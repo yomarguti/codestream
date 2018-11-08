@@ -7,7 +7,8 @@ import Button from "./Button";
 import Tooltip from "./Tooltip";
 import createClassString from "classnames";
 import { invite } from "./actions";
-import { isActiveMixin, mapFilter } from "../utils";
+import { isInVscode, mapFilter } from "../utils";
+import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -24,10 +25,18 @@ export class InvitePage extends Component {
 
 	state = this.initialState;
 
-	isActive = isActiveMixin("invite", this.constructor.name);
+	componentDidMount() {
+		if (isInVscode()) {
+			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
+				if (event.key === "Escape") {
+					this.goToChannels();
+				}
+			});
+		}
+	}
 
-	shouldComponentUpdate(nextProps) {
-		return this.isActive(this.props, nextProps);
+	componentWillUnmount() {
+		this.disposable && this.disposable.dispose();
 	}
 
 	onEmailChange = event => this.setState({ newMemberEmail: event.target.value });
@@ -177,6 +186,8 @@ export class InvitePage extends Component {
 		);
 	};
 
+	goToChannels = () => this.props.setActivePanel("channels");
+
 	render() {
 		const inactive = this.props.activePanel !== "invite";
 
@@ -197,10 +208,7 @@ export class InvitePage extends Component {
 			<div className={panelClass}>
 				<div className="panel-header">
 					<Tooltip title={title} placement="bottomRight">
-						<span
-							className="align-right-button"
-							onClick={() => this.props.setActivePanel("channels")}
-						>
+						<span className="align-right-button" onClick={this.goToChannels}>
 							<Icon name="x" className="clickable" />
 						</span>
 					</Tooltip>

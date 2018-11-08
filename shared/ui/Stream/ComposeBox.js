@@ -2,7 +2,6 @@ import _ from "underscore";
 import React from "react";
 import ContentEditable from "react-contenteditable";
 import createClassString from "classnames";
-import EventEmitter from "../event-emitter";
 import AtMentionsPopup from "./AtMentionsPopup";
 import Icon from "./Icon";
 import Button from "./Button";

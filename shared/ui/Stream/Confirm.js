@@ -2,8 +2,12 @@ import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import createClassString from "classnames";
 import Button from "./Button";
+import { isInVscode } from "../utils";
+import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 
 export default class Confirm extends Component {
+	disposables = [];
+
 	constructor(props) {
 		super(props);
 		this.state = { selected: props.selected, loading: null };
@@ -14,10 +18,21 @@ export default class Confirm extends Component {
 		const modalRoot = document.getElementById("confirm-root");
 		modalRoot.appendChild(this.el);
 		modalRoot.classList.add("active");
+
+		if (isInVscode()) {
+			this.disposables.push(
+				VsCodeKeystrokeDispatcher.on("keydown", event => {
+					if (event.key === "Escape") {
+						this.closePopup();
+					}
+				})
+			);
+		}
 	}
 
 	componentWillUnmount() {
 		this.closePopup();
+		this.disposables.forEach(d => d.dispose());
 	}
 
 	closePopup = () => {

@@ -12,7 +12,8 @@ import Icon from "./Icon";
 import _ from "underscore";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
-import { isActiveMixin } from "../utils";
+import { isInVscode } from "../utils";
+import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 
 export class SimplePublicChannelPanel extends Component {
 	constructor(props) {
@@ -21,11 +22,17 @@ export class SimplePublicChannelPanel extends Component {
 		this.state = { loading: null };
 	}
 
-	isActive = isActiveMixin("public-channels", this.constructor.name);
-
-	shouldComponentUpdate(nextProps) {
-		return this.isActive(this.props, nextProps);
+	componentDidMount() {
+		if (isInVscode()) {
+			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
+				if (event.key === "Escape") {
+					this.goToChannels();
+				}
+			});
+		}
 	}
+
+	goToChannels = () => this.props.setActivePanel("channels");
 
 	render() {
 		const panelClass = createClassString({
@@ -54,10 +61,7 @@ export class SimplePublicChannelPanel extends Component {
 			<div className={panelClass}>
 				<div className="panel-header">
 					<Tooltip title={title} placement="bottomRight">
-						<span
-							className="align-right-button"
-							onClick={() => this.props.setActivePanel("channels")}
-						>
+						<span className="align-right-button" onClick={this.goToChannels}>
 							<Icon name="x" className="clickable" />
 						</span>
 					</Tooltip>

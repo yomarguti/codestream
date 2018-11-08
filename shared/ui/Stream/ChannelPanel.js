@@ -16,16 +16,16 @@ import {
 	getServiceStreamsForTeam,
 	getDMName
 } from "../reducers/streams";
-import { isActiveMixin, mapFilter, toMapBy } from "../utils";
+import { mapFilter, toMapBy } from "../utils";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import Debug from "./Debug";
-import Menu from "./Menu";
 import Button from "./Button";
 import ChannelMenu from "./ChannelMenu";
 import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
-import { safe } from "../utils";
+import { isInVscode, safe } from "../utils";
+import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 
 export class SimpleChannelPanel extends Component {
 	constructor(props) {
@@ -58,10 +58,14 @@ export class SimpleChannelPanel extends Component {
 		];
 	}
 
-	isActive = isActiveMixin("channels", this.constructor.name);
-
-	shouldComponentUpdate(nextProps) {
-		return this.isActive(this.props, nextProps);
+	componentDidMount() {
+		if (isInVscode()) {
+			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
+				if (event.key === "Escape") {
+					this.props.setUserPreference(["showChannels"], "all");
+				}
+			});
+		}
 	}
 
 	componentDidUpdate(prevProps, prevState) {
