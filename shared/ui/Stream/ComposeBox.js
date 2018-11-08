@@ -113,6 +113,8 @@ class ComposeBox extends React.Component {
 		// this.props.ensureStreamIsActive();
 		this.setState({ quote: body });
 
+		if (!body) return;
+
 		let mentions = [];
 		if (body.source && body.source.authors) {
 			mentions = body.source.authors.filter(author => author.id !== this.props.currentUserId);

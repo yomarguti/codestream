@@ -487,7 +487,7 @@ export class SimpleStream extends Component {
 											this.setMultiCompose(true);
 										}}
 									>
-										<Tooltip title="Create Marker" placement="bottomRight">
+										<Tooltip title="Create Codemark" placement="bottomRight">
 											<span>
 												<Icon name="plus" className="button" />
 											</span>
