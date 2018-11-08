@@ -59,6 +59,9 @@ export class SimpleStream extends Component {
 		this.disposables.push(
 			EventEmitter.on("interaction:stream-thread-selected", this.handleStreamThreadSelected)
 		);
+		this.disposables.push(
+			EventEmitter.subscribe("interaction:code-highlighted", this.handleCodeHighlightEvent)
+		);
 
 		// this.props.fetchPostsForStreams();
 
@@ -133,6 +136,12 @@ export class SimpleStream extends Component {
 	componentWillUnmount = () => {
 		this.disposables.forEach(d => d.dispose());
 		this.disposables = [];
+	};
+
+	handleCodeHighlightEvent = body => {
+		// make sure we have a compose box to type into
+		this.setMultiCompose(true);
+		this.setState({ quote: body });
 	};
 
 	goToThread = post => {
@@ -715,6 +724,7 @@ export class SimpleStream extends Component {
 				isSlackTeam={this.props.isSlackTeam}
 				multiCompose={this.state.multiCompose}
 				setMultiCompose={this.setMultiCompose}
+				quote={this.state.quote}
 			/>
 		);
 	};
@@ -755,6 +765,7 @@ export class SimpleStream extends Component {
 
 	setMultiCompose = value => {
 		this.setState({ multiCompose: value });
+		if (!value) this.setState({ quote: null });
 		// if (value) this.focus();
 	};
 
@@ -798,12 +809,6 @@ export class SimpleStream extends Component {
 
 	showChannels = _event => {
 		this.setActivePanel("channels");
-	};
-
-	ensureStreamIsActive = () => {
-		const { activePanel } = this.props;
-		if (activePanel === "main" || activePanel === "thread") this.focusInput();
-		else this.setActivePanel("main");
 	};
 
 	setActivePanel = panel => {

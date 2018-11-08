@@ -5,7 +5,7 @@ export const setPanel = panel => (dispatch, getState) => {
 };
 
 export const closePanel = () => dispatch => {
-	dispatch({ type: "CLOSE_PANEL", payload: panel });
+	dispatch({ type: "CLOSE_PANEL" });
 };
 
 export const focus = () => ({ type: "SET_HAS_FOCUS", payload: true });

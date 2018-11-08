@@ -42,10 +42,6 @@ class ComposeBox extends React.Component {
 	disposables = [];
 
 	componentDidMount() {
-		this.disposables.push(
-			EventEmitter.subscribe("interaction:code-highlighted", this.handleCodeHighlightEvent)
-		);
-
 		// so that HTML doesn't get pasted into the input field. without this,
 		// HTML would be rendered as HTML when pasted
 		this._contentEditable.htmlEl.addEventListener("paste", function(e) {
@@ -98,7 +94,7 @@ class ComposeBox extends React.Component {
 	}
 
 	componentDidUpdate(prevProps, prevState) {
-		const { multiCompose } = this.props;
+		const { multiCompose, quote } = this.props;
 
 		if (prevProps.multiCompose !== multiCompose) {
 			this.setState({ commentType: multiCompose === true ? "comment" : multiCompose });
@@ -106,11 +102,15 @@ class ComposeBox extends React.Component {
 				this.focus();
 			}, 20);
 		}
+
+		if (prevProps.quote !== quote) {
+			this.handleCodeHighlightEvent(quote);
+		}
 	}
 
 	handleCodeHighlightEvent = body => {
 		// make sure we have a compose box to type into
-		this.props.ensureStreamIsActive();
+		// this.props.ensureStreamIsActive();
 		this.setState({ quote: body });
 
 		let mentions = [];
