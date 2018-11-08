@@ -442,7 +442,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				const telemetry = Container.instance().telemetry;
 				let isMarker = false;
 				// Check if it's a marker
-				if (request.codeBlocks != null && request.codeBlocks.length > 0) {
+				if (request.codemark != null) {
 					isMarker = true;
 				}
 				const payload: {

@@ -6,7 +6,6 @@ import { CSUnreads } from "../../shared/agent.protocol";
 import { CSLastReads, CSPost, CSStream, StreamType } from "../../shared/api.protocol";
 import { Arrays, Functions, log } from "../../system";
 import { ApiProvider } from "../apiProvider";
-import { Functions } from "../../system/function";
 
 export class CodeStreamUnreads {
 	private _onDidChange = new Emitter<CSUnreads>();

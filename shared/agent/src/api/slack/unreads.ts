@@ -5,7 +5,6 @@ import { CSUnreads } from "../../shared/agent.protocol";
 import { CSLastReads, CSMePreferences } from "../../shared/api.protocol";
 import { Iterables, log } from "../../system";
 import { ApiProvider } from "../apiProvider";
-import { Functions } from "../../system/function";
 
 export class SlackUnreads {
 	private _onDidChange = new Emitter<CSUnreads>();
