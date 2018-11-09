@@ -109,41 +109,6 @@ interface DeferredStreamRequest<TResult> {
 	};
 }
 
-function cacheSet(entities: {
-	codemarks?: CSCodemark[];
-	markers?: CSMarker[];
-	markerLocations?: CSMarkerLocations[];
-	repos?: CSRepository[];
-	streams?: CSStream[];
-}) {
-	const container = Container.instance();
-	if (entities.codemarks) {
-		for (const codemark of entities.codemarks) {
-			container.codemarks.cacheSet(codemark);
-		}
-	}
-	if (entities.markers) {
-		for (const marker of entities.markers) {
-			container.markers.cacheSet(marker);
-		}
-	}
-	if (entities.markerLocations) {
-		for (const markerLocations of entities.markerLocations) {
-			container.markerLocations.cacheSet(markerLocations);
-		}
-	}
-	if (entities.repos) {
-		for (const repos of entities.repos) {
-			container.repos.cacheSet(repos);
-		}
-	}
-	if (entities.streams) {
-		for (const stream of entities.streams) {
-			container.streams.cacheSet(stream);
-		}
-	}
-}
-
 export class SlackApiProvider implements ApiProvider {
 	private _onDidReceiveMessage = new Emitter<RTMessage>();
 	get onDidReceiveMessage(): Event<RTMessage> {
@@ -571,13 +536,6 @@ export class SlackApiProvider implements ApiProvider {
 					providerType: ProviderType.Slack
 				});
 				({ codemark, markers, markerLocations, streams, repos } = codemarkResponse);
-				cacheSet({
-					codemarks: [codemark],
-					markers,
-					markerLocations,
-					streams,
-					repos
-				});
 				if (markers && markers.length) {
 					// FIXME KB - support multiple markers per codemark
 					const marker = markers[0];
@@ -635,9 +593,6 @@ export class SlackApiProvider implements ApiProvider {
 					postId: post.id
 				});
 				codemark = response.codemark;
-				cacheSet({
-					codemarks: [codemark]
-				});
 			}
 
 			const postResponse = await this.getPost({ streamId: streamId, postId: postId });

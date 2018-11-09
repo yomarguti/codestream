@@ -37,7 +37,7 @@ export interface CreatePostInFileStreamRequest {
 }
 
 export interface CreatePostResponse {
-	post: CSPost;
+	post: CSFullPost;
 	codemark?: CSCodemark;
 	markers?: CSMarker[];
 	markerLocations?: CSMarkerLocations[];
@@ -60,7 +60,7 @@ export interface CodeBlockSource {
 	remotes: { name: string; url: string }[];
 }
 
-export interface CreatePostWithCodemarkRequest {
+export interface CreatePostWithMarkerRequest {
 	textDocument: TextDocumentIdentifier;
 	text: string;
 	mentionedUserIds: string[];
@@ -76,9 +76,9 @@ export interface CreatePostWithCodemarkRequest {
 	status?: string;
 }
 
-export const CreatePostWithCodemarkRequestType = new RequestType<
-	CreatePostWithCodemarkRequest,
-	CSPost,
+export const CreatePostWithMarkerRequestType = new RequestType<
+	CreatePostWithMarkerRequest,
+	CreatePostResponse,
 	void,
 	void
 >("codeStream/posts/createWithCodemark");

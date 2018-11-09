@@ -23,26 +23,21 @@ import { Container } from "./container";
 import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
 import { MarkerHandler } from "./marker/markerHandler";
-import { PostHandler } from "./post/postHandler";
 import {
 	AgentOptions,
 	ApiRequestType,
 	ChangeDataType,
 	CodeStreamEnvironment,
 	ConnectionStatus,
-	CreatePostWithCodemarkRequestType,
-	CreatePostWithCodeRequestType,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
 	DidLogoutNotificationType,
-	DocumentFromCodeBlockRequestType,
 	DocumentFromMarkerRequestType,
 	DocumentLatestRevisionRequestType,
 	DocumentMarkersRequestType,
 	FetchMarkerLocationsRequestType,
-	LogoutReason,
-	PreparePostWithCodeRequestType
+	LogoutReason
 } from "./shared/agent.protocol";
 import {
 	ApiErrors,
@@ -171,11 +166,6 @@ export class CodeStreamSession {
 		);
 		this.agent.registerHandler(DocumentFromMarkerRequestType, MarkerHandler.documentFromMarker);
 		this.agent.registerHandler(DocumentMarkersRequestType, MarkerHandler.documentMarkers);
-		this.agent.registerHandler(PreparePostWithCodeRequestType, PostHandler.documentPreparePost);
-		this.agent.registerHandler(
-			CreatePostWithCodemarkRequestType,
-			PostHandler.createPostWithCodemark
-		);
 
 		this.agent.registerHandler(DocumentLatestRevisionRequestType, async e => {
 			const revision = await Container.instance().git.getFileCurrentRevision(

@@ -1,10 +1,17 @@
 "use strict";
+import * as path from "path";
+import { Range } from "vscode-languageserver-protocol";
+import URI from "vscode-uri";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
+	CreateCodemarkRequest,
+	CreateCodemarkRequestMarker,
 	CreatePostRequest,
 	CreatePostRequestType,
 	CreatePostResponse,
+	CreatePostWithMarkerRequest,
+	CreatePostWithMarkerRequestType,
 	CSFullCodemark,
 	CSFullPost,
 	DeletePostRequest,
@@ -25,6 +32,9 @@ import {
 	MarkPostUnreadRequest,
 	MarkPostUnreadRequestType,
 	MarkPostUnreadResponse,
+	PreparePostWithCodeRequest,
+	PreparePostWithCodeRequestType,
+	PreparePostWithCodeResponse,
 	ReactToPostRequest,
 	ReactToPostRequestType,
 	ReactToPostResponse,
@@ -32,8 +42,8 @@ import {
 	SetPostStatusRequestType,
 	SetPostStatusResponse
 } from "../shared/agent.protocol";
-import { CSCodemark, CSPost } from "../shared/api.protocol";
-import { lsp, lspHandler, Strings } from "../system";
+import { CSMarkerLocation, CSPost } from "../shared/api.protocol";
+import { Iterables, lsp, lspHandler, Strings } from "../system";
 import { BaseIndex, IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue, UniqueFetchFn } from "./cache/baseCache";
 import { EntityCache } from "./cache/entityCache";
@@ -378,6 +388,34 @@ class PostsCache extends EntityCache<CSPost> {
 	}
 }
 
+function trackPostCreation(request: CreatePostRequest) {
+	process.nextTick(() => {
+		try {
+			const telemetry = Container.instance().telemetry;
+			let isMarker = false;
+			// Check if it's a marker
+			if (request.codemark != null) {
+				isMarker = true;
+			}
+			const payload: {
+				[key: string]: any;
+			} = {
+				Type: "Chat",
+				Thread: request.parentPostId ? "Reply" : "Parent",
+				Marker: isMarker
+			};
+			// TODO: Add Category
+			if (!Container.instance().session.telemetryData.hasCreatedPost) {
+				payload["First Post?"] = new Date().toISOString();
+				Container.instance().session.telemetryData.hasCreatedPost = true;
+			}
+			telemetry.track({ eventName: "Post Created", properties: payload });
+		} catch (ex) {
+			Logger.error(ex);
+		}
+	});
+}
+
 @lsp
 export class PostsManager extends EntityManagerBase<CSPost> {
 	protected readonly cache: PostsCache = new PostsCache(
@@ -447,28 +485,32 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	async fullPosts(csPosts: CSPost[]): Promise<CSFullPost[]> {
 		const fullPosts = [];
 		for (const csPost of csPosts) {
-			let fullCodemark: CSFullCodemark | undefined;
-			let hasMarkers = false;
-			if (csPost.codemarkId) {
-				const csCodemark = await Container.instance().codemarks.getById(csPost.codemarkId);
-				fullCodemark = {
-					...csCodemark
-				};
-				if (csCodemark.markerIds) {
-					fullCodemark.markers = [];
-					for (const markerId of csCodemark.markerIds) {
-						fullCodemark.markers.push(await Container.instance().markers.getById(markerId));
-						hasMarkers = true;
-					}
-				}
-			}
-			fullPosts.push({
-				...csPost,
-				codemark: fullCodemark,
-				hasMarkers
-			});
+			fullPosts.push(await this.fullPost(csPost));
 		}
 		return fullPosts;
+	}
+
+	private async fullPost(csPost: CSPost): Promise<CSFullPost> {
+		let fullCodemark: CSFullCodemark | undefined;
+		let hasMarkers = false;
+		if (csPost.codemarkId) {
+			const csCodemark = await Container.instance().codemarks.getById(csPost.codemarkId);
+			fullCodemark = {
+				...csCodemark
+			};
+			if (csCodemark.markerIds) {
+				fullCodemark.markers = [];
+				for (const markerId of csCodemark.markerIds) {
+					fullCodemark.markers.push(await Container.instance().markers.getById(markerId));
+					hasMarkers = true;
+				}
+			}
+		}
+		return {
+			...csPost,
+			codemark: fullCodemark,
+			hasMarkers
+		};
 	}
 
 	@lspHandler(FetchPostRepliesRequestType)
@@ -481,35 +523,185 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	}
 
 	@lspHandler(CreatePostRequestType)
-	createPost(request: CreatePostRequest): Promise<CreatePostResponse> {
-		const resp = this.session.api.createPost(request);
-		resp.then(() => {
-			try {
-				const telemetry = Container.instance().telemetry;
-				let isMarker = false;
-				// Check if it's a marker
-				if (request.codemark != null) {
-					isMarker = true;
-				}
-				const payload: {
-					[key: string]: any;
-				} = {
-					Type: "Chat",
-					Thread: request.parentPostId ? "Reply" : "Parent",
-					Marker: isMarker
-				};
-				// TODO: Add Category
-				if (!Container.instance().session.telemetryData.hasCreatedPost) {
-					payload["First Post?"] = new Date().toISOString();
-					Container.instance().session.telemetryData.hasCreatedPost = true;
-				}
-				telemetry.track({ eventName: "Post Created", properties: payload });
-			} catch (ex) {
-				Logger.error(ex);
-			}
-		});
+	async createPost(request: CreatePostRequest): Promise<CreatePostResponse> {
+		const response = await this.session.api.createPost(request);
+		trackPostCreation(request);
+		setCaches(response);
+		return {
+			...response,
+			post: await this.fullPost(response.post)
+		};
+	}
 
-		return resp;
+	@lspHandler(CreatePostWithMarkerRequestType)
+	async createPostWithMarker({
+		textDocument: documentId,
+		rangeArray,
+		text,
+		code,
+		source,
+		streamId,
+		parentPostId,
+		mentionedUserIds,
+		title,
+		type,
+		assignees,
+		color,
+		status
+	}: CreatePostWithMarkerRequest): Promise<CreatePostResponse | undefined> {
+		const { git } = Container.instance();
+		const filePath = URI.parse(documentId.uri).fsPath;
+		const fileContents = this.lastFullCode;
+
+		const codemarkRequest = {
+			title,
+			type,
+			assignees,
+			color,
+			status
+		} as CreateCodemarkRequest;
+		let marker: CreateCodemarkRequestMarker | undefined;
+		let commitHashWhenPosted: string | undefined;
+		let location: CSMarkerLocation | undefined;
+		let backtrackedLocation: CSMarkerLocation | undefined;
+		let remotes: string[] | undefined;
+		if (rangeArray) {
+			const range = Range.create(rangeArray[0], rangeArray[1], rangeArray[2], rangeArray[3]);
+			location = Container.instance().markerLocations.rangeToLocation(range);
+
+			if (source) {
+				if (source.revision) {
+					commitHashWhenPosted = source.revision;
+					backtrackedLocation = await Container.instance().markerLocations.backtrackLocation(
+						documentId,
+						fileContents,
+						location
+					);
+				} else {
+					commitHashWhenPosted = (await git.getRepoHeadRevision(source.repoPath))!;
+					backtrackedLocation = Container.instance().markerLocations.emptyFileLocation();
+				}
+				if (source.remotes && source.remotes.length > 0) {
+					remotes = source.remotes.map(r => r.url);
+				}
+			}
+
+			marker = {
+				code,
+				remotes,
+				file: source && source.file,
+				commitHash: commitHashWhenPosted,
+				location:
+					backtrackedLocation &&
+					Container.instance().markerLocations.locationToArray(backtrackedLocation)
+			};
+
+			codemarkRequest.streamId = streamId;
+			codemarkRequest.markers = marker && [marker];
+			codemarkRequest.remotes = remotes;
+		}
+
+		try {
+			const response = await this.createPost({
+				streamId,
+				text,
+				parentPostId,
+				codemark: codemarkRequest,
+				mentionedUserIds
+			});
+
+			const { markers } = response;
+			if (markers && markers.length && backtrackedLocation) {
+				const meta = backtrackedLocation.meta;
+				if (meta && (meta.startWasDeleted || meta.endWasDeleted)) {
+					const uncommittedLocation = {
+						...location!,
+						id: markers[0].id
+					};
+
+					await Container.instance().markerLocations.saveUncommittedLocation(
+						filePath,
+						fileContents,
+						uncommittedLocation
+					);
+				}
+			}
+
+			return response;
+		} catch (ex) {
+			debugger;
+			return;
+		}
+	}
+
+	private lastFullCode = "";
+	@lspHandler(PreparePostWithCodeRequestType)
+	async documentPreparePost({
+		textDocument: documentId,
+		range,
+		dirty
+	}: PreparePostWithCodeRequest): Promise<PreparePostWithCodeResponse> {
+		const { documents, git } = Container.instance();
+
+		const document = documents.get(documentId.uri);
+		if (document === undefined) {
+			throw new Error(`No document could be found for Uri(${documentId.uri})`);
+		}
+		this.lastFullCode = document.getText();
+
+		const uri = URI.parse(document.uri);
+
+		let authors: { id: string; username: string }[] | undefined;
+		let file: string | undefined;
+		let remotes: { name: string; url: string }[] | undefined;
+		let rev: string | undefined;
+
+		let gitError;
+		let repoPath;
+		if (uri.scheme === "file") {
+			try {
+				repoPath = await git.getRepoRoot(uri.fsPath);
+				if (repoPath !== undefined) {
+					file = Strings.normalizePath(path.relative(repoPath, uri.fsPath));
+					if (file[0] === "/") {
+						file = file.substr(1);
+					}
+
+					rev = await git.getFileCurrentRevision(uri.fsPath);
+					const gitRemotes = await git.getRepoRemotes(repoPath);
+					remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
+
+					const gitAuthors = await git.getFileAuthors(uri.fsPath, {
+						startLine: range.start.line,
+						endLine: range.end.line - 1,
+						contents: dirty ? this.lastFullCode : undefined
+					});
+					const authorEmails = gitAuthors.map(a => a.email);
+
+					const users = await Container.instance().users.getByEmails(authorEmails);
+					authors = [...Iterables.map(users, u => ({ id: u.id, username: u.username }))];
+				}
+			} catch (ex) {
+				gitError = ex.toString();
+				Logger.error(ex);
+				debugger;
+			}
+		}
+
+		return {
+			code: document.getText(range),
+			source:
+				repoPath !== undefined
+					? {
+							file: file!,
+							repoPath: repoPath,
+							revision: rev!,
+							authors: authors || [],
+							remotes: remotes || []
+					  }
+					: undefined,
+			gitError: gitError
+		};
 	}
 
 	@lspHandler(DeletePostRequestType)
@@ -541,5 +733,32 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	private async getPost(request: GetPostRequest): Promise<GetPostResponse> {
 		const post = await this.getById(request.postId);
 		return { post: post };
+	}
+}
+
+function setCaches(response: CreatePostResponse) {
+	const container = Container.instance();
+	if (response.codemark) {
+		container.codemarks.cacheSet(response.codemark);
+	}
+	if (response.markers) {
+		for (const marker of response.markers) {
+			container.markers.cacheSet(marker);
+		}
+	}
+	if (response.markerLocations) {
+		for (const markerLocations of response.markerLocations) {
+			container.markerLocations.cacheSet(markerLocations);
+		}
+	}
+	if (response.repos) {
+		for (const repos of response.repos) {
+			container.repos.cacheSet(repos);
+		}
+	}
+	if (response.streams) {
+		for (const stream of response.streams) {
+			container.streams.cacheSet(stream);
+		}
 	}
 }
