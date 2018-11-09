@@ -65,6 +65,7 @@ import {
 	DocumentLatestRevisionResponse,
 	DocumentMarkersRequestType,
 	EditPostRequestType,
+	FetchCodemarksRequestType,
 	FetchFileStreamsRequestType,
 	FetchMarkerLocationsRequestType,
 	FetchPostRepliesRequestType,
@@ -77,7 +78,6 @@ import {
 	GetMarkerRequestType,
 	GetMeRequestType,
 	GetPostRequestType,
-	GetPostsWithCodemarksRequestType,
 	GetPreferencesRequestType,
 	GetRepoRequestType,
 	GetStreamRequestType,
@@ -311,6 +311,19 @@ export class CodeStreamAgentConnection implements Disposable {
 	}(this);
 
 	@started
+	get codemarks() {
+		return this._codemarks;
+	}
+
+	private readonly _codemarks = new class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		fetch() {
+			return this._connection.sendRequest(FetchCodemarksRequestType, {});
+		}
+	}(this);
+
+	@started
 	get posts() {
 		return this._posts;
 	}
@@ -429,10 +442,6 @@ export class CodeStreamAgentConnection implements Disposable {
 				streamId: streamId,
 				postId: postId
 			});
-		}
-
-		fetchWithCodemarks() {
-			return this._connection.sendRequest(GetPostsWithCodemarksRequestType, {});
 		}
 
 		delete(streamId: string, postId: string) {
