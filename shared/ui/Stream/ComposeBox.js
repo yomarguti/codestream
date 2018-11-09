@@ -103,7 +103,7 @@ class ComposeBox extends React.Component {
 			}, 20);
 		}
 
-		if (prevProps.quote !== quote) {
+		if (prevProps.quote !== quote && !prevProps.isEditing) {
 			this.handleCodeHighlightEvent(quote);
 		}
 
@@ -698,6 +698,7 @@ class ComposeBox extends React.Component {
 	};
 
 	setCommentType = type => {
+		if (this.props.isEditing) return;
 		this.setState({ commentType: type });
 		setTimeout(() => {
 			this.focus();
@@ -706,6 +707,8 @@ class ComposeBox extends React.Component {
 
 	renderCommentForm = quote => {
 		const { commentType = "" } = this.state;
+
+		const { isEditing } = this.props;
 
 		const trapTip =
 			"Let your teammates know about a critical section of code that should not be changed without discussion or consultation. You will be alerted when a teammate edits code within a Code Trap.";
@@ -754,7 +757,8 @@ class ComposeBox extends React.Component {
 				: " (optional)";
 		return [
 			<div className="panel-header" key="one">
-				New {commentString.charAt(0).toUpperCase() + commentString.slice(1)}
+				{isEditing ? "Update" : "New"}{" "}
+				{commentString.charAt(0).toUpperCase() + commentString.slice(1)}
 				<CancelButton placement="left" onClick={this.handleClickDismissMultiCompose} />
 			</div>,
 			<ScrollBox key="two">
@@ -766,6 +770,7 @@ class ComposeBox extends React.Component {
 									<label>Post to</label>
 									<div className="styled-select">
 										<select
+											disabled={isEditing}
 											onChange={e => this.setState({ streamId: e.target.value })}
 											defaultValue={this.props.streamId}
 										>
@@ -1048,7 +1053,7 @@ class ComposeBox extends React.Component {
 	}
 
 	renderMessageInput = () => {
-		let { placeholder } = this.props;
+		let { placeholder, isEditing, text } = this.props;
 		const { quote, emojiOpen, commentType } = this.state;
 		const multiCompose = quote || this.props.multiCompose;
 
@@ -1067,7 +1072,8 @@ class ComposeBox extends React.Component {
 					break;
 			}
 		}
-		let contentEditableHTML = this.state.postTextByStream[this.props.streamId] || "";
+		let contentEditableHTML =
+			(isEditing && text) || this.state.postTextByStream[this.props.streamId] || "";
 		return (
 			<div className="message-input-wrapper">
 				<div style={{ position: "relative" }}>

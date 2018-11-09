@@ -120,9 +120,13 @@ export const createSystemPost = (streamId, parentPostId, text, seqNum) => async 
 	dispatch({ type: "ADD_POST", payload: post });
 };
 
-export const editPost = (streamId, id, text, mentions) => async (dispatch, getState, { api }) => {
+export const editPost = (streamId, id, text, mentions, codemark) => async (
+	dispatch,
+	getState,
+	{ api }
+) => {
 	try {
-		const post = await api.editPost({ streamId, id, text, mentions });
+		const post = await api.editPost({ streamId, id, text, mentions, codemark });
 		return dispatch({ type: "UPDATE_POST", payload: post });
 	} catch (e) {
 		// TODO:

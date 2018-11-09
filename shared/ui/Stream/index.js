@@ -48,6 +48,7 @@ export class SimpleStream extends Component {
 		super(props);
 
 		this.state = {
+			composeBoxProps: {},
 			topTab: "chat",
 			threadId: props.initialThreadId,
 			threadTrigger: null
@@ -717,6 +718,7 @@ export class SimpleStream extends Component {
 				setMultiCompose={this.setMultiCompose}
 				quote={this.state.quote}
 				quotePost={this.state.quotePost}
+				{...this.state.composeBoxProps}
 			/>
 		);
 	};
@@ -757,7 +759,16 @@ export class SimpleStream extends Component {
 
 	setMultiCompose = value => {
 		this.setState({ multiCompose: value });
-		if (!value) this.setState({ quote: null });
+		if (!value) {
+			this.setState({
+				quote: null,
+				composeBoxProps: {
+					editingPostId: null,
+					text: null,
+					isEditing: false
+				}
+			});
+		}
 		// if (value) this.focus();
 	};
 
@@ -792,11 +803,28 @@ export class SimpleStream extends Component {
 		if (activePanel === "main") {
 			list = this._postslist;
 		}
-		const post = list.getUsersMostRecentPost();
-		if (post)
-			this.setState({ editingPostId: post.id }, () => {
-				list.scrollTo(post.id);
-			});
+		const { id } = list.getUsersMostRecentPost();
+		if (id) {
+			// HACKy
+			const post = this.findPostById(id);
+			if (post.codemark) {
+				this.setMultiCompose(true);
+				const marker = post.codemark.markers[0];
+
+				this.setState({
+					composeBoxProps: {
+						...this.state.composeBoxProps,
+						isEditing: true,
+						editingPostId: post.id,
+						text: post.text,
+						quote: { ...marker, location: marker.locationWhenCreated }
+					}
+				});
+			} else
+				this.setState({ editingPostId: post.id }, () => {
+					list.scrollTo(post.id);
+				});
+		}
 	};
 
 	showChannels = _event => {
@@ -1496,13 +1524,19 @@ export class SimpleStream extends Component {
 		color
 	}) => {
 		const codeBlocks = [];
-		const { activePanel, postStreamId, createPost } = this.props;
+		const { activePanel, postStreamId, createPost, editPost } = this.props;
 		let fileUri;
 
 		if (this.checkForSlashCommands(text)) return;
 
 		let threadId = forceThreadId || this.state.threadId;
 		const streamId = forceStreamId || postStreamId;
+
+		const { composeBoxProps } = this.state;
+		if (composeBoxProps.isEditing) {
+			editPost(postStreamId, composeBoxProps.editingPostId, text, mentionedUserIds, { color });
+			return this.setMultiCompose(false);
+		}
 
 		const submit = () =>
 			createPost(streamId, threadId, text, codeBlocks, mentionedUserIds, {
