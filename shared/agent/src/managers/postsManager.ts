@@ -330,10 +330,10 @@ class PostsCache extends EntityCache<CSPost> {
 
 	constructor(
 		idxFields: IndexParams<CSPost>[],
-		fetchById: UniqueFetchFn<CSPost>,
+		fetchFn: UniqueFetchFn<CSPost>,
 		private readonly fetchPosts: FetchPostsFn
 	) {
-		super(idxFields, fetchById);
+		super(idxFields, fetchFn);
 		this.postIndex = new PostIndex(fetchPosts);
 		this.indexes.set("streamId", this.postIndex);
 	}
@@ -420,7 +420,7 @@ function trackPostCreation(request: CreatePostRequest) {
 export class PostsManager extends EntityManagerBase<CSPost> {
 	protected readonly cache: PostsCache = new PostsCache(
 		this.getIndexedFields(),
-		this.fetchById.bind(this),
+		this.fetch.bind(this),
 		this.fetchPosts.bind(this)
 	);
 

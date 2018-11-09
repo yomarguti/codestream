@@ -28,16 +28,16 @@ export class EntityCache<T extends CSEntity> extends BaseCache<T> {
 	 * Create a cache
 	 *
 	 * @param idxFields Indexed fields
-	 * @param fetchById Function to fetch an entity by Id
+	 * @param fetchFn Function to fetch an entity by Id
 	 */
-	constructor(idxFields: IndexParams<T>[], fetchById: UniqueFetchFn<T>) {
+	constructor(idxFields: IndexParams<T>[], fetchFn: UniqueFetchFn<T>) {
 		super(idxFields);
 		this.indexes.set(
 			"id",
 			makeIndex({
 				fields: ["id"],
 				type: IndexType.Unique,
-				fetchFn: fetchById
+				fetchFn
 			})
 		);
 	}

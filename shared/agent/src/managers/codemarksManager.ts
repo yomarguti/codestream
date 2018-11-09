@@ -2,28 +2,35 @@
 
 import { Container } from "../container";
 import {
-	GetPostsWithCodemarksRequest,
-	GetPostsWithCodemarksRequestType,
-	GetPostsWithCodemarksResponse
+	CSFullCodemark,
+	FetchCodemarksRequest,
+	FetchCodemarksRequestType,
+	FetchCodemarksResponse
 } from "../shared/agent.protocol.markers";
 import { CSCodemark } from "../shared/api.protocol.models";
 import { lspHandler } from "../system/decorators";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 
 export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
-	@lspHandler(GetPostsWithCodemarksRequestType)
-	async get(request: GetPostsWithCodemarksRequest): Promise<GetPostsWithCodemarksResponse> {
+	@lspHandler(FetchCodemarksRequestType)
+	async get(request: FetchCodemarksRequest): Promise<FetchCodemarksResponse> {
 		const csCodemarks = await this.ensureCached();
-		const csPosts = [];
+		const fullCodemarks = [];
 
 		for (const csCodemark of csCodemarks) {
-			const csPost = await Container.instance().posts.getById(csCodemark.postId);
-			csPosts.push(csPost);
+			const fullCodemark = {
+				...csCodemark
+			} as CSFullCodemark;
+			if (csCodemark.markerIds) {
+				fullCodemark.markers = [];
+				for (const markerId of csCodemark.markerIds) {
+					fullCodemark.markers.push(await Container.instance().markers.getById(markerId));
+				}
+			}
+			fullCodemarks.push(fullCodemark);
 		}
 
-		const fullPosts = await Container.instance().posts.fullPosts(csPosts);
-
-		return { posts: fullPosts };
+		return { codemarks: fullCodemarks };
 	}
 
 	protected async fetchById(id: Id): Promise<CSCodemark> {

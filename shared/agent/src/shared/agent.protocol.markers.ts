@@ -34,23 +34,17 @@ export const DidChangeDocumentMarkersNotificationType = new NotificationType<
 export interface FetchCodemarksRequest {}
 
 export interface FetchCodemarksResponse {
-	codemarks: CSCodemark[];
-	posts: CSPost[];
-	markers: CSMarker[];
+	codemarks: CSFullCodemark[];
+	posts?: CSPost[];
+	markers?: CSMarker[];
 }
 
-export interface GetPostsWithCodemarksRequest {}
-
-export interface GetPostsWithCodemarksResponse {
-	posts: CSFullPost[];
-}
-
-export const GetPostsWithCodemarksRequestType = new RequestType<
-	GetPostsWithCodemarksRequest,
-	GetPostsWithCodemarksResponse | undefined,
+export const FetchCodemarksRequestType = new RequestType<
+	FetchCodemarksRequest,
+	FetchCodemarksResponse | undefined,
 	void,
 	void
->("codeStream/postsWithCodemarks");
+>("codeStream/fetchCodemarks");
 
 export interface GetCodemarkRequest {
 	codemarkId: string;

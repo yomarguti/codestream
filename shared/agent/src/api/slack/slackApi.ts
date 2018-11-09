@@ -871,7 +871,9 @@ export class SlackApiProvider implements ApiProvider {
 		// });
 
 		const { ok, error, messages } = response as WebAPICallResult & { messages: any };
-		if (!ok) throw new Error(error);
+		if (!ok) {
+			throw new Error(error);
+		}
 
 		const message = messages[0];
 		// Since we can end up with a post NEAREST postId rather than postId, make sure we found the right post
