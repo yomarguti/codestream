@@ -448,6 +448,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		const fullPosts = [];
 		for (const csPost of csPosts) {
 			let fullCodemark: CSFullCodemark | undefined;
+			let hasMarkers = false;
 			if (csPost.codemarkId) {
 				const csCodemark = await Container.instance().codemarks.getById(csPost.codemarkId);
 				fullCodemark = {
@@ -457,12 +458,14 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					fullCodemark.markers = [];
 					for (const markerId of csCodemark.markerIds) {
 						fullCodemark.markers.push(await Container.instance().markers.getById(markerId));
+						hasMarkers = true;
 					}
 				}
 			}
 			fullPosts.push({
 				...csPost,
-				codemark: fullCodemark
+				codemark: fullCodemark,
+				hasMarkers
 			});
 		}
 		return fullPosts;

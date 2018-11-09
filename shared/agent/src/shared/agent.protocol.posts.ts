@@ -16,6 +16,7 @@ import {
 
 export interface CSFullPost extends CSPost {
 	codemark?: CSFullCodemark;
+	hasMarkers?: boolean;
 }
 
 export interface CreatePostRequest {
