@@ -687,7 +687,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 						}
 						case "show-code": {
 							const { post, enteringThread } = e.body.params;
-							if (post.codeBlocks == null || post.codeBlocks.length === 0) return;
+							if (!post.codemarkId) return;
 
 							const stream = await this.session.getStream(post.streamId);
 							const status = await Container.commands.openPostWorkingFile(
