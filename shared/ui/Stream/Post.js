@@ -70,7 +70,7 @@ class Post extends React.Component {
 
 	async showCode(enteringThread = false) {
 		const { post } = this.props;
-		const marker = post.codemark && post.codemark.markers && post.codemark.markers[0];
+		const marker = post.hasMarkers && post.codemark.markers[0];
 		if (marker) {
 			if (marker.repoId) {
 				const status = await this.props.showCode(this.props.post, enteringThread);
@@ -172,6 +172,8 @@ class Post extends React.Component {
 		const mine = post.creatorId === this.props.currentUserId;
 		const systemPost = post.creatorId === "codestream";
 		const color = post.codemark && post.codemark.color;
+		const type = post.codemark && post.codemark.type;
+		const title = post.codemark && post.codemark.title;
 
 		// if (post.title && post.title.match(/assigned/)) console.log(post);
 
@@ -187,15 +189,15 @@ class Post extends React.Component {
 			[`thread-key-${this.props.threadKey}`]: true,
 			[color]: true,
 			collapsed: this.props.collapsed,
-			question: post.type === "question",
-			issue: post.type === "issue",
-			trap: post.type === "trap",
-			bookmark: post.type === "bookmark"
+			question: type === "question",
+			issue: type === "issue",
+			trap: type === "trap",
+			bookmark: type === "bookmark"
 		});
 
 		console.log(post);
 		let codeBlock = null;
-		if (post.codemark && post.codemark.markers) {
+		if (post.hasMarkers) {
 			const noRepo = !post.codemark.markers[0].repoId;
 			codeBlock = (
 				<div
@@ -218,6 +220,7 @@ class Post extends React.Component {
 		}
 
 		let parentPost = this.props.replyingTo;
+		const parentPostTitle = parentPost && parentPost.codemark && parentPost.codemark.title;
 		if (_.isString(parentPost)) parentPost = { text: "a message" };
 
 		let menuItems = [];
@@ -304,7 +307,7 @@ class Post extends React.Component {
 				)}
 				{parentPost && (
 					<div className="replying-to">
-						<span>reply to</span> <b>{(parentPost.title || parentPost.text).substr(0, 80)}</b>
+						<span>reply to</span> <b>{(parentPostTitle || parentPost.text).substr(0, 80)}</b>
 					</div>
 				)}
 				{post.creatorId === "codestream" && (
@@ -316,7 +319,7 @@ class Post extends React.Component {
 					{this.renderTitle(post)}
 					{(this.props.editing || post.text.length > 0) && (
 						<div className="text">
-							{this.props.collapsed && !post.title && this.renderTypeIcon(post)}
+							{this.props.collapsed && !title && this.renderTypeIcon(post)}
 							{this.renderText(post)}
 							{!this.props.editing && post.hasBeenEdited && (
 								<span className="edited">(edited)</span>
@@ -380,7 +383,8 @@ class Post extends React.Component {
 			return null;
 
 		const numReplies = post.numreplies || "0";
-		switch (post.type) {
+		const type = post.codemark && post.codemark.type;
+		switch (type) {
 			case "question":
 				message = numReplies === 1 ? "1 Answer" : `${numReplies} Answers`;
 				break;
@@ -400,8 +404,9 @@ class Post extends React.Component {
 	};
 
 	toggleStatus = () => {
-		// console.log("WE CLICKED TOG STAT", this.props.post);
-		if (this.props.post.status === "closed") this.reopenIssue();
+		const { post } = this.props;
+		const status = post.codemark && post.codemark.status;
+		if (status === "closed") this.reopenIssue();
 		else this.closeIssue();
 	};
 
@@ -424,7 +429,8 @@ class Post extends React.Component {
 
 	renderTypeIcon = post => {
 		let icon = null;
-		switch (post.type) {
+		const type = post.codemark && post.codemark.type;
+		switch (type) {
 			case "question":
 				icon = <Icon name="question" className="type-icon" />;
 				break;
@@ -444,11 +450,12 @@ class Post extends React.Component {
 	};
 
 	renderTitle = post => {
-		let icon = this.renderTypeIcon(post);
-		if (post.title)
+		const icon = this.renderTypeIcon(post);
+		const title = post.codemark && post.codemark.title;
+		if (title)
 			return (
 				<div className="title">
-					{icon} {this.renderTextLinkified(post.title)}
+					{icon} {this.renderTextLinkified(title)}
 					{this.renderCodeBlockFile(post)}
 				</div>
 			);
@@ -460,7 +467,7 @@ class Post extends React.Component {
 
 		if (collapsed) return null;
 
-		const assignees = post.assignees || [];
+		const assignees = post.codemark ? post.codemark.assignees || [] : [];
 
 		if (assignees.length == 0) return null;
 		if (!this.props.teammates) return null;
@@ -484,7 +491,7 @@ class Post extends React.Component {
 	renderCodeBlockFile = post => {
 		const { collapsed, showFileAfterTitle } = this.props;
 
-		const marker = post.codemark && post.codemark.markers ? post.codemark.markers[0] || {} : {};
+		const marker = post.hasMarkers ? post.codemark.markers[0] || {} : {};
 
 		if (!collapsed || !showFileAfterTitle || !marker.file) return null;
 		return <span className="file-name">{marker.file}</span>;
@@ -492,7 +499,9 @@ class Post extends React.Component {
 
 	renderStatus = () => {
 		// console.log("STATUS IS: ", this.props.status);
-		const status = this.props.post.status || "open";
+		const { post } = this.props;
+		const status = (post.codemark && post.codemark.status) || "open";
+		// const status = this.props.post.status || "open";
 
 		const statusClass = createClassString({
 			"status-button": true,
@@ -509,7 +518,8 @@ class Post extends React.Component {
 	};
 
 	renderAssigneeHeadshots = () => {
-		const assignees = this.props.post.assignees || [];
+		const { post } = this.props;
+		const assignees = post.codemark ? post.codemark.assignees || [] : [];
 
 		if (assignees.length == 0) return null;
 
@@ -557,12 +567,13 @@ class Post extends React.Component {
 	};
 
 	renderEmote = post => {
+		const type = post.codemark && post.codemark.type;
 		let matches = (post.text || "").match(/^\/me\s+(.*)/);
 		if (matches) return <span className="emote">{this.renderTextLinkified(matches[1])}</span>;
-		if (post.type === "question") return <span className="emote">has a question</span>;
-		if (post.type === "bookmark") return <span className="emote">set a bookmark</span>;
-		if (post.type === "issue") return <span className="emote">posted an issue</span>;
-		if (post.type === "trap") return <span className="emote">created a code trap</span>;
+		if (type === "question") return <span className="emote">has a question</span>;
+		if (type === "bookmark") return <span className="emote">set a bookmark</span>;
+		if (type === "issue") return <span className="emote">posted an issue</span>;
+		if (type === "trap") return <span className="emote">created a code trap</span>;
 		else return null;
 	};
 

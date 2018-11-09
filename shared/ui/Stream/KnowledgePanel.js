@@ -109,13 +109,14 @@ export class SimpleKnowledgePanel extends Component {
 		else {
 			return posts.map(post => {
 				const collapsed = this.state.openPost !== post.id;
+				const type = post.codemark && post.codemark.type;
 				return (
 					<div key={post.id}>
 						<Post
 							id={post.id}
 							streamId={post.streamId}
 							q={this.props.q}
-							showStatus={post.type === "issue"}
+							showStatus={type === "issue"}
 							showAssigneeHeadshots={true}
 							alwaysShowReplyCount={!collapsed}
 							teammates={this.props.teammates}
@@ -180,20 +181,23 @@ export class SimpleKnowledgePanel extends Component {
 		};
 
 		posts.forEach(post => {
-			const postType = post.type || "comment";
+			const postType = (post.codemark && post.codemark.type) || "comment";
 			if (post.deactivated) return null;
 			if (typeFilter !== "all" && postType !== typeFilter) return null;
 			if (postType === "comment" && (!post.codeBlocks || !post.codeBlocks.length)) return null;
 			const codeBlock = post.codeBlocks && post.codeBlocks.length && post.codeBlocks[0];
 			const codeBlockFile = codeBlock && codeBlock.file;
 			const codeBlockRepo = codeBlock && codeBlock.repoId;
+			const title = post.codemark && post.codemark.title;
+			const assignees = post.codemark && post.codemark.assignees;
+			const status = post.codemark && post.codemark.status;
 			sectionFilters.forEach(section => {
 				if (assignedPosts[post.id]) return;
 				// if (!this.state.expanded[section]) return;
 				if (
 					this.props.q &&
 					!(post.text || "").includes(this.props.q) &&
-					!(post.title || "").includes(this.props.q)
+					!(title || "").includes(this.props.q)
 				)
 					return;
 				if (fileFilter === "current" && section !== "inThisFile") return;
@@ -205,14 +209,11 @@ export class SimpleKnowledgePanel extends Component {
 							assignPost(post, "inThisFile");
 						break;
 					case "mine":
-						if (
-							post.status === "open" ||
-							(!post.status && _.contains(post.assignees || [], currentUserId))
-						)
+						if (status === "open" || (!status && _.contains(assignees || [], currentUserId)))
 							assignPost(post, "mine");
 						break;
 					case "open":
-						if (post.status === "open" || !post.status) assignPost(post, "open");
+						if (status === "open" || !status) assignPost(post, "open");
 						break;
 					case "unanswered":
 						if (post.numReplies > 0) assignPost(post, "unanswered");
@@ -221,7 +222,7 @@ export class SimpleKnowledgePanel extends Component {
 						assignPost(post, "recent");
 						break;
 					case "closed":
-						if (post.status === "closed") assignPost(post, "closed");
+						if (status === "closed") assignPost(post, "closed");
 						break;
 				}
 			});
