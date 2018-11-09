@@ -411,6 +411,17 @@ export class CodeStreamWebviewPanel implements Disposable {
 							});
 							break;
 						}
+						case "fetch-posts-with-codemarks": {
+							const {} = body.params;
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: {
+									id: body.id,
+									payload: await Container.agent.posts.fetchWithCodemarks()
+								}
+							});
+							break;
+						}
 						case "fetch-thread": {
 							const { streamId, parentPostId } = body.params;
 							const posts = (await Container.agent.posts.fetchReplies(streamId, parentPostId))

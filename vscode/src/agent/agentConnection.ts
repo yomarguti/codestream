@@ -77,6 +77,7 @@ import {
 	GetMarkerRequestType,
 	GetMeRequestType,
 	GetPostRequestType,
+	GetPostsWithCodemarksRequestType,
 	GetPreferencesRequestType,
 	GetRepoRequestType,
 	GetStreamRequestType,
@@ -428,6 +429,10 @@ export class CodeStreamAgentConnection implements Disposable {
 				streamId: streamId,
 				postId: postId
 			});
+		}
+
+		fetchWithCodemarks() {
+			return this._connection.sendRequest(GetPostsWithCodemarksRequestType, {});
 		}
 
 		delete(streamId: string, postId: string) {
