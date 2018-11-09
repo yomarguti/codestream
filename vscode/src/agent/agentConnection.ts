@@ -43,7 +43,8 @@ import {
 	CreateChannelStreamRequestType,
 	CreateDirectStreamRequestType,
 	CreatePostRequestType,
-	CreatePostWithCodemarkRequestType,
+	CreatePostResponse,
+	CreatePostWithMarkerRequestType,
 	CreateRepoRequestType,
 	DeletePostRequestType,
 	DidChangeConnectionStatusNotification,
@@ -368,8 +369,8 @@ export class CodeStreamAgentConnection implements Disposable {
 			type?: CodemarkType,
 			assignees?: [],
 			color?: string
-		): Promise<CSPost> {
-			return this._connection.sendRequest(CreatePostWithCodemarkRequestType, {
+		): Promise<CreatePostResponse> {
+			return this._connection.sendRequest(CreatePostWithMarkerRequestType, {
 				textDocument: { uri: uri.toString() },
 				// range: range,
 				// dirty: document.isDirty,

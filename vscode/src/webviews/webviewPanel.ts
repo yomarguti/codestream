@@ -367,7 +367,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 									const uri = block.source
 										? Uri.file(path.join(block.source.repoPath, block.source.file))
 										: Uri.parse(fileUri);
-									post = await Container.agent.posts.createWithCode(
+									post = (await Container.agent.posts.createWithCode(
 										uri,
 										text,
 										mentions,
@@ -380,7 +380,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 										type,
 										assignees,
 										color
-									);
+									)).post;
 								}
 							} catch (ex) {
 								responseBody.error = ex;
