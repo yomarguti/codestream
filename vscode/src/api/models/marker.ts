@@ -28,8 +28,10 @@ export class Marker {
 	private _post: Post | undefined;
 	async post() {
 		if (this._post === undefined) {
-			const post = (await Container.agent.posts.get(this.entity.postStreamId, this.entity.postId))
-				.post;
+			const post = (await Container.agent.posts.get(
+				this.entity.codemark.streamId,
+				this.entity.codemark.postId
+			)).post;
 			this._post = new Post(this.session, post);
 		}
 		return this._post;
