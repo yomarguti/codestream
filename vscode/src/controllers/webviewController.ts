@@ -9,6 +9,7 @@ import {
 } from "../api/session";
 import { WorkspaceState } from "../common";
 import { Container } from "../container";
+import { ConnectionStatus } from "../shared/agent.protocol";
 import { log } from "../system";
 import { CodeStreamWebviewPanel } from "../webviews/webviewPanel";
 
@@ -123,11 +124,18 @@ export class WebviewController implements Disposable {
 		return this._panel!.postCode(code, uri, range, source, gitError);
 	}
 
+	// @log()
+	// reload() {
+	// 	if (this._panel === undefined || !this.visible) return;
+
+	// 	return this._panel.reload();
+	// }
+
 	@log()
-	reload() {
+	setConnectionStatus(status: ConnectionStatus, reset?: boolean) {
 		if (this._panel === undefined || !this.visible) return;
 
-		return this._panel.reload();
+		return this._panel.setConnectionStatus(status, reset);
 	}
 
 	@log({

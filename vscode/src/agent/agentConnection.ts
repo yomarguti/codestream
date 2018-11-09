@@ -46,6 +46,8 @@ import {
 	CreatePostWithCodeRequestType,
 	CreateRepoRequestType,
 	DeletePostRequestType,
+	DidChangeConnectionStatusNotification,
+	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotification,
 	DidChangeDataNotificationType,
 	DidChangeDocumentMarkersNotification,
@@ -54,8 +56,6 @@ import {
 	DidChangeVersionCompatibilityNotificationType,
 	DidLogoutNotification,
 	DidLogoutNotificationType,
-	DidResetNotification,
-	DidResetNotificationType,
 	DocumentFromCodeBlockRequestType,
 	DocumentFromCodeBlockResponse,
 	DocumentLatestRevisionRequestType,
@@ -680,15 +680,26 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}(this);
 
-	private onDocumentMarkersChanged(e: DidChangeDocumentMarkersNotification) {
-		Logger.log(`AgentConnection.onDocumentMarkersChanged(${e.textDocument.uri})`);
+	@log({
+		prefix: (context, e: DidChangeConnectionStatusNotification) => `${context.prefix}(${e.status})`
+	})
+	private onConnectionStatusChanged(e: DidChangeConnectionStatusNotification) {
+		Container.webview.setConnectionStatus(e.status, e.reset);
+	}
 
+	@log({
+		prefix: (context, e: DidChangeDocumentMarkersNotification) =>
+			`${context.prefix}(${e.textDocument.uri})`
+	})
+	private onDocumentMarkersChanged(e: DidChangeDocumentMarkersNotification) {
 		this._onDidChangeDocumentMarkers.fire({ uri: Uri.parse(e.textDocument.uri) });
 	}
 
+	@log({
+		prefix: (context, ...messages: DidChangeDataNotification[]) =>
+			`${context.prefix}(${messages.map(m => m.type).join(", ")})`
+	})
 	private async onDataChanged(...messages: DidChangeDataNotification[]) {
-		Logger.log(`AgentConnection.onDataChanged(${messages.map(m => m.type).join(", ")})`);
-
 		for (const message of messages) {
 			Logger.debug(`\tAgentConnection.onDataChanged(${message.type})`, message.data);
 			this._onDidChangeData.fire(message);
@@ -698,11 +709,6 @@ export class CodeStreamAgentConnection implements Disposable {
 	@log()
 	private onLogout(e: DidLogoutNotification) {
 		void Container.session.goOffline();
-	}
-
-	@log()
-	private onReset(e: DidResetNotification) {
-		void Container.webview.reload();
 	}
 
 	@log()
@@ -818,6 +824,10 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		this._client.onNotification(DidChangeDataNotificationType, this.onDataChanged.bind(this));
 		this._client.onNotification(
+			DidChangeConnectionStatusNotificationType,
+			this.onConnectionStatusChanged.bind(this)
+		);
+		this._client.onNotification(
 			DidChangeDocumentMarkersNotificationType,
 			this.onDocumentMarkersChanged.bind(this)
 		);
@@ -826,7 +836,7 @@ export class CodeStreamAgentConnection implements Disposable {
 			this.onVersionCompatibilityChanged.bind(this)
 		);
 		this._client.onNotification(DidLogoutNotificationType, this.onLogout.bind(this));
-		this._client.onNotification(DidResetNotificationType, this.onReset.bind(this));
+		// this._client.onNotification(DidResetNotificationType, this.onReset.bind(this));
 
 		return this._client.initializeResult! as AgentInitializeResult;
 	}

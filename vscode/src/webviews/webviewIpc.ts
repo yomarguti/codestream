@@ -141,6 +141,20 @@ export class WebviewIpc {
 		});
 	}
 
+	sendDidConnect() {
+		return this.postMessage({
+			type: WebviewIpcMessageType.didConnect,
+			body: {}
+		});
+	}
+
+	sendDidDisconnect() {
+		return this.postMessage({
+			type: WebviewIpcMessageType.didDisconnect,
+			body: {}
+		});
+	}
+
 	sendDidFocus() {
 		return this.postMessage({
 			type: WebviewIpcMessageType.didFocus,

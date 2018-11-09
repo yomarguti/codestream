@@ -44,7 +44,7 @@ import {
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { ApiCapabilities, TraceLevel } from "../shared/agent.protocol";
+import { ApiCapabilities, ConnectionStatus, TraceLevel } from "../shared/agent.protocol";
 import { log } from "../system";
 import {
 	toLoggableIpcMessage,
@@ -892,6 +892,28 @@ export class CodeStreamWebviewPanel implements Disposable {
 		if (cancelled) return undefined;
 
 		return this._streamThread;
+	}
+
+	@log()
+	async setConnectionStatus(status: ConnectionStatus, reset?: boolean) {
+		if (this._panel === undefined) return;
+
+		switch (status) {
+			case ConnectionStatus.Disconnected:
+				// TODO: Handle this
+				break;
+
+			case ConnectionStatus.Reconnecting:
+				void (await this._ipc.sendDidDisconnect());
+				break;
+			case ConnectionStatus.Reconnected:
+				if (reset) {
+					void (await this.reload());
+				}
+
+				void (await this._ipc.sendDidConnect());
+				break;
+		}
 	}
 
 	@log({
