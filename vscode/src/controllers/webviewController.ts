@@ -124,12 +124,12 @@ export class WebviewController implements Disposable {
 		return this._panel!.postCode(code, uri, range, source, gitError);
 	}
 
-	// @log()
-	// reload() {
-	// 	if (this._panel === undefined || !this.visible) return;
+	@log()
+	reload() {
+		if (this._panel === undefined || !this.visible) return;
 
-	// 	return this._panel.reload();
-	// }
+		return this._panel.reload();
+	}
 
 	@log()
 	setConnectionStatus(status: ConnectionStatus, reset?: boolean) {

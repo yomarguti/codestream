@@ -909,6 +909,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 			case ConnectionStatus.Reconnected:
 				if (reset) {
 					void (await this.reload());
+
+					return;
 				}
 
 				void (await this._ipc.sendDidConnect());
