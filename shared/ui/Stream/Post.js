@@ -69,7 +69,8 @@ class Post extends React.Component {
 	};
 
 	async showCode(enteringThread = false) {
-		const marker = this.props.post.codemark && this.props.post.codemark.markers[0];
+		const { post } = this.props;
+		const marker = post.codemark && post.codemark.markers && post.codemark.markers[0];
 		if (marker) {
 			if (marker.repoId) {
 				const status = await this.props.showCode(this.props.post, enteringThread);
@@ -194,7 +195,7 @@ class Post extends React.Component {
 
 		console.log(post);
 		let codeBlock = null;
-		if (post.codemark) {
+		if (post.codemark && post.codemark.markers) {
 			const noRepo = !post.codemark.markers[0].repoId;
 			codeBlock = (
 				<div
@@ -483,7 +484,7 @@ class Post extends React.Component {
 	renderCodeBlockFile = post => {
 		const { collapsed, showFileAfterTitle } = this.props;
 
-		const marker = post.codemark ? post.codemark.markers[0] || {} : {};
+		const marker = post.codemark && post.codemark.markers ? post.codemark.markers[0] || {} : {};
 
 		if (!collapsed || !showFileAfterTitle || !marker.file) return null;
 		return <span className="file-name">{marker.file}</span>;
