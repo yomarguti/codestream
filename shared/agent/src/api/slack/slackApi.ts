@@ -8,6 +8,7 @@ import { Logger, TraceLevel } from "../../logger";
 import {
 	ArchiveStreamRequest,
 	CloseStreamRequest,
+	ConnectionStatus,
 	CreateChannelStreamRequest,
 	CreateDirectStreamRequest,
 	CreateMarkerLocationRequest,
@@ -44,7 +45,6 @@ import {
 	OpenStreamRequest,
 	ReactToPostRequest,
 	RenameStreamRequest,
-	ResetReason,
 	SetStreamPurposeRequest,
 	UnarchiveStreamRequest,
 	UpdateMarkerRequest,
@@ -69,7 +69,6 @@ import { Functions, log } from "../../system";
 import {
 	ApiProvider,
 	CodeStreamApiMiddleware,
-	ConnectionStatus,
 	LoginOptions,
 	MessageType,
 	RTMessage,
@@ -113,12 +112,12 @@ export class SlackApiProvider implements ApiProvider {
 	private readonly _slackToken: string;
 	private readonly _slackUserId: string;
 
+	private _preferences: CodeStreamPreferences;
 	private readonly _unreads: SlackUnreads;
 	// TODO: Convert to index on UserManager?
 	private _usernamesById: Map<string, string> | undefined;
 	// TODO: Convert to index on UserManager?
 	private _userIdsByName: Map<string, string> | undefined;
-	private _preferences: CodeStreamPreferences;
 
 	readonly capabilities = {
 		mute: false
@@ -161,21 +160,28 @@ export class SlackApiProvider implements ApiProvider {
 			switch (e.type) {
 				case MessageType.Connection:
 					switch (e.data.status) {
-						case ConnectionStatus.Disconnected:
-							void (await this._events!.disconnect());
-							break;
+						// case ConnectionStatus.Disconnected:
+						// 	break;
 						// case ConnectionStatus.Reconnecting:
+						// 	break;
 						case ConnectionStatus.Reconnected:
-							if (!this._events!.connected) {
-								Logger.log(
-									`SlackApiProvider.onCodeStreamMessage(${
-										e.type
-									}); Reconnected, but Slack lost its connection, so resetting...`
-								);
-								void Container.instance().session.reset(ResetReason.Reconnected);
-
-								void (await this._events!.reconnect());
+							if (e.data.reset) {
+								void Container.instance().session.reset();
+								// TODO: Handle reconnect to pubnub?
 							}
+
+							// if (!this._events!.connected) {
+							// 	Logger.log(
+							// 		`SlackApiProvider.onCodeStreamMessage(${
+							// 			e.type
+							// 		}); Slack RTM lost its connection, reconnecting...`
+							// 	);
+							// 	void Container.instance().session.reset(ResetReason.LostConnection);
+
+							// 	void (await this._events!.reconnect());
+							// }
+
+							break;
 					}
 					break;
 

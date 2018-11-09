@@ -7,6 +7,7 @@ import {
 	ArchiveStreamResponse,
 	CloseStreamRequest,
 	CloseStreamResponse,
+	ConnectionStatus,
 	CreateChannelStreamRequest,
 	CreateChannelStreamResponse,
 	CreateDirectStreamRequest,
@@ -137,15 +138,9 @@ export enum MessageType {
 	Users = "users"
 }
 
-export enum ConnectionStatus {
-	Disconnected = "disconnected",
-	Reconnected = "reconnected",
-	Reconnecting = "reconnecting"
-}
-
 export interface ConnectionRTMessage {
 	type: MessageType.Connection;
-	data: { status: ConnectionStatus };
+	data: { reset?: boolean; status: ConnectionStatus };
 }
 
 export interface MarkerLocationsRTMessage {

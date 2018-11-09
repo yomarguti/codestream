@@ -120,14 +120,6 @@ export const DidLogoutNotificationType = new NotificationType<DidLogoutNotificat
 	"codeStream/didLogout"
 );
 
-export interface DidResetNotification {
-	reason: ResetReason;
-}
-
-export const DidResetNotificationType = new NotificationType<DidResetNotification, void>(
-	"codeStream/didReset"
-);
-
 export enum ChangeDataType {
 	MarkerLocations = "markerLocations",
 	Markers = "markers",
@@ -208,6 +200,22 @@ export const DidChangeDataNotificationType = new NotificationType<DidChangeDataN
 	"codeStream/didChangeData"
 );
 
+export enum ConnectionStatus {
+	Disconnected = "disconnected",
+	Reconnected = "reconnected",
+	Reconnecting = "reconnecting"
+}
+
+export interface DidChangeConnectionStatusNotification {
+	reset?: boolean;
+	status: ConnectionStatus;
+}
+
+export const DidChangeConnectionStatusNotificationType = new NotificationType<
+	DidChangeConnectionStatusNotification,
+	void
+>("codeStream/didChangeConnectionStatus");
+
 export enum VersionCompatibility {
 	Compatible = "ok",
 	CompatibleUpgradeAvailable = "outdated",
@@ -226,11 +234,6 @@ export const DidChangeVersionCompatibilityNotificationType = new NotificationTyp
 	DidChangeVersionCompatibilityNotification,
 	void
 >("codeStream/didChangeVersionCompatibility");
-
-export enum ResetReason {
-	Reconnected = "reconnected",
-	Unknown = "unknown"
-}
 
 export interface DocumentFromCodeBlockRequest {
 	file: string;

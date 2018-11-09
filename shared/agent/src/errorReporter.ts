@@ -29,7 +29,7 @@ export class ErrorReporter {
 					//  TODO: acknowledge telemetryConsent
 					scope.setUser({
 						id: session.userId,
-						email: session.userEmail,
+						email: session.email,
 						team: {
 							id: team.id,
 							name: team.name,

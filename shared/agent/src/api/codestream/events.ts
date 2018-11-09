@@ -8,8 +8,9 @@ import {
 	PubnubStatus,
 	StatusChangeEvent
 } from "../../pubnub/pubnubConnection";
+import { ConnectionStatus } from "../../shared/agent.protocol";
 import { log } from "../../system";
-import { ConnectionRTMessage, ConnectionStatus, MessageType, RawRTMessage } from "../apiProvider";
+import { ConnectionRTMessage, MessageType, RawRTMessage } from "../apiProvider";
 import { CodeStreamApiProvider } from "./codestreamApi";
 
 const messageToType: {
@@ -121,7 +122,7 @@ export class PubnubEvents {
 				if (e.reconnected) {
 					this._onDidReceiveMessage.fire({
 						type: MessageType.Connection,
-						data: { status: ConnectionStatus.Reconnected }
+						data: { reset: false, status: ConnectionStatus.Reconnected }
 					} as ConnectionRTMessage);
 				}
 				break;
@@ -135,6 +136,10 @@ export class PubnubEvents {
 
 			case PubnubStatus.Reset:
 				// TODO: must fetch all data fetch from the server
+				this._onDidReceiveMessage.fire({
+					type: MessageType.Connection,
+					data: { reset: true, status: ConnectionStatus.Reconnected }
+				} as ConnectionRTMessage);
 				break;
 
 			case PubnubStatus.Offline:

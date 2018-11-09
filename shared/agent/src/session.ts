@@ -13,6 +13,7 @@ import { CodeStreamAgent } from "./agent";
 import { AgentError, ServerError } from "./agentError";
 import { ApiProvider, LoginOptions, MessageType, RTMessage } from "./api/apiProvider";
 import { CodeStreamApiProvider } from "./api/codestream/codestreamApi";
+import { Team, User } from "./api/extensions";
 import {
 	VersionCompatibilityChangedEvent,
 	VersionMiddlewareManager
@@ -29,22 +30,23 @@ import {
 	ChangeDataType,
 	CodeStreamEnvironment,
 	CreatePostWithCodeRequestType,
+	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
 	DidLogoutNotificationType,
-	DidResetNotificationType,
 	DocumentFromCodeBlockRequestType,
 	DocumentLatestRevisionRequestType,
 	DocumentMarkersRequestType,
 	FetchMarkerLocationsRequestType,
 	LogoutReason,
-	PreparePostWithCodeRequestType,
-	ResetReason
+	PreparePostWithCodeRequestType
 } from "./shared/agent.protocol";
 import {
 	ApiErrors,
+	CSCompany,
 	CSMarker,
 	CSMarkerLocations,
+	CSMe,
 	CSPost,
 	CSRepository,
 	CSStream,
@@ -52,9 +54,7 @@ import {
 	CSUser,
 	LoginResult
 } from "./shared/api.protocol";
-import { Strings } from "./system";
-import { memoize } from "./system/decorators";
-import { MixPanelTelemetryService } from "./telemetry";
+import { log, memoize } from "./system";
 
 const envRegex = /https?:\/\/(pd-|qa-)?api.codestream.(?:us|com)/;
 
@@ -186,6 +186,9 @@ export class CodeStreamSession {
 
 	private async onRTMessageReceived(e: RTMessage) {
 		switch (e.type) {
+			case MessageType.Connection:
+				this.agent.sendNotification(DidChangeConnectionStatusNotificationType, e.data);
+				break;
 			case MessageType.MarkerLocations:
 				const markerLocations = await Container.instance().markerLocations.resolve(e);
 				this._onDidChangeMarkerLocations.fire(markerLocations);
@@ -261,14 +264,14 @@ export class CodeStreamSession {
 		return this._api!;
 	}
 
-	private _telemetryService: MixPanelTelemetryService | undefined;
-	get telemetryService() {
-		return this._telemetryService!;
-	}
-
 	private _codestreamUserId: string | undefined;
 	get codestreamUserId() {
 		return this._codestreamUserId!;
+	}
+
+	private _email: string | undefined;
+	get email() {
+		return this._email!;
 	}
 
 	private _environment: CodeStreamEnvironment | undefined;
@@ -281,25 +284,19 @@ export class CodeStreamSession {
 		return this._teamId!;
 	}
 
-	private _userId: string | undefined;
-	get userId() {
-		return this._userId!;
-	}
-
-	private _userEmail: string | undefined;
-	get userEmail() {
-		return this._userEmail!;
-	}
-
 	private _telemetryData: TelemetryData = {
 		hasCreatedPost: false
 	};
 	get telemetryData() {
 		return this._telemetryData;
 	}
-
 	set telemetryData(data: TelemetryData) {
 		this._telemetryData = data;
+	}
+
+	private _userId: string | undefined;
+	get userId() {
+		return this._userId!;
 	}
 
 	@memoize
@@ -314,6 +311,7 @@ export class CodeStreamSession {
 		return this.connection.workspace;
 	}
 
+	@log()
 	async login() {
 		const { email, passwordOrToken, serverUrl, signupToken, team, teamId } = this._options;
 		if (!signupToken && typeof passwordOrToken !== "string") {
@@ -322,167 +320,116 @@ export class CodeStreamSession {
 			}
 		}
 
-		const start = process.hrtime();
+		let opts = { team: team, teamId: teamId } as LoginOptions;
+		if (signupToken) {
+			Logger.log(this.login, `Logging ${email} into CodeStream via credentials...`);
 
-		try {
-			let opts = { team: team, teamId: teamId } as LoginOptions;
-			if (signupToken) {
-				Logger.log(`Logging ${email} into CodeStream via credentials...`);
+			opts = { ...opts, type: "otc", code: signupToken };
+		} else if (typeof passwordOrToken === "string") {
+			Logger.log(this.login, `Logging ${email} into CodeStream via CodeStream code...`);
 
-				opts = { ...opts, type: "otc", code: signupToken };
-			} else if (typeof passwordOrToken === "string") {
-				Logger.log(`Logging ${email} into CodeStream via CodeStream code...`);
-
-				opts = {
-					...opts,
-					type: "credentials",
-					email: email,
-					password: passwordOrToken
-				};
-			} else {
-				Logger.log(`Logging ${email} into CodeStream via authentication token...`);
-
-				opts = {
-					...opts,
-					type: "token",
-					token: passwordOrToken
-				};
-			}
-
-			let response;
-			try {
-				response = await this.api.login(opts);
-			} catch (ex) {
-				if (ex instanceof ServerError) {
-					if (ex.statusCode !== undefined && ex.statusCode >= 400 && ex.statusCode < 500) {
-						return {
-							error: loginApiErrorMappings[ex.info.code] || LoginResult.Unknown
-						};
-					}
-				}
-
-				throw AgentError.wrap(ex, `Login failed:\n${ex.message}`);
-			}
-
-			this._options.passwordOrToken = {
-				url: serverUrl,
+			opts = {
+				...opts,
+				type: "credentials",
 				email: email,
-				value: response.accessToken
+				password: passwordOrToken
 			};
+		} else {
+			Logger.log(this.login, `Logging ${email} into CodeStream via authentication token...`);
 
-			this._teamId = this._options.teamId = response.teamId;
-			this._codestreamUserId = response.user.id;
-
-			const currentTeam = response.teams.find(t => t.id === this._teamId)!;
-			let isCurrentTeamSlack = false;
-
-			if (response.user.providerInfo && response.user.providerInfo.slack) {
-				if (currentTeam.providerInfo && currentTeam.providerInfo.slack) {
-					isCurrentTeamSlack = true;
-					Logger.log(
-						`Logging into Slack because team '${currentTeam.name}' (${
-							currentTeam.id
-						}) is a Slack-based team`
-					);
-
-					this._api = new SlackApiProvider(
-						this._api! as CodeStreamApiProvider,
-						response.user.providerInfo.slack,
-						response.user,
-						this._teamId,
-						this._proxyAgent
-					);
-
-					await (this._api as SlackApiProvider).processLoginResponse(response);
-
-					Logger.log(
-						`Logged into Slack as '${response.user.username}' (${response.user.id}), Slack team ${
-							currentTeam.providerInfo.slack.teamId
-						}`
-					);
-				}
-			}
-
-			// Make sure to update this after the slack switch as the userId will change
-			this._userId = response.user.id;
-			this._userEmail = response.user.email;
-
-			setGitPath(this._options.gitPath);
-
-			this.api.onDidReceiveMessage(e => this.onRTMessageReceived(e), this);
-
-			Logger.log(`Subscribing to realtime events...`);
-			this.api.subscribe();
-
-			Container.instance().git.onRepositoryCommitHashChanged(repo => {
-				Container.instance().markerLocations.flushUncommittedLocations(repo);
-			});
-
-			// Initialize Mixpanel tracking
-			// TODO: Check for opt in
-			const user = response.user;
-			const { telemetry } = Container.instance();
-
-			// Set super props
-			this._telemetryData.hasCreatedPost = user.totalPosts > 0;
-
-			const props: { [key: string]: any } = {
-				"Email Address": user.email,
-				"Team ID": this._teamId,
-				"Join Method": response.user.joinMethod,
-				"Plugin Version": this._options.extension.versionFormatted,
-				Endpoint: "VS Code",
-				Provider: isCurrentTeamSlack ? "Slack" : "CodeStream"
+			opts = {
+				...opts,
+				type: "token",
+				token: passwordOrToken
 			};
-
-			if (currentTeam != null) {
-				props["Team Name"] = currentTeam.name;
-				if (currentTeam.memberIds != null) {
-					props["Team Size"] = currentTeam.memberIds.length;
-				}
-
-				// Get company name from companyId
-				let companyName = "";
-				try {
-					companyName = response.companies.filter(c => c.id === currentTeam.companyId)[0].name;
-					props["Company"] = companyName;
-				} catch (ex) {
-					Logger.error(ex);
-				}
-			}
-
-			try {
-				props["Date Signed Up"] = new Date(user.registeredAt).toISOString();
-			} catch (ex) {
-				Logger.error(ex);
-			}
-
-			try {
-				props["Date of Last Post"] = new Date(user.lastPostCreatedAt).toISOString();
-			} catch (ex) {
-				Logger.error(ex);
-			}
-
-			telemetry.setDistinctId(this._codestreamUserId);
-			telemetry.setSuperProps(props);
-
-			return {
-				loginResponse: { ...response },
-				state: {
-					apiToken: response.accessToken,
-					capabilities: this.api.capabilities,
-					email: email,
-					environment: this._environment,
-					serverUrl: serverUrl,
-					teamId: this._teamId,
-					userId: this._userId
-				}
-			};
-		} finally {
-			Logger.log(`Login completed in ${Strings.getDurationMilliseconds(start)} ms`);
 		}
+
+		let response;
+		try {
+			response = await this.api.login(opts);
+		} catch (ex) {
+			if (ex instanceof ServerError) {
+				if (ex.statusCode !== undefined && ex.statusCode >= 400 && ex.statusCode < 500) {
+					return {
+						error: loginApiErrorMappings[ex.info.code] || LoginResult.Unknown
+					};
+				}
+			}
+
+			throw AgentError.wrap(ex, `Login failed:\n${ex.message}`);
+		}
+
+		this._options.passwordOrToken = {
+			url: serverUrl,
+			email: email,
+			value: response.accessToken
+		};
+
+		this._teamId = this._options.teamId = response.teamId;
+		this._codestreamUserId = response.user.id;
+
+		const currentTeam = response.teams.find(t => t.id === this._teamId)!;
+
+		if (User.isSlack(response.user) && Team.isSlack(currentTeam)) {
+			Logger.log(
+				this.login,
+				`Logging into Slack because team '${currentTeam.name}' (${
+					currentTeam.id
+				}) is a Slack-based team`
+			);
+
+			this._api = new SlackApiProvider(
+				this._api! as CodeStreamApiProvider,
+				response.user.providerInfo.slack,
+				response.user,
+				this._teamId,
+				this._proxyAgent
+			);
+
+			await (this._api as SlackApiProvider).processLoginResponse(response);
+
+			Logger.log(
+				this.login,
+				`Logged into Slack as '${response.user.username}' (${response.user.id}), Slack team ${
+					currentTeam.providerInfo.slack.teamId
+				}`
+			);
+		}
+
+		// Make sure to update this after the slack switch as the userId will change
+		this._userId = response.user.id;
+		this._email = response.user.email;
+
+		setGitPath(this._options.gitPath);
+
+		this.api.onDidReceiveMessage(e => this.onRTMessageReceived(e), this);
+
+		Logger.log(this.login, `Subscribing to real-time events...`);
+		this.api.subscribe();
+
+		Container.instance().git.onRepositoryCommitHashChanged(repo => {
+			Container.instance().markerLocations.flushUncommittedLocations(repo);
+		});
+
+		// Initialize Mixpanel tracking
+		// TODO: Check for opt in
+		this.initializeTelemetry(response.user, currentTeam, response.companies);
+
+		return {
+			loginResponse: { ...response },
+			state: {
+				apiToken: response.accessToken,
+				capabilities: this.api.capabilities,
+				email: email,
+				environment: this._environment,
+				serverUrl: serverUrl,
+				teamId: this._teamId,
+				userId: this._userId
+			}
+		};
 	}
 
+	@log()
 	logout(reason: LogoutReason) {
 		return this.agent.sendNotification(DidLogoutNotificationType, { reason: reason });
 	}
@@ -491,19 +438,22 @@ export class CodeStreamSession {
 		return this._readyPromise;
 	}
 
-	async reset(reason: ResetReason) {
+	@log()
+	async reset() {
 		this._onDidRequestReset.fire(undefined);
-		this.agent.sendNotification(DidResetNotificationType, { reason: reason });
 	}
 
+	@log()
 	showErrorMessage<T extends MessageActionItem>(message: string, ...actions: T[]) {
 		return this.connection.window.showErrorMessage(message, ...actions);
 	}
 
+	@log()
 	showInformationMessage<T extends MessageActionItem>(message: string, ...actions: T[]) {
 		return this.connection.window.showInformationMessage(message, ...actions);
 	}
 
+	@log()
 	showWarningMessage<T extends MessageActionItem>(message: string, ...actions: T[]) {
 		return this.connection.window.showWarningMessage(message, ...actions);
 	}
@@ -521,5 +471,45 @@ export class CodeStreamSession {
 			default:
 				return CodeStreamEnvironment.Production;
 		}
+	}
+
+	private initializeTelemetry(user: CSMe, team: CSTeam, companies: CSCompany[]) {
+		// Set super props
+		this._telemetryData.hasCreatedPost = user.totalPosts > 0;
+
+		const props: { [key: string]: any } = {
+			"Email Address": user.email,
+			"Team ID": this._teamId,
+			"Join Method": user.joinMethod,
+			"Plugin Version": this._options.extension.versionFormatted,
+			Endpoint: "VS Code",
+			Provider: Team.isSlack(team) ? "Slack" : "CodeStream"
+		};
+
+		// Get company name from companyId
+		try {
+			props["Company"] = companies.filter(c => c.id === team.companyId)[0].name;
+		} catch {}
+
+		if (team != null) {
+			props["Team Name"] = team.name;
+			if (team.memberIds != null) {
+				props["Team Size"] = team.memberIds.length;
+			}
+		}
+
+		try {
+			props["Date Signed Up"] =
+				user.registeredAt != null ? new Date(user.registeredAt).toISOString() : undefined;
+		} catch {}
+
+		try {
+			props["Date of Last Post"] =
+				user.lastPostCreatedAt != null ? new Date(user.lastPostCreatedAt).toISOString() : undefined;
+		} catch {}
+
+		const { telemetry } = Container.instance();
+		telemetry.setDistinctId(this._codestreamUserId!);
+		telemetry.setSuperProps(props);
 	}
 }

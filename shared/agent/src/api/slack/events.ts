@@ -4,8 +4,9 @@ import HttpsProxyAgent from "https-proxy-agent";
 import { Emitter, Event } from "vscode-languageserver";
 import { Container } from "../../container";
 import { Logger } from "../../logger";
+import { ConnectionStatus } from "../../shared/agent.protocol";
 import { StreamType } from "../../shared/api.protocol";
-import { log } from "../../system";
+import { debug, log } from "../../system";
 import {
 	MessageType,
 	PreferencesRTMessage,
@@ -68,8 +69,11 @@ enum SlackRtmEventTypes {
 
 enum SlackRtmLifeCycleEventTypes {
 	Authenticated = "authenticated",
+	Connected = "connected",
+	Connecting = "connecting",
 	Disconnected = "disconnected",
 	Disconnecting = "disconnecting",
+	Error = "error",
 	Reconnecting = "reconnecting"
 }
 
@@ -96,8 +100,11 @@ export class SlackEvents {
 		return this._onDidReceiveMessage.event;
 	}
 
+	private _connectivityHeartbeat: NodeJS.Timer | undefined;
 	private readonly _meMentionRegex: RegExp;
+	private _reconnecting: boolean = false;
 	private readonly _slackRTM: RTMClient;
+	private _userIds: string[] | undefined;
 
 	constructor(
 		slackToken: string,
@@ -157,18 +164,38 @@ export class SlackEvents {
 		// );
 
 		this._slackRTM.on(
+			SlackRtmLifeCycleEventTypes.Connected,
+			(...args: any[]) =>
+				this.onSlackConnectionChanged(SlackRtmLifeCycleEventTypes.Connected, ...args),
+			this
+		);
+		this._slackRTM.on(
+			SlackRtmLifeCycleEventTypes.Connecting,
+			(...args: any[]) =>
+				this.onSlackConnectionChanged(SlackRtmLifeCycleEventTypes.Connecting, ...args),
+			this
+		);
+		this._slackRTM.on(
 			SlackRtmLifeCycleEventTypes.Disconnected,
-			this.onSlackConnectionChanged,
+			(...args: any[]) =>
+				this.onSlackConnectionChanged(SlackRtmLifeCycleEventTypes.Disconnected, ...args),
 			this
 		);
 		this._slackRTM.on(
 			SlackRtmLifeCycleEventTypes.Disconnecting,
-			this.onSlackConnectionChanged,
+			(...args: any[]) =>
+				this.onSlackConnectionChanged(SlackRtmLifeCycleEventTypes.Disconnecting, ...args),
+			this
+		);
+		this._slackRTM.on(
+			SlackRtmLifeCycleEventTypes.Error,
+			(...args: any[]) => this.onSlackConnectionChanged(SlackRtmLifeCycleEventTypes.Error, ...args),
 			this
 		);
 		this._slackRTM.on(
 			SlackRtmLifeCycleEventTypes.Reconnecting,
-			this.onSlackConnectionChanged,
+			(...args: any[]) =>
+				this.onSlackConnectionChanged(SlackRtmLifeCycleEventTypes.Reconnecting, ...args),
 			this
 		);
 
@@ -181,17 +208,27 @@ export class SlackEvents {
 
 	@log()
 	async connect(userIds?: string[]) {
-		if (userIds !== undefined && userIds.length !== 0) {
-			this._slackRTM.subscribePresence(userIds);
-		}
+		try {
+			this._userIds = userIds;
+			if (userIds !== undefined && userIds.length !== 0) {
+				this._slackRTM.subscribePresence(userIds);
+			}
 
-		void (await this._slackRTM.start());
+			void (await this._slackRTM.start());
+		} catch (ex) {
+			Logger.error(ex, this.disconnect);
+			throw ex;
+		}
 	}
 
 	@log()
 	async disconnect() {
 		try {
-			return await this._slackRTM.disconnect();
+			this.stopConnectivityPolling();
+
+			if (this._slackRTM.connected) {
+				return await this._slackRTM.disconnect();
+			}
 		} catch (ex) {
 			Logger.error(ex, this.disconnect);
 		}
@@ -200,16 +237,102 @@ export class SlackEvents {
 	@log()
 	async reconnect() {
 		try {
-			await this._slackRTM.disconnect();
-			return await this._slackRTM.start();
+			return await this.connect(this._userIds);
 		} catch (ex) {
 			Logger.error(ex, this.reconnect);
 			throw ex;
 		}
 	}
 
-	private async onSlackConnectionChanged(e: any) {
-		Logger.logWithDebugParams(`SlackEvents.onSlackConnectionChanged`, e);
+	@debug({ condition: silent => !silent, timed: false })
+	startConnectivityPolling(silent: boolean = false) {
+		this._connectivityHeartbeat = setTimeout(this.onConnectivityHeartbeat.bind(this), 5000);
+	}
+
+	@debug()
+	stopConnectivityPolling() {
+		if (this._connectivityHeartbeat !== undefined) {
+			clearTimeout(this._connectivityHeartbeat);
+			this._connectivityHeartbeat = undefined;
+		}
+	}
+
+	@log({
+		prefix: (context, type: SlackRtmLifeCycleEventTypes) => `${context.prefix}(${type})`,
+		timed: false
+	})
+	private async onSlackConnectionChanged(type: SlackRtmLifeCycleEventTypes, ...args: any[]) {
+		switch (type) {
+			case SlackRtmLifeCycleEventTypes.Error:
+				const [error] = args;
+				Logger.warn(this.onSlackConnectionChanged, `Error=${error && error.code}`);
+				break;
+
+			case SlackRtmLifeCycleEventTypes.Disconnected:
+				Logger.log(
+					this.onSlackConnectionChanged,
+					"Slack real-time connection has been disconnected, reconnecting..."
+				);
+
+				this.stopConnectivityPolling();
+				void (await this.reconnect());
+
+				this._onDidReceiveMessage.fire({
+					type: MessageType.Connection,
+					data: { status: ConnectionStatus.Disconnected }
+				});
+				break;
+
+			case SlackRtmLifeCycleEventTypes.Reconnecting:
+				this._reconnecting = true;
+				Logger.log(
+					this.onSlackConnectionChanged,
+					"Slack real-time connection has been lost, attempting to reconnect..."
+				);
+
+				this.stopConnectivityPolling();
+
+				this._onDidReceiveMessage.fire({
+					type: MessageType.Connection,
+					data: { status: ConnectionStatus.Reconnecting }
+				});
+				break;
+
+			case SlackRtmLifeCycleEventTypes.Disconnecting:
+				this.stopConnectivityPolling();
+				break;
+
+			case SlackRtmLifeCycleEventTypes.Connected:
+				this.startConnectivityPolling();
+
+				if (this._reconnecting) {
+					this._onDidReceiveMessage.fire({
+						type: MessageType.Connection,
+						data: { reset: true, status: ConnectionStatus.Reconnected }
+					});
+
+					void Container.instance().session.reset();
+				}
+
+				this._reconnecting = false;
+				break;
+		}
+	}
+
+	private onConnectivityHeartbeat() {
+		this._connectivityHeartbeat = undefined;
+
+		if (!this.connected) {
+			Logger.warn(
+				`${Logger.toLoggableName(this)}.onConnectivityHeartbeat`,
+				"Slack real-time connection has been lost, reconnecting..."
+			);
+			// this.reconnect();
+
+			return;
+		}
+
+		this.startConnectivityPolling(true);
 	}
 
 	@log({
