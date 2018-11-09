@@ -2,9 +2,8 @@ import React, { Component } from "react";
 import { FormattedMessage, injectIntl } from "react-intl";
 import { connect } from "react-redux";
 import _ from "underscore";
-import Icon from "./Icon";
 import Button from "./Button";
-import Tooltip from "./Tooltip";
+import CancelButton from "./CancelButton";
 import createClassString from "classnames";
 import { invite } from "./actions";
 import { isInVscode, mapFilter } from "../utils";
@@ -198,20 +197,10 @@ export class InvitePage extends Component {
 
 		this.tabIndexCount = 0;
 
-		const title = (
-			<span>
-				Close <span className="keybinding">ESC</span>
-			</span>
-		);
-
 		return (
 			<div className={panelClass}>
 				<div className="panel-header">
-					<Tooltip title={title} placement="bottomRight">
-						<span className="align-right-button" onClick={this.goToChannels}>
-							<Icon name="x" className="clickable" />
-						</span>
-					</Tooltip>
+					<CancelButton onClick={this.goToChannels} />
 					<span className="panel-title">Invite People</span>
 				</div>
 				<form className="standard-form vscroll" onSubmit={this.onSubmit}>

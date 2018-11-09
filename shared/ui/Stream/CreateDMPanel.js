@@ -6,6 +6,7 @@ import { createStream, openDirectMessage, setCurrentStream } from "./actions";
 import createClassString from "classnames";
 import { getDirectMessageStreamsForTeam, getDMName } from "../reducers/streams";
 import Button from "./Button";
+import CancelButton from "./CancelButton";
 import { FormattedMessage } from "react-intl";
 import Select from "react-select";
 import Timestamp from "./Timestamp";
@@ -37,20 +38,10 @@ export class SimpleCreateDMPanel extends Component {
 	render() {
 		const inactive = this.props.activePanel !== "create-dm";
 
-		const title = (
-			<span>
-				Close <span className="keybinding">ESC</span>
-			</span>
-		);
-
 		return (
 			<div className="panel create-dm-panel" ref={this._createDMPanel}>
 				<div className="panel-header">
-					<Tooltip title={title} placement="bottomRight">
-						<span className="align-right-button" onClick={this.goToChannels}>
-							<Icon name="x" className="clickable" />
-						</span>
-					</Tooltip>
+					<CancelButton onClick={this.goToChannels} />
 					<span className="panel-title">Direct Messages</span>
 				</div>
 				<form id="create-dm-form" className="standard-form postslist vscroll">

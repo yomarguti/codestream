@@ -76,7 +76,7 @@ export class SimpleCreateChannelPanel extends Component {
 		return (
 			<div className={createChannelPanelClass} ref={this._createChannelPanel}>
 				<div className="panel-header">
-					<CancelButton placement="left" onClick={this.goToChannels} />
+					<CancelButton onClick={this.goToChannels} />
 					<span className="panel-title">New Channel</span>
 				</div>
 				<form id="create-channel-form" className="standard-form vscroll">
