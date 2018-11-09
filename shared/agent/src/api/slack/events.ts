@@ -310,8 +310,6 @@ export class SlackEvents {
 						type: MessageType.Connection,
 						data: { reset: true, status: ConnectionStatus.Reconnected }
 					});
-
-					void Container.instance().session.reset();
 				}
 
 				this._reconnecting = false;

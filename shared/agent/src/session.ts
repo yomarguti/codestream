@@ -29,6 +29,7 @@ import {
 	ApiRequestType,
 	ChangeDataType,
 	CodeStreamEnvironment,
+	ConnectionStatus,
 	CreatePostWithCodeRequestType,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
@@ -187,6 +188,10 @@ export class CodeStreamSession {
 	private async onRTMessageReceived(e: RTMessage) {
 		switch (e.type) {
 			case MessageType.Connection:
+				if (e.data.status === ConnectionStatus.Reconnected && e.data.reset) {
+					void Container.instance().session.reset();
+				}
+
 				this.agent.sendNotification(DidChangeConnectionStatusNotificationType, e.data);
 				break;
 			case MessageType.MarkerLocations:
