@@ -1,6 +1,6 @@
 "use strict";
 import { Range } from "vscode";
-import { CSLocationArray, CSMarker } from "../../agent/agentConnection";
+import { CSFullMarker, CSLocationArray, CSMarker } from "../../agent/agentConnection";
 import { Container } from "../../container";
 import { memoize } from "../../system";
 import { CodeStreamSession, Post } from "../session";
@@ -10,7 +10,7 @@ export class Marker {
 
 	constructor(
 		public readonly session: CodeStreamSession,
-		private readonly entity: CSMarker,
+		private readonly entity: CSFullMarker,
 		location: CSLocationArray
 	) {
 		this._range = new Range(location[0], location[1], location[2], location[3]);
