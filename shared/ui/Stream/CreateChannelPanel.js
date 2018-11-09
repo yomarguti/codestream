@@ -10,7 +10,8 @@ import Button from "./Button";
 import Tooltip from "./Tooltip";
 import { FormattedMessage } from "react-intl";
 import Select from "react-select";
-import { isActiveMixin } from "../utils";
+import { isInVscode } from "../utils";
+import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 
 export class SimpleCreateChannelPanel extends Component {
 	constructor(props) {
@@ -20,10 +21,14 @@ export class SimpleCreateChannelPanel extends Component {
 		this._createChannelPanel = React.createRef();
 	}
 
-	isActive = isActiveMixin("create-channel", this.constructor.name);
-
-	shouldComponentUpdate(nextProps) {
-		return this.isActive(this.props, nextProps);
+	componentDidMount() {
+		if (isInVscode()) {
+			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
+				if (event.key === "Escape") {
+					this.goToChannels();
+				}
+			});
+		}
 	}
 
 	componentDidUpdate(prevProps, prevState) {
@@ -53,6 +58,8 @@ export class SimpleCreateChannelPanel extends Component {
 		return global.atom ? this.tabIndexCount++ : "0";
 	};
 
+	goToChannels = () => this.props.setActivePanel("channels");
+
 	render() {
 		const inactive = this.props.activePanel !== "create-channel";
 
@@ -69,7 +76,7 @@ export class SimpleCreateChannelPanel extends Component {
 		return (
 			<div className={createChannelPanelClass} ref={this._createChannelPanel}>
 				<div className="panel-header">
-					<CancelButton placement="left" onClick={() => this.props.setActivePanel("channels")} />
+					<CancelButton placement="left" onClick={this.goToChannels} />
 					<span className="panel-title">New Channel</span>
 				</div>
 				<form id="create-channel-form" className="standard-form vscroll">

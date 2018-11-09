@@ -10,8 +10,9 @@ import { FormattedMessage } from "react-intl";
 import Select from "react-select";
 import Timestamp from "./Timestamp";
 import Icon from "./Icon";
-import { isActiveMixin, toMapBy, mapFilter } from "../utils";
+import { isInVscode, toMapBy, mapFilter } from "../utils";
 import Tooltip from "./Tooltip";
+import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 
 export class SimpleCreateDMPanel extends Component {
 	constructor(props) {
@@ -21,11 +22,17 @@ export class SimpleCreateDMPanel extends Component {
 		this._createDMPanel = React.createRef();
 	}
 
-	isActive = isActiveMixin("create-dm", this.constructor.name);
-
-	shouldComponentUpdate(nextProps) {
-		return this.isActive(this.props, nextProps);
+	componentDidMount() {
+		if (isInVscode()) {
+			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
+				if (event.key === "Escape") {
+					this.goToChannels();
+				}
+			});
+		}
 	}
+
+	goToChannels = () => this.props.setActivePanel("channels");
 
 	render() {
 		const inactive = this.props.activePanel !== "create-dm";
@@ -40,10 +47,7 @@ export class SimpleCreateDMPanel extends Component {
 			<div className="panel create-dm-panel" ref={this._createDMPanel}>
 				<div className="panel-header">
 					<Tooltip title={title} placement="bottomRight">
-						<span
-							className="align-right-button"
-							onClick={() => this.props.setActivePanel("channels")}
-						>
+						<span className="align-right-button" onClick={this.goToChannels}>
 							<Icon name="x" className="clickable" />
 						</span>
 					</Tooltip>
