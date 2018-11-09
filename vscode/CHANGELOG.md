@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.23.0] - 2018-11-9
+
+### Changed
+
+- Improves performance of initial loading of channels/DMs for Slack teams
+
 ## [0.22.1] - 2018-11-7
 
 ### Fixed
