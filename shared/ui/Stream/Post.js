@@ -170,6 +170,7 @@ class Post extends React.Component {
 
 		const mine = post.creatorId === this.props.currentUserId;
 		const systemPost = post.creatorId === "codestream";
+		const color = post.codemark && post.codemark.color;
 
 		// if (post.title && post.title.match(/assigned/)) console.log(post);
 
@@ -183,7 +184,7 @@ class Post extends React.Component {
 			unread: this.props.unread,
 			"new-separator": this.props.newMessageIndicator,
 			[`thread-key-${this.props.threadKey}`]: true,
-			[post.color]: true,
+			[color]: true,
 			collapsed: this.props.collapsed,
 			question: post.type === "question",
 			issue: post.type === "issue",
@@ -191,7 +192,7 @@ class Post extends React.Component {
 			bookmark: post.type === "bookmark"
 		});
 
-		// console.log(post);
+		console.log(post);
 		let codeBlock = null;
 		if (post.codemark) {
 			const noRepo = !post.codemark.markers[0].repoId;
