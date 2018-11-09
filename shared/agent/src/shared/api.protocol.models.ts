@@ -171,6 +171,10 @@ export interface CSTeamSlackProviderInfo {
 	teamId: string;
 }
 
+export interface CSCompany extends CSEntity {
+	name: string;
+}
+
 export interface CSTeam extends CSEntity {
 	companyId: string;
 	memberIds: string[];

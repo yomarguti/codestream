@@ -2,6 +2,7 @@
 import {
 	ChannelServiceType,
 	CSChannelStream,
+	CSCompany,
 	CSDirectStream,
 	CSFileStream,
 	CSLocationArray,
@@ -53,6 +54,7 @@ export interface LoginResponse {
 	pubnubKey: string;
 	pubnubToken: string;
 	teams: CSTeam[];
+	companies: CSCompany[];
 	repos: CSRepository[];
 }
 

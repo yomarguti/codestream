@@ -418,14 +418,6 @@ export class CodeStreamSession {
 				Container.instance().markerLocations.flushUncommittedLocations(repo);
 			});
 
-			// Get company name from companyId
-			let companyName = "";
-			try {
-				companyName = response.teams.filter(team => team.id === this._teamId)[0].name;
-			} catch (ex) {
-				Logger.error(ex);
-			}
-
 			// Initialize Mixpanel tracking
 			// TODO: Check for opt in
 			const user = response.user;
@@ -437,7 +429,6 @@ export class CodeStreamSession {
 			const props: { [key: string]: any } = {
 				"Email Address": user.email,
 				"Team ID": this._teamId,
-				Company: companyName,
 				"Join Method": response.user.joinMethod,
 				"Plugin Version": this._options.extension.versionFormatted,
 				Endpoint: "VS Code",
@@ -448,6 +439,15 @@ export class CodeStreamSession {
 				props["Team Name"] = currentTeam.name;
 				if (currentTeam.memberIds != null) {
 					props["Team Size"] = currentTeam.memberIds.length;
+				}
+
+				// Get company name from companyId
+				let companyName = "";
+				try {
+					companyName = response.companies.filter(c => c.id === currentTeam.companyId)[0].name;
+					props["Company"] = companyName;
+				} catch (ex) {
+					Logger.error(ex);
 				}
 			}
 
