@@ -519,7 +519,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	fetchCodemarks(request: FetchCodemarksRequest): Promise<FetchCodemarksResponse> {
-		return this.get<FetchCodemarksResponse>(`/codemarks`, this._token);
+		return this.get<FetchCodemarksResponse>(`/codemarks?teamId=${this.teamId}`, this._token);
 	}
 
 	@log()
