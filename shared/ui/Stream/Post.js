@@ -69,9 +69,9 @@ class Post extends React.Component {
 	};
 
 	async showCode(enteringThread = false) {
-		const codeBlock = this.props.post.codeBlocks && this.props.post.codeBlocks[0];
-		if (codeBlock) {
-			if (codeBlock.repoId) {
+		const marker = this.props.post.codemark && this.props.post.codemark.markers[0];
+		if (marker) {
+			if (marker.repoId) {
 				const status = await this.props.showCode(this.props.post, enteringThread);
 				if (status === "SUCCESS") {
 					this.setState({ warning: null });
@@ -139,8 +139,8 @@ class Post extends React.Component {
 		}
 	}
 
-	renderCode(codeBlock) {
-		const path = codeBlock.file;
+	renderCode(marker) {
+		const path = marker.file;
 		let extension = Path.extname(path).toLowerCase();
 		if (extension.startsWith(".")) {
 			extension = extension.substring(1);
@@ -149,12 +149,12 @@ class Post extends React.Component {
 		let codeHTML;
 		if (extension) {
 			try {
-				codeHTML = hljs.highlight(extension, codeBlock.code).value;
+				codeHTML = hljs.highlight(extension, marker.code).value;
 			} catch (e) {
 				/* the language for that file extension may not be supported */
-				codeHTML = hljs.highlightAuto(codeBlock.code).value;
+				codeHTML = hljs.highlightAuto(marker.code).value;
 			}
-		} else codeHTML = hljs.highlightAuto(codeBlock.code).value;
+		} else codeHTML = hljs.highlightAuto(marker.code).value;
 
 		return <div className="code" dangerouslySetInnerHTML={{ __html: codeHTML }} />;
 	}
@@ -192,16 +192,15 @@ class Post extends React.Component {
 		});
 
 		let codeBlock = null;
-		if (post.codeBlocks && post.codeBlocks.length) {
-			let code = post.codeBlocks[0].code;
-			const noRepo = !post.codeBlocks[0].repoId;
+		if (post.codemark) {
+			const noRepo = !post.codemark.markers[0].repoId;
 			codeBlock = (
 				<div
 					className="code-reference"
 					onClick={this.props.showDetails && this.handleClickCodeBlock}
 				>
 					<div className={createClassString("header", { "no-repo": noRepo })}>
-						<span className="file">{post.codeBlocks[0].file || "-"}</span>
+						<span className="file">{post.codemark.markers[0].file || "-"}</span>
 						{this.state.warning && (
 							<Tooltip placement="left" title={this.getWarningMessage()}>
 								<span className="icon-wrapper">
@@ -210,7 +209,7 @@ class Post extends React.Component {
 							</Tooltip>
 						)}
 					</div>
-					{this.renderCode(post.codeBlocks[0])}
+					{this.renderCode(post.codemark.markers[0])}
 				</div>
 			);
 		}
@@ -481,10 +480,10 @@ class Post extends React.Component {
 	renderCodeBlockFile = post => {
 		const { collapsed, showFileAfterTitle } = this.props;
 
-		const codeBlock = post.codeBlocks ? post.codeBlocks[0] || {} : {};
+		const marker = post.codemark ? post.codemark.markers[0] || {} : {};
 
-		if (!collapsed || !showFileAfterTitle || !codeBlock.file) return null;
-		return <span className="file-name">{codeBlock.file}</span>;
+		if (!collapsed || !showFileAfterTitle || !marker.file) return null;
+		return <span className="file-name">{marker.file}</span>;
 	};
 
 	renderStatus = () => {
@@ -750,8 +749,7 @@ const mapStateToProps = (state, props) => {
 
 	const repoName =
 		safe(() => {
-			const codeBlock = post.codeBlocks[0];
-			return getById(state.repos, codeBlock.repoId).name;
+			return getById(state.repos, post.codemark.markers[0].repoId).name;
 		}) || "";
 
 	let author = users[post.creatorId];
