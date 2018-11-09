@@ -23,6 +23,8 @@ import {
 	DeletePostResponse,
 	EditPostRequest,
 	EditPostResponse,
+	FetchCodemarksRequest,
+	FetchCodemarksResponse,
 	FetchFileStreamsRequest,
 	FetchFileStreamsResponse,
 	FetchMarkerLocationsRequest,
@@ -234,6 +236,7 @@ export interface ApiProvider {
 	// createFileStream(request: CreateFileStreamRequest): Promise<CreateFileStreamResponse>;
 	fetchFileStreams(request: FetchFileStreamsRequest): Promise<FetchFileStreamsResponse>;
 
+	fetchCodemarks(request: FetchCodemarksRequest): Promise<FetchCodemarksResponse>;
 	getCodemark(request: GetCodemarkRequest): Promise<GetCodemarkResponse>;
 
 	createMarkerLocation(request: CreateMarkerLocationRequest): Promise<CreateMarkerLocationResponse>;

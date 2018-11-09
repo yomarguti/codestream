@@ -18,6 +18,7 @@ import {
 	CSUnreads,
 	DeletePostRequest,
 	EditPostRequest,
+	FetchCodemarksRequest,
 	FetchFileStreamsRequest,
 	FetchMarkerLocationsRequest,
 	FetchMarkersRequest,
@@ -454,6 +455,11 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	fetchFileStreams(request: FetchFileStreamsRequest) {
 		return this._codestream.fetchFileStreams(request);
+	}
+
+	@log()
+	fetchCodemarks(request: FetchCodemarksRequest) {
+		return this._codestream.fetchCodemarks(request);
 	}
 
 	@log()

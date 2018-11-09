@@ -19,6 +19,8 @@ import {
 	CSUnreads,
 	DeletePostRequest,
 	EditPostRequest,
+	FetchCodemarksRequest,
+	FetchCodemarksResponse,
 	FetchFileStreamsRequest,
 	FetchMarkerLocationsRequest,
 	FetchMarkersRequest,
@@ -513,6 +515,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 			},
 			this._token
 		);
+	}
+
+	@log()
+	fetchCodemarks(request: FetchCodemarksRequest): Promise<FetchCodemarksResponse> {
+		return this.get<FetchCodemarksResponse>(`/codemarks`, this._token);
 	}
 
 	@log()

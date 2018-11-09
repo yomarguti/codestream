@@ -5,6 +5,7 @@ import {
 	RequestType,
 	TextDocumentIdentifier
 } from "vscode-languageserver-protocol";
+import { CSFullPost } from "./agent.protocol.posts";
 import {
 	CodemarkType,
 	CSCodemark,
@@ -29,6 +30,27 @@ export const DidChangeDocumentMarkersNotificationType = new NotificationType<
 	DidChangeDocumentMarkersNotification,
 	void
 >("codeStream/didChangeDocumentMarkers");
+
+export interface FetchCodemarksRequest {}
+
+export interface FetchCodemarksResponse {
+	codemarks: CSCodemark[];
+	posts: CSPost[];
+	markers: CSMarker[];
+}
+
+export interface GetPostsWithCodemarksRequest {}
+
+export interface GetPostsWithCodemarksResponse {
+	posts: CSFullPost[];
+}
+
+export const GetPostsWithCodemarksRequestType = new RequestType<
+	GetPostsWithCodemarksRequest,
+	GetPostsWithCodemarksResponse | undefined,
+	void,
+	void
+>("codeStream/postsWithCodemarks");
 
 export interface GetCodemarkRequest {
 	codemarkId: string;
