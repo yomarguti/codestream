@@ -244,7 +244,7 @@ export interface CSGetMarkersRequest {
 export interface CSGetMarkersResponse {
 	markers: CSMarker[];
 	markerLocations: CSMarkerLocation[];
-	numMarkers: number;
+	codemarks: CSCodemark[];
 }
 
 export interface CSGetPostResponse {

@@ -61,15 +61,16 @@ export interface DocumentMarkersRequest {
 	textDocument: TextDocumentIdentifier;
 }
 
-export interface MarkerWithRange extends CSMarker {
+export interface CSFullMarker extends CSMarker {
 	range: Range;
+	codemark: CSCodemark;
 }
 
 export enum MarkerNotLocatedReason {
-	MISSING_ORIGINAL_LOCATION,
-	MISSING_ORIGINAL_COMMIT,
-	CODEBLOCK_DELETED,
-	UNKNOWN
+	MISSING_ORIGINAL_LOCATION = "missing original location",
+	MISSING_ORIGINAL_COMMIT = "missing original commit",
+	CODEBLOCK_DELETED = "code block deleted",
+	UNKNOWN = "unknown"
 }
 
 export interface MarkerNotLocated extends CSMarker {
@@ -78,7 +79,7 @@ export interface MarkerNotLocated extends CSMarker {
 }
 
 export interface DocumentMarkersResponse {
-	markers: MarkerWithRange[];
+	markers: CSFullMarker[];
 	markersNotLocated: MarkerNotLocated[];
 }
 
@@ -114,7 +115,7 @@ export interface FetchMarkersRequest {
 export interface FetchMarkersResponse {
 	markers: CSMarker[];
 	markerLocations: CSMarkerLocation[];
-	numMarkers: number;
+	codemarks: CSCodemark[];
 }
 
 export const FetchMarkersRequestType = new RequestType<

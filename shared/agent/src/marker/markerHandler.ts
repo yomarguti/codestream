@@ -5,13 +5,13 @@ import URI from "vscode-uri";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
+	CSFullMarker,
 	DocumentFromMarkerRequest,
 	DocumentFromMarkerResponse,
 	DocumentMarkersRequest,
 	DocumentMarkersResponse,
 	MarkerNotLocated,
-	MarkerNotLocatedReason,
-	MarkerWithRange
+	MarkerNotLocatedReason
 } from "../shared/agent.protocol";
 
 export namespace MarkerHandler {
@@ -45,7 +45,7 @@ export namespace MarkerHandler {
 			} = await Container.instance().markerLocations.getCurrentLocations(documentId.uri);
 
 			Logger.log(`MARKERS: results:`);
-			const markersWithRange: MarkerWithRange[] = [];
+			const markersWithRange: CSFullMarker[] = [];
 			const markersNotLocated: MarkerNotLocated[] = [];
 			for (const marker of markers) {
 				const location = locations[marker.id];
@@ -53,6 +53,7 @@ export namespace MarkerHandler {
 					const range = Container.instance().markerLocations.locationToRange(location);
 					markersWithRange.push({
 						...marker,
+						codemark: await Container.instance().codemarks.getById(marker.codemarkId),
 						range
 					});
 					Logger.log(

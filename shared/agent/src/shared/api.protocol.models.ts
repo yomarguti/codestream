@@ -41,7 +41,6 @@ export interface CSMarker extends CSEntity {
 	postStreamId: string;
 	postId: string;
 	codemarkId: string;
-	codemark: CSCodemark;
 	providerType?: ProviderType;
 	commitHashWhenCreated: string;
 	locationWhenCreated: CSLocationArray;
