@@ -587,12 +587,13 @@ export class SlackApiProvider implements ApiProvider {
 			const { postId } = fromSlackPostId(post.id, post.streamId);
 
 			if (codemark) {
-				const response = await this._codestream.updateCodemark({
+				await this._codestream.updateCodemark({
 					codemarkId: codemark.id,
 					streamId: post.streamId,
 					postId: post.id
 				});
-				codemark = response.codemark;
+				codemark.postId = post.id;
+				codemark.streamId = post.streamId;
 			}
 
 			const postResponse = await this.getPost({ streamId: streamId, postId: postId });

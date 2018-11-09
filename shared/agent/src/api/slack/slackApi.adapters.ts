@@ -4,7 +4,6 @@ import { Container } from "../../container";
 import { Logger } from "../../logger";
 import {
 	CSChannelStream,
-	CSCodeBlock,
 	CSCodemark,
 	CSDirectStream,
 	CSPost,

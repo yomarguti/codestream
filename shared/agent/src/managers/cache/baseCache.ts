@@ -72,20 +72,23 @@ export class BaseCache<T> {
 			throw new Error(`No unique index declared for fields ${keys}`);
 		}
 
-		Logger.log(`BaseCache: retrieving entity ${keys}=${values}`);
+		const className = this.constructor.name;
+		Logger.log(`${className}: retrieving entity ${keys}=${values}`);
 		let entity = index.get(values);
 		if (!entity && options.fromCacheOnly !== true) {
-			Logger.log(`BaseCache: cache miss ${keys}=${values}`);
+			Logger.log(`${className}: cache miss ${keys}=${values}`);
 			const fetch = index.fetchFn as UniqueFetchFn<T>;
 			entity = await fetch(criteria);
-			Logger.log(`BaseCache: caching entity ${keys}=${values}`);
+			Logger.log(`${className}: caching entity ${keys}=${values}`);
 			this.set(entity);
 		} else if (entity) {
-			Logger.log(`BaseCache: cache hit ${keys}=${values}`);
+			Logger.log(`${className}: cache hit ${keys}=${values}`);
 		}
 
 		Logger.log(
-			`BaseCache: returning entity in ${Strings.getDurationMilliseconds(start)}ms ${keys}=${values}`
+			`${className}: returning entity in ${Strings.getDurationMilliseconds(
+				start
+			)}ms ${keys}=${values}`
 		);
 		return entity;
 	}
@@ -135,20 +138,21 @@ export class BaseCache<T> {
 			throw new Error(`No group index declared for field ${keys}`);
 		}
 
-		Logger.log(`BaseCache: retrieving entities ${keys}=${values}`);
+		const className = this.constructor.name;
+		Logger.log(`${className}: retrieving entities ${keys}=${values}`);
 		let entities = index.getGroup(values);
 		if (!entities) {
-			Logger.log(`BaseCache: cache miss ${keys}=${values}`);
+			Logger.log(`${className}: cache miss ${keys}=${values}`);
 			const fetch = index.fetchFn as GroupFetchFn<T>;
 			entities = await fetch(criteria);
-			Logger.log(`BaseCache: caching entities ${keys}=${values}`);
+			Logger.log(`${className}: caching entities ${keys}=${values}`);
 			this.initGroup(criteria, entities);
 		} else {
-			Logger.log(`BaseCache: cache hit ${keys}=${values}`);
+			Logger.log(`${className}: cache hit ${keys}=${values}`);
 		}
 
 		Logger.log(
-			`BaseCache: returning ${entities.length} entities in ${Strings.getDurationMilliseconds(
+			`${className}: returning ${entities.length} entities in ${Strings.getDurationMilliseconds(
 				start
 			)}ms ${keys}=${values}`
 		);

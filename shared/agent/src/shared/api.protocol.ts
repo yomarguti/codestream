@@ -350,9 +350,7 @@ export interface CSUpdateCodemarkRequest {
 	postId?: string;
 }
 
-export interface CSUpdateCodemarkResponse {
-	codemark: CSCodemark;
-}
+export interface CSUpdateCodemarkResponse {}
 
 export interface CSUpdateMarkerRequest {
 	commitHashWhenCreated?: string;
