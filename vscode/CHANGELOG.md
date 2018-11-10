@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.24.0] - 2018-11-10
+
+### Changed
+
+- Improves reconnection status and behavior on network connection loss or sleep for Slack teams
+
+### Fixed
+
+- Fixes an issue with unread indicators not showing up on channels after logging in with Slack teams
+
 ## [0.23.0] - 2018-11-9
 
 ### Changed
