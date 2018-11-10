@@ -70,7 +70,7 @@ export class SlackUnreads {
 					id,
 					c.last_read,
 					c.mention_count_display || 0,
-					c.unread_count_display || 0,
+					c.unread_count_display || (c.has_unreads ? 1 : 0),
 					preferences
 				)
 			) {
@@ -84,7 +84,7 @@ export class SlackUnreads {
 					id,
 					g.last_read,
 					g.mention_count_display || 0,
-					g.unread_count_display || 0,
+					g.unread_count_display || (g.has_unreads ? 1 : 0),
 					preferences
 				)
 			) {
