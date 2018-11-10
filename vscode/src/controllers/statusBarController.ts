@@ -122,17 +122,18 @@ export class StatusBarController implements Disposable {
 				}
 				if (unreads.totalMentions > 0) {
 					label += ` (${unreads.totalMentions})`;
-					tooltip += `\n${unreads.totalMentions} unread mention${
+					tooltip += `\nYou have ${unreads.totalMentions} unread mention${
 						unreads.totalMentions === 1 ? "" : "s"
 					}`;
 				} else if (unreads.totalUnreads > 0) {
 					label += ` \u00a0\u2022`;
+					tooltip += `\nYou have unread messages`;
 				}
 
-				const unreadsOnly = unreads.totalUnreads - unreads.totalMentions;
-				if (unreadsOnly > 0) {
-					tooltip += `\n${unreadsOnly} unread message${unreadsOnly === 1 ? "" : "s"}`;
-				}
+				// const unreadsOnly = unreads.totalUnreads - unreads.totalMentions;
+				// if (unreadsOnly > 0) {
+				// 	tooltip += `\n${unreadsOnly} unread message${unreadsOnly === 1 ? "" : "s"}`;
+				// }
 
 				this._statusBarItem.text = ` $(comment-discussion) ${env}${label} `;
 				this._statusBarItem.command = "codestream.toggle";
