@@ -87,6 +87,8 @@ import {
 	SetStreamPurposeResponse,
 	UnarchiveStreamRequest,
 	UnarchiveStreamResponse,
+	UpdateCodemarkRequest,
+	UpdateCodemarkResponse,
 	UpdateMarkerRequest,
 	UpdateMarkerResponse,
 	UpdatePreferencesRequest,
@@ -238,6 +240,7 @@ export interface ApiProvider {
 
 	fetchCodemarks(request: FetchCodemarksRequest): Promise<FetchCodemarksResponse>;
 	getCodemark(request: GetCodemarkRequest): Promise<GetCodemarkResponse>;
+	updateCodemark(request: UpdateCodemarkRequest): Promise<UpdateCodemarkResponse>;
 
 	createMarkerLocation(request: CreateMarkerLocationRequest): Promise<CreateMarkerLocationResponse>;
 	fetchMarkerLocations(request: FetchMarkerLocationsRequest): Promise<FetchMarkerLocationsResponse>;

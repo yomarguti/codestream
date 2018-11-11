@@ -1,11 +1,15 @@
 "use strict";
 
+import { MessageType } from "../api/apiProvider";
 import { Container } from "../container";
 import {
 	CSFullCodemark,
 	FetchCodemarksRequest,
 	FetchCodemarksRequestType,
-	FetchCodemarksResponse
+	FetchCodemarksResponse,
+	UpdateCodemarkRequest,
+	UpdateCodemarkRequestType,
+	UpdateCodemarkResponse
 } from "../shared/agent.protocol.markers";
 import { CSCodemark } from "../shared/api.protocol.models";
 import { lspHandler } from "../system/decorators";
@@ -33,6 +37,16 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		return { codemarks: fullCodemarks };
 	}
 
+	@lspHandler(UpdateCodemarkRequestType)
+	async edit(request: UpdateCodemarkRequest): Promise<UpdateCodemarkResponse> {
+		const updateResponse = await this.session.api.updateCodemark(request);
+		const [codemark] = await this.resolve({
+			type: MessageType.Codemarks,
+			data: [updateResponse.codemark]
+		});
+		return { codemark: await this.fullCodemark(codemark) };
+	}
+
 	protected async fetchById(id: Id): Promise<CSCodemark> {
 		const response = await this.session.api.getCodemark({ codemarkId: id });
 		return response.codemark;
@@ -54,5 +68,17 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		}
 
 		this.cache.set(response.codemarks);
+	}
+
+	private async fullCodemark(codemark: CSCodemark) {
+		let fullCodemark: CSFullCodemark = { ...codemark };
+		if (codemark.markerIds) {
+			fullCodemark = { ...codemark, markers: [] };
+			for (const markerId of codemark.markerIds) {
+				const marker = await Container.instance().markers.getById(markerId);
+				fullCodemark.markers!.push(marker);
+			}
+		}
+		return fullCodemark;
 	}
 }

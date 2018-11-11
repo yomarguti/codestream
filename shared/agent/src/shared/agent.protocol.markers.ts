@@ -5,11 +5,9 @@ import {
 	RequestType,
 	TextDocumentIdentifier
 } from "vscode-languageserver-protocol";
-import { CSFullPost } from "./agent.protocol.posts";
 import {
 	CodemarkType,
 	CSCodemark,
-	CSCreateCodemarkRequestMarker,
 	CSLocationArray,
 	CSMarker,
 	CSMarkerLocation,
@@ -186,7 +184,19 @@ export interface UpdateCodemarkRequest {
 	codemarkId: string;
 	streamId?: string;
 	postId?: string;
+	color?: string;
 }
+
+export interface UpdateCodemarkResponse {
+	codemark: CSFullCodemark;
+}
+
+export const UpdateCodemarkRequestType = new RequestType<
+	UpdateCodemarkRequest,
+	UpdateCodemarkResponse,
+	void,
+	void
+>("codeStream/codemark/update");
 
 export interface UpdateMarkerResponse {
 	marker: CSMarker;

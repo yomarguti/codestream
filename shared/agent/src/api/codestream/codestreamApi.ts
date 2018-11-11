@@ -507,12 +507,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	updateCodemark(request: UpdateCodemarkRequest) {
+		const { codemarkId, ...attributes } = request;
 		return this.put<CSUpdateCodemarkRequest, CSUpdateCodemarkResponse>(
-			`/codemarks/${request.codemarkId}`,
-			{
-				streamId: request.streamId,
-				postId: request.postId
-			},
+			`/codemarks/${codemarkId}`,
+			attributes,
 			this._token
 		);
 	}

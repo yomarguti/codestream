@@ -52,6 +52,7 @@ import {
 	SetPostStatusResponse,
 	SetStreamPurposeRequest,
 	UnarchiveStreamRequest,
+	UpdateCodemarkRequest,
 	UpdateMarkerRequest,
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
@@ -1191,6 +1192,11 @@ export class SlackApiProvider implements ApiProvider {
 		return {
 			preferences: this._preferences.get()
 		};
+	}
+
+	@log()
+	updateCodemark(request: UpdateCodemarkRequest) {
+		return this._codestream.updateCodemark(request);
 	}
 
 	@log()
