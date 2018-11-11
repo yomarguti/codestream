@@ -98,6 +98,7 @@ import {
 	SetPostStatusRequestType,
 	SetStreamPurposeRequestType,
 	UnarchiveStreamRequestType,
+	UpdateCodemarkRequestType,
 	UpdatePreferencesRequestType,
 	UpdatePresenceRequestType,
 	UpdateStreamMembershipRequestType,
@@ -320,6 +321,10 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		fetch() {
 			return this._connection.sendRequest(FetchCodemarksRequestType, {});
+		}
+
+		edit(codemarkId: string, attributes: { color?: string }) {
+			return this._connection.sendRequest(UpdateCodemarkRequestType, { codemarkId, ...attributes });
 		}
 	}(this);
 
