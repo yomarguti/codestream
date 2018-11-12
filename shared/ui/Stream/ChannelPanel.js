@@ -66,6 +66,7 @@ export class SimpleChannelPanel extends Component {
 		) {
 			return { previousShowChannelsValue: props.showChannels };
 		}
+		return null;
 	}
 
 	componentDidMount() {
