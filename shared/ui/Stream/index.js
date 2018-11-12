@@ -131,9 +131,13 @@ export class SimpleStream extends Component {
 					}
 					if (event.key === "ArrowUp") {
 						if (event.target.id === "input-div") {
-							if (event.target.textContent.length === 0) this.editLastPost(event);
+							if (event.target.textContent.length === 0) {
+								event.stopPropagation();
+								this.editLastPost();
+							}
 						} else {
-							this.editLastPost(event);
+							event.stopPropagation();
+							this.editLastPost();
 						}
 					}
 				})
@@ -802,14 +806,15 @@ export class SimpleStream extends Component {
 			.value();
 	}
 
-	editLastPost = _event => {
+	// this is no longer specific to the last post
+	editLastPost = id => {
 		const { activePanel } = this.props;
 		let list;
 		if (activePanel === "thread") list = this._threadpostslist;
 		if (activePanel === "main") {
 			list = this._postslist;
 		}
-		const { id } = list.getUsersMostRecentPost();
+		id = id || list.getUsersMostRecentPost().id;
 		if (id) {
 			const { posts, codemarks } = this.context.store.getState();
 
@@ -952,7 +957,7 @@ export class SimpleStream extends Component {
 			case "goto-thread":
 				return this.goToThread(post);
 			case "edit-post":
-				return this.setState({ editingPostId: post.id });
+				return this.editLastPost(post.id);
 			case "delete-post":
 				return this.confirmDeletePost(post.id);
 			case "mark-unread":
