@@ -1145,11 +1145,15 @@ export class SlackApiProvider implements ApiProvider {
 
 			return {
 				channels: (channels == null ? [] : channels).reduce((map, c) => {
-					map[c.id] = c;
+					if (!c.is_archived) {
+						map[c.id] = c;
+					}
 					return map;
 				}, Object.create(null)),
 				groups: (groups == null ? [] : groups).reduce((map, g) => {
-					map[g.id] = g;
+					if (!g.is_archived) {
+						map[g.id] = g;
+					}
 					return map;
 				}, Object.create(null)),
 				ims: (ims == null ? [] : ims).reduce((map, im) => {
