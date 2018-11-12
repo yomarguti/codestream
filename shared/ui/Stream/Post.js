@@ -384,6 +384,8 @@ class Post extends React.Component {
 			return null;
 
 		const numReplies = post.numreplies || "0";
+
+		const { codemark } = this.props;
 		const type = codemark && codemark.type;
 		switch (type) {
 			case "question":

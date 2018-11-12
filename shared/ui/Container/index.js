@@ -1,4 +1,5 @@
 import * as React from "react";
+import PropTypes from "prop-types";
 import { addLocaleData, IntlProvider } from "react-intl";
 import englishLocaleData from "react-intl/locale-data/en";
 import { connect, Provider } from "react-redux";
@@ -46,6 +47,14 @@ export default class Container extends React.Component {
 
 	static getDerivedStateFromError(error) {
 		return { hasError: true };
+	}
+
+	static childContextTypes = {
+		store: PropTypes.object
+	};
+
+	getChildContext() {
+		return { store: this.props.store };
 	}
 
 	componentDidCatch(error, info) {

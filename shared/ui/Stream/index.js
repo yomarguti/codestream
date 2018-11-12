@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import { injectIntl } from "react-intl";
 import { connect } from "react-redux";
 import _ from "underscore";
@@ -25,7 +26,7 @@ import * as actions from "./actions";
 import { isInVscode, safe, toMapBy } from "../utils";
 import { getSlashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
-import { getPostsForStream } from "../reducers/posts";
+import { getPostsForStream, getPost } from "../reducers/posts";
 import {
 	getStreamForId,
 	getStreamForTeam,
@@ -34,6 +35,7 @@ import {
 	getDirectMessageStreamsForTeam,
 	getDMName
 } from "../reducers/streams";
+import { getCodemark } from "../reducers/codemarks";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 
 const EMAIL_MATCH_REGEX = new RegExp(
@@ -43,6 +45,10 @@ const EMAIL_MATCH_REGEX = new RegExp(
 
 export class SimpleStream extends Component {
 	disposables = [];
+
+	static contextTypes = {
+		store: PropTypes.object
+	};
 
 	constructor(props) {
 		super(props);
@@ -805,11 +811,14 @@ export class SimpleStream extends Component {
 		}
 		const { id } = list.getUsersMostRecentPost();
 		if (id) {
-			// HACKy
-			const post = this.findPostById(id);
-			if (post.codemark) {
+			const { posts, codemarks } = this.context.store.getState();
+
+			const post = getPost(posts, this.props.postStreamId, id);
+
+			if (post.codemarkId) {
 				this.setMultiCompose(true);
-				const marker = post.codemark.markers[0];
+				const codemark = getCodemark(codemarks, post.codemarkId);
+				const marker = codemark.markers[0];
 
 				this.setState({
 					composeBoxProps: {

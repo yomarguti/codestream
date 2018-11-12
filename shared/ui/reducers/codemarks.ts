@@ -13,11 +13,13 @@ const initialState: State = {};
 
 export default function(state = initialState, { type, payload }: Action) {
 	switch (type) {
+		case Type.UPDATE_CODEMARKS:
 		case Type.SAVE_CODEMARKS: {
 			return { ...state, ...toMapBy("id", payload) };
 		}
+		default:
+			return state;
 	}
-	return state;
 }
 
 export function getCodemark(state: State, id?: string): object | undefined {

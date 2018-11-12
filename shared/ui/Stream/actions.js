@@ -2,7 +2,7 @@ import EventEmitter from "../event-emitter";
 import { getChannelStreamsForTeam, getDirectMessageStreamsForTeam } from "../reducers/streams";
 import { updatePreferences } from "../actions";
 import { openPanel, closePanel } from "../actions/context";
-import { saveCodemarks } from "../actions/codemarks";
+import { saveCodemarks, updateCodemarks } from "../actions/codemarks";
 
 export { openPanel, closePanel };
 
@@ -128,10 +128,12 @@ export const editPost = (streamId, id, text, mentions, codemark) => async (
 	{ api }
 ) => {
 	try {
-		const post = await api.editPost({ streamId, id, text, mentions, codemark });
-		return dispatch({ type: "UPDATE_POST", payload: post });
+		const response = await api.editPost({ streamId, id, text, mentions, codemark });
+		dispatch({ type: "UPDATE_POST", payload: response.post });
+		dispatch(updateCodemarks([response.codemark]));
 	} catch (e) {
 		// TODO:
+		console.error("failed to edit post", e);
 	}
 };
 
@@ -182,7 +184,7 @@ export const deletePost = (streamId, id) => async (dispatch, getState, { api }) 
 
 // usage: setUserPreference(["favorites", "shoes", "wedges"], "red")
 export const setUserPreference = (prefPath, value) => async (dispatch, getState, { api }) => {
-	const { session, context, users } = getState();
+	const { session, users } = getState();
 	let user = users[session.userId];
 	if (!user) return;
 
