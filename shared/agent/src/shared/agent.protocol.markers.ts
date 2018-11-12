@@ -29,7 +29,9 @@ export const DidChangeDocumentMarkersNotificationType = new NotificationType<
 	void
 >("codeStream/didChangeDocumentMarkers");
 
-export interface FetchCodemarksRequest {}
+export interface FetchCodemarksRequest {
+	streamId?: string;
+}
 
 export interface FetchCodemarksResponse {
 	codemarks: CSFullCodemark[];

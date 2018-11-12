@@ -22,6 +22,10 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		const fullCodemarks = [];
 
 		for (const csCodemark of csCodemarks) {
+			if (request.streamId && request.streamId !== csCodemark.streamId) {
+				continue;
+			}
+
 			const fullCodemark = {
 				...csCodemark
 			} as CSFullCodemark;
