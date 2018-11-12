@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.24.0] - 2018-11-10
+## [0.24.0] - 2018-11-12
 
 ### Changed
 
@@ -8,7 +8,9 @@
 
 ### Fixed
 
-- Fixes an issue with unread indicators not showing up on channels after logging in with Slack teams
+- Fixes an issue where unread indicators were not showing up on channels after logging in with Slack teams
+- Fixes an issue where unread indicators were sometimes showing up for archived channels with Slack teams
+- Fixes an issue where in certain (rare) cases the agent process could get stuck in an infinite loop
 
 ## [0.23.0] - 2018-11-9
 
