@@ -11,7 +11,7 @@ export default store => next => action => {
 
 			if (isTeamStream || safe(() => memberIds.includes(session.userId))) {
 				const stream = getStreamForId(streams, teamId, id);
-				if (!safe(() => stream.memberIds.includes(session.userId))) {
+				if (!stream.isTeamStream && !safe(() => stream.memberIds.includes(session.userId))) {
 					requestIdleCallback(
 						() => {
 							store.dispatch(fetchPosts({ teamId, streamId: id }));
