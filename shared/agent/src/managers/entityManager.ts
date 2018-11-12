@@ -21,8 +21,8 @@ export abstract class EntityManagerBase<T extends CSEntity> extends ManagerBase<
 		super(session);
 	}
 
-	async getById(id: Id): Promise<T> {
-		return this.cache.getById(id);
+	async getById(id: Id, options: { localOnly?: boolean }): Promise<T> {
+		return this.cache.getById(id, options);
 	}
 
 	protected fetch(criteria: KeyValue<T>[]): Promise<T> {

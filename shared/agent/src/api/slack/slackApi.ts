@@ -218,8 +218,7 @@ export class SlackApiProvider implements ApiProvider {
 
 	async processLoginResponse(response: LoginResponse): Promise<void> {
 		// Mix in slack user info with ours
-		// Make sure to not use the previous state here (it will cause a loop)
-		const meResponse = await this.getMeCore(false, { user: response.user });
+		const meResponse = await this.getMeCore({ user: response.user });
 
 		// TODO: Correlate codestream ids to slack ids once the server returns that info
 		// const users = await this._codestream.fetchUsers({});
@@ -356,18 +355,17 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	getMe() {
-		return this.getMeCore(true);
+		return this.getMeCore();
 	}
 
-	private async getMeCore(usePrevious: boolean, meResponse?: CSGetMeResponse) {
+	private async getMeCore(meResponse?: CSGetMeResponse) {
 		if (meResponse === undefined) {
 			meResponse = await this._codestream.getMe();
 		}
 
-		let prevMe;
-		if (usePrevious) {
-			prevMe = (await Container.instance().users.getById(this._slackUserId)) as CSMe;
-		}
+		const prevMe = (await Container.instance().users.getById(this._slackUserId, {
+			localOnly: true // Only return the data if we already have it cached (otherwise we'll loop infinitely 😀)
+		})) as CSMe;
 
 		let me = meResponse.user;
 		me.id = this.userId;
@@ -1970,8 +1968,7 @@ export class SlackApiProvider implements ApiProvider {
 		// Find ourselves and replace it with our model
 		const index = users.findIndex(u => u.id === this._slackUserId);
 
-		// Make sure to not use the previous state here (it will cause a loop)
-		const meResponse = await this.getMeCore(false);
+		const meResponse = await this.getMeCore();
 		users.splice(index, 1, meResponse.user);
 
 		return { users: users };
