@@ -65,8 +65,6 @@ interface BootstrapState {
 	currentTeamId: string;
 	currentUserId: string;
 	currentStreamId: string;
-	currentStreamLabel?: string;
-	currentStreamServiceType?: "liveshare";
 	currentThreadId?: string;
 	env: CodeStreamEnvironment;
 	posts: CSPost[];
@@ -1121,7 +1119,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 			Container.agent.teams.fetch(),
 			Container.agent.users.unreads(),
 			Container.agent.users.fetch(),
-			Container.agent.users.preferences()
+			Container.agent.users.preferences(),
+			Container.agent.codemarks.fetch()
 		]);
 
 		state.capabilities = this.session.capabilities;
