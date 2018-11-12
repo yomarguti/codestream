@@ -2,6 +2,10 @@
 
 ## [0.24.0] - 2018-11-12
 
+### Added
+
+- Adds an Open button to incoming message notifications to jump directly to the channel &mdash; closes [#8](https://github.com/TeamCodeStream/CodeStream/issues/8)
+
 ### Changed
 
 - Improves reconnection status and behavior on network connection loss or sleep for Slack teams

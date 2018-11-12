@@ -7,14 +7,11 @@ import { vslsUrlRegex } from "./liveShareController";
 
 export class NotificationsController implements Disposable {
 	private _disposable: Disposable;
-	private _showButtons: boolean = false;
 
 	constructor() {
 		this._disposable = Disposable.from(
 			Container.session.onDidChangePosts(this.onSessionPostsReceived, this)
 		);
-
-		this._showButtons = version.endsWith("-insider");
 	}
 
 	dispose() {
@@ -97,20 +94,14 @@ export class NotificationsController implements Disposable {
 		}
 
 		// TODO: Need to better deal with formatted text for notifications
-		if (this._showButtons) {
-			const actions: MessageItem[] = [{ title: "Open" }];
+		const actions: MessageItem[] = [{ title: "Open" }];
 
-			const result = await window.showInformationMessage(
-				`${sender !== undefined ? sender.name : "Someone"}: ${text}`,
-				...actions
-			);
-			if (result === actions[0]) {
-				Container.commands.openStream({ streamThread: { id: undefined, streamId: post.streamId } });
-			}
-		} else {
-			await window.showInformationMessage(
-				`${sender !== undefined ? sender.name : "Someone"}: ${text}`
-			);
+		const result = await window.showInformationMessage(
+			`${sender !== undefined ? sender.name : "Someone"}: ${text}`,
+			...actions
+		);
+		if (result === actions[0]) {
+			Container.commands.openStream({ streamThread: { id: undefined, streamId: post.streamId } });
 		}
 	}
 }
