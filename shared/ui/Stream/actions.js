@@ -2,6 +2,8 @@ import EventEmitter from "../event-emitter";
 import { getChannelStreamsForTeam, getDirectMessageStreamsForTeam } from "../reducers/streams";
 import { updatePreferences } from "../actions";
 import { openPanel, closePanel } from "../actions/context";
+import { saveCodemarks } from "../actions/codemarks";
+
 export { openPanel, closePanel };
 
 // uuid generator taken from: https://gist.github.com/jed/982883
@@ -349,6 +351,7 @@ export const fetchPosts = params => async (dispatch, getState, { api }) => {
 			type: "ADD_POSTS_FOR_STREAM",
 			payload: { posts: response.posts, streamId: params.streamId }
 		});
+		dispatch(saveCodemarks(response.codemarks));
 		return response;
 	} catch (error) {
 		console.error(error);

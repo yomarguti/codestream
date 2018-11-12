@@ -17,6 +17,7 @@ import Tooltip from "./Tooltip";
 import Debug from "./Debug";
 import { getById } from "../reducers/repos";
 import { getPost } from "../reducers/posts";
+import { getCodemark } from "../reducers/codemarks";
 import { markdownify, emojify } from "./Markdowner";
 import hljs from "highlight.js";
 import _ from "underscore";
@@ -69,8 +70,8 @@ class Post extends React.Component {
 	};
 
 	async showCode(enteringThread = false) {
-		const { post } = this.props;
-		const marker = post.hasMarkers && post.codemark.markers[0];
+		const { post, hasMarkers, codemark } = this.props;
+		const marker = hasMarkers && codemark.markers[0];
 		if (marker) {
 			if (marker.repoId) {
 				const status = await this.props.showCode(this.props.post, enteringThread);
@@ -164,16 +165,16 @@ class Post extends React.Component {
 		if (this.props.deactivated) return null;
 
 		// console.log(renderCount++);
-		const { post, showStatus, showAssigneeHeadshots } = this.props;
+		const { post, showStatus, showAssigneeHeadshots, hasMarkers, codemark } = this.props;
 		const { menuOpen, authorMenuOpen, menuTarget } = this.state;
 
 		const headshotSize = this.props.headshotSize || 36;
 
 		const mine = post.creatorId === this.props.currentUserId;
 		const systemPost = post.creatorId === "codestream";
-		const color = post.codemark && post.codemark.color;
-		const type = post.codemark && post.codemark.type;
-		const title = post.codemark && post.codemark.title;
+		const color = codemark && codemark.color;
+		const type = codemark && codemark.type;
+		const title = codemark && codemark.title;
 
 		// if (post.title && post.title.match(/assigned/)) console.log(post);
 
@@ -197,15 +198,15 @@ class Post extends React.Component {
 
 		// console.log(post);
 		let codeBlock = null;
-		if (post.hasMarkers) {
-			const noRepo = !post.codemark.markers[0].repoId;
+		if (hasMarkers) {
+			const noRepo = !codemark.markers[0].repoId;
 			codeBlock = (
 				<div
 					className="code-reference"
 					onClick={this.props.showDetails && this.handleClickCodeBlock}
 				>
 					<div className={createClassString("header", { "no-repo": noRepo })}>
-						<span className="file">{post.codemark.markers[0].file || "-"}</span>
+						<span className="file">{codemark.markers[0].file || "-"}</span>
 						{this.state.warning && (
 							<Tooltip placement="left" title={this.getWarningMessage()}>
 								<span className="icon-wrapper">
@@ -214,7 +215,7 @@ class Post extends React.Component {
 							</Tooltip>
 						)}
 					</div>
-					{this.renderCode(post.codemark.markers[0])}
+					{this.renderCode(codemark.markers[0])}
 				</div>
 			);
 		}
@@ -383,7 +384,7 @@ class Post extends React.Component {
 			return null;
 
 		const numReplies = post.numreplies || "0";
-		const type = post.codemark && post.codemark.type;
+		const type = codemark && codemark.type;
 		switch (type) {
 			case "question":
 				message = numReplies === 1 ? "1 Answer" : `${numReplies} Answers`;
@@ -404,8 +405,8 @@ class Post extends React.Component {
 	};
 
 	toggleStatus = () => {
-		const { post } = this.props;
-		const status = post.codemark && post.codemark.status;
+		const { post, codemark } = this.props;
+		const status = codemark && codemark.status;
 		if (status === "closed") this.reopenIssue();
 		else this.closeIssue();
 	};
@@ -428,8 +429,9 @@ class Post extends React.Component {
 	};
 
 	renderTypeIcon = post => {
+		const { codemark } = this.props;
 		let icon = null;
-		const type = post.codemark && post.codemark.type;
+		const type = codemark && codemark.type;
 		switch (type) {
 			case "question":
 				icon = <Icon name="question" className="type-icon" />;
@@ -450,8 +452,9 @@ class Post extends React.Component {
 	};
 
 	renderTitle = post => {
+		const { codemark } = this.props;
 		const icon = this.renderTypeIcon(post);
-		const title = post.codemark && post.codemark.title;
+		const title = codemark && codemark.title;
 		if (title)
 			return (
 				<div className="title">
@@ -463,11 +466,11 @@ class Post extends React.Component {
 	};
 
 	renderAssignees = post => {
-		const { collapsed } = this.props;
+		const { collapsed, codemark } = this.props;
 
 		if (collapsed) return null;
 
-		const assignees = post.codemark ? post.codemark.assignees || [] : [];
+		const assignees = codemark ? codemark.assignees || [] : [];
 
 		if (assignees.length == 0) return null;
 		if (!this.props.teammates) return null;
@@ -489,9 +492,9 @@ class Post extends React.Component {
 	};
 
 	renderCodeBlockFile = post => {
-		const { collapsed, showFileAfterTitle } = this.props;
+		const { collapsed, showFileAfterTitle, hasMarkers, codemark } = this.props;
 
-		const marker = post.hasMarkers ? post.codemark.markers[0] || {} : {};
+		const marker = hasMarkers ? codemark.markers[0] || {} : {};
 
 		if (!collapsed || !showFileAfterTitle || !marker.file) return null;
 		return <span className="file-name">{marker.file}</span>;
@@ -500,7 +503,7 @@ class Post extends React.Component {
 	renderStatus = () => {
 		// console.log("STATUS IS: ", this.props.status);
 		const { post } = this.props;
-		const status = (post.codemark && post.codemark.status) || "open";
+		const status = (codemark && codemark.status) || "open";
 		// const status = this.props.post.status || "open";
 
 		const statusClass = createClassString({
@@ -519,7 +522,7 @@ class Post extends React.Component {
 
 	renderAssigneeHeadshots = () => {
 		const { post } = this.props;
-		const assignees = post.codemark ? post.codemark.assignees || [] : [];
+		const assignees = codemark ? codemark.assignees || [] : [];
 
 		if (assignees.length == 0) return null;
 
@@ -567,7 +570,8 @@ class Post extends React.Component {
 	};
 
 	renderEmote = post => {
-		const type = post.codemark && post.codemark.type;
+		const { codemark } = this.props;
+		const type = codemark && codemark.type;
 		let matches = (post.text || "").match(/^\/me\s+(.*)/);
 		if (matches) return <span className="emote">{this.renderTextLinkified(matches[1])}</span>;
 		if (type === "question") return <span className="emote">has a question</span>;
@@ -762,10 +766,14 @@ const mapStateToProps = (state, props) => {
 	const post = getPost(state.posts, props.streamId, props.id);
 	if (!post) return { deactivated: true };
 
+	const codemark = getCodemark(state.codemarks, post.codemarkId);
+
 	const repoName =
-		safe(() => {
-			return getById(state.repos, post.codemark.markers[0].repoId).name;
-		}) || "";
+		(codemark &&
+			safe(() => {
+				return getById(state.repos, codemark.markers[0].repoId).name;
+			})) ||
+		"";
 
 	let author = users[post.creatorId];
 	if (!author) {
@@ -779,7 +787,9 @@ const mapStateToProps = (state, props) => {
 		userNamesNormalized,
 		repoName,
 		canLiveshare: state.services.vsls,
-		post: { ...post, author } // pull author out
+		post: { ...post, author }, // pull author out
+		hasMarkers: codemark && codemark.markers.length > 0,
+		codemark
 	};
 };
 
