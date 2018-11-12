@@ -93,7 +93,7 @@ export default class Confirm extends Component {
 												this.setState({ loading: false });
 												this.closePopup();
 											}
-										}
+										} else this.closePopup();
 									}}
 									key={button.label}
 									loading={this.state.loading === button.label}
