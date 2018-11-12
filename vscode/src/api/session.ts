@@ -34,6 +34,7 @@ import {
 import { Team } from "./models/team";
 import { User } from "./models/user";
 import {
+	CodemarksChangedEvent,
 	MergeableEvent,
 	PostsChangedEvent,
 	PreferencesChangedEvent,
@@ -53,6 +54,7 @@ import { TokenManager } from "./tokenManager";
 export {
 	ChannelStream,
 	ChannelStreamCreationOptions,
+	CodemarksChangedEvent,
 	CodeStreamEnvironment,
 	DirectStream,
 	Marker,
@@ -97,6 +99,12 @@ export class CodeStreamSession implements Disposable {
 	get onDidChangeTextDocumentMarkers(): Event<TextDocumentMarkersChangedEvent> {
 		return this._onDidChangeTextDocumentMarkers.event;
 	}
+
+	private _onDidChangeCodemarks = new EventEmitter<CodemarksChangedEvent>();
+	get onDidChangeCodemarks(): Event<CodemarksChangedEvent> {
+		return this._onDidChangeCodemarks.event;
+	}
+	private fireDidChangeCodemarks = createMergableDebouncedEvent(this._onDidChangeCodemarks);
 
 	private _onDidChangePosts = new EventEmitter<PostsChangedEvent>();
 	get onDidChangePosts(): Event<PostsChangedEvent> {
@@ -177,6 +185,9 @@ export class CodeStreamSession implements Disposable {
 
 	private onDataChanged(e: DidChangeDataNotification) {
 		switch (e.type) {
+			case ChangeDataType.Codemarks:
+				this.fireDidChangeCodemarks(new CodemarksChangedEvent(this, e));
+				break;
 			case ChangeDataType.Posts:
 				this.fireDidChangePosts(new PostsChangedEvent(this, e));
 				break;

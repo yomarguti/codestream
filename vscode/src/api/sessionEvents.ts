@@ -1,6 +1,7 @@
 "use strict";
 import { Uri } from "vscode";
 import {
+	CodemarksChangedNotification,
 	CSMePreferences,
 	CSUnreads,
 	DidChangeDataNotification,
@@ -28,6 +29,7 @@ export class TextDocumentMarkersChangedEvent {
 }
 
 export enum SessionChangedEventType {
+	Codemarks = "codemarks",
 	Posts = "posts",
 	Preferences = "preferences",
 	Repositories = "repos",
@@ -65,6 +67,28 @@ abstract class SessionChangedEventBase<T extends DidChangeDataNotification>
 				payload: this._event.data
 			}
 		};
+	}
+}
+
+export class CodemarksChangedEvent extends SessionChangedEventBase<CodemarksChangedNotification>
+	implements MergeableEvent<CodemarksChangedEvent> {
+	readonly type = SessionChangedEventType.Codemarks;
+
+	get count() {
+		return this._event.data.length;
+	}
+
+	affects(id: string, type: "entity") {
+		return affects(this._event.data, id, type);
+	}
+
+	// @memoize
+	// items() {
+	// 	return this._event.data.map(p => new Cod(this.session, p));
+	// }
+
+	merge(e: CodemarksChangedEvent) {
+		this._event.data.push(...e._event.data);
 	}
 }
 

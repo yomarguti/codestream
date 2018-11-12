@@ -110,7 +110,6 @@ import {
 	CodemarkType,
 	CSMarker,
 	CSMePreferences,
-	CSPost,
 	CSPresenceStatus,
 	StreamType
 } from "../shared/api.protocol";

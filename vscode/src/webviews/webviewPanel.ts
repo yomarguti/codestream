@@ -21,7 +21,6 @@ import {
 } from "vscode";
 import {
 	CSCodeBlock,
-	CSCodemark,
 	CSMePreferences,
 	CSPost,
 	CSRepository,
@@ -32,6 +31,7 @@ import {
 	LoginResult
 } from "../agent/agentConnection";
 import {
+	CodemarksChangedEvent,
 	CodeStreamEnvironment,
 	CodeStreamSession,
 	Post,
@@ -842,6 +842,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 	private onSessionDataChanged(
 		e:
+			| CodemarksChangedEvent
 			| PostsChangedEvent
 			| PreferencesChangedEvent
 			| RepositoriesChangedEvent
@@ -851,6 +852,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 			| UsersChangedEvent
 	) {
 		switch (e.type) {
+			case SessionChangedEventType.Codemarks:
 			case SessionChangedEventType.Posts:
 			case SessionChangedEventType.Preferences:
 			case SessionChangedEventType.Repositories:
@@ -1052,6 +1054,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 		this._ipc.connect(this._panel);
 
 		this._disposable = Disposable.from(
+			this.session.onDidChangeCodemarks(this.onSessionDataChanged, this),
 			this.session.onDidChangePosts(this.onSessionDataChanged, this),
 			this.session.onDidChangeRepositories(this.onSessionDataChanged, this),
 			this.session.onDidChangeStreams(this.onSessionDataChanged, this),
