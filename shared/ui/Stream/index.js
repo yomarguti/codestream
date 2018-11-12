@@ -823,9 +823,11 @@ export class SimpleStream extends Component {
 				this.setState({
 					composeBoxProps: {
 						...this.state.composeBoxProps,
+						key: Math.random().toString(),
 						isEditing: true,
 						editingPostId: post.id,
 						text: post.text,
+						codemarkColor: codemark.color,
 						quote: { ...marker, location: marker.locationWhenCreated }
 					}
 				});

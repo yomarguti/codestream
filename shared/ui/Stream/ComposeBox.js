@@ -8,7 +8,7 @@ import CancelButton from "./CancelButton";
 import Button from "./Button";
 import ScrollBox from "./ScrollBox";
 import EmojiPicker from "./EmojiPicker";
-import { getCurrentCursorPosition, createRange, isInVscode } from "../utils";
+import { capitalize, getCurrentCursorPosition, createRange, isInVscode } from "../utils";
 const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
 import Select from "react-select";
 import Tooltip from "./Tooltip";
@@ -29,9 +29,11 @@ const arrayToRange = ([startRow, startCol, endRow, endCol]) => {
 	};
 };
 
+const colorOptions = ["blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray"];
+
 class ComposeBox extends React.Component {
 	state = {
-		color: "blue",
+		color: this.props.codemarkColor || "blue",
 		postTextByStream: {},
 		quote: null,
 		autoMentions: [],
@@ -798,14 +800,11 @@ class ComposeBox extends React.Component {
 									<label>Marker Icon</label>
 									<div className="styled-select">
 										<select onChange={e => this.setState({ color: e.target.value })}>
-											<option value="blue">Blue</option>
-											<option value="green">Green</option>
-											<option value="yellow">Yellow</option>
-											<option value="orange">Orange</option>
-											<option value="red">Red</option>
-											<option value="purple">Purple</option>
-											<option value="aqua">Aqua</option>
-											<option value="gray">Gray</option>
+											{colorOptions.map(color => (
+												<option value={color} selected={this.state.color === color}>
+													{capitalize(color)}
+												</option>
+											))}
 											<hr />
 											<option value="none">None</option>
 										</select>

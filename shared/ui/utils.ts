@@ -4,6 +4,10 @@ export function isInVscode() {
 	return !!document.querySelector("body.codestream");
 }
 
+export function capitalize([first, ...rest]) {
+	return first.toUpperCase() + rest.join("");
+}
+
 export const isActiveMixin = (panel: string, componentName) => (
 	props: { activePanel: string },
 	nextProps: { activePanel: string }
