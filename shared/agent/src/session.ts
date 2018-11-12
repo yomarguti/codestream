@@ -181,6 +181,13 @@ export class CodeStreamSession {
 
 	private async onRTMessageReceived(e: RTMessage) {
 		switch (e.type) {
+			case MessageType.Codemarks:
+				// this._onDidChangeMarkerLocations.fire(codemarks);
+				this.agent.sendNotification(DidChangeDataNotificationType, {
+					type: ChangeDataType.Codemarks,
+					data: e.data
+				});
+				break;
 			case MessageType.Connection:
 				if (e.data.status === ConnectionStatus.Reconnected && e.data.reset) {
 					void Container.instance().session.reset();

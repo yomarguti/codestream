@@ -476,9 +476,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	async get(request: FetchPostsRequest): Promise<FetchPostsResponse> {
 		const cacheResponse = await this.cache.getPosts(request);
 		const fullPosts = await this.fullPosts(cacheResponse.posts);
+		const { codemarks } = await Container.instance().codemarks.get({ streamId: request.streamId });
 		return {
 			posts: fullPosts,
-			more: cacheResponse.more
+			more: cacheResponse.more,
+			codemarks
 		};
 	}
 

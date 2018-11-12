@@ -7,6 +7,7 @@ import {
 	RequestType,
 	TextDocumentIdentifier
 } from "vscode-languageserver-protocol";
+import { CSFullCodemark } from "./agent.protocol.markers";
 import {
 	CSMarker,
 	CSMarkerLocations,
@@ -121,6 +122,7 @@ export const DidLogoutNotificationType = new NotificationType<DidLogoutNotificat
 );
 
 export enum ChangeDataType {
+	Codemarks = "codemarks",
 	MarkerLocations = "markerLocations",
 	Markers = "markers",
 	Posts = "posts",
@@ -130,6 +132,11 @@ export enum ChangeDataType {
 	Teams = "teams",
 	Unreads = "unreads",
 	Users = "users"
+}
+
+export interface CodemarksChangedNotification {
+	type: ChangeDataType.Codemarks;
+	data: CSFullCodemark[];
 }
 
 export interface MarkerLocationsChangedNotification {
@@ -186,6 +193,7 @@ export interface UsersChangedNotification {
 }
 
 export type DidChangeDataNotification =
+	| CodemarksChangedNotification
 	| MarkerLocationsChangedNotification
 	| MarkersChangedNotification
 	| PostsChangedNotification

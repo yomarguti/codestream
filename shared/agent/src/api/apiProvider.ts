@@ -99,6 +99,7 @@ import {
 } from "../shared/agent.protocol";
 import {
 	CSChannelStream,
+	CSCodemark,
 	CSDirectStream,
 	CSMarker,
 	CSMarkerLocations,
@@ -145,6 +146,11 @@ export enum MessageType {
 	Teams = "teams",
 	Unreads = "unreads",
 	Users = "users"
+}
+
+export interface CodemarksRTMessage {
+	type: MessageType.Codemarks;
+	data: CSCodemark[];
 }
 
 export interface ConnectionRTMessage {
@@ -203,6 +209,7 @@ export interface RawRTMessage {
 }
 
 export type RTMessage =
+	| CodemarksRTMessage
 	| ConnectionRTMessage
 	| MarkerLocationsRTMessage
 	| MarkersRTMessage

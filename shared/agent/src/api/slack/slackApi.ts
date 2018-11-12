@@ -319,6 +319,7 @@ export class SlackApiProvider implements ApiProvider {
 
 		this._codestream.onDidReceiveMessage(this.onCodeStreamMessage, this);
 		await this._codestream.subscribe([
+			MessageType.Codemarks,
 			MessageType.Connection,
 			MessageType.MarkerLocations,
 			MessageType.Markers,
