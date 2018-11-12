@@ -5,7 +5,7 @@ import _ from "underscore";
 import Button from "./Button";
 import CancelButton from "./CancelButton";
 import createClassString from "classnames";
-import { invite } from "./actions";
+import { closePanel, invite } from "./actions";
 import { isInVscode, mapFilter } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 
@@ -28,7 +28,7 @@ export class InvitePage extends Component {
 		if (isInVscode()) {
 			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
 				if (event.key === "Escape") {
-					this.goToChannels();
+					this.props.closePanel();
 				}
 			});
 		}
@@ -185,8 +185,6 @@ export class InvitePage extends Component {
 		);
 	};
 
-	goToChannels = () => this.props.setActivePanel("channels");
-
 	render() {
 		const inactive = this.props.activePanel !== "invite";
 
@@ -200,7 +198,7 @@ export class InvitePage extends Component {
 		return (
 			<div className={panelClass}>
 				<div className="panel-header">
-					<CancelButton onClick={this.goToChannels} />
+					<CancelButton onClick={this.props.closePanel} />
 					<span className="panel-title">Invite People</span>
 				</div>
 				<form className="standard-form vscroll" onSubmit={this.onSubmit}>
@@ -281,6 +279,7 @@ const mapStateToProps = ({ users, context, teams }) => {
 export default connect(
 	mapStateToProps,
 	{
+		closePanel,
 		invite
 	}
 )(injectIntl(InvitePage));

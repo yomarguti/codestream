@@ -1,7 +1,7 @@
 export const setContext = payload => ({ type: "SET_CONTEXT", payload });
 
-export const setPanel = panel => (dispatch, getState) => {
-	if (getState().context.panel !== panel) dispatch({ type: "SET_PANEL", payload: panel });
+export const openPanel = panel => (dispatch, getState) => {
+	if (getState().context.panelStack[0] !== panel) dispatch({ type: "SET_PANEL", payload: panel });
 };
 
 export const closePanel = () => dispatch => {

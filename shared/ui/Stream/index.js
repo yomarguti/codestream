@@ -804,9 +804,7 @@ export class SimpleStream extends Component {
 	};
 
 	setActivePanel = panel => {
-		if (panel !== this.props.activePanel) {
-			this.props.setPanel(panel);
-		}
+		this.props.openPanel(panel);
 	};
 
 	handleDidChangeVisiblePosts = data => {
@@ -1667,7 +1665,7 @@ const mapStateToProps = ({
 		pluginVersion,
 		channelStreams,
 		directMessageStreams,
-		activePanel: context.panel,
+		activePanel: context.panelStack[0],
 		startOnMainPanel: startupProps.startOnMainPanel,
 		initialThreadId: startupProps.threadId,
 		umis: {

@@ -8,7 +8,8 @@ import {
 	createStream,
 	muteAllConversations,
 	setCurrentStream,
-	setUserPreference
+	setUserPreference,
+	openPanel
 } from "./actions";
 import {
 	getChannelStreamsForTeam,
@@ -58,11 +59,20 @@ export class SimpleChannelPanel extends Component {
 		];
 	}
 
+	static getDerivedStateFromProps(props, state) {
+		if (
+			props.showChannels !== "selecting" &&
+			props.showChannels !== state.previousShowChannelsValue
+		) {
+			return { previousShowChannelsValue: props.showChannels };
+		}
+	}
+
 	componentDidMount() {
 		if (isInVscode()) {
 			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
 				if (event.key === "Escape") {
-					this.props.setUserPreference(["showChannels"], "all");
+					this.props.setUserPreference(["showChannels"], this.state.previousShowChannelsValue);
 				}
 			});
 		}
@@ -274,7 +284,9 @@ export class SimpleChannelPanel extends Component {
 					<Tooltip title={title} placement="bottomRight">
 						<span
 							className="align-right-button"
-							onClick={() => this.props.setUserPreference(["showChannels"], "all")}
+							onClick={() =>
+								this.props.setUserPreference(["showChannels"], this.state.previousShowChannelsValue)
+							}
 						>
 							<Icon name="x" className="clickable" />
 						</span>
@@ -603,7 +615,13 @@ export class SimpleChannelPanel extends Component {
 				</div>
 				<ul onClick={this.handleClickSelectStream}>
 					{dms.map(stream => stream.element)}
-					<li className="invite" onClick={() => this.props.setActivePanel("invite")}>
+					<li
+						className="invite"
+						onClick={event => {
+							event.stopPropagation();
+							this.props.openPanel("invite");
+						}}
+					>
 						<span>
 							<Icon name="plus-small" />
 							{this.props.isSlackTeam ? "Invite People to CodeStream" : "Invite People"}
@@ -787,6 +805,7 @@ export default connect(
 		createStream,
 		setUserPreference,
 		setCurrentStream,
-		muteAllConversations
+		muteAllConversations,
+		openPanel
 	}
 )(SimpleChannelPanel);

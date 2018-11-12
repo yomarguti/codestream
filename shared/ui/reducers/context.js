@@ -4,8 +4,7 @@ const initialState = {
 	currentTeamId: "",
 	currentRepoId: "",
 	currentCommit: "",
-	panel: "channels",
-	panelStack: [], // stores the stack of panels
+	panelStack: ["channels"], // stores the stack of panels
 	noAccess: false, // Legacy
 	showSlackInfo: false, // Legacy
 	hasFocus: true, // we assume we start with the focus when codestream initializes
@@ -29,12 +28,12 @@ export default (state = initialState, { type, payload }) => {
 		// set the current panel and keep a stack of the most
 		// recent ones, so we can pop the current panel off the
 		// stack, and return to the prior one
-		const panelStack = [payload, ...state.panelStack].slice(0, 10); // limit size
-		return { ...state, panel: payload, panelStack };
+		return { ...state, panelStack: [payload, ...state.panelStack].slice(0, 10) };
 	}
 	if (type === "CLOSE_PANEL") {
-		const [panel, ...panelStack] = state.panelStack;
-		return { ...state, panel, panelStack };
+		if (state.panelStack.length === 1) return state;
+		const [, ...panelStack] = state.panelStack;
+		return { ...state, panelStack };
 	}
 	if (type === "COMMIT_HASH_CHANGED") return { ...state, currentCommit: payload };
 	if (type === "SET_HAS_FOCUS") return { ...state, hasFocus: payload };

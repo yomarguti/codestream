@@ -11,7 +11,6 @@ import {
 import Icon from "./Icon";
 import _ from "underscore";
 import Timestamp from "./Timestamp";
-import Tooltip from "./Tooltip";
 import { isInVscode } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import CancelButton from "./CancelButton";
@@ -27,13 +26,11 @@ export class SimplePublicChannelPanel extends Component {
 		if (isInVscode()) {
 			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
 				if (event.key === "Escape") {
-					this.goToChannels();
+					this.props.closePanel();
 				}
 			});
 		}
 	}
-
-	goToChannels = () => this.props.setActivePanel("channels");
 
 	render() {
 		const panelClass = createClassString({
@@ -52,16 +49,10 @@ export class SimplePublicChannelPanel extends Component {
 		// 		</span>
 		// 	</Tooltip>
 		// </span>
-		const title = (
-			<span>
-				Close <span className="keybinding">ESC</span>
-			</span>
-		);
-
 		return (
 			<div className={panelClass}>
 				<div className="panel-header">
-					<CancelButton onClick={() => this.props.setActivePanel("channels")} />
+					<CancelButton onClick={this.props.closePanel} />
 					<span className="panel-title">Public Channels</span>
 				</div>
 				<div className="filters" style={{ paddingTop: "10px" }}>

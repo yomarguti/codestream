@@ -25,7 +25,7 @@ export class SimpleCreateChannelPanel extends Component {
 		if (isInVscode()) {
 			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
 				if (event.key === "Escape") {
-					this.goToChannels();
+					this.props.closePanel();
 				}
 			});
 		}
@@ -58,8 +58,6 @@ export class SimpleCreateChannelPanel extends Component {
 		return global.atom ? this.tabIndexCount++ : "0";
 	};
 
-	goToChannels = () => this.props.setActivePanel("channels");
-
 	render() {
 		const inactive = this.props.activePanel !== "create-channel";
 
@@ -76,7 +74,7 @@ export class SimpleCreateChannelPanel extends Component {
 		return (
 			<div className={createChannelPanelClass} ref={this._createChannelPanel}>
 				<div className="panel-header">
-					<CancelButton onClick={this.goToChannels} />
+					<CancelButton onClick={this.props.closePanel} />
 					<span className="panel-title">New Channel</span>
 				</div>
 				<form id="create-channel-form" className="standard-form vscroll">
