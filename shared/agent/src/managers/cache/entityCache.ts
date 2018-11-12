@@ -49,7 +49,7 @@ export class EntityCache<T extends CSEntity> extends BaseCache<T> {
 	 *
 	 * @return Entity or `undefined`
 	 */
-	async getById(id: Id, options: { localOnly?: boolean }): Promise<T> {
+	async getById(id: Id, options?: { localOnly?: boolean }): Promise<T> {
 		const entity = await this.get([["id", id]], options);
 		if (!entity) {
 			throw new Error(`Could not find entity with ID ${id}`);
