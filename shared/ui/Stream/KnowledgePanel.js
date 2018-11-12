@@ -241,7 +241,7 @@ export class SimpleKnowledgePanel extends Component {
 		let fileMenuItems = [
 			{ label: "From All Files", action: "all" },
 			{ label: "From All Files, Unseparated", action: "unseparated" },
-			{ label: "In Current Repo Only", action: "repo" },
+			// { label: "In Current Repo Only", action: "repo" },
 			{ label: "In Current File Only", action: "current" }
 		];
 
