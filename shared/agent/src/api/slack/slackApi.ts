@@ -363,9 +363,8 @@ export class SlackApiProvider implements ApiProvider {
 			meResponse = await this._codestream.getMe();
 		}
 
-		const prevMe = (await Container.instance().users.getById(this._slackUserId, {
-			localOnly: true // Only return the data if we already have it cached (otherwise we'll loop infinitely 😀)
-		})) as CSMe;
+		// Only get the data if we already have it cached (otherwise we'll loop infinitely 😀)
+		const prevMe = (await Container.instance().users.getByIdFromCache(this._slackUserId)) as CSMe;
 
 		let me = meResponse.user;
 		me.id = this.userId;

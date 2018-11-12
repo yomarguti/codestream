@@ -69,7 +69,7 @@ export abstract class ManagerBase<T> {
 	}
 
 	cacheGet(criteria: KeyValue<T>[]): Promise<T | undefined> {
-		return this.cache.get(criteria, { localOnly: true });
+		return this.cache.get(criteria, { fromCacheOnly: true });
 	}
 
 	cacheSet(entity: T, oldEntity?: T) {

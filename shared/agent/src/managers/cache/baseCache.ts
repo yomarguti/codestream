@@ -60,7 +60,7 @@ export class BaseCache<T> {
 	 */
 	async get(
 		criteria: KeyValue<T>[],
-		options: { localOnly?: boolean } = {}
+		options: { fromCacheOnly?: boolean } = {}
 	): Promise<T | undefined> {
 		const keys = getKeys(criteria);
 		const index = this.getIndex(keys);
@@ -70,7 +70,7 @@ export class BaseCache<T> {
 		}
 
 		let entity = index.get(values);
-		if (!entity && options.localOnly !== true) {
+		if (!entity && options.fromCacheOnly !== true) {
 			const fetch = index.fetchFn as UniqueFetchFn<T>;
 			entity = await fetch(criteria);
 			this.set(entity);
