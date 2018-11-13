@@ -320,14 +320,10 @@ export class CodeStreamWebviewPanel implements Disposable {
 						case "create-post": {
 							const {
 								text,
-								extra: { fileUri, title, type, assignees, color } = {
-									fileUri: undefined,
-									title,
-									type,
-									assignees,
-									color
+								extra: { fileUri } = {
+									fileUri: undefined
 								},
-								codeBlocks,
+								codemark,
 								mentions,
 								parentPostId,
 								streamId
@@ -335,38 +331,35 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
 
-							let post;
 							try {
-								if (codeBlocks === undefined || codeBlocks.length === 0) {
+								if (codemark === undefined) {
 									const response = await Container.agent.posts.create(
 										streamId,
 										text,
 										mentions,
-										parentPostId,
-										title,
-										type,
-										assignees,
-										color
+										parentPostId
 									);
-									post = response.post;
+									responseBody.payload = response;
 								} else {
-									const block = codeBlocks[0] as {
-										code: string;
-										location?: [number, number, number, number];
-										file?: string;
-										source?: {
-											file: string;
-											repoPath: string;
-											revision: string;
-											authors: { id: string; username: string }[];
-											remotes: { name: string; url: string }[];
-										};
-									};
+									const { text, title, type, assignees, color, markers } = codemark;
+									const block =
+										(markers[0] as {
+											code: string;
+											location?: [number, number, number, number];
+											file?: string;
+											source?: {
+												file: string;
+												repoPath: string;
+												revision: string;
+												authors: { id: string; username: string }[];
+												remotes: { name: string; url: string }[];
+											};
+										}) || {};
 
 									const uri = block.source
 										? Uri.file(path.join(block.source.repoPath, block.source.file))
 										: Uri.parse(fileUri);
-									post = (await Container.agent.posts.createWithCode(
+									responseBody.payload = await Container.agent.posts.createWithCode(
 										uri,
 										text,
 										mentions,
@@ -379,20 +372,16 @@ export class CodeStreamWebviewPanel implements Disposable {
 										type,
 										assignees,
 										color
-									)).post;
+									);
 								}
 							} catch (ex) {
 								responseBody.error = ex;
+							} finally {
+								this.postMessage({
+									type: WebviewIpcMessageType.response,
+									body: responseBody
+								});
 							}
-
-							if (post) {
-								responseBody.payload = post;
-							}
-
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: responseBody
-							});
 							break;
 						}
 						case "fetch-posts": {
