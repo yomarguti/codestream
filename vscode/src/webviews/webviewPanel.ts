@@ -912,8 +912,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 	@log()
 	hide() {
+		Container.agent.telemetry.track("Webview Toggled", { Direction: "Off" });
 		if (this._panel === undefined) return;
-
 		this._panel.dispose();
 	}
 
@@ -997,6 +997,12 @@ export class CodeStreamWebviewPanel implements Disposable {
 		args: false
 	})
 	async show(streamThread?: StreamThread) {
+		Container.agent.telemetry.track("Webview Toggled", { Direction: "On" });
+		if (streamThread && streamThread.id) {
+			const { post } = await Container.agent.posts.get(streamThread.stream.id, streamThread.id);
+			Container.commands.openPostWorkingFile(new Post(this.session, post, streamThread.stream));
+		}
+
 		if (this._panel === undefined) return this.createWebview(streamThread);
 
 		if (
