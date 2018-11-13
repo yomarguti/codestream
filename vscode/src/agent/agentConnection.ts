@@ -57,8 +57,6 @@ import {
 	DidChangeVersionCompatibilityNotificationType,
 	DidLogoutNotification,
 	DidLogoutNotificationType,
-	DocumentFromCodeBlockRequestType,
-	DocumentFromCodeBlockResponse,
 	DocumentFromMarkerRequestType,
 	DocumentFromMarkerResponse,
 	DocumentLatestRevisionRequestType,
