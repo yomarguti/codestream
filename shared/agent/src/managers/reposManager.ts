@@ -48,4 +48,8 @@ export class ReposManager extends CachedEntityManagerBase<CSRepository> {
 		const repo = await this.getById(request.repoId);
 		return { repo: repo };
 	}
+
+	protected getEntityName(): string {
+		return "Repository";
+	}
 }

@@ -541,4 +541,8 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 
 		return result;
 	}
+
+	protected getEntityName(): string {
+		return "MarkerLocation";
+	}
 }

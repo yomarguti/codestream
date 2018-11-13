@@ -40,4 +40,8 @@ export class TeamsManager extends CachedEntityManagerBase<CSTeam> {
 		const team = await this.getById(request.teamId);
 		return { team: team };
 	}
+
+	protected getEntityName(): string {
+		return "Team";
+	}
 }

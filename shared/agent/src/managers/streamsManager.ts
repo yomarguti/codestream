@@ -201,4 +201,8 @@ export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CS
 		const stream = await this.getById(request.streamId);
 		return { stream: stream };
 	}
+
+	protected getEntityName(): string {
+		return "Stream";
+	}
 }

@@ -2,8 +2,12 @@
 
 import { CSEntity } from "../../shared/api.protocol";
 import { Id } from "../entityManager";
-import { BaseCache, UniqueFetchFn } from "./baseCache";
-import { IndexParams, IndexType, makeIndex, UniqueIndex } from "./index";
+import { BaseCache, CacheCfg, UniqueFetchFn } from "./baseCache";
+import { IndexType, makeIndex, UniqueIndex } from "./index";
+
+export interface EntityCacheCfg<T> extends CacheCfg<T> {
+	fetchFn: UniqueFetchFn<T>;
+}
 
 /**
  * <p>Cache for entities. All entities are indexed by Id. Indexes for additional fields can be
@@ -27,17 +31,16 @@ export class EntityCache<T extends CSEntity> extends BaseCache<T> {
 	/**
 	 * Create a cache
 	 *
-	 * @param idxFields Indexed fields
-	 * @param fetchFn Function to fetch an entity by Id
+	 * @param cfg Cache configuration
 	 */
-	constructor(idxFields: IndexParams<T>[], fetchFn: UniqueFetchFn<T>) {
-		super(idxFields);
+	constructor(cfg: EntityCacheCfg<T>) {
+		super(cfg);
 		this.indexes.set(
 			"id",
 			makeIndex({
 				fields: ["id"],
 				type: IndexType.Unique,
-				fetchFn
+				fetchFn: cfg.fetchFn
 			})
 		);
 	}

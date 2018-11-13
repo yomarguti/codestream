@@ -46,7 +46,7 @@ import { CSMarkerLocation, CSPost } from "../shared/api.protocol";
 import { Iterables, lsp, lspHandler, Strings } from "../system";
 import { BaseIndex, IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue, UniqueFetchFn } from "./cache/baseCache";
-import { EntityCache } from "./cache/entityCache";
+import { EntityCache, EntityCacheCfg } from "./cache/entityCache";
 import { EntityManagerBase, Id } from "./entityManager";
 
 export type FetchPostsFn = (request: FetchPostsRequest) => Promise<FetchPostsResponse>;
@@ -325,16 +325,18 @@ export class PostIndex extends BaseIndex<CSPost> {
 	}
 }
 
+interface PostCacheCfg extends EntityCacheCfg<CSPost> {
+	fetchPosts: FetchPostsFn;
+}
+
 class PostsCache extends EntityCache<CSPost> {
 	private readonly postIndex: PostIndex;
+	private readonly fetchPosts: FetchPostsFn;
 
-	constructor(
-		idxFields: IndexParams<CSPost>[],
-		fetchFn: UniqueFetchFn<CSPost>,
-		private readonly fetchPosts: FetchPostsFn
-	) {
-		super(idxFields, fetchFn);
-		this.postIndex = new PostIndex(fetchPosts);
+	constructor(cfg: PostCacheCfg) {
+		super(cfg);
+		this.fetchPosts = cfg.fetchPosts;
+		this.postIndex = new PostIndex(cfg.fetchPosts);
 		this.indexes.set("streamId", this.postIndex);
 	}
 
@@ -418,11 +420,12 @@ function trackPostCreation(request: CreatePostRequest) {
 
 @lsp
 export class PostsManager extends EntityManagerBase<CSPost> {
-	protected readonly cache: PostsCache = new PostsCache(
-		this.getIndexedFields(),
-		this.fetch.bind(this),
-		this.fetchPosts.bind(this)
-	);
+	protected readonly cache: PostsCache = new PostsCache({
+		idxFields: this.getIndexedFields(),
+		fetchFn: this.fetch.bind(this),
+		fetchPosts: this.fetchPosts.bind(this),
+		entityName: this.getEntityName()
+	});
 
 	async cacheSet(entity: CSPost, oldEntity?: CSPost): Promise<void> {
 		if (entity && entity.streamId) {
@@ -735,6 +738,10 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	private async getPost(request: GetPostRequest): Promise<GetPostResponse> {
 		const post = await this.getById(request.postId);
 		return { post: post };
+	}
+
+	protected getEntityName(): string {
+		return "Post";
 	}
 }
 

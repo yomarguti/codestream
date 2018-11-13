@@ -11,8 +11,8 @@ import {
 } from "../shared/agent.protocol";
 import { CSFileStream, CSStream, StreamType } from "../shared/api.protocol";
 import { lsp, lspHandler } from "../system";
+import { IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
-import { IndexParams, IndexType } from "./cache/index";
 import { EntityManagerBase, Id } from "./entityManager";
 
 @lsp
@@ -118,5 +118,9 @@ export class FilesManager extends EntityManagerBase<CSFileStream> {
 	): Promise<FetchFileStreamsResponse> {
 		const streams = await this.getByRepoId(request.repoId);
 		return { streams: streams };
+	}
+
+	protected getEntityName(): string {
+		return "FileStream";
 	}
 }

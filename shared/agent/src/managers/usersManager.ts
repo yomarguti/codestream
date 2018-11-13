@@ -98,4 +98,8 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 	private async getPreferences(): Promise<GetPreferencesResponse> {
 		return this.session.api.getPreferences();
 	}
+
+	protected getEntityName(): string {
+		return "User";
+	}
 }

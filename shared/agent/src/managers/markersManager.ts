@@ -104,4 +104,8 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 		const marker = await this.getById(request.markerId);
 		return { marker: marker };
 	}
+
+	protected getEntityName(): string {
+		return "Marker";
+	}
 }

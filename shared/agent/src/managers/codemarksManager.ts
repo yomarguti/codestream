@@ -85,4 +85,8 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		}
 		return fullCodemark;
 	}
+
+	protected getEntityName(): string {
+		return "Codemark";
+	}
 }

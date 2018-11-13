@@ -12,10 +12,11 @@ export type Id = string;
  * Base class for entity managers.
  */
 export abstract class EntityManagerBase<T extends CSEntity> extends ManagerBase<T> {
-	protected readonly cache: EntityCache<T> = new EntityCache<T>(
-		this.getIndexedFields(),
-		this.fetch.bind(this)
-	);
+	protected readonly cache: EntityCache<T> = new EntityCache<T>({
+		idxFields: this.getIndexedFields(),
+		fetchFn: this.fetch.bind(this),
+		entityName: this.getEntityName()
+	});
 
 	constructor(public readonly session: CodeStreamSession) {
 		super(session);

@@ -8,7 +8,10 @@ import * as operations from "./operations";
 import { isCompleteObject } from "./operations";
 
 export abstract class ManagerBase<T> {
-	protected readonly cache: BaseCache<T> = new BaseCache<T>(this.getIndexedFields());
+	protected readonly cache: BaseCache<T> = new BaseCache<T>({
+		idxFields: this.getIndexedFields(),
+		entityName: this.getEntityName()
+	});
 
 	public constructor(public readonly session: CodeStreamSession) {
 		this.session.onDidRequestReset(() => {
@@ -23,6 +26,8 @@ export abstract class ManagerBase<T> {
 	getIndexedFields(): IndexParams<T>[] {
 		return [];
 	}
+
+	protected abstract getEntityName(): string;
 
 	protected abstract fetch(criteria: KeyValue<T>[]): Promise<T>;
 
