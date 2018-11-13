@@ -473,7 +473,7 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	async createPost(request: CreatePostRequest) {
 		try {
-			const meMessage = request.text && request.text.startsWith("/me ");
+			const meMessage = request.text != null && request.text.startsWith("/me ");
 
 			let text;
 			if (request.text) {
@@ -562,7 +562,7 @@ export class SlackApiProvider implements ApiProvider {
 			const [start, , end] = codeblock.location!;
 			const title = `${codeblock.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;
 
-			const githubRemote = codeblock.remotes!.find(r => r.startsWith("github.com"));
+			const githubRemote = codeblock.remotes!.find(r => r != null && r.startsWith("github.com"));
 			let titleLink;
 			if (githubRemote) {
 				titleLink = `https://${githubRemote}/blob/HEAD/${codeblock.file}#L${start}${

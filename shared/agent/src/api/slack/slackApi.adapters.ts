@@ -289,7 +289,7 @@ export async function fromSlackPostCodeBlock(attachments: MessageAttachment[]) {
 }
 
 export function fromSlackPostFile(file: any) {
-	const image = file.mimetype.startsWith("image/");
+	const image = file != null && file.mimetype != null && file.mimetype.startsWith("image/");
 
 	let preview;
 	if (image) {
