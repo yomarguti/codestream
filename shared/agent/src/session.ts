@@ -325,13 +325,15 @@ export class CodeStreamSession {
 			}
 		}
 
+		const cc = Logger.getCorrelationContext();
+
 		let opts = { team: team, teamId: teamId } as LoginOptions;
 		if (signupToken) {
-			Logger.log(this.login, `Logging ${email} into CodeStream via credentials...`);
+			Logger.log(cc, `Logging ${email} into CodeStream via credentials...`);
 
 			opts = { ...opts, type: "otc", code: signupToken };
 		} else if (typeof passwordOrToken === "string") {
-			Logger.log(this.login, `Logging ${email} into CodeStream via CodeStream code...`);
+			Logger.log(cc, `Logging ${email} into CodeStream via CodeStream code...`);
 
 			opts = {
 				...opts,
@@ -340,7 +342,7 @@ export class CodeStreamSession {
 				password: passwordOrToken
 			};
 		} else {
-			Logger.log(this.login, `Logging ${email} into CodeStream via authentication token...`);
+			Logger.log(cc, `Logging ${email} into CodeStream via authentication token...`);
 
 			opts = {
 				...opts,
@@ -377,7 +379,7 @@ export class CodeStreamSession {
 
 		if (User.isSlack(response.user) && Team.isSlack(currentTeam)) {
 			Logger.log(
-				this.login,
+				cc,
 				`Logging into Slack because team '${currentTeam.name}' (${
 					currentTeam.id
 				}) is a Slack-based team`
@@ -394,7 +396,7 @@ export class CodeStreamSession {
 			await (this._api as SlackApiProvider).processLoginResponse(response);
 
 			Logger.log(
-				this.login,
+				cc,
 				`Logged into Slack as '${response.user.username}' (${response.user.id}), Slack team ${
 					currentTeam.providerInfo.slack.teamId
 				}`
@@ -409,7 +411,7 @@ export class CodeStreamSession {
 
 		this.api.onDidReceiveMessage(e => this.onRTMessageReceived(e), this);
 
-		Logger.log(this.login, `Subscribing to real-time events...`);
+		Logger.log(cc, `Subscribing to real-time events...`);
 		this.api.subscribe();
 
 		Container.instance().git.onRepositoryCommitHashChanged(repo => {

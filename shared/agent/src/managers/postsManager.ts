@@ -28,7 +28,7 @@ import {
 	ReactToPostResponse
 } from "../shared/agent.protocol";
 import { CSPost } from "../shared/api.protocol";
-import { lspHandler } from "../system/decorators";
+import { lspHandler } from "../system";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { IndexParams, IndexType } from "./cache/index";
 import { EntityManagerBase, Id } from "./entityManager";
@@ -74,7 +74,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					payload["First Post?"] = new Date().toISOString();
 					Container.instance().session.telemetryData.hasCreatedPost = true;
 				}
-				telemetry.track("Post Created", payload);
+				telemetry.track({ eventName: "Post Created", properties: payload });
 			} catch (ex) {
 				Logger.error(ex);
 			}

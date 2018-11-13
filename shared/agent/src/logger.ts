@@ -1,5 +1,7 @@
 "use strict";
+import URI from "vscode-uri";
 import { CodeStreamAgent } from "./agent";
+import { getCorrelationContext } from "./system";
 // import { Telemetry } from './telemetry';
 
 // const ConsolePrefix = `[CodeStreamAgent]`;
@@ -11,7 +13,7 @@ export enum TraceLevel {
 	Debug = "debug"
 }
 
-export interface LogCallerContext {
+export interface LogCorrelationContext {
 	correlationId?: number;
 	prefix: string;
 }
@@ -19,14 +21,20 @@ export interface LogCallerContext {
 export class Logger {
 	static level: TraceLevel = TraceLevel.Silent;
 	private static _agent: CodeStreamAgent | undefined;
+	static customLoggableFn: ((o: object) => string | undefined) | undefined;
 
-	static initialize(agent: CodeStreamAgent) {
+	static initialize(agent: CodeStreamAgent, loggableFn?: (o: any) => string | undefined) {
+		this.customLoggableFn = loggableFn;
+
 		this._agent = agent;
 	}
 
 	static debug(message: string, ...params: any[]): void;
-	static debug(caller: Function, message: string, ...params: any[]): void;
-	static debug(callerOrMessage: Function | string, ...params: any[]): void {
+	static debug(context: LogCorrelationContext | undefined, message: string, ...params: any[]): void;
+	static debug(
+		callerOrMessage: LogCorrelationContext | string | undefined,
+		...params: any[]
+	): void {
 		if (this.level !== TraceLevel.Debug && !Logger.isDebugging) return;
 
 		let message;
@@ -35,9 +43,8 @@ export class Logger {
 		} else {
 			message = params.shift();
 
-			const context = this.getCallerContext(callerOrMessage);
-			if (context !== undefined) {
-				message = `${context.prefix} ${message || ""}`;
+			if (callerOrMessage !== undefined) {
+				message = `${callerOrMessage.prefix} ${message || ""}`;
 			}
 		}
 
@@ -51,8 +58,17 @@ export class Logger {
 	}
 
 	static error(ex: Error, message?: string, ...params: any[]): void;
-	static error(ex: Error, caller: Function, message?: string, ...params: any[]): void;
-	static error(ex: Error, callerOrMessage: Function | string | undefined, ...params: any[]): void {
+	static error(
+		ex: Error,
+		context?: LogCorrelationContext,
+		message?: string,
+		...params: any[]
+	): void;
+	static error(
+		ex: Error,
+		callerOrMessage: LogCorrelationContext | string | undefined,
+		...params: any[]
+	): void {
 		if (this.level === TraceLevel.Silent && !Logger.isDebugging) return;
 
 		let message;
@@ -61,9 +77,8 @@ export class Logger {
 		} else {
 			message = params.shift();
 
-			const context = this.getCallerContext(callerOrMessage);
-			if (context !== undefined) {
-				message = `${context.prefix} ${message || ""}`;
+			if (callerOrMessage !== undefined) {
+				message = `${callerOrMessage.prefix} ${message || ""}`;
 			}
 		}
 
@@ -90,9 +105,13 @@ export class Logger {
 		// Telemetry.trackException(ex);
 	}
 
+	static getCorrelationContext() {
+		return getCorrelationContext();
+	}
+
 	static log(message: string, ...params: any[]): void;
-	static log(caller: Function, message: string, ...params: any[]): void;
-	static log(callerOrMessage: Function | string, ...params: any[]): void {
+	static log(context: LogCorrelationContext | undefined, message: string, ...params: any[]): void;
+	static log(callerOrMessage: LogCorrelationContext | string | undefined, ...params: any[]): void {
 		if (
 			this.level !== TraceLevel.Verbose &&
 			this.level !== TraceLevel.Debug &&
@@ -107,9 +126,8 @@ export class Logger {
 		} else {
 			message = params.shift();
 
-			const context = this.getCallerContext(callerOrMessage);
-			if (context !== undefined) {
-				message = `${context.prefix} ${message || ""}`;
+			if (callerOrMessage !== undefined) {
+				message = `${callerOrMessage.prefix} ${message || ""}`;
 			}
 		}
 
@@ -123,8 +141,15 @@ export class Logger {
 	}
 
 	static logWithDebugParams(message: string, ...params: any[]): void;
-	static logWithDebugParams(caller: Function, message: string, ...params: any[]): void;
-	static logWithDebugParams(callerOrMessage: Function | string, ...params: any[]): void {
+	static logWithDebugParams(
+		context: LogCorrelationContext | undefined,
+		message: string,
+		...params: any[]
+	): void;
+	static logWithDebugParams(
+		callerOrMessage: LogCorrelationContext | string | undefined,
+		...params: any[]
+	): void {
 		if (
 			this.level !== TraceLevel.Verbose &&
 			this.level !== TraceLevel.Debug &&
@@ -139,9 +164,8 @@ export class Logger {
 		} else {
 			message = params.shift();
 
-			const context = this.getCallerContext(callerOrMessage);
-			if (context !== undefined) {
-				message = `${context.prefix} ${message || ""}`;
+			if (callerOrMessage !== undefined) {
+				message = `${callerOrMessage.prefix} ${message || ""}`;
 			}
 		}
 
@@ -155,8 +179,8 @@ export class Logger {
 	}
 
 	static warn(message: string, ...params: any[]): void;
-	static warn(caller: Function, message: string, ...params: any[]): void;
-	static warn(callerOrMessage: Function | string, ...params: any[]): void {
+	static warn(context: LogCorrelationContext | undefined, message: string, ...params: any[]): void;
+	static warn(callerOrMessage: LogCorrelationContext | string | undefined, ...params: any[]): void {
 		if (this.level === TraceLevel.Silent && !Logger.isDebugging) return;
 
 		let message;
@@ -165,9 +189,8 @@ export class Logger {
 		} else {
 			message = params.shift();
 
-			const context = this.getCallerContext(callerOrMessage);
-			if (context !== undefined) {
-				message = `${context.prefix} ${message || ""}`;
+			if (callerOrMessage !== undefined) {
+				message = `${callerOrMessage.prefix} ${message || ""}`;
 			}
 		}
 
@@ -186,22 +209,31 @@ export class Logger {
 		return /(password|token)/i.test(key) ? `<${key}>` : value;
 	}
 
+	static toLoggable(p: any, sanitize?: ((key: string, value: any) => any) | undefined) {
+		if (typeof p !== "object") return String(p);
+		if (this.customLoggableFn !== undefined) {
+			const loggable = this.customLoggableFn(p);
+			if (loggable != null) return loggable;
+		}
+		if (p instanceof URI) return `Uri(${p.toString(true)})`;
+
+		try {
+			return JSON.stringify(p, sanitize);
+		} catch {
+			return `<error>`;
+		}
+	}
+
 	static toLoggableName(instance: { constructor: Function }) {
-		const name = instance.constructor != null ? instance.constructor.name : "";
+		const name =
+			typeof instance === "function"
+				? instance.name
+				: instance.constructor != null
+				? instance.constructor.name
+				: "";
 		// Strip webpack module name (since I never name classes with an _)
 		const index = name.indexOf("_");
 		return index === -1 ? name : name.substr(index + 1);
-	}
-
-	private static getCallerContext(caller: Function): LogCallerContext | undefined {
-		let context = (caller as any).$log;
-		if (context == null && caller.prototype != null) {
-			context = caller.prototype.$log;
-			if (context == null && caller.prototype.constructor != null) {
-				context = caller.prototype.constructor.$log;
-			}
-		}
-		return context;
 	}
 
 	private static get timestamp(): string {
@@ -220,18 +252,7 @@ export class Logger {
 			return "";
 		}
 
-		const loggableParams = params
-			.map(p => {
-				if (typeof p !== "object") return String(p);
-
-				try {
-					return JSON.stringify(p, this.sanitizeSerializableParam);
-				} catch {
-					return `<error>`;
-				}
-			})
-			.join(", ");
-
+		const loggableParams = params.map(p => this.toLoggable(p)).join(", ");
 		return loggableParams || "";
 	}
 

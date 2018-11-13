@@ -45,7 +45,7 @@ export class ErrorReporter {
 		}
 	}
 
-	private reportError = async (request: ReportErrorRequest) => {
+	private reportError(request: ReportErrorRequest) {
 		Sentry.captureEvent({
 			level: Sentry.Severity.Error,
 			timestamp: Date.now(),

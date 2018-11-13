@@ -156,6 +156,8 @@ export class SlackApiProvider implements ApiProvider {
 		prefix: (context, e) => `${context.prefix}(${e.type})`
 	})
 	private async onCodeStreamMessage(e: RTMessage) {
+		const cc = Logger.getCorrelationContext();
+
 		try {
 			switch (e.type) {
 				case MessageType.Connection:
@@ -204,7 +206,7 @@ export class SlackApiProvider implements ApiProvider {
 					this._onDidReceiveMessage.fire(e);
 			}
 		} catch (ex) {
-			Logger.error(ex, this.onCodeStreamMessage);
+			Logger.error(ex, cc);
 		}
 	}
 
@@ -1021,6 +1023,8 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async createDirectStream(request: CreateDirectStreamRequest) {
+		const cc = Logger.getCorrelationContext();
+
 		const response = await slackTimeout(
 			this._slack.conversations.open({
 				users: request.memberIds.join(","),
@@ -1036,7 +1040,7 @@ export class SlackApiProvider implements ApiProvider {
 			const members = await this.getStreamMembers(channel.id);
 			channel.members = members;
 		} catch (ex) {
-			Logger.error(ex, this.createDirectStream);
+			Logger.error(ex, cc);
 
 			channel.members = request.memberIds;
 		}
@@ -1063,6 +1067,8 @@ export class SlackApiProvider implements ApiProvider {
 				.join("\n")}`
 	})
 	async fetchStreams(request: FetchStreamsRequest) {
+		const cc = Logger.getCorrelationContext();
+
 		try {
 			// const response = await this._slack.conversations.list({
 			// 	exclude_archived: true,
@@ -1108,7 +1114,7 @@ export class SlackApiProvider implements ApiProvider {
 
 			return { streams: streams };
 		} catch (ex) {
-			Logger.error(ex, this.fetchStreams);
+			Logger.error(ex, cc);
 			throw ex;
 		}
 	}
@@ -1122,6 +1128,8 @@ export class SlackApiProvider implements ApiProvider {
 		  }
 		| undefined
 	> {
+		const cc = Logger.getCorrelationContext();
+
 		try {
 			const response = await slackTimeout(
 				this._slack.apiCall("users.counts", {
@@ -1159,7 +1167,7 @@ export class SlackApiProvider implements ApiProvider {
 				}, Object.create(null))
 			};
 		} catch (ex) {
-			Logger.error(ex, this.fetchCounts);
+			Logger.error(ex, cc);
 			return undefined;
 		}
 	}
@@ -1185,6 +1193,8 @@ export class SlackApiProvider implements ApiProvider {
 	private async processPendingStreamsQueue(
 		queue: DeferredStreamRequest<CSChannelStream | CSDirectStream>[]
 	) {
+		const cc = Logger.getCorrelationContext();
+
 		queue.sort((a, b) => b.grouping - a.grouping || a.order - b.order);
 
 		const { streams } = Container.instance();
@@ -1202,7 +1212,7 @@ export class SlackApiProvider implements ApiProvider {
 				const timeoutMs = 30000;
 				const timer = setTimeout(async () => {
 					Logger.warn(
-						this.processPendingStreamsQueue,
+						cc,
 						`TIMEOUT ${timeoutMs / 1000}s exceeded while fetching stream '${
 							deferred.stream.id
 						}' in the background`
@@ -1245,10 +1255,7 @@ export class SlackApiProvider implements ApiProvider {
 		}
 
 		if (failed > 0) {
-			Logger.debug(
-				this.processPendingStreamsQueue,
-				`Failed fetching ${failed} stream(s) in the background`
-			);
+			Logger.debug(cc, `Failed fetching ${failed} stream(s) in the background`);
 		}
 	}
 
@@ -1326,6 +1333,8 @@ export class SlackApiProvider implements ApiProvider {
 		prefix: (context, id) => `${context.prefix}(${id})`
 	})
 	private async fetchChannel(id: string) {
+		const cc = Logger.getCorrelationContext();
+
 		try {
 			const response = await slackTimeout(
 				this._slack.channels.info({
@@ -1341,7 +1350,7 @@ export class SlackApiProvider implements ApiProvider {
 
 			return fromSlackChannel(channel, this._codestreamTeamId);
 		} catch (ex) {
-			Logger.error(ex, this.fetchChannel);
+			Logger.error(ex, cc);
 			throw ex;
 		}
 	}
@@ -1429,6 +1438,8 @@ export class SlackApiProvider implements ApiProvider {
 		prefix: (context, id) => `${context.prefix}(${id})`
 	})
 	private async fetchGroup(id: any, usernamesById: Map<string, string>) {
+		const cc = Logger.getCorrelationContext();
+
 		try {
 			const response = await slackTimeout(
 				this._slack.groups.info({
@@ -1454,7 +1465,7 @@ export class SlackApiProvider implements ApiProvider {
 				this._codestreamTeamId
 			)!;
 		} catch (ex) {
-			Logger.error(ex, this.fetchGroup);
+			Logger.error(ex, cc);
 			throw ex;
 		}
 	}
@@ -1539,6 +1550,8 @@ export class SlackApiProvider implements ApiProvider {
 		prefix: (context, id) => `${context.prefix}(${id})`
 	})
 	private async fetchIM(id: string, usernamesById: Map<string, string>) {
+		const cc = Logger.getCorrelationContext();
+
 		try {
 			const response = await slackTimeout(
 				this._slack.conversations.info({
@@ -1559,7 +1572,7 @@ export class SlackApiProvider implements ApiProvider {
 
 			return fromSlackDirect(channel, usernamesById, this._slackUserId, this._codestreamTeamId);
 		} catch (ex) {
-			Logger.error(ex, this.fetchIM);
+			Logger.error(ex, cc);
 			throw ex;
 		}
 	}
@@ -1680,6 +1693,8 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async leaveStream(request: LeaveStreamRequest) {
+		const cc = Logger.getCorrelationContext();
+
 		// Get a copy of the original stream & copy its membership array (since it will be mutated)
 		const originalStream = { ...(await Container.instance().streams.getById(request.streamId)) };
 		if (originalStream.memberIds != null) {
@@ -1715,7 +1730,7 @@ export class SlackApiProvider implements ApiProvider {
 			});
 			return { stream: stream as CSChannelStream };
 		} catch (ex) {
-			Logger.error(ex, this.leaveStream);
+			Logger.error(ex, cc);
 
 			// Since this can happen because we have no permission to the stream anymore,
 			// simulate removing ourselves from the membership list
@@ -1781,6 +1796,8 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async openStream(request: OpenStreamRequest) {
+		const cc = Logger.getCorrelationContext();
+
 		const response = await slackTimeout(
 			this._slack.conversations.open({
 				channel: request.streamId,
@@ -1796,7 +1813,7 @@ export class SlackApiProvider implements ApiProvider {
 			const members = await this.getStreamMembers(channel.id);
 			channel.members = members;
 		} catch (ex) {
-			Logger.error(ex, this.openStream);
+			Logger.error(ex, cc);
 
 			const stream = await Container.instance().streams.getById(request.streamId);
 			channel.members = stream.memberIds;
@@ -2011,8 +2028,11 @@ function slackTimeout<T>(promise: Promise<T>, message: string): Promise<T> {
 		message: message,
 		onTimeout: (resolve, reject, message) => {
 			const telemetry = Container.instance().telemetry;
-			telemetry.track("Slack Timeout", {
-				Message: message || "N/A"
+			telemetry.track({
+				eventName: "Slack Timeout",
+				properties: {
+					Message: message || "N/A"
+				}
 			});
 			Logger.warn(`SLACK: ${message}: TIMEOUT ${timeoutMs / 1000}s exceeded`);
 		}

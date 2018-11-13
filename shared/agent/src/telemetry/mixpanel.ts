@@ -1,8 +1,8 @@
 "use strict";
 import * as mixpanel from "mixpanel";
-import { Logger } from "./logger";
-import { CodeStreamSession } from "./session";
-import { CodeStreamEnvironment } from "./shared/agent.protocol";
+import { Logger } from "./../logger";
+import { CodeStreamSession } from "./../session";
+import { CodeStreamEnvironment } from "./../shared/agent.protocol";
 
 /**
  *
@@ -50,18 +50,6 @@ export class MixPanelTelemetryService {
 		}
 	}
 
-	setDistinctId(id: string) {
-		this._distinctId = id;
-	}
-
-	setConsent(hasConsented: boolean) {
-		this._hasOptedOut = !hasConsented;
-	}
-
-	setSuperProps(props: { [key: string]: string | number | boolean }) {
-		this._superProps = props;
-	}
-
 	alias(id?: string) {
 		if (this._hasOptedOut || this._distinctId == null || this._mpInstance == null) {
 			return;
@@ -72,6 +60,18 @@ export class MixPanelTelemetryService {
 		} catch (ex) {
 			Logger.error(ex);
 		}
+	}
+
+	setConsent(hasConsented: boolean) {
+		this._hasOptedOut = !hasConsented;
+	}
+
+	setDistinctId(id: string) {
+		this._distinctId = id;
+	}
+
+	setSuperProps(props: { [key: string]: string | number | boolean }) {
+		this._superProps = props;
 	}
 
 	track(event: string, data?: { [key: string]: string | number | boolean }) {

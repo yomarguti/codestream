@@ -208,6 +208,8 @@ export class SlackEvents {
 
 	@log()
 	async connect(userIds?: string[]) {
+		const cc = Logger.getCorrelationContext();
+
 		try {
 			this._userIds = userIds;
 			if (userIds !== undefined && userIds.length !== 0) {
@@ -216,13 +218,15 @@ export class SlackEvents {
 
 			void (await this._slackRTM.start());
 		} catch (ex) {
-			Logger.error(ex, this.disconnect);
+			Logger.error(ex, cc);
 			throw ex;
 		}
 	}
 
 	@log()
 	async disconnect() {
+		const cc = Logger.getCorrelationContext();
+
 		try {
 			this.stopConnectivityPolling();
 
@@ -230,16 +234,18 @@ export class SlackEvents {
 				return await this._slackRTM.disconnect();
 			}
 		} catch (ex) {
-			Logger.error(ex, this.disconnect);
+			Logger.error(ex, cc);
 		}
 	}
 
 	@log()
 	async reconnect() {
+		const cc = Logger.getCorrelationContext();
+
 		try {
 			return await this.connect(this._userIds);
 		} catch (ex) {
-			Logger.error(ex, this.reconnect);
+			Logger.error(ex, cc);
 			throw ex;
 		}
 	}
@@ -262,17 +268,16 @@ export class SlackEvents {
 		timed: false
 	})
 	private async onSlackConnectionChanged(type: SlackRtmLifeCycleEventTypes, ...args: any[]) {
+		const cc = Logger.getCorrelationContext();
+
 		switch (type) {
 			case SlackRtmLifeCycleEventTypes.Error:
 				const [error] = args;
-				Logger.warn(this.onSlackConnectionChanged, `Error=${error && error.code}`);
+				Logger.warn(cc, `Error=${error && error.code}`);
 				break;
 
 			case SlackRtmLifeCycleEventTypes.Disconnected:
-				Logger.log(
-					this.onSlackConnectionChanged,
-					"Slack real-time connection has been disconnected, reconnecting..."
-				);
+				Logger.log(cc, "Slack real-time connection has been disconnected, reconnecting...");
 
 				this.stopConnectivityPolling();
 				void (await this.reconnect());
@@ -285,10 +290,7 @@ export class SlackEvents {
 
 			case SlackRtmLifeCycleEventTypes.Reconnecting:
 				this._reconnecting = true;
-				Logger.log(
-					this.onSlackConnectionChanged,
-					"Slack real-time connection has been lost, attempting to reconnect..."
-				);
+				Logger.log(cc, "Slack real-time connection has been lost, attempting to reconnect...");
 
 				this.stopConnectivityPolling();
 
@@ -338,6 +340,7 @@ export class SlackEvents {
 			`${context.prefix}(${e.type}${e.subtype ? `:${e.subtype}` : ""})`
 	})
 	private async onSlackChannelChanged(e: SlackEvent) {
+		const cc = Logger.getCorrelationContext();
 		const { type, subtype } = e;
 
 		try {
@@ -518,7 +521,7 @@ export class SlackEvents {
 				}
 			}
 		} catch (ex) {
-			Logger.error(ex, this.onSlackChannelChanged);
+			Logger.error(ex, cc);
 		}
 	}
 
@@ -527,6 +530,7 @@ export class SlackEvents {
 			`${context.prefix}(${e.type}${e.subtype ? `:${e.subtype}` : ""})`
 	})
 	private async onSlackMessageChanged(e: SlackEvent) {
+		const cc = Logger.getCorrelationContext();
 		const { type, subtype } = e;
 
 		try {
@@ -616,7 +620,7 @@ export class SlackEvents {
 							break;
 					}
 				} catch (ex) {
-					Logger.error(ex, this.onSlackMessageChanged);
+					Logger.error(ex, cc);
 				}
 
 				const { preferences } = await this._api.getPreferences();
@@ -650,7 +654,7 @@ export class SlackEvents {
 			message.data = await Container.instance().streams.resolve(message);
 			this._onDidReceiveMessage.fire(message);
 		} catch (ex) {
-			Logger.error(ex, this.onSlackMessageChanged);
+			Logger.error(ex, cc);
 		}
 	}
 
@@ -658,6 +662,7 @@ export class SlackEvents {
 		prefix: (context, e: SlackEvent) => `${context.prefix}(${e.type})`
 	})
 	private async onSlackUserChanged(e: SlackEvent) {
+		const cc = Logger.getCorrelationContext();
 		const { type } = e;
 
 		try {
@@ -810,7 +815,7 @@ export class SlackEvents {
 				}
 			}
 		} catch (ex) {
-			Logger.error(ex, this.onSlackUserChanged);
+			Logger.error(ex, cc);
 		}
 	}
 }

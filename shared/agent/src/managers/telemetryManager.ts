@@ -1,24 +1,37 @@
-import { Container } from "../container";
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import { TelemetryRequest, TelemetryRequestType } from "../shared/agent.protocol";
-import { lspHandler } from "../system/decorators";
-import { MixPanelTelemetryService } from "../telemetry";
+import { debug, lspHandler } from "../system";
+import { MixPanelTelemetryService } from "../telemetry/mixpanel";
 
 export class TelemetryManager {
-	private readonly _telemetryService: MixPanelTelemetryService;
+	private readonly _mixpanel: MixPanelTelemetryService;
 
 	constructor(session: CodeStreamSession) {
-		this._telemetryService = Container.instance().telemetry;
+		// TODO: Respect VSCode telemetry opt out
+		this._mixpanel = new MixPanelTelemetryService(session, false);
 	}
 
+	setConsent(hasConsented: boolean) {
+		this._mixpanel.setConsent(hasConsented);
+	}
+
+	setDistinctId(id: string) {
+		this._mixpanel.setDistinctId(id);
+	}
+
+	setSuperProps(props: { [key: string]: string | number | boolean }) {
+		this._mixpanel.setSuperProps(props);
+	}
+
+	@debug()
 	@lspHandler(TelemetryRequestType)
-	private _trackEvent = (request: TelemetryRequest) => {
-		Logger.debug("_trackEvent called from TelemetryManager");
+	track(request: TelemetryRequest) {
+		const cc = Logger.getCorrelationContext();
 		try {
-			const resp = this._telemetryService.track(request.eventName, request.properties);
+			void this._mixpanel.track(request.eventName, request.properties);
 		} catch (ex) {
-			Logger.error(ex);
+			Logger.error(ex, cc);
 		}
 	}
 }
