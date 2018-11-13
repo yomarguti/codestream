@@ -1122,8 +1122,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 			Container.agent.teams.fetch(),
 			Container.agent.users.unreads(),
 			Container.agent.users.fetch(),
-			Container.agent.users.preferences(),
-			Container.agent.codemarks.fetch()
+			Container.agent.users.preferences()
 		]);
 
 		state.capabilities = this.session.capabilities;
