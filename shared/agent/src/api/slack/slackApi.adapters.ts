@@ -6,6 +6,7 @@ import {
 	CSChannelStream,
 	CSCodemark,
 	CSDirectStream,
+	CSMarker,
 	CSPost,
 	CSTeam,
 	CSUser,
@@ -17,6 +18,7 @@ const defaultCreatedAt = 181886400000;
 // const multiPartyNameRegEx = /--([^-]+)/g;
 
 const codemarkAttachmentRegex = /codestream\:\/\/codemark\/(.*)/;
+const markerAttachmentRegex = /codestream\:\/\/marker\/(.*)/;
 const mentionsRegex = /(^|\s)@(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
 const pseudoMentionsRegex = /(^|\s)@(everyone|channel|here)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
 
@@ -215,6 +217,13 @@ export async function fromSlackPost(
 		if (attachments.length !== 0) {
 			codemark = await fromSlackPostCodemark(attachments);
 			if (!codemark) {
+				// legacy markers
+				const marker = await fromSlackPostMarker(attachments);
+				if (marker) {
+					codemark = await Container.instance().codemarks.getById(marker.codemarkId);
+				}
+			}
+			if (!codemark) {
 				// Get text/fallback for attachments
 				text += "\n";
 				for (const attachment of attachments) {
@@ -267,6 +276,28 @@ export async function fromSlackPostCodemark(
 		return await Container.instance().codemarks.getById(codemarkId);
 	} catch (ex) {
 		Logger.error(ex, `Failed to find codemark=${codemarkId}`);
+		debugger;
+		return undefined;
+	}
+}
+
+export async function fromSlackPostMarker(
+	attachments: MessageAttachment[]
+): Promise<CSMarker | undefined> {
+	const attachment = attachments.find(
+		(a: any) => a.callback_id != null && markerAttachmentRegex.test(a.callback_id)
+	);
+	if (attachment == null) return undefined;
+
+	const match = markerAttachmentRegex.exec(attachment.callback_id || "");
+	if (match == null) return undefined;
+
+	const [, markerId] = match;
+
+	try {
+		return await Container.instance().markers.getById(markerId);
+	} catch (ex) {
+		Logger.error(ex, `Failed to find marker=${markerId}`);
 		debugger;
 		return undefined;
 	}
