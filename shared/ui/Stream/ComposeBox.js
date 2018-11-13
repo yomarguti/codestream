@@ -35,7 +35,7 @@ class ComposeBox extends React.Component {
 	state = {
 		color: this.props.codemarkColor || "blue",
 		postTextByStream: {},
-		quote: null,
+		quote: this.props.quote,
 		autoMentions: [],
 		popupOpen: false,
 		emojiOpen: false,

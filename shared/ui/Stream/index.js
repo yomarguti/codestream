@@ -767,16 +767,12 @@ export class SimpleStream extends Component {
 		}, 20);
 	};
 
-	setMultiCompose = value => {
-		this.setState({ multiCompose: value });
+	setMultiCompose = (value, state = {}) => {
+		this.setState({ multiCompose: value, ...state });
 		if (!value) {
 			this.setState({
 				quote: null,
-				composeBoxProps: {
-					editingPostId: null,
-					text: null,
-					isEditing: false
-				}
+				composeBoxProps: {}
 			});
 		}
 		// if (value) this.focus();
@@ -821,19 +817,18 @@ export class SimpleStream extends Component {
 			const post = getPost(posts, this.props.postStreamId, id);
 
 			if (post.codemarkId) {
-				this.setMultiCompose(true);
 				const codemark = getCodemark(codemarks, post.codemarkId);
 				const marker = codemark.markers[0];
 
-				this.setState({
+				this.setMultiCompose(true, {
+					quote: marker ? { ...marker, location: marker.locationWhenCreated } : null,
 					composeBoxProps: {
 						...this.state.composeBoxProps,
 						key: Math.random().toString(),
 						isEditing: true,
 						editingPostId: post.id,
 						text: post.text,
-						codemarkColor: codemark.color,
-						quote: { ...marker, location: marker.locationWhenCreated }
+						codemarkColor: codemark.color
 					}
 				});
 			} else
