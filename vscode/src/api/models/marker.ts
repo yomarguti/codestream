@@ -2,7 +2,7 @@
 import { Range } from "vscode";
 import { CSLocationArray, CSMarker } from "../../agent/agentConnection";
 import { Container } from "../../container";
-import { memoize } from "../../system/decorators";
+import { memoize } from "../../system";
 import { CodeStreamSession, Post } from "../session";
 
 export class Marker {

@@ -1,6 +1,5 @@
 "use strict";
-const _debounce = require("lodash.debounce");
-// const _once = require('lodash.once');
+import { debounce as _debounce } from "lodash-es";
 import * as uuidv4 from "uuid/v4";
 
 export interface IDeferrable {
@@ -15,7 +14,23 @@ interface IPropOfValue {
 }
 
 export namespace Functions {
-	export function debounce<T extends Function>(
+	export function cachedOnce<T>(
+		fn: (...args: any[]) => Promise<T>,
+		seed: T
+	): (...args: any[]) => Promise<T> {
+		let cached: T | undefined = seed;
+		return (...args: any[]) => {
+			if (cached !== undefined) {
+				const promise = Promise.resolve(cached);
+				cached = undefined;
+
+				return promise;
+			}
+			return fn(...args);
+		};
+	}
+
+	export function debounce<T extends (...args: any[]) => any>(
 		fn: T,
 		wait?: number,
 		options?: { leading?: boolean; maxWait?: number; track?: boolean; trailing?: boolean }
@@ -58,7 +73,7 @@ export namespace Functions {
 		return tracked;
 	}
 
-	export function debounceMerge<T extends Function>(
+	export function debounceMerge<T extends (...args: any[]) => any>(
 		fn: T,
 		merger: (combined: any[] | undefined, current: any) => any[],
 		wait?: number,
@@ -123,32 +138,32 @@ export namespace Functions {
 	//     foodb({ type: 'bar', values: ['7'] });
 	// }, 5000);
 
-	export function decorate(decorator: (fn: Function, key: string) => Function): Function {
-		return (target: any, key: string, descriptor: any) => {
-			let fn;
-			let fnKey;
+	export function getParameters(fn: Function): string[] {
+		if (typeof fn !== "function") throw new Error("Not supported");
 
-			if (typeof descriptor.value === "function") {
-				fn = descriptor.value;
-				fnKey = "value";
-			} else if (typeof descriptor.get === "function") {
-				fn = descriptor.get;
-				fnKey = "get";
-			}
+		if (fn.length === 0) return [];
 
-			if (!fn || !fnKey) throw new Error("Not supported");
+		const stripCommentsRegex = /(\/\*([\s\S]*?)\*\/|([^:]|^)\/\/(.*)$)/gm;
+		let fnBody: string = Function.prototype.toString.call(fn);
+		fnBody = fnBody.replace(stripCommentsRegex, "") || fnBody;
+		fnBody = fnBody.slice(0, fnBody.indexOf("{"));
 
-			descriptor[fnKey] = decorator(fn, key);
-		};
+		let open = fnBody.indexOf("(");
+		let close = fnBody.indexOf(")");
+
+		open = open >= 0 ? open + 1 : 0;
+		close = close > 0 ? close : fnBody.indexOf("=");
+
+		fnBody = fnBody.slice(open, close);
+		fnBody = `(${fnBody})`;
+
+		const match = fnBody.match(/\(([\s\S]*)\)/);
+		return match != null ? match[1].split(",").map(param => param.trim()) : [];
 	}
 
 	export function isPromise(o: any) {
 		return (typeof o === "object" || typeof o === "function") && typeof o.then === "function";
 	}
-
-	// export function once<T extends Function>(fn: T): T {
-	//     return _once(fn);
-	// }
 
 	export function propOf<T, K extends Extract<keyof T, string>>(o: T, key: K) {
 		const propOfCore = <T, K extends Extract<keyof T, string>>(o: T, key: K) => {
@@ -161,22 +176,6 @@ export namespace Functions {
 			return Object.assign(fn, { value: value });
 		};
 		return propOfCore(o, key);
-	}
-
-	export function seeded<T>(
-		fn: (...args: any[]) => Promise<T>,
-		seed: T
-	): (...args: any[]) => Promise<T> {
-		let cached: T | undefined = seed;
-		return (...args: any[]) => {
-			if (cached !== undefined) {
-				const promise = Promise.resolve(cached);
-				cached = undefined;
-
-				return promise;
-			}
-			return fn(...args);
-		};
 	}
 
 	export async function wait(ms: number) {
