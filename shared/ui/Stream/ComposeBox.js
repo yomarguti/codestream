@@ -809,9 +809,12 @@ class ComposeBox extends React.Component {
 								<div className="half-width">
 									<label>Marker Icon</label>
 									<div className="styled-select">
-										<select onChange={e => this.setState({ color: e.target.value })}>
+										<select
+											defaultValue={this.state.color}
+											onChange={e => this.setState({ color: e.target.value })}
+										>
 											{colorOptions.map(color => (
-												<option value={color} selected={this.state.color === color}>
+												<option key={color} value={color}>
 													{capitalize(color)}
 												</option>
 											))}
