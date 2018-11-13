@@ -40,7 +40,7 @@ export const muteAllConversations = value => (dispatch, getState, { api }) => {
 	api.muteAllConversations(value);
 };
 
-export const createPost = (streamId, parentPostId, text, codeBlocks, mentions, extra) => async (
+export const createPost = (streamId, parentPostId, text, codemark, mentions, extra) => async (
 	dispatch,
 	getState,
 	{ api }
@@ -53,31 +53,27 @@ export const createPost = (streamId, parentPostId, text, codeBlocks, mentions, e
 			id: pendingId,
 			streamId,
 			parentPostId,
-			codeBlocks,
 			text,
-			commitHashWhenPosted: context.currentCommit,
+			codemark,
 			creatorId: session.userId,
 			createdAt: new Date().getTime(),
-			pending: true,
-			title: extra.title,
-			assignees: extra.assignees,
-			type: extra.type,
-			color: extra.color
+			pending: true
 		}
 	});
 	try {
-		const post = await api.createPost({
+		const response = await api.createPost({
 			id: pendingId,
 			teamId: context.currentTeamId,
 			parentPostId,
 			streamId,
 			text,
-			codeBlocks,
+			codemark,
 			mentions,
 			extra
 		});
-		dispatch(postCreated({ post, ...extra }));
-		return dispatch(resolvePendingPost(pendingId, post));
+		dispatch(resolvePendingPost(pendingId, response.post));
+		response.codemark &&
+			dispatch(saveCodemarks([{ ...response.codemark, markers: response.markers }]));
 	} catch (e) {
 		console.log("DID NOT POST: ", e);
 		return dispatch({ type: "PENDING_POST_FAILED", payload: pendingId });
@@ -89,7 +85,6 @@ export const retryPost = pendingId => async (dispatch, getState, { api }) => {
 	const pendingPost = posts.pending.find(post => post.id === pendingId);
 	if (pendingPost) {
 		const post = await api.createPost(pendingPost);
-		dispatch(postCreated({ post })); // FIXME: analytics metadata is lost
 		return dispatch(resolvePendingPost(pendingId, post));
 		// if it fails then what?
 	} else {

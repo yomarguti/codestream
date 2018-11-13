@@ -1529,18 +1529,16 @@ export class SimpleStream extends Component {
 	// create a new post
 	submitPost = ({
 		text,
-		title,
 		quote,
 		mentionedUserIds,
 		autoMentions,
 		forceStreamId,
 		forceThreadId,
-		type,
-		assignees,
-		color
+		codemark
 	}) => {
-		const codeBlocks = [];
-		const { activePanel, postStreamId, createPost, editPost } = this.props;
+		const markers = [];
+		if (codemark) codemark.markers = markers;
+		const { postStreamId, createPost, editPost } = this.props;
 		let fileUri;
 
 		if (this.checkForSlashCommands(text)) return;
@@ -1550,35 +1548,34 @@ export class SimpleStream extends Component {
 
 		const { composeBoxProps } = this.state;
 		if (composeBoxProps.isEditing) {
-			editPost(postStreamId, composeBoxProps.editingPostId, text, mentionedUserIds, { color });
+			// TODO: might not always be a post edit.
+			editPost(postStreamId, composeBoxProps.editingPostId, text, mentionedUserIds, {
+				color: codemark.color
+			});
 			return this.setMultiCompose(false);
 		}
 
 		const submit = () =>
-			createPost(streamId, threadId, text, codeBlocks, mentionedUserIds, {
-				title,
+			createPost(streamId, threadId, text, codemark, mentionedUserIds, {
 				autoMentions,
-				fileUri,
-				type,
-				assignees,
-				color
+				fileUri
 			}).then(this.scrollPostsListToBottom);
 
 		if (quote) {
 			fileUri = quote.fileUri;
 
-			let codeBlock = {
+			let marker = {
 				code: quote.code,
 				location: quote.location,
 				file: quote.file
 			};
 
 			if (quote.source) {
-				codeBlock.file = quote.source.file;
-				codeBlock.source = quote.source;
+				marker.file = quote.source.file;
+				marker.source = quote.source;
 			}
 
-			codeBlocks.push(codeBlock);
+			markers.push(marker);
 
 			let warning;
 			if (quote.source) {

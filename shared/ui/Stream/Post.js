@@ -768,7 +768,7 @@ const mapStateToProps = (state, props) => {
 	const post = getPost(state.posts, props.streamId, props.id);
 	if (!post) return { deactivated: true };
 
-	const codemark = getCodemark(state.codemarks, post.codemarkId);
+	const codemark = (post.pending && post.codemark) || getCodemark(state.codemarks, post.codemarkId);
 
 	const repoName =
 		(codemark &&
