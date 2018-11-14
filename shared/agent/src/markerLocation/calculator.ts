@@ -2,6 +2,8 @@
 
 import { IUniDiff } from "diff";
 import { compareTwoStrings, findBestMatch, Rating } from "string-similarity";
+import { Logger } from "../logger";
+import { Id } from "../managers/entityManager";
 import { LocationsById } from "../managers/markerLocationManager";
 import { CSLocationMeta, CSMarkerLocation } from "../shared/api.protocol";
 import { buildChangeset, Change, Changeset } from "./changeset";
@@ -183,14 +185,17 @@ class CalculatedLocation {
 
 class Calculation {
 	private readonly _lines: number[];
+	private readonly _locationsStarting = new Map<number, Id[]>();
+	private readonly _locationsEnding = new Map<number, Id[]>();
+	private readonly _activeLocations = new Set<Id>();
 	private readonly _calculatedLines: Map<number, CalculatedLine>;
-	private readonly _calculatedLocations: Map<String, CalculatedLocation>;
+	private readonly _calculatedLocations: Map<Id, CalculatedLocation>;
 	private readonly _changes: Change[];
 	private _lineIndex: number;
 	private _finalBalance: number;
 
 	constructor(locations: LocationsById, changeset: Changeset) {
-		const calculatedLocations = new Map<String, CalculatedLocation>();
+		const calculatedLocations = new Map<Id, CalculatedLocation>();
 		const linesOfInterest = new Set<number>();
 		const calculatedLines = new Map<number, CalculatedLine>();
 
@@ -199,9 +204,21 @@ class Calculation {
 			calculatedLocations.set(location.id, new CalculatedLocation(location, calculatedLines));
 			if (location.lineStart !== DELETED) {
 				linesOfInterest.add(location.lineStart);
+				let starting = this._locationsStarting.get(location.lineStart);
+				if (!starting) {
+					starting = [];
+					this._locationsStarting.set(location.lineStart, starting);
+				}
+				starting.push(location.id);
 			}
 			if (location.lineEnd !== DELETED) {
 				linesOfInterest.add(location.lineEnd);
+				let ending = this._locationsEnding.get(location.lineEnd);
+				if (!ending) {
+					ending = [];
+					this._locationsEnding.set(location.lineEnd, ending);
+				}
+				ending.push(location.id);
 			}
 		}
 
@@ -216,6 +233,7 @@ class Calculation {
 		this._changes = changeset.changes;
 		this._lineIndex = 0;
 		this._finalBalance = 0;
+		this.activateLocationsStartingAtCurrentLine();
 	}
 
 	public results(): LocationsById {
@@ -235,6 +253,26 @@ class Calculation {
 		return result;
 	}
 
+	private activateLocationsStartingAtCurrentLine() {
+		const line = this.getCurrentLine();
+		const locationIds = this._locationsStarting.get(line);
+		if (locationIds) {
+			for (const id of locationIds) {
+				this._activeLocations.add(id);
+			}
+		}
+	}
+
+	private deactivateLocationsEndingAtCurrentLine() {
+		const line = this.getCurrentLine();
+		const locationIds = this._locationsEnding.get(line);
+		if (locationIds) {
+			for (const id of locationIds) {
+				this._activeLocations.delete(id);
+			}
+		}
+	}
+
 	private getCurrentLine(): number {
 		return this._lines[this._lineIndex];
 	}
@@ -249,7 +287,9 @@ class Calculation {
 	}
 
 	private nextLine() {
+		this.deactivateLocationsEndingAtCurrentLine();
 		this._lineIndex++;
+		this.activateLocationsStartingAtCurrentLine();
 	}
 
 	private moveCurrentLineBy(delta: number) {
@@ -330,6 +370,7 @@ class Calculation {
 	}
 
 	private calculateLinesIn(change: Change) {
+		this.setContentChangedInActiveLocations();
 		const initialBalance = change.addStart - change.delStart;
 		const changeLen = change.adds.length - change.dels.length;
 		const delEnd = change.delStart + change.dels.length;
@@ -464,6 +505,19 @@ class Calculation {
 		}
 
 		return matches.sort(sortMatches).map(match => match.change);
+	}
+
+	private setContentChangedInActiveLocations() {
+		for (const id of this._activeLocations) {
+			const calculatedLocation = this._calculatedLocations.get(id);
+			if (calculatedLocation) {
+				calculatedLocation.meta.contentChanged = true;
+			} else {
+				Logger.warn(
+					`Calculation error: cannot set flag contentsChanged=true in active location ${id} - calculated location object not found`
+				);
+			}
+		}
 	}
 }
 

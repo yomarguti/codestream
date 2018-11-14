@@ -54,6 +54,7 @@ export interface CSLocationMeta {
 	startWasDeleted?: boolean;
 	endWasDeleted?: boolean;
 	entirelyDeleted?: boolean;
+	contentChanged?: boolean;
 }
 
 export type CSLocationArray = [number, number, number, number, CSLocationMeta | undefined];

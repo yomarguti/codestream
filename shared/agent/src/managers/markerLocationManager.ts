@@ -156,6 +156,9 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 						commLoc.colEnd
 					}] => [${currLoc.lineStart}, ${currLoc.colStart}, ${currLoc.lineEnd}, ${currLoc.colEnd}]`
 				);
+				if (currLoc.meta && currLoc.meta.contentChanged) {
+					// Logger.log("IT'S A TRAP!!!!!!!!!!!");
+				}
 			}
 			Object.assign(result.locations, calculatedLocations);
 		}
