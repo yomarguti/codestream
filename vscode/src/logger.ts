@@ -253,13 +253,12 @@ export class Logger {
 		}
 	}
 
-	static toLoggableName(instance: { constructor: Function }) {
-		const name =
-			typeof instance === "function"
-				? instance.name
-				: instance.constructor != null
-					? instance.constructor.name
-					: "";
+	static toLoggableName(instance: Function | object) {
+		if (typeof instance === "function") {
+			return instance.name;
+		}
+
+		const name = instance.constructor != null ? instance.constructor.name : "";
 		// Strip webpack module name (since I never name classes with an _)
 		const index = name.indexOf("_");
 		return index === -1 ? name : name.substr(index + 1);
