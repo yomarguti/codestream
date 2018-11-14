@@ -28,11 +28,12 @@ import {
 	ReactToPostResponse
 } from "../shared/agent.protocol";
 import { CSPost } from "../shared/api.protocol";
-import { lspHandler } from "../system";
+import { lsp, lspHandler } from "../system";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { IndexParams, IndexType } from "./cache/index";
 import { EntityManagerBase, Id } from "./entityManager";
 
+@lsp
 export class PostsManager extends EntityManagerBase<CSPost> {
 	getIndexedFields(): IndexParams<CSPost>[] {
 		return [

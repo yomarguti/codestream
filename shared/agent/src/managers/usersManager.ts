@@ -20,10 +20,11 @@ import {
 	UpdatePresenceRequest,
 	UpdatePresenceRequestType
 } from "../shared/agent.protocol";
-import { CSMe, CSUser } from "../shared/api.protocol";
-import { lspHandler } from "../system";
+import { CSUser } from "../shared/api.protocol";
+import { lsp, lspHandler } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 
+@lsp
 export class UsersManager extends CachedEntityManagerBase<CSUser> {
 	@lspHandler(FetchUsersRequestType)
 	async get(request?: FetchUsersRequest): Promise<FetchUsersResponse> {

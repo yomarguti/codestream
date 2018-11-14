@@ -62,6 +62,11 @@ export class CodeStreamAgent implements Disposable {
 				Logger.overrideIsDebugging();
 			}
 
+			// Pause for a bit to give the debugger a window of time to connect -- mainly for startup issues
+			if (Logger.isDebugging) {
+				void (await Functions.wait(5000));
+			}
+
 			Logger.log(
 				`Agent for CodeStream v${agentOptions.extension.versionFormatted} in ${
 					agentOptions.ide.name
@@ -69,11 +74,6 @@ export class CodeStreamAgent implements Disposable {
 			);
 
 			this._session = new CodeStreamSession(this, this._connection, agentOptions);
-
-			// Pause for a bit to give the debugger a window of time to connect -- mainly for startup issues
-			if (Logger.isDebugging) {
-				void (await Functions.wait(5000));
-			}
 			const result = await this._session.login();
 
 			return {

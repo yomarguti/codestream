@@ -55,7 +55,7 @@ import {
 	CSUser,
 	LoginResult
 } from "./shared/api.protocol";
-import { log, memoize } from "./system";
+import { log, memoize, registerDecoratedHandlers } from "./system";
 
 const envRegex = /https?:\/\/(pd-|qa-)?api.codestream.(?:us|com)/;
 
@@ -161,6 +161,8 @@ export class CodeStreamSession {
 		versionManager.onDidChangeCompatibility(this.onVersionCompatibilityChanged, this);
 
 		// this.connection.onHover(e => MarkerHandler.onHover(e));
+
+		registerDecoratedHandlers(this.agent);
 
 		this.agent.registerHandler(ApiRequestType, (e, cancellationToken: CancellationToken) =>
 			this.api.fetch(e.url, e.init, e.token)

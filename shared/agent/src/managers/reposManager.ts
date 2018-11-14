@@ -11,9 +11,10 @@ import {
 	GetRepoResponse
 } from "../shared/agent.protocol";
 import { CSRepository } from "../shared/api.protocol";
-import { lspHandler } from "../system";
+import { lsp, lspHandler } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 
+@lsp
 export class ReposManager extends CachedEntityManagerBase<CSRepository> {
 	@lspHandler(CreateRepoRequestType)
 	createRepo(request: CreateRepoRequest): Promise<CreateRepoResponse> {

@@ -7,7 +7,9 @@ import {
 	ReportErrorRequest,
 	ReportErrorRequestType
 } from "./shared/agent.protocol";
+import { lsp, lspHandler } from "./system";
 
+@lsp
 export class ErrorReporter {
 	constructor(session: CodeStreamSession) {
 		if (
@@ -40,11 +42,10 @@ export class ErrorReporter {
 					scope.setTag("source", "agent");
 				});
 			});
-
-			session.agent.registerHandler(ReportErrorRequestType, this.reportError);
 		}
 	}
 
+	@lspHandler(ReportErrorRequestType)
 	private reportError(request: ReportErrorRequest) {
 		Sentry.captureEvent({
 			level: Sentry.Severity.Error,

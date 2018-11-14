@@ -8,9 +8,10 @@ import {
 	GetTeamResponse
 } from "../shared/agent.protocol";
 import { CSTeam } from "../shared/api.protocol";
-import { lspHandler } from "../system";
+import { lsp, lspHandler } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 
+@lsp
 export class TeamsManager extends CachedEntityManagerBase<CSTeam> {
 	@lspHandler(FetchTeamsRequestType)
 	async get(request?: FetchTeamsRequest): Promise<FetchTeamsResponse> {

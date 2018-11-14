@@ -76,8 +76,13 @@ export function log<T>(
 	const logFn = options.debug ? Logger.debug.bind(Logger) : Logger.log.bind(Logger);
 
 	return (target: any, key: string, descriptor: PropertyDescriptor) => {
-		const fn = descriptor.value;
-		if (typeof fn !== "function") throw new Error("not supported");
+		let fn: Function | undefined;
+		if (typeof descriptor.value === "function") {
+			fn = descriptor.value;
+		} else if (typeof descriptor.get === "function") {
+			fn = descriptor.get;
+		}
+		if (fn == null) throw new Error("Not supported");
 
 		const parameters = Functions.getParameters(fn);
 
@@ -87,7 +92,7 @@ export function log<T>(
 					!(Logger.level === TraceLevel.Verbose && !options.debug)) ||
 				(typeof options.condition === "function" && !options.condition(...args))
 			) {
-				return fn.apply(this, args);
+				return fn!.apply(this, args);
 			}
 
 			let instanceName: string;
@@ -177,7 +182,7 @@ export function log<T>(
 
 				let result;
 				try {
-					result = fn.apply(this, args);
+					result = fn!.apply(this, args);
 				} catch (ex) {
 					logError(ex);
 					throw ex;
@@ -222,7 +227,7 @@ export function log<T>(
 				return result;
 			}
 
-			return fn.apply(this, args);
+			return fn!.apply(this, args);
 		};
 	};
 }

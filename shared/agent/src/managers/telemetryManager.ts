@@ -1,9 +1,10 @@
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import { TelemetryRequest, TelemetryRequestType } from "../shared/agent.protocol";
-import { debug, lspHandler } from "../system";
+import { debug, lsp, lspHandler } from "../system";
 import { MixPanelTelemetryService } from "../telemetry/mixpanel";
 
+@lsp
 export class TelemetryManager {
 	private readonly _mixpanel: MixPanelTelemetryService;
 

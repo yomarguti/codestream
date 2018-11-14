@@ -53,10 +53,11 @@ import {
 	UpdateStreamMembershipResponse
 } from "../shared/agent.protocol";
 import { CSChannelStream, CSDirectStream, CSStream, StreamType } from "../shared/api.protocol";
-import { lspHandler } from "../system";
+import { lsp, lspHandler } from "../system";
 import { KeyValue } from "./cache/baseCache";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 
+@lsp
 export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CSDirectStream> {
 	@lspHandler(FetchStreamsRequestType)
 	async get(request?: FetchStreamsRequest): Promise<FetchStreamsResponse> {

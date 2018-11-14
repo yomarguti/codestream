@@ -1,7 +1,7 @@
 "use strict";
 import { RawRTMessage } from "../api/apiProvider";
 import { CodeStreamSession } from "../session";
-import { debug, log, LspHandler } from "../system";
+import { debug, log } from "../system";
 import { IndexParams } from "./cache";
 import { BaseCache, KeyValue } from "./cache/baseCache";
 import * as operations from "./operations";
@@ -10,14 +10,7 @@ import { isCompleteObject } from "./operations";
 export abstract class ManagerBase<T> {
 	protected readonly cache: BaseCache<T> = new BaseCache<T>(this.getIndexedFields());
 
-	public constructor(public session: CodeStreamSession) {
-		const handlerRegistry = (this as any).handlerRegistry as LspHandler[] | undefined;
-		if (handlerRegistry !== undefined) {
-			for (const handler of handlerRegistry) {
-				this.session.agent.registerHandler(handler.type, handler.method.bind(this));
-			}
-		}
-
+	public constructor(public readonly session: CodeStreamSession) {
 		this.session.onDidRequestReset(() => {
 			this.invalidateCache();
 		});

@@ -10,11 +10,12 @@ import {
 	FetchFileStreamsResponse
 } from "../shared/agent.protocol";
 import { CSFileStream, CSStream, StreamType } from "../shared/api.protocol";
-import { lspHandler } from "../system";
+import { lsp, lspHandler } from "../system";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { IndexParams, IndexType } from "./cache/index";
 import { EntityManagerBase, Id } from "./entityManager";
 
+@lsp
 export class FilesManager extends EntityManagerBase<CSFileStream> {
 	private idsByPath = new Map<string, Id>();
 
