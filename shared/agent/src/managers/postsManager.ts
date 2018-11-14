@@ -560,6 +560,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 		const codemarkRequest = {
 			title,
+			text,
 			type,
 			assignees,
 			color,
@@ -609,7 +610,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		try {
 			const response = await this.createPost({
 				streamId,
-				text,
+				text: "",
 				parentPostId,
 				codemark: codemarkRequest,
 				mentionedUserIds

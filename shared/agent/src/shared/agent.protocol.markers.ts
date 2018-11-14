@@ -162,8 +162,9 @@ export interface UpdateMarkerRequest {
 }
 
 export interface CreateCodemarkRequest {
-	providerType?: ProviderType;
 	type: CodemarkType;
+	providerType?: ProviderType;
+	text?: string;
 	streamId?: string;
 	postId?: string;
 	color?: string;
