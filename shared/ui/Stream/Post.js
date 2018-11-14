@@ -318,17 +318,13 @@ class Post extends React.Component {
 				)}
 				<div className="body">
 					{this.renderTitle(post)}
-					{(this.props.editing || post.text.length > 0) && (
-						<div className="text">
-							{this.props.collapsed && !title && this.renderTypeIcon(post)}
-							{this.renderText(post)}
-							{!this.props.editing && post.hasBeenEdited && (
-								<span className="edited">(edited)</span>
-							)}
-							{this.renderAssignees(post)}
-							{this.renderCodeBlockFile(post)}
-						</div>
-					)}
+					<div className="text">
+						{this.props.collapsed && !title && this.renderTypeIcon(post)}
+						{this.renderText(post)}
+						{!this.props.editing && post.hasBeenEdited && <span className="edited">(edited)</span>}
+						{this.renderAssignees(post)}
+						{this.renderCodeBlockFile()}
+					</div>
 					{codeBlock}
 					{this.renderAttachments(post)}
 					{this.props.showDetails && !this.state.warning && (
@@ -461,7 +457,7 @@ class Post extends React.Component {
 			return (
 				<div className="title">
 					{icon} {this.renderTextLinkified(title)}
-					{this.renderCodeBlockFile(post)}
+					{this.renderCodeBlockFile()}
 				</div>
 			);
 		else return null;
@@ -493,7 +489,7 @@ class Post extends React.Component {
 		);
 	};
 
-	renderCodeBlockFile = post => {
+	renderCodeBlockFile = () => {
 		const { collapsed, showFileAfterTitle, hasMarkers, codemark } = this.props;
 
 		const marker = hasMarkers ? codemark.markers[0] || {} : {};
@@ -504,7 +500,7 @@ class Post extends React.Component {
 
 	renderStatus = () => {
 		// console.log("STATUS IS: ", this.props.status);
-		const { post } = this.props;
+		const { codemark } = this.props;
 		const status = (codemark && codemark.status) || "open";
 		// const status = this.props.post.status || "open";
 
@@ -523,7 +519,7 @@ class Post extends React.Component {
 	};
 
 	renderAssigneeHeadshots = () => {
-		const { post } = this.props;
+		const { codemark } = this.props;
 		const assignees = codemark ? codemark.assignees || [] : [];
 
 		if (assignees.length == 0) return null;
@@ -584,9 +580,10 @@ class Post extends React.Component {
 	};
 
 	renderText = post => {
-		if (this.props.editing) return this.renderTextEditing(post);
+		const { codemark, editing } = this.props;
+		if (editing) return this.renderTextEditing(post);
 		else if ((post.text || "").match(/^\/me\s/)) return null;
-		else return this.renderTextLinkified(post.text);
+		else return this.renderTextLinkified(codemark ? codemark.text : post.text);
 	};
 
 	renderTextLinkified = text => {

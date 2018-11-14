@@ -579,7 +579,7 @@ class ComposeBox extends React.Component {
 
 		this.props.onSubmit({
 			type: commentType,
-			text,
+			text: multiCompose ? "" : text,
 			title,
 			quote,
 			mentionedUserIds: this.props.findMentionedUserIds(text, this.props.teammates),
@@ -588,6 +588,7 @@ class ComposeBox extends React.Component {
 			codemark: multiCompose
 				? {
 						title,
+						text,
 						streamId,
 						type: commentType,
 						assignees: assigneeIds || [],
