@@ -91,11 +91,10 @@ export class BaseCache<T> {
 			hit = true;
 		}
 
-		const cacheName = `${this.entityName} cache`;
 		Logger.log(
-			`${cacheName} ${hit ? "hit" : "miss"} ${keys}=${values} ${Strings.getDurationMilliseconds(
-				start
-			)}ms `
+			`${this.entityName} cache ${
+				hit ? "hit" : "miss"
+			} ${keys}=${values} ${Strings.getDurationMilliseconds(start)}ms `
 		);
 		return entity;
 	}
