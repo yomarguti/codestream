@@ -44,40 +44,45 @@ export function logName<T>(fn: (c: T, name: string) => string) {
 
 export function debug<T>(
 	options: {
-		args?: boolean | { [arg: string]: (arg: any) => string };
-		condition?(this: any, ...args: any[]): boolean;
+		args?: false | { [arg: string]: (arg: any) => string | false };
+		condition?(...args: any[]): boolean;
 		correlate?: boolean;
-		enter?(this: any, ...args: any[]): string;
-		exit?(this: any, result: any): string;
-		prefix?(this: any, context: LogContext<T>, ...args: any[]): string;
-		sanitize?(this: any, key: string, value: any): any;
+		enter?(...args: any[]): string;
+		exit?(result: any): string;
+		prefix?(context: LogContext<T>, ...args: any[]): string;
+		sanitize?(key: string, value: any): any;
 		timed?: boolean;
-	} = { args: true, timed: true }
+	} = { timed: true }
 ) {
 	return log<T>({ debug: true, ...options });
 }
 
 export function log<T>(
 	options: {
-		args?: boolean | { [arg: number]: (arg: any) => string };
-		condition?(this: any, ...args: any[]): boolean;
+		args?: false | { [arg: number]: (arg: any) => string | false };
+		condition?(...args: any[]): boolean;
 		correlate?: boolean;
 		debug?: boolean;
-		enter?(this: any, ...args: any[]): string;
-		exit?(this: any, result: any): string;
-		prefix?(this: any, context: LogContext<T>, ...args: any[]): string;
-		sanitize?(this: any, key: string, value: any): any;
+		enter?(...args: any[]): string;
+		exit?(result: any): string;
+		prefix?(context: LogContext<T>, ...args: any[]): string;
+		sanitize?(key: string, value: any): any;
 		singleLine?: boolean;
 		timed?: boolean;
-	} = { args: true, timed: true }
+	} = { timed: true }
 ) {
-	options = { args: true, timed: true, ...options };
+	options = { timed: true, ...options };
 
 	const logFn = options.debug ? Logger.debug.bind(Logger) : Logger.log.bind(Logger);
 
 	return (target: any, key: string, descriptor: PropertyDescriptor) => {
-		const fn = descriptor.value;
-		if (typeof fn !== "function") throw new Error("not supported");
+		let fn: Function | undefined;
+		if (typeof descriptor.value === "function") {
+			fn = descriptor.value;
+		} else if (typeof descriptor.get === "function") {
+			fn = descriptor.get;
+		}
+		if (fn == null) throw new Error("Not supported");
 
 		const parameters = Functions.getParameters(fn);
 
@@ -87,7 +92,7 @@ export function log<T>(
 					!(Logger.level === TraceLevel.Verbose && !options.debug)) ||
 				(typeof options.condition === "function" && !options.condition(...args))
 			) {
-				return fn.apply(this, args);
+				return fn!.apply(this, args);
 			}
 
 			let instanceName: string;
@@ -129,24 +134,31 @@ export function log<T>(
 			const enter = options.enter != null ? options.enter(...args) : "";
 
 			let loggableParams: string;
-			if (!options.args || args.length === 0) {
+			if (options.args === false || args.length === 0) {
 				loggableParams = "";
 
 				if (!options.singleLine) {
 					logFn(`${prefix}${enter}`);
 				}
 			} else {
+				const argFns = typeof options.args === "object" ? options.args : undefined;
+				let argFn;
+				let loggable;
 				loggableParams = args
 					.map((v: any, index: number) => {
 						const p = parameters[index];
 
-						const loggable =
-							typeof options.args === "object" && options.args[index]
-								? options.args[index](v)
-								: Logger.toLoggable(v, options.sanitize);
+						argFn = argFns !== undefined ? argFns[index] : undefined;
+						if (argFn !== undefined) {
+							loggable = argFn(v);
+							if (loggable === false) return undefined;
+						} else {
+							loggable = Logger.toLoggable(v, options.sanitize);
+						}
 
 						return p ? `${p}=${loggable}` : loggable;
 					})
+					.filter(Boolean)
 					.join(", ");
 
 				if (!options.singleLine) {
@@ -177,7 +189,7 @@ export function log<T>(
 
 				let result;
 				try {
-					result = fn.apply(this, args);
+					result = fn!.apply(this, args);
 				} catch (ex) {
 					logError(ex);
 					throw ex;
@@ -222,7 +234,7 @@ export function log<T>(
 				return result;
 			}
 
-			return fn.apply(this, args);
+			return fn!.apply(this, args);
 		};
 	};
 }
