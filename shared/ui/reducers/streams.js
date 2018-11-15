@@ -172,20 +172,6 @@ export const getStreamsByIdForRepo = (state, repoId) => {
 	return (state.byRepo[repoId] || {}).byId;
 };
 
-// If stream for a pending post is created, the pending post will be lost (not displayed)
-// TODO: reconcile pending posts for a file with stream when the stream is created
-export const getPostsForStream = ({ byStream, pending }, streamId = "") => {
-	if (streamId === "") return [];
-	const pendingForStream = pending.filter(it => {
-		try {
-			return it.streamId === streamId || it.stream.file === streamId;
-		} catch (e) {
-			return false;
-		}
-	});
-	return [..._.sortBy(byStream[streamId], "seqNum"), ...pendingForStream];
-};
-
 export const getAllPostsOfType = ({ byStream }, type) => {
 	let posts = [];
 	Object.keys(byStream).forEach(streamId => {

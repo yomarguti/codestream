@@ -2,11 +2,15 @@ import { Type } from "../actions/codemarks";
 import { toMapBy } from "../utils";
 
 interface State {
-	[codemarkId: string]: object;
+	[codemarkId: string]: Codemark;
 }
 interface Action {
 	type: string;
 	payload: any;
+}
+
+interface Codemark {
+	type: string;
 }
 
 const initialState: State = {};
@@ -22,7 +26,13 @@ export default function(state = initialState, { type, payload }: Action) {
 	}
 }
 
-export function getCodemark(state: State, id?: string): object | undefined {
+export function getCodemark(state: State, id?: string): Codemark | undefined {
 	if (!id) return undefined;
 	return state[id];
+}
+
+export function getByType(state: State, type?: string): Codemark[] {
+	if (!type) return Object.values(state);
+
+	return Object.values(state).filter(codemark => codemark.type === type);
 }

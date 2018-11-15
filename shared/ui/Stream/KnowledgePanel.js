@@ -3,14 +3,12 @@ import { connect } from "react-redux";
 import createClassString from "classnames";
 import _ from "underscore";
 import { createStream, setCurrentStream, showCode, showMarkersInEditor } from "./actions";
-import { getAllPostsOfType } from "../reducers/streams";
+import * as codemarkSelectors from "../reducers/codemarks";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import Post from "./Post";
-import Menu from "./Menu";
 import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
-import EventEmitter from "../event-emitter";
 
 export class SimpleKnowledgePanel extends Component {
 	disposables = [];
@@ -111,9 +109,9 @@ export class SimpleKnowledgePanel extends Component {
 				const collapsed = this.state.openPost !== post.id;
 				const type = post.codemark && post.codemark.type;
 				return (
-					<div key={post.id}>
+					<div key={post.postId}>
 						<Post
-							id={post.id}
+							id={post.postId}
 							streamId={post.streamId}
 							q={this.props.q}
 							showStatus={type === "issue"}
@@ -163,7 +161,7 @@ export class SimpleKnowledgePanel extends Component {
 	};
 
 	render() {
-		const { posts, currentUserId, mostRecentSourceFile, fileFilter, typeFilter } = this.props;
+		const { codemarks, currentUserId, mostRecentSourceFile, fileFilter, typeFilter } = this.props;
 		const { thisRepo } = this.state;
 
 		const sections = this.sectionsByType[typeFilter];
@@ -180,17 +178,18 @@ export class SimpleKnowledgePanel extends Component {
 			totalPosts++;
 		};
 
-		posts.forEach(post => {
-			const postType = (post.codemark && post.codemark.type) || "comment";
+		codemarks.forEach(post => {
+			const postType = post.type || "comment";
 			if (post.deactivated) return null;
 			if (typeFilter !== "all" && postType !== typeFilter) return null;
-			if (postType === "comment" && (!post.codeBlocks || !post.codeBlocks.length)) return null;
-			const codeBlock = post.codeBlocks && post.codeBlocks.length && post.codeBlocks[0];
+			if (postType === "comment" && (!post.markers || post.markers.length === 0)) return null;
+			const codeBlock = post.markers.length && post.markers[0];
+
 			const codeBlockFile = codeBlock && codeBlock.file;
 			const codeBlockRepo = codeBlock && codeBlock.repoId;
-			const title = post.codemark && post.codemark.title;
-			const assignees = post.codemark && post.codemark.assignees;
-			const status = post.codemark && post.codemark.status;
+			const title = post.title;
+			const assignees = post.assignees;
+			const status = post.status;
 			sectionFilters.forEach(section => {
 				if (assignedPosts[post.id]) return;
 				// if (!this.state.expanded[section]) return;
@@ -297,27 +296,7 @@ export class SimpleKnowledgePanel extends Component {
 		// if they clicked a link, follow the link rather than selecting the post
 		if (event && event.target && event.target.tagName === "A") return false;
 
-		// console.log(event.target.id);
-		if (event.target.id === "cancel-button") {
-			// if the user clicked on the cancel changes button,
-			// presumably because she is editing a post, abort
-			this.setState({ editingPostId: null });
-			return;
-		} else if (event.target.id === "save-button") {
-			// if the user clicked on the save changes button,
-			// save the new post text
-			return this.editPost(postDiv.id);
-		} else if (postDiv.classList.contains("editing")) {
-			// otherwise, if we aren't currently editing the
-			// post, go to the thread for that post, but if
-			// we are editing, then do nothing.
-			return;
-		} else if (postDiv.classList.contains("system-post")) {
-			// otherwise, if we aren't currently editing the
-			// post, go to the thread for that post, but if
-			// we are editing, then do nothing.
-			return;
-		} else if (event.target.closest(".status-button")) {
+		if (event.target.closest(".status-button")) {
 			console.log("RETURNING FALSE");
 			return true;
 			// if the user clicked on the checkmark; toggle status
@@ -340,11 +319,12 @@ export class SimpleKnowledgePanel extends Component {
 		// const isOpen = this.state.openPost === id;
 		// if (isOpen) this.setState({ openPost: null });
 		// else {
-		const post = this.props.posts.find(post => id === post.id);
-		if (post) this.props.showCode(post, true);
+		// TODO: should rather send the marker to display
+		this.props.showCode(id, true);
 		// this.setState({ openPost: id });
 		// this.props.setCurrentStream(post.streamId);
-		this.props.postAction("make-thread", post);
+		// TODO pass id instead of post object
+		// this.props.postAction("make-thread", post);
 		// }
 	};
 
@@ -372,52 +352,19 @@ export class SimpleKnowledgePanel extends Component {
 	};
 }
 
-const mapStateToProps = ({ context, users, teams, preferences, umis, posts, session, configs }) => {
+const mapStateToProps = ({ codemarks, context, users, teams, preferences, configs }) => {
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 	// .filter(user => user && user.isRegistered);
 
-	const postsByType = getAllPostsOfType(posts);
-
 	return {
-		umis,
 		users,
+		codemarks: codemarkSelectors.getByType(codemarks),
 		showMarkers: configs.showMarkers,
 		teammates: teamMembers,
 		team: teams[context.currentTeamId],
 		fileFilter: preferences.markerFileFilter || "all",
 		typeFilter: preferences.markerTypeFilter || "all",
-		mostRecentSourceFile: context.mostRecentSourceFile,
-		posts: postsByType.map(post => {
-			let user = users[post.creatorId];
-			if (!user) {
-				if (post.creatorId === "codestream") {
-					user = {
-						username: "CodeStream",
-						email: "",
-						fullName: ""
-					};
-				} else {
-					console.warn(
-						`Redux store doesn't have a user with id ${post.creatorId} for post with id ${post.id}`
-					);
-					user = {
-						username: "Unknown user",
-						email: "",
-						fullName: ""
-					};
-				}
-			}
-			const { username, email, fullName = "", color } = user;
-			return {
-				...post,
-				author: {
-					username,
-					email,
-					color,
-					fullName
-				}
-			};
-		})
+		mostRecentSourceFile: context.mostRecentSourceFile
 	};
 };
 
