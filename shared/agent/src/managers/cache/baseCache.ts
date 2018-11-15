@@ -81,23 +81,21 @@ export class BaseCache<T> {
 			throw new Error(`No unique index declared for fields ${keys}`);
 		}
 
-		const cacheName = `${this.entityName} cache`;
-		Logger.log(`${cacheName}: retrieving entity ${keys}=${values}`);
 		let entity = index.get(values);
+		let hit = false;
 		if (!entity && options.fromCacheOnly !== true) {
-			Logger.log(`${cacheName}: cache miss ${keys}=${values}`);
 			const fetch = index.fetchFn as UniqueFetchFn<T>;
 			entity = await fetch(criteria);
-			Logger.log(`${cacheName}: caching entity ${keys}=${values}`);
 			this.set(entity);
 		} else if (entity) {
-			Logger.log(`${cacheName}: cache hit ${keys}=${values}`);
+			hit = true;
 		}
 
+		const cacheName = `${this.entityName} cache`;
 		Logger.log(
-			`${cacheName}: returning entity in ${Strings.getDurationMilliseconds(
+			`${cacheName} ${hit ? "hit" : "miss"} ${keys}=${values} ${Strings.getDurationMilliseconds(
 				start
-			)}ms ${keys}=${values}`
+			)}ms `
 		);
 		return entity;
 	}
