@@ -446,24 +446,25 @@ export class CodeStreamWebviewPanel implements Disposable {
 							break;
 						}
 						case "edit-post": {
-							const { streamId, id, text, mentions, codemark } = body.params;
-
-							const payload: any = {};
+							const { streamId, id, text, mentions } = body.params;
 
 							const response = await Container.agent.posts.edit(streamId, id, text, mentions);
-							payload.post = response.post;
-
-							if (codemark) {
-								const codemarkResponse = await Container.agent.codemarks.edit(
-									response.post.codemarkId!,
-									codemark
-								);
-								payload.codemark = codemarkResponse.codemark;
-							}
 
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload }
+								body: { id: body.id, payload: response.post }
+							});
+
+							break;
+						}
+						case "edit-codemark": {
+							const { id, text, color } = body.params;
+
+							const response = await Container.agent.codemarks.edit(id, { text, color });
+
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: { id: body.id, payload: response.codemark }
 							});
 
 							break;

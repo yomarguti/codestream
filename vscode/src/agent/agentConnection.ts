@@ -320,7 +320,7 @@ export class CodeStreamAgentConnection implements Disposable {
 			return this._connection.sendRequest(FetchCodemarksRequestType, {});
 		}
 
-		edit(codemarkId: string, attributes: { color?: string }) {
+		edit(codemarkId: string, attributes: { text?: string; color?: string }) {
 			return this._connection.sendRequest(UpdateCodemarkRequestType, { codemarkId, ...attributes });
 		}
 	}(this);
