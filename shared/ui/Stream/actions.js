@@ -125,7 +125,6 @@ export const editPost = (streamId, id, text, mentions, codemark) => async (
 	try {
 		const response = await api.editPost({ streamId, id, text, mentions, codemark });
 		dispatch({ type: "UPDATE_POST", payload: response.post });
-		dispatch(updateCodemarks([response.codemark]));
 	} catch (e) {
 		// TODO:
 		console.error("failed to edit post", e);
@@ -413,5 +412,14 @@ export const changeStreamMuteState = (streamId, muted) => async (dispatch, getSt
 		// undo optimistic update
 		// TODO: communicate failure
 		dispatch(updatePreferences({ mutedStreams: { ...mutedStreams, [streamId]: !muted } }));
+	}
+};
+
+export const editCodemark = attributes => async (dispatch, getState, { api }) => {
+	try {
+		const updatedCodemark = await api.editCodemark(attributes);
+		dispatch(updateCodemarks([updatedCodemark]));
+	} catch (error) {
+		console.error("failed to update codemark", error);
 	}
 };

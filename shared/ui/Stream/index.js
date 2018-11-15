@@ -826,8 +826,8 @@ export class SimpleStream extends Component {
 						...this.state.composeBoxProps,
 						key: Math.random().toString(),
 						isEditing: true,
-						editingPostId: post.id,
-						text: post.text,
+						editingCodemarkId: codemark.id,
+						text: codemark.text,
 						codemarkColor: codemark.color
 					}
 				});
@@ -1533,7 +1533,7 @@ export class SimpleStream extends Component {
 	}) => {
 		const markers = [];
 		if (codemark) codemark.markers = markers;
-		const { postStreamId, createPost, editPost } = this.props;
+		const { postStreamId, createPost, editCodemark } = this.props;
 		let fileUri;
 
 		if (this.checkForSlashCommands(text)) return;
@@ -1543,9 +1543,10 @@ export class SimpleStream extends Component {
 
 		const { composeBoxProps } = this.state;
 		if (composeBoxProps.isEditing) {
-			// TODO: might not always be a post edit.
-			editPost(postStreamId, composeBoxProps.editingPostId, text, mentionedUserIds, {
-				color: codemark.color
+			editCodemark({
+				id: composeBoxProps.editingCodemarkId,
+				color: codemark.color,
+				text: codemark.text
 			});
 			return this.setMultiCompose(false);
 		}

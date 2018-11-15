@@ -169,4 +169,8 @@ export default class WebviewApi {
 	changeStreamMuteState(streamId: string, muted: boolean) {
 		return this.postMessage({ action: "change-stream-mute-state", params: { streamId, muted } });
 	}
+
+	editCodemark(params: { id: string; text: string; color: string }) {
+		return this.postMessage({ action: "edit-codemark", params });
+	}
 }
