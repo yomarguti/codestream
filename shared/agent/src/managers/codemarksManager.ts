@@ -86,12 +86,6 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 	protected async loadCache(): Promise<void> {
 		const response = await this.session.api.fetchCodemarks({});
 
-		if (response.posts) {
-			for (const post of response.posts) {
-				await Container.instance().posts.cacheSet(post);
-			}
-		}
-
 		if (response.markers) {
 			for (const marker of response.markers) {
 				Container.instance().markers.cacheSet(marker);
