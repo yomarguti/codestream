@@ -28,7 +28,7 @@ export class SimpleFilter extends Component {
 	menuAction = arg => {
 		const { preferenceId, setUserPreference, action } = this.props;
 		this.setState({ menuOpen: false });
-		if (preferenceId) setUserPreference([preferenceId], arg);
+		if (preferenceId && arg != null) setUserPreference([preferenceId], arg);
 		if (action) action(arg);
 	};
 
@@ -37,7 +37,7 @@ export class SimpleFilter extends Component {
 	};
 }
 
-const mapStateToProps = ({ context, streams, users, teams, umis, posts, session, configs }) => {
+const mapStateToProps = () => {
 	return {};
 };
 
