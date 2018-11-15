@@ -13,9 +13,10 @@ import {
 	UpdateCodemarkResponse
 } from "../shared/agent.protocol.markers";
 import { CSCodemark } from "../shared/api.protocol.models";
-import { lspHandler } from "../system/decorators";
+import { lsp, lspHandler } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 
+@lsp
 export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 	initialize() {
 		this.session.onDidChangeCodemarks(async (codemarks: CSCodemark[]) => {

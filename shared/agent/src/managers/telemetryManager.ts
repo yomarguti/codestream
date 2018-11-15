@@ -34,5 +34,5 @@ export class TelemetryManager {
 		} catch (ex) {
 			Logger.error(ex, cc);
 		}
-	};
+	}
 }
