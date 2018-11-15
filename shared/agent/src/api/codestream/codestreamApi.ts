@@ -481,10 +481,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	getMarker(request: GetMarkerRequest) {
-		return this.get<CSGetMarkerResponse>(
-			`/markers/${request.markerId}?teamId=${this.teamId}`,
-			this._token
-		);
+		return this.get<CSGetMarkerResponse>(`/markers/${request.markerId}`, this._token);
 	}
 
 	@log()
