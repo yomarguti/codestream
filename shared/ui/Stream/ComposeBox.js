@@ -125,7 +125,7 @@ class ComposeBox extends React.Component {
 	handleCodeHighlightEvent = body => {
 		// make sure we have a compose box to type into
 		// this.props.ensureStreamIsActive();
-		this.setState({ quote: body });
+		this.setState({ quote: body, codeBlockInvalid: false });
 
 		if (!body) return;
 
@@ -550,8 +550,40 @@ class ComposeBox extends React.Component {
 	};
 
 	isFormInvalid = () => {
-		return;
-		// return isNameInvalid(this.state.name);
+		let newPostText =
+			this.state.postTextByStream[this.props.streamId] ||
+			(this.props.isEditing && this.props.text) ||
+			"";
+		const { quote, title, assignees, color, commentType, streamId } = this.state;
+
+		let validationState = {
+			codeBlockInvalid: false,
+			titleInvalid: false,
+			textInvalid: false
+		};
+
+		let invalid = false;
+		if (commentType === "trap" || commentType === "bookmark") {
+			if (!quote) {
+				validationState.codeBlockInvalid = true;
+				invalid = true;
+			}
+		}
+		if (commentType === "question" || commentType === "issue") {
+			if (!title) {
+				validationState.titleInvalid = true;
+				invalid = true;
+			}
+		}
+		if (commentType === "comment" || commentType === "trap" || commentType === "bookmark") {
+			if (!newPostText) {
+				validationState.textInvalid = true;
+				invalid = true;
+			}
+		}
+
+		this.setState(validationState);
+		return invalid;
 	};
 
 	submitThePost = event => {
@@ -563,6 +595,8 @@ class ComposeBox extends React.Component {
 		const multiCompose = quote || this.props.multiCompose;
 
 		if (this.props.disabled) return;
+
+		if (this.isFormInvalid()) return;
 
 		// don't submit blank posts
 		if (newPostText.trim().length === 0 && title.length === 0) return;
@@ -712,10 +746,39 @@ class ComposeBox extends React.Component {
 
 	setCommentType = type => {
 		if (this.props.isEditing) return;
-		this.setState({ commentType: type });
+		this.setState({
+			commentType: type,
+			codeBlockInvalid: false,
+			titleInvalid: false,
+			textInvalid: false
+		});
 		setTimeout(() => {
 			this.focus();
 		}, 20);
+	};
+
+	renderCodeBlockHelp = () => {
+		const { codeBlockInvalid } = this.state;
+
+		if (codeBlockInvalid) {
+			return <small className="error-message">Required</small>;
+		} else return null;
+	};
+
+	renderTitleHelp = () => {
+		const { titleInvalid } = this.state;
+
+		if (titleInvalid) {
+			return <small className="error-message">Required</small>;
+		} else return null;
+	};
+
+	renderTextHelp = () => {
+		const { textInvalid } = this.state;
+
+		if (textInvalid) {
+			return <small className="error-message">Required</small>;
+		} else return null;
 	};
 
 	renderCommentForm = quote => {
@@ -851,6 +914,7 @@ class ComposeBox extends React.Component {
 									{requiredCodeBlockMessage}
 								</label>
 							)}
+							{this.renderCodeBlockHelp()}
 							{!quote && (
 								<div
 									className="hint frame control-group"
@@ -944,6 +1008,7 @@ class ComposeBox extends React.Component {
 								commentType === "question" ||
 								commentType === "snippet") && (
 								<div className="control-group">
+									{this.renderTitleHelp()}
 									<input
 										type="text"
 										name="title"
@@ -990,6 +1055,7 @@ class ComposeBox extends React.Component {
 									ref={ref => (this._contentEditableSnippet = ref)}
 								/>
 							)}
+							{this.renderTextHelp()}
 							{this.renderMessageInput()}
 						</div>
 						<div className="button-group">
