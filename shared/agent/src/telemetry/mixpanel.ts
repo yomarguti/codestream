@@ -43,11 +43,6 @@ export class MixPanelTelemetryService {
 
 		this._superProps = props;
 		this._hasOptedOut = hasOptedOut;
-
-		// Even if opted in, let's opt out if we are debugging
-		if (Logger.isDebugging) {
-			this._hasOptedOut = true;
-		}
 	}
 
 	alias(id?: string) {
