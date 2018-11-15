@@ -17,6 +17,8 @@ import {
 	CreatePostRequest,
 	CreateRepoRequest,
 	CSUnreads,
+	DeleteCodemarkRequest,
+	DeleteCodemarkResponse,
 	DeletePostRequest,
 	EditPostRequest,
 	FetchCodemarksRequest,
@@ -513,6 +515,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
+	deleteCodemark(request: DeleteCodemarkRequest): Promise<DeleteCodemarkResponse> {
+		const { codemarkId } = request;
+		return this.delete(`/codemarks/${codemarkId}`, this._token);
+	}
+
+	@log()
 	fetchCodemarks(request: FetchCodemarksRequest): Promise<FetchCodemarksResponse> {
 		return this.get<FetchCodemarksResponse>(`/codemarks?teamId=${this.teamId}`, this._token);
 	}
@@ -538,9 +546,18 @@ export class CodeStreamApiProvider implements ApiProvider {
 			this._token
 		);
 		const [post] = await Container.instance().posts.resolve({
-			type: MessageType.Streams,
-			data: [response.post]
+			type: MessageType.Posts,
+			data: response.posts
 		});
+		await Container.instance().codemarks.resolve({
+			type: MessageType.Codemarks,
+			data: response.codemarks
+		});
+		await Container.instance().markers.resolve({
+			type: MessageType.Markers,
+			data: response.markers
+		});
+
 		return { ...response, post };
 	}
 

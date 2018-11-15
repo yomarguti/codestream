@@ -50,10 +50,10 @@ export abstract class ManagerBase<T> {
 					return updatedEntity as T;
 				} else {
 					let entity;
-					if (isCompleteObject(data)) {
-						entity = data as T;
-					} else {
+					if (this.mustFetchToResolve(data)) {
 						entity = await this.fetch(criteria);
+					} else {
+						entity = data as T;
 					}
 					if (entity) {
 						this.cacheSet(entity);
@@ -64,6 +64,10 @@ export abstract class ManagerBase<T> {
 			})
 		);
 		return resolved.filter(Boolean) as T[];
+	}
+
+	protected mustFetchToResolve(obj: object): boolean {
+		return isCompleteObject(obj);
 	}
 
 	cacheGet(criteria: KeyValue<T>[]): Promise<T | undefined> {

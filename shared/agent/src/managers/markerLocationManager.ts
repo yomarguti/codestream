@@ -11,7 +11,6 @@ import { Logger } from "../logger";
 import { calculateLocation, calculateLocations } from "../markerLocation/calculator";
 import { MarkerNotLocatedReason } from "../shared/agent.protocol.markers";
 import {
-	CSFileStream,
 	CSLocationArray,
 	CSMarker,
 	CSMarkerLocation,
@@ -78,6 +77,10 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			};
 		}
 		super.cacheSet(entity, oldEntity);
+	}
+
+	protected mustFetchToResolve(obj: object): boolean {
+		return true;
 	}
 
 	protected async fetch(criteria: KeyValue<CSMarkerLocations>[]): Promise<CSMarkerLocations> {
@@ -261,7 +264,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			return newGetLocationsResult();
 		}
 
-		const markers = await Container.instance().markers.getByStreamId(stream.id);
+		const markers = await Container.instance().markers.getByStreamId(stream.id, true);
 		Logger.log(`MARKERS: found ${markers.length} markers for stream ${stream.id}`);
 
 		const currentCommitLocations = await this.getLocationsById(stream.id, commitHash);

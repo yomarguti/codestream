@@ -16,6 +16,8 @@ import {
 	CreatePostResponse,
 	CreateRepoRequest,
 	CSUnreads,
+	DeleteCodemarkRequest,
+	DeleteCodemarkResponse,
 	DeletePostRequest,
 	EditPostRequest,
 	FetchCodemarksRequest,
@@ -641,6 +643,12 @@ export class SlackApiProvider implements ApiProvider {
 			`chat.delete(${streamId}, ${postId})`
 		);
 
+		if (postResponse.post.codemarkId) {
+			await this._codestream.deleteCodemark({
+				codemarkId: postResponse.post.codemarkId
+			});
+		}
+
 		const { ok, error } = response as WebAPICallResult;
 		if (!ok) throw new Error(error);
 
@@ -1198,6 +1206,11 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	updateCodemark(request: UpdateCodemarkRequest) {
 		return this._codestream.updateCodemark(request);
+	}
+
+	@log()
+	deleteCodemark(request: DeleteCodemarkRequest) {
+		return this._codestream.deleteCodemark(request);
 	}
 
 	@log()

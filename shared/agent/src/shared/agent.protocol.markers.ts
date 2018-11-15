@@ -35,7 +35,6 @@ export interface FetchCodemarksRequest {
 
 export interface FetchCodemarksResponse {
 	codemarks: CSFullCodemark[];
-	posts?: CSPost[];
 	markers?: CSMarker[];
 }
 
@@ -200,6 +199,12 @@ export const UpdateCodemarkRequestType = new RequestType<
 	void,
 	void
 >("codeStream/codemark/update");
+
+export interface DeleteCodemarkRequest {
+	codemarkId: string;
+}
+
+export interface DeleteCodemarkResponse {}
 
 export interface UpdateMarkerResponse {
 	marker: CSMarker;

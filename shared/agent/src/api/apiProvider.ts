@@ -19,6 +19,8 @@ import {
 	CreateRepoRequest,
 	CreateRepoResponse,
 	CSUnreads,
+	DeleteCodemarkRequest,
+	DeleteCodemarkResponse,
 	DeletePostRequest,
 	DeletePostResponse,
 	EditPostRequest,
@@ -248,6 +250,7 @@ export interface ApiProvider {
 	fetchCodemarks(request: FetchCodemarksRequest): Promise<FetchCodemarksResponse>;
 	getCodemark(request: GetCodemarkRequest): Promise<GetCodemarkResponse>;
 	updateCodemark(request: UpdateCodemarkRequest): Promise<UpdateCodemarkResponse>;
+	deleteCodemark(request: DeleteCodemarkRequest): Promise<DeleteCodemarkResponse>;
 
 	createMarkerLocation(request: CreateMarkerLocationRequest): Promise<CreateMarkerLocationResponse>;
 	fetchMarkerLocations(request: FetchMarkerLocationsRequest): Promise<FetchMarkerLocationsResponse>;

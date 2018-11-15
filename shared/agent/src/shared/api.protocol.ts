@@ -177,7 +177,9 @@ export type CSCreateStreamResponse =
 	| CSCreateFileStreamResponse;
 
 export interface CSDeletePostResponse {
-	post: { [key: string]: any };
+	posts: any[];
+	codemarks: any[];
+	markers: any[];
 }
 
 export interface CSDeleteTeamContentRequest {
