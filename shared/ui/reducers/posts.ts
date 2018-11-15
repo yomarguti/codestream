@@ -1,5 +1,20 @@
 import _ from "underscore";
 
+interface Post {
+	id: string;
+}
+
+interface Index {
+	[id: string]: Post;
+}
+
+interface State {
+	byStream: {
+		[streamId: string]: Index;
+	};
+	pending: Post[];
+}
+
 const initialState = {
 	byStream: {},
 	pending: []
@@ -11,9 +26,8 @@ const addPost = (byStream, post) => {
 	return { ...byStream, [streamId]: { ...streamPosts, [post.id]: post } };
 };
 
-export default (state = initialState, { type, payload }) => {
+export default (state: State = initialState, { type, payload }) => {
 	switch (type) {
-		case "ADD_POSTS":
 		case "BOOTSTRAP_POSTS": {
 			const nextState = {
 				pending: [...state.pending],
@@ -39,7 +53,6 @@ export default (state = initialState, { type, payload }) => {
 				byStream: { ...state.byStream, [streamId]: streamPosts }
 			};
 		}
-		case "POSTS-UPDATE_FROM_PUBNUB":
 		case "UPDATE_POST":
 		case "ADD_POST":
 			return {
@@ -74,6 +87,7 @@ export default (state = initialState, { type, payload }) => {
 			const { id, streamId } = payload;
 			const streamPosts = { ...(state.byStream[streamId] || {}) };
 			delete streamPosts[id];
+
 			return {
 				...state,
 				byStream: { ...state.byStream, [streamId]: streamPosts }
