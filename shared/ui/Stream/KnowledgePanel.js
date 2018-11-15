@@ -100,21 +100,20 @@ export class SimpleKnowledgePanel extends Component {
 		});
 	};
 
-	renderPosts = posts => {
+	renderPosts = codemarks => {
 		const { typeFilter } = this.props;
-		if (posts.length === 0)
+		if (codemarks.length === 0)
 			return <div className="no-matches">No {typeFilter}s in file foo/bar/baz.js</div>;
 		else {
-			return posts.map(post => {
-				const collapsed = this.state.openPost !== post.id;
-				const type = post.codemark && post.codemark.type;
+			return codemarks.map(codemark => {
+				const collapsed = this.state.openPost !== codemark.id;
 				return (
-					<div key={post.postId}>
+					<div key={codemark.id}>
 						<Post
-							id={post.postId}
-							streamId={post.streamId}
+							id={codemark.postId}
+							streamId={codemark.streamId}
 							q={this.props.q}
-							showStatus={type === "issue"}
+							showStatus={codemark.type === "issue"}
 							showAssigneeHeadshots={true}
 							alwaysShowReplyCount={!collapsed}
 							teammates={this.props.teammates}
@@ -134,8 +133,8 @@ export class SimpleKnowledgePanel extends Component {
 		}
 	};
 
-	renderSection = (section, posts) => {
-		if (posts.length === 0) return null;
+	renderSection = (section, codemarks) => {
+		if (codemarks.length === 0) return null;
 
 		const sectionLabel =
 			section === "inThisFile" && this.props.mostRecentSourceFile ? (
@@ -155,7 +154,7 @@ export class SimpleKnowledgePanel extends Component {
 					<Icon name="triangle-right" className="triangle-right" />
 					<span className="clickable">{sectionLabel}</span>
 				</div>
-				<ul>{this.renderPosts(posts)}</ul>
+				<ul>{this.renderPosts(codemarks)}</ul>
 			</div>
 		);
 	};
@@ -166,36 +165,37 @@ export class SimpleKnowledgePanel extends Component {
 
 		const sections = this.sectionsByType[typeFilter];
 
-		let displayPosts = {};
-		let assignedPosts = {};
+		let displayCodemarks = {};
+		let assignedCodemarks = {};
 		let sectionFilters = this.sectionsFilterOrder[typeFilter] || [];
-		let totalPosts = 0;
+		let totalCodemarks = 0;
 
-		const assignPost = (post, section) => {
-			if (!displayPosts[section]) displayPosts[section] = [];
-			displayPosts[section].push(post);
-			assignedPosts[post.id] = true;
-			totalPosts++;
+		const assignCodemark = (codemark, section) => {
+			if (!displayCodemarks[section]) displayCodemarks[section] = [];
+			displayCodemarks[section].push(codemark);
+			assignedCodemarks[codemark.id] = true;
+			totalCodemarks++;
 		};
 
-		codemarks.forEach(post => {
-			const postType = post.type || "comment";
-			if (post.deactivated) return null;
-			if (typeFilter !== "all" && postType !== typeFilter) return null;
-			if (postType === "comment" && (!post.markers || post.markers.length === 0)) return null;
-			const codeBlock = post.markers.length && post.markers[0];
+		codemarks.forEach(codemark => {
+			const codemarkType = codemark.type || "comment";
+			if (codemark.deactivated) return null;
+			if (typeFilter !== "all" && codemarkType !== typeFilter) return null;
+			if (codemarkType === "comment" && (!codemark.markers || codemark.markers.length === 0))
+				return null;
+			const codeBlock = codemark.markers.length && codemark.markers[0];
 
 			const codeBlockFile = codeBlock && codeBlock.file;
 			const codeBlockRepo = codeBlock && codeBlock.repoId;
-			const title = post.title;
-			const assignees = post.assignees;
-			const status = post.status;
+			const title = codemark.title;
+			const assignees = codemark.assignees;
+			const status = codemark.status;
 			sectionFilters.forEach(section => {
-				if (assignedPosts[post.id]) return;
+				if (assignedCodemarks[codemark.id]) return;
 				// if (!this.state.expanded[section]) return;
 				if (
 					this.props.q &&
-					!(post.text || "").includes(this.props.q) &&
+					!(codemark.text || "").includes(this.props.q) &&
 					!(title || "").includes(this.props.q)
 				)
 					return;
@@ -205,23 +205,23 @@ export class SimpleKnowledgePanel extends Component {
 				switch (section) {
 					case "inThisFile":
 						if (mostRecentSourceFile && codeBlockFile === mostRecentSourceFile)
-							assignPost(post, "inThisFile");
+							assignCodemark(codemark, "inThisFile");
 						break;
 					case "mine":
 						if (status === "open" || (!status && _.contains(assignees || [], currentUserId)))
-							assignPost(post, "mine");
+							assignCodemark(codemark, "mine");
 						break;
 					case "open":
-						if (status === "open" || !status) assignPost(post, "open");
+						if (status === "open" || !status) assignCodemark(codemark, "open");
 						break;
 					case "unanswered":
-						if (post.numReplies > 0) assignPost(post, "unanswered");
+						if (codemark.numReplies > 0) assignCodemark(codemark, "unanswered");
 						break;
 					case "recent":
-						assignPost(post, "recent");
+						assignCodemark(codemark, "recent");
 						break;
 					case "closed":
-						if (status === "closed") assignPost(post, "closed");
+						if (status === "closed") assignCodemark(codemark, "closed");
 						break;
 				}
 			});
@@ -272,11 +272,11 @@ export class SimpleKnowledgePanel extends Component {
 				</div>
 				<ScrollBox>
 					<div className="channel-list vscroll" onClick={this.handleClickPost}>
-						{totalPosts > 0 &&
+						{totalCodemarks > 0 &&
 							sections.map(section => {
-								return this.renderSection(section, displayPosts[section] || []);
+								return this.renderSection(section, displayCodemarks[section] || []);
 							})}
-						{!totalPosts && <div className="no-matches">No codemarks match this type.</div>}
+						{!totalCodemarks && <div className="no-matches">No codemarks match this type.</div>}
 					</div>
 				</ScrollBox>
 			</div>
