@@ -423,3 +423,12 @@ export const editCodemark = attributes => async (dispatch, getState, { api }) =>
 		console.error("failed to update codemark", error);
 	}
 };
+
+export const fetchCodemarks = () => async (dispatch, getState, { api }) => {
+	try {
+		const response = await api.fetchCodemarks(getState().context.currentTeamId);
+		dispatch(saveCodemarks(response.codemarks));
+	} catch (error) {
+		console.error("failed to fetch codemarks", error);
+	}
+};

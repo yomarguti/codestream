@@ -173,4 +173,8 @@ export default class WebviewApi {
 	editCodemark(params: { id: string; text: string; color: string }) {
 		return this.postMessage({ action: "edit-codemark", params });
 	}
+
+	fetchCodemarks(teamId: string) {
+		return this.postMessage({ action: "fetch-codemarks", params: teamId });
+	}
 }

@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import createClassString from "classnames";
 import _ from "underscore";
-import { createStream, setCurrentStream, showCode, showMarkersInEditor } from "./actions";
+import * as actions from "./actions";
 import * as codemarkSelectors from "../reducers/codemarks";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
@@ -78,6 +78,7 @@ export class SimpleKnowledgePanel extends Component {
 	}
 
 	componentDidMount() {
+		this.props.fetchCodemarks();
 		// this.disposables.push(
 		// 	EventEmitter.subscribe("interaction:active-editor-changed", this.handleFileChangedEvent)
 		// );
@@ -365,10 +366,5 @@ const mapStateToProps = ({ codemarks, context, teams, preferences, configs }) =>
 
 export default connect(
 	mapStateToProps,
-	{
-		createStream,
-		setCurrentStream,
-		showCode,
-		showMarkersInEditor
-	}
+	actions
 )(SimpleKnowledgePanel);
