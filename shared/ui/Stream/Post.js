@@ -787,7 +787,7 @@ const mapStateToProps = (state, props) => {
 		repoName,
 		canLiveshare: state.services.vsls,
 		post: { ...post, author }, // pull author out
-		hasMarkers: codemark && codemark.markers.length > 0,
+		hasMarkers: codemark && codemark.markers && codemark.markers.length > 0,
 		codemark
 	};
 };
