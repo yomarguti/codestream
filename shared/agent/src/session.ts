@@ -41,6 +41,7 @@ import {
 } from "./shared/agent.protocol";
 import {
 	ApiErrors,
+	CSCodemark,
 	CSCompany,
 	CSMarker,
 	CSMarkerLocations,
@@ -94,6 +95,11 @@ export class CodeStreamSession {
 	private _onDidChangeMarkers = new Emitter<CSMarker[]>();
 	get onDidChangeMarkers(): Event<CSMarker[]> {
 		return this._onDidChangeMarkers.event;
+	}
+
+	private _onDidChangeCodemarks = new Emitter<CSCodemark[]>();
+	get onDidChangeCodemarks(): Event<CSCodemark[]> {
+		return this._onDidChangeCodemarks.event;
 	}
 
 	private _onDidChangePosts = new Emitter<CSPost[]>();
@@ -182,10 +188,11 @@ export class CodeStreamSession {
 	private async onRTMessageReceived(e: RTMessage) {
 		switch (e.type) {
 			case MessageType.Codemarks:
-				// this._onDidChangeMarkerLocations.fire(codemarks);
+				const codemarks = await Container.instance().codemarks.resolve(e);
+				this._onDidChangeCodemarks.fire(codemarks);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.Codemarks,
-					data: e.data
+					data: codemarks
 				});
 				break;
 			case MessageType.Connection:

@@ -4,6 +4,7 @@ import { MessageType } from "../api/apiProvider";
 import { Container } from "../container";
 import {
 	CSFullCodemark,
+	DidChangeDocumentMarkersNotificationType,
 	FetchCodemarksRequest,
 	FetchCodemarksRequestType,
 	FetchCodemarksResponse,
@@ -16,6 +17,32 @@ import { lspHandler } from "../system/decorators";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 
 export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
+	initialize() {
+		this.session.onDidChangeCodemarks(async (codemarks: CSCodemark[]) => {
+			const { files } = Container.instance();
+			const fileStreamIds = new Set<Id>();
+
+			for (const codemark of codemarks) {
+				if (codemark.fileStreamIds) {
+					for (const fileStreamId of codemark.fileStreamIds) {
+						fileStreamIds.add(fileStreamId);
+					}
+				}
+			}
+
+			for (const fileStreamId of fileStreamIds) {
+				const uri = await files.getDocumentUri(fileStreamId);
+				if (uri) {
+					this.session.agent.sendNotification(DidChangeDocumentMarkersNotificationType, {
+						textDocument: {
+							uri
+						}
+					});
+				}
+			}
+		});
+	}
+
 	@lspHandler(FetchCodemarksRequestType)
 	async get(request: FetchCodemarksRequest): Promise<FetchCodemarksResponse> {
 		const csCodemarks = await this.ensureCached();
