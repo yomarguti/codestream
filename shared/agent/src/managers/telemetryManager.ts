@@ -28,6 +28,7 @@ export class TelemetryManager {
 	@debug()
 	@lspHandler(TelemetryRequestType)
 	track(request: TelemetryRequest) {
+		Logger.debug("(6) telemetryManager :: track has been called : ", request.eventName);
 		const cc = Logger.getCorrelationContext();
 		try {
 			void this._mixpanel.track(request.eventName, request.properties);
