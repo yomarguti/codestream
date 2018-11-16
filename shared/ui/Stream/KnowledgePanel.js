@@ -184,7 +184,7 @@ export class SimpleKnowledgePanel extends Component {
 			if (typeFilter !== "all" && codemarkType !== typeFilter) return null;
 			if (codemarkType === "comment" && (!codemark.markers || codemark.markers.length === 0))
 				return null;
-			const codeBlock = codemark.markers.length && codemark.markers[0];
+			const codeBlock = codemark.markers && codemark.markers.length && codemark.markers[0];
 
 			const codeBlockFile = codeBlock && codeBlock.file;
 			const codeBlockRepo = codeBlock && codeBlock.repoId;
@@ -353,10 +353,12 @@ export class SimpleKnowledgePanel extends Component {
 	};
 }
 
-const mapStateToProps = ({ codemarks, context, teams, preferences, configs }) => {
+const mapStateToProps = ({ codemarks, context, users, teams, preferences, configs }) => {
+	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 	return {
 		codemarks: codemarkSelectors.getByType(codemarks),
 		showMarkers: configs.showMarkers,
+		teammates: teamMembers,
 		team: teams[context.currentTeamId],
 		fileFilter: preferences.markerFileFilter || "all",
 		typeFilter: preferences.markerTypeFilter || "all",

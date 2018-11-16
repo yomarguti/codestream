@@ -523,6 +523,7 @@ class Post extends React.Component {
 		const assignees = codemark ? codemark.assignees || [] : [];
 
 		if (assignees.length == 0) return null;
+		if (!this.props.teammates) return null;
 
 		return (
 			<div className="align-far-right">
