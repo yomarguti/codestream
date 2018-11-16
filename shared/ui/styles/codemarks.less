@@ -1,0 +1,91 @@
+.codemark {
+	padding-left: 10px;
+	cursor: pointer;
+	&.collapsed {
+		min-height: 25px;
+		width: 100%;
+		padding-top: 5px;
+		padding-bottom: 5px;
+		padding-left: 38px;
+		.body {
+			background: none;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			p {
+				display: inline;
+			}
+			.type-icon {
+				padding-right: 5px;
+			}
+			.file-name {
+				padding-left: 10px;
+				opacity: 0.25;
+			}
+		}
+		.align-far-left {
+			margin-left: -22px;
+			display: inline-block;
+			float: left;
+		}
+		.status-button {
+			// float: right;
+			display: inline-block;
+			// border: 2px solid green;
+			border-radius: 3px;
+			width: 14px;
+			height: 14px;
+			text-align: center;
+			border: 2px solid @text-color;
+			opacity: 1;
+			margin-top: 2px;
+			.check {
+				opacity: 1;
+				transform: scale(0.01);
+				transition: transform 0.3s;
+				display: inline-block;
+				top: -2px !important;
+				color: @text-color !important;
+				visibility: hidden;
+			}
+			&.checked {
+				.check {
+					visibility: visible;
+				}
+				background-color: @text-color;
+				border: none;
+				vertical-align: 2px !important;
+				.check {
+					// opacity: 0.6;
+					transform: scale(1);
+					transform: scale(0.85);
+					color: @app-background-color !important;
+				}
+			}
+		}
+	}
+	&.blue .type-icon {
+		color: #3578ba;
+	}
+	&.green .type-icon {
+		color: #7aba5d;
+	}
+	&.yellow .type-icon {
+		color: #edd648;
+	}
+	&.orange .type-icon {
+		color: #f1a340;
+	}
+	&.red .type-icon {
+		color: #d9634f;
+	}
+	&.purple .type-icon {
+		color: #b87cda;
+	}
+	&.aqua .type-icon {
+		color: #5abfdc;
+	}
+	&.gray .type-icon {
+		color: #888888;
+	}
+}

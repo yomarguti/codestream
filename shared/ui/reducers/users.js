@@ -23,3 +23,12 @@ export default (state = initialState, { type, payload }) => {
 			return state;
 	}
 };
+
+export function getUsernames(state) {
+	return Object.values(state).map(user => {
+		if (!user.username && user.email) {
+			return user.email.replace(/@.*/, "");
+		}
+		return user.username;
+	});
+}

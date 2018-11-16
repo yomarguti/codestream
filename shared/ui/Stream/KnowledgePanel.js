@@ -4,11 +4,13 @@ import createClassString from "classnames";
 import _ from "underscore";
 import * as actions from "./actions";
 import * as codemarkSelectors from "../reducers/codemarks";
+import * as userSelectors from "../reducers/users";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import Post from "./Post";
 import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
+import Codemark from "./Codemark";
 
 export class SimpleKnowledgePanel extends Component {
 	disposables = [];
@@ -107,28 +109,34 @@ export class SimpleKnowledgePanel extends Component {
 			return <div className="no-matches">No {typeFilter}s in file foo/bar/baz.js</div>;
 		else {
 			return codemarks.map(codemark => {
-				const collapsed = this.state.openPost !== codemark.id;
 				return (
-					<div key={codemark.id}>
-						<Post
-							id={codemark.postId}
-							streamId={codemark.streamId}
-							q={this.props.q}
-							showStatus={codemark.type === "issue"}
-							showAssigneeHeadshots={true}
-							alwaysShowReplyCount={!collapsed}
-							teammates={this.props.teammates}
-							collapsed={collapsed}
-							showFileAfterTitle={collapsed}
-							context="knowledge"
-							headshotSize={18}
-							usernames={this.props.usernames}
-							currentUserId={this.props.currentUserId}
-							currentUserName={this.props.currentUserName}
-							currentCommit={this.props.currentCommit}
-							action={this.props.postAction}
-						/>
-					</div>
+					<Codemark
+						key={codemark.id}
+						codemark={codemark}
+						collapsed={this.state.openPost !== codemark.id}
+						currentUserName={this.props.currentUserName}
+						usernames={this.props.usernames}
+					/>
+					// <div key={codemark.id}>
+					// 	<Post
+					// 		id={codemark.postId}
+					// 		streamId={codemark.streamId}
+					// 		q={this.props.q}
+					// 		showStatus={codemark.type === "issue"}
+					// 		showAssigneeHeadshots={true}
+					// 		alwaysShowReplyCount={!collapsed}
+					// 		teammates={this.props.teammates}
+					// 		collapsed={collapsed}
+					// 		showFileAfterTitle={collapsed}
+					// 		context="knowledge"
+					// 		headshotSize={18}
+					// 		usernames={this.props.usernames}
+					// 		currentUserId={this.props.currentUserId}
+					// 		currentUserName={this.props.currentUserName}
+					// 		currentCommit={this.props.currentCommit}
+					// 		action={this.props.postAction}
+					// 	/>
+					// </div>
 				);
 			});
 		}
@@ -356,6 +364,7 @@ export class SimpleKnowledgePanel extends Component {
 const mapStateToProps = ({ codemarks, context, users, teams, preferences, configs }) => {
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 	return {
+		usernames: userSelectors.getUsernames(users),
 		codemarks: codemarkSelectors.getByType(codemarks),
 		showMarkers: configs.showMarkers,
 		teammates: teamMembers,
