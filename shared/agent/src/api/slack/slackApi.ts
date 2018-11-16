@@ -78,7 +78,7 @@ import {
 	ProviderType,
 	StreamType
 } from "../../shared/api.protocol";
-import { Functions, log } from "../../system";
+import { debug, Functions, log } from "../../system";
 import {
 	ApiProvider,
 	CodeStreamApiMiddleware,
@@ -250,10 +250,7 @@ export class SlackApiProvider implements ApiProvider {
 	private async getSlackPreferences() {
 		try {
 			// Undocumented: https://github.com/ErikKalkoken/slackApiDoc/blob/master/users.prefs.get.md
-			const response = await slackTimeout(
-				this._slack.apiCall("users.prefs.get"),
-				"users.prefs.get"
-			);
+			const response = await this.slackApiCall("users.prefs.get", undefined, "users.prefs.get");
 
 			const { ok, error, prefs } = response as WebAPICallResult & { prefs: any };
 			if (!ok) {
@@ -385,11 +382,12 @@ export class SlackApiProvider implements ApiProvider {
 		let me = meResponse.user;
 		me.id = this.userId;
 
-		const response = await slackTimeout(
-			this._slack.users.info({
+		const response = await this.slackApiCall(
+			this._slack.users.info,
+			{
 				user: this.userId
-			}),
-			`users.info(${this.userId})`
+			},
+			`users.info`
 		);
 
 		let user;
@@ -518,12 +516,13 @@ export class SlackApiProvider implements ApiProvider {
 			);
 
 			if (meMessage) {
-				const response = await slackTimeout(
-					this._slack.chat.meMessage({
+				const response = await this.slackApiCall(
+					this._slack.chat.meMessage,
+					{
 						channel: streamId,
 						text: text
-					}),
-					`chat.meMessage(${streamId})`
+					},
+					`chat.meMessage`
 				);
 
 				const { ok, error, ts: postId } = response as WebAPICallResult & { ts?: any };
@@ -576,8 +575,9 @@ export class SlackApiProvider implements ApiProvider {
 				}
 			}
 
-			const response = await slackTimeout(
-				this._slack.chat.postMessage({
+			const response = await this.slackApiCall(
+				this._slack.chat.postMessage,
+				{
 					channel: streamId,
 					text: text,
 					as_user: true,
@@ -585,8 +585,8 @@ export class SlackApiProvider implements ApiProvider {
 					unfurl_links: true,
 					reply_broadcast: parentPostId ? true : undefined,
 					attachments: attachments
-				}),
-				`chat.postMessage(${streamId})`
+				},
+				`chat.postMessage`
 			);
 
 			const { ok, error, message } = response as WebAPICallResult & { message?: any; ts?: any };
@@ -634,13 +634,14 @@ export class SlackApiProvider implements ApiProvider {
 		const { streamId, postId } = fromSlackPostId(request.postId, request.streamId);
 		const postResponse = await this.getPost({ streamId: streamId, postId: postId });
 
-		const response = await slackTimeout(
-			this._slack.chat.delete({
+		const response = await this.slackApiCall(
+			this._slack.chat.delete,
+			{
 				channel: streamId,
 				ts: postId,
 				as_user: true
-			}),
-			`chat.delete(${streamId}, ${postId})`
+			},
+			`chat.delete`
 		);
 
 		if (postResponse.post.codemarkId) {
@@ -671,14 +672,15 @@ export class SlackApiProvider implements ApiProvider {
 			text = request.text;
 		}
 
-		const response = await slackTimeout(
-			this._slack.chat.update({
+		const response = await this.slackApiCall(
+			this._slack.chat.update,
+			{
 				channel: streamId,
 				ts: postId,
 				as_user: true,
 				text: text
-			}),
-			`chat.update(${streamId}, ${postId})`
+			},
+			`chat.update`
 		);
 
 		const { ok, error } = response as WebAPICallResult;
@@ -697,34 +699,37 @@ export class SlackApiProvider implements ApiProvider {
 		// This isn't ideal, but we can always pack some more info into the id to ensure we call the right thing
 		switch (fromSlackChannelIdToType(streamId)) {
 			case "channel":
-				response = await slackTimeout(
-					this._slack.channels.replies({
+				response = await this.slackApiCall(
+					this._slack.channels.replies,
+					{
 						channel: streamId,
 						thread_ts: postId
-					}),
-					`channels.replies(${streamId}, ${postId})`
+					},
+					`channels.replies`
 				);
 
 				break;
 
 			case "group":
-				response = await slackTimeout(
-					this._slack.groups.replies({
+				response = await this.slackApiCall(
+					this._slack.groups.replies,
+					{
 						channel: streamId,
 						thread_ts: postId as any // Slack has the wrong typing here
-					}),
-					`groups.replies(${streamId}, ${postId})`
+					},
+					`groups.replies`
 				);
 
 				break;
 
 			case "direct":
-				response = await slackTimeout(
-					this._slack.im.replies({
+				response = await this.slackApiCall(
+					this._slack.im.replies,
+					{
 						channel: streamId,
 						thread_ts: postId
-					}),
-					`im.replies(${streamId}, ${postId})`
+					},
+					`im.replies`
 				);
 				break;
 		}
@@ -752,49 +757,46 @@ export class SlackApiProvider implements ApiProvider {
 		// This isn't ideal, but we can always pack some more info into the id to ensure we call the right thing
 		switch (fromSlackChannelIdToType(request.streamId)) {
 			case "channel":
-				response = await slackTimeout(
-					this._slack.channels.history({
+				response = await this.slackApiCall(
+					this._slack.channels.history,
+					{
 						channel: request.streamId,
 						count: request.limit || 100,
 						oldest: request.after == null ? undefined : String(request.after),
 						latest: request.before == null ? undefined : String(request.before),
 						inclusive: request.inclusive
-					}),
-					`channels.history(${request.streamId}${
-						request.before == null ? "" : `, latest=${request.before}`
-					}${request.after == null ? "" : `, oldest=${request.after}`})`
+					},
+					`channels.history`
 				);
 
 				break;
 
 			case "group":
-				response = await slackTimeout(
-					this._slack.groups.history({
+				response = await this.slackApiCall(
+					this._slack.groups.history,
+					{
 						channel: request.streamId,
 						count: request.limit || 100,
 						oldest: request.after == null ? undefined : String(request.after),
 						latest: request.before == null ? undefined : String(request.before),
 						inclusive: request.inclusive
-					}),
-					`groups.history(${request.streamId}${
-						request.before == null ? "" : `, latest=${request.before}`
-					}${request.after == null ? "" : `, oldest=${request.after}`})`
+					},
+					`groups.history`
 				);
 
 				break;
 
 			case "direct":
-				response = await slackTimeout(
-					this._slack.im.history({
+				response = await this.slackApiCall(
+					this._slack.im.history,
+					{
 						channel: request.streamId,
 						count: request.limit || 100,
 						oldest: request.after == null ? undefined : String(request.after),
 						latest: request.before == null ? undefined : String(request.before),
 						inclusive: request.inclusive
-					}),
-					`im.history(${request.streamId}${
-						request.before == null ? "" : `, latest=${request.before}`
-					}${request.after == null ? "" : `, oldest=${request.after}`})`
+					},
+					`im.history`
 				);
 				break;
 		}
@@ -834,51 +836,54 @@ export class SlackApiProvider implements ApiProvider {
 		// This isn't ideal, but we can always pack some more info into the id to ensure we call the right thing
 		switch (fromSlackChannelIdToType(streamId)) {
 			case "channel":
-				response = await slackTimeout(
-					this._slack.channels.history({
+				response = await this.slackApiCall(
+					this._slack.channels.history,
+					{
 						channel: streamId,
 						count: 1,
 						latest: postId,
 						inclusive: true
-					}),
-					`channels.history(${streamId}, ${postId})`
+					},
+					`channels.history`
 				);
 
 				break;
 
 			case "group":
-				response = await slackTimeout(
-					this._slack.groups.history({
+				response = await this.slackApiCall(
+					this._slack.groups.history,
+					{
 						channel: streamId,
 						count: 1,
 						latest: postId,
 						inclusive: true
-					}),
-					`groups.history(${streamId}, ${postId})`
+					},
+					`groups.history`
 				);
 
 				break;
 
 			case "direct":
-				response = await slackTimeout(
-					this._slack.im.history({
+				response = await this.slackApiCall(
+					this._slack.im.history,
+					{
 						channel: streamId,
 						count: 1,
 						latest: postId,
 						inclusive: true
-					}),
-					`im.history(${streamId}, ${postId})`
+					},
+					`im.history`
 				);
 				break;
 		}
 
 		// Can't use the Conversations API because replies aren't included in the main channel/group/im
-		// const response = await this._slack.conversations.history({
+		// const response = await this._slack.conversations.history, {
 		// 	channel: streamId,
 		// 	limit: 1,
 		// 	inclusive: true,
 		// 	latest: postId
-		// });
+		// };
 
 		const { ok, error, messages } = response as WebAPICallResult & { messages: any };
 		if (!ok) {
@@ -904,9 +909,10 @@ export class SlackApiProvider implements ApiProvider {
 		// This isn't ideal, but we can always pack some more info into the id to ensure we call the right thing
 		switch (fromSlackChannelIdToType(streamId)) {
 			case "channel": {
-				response = await slackTimeout(
-					this._slack.channels.mark({ channel: streamId, ts: postId }),
-					`channels.mark(${streamId}, ${postId})`
+				response = await this.slackApiCall(
+					this._slack.channels.mark,
+					{ channel: streamId, ts: postId },
+					`channels.mark`
 				);
 				const { ok, error } = response as WebAPICallResult;
 				if (!ok) throw new Error(error);
@@ -914,9 +920,10 @@ export class SlackApiProvider implements ApiProvider {
 				break;
 			}
 			case "group": {
-				response = await slackTimeout(
-					this._slack.groups.mark({ channel: streamId, ts: postId }),
-					`groups.mark(${streamId}, ${postId})`
+				response = await this.slackApiCall(
+					this._slack.groups.mark,
+					{ channel: streamId, ts: postId },
+					`groups.mark`
 				);
 				const { ok, error } = response as WebAPICallResult;
 				if (!ok) throw new Error(error);
@@ -924,9 +931,10 @@ export class SlackApiProvider implements ApiProvider {
 				break;
 			}
 			case "direct": {
-				response = await slackTimeout(
-					this._slack.im.mark({ channel: streamId, ts: postId }),
-					`im.mark(${streamId}, ${postId})`
+				response = await this.slackApiCall(
+					this._slack.im.mark,
+					{ channel: streamId, ts: postId },
+					`im.mark`
 				);
 				const { ok, error } = response as WebAPICallResult;
 				if (!ok) throw new Error(error);
@@ -945,22 +953,24 @@ export class SlackApiProvider implements ApiProvider {
 
 		for (const [name, value] of Object.entries(request.emojis)) {
 			if (value) {
-				response = await slackTimeout(
-					this._slack.reactions.add({
+				response = await this.slackApiCall(
+					this._slack.reactions.add,
+					{
 						channel: streamId,
 						timestamp: postId,
 						name: name
-					}),
-					`reactions.add(${streamId}, ${postId})`
+					},
+					`reactions.add`
 				);
 			} else {
-				response = await slackTimeout(
-					this._slack.reactions.remove({
+				response = await this.slackApiCall(
+					this._slack.reactions.remove,
+					{
 						channel: streamId,
 						timestamp: postId,
 						name: name
-					}),
-					`reactions.remove(${streamId}, ${postId})`
+					},
+					`reactions.remove`
 				);
 			}
 		}
@@ -1003,12 +1013,13 @@ export class SlackApiProvider implements ApiProvider {
 			request.memberIds.splice(index, 1);
 		}
 
-		const response = await slackTimeout(
-			this._slack.conversations.create({
+		const response = await this.slackApiCall(
+			this._slack.conversations.create,
+			{
 				name: request.name,
 				is_private: request.privacy === "private",
 				user_ids: request.memberIds.length === 0 ? undefined : request.memberIds.join(",")
-			}),
+			},
 			`conversations.create`
 		);
 
@@ -1049,11 +1060,12 @@ export class SlackApiProvider implements ApiProvider {
 	async createDirectStream(request: CreateDirectStreamRequest) {
 		const cc = Logger.getCorrelationContext();
 
-		const response = await slackTimeout(
-			this._slack.conversations.open({
+		const response = await this.slackApiCall(
+			this._slack.conversations.open,
+			{
 				users: request.memberIds.join(","),
 				return_im: true
-			}),
+			},
 			`conversations.open`
 		);
 
@@ -1094,28 +1106,40 @@ export class SlackApiProvider implements ApiProvider {
 		const cc = Logger.getCorrelationContext();
 
 		try {
-			// const response = await this._slack.conversations.list({
-			// 	exclude_archived: true,
-			// 	limit: 1000,
-			// 	types: "public_channel,private_channel,mpim,im"
-			// });
+			// const response = await this.slackApiCall(
+			// 	this._slack.users.conversations,
+			// 	{
+			// 		exclude_archived: true,
+			// 		types: "public_channel,private_channel,mpim,im"
+			// 		// limit: 1000
+			// 	},
+			// 	`users.conversations`
+			// );
 
-			// const { ok, error, channels } = response as WebAPICallResult & { channels: any };
+			// const {
+			// 	ok,
+			// 	error,
+			// 	channels: cs,
+			// 	groups: gs,
+			// 	mpims,
+			// 	ims: is
+			// } = response as WebAPICallResult & {
+			// 	channels: any[];
+			// 	groups: any[];
+			// 	mpims: any[];
+			// 	ims: any[];
+			// };
 			// if (!ok) throw new Error(error);
-
-			// const users = (await this.fetchUsers({})).users;
-			// const streams: (CSChannelStream | CSDirectStream)[] = channels
-			// 	.map((c: any) => CSStream.fromSlack(c, users, this._slackUserId, this._codestreamTeamId))
-			// 	.filter(Boolean);
 
 			const usernamesById = await this.ensureUsernamesById();
 			const counts = await this.fetchCounts();
 
 			const pendingRequestsQueue: DeferredStreamRequest<CSChannelStream | CSDirectStream>[] = [];
+
 			const [channels, groups, ims] = await Promise.all([
-				this.fetchChannels(counts && counts.channels, pendingRequestsQueue),
-				this.fetchGroups(usernamesById, counts && counts.groups, pendingRequestsQueue),
-				this.fetchIMs(usernamesById, counts && counts.ims, pendingRequestsQueue)
+				this.fetchChannels(undefined, counts && counts.channels, pendingRequestsQueue),
+				this.fetchGroups(undefined, usernamesById, counts && counts.groups, pendingRequestsQueue),
+				this.fetchIMs(undefined, usernamesById, counts && counts.ims, pendingRequestsQueue)
 			]);
 
 			const streams = channels.concat(...groups, ...ims);
@@ -1155,13 +1179,14 @@ export class SlackApiProvider implements ApiProvider {
 		const cc = Logger.getCorrelationContext();
 
 		try {
-			const response = await slackTimeout(
-				this._slack.apiCall("users.counts", {
+			const response = await this.slackApiCall(
+				"users.counts",
+				{
 					include_threads: true,
 					// mpim_aware: true,
 					only_relevant_ims: true,
 					simple_unreads: true
-				}),
+				},
 				`users.counts`
 			);
 
@@ -1294,20 +1319,26 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	private async fetchChannels(
+		channels: any | undefined,
 		countsByChannel: { [id: string]: any } | undefined,
 		pendingQueue: DeferredStreamRequest<CSChannelStream | CSDirectStream>[]
 	): Promise<(CSChannelStream | CSDirectStream)[]> {
-		const response = await slackTimeout(
-			this._slack.channels.list({
-				exclude_archived: true,
-				exclude_members: false
-				// limit: 1000
-			}),
-			`channels.list`
-		);
+		if (channels === undefined) {
+			const response = await this.slackApiCall(
+				this._slack.channels.list,
+				{
+					exclude_archived: true,
+					exclude_members: false
+					// limit: 1000
+				},
+				`channels.list`
+			);
 
-		const { ok, error, channels } = response as WebAPICallResult & { channels: any[] };
-		if (!ok) throw new Error(error);
+			const { ok, error, channels: data } = response as WebAPICallResult & { channels: any[] };
+			if (!ok) throw new Error(error);
+
+			channels = data;
+		}
 
 		const streams = [];
 		let pending:
@@ -1330,7 +1361,7 @@ export class SlackApiProvider implements ApiProvider {
 				}
 			}
 
-			s = fromSlackChannel(c, this._codestreamTeamId);
+			s = fromSlackChannel(c, this._slackUserId, this._codestreamTeamId);
 			if (s !== undefined) {
 				streams.push(s);
 			}
@@ -1370,11 +1401,12 @@ export class SlackApiProvider implements ApiProvider {
 		const cc = Logger.getCorrelationContext();
 
 		try {
-			const response = await slackTimeout(
-				this._slack.channels.info({
+			const response = await this.slackApiCall(
+				this._slack.channels.info,
+				{
 					channel: id
-				}),
-				`channels.info(${id})`
+				},
+				`channels.info`
 			);
 
 			const { ok, error, channel } = response as WebAPICallResult & { channel: any };
@@ -1382,7 +1414,7 @@ export class SlackApiProvider implements ApiProvider {
 
 			this._unreads.update(channel.id, channel.last_read, 0, channel.unread_count_display || 0);
 
-			return fromSlackChannel(channel, this._codestreamTeamId);
+			return fromSlackChannel(channel, this._slackUserId, this._codestreamTeamId);
 		} catch (ex) {
 			Logger.error(ex, cc);
 			throw ex;
@@ -1390,22 +1422,27 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	private async fetchGroups(
+		groups: any | undefined,
 		usernamesById: Map<string, string>,
 		countsByGroup: { [id: string]: any } | undefined,
 		pendingQueue: DeferredStreamRequest<CSChannelStream | CSDirectStream>[]
 	): Promise<(CSChannelStream | CSDirectStream)[]> {
-		const response = await slackTimeout(
-			this._slack.groups.list({
-				exclude_archived: true,
-				exclude_members: false
-				// limit: 1000
-			}),
-			`groups.list`
-		);
+		if (groups === undefined) {
+			const response = await this.slackApiCall(
+				this._slack.groups.list,
+				{
+					exclude_archived: true,
+					exclude_members: false
+					// limit: 1000
+				},
+				`groups.list`
+			);
 
-		const { ok, error, groups } = response as WebAPICallResult & { groups: any[] };
-		if (!ok) throw new Error(error);
+			const { ok, error, groups: data } = response as WebAPICallResult & { groups: any[] };
+			if (!ok) throw new Error(error);
 
+			groups = data;
+		}
 		const streams = [];
 		let pending:
 			| {
@@ -1475,11 +1512,12 @@ export class SlackApiProvider implements ApiProvider {
 		const cc = Logger.getCorrelationContext();
 
 		try {
-			const response = await slackTimeout(
-				this._slack.groups.info({
+			const response = await this.slackApiCall(
+				this._slack.groups.info,
+				{
 					channel: id
-				}),
-				`groups.info(${id})`
+				},
+				`groups.info`
 			);
 
 			const { ok, error, group } = response as WebAPICallResult & { group: any };
@@ -1505,19 +1543,25 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	private async fetchIMs(
+		ims: any | undefined,
 		usernamesById: Map<string, string>,
 		countsByIM: { [id: string]: any } | undefined,
 		pendingQueue: DeferredStreamRequest<CSChannelStream | CSDirectStream>[]
 	): Promise<(CSChannelStream | CSDirectStream)[]> {
-		const response = await slackTimeout(
-			this._slack.im.list({
-				// limit: 1000
-			}),
-			`im.list`
-		);
+		if (ims === undefined) {
+			const response = await this.slackApiCall(
+				this._slack.im.list,
+				{
+					// limit: 1000
+				},
+				`im.list`
+			);
 
-		const { ok, error, ims } = response as WebAPICallResult & { ims: any[] };
-		if (!ok) throw new Error(error);
+			const { ok, error, ims: data } = response as WebAPICallResult & { ims: any[] };
+			if (!ok) throw new Error(error);
+
+			ims = data;
+		}
 
 		const streams = [];
 		let pending:
@@ -1587,11 +1631,12 @@ export class SlackApiProvider implements ApiProvider {
 		const cc = Logger.getCorrelationContext();
 
 		try {
-			const response = await slackTimeout(
-				this._slack.conversations.info({
+			const response = await this.slackApiCall(
+				this._slack.conversations.info,
+				{
 					channel: id
-				}),
-				`conversations.info(${id})`
+				},
+				`conversations.info`
 			);
 
 			const { ok, error, channel } = response as WebAPICallResult & { channel: any };
@@ -1643,12 +1688,13 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	private async getStreamMembers(streamId: string) {
-		const response = await slackTimeout(
-			this._slack.conversations.members({
+		const response = await this.slackApiCall(
+			this._slack.conversations.members,
+			{
 				channel: streamId
 				// limit: 1000
-			}),
-			`conversations.members(${streamId})`
+			},
+			`conversations.members`
 		);
 
 		const { ok, error, members } = response as WebAPICallResult & { members: string[] };
@@ -1659,11 +1705,12 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async archiveStream(request: ArchiveStreamRequest) {
-		const response = await slackTimeout(
-			this._slack.conversations.archive({
+		const response = await this.slackApiCall(
+			this._slack.conversations.archive,
+			{
 				channel: request.streamId
-			}),
-			`conversations.archive(${request.streamId})`
+			},
+			`conversations.archive`
 		);
 
 		const { ok, error } = response as WebAPICallResult;
@@ -1680,11 +1727,12 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async closeStream(request: CloseStreamRequest) {
-		const response = await slackTimeout(
-			this._slack.conversations.close({
+		const response = await this.slackApiCall(
+			this._slack.conversations.close,
+			{
 				channel: request.streamId
-			}),
-			`conversations.close(${request.streamId})`
+			},
+			`conversations.close`
 		);
 
 		const { ok, error, no_op } = response as WebAPICallResult & { no_op: boolean };
@@ -1706,11 +1754,12 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async joinStream(request: JoinStreamRequest) {
-		const response = await slackTimeout(
-			this._slack.conversations.join({
+		const response = await this.slackApiCall(
+			this._slack.conversations.join,
+			{
 				channel: request.streamId
-			}),
-			`conversations.join(${request.streamId})`
+			},
+			`conversations.join`
 		);
 
 		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
@@ -1735,11 +1784,12 @@ export class SlackApiProvider implements ApiProvider {
 			originalStream.memberIds = originalStream.memberIds.slice(0);
 		}
 
-		const response = await slackTimeout(
-			this._slack.conversations.leave({
+		const response = await this.slackApiCall(
+			this._slack.conversations.leave,
+			{
 				channel: request.streamId
-			}),
-			`conversations.leave(${request.streamId})`
+			},
+			`conversations.leave`
 		);
 
 		const { ok, error, not_in_channel } = response as WebAPICallResult & {
@@ -1780,11 +1830,12 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async markStreamRead(request: MarkStreamReadRequest) {
-		let response = await slackTimeout(
-			this._slack.conversations.info({
+		let response = await this.slackApiCall(
+			this._slack.conversations.info,
+			{
 				channel: request.streamId
-			}),
-			`conversations.info(${request.streamId})`
+			},
+			`conversations.info`
 		);
 
 		const { ok, error, channel: c } = response as WebAPICallResult & { channel: any };
@@ -1797,25 +1848,28 @@ export class SlackApiProvider implements ApiProvider {
 		if (postId == null) return {};
 
 		if (c.is_channel) {
-			response = await slackTimeout(
-				this._slack.channels.mark({ channel: c.id, ts: postId }),
-				`channels.mark(${request.streamId})`
+			response = await this.slackApiCall(
+				this._slack.channels.mark,
+				{ channel: c.id, ts: postId },
+				`channels.mark`
 			);
 			return {};
 		}
 
 		if (c.is_group) {
-			response = await slackTimeout(
-				this._slack.groups.mark({ channel: c.id, ts: postId }),
-				`groups.mark(${request.streamId})`
+			response = await this.slackApiCall(
+				this._slack.groups.mark,
+				{ channel: c.id, ts: postId },
+				`groups.mark`
 			);
 			return {};
 		}
 
 		if (c.is_im) {
-			response = await slackTimeout(
-				this._slack.im.mark({ channel: c.id, ts: postId }),
-				`im.mark(${request.streamId})`
+			response = await this.slackApiCall(
+				this._slack.im.mark,
+				{ channel: c.id, ts: postId },
+				`im.mark`
 			);
 			return {};
 		}
@@ -1832,12 +1886,13 @@ export class SlackApiProvider implements ApiProvider {
 	async openStream(request: OpenStreamRequest) {
 		const cc = Logger.getCorrelationContext();
 
-		const response = await slackTimeout(
-			this._slack.conversations.open({
+		const response = await this.slackApiCall(
+			this._slack.conversations.open,
+			{
 				channel: request.streamId,
 				return_im: true
-			}),
-			`conversations.open(${request.streamId})`
+			},
+			`conversations.open`
 		);
 
 		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
@@ -1870,12 +1925,13 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async renameStream(request: RenameStreamRequest) {
-		const response = await slackTimeout(
-			this._slack.conversations.rename({
+		const response = await this.slackApiCall(
+			this._slack.conversations.rename,
+			{
 				channel: request.streamId,
 				name: request.name
-			}),
-			`conversations.rename(${request.streamId})`
+			},
+			`conversations.rename`
 		);
 
 		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
@@ -1892,12 +1948,13 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async setStreamPurpose(request: SetStreamPurposeRequest) {
-		const response = await slackTimeout(
-			this._slack.conversations.setPurpose({
+		const response = await this.slackApiCall(
+			this._slack.conversations.setPurpose,
+			{
 				channel: request.streamId,
 				purpose: request.purpose
-			}),
-			`conversations.setPurpose(${request.streamId})`
+			},
+			`conversations.setPurpose`
 		);
 
 		const { ok, error, purpose } = response as WebAPICallResult & { purpose: any };
@@ -1914,11 +1971,12 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async unarchiveStream(request: UnarchiveStreamRequest) {
-		const response = await slackTimeout(
-			this._slack.conversations.unarchive({
+		const response = await this.slackApiCall(
+			this._slack.conversations.unarchive,
+			{
 				channel: request.streamId
-			}),
-			`conversations.unarchive(${request.streamId})`
+			},
+			`conversations.unarchive`
 		);
 
 		const { ok, error } = response as WebAPICallResult;
@@ -1939,12 +1997,13 @@ export class SlackApiProvider implements ApiProvider {
 	): Promise<UpdateStreamMembershipResponse> {
 		const errors = [];
 		if (request.add != null && request.add.length !== 0) {
-			const response = await slackTimeout(
-				this._slack.conversations.invite({
+			const response = await this.slackApiCall(
+				this._slack.conversations.invite,
+				{
 					channel: request.streamId,
 					users: request.add.join(",")
-				}),
-				`conversations.invite(${request.streamId})`
+				},
+				`conversations.invite`
 			);
 
 			const { ok, error } = response as WebAPICallResult;
@@ -1955,12 +2014,13 @@ export class SlackApiProvider implements ApiProvider {
 
 		if (request.remove != null && request.remove.length !== 0) {
 			for (const userId of request.remove) {
-				const response = await slackTimeout(
-					this._slack.conversations.kick({
+				const response = await this.slackApiCall(
+					this._slack.conversations.kick,
+					{
 						channel: request.streamId,
 						user: userId
-					}),
-					`conversations.kick(${request.streamId})`
+					},
+					`conversations.kick`
 				);
 
 				const { ok, error } = response as WebAPICallResult;
@@ -2008,7 +2068,7 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async fetchUsers(request: FetchUsersRequest) {
-		const response = await slackTimeout(this._slack.users.list(), `users.list`);
+		const response = await this.slackApiCall(this._slack.users.list, undefined, `users.list`);
 
 		const { ok, error, members } = response as WebAPICallResult & { members: any };
 		if (!ok) throw new Error(error);
@@ -2035,10 +2095,11 @@ export class SlackApiProvider implements ApiProvider {
 			return this._codestream.getUser(request);
 		}
 
-		const response = await slackTimeout(
-			this._slack.users.info({
+		const response = await this.slackApiCall(
+			this._slack.users.info,
+			{
 				user: request.userId
-			}),
+			},
 			"users.info"
 		);
 
@@ -2054,21 +2115,63 @@ export class SlackApiProvider implements ApiProvider {
 	inviteUser(request: InviteUserRequest) {
 		return this._codestream.inviteUser(request);
 	}
+
+	private async slackApiCall<TRequest, TResponse extends WebAPICallResult>(
+		fn: (request?: TRequest) => Promise<TResponse>,
+		request?: TRequest,
+		name?: string
+	): Promise<TResponse>;
+	private async slackApiCall<TRequest, TResponse extends WebAPICallResult>(
+		method: string,
+		request?: TRequest,
+		name?: string
+	): Promise<TResponse>;
+	@debug({
+		args: false,
+		prefix: (context, fnOrMethod, request, name) =>
+			`${context.prefix} ${name ||
+				(typeof fnOrMethod === "string" ? fnOrMethod : Logger.toLoggableName(fnOrMethod))}(${
+				request != null
+					? Logger.toLoggable(request, (key, value) =>
+							logFilterKeys.has(key) ? `<${key}>` : value
+					  )
+					: ""
+			})`
+	})
+	private async slackApiCall<TRequest, TResponse extends WebAPICallResult>(
+		fnOrMethod: ((request?: TRequest) => Promise<TResponse>) | string,
+		request?: TRequest,
+		name?: string
+	): Promise<TResponse> {
+		const cc = Logger.getCorrelationContext();
+
+		const timeoutMs = 30000;
+		try {
+			const response = await Functions.timeout(
+				typeof fnOrMethod === "string"
+					? this._slack.apiCall(fnOrMethod, request)
+					: fnOrMethod(request),
+				timeoutMs,
+				{
+					message: cc && cc.prefix,
+					onTimeout: (resolve, reject, message) => {
+						const telemetry = Container.instance().telemetry;
+						telemetry.track({
+							eventName: "Slack Timeout",
+							properties: {
+								Message: message || "N/A"
+							}
+						});
+						Logger.warn(cc, `TIMEOUT ${timeoutMs / 1000}s exceeded`);
+					}
+				}
+			);
+			return response as TResponse;
+		} catch (ex) {
+			Logger.error(ex, cc, ex.data != null ? JSON.stringify(ex.data) : undefined);
+			throw ex;
+		}
+	}
 }
 
-function slackTimeout<T>(promise: Promise<T>, message: string): Promise<T> {
-	const timeoutMs = 30000;
-	return Functions.timeout(promise, timeoutMs, {
-		message: message,
-		onTimeout: (resolve, reject, message) => {
-			const telemetry = Container.instance().telemetry;
-			telemetry.track({
-				eventName: "Slack Timeout",
-				properties: {
-					Message: message || "N/A"
-				}
-			});
-			Logger.warn(`SLACK: ${message}: TIMEOUT ${timeoutMs / 1000}s exceeded`);
-		}
-	});
-}
+const logFilterKeys = new Set(["text", "attachments"]);
