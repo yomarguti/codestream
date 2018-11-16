@@ -303,7 +303,6 @@ export class SimpleKnowledgePanel extends Component {
 		// const isOpen = this.state.openPost === id;
 		// if (isOpen) this.setState({ openPost: null });
 		// else {
-		// TODO: should rather send the marker to display
 		if (codemark.markers) this.props.showCode(codemark.markers[0], true);
 		// this.setState({ openPost: id });
 		// this.props.setCurrentStream(post.streamId);
