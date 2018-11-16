@@ -331,6 +331,15 @@ export const archiveStream = (streamId, archive) => async (dispatch, getState, {
 	}
 };
 
+export const trackEvent = (eventName, properties) => async (dispatch, getState, { api }) => {
+	console.log("(2) actions.js :: trackEvent called");
+	try {
+		await api.trackEvent(eventName, properties);
+	} catch (error) {
+		console.log("Error: ", error);
+	}
+};
+
 export const invite = attributes => async (dispatch, getState, { api }) => {
 	try {
 		const user = await api.invite(attributes);

@@ -1399,6 +1399,15 @@ export class SimpleStream extends Component {
 	};
 
 	inviteToLiveShare = userId => {
+		// this.props.trackEvent("(1) Start Live Share", { URL: "Test1" });
+
+		EventEmitter.emit("telemetry", {
+			eventName: "State Live Share",
+			properties: {
+				"Start Location": "Headshot"
+			}
+		});
+
 		EventEmitter.emit("interaction:svc-request", {
 			service: "vsls",
 			action: {
@@ -1414,6 +1423,8 @@ export class SimpleStream extends Component {
 	startLiveShare = () => {
 		const { postStreamId } = this.props;
 		const threadId = this.state.threadId;
+
+		this.props.trackEvent("Start Live Share", { URL: "Test2" });
 
 		const text = "Starting Live Share...";
 		this.submitSystemPost(text);
@@ -1649,8 +1660,8 @@ const mapStateToProps = ({
 	const channelMembers = postStream.isTeamStream
 		? teamMembers
 		: postStream.memberIds
-		? postStream.memberIds.map(id => users[id])
-		: [];
+			? postStream.memberIds.map(id => users[id])
+			: [];
 
 	const teamMembersById = toMapBy("id", teamMembers);
 
