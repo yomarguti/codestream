@@ -242,15 +242,20 @@ export class GitRepositories {
 		}
 
 		// Get any specified excludes -- this is a total hack, but works for some simple cases and something is better than nothing :)
-		let excludes: { [key: string]: boolean } = {
-			...((await workspace.getConfiguration({
+		const [files, search] = await workspace.getConfiguration([
+			{
 				section: "files.exclude",
 				scopeUri: folderUri.toString()
-			})) || {}),
-			...((await workspace.getConfiguration({
+			},
+			{
 				section: "search.exclude",
 				scopeUri: folderUri.toString()
-			})) || {})
+			}
+		]);
+
+		let excludes: { [key: string]: boolean } = {
+			...(files || {}),
+			...(search || {})
 		};
 
 		const excludedPaths = [
