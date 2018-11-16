@@ -327,7 +327,9 @@ export class CodeStreamSession {
 		return this.connection.workspace;
 	}
 
-	@log()
+	@log({
+		singleLine: true
+	})
 	async login() {
 		const { email, passwordOrToken, serverUrl, signupToken, team, teamId } = this._options;
 		if (!signupToken && typeof passwordOrToken !== "string") {
@@ -340,11 +342,11 @@ export class CodeStreamSession {
 
 		let opts = { team: team, teamId: teamId } as LoginOptions;
 		if (signupToken) {
-			Logger.log(cc, `Logging ${email} into CodeStream via credentials...`);
+			Logger.log(cc, `Logging ${email} into CodeStream (@ ${serverUrl}) via credentials...`);
 
 			opts = { ...opts, type: "otc", code: signupToken };
 		} else if (typeof passwordOrToken === "string") {
-			Logger.log(cc, `Logging ${email} into CodeStream via CodeStream code...`);
+			Logger.log(cc, `Logging ${email} into CodeStream (@ ${serverUrl}) via CodeStream code...`);
 
 			opts = {
 				...opts,
@@ -353,7 +355,10 @@ export class CodeStreamSession {
 				password: passwordOrToken
 			};
 		} else {
-			Logger.log(cc, `Logging ${email} into CodeStream via authentication token...`);
+			Logger.log(
+				cc,
+				`Logging ${email} into CodeStream (@ ${serverUrl}) via authentication token...`
+			);
 
 			opts = {
 				...opts,
