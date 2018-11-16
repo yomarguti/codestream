@@ -186,8 +186,8 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 
 		const decorations = await this.provideDecorations(editor!);
 
-		for (const key of Object.keys(decorations)) {
-			editor!.setDecorations(this._decorationType[key], decorations[key]);
+		for (const [key, value] of Object.entries(this._decorationType)) {
+			editor!.setDecorations(value, decorations[key] || []);
 		}
 	}
 
