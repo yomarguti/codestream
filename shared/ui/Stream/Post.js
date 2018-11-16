@@ -70,11 +70,11 @@ class Post extends React.Component {
 	};
 
 	async showCode(enteringThread = false) {
-		const { post, hasMarkers, codemark } = this.props;
+		const { hasMarkers, codemark } = this.props;
 		const marker = hasMarkers && codemark.markers[0];
 		if (marker) {
 			if (marker.repoId) {
-				const status = await this.props.showCode(this.props.post, enteringThread);
+				const status = await this.props.showCode(marker, enteringThread);
 				if (status === "SUCCESS") {
 					this.setState({ warning: null });
 				} else {

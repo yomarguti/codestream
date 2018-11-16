@@ -154,8 +154,8 @@ export default class WebviewApi {
 		return this.postMessage({ action: "save-user-preference", params: newPreference });
 	}
 
-	showCode(post: object, enteringThread: boolean) {
-		return this.postMessage({ action: "show-code", params: { post, enteringThread } });
+	showCode(marker: object, enteringThread: boolean) {
+		return this.postMessage({ action: "show-code", params: { marker, enteringThread } });
 	}
 
 	closeDirectMessage(streamId: string) {

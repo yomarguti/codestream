@@ -116,6 +116,7 @@ export class SimpleKnowledgePanel extends Component {
 						collapsed={this.state.openPost !== codemark.id}
 						currentUserName={this.props.currentUserName}
 						usernames={this.props.usernames}
+						onClick={this.handleClickCodemark}
 					/>
 					// <div key={codemark.id}>
 					// 	<Post
@@ -280,7 +281,7 @@ export class SimpleKnowledgePanel extends Component {
 					/>
 				</div>
 				<ScrollBox>
-					<div className="channel-list vscroll" onClick={this.handleClickPost}>
+					<div className="channel-list vscroll">
 						{totalCodemarks > 0 &&
 							sections.map(section => {
 								return this.renderSection(section, displayCodemarks[section] || []);
@@ -298,43 +299,23 @@ export class SimpleKnowledgePanel extends Component {
 		// this.setState({ showMarkers });
 	};
 
-	handleClickPost = event => {
-		var postDiv = event.target.closest(".post");
-		if (!postDiv) return;
-
-		// if they clicked a link, follow the link rather than selecting the post
-		if (event && event.target && event.target.tagName === "A") return false;
-
-		if (event.target.closest(".status-button")) {
-			console.log("RETURNING FALSE");
-			return true;
-			// if the user clicked on the checkmark; toggle status
-			// return this.toggleStatus(postDiv.id);
-		} else if (window.getSelection().toString().length > 0) {
-			// in this case the user has selected a string
-			// by dragging
-			return;
-		}
-		this.selectPost(postDiv.id);
+	handleClickCodemark = codemark => {
+		// const isOpen = this.state.openPost === id;
+		// if (isOpen) this.setState({ openPost: null });
+		// else {
+		// TODO: should rather send the marker to display
+		if (codemark.markers) this.props.showCode(codemark.markers[0], true);
+		// this.setState({ openPost: id });
+		// this.props.setCurrentStream(post.streamId);
+		// TODO pass id instead of post object
+		// this.props.postAction("make-thread", post);
+		// }
 	};
 
 	toggleStatus = id => {
 		this.setState({
 			statusPosts: { ...this.state.statusPosts, [id]: !this.state.statusPosts[id] }
 		});
-	};
-
-	selectPost = id => {
-		// const isOpen = this.state.openPost === id;
-		// if (isOpen) this.setState({ openPost: null });
-		// else {
-		// TODO: should rather send the marker to display
-		this.props.showCode(id, true);
-		// this.setState({ openPost: id });
-		// this.props.setCurrentStream(post.streamId);
-		// TODO pass id instead of post object
-		// this.props.postAction("make-thread", post);
-		// }
 	};
 
 	handleClickCreateKnowledge = e => {

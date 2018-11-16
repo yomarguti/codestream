@@ -13,22 +13,24 @@ enum Type {
 	Trap = "trap"
 }
 
+interface CodemarkEntity {
+	color: string;
+	type: Type;
+	text?: string;
+	title?: string;
+	markers?: {
+		file?: string;
+	};
+	status?: string;
+	version: number;
+}
 interface State {}
 interface Props {
 	collapsed?: boolean;
-	codemark: {
-		color: string;
-		type: Type;
-		text?: string;
-		title?: string;
-		markers?: {
-			file?: string;
-		};
-		status?: string;
-		version: number;
-	};
+	codemark: CodemarkEntity;
 	currentUserName: string;
 	usernames: string[];
+	onClick?: (CodemarkEntity) => any;
 }
 
 export default class Codemark extends React.Component<Props, State> {
@@ -103,12 +105,20 @@ export default class Codemark extends React.Component<Props, State> {
 		return icon;
 	}
 
+	handleClickStatusToggle = (event: React.SyntheticEvent): any => {
+		event.stopPropagation();
+		// TODO: toggle
+	};
+
 	renderStatus(codemark) {
 		const { type, status = "open" } = codemark;
 		if (type === Type.Issue) {
 			return (
 				<div className="align-far-left">
-					<div className={cx("status-button", { checked: status === "closed" })}>
+					<div
+						className={cx("status-button", { checked: status === "closed" })}
+						onClick={this.handleClickStatusToggle}
+					>
 						<Icon name="check" className="check" />
 					</div>
 				</div>
@@ -117,11 +127,23 @@ export default class Codemark extends React.Component<Props, State> {
 		return null;
 	}
 
+	handleClickCodemark = (event: React.SyntheticEvent): any => {
+		event.preventDefault();
+		if (event && event.currentTarget && event.currentTarget.tagName === "A") return false;
+
+		if (window.getSelection().toString().length > 0) {
+			// in this case the user has selected a string
+			// by dragging
+			return;
+		}
+		this.props.onClick && this.props.onClick(this.props.codemark);
+	};
+
 	renderCollapsedCodemark() {
 		const { codemark } = this.props;
 		const file = codemark.markers && codemark.markers[0].file;
 		return (
-			<div className={cx("codemark collapsed", codemark.color)}>
+			<div className={cx("codemark collapsed", codemark.color)} onClick={this.handleClickCodemark}>
 				{this.renderStatus(codemark)}
 				<div className="body">
 					{this.renderTypeIcon()}

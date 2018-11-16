@@ -390,8 +390,8 @@ export const fetchPostsForStreams = () => async (dispatch, getState) => {
 	}
 };
 
-export const showCode = (post, enteringThread) => (dispatch, getState, { api }) => {
-	return api.showCode(post, enteringThread);
+export const showCode = (marker, enteringThread) => (dispatch, getState, { api }) => {
+	return api.showCode(marker, enteringThread);
 };
 
 export const closeDirectMessage = id => async (dispatch, getState, { api }) => {
