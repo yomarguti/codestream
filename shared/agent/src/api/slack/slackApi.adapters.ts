@@ -50,7 +50,7 @@ export function fromSlackChannelOrDirect(
 	codestreamTeamId: string
 ) {
 	if (channel.is_channel || (channel.is_group && !channel.is_mpim)) {
-		return fromSlackChannel(channel, codestreamTeamId);
+		return fromSlackChannel(channel, slackUserId, codestreamTeamId);
 	}
 
 	if (channel.is_mpim || channel.is_im) {
@@ -72,7 +72,11 @@ export function fromSlackChannelOrDirectLatest(channel: { id: string; latest?: {
 	return { mostRecentId: mostRecentId, mostRecentTimestamp: mostRecentTimestamp };
 }
 
-export function fromSlackChannel(channel: any, codestreamTeamId: string): CSChannelStream {
+export function fromSlackChannel(
+	channel: any,
+	slackUserId: string,
+	codestreamTeamId: string
+): CSChannelStream {
 	const { mostRecentId, mostRecentTimestamp } = fromSlackChannelOrDirectLatest(channel);
 
 	return {
