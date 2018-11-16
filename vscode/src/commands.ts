@@ -8,18 +8,13 @@ import {
 	ViewColumn,
 	window
 } from "vscode";
-import {
-	CodeStreamSession,
-	Post,
-	Stream,
-	StreamThread,
-	StreamType
-} from "./api/session";
+import { CodeStreamSession, Stream, StreamThread, StreamType } from "./api/session";
 import { TokenManager } from "./api/tokenManager";
 import { openEditor, ShowCodeResult, WorkspaceState } from "./common";
 import { Container } from "./container";
 import { StreamThreadId } from "./controllers/webviewController";
 import { Logger } from "./logger";
+import { CSMarker } from "./shared/api.protocol";
 import { Command, createCommandDecorator } from "./system";
 
 const commandRegistry: Command[] = [];
@@ -125,11 +120,26 @@ export class Commands implements Disposable {
 	}
 
 	@command("openPostWorkingFile", { showErrorMessage: "Unable to open post" })
-	async openPostWorkingFile(post?: Post, args: OpenPostWorkingFileArgs = { preserveFocus: false }) {
-		if (post == null) return;
+	async openPostWorkingFile(
+		marker?: CSMarker,
+		args: OpenPostWorkingFileArgs = { preserveFocus: false }
+	) {
+		if (marker == null) return;
 
-		const block = await post.codeBlock();
-		if (block === undefined) return ShowCodeResult.RepoNotInWorkspace;
+		const resp = await Container.agent.getDocumentFromMarker(marker);
+		if (resp === undefined || resp === null) return ShowCodeResult.RepoNotInWorkspace; // ?: what exactly does no response mean?
+
+		const block = {
+			code: marker.code,
+			range: new Range(
+				resp.range.start.line,
+				resp.range.start.character,
+				resp.range.end.line,
+				resp.range.end.character
+			),
+			revision: resp.revision,
+			uri: Uri.parse(resp.textDocument.uri)
+		};
 
 		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
 		let column = Container.webview.viewColumn as number | undefined;

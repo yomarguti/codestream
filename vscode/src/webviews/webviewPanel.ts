@@ -698,14 +698,10 @@ export class CodeStreamWebviewPanel implements Disposable {
 							return;
 						}
 						case "show-code": {
-							const { post, enteringThread } = e.body.params;
-							if (!post.codemarkId) return;
-
-							const stream = await this.session.getStream(post.streamId);
-							const status = await Container.commands.openPostWorkingFile(
-								new Post(this.session, post, stream),
-								{ preserveFocus: enteringThread }
-							);
+							const { marker, enteringThread } = e.body.params;
+							const status = await Container.commands.openPostWorkingFile(marker, {
+								preserveFocus: enteringThread
+							});
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
 								body: { id: e.body.id, payload: status }
@@ -988,11 +984,6 @@ export class CodeStreamWebviewPanel implements Disposable {
 		args: false
 	})
 	async show(streamThread?: StreamThread) {
-		if (streamThread && streamThread.id) {
-			const { post } = await Container.agent.posts.get(streamThread.stream.id, streamThread.id);
-			Container.commands.openPostWorkingFile(new Post(this.session, post, streamThread.stream));
-		}
-
 		if (this._panel === undefined) return this.createWebview(streamThread);
 
 		if (
