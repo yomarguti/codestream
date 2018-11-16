@@ -11,6 +11,7 @@ import {
 } from "./index";
 
 import { Logger } from "../../logger";
+import { debug } from "../../system";
 import { Strings } from "../../system/string";
 import { Id } from "../entityManager";
 
@@ -42,7 +43,7 @@ export class BaseCache<T> {
 	/**
 	 * Create a cache
 	 *
-	 * @param cfg Cache configuration
+	 * @param  cfg Cache configuration
 	 */
 	constructor(cfg: CacheCfg<T>) {
 		this.entityName = cfg.entityName;
@@ -57,7 +58,7 @@ export class BaseCache<T> {
 	invalidate() {
 		const cacheName = `${this.entityName} cache`;
 		for (const [field, index] of this.indexes.entries()) {
-			Logger.log(`${cacheName}: Invalidating index ${field}`);
+			Logger.debug(`${cacheName}: Invalidating index ${field}`);
 			index.invalidate();
 		}
 	}
@@ -69,11 +70,19 @@ export class BaseCache<T> {
 	 *
 	 * @return Entity or `undefined`
 	 */
+	@debug<BaseCache<T>>({
+		prefix: context =>
+			`[${context.id}] ${context.instance.entityName}${
+				context.instanceName ? `${context.instanceName}.` : ""
+			}${context.name}`,
+		singleLine: true
+	})
 	async get(
 		criteria: KeyValue<T>[],
 		options: { fromCacheOnly?: boolean } = {}
 	): Promise<T | undefined> {
-		const start = process.hrtime();
+		const cc = Logger.getCorrelationContext();
+
 		const keys = getKeys(criteria);
 		const index = this.getIndex<UniqueIndex<T>>(keys);
 		const values = getValues(criteria);
@@ -82,20 +91,18 @@ export class BaseCache<T> {
 		}
 
 		let entity = index.get(values);
-		let hit = false;
-		if (!entity && options.fromCacheOnly !== true) {
-			const fetch = index.fetchFn as UniqueFetchFn<T>;
-			entity = await fetch(criteria);
-			this.set(entity);
-		} else if (entity) {
-			hit = true;
+		if (!entity) {
+			if (cc !== undefined) {
+				cc.exitDetails = "(cache miss)";
+			}
+
+			if (options.fromCacheOnly !== true) {
+				const fetch = index.fetchFn as UniqueFetchFn<T>;
+				entity = await fetch(criteria);
+				this.set(entity);
+			}
 		}
 
-		Logger.log(
-			`${this.entityName} cache ${
-				hit ? "hit" : "miss"
-			} ${keys}=${values} ${Strings.getDurationMilliseconds(start)}ms `
-		);
 		return entity;
 	}
 
@@ -144,23 +151,19 @@ export class BaseCache<T> {
 			throw new Error(`No group index declared for field ${keys}`);
 		}
 
-		const cacheName = `${this.entityName} cache`;
-		Logger.log(`${cacheName}: retrieving entities ${keys}=${values}`);
 		let entities = index.getGroup(values);
+		let found = true;
 		if (!entities) {
-			Logger.log(`${cacheName}: cache miss ${keys}=${values}`);
+			found = false;
 			const fetch = index.fetchFn as GroupFetchFn<T>;
 			entities = await fetch(criteria);
-			Logger.log(`${cacheName}: caching entities ${keys}=${values}`);
 			this.initGroup(criteria, entities);
-		} else {
-			Logger.log(`${cacheName}: cache hit ${keys}=${values}`);
 		}
 
-		Logger.log(
-			`${cacheName}: returning ${entities.length} entities in ${Strings.getDurationMilliseconds(
-				start
-			)}ms ${keys}=${values}`
+		Logger.debug(
+			`${this.entityName}${Logger.toLoggableName(this)}${found ? "" : "(cache miss)"} returned ${
+				entities.length
+			} entities \u2022 ${Strings.getDurationMilliseconds(start)} ms \u2014 ${keys}=${values}`
 		);
 		return entities;
 	}

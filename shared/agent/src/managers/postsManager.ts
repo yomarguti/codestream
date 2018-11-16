@@ -44,7 +44,7 @@ import {
 	SetPostStatusResponse
 } from "../shared/agent.protocol";
 import { CSMarkerLocation, CSPost } from "../shared/api.protocol";
-import { Iterables, lsp, lspHandler, Strings } from "../system";
+import { debug, Iterables, lsp, lspHandler, Strings } from "../system";
 import { BaseIndex, IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { EntityCache, EntityCacheCfg } from "./cache/entityCache";
@@ -341,31 +341,26 @@ class PostsCache extends EntityCache<CSPost> {
 		this.indexes.set("streamId", this.postIndex);
 	}
 
+	@debug({
+		exit: (result: FetchPostsResponse) =>
+			`returned ${result.posts.length} posts (more=${result.more})`,
+		prefix: (context, request: FetchPostsRequest) => `${context.prefix}(${request.streamId})`,
+		singleLine: true
+	})
 	async getPosts(request: FetchPostsRequest): Promise<FetchPostsResponse> {
-		const start = process.hrtime();
-		Logger.log(`PostManager: retrieving posts streamId=${request.streamId}`);
+		const cc = Logger.getCorrelationContext();
+
 		let { posts, more } = this.postIndex.getPosts(request);
 		if (posts === undefined) {
-			Logger.log(`PostManager: cache miss streamId=${request.streamId}`);
+			Logger.debug(cc, `cache miss, fetching...`);
 			const response = await this.fetchPosts(request);
-			Logger.log(`PostManager: caching posts streamId=${request.streamId}`);
 
 			this.set(response.posts);
 
 			this.postIndex.setPosts(request, response);
 			posts = response.posts;
 			more = response.more;
-		} else {
-			Logger.log(`PostManager: cache hit streamId=${request.streamId}`);
 		}
-
-		Logger.log(
-			`PostManager: returning ${
-				posts!.length
-			} posts (more=${more}) in ${Strings.getDurationMilliseconds(start)}ms streamId=${
-				request.streamId
-			}`
-		);
 
 		return { posts: posts!, more };
 	}
@@ -374,19 +369,19 @@ class PostsCache extends EntityCache<CSPost> {
 	async ensureStreamInitialized(streamId: Id): Promise<void> {
 		if (this.postIndex.isStreamInitialized(streamId)) {
 			return;
+		}
+
+		const promise = this._streamInitialization.get(streamId);
+		if (promise) {
+			await promise;
 		} else {
-			const promise = this._streamInitialization.get(streamId);
-			if (promise) {
-				await promise;
-			} else {
-				Logger.log(`PostCache: initializing stream ${streamId}`);
-				const newPromise = this.getPosts({
-					streamId: streamId,
-					limit: 100
-				});
-				this._streamInitialization.set(streamId, newPromise as Promise<any>);
-				await newPromise;
-			}
+			Logger.debug(`PostCache: initializing stream ${streamId}`);
+			const newPromise = this.getPosts({
+				streamId: streamId,
+				limit: 100
+			});
+			this._streamInitialization.set(streamId, newPromise as Promise<any>);
+			await newPromise;
 		}
 	}
 }
