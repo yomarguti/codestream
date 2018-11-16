@@ -33,6 +33,15 @@ export class Post extends CodeStreamItem<CSFullPost> {
 		return !!this.entity.hasBeenEdited;
 	}
 
+	get codemark() {
+		return this.entity.codemark;
+	}
+
+	get summary() {
+		if (this.entity.codemark && this.entity.codemark.title) return this.entity.codemark.title;
+		else return this.entity.text;
+	}
+
 	get hasCode() {
 		return (
 			this.entity.codemark && this.entity.codemark.markers && this.entity.codemark.markers.length

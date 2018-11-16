@@ -307,7 +307,6 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 					const post = await m.post();
 					if (token.isCancellationRequested) return undefined;
 					if (post === undefined) continue;
-
 					const sender = await post.sender();
 					if (token.isCancellationRequested) return undefined;
 
@@ -322,7 +321,7 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 						message += "\n-----\n";
 					}
 					message = `__${sender!.name}__, ${post.fromNow()} &nbsp; _(${post.formatDate()})_\n\n>${
-						post.text
+						post.summary
 					}\n\n[__Open Comment \u2197__](command:codestream.openStream?${encodeURIComponent(
 						JSON.stringify(args)
 					)} "Open Comment")`;
