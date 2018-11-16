@@ -8,29 +8,6 @@ export function capitalize([first, ...rest]) {
 	return first.toUpperCase() + rest.join("");
 }
 
-export const isActiveMixin = (panel: string, componentName) => (
-	props: { activePanel: string },
-	nextProps: { activePanel: string }
-) => {
-	// const isActive = props.activePanel === panel;
-	// const isBecomingActive = nextProps.activePanel === panel;
-	// const isBecomingInactive = isActive && !isBecomingActive;
-	// const shouldUpdate = isBecomingActive || isBecomingInactive;
-	// if (shouldUpdate) {
-	// 	console.warn(`${componentName} is re-rendering`, {
-	// 		isBecomingActive,
-	// 		isBecomingInactive
-	// 	});
-	// } else {
-	// 	console.warn(`${componentName} is skipping a render`, {
-	// 		isBecomingActive,
-	// 		isBecomingInactive
-	// 	});
-	// }
-	// return shouldUpdate;
-	return true;
-};
-
 export const safe = <T>(fn: () => T): T | undefined => {
 	try {
 		return fn();
