@@ -14,8 +14,9 @@ export enum TraceLevel {
 }
 
 export interface LogCorrelationContext {
-	correlationId?: number;
-	prefix: string;
+	readonly correlationId?: number;
+	readonly prefix: string;
+	exitDetails?: string;
 }
 
 export class Logger {
@@ -32,19 +33,19 @@ export class Logger {
 	static debug(message: string, ...params: any[]): void;
 	static debug(context: LogCorrelationContext | undefined, message: string, ...params: any[]): void;
 	static debug(
-		callerOrMessage: LogCorrelationContext | string | undefined,
+		contextOrMessage: LogCorrelationContext | string | undefined,
 		...params: any[]
 	): void {
 		if (this.level !== TraceLevel.Debug && !Logger.isDebugging) return;
 
 		let message;
-		if (typeof callerOrMessage === "string") {
-			message = callerOrMessage;
+		if (typeof contextOrMessage === "string") {
+			message = contextOrMessage;
 		} else {
 			message = params.shift();
 
-			if (callerOrMessage !== undefined) {
-				message = `${callerOrMessage.prefix} ${message || ""}`;
+			if (contextOrMessage !== undefined) {
+				message = `${contextOrMessage.prefix} ${message || ""}`;
 			}
 		}
 
@@ -53,7 +54,7 @@ export class Logger {
 		// }
 
 		if (this._agent !== undefined) {
-			this._agent.log(`${this.timestamp} ${message || ""} ${this.toLoggableParams(true, params)}`);
+			this._agent.log(`${this.timestamp} ${message || ""}${this.toLoggableParams(true, params)}`);
 		}
 	}
 
@@ -66,19 +67,19 @@ export class Logger {
 	): void;
 	static error(
 		ex: Error,
-		callerOrMessage: LogCorrelationContext | string | undefined,
+		contextOrMessage: LogCorrelationContext | string | undefined,
 		...params: any[]
 	): void {
 		if (this.level === TraceLevel.Silent && !Logger.isDebugging) return;
 
 		let message;
-		if (callerOrMessage === undefined || typeof callerOrMessage === "string") {
-			message = callerOrMessage;
+		if (contextOrMessage === undefined || typeof contextOrMessage === "string") {
+			message = contextOrMessage;
 		} else {
 			message = params.shift();
 
-			if (callerOrMessage !== undefined) {
-				message = `${callerOrMessage.prefix} ${message || ""}`;
+			if (contextOrMessage !== undefined) {
+				message = `${contextOrMessage.prefix} ${message || ""}`;
 			}
 		}
 
@@ -98,7 +99,7 @@ export class Logger {
 
 		if (this._agent !== undefined) {
 			this._agent.error(
-				`${this.timestamp} ${message || ""} ${this.toLoggableParams(false, params)}\n${ex}`
+				`${this.timestamp} ${message || ""}${this.toLoggableParams(false, params)}\n${ex}`
 			);
 		}
 
@@ -111,7 +112,7 @@ export class Logger {
 
 	static log(message: string, ...params: any[]): void;
 	static log(context: LogCorrelationContext | undefined, message: string, ...params: any[]): void;
-	static log(callerOrMessage: LogCorrelationContext | string | undefined, ...params: any[]): void {
+	static log(contextOrMessage: LogCorrelationContext | string | undefined, ...params: any[]): void {
 		if (
 			this.level !== TraceLevel.Verbose &&
 			this.level !== TraceLevel.Debug &&
@@ -121,13 +122,13 @@ export class Logger {
 		}
 
 		let message;
-		if (typeof callerOrMessage === "string") {
-			message = callerOrMessage;
+		if (typeof contextOrMessage === "string") {
+			message = contextOrMessage;
 		} else {
 			message = params.shift();
 
-			if (callerOrMessage !== undefined) {
-				message = `${callerOrMessage.prefix} ${message || ""}`;
+			if (contextOrMessage !== undefined) {
+				message = `${contextOrMessage.prefix} ${message || ""}`;
 			}
 		}
 
@@ -136,7 +137,7 @@ export class Logger {
 		// }
 
 		if (this._agent !== undefined) {
-			this._agent.log(`${this.timestamp} ${message || ""} ${this.toLoggableParams(false, params)}`);
+			this._agent.log(`${this.timestamp} ${message || ""}${this.toLoggableParams(false, params)}`);
 		}
 	}
 
@@ -147,7 +148,7 @@ export class Logger {
 		...params: any[]
 	): void;
 	static logWithDebugParams(
-		callerOrMessage: LogCorrelationContext | string | undefined,
+		contextOrMessage: LogCorrelationContext | string | undefined,
 		...params: any[]
 	): void {
 		if (
@@ -159,13 +160,13 @@ export class Logger {
 		}
 
 		let message;
-		if (typeof callerOrMessage === "string") {
-			message = callerOrMessage;
+		if (typeof contextOrMessage === "string") {
+			message = contextOrMessage;
 		} else {
 			message = params.shift();
 
-			if (callerOrMessage !== undefined) {
-				message = `${callerOrMessage.prefix} ${message || ""}`;
+			if (contextOrMessage !== undefined) {
+				message = `${contextOrMessage.prefix} ${message || ""}`;
 			}
 		}
 
@@ -174,23 +175,26 @@ export class Logger {
 		// }
 
 		if (this._agent !== undefined) {
-			this._agent.log(`${this.timestamp} ${message || ""} ${this.toLoggableParams(true, params)}`);
+			this._agent.log(`${this.timestamp} ${message || ""}${this.toLoggableParams(true, params)}`);
 		}
 	}
 
 	static warn(message: string, ...params: any[]): void;
 	static warn(context: LogCorrelationContext | undefined, message: string, ...params: any[]): void;
-	static warn(callerOrMessage: LogCorrelationContext | string | undefined, ...params: any[]): void {
+	static warn(
+		contextOrMessage: LogCorrelationContext | string | undefined,
+		...params: any[]
+	): void {
 		if (this.level === TraceLevel.Silent && !Logger.isDebugging) return;
 
 		let message;
-		if (typeof callerOrMessage === "string") {
-			message = callerOrMessage;
+		if (typeof contextOrMessage === "string") {
+			message = contextOrMessage;
 		} else {
 			message = params.shift();
 
-			if (callerOrMessage !== undefined) {
-				message = `${callerOrMessage.prefix} ${message || ""}`;
+			if (contextOrMessage !== undefined) {
+				message = `${contextOrMessage.prefix} ${message || ""}`;
 			}
 		}
 
@@ -199,9 +203,7 @@ export class Logger {
 		// }
 
 		if (this._agent !== undefined) {
-			this._agent.warn(
-				`${this.timestamp} ${message || ""} ${this.toLoggableParams(false, params)}`
-			);
+			this._agent.warn(`${this.timestamp} ${message || ""}${this.toLoggableParams(false, params)}`);
 		}
 	}
 
@@ -252,7 +254,7 @@ export class Logger {
 		}
 
 		const loggableParams = params.map(p => this.toLoggable(p)).join(", ");
-		return loggableParams || "";
+		return ` \u2014 ${loggableParams}` || "";
 	}
 
 	private static _isDebugging: boolean | undefined;
