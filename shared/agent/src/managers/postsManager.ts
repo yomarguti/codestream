@@ -2,6 +2,7 @@
 import * as path from "path";
 import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
+import { MessageType } from "../api/apiProvider";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
@@ -45,7 +46,7 @@ import {
 import { CSMarkerLocation, CSPost } from "../shared/api.protocol";
 import { Iterables, lsp, lspHandler, Strings } from "../system";
 import { BaseIndex, IndexParams, IndexType } from "./cache";
-import { getValues, KeyValue, UniqueFetchFn } from "./cache/baseCache";
+import { getValues, KeyValue } from "./cache/baseCache";
 import { EntityCache, EntityCacheCfg } from "./cache/entityCache";
 import { EntityManagerBase, Id } from "./entityManager";
 
@@ -531,7 +532,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	async createPost(request: CreatePostRequest): Promise<CreatePostResponse> {
 		const response = await this.session.api.createPost(request);
 		trackPostCreation(request);
-		setCaches(response);
+		await resolveCreatePostResponse(response);
 		return {
 			...response,
 			post: await this.fullPost(response.post)
@@ -746,29 +747,36 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	}
 }
 
-function setCaches(response: CreatePostResponse) {
+async function resolveCreatePostResponse(response: CreatePostResponse) {
 	const container = Container.instance();
 	if (response.codemark) {
-		container.codemarks.cacheSet(response.codemark);
+		await container.codemarks.resolve({
+			type: MessageType.Codemarks,
+			data: [response.codemark]
+		});
 	}
 	if (response.markers) {
-		for (const marker of response.markers) {
-			container.markers.cacheSet(marker);
-		}
+		await container.markers.resolve({
+			type: MessageType.Markers,
+			data: response.markers
+		});
 	}
 	if (response.markerLocations) {
-		for (const markerLocations of response.markerLocations) {
-			container.markerLocations.cacheSet(markerLocations);
-		}
+		await container.markerLocations.resolve({
+			type: MessageType.MarkerLocations,
+			data: response.markerLocations
+		});
 	}
 	if (response.repos) {
-		for (const repos of response.repos) {
-			container.repos.cacheSet(repos);
-		}
+		await container.repos.resolve({
+			type: MessageType.Repositories,
+			data: response.repos
+		});
 	}
 	if (response.streams) {
-		for (const stream of response.streams) {
-			container.streams.cacheSet(stream);
-		}
+		await container.streams.resolve({
+			type: MessageType.Streams,
+			data: response.streams
+		});
 	}
 }
