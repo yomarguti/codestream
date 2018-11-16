@@ -325,9 +325,11 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 						post.text
 					}\n\n[__Open Comment \u2197__](command:codestream.openStream?${encodeURIComponent(
 						JSON.stringify(args)
-					)} "Open Comment")  &nbsp; &middot; &nbsp; [__Unpin Marker \u1F4CC__](command:codestream.openStream?${encodeURIComponent(
-						JSON.stringify(args)
-					)} "Unpin Marker")`;
+					)} "Open Comment")`;
+
+					// &nbsp; &middot; &nbsp; [__Unpin Marker \u1F4CC__](command:codestream.openStream?${encodeURIComponent(
+					// 	JSON.stringify(args)
+					// )} "Unpin Marker")
 
 					if (range) {
 						range.union(m.hoverRange); // document.validateRange(m.hoverRange));

@@ -158,6 +158,14 @@
                 "category": "CodeStream"
             }
         ],
+        "keybindings": [
+            {
+                "command": "codestream.postCode",
+                "key": "cmd+/ cmd+/",
+                "mac": "ctrl+/ ctrl+/",
+                "when": "editorTextFocus && codestream:status == signedIn"
+            }
+        ],
         "menus": {
             "commandPalette": [
                 {
