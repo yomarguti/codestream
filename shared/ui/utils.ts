@@ -29,7 +29,7 @@ export function mapFilter<A, B>(array: A[], fn: (A) => B | undefined): B[] {
 
 export const findLast = (array: any[], fn: (any) => boolean): any | undefined => {
 	for (let i = array.length - 1; i >= 0; i--) {
-		let item = array[i];
+		const item = array[i];
 		if (fn(item)) return item;
 	}
 };
@@ -75,10 +75,14 @@ export const rAFThrottle = (fn: Function): Function => {
 	return throttledFn;
 };
 
-export const toMapBy = (key: string, entities: any[]) =>
-	entities.reduce((result, entity) => ({ ...result, [entity[key]]: entity }), {});
+export function toMapBy(key: string, entities: any[]) {
+	return entities.reduce(function(map, entity) {
+		map[entity[key]] = entity;
+		return map;
+	}, Object.create(null));
+}
 
-export const uuid = () => uuidv4();
+export const uuid = uuidv4;
 export const shortUuid = () => {
 	const data = new Uint8Array(16);
 	uuidv4(null, data, 0);
@@ -102,7 +106,7 @@ export const isChildOf = (node: any, parentId: string) => {
 };
 
 export const getCurrentCursorPosition = (parentId: string) => {
-	var selection = window.getSelection(),
+	let selection = window.getSelection(),
 		charCount = -1,
 		node: any;
 
@@ -150,7 +154,7 @@ export const createRange = (node: any, chars: any, range: any) => {
 				chars.count = 0;
 			}
 		} else {
-			for (var lp = 0; lp < node.childNodes.length; lp++) {
+			for (let lp = 0; lp < node.childNodes.length; lp++) {
 				range = createRange(node.childNodes[lp], chars, range);
 
 				if (chars.count === 0) {

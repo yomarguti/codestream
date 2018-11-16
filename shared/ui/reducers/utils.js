@@ -1,2 +1,6 @@
-export const toMapBy = (key, entities) =>
-	entities.reduce((result, entity) => ({ ...result, [entity[key]]: entity }), {});
+export function toMapBy(key, entities) {
+	return entities.reduce(function(map, entity) {
+		map[entity[key]] = entity;
+		return map;
+	}, Object.create(null));
+}

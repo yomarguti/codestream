@@ -1679,7 +1679,7 @@ const mapStateToProps = ({
 		getDirectMessageStreamsForTeam(streams, context.currentTeamId) || []
 	).map(stream => ({
 		...stream,
-		name: getDMName(stream, toMapBy("id", teamMembers), session.userId)
+		name: getDMName(stream, teamMembersById, session.userId)
 	}));
 
 	return {
