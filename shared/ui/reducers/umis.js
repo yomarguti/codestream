@@ -1,4 +1,4 @@
-import { toMapBy } from "./utils";
+import { toMapBy } from "../utils";
 import _ from "underscore";
 
 const initialState = { lastReads: {}, mentions: {}, unreads: {} };
