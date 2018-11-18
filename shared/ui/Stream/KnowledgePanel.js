@@ -305,9 +305,8 @@ export class SimpleKnowledgePanel extends Component {
 		// else {
 		if (codemark.markers) this.props.showCode(codemark.markers[0], true);
 		// this.setState({ openPost: id });
-		// this.props.setCurrentStream(post.streamId);
-		// TODO pass id instead of post object
-		// this.props.postAction("make-thread", post);
+		this.props.setCurrentStream(codemark.streamId);
+		this.props.postAction("make-thread", { id: codemark.postId });
 		// }
 	};
 
