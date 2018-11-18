@@ -1,19 +1,16 @@
 import EventEmitter from "../event-emitter";
 import { getChannelStreamsForTeam, getDirectMessageStreamsForTeam } from "../reducers/streams";
 import { updatePreferences } from "../actions";
-import { openPanel, closePanel } from "../actions/context";
+import { openPanel, closePanel, setThread } from "../actions/context";
 import { saveCodemarks, updateCodemarks } from "../actions/codemarks";
 
-export { openPanel, closePanel };
+export { openPanel, closePanel, setThread };
 
 // uuid generator taken from: https://gist.github.com/jed/982883
 const createTempId = a =>
 	a
 		? (a ^ ((Math.random() * 16) >> (a / 4))).toString(16)
 		: ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, createTempId);
-
-// FIXME: this is for analytics purposes and the extension host should probably send the event
-const postCreated = meta => ({ type: "POST_CREATED", meta });
 
 const resolvePendingPost = (pendingId, post) => ({
 	type: "RESOLVE_PENDING_POST",

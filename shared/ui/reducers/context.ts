@@ -1,10 +1,14 @@
+import { Type } from "../actions/context";
+
 const initialState = {
 	currentFile: "",
 	mostRecentSourceFile: "",
 	currentTeamId: "",
 	currentRepoId: "",
 	currentCommit: "",
-	panelStack: ["channels"], // stores the stack of panels
+	currentStreamId: "",
+	threadId: null,
+	panelStack: ["channels"],
 	hasFocus: true // we assume we start with the focus when codestream initializes
 };
 
@@ -18,7 +22,9 @@ export default (state = initialState, { type, payload }) => {
 		else return { ...state, currentFile: "" };
 	}
 	if (type === "SET_CURRENT_TEAM") return { ...state, currentTeamId: payload };
-	if (type === "SET_CURRENT_STREAM") return { ...state, currentStreamId: payload };
+	if (type === "SET_CURRENT_STREAM") return { ...state, currentStreamId: payload, threadId: null };
+	if (type === Type.SetThread)
+		return { ...state, currentStreamId: payload.streamId, threadId: payload.threadId };
 	if (type === "SET_PANEL") {
 		// set the current panel and keep a stack of the most
 		// recent ones, so we can pop the current panel off the

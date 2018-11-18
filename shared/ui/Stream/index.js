@@ -45,22 +45,16 @@ const EMAIL_MATCH_REGEX = new RegExp(
 
 export class SimpleStream extends Component {
 	disposables = [];
+	state = {
+		composeBoxProps: {},
+		topTab: "chat",
+		threadTrigger: null
+	};
+	_compose = React.createRef();
 
 	static contextTypes = {
 		store: PropTypes.object
 	};
-
-	constructor(props) {
-		super(props);
-
-		this.state = {
-			composeBoxProps: {},
-			topTab: "chat",
-			threadId: props.initialThreadId,
-			threadTrigger: null
-		};
-		this._compose = React.createRef();
-	}
 
 	componentDidMount() {
 		this.setUmiInfo();
@@ -120,7 +114,7 @@ export class SimpleStream extends Component {
 							this.handleEscape(event);
 						} else if (this.state.searchBarOpen) {
 							this.handleClickSearch(event);
-						} else if (this.state.threadId) {
+						} else if (this.props.threadId) {
 							this.handleDismissThread();
 						}
 					}
@@ -156,16 +150,21 @@ export class SimpleStream extends Component {
 		this.setState({ quote: body });
 	};
 
+	// TODO: delete this for `setThread` action
 	goToThread = post => {
 		const threadId = post.parentPostId || post.id;
-		this.handleStreamThreadSelected({ streamId: post.postStreamId, threadId });
+		this.handleStreamThreadSelected({ streamId: post.streamId, threadId });
 	};
 
 	handleStreamThreadSelected = async ({ streamId, threadId }) => {
 		if (streamId !== this.props.postStreamId) {
+			console.warn("changing stream");
 			this.props.setCurrentStream(streamId);
 		}
-		if (threadId) this.openThread(threadId);
+		if (threadId) {
+			console.warn("opening thread", threadId);
+			this.openThread(threadId);
+		}
 	};
 
 	copy(event) {
@@ -200,7 +199,7 @@ export class SimpleStream extends Component {
 
 		// when going in and out of threads, make sure the streams are all
 		// the right height
-		if (prevState.threadId !== this.state.threadId) {
+		if (prevProps.threadId !== this.props.threadId) {
 			this.resizeStream();
 		}
 
@@ -208,7 +207,7 @@ export class SimpleStream extends Component {
 
 		const switchedStreams = postStreamId && postStreamId !== prevProps.postStreamId;
 		if (switchedStreams) {
-			this.handleDismissThread({ track: false });
+			this.onThreadClosed(prevProps.threadId);
 			safe(() => this._postslist.scrollToBottom());
 		}
 		if (this.props.activePanel !== prevProps.activePanel && this.state.editingPostId)
@@ -254,7 +253,8 @@ export class SimpleStream extends Component {
 
 	// return the post, if any, with the given ID
 	findPostById(id) {
-		return this.props.posts.find(post => id === post.id);
+		const { posts } = this.context.store.getState();
+		return getPost(posts, this.props.postStreamId, id);
 	}
 
 	handleClickHelpLink = event => {
@@ -300,7 +300,7 @@ export class SimpleStream extends Component {
 		const { searchBarOpen, q } = this.state;
 		if (searchBarOpen && q) activePanel = "knowledge";
 
-		let threadId = this.state.threadId;
+		let threadId = this.props.threadId;
 		let threadPost = this.findPostById(threadId);
 
 		const streamClass = createClassString({
@@ -628,10 +628,7 @@ export class SimpleStream extends Component {
 								<span>
 									<label>
 										{commentTypeLabel} in{" "}
-										<span
-											className="clickable"
-											onClick={() => this.handleGotoStream(threadPost.streamId)}
-										>
+										<span className="clickable" onClick={() => this.handleDismissThread()}>
 											{channelIcon}
 											{this.props.postStreamName}
 										</span>
@@ -698,12 +695,6 @@ export class SimpleStream extends Component {
 				{...this.state.composeBoxProps}
 			/>
 		);
-	};
-
-	handleGotoStream = streamId => {
-		this.setState({ threadId: null, threadTrigger: null });
-		this.props.setCurrentStream(streamId);
-		this.setActivePanel("main");
 	};
 
 	starChannel = () => {
@@ -779,9 +770,9 @@ export class SimpleStream extends Component {
 		}
 		id = id || list.getUsersMostRecentPost().id;
 		if (id) {
-			const { posts, codemarks } = this.context.store.getState();
+			const { codemarks } = this.context.store.getState();
 
-			const post = getPost(posts, this.props.postStreamId, id);
+			const post = this.findPostById(id);
 
 			if (post.codemarkId) {
 				const codemark = getCodemark(codemarks, post.codemarkId);
@@ -830,16 +821,19 @@ export class SimpleStream extends Component {
 
 	// dismiss the thread stream and return to the main stream
 	handleDismissThread = ({ track = true } = {}) => {
-		EventEmitter.emit("interaction:thread-closed", this.state.threadId);
-		this.setState({ threadId: null, threadTrigger: null });
+		this.onThreadClosed(this.props.threadId);
+		this.setState({ threadTrigger: null });
+		this.props.setThread(this.props.postStreamId);
 		// this.setActivePanel("main");
 		this.focusInput();
-		if (track)
-			EventEmitter.emit("analytics", {
-				label: "Page Viewed",
-				payload: { "Page Name": "Source Stream" }
-			});
+		// if (track)
+		// 	EventEmitter.emit("analytics", {
+		// 		label: "Page Viewed",
+		// 		payload: { "Page Name": "Source Stream" }
+		// 	});
 	};
+
+	onThreadClosed = threadId => EventEmitter.emit("interaction:thread-closed", threadId);
 
 	handleEditPost = event => {
 		var postDiv = event.target.closest(".post");
@@ -972,7 +966,7 @@ export class SimpleStream extends Component {
 
 	editPost = id => {
 		let inputId = `input-div-${id}`;
-		if (this.state.threadId) inputId = `thread-${inputId}`;
+		if (this.props.threadId) inputId = `thread-${inputId}`;
 		let newText = document.getElementById(inputId).innerHTML.replace(/<br>/g, "\n");
 
 		this.replacePostText(id, newText);
@@ -1027,11 +1021,13 @@ export class SimpleStream extends Component {
 	};
 
 	openThread = (threadId, wasClicked = false) => {
+		debugger;
 		EventEmitter.emit("analytics", {
 			label: "Page Viewed",
 			payload: { "Page Name": "Thread View" }
 		});
-		this.setState({ threadId, threadTrigger: wasClicked && threadId });
+		this.setState({ threadTrigger: wasClicked && threadId });
+		this.props.setThread(this.props.postStreamId, threadId);
 		// this.setActivePanel("thread");
 
 		this.focusInput();
@@ -1370,7 +1366,7 @@ export class SimpleStream extends Component {
 
 	submitSystemPost = async text => {
 		const { postStreamId, createSystemPost, posts } = this.props;
-		const threadId = this.state.threadId;
+		const threadId = this.props.threadId;
 		const lastPost = _.last(posts);
 		const seqNum = lastPost ? lastPost.seqNum + 0.001 : 0.001;
 		await createSystemPost(postStreamId, threadId, text, seqNum);
@@ -1422,7 +1418,7 @@ export class SimpleStream extends Component {
 
 	startLiveShare = () => {
 		const { postStreamId } = this.props;
-		const threadId = this.state.threadId;
+		const threadId = this.props.threadId;
 
 		this.props.trackEvent("Start Live Share", { URL: "Test2" });
 
@@ -1516,7 +1512,7 @@ export class SimpleStream extends Component {
 
 		if (this.checkForSlashCommands(text)) return;
 
-		let threadId = forceThreadId || this.state.threadId;
+		let threadId = forceThreadId || this.props.threadId;
 		const streamId = forceStreamId || postStreamId;
 
 		const { composeBoxProps } = this.state;
@@ -1660,8 +1656,8 @@ const mapStateToProps = ({
 	const channelMembers = postStream.isTeamStream
 		? teamMembers
 		: postStream.memberIds
-			? postStream.memberIds.map(id => users[id])
-			: [];
+		? postStream.memberIds.map(id => users[id])
+		: [];
 
 	const teamMembersById = toMapBy("id", teamMembers);
 
@@ -1688,7 +1684,7 @@ const mapStateToProps = ({
 		directMessageStreams,
 		activePanel: context.panelStack[0],
 		startOnMainPanel: startupProps.startOnMainPanel,
-		initialThreadId: startupProps.threadId,
+		threadId: context.threadId,
 		umis: {
 			...umis,
 			totalUnread: Object.values(_.omit(umis.unreads, postStream.id)).reduce(sum, 0),

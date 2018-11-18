@@ -7,7 +7,6 @@ import * as codemarkSelectors from "../reducers/codemarks";
 import * as userSelectors from "../reducers/users";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
-import Post from "./Post";
 import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
 import Codemark from "./Codemark";
@@ -300,13 +299,12 @@ export class SimpleKnowledgePanel extends Component {
 	};
 
 	handleClickCodemark = codemark => {
+		if (codemark.markers) this.props.showCode(codemark.markers[0], true);
+		// TODO: this.props.setThread(codemark.streamId, codemark.post.parentPostId || codemark.post.id);
 		// const isOpen = this.state.openPost === id;
 		// if (isOpen) this.setState({ openPost: null });
 		// else {
-		if (codemark.markers) this.props.showCode(codemark.markers[0], true);
 		// this.setState({ openPost: id });
-		this.props.setCurrentStream(codemark.streamId);
-		this.props.postAction("make-thread", { id: codemark.postId });
 		// }
 	};
 
