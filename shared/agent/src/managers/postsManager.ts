@@ -43,7 +43,7 @@ import {
 	SetPostStatusRequestType,
 	SetPostStatusResponse
 } from "../shared/agent.protocol";
-import { CSMarkerLocation, CSPost } from "../shared/api.protocol";
+import { CodemarkType, CSMarkerLocation, CSPost } from "../shared/api.protocol";
 import { debug, Iterables, lsp, lspHandler, Strings } from "../system";
 import { BaseIndex, IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
@@ -389,16 +389,34 @@ class PostsCache extends EntityCache<CSPost> {
 function trackPostCreation(request: CreatePostRequest) {
 	process.nextTick(() => {
 		try {
+			let markerType = "Chat";
 			const telemetry = Container.instance().telemetry;
 			let isMarker = false;
 			// Check if it's a marker
 			if (request.codemark != null) {
 				isMarker = true;
 			}
+
+			// Get Type for codemark
+			if (request.codemark != null) {
+				// TODO: Add Bookmark and Issue
+				switch (request.codemark.type) {
+					case CodemarkType.Question:
+						markerType = "Question";
+						break;
+					case CodemarkType.Comment:
+						markerType = "Comment";
+						break;
+					case CodemarkType.Trap:
+						markerType = "Trap";
+						break;
+				}
+			}
+
 			const payload: {
 				[key: string]: any;
 			} = {
-				Type: "Chat",
+				Type: markerType,
 				Thread: request.parentPostId ? "Reply" : "Parent",
 				Marker: isMarker
 			};
