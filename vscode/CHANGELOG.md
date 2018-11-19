@@ -1,5 +1,17 @@
 # Change Log
 
+## [0.24.2] - 2018-11-19
+
+### Fixed
+
+- Fixes issue with some slack teams missing real-time events -- affected teams will be signed out and will need to reauthenticate to resolve the issue
+
+## [0.24.1] - 2018-11-16
+
+### Fixed
+
+- Fixes some performance issues with larger Slack teams (still a work-in-progress)
+
 ## [0.24.0] - 2018-11-12
 
 ### Added
