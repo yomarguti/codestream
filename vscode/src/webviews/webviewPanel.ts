@@ -251,19 +251,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 							});
 							break;
 						}
-						case "track-event": {
-							Logger.debug("`track-event` called from webviewPanel.ts");
-							const { eventName, properties } = body.params;
-							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-							Container.agent.telemetry.track(eventName, properties);
 
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: responseBody
-							});
-
-							break;
-						}
 						case "go-to-signup": {
 							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
 							try {
@@ -829,6 +817,19 @@ export class CodeStreamWebviewPanel implements Disposable {
 				}
 				case WebviewIpcMessageType.onReloadRequest: {
 					this.reload();
+					break;
+				}
+				case WebviewIpcMessageType.onTelemetry: {
+					Logger.debug("(4) `WebviewIpcMessageType.onTelemetry` called from webviewPanel");
+					const { eventName, properties } = e.body;
+					const responseBody: WebviewIpcMessageResponseBody = { id: e.body.id };
+					Container.agent.telemetry.track(eventName, properties);
+
+					this.postMessage({
+						type: WebviewIpcMessageType.response,
+						body: responseBody
+					});
+
 					break;
 				}
 			}

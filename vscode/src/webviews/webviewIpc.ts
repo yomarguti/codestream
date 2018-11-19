@@ -30,7 +30,8 @@ export enum WebviewIpcMessageType {
 	onServiceRequest = "codestream:interaction:svc-request",
 	onReloadRequest = "codestream:interaction:clicked-reload-webview",
 	onViewReady = "codestream:view-ready",
-	response = "codestream:response"
+	response = "codestream:response",
+	onTelemetry = "codestream:telemetry"
 }
 
 export function toLoggableIpcMessage(msg: WebviewIpcMessage) {
