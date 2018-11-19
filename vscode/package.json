@@ -2,7 +2,7 @@
     "name": "codestream",
     "displayName": "CodeStream: For Slack & Live Share",
     "description": "Team chat using Slack or CodeStream channels right inside VS Code for a better way to discuss code and share knowledge about your codebase. Also integrates with Visual Studio Live Share.",
-    "version": "0.24.2",
+    "version": "0.24.3",
     "author": "CodeStream",
     "publisher": "CodeStream",
     "license": "UNLICENSED",
