@@ -100,6 +100,7 @@ export interface DidSelectCodeNotification {
 			  }
 			| undefined;
 		gitError: string | undefined;
+		isHighlight?: boolean;
 	};
 }
 

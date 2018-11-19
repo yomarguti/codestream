@@ -531,6 +531,16 @@ export class CodeStreamWebviewPanel implements Disposable {
 							);
 							break;
 						}
+						case "open-comment-on-select": {
+							const value = body.params;
+							// set the config
+							await configuration.update(
+								configuration.name("openCommentOnSelect").value,
+								value,
+								ConfigurationTarget.Global
+							);
+							break;
+						}
 						case "create-stream": {
 							const { type, name, purpose, privacy, memberIds } = body.params;
 
@@ -870,6 +880,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 			configuration.changed(e, configuration.name("avatars").value) ||
 			configuration.changed(e, configuration.name("muteAll").value) ||
 			configuration.changed(e, configuration.name("showMarkers").value) ||
+			configuration.changed(e, configuration.name("openCommentOnSelect").value) ||
 			configuration.changed(e, configuration.name("traceLevel").value)
 		) {
 			this.postMessage({
@@ -879,7 +890,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 					muteAll: Container.config.muteAll,
 					serverUrl: this.session.serverUrl,
 					showHeadshots: Container.config.avatars,
-					showMarkers: Container.config.showMarkers
+					showMarkers: Container.config.showMarkers,
+					openCommentOnSelect: Container.config.openCommentOnSelect
 				}
 			});
 		}
@@ -915,7 +927,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 			authors: { id: string; username: string }[];
 			remotes: { name: string; url: string }[];
 		},
-		gitError?: string
+		gitError?: string,
+		isHighlight?: boolean
 	) {
 		let file;
 		if (source === undefined) {
@@ -935,7 +948,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 				fileUri: uri.toString(),
 				location: [range.start.line, range.start.character, range.end.line, range.end.character],
 				source: source,
-				gitError
+				gitError,
+				isHighlight
 			}
 		} as DidSelectCodeNotification));
 		return this._streamThread;
@@ -1082,7 +1096,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 		const uri = e.textEditor.document.uri;
 
 		const response = await Container.agent.posts.prepareCode(e.textEditor.document, selection);
-		await this.postCode(response.code, uri, selection, response.source, response.gitError);
+		await this.postCode(response.code, uri, selection, response.source, response.gitError, true);
 	}
 
 	private async getBootstrapState() {
@@ -1113,7 +1127,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 			muteAll: Container.config.muteAll,
 			serverUrl: this.session.serverUrl,
 			showHeadshots: Container.config.avatars,
-			showMarkers: Container.config.showMarkers
+			showMarkers: Container.config.showMarkers,
+			openCommentOnSelect: Container.config.openCommentOnSelect
 		};
 		state.currentTeamId = this.session.team.id;
 		state.currentUserId = this.session.userId;
