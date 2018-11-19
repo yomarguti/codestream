@@ -1093,6 +1093,18 @@ class ComposeBox extends React.Component {
 							<span className="hint">Styling with Markdown is supported</span>
 						</div>
 						<div style={{ clear: "both" }} />
+						<div
+							style={{ marginTop: "30px", cursor: "pointer" }}
+							onClick={this.props.toggleOpenCommentOnSelect}
+						>
+							<span
+								style={{ float: "right", marginLeft: "10px" }}
+								className={createClassString("switch", {
+									checked: this.props.openCommentOnSelect
+								})}
+							/>
+							Auto-open when selecting code and CodeStream is visible
+						</div>
 					</fieldset>
 				</form>
 			</ScrollBox>

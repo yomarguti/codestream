@@ -150,6 +150,13 @@ export default class WebviewApi {
 		});
 	}
 
+	openCommentOnSelectInEditor(value: Boolean) {
+		return this.postMessage({
+			action: "open-comment-on-select",
+			params: value
+		});
+	}
+
 	saveUserPreference(newPreference: object) {
 		return this.postMessage({ action: "save-user-preference", params: newPreference });
 	}

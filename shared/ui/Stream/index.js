@@ -47,7 +47,6 @@ export class SimpleStream extends Component {
 	disposables = [];
 	state = {
 		composeBoxProps: {},
-		topTab: "chat",
 		threadTrigger: null
 	};
 	_compose = React.createRef();
@@ -146,7 +145,12 @@ export class SimpleStream extends Component {
 
 	handleCodeHighlightEvent = body => {
 		// make sure we have a compose box to type into
-		this.setMultiCompose(true);
+		// if it's not a highlight event, we definitely want to
+		// open multi-compose. if it is a highlight event, only
+		// open it if it's not open and the user has the preference
+		// to auto-open on selection
+		if (!body.isHighlight || (!this.state.multiCompose && this.props.configs.openCommentOnSelect))
+			this.setMultiCompose(true);
 		this.setState({ quote: body });
 	};
 
@@ -691,10 +695,16 @@ export class SimpleStream extends Component {
 				multiCompose={this.state.multiCompose}
 				setMultiCompose={this.setMultiCompose}
 				quote={this.state.quote}
+				openCommentOnSelect={this.props.configs.openCommentOnSelect}
+				toggleOpenCommentOnSelect={this.toggleOpenCommentOnSelect}
 				quotePost={this.state.quotePost}
 				{...this.state.composeBoxProps}
 			/>
 		);
+	};
+
+	toggleOpenCommentOnSelect = () => {
+		this.props.openCommentOnSelectInEditor(!this.props.configs.openCommentOnSelect);
 	};
 
 	starChannel = () => {
@@ -716,13 +726,6 @@ export class SimpleStream extends Component {
 			this.setState({ q: null });
 		}
 		this.setState({ searchBarOpen: !searchBarOpen });
-	};
-
-	setTopTab = type => {
-		this.setState({ topTab: type });
-		setTimeout(() => {
-			// this.focusInput();
-		}, 20);
 	};
 
 	setMultiCompose = (value, state = {}) => {
@@ -1659,8 +1662,8 @@ const mapStateToProps = ({
 	const channelMembers = postStream.isTeamStream
 		? teamMembers
 		: postStream.memberIds
-			? postStream.memberIds.map(id => users[id])
-			: [];
+		? postStream.memberIds.map(id => users[id])
+		: [];
 
 	const teamMembersById = toMapBy("id", teamMembers);
 

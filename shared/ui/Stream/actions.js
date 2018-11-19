@@ -37,6 +37,10 @@ export const muteAllConversations = value => (dispatch, getState, { api }) => {
 	api.muteAllConversations(value);
 };
 
+export const openCommentOnSelectInEditor = value => (dispatch, getState, { api }) => {
+	api.openCommentOnSelectInEditor(value);
+};
+
 export const createPost = (streamId, parentPostId, text, codemark, mentions, extra) => async (
 	dispatch,
 	getState,
