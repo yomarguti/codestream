@@ -110,6 +110,7 @@ export interface ApiRequest {
 export const ApiRequestType = new RequestType<ApiRequest, any, void, void>("codeStream/api");
 
 export enum LogoutReason {
+	Token = "token",
 	Unknown = "unknown"
 }
 

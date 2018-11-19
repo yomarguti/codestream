@@ -1,10 +1,10 @@
 "use strict";
-import { RTMClient } from "@slack/client";
+import { LogLevel, RTMClient } from "@slack/client";
 import HttpsProxyAgent from "https-proxy-agent";
 import { Emitter, Event } from "vscode-languageserver";
 import { Container } from "../../container";
-import { Logger } from "../../logger";
-import { ConnectionStatus } from "../../shared/agent.protocol";
+import { Logger, TraceLevel } from "../../logger";
+import { ConnectionStatus, LogoutReason } from "../../shared/agent.protocol";
 import { StreamType } from "../../shared/api.protocol";
 import { debug, log } from "../../system";
 import {
@@ -111,7 +111,17 @@ export class SlackEvents {
 		private readonly _api: SlackApiProvider,
 		proxyAgent: HttpsProxyAgent | undefined
 	) {
-		this._slackRTM = new RTMClient(slackToken, { agent: proxyAgent });
+		this._slackRTM = new RTMClient(slackToken, {
+			agent: proxyAgent,
+			logLevel: Logger.level === TraceLevel.Debug ? LogLevel.DEBUG : LogLevel.INFO,
+			logger: (level, message) => {
+				Logger.log(`SLACK-RTM[${level}]: ${message}`);
+				if (message.includes("unable to RTM start: An API error occurred: missing_scope")) {
+					// If we are missing the scope, we have a token issue, force a logout -- and we give it a little time to let the initialization unwind
+					setTimeout(() => void Container.instance().session.logout(LogoutReason.Token), 500);
+				}
+			}
+		});
 
 		this._slackRTM.on(SlackRtmEventTypes.Message, this.onSlackMessageChanged, this);
 		this._slackRTM.on(SlackRtmEventTypes.ReactionAdded, this.onSlackMessageChanged, this);
