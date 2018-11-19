@@ -85,6 +85,7 @@ import {
 	InviteUserRequestType,
 	JoinStreamRequestType,
 	LeaveStreamRequestType,
+	LogoutReason,
 	MarkPostUnreadRequestType,
 	MarkStreamReadRequestType,
 	MuteStreamRequestType,
@@ -761,7 +762,11 @@ export class CodeStreamAgentConnection implements Disposable {
 
 	@log()
 	private onLogout(e: DidLogoutNotification) {
-		void Container.session.goOffline();
+		if (e.reason === LogoutReason.Token) {
+			void Container.session.logout();
+		} else {
+			void Container.session.goOffline();
+		}
 	}
 
 	@log()
