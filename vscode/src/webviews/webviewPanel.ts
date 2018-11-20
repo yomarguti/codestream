@@ -34,7 +34,6 @@ import {
 	CodemarksChangedEvent,
 	CodeStreamEnvironment,
 	CodeStreamSession,
-	Post,
 	PostsChangedEvent,
 	PreferencesChangedEvent,
 	RepositoriesChangedEvent,
@@ -469,13 +468,13 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 							break;
 						}
-						case "set-post-status": {
-							const { streamId, id, status } = body.params;
+						case "set-codemark-status": {
+							const { id, status } = body.params;
 
-							const response = await Container.agent.posts.setStatus(streamId, id, status);
+							const response = await Container.agent.codemarks.setStatus(id, status);
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload: response.post }
+								body: { id: body.id, payload: response }
 							});
 
 							break;

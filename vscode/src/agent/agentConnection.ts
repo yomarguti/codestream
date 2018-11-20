@@ -93,7 +93,7 @@ import {
 	ReactToPostRequestType,
 	RenameStreamRequestType,
 	ReportErrorRequestType,
-	SetPostStatusRequestType,
+	SetCodemarkStatusRequestType,
 	SetStreamPurposeRequestType,
 	UnarchiveStreamRequestType,
 	UpdateCodemarkRequestType,
@@ -323,6 +323,10 @@ export class CodeStreamAgentConnection implements Disposable {
 		edit(codemarkId: string, attributes: { text?: string; color?: string }) {
 			return this._connection.sendRequest(UpdateCodemarkRequestType, { codemarkId, ...attributes });
 		}
+
+		setStatus(codemarkId: string, status: string) {
+			return this._connection.sendRequest(SetCodemarkStatusRequestType, { codemarkId, status });
+		}
 	}(this);
 
 	@started
@@ -482,14 +486,6 @@ export class CodeStreamAgentConnection implements Disposable {
 				postId: postId,
 				streamId: streamId,
 				emojis: reactions
-			});
-		}
-
-		setStatus(streamId: string, postId: string, status: string) {
-			return this._connection.sendRequest(SetPostStatusRequestType, {
-				postId: postId,
-				streamId: streamId,
-				status: status
 			});
 		}
 	}(this);
