@@ -167,12 +167,17 @@ export const createRange = (node: any, chars: any, range: any) => {
 	return range;
 };
 
-// const name = this.constructor.displayName || this.constructor.name || "Component";
-// console.group(name);
-// console.debug("props", { prevProps, currProps: this.props });
-// Object.keys(prevProps).forEach(key => {
-// 	if (prevProps[key] !== this.props[key]) {
-// 		console.log(`property ${key} changed from ${prevProps[key]} to ${this.props[key]}`);
-// 	}
-// });
-// console.groupEnd(name);
+export function componentDidUpateMixin<Props, State>(context, fn: (Props, State) => any) {
+	return prevProps => {
+		const name = context.constructor.displayName || context.constructor.name || "Component";
+		console.group(name);
+		console.debug("props", { prevProps, currProps: context.props });
+		Object.keys(prevProps).forEach(key => {
+			if (prevProps[key] !== context.props[key]) {
+				console.log(`prop ${key} changed from ${prevProps[key]} to ${context.props[key]}`);
+			}
+		});
+		console.groupEnd();
+		fn.call(context, ...arguments);
+	};
+}
