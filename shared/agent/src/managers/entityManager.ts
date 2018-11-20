@@ -47,7 +47,7 @@ export abstract class CachedEntityManagerBase<T extends CSEntity> extends Entity
 	protected _cached = false;
 	protected _caching: Promise<void> | undefined;
 
-	protected async ensureCached(): Promise<T[]> {
+	async ensureCached(): Promise<T[]> {
 		if (!this._cached && this._caching === undefined) {
 			// Don't pass the request, since we want to cache all the data
 			this._caching = this.loadCache();

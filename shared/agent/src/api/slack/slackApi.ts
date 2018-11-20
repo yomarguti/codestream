@@ -754,6 +754,7 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	async fetchPosts(request: FetchPostsRequest) {
 		let response;
+		const codemarksPromise = Container.instance().codemarks.ensureCached();
 
 		// This isn't ideal, but we can always pack some more info into the id to ensure we call the right thing
 		switch (fromSlackChannelIdToType(request.streamId)) {
@@ -821,6 +822,7 @@ export class SlackApiProvider implements ApiProvider {
 		messages.sort((a: any, b: any) => a.ts - b.ts);
 
 		const usernamesById = await this.ensureUsernamesById();
+		await codemarksPromise;
 		const posts = await Promise.all(messages.map((m: any) =>
 			fromSlackPost(m, request.streamId, usernamesById, this._codestreamTeamId)
 		) as Promise<CSPost>[]);
