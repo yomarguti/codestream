@@ -4,7 +4,6 @@ import { connect } from "react-redux";
 import { Action } from "redux";
 import { setCodemarkStatus } from "./actions";
 import Icon from "./Icon";
-// import Debug from "./Debug";
 import { markdownify } from "./Markdowner";
 
 enum Type {
@@ -42,26 +41,6 @@ interface Props {
 }
 
 export class Codemark extends React.Component<Props, State> {
-	// shouldComponentUpdate(nextProps) {
-	// 	const codemarkChanged = nextProps.codemark.version !== this.props.codemark.version;
-	// 	const usernamesChanged =
-	// 		nextProps.usernames.length !== this.props.usernames.length ||
-	// 		nextProps.usernames.some(username => !this.props.usernames.includes(username));
-	// 	return codemarkChanged || usernamesChanged;
-	// }
-
-	// componentDidUpdate(prevProps, prevState) {
-	// 	const name = "Codemark";
-	// 	console.group(name);
-	// 	console.debug("props", { prevProps, currProps: this.props });
-	// 	Object.keys(prevProps).forEach(key => {
-	// 		if (prevProps[key] !== this.props[key]) {
-	// 			console.log(`property ${key} changed from ${prevProps[key]} to ${this.props[key]}`);
-	// 		}
-	// 	});
-	// 	console.groupEnd();
-	// }
-
 	render() {
 		if (this.props.collapsed) return this.renderCollapsedCodemark();
 		else return null;
