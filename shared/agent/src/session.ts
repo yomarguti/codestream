@@ -55,7 +55,8 @@ import {
 } from "./shared/api.protocol";
 import { log, memoize, registerDecoratedHandlers } from "./system";
 
-const envRegex = /https?:\/\/(pd-|qa-)?api.codestream.(?:us|com)/;
+// FIXME: Must keep this in sync with vscode-codestream/src/api/session.ts
+const envRegex = /https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(?::\d+$)?/i;
 
 const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 	"USRC-1001": ApiErrors.InvalidCredentials,
@@ -290,9 +291,9 @@ export class CodeStreamSession {
 		return this._email!;
 	}
 
-	private _environment: CodeStreamEnvironment | undefined;
+	private _environment: CodeStreamEnvironment | string = CodeStreamEnvironment.Unknown;
 	get environment() {
-		return this._environment!;
+		return this._environment;
 	}
 
 	private _teamId: string | undefined;
@@ -485,15 +486,17 @@ export class CodeStreamSession {
 		const match = envRegex.exec(url);
 		if (match == null) return CodeStreamEnvironment.Unknown;
 
-		const [, env] = match;
-		switch (env == null ? env : env.toLowerCase()) {
-			case "pd-":
-				return CodeStreamEnvironment.PD;
-			case "qa-":
-				return CodeStreamEnvironment.QA;
-			default:
-				return CodeStreamEnvironment.Production;
+		// FIXME: Must keep this logic in sync with vscode-codestream/src/api/session.ts
+		const [, subdomain, env] = match;
+		if (subdomain != null && subdomain.toLowerCase() === "localhost") {
+			return CodeStreamEnvironment.Local;
 		}
+
+		if (env == null) {
+			return CodeStreamEnvironment.Production;
+		}
+
+		return env.toLowerCase();
 	}
 
 	private initializeTelemetry(user: CSMe, team: CSTeam, companies: CSCompany[]) {

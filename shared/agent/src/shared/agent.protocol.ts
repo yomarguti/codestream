@@ -40,9 +40,8 @@ export interface AccessToken {
 }
 
 export enum CodeStreamEnvironment {
-	PD = "pd",
+	Local = "local",
 	Production = "prod",
-	QA = "qa",
 	Unknown = "unknown"
 }
 
@@ -86,7 +85,7 @@ export interface AgentState {
 	apiToken: string;
 	capabilities: ApiCapabilities;
 	email: string;
-	environment: CodeStreamEnvironment;
+	environment: CodeStreamEnvironment | string;
 	serverUrl: string;
 	teamId: string;
 	userId: string;
