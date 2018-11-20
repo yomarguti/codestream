@@ -6,11 +6,19 @@ import {
 	closePanel,
 	setThread,
 	setCodemarkTypeFilter,
-	setCodemarkFileFilter
+	setCodemarkFileFilter,
+	setChannelFilter
 } from "../actions/context";
 import { saveCodemarks, updateCodemarks } from "../actions/codemarks";
 
-export { openPanel, closePanel, setThread, setCodemarkTypeFilter, setCodemarkFileFilter };
+export {
+	openPanel,
+	closePanel,
+	setThread,
+	setCodemarkTypeFilter,
+	setCodemarkFileFilter,
+	setChannelFilter
+};
 
 // uuid generator taken from: https://gist.github.com/jed/982883
 const createTempId = a =>

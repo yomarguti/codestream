@@ -9,6 +9,7 @@ import {
 	muteAllConversations,
 	setCurrentStream,
 	setUserPreference,
+	setChannelFilter,
 	openPanel
 } from "./actions";
 import {
@@ -73,7 +74,7 @@ export class SimpleChannelPanel extends Component {
 		if (isInVscode()) {
 			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
 				if (event.key === "Escape") {
-					this.props.setUserPreference(["showChannels"], this.state.previousShowChannelsValue);
+					this.props.setChannelFilter(this.state.previousShowChannelsValue);
 				}
 			});
 		}
@@ -107,7 +108,7 @@ export class SimpleChannelPanel extends Component {
 					</Tooltip>
 					Show{" "}
 					<Filter
-						preferenceId="showChannels"
+						onValue={this.props.setChannelFilter}
 						selected={showChannels}
 						labels={this.showChannelsLabel}
 						items={this.menuItems}
@@ -285,9 +286,7 @@ export class SimpleChannelPanel extends Component {
 					<Tooltip title={title} placement="bottomRight">
 						<span
 							className="align-right-button"
-							onClick={() =>
-								this.props.setUserPreference(["showChannels"], this.state.previousShowChannelsValue)
-							}
+							onClick={() => this.props.setChannelFilter(this.state.previousShowChannelsValue)}
 						>
 							<Icon name="x" className="clickable" />
 						</span>
@@ -333,7 +332,7 @@ export class SimpleChannelPanel extends Component {
 	saveSelected = async () => {
 		const { checkedStreams } = this.state;
 		await this.props.setUserPreference(["selectedStreams"], checkedStreams);
-		await this.props.setUserPreference(["showChannels"], "selected");
+		await this.props.setChannelPreference("selected");
 	};
 
 	streamIcon = stream => {
@@ -794,7 +793,7 @@ const mapStateToProps = ({
 		meStreamId,
 		streamPresence,
 		team: team,
-		showChannels: preferences.showChannels || "all"
+		showChannels: context.channelFilter
 	};
 };
 
@@ -807,6 +806,7 @@ export default connect(
 		setUserPreference,
 		setCurrentStream,
 		muteAllConversations,
-		openPanel
+		openPanel,
+		setChannelFilter
 	}
 )(SimpleChannelPanel);

@@ -1,7 +1,8 @@
 export enum Type {
 	SetThread = "SET_CURRENT_THREAD",
 	SetCodeMarkFileFilter = "SET_CODEMARK_FILE_FILTER",
-	SetCodemarkTypeFilter = "SET_CODEMARK_TYPE_FILTER"
+	SetCodemarkTypeFilter = "SET_CODEMARK_TYPE_FILTER",
+	SetChannelFilter = "SET_CHANNEL_FILTER"
 }
 
 export const setContext = payload => ({ type: "SET_CONTEXT", payload });
@@ -29,5 +30,10 @@ export const setCodemarkFileFilter = (value: string) => ({
 
 export const setCodemarkTypeFilter = (value: string) => ({
 	type: Type.SetCodemarkTypeFilter,
+	payload: value
+});
+
+export const setChannelFilter = (value: string) => ({
+	type: Type.SetChannelFilter,
 	payload: value
 });

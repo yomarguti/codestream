@@ -11,7 +11,8 @@ const initialState = {
 	panelStack: ["channels"],
 	hasFocus: true, // we assume we start with the focus when codestream initializes
 	codemarkFileFilter: "all",
-	codemarkTypeFilter: "all"
+	codemarkTypeFilter: "all",
+	channelFilter: "all"
 };
 
 export default (state = initialState, { type, payload }) => {
@@ -51,6 +52,8 @@ export default (state = initialState, { type, payload }) => {
 			return { ...state, codemarkFileFilter: payload };
 		case Type.SetCodemarkTypeFilter:
 			return { ...state, codemarkTypeFilter: payload };
+		case Type.SetChannelFilter:
+			return { ...state, channelFilter: payload };
 		default:
 			return { ...initialState, ...state };
 	}
