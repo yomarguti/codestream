@@ -50,7 +50,7 @@ import {
 	OpenStreamRequest,
 	ReactToPostRequest,
 	RenameStreamRequest,
-	SetPostStatusRequest,
+	SetCodemarkStatusRequest,
 	SetStreamPurposeRequest,
 	UnarchiveStreamRequest,
 	UpdateCodemarkRequest,
@@ -515,6 +515,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
+	async setCodemarkStatus(request: SetCodemarkStatusRequest) {
+		return this.updateCodemark(request);
+	}
+
+	@log()
 	deleteCodemark(request: DeleteCodemarkRequest): Promise<DeleteCodemarkResponse> {
 		const { codemarkId } = request;
 		return this.delete(`/codemarks/${codemarkId}`, this._token);
@@ -634,21 +639,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 		const response = await this.put<CSReactions, CSReactToPostResponse>(
 			`/react/${request.postId}`,
 			request.emojis,
-			this._token
-		);
-
-		const [post] = await Container.instance().posts.resolve({
-			type: MessageType.Posts,
-			data: [response.post]
-		});
-		return { ...response, post: post };
-	}
-
-	@log()
-	async setPostStatus(request: SetPostStatusRequest) {
-		const response = await this.put<CSSetPostStatusRequest, CSSetPostStatusResponse>(
-			`/set-status/${request.postId}`,
-			request,
 			this._token
 		);
 

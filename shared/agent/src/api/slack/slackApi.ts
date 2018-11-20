@@ -50,8 +50,7 @@ import {
 	OpenStreamRequest,
 	ReactToPostRequest,
 	RenameStreamRequest,
-	SetPostStatusRequest,
-	SetPostStatusResponse,
+	SetCodemarkStatusRequest,
 	SetStreamPurposeRequest,
 	UnarchiveStreamRequest,
 	UpdateCodemarkRequest,
@@ -985,8 +984,8 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
-	setPostStatus(request: SetPostStatusRequest): Promise<SetPostStatusResponse> {
-		throw new Error("Method not implemented.");
+	async setCodemarkStatus(request: SetCodemarkStatusRequest) {
+		return this._codestream.setCodemarkStatus(request);
 	}
 
 	@log()

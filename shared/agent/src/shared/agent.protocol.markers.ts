@@ -188,6 +188,7 @@ export interface UpdateCodemarkRequest {
 	streamId?: string;
 	postId?: string;
 	color?: string;
+	status?: string;
 }
 
 export interface UpdateCodemarkResponse {
@@ -217,3 +218,19 @@ export const UpdateMarkerRequestType = new RequestType<
 	void,
 	void
 >("codeStream/marker/update");
+
+export interface SetCodemarkStatusRequest {
+	codemarkId: string;
+	status: string;
+}
+
+export interface SetCodemarkStatusResponse {
+	codemark: CSFullCodemark;
+}
+
+export const SetCodemarkStatusRequestType = new RequestType<
+	SetCodemarkStatusRequest,
+	SetCodemarkStatusResponse,
+	void,
+	void
+>("codeStream/codemark/setStatus");

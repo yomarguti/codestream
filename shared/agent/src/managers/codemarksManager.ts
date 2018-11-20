@@ -8,6 +8,9 @@ import {
 	FetchCodemarksRequest,
 	FetchCodemarksRequestType,
 	FetchCodemarksResponse,
+	SetCodemarkStatusRequest,
+	SetCodemarkStatusRequestType,
+	SetCodemarkStatusResponse,
 	UpdateCodemarkRequest,
 	UpdateCodemarkRequestType,
 	UpdateCodemarkResponse
@@ -75,6 +78,16 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		const [codemark] = await this.resolve({
 			type: MessageType.Codemarks,
 			data: [updateResponse.codemark]
+		});
+		return { codemark: await this.fullCodemark(codemark) };
+	}
+
+	@lspHandler(SetCodemarkStatusRequestType)
+	async setStatus(request: SetCodemarkStatusRequest): Promise<SetCodemarkStatusResponse> {
+		const response = await this.session.api.setCodemarkStatus(request);
+		const [codemark] = await this.resolve({
+			type: MessageType.Codemarks,
+			data: [response.codemark]
 		});
 		return { codemark: await this.fullCodemark(codemark) };
 	}

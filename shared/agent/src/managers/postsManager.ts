@@ -38,10 +38,7 @@ import {
 	PreparePostWithCodeResponse,
 	ReactToPostRequest,
 	ReactToPostRequestType,
-	ReactToPostResponse,
-	SetPostStatusRequest,
-	SetPostStatusRequestType,
-	SetPostStatusResponse
+	ReactToPostResponse
 } from "../shared/agent.protocol";
 import { CodemarkType, CSMarkerLocation, CSPost } from "../shared/api.protocol";
 import { debug, Iterables, lsp, lspHandler, Strings } from "../system";
@@ -742,11 +739,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	@lspHandler(ReactToPostRequestType)
 	reactToPost(request: ReactToPostRequest): Promise<ReactToPostResponse> {
 		return this.session.api.reactToPost(request);
-	}
-
-	@lspHandler(SetPostStatusRequestType)
-	setPostStatus(request: SetPostStatusRequest): Promise<SetPostStatusResponse> {
-		return this.session.api.setPostStatus(request);
 	}
 
 	@lspHandler(GetPostRequestType)

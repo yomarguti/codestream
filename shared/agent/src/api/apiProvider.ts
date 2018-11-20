@@ -83,8 +83,8 @@ import {
 	ReactToPostResponse,
 	RenameStreamRequest,
 	RenameStreamResponse,
-	SetPostStatusRequest,
-	SetPostStatusResponse,
+	SetCodemarkStatusRequest,
+	SetCodemarkStatusResponse,
 	SetStreamPurposeRequest,
 	SetStreamPurposeResponse,
 	UnarchiveStreamRequest,
@@ -243,6 +243,7 @@ export interface ApiProvider {
 	updatePreferences(request: UpdatePreferencesRequest): Promise<GetMeResponse>;
 	getPreferences(): Promise<GetPreferencesResponse>;
 	updatePresence(request: UpdatePresenceRequest): Promise<UpdatePresenceResponse>;
+	setCodemarkStatus(request: SetCodemarkStatusRequest): Promise<SetCodemarkStatusResponse>;
 
 	// createFileStream(request: CreateFileStreamRequest): Promise<CreateFileStreamResponse>;
 	fetchFileStreams(request: FetchFileStreamsRequest): Promise<FetchFileStreamsResponse>;
@@ -267,7 +268,6 @@ export interface ApiProvider {
 	getPost(request: GetPostRequest): Promise<GetPostResponse>;
 	markPostUnread(request: MarkPostUnreadRequest): Promise<MarkPostUnreadResponse>;
 	reactToPost(request: ReactToPostRequest): Promise<ReactToPostResponse>;
-	setPostStatus(request: SetPostStatusRequest): Promise<SetPostStatusResponse>;
 
 	createRepo(request: CreateRepoRequest): Promise<CreateRepoResponse>;
 	fetchRepos(request: FetchReposRequest): Promise<FetchReposResponse>;

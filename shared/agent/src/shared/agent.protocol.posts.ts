@@ -214,20 +214,3 @@ export const ReactToPostRequestType = new RequestType<
 	void,
 	void
 >("codeStream/post/react");
-
-export interface SetPostStatusRequest {
-	streamId: string;
-	postId: string;
-	status: string;
-}
-
-export interface SetPostStatusResponse {
-	post: CSPost;
-}
-
-export const SetPostStatusRequestType = new RequestType<
-	SetPostStatusRequest,
-	SetPostStatusResponse,
-	void,
-	void
->("codeStream/post/setStatus");
