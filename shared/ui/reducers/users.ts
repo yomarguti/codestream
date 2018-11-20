@@ -3,6 +3,8 @@ import { toMapBy } from "../utils";
 
 interface UserEntity {
 	id: string;
+	email: string;
+	username?: string;
 }
 
 interface UserState {
@@ -34,12 +36,13 @@ export default (state = initialState, { type, payload }) => {
 };
 
 const getUsers = state => state.users;
-const getTeam = state => state.teams[state.context.currentTeamId];
-const getTeamMembers = createSelector(getTeam, getUsers, (team, users) => {
-	return team.memberIds.map(id => users[id]);
-});
+// const getTeam = state => state.teams[state.context.currentTeamId];
+// const getTeamMembers = createSelector(getTeam, getUsers, (team, users) => {
+// 	return team.memberIds.map(id => users[id]);
+// });
 
-export const getUsernames = createSelector(getTeamMembers, users => {
+export const getAllUsers = createSelector(getUsers, (users: UserState) => Object.values(users));
+export const getUsernames = createSelector(getAllUsers, users => {
 	return users.map(user => {
 		if (!user.username && user.email) {
 			return user.email.replace(/@.*/, "");
