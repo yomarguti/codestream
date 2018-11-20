@@ -1,6 +1,9 @@
 /* eslint-disable */
-import * as React from "react";
 import cx from "classnames";
+import * as React from "react";
+import { connect } from "react-redux";
+import { Action } from "redux";
+import { setCodemarkStatus } from "./actions";
 import Icon from "./Icon";
 // import Debug from "./Debug";
 import { markdownify } from "./Markdowner";
@@ -14,15 +17,19 @@ enum Type {
 }
 
 interface CodemarkEntity {
+	id: string;
 	color: string;
 	type: Type;
+	streamId: string;
+	version: number;
+	postId?: string;
+	parentPostId?: string;
 	text?: string;
 	title?: string;
 	markers?: {
 		file?: string;
 	};
 	status?: string;
-	version: number;
 }
 interface State {}
 interface Props {
@@ -30,10 +37,12 @@ interface Props {
 	codemark: CodemarkEntity;
 	currentUserName: string;
 	usernames: string[];
-	onClick?: (CodemarkEntity) => any;
+	setCodemarkStatus(id: string, status: string): Action;
+	action(action: string, post: any, args: any): any;
+	onClick?(CodemarkEntity): any;
 }
 
-export default class Codemark extends React.Component<Props, State> {
+export class Codemark extends React.Component<Props, State> {
 	// shouldComponentUpdate(nextProps) {
 	// 	const codemarkChanged = nextProps.codemark.version !== this.props.codemark.version;
 	// 	const usernamesChanged =
@@ -81,7 +90,7 @@ export default class Codemark extends React.Component<Props, State> {
 		}
 
 		return <span dangerouslySetInnerHTML={{ __html: html }} />;
-	};
+	}
 
 	renderTypeIcon() {
 		const { codemark } = this.props;
@@ -107,8 +116,28 @@ export default class Codemark extends React.Component<Props, State> {
 
 	handleClickStatusToggle = (event: React.SyntheticEvent): any => {
 		event.stopPropagation();
-		// TODO: toggle
-	};
+		const { codemark } = this.props;
+		if (codemark.status === "closed") this.openIssue();
+		else this.closeIssue();
+	}
+
+	closeIssue = () => {
+		const { codemark, setCodemarkStatus } = this.props;
+		setCodemarkStatus(codemark.id, "closed");
+		this.submitReply("/me closed this issue");
+	}
+
+	openIssue = () => {
+		const { codemark, setCodemarkStatus } = this.props;
+		setCodemarkStatus(codemark.id, "open");
+		this.submitReply("/me reopened this issue");
+	}
+
+	submitReply = text => {
+		const { action, codemark } = this.props;
+		const forceThreadId = codemark.parentPostId || codemark.postId;
+		action("submit-post", null, { forceStreamId: codemark.streamId, forceThreadId, text });
+	}
 
 	renderStatus(codemark) {
 		const { type, status = "open" } = codemark;
@@ -137,7 +166,7 @@ export default class Codemark extends React.Component<Props, State> {
 			return;
 		}
 		this.props.onClick && this.props.onClick(this.props.codemark);
-	};
+	}
 
 	renderCollapsedCodemark() {
 		const { codemark } = this.props;
@@ -154,3 +183,8 @@ export default class Codemark extends React.Component<Props, State> {
 		);
 	}
 }
+
+export default connect(
+	null,
+	{ setCodemarkStatus }
+)(Codemark);

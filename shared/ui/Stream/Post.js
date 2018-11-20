@@ -21,7 +21,7 @@ import { getCodemark } from "../reducers/codemarks";
 import { markdownify, emojify } from "./Markdowner";
 import hljs from "highlight.js";
 import _ from "underscore";
-import { reactToPost, setPostStatus } from "./actions";
+import { reactToPost } from "./actions";
 import { safe } from "../utils";
 
 // let renderCount = 0;
@@ -402,30 +402,6 @@ class Post extends React.Component {
 		this.props.action("goto-thread", this.props.post);
 	};
 
-	toggleStatus = () => {
-		const { post, codemark } = this.props;
-		const status = codemark && codemark.status;
-		if (status === "closed") this.reopenIssue();
-		else this.closeIssue();
-	};
-
-	submitReply = text => {
-		const { post, action } = this.props;
-		const forceThreadId = post.parentPostId || post.id;
-		action("submit-post", post, { forceStreamId: post.streamId, forceThreadId, text });
-	};
-
-	closeIssue = e => {
-		this.props.setPostStatus(this.props.post, "closed");
-		this.submitReply("/me closed this issue");
-	};
-
-	reopenIssue = e => {
-		this.props.setPostStatus(this.props.post, "open");
-		this.submitReply("/me reopened this issue");
-		// this.props.action("submit-post", this.props.post, { postStreamId, threadId, text: "/me reopened this issue" });
-	};
-
 	renderTypeIcon = post => {
 		const { codemark } = this.props;
 		let icon = null;
@@ -511,7 +487,7 @@ class Post extends React.Component {
 
 		return (
 			<div className="align-far-left">
-				<div className={statusClass} onClick={this.toggleStatus}>
+				<div className={statusClass}>
 					<Icon name="check" className="check" />
 				</div>
 			</div>
@@ -795,5 +771,5 @@ const mapStateToProps = (state, props) => {
 
 export default connect(
 	mapStateToProps,
-	{ cancelPost, retryPost, showCode, reactToPost, setPostStatus }
+	{ cancelPost, retryPost, showCode, reactToPost }
 )(injectIntl(Post));

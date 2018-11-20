@@ -184,4 +184,8 @@ export default class WebviewApi {
 	fetchCodemarks(teamId: string) {
 		return this.postMessage({ action: "fetch-codemarks", params: teamId });
 	}
+
+	setCodemarkStatus(params: { id: string; status: string }) {
+		return this.postMessage({ action: "set-codemark-status", params });
+	}
 }

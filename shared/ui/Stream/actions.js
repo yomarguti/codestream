@@ -132,18 +132,6 @@ export const editPost = (streamId, id, text, mentions, codemark) => async (
 	}
 };
 
-export const setPostStatus = (post, status) => async (dispatch, getState, { api }) => {
-	try {
-		post.status = status;
-		return dispatch({ type: "UPDATE_POST", payload: post });
-
-		// const post = await api.setPostStatus({ id, status });
-		// return dispatch({ type: "UPDATE_POST", payload: post });
-	} catch (e) {
-		// TODO:
-	}
-};
-
 export const reactToPost = (post, emoji, value) => async (dispatch, getState, { api }) => {
 	try {
 		const { session } = getState();
@@ -440,5 +428,14 @@ export const fetchCodemarks = () => async (dispatch, getState, { api }) => {
 		dispatch(saveCodemarks(response.codemarks));
 	} catch (error) {
 		console.error("failed to fetch codemarks", error);
+	}
+};
+
+export const setCodemarkStatus = (id, status) => async (dispatch, getState, { api }) => {
+	try {
+		const response = await api.setCodemarkStatus({ id, status });
+		dispatch(updateCodemarks([response.codemark]));
+	} catch (error) {
+		console.error("failed to change codemark status", error);
 	}
 };
