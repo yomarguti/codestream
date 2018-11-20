@@ -339,13 +339,12 @@ export class SimpleKnowledgePanel extends Component {
 	};
 }
 
-const mapStateToProps = ({ codemarks, context, users, teams, preferences, configs }) => {
-	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
+const mapStateToProps = state => {
+	const { codemarks, context, users, teams, preferences, configs } = state;
 	return {
-		usernames: userSelectors.getUsernames(users),
+		usernames: userSelectors.getUsernames(state),
 		codemarks: codemarkSelectors.getByType(codemarks),
 		showMarkers: configs.showMarkers,
-		teammates: teamMembers,
 		team: teams[context.currentTeamId],
 		fileFilter: preferences.markerFileFilter || "all",
 		typeFilter: preferences.markerTypeFilter || "all",

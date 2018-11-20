@@ -1,4 +1,3 @@
-/* eslint-disable */
 import cx from "classnames";
 import * as React from "react";
 import { connect } from "react-redux";
