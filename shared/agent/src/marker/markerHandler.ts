@@ -114,6 +114,11 @@ export namespace MarkerHandler {
 			? Container.instance().markerLocations.locationToRange(location)
 			: Range.create(0, 0, 0, 0);
 
+		const telemetry = Container.instance().telemetry;
+		telemetry.track({
+			eventName: "Codemark Clicked"
+		});
+
 		return {
 			textDocument: { uri: documentUri },
 			range: range,
