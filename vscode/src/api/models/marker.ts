@@ -60,4 +60,8 @@ export class Marker {
 	get status(): string {
 		return this.entity.codemark.status || "open";
 	}
+
+	get summary() {
+		return this.entity.codemark.title ? this.entity.codemark.title : this.entity.codemark.text;
+	}
 }

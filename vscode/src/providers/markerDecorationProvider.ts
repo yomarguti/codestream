@@ -321,7 +321,7 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 						message += "\n-----\n";
 					}
 					message = `__${sender!.name}__, ${post.fromNow()} &nbsp; _(${post.formatDate()})_\n\n>${
-						post.summary
+						m.summary
 					}\n\n[__Open Comment \u2197__](command:codestream.openStream?${encodeURIComponent(
 						JSON.stringify(args)
 					)} "Open Comment")`;
