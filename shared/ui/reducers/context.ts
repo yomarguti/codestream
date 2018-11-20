@@ -9,7 +9,9 @@ const initialState = {
 	currentStreamId: "",
 	threadId: null,
 	panelStack: ["channels"],
-	hasFocus: true // we assume we start with the focus when codestream initializes
+	hasFocus: true, // we assume we start with the focus when codestream initializes
+	codemarkFileFilter: "all",
+	codemarkTypeFilter: "all"
 };
 
 export default (state = initialState, { type, payload }) => {
@@ -45,6 +47,10 @@ export default (state = initialState, { type, payload }) => {
 			return { ...state, currentCommit: payload };
 		case "SET_HAS_FOCUS":
 			return { ...state, hasFocus: payload };
+		case Type.SetCodeMarkFileFilter:
+			return { ...state, codemarkFileFilter: payload };
+		case Type.SetCodemarkTypeFilter:
+			return { ...state, codemarkTypeFilter: payload };
 		default:
 			return { ...initialState, ...state };
 	}

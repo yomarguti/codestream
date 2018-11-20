@@ -1,5 +1,7 @@
 export enum Type {
-	SetThread = "SET_CURRENT_THREAD"
+	SetThread = "SET_CURRENT_THREAD",
+	SetCodeMarkFileFilter = "SET_CODEMARK_FILE_FILTER",
+	SetCodemarkTypeFilter = "SET_CODEMARK_TYPE_FILTER"
 }
 
 export const setContext = payload => ({ type: "SET_CONTEXT", payload });
@@ -19,3 +21,13 @@ export const blur = () => ({ type: "SET_HAS_FOCUS", payload: false });
 export function setThread(streamId: string, threadId: string | null = null) {
 	return { type: Type.SetThread, payload: { streamId, threadId } };
 }
+
+export const setCodemarkFileFilter = (value: string) => ({
+	type: Type.SetCodeMarkFileFilter,
+	payload: value
+});
+
+export const setCodemarkTypeFilter = (value: string) => ({
+	type: Type.SetCodemarkTypeFilter,
+	payload: value
+});

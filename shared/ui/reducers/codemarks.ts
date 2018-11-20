@@ -1,3 +1,4 @@
+import { createSelector } from "reselect";
 import { Type } from "../actions/codemarks";
 import { toMapBy } from "../utils";
 
@@ -36,3 +37,14 @@ export function getByType(state: State, type?: string): Codemark[] {
 
 	return Object.values(state).filter(codemark => codemark.type === type);
 }
+
+const getCodemarks = state => state.codemarks;
+const getCodemarkTypeFilter = state => state.context.codemarkTypeFilter;
+export const getTypeFilteredCodemarks = createSelector(
+	getCodemarks,
+	getCodemarkTypeFilter,
+	(codemarks: State, filter: string) => {
+		if (filter === "all") return Object.values(codemarks);
+		else return Object.values(codemarks).filter(codemark => codemark.type === filter);
+	}
+);

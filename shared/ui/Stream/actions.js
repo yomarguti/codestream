@@ -1,10 +1,16 @@
 import EventEmitter from "../event-emitter";
 import { getChannelStreamsForTeam, getDirectMessageStreamsForTeam } from "../reducers/streams";
 import { updatePreferences } from "../actions";
-import { openPanel, closePanel, setThread } from "../actions/context";
+import {
+	openPanel,
+	closePanel,
+	setThread,
+	setCodemarkTypeFilter,
+	setCodemarkFileFilter
+} from "../actions/context";
 import { saveCodemarks, updateCodemarks } from "../actions/codemarks";
 
-export { openPanel, closePanel, setThread };
+export { openPanel, closePanel, setThread, setCodemarkTypeFilter, setCodemarkFileFilter };
 
 // uuid generator taken from: https://gist.github.com/jed/982883
 const createTempId = a =>

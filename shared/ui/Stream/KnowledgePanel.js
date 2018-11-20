@@ -268,13 +268,13 @@ export class SimpleKnowledgePanel extends Component {
 					</Tooltip>
 					Show{" "}
 					<Filter
-						preferenceId="markerTypeFilter"
+						onValue={this.props.setCodemarkTypeFilter}
 						selected={typeFilter}
 						labels={this.typeLabelsLower}
 						items={typeMenuItems}
 					/>
 					<Filter
-						preferenceId="markerFileFilter"
+						onValue={this.props.setCodemarkFileFilter}
 						selected={fileFilter}
 						labels={this.fileFiltersLabelsLower}
 						items={fileMenuItems}
@@ -340,14 +340,14 @@ export class SimpleKnowledgePanel extends Component {
 }
 
 const mapStateToProps = state => {
-	const { codemarks, context, users, teams, preferences, configs } = state;
+	const { context, teams, configs } = state;
 	return {
 		usernames: userSelectors.getUsernames(state),
-		codemarks: codemarkSelectors.getByType(codemarks),
+		codemarks: codemarkSelectors.getTypeFilteredCodemarks(state),
 		showMarkers: configs.showMarkers,
 		team: teams[context.currentTeamId],
-		fileFilter: preferences.markerFileFilter || "all",
-		typeFilter: preferences.markerTypeFilter || "all",
+		fileFilter: context.codemarkFileFilter,
+		typeFilter: context.codemarkTypeFilter,
 		mostRecentSourceFile: context.mostRecentSourceFile
 	};
 };
