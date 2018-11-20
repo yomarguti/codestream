@@ -35,6 +35,13 @@ export default (state = initialState, { type, payload }) => {
 	}
 };
 
+const getUsername = (user: UserEntity) => {
+	if (!user.username && user.email) {
+		return user.email.replace(/@.*/, "");
+	}
+	return user.username;
+};
+
 const getUsers = state => state.users;
 const getTeam = state => state.teams[state.context.currentTeamId];
 export const getTeamMembers = createSelector(getTeam, getUsers, (team, users) => {
@@ -46,10 +53,13 @@ export const getTeamMembers = createSelector(getTeam, getUsers, (team, users) =>
 
 export const getAllUsers = createSelector(getUsers, (users: UserState) => Object.values(users));
 export const getUsernames = createSelector(getAllUsers, users => {
-	return users.map(user => {
-		if (!user.username && user.email) {
-			return user.email.replace(/@.*/, "");
-		}
-		return user.username;
+	return users.map(getUsername);
+});
+
+export const getUsernamesById = createSelector(getAllUsers, users => {
+	const map = {};
+	users.forEach(user => {
+		map[user.id] = getUsername(user);
 	});
+	return map;
 });

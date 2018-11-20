@@ -23,6 +23,7 @@ import hljs from "highlight.js";
 import _ from "underscore";
 import { reactToPost } from "./actions";
 import { safe } from "../utils";
+import { getUsernamesById } from "../reducers/users";
 
 // let renderCount = 0;
 class Post extends React.Component {
@@ -661,7 +662,7 @@ class Post extends React.Component {
 	};
 
 	renderReactions = post => {
-		const { userNames, currentUserId } = this.props;
+		const { usernamesById, currentUserId } = this.props;
 		const reactions = post.reactions || {};
 		const keys = Object.keys(reactions);
 		if (keys.length === 0) return null;
@@ -673,7 +674,7 @@ class Post extends React.Component {
 					if (reactors.length == 0) return null;
 					const emoji = emojify(":" + emojiId + ":");
 					const tooltipText =
-						reactors.map(id => userNames[id]).join(", ") + " reacted with " + emojiId;
+						reactors.map(id => usernamesById[id]).join(", ") + " reacted with " + emojiId;
 					const className = _.contains(reactors, currentUserId) ? "reaction mine" : "reaction";
 					atLeastOneReaction = true;
 					return (
@@ -724,7 +725,6 @@ const mapStateToProps = (state, props) => {
 
 	let index = 1;
 
-	let userNames = {};
 	let userNamesNormalized = new Set();
 
 	for (const [userId, user] of Object.entries(users)) {
@@ -733,7 +733,6 @@ const mapStateToProps = (state, props) => {
 			user.username = user.email.replace(/@.*/, "");
 		}
 
-		userNames[userId] = user.username;
 		if (user.username) {
 			userNamesNormalized.add(user.username.toLowerCase());
 		}
@@ -759,7 +758,7 @@ const mapStateToProps = (state, props) => {
 	}
 
 	return {
-		userNames,
+		usernamesById: getUsernamesById(state),
 		userNamesNormalized,
 		repoName,
 		canLiveshare: state.services.vsls,
