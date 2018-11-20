@@ -23,7 +23,7 @@ import hljs from "highlight.js";
 import _ from "underscore";
 import { reactToPost } from "./actions";
 import { safe } from "../utils";
-import { getUsernamesById } from "../reducers/users";
+import { getUsernamesById, getNormalizedUsernames } from "../reducers/users";
 
 // let renderCount = 0;
 class Post extends React.Component {
@@ -572,7 +572,7 @@ class Post extends React.Component {
 			const me = this.props.currentUserName.toLowerCase();
 			html = markdownify(text).replace(/@(\w+)/g, (match, name) => {
 				const nameNormalized = name.toLowerCase();
-				if (this.props.userNamesNormalized.has(nameNormalized)) {
+				if (this.props.userNamesNormalized.includes(nameNormalized)) {
 					return `<span class="at-mention${nameNormalized === me ? " me" : ""}">${match}</span>`;
 				}
 
@@ -725,16 +725,10 @@ const mapStateToProps = (state, props) => {
 
 	let index = 1;
 
-	let userNamesNormalized = new Set();
-
 	for (const [userId, user] of Object.entries(users)) {
 		user.color = index % 10;
 		if (!user.username && user.email) {
 			user.username = user.email.replace(/@.*/, "");
-		}
-
-		if (user.username) {
-			userNamesNormalized.add(user.username.toLowerCase());
 		}
 	}
 
@@ -759,7 +753,7 @@ const mapStateToProps = (state, props) => {
 
 	return {
 		usernamesById: getUsernamesById(state),
-		userNamesNormalized,
+		userNamesNormalized: getNormalizedUsernames(state),
 		repoName,
 		canLiveshare: state.services.vsls,
 		post: { ...post, author }, // pull author out

@@ -63,3 +63,7 @@ export const getUsernamesById = createSelector(getAllUsers, users => {
 	});
 	return map;
 });
+
+export const getNormalizedUsernames = createSelector(getUsernames, usernames => {
+	return mapFilter(usernames, username => username && username.toLowerCase());
+});
