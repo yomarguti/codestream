@@ -36,6 +36,7 @@ import {
 	getDMName
 } from "../reducers/streams";
 import { getCodemark } from "../reducers/codemarks";
+import { getTeamMembers } from "../reducers/users";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 
 const EMAIL_MATCH_REGEX = new RegExp(
@@ -1607,29 +1608,30 @@ export class SimpleStream extends Component {
 
 const sum = (total, num) => total + Math.round(num);
 
-const mapStateToProps = ({
-	capabilities,
-	configs,
-	connectivity,
-	session,
-	context,
-	startupProps,
-	streams,
-	users,
-	pluginVersion,
-	posts,
-	preferences,
-	messaging,
-	teams,
-	onboarding,
-	services,
-	umis
-}) => {
+const mapStateToProps = state => {
+	const {
+		capabilities,
+		configs,
+		connectivity,
+		session,
+		context,
+		startupProps,
+		streams,
+		users,
+		pluginVersion,
+		posts,
+		preferences,
+		messaging,
+		teams,
+		onboarding,
+		services,
+		umis
+	} = state;
 	const fileStream =
 		getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
 
 	const team = teams[context.currentTeamId];
-	const teamMembers = team.memberIds.map(id => users[id]).filter(Boolean);
+	const teamMembers = getTeamMembers(state);
 	// console.log("MEMBER IDS ARE: ", teams[context.currentTeamId].memberIds);
 	// console.log("USERS ARE: ", users);
 	// this usenames regexp is a pipe-separated list of
@@ -1701,7 +1703,7 @@ const mapStateToProps = ({
 		configs,
 		isOffline,
 		teamMembersById,
-		teammates: teamMembers.filter(({ deactivated }) => !deactivated),
+		teammates: teamMembers,
 		postStream,
 		postStreamId: postStream.id,
 		postStreamName,

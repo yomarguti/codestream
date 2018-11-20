@@ -1,5 +1,5 @@
 import { createSelector } from "reselect";
-import { toMapBy } from "../utils";
+import { mapFilter, toMapBy } from "../utils";
 
 interface UserEntity {
 	id: string;
@@ -36,10 +36,13 @@ export default (state = initialState, { type, payload }) => {
 };
 
 const getUsers = state => state.users;
-// const getTeam = state => state.teams[state.context.currentTeamId];
-// const getTeamMembers = createSelector(getTeam, getUsers, (team, users) => {
-// 	return team.memberIds.map(id => users[id]);
-// });
+const getTeam = state => state.teams[state.context.currentTeamId];
+export const getTeamMembers = createSelector(getTeam, getUsers, (team, users) => {
+	return mapFilter(team.memberIds, id => {
+		const user = users[id];
+		if (user && !user.deactivated) return user;
+	});
+});
 
 export const getAllUsers = createSelector(getUsers, (users: UserState) => Object.values(users));
 export const getUsernames = createSelector(getAllUsers, users => {
