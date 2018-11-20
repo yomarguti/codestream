@@ -42,18 +42,6 @@ class Post extends React.Component {
 		}
 	}
 
-	shouldComponentUpdate(nextProps, nextState) {
-		const postChanged = true; //  nextProps.post.version !== this.props.post.version;
-
-		const propsChanged = Object.entries(this.props).some(([prop, value]) => {
-			return !["userNames", "post"].includes(prop) && value !== this.props[prop];
-		});
-		const userNamesChanged = !_.isEqual(this.props.userNames, nextProps.userNames);
-		const stateChanged = !_.isEqual(this.state, nextState);
-		const shouldUpdate = propsChanged || userNamesChanged || postChanged || stateChanged;
-		return shouldUpdate;
-	}
-
 	componentDidUpdate(prevProps, _prevState) {
 		const editStateToggledOn = this.props.editing && !prevProps.editing;
 		if (editStateToggledOn) {
@@ -166,7 +154,7 @@ class Post extends React.Component {
 		if (this.props.deactivated) return null;
 
 		// console.log(renderCount++);
-		const { post, showStatus, showAssigneeHeadshots, hasMarkers, codemark } = this.props;
+		const { author, post, showStatus, showAssigneeHeadshots, hasMarkers, codemark } = this.props;
 		const { menuOpen, authorMenuOpen, menuTarget } = this.state;
 
 		const headshotSize = this.props.headshotSize || 36;
@@ -251,10 +239,10 @@ class Post extends React.Component {
 		authorMenuItems.push({
 			fragment: (
 				<div className="headshot-popup">
-					<Headshot size={144} person={post.author} />
+					<Headshot size={144} person={author} />
 					<div className="author-details">
-						<div className="author-username">@{post.author.username}</div>
-						<div className="author-fullname">{post.author.fullName}</div>
+						<div className="author-username">@{author.username}</div>
+						<div className="author-fullname">{author.fullName}</div>
 					</div>
 				</div>
 			)
@@ -292,14 +280,14 @@ class Post extends React.Component {
 				<Debug object={post} placement="top">
 					<Headshot
 						size={headshotSize}
-						person={post.author}
+						person={author}
 						mine={mine}
 						onClick={this.handleHeadshotClick}
 					/>
 				</Debug>
 
 				<span className="author" ref={ref => (this._authorDiv = ref)}>
-					{post.author.username}
+					{author.username}
 					{this.renderEmote(post)}
 				</span>
 				{post.error ? (
@@ -756,7 +744,8 @@ const mapStateToProps = (state, props) => {
 		userNamesNormalized: getNormalizedUsernames(state),
 		repoName,
 		canLiveshare: state.services.vsls,
-		post: { ...post, author }, // pull author out
+		post,
+		author,
 		hasMarkers: codemark && codemark.markers && codemark.markers.length > 0,
 		codemark
 	};
