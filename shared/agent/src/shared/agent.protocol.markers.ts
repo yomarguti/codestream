@@ -166,6 +166,7 @@ export interface CreateCodemarkRequest {
 	text?: string;
 	streamId?: string;
 	postId?: string;
+	parentPostId?: string;
 	color?: string;
 	status?: string;
 	title?: string;

@@ -542,6 +542,7 @@ export class SlackApiProvider implements ApiProvider {
 			if (request.codemark) {
 				const codemarkResponse = await this._codestream.createCodemark({
 					...request.codemark,
+					parentPostId: request.parentPostId,
 					providerType: ProviderType.Slack
 				});
 				({ codemark, markers, markerLocations, streams, repos } = codemarkResponse);

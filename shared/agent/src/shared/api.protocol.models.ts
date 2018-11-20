@@ -23,6 +23,7 @@ export interface CSCodemark extends CSEntity {
 	teamId: string;
 	streamId: string;
 	postId: string;
+	parentPostId?: string;
 	markerIds?: string[];
 	fileStreamIds: string[];
 	providerType?: ProviderType;
