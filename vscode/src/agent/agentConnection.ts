@@ -158,8 +158,7 @@ export class CodeStreamAgentConnection implements Disposable {
 				error: (error: Error, message: Message, count: number) => {
 					Logger.error(error, "AgentConnection.error", message.jsonrpc, count);
 
-					const env = Container.session.environment;
-					if (env === CodeStreamEnvironment.PD || env === CodeStreamEnvironment.QA) {
+					if (Container.session.environment !== CodeStreamEnvironment.Production) {
 						window.showErrorMessage(
 							`CodeStream Connection Error (${count})\n${error.message}\n${message.jsonrpc}`
 						);
@@ -170,8 +169,7 @@ export class CodeStreamAgentConnection implements Disposable {
 				closed: () => {
 					Logger.error(undefined!, "AgentConnection.closed");
 
-					const env = Container.session.environment;
-					if (env === CodeStreamEnvironment.PD || env === CodeStreamEnvironment.QA) {
+					if (Container.session.environment !== CodeStreamEnvironment.Production) {
 						window.showErrorMessage(
 							`CodeStream Connection Closed\nAttempting to reestablish connection...`
 						);

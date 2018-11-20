@@ -89,13 +89,15 @@ export class StatusBarController implements Disposable {
 			);
 		}
 
-		let env = "";
+		let env;
 		switch (Container.session.environment) {
-			case CodeStreamEnvironment.PD:
-				env = "PD: ";
+			case CodeStreamEnvironment.Local:
+			case CodeStreamEnvironment.Production:
+			case CodeStreamEnvironment.Unknown:
+				env = "";
 				break;
-			case CodeStreamEnvironment.QA:
-				env = "QA: ";
+			default:
+				env = `${Container.session.environment.toUpperCase()}: `;
 				break;
 		}
 

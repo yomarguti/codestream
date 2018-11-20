@@ -65,7 +65,7 @@ interface BootstrapState {
 	currentUserId: string;
 	currentStreamId: string;
 	currentThreadId?: string;
-	env: CodeStreamEnvironment;
+	env: CodeStreamEnvironment | string;
 	posts: CSPost[];
 	streams: CSStream[];
 	teams: CSTeam[];

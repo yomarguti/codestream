@@ -78,7 +78,8 @@ export {
 	UsersChangedEvent
 };
 
-const envRegex = /https?:\/\/(pd-|qa-)?api.codestream.(?:us|com)/;
+// FIXME: Must keep this in sync with codestream-lsp-agent/src/session.ts
+const envRegex = /https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(?::\d+$)?/i;
 const instanceId = Functions.shortUuid();
 
 export enum SessionSignedOutReason {
@@ -165,7 +166,7 @@ export class CodeStreamSession implements Disposable {
 	private _disposable: Disposable | undefined;
 
 	private _email: string | undefined;
-	private _environment = CodeStreamEnvironment.Unknown;
+	private _environment: CodeStreamEnvironment | string = CodeStreamEnvironment.Unknown;
 	private _id: string | undefined;
 	private _loginPromise: Promise<LoginResult> | undefined;
 	private _state: SessionState | undefined;
@@ -222,7 +223,7 @@ export class CodeStreamSession implements Disposable {
 		return this._id;
 	}
 
-	get environment(): CodeStreamEnvironment {
+	get environment(): CodeStreamEnvironment | string {
 		return this._environment;
 	}
 
@@ -233,21 +234,22 @@ export class CodeStreamSession implements Disposable {
 		this._serverUrl = url;
 		this._environment = CodeStreamEnvironment.Unknown;
 
+		// FIXME: Must keep this logic in sync with codestream-lsp-agent/src/session.ts
 		const match = envRegex.exec(url);
 		if (match == null) return;
 
-		const [, env] = match;
-		switch (env == null ? env : env.toLowerCase()) {
-			case "pd-":
-				this._environment = CodeStreamEnvironment.PD;
-				break;
-			case "qa-":
-				this._environment = CodeStreamEnvironment.QA;
-				break;
-			default:
-				this._environment = CodeStreamEnvironment.Production;
-				break;
+		const [, subdomain, env] = match;
+		if (subdomain != null && subdomain.toLowerCase() === "localhost") {
+			this._environment = CodeStreamEnvironment.Local;
+			return;
 		}
+
+		if (env == null) {
+			this._environment = CodeStreamEnvironment.Production;
+			return;
+		}
+
+		this._environment = env.toLowerCase();
 	}
 
 	get signedIn() {
