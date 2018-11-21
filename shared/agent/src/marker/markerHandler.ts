@@ -116,7 +116,10 @@ export namespace MarkerHandler {
 
 		const telemetry = Container.instance().telemetry;
 		telemetry.track({
-			eventName: "Codemark Clicked"
+			eventName: "Codemark Clicked",
+			properties: {
+				"Codemark Location": "Source File"
+			}
 		});
 
 		return {
