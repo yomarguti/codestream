@@ -250,6 +250,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 							});
 							break;
 						}
+
 						case "go-to-signup": {
 							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
 							try {
@@ -827,6 +828,19 @@ export class CodeStreamWebviewPanel implements Disposable {
 					this.reload();
 					break;
 				}
+				case WebviewIpcMessageType.onTelemetry: {
+					Logger.debug("(4) `WebviewIpcMessageType.onTelemetry` called from webviewPanel");
+					const { eventName, properties } = e.body;
+					const responseBody: WebviewIpcMessageResponseBody = { id: e.body.id };
+					Container.agent.telemetry.track(eventName, properties);
+
+					this.postMessage({
+						type: WebviewIpcMessageType.response,
+						body: responseBody
+					});
+
+					break;
+				}
 			}
 		} catch (ex) {
 			debugger;
@@ -910,8 +924,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 	@log()
 	hide() {
+		Container.agent.telemetry.track("Webview Toggled", { Direction: "Off" });
 		if (this._panel === undefined) return;
-
 		this._panel.dispose();
 	}
 
@@ -997,6 +1011,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 		args: false
 	})
 	async show(streamThread?: StreamThread) {
+		Container.agent.telemetry.track("Webview Toggled", { Direction: "On" });
+
 		if (this._panel === undefined) return this.createWebview(streamThread);
 
 		if (
