@@ -22,6 +22,26 @@
 			"sourceMaps": true
 		},
 		{
+			"name": "Launch CodeStream (Agent Break)",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+			"env": {
+				"VSCODE_DEBUGGING_EXTENSION": "codestream",
+				"CODESTREAM_AGENT_BREAK_ON_START": "true"
+			},
+			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/node_modules/**",
+				"**/app/out/vs/**",
+				"**/extensions/**"
+			],
+			"smartStep": true,
+			"sourceMaps": true
+		},
+		{
 			"name": "Rebuild & Launch CodeStream",
 			"type": "extensionHost",
 			"request": "launch",
