@@ -16,7 +16,13 @@ function calcTotals(state) {
 export default (state = initialState, { type, payload }) => {
 	switch (type) {
 		case "UPDATE_UNREADS": {
-			return { ...state, ...payload };
+			return {
+				totalMentions: payload.totalMentions,
+				totalUnreads: payload.totalUnreads,
+				lastReads: { ...state.lastReads, ...payload.lastReads },
+				mentions: payload.mentions,
+				unreads: payload.unreads
+			};
 		}
 		// ---- LEGACY: these will be removed once atom is no longer using them
 		case "INCREMENT_UMI": {
