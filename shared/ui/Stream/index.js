@@ -1532,11 +1532,18 @@ export class SimpleStream extends Component {
 			return this.setMultiCompose(false);
 		}
 
-		const submit = () =>
-			createPost(streamId, threadId, text, codemark, mentionedUserIds, {
+		const submit = async () => {
+			await createPost(streamId, threadId, text, codemark, mentionedUserIds, {
 				autoMentions,
 				fileUri
-			}).then(this.scrollPostsListToBottom);
+			});
+			if (this.props.activePanel === "main") {
+				safe(() => this.scrollPostsListToBottom());
+			} else if (codemark) {
+				this.props.setCurrentStream(codemark.streamId);
+				this.setActivePanel("main");
+			}
+		};
 
 		if (quote) {
 			fileUri = quote.fileUri;
