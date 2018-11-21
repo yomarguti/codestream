@@ -539,6 +539,11 @@ export class SlackApiProvider implements ApiProvider {
 			let repos: CSRepository[] | undefined;
 
 			if (request.codemark) {
+				text = toSlackPostText(
+					request.codemark!.title! || request.codemark!.text!,
+					request.mentionedUserIds,
+					await this.ensureUserIdsByName()
+				);
 				const codemarkResponse = await this._codestream.createCodemark({
 					...request.codemark,
 					parentPostId: request.parentPostId,
