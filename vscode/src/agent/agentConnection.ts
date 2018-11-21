@@ -140,6 +140,9 @@ export class CodeStreamAgentConnection implements Disposable {
 	private _serverOptions: ServerOptions;
 
 	constructor(context: ExtensionContext, options: BaseAgentOptions) {
+		const env = process.env;
+		const breakOnStart = (env && env.CODESTREAM_AGENT_BREAK_ON_START) === "true";
+
 		this._serverOptions = {
 			run: {
 				module: context.asAbsolutePath("dist/agent.js"),
@@ -149,7 +152,7 @@ export class CodeStreamAgentConnection implements Disposable {
 				module: context.asAbsolutePath("../codestream-lsp-agent/dist/agent.js"),
 				transport: TransportKind.ipc,
 				options: {
-					execArgv: ["--nolazy", "--inspect=6009"] // "--inspect-brk=6009"
+					execArgv: ["--nolazy", breakOnStart ? "--inspect-brk=6009" : "--inspect=6009"]
 				}
 			}
 		};

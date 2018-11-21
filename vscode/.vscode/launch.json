@@ -8,7 +8,8 @@
 			"runtimeExecutable": "${execPath}",
 			"args": ["--extensionDevelopmentPath=${workspaceFolder}"],
 			"env": {
-				"VSCODE_DEBUGGING_EXTENSION": "codestream"
+				"VSCODE_DEBUGGING_EXTENSION": "codestream",
+				"CODESTREAM_AGENT_BREAK_ON_START": "false"
 			},
 			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
 			"skipFiles": [
