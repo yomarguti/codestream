@@ -28,6 +28,7 @@ const addPost = (byStream, post) => {
 
 export default (state: State = initialState, { type, payload }) => {
 	switch (type) {
+		case "ADD_POSTS":
 		case "BOOTSTRAP_POSTS": {
 			const nextState = {
 				pending: [...state.pending],
