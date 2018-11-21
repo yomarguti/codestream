@@ -397,7 +397,7 @@ function trackPostCreation(request: CreatePostRequest) {
 			Container.instance()
 				.streams.getById(request.streamId)
 				.then((stream: CSStream) => {
-					let streamType: String = "";
+					let streamType: String = "Unknown";
 					switch (stream.type) {
 						case StreamType.Channel:
 							stream.privacy === "private"
@@ -447,7 +447,8 @@ function trackPostCreation(request: CreatePostRequest) {
 						Container.instance().session.telemetryData.hasCreatedPost = true;
 					}
 					telemetry.track({ eventName: "Post Created", properties: payload });
-				});
+				})
+				.catch(ex => Logger.error(ex));
 		} catch (ex) {
 			Logger.error(ex);
 		}
