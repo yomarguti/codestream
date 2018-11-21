@@ -18,6 +18,7 @@ export default infiniteLoadable(
 		state = {};
 
 		componentDidMount() {
+			this.props.onDidScrollToTop();
 			this.scrollToBottom();
 			this.markAsRead();
 		}
@@ -148,11 +149,11 @@ export default infiniteLoadable(
 		});
 
 		onScroll = event => {
-			if (!this.props.isThread) {
-				this.props.onScroll();
-				this.handleScroll(event.target);
-				this.findFirstUnread(event.target);
-			}
+			if (this.props.isThread) return;
+			console.debug("PostList scrolling");
+			this.props.onScroll();
+			this.handleScroll(event.target);
+			this.findFirstUnread(event.target);
 		};
 
 		findFirstUnread = rAFThrottle($list => {

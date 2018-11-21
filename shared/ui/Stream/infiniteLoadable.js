@@ -84,6 +84,7 @@ export default Child => {
 				}
 			}
 
+			// Might need to create `onDidScrollToBottom` too
 			onDidScrollToTop = () => {
 				if (!this.props.childProps.threadId && this.state.hasMore) {
 					const { posts } = this.state;
