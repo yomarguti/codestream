@@ -282,7 +282,6 @@ export class CodeStreamAgentConnection implements Disposable {
 		return this.stop();
 	}
 
-	@started
 	get markers() {
 		return this._markers;
 	}
@@ -308,7 +307,6 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}(this);
 
-	@started
 	get codemarks() {
 		return this._codemarks;
 	}
@@ -329,7 +327,6 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}(this);
 
-	@started
 	get posts() {
 		return this._posts;
 	}
@@ -490,30 +487,6 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}(this);
 
-	@started
-	get telemetry() {
-		return this._telemetry;
-	}
-
-	private readonly _telemetry = new class {
-		constructor(private readonly _connection: CodeStreamAgentConnection) {}
-
-		async track(eventName: string, properties?: { [key: string]: string | number | boolean }) {
-			Logger.debug("(5) track called from agentConnection.ts :: ", eventName);
-			try {
-				const resp = await this._connection.sendRequest(TelemetryRequestType, {
-					eventName: eventName,
-					properties: properties
-				});
-
-				return resp;
-			} catch (ex) {
-				Logger.error(ex);
-			}
-		}
-	}(this);
-
-	@started
 	get repos() {
 		return this._repos;
 	}
@@ -539,7 +512,6 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}(this);
 
-	@started
 	get streams() {
 		return this._streams;
 	}
@@ -683,7 +655,6 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}(this);
 
-	@started
 	get teams() {
 		return this._teams;
 	}
@@ -705,7 +676,30 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}(this);
 
-	@started
+	get telemetry() {
+		return this._telemetry;
+	}
+
+	private readonly _telemetry = new class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		async track(eventName: string, properties?: { [key: string]: string | number | boolean }) {
+			if (!this._connection.started) return;
+
+			Logger.debug("(5) track called from agentConnection.ts :: ", eventName);
+			try {
+				const resp = await this._connection.sendRequest(TelemetryRequestType, {
+					eventName: eventName,
+					properties: properties
+				});
+
+				return resp;
+			} catch (ex) {
+				Logger.error(ex);
+			}
+		}
+	}(this);
+
 	get users() {
 		return this._users;
 	}

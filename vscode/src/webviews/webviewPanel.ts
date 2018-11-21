@@ -1011,7 +1011,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 		args: false
 	})
 	async show(streamThread?: StreamThread) {
-		Container.agent.telemetry.track("Webview Toggled", { Direction: "On" });
+		void Container.agent.telemetry.track("Webview Toggled", { Direction: "On" });
 
 		if (this._panel === undefined) return this.createWebview(streamThread);
 
