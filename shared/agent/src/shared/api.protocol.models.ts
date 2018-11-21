@@ -15,6 +15,8 @@ export enum ProviderType {
 
 export enum CodemarkType {
 	Comment = "comment",
+	Issue = "issue",
+	Bookmark = "bookmark",
 	Question = "question",
 	Trap = "trap"
 }

@@ -430,6 +430,12 @@ function trackPostCreation(request: CreatePostRequest) {
 							case CodemarkType.Trap:
 								markerType = "Trap";
 								break;
+							case CodemarkType.Bookmark:
+								markerType = "Bookmark";
+								break;
+							case CodemarkType.Issue:
+								markerType = "Issue";
+								break;
 						}
 					}
 
