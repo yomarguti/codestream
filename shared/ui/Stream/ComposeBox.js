@@ -1166,7 +1166,11 @@ class ComposeBox extends React.Component {
 		let contentEditableHTML =
 			(isEditing && text) || this.state.postTextByStream[this.props.streamId] || "";
 		return (
-			<div className="message-input-wrapper">
+			<div
+				className="message-input-wrapper"
+				onKeyPress={this.handleKeyPress}
+				onKeyDown={this.handleKeyDown}
+			>
 				<div style={{ position: "relative" }}>
 					<AtMentionsPopup
 						on={this.state.popupOpen}
@@ -1223,8 +1227,6 @@ class ComposeBox extends React.Component {
 		return (
 			<div
 				ref={forwardedRef}
-				onKeyPress={this.handleKeyPress}
-				onKeyDown={this.handleKeyDown}
 				className={createClassString("compose", {
 					offscreen: this.props.offscreen,
 					"popup-open": this.state.popupOpen,
