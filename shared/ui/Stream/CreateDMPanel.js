@@ -255,9 +255,13 @@ export class SimpleCreateDMPanel extends Component {
 				return member.value;
 			})
 			.filter(Boolean);
-		if (memberIds.length) await this.props.createStream({ type: "direct", memberIds });
+		if (memberIds.length) {
+			// this will select the stream as current...
+			let stream = await this.props.createStream({ type: "direct", memberIds });
+			// ...now we send the user to that panel
+			this.props.setActivePanel("main");
+		}
 
-		// FIXME -- shouldn't this select the stream?
 		this.resetForm();
 	};
 }

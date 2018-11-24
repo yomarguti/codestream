@@ -256,8 +256,8 @@ export class SimpleCreateChannelPanel extends Component {
 			return member.value;
 		});
 		await this.props.createStream({ type: "channel", privacy, name, memberIds, purpose });
+		this.props.setActivePanel("main");
 		this.resetForm();
-		// this.props.setActivePanel("channels");
 	};
 }
 
