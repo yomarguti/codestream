@@ -90,4 +90,8 @@ export namespace Objects {
 			yield o[key];
 		}
 	}
+
+	export function isEmpty(o: object) {
+		return Object.values(o).length === 0;
+	}
 }

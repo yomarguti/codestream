@@ -17,7 +17,7 @@ export class SlackUnreads {
 
 	private _readChanges = new Set<string>();
 
-	constructor(private readonly _api: ApiProvider) {}
+	constructor(private readonly _api: ApiProvider) { }
 
 	get(): CSUnreads {
 		return this.values();
@@ -168,7 +168,7 @@ export class SlackUnreads {
 
 			Logger.debug(
 				`Unreads.changed: mentions (${values.totalMentions}), unreads (${
-					values.totalUnreads
+				values.totalUnreads
 				})${loggableUnreads}`
 			);
 		}

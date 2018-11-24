@@ -361,10 +361,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 					try {
 						if (
-							this._unreads !== undefined &&
+							Objects.isEmpty(me.lastReads) ||
 							!Objects.shallowEquals(lastReads, this._user.lastReads)
 						) {
-							this._unreads.compute(me.lastReads);
+							this._unreads!.compute(me.lastReads);
 						}
 						if (this._preferences && me.preferences) {
 							this._preferences.update(this._user.preferences);
