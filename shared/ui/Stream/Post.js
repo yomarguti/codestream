@@ -362,17 +362,12 @@ class Post extends React.Component {
 
 	renderReplyCount = post => {
 		let message = null;
-		if (
-			!this.props.alwaysShowReplyCount &&
-			(this.props.showDetails || !post.numReplies || this.props.collapsed)
-		)
-			return null;
-
-		const numReplies = post.numreplies || "0";
-
 		const { codemark } = this.props;
-		const type = codemark && codemark.type;
-		switch (type) {
+
+		if (!codemark || (!this.props.alwaysShowReplyCount && this.props.showDetails)) return null;
+
+		const numReplies = codemark.numreplies || "0";
+		switch (codemark.type) {
 			case "question":
 				message = numReplies === 1 ? "1 Answer" : `${numReplies} Answers`;
 				break;
