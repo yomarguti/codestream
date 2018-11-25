@@ -18,7 +18,6 @@ export default infiniteLoadable(
 		state = {};
 
 		componentDidMount() {
-			this.props.onDidScrollToTop();
 			this.scrollToBottom();
 			this.markAsRead();
 		}

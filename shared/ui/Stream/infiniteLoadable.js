@@ -67,7 +67,7 @@ export default Child => {
 						hasMore: false
 					});
 				} else {
-					if (this.props.posts.length === 0) {
+					if (this.props.posts.length < initializeCount) {
 						const { more } = await fetchPosts({ streamId, teamId, limit: initializeCount });
 						this.setState({
 							isInitialized: true,
