@@ -552,38 +552,40 @@ export class SimpleStream extends Component {
 										/>
 									)}
 								</span>
-								<Tooltip title="Star this channel" placement="bottomLeft">
-									<span className="clickable" onClick={this.starChannel}>
-										<Icon
-											name="star"
-											className={createClassString("smaller", {
-												checked: postStreamStarred
-											})}
-										/>
-									</span>
-								</Tooltip>
-								{memberCount > 2 && [
-									<div className="sep" />,
-									<Tooltip title="View member list" placement="bottomLeft">
-										<span className="clickable" onClick={e => this.runSlashCommand("who")}>
-											<Icon name="person" className="smaller" /> {memberCount}
+								<div className="stream-header-buttons">
+									<Tooltip title="Star this channel" placement="bottomLeft">
+										<span className="clickable" onClick={this.starChannel}>
+											<Icon
+												name="star"
+												className={createClassString("smaller", {
+													checked: postStreamStarred
+												})}
+											/>
 										</span>
 									</Tooltip>
-								]}
-								{
-									// <div className="sep" />
-									// <Tooltip title="View pinned items" placement="bottomLeft">
-									// 	<span className="clickable" onClick={this.showPinnedPosts}>
-									// 		<Icon name="pin" className="smaller" />
-									// 	</span>
-									// </Tooltip>
-								}
-								{postStreamPurpose && [
-									<div className="sep" />,
-									<span onClick={() => this.setPurpose()} className="purpose-header">
-										{postStreamPurpose}
-									</span>
-								]}
+									{memberCount > 2 && [
+										<div className="sep" />,
+										<Tooltip title="View member list" placement="bottomLeft">
+											<span className="clickable" onClick={e => this.runSlashCommand("who")}>
+												<Icon name="person" className="smaller" /> {memberCount}
+											</span>
+										</Tooltip>
+									]}
+									{
+										// <div className="sep" />
+										// <Tooltip title="View pinned items" placement="bottomLeft">
+										// 	<span className="clickable" onClick={this.showPinnedPosts}>
+										// 		<Icon name="pin" className="smaller" />
+										// 	</span>
+										// </Tooltip>
+									}
+									{postStreamPurpose && [
+										<div className="sep" />,
+										<span onClick={() => this.setPurpose()} className="purpose-header">
+											{postStreamPurpose}
+										</span>
+									]}
+								</div>
 							</div>
 							<OfflineBanner />
 							<div className="shadow-overlay">
