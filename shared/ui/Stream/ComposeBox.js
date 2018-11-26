@@ -46,7 +46,8 @@ class ComposeBox extends React.Component {
 		autoMentions: [],
 		popupOpen: false,
 		emojiOpen: false,
-		commentType: this.props.isEditing ? this.props.editingCodemark.type : "comment"
+		commentType: this.props.isEditing ? this.props.editingCodemark.type : "comment",
+		title: this.props.isEditing ? this.props.editingCodemark.title : ""
 	};
 	disposables = [];
 
@@ -577,7 +578,7 @@ class ComposeBox extends React.Component {
 			}
 		}
 		if (commentType === "question" || commentType === "issue") {
-			if (!title) {
+			if (!title || title.length === 0) {
 				validationState.titleInvalid = true;
 				invalid = true;
 			}
@@ -596,7 +597,7 @@ class ComposeBox extends React.Component {
 	submitThePost = event => {
 		let newPostText =
 			this.state.postTextByStream[this.props.streamId] ||
-			(this.props.isEditing && this.props.text) ||
+			(this.props.isEditing && this.props.editingCodemark.text) ||
 			"";
 		const { quote, title, assignees, color, commentType, streamId } = this.state;
 		const multiCompose = quote || this.props.multiCompose;
