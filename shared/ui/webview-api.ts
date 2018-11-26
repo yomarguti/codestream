@@ -177,7 +177,13 @@ export default class WebviewApi {
 		return this.postMessage({ action: "change-stream-mute-state", params: { streamId, muted } });
 	}
 
-	editCodemark(params: { id: string; text: string; color: string }) {
+	editCodemark(params: {
+		id: string;
+		text: string;
+		title: string;
+		color: string;
+		assignees: string[];
+	}) {
 		return this.postMessage({ action: "edit-codemark", params });
 	}
 

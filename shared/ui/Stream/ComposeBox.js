@@ -33,13 +33,20 @@ const colorOptions = ["blue", "green", "yellow", "orange", "red", "purple", "aqu
 
 class ComposeBox extends React.Component {
 	state = {
-		color: this.props.codemarkColor || "blue",
+		color: this.props.isEditing ? this.props.editingCodemark.color : "blue",
+		assignees:
+			this.props.isEditing && this.props.editingCodemark.assignees
+				? this.props.editingCodemark.assignees.map(id => ({
+						label: this.props.teammates.find(u => u.id === id).username,
+						value: id
+				  }))
+				: [],
 		postTextByStream: {},
 		quote: this.props.quote,
 		autoMentions: [],
 		popupOpen: false,
 		emojiOpen: false,
-		commentType: "comment"
+		commentType: this.props.isEditing ? this.props.editingCodemark.type : "comment"
 	};
 	disposables = [];
 
@@ -552,7 +559,7 @@ class ComposeBox extends React.Component {
 	isFormInvalid = () => {
 		let newPostText =
 			this.state.postTextByStream[this.props.streamId] ||
-			(this.props.isEditing && this.props.text) ||
+			(this.props.isEditing && this.props.editingCodemark.text) ||
 			"";
 		const { quote, title, assignees, color, commentType, streamId } = this.state;
 
@@ -782,9 +789,8 @@ class ComposeBox extends React.Component {
 	};
 
 	renderCommentForm = quote => {
-		const { commentType = "" } = this.state;
-
-		const { isEditing } = this.props;
+		const { isEditing, editingCodemark } = this.props;
+		const commentType = isEditing ? editingCodemark.type : this.state.commentType || "";
 
 		const trapTip =
 			"Let your teammates know about a critical section of code that should not be changed without discussion or consultation. You will be alerted when a teammate edits code within a Code Trap.";
@@ -1014,6 +1020,7 @@ class ComposeBox extends React.Component {
 										name="title"
 										className="native-key-bindings input-text control"
 										tabIndex={this.tabIndex()}
+										defaultValue={isEditing ? editingCodemark.title : ""}
 										value={this.state.title}
 										onChange={e => this.setState({ title: e.target.value })}
 										placeholder={titlePlaceholder}
@@ -1144,7 +1151,7 @@ class ComposeBox extends React.Component {
 	}
 
 	renderMessageInput = () => {
-		let { placeholder, isEditing, text } = this.props;
+		let { placeholder, isEditing, editingCodemark } = this.props;
 		const { quote, emojiOpen, commentType } = this.state;
 		const multiCompose = quote || this.props.multiCompose;
 
@@ -1164,7 +1171,7 @@ class ComposeBox extends React.Component {
 			}
 		}
 		let contentEditableHTML =
-			(isEditing && text) || this.state.postTextByStream[this.props.streamId] || "";
+			(isEditing && editingCodemark.text) || this.state.postTextByStream[this.props.streamId] || "";
 		return (
 			<div
 				className="message-input-wrapper"

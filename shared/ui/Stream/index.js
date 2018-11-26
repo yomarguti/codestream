@@ -790,9 +790,7 @@ export class SimpleStream extends Component {
 						...this.state.composeBoxProps,
 						key: Math.random().toString(),
 						isEditing: true,
-						editingCodemarkId: codemark.id,
-						text: codemark.text,
-						codemarkColor: codemark.color
+						editingCodemark: codemark
 					}
 				});
 			} else
@@ -1527,9 +1525,11 @@ export class SimpleStream extends Component {
 		const { composeBoxProps } = this.state;
 		if (composeBoxProps.isEditing) {
 			editCodemark({
-				id: composeBoxProps.editingCodemarkId,
+				id: composeBoxProps.editingCodemark.id,
 				color: codemark.color,
-				text: codemark.text
+				text: codemark.text,
+				title: codemark.title,
+				assignees: codemark.assignees
 			});
 			return this.setMultiCompose(false);
 		}
