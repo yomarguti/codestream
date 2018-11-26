@@ -332,7 +332,7 @@ export class SimpleChannelPanel extends Component {
 	saveSelected = async () => {
 		const { checkedStreams } = this.state;
 		await this.props.setUserPreference(["selectedStreams"], checkedStreams);
-		await this.props.setChannelPreference("selected");
+		await this.props.setChannelFilter("selected");
 	};
 
 	streamIcon = stream => {
