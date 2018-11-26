@@ -3,7 +3,7 @@ import companies from "./companies";
 import onboarding from "./onboarding";
 import posts from "./posts";
 import capabilities from "./capabilities";
-import context from "./context";
+import { reduceContext } from "../store/context/reducer";
 import configs from "./configs";
 import streams from "./streams";
 import users from "./users";
@@ -55,7 +55,7 @@ const appReducer = combineReducers({
 	companies,
 	configs,
 	connectivity,
-	context,
+	context: reduceContext,
 	currentPage,
 	markerLocations,
 	markers,

@@ -1,5 +1,5 @@
 import { bootstrap } from "../actions";
-import { setContext } from "../actions/context";
+import { setContext } from "../store/context/actions";
 export { startSlackSignin } from "../Signup/actions";
 export { validateSignup } from "../CompleteSignup/actions";
 

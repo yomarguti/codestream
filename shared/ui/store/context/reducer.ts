@@ -1,4 +1,4 @@
-import { Type } from "../actions/context";
+import { Type } from "./actions";
 
 const initialState = {
 	currentFile: "",
@@ -15,7 +15,7 @@ const initialState = {
 	channelFilter: "all"
 };
 
-export default (state = initialState, { type, payload }) => {
+export function reduceContext(state = initialState, { type, payload }) {
 	switch (type) {
 		case "RESET_CONTEXT":
 			return {
@@ -57,4 +57,4 @@ export default (state = initialState, { type, payload }) => {
 		default:
 			return { ...initialState, ...state };
 	}
-};
+}

@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import Menu from "./Menu";
-import * as contextActions from "../actions/context";
+import * as contextActions from "../store/context/actions";
 // import * as userActions from "../actions/user";
 import * as streamActions from "./actions";
 

@@ -1,7 +1,7 @@
 import { unique } from "underscore";
-import { getStreamForId } from "../reducers/streams";
-import { fetchPosts } from "../Stream/actions";
-import { safe } from "../utils";
+import { getStreamForId } from "../../reducers/streams";
+import { fetchPosts } from "../../Stream/actions";
+import { safe } from "../../utils";
 
 export default store => next => action => {
 	if (action.type === "ADD_STREAMS") {

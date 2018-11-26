@@ -8,7 +8,7 @@ import {
 	setCodemarkTypeFilter,
 	setCodemarkFileFilter,
 	setChannelFilter
-} from "../actions/context";
+} from "../store/context/actions";
 import { saveCodemarks, updateCodemarks } from "../actions/codemarks";
 
 export {

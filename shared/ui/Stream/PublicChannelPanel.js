@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import * as contextActions from "../actions/context";
+import * as contextActions from "../store/context/actions";
 import * as streamActions from "./actions";
 import createClassString from "classnames";
 import {

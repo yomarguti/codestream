@@ -1,5 +1,5 @@
 import { bootstrap } from "../actions";
-import { setContext } from "../actions/context";
+import { setContext } from "../store/context/actions";
 export { startSignup } from "../Login/actions";
 export { goToLogin } from "../actions/routing";
 
