@@ -1,11 +1,11 @@
+import { Action } from "../types";
 import { Type } from "./actions";
 
 const initialState = {
 	currentFile: "",
 	mostRecentSourceFile: "",
 	currentTeamId: "",
-	currentRepoId: "",
-	currentCommit: "",
+	currentCommit: "", // maybe delete
 	currentStreamId: "",
 	threadId: null,
 	panelStack: ["channels"],
@@ -15,38 +15,36 @@ const initialState = {
 	channelFilter: "all"
 };
 
-export function reduceContext(state = initialState, { type, payload }) {
+export function reduceContext(state = initialState, { type, payload }: Action<Type>) {
 	switch (type) {
-		case "RESET_CONTEXT":
+		case Type.ResetContext:
 			return {
 				...initialState,
 				currentFile: state.currentFile,
 				currentCommit: state.currentCommit
 			};
-		case "SET_CONTEXT":
+		case Type.SetContext:
 			return { ...state, ...payload };
-		case "SET_CURRENT_FILE": {
+		case Type.SetCurrentFile: {
 			const file = payload.editor && payload.editor.fileName;
 			if (file) return { ...state, currentFile: file, mostRecentSourceFile: file };
 			else return { ...state, currentFile: "" };
 		}
-		case "SET_CURRENT_TEAM":
+		case Type.SetCurrentTeam:
 			return { ...state, currentTeamId: payload };
-		case "SET_CURRENT_STREAM":
+		case Type.SetCurrentStream:
 			return { ...state, currentStreamId: payload, threadId: null };
 		case Type.SetThread: {
 			return { ...state, currentStreamId: payload.streamId, threadId: payload.threadId };
 		}
-		case "SET_PANEL":
+		case Type.OpenPanel:
 			return { ...state, panelStack: [payload, ...state.panelStack].slice(0, 10) };
-		case "CLOSE_PANEL": {
+		case Type.ClosePanel: {
 			if (state.panelStack.length === 1) return state;
 			const [, ...panelStack] = state.panelStack;
 			return { ...state, panelStack };
 		}
-		case "COMMIT_HASH_CHANGED":
-			return { ...state, currentCommit: payload };
-		case "SET_HAS_FOCUS":
+		case Type.SetFocusState:
 			return { ...state, hasFocus: payload };
 		case Type.SetCodeMarkFileFilter:
 			return { ...state, codemarkFileFilter: payload };
