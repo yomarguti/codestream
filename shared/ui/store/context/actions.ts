@@ -1,3 +1,5 @@
+import EventEmitter from "../../event-emitter";
+
 export enum Type {
 	SetThread = "SET_CURRENT_THREAD",
 	SetCodeMarkFileFilter = "SET_CODEMARK_FILE_FILTER",
@@ -18,11 +20,13 @@ export const setContext = payload => ({ type: Type.SetContext, payload });
 export const openPanel = panel => (dispatch, getState) => {
 	if (getState().context.panelStack[0] !== panel) {
 		dispatch({ type: Type.OpenPanel, payload: panel });
+		EventEmitter.emit("interaction:active-panel-changed", getState().context.panelStack);
 	}
 };
 
-export const closePanel = () => dispatch => {
+export const closePanel = () => (dispatch, getState) => {
 	dispatch({ type: Type.ClosePanel });
+	EventEmitter.emit("interaction:active-panel-changed", getState().context.panelStack);
 };
 
 export const focus = () => ({ type: Type.SetFocusState, payload: true });
