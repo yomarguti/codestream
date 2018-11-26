@@ -160,13 +160,10 @@ api.bootstrap().then(data => {
 	const store = createStore(
 		{
 			pluginVersion: data.version,
-			startupProps: {
-				startOnMainPanel: Boolean(data.currentStreamId),
-				threadId: data.currentThreadId
-			},
 			context: {
 				currentTeamId: data.currentTeamId,
 				currentStreamId: data.currentStreamId,
+				threadId: data.currentThreadId,
 				hasFocus: true,
 				...(panel ? { panel } : {}) // a little black magic so not to assume what the view will use as a default
 			},
