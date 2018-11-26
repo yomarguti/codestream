@@ -321,7 +321,7 @@ class Post extends React.Component {
 					)}
 				</div>
 				{this.renderReactions(post)}
-				{this.renderReplyCount(post)}
+				{/*this.renderReplyCount(post)*/}
 			</div>
 		);
 	}
