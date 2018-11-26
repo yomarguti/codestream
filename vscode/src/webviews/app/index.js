@@ -165,7 +165,7 @@ api.bootstrap().then(data => {
 				currentStreamId: data.currentStreamId,
 				threadId: data.currentThreadId,
 				hasFocus: true,
-				...(panel ? { panel } : {}) // a little black magic so not to assume what the view will use as a default
+				...(data.panelStack ? { panelStack: data.panelStack } : {})
 			},
 			session: {
 				userId: data.currentUserId

@@ -80,6 +80,7 @@ interface BootstrapState {
 	configs: {
 		[k: string]: any;
 	};
+	panelStack?: string[];
 }
 
 interface CSWebviewRequest {
@@ -126,12 +127,18 @@ export class CodeStreamWebviewPanel implements Disposable {
 		return this._onDidClose.event;
 	}
 
+	private _onDidChangeViewPanel = new EventEmitter<string[]>();
+	get onDidChangeViewPanel(): Event<string[]> {
+		return this._onDidChangeViewPanel.event;
+	}
+
 	private _bootstrapPromise: Promise<BootstrapState> | undefined;
 	private _disposable: Disposable | undefined;
 	private readonly _ipc: WebviewIpc;
 	private _onReadyResolver: ((cancelled: boolean) => void) | undefined;
 	private _panel: WebviewPanel | undefined;
 	private _streamThread: StreamThread | undefined;
+	private _viewPanelStack: string[] | undefined;
 
 	constructor(public readonly session: CodeStreamSession) {
 		this._ipc = new WebviewIpc(this);
@@ -775,6 +782,10 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 					break;
 				}
+				case WebviewIpcMessageType.onActivePanelChanged: {
+					this._onDidChangeViewPanel.fire(e.body);
+					break;
+				}
 				case WebviewIpcMessageType.onActiveStreamChanged: {
 					const streamId = e.body;
 
@@ -1015,7 +1026,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 	@log({
 		args: false
 	})
-	async show(streamThread?: StreamThread) {
+	async show(streamThread?: StreamThread, viewPanelStack?: string[]) {
+		if (viewPanelStack) this._viewPanelStack = viewPanelStack;
 		if (this._panel === undefined) return this.createWebview(streamThread);
 
 		if (
@@ -1150,6 +1162,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 		};
 		state.currentTeamId = this.session.team.id;
 		state.currentUserId = this.session.userId;
+		if (this._viewPanelStack) state.panelStack = this._viewPanelStack;
 		state.env = this.session.environment;
 		state.services = {
 			vsls: Container.vsls.installed
