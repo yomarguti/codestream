@@ -1026,11 +1026,10 @@ export class SimpleStream extends Component {
 	};
 
 	openThread = (threadId, wasClicked = false) => {
-		debugger;
-		EventEmitter.emit("analytics", {
-			label: "Page Viewed",
-			payload: { "Page Name": "Thread View" }
-		});
+		// EventEmitter.emit("analytics", {
+		// 	label: "Page Viewed",
+		// 	payload: { "Page Name": "Thread View" }
+		// });
 		this.setState({ threadTrigger: wasClicked && threadId });
 		this.props.setThread(this.props.postStreamId, threadId);
 		// this.setActivePanel("thread");
