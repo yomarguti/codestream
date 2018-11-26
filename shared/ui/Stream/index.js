@@ -701,6 +701,7 @@ export class SimpleStream extends Component {
 				openCommentOnSelect={this.props.configs.openCommentOnSelect}
 				toggleOpenCommentOnSelect={this.toggleOpenCommentOnSelect}
 				quotePost={this.state.quotePost}
+				inThread={Boolean(this.props.threadId)}
 				{...this.state.composeBoxProps}
 			/>
 		);

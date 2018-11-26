@@ -790,7 +790,7 @@ class ComposeBox extends React.Component {
 	};
 
 	renderCommentForm = quote => {
-		const { isEditing, editingCodemark } = this.props;
+		const { isEditing, editingCodemark, inThread } = this.props;
 		const commentType = isEditing ? editingCodemark.type : this.state.commentType || "";
 
 		const trapTip =
@@ -853,7 +853,7 @@ class ComposeBox extends React.Component {
 									<label>Post to</label>
 									<div className="styled-select">
 										<select
-											disabled={isEditing}
+											disabled={isEditing || inThread}
 											onChange={e => this.setState({ streamId: e.target.value })}
 											defaultValue={this.props.streamId}
 										>
