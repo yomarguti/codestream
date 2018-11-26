@@ -1624,7 +1624,6 @@ const mapStateToProps = state => {
 		connectivity,
 		session,
 		context,
-		startupProps,
 		streams,
 		users,
 		pluginVersion,
@@ -1700,7 +1699,6 @@ const mapStateToProps = state => {
 		channelStreams,
 		directMessageStreams,
 		activePanel: context.panelStack[0],
-		startOnMainPanel: startupProps.startOnMainPanel,
 		threadId: context.threadId,
 		umis: {
 			...umis,
