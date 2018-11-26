@@ -1540,11 +1540,11 @@ export class SimpleStream extends Component {
 				autoMentions,
 				fileUri
 			});
-			if (this.props.activePanel === "main") {
-				safe(() => this.scrollPostsListToBottom());
-			} else if (codemark) {
+			if (codemark && codemark.streamId !== postStreamId) {
 				this.props.setCurrentStream(codemark.streamId);
 				this.setActivePanel("main");
+			} else if (this.props.activePanel === "main") {
+				safe(() => this.scrollPostsListToBottom());
 			}
 		};
 
