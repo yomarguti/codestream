@@ -537,5 +537,6 @@ export class CodeStreamSession {
 		const { telemetry } = Container.instance();
 		telemetry.setDistinctId(this._codestreamUserId!);
 		telemetry.setSuperProps(props);
+		telemetry.track({ eventName: "Agent Started" });
 	}
 }
