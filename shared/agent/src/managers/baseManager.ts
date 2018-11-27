@@ -12,7 +12,7 @@ function isDirective(data: any): boolean {
 
 function isCompatibleVersion(cachedEntity: any, newEntityOrDirective: any): boolean {
 	if (isDirective(newEntityOrDirective)) {
-		const directiveVersion = newEntityOrDirective.version;
+		const directiveVersion = newEntityOrDirective.$version;
 		if (!directiveVersion) {
 			throw new Error(
 				`Received directive without version attribute for object Id=${newEntityOrDirective.id}`
