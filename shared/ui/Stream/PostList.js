@@ -214,7 +214,7 @@ export default infiniteLoadable(
 					{this.props.posts.map((post, index) => {
 						// if the parent post isn't yet in local collection because it's further back, use the id
 						const parentPost =
-							post.parentPostId && post.ParentPostId !== post.id
+							post.parentPostId && post.parentPostId !== post.id
 								? posts.find(p => p.id === post.parentPostId) || post.parentPostId
 								: null;
 
@@ -240,7 +240,7 @@ export default infiniteLoadable(
 									teammates={this.props.teammates}
 									currentUserId={this.props.currentUserId}
 									currentUserName={this.props.currentUserName}
-									replyingTo={!this.props.isThread && parentPost}
+									parentPostId={parentPost && parentPost.id}
 									newMessageIndicator={hasNewMessageLine}
 									editing={isActive && post.id === editingPostId}
 									action={postAction}

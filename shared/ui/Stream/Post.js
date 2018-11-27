@@ -209,14 +209,11 @@ class Post extends React.Component {
 			);
 		}
 
-		let parentPost = this.props.replyingTo;
-		const parentPostTitle = parentPost && parentPost.codemark && parentPost.codemark.title;
-		if (_.isString(parentPost)) parentPost = { text: "a message" };
-
 		let menuItems = [];
 
 		if (!this.props.showDetails) {
-			const threadLabel = parentPost || post.numReplies > 0 ? "View Thread" : "Start a Thread";
+			const threadLabel =
+				this.props.parentPostId || post.numReplies > 0 ? "View Thread" : "Start a Thread";
 			menuItems.push({ label: threadLabel, action: "make-thread" });
 		}
 		// menuItems.push({ label: "Add Reaction", action: "add-reaction" });
@@ -295,9 +292,9 @@ class Post extends React.Component {
 				) : (
 					<Timestamp time={post.createdAt} />
 				)}
-				{parentPost && (
+				{this.props.parentPostId && !this.props.showDetails && (
 					<div className="replying-to">
-						<span>reply to</span> <b>{(parentPostTitle || parentPost.text).substr(0, 80)}</b>
+						<span>reply to</span> <b>{this.props.parentPostContent.substr(0, 80)}</b>
 					</div>
 				)}
 				{post.creatorId === "codestream" && (
@@ -720,6 +717,18 @@ const mapStateToProps = (state, props) => {
 
 	const codemark = (post.pending && post.codemark) || getCodemark(state.codemarks, post.codemarkId);
 
+	const parentPost = getPost(state.posts, props.streamId, props.parentPostId);
+	let parentPostContent;
+	if (parentPost) {
+		let parentPostCodemark;
+		if (parentPost.codemarkId) {
+			parentPostCodemark = getCodemark(state.codemarks, parentPost.codemarkId);
+			if (parentPostCodemark) {
+				parentPostContent = parentPostCodemark.title || parentPostCodemark.text || parentPost.text;
+			}
+		} else parentPostContent = parentPost.text;
+	}
+
 	const repoName =
 		(codemark &&
 			safe(() => {
@@ -742,7 +751,8 @@ const mapStateToProps = (state, props) => {
 		post,
 		author,
 		hasMarkers: codemark && codemark.markers && codemark.markers.length > 0,
-		codemark
+		codemark,
+		parentPostContent
 	};
 };
 
