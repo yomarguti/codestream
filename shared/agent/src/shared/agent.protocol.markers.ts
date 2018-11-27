@@ -189,6 +189,9 @@ export interface UpdateCodemarkRequest {
 	postId?: string;
 	color?: string;
 	status?: string;
+	assignees?: string[];
+	title?: string;
+	text?: string;
 }
 
 export interface UpdateCodemarkResponse {
