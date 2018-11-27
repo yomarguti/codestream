@@ -536,7 +536,7 @@ class Post extends React.Component {
 		if (type === "question") return <span className="emote">has a question</span>;
 		if (type === "bookmark") return <span className="emote">set a bookmark</span>;
 		if (type === "issue") return <span className="emote">posted an issue</span>;
-		if (type === "trap") return <span className="emote">created a code trap</span>;
+		if (type === "trap") return <span className="emote">created a trap</span>;
 		else return null;
 	};
 

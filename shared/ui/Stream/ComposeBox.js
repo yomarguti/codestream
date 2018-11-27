@@ -803,7 +803,7 @@ class ComposeBox extends React.Component {
 		let verb = "Commenting on ";
 		if (commentType === "question") verb = "Question about ";
 		if (commentType === "issue") verb = "Issue in ";
-		if (commentType === "trap") verb = "Code Trap for ";
+		if (commentType === "trap") verb = "Trap for ";
 		if (commentType === "bookmark") verb = "Bookmark for ";
 		if (range) {
 			if (range.start.row === range.end.row) {
@@ -989,7 +989,7 @@ class ComposeBox extends React.Component {
 									})}
 									onClick={e => this.setCommentType("trap")}
 								>
-									<Icon name="trap" /> <b>Code Trap</b>
+									<Icon name="trap" /> <b>Trap</b>
 								</label>
 								<label
 									htmlFor="radio-comment-type-bookmark"
@@ -1164,7 +1164,7 @@ class ComposeBox extends React.Component {
 					placeholder = "Description (optional)";
 					break;
 				case "trap":
-					placeholder = "Justification for Code Trap (required)";
+					placeholder = "Justification for Trap (required)";
 					break;
 				case "bookmark":
 					placeholder = "Label (required)";
