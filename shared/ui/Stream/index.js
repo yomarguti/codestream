@@ -1427,7 +1427,13 @@ export class SimpleStream extends Component {
 		return true;
 	};
 
-	startLiveShare = () => {
+	startLiveShare = args => {
+		const { startLocation } = args;
+		console.log("Start location : " + startLocation);
+		let liveShareStartLocation = "Slash Command";
+		if (startLocation != null) {
+			liveShareStartLocation = startLocation;
+		}
 		const { postStreamId } = this.props;
 		const threadId = this.props.threadId;
 
@@ -1437,7 +1443,7 @@ export class SimpleStream extends Component {
 		EventEmitter.emit("telemetry", {
 			eventName: "Start Live Share",
 			properties: {
-				"Start Location": "Slash Command"
+				"Start Location": liveShareStartLocation
 			}
 		});
 
@@ -1469,7 +1475,7 @@ export class SimpleStream extends Component {
 			case "leave":
 				return this.leaveChannel();
 			case "liveshare":
-				return this.startLiveShare();
+				return this.startLiveShare(args);
 			case "me":
 				return false;
 			case "msg":

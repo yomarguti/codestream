@@ -637,7 +637,7 @@ export class SimpleChannelPanel extends Component {
 	handleClickStartLiveShare = event => {
 		this.handleClickSelectStream(event);
 		setTimeout(() => {
-			this.props.runSlashCommand("liveshare");
+			this.props.runSlashCommand("liveshare", { startLocation: "Channel Switcher" });
 		}, 500);
 	};
 
