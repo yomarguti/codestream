@@ -544,7 +544,7 @@ class Post extends React.Component {
 		const { codemark, editing } = this.props;
 		if (editing) return this.renderTextEditing(post);
 		else if ((post.text || "").match(/^\/me\s/)) return null;
-		else return this.renderTextLinkified(codemark ? codemark.text : post.text);
+		else return this.renderTextLinkified((codemark && codemark.text) || post.text); // unfortunately need to account for legacy slack codemarks that don't have text
 	};
 
 	renderTextLinkified = text => {
