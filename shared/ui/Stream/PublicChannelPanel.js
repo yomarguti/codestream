@@ -132,6 +132,7 @@ export class SimplePublicChannelPanel extends Component {
 		await this.props.joinStream(liDiv.id);
 		this.setState({ loading: null });
 		this.props.setCurrentStream(liDiv.id);
+		this.props.setActivePanel("main");
 	};
 
 	showChannels = event => {
