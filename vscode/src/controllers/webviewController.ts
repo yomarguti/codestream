@@ -176,6 +176,7 @@ export class WebviewController implements Disposable {
 	}
 
 	private closePanel(reason?: "user") {
+		Container.agent.telemetry.track("Webview Closed");
 		this.updateState(this.activeStreamThread, reason === "user");
 
 		this._disposablePanel && this._disposablePanel.dispose();

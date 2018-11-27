@@ -940,7 +940,6 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 	@log()
 	hide() {
-		Container.agent.telemetry.track("Webview Closed");
 		if (this._panel === undefined) return;
 		this._panel.dispose();
 	}
