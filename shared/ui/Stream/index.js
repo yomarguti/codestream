@@ -1539,7 +1539,7 @@ export class SimpleStream extends Component {
 				autoMentions,
 				fileUri
 			});
-			if (codemark && codemark.streamId !== postStreamId) {
+			if (codemark && codemark.streamId && codemark.streamId !== postStreamId) {
 				this.props.setCurrentStream(codemark.streamId);
 				this.setActivePanel("main");
 			} else if (this.props.activePanel === "main") {
