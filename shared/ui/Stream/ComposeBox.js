@@ -794,7 +794,7 @@ class ComposeBox extends React.Component {
 		const commentType = isEditing ? editingCodemark.type : this.state.commentType || "";
 
 		const trapTip =
-			"Let your teammates know about a critical section of code that should not be changed without discussion or consultation. You will be alerted when a teammate edits code within a Code Trap.";
+			"Let your teammates know about a critical section of code that should not be changed without discussion or consultation.";
 		const bookmarkTip =
 			'Save a bookmark either for yourself, or for your team (select the appropriate "Post to" setting above).';
 
