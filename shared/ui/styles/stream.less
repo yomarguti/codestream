@@ -326,7 +326,13 @@
 		.purpose-header {
 			display: inline-block;
 			cursor: pointer;
+			height: 1.4em;
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
 			&:hover {
+				white-space: normal;
+				height: auto;
 				border-radius: 5px;
 				color: @text-color-highlight;
 				padding: 5px 8px;

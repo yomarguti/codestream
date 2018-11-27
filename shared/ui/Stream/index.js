@@ -566,7 +566,11 @@ export class SimpleStream extends Component {
 									{memberCount > 2 && [
 										<div className="sep" />,
 										<Tooltip title="View member list" placement="bottomLeft">
-											<span className="clickable" onClick={e => this.runSlashCommand("who")}>
+											<span
+												className="clickable"
+												style={{ whiteSpace: "nowrap" }}
+												onClick={e => this.runSlashCommand("who")}
+											>
 												<Icon name="person" className="smaller" /> {memberCount}
 											</span>
 										</Tooltip>
