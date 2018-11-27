@@ -146,7 +146,8 @@ export class SimpleStream extends Component {
 
 	handleCodeHighlightEvent = body => {
 		// make sure we have a compose box to type into
-		// if it's not a highlight event, we definitely want to
+		// if it's not a highlight event (i.e. someone clicked
+		// "Add CodeStream Comment"), then we definitely want to
 		// open multi-compose. if it is a highlight event, only
 		// open it if it's not open and the user has the preference
 		// to auto-open on selection
@@ -154,6 +155,9 @@ export class SimpleStream extends Component {
 			this.setMultiCompose(true);
 			this.setState({ quote: body });
 		}
+		// if multi-compose is already open, regardless of settings,
+		// update this.state.quote just in case the selection changed
+		if (this.state.multiCompose) this.setState({ quote: body });
 	};
 
 	// TODO: delete this for `setThread` action
