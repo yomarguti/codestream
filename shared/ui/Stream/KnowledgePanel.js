@@ -117,6 +117,7 @@ export class SimpleKnowledgePanel extends Component {
 						usernames={this.props.usernames}
 						onClick={this.handleClickCodemark}
 						action={this.props.postAction}
+						query={this.props.q}
 					/>
 					// <div key={codemark.id}>
 					// 	<Post

@@ -38,6 +38,7 @@ interface Props {
 	setCodemarkStatus(id: string, status: string): Action;
 	action(action: string, post: any, args: any): any;
 	onClick?(CodemarkEntity): any;
+	query?: string;
 }
 
 export class Codemark extends React.Component<Props, State> {
@@ -61,10 +62,10 @@ export class Codemark extends React.Component<Props, State> {
 				return match;
 			});
 
-			// if (this.props.q) {
-			// 	const matchQueryRegexp = new RegExp(this.props.q, "g");
-			// 	html = html.replace(matchQueryRegexp, "<u><b>$&</b></u>");
-			// }
+			if (this.props.query) {
+				const matchQueryRegexp = new RegExp(this.props.query, "g");
+				html = html.replace(matchQueryRegexp, "<u><b>$&</b></u>");
+			}
 		}
 
 		return <span dangerouslySetInnerHTML={{ __html: html }} />;
