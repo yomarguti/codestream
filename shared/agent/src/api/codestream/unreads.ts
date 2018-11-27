@@ -17,7 +17,7 @@ export class CodeStreamUnreads {
 	private _mentions: { [streamId: string]: number } = Object.create(null);
 	private _unreads: { [streamId: string]: number } = Object.create(null);
 
-	constructor(private readonly _api: ApiProvider) { }
+	constructor(private readonly _api: ApiProvider) {}
 
 	private _computePromise: Promise<void> | undefined;
 	@log()
