@@ -33,7 +33,7 @@ export class SimpleKnowledgePanel extends Component {
 			comment: "Code Comments",
 			question: "Questions & Answers",
 			issue: "Issues",
-			trap: "Code Traps",
+			trap: "Traps",
 			snippet: "Snippets",
 			bookmark: "Bookmarks"
 		};
@@ -42,7 +42,7 @@ export class SimpleKnowledgePanel extends Component {
 			comment: "code comments",
 			question: "questions & answers",
 			issue: "issues",
-			trap: "code traps",
+			trap: "traps",
 			snippet: "snippets",
 			bookmark: "bookmarks"
 		};
@@ -244,7 +244,7 @@ export class SimpleKnowledgePanel extends Component {
 			{ label: "Code Comments", action: "comment" },
 			{ label: "Questions & Answers", action: "question" },
 			{ label: "Issues", action: "issue" },
-			{ label: "Code Traps", action: "trap" },
+			{ label: "Traps", action: "trap" },
 			{ label: "Bookmarks", action: "bookmark" }
 		];
 
