@@ -2077,10 +2077,12 @@ export class SlackApiProvider implements ApiProvider {
 	async fetchUsers(request: FetchUsersRequest) {
 		const response = await this.slackApiCall(this._slack.users.list, undefined, `users.list`);
 
-		const { ok, error, members } = response as WebAPICallResult & { members: any };
+		const { ok, error, members } = response as WebAPICallResult & { members: any[] };
 		if (!ok) throw new Error(error);
 
-		const users: CSUser[] = members.map((m: any) => fromSlackUser(m, this._codestreamTeamId));
+		const users: CSUser[] = members
+			.map((m: any) => fromSlackUser(m, this._codestreamTeamId))
+			.filter(u => !u.deactivated);
 
 		// Find ourselves and replace it with our model
 		const index = users.findIndex(u => u.id === this._slackUserId);
