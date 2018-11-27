@@ -1044,6 +1044,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 				}
 			}
 
+			let id;
 			let resp;
 			let retryCount = 0;
 			if (json === undefined) {
@@ -1052,8 +1053,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 					context.response = resp;
 				}
 
+				id = resp.headers.get("x-request-id");
+
 				if (resp.ok) {
-					traceResult = `API: Completed ${method} ${url}`;
+					traceResult = `API(${id}): Completed ${method} ${url}`;
 					json = resp.json() as Promise<R>;
 				}
 			}
@@ -1065,13 +1068,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 					try {
 						await mw.onResponse(context!, json);
 					} catch (ex) {
-						Logger.error(ex, `API: ${method} ${url}: Middleware(${mw.name}).onResponse FAILED`);
+						Logger.error(
+							ex,
+							`API(${id}): ${method} ${url}: Middleware(${mw.name}).onResponse FAILED`
+						);
 					}
 				}
 			}
 
 			if (resp !== undefined && !resp.ok) {
-				traceResult = `API: FAILED(${retryCount}x) ${method} ${url}`;
+				traceResult = `API(${id}): FAILED(${retryCount}x) ${method} ${url}`;
 				throw await this.handleErrorResponse(resp);
 			}
 
