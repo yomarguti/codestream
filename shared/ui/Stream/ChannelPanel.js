@@ -158,6 +158,8 @@ export class SimpleChannelPanel extends Component {
 	};
 
 	renderBrowsePublicIcon = () => {
+		if (this.props.isSlackTeam) return null;
+
 		return (
 			<Tooltip title="Browse Public Channels" placement="bottomRight">
 				<span>
