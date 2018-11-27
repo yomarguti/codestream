@@ -150,9 +150,10 @@ export class SimpleStream extends Component {
 		// open multi-compose. if it is a highlight event, only
 		// open it if it's not open and the user has the preference
 		// to auto-open on selection
-		if (!body.isHighlight || (!this.state.multiCompose && this.props.configs.openCommentOnSelect))
+		if (!body.isHighlight || (!this.state.multiCompose && this.props.configs.openCommentOnSelect)) {
 			this.setMultiCompose(true);
-		this.setState({ quote: body });
+			this.setState({ quote: body });
+		}
 	};
 
 	// TODO: delete this for `setThread` action
