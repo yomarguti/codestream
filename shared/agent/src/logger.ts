@@ -83,13 +83,11 @@ export class Logger {
 			}
 		}
 
-		if (message === undefined) {
-			const stack = ex.stack;
-			if (stack) {
-				const match = /.*\s*?at\s(.+?)\s/.exec(stack);
-				if (match != null) {
-					message = match[1];
-				}
+		const stack = ex.stack;
+		if (message === undefined && stack) {
+			const match = /.*\s*?at\s(.+?)\s/.exec(stack);
+			if (match != null) {
+				message = match[1];
 			}
 		}
 
@@ -99,7 +97,7 @@ export class Logger {
 
 		if (this._agent !== undefined) {
 			this._agent.error(
-				`${this.timestamp} ${message || ""}${this.toLoggableParams(false, params)}\n${ex}`
+				`${this.timestamp} ${message || ""}${this.toLoggableParams(false, params)}\n${ex}\n${stack}`
 			);
 		}
 

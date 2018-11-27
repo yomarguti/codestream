@@ -95,5 +95,8 @@ const operations = {
 				else if (Number.isInteger(value)) object[property] = value + data[property];
 			});
 		});
+	},
+	$version(object: any, data: any) {
+		object.version = data.after;
 	}
 } as any;

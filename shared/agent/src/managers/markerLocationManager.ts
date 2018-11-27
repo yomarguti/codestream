@@ -59,6 +59,8 @@ function newGetLocationsResult(): GetLocationsResult {
 }
 
 export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
+	protected forceFetchToResolveOnCacheMiss = true;
+
 	getIndexedFields(): IndexParams<CSMarkerLocations>[] {
 		return [
 			{
@@ -77,10 +79,6 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			};
 		}
 		super.cacheSet(entity, oldEntity);
-	}
-
-	protected mustFetchToResolve(obj: object): boolean {
-		return true;
 	}
 
 	protected async fetch(criteria: KeyValue<CSMarkerLocations>[]): Promise<CSMarkerLocations> {

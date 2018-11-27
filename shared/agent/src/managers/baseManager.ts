@@ -5,13 +5,35 @@ import { debug, log } from "../system";
 import { IndexParams } from "./cache";
 import { BaseCache, KeyValue } from "./cache/baseCache";
 import * as operations from "./operations";
-import { isCompleteObject } from "./operations";
+
+function isDirective(data: any): boolean {
+	return !!data.$version;
+}
+
+function isCompatibleVersion(cachedEntity: any, newEntityOrDirective: any): boolean {
+	if (isDirective(newEntityOrDirective)) {
+		const directiveVersion = newEntityOrDirective.version;
+		if (!directiveVersion) {
+			throw new Error(
+				`Received directive without version attribute for object Id=${newEntityOrDirective.id}`
+			);
+		}
+		return directiveVersion.before === cachedEntity.version;
+	} else {
+		if (cachedEntity.version == null && newEntityOrDirective.version == null) {
+			return true;
+		}
+		return cachedEntity.version < newEntityOrDirective.version;
+	}
+}
 
 export abstract class ManagerBase<T> {
 	protected readonly cache: BaseCache<T> = new BaseCache<T>({
 		idxFields: this.getIndexedFields(),
 		entityName: this.getEntityName()
 	});
+
+	protected forceFetchToResolveOnCacheMiss = false;
 
 	public constructor(public readonly session: CodeStreamSession) {
 		this.session.onDidRequestReset(() => {
@@ -44,13 +66,13 @@ export abstract class ManagerBase<T> {
 			message.data.map(async (data: any) => {
 				const criteria = this.fetchCriteria(data as T);
 				const cached = await this.cacheGet(criteria);
-				if (cached) {
+				if (cached && isCompatibleVersion(cached, data)) {
 					const updatedEntity = operations.resolve(cached as any, data);
 					this.cacheSet(updatedEntity as T, cached);
 					return updatedEntity as T;
 				} else {
 					let entity;
-					if (this.mustFetchToResolve(data)) {
+					if (this.forceFetchToResolveOnCacheMiss || isDirective(data)) {
 						entity = await this.fetch(criteria);
 					} else {
 						entity = data as T;
@@ -64,10 +86,6 @@ export abstract class ManagerBase<T> {
 			})
 		);
 		return resolved.filter(Boolean) as T[];
-	}
-
-	protected mustFetchToResolve(obj: object): boolean {
-		return isCompleteObject(obj);
 	}
 
 	cacheGet(criteria: KeyValue<T>[]): Promise<T | undefined> {
