@@ -90,6 +90,7 @@ export interface FetchPostRepliesRequest {
 
 export interface FetchPostRepliesResponse {
 	posts: CSPost[];
+	codemarks: CSFullCodemark[];
 }
 
 export const FetchPostRepliesRequestType = new RequestType<

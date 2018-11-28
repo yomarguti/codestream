@@ -47,7 +47,7 @@ import {
 	CSStream,
 	StreamType
 } from "../shared/api.protocol";
-import { debug, Iterables, lsp, lspHandler, Strings } from "../system";
+import { Arrays, debug, Iterables, lsp, lspHandler, Strings } from "../system";
 import { BaseIndex, IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { EntityCache, EntityCacheCfg } from "./cache/entityCache";
@@ -537,6 +537,26 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		return fullPosts;
 	}
 
+	private async fullCodemarks(codemarkIds: string[]): Promise<CSFullCodemark[]> {
+		const fullCodemarks = [];
+		for (const codemarkId of codemarkIds) {
+			let fullCodemark: CSFullCodemark;
+			const codemark = await Container.instance().codemarks.getById(codemarkId);
+			fullCodemark = {
+				...codemark
+			};
+			if (codemark.markerIds) {
+				fullCodemark.markers = [];
+				for (const markerId of codemark.markerIds) {
+					fullCodemark.markers.push(await Container.instance().markers.getById(markerId));
+				}
+			}
+			fullCodemarks.push(fullCodemark);
+		}
+
+		return fullCodemarks;
+	}
+
 	private async fullPost(csPost: CSPost): Promise<CSFullPost> {
 		let fullCodemark: CSFullCodemark | undefined;
 		let hasMarkers = false;
@@ -567,11 +587,17 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	@lspHandler(FetchPostRepliesRequestType)
 	async getReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse> {
 		const parentPost = await this.cache.getById(request.postId);
-		const posts = await this.cache.getGroup([
+		const childPosts = await this.cache.getGroup([
 			["streamId", request.streamId],
 			["parentPostId", request.postId]
 		]);
-		return { posts: [parentPost, ...posts] };
+		const posts = [parentPost, ...childPosts];
+
+		const codemarks: CSFullCodemark[] = await this.fullCodemarks(
+			Arrays.filterMap(posts, post => post.codemarkId)
+		);
+
+		return { posts, codemarks };
 	}
 
 	@lspHandler(CreatePostRequestType)
