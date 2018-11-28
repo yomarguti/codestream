@@ -170,10 +170,14 @@ export class GitRepositories {
 		const repos = this._repositoryTree.values();
 		for (const repo of repos) {
 			const logFile = path.join(repo.path, ".git", "logs", "HEAD");
-			const watcher = fs.watch(logFile, () => {
-				this._onCommitHashChanged.fire(repo);
-			});
-			this._monitors.push(watcher);
+			try {
+				const watcher = fs.watch(logFile, () => {
+					this._onCommitHashChanged.fire(repo);
+				});
+				this._monitors.push(watcher);
+			} catch (err) {
+				Logger.error(err);
+			}
 		}
 	}
 
