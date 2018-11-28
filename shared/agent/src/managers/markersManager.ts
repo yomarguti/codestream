@@ -77,7 +77,7 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 			}
 
 			try {
-				const stream = await streams.getById(marker.postStreamId);
+				const stream = await streams.getByIdFromCache(marker.postStreamId);
 				if (stream && this.canSeeMarkers(stream, this.session.userId)) {
 					includedMarkers.push(marker);
 				}
