@@ -42,7 +42,6 @@ import {
 } from "../shared/agent.protocol";
 import {
 	CodemarkType,
-	CSChannelStream,
 	CSMarkerLocation,
 	CSPost,
 	CSStream,
@@ -542,15 +541,17 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		let fullCodemark: CSFullCodemark | undefined;
 		let hasMarkers = false;
 		if (csPost.codemarkId) {
-			const csCodemark = await Container.instance().codemarks.getById(csPost.codemarkId);
-			fullCodemark = {
-				...csCodemark
-			};
-			if (csCodemark.markerIds) {
-				fullCodemark.markers = [];
-				for (const markerId of csCodemark.markerIds) {
-					fullCodemark.markers.push(await Container.instance().markers.getById(markerId));
-					hasMarkers = true;
+			const csCodemark = await Container.instance().codemarks.getByIdFromCache(csPost.codemarkId);
+			if (csCodemark) {
+				fullCodemark = {
+					...csCodemark
+				};
+				if (csCodemark.markerIds) {
+					fullCodemark.markers = [];
+					for (const markerId of csCodemark.markerIds) {
+						fullCodemark.markers.push(await Container.instance().markers.getById(markerId));
+						hasMarkers = true;
+					}
 				}
 			}
 		}
