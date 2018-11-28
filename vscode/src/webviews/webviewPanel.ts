@@ -419,13 +419,12 @@ export class CodeStreamWebviewPanel implements Disposable {
 						}
 						case "fetch-thread": {
 							const { streamId, parentPostId } = body.params;
-							const posts = (await Container.agent.posts.fetchReplies(streamId, parentPostId))
-								.posts;
+							const response = await Container.agent.posts.fetchReplies(streamId, parentPostId);
 							this.postMessage({
 								type: WebviewIpcMessageType.response,
 								body: {
 									id: body.id,
-									payload: posts
+									payload: response
 								}
 							});
 							break;
