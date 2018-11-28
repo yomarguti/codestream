@@ -7,7 +7,7 @@ const TerserPlugin = require("terser-webpack-plugin");
 
 module.exports = function(env, argv) {
 	env = env || {};
-	const production = Boolean(env.production);
+	env.production = Boolean(env.production);
 
 	const plugins = [
 		new CleanWebpackPlugin(["dist"], { verbose: false }),
@@ -37,12 +37,12 @@ module.exports = function(env, argv) {
 		entry: {
 			agent: "./src/agent.ts"
 		},
-		mode: production ? "production" : "development",
+		mode: env.production ? "production" : "development",
 		target: "node",
 		node: {
 			__dirname: false
 		},
-		devtool: !production ? "source-map" : undefined,
+		devtool: "source-map", // !env.production ? "source-map" : undefined,
 		output: {
 			filename: "[name].js",
 			devtoolModuleFilenameTemplate: "file:///[absolute-resource-path]"
@@ -52,7 +52,7 @@ module.exports = function(env, argv) {
 				new TerserPlugin({
 					cache: true,
 					parallel: true,
-					sourceMap: env.production,
+					sourceMap: true, // env.production,
 					terserOptions: {
 						ecma: 8,
 						// Keep the class names otherwise @log won't provide a useful name
@@ -79,10 +79,6 @@ module.exports = function(env, argv) {
 					test: /\.tsx?$/,
 					use: "ts-loader",
 					exclude: /node_modules|\.d\.ts$/
-				},
-				{
-					test: /\.d\.ts$/,
-					loader: "ignore-loader"
 				}
 			],
 			// Removes `Critical dependency: the request of a dependency is an expression` from `./node_modules/vscode-languageserver/lib/files.js`
