@@ -720,9 +720,10 @@ export class CodeStreamWebviewPanel implements Disposable {
 							return;
 						}
 						case "show-code": {
-							const { marker, enteringThread } = e.body.params;
+							const { marker, enteringThread, source } = e.body.params;
 							const status = await Container.commands.openPostWorkingFile(marker, {
-								preserveFocus: enteringThread
+								preserveFocus: enteringThread,
+								source: source
 							});
 							this.postMessage({
 								type: WebviewIpcMessageType.response,

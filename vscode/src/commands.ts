@@ -61,6 +61,7 @@ export function isStreamThreadId(
 
 export interface OpenPostWorkingFileArgs {
 	preserveFocus: boolean;
+	source: string;
 }
 
 export interface OpenStreamCommandArgs extends IRequiresStream {
@@ -122,11 +123,11 @@ export class Commands implements Disposable {
 	@command("openPostWorkingFile", { showErrorMessage: "Unable to open post" })
 	async openPostWorkingFile(
 		marker?: CSMarker,
-		args: OpenPostWorkingFileArgs = { preserveFocus: false }
+		args: OpenPostWorkingFileArgs = { preserveFocus: false, source: "stream" }
 	) {
 		if (marker == null) return;
 
-		const resp = await Container.agent.getDocumentFromMarker(marker);
+		const resp = await Container.agent.getDocumentFromMarker(marker, args.source);
 		if (resp === undefined || resp === null) return ShowCodeResult.RepoNotInWorkspace; // ?: what exactly does no response mean?
 
 		const block = {
