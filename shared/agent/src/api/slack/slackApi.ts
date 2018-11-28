@@ -1822,7 +1822,8 @@ export class SlackApiProvider implements ApiProvider {
 				data: [
 					{
 						id: request.streamId,
-						$pull: { memberIds: [this._slackUserId] }
+						$pull: { memberIds: [this._slackUserId] },
+						$version: { before: "*" }
 					}
 				]
 			});

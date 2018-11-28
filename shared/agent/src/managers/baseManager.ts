@@ -7,7 +7,7 @@ import { BaseCache, KeyValue } from "./cache/baseCache";
 import * as operations from "./operations";
 
 function isDirective(data: any): boolean {
-	return !!data.$version;
+	return Boolean(data.$version);
 }
 
 function isCompatibleVersion(cachedEntity: any, newEntityOrDirective: any): boolean {
@@ -18,7 +18,7 @@ function isCompatibleVersion(cachedEntity: any, newEntityOrDirective: any): bool
 				`Received directive without version attribute for object Id=${newEntityOrDirective.id}`
 			);
 		}
-		return directiveVersion.before === cachedEntity.version;
+		return directiveVersion.before === cachedEntity.version || directiveVersion.before === "*";
 	} else {
 		if (cachedEntity.version == null && newEntityOrDirective.version == null) {
 			return true;

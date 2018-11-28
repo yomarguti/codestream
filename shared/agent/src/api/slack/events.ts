@@ -362,7 +362,8 @@ export class SlackEvents {
 						data: [
 							{
 								id: e.channel,
-								$set: { isArchived: true }
+								$set: { isArchived: true },
+								$version: { before: "*" }
 							} as unknown
 						]
 					} as StreamsRTMessage;
@@ -378,7 +379,8 @@ export class SlackEvents {
 						data: [
 							{
 								id: e.channel,
-								$set: { isClosed: true }
+								$set: { isClosed: true },
+								$version: { before: "*" }
 							} as unknown
 						]
 					} as StreamsRTMessage;
@@ -409,7 +411,8 @@ export class SlackEvents {
 						data: [
 							{
 								id: e.channel,
-								$set: { deactivated: true }
+								$set: { deactivated: true },
+								$version: { before: "*" }
 							} as unknown
 						]
 					} as StreamsRTMessage;
@@ -425,7 +428,8 @@ export class SlackEvents {
 						data: [
 							{
 								id: e.channel,
-								$set: { isClosed: false }
+								$set: { isClosed: false },
+								$version: { before: "*" }
 							} as unknown
 						]
 					} as StreamsRTMessage;
@@ -446,7 +450,8 @@ export class SlackEvents {
 						data: [
 							{
 								id: e.channel,
-								$addToSet: { memberIds: [e.user] }
+								$addToSet: { memberIds: [e.user] },
+								$version: { before: "*" }
 							} as unknown
 						]
 					} as StreamsRTMessage;
@@ -461,7 +466,8 @@ export class SlackEvents {
 						data: [
 							{
 								id: e.channel,
-								$pull: { memberIds: [e.user] }
+								$pull: { memberIds: [e.user] },
+								$version: { before: "*" }
 							} as unknown
 						]
 					} as StreamsRTMessage;
@@ -477,7 +483,8 @@ export class SlackEvents {
 						data: [
 							{
 								id: e.channel,
-								$pull: { memberIds: [this._api.userId] }
+								$pull: { memberIds: [this._api.userId] },
+								$version: { before: "*" }
 							} as unknown
 						]
 					} as StreamsRTMessage;
@@ -504,7 +511,8 @@ export class SlackEvents {
 						data: [
 							{
 								id: e.channel.id,
-								$set: { name: e.channel.name }
+								$set: { name: e.channel.name },
+								$version: { before: "*" }
 							} as unknown
 						]
 					} as StreamsRTMessage;
@@ -520,7 +528,8 @@ export class SlackEvents {
 						data: [
 							{
 								id: e.channel,
-								$set: { isArchived: false }
+								$set: { isArchived: false },
+								$version: { before: "*" }
 							} as unknown
 						]
 					} as StreamsRTMessage;
@@ -581,7 +590,8 @@ export class SlackEvents {
 								data: [
 									{
 										id: e.channel,
-										$set: { purpose: e.purpose }
+										$set: { purpose: e.purpose },
+										$version: { before: "*" }
 									} as unknown
 								]
 							} as StreamsRTMessage;
@@ -656,7 +666,8 @@ export class SlackEvents {
 							modifiedAt: post.createdAt,
 							mostRecentPostCreatedAt: post.createdAt,
 							mostRecentPostId: post.id
-						}
+						},
+						$version: { before: "*" }
 					} as unknown
 				]
 			} as StreamsRTMessage;
@@ -685,7 +696,8 @@ export class SlackEvents {
 								id: this._api.userId,
 								$set: {
 									dnd: e.dnd_status.dnd_enabled
-								}
+								},
+								$version: { before: "*" }
 							} as unknown
 						]
 					} as UsersRTMessage;
@@ -702,7 +714,8 @@ export class SlackEvents {
 								id: e.user,
 								$set: {
 									dnd: e.dnd_status.dnd_enabled
-								}
+								},
+								$version: { before: "*" }
 							} as unknown
 						]
 					} as UsersRTMessage;
@@ -739,7 +752,8 @@ export class SlackEvents {
 											[`preferences.mutedStreams.${streamId}`]: true
 										}),
 										{}
-									)
+									),
+									$version: { before: "*" }
 								} as unknown
 							]
 						} as PreferencesRTMessage;
@@ -758,7 +772,8 @@ export class SlackEvents {
 								id: this._api.userId,
 								$set: {
 									presence: e.presence
-								}
+								},
+								$version: { before: "*" }
 							} as unknown
 						]
 					} as UsersRTMessage;
@@ -774,7 +789,8 @@ export class SlackEvents {
 							id: u,
 							$set: {
 								presence: e.presence
-							}
+							},
+							$version: { before: "*" }
 						}));
 					} else {
 						data = [
@@ -782,7 +798,8 @@ export class SlackEvents {
 								id: e.user,
 								$set: {
 									presence: e.presence
-								}
+								},
+								$version: { before: "*" }
 							}
 						];
 					}
