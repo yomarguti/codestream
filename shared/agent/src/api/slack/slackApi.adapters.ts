@@ -165,7 +165,6 @@ export function fromSlackDirect(
 				const username = usernamesById.get(m);
 				return username === undefined ? m : username || m;
 			});
-		names.sort((a, b) => a.localeCompare(b));
 	} else {
 		let match = multiPartyNamesRegEx.exec(channel.name);
 		if (match != null) {
@@ -185,6 +184,7 @@ export function fromSlackDirect(
 		} else {
 			names = ["Unknown"];
 		}
+		names.sort((a, b) => a.localeCompare(b));
 	}
 
 	// TODO: If we are missing membership, what should we do?
