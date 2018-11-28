@@ -563,11 +563,12 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 	@lspHandler(FetchPostRepliesRequestType)
 	async getReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse> {
+		const parentPost = await this.cache.getById(request.postId);
 		const posts = await this.cache.getGroup([
 			["streamId", request.streamId],
 			["parentPostId", request.postId]
 		]);
-		return { posts };
+		return { posts: [parentPost, ...posts] };
 	}
 
 	@lspHandler(CreatePostRequestType)
