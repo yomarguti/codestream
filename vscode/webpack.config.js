@@ -68,7 +68,7 @@ function getExtensionConfig(env) {
 		node: {
 			__dirname: false
 		},
-		devtool: !env.production ? "source-map" : undefined,
+		devtool: "source-map", // !env.production ? "source-map" : undefined,
 		output: {
 			libraryTarget: "commonjs2",
 			filename: "extension.js",
@@ -79,7 +79,7 @@ function getExtensionConfig(env) {
 				new TerserPlugin({
 					cache: true,
 					parallel: true,
-					sourceMap: env.production,
+					sourceMap: true, // env.production,
 					terserOptions: {
 						ecma: 8,
 						// Keep the class names otherwise @log won't provide a useful name
@@ -113,7 +113,6 @@ function getExtensionConfig(env) {
 		resolve: {
 			extensions: [".ts", ".tsx", ".js", ".jsx"],
 			alias: {
-				"node-fetch": path.resolve(__dirname, "node_modules/node-fetch/lib/index.js"),
 				"vsls/vscode": path.resolve(__dirname, "node_modules/vsls/vscode.js")
 			}
 		},
@@ -169,13 +168,6 @@ function getWebviewConfig(env) {
 			publicPath: "{{root}}/dist/webview/"
 		},
 		optimization: {
-			minimizer: [
-				new TerserPlugin({
-					cache: true,
-					parallel: true,
-					sourceMap: env.production
-				})
-			],
 			splitChunks: {
 				chunks: "all",
 				cacheGroups: {
