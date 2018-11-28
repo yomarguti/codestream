@@ -301,7 +301,7 @@ export class SimpleKnowledgePanel extends Component {
 	};
 
 	handleClickCodemark = codemark => {
-		if (codemark.markers) this.props.showCode(codemark.markers[0], true);
+		if (codemark.markers) this.props.showCode(codemark.markers[0], true, "tab");
 		this.props.setThread(codemark.streamId, codemark.parentPostId || codemark.postId);
 		// const isOpen = this.state.openPost === id;
 		// if (isOpen) this.setState({ openPost: null });
