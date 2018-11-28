@@ -228,7 +228,7 @@ export class SlackEvents {
 
 			void (await this._slackRTM.start());
 		} catch (ex) {
-			Logger.error(ex, cc);
+			Logger.error(ex, cc, ex.data != null ? JSON.stringify(ex.data) : undefined);
 			throw ex;
 		}
 	}
@@ -244,7 +244,7 @@ export class SlackEvents {
 				return await this._slackRTM.disconnect();
 			}
 		} catch (ex) {
-			Logger.error(ex, cc);
+			Logger.error(ex, cc, ex.data != null ? JSON.stringify(ex.data) : undefined);
 		}
 	}
 

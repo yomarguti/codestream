@@ -14,8 +14,8 @@ import {
 } from "../../shared/api.protocol";
 
 const defaultCreatedAt = 181886400000;
-// const multiPartyNamesRegEx = /^mpdm-([^-]+)(--.*)-1$/;
-// const multiPartyNameRegEx = /--([^-]+)/g;
+const multiPartyNamesRegEx = /^mpdm-([^-]+)(--.*)-1$/;
+const multiPartyNameRegEx = /--([^-]+)/g;
 
 const codemarkAttachmentRegex = /codestream\:\/\/codemark\/(.*)/;
 const markerAttachmentRegex = /codestream\:\/\/marker\/(.*)/;
@@ -79,6 +79,13 @@ export function fromSlackChannel(
 ): CSChannelStream {
 	const { mostRecentId, mostRecentTimestamp } = fromSlackChannelOrDirectLatest(channel);
 
+	let memberIds: string[] | undefined;
+	if (!channel.is_general) {
+		// TODO: If we are missing membership, what should we do?
+		// Add an isMember propery to the stream and keep members undefined ?
+		memberIds = channel.members == null ? [slackUserId] : channel.members;
+	}
+
 	return {
 		createdAt: channel.created * 1000,
 		creatorId: channel.creator,
@@ -86,7 +93,7 @@ export function fromSlackChannel(
 		isArchived: Boolean(channel.is_archived),
 		isTeamStream: Boolean(channel.is_general),
 		name: channel.name || "",
-		memberIds: Boolean(channel.is_general) ? undefined : channel.members,
+		memberIds: memberIds,
 		modifiedAt: mostRecentTimestamp || channel.created * 1000,
 		mostRecentPostCreatedAt: mostRecentTimestamp,
 		mostRecentPostId: mostRecentId,
@@ -114,7 +121,7 @@ export function fromSlackDirect(
 	let closed;
 	if (channel.is_open == null) {
 		if (
-			channel.priority <= 0.015082787818972 &&
+			(channel.priority === 0.015082787818972 || channel.priority === 0.017071595754764) &&
 			channel.user !== "USLACKBOT" &&
 			channel.user !== slackUserId
 		) {
@@ -150,18 +157,6 @@ export function fromSlackDirect(
 		};
 	}
 
-	// const names = [];
-	// let match = multiPartyNamesRegEx.exec(channel.name);
-	// if (match != null) {
-	// 	const [, first, rest] = match;
-	// 	names.push(first);
-	// 	do {
-	// 		match = multiPartyNameRegEx.exec(rest);
-	// 		if (match == null) break;
-	// 		names.push(match[1]);
-	// 	} while (match != null);
-	// }
-
 	let names: string[];
 	if (channel.members != null) {
 		names = channel.members
@@ -172,8 +167,29 @@ export function fromSlackDirect(
 			});
 		names.sort((a, b) => a.localeCompare(b));
 	} else {
-		names = ["Unknown"];
+		let match = multiPartyNamesRegEx.exec(channel.name);
+		if (match != null) {
+			const [, first, rest] = match;
+			names = [first];
+			do {
+				match = multiPartyNameRegEx.exec(rest);
+				if (match == null) break;
+
+				names.push(match[1]);
+			} while (match != null);
+
+			const index = names.indexOf(usernamesById.get(slackUserId)!.toLowerCase());
+			if (index !== -1) {
+				names.splice(index, 1);
+			}
+		} else {
+			names = ["Unknown"];
+		}
 	}
+
+	// TODO: If we are missing membership, what should we do?
+	// Add an isMember propery to the stream and keep members undefined ?
+	const memberIds: string[] = channel.members == null ? [slackUserId] : channel.members;
 
 	return {
 		createdAt: channel.created * 1000,
@@ -182,7 +198,7 @@ export function fromSlackDirect(
 		isArchived: Boolean(channel.is_archived),
 		isClosed: closed,
 		name: names.join(", "),
-		memberIds: channel.members,
+		memberIds: memberIds,
 		modifiedAt: mostRecentTimestamp || channel.created * 1000,
 		mostRecentPostCreatedAt: mostRecentTimestamp,
 		mostRecentPostId: mostRecentId,
