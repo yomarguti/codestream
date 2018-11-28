@@ -247,6 +247,7 @@ export interface DocumentFromMarkerRequest {
 	file: string;
 	repoId: string;
 	markerId: string;
+	source?: string;
 }
 
 export interface DocumentFromMarkerResponse {
