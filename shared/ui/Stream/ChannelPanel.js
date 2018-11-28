@@ -761,7 +761,10 @@ const mapStateToProps = ({
 					streamPresence[stream.id] = users[session.userId].presence;
 				} else {
 					const id = stream.memberIds[stream.memberIds[0] === session.userId ? 1 : 0];
-					streamPresence[stream.id] = users[id].presence;
+					const user = users[id];
+					if (user !== undefined) {
+						streamPresence[stream.id] = user.presence;
+					}
 				}
 			}
 
