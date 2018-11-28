@@ -541,8 +541,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		let fullCodemark: CSFullCodemark | undefined;
 		let hasMarkers = false;
 		if (csPost.codemarkId) {
-			const csCodemark = await Container.instance().codemarks.getByIdFromCache(csPost.codemarkId);
-			if (csCodemark) {
+			try {
+				const csCodemark = await Container.instance().codemarks.getById(csPost.codemarkId);
 				fullCodemark = {
 					...csCodemark
 				};
@@ -553,6 +553,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						hasMarkers = true;
 					}
 				}
+			} catch (err) {
+				Logger.error(err);
 			}
 		}
 		return {
