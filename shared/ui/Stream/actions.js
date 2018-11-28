@@ -368,11 +368,12 @@ export const fetchPosts = params => async (dispatch, getState, { api }) => {
 
 export const fetchThread = (streamId, parentPostId) => async (dispatch, getState, { api }) => {
 	try {
-		const posts = await api.fetchThread(streamId, parentPostId);
+		const { posts, codemarks } = await api.fetchThread(streamId, parentPostId);
 		dispatch({
 			type: "ADD_POSTS_FOR_STREAM",
 			payload: { posts, streamId }
 		});
+		dispatch(saveCodemarks(codemarks));
 		return posts;
 	} catch (error) {
 		console.error(error);
