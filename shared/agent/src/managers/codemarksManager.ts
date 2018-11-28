@@ -57,6 +57,10 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 				continue;
 			}
 
+			if (!(await this.canSeeCodemark(csCodemark))) {
+				continue;
+			}
+
 			const fullCodemark = {
 				...csCodemark
 			} as CSFullCodemark;
@@ -70,6 +74,19 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		}
 
 		return { codemarks: fullCodemarks };
+	}
+
+	private async canSeeCodemark(codemark: CSCodemark): Promise<boolean> {
+		const stream = await Container.instance().streams.getByIdFromCache(codemark.streamId);
+		if (!stream || stream.deactivated || stream.isArchived) {
+			return false;
+		}
+
+		if (stream.memberIds === undefined) {
+			return true;
+		}
+
+		return stream.memberIds.includes(this.session.userId);
 	}
 
 	@lspHandler(UpdateCodemarkRequestType)
