@@ -113,7 +113,8 @@ export class SlackEvents {
 	) {
 		this._slackRTM = new RTMClient(slackToken, {
 			agent: proxyAgent,
-			logLevel: Logger.level === TraceLevel.Debug ? LogLevel.DEBUG : LogLevel.INFO,
+			// Only log INFO because otherwise its just too noisy
+			logLevel: LogLevel.INFO, // Logger.level === TraceLevel.Debug ? LogLevel.DEBUG : LogLevel.INFO,
 			logger: (level, message) => {
 				Logger.log(`SLACK-RTM[${level}]: ${message}`);
 				if (message.includes("unable to RTM start: An API error occurred: missing_scope")) {
