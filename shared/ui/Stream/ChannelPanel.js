@@ -458,7 +458,11 @@ export class SimpleChannelPanel extends Component {
 					{mentions == 0 && (
 						<span className="align-right">
 							{this.props.services.vsls && (
-								<Icon name="link-external" onClick={this.handleClickStartLiveShare} />
+								<Tooltip title="Start a Live Share" placement="bottomRight">
+									<span>
+										<Icon name="link-external" onClick={this.handleClickStartLiveShare} />
+									</span>
+								</Tooltip>
 							)}
 							<Icon name="gear" onClick={this.handleClickStreamSettings} />
 							{menuActive && (
@@ -578,7 +582,11 @@ export class SimpleChannelPanel extends Component {
 							{count == 0 && (
 								<span className="align-right">
 									{this.props.services.vsls && (
-										<Icon name="link-external" onClick={this.handleClickStartLiveShare} />
+										<Tooltip title="Start a Live Share" placement="bottomRight">
+											<span>
+												<Icon name="link-external" onClick={this.handleClickStartLiveShare} />
+											</span>
+										</Tooltip>
 									)}
 									<Icon name="x" onClick={this.handleClickCloseDirectMessage} />
 								</span>
