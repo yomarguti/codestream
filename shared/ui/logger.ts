@@ -4,16 +4,16 @@ enum LogType {
 	Error = "error"
 }
 
-class Logger {
-	error(error: Error, info: any) {
-		console.error(error);
-		this.sendLog(LogType.Error, error.message, info);
-	}
-
-	private sendLog(type: LogType, message: string, extra?: object) {
-		EventEmitter.emit("log", { type, message, extra });
-	}
+function sendLog(type: LogType, message: string, extra?: object) {
+	EventEmitter.emit("log", { type, message, extra });
 }
 
-const logger = new Logger();
-export default logger;
+export function logError(error: string | Error, extra?: object) {
+	console.error(error, extra);
+	if (typeof error === "string") {
+		sendLog(LogType.Error, error, extra);
+	} else {
+		const info = extra ? extra : {};
+		sendLog(LogType.Error, error.message, { ...info, stackTrace: error.stack });
+	}
+}

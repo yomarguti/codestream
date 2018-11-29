@@ -10,6 +10,7 @@ import {
 	setChannelFilter
 } from "../store/context/actions";
 import { saveCodemarks, updateCodemarks } from "../actions/codemarks";
+import { logError } from "../logger";
 
 export {
 	openPanel,
@@ -88,8 +89,10 @@ export const createPost = (streamId, parentPostId, text, codemark, mentions, ext
 		});
 		dispatch(resolvePendingPost(pendingId, response.post));
 		response.codemark && dispatch(saveCodemarks([response.codemark]));
-	} catch (e) {
-		console.log("DID NOT POST: ", e);
+	} catch (error) {
+		Logger.error(`Error creating a post: ${error.message}`, {
+			stackTrace: error.stack
+		});
 		return dispatch({ type: "PENDING_POST_FAILED", payload: pendingId });
 	}
 };

@@ -7,7 +7,7 @@ import Stream from "../Stream";
 import Login from "../Login";
 import Signup from "../Signup";
 import CompleteSignup from "../CompleteSignup";
-import Logger from "../logger";
+import { logError } from "../logger";
 import EventEmitter from "../event-emitter";
 
 addLocaleData(englishLocaleData);
@@ -58,7 +58,10 @@ export default class Container extends React.Component {
 	}
 
 	componentDidCatch(error, info) {
-		Logger.error(error, info);
+		logError(`Exception caught in React component tree: ${error.message}`, {
+			stacktrace: error.stack,
+			info
+		});
 	}
 
 	handleClickReload = event => {
