@@ -159,7 +159,7 @@ export class Codemark extends React.Component<Props, State> {
 			const marker = codemark.markers[0];
 			if (marker) {
 				const location = marker.location || marker.locationWhenCreated;
-				if (location) top = 16 * location[0];
+				if (location) top = 18 * location[0];
 			}
 		}
 

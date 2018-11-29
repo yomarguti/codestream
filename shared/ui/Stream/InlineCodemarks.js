@@ -73,14 +73,14 @@ export class SimpleInlineCodemarks extends Component {
 		});
 		if (codemarksInThisFile.length === 0) {
 			if (!mostRecentSourceFile) return null;
-			else
-				return (
-					<div className="no-codemarks">
-						There are no codemarks in {mostRecentSourceFile}.<br />
-						<br />
-						Create one by selecting code.
-					</div>
-				);
+			else return null;
+			return (
+				<div className="no-codemarks">
+					There are no codemarks in {mostRecentSourceFile}.<br />
+					<br />
+					Create one by selecting code.
+				</div>
+			);
 		} else return this.renderCodemarks(codemarksInThisFile);
 
 		let displayCodemarks = {};
