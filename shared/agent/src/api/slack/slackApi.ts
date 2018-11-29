@@ -1116,12 +1116,14 @@ export class SlackApiProvider implements ApiProvider {
 
 			const [channels, groups, ims] = await Promise.all([
 				this.fetchChannels(
-					conversations.filter(c => c.is_channel),
+					// Filter out shared channels for now, until we can convert to the conversation apis
+					conversations.filter(c => c.is_channel && !c.is_shared),
 					counts && counts.channels,
 					pendingRequestsQueue
 				),
 				this.fetchGroups(
-					conversations.filter(c => c.is_group),
+					// Filter out shared channels for now, until we can convert to the conversation apis
+					conversations.filter(c => c.is_group && !c.is_shared),
 					usernamesById,
 					counts && counts.groups,
 					pendingRequestsQueue
