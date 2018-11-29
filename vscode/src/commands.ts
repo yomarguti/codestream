@@ -123,7 +123,7 @@ export class Commands implements Disposable {
 	@command("openPostWorkingFile", { showErrorMessage: "Unable to open post" })
 	async openPostWorkingFile(
 		marker?: CSMarker,
-		args: OpenPostWorkingFileArgs = { preserveFocus: false, source: "stream" }
+		args: OpenPostWorkingFileArgs = { preserveFocus: false, source: "Source File" }
 	) {
 		if (marker == null) return;
 
@@ -179,6 +179,12 @@ export class Commands implements Disposable {
 	// 		selection: block.range
 	// 	});
 	// }
+
+	@command("openComment", { showErrorMessage: "Unable to open comment" })
+	async openComment(args: OpenStreamCommandArgs): Promise<StreamThread | undefined> {
+		Container.agent.telemetry.track("Codemark Clicked", { "Codemark Location": "Source File" });
+		return this.openStream(args);
+	}
 
 	@command("openStream", { showErrorMessage: "Unable to open stream" })
 	async openStream(args: OpenStreamCommandArgs): Promise<StreamThread | undefined> {
