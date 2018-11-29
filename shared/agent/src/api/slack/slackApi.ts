@@ -97,6 +97,7 @@ import {
 	fromSlackPost,
 	fromSlackPostId,
 	fromSlackUser,
+	toSlackPostAttachment,
 	toSlackPostText,
 	toSlackTeam
 } from "./slackApi.adapters";
@@ -531,6 +532,8 @@ export class SlackApiProvider implements ApiProvider {
 				return postResponse;
 			}
 
+			const usernamesById = await this.ensureUsernamesById();
+
 			let attachments;
 			let codemark: CSCodemark | undefined;
 			let markers: CSMarker[] | undefined;
@@ -538,46 +541,23 @@ export class SlackApiProvider implements ApiProvider {
 			let streams: CSStream[] | undefined;
 			let repos: CSRepository[] | undefined;
 
-			if (request.codemark) {
-				text = toSlackPostText(
-					request.codemark!.title! || request.codemark!.text!,
-					request.mentionedUserIds,
-					await this.ensureUserIdsByName()
-				);
+			if (request.codemark !== undefined) {
 				const codemarkResponse = await this._codestream.createCodemark({
 					...request.codemark,
 					parentPostId: request.parentPostId,
 					providerType: ProviderType.Slack
 				});
+
 				({ codemark, markers, markerLocations, streams, repos } = codemarkResponse);
-				if (markers && markers.length) {
-					// FIXME KB - support multiple markers per codemark
-					const marker = markers[0];
-					const location = markerLocations![0].locations[marker.id];
-					const [start, , end] = location!;
-					const title = `${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;
 
-					const githubRemote = request.codemark.remotes!.find(r => r.startsWith("github.com"));
-					let titleLink;
-					if (githubRemote) {
-						titleLink = `https://${githubRemote}/blob/HEAD/${marker.file}#L${start}${
-							start !== end ? `-L${end}` : ""
-						}`;
-					}
-					const code = `\`\`\`${marker.code}\`\`\``;
-
-					attachments = [
-						{
-							fallback: `${title}\n${code}`,
-							title: title,
-							title_link: titleLink,
-							text: code,
-							footer: "Posted via CodeStream",
-							ts: (new Date().getTime() / 1000) as any,
-							callback_id: `codestream://codemark/${codemark.id}`
-						}
-					];
-				}
+				attachments = toSlackPostAttachment(
+					codemark,
+					request.codemark.remotes,
+					markers,
+					markerLocations,
+					usernamesById,
+					this._slackUserId
+				);
 			}
 
 			const response = await this.slackApiCall(
@@ -597,7 +577,6 @@ export class SlackApiProvider implements ApiProvider {
 			const { ok, error, message } = response as WebAPICallResult & { message?: any; ts?: any };
 			if (!ok) throw new Error(error);
 
-			const usernamesById = await this.ensureUsernamesById();
 			const post = await fromSlackPost(message, streamId, usernamesById, this._codestreamTeamId);
 			const { postId } = fromSlackPostId(post.id, post.streamId);
 

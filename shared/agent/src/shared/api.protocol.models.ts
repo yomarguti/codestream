@@ -30,7 +30,7 @@ export interface CSCodemark extends CSEntity {
 	fileStreamIds: string[];
 	providerType?: ProviderType;
 	type: CodemarkType;
-	color: string;
+	color: "blue" | "green" | "yellow" | "orange" | "red" | "purple" | "aqua" | "gray" | string;
 	status: string;
 	title: string;
 	assignees: string[];

@@ -3,10 +3,12 @@ import { MessageAttachment } from "@slack/client";
 import { Container } from "../../container";
 import { Logger } from "../../logger";
 import {
+	CodemarkType,
 	CSChannelStream,
 	CSCodemark,
 	CSDirectStream,
 	CSMarker,
+	CSMarkerLocations,
 	CSPost,
 	CSTeam,
 	CSUser,
@@ -464,6 +466,178 @@ export function toSlackPostText(
 	}
 
 	return text;
+}
+
+export function toSlackPostAttachment(
+	codemark: CSCodemark,
+	remotes: string[] | undefined,
+	markers: CSMarker[] | undefined,
+	markerLocations: CSMarkerLocations[] | undefined,
+	usernamesById: Map<string, string>,
+	slackUserId: string
+): MessageAttachment[] {
+	let { color } = codemark;
+	if (color !== undefined) {
+		switch (color) {
+			case "blue":
+				color = "#3578ba";
+				break;
+			case "green":
+				color = "#7aba5d";
+				break;
+			case "yellow":
+				color = "#edd648";
+				break;
+			case "orange":
+				color = "#f1a340";
+				break;
+			case "red":
+				color = "#d9634f";
+				break;
+			case "purple":
+				color = "#b87cda";
+				break;
+			case "aqua":
+				color = "#5abfdc";
+				break;
+			case "gray":
+				color = "#888888";
+				break;
+			default:
+				color = undefined!;
+				break;
+		}
+	}
+
+	let author;
+	// let authorIcon;
+	let fields:
+		| {
+				title: string;
+				value: string;
+				short?: boolean;
+		  }[]
+		| undefined;
+	let text;
+	let title;
+	let fallback;
+
+	switch (codemark.type) {
+		case CodemarkType.Comment:
+			text = codemark.text;
+			if (text) {
+				fallback = `\n${text}`;
+			}
+			break;
+		case CodemarkType.Bookmark:
+			author = `${usernamesById.get(slackUserId)} set a bookmark`;
+			fallback = `\n${author}`;
+			// TODO: Add url to web accessible icon
+			// authorIcon = "";
+
+			text = codemark.text;
+			if (text) {
+				fallback = `\n${text}`;
+			}
+			break;
+		case CodemarkType.Issue:
+			author = `${usernamesById.get(slackUserId)} posted an issue`;
+			fallback = `\n${author}`;
+			// TODO: Add url to web accessible icon
+			// authorIcon = "";
+
+			title = codemark.title;
+			if (title) {
+				fallback = `\n${title}`;
+			}
+
+			text = codemark.text;
+			if (text) {
+				fallback += `\n${text}`;
+			}
+
+			if (codemark.assignees !== undefined && codemark.assignees.length !== 0) {
+				if (fields === undefined) {
+					fields = [];
+				}
+
+				fields.push({
+					title: "Assignees",
+					value: codemark.assignees.map(a => usernamesById.get(a)).join(", ")
+				});
+			}
+
+			break;
+		case CodemarkType.Question:
+			author = `${usernamesById.get(slackUserId)}  has a question`;
+			fallback = `\n${author}`;
+			// TODO: Add url to web accessible icon
+			// authorIcon = "";
+
+			title = codemark.title;
+			if (title) {
+				fallback = `\n${title}`;
+			}
+			text = codemark.text;
+			if (text) {
+				fallback += `\n${text}`;
+			}
+			break;
+		case CodemarkType.Trap:
+			author = `${usernamesById.get(slackUserId)} created a trap`;
+			fallback = `\n${author}`;
+			// TODO: Add url to web accessible icon
+			// authorIcon = "";
+
+			text = codemark.text;
+			if (text) {
+				fallback = `\n${text}`;
+			}
+			break;
+	}
+
+	if (markers !== undefined && markers.length !== 0) {
+		if (fields === undefined) {
+			fields = [];
+		}
+
+		for (const marker of markers) {
+			const location = markerLocations![0].locations[marker.id];
+			const [start, , end] = location!;
+
+			let title = `*${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})*`;
+			const code = `\n\`\`\`${marker.code}\`\`\``;
+
+			fallback += `${fallback ? "\n" : ""}\n${title}${code}`;
+
+			const githubRemote = remotes!.find(r => r.startsWith("github.com"));
+			if (githubRemote) {
+				title = `<https://${githubRemote}/blob/${marker.commitHashWhenCreated}/${
+					marker.file
+				}#L${start}${start !== end ? `-L${end}` : ""}|${title}>`;
+			}
+
+			fields.push({
+				title: undefined!, // This is because slack has the wrong type def here
+				value: `${title}${code}`
+			});
+		}
+	}
+
+	const attachment: MessageAttachment = {
+		fallback: fallback !== undefined ? fallback.substr(1) : undefined,
+		author_name: author,
+		// author_icon: authorIcon,
+		title: title,
+		fields: fields,
+		text: text,
+		footer: "Posted via CodeStream",
+		ts: (new Date().getTime() / 1000) as any,
+		color: color,
+		callback_id: `codestream://codemark/${codemark.id}?teamId=${codemark.teamId}`,
+		mrkdwn_in: ["fields", "pretext", "text"]
+	};
+	return [attachment];
 }
 
 export function toSlackTeam(team: CSTeam, usernamesById: Map<string, string>) {
