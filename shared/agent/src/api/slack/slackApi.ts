@@ -899,7 +899,9 @@ export class SlackApiProvider implements ApiProvider {
 
 		const message = messages[0];
 		// Since we can end up with a post NEAREST postId rather than postId, make sure we found the right post
-		if (message.ts !== postId) throw new Error(`Unable to find message with id=${postId}`);
+		if (message.ts !== postId) {
+			throw new Error(`Unable to find message with id=${postId}`);
+		}
 
 		const usernamesById = await this.ensureUsernamesById();
 		const post = await fromSlackPost(message, streamId, usernamesById, this._codestreamTeamId);

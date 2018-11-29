@@ -317,7 +317,6 @@ export async function fromSlackPostMarker(
 		return await Container.instance().markers.getById(markerId);
 	} catch (ex) {
 		Logger.error(ex, `Failed to find marker=${markerId}`);
-		debugger;
 		return undefined;
 	}
 }

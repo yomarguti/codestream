@@ -586,12 +586,31 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 	@lspHandler(FetchPostRepliesRequestType)
 	async getReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse> {
-		const parentPost = await this.cache.getById(request.postId);
-		const childPosts = await this.cache.getGroup([
-			["streamId", request.streamId],
-			["parentPostId", request.postId]
-		]);
-		const posts = [parentPost, ...childPosts];
+		let parentPost;
+		let childPosts;
+
+		try {
+			parentPost = await this.cache.getById(request.postId);
+		} catch (err) {
+			Logger.error(err, `Could not find thread's parent post ${request.postId}`);
+		}
+
+		try {
+			childPosts = await this.cache.getGroup([
+				["streamId", request.streamId],
+				["parentPostId", request.postId]
+			]);
+		} catch (err) {
+			Logger.error(err, `Could not find thread ${request.postId}`);
+		}
+
+		const posts = [];
+		if (parentPost) {
+			posts.push(parentPost);
+		}
+		if (childPosts) {
+			posts.push(...childPosts);
+		}
 
 		const codemarks: CSFullCodemark[] = await this.fullCodemarks(
 			Arrays.filterMap(posts, post => post.codemarkId)
