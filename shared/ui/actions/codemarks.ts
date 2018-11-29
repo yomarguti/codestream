@@ -5,6 +5,7 @@ interface CodemarksAction extends Action {
 }
 
 export enum Type {
+	ADD_CODEMARKS = "ADD_CODEMARKS",
 	SAVE_CODEMARKS = "SAVE_CODEMARKS",
 	UPDATE_CODEMARKS = "UPDATE_CODEMARKS"
 }
