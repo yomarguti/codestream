@@ -296,7 +296,6 @@ export async function fromSlackPostCodemark(
 		return await Container.instance().codemarks.getById(codemarkId);
 	} catch (ex) {
 		Logger.error(ex, `Failed to find codemark=${codemarkId}`);
-		debugger;
 		return undefined;
 	}
 }
