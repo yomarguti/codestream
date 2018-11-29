@@ -161,7 +161,7 @@ export default class WebviewApi {
 		return this.postMessage({ action: "save-user-preference", params: newPreference });
 	}
 
-	showCode(marker: object, enteringThread: boolean, source: string = "stream") {
+	showCode(marker: object, enteringThread: boolean, source: string = "Source File") {
 		return this.postMessage({ action: "show-code", params: { marker, enteringThread, source } });
 	}
 
