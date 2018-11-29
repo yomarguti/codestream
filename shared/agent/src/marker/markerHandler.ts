@@ -103,10 +103,8 @@ export namespace MarkerHandler {
 	}: DocumentFromMarkerRequest): Promise<DocumentFromMarkerResponse | undefined> {
 		const { git } = Container.instance();
 
-		let _source = "Codemarks Tab";
-		if (source != null && source === "stream") {
-			_source = "Stream";
-		}
+		let _source = "Source File";
+		if (source != null) _source = source;
 
 		const repo = await git.getRepositoryById(repoId);
 		if (repo === undefined) return undefined;
