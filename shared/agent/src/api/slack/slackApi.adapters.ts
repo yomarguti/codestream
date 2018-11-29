@@ -468,6 +468,41 @@ export function toSlackPostText(
 	return text;
 }
 
+const providers: [
+	RegExp,
+	(remote: string, ref: string, file: string, start: number, end: number) => string
+][] = [
+	[
+		/(?:^|\.)github\.com/i,
+		(remote: string, ref: string, file: string, start: number, end: number) =>
+			`https://${remote}/blob/${ref}/${file}#L${start}${start !== end ? `-L${end}` : ""}`
+	],
+	[
+		/(?:^|\.)gitlab\.com/i,
+		(remote: string, ref: string, file: string, start: number, end: number) =>
+			`https://${remote}/blob/${ref}/${file}#L${start}${start !== end ? `-${end}` : ""}`
+	],
+	[
+		/(?:^|\.)bitbucket\./i,
+		(remote: string, ref: string, file: string, start: number, end: number) =>
+			`https://${remote}/src/${ref}/${file}#${file}-${start}${start !== end ? `:${end}` : ""}`
+	],
+	[
+		/(?:^|\.)dev\.azure\.com/i,
+		(remote: string, ref: string, file: string, start: number, end: number) =>
+			`https://${remote}/commit/${ref}/?_a=contents&path=%2F${file}&line=${start}${
+				start !== end ? `&lineEnd=${end}` : ""
+			}`
+	],
+	[
+		/(?:^|\.)?visualstudio\.com$/i,
+		(remote: string, ref: string, file: string, start: number, end: number) =>
+			`https://${remote}/commit/${ref}/?_a=contents&path=%2F${file}&line=${start}${
+				start !== end ? `&lineEnd=${end}` : ""
+			}`
+	]
+];
+
 export function toSlackPostAttachment(
 	codemark: CSCodemark,
 	remotes: string[] | undefined,
@@ -610,11 +645,20 @@ export function toSlackPostAttachment(
 
 			fallback += `${fallback ? "\n" : ""}\n${title}${code}`;
 
-			const githubRemote = remotes!.find(r => r.startsWith("github.com"));
-			if (githubRemote) {
-				title = `<https://${githubRemote}/blob/${marker.commitHashWhenCreated}/${
-					marker.file
-				}#L${start}${start !== end ? `-L${end}` : ""}|${title}>`;
+			if (remotes !== undefined && remotes.length !== 0) {
+				let url;
+				for (const remote of remotes) {
+					for (const [regex, fn] of providers) {
+						if (!regex.test(remote)) continue;
+
+						url = fn(remote, marker.commitHashWhenCreated, marker.file, start, end);
+						break;
+					}
+				}
+
+				if (url !== undefined) {
+					title = `<${url}|${title}>`;
+				}
 			}
 
 			fields.push({
