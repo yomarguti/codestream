@@ -2,8 +2,10 @@ import cx from "classnames";
 import * as React from "react";
 import { connect } from "react-redux";
 import { setCodemarkStatus } from "./actions";
+import Headshot from "./Headshot";
 import Icon from "./Icon";
 import { markdownify } from "./Markdowner";
+import Timestamp from "./Timestamp";
 
 enum Type {
 	Comment = "comment",
@@ -17,6 +19,7 @@ interface CodemarkEntity {
 	id: string;
 	color: string;
 	type: Type;
+	createdAt: number;
 	streamId: string;
 	version: number;
 	postId?: string;
@@ -31,6 +34,7 @@ interface CodemarkEntity {
 interface State {}
 interface Props {
 	collapsed?: boolean;
+	inline?: boolean;
 	codemark: CodemarkEntity;
 	currentUserName: string;
 	usernames: string[];
@@ -147,15 +151,47 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	renderCollapsedCodemark() {
-		const { codemark } = this.props;
+		const { codemark, inline } = this.props;
 		const file = codemark.markers && codemark.markers[0].file;
+		// const startLine = codemark.markers && codemark.markers[0].location[0];
+		let top = 0;
+		if (codemark.markers) {
+			const marker = codemark.markers[0];
+			if (marker) {
+				const location = marker.location || marker.locationWhenCreated;
+				if (location) top = 16 * location[0];
+			}
+		}
+
+		const user = {
+			username: "pez",
+			email: "pez@codestream.com",
+			fullName: "Peter Pezaris"
+		};
+
+		console.log(codemark);
+		// const style = inline ?
 		return (
-			<div className={cx("codemark collapsed", codemark.color)} onClick={this.handleClickCodemark}>
+			<div
+				style={{ top }}
+				className={cx("codemark collapsed", codemark.color, { inline })}
+				onClick={this.handleClickCodemark}
+			>
 				{this.renderStatus(codemark)}
 				<div className="body">
 					{this.renderTypeIcon()}
 					{this.renderTextLinkified(codemark.title || codemark.text)}
-					{file && <span className="file-name">{file}</span>}
+					{file && !inline && <span className="file-name">{file}</span>}
+					{inline && (
+						<div className="show-on-hover">
+							<div className="angle-arrow" />
+							{<Headshot size={18} person={user} />}
+							<span className="username">pez</span> posted to{" "}
+							<span className="clickable">#general</span> &middot;{" "}
+							<span className="clickable">2 replies</span> &middot;
+							<Timestamp time={codemark.createdAt} />
+						</div>
+					)}
 				</div>
 			</div>
 		);

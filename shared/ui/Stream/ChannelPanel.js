@@ -23,6 +23,7 @@ import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import Debug from "./Debug";
 import Button from "./Button";
+import CancelButton from "./CancelButton";
 import ChannelMenu from "./ChannelMenu";
 import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
@@ -96,6 +97,7 @@ export class SimpleChannelPanel extends Component {
 					muted: this.props.muteAll
 				})}
 			>
+				<div className="panel-header">Channels &amp; DMs</div>
 				<div className="filters">
 					<Tooltip title="Mute All" placement="left">
 						<label
