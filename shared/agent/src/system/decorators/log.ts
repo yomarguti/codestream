@@ -77,6 +77,10 @@ export function log<T>(
 ) {
 	options = { timed: true, ...options };
 
+	if (Logger.isDebugging) {
+		options.debug = true;
+	}
+
 	const logFn = (options.debug ? Logger.debug.bind(Logger) : Logger.log.bind(Logger)) as
 		| typeof Logger.debug
 		| typeof Logger.log;
