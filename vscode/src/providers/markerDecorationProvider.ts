@@ -262,12 +262,12 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 						1000000
 					)
 				});
-			}
+			} else continue;
 
-			decorations[key].push({
-				range: marker.hoverRange, // editor.document.validateRange(marker.hoverRange)
-				renderOptions: {}
-			});
+			// decorations[key].push({
+			// 	range: marker.hoverRange, // editor.document.validateRange(marker.hoverRange)
+			// 	renderOptions: {}
+			// });
 
 			starts.add(start);
 		}

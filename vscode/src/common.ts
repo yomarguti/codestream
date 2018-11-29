@@ -1,5 +1,14 @@
 "user strict";
-import { commands, TextDocumentShowOptions, Uri, ViewColumn, window, workspace } from "vscode";
+import {
+	commands,
+	DecorationRangeBehavior,
+	Range,
+	TextDocumentShowOptions,
+	Uri,
+	ViewColumn,
+	window,
+	workspace
+} from "vscode";
 import { BuiltInCommands } from "./commands";
 import { Logger } from "./logger";
 
@@ -9,19 +18,28 @@ export enum ShowCodeResult {
 	RepoNotInWorkspace = "REPO_NOT_IN_WORKSPACE"
 }
 
+const highlightDecorationType = window.createTextEditorDecorationType({
+	rangeBehavior: DecorationRangeBehavior.OpenOpen,
+	backgroundColor: "rgba(127, 127, 127, 0.1)"
+});
+
 export async function openEditor(
 	uri: Uri,
-	options: TextDocumentShowOptions & { rethrow?: boolean } = {}
+	options: TextDocumentShowOptions & { rethrow?: boolean; highlight?: Range } = {}
 ): Promise<ShowCodeResult | undefined> {
-	const { rethrow, ...opts } = options;
+	const { rethrow, highlight, ...opts } = options;
 	try {
 		const document = await workspace.openTextDocument(uri);
-		window.showTextDocument(document, {
-			preserveFocus: false,
-			preview: true,
-			viewColumn: ViewColumn.Active,
-			...opts
-		});
+		window
+			.showTextDocument(document, {
+				preserveFocus: false,
+				preview: true,
+				viewColumn: ViewColumn.Active,
+				...opts
+			})
+			.then(editor => {
+				editor.setDecorations(highlightDecorationType, highlight ? [highlight] : []);
+			});
 		return ShowCodeResult.Success;
 	} catch (ex) {
 		const msg = ex.toString();

@@ -373,6 +373,18 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 							break;
 						}
+						case "highlight-code": {
+							const { marker, onOff } = e.body.params;
+							const status = await Container.commands.highlightCode(marker, {
+								onOff
+							});
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: { id: e.body.id, payload: status }
+							});
+
+							break;
+						}
 						default: {
 							const responseBody: { id: string; [key: string]: any } = { id: body.id };
 							try {

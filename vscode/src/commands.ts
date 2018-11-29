@@ -64,6 +64,10 @@ export interface OpenPostWorkingFileArgs {
 	source: string;
 }
 
+export interface HighlightCodeArgs {
+	onOff: boolean;
+}
+
 export interface OpenStreamCommandArgs extends IRequiresStream {
 	session?: CodeStreamSession;
 }
@@ -160,6 +164,43 @@ export class Commands implements Disposable {
 			viewColumn: column || ViewColumn.Beside,
 			selection: range,
 			preserveFocus: args.preserveFocus
+		});
+	}
+
+	async highlightCode(marker?: CSMarker, args: HighlightCodeArgs = { onOff: true }) {
+		if (marker == null) return;
+
+		const resp = await Container.agent.getDocumentFromMarker(marker);
+		if (resp === undefined || resp === null) return ShowCodeResult.RepoNotInWorkspace; // ?: what exactly does no response mean?
+
+		const block = {
+			code: marker.code,
+			range: new Range(
+				resp.range.start.line,
+				resp.range.start.character,
+				resp.range.end.line,
+				resp.range.end.character
+			),
+			revision: resp.revision,
+			uri: Uri.parse(resp.textDocument.uri)
+		};
+
+		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
+		let column = Container.webview.viewColumn as number | undefined;
+		if (column !== undefined) {
+			column--;
+			if (column <= 0) {
+				column = undefined;
+			}
+		}
+
+		const range = args.onOff ? block.range : undefined;
+
+		// TODO: Need to follow marker to current sha
+		return openEditor(block.uri, {
+			preview: true,
+			viewColumn: column || ViewColumn.Beside,
+			highlight: range
 		});
 	}
 
