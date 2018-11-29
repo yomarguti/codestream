@@ -62,7 +62,7 @@ export class CodeStreamUnreads {
 
 		for (const [streamId, posts] of Object.entries(grouped)) {
 			const { preferences } = await this._api.getPreferences();
-			if (preferences.mutedStreams[streamId]) continue;
+			if (preferences.mutedStreams && preferences.mutedStreams[streamId]) continue;
 
 			const stream = streams.find(s => s.id === streamId);
 			if (stream == null) continue;
