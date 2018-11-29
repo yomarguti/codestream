@@ -87,8 +87,7 @@ export const createPost = (streamId, parentPostId, text, codemark, mentions, ext
 			extra
 		});
 		dispatch(resolvePendingPost(pendingId, response.post));
-		response.codemark &&
-			dispatch(saveCodemarks([{ ...response.codemark, markers: response.markers }]));
+		response.codemark && dispatch(saveCodemarks([response.codemark]));
 	} catch (e) {
 		console.log("DID NOT POST: ", e);
 		return dispatch({ type: "PENDING_POST_FAILED", payload: pendingId });
