@@ -38,7 +38,7 @@ export interface CreatePostInFileStreamRequest {
 
 export interface CreatePostResponse {
 	post: CSFullPost;
-	codemark?: CSCodemark;
+	codemark?: CSFullCodemark;
 	markers?: CSMarker[];
 	markerLocations?: CSMarkerLocations[];
 	streams?: CSStream[];

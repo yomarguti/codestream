@@ -725,6 +725,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				}
 			}
 
+			response.codemark!.markers = response.markers;
 			return response;
 		} catch (ex) {
 			debugger;
