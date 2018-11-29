@@ -60,20 +60,29 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 			if (!(await this.canSeeCodemark(csCodemark))) {
 				continue;
 			}
+			const [fullCodemark] = await this.fullCodemarks([csCodemark]);
+			fullCodemarks.push(fullCodemark);
+		}
 
-			const fullCodemark = {
-				...csCodemark
-			} as CSFullCodemark;
-			if (csCodemark.markerIds) {
+		return { codemarks: fullCodemarks };
+	}
+
+	async fullCodemarks(codemarks: CSCodemark[]): Promise<CSFullCodemark[]> {
+		const fullCodemarks = [];
+		for (const codemark of codemarks) {
+			const fullCodemark: CSFullCodemark = {
+				...codemark
+			};
+			if (codemark.markerIds) {
 				fullCodemark.markers = [];
-				for (const markerId of csCodemark.markerIds) {
+				for (const markerId of codemark.markerIds) {
 					fullCodemark.markers.push(await Container.instance().markers.getById(markerId));
 				}
 			}
 			fullCodemarks.push(fullCodemark);
 		}
 
-		return { codemarks: fullCodemarks };
+		return fullCodemarks;
 	}
 
 	private async canSeeCodemark(codemark: CSCodemark): Promise<boolean> {

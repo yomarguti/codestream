@@ -189,7 +189,8 @@ export class CodeStreamSession {
 	private async onRTMessageReceived(e: RTMessage) {
 		switch (e.type) {
 			case MessageType.Codemarks:
-				const codemarks = await Container.instance().codemarks.resolve(e);
+				let codemarks = await Container.instance().codemarks.resolve(e);
+				codemarks = await Container.instance().codemarks.fullCodemarks(codemarks);
 				this._onDidChangeCodemarks.fire(codemarks);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.Codemarks,
