@@ -187,6 +187,7 @@ export interface UpdateCodemarkRequest {
 	codemarkId: string;
 	streamId?: string;
 	postId?: string;
+	parentPostId?: string;
 	color?: string;
 	status?: string;
 	assignees?: string[];

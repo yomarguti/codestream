@@ -1,6 +1,7 @@
 "use strict";
 
 import { MessageType } from "../api/apiProvider";
+import { SlackApiProvider } from "../api/slack/slackApi";
 import { Container } from "../container";
 import {
 	CSFullCodemark,
@@ -49,7 +50,8 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 
 	@lspHandler(FetchCodemarksRequestType)
 	async get(request: FetchCodemarksRequest): Promise<FetchCodemarksResponse> {
-		const csCodemarks = await this.ensureCached();
+		let csCodemarks = await this.ensureCached();
+		csCodemarks = await this.filterLegacyCodemarks(csCodemarks);
 		const fullCodemarks = [];
 
 		for (const csCodemark of csCodemarks) {
@@ -145,6 +147,48 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 			}
 		}
 		return fullCodemark;
+	}
+
+	// slack only: filter out legacy codemarks with no text that were created by other users
+	// and update the current user's legacy codemarks with the text from the slack post if possible
+	private filterLegacyCodemarks(codemarks: CSCodemark[]): CSCodemark[] {
+		if (!(this.session.api instanceof SlackApiProvider)) return codemarks;
+
+		const result: CSCodemark[] = [];
+		const legacyCodemarks: CSCodemark[] = [];
+
+		for (const codemark of codemarks) {
+			if (!codemark.type && !codemark.text) {
+				if (codemark.creatorId === this.session.codestreamUserId) {
+					legacyCodemarks.push(codemark);
+					result.push(codemark);
+				}
+			} else {
+				result.push(codemark);
+			}
+		}
+		this.migrate(legacyCodemarks);
+		return result;
+	}
+
+	private migrate(codemarks: CSCodemark[]) {
+		setImmediate(async () => {
+			for (const codemark of codemarks) {
+				try {
+					const { post } = await this.session.api.getPost({
+						streamId: codemark.streamId,
+						postId: codemark.postId
+					});
+					this.edit({
+						codemarkId: codemark.id,
+						text: post.text,
+						parentPostId: post.parentPostId
+					});
+				} catch (ex) {
+					/* ignore because we probably couldn't get the slack post */
+				}
+			}
+		});
 	}
 
 	protected getEntityName(): string {
