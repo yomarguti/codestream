@@ -157,7 +157,6 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	handleMouseLeaveCodemark = (event: React.SyntheticEvent): any => {
-		console.log("LEAVING!");
 		this.props.onMouseLeave && this.props.onMouseLeave(this.props.codemark);
 	}
 
