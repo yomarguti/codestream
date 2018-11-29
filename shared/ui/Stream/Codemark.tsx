@@ -41,6 +41,8 @@ interface Props {
 	setCodemarkStatus: typeof setCodemarkStatus;
 	action(action: string, post: any, args: any): any;
 	onClick?(CodemarkEntity): any;
+	onMouseEnter?(CodemarkEntity): any;
+	onMouseLeave?(CodemarkEntity): any;
 	query?: string;
 }
 
@@ -150,6 +152,15 @@ export class Codemark extends React.Component<Props, State> {
 		this.props.onClick && this.props.onClick(this.props.codemark);
 	}
 
+	handleMouseEnterCodemark = (event: React.SyntheticEvent): any => {
+		this.props.onMouseEnter && this.props.onMouseEnter(this.props.codemark);
+	}
+
+	handleMouseLeaveCodemark = (event: React.SyntheticEvent): any => {
+		console.log("LEAVING!");
+		this.props.onMouseLeave && this.props.onMouseLeave(this.props.codemark);
+	}
+
 	renderCollapsedCodemark() {
 		const { codemark, inline } = this.props;
 		const file = codemark.markers && codemark.markers[0].file;
@@ -159,7 +170,7 @@ export class Codemark extends React.Component<Props, State> {
 			const marker = codemark.markers[0];
 			if (marker) {
 				const location = marker.location || marker.locationWhenCreated;
-				if (location) top = 18 * location[0];
+				if (location) top = 18 * location[0] - 3;
 			}
 		}
 
@@ -169,13 +180,15 @@ export class Codemark extends React.Component<Props, State> {
 			fullName: "Peter Pezaris"
 		};
 
-		console.log(codemark);
+		// console.log(codemark);
 		// const style = inline ?
 		return (
 			<div
-				style={{ top }}
+				style={{ top, zIndex: 2 }}
 				className={cx("codemark collapsed", codemark.color, { inline })}
 				onClick={this.handleClickCodemark}
+				onMouseEnter={this.handleMouseEnterCodemark}
+				onMouseLeave={this.handleMouseLeaveCodemark}
 			>
 				{this.renderStatus(codemark)}
 				<div className="body">

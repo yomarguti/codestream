@@ -441,6 +441,14 @@ export const showCode = (marker, enteringThread, source) => (dispatch, getState,
 	return api.showCode(marker, enteringThread, source);
 };
 
+export const highlightCode = (marker, onOff, source) => (
+	dispatch,
+	getState,
+	{ api }: ThunkExtras
+) => {
+	return api.highlightCode(marker, onOff, source);
+};
+
 export const closeDirectMessage = id => async (dispatch, getState, { api }: ThunkExtras) => {
 	try {
 		const { stream } = await api.closeDirectMessage(id);

@@ -52,6 +52,8 @@ export class SimpleInlineCodemarks extends Component {
 						currentUserName={this.props.currentUserName || "pez"}
 						usernames={this.props.usernames}
 						onClick={this.handleClickCodemark}
+						onMouseEnter={this.handleHighlightCodemark}
+						onMouseLeave={this.handleUnhighlightCodemark}
 						action={this.props.postAction}
 						query={this.state.q}
 					/>
@@ -60,7 +62,7 @@ export class SimpleInlineCodemarks extends Component {
 		}
 	};
 
-	render() {
+	renderMain() {
 		const { codemarks, currentUserId, mostRecentSourceFile, fileFilter, typeFilter } = this.props;
 		const { thisRepo } = this.state;
 
@@ -145,6 +147,22 @@ export class SimpleInlineCodemarks extends Component {
 		});
 	}
 
+	render() {
+		let hundred = [...Array(100).keys()];
+		return (
+			<div>
+				{this.renderMain()}
+				{hundred.map(() => {
+					return (
+						<div className="hover-plus">
+							<Icon name="plus" />
+						</div>
+					);
+				})}
+			</div>
+		);
+	}
+
 	handleClickCodemark = codemark => {
 		if (codemark.markers) this.props.showCode(codemark.markers[0], true);
 		this.props.setThread(codemark.streamId, codemark.parentPostId || codemark.postId);
@@ -153,6 +171,14 @@ export class SimpleInlineCodemarks extends Component {
 		// else {
 		// this.setState({ openPost: id });
 		// }
+	};
+
+	handleHighlightCodemark = codemark => {
+		if (codemark.markers) this.props.highlightCode(codemark.markers[0], true);
+	};
+
+	handleUnhighlightCodemark = codemark => {
+		if (codemark.markers) this.props.highlightCode(codemark.markers[0], false);
 	};
 
 	toggleStatus = id => {

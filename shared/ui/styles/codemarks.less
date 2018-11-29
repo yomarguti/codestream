@@ -172,7 +172,7 @@
 		color: #888888;
 	}
 	&:hover {
-		background: @app-background-color-hover;
+		background: @app-background-color;
 		color: @text-color-highlight;
 	}
 	&.inline {
@@ -190,4 +190,25 @@
 	color: @text-color-subtle;
 	text-align: center;
 	font-size: bigger;
+}
+.hover-plus {
+	height: 18px;
+	padding-left: 22px;
+	opacity: 0;
+	color: @text-color-subtle;
+	&:hover {
+		opacity: 1;
+		z-index: 1;
+	}
+	.icon {
+		cursor: pointer;
+		opacity: 0.4;
+		&:hover {
+			opacity: 1;
+			color: @text-color-highlight;
+		}
+	}
+}
+.has-overlay .hover-plus {
+	display: none;
 }

@@ -60,6 +60,7 @@ import {
 	RenameStreamRequestType,
 	RenameStreamResponse,
 	ReportingMessageType,
+	ReportMessageRequest,
 	ReportMessageRequestType,
 	SetStreamPurposeRequest,
 	SetStreamPurposeRequestType,
@@ -77,8 +78,7 @@ import {
 	UpdatePreferencesResponse,
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipRequestType,
-	UpdateStreamMembershipResponse,
-	ReportMessageRequest
+	UpdateStreamMembershipResponse
 } from "./shared/agent.protocol";
 import { CodemarkType, CSMePreferences, StreamType } from "./shared/api.protocol.models";
 import { shortUuid } from "./utils";
@@ -367,6 +367,10 @@ export default class WebviewApi {
 
 	showCode(marker: object, enteringThread: boolean, source: string = "Source File") {
 		return this.postMessage({ action: "show-code", params: { marker, enteringThread, source } });
+	}
+
+	highlightCode(marker: object, onOff: boolean, source: string = "stream") {
+		return this.postMessage({ action: "highlight-code", params: { marker, onOff, source } });
 	}
 
 	closeDirectMessage(streamId: string): Promise<CloseStreamResponse> {
