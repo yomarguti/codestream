@@ -604,7 +604,7 @@ export function toSlackPostAttachment(
 
 			break;
 		case CodemarkType.Question:
-			author = `${usernamesById.get(slackUserId)}  has a question`;
+			author = `${usernamesById.get(slackUserId)} has a question`;
 			fallback = `\n${author}`;
 			// TODO: Add url to web accessible icon
 			// authorIcon = "";
