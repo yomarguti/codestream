@@ -167,19 +167,19 @@ function getWebviewConfig(env) {
 			path: path.resolve(__dirname, "dist/webview"),
 			publicPath: "{{root}}/dist/webview/"
 		},
-		optimization: {
-			splitChunks: {
-				chunks: "all",
-				cacheGroups: {
-					styles: {
-						name: "styles",
-						test: /\.css$/,
-						chunks: "all",
-						enforce: true
-					}
-				}
-			}
-		},
+		// optimization: {
+		// 	splitChunks: {
+		// 		chunks: "all",
+		// 		cacheGroups: {
+		// 			styles: {
+		// 				name: "styles",
+		// 				test: /\.css$/,
+		// 				chunks: "all",
+		// 				enforce: true
+		// 			}
+		// 		}
+		// 	}
+		// },
 		module: {
 			rules: [
 				{
