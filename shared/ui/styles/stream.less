@@ -251,6 +251,7 @@
 		&.has-overlay .panel,
 		&.has-overlay .inline-codemarks .codemark {
 			opacity: 0.2;
+			opacity: 0;
 			pointer-events: none;
 			// filter: blur(0.5px);
 		}
@@ -592,7 +593,7 @@
 			.plus {
 				position: absolute;
 				bottom: 5px;
-				right: 8px;
+				right: 38px;
 				opacity: 0.4;
 				cursor: pointer;
 				transition: transform 0.1s;
@@ -611,7 +612,8 @@
 				left: 7px;
 				right: auto;
 			}
-			.plus-button {
+			.plus-button,
+			.x-button {
 				position: absolute;
 				height: 100%;
 				left: 0;
@@ -621,12 +623,19 @@
 				&:hover,
 				&.hover {
 					background: @app-background-color-hover;
-					.plus {
+					.plus,
+					.x {
 						opacity: 1;
 						color: @text-color-info;
 						transform: scale(1.4);
 					}
 				}
+			}
+			.x-button {
+				left: auto;
+				right: 0;
+				border: none;
+				border-left: 1px solid @base-border-color;
 			}
 
 			.hint {
@@ -698,6 +707,24 @@
 			width: calc(100vw - 40px) !important;
 			.input-text {
 				margin-bottom: 5px;
+			}
+			.panel-header {
+				.align-left-button,
+				.align-right-button {
+					margin: -15px 0 0 -15px;
+					opacity: 0.4;
+					cursor: pointer;
+					transition: transform 0.1s;
+					&:hover {
+						opacity: 1;
+						color: @text-color-info;
+						transform: scale(1.4);
+						background: none;
+					}
+				}
+				.align-right-button {
+					margin: -15px -20px 0 0;
+				}
 			}
 		}
 
@@ -2399,7 +2426,7 @@
 
 	#code-comment-form {
 		width: 100%;
-		padding: 10px;
+		padding: 0 10px 10px 10px;
 		position: relative;
 		overflow-x: hidden;
 		max-height: 100vh !important;
@@ -2421,7 +2448,7 @@
 		// 	vertical-align: -2px;
 		// }
 		label {
-			margin-top: 15px !important;
+			margin-top: 5px !important;
 		}
 		.mentions-popup ul {
 			max-height: 150px;
@@ -2707,9 +2734,9 @@
 		display: none;
 	}
 }
-@media only screen and (max-width: 500px) {
+@media only screen and (max-width: 430px) {
 	#code-comment-form .tab-group label {
-		max-width: calc(25%);
+		max-width: calc(25% - 10);
 	}
 }
 
