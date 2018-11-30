@@ -792,7 +792,7 @@ export class SimpleStream extends Component {
 
 			if (post.codemarkId) {
 				const codemark = getCodemark(codemarks, post.codemarkId);
-				const marker = codemark.markers[0];
+				const marker = codemark.markers && codemark.markers[0];
 
 				this.setMultiCompose(true, {
 					quote: marker ? { ...marker, location: marker.locationWhenCreated } : null,
