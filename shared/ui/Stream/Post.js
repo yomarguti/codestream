@@ -693,7 +693,7 @@ class Post extends React.Component {
 	};
 
 	handleSelectMenu = action => {
-		this.props.action(action, this.props.post);
+		this.props.action(action, { ...this.props.post, author: this.props.author });
 		this.setState({ menuOpen: false, authorMenuOpen: false });
 	};
 }
