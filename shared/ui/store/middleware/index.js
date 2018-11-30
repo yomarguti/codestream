@@ -1,3 +1,3 @@
-import sideEffects from "./side-effects";
+// import { sideEffects } from "./side-effects";
 
-export default [sideEffects];
+export default [];
