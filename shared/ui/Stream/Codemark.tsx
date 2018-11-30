@@ -199,7 +199,7 @@ export class Codemark extends React.Component<Props, State> {
 							<div className="angle-arrow" />
 							{<Headshot size={18} person={user} />}
 							<span className="username">pez</span> posted to{" "}
-							<span className="clickable">#general</span> &middot;{" "}
+							<span className="clickable">#test</span> &middot;{" "}
 							<span className="clickable">2 replies</span> &middot;
 							<Timestamp time={codemark.createdAt} />
 						</div>

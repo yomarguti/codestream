@@ -175,6 +175,7 @@
 			.icon {
 				display: inline-block;
 				transform: scale(1.5);
+				vertical-align: 3px;
 			}
 			.icon.slack {
 				transform: scale(1.8);
@@ -723,7 +724,9 @@
 					}
 				}
 				.align-right-button {
-					margin: -15px -20px 0 0;
+					// no idea why this is -21px on the right but
+					// it makes it all line-up perfectly
+					margin: -15px -21px 0 0;
 				}
 			}
 		}
