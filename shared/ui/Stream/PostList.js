@@ -92,6 +92,7 @@ export default infiniteLoadable(
 		};
 
 		scrollToBottom = () => {
+			if (this.props.isThread) return;
 			requestAnimationFrame(() => {
 				if (this.list.current) {
 					const { clientHeight, scrollHeight } = this.list.current;
