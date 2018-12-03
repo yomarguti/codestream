@@ -725,6 +725,8 @@ const mapStateToProps = (state, props) => {
 			parentPostCodemark = getCodemark(state.codemarks, parentPost.codemarkId);
 			if (parentPostCodemark) {
 				parentPostContent = parentPostCodemark.title || parentPostCodemark.text || parentPost.text;
+			} else {
+				parentPostContent = parentPost.text.trim() !== "" ? parentPost.text : "a codemark";
 			}
 		} else parentPostContent = parentPost.text;
 	}
