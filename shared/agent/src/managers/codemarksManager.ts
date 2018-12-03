@@ -48,6 +48,14 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		});
 	}
 
+	async cacheSet(entity: CSCodemark, oldEntity?: CSCodemark): Promise<CSCodemark | undefined> {
+		if (await this.canSeeCodemark(entity)) {
+			return super.cacheSet(entity, oldEntity);
+		} else {
+			return undefined;
+		}
+	}
+
 	@lspHandler(FetchCodemarksRequestType)
 	async get(request: FetchCodemarksRequest): Promise<FetchCodemarksResponse> {
 		let csCodemarks = await this.ensureCached();

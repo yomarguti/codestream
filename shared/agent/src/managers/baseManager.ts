@@ -68,8 +68,7 @@ export abstract class ManagerBase<T> {
 				const cached = await this.cacheGet(criteria);
 				if (cached && isCompatibleVersion(cached, data)) {
 					const updatedEntity = operations.resolve(cached as any, data);
-					this.cacheSet(updatedEntity as T, cached);
-					return updatedEntity as T;
+					return await this.cacheSet(updatedEntity as T, cached);
 				} else {
 					let entity;
 					if (this.forceFetchToResolveOnCacheMiss || isDirective(data)) {
@@ -78,8 +77,7 @@ export abstract class ManagerBase<T> {
 						entity = data as T;
 					}
 					if (entity) {
-						this.cacheSet(entity);
-						return entity;
+						return await this.cacheSet(entity);
 					}
 					return undefined;
 				}
@@ -92,7 +90,8 @@ export abstract class ManagerBase<T> {
 		return this.cache.get(criteria, { fromCacheOnly: true });
 	}
 
-	cacheSet(entity: T, oldEntity?: T) {
+	async cacheSet(entity: T, oldEntity?: T): Promise<T | undefined> {
 		this.cache.set(entity, oldEntity);
+		return entity;
 	}
 }

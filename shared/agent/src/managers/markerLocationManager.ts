@@ -71,14 +71,17 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		];
 	}
 
-	cacheSet(entity: CSMarkerLocations, oldEntity?: CSMarkerLocations) {
+	async cacheSet(
+		entity: CSMarkerLocations,
+		oldEntity?: CSMarkerLocations
+	): Promise<CSMarkerLocations | undefined> {
 		if (oldEntity) {
 			entity.locations = {
 				...oldEntity.locations,
 				...entity.locations
 			};
 		}
-		super.cacheSet(entity, oldEntity);
+		return super.cacheSet(entity, oldEntity);
 	}
 
 	protected async fetch(criteria: KeyValue<CSMarkerLocations>[]): Promise<CSMarkerLocations> {

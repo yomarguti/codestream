@@ -119,14 +119,18 @@ export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CS
 		}
 	}
 
-	cacheSet(entity: CSStream, oldEntity?: CSStream) {
+	async cacheSet(
+		entity: CSStream,
+		oldEntity?: CSStream
+	): Promise<CSChannelStream | CSDirectStream | undefined> {
 		switch (entity.type) {
 			case StreamType.Channel:
 			case StreamType.Direct:
 				return super.cacheSet(entity, oldEntity as any);
 			case StreamType.File:
-				return Container.instance().files.cacheSet(entity, oldEntity as any);
+				return Container.instance().files.cacheSet(entity, oldEntity as any) as any;
 		}
+		return undefined;
 	}
 
 	@lspHandler(CreateChannelStreamRequestType)

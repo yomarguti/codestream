@@ -469,12 +469,12 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		entityName: this.getEntityName()
 	});
 
-	async cacheSet(entity: CSPost, oldEntity?: CSPost): Promise<void> {
+	async cacheSet(entity: CSPost, oldEntity?: CSPost): Promise<CSPost | undefined> {
 		if (entity && entity.streamId) {
 			await this.cache.ensureStreamInitialized(entity.streamId);
 		}
 
-		super.cacheSet(entity, oldEntity);
+		return super.cacheSet(entity, oldEntity);
 	}
 
 	getIndexedFields(): IndexParams<CSPost>[] {
