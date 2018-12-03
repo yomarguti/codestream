@@ -2,7 +2,7 @@
 
 CodeStream is the knowledge base behind your codebase. Your dev team's discussions about code happen right inside the IDE, and are saved permanently with the code blocks to which they refer. That way your team, including its future members, benefits from working with an annotated codebase. With each discussion, your knowledge base grows and your codebase gets smarter over time.
 
-![CodeStream](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/CodeStream.png)
+![CodeStream](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/CodeStream1.png)
 
 # Install CodeStream
 
