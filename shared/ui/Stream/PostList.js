@@ -18,8 +18,10 @@ export default infiniteLoadable(
 		state = {};
 
 		componentDidMount() {
-			this.scrollToBottom();
 			this.markAsRead();
+			if (!this.props.isThread) {
+				this.scrollToBottom();
+			}
 		}
 
 		getSnapshotBeforeUpdate(prevProps, _prevState) {
@@ -92,7 +94,6 @@ export default infiniteLoadable(
 		};
 
 		scrollToBottom = () => {
-			if (this.props.isThread) return;
 			requestAnimationFrame(() => {
 				if (this.list.current) {
 					const { clientHeight, scrollHeight } = this.list.current;
@@ -191,6 +192,13 @@ export default infiniteLoadable(
 			}
 		}, 1000);
 
+		onPostDidResize = postId => {
+			if (this.props.posts[this.props.posts.length - 1].id === postId)
+				if (!this.scrolledOffBottom) {
+					this.scrollToBottom();
+				}
+		};
+
 		render() {
 			const {
 				editingPostId,
@@ -248,6 +256,7 @@ export default infiniteLoadable(
 									showDetails={this.props.isThread}
 									streamId={this.props.streamId}
 									didTriggerThread={this.props.isThread && post.id === this.props.threadTrigger}
+									onDidResize={this.onPostDidResize}
 								/>
 							</React.Fragment>
 						);

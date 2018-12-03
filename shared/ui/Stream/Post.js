@@ -51,6 +51,8 @@ class Post extends React.Component {
 		if (!prevProps.didTriggerThread && this.props.didTriggerThread) {
 			this.showCode(true);
 		}
+
+		if (!prevProps.codemark && this.props.codemark) this.props.onDidResize(this.props.id);
 	}
 
 	handleClickCodeBlock = event => {
