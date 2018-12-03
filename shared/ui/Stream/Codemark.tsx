@@ -63,7 +63,7 @@ export class Codemark extends React.Component<Props, State> {
 			});
 
 			if (this.props.query) {
-				const matchQueryRegexp = new RegExp(this.props.query, "g");
+				const matchQueryRegexp = new RegExp(this.props.query, "gi");
 				html = html.replace(matchQueryRegexp, "<u><b>$&</b></u>");
 			}
 		}

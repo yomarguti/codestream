@@ -201,13 +201,16 @@ export class SimpleKnowledgePanel extends Component {
 			const title = codemark.title;
 			const assignees = codemark.assignees;
 			const status = codemark.status;
+			const q = this.props.q ? this.props.q.toLocaleLowerCase() : null;
+
 			sectionFilters.forEach(section => {
 				if (assignedCodemarks[codemark.id]) return;
 				// if (!this.state.expanded[section]) return;
+
 				if (
-					this.props.q &&
-					!(codemark.text || "").includes(this.props.q) &&
-					!(title || "").includes(this.props.q)
+					q &&
+					!(codemark.text || "").toLocaleLowerCase().includes(q) &&
+					!(title || "").toLocaleLowerCase().includes(q)
 				)
 					return;
 				if (fileFilter === "current" && section !== "inThisFile") return;
