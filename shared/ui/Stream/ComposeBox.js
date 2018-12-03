@@ -831,7 +831,11 @@ class ComposeBox extends React.Component {
 			})
 			.filter(Boolean);
 
-		let commentString = commentType || "codemark";
+		let commentString = commentType;
+		if (!commentString || commentString === "comment") {
+			commentString = "codemark";
+		}
+
 		const submitAnotherLabel = "Command-click to submit another " + commentString + " after saving";
 
 		const requiredCodeBlockMessage =
