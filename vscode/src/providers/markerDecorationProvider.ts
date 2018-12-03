@@ -170,12 +170,19 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 	private onSessionStatusChanged(e: SessionStatusChangedEvent) {
 		switch (e.getStatus()) {
 			case SessionStatus.SignedOut:
-				this.clear();
+				this.clearAll();
 				break;
 
 			case SessionStatus.SignedIn:
 				this.applyToApplicableVisibleEditors();
 				break;
+		}
+	}
+
+	private clearAll() {
+		this._markersCache.clear();
+		for (const editor of this.getApplicableVisibleEditors()) {
+			this.clear(editor);
 		}
 	}
 
