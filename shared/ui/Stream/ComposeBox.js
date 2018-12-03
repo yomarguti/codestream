@@ -946,7 +946,7 @@ class ComposeBox extends React.Component {
 								>
 									<Icon name="comment" className="chat-bubble" /> <b>Comment</b>
 								</label>
-								<input
+								{/* <input
 									id="radio-comment-type-question"
 									type="radio"
 									name="comment-type"
@@ -960,7 +960,7 @@ class ComposeBox extends React.Component {
 									onClick={e => this.setCommentType("question")}
 								>
 									<Icon name="question" /> <b>Question</b>
-								</label>
+								</label>*/}
 								<input
 									id="radio-comment-type-issue"
 									type="radio"
