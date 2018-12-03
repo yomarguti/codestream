@@ -222,7 +222,7 @@ export class SimpleKnowledgePanel extends Component {
 							assignCodemark(codemark, "inThisFile");
 						break;
 					case "mine":
-						if (status === "open" || (!status && _.contains(assignees || [], currentUserId)))
+						if ((status === "open" || !status) && _.contains(assignees || [], currentUserId))
 							assignCodemark(codemark, "mine");
 						break;
 					case "open":
