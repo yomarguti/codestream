@@ -31,7 +31,7 @@ export class SimpleKnowledgePanel extends Component {
 
 		this.typeLabels = {
 			comment: "Code Comments",
-			question: "Questions & Answers",
+			// question: "Questions & Answers",
 			issue: "Issues",
 			trap: "Traps",
 			snippet: "Snippets",
@@ -40,7 +40,7 @@ export class SimpleKnowledgePanel extends Component {
 		this.typeLabelsLower = {
 			all: "all codemarks",
 			comment: "code comments",
-			question: "questions & answers",
+			// question: "questions & answers",
 			issue: "issues",
 			trap: "traps",
 			snippet: "snippets",
@@ -245,7 +245,7 @@ export class SimpleKnowledgePanel extends Component {
 			{ label: "All Codemarks", action: "all" },
 			{ label: "-" },
 			{ label: "Code Comments", action: "comment" },
-			{ label: "Questions & Answers", action: "question" },
+			// { label: "Questions & Answers", action: "question" },
 			{ label: "Issues", action: "issue" },
 			{ label: "Traps", action: "trap" },
 			{ label: "Bookmarks", action: "bookmark" }
