@@ -46,7 +46,7 @@ class ComposeBox extends React.Component {
 		autoMentions: [],
 		popupOpen: false,
 		emojiOpen: false,
-		commentType: this.props.isEditing ? this.props.editingCodemark.type : "codemark",
+		commentType: this.props.isEditing ? this.props.editingCodemark.type : "comment",
 		title: this.props.isEditing ? this.props.editingCodemark.title : ""
 	};
 	disposables = [];
