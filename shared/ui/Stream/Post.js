@@ -163,6 +163,8 @@ class Post extends React.Component {
 		const systemPost = post.creatorId === "codestream";
 		const color = codemark && codemark.color;
 		const type = codemark && codemark.type;
+		let typeString = type || "codemark";
+		typeString = typeString.charAt(0).toUpperCase() + typeString.slice(1);
 		const title = codemark && codemark.title;
 
 		// if (post.title && post.title.match(/assigned/)) console.log(post);
@@ -226,8 +228,8 @@ class Post extends React.Component {
 		if (mine) {
 			menuItems.push(
 				{ label: "-" },
-				{ label: "Edit Comment", action: "edit-post" },
-				{ label: "Delete Comment", action: "delete-post" }
+				{ label: `Edit ${typeString}`, action: "edit-post" },
+				{ label: `Delete ${typeString}`, action: "delete-post" }
 			);
 		}
 
