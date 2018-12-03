@@ -46,7 +46,7 @@ class ComposeBox extends React.Component {
 		autoMentions: [],
 		popupOpen: false,
 		emojiOpen: false,
-		commentType: this.props.isEditing ? this.props.editingCodemark.type : "comment",
+		commentType: this.props.isEditing ? this.props.editingCodemark.type : "codemark",
 		title: this.props.isEditing ? this.props.editingCodemark.title : ""
 	};
 	disposables = [];
@@ -831,7 +831,7 @@ class ComposeBox extends React.Component {
 			})
 			.filter(Boolean);
 
-		let commentString = commentType || "comment";
+		let commentString = commentType || "codemark";
 		const submitAnotherLabel = "Command-click to submit another " + commentString + " after saving";
 
 		const requiredCodeBlockMessage =
