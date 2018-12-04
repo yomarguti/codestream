@@ -327,21 +327,21 @@ export class SimpleKnowledgePanel extends Component {
 						</p>
 					</div>
 					<div className="info">
-						<div className="codemark-info">
+						<div className="codemark-info" onClick={this.onClickCodemarkTypeFor("comment")}>
 							<Icon name="comment" className="type-icon" />
 							<div className="text">
 								<h3>Comment</h3>
 								<p>Link any type of comment or question to a block of code.</p>
 							</div>
 						</div>
-						<div className="codemark-info">
+						<div className="codemark-info" onClick={this.onClickCodemarkTypeFor("issue")}>
 							<Icon name="issue" className="type-icon" />
 							<div className="text">
 								<h3>Issue</h3>
 								<p>See some code that needs to be fixed or refactored? Assign an issue.</p>
 							</div>
 						</div>
-						<div className="codemark-info">
+						<div className="codemark-info" onClick={this.onClickCodemarkTypeFor("trap")}>
 							<Icon name="trap" className="type-icon" />
 							<div className="text">
 								<h3>Code Trap</h3>
@@ -350,7 +350,7 @@ export class SimpleKnowledgePanel extends Component {
 								</p>
 							</div>
 						</div>
-						<div className="codemark-info">
+						<div className="codemark-info" onClick={this.onClickCodemarkTypeFor("bookmark")}>
 							<Icon name="bookmark" className="type-icon" />
 							<div className="text">
 								<h3>Bookmark</h3>
@@ -362,6 +362,15 @@ export class SimpleKnowledgePanel extends Component {
 			</div>
 		);
 	}
+
+	onClickCodemarkTypeFor = type => e => {
+		e.preventDefault();
+		this.props.setMultiCompose(true, {
+			composeBoxProps: {
+				codemarkType: type
+			}
+		});
+	};
 
 	toggleShowMarkers = () => {
 		const showMarkers = !this.props.showMarkers;

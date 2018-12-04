@@ -32,24 +32,33 @@ const arrayToRange = ([startRow, startCol, endRow, endCol]) => {
 const colorOptions = ["blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray"];
 
 class ComposeBox extends React.Component {
-	state = {
-		color: this.props.isEditing ? this.props.editingCodemark.color : "blue",
-		assignees:
-			this.props.isEditing && this.props.editingCodemark.assignees
-				? this.props.editingCodemark.assignees.map(id => ({
-						label: this.props.teammates.find(u => u.id === id).username,
-						value: id
-				  }))
-				: [],
-		postTextByStream: {},
-		quote: this.props.quote,
-		autoMentions: [],
-		popupOpen: false,
-		emojiOpen: false,
-		commentType: this.props.isEditing ? this.props.editingCodemark.type : "comment",
-		title: this.props.isEditing ? this.props.editingCodemark.title : ""
-	};
 	disposables = [];
+
+	constructor(props) {
+		super(props);
+
+		const codemarkType = props.isEditing
+			? props.editingCodemark.type
+			: props.codemarkType || "comment";
+
+		this.state = {
+			commentType: codemarkType,
+			color: this.props.isEditing ? this.props.editingCodemark.color : "blue",
+			assignees:
+				this.props.isEditing && this.props.editingCodemark.assignees
+					? this.props.editingCodemark.assignees.map(id => ({
+							label: this.props.teammates.find(u => u.id === id).username,
+							value: id
+					  }))
+					: [],
+			postTextByStream: {},
+			quote: this.props.quote,
+			autoMentions: [],
+			popupOpen: false,
+			emojiOpen: false,
+			title: this.props.isEditing ? this.props.editingCodemark.title : ""
+		};
+	}
 
 	componentDidMount() {
 		// so that HTML doesn't get pasted into the input field. without this,
