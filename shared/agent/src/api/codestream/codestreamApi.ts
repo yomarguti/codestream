@@ -557,11 +557,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 		});
 		await Container.instance().codemarks.resolve({
 			type: MessageType.Codemarks,
-			data: response.codemarks
+			data: response.codemarks || []
 		});
 		await Container.instance().markers.resolve({
 			type: MessageType.Markers,
-			data: response.markers
+			data: response.markers || []
 		});
 
 		return { ...response, post };
