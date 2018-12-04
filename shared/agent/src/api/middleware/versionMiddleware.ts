@@ -51,7 +51,7 @@ export class VersionMiddleware implements CodeStreamApiMiddleware {
 
 	async onResponse<R>(context: Readonly<CodeStreamApiMiddlewareContext>, responseJson: Promise<R>) {
 		if (context.response === undefined) return;
-		if (!context.response.ok || !context.url.endsWith("/presence")) return;
+		if (context.response.ok && !context.url.endsWith("/presence")) return;
 
 		const compatibility = context.response.headers.get(
 			"X-CS-Version-Disposition"
