@@ -29,7 +29,8 @@ export enum ApiErrors {
 	NotConfirmed = "NOT_CONFIRMED",
 	NotOnTeam = "USER_NOT_ON_TEAM",
 	NotFound = "NOT_FOUND",
-	Unknown = "UNKNOWN"
+	Unknown = "UNKNOWN",
+	VersionUnsupported = "VERSION_UNSUPPORTED"
 }
 
 export enum LoginResult {
@@ -38,7 +39,8 @@ export enum LoginResult {
 	InvalidToken = "TOKEN_INVALID",
 	NotConfirmed = "NOT_CONFIRMED",
 	NotOnTeam = "USER_NOT_ON_TEAM",
-	Unknown = "UNKNOWN"
+	Unknown = "UNKNOWN",
+	VersionUnsupported = "VERSION_UNSUPPORTED"
 }
 
 export interface CompleteSignupRequest {

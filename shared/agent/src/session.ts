@@ -66,7 +66,8 @@ const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 	"AUTH-1005": ApiErrors.InvalidToken,
 	// "RAPI-1001": "missing parameter" // shouldn't ever happen
 	"RAPI-1003": ApiErrors.NotFound,
-	"USRC-1012": ApiErrors.NotOnTeam
+	"USRC-1012": ApiErrors.NotOnTeam,
+	"VERS-1001": ApiErrors.VersionUnsupported
 };
 
 export interface TelemetryData {
