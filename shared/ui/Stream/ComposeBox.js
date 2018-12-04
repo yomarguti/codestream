@@ -846,11 +846,7 @@ class ComposeBox extends React.Component {
 			})
 			.filter(Boolean);
 
-		let commentString = commentType;
-		if (!commentString || commentString === "comment") {
-			commentString = "codemark";
-		}
-
+		const commentString = commentType || "codemark";
 		const submitAnotherLabel = "Command-click to submit another " + commentString + " after saving";
 
 		const requiredCodeBlockMessage =
@@ -860,7 +856,7 @@ class ComposeBox extends React.Component {
 		return [
 			<div className="panel-header" key="one">
 				{isEditing ? "Update" : "New"}{" "}
-				{commentString.charAt(0).toUpperCase() + commentString.slice(1)}
+				{isEditing ? commentString.charAt(0).toUpperCase() + commentString.slice(1) : "Codemark"}
 				<CancelButton placement="left" onClick={this.handleClickDismissMultiCompose} />
 			</div>,
 			<ScrollBox key="two">
