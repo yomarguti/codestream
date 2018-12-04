@@ -204,8 +204,6 @@ export class SimpleKnowledgePanel extends Component {
 			const codemarkType = codemark.type || "comment";
 			if (codemark.deactivated) return null;
 			if (typeFilter !== "all" && codemarkType !== typeFilter) return null;
-			if (codemarkType === "comment" && (!codemark.markers || codemark.markers.length === 0))
-				return null;
 			const codeBlock = codemark.markers && codemark.markers.length && codemark.markers[0];
 
 			const codeBlockFile = codeBlock && codeBlock.file;
