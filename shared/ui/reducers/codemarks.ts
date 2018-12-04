@@ -12,6 +12,7 @@ interface Action {
 
 interface Codemark {
 	type: string;
+	deactivated: boolean;
 }
 
 const initialState: State = {};
@@ -46,7 +47,11 @@ export const getTypeFilteredCodemarks = createSelector(
 	getCodemarkTypeFilter,
 	(codemarks: State, filter: string) => {
 		if (filter === "all") return Object.values(codemarks);
-		else return Object.values(codemarks).filter(codemark => codemark.type === filter);
+		else {
+			return Object.values(codemarks).filter(
+				codemark => codemark.type === filter && !codemark.deactivated
+			);
+		}
 	}
 );
 
