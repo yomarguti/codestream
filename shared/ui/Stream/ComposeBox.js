@@ -8,7 +8,7 @@ import CancelButton from "./CancelButton";
 import Button from "./Button";
 import ScrollBox from "./ScrollBox";
 import EmojiPicker from "./EmojiPicker";
-import { capitalize, getCurrentCursorPosition, createRange, isInVscode } from "../utils";
+import { mapFilter, capitalize, getCurrentCursorPosition, createRange, isInVscode } from "../utils";
 const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
 import Select from "react-select";
 import Tooltip from "./Tooltip";
@@ -40,17 +40,23 @@ class ComposeBox extends React.Component {
 		const codemarkType = props.isEditing
 			? props.editingCodemark.type
 			: props.codemarkType || "comment";
+		const assignees =
+			props.isEditing && props.editingCodemark.assignees
+				? mapFilter(props.editingCodemark.assignees, id => {
+						const user = this.props.teammates.find(u => u.id === id);
+						if (user) {
+							return {
+								label: user.username,
+								value: id
+							};
+						}
+				  })
+				: [];
 
 		this.state = {
 			commentType: codemarkType,
 			color: this.props.isEditing ? this.props.editingCodemark.color : "blue",
-			assignees:
-				this.props.isEditing && this.props.editingCodemark.assignees
-					? this.props.editingCodemark.assignees.map(id => ({
-							label: this.props.teammates.find(u => u.id === id).username,
-							value: id
-					  }))
-					: [],
+			assignees,
 			postTextByStream: {},
 			quote: this.props.quote,
 			autoMentions: [],
@@ -1217,7 +1223,7 @@ class ComposeBox extends React.Component {
 				{emojiOpen && (
 					<EmojiPicker addEmoji={this.addEmoji} target={this.state.emojiTarget} autoFocus={true} />
 				)}
-				{/* the unique class forces a redraw of the component -- 
+				{/* the unique class forces a redraw of the component --
 				    without it, react wouldn't update the editable div. */}
 				<ContentEditable
 					className={createClassString(
