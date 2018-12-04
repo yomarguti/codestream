@@ -441,10 +441,10 @@ class Post extends React.Component {
 				{assignees
 					.map(userId => {
 						const person = this.props.teammates.find(user => user.id === userId);
-						return person.username;
+						return person && person.username;
 					})
+					.filter(Boolean)
 					.join(", ")}
-
 				<br />
 			</div>
 		);
