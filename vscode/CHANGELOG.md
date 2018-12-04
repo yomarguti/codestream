@@ -1,5 +1,28 @@
 # Change Log
 
+## [0.25] - 2018-12-6
+
+### Added
+
+- Adds different types of "codemarks", including comments, issues, code traps and bookmarks, for annotating your code base - [Learn more about codemarks](https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks)
+- Adds a "Codemarks" page for exploring your knowledge base and looking at filtered views of your codemarks
+- Adds a global navigation with tabs for jumping between codemarks, channels and your currently selected conversation
+- Adds the ability to search for codemarks
+- Adds a form for creating codemarks that automatically pops up when code is selected in your editor
+- Adds a "Quote" option to the gear menu for posts in the stream to easily quote a post
+- Adds the ability to start a Live Share session via an icon that appears on hover on the Channels tab
+
+### Changed
+
+- Continued (but significant) optimizations for handling large slack workspaces.
+
+### Fixed
+
+- Fixes [#10](https://github.com/TeamCodeStream/CodeStream/issues/10) &mdash; Downloading Channel list takes a very long time, then fails
+- Fixes [#15](https://github.com/TeamCodeStream/CodeStream/issues/15) &mdash; Unable to open channels with Japanese characters
+- Fixes [#17](https://github.com/TeamCodeStream/CodeStream/issues/17) &mdash; Links to Github don't put hash in URL properly
+- Fixes [#18](https://github.com/TeamCodeStream/CodeStream/issues/18) &mdash; Unread count in VS Code status bar not decrementing
+
 ## [0.24.2] - 2018-11-19
 
 ### Fixed
