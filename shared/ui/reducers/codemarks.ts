@@ -49,3 +49,7 @@ export const getTypeFilteredCodemarks = createSelector(
 		else return Object.values(codemarks).filter(codemark => codemark.type === filter);
 	}
 );
+
+export const teamHasCodemarks = createSelector(getCodemarks, (codemarks: State) => {
+	return Object.keys(codemarks).length > 0;
+});

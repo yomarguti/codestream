@@ -171,8 +171,19 @@ export class SimpleKnowledgePanel extends Component {
 	};
 
 	render() {
-		const { codemarks, currentUserId, mostRecentSourceFile, fileFilter, typeFilter } = this.props;
+		const {
+			codemarks,
+			noCodemarksAtAll,
+			currentUserId,
+			mostRecentSourceFile,
+			fileFilter,
+			typeFilter
+		} = this.props;
 		const { thisRepo } = this.state;
+
+		if (noCodemarksAtAll) {
+			return this.renderBlankFiller();
+		}
 
 		const sections = this.sectionsByType[typeFilter];
 
@@ -302,6 +313,56 @@ export class SimpleKnowledgePanel extends Component {
 		);
 	}
 
+	renderBlankFiller() {
+		return (
+			<div className="panel codemarks-panel">
+				<div className="getting-started">
+					<div>
+						<p>
+							Codemarks are the building blocks of your team’s knowledge base. Click the "+" button
+							above to create one.{" "}
+							<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
+								Learn more about how to use codemarks.
+							</a>
+						</p>
+					</div>
+					<div className="info">
+						<div className="codemark-info">
+							<Icon name="comment" className="type-icon" />
+							<div className="text">
+								<h3>Comment</h3>
+								<p>Link any type of comment or question to a block of code.</p>
+							</div>
+						</div>
+						<div className="codemark-info">
+							<Icon name="issue" className="type-icon" />
+							<div className="text">
+								<h3>Issue</h3>
+								<p>See some code that needs to be fixed or refactored? Assign an issue.</p>
+							</div>
+						</div>
+						<div className="codemark-info">
+							<Icon name="trap" className="type-icon" />
+							<div className="text">
+								<h3>Code Trap</h3>
+								<p>
+									Create a trap around code that shouldn’t be touched without talking to you first.
+								</p>
+							</div>
+						</div>
+						<div className="codemark-info">
+							<Icon name="bookmark" className="type-icon" />
+							<div className="text">
+								<h3>Bookmark</h3>
+								<p> Bookmark parts of the code you want to be able to get back to quickly.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
 	toggleShowMarkers = () => {
 		const showMarkers = !this.props.showMarkers;
 		this.props.showMarkersInEditor(showMarkers);
@@ -350,8 +411,10 @@ export class SimpleKnowledgePanel extends Component {
 
 const mapStateToProps = state => {
 	const { context, teams, configs } = state;
+
 	return {
 		usernames: userSelectors.getUsernames(state),
+		noCodemarksAtAll: !codemarkSelectors.teamHasCodemarks(state),
 		codemarks: codemarkSelectors.getTypeFilteredCodemarks(state),
 		showMarkers: configs.showMarkers,
 		team: teams[context.currentTeamId],
