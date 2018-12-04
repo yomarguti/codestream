@@ -1,5 +1,13 @@
 "use strict";
-import { ConfigurationTarget, Disposable, Event, EventEmitter } from "vscode";
+import {
+	commands,
+	ConfigurationTarget,
+	Disposable,
+	Event,
+	EventEmitter,
+	MessageItem,
+	window
+} from "vscode";
 import {
 	AccessToken,
 	AgentResult,
@@ -16,6 +24,7 @@ import {
 } from "../agent/agentConnection";
 import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
+import { extensionQualifiedId } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions, Strings } from "../system";
@@ -489,6 +498,10 @@ export class CodeStreamSession implements Disposable {
 				this._signupToken = undefined;
 			}
 
+			if (result.error === LoginResult.VersionUnsupported) {
+				await this.showVersionUnsupportedMessage();
+			}
+
 			return result.error;
 		}
 
@@ -560,9 +573,13 @@ export class CodeStreamSession implements Disposable {
 			);
 
 			if (result.error) {
-				// Clear the access token
-				await TokenManager.clear(this._serverUrl, email);
-				this.setStatus(SessionStatus.SignedOut, SessionSignedOutReason.SignInFailure);
+				if (result.error === LoginResult.VersionUnsupported) {
+					await this.showVersionUnsupportedMessage();
+				} else {
+					// Clear the access token
+					await TokenManager.clear(this._serverUrl, email);
+					this.setStatus(SessionStatus.SignedOut, SessionSignedOutReason.SignInFailure);
+				}
 
 				return result.error;
 			}
@@ -637,6 +654,21 @@ export class CodeStreamSession implements Disposable {
 		);
 
 		this.setStatus(SessionStatus.SignedIn, undefined, unreads);
+	}
+
+	private async showVersionUnsupportedMessage() {
+		const actions: MessageItem[] = [{ title: "Upgrade" }];
+		const result = await window.showErrorMessage(
+			"This version of CodeStream is no longer supported. Please upgrade to the latest version.",
+			...actions
+		);
+
+		if (result !== undefined) {
+			await commands.executeCommand("workbench.extensions.action.checkForUpdates");
+			await commands.executeCommand("workbench.extensions.action.showExtensionsWithIds", [
+				extensionQualifiedId
+			]);
+		}
 	}
 }
 
