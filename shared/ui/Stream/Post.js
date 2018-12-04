@@ -165,7 +165,7 @@ class Post extends React.Component {
 		const systemPost = post.creatorId === "codestream";
 		const color = codemark && codemark.color;
 		const type = codemark && codemark.type;
-		let typeString = type || "codemark";
+		let typeString = type || "post";
 		typeString = typeString.charAt(0).toUpperCase() + typeString.slice(1);
 		const title = codemark && codemark.title;
 
