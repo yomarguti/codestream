@@ -1208,10 +1208,17 @@ class ComposeBox extends React.Component {
 				{emojiOpen && (
 					<EmojiPicker addEmoji={this.addEmoji} target={this.state.emojiTarget} autoFocus={true} />
 				)}
+				{/* the unique class forces a redraw of the component -- 
+				    without it, react wouldn't update the editable div. */}
 				<ContentEditable
-					className={createClassString("native-key-bindings", "message-input", btoa(placeholder), {
-						"has-plus": !multiCompose
-					})}
+					className={createClassString(
+						"native-key-bindings",
+						"message-input",
+						btoa(unescape(encodeURIComponent(placeholder))),
+						{
+							"has-plus": !multiCompose
+						}
+					)}
 					id="input-div"
 					tabIndex={this.tabIndex()}
 					onChange={this.handleChange}
