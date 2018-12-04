@@ -188,58 +188,63 @@ export class SimpleKnowledgePanel extends Component {
 			totalCodemarks++;
 		};
 
-		codemarks.forEach(codemark => {
-			const codemarkType = codemark.type || "comment";
-			if (codemark.deactivated) return null;
-			if (typeFilter !== "all" && codemarkType !== typeFilter) return null;
-			if (codemarkType === "comment" && (!codemark.markers || codemark.markers.length === 0))
-				return null;
-			const codeBlock = codemark.markers && codemark.markers.length && codemark.markers[0];
+		// slice().reverse() creates a shallow copy and reverses it so
+		// that the most recent codemark is first
+		codemarks
+			.slice()
+			.reverse()
+			.forEach(codemark => {
+				const codemarkType = codemark.type || "comment";
+				if (codemark.deactivated) return null;
+				if (typeFilter !== "all" && codemarkType !== typeFilter) return null;
+				if (codemarkType === "comment" && (!codemark.markers || codemark.markers.length === 0))
+					return null;
+				const codeBlock = codemark.markers && codemark.markers.length && codemark.markers[0];
 
-			const codeBlockFile = codeBlock && codeBlock.file;
-			const codeBlockRepo = codeBlock && codeBlock.repoId;
-			const title = codemark.title;
-			const assignees = codemark.assignees;
-			const status = codemark.status;
-			const q = this.props.q ? this.props.q.toLocaleLowerCase() : null;
+				const codeBlockFile = codeBlock && codeBlock.file;
+				const codeBlockRepo = codeBlock && codeBlock.repoId;
+				const title = codemark.title;
+				const assignees = codemark.assignees;
+				const status = codemark.status;
+				const q = this.props.q ? this.props.q.toLocaleLowerCase() : null;
 
-			sectionFilters.forEach(section => {
-				if (assignedCodemarks[codemark.id]) return;
-				// if (!this.state.expanded[section]) return;
+				sectionFilters.forEach(section => {
+					if (assignedCodemarks[codemark.id]) return;
+					// if (!this.state.expanded[section]) return;
 
-				if (
-					q &&
-					!(codemark.text || "").toLocaleLowerCase().includes(q) &&
-					!(title || "").toLocaleLowerCase().includes(q)
-				)
-					return;
-				if (fileFilter === "current" && section !== "inThisFile") return;
-				if (fileFilter === "repo" && codeBlockRepo !== thisRepo) return;
-				if (fileFilter === "unseparated" && section === "inThisFile") return;
-				switch (section) {
-					case "inThisFile":
-						if (mostRecentSourceFile && codeBlockFile === mostRecentSourceFile)
-							assignCodemark(codemark, "inThisFile");
-						break;
-					case "mine":
-						if ((status === "open" || !status) && _.contains(assignees || [], currentUserId))
-							assignCodemark(codemark, "mine");
-						break;
-					case "open":
-						if (status === "open" || !status) assignCodemark(codemark, "open");
-						break;
-					case "unanswered":
-						if (codemark.numReplies > 0) assignCodemark(codemark, "unanswered");
-						break;
-					case "recent":
-						assignCodemark(codemark, "recent");
-						break;
-					case "closed":
-						if (status === "closed") assignCodemark(codemark, "closed");
-						break;
-				}
+					if (
+						q &&
+						!(codemark.text || "").toLocaleLowerCase().includes(q) &&
+						!(title || "").toLocaleLowerCase().includes(q)
+					)
+						return;
+					if (fileFilter === "current" && section !== "inThisFile") return;
+					if (fileFilter === "repo" && codeBlockRepo !== thisRepo) return;
+					if (fileFilter === "unseparated" && section === "inThisFile") return;
+					switch (section) {
+						case "inThisFile":
+							if (mostRecentSourceFile && codeBlockFile === mostRecentSourceFile)
+								assignCodemark(codemark, "inThisFile");
+							break;
+						case "mine":
+							if ((status === "open" || !status) && _.contains(assignees || [], currentUserId))
+								assignCodemark(codemark, "mine");
+							break;
+						case "open":
+							if (status === "open" || !status) assignCodemark(codemark, "open");
+							break;
+						case "unanswered":
+							if (codemark.numReplies > 0) assignCodemark(codemark, "unanswered");
+							break;
+						case "recent":
+							assignCodemark(codemark, "recent");
+							break;
+						case "closed":
+							if (status === "closed") assignCodemark(codemark, "closed");
+							break;
+					}
+				});
 			});
-		});
 
 		let typeMenuItems = [
 			{ label: "All Codemarks", action: "all" },
