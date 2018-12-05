@@ -274,6 +274,7 @@ export class CodeStreamSession {
 		}
 	}
 
+	@log()
 	private onVersionCompatibilityChanged(e: VersionCompatibilityChangedEvent) {
 		this.agent.sendNotification(DidChangeVersionCompatibilityNotificationType, e);
 	}

@@ -1,6 +1,7 @@
 "use strict";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
 import { VersionCompatibility } from "../../shared/agent.protocol";
+import { log } from "../../system";
 import {
 	ApiProvider,
 	CodeStreamApiMiddleware,
@@ -30,6 +31,7 @@ export class VersionMiddlewareManager implements Disposable {
 		this._disposable && this._disposable.dispose();
 	}
 
+	@log()
 	async notify(compatibility: VersionCompatibility, url: string, version: string | undefined) {
 		if (this._compatibility === compatibility) return;
 
