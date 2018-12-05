@@ -203,9 +203,12 @@
 	.icon {
 		cursor: pointer;
 		opacity: 0.4;
+		display: inline-block;
+		transition: transform 0.1s;
 		&:hover {
 			opacity: 1;
-			color: @text-color-highlight;
+			color: @text-color-info;
+			transform: scale(1.4);
 		}
 	}
 }
