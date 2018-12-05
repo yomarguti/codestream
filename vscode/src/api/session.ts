@@ -27,7 +27,7 @@ import { configuration } from "../configuration";
 import { extensionQualifiedId } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { Functions, Strings } from "../system";
+import { Functions, log, Strings } from "../system";
 import { Marker } from "./models/marker";
 import { Post } from "./models/post";
 import { Repository } from "./models/repository";
@@ -492,15 +492,15 @@ export class CodeStreamSession implements Disposable {
 		);
 
 		if (result.error) {
-			this.setStatus(SessionStatus.SignedOut, SessionSignedOutReason.SignInFailure);
-
 			if (result.error !== LoginResult.NotOnTeam && result.error !== LoginResult.NotConfirmed) {
 				this._signupToken = undefined;
 			}
 
 			if (result.error === LoginResult.VersionUnsupported) {
-				await this.showVersionUnsupportedMessage();
+				this.showVersionUnsupportedMessage();
 			}
+
+			this.setStatus(SessionStatus.SignedOut, SessionSignedOutReason.SignInFailure);
 
 			return result.error;
 		}
@@ -509,6 +509,7 @@ export class CodeStreamSession implements Disposable {
 		return LoginResult.Success;
 	}
 
+	@log()
 	async logout(reason: SessionSignedOutReason = SessionSignedOutReason.UserSignedOut) {
 		this._id = undefined;
 		this._loginPromise = undefined;
@@ -574,12 +575,13 @@ export class CodeStreamSession implements Disposable {
 
 			if (result.error) {
 				if (result.error === LoginResult.VersionUnsupported) {
-					await this.showVersionUnsupportedMessage();
+					this.showVersionUnsupportedMessage();
 				} else {
 					// Clear the access token
 					await TokenManager.clear(this._serverUrl, email);
-					this.setStatus(SessionStatus.SignedOut, SessionSignedOutReason.SignInFailure);
 				}
+
+				this.setStatus(SessionStatus.SignedOut, SessionSignedOutReason.SignInFailure);
 
 				return result.error;
 			}
