@@ -137,16 +137,10 @@ class Post extends React.Component {
 		let extension = Path.extname(path).toLowerCase();
 		if (extension.startsWith(".")) {
 			extension = extension.substring(1);
-			if (extension === "tsx") extension = "jsx"; // Placeholder until https://github.com/highlightjs/highlight.js/pull/1663 get's merged
 		}
 		let codeHTML;
-		if (extension) {
-			try {
-				codeHTML = hljs.highlight(extension, marker.code).value;
-			} catch (e) {
-				/* the language for that file extension may not be supported */
-				codeHTML = hljs.highlightAuto(marker.code).value;
-			}
+		if (extension && hljs.getLanguage(extension)) {
+			codeHTML = hljs.highlight(extension, marker.code, true).value;
 		} else codeHTML = hljs.highlightAuto(marker.code).value;
 
 		return <div className="code" dangerouslySetInnerHTML={{ __html: codeHTML }} />;

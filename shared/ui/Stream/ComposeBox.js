@@ -1159,9 +1159,10 @@ class ComposeBox extends React.Component {
 		if (extension.startsWith(".")) {
 			extension = extension.substring(1);
 		}
-		const codeHTML = extension
-			? hljs.highlight(extension, quote.code).value
-			: hljs.highlightAuto(quote.code).value;
+		const codeHTML =
+			extension && hljs.getLanguage(extension)
+				? hljs.highlight(extension, quote.code, true).value
+				: hljs.highlightAuto(quote.code).value;
 
 		return <div className="code" dangerouslySetInnerHTML={{ __html: codeHTML }} />;
 	}
