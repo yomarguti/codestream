@@ -19,7 +19,7 @@ const defaultCreatedAt = 181886400000;
 const multiPartyNamesRegEx = /^mpdm-([^-]+)(--.*)-1$/;
 const multiPartyNameRegEx = /--([^-]+)/g;
 
-const codemarkAttachmentRegex = /codestream\:\/\/codemark\/(.*)/;
+const codemarkAttachmentRegex = /codestream\:\/\/codemark\/(\w+)(?:\?teamId=)?(\w+)?/;
 const markerAttachmentRegex = /codestream\:\/\/marker\/(.*)/;
 const mentionsRegex = /(^|\s)@(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
 const pseudoMentionsRegex = /(^|\s)@(everyone|channel|here)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
@@ -237,7 +237,7 @@ export async function fromSlackPost(
 		// TODO: Turn unfurled images into files
 		const attachments = post.attachments.filter((a: any) => a.from_url == null);
 		if (attachments.length !== 0) {
-			codemark = await fromSlackPostCodemark(attachments);
+			codemark = await fromSlackPostCodemark(attachments, teamId);
 			if (!codemark) {
 				// legacy markers
 				const marker = await fromSlackPostMarker(attachments);
@@ -282,7 +282,8 @@ export async function fromSlackPost(
 }
 
 export async function fromSlackPostCodemark(
-	attachments: MessageAttachment[]
+	attachments: MessageAttachment[],
+	codestreamTeamId: string
 ): Promise<CSCodemark | undefined> {
 	const attachment = attachments.find(
 		(a: any) => a.callback_id != null && codemarkAttachmentRegex.test(a.callback_id)
@@ -292,7 +293,11 @@ export async function fromSlackPostCodemark(
 	const match = codemarkAttachmentRegex.exec(attachment.callback_id || "");
 	if (match == null) return undefined;
 
-	const [, codemarkId] = match;
+	const [, codemarkId, teamId] = match;
+
+	if (teamId && teamId !== codestreamTeamId) {
+		return undefined;
+	}
 
 	try {
 		return await Container.instance().codemarks.getById(codemarkId);
