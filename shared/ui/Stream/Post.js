@@ -183,17 +183,19 @@ class Post extends React.Component {
 			bookmark: type === "bookmark"
 		});
 
-		// console.log(post);
+		console.log(codemark);
 		let codeBlock = null;
 		if (hasMarkers) {
 			const noRepo = !codemark.markers[0].repoId;
+			let fileLabel = codemark.markers[0].file || "-";
+			// if (codemark.Markers[0].range)
 			codeBlock = (
 				<div
 					className="code-reference"
 					onClick={this.props.showDetails && this.handleClickCodeBlock}
 				>
 					<div className={createClassString("header", { "no-repo": noRepo })}>
-						<span className="file">{codemark.markers[0].file || "-"}</span>
+						<span className="file">{fileLabel}</span>
 						{this.state.warning && (
 							<Tooltip placement="left" title={this.getWarningMessage()}>
 								<span className="icon-wrapper">

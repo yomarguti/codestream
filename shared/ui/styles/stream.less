@@ -667,6 +667,15 @@
 				border: 1px solid @base-border-color;
 				border-radius: 4px;
 			}
+			.channel-label {
+				font-weight: normal;
+				color: @text-color-highlight;
+				.icon {
+					display: inline-block;
+					transform: scale(0.7);
+					margin-left: 2px;
+				}
+			}
 		}
 		.compose {
 		}
@@ -1775,34 +1784,35 @@
 			}
 			.replying-to,
 			.code-reference .file {
-				height: 1.4em;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				white-space: pre;
+				// height: 1.4em;
+				// overflow: hidden;
+				// text-overflow: ellipsis;
+				// white-space: pre;
 				color: @text-color-info;
 				display: block;
 				span {
-					opacity: 0.5;
-					color: @text-color;
+					// opacity: 0.5;
+					// color: @text-color;
 				}
 				b {
 					font-weight: normal;
 				}
 			}
 			.code-reference .header {
-				direction: rtl;
-				text-align: center;
-				color: @text-color-subtle;
-				background-color: @base-border-color;
-				background: @base-background-color;
-				display: block;
-				padding: 2px 4px;
-				height: auto;
-				margin-top: 5px;
-				font-size: 12px;
-				border-radius: 5px 5px 0 0;
-				border: 1px solid @base-border-color;
-				border-bottom: 1px dashed @base-border-color;
+				// direction: rtl;
+				// text-align: center;
+				// color: @text-color-subtle;
+				// background-color: @base-border-color;
+				// background: @base-background-color;
+				// display: block;
+				// padding: 2px 4px;
+				// height: auto;
+				// margin-top: 5px;
+				// font-size: 12px;
+				// border-radius: 5px 5px 0 0;
+				// border: 1px solid @base-border-color;
+				// border-bottom: 1px dashed @base-border-color;
+
 				&.no-repo {
 					height: 0;
 					border-bottom: none !important;
@@ -1811,10 +1821,10 @@
 						display: none;
 					}
 				}
-				.file {
-					opacity: 0.5;
-					color: @text-color;
-				}
+				// .file {
+				// 	opacity: 0.5;
+				// 	color: @text-color;
+				// }
 				.icon-wrapper {
 					position: absolute;
 					right: 20px;
@@ -2310,10 +2320,10 @@
 			.control-group {
 				margin: 3% 0;
 
-				&:first-child,
-				&:last-child {
-					margin: 0;
-				}
+				// &:first-child,
+				// &:last-child {
+				// 	margin: 0;
+				// }
 
 				.help-link {
 					text-align: right;
@@ -2334,7 +2344,7 @@
 				border-radius: 3px;
 			}
 			.tab-group {
-				margin-top: 8px;
+				// margin-top: 8px;
 				white-space: nowrap;
 				overflow: hidden;
 				input {
@@ -2388,6 +2398,12 @@
 				vertical-align: -2px;
 			}
 		}
+		.checkbox-row {
+			margin-top: 10px;
+			cursor: pointer;
+			user-select: none;
+			color: @text-color-subtle;
+		}
 		.styled-select {
 			margin: 5px 0;
 		}
@@ -2429,11 +2445,15 @@
 				margin: 0 !important;
 			}
 		}
+		.panel-header {
+			height: 20px;
+		}
 	}
 
 	#code-comment-form {
 		width: 100%;
 		padding: 0 10px 10px 10px;
+		padding: 0 25px 25px 25px;
 		position: relative;
 		overflow-x: hidden;
 		max-height: 100vh !important;
