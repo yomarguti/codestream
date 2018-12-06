@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.30.1] - 2018-12-6
+
+### Fixed
+
+- Fixes an issue where if another user created a codemark (without code), it would not immediately be displayed in the Codemarks view
+- Fixes an issue where if another user created a codemark (with code), it would not be displayed in the editor until a reload
+
 ## [0.30] - 2018-12-6
 
 ### Added
