@@ -113,6 +113,8 @@ interface DeferredStreamRequest<TResult> {
 	};
 }
 
+const meMessageRegex = /^\/me /;
+
 export class SlackApiProvider implements ApiProvider {
 	private _onDidReceiveMessage = new Emitter<RTMessage>();
 	get onDidReceiveMessage(): Event<RTMessage> {
@@ -497,17 +499,18 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	async createPost(request: CreatePostRequest): Promise<CreatePostResponse> {
 		try {
-			const meMessage = request.text != null && request.text.startsWith("/me ");
+			const usernamesById = await this.ensureUsernamesById();
 
-			let text;
-			if (request.text) {
-				text = toSlackPostText(
-					request.text,
-					request.mentionedUserIds,
-					await this.ensureUserIdsByName()
-				);
-			} else {
-				text = request.text;
+			let text = request.text;
+			let meMessage = meMessageRegex.test(text);
+			// If we are trying post a me message as a reply, send it as a normal reply with /me replaced with the username
+			if (meMessage && request.parentPostId != null) {
+				text = text.replace(meMessageRegex, `${usernamesById.get(this._slackUserId)} `);
+				meMessage = false;
+			}
+
+			if (text) {
+				text = toSlackPostText(text, request.mentionedUserIds, usernamesById);
 			}
 
 			const { streamId, postId: parentPostId } = fromSlackPostId(
@@ -531,8 +534,6 @@ export class SlackApiProvider implements ApiProvider {
 				const postResponse = await this.getPost({ streamId: streamId, postId: postId });
 				return postResponse;
 			}
-
-			const usernamesById = await this.ensureUsernamesById();
 
 			let attachments;
 			let codemark: CSCodemark | undefined;
