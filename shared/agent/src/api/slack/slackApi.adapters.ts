@@ -642,15 +642,28 @@ export function toSlackPostAttachment(
 		}
 
 		for (const marker of markers) {
-			const location = markerLocations![0].locations[marker.id];
-			const [start, , end] = location!;
+			let title;
+			let start;
+			let end;
 
-			let title = `*${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})*`;
+			if (markerLocations) {
+				const location = markerLocations[0].locations[marker.id];
+				[start, , end] = location!;
+				title = `*${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})*`;
+			} else {
+				title = `*${marker.file}*`;
+			}
+
 			const code = `\n\`\`\`${marker.code}\`\`\``;
 
 			fallback += `${fallback ? "\n" : ""}\n${title}${code}`;
 
-			if (remotes !== undefined && remotes.length !== 0) {
+			if (
+				remotes !== undefined &&
+				remotes.length !== 0 &&
+				start !== undefined &&
+				end !== undefined
+			) {
 				let url;
 				for (const remote of remotes) {
 					for (const [regex, fn] of providers) {
