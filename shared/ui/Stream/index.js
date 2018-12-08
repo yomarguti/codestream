@@ -701,6 +701,8 @@ export class SimpleStream extends Component {
 				findMentionedUserIds={this.findMentionedUserIds}
 				isDirectMessage={this.props.postStreamType === "direct"}
 				isSlackTeam={this.props.isSlackTeam}
+				connectSlack={this.props.connectSlack}
+				connectTrello={this.props.connectTrello}
 				multiCompose={this.state.multiCompose}
 				setMultiCompose={this.setMultiCompose}
 				quote={this.state.quote}

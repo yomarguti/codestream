@@ -134,6 +134,22 @@ export default class WebviewApi {
 		return this.postMessage({ action: "go-to-slack-signin" });
 	}
 
+	startTrelloSignin() {
+		return this.postMessage({ action: "go-to-trello-signin" });
+	}
+
+	startJiraSignin() {
+		return this.postMessage({ action: "go-to-jira-signin" });
+	}
+
+	startGitHubSignin() {
+		return this.postMessage({ action: "go-to-github-signin" });
+	}
+
+	startAsanaSignin() {
+		return this.postMessage({ action: "go-to-asana-signin" });
+	}
+
 	validateSignup(token: string) {
 		return this.postMessage({ action: "validate-signup", params: token });
 	}

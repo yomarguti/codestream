@@ -38,7 +38,11 @@ export default class Menu extends Component {
 			// check to make sure the menu doesn't display
 			// off the bottom of the screen
 			const tooFar = rect.top + this._div.offsetHeight + 35 - window.innerHeight;
-			if (tooFar > 0) this._div.style.top = rect.top - tooFar + "px";
+			if (tooFar > 0) {
+				const newTop = rect.top - tooFar;
+				if (newTop > 10) this._div.style.top = newTop + "px";
+				else this._div.style.top = "10px";
+			}
 		}
 	}
 
@@ -63,8 +67,9 @@ export default class Menu extends Component {
 
 	render() {
 		let count = 0;
+		const className = this.props.compact ? "menu-popup compact" : "menu-popup";
 		return ReactDOM.createPortal(
-			<div className="menu-popup" ref={ref => (this._div = ref)}>
+			<div className={className} ref={ref => (this._div = ref)}>
 				<div className="menu-popup-body">
 					<ul className="compact">
 						{this.props.items.map(item => {
@@ -78,7 +83,7 @@ export default class Menu extends Component {
 										hover: item.action === this.state.selected
 									})}
 									key={item.action}
-									onMouseEnter={event => this.handleMouseEnter(item.action)}
+									onMouseEnter={() => this.handleMouseEnter(item.action)}
 									onClick={event => this.handleClickItem(event, item)}
 								>
 									{item.icon && <span className="icon">{item.icon}</span>}

@@ -1025,8 +1025,10 @@
 			}
 			ul {
 				// border-top: 1px solid @base-border-color;
-				padding: 5px 0;
+				margin: 5px 0;
 				border-radius: 0 5px 5px 0;
+				max-height: 95vh;
+				overflow: auto;
 			}
 			li.menu-item {
 				padding: 5px 10px;
@@ -1040,6 +1042,9 @@
 					border-radius: 3px;
 					margin-right: 6px;
 				}
+			}
+			&.compact li.menu-item {
+				padding: 1px 10px;
 			}
 			// li:hover,
 			li.menu-item.hover {
@@ -2418,6 +2423,10 @@
 					}
 				}
 			}
+			.icon.spin {
+				margin-left: 5px;
+				vertical-align: 1px;
+			}
 		}
 		.styled-select {
 			margin: 5px 0;
@@ -2431,6 +2440,21 @@
 			color: @text-color;
 			background-color: @app-background-color-darker;
 			width: 100%;
+
+			&.text-select {
+				border: none;
+				color: @text-color;
+				background-color: transparent;
+				padding: 0;
+				margin: 0;
+				width: auto;
+				display: inline-block;
+				outline: none;
+				&:focus {
+					border: none;
+					outline: none;
+				}
+			}
 		}
 		.two-column {
 			display: grid;
@@ -2749,6 +2773,17 @@
 		margin-left: 5px;
 		border-radius: 3px;
 		vertical-align: 1px;
+	}
+	.icon.clickable {
+		cursor: pointer;
+		transition: transform 0.1s;
+		display: inline-block;
+		&:hover,
+		&.hover {
+			opacity: 1;
+			color: @text-color-info;
+			transform: scale(1.4);
+		}
 	}
 	// .switch.public-private
 	// <input type="checkbox" id="toggle" class="offscreen" />
