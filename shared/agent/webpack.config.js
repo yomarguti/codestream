@@ -21,6 +21,11 @@ module.exports = function(env, argv) {
 							destination: path.resolve(__dirname, "../vscode-codestream/src/shared/")
 						},
 						{
+							source: "src/shared/*",
+							// TODO: Use environment variable if exists
+							destination: path.resolve(__dirname, "../codestream-components/shared/")
+						},
+						{
 							source: "dist/*",
 							// TODO: Use environment variable if exists
 							destination: path.resolve(__dirname, "../vscode-codestream/dist/")
