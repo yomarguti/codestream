@@ -309,6 +309,29 @@ export class CodeStreamWebviewPanel implements Disposable {
 							});
 							break;
 						}
+						case "go-to-trello-signin": {
+							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
+
+							try {
+								await commands.executeCommand(
+									"vscode.open",
+									Uri.parse(
+										`${
+											Container.config.webAppUrl
+										}/service-auth/trello?state=${this.session.getSignupToken()}`
+									)
+								);
+								responseBody.payload = true;
+							} catch (ex) {
+								responseBody.error = ex.message;
+							}
+
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: responseBody
+							});
+							break;
+						}
 						case "validate-signup": {
 							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
 							const status = await this.session.loginViaSignupToken(body.params);
