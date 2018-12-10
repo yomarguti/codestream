@@ -858,17 +858,14 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}
 
-	private sendRequest<R, E, RO>(
-		type: RequestType0<R, E, RO>,
-		token?: CancellationToken
-	): Promise<R>;
-	private sendRequest<P, R, E, RO>(
+	sendRequest<R, E, RO>(type: RequestType0<R, E, RO>, token?: CancellationToken): Promise<R>;
+	sendRequest<P, R, E, RO>(
 		type: RequestType<P, R, E, RO>,
 		params: P,
 		token?: CancellationToken
 	): Promise<R>;
 	@started
-	private async sendRequest(type: any, params?: any): Promise<any> {
+	async sendRequest(type: any, params?: any): Promise<any> {
 		const traceParams =
 			type.method === ApiRequestType.method ? params.init && params.init.body : params;
 

@@ -19,6 +19,7 @@ import {
 	WindowState,
 	workspace
 } from "vscode";
+import { RequestType } from "vscode-jsonrpc";
 import {
 	CSCodeBlock,
 	CSMePreferences,
@@ -391,137 +392,6 @@ export class CodeStreamWebviewPanel implements Disposable {
 							}
 							break;
 						}
-						case "fetch-posts": {
-							const { streamId, limit, beforeSeqNum } = body.params;
-
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: {
-									id: body.id,
-									payload: await Container.agent.posts.fetch(streamId, {
-										limit: limit,
-										before: beforeSeqNum
-									})
-								}
-							});
-							break;
-						}
-						case "fetch-codemarks": {
-							const {} = body.params;
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: {
-									id: body.id,
-									payload: await Container.agent.codemarks.fetch()
-								}
-							});
-							break;
-						}
-						case "fetch-thread": {
-							const { streamId, parentPostId } = body.params;
-							const response = await Container.agent.posts.fetchReplies(streamId, parentPostId);
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: {
-									id: body.id,
-									payload: response
-								}
-							});
-							break;
-						}
-						case "delete-post": {
-							const { streamId, id } = body.params;
-
-							const response = await Container.agent.posts.delete(streamId, id);
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload: response.post }
-							});
-
-							break;
-						}
-						case "react-to-post": {
-							const { streamId, id, emoji, value } = body.params;
-
-							const response = await Container.agent.posts.react(streamId, id, { [emoji]: value });
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload: response.post }
-							});
-
-							break;
-						}
-						case "edit-post": {
-							const { streamId, id, text, mentions } = body.params;
-
-							const response = await Container.agent.posts.edit(streamId, id, text, mentions);
-
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload: response.post }
-							});
-
-							break;
-						}
-						case "edit-codemark": {
-							const { id, text, color, assignees, title } = body.params;
-
-							const response = await Container.agent.codemarks.edit(id, {
-								text,
-								color,
-								assignees,
-								title
-							});
-
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload: response.codemark }
-							});
-
-							break;
-						}
-						case "set-codemark-status": {
-							const { id, status } = body.params;
-
-							const response = await Container.agent.codemarks.setStatus(id, status);
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload: response }
-							});
-
-							break;
-						}
-						case "mark-stream-read": {
-							const { streamId } = body.params;
-							let postId = body.params.postId;
-
-							if (!postId) {
-								const { posts } = await Container.agent.posts.fetch(streamId, { limit: 1 });
-								if (posts.length === 1) {
-									postId = posts[0].id;
-								}
-							}
-
-							if (postId) await Container.agent.streams.markRead(streamId, postId);
-
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload: true }
-							});
-
-							break;
-						}
-						case "mark-post-unread": {
-							const { streamId, id } = body.params;
-
-							const response = await Container.agent.posts.markUnread(streamId, id);
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload: response }
-							});
-
-							break;
-						}
 						case "show-markers": {
 							const value = body.params;
 							// set the config
@@ -552,172 +422,6 @@ export class CodeStreamWebviewPanel implements Disposable {
 							);
 							break;
 						}
-						case "create-stream": {
-							const { type, name, purpose, privacy, memberIds } = body.params;
-
-							let response;
-							if (type === "channel") {
-								response = await Container.agent.streams.createChannel(
-									name,
-									memberIds,
-									privacy,
-									purpose
-								);
-							} else if (type === "direct") {
-								response = await Container.agent.streams.createDirect(memberIds);
-							}
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload: response && response.stream }
-							});
-
-							break;
-						}
-						case "open-stream": {
-							const streamId = body.params;
-
-							const response = await Container.agent.streams.open(streamId);
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload: response.stream }
-							});
-
-							break;
-						}
-						case "save-user-preference": {
-							const response = await Container.agent.users.updatePreferences(body.params);
-
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload: response }
-							});
-
-							break;
-						}
-						case "invite": {
-							const { email, fullName } = body.params;
-
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: {
-									id: body.id,
-									payload: await Container.agent.users.invite(email, fullName)
-								}
-							});
-
-							break;
-						}
-						case "join-stream": {
-							const { streamId } = body.params;
-
-							const response = await Container.agent.streams.join(streamId);
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: { id: body.id, payload: response.stream }
-							});
-
-							break;
-						}
-						case "leave-stream": {
-							const { streamId } = body.params;
-
-							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-							try {
-								const response = await Container.agent.streams.leave(streamId);
-								responseBody.payload = response.stream;
-							} catch (ex) {
-								responseBody.error = ex;
-							}
-
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: responseBody
-							});
-
-							break;
-						}
-						case "rename-stream": {
-							const { streamId, name } = body.params;
-
-							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-							try {
-								const response = await Container.agent.streams.rename(streamId, name);
-								responseBody.payload = response.stream;
-							} catch (ex) {
-								responseBody.error = ex;
-							}
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: responseBody
-							});
-							return;
-						}
-						case "set-stream-purpose": {
-							const { streamId, purpose } = body.params;
-
-							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-							try {
-								const response = await Container.agent.streams.setPurpose(streamId, purpose);
-								responseBody.payload = response.stream;
-							} catch (ex) {
-								responseBody.error = ex;
-							}
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: responseBody
-							});
-							return;
-						}
-						case "archive-stream": {
-							const { streamId, archive } = body.params;
-
-							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-							try {
-								const response = archive
-									? await Container.agent.streams.archive(streamId)
-									: await Container.agent.streams.unarchive(streamId);
-								responseBody.payload = response.stream;
-							} catch (ex) {
-								responseBody.error = ex;
-							}
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: responseBody
-							});
-							return;
-						}
-						case "remove-users-from-stream": {
-							const { streamId, userIds } = body.params;
-
-							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-							try {
-								const response = await Container.agent.streams.kick(streamId, userIds);
-								responseBody.payload = response.stream;
-							} catch (ex) {
-								responseBody.error = ex;
-							}
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: responseBody
-							});
-							return;
-						}
-						case "add-users-to-stream": {
-							const { streamId, userIds } = body.params;
-
-							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-							try {
-								const response = await Container.agent.streams.invite(streamId, userIds);
-								responseBody.payload = response.stream;
-							} catch (ex) {
-								responseBody.error = ex;
-							}
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: responseBody
-							});
-							return;
-						}
 						case "show-code": {
 							const { marker, enteringThread, source } = e.body.params;
 							const status = await Container.commands.openPostWorkingFile(marker, {
@@ -731,35 +435,19 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 							break;
 						}
-						case "close-direct-message": {
-							const responseBody: { [k: string]: any } = { id: e.body.id };
-							try {
-								const response = await Container.agent.streams.close(e.body.params);
-								responseBody.payload = response.stream;
-							} catch (error) {
-								responseBody.error = error.message;
-							} finally {
-								this.postMessage({
-									type: WebviewIpcMessageType.response,
-									body: responseBody
-								});
-							}
-							break;
-						}
-						case "change-stream-mute-state": {
-							const responseBody: { [k: string]: any } = { id: e.body.id };
-							try {
-								const { streamId, muted } = e.body.params;
-								const response = await Container.agent.streams.mute(streamId, muted);
-								responseBody.payload = response.stream;
-							} catch (error) {
-								responseBody.error = error;
-							} finally {
-								this.postMessage({
-									type: WebviewIpcMessageType.response,
-									body: responseBody
-								});
-							}
+						default: {
+							// TODO: catch errors
+							const response = await Container.agent.sendRequest(
+								new RequestType<any, any, any, any>(body.action),
+								body.params
+							);
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: {
+									id: body.id,
+									payload: response
+								}
+							});
 							break;
 						}
 					}

@@ -14,7 +14,11 @@ module.exports = function(env, argv) {
 	env.watch = Boolean(argv.watch || argv.w);
 
 	env.copyShared = Boolean(env.copyShared);
-	if (!env.copyShared && !fs.existsSync(path.resolve(__dirname, "src/shared"))) {
+	if (
+		!env.copyShared &&
+		(!fs.existsSync(path.resolve(__dirname, "src/shared")) ||
+			!fs.existsSync(path.resolve(__dirname, "../codestream-components/shared")))
+	) {
 		env.copyShared = true;
 	}
 
@@ -130,9 +134,25 @@ function getExtensionConfig(env) {
 }
 
 function getWebviewConfig(env) {
+	let onStart = [];
+	if (!env.watch && env.copyShared) {
+		onStart.push({
+			copy: [
+				// Copy in the type declarations from the agent, because referencing them directly is a nightmare
+				{
+					// TODO: Use environment variable if exists
+					source: path.resolve(__dirname, "../codestream-lsp-agent/src/shared/*"),
+					destination: path.resolve(__dirname, "../codestream-components/shared/")
+				}
+			]
+		});
+	}
 	const plugins = [
 		new CleanPlugin(["dist/webview", "webview.html"]),
 		// new BabelExternalHelpersPlugin(),
+		new FileManagerPlugin({
+			onStart: onStart
+		}),
 		new MiniCssExtractPlugin({
 			filename: "webview.css"
 		}),
@@ -229,6 +249,9 @@ function getWebviewConfig(env) {
 				"codestream-components$": path.resolve(__dirname, "../codestream-components/index.js"),
 				"codestream-components": path.resolve(__dirname, "../codestream-components/")
 			}
+		},
+		node: {
+			net: "mock"
 		},
 		plugins: plugins,
 		stats: {
