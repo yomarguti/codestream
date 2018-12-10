@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.30.2] - 2018-12-10
+
+### Fixed
+
+- Fixes [#20](https://github.com/TeamCodeStream/CodeStream/issues/20) &mdash; Add CodeStream comment doesn't work for Slack
+- Fixes an issue with automated messages for the closing of an issue codemark not being displayed as part of the issue's thread.
+
 ## [0.30.1] - 2018-12-6
 
 ### Fixed
