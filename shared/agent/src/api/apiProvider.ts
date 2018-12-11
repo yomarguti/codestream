@@ -299,6 +299,11 @@ export interface ApiProvider {
 	fetchUsers(request: FetchUsersRequest): Promise<FetchUsersResponse>;
 	getUser(request: GetUserRequest): Promise<GetUserResponse>;
 	inviteUser(request: InviteUserRequest): Promise<InviteUserResponse>;
+
+	connectThirdPartyProvider(request: {
+		providerName: string;
+		apiKey?: string;
+	}): Promise<{ code: string }>;
 }
 
 export interface CodeStreamApiMiddlewareContext {

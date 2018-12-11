@@ -1,6 +1,8 @@
 "use strict";
 import fetch, { RequestInit, Response } from "node-fetch";
 import * as qs from "querystring";
+import { MessageType } from "../api/apiProvider";
+import { User } from "../api/extensions";
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import {
@@ -16,49 +18,74 @@ import {
 	TrelloFetchListsRequestType,
 	TrelloList
 } from "../shared/agent.protocol";
+import { CSMe, CSTrelloProviderInfo } from "../shared/api.protocol";
 import { Functions, log, lsp, lspHandler, Strings } from "../system";
 
 @lsp
 export class TrelloProvider {
 	private readonly _baseUrl = "https://api.trello.com/1";
-	private readonly _key: string;
-	private _token: string | undefined;
-	private _userId: string | undefined;
+	// TODO: Change this
+	private readonly _apiKey: string = "2ddb4a0ef22ece7fc17c09f82ad14a1b";
+	private _providerInfo: CSTrelloProviderInfo | undefined;
+	private _trelloUserId: string | undefined;
+	private _initalizing: Promise<void> | undefined;
 
-	constructor(session: CodeStreamSession) {
-		this._key = "2ddb4a0ef22ece7fc17c09f82ad14a1b";
+	constructor(public readonly session: CodeStreamSession) {
+		this._initalizing = this.initialize();
+	}
+
+	async initialize() {
+		const response = await this.session.api.getMe();
+		this._providerInfo = this.getProviderInfo(response.user);
+		if (this._providerInfo == null) return;
+
+		this._trelloUserId = await this.getMemberId();
+		this._initalizing = undefined;
+	}
+
+	private get token() {
+		return this._providerInfo && this._providerInfo.accessToken;
 	}
 
 	@log()
 	@lspHandler(TrelloAuthRequestType)
 	async auth(request: TrelloAuthRequest) {
-		// TODO
-		this._token = "<YOUR-TOKEN-HERE>";
+		void (await this.session.api.connectThirdPartyProvider({
+			providerName: "trello",
+			apiKey: this._apiKey
+		}));
+		this._providerInfo = await new Promise(resolve => {
+			this.session.api.onDidReceiveMessage(e => {
+				if (e.type !== MessageType.Users) return;
 
-		const tokenResponse = await this.get<{ idMember: string; [key: string]: any }>(
-			`/token/${this._token}?${qs.stringify({ key: this._key, token: this._token })}`
-		);
+				const me = e.data.find(u => u.id === this.session.userId) as CSMe | null | undefined;
+				if (me == null) return;
 
-		this._userId = tokenResponse.idMember;
+				const providerInfo = this.getProviderInfo(me);
+				if (providerInfo == null) return;
 
-		// const memberResponse = await this.get<{
-		// 	username: string;
-		// 	idBoards: string[];
-		// 	idOrganizations: string[];
-		// 	[key: string]: any;
-		// }>(`/members/${this._userId}?${qs.stringify({ key: this._key, token: this._token })}`);
+				resolve(providerInfo);
+			});
+		});
+
+		this._trelloUserId = await this.getMemberId();
 	}
 
 	@log()
 	@lspHandler(TrelloFetchBoardsRequestType)
 	async boards(request: TrelloFetchBoardsRequest) {
+		if (this._initalizing !== undefined) {
+			void (await this._initalizing);
+		}
+		if (this.token == null) throw new Error("You must authenticate with Trello first.");
+
 		const response = await this.get<TrelloBoard[]>(
-			`/members/${this._userId}/boards?${qs.stringify({
+			`/members/${this._trelloUserId}/boards?${qs.stringify({
 				filter: "open",
 				fields: "id,name,desc,descData,closed,idOrganization,pinned,url,labelNames,starred",
-				// lists: "open",
-				key: this._key,
-				token: this._token
+				lists: "open",
+				key: this._apiKey,
+				token: this.token
 			})}`
 		);
 
@@ -72,13 +99,18 @@ export class TrelloProvider {
 	@log()
 	@lspHandler(TrelloCreateCardRequestType)
 	async createCard(request: TrelloCreateCardRequest) {
+		if (this._initalizing !== undefined) {
+			void (await this._initalizing);
+		}
+		if (this.token == null) throw new Error("You must authenticate with Trello first.");
+
 		const response = await this.post<{}, TrelloCreateCardResponse>(
 			`/cards?${qs.stringify({
 				idList: request.listId,
 				name: request.name,
 				desc: request.description,
-				key: this._key,
-				token: this._token
+				key: this._apiKey,
+				token: this.token
 			})}`,
 			{}
 		);
@@ -88,11 +120,30 @@ export class TrelloProvider {
 	@log()
 	@lspHandler(TrelloFetchListsRequestType)
 	async lists(request: TrelloFetchListsRequest) {
+		if (this._initalizing !== undefined) {
+			void (await this._initalizing);
+		}
+		if (this.token == null) throw new Error("You must authenticate with Trello first.");
+
 		const response = await this.get<TrelloList[]>(
-			`/boards/${request.boardId}/lists?${qs.stringify({ key: this._key, token: this._token })}`
+			`/boards/${request.boardId}/lists?${qs.stringify({ key: this._apiKey, token: this.token })}`
 		);
 		return { lists: response.filter(l => !l.closed) };
 	}
+
+	private async getMemberId() {
+		const tokenResponse = await this.get<{ idMember: string; [key: string]: any }>(
+			`/token/${this.token}?${qs.stringify({ key: this._apiKey, token: this.token })}`
+		);
+
+		return tokenResponse.idMember;
+	}
+
+	private getProviderInfo(me: CSMe) {
+		return User.getProviderInfo<CSTrelloProviderInfo>(me, this.session.teamId, "trello");
+	}
+
+	// TODO: Move the below into a common re-usable place
 
 	private delete<R extends object>(url: string): Promise<R> {
 		let resp = undefined;

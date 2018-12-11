@@ -1,5 +1,5 @@
 "use strict";
-import { CSMe, CSSlackProviderInfo, CSTeam, ProviderType } from "../shared/api.protocol";
+import { CSMe, CSProviderInfos, CSSlackProviderInfo, CSTeam } from "../shared/api.protocol";
 
 export namespace Team {
 	export function isSlack(
@@ -16,5 +16,18 @@ export namespace User {
 			(me.providerInfo.slack != null ||
 				Object.values(me.providerInfo).some(provider => provider.slack != null))
 		);
+	}
+
+	export function getProviderInfo<T extends CSProviderInfos>(
+		me: CSMe,
+		teamId: string,
+		name: "trello"
+	) {
+		if (me.providerInfo == null) return undefined;
+
+		const provider = me.providerInfo[teamId];
+		if (provider == null) return;
+
+		return provider[name] as T;
 	}
 }

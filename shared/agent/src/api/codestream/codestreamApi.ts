@@ -1,6 +1,7 @@
 "use strict";
 import HttpsProxyAgent from "https-proxy-agent";
 import fetch, { Headers, RequestInit, Response } from "node-fetch";
+import opn from "opn";
 import { URLSearchParams } from "url";
 import { Emitter, Event } from "vscode-languageserver";
 import { ServerError } from "../../agentError";
@@ -932,6 +933,20 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	async getPreferences() {
 		return { preferences: this._preferences!.get() };
+	}
+
+	@log()
+	async connectThirdPartyProvider(request: { providerName: string; apiKey?: string }) {
+		const response = await this.get<{ code: string }>(
+			`/provider-auth-code?teamId=${this.teamId}`,
+			this._token
+		);
+		await opn(
+			`${this.baseUrl}/no-auth/provider-auth/${request.providerName}?code=${response.code}&key=${
+				request.apiKey
+			}`
+		);
+		return response;
 	}
 
 	private delete<R extends object>(url: string, token?: string): Promise<R> {

@@ -50,6 +50,7 @@
         "lodash-es": "4.17.11",
         "mixpanel": "^0.10.0",
         "node-fetch": "2.3.0",
+        "opn": "5.4.0",
         "pubnub": "4.21.6",
         "string-similarity": "2.0.0",
         "tmp": "0.0.33",

@@ -260,6 +260,8 @@ export interface CSMePreferences {
 	[key: string]: any;
 }
 
+export type CSProviderInfos = CSSlackProviderInfo | CSTrelloProviderInfo;
+
 export interface CSMe extends CSUser {
 	lastReads: CSLastReads;
 	joinMethod: string;

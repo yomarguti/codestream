@@ -34,6 +34,7 @@ export interface TrelloBoard {
 	url: string;
 	labelNames: { [color: string]: string };
 	starred: boolean;
+	lists: TrelloList[];
 }
 
 export interface TrelloFetchBoardsResponse {
