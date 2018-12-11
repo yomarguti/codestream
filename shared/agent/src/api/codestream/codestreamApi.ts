@@ -937,16 +937,23 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	async connectThirdPartyProvider(request: { providerName: string; apiKey?: string }) {
-		const response = await this.get<{ code: string }>(
-			`/provider-auth-code?teamId=${this.teamId}`,
-			this._token
-		);
-		await opn(
-			`${this.baseUrl}/no-auth/provider-auth/${request.providerName}?code=${response.code}&key=${
-				request.apiKey
-			}`
-		);
-		return response;
+		const cc = Logger.getCorrelationContext();
+
+		try {
+			const response = await this.get<{ code: string }>(
+				`/provider-auth-code?teamId=${this.teamId}`,
+				this._token
+			);
+			await opn(
+				`${this.baseUrl}/no-auth/provider-auth/${request.providerName}?code=${response.code}&key=${
+					request.apiKey
+				}`
+			);
+			return response;
+		} catch (ex) {
+			Logger.error(ex, cc);
+			throw ex;
+		}
 	}
 
 	private delete<R extends object>(url: string, token?: string): Promise<R> {

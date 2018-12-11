@@ -1,10 +1,11 @@
 "use strict";
+import { Session } from "inspector";
 import fetch, { RequestInit, Response } from "node-fetch";
 import * as qs from "querystring";
 import { MessageType } from "../api/apiProvider";
 import { User } from "../api/extensions";
 import { Logger } from "../logger";
-import { CodeStreamSession } from "../session";
+import { CodeStreamSession, SessionStatus } from "../session";
 import {
 	TrelloAuthRequest,
 	TrelloAuthRequestType,
@@ -31,7 +32,14 @@ export class TrelloProvider {
 	private _initalizing: Promise<void> | undefined;
 
 	constructor(public readonly session: CodeStreamSession) {
-		this._initalizing = this.initialize();
+		this._initalizing = new Promise<void>(resolve => {
+			this.session.onDidChangeSessionStatus(async e => {
+				if (e.getStatus() !== SessionStatus.SignedIn) return;
+
+				void (await this.initialize());
+				resolve();
+			});
+		});
 	}
 
 	async initialize() {

@@ -70,6 +70,16 @@ const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 	"VERS-1001": ApiErrors.VersionUnsupported
 };
 
+export enum SessionStatus {
+	SignedOut = "signedOut",
+	SignedIn = "signedIn"
+}
+
+export interface SessionStatusChangedEvent {
+	getStatus(): SessionStatus;
+	session: CodeStreamSession;
+}
+
 export interface TelemetryData {
 	hasCreatedPost: boolean;
 }
@@ -132,6 +142,11 @@ export class CodeStreamSession {
 	private _onDidRequestReset = new Emitter<void>();
 	get onDidRequestReset(): Event<void> {
 		return this._onDidRequestReset.event;
+	}
+
+	private _onDidChangeSessionStatus = new Emitter<SessionStatusChangedEvent>();
+	get onDidChangeSessionStatus(): Event<SessionStatusChangedEvent> {
+		return this._onDidChangeSessionStatus.event;
 	}
 
 	private readonly _proxyAgent: HttpsProxyAgent | undefined;
@@ -299,6 +314,20 @@ export class CodeStreamSession {
 		return this._environment;
 	}
 
+	private _status: SessionStatus = SessionStatus.SignedOut;
+	get status() {
+		return this._status;
+	}
+	private setStatus(status: SessionStatus) {
+		this._status = status;
+		const e: SessionStatusChangedEvent = {
+			getStatus: () => this._status,
+			session: this
+		};
+
+		this._onDidChangeSessionStatus.fire(e);
+	}
+
 	private _teamId: string | undefined;
 	get teamId() {
 		return this._teamId!;
@@ -439,6 +468,8 @@ export class CodeStreamSession {
 		// TODO: Check for opt in
 		this.initializeTelemetry(response.user, currentTeam, response.companies);
 
+		this.setStatus(SessionStatus.SignedIn);
+
 		return {
 			loginResponse: { ...response },
 			state: {
@@ -467,6 +498,7 @@ export class CodeStreamSession {
 
 	@log()
 	logout(reason: LogoutReason) {
+		this.setStatus(SessionStatus.SignedOut);
 		return this.agent.sendNotification(DidLogoutNotificationType, { reason: reason });
 	}
 
