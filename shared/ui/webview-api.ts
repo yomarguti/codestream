@@ -138,41 +138,34 @@ export default class WebviewApi {
 		return this.postMessage({ action: "agent", params: { url: "trello/auth", request: {} } });
 	}
 
-	createTrelloCard(
-		organizationId: string,
-		boardId: string,
-		listId: string,
-		name: string,
-		description: string
-	) {
+	createTrelloCard(listId: string, name: string, description: string) {
 		return this.postMessage({
 			action: "agent",
 			params: {
 				url: "trello/cards/create",
 				request: {
-					organizationId: organizationId,
-					boardId: boardId,
 					listId: listId,
 					name: name,
-					description: description /* TODO */
+					description: description
+					/* TODO */
 				}
 			}
 		});
 	}
 
-	fetchTrelloBoards(organizationId: string) {
+	fetchTrelloBoards(organizationId?: string) {
 		return this.postMessage({
 			action: "agent",
 			params: { url: "trello/boards", request: { organizationId: organizationId } }
 		});
 	}
 
-	fetchTrelloLists(organizationId: string, boardId: string) {
+	fetchTrelloLists(boardId: string) {
 		return this.postMessage({
 			action: "agent",
 			params: {
 				url: "trello/lists",
-				request: { organizationId: organizationId, boardId: boardId }
+				request: { boardId: boardId }
 			}
 		});
 	}
