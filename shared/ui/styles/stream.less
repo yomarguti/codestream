@@ -2498,6 +2498,9 @@
 		max-height: 100vh !important;
 		overflow-y: auto !important;
 		max-width: auto;
+		.tab-group {
+			margin-bottom: 10px;
+		}
 		fieldset {
 			padding: 0 !important;
 			// padding: 0 0 40px 0 !important;
@@ -2788,6 +2791,14 @@
 	// .switch.public-private
 	// <input type="checkbox" id="toggle" class="offscreen" />
 	// <label for="toggle" class="switch"></label>
+	.checkbox {
+		width: 1em;
+		height: 1em;
+		border-radius: 0.1em;
+		background-color: @app-background-color-hover;
+		&.checked {
+		}
+	}
 }
 
 @media only screen and (max-width: 250px) {
