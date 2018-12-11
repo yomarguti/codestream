@@ -54,7 +54,7 @@ export class TrelloProvider {
 			providerName: "trello",
 			apiKey: this._apiKey
 		}));
-		this._providerInfo = await new Promise(resolve => {
+		this._providerInfo = await new Promise<CSTrelloProviderInfo>(resolve => {
 			this.session.api.onDidReceiveMessage(e => {
 				if (e.type !== MessageType.Users) return;
 
