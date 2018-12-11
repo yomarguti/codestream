@@ -25,8 +25,8 @@ import { Functions, log, lsp, lspHandler, Strings } from "../system";
 @lsp
 export class TrelloProvider {
 	private readonly _baseUrl = "https://api.trello.com/1";
-	// TODO: Change this
-	private readonly _apiKey: string = "2ddb4a0ef22ece7fc17c09f82ad14a1b";
+	// This API key is from JJ and is connected to ops@codestream.com
+	private readonly _apiKey: string = "15b499a5b08872a4fe5ad7274c782d8a";
 	private _providerInfo: CSTrelloProviderInfo | undefined;
 	private _trelloUserId: string | undefined;
 	private _initalizing: Promise<void> | undefined;
