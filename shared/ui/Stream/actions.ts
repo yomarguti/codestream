@@ -24,6 +24,13 @@ interface ThunkExtras {
 }
 
 export {
+	connectSlack,
+	connectTrello,
+	connectJira,
+	connectGitHub,
+	connectAsana
+} from "../Signup/actions";
+export {
 	openPanel,
 	closePanel,
 	setThread,
@@ -528,5 +535,28 @@ export const telemetry = (params: { eventName: string; properties: {} }) => asyn
 		await api.sendTelemetry(params);
 	} catch (error) {
 		logError(`Telemetry error: ${error}`, params);
+	}
+};
+
+export const fetchTrelloBoards = () => async (dispatch, getState, { api }) => {
+	try {
+		const response = await api.fetchTrelloBoards();
+		return response;
+		// dispatch(saveCodemarks(response.codemarks));
+	} catch (error) {
+		console.error("failed to fetch trello boards", error);
+	}
+};
+
+export const createTrelloCard = (listId: string, name: string, description: string) => async (
+	dispatch,
+	getState,
+	{ api }
+) => {
+	try {
+		const response = await api.createTrelloCard(listId, name, description);
+		return response;
+	} catch (error) {
+		console.error("failed to create a trello card", error);
 	}
 };
