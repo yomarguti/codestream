@@ -1,5 +1,5 @@
 "use strict";
-import { CSMe, CSSlackProviderInfo, CSTeam } from "../shared/api.protocol";
+import { CSMe, CSSlackProviderInfo, CSTeam, ProviderType } from "../shared/api.protocol";
 
 export namespace Team {
 	export function isSlack(
@@ -11,6 +11,10 @@ export namespace Team {
 
 export namespace User {
 	export function isSlack(me: CSMe): me is CSMe & { providerInfo: { slack: CSSlackProviderInfo } } {
-		return me.providerInfo != null && me.providerInfo.slack != null;
+		return (
+			me.providerInfo != null &&
+			(me.providerInfo.slack != null ||
+				Object.values(me.providerInfo).some(provider => provider.slack != null))
+		);
 	}
 }

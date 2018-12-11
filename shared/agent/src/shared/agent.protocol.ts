@@ -27,6 +27,7 @@ export * from "./agent.protocol.posts";
 export * from "./agent.protocol.repos";
 export * from "./agent.protocol.streams";
 export * from "./agent.protocol.teams";
+export * from "./agent.protocol.trello";
 export * from "./agent.protocol.users";
 
 export interface ApiCapabilities {

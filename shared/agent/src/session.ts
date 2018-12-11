@@ -410,7 +410,6 @@ export class CodeStreamSession {
 			);
 
 			this._api = this.newSlackApiProvider(response);
-
 			await (this._api as SlackApiProvider).processLoginResponse(response);
 
 			Logger.log(
@@ -457,7 +456,9 @@ export class CodeStreamSession {
 	protected newSlackApiProvider(response: any) {
 		return new SlackApiProvider(
 			this._api! as CodeStreamApiProvider,
-			response.user.providerInfo.slack,
+			response.user.providerInfo.slack ||
+				(response.user.providerInfo[this._teamId!] &&
+					response.user.providerInfo[this._teamId!].slack),
 			response.user,
 			this._teamId!,
 			this._proxyAgent

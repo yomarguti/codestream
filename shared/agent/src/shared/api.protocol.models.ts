@@ -218,6 +218,11 @@ export interface CSSlackProviderInfo {
 	userId: string;
 }
 
+export interface CSTrelloProviderInfo {
+	accessToken: string;
+	userId: string;
+}
+
 export interface CSUser extends CSEntity {
 	companyIds: string[];
 	email: string;
@@ -259,7 +264,10 @@ export interface CSMe extends CSUser {
 	lastReads: CSLastReads;
 	joinMethod: string;
 	preferences: CSMePreferences;
-	providerInfo?: {
-		slack?: CSSlackProviderInfo;
+	providerInfo?: { slack?: CSSlackProviderInfo } & {
+		[teamId in string]: {
+			slack?: CSSlackProviderInfo;
+			trello?: CSTrelloProviderInfo;
+		}
 	};
 }

@@ -237,11 +237,25 @@ export class CodeStreamApiProvider implements ApiProvider {
 			// If we still can't find a team, then just pick the first one
 			if (options.teamId == null) {
 				// Pick the first slack team if there is one
-				if (response.user.providerInfo && response.user.providerInfo.slack) {
-					const team = response.teams.find(t => Boolean(t.providerInfo));
-					if (team) {
-						options.teamId = team.id;
-						pickedTeamReason = " because the team was the oldest Slack team";
+				const { providerInfo: providers } = response.user;
+				if (providers) {
+					if (providers.slack) {
+						const team = response.teams.find(t => Boolean(t.providerInfo));
+						if (team) {
+							options.teamId = team.id;
+							pickedTeamReason = " because the team was the oldest Slack team";
+						}
+					} else {
+						for (const [teamId, provider] of Object.entries(providers)) {
+							if (provider.slack) {
+								const team = response.teams.find(t => t.id === teamId);
+								if (team) {
+									options.teamId = team.id;
+									pickedTeamReason = " because the team was the oldest Slack team";
+								}
+								break;
+							}
+						}
 					}
 				}
 
