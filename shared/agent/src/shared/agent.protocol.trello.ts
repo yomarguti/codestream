@@ -2,9 +2,10 @@
 import { RequestType } from "vscode-languageserver-protocol";
 
 export interface TrelloCreateCardRequest {
-	organizationId: string;
-	boardId: string;
 	listId: string;
+
+	name: string;
+	description: string;
 }
 
 export interface TrelloCreateCardResponse {
@@ -19,11 +20,24 @@ export const TrelloCreateCardRequestType = new RequestType<
 >("codeStream/trello/cards/create");
 
 export interface TrelloFetchBoardsRequest {
-	organizationId: string;
+	organizationId?: string;
+}
+
+export interface TrelloBoard {
+	id: string;
+	name: string;
+	desc: string;
+	descData: string;
+	closed: boolean;
+	idOrganization: string;
+	pinned: boolean;
+	url: string;
+	labelNames: { [color: string]: string };
+	starred: boolean;
 }
 
 export interface TrelloFetchBoardsResponse {
-	boards: any[];
+	boards: TrelloBoard[];
 }
 
 export const TrelloFetchBoardsRequestType = new RequestType<
@@ -34,12 +48,20 @@ export const TrelloFetchBoardsRequestType = new RequestType<
 >("codeStream/trello/boards");
 
 export interface TrelloFetchListsRequest {
-	organizationId: string;
 	boardId: string;
 }
 
+export interface TrelloList {
+	id: string;
+	name: string;
+	closed: boolean;
+	idBoard: string;
+	pos: number;
+	subscribed: boolean;
+}
+
 export interface TrelloFetchListsResponse {
-	lists: any[];
+	lists: TrelloList[];
 }
 
 export const TrelloFetchListsRequestType = new RequestType<
