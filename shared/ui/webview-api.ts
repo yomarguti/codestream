@@ -138,12 +138,24 @@ export default class WebviewApi {
 		return this.postMessage({ action: "agent", params: { url: "trello/auth", request: {} } });
 	}
 
-	createTrelloCard(organizationId: string, boardId: string, listId: string) {
+	createTrelloCard(
+		organizationId: string,
+		boardId: string,
+		listId: string,
+		name: string,
+		description: string
+	) {
 		return this.postMessage({
 			action: "agent",
 			params: {
 				url: "trello/cards/create",
-				request: { organizationId: organizationId, boardId: boardId, listId: listId /* TODO */ }
+				request: {
+					organizationId: organizationId,
+					boardId: boardId,
+					listId: listId,
+					name: name,
+					description: description /* TODO */
+				}
 			}
 		});
 	}
