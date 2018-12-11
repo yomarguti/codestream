@@ -867,6 +867,17 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}
 
+	public async sendPassthroughRequest(url: string, request: any): Promise<any> {
+		try {
+			Logger.logWithDebugParams(`AgentConnection.sendPassthroughRequest(${url})`, request);
+			const response = await this._client!.sendRequest(`codeStream/${url}`, request);
+			return response;
+		} catch (ex) {
+			Logger.error(ex, `AgentConnection.sendRequest(${url})`, request);
+			throw ex;
+		}
+	}
+
 	sendRequest<R, E, RO>(type: RequestType0<R, E, RO>, token?: CancellationToken): Promise<R>;
 	sendRequest<P, R, E, RO>(
 		type: RequestType<P, R, E, RO>,
