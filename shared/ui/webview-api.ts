@@ -135,7 +135,34 @@ export default class WebviewApi {
 	}
 
 	startTrelloSignin() {
-		return this.postMessage({ action: "go-to-trello-signin" });
+		return this.postMessage({ action: "agent", params: { url: "trello/auth", request: {} } });
+	}
+
+	createTrelloCard(organizationId: string, boardId: string, listId: string) {
+		return this.postMessage({
+			action: "agent",
+			params: {
+				url: "trello/cards/create",
+				request: { organizationId: organizationId, boardId: boardId, listId: listId /* TODO */ }
+			}
+		});
+	}
+
+	fetchTrelloBoards(organizationId: string) {
+		return this.postMessage({
+			action: "agent",
+			params: { url: "trello/boards", request: { organizationId: organizationId } }
+		});
+	}
+
+	fetchTrelloLists(organizationId: string, boardId: string) {
+		return this.postMessage({
+			action: "agent",
+			params: {
+				url: "trello/lists",
+				request: { organizationId: organizationId, boardId: boardId }
+			}
+		});
 	}
 
 	startJiraSignin() {
