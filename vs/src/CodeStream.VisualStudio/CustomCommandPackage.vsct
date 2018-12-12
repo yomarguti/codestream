@@ -83,6 +83,11 @@
     </Bitmaps>
   </Commands>
 
+  <KeyBindings>
+    <KeyBinding guid="guidCustomCommandPackageCmdSet" id="cmdidCodeStreamToolWindowCommand"
+        editor="guidVSStd97" key1="C" mod1="ALT" key2="S" mod2="ALT" />
+  </KeyBindings>
+
   <Symbols>
     <!-- This is the package guid. -->
     <GuidSymbol name="guidCustomCommandPackage" value="{330ce502-4e1f-44b8-ab32-82a7ea71beeb}" />
