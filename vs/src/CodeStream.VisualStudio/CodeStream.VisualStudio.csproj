@@ -84,8 +84,7 @@
     </Compile>
     <Compile Include="Commands\IVsCommands.cs" />
     <Compile Include="Constants.cs" />
-    <Compile Include="CustomCommand.cs" />
-    <Compile Include="CustomCommandPackage.cs" />
+    <Compile Include="CodeStreamCommandPackage.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="FooContentTypeDefinition.cs" />
     <Compile Include="FooLanguageClient.cs" />
@@ -124,13 +123,13 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <EmbeddedResource Include="teamdev.licenses" />
-    <VSCTCompile Include="CustomCommandPackage.vsct">
+    <VSCTCompile Include="CodeStreamCommandPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
     </VSCTCompile>
     <Content Include="CodeStream.VisualStudio.pkgdef" />
     <Content Include="Resources\CodeStreamToolWindowCommand.png" />
-    <Content Include="Resources\CustomCommand.png" />
-    <Content Include="Resources\CustomCommandPackage.ico" />
+    <Content Include="Resources\CodeStreamCommand.png" />
+    <Content Include="Resources\CodeStreamCommandPackage.ico" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="DotNetBrowser.Chromium32, Version=1.19.0.0, Culture=neutral, PublicKeyToken=b0b5aaca9c95c84e, processorArchitecture=MSIL">
@@ -274,6 +273,7 @@
     <EmbeddedResource Include="VSPackage.resx">
       <MergeWithCTO>true</MergeWithCTO>
       <ManifestResourceName>VSPackage</ManifestResourceName>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

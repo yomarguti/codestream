@@ -22,7 +22,7 @@
 
   <!--The Commands section is where commands, menus, and menu groups are defined.
       This section uses a Guid to identify the package that provides the command defined inside it. -->
-  <Commands package="guidCustomCommandPackage">
+  <Commands package="guidCodeStreamCommandPackage">
     <!-- Inside this section we have different sub-sections: one for the menus, another
     for the menu groups, one for the buttons (the actual commands), one for the combos
     and the last one for the bitmaps used. Each element is identified by a command id that
@@ -36,7 +36,7 @@
          group as the part of a menu contained between two lines. The parent of a group
          must be a menu. -->
     <Groups>
-      <Group guid="guidCustomCommandPackageCmdSet" id="MyMenuGroup" priority="0x0600">
+      <Group guid="guidCodeStreamCommandPackageCmdSet" id="MyMenuGroup" priority="0x0600">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS" />
       </Group>
     </Groups>
@@ -52,17 +52,7 @@
               <CommandFlag>DefaultInvisible</CommandFlag>
               <CommandFlag>DynamicVisibility</CommandFlag>
           If you do not want an image next to your command, remove the Icon node /> -->
-      <!--<Button guid="guidCustomCommandPackageCmdSet" id="CustomCommandId" priority="0x0100" type="Button">
-        <Parent guid="guidCustomCommandPackageCmdSet" id="MyMenuGroup" />
-        <Icon guid="guidImages" id="bmpPic1" />
-        <CommandFlag>DefaultDisabled</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <Strings>
-          <ButtonText>Invoke CustomCommand</ButtonText>
-        </Strings>
-      </Button>-->
-      <Button guid="guidCustomCommandPackageCmdSet" id="cmdidCodeStreamToolWindowCommand" priority="0x0100" type="Button">
+      <Button guid="guidCodeStreamCommandPackageCmdSet" id="cmdidCodeStreamToolWindowCommand" priority="0x0100" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1" />
         <Icon guid="guidImages1" id="bmpPic1" />
         <Strings>
@@ -77,25 +67,25 @@
             the declaration starts with a guid for the bitmap strip, then there is the resource id of the
             bitmap strip containing the bitmaps and then there are the numeric ids of the elements used
             inside a button definition. An important aspect of this declaration is that the element id
-            must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
-      <!--<Bitmap guid="guidImages" href="Resources\CustomCommand.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, bmpPicStrikethrough" />-->
+            must be the actual index (1-based) of the bitmap inside the bitmap strip. -->      
       <Bitmap guid="guidImages1" href="Resources\CodeStreamToolWindowCommand.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, bmpPicStrikethrough" />
     </Bitmaps>
   </Commands>
 
   <KeyBindings>
-    <KeyBinding guid="guidCustomCommandPackageCmdSet" id="cmdidCodeStreamToolWindowCommand"
+    <KeyBinding guid="guidCodeStreamCommandPackageCmdSet" id="cmdidCodeStreamToolWindowCommand"
         editor="guidVSStd97" key1="C" mod1="ALT" key2="S" mod2="ALT" />
   </KeyBindings>
 
   <Symbols>
     <!-- This is the package guid. -->
-    <GuidSymbol name="guidCustomCommandPackage" value="{330ce502-4e1f-44b8-ab32-82a7ea71beeb}" />
+    <GuidSymbol name="guidCodeStreamCommandPackage" value="{330ce502-4e1f-44b8-ab32-82a7ea71beeb}" />
 
     <!-- This is the guid used to group the menu commands together -->
-    <GuidSymbol name="guidCustomCommandPackageCmdSet" value="{6cd448f0-2967-4e12-997c-1ee5e3942541}">
+    <GuidSymbol name="guidCodeStreamCommandPackageCmdSet" value="{6cd448f0-2967-4e12-997c-1ee5e3942541}">
       <IDSymbol name="MyMenuGroup" value="0x1020" />
-      <IDSymbol name="CustomCommandId" value="0x0100" />
+      <IDSymbol name="CodeStream
+                CommandId" value="0x0100" />
       <IDSymbol value="4129" name="cmdidCodeStreamToolWindowCommand" />
     </GuidSymbol>
 

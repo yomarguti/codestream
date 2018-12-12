@@ -12,19 +12,17 @@ namespace CodeStream.VisualStudio
     /// </summary>
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
-    [ProvideMenuResource("Menus.ctmenu", 1)]
-    // [ProvideAutoLoad(FooLanguageClient.UiContextGuidString)]
+    [ProvideMenuResource("Menus.ctmenu", 1)]    
     [Guid(PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
-    [ProvideToolWindow(typeof(CodeStream.VisualStudio.CodeStreamToolWindow))]
-    public sealed class CustomCommandPackage : AsyncPackage
+    [ProvideToolWindow(typeof(CodeStreamToolWindow))]
+    public sealed class CodeStreamCommandPackage : AsyncPackage
     {
-        static readonly ILogger log = LogManager.ForContext<CustomCommandPackage>();
-
+        static readonly ILogger log = LogManager.ForContext<CodeStreamCommandPackage>();
 
         public const string PackageGuidString = "330ce502-4e1f-44b8-ab32-82a7ea71beeb";
 
-        public CustomCommandPackage()
+        public CodeStreamCommandPackage()
         {
         }
 
@@ -38,8 +36,7 @@ namespace CodeStream.VisualStudio
         protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             await base.InitializeAsync(cancellationToken, progress);
-
-            CustomCommand.Initialize(this);
+           
             // When initialized asynchronously, the current thread may be a background thread at this point.
             // Do any initialization that requires the UI thread after switching to the UI thread.
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
