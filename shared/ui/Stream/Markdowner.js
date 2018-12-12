@@ -2,6 +2,7 @@ const MarkdownIt = require("markdown-it");
 const markdownItSlack = require("markdown-it-slack");
 const markdownItEmoji = require("markdown-it-emoji-mart");
 import hljs from "highlight.js";
+import { logError } from "../logger";
 
 const md = new MarkdownIt({
 	breaks: true,
@@ -28,13 +29,18 @@ export const emojify = text => {
 };
 
 export const markdownify = text => {
-	const replaced = md
-		.render(text)
-		.replace(/blockquote>\n/g, "blockquote>")
-		.replace(/<br>\n/g, "\n")
-		.replace(/<\/p>\n$/, "</p>");
-	// console.log(replaced);
-	if (text.trim().match(/^(:[\w_+]+:|\s)+$/))
-		return "<span class='only-emoji'>" + replaced + "</span>";
-	else return replaced;
+	try {
+		const replaced = md
+			.render(text, { references: {} })
+			.replace(/blockquote>\n/g, "blockquote>")
+			.replace(/<br>\n/g, "\n")
+			.replace(/<\/p>\n$/, "</p>");
+		// console.log(replaced);
+		if (text.trim().match(/^(:[\w_+]+:|\s)+$/))
+			return "<span class='only-emoji'>" + replaced + "</span>";
+		else return replaced;
+	} catch (error) {
+		logError(`Error rendering markdown: ${error.message}`);
+		return text;
+	}
 };
