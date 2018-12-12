@@ -107,11 +107,13 @@ namespace CodeStream.VisualStudio
         {
             await System.Threading.Tasks.Task.Yield();
 
+            //TODO package up node?
             var info = new ProcessStartInfo
             {
                 FileName = @"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\Microsoft\VisualStudio\NodeJs\node.exe"
             };
-            var agent = @"C:\Users\brian\code\CodeStream\codestream-lsp-agent\dist\agent-cli.js";
+            //TODO package this up?
+            var agent = @"..\..\..\..\..\..\codestream-lsp-agent\dist\agent-cli.js";
             info.Arguments = $@"{agent} --stdio --inspect=6009 --nolazy";
             info.RedirectStandardInput = true;
             info.RedirectStandardOutput = true;
@@ -128,7 +130,7 @@ namespace CodeStream.VisualStudio
                 return new Connection(process.StandardOutput.BaseStream, process.StandardInput.BaseStream);
             }
 
-            throw new Exception("WTF");
+            throw new Exception("Process start exception");
         }
 
         public async Task<Connection> ActivateAsync(CancellationToken token)

@@ -18,6 +18,8 @@ namespace CodeStream.VisualStudio
 
         static Logger CreateLogger()
         {
+            //TODO use rolling file sink
+
             //var logPath = Path.Combine(
             //    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             //    Constants.ApplicationName,
