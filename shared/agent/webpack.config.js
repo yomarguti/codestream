@@ -9,38 +9,55 @@ module.exports = function(env, argv) {
 	env = env || {};
 	env.production = Boolean(env.production);
 
-	const plugins = [
-		new CleanWebpackPlugin(["dist"], { verbose: false }),
-		new FileManagerWebpackPlugin({
-			onEnd: [
+	const onEnd = [
+		{
+			copy: [
 				{
-					copy: [
-						{
-							source: "src/shared/*",
-							// TODO: Use environment variable if exists
-							destination: path.resolve(__dirname, "../vscode-codestream/src/shared/")
-						},
-						{
-							source: "src/shared/*",
-							// TODO: Use environment variable if exists
-							destination: path.resolve(__dirname, "../codestream-components/shared/")
-						},
-						{
-							source: "dist/*",
-							// TODO: Use environment variable if exists
-							destination: path.resolve(__dirname, "../vscode-codestream/dist/")
-						}
-					]
+					source: "src/shared/*",
+					// TODO: Use environment variable if exists
+					destination: path.resolve(__dirname, "../vscode-codestream/src/shared/")
+				},
+				{
+					source: "src/shared/*",
+					// TODO: Use environment variable if exists
+					destination: path.resolve(__dirname, "../codestream-components/shared/")
+				},
+				{
+					source: "dist/*",
+					// TODO: Use environment variable if exists
+					destination: path.resolve(__dirname, "../vscode-codestream/dist/")
+				},
+				{
+					source: "dist/agent-vs.js",
+					// TODO: Use environment variable if exists
+					destination: path.resolve(
+						__dirname,
+						"../vs-codestream/src/CodeStream.VisualStudio/LSP/agent.js"
+					)
+				},
+				{
+					source: "dist/agent-vs.js.map",
+					// TODO: Use environment variable if exists
+					destination: path.resolve(
+						__dirname,
+						"../vs-codestream/src/CodeStream.VisualStudio/LSP/agent.js.map"
+					)
 				}
 			]
-		}),
+		}
+	];
+
+	const plugins = [
+		new CleanWebpackPlugin(["dist"], { verbose: false }),
+		new FileManagerWebpackPlugin({ onEnd: onEnd }),
 		// Added because of https://github.com/felixge/node-formidable/issues/337
 		new webpack.DefinePlugin({ "global.GENTLY": false })
 	];
 
 	return {
 		entry: {
-			agent: "./src/agent.ts"
+			agent: "./src/main.ts",
+			"agent-vs": "./src/main-vs.ts"
 		},
 		mode: env.production ? "production" : "development",
 		target: "node",

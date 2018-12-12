@@ -1,6 +1,7 @@
 "use strict";
 import { Logger } from "../logger";
 import { Strings } from "../system";
+import { findGitPath } from "./locator";
 import { CommandOptions, runCommand } from "./shell";
 
 export const GitErrors = {
@@ -104,6 +105,19 @@ function gitPath(): string {
 	return _gitPath;
 }
 
-export function setGitPath(path: string): void {
-	_gitPath = path;
+export async function setGitPath(path: string): Promise<void> {
+	_gitPath = await setOrFindGitPath(path);
+}
+
+async function setOrFindGitPath(gitPath?: string): Promise<string> {
+	const start = process.hrtime();
+	const gitInfo = await findGitPath(gitPath);
+
+	Logger.log(
+		`Git found: ${gitInfo.version} @ ${
+			gitInfo.path === "git" ? "PATH" : gitInfo.path
+		} \u2022 ${Strings.getDurationMilliseconds(start)} ms`
+	);
+
+	return gitInfo.path;
 }

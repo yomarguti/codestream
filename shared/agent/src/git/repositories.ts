@@ -87,10 +87,17 @@ export class GitRepositories {
 		// Wait for the session to be ready first
 		await this.session.ready();
 
-		this._disposable = Disposables.from(
-			this.session.onDidChangeRepositories(this.onRepositoriesChanged, this),
-			this.session.workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this)
-		);
+		const disposables: Disposable[] = [
+			this.session.onDidChangeRepositories(this.onRepositoriesChanged, this)
+		];
+
+		if (this.session.agent.supportsConfiguration) {
+			disposables.push(
+				this.session.workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this)
+			);
+		}
+
+		this._disposable = Disposables.from(...disposables);
 
 		return this.onWorkspaceFoldersChanged();
 	}
@@ -108,7 +115,7 @@ export class GitRepositories {
 		if (e === undefined) {
 			initializing = true;
 			e = {
-				added: (await this.session.workspace.getWorkspaceFolders()) || [],
+				added: await this.session.getWorkspaceFolders(),
 				removed: []
 			} as WorkspaceFoldersChangeEvent;
 
@@ -245,38 +252,41 @@ export class GitRepositories {
 			return repositories;
 		}
 
-		// Get any specified excludes -- this is a total hack, but works for some simple cases and something is better than nothing :)
-		const [files, search] = await workspace.getConfiguration([
-			{
-				section: "files.exclude",
-				scopeUri: folderUri.toString()
-			},
-			{
-				section: "search.exclude",
-				scopeUri: folderUri.toString()
-			}
-		]);
+		let excludes: { [key: string]: boolean } = Object.create(null);
+		if (this.session.agent.supportsConfiguration) {
+			// Get any specified excludes -- this is a total hack, but works for some simple cases and something is better than nothing :)
+			const [files, search] = await workspace.getConfiguration([
+				{
+					section: "files.exclude",
+					scopeUri: folderUri.toString()
+				},
+				{
+					section: "search.exclude",
+					scopeUri: folderUri.toString()
+				}
+			]);
 
-		let excludes: { [key: string]: boolean } = {
-			...(files || {}),
-			...(search || {})
-		};
+			excludes = {
+				...(files || {}),
+				...(search || {})
+			};
 
-		const excludedPaths = [
-			...Iterables.filterMap(Objects.entries(excludes), ([key, value]) => {
-				if (!value) return undefined;
-				if (key.startsWith("**/")) return key.substring(3);
-				return key;
-			})
-		];
+			const excludedPaths = [
+				...Iterables.filterMap(Objects.entries(excludes), ([key, value]) => {
+					if (!value) return undefined;
+					if (key.startsWith("**/")) return key.substring(3);
+					return key;
+				})
+			];
 
-		excludes = excludedPaths.reduce(
-			(accumulator, current) => {
-				accumulator[current] = true;
-				return accumulator;
-			},
-			Object.create(null) as any
-		);
+			excludes = excludedPaths.reduce(
+				(accumulator, current) => {
+					accumulator[current] = true;
+					return accumulator;
+				},
+				Object.create(null) as any
+			);
+		}
 
 		let paths;
 		try {

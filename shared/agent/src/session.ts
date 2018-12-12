@@ -1,12 +1,14 @@
 "use strict";
 import HttpsProxyAgent from "https-proxy-agent";
+import * as path from "path";
 import * as url from "url";
 import {
 	CancellationToken,
 	Connection,
 	Emitter,
 	Event,
-	MessageActionItem
+	MessageActionItem,
+	WorkspaceFolder
 } from "vscode-languageserver";
 import URI from "vscode-uri";
 import { CodeStreamAgent } from "./agent";
@@ -154,7 +156,7 @@ export class CodeStreamSession {
 
 	constructor(
 		public readonly agent: CodeStreamAgent,
-		public readonly connection: Connection,
+		private readonly _connection: Connection,
 		private readonly _options: AgentOptions
 	) {
 		this._readyPromise = new Promise<void>(resolve =>
@@ -315,6 +317,10 @@ export class CodeStreamSession {
 		return this._environment;
 	}
 
+	get recordRequests(): boolean {
+		return !!this._options.recordRequests;
+	}
+
 	private _status: SessionStatus = SessionStatus.SignedOut;
 	get status() {
 		return this._status;
@@ -358,11 +364,26 @@ export class CodeStreamSession {
 	}
 
 	get workspace() {
-		return this.connection.workspace;
+		return this._connection.workspace;
 	}
 
-	get recordRequests(): boolean {
-		return !!this._options.recordRequests;
+	public async getWorkspaceFolders() {
+		if (this.agent.supportsWorkspaces) {
+			return (await this.workspace.getWorkspaceFolders()) || [];
+		}
+
+		return new Promise<WorkspaceFolder[] | null>(resolve => {
+			if (this.agent.rootUri) {
+				resolve([
+					{
+						uri: this.agent.rootUri.substring(0, this.agent.rootUri.length - 1),
+						name: path.basename(this.agent.rootUri)
+					}
+				]);
+			} else {
+				resolve([]);
+			}
+		});
 	}
 
 	@log({
@@ -454,7 +475,7 @@ export class CodeStreamSession {
 		this._userId = response.user.id;
 		this._email = response.user.email;
 
-		setGitPath(this._options.gitPath);
+		await setGitPath(this._options.gitPath);
 
 		this.api.onDidReceiveMessage(e => this.onRTMessageReceived(e), this);
 
@@ -514,17 +535,17 @@ export class CodeStreamSession {
 
 	@log()
 	showErrorMessage<T extends MessageActionItem>(message: string, ...actions: T[]) {
-		return this.connection.window.showErrorMessage(message, ...actions);
+		return this._connection.window.showErrorMessage(message, ...actions);
 	}
 
 	@log()
 	showInformationMessage<T extends MessageActionItem>(message: string, ...actions: T[]) {
-		return this.connection.window.showInformationMessage(message, ...actions);
+		return this._connection.window.showInformationMessage(message, ...actions);
 	}
 
 	@log()
 	showWarningMessage<T extends MessageActionItem>(message: string, ...actions: T[]) {
-		return this.connection.window.showWarningMessage(message, ...actions);
+		return this._connection.window.showWarningMessage(message, ...actions);
 	}
 
 	private getEnvironment(url: string) {

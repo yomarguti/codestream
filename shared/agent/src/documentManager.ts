@@ -10,14 +10,14 @@ import { Disposables } from "./system";
 
 export class DocumentManager implements Disposable {
 	private readonly _disposable: Disposable;
-	private readonly _documents: TextDocuments;
 
-	constructor() {
-		this._documents = new TextDocuments();
+	constructor(private readonly _documents: TextDocuments, connection: Connection) {
 		this._disposable = Disposables.from(
 			this._documents.onDidOpen(this.onOpened),
 			this._documents.onDidChangeContent(this.onContentChanged)
 		);
+
+		this._documents.listen(connection);
 	}
 
 	dispose() {
@@ -30,9 +30,5 @@ export class DocumentManager implements Disposable {
 
 	get(uri: string): TextDocument | undefined {
 		return this._documents.get(uri);
-	}
-
-	listen(conn: Connection) {
-		this._documents.listen(conn);
 	}
 }

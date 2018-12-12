@@ -18,6 +18,8 @@ import { CodeStreamSession } from "./session";
 
 class ServiceContainer {
 	constructor(public readonly session: CodeStreamSession) {
+		this._documents = session.agent.documents;
+
 		this._files = new FilesManager(session);
 		this._markerLocations = new MarkerLocationManager(session);
 		this._codemarks = new CodemarksManager(session);
@@ -33,9 +35,6 @@ class ServiceContainer {
 		this._telemetry = new TelemetryManager(session);
 
 		this._providerRegistry = new ThirdPartyProviderRegistry(session);
-
-		this._documents = new DocumentManager();
-		this._documents.listen(session.connection);
 	}
 
 	private readonly _errorReporter: ErrorReporter;

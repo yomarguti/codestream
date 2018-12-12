@@ -231,7 +231,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		text: string,
 		location: CSMarkerLocation
 	): Promise<CSMarkerLocation> {
-		const { documents, git } = Container.instance();
+		const { git } = Container.instance();
 		const documentUri = documentId.uri;
 		const filePath = URI.parse(documentUri).fsPath;
 
@@ -247,10 +247,6 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			throw new Error(`Could not retrieve contents for ${filePath}@${fileCurrentRevision}`);
 		}
 
-		const doc = documents.get(documentUri);
-		if (!doc) {
-			throw new Error(`Could not retrieve ${documentUri} from document manager`);
-		}
 		// Maybe in this case the IDE should inform the buffer contents to ensure we have the exact same
 		// buffer text the user is seeing
 		const diff = structuredPatch(filePath, filePath, text, currentCommitText, "", "");

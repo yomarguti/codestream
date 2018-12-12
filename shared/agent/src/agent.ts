@@ -1,29 +1,32 @@
 "use strict";
+import * as fs from "fs";
 import {
 	CancellationToken,
 	ClientCapabilities,
 	Connection,
-	createConnection,
 	DidChangeConfigurationNotification,
 	Disposable,
 	Emitter,
 	Event,
 	InitializedParams,
+	InitializeError,
 	InitializeParams,
 	InitializeResult,
+	NotificationHandler,
 	NotificationType,
 	NotificationType0,
-	ProposedFeatures,
 	RequestHandler,
 	RequestHandler0,
 	RequestType,
 	RequestType0,
+	TextDocuments,
 	TextDocumentSyncKind
 } from "vscode-languageserver";
 import { Container } from "./container";
+import { DocumentManager } from "./documentManager";
 import { Logger } from "./logger";
 import { CodeStreamSession } from "./session";
-import { AgentOptions, DidChangeDataNotificationType } from "./shared/agent.protocol";
+import { AgentOptions, DidChangeDataNotificationType, LogoutReason } from "./shared/agent.protocol";
 import { Disposables, Functions, log, memoize } from "./system";
 
 export class CodeStreamAgent implements Disposable {
@@ -32,29 +35,70 @@ export class CodeStreamAgent implements Disposable {
 		return this._onReady.event;
 	}
 
-	private _clientCapabilities: ClientCapabilities | undefined;
-	private readonly _connection: Connection;
-	private _disposable: Disposable | undefined;
-	private _session: CodeStreamSession | undefined;
+	readonly documents: DocumentManager;
+	rootUri: string | undefined;
 
-	constructor() {
-		// Create a connection for the server. The connection uses Node's IPC as a transport.
-		// Also include all preview / proposed LSP features.
-		this._connection = createConnection(ProposedFeatures.all);
+	private _clientCapabilities: ClientCapabilities | undefined;
+	private _disposable: Disposable | undefined;
+	private readonly _logger: LspLogger;
+	private _session: CodeStreamSession | undefined;
+	private _signedIn: boolean = false;
+
+	constructor(
+		private readonly _connection: Connection,
+		options: {
+			logger?: LspLogger;
+			onInitialize?: RequestHandler<InitializeParams, InitializeResult, InitializeError>;
+			onInitialized?: NotificationHandler<InitializedParams>;
+		} = {}
+	) {
+		this._connection.onInitialize(options.onInitialize || this.onInitialize.bind(this));
+		this._connection.onInitialized(options.onInitialized || this.onInitialized.bind(this));
+
+		this._logger = options.logger || new ConnectionLspLogger(this._connection);
 		Logger.initialize(this);
 
-		this._connection.onInitialize(this.onInitialize.bind(this));
-		this._connection.onInitialized(this.onInitialized.bind(this));
+		this.documents = new DocumentManager(new TextDocuments(), this._connection);
 	}
 
 	dispose() {
 		this._disposable && this._disposable.dispose();
+		this.documents.dispose();
 	}
 
-	private async onInitialize(e: InitializeParams) {
+	get connection() {
+		return this._connection;
+	}
+
+	get signedIn() {
+		return this._signedIn;
+	}
+
+	@memoize
+	get supportsConfiguration() {
+		return (
+			(this._clientCapabilities &&
+				this._clientCapabilities.workspace &&
+				!!this._clientCapabilities.workspace.configuration) ||
+			false
+		);
+	}
+
+	@memoize
+	get supportsWorkspaces() {
+		return (
+			(this._clientCapabilities &&
+				this._clientCapabilities.workspace &&
+				!!this._clientCapabilities.workspace.workspaceFolders) ||
+			false
+		);
+	}
+
+	async onInitialize(e: InitializeParams) {
 		try {
 			const capabilities = e.capabilities;
 			this._clientCapabilities = capabilities;
+			this.rootUri = e.rootUri == null ? undefined : e.rootUri;
 
 			const agentOptions = e.initializationOptions! as AgentOptions;
 
@@ -96,14 +140,14 @@ export class CodeStreamAgent implements Disposable {
 				result: result
 			} as InitializeResult;
 		} catch (ex) {
-			debugger;
+			// debugger;
 			Logger.error(ex);
 			// TODO: Probably should avoid throwing here and return better error reporting to the extension
 			throw ex;
 		}
 	}
 
-	private async onInitialized(e: InitializedParams) {
+	async onInitialized(e: InitializedParams) {
 		try {
 			const subscriptions = [];
 
@@ -116,37 +160,18 @@ export class CodeStreamAgent implements Disposable {
 
 			this._disposable = Disposables.from(...subscriptions);
 
+			this._signedIn = true;
 			this._onReady.fire(undefined);
 		} catch (ex) {
-			debugger;
+			// debugger;
 			Logger.error(ex);
 			// TODO: Probably should avoid throwing here and return better error reporting to the extension
 			throw ex;
 		}
 	}
 
-	@memoize
-	get supportsConfiguration() {
-		return (
-			(this._clientCapabilities &&
-				this._clientCapabilities.workspace &&
-				!!this._clientCapabilities.workspace.configuration) ||
-			false
-		);
-	}
-
-	@memoize
-	get supportsWorkspaces() {
-		return (
-			(this._clientCapabilities &&
-				this._clientCapabilities.workspace &&
-				!!this._clientCapabilities.workspace.workspaceFolders) ||
-			false
-		);
-	}
-
-	get connection() {
-		return this._connection;
+	async logout(reason: LogoutReason) {
+		this._session!.logout(reason);
 	}
 
 	registerHandler<R, E, RO>(type: RequestType0<R, E, RO>, handler: RequestHandler0<R, E>): void;
@@ -232,13 +257,33 @@ export class CodeStreamAgent implements Disposable {
 	error(exception: Error): void;
 	error(message: string): void;
 	error(exceptionOrmessage: Error | string): void {
-		this._connection.console.error(
+		this._logger.error(
 			typeof exceptionOrmessage === "string" ? exceptionOrmessage : exceptionOrmessage.toString()
 		);
 	}
 
-	listen() {
-		this._connection.listen();
+	log(message: string): void {
+		this._logger.log(message);
+	}
+
+	warn(message: string): void {
+		this._logger.warn(message);
+	}
+}
+
+export interface LspLogger {
+	log(message: string): void;
+	warn(message: string): void;
+	error(exception: Error): void;
+	error(message: string): void;
+	error(exceptionOrmessage: Error | string): void;
+}
+
+export class ConnectionLspLogger implements LspLogger {
+	private readonly _connection: Connection;
+
+	constructor(connection: Connection) {
+		this._connection = connection;
 	}
 
 	log(message: string): void {
@@ -248,7 +293,46 @@ export class CodeStreamAgent implements Disposable {
 	warn(message: string): void {
 		this._connection.console.warn(message);
 	}
+
+	error(exception: Error): void;
+	error(message: string): void;
+	error(exceptionOrmessage: Error | string): void {
+		this._connection.console.error(
+			typeof exceptionOrmessage === "string" ? exceptionOrmessage : exceptionOrmessage.toString()
+		);
+	}
 }
 
-const agent = new CodeStreamAgent();
-agent.listen();
+export class FileLspLogger implements LspLogger {
+	private readonly _logFile: fs.WriteStream;
+
+	constructor(logPath: string) {
+		this._logFile = fs.createWriteStream(logPath, {
+			flags: "w"
+		});
+		this.log(`initialized log at ${logPath}`);
+	}
+	log(message: string): void {
+		this._logFile.write(`${message}\n`);
+	}
+	warn(message: string): void {
+		this._logFile.write(`${message}\n`);
+	}
+	error(exception: Error): void;
+	error(message: string): void;
+	error(exceptionOrmessage: Error | string): void {
+		this._logFile.write(
+			`${
+				typeof exceptionOrmessage === "string" ? exceptionOrmessage : exceptionOrmessage.toString()
+			}\n`
+		);
+	}
+}
+
+export class NullLspLogger implements LspLogger {
+	log(message: string): void {}
+	warn(message: string): void {}
+	error(exception: Error): void;
+	error(message: string): void;
+	error(exceptionOrmessage: Error | string): void {}
+}

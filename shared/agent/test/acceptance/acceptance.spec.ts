@@ -5,7 +5,7 @@ import { describe, it } from "mocha";
 import { RequestInit } from "node-fetch";
 import { Connection } from "vscode-languageserver";
 import { CodeStreamAgent } from "../../src/agent";
-import { CodeStreamSession } from "../../src/session";
+import { Functions } from "../../src/system/function";
 import {
 	getRequest,
 	loadTestData,
@@ -14,7 +14,6 @@ import {
 	TestSession,
 	trimUndefined
 } from "./helpers";
-import { Functions } from "../../src/system/function";
 import wait = Functions.wait;
 
 async function runAcceptanceTest(dir: string, ctx: any) {
