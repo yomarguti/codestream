@@ -2440,7 +2440,8 @@ body {
 }
 .codestream .stream .post .code-reference .header.no-repo {
   height: 0;
-  border-bottom: none;
+  border-bottom: none !important;
+  padding: 0;
 }
 .codestream .stream .post .code-reference .header.no-repo * {
   display: none;
@@ -3269,7 +3270,7 @@ body {
 }
 @media only screen and (max-width: 500px) {
   #code-comment-form .tab-group label {
-    max-width: calc(20%);
+    max-width: calc(25%);
   }
 }
 @keyframes slidein {
@@ -3398,6 +3399,19 @@ body {
   height: auto !important;
   display: inline !important;
   white-space: normal;
+}
+.codemark.collapsed hr {
+  display: none;
+}
+.codemark.collapsed h1,
+.codemark.collapsed h2,
+.codemark.collapsed h3,
+.codemark.collapsed h4,
+.codemark.collapsed h5,
+.codemark.collapsed h6 {
+  font-size: inherit;
+  font-weight: inherit;
+  display: inline;
 }
 .codemark.blue .type-icon {
   color: #3578ba;

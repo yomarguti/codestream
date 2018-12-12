@@ -1,10 +1,5 @@
 ﻿using CodeStream.VisualStudio.Browsers;
-using CodeStream.VisualStudio.Models;
-using CodeStream.VisualStudio.Services;
-using Microsoft.VisualStudio.Shell;
-using Newtonsoft.Json.Linq;
 using Serilog;
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Windows;
@@ -35,13 +30,12 @@ namespace CodeStream.VisualStudio
             harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{File.ReadAllText($"{dir}/Themes/dark.css")}</style>");
             harness = harness.Replace("{footerHtml}", browser.FooterHtml);
             browser.AttachControl(grid);
-            browser.AddWindowMessageEvent(delegate (object sender, WindowEventArgs e)
+            browser.AddWindowMessageEvent(delegate (object sender, WindowEventArgs ea)
             {
-                  browserCommandHandler.Handle(e);
+                  browserCommandHandler.Handle(ea);
             });
 
-            browser.LoadHtml(harness);
-    
+            browser.LoadHtml(harness);    
         }
 
         //private void Browser_Initialized(object sender, EventArgs e)

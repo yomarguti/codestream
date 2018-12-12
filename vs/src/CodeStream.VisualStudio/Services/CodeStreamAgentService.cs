@@ -22,20 +22,11 @@ namespace CodeStream.VisualStudio.Services
             _rpc = rpc;
         }
 
-        public async Task<object> GetPostsAsync(string streamId, int limit = 50, object before = null, object after = null, bool? inclusive = null)
+        public async Task<object> SendAsync(string name, JToken arguments)
         {
             try
             {
-                return await _rpc.InvokeWithParameterObjectAsync<object>("codeStream/posts",
-                     new
-                     {
-                         streamId
-                         //,
-                         //limit,
-                         //before,
-                         //after,
-                         //inclusive
-                     });
+                return await _rpc.InvokeWithParameterObjectAsync<object>(name, arguments);
             }
             catch (Exception ex)
             {
