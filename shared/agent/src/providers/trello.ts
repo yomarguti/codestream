@@ -1,5 +1,4 @@
 "use strict";
-import { Session } from "inspector";
 import fetch, { RequestInit, Response } from "node-fetch";
 import * as qs from "querystring";
 import { MessageType } from "../api/apiProvider";
@@ -13,6 +12,7 @@ import {
 	TrelloCreateCardRequest,
 	TrelloCreateCardRequestType,
 	TrelloCreateCardResponse,
+	TrelloDeauthRequest,
 	TrelloDeauthRequestType,
 	TrelloFetchBoardsRequest,
 	TrelloFetchBoardsRequestType,
@@ -82,8 +82,8 @@ export class TrelloProvider {
 
 	@log()
 	@lspHandler(TrelloDeauthRequestType)
-	async deauth(request: TrelloDeauthRequest) {
-		// WRITE ME
+	deauth(request: TrelloDeauthRequest) {
+		return this.session.api.disconnectThirdPartyProvider({ providerName: "trello" });
 	}
 
 	@log()

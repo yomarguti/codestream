@@ -956,6 +956,15 @@ export class CodeStreamApiProvider implements ApiProvider {
 		}
 	}
 
+	@log()
+	async disconnectThirdPartyProvider(request: { providerName: string }) {
+		void (await this.put<{ teamId: string }, {}>(
+			`/provider-deauth/${request.providerName}`,
+			{ teamId: this.teamId },
+			this._token
+		));
+	}
+
 	private delete<R extends object>(url: string, token?: string): Promise<R> {
 		let resp = undefined;
 		if (resp === undefined) {

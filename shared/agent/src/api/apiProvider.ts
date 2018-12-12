@@ -304,6 +304,8 @@ export interface ApiProvider {
 		providerName: string;
 		apiKey?: string;
 	}): Promise<{ code: string }>;
+
+	disconnectThirdPartyProvider(request: { providerName: string }): Promise<void>;
 }
 
 export interface CodeStreamApiMiddlewareContext {

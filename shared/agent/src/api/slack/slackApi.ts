@@ -2138,6 +2138,11 @@ export class SlackApiProvider implements ApiProvider {
 		return this._codestream.connectThirdPartyProvider(request);
 	}
 
+	@log()
+	disconnectThirdPartyProvider(request: { providerName: string }) {
+		return this._codestream.disconnectThirdPartyProvider(request);
+	}
+
 	protected async slackApiCall<TRequest, TResponse extends WebAPICallResult>(
 		fn: (request?: TRequest) => Promise<TResponse>,
 		request?: TRequest,
