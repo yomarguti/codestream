@@ -13,6 +13,7 @@ import {
 	TrelloCreateCardRequest,
 	TrelloCreateCardRequestType,
 	TrelloCreateCardResponse,
+	TrelloDeauthRequestType,
 	TrelloFetchBoardsRequest,
 	TrelloFetchBoardsRequestType,
 	TrelloFetchListsRequest,
@@ -77,6 +78,12 @@ export class TrelloProvider {
 		});
 
 		this._trelloUserId = await this.getMemberId();
+	}
+
+	@log()
+	@lspHandler(TrelloDeauthRequestType)
+	async deauth(request: TrelloDeauthRequest) {
+		// WRITE ME
 	}
 
 	@log()
