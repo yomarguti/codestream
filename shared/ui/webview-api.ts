@@ -138,7 +138,7 @@ export default class WebviewApi {
 		return this.postMessage({ action: "agent", params: { url: "trello/auth", request: {} } });
 	}
 
-	trelloSignout() {
+	disconnectTrello() {
 		return this.postMessage({ action: "agent", params: { url: "trello/deauth", request: {} } });
 	}
 
