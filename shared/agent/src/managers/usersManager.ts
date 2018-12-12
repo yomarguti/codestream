@@ -67,6 +67,7 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 		return this.session.api.inviteUser(request);
 	}
 
+	// TODO: return preferences instead of user
 	@lspHandler(UpdatePreferencesRequestType)
 	updatePreferences(request: UpdatePreferencesRequest) {
 		return this.session.api.updatePreferences(request);

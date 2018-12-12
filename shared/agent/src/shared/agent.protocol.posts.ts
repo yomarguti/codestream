@@ -63,7 +63,7 @@ export interface CodeBlockSource {
 export interface CreatePostWithMarkerRequest {
 	textDocument: TextDocumentIdentifier;
 	text: string;
-	mentionedUserIds: string[];
+	mentionedUserIds?: string[];
 	code: string;
 	rangeArray?: [number, number, number, number];
 	source?: CodeBlockSource;
@@ -71,7 +71,7 @@ export interface CreatePostWithMarkerRequest {
 	streamId: string;
 	title?: string;
 	type: CodemarkType;
-	assignees?: [];
+	assignees?: string[];
 	color?: string;
 	status?: string;
 }
