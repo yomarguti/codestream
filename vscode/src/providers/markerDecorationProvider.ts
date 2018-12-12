@@ -31,6 +31,7 @@ import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions } from "../system/function";
+import { Strings } from "../system/string";
 
 const positionStyleMap: { [key: string]: string } = {
 	inline: "display: inline-block; margin: 0 0.5em 0 0; vertical-align: middle;",
@@ -327,11 +328,12 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 					if (message) {
 						message += "\n-----\n";
 					}
+					const typeString = Strings.toTitleCase(m.type);
 					message = `__${sender!.name}__, ${post.fromNow()} &nbsp; _(${post.formatDate()})_\n\n>${
 						m.summary
-					}\n\n[__Open Comment \u2197__](command:codestream.openComment?${encodeURIComponent(
+					}\n\n[__View ${typeString} \u2197__](command:codestream.openComment?${encodeURIComponent(
 						JSON.stringify(args)
-					)} "Open Comment")`;
+					)} "View ${typeString}")`;
 
 					// &nbsp; &middot; &nbsp; [__Unpin Marker \u1F4CC__](command:codestream.openStream?${encodeURIComponent(
 					// 	JSON.stringify(args)
