@@ -1,27 +1,23 @@
 import { createSelector } from "reselect";
-import { Type } from "../actions/codemarks";
-import { toMapBy } from "../utils";
+import { CSCodemark } from "../../shared/api.protocol";
+import { toMapBy } from "../../utils";
+import { ActionType } from "../common";
+import * as actions from "./actions";
+import { CodemarksActionsTypes } from "./types";
+
+type StreamsActions = ActionType<typeof actions>;
 
 interface State {
-	[codemarkId: string]: Codemark;
-}
-interface Action {
-	type: string;
-	payload: any;
-}
-
-interface Codemark {
-	type: string;
-	deactivated: boolean;
+	[codemarkId: string]: CSCodemark;
 }
 
 const initialState: State = {};
 
-export default function(state = initialState, { type, payload }: Action) {
+export function reduceCodemarks(state = initialState, { type, payload }: StreamsActions) {
 	switch (type) {
-		case Type.ADD_CODEMARKS:
-		case Type.UPDATE_CODEMARKS:
-		case Type.SAVE_CODEMARKS: {
+		case CodemarksActionsTypes.AddCodemarks:
+		case CodemarksActionsTypes.UpdateCodemarks:
+		case CodemarksActionsTypes.SaveCodemarks: {
 			return { ...state, ...toMapBy("id", payload) };
 		}
 		default:
@@ -29,12 +25,12 @@ export default function(state = initialState, { type, payload }: Action) {
 	}
 }
 
-export function getCodemark(state: State, id?: string): Codemark | undefined {
+export function getCodemark(state: State, id?: string): CSCodemark | undefined {
 	if (!id) return undefined;
 	return state[id];
 }
 
-export function getByType(state: State, type?: string): Codemark[] {
+export function getByType(state: State, type?: string): CSCodemark[] {
 	if (!type) return Object.values(state);
 
 	return Object.values(state).filter(codemark => codemark.type === type);

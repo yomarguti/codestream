@@ -1,12 +1,22 @@
 import _ from "underscore";
+import { ActionType } from "../common";
+import * as actions from "./actions";
+import { Stream, StreamActionType } from "./types";
+
+type StreamsAction = ActionType<typeof actions>;
+
+interface Index {
+	[id: string]: Stream;
+}
+
+interface State {
+	byTeam: {
+		[teamId: string]: Index;
+	};
+}
 
 const initialState = {
-	byTeam: {
-		//[teamId]: { [streamId]: {} }
-	},
-	byRepo: {
-		//[repoId]: { byFile: {} }
-	}
+	byTeam: {}
 };
 
 const addStreamForTeam = (state, stream) => {
@@ -19,40 +29,24 @@ const addStreamForTeam = (state, stream) => {
 };
 
 const addStream = (state, stream) => {
-	const existingStreamsForRepo = state.byRepo[stream.repoId] || { byFile: {}, byId: {} };
 	return {
-		byTeam: addStreamForTeam(state.byTeam, stream),
-		byRepo: {
-			...state.byRepo,
-			[stream.repoId]: {
-				byFile: {
-					...existingStreamsForRepo.byFile,
-					[stream.file]: stream
-				},
-				byId: {
-					...existingStreamsForRepo.byId,
-					[stream.id]: stream
-				}
-			}
-		}
+		byTeam: addStreamForTeam(state.byTeam, stream)
 	};
 };
 
-export default (state = initialState, { type, payload }) => {
-	switch (type) {
-		case "ADD_STREAMS":
-		case "BOOTSTRAP_STREAMS":
-			return payload.reduce(addStream, state);
-		case "STREAMS-UPDATE_FROM_PUBNUB":
-		case "UPDATE_STREAM":
-		case "ADD_STREAM":
-			return addStream(state, payload);
-		case "REMOVE_STREAM": {
-			const streamsForTeam = state.byTeam[payload.teamId] || {};
-			delete streamsForTeam[payload.streamId];
+export const reduceStreams = (state: State = initialState, action: StreamsAction) => {
+	switch (action.type) {
+		case StreamActionType.ADD_STREAMS:
+		case StreamActionType.BOOTSTRAP_STREAMS:
+			return action.payload.reduce(addStream, state);
+		case StreamActionType.UPDATE_STREAM:
+			return addStream(state, action.payload);
+		case StreamActionType.REMOVE_STREAM: {
+			const streamsForTeam = { ...(state.byTeam[action.payload.teamId] || {}) };
+			delete streamsForTeam[action.payload.streamId];
 			return {
 				...state,
-				byTeam: { ...state.byTeam, [payload.teamId]: streamsForTeam }
+				byTeam: { ...state.byTeam, [action.payload.teamId]: streamsForTeam }
 			};
 		}
 		default:
@@ -61,12 +55,13 @@ export default (state = initialState, { type, payload }) => {
 };
 
 // Selectors
-export const getStreamForTeam = (state, teamId) => {
+// TODO: memoize
+export const getStreamForTeam = (state: State, teamId: string) => {
 	const streams = state.byTeam[teamId] || {};
 	return _.sortBy(Object.values(streams).filter(stream => stream.isTeamStream), "createdAt")[0];
 };
 
-export const getChannelStreamsForTeam = (state, teamId, userId) => {
+export const getChannelStreamsForTeam = (state: State, teamId: string, userId: string) => {
 	const streams = state.byTeam[teamId] || {};
 	return Object.values(streams).filter(
 		stream =>
@@ -78,7 +73,8 @@ export const getChannelStreamsForTeam = (state, teamId, userId) => {
 	);
 };
 
-export const getPublicChannelStreamsForTeam = (state, teamId, userId) => {
+// TODO: memoize
+export const getPublicChannelStreamsForTeam = (state: State, teamId: string, userId: string) => {
 	const streams = state.byTeam[teamId] || {};
 	return Object.values(streams).filter(
 		stream =>
@@ -91,7 +87,7 @@ export const getPublicChannelStreamsForTeam = (state, teamId, userId) => {
 	);
 };
 
-export const getArchivedChannelStreamsForTeam = (state, teamId, userId) => {
+export const getArchivedChannelStreamsForTeam = (state: State, teamId: string) => {
 	const streams = state.byTeam[teamId] || {};
 	return Object.values(streams).filter(stream => stream.type === "channel" && stream.isArchived);
 };
@@ -132,13 +128,13 @@ export const getDMName = (stream, users, currentUserId) => {
 	}
 };
 
-export const getDirectMessageStreamsForTeam = (state, teamId) => {
+export const getDirectMessageStreamsForTeam = (state: State, teamId: string) => {
 	const streams = state.byTeam[teamId] || {};
 	// TODO: filter for only those including the current user
 	return Object.values(streams).filter(stream => stream.type === "direct");
 };
 
-export const getServiceStreamsForTeam = (state, teamId, userId) => {
+export const getServiceStreamsForTeam = (state: State, teamId: string, userId: string) => {
 	const streams = state.byTeam[teamId] || {};
 	const serviceStreams = Object.values(streams).filter(
 		stream =>
@@ -154,28 +150,7 @@ export const getServiceStreamsForTeam = (state, teamId, userId) => {
 	return serviceStreams;
 };
 
-export const getStreamForId = (state, teamId, streamId) => {
+export const getStreamForId = (state: State, teamId: string, streamId: string) => {
 	const streams = state.byTeam[teamId] || {};
 	return Object.values(streams).find(stream => stream.id === streamId);
-};
-
-export const getStreamForRepoAndFile = (state, repoId, file) => {
-	const filesForRepo = (state.byRepo[repoId] || {}).byFile;
-	if (filesForRepo) return filesForRepo[file];
-};
-
-export const getStreamsByFileForRepo = (state, repoId) => {
-	return (state.byRepo[repoId] || {}).byFile;
-};
-
-export const getStreamsByIdForRepo = (state, repoId) => {
-	return (state.byRepo[repoId] || {}).byId;
-};
-
-export const getAllPostsOfType = ({ byStream }, type) => {
-	let posts = [];
-	Object.keys(byStream).forEach(streamId => {
-		posts = posts.concat(Object.values(byStream[streamId]));
-	});
-	return [..._.sortBy(posts, "seqNum")];
 };

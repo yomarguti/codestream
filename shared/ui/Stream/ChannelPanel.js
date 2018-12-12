@@ -17,7 +17,7 @@ import {
 	getDirectMessageStreamsForTeam,
 	getServiceStreamsForTeam,
 	getDMName
-} from "../reducers/streams";
+} from "../store/streams/reducer";
 import { mapFilter, toMapBy } from "../utils";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";

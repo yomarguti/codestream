@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import createClassString from "classnames";
 import _ from "underscore";
 import * as actions from "./actions";
-import * as codemarkSelectors from "../reducers/codemarks";
+import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as userSelectors from "../reducers/users";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";

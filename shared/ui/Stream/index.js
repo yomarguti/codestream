@@ -28,12 +28,11 @@ import { getPostsForStream, getPost } from "../reducers/posts";
 import {
 	getStreamForId,
 	getStreamForTeam,
-	getStreamForRepoAndFile,
 	getChannelStreamsForTeam,
 	getDirectMessageStreamsForTeam,
 	getDMName
-} from "../reducers/streams";
-import { getCodemark } from "../reducers/codemarks";
+} from "../store/streams/reducer";
+import { getCodemark } from "../store/codemarks/reducer";
 import { getTeamMembers } from "../reducers/users";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 
@@ -1204,7 +1203,7 @@ export class SimpleStream extends Component {
 		}
 		if (args) {
 			const oldName = this.props.postStreamName;
-			const newStream = await this.props.renameStream(this.props.postStreamId, args);
+			const { payload: newStream } = await this.props.renameStream(this.props.postStreamId, args);
 			if (newStream && newStream.name === args) {
 				if (!this.props.isSlackTeam) {
 					this.submitPost({ text: "/me renamed the channel from #" + oldName + " to #" + args });
@@ -1243,7 +1242,7 @@ export class SimpleStream extends Component {
 			return this.submitSystemPost(text);
 		}
 		if (args) {
-			const newStream = await this.props.setPurpose(this.props.postStreamId, args);
+			const { payload: newStream } = await this.props.setPurpose(this.props.postStreamId, args);
 			if (newStream.purpose === args) {
 				if (!this.props.isSlackTeam) {
 					this.submitPost({ text: "/me set the channel purpose to " + args });
@@ -1537,8 +1536,7 @@ export class SimpleStream extends Component {
 
 		const { composeBoxProps } = this.state;
 		if (composeBoxProps.isEditing) {
-			editCodemark({
-				id: composeBoxProps.editingCodemark.id,
+			editCodemark(composeBoxProps.editingCodemark.id, {
 				color: codemark.color,
 				text: codemark.text,
 				title: codemark.title,
@@ -1648,8 +1646,6 @@ const mapStateToProps = state => {
 		services,
 		umis
 	} = state;
-	const fileStream =
-		getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
 
 	const team = teams[context.currentTeamId];
 	const teamMembers = getTeamMembers(state);
@@ -1732,7 +1728,6 @@ const mapStateToProps = state => {
 		postStreamIsTeamStream: postStream.isTeamStream,
 		postStreamMemberIds: postStream.memberIds,
 		isPrivate: postStream.privacy === "private",
-		fileStreamId: fileStream.id,
 		teamId: context.currentTeamId,
 		teamName: team.name || "",
 		repoId: context.currentRepoId,
@@ -1740,7 +1735,6 @@ const mapStateToProps = state => {
 		firstTimeInAtom: onboarding.firstTimeInAtom,
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
-		editingUsers: fileStream.editingUsers,
 		usernamesRegexp: usernamesRegexp,
 		currentUserId: user.id,
 		currentUserName: user.username,

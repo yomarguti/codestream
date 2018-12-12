@@ -4,7 +4,7 @@ import * as contextActions from "../store/context/actions";
 import _ from "underscore";
 import { createStream, openDirectMessage, setCurrentStream } from "./actions";
 import createClassString from "classnames";
-import { getDirectMessageStreamsForTeam, getDMName } from "../reducers/streams";
+import { getDirectMessageStreamsForTeam, getDMName } from "../store/streams/reducer";
 import Button from "./Button";
 import CancelButton from "./CancelButton";
 import { FormattedMessage } from "react-intl";

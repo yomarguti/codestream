@@ -7,7 +7,7 @@ import {
 	getChannelStreamsForTeam,
 	getPublicChannelStreamsForTeam,
 	getArchivedChannelStreamsForTeam
-} from "../reducers/streams";
+} from "../store/streams/reducer";
 import Icon from "./Icon";
 import _ from "underscore";
 import Timestamp from "./Timestamp";

@@ -17,7 +17,7 @@ import Tooltip from "./Tooltip";
 import Debug from "./Debug";
 import { getById } from "../reducers/repos";
 import { getPost } from "../reducers/posts";
-import { getCodemark } from "../reducers/codemarks";
+import { getCodemark } from "../store/codemarks/reducer";
 import { markdownify, emojify } from "./Markdowner";
 import hljs from "highlight.js";
 import _ from "underscore";

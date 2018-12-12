@@ -1,3 +1,6 @@
+import { bootstrap as bootstrapStreams } from "../store/streams/actions";
+import { setCurrentFile } from "../store/context/actions";
+
 export const updateConfigs = configs => ({ type: "UPDATE_CONFIGS", payload: configs });
 
 export const updateUnreads = unreads => ({ type: "UPDATE_UNREADS", payload: unreads });
@@ -17,7 +20,7 @@ export const reset = () => ({ type: "RESET" });
 export const bootstrap = (data = {}) => async dispatch => {
 	dispatch({ type: "BOOTSTRAP_USERS", payload: data.users || [] });
 	dispatch({ type: "BOOTSTRAP_TEAMS", payload: data.teams || [] });
-	dispatch({ type: "BOOTSTRAP_STREAMS", payload: data.streams || [] });
+	dispatch(bootstrapStreams(data.streams || []));
 	dispatch({ type: "BOOTSTRAP_REPOS", payload: data.repos || [] });
 	dispatch({ type: "BOOTSTRAP_SERVICES", payload: data.services || {} });
 	dispatch(updateUnreads(data.unreads || {}));
@@ -29,4 +32,5 @@ export const bootstrap = (data = {}) => async dispatch => {
 export const offline = () => ({ type: "OFFLINE" });
 export const online = () => ({ type: "ONLINE" });
 
-export const fileChanged = body => ({ type: "SET_CURRENT_FILE", payload: body || {} });
+export const fileChanged = body =>
+	setCurrentFile(body && body.editor ? body.editor.fileName : undefined);

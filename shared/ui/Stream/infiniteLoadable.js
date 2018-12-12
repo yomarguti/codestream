@@ -110,7 +110,7 @@ export default Child => {
 					streamId,
 					teamId,
 					limit: batchCount,
-					beforeSeqNum: seqNum
+					before: seqNum
 				});
 
 				this.onScrollStop(() => {

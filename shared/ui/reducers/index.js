@@ -5,7 +5,7 @@ import posts from "./posts";
 import capabilities from "./capabilities";
 import { reduceContext } from "../store/context/reducer";
 import configs from "./configs";
-import streams from "./streams";
+import { reduceStreams } from "../store/streams/reducer";
 import users from "./users";
 import repos from "./repos";
 import teams from "./teams";
@@ -18,7 +18,7 @@ import currentPage from "./currentPage"; // TODO: remove this
 import route from "./route";
 import services from "./services";
 import preferences from "./preferences";
-import codemarks from "./codemarks";
+import { reduceCodemarks } from "../store/codemarks/reducer";
 
 const session = (state = {}, { type, payload }) => {
 	switch (type) {
@@ -51,7 +51,7 @@ const pluginVersion = (state = "", { type }) => {
 const appReducer = combineReducers({
 	bootstrapped,
 	capabilities,
-	codemarks,
+	codemarks: reduceCodemarks,
 	companies,
 	configs,
 	connectivity,
@@ -68,7 +68,7 @@ const appReducer = combineReducers({
 	repos,
 	route,
 	session,
-	streams,
+	streams: reduceStreams,
 	teams,
 	umis,
 	users,

@@ -1,7 +1,10 @@
-import { Action } from "../types";
-import { Type } from "./actions";
+import { ActionType } from "../common";
+import * as actions from "./actions";
+import { ContextActionsType, State } from "./types";
 
-const initialState = {
+type ContextActions = ActionType<typeof actions>;
+
+const initialState: State = {
 	currentFile: "",
 	mostRecentSourceFile: "",
 	currentTeamId: "",
@@ -15,43 +18,35 @@ const initialState = {
 	channelFilter: "all"
 };
 
-export function reduceContext(state = initialState, { type, payload }: Action<Type>) {
-	switch (type) {
-		case Type.ResetContext:
-			return {
-				...initialState,
-				currentFile: state.currentFile,
-				currentCommit: state.currentCommit
-			};
-		case Type.SetContext:
-			return { ...state, ...payload };
-		case Type.SetCurrentFile: {
-			const file = payload.editor && payload.editor.fileName;
+export function reduceContext(state: State = initialState, action: ContextActions) {
+	switch (action.type) {
+		case ContextActionsType.SetContext:
+			return { ...state, ...action.payload };
+		case ContextActionsType.SetCurrentFile: {
+			const file = action.payload;
 			if (file) return { ...state, currentFile: file, mostRecentSourceFile: file };
 			else return { ...state, currentFile: "" };
 		}
-		case Type.SetCurrentTeam:
-			return { ...state, currentTeamId: payload };
-		case Type.SetCurrentStream:
-			return { ...state, currentStreamId: payload, threadId: null };
-		case Type.SetThread: {
-			return { ...state, currentStreamId: payload.streamId, threadId: payload.threadId };
+		case ContextActionsType.SetCurrentStream:
+			return { ...state, currentStreamId: action.payload, threadId: null };
+		case ContextActionsType.SetThread: {
+			return { ...state, ...action.payload };
 		}
-		case Type.OpenPanel:
-			return { ...state, panelStack: [payload, ...state.panelStack].slice(0, 10) };
-		case Type.ClosePanel: {
+		case ContextActionsType.OpenPanel:
+			return { ...state, panelStack: [action.payload, ...state.panelStack].slice(0, 10) };
+		case ContextActionsType.ClosePanel: {
 			if (state.panelStack.length === 1) return state;
 			const [, ...panelStack] = state.panelStack;
 			return { ...state, panelStack };
 		}
-		case Type.SetFocusState:
-			return { ...state, hasFocus: payload };
-		case Type.SetCodeMarkFileFilter:
-			return { ...state, codemarkFileFilter: payload };
-		case Type.SetCodemarkTypeFilter:
-			return { ...state, codemarkTypeFilter: payload };
-		case Type.SetChannelFilter:
-			return { ...state, channelFilter: payload };
+		case ContextActionsType.SetFocusState:
+			return { ...state, hasFocus: action.payload };
+		case ContextActionsType.SetCodeMarkFileFilter:
+			return { ...state, codemarkFileFilter: action.payload };
+		case ContextActionsType.SetCodemarkTypeFilter:
+			return { ...state, codemarkTypeFilter: action.payload };
+		case ContextActionsType.SetChannelFilter:
+			return { ...state, channelFilter: action.payload };
 		default:
 			return { ...initialState, ...state };
 	}

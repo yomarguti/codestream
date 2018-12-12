@@ -1,7 +1,6 @@
 import cx from "classnames";
 import * as React from "react";
 import { connect } from "react-redux";
-import { Action } from "redux";
 import { setCodemarkStatus } from "./actions";
 import Icon from "./Icon";
 import { markdownify } from "./Markdowner";
@@ -35,7 +34,7 @@ interface Props {
 	codemark: CodemarkEntity;
 	currentUserName: string;
 	usernames: string[];
-	setCodemarkStatus(id: string, status: string): Action;
+	setCodemarkStatus: typeof setCodemarkStatus;
 	action(action: string, post: any, args: any): any;
 	onClick?(CodemarkEntity): any;
 	query?: string;

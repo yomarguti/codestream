@@ -4,7 +4,7 @@ import * as contextActions from "../store/context/actions";
 import _ from "underscore";
 import { createStream } from "./actions";
 import createClassString from "classnames";
-import { getChannelStreamsForTeam } from "../reducers/streams";
+import { getChannelStreamsForTeam } from "../store/streams/reducer";
 import CancelButton from "./CancelButton";
 import Button from "./Button";
 import Tooltip from "./Tooltip";

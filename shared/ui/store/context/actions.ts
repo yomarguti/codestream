@@ -1,53 +1,49 @@
 import EventEmitter from "../../event-emitter";
+import { action } from "../common";
+import { ContextActionsType, State } from "./types";
 
-export enum Type {
-	SetThread = "SET_CURRENT_THREAD",
-	SetCodeMarkFileFilter = "SET_CODEMARK_FILE_FILTER",
-	SetCodemarkTypeFilter = "SET_CODEMARK_TYPE_FILTER",
-	SetChannelFilter = "SET_CHANNEL_FILTER",
-	SetContext = "SET_CONTEXT",
-	OpenPanel = "SET_PANEL",
-	ClosePanel = "CLOSE_PANEL",
-	SetFocusState = "SET_HAS_FOCUS",
-	ResetContext = "RESET_CONTEXT",
-	SetCurrentFile = "SET_CURRENT_FILE",
-	SetCurrentTeam = "SET_CURRENT_TEAM",
-	SetCurrentStream = "SET_CURRENT_STREAM"
-}
+export const setContext = (payload: State) => action(ContextActionsType.SetContext, payload);
 
-export const setContext = payload => ({ type: Type.SetContext, payload });
-
-export const openPanel = panel => (dispatch, getState) => {
+export const _openPanel = (panel: string) => action(ContextActionsType.OpenPanel, panel);
+export const openPanel = (panel: string) => (dispatch, getState) => {
 	if (getState().context.panelStack[0] !== panel) {
-		dispatch({ type: Type.OpenPanel, payload: panel });
 		EventEmitter.emit("interaction:active-panel-changed", getState().context.panelStack);
+		return dispatch(_openPanel(panel));
 	}
 };
 
+export const _closePanel = () => action(ContextActionsType.ClosePanel);
 export const closePanel = () => (dispatch, getState) => {
-	dispatch({ type: Type.ClosePanel });
 	EventEmitter.emit("interaction:active-panel-changed", getState().context.panelStack);
+	return dispatch(_closePanel());
 };
 
-export const focus = () => ({ type: Type.SetFocusState, payload: true });
+export const focus = () => action(ContextActionsType.SetFocusState, true);
 
-export const blur = () => ({ type: Type.SetFocusState, payload: false });
+export const blur = () => action(ContextActionsType.SetFocusState, false);
 
 export function setThread(streamId: string, threadId: string | null = null) {
-	return { type: Type.SetThread, payload: { streamId, threadId } };
+	return action(ContextActionsType.SetThread, { streamId, threadId });
 }
 
-export const setCodemarkFileFilter = (value: string) => ({
-	type: Type.SetCodeMarkFileFilter,
-	payload: value
-});
+export const setCodemarkFileFilter = (value: string) =>
+	action(ContextActionsType.SetCodeMarkFileFilter, value);
 
-export const setCodemarkTypeFilter = (value: string) => ({
-	type: Type.SetCodemarkTypeFilter,
-	payload: value
-});
+export const setCodemarkTypeFilter = (value: string) =>
+	action(ContextActionsType.SetCodemarkTypeFilter, value);
 
-export const setChannelFilter = (value: string) => ({
-	type: Type.SetChannelFilter,
-	payload: value
-});
+export const setChannelFilter = (value: string) =>
+	action(ContextActionsType.SetChannelFilter, value);
+
+export const setCurrentFile = (file = "") => action(ContextActionsType.SetCurrentFile, file);
+
+export const _setCurrentStream = (streamId: string) =>
+	action(ContextActionsType.SetCurrentStream, streamId);
+export const setCurrentStream = streamId => (dispatch, getState) => {
+	const { context } = getState();
+	// don't set the stream ID unless it actually changed
+	if (context.currentStreamId !== streamId) {
+		EventEmitter.emit("interaction:changed-active-stream", streamId);
+		return dispatch(_setCurrentStream(streamId));
+	}
+};
