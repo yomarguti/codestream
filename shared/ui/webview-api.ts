@@ -138,6 +138,10 @@ export default class WebviewApi {
 		return this.postMessage({ action: "agent", params: { url: "trello/auth", request: {} } });
 	}
 
+	trelloSignout() {
+		return this.postMessage({ action: "agent", params: { url: "trello/signout", request: {} } });
+	}
+
 	createTrelloCard(listId: string, name: string, description: string) {
 		return this.postMessage({
 			action: "agent",

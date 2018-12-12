@@ -560,3 +560,12 @@ export const createTrelloCard = (listId: string, name: string, description: stri
 		console.error("failed to create a trello card", error);
 	}
 };
+
+export const trelloSignout = () => async (dispatch, getState, { api }) => {
+	try {
+		const response = await api.trelloSignout();
+		return response;
+	} catch (error) {
+		console.error("failed to signout from trello", error);
+	}
+};
