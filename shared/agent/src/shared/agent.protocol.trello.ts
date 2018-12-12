@@ -84,3 +84,14 @@ export const TrelloAuthRequestType = new RequestType<
 	void,
 	void
 >("codeStream/trello/auth");
+
+export interface TrelloSignoutRequest {}
+
+export interface TrelloSignoutResponse {}
+
+export const TrelloSignoutRequestType = new RequestType<
+	TrelloSignoutRequest,
+	TrelloSignoutResponse,
+	void,
+	void
+>("codeStream/trello/signout");
