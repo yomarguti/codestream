@@ -19,33 +19,9 @@
         </div>
     </div>
     <script type="text/javascript" src="file:///{root}/dist/webview/webview.js"></script>
-    <!--<script>
-        alert('html');
-    </script>-->
+    
 
-    <script>
-        window.addEventListener("message", function (e) {
-            console.log('handler from webview.html', e, e.type);
-
-            if (!e || e.type !== 'message' || e.data.type == null) return;
-
-            console.log(JSON.stringify(e.data))
-
-            //console.log(arguments);
-            //try {
-            //    console.log(window.external.cheese)
-            //}
-            //catch (x) {
-            //    console.error('w.e.c failed');
-            //}
-            //try {
-            //    console.log(window.cheese)
-            //}
-            //catch (x) {
-            //    console.error('w.c failed');
-            //}
-        }, false);        
-    </script>
+    {footerHtml}
 </body>
 
 </html>

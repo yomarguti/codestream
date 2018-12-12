@@ -211,28 +211,82 @@ namespace CodeStream.VisualStudio.Models
         public string UserId { get; set; }
     }
 
+   
+    public class Extension
+    {
+        public string Build { get; set; }
+        public string BuildEnv { get; set; }
+        public string Version { get; set; }
+        public string VersionFormatted { get; set; }
+    }
+    public class IDE
+    {
+        public string Name { get; set; }
+        public string Version { get; set; }
+    }
+    public class Proxy
+    {
+        public string Url { get; set; }
+        public bool StrictSSL { get; set; }
+    }
+    public class InitializationOptions
+    {
+        public string ServerUrl { get; set; }
+        public string GitPath { get; set; }
+        //public string Type { get; set; }
+        //public string Email { get; set; }
+        //public string PasswordOrToken { get; set; }
+        public Extension Extension { get; set; }
+        public string TraceLevel { get; set; }
+        public bool IsDebugging { get; set; }
+        public IDE Ide { get; set; }
+        public Proxy Proxy { get; set; }
+    }
 
+    public class InitializationOptionsWrapper
+    {        
+        public Capabilities Capabilities { get; set; } = new Capabilities();
+        public InitializationOptions InitializationOptions { get; set; } = new InitializationOptions();
+    }
 
     public class WebviewIpcMessageResponse
     {
         public string Id { get; set; }
-        public string Type { get; set; }
+        public string Type { get; set; } = "codestream:response";
         public WebviewIpcMessageResponseBody Body { get; set; }
         public string Error { get; set; }
     }
 
     public class WebviewIpcMessageResponseBody
     {
+        public WebviewIpcMessageResponseBody(string id)
+        {
+            Id = id;
+        }
+
         public string Id { get; set; }
         public string Type { get; set; }
         public object Payload { get; set; }
         public string Error { get; set; }
     }
 
+    public class WebviewIpcMessageResponsePayload
+    {
+        public string Env { get; set; }
+        public Config Configs { get; set; }
+        public Service Services { get; set; }
+        public string Version { get; set; }
+    }
+
     public class CodeStreamMessage
     {
         public string Type { get; set; }
         public JToken Body { get; set; }
+
+        public static CodeStreamMessage Empty()
+        {
+            return new CodeStreamMessage();
+        }
 
         public string Action
         {

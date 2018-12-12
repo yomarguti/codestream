@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.Shell;
+using Serilog;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
@@ -18,13 +19,15 @@ namespace CodeStream.VisualStudio
     [ProvideToolWindow(typeof(CodeStream.VisualStudio.CodeStreamToolWindow))]
     public sealed class CustomCommandPackage : AsyncPackage
     {
+        static readonly ILogger log = LogManager.ForContext<CustomCommandPackage>();
+
+
         public const string PackageGuidString = "330ce502-4e1f-44b8-ab32-82a7ea71beeb";
 
         public CustomCommandPackage()
         {
         }
 
-        private static AsyncPackage ServiceLocator1;
         /// <summary>
         /// Initialization of the package; this method is called right after the package is sited, so this is the place
         /// where you can put all the initialization code that rely on services provided by VisualStudio.
@@ -34,13 +37,20 @@ namespace CodeStream.VisualStudio
         /// <returns>A task representing the async work of package initialization, or an already completed task if there is none. Do not return null from this method.</returns>
         protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
-            await base.InitializeAsync(cancellationToken, progress);            
+            await base.InitializeAsync(cancellationToken, progress);
 
             CustomCommand.Initialize(this);
             // When initialized asynchronously, the current thread may be a background thread at this point.
             // Do any initialization that requires the UI thread after switching to the UI thread.
-            await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-            await CodeStream.VisualStudio.CodeStreamToolWindowCommand.InitializeAsync(this);
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+            await CodeStreamToolWindowCommand.InitializeAsync(this);
+
+            var packageVersion = Constants.GetPackageVersion(this);
+            var hostVersionInfo = Constants.GetHostVersionInfo();
+
+            log.Information("Initializing GitHub Extension v{PackageVersion} in {$FileDescription} ({$ProductVersion})",
+                packageVersion, hostVersionInfo.FileDescription, hostVersionInfo.ProductVersion);
+
         }
     }
 }

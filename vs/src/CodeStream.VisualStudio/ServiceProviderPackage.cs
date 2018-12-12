@@ -7,7 +7,10 @@ using CodeStream.VisualStudio.Services;
 
 namespace CodeStream.VisualStudio
 {
-    [ProvideService(typeof(SBrowserService))]
+    /// <summary>
+    /// Psuedo-package to allow for a custom service provider
+    /// </summary>
+    [ProvideService(typeof(SHostService))]
     [ProvideService(typeof(SSessionService))]
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [Guid(PackageGuidString)]
@@ -21,15 +24,15 @@ namespace CodeStream.VisualStudio
             ServiceCreatorCallback callback = new ServiceCreatorCallback(CreateService);
 
             ((IServiceContainer)this).AddService(typeof(SSessionService), callback, true);
-            ((IServiceContainer)this).AddService(typeof(SBrowserService), callback, true);
+            ((IServiceContainer)this).AddService(typeof(SHostService), callback, true);
         }
 
         private object CreateService(IServiceContainer container, Type serviceType)
         {
             if (typeof(SSessionService) == serviceType)
                 return new SessionService(this);
-            if (typeof(SBrowserService) == serviceType)
-                return new BrowserService(this);
+            if (typeof(SHostService) == serviceType)
+                return new HostService(this);
 
             return null;
         }

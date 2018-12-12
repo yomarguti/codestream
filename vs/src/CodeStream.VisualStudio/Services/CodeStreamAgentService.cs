@@ -7,38 +7,35 @@ using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio.Services
 {
-    public class CodestreamAgentApi
+    public class CodestreamAgentService
     {
-        private static readonly Lazy<CodestreamAgentApi> lazy =
-            new Lazy<CodestreamAgentApi>(() => new CodestreamAgentApi());
+        #region Singleton
+        private static readonly Lazy<CodestreamAgentService> lazy = new Lazy<CodestreamAgentService>(() => new CodestreamAgentService());
+        public static CodestreamAgentService Instance { get { return lazy.Value; } }
+        private CodestreamAgentService() { }
+        #endregion
 
-        public static CodestreamAgentApi Instance { get { return lazy.Value; } }
+        private JsonRpc _rpc { get; set; }
 
-        private CodestreamAgentApi()
-        {
-        }
-
-        internal JsonRpc Rpc { get; set; }
         public void SetRpc(JsonRpc rpc)
         {
-            Rpc = rpc;
+            _rpc = rpc;
         }
 
         public async Task<object> GetPostsAsync(string streamId, int limit = 50, object before = null, object after = null, bool? inclusive = null)
         {
-
             try
             {
-                return await this.Rpc.InvokeWithParameterObjectAsync<object>("codeStream/posts",
+                return await _rpc.InvokeWithParameterObjectAsync<object>("codeStream/posts",
                      new
                      {
                          streamId
-                        //,
-                        //limit,
-                        //before,
-                        //after,
-                        //inclusive
-                    });
+                         //,
+                         //limit,
+                         //before,
+                         //after,
+                         //inclusive
+                     });
             }
             catch (Exception ex)
             {
@@ -48,7 +45,7 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task<JToken> LoginAsync(string email, string password, string serverUrl)
         {
-            return await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/cli/login", new
+            return await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/cli/login", new
             {
                 email = email,
                 passwordOrToken = password,
@@ -69,36 +66,38 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task<BootstrapState> GetBootstrapAsync(StateResponse state)
         {
-            var repos = await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/repos");
-            var streams = await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/streams");
-            var teams = await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/teams");
-            var usersUnreads = await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/unreads");
-            var users = await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users");
-            var usersPreferences = await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/preferences");
+            var repos =            await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/repos");
+            var streams =          await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/streams");
+            var teams =            await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/teams");
+            var usersUnreads =     await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/unreads");
+            var users =            await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users");
+            var usersPreferences = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/preferences");
 
-            BootstrapState bs = new BootstrapState();
-            bs.Capabilities = state.State.Capabilities;
-            bs.CurrentUserId = state.State.UserId;
-            bs.CurrentTeamId = state.State.TeamId;
-            bs.Configs = new Config()
+            var bootstrapState = new BootstrapState
             {
-                ServerUrl = state.State.ServerUrl,
-                Email = state.State.Email
-            };
-            bs.Env = state.State.Environment;
+                Capabilities = state.State.Capabilities,
+                CurrentUserId = state.State.UserId,
+                CurrentTeamId = state.State.TeamId,
+                Configs = new Config()
+                {
+                    ServerUrl = state.State.ServerUrl,
+                    Email = state.State.Email
+                },
+                Env = state.State.Environment,
 
-            bs.Repos = repos.Value<JToken>("repos").ToObject<List<CSRepository>>();
-            bs.Streams = streams.Value<JToken>("streams").ToObject<List<CSStream>>();
-            bs.Teams = teams.Value<JToken>("teams").ToObject<List<Team>>();
-            bs.Unreads = usersUnreads.Value<JToken>("unreads").ToObject<CSUnreads>();
-            bs.Users = users.Value<JToken>("users").ToObject<List<CSUser>>();
-            bs.Services = new Service()
-            {
-                //TODO
-                Vsls = true
+                Repos = repos.Value<JToken>("repos").ToObject<List<CSRepository>>(),
+                Streams = streams.Value<JToken>("streams").ToObject<List<CSStream>>(),
+                Teams = teams.Value<JToken>("teams").ToObject<List<Team>>(),
+                Unreads = usersUnreads.Value<JToken>("unreads").ToObject<CSUnreads>(),
+                Users = users.Value<JToken>("users").ToObject<List<CSUser>>(),
+                Services = new Service()
+                {
+                    //TODO
+                    Vsls = false
+                }
             };
 
-            return bs;
+            return bootstrapState;
         }
     }
 }

@@ -4,7 +4,6 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
-using Newtonsoft.Json.Linq;
 using Serilog;
 using StreamJsonRpc;
 using System;
@@ -65,10 +64,9 @@ namespace CodeStream.VisualStudio
         {
             get
             {
-                return new
+                return new InitializationOptionsWrapper
                 {
-                    capabilities = new { },
-                    initializationOptions = new
+                    InitializationOptions = new InitializationOptions
                     {
                         //serverUrl = "https://pd-api.codestream.us:9443",
                         // gitPath = "",
@@ -155,26 +153,28 @@ namespace CodeStream.VisualStudio
                 }
             }
 
+            // [BC] does this actually work?
             //this.Rpc.AddLocalRpcTarget()
         }
 
         public async System.Threading.Tasks.Task OnLoadedAsync()
         {
+            log.Verbose(nameof(OnLoadedAsync));
             await StartAsync?.InvokeAsync(this, EventArgs.Empty);
         }
 
         public async System.Threading.Tasks.Task OnServerInitializedAsync()
         {
             try
-            {
+            {                                
+                CodestreamAgentService.Instance.SetRpc(Rpc);
                 var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
-                sessionService.SessionState = SessionState.AgentReady;              
-                CodestreamAgentApi.Instance.SetRpc(Rpc);
-                log.Debug("Initialized");
+                sessionService.SessionState = SessionState.AgentReady;
+                log.Verbose(nameof(OnServerInitializedAsync));
             }
             catch (Exception ex)
             {
-                log.Error(ex, "OnServerInitializedAsync");
+                log.Error(ex, nameof(OnServerInitializedAsync));
                 throw ex;
             }
             await System.Threading.Tasks.Task.CompletedTask;
@@ -182,7 +182,7 @@ namespace CodeStream.VisualStudio
 
         public System.Threading.Tasks.Task OnServerInitializeFailedAsync(Exception ex)
         {
-            log.Error(ex, "OnServerInitializeFailedAsync");
+            log.Error(ex, nameof(OnServerInitializeFailedAsync));
             throw ex;
         }
     }

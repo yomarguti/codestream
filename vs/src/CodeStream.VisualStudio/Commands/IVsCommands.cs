@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace CodeStream.VisualStudio.Commands
@@ -45,7 +41,7 @@ namespace CodeStream.VisualStudio.Commands
         bool Visible { get; }
     }
 
-    public interface ICodestreamToggleWindowCommand : IVsCommand
+    public interface IVsCommands : IVsCommand
     {
     }
 }
