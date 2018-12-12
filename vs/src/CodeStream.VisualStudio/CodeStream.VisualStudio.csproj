@@ -96,6 +96,8 @@
     <Compile Include="Services\HostService.cs" />
     <Compile Include="Services\CodeStreamAgentService.cs" />
     <Compile Include="Services\SessionService.cs" />
+    <Compile Include="Attributes\InjectedAttribute.cs" />
+    <Compile Include="SolutionLoadPackage.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
