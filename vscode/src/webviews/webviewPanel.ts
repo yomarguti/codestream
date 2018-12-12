@@ -436,18 +436,20 @@ export class CodeStreamWebviewPanel implements Disposable {
 							break;
 						}
 						default: {
-							// TODO: catch errors
-							const response = await Container.agent.sendRequest(
-								new RequestType<any, any, any, any>(body.action),
-								body.params
-							);
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: {
-									id: body.id,
-									payload: response
-								}
-							});
+							const responseBody: { id: string; [key: string]: any } = { id: body.id };
+							try {
+								responseBody.payload = await Container.agent.sendRequest(
+									new RequestType<any, any, any, any>(body.action),
+									body.params
+								);
+							} catch (error) {
+								responseBody.error = error.message;
+							} finally {
+								this.postMessage({
+									type: WebviewIpcMessageType.response,
+									body: responseBody
+								});
+							}
 							break;
 						}
 					}
