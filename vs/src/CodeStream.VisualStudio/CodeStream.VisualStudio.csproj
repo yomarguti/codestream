@@ -102,9 +102,6 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="dist\agent.js.map" />
-    <None Include="dist\extension.js.map" />
-    <None Include="dist\package-lock.json" />
-    <None Include="dist\package.json" />
     <None Include="CodeStream.VisualStudio.Settings.json" />
     <None Include="packages.config" />
     <None Include="source.extension.vsixmanifest">
@@ -113,15 +110,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="dist\agent.js" />
-    <Content Include="dist\extension.js" />
     <Content Include="dist\webview\webview.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="dist\webview\webview.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="dist\x-extension.js" />
-    <Content Include="dist\x-server.js" />
     <Content Include="Resources\CodestreamPackage.ico" />
     <Content Include="Themes\dark.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
