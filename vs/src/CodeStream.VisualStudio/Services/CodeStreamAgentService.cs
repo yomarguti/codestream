@@ -34,6 +34,26 @@ namespace CodeStream.VisualStudio.Services
             }
         }
 
+        public async Task<JToken> LoginViaTokenAsync(string signupToken, string serverUrl)
+        {
+            return await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/cli/login",
+                new
+                {                 
+                    serverUrl = serverUrl,
+                    signupToken = signupToken,
+                    team = (string)null,
+                    teamId = (string)null,
+                    extension = new
+                    {
+                        build = "0",
+                        buildEnv = "0",
+                        version = "0",
+                        versionFormatted = "0",
+                    },
+                    traceLevel = "verbose"
+                });
+        }
+		
         public async Task<JToken> LoginAsync(string email, string password, string serverUrl)
         {
             return await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/cli/login", new

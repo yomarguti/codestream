@@ -156,6 +156,45 @@ namespace CodeStream.VisualStudio
                                         break;
                                     }
                                 case "validate-signup":
+                                    {
+                                        //TODO
+
+                                        //var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+                                        //if (sessionService.SessionState == SessionState.AgentReady)
+                                        //{
+                                        //    var response = new WebviewIpcMessageResponse
+                                        //    {
+                                        //        Body = new WebviewIpcMessageResponseBody(request?.Id)
+                                        //    };
+
+                                        //    var loginResponsewrapper = CodestreamAgentService.Instance.LoginViaTokenAsync(
+                                        //        request.Params["token"].ToString(),                                                
+                                        //        Constants.ServerUrl
+                                        //       ).GetAwaiter().GetResult();
+
+                                        //    var error = loginResponsewrapper.Value<string>("error");
+                                        //    if (error != null)
+                                        //    {
+                                        //        response.Body.Payload = error;
+                                        //    }
+                                        //    else
+                                        //    {
+                                        //        var loginResponse = loginResponsewrapper.ToObject<LoginResponseResponse>();
+                                        //        var state = loginResponsewrapper.Value<JToken>().ToObject<StateResponse>();
+
+                                        //        sessionService.LoginResponse = loginResponse.LoginResponse;
+                                        //        sessionService.State = state.State;
+
+                                        //        response.Body.Payload = CodestreamAgentService.Instance.GetBootstrapAsync(state).GetAwaiter().GetResult();
+                                        //    }
+                                        //    browser.PostMessage(response);
+                                        //}
+                                        //else
+                                        //{
+                                        //    //nuttin yet
+                                        //}
+                                        break;
+                                    }
                                 case "create-post":                                    
                                 case "fetch-posts":                                  
                                 case "fetch-thread":                                    

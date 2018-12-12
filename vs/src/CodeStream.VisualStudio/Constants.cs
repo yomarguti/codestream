@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio
 {
@@ -13,6 +9,9 @@ namespace CodeStream.VisualStudio
         //TODO move me out of here
         public static string WebAppUrl = "http://pd-app.codestream.us:1380";
         public static string ServerUrl = "https://pd-api.codestream.us:9443";
+
+        //public static string WebAppUrl = "http://app.codestream.com";
+        //public static string ServerUrl = "https://api.codestream.com";
 
 
         /// <summary>

@@ -1,6 +1,6 @@
-﻿using System;
-using CodeStream.VisualStudio.Attributes;
+﻿using CodeStream.VisualStudio.Attributes;
 using CodeStream.VisualStudio.Models;
+using System;
 
 namespace CodeStream.VisualStudio.Services
 {
@@ -26,6 +26,7 @@ namespace CodeStream.VisualStudio.Services
         public State State { get; set; }
         public BootstrapState BootstrapState { get; set; }
         public SessionState SessionState { get; set; }
+        private Guid _signupToken = Guid.Empty;
 
         public SessionService(Microsoft.VisualStudio.OLE.Interop.IServiceProvider serviceProvider)
         {
@@ -34,7 +35,12 @@ namespace CodeStream.VisualStudio.Services
 
         public Guid GenerateSignupToken()
         {
-            return Guid.NewGuid();
+            if (_signupToken == Guid.Empty)
+            {
+                _signupToken = Guid.NewGuid();
+            }
+			
+            return _signupToken;
         }
     }
 
