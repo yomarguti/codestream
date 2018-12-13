@@ -5,8 +5,8 @@ import { ContextActionsType, State } from "./types";
 type ContextActions = ActionType<typeof actions>;
 
 const initialState: State = {
-	currentFile: "",
-	mostRecentSourceFile: "",
+	activeFile: "",
+	lastActiveFile: "",
 	currentTeamId: "",
 	currentCommit: "", // maybe delete
 	currentStreamId: "",
@@ -26,9 +26,9 @@ export function reduceContext(state: State = initialState, action: ContextAction
 			return { ...state, ...action.payload };
 		case ContextActionsType.SetCurrentFile: {
 			const { file, fileStreamId } = action.payload;
-			const nextState: Partial<State> = { currentFile: file, fileStreamId };
+			const nextState: Partial<State> = { activeFile: file, fileStreamId };
 			if (file) {
-				nextState.mostRecentSourceFile = file;
+				nextState.lastActiveFile = file;
 			}
 			if (fileStreamId) {
 				nextState.lastFileStreamId = fileStreamId;

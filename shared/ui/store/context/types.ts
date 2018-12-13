@@ -12,8 +12,8 @@ export enum ContextActionsType {
 }
 
 export interface State {
-	currentFile: string;
-	mostRecentSourceFile: string;
+	activeFile?: string;
+	lastActiveFile?: string;
 	currentTeamId: string;
 	currentCommit: string; // maybe delete
 	currentStreamId: string;

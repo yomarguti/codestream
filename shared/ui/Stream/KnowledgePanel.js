@@ -148,9 +148,9 @@ export class SimpleKnowledgePanel extends Component {
 		if (codemarks.length === 0) return null;
 
 		const sectionLabel =
-			section === "inThisFile" && this.props.mostRecentSourceFile ? (
+			section === "inThisFile" && this.props.fileNameToFilterFor ? (
 				<span>
-					In This File: <span className="filename">{this.props.mostRecentSourceFile}</span>
+					In This File: <span className="filename">{this.props.fileNameToFilterFor}</span>
 				</span>
 			) : (
 				this.sectionLabel[section]
@@ -175,8 +175,8 @@ export class SimpleKnowledgePanel extends Component {
 			codemarks,
 			noCodemarksAtAll,
 			currentUserId,
-			mostRecentSourceFile,
-			mostRecentFileStreamId,
+			fileNameToFilterFor,
+			fileStreamIdToFilterFor,
 			fileFilter,
 			typeFilter
 		} = this.props;
@@ -207,7 +207,6 @@ export class SimpleKnowledgePanel extends Component {
 			if (typeFilter !== "all" && codemarkType !== typeFilter) return null;
 			const codeBlock = codemark.markers && codemark.markers.length && codemark.markers[0];
 
-			const codeBlockFile = codeBlock && codeBlock.file;
 			const codeBlockRepo = codeBlock && codeBlock.repoId;
 			const title = codemark.title;
 			const assignees = codemark.assignees;
@@ -230,8 +229,8 @@ export class SimpleKnowledgePanel extends Component {
 				switch (section) {
 					case "inThisFile":
 						if (
-							mostRecentSourceFile &&
-							(codemark.fileStreamIds || []).includes(mostRecentFileStreamId)
+							fileNameToFilterFor &&
+							(codemark.fileStreamIds || []).includes(fileStreamIdToFilterFor)
 						)
 							assignCodemark(codemark, "inThisFile");
 						break;
@@ -421,13 +420,13 @@ const mapStateToProps = state => {
 
 	let fileNameToFilterFor;
 	let fileStreamIdToFilterFor;
-	if (context.currentFile && context.fileStreamId) {
-		fileNameToFilterFor = context.currentFile;
+	if (context.activeFile && context.fileStreamId) {
+		fileNameToFilterFor = context.activeFile;
 		fileStreamIdToFilterFor = context.fileStreamId;
-	} else if (context.currentFile && !context.fileStreamId) {
-		fileNameToFilterFor = context.currentFile;
+	} else if (context.activeFile && !context.fileStreamId) {
+		fileNameToFilterFor = context.activeFile;
 	} else {
-		fileNameToFilterFor = context.mostRecentSourceFile;
+		fileNameToFilterFor = context.lastActiveFile;
 		fileStreamIdToFilterFor = context.lastFileStreamId;
 	}
 
@@ -439,8 +438,8 @@ const mapStateToProps = state => {
 		team: teams[context.currentTeamId],
 		fileFilter: context.codemarkFileFilter,
 		typeFilter: context.codemarkTypeFilter,
-		mostRecentSourceFile: fileNameToFilterFor,
-		mostRecentFileStreamId: fileStreamIdToFilterFor
+		fileNameToFilterFor,
+		fileStreamIdToFilterFor
 	};
 };
 
