@@ -10,6 +10,8 @@ const initialState: State = {
 	currentTeamId: "",
 	currentCommit: "", // maybe delete
 	currentStreamId: "",
+	fileStreamId: undefined,
+	lastFileStreamId: undefined,
 	threadId: null,
 	panelStack: ["channels"],
 	hasFocus: true, // we assume we start with the focus when codestream initializes
@@ -23,9 +25,15 @@ export function reduceContext(state: State = initialState, action: ContextAction
 		case ContextActionsType.SetContext:
 			return { ...state, ...action.payload };
 		case ContextActionsType.SetCurrentFile: {
-			const file = action.payload;
-			if (file) return { ...state, currentFile: file, mostRecentSourceFile: file };
-			else return { ...state, currentFile: "" };
+			const { file, fileStreamId } = action.payload;
+			const nextState: Partial<State> = { currentFile: file, fileStreamId };
+			if (file) {
+				nextState.mostRecentSourceFile = file;
+			}
+			if (fileStreamId) {
+				nextState.lastFileStreamId = fileStreamId;
+			}
+			return { ...state, ...nextState };
 		}
 		case ContextActionsType.SetCurrentStream:
 			return { ...state, currentStreamId: action.payload, threadId: null };

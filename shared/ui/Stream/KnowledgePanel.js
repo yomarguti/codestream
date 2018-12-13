@@ -176,6 +176,7 @@ export class SimpleKnowledgePanel extends Component {
 			noCodemarksAtAll,
 			currentUserId,
 			mostRecentSourceFile,
+			mostRecentFileStreamId,
 			fileFilter,
 			typeFilter
 		} = this.props;
@@ -228,7 +229,10 @@ export class SimpleKnowledgePanel extends Component {
 				if (fileFilter === "unseparated" && section === "inThisFile") return;
 				switch (section) {
 					case "inThisFile":
-						if (mostRecentSourceFile && codeBlockFile === mostRecentSourceFile)
+						if (
+							mostRecentSourceFile &&
+							(codemark.fileStreamIds || []).includes(mostRecentFileStreamId)
+						)
 							assignCodemark(codemark, "inThisFile");
 						break;
 					case "mine":
@@ -415,6 +419,18 @@ export class SimpleKnowledgePanel extends Component {
 const mapStateToProps = state => {
 	const { context, teams, configs } = state;
 
+	let fileNameToFilterFor;
+	let fileStreamIdToFilterFor;
+	if (context.currentFile && context.fileStreamId) {
+		fileNameToFilterFor = context.currentFile;
+		fileStreamIdToFilterFor = context.fileStreamId;
+	} else if (context.currentFile && !context.fileStreamId) {
+		fileNameToFilterFor = context.currentFile;
+	} else {
+		fileNameToFilterFor = context.mostRecentSourceFile;
+		fileStreamIdToFilterFor = context.lastFileStreamId;
+	}
+
 	return {
 		usernames: userSelectors.getUsernames(state),
 		noCodemarksAtAll: !codemarkSelectors.teamHasCodemarks(state),
@@ -423,7 +439,8 @@ const mapStateToProps = state => {
 		team: teams[context.currentTeamId],
 		fileFilter: context.codemarkFileFilter,
 		typeFilter: context.codemarkTypeFilter,
-		mostRecentSourceFile: context.mostRecentSourceFile
+		mostRecentSourceFile: fileNameToFilterFor,
+		mostRecentFileStreamId: fileStreamIdToFilterFor
 	};
 };
 

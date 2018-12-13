@@ -17,6 +17,8 @@ export interface State {
 	currentTeamId: string;
 	currentCommit: string; // maybe delete
 	currentStreamId: string;
+	fileStreamId?: string;
+	lastFileStreamId?: string;
 	threadId: string | null;
 	panelStack: string[];
 	hasFocus: boolean;

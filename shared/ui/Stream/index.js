@@ -1733,7 +1733,6 @@ const mapStateToProps = state => {
 		repoId: context.currentRepoId,
 		hasFocus: context.hasFocus,
 		firstTimeInAtom: onboarding.firstTimeInAtom,
-		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
 		usernamesRegexp: usernamesRegexp,
 		currentUserId: user.id,

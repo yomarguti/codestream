@@ -35,7 +35,8 @@ export const setCodemarkTypeFilter = (value: string) =>
 export const setChannelFilter = (value: string) =>
 	action(ContextActionsType.SetChannelFilter, value);
 
-export const setCurrentFile = (file = "") => action(ContextActionsType.SetCurrentFile, file);
+export const setCurrentFile = (file = "", fileStreamId?: string) =>
+	action(ContextActionsType.SetCurrentFile, { file, fileStreamId });
 
 export const _setCurrentStream = (streamId: string) =>
 	action(ContextActionsType.SetCurrentStream, streamId);

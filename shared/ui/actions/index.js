@@ -32,5 +32,4 @@ export const bootstrap = (data = {}) => async dispatch => {
 export const offline = () => ({ type: "OFFLINE" });
 export const online = () => ({ type: "ONLINE" });
 
-export const fileChanged = body =>
-	setCurrentFile(body && body.editor ? body.editor.fileName : undefined);
+export const fileChanged = editor => setCurrentFile(editor.fileName, editor.fileStreamId);
