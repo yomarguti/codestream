@@ -20,10 +20,10 @@ namespace CodeStream.VisualStudio
 
         private CodeStreamMessage ParseMessageSafe(JToken token)
         {
+            string type = null;
             try
             {
-                var type = token.Value<string>("type");
-
+                type = token.Value<string>("type");
                 return new CodeStreamMessage()
                 {
                     Type = type,
@@ -32,7 +32,7 @@ namespace CodeStream.VisualStudio
             }
             catch (Exception ex)
             {
-                log.Error(ex, nameof(ParseMessageSafe));
+                log.Error(ex, "Token could not be parsed. Type={Type}", type);
             }
 
             return CodeStreamMessage.Empty();
@@ -45,12 +45,12 @@ namespace CodeStream.VisualStudio
             {
                 log.Verbose(e.Message, $"{nameof(WindowEventArgs)} not found");
                 return;
-            }
-
-            log.Verbose(e.Message);
+            }            
 
             var message = ParseMessageSafe(JToken.Parse(e.Message));
-
+ 
+            log.Debug(e.Message);
+ 
             switch (message.Type)
             {
                 case "codestream:log":
@@ -83,7 +83,7 @@ namespace CodeStream.VisualStudio
                             {
                                 Body = new WebviewIpcMessageResponseBody(request?.Id)
                                 {
-                                    Payload = CodestreamAgentService.Instance.SendAsync(request.Action, request.Params).GetAwaiter().GetResult()
+                                    Payload = CodestreamAgentService.Instance.SendAsync<object>(request.Action, request.Params).GetAwaiter().GetResult()
                                 }
                             };
                             browser.PostMessage(response);

@@ -28,29 +28,23 @@ namespace CodeStream.VisualStudio
 
         public ISuggestedActionsSource CreateSuggestedActionsSource(ITextView textView, ITextBuffer textBuffer)
         {
-            if (textBuffer == null || textView == null)
-            {
-                return null;
-            }
-            return new TestSuggestedActionsSource(this, textView, textBuffer);
+            return textBuffer == null || textView == null 
+                ? null 
+                : new TestSuggestedActionsSource(this, textView, textBuffer);
         }
     }
 
     internal class TestSuggestedActionsSource : ISuggestedActionsSource
     {
-        private readonly TestSuggestedActionsSourceProvider m_factory;
-        private readonly ITextBuffer m_textBuffer;
-        private readonly ITextView m_textView;
+        private readonly TestSuggestedActionsSourceProvider _actionSourceProvider;
+        private readonly ITextBuffer _textBuffer;
+        private readonly ITextView _textView;
 
         public TestSuggestedActionsSource(TestSuggestedActionsSourceProvider testSuggestedActionsSourceProvider, ITextView textView, ITextBuffer textBuffer)
         {
-            m_factory = testSuggestedActionsSourceProvider;
-            m_textBuffer = textBuffer;
-            m_textView = textView;
-        }
-
-        public void Dispose()
-        {
+            _actionSourceProvider = testSuggestedActionsSourceProvider;
+            _textBuffer = textBuffer;
+            _textView = textView;
         }
 
         public bool TryGetTelemetryId(out Guid telemetryId)
@@ -72,13 +66,14 @@ namespace CodeStream.VisualStudio
             if (selectedTextService.TryGetSelectedText(out selectedText))
             {
                 return new SuggestedActionSet[]
-               {
-                    new SuggestedActionSet(new ISuggestedAction[]
-                        {
-                            new CodemarkSuggestedAction(selectedText)
-                        }
-                    )
-               };
+                   {
+
+                        new SuggestedActionSet(new ISuggestedAction[]
+                            {
+                                new CodemarkSuggestedAction(selectedText)
+                            }
+                        )
+                   };
             }
 
             return Enumerable.Empty<SuggestedActionSet>();
@@ -87,6 +82,10 @@ namespace CodeStream.VisualStudio
         public Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken)
         {
             return System.Threading.Tasks.Task.FromResult(true);
+        }
+
+        public void Dispose()
+        {
         }
     }
 
@@ -120,7 +119,6 @@ namespace CodeStream.VisualStudio
             //        dirty = false
             //    }).ToJson()), cancellationToken));
             //var foo = task.Result;
-
         }
 
         public Task<object> GetPreviewAsync(CancellationToken cancellationToken)
@@ -130,11 +128,7 @@ namespace CodeStream.VisualStudio
             textBlock.Inlines.Add(new Run() { Text = _text });
 
             return System.Threading.Tasks.Task.FromResult<object>(textBlock);
-        }
-
-        public void Dispose()
-        {
-        }
+        }        
 
         public bool TryGetTelemetryId(out Guid telemetryId)
         {
@@ -177,6 +171,10 @@ namespace CodeStream.VisualStudio
         public bool HasPreview
         {
             get { return false; }
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

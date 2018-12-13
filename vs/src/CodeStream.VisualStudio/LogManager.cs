@@ -3,6 +3,7 @@ using Serilog.Core;
 using Serilog.Events;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 
 namespace CodeStream.VisualStudio
 {
@@ -18,30 +19,22 @@ namespace CodeStream.VisualStudio
 
         static Logger CreateLogger()
         {
-            //TODO use rolling file sink
+            var logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                Constants.ApplicationName,
+                "vs-extension.log");
 
-            //var logPath = Path.Combine(
-            //    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            //    Constants.ApplicationName,
-            //    "extension.log");
-
-            //const string outputTemplate =
-            //    "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{ProcessId:00000}] {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}{NewLine}{Exception}";
+            const string outputTemplate =
+                "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{ProcessId:00000}] {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}{NewLine}{Exception}";
 
             return new LoggerConfiguration()
-                 .MinimumLevel.ControlledBy(LoggingLevelSwitch)
-                 .WriteTo.Debug()
-                 .CreateLogger();
-
-            //return new LoggerConfiguration()
-            //   // .Enrich.WithProcessId()
-            //  //  .Enrich.WithThreadId()
-            //    .MinimumLevel.ControlledBy(LoggingLevelSwitch)
-            //    .WriteTo.File(logPath,
-            //        fileSizeLimitBytes: null,
-            //        outputTemplate: outputTemplate,
-            //        shared: true)
-            //    .CreateLogger();
+                 .Enrich.WithProcessId()
+                  .Enrich.WithThreadId()
+                .MinimumLevel.ControlledBy(LoggingLevelSwitch)
+                .WriteTo.File(logPath,
+                    fileSizeLimitBytes: null,
+                    outputTemplate: outputTemplate,
+                    shared: true)
+                .CreateLogger();
         }
 
         public static void EnableTraceLogging(bool enable)

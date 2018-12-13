@@ -1,6 +1,7 @@
 ﻿using CodeStream.VisualStudio.Attributes;
 using CodeStream.VisualStudio.Models;
 using Newtonsoft.Json.Linq;
+using Serilog;
 using StreamJsonRpc;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,8 @@ namespace CodeStream.VisualStudio.Services
     [Singleton]
     public class CodestreamAgentService
     {
+        static readonly ILogger log = LogManager.ForContext<CodestreamAgentService>();
+
         #region Singleton
         private static readonly Lazy<CodestreamAgentService> lazy = new Lazy<CodestreamAgentService>(() => new CodestreamAgentService());
         public static CodestreamAgentService Instance { get { return lazy.Value; } }
@@ -23,25 +26,31 @@ namespace CodeStream.VisualStudio.Services
         public async Task<object> SetRpcAsync(JsonRpc rpc)
         {
             _rpc = rpc;
-            return await SendAsync("codeStream/cli/initialized", null);
+            return await SendAsync<object>("codeStream/cli/initialized", null);
         }
 
-        public async Task<object> SendAsync(string name, JToken arguments, CancellationToken? cancellationToken = null)
+        public async Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null)
         {
             cancellationToken = cancellationToken ?? CancellationToken.None;
             try
             {
-                return await _rpc.InvokeWithParameterObjectAsync<object>(name, arguments, cancellationToken.Value);
+                return await _rpc.InvokeWithParameterObjectAsync<T>(name, arguments, cancellationToken.Value);
             }
             catch (Exception ex)
             {
+                log.Error(ex, "SendAsync Name={Name}", name);
                 throw;
             }
-        }
+        }        
+
+        //public async Task<object> SendAsync(string name, object arguments, CancellationToken? cancellationToken = null)
+        //{
+        //    return await SendAsync<object>(name, arguments, cancellationToken);
+        //}
 
         public async Task<JToken> LoginViaTokenAsync(string signupToken, string serverUrl)
         {
-            return await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/cli/login",
+            return await SendAsync<JToken>("codeStream/cli/login",
                 new
                 {                 
                     serverUrl = serverUrl,
@@ -61,7 +70,7 @@ namespace CodeStream.VisualStudio.Services
 		
         public async Task<JToken> LoginAsync(string email, string password, string serverUrl)
         {
-            return await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/cli/login", new
+            return await SendAsync<JToken>("codeStream/cli/login", new
             {
                 email = email,
                 passwordOrToken = password,

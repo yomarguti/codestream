@@ -6,6 +6,8 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
 using Serilog;
+using SerilogTimings;
+using SerilogTimings.Extensions;
 using StreamJsonRpc;
 using System;
 using System.Collections.Generic;
@@ -21,7 +23,6 @@ namespace CodeStream.VisualStudio
     public class FooLanguageClient : ILanguageClient, ILanguageClientCustomMessage
     {
         static readonly ILogger log = LogManager.ForContext<FooLanguageClient>();
-
         internal const string UiContextGuidString = "DE885E15-D44E-40B1-A370-45372EFC23AA";
         private Guid _uiContextGuid = new Guid(UiContextGuidString);
 
@@ -47,8 +48,9 @@ namespace CodeStream.VisualStudio
         //    this.serviceProvider = serviceProvider;
         //}
 
-        internal static FooLanguageClient Instance { get; set; }
-        internal JsonRpc Rpc { get; set; }
+        internal static FooLanguageClient Instance { get; private set; }
+        private JsonRpc _rpc;
+
         public string Name => "CodeStream (Agent)";
 
         public IEnumerable<string> ConfigurationSections
@@ -89,7 +91,6 @@ namespace CodeStream.VisualStudio
                     //    url = (string)null,
                     //    strictSSL = false
                     //}
-
                 };
             }
         }
@@ -127,13 +128,14 @@ namespace CodeStream.VisualStudio
             {
                 FileName = @"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\Microsoft\VisualStudio\NodeJs\node.exe"
             };
+
             ////TODO package this up?
             //var agent = @"..\..\..\..\..\..\codestream-lsp-agent\dist\agent-cli.js";
             //var info = new ProcessStartInfo
             //{
             //    FileName = @"..\..\..\..\..\..\codestream-lsp-agent\dist\agent-cli.exe"
             //};
-            //TODO package this up?
+
             var agent = @"..\..\..\..\..\..\codestream-lsp-agent\dist\agent-cli.js";
             info.Arguments = $@"{agent} --stdio --inspect=6009 --nolazy";
             info.RedirectStandardInput = true;
@@ -146,9 +148,13 @@ namespace CodeStream.VisualStudio
                 StartInfo = info
             };
 
-            if (process.Start())
+            using (log.TimeOperation($"Creating lsp server process. FileName={{FileNameAttribute}} Arguments={{Arguments}}", info.FileName, info.Arguments))
             {
-                return new Connection(process.StandardOutput.BaseStream, process.StandardInput.BaseStream);
+                if (process.Start())
+                {
+                    var connection = new Connection(process.StandardOutput.BaseStream, process.StandardInput.BaseStream);                   
+                    return connection;
+                }
             }
 
             throw new Exception("Process start exception");
@@ -162,11 +168,11 @@ namespace CodeStream.VisualStudio
         public async System.Threading.Tasks.Task AttachForCustomMessageAsync(JsonRpc rpc)
         {
             await System.Threading.Tasks.Task.Yield();
-            this.Rpc = rpc;
+            _rpc = rpc;
 
             //await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            ////// Sets the UI context so the custom command will be available.
+            // Sets the UI context so the custom command will be available.
             //var monitorSelection = ServiceProvider.GlobalProvider.GetService(typeof(IVsMonitorSelection)) as IVsMonitorSelection;
             //if (monitorSelection != null)
             //{
@@ -182,20 +188,23 @@ namespace CodeStream.VisualStudio
 
         public async System.Threading.Tasks.Task OnLoadedAsync()
         {
-            log.Verbose(nameof(OnLoadedAsync));
-            await StartAsync?.InvokeAsync(this, EventArgs.Empty);
+            using (log.TimeOperation($"{nameof(OnLoadedAsync)}"))
+            {
+                await StartAsync?.InvokeAsync(this, EventArgs.Empty);
+            }
         }
 
         public async System.Threading.Tasks.Task OnServerInitializedAsync()
         {
             try
             {
-                
-                var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
-                var initialized = await CodestreamAgentService.Instance.SetRpcAsync(Rpc);
-                sessionService.Capabilities = initialized;
-                sessionService.SetAgentReady();
-                log.Verbose(nameof(OnServerInitializedAsync));
+                using (log.TimeOperation($"{nameof(OnServerInitializedAsync)}"))
+                {
+                    var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+                    var initialized = await CodestreamAgentService.Instance.SetRpcAsync(_rpc);
+                    sessionService.Capabilities = initialized;
+                    sessionService.SetAgentReady();                    
+                }
             }
             catch (Exception ex)
             {
@@ -237,24 +246,6 @@ namespace CodeStream.VisualStudio
         {
             //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
             //server.OnTextDocumentOpened(parameter);
-        }
-
-        [JsonRpcMethod("codestream/foo")]
-        public object CodestreamS(object arg)
-        {
-            return null;
-        }
-
-        [JsonRpcMethod("codeStream/ping")]
-        public object Ping(object arg)
-        {
-            return null;
-        }
-
-        [JsonRpcMethod("codeStream/teams")]
-        public object CodestreamTeams(object arg)
-        {
-            return null;
         }
 
         [JsonRpcMethod(Methods.TextDocumentDidOpenName)]
