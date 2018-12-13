@@ -93,7 +93,8 @@ import {
 	PreparePostWithCodeRequestType,
 	ReactToPostRequestType,
 	RenameStreamRequestType,
-	ReportErrorRequestType,
+	ReportingMessageType,
+	ReportMessageRequestType,
 	SetCodemarkStatusRequestType,
 	SetStreamPurposeRequestType,
 	TelemetryRequestType,
@@ -233,8 +234,8 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	@started
-	async reportError(message: string, source: "webview" | "extension", extra?: object) {
-		this.sendRequest(ReportErrorRequestType, { source, message, extra });
+	async reportMessage(type: ReportingMessageType, message: string, extra?: object) {
+		this.sendRequest(ReportMessageRequestType, { source: "extension", type, message, extra });
 	}
 
 	async login(

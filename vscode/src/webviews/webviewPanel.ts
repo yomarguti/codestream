@@ -48,7 +48,12 @@ import {
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { ApiCapabilities, ConnectionStatus, TraceLevel } from "../shared/agent.protocol";
+import {
+	ApiCapabilities,
+	ConnectionStatus,
+	ReportingMessageType,
+	TraceLevel
+} from "../shared/agent.protocol";
 import { log } from "../system";
 import { Functions } from "../system";
 import {
@@ -462,7 +467,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 			}
 		} catch (ex) {
 			debugger;
-			Container.agent.reportError(ex.message, "extension", ex);
+			Container.agent.reportMessage(ReportingMessageType.Error, ex.message);
 			Logger.error(ex);
 		}
 	}
