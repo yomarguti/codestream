@@ -12,6 +12,7 @@ namespace CodeStream.VisualStudio
     /// </summary>
     [ProvideService(typeof(SHostService))]
     [ProvideService(typeof(SSessionService))]
+    [ProvideService(typeof(SSelectedTextService))]
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [Guid(PackageGuidString)]
     public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer, IServiceProvider
@@ -25,6 +26,7 @@ namespace CodeStream.VisualStudio
 
             ((IServiceContainer)this).AddService(typeof(SSessionService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SHostService), callback, true);
+            ((IServiceContainer)this).AddService(typeof(SSelectedTextService), callback, true);
         }
 
         private object CreateService(IServiceContainer container, Type serviceType)
@@ -33,6 +35,8 @@ namespace CodeStream.VisualStudio
                 return new SessionService(this);
             if (typeof(SHostService) == serviceType)
                 return new HostService(this);
+            if (typeof(SSelectedTextService) == serviceType)
+                return new SelectedTextService(this);
 
             return null;
         }

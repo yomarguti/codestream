@@ -74,6 +74,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Attributes\SingletonAttribute.cs" />
     <Compile Include="Browsers\DotNetBrowserBrowser.cs" />
     <Compile Include="Browsers\IBrowser.cs" />
     <Compile Include="CodeStreamCommandHandler.cs" />
@@ -88,12 +89,14 @@
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="FooContentTypeDefinition.cs" />
     <Compile Include="FooLanguageClient.cs" />
+    <Compile Include="CodemarkLightBulb.cs" />
     <Compile Include="LogManager.cs" />
     <Compile Include="Models\Models.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServiceProviderPackage.cs" />
     <Compile Include="Services\HostService.cs" />
     <Compile Include="Services\CodeStreamAgentService.cs" />
+    <Compile Include="Services\SelectedTextService.cs" />
     <Compile Include="Services\SessionService.cs" />
     <Compile Include="Attributes\InjectedAttribute.cs" />
     <Compile Include="SolutionLoadPackage.cs" />
@@ -166,6 +169,9 @@
       <HintPath>..\packages\Microsoft.VisualStudio.Imaging.Interop.14.0.DesignTime.14.3.25408\lib\net20\Microsoft.VisualStudio.Imaging.Interop.14.0.DesignTime.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.Language.Intellisense, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Client, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.VisualStudio.LanguageServer.Client.15.8.3057\lib\net461\Microsoft.VisualStudio.LanguageServer.Client.dll</HintPath>
     </Reference>
@@ -220,6 +226,9 @@
       <HintPath>..\packages\Microsoft.VisualStudio.Shell.Interop.9.0.9.0.30729\lib\Microsoft.VisualStudio.Shell.Interop.9.0.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.Text.Data, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.Text.Logic, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Text.UI, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <HintPath>..\packages\Microsoft.VisualStudio.TextManager.Interop.7.10.6070\lib\Microsoft.VisualStudio.TextManager.Interop.dll</HintPath>
       <Private>True</Private>
@@ -262,6 +271,7 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />

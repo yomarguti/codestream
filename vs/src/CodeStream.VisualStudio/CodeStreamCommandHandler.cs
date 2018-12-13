@@ -116,43 +116,32 @@ namespace CodeStream.VisualStudio
                                         {
                                             Body = new WebviewIpcMessageResponseBody(request?.Id)
                                         };
-                                        try
+
+                                        using (sessionService.AgentReady())
                                         {
-                                            if (sessionService.SessionState == SessionState.AgentReady)
+                                            var loginResponsewrapper = CodestreamAgentService.Instance.LoginAsync(
+                                                request.Params["email"].ToString(),
+                                                request.Params["password"].ToString(),
+                                                Constants.ServerUrl
+                                               ).GetAwaiter().GetResult();
+
+                                            var error = loginResponsewrapper.Value<string>("error");
+                                            if (error != null)
                                             {
-                                                var loginResponsewrapper = CodestreamAgentService.Instance.LoginAsync(
-                                                    request.Params["email"].ToString(),
-                                                    request.Params["password"].ToString(),
-                                                    Constants.ServerUrl
-                                                   ).GetAwaiter().GetResult();
-
-                                                var error = loginResponsewrapper.Value<string>("error");
-                                                if (error != null)
-                                                {
-                                                    response.Body.Payload = error;
-                                                }
-                                                else
-                                                {
-                                                    var loginResponse = loginResponsewrapper.ToObject<LoginResponseResponse>();
-                                                    var state = loginResponsewrapper.Value<JToken>().ToObject<StateResponse>();
-
-                                                    sessionService.LoginResponse = loginResponse.LoginResponse;
-                                                    sessionService.State = state.State;
-
-                                                    response.Body.Payload = CodestreamAgentService.Instance.GetBootstrapAsync(state).GetAwaiter().GetResult();
-                                                }
-                                                browser.PostMessage(response);
+                                                response.Body.Payload = error;
                                             }
                                             else
                                             {
-                                                //nuttin yet
-                                            }
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            log.Error(ex, "Authentication");
-                                        }
+                                                var loginResponse = loginResponsewrapper.ToObject<LoginResponseResponse>();
+                                                var state = loginResponsewrapper.Value<JToken>().ToObject<StateResponse>();
 
+                                                sessionService.LoginResponse = loginResponse.LoginResponse;
+                                                sessionService.State = state.State;
+
+                                                response.Body.Payload = CodestreamAgentService.Instance.GetBootstrapAsync(state).GetAwaiter().GetResult();
+                                            }
+                                            browser.PostMessage(response);
+                                        }
                                         break;
                                     }
                                 case "validate-signup":
@@ -195,9 +184,9 @@ namespace CodeStream.VisualStudio
                                         //}
                                         break;
                                     }
-                                case "create-post":                                    
-                                case "fetch-posts":                                  
-                                case "fetch-thread":                                    
+                                case "create-post":
+                                case "fetch-posts":
+                                case "fetch-thread":
                                 case "delete-post":
                                 case "edit-codemark":
                                 case "mute-all":

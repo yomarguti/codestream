@@ -1,12 +1,15 @@
-﻿using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Attributes;
+using CodeStream.VisualStudio.Models;
 using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio.Services
 {
+    [Singleton]
     public class CodestreamAgentService
     {
         #region Singleton
@@ -17,16 +20,18 @@ namespace CodeStream.VisualStudio.Services
 
         private JsonRpc _rpc { get; set; }
 
-        public void SetRpc(JsonRpc rpc)
+        public async Task<object> SetRpcAsync(JsonRpc rpc)
         {
             _rpc = rpc;
+            return await SendAsync("codeStream/cli/initialized", null);
         }
 
-        public async Task<object> SendAsync(string name, JToken arguments)
+        public async Task<object> SendAsync(string name, JToken arguments, CancellationToken? cancellationToken = null)
         {
+            cancellationToken = cancellationToken ?? CancellationToken.None;
             try
             {
-                return await _rpc.InvokeWithParameterObjectAsync<object>(name, arguments);
+                return await _rpc.InvokeWithParameterObjectAsync<object>(name, arguments, cancellationToken.Value);
             }
             catch (Exception ex)
             {

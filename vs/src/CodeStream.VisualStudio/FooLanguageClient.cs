@@ -1,7 +1,8 @@
-﻿using Microsoft.VisualStudio;
+﻿using CodeStream.VisualStudio.Models;
+using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.LanguageServer.Client;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
 using Serilog;
@@ -12,8 +13,6 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using CodeStream.VisualStudio.Models;
-using CodeStream.VisualStudio.Services;
 
 namespace CodeStream.VisualStudio
 {
@@ -64,44 +63,60 @@ namespace CodeStream.VisualStudio
         {
             get
             {
-                return new InitializationOptionsWrapper
+                return new InitializationOptions
                 {
-                    InitializationOptions = new InitializationOptions
-                    {
-                        //serverUrl = "https://pd-api.codestream.us:9443",
-                        // gitPath = "",
-                        //type = "credentials",
-                        //email = "",
-                        //passwordOrToken = "",
-                        //extension = new
-                        //{
-                        //    build = "0",
-                        //    buildEnv = "0",
-                        //    version = "0",
-                        //    versionFormatted = "0",
-                        //},
-                        //traceLevel = "verbose"
-                        //isDebugging = true,
-                        //ide = new
-                        //{
-                        //    name = "Visual Studio",
-                        //    version = "2017"
-                        //},
-                        //proxy = new
-                        //{
-                        //    url = (string)null,
-                        //    strictSSL = false
-                        //}
-                    }
+                    //serverUrl = "https://pd-api.codestream.us:9443",
+                    // gitPath = "",
+                    //type = "credentials",
+                    //email = "",
+                    //passwordOrToken = "",
+                    //extension = new
+                    //{
+                    //    build = "0",
+                    //    buildEnv = "0",
+                    //    version = "0",
+                    //    versionFormatted = "0",
+                    //},
+                    //traceLevel = "verbose"
+                    //isDebugging = true,
+                    //ide = new
+                    //{
+                    //    name = "Visual Studio",
+                    //    version = "2017"
+                    //},
+                    //proxy = new
+                    //{
+                    //    url = (string)null,
+                    //    strictSSL = false
+                    //}
+
                 };
             }
         }
 
         public IEnumerable<string> FilesToWatch => null;
 
-        public object MiddleLayer => null;
+        public object MiddleLayer => MiddleLayerProvider.Instance;
 
-        public object CustomMessageTarget => null;
+        private class MiddleLayerProvider : ILanguageClientWorkspaceSymbolProvider
+        {
+            internal readonly static MiddleLayerProvider Instance = new MiddleLayerProvider();
+
+            private MiddleLayerProvider()
+            {
+            }
+
+            public async Task<SymbolInformation[]> RequestWorkspaceSymbols(WorkspaceSymbolParams param, Func<WorkspaceSymbolParams, Task<SymbolInformation[]>> sendRequest)
+            {
+                // Send along the request as given
+                SymbolInformation[] symbols = await sendRequest(param);
+
+                return symbols;
+            }
+
+        }
+
+        public object CustomMessageTarget => new CustomTarget();
 
         private async Task<Connection> ActivateByStdIOAsync(CancellationToken token)
         {
@@ -112,6 +127,12 @@ namespace CodeStream.VisualStudio
             {
                 FileName = @"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\Microsoft\VisualStudio\NodeJs\node.exe"
             };
+            ////TODO package this up?
+            //var agent = @"..\..\..\..\..\..\codestream-lsp-agent\dist\agent-cli.js";
+            //var info = new ProcessStartInfo
+            //{
+            //    FileName = @"..\..\..\..\..\..\codestream-lsp-agent\dist\agent-cli.exe"
+            //};
             //TODO package this up?
             var agent = @"..\..\..\..\..\..\codestream-lsp-agent\dist\agent-cli.js";
             info.Arguments = $@"{agent} --stdio --inspect=6009 --nolazy";
@@ -143,17 +164,17 @@ namespace CodeStream.VisualStudio
             await System.Threading.Tasks.Task.Yield();
             this.Rpc = rpc;
 
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            //await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            //// Sets the UI context so the custom command will be available.
-            var monitorSelection = ServiceProvider.GlobalProvider.GetService(typeof(IVsMonitorSelection)) as IVsMonitorSelection;
-            if (monitorSelection != null)
-            {
-                if (monitorSelection.GetCmdUIContextCookie(ref this._uiContextGuid, out uint cookie) == VSConstants.S_OK)
-                {
-                    monitorSelection.SetCmdUIContext(cookie, 1);
-                }
-            }
+            ////// Sets the UI context so the custom command will be available.
+            //var monitorSelection = ServiceProvider.GlobalProvider.GetService(typeof(IVsMonitorSelection)) as IVsMonitorSelection;
+            //if (monitorSelection != null)
+            //{
+            //    if (monitorSelection.GetCmdUIContextCookie(ref this._uiContextGuid, out uint cookie) == VSConstants.S_OK)
+            //    {
+            //        monitorSelection.SetCmdUIContext(cookie, 1);
+            //    }
+            //}
 
             // [BC] does this actually work?
             //this.Rpc.AddLocalRpcTarget()
@@ -168,10 +189,12 @@ namespace CodeStream.VisualStudio
         public async System.Threading.Tasks.Task OnServerInitializedAsync()
         {
             try
-            {                                
-                CodestreamAgentService.Instance.SetRpc(Rpc);
+            {
+                
                 var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
-                sessionService.SessionState = SessionState.AgentReady;
+                var initialized = await CodestreamAgentService.Instance.SetRpcAsync(Rpc);
+                sessionService.Capabilities = initialized;
+                sessionService.SetAgentReady();
                 log.Verbose(nameof(OnServerInitializedAsync));
             }
             catch (Exception ex)
@@ -189,69 +212,69 @@ namespace CodeStream.VisualStudio
         }
     }
 
-    //public class CustomTarget
-    //{
-    //    public void OnCustomNotification(object arg)
-    //    {
-    //        // Provide logic on what happens OnCustomNotification is called from the language server
-    //    }
+    public class CustomTarget
+    {
+        public void OnCustomNotification(object arg)
+        {
+            // Provide logic on what happens OnCustomNotification is called from the language server
+        }
 
-    //    public string OnCustomRequest(string test)
-    //    {
-    //        // Provide logic on what happens OnCustomRequest is called from the language server
-    //        return null;
-    //    }
+        public string OnCustomRequest(string test)
+        {
+            // Provide logic on what happens OnCustomRequest is called from the language server
+            return null;
+        }
 
-    //    [JsonRpcMethod(Methods.InitializeName)]
-    //    public void OnInitialize(object arg)
-    //    {
-    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
-    //        //server.OnTextDocumentOpened(parameter);
-    //    }
+        [JsonRpcMethod(Methods.InitializeName)]
+        public void OnInitialize(object arg)
+        {
+            //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
+            //server.OnTextDocumentOpened(parameter);
+        }
 
-    //    [JsonRpcMethod(Methods.InitializedName)]
-    //    public void OnInitialized(object arg)
-    //    {
-    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
-    //        //server.OnTextDocumentOpened(parameter);
-    //    }
+        [JsonRpcMethod(Methods.InitializedName)]
+        public void OnInitialized(object arg)
+        {
+            //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
+            //server.OnTextDocumentOpened(parameter);
+        }
 
-    //    [JsonRpcMethod("codestream/foo")]
-    //    public object CodestreamS(object arg)
-    //    {
-    //        return null;
-    //    }
+        [JsonRpcMethod("codestream/foo")]
+        public object CodestreamS(object arg)
+        {
+            return null;
+        }
 
-    //    [JsonRpcMethod("codeStream/ping")]
-    //    public object Ping(object arg)
-    //    {
-    //        return null;
-    //    }
+        [JsonRpcMethod("codeStream/ping")]
+        public object Ping(object arg)
+        {
+            return null;
+        }
 
-    //    [JsonRpcMethod("codeStream/teams")]
-    //    public object CodestreamTeams(object arg)
-    //    {
-    //        return null;
-    //    }
+        [JsonRpcMethod("codeStream/teams")]
+        public object CodestreamTeams(object arg)
+        {
+            return null;
+        }
 
-    //    [JsonRpcMethod(Methods.TextDocumentDidOpenName)]
-    //    public void OnTextDocumentOpened(object arg)
-    //    {
-    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
-    //        //server.OnTextDocumentOpened(parameter);
-    //    }
+        [JsonRpcMethod(Methods.TextDocumentDidOpenName)]
+        public void OnTextDocumentOpened(object arg)
+        {
+            //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
+            //server.OnTextDocumentOpened(parameter);
+        }
 
-    //    [JsonRpcMethod(Methods.TextDocumentPublishDiagnosticsName)]
-    //    public void TextDocumentPublishDiagnosticsName(object arg)
-    //    {
-    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
-    //        //server.OnTextDocumentOpened(parameter);
-    //    }
+        [JsonRpcMethod(Methods.TextDocumentPublishDiagnosticsName)]
+        public void TextDocumentPublishDiagnosticsName(object arg)
+        {
+            //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
+            //server.OnTextDocumentOpened(parameter);
+        }
 
-    //    [JsonRpcMethod("window/logMessage")]
-    //    public void Log(string s)
-    //    {
-    //        Console.WriteLine(s);
-    //    }
-    //}
+        [JsonRpcMethod("window/logMessage")]
+        public void Log(string s)
+        {
+            Console.WriteLine(s);
+        }
+    }
 }

@@ -1,4 +1,5 @@
 ﻿using CodeStream.VisualStudio.Attributes;
+using System;
 using System.Diagnostics;
 
 namespace CodeStream.VisualStudio.Services
@@ -15,9 +16,9 @@ namespace CodeStream.VisualStudio.Services
     [Injected]
     public class HostService : SHostService, IHostService
     {
-        private Microsoft.VisualStudio.OLE.Interop.IServiceProvider _serviceProvider;
+        private IServiceProvider _serviceProvider;
 
-        public HostService(Microsoft.VisualStudio.OLE.Interop.IServiceProvider serviceProvider)
+        public HostService(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
         }

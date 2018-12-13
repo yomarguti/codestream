@@ -243,12 +243,6 @@ namespace CodeStream.VisualStudio.Models
         public Proxy Proxy { get; set; }
     }
 
-    public class InitializationOptionsWrapper
-    {        
-        public Capabilities Capabilities { get; set; } = new Capabilities();
-        public InitializationOptions InitializationOptions { get; set; } = new InitializationOptions();
-    }
-
     public class WebviewIpcMessageResponse
     {
         public string Id { get; set; }
