@@ -25,7 +25,6 @@ export enum WebviewIpcMessageType {
 	onActiveStreamChanged = "codestream:interaction:changed-active-stream",
 	onFileChangedSubscribe = "codestream:subscription:file-changed",
 	onFileChangedUnsubscribe = "codestream:unsubscribe:file-changed",
-	onLog = "codestream:log",
 	onRequest = "codestream:request",
 	onServiceRequest = "codestream:interaction:svc-request",
 	onReloadRequest = "codestream:interaction:clicked-reload-webview",
