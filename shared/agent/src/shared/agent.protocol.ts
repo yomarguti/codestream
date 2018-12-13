@@ -278,14 +278,23 @@ export const DocumentLatestRevisionRequestType = new RequestType<
 	void
 >("codeStream/textDocument/scm/revision");
 
-export interface ReportErrorRequest {
+export enum ReportingMessageType {
+	Error = "error",
+	Warning = "warning",
+	Info = "info",
+	Debug = "debug",
+	Fatal = "fatal"
+}
+
+export interface ReportMessageRequest {
+	type: ReportingMessageType;
 	message: string;
 	source: "webview" | "extension";
 	extra?: object;
 }
 
-export const ReportErrorRequestType = new RequestType<ReportErrorRequest, void, void, void>(
-	"codeStream/reporting/error"
+export const ReportMessageRequestType = new RequestType<ReportMessageRequest, void, void, void>(
+	"codeStream/reporting/message"
 );
 
 /**

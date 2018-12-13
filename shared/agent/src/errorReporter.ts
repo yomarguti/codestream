@@ -1,11 +1,12 @@
 import * as Sentry from "@sentry/node";
+import { Severity } from "@sentry/node";
 import * as os from "os";
 import { Container } from "./container";
 import { CodeStreamSession } from "./session";
 import {
 	// CodeStreamEnvironment,
-	ReportErrorRequest,
-	ReportErrorRequestType
+	ReportMessageRequest,
+	ReportMessageRequestType
 } from "./shared/agent.protocol";
 import { lsp, lspHandler } from "./system";
 
@@ -45,10 +46,10 @@ export class ErrorReporter {
 		}
 	}
 
-	@lspHandler(ReportErrorRequestType)
-	private reportError(request: ReportErrorRequest) {
+	@lspHandler(ReportMessageRequestType)
+	private reportMessage(request: ReportMessageRequest) {
 		Sentry.captureEvent({
-			level: Sentry.Severity.Error,
+			level: Severity.fromString(request.type),
 			timestamp: Date.now(),
 			message: request.message,
 			extra: request.extra,
