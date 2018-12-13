@@ -104,7 +104,9 @@ import {
 	UpdatePresenceRequestType,
 	UpdateStreamMembershipRequestType,
 	UpdateStreamMembershipResponse,
-	VersionCompatibility
+	VersionCompatibility,
+	GetFileStreamRequestType,
+	GetFileStreamResponse
 } from "../shared/agent.protocol";
 import {
 	ChannelServiceType,
@@ -575,6 +577,12 @@ export class CodeStreamAgentConnection implements Disposable {
 		get(streamId: string) {
 			return this._connection.sendRequest(GetStreamRequestType, {
 				streamId: streamId
+			});
+		}
+
+		getFileStream(uri: string): Promise<GetFileStreamResponse> {
+			return this._connection.sendRequest(GetFileStreamRequestType, {
+				textDocument: { uri }
 			});
 		}
 

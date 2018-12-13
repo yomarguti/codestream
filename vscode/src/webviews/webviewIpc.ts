@@ -72,6 +72,7 @@ export interface DidChangeActiveEditorNotification {
 					uri: string;
 					fileName: string;
 					languageId: string;
+					fileStreamId?: string;
 			  }
 			| undefined;
 	};
@@ -204,7 +205,7 @@ export class WebviewIpc {
 		});
 	}
 
-	sendDidChangeActiveEditor(editor: TextEditor | undefined) {
+	async sendDidChangeActiveEditor(editor: TextEditor | undefined) {
 		const message: DidChangeActiveEditorNotification = {
 			type: WebviewIpcMessageType.didChangeActiveEditor,
 			body: {
@@ -215,6 +216,7 @@ export class WebviewIpc {
 		if (editor != null) {
 			const uri = editor.document.uri;
 			if (uri.scheme === "file") {
+				const { stream } = await Container.agent.streams.getFileStream(uri.toString());
 				const folder = workspace.getWorkspaceFolder(uri);
 				const fileName =
 					folder !== undefined
@@ -222,6 +224,7 @@ export class WebviewIpc {
 						: editor.document.fileName;
 
 				message.body.editor = {
+					fileStreamId: stream && stream.id,
 					uri: uri.toString(),
 					fileName: fileName,
 					languageId: editor.document.languageId
