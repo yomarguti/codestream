@@ -7,7 +7,10 @@ import { Logger } from "../logger";
 import {
 	FetchFileStreamsRequest,
 	FetchFileStreamsRequestType,
-	FetchFileStreamsResponse
+	FetchFileStreamsResponse,
+	GetFileStreamRequest,
+	GetFileStreamRequestType,
+	GetFileStreamResponse
 } from "../shared/agent.protocol";
 import { CSFileStream, CSStream, StreamType } from "../shared/api.protocol";
 import { lsp, lspHandler } from "../system";
@@ -90,6 +93,12 @@ export class FilesManager extends EntityManagerBase<CSFileStream> {
 		const documentUri = URI.file(filePath).toString();
 
 		return TextDocumentIdentifier.create(documentUri);
+	}
+
+	@lspHandler(GetFileStreamRequestType)
+	async getFileStream(request: GetFileStreamRequest): Promise<GetFileStreamResponse> {
+		const stream = await this.getByPath(URI.parse(request.textDocument.uri).fsPath);
+		return { stream: stream as CSFileStream };
 	}
 
 	protected async fetchById(id: Id): Promise<CSFileStream> {

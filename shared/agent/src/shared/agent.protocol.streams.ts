@@ -1,5 +1,5 @@
 "use strict";
-import { RequestType } from "vscode-languageserver-protocol";
+import { RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
 import {
 	ChannelServiceType,
 	CSChannelStream,
@@ -137,6 +137,21 @@ export const GetStreamRequestType = new RequestType<
 	void,
 	void
 >("codeStream/stream");
+
+export interface GetFileStreamRequest {
+	textDocument: TextDocumentIdentifier;
+}
+
+export interface GetFileStreamResponse {
+	stream?: CSFileStream;
+}
+
+export const GetFileStreamRequestType = new RequestType<
+	GetFileStreamRequest,
+	GetFileStreamResponse,
+	void,
+	void
+>("codeStream/streams/fileStream");
 
 export interface JoinStreamRequest {
 	streamId: string;
