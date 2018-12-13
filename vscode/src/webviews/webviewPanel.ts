@@ -467,19 +467,6 @@ export class CodeStreamWebviewPanel implements Disposable {
 					this.reload();
 					break;
 				}
-				case WebviewIpcMessageType.onTelemetry: {
-					Logger.debug("(4) `WebviewIpcMessageType.onTelemetry` called from webviewPanel");
-					const { eventName, properties } = e.body;
-					const responseBody: WebviewIpcMessageResponseBody = { id: e.body.id };
-					Container.agent.telemetry.track(eventName, properties);
-
-					this.postMessage({
-						type: WebviewIpcMessageType.response,
-						body: responseBody
-					});
-
-					break;
-				}
 			}
 		} catch (ex) {
 			debugger;

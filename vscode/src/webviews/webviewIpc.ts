@@ -31,7 +31,6 @@ export enum WebviewIpcMessageType {
 	onReloadRequest = "codestream:interaction:clicked-reload-webview",
 	onViewReady = "codestream:view-ready",
 	response = "codestream:response",
-	onTelemetry = "codestream:telemetry",
 	onActivePanelChanged = "codestream:interaction:active-panel-changed"
 }
 
