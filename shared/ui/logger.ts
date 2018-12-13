@@ -1,26 +1,23 @@
-import EventEmitter from "./event-emitter";
+import { ReportingMessageType } from "./shared/agent.protocol";
+import WebviewApi from "./webview-api";
 
-enum LogType {
-	Error = "error",
-	Warning = "warning"
-}
-
-function sendLog(type: LogType, message: string, extra?: object) {
-	EventEmitter.emit("log", { type, message, extra });
-}
+// TODO: move logging into middleware so the host's instance of WebviewApi can be injected
+const api = new WebviewApi();
 
 export function logError(error: string | Error, extra?: object) {
 	console.error(error, extra);
 	if (typeof error === "string") {
-		sendLog(LogType.Error, error, extra);
+		api.reportMessage(ReportingMessageType.Error, error, extra);
 	} else {
 		const info = extra ? extra : {};
-		sendLog(LogType.Error, error.message, { ...info, stackTrace: error.stack });
+		api.reportMessage(ReportingMessageType.Error, error.message, {
+			...info,
+			stackTrace: error.stack
+		});
 	}
 }
 
-// TODO: agent/extension aren't handling this
 export function logWarning(message: string, extra?: object) {
 	console.warn(message, extra);
-	sendLog(LogType.Warning, message, extra);
+	api.reportMessage(ReportingMessageType.Warning, message, extra);
 }

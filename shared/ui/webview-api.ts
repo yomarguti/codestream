@@ -59,6 +59,8 @@ import {
 	RenameStreamRequest,
 	RenameStreamRequestType,
 	RenameStreamResponse,
+	ReportingMessageType,
+	ReportMessageRequestType,
 	SetStreamPurposeRequest,
 	SetStreamPurposeRequestType,
 	SetStreamPurposeResponse,
@@ -75,7 +77,8 @@ import {
 	UpdatePreferencesResponse,
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipRequestType,
-	UpdateStreamMembershipResponse
+	UpdateStreamMembershipResponse,
+	ReportMessageRequest
 } from "./shared/agent.protocol";
 import { CodemarkType, CSMePreferences, StreamType } from "./shared/api.protocol.models";
 import { shortUuid } from "./utils";
@@ -419,6 +422,14 @@ export default class WebviewApi {
 	sendTelemetry(params: TelemetryRequest): Promise<void> {
 		return this.postMessage({
 			action: TelemetryRequestType.method,
+			params
+		});
+	}
+
+	reportMessage(type: ReportingMessageType, message: string, extra?: {}): Promise<void> {
+		const params: ReportMessageRequest = { source: "webview", type, message, extra };
+		return this.postMessage({
+			action: ReportMessageRequestType.method,
 			params
 		});
 	}
