@@ -516,3 +516,15 @@ export const setCodemarkStatus = (id: string, status: "closed" | "open") => asyn
 		console.error("failed to change codemark status", error);
 	}
 };
+
+export const telemetry = (params: { eventName: string; properties: {} }) => async (
+	dispatch,
+	getState,
+	{ api }: ThunkExtras
+) => {
+	try {
+		await api.sendTelemetry(params);
+	} catch (error) {
+		logError(`Telemetry error: ${error}`, params);
+	}
+};

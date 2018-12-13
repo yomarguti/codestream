@@ -1405,7 +1405,7 @@ export class SimpleStream extends Component {
 	};
 
 	inviteToLiveShare = userId => {
-		EventEmitter.emit("telemetry", {
+		this.props.telemetry({
 			eventName: "Start Live Share",
 			properties: {
 				"Start Location": "Headshot"
@@ -1437,7 +1437,7 @@ export class SimpleStream extends Component {
 		const text = "Starting Live Share...";
 		this.submitSystemPost(text);
 
-		EventEmitter.emit("telemetry", {
+		this.props.telemetry({
 			eventName: "Start Live Share",
 			properties: {
 				"Start Location": liveShareStartLocation

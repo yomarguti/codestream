@@ -62,6 +62,8 @@ import {
 	SetStreamPurposeRequest,
 	SetStreamPurposeRequestType,
 	SetStreamPurposeResponse,
+	TelemetryRequest,
+	TelemetryRequestType,
 	UnarchiveStreamRequest,
 	UnarchiveStreamRequestType,
 	UnarchiveStreamResponse,
@@ -411,6 +413,13 @@ export default class WebviewApi {
 				codemarkId: id,
 				status
 			} as UpdateCodemarkRequest
+		});
+	}
+
+	sendTelemetry(params: TelemetryRequest): Promise<void> {
+		return this.postMessage({
+			action: TelemetryRequestType.method,
+			params
 		});
 	}
 }
