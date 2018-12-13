@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.30.3] - 2018-12-12
+
+### Fixed
+
+- Fixes [#28](https://github.com/TeamCodeStream/CodeStream/issues/28) &mdash; Certain markdown snippets cause markdown parsing library to throw an error
+
 ## [0.30.2] - 2018-12-10
 
 ### Fixed
