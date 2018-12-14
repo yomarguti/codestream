@@ -7,8 +7,9 @@ export const setContext = (payload: State) => action(ContextActionsType.SetConte
 export const _openPanel = (panel: string) => action(ContextActionsType.OpenPanel, panel);
 export const openPanel = (panel: string) => (dispatch, getState) => {
 	if (getState().context.panelStack[0] !== panel) {
+		const result = dispatch(_openPanel(panel));
 		EventEmitter.emit("interaction:active-panel-changed", getState().context.panelStack);
-		return dispatch(_openPanel(panel));
+		return result;
 	}
 };
 
