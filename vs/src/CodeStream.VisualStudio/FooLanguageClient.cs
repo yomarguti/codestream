@@ -6,7 +6,6 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
 using Serilog;
-using SerilogTimings;
 using SerilogTimings.Extensions;
 using StreamJsonRpc;
 using System;
@@ -51,15 +50,15 @@ namespace CodeStream.VisualStudio
         internal static FooLanguageClient Instance { get; private set; }
         private JsonRpc _rpc;
 
-        public string Name => "CodeStream (Agent)";
+        public string Name => "CodeStream";
 
-        public IEnumerable<string> ConfigurationSections
-        {
-            get
-            {
-                yield return "CodeStream";
-            }
-        }
+        public IEnumerable<string> ConfigurationSections => null;
+        //{
+        //    get
+        //    {
+        //        yield return "CodeStream";
+        //    }
+        //}
 
         public object InitializationOptions
         {
@@ -117,7 +116,15 @@ namespace CodeStream.VisualStudio
 
         }
 
-        public object CustomMessageTarget => new CustomTarget();
+        private static CustomTarget _target;
+        public object CustomMessageTarget
+        {
+            get
+            {
+                _target = new CustomTarget();
+                return _target;
+            }
+        }
 
         private async Task<Connection> ActivateByStdIOAsync(CancellationToken token)
         {
@@ -152,7 +159,7 @@ namespace CodeStream.VisualStudio
             {
                 if (process.Start())
                 {
-                    var connection = new Connection(process.StandardOutput.BaseStream, process.StandardInput.BaseStream);                   
+                    var connection = new Connection(process.StandardOutput.BaseStream, process.StandardInput.BaseStream);
                     return connection;
                 }
             }
@@ -182,8 +189,8 @@ namespace CodeStream.VisualStudio
             //    }
             //}
 
-            // [BC] does this actually work?
-            //this.Rpc.AddLocalRpcTarget()
+            // [BC] does this actually work? YES, but can't enable it here
+            // _rpc.AddLocalRpcTarget(new CustomTarget2());
         }
 
         public async System.Threading.Tasks.Task OnLoadedAsync()
@@ -203,7 +210,7 @@ namespace CodeStream.VisualStudio
                     var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
                     var initialized = await CodestreamAgentService.Instance.SetRpcAsync(_rpc);
                     sessionService.Capabilities = initialized;
-                    sessionService.SetAgentReady();                    
+                    sessionService.SetAgentReady();
                 }
             }
             catch (Exception ex)
@@ -220,6 +227,54 @@ namespace CodeStream.VisualStudio
             throw ex;
         }
     }
+
+    //public class CustomTarget2
+    //{
+    //    public void OnCustomNotification(object arg)
+    //    {
+    //        // Provide logic on what happens OnCustomNotification is called from the language server
+    //    }
+
+    //    public string OnCustomRequest(string test)
+    //    {
+    //        // Provide logic on what happens OnCustomRequest is called from the language server
+    //        return null;
+    //    }
+
+    //    [JsonRpcMethod(Methods.InitializeName)]
+    //    public void OnInitialize(object arg)
+    //    {
+    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
+    //        //server.OnTextDocumentOpened(parameter);
+    //    }
+
+    //    [JsonRpcMethod(Methods.InitializedName)]
+    //    public void OnInitialized(object arg)
+    //    {
+    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
+    //        //server.OnTextDocumentOpened(parameter);
+    //    }
+
+    //    [JsonRpcMethod(Methods.TextDocumentDidOpenName)]
+    //    public void OnTextDocumentOpened(object arg)
+    //    {
+    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
+    //        //server.OnTextDocumentOpened(parameter);
+    //    }
+
+    //    [JsonRpcMethod(Methods.TextDocumentPublishDiagnosticsName)]
+    //    public void TextDocumentPublishDiagnosticsName(object arg)
+    //    {
+    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
+    //        //server.OnTextDocumentOpened(parameter);
+    //    }
+
+    //    [JsonRpcMethod("window/logMessage")]
+    //    public void Log(string s)
+    //    {
+    //        Console.WriteLine(s);
+    //    }
+    //}
 
     public class CustomTarget
     {
@@ -247,6 +302,14 @@ namespace CodeStream.VisualStudio
             //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
             //server.OnTextDocumentOpened(parameter);
         }
+
+        [JsonRpcMethod(Methods.TextDocumentDidSaveName)]
+        public void OnTextDocumentDidSaveName(object arg)
+        {
+            //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
+            //server.OnTextDocumentOpened(parameter);
+        }
+
 
         [JsonRpcMethod(Methods.TextDocumentDidOpenName)]
         public void OnTextDocumentOpened(object arg)
