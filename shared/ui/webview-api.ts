@@ -157,18 +157,20 @@ export default class WebviewApi {
 		});
 	}
 
-	fetchTrelloBoards(organizationId?: string) {
+	// service is one of "trello", "asana", "jira", "github"
+	fetchIssueBoards(service: string, organizationId?: string) {
 		return this.postMessage({
 			action: "agent",
-			params: { url: "trello/boards", request: { organizationId: organizationId } }
+			params: { url: service + "/boards", request: { organizationId: organizationId } }
 		});
 	}
 
-	fetchTrelloLists(boardId: string) {
+	// service is one of "trello", "asana", "jira", "github"
+	fetchIssueLists(service: string, boardId: string) {
 		return this.postMessage({
 			action: "agent",
 			params: {
-				url: "trello/lists",
+				url: service + "/lists",
 				request: { boardId: boardId }
 			}
 		});

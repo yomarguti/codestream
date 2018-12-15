@@ -538,9 +538,9 @@ export const telemetry = (params: { eventName: string; properties: {} }) => asyn
 	}
 };
 
-export const fetchTrelloBoards = () => async (dispatch, getState, { api }) => {
+export const fetchIssueBoards = service => async (dispatch, getState, { api }: ThunkExtras) => {
 	try {
-		const response = await api.fetchTrelloBoards();
+		const response = await api.fetchIssueBoards(service);
 		return response;
 		// dispatch(saveCodemarks(response.codemarks));
 	} catch (error) {
