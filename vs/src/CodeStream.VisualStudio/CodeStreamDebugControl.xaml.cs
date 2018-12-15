@@ -196,8 +196,10 @@ namespace CodeStream.VisualStudio
             {
                 Results.Background = ToSolidColorBrush("#98FB98");
 
+                var codeStreamAgent = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
+
                 var parameters = string.IsNullOrWhiteSpace(Params.Text) ? null : JToken.Parse(Params.Text);
-                var results = await CodestreamAgentService.Instance.SendAsync<object>(Request.Text, parameters);
+                var results = await codeStreamAgent.SendAsync<object>(Request.Text, parameters);
                 Results.Text = results.ToJson();
             }
             catch (Exception ex)

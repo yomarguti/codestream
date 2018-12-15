@@ -1,22 +1,34 @@
 ﻿using DotNetBrowser;
 using DotNetBrowser.WPF;
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.Windows.Controls;
-using System.Windows.Media;
 
-namespace CodeStream.VisualStudio.Browsers
+namespace CodeStream.VisualStudio.Services
 {
-    public class DotNetBrowserBrowser : BrowserBase
+    /// <summary>
+    /// Implementation of a browser service using DotNetBrowser
+    /// </summary>
+    public class DotNetBrowserService : BrowserServiceBase
     {
         private Browser _browser;
         private WPFBrowserView _browserView;
-        public DotNetBrowserBrowser()
-        {
-            BrowserPreferences.SetChromiumSwitches("--remote-debugging-port=9222", "--disable-web-security", "--allow-file-access-from-files");
-            _browserView = Activator.CreateInstance(typeof(WPFBrowserView)) as WPFBrowserView;
+        private IAsyncServiceProvider _serviceProvider;
 
+        public DotNetBrowserService(IAsyncServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+        
+#if DEBUG
+            BrowserPreferences.SetChromiumSwitches("--remote-debugging-port=9222", "--disable-web-security", "--allow-file-access-from-files");
+#else
+            BrowserPreferences.SetChromiumSwitches("--disable-web-security", "--allow-file-access-from-files");
+#endif
+            _browserView = new WPFBrowserView(BrowserFactory.Create());
+
+            // can theme it here
             //var bc = new BrushConverter();
-            //  _browserView.Background = (System.Windows.Media.Brush)bc.ConvertFrom("#ff0000");
+            // _browserView.Background = (System.Windows.Media.Brush)bc.ConvertFrom("#ff0000");
 
             _browser = _browserView.Browser;
         }

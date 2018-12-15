@@ -1,5 +1,4 @@
-﻿using CodeStream.VisualStudio.Browsers;
-using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
@@ -11,9 +10,9 @@ namespace CodeStream.VisualStudio
     public class CodeStreamCommandHandler
     {
         static readonly ILogger log = LogManager.ForContext<CodeStreamCommandHandler>();
-        private IBrowser browser;
+        private IBrowserService browser;
 
-        public CodeStreamCommandHandler(IBrowser browser)
+        public CodeStreamCommandHandler(IBrowserService browser)
         {
             this.browser = browser;
         }
@@ -45,12 +44,15 @@ namespace CodeStream.VisualStudio
             {
                 log.Verbose(e.Message, $"{nameof(WindowEventArgs)} not found");
                 return;
-            }            
+            }
 
             var message = ParseMessageSafe(JToken.Parse(e.Message));
- 
+
             log.Debug(e.Message);
- 
+
+            var codeStreamAgent = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
+            var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+
             switch (message.Type)
             {
                 case "codestream:log":
@@ -69,7 +71,14 @@ namespace CodeStream.VisualStudio
                 case "codestream:interaction:svc-request":
                 case "codestream:subscription:file-changed":
                 case "codestream:unsubscribe:file-changed":
+                    {
+                        break;
+                    }
                 case "codestream:interaction:changed-active-stream":
+                    {
+                        sessionService.CurrentStreamId = message.Body.ToString();
+                        break;
+                    }
                 case "codestream:view-ready":
                     {
                         break;
@@ -83,7 +92,7 @@ namespace CodeStream.VisualStudio
                             {
                                 Body = new WebviewIpcMessageResponseBody(request?.Id)
                                 {
-                                    Payload = CodestreamAgentService.Instance.SendAsync<object>(request.Action, request.Params).GetAwaiter().GetResult()
+                                    Payload = codeStreamAgent.SendAsync<object>(request.Action, request.Params).GetAwaiter().GetResult()
                                 }
                             };
                             browser.PostMessage(response);
@@ -111,7 +120,6 @@ namespace CodeStream.VisualStudio
                                     }
                                 case "authenticate":
                                     {
-                                        var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
                                         var response = new WebviewIpcMessageResponse
                                         {
                                             Body = new WebviewIpcMessageResponseBody(request?.Id)
@@ -119,7 +127,7 @@ namespace CodeStream.VisualStudio
 
                                         using (sessionService.AgentReady())
                                         {
-                                            var loginResponsewrapper = CodestreamAgentService.Instance.LoginAsync(
+                                            var loginResponsewrapper = codeStreamAgent.LoginAsync(
                                                 request.Params["email"].ToString(),
                                                 request.Params["password"].ToString(),
                                                 Constants.ServerUrl
@@ -138,7 +146,7 @@ namespace CodeStream.VisualStudio
                                                 sessionService.LoginResponse = loginResponse.LoginResponse;
                                                 sessionService.State = state.State;
 
-                                                response.Body.Payload = CodestreamAgentService.Instance.GetBootstrapAsync(state).GetAwaiter().GetResult();
+                                                response.Body.Payload = codeStreamAgent.GetBootstrapAsync(state).GetAwaiter().GetResult();
                                             }
                                             browser.PostMessage(response);
                                         }
@@ -224,7 +232,6 @@ namespace CodeStream.VisualStudio
 
                                         try
                                         {
-                                            var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
                                             var browserService = Package.GetGlobalService(typeof(SHostService)) as IHostService;
                                             browserService.Navigate($"{Constants.WebAppUrl}/signup?force_auth=true&signup_token={sessionService.GenerateSignupToken()}");
                                             response.Body.Payload = true;
@@ -245,7 +252,6 @@ namespace CodeStream.VisualStudio
 
                                         try
                                         {
-                                            var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
                                             var browserService = Package.GetGlobalService(typeof(SHostService)) as IHostService;
                                             browserService.Navigate($"{Constants.WebAppUrl}/service-auth/slack?state={sessionService.GenerateSignupToken()}");
                                             response.Body.Payload = true;

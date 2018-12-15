@@ -1,5 +1,6 @@
 ﻿using CodeStream.VisualStudio.Attributes;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 
@@ -17,35 +18,33 @@ namespace CodeStream.VisualStudio.Services
         /// <summary>
         /// Gets the currently selected text.
         /// </summary>
-        /// <returns>The selected text in the active editor, or an empty string if no text is selected.</returns>
-        bool TryGetSelectedText(out string text);
+        /// <returns>The selected text in the active editor, or a null string if no text is selected.</returns>
+        string GetSelectedText();
     }
 
     [Injected]
     public class SelectedTextService : SSelectedTextService, ISelectedTextService
     {
-        private IServiceProvider _serviceProvider;
-        public SelectedTextService(IServiceProvider serviceProvider)
+        private IVsTextManager _iIVsTextManager;
+        public SelectedTextService(IVsTextManager iIVsTextManager)
         {
-            _serviceProvider = serviceProvider;
+            _iIVsTextManager = iIVsTextManager;
         }
 
-        public bool TryGetSelectedText(out string text)
+        public string GetSelectedText()
         {
             string selectedText;
             IVsTextView activeView;
-            var textManager = _serviceProvider.GetService(typeof(SVsTextManager)) as IVsTextManager;
-
-            if (textManager != null &&
-                ErrorHandler.Succeeded(textManager.GetActiveView(1, null, out activeView)) &&
+            
+            if (_iIVsTextManager != null &&
+                ErrorHandler.Succeeded(_iIVsTextManager.GetActiveView(1, null, out activeView)) &&
                 ErrorHandler.Succeeded(activeView.GetSelectedText(out selectedText)))
             {
-                text = selectedText;
-                return true;
+               return selectedText;
+                
             }
 
-            text = null;
-            return false;
+            return null;            
         }
     }
 }

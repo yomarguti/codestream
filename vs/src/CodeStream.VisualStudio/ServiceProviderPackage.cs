@@ -1,9 +1,10 @@
-﻿using Microsoft.VisualStudio.Shell;
+﻿using CodeStream.VisualStudio.Services;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
-using CodeStream.VisualStudio.Services;
 
 namespace CodeStream.VisualStudio
 {
@@ -13,9 +14,12 @@ namespace CodeStream.VisualStudio
     [ProvideService(typeof(SHostService))]
     [ProvideService(typeof(SSessionService))]
     [ProvideService(typeof(SSelectedTextService))]
+    [ProvideService(typeof(SBrowserService))]
+    [ProvideService(typeof(SCodeStreamAgentService))]
+    [ProvideService(typeof(SCodeStreamService))]
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [Guid(PackageGuidString)]
-    public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer, IServiceProvider
+    public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer, IAsyncServiceProvider
     {
         public const string PackageGuidString = "D5CE1488-DEDE-426D-9E5B-BFCCFBE33E54";
 
@@ -27,6 +31,9 @@ namespace CodeStream.VisualStudio
             ((IServiceContainer)this).AddService(typeof(SSessionService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SHostService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SSelectedTextService), callback, true);
+            ((IServiceContainer)this).AddService(typeof(SBrowserService), callback, true);
+            ((IServiceContainer)this).AddService(typeof(SCodeStreamAgentService), callback, true);
+            ((IServiceContainer)this).AddService(typeof(SCodeStreamService), callback, true);
         }
 
         private object CreateService(IServiceContainer container, Type serviceType)
@@ -36,7 +43,18 @@ namespace CodeStream.VisualStudio
             if (typeof(SHostService) == serviceType)
                 return new HostService(this);
             if (typeof(SSelectedTextService) == serviceType)
-                return new SelectedTextService(this);
+            {
+                return new SelectedTextService(GetService(typeof(SVsTextManager)) as IVsTextManager);
+            }
+            if (typeof(SBrowserService) == serviceType)
+                return new DotNetBrowserService(this);
+            if (typeof(SCodeStreamAgentService) == serviceType)
+                return new CodeStreamAgentService(this);
+            if (typeof(SCodeStreamService) == serviceType)
+                return new CodeStreamService(
+                    GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
+                    GetService(typeof(SBrowserService)) as IBrowserService
+                );
 
             return null;
         }

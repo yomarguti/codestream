@@ -1,7 +1,7 @@
 ﻿using CodeStream.VisualStudio.Extensions;
 using System.Windows.Controls;
 
-namespace CodeStream.VisualStudio.Browsers
+namespace CodeStream.VisualStudio.Services
 {
     public class WindowEventArgs
     {
@@ -13,7 +13,7 @@ namespace CodeStream.VisualStudio.Browsers
         public string Message { get; }
     }
 
-    public abstract class BrowserBase : IBrowser
+    public abstract class BrowserServiceBase : IBrowserService, SBrowserService
     {
         public virtual string FooterHtml { get; } = "";
 
@@ -31,7 +31,12 @@ namespace CodeStream.VisualStudio.Browsers
         }
     }    
 
-    public interface IBrowser
+    public interface SBrowserService
+    {
+
+    }
+
+    public interface IBrowserService
     {
         void PostMessage(string message);
         void PostMessage(object message);

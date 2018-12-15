@@ -1,5 +1,6 @@
 ﻿using CodeStream.VisualStudio.Attributes;
 using CodeStream.VisualStudio.Models;
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.Runtime.Serialization;
 
@@ -18,12 +19,13 @@ namespace CodeStream.VisualStudio.Services
         AgentReadyScope AgentReady();
         void SetAgentReady();
         object Capabilities { get; set; }
+        string CurrentStreamId { get; set; }
     }
 
     [Injected]
     public class SessionService : SSessionService, ISessionService
     {
-        private IServiceProvider _serviceProvider;
+        private IAsyncServiceProvider _serviceProvider;
 
         public LoginResponse LoginResponse { get; set; }
         public State State { get; set; }
@@ -31,7 +33,7 @@ namespace CodeStream.VisualStudio.Services
         private SessionState _sessionState;
         private Guid _signupToken = Guid.Empty;
 
-        public SessionService(IServiceProvider serviceProvider)
+        public SessionService(IAsyncServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
         }
@@ -62,6 +64,8 @@ namespace CodeStream.VisualStudio.Services
         {
             _sessionState = SessionState.AgentReady;
         }
+
+        public string CurrentStreamId { get; set; }
     }
 
     public class AgentUninitializedException : Exception

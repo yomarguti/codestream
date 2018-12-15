@@ -121,7 +121,11 @@ namespace CodeStream.VisualStudio
         {
             get
             {
-                _target = new CustomTarget();
+                if (_target == null)
+                {
+                    _target = new CustomTarget();
+                }
+
                 return _target;
             }
         }
@@ -148,7 +152,7 @@ namespace CodeStream.VisualStudio
             info.RedirectStandardInput = true;
             info.RedirectStandardOutput = true;
             info.UseShellExecute = false;
-            info.CreateNoWindow = true;
+            info.CreateNoWindow = false; // true;
 
             var process = new Process
             {
@@ -208,7 +212,9 @@ namespace CodeStream.VisualStudio
                 using (log.TimeOperation($"{nameof(OnServerInitializedAsync)}"))
                 {
                     var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
-                    var initialized = await CodestreamAgentService.Instance.SetRpcAsync(_rpc);
+                    var codeStreamAgentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
+
+                    var initialized = await codeStreamAgentService.SetRpcAsync(_rpc);
                     sessionService.Capabilities = initialized;
                     sessionService.SetAgentReady();
                 }

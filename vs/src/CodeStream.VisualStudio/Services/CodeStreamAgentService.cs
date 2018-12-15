@@ -1,5 +1,5 @@
-﻿using CodeStream.VisualStudio.Attributes;
-using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Models;
+using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using StreamJsonRpc;
@@ -10,16 +10,36 @@ using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio.Services
 {
-    [Singleton]
-    public class CodestreamAgentService
+    public interface SCodeStreamAgentService
     {
-        static readonly ILogger log = LogManager.ForContext<CodestreamAgentService>();
 
-        #region Singleton
-        private static readonly Lazy<CodestreamAgentService> lazy = new Lazy<CodestreamAgentService>(() => new CodestreamAgentService());
-        public static CodestreamAgentService Instance { get { return lazy.Value; } }
-        private CodestreamAgentService() { }
-        #endregion
+    }
+
+    public interface ICodeStreamAgentService
+    {
+        Task<object> SetRpcAsync(JsonRpc rpc);
+        Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null);
+        Task<GetMetadataResponse> GetMetadataAsync(string uri,
+           CancellationToken? cancellationToken = null
+        );
+
+        Task<JToken> LoginViaTokenAsync(string signupToken, string serverUrl);
+        Task<JToken> LoginAsync(string email, string password, string serverUrl);
+        Task<BootstrapState> GetBootstrapAsync(StateResponse state);
+    }
+
+    public class GetMetadataResponse
+    {
+        public string Code { get; set; }
+    }
+    public class CodeStreamAgentService : ICodeStreamAgentService
+    {
+        static readonly ILogger log = LogManager.ForContext<CodeStreamAgentService>();
+        private IAsyncServiceProvider _serviceProvider;
+        public CodeStreamAgentService(IAsyncServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+        }
 
         private JsonRpc _rpc { get; set; }
 
@@ -41,18 +61,26 @@ namespace CodeStream.VisualStudio.Services
                 log.Error(ex, "SendAsync Name={Name}", name);
                 throw;
             }
-        }        
+        }
 
-        //public async Task<object> SendAsync(string name, object arguments, CancellationToken? cancellationToken = null)
-        //{
-        //    return await SendAsync<object>(name, arguments, cancellationToken);
-        //}
+        public async Task<GetMetadataResponse> GetMetadataAsync(string uri,          
+            CancellationToken? cancellationToken = null
+         )
+        {
+            return await SendAsync<GetMetadataResponse>("codeStream/post/prepareWithCode",
+                new
+                {
+                    textDocument = new { uri = uri },
+                    range = new { start = new { line = 1, character = 1 }, end = new { line = 6, character = 2 } },
+                    dirty = false
+                }, cancellationToken);
+        }
 
         public async Task<JToken> LoginViaTokenAsync(string signupToken, string serverUrl)
         {
             return await SendAsync<JToken>("codeStream/cli/login",
                 new
-                {                 
+                {
                     serverUrl = serverUrl,
                     signupToken = signupToken,
                     team = (string)null,
@@ -67,7 +95,7 @@ namespace CodeStream.VisualStudio.Services
                     traceLevel = "verbose"
                 });
         }
-		
+
         public async Task<JToken> LoginAsync(string email, string password, string serverUrl)
         {
             return await SendAsync<JToken>("codeStream/cli/login", new
@@ -91,11 +119,11 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task<BootstrapState> GetBootstrapAsync(StateResponse state)
         {
-            var repos =            await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/repos");
-            var streams =          await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/streams");
-            var teams =            await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/teams");
-            var usersUnreads =     await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/unreads");
-            var users =            await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users");
+            var repos = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/repos");
+            var streams = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/streams");
+            var teams = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/teams");
+            var usersUnreads = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/unreads");
+            var users = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users");
             var usersPreferences = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/preferences");
 
             var bootstrapState = new BootstrapState

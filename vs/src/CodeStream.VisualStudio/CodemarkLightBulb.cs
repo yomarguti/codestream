@@ -28,8 +28,8 @@ namespace CodeStream.VisualStudio
 
         public ISuggestedActionsSource CreateSuggestedActionsSource(ITextView textView, ITextBuffer textBuffer)
         {
-            return textBuffer == null || textView == null 
-                ? null 
+            return textBuffer == null || textView == null
+                ? null
                 : new TestSuggestedActionsSource(this, textView, textBuffer);
         }
     }
@@ -61,13 +61,12 @@ namespace CodeStream.VisualStudio
         public IEnumerable<SuggestedActionSet> GetSuggestedActions(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken)
         {
             var selectedTextService = Package.GetGlobalService(typeof(SSelectedTextService)) as ISelectedTextService;
-            string selectedText;
+            var selectedText = selectedTextService.GetSelectedText();
 
-            if (selectedTextService.TryGetSelectedText(out selectedText))
+            if (selectedText != null)
             {
                 return new SuggestedActionSet[]
                    {
-
                         new SuggestedActionSet(new ISuggestedAction[]
                             {
                                 new CodemarkSuggestedAction(selectedText)
@@ -107,18 +106,24 @@ namespace CodeStream.VisualStudio
 
         public void Invoke(CancellationToken cancellationToken)
         {
-            MessageBox.Show(_text);
+            // MessageBox.Show(_text);
             // m_span.TextBuffer.Replace(m_span.GetSpan(m_snapshot), m_upper);
 
-            //Task<object> task = System.Threading.Tasks.Task.Run<object>(
-            //    async () => await CodestreamAgentService.Instance.SendAsync("codeStream/post/prepareWithCode",
-            //    JToken.Parse((new
-            //    {
-            //        textDocument = new { uri = @"file:///C:/Users/brian/code/ConsoleApp1/ConsoleApp1/Program.cs" },
-            //        range = new { start = 1, end = 10 },
-            //        dirty = false
-            //    }).ToJson()), cancellationToken));
-            //var foo = task.Result;
+            var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
+
+
+            //  var csid = sessionService.CurrentStreamId;
+
+            Task<object> task = System.Threading.Tasks.Task.Run<object>(
+            async () =>
+            {                
+                return await codeStreamService.PostCodeAsync(
+                          "file:///C:/Users/brian/code/ConsoleApp1/ConsoleApp1/Program.cs", cancellationToken);
+            }
+            );
+        
+            var results = task.Result;
+
         }
 
         public Task<object> GetPreviewAsync(CancellationToken cancellationToken)
@@ -128,7 +133,7 @@ namespace CodeStream.VisualStudio
             textBlock.Inlines.Add(new Run() { Text = _text });
 
             return System.Threading.Tasks.Task.FromResult<object>(textBlock);
-        }        
+        }
 
         public bool TryGetTelemetryId(out Guid telemetryId)
         {
