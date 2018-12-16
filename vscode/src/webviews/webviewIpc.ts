@@ -19,6 +19,7 @@ export enum WebviewIpcMessageType {
 	didFileChange = "codestream:publish:file-changed",
 	didFocus = "codestream:interaction:focus",
 	didSelectCode = "codestream:interaction:code-highlighted",
+	didScroll = "codestream:interaction:scrolled",
 	didSignOut = "codestream:interaction:signed-out",
 	onActiveThreadChanged = "codestream:interaction:thread-selected",
 	onActiveThreadClosed = "codestream:interaction:thread-closed",
@@ -102,6 +103,14 @@ export interface DidSelectCodeNotification {
 			| undefined;
 		gitError: string | undefined;
 		isHighlight?: boolean;
+	};
+}
+
+export interface DidScrollNotification {
+	type: WebviewIpcMessageType.didScroll;
+	body: {
+		firstLine: number;
+		lastLine: number;
 	};
 }
 

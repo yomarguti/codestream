@@ -11,6 +11,7 @@ import {
 	Range,
 	TextEditor,
 	TextEditorSelectionChangeEvent,
+	TextEditorVisibleRangesChangeEvent,
 	Uri,
 	ViewColumn,
 	WebviewPanel,
@@ -57,6 +58,7 @@ import {
 import { log } from "../system";
 import { Functions } from "../system";
 import {
+	DidScrollNotification,
 	DidSelectCodeNotification,
 	toLoggableIpcMessage,
 	WebviewIpc,
@@ -758,7 +760,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 				this
 			),
 			window.onDidChangeWindowState(this.onWindowStateChanged, this),
-			configuration.onDidChange(this.onConfigurationChanged, this)
+			configuration.onDidChange(this.onConfigurationChanged, this),
+			window.onDidChangeTextEditorVisibleRanges(this.onDidChangeTextEditorVisibleRanges, this)
 		);
 
 		this._panel.webview.html = await this.getHtml();
@@ -788,6 +791,19 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 		const response = await Container.agent.posts.prepareCode(e.textEditor.document, selection);
 		await this.postCode(response.code, uri, selection, response.source, response.gitError, true);
+	}
+
+	private async onDidChangeTextEditorVisibleRanges(e: TextEditorVisibleRangesChangeEvent) {
+		console.log(e);
+		const uri = e.textEditor.document.uri;
+
+		void (await this.postMessage({
+			type: WebviewIpcMessageType.didScroll,
+			body: {
+				firstLine: e.visibleRanges[0].start.line,
+				lastLine: e.visibleRanges[0].end.line
+			}
+		} as DidScrollNotification));
 	}
 
 	private async getBootstrapState() {

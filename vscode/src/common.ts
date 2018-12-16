@@ -20,7 +20,7 @@ export enum ShowCodeResult {
 
 const highlightDecorationType = window.createTextEditorDecorationType({
 	rangeBehavior: DecorationRangeBehavior.OpenOpen,
-	backgroundColor: "rgba(127, 127, 127, 0.1)"
+	backgroundColor: "rgba(127, 127, 127, 0.4)"
 });
 
 export async function openEditor(
