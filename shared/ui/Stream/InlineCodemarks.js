@@ -57,6 +57,7 @@ export class SimpleInlineCodemarks extends Component {
 						onMouseLeave={this.handleUnhighlightCodemark}
 						action={this.props.postAction}
 						query={this.state.q}
+						textEditorFirstLine={this.props.textEditorFirstLine}
 					/>
 				);
 			});

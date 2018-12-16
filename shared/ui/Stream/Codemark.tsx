@@ -35,6 +35,7 @@ interface State {}
 interface Props {
 	collapsed?: boolean;
 	inline?: boolean;
+	textEditorFirstLine?: number;
 	codemark: CodemarkEntity;
 	currentUserName: string;
 	usernames: string[];
@@ -161,7 +162,7 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	renderCollapsedCodemark() {
-		const { codemark, inline } = this.props;
+		const { codemark, inline, textEditorFirstLine = 0 } = this.props;
 		const file = codemark.markers && codemark.markers[0].file;
 		// const startLine = codemark.markers && codemark.markers[0].location[0];
 		let top = 0;
@@ -169,7 +170,7 @@ export class Codemark extends React.Component<Props, State> {
 			const marker = codemark.markers[0];
 			if (marker) {
 				const location = marker.location || marker.locationWhenCreated;
-				if (location) top = 18 * location[0] - 3;
+				if (location) top = 18 * (location[0] - textEditorFirstLine) - 3;
 			}
 		}
 
