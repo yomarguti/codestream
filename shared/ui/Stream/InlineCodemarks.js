@@ -43,7 +43,6 @@ export class SimpleInlineCodemarks extends Component {
 		if (codemarks.length === 0) return null;
 		else {
 			return codemarks.map(codemark => {
-				console.log(codemark);
 				return (
 					<Codemark
 						key={codemark.id}
@@ -57,7 +56,6 @@ export class SimpleInlineCodemarks extends Component {
 						onMouseLeave={this.handleUnhighlightCodemark}
 						action={this.props.postAction}
 						query={this.state.q}
-						textEditorFirstLine={this.props.textEditorFirstLine}
 					/>
 				);
 			});
@@ -90,12 +88,15 @@ export class SimpleInlineCodemarks extends Component {
 
 	render() {
 		let hundred = [...Array(100).keys()];
+		const { textEditorFirstLine = 0 } = this.props;
+
+		const top = (textEditorFirstLine === 0 ? 0 : textEditorFirstLine - 0.5) * -18;
 		return (
-			<div>
+			<div style={{ marginTop: top, position: "relative" }}>
 				{this.renderMain()}
 				{hundred.map(index => {
 					return (
-						<div className="hover-plus" key={index}>
+						<div onClick={e => this.handleClickPlus(index)} className="hover-plus" key={index}>
 							<Icon name="plus" />
 						</div>
 					);
@@ -103,6 +104,11 @@ export class SimpleInlineCodemarks extends Component {
 			</div>
 		);
 	}
+
+	handleClickPlus = lineNum => {
+		this.props.startCommentOnLine(lineNum, this.props.textEditorUri);
+		setTimeout(() => this.props.focusInput(), 500);
+	};
 
 	handleClickCodemark = codemark => {
 		if (codemark.markers) this.props.showCode(codemark.markers[0], true);

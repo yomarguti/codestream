@@ -427,6 +427,10 @@ export default class WebviewApi {
 		return this.postMessage({ action: "highlight-code", params: { marker, onOff, source } });
 	}
 
+	startCommentOnLine(line: number, uri) {
+		return this.postMessage({ action: "start-comment-on-line", params: { line, uri } });
+	}
+
 	closeDirectMessage(streamId: string): Promise<CloseStreamResponse> {
 		return this.postMessage({
 			action: CloseStreamRequestType.method,

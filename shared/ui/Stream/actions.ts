@@ -569,3 +569,7 @@ export const disconnectTrello = () => async (dispatch, getState, { api }) => {
 		console.error("failed to signout from trello", error);
 	}
 };
+
+export const startCommentOnLine = (line, uri) => (dispatch, getState, { api }) => {
+	return api.startCommentOnLine(line, uri);
+};
