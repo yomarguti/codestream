@@ -29,9 +29,10 @@ namespace CodeStream.VisualStudio
             harness = harness.Replace("{footerHtml}", browser.FooterHtml);
 
             browser.AttachControl(grid);
-            browser.AddWindowMessageEvent(delegate (object sender, WindowEventArgs ea)
+            
+            browser.AddWindowMessageEvent(async delegate (object sender, WindowEventArgs ea)
             {
-                  browserCommandHandler.Handle(ea);
+                await browserCommandHandler.HandleAsync(ea);
             });
 
             browser.LoadHtml(harness);    

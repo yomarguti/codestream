@@ -1,4 +1,5 @@
 ﻿using CodeStream.VisualStudio.Extensions;
+using System.Threading.Tasks;
 using System.Windows.Controls;
 
 namespace CodeStream.VisualStudio.Services
@@ -46,5 +47,5 @@ namespace CodeStream.VisualStudio.Services
         string FooterHtml { get; }
     }
 
-    public delegate void WindowMessageHandler(object sender, WindowEventArgs e);
+    public delegate Task WindowMessageHandler(object sender, WindowEventArgs e);
 }

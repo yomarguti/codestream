@@ -57,6 +57,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Attributes\SingletonAttribute.cs" />
+    <Compile Include="CodeStreamOptionsPackage.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Services\CodeStreamService.cs" />
     <Compile Include="Services\DotNetBrowserService.cs" />
     <Compile Include="Services\BrowserServiceBase.cs" />
@@ -85,6 +88,7 @@
     <Compile Include="Services\SelectedTextService.cs" />
     <Compile Include="Services\SessionService.cs" />
     <Compile Include="Attributes\InjectedAttribute.cs" />
+    <Compile Include="Services\SettingsService.cs" />
     <Compile Include="SolutionLoadPackage.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -109,6 +113,7 @@
     </Content>
     <Content Include="Resources\CodeStreamDebugCommand.png" />
     <Content Include="Resources\CodeStreamDebugPackage.ico" />
+    <Content Include="Resources\CodeStreamOptionsPackage.ico" />
     <Content Include="Resources\CodestreamPackage.ico" />
     <Content Include="Themes\dark.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

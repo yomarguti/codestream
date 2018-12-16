@@ -155,4 +155,13 @@
   <data name="2400" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\CodeStreamDebugPackage.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="3110" xml:space="preserve">
+    <value>CodeStreamOptionsPackage Extension</value>
+  </data>
+  <data name="3112" xml:space="preserve">
+    <value>CodeStreamOptionsPackage Visual Stuido Extension Detailed Info</value>
+  </data>
+  <data name="3400" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\CodeStreamOptionsPackage.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>
