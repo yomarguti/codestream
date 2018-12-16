@@ -430,6 +430,16 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 							break;
 						}
+						case "start-comment-on-line": {
+							const { line, uri } = e.body.params;
+							const status = await Container.commands.startCommentOnLine({ line, uri });
+							this.postMessage({
+								type: WebviewIpcMessageType.response,
+								body: { id: e.body.id, payload: status }
+							});
+
+							break;
+						}
 						default: {
 							const responseBody: { id: string; [key: string]: any } = { id: body.id };
 							try {
@@ -794,12 +804,12 @@ export class CodeStreamWebviewPanel implements Disposable {
 	}
 
 	private async onDidChangeTextEditorVisibleRanges(e: TextEditorVisibleRangesChangeEvent) {
-		console.log(e);
 		const uri = e.textEditor.document.uri;
 
 		void (await this.postMessage({
 			type: WebviewIpcMessageType.didScroll,
 			body: {
+				uri,
 				firstLine: e.visibleRanges[0].start.line,
 				lastLine: e.visibleRanges[0].end.line
 			}

@@ -3,6 +3,7 @@ import {
 	Disposable,
 	Position,
 	Range,
+	Selection,
 	TextDocument,
 	Uri,
 	ViewColumn,
@@ -14,6 +15,7 @@ import { openEditor, ShowCodeResult, WorkspaceState } from "./common";
 import { Container } from "./container";
 import { StreamThreadId } from "./controllers/webviewController";
 import { Logger } from "./logger";
+import { EditPostRequestType } from "./shared/agent.protocol";
 import { CSMarker } from "./shared/api.protocol";
 import { Command, createCommandDecorator } from "./system";
 
@@ -66,6 +68,11 @@ export interface OpenPostWorkingFileArgs {
 
 export interface HighlightCodeArgs {
 	onOff: boolean;
+}
+
+export interface StartCommentOnLineArgs {
+	uri: Uri;
+	line: number;
 }
 
 export interface OpenStreamCommandArgs extends IRequiresStream {
@@ -202,6 +209,25 @@ export class Commands implements Disposable {
 			viewColumn: column || ViewColumn.Beside,
 			highlight: range
 		});
+	}
+
+	@command("startCommentOneLine", { showErrorMessage: "Unable to start comment" })
+	async startCommentOnLine(args: StartCommentOnLineArgs) {
+		// const range = new Range(new Position(args.line, 0), new Position(args.line + 1, 0));
+
+		// window.visibleTextEditors.forEach(editor => {
+		// 	console.log("GOT AN EDITOR: ", editor);
+		// });
+		// const uri = Uri.parse(Uri.file(args.uri.path).toString());
+		// return openEditor(uri, {
+		// 	preview: true,
+		// 	viewColumn: ViewColumn.Beside,
+		// 	selection: range
+		// });
+
+		// FIXME -- this assumes there is only one visible editor
+		const editor = window.visibleTextEditors[0];
+		editor.selection = new Selection(new Position(args.line - 1, 0), new Position(args.line, 0));
 	}
 
 	// @command("openPostFileRevision", { showErrorMessage: "Unable to open post" })

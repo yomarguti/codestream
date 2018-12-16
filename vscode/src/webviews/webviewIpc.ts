@@ -1,6 +1,6 @@
 "use strict";
 import * as path from "path";
-import { TextEditor, WebviewPanel, workspace } from "vscode";
+import { TextEditor, Uri, WebviewPanel, workspace } from "vscode";
 import { StreamThread } from "../api/session";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -109,6 +109,7 @@ export interface DidSelectCodeNotification {
 export interface DidScrollNotification {
 	type: WebviewIpcMessageType.didScroll;
 	body: {
+		uri: Uri;
 		firstLine: number;
 		lastLine: number;
 	};
