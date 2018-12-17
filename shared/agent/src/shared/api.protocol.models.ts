@@ -250,6 +250,8 @@ export interface CSLastReads {
 }
 
 export interface CSMePreferences {
+	telemetryConsent?: boolean; // legacy
+	telemetryOptOut?: boolean;
 	[key: string]: any;
 }
 

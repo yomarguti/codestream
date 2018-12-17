@@ -11,6 +11,17 @@ export class TelemetryManager {
 	constructor(session: CodeStreamSession) {
 		// TODO: Respect VSCode telemetry opt out
 		this._mixpanel = new MixPanelTelemetryService(session, false);
+		session
+			.ready()
+			.then(() => session.api.getPreferences())
+			.then(({ preferences }) => {
+				// legacy consent
+				if ("telemetryConsent" in preferences) {
+					this.setConsent(preferences.telemetryConsent!);
+				} else {
+					this.setConsent(!Boolean(preferences.telemetryOptOut));
+				}
+			});
 	}
 
 	setConsent(hasConsented: boolean) {
