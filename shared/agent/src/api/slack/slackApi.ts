@@ -569,7 +569,7 @@ export class SlackApiProvider implements ApiProvider {
 					as_user: true,
 					thread_ts: parentPostId,
 					unfurl_links: true,
-					reply_broadcast: parentPostId ? true : undefined,
+					reply_broadcast: false, // parentPostId ? true : undefined --- because of slack bug (https://trello.com/c/Y48QI6Z9/919)
 					attachments: attachments
 				},
 				`chat.postMessage`
