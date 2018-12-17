@@ -165,8 +165,8 @@ export class WebviewController implements Disposable {
 				// Keep this at the end otherwise the above subscriptions can fire while disposing
 				this._panel
 			);
+			Container.agent.telemetry.track("Webview Opened");
 		}
-		Container.agent.telemetry.track("Webview Opened");
 
 		return this._panel.show(streamThread, this._viewPanelStack);
 	}
