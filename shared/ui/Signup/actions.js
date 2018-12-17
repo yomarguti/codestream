@@ -15,26 +15,8 @@ export const connectSlack = () => (dispatch, getState, { api }) => {
 	});
 };
 
-export const connectTrello = () => (dispatch, getState, { api }) => {
-	api.startTrelloSignin().then(() => {
+export const connectService = service => (dispatch, getState, { api }) => {
+	api.startServiceSignin(service).then(() => {
 		dispatch({ type: "GO_TO_COMPLETE_CONNECT", payload: { authType: "trello" } });
-	});
-};
-
-export const connectJira = () => (dispatch, getState, { api }) => {
-	api.startJiraSignin().then(() => {
-		dispatch({ type: "GO_TO_COMPLETE_CONNECT", payload: { authType: "jira" } });
-	});
-};
-
-export const connectGitHub = () => (dispatch, getState, { api }) => {
-	api.startGitHubSignin().then(() => {
-		dispatch({ type: "GO_TO_COMPLETE_CONNECT", payload: { authType: "github" } });
-	});
-};
-
-export const connectAsana = () => (dispatch, getState, { api }) => {
-	api.startAsanaSignin().then(() => {
-		dispatch({ type: "GO_TO_COMPLETE_CONNECT", payload: { authType: "asana" } });
 	});
 };

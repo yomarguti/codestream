@@ -23,13 +23,7 @@ interface ThunkExtras {
 	api: WebviewApi;
 }
 
-export {
-	connectSlack,
-	connectTrello,
-	connectJira,
-	connectGitHub,
-	connectAsana
-} from "../Signup/actions";
+export { connectSlack, connectService } from "../Signup/actions";
 export {
 	openPanel,
 	closePanel,
@@ -561,15 +555,11 @@ export const createTrelloCard = (listId: string, name: string, description: stri
 	}
 };
 
-export const disconnectTrello = () => async (dispatch, getState, { api }) => {
+export const disconnectService = service => async (dispatch, getState, { api }) => {
 	try {
-		const response = await api.disconnectTrello();
+		const response = await api.disconnectService("trello");
 		return response;
 	} catch (error) {
-		console.error("failed to signout from trello", error);
+		console.error("failed to signout from " + service, error);
 	}
-};
-
-export const startCommentOnLine = (line, uri) => (dispatch, getState, { api }) => {
-	return api.startCommentOnLine(line, uri);
 };
