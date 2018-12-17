@@ -2,11 +2,11 @@ import { combineReducers } from "redux";
 import companies from "./companies";
 import onboarding from "./onboarding";
 import posts from "./posts";
-import capabilities from "./capabilities";
+import { reduceCapabilities } from "../store/capabilities/reducer";
 import { reduceContext } from "../store/context/reducer";
-import configs from "./configs";
+import { reduceConfigs } from "../store/configs/reducer";
 import { reduceStreams } from "../store/streams/reducer";
-import users from "./users";
+import { reduceUsers } from "../store/users/reducer";
 import repos from "./repos";
 import teams from "./teams";
 import markers from "./markers";
@@ -50,10 +50,10 @@ const pluginVersion = (state = "", { type }) => {
 
 const appReducer = combineReducers({
 	bootstrapped,
-	capabilities,
+	capabilities: reduceCapabilities,
 	codemarks: reduceCodemarks,
 	companies,
-	configs,
+	configs: reduceConfigs,
 	connectivity,
 	context: reduceContext,
 	currentPage,
@@ -71,7 +71,7 @@ const appReducer = combineReducers({
 	streams: reduceStreams,
 	teams,
 	umis,
-	users,
+	users: reduceUsers,
 	services
 });
 

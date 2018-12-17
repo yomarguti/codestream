@@ -4,7 +4,7 @@ import createClassString from "classnames";
 import _ from "underscore";
 import * as actions from "./actions";
 import * as codemarkSelectors from "../store/codemarks/reducer";
-import * as userSelectors from "../reducers/users";
+import * as userSelectors from "../store/users/reducer";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import ScrollBox from "./ScrollBox";

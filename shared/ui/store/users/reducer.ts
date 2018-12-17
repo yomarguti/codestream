@@ -1,41 +1,37 @@
 import { createSelector } from "reselect";
-import { mapFilter, toMapBy } from "../utils";
+import { CSUser } from "../../shared/api.protocol";
+import { mapFilter, toMapBy } from "../../utils";
+import { ActionType } from "../common";
+import * as actions from "./actions";
+import { State, UsersActionsType } from "./types";
 
-interface UserEntity {
-	id: string;
-	email: string;
-	username?: string;
-}
+type UsersActions = ActionType<typeof actions>;
 
-interface UserState {
-	[id: string]: UserEntity;
-}
+const initialState: State = {};
 
-const initialState: UserState = {};
-
-const updateUser = (payload, users) => {
+const updateUser = (payload: CSUser, users: State) => {
 	const user = users[payload.id] || {};
 	return { ...user, ...payload };
 };
 
-export default (state = initialState, { type, payload }) => {
-	switch (type) {
-		case "BOOTSTRAP_USERS":
-			return toMapBy("id", payload);
-		case "USERS-UPDATE_FROM_PUBNUB":
-		case "UPDATE_USER":
-		case "ADD_USER":
-			return { ...state, [payload.id]: updateUser(payload, state) };
-		case "ADD_USERS": {
-			const updatedUsers = payload.map(user => updateUser(user, state));
+export function reduceUsers(state = initialState, action: UsersActions) {
+	switch (action.type) {
+		case UsersActionsType.Bootstrap: {
+			return toMapBy("id", action.payload);
+		}
+		case UsersActionsType.Update:
+		case UsersActionsType.Add:
+			return { ...state, [action.payload.id]: updateUser(action.payload, state) };
+		case UsersActionsType.AddMultiple: {
+			const updatedUsers = action.payload.map(user => updateUser(user, state));
 			return { ...state, ...toMapBy("id", updatedUsers) };
 		}
 		default:
 			return state;
 	}
-};
+}
 
-const getUsername = (user: UserEntity) => {
+const getUsername = (user: CSUser) => {
 	if (!user.username && user.email) {
 		return user.email.replace(/@.*/, "");
 	}
@@ -51,7 +47,7 @@ export const getTeamMembers = createSelector(getTeam, getUsers, (team, users) =>
 	});
 });
 
-export const getAllUsers = createSelector(getUsers, (users: UserState) => Object.values(users));
+export const getAllUsers = createSelector(getUsers, (users: State) => Object.values(users));
 export const getUsernames = createSelector(getAllUsers, users => {
 	return users.map(getUsername);
 });

@@ -1,7 +1,9 @@
 import { bootstrap as bootstrapStreams } from "../store/streams/actions";
+import { bootstrapUsers } from "../store/users/actions";
 import { setCurrentFile } from "../store/context/actions";
+import { updateCapabilities } from "../store/capabilities/actions";
 
-export const updateConfigs = configs => ({ type: "UPDATE_CONFIGS", payload: configs });
+export * from "../store/configs/actions";
 
 export const updateUnreads = unreads => ({ type: "UPDATE_UNREADS", payload: unreads });
 
@@ -10,15 +12,10 @@ export const updatePreferences = preferences => ({
 	payload: preferences
 });
 
-export const updateCapabilities = capabilities => ({
-	type: "UPDATE_CAPABILITIES",
-	payload: capabilities
-});
-
 export const reset = () => ({ type: "RESET" });
 
 export const bootstrap = (data = {}) => async dispatch => {
-	dispatch({ type: "BOOTSTRAP_USERS", payload: data.users || [] });
+	dispatch(bootstrapUsers(data.users || []));
 	dispatch({ type: "BOOTSTRAP_TEAMS", payload: data.teams || [] });
 	dispatch(bootstrapStreams(data.streams || []));
 	dispatch({ type: "BOOTSTRAP_REPOS", payload: data.repos || [] });

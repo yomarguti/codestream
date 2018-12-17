@@ -33,7 +33,7 @@ import {
 	getDMName
 } from "../store/streams/reducer";
 import { getCodemark } from "../store/codemarks/reducer";
-import { getTeamMembers } from "../reducers/users";
+import { getTeamMembers } from "../store/users/reducer";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 
 const EMAIL_MATCH_REGEX = new RegExp(

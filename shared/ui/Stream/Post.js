@@ -23,7 +23,7 @@ import hljs from "highlight.js";
 import _ from "underscore";
 import { reactToPost } from "./actions";
 import { safe } from "../utils";
-import { getUsernamesById, getNormalizedUsernames } from "../reducers/users";
+import { getUsernamesById, getNormalizedUsernames } from "../store/users/reducer";
 
 // let renderCount = 0;
 class Post extends React.Component {
