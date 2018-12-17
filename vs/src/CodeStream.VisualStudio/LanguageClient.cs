@@ -11,31 +11,60 @@ using StreamJsonRpc;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio
 {
+    [ContentType("FSharpInteractive")]
+    [ContentType("RazorCoreCSharp")]
+    [ContentType("RazorVisualBasic")]
+    [ContentType("CoffeeScript")]
     [ContentType("CSharp")]
+    [ContentType("mustache")]
+    [ContentType("RazorCSharp")]
+    [ContentType("JavaScript")]
+    [ContentType("Python")]
+    [ContentType("F#")]
+    [ContentType("css")]
+    [ContentType("XML")]
+    [ContentType("C/C++")]
+    [ContentType("vbscript")]
+    [ContentType("TypeScript")]
+    [ContentType("Dockerfile")]
+    [ContentType("LESS")]
+    [ContentType("jade")]
+    [ContentType("JSON")]
+    [ContentType("HTML")]
+    [ContentType("SCSS")]
+    [ContentType("XAML")]
     [Export(typeof(ILanguageClient))]
-    public class FooLanguageClient : ILanguageClient, ILanguageClientCustomMessage
+    public class LanguageClient : ILanguageClient, ILanguageClientCustomMessage
     {
-        static readonly ILogger log = LogManager.ForContext<FooLanguageClient>();
+        static readonly ILogger log = LogManager.ForContext<LanguageClient>();
         internal const string UiContextGuidString = "DE885E15-D44E-40B1-A370-45372EFC23AA";
         private Guid _uiContextGuid = new Guid(UiContextGuidString);
+        private ILanguageServerProcess _languageServer;
 
         public event AsyncEventHandler<EventArgs> StartAsync;
 #pragma warning disable 0067
         public event AsyncEventHandler<EventArgs> StopAsync;
 #pragma warning restore 0067
 
-        //[Import]
-        //internal IContentTypeRegistryService ContentTypeRegistryService { get; set; }
+#if DEBUG
+        [Import]
+        internal IContentTypeRegistryService ContentTypeRegistryService { get; set; }
+#endif
 
-        public FooLanguageClient()
+        public LanguageClient() : this(new LanguageServerProcess())
+        {
+
+        }
+
+        public LanguageClient(ILanguageServerProcess languageServer)
         {
             Instance = this;
+            _languageServer = languageServer;
         }
 
         // IServiceProvider serviceProvider;
@@ -47,7 +76,7 @@ namespace CodeStream.VisualStudio
         //    this.serviceProvider = serviceProvider;
         //}
 
-        internal static FooLanguageClient Instance { get; private set; }
+        internal static LanguageClient Instance { get; private set; }
         private JsonRpc _rpc;
 
         public string Name => "CodeStream";
@@ -96,25 +125,7 @@ namespace CodeStream.VisualStudio
 
         public IEnumerable<string> FilesToWatch => null;
 
-        public object MiddleLayer => MiddleLayerProvider.Instance;
-
-        private class MiddleLayerProvider : ILanguageClientWorkspaceSymbolProvider
-        {
-            internal readonly static MiddleLayerProvider Instance = new MiddleLayerProvider();
-
-            private MiddleLayerProvider()
-            {
-            }
-
-            public async Task<SymbolInformation[]> RequestWorkspaceSymbols(WorkspaceSymbolParams param, Func<WorkspaceSymbolParams, Task<SymbolInformation[]>> sendRequest)
-            {
-                // Send along the request as given
-                SymbolInformation[] symbols = await sendRequest(param);
-
-                return symbols;
-            }
-
-        }
+        public object MiddleLayer => null;
 
         private static CustomTarget _target;
         public object CustomMessageTarget
@@ -130,50 +141,23 @@ namespace CodeStream.VisualStudio
             }
         }
 
-        private async Task<Connection> ActivateByStdIOAsync(CancellationToken token)
+        public async Task<Connection> ActivateAsync(CancellationToken token)
         {
             await System.Threading.Tasks.Task.Yield();
 
-            //TODO package up node?
-            var info = new ProcessStartInfo
-            {
-                FileName = @"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\Microsoft\VisualStudio\NodeJs\node.exe"
-            };
+            Connection connection = null;
 
-            ////TODO package this up?
-            //var agent = @"..\..\..\..\..\..\codestream-lsp-agent\dist\agent-cli.js";
-            //var info = new ProcessStartInfo
-            //{
-            //    FileName = @"..\..\..\..\..\..\codestream-lsp-agent\dist\agent-cli.exe"
-            //};
+            var process = _languageServer.Create();
 
-            var agent = @"..\..\..\..\..\..\codestream-lsp-agent\dist\agent-cli.js";
-            info.Arguments = $@"{agent} --stdio --inspect=6009 --nolazy";
-            info.RedirectStandardInput = true;
-            info.RedirectStandardOutput = true;
-            info.UseShellExecute = false;
-            info.CreateNoWindow = false; // true;
-
-            var process = new Process
-            {
-                StartInfo = info
-            };
-
-            using (log.TimeOperation($"Creating lsp server process. FileName={{FileNameAttribute}} Arguments={{Arguments}}", info.FileName, info.Arguments))
+            using (log.TimeOperation($"Starting server process. FileName={{FileNameAttribute}} Arguments={{Arguments}}", process.StartInfo.FileName, process.StartInfo.Arguments))
             {
                 if (process.Start())
                 {
-                    var connection = new Connection(process.StandardOutput.BaseStream, process.StandardInput.BaseStream);
-                    return connection;
+                    connection = new Connection(process.StandardOutput.BaseStream, process.StandardInput.BaseStream);
                 }
             }
 
-            throw new Exception("Process start exception");
-        }
-
-        public async Task<Connection> ActivateAsync(CancellationToken token)
-        {
-            return await ActivateByStdIOAsync(token);
+            return connection;
         }
 
         public async System.Threading.Tasks.Task AttachForCustomMessageAsync(JsonRpc rpc)
@@ -182,7 +166,6 @@ namespace CodeStream.VisualStudio
             _rpc = rpc;
 
             //await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
             // Sets the UI context so the custom command will be available.
             //var monitorSelection = ServiceProvider.GlobalProvider.GetService(typeof(IVsMonitorSelection)) as IVsMonitorSelection;
             //if (monitorSelection != null)
@@ -192,9 +175,6 @@ namespace CodeStream.VisualStudio
             //        monitorSelection.SetCmdUIContext(cookie, 1);
             //    }
             //}
-
-            // [BC] does this actually work? YES, but can't enable it here
-            // _rpc.AddLocalRpcTarget(new CustomTarget2());
         }
 
         public async System.Threading.Tasks.Task OnLoadedAsync()

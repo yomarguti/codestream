@@ -60,6 +60,7 @@
     <Compile Include="CodeStreamOptionsPackage.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="LanguageServerProcess.cs" />
     <Compile Include="Services\CodeStreamService.cs" />
     <Compile Include="Services\DotNetBrowserService.cs" />
     <Compile Include="Services\BrowserServiceBase.cs" />
@@ -76,8 +77,8 @@
     <Compile Include="Constants.cs" />
     <Compile Include="CodeStreamCommandPackage.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
-    <Compile Include="FooContentTypeDefinition.cs" />
-    <Compile Include="FooLanguageClient.cs" />
+    <Compile Include="CodeStreamContentDefinitions.cs" />
+    <Compile Include="LanguageClient.cs" />
     <Compile Include="CodemarkLightBulb.cs" />
     <Compile Include="LogManager.cs" />
     <Compile Include="Models\Models.cs" />
