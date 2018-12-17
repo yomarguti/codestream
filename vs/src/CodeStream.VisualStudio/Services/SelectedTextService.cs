@@ -1,8 +1,6 @@
 ﻿using CodeStream.VisualStudio.Attributes;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TextManager.Interop;
-using System;
 
 namespace CodeStream.VisualStudio.Services
 {
@@ -39,9 +37,8 @@ namespace CodeStream.VisualStudio.Services
             if (_iIVsTextManager != null &&
                 ErrorHandler.Succeeded(_iIVsTextManager.GetActiveView(1, null, out activeView)) &&
                 ErrorHandler.Succeeded(activeView.GetSelectedText(out selectedText)))
-            {
-               return selectedText;
-                
+            {            
+               return selectedText;                
             }
 
             return null;            

@@ -14,7 +14,7 @@ namespace CodeStream.VisualStudio.Services
     {
 
     }
-
+    
     public interface ICodeStreamAgentService
     {
         Task<object> SetRpcAsync(JsonRpc rpc);
@@ -32,6 +32,7 @@ namespace CodeStream.VisualStudio.Services
     {
         public string Code { get; set; }
     }
+
     public class CodeStreamAgentService : ICodeStreamAgentService
     {
         static readonly ILogger log = LogManager.ForContext<CodeStreamAgentService>();

@@ -63,7 +63,7 @@ namespace CodeStream.VisualStudio
                 return new CodeStreamAgentService(this);
             if (typeof(SCodeStreamService) == serviceType)
                 return new CodeStreamService(
-                    GetServiceAsync(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
+                    GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
                     GetService(typeof(SBrowserService)) as IBrowserService
                 );
 

@@ -26,26 +26,53 @@ namespace CodeStream.VisualStudio
         [Import(typeof(ITextStructureNavigatorSelectorService))]
         internal ITextStructureNavigatorSelectorService NavigatorService { get; set; }
 
+        private readonly ITextDocumentFactoryService _textDocumentFactoryService;
+
+        [ImportingConstructor]
+        internal TestSuggestedActionsSourceProvider(ITextDocumentFactoryService textDocumentFactoryService)
+        {
+            _textDocumentFactoryService = textDocumentFactoryService;
+        }
+
         public ISuggestedActionsSource CreateSuggestedActionsSource(ITextView textView, ITextBuffer textBuffer)
         {
             return textBuffer == null || textView == null
                 ? null
-                : new TestSuggestedActionsSource(this, textView, textBuffer);
+                : new TestSuggestedActionsSource(this, textView, textBuffer, _textDocumentFactoryService);
         }
     }
 
     internal class TestSuggestedActionsSource : ISuggestedActionsSource
     {
-        private readonly TestSuggestedActionsSourceProvider _actionSourceProvider;
+        private readonly TestSuggestedActionsSourceProvider _actionsSourceProvider;
         private readonly ITextBuffer _textBuffer;
         private readonly ITextView _textView;
+        private readonly ITextDocumentFactoryService _textDocumentFactoryService;
 
-        public TestSuggestedActionsSource(TestSuggestedActionsSourceProvider testSuggestedActionsSourceProvider, ITextView textView, ITextBuffer textBuffer)
+        public TestSuggestedActionsSource(TestSuggestedActionsSourceProvider actionsSourceProvider, 
+            ITextView textView, 
+            ITextBuffer textBuffer,
+            ITextDocumentFactoryService textDocumentFactoryService)
         {
-            _actionSourceProvider = testSuggestedActionsSourceProvider;
-            _textBuffer = textBuffer;
+            _actionsSourceProvider = actionsSourceProvider;
+            _textBuffer = textBuffer;            
             _textView = textView;
+            // TODO text of the document has changed...
+            //_textBuffer.Changed += TextBuffer_Changed;
+            //_textView.Selection.SelectionChanged += Selection_SelectionChanged;
+            _textDocumentFactoryService = textDocumentFactoryService;
         }
+
+        //private void Selection_SelectionChanged(object sender, EventArgs e)
+        //{
+        //    var textSelection = sender as ITextSelection;
+
+        //}
+
+        //private void TextBuffer_Changed(object sender, TextContentChangedEventArgs e)
+        //{
+
+        //}
 
         public bool TryGetTelemetryId(out Guid telemetryId)
         {
@@ -65,14 +92,18 @@ namespace CodeStream.VisualStudio
 
             if (selectedText != null)
             {
-                return new SuggestedActionSet[]
-                   {
+                ITextDocument textDocument;
+                if (_textDocumentFactoryService.TryGetTextDocument(_textBuffer, out textDocument))
+                {                    
+                    return new SuggestedActionSet[]
+                       {
                         new SuggestedActionSet(new ISuggestedAction[]
                             {
-                                new CodemarkSuggestedAction(selectedText)
+                                new CodemarkSuggestedAction(textDocument, selectedText)
                             }
                         )
-                   };
+                       };
+                }
             }
 
             return Enumerable.Empty<SuggestedActionSet>();
@@ -85,18 +116,22 @@ namespace CodeStream.VisualStudio
 
         public void Dispose()
         {
+            //if (_textView?.Selection != null)
+            //{
+            //    _textView.Selection.SelectionChanged -= Selection_SelectionChanged;
+            //}
         }
     }
 
     internal class CodemarkSuggestedAction : ISuggestedAction
     {
-        private string _text;
-        private string _display;
+        private string _selectedText;
+        private readonly ITextDocument _textDocument;
 
-        public CodemarkSuggestedAction(string text)
+        public CodemarkSuggestedAction(ITextDocument extDocument, string selectedText)
         {
-            _text = text;
-            _display = "CodeStream: Add Codemark...";
+            _selectedText = selectedText;
+            _textDocument = extDocument;
         }
 
         public Task<IEnumerable<SuggestedActionSet>> GetActionSetsAsync(CancellationToken cancellationToken)
@@ -108,19 +143,14 @@ namespace CodeStream.VisualStudio
         {
             // MessageBox.Show(_text);
             // m_span.TextBuffer.Replace(m_span.GetSpan(m_snapshot), m_upper);
-
-            var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
-
-
-            //  var csid = sessionService.CurrentStreamId;
-
+            
+            var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;                   
             Task<object> task = System.Threading.Tasks.Task.Run<object>(
-            async () =>
-            {                
+            async () => {                
                 return await codeStreamService.PostCodeAsync(
-                          "file:///C:/Users/brian/code/ConsoleApp1/ConsoleApp1/Program.cs", cancellationToken);
-            }
-            );
+                    new FileUri(_textDocument.FilePath), 
+                    cancellationToken);
+            });
         
             var results = task.Result;
 
@@ -130,7 +160,7 @@ namespace CodeStream.VisualStudio
         {
             var textBlock = new TextBlock();
             textBlock.Padding = new Thickness(5);
-            textBlock.Inlines.Add(new Run() { Text = _text });
+            textBlock.Inlines.Add(new Run() { Text = _selectedText });
 
             return System.Threading.Tasks.Task.FromResult<object>(textBlock);
         }
@@ -147,10 +177,7 @@ namespace CodeStream.VisualStudio
             get { return false; }
         }
 
-        public string DisplayText
-        {
-            get { return _display; }
-        }
+        public string DisplayText { get; } = "CodeStream: Add Comment...";
 
         public ImageMoniker IconMoniker
         {
