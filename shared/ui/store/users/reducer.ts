@@ -20,9 +20,8 @@ export function reduceUsers(state = initialState, action: UsersActions) {
 			return toMapBy("id", action.payload);
 		}
 		case UsersActionsType.Update:
-		case UsersActionsType.Add:
 			return { ...state, [action.payload.id]: updateUser(action.payload, state) };
-		case UsersActionsType.AddMultiple: {
+		case UsersActionsType.Add: {
 			const updatedUsers = action.payload.map(user => updateUser(user, state));
 			return { ...state, ...toMapBy("id", updatedUsers) };
 		}

@@ -6,6 +6,4 @@ export const bootstrapUsers = (users: CSUser[]) => action(UsersActionsType.Boots
 
 export const updateUser = (user: CSUser) => action(UsersActionsType.Update, user);
 
-export const addUser = (user: CSUser) => action(UsersActionsType.Add, user);
-
-export const addUsers = (users: CSUser[]) => action(UsersActionsType.AddMultiple, users);
+export const addUsers = (users: CSUser[]) => action(UsersActionsType.Add, users);

@@ -14,6 +14,7 @@ import {
 import * as contextActions from "../store/context/actions";
 import * as streamActions from "../store/streams/actions";
 import { getChannelStreamsForTeam, getDirectMessageStreamsForTeam } from "../store/streams/reducer";
+import { addUsers } from "../store/users/actions";
 import { uuid } from "../utils";
 import WebviewApi from "../webview-api";
 
@@ -387,7 +388,7 @@ export const invite = (attributes: { email: string; fullName?: string }) => asyn
 ) => {
 	try {
 		const response = await api.invite(attributes);
-		return dispatch({ type: "ADD_USER", payload: response.user });
+		return dispatch(addUsers([response.user]));
 	} catch (error) {
 		logError(`There was an error inviting a user: ${error}`, attributes);
 	}
