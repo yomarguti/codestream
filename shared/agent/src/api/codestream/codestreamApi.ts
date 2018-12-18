@@ -104,15 +104,12 @@ import {
 	CSPost,
 	CSReactions,
 	CSReactToPostResponse,
-	CSSetPostStatusRequest,
-	CSSetPostStatusResponse,
 	CSStream,
+	CSTrackSlackPostRequest,
 	CSUpdateCodemarkRequest,
 	CSUpdateCodemarkResponse,
 	CSUpdateMarkerRequest,
 	CSUpdateMarkerResponse,
-	CSUpdatePostsCountRequest,
-	CSUpdatePostsCountResponse,
 	CSUpdatePresenceRequest,
 	CSUpdatePresenceResponse,
 	CSUpdateStreamRequest,
@@ -412,12 +409,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	updatePostsCount(request: CSUpdatePostsCountRequest): Promise<CSUpdatePostsCountResponse> {
-		return this.put<CSUpdatePostsCountRequest, CSUpdatePostsCountResponse>(
-			`/bump-posts`,
-			request,
-			this._token
-		);
+	trackSlackPost(request: CSTrackSlackPostRequest) {
+		return this.post("/slack-posts", request, this._token);
 	}
 
 	@log()

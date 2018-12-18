@@ -17,7 +17,6 @@ import {
 	CreateRepoRequest,
 	CSUnreads,
 	DeleteCodemarkRequest,
-	DeleteCodemarkResponse,
 	DeletePostRequest,
 	EditPostRequest,
 	FetchCodemarksRequest,
@@ -498,6 +497,7 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async createPost(request: CreatePostRequest): Promise<CreatePostResponse> {
+		let createdPostId;
 		try {
 			const usernamesById = await this.ensureUsernamesById();
 
@@ -580,6 +580,7 @@ export class SlackApiProvider implements ApiProvider {
 
 			const post = await fromSlackPost(message, streamId, usernamesById, this._codestreamTeamId);
 			const { postId } = fromSlackPostId(post.id, post.streamId);
+			createdPostId = postId;
 
 			if (codemark) {
 				await this._codestream.updateCodemark({
@@ -601,13 +602,13 @@ export class SlackApiProvider implements ApiProvider {
 				repos
 			};
 		} finally {
-			this.updatePostsCount();
+			if (createdPostId) this.updatePostsCount(this.teamId, request.streamId, createdPostId);
 		}
 	}
 
-	private async updatePostsCount() {
+	private async updatePostsCount(teamId: string, streamId: string, postId: string) {
 		try {
-			void (await this._codestream.updatePostsCount({}));
+			void (await this._codestream.trackSlackPost({ teamId, streamId, postId }));
 		} catch (ex) {
 			debugger;
 			Logger.error(ex, "Failed updating post count");

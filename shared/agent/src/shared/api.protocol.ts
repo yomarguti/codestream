@@ -391,8 +391,8 @@ export interface CSUpdateStreamResponse {
 	stream: { [key: string]: any };
 }
 
-export interface CSUpdatePostsCountRequest {}
-
-export interface CSUpdatePostsCountResponse {
-	user: { [key: string]: any };
+export interface CSTrackSlackPostRequest {
+	teamId: string;
+	streamId: string;
+	postId: string;
 }
