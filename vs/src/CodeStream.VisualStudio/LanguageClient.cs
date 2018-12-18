@@ -125,7 +125,7 @@ namespace CodeStream.VisualStudio
 
         public IEnumerable<string> FilesToWatch => null;
 
-        public object MiddleLayer => null;
+        public object MiddleLayer => null;         
 
         private static CustomTarget _target;
         public object CustomMessageTarget
@@ -214,56 +214,11 @@ namespace CodeStream.VisualStudio
         }
     }
 
-    //public class CustomTarget2
-    //{
-    //    public void OnCustomNotification(object arg)
-    //    {
-    //        // Provide logic on what happens OnCustomNotification is called from the language server
-    //    }
-
-    //    public string OnCustomRequest(string test)
-    //    {
-    //        // Provide logic on what happens OnCustomRequest is called from the language server
-    //        return null;
-    //    }
-
-    //    [JsonRpcMethod(Methods.InitializeName)]
-    //    public void OnInitialize(object arg)
-    //    {
-    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
-    //        //server.OnTextDocumentOpened(parameter);
-    //    }
-
-    //    [JsonRpcMethod(Methods.InitializedName)]
-    //    public void OnInitialized(object arg)
-    //    {
-    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
-    //        //server.OnTextDocumentOpened(parameter);
-    //    }
-
-    //    [JsonRpcMethod(Methods.TextDocumentDidOpenName)]
-    //    public void OnTextDocumentOpened(object arg)
-    //    {
-    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
-    //        //server.OnTextDocumentOpened(parameter);
-    //    }
-
-    //    [JsonRpcMethod(Methods.TextDocumentPublishDiagnosticsName)]
-    //    public void TextDocumentPublishDiagnosticsName(object arg)
-    //    {
-    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
-    //        //server.OnTextDocumentOpened(parameter);
-    //    }
-
-    //    [JsonRpcMethod("window/logMessage")]
-    //    public void Log(string s)
-    //    {
-    //        Console.WriteLine(s);
-    //    }
-    //}
 
     public class CustomTarget
     {
+        static readonly ILogger log = LogManager.ForContext<CustomTarget>();
+
         public void OnCustomNotification(object arg)
         {
             // Provide logic on what happens OnCustomNotification is called from the language server
@@ -312,9 +267,16 @@ namespace CodeStream.VisualStudio
         }
 
         [JsonRpcMethod("window/logMessage")]
+        public void LogMessage(string s)
+        {
+            Console.WriteLine(s);
+        }
+
+        [JsonRpcMethod("log")]
         public void Log(string s)
         {
             Console.WriteLine(s);
+            log.Information(s);            
         }
     }
 }

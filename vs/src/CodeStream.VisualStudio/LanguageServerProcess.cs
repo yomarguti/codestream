@@ -26,18 +26,14 @@ namespace CodeStream.VisualStudio
             info.Arguments = $@"{agent} --stdio --inspect=6009 --nolazy";
             info.RedirectStandardInput = true;
             info.RedirectStandardOutput = true;
-            info.UseShellExecute = false;
-#if DEBUG
-            info.CreateNoWindow = false;
-#else
-            info.CreateNoWindow = true;
-#endif
+            info.UseShellExecute = false; 
+            info.CreateNoWindow = true; 
 
             var process = new Process
             {
                 StartInfo = info
-            };
-
+            };           
+            
             return process;
         }
     }

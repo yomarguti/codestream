@@ -1,17 +1,10 @@
-﻿using System;
+﻿using CodeStream.VisualStudio.Models;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio.Services
-{
-    public class FileUri : Uri
-    {
-        public FileUri(string path) : base("file:///" + path.Replace("/", "\\"))
-        {
-
-        }
-    }
-
+{  
     public interface SCodeStreamService
     {
 
@@ -19,7 +12,7 @@ namespace CodeStream.VisualStudio.Services
 
     public interface ICodeStreamService
     {
-        Task<object> PostCodeAsync(FileUri uri, CancellationToken? cancellationToken);
+        Task<object> PostCodeAsync(FileUri uri, SelectedText selectedText, CancellationToken? cancellationToken);
     }
 
     public class CodeStreamService : ICodeStreamService, SCodeStreamService
@@ -33,9 +26,11 @@ namespace CodeStream.VisualStudio.Services
             _browserService = browserService;
         }
 
-        public async Task<object> PostCodeAsync(FileUri uri, CancellationToken? cancellationToken = null)
+        public async Task<object> PostCodeAsync(FileUri uri, SelectedText selectedText, CancellationToken? cancellationToken = null)
         {
-            var post = await _agentService.GetMetadataAsync(uri.ToString(), cancellationToken);
+            var range = new Range(selectedText);
+
+            var post = await _agentService.GetMetadataAsync(uri.ToString(), range, cancellationToken);
 
             _browserService.PostMessage(new
             {
@@ -44,7 +39,7 @@ namespace CodeStream.VisualStudio.Services
                 {
                     code = post.Code,
                     fileUri = uri,
-                    location = new int[] { 0, 1, 1, 5 }
+                    location = range.ToLocation()
                 }
             });
 

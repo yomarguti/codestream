@@ -64,14 +64,14 @@
 
   <Symbols>
     <!-- This is the package guid. -->
-    <GuidSymbol name="guidCodeStreamDebugPackage" value="{2fef2b89-8c75-44b6-90d5-c0bbf4a14a4e}" />
+    <GuidSymbol name="guidCodeStreamDebugPackage" value="{f3f79669-cec3-4564-b647-1cdb21cbefea}" />
 
     <!-- This is the guid used to group the menu commands together -->
-    <GuidSymbol name="guidCodeStreamDebugPackageCmdSet" value="{e2a6aba6-f866-458c-b4c8-a1247f583d87}">
+    <GuidSymbol name="guidCodeStreamDebugPackageCmdSet" value="{52c750a2-e314-459c-9f92-1afb5c2daaef}">
       <IDSymbol name="CodeStreamDebugCommandId" value="0x0100" />
     </GuidSymbol>
 
-    <GuidSymbol name="guidImages" value="{8e261cb3-a23b-48eb-835c-c0a98e736b79}" >
+    <GuidSymbol name="guidImages" value="{872bc1fb-6981-4584-a20b-3b255965d3c5}" >
       <IDSymbol name="bmpPic1" value="1" />
       <IDSymbol name="bmpPic2" value="2" />
       <IDSymbol name="bmpPicSearch" value="3" />

@@ -54,7 +54,7 @@ namespace CodeStream.VisualStudio
             if (typeof(SHostService) == serviceType)
                 return new HostService(this);
             if (typeof(SSelectedTextService) == serviceType)
-                return new SelectedTextService(GetService(typeof(SVsTextManager)) as IVsTextManager);
+                return new SelectedTextService(GetService(typeof(SVsTextManager)) as IVsTextManager2);
             if (typeof(SBrowserService) == serviceType)
                 return new DotNetBrowserService(this);
             if (typeof(SSettingsService) == serviceType)

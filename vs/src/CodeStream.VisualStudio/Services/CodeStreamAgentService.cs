@@ -14,23 +14,38 @@ namespace CodeStream.VisualStudio.Services
     {
 
     }
-    
+
     public interface ICodeStreamAgentService
     {
+        bool IsReady { get; }
         Task<object> SetRpcAsync(JsonRpc rpc);
         Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null);
-        Task<GetMetadataResponse> GetMetadataAsync(string uri,
+        Task<GetMetadataResponse> GetMetadataAsync(string uri, Range range,
            CancellationToken? cancellationToken = null
         );
 
         Task<JToken> LoginViaTokenAsync(string signupToken, string serverUrl);
         Task<JToken> LoginAsync(string email, string password, string serverUrl);
         Task<BootstrapState> GetBootstrapAsync(StateResponse state);
+        Task<FetchCodemarksResponse> GetMarkersAsync(string streamId);
+        Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(FileUri uri, CancellationToken? cancellationToken = null);
     }
 
     public class GetMetadataResponse
     {
         public string Code { get; set; }
+    }
+
+    public class FetchCodemarksResponse
+    {
+        public List<CSMarker> Markers { get; set; }
+        public List<CSFullCodemark> Codemarks { get; set; }
+    }
+
+    public class DocumentMarkersResponse
+    {
+        public List<CSFullMarker> Markers { get; set; }
+        public List<MarkerNotLocated> MarkersNotLocated { get; set; }
     }
 
     public class CodeStreamAgentService : ICodeStreamAgentService
@@ -42,16 +57,40 @@ namespace CodeStream.VisualStudio.Services
             _serviceProvider = serviceProvider;
         }
 
+        public bool IsReady { get; private set; }
         private JsonRpc _rpc { get; set; }
 
         public async Task<object> SetRpcAsync(JsonRpc rpc)
         {
             _rpc = rpc;
-            return await SendAsync<object>("codeStream/cli/initialized", null);
+            IsReady = true;
+            //TODO fix arg -- use AgentOptions
+            return await SendAsync<object>("codeStream/cli/initialized", new {
+#if DEBUG
+                isDebugging = true,
+                traceLevel = "verbose",
+#endif
+                signupToken = (string)null,
+                team = (string)null,
+                teamId = (string)null,
+                extension = new
+                {
+                    build = "0",
+                    buildEnv = "0",
+                    version = "0",
+                    versionFormatted = "0",
+                },                
+                serverUrl = Constants.ServerUrl
+            });
         }
 
         public async Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null)
         {
+            if (!IsReady)
+            {
+                return default(T);
+            }
+
             cancellationToken = cancellationToken ?? CancellationToken.None;
             try
             {
@@ -64,7 +103,22 @@ namespace CodeStream.VisualStudio.Services
             }
         }
 
-        public async Task<GetMetadataResponse> GetMetadataAsync(string uri,          
+        public async Task<FetchCodemarksResponse> GetMarkersAsync(string streamId)
+        {
+            return await SendAsync<FetchCodemarksResponse>("codeStream/fetchCodemarks", new { streamId = streamId });
+        }
+
+        public async Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(FileUri uri,
+            CancellationToken? cancellationToken = null)
+        {
+            return await SendAsync<DocumentMarkersResponse>("codeStream/textDocument/markers", new
+            {
+                textDocument = new { uri = uri.ToString() }
+            }, cancellationToken);
+        }
+
+        public async Task<GetMetadataResponse> GetMetadataAsync(string uri,
+            Range range,
             CancellationToken? cancellationToken = null
          )
         {
@@ -72,7 +126,8 @@ namespace CodeStream.VisualStudio.Services
                 new
                 {
                     textDocument = new { uri = uri },
-                    range = new { start = new { line = 1, character = 1 }, end = new { line = 6, character = 2 } },
+                    range = new { start = new { line = range.StartLine, character = range.StartCharacter },
+                               end = new { line = range.EndLine, character = range.EndCharacter } },
                     dirty = false
                 }, cancellationToken);
         }

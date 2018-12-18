@@ -18,9 +18,6 @@ namespace CodeStream.VisualStudio
     [Guid("0fae43ec-bc2d-417e-af01-a477439cf228")]
     public class CodeStreamToolWindow : ToolWindowPane
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CodeStreamToolWindow"/> class.
-        /// </summary>
         public CodeStreamToolWindow() : base(null)
         {
             this.Caption = "CodeStream";
