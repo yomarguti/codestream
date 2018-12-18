@@ -1,0 +1,117 @@
+{
+  "url": "channels.info",
+  "request": {
+    "channel": "CENV45Y1L"
+  },
+  "response": {
+    "ok": true,
+    "channel": {
+      "id": "CENV45Y1L",
+      "name": "ci-vscode",
+      "is_channel": true,
+      "created": 1544127569,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "creator": "U9QPXSR3M",
+      "name_normalized": "ci-vscode",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_member": true,
+      "is_private": false,
+      "is_mpim": false,
+      "last_read": "1545175815.024500",
+      "latest": {
+        "type": "message",
+        "subtype": "bot_message",
+        "text": "<http://tc.codestream.us/viewLog.html?buildTypeId=VscodeCodestream_Ci&amp;buildId=3493|Failed - vscode-codestream / CI (build dev asset from develop &amp; feature/*) #codestream-0.30.4+938 [visual-studio]>",
+        "ts": "1545322107.028900",
+        "username": "rosiebud",
+        "icons": {
+          "image_48": "https://s3-us-west-2.amazonaws.com/slack-files2/bot_icons/2017-11-01/264914556512_48.png"
+        },
+        "bot_id": "B7UJTSW0P",
+        "attachments": [
+          {
+            "fallback": "CI (build dev asset from develop &amp; feature/*)",
+            "id": 1,
+            "color": "a30200",
+            "fields": [
+              {
+                "title": "CI (build dev asset from develop &amp; feature/*)",
+                "value": "Agent: Linux--tca2.codestream.us--t2-xlarge\nElapsed: 2m:30s",
+                "short": false
+              },
+              {
+                "title": "Reason",
+                "value": "Process exited with code 1 (Step: Build (Command Line))",
+                "short": false
+              },
+              {
+                "title": "Commits",
+                "value": "38cf7e6b57 :: brian :: fixes missing gitPath, deals with no client support for workspace / configuration, adds logger interface (wip)\n\n",
+                "short": false
+              },
+              {
+                "title": "Changes By",
+                "value": "brian",
+                "short": false
+              }
+            ]
+          }
+        ]
+      },
+      "unread_count": 44,
+      "unread_count_display": 44,
+      "members": [
+        "U7CS9PYJU",
+        "U7CT4071N",
+        "U7DJW0ZQU",
+        "U7FNCE5NX",
+        "U7H4N1A6B",
+        "U7YNDN2VD",
+        "U9QPXSR3M",
+        "UAUATCSCE",
+        "UEC3ZJ58U"
+      ],
+      "topic": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "purpose": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "previous_names": []
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "channels:read"
+    ]
+  }
+}

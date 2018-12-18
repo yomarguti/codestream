@@ -1,0 +1,41 @@
+{
+  "url": "/posts/5be4b2e56923fe6b9acc65e7?teamId=5bbd06ba2aae56770cbcbf47",
+  "response": {
+    "post": {
+      "version": 1,
+      "deactivated": false,
+      "numReplies": 0,
+      "reactions": {},
+      "createdAt": 1541714661896,
+      "modifiedAt": 1541714661898,
+      "_id": "5be4b2e56923fe6b9acc65e7",
+      "streamId": "5bbd06ba2aae56770cbcbf49",
+      "text": "wtf",
+      "mentionedUserIds": [],
+      "origin": "VS Code",
+      "creatorId": "5bbd06952aae56770cbcbf45",
+      "teamId": "5bbd06ba2aae56770cbcbf47",
+      "codemarkId": "5be4b2e56923fe6b9acc65e8",
+      "seqNum": 166,
+      "id": "5be4b2e56923fe6b9acc65e7"
+    },
+    "codemark": {
+      "version": 1,
+      "deactivated": false,
+      "streamId": "5bbd06ba2aae56770cbcbf49",
+      "postId": "5be4b2e56923fe6b9acc65e7",
+      "numReplies": 0,
+      "pinned": true,
+      "createdAt": 1541714661897,
+      "modifiedAt": 1541714661897,
+      "_id": "5be4b2e56923fe6b9acc65e8",
+      "title": "wtf",
+      "type": "question",
+      "assignees": [],
+      "color": "blue",
+      "teamId": "5bbd06ba2aae56770cbcbf47",
+      "creatorId": "5bbd06952aae56770cbcbf45",
+      "id": "5be4b2e56923fe6b9acc65e8"
+    }
+  }
+}

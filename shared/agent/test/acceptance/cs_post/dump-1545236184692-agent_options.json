@@ -1,0 +1,24 @@
+{
+  "extension": {
+    "build": "",
+    "buildEnv": "dev",
+    "version": "0.30.4",
+    "versionFormatted": "0.30.4 (dev)"
+  },
+  "gitPath": "/opt/local/bin/git",
+  "ide": {
+    "name": "VS Code",
+    "version": "1.31.0-exploration"
+  },
+  "isDebugging": false,
+  "serverUrl": "https://pd-api.codestream.us:9443",
+  "traceLevel": "debug",
+  "email": "marcelo+1@codestream.com",
+  "passwordOrToken": {
+    "url": "https://pd-api.codestream.us:9443",
+    "email": "marcelo+1@codestream.com",
+    "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiI1YmJkMDY5NTJhYWU1Njc3MGNiY2JmNDUiLCJpc3MiOiJDb2RlU3RyZWFtIiwiYWxnIjoiSFMyNTYiLCJ0eXBlIjoid2ViIiwiaWF0IjoxNTM5MTE0Njc1fQ.p5XFxwX8etjnfQ4mtA9YO4X-N6ANU7UEoew5FtHh_Mg"
+  },
+  "team": "Team CodeStream",
+  "dumpRequests": true
+}

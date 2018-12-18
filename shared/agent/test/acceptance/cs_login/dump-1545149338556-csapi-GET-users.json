@@ -1,0 +1,63 @@
+{
+  "url": "/users?teamId=5bbd06ba2aae56770cbcbf47",
+  "response": {
+    "users": [
+      {
+        "version": 212,
+        "deactivated": false,
+        "phoneNumber": "",
+        "iWorkOn": "",
+        "providerIdentities": [],
+        "createdAt": 1539114645018,
+        "modifiedAt": 1539114675002,
+        "_id": "5bbd06952aae56770cbcbf45",
+        "email": "marcelo+1@codestream.com",
+        "username": "marcelo1",
+        "timeZone": "America/New_York",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "isRegistered": true,
+        "registeredAt": 1539114675002,
+        "joinMethod": "Created Team",
+        "primaryReferral": "external",
+        "originTeamId": "5bbd06ba2aae56770cbcbf47",
+        "companyIds": [
+          "5bbd06ba2aae56770cbcbf48"
+        ],
+        "teamIds": [
+          "5bbd06ba2aae56770cbcbf47"
+        ],
+        "lastLogin": 1545149337428,
+        "id": "5bbd06952aae56770cbcbf45"
+      },
+      {
+        "version": 58,
+        "deactivated": false,
+        "phoneNumber": "",
+        "iWorkOn": "",
+        "providerIdentities": [],
+        "createdAt": 1539189347481,
+        "modifiedAt": 1539189378705,
+        "_id": "5bbe2a6333d00a39e1a4dd21",
+        "email": "marcelo+2@codestream.com",
+        "username": "marcelo2",
+        "timeZone": "America/New_York",
+        "creatorId": "5bbe2a6333d00a39e1a4dd21",
+        "isRegistered": true,
+        "registeredAt": 1539189378705,
+        "joinMethod": "Created Team",
+        "primaryReferral": "external",
+        "originTeamId": "5bbe2a9233d00a39e1a4dd23",
+        "companyIds": [
+          "5bbe2a9233d00a39e1a4dd24",
+          "5bbd06ba2aae56770cbcbf48"
+        ],
+        "teamIds": [
+          "5bbe2a9233d00a39e1a4dd23",
+          "5bbd06ba2aae56770cbcbf47"
+        ],
+        "lastLogin": 1543952304465,
+        "id": "5bbe2a6333d00a39e1a4dd21"
+      }
+    ]
+  }
+}

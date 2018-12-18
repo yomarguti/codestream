@@ -1,0 +1,13 @@
+{
+  "method": "codeStream/users/me/unreads",
+  "request": {},
+  "response": {
+    "unreads": {
+      "lastReads": {},
+      "mentions": {},
+      "unreads": {},
+      "totalMentions": 0,
+      "totalUnreads": 0
+    }
+  }
+}

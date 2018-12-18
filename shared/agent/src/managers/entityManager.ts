@@ -65,7 +65,7 @@ export abstract class CachedEntityManagerBase<T extends CSEntity> extends Entity
 	@log()
 	protected invalidateCache() {
 		this._cached = false;
-		return super.invalidateCache();
+		super.invalidateCache();
 	}
 
 	protected abstract async loadCache(): Promise<void>;

@@ -1,0 +1,1655 @@
+{
+  "method": "codeStream/posts",
+  "request": {
+    "limit": 50,
+    "streamId": "C7DM92RTN",
+    "teamId": "5bb51100585ada29401ee9c5"
+  },
+  "response": {
+    "posts": [
+      {
+        "createdAt": 1545069062000,
+        "creatorId": "U7CT4071N",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545069062.567300",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545069062000,
+        "text": "yes",
+        "seqNum": "1545069062.567300",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545069602000,
+        "creatorId": "U7DJW0ZQU",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545069602.568700",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545069602000,
+        "text": "pushed the change.  I also added the oauth 2.0 feature to the apps (I created a second app for production) with the same callback url’s we entered into github.  It gave me an auth_code_generator_url template which I added as another variable (CS_API_JIRA_AUTH_CODE_GEN_TEMPLATE).",
+        "seqNum": "1545069602.568700",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545069625000,
+        "creatorId": "U7DJW0ZQU",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545069625.569200",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545069625000,
+        "text": "Make sure you update your secrets (*dt-update-secrets*), pull the latest on development and reload your sandbox",
+        "seqNum": "1545069625.569200",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545069632000,
+        "creatorId": "U7DJW0ZQU",
+        "deactivated": false,
+        "hasBeenEdited": true,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545069632.569500",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545069644000,
+        "text": "`env|grep JIRA` to verify",
+        "seqNum": "1545069632.569500",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545069752000,
+        "creatorId": "U7DJW0ZQU",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545069752.570500",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545069752000,
+        "text": "Finally, I added all the required fields for both apps so now it’s up to the atlassian guys to get them published. There are two apps under my atlassian account.",
+        "seqNum": "1545069752.570500",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545069783000,
+        "creatorId": "U7DJW0ZQU",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545069783.570900",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545069783000,
+        "text": "```\ndevelopment: ZA2TOONdGfnQh5o5JtlmUIm33NM7k1mz\nproduction: uO25m5LXVStXYvwucx3ah4875p4y0XrX\n```",
+        "seqNum": "1545069783.570900",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545082745000,
+        "creatorId": "UEC3ZJ58U",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545082745.571100",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545082745000,
+        "text": "https://insights.stackoverflow.com/survey/2018/",
+        "seqNum": "1545082745.571100",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545088471000,
+        "creatorId": "U7CT4071N",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545088471.571500",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545088471000,
+        "text": "yay! jira auth is working now",
+        "seqNum": "1545088471.571500",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545088513000,
+        "creatorId": "U7CT4071N",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545088513.571900",
+        "mentionedUserIds": [
+          "U9QPXSR3M"
+        ],
+        "modifiedAt": 1545088513000,
+        "reactions": {
+          "+1": [
+            "U9QPXSR3M",
+            "U7DJW0ZQU"
+          ]
+        },
+        "text": "@Eric api server is now returning the api key with trello providerInfo",
+        "seqNum": "1545088513.571900",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545102884000,
+        "creatorId": "U7DJW0ZQU",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545102884.573300",
+        "mentionedUserIds": [
+          "U7CT4071N"
+        ],
+        "modifiedAt": 1545102884000,
+        "text": "@colin I enabled *‘Make your App public’* on the jira cs development app. I’ve left production disabled.",
+        "seqNum": "1545102884.573300",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545144445000,
+        "creatorId": "U7CT4071N",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545144445.573600",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545144445000,
+        "text": "jira auth is now working in PD",
+        "seqNum": "1545144445.573600",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545148881000,
+        "creatorId": "U9QPXSR3M",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545148881.574800",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545148881000,
+        "text": "I will miss stand-up today (I'm on the train back home) and also need to stop work early (4pm) for a kids Xmas event",
+        "seqNum": "1545148881.574800",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545233570000,
+        "creatorId": "U7YNDN2VD",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545233570.576100",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545233570000,
+        "text": "Lets plan on doing an extension release tomorrow. There's a decent amount of stuff that's ready to go out. Friday isn't really an option because the NY office will be doing the second half of our move and then a holiday lunch/drinking.",
+        "seqNum": "1545233570.576100",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545236705000,
+        "creatorId": "U7CS9PYJU",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545236705.577000",
+        "mentionedUserIds": [
+          "U7YNDN2VD"
+        ],
+        "modifiedAt": 1545236705000,
+        "text": "@Dave has asked to rename the three client branches which are currently called `inline` to `feature/inline` — i’m prolly not the best person to do that. can someone please take care of that?",
+        "seqNum": "1545236705.577000",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545236852000,
+        "creatorId": "U7DJW0ZQU",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545236852.577200",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545236852000,
+        "text": "I will do it",
+        "seqNum": "1545236852.577200",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545236971000,
+        "creatorId": "U7DJW0ZQU",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545236971.579100",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545236971000,
+        "reactions": {
+          "+1": [
+            "UEC3ZJ58U",
+            "U7H4N1A6B"
+          ]
+        },
+        "text": "FYI to all, the TC vscode dev extension build is configured to created assets for *develop* as well as any branch that begins with *feature/*.  The *develop* asset is saved on our asset server, the other build assets are available from the TC web site (https://tc.codestream.us/)",
+        "seqNum": "1545236971.579100",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545238488000,
+        "creatorId": "U7DJW0ZQU",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545238488.579700",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545238488000,
+        "text": "branch has been renamed.  You can grab the asset for it from this page:\nhttp://tc.codestream.us/project.html?projectId=VscodeCodestream&tab=projectOverview",
+        "seqNum": "1545238488.579700",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545240710000,
+        "creatorId": "U7CT4071N",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545240710.581000",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545240710000,
+        "text": "does anyone know if there’s something weird with VS Code and string searches across a repo? i’ve got a change i need to make that is dependent on finding a certain string, and VS Code just will not show me all the instances of that string in a search … it’s driving me crazy because i keep finding new instances that the search didn’t find originally",
+        "seqNum": "1545240710.581000",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545240944000,
+        "creatorId": "UEC3ZJ58U",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545240944.581400",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545240944000,
+        "text": "there's the file/search exclude patterns in settings...",
+        "seqNum": "1545240944.581400",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545240953000,
+        "creatorId": "U7CT4071N",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545240953.581600",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545240953000,
+        "text": "no it’s definitely not that",
+        "seqNum": "1545240953.581600",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545240992000,
+        "creatorId": "U7CT4071N",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545240992.582000",
+        "mentionedUserIds": [
+          "U7FNCE5NX"
+        ],
+        "modifiedAt": 1545240992000,
+        "text": "@Akonwi you’ll be happy to know i resorted to atom to do it :confused:",
+        "seqNum": "1545240992.582000",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545241005000,
+        "creatorId": "U7FNCE5NX",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545241005.582300",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545241005000,
+        "text": "i was thinking about saying something",
+        "seqNum": "1545241005.582300",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545241045000,
+        "creatorId": "U7CT4071N",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545241045.582900",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545241045000,
+        "text": "i’ve had this problem before, i think there’s a vs code bug … it doesn’t happen all the time but when it does it seems to “persist” (like searching over and over doesn’t solve it)",
+        "seqNum": "1545241045.582900",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545241146000,
+        "creatorId": "U7CT4071N",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545241146.583300",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545241146000,
+        "text": "it’s a case-sensitive search so that might have something to do with it",
+        "seqNum": "1545241146.583300",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545242277000,
+        "creatorId": "U9QPXSR3M",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545242277.583900",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545242277000,
+        "text": "is it just a simple search? or regex? single word or something that could span line breaks?",
+        "seqNum": "1545242277.583900",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545242664000,
+        "creatorId": "U9QPXSR3M",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 1,
+        "id": "C7DM92RTN|1545242664.584900",
+        "mentionedUserIds": [
+          "U7DJW0ZQU"
+        ],
+        "modifiedAt": 1545242664000,
+        "parentPostId": "C7DM92RTN|1545242664.584900",
+        "text": "@jj when you changed `inline` to `feature/inline` did you rename the branch or just create a new one?",
+        "seqNum": "1545242664.584900",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545244737000,
+        "creatorId": "U7CS9PYJU",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545244737.585400",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545244737000,
+        "text": "No standup for me as I am flying. ",
+        "seqNum": "1545244737.585400",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545245292000,
+        "creatorId": "U7FNCE5NX",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545245292.585500",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545245292000,
+        "parentPostId": "C7DM92RTN|1545242664.584900",
+        "text": "he did a rename",
+        "seqNum": "1545245292.585500",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545245324000,
+        "creatorId": "U9QPXSR3M",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545245324.585700",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545245324000,
+        "parentPostId": "C7DM92RTN|1545242664.584900",
+        "text": "damn -- would have expected a better outcome then",
+        "seqNum": "1545245324.585700",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545245367000,
+        "creatorId": "U9QPXSR3M",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545245367.586600",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545245367000,
+        "text": "If you have been using the `inline` branches, you will likely need to do the following to resync them:\n```\ngit branch -m inline feature/inline\ngit branch -u origin/feature/inline feature/inline\n```",
+        "seqNum": "1545245367.586600",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545245404000,
+        "creatorId": "U9QPXSR3M",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545245404.587100",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545245404000,
+        "text": "you may also want to do a `git fetch -p` to prune any old remote branches",
+        "seqNum": "1545245404.587100",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545248638000,
+        "creatorId": "U7DJW0ZQU",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545248638.588100",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545248638000,
+        "reactions": {
+          "+1": [
+            "U9QPXSR3M"
+          ]
+        },
+        "text": "I did\n```\ngit fetch origin\ngit checkout old-name\ngit branch -m new-name\ngit push origin :old-name new-name\ngit push origin -u new-name\n```",
+        "seqNum": "1545248638.588100",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545248663000,
+        "creatorId": "U7DJW0ZQU",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545248663.588600",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545248663000,
+        "text": "I pruned when I was done, but I didn’t need to in this repo",
+        "seqNum": "1545248663.588600",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545314081000,
+        "creatorId": "U7YNDN2VD",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545314081.590700",
+        "mentionedUserIds": [
+          "U9QPXSR3M"
+        ],
+        "modifiedAt": 1545314081000,
+        "text": "Anyone imminently landing anything in develop? If not, @Eric - I think we can do an extension release at any time. Changelog is updated. ",
+        "seqNum": "1545314081.590700",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545316542000,
+        "creatorId": "U7FNCE5NX",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545316542.591700",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545316542000,
+        "text": "i'm pushing changes later after the release",
+        "seqNum": "1545316542.591700",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545323552000,
+        "creatorId": "U7CT4071N",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545323552.592500",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545323552000,
+        "text": "i’ll probably miss standup today, will be en route from relative to relative … still working on the analytics cards, will look into bitbucket and gitlab integrations after that",
+        "seqNum": "1545323552.592500",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545328002000,
+        "creatorId": "U7DJW0ZQU",
+        "deactivated": false,
+        "hasBeenEdited": true,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545328002.594400",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545328016000,
+        "text": "I just remembered from a stand-up 2+ weeks ago, that someone was asking how we handle static image serving.  We have a repo that gets copied to an S3 bucket which is the origin for an AWS CloudFront distribution (CDN).\n\nhttps://github.com/TeamCodeStream/static_content",
+        "seqNum": "1545328002.594400",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545331756000,
+        "creatorId": "U9QPXSR3M",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545331756.594800",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545331756000,
+        "text": "FYI here is their licensing page: https://www.teamdev.com/dotnetbrowser#licensing-pricing",
+        "seqNum": "1545331756.594800",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545331812000,
+        "creatorId": "U7DJW0ZQU",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545331812.596200",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545331812000,
+        "text": "Such a beautiful picture to cover up what I’m sure is a horrific labyrinth of rules and regulations only few of whom can truly understand",
+        "seqNum": "1545331812.596200",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545331814000,
+        "creatorId": "U9QPXSR3M",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545331814.596300",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545331814000,
+        "text": "We also might want to talk to them about a bundle, since we are likely to want the java version as well",
+        "seqNum": "1545331814.596300",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545331819000,
+        "creatorId": "UEC3ZJ58U",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545331819.596500",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545331819000,
+        "text": "pick the 1 dev and i better get really good at java :confused:",
+        "seqNum": "1545331819.596500",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545331882000,
+        "creatorId": "U9QPXSR3M",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545331882.596800",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545331882000,
+        "text": "https://www.teamdev.com/jxbrowser#licensing-pricing",
+        "seqNum": "1545331882.596800",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545331889000,
+        "creatorId": "U9QPXSR3M",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545331889.597100",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545331889000,
+        "text": "that is the java version",
+        "seqNum": "1545331889.597100",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545331952000,
+        "creatorId": "UEC3ZJ58U",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545331952.597700",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545331952000,
+        "text": "bummer -- didn't realize they have separate licenses for each language",
+        "seqNum": "1545331952.597700",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545344197000,
+        "creatorId": "U9QPXSR3M",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545344197.598600",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545344197000,
+        "text": "@here just prepped 0.31 for release",
+        "seqNum": "1545344197.598600",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545344262000,
+        "creatorId": "U7FNCE5NX",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545344262.599000",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545344262000,
+        "reactions": {
+          "grin": [
+            "U9QPXSR3M",
+            "UEC3ZJ58U"
+          ]
+        },
+        "text": ":snowflake:",
+        "seqNum": "1545344262.599000",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545344263000,
+        "creatorId": "U9QPXSR3M",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545344263.599100",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545344263000,
+        "reactions": {
+          "+1": [
+            "U7YNDN2VD",
+            "U7CS9PYJU"
+          ]
+        },
+        "text": "are we good to publish?",
+        "seqNum": "1545344263.599100",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545344269000,
+        "creatorId": "U7FNCE5NX",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545344269.599300",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545344269000,
+        "text": "good with me",
+        "seqNum": "1545344269.599300",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545344359000,
+        "creatorId": "U7YNDN2VD",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545344359.599900",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545344359000,
+        "reactions": {
+          "pray": [
+            "U9QPXSR3M"
+          ],
+          "santa": [
+            "UEC3ZJ58U"
+          ]
+        },
+        "text": "Nice easter egg, btw!",
+        "seqNum": "1545344359.599900",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      },
+      {
+        "createdAt": 1545344718000,
+        "creatorId": "U9QPXSR3M",
+        "deactivated": false,
+        "hasBeenEdited": false,
+        "numReplies": 0,
+        "id": "C7DM92RTN|1545344718.600400",
+        "mentionedUserIds": [],
+        "modifiedAt": 1545344718000,
+        "reactions": {
+          "100": [
+            "UAUATCSCE"
+          ],
+          "+1": [
+            "U7CS9PYJU"
+          ]
+        },
+        "text": "0.31 has been released",
+        "seqNum": "1545344718.600400",
+        "streamId": "C7DM92RTN",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "hasMarkers": false
+      }
+    ],
+    "more": true,
+    "codemarks": [
+      {
+        "version": 2,
+        "deactivated": false,
+        "streamId": "C7DM92RTN",
+        "postId": "C7DM92RTN|1543934079.054200",
+        "numReplies": 0,
+        "pinned": true,
+        "createdAt": 1543934078850,
+        "modifiedAt": 1543934079195,
+        "_id": "5c06907e6f6e2b29beae5987",
+        "title": "",
+        "text": "test",
+        "type": "comment",
+        "color": "orange",
+        "providerType": "slack",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "creatorId": "5c0599af6f6e2b29beae5919",
+        "markerIds": [
+          "5c06907e6f6e2b29beae5988"
+        ],
+        "fileStreamIds": [
+          "5c06907e6f6e2b29beae5989"
+        ],
+        "id": "5c06907e6f6e2b29beae5987",
+        "markers": [
+          {
+            "version": 2,
+            "deactivated": false,
+            "createdAt": 1543934078849,
+            "modifiedAt": 1543934079194,
+            "_id": "5c06907e6f6e2b29beae5988",
+            "code": "multiCompose",
+            "file": "Stream/ComposeBox.js",
+            "teamId": "5bb51100585ada29401ee9c5",
+            "providerType": "slack",
+            "postStreamId": "C7DM92RTN",
+            "commitHashWhenCreated": "90cc4b6cf71dec9f6d0c8d8bd4fc7dead0c65bf7",
+            "locationWhenCreated": [
+              1213,
+              20,
+              1213,
+              32,
+              {
+                "contentChanged": true
+              }
+            ],
+            "creatorId": "5c0599af6f6e2b29beae5919",
+            "codemarkId": "5c06907e6f6e2b29beae5987",
+            "repoId": "5bef10d3c6a69f1ba0ffe8af",
+            "repo": "github.com/teamcodestream/codestream-components",
+            "fileStreamId": "5c06907e6f6e2b29beae5989",
+            "postId": "C7DM92RTN|1543934079.054200",
+            "id": "5c06907e6f6e2b29beae5988"
+          }
+        ]
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "streamId": "C7DM92RTN",
+        "postId": "C7DM92RTN|1543359023.768400",
+        "numReplies": 0,
+        "pinned": true,
+        "createdAt": 1543359023629,
+        "modifiedAt": 1543359024490,
+        "_id": "5bfdca2fe8a06548106a10dc",
+        "title": "",
+        "text": "blah",
+        "type": "comment",
+        "color": "blue",
+        "providerType": "slack",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "creatorId": "5a664fb301cc4c2b8a6b79e8",
+        "markerIds": [
+          "5bfdca2fe8a06548106a10dd"
+        ],
+        "fileStreamIds": [
+          "5bfdca2fe8a06548106a10de"
+        ],
+        "id": "5bfdca2fe8a06548106a10dc",
+        "markers": [
+          {
+            "version": 2,
+            "deactivated": false,
+            "createdAt": 1543359023628,
+            "modifiedAt": 1543359024489,
+            "_id": "5bfdca2fe8a06548106a10dd",
+            "code": "export namespace User {\n\texport function isSlack(me: CSMe): me is CSMe & { providerInfo: { slack: CSSlackProviderInfo } } {\n\t\treturn me.providerInfo != null && me.providerInfo.slack != null;\n\t}\n}",
+            "file": "src/api/extensions.ts",
+            "teamId": "5bb51100585ada29401ee9c5",
+            "providerType": "slack",
+            "postStreamId": "C7DM92RTN",
+            "commitHashWhenCreated": "f7602a91d22058eaa0aba0ab04b24300f85073fd",
+            "locationWhenCreated": [
+              12,
+              1,
+              16,
+              2,
+              {}
+            ],
+            "creatorId": "5a664fb301cc4c2b8a6b79e8",
+            "codemarkId": "5bfdca2fe8a06548106a10dc",
+            "repoId": "5bd0e25dd4321c0d4897c760",
+            "repo": "github.com/teamcodestream/codestream-lsp-agent",
+            "fileStreamId": "5bfdca2fe8a06548106a10de",
+            "postId": "C7DM92RTN|1543359023.768400",
+            "id": "5bfdca2fe8a06548106a10dd"
+          }
+        ]
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "streamId": "C7DM92RTN",
+        "postId": "C7DM92RTN|1542734996.584600",
+        "numReplies": 0,
+        "pinned": true,
+        "createdAt": 1542734995989,
+        "modifiedAt": 1542734996487,
+        "_id": "5bf44493e8a06548106a0f9e",
+        "text": "@Eric: `args` is always undefined here. any idea why?\n\nthis is why opening a thread from the marker isn't working",
+        "type": "comment",
+        "color": "blue",
+        "providerType": "slack",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "creatorId": "5b6ca95ca51ac46638670186",
+        "markerIds": [
+          "5bf44493e8a06548106a0f9f"
+        ],
+        "fileStreamIds": [
+          "5be3568f36911e492c93a462"
+        ],
+        "id": "5bf44493e8a06548106a0f9e",
+        "markers": [
+          {
+            "version": 2,
+            "deactivated": false,
+            "createdAt": 1542734995988,
+            "modifiedAt": 1542734996486,
+            "_id": "5bf44493e8a06548106a0f9f",
+            "code": "\tasync openStream(args: OpenStreamCommandArgs): Promise<StreamThread | undefined> {\n",
+            "file": "src/commands.ts",
+            "teamId": "5bb51100585ada29401ee9c5",
+            "providerType": "slack",
+            "postStreamId": "C7DM92RTN",
+            "commitHashWhenCreated": "f001920a61d111850b8f6e436e0a16273e6d4555",
+            "locationWhenCreated": [
+              183,
+              1,
+              184,
+              1,
+              {}
+            ],
+            "creatorId": "5b6ca95ca51ac46638670186",
+            "codemarkId": "5bf44493e8a06548106a0f9e",
+            "repoId": "5bbd2460c129b10c668b9fc9",
+            "repo": "github.com/teamcodestream/vscode-codestream",
+            "fileStreamId": "5be3568f36911e492c93a462",
+            "postId": "C7DM92RTN|1542734996.584600",
+            "id": "5bf44493e8a06548106a0f9f"
+          }
+        ]
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "streamId": "C7DM92RTN",
+        "postId": "C7DM92RTN|1542048553.335400",
+        "numReplies": 0,
+        "pinned": true,
+        "createdAt": 1542048553018,
+        "modifiedAt": 1542048553168,
+        "_id": "5be9cb299fa54d63150747ce",
+        "type": "comment",
+        "assignees": [],
+        "color": "",
+        "providerType": "slack",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "creatorId": "5b6ca95ca51ac46638670186",
+        "id": "5be9cb299fa54d63150747ce"
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "streamId": "C7DM92RTN",
+        "postId": "C7DM92RTN|1542048315.333000",
+        "numReplies": 0,
+        "pinned": true,
+        "createdAt": 1542048315407,
+        "modifiedAt": 1542048315562,
+        "_id": "5be9ca3b9fa54d63150747cd",
+        "title": "",
+        "type": "comment",
+        "assignees": [],
+        "color": "",
+        "providerType": "slack",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "creatorId": "5b6ca95ca51ac46638670186",
+        "id": "5be9ca3b9fa54d63150747cd"
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "streamId": "C7DM92RTN",
+        "postId": "C7DM92RTN|1542048286.332900",
+        "numReplies": 0,
+        "pinned": true,
+        "createdAt": 1542048286076,
+        "modifiedAt": 1542048286225,
+        "_id": "5be9ca1e9fa54d63150747cc",
+        "type": "comment",
+        "assignees": [],
+        "color": "",
+        "providerType": "slack",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "creatorId": "5b6ca95ca51ac46638670186",
+        "id": "5be9ca1e9fa54d63150747cc"
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "streamId": "C7DM92RTN",
+        "postId": "C7DM92RTN|1539148695.000100",
+        "numReplies": 0,
+        "pinned": true,
+        "createdAt": 1539148696063,
+        "modifiedAt": 1544133706424,
+        "_id": "5be2432c0cbafa40f789c69b",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "markerIds": [
+          "5bbd8b98c129b10c668b9ffe"
+        ],
+        "fileStreamIds": [
+          "5bbd8903c129b10c668b9ff5"
+        ],
+        "creatorId": "5bb56a296c347e4bc63c2ab0",
+        "providerType": "slack",
+        "text": "@Eric: asdf fdsfsd",
+        "id": "5be2432c0cbafa40f789c69b",
+        "markers": [
+          {
+            "version": 1,
+            "deactivated": false,
+            "createdAt": 1539148696063,
+            "modifiedAt": 1539148696063,
+            "_id": "5bbd8b98c129b10c668b9ffe",
+            "teamId": "5bb51100585ada29401ee9c5",
+            "streamId": "5bbd8903c129b10c668b9ff5",
+            "postId": "C7DM92RTN|1539148695.000100",
+            "postStreamId": "C7DM92RTN",
+            "codeBlock": {
+              "code": "const git = await gitPath();",
+              "commitHash": "b97cd6c98c526d04742eb83171d2406612089de5",
+              "location": [
+                38,
+                2,
+                38,
+                30,
+                {}
+              ],
+              "file": "src/extension.ts",
+              "repoId": "5bbd2460c129b10c668b9fc9",
+              "repo": "github.com/teamcodestream/vscode-codestream",
+              "streamId": "5bbd8903c129b10c668b9ff5"
+            },
+            "commitHashWhenCreated": "b97cd6c98c526d04742eb83171d2406612089de5",
+            "numComments": 1,
+            "creatorId": "5bb56a296c347e4bc63c2ab0",
+            "code": "const git = await gitPath();",
+            "commitHash": "b97cd6c98c526d04742eb83171d2406612089de5",
+            "location": [
+              38,
+              2,
+              38,
+              30,
+              {}
+            ],
+            "file": "src/extension.ts",
+            "repoId": "5bbd2460c129b10c668b9fc9",
+            "repo": "github.com/teamcodestream/vscode-codestream",
+            "locationWhenCreated": [
+              38,
+              2,
+              38,
+              30,
+              {}
+            ],
+            "fileStreamId": "5bbd8903c129b10c668b9ff5",
+            "codemarkId": "5be2432c0cbafa40f789c69b",
+            "providerType": "slack",
+            "id": "5bbd8b98c129b10c668b9ffe"
+          }
+        ]
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "streamId": "C7DM92RTN",
+        "postId": "C7DM92RTN|1539148390.000100",
+        "numReplies": 0,
+        "pinned": true,
+        "createdAt": 1539148391162,
+        "modifiedAt": 1544133706601,
+        "_id": "5be2432c0cbafa40f789c699",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "markerIds": [
+          "5bbd8a67c129b10c668b9ffa"
+        ],
+        "fileStreamIds": [
+          "5bbd7011c129b10c668b9fd4"
+        ],
+        "creatorId": "5bb56a296c347e4bc63c2ab0",
+        "providerType": "slack",
+        "text": "asdf",
+        "id": "5be2432c0cbafa40f789c699",
+        "markers": [
+          {
+            "version": 1,
+            "deactivated": false,
+            "createdAt": 1539148391162,
+            "modifiedAt": 1539148391162,
+            "_id": "5bbd8a67c129b10c668b9ffa",
+            "teamId": "5bb51100585ada29401ee9c5",
+            "streamId": "5bbd7011c129b10c668b9fd4",
+            "postId": "C7DM92RTN|1539148390.000100",
+            "postStreamId": "C7DM92RTN",
+            "codeBlock": {
+              "code": "\t\tawait this.waitUntilReady();\n\n\t\t// these comments aren't here yet\n\t\t// and maybe never will\n\n\t\treturn this._streamThread;",
+              "commitHash": "79282ba1b0aec2cf366696f6ea5998ef3dd3b3c6",
+              "location": [
+                744,
+                1,
+                746,
+                29,
+                {}
+              ],
+              "file": "src/webviews/streamWebviewPanel.ts",
+              "repoId": "5bbd2460c129b10c668b9fc9",
+              "repo": "github.com/teamcodestream/vscode-codestream",
+              "streamId": "5bbd7011c129b10c668b9fd4"
+            },
+            "commitHashWhenCreated": "79282ba1b0aec2cf366696f6ea5998ef3dd3b3c6",
+            "numComments": 1,
+            "creatorId": "5bb56a296c347e4bc63c2ab0",
+            "code": "\t\tawait this.waitUntilReady();\n\n\t\t// these comments aren't here yet\n\t\t// and maybe never will\n\n\t\treturn this._streamThread;",
+            "commitHash": "79282ba1b0aec2cf366696f6ea5998ef3dd3b3c6",
+            "location": [
+              744,
+              1,
+              746,
+              29,
+              {}
+            ],
+            "file": "src/webviews/streamWebviewPanel.ts",
+            "repoId": "5bbd2460c129b10c668b9fc9",
+            "repo": "github.com/teamcodestream/vscode-codestream",
+            "locationWhenCreated": [
+              744,
+              1,
+              746,
+              29,
+              {}
+            ],
+            "fileStreamId": "5bbd7011c129b10c668b9fd4",
+            "codemarkId": "5be2432c0cbafa40f789c699",
+            "providerType": "slack",
+            "id": "5bbd8a67c129b10c668b9ffa"
+          }
+        ]
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "streamId": "C7DM92RTN",
+        "postId": "C7DM92RTN|1539148034.000100",
+        "numReplies": 0,
+        "pinned": true,
+        "createdAt": 1539148035154,
+        "modifiedAt": 1543852020887,
+        "_id": "5be2432c0cbafa40f789c697",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "markerIds": [
+          "5bbd8903c129b10c668b9ff6"
+        ],
+        "fileStreamIds": [
+          "5bbd8903c129b10c668b9ff5"
+        ],
+        "creatorId": "5b58a606efb4c720ffe15a78",
+        "providerType": "slack",
+        "text": "commenting on code....",
+        "id": "5be2432c0cbafa40f789c697",
+        "markers": [
+          {
+            "version": 1,
+            "deactivated": false,
+            "createdAt": 1539148035154,
+            "modifiedAt": 1539148035154,
+            "_id": "5bbd8903c129b10c668b9ff6",
+            "teamId": "5bb51100585ada29401ee9c5",
+            "streamId": "5bbd8903c129b10c668b9ff5",
+            "postId": "C7DM92RTN|1539148034.000100",
+            "postStreamId": "C7DM92RTN",
+            "codeBlock": {
+              "code": "\tconst formattedVersion = `${extensionVersion}${info.buildNumber ? `-${info.buildNumber}` : \"\"}${\n\t\tinfo.assetEnvironment && info.assetEnvironment !== \"prod\" ? ` (${info.assetEnvironment})` : \"\"\n\t}`;\n",
+              "commitHash": "b97cd6c98c526d04742eb83171d2406612089de5",
+              "location": [
+                31,
+                1,
+                34,
+                1,
+                {}
+              ],
+              "file": "src/extension.ts",
+              "repoId": "5bbd2460c129b10c668b9fc9",
+              "repo": "github.com/teamcodestream/vscode-codestream",
+              "streamId": "5bbd8903c129b10c668b9ff5"
+            },
+            "commitHashWhenCreated": "b97cd6c98c526d04742eb83171d2406612089de5",
+            "numComments": 1,
+            "creatorId": "5b58a606efb4c720ffe15a78",
+            "code": "\tconst formattedVersion = `${extensionVersion}${info.buildNumber ? `-${info.buildNumber}` : \"\"}${\n\t\tinfo.assetEnvironment && info.assetEnvironment !== \"prod\" ? ` (${info.assetEnvironment})` : \"\"\n\t}`;\n",
+            "commitHash": "b97cd6c98c526d04742eb83171d2406612089de5",
+            "location": [
+              31,
+              1,
+              34,
+              1,
+              {}
+            ],
+            "file": "src/extension.ts",
+            "repoId": "5bbd2460c129b10c668b9fc9",
+            "repo": "github.com/teamcodestream/vscode-codestream",
+            "locationWhenCreated": [
+              31,
+              1,
+              34,
+              1,
+              {}
+            ],
+            "fileStreamId": "5bbd8903c129b10c668b9ff5",
+            "codemarkId": "5be2432c0cbafa40f789c697",
+            "providerType": "slack",
+            "id": "5bbd8903c129b10c668b9ff6"
+          }
+        ]
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "streamId": "C7DM92RTN",
+        "postId": "C7DM92RTN|1539147553.000100",
+        "numReplies": 0,
+        "pinned": true,
+        "createdAt": 1539147553156,
+        "modifiedAt": 1544565929752,
+        "_id": "5be2432c0cbafa40f789c696",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "markerIds": [
+          "5bbd8721c129b10c668b9ff4"
+        ],
+        "fileStreamIds": [
+          "5bbd8612c129b10c668b9ff1"
+        ],
+        "creatorId": "5b58dde6efb4c720ffe15a83",
+        "providerType": "slack",
+        "text": "How about now?",
+        "parentPostId": "C7DM92RTN|1539147553.000100",
+        "id": "5be2432c0cbafa40f789c696",
+        "markers": [
+          {
+            "version": 1,
+            "deactivated": false,
+            "createdAt": 1539147553156,
+            "modifiedAt": 1539147553156,
+            "_id": "5bbd8721c129b10c668b9ff4",
+            "teamId": "5bb51100585ada29401ee9c5",
+            "streamId": "5bbd8612c129b10c668b9ff1",
+            "postId": "C7DM92RTN|1539147553.000100",
+            "postStreamId": "C7DM92RTN",
+            "codeBlock": {
+              "code": "👉 **NOTE!** Make sure to clone the `vscode-codestream` repository into a folder that is a sibling of the `codestream-component` and `codestream-lsp-agent` repositories\n",
+              "commitHash": "9b592ba2483f950e7a62e5bd74a800b6d6daa330",
+              "location": [
+                9,
+                1,
+                10,
+                1,
+                {}
+              ],
+              "file": "DEV_README.md",
+              "repoId": "5bbd2460c129b10c668b9fc9",
+              "repo": "github.com/teamcodestream/vscode-codestream",
+              "streamId": "5bbd8612c129b10c668b9ff1"
+            },
+            "commitHashWhenCreated": "9b592ba2483f950e7a62e5bd74a800b6d6daa330",
+            "numComments": 1,
+            "creatorId": "5b58dde6efb4c720ffe15a83",
+            "code": "👉 **NOTE!** Make sure to clone the `vscode-codestream` repository into a folder that is a sibling of the `codestream-component` and `codestream-lsp-agent` repositories\n",
+            "commitHash": "9b592ba2483f950e7a62e5bd74a800b6d6daa330",
+            "location": [
+              9,
+              1,
+              10,
+              1,
+              {}
+            ],
+            "file": "DEV_README.md",
+            "repoId": "5bbd2460c129b10c668b9fc9",
+            "repo": "github.com/teamcodestream/vscode-codestream",
+            "locationWhenCreated": [
+              9,
+              1,
+              10,
+              1,
+              {}
+            ],
+            "fileStreamId": "5bbd8612c129b10c668b9ff1",
+            "codemarkId": "5be2432c0cbafa40f789c696",
+            "providerType": "slack",
+            "id": "5bbd8721c129b10c668b9ff4"
+          }
+        ]
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "streamId": "C7DM92RTN",
+        "postId": "C7DM92RTN|1539145632.000100",
+        "numReplies": 0,
+        "pinned": true,
+        "createdAt": 1539145632377,
+        "modifiedAt": 1544133706770,
+        "_id": "5be2432c0cbafa40f789c694",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "markerIds": [
+          "5bbd7fa0c129b10c668b9ff0"
+        ],
+        "fileStreamIds": [
+          "5bbd2460c129b10c668b9fca"
+        ],
+        "creatorId": "5bb56a296c347e4bc63c2ab0",
+        "providerType": "slack",
+        "text": "@Akonwi how about this one?\n\n```## Add comments to ongoing discussions```",
+        "parentPostId": "C7DM92RTN|1539145632.000100",
+        "id": "5be2432c0cbafa40f789c694",
+        "markers": [
+          {
+            "version": 1,
+            "deactivated": false,
+            "createdAt": 1539145632377,
+            "modifiedAt": 1539145632377,
+            "_id": "5bbd7fa0c129b10c668b9ff0",
+            "teamId": "5bb51100585ada29401ee9c5",
+            "streamId": "5bbd2460c129b10c668b9fca",
+            "postId": "C7DM92RTN|1539145632.000100",
+            "postStreamId": "C7DM92RTN",
+            "codeBlock": {
+              "code": "## Add comments to ongoing discussions",
+              "commitHash": "a173e9236d7c93741b593edf63b4c90a55702dd0",
+              "location": [
+                24,
+                1,
+                24,
+                39,
+                {}
+              ],
+              "file": "README.md",
+              "repoId": "5bbd2460c129b10c668b9fc9",
+              "repo": "github.com/teamcodestream/vscode-codestream",
+              "streamId": "5bbd2460c129b10c668b9fca"
+            },
+            "commitHashWhenCreated": "a173e9236d7c93741b593edf63b4c90a55702dd0",
+            "numComments": 1,
+            "creatorId": "5bb56a296c347e4bc63c2ab0",
+            "code": "## Add comments to ongoing discussions",
+            "commitHash": "a173e9236d7c93741b593edf63b4c90a55702dd0",
+            "location": [
+              24,
+              1,
+              24,
+              39,
+              {}
+            ],
+            "file": "README.md",
+            "repoId": "5bbd2460c129b10c668b9fc9",
+            "repo": "github.com/teamcodestream/vscode-codestream",
+            "locationWhenCreated": [
+              24,
+              1,
+              24,
+              39,
+              {}
+            ],
+            "fileStreamId": "5bbd2460c129b10c668b9fca",
+            "codemarkId": "5be2432c0cbafa40f789c694",
+            "providerType": "slack",
+            "id": "5bbd7fa0c129b10c668b9ff0"
+          }
+        ]
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "streamId": "C7DM92RTN",
+        "postId": "C7DM92RTN|1539145341.000100",
+        "numReplies": 0,
+        "pinned": true,
+        "createdAt": 1539145341192,
+        "modifiedAt": 1543618660285,
+        "_id": "5be2432c0cbafa40f789c693",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "markerIds": [
+          "5bbd7e7dc129b10c668b9fee"
+        ],
+        "fileStreamIds": [
+          "5bbd7cbbc129b10c668b9feb"
+        ],
+        "creatorId": "5b6ca95ca51ac46638670186",
+        "providerType": "slack",
+        "text": "juvenile\n\n```Pubic Assets```",
+        "id": "5be2432c0cbafa40f789c693",
+        "markers": [
+          {
+            "version": 1,
+            "deactivated": false,
+            "createdAt": 1539145341192,
+            "modifiedAt": 1539145341192,
+            "_id": "5bbd7e7dc129b10c668b9fee",
+            "teamId": "5bb51100585ada29401ee9c5",
+            "streamId": "5bbd7cbbc129b10c668b9feb",
+            "postId": "C7DM92RTN|1539145341.000100",
+            "postStreamId": "C7DM92RTN",
+            "codeBlock": {
+              "code": "Pubic Assets",
+              "commitHash": "019284710733d880bc679ee5e80574ea57952263",
+              "location": [
+                13,
+                1,
+                13,
+                14,
+                {}
+              ],
+              "file": "README.build.md",
+              "repoId": "5bbd2460c129b10c668b9fc9",
+              "repo": "github.com/teamcodestream/vscode-codestream",
+              "streamId": "5bbd7cbbc129b10c668b9feb"
+            },
+            "commitHashWhenCreated": "019284710733d880bc679ee5e80574ea57952263",
+            "numComments": 1,
+            "creatorId": "5b6ca95ca51ac46638670186",
+            "code": "Pubic Assets",
+            "commitHash": "019284710733d880bc679ee5e80574ea57952263",
+            "location": [
+              13,
+              1,
+              13,
+              14,
+              {}
+            ],
+            "file": "README.build.md",
+            "repoId": "5bbd2460c129b10c668b9fc9",
+            "repo": "github.com/teamcodestream/vscode-codestream",
+            "locationWhenCreated": [
+              13,
+              1,
+              13,
+              14,
+              {}
+            ],
+            "fileStreamId": "5bbd7cbbc129b10c668b9feb",
+            "codemarkId": "5be2432c0cbafa40f789c693",
+            "providerType": "slack",
+            "id": "5bbd7e7dc129b10c668b9fee"
+          }
+        ]
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "streamId": "C7DM92RTN",
+        "postId": "C7DM92RTN|1539142335.000100",
+        "numReplies": 0,
+        "pinned": true,
+        "createdAt": 1539142335731,
+        "modifiedAt": 1544133707112,
+        "_id": "5be2432c0cbafa40f789c690",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "markerIds": [
+          "5bbd72bfc129b10c668b9fdb"
+        ],
+        "fileStreamIds": [
+          "5bbd2460c129b10c668b9fca"
+        ],
+        "creatorId": "5bb56a296c347e4bc63c2ab0",
+        "providerType": "slack",
+        "text": "@Akonwi you should see a marker on line 16\n\n```# Things to Try```",
+        "parentPostId": "C7DM92RTN|1539142335.000100",
+        "id": "5be2432c0cbafa40f789c690",
+        "markers": [
+          {
+            "version": 1,
+            "deactivated": false,
+            "createdAt": 1539142335731,
+            "modifiedAt": 1539142335731,
+            "_id": "5bbd72bfc129b10c668b9fdb",
+            "teamId": "5bb51100585ada29401ee9c5",
+            "streamId": "5bbd2460c129b10c668b9fca",
+            "postId": "C7DM92RTN|1539142335.000100",
+            "postStreamId": "C7DM92RTN",
+            "codeBlock": {
+              "code": "# Things to Try",
+              "commitHash": "a173e9236d7c93741b593edf63b4c90a55702dd0",
+              "location": [
+                16,
+                1,
+                16,
+                16,
+                {}
+              ],
+              "file": "README.md",
+              "repoId": "5bbd2460c129b10c668b9fc9",
+              "repo": "github.com/teamcodestream/vscode-codestream",
+              "streamId": "5bbd2460c129b10c668b9fca"
+            },
+            "commitHashWhenCreated": "a173e9236d7c93741b593edf63b4c90a55702dd0",
+            "numComments": 1,
+            "creatorId": "5bb56a296c347e4bc63c2ab0",
+            "code": "# Things to Try",
+            "commitHash": "a173e9236d7c93741b593edf63b4c90a55702dd0",
+            "location": [
+              16,
+              1,
+              16,
+              16,
+              {}
+            ],
+            "file": "README.md",
+            "repoId": "5bbd2460c129b10c668b9fc9",
+            "repo": "github.com/teamcodestream/vscode-codestream",
+            "locationWhenCreated": [
+              16,
+              1,
+              16,
+              16,
+              {}
+            ],
+            "fileStreamId": "5bbd2460c129b10c668b9fca",
+            "codemarkId": "5be2432c0cbafa40f789c690",
+            "providerType": "slack",
+            "id": "5bbd72bfc129b10c668b9fdb"
+          }
+        ]
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "streamId": "C7DM92RTN",
+        "postId": "C7DM92RTN|1539141649.000100",
+        "numReplies": 0,
+        "pinned": true,
+        "createdAt": 1539141649271,
+        "modifiedAt": 1544133707413,
+        "_id": "5be2432c0cbafa40f789c68e",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "markerIds": [
+          "5bbd7011c129b10c668b9fd5"
+        ],
+        "fileStreamIds": [
+          "5bbd7011c129b10c668b9fd4"
+        ],
+        "creatorId": "5bb56a296c347e4bc63c2ab0",
+        "providerType": "slack",
+        "text": "@Akonwi: this is not a marker\n\n```interface CSWebviewRequest {\n\tid: string;\n\taction: string;\n\tparams: any;\n}```",
+        "parentPostId": "C7DM92RTN|1539141649.000100",
+        "id": "5be2432c0cbafa40f789c68e",
+        "markers": [
+          {
+            "version": 1,
+            "deactivated": false,
+            "createdAt": 1539141649271,
+            "modifiedAt": 1539141649271,
+            "_id": "5bbd7011c129b10c668b9fd5",
+            "teamId": "5bb51100585ada29401ee9c5",
+            "streamId": "5bbd7011c129b10c668b9fd4",
+            "postId": "C7DM92RTN|1539141649.000100",
+            "postStreamId": "C7DM92RTN",
+            "codeBlock": {
+              "code": "interface CSWebviewRequest {\n\tid: string;\n\taction: string;\n\tparams: any;\n}",
+              "commitHash": "79282ba1b0aec2cf366696f6ea5998ef3dd3b3c6",
+              "location": [
+                76,
+                1,
+                80,
+                2,
+                {}
+              ],
+              "file": "src/webviews/streamWebviewPanel.ts",
+              "repoId": "5bbd2460c129b10c668b9fc9",
+              "repo": "github.com/teamcodestream/vscode-codestream",
+              "streamId": "5bbd7011c129b10c668b9fd4"
+            },
+            "commitHashWhenCreated": "79282ba1b0aec2cf366696f6ea5998ef3dd3b3c6",
+            "numComments": 1,
+            "creatorId": "5bb56a296c347e4bc63c2ab0",
+            "code": "interface CSWebviewRequest {\n\tid: string;\n\taction: string;\n\tparams: any;\n}",
+            "commitHash": "79282ba1b0aec2cf366696f6ea5998ef3dd3b3c6",
+            "location": [
+              76,
+              1,
+              80,
+              2,
+              {}
+            ],
+            "file": "src/webviews/streamWebviewPanel.ts",
+            "repoId": "5bbd2460c129b10c668b9fc9",
+            "repo": "github.com/teamcodestream/vscode-codestream",
+            "locationWhenCreated": [
+              76,
+              1,
+              80,
+              2,
+              {}
+            ],
+            "fileStreamId": "5bbd7011c129b10c668b9fd4",
+            "codemarkId": "5be2432c0cbafa40f789c68e",
+            "providerType": "slack",
+            "id": "5bbd7011c129b10c668b9fd5"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,901 @@
+{
+  "method": "codeStream/users",
+  "request": {},
+  "response": {
+    "users": [
+      {
+        "version": 92,
+        "deactivated": false,
+        "phoneNumber": "",
+        "iWorkOn": "",
+        "providerIdentities": [
+          "slack::U7H4N1A6B"
+        ],
+        "createdAt": 1538615849591,
+        "modifiedAt": 1541624668002,
+        "_id": "5bb56a296c347e4bc63c2ab0",
+        "email": "marcelo@codestream.com",
+        "username": "marcelo",
+        "timeZone": "America/New_York",
+        "creatorId": "5bb56a296c347e4bc63c2ab0",
+        "isRegistered": true,
+        "registeredAt": 1539020051997,
+        "joinMethod": "Created Team",
+        "primaryReferral": "external",
+        "originTeamId": "5bbb9527ce36105aede3d176",
+        "companyIds": [
+          "5bbb9527ce36105aede3d177",
+          "5bb51100585ada29401ee9c6",
+          "5bfdd197e8a06548106a10e8"
+        ],
+        "teamIds": [
+          "5bbb9527ce36105aede3d176",
+          "5bb51100585ada29401ee9c5",
+          "5bfdd197e8a06548106a10e7"
+        ],
+        "lastLogin": 1545336592612,
+        "id": "U7H4N1A6B",
+        "lastReads": {
+          "5bfdd197e8a06548106a10e9": 4
+        },
+        "preferences": {
+          "telemetryConsent": true,
+          "emojiPicker-last": "stuffed_flatbread",
+          "emojiPicker-frequently": {
+            "+1": 9,
+            "bridge_at_night": 1,
+            "grinning": 8,
+            "heart_eyes": 6,
+            "joy": 2,
+            "kissing_heart": 7,
+            "laughing": 5,
+            "scream": 1,
+            "stuck_out_tongue_winking_eye": 4,
+            "sweat_smile": 3,
+            "stuffed_flatbread": 1
+          },
+          "markerFileFilter": "all",
+          "markerTypeFilter": "all",
+          "showChannels": "all",
+          "mutedStreams": {
+            "C7Q0BDVPF": true,
+            "CENV60J86": true,
+            "CENV45Y1L": true
+          }
+        },
+        "totalPosts": 168,
+        "lastPostCreatedAt": 1539049363704,
+        "providerInfo": {
+          "slack": {
+            "userId": "U7H4N1A6B",
+            "teamId": "T7DDT1L5R",
+            "accessToken": "xoxp-251469054195-255158044215-452121319443-10f9492e5ca1ecc88df6e2adb0d6eb05"
+          }
+        },
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2017-10-10/255006171158_b88877789677b8c3a821_original.jpg",
+          "image48": "https://avatars.slack-edge.com/2017-10-10/255006171158_b88877789677b8c3a821_48.jpg"
+        },
+        "firstName": "Marcelo",
+        "fullName": "Marcelo Bukowski de Farias",
+        "lastName": "Bukowski de Farias"
+      },
+      {
+        "avatar": {
+          "image48": "https://a.slack-edge.com/7f1a0/plugins/slackbot/assets/service_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "USLACKBOT",
+        "deactivated": false,
+        "email": "cs-USLACKBOT@unknown.com",
+        "firstName": "slackbot",
+        "fullName": "slackbot",
+        "id": "USLACKBOT",
+        "isRegistered": true,
+        "lastPostCreatedAt": 0,
+        "lastName": "",
+        "modifiedAt": 0,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": null,
+        "totalPosts": 0,
+        "username": "slackbot"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2017-12-14/286298964416_e28e979db3ca1e465ad0_original.jpg",
+          "image48": "https://avatars.slack-edge.com/2017-12-14/286298964416_e28e979db3ca1e465ad0_48.jpg"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U7CS9PYJU",
+        "deactivated": false,
+        "email": "pez@codestream.com",
+        "firstName": "Peter",
+        "fullName": "Peter Pezaris",
+        "id": "U7CS9PYJU",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1545336145,
+        "lastName": "Pezaris",
+        "modifiedAt": 1545336145,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/New_York",
+        "totalPosts": 0,
+        "username": "pez"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2017-11-02/266147149250_ae5658d083c436d16d5c_original.jpg",
+          "image48": "https://avatars.slack-edge.com/2017-11-02/266147149250_ae5658d083c436d16d5c_48.jpg"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U7CT4071N",
+        "deactivated": false,
+        "email": "colin@codestream.com",
+        "firstName": "Colin",
+        "fullName": "Colin Stryker",
+        "id": "U7CT4071N",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1544999119,
+        "lastName": "Stryker",
+        "modifiedAt": 1544999119,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/New_York",
+        "totalPosts": 0,
+        "username": "colin"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2017-10-04/252676086919_7ecd10d84d8635b432e1_original.jpg",
+          "image48": "https://avatars.slack-edge.com/2017-10-04/252676086919_7ecd10d84d8635b432e1_48.jpg"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U7DJW0ZQU",
+        "deactivated": false,
+        "email": "jj@codestream.com",
+        "firstName": "James",
+        "fullName": "James Price",
+        "id": "U7DJW0ZQU",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1544835997,
+        "lastName": "Price",
+        "modifiedAt": 1544835997,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/New_York",
+        "totalPosts": 0,
+        "username": "jj"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2017-10-09/254673793031_f3a52fc10d023bd8ac62_original.jpg",
+          "image48": "https://avatars.slack-edge.com/2017-10-09/254673793031_f3a52fc10d023bd8ac62_48.jpg"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U7EPCTGCU",
+        "deactivated": false,
+        "email": "claudio@codestream.com",
+        "firstName": "Claudio",
+        "fullName": "Claudio Pinkus",
+        "id": "U7EPCTGCU",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1545174370,
+        "lastName": "Pinkus",
+        "modifiedAt": 1545174370,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "Claudio"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2017-11-13/271500982754_b0117b1308be975cdda7_original.png",
+          "image48": "https://avatars.slack-edge.com/2017-11-13/271500982754_b0117b1308be975cdda7_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U7EV7SB71",
+        "deactivated": false,
+        "email": "michael@codestream.com",
+        "firstName": "Michael",
+        "fullName": "Michael Gersh",
+        "id": "U7EV7SB71",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1545336145,
+        "lastName": "Gersh",
+        "modifiedAt": 1545336145,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/New_York",
+        "totalPosts": 0,
+        "username": "Gersh"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2017-11-13/271448216772_a1ba6ad49a69c4f403f4_original.jpg",
+          "image48": "https://avatars.slack-edge.com/2017-11-13/271448216772_a1ba6ad49a69c4f403f4_48.jpg"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U7FNCE5NX",
+        "deactivated": false,
+        "email": "akonwi@codestream.com",
+        "firstName": "Akonwi",
+        "fullName": "Akonwi Ngoh",
+        "id": "U7FNCE5NX",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1544030165,
+        "lastName": "Ngoh",
+        "modifiedAt": 1544030165,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/New_York",
+        "totalPosts": 0,
+        "username": "Akonwi"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2017-11-08/270185695478_283aafac4a7b20f5f36e_original.png",
+          "image48": "https://avatars.slack-edge.com/2017-11-08/270185695478_283aafac4a7b20f5f36e_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U7H59LZ8E",
+        "deactivated": false,
+        "email": "cs-U7H59LZ8E@unknown.com",
+        "firstName": "Google",
+        "fullName": "Google Drive",
+        "id": "U7H59LZ8E",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1510181152,
+        "lastName": "Drive",
+        "modifiedAt": 1510181152,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "Google Drive"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2017-10-17/257701729315_d5414562921c241a37ec_original.png",
+          "image48": "https://avatars.slack-edge.com/2017-10-17/257701729315_d5414562921c241a37ec_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U7KQF2ZE0",
+        "deactivated": false,
+        "email": "cs-U7KQF2ZE0@unknown.com",
+        "fullName": "trello",
+        "id": "U7KQF2ZE0",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1508270124,
+        "modifiedAt": 1508270124,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "trello"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2018-11-30/492021987344_65cb2d06f9b998d37d9f_original.png",
+          "image48": "https://avatars.slack-edge.com/2018-11-30/492021987344_65cb2d06f9b998d37d9f_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U7TF0TDKN",
+        "deactivated": false,
+        "email": "cs-U7TF0TDKN@unknown.com",
+        "firstName": "Jira",
+        "fullName": "Jira Cloud",
+        "id": "U7TF0TDKN",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1543615560,
+        "lastName": "Cloud",
+        "modifiedAt": 1543615560,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "jirabot"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2017-11-01/265608671604_a394d6766ae51c0dbb1b_original.jpg",
+          "image48": "https://avatars.slack-edge.com/2017-11-01/265608671604_a394d6766ae51c0dbb1b_48.jpg"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U7TGBBENN",
+        "deactivated": false,
+        "email": "cs-U7TGBBENN@unknown.com",
+        "firstName": "rosie",
+        "fullName": "rosie",
+        "id": "U7TGBBENN",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1509569332,
+        "lastName": "",
+        "modifiedAt": 1509569332,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "rosie"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2017-11-13/272255178742_c0a38018cf824918eb54_original.jpg",
+          "image48": "https://avatars.slack-edge.com/2017-11-13/272255178742_c0a38018cf824918eb54_48.jpg"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U7YNDN2VD",
+        "deactivated": false,
+        "email": "dave@codestream.com",
+        "firstName": "David",
+        "fullName": "David Hersh",
+        "id": "U7YNDN2VD",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1544559072,
+        "lastName": "Hersh",
+        "modifiedAt": 1544559072,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/New_York",
+        "totalPosts": 0,
+        "username": "Dave"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2018-05-23/369057793891_c5066f21e577241e1daa_original.png",
+          "image48": "https://avatars.slack-edge.com/2018-05-23/369057793891_c5066f21e577241e1daa_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U878A495J",
+        "deactivated": false,
+        "email": "cs-U878A495J@unknown.com",
+        "firstName": "Stratejos",
+        "fullName": "Stratejos - Jira Slack Integration",
+        "id": "U878A495J",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1527108513,
+        "lastName": "- Jira Slack Integration",
+        "modifiedAt": 1527108513,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "jirio"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2018-05-07/359435574067_670d171e20b0f2c0f7bb_original.png",
+          "image48": "https://avatars.slack-edge.com/2018-05-07/359435574067_670d171e20b0f2c0f7bb_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U8Q7AH4N4",
+        "deactivated": false,
+        "email": "cs-U8Q7AH4N4@unknown.com",
+        "firstName": "Slite",
+        "fullName": "Slite",
+        "id": "U8Q7AH4N4",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1525704557,
+        "lastName": "",
+        "modifiedAt": 1525704557,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "slitebot"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2018-01-11/297582557860_fd059c018ed9ea00c0fc_original.png",
+          "image48": "https://avatars.slack-edge.com/2018-01-11/297582557860_fd059c018ed9ea00c0fc_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U8R19794H",
+        "deactivated": false,
+        "email": "cs-U8R19794H@unknown.com",
+        "fullName": "Polly",
+        "id": "U8R19794H",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1515696397,
+        "modifiedAt": 1515696397,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "polly"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2018-11-16/481940250036_6287fb461098da5ae90d_original.png",
+          "image48": "https://avatars.slack-edge.com/2018-11-16/481940250036_6287fb461098da5ae90d_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U90FAMCN7",
+        "deactivated": false,
+        "email": "cs-U90FAMCN7@unknown.com",
+        "firstName": "Workast",
+        "fullName": "Workast",
+        "id": "U90FAMCN7",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1542412235,
+        "lastName": "",
+        "modifiedAt": 1542412235,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "todobot"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2018-06-01/374587287413_fe65db3deeab3109c1ae_original.png",
+          "image48": "https://avatars.slack-edge.com/2018-06-01/374587287413_fe65db3deeab3109c1ae_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U93JZASCQ",
+        "deactivated": false,
+        "email": "cs-U93JZASCQ@unknown.com",
+        "firstName": "M.io",
+        "fullName": "M.io",
+        "id": "U93JZASCQ",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1527897482,
+        "lastName": "",
+        "modifiedAt": 1527897482,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "mio"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2018-02-12/313904511493_197f5c8ec3e8a6fb4cda_original.png",
+          "image48": "https://avatars.slack-edge.com/2018-02-12/313904511493_197f5c8ec3e8a6fb4cda_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U9792MEGM",
+        "deactivated": false,
+        "email": "cs-U9792MEGM@unknown.com",
+        "firstName": "Letterbox",
+        "fullName": "Letterbox",
+        "id": "U9792MEGM",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1518452607,
+        "lastName": "",
+        "modifiedAt": 1518452607,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "letterbox"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2018-03-12/329576192310_5b6e84c8cda4b17c8ffe_original.png",
+          "image48": "https://avatars.slack-edge.com/2018-03-12/329576192310_5b6e84c8cda4b17c8ffe_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U9NJHBA8K",
+        "deactivated": false,
+        "email": "cs-U9NJHBA8K@unknown.com",
+        "fullName": "GitHub",
+        "id": "U9NJHBA8K",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1520891775,
+        "modifiedAt": 1520891775,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "github"
+      },
+      {
+        "avatar": {
+          "image48": "https://secure.gravatar.com/avatar/6cee6b6e49f3b2e572283447b7528ebb.jpg?s=48&d=https%3A%2F%2Fa.slack-edge.com%2F66f9%2Fimg%2Favatars%2Fava_0000-48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U9NP82DUL",
+        "deactivated": false,
+        "email": "cs-U9NP82DUL@unknown.com",
+        "firstName": "CodeStream",
+        "fullName": "CodeStream (pd slackbot)",
+        "id": "U9NP82DUL",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1540178454,
+        "lastName": "(pd slackbot)",
+        "modifiedAt": 1540178454,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "codestream.pd"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2018-10-10/453583548133_18537ec415146e85a1fc_original.png",
+          "image48": "https://avatars.slack-edge.com/2018-10-10/453583548133_18537ec415146e85a1fc_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U9QLRMKDY",
+        "deactivated": false,
+        "email": "cs-U9QLRMKDY@unknown.com",
+        "firstName": "CodeStream",
+        "fullName": "CodeStream (bot)",
+        "id": "U9QLRMKDY",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1539191745,
+        "lastName": "(bot)",
+        "modifiedAt": 1539191745,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "codestream_helper"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2018-03-15/330390934049_62bf0ffa4da8972b3124_original.png",
+          "image48": "https://avatars.slack-edge.com/2018-03-15/330390934049_62bf0ffa4da8972b3124_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U9QPXSR3M",
+        "deactivated": false,
+        "email": "eric@codestream.com",
+        "firstName": "Eric",
+        "fullName": "Eric Amodio",
+        "id": "U9QPXSR3M",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1545261782,
+        "lastName": "Amodio",
+        "modifiedAt": 1545261782,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/New_York",
+        "totalPosts": 0,
+        "username": "Eric"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2018-12-14/503941121104_e3a00baf44138902dbe7_original.jpg",
+          "image48": "https://avatars.slack-edge.com/2018-12-14/503941121104_e3a00baf44138902dbe7_48.jpg"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "U9ZBV29M4",
+        "deactivated": false,
+        "email": "me@bpmct.net",
+        "firstName": "Ben",
+        "fullName": "Ben Potter",
+        "id": "U9ZBV29M4",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1544831044,
+        "lastName": "Potter",
+        "modifiedAt": 1544831044,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "Ben"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2018-05-16/365147683781_b6caa75fefc474b20855_original.png",
+          "image48": "https://avatars.slack-edge.com/2018-05-16/365147683781_b6caa75fefc474b20855_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "UAQ97BS6L",
+        "deactivated": false,
+        "email": "cs-UAQ97BS6L@unknown.com",
+        "fullName": "Wonder",
+        "id": "UAQ97BS6L",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1526490318,
+        "modifiedAt": 1526490318,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "wonder"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2018-10-23/461596885248_7ee1fc1b2787784f4f9b_original.png",
+          "image48": "https://avatars.slack-edge.com/2018-10-23/461596885248_7ee1fc1b2787784f4f9b_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "UAUATCSCE",
+        "deactivated": false,
+        "email": "muchai@codestream.com",
+        "firstName": "Mercy",
+        "fullName": "Mercy Muchai",
+        "id": "UAUATCSCE",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1543404366,
+        "lastName": "Muchai",
+        "modifiedAt": 1543404366,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "Africa/Nairobi",
+        "totalPosts": 0,
+        "username": "muchai"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2018-08-30/426895880005_94010763dbfce6b3cd42_original.png",
+          "image48": "https://avatars.slack-edge.com/2018-08-30/426895880005_94010763dbfce6b3cd42_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "UCL2G3VPG",
+        "deactivated": false,
+        "email": "cs-UCL2G3VPG@unknown.com",
+        "fullName": "Ziri",
+        "id": "UCL2G3VPG",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1535679384,
+        "modifiedAt": 1535679384,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "ziri"
+      },
+      {
+        "avatar": {
+          "image48": "https://secure.gravatar.com/avatar/af4e661ab579b321b4a690f45aa10c93.jpg?s=48&d=https%3A%2F%2Fa.slack-edge.com%2F66f9%2Fimg%2Favatars%2Fava_0015-48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "UDCCVLSMS",
+        "deactivated": false,
+        "email": "colin.stryker@gmail.com",
+        "fullName": "Colin Stryker (gmail)",
+        "id": "UDCCVLSMS",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1539300559,
+        "modifiedAt": 1539300559,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "colin (gmail)"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2018-11-07/475418009190_e1794b33d4161fd7538d_original.png",
+          "image48": "https://avatars.slack-edge.com/2018-11-07/475418009190_e1794b33d4161fd7538d_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "UDY0JCDQS",
+        "deactivated": false,
+        "email": "cs-UDY0JCDQS@unknown.com",
+        "fullName": "Sentry",
+        "id": "UDY0JCDQS",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1541607798,
+        "modifiedAt": 1541607798,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "sentry"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2018-11-26/488309058274_81266074153e1d666447_original.jpg",
+          "image48": "https://avatars.slack-edge.com/2018-11-26/488309058274_81266074153e1d666447_48.jpg"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "UEC3ZJ58U",
+        "deactivated": false,
+        "email": "brian@codestream.com",
+        "firstName": "Brian",
+        "fullName": "Brian Canzanella",
+        "id": "UEC3ZJ58U",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1545261783,
+        "lastName": "Canzanella",
+        "modifiedAt": 1545261783,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/New_York",
+        "totalPosts": 0,
+        "username": "Brian"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2018-12-06/498109604757_341ba26929cb96d94360_original.png",
+          "image48": "https://avatars.slack-edge.com/2018-12-06/498109604757_341ba26929cb96d94360_48.png"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "UEM52JA4Q",
+        "deactivated": false,
+        "email": "cs-UEM52JA4Q@unknown.com",
+        "fullName": "sunsama",
+        "id": "UEM52JA4Q",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1544158530,
+        "modifiedAt": 1544158530,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "sunsama"
+      },
+      {
+        "avatar": {
+          "image": "https://avatars.slack-edge.com/2018-12-12/501482145216_69eeaf103e6277a37067_original.jpg",
+          "image48": "https://avatars.slack-edge.com/2018-12-12/501482145216_69eeaf103e6277a37067_48.jpg"
+        },
+        "companyIds": [],
+        "createdAt": 181886400000,
+        "creatorId": "UESCB7V37",
+        "deactivated": false,
+        "email": "cs-UESCB7V37@unknown.com",
+        "fullName": "Jirafe",
+        "id": "UESCB7V37",
+        "isRegistered": true,
+        "lastPostCreatedAt": 1544634135,
+        "modifiedAt": 1544634135,
+        "numInvites": 0,
+        "numMentions": 0,
+        "registeredAt": 181886400000,
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "timeZone": "America/Los_Angeles",
+        "totalPosts": 0,
+        "username": "jirafe"
+      }
+    ]
+  }
+}

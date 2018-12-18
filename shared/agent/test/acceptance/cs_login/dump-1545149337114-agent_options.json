@@ -1,0 +1,20 @@
+{
+  "extension": {
+    "build": "",
+    "buildEnv": "dev",
+    "version": "0.30.3",
+    "versionFormatted": "0.30.3 (dev)"
+  },
+  "gitPath": "/opt/local/bin/git",
+  "ide": {
+    "name": "VS Code",
+    "version": "1.31.0-exploration"
+  },
+  "isDebugging": true,
+  "serverUrl": "https://pd-api.codestream.us:9443",
+  "traceLevel": "debug",
+  "email": "marcelo+1@codestream.com",
+  "passwordOrToken": "marcelo1",
+  "team": "Team CodeStream",
+  "dumpRequests": true
+}

@@ -1,0 +1,102 @@
+{
+  "method": "codeStream/teams",
+  "request": {
+    "mine": true
+  },
+  "response": {
+    "teams": [
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1538593024654,
+        "modifiedAt": 1538593024654,
+        "_id": "5bb51100585ada29401ee9c5",
+        "name": "CodeStream",
+        "creatorId": "5b6ca95ca51ac46638670186",
+        "memberIds": [
+          "U7H4N1A6B",
+          "USLACKBOT",
+          "U7CS9PYJU",
+          "U7CT4071N",
+          "U7DJW0ZQU",
+          "U7EPCTGCU",
+          "U7EV7SB71",
+          "U7FNCE5NX",
+          "U7H59LZ8E",
+          "U7KQF2ZE0",
+          "U7TF0TDKN",
+          "U7TGBBENN",
+          "U7YNDN2VD",
+          "U878A495J",
+          "U8Q7AH4N4",
+          "U8R19794H",
+          "U90FAMCN7",
+          "U93JZASCQ",
+          "U9792MEGM",
+          "U9NJHBA8K",
+          "U9NP82DUL",
+          "U9QLRMKDY",
+          "U9QPXSR3M",
+          "U9ZBV29M4",
+          "UAQ97BS6L",
+          "UAUATCSCE",
+          "UCL2G3VPG",
+          "UDCCVLSMS",
+          "UDY0JCDQS",
+          "UEC3ZJ58U",
+          "UEM52JA4Q",
+          "UESCB7V37"
+        ],
+        "adminIds": [
+          "5b6ca95ca51ac46638670186"
+        ],
+        "providerInfo": {
+          "slack": {
+            "teamId": "T7DDT1L5R"
+          }
+        },
+        "primaryReferral": "internal",
+        "companyId": "5bb51100585ada29401ee9c6",
+        "id": "5bb51100585ada29401ee9c5"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1539020071346,
+        "modifiedAt": 1539020071346,
+        "_id": "5bbb9527ce36105aede3d176",
+        "name": "codestream",
+        "creatorId": "5bb56a296c347e4bc63c2ab0",
+        "memberIds": [
+          "5bb56a296c347e4bc63c2ab0"
+        ],
+        "adminIds": [
+          "5bb56a296c347e4bc63c2ab0"
+        ],
+        "primaryReferral": "external",
+        "companyId": "5bbb9527ce36105aede3d177",
+        "id": "5bbb9527ce36105aede3d176"
+      },
+      {
+        "version": 3,
+        "deactivated": false,
+        "createdAt": 1543360919747,
+        "modifiedAt": 1543360919747,
+        "_id": "5bfdd197e8a06548106a10e7",
+        "name": "Colin's Own Team",
+        "creatorId": "5bfdd16ae8a06548106a10e5",
+        "memberIds": [
+          "5bfdd16ae8a06548106a10e5",
+          "5bb56a296c347e4bc63c2ab0",
+          "5bfddc80e8a06548106a1106"
+        ],
+        "adminIds": [
+          "5bfdd16ae8a06548106a10e5"
+        ],
+        "primaryReferral": "external",
+        "companyId": "5bfdd197e8a06548106a10e8",
+        "id": "5bfdd197e8a06548106a10e7"
+      }
+    ]
+  }
+}

@@ -178,6 +178,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 		};
 	}
 
+	async dispose() {
+		if (this._events) {
+			await this._events.dispose();
+		}
+	}
+
 	async login(options: LoginOptions): Promise<LoginResponse & { teamId: string }> {
 		let response;
 		switch (options.type) {
@@ -1077,7 +1083,35 @@ export class CodeStreamApiProvider implements ApiProvider {
 				throw await this.handleErrorResponse(resp);
 			}
 
-			return CodeStreamApiProvider.normalizeResponse(await json!);
+			const _json = await json!;
+
+			if (Container.instance().session.recordRequests && init) {
+				const now = Date.now();
+				const { method, body } = init;
+
+				const fs = require("fs");
+				const sanitize = require("sanitize-filename");
+				const sanitizedURL = sanitize(
+					url
+						.split("?")[0]
+						.replace(/\//g, "_")
+						.replace("_", "")
+				);
+				const filename = `/tmp/dump-${now}-csapi-${method}-${sanitizedURL}.json`;
+
+				const out = {
+					url: url,
+					request: typeof body === "string" ? JSON.parse(body) : body,
+					response: _json
+				};
+				const outString = JSON.stringify(out, null, 2);
+
+				fs.writeFile(filename, outString, "utf8", () => {
+					Logger.log(`Written ${filename}`);
+				});
+			}
+
+			return CodeStreamApiProvider.normalizeResponse(_json);
 		} finally {
 			Logger.log(
 				`${traceResult}${

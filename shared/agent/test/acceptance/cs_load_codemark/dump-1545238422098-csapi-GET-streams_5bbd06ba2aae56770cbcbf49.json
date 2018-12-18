@@ -1,0 +1,23 @@
+{
+  "url": "/streams/5bbd06ba2aae56770cbcbf49",
+  "response": {
+    "stream": {
+      "version": 187,
+      "deactivated": false,
+      "createdAt": 1539114682475,
+      "modifiedAt": 1539114682475,
+      "_id": "5bbd06ba2aae56770cbcbf49",
+      "teamId": "5bbd06ba2aae56770cbcbf47",
+      "type": "channel",
+      "name": "general",
+      "isTeamStream": true,
+      "privacy": "public",
+      "creatorId": "5bbd06952aae56770cbcbf45",
+      "sortId": "5c1a6efb6234b62fafbb64ba",
+      "mostRecentPostId": "5c1a6efb6234b62fafbb64ba",
+      "mostRecentPostCreatedAt": 1545236219048,
+      "numMarkers": 43,
+      "id": "5bbd06ba2aae56770cbcbf49"
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "method": "codeStream/repos",
+  "request": {},
+  "response": {
+    "repos": [
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1539116328198,
+        "modifiedAt": 1539116328198,
+        "_id": "5bbd0d282aae56770cbcbf52",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/marcelofarias/atom",
+            "normalizedUrl": "github.com/marcelofarias/atom",
+            "companyIdentifier": "github.com/marcelofarias"
+          },
+          {
+            "url": "github.com/teamcodestream/atom",
+            "normalizedUrl": "github.com/teamcodestream/atom",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "atom",
+        "id": "5bbd0d282aae56770cbcbf52"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1540571136813,
+        "modifiedAt": 1540571136813,
+        "_id": "5bd340000d99e654fdb1160f",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/marcelofarias/testrepo",
+            "normalizedUrl": "github.com/marcelofarias/testrepo",
+            "companyIdentifier": "github.com/marcelofarias"
+          },
+          {
+            "url": "github.com/teamcodestream/testrepo",
+            "normalizedUrl": "github.com/teamcodestream/testrepo",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "testrepo",
+        "id": "5bd340000d99e654fdb1160f"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1540573891017,
+        "modifiedAt": 1540573891017,
+        "_id": "5bd34ac30d99e654fdb11618",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/codestream-lsp-agent",
+            "normalizedUrl": "github.com/teamcodestream/codestream-lsp-agent",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "codestream-lsp-agent",
+        "id": "5bd34ac30d99e654fdb11618"
+      }
+    ]
+  }
+}

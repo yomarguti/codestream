@@ -145,11 +145,7 @@ export class SlackApiProvider implements ApiProvider {
 		private readonly _proxyAgent: HttpsProxyAgent | undefined
 	) {
 		this._slackToken = providerInfo.accessToken;
-		this._slack = new WebClient(this._slackToken, {
-			agent: this._proxyAgent,
-			logLevel: Logger.level === TraceLevel.Debug ? LogLevel.DEBUG : LogLevel.INFO,
-			logger: (level, message) => Logger.log(`SLACK[${level}]: ${message}`)
-		});
+		this._slack = this.newWebClient();
 
 		this._slack.on("rate_limited", retryAfter => {
 			Logger.log(
@@ -164,6 +160,14 @@ export class SlackApiProvider implements ApiProvider {
 
 		this._codestreamUserId = user.id;
 		this._slackUserId = providerInfo.userId;
+	}
+
+	protected newWebClient() {
+		return new WebClient(this._slackToken, {
+			agent: this._proxyAgent,
+			logLevel: Logger.level === TraceLevel.Debug ? LogLevel.DEBUG : LogLevel.INFO,
+			logger: (level, message) => Logger.log(`SLACK[${level}]: ${message}`)
+		});
 	}
 
 	@log({
@@ -297,7 +301,7 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async subscribe(types?: MessageType[]) {
-		this._events = new SlackEvents(this._slackToken, this, this._proxyAgent);
+		this._events = this.newSlackEvents();
 		this._events.onDidReceiveMessage(e => {
 			if (e.type === MessageType.Preferences) {
 				this._preferences.update(e.data);
@@ -328,6 +332,10 @@ export class SlackApiProvider implements ApiProvider {
 			MessageType.Repositories,
 			MessageType.Users
 		]);
+	}
+
+	protected newSlackEvents() {
+		return new SlackEvents(this._slackToken, this, this._proxyAgent);
 	}
 
 	async ensureUsernamesById(): Promise<Map<string, string>> {
@@ -1252,7 +1260,7 @@ export class SlackApiProvider implements ApiProvider {
 		correlate: true,
 		enter: q => `fetching ${q.length} stream(s) in the background...`
 	})
-	private async processPendingStreamsQueue(
+	protected async processPendingStreamsQueue(
 		queue: DeferredStreamRequest<CSChannelStream | CSDirectStream>[]
 	) {
 		const cc = Logger.getCorrelationContext();
@@ -2125,12 +2133,12 @@ export class SlackApiProvider implements ApiProvider {
 		return this._codestream.inviteUser(request);
 	}
 
-	private async slackApiCall<TRequest, TResponse extends WebAPICallResult>(
+	protected async slackApiCall<TRequest, TResponse extends WebAPICallResult>(
 		fn: (request?: TRequest) => Promise<TResponse>,
 		request?: TRequest,
 		name?: string
 	): Promise<TResponse>;
-	private async slackApiCall<TRequest, TResponse extends WebAPICallResult>(
+	protected async slackApiCall<TRequest, TResponse extends WebAPICallResult>(
 		method: string,
 		request?: TRequest,
 		name?: string
@@ -2147,7 +2155,7 @@ export class SlackApiProvider implements ApiProvider {
 					: ""
 			})`
 	})
-	private async slackApiCall<TRequest, TResponse extends WebAPICallResult>(
+	protected async slackApiCall<TRequest, TResponse extends WebAPICallResult>(
 		fnOrMethod: ((request?: TRequest) => Promise<TResponse>) | string,
 		request?: TRequest,
 		name?: string
@@ -2175,10 +2183,44 @@ export class SlackApiProvider implements ApiProvider {
 					}
 				}
 			);
+			if (Container.instance().session.recordRequests) {
+				const method = typeof fnOrMethod === "string" ? fnOrMethod : name;
+				const now = Date.now();
+				// const { method, body } = init;
+
+				const fs = require("fs");
+				const sanitize = require("sanitize-filename");
+				const sanitizedMethod = sanitize(
+					method
+					// .split("?")[0]
+					// .replace(/\//g, "_")
+					// .replace("_", "")
+				);
+				const filename = `/tmp/dump-${now}-slack-${sanitizedMethod}.json`;
+
+				const out = {
+					url: method,
+					request: request,
+					response: response
+				};
+				const outString = JSON.stringify(out, null, 2);
+
+				fs.writeFile(filename, outString, "utf8", () => {
+					Logger.log(`Written ${filename}`);
+				});
+			}
+
 			return response as TResponse;
 		} catch (ex) {
 			Logger.error(ex, cc, ex.data != null ? JSON.stringify(ex.data) : undefined);
 			throw ex;
+		}
+	}
+
+	async dispose() {
+		await this._codestream.dispose();
+		if (this._events) {
+			await this._events.dispose();
 		}
 	}
 }

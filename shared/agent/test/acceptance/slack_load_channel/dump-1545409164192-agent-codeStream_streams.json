@@ -1,0 +1,1084 @@
+{
+  "method": "codeStream/streams",
+  "request": {},
+  "response": {
+    "streams": [
+      {
+        "createdAt": 1507164877000,
+        "creatorId": "U7DJW0ZQU",
+        "id": "C7DM92RTN",
+        "isArchived": false,
+        "isTeamStream": false,
+        "name": "development",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1545344718000,
+        "mostRecentPostCreatedAt": 1545344718000,
+        "mostRecentPostId": "C7DM92RTN|1545344718.600400",
+        "privacy": "public",
+        "purpose": "Technical discussion about CodeStream",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "channel"
+      },
+      {
+        "createdAt": 1507148032000,
+        "creatorId": "U7CS9PYJU",
+        "id": "C7CS9Q4AU",
+        "isArchived": false,
+        "isTeamStream": false,
+        "name": "random",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1545248904000,
+        "mostRecentPostCreatedAt": 1545248904000,
+        "mostRecentPostId": "C7CS9Q4AU|1545248904.015700",
+        "privacy": "public",
+        "purpose": "A place for non-work-related flimflam, faffing, hodge-podge or jibber-jabber you'd prefer to keep out of more focused work-related channels.",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "channel"
+      },
+      {
+        "createdAt": 1507148032000,
+        "creatorId": "U7CS9PYJU",
+        "id": "C7D0T5KGR",
+        "isArchived": false,
+        "isTeamStream": true,
+        "name": "general",
+        "modifiedAt": 1545368433000,
+        "mostRecentPostCreatedAt": 1545368433000,
+        "mostRecentPostId": "C7D0T5KGR|1545368433.000100",
+        "privacy": "public",
+        "purpose": "This channel is for workspace-wide communication and announcements. All members are in this channel.",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "channel"
+      },
+      {
+        "createdAt": 1507236920000,
+        "creatorId": "U7DJW0ZQU",
+        "id": "C7DLA4LEM",
+        "isArchived": false,
+        "isTeamStream": false,
+        "name": "marketing",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1544189244000,
+        "mostRecentPostCreatedAt": 1544189244000,
+        "mostRecentPostId": "C7DLA4LEM|1544189244.001500",
+        "privacy": "public",
+        "purpose": "CodeStream marketing related discussion",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "channel"
+      },
+      {
+        "createdAt": 1507305762000,
+        "creatorId": "U7CS9PYJU",
+        "id": "C7E3ED0TT",
+        "isArchived": false,
+        "isTeamStream": false,
+        "name": "product",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1545401913000,
+        "mostRecentPostCreatedAt": 1545401913000,
+        "mostRecentPostId": "C7E3ED0TT|1545401913.001300",
+        "privacy": "public",
+        "purpose": "",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "channel"
+      },
+      {
+        "createdAt": 1508935389000,
+        "creatorId": "U7EV7SB71",
+        "id": "C7QGZCLNA",
+        "isArchived": false,
+        "isTeamStream": false,
+        "name": "marketing_social",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1545331954000,
+        "mostRecentPostCreatedAt": 1545331954000,
+        "mostRecentPostId": "C7QGZCLNA|1545331954.010500",
+        "privacy": "public",
+        "purpose": "To internally suggest content for our teamcodestream social channels",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "channel"
+      },
+      {
+        "createdAt": 1513027607000,
+        "creatorId": "U7EV7SB71",
+        "id": "C8D31E0PN",
+        "isArchived": false,
+        "isTeamStream": false,
+        "name": "sales_crm_hubspot",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1524854953000,
+        "mostRecentPostCreatedAt": 1524854953000,
+        "mostRecentPostId": "C8D31E0PN|1524854953.000322",
+        "privacy": "public",
+        "purpose": "",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "channel"
+      },
+      {
+        "createdAt": 1516772247000,
+        "creatorId": "U7CS9PYJU",
+        "id": "C8YFZ1K7G",
+        "isArchived": false,
+        "isTeamStream": false,
+        "name": "history",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1545149221000,
+        "mostRecentPostCreatedAt": 1545149221000,
+        "mostRecentPostId": "C8YFZ1K7G|1545149221.001600",
+        "privacy": "public",
+        "purpose": "",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "channel"
+      },
+      {
+        "createdAt": 1519754211000,
+        "creatorId": "U7LJRCHK9",
+        "id": "C9FJGJJLB",
+        "isArchived": false,
+        "isTeamStream": false,
+        "name": "upvote",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1544538447000,
+        "mostRecentPostCreatedAt": 1544538447000,
+        "mostRecentPostId": "C9FJGJJLB|1544538447.005700",
+        "privacy": "public",
+        "purpose": "Channel for team tasks",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "channel"
+      },
+      {
+        "createdAt": 1521053502000,
+        "creatorId": "U7EV7SB71",
+        "id": "C9R238WQP",
+        "isArchived": false,
+        "isTeamStream": false,
+        "name": "notify_alerts",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1545347659000,
+        "mostRecentPostCreatedAt": 1545347659000,
+        "mostRecentPostId": "C9R238WQP|1545347659.012700",
+        "privacy": "public",
+        "purpose": "",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "channel"
+      },
+      {
+        "createdAt": 1528384901000,
+        "creatorId": "U7EPCTGCU",
+        "id": "CB4DB25PG",
+        "isArchived": false,
+        "isTeamStream": false,
+        "name": "contentfodder",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1532532172000,
+        "mostRecentPostCreatedAt": 1532532172000,
+        "mostRecentPostId": "CB4DB25PG|1532532172.000004",
+        "privacy": "public",
+        "purpose": "Collect ideas from the dev team for content marketing",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "channel"
+      },
+      {
+        "createdAt": 1540302705000,
+        "creatorId": "U7H4N1A6B",
+        "id": "CDKK80L0Y",
+        "isArchived": false,
+        "isTeamStream": false,
+        "name": "agent",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1544218066000,
+        "mostRecentPostCreatedAt": 1544218066000,
+        "mostRecentPostId": "CDKK80L0Y|1544218066.010800",
+        "privacy": "public",
+        "purpose": "",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "channel"
+      },
+      {
+        "createdAt": 1544132003000,
+        "creatorId": "U7H4N1A6B",
+        "id": "CEM1NLATT",
+        "isArchived": false,
+        "isTeamStream": false,
+        "name": "test-marcelo",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1544217706000,
+        "mostRecentPostCreatedAt": 1544217706000,
+        "mostRecentPostId": "CEM1NLATT|1544217706.000600",
+        "privacy": "public",
+        "purpose": "",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "channel"
+      },
+      {
+        "createdAt": 1544127569000,
+        "creatorId": "U9QPXSR3M",
+        "id": "CENV45Y1L",
+        "isArchived": false,
+        "isTeamStream": false,
+        "name": "ci-vscode",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1545344685000,
+        "mostRecentPostCreatedAt": 1545344685000,
+        "mostRecentPostId": "CENV45Y1L|1545344685.031100",
+        "privacy": "public",
+        "purpose": "",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "channel"
+      },
+      {
+        "createdAt": 1544127682000,
+        "creatorId": "U9QPXSR3M",
+        "id": "CENV60J86",
+        "isArchived": false,
+        "isTeamStream": false,
+        "name": "ci-services",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1545402690000,
+        "mostRecentPostCreatedAt": 1545402690000,
+        "mostRecentPostId": "CENV60J86|1545402690.001000",
+        "privacy": "public",
+        "purpose": "",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "channel"
+      },
+      {
+        "createdAt": 1507689722000,
+        "creatorId": "U7CS9PYJU",
+        "id": "G7GD691PC",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "akonwi, pez",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1507689722000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "purpose": "Group messaging with: @pez @akonwi @marcelo",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1513879687000,
+        "creatorId": "U7LJRCHK9",
+        "id": "G8HJXRA5P",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "akonwi, luis",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1513879687000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "purpose": "Group messaging with: @luis @akonwi @marcelo",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1516779764000,
+        "creatorId": "U7CS9PYJU",
+        "id": "G8X52UWUR",
+        "isArchived": false,
+        "isTeamStream": false,
+        "name": "techrecruiting",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1520979950000,
+        "mostRecentPostCreatedAt": 1520979950000,
+        "mostRecentPostId": "G8X52UWUR|1520979950.000187",
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "purpose": "",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "channel"
+      },
+      {
+        "createdAt": 1517937718000,
+        "creatorId": "U7CT4071N",
+        "id": "G94NVL96E",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "akonwi, colin",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1517937718000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "purpose": "Group messaging with: @colin @akonwi @marcelo",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1518203545000,
+        "creatorId": "U7H4N1A6B",
+        "id": "G96PSEX43",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "colin, pez",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1518203545000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "purpose": "Group messaging with: @marcelo @pez @colin",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1519758301000,
+        "creatorId": "U7LJRCHK9",
+        "id": "G9GQARX5M",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "colin, luis",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1519758301000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "purpose": "Group messaging with: @luis @colin @marcelo",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1522349254000,
+        "creatorId": "U7YNDN2VD",
+        "id": "G9XT08P4Z",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "colin, dave",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1522349254000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "purpose": "Group messaging with: @dave @colin @marcelo",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1523470178000,
+        "creatorId": "U7CS9PYJU",
+        "id": "GA4JGDK41",
+        "isArchived": false,
+        "isTeamStream": false,
+        "name": "devrecruiting",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1525464375000,
+        "mostRecentPostCreatedAt": 1525464375000,
+        "mostRecentPostId": "GA4JGDK41|1525464375.000184",
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "purpose": "",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "channel"
+      },
+      {
+        "createdAt": 1523722360000,
+        "creatorId": "U7EPCTGCU",
+        "id": "GA66WK2BA",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "akonwi, claudio, colin, eric",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1523722360000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "purpose": "Group messaging with: @claudio @eric @colin @akonwi @marcelo",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1524239699000,
+        "creatorId": "U7EPCTGCU",
+        "id": "GA9UT73UH",
+        "isArchived": false,
+        "isTeamStream": false,
+        "name": "goals",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1524240097000,
+        "mostRecentPostCreatedAt": 1524240097000,
+        "mostRecentPostId": "GA9UT73UH|1524240097.000091",
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "purpose": "Share high level goals and supporting initiatives",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "channel"
+      },
+      {
+        "createdAt": 1527165428000,
+        "creatorId": "U9QPXSR3M",
+        "id": "GAVL73H0V",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "colin, eric, seb",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1527165428000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "purpose": "Group messaging with: @eric @colin @marcelo @seb",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1531771534000,
+        "creatorId": "U9QPXSR3M",
+        "id": "GBQU8NM17",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "akonwi, eric",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1531771534000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "purpose": "Group messaging with: @eric @akonwi @marcelo",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1532024169000,
+        "creatorId": "U7EV7SB71",
+        "id": "GBTG2MZK5",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "akonwi, michael",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1532024169000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "purpose": "Group messaging with: @michael @akonwi @marcelo",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1534304550000,
+        "creatorId": "U7CS9PYJU",
+        "id": "GC8GW49S8",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "eric, pez",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1534304550000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "purpose": "Group messaging with: @pez @eric @marcelo",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1539700577000,
+        "creatorId": "U7YNDN2VD",
+        "id": "GDEJ22HQ8",
+        "isArchived": false,
+        "isClosed": false,
+        "name": "akonwi, dave",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1543247328000,
+        "mostRecentPostCreatedAt": 1543247328000,
+        "mostRecentPostId": "GDEJ22HQ8|1543247328.002500",
+        "priority": 0.020387738455116,
+        "privacy": "private",
+        "purpose": "Group messaging with: @dave @akonwi @marcelo",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1539633933000,
+        "creatorId": "U7YNDN2VD",
+        "id": "GDG2Z9RFY",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "dave, michael",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1539633933000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "purpose": "Group messaging with: @dave @michael @marcelo",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1544634125000,
+        "creatorId": "U7H4N1A6B",
+        "id": "DERJ48TSM",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "jirafe",
+        "memberIds": [
+          "U7H4N1A6B",
+          "UESCB7V37"
+        ],
+        "modifiedAt": 1544634125000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1544158522000,
+        "creatorId": "U7H4N1A6B",
+        "id": "DEM52JEFJ",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "sunsama",
+        "memberIds": [
+          "U7H4N1A6B",
+          "UEM52JA4Q"
+        ],
+        "modifiedAt": 1544158522000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1543257545000,
+        "creatorId": "U7H4N1A6B",
+        "id": "DEC3ZJP9A",
+        "isArchived": false,
+        "isClosed": false,
+        "name": "Brian",
+        "memberIds": [
+          "U7H4N1A6B",
+          "UEC3ZJ58U"
+        ],
+        "modifiedAt": 1545161621000,
+        "mostRecentPostCreatedAt": 1545161621000,
+        "mostRecentPostId": "DEC3ZJP9A|1545161621.000300",
+        "priority": 0.034246409353445,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1539300560000,
+        "creatorId": "U7H4N1A6B",
+        "id": "DDDUN7DCN",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "colin (gmail)",
+        "memberIds": [
+          "U7H4N1A6B",
+          "UDCCVLSMS"
+        ],
+        "modifiedAt": 1539300560000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1535679379000,
+        "creatorId": "U7H4N1A6B",
+        "id": "DCJ4ZDUNM",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "ziri",
+        "memberIds": [
+          "U7H4N1A6B",
+          "UCL2G3VPG"
+        ],
+        "modifiedAt": 1535679379000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1526918234000,
+        "creatorId": "U7H4N1A6B",
+        "id": "DATB1N1CK",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "muchai",
+        "memberIds": [
+          "U7H4N1A6B",
+          "UAUATCSCE"
+        ],
+        "modifiedAt": 1526918234000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1526490313000,
+        "creatorId": "U7H4N1A6B",
+        "id": "DAR09U2M8",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "wonder",
+        "memberIds": [
+          "U7H4N1A6B",
+          "UAQ97BS6L"
+        ],
+        "modifiedAt": 1526490313000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1522356104000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D9ZJ95WKZ",
+        "isArchived": false,
+        "isClosed": false,
+        "name": "Ben",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U9ZBV29M4"
+        ],
+        "modifiedAt": 1543645997000,
+        "mostRecentPostCreatedAt": 1543645997000,
+        "mostRecentPostId": "D9ZJ95WKZ|1543645997.002400",
+        "priority": 0.047181802289268,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1521163909000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D9QRZ89RS",
+        "isArchived": false,
+        "isClosed": false,
+        "name": "Eric",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U9QPXSR3M"
+        ],
+        "modifiedAt": 1545351421000,
+        "mostRecentPostCreatedAt": 1545351421000,
+        "mostRecentPostId": "D9QRZ89RS|1545351421.000200",
+        "priority": 0.066257166963576,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1521138501000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D9Q1G2GN4",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "codestream_helper",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U9QLRMKDY"
+        ],
+        "modifiedAt": 1521138501000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1520907974000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D9N4T6R4G",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "codestream.pd",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U9NP82DUL"
+        ],
+        "modifiedAt": 1520907974000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1518278507000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D9750CJCU",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "letterbox",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U9792MEGM"
+        ],
+        "modifiedAt": 1518278507000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1517869785000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D93MZAAQZ",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "mio",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U93JZASCQ"
+        ],
+        "modifiedAt": 1517869785000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1517272467000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D8ZUJ1V3J",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "todobot",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U90FAMCN7"
+        ],
+        "modifiedAt": 1517272467000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1515696391000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D8RLY6LP7",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "polly",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U8R19794H"
+        ],
+        "modifiedAt": 1515696391000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1515604592000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D8QS5TDJQ",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "slitebot",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U8Q7AH4N4"
+        ],
+        "modifiedAt": 1515604592000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1511973858000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D8897FETH",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "jirio",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U878A495J"
+        ],
+        "modifiedAt": 1511973858000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1510240227000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D7X4SF32M",
+        "isArchived": false,
+        "isClosed": false,
+        "name": "Dave",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U7YNDN2VD"
+        ],
+        "modifiedAt": 1544453412000,
+        "mostRecentPostCreatedAt": 1544453412000,
+        "mostRecentPostId": "D7X4SF32M|1544453412.001800",
+        "priority": 0.049097434262555,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1509569096000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D7UJTT0KZ",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "rosie",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U7TGBBENN"
+        ],
+        "modifiedAt": 1509569096000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1509560233000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D7TDHGKH8",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "jirabot",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U7TF0TDKN"
+        ],
+        "modifiedAt": 1509560233000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1508270119000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D7KSYRXSR",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "trello",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U7KQF2ZE0"
+        ],
+        "modifiedAt": 1508270119000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1507645256000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D7GU4PQDU",
+        "isArchived": false,
+        "isClosed": false,
+        "name": "colin",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U7CT4071N"
+        ],
+        "modifiedAt": 1544126833000,
+        "mostRecentPostCreatedAt": 1544126833000,
+        "mostRecentPostId": "D7GU4PQDU|1544126833.002300",
+        "priority": 0.04069728195763,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1507645256000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D7GU4PPK8",
+        "isArchived": false,
+        "isClosed": false,
+        "name": "pez",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U7CS9PYJU"
+        ],
+        "modifiedAt": 1544126419000,
+        "mostRecentPostCreatedAt": 1544126419000,
+        "mostRecentPostId": "D7GU4PPK8|1544126419.004100",
+        "priority": 0.031513069439366,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1507645256000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D7G66TH6H",
+        "isArchived": false,
+        "isClosed": false,
+        "name": "marcelo",
+        "memberIds": [
+          "U7H4N1A6B"
+        ],
+        "modifiedAt": 1543878972000,
+        "mostRecentPostCreatedAt": 1543878972000,
+        "mostRecentPostId": "D7G66TH6H|1543878972.000200",
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1507645257000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D7G3QKH52",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "Gersh",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U7EV7SB71"
+        ],
+        "modifiedAt": 1507645257000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1507645257000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D7G3QKENQ",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "Claudio",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U7EPCTGCU"
+        ],
+        "modifiedAt": 1507645257000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1507645256000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D7G3QKCAY",
+        "isArchived": false,
+        "isClosed": false,
+        "name": "jj",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U7DJW0ZQU"
+        ],
+        "modifiedAt": 1544114974000,
+        "mostRecentPostCreatedAt": 1544114974000,
+        "mostRecentPostId": "D7G3QKCAY|1544114974.002500",
+        "priority": 0.02406051487852,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1507645256000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D7FVA5TLK",
+        "isArchived": false,
+        "isClosed": false,
+        "name": "slackbot",
+        "memberIds": [
+          "U7H4N1A6B",
+          "USLACKBOT"
+        ],
+        "modifiedAt": 1544804416000,
+        "mostRecentPostCreatedAt": 1544804416000,
+        "mostRecentPostId": "D7FVA5TLK|1544804416.000100",
+        "priority": 0,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1507665561000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D7FJY8W0G",
+        "isArchived": false,
+        "isClosed": true,
+        "name": "Google Drive",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U7H59LZ8E"
+        ],
+        "modifiedAt": 1507665561000,
+        "priority": 0.016437170575451,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      },
+      {
+        "createdAt": 1507645257000,
+        "creatorId": "U7H4N1A6B",
+        "id": "D7FCD9J4Q",
+        "isArchived": false,
+        "isClosed": false,
+        "name": "Akonwi",
+        "memberIds": [
+          "U7H4N1A6B",
+          "U7FNCE5NX"
+        ],
+        "modifiedAt": 1543952356000,
+        "mostRecentPostCreatedAt": 1543952356000,
+        "mostRecentPostId": "D7FCD9J4Q|1543952356.007600",
+        "priority": 0.037265023542322,
+        "privacy": "private",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "type": "direct"
+      }
+    ]
+  }
+}

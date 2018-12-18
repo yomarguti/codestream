@@ -1,0 +1,45 @@
+{
+  "url": "/posts",
+  "request": {
+    "mentionedUserIds": [],
+    "parentPostId": null,
+    "streamId": "5bbd06ba2aae56770cbcbf49",
+    "text": "chupacabra",
+    "teamId": "5bbd06ba2aae56770cbcbf47"
+  },
+  "response": {
+    "post": {
+      "version": 1,
+      "deactivated": false,
+      "numReplies": 0,
+      "reactions": {},
+      "createdAt": 1545236219048,
+      "modifiedAt": 1545236219050,
+      "mentionedUserIds": [],
+      "streamId": "5bbd06ba2aae56770cbcbf49",
+      "text": "chupacabra",
+      "origin": "VS Code",
+      "creatorId": "5bbd06952aae56770cbcbf45",
+      "id": "5c1a6efb6234b62fafbb64ba",
+      "teamId": "5bbd06ba2aae56770cbcbf47",
+      "seqNum": 200,
+      "_id": "5c1a6efb6234b62fafbb64ba"
+    },
+    "streams": [
+      {
+        "$set": {
+          "mostRecentPostId": "5c1a6efb6234b62fafbb64ba",
+          "mostRecentPostCreatedAt": 1545236219048,
+          "sortId": "5c1a6efb6234b62fafbb64ba",
+          "version": 187
+        },
+        "id": "5bbd06ba2aae56770cbcbf49",
+        "_id": "5bbd06ba2aae56770cbcbf49",
+        "$version": {
+          "before": 186,
+          "after": 187
+        }
+      }
+    ]
+  }
+}

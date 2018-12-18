@@ -559,14 +559,13 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	}
 
 	private async fullPost(csPost: CSPost): Promise<CSFullPost> {
-		let fullCodemark: CSFullCodemark | undefined;
-		let hasMarkers = false;
 		if (csPost.codemarkId) {
 			try {
 				const csCodemark = await Container.instance().codemarks.getById(csPost.codemarkId);
-				fullCodemark = {
+				const fullCodemark: CSFullCodemark = {
 					...csCodemark
 				};
+				let hasMarkers = false;
 				if (csCodemark.markerIds) {
 					fullCodemark.markers = [];
 					for (const markerId of csCodemark.markerIds) {
@@ -574,14 +573,19 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						hasMarkers = true;
 					}
 				}
+				return {
+					...csPost,
+					codemark: fullCodemark,
+					hasMarkers
+				};
 			} catch (err) {
 				Logger.error(err);
 			}
 		}
+
 		return {
 			...csPost,
-			codemark: fullCodemark,
-			hasMarkers
+			hasMarkers: false
 		};
 	}
 

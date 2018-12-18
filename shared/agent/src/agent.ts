@@ -20,6 +20,7 @@ import {
 	RequestType0,
 	TextDocumentSyncKind
 } from "vscode-languageserver";
+import { Container } from "./container";
 import { Logger } from "./logger";
 import { CodeStreamSession } from "./session";
 import { AgentOptions, DidChangeDataNotificationType } from "./shared/agent.protocol";
@@ -72,6 +73,17 @@ export class CodeStreamAgent implements Disposable {
 					agentOptions.ide.name
 				} (v${agentOptions.ide.version}) initializing...`
 			);
+
+			if (agentOptions.recordRequests) {
+				const now = Date.now();
+				const fs = require("fs");
+				const filename = `/tmp/dump-${now}-agent_options.json`;
+				const outString = JSON.stringify(agentOptions, null, 2);
+
+				fs.writeFile(filename, outString, "utf8", () => {
+					Logger.log(`Written ${filename}`);
+				});
+			}
 
 			this._session = new CodeStreamSession(this, this._connection, agentOptions);
 			const result = await this._session.login();
@@ -148,7 +160,35 @@ export class CodeStreamAgent implements Disposable {
 		timed: false
 	})
 	registerHandler(type: any, handler: any): void {
-		return this._connection.onRequest(type, handler);
+		if (Container.instance().session.recordRequests) {
+			this._connection.onRequest(type, async function() {
+				const now = Date.now();
+				const fs = require("fs");
+				const sanitize = require("sanitize-filename");
+				const sanitizedURL = sanitize(type.method.replace(/\//g, "_"));
+				const method = type.method;
+
+				let result = handler.apply(null, arguments);
+				if (typeof result.then === "function") {
+					result = await result;
+				}
+				const out = {
+					method: method,
+					request: arguments[0],
+					response: result
+				};
+				const outString = JSON.stringify(out, null, 2);
+				const filename = `/tmp/dump-${now}-agent-${sanitizedURL}.json`;
+
+				fs.writeFile(filename, outString, "utf8", () => {
+					Logger.log(`Written ${filename}`);
+				});
+
+				return result;
+			});
+		} else {
+			return this._connection.onRequest(type, handler);
+		}
 	}
 
 	sendNotification<RO>(type: NotificationType0<RO>): void;

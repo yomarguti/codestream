@@ -1,0 +1,157 @@
+{
+  "url": "channels.info",
+  "request": {
+    "channel": "C7DLA4LEM"
+  },
+  "response": {
+    "ok": true,
+    "channel": {
+      "id": "C7DLA4LEM",
+      "name": "marketing",
+      "is_channel": true,
+      "created": 1507236920,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "creator": "U7DJW0ZQU",
+      "name_normalized": "marketing",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_member": true,
+      "is_private": false,
+      "is_mpim": false,
+      "last_read": "1544189244.001500",
+      "latest": {
+        "type": "message",
+        "text": "Some nice news to go with your morning coffee....  This isn't the 20 minutes we get on one of the smaller stages mixed into the conference hall that comes with the sponsorship.  This was result of an application, not paid for, to get on one of the bigger stages (although I'm sure having sponsored 3 devweeks doesn't hurt).  Hand clap for <@U7EPCTGCU>’s title and abstract and <@U7CS9PYJU>' growing resume of prior speaking arrangements which I believe beget more.",
+        "files": [
+          {
+            "id": "FEN62S598",
+            "created": 1544189240,
+            "timestamp": 1544189240,
+            "name": "speaker_email.png",
+            "title": "speaker_email.png",
+            "mimetype": "image/png",
+            "filetype": "png",
+            "pretty_type": "PNG",
+            "user": "U7EV7SB71",
+            "editable": false,
+            "size": 145626,
+            "mode": "hosted",
+            "is_external": false,
+            "external_type": "",
+            "is_public": true,
+            "public_url_shared": false,
+            "display_as_bot": false,
+            "username": "",
+            "url_private": "https://files.slack.com/files-pri/T7DDT1L5R-FEN62S598/speaker_email.png",
+            "url_private_download": "https://files.slack.com/files-pri/T7DDT1L5R-FEN62S598/download/speaker_email.png",
+            "thumb_64": "https://files.slack.com/files-tmb/T7DDT1L5R-FEN62S598-9e845b87fb/speaker_email_64.png",
+            "thumb_80": "https://files.slack.com/files-tmb/T7DDT1L5R-FEN62S598-9e845b87fb/speaker_email_80.png",
+            "thumb_360": "https://files.slack.com/files-tmb/T7DDT1L5R-FEN62S598-9e845b87fb/speaker_email_360.png",
+            "thumb_360_w": 360,
+            "thumb_360_h": 221,
+            "thumb_480": "https://files.slack.com/files-tmb/T7DDT1L5R-FEN62S598-9e845b87fb/speaker_email_480.png",
+            "thumb_480_w": 480,
+            "thumb_480_h": 295,
+            "thumb_160": "https://files.slack.com/files-tmb/T7DDT1L5R-FEN62S598-9e845b87fb/speaker_email_160.png",
+            "thumb_720": "https://files.slack.com/files-tmb/T7DDT1L5R-FEN62S598-9e845b87fb/speaker_email_720.png",
+            "thumb_720_w": 720,
+            "thumb_720_h": 442,
+            "thumb_800": "https://files.slack.com/files-tmb/T7DDT1L5R-FEN62S598-9e845b87fb/speaker_email_800.png",
+            "thumb_800_w": 800,
+            "thumb_800_h": 491,
+            "thumb_960": "https://files.slack.com/files-tmb/T7DDT1L5R-FEN62S598-9e845b87fb/speaker_email_960.png",
+            "thumb_960_w": 960,
+            "thumb_960_h": 589,
+            "thumb_1024": "https://files.slack.com/files-tmb/T7DDT1L5R-FEN62S598-9e845b87fb/speaker_email_1024.png",
+            "thumb_1024_w": 1024,
+            "thumb_1024_h": 629,
+            "image_exif_rotation": 1,
+            "original_w": 1049,
+            "original_h": 644,
+            "permalink": "https://teamcodestream.slack.com/files/U7EV7SB71/FEN62S598/speaker_email.png",
+            "permalink_public": "https://slack-files.com/T7DDT1L5R-FEN62S598-22e64f67c7",
+            "is_starred": false
+          }
+        ],
+        "upload": true,
+        "user": "U7EV7SB71",
+        "display_as_bot": false,
+        "ts": "1544189244.001500",
+        "reactions": [
+          {
+            "name": "success",
+            "users": [
+              "UEC3ZJ58U",
+              "U7YNDN2VD",
+              "UAUATCSCE",
+              "U7FNCE5NX",
+              "U9QPXSR3M",
+              "U7H4N1A6B",
+              "U7CS9PYJU",
+              "U7DJW0ZQU"
+            ],
+            "count": 8
+          }
+        ]
+      },
+      "unread_count": 0,
+      "unread_count_display": 0,
+      "members": [
+        "U7CS9PYJU",
+        "U7CT4071N",
+        "U7DJW0ZQU",
+        "U7EPCTGCU",
+        "U7EV7SB71",
+        "U7FNCE5NX",
+        "U7GK5RY3H",
+        "U7H4N1A6B",
+        "U7YNDN2VD",
+        "U8E97A1B5",
+        "U9QPXSR3M",
+        "U9ZBV29M4",
+        "UAUATCSCE",
+        "UEC3ZJ58U"
+      ],
+      "topic": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "purpose": {
+        "value": "CodeStream marketing related discussion",
+        "creator": "U7DJW0ZQU",
+        "last_set": 1507236920
+      },
+      "previous_names": []
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "channels:read"
+    ]
+  }
+}

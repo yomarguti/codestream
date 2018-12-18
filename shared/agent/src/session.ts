@@ -331,6 +331,10 @@ export class CodeStreamSession {
 		return this.connection.workspace;
 	}
 
+	get recordRequests(): boolean {
+		return !!this._options.recordRequests;
+	}
+
 	@log({
 		singleLine: true
 	})
@@ -405,13 +409,7 @@ export class CodeStreamSession {
 				}) is a Slack-based team`
 			);
 
-			this._api = new SlackApiProvider(
-				this._api! as CodeStreamApiProvider,
-				response.user.providerInfo.slack,
-				response.user,
-				this._teamId,
-				this._proxyAgent
-			);
+			this._api = this.newSlackApiProvider(response);
 
 			await (this._api as SlackApiProvider).processLoginResponse(response);
 
@@ -432,7 +430,7 @@ export class CodeStreamSession {
 		this.api.onDidReceiveMessage(e => this.onRTMessageReceived(e), this);
 
 		Logger.log(cc, `Subscribing to real-time events...`);
-		this.api.subscribe();
+		await this.api.subscribe();
 
 		Container.instance().git.onRepositoryCommitHashChanged(repo => {
 			Container.instance().markerLocations.flushUncommittedLocations(repo);
@@ -454,6 +452,16 @@ export class CodeStreamSession {
 				userId: this._userId
 			}
 		};
+	}
+
+	protected newSlackApiProvider(response: any) {
+		return new SlackApiProvider(
+			this._api! as CodeStreamApiProvider,
+			response.user.providerInfo.slack,
+			response.user,
+			this._teamId!,
+			this._proxyAgent
+		);
 	}
 
 	@log()

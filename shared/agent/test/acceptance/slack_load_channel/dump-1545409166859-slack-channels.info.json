@@ -1,0 +1,81 @@
+{
+  "url": "channels.info",
+  "request": {
+    "channel": "C8D31E0PN"
+  },
+  "response": {
+    "ok": true,
+    "channel": {
+      "id": "C8D31E0PN",
+      "name": "sales_crm_hubspot",
+      "is_channel": true,
+      "created": 1513027607,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "creator": "U7EV7SB71",
+      "name_normalized": "sales_crm_hubspot",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_member": true,
+      "is_private": false,
+      "is_mpim": false,
+      "last_read": "1524854953.000322",
+      "latest": {
+        "type": "message",
+        "subtype": "bot_message",
+        "text": "Onboarding Scheduled! <http://unroll.me|unroll.me> - Chandani Soni (GOTO) by <mailto:luis@codestream.com|luis@codestream.com>",
+        "ts": "1524854953.000322",
+        "username": "Zapier",
+        "bot_id": "B8CBXV2D6"
+      },
+      "unread_count": 0,
+      "unread_count_display": 0,
+      "members": [
+        "U7CS9PYJU",
+        "U7EPCTGCU",
+        "U7EV7SB71",
+        "U7FNCE5NX",
+        "U7H4N1A6B"
+      ],
+      "topic": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "purpose": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "previous_names": []
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "channels:read"
+    ]
+  }
+}

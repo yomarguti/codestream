@@ -4,7 +4,8 @@ import { CodeStreamAgent } from "../../agent";
 
 export interface LspHandler {
 	type: RequestType<any, any, void, void>;
-	method: RequestHandler0<{}, {}>;
+	unboundMethod: RequestHandler0<{}, {}>;
+	method?: RequestHandler0<{}, {}>;
 	target: any;
 }
 
@@ -12,10 +13,9 @@ const handlerRegistry = new Map<any, LspHandler[]>();
 export function registerDecoratedHandlers(agent: CodeStreamAgent): void {
 	for (const [_, handlers] of handlerRegistry) {
 		for (const handler of handlers) {
-			agent.registerHandler(handler.type, handler.method);
+			agent.registerHandler(handler.type, handler.method!);
 		}
 	}
-	handlerRegistry.clear();
 }
 
 export function lsp<T extends object>(target: T) {
@@ -26,7 +26,7 @@ export function lsp<T extends object>(target: T) {
 			const handlers = handlerRegistry.get(target);
 			if (handlers !== undefined) {
 				for (const handler of handlers) {
-					handler.method = handler.method.bind(instance);
+					handler.method = handler.unboundMethod.bind(instance);
 				}
 			}
 
@@ -51,7 +51,7 @@ export function lspHandler(type: RequestType<any, any, void, void>): Function {
 
 		handlers.push({
 			type: type,
-			method: descriptor.value,
+			unboundMethod: descriptor.value,
 			target: target.constructor
 		});
 	};

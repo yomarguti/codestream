@@ -1,0 +1,38 @@
+{
+  "url": "/teams/5bb51100585ada29401ee9c5",
+  "response": {
+    "team": {
+      "version": 1,
+      "deactivated": false,
+      "createdAt": 1538593024654,
+      "modifiedAt": 1538593024654,
+      "_id": "5bb51100585ada29401ee9c5",
+      "name": "CodeStream",
+      "creatorId": "5b6ca95ca51ac46638670186",
+      "memberIds": [
+        "5b6ca95ca51ac46638670186",
+        "5bb619e76c347e4bc63c2ad6",
+        "5b58dde6efb4c720ffe15a83",
+        "5b58a606efb4c720ffe15a78",
+        "5bb56a296c347e4bc63c2ab0",
+        "5bbcded32aae56770cbcbf33",
+        "5bbcfb942aae56770cbcbf39",
+        "5a664fb301cc4c2b8a6b79e8",
+        "5bbd0ac12aae56770cbcbf4a",
+        "5b64966ccca9257a70dbde8e",
+        "5c0599af6f6e2b29beae5919"
+      ],
+      "adminIds": [
+        "5b6ca95ca51ac46638670186"
+      ],
+      "providerInfo": {
+        "slack": {
+          "teamId": "T7DDT1L5R"
+        }
+      },
+      "primaryReferral": "internal",
+      "companyId": "5bb51100585ada29401ee9c6",
+      "id": "5bb51100585ada29401ee9c5"
+    }
+  }
+}

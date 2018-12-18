@@ -1,0 +1,105 @@
+{
+  "url": "channels.info",
+  "request": {
+    "channel": "C9FJGJJLB"
+  },
+  "response": {
+    "ok": true,
+    "channel": {
+      "id": "C9FJGJJLB",
+      "name": "upvote",
+      "is_channel": true,
+      "created": 1519754211,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "creator": "U7LJRCHK9",
+      "name_normalized": "upvote",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_member": true,
+      "is_private": false,
+      "is_mpim": false,
+      "last_read": "1544538447.005700",
+      "latest": {
+        "client_msg_id": "3880830b-0fb2-423a-813a-9ca6bd66c433",
+        "type": "message",
+        "text": "Also, <@UEC3ZJ58U>'s \"Meet the Team\" post is up on Instagram: <https://www.instagram.com/p/BrP6_FUjSNS/>",
+        "user": "U9ZBV29M4",
+        "ts": "1544538447.005700",
+        "attachments": [
+          {
+            "service_name": "Instagram",
+            "title": "CodeStream on Instagram: “Meet the Team: Brian Canzanella :fire:⠀ :heavy_minus_sign::heavy_minus_sign::heavy_minus_sign::heavy_minus_sign::heavy_minus_sign::heavy_minus_sign::heavy_minus_sign::heavy_minus_sign::heavy_minus_sign::heavy_minus_sign:⠀ :thinking_face: What do you do at CodeStream?⠀ .⠀ \"I make and break stuff!\"⠀ .⠀ :one: What was the first…”",
+            "title_link": "https://www.instagram.com/p/BrP6_FUjSNS/",
+            "text": "38 Likes, 1 Comments - CodeStream (@teamcodestream) on Instagram: “Meet the Team: Brian Canzanella :fire:⠀ :heavy_minus_sign::heavy_minus_sign::heavy_minus_sign::heavy_minus_sign::heavy_minus_sign::heavy_minus_sign::heavy_minus_sign::heavy_minus_sign::heavy_minus_sign::heavy_minus_sign:⠀ :thinking_face: What do you do at CodeStream?⠀ .⠀ \"I make and…”",
+            "fallback": "Instagram: CodeStream on Instagram: “Meet the Team: Brian Canzanella 🔥⠀ ➖➖➖➖➖➖➖➖➖➖⠀ 🤔 What do you do at CodeStream?⠀ .⠀ \"I make and break stuff!\"⠀ .⠀ 1️⃣ What was the first…”",
+            "image_url": "https://scontent-iad3-1.cdninstagram.com/vp/303f56e6be59fe3b7167f79f1e57437f/5C9EAB27/t51.2885-15/fr/e15/s1080x1080/47235681_197270864557165_843695684414931245_n.jpg",
+            "from_url": "https://www.instagram.com/p/BrP6_FUjSNS/",
+            "image_width": 375,
+            "image_height": 250,
+            "image_bytes": 77331,
+            "service_icon": "https://www.instagram.com/static/images/ico/apple-touch-icon-76x76-precomposed.png/4272e394f5ad.png",
+            "id": 1,
+            "original_url": "https://www.instagram.com/p/BrP6_FUjSNS/"
+          }
+        ]
+      },
+      "unread_count": 0,
+      "unread_count_display": 0,
+      "members": [
+        "U7CS9PYJU",
+        "U7CT4071N",
+        "U7DJW0ZQU",
+        "U7EPCTGCU",
+        "U7EV7SB71",
+        "U7FNCE5NX",
+        "U7H4N1A6B",
+        "U7YNDN2VD",
+        "U8E97A1B5",
+        "U9QPXSR3M",
+        "U9ZBV29M4",
+        "UAUATCSCE",
+        "UEC3ZJ58U"
+      ],
+      "topic": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "purpose": {
+        "value": "Channel for team tasks",
+        "creator": "U7LJRCHK9",
+        "last_set": 1519754212
+      },
+      "previous_names": []
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "channels:read"
+    ]
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "url": "channels.info",
+  "request": {
+    "channel": "C7CS9Q4AU"
+  },
+  "response": {
+    "ok": true,
+    "channel": {
+      "id": "C7CS9Q4AU",
+      "name": "random",
+      "is_channel": true,
+      "created": 1507148032,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "creator": "U7CS9PYJU",
+      "name_normalized": "random",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_member": true,
+      "is_private": false,
+      "is_mpim": false,
+      "last_read": "1545248904.015700",
+      "latest": {
+        "client_msg_id": "1d5df4c3-ed2d-4867-aa4a-9b71b2f5f57a",
+        "type": "message",
+        "text": "easily the most depressing admin job ever",
+        "user": "U7DJW0ZQU",
+        "ts": "1545248904.015700"
+      },
+      "unread_count": 0,
+      "unread_count_display": 0,
+      "members": [
+        "U7CS9PYJU",
+        "U7CT4071N",
+        "U7DJW0ZQU",
+        "U7EPCTGCU",
+        "U7EV7SB71",
+        "U7FNCE5NX",
+        "U7GK5RY3H",
+        "U7H4N1A6B",
+        "U7YNDN2VD",
+        "U8E97A1B5",
+        "U9QPXSR3M",
+        "U9ZBV29M4",
+        "UAQ97BS6L",
+        "UAUATCSCE",
+        "UDCCVLSMS",
+        "UEC3ZJ58U"
+      ],
+      "topic": {
+        "value": "Non-work banter and water cooler conversation",
+        "creator": "U7CS9PYJU",
+        "last_set": 1507148032
+      },
+      "purpose": {
+        "value": "A place for non-work-related flimflam, faffing, hodge-podge or jibber-jabber you'd prefer to keep out of more focused work-related channels.",
+        "creator": "U7CS9PYJU",
+        "last_set": 1507148032
+      },
+      "previous_names": []
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "channels:read"
+    ]
+  }
+}

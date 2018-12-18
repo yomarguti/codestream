@@ -1,0 +1,73 @@
+{
+  "url": "groups.info",
+  "request": {
+    "channel": "G8X52UWUR"
+  },
+  "response": {
+    "ok": true,
+    "group": {
+      "id": "G8X52UWUR",
+      "name": "techrecruiting",
+      "is_group": true,
+      "created": 1516779764,
+      "creator": "U7CS9PYJU",
+      "is_archived": false,
+      "name_normalized": "techrecruiting",
+      "is_mpim": false,
+      "is_open": true,
+      "last_read": "1523470712.000786",
+      "latest": {
+        "user": "U7FNCE5NX",
+        "type": "message",
+        "subtype": "group_leave",
+        "ts": "1523470712.000786",
+        "text": "<@U7FNCE5NX> has left the group"
+      },
+      "unread_count": 0,
+      "unread_count_display": 0,
+      "members": [
+        "U7CS9PYJU",
+        "U7CT4071N",
+        "U7DJW0ZQU",
+        "U7H4N1A6B"
+      ],
+      "topic": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "purpose": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      }
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "groups:read"
+    ]
+  }
+}

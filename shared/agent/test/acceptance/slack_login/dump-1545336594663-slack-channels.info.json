@@ -1,0 +1,108 @@
+{
+  "url": "channels.info",
+  "request": {
+    "channel": "C9R238WQP"
+  },
+  "response": {
+    "ok": true,
+    "channel": {
+      "id": "C9R238WQP",
+      "name": "notify_alerts",
+      "is_channel": true,
+      "created": 1521053502,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "creator": "U7EV7SB71",
+      "name_normalized": "notify_alerts",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_member": true,
+      "is_private": false,
+      "is_mpim": false,
+      "last_read": "1545201018.012300",
+      "latest": {
+        "type": "message",
+        "subtype": "bot_message",
+        "text": "",
+        "ts": "1545201018.012300",
+        "bot_id": "BCG0YT4UX",
+        "attachments": [
+          {
+            "fallback": "<https://twitter.com/teamcodestream|@teamcodestream>: Create smarter //comments in your code with conversation threads behind each section of code!\n\nTry it at <https://t.co/AIhsRXVCqZ>! :fire: <https://t.co/713eCRzpJ2>",
+            "ts": 1545201012,
+            "author_name": "CodeStream",
+            "author_link": "https://twitter.com/teamcodestream/status/1075277097189425152",
+            "author_icon": "https://pbs.twimg.com/profile_images/960333160629374976/so4Fq93n_normal.jpg",
+            "author_subname": "@teamcodestream",
+            "pretext": "<https://twitter.com/teamcodestream/status/1075277097189425152>",
+            "text": "Create smarter //comments in your code with conversation threads behind each section of code!\n\nTry it at <https://t.co/AIhsRXVCqZ>! :fire: <https://t.co/713eCRzpJ2>",
+            "service_name": "twitter",
+            "service_url": "https://twitter.com/",
+            "from_url": "https://twitter.com/teamcodestream/status/1075277097189425152",
+            "image_url": "https://pbs.twimg.com/media/Duwm0joWsAURte1.jpg",
+            "image_width": 420,
+            "image_height": 211,
+            "image_bytes": 16341,
+            "id": 1,
+            "footer": "Twitter",
+            "footer_icon": "https://a.slack-edge.com/6e067/img/services/twitter_pixel_snapped_32.png"
+          }
+        ]
+      },
+      "unread_count": 0,
+      "unread_count_display": 0,
+      "members": [
+        "U7CS9PYJU",
+        "U7DJW0ZQU",
+        "U7EV7SB71",
+        "U7FNCE5NX",
+        "U7H4N1A6B",
+        "U7YNDN2VD",
+        "U8E97A1B5",
+        "U9QPXSR3M",
+        "U9ZBV29M4",
+        "UAUATCSCE",
+        "UEC3ZJ58U"
+      ],
+      "topic": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "purpose": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "previous_names": []
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "channels:read"
+    ]
+  }
+}

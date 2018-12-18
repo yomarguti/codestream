@@ -1,0 +1,38 @@
+{
+  "method": "codeStream/stream",
+  "request": {
+    "streamId": "C7DM92RTN"
+  },
+  "response": {
+    "stream": {
+      "createdAt": 1507164877000,
+      "creatorId": "U7DJW0ZQU",
+      "id": "C7DM92RTN",
+      "isArchived": false,
+      "isTeamStream": false,
+      "name": "development",
+      "memberIds": [
+        "U7CS9PYJU",
+        "U7CT4071N",
+        "U7DJW0ZQU",
+        "U7EV7SB71",
+        "U7FNCE5NX",
+        "U7GK5RY3H",
+        "U7H4N1A6B",
+        "U7TF0TDKN",
+        "U7YNDN2VD",
+        "U93JZASCQ",
+        "U9QPXSR3M",
+        "UAUATCSCE",
+        "UEC3ZJ58U"
+      ],
+      "modifiedAt": 1545344718000,
+      "mostRecentPostCreatedAt": 1545344718000,
+      "mostRecentPostId": "C7DM92RTN|1545344718.600400",
+      "privacy": "public",
+      "purpose": "Technical discussion about CodeStream",
+      "teamId": "5bb51100585ada29401ee9c5",
+      "type": "channel"
+    }
+  }
+}

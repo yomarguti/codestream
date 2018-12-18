@@ -42,7 +42,7 @@ const messageToType: {
 	users: MessageType.Users
 };
 
-export class PubnubEvents {
+export class PubnubEvents implements Disposable {
 	private _onDidReceiveMessage = new Emitter<RawRTMessage>();
 	get onDidReceiveMessage(): Event<RawRTMessage> {
 		return this._onDidReceiveMessage.event;
@@ -94,8 +94,7 @@ export class PubnubEvents {
 		return this._disposable;
 	}
 
-	@log()
-	disconnect() {
+	dispose() {
 		if (this._disposable === undefined) return;
 
 		this._disposable.dispose();

@@ -1,0 +1,1111 @@
+{
+  "url": "channels.history",
+  "request": {
+    "channel": "C7DM92RTN",
+    "count": 100
+  },
+  "response": {
+    "ok": true,
+    "messages": [
+      {
+        "client_msg_id": "4e0d10ca-50f9-45d1-b38e-374892379546",
+        "type": "message",
+        "text": "0.31 has been released",
+        "user": "U9QPXSR3M",
+        "ts": "1545344718.600400",
+        "reactions": [
+          {
+            "name": "+1",
+            "users": [
+              "U7CS9PYJU"
+            ],
+            "count": 1
+          },
+          {
+            "name": "100",
+            "users": [
+              "UAUATCSCE"
+            ],
+            "count": 1
+          }
+        ]
+      },
+      {
+        "bot_id": "BDCRHAKPY",
+        "type": "message",
+        "text": "Nice easter egg, btw!",
+        "user": "U7YNDN2VD",
+        "ts": "1545344359.599900",
+        "reactions": [
+          {
+            "name": "pray",
+            "users": [
+              "U9QPXSR3M"
+            ],
+            "count": 1
+          },
+          {
+            "name": "santa",
+            "users": [
+              "UEC3ZJ58U"
+            ],
+            "count": 1
+          }
+        ]
+      },
+      {
+        "client_msg_id": "25af5607-9d61-40ee-bc52-5b1bc3f07f9a",
+        "type": "message",
+        "text": "good with me",
+        "user": "U7FNCE5NX",
+        "ts": "1545344269.599300"
+      },
+      {
+        "client_msg_id": "3fcd80f9-e5a1-4cb2-b295-9443c05680ad",
+        "type": "message",
+        "text": "are we good to publish?",
+        "user": "U9QPXSR3M",
+        "ts": "1545344263.599100",
+        "reactions": [
+          {
+            "name": "+1",
+            "users": [
+              "U7YNDN2VD",
+              "U7CS9PYJU"
+            ],
+            "count": 2
+          }
+        ]
+      },
+      {
+        "client_msg_id": "af58be38-bf05-4954-85a0-5b4e2961ed1d",
+        "type": "message",
+        "text": ":snowflake:",
+        "user": "U7FNCE5NX",
+        "ts": "1545344262.599000",
+        "reactions": [
+          {
+            "name": "grin",
+            "users": [
+              "U9QPXSR3M",
+              "UEC3ZJ58U"
+            ],
+            "count": 2
+          }
+        ]
+      },
+      {
+        "client_msg_id": "9e5e284f-a6a4-456b-a932-cd2fbd69caea",
+        "type": "message",
+        "text": "<!here> just prepped 0.31 for release",
+        "user": "U9QPXSR3M",
+        "ts": "1545344197.598600"
+      },
+      {
+        "client_msg_id": "ff364091-65a1-4397-8829-d9702e7e977a",
+        "type": "message",
+        "text": "bummer -- didn't realize they have separate licenses for each language",
+        "user": "UEC3ZJ58U",
+        "ts": "1545331952.597700"
+      },
+      {
+        "client_msg_id": "8fec4245-6935-48b0-a0a2-bf0b01a2d453",
+        "type": "message",
+        "text": "that is the java version",
+        "user": "U9QPXSR3M",
+        "ts": "1545331889.597100"
+      },
+      {
+        "client_msg_id": "b58de9c2-0761-4230-87ae-b5a9221218ca",
+        "type": "message",
+        "text": "<https://www.teamdev.com/jxbrowser#licensing-pricing>",
+        "user": "U9QPXSR3M",
+        "ts": "1545331882.596800",
+        "attachments": [
+          {
+            "title": "TeamDev",
+            "title_link": "https://www.teamdev.com/jxbrowser#licensing-pricing",
+            "text": "Embed a Chromium-based Swing/JavaFX component into your Java application to display modern web pages built with HTML5, CSS3, JavaScript, Flash, Silverlight etc.",
+            "fallback": "TeamDev",
+            "image_url": "http://www.teamdev.com/img/opengraph/jxbrowser-og.jpg",
+            "from_url": "https://www.teamdev.com/jxbrowser#licensing-pricing",
+            "image_width": 476,
+            "image_height": 250,
+            "image_bytes": 236237,
+            "service_icon": "https://www.teamdev.com/apple-touch-icon.png?v=oLdgpkWBak",
+            "service_name": "TeamDev",
+            "id": 1,
+            "original_url": "https://www.teamdev.com/jxbrowser#licensing-pricing"
+          }
+        ]
+      },
+      {
+        "client_msg_id": "b50aed66-6aeb-4deb-9b1a-fa309d6b30a3",
+        "type": "message",
+        "text": "pick the 1 dev and i better get really good at java :confused:",
+        "user": "UEC3ZJ58U",
+        "ts": "1545331819.596500"
+      },
+      {
+        "client_msg_id": "e829903a-dd79-425e-9419-85c5b4a44812",
+        "type": "message",
+        "text": "We also might want to talk to them about a bundle, since we are likely to want the java version as well",
+        "user": "U9QPXSR3M",
+        "ts": "1545331814.596300"
+      },
+      {
+        "client_msg_id": "7df8fe29-fdd0-4412-ab25-19fd28b1b831",
+        "type": "message",
+        "text": "Such a beautiful picture to cover up what I’m sure is a horrific labyrinth of rules and regulations only few of whom can truly understand",
+        "user": "U7DJW0ZQU",
+        "ts": "1545331812.596200"
+      },
+      {
+        "client_msg_id": "4ade0a18-8ae7-43e6-a20f-135aa68fe8f8",
+        "type": "message",
+        "text": "FYI here is their licensing page: <https://www.teamdev.com/dotnetbrowser#licensing-pricing>",
+        "user": "U9QPXSR3M",
+        "ts": "1545331756.594800",
+        "attachments": [
+          {
+            "title": "TeamDev",
+            "title_link": "https://www.teamdev.com/dotnetbrowser#licensing-pricing",
+            "text": "Embed a Chromium-based browser component into your .NET application to display modern web pages built with HTML5, CSS3, JavaScript, Silverlight etc.",
+            "fallback": "TeamDev",
+            "image_url": "http://www.teamdev.com/img/opengraph/dotnetbrowser-og.jpg",
+            "from_url": "https://www.teamdev.com/dotnetbrowser#licensing-pricing",
+            "image_width": 476,
+            "image_height": 250,
+            "image_bytes": 226825,
+            "service_icon": "https://www.teamdev.com/apple-touch-icon.png?v=oLdgpkWBak",
+            "service_name": "TeamDev",
+            "id": 1,
+            "original_url": "https://www.teamdev.com/dotnetbrowser#licensing-pricing"
+          }
+        ]
+      },
+      {
+        "client_msg_id": "a480185f-2502-4875-b7bf-71fd2a5d278f",
+        "type": "message",
+        "text": "I just remembered from a stand-up 2+ weeks ago, that someone was asking how we handle static image serving.  We have a repo that gets copied to an S3 bucket which is the origin for an AWS CloudFront distribution (CDN).\n\n<https://github.com/TeamCodeStream/static_content>",
+        "user": "U7DJW0ZQU",
+        "ts": "1545328002.594400",
+        "edited": {
+          "user": "U7DJW0ZQU",
+          "ts": "1545328016.000000"
+        }
+      },
+      {
+        "client_msg_id": "0c4228c2-7852-40fe-b558-503a1d42582a",
+        "type": "message",
+        "text": "i’ll probably miss standup today, will be en route from relative to relative … still working on the analytics cards, will look into bitbucket and gitlab integrations after that",
+        "user": "U7CT4071N",
+        "ts": "1545323552.592500"
+      },
+      {
+        "client_msg_id": "b7817e09-d3ea-4800-ac81-d1de3c3b9e53",
+        "type": "message",
+        "text": "i'm pushing changes later after the release",
+        "user": "U7FNCE5NX",
+        "ts": "1545316542.591700"
+      },
+      {
+        "client_msg_id": "C98F28A6-BBEF-45EC-A1AD-0ED55F320D9F",
+        "type": "message",
+        "text": "Anyone imminently landing anything in develop? If not, <@U9QPXSR3M> - I think we can do an extension release at any time. Changelog is updated. ",
+        "user": "U7YNDN2VD",
+        "ts": "1545314081.590700"
+      },
+      {
+        "client_msg_id": "4ffb0078-2245-468a-98ae-735db631631d",
+        "type": "message",
+        "text": "I pruned when I was done, but I didn’t need to in this repo",
+        "user": "U7DJW0ZQU",
+        "ts": "1545248663.588600"
+      },
+      {
+        "client_msg_id": "7c933a01-2ec7-480e-902e-62e1a18d8790",
+        "type": "message",
+        "text": "I did\n```\ngit fetch origin\ngit checkout old-name\ngit branch -m new-name\ngit push origin :old-name new-name\ngit push origin -u new-name\n```",
+        "user": "U7DJW0ZQU",
+        "ts": "1545248638.588100",
+        "reactions": [
+          {
+            "name": "+1",
+            "users": [
+              "U9QPXSR3M"
+            ],
+            "count": 1
+          }
+        ]
+      },
+      {
+        "client_msg_id": "7a9ee7dc-b805-4834-ad0c-aeb98dfcf2d7",
+        "type": "message",
+        "text": "you may also want to do a `git fetch -p` to prune any old remote branches",
+        "user": "U9QPXSR3M",
+        "ts": "1545245404.587100"
+      },
+      {
+        "client_msg_id": "7368511f-73b8-4aa1-9157-35e538940d1c",
+        "type": "message",
+        "text": "If you have been using the `inline` branches, you will likely need to do the following to resync them:\n```\ngit branch -m inline feature/inline\ngit branch -u origin/feature/inline feature/inline\n```",
+        "user": "U9QPXSR3M",
+        "ts": "1545245367.586600"
+      },
+      {
+        "client_msg_id": "d5cafda2-829e-471d-8312-2d104099a623",
+        "type": "message",
+        "text": "damn -- would have expected a better outcome then",
+        "user": "U9QPXSR3M",
+        "ts": "1545245324.585700",
+        "thread_ts": "1545242664.584900",
+        "parent_user_id": "U9QPXSR3M"
+      },
+      {
+        "client_msg_id": "fc27d6c5-93e7-4be9-a688-d8bdd679d43a",
+        "type": "message",
+        "text": "he did a rename",
+        "user": "U7FNCE5NX",
+        "ts": "1545245292.585500",
+        "thread_ts": "1545242664.584900",
+        "parent_user_id": "U9QPXSR3M"
+      },
+      {
+        "client_msg_id": "52118A39-8F4B-40B9-BFB0-DCFD3BDDC717",
+        "type": "message",
+        "text": "No standup for me as I am flying. ",
+        "user": "U7CS9PYJU",
+        "ts": "1545244737.585400"
+      },
+      {
+        "client_msg_id": "2a2206d4-01a6-4abf-a1b2-9cb72ef102b6",
+        "type": "message",
+        "text": "<@U7DJW0ZQU> when you changed `inline` to `feature/inline` did you rename the branch or just create a new one?",
+        "user": "U9QPXSR3M",
+        "ts": "1545242664.584900",
+        "thread_ts": "1545242664.584900",
+        "reply_count": 2,
+        "reply_users_count": 2,
+        "latest_reply": "1545245324.585700",
+        "reply_users": [
+          "U7FNCE5NX",
+          "U9QPXSR3M"
+        ],
+        "replies": [
+          {
+            "user": "U7FNCE5NX",
+            "ts": "1545245292.585500"
+          },
+          {
+            "user": "U9QPXSR3M",
+            "ts": "1545245324.585700"
+          }
+        ],
+        "subscribed": false
+      },
+      {
+        "client_msg_id": "68cab16f-cd7c-4ac0-8370-0b0cad840b84",
+        "type": "message",
+        "text": "is it just a simple search? or regex? single word or something that could span line breaks?",
+        "user": "U9QPXSR3M",
+        "ts": "1545242277.583900"
+      },
+      {
+        "client_msg_id": "b57fa197-ad66-4aab-b096-dc4f88b13e69",
+        "type": "message",
+        "text": "it’s a case-sensitive search so that might have something to do with it",
+        "user": "U7CT4071N",
+        "ts": "1545241146.583300"
+      },
+      {
+        "client_msg_id": "4986f2d9-f840-449c-8e1f-5de162758db5",
+        "type": "message",
+        "text": "i’ve had this problem before, i think there’s a vs code bug … it doesn’t happen all the time but when it does it seems to “persist” (like searching over and over doesn’t solve it)",
+        "user": "U7CT4071N",
+        "ts": "1545241045.582900"
+      },
+      {
+        "client_msg_id": "050345b5-f2df-469c-93a8-c86864005227",
+        "type": "message",
+        "text": "i was thinking about saying something",
+        "user": "U7FNCE5NX",
+        "ts": "1545241005.582300"
+      },
+      {
+        "client_msg_id": "165faa9e-3f52-4775-bf54-3e44891ef1d8",
+        "type": "message",
+        "text": "<@U7FNCE5NX> you’ll be happy to know i resorted to atom to do it :confused:",
+        "user": "U7CT4071N",
+        "ts": "1545240992.582000"
+      },
+      {
+        "client_msg_id": "6a979e53-1680-4cd6-9d28-2663d835c2b1",
+        "type": "message",
+        "text": "no it’s definitely not that",
+        "user": "U7CT4071N",
+        "ts": "1545240953.581600"
+      },
+      {
+        "client_msg_id": "a1e1895e-9105-4063-b0d1-9177013cd12e",
+        "type": "message",
+        "text": "there's the file/search exclude patterns in settings...",
+        "user": "UEC3ZJ58U",
+        "ts": "1545240944.581400"
+      },
+      {
+        "client_msg_id": "18644e7f-7425-4dec-a7df-046dec5f7582",
+        "type": "message",
+        "text": "does anyone know if there’s something weird with VS Code and string searches across a repo? i’ve got a change i need to make that is dependent on finding a certain string, and VS Code just will not show me all the instances of that string in a search … it’s driving me crazy because i keep finding new instances that the search didn’t find originally",
+        "user": "U7CT4071N",
+        "ts": "1545240710.581000"
+      },
+      {
+        "client_msg_id": "99c3f0a1-4587-46b0-892a-c5d107bd1924",
+        "type": "message",
+        "text": "branch has been renamed.  You can grab the asset for it from this page:\n<http://tc.codestream.us/project.html?projectId=VscodeCodestream&amp;tab=projectOverview>",
+        "user": "U7DJW0ZQU",
+        "ts": "1545238488.579700"
+      },
+      {
+        "client_msg_id": "4837ad69-e82d-4d13-ad13-04f836c8c34d",
+        "type": "message",
+        "text": "FYI to all, the TC vscode dev extension build is configured to created assets for *develop* as well as any branch that begins with *feature/*.  The *develop* asset is saved on our asset server, the other build assets are available from the TC web site (<https://tc.codestream.us/>)",
+        "user": "U7DJW0ZQU",
+        "ts": "1545236971.579100",
+        "reactions": [
+          {
+            "name": "+1",
+            "users": [
+              "UEC3ZJ58U",
+              "U7H4N1A6B"
+            ],
+            "count": 2
+          }
+        ]
+      },
+      {
+        "client_msg_id": "d66b2fed-a1c2-4a0e-8bd5-f488f6c28bf1",
+        "type": "message",
+        "text": "I will do it",
+        "user": "U7DJW0ZQU",
+        "ts": "1545236852.577200"
+      },
+      {
+        "client_msg_id": "00cab2b5-ae7e-4584-b872-2e6c94075d33",
+        "type": "message",
+        "text": "<@U7YNDN2VD> has asked to rename the three client branches which are currently called `inline` to `feature/inline` — i’m prolly not the best person to do that. can someone please take care of that?",
+        "user": "U7CS9PYJU",
+        "ts": "1545236705.577000"
+      },
+      {
+        "client_msg_id": "993e03e2-b862-4751-97ce-4bfc801d6e69",
+        "type": "message",
+        "text": "Lets plan on doing an extension release tomorrow. There's a decent amount of stuff that's ready to go out. Friday isn't really an option because the NY office will be doing the second half of our move and then a holiday lunch/drinking.",
+        "user": "U7YNDN2VD",
+        "ts": "1545233570.576100"
+      },
+      {
+        "client_msg_id": "a24092e3-2867-4458-af9e-394b60787fbb",
+        "type": "message",
+        "text": "I will miss stand-up today (I'm on the train back home) and also need to stop work early (4pm) for a kids Xmas event",
+        "user": "U9QPXSR3M",
+        "ts": "1545148881.574800"
+      },
+      {
+        "client_msg_id": "342e46df-b882-4c74-841f-4a09479317c2",
+        "type": "message",
+        "text": "jira auth is now working in PD",
+        "user": "U7CT4071N",
+        "ts": "1545144445.573600"
+      },
+      {
+        "client_msg_id": "425a4039-71af-4c14-ba9f-299c7c4338f8",
+        "type": "message",
+        "text": "<@U7CT4071N> I enabled *‘Make your App public’* on the jira cs development app. I’ve left production disabled.",
+        "user": "U7DJW0ZQU",
+        "ts": "1545102884.573300"
+      },
+      {
+        "client_msg_id": "93e32b9f-5ef5-4bcf-a19d-96c2da3a880e",
+        "type": "message",
+        "text": "<@U9QPXSR3M> api server is now returning the api key with trello providerInfo",
+        "user": "U7CT4071N",
+        "ts": "1545088513.571900",
+        "reactions": [
+          {
+            "name": "+1",
+            "users": [
+              "U9QPXSR3M",
+              "U7DJW0ZQU"
+            ],
+            "count": 2
+          }
+        ]
+      },
+      {
+        "client_msg_id": "1d1f2929-349d-4f9a-98e1-3825f544ab22",
+        "type": "message",
+        "text": "yay! jira auth is working now",
+        "user": "U7CT4071N",
+        "ts": "1545088471.571500"
+      },
+      {
+        "client_msg_id": "eb1a2e6a-218d-40f5-bb97-9ac727b3a035",
+        "type": "message",
+        "text": "<https://insights.stackoverflow.com/survey/2018/>",
+        "user": "UEC3ZJ58U",
+        "ts": "1545082745.571100",
+        "attachments": [
+          {
+            "service_name": "Stack Overflow",
+            "title": "Stack Overflow Developer Survey 2018",
+            "title_link": "https://insights.stackoverflow.com/survey/2018/",
+            "text": "Get insights on the world’s developers from the largest and most comprehensive survey ever. Demographics. Technologies. Salaries. Career satisfaction.",
+            "fallback": "Stack Overflow: Stack Overflow Developer Survey 2018",
+            "image_url": "https://cdn.sstatic.net/insights/Img/Survey/2018/TwitterCard.png?v=5279b4381c14",
+            "from_url": "https://insights.stackoverflow.com/survey/2018/",
+            "image_width": 500,
+            "image_height": 250,
+            "image_bytes": 118352,
+            "service_icon": "https://cdn.sstatic.net/Sites/stackoverflow/img/favicon.ico?v=4f32ecc8f43d",
+            "id": 1,
+            "original_url": "https://insights.stackoverflow.com/survey/2018/"
+          }
+        ]
+      },
+      {
+        "client_msg_id": "f7f362d5-85da-45b8-9640-62ccf257b612",
+        "type": "message",
+        "text": "```\ndevelopment: ZA2TOONdGfnQh5o5JtlmUIm33NM7k1mz\nproduction: uO25m5LXVStXYvwucx3ah4875p4y0XrX\n```",
+        "user": "U7DJW0ZQU",
+        "ts": "1545069783.570900"
+      },
+      {
+        "client_msg_id": "2ac8b818-67e4-4533-bd22-e10adddc2cd1",
+        "type": "message",
+        "text": "Finally, I added all the required fields for both apps so now it’s up to the atlassian guys to get them published. There are two apps under my atlassian account.",
+        "user": "U7DJW0ZQU",
+        "ts": "1545069752.570500"
+      },
+      {
+        "client_msg_id": "e3bf67c3-fbe4-4dc3-a354-4c27c2f92084",
+        "type": "message",
+        "text": "`env|grep JIRA` to verify",
+        "user": "U7DJW0ZQU",
+        "ts": "1545069632.569500",
+        "edited": {
+          "user": "U7DJW0ZQU",
+          "ts": "1545069644.000000"
+        }
+      },
+      {
+        "client_msg_id": "86a0d718-8544-4ae1-8c6d-68bbf369c704",
+        "type": "message",
+        "text": "Make sure you update your secrets (*dt-update-secrets*), pull the latest on development and reload your sandbox",
+        "user": "U7DJW0ZQU",
+        "ts": "1545069625.569200"
+      },
+      {
+        "client_msg_id": "17573c4f-88d7-49c5-bc8f-e8677dd627ae",
+        "type": "message",
+        "text": "pushed the change.  I also added the oauth 2.0 feature to the apps (I created a second app for production) with the same callback url’s we entered into github.  It gave me an auth_code_generator_url template which I added as another variable (CS_API_JIRA_AUTH_CODE_GEN_TEMPLATE).",
+        "user": "U7DJW0ZQU",
+        "ts": "1545069602.568700"
+      },
+      {
+        "client_msg_id": "8c177af3-1c42-48ed-89f1-c111af1789e9",
+        "type": "message",
+        "text": "yes",
+        "user": "U7CT4071N",
+        "ts": "1545069062.567300"
+      },
+      {
+        "client_msg_id": "79111ff1-50f8-438e-b0d8-2996b36b1aa5",
+        "type": "message",
+        "text": "can I delete the feature/auth_callback_env branch",
+        "user": "U7DJW0ZQU",
+        "ts": "1545069054.567100"
+      },
+      {
+        "client_msg_id": "661ba19a-1742-4986-9285-b5fb492b92d2",
+        "type": "message",
+        "text": "thanks, thanks",
+        "user": "U7CT4071N",
+        "ts": "1545069038.566900"
+      },
+      {
+        "client_msg_id": "29d35f50-22e6-4f3c-8c8f-291242897334",
+        "type": "message",
+        "text": "yes yes, I’m working on it",
+        "user": "U7DJW0ZQU",
+        "ts": "1545069026.566500"
+      },
+      {
+        "client_msg_id": "8d9415ac-8abb-4afe-8457-97ea17e7cb04",
+        "type": "message",
+        "text": "<@U7DJW0ZQU> ^",
+        "user": "U7CT4071N",
+        "ts": "1545068985.566200"
+      },
+      {
+        "client_msg_id": "414f7606-1c18-4fa2-8788-58abc8a09d14",
+        "type": "message",
+        "text": "i'm not sure which places you're looking but the `webview/index.js` file of the extension handles it",
+        "user": "U7FNCE5NX",
+        "ts": "1545055941.565900",
+        "thread_ts": "1544932732.554800",
+        "parent_user_id": "U7CS9PYJU"
+      },
+      {
+        "client_msg_id": "eb4016fe-99f5-416b-8982-a92bdd063f76",
+        "type": "message",
+        "text": "can you use `JIRA` instead of `ATLASSIAN`?",
+        "user": "U7CT4071N",
+        "ts": "1545055002.565800"
+      },
+      {
+        "client_msg_id": "1183e69a-5190-4676-9e3b-653d12f78343",
+        "type": "message",
+        "text": "verify with:\n```\n[api-noauth] Jamess-MacBook-3:api_server jj$ env|grep ATLASSIAN\nCS_API_ATLASSIAN_SECRET=G1uUvsqnnUfhIzSVvDCWKx3907oUJmt6OOpUs5hMg5Dn2nxDUkhsEvCMSWLAsprc\nCS_API_ATLASSIAN_CLIENT_ID=ZA2TOONdGfnQh5o5JtlmUIm33NM7k1mz\n[api-noauth] Jamess-MacBook-3:api_server jj$\n```",
+        "user": "U7DJW0ZQU",
+        "ts": "1545032690.564900"
+      },
+      {
+        "client_msg_id": "71078dea-8e52-417d-a568-f99f0e6d5606",
+        "type": "message",
+        "text": "ok, api has been updated. Pull and reload your sandbox after you pull the latest secrets",
+        "user": "U7DJW0ZQU",
+        "ts": "1545032663.564600"
+      },
+      {
+        "client_msg_id": "253ED393-8754-4EBB-B131-A8FC9D67CDB3",
+        "type": "message",
+        "text": "I’ll try to get some time to look into the Jira issues tmrw ",
+        "user": "U7CT4071N",
+        "ts": "1545030140.564100"
+      },
+      {
+        "client_msg_id": "D07330F7-9817-41CE-A6DD-D137FEA48551",
+        "type": "message",
+        "text": "Yes, it is merged. Just do it in the development branch.",
+        "user": "U7CT4071N",
+        "ts": "1545030118.563400"
+      },
+      {
+        "client_msg_id": "9fbb918b-cc6f-480f-9bf0-4b2d1428fb27",
+        "type": "message",
+        "text": "<@U7CT4071N> did you ever merge the *feature/auth_callback_env* branch into development on the API server?  I need to update the default sandbox config with the atlassian key and I’m not sure where to do it",
+        "user": "U7DJW0ZQU",
+        "ts": "1545029984.562500"
+      },
+      {
+        "client_msg_id": "2454fefc-6bd4-4fa7-b102-aadb135f2397",
+        "type": "message",
+        "text": "If you run *dt-update-secrets* you’ll get the new key.",
+        "user": "U7DJW0ZQU",
+        "ts": "1545029883.561500"
+      },
+      {
+        "type": "message",
+        "text": "",
+        "files": [
+          {
+            "id": "FEWR4EV2A",
+            "created": 1545029850,
+            "timestamp": 1545029850,
+            "name": "image.png",
+            "title": "Pasted image at 2018-12-17, 1:57 AM",
+            "mimetype": "image/png",
+            "filetype": "png",
+            "pretty_type": "PNG",
+            "user": "U7DJW0ZQU",
+            "editable": false,
+            "size": 95626,
+            "mode": "hosted",
+            "is_external": false,
+            "external_type": "",
+            "is_public": true,
+            "public_url_shared": false,
+            "display_as_bot": false,
+            "username": "",
+            "url_private": "https://files.slack.com/files-pri/T7DDT1L5R-FEWR4EV2A/image.png",
+            "url_private_download": "https://files.slack.com/files-pri/T7DDT1L5R-FEWR4EV2A/download/image.png",
+            "thumb_64": "https://files.slack.com/files-tmb/T7DDT1L5R-FEWR4EV2A-7485e89856/image_64.png",
+            "thumb_80": "https://files.slack.com/files-tmb/T7DDT1L5R-FEWR4EV2A-7485e89856/image_80.png",
+            "thumb_360": "https://files.slack.com/files-tmb/T7DDT1L5R-FEWR4EV2A-7485e89856/image_360.png",
+            "thumb_360_w": 360,
+            "thumb_360_h": 209,
+            "thumb_480": "https://files.slack.com/files-tmb/T7DDT1L5R-FEWR4EV2A-7485e89856/image_480.png",
+            "thumb_480_w": 480,
+            "thumb_480_h": 278,
+            "thumb_160": "https://files.slack.com/files-tmb/T7DDT1L5R-FEWR4EV2A-7485e89856/image_160.png",
+            "thumb_720": "https://files.slack.com/files-tmb/T7DDT1L5R-FEWR4EV2A-7485e89856/image_720.png",
+            "thumb_720_w": 720,
+            "thumb_720_h": 417,
+            "thumb_800": "https://files.slack.com/files-tmb/T7DDT1L5R-FEWR4EV2A-7485e89856/image_800.png",
+            "thumb_800_w": 800,
+            "thumb_800_h": 463,
+            "thumb_960": "https://files.slack.com/files-tmb/T7DDT1L5R-FEWR4EV2A-7485e89856/image_960.png",
+            "thumb_960_w": 960,
+            "thumb_960_h": 556,
+            "thumb_1024": "https://files.slack.com/files-tmb/T7DDT1L5R-FEWR4EV2A-7485e89856/image_1024.png",
+            "thumb_1024_w": 1024,
+            "thumb_1024_h": 593,
+            "image_exif_rotation": 1,
+            "original_w": 1445,
+            "original_h": 837,
+            "permalink": "https://teamcodestream.slack.com/files/U7DJW0ZQU/FEWR4EV2A/image.png",
+            "permalink_public": "https://slack-files.com/T7DDT1L5R-FEWR4EV2A-a4c87e086a"
+          }
+        ],
+        "upload": true,
+        "user": "U7DJW0ZQU",
+        "display_as_bot": false,
+        "ts": "1545029855.560700"
+      },
+      {
+        "client_msg_id": "b094f023-7354-4c6c-9dc0-8e29e8d0cade",
+        "type": "message",
+        "text": "However, on the distribution page, it shows this:",
+        "user": "U7DJW0ZQU",
+        "ts": "1545029835.560600"
+      },
+      {
+        "type": "message",
+        "text": "",
+        "files": [
+          {
+            "id": "FEUM1HCSU",
+            "created": 1545029818,
+            "timestamp": 1545029818,
+            "name": "Screen Shot 2018-12-17 at 1.50.38 AM.png",
+            "title": "Screen Shot 2018-12-17 at 1.50.38 AM.png",
+            "mimetype": "image/png",
+            "filetype": "png",
+            "pretty_type": "PNG",
+            "user": "U7DJW0ZQU",
+            "editable": false,
+            "size": 132654,
+            "mode": "hosted",
+            "is_external": false,
+            "external_type": "",
+            "is_public": true,
+            "public_url_shared": false,
+            "display_as_bot": false,
+            "username": "",
+            "url_private": "https://files.slack.com/files-pri/T7DDT1L5R-FEUM1HCSU/screen_shot_2018-12-17_at_1.50.38_am.png",
+            "url_private_download": "https://files.slack.com/files-pri/T7DDT1L5R-FEUM1HCSU/download/screen_shot_2018-12-17_at_1.50.38_am.png",
+            "thumb_64": "https://files.slack.com/files-tmb/T7DDT1L5R-FEUM1HCSU-10e94af7ea/screen_shot_2018-12-17_at_1.50.38_am_64.png",
+            "thumb_80": "https://files.slack.com/files-tmb/T7DDT1L5R-FEUM1HCSU-10e94af7ea/screen_shot_2018-12-17_at_1.50.38_am_80.png",
+            "thumb_360": "https://files.slack.com/files-tmb/T7DDT1L5R-FEUM1HCSU-10e94af7ea/screen_shot_2018-12-17_at_1.50.38_am_360.png",
+            "thumb_360_w": 360,
+            "thumb_360_h": 222,
+            "thumb_480": "https://files.slack.com/files-tmb/T7DDT1L5R-FEUM1HCSU-10e94af7ea/screen_shot_2018-12-17_at_1.50.38_am_480.png",
+            "thumb_480_w": 480,
+            "thumb_480_h": 297,
+            "thumb_160": "https://files.slack.com/files-tmb/T7DDT1L5R-FEUM1HCSU-10e94af7ea/screen_shot_2018-12-17_at_1.50.38_am_160.png",
+            "thumb_720": "https://files.slack.com/files-tmb/T7DDT1L5R-FEUM1HCSU-10e94af7ea/screen_shot_2018-12-17_at_1.50.38_am_720.png",
+            "thumb_720_w": 720,
+            "thumb_720_h": 445,
+            "thumb_800": "https://files.slack.com/files-tmb/T7DDT1L5R-FEUM1HCSU-10e94af7ea/screen_shot_2018-12-17_at_1.50.38_am_800.png",
+            "thumb_800_w": 800,
+            "thumb_800_h": 494,
+            "thumb_960": "https://files.slack.com/files-tmb/T7DDT1L5R-FEUM1HCSU-10e94af7ea/screen_shot_2018-12-17_at_1.50.38_am_960.png",
+            "thumb_960_w": 960,
+            "thumb_960_h": 593,
+            "thumb_1024": "https://files.slack.com/files-tmb/T7DDT1L5R-FEUM1HCSU-10e94af7ea/screen_shot_2018-12-17_at_1.50.38_am_1024.png",
+            "thumb_1024_w": 1024,
+            "thumb_1024_h": 633,
+            "image_exif_rotation": 1,
+            "original_w": 1431,
+            "original_h": 884,
+            "permalink": "https://teamcodestream.slack.com/files/U7DJW0ZQU/FEUM1HCSU/screen_shot_2018-12-17_at_1.50.38_am.png",
+            "permalink_public": "https://slack-files.com/T7DDT1L5R-FEUM1HCSU-16a1d3af71"
+          }
+        ],
+        "upload": true,
+        "user": "U7DJW0ZQU",
+        "display_as_bot": false,
+        "ts": "1545029822.560100"
+      },
+      {
+        "client_msg_id": "14d0f0f4-e8ae-42c5-9f35-800481840347",
+        "type": "message",
+        "text": "I created a development app under my atlassian account, however their seems to be a distribution issue.\n\nI added the Jira platform rest API with these permissions:",
+        "user": "U7DJW0ZQU",
+        "ts": "1545029801.560000"
+      },
+      {
+        "client_msg_id": "1520238d-437b-4c0c-ba1c-9ea724d4d063",
+        "type": "message",
+        "text": "i’ve forwarded you the email from atlassian, if that helps at all",
+        "user": "U7CT4071N",
+        "ts": "1545027196.559000"
+      },
+      {
+        "client_msg_id": "93d08ffe-36f5-4aaa-a6d2-535b5e4c317b",
+        "type": "message",
+        "text": "hopefully, from there, it’ll just “work”, though i’m not at all sure how their approval process connects directly to our account in atlassian, but we’ll see….",
+        "user": "U7CT4071N",
+        "ts": "1545027155.558700"
+      },
+      {
+        "client_msg_id": "8d4796aa-0d00-48b1-af0a-e9f864096eb4",
+        "type": "message",
+        "text": "this should give you a client ID and client secret like for all the other providers, which we’ll then need to make into configuration secrets in the usual way",
+        "user": "U7CT4071N",
+        "ts": "1545027115.557900"
+      },
+      {
+        "client_msg_id": "523d4c21-e697-4125-a886-e4ee15c910a1",
+        "type": "message",
+        "text": "<@U7DJW0ZQU> can you try to make an “official” app … i *think* you need to do it from here: <https://developer.atlassian.com/apps/?utm_source=%2Fapps&amp;utm_medium=302>",
+        "user": "U7CT4071N",
+        "ts": "1545027041.557000",
+        "attachments": [
+          {
+            "title": "Log in with Atlassian account",
+            "title_link": "https://developer.atlassian.com/apps/?utm_source=%2Fapps&utm_medium=302",
+            "text": "Log in to Jira, Confluence, and all other Atlassian Cloud products here. Not an Atlassian user? Sign up for free.",
+            "fallback": "Log in with Atlassian account",
+            "from_url": "https://developer.atlassian.com/apps/?utm_source=%2Fapps&utm_medium=302",
+            "service_icon": "https://cpfs-cdn.atlassian.com/assets/shared/id-summit/id-summit-aa-favicon.ico",
+            "service_name": "id.atlassian.com",
+            "id": 1,
+            "original_url": "https://developer.atlassian.com/apps/?utm_source=%2Fapps&amp;utm_medium=302"
+          }
+        ]
+      },
+      {
+        "client_msg_id": "13298e8d-46ab-42bd-afdb-7c8d83eaf9b1",
+        "type": "message",
+        "text": "atlassian has approved our app for public distribution",
+        "user": "U7CT4071N",
+        "ts": "1545026874.555400"
+      },
+      {
+        "client_msg_id": "234f579f-7523-4f17-adc7-cb72ee878836",
+        "type": "message",
+        "text": "when the extension posts `codestream:interaction:active-editor-changed` to the webview, what handles it? the only places that seem plausible to me are commented out",
+        "user": "U7CS9PYJU",
+        "ts": "1544932732.554800",
+        "thread_ts": "1544932732.554800",
+        "reply_count": 1,
+        "reply_users_count": 1,
+        "latest_reply": "1545055941.565900",
+        "reply_users": [
+          "U7FNCE5NX"
+        ],
+        "replies": [
+          {
+            "user": "U7FNCE5NX",
+            "ts": "1545055941.565900"
+          }
+        ],
+        "subscribed": false
+      },
+      {
+        "client_msg_id": "d74be35d-eb85-412f-9575-5410b2ef9e93",
+        "type": "message",
+        "text": "running `npm run rebuild` didn't install it. after manually installing it via `npm install vscode-languageserver-protocol` and then running `npm run rebuild` everything worked.",
+        "user": "U7CS9PYJU",
+        "ts": "1544901282.554200"
+      },
+      {
+        "client_msg_id": "90e6ea6d-1d5f-4c2a-8e13-9eb45e7bdd34",
+        "type": "message",
+        "text": "that is a dependency of `vscode-languageserver` and `vscode-languageclient`",
+        "user": "U9QPXSR3M",
+        "ts": "1544900853.553500"
+      },
+      {
+        "client_msg_id": "6842cbff-f3fa-4875-8fb5-b39055d5c34a",
+        "type": "message",
+        "text": "looks like `vscode-languageserver-protocol` is in package-lock.json but not in any package.json",
+        "user": "U7CS9PYJU",
+        "ts": "1544891444.552800"
+      },
+      {
+        "client_msg_id": "6706F06F-A92A-4EBE-B633-89819B04A1B1",
+        "type": "message",
+        "text": "I think so yeah but I don’t know much about it. Just seems pretty obvious you’re missing a nose module. Maybe just install it and see if that fixes it.",
+        "user": "U7CT4071N",
+        "ts": "1544850583.552400"
+      },
+      {
+        "client_msg_id": "FBAD9040-60AF-4852-8DBF-1216133240B9",
+        "type": "message",
+        "text": "My understanding is that run rebuild does that",
+        "user": "U7CS9PYJU",
+        "ts": "1544850512.550800"
+      },
+      {
+        "client_msg_id": "7F073BB1-ED15-4829-B432-10FE86BDE8D9",
+        "type": "message",
+        "text": "Do you need to do an npm install?",
+        "user": "U7CT4071N",
+        "ts": "1544849444.550100"
+      },
+      {
+        "client_msg_id": "7e1ae3cb-d0b1-4c29-8a53-08002b6aef80",
+        "type": "message",
+        "text": "what am i doing wrong? i checked out all 3 client repos to `develop` to fix that input width bug, then checked all 3 back out to `inline` to continue work. when i did an `npm run rebuild` now i get the following errors:\n\n```    Built at: 12/14/2018 11:47:17 PM\n                 Asset       Size   Chunks             Chunk Names\n    ../../webview.html  635 bytes           [emitted]\n           webview.css    103 KiB  webview  [emitted]  webview\n            webview.js   14.7 MiB  webview  [emitted]  webview\n\n    ERROR in /Users/pez/github/codestream-components/shared/agent.protocol.markers.ts\n    [tsl] ERROR in /Users/pez/github/codestream-components/shared/agent.protocol.markers.ts(7,8)\n          TS2307: Cannot find module 'vscode-languageserver-protocol'.\n\n    ERROR in /Users/pez/github/codestream-components/shared/agent.protocol.posts.ts\n    [tsl] ERROR in /Users/pez/github/codestream-components/shared/agent.protocol.posts.ts(2,60)\n          TS2307: Cannot find module 'vscode-languageserver-protocol'.```",
+        "user": "U7CS9PYJU",
+        "ts": "1544849320.549200"
+      },
+      {
+        "client_msg_id": "7D556706-879E-4FE5-8EB4-2175C83E8371",
+        "type": "message",
+        "text": "Sweet. ",
+        "user": "U7CS9PYJU",
+        "ts": "1544839778.548300"
+      },
+      {
+        "client_msg_id": "f644bd8f-e0c5-4310-a89f-9af7bf1607e9",
+        "type": "message",
+        "text": "github and asana auth are now in PD … have to wait on the approval of our app for jira",
+        "user": "U7CT4071N",
+        "ts": "1544839633.548100"
+      },
+      {
+        "client_msg_id": "751159a1-4bc2-4114-880b-24e9dd2a5bae",
+        "type": "message",
+        "text": "&gt; until Submit button goes off the right. I'll put in a card.\ncommit 7a2f591 fixes it. couldn't find the card.",
+        "user": "U7CS9PYJU",
+        "ts": "1544837917.547600"
+      },
+      {
+        "client_msg_id": "4bab31e2-4580-4657-93c1-5baaa0c25696",
+        "type": "message",
+        "text": "so yeah w can prolly fix it",
+        "user": "U7CS9PYJU",
+        "ts": "1544833362.546900"
+      },
+      {
+        "client_msg_id": "75f27701-72a5-4bd4-afcd-6d4677e59a37",
+        "type": "message",
+        "text": "actually i take that back... devs might need to share long strings like keys or IDs.",
+        "user": "U7CS9PYJU",
+        "ts": "1544833356.546700"
+      },
+      {
+        "client_msg_id": "37e6650f-7080-44e7-a1ea-46772308216c",
+        "type": "message",
+        "text": "so like a string of \"M\"s? that's a pretty low-priority fix. or is there a real-world use case that shows the error?",
+        "user": "U7CS9PYJU",
+        "ts": "1544833320.546300"
+      },
+      {
+        "client_msg_id": "fca29481-357b-41a2-b972-0e3b1866bd82",
+        "type": "message",
+        "text": "Ben was able to reproduce. I was thinking a large amount of text, but it's really just a long individual string that extends beyond width of compose box. Just starts pushing the width of the compose box wider and wider until Submit button goes off the right. I'll put in a card.",
+        "user": "U7YNDN2VD",
+        "ts": "1544832087.545400"
+      },
+      {
+        "client_msg_id": "54cbc1cd-6a51-4860-b3c9-53f8ebdf3e38",
+        "type": "message",
+        "text": "I haven't been able to reproduce so I asked Ben to reach out to him for more details, or to have him contact us via support.",
+        "user": "U7YNDN2VD",
+        "ts": "1544831637.544100"
+      },
+      {
+        "client_msg_id": "12B539CD-2FFB-4D49-9B68-8130C0C9E3F7",
+        "type": "message",
+        "text": "I’ll check it out when I’m back at a computer. On my at home. Might haven’t to with pastoring in text instead of typing ",
+        "user": "U7YNDN2VD",
+        "ts": "1544827851.543500"
+      },
+      {
+        "client_msg_id": "382701db-8a0c-4135-b43a-7daf218bd128",
+        "type": "message",
+        "text": "can someone plz respond?",
+        "user": "U7CS9PYJU",
+        "ts": "1544825655.542200"
+      },
+      {
+        "client_msg_id": "c709aff0-9261-4cea-9b88-8068767f99e8",
+        "type": "message",
+        "text": "does anyone know what this guy is talking about? <https://twitter.com/liamzebedee/status/1073685106341044224>",
+        "user": "U7CS9PYJU",
+        "ts": "1544825652.541900",
+        "attachments": [
+          {
+            "fallback": "<https://twitter.com/liamzebedee|@liamzebedee>: Yo <https://twitter.com/teamcodestream|@teamcodestream> - really like your product idea, was just trying it out. It appears the \"Submit\" btn disappears if you have a long string in the comment box - the box.width expands rather than word-wrapping, so the buttons go offscreen. Please fix &lt;3",
+            "ts": 1544821452,
+            "author_name": "Liam Zebedee",
+            "author_link": "https://twitter.com/liamzebedee/status/1073685106341044224",
+            "author_icon": "https://pbs.twimg.com/profile_images/929993551705812992/aI0QUMyH_normal.jpg",
+            "author_subname": "@liamzebedee",
+            "text": "Yo <https://twitter.com/teamcodestream|@teamcodestream> - really like your product idea, was just trying it out. It appears the \"Submit\" btn disappears if you have a long string in the comment box - the box.width expands rather than word-wrapping, so the buttons go offscreen. Please fix &lt;3",
+            "service_name": "twitter",
+            "service_url": "https://twitter.com/",
+            "from_url": "https://twitter.com/liamzebedee/status/1073685106341044224",
+            "id": 1,
+            "original_url": "https://twitter.com/liamzebedee/status/1073685106341044224",
+            "footer": "Twitter",
+            "footer_icon": "https://a.slack-edge.com/6e067/img/services/twitter_pixel_snapped_32.png"
+          }
+        ]
+      },
+      {
+        "client_msg_id": "f7310404-32be-4a57-a3c3-8f99547947d4",
+        "type": "message",
+        "text": "forgot to mention I'm back",
+        "user": "U9QPXSR3M",
+        "ts": "1544819902.541400",
+        "reactions": [
+          {
+            "name": "ohyeah",
+            "users": [
+              "U7CT4071N"
+            ],
+            "count": 1
+          }
+        ]
+      },
+      {
+        "client_msg_id": "ff88a8c5-5968-4101-ac7b-bab15145c87f",
+        "type": "message",
+        "text": "<!channel> reminder demo/standup now",
+        "user": "U7CS9PYJU",
+        "ts": "1544812259.541100"
+      },
+      {
+        "client_msg_id": "7e01649f-ad8c-4f78-a5f1-fc793ef173f4",
+        "type": "message",
+        "text": "Sorry for the late notice, but I will be out from 1 to ~3 at Dex's holiday show",
+        "user": "U9QPXSR3M",
+        "ts": "1544807578.540500"
+      },
+      {
+        "client_msg_id": "06369D92-1F6F-47C6-94C1-D37FFBF3C224",
+        "type": "message",
+        "text": "Facebook is retiring Nuclide. ",
+        "user": "U7CS9PYJU",
+        "ts": "1544805410.539800"
+      },
+      {
+        "client_msg_id": "3167d281-610a-425c-bdba-afca0ef24a73",
+        "type": "message",
+        "text": "FYI the guy who wrote that is our atlassian champion",
+        "user": "U9QPXSR3M",
+        "ts": "1544745272.539300"
+      },
+      {
+        "client_msg_id": "3b69904c-4913-4ca7-9ae0-be317be75af9",
+        "type": "message",
+        "text": "“Adding message actions to the Jira integration” by Trevor Thompson <https://link.medium.com/m6j1o3rVCS>",
+        "user": "U9QPXSR3M",
+        "ts": "1544745217.538200",
+        "attachments": [
+          {
+            "title": "“Adding message actions to the Jira integration”",
+            "title_link": "https://link.medium.com/m6j1o3rVCS",
+            "text": "A place where words matter",
+            "fallback": "“Adding message actions to the Jira integration”",
+            "image_url": "https://cdn-images-1.medium.com/1*pxJjkeKarQQzBdXBBhCZMA.gif",
+            "from_url": "https://link.medium.com/m6j1o3rVCS",
+            "image_width": 500,
+            "image_height": 250,
+            "image_bytes": 2866180,
+            "service_icon": "https://cdn-images-1.medium.com/1*pxJjkeKarQQzBdXBBhCZMA.gif",
+            "service_name": "link.medium.com",
+            "id": 1,
+            "original_url": "https://link.medium.com/m6j1o3rVCS"
+          }
+        ]
+      },
+      {
+        "client_msg_id": "72b37660-82f3-48de-85c9-468bfd0aa75a",
+        "type": "message",
+        "text": "request made: <https://ecosystem.atlassian.net/servicedesk/customer/portal/14/DEVHELP-2038>",
+        "user": "U7CT4071N",
+        "ts": "1544745047.538000"
+      },
+      {
+        "client_msg_id": "e5b5d4c6-246e-4d19-a6b8-f4f85f2b52b6",
+        "type": "message",
+        "text": "danke",
+        "user": "U7CT4071N",
+        "ts": "1544743594.537700",
+        "thread_ts": "1544736765.536700",
+        "parent_user_id": "U7CT4071N"
+      },
+      {
+        "client_msg_id": "a3b50778-cbda-42b7-ba49-77b9d83bfb60",
+        "type": "message",
+        "text": "also product partnerships",
+        "user": "U7CS9PYJU",
+        "ts": "1544743581.537600"
+      },
+      {
+        "type": "message",
+        "subtype": "thread_broadcast",
+        "text": "he is director, produt partnerships",
+        "bot_id": "BDASP14QH",
+        "ts": "1544743559.537200",
+        "thread_ts": "1544736765.536700",
+        "root": {
+          "client_msg_id": "6375fe94-628b-490e-93f1-994f680f97f2",
+          "type": "message",
+          "text": "<@U7CS9PYJU> what’s the name/position of the guy that said we could get whitelisted for OAuth2 at atlassian? i’d like to put his info in the request",
+          "user": "U7CT4071N",
+          "ts": "1544736765.536700",
+          "thread_ts": "1544736765.536700",
+          "reply_count": 3,
+          "reply_users_count": 2,
+          "latest_reply": "1544743594.537700",
+          "reply_users": [
+            "U7CS9PYJU",
+            "U7CT4071N"
+          ],
+          "replies": [
+            {
+              "user": "U7CS9PYJU",
+              "ts": "1544743481.536800"
+            },
+            {
+              "user": "U7CS9PYJU",
+              "ts": "1544743559.537200"
+            },
+            {
+              "user": "U7CT4071N",
+              "ts": "1544743594.537700"
+            }
+          ],
+          "subscribed": false
+        }
+      }
+    ],
+    "has_more": true,
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "channels:history"
+    ]
+  }
+}

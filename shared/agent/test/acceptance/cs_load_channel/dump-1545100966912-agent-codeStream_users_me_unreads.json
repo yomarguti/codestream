@@ -1,0 +1,15 @@
+{
+  "method": "codeStream/users/me/unreads",
+  "request": {},
+  "response": {
+    "unreads": {
+      "lastReads": {
+        "5bbd06ba2aae56770cbcbf49": 197
+      },
+      "mentions": {},
+      "unreads": {},
+      "totalMentions": 0,
+      "totalUnreads": 0
+    }
+  }
+}

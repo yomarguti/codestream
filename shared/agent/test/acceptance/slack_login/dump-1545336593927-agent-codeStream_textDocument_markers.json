@@ -1,0 +1,12 @@
+{
+  "method": "codeStream/textDocument/markers",
+  "request": {
+    "textDocument": {
+      "uri": "file:///Users/mfarias/Code/vscode-codestream/src/providers/markerDecorationProvider.ts"
+    }
+  },
+  "response": {
+    "markers": [],
+    "markersNotLocated": []
+  }
+}

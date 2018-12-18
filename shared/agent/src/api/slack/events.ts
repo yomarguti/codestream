@@ -6,7 +6,7 @@ import { Container } from "../../container";
 import { Logger, TraceLevel } from "../../logger";
 import { ConnectionStatus, LogoutReason } from "../../shared/agent.protocol";
 import { StreamType } from "../../shared/api.protocol";
-import { debug, log } from "../../system";
+import { debug, Disposable, log } from "../../system";
 import {
 	MessageType,
 	PreferencesRTMessage,
@@ -94,7 +94,7 @@ interface SlackEvent {
 	[key: string]: any;
 }
 
-export class SlackEvents {
+export class SlackEvents implements Disposable {
 	private _onDidReceiveMessage = new Emitter<RTMessage>();
 	get onDidReceiveMessage(): Event<RTMessage> {
 		return this._onDidReceiveMessage.event;
@@ -235,7 +235,7 @@ export class SlackEvents {
 	}
 
 	@log()
-	async disconnect() {
+	async dispose() {
 		const cc = Logger.getCorrelationContext();
 
 		try {

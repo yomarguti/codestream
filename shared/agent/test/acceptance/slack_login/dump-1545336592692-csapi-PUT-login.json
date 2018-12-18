@@ -1,0 +1,403 @@
+{
+  "url": "/login",
+  "request": {},
+  "response": {
+    "user": {
+      "version": 92,
+      "deactivated": false,
+      "phoneNumber": "",
+      "iWorkOn": "",
+      "providerIdentities": [
+        "slack::U7H4N1A6B"
+      ],
+      "createdAt": 1538615849591,
+      "modifiedAt": 1541624668002,
+      "_id": "5bb56a296c347e4bc63c2ab0",
+      "email": "marcelo@codestream.com",
+      "username": "marcelo",
+      "timeZone": "America/New_York",
+      "creatorId": "5bb56a296c347e4bc63c2ab0",
+      "isRegistered": true,
+      "registeredAt": 1539020051997,
+      "joinMethod": "Created Team",
+      "primaryReferral": "external",
+      "originTeamId": "5bbb9527ce36105aede3d176",
+      "companyIds": [
+        "5bbb9527ce36105aede3d177",
+        "5bb51100585ada29401ee9c6",
+        "5bfdd197e8a06548106a10e8"
+      ],
+      "teamIds": [
+        "5bbb9527ce36105aede3d176",
+        "5bb51100585ada29401ee9c5",
+        "5bfdd197e8a06548106a10e7"
+      ],
+      "lastLogin": 1545336592612,
+      "id": "5bb56a296c347e4bc63c2ab0",
+      "lastReads": {
+        "5bfdd197e8a06548106a10e9": 4
+      },
+      "preferences": {
+        "telemetryConsent": true,
+        "emojiPicker-last": "stuffed_flatbread",
+        "emojiPicker-frequently": {
+          "+1": 9,
+          "bridge_at_night": 1,
+          "grinning": 8,
+          "heart_eyes": 6,
+          "joy": 2,
+          "kissing_heart": 7,
+          "laughing": 5,
+          "scream": 1,
+          "stuck_out_tongue_winking_eye": 4,
+          "sweat_smile": 3,
+          "stuffed_flatbread": 1
+        },
+        "markerFileFilter": "all",
+        "markerTypeFilter": "all",
+        "showChannels": "all"
+      },
+      "totalPosts": 168,
+      "lastPostCreatedAt": 1539049363704,
+      "providerInfo": {
+        "slack": {
+          "userId": "U7H4N1A6B",
+          "teamId": "T7DDT1L5R",
+          "accessToken": "xoxp-251469054195-255158044215-452121319443-10f9492e5ca1ecc88df6e2adb0d6eb05"
+        }
+      }
+    },
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiI1YmI1NmEyOTZjMzQ3ZTRiYzYzYzJhYjAiLCJpc3MiOiJDb2RlU3RyZWFtIiwiYWxnIjoiSFMyNTYiLCJ0eXBlIjoid2ViIiwiaWF0IjoxNTM5MDIwMDUxfQ.7IAg-8xIMDULj6P1c-BJGYNfftGC0wPdzOSn3WaoZ3s",
+    "pubnubKey": "sub-c-976e9836-f4a7-11e7-b8a6-46d99af2bb8c",
+    "pubnubToken": "6f7e81fa214d46a9bf03d53053744c5549fcea2a4fb0437ebeb9f66417b1a351",
+    "teams": [
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1538593024654,
+        "modifiedAt": 1538593024654,
+        "_id": "5bb51100585ada29401ee9c5",
+        "name": "CodeStream",
+        "creatorId": "5b6ca95ca51ac46638670186",
+        "memberIds": [
+          "5b6ca95ca51ac46638670186",
+          "5bb619e76c347e4bc63c2ad6",
+          "5b58dde6efb4c720ffe15a83",
+          "5b58a606efb4c720ffe15a78",
+          "5bb56a296c347e4bc63c2ab0",
+          "5bbcded32aae56770cbcbf33",
+          "5bbcfb942aae56770cbcbf39",
+          "5a664fb301cc4c2b8a6b79e8",
+          "5bbd0ac12aae56770cbcbf4a",
+          "5b64966ccca9257a70dbde8e",
+          "5c0599af6f6e2b29beae5919"
+        ],
+        "adminIds": [
+          "5b6ca95ca51ac46638670186"
+        ],
+        "providerInfo": {
+          "slack": {
+            "teamId": "T7DDT1L5R"
+          }
+        },
+        "primaryReferral": "internal",
+        "companyId": "5bb51100585ada29401ee9c6",
+        "id": "5bb51100585ada29401ee9c5"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1539020071346,
+        "modifiedAt": 1539020071346,
+        "_id": "5bbb9527ce36105aede3d176",
+        "name": "codestream",
+        "creatorId": "5bb56a296c347e4bc63c2ab0",
+        "memberIds": [
+          "5bb56a296c347e4bc63c2ab0"
+        ],
+        "adminIds": [
+          "5bb56a296c347e4bc63c2ab0"
+        ],
+        "primaryReferral": "external",
+        "companyId": "5bbb9527ce36105aede3d177",
+        "id": "5bbb9527ce36105aede3d176"
+      },
+      {
+        "version": 3,
+        "deactivated": false,
+        "createdAt": 1543360919747,
+        "modifiedAt": 1543360919747,
+        "_id": "5bfdd197e8a06548106a10e7",
+        "name": "Colin's Own Team",
+        "creatorId": "5bfdd16ae8a06548106a10e5",
+        "memberIds": [
+          "5bfdd16ae8a06548106a10e5",
+          "5bb56a296c347e4bc63c2ab0",
+          "5bfddc80e8a06548106a1106"
+        ],
+        "adminIds": [
+          "5bfdd16ae8a06548106a10e5"
+        ],
+        "primaryReferral": "external",
+        "companyId": "5bfdd197e8a06548106a10e8",
+        "id": "5bfdd197e8a06548106a10e7"
+      }
+    ],
+    "companies": [
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1538593024650,
+        "modifiedAt": 1538593024650,
+        "_id": "5bb51100585ada29401ee9c6",
+        "name": "codestream.com",
+        "creatorId": "5b6ca95ca51ac46638670186",
+        "teamIds": [
+          "5bb51100585ada29401ee9c5"
+        ],
+        "id": "5bb51100585ada29401ee9c6"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1539020071343,
+        "modifiedAt": 1539020071343,
+        "_id": "5bbb9527ce36105aede3d177",
+        "name": "codestream.com",
+        "creatorId": "5bb56a296c347e4bc63c2ab0",
+        "teamIds": [
+          "5bbb9527ce36105aede3d176"
+        ],
+        "id": "5bbb9527ce36105aede3d177"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1543360919745,
+        "modifiedAt": 1543360919745,
+        "_id": "5bfdd197e8a06548106a10e8",
+        "name": "codestream.com",
+        "teamIds": [
+          "5bfdd197e8a06548106a10e7"
+        ],
+        "creatorId": "5bfdd16ae8a06548106a10e5",
+        "id": "5bfdd197e8a06548106a10e8"
+      }
+    ],
+    "repos": [
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1539091796247,
+        "modifiedAt": 1539091796247,
+        "_id": "5bbcad542aae56770cbcbef6",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/gore",
+            "normalizedUrl": "github.com/teamcodestream/gore",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bb56a296c347e4bc63c2ab0",
+        "name": "gore",
+        "id": "5bbcad542aae56770cbcbef6"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1539097456628,
+        "modifiedAt": 1539097456628,
+        "_id": "5bbcc3702aae56770cbcbf05",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "remotes": [
+          {
+            "url": "github.com/marcelofarias/atom",
+            "normalizedUrl": "github.com/marcelofarias/atom",
+            "companyIdentifier": "github.com/marcelofarias"
+          },
+          {
+            "url": "github.com/teamcodestream/atom",
+            "normalizedUrl": "github.com/teamcodestream/atom",
+            "companyIdentifier": "github.com/teamcodestream"
+          },
+          {
+            "url": "github.com/teamcodestream/atom-client",
+            "normalizedUrl": "github.com/teamcodestream/atom-client",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bb56a296c347e4bc63c2ab0",
+        "name": "atom",
+        "id": "5bbcc3702aae56770cbcbf05"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1539122272593,
+        "modifiedAt": 1539122272593,
+        "_id": "5bbd2460c129b10c668b9fc9",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/vscode-codestream",
+            "normalizedUrl": "github.com/teamcodestream/vscode-codestream",
+            "companyIdentifier": "github.com/teamcodestream"
+          },
+          {
+            "url": "github.com/marcelofarias/vscode-codestream",
+            "normalizedUrl": "github.com/marcelofarias/vscode-codestream",
+            "companyIdentifier": "github.com/marcelofarias"
+          }
+        ],
+        "creatorId": "5b58dde6efb4c720ffe15a83",
+        "name": "vscode-codestream",
+        "id": "5bbd2460c129b10c668b9fc9"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1540416093193,
+        "modifiedAt": 1540416093194,
+        "_id": "5bd0e25dd4321c0d4897c760",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/codestream-lsp-agent",
+            "normalizedUrl": "github.com/teamcodestream/codestream-lsp-agent",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bb56a296c347e4bc63c2ab0",
+        "name": "codestream-lsp-agent",
+        "id": "5bd0e25dd4321c0d4897c760"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1542394067446,
+        "modifiedAt": 1542394067446,
+        "_id": "5bef10d3c6a69f1ba0ffe8af",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/codestream-components",
+            "normalizedUrl": "github.com/teamcodestream/codestream-components",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5b6ca95ca51ac46638670186",
+        "name": "codestream-components",
+        "id": "5bef10d3c6a69f1ba0ffe8af"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1543440876981,
+        "modifiedAt": 1543440876981,
+        "_id": "5bff09ecb45ba641c7cfee56",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/api_server",
+            "normalizedUrl": "github.com/teamcodestream/api_server",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbcfb942aae56770cbcbf39",
+        "name": "api_server",
+        "id": "5bff09ecb45ba641c7cfee56"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1544211382371,
+        "modifiedAt": 1544211382371,
+        "_id": "5c0acbb6692a64151ed76a14",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/outbound_email",
+            "normalizedUrl": "github.com/teamcodestream/outbound_email",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5a664fb301cc4c2b8a6b79e8",
+        "name": "outbound_email",
+        "id": "5c0acbb6692a64151ed76a14"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1545237455022,
+        "modifiedAt": 1545237455022,
+        "_id": "5c1a73cf6234b62fafbb64c6",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "remotes": [
+          {
+            "url": "github.com/akonwi/git-plus",
+            "normalizedUrl": "github.com/akonwi/git-plus",
+            "companyIdentifier": "github.com/akonwi"
+          }
+        ],
+        "creatorId": "5b6ca95ca51ac46638670186",
+        "name": "git-plus",
+        "id": "5c1a73cf6234b62fafbb64c6"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1539020102932,
+        "modifiedAt": 1539020102932,
+        "_id": "5bbb9546ce36105aede3d17c",
+        "teamId": "5bbb9527ce36105aede3d176",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/gore",
+            "normalizedUrl": "github.com/teamcodestream/gore",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bb56a296c347e4bc63c2ab0",
+        "name": "gore",
+        "id": "5bbb9546ce36105aede3d17c"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1543361438460,
+        "modifiedAt": 1543361438460,
+        "_id": "5bfdd39ee8a06548106a10ed",
+        "teamId": "5bfdd197e8a06548106a10e7",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/codestream-lsp-agent",
+            "normalizedUrl": "github.com/teamcodestream/codestream-lsp-agent",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bfdd16ae8a06548106a10e5",
+        "name": "codestream-lsp-agent",
+        "id": "5bfdd39ee8a06548106a10ed"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1543364424036,
+        "modifiedAt": 1543364424036,
+        "_id": "5bfddf48e8a06548106a111d",
+        "teamId": "5bfdd197e8a06548106a10e7",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/api_server",
+            "normalizedUrl": "github.com/teamcodestream/api_server",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bfddc80e8a06548106a1106",
+        "name": "api_server",
+        "id": "5bfddf48e8a06548106a111d"
+      }
+    ]
+  }
+}

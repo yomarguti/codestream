@@ -71,6 +71,7 @@ export interface BaseAgentOptions {
 	};
 	serverUrl: string;
 	traceLevel: TraceLevel;
+	recordRequests?: boolean;
 }
 
 export interface AgentOptions extends BaseAgentOptions {

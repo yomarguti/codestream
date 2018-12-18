@@ -232,6 +232,7 @@ export interface ApiProvider {
 
 	fetch<R extends object>(url: string, init?: RequestInit, token?: string): Promise<R>;
 	useMiddleware(middleware: CodeStreamApiMiddleware): Disposable;
+	dispose(): Promise<void>;
 
 	login(options: LoginOptions): Promise<LoginResponse & { teamId: string }>;
 	subscribe(types?: MessageType[]): Promise<void>;

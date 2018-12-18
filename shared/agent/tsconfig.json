@@ -1,5 +1,9 @@
 {
 	"compilerOptions": {
+		"baseUrl": "src",
+		"paths": {
+			"https-proxy-agent": ["@types/https-proxy-agent"]
+		},
 		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
 		"importHelpers": true,

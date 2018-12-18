@@ -1,0 +1,26 @@
+{
+  "method": "codeStream/stream",
+  "request": {
+    "streamId": "5bbd06ba2aae56770cbcbf49"
+  },
+  "response": {
+    "stream": {
+      "version": 186,
+      "deactivated": false,
+      "createdAt": 1539114682475,
+      "modifiedAt": 1539114682475,
+      "_id": "5bbd06ba2aae56770cbcbf49",
+      "teamId": "5bbd06ba2aae56770cbcbf47",
+      "type": "channel",
+      "name": "general",
+      "isTeamStream": true,
+      "privacy": "public",
+      "creatorId": "5bbd06952aae56770cbcbf45",
+      "sortId": "5c06d7c36f6e2b29beae59dd",
+      "mostRecentPostId": "5c06d7c36f6e2b29beae59dd",
+      "mostRecentPostCreatedAt": 1543952323515,
+      "numMarkers": 43,
+      "id": "5bbd06ba2aae56770cbcbf49"
+    }
+  }
+}

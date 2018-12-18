@@ -1,0 +1,104 @@
+{
+  "url": "channels.info",
+  "request": {
+    "channel": "CENV45Y1L"
+  },
+  "response": {
+    "ok": true,
+    "channel": {
+      "id": "CENV45Y1L",
+      "name": "ci-vscode",
+      "is_channel": true,
+      "created": 1544127569,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "creator": "U9QPXSR3M",
+      "name_normalized": "ci-vscode",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_member": true,
+      "is_private": false,
+      "is_mpim": false,
+      "last_read": "1545344685.031100",
+      "latest": {
+        "type": "message",
+        "subtype": "bot_message",
+        "text": "",
+        "ts": "1545344685.031100",
+        "bot_id": "BEMPLJUGH",
+        "attachments": [
+          {
+            "fallback": "Asset Created : CI (build dev asset from develop &amp; feature/*) build #codestream-0.31.1+940",
+            "title": "Asset created : CI (build dev asset from develop &amp; feature/*) <http://tc.codestream.us/viewLog.html?buildTypeId=VscodeCodestream_Ci&amp;buildId=3505|build #codestream-0.31.1+940>",
+            "id": 1,
+            "color": "2eb886",
+            "fields": [
+              {
+                "title": "Asset",
+                "value": "<http://tc.codestream.us/artifacts/dev/vscode-codestream/codestream-0.31.1+940.vsix>",
+                "short": false
+              },
+              {
+                "title": "Info",
+                "value": "<http://tc.codestream.us/artifacts/dev/vscode-codestream/codestream-0.31.1+940.info>",
+                "short": false
+              }
+            ]
+          }
+        ]
+      },
+      "unread_count": 0,
+      "unread_count_display": 0,
+      "members": [
+        "U7CS9PYJU",
+        "U7CT4071N",
+        "U7DJW0ZQU",
+        "U7FNCE5NX",
+        "U7H4N1A6B",
+        "U7YNDN2VD",
+        "U9QPXSR3M",
+        "UAUATCSCE",
+        "UEC3ZJ58U"
+      ],
+      "topic": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "purpose": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "previous_names": []
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "channels:read"
+    ]
+  }
+}

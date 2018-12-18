@@ -1,0 +1,93 @@
+{
+  "url": "channels.info",
+  "request": {
+    "channel": "CEM1NLATT"
+  },
+  "response": {
+    "ok": true,
+    "channel": {
+      "id": "CEM1NLATT",
+      "name": "test-marcelo",
+      "is_channel": true,
+      "created": 1544132003,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "creator": "U7H4N1A6B",
+      "name_normalized": "test-marcelo",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_member": true,
+      "is_private": false,
+      "is_mpim": false,
+      "last_read": "1544217706.000600",
+      "latest": {
+        "bot_id": "BD9DZ659N",
+        "type": "message",
+        "text": "",
+        "user": "U7H4N1A6B",
+        "ts": "1544217706.000600",
+        "attachments": [
+          {
+            "callback_id": "codestream://codemark/5c0ae462692a64151ed76a25?teamId=5bb51100585ada29401ee9c5",
+            "fallback": "bar",
+            "text": "bar",
+            "footer": "Posted via CodeStream",
+            "id": 1,
+            "ts": 1544217706,
+            "color": "3578ba",
+            "mrkdwn_in": [
+              "fields",
+              "pretext",
+              "text"
+            ]
+          }
+        ]
+      },
+      "unread_count": 0,
+      "unread_count_display": 0,
+      "members": [
+        "U7CT4071N",
+        "U7H4N1A6B"
+      ],
+      "topic": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "purpose": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "previous_names": []
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "channels:read"
+    ]
+  }
+}
