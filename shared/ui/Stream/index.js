@@ -328,8 +328,8 @@ export class SimpleStream extends Component {
 		if (this.props.postStreamType === "direct") {
 			placeholderText = "Message " + this.props.postStreamName;
 		}
-		if (activePanel === "thread" && threadPost) {
-			placeholderText = "Reply to " + threadPost.author.username;
+		if (threadPost) {
+			placeholderText = "Reply to " + this.props.teamMembersById[threadPost.creatorId].username;
 		}
 
 		const streamDivId = "stream-" + this.props.postStreamId;
