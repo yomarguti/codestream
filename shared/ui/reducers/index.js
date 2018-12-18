@@ -11,7 +11,7 @@ import repos from "./repos";
 import teams from "./teams";
 import markers from "./markers";
 import markerLocations from "./marker-locations";
-import umis from "./umis";
+import { reduceUnreads } from "../store/unreads/reducer";
 import messaging from "./messaging";
 import connectivity from "./connectivity";
 import currentPage from "./currentPage"; // TODO: remove this
@@ -70,7 +70,7 @@ const appReducer = combineReducers({
 	session,
 	streams: reduceStreams,
 	teams,
-	umis,
+	umis: reduceUnreads,
 	users: reduceUsers,
 	services
 });
