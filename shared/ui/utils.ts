@@ -75,7 +75,7 @@ export const rAFThrottle = (fn: Function): Function => {
 	return throttledFn;
 };
 
-export function toMapBy<T>(key: string, entities: T[]): { [key: string]: T } {
+export function toMapBy<Key extends keyof T, T>(key: Key, entities: T[]): { [key: string]: T } {
 	return entities.reduce(function(map, entity) {
 		map[entity[key]] = entity;
 		return map;

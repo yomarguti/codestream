@@ -8,7 +8,7 @@ import { reduceConfigs } from "../store/configs/reducer";
 import { reduceStreams } from "../store/streams/reducer";
 import { reduceUsers } from "../store/users/reducer";
 import repos from "./repos";
-import teams from "./teams";
+import { reduceTeams } from "../store/teams/reducer";
 import { reduceUnreads } from "../store/unreads/reducer";
 import messaging from "./messaging";
 import connectivity from "./connectivity";
@@ -65,7 +65,7 @@ const appReducer = combineReducers({
 	route,
 	session,
 	streams: reduceStreams,
-	teams,
+	teams: reduceTeams,
 	umis: reduceUnreads,
 	users: reduceUsers,
 	services
