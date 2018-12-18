@@ -395,4 +395,5 @@ export interface CSTrackSlackPostRequest {
 	teamId: string;
 	streamId: string;
 	postId: string;
+	parentPostId?: string;
 }
