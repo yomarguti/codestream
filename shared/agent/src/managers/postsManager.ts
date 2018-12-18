@@ -645,7 +645,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		type,
 		assignees,
 		color,
-		status
+		status = "open"
 	}: CreatePostWithMarkerRequest): Promise<CreatePostResponse | undefined> {
 		const { git } = Container.instance();
 		const filePath = URI.parse(documentId.uri).fsPath;
@@ -657,7 +657,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			type,
 			assignees,
 			color,
-			status
+			status: type === CodemarkType.Issue ? status : undefined
 		} as CreateCodemarkRequest;
 		let marker: CreateCodemarkRequestMarker | undefined;
 		let commitHashWhenPosted: string | undefined;
