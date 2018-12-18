@@ -9,8 +9,6 @@ import { reduceStreams } from "../store/streams/reducer";
 import { reduceUsers } from "../store/users/reducer";
 import repos from "./repos";
 import teams from "./teams";
-import markers from "./markers";
-import markerLocations from "./marker-locations";
 import { reduceUnreads } from "../store/unreads/reducer";
 import messaging from "./messaging";
 import connectivity from "./connectivity";
@@ -57,8 +55,6 @@ const appReducer = combineReducers({
 	connectivity,
 	context: reduceContext,
 	currentPage,
-	markerLocations,
-	markers,
 	messaging,
 	onboarding,
 	pluginVersion,
