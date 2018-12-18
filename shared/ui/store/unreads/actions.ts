@@ -1,4 +1,4 @@
 import { action } from "../common";
-import { State } from "./types";
+import { State, UnreadsActionsType } from "./types";
 
-export const updateUnreads = (data: State) => action("UPDATE_UNREADS", data);
+export const updateUnreads = (data: State) => action(UnreadsActionsType.Update, data);

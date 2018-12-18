@@ -1,8 +1,8 @@
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { State } from "./types";
+import { State, UnreadsActionsType } from "./types";
 
-type UnreadsActionsActions = ActionType<typeof actions>;
+type UnreadsActions = ActionType<typeof actions>;
 
 const initialState: State = {
 	lastReads: {},
@@ -12,9 +12,9 @@ const initialState: State = {
 	totalMentions: 0
 };
 
-export function reduceUnreads(state = initialState, { type, payload }: UnreadsActionsActions) {
+export function reduceUnreads(state = initialState, { type, payload }: UnreadsActions) {
 	switch (type) {
-		case "UPDATE_UNREADS": {
+		case UnreadsActionsType.Update: {
 			return {
 				totalMentions: payload.totalMentions,
 				totalUnreads: payload.totalUnreads,

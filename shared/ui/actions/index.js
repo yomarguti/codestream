@@ -2,15 +2,12 @@ import { bootstrap as bootstrapStreams } from "../store/streams/actions";
 import { bootstrapUsers } from "../store/users/actions";
 import { setCurrentFile } from "../store/context/actions";
 import { updateCapabilities } from "../store/capabilities/actions";
+import { updatePreferences } from "../store/preferences/actions";
+import { updateUnreads } from "../store/unreads/actions";
 
+export * from "../store/connectivity/actions";
 export * from "../store/configs/actions";
-
-export const updateUnreads = unreads => ({ type: "UPDATE_UNREADS", payload: unreads });
-
-export const updatePreferences = preferences => ({
-	type: "UPDATE_PREFERENCES",
-	payload: preferences
-});
+export { updatePreferences, updateUnreads };
 
 export const reset = () => ({ type: "RESET" });
 
@@ -25,8 +22,5 @@ export const bootstrap = (data = {}) => async dispatch => {
 	dispatch(updatePreferences(data.preferences || {}));
 	dispatch({ type: "BOOTSTRAP_COMPLETE" });
 };
-
-export const offline = () => ({ type: "OFFLINE" });
-export const online = () => ({ type: "ONLINE" });
 
 export const fileChanged = editor => setCurrentFile(editor.fileName, editor.fileStreamId);

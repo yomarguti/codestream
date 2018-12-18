@@ -1640,9 +1640,7 @@ const mapStateToProps = state => {
 		pluginVersion,
 		posts,
 		preferences,
-		messaging,
 		teams,
-		onboarding,
 		services,
 		umis
 	} = state;
@@ -1667,8 +1665,7 @@ const mapStateToProps = state => {
 		.replace(/\+/g, "\\+") // replace + and . with escaped versions so
 		.replace(/\./g, "\\."); // that the regexp matches the literal chars
 
-	const isOffline =
-		connectivity.offline || messaging.failedSubscriptions.length > 0 || messaging.timedOut;
+	const isOffline = connectivity.offline;
 
 	// FIXME -- eventually we'll allow the user to switch to other streams, like DMs and channels
 	const teamStream = getStreamForTeam(streams, context.currentTeamId) || {};
@@ -1730,7 +1727,6 @@ const mapStateToProps = state => {
 		teamName: team.name || "",
 		repoId: context.currentRepoId,
 		hasFocus: context.hasFocus,
-		firstTimeInAtom: onboarding.firstTimeInAtom,
 		currentCommit: context.currentCommit,
 		usernamesRegexp: usernamesRegexp,
 		currentUserId: user.id,

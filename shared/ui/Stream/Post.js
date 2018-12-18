@@ -15,7 +15,7 @@ import Menu from "./Menu";
 import EmojiPicker from "./EmojiPicker";
 import Tooltip from "./Tooltip";
 import Debug from "./Debug";
-import { getById } from "../reducers/repos";
+import { getById } from "../store/repos/reducer";
 import { getPost } from "../reducers/posts";
 import { getCodemark } from "../store/codemarks/reducer";
 import { markdownify, emojify } from "./Markdowner";

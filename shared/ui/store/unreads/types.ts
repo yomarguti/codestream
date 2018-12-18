@@ -5,3 +5,7 @@ export interface State {
 	totalUnreads: number;
 	totalMentions: number;
 }
+
+export enum UnreadsActionsType {
+	Update = "UPDATE_UNREADS"
+}
