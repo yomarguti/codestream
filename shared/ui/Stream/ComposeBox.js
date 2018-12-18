@@ -614,7 +614,7 @@ class ComposeBox extends React.Component {
 			this.state.postTextByStream[this.props.streamId] ||
 			(this.props.isEditing && this.props.editingCodemark.text) ||
 			"";
-		const { quote, title, assignees, color, commentType, streamId } = this.state;
+		const { quote, assignees, color, commentType, streamId } = this.state;
 		const multiCompose = quote || this.props.multiCompose;
 
 		if (this.props.disabled) return;
@@ -622,12 +622,14 @@ class ComposeBox extends React.Component {
 		if (this.isFormInvalid()) return;
 
 		// don't submit blank posts
-		if (newPostText.trim().length === 0 && title.length === 0) return;
+		if (newPostText.trim().length === 0 && this.state.title.trim().length === 0) return;
 
 		// convert the text to plaintext so there is no HTML
-		let text = newPostText.replace(/<br>/g, "\n");
-		const doc = new DOMParser().parseFromString(text, "text/html");
-		text = doc.documentElement.textContent;
+		const domParser = new DOMParser();
+		const text = domParser.parseFromString(newPostText.replace(/<br>/g, "\n"), "text/html")
+			.documentElement.textContent;
+		const title = domParser.parseFromString(this.state.title.replace(/<br>/g, "\n"), "text/html")
+			.documentElement.textContent;
 		const assigneeIds = (assignees || [])
 			.map(item => {
 				return item.value;
