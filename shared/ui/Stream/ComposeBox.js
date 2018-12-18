@@ -626,10 +626,13 @@ class ComposeBox extends React.Component {
 
 		// convert the text to plaintext so there is no HTML
 		const domParser = new DOMParser();
-		const text = domParser.parseFromString(newPostText.replace(/<br>/g, "\n"), "text/html")
+		const replaceRegex = /<br>|<div>/g;
+		const text = domParser.parseFromString(newPostText.replace(replaceRegex, "\n"), "text/html")
 			.documentElement.textContent;
-		const title = domParser.parseFromString(this.state.title.replace(/<br>/g, "\n"), "text/html")
-			.documentElement.textContent;
+		const title = domParser.parseFromString(
+			this.state.title.replace(replaceRegex, "\n"),
+			"text/html"
+		).documentElement.textContent;
 		const assigneeIds = (assignees || [])
 			.map(item => {
 				return item.value;
@@ -1189,8 +1192,12 @@ class ComposeBox extends React.Component {
 					break;
 			}
 		}
-		let contentEditableHTML =
-			(isEditing && editingCodemark.text) || this.state.postTextByStream[this.props.streamId] || "";
+		let contentEditableHTML = (
+			(isEditing && editingCodemark.text) ||
+			this.state.postTextByStream[this.props.streamId] ||
+			""
+		).replace(/\n/, "<br>"); // need to preserve newlines in html
+
 		return (
 			<div
 				className="message-input-wrapper"
