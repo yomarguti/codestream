@@ -1711,10 +1711,8 @@ const mapStateToProps = state => {
 		threadId: context.threadId,
 		umis: {
 			...umis,
-			totalUnread: Object.values(_.omit(umis.unreads, postStream.id)).reduce(sum, 0),
-			totalMentions: Object.values(_.omit(umis.mentions, postStream.id)).reduce(sum, 0)
-			// totalUnread: Object.values(umis.unreads).reduce(sum, 0),
-			// totalMentions: Object.values(umis.mentions).reduce(sum, 0)
+			totalUnread: umis.totalUnreads - (umis.unreads[postStream.id] || 0),
+			totalMentions: umis.totalMentions - (umis.mentions[postStream.id] || 0)
 		},
 		configs,
 		isOffline,
