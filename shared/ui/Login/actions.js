@@ -1,5 +1,7 @@
 import { bootstrap } from "../actions";
 import { setContext } from "../store/context/actions";
+import { goToCompleteSignup } from "../store/route/actions";
+
 export { startSlackSignin } from "../Signup/actions";
 export { validateSignup } from "../CompleteSignup/actions";
 export { goToSignup } from "../store/route/actions";
@@ -16,7 +18,7 @@ export const authenticate = params => async (dispatch, getState, { api }) => {
 export const startSignup = () => async (dispatch, getState, { api }) => {
 	try {
 		await api.startSignup();
-		dispatch({ type: "GO_TO_COMPLETE_SIGNUP" });
+		dispatch(goToCompleteSignup());
 	} catch (error) {
 		console.error(error);
 	}
