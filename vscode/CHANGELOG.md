@@ -1,5 +1,21 @@
 # Change Log
 
+## [0.31.0] - 2018-12-20
+
+### Changed
+
+- Replies posted to a thread are no longer broadcast to the channel on Slack to temporarily work around a Slack bug
+- Link text when hovering over a codemark in a source file is now based on the type of codemark
+
+### Fixed
+
+- Fixes an issue where very long strings would expand the New Codemark modal off the page
+- Fixes an issue with the help text in the chat box when viewing a thread
+- Fixes an issue with line breaks not being preserved in codemark descriptions
+- Fixes an issue with the Codemarks tab not taking repo into account when associating codemarks with the current file
+- Fixes an issue with the webview not always restoring the previously selected channel
+
+
 ## [0.30.3] - 2018-12-12
 
 ### Fixed
@@ -34,7 +50,7 @@
 
 ### Changed
 
-- Continued (but significant) optimizations for handling large slack workspaces.
+- Continued (but significant) optimizations for handling large slack workspaces
 
 ### Fixed
 
