@@ -162,9 +162,6 @@ initializeColorPalette();
 const start = Date.now();
 const api = new WebviewApi();
 api.bootstrap().then(data => {
-	let panel;
-	if (data.currentStreamId) panel = "main";
-	if (data.currentStreamId && data.currentThreadId) panel = "thread";
 	const store = createStore(
 		{
 			pluginVersion: data.version,
