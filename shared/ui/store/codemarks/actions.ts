@@ -2,7 +2,7 @@ import { CSCodemark } from "../../shared/api.protocol";
 import { action } from "../common";
 import { CodemarksActionsTypes } from "./types";
 
-export const add = (codemarks: CSCodemark[]) =>
+export const addCodemarks = (codemarks: CSCodemark[]) =>
 	action(CodemarksActionsTypes.AddCodemarks, codemarks);
 
 export const saveCodemarks = (codemarks: CSCodemark[]) =>

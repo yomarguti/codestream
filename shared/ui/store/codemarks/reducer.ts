@@ -5,7 +5,7 @@ import { ActionType } from "../common";
 import * as actions from "./actions";
 import { CodemarksActionsTypes } from "./types";
 
-type StreamsActions = ActionType<typeof actions>;
+type CodemarksActions = ActionType<typeof actions>;
 
 interface State {
 	[codemarkId: string]: CSCodemark;
@@ -13,12 +13,12 @@ interface State {
 
 const initialState: State = {};
 
-export function reduceCodemarks(state = initialState, { type, payload }: StreamsActions) {
-	switch (type) {
+export function reduceCodemarks(state = initialState, action: CodemarksActions) {
+	switch (action.type) {
 		case CodemarksActionsTypes.AddCodemarks:
 		case CodemarksActionsTypes.UpdateCodemarks:
 		case CodemarksActionsTypes.SaveCodemarks: {
-			return { ...state, ...toMapBy("id", payload) };
+			return { ...state, ...toMapBy("id", action.payload) };
 		}
 		default:
 			return state;
