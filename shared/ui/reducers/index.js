@@ -1,5 +1,5 @@
 import { combineReducers } from "redux";
-import posts from "./posts";
+import { reducePosts } from "../store/posts/reducer";
 import { reduceCapabilities } from "../store/capabilities/reducer";
 import { reduceContext } from "../store/context/reducer";
 import { reduceConfigs } from "../store/configs/reducer";
@@ -44,7 +44,7 @@ const appReducer = combineReducers({
 	connectivity: reduceConnectivity,
 	context: reduceContext,
 	pluginVersion,
-	posts,
+	posts: reducePosts,
 	preferences: reducePreferences,
 	repos: reduceRepos,
 	route: reduceRoute,

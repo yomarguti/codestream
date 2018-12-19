@@ -24,7 +24,7 @@ import * as actions from "./actions";
 import { isInVscode, safe, toMapBy } from "../utils";
 import { getSlashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
-import { getPostsForStream, getPost } from "../reducers/posts";
+import { getPostsForStream, getPost } from "../store/posts/reducer";
 import {
 	getStreamForId,
 	getStreamForTeam,

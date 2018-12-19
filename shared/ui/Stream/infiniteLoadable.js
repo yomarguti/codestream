@@ -1,7 +1,7 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { isEqual } from "underscore";
-import { getPostsForStream } from "../reducers/posts";
+import { getPostsForStream } from "../store/posts/reducer";
 import { fetchPosts, fetchThread } from "./actions";
 import { safe } from "../utils";
 

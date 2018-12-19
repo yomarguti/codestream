@@ -30,3 +30,7 @@ export function action<T extends StringType, P = undefined, M = undefined>(
 export interface Action<T> extends AnyAction {
 	type: T;
 }
+
+export interface Index<T> {
+	[key: string]: T;
+}

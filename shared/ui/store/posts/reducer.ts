@@ -1,49 +1,40 @@
 import _ from "underscore";
+import { CSPost } from "../../shared/api.protocol";
+import { ActionType } from "../common";
+import * as actions from "./actions";
+import { isPending, PostsActionsType, State } from "./types";
 
-interface Post {
-	id: string;
-}
-
-interface Index {
-	[id: string]: Post;
-}
-
-interface State {
-	byStream: {
-		[streamId: string]: Index;
-	};
-	pending: Post[];
-}
+type PostsActions = ActionType<typeof actions>;
 
 const initialState = {
 	byStream: {},
 	pending: []
 };
 
-const addPost = (byStream, post) => {
+const addPost = (byStream, post: CSPost) => {
 	const streamId = post.streamId;
 	const streamPosts = byStream[streamId] || {};
 	return { ...byStream, [streamId]: { ...streamPosts, [post.id]: post } };
 };
 
-export default (state: State = initialState, { type, payload }) => {
-	switch (type) {
-		case "ADD_POSTS":
-		case "BOOTSTRAP_POSTS": {
+export function reducePosts(state: State = initialState, action: PostsActions) {
+	switch (action.type) {
+		case PostsActionsType.Add:
+		case PostsActionsType.Bootstrap: {
 			const nextState = {
 				pending: [...state.pending],
 				byStream: { ...state.byStream }
 			};
-			payload.forEach(post => {
-				if (post.pending) nextState.pending.push(post);
+			action.payload.forEach(post => {
+				if (isPending(post)) nextState.pending.push(post);
 				else {
 					nextState.byStream = addPost(nextState.byStream, post);
 				}
 			});
 			return nextState;
 		}
-		case "ADD_POSTS_FOR_STREAM": {
-			const { streamId, posts } = payload;
+		case PostsActionsType.AddForStream: {
+			const { streamId, posts } = action.payload;
 			const streamPosts = { ...(state.byStream[streamId] || {}) };
 			posts.filter(Boolean).forEach(post => {
 				streamPosts[post.id] = post;
@@ -54,38 +45,37 @@ export default (state: State = initialState, { type, payload }) => {
 				byStream: { ...state.byStream, [streamId]: streamPosts }
 			};
 		}
-		case "UPDATE_POST":
-		case "ADD_POST":
+		case PostsActionsType.Update:
 			return {
 				...state,
-				byStream: addPost(state.byStream, payload)
+				byStream: addPost(state.byStream, action.payload)
 			};
-		case "ADD_PENDING_POST": {
-			return { ...state, pending: [...state.pending, payload] };
+		case PostsActionsType.AddPendingPost: {
+			return { ...state, pending: [...state.pending, action.payload] };
 		}
-		case "RESOLVE_PENDING_POST": {
-			const { pendingId, post } = payload;
+		case PostsActionsType.ResolvePendingPost: {
+			const { pendingId, post } = action.payload;
 			return {
 				byStream: addPost(state.byStream, post),
 				pending: state.pending.filter(post => post.id !== pendingId)
 			};
 		}
-		case "PENDING_POST_FAILED": {
+		case PostsActionsType.FailPendingPost: {
 			return {
 				...state,
 				pending: state.pending.map(post => {
-					return post.id === payload ? { ...post, error: true } : post;
+					return post.id === action.payload ? { ...post, error: true } : post;
 				})
 			};
 		}
-		case "CANCEL_PENDING_POST": {
+		case PostsActionsType.CancelPendingPost: {
 			return {
 				...state,
-				pending: state.pending.filter(post => post.id !== payload)
+				pending: state.pending.filter(post => post.id !== action.payload)
 			};
 		}
-		case "DELETE_POST": {
-			const { id, streamId } = payload;
+		case PostsActionsType.Delete: {
+			const { id, streamId } = action.payload;
 			const streamPosts = { ...(state.byStream[streamId] || {}) };
 			delete streamPosts[id];
 
@@ -97,7 +87,7 @@ export default (state: State = initialState, { type, payload }) => {
 		default:
 			return state;
 	}
-};
+}
 
 export const getPostsForStream = ({ byStream, pending }, streamId) => {
 	if (!streamId) return [];

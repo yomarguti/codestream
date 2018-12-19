@@ -11,6 +11,7 @@ import {
 	setCodemarkTypeFilter,
 	setThread
 } from "../store/context/actions";
+import * as postsActions from "../store/posts/actions";
 import { updatePreferences } from "../store/preferences/actions";
 import * as streamActions from "../store/streams/actions";
 import { getChannelStreamsForTeam, getDirectMessageStreamsForTeam } from "../store/streams/reducer";
@@ -32,11 +33,6 @@ export {
 };
 
 export const setCurrentStream = contextActions.setCurrentStream;
-
-const resolvePendingPost = (pendingId, post) => ({
-	type: "RESOLVE_PENDING_POST",
-	payload: { pendingId, post }
-});
 
 export const markStreamRead = (streamId, postId) => (dispatch, getState, { api }: ThunkExtras) => {
 	if (!streamId) return;
@@ -76,9 +72,8 @@ export const createPost = (streamId, parentPostId, text, codemark, mentions, ext
 ) => {
 	const { session } = getState();
 	const pendingId = uuid();
-	dispatch({
-		type: "ADD_PENDING_POST",
-		payload: {
+	dispatch(
+		postsActions.addPendingPost({
 			id: pendingId,
 			streamId,
 			parentPostId,
@@ -87,8 +82,8 @@ export const createPost = (streamId, parentPostId, text, codemark, mentions, ext
 			creatorId: session.userId,
 			createdAt: new Date().getTime(),
 			pending: true
-		}
-	});
+		})
+	);
 	try {
 		let responsePromise: ReturnType<typeof api.createPost>;
 		if (codemark) {
@@ -111,12 +106,12 @@ export const createPost = (streamId, parentPostId, text, codemark, mentions, ext
 		response.codemark && dispatch(saveCodemarks([response.codemark]));
 		response.streams &&
 			response.streams.forEach(stream => dispatch(streamActions.updateStream(stream)));
-		return dispatch(resolvePendingPost(pendingId, response.post));
+		return dispatch(postsActions.resolvePendingPost(pendingId, response.post));
 	} catch (error) {
 		logError(`Error creating a post: ${error.message}`, {
 			stackTrace: error.stack
 		});
-		return dispatch({ type: "PENDING_POST_FAILED", payload: pendingId });
+		return dispatch(postsActions.failPendingPost(pendingId));
 	}
 };
 
@@ -125,14 +120,14 @@ export const retryPost = pendingId => async (dispatch, getState, { api }) => {
 	const pendingPost = posts.pending.find(post => post.id === pendingId);
 	if (pendingPost) {
 		const post = await api.createPost(pendingPost);
-		return dispatch(resolvePendingPost(pendingId, post));
+		return dispatch(postsActions.resolvePendingPost(pendingId, post));
 		// if it fails then what?
 	} else {
 		// what happened to the pending post?
 	}
 };
 
-export const cancelPost = id => ({ type: "CANCEL_PENDING_POST", payload: id });
+export const cancelPost = postsActions.cancelPendingPost;
 
 export const createSystemPost = (streamId, parentPostId, text, seqNum) => async (
 	dispatch,
@@ -151,10 +146,13 @@ export const createSystemPost = (streamId, parentPostId, text, seqNum) => async 
 		parentPostId: parentPostId,
 		streamId,
 		seqNum,
-		text
+		text,
+		numReplies: 0,
+		hasBeenEdited: false,
+		modifiedAt: new Date().getTime()
 	};
 
-	dispatch({ type: "ADD_POST", payload: post });
+	dispatch(postsActions.addPosts([post]));
 };
 
 export const editPost = (streamId, postId, text, mentionedUserIds) => async (
@@ -164,7 +162,7 @@ export const editPost = (streamId, postId, text, mentionedUserIds) => async (
 ) => {
 	try {
 		const response = await api.editPost(streamId, postId, text, mentionedUserIds);
-		dispatch({ type: "UPDATE_POST", payload: response.post });
+		dispatch(postsActions.updatePost(response.post));
 	} catch (error) {
 		logError(`There was an error editing a post: ${error}`, { streamId, postId, text });
 	}
@@ -183,11 +181,11 @@ export const reactToPost = (post, emoji, value) => async (
 		if (value) reactions[emoji].push(session.userId);
 		else reactions[emoji] = reactions[emoji].filter(id => id !== session.userId);
 
-		dispatch({ type: "UPDATE_POST", payload: { ...post, reactions } });
+		dispatch(postsActions.updatePost({ ...post, reactions }));
 
 		// then update it for real on the API server
 		const response = await api.reactToPost(post.streamId, post.id, { [emoji]: value });
-		return dispatch({ type: "UPDATE_POST", payload: response.post });
+		return dispatch(postsActions.updatePost(response.post));
 	} catch (error) {
 		logError(`There was an error reacting to a post: ${error}`, { post, emoji, value });
 	}
@@ -195,8 +193,8 @@ export const reactToPost = (post, emoji, value) => async (
 
 export const deletePost = (streamId, id) => async (dispatch, getState, { api }: ThunkExtras) => {
 	try {
-		const post = await api.deletePost({ streamId, postId: id });
-		return dispatch({ type: "DELETE_POST", payload: post });
+		const { post } = await api.deletePost({ streamId, postId: id });
+		return dispatch(postsActions.deletePost(post));
 	} catch (error) {
 		logError(`There was an error deleting a post: ${error}`, { streamId, postId: id });
 	}
@@ -402,10 +400,7 @@ export const fetchPosts = (params: { streamId: string; limit?: number; before?: 
 ) => {
 	try {
 		const response = await api.fetchPosts(params);
-		dispatch({
-			type: "ADD_POSTS_FOR_STREAM",
-			payload: { posts: response.posts, streamId: params.streamId }
-		});
+		dispatch(postsActions.addPostsForStream(params.streamId, response.posts));
 		response.codemarks && dispatch(saveCodemarks(response.codemarks));
 		return response;
 	} catch (error) {
@@ -420,10 +415,7 @@ export const fetchThread = (streamId, parentPostId) => async (
 ) => {
 	try {
 		const { posts, codemarks } = await api.fetchThread(streamId, parentPostId);
-		dispatch({
-			type: "ADD_POSTS_FOR_STREAM",
-			payload: { posts, streamId }
-		});
+		dispatch(postsActions.addPostsForStream(streamId, posts));
 		codemarks && dispatch(saveCodemarks(codemarks));
 		return posts;
 	} catch (error) {

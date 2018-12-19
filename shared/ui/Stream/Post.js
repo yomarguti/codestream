@@ -16,7 +16,7 @@ import EmojiPicker from "./EmojiPicker";
 import Tooltip from "./Tooltip";
 import Debug from "./Debug";
 import { getById } from "../store/repos/reducer";
-import { getPost } from "../reducers/posts";
+import { getPost } from "../store/posts/reducer";
 import { getCodemark } from "../store/codemarks/reducer";
 import { markdownify, emojify } from "./Markdowner";
 import hljs from "highlight.js";
