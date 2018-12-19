@@ -27,7 +27,7 @@ export function mapFilter<A, B>(array: A[], fn: (A) => B | undefined): B[] {
 	return result;
 }
 
-export const findLast = (array: any[], fn: (any) => boolean): any | undefined => {
+export const findLast = (array: any[], fn: (arg: any) => boolean): any | undefined => {
 	for (let i = array.length - 1; i >= 0; i--) {
 		const item = array[i];
 		if (fn(item)) return item;
@@ -87,7 +87,7 @@ export const shortUuid = () => {
 	const data = new Uint8Array(16);
 	uuidv4(null, data, 0);
 
-	const base64 = btoa(String.fromCharCode.apply(null, data));
+	const base64 = btoa(String.fromCharCode.apply(null, data as any));
 	return base64
 		.replace(/\+/g, "-") // Replace + with - (see RFC 4648, sec. 5)
 		.replace(/\//g, "_") // Replace / with _ (see RFC 4648, sec. 5)
@@ -106,9 +106,9 @@ export const isChildOf = (node: any, parentId: string) => {
 };
 
 export const getCurrentCursorPosition = (parentId: string) => {
-	let selection = window.getSelection(),
-		charCount = -1,
-		node: any;
+	const selection = window.getSelection();
+	let charCount = -1;
+	let node: any;
 
 	// console.log(selection);
 	if (selection.focusNode) {
@@ -154,8 +154,8 @@ export const createRange = (node: any, chars: any, range: any) => {
 				chars.count = 0;
 			}
 		} else {
-			for (let lp = 0; lp < node.childNodes.length; lp++) {
-				range = createRange(node.childNodes[lp], chars, range);
+			for (const child of node.childNodes) {
+				range = createRange(child, chars, range);
 
 				if (chars.count === 0) {
 					break;
@@ -167,7 +167,7 @@ export const createRange = (node: any, chars: any, range: any) => {
 	return range;
 };
 
-export function componentDidUpateMixin<Props, State>(context, fn: (Props, State) => any) {
+export function componentDidUpateMixin<Props, State>(context, fn: (p: Props, s: State) => any) {
 	return prevProps => {
 		const name = context.constructor.displayName || context.constructor.name || "Component";
 		console.group(name);
@@ -178,6 +178,6 @@ export function componentDidUpateMixin<Props, State>(context, fn: (Props, State)
 			}
 		});
 		console.groupEnd();
-		fn.call(context, ...arguments);
+		(fn as any).call(context, ...arguments);
 	};
 }
