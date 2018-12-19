@@ -60,8 +60,7 @@ export default (state, action) => {
 	if (action.type === "RESET")
 		state = {
 			configs: state.configs,
-			pluginVersion: state.pluginVersion,
-			route: { route: "login" }
+			pluginVersion: state.pluginVersion
 		};
 	return appReducer(state, action);
 };

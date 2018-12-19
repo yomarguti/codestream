@@ -7,12 +7,13 @@ import { setCurrentFile } from "../store/context/actions";
 import { updateCapabilities } from "../store/capabilities/actions";
 import { updatePreferences } from "../store/preferences/actions";
 import { updateUnreads } from "../store/unreads/actions";
+import { action } from "../store/common";
 
 export * from "../store/connectivity/actions";
 export * from "../store/configs/actions";
 export { updatePreferences, updateUnreads };
 
-export const reset = () => ({ type: "RESET" });
+export const reset = () => action("RESET");
 
 export const bootstrap = (data = {}) => async dispatch => {
 	dispatch(bootstrapUsers(data.users || []));
