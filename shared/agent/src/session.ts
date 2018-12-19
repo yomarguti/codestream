@@ -157,7 +157,7 @@ export class CodeStreamSession {
 			this._proxyAgent = new HttpsProxyAgent({
 				...url.parse(_options.proxy.url),
 				rejectUnauthorized: _options.proxy.strictSSL
-			});
+			} as any);
 		}
 
 		this._api = new CodeStreamApiProvider(_options.serverUrl, this.versionInfo, this._proxyAgent);

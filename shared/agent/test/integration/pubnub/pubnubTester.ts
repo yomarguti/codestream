@@ -27,14 +27,14 @@ export interface PubnubTesterConfig {
 class CodeStreamApiSimulator {
 	constructor(private _apiRequester: ApiRequester) {}
 
-	async grant(token: string, channel: string) {
+	grant(token: string, channel: string) {
 		const request = {
 			method: "PUT",
 			path: `/grant/${channel}`,
 			data: {},
 			token
 		};
-		await this._apiRequester.request(request);
+		return this._apiRequester.request(request);
 	}
 }
 

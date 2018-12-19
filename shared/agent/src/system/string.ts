@@ -3,12 +3,24 @@ import { createHash, HexBase64Latin1Encoding } from "crypto";
 import * as path from "path";
 
 export namespace Strings {
+	export const enum CharCode {
+		/**
+		 * The `/` character.
+		 */
+		Slash = 47,
+		/**
+		 * The `\` character.
+		 */
+		Backslash = 92
+	}
+
 	export function getDurationMilliseconds(start: [number, number]) {
 		const [secs, nanosecs] = process.hrtime(start);
 		return secs * 1000 + Math.floor(nanosecs / 1000000);
 	}
 
-	const pathNormalizer = /\\/g;
+	const pathNormalizeRegex = /\\/g;
+	const pathStripTrailingSlashRegex = /\/$/g;
 	const TokenRegex = /\$\{(\W*)?([^|]*?)(?:\|(\d+)(\-|\?)?)?(\W*)?\}/g;
 	const TokenSanitizeRegex = /\$\{(?:\W*)?(\w*?)(?:[\W\d]*)\}/g;
 
@@ -69,14 +81,28 @@ export namespace Strings {
 			.digest(encoding);
 	}
 
-	export function normalizePath(fileName: string) {
-		const normalized = fileName && fileName.replace(pathNormalizer, "/");
-		// if (normalized && normalized.includes('..')) {
-		//     debugger;
-		// }
+	export function normalizePath(
+		fileName: string,
+		options: { addLeadingSlash?: boolean; stripTrailingSlash?: boolean } = {
+			stripTrailingSlash: true
+		}
+	) {
+		if (fileName == null || fileName.length === 0) return fileName;
+
+		let normalized = fileName.replace(pathNormalizeRegex, "/");
+
+		const { addLeadingSlash, stripTrailingSlash } = { stripTrailingSlash: true, ...options };
+
+		if (stripTrailingSlash) {
+			normalized = normalized.replace(pathStripTrailingSlashRegex, "");
+		}
+
+		if (addLeadingSlash && normalized.charCodeAt(0) !== CharCode.Slash) {
+			normalized = `/${normalized}`;
+		}
+
 		return normalized;
 	}
-
 	export function pad(
 		s: string,
 		before: number = 0,
