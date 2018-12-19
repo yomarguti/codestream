@@ -73,6 +73,8 @@ import {
 	FetchTeamsRequestType,
 	FetchUnreadStreamsRequestType,
 	FetchUsersRequestType,
+	GetFileStreamRequestType,
+	GetFileStreamResponse,
 	GetMarkerRequestType,
 	GetMeRequestType,
 	GetPostRequestType,
@@ -104,9 +106,7 @@ import {
 	UpdatePresenceRequestType,
 	UpdateStreamMembershipRequestType,
 	UpdateStreamMembershipResponse,
-	VersionCompatibility,
-	GetFileStreamRequestType,
-	GetFileStreamResponse
+	VersionCompatibility
 } from "../shared/agent.protocol";
 import {
 	ChannelServiceType,
@@ -942,11 +942,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 }
 
-function started(
-	target: CodeStreamAgentConnection,
-	propertyName: string,
-	descriptor: TypedPropertyDescriptor<any>
-) {
+function started(target: CodeStreamAgentConnection, propertyName: string, descriptor: any) {
 	if (typeof descriptor.value === "function") {
 		const method = descriptor.value;
 		descriptor.value = function(this: CodeStreamAgentConnection, ...args: any[]) {

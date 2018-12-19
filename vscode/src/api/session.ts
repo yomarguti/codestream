@@ -690,11 +690,7 @@ function createMergableDebouncedEvent<E extends MergeableEvent<SessionChangedEve
 	);
 }
 
-function signedIn(
-	target: CodeStreamSession,
-	propertyName: string,
-	descriptor: TypedPropertyDescriptor<any>
-) {
+function signedIn(target: CodeStreamSession, propertyName: string, descriptor: any) {
 	if (typeof descriptor.value === "function") {
 		const method = descriptor.value;
 		descriptor.value = function(this: CodeStreamSession, ...args: any[]) {
