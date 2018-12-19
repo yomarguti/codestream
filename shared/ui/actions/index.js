@@ -1,5 +1,8 @@
-import { bootstrap as bootstrapStreams } from "../store/streams/actions";
+import { bootstrapStreams } from "../store/streams/actions";
 import { bootstrapUsers } from "../store/users/actions";
+import { bootstrapServices } from "../store/services/actions";
+import { bootstrapRepos } from "../store/repos/actions";
+import { bootstrapTeams } from "../store/teams/actions";
 import { setCurrentFile } from "../store/context/actions";
 import { updateCapabilities } from "../store/capabilities/actions";
 import { updatePreferences } from "../store/preferences/actions";
@@ -13,10 +16,10 @@ export const reset = () => ({ type: "RESET" });
 
 export const bootstrap = (data = {}) => async dispatch => {
 	dispatch(bootstrapUsers(data.users || []));
-	dispatch({ type: "BOOTSTRAP_TEAMS", payload: data.teams || [] });
+	dispatch(bootstrapTeams(data.teams || []));
 	dispatch(bootstrapStreams(data.streams || []));
-	dispatch({ type: "BOOTSTRAP_REPOS", payload: data.repos || [] });
-	dispatch({ type: "BOOTSTRAP_SERVICES", payload: data.services || {} });
+	dispatch(bootstrapRepos(data.repos || []));
+	dispatch(bootstrapServices(data.services || {}));
 	dispatch(updateUnreads(data.unreads || {}));
 	dispatch(updateCapabilities(data.capabilities || {}));
 	dispatch(updatePreferences(data.preferences || {}));

@@ -10,7 +10,7 @@ import { reduceTeams } from "../store/teams/reducer";
 import { reduceUnreads } from "../store/unreads/reducer";
 import { reduceConnectivity } from "../store/connectivity/reducer";
 import { reduceRoute } from "../store/route/reducer";
-import services from "./services";
+import { reduceServices } from "../store/services/reducer";
 import { reducePreferences } from "../store/preferences/reducer";
 import { reduceCodemarks } from "../store/codemarks/reducer";
 
@@ -53,7 +53,7 @@ const appReducer = combineReducers({
 	teams: reduceTeams,
 	umis: reduceUnreads,
 	users: reduceUsers,
-	services
+	services: reduceServices
 });
 
 export default (state, action) => {

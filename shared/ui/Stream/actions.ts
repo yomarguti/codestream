@@ -1,8 +1,8 @@
-import { updatePreferences } from "../actions";
 import EventEmitter from "../event-emitter";
 import { logError, logWarning } from "../logger";
 import { StreamType } from "../shared/api.protocol";
 import { saveCodemarks, updateCodemarks } from "../store/codemarks/actions";
+import * as contextActions from "../store/context/actions";
 import {
 	closePanel,
 	openPanel,
@@ -11,7 +11,7 @@ import {
 	setCodemarkTypeFilter,
 	setThread
 } from "../store/context/actions";
-import * as contextActions from "../store/context/actions";
+import { updatePreferences } from "../store/preferences/actions";
 import * as streamActions from "../store/streams/actions";
 import { getChannelStreamsForTeam, getDirectMessageStreamsForTeam } from "../store/streams/reducer";
 import { addUsers } from "../store/users/actions";
@@ -109,7 +109,8 @@ export const createPost = (streamId, parentPostId, text, codemark, mentions, ext
 		}
 		const response = await responsePromise;
 		response.codemark && dispatch(saveCodemarks([response.codemark]));
-		response.streams && response.streams.forEach(stream => dispatch(streamActions.update(stream)));
+		response.streams &&
+			response.streams.forEach(stream => dispatch(streamActions.updateStream(stream)));
 		return dispatch(resolvePendingPost(pendingId, response.post));
 	} catch (error) {
 		logError(`Error creating a post: ${error.message}`, {
@@ -262,7 +263,7 @@ export const createStream = (
 
 	try {
 		const response = await responsePromise!;
-		dispatch(streamActions.add([response.stream]));
+		dispatch(streamActions.addStreams([response.stream]));
 		dispatch(contextActions.setCurrentStream(response.stream.id));
 
 		// unmute any created streams
@@ -283,7 +284,7 @@ export const leaveChannel = streamId => async (dispatch, getState, { api }: Thun
 			dispatch(streamActions.remove(streamId, context.currentTeamId));
 		} else {
 			dispatch(
-				streamActions.update({
+				streamActions.updateStream({
 					...stream,
 					memberIds: stream.memberIds!.filter(id => id !== session.userId)
 				})
@@ -329,7 +330,7 @@ export const addUsersToStream = (streamId: string, userIds: string[]) => async (
 export const joinStream = streamId => async (dispatch, getState, { api }: ThunkExtras) => {
 	try {
 		const { stream } = await api.joinStream(streamId);
-		return dispatch(streamActions.update(stream));
+		return dispatch(streamActions.updateStream(stream));
 	} catch (error) {
 		logError(`There was an error joining a stream: ${error}`, { streamId });
 	}
@@ -342,7 +343,7 @@ export const renameStream = (streamId, name) => async (
 ) => {
 	try {
 		const { stream } = await api.renameStream(streamId, name);
-		return dispatch(streamActions.update(stream));
+		return dispatch(streamActions.updateStream(stream));
 	} catch (error) {
 		logError(`There was an error renaming a stream: ${error}`, { streamId, name });
 	}
@@ -351,7 +352,7 @@ export const renameStream = (streamId, name) => async (
 export const setPurpose = (streamId, purpose) => async (dispatch, getState, { api }) => {
 	try {
 		const { stream } = await api.setStreamPurpose(streamId, purpose);
-		return dispatch(streamActions.update(stream));
+		return dispatch(streamActions.updateStream(stream));
 	} catch (error) {
 		logError(`There was an error setting stream purpose: ${error}`, { streamId });
 	}
@@ -366,7 +367,7 @@ export const archiveStream = (streamId, archive = true) => async (
 		const { stream } = archive
 			? await api.archiveStream(streamId)
 			: await api.unarchiveStream(streamId);
-		if (stream) return dispatch(streamActions.update(stream));
+		if (stream) return dispatch(streamActions.updateStream(stream));
 	} catch (error) {
 		logError(`There was an error ${archive ? "" : "un"}archiving stream: ${error}`, { streamId });
 	}
@@ -451,7 +452,7 @@ export const showCode = (marker, enteringThread, source) => (dispatch, getState,
 export const closeDirectMessage = id => async (dispatch, getState, { api }: ThunkExtras) => {
 	try {
 		const { stream } = await api.closeDirectMessage(id);
-		dispatch(streamActions.update(stream));
+		dispatch(streamActions.updateStream(stream));
 	} catch (error) {
 		logError(`There was an error closing a dm: ${error}`);
 	}
@@ -460,7 +461,7 @@ export const closeDirectMessage = id => async (dispatch, getState, { api }: Thun
 export const openDirectMessage = id => async (dispatch, getState, { api }: ThunkExtras) => {
 	try {
 		const response = await api.openDirectMessage(id);
-		return dispatch(streamActions.update(response.stream));
+		return dispatch(streamActions.updateStream(response.stream));
 	} catch (error) {
 		logError(`There was an error opening a dm: ${error}`);
 	}
