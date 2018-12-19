@@ -206,7 +206,9 @@ api.bootstrap().then(data => {
 
 	EventEmitter.on(
 		"interaction:active-editor-changed",
-		body => body.editor && store.dispatch(actions.fileChanged(body.editor))
+		body =>
+			body.editor &&
+			store.dispatch(actions.setCurrentFile(body.editor.fileName, body.editor.fileStreamId))
 	);
 
 	EventEmitter.on("interaction:focus", () => {
