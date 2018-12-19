@@ -18,6 +18,8 @@ import { reduceUnreads } from "../store/unreads/reducer";
 import { reduceUsers } from "../store/users/reducer";
 import middleware from "./middleware";
 
+export { actions } from "./actions";
+
 const session = (state = {}, { type, payload }) => {
 	switch (type) {
 		case "RESET":

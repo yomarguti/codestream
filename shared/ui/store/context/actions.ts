@@ -2,7 +2,7 @@ import EventEmitter from "../../event-emitter";
 import { action } from "../common";
 import { ContextActionsType, State } from "./types";
 
-export { reset } from "../../actions";
+export { reset } from "../actions";
 
 export const setContext = (payload: State) => action(ContextActionsType.SetContext, payload);
 
@@ -37,6 +37,8 @@ export const setCodemarkTypeFilter = (value: string) =>
 
 export const setChannelFilter = (value: string) =>
 	action(ContextActionsType.SetChannelFilter, value);
+
+export const fileChanged = editor => setCurrentFile(editor.fileName, editor.fileStreamId);
 
 export const setCurrentFile = (file = "", fileStreamId?: string) =>
 	action(ContextActionsType.SetCurrentFile, { file, fileStreamId });

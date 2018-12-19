@@ -1,4 +1,4 @@
-import { bootstrap } from "../actions";
+import { bootstrap } from "../store/actions";
 import { setContext } from "../store/context/actions";
 import { goToCompleteSignup } from "../store/route/actions";
 
