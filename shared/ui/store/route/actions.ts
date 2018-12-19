@@ -1,5 +1,6 @@
 import { action } from "../common";
 import { RouteActionsType } from "./types";
+
 export { reset } from "../../actions";
 
 export const goToCompleteSignup = (params = {}) => action(RouteActionsType.CompleteSignup, params);

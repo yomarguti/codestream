@@ -20,6 +20,8 @@ export function reduceCodemarks(state = initialState, action: CodemarksActions) 
 		case CodemarksActionsTypes.SaveCodemarks: {
 			return { ...state, ...toMapBy("id", action.payload) };
 		}
+		case "RESET":
+			return initialState;
 		default:
 			return state;
 	}

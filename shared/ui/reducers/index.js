@@ -36,7 +36,7 @@ const pluginVersion = (state = "", { type }) => {
 	return state;
 };
 
-const appReducer = combineReducers({
+export default combineReducers({
 	bootstrapped,
 	capabilities: reduceCapabilities,
 	codemarks: reduceCodemarks,
@@ -55,12 +55,3 @@ const appReducer = combineReducers({
 	users: reduceUsers,
 	services: reduceServices
 });
-
-export default (state, action) => {
-	if (action.type === "RESET")
-		state = {
-			configs: state.configs,
-			pluginVersion: state.pluginVersion
-		};
-	return appReducer(state, action);
-};

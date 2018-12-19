@@ -49,6 +49,8 @@ export const reduceStreams = (state: State = initialState, action: StreamsAction
 				byTeam: { ...state.byTeam, [action.payload.teamId]: streamsForTeam }
 			};
 		}
+		case "RESET":
+			return initialState;
 		default:
 			return state;
 	}

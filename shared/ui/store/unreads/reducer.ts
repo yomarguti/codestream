@@ -12,9 +12,10 @@ const initialState: State = {
 	totalMentions: 0
 };
 
-export function reduceUnreads(state = initialState, { type, payload }: UnreadsActions) {
-	switch (type) {
+export function reduceUnreads(state = initialState, action: UnreadsActions) {
+	switch (action.type) {
 		case UnreadsActionsType.Update: {
+			const { payload } = action;
 			return {
 				totalMentions: payload.totalMentions,
 				totalUnreads: payload.totalUnreads,
@@ -23,6 +24,8 @@ export function reduceUnreads(state = initialState, { type, payload }: UnreadsAc
 				unreads: payload.unreads
 			};
 		}
+		case "RESET":
+			return initialState;
 		default:
 			return state;
 	}

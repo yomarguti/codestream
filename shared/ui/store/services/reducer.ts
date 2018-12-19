@@ -6,10 +6,12 @@ type ServicesActions = ActionType<typeof actions>;
 
 const initialState = {};
 
-export function reduceServices(state = initialState, { type, payload }: ServicesActions) {
-	switch (type) {
+export function reduceServices(state = initialState, action: ServicesActions) {
+	switch (action.type) {
 		case ServicesActionsType.Bootstrap:
-			return { ...payload, ...state };
+			return { ...action.payload, ...state };
+		case "RESET":
+			return initialState;
 		default:
 			return { ...initialState, ...state };
 	}

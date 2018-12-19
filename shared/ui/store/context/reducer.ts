@@ -55,6 +55,8 @@ export function reduceContext(state: State = initialState, action: ContextAction
 			return { ...state, codemarkTypeFilter: action.payload };
 		case ContextActionsType.SetChannelFilter:
 			return { ...state, channelFilter: action.payload };
+		case "RESET":
+			return initialState;
 		default:
 			return { ...initialState, ...state };
 	}

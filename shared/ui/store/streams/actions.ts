@@ -2,6 +2,8 @@ import { CSStream } from "../../shared/api.protocol";
 import { action } from "../common";
 import { StreamActionType } from "./types";
 
+export { reset } from "../../actions";
+
 export const addStreams = (streams: CSStream[]) => action(StreamActionType.ADD_STREAMS, streams);
 
 export const updateStream = (stream: CSStream) => action(StreamActionType.UPDATE_STREAM, stream);

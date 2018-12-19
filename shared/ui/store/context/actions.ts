@@ -2,6 +2,8 @@ import EventEmitter from "../../event-emitter";
 import { action } from "../common";
 import { ContextActionsType, State } from "./types";
 
+export { reset } from "../../actions";
+
 export const setContext = (payload: State) => action(ContextActionsType.SetContext, payload);
 
 export const _openPanel = (panel: string) => action(ContextActionsType.OpenPanel, panel);

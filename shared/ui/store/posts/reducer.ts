@@ -84,6 +84,8 @@ export function reducePosts(state: State = initialState, action: PostsActions) {
 				byStream: { ...state.byStream, [streamId]: streamPosts }
 			};
 		}
+		case "RESET":
+			return initialState;
 		default:
 			return state;
 	}

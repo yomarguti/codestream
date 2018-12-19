@@ -25,6 +25,8 @@ export function reduceUsers(state = initialState, action: UsersActions) {
 			const updatedUsers = action.payload.map(user => updateUser(user, state));
 			return { ...state, ...toMapBy("id", updatedUsers) };
 		}
+		case "RESET":
+			return initialState;
 		default:
 			return state;
 	}

@@ -7,12 +7,14 @@ type ReposActions = ActionType<typeof actions>;
 
 const initialState: State = {};
 
-export function reduceRepos(state = initialState, { type, payload }: ReposActions) {
-	switch (type) {
+export function reduceRepos(state = initialState, action: ReposActions) {
+	switch (action.type) {
 		case ReposActionsType.Bootstrap:
-			return toMapBy("id", payload);
+			return toMapBy("id", action.payload);
 		case ReposActionsType.Add:
-			return { ...state, ...toMapBy("id", payload) };
+			return { ...state, ...toMapBy("id", action.payload) };
+		case "RESET":
+			return initialState;
 		default:
 			return state;
 	}

@@ -14,6 +14,8 @@ export function reduceConnectivity(state = initialState, { type }: ConnectivityA
 			return { ...state, offline: true };
 		case ConnectivityActionsType.Online:
 			return { ...state, offline: false };
+		case "RESET":
+			return initialState;
 		default:
 			return state;
 	}

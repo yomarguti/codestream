@@ -7,12 +7,14 @@ type TeamsActions = ActionType<typeof actions>;
 
 const initialState: State = {};
 
-export function reduceTeams(state = initialState, { type, payload }: TeamsActions) {
-	switch (type) {
+export function reduceTeams(state = initialState, action: TeamsActions) {
+	switch (action.type) {
 		case TeamsActionsType.Bootstrap:
-			return toMapBy("id", payload);
+			return toMapBy("id", action.payload);
 		case TeamsActionsType.Add:
-			return { ...state, ...toMapBy("id", payload) };
+			return { ...state, ...toMapBy("id", action.payload) };
+		case "RESET":
+			return initialState;
 		default:
 			return state;
 	}
