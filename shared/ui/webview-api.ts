@@ -134,12 +134,18 @@ export default class WebviewApi {
 		return this.postMessage({ action: "go-to-slack-signin" });
 	}
 
-	startServiceSignin(service) {
-		return this.postMessage({ action: "agent", params: { url: service + "/auth", request: {} } });
+	connectService(service: string) {
+		return this.postMessage({
+			action: "agent",
+			params: { url: "provider/connect", request: { providerName: service } }
+		});
 	}
 
-	disconnectService(service) {
-		return this.postMessage({ action: "agent", params: { url: service + "/deauth", request: {} } });
+	disconnectService(service: string) {
+		return this.postMessage({
+			action: "agent",
+			params: { url: "provider/disconnect", request: { providerName: service } }
+		});
 	}
 
 	createTrelloCard(listId: string, name: string, description: string) {
