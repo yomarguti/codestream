@@ -21,7 +21,7 @@ export namespace User {
 	export function getProviderInfo<T extends CSProviderInfos>(
 		me: CSMe,
 		teamId: string,
-		name: "trello"
+		name: string
 	) {
 		if (me.providerInfo == null) return undefined;
 

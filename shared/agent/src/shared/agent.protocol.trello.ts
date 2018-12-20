@@ -71,27 +71,3 @@ export const TrelloFetchListsRequestType = new RequestType<
 	void,
 	void
 >("codeStream/trello/lists");
-
-export interface TrelloAuthRequest {}
-
-export interface TrelloAuthResponse {
-	organizationId: string;
-}
-
-export const TrelloAuthRequestType = new RequestType<
-	TrelloAuthRequest,
-	TrelloAuthResponse,
-	void,
-	void
->("codeStream/trello/auth");
-
-export interface TrelloDeauthRequest {}
-
-export interface TrelloDeauthResponse {}
-
-export const TrelloDeauthRequestType = new RequestType<
-	TrelloDeauthRequest,
-	TrelloDeauthResponse,
-	void,
-	void
->("codeStream/trello/deauth");

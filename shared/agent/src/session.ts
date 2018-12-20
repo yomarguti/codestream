@@ -53,7 +53,7 @@ import {
 	CSUser,
 	LoginResult
 } from "./shared/api.protocol";
-import { log, memoize, registerDecoratedHandlers } from "./system";
+import { createDecoratedProviders, log, memoize, registerDecoratedHandlers } from "./system";
 
 // FIXME: Must keep this in sync with vscode-codestream/src/api/session.ts
 const envRegex = /https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(?::\d+$)?/i;
@@ -182,6 +182,7 @@ export class CodeStreamSession {
 
 		// this.connection.onHover(e => MarkerHandler.onHover(e));
 
+		createDecoratedProviders(this);
 		registerDecoratedHandlers(this.agent);
 
 		this.agent.registerHandler(ApiRequestType, (e, cancellationToken: CancellationToken) =>

@@ -14,5 +14,5 @@ export * from "./system/version";
 // Must keep this at the end, since they uses Functions
 export * from "./system/decorators/gate";
 export * from "./system/decorators/log";
-export * from "./system/decorators/lspHandler";
+export * from "./system/decorators/lsp";
 export * from "./system/decorators/memoize";

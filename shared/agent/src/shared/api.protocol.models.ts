@@ -212,6 +212,21 @@ export interface CSTeam extends CSEntity {
 	};
 }
 
+export interface CSAsanaProviderInfo {
+	accessToken: string;
+	userId: string;
+}
+
+export interface CSGitHubProviderInfo {
+	accessToken: string;
+	userId: string;
+}
+
+export interface CSJiraProviderInfo {
+	accessToken: string;
+	userId: string;
+}
+
 export interface CSSlackProviderInfo {
 	accessToken: string;
 	teamId: string;
@@ -220,8 +235,16 @@ export interface CSSlackProviderInfo {
 
 export interface CSTrelloProviderInfo {
 	accessToken: string;
+	apiKey: string;
 	userId: string;
 }
+
+export type CSProviderInfos =
+	| CSAsanaProviderInfo
+	| CSGitHubProviderInfo
+	| CSJiraProviderInfo
+	| CSSlackProviderInfo
+	| CSTrelloProviderInfo;
 
 export interface CSUser extends CSEntity {
 	companyIds: string[];
@@ -260,16 +283,18 @@ export interface CSMePreferences {
 	[key: string]: any;
 }
 
-export type CSProviderInfos = CSSlackProviderInfo | CSTrelloProviderInfo;
-
 export interface CSMe extends CSUser {
 	lastReads: CSLastReads;
 	joinMethod: string;
 	preferences: CSMePreferences;
 	providerInfo?: { slack?: CSSlackProviderInfo } & {
 		[teamId in string]: {
+			asana?: CSAsanaProviderInfo;
+			github?: CSGitHubProviderInfo;
+			jira?: CSJiraProviderInfo;
 			slack?: CSSlackProviderInfo;
 			trello?: CSTrelloProviderInfo;
+			[key: string]: CSProviderInfos | undefined;
 		}
 	};
 }

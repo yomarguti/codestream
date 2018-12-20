@@ -13,7 +13,7 @@ import { StreamsManager } from "./managers/streamsManager";
 import { TeamsManager } from "./managers/teamsManager";
 import { TelemetryManager } from "./managers/telemetryManager";
 import { UsersManager } from "./managers/usersManager";
-import { TrelloProvider } from "./providers/trello";
+import { ThirdPartyProviderRegistry } from "./providers/registry";
 import { CodeStreamSession } from "./session";
 
 class ServiceContainer {
@@ -32,7 +32,7 @@ class ServiceContainer {
 		this._errorReporter = new ErrorReporter(session);
 		this._telemetry = new TelemetryManager(session);
 
-		this._trello = new TrelloProvider(session);
+		this._providerRegistry = new ThirdPartyProviderRegistry(session);
 
 		this._documents = new DocumentManager();
 		this._documents.listen(session.connection);
@@ -78,6 +78,11 @@ class ServiceContainer {
 		return this._posts;
 	}
 
+	private readonly _providerRegistry: ThirdPartyProviderRegistry;
+	get providerRegistry() {
+		return this._providerRegistry;
+	}
+
 	private readonly _repos: ReposManager;
 	get repos(): ReposManager {
 		return this._repos;
@@ -96,11 +101,6 @@ class ServiceContainer {
 	private readonly _telemetry: TelemetryManager;
 	get telemetry() {
 		return this._telemetry;
-	}
-
-	private readonly _trello: TrelloProvider;
-	get trello() {
-		return this._trello;
 	}
 
 	private readonly _users: UsersManager;
