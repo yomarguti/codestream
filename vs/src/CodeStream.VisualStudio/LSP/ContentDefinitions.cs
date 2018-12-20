@@ -2,9 +2,9 @@
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
 
-namespace CodeStream.VisualStudio
+namespace CodeStream.VisualStudio.LSP
 {
-    public class CodeStreamContentDefinitions
+    public class ContentDefinitions
     {
         //        [Export]
         //        [Name("CSharp")]

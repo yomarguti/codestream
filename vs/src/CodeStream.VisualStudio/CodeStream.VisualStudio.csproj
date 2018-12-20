@@ -68,26 +68,26 @@
     <Compile Include="Events\EventAggregator.cs" />
     <Compile Include="Events\EventArgs.cs" />
     <Compile Include="Events\IEvent.cs" />
-    <Compile Include="LanguageServerProcess.cs" />
+    <Compile Include="LSP\LanguageServerProcess.cs" />
     <Compile Include="Models\Models.cs" />
     <Compile Include="Services\CodeStreamService.cs" />
     <Compile Include="Services\DotNetBrowserService.cs" />
     <Compile Include="Services\BrowserServiceBase.cs" />
-    <Compile Include="CodeStreamCommandHandler.cs" />
-    <Compile Include="CodeStreamToolWindow.cs" />
-    <Compile Include="CodeStreamToolWindowCommand.cs" />
-    <Compile Include="CodeStreamToolWindowControl.xaml.cs">
-      <DependentUpon>CodeStreamToolWindowControl.xaml</DependentUpon>
+    <Compile Include="WebViewRouter.cs" />
+    <Compile Include="UI\ToolWindows\WebViewToolWindow.cs" />
+    <Compile Include="Commands\WebViewCommand.cs" />
+    <Compile Include="UI\ToolWindows\WebViewControl.xaml.cs">
+      <DependentUpon>WebViewControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Commands\IVsCommands.cs" />
-    <Compile Include="Constants.cs" />
-    <Compile Include="CodeStreamCommandPackage.cs" />
+    <Compile Include="Core\Constants.cs" />
+    <Compile Include="WebViewPackage.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
-    <Compile Include="CodeStreamContentDefinitions.cs" />
-    <Compile Include="LanguageClient.cs" />
+    <Compile Include="LSP\ContentDefinitions.cs" />
+    <Compile Include="LSP\LanguageClient.cs" />
     <Compile Include="UI\Margins\CodemarkViewModel.cs" />
     <Compile Include="UI\SuggestedActions\CodemarkSuggestedActionsSource.cs" />
-    <Compile Include="LogManager.cs" />
+    <Compile Include="Core\Logging\LogManager.cs" />
     <Compile Include="Models\CodeStreamModels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServiceProviderPackage.cs" />
@@ -97,7 +97,6 @@
     <Compile Include="Services\SessionService.cs" />
     <Compile Include="Attributes\InjectedAttribute.cs" />
     <Compile Include="Services\SettingsService.cs" />
-    <Compile Include="SolutionLoadPackage.cs" />
     <Compile Include="UI\Margins\CodemarkViewMargin.cs" />
     <Compile Include="UI\Margins\CodeStreamMarginProvider.cs" />
     <Compile Include="UI\IntraTextAdornmentTagger.cs" />
@@ -108,8 +107,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="dist\agent.js.map" />
     <None Include="CodeStream.VisualStudio.Settings.json" />
+    <None Include="dist\agent.js.map" />
     <None Include="packages.config" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
@@ -119,6 +118,7 @@
     <VSCTCompile Include="CodeStreamDebugPackage.vsct">
       <ResourceName>Menus1.ctmenu</ResourceName>
     </VSCTCompile>
+    <Content Include="CodeStream.VisualStudio.pkgdef" />
     <Content Include="dist\agent.js" />
     <Content Include="dist\webview\webview.css">
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -181,11 +181,11 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="UI\Views\waiting.html">
+    <Content Include="UI\WebViews\waiting.html">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="UI\Views\webview.html">
+    <Content Include="UI\WebViews\webview.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -193,7 +193,6 @@
     <VSCTCompile Include="CodeStreamCommandPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
     </VSCTCompile>
-    <Content Include="CodeStream.VisualStudio.pkgdef" />
     <Content Include="Resources\CodeStreamToolWindowCommand.png" />
     <Content Include="Resources\CodeStreamCommand.png" />
     <Content Include="Resources\CodeStreamCommandPackage.ico" />
@@ -387,7 +386,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="CodeStreamToolWindowControl.xaml">
+    <Page Include="UI\ToolWindows\WebViewControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

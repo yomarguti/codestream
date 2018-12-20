@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace CodeStream.VisualStudio
+namespace CodeStream.VisualStudio.Core
 {
     public class Constants
     {
@@ -14,13 +14,20 @@ namespace CodeStream.VisualStudio
         //public static string ServerUrl = "https://api.codestream.com";
 
 
+        private static FileVersionInfo _fileVersionInfo;
+        private static Version _version;
         /// <summary>
         /// Gets the version information for the host process.
         /// </summary>
         /// <returns>The version of the host process.</returns>
         public static FileVersionInfo GetHostVersionInfo()
         {
-            return Process.GetCurrentProcess().MainModule.FileVersionInfo;
+            if (_fileVersionInfo == null)
+            {
+                _fileVersionInfo = Process.GetCurrentProcess().MainModule.FileVersionInfo;
+            }
+
+            return _fileVersionInfo;
         }
 
         /// <summary>
@@ -33,7 +40,12 @@ namespace CodeStream.VisualStudio
         /// <returns>The version of the package.</returns>
         public static Version GetPackageVersion(object package)
         {
-            return package.GetType().Assembly.GetName().Version;
+            if (_version == null)
+            {
+                _version = package.GetType().Assembly.GetName().Version;
+            }
+
+            return _version;
         }
     }
 }

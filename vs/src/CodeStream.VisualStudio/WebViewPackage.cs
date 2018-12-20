@@ -1,4 +1,8 @@
-﻿using Microsoft.VisualStudio.Shell;
+﻿using CodeStream.VisualStudio.Commands;
+using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.UI;
+using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -15,14 +19,14 @@ namespace CodeStream.VisualStudio
     [ProvideMenuResource("Menus.ctmenu", 1)]    
     [Guid(PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
-    [ProvideToolWindow(typeof(CodeStreamToolWindow))]
-    public sealed class CodeStreamCommandPackage : AsyncPackage
+    [ProvideToolWindow(typeof(WebViewToolWindow))]
+    public sealed class WebViewPackage : AsyncPackage
     {
-        static readonly ILogger log = LogManager.ForContext<CodeStreamCommandPackage>();
+        static readonly ILogger log = LogManager.ForContext<WebViewPackage>();
 
         public const string PackageGuidString = "330ce502-4e1f-44b8-ab32-82a7ea71beeb";
 
-        public CodeStreamCommandPackage()
+        public WebViewPackage()
         {
         }
 
@@ -40,7 +44,7 @@ namespace CodeStream.VisualStudio
             // When initialized asynchronously, the current thread may be a background thread at this point.
             // Do any initialization that requires the UI thread after switching to the UI thread.
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-            await CodeStreamToolWindowCommand.InitializeAsync(this);
+            await WebViewCommand.InitializeAsync(this);
 
             var packageVersion = Constants.GetPackageVersion(this);
             var hostVersionInfo = Constants.GetHostVersionInfo();

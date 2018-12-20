@@ -1,4 +1,6 @@
-﻿using CodeStream.VisualStudio.Events;
+﻿using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
@@ -8,14 +10,14 @@ using System;
 
 namespace CodeStream.VisualStudio
 {
-    public class CodeStreamCommandHandler
+    public class WebViewRouter
     {
-        static readonly ILogger log = LogManager.ForContext<CodeStreamCommandHandler>();
+        static readonly ILogger log = LogManager.ForContext<WebViewRouter>();
 
         private readonly IEventAggregator _eventAggregator;
         private readonly IBrowserService _browser;
 
-        public CodeStreamCommandHandler(IEventAggregator eventAggregator, IBrowserService browser)
+        public WebViewRouter(IEventAggregator eventAggregator, IBrowserService browser)
         {
             _eventAggregator = eventAggregator;
             _browser = browser;

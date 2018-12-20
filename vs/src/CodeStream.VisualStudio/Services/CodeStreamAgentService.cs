@@ -1,4 +1,5 @@
-﻿using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Models;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;

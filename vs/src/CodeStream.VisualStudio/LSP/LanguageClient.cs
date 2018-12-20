@@ -1,8 +1,8 @@
-﻿using CodeStream.VisualStudio.Events;
+﻿using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.LanguageServer.Client;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
@@ -15,7 +15,7 @@ using System.ComponentModel.Composition;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CodeStream.VisualStudio
+namespace CodeStream.VisualStudio.LSP
 {
     [ContentType("FSharpInteractive")]
     [ContentType("RazorCoreCSharp")]

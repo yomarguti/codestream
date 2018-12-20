@@ -1,4 +1,5 @@
-﻿using CodeStream.VisualStudio.Events;
+﻿using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
@@ -7,30 +8,30 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Controls;
 
-namespace CodeStream.VisualStudio
+namespace CodeStream.VisualStudio.UI.ToolWindows
 {
-    public partial class CodeStreamToolWindowControl : UserControl, IDisposable
+    public partial class WebViewControl : UserControl, IDisposable
     {
-        static readonly ILogger log = LogManager.ForContext<CodeStreamToolWindowControl>();
+        static readonly ILogger log = LogManager.ForContext<WebViewControl>();
 
         private readonly IDisposable _languageServerReadySubscription;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CodeStreamToolWindowControl"/> class.
+        /// Initializes a new instance of the <see cref="WebViewControl"/> class.
         /// </summary>
-        public CodeStreamToolWindowControl()
+        public WebViewControl()
         {
             InitializeComponent();
             var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
 
-            IBrowserService browser = Package.GetGlobalService(typeof(SBrowserService)) as IBrowserService;
-            var browserCommandHandler = new CodeStreamCommandHandler(eventAggregator, browser);
+            var browser = Package.GetGlobalService(typeof(SBrowserService)) as IBrowserService;
+            var router = new WebViewRouter(eventAggregator, browser);
 
             //TODO gotta be a better way to embed & retrieve these???????
 
-            var assembly = Assembly.GetAssembly(typeof(CodeStreamToolWindowControl));
+            var assembly = Assembly.GetAssembly(typeof(WebViewControl));
             string waitingHtml = null;
-            using (var sr = new StreamReader(Path.GetDirectoryName(assembly.Location) + "/UI/Views/waiting.html"))
+            using (var sr = new StreamReader(Path.GetDirectoryName(assembly.Location) + "/UI/WebViews/waiting.html"))
             {
                 waitingHtml = sr.ReadToEnd();
             }
@@ -42,7 +43,7 @@ namespace CodeStream.VisualStudio
               {
                   string harness = null;
                   var dir = Path.GetDirectoryName(assembly.Location);
-                  using (var sr = new StreamReader(dir + "/UI/Views/webview.html"))
+                  using (var sr = new StreamReader(dir + "/UI/WebViews/webview.html"))
                   {
                       harness = sr.ReadToEnd();
                       harness = harness
@@ -57,7 +58,7 @@ namespace CodeStream.VisualStudio
 
                   browser.AddWindowMessageEvent(async delegate (object sender, WindowEventArgs ea)
                   {
-                      await browserCommandHandler.HandleAsync(ea);
+                      await router.HandleAsync(ea);
                   });
 
                   browser.LoadHtml(harness);
@@ -99,7 +100,6 @@ namespace CodeStream.VisualStudio
             // GC.SuppressFinalize(this);
         }
         #endregion
-
 
 
         //private void Browser_Initialized(object sender, EventArgs e)

@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace CodeStream.VisualStudio
+namespace CodeStream.VisualStudio.LSP
 {
     public interface ILanguageServerProcess
     {

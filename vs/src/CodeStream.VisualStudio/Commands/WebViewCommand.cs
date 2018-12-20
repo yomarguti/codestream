@@ -3,16 +3,17 @@ using System.ComponentModel.Design;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.UI;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
 
-namespace CodeStream.VisualStudio
+namespace CodeStream.VisualStudio.Commands
 {
     /// <summary>
     /// Command handler
     /// </summary>
-    internal sealed class CodeStreamToolWindowCommand
+    internal sealed class WebViewCommand
     {
         /// <summary>
         /// Command ID.
@@ -30,12 +31,12 @@ namespace CodeStream.VisualStudio
         private readonly AsyncPackage package;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CodeStreamToolWindowCommand"/> class.
+        /// Initializes a new instance of the <see cref="WebViewCommand"/> class.
         /// Adds our command handlers for menu (commands must exist in the command table file)
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
         /// <param name="commandService">Command service to add command to, not null.</param>
-        private CodeStreamToolWindowCommand(AsyncPackage package, OleMenuCommandService commandService)
+        private WebViewCommand(AsyncPackage package, OleMenuCommandService commandService)
         {
             this.package = package ?? throw new ArgumentNullException(nameof(package));
             commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
@@ -48,7 +49,7 @@ namespace CodeStream.VisualStudio
         /// <summary>
         /// Gets the instance of the command.
         /// </summary>
-        public static CodeStreamToolWindowCommand Instance
+        public static WebViewCommand Instance
         {
             get;
             private set;
@@ -76,7 +77,7 @@ namespace CodeStream.VisualStudio
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(package.DisposalToken);
 
             OleMenuCommandService commandService = await package.GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
-            Instance = new CodeStreamToolWindowCommand(package, commandService);
+            Instance = new WebViewCommand(package, commandService);
         }
 
         /// <summary>
@@ -91,7 +92,7 @@ namespace CodeStream.VisualStudio
             // Get the instance number 0 of this tool window. This window is single instance so this instance
             // is actually the only one.
             // The last flag is set to true so that if the tool window does not exists it will be created.
-            ToolWindowPane window = this.package.FindToolWindow(typeof(CodeStreamToolWindow), 0, true);
+            ToolWindowPane window = this.package.FindToolWindow(typeof(WebViewToolWindow), 0, true);
             if ((null == window) || (null == window.Frame))
             {
                 throw new NotSupportedException("Cannot create tool window");

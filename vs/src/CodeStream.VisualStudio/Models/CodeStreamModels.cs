@@ -1,5 +1,4 @@
-﻿using CodeStream.VisualStudio.Services;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio.Models
