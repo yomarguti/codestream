@@ -1,42 +1,87 @@
-﻿using CodeStream.VisualStudio.Services;
+﻿using CodeStream.VisualStudio.Events;
+using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
-using System.Diagnostics.CodeAnalysis;
+using System;
 using System.IO;
-using System.Windows;
 using System.Windows.Controls;
 
 namespace CodeStream.VisualStudio
-{    
-    public partial class CodeStreamToolWindowControl : UserControl
-    {        
+{
+    public partial class CodeStreamToolWindowControl : UserControl, IDisposable
+    {
         static readonly ILogger log = LogManager.ForContext<CodeStreamToolWindowControl>();
+
+        private readonly IDisposable _languageServerReadySubscription;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CodeStreamToolWindowControl"/> class.
         /// </summary>
         public CodeStreamToolWindowControl()
         {
-            IBrowserService browser = Package.GetGlobalService(typeof(SBrowserService)) as IBrowserService;
-            var browserCommandHandler = new CodeStreamCommandHandler(browser);
-
             InitializeComponent();
+            var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
 
-            var dir = Directory.GetCurrentDirectory();
-            var harness = File.ReadAllText($"{dir}/webview.html");
-            harness = harness.Replace("{root}", dir.Replace(@"\", "/"));
-            harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{File.ReadAllText($"{dir}/Themes/dark.css")}</style>");
-            harness = harness.Replace("{footerHtml}", browser.FooterHtml);
+            IBrowserService browser = Package.GetGlobalService(typeof(SBrowserService)) as IBrowserService;
+            var browserCommandHandler = new CodeStreamCommandHandler(eventAggregator, browser);
 
             browser.AttachControl(grid);
-            
-            browser.AddWindowMessageEvent(async delegate (object sender, WindowEventArgs ea)
-            {
-                await browserCommandHandler.HandleAsync(ea);
-            });
+            browser.LoadHtml("Open a solution and a file to start using CodeStream!");
 
-            browser.LoadHtml(harness);    
+            _languageServerReadySubscription = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
+              {
+                  var dir = Directory.GetCurrentDirectory();
+                  var harness = File.ReadAllText($"{dir}/webview.html");
+                  harness = harness.Replace("{root}", dir.Replace(@"\", "/"));
+                  harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{File.ReadAllText($"{dir}/Themes/dark.css")}</style>");
+                  harness = harness.Replace("{footerHtml}", browser.FooterHtml);
+
+                  browser.AddWindowMessageEvent(async delegate (object sender, WindowEventArgs ea)
+                  {
+                      await browserCommandHandler.HandleAsync(ea);
+                  });
+
+                  browser.LoadHtml(harness);
+              });
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    _languageServerReadySubscription?.Dispose();
+                    // TODO: dispose managed state (managed objects).
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // TODO: set large fields to null.
+
+                disposedValue = true;
+            }
+        }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // ~CodeStreamToolWindowControl() {
+        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+        //   Dispose(false);
+        // }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
+        }
+        #endregion
+
+
 
         //private void Browser_Initialized(object sender, EventArgs e)
         //{

@@ -18,8 +18,11 @@ namespace CodeStream.VisualStudio.Services
         Guid GenerateSignupToken();
         AgentReadyScope AgentReady();
         void SetAgentReady();
+        void SetUserReady();
         object Capabilities { get; set; }
         string CurrentStreamId { get; set; }
+        bool IsReady { get; }
+
     }
 
     [Injected]
@@ -50,7 +53,7 @@ namespace CodeStream.VisualStudio.Services
 
         public AgentReadyScope AgentReady()
         {
-            if (_sessionState != SessionState.AgentReady)
+            if (_sessionState != SessionState.AgentReady && _sessionState != SessionState.UserReady)
             {
                 throw new AgentUninitializedException();
             }
@@ -65,7 +68,19 @@ namespace CodeStream.VisualStudio.Services
             _sessionState = SessionState.AgentReady;
         }
 
+        public void SetUserReady()
+        {
+            _sessionState = SessionState.UserReady;
+        }
+
         public string CurrentStreamId { get; set; }
+        public bool IsReady
+        {
+            get
+            {
+                return _sessionState == SessionState.UserReady;
+            }
+        }
     }
 
     public class AgentUninitializedException : Exception
@@ -104,6 +119,7 @@ namespace CodeStream.VisualStudio.Services
     public enum SessionState
     {
         Unknown,
+        UserReady,
         AgentReady
     }
 }

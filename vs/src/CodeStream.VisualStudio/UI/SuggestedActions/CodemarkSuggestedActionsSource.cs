@@ -149,7 +149,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
             get { return false; }
         }
 
-        public string DisplayText { get; } = "CodeStream: Add Comment...";
+        public string DisplayText { get; } = "Add CodeStream Comment";
 
         public ImageMoniker IconMoniker
         {

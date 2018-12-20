@@ -1,4 +1,5 @@
-﻿using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Events;
+using CodeStream.VisualStudio.Models;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,12 +17,12 @@ namespace CodeStream.VisualStudio.Services
     }
 
     public class CodeStreamService : ICodeStreamService, SCodeStreamService
-    {
-        private ICodeStreamAgentService _agentService;
-        private IBrowserService _browserService;
+    {        
+        private readonly ICodeStreamAgentService _agentService;
+        private readonly IBrowserService _browserService;
 
         public CodeStreamService(ICodeStreamAgentService serviceProvider, IBrowserService browserService)
-        {
+        {            
             _agentService = serviceProvider;
             _browserService = browserService;
         }

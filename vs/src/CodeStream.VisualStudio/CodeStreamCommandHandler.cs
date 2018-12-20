@@ -1,4 +1,5 @@
-﻿using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Events;
+using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
@@ -10,11 +11,14 @@ namespace CodeStream.VisualStudio
     public class CodeStreamCommandHandler
     {
         static readonly ILogger log = LogManager.ForContext<CodeStreamCommandHandler>();
-        private IBrowserService browser;
 
-        public CodeStreamCommandHandler(IBrowserService browser)
+        private readonly IEventAggregator _eventAggregator;
+        private readonly IBrowserService _browser;
+
+        public CodeStreamCommandHandler(IEventAggregator eventAggregator, IBrowserService browser)
         {
-            this.browser = browser;
+            _eventAggregator = eventAggregator;
+            _browser = browser;
         }
 
         private CodeStreamMessage ParseMessageSafe(JToken token)
@@ -36,6 +40,12 @@ namespace CodeStream.VisualStudio
 
             return CodeStreamMessage.Empty();
         }
+
+        //
+        //
+        //TODO use DI in the ctor rather than inline Package/ServiceLocator pattern
+        //
+        //
 
         public async System.Threading.Tasks.Task HandleAsync(WindowEventArgs e)
         {
@@ -95,7 +105,7 @@ namespace CodeStream.VisualStudio
                                         Payload = await codeStreamAgent.SendAsync<object>(request.Action, request.Params)
                                     }
                                 };
-                                browser.PostMessage(response);
+                                _browser.PostMessage(response);
                             }
                             else
                             {
@@ -119,7 +129,7 @@ namespace CodeStream.VisualStudio
                                                 }
                                             };
 
-                                            browser.PostMessage(response);
+                                            _browser.PostMessage(response);
                                             break;
                                         }
                                     case "authenticate":
@@ -150,8 +160,10 @@ namespace CodeStream.VisualStudio
                                                     sessionService.State = loginResponse.Result.State;
 
                                                     response.Body.Payload = await codeStreamAgent.GetBootstrapAsync(loginResponse.Result.State);
+                                                    sessionService.SetUserReady();
+                                                    _eventAggregator.Publish(new SessionReadyEvent());
                                                 }
-                                                browser.PostMessage(response);
+                                                _browser.PostMessage(response);
 
                                                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                                                 using (var scope = SettingsScope.Create(Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService))
@@ -241,6 +253,7 @@ namespace CodeStream.VisualStudio
                                             try
                                             {
                                                 var browserService = Package.GetGlobalService(typeof(SHostService)) as IHostService;
+                                                //TODO move out of Constants
                                                 browserService.Navigate($"{Constants.WebAppUrl}/signup?force_auth=true&signup_token={sessionService.GenerateSignupToken()}");
                                                 response.Body.Payload = true;
                                             }
@@ -248,7 +261,7 @@ namespace CodeStream.VisualStudio
                                             {
                                                 response.Body.Error = ex.ToString();
                                             }
-                                            browser.PostMessage(response);
+                                            _browser.PostMessage(response);
                                             break;
                                         }
                                     case "go-to-slack-signin":
@@ -261,6 +274,7 @@ namespace CodeStream.VisualStudio
                                             try
                                             {
                                                 var browserService = Package.GetGlobalService(typeof(SHostService)) as IHostService;
+                                                //TODO move out of Constants
                                                 browserService.Navigate($"{Constants.WebAppUrl}/service-auth/slack?state={sessionService.GenerateSignupToken()}");
                                                 response.Body.Payload = true;
                                             }
@@ -268,7 +282,7 @@ namespace CodeStream.VisualStudio
                                             {
                                                 response.Body.Error = ex.ToString();
                                             }
-                                            browser.PostMessage(response);
+                                            _browser.PostMessage(response);
                                             break;
                                         }
 

@@ -6,5 +6,5 @@
              xmlns:local="clr-namespace:CodeStream.VisualStudio.UI.Margins"
              mc:Ignorable="d" 
              d:DesignHeight="205" d:DesignWidth="250">
-    <Image MouseDown="Glyph_MouseDown" Name="Glyph" Source="{Binding ImageUri}" Width="20" Height="20" HorizontalAlignment="Left"/>
+    <Image MouseDown="Codemark_MouseDown" Name="Glyph" Source="{Binding ImageUri}" Width="20" Height="20" HorizontalAlignment="Left"/>
 </UserControl>

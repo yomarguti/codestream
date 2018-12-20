@@ -1,4 +1,5 @@
-﻿using CodeStream.VisualStudio.Services;
+﻿using CodeStream.VisualStudio.Events;
+using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -20,8 +21,10 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         public IWpfTextViewMargin CreateMargin(IWpfTextViewHost wpfTextViewHost, IWpfTextViewMargin parent)
         {
+            var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
             var agentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
-            return new CodemarkViewMargin(agentService, wpfTextViewHost.TextView, TextDocumentFactoryService);
+            var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
+            return new CodemarkViewMargin(eventAggregator, sessionService, agentService, wpfTextViewHost.TextView, TextDocumentFactoryService);
         }
     }     
 }

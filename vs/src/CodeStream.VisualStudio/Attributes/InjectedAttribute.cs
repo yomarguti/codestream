@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio.Attributes
 {
     /// <summary>
-    /// Signifies the class is injected via VisualStudio's service provider, do not instantiate it manually
+    /// Signifies the class is injected via VisualStudio's service provider, do not instantiate it manually. 
+    /// This is just a marker!
     /// </summary>
     public class InjectedAttribute : Attribute
     {

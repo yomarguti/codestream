@@ -26,7 +26,7 @@ namespace CodeStream.VisualStudio.UI.Margins
             set { SetValue(ImageUriProperty, value); }
         }
 
-        private void Glyph_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Codemark_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             //var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
            // codeStreamService.OpenCommentAsync(null, _viewModel.Marker.)

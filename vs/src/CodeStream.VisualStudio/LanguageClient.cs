@@ -1,4 +1,5 @@
-﻿using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Events;
+using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
@@ -195,6 +196,8 @@ namespace CodeStream.VisualStudio
                     var codeStreamAgentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
                     await codeStreamAgentService.SetRpcAsync(_rpc);
                     sessionService.SetAgentReady();
+                    var ea = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
+                    ea.Publish(new LanguageServerReadyEvent() { IsReady = true });
                 }
             }
             catch (Exception ex)
