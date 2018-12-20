@@ -21,6 +21,7 @@ namespace CodeStream.VisualStudio
         {
             var logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 Constants.ApplicationName,
+                "Logs",
                 "vs-extension.log");
 
             const string outputTemplate =

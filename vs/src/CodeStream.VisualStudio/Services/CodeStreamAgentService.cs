@@ -18,7 +18,7 @@ namespace CodeStream.VisualStudio.Services
     public interface ICodeStreamAgentService
     {
         bool IsReady { get; }
-        Task<object> SetRpcAsync(JsonRpc rpc);
+        System.Threading.Tasks.Task SetRpcAsync(JsonRpc rpc);
         Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null);
         Task<GetMetadataResponse> GetMetadataAsync(string uri, Range range,
            CancellationToken? cancellationToken = null
@@ -26,7 +26,7 @@ namespace CodeStream.VisualStudio.Services
 
         Task<JToken> LoginViaTokenAsync(string signupToken, string serverUrl);
         Task<JToken> LoginAsync(string email, string password, string serverUrl);
-        Task<BootstrapState> GetBootstrapAsync(StateResponse state);
+        Task<BootstrapState> GetBootstrapAsync(State state);
         Task<FetchCodemarksResponse> GetMarkersAsync(string streamId);
         Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(FileUri uri, CancellationToken? cancellationToken = null);
     }
@@ -34,6 +34,8 @@ namespace CodeStream.VisualStudio.Services
     public class GetMetadataResponse
     {
         public string Code { get; set; }
+        public string GitError { get; set; }
+        public Source Source { get; set; }
     }
 
     public class FetchCodemarksResponse
@@ -60,28 +62,31 @@ namespace CodeStream.VisualStudio.Services
         public bool IsReady { get; private set; }
         private JsonRpc _rpc { get; set; }
 
-        public async Task<object> SetRpcAsync(JsonRpc rpc)
+        public async System.Threading.Tasks.Task SetRpcAsync(JsonRpc rpc)
         {
+            await System.Threading.Tasks.Task.Yield();
             _rpc = rpc;
             IsReady = true;
+
             //TODO fix arg -- use AgentOptions
-            return await SendAsync<object>("codeStream/cli/initialized", new {
-#if DEBUG
-                isDebugging = true,
-                traceLevel = "verbose",
-#endif
-                signupToken = (string)null,
-                team = (string)null,
-                teamId = (string)null,
-                extension = new
-                {
-                    build = "0",
-                    buildEnv = "0",
-                    version = "0",
-                    versionFormatted = "0",
-                },                
-                serverUrl = Constants.ServerUrl
-            });
+            //    return await SendAsync<object>("codeStream/cli/initialized", null);
+            //            return await SendAsync<object>("codeStream/cli/initialized", new {
+            //#if DEBUG
+            //                isDebugging = true,
+            //                traceLevel = "verbose",
+            //#endif
+            //                signupToken = (string)null,
+            //                team = (string)null,
+            //                teamId = (string)null,
+            //                extension = new
+            //                {
+            //                    build = "0",
+            //                    buildEnv = "0",
+            //                    version = "0",
+            //                    versionFormatted = "0",
+            //                },                
+            //                serverUrl = Constants.ServerUrl
+            //            });
         }
 
         public async Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null)
@@ -111,6 +116,11 @@ namespace CodeStream.VisualStudio.Services
         public async Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(FileUri uri,
             CancellationToken? cancellationToken = null)
         {
+            var s = await SendAsync<JToken>("codeStream/textDocument/markers", new
+            {
+                textDocument = new { uri = uri.ToString() }
+            }, cancellationToken);
+
             return await SendAsync<DocumentMarkersResponse>("codeStream/textDocument/markers", new
             {
                 textDocument = new { uri = uri.ToString() }
@@ -126,8 +136,11 @@ namespace CodeStream.VisualStudio.Services
                 new
                 {
                     textDocument = new { uri = uri },
-                    range = new { start = new { line = range.StartLine, character = range.StartCharacter },
-                               end = new { line = range.EndLine, character = range.EndCharacter } },
+                    range = new
+                    {
+                        start = new { line = range.StartLine, character = range.StartCharacter },
+                        end = new { line = range.EndLine, character = range.EndCharacter }
+                    },
                     dirty = false
                 }, cancellationToken);
         }
@@ -169,11 +182,15 @@ namespace CodeStream.VisualStudio.Services
                     version = "0",
                     versionFormatted = "0",
                 },
+                ide = new
+                {
+                    name = "Visual Studio" //fixme
+                },
                 traceLevel = "verbose"
             });
         }
 
-        public async Task<BootstrapState> GetBootstrapAsync(StateResponse state)
+        public async Task<BootstrapState> GetBootstrapAsync(State state)
         {
             var repos = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/repos");
             var streams = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/streams");
@@ -184,15 +201,15 @@ namespace CodeStream.VisualStudio.Services
 
             var bootstrapState = new BootstrapState
             {
-                Capabilities = state.State.Capabilities,
-                CurrentUserId = state.State.UserId,
-                CurrentTeamId = state.State.TeamId,
+                Capabilities = state.Capabilities,
+                CurrentUserId = state.UserId,
+                CurrentTeamId = state.TeamId,
                 Configs = new Config()
                 {
-                    ServerUrl = state.State.ServerUrl,
-                    Email = state.State.Email
+                    ServerUrl = state.ServerUrl,
+                    Email = state.Email
                 },
-                Env = state.State.Environment,
+                Env = state.Environment,
 
                 Repos = repos.Value<JToken>("repos").ToObject<List<CSRepository>>(),
                 Streams = streams.Value<JToken>("streams").ToObject<List<CSStream>>(),

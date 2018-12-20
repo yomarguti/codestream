@@ -145,13 +145,11 @@ namespace CodeStream.VisualStudio
                                                 }
                                                 else
                                                 {
-                                                    var loginResponse = loginResponsewrapper.ToObject<LoginResponseResponse>();
-                                                    var state = loginResponsewrapper.Value<JToken>().ToObject<StateResponse>();
+                                                    var loginResponse = loginResponsewrapper.ToObject<LoginResponseWrapper>();                                                  
+                                                    sessionService.LoginResponse = loginResponse.Result.LoginResponse;
+                                                    sessionService.State = loginResponse.Result.State;
 
-                                                    sessionService.LoginResponse = loginResponse.LoginResponse;
-                                                    sessionService.State = state.State;
-
-                                                    response.Body.Payload = await codeStreamAgent.GetBootstrapAsync(state);
+                                                    response.Body.Payload = await codeStreamAgent.GetBootstrapAsync(loginResponse.Result.State);
                                                 }
                                                 browser.PostMessage(response);
 

@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
@@ -47,8 +48,7 @@ namespace CodeStream.VisualStudio.UI.Margins
 
             if (_agentService.IsReady)
             {
-                this.Visibility = Visibility.Visible;
-                // Foo();
+                this.Visibility = Visibility.Visible;                
                 _textView.TextBuffer.ChangedLowPriority += TextBuffer_ChangedLowPriority;
                 _textView.ViewportHeightChanged += TextView_ViewportHeightChanged;
                 _textView.LayoutChanged += TextView_LayoutChanged;
@@ -68,7 +68,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         {
             ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
-                Foo();
+                UpdateAsync();
             });
 
         }
@@ -77,7 +77,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         {
             ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
-                Foo();
+                UpdateAsync();
             });
         }
 
@@ -85,12 +85,12 @@ namespace CodeStream.VisualStudio.UI.Margins
         {
             ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
-                Foo();
+                UpdateAsync();
             });
         }
 
         private IWpfTextView _textView;
-        private async System.Threading.Tasks.Task Foo()
+        private async System.Threading.Tasks.Task UpdateAsync()
         {
             await System.Threading.Tasks.Task.Yield();
 
@@ -99,23 +99,20 @@ namespace CodeStream.VisualStudio.UI.Margins
             {
                 var response = await _agentService.GetMarkersForDocumentAsync(new Models.FileUri(textDocument.FilePath));
                 if (response != null)
-                {
-                    var items = new int[] { 6, 18 };
+                {                    
                     Children.Clear();
 
-                    var currMarkerOffset = 0;
-                    int i = 1;
-
+                    var currMarkerOffset = 0;                                      
                     foreach (var currLine in _textView.TextSnapshot.Lines)
                     {
-                        var hasItem = items.Where(_ => _ == currLine.LineNumber + 1);
-                        if (hasItem.Any())
+                        var markers = 
+                            response.Markers.Where(_ => _?.Range?.Start.Line == currLine.LineNumber + 1);
+                        if (markers.Any())
                         {
                             var codemark = new Codemark(
                                 new CodemarkViewModel()
                                 {
-                                    Color = "blue",
-                                    Type = "comment"
+                                    Marker = markers.First()
                                 });
                             Canvas.SetLeft(codemark, 0);
                             Canvas.SetTop(codemark, currMarkerOffset - _textView.ViewportTop);

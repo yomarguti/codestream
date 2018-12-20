@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CodeStream.VisualStudio.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,6 @@ namespace CodeStream.VisualStudio.UI.Margins
 {
     public class CodemarkViewModel
     {
-        public string Color { get; set; }
-        public string Type { get; set; }
+        public CSFullMarker Marker { get; set; }
     }
 }

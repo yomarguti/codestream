@@ -10,7 +10,7 @@ namespace CodeStream.VisualStudio
     public class LanguageServerProcess : ILanguageServerProcess
     {
         /// <summary>
-        /// Creates the lsp server process
+        /// Creates the lsp server process object
         /// </summary>
         /// <returns></returns>
         public Process Create()
@@ -23,7 +23,11 @@ namespace CodeStream.VisualStudio
             ////TODO package this up?                     
             //@"..\..\..\..\..\..\codestream-lsp-agent\dist\agent-cli.exe"
             var agent = @"..\..\..\..\..\..\codestream-lsp-agent\dist\agent-cli.js";
+#if DEBUG
             info.Arguments = $@"{agent} --stdio --inspect=6009 --nolazy";
+#else
+            info.Arguments = $@"{agent} --stdio --nolazy";
+#endif
             info.RedirectStandardInput = true;
             info.RedirectStandardOutput = true;
             info.UseShellExecute = false; 

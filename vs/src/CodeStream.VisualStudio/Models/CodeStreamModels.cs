@@ -45,12 +45,12 @@ namespace CodeStream.VisualStudio.Models
     {
         public string TeamId { get; set; }
         public string FileStreamId { get; set; }
-        public string PotStreamId { get; set; }
+        public string PostStreamId { get; set; }
         public string PostId { get; set; }
         public string CodemarkId { get; set; }
         public ProviderType? ProviderType { get; set; }
-        public string commitHashWhenCreated { get; set; }
-        public object locationWhenCreated { get; set; } //CSLocationArray
+        public string CommitHashWhenCreated { get; set; }
+        public object LocationWhenCreated { get; set; } //CSLocationArray
         public string Code { get; set; }
         public string File { get; set; }
         public string Repo { get; set; }
@@ -76,7 +76,7 @@ namespace CodeStream.VisualStudio.Models
 
     public class MarkerNotLocated : CSMarker
     {
-       public string NotLocatedReason { get; set; }//: MarkerNotLocatedReason;
+        public string NotLocatedReason { get; set; }//: MarkerNotLocatedReason;
         public string NotLocatedDetails { get; set; }
     }
 
@@ -98,9 +98,21 @@ namespace CodeStream.VisualStudio.Models
         public int NumReplies { get; set; }
     }
 
+    public class CSRangePoint
+    {
+        public int Line { get; set; }
+        public int Character { get; set; }
+    }
+
+    public class CSRange
+    {
+        public CSRangePoint Start { get; set; }
+        public CSRangePoint End { get; set; }
+    }
+
     public class CSFullMarker : CSMarker
     {
-        public Range range { get; set; }
+        public CSRange Range { get; set; }
         public CSCodemark Codemark { get; set; }
     }
 
@@ -212,9 +224,14 @@ namespace CodeStream.VisualStudio.Models
         public bool Mute { get; set; }
     }
 
-    public class LoginResponseResponse
+    public class Result
     {
         public LoginResponse LoginResponse { get; set; }
+        public State State { get; set; }
+    }
+    public class LoginResponseWrapper
+    {
+        public Result Result { get; set; }
     }
 
     public class CSUser : CSEntityBase
@@ -262,12 +279,7 @@ namespace CodeStream.VisualStudio.Models
         public List<Company> Companies { get; set; }
         public List<CSRepository> Repos { get; set; }
         public string TeamId { get; set; }
-    }
-
-    public class StateResponse
-    {
-        public State State { get; set; }
-    }
+    } 
 
     public class State
     {

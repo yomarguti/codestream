@@ -125,21 +125,21 @@ namespace CodeStream.VisualStudio
 
         public IEnumerable<string> FilesToWatch => null;
 
-        public object MiddleLayer => null;         
+        public object MiddleLayer => null;
 
-        private static CustomTarget _target;
-        public object CustomMessageTarget
-        {
-            get
-            {
-                if (_target == null)
-                {
-                    _target = new CustomTarget();
-                }
+        //private static CustomTarget _target;
+        public object CustomMessageTarget => null;
+        //{
+        //    get
+        //    {
+        //        if (_target == null)
+        //        {
+        //            _target = new CustomTarget();
+        //        }
 
-                return _target;
-            }
-        }
+        //        return _target;
+        //    }
+        //}
 
         public async Task<Connection> ActivateAsync(CancellationToken token)
         {
@@ -193,9 +193,7 @@ namespace CodeStream.VisualStudio
                 {
                     var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
                     var codeStreamAgentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
-
-                    var initialized = await codeStreamAgentService.SetRpcAsync(_rpc);
-                    sessionService.Capabilities = initialized;
+                    await codeStreamAgentService.SetRpcAsync(_rpc);
                     sessionService.SetAgentReady();
                 }
             }
@@ -215,68 +213,68 @@ namespace CodeStream.VisualStudio
     }
 
 
-    public class CustomTarget
-    {
-        static readonly ILogger log = LogManager.ForContext<CustomTarget>();
+    //public class CustomTarget
+    //{
+    //    static readonly ILogger log = LogManager.ForContext<CustomTarget>();
 
-        public void OnCustomNotification(object arg)
-        {
-            // Provide logic on what happens OnCustomNotification is called from the language server
-        }
+    //    public void OnCustomNotification(object arg)
+    //    {
+    //        // Provide logic on what happens OnCustomNotification is called from the language server
+    //    }
 
-        public string OnCustomRequest(string test)
-        {
-            // Provide logic on what happens OnCustomRequest is called from the language server
-            return null;
-        }
+    //    public string OnCustomRequest(string test)
+    //    {
+    //        // Provide logic on what happens OnCustomRequest is called from the language server
+    //        return null;
+    //    }
 
-        [JsonRpcMethod(Methods.InitializeName)]
-        public void OnInitialize(object arg)
-        {
-            //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
-            //server.OnTextDocumentOpened(parameter);
-        }
+    //    [JsonRpcMethod(Methods.InitializeName)]
+    //    public void OnInitialize(object arg)
+    //    {
+    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
+    //        //server.OnTextDocumentOpened(parameter);
+    //    }
 
-        [JsonRpcMethod(Methods.InitializedName)]
-        public void OnInitialized(object arg)
-        {
-            //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
-            //server.OnTextDocumentOpened(parameter);
-        }
+    //    [JsonRpcMethod(Methods.InitializedName)]
+    //    public void OnInitialized(object arg)
+    //    {
+    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
+    //        //server.OnTextDocumentOpened(parameter);
+    //    }
 
-        [JsonRpcMethod(Methods.TextDocumentDidSaveName)]
-        public void OnTextDocumentDidSaveName(object arg)
-        {
-            //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
-            //server.OnTextDocumentOpened(parameter);
-        }
+    //    [JsonRpcMethod(Methods.TextDocumentDidSaveName)]
+    //    public void OnTextDocumentDidSaveName(object arg)
+    //    {
+    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
+    //        //server.OnTextDocumentOpened(parameter);
+    //    }
 
 
-        [JsonRpcMethod(Methods.TextDocumentDidOpenName)]
-        public void OnTextDocumentOpened(object arg)
-        {
-            //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
-            //server.OnTextDocumentOpened(parameter);
-        }
+    //    [JsonRpcMethod(Methods.TextDocumentDidOpenName)]
+    //    public void OnTextDocumentOpened(object arg)
+    //    {
+    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
+    //        //server.OnTextDocumentOpened(parameter);
+    //    }
 
-        [JsonRpcMethod(Methods.TextDocumentPublishDiagnosticsName)]
-        public void TextDocumentPublishDiagnosticsName(object arg)
-        {
-            //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
-            //server.OnTextDocumentOpened(parameter);
-        }
+    //    [JsonRpcMethod(Methods.TextDocumentPublishDiagnosticsName)]
+    //    public void TextDocumentPublishDiagnosticsName(object arg)
+    //    {
+    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
+    //        //server.OnTextDocumentOpened(parameter);
+    //    }
 
-        [JsonRpcMethod("window/logMessage")]
-        public void LogMessage(string s)
-        {
-            Console.WriteLine(s);
-        }
+    //    [JsonRpcMethod("window/logMessage")]
+    //    public void LogMessage(string s)
+    //    {
+    //        Console.WriteLine(s);
+    //    }
 
-        [JsonRpcMethod("log")]
-        public void Log(string s)
-        {
-            Console.WriteLine(s);
-            log.Information(s);            
-        }
-    }
+    //    [JsonRpcMethod("log")]
+    //    public void Log(string s)
+    //    {
+    //        Console.WriteLine(s);
+    //        log.Information(s);
+    //    }
+    //}
 }

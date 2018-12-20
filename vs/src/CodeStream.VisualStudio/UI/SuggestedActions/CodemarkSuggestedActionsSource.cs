@@ -117,21 +117,16 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
             // MessageBox.Show(_text);
             // m_span.TextBuffer.Replace(m_span.GetSpan(m_snapshot), m_upper);
             
-            var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;     
-            
-            //TODO change how this is called...
-            
-            Task<object> task = System.Threading.Tasks.Task.Run<object>(
-            async () => {                
-                return await codeStreamService.PostCodeAsync(
-                    new FileUri(_textDocument.FilePath), 
-                    _selectedText,
-                    cancellationToken);
+            var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
+            ThreadHelper.JoinableTaskFactory.Run(async delegate
+            {
+                await codeStreamService.PostCodeAsync(
+                        new FileUri(_textDocument.FilePath), 
+                        _selectedText,
+                        cancellationToken);
             });
-        
-            var results = task.Result;
 
-        }
+            }
 
         public Task<object> GetPreviewAsync(CancellationToken cancellationToken)
         {

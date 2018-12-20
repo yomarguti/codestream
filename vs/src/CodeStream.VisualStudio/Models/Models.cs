@@ -48,4 +48,25 @@ namespace CodeStream.VisualStudio.Models
         public int EndLine { get; set; }
         public int EndCharacter { get; set; }
     }
+
+    public class SourceRemote
+    {
+        public string Name { get; set; }
+        public string Url { get; set; }
+    }
+
+    public class SourceAuthor
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+    }
+
+    public class Source
+    {
+        public string File { get; set; }
+        public string RepoPath { get; set; }
+        public string Revision { get; set; }
+        public List<SourceAuthor> Authors { get; set; }
+        public List<SourceRemote> Remotes { get; set; }
+    }
 }

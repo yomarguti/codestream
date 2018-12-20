@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using CodeStream.VisualStudio.Services;
+using Microsoft.VisualStudio.Shell;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace CodeStream.VisualStudio.UI.Margins
@@ -12,7 +14,7 @@ namespace CodeStream.VisualStudio.UI.Margins
             _viewModel = viewModel;
             InitializeComponent();
             DataContext = this;
-            ImageUri = $"pack://application:,,,/CodeStream.VisualStudio;component/Resources/Assets/marker-{_viewModel.Type}-{_viewModel.Color}.png";
+            ImageUri = $"pack://application:,,,/CodeStream.VisualStudio;component/Resources/Assets/marker-{_viewModel.Marker.Codemark.Type}-{_viewModel.Marker.Codemark.Color}.png";
         }
 
         public static readonly DependencyProperty ImageUriProperty =
@@ -26,7 +28,9 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         private void Glyph_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            MessageBox.Show("why hello");
+            //var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
+           // codeStreamService.OpenCommentAsync(null, _viewModel.Marker.)
+            MessageBox.Show(_viewModel.Marker.Code);
         }
     }
 }
