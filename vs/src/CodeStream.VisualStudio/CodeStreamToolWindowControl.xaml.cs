@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
 using System.IO;
+using System.Reflection;
 using System.Windows.Controls;
 
 namespace CodeStream.VisualStudio
@@ -25,16 +26,34 @@ namespace CodeStream.VisualStudio
             IBrowserService browser = Package.GetGlobalService(typeof(SBrowserService)) as IBrowserService;
             var browserCommandHandler = new CodeStreamCommandHandler(eventAggregator, browser);
 
+            //TODO gotta be a better way to embed & retrieve these???????
+
+            var assembly = Assembly.GetAssembly(typeof(CodeStreamToolWindowControl));
+            string waitingHtml = null;
+            using (var sr = new StreamReader(Path.GetDirectoryName(assembly.Location) + "/UI/Views/waiting.html"))
+            {
+                waitingHtml = sr.ReadToEnd();
+            }
+
             browser.AttachControl(grid);
-            browser.LoadHtml("Open a solution and a file to start using CodeStream!");
+            browser.LoadHtml(waitingHtml);
 
             _languageServerReadySubscription = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
               {
-                  var dir = Directory.GetCurrentDirectory();
-                  var harness = File.ReadAllText($"{dir}/webview.html");
-                  harness = harness.Replace("{root}", dir.Replace(@"\", "/"));
-                  harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{File.ReadAllText($"{dir}/Themes/dark.css")}</style>");
-                  harness = harness.Replace("{footerHtml}", browser.FooterHtml);
+                  string harness = null;
+                  var dir = Path.GetDirectoryName(assembly.Location);
+                  using (var sr = new StreamReader(dir + "/UI/Views/webview.html"))
+                  {
+                      harness = sr.ReadToEnd();
+                      harness = harness
+                                  .Replace("{root}", dir.Replace(@"\", "/"))
+                                  .Replace("{footerHtml}", browser.FooterHtml);
+                  }
+                  using (var sr = new StreamReader(dir + "/Themes/dark.css"))
+                  {
+                      var theme = sr.ReadToEnd();
+                      harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{theme}</style>");
+                  }
 
                   browser.AddWindowMessageEvent(async delegate (object sender, WindowEventArgs ea)
                   {

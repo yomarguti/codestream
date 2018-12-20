@@ -121,10 +121,12 @@
     </VSCTCompile>
     <Content Include="dist\agent.js" />
     <Content Include="dist\webview\webview.css">
+      <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="dist\webview\webview.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Resource Include="Resources\Assets\marker-comment-blue.png" />
     <Resource Include="Resources\Assets\codestream.png" />
@@ -177,9 +179,15 @@
     <Content Include="Resources\CodestreamPackage.ico" />
     <Content Include="Themes\dark.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="webview.html">
+    <Content Include="UI\Views\waiting.html">
+      <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="UI\Views\webview.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <EmbeddedResource Include="teamdev.licenses" />
     <VSCTCompile Include="CodeStreamCommandPackage.vsct">
