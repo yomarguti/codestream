@@ -27,8 +27,8 @@ namespace CodeStream.VisualStudio.Services
             _browserView = new WPFBrowserView(BrowserFactory.Create());
 
             // can theme it here
-            //var bc = new BrushConverter();
-            // _browserView.Background = (System.Windows.Media.Brush)bc.ConvertFrom("#ff0000");
+            var bc = new System.Windows.Media.BrushConverter();
+             _browserView.Background = (System.Windows.Media.Brush)bc.ConvertFrom("#ff0000");
 
             _browser = _browserView.Browser;
         }

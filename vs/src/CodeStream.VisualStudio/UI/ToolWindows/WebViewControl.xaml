@@ -8,7 +8,7 @@
              d:DesignHeight="300" d:DesignWidth="300"
              Name="CodeStream">
  
-        <Grid Name="grid">
+        <Grid Name="grid" Background="Green" >
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>

@@ -1,4 +1,28 @@
 ﻿:root {
+    /*-font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", HelveticaNeue-Light, Ubuntu, "Droid Sans", Arial, Consolas, sans-serif;
+    --color: {color};
+    --text-color: {color};
+    --text-color-highlight: {color};
+    --text-color-subtle: {color};
+    --text-color-subtle-extra: {color};
+    --background-color: {background-color};
+    --app-background-color: {background-color};
+    --app-background-color-darker: {background-color};
+    --app-background-color-hover: {background-color};
+    --base-background-color: {background-color};
+    --base-border-color: {background-color};
+    --tool-panel-background-color: {background-color};
+    --link-color: {color};
+    --text-color-info-muted: {color};
+    --font-size: 13px;
+    --font-weight: normal;
+    --link-active-color: #3794ff;
+    --vscode-button-background: {vscode-button-background};
+    --vscode-button-hoverBackground: {vscode-button-hoverBackground};
+    --vscode-sideBar-foreground: {background-color};
+    --vscode-sideBarSectionHeader-background: {background-color};
+    --vscode-sideBarSectionHeader-foreground: {background-color};*/
+
     --background-color: #1e1e1e;
     --color: #d4d4d4;
     --font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", HelveticaNeue-Light, Ubuntu, "Droid Sans", Arial, Consolas, sans-serif;
