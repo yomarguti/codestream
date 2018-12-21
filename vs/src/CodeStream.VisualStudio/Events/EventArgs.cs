@@ -12,5 +12,8 @@
 
     public class SessionLogoutEvent : IEvent { }
 
-    public class TextDocumentChangedEvent : IEvent { }
+    public class TextDocumentChangedEvent : IEvent
+    {
+        public bool IsScroll { get; set; }
+    }
 }
