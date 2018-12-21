@@ -23,6 +23,7 @@
     --vscode-sideBarSectionHeader-background: {background-color};
     --vscode-sideBarSectionHeader-foreground: {background-color};*/
 
+    --app-background-color:#1e1e1e;
     --background-color: #1e1e1e;
     --color: #d4d4d4;
     --font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", HelveticaNeue-Light, Ubuntu, "Droid Sans", Arial, Consolas, sans-serif;
@@ -288,6 +289,7 @@
 }
 
 body {
+    background-color: #1e1e1e;
     margin: 0;
     padding: 0;
     border: 0;
