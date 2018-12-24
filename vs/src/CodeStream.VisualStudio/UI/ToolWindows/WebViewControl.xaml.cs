@@ -51,7 +51,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
             _languageServerReadySubscription = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
               {                  
                   _browserService.AddWindowMessageEvent(async delegate (object sender, WindowEventArgs ea)
-                  {
+                  {                     
                       await router.HandleAsync(ea);
                   });
 

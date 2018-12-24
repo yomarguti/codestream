@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using CodeStream.VisualStudio.Extensions;
+using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio.Models
@@ -70,6 +71,8 @@ namespace CodeStream.VisualStudio.Models
         Slack
     }
 
+   
+
     public class CSMarker : CSEntity
     {
         public string TeamId { get; set; }
@@ -79,11 +82,32 @@ namespace CodeStream.VisualStudio.Models
         public string CodemarkId { get; set; }
         public ProviderType? ProviderType { get; set; }
         public string CommitHashWhenCreated { get; set; }
-        public object LocationWhenCreated { get; set; } //CSLocationArray
+        /// <summary>
+        /// this is // export type CSLocationArray = [number, number, number, number, CSLocationMeta | undefined];
+        /// </summary>
+        public List<object> LocationWhenCreated { get; set; }
         public string Code { get; set; }
         public string File { get; set; }
         public string Repo { get; set; }
         public string RepoId { get; set; }
+
+        public Range Range
+        {
+            get
+            {
+                if (LocationWhenCreated != null && LocationWhenCreated.Count >=4)
+                {
+                    return new Range()
+                    {
+                        StartLine = LocationWhenCreated[0].ToInt(),
+                        StartCharacter = LocationWhenCreated[1].ToInt(),
+                        EndLine = LocationWhenCreated[2].ToInt(),
+                        EndCharacter = LocationWhenCreated[3].ToInt(),
+                    };
+                }
+                return null;
+            }
+        }
     }
 
     public enum CodemarkType
@@ -369,6 +393,11 @@ namespace CodeStream.VisualStudio.Models
 
     public class WebviewIpcMessageResponse
     {
+        public WebviewIpcMessageResponse() { }
+        public WebviewIpcMessageResponse(WebviewIpcMessageResponseBody body)
+        {
+            Body = body;
+        }
         public string Id { get; set; }
         public string Type { get; set; } = "codestream:response";
         public WebviewIpcMessageResponseBody Body { get; set; }
@@ -440,5 +469,12 @@ namespace CodeStream.VisualStudio.Models
         public List<CSMarkerLocations> MarkerLocations { get; set; }
         public List<CSStream> Streams { get; set; }
         public List<CSRepository> Repos { get; set; }
+    }
+
+    public class ShowCodeResponse
+    {
+        public CSMarker Marker { get; set; }
+        public bool EnteringThread { get; set; }
+        public string Source { get; set; }
     }
 }

@@ -26,6 +26,7 @@ namespace CodeStream.VisualStudio.Models
         public string Text { get; set; }
     }
 
+    // Note this is a vscode-languageserver model
     public class Range
     {
         public Range()

@@ -29,6 +29,7 @@ namespace CodeStream.VisualStudio.Services
         Task<JToken> LoginAsync(string email, string password, string serverUrl);
         Task<BootstrapState> GetBootstrapAsync(State state);
         Task<FetchCodemarksResponse> GetMarkersAsync(string streamId);
+        Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request);
         Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(FileUri uri, CancellationToken? cancellationToken = null);
     }
 
@@ -116,12 +117,7 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(FileUri uri,
             CancellationToken? cancellationToken = null)
-        {
-            var s = await SendAsync<JToken>("codeStream/textDocument/markers", new
-            {
-                textDocument = new { uri = uri.ToString() }
-            }, cancellationToken);
-
+        {            
             return await SendAsync<DocumentMarkersResponse>("codeStream/textDocument/markers", new
             {
                 textDocument = new { uri = uri.ToString() }
@@ -192,6 +188,17 @@ namespace CodeStream.VisualStudio.Services
             });
         }
 
+        public async Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request)
+        {
+            return await SendAsync<DocumentFromMarkerResponse>("codeStream/textDocument/fromMarker", new
+            {
+                file = request.File,
+                repoId = request.RepoId,
+                markerId = request.MarkerId,
+                source = request.Source
+            });
+        }
+
         public async Task<BootstrapState> GetBootstrapAsync(State state)
         {
             var repos = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/repos");
@@ -227,5 +234,25 @@ namespace CodeStream.VisualStudio.Services
 
             return bootstrapState;
         }
+    }
+
+    public class TextDocumentIdentifier
+    {
+        public string Uri { get; set; }
+    }
+
+    public class DocumentFromMarkerRequest
+    {
+        public string File { get; set; }
+        public string RepoId { get; set; }
+        public string MarkerId { get; set; }
+        public string Source { get; set; }
+    }
+
+    public class DocumentFromMarkerResponse
+    {
+        public TextDocumentIdentifier TextDocument { get; set; }
+        public CSRange Range { get; set; }
+        public string Revision { get; set; }
     }
 }

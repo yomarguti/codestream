@@ -17,6 +17,7 @@ namespace CodeStream.VisualStudio
     /// </summary>
    // [ProvideService(typeof(SServiceProviderLocator))]
     [ProvideService(typeof(SEventAggregator))]
+    [ProvideService(typeof(SIDEService))]
     [ProvideService(typeof(SHostService))]
     [ProvideService(typeof(SSessionService))]
     [ProvideService(typeof(SSelectedTextService))]
@@ -26,15 +27,14 @@ namespace CodeStream.VisualStudio
     [ProvideService(typeof(SSettingsService))]   
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [Guid(PackageGuidString)]
-    public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer, Microsoft.VisualStudio.Shell.IAsyncServiceProvider
+    public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer, IAsyncServiceProvider
     {
         public const string PackageGuidString = "D5CE1488-DEDE-426D-9E5B-BFCCFBE33E54";
 
         /// <summary>
         /// Store a reference to this as only a class that inherits from AsyncPackage can call GetDialogPage
         /// </summary>
-        private CodeStreamOptionsDialogPage codeStreamOptions;
-        //private IServiceProvider _serviceProvider;
+        private CodeStreamOptionsDialogPage codeStreamOptions;        
 
         protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
@@ -45,10 +45,8 @@ namespace CodeStream.VisualStudio
             ServiceCreatorCallback callback = new ServiceCreatorCallback(CreateService);
             codeStreamOptions = (CodeStreamOptionsDialogPage)GetDialogPage(typeof(CodeStreamOptionsDialogPage));
 
-            //  _serviceProvider = this;
-
-           // ((IServiceContainer)this).AddService(typeof(SServiceProviderLocator), callback, true);
             ((IServiceContainer)this).AddService(typeof(SEventAggregator), callback, true);
+            ((IServiceContainer)this).AddService(typeof(SIDEService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SSessionService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SHostService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SSelectedTextService), callback, true);
@@ -64,6 +62,8 @@ namespace CodeStream.VisualStudio
             //    return new ServiceProviderLocator(_serviceProvider);
             if (typeof(SEventAggregator) == serviceType)
                 return new EventAggregator();
+            if (typeof(SIDEService) == serviceType)
+                return new IDEService();
             if (typeof(SSessionService) == serviceType)
                 return new SessionService(this);
             if (typeof(SHostService) == serviceType)
@@ -82,25 +82,6 @@ namespace CodeStream.VisualStudio
                     GetService(typeof(SBrowserService)) as IBrowserService
                 );
             return null;
-        }
-    }
-
-    public interface SServiceProviderLocator
-    {
-
-    }
-
-    public interface IServiceProviderLocator {
-        IServiceProvider Provider { get;   }
-
-    }
-
-    public class ServiceProviderLocator
-    {
-        public IServiceProvider Provider { get; private set; }
-        public ServiceProviderLocator(IServiceProvider servicePRovider)
-        {
-            Provider = servicePRovider;
         }
     }
 }

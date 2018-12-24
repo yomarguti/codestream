@@ -1,32 +1,52 @@
 ﻿using EnvDTE;
+using Microsoft.VisualStudio.Shell;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio.Services
 {
-    public class IdeService
+    public interface IIDEService
     {
-        //EnvDTE80.DTE2 _dte;
-        //public IdeService(EnvDTE80.DTE2 dte)
-        //{
+        ShowCodeResult OpenEditor(string sourceFile, int? scrollTo = null);
+    }
 
-        //}
+    public interface SIDEService
+    {
 
-        //public void adsf(FileInfo file)
-        //{
-        //    if (null == file)
-        //        throw new ArgumentNullException(nameof(file));
+    }
 
-        //    var dte2 = (EnvDTE80.DTE2)DTE;
-        //    dte2.MainWindow.Activate();
-        //    var newWindow = dte2.ItemOperations.IsFileOpen(file.FullName)
-        //            ? FindWindow(file.FullName)
-        //            : dte2.ItemOperations.OpenFile(file.FullName);
-        //    newWindow.Activate();
-        //}
+    public enum ShowCodeResult
+    {
+        SUCCESS,
+        FILE_NOT_FOUND,
+        REPO_NOT_IN_WORKSPACE
+    }
+
+
+    public class IDEService : IIDEService, SIDEService
+    {
+        public ShowCodeResult OpenEditor(string sourceFile, int? scrollTo = null)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+            var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
+
+            try
+            {
+                var window = dte.ItemOperations.OpenFile(sourceFile);
+                if (window != null)
+                {
+                    window.Visible = true;
+                    if (scrollTo != null && scrollTo.Value > 0)
+                    {
+                        dte.ExecuteCommand("Edit.Goto", scrollTo.Value.ToString());
+                    }
+                }
+                return ShowCodeResult.SUCCESS;
+
+            }
+            catch(Exception ex)
+            {
+                return ShowCodeResult.FILE_NOT_FOUND;
+            }
+        }
     }
 }

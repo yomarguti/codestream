@@ -1,14 +1,12 @@
-﻿using CodeStream.VisualStudio.Core;
-using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
+using System.Threading;
 
 namespace CodeStream.VisualStudio
 {
@@ -61,7 +59,7 @@ namespace CodeStream.VisualStudio
                 log.Verbose(e.Message, $"{nameof(WindowEventArgs)} not found");
             }
             else
-            {               
+            {
                 var message = ParseMessageSafe(JToken.Parse(e.Message));
 
                 log.Debug(e.Message);
@@ -79,10 +77,18 @@ namespace CodeStream.VisualStudio
                     case "codestream:telemetry":
                     case "codestream:response":
                         {
-                            if(message.Body?["payload"]?["post"] != null)
+                            try
                             {
-                                var postCreated = message.Body.ToObject<CreatePostResponse>();
-                                _eventAggregator.Publish(new CodeMarkChangedEvent());
+                                var payload = message.Body?["payload"];
+                                if (!(payload is JValue) && payload?["post"] != null)
+                                {
+                                    var postCreated = message.Body.ToObject<CreatePostResponse>();
+                                    _eventAggregator.Publish(new CodeMarkChangedEvent());
+                                }
+                            }
+                            catch(Exception ex)
+                            {
+
                             }
 
                             break;
@@ -107,228 +113,203 @@ namespace CodeStream.VisualStudio
                         }
                     case "codestream:view-ready":
                         {
+                            // ready -- nothing to do!
                             break;
                         }
                     case "codestream:request":
-                        {
-                            var request = message;
-                            if (request.Action.StartsWith("codeStream/"))
+                        {                           
+                            switch (message?.Action)
                             {
-                                var response = new WebviewIpcMessageResponse
-                                {
-                                    Body = new WebviewIpcMessageResponseBody(request?.Id)
+                                case "bootstrap":
                                     {
-                                        Payload = await codeStreamAgent.SendAsync<object>(request.Action, request.Params)
-                                    }
-                                };
-                                _browser.PostMessage(response);
-                            }
-                            else
-                            {
-                                switch (request?.Action)
-                                {
-                                    case "bootstrap":
+                                        var settings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
+                                        var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message?.Id)
                                         {
-                                            var settings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
-                                            var response = new WebviewIpcMessageResponse
+                                            Payload = new WebviewIpcMessageResponsePayload
                                             {
-                                                Body = new WebviewIpcMessageResponseBody(request?.Id)
+                                                Configs = new Config()
                                                 {
-                                                    Payload = new WebviewIpcMessageResponsePayload
-                                                    {
-                                                        Configs = new Config()
-                                                        {
-                                                            Email = settings?.Email
-                                                        },
-                                                        Services = new Service(),
-                                                    }
-                                                }
-                                            };
-
-                                            _browser.PostMessage(response);
-                                            break;
-                                        }
-                                    case "authenticate":
-                                        {
-                                            var response = new WebviewIpcMessageResponse
-                                            {
-                                                Body = new WebviewIpcMessageResponseBody(request?.Id)
-                                            };
-
-                                            using (sessionService.AgentReady())
-                                            {
-                                                string email = request.Params["email"].ToString();
-                                                var loginResponsewrapper = await codeStreamAgent.LoginAsync(
-                                                    email,
-                                                    request.Params["password"].ToString(),
-                                                    Core.Constants.ServerUrl
-                                                   );
-
-                                                var error = loginResponsewrapper.Value<string>("error");
-                                                if (error != null)
-                                                {
-                                                    response.Body.Payload = error;
-                                                }
-                                                else
-                                                {
-                                                    var loginResponse = loginResponsewrapper.ToObject<LoginResponseWrapper>();                                                  
-                                                    sessionService.LoginResponse = loginResponse.Result.LoginResponse;
-                                                    sessionService.State = loginResponse.Result.State;
-
-                                                    response.Body.Payload = await codeStreamAgent.GetBootstrapAsync(loginResponse.Result.State);
-                                                    sessionService.SetUserReady();
-                                                    _eventAggregator.Publish(new SessionReadyEvent());
-                                                }
-                                                _browser.PostMessage(response);
-
-                                                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                                using (var scope = SettingsScope.Create(Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService))
-                                                {
-                                                    scope.SettingsService.Email = email;
-                                                }                                                 
+                                                    Email = settings?.Email
+                                                },
+                                                Services = new Service(),
                                             }
-                                            break;
-                                        }
-                                    case "validate-signup":
-                                        {
-                                            //TODO
-                                            //var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
-                                            //if (sessionService.SessionState == SessionState.AgentReady)
-                                            //{
-                                            //    var response = new WebviewIpcMessageResponse
-                                            //    {
-                                            //        Body = new WebviewIpcMessageResponseBody(request?.Id)
-                                            //    };
+                                        });
 
-                                            //    var loginResponsewrapper = CodestreamAgentService.Instance.LoginViaTokenAsync(
-                                            //        request.Params["token"].ToString(),                                                
-                                            //        Constants.ServerUrl
-                                            //       ).GetAwaiter().GetResult();
-
-                                            //    var error = loginResponsewrapper.Value<string>("error");
-                                            //    if (error != null)
-                                            //    {
-                                            //        response.Body.Payload = error;
-                                            //    }
-                                            //    else
-                                            //    {
-                                            //        var loginResponse = loginResponsewrapper.ToObject<LoginResponseResponse>();
-                                            //        var state = loginResponsewrapper.Value<JToken>().ToObject<StateResponse>();
-
-                                            //        sessionService.LoginResponse = loginResponse.LoginResponse;
-                                            //        sessionService.State = state.State;
-
-                                            //        response.Body.Payload = CodestreamAgentService.Instance.GetBootstrapAsync(state).GetAwaiter().GetResult();
-                                            //    }
-                                            //    browser.PostMessage(response);
-                                            //}
-                                            //else
-                                            //{
-                                            //    //nuttin yet
-                                            //}
-                                            break;
-                                        }
-                                    case "create-post":
-                                    case "fetch-posts":
-                                    case "fetch-thread":
-                                    case "delete-post":
-                                    case "edit-codemark":
-                                    case "mute-all":
-                                    case "open-comment-on-select":
-                                        {
-                                            // this is a setting 'callback' to save user input on save
-                                            break;
-                                        }
-                                    case "create-stream":
-                                    case "open-stream":
-                                    case "leave-stream":
-                                    case "rename-stream":
-                                    case "set-stream-purpose":
-                                    case "archive-stream":
-                                    case "remove-users-from-stream":
-                                    case "add-users-to-stream":
-                                    case "close-direct-message":
-                                    case "change-stream-mute-state":
-                                    case "show-code":
-                                        {
-                                            //try
-                                            //{
-                                            //    Guid XmlTextEditorGuid = new Guid("FA3CD31E-987B-443A-9B81-186104E8DAC1");
-
-                                            //    // Open the referenced document using our editor.
-                                            //    IVsWindowFrame frame;
-                                            //    IVsUIHierarchy hierarchy;
-                                            //    uint itemid;
-                                            //    VsShellUtilities.OpenDocumentWithSpecificEditor(_serviceProvider, request.Params["email"].ToString(),
-                                            //        XmlTextEditorGuid, VSConstants.LOGVIEWID_Primary, out hierarchy, out itemid, out frame);
-                                            //    ErrorHandler.ThrowOnFailure(frame.Show());
-                                            //}
-                                            //catch(Exception ex)
-                                            //{
-                                            //    log.Error(ex, "show-code");
-                                            //}
-                                            break;
-                                        }
-                                    case "invite":
-                                    case "save-user-preference":
-                                    case "join-stream":
-                                    case "set-codemark-status":
-                                    case "mark-stream-read":
-                                    case "show-markers":
-                                    case "mark-post-unread":
-                                    case "edit-post":
-                                    case "react-to-post":
-                                    case "fetch-codemarks":
-                                        {
-                                            break;
-                                        }
-                                    case "go-to-signup":
-                                        {
-                                            var response = new WebviewIpcMessageResponse
-                                            {
-                                                Body = new WebviewIpcMessageResponseBody(request?.Id)
-                                            };
-
-                                            try
-                                            {
-                                                var browserService = Package.GetGlobalService(typeof(SHostService)) as IHostService;
-                                                //TODO move out of Constants
-                                                browserService.Navigate($"{Core.Constants.WebAppUrl}/signup?force_auth=true&signup_token={sessionService.GenerateSignupToken()}");
-                                                response.Body.Payload = true;
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                response.Body.Error = ex.ToString();
-                                            }
-                                            _browser.PostMessage(response);
-                                            break;
-                                        }
-                                    case "go-to-slack-signin":
-                                        {
-                                            var response = new WebviewIpcMessageResponse
-                                            {
-                                                Body = new WebviewIpcMessageResponseBody(request?.Id)
-                                            };
-
-                                            try
-                                            {
-                                                var browserService = Package.GetGlobalService(typeof(SHostService)) as IHostService;
-                                                //TODO move out of Constants
-                                                browserService.Navigate($"{Core.Constants.WebAppUrl}/service-auth/slack?state={sessionService.GenerateSignupToken()}");
-                                                response.Body.Payload = true;
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                response.Body.Error = ex.ToString();
-                                            }
-                                            _browser.PostMessage(response);
-                                            break;
-                                        }
-
-                                    default:
-                                        log.Debug("Unknown Action={Action}", request?.Action);
+                                        _browser.PostMessage(response);
                                         break;
-                                }
+                                    }
+                                case "authenticate":
+                                    {
+                                        var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message?.Id));
+
+                                        using (sessionService.AgentReady())
+                                        {
+                                            string email = message.Params["email"].ToString();
+                                            var loginResponsewrapper = await codeStreamAgent.LoginAsync(
+                                                email,
+                                                message.Params["password"].ToString(),
+                                                Core.Constants.ServerUrl
+                                               );
+
+                                            var error = loginResponsewrapper.Value<string>("error");
+                                            if (error != null)
+                                            {
+                                                response.Body.Payload = error;
+                                            }
+                                            else
+                                            {
+                                                var loginResponse = loginResponsewrapper.ToObject<LoginResponseWrapper>();
+                                                sessionService.LoginResponse = loginResponse.Result.LoginResponse;
+                                                sessionService.State = loginResponse.Result.State;
+
+                                                response.Body.Payload = await codeStreamAgent.GetBootstrapAsync(loginResponse.Result.State);
+                                                sessionService.SetUserReady();
+                                                _eventAggregator.Publish(new SessionReadyEvent());
+                                            }
+                                            _browser.PostMessage(response);
+
+                                            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                                            using (var scope = SettingsScope.Create(Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService))
+                                            {
+                                                scope.SettingsService.Email = email;
+                                            }
+                                        }
+                                        break;
+                                    }
+                                case "go-to-signup":
+                                    {
+                                        var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message?.Id));                                        
+
+                                        try
+                                        {
+                                            var browserService = Package.GetGlobalService(typeof(SHostService)) as IHostService;
+                                            //TODO move out of Constants
+                                            browserService.Navigate($"{Core.Constants.WebAppUrl}/signup?force_auth=true&signup_token={sessionService.GenerateSignupToken()}");
+                                            response.Body.Payload = true;
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            response.Body.Error = ex.ToString();
+                                        }
+                                        _browser.PostMessage(response);
+                                        break;
+                                    }
+                                case "go-to-slack-signin":
+                                    {
+                                        var response = new WebviewIpcMessageResponse
+                                        {
+                                            Body = new WebviewIpcMessageResponseBody(message?.Id)
+                                        };
+
+                                        try
+                                        {
+                                            var browserService = Package.GetGlobalService(typeof(SHostService)) as IHostService;
+                                            //TODO move out of Constants
+                                            browserService.Navigate($"{Core.Constants.WebAppUrl}/service-auth/slack?state={sessionService.GenerateSignupToken()}");
+                                            response.Body.Payload = true;
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            response.Body.Error = ex.ToString();
+                                        }
+                                        _browser.PostMessage(response);
+                                        break;
+                                    }
+                                case "validate-signup":
+                                    {
+                                        //TODO
+                                        //var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+                                        //if (sessionService.SessionState == SessionState.AgentReady)
+                                        //{
+                                        //    var response = new WebviewIpcMessageResponse
+                                        //    {
+                                        //        Body = new WebviewIpcMessageResponseBody(request?.Id)
+                                        //    };
+
+                                        //    var loginResponsewrapper = CodestreamAgentService.Instance.LoginViaTokenAsync(
+                                        //        request.Params["token"].ToString(),                                                
+                                        //        Constants.ServerUrl
+                                        //       ).GetAwaiter().GetResult();
+
+                                        //    var error = loginResponsewrapper.Value<string>("error");
+                                        //    if (error != null)
+                                        //    {
+                                        //        response.Body.Payload = error;
+                                        //    }
+                                        //    else
+                                        //    {
+                                        //        var loginResponse = loginResponsewrapper.ToObject<LoginResponseResponse>();
+                                        //        var state = loginResponsewrapper.Value<JToken>().ToObject<StateResponse>();
+
+                                        //        sessionService.LoginResponse = loginResponse.LoginResponse;
+                                        //        sessionService.State = state.State;
+
+                                        //        response.Body.Payload = CodestreamAgentService.Instance.GetBootstrapAsync(state).GetAwaiter().GetResult();
+                                        //    }
+                                        //    browser.PostMessage(response);
+                                        //}
+                                        //else
+                                        //{
+                                        //    //nuttin yet
+                                        //}
+                                        break;
+                                    }
+                                case "show-markers":
+                                    {
+                                        break;
+                                    }
+                                case "mute-all":
+                                    {
+                                        break;
+                                    }
+                                case "open-comment-on-select":
+                                    {
+                                        // this is a setting 'callback' to save user input on save
+                                        break;
+                                    }
+                                case "show-code":
+                                    {
+                                        var showCodeResponse = message.Params.ToObject<ShowCodeResponse>();
+                                        var agentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
+                                        var fromMarkerResponse = await agentService.GetDocumentFromMarkerAsync(new DocumentFromMarkerRequest()
+                                        {
+                                            File = showCodeResponse.Marker.File,
+                                            RepoId = showCodeResponse.Marker.RepoId,
+                                            MarkerId = showCodeResponse.Marker.Id,
+                                            Source = showCodeResponse.Source
+                                        });
+
+                                        if (fromMarkerResponse?.TextDocument?.Uri != null)
+                                        {
+                                            var ide = Package.GetGlobalService(typeof(SIDEService)) as IIDEService;
+                                            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+
+                                           var editorResponse = ide.OpenEditor(fromMarkerResponse.TextDocument.Uri, fromMarkerResponse.Range?.Start?.Line);
+                                            _browser.PostMessage(new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message?.Id)
+                                            {
+                                                Payload = editorResponse.ToString()
+                                            }));
+                                        }
+                                        break;
+                                    }
+
+                                default:
+                                    {
+                                        WebviewIpcMessageResponse response = null;
+                                        try
+                                        {
+                                            response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message?.Id)
+                                            {
+                                                Payload = await codeStreamAgent.SendAsync<object>(message.Action, message.Params)
+                                            });
+                                        }
+                                        catch(Exception ex)
+                                        {
+                                            response.Error = ex.ToString();
+                                        }
+                                        _browser.PostMessage(response);                                        
+                                        break;
+                                    }
                             }
 
                             break;
