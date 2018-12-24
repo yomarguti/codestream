@@ -18,7 +18,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 
         private readonly IDisposable _languageServerReadySubscription;
         private readonly Assembly _assembly;
-        private IBrowserService browser;
+        private readonly IBrowserService _browserService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WebViewControl"/> class.
@@ -30,9 +30,10 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
             InitializeComponent();
 
             var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
+           // var serviceProviderLocator = Package.GetGlobalService(typeof(SServiceProviderLocator)) as IServiceProviderLocator;
 
-            browser = Package.GetGlobalService(typeof(SBrowserService)) as IBrowserService;
-            var router = new WebViewRouter(eventAggregator, browser);
+            _browserService = Package.GetGlobalService(typeof(SBrowserService)) as IBrowserService;
+            var router = new WebViewRouter(null, eventAggregator, _browserService);
 
             //TODO gotta be a better way to embed & retrieve these???????
 
@@ -44,17 +45,17 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
                 waitingHtml = sr.ReadToEnd();
             }
 
-            browser.AttachControl(grid);
-            browser.LoadHtml(waitingHtml);
+            _browserService.AttachControl(grid);
+            _browserService.LoadHtml(waitingHtml);
 
             _languageServerReadySubscription = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
               {                  
-                  browser.AddWindowMessageEvent(async delegate (object sender, WindowEventArgs ea)
+                  _browserService.AddWindowMessageEvent(async delegate (object sender, WindowEventArgs ea)
                   {
                       await router.HandleAsync(ea);
                   });
 
-                  browser.LoadHtml(CreateHarness(_assembly, browser));
+                  _browserService.LoadHtml(CreateHarness(_assembly, _browserService));
               });
         }
 

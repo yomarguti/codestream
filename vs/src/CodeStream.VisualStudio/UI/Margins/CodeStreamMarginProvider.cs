@@ -9,7 +9,7 @@ using System.ComponentModel.Composition;
 namespace CodeStream.VisualStudio.UI.Margins
 {
     [Export(typeof(IWpfTextViewMarginProvider))]
-    [Name("CodeStreamMargin")]
+    [Name(CodemarkViewMargin.MarginName)]
     [Order(After = PredefinedMarginNames.Glyph)]
     [MarginContainer(PredefinedMarginNames.Left)]
     [ContentType("text")]

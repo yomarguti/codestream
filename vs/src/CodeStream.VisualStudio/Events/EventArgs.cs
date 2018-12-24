@@ -12,8 +12,21 @@
 
     public class SessionLogoutEvent : IEvent { }
 
+    public enum TextDocumentChangedReason
+    {
+        Unknown,
+        Scrolled,
+        Edited,
+        ViewportHeightChanged
+    }
+
     public class TextDocumentChangedEvent : IEvent
     {
-        public bool IsScroll { get; set; }
+        public TextDocumentChangedReason Reason { get; set; }
+    }
+
+    public class CodeMarkChangedEvent : IEvent
+    {
+        public string Uri { get; set; }
     }
 }

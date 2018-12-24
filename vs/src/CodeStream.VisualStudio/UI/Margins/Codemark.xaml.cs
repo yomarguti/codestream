@@ -1,5 +1,6 @@
 ﻿using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text.Editor;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -11,6 +12,8 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         public Codemark(CodemarkViewModel viewModel)
         {
+            //Default height used for repositioning in the margin
+            Height = 19;
             _viewModel = viewModel;
             InitializeComponent();
             DataContext = this;
@@ -31,6 +34,14 @@ namespace CodeStream.VisualStudio.UI.Margins
             //var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
            // codeStreamService.OpenCommentAsync(null, _viewModel.Marker.)
             MessageBox.Show(_viewModel.Marker.Code);
+        }
+
+        private static int buffer = 5;
+
+        public void Reposition(IWpfTextView textView, int offset)
+        {
+            Canvas.SetLeft(this, 0);
+            Canvas.SetTop(this, offset - textView.ViewportTop + Height - buffer);
         }
     }
 }

@@ -49,6 +49,11 @@ namespace CodeStream.VisualStudio.Extensions
             }
 
             return token;
-        }      
+        }     
+        
+        public static bool EqualsIgnoreCase(this string one, string two)
+        {
+            return string.Equals(one, two, System.StringComparison.OrdinalIgnoreCase);
+        }
     }
 }

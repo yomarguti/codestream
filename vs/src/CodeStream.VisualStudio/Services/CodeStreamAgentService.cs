@@ -54,7 +54,7 @@ namespace CodeStream.VisualStudio.Services
     public class CodeStreamAgentService : ICodeStreamAgentService
     {
         static readonly ILogger log = LogManager.ForContext<CodeStreamAgentService>();
-        private IAsyncServiceProvider _serviceProvider;
+        private readonly IAsyncServiceProvider _serviceProvider;
         public CodeStreamAgentService(IAsyncServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
@@ -173,6 +173,7 @@ namespace CodeStream.VisualStudio.Services
                 email = email,
                 passwordOrToken = password,
                 serverUrl = serverUrl,
+                //type = "credentials",
                 signupToken = (string)null,
                 team = (string)null,
                 teamId = (string)null,

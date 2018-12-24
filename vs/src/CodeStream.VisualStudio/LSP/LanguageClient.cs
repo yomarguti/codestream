@@ -45,7 +45,7 @@ namespace CodeStream.VisualStudio.LSP
         static readonly ILogger log = LogManager.ForContext<LanguageClient>();
         internal const string UiContextGuidString = "DE885E15-D44E-40B1-A370-45372EFC23AA";
         private Guid _uiContextGuid = new Guid(UiContextGuidString);
-        private ILanguageServerProcess _languageServer;
+        private readonly ILanguageServerProcess _languageServer;
 
         public event AsyncEventHandler<EventArgs> StartAsync;
 #pragma warning disable 0067
@@ -108,8 +108,10 @@ namespace CodeStream.VisualStudio.LSP
                     //    version = "0",
                     //    versionFormatted = "0",
                     //},
-                    //traceLevel = "verbose"
-                    //isDebugging = true,
+#if DEBUG
+                    traceLevel = "verbose",
+                    isDebugging = true,
+#endif
                     //ide = new
                     //{
                     //    name = "Visual Studio",

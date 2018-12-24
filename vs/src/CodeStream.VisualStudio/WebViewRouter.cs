@@ -3,7 +3,9 @@ using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
@@ -14,11 +16,13 @@ namespace CodeStream.VisualStudio
     {
         static readonly ILogger log = LogManager.ForContext<WebViewRouter>();
 
+        private IServiceProvider _serviceProvider;
         private readonly IEventAggregator _eventAggregator;
         private readonly IBrowserService _browser;
 
-        public WebViewRouter(IEventAggregator eventAggregator, IBrowserService browser)
+        public WebViewRouter(IServiceProvider serviceProvider, IEventAggregator eventAggregator, IBrowserService browser)
         {
+            _serviceProvider = serviceProvider;
             _eventAggregator = eventAggregator;
             _browser = browser;
         }
@@ -73,6 +77,16 @@ namespace CodeStream.VisualStudio
                             break;
                         }
                     case "codestream:telemetry":
+                    case "codestream:response":
+                        {
+                            if(message.Body?["payload"]?["post"] != null)
+                            {
+                                var postCreated = message.Body.ToObject<CreatePostResponse>();
+                                _eventAggregator.Publish(new CodeMarkChangedEvent());
+                            }
+
+                            break;
+                        }
                     case "codestream:interaction:clicked-reload-webview":
                     case "codestream:interaction:thread-closed":
                     case "codestream:interaction:active-panel-changed":
@@ -147,7 +161,7 @@ namespace CodeStream.VisualStudio
                                                 var loginResponsewrapper = await codeStreamAgent.LoginAsync(
                                                     email,
                                                     request.Params["password"].ToString(),
-                                                    Constants.ServerUrl
+                                                    Core.Constants.ServerUrl
                                                    );
 
                                                 var error = loginResponsewrapper.Value<string>("error");
@@ -221,6 +235,10 @@ namespace CodeStream.VisualStudio
                                     case "edit-codemark":
                                     case "mute-all":
                                     case "open-comment-on-select":
+                                        {
+                                            // this is a setting 'callback' to save user input on save
+                                            break;
+                                        }
                                     case "create-stream":
                                     case "open-stream":
                                     case "leave-stream":
@@ -232,6 +250,25 @@ namespace CodeStream.VisualStudio
                                     case "close-direct-message":
                                     case "change-stream-mute-state":
                                     case "show-code":
+                                        {
+                                            //try
+                                            //{
+                                            //    Guid XmlTextEditorGuid = new Guid("FA3CD31E-987B-443A-9B81-186104E8DAC1");
+
+                                            //    // Open the referenced document using our editor.
+                                            //    IVsWindowFrame frame;
+                                            //    IVsUIHierarchy hierarchy;
+                                            //    uint itemid;
+                                            //    VsShellUtilities.OpenDocumentWithSpecificEditor(_serviceProvider, request.Params["email"].ToString(),
+                                            //        XmlTextEditorGuid, VSConstants.LOGVIEWID_Primary, out hierarchy, out itemid, out frame);
+                                            //    ErrorHandler.ThrowOnFailure(frame.Show());
+                                            //}
+                                            //catch(Exception ex)
+                                            //{
+                                            //    log.Error(ex, "show-code");
+                                            //}
+                                            break;
+                                        }
                                     case "invite":
                                     case "save-user-preference":
                                     case "join-stream":
@@ -256,7 +293,7 @@ namespace CodeStream.VisualStudio
                                             {
                                                 var browserService = Package.GetGlobalService(typeof(SHostService)) as IHostService;
                                                 //TODO move out of Constants
-                                                browserService.Navigate($"{Constants.WebAppUrl}/signup?force_auth=true&signup_token={sessionService.GenerateSignupToken()}");
+                                                browserService.Navigate($"{Core.Constants.WebAppUrl}/signup?force_auth=true&signup_token={sessionService.GenerateSignupToken()}");
                                                 response.Body.Payload = true;
                                             }
                                             catch (Exception ex)
@@ -277,7 +314,7 @@ namespace CodeStream.VisualStudio
                                             {
                                                 var browserService = Package.GetGlobalService(typeof(SHostService)) as IHostService;
                                                 //TODO move out of Constants
-                                                browserService.Navigate($"{Constants.WebAppUrl}/service-auth/slack?state={sessionService.GenerateSignupToken()}");
+                                                browserService.Navigate($"{Core.Constants.WebAppUrl}/service-auth/slack?state={sessionService.GenerateSignupToken()}");
                                                 response.Body.Payload = true;
                                             }
                                             catch (Exception ex)

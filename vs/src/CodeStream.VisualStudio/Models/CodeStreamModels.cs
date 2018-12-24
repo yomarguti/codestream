@@ -3,28 +3,7 @@ using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio.Models
 {
-    public class CSPost
-    {
-
-    }
-
-    public class Team : CSEntityBase
-    {
-        public string Name { get; set; }
-        public List<string> MemberIds { get; set; }
-        public List<string> AdminIds { get; set; }
-        public string PrimaryReferral { get; set; }
-    }
-
-    public class Company : CSEntityBase
-    {
-        public string Name { get; set; }
-        public List<string> TeamIds { get; set; }
-    }
-
-    public interface ICSStream { }
-
-    public class CSEntityBase
+    public class CSEntity
     {
         public bool Deactivated { get; set; }
         public long CreatedAt { get; set; }
@@ -35,12 +14,63 @@ namespace CodeStream.VisualStudio.Models
         public int Version { get; set; }
     }
 
+    public class File
+    {
+        public string Mimetype { get; set; }
+        public string Name { get; set; }
+        public string Title { get; set; }
+        public string Type { get; set; }
+        public string Url { get; set; }
+
+        //TODO this is some kind string | object
+        //public Preview Preview {get;set;}
+
+    }
+    public class CSPost : CSEntity
+    {
+        public string TeamId { get; set; }
+        public string StreamId { get; set; }
+        public string ParentPostId { get; set; }
+        public int NumReplies { get; set; }
+        public string Text { get; set; }
+        public object SeqNum { get; set; }
+        public bool HasBeenEdited { get; set; }
+        public List<string> MentionedUserIds { get; set; }
+        public string Origin { get; set; } //?: "email" | "slack" | "teams";
+        public Dictionary<string, bool> Reactions { get; set; }
+
+        public string CodemarkId { get; set; }
+        public List<File> Files { get; set; }
+    }
+
+    public class CSFullPost : CSPost
+    {
+        public CSFullCodemark Codemark { get; set; }
+        public bool? HasMarkers { get; set; }
+    }
+
+    public class Team : CSEntity
+    {
+        public string Name { get; set; }
+        public List<string> MemberIds { get; set; }
+        public List<string> AdminIds { get; set; }
+        public string PrimaryReferral { get; set; }
+    }
+
+    public class Company : CSEntity
+    {
+        public string Name { get; set; }
+        public List<string> TeamIds { get; set; }
+    }
+
+    public interface ICSStream { }
+
     public enum ProviderType
     {
         Slack
     }
 
-    public class CSMarker : CSEntityBase
+    public class CSMarker : CSEntity
     {
         public string TeamId { get; set; }
         public string FileStreamId { get; set; }
@@ -78,8 +108,17 @@ namespace CodeStream.VisualStudio.Models
         public string NotLocatedReason { get; set; }//: MarkerNotLocatedReason;
         public string NotLocatedDetails { get; set; }
     }
+  
+    public class CSMarkerLocations
+    {
+        public string TeamId { get; set; }
+        public string StreamId { get; set; }
+        public string CommitHash { get; set; }
+        // TODO this is a bizarro shaped object
+        public Dictionary<string, List<object>> Locations { get; set; }
+    }
 
-    public class CSCodemark : CSEntityBase
+    public class CSCodemark : CSEntity
     {
         public string TeamId { get; set; }
         public string StreamId { get; set; }
@@ -120,7 +159,7 @@ namespace CodeStream.VisualStudio.Models
         public List<CSMarker> Markers { get; set; }
     }
 
-    public class CSStream : CSEntityBase
+    public class CSStream : CSEntity
     {
         public CSStream()
         {
@@ -233,7 +272,7 @@ namespace CodeStream.VisualStudio.Models
         public Result Result { get; set; }
     }
 
-    public class CSUser : CSEntityBase
+    public class CSUser : CSEntity
     {
         public string PhoneNumber { get; set; }
         public string IWorkOn { get; set; }
@@ -278,7 +317,7 @@ namespace CodeStream.VisualStudio.Models
         public List<Company> Companies { get; set; }
         public List<CSRepository> Repos { get; set; }
         public string TeamId { get; set; }
-    } 
+    }
 
     public class State
     {
@@ -322,8 +361,8 @@ namespace CodeStream.VisualStudio.Models
         //public string Email { get; set; }
         //public string PasswordOrToken { get; set; }
         public Extension Extension { get; set; }
-        public string TraceLevel { get; set; }
-        public bool IsDebugging { get; set; }
+        public string traceLevel { get; set; }
+        public bool isDebugging { get; set; }
         public IDE Ide { get; set; }
         public Proxy Proxy { get; set; }
     }
@@ -389,5 +428,17 @@ namespace CodeStream.VisualStudio.Models
                 return Body.Value<JToken>("params");
             }
         }
+    }
+
+
+    public class CreatePostResponse
+    {
+        public CSFullPost Post { get; set; }
+        public CSFullCodemark codemark { get; set; }
+        public List<CSMarker> Markers { get; set; }
+
+        public List<CSMarkerLocations> MarkerLocations { get; set; }
+        public List<CSStream> Streams { get; set; }
+        public List<CSRepository> Repos { get; set; }
     }
 }

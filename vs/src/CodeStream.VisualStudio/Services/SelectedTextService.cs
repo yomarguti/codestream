@@ -1,6 +1,8 @@
 ﻿using CodeStream.VisualStudio.Attributes;
 using CodeStream.VisualStudio.Models;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
+using System;
 
 namespace CodeStream.VisualStudio.Services
 {
@@ -96,12 +98,15 @@ namespace CodeStream.VisualStudio.Services
     [Injected]
     public class SelectedTextService : SSelectedTextService, ISelectedTextService
     {
-        private IVsTextManager2 _iIVsTextManager;
-        public SelectedTextService(IVsTextManager2 iIVsTextManager)
+        private readonly IVsTextManager2 _iIVsTextManager;
+        IVsProject3 _project;
+        public SelectedTextService(IVsProject3 project, IVsTextManager2 iIVsTextManager)
         {
+            _project = project;
             _iIVsTextManager = iIVsTextManager;
         }
 
+        // old implementation
         //public string GetSelectedText()
         //{
         //    string selectedText;
@@ -119,20 +124,19 @@ namespace CodeStream.VisualStudio.Services
         {
             var textManager = _iIVsTextManager as IVsTextManager2;
             IVsTextView view;
+
             int result = textManager.GetActiveView2(1, null, (uint)_VIEWFRAMETYPE.vftCodeWindow, out view);
 
-            view.GetSelection(out int startLine, out int startColumn, out int endLine, out int endColumn);//end could be before beginning
-
-            //var start = new TextViewPosition(startLine, startColumn);
-            //var end = new TextViewPosition(endLine, endColumn);
-
+            view.GetSelection(out int startLine, out int startColumn, out int endLine, out int endColumn);                    
             view.GetSelectedText(out string selectedText);
 
-            return new SelectedText() {
+            //end could be before beginning...
+            return new SelectedText()
+            {
                     StartLine = startLine,
-                    StartColumn = startColumn,
+                    StartColumn = Math.Min(startColumn, endColumn),
                     EndLine = endLine,
-                    EndColumn = endColumn,
+                    EndColumn = Math.Max(startColumn, endColumn),
                     Text = selectedText
             };
         }

@@ -17,7 +17,7 @@ namespace CodeStream.VisualStudio.Services
     [Injected]
     public class HostService : SHostService, IHostService
     {
-        private IAsyncServiceProvider _serviceProvider;
+        private readonly IAsyncServiceProvider _serviceProvider;
 
         public HostService(IAsyncServiceProvider serviceProvider)
         {

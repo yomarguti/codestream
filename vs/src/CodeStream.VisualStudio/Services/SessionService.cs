@@ -28,7 +28,7 @@ namespace CodeStream.VisualStudio.Services
     [Injected]
     public class SessionService : SSessionService, ISessionService
     {
-        private IAsyncServiceProvider _serviceProvider;
+        private readonly IAsyncServiceProvider _serviceProvider;
 
         public LoginResponse LoginResponse { get; set; }
         public State State { get; set; }

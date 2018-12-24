@@ -11,13 +11,7 @@ using System.Windows;
 using System.Windows.Controls;
 
 namespace CodeStream.VisualStudio.UI.Margins
-{
-    internal class CodemarkCache
-    {
-        public int StartLine { get; set; }
-        public Codemark Codemark { get; set; }
-    }
-	
+{ 
     /// <summary>
     /// Margin's canvas and visual definition including both size and content
     /// </summary>
@@ -33,6 +27,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         /// </summary>
         private bool isDisposed;
         private IWpfTextView _textView;
+        private readonly IEventAggregator _events;
         private readonly IEventAggregator _eventAggregator;
         private readonly ISessionService _sessionService;
         private readonly ICodeStreamAgentService _agentService;
@@ -41,7 +36,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         private bool _initialized;
         private ITextDocument _textDocument;
         private DocumentMarkersResponse _markerCache;
-        private List<CodemarkCache> _viewCache;
+        private List<CodemarkGlyphCache> _viewCache;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EditorMargin1"/> class for a given <paramref name="textView"/>.
@@ -61,19 +56,22 @@ namespace CodeStream.VisualStudio.UI.Margins
 
             _textDocumentFactoryService = textDocumentFactoryService;
 
-            if (_textDocumentFactoryService.TryGetTextDocument(_textView.TextBuffer, out _textDocument))
+            if (!_textDocumentFactoryService.TryGetTextDocument(_textView.TextBuffer, out _textDocument))
             {
-
+                // do something
             }
-
-            _disposables = new List<IDisposable>();
 
             Width = 20;
             ClipToBounds = true;
+
             //Background = new SolidColorBrush(Colors.Cheese);
 
+            _events = new EventAggregator();
+
             //listening on the main thread since we have to change the UI state
-            _disposables.Add(eventAggregator.GetEvent<SessionReadyEvent>()
+            _disposables = new List<IDisposable>() {
+                eventAggregator
+                .GetEvent<SessionReadyEvent>()
                 .ObserveOnDispatcher()
                 .Subscribe(_ =>
                 {
@@ -81,14 +79,14 @@ namespace CodeStream.VisualStudio.UI.Margins
                     {
                         Initialize();
                     }
-                }));
-
-            _disposables.Add(eventAggregator.GetEvent<SessionLogoutEvent>()
-              .ObserveOnDispatcher()
-              .Subscribe(_ =>
-              {
-                  Visibility = Visibility.Hidden;
-              }));
+                }),
+                eventAggregator.GetEvent<SessionLogoutEvent>()
+                .ObserveOnDispatcher()
+                .Subscribe(_ =>
+                {
+                    Visibility = Visibility.Hidden;
+                })
+            };
 
             if (_sessionService.IsReady && _agentService.IsReady && !_initialized)
             {
@@ -102,16 +100,17 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         private void Initialize()
         {
-            _disposables.Add(_eventAggregator.GetEvent<TextDocumentChangedEvent>()
-                .Throttle(TimeSpan.FromMilliseconds(50))
-                .ObserveOnDispatcher()
-                .Subscribe(_ =>
-                    {
-                        ThreadHelper.JoinableTaskFactory.Run(async delegate
-                        {
-                            await UpdateAsync(_);
-                        });
-                    }));
+            _disposables.Add(
+                _eventAggregator.GetEvent<CodeMarkChangedEvent>()
+              .Throttle(TimeSpan.FromMilliseconds(100))
+              .ObserveOnDispatcher()
+              .Subscribe(_ =>
+              {
+                  //if (new FileUri(_textDocument.FilePath).EqualsIgnoreCase(_.Uri))
+                  {
+                      Update();
+                  }
+              }));
 
             Visibility = Visibility.Visible;
             // _textView.TextBuffer.ChangedLowPriority += TextBuffer_ChangedLowPriority;
@@ -120,40 +119,40 @@ namespace CodeStream.VisualStudio.UI.Margins
             _initialized = true;
 
             //kick off a change
-            ThreadHelper.JoinableTaskFactory.Run(async delegate
-            {
-                await UpdateAsync(null);
-            });
+            Update();
         }
-
-        //private void UpdateDisplay()
-        //{
-        //    Dispatcher.BeginInvoke(new Action(Foo), DispatcherPriority.Render);
-        //}
 
         private void TextView_LayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
         {
             var verticalTranslation = e.VerticalTranslation;
             if (verticalTranslation || e.TranslatedLines.Any())
             {
-                _eventAggregator.Publish(new TextDocumentChangedEvent()
+                Update(new TextDocumentChangedEvent()
                 {
-                    IsScroll = verticalTranslation
+                    Reason = verticalTranslation
+                    ? TextDocumentChangedReason.Scrolled
+                    : TextDocumentChangedReason.Edited
                 });
             }
         }
 
         private void TextView_ViewportHeightChanged(object sender, EventArgs e)
-        {
-            _eventAggregator.Publish(new TextDocumentChangedEvent());
+        {            
+            Update(new TextDocumentChangedEvent()
+            {
+                Reason = TextDocumentChangedReason.ViewportHeightChanged
+            });
         }
 
-        //private void TextBuffer_ChangedLowPriority(object sender, TextContentChangedEventArgs e)
-        //{
-        //    _eventAggregator.Publish(new TextDocumentChangedEvent());
-        //}
+        private void Update(TextDocumentChangedEvent e = null)
+        {
+            ThreadHelper.JoinableTaskFactory.Run(async delegate
+            {
+                await UpdateAsync(e);
+            });
+        }
 
-        private async System.Threading.Tasks.Task UpdateAsync(TextDocumentChangedEvent e)
+        private async System.Threading.Tasks.Task UpdateAsync(TextDocumentChangedEvent e = null)
         {
             await System.Threading.Tasks.Task.Yield();
 
@@ -162,7 +161,8 @@ namespace CodeStream.VisualStudio.UI.Margins
                 return;
             }
 
-            if (_markerCache == null || e?.IsScroll != true)
+            //if no cache, or we've gotten here for any other reason except scrolling -- reup
+            if (_markerCache == null || e?.Reason != TextDocumentChangedReason.Scrolled)
             {
                 _markerCache = await _agentService.GetMarkersForDocumentAsync(new Models.FileUri(_textDocument.FilePath));
             }
@@ -172,17 +172,17 @@ namespace CodeStream.VisualStudio.UI.Margins
                 return;
             }
 
-            if (e?.IsScroll == true && _viewCache?.Any() == true)
+            if (e?.Reason == TextDocumentChangedReason.Scrolled && _viewCache?.Any() == true)
             {
+                // if we scrolled, and we have a viewCache -- just reposition them
+
                 var currMarkerOffset = 0;
                 foreach (var currLine in _textView.TextSnapshot.Lines)
                 {
-                    var startLine = currLine.LineNumber + 1;
-                    var codemark = _viewCache.FirstOrDefault(_ => _.StartLine == startLine);
-                    if (codemark != null)
+                    var codemark = _viewCache.FirstOrDefault(_ => _.StartLine == currLine.LineNumber + 1);
+                    if (codemark?.Codemark != null)
                     {
-                        Canvas.SetLeft(codemark.Codemark, 0);
-                        Canvas.SetTop(codemark.Codemark, currMarkerOffset - _textView.ViewportTop);
+                        codemark.Codemark.Reposition(_textView, currMarkerOffset);
                     }
 
                     currMarkerOffset += (int)_textView.LineHeight;
@@ -190,7 +190,7 @@ namespace CodeStream.VisualStudio.UI.Margins
             }
             else
             {
-                _viewCache = new List<CodemarkCache>();
+                _viewCache = new List<CodemarkGlyphCache>();
 
                 Children.Clear();
 
@@ -201,16 +201,13 @@ namespace CodeStream.VisualStudio.UI.Margins
                     var markers = _markerCache?.Markers.Where(_ => _?.Range?.Start.Line == startLine);
                     if (markers.Any())
                     {
-                        var codemark = new Codemark(
-                            new CodemarkViewModel()
-                            {
-                                Marker = markers.First()
-                            });
+                        var codemark = new Codemark(new CodemarkViewModel(markers.First()));
 
-                        Canvas.SetLeft(codemark, 0);
-                        Canvas.SetTop(codemark, currMarkerOffset - _textView.ViewportTop);
+                        codemark.Reposition(_textView, currMarkerOffset);
+
                         Children.Add(codemark);
-                        _viewCache.Add(new CodemarkCache() { Codemark = codemark, StartLine = startLine });
+
+                        _viewCache.Add(new CodemarkGlyphCache(codemark, startLine));
                     }
 
                     currMarkerOffset += (int)_textView.LineHeight;

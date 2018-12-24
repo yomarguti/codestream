@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CodeStream.VisualStudio.Extensions;
+using System;
 using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio.Models
@@ -8,6 +9,11 @@ namespace CodeStream.VisualStudio.Models
         public FileUri(string path) : base("file:///" + path.Replace("/", "\\"))
         {
 
+        }
+
+        public bool EqualsIgnoreCase(string uri)
+        {
+            return uri.EqualsIgnoreCase(this.ToString());
         }
     }
 

@@ -10,9 +10,12 @@ namespace CodeStream.VisualStudio.Services
     /// </summary>
     public class DotNetBrowserService : BrowserServiceBase
     {
-        private Browser _browser;
+        /// <summary>
+        /// Interface provided by DotNetBrowser (isn't prefixed with I)
+        /// </summary>
+        private readonly Browser _browser;
         private WPFBrowserView _browserView;
-        private IAsyncServiceProvider _serviceProvider;
+        private readonly IAsyncServiceProvider _serviceProvider;
 
         public DotNetBrowserService(IAsyncServiceProvider serviceProvider)
         {
