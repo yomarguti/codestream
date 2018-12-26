@@ -1,0 +1,99 @@
+﻿:root {
+    --app-background-color: --cs--app-background-color--;
+    --app-background-color-darker: --cs--background-color-darker--;
+    --app-background-color-hover: --cs--background-color--;
+    --background-color: --cs--background-color--;
+    --base-background-color: --cs--background-color--;
+    --base-border-color: --cs--base-border-color--;
+    --color: --cs--color--;
+    --font-family: --cs--font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", HelveticaNeue-Light, Ubuntu, "Droid Sans", Arial, Consolas, sans-serif;
+    --font-size: --cs--font-size--px;
+    --font-weight: normal;
+    --link-color: --cs--link-color--;
+    --link-active-color: --cs--link-color--;
+    --text-color: --cs--color--;
+    --text-color-highlight: --cs--color--;
+    --text-color-info-muted: --cs--color--;
+    --text-color-subtle: --cs--color--;
+    --text-color-subtle-extra: --cs--color--;
+    --tool-panel-background-color: --cs--background-color--;
+    --vscode-editor-background: --cs--background-color--;
+    --vscode-editor-foreground: --cs--color--;
+    --vscode-editor-font-family: --cs--font-family--;
+    --vscode-editor-font-weight: normal;
+    --vscode-editor-font-size: --cs--font-size--px;
+    --vscode-button-background: --cs--vscode-button-background--;
+    --vscode-button-hoverBackground: --cs--vscode-button-hoverBackground--;
+    --vscode-sideBar-foreground: --cs--color--;
+    --vscode-sideBarSectionHeader-background: --cs--vscode-sideBarSectionHeader-background--;
+    --vscode-sideBarSectionHeader-foreground: --cs--vscode-sideBarSectionHeader-foreground--;
+    --vscode-textLink-foreground: --cs--color--;
+} 
+body {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    font-family: var(--vscode-editor-font-family);
+    font-weight: var(--vscode-editor-font-weight);
+    font-size: var(--vscode-editor-font-size);
+    margin: 0;
+    padding: 0 20px;
+}
+.btn {
+    background: --cs--vs-btn-background-- !important;
+    color: --cs--vs-btn-color-- !important;
+}
+.btn.btn-primary {
+    background:--cs--vs-btn-primary-background-- !important;
+    color:--cs--vs-btn-primary-color-- !important;
+}
+.codestream button.cancel {
+    background-color: --cs--vscode-button-background-- !important;
+}
+.codestream input[type="text"], .codestream input[type="password"] {
+    background-color: --cs--vs-input-background-- !important;
+}
+.codestream input[type="text"]:focus,
+.codestream input[type="password"]:focus {
+    outline: 1px solid --cs--vs-input-outline-- !important;
+}
+.codestream .post.new-separator {
+    border-top: 1px solid --cs--vs-post-separator-- !important;
+}
+.codestream .post.new-separator::before {
+   color: --cs--vs-accent-color-- !important;
+}
+.codestream .standard-form #controls .radio-group {
+    background-color:--cs--vs-background-accent-- !important;
+}
+.codestream .standard-form #controls .tab-tip {
+    background-color:--cs--vs-background-accent-- !important;
+}
+.codestream .standard-form #controls .styled-select {
+    background-color:--cs--vs-background-color-- !important;
+}
+.codestream .stream .new-messages-below:hover {
+  background-color:--cs--vs-background-accent-- !important;
+}
+.codestream .stream .message-input:focus {
+   outline: 1px solid --cs--vs-input-outline-- !important;
+}
+.codestream .stream .post.editing {
+    background-color: --cs--vs-background-accent-- !important;
+}
+.react-select__control {
+    background-color: --cs--background-color-- !important;
+}
+.popup-button {
+    border:1px solid --cs--base-border-color-- !important;
+}
+    /*body {
+    background-color: --cs--background-color--;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: --cs--color--;
+    font-size: 13px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", HelveticaNeue-Light, Ubuntu, "Droid Sans", Arial, Consolas, sans-serif;
+    line-height: 1.45;
+    word-wrap: break-word;
+}*/

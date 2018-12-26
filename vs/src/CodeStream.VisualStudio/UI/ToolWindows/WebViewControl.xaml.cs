@@ -1,14 +1,18 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
+using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Services;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.PlatformUI;
+using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Resources;
+using System.Windows;
 using System.Windows.Controls;
-using CodeStream.VisualStudio.Extensions;
+using System.Windows.Media;
 
 namespace CodeStream.VisualStudio.UI.ToolWindows
 {
@@ -19,80 +23,138 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
         private readonly IDisposable _languageServerReadySubscription;
         private readonly Assembly _assembly;
         private readonly IBrowserService _browserService;
+        private readonly ResourceManager _resourceManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WebViewControl"/> class.
         /// </summary>
         public WebViewControl()
         {
+            _assembly = Assembly.GetAssembly(typeof(WebViewControl));
+            _resourceManager = new ResourceManager("VSPackage", Assembly.GetExecutingAssembly());
+
             VSColorTheme.ThemeChanged += VSColorTheme_ThemeChanged;
-            
+
             InitializeComponent();
 
-            var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
-           // var serviceProviderLocator = Package.GetGlobalService(typeof(SServiceProviderLocator)) as IServiceProviderLocator;
-
             _browserService = Package.GetGlobalService(typeof(SBrowserService)) as IBrowserService;
-            var router = new WebViewRouter(null, eventAggregator, _browserService);
-
-            //TODO gotta be a better way to embed & retrieve these???????
-
-            _assembly = Assembly.GetAssembly(typeof(WebViewControl));
-
-            string waitingHtml = null;
-            using (var sr = new StreamReader(Path.GetDirectoryName(_assembly.Location) + "/UI/WebViews/waiting.html"))
-            {
-                waitingHtml = sr.ReadToEnd();
-            }
-
+            var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
+            // var serviceProviderLocator = Package.GetGlobalService(typeof(SServiceProviderLocator)) as IServiceProviderLocator;
+                                                                         
             _browserService.AttachControl(grid);
-            _browserService.LoadHtml(waitingHtml);
+            _browserService.LoadHtml(_resourceManager.GetString("waiting"));
 
+            var router = new WebViewRouter(null, eventAggregator, _browserService);
             _languageServerReadySubscription = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
-              {                  
+              {
                   _browserService.AddWindowMessageEvent(async delegate (object sender, WindowEventArgs ea)
-                  {                     
+                  {
                       await router.HandleAsync(ea);
                   });
 
-                  _browserService.LoadHtml(CreateHarness(_assembly, _browserService));
+                  _browserService.LoadHtml(CreateHarness(_assembly));
               });
         }
 
-        private static string CreateHarness(Assembly assembly, IBrowserService browser)
+        private   string CreateHarness(Assembly assembly)
         {
             string harness = null;
-            var dir = Path.GetDirectoryName(assembly.Location);
-            using (var sr = new StreamReader(dir + "/UI/WebViews/webview.html"))
-            {
-                harness = sr.ReadToEnd();
-                harness = harness
-                            .Replace("{root}", dir.Replace(@"\", "/"))
-                            .Replace("{footerHtml}", browser.FooterHtml);
-            }
-            using (var sr = new StreamReader(dir + "/Themes/dark.css"))
-            {
-                var theme = sr.ReadToEnd();
-                harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{Themeize(theme)}</style>");
-            }
+            var dir = Path.GetDirectoryName(assembly.Location); 
+
+            harness = _resourceManager.GetString("webview");
+            harness = harness
+                        .Replace("{root}", dir.Replace(@"\", "/"))
+                        .Replace("{footerHtml}", _browserService.FooterHtml);
+
+
+            var theme = _resourceManager.GetString("theme");
+            harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{Themeize(theme)}</style>");
+
             return harness;
         }
 
-
         private static string Themeize(string theme)
-        {            
-            return theme
-                .Replace("{color}", VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowTextColorKey).ToHex())
-                .Replace("{background-color}", VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowBackgroundColorKey).ToHex())
-                .Replace("{vscode-button-background}", VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowButtonDownColorKey).ToHex())
-                .Replace("{vscode-button-hoverBackground}", VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowButtonDownColorKey).ToHex())
-                ;
+        {
+            //var d = new System.Collections.Generic.Dictionary<string, string>();
+            //Type type = typeof(EnvironmentColors); // MyClass is static class with static properties
+            //foreach (var p in type.GetProperties().Where(_ => _.Name.StartsWith("ToolWindow")))
+            //{
+            //    var val = typeof(EnvironmentColors).GetProperty(p.Name, BindingFlags.Public | BindingFlags.Static);
+            //    var v = val.GetValue(null);
+            //    var trk = v as ThemeResourceKey;
+            //    if (trk != null)
+            //    {
+            //        var color = VSColorTheme.GetThemedColor(trk);
+            //        d.Add(p.Name, color.ToHex());
+            //    }
+
+            //    // d.Add(p.Name, ((System.Drawing.Color)val).ToHex());
+            //}
+
+            //string s = "";
+            //foreach (var kvp in d)
+            //{
+            //    s += $@"<div>";
+            //    s += $@"<span style='display:inline-block; height:50ps; width: 50px; background:{kvp.Value}; padding-right:5px; margin-right:5px;'>&nbsp;</span>";
+            //    s += $@"<span>{kvp.Value} - {kvp.Key}</span>";
+            //    s += "</div>";
+            //}
+
+            foreach (var item in ColorThemeMap)
+            {
+                theme = theme.Replace("--cs--" + item.Key + "--", VSColorTheme.GetThemedColor(item.Value).ToHex());
+            }
+            var fontFamilyString = "Arial, Consolas, sans-serif";
+            var fontFamily = Application.Current.FindResource(VsFonts.EnvironmentFontFamilyKey) as FontFamily;
+            if (fontFamily != null)
+            {
+                fontFamilyString = fontFamily.ToString();
+            }
+
+            theme = theme.Replace("--cs--font-family--", fontFamilyString);
+            theme = theme.Replace("--cs--vscode-editor-font-family--", fontFamilyString);
+
+            var fontSizeInt = 13;
+            var fontSize = Application.Current.FindResource(VsFonts.EnvironmentFontSizeKey);
+            if (fontSize != null)
+            {
+                fontSizeInt = int.Parse(fontSize.ToString());
+            }
+            theme = theme.Replace("--cs--font-size--", fontSizeInt.ToString());
+
+            theme = theme.Replace("--cs--background-color-darker--", VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowBackgroundColorKey).Darken().ToHex());
+            return theme;
         }
+
+        private static Dictionary<string, ThemeResourceKey> ColorThemeMap = new Dictionary<string, ThemeResourceKey>
+        {
+            {"app-background-color",                   EnvironmentColors.ToolWindowBackgroundColorKey},
+            {"base-border-color",                      EnvironmentColors.ToolWindowBorderColorKey},
+            {"color",                                  EnvironmentColors.ToolWindowTextColorKey},
+            {"background-color",                       EnvironmentColors.ToolWindowBackgroundColorKey},
+            {"link-color",                             EnvironmentColors.ToolWindowTextColorKey},
+
+            {"vscode-button-hoverBackground",          EnvironmentColors.ToolWindowButtonDownBorderColorKey},
+            {"vscode-sideBarSectionHeader-background", EnvironmentColors.ToolWindowContentGridColorKey},
+            {"vscode-sideBarSectionHeader-foreground", EnvironmentColors.ToolWindowTextColorKey},
+
+            {"vs-accent-color",                        EnvironmentColors.ToolWindowButtonInactiveColorKey},
+
+            {"vs-btn-background",                      EnvironmentColors.ToolWindowButtonInactiveGlyphColorKey},
+            {"vs-btn-color",                           EnvironmentColors.ToolWindowButtonHoverActiveGlyphColorKey},
+
+            {"vs-btn-primary-background",              EnvironmentColors.ToolWindowButtonDownColorKey},
+            {"vs-btn-primary-color",                   EnvironmentColors.ToolWindowButtonDownActiveGlyphColorKey},
+
+            {"vs-input-background",                    EnvironmentColors.ToolWindowButtonHoverInactiveColorKey},
+            {"vs-background-accent",                   EnvironmentColors.ToolWindowTabMouseOverBackgroundBeginColorKey},
+            {"vs-input-outline",                       EnvironmentColors.ToolWindowButtonHoverActiveBorderColorKey},
+            {"vs-post-separator",                      EnvironmentColors.ToolWindowBorderColorKey},
+        };
 
         private void VSColorTheme_ThemeChanged(ThemeChangedEventArgs e)
         {
-            //TODO uodate webviews
-           // browser.LoadHtml(CreateHarness(_assembly, browser));
+            _browserService.LoadHtml(CreateHarness(_assembly));
         }
 
         #region IDisposable Support

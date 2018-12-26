@@ -184,16 +184,13 @@
     <Content Include="Resources\CodeStreamDebugPackage.ico" />
     <Content Include="Resources\CodeStreamOptionsPackage.ico" />
     <Content Include="Resources\CodestreamPackage.ico" />
-    <Content Include="Themes\dark.css">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Include="UI\WebViews\theme.css">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="UI\WebViews\waiting.html">
       <IncludeInVSIX>true</IncludeInVSIX>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="UI\WebViews\webview.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <EmbeddedResource Include="teamdev.licenses" />
