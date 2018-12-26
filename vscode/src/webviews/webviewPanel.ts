@@ -407,6 +407,12 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 							break;
 						}
+						case "reveal-line": {
+							const { line } = e.body.params;
+							commands.executeCommand("revealLine", { lineNumber: line, at: "top" });
+
+							break;
+						}
 						case "start-comment-on-line": {
 							const { line, uri } = e.body.params;
 							const status = await Container.commands.startCommentOnLine({ line, uri });
