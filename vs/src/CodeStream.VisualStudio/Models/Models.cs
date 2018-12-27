@@ -1,6 +1,5 @@
 ﻿using CodeStream.VisualStudio.Extensions;
 using System;
-using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio.Models
 {
@@ -42,6 +41,10 @@ namespace CodeStream.VisualStudio.Models
             EndCharacter = text.EndColumn;
         }
 
+        /// <summary>
+        /// formats a range as [StartLine, StartCharacter, EndLine, EndCharacter]
+        /// </summary>
+        /// <returns></returns>
         public int[] ToLocation()
         {
             return new int[] { StartLine, StartCharacter, EndLine, EndCharacter };
@@ -51,26 +54,5 @@ namespace CodeStream.VisualStudio.Models
         public int StartCharacter { get; set; }
         public int EndLine { get; set; }
         public int EndCharacter { get; set; }
-    }
-
-    public class SourceRemote
-    {
-        public string Name { get; set; }
-        public string Url { get; set; }
-    }
-
-    public class SourceAuthor
-    {
-        public string Id { get; set; }
-        public string Name { get; set; }
-    }
-
-    public class Source
-    {
-        public string File { get; set; }
-        public string RepoPath { get; set; }
-        public string Revision { get; set; }
-        public List<SourceAuthor> Authors { get; set; }
-        public List<SourceRemote> Remotes { get; set; }
     }
 }

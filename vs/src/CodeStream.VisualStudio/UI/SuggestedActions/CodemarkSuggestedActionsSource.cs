@@ -1,5 +1,5 @@
-﻿using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Models;
+using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;
@@ -23,13 +23,13 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
         private readonly ITextView _textView;
         private readonly ITextDocumentFactoryService _textDocumentFactoryService;
 
-        public CodemarkSuggestedActionsSource(CodemarkSuggestedActionsSourceProvider actionsSourceProvider, 
-            ITextView textView, 
+        public CodemarkSuggestedActionsSource(CodemarkSuggestedActionsSourceProvider actionsSourceProvider,
+            ITextView textView,
             ITextBuffer textBuffer,
             ITextDocumentFactoryService textDocumentFactoryService)
         {
             _actionsSourceProvider = actionsSourceProvider;
-            _textBuffer = textBuffer;            
+            _textBuffer = textBuffer;
             _textView = textView;
             // TODO text of the document has changed...
             //_textBuffer.Changed += TextBuffer_Changed;
@@ -61,13 +61,13 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
         public IEnumerable<SuggestedActionSet> GetSuggestedActions(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken)
         {
             var selectedTextService = Package.GetGlobalService(typeof(SSelectedTextService)) as ISelectedTextService;
-            var selectedText = selectedTextService.GetSelectedText();
+            var selectedText = selectedTextService?.GetSelectedText();
 
             if (selectedText != null)
-            {                
+            {
                 ITextDocument textDocument;
                 if (_textDocumentFactoryService.TryGetTextDocument(_textBuffer, out textDocument))
-                {                    
+                {
                     return new SuggestedActionSet[]
                        {
                         new SuggestedActionSet(new ISuggestedAction[]
@@ -98,7 +98,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 
     internal class CodemarkSuggestedAction : ISuggestedAction
     {
-        private SelectedText _selectedText;
+        private readonly SelectedText _selectedText;
         private readonly ITextDocument _textDocument;
 
         public CodemarkSuggestedAction(ITextDocument extDocument, SelectedText selectedText)
@@ -114,24 +114,23 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 
         public void Invoke(CancellationToken cancellationToken)
         {
-            // MessageBox.Show(_text);
-            // m_span.TextBuffer.Replace(m_span.GetSpan(m_snapshot), m_upper);
-            
             var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
             ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
                 await codeStreamService.PostCodeAsync(
-                        new FileUri(_textDocument.FilePath), 
+                        new FileUri(_textDocument.FilePath),
                         _selectedText,
+                        true,
                         cancellationToken);
             });
-
-            }
+        }
 
         public Task<object> GetPreviewAsync(CancellationToken cancellationToken)
         {
-            var textBlock = new TextBlock();
-            textBlock.Padding = new Thickness(5);
+            var textBlock = new TextBlock
+            {
+                Padding = new Thickness(5)
+            };
             textBlock.Inlines.Add(new Run() { Text = _selectedText.Text });
 
             return System.Threading.Tasks.Task.FromResult<object>(textBlock);

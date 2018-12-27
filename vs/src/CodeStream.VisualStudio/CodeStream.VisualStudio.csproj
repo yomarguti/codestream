@@ -69,6 +69,7 @@
     <Compile Include="Events\EventArgs.cs" />
     <Compile Include="Events\IEvent.cs" />
     <Compile Include="Extensions\ColorExtensions.cs" />
+    <Compile Include="Extensions\DateTimeExtensions.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="LSP\LanguageServerProcess.cs" />
     <Compile Include="Models\Models.cs" />

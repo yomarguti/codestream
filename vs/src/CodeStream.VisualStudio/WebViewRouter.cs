@@ -15,7 +15,7 @@ namespace CodeStream.VisualStudio
     {
         static readonly ILogger log = LogManager.ForContext<WebViewRouter>();
 
-        private IServiceProvider _serviceProvider;
+        private readonly IServiceProvider _serviceProvider;
         private readonly IEventAggregator _eventAggregator;
         private readonly IBrowserService _browser;
 

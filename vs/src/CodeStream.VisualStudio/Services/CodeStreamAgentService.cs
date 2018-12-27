@@ -1,8 +1,6 @@
-﻿using CodeStream.VisualStudio.Core;
-using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Models;
 using Microsoft.VisualStudio.Shell;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using StreamJsonRpc;
@@ -23,10 +21,11 @@ namespace CodeStream.VisualStudio.Services
         bool IsReady { get; }
         System.Threading.Tasks.Task SetRpcAsync(JsonRpc rpc);
         Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null);
-        Task<GetMetadataResponse> GetMetadataAsync(string uri, Range range,
+        Task<PrepareCodeResponse> PrepareCodeAsync(string uri, Range range,
            CancellationToken? cancellationToken = null
         );
-
+        Task<GetPostResponse> GetPostAsync(string streamId, string postId);
+        Task<GetUserResponse> GetUserAsync(string userId);
         Task<JToken> LoginViaTokenAsync(string signupToken, string serverUrl);
         Task<JToken> LoginAsync(string email, string password, string serverUrl);
         Task<BootstrapState> GetBootstrapAsync(State state, Settings settings);
@@ -35,7 +34,7 @@ namespace CodeStream.VisualStudio.Services
         Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(FileUri uri, CancellationToken? cancellationToken = null);
     }
 
-    public class GetMetadataResponse
+    public class PrepareCodeResponse
     {
         public string Code { get; set; }
         public string GitError { get; set; }
@@ -53,19 +52,28 @@ namespace CodeStream.VisualStudio.Services
         public List<CSFullMarker> Markers { get; set; }
         public List<MarkerNotLocated> MarkersNotLocated { get; set; }
     }
-   
+
+    public class FetchPostsRequest
+    {
+        public string StreamId { get; set; }
+        public int? Limit { get; set; }
+        public object After { get; set; }
+        public object Before { get; set; }
+        public bool? Inclusive { get; set; }
+    }
+
     public class LoginRequest
     {
-        
-        public string ServerUrl { get; set; }        
-        public string Email { get; set; }        
-        public string PasswordOrToken { get; set; }        
-        public string SignupToken { get; set; }        
-        public string Type { get; set; }        
-        public string Team { get; set; }        
-        public string TeamId { get; set; }      
-        public Extension Extension { get; set; }      
-        public IDE Ide { get; set; }        
+
+        public string ServerUrl { get; set; }
+        public string Email { get; set; }
+        public string PasswordOrToken { get; set; }
+        public string SignupToken { get; set; }
+        public string Type { get; set; }
+        public string Team { get; set; }
+        public string TeamId { get; set; }
+        public Extension Extension { get; set; }
+        public IDE Ide { get; set; }
         public string TraceLevel { get; set; }
     }
 
@@ -87,6 +95,16 @@ namespace CodeStream.VisualStudio.Services
         public TextDocumentIdentifier TextDocument { get; set; }
         public CSRange Range { get; set; }
         public string Revision { get; set; }
+    }
+
+    public class GetPostResponse
+    {
+        public CSPost Post { get; set; }
+    }
+
+    public class GetUserResponse
+    {
+        public CSUser User { get; set; }
     }
 
     public class CodeStreamAgentService : ICodeStreamAgentService
@@ -135,19 +153,36 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(FileUri uri,
             CancellationToken? cancellationToken = null)
-        {            
+        {
             return await SendAsync<DocumentMarkersResponse>("codeStream/textDocument/markers", new
             {
                 textDocument = new { uri = uri.ToString() }
             }, cancellationToken);
         }
 
-        public async Task<GetMetadataResponse> GetMetadataAsync(string uri,
+        public async Task<GetPostResponse> GetPostAsync(string streamId, string postId)
+        {
+            return await SendAsync<GetPostResponse>("codeStream/post", new
+            {
+                streamId,
+                postId
+            });
+        }
+
+        public async Task<GetUserResponse> GetUserAsync(string userId)
+        {
+            return await SendAsync<GetUserResponse>("codeStream/user", new
+            {
+               userId
+            });
+        }
+
+        public async Task<PrepareCodeResponse> PrepareCodeAsync(string uri,
             Range range,
             CancellationToken? cancellationToken = null
          )
         {
-            return await SendAsync<GetMetadataResponse>("codeStream/post/prepareWithCode",
+            return await SendAsync<PrepareCodeResponse>("codeStream/post/prepareWithCode",
                 new
                 {
                     textDocument = new { uri = uri },
@@ -163,14 +198,14 @@ namespace CodeStream.VisualStudio.Services
         public async Task<JToken> LoginViaTokenAsync(string signupToken, string serverUrl)
         {
             return await SendAsync<JToken>("codeStream/cli/login", new LoginRequest
-                {
-                    SignupToken = signupToken,
-                    ServerUrl = serverUrl,                    
-                    Type = "otc",                    
-                    Extension = Application.Extension,
-                    Ide = Application.Ide,
-                    TraceLevel = "verbose"
-                });
+            {
+                SignupToken = signupToken,
+                ServerUrl = serverUrl,
+                Type = "otc",
+                Extension = Application.Extension,
+                Ide = Application.Ide,
+                TraceLevel = "verbose"
+            });
         }
 
         public async Task<JToken> LoginAsync(string email, string password, string serverUrl)
@@ -180,7 +215,7 @@ namespace CodeStream.VisualStudio.Services
                 Email = email,
                 PasswordOrToken = password,
                 ServerUrl = serverUrl,
-                Type = "credentials",                                              
+                Type = "credentials",
                 Extension = Application.Extension,
                 Ide = Application.Ide,
                 TraceLevel = "verbose"
@@ -189,7 +224,7 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request)
         {
-            return await SendAsync<DocumentFromMarkerResponse>("codeStream/textDocument/fromMarker", new 
+            return await SendAsync<DocumentFromMarkerResponse>("codeStream/textDocument/fromMarker", new
             {
                 file = request.File,
                 repoId = request.RepoId,
@@ -216,7 +251,9 @@ namespace CodeStream.VisualStudio.Services
                 {
                     ServerUrl = settings.ServerUrl,
                     Email = state.Email,
-                    ShowMarkers = settings.ShowMarkers
+                    ShowMarkers = settings.ShowMarkers,
+                    ShowHeadshots = settings.ShowHeadshots,
+                    Team = settings.Team
                 },
                 Env = state.Environment,
 

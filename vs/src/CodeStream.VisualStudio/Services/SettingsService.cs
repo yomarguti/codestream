@@ -9,16 +9,20 @@ namespace CodeStream.VisualStudio.Services
         Settings GetSettings();
         string Email { get; set; }
         bool ShowMarkers { get; set; }
+        bool ShowHeadshots { get; set; }
         string ServerUrl { get; set; }
         string WebAppUrl { get; set; }
+        string Team { get; set; }
     }
 
     public class Settings
     {
         public string Email { get; set; }
         public bool ShowMarkers { get; set; }
+        public bool ShowHeadshots { get; set; }
         public string ServerUrl { get; set; }
         public string WebAppUrl { get; set; }
+        public string Team { get; set; }
     }
 
     public interface SSettingsService { }
@@ -48,8 +52,10 @@ namespace CodeStream.VisualStudio.Services
             {
                 Email = Email,
                 ShowMarkers = ShowMarkers,
+                ShowHeadshots = ShowHeadshots,
                 ServerUrl = ServerUrl,
-				WebAppUrl = WebAppUrl
+				WebAppUrl = WebAppUrl,
+                Team = Team
             };
         }
 
@@ -77,6 +83,18 @@ namespace CodeStream.VisualStudio.Services
             }
         }
 
+        public bool ShowHeadshots
+        {
+            get
+            {
+                return _dialogPage.ShowHeadshots;
+            }
+            set
+            {
+                _dialogPage.ShowHeadshots = value;
+            }
+        }
+
         public string ServerUrl
         {
             get
@@ -98,6 +116,18 @@ namespace CodeStream.VisualStudio.Services
             set
             {
                 _dialogPage.WebAppUrl = value;
+            }
+        }
+
+        public string Team
+        {
+            get
+            {
+                return _dialogPage.Team;
+            }
+            set
+            {
+                _dialogPage.Team = value;
             }
         }
     }

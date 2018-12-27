@@ -1,15 +1,44 @@
-﻿using CodeStream.VisualStudio.Extensions;
+﻿
+using CodeStream.VisualStudio.Extensions;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio.Models
 {
     public class CSEntity
     {
+        private long _createdAt;
+        private long _modifiedAt;
+
         public bool Deactivated { get; set; }
-        public long CreatedAt { get; set; }
-        public long ModifiedAt { get; set; }
+
+        public long CreatedAt
+        {
+            get => _createdAt;
+            set
+            {
+                _createdAt = value;
+                CreateAtDateTime = value.FromLong().ToLocalTime();
+            }
+        }
+
+        public DateTime CreateAtDateTime { get; private set; }
+
+        public long ModifiedAt
+        {
+            get => _modifiedAt;
+            set
+            {
+                _modifiedAt = value;
+                ModifiedAtDateTime = value.FromLong().ToLocalTime();
+            }
+        }
+
+        public DateTime ModifiedAtDateTime { get; private set; }
+
         public string Id { get; set; }
+        // ReSharper disable once InconsistentNaming
         public string _Id { get; set; }
         public string CreatorId { get; set; }
         public int Version { get; set; }
@@ -71,7 +100,7 @@ namespace CodeStream.VisualStudio.Models
         Slack
     }
 
-   
+
 
     public class CSMarker : CSEntity
     {
@@ -91,11 +120,11 @@ namespace CodeStream.VisualStudio.Models
         public string Repo { get; set; }
         public string RepoId { get; set; }
 
-        public Range Range
+        public Range LocationWhenCreatedAsRange
         {
             get
             {
-                if (LocationWhenCreated != null && LocationWhenCreated.Count >=4)
+                if (LocationWhenCreated != null && LocationWhenCreated.Count >= 4)
                 {
                     return new Range()
                     {
@@ -132,7 +161,7 @@ namespace CodeStream.VisualStudio.Models
         public string NotLocatedReason { get; set; }//: MarkerNotLocatedReason;
         public string NotLocatedDetails { get; set; }
     }
-  
+
     public class CSMarkerLocations
     {
         public string TeamId { get; set; }
@@ -176,6 +205,14 @@ namespace CodeStream.VisualStudio.Models
     {
         public CSRange Range { get; set; }
         public CSCodemark Codemark { get; set; }
+
+        public string Summary
+        {
+            get
+            {
+                return Codemark?.Title.IsNotNullOrWhiteSpace() == true ? Codemark.Title : Codemark?.Text;
+            }
+        }
     }
 
     public class CSFullCodemark : CSMarker
@@ -217,7 +254,7 @@ namespace CodeStream.VisualStudio.Models
         public Dictionary<string, object> ServiceInfo { get; set; }
     }
 
-    public class CSMePreferences
+    public class CSMePreferences : Dictionary<string, object>
     {
     }
 
@@ -226,6 +263,7 @@ namespace CodeStream.VisualStudio.Models
         public bool TelemetryConsent { get; set; }
         public Dictionary<string, bool> MutedStreams { get; set; }
     }
+
     public class CSUnreads
     {
         public Dictionary<string, int> LastReads { get; set; }
@@ -244,6 +282,7 @@ namespace CodeStream.VisualStudio.Models
         public bool ShowHeadshots { get; set; }
         public bool ShowMarkers { get; set; }
         public bool OpenCommentOnSelect { get; set; }
+        public string Team { get; set; }
     }
 
     public class Service
@@ -297,26 +336,44 @@ namespace CodeStream.VisualStudio.Models
         public Result Result { get; set; }
     }
 
+    public class CSTeam : CSEntity
+    {
+        public string Name { get; set; }
+    }
+
     public class CSUser : CSEntity
     {
-        public string PhoneNumber { get; set; }
-        public string IWorkOn { get; set; }
-        public List<object> ProviderIdentities { get; set; }
-        public string Email { get; set; }
-        public string Username { get; set; }
-        public string TimeZone { get; set; }
-        public bool IsRegistered { get; set; }
-        public long RegisteredAt { get; set; }
-        public string JoinMethod { get; set; }
-        public string PrimaryReferral { get; set; }
-        public string OriginTeamId { get; set; }
         public List<string> CompanyIds { get; set; }
+        public string Email { get; set; }
+        public string FirstName { get; set; }
+        public string FullName { get; set; }
+        public bool IsRegistered { get; set; }
+        public string IWorkOn { get; set; }
+        public string LastName { get; set; }
+        public long LastPostCreatedAt { get; set; }
+        public int NumMentions { get; set; }
+        public int NumInvites { get; set; }
+        public long RegisteredAt { get; set; }
+        public List<string> SecondaryEmails { get; set; }
         public List<string> TeamIds { get; set; }
-        public long LastLogin { get; set; }
-        public Preferences Preferences { get; set; }
-        public string AccessToken { get; set; }
-        public string PubNubKey { get; set; }
-        public string PubNubToken { get; set; }
+        public string TimeZone { get; set; }
+        public int TotalPosts { get; set; }
+        public string Username { get; set; }
+        public CSAvatar Avatar { get; set; }
+        public bool? Dnd { get; set; }
+        public string Presence { get; set; }
+        public CSMePreferences Preferences { get; set; }
+
+        public string Name
+        {
+            get { return Username ?? FullName; }
+        }
+    }
+
+    public class CSAvatar
+    {
+        public string Image { get; set; }
+        public string Image48 { get; set; }
     }
 
     public class CSRemote
@@ -361,16 +418,16 @@ namespace CodeStream.VisualStudio.Models
     }
 
     public class Extension
-    {        
-        public string Build { get; set; }        
-        public string BuildEnv { get; set; }        
-        public string Version { get; set; }        
+    {
+        public string Build { get; set; }
+        public string BuildEnv { get; set; }
+        public string Version { get; set; }
         public string VersionFormatted { get; set; }
     }
 
     public class IDE
     {
-        public string Name { get; set; }        
+        public string Name { get; set; }
         public string Version { get; set; }
     }
 
@@ -388,8 +445,8 @@ namespace CodeStream.VisualStudio.Models
         //public string Email { get; set; }
         //public string PasswordOrToken { get; set; }
         //public Extension Extension { get; set; }
-        
-        public string TraceLevel { get; set; }       
+
+        public string TraceLevel { get; set; }
         public bool IsDebugging { get; set; }
         //public IDE Ide { get; set; }
 
@@ -398,12 +455,12 @@ namespace CodeStream.VisualStudio.Models
 
 
     public class WebviewIpcGenericMessageResponse
-    {       
+    {
         public WebviewIpcGenericMessageResponse(string type)
         {
             Type = type;
         }
-       
+
         public string Id { get; set; }
         public string Type { get; private set; }
         public object Body { get; set; }
@@ -415,18 +472,18 @@ namespace CodeStream.VisualStudio.Models
         {
             Type = "codestream:response";
         }
-		
+
         public WebviewIpcMessageResponse(WebviewIpcMessageResponseBody body)
         {
             Body = body;
-			Type = "codestream:response";
+            Type = "codestream:response";
         }
         public string Id { get; set; }
         public string Type { get; private set; }
-        public WebviewIpcMessageResponseBody Body { get; set; }        
+        public WebviewIpcMessageResponseBody Body { get; set; }
     }
 
- 
+
 
     public class WebviewIpcMessageResponseBody
     {
@@ -500,5 +557,26 @@ namespace CodeStream.VisualStudio.Models
         public CSMarker Marker { get; set; }
         public bool EnteringThread { get; set; }
         public string Source { get; set; }
+    }
+
+    public class SourceRemote
+    {
+        public string Name { get; set; }
+        public string Url { get; set; }
+    }
+
+    public class SourceAuthor
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+    }
+
+    public class Source
+    {
+        public string File { get; set; }
+        public string RepoPath { get; set; }
+        public string Revision { get; set; }
+        public List<SourceAuthor> Authors { get; set; }
+        public List<SourceRemote> Remotes { get; set; }
     }
 }

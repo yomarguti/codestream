@@ -26,24 +26,26 @@ namespace CodeStream.VisualStudio.UI.Margins
         /// A value indicating whether the object is disposed.
         /// </summary>
         private bool isDisposed;
-        private IWpfTextView _textView;
+        private readonly IWpfTextView _textView;
         private readonly IEventAggregator _events;
         private readonly IEventAggregator _eventAggregator;
-        private readonly ISessionService _sessionService;
         private readonly ICodeStreamAgentService _agentService;
-        private readonly ITextDocumentFactoryService _textDocumentFactoryService;
-        private List<IDisposable> _disposables;
+        private readonly List<IDisposable> _disposables;
         private bool _initialized;
-        private ITextDocument _textDocument;
+        private readonly ITextDocument _textDocument;
         private DocumentMarkersResponse _markerCache;
         private List<CodemarkGlyphCache> _viewCache;
 
-        private const int _defaultWidth = 20;
+        private const int DefaultWidth = 20;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EditorMargin1"/> class for a given <paramref name="textView"/>.
         /// </summary>
+        /// <param name="agentService"></param>
         /// <param name="textView">The <see cref="IWpfTextView"/> to attach the margin to.</param>
+        /// <param name="eventAggregator"></param>
+        /// <param name="sessionService"></param>
+        /// <param name="textDocumentFactoryService"></param>
         public CodemarkViewMargin(
             IEventAggregator eventAggregator,
             ISessionService sessionService,
@@ -52,18 +54,15 @@ namespace CodeStream.VisualStudio.UI.Margins
             ITextDocumentFactoryService textDocumentFactoryService)
         {
             _eventAggregator = eventAggregator;
-            _sessionService = sessionService;
             _agentService = agentService;
             _textView = textView;
 
-            _textDocumentFactoryService = textDocumentFactoryService;
-
-            if (!_textDocumentFactoryService.TryGetTextDocument(_textView.TextBuffer, out _textDocument))
+            if (!textDocumentFactoryService.TryGetTextDocument(_textView.TextBuffer, out _textDocument))
             {
                 // do something
             }
 
-            Width = _defaultWidth;
+            Width = DefaultWidth;
             ClipToBounds = true;
 
             //Background = new SolidColorBrush(Colors.Cheese);
@@ -96,7 +95,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                     if (_.IsVisible)
                     {
                         Visibility = Visibility.Visible;
-                        Width = _defaultWidth;
+                        Width = DefaultWidth;
                     }
                     else
                     {
@@ -106,7 +105,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                 })
             };
 
-            if (_sessionService.IsReady && _agentService.IsReady && !_initialized)
+            if (sessionService.IsReady && _agentService.IsReady && !_initialized)
             {
                 Initialize();
             }
@@ -140,17 +139,21 @@ namespace CodeStream.VisualStudio.UI.Margins
             Update();
         }
 
+        private DateTime _lastUpdate = DateTime.MinValue;
         private void TextView_LayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
         {
             var verticalTranslation = e.VerticalTranslation;
             if (verticalTranslation || e.TranslatedLines.Any())
             {
-                Update(new TextDocumentChangedEvent()
+                if (_lastUpdate == DateTime.MinValue || (DateTime.Now - _lastUpdate) > TimeSpan.FromMilliseconds(25))
                 {
-                    Reason = verticalTranslation
-                    ? TextDocumentChangedReason.Scrolled
-                    : TextDocumentChangedReason.Edited
-                });
+                    Update(new TextDocumentChangedEvent
+                    {
+                        Reason = verticalTranslation
+                            ? TextDocumentChangedReason.Scrolled
+                            : TextDocumentChangedReason.Edited
+                    });
+                }
             }
         }
 
@@ -237,6 +240,8 @@ namespace CodeStream.VisualStudio.UI.Margins
                 }
             }
 
+            _lastUpdate = DateTime.Now;
+            
             await System.Threading.Tasks.Task.CompletedTask;
         }
 

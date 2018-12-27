@@ -1,5 +1,4 @@
-﻿using CodeStream.VisualStudio.Events;
-using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Models;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,23 +11,42 @@ namespace CodeStream.VisualStudio.Services
 
     public interface ICodeStreamService
     {
-        Task<object> PostCodeAsync(FileUri uri, SelectedText selectedText, CancellationToken? cancellationToken);
-        Task OpenCommentAsync(string streamId, string threadId);
+        Task<object> PostCodeAsync(FileUri uri, SelectedText selectedText, bool? isHighlight = null, CancellationToken? cancellationToken = null);
+        Task OpenCommentByPostAsync(string streamId, string postId);
+        Task OpenCommentByThreadAsync(string streamId, string threadId);
     }
 
     public class CodeStreamService : ICodeStreamService, SCodeStreamService
-    {        
+    {
         private readonly ICodeStreamAgentService _agentService;
         private readonly IBrowserService _browserService;
 
         public CodeStreamService(ICodeStreamAgentService serviceProvider, IBrowserService browserService)
-        {            
+        {
             _agentService = serviceProvider;
             _browserService = browserService;
         }
 
+        public async Task OpenCommentByPostAsync(string streamId, string postId)
+        {
+            await Task.Yield();
 
-        public async Task OpenCommentAsync(string streamId, string threadId)
+            var postResponse = await _agentService.GetPostAsync(streamId, postId);
+            if (postResponse?.Post != null)
+            {
+                _browserService.PostMessage(new
+                {
+                    type = "codestream:interaction:stream-thread-selected",
+                    body = new
+                    {
+                        streamId = postResponse.Post.StreamId,
+                        threadId = postResponse.Post.Id
+                    }
+                });
+            }
+        }
+
+        public async Task OpenCommentByThreadAsync(string streamId, string threadId)
         {
             await Task.Yield();
 
@@ -37,30 +55,33 @@ namespace CodeStream.VisualStudio.Services
                 type = "codestream:interaction:stream-thread-selected",
                 body = new
                 {
-                    streamId,
-                    threadId
+                    streamId = streamId,
+                    threadId = threadId
                 }
             });
+
         }
 
-        public async Task<object> PostCodeAsync(FileUri uri,
-            SelectedText selectedText,CancellationToken? cancellationToken = null)
+        public async Task<object> PostCodeAsync(FileUri uri, SelectedText selectedText, bool? isHighlight = null,
+            CancellationToken? cancellationToken = null)
         {
             var range = new Range(selectedText);
 
-            var post = await _agentService.GetMetadataAsync(uri.ToString(), range, cancellationToken);
+            var post = await _agentService.PrepareCodeAsync(uri.ToString(), range, cancellationToken);
 
-             _browserService.PostMessage(new
+            var source = post?.Source;
+            _browserService.PostMessage(new
             {
                 type = "codestream:interaction:code-highlighted",
                 body = new
                 {
-                    code = post.Code,
+                    code = post?.Code,
+                    file = source?.File,
                     fileUri = uri,
                     location = range.ToLocation(),
-                    source = post?.Source,
+                    source = source,
                     gitError = post?.GitError,
-                   // isHightlight = post?.IsHightlight
+                    isHightlight = isHighlight
                 }
             });
 

@@ -12,8 +12,10 @@ namespace CodeStream.VisualStudio
     {
         string Email { get; set; }
         bool ShowMarkers { get; set; }
+        bool ShowHeadshots { get; set; }
         string ServerUrl { get; set; }
         string WebAppUrl { get; set; }
+        string Team { get; set; }
         void SaveSettingsToStorage();
         void LoadSettingsFromStorage();
     }
@@ -28,7 +30,12 @@ namespace CodeStream.VisualStudio
         [Category("CodeStream")]
         [DisplayName("Show Markers")]
         [Description("Specifies whether to show CodeStream markers in editor margins")]
-        public bool ShowMarkers { get; set; }
+        public bool ShowMarkers { get; set; } = true;
+
+        [Category("CodeStream")]
+        [DisplayName("Avatars")]
+        [Description("Specifies whether to show avatars")]
+        public bool ShowHeadshots { get; set; } = true;
 
         [Category("CodeStream")]
         [DisplayName("Server Url")]
@@ -44,9 +51,14 @@ namespace CodeStream.VisualStudio
         [Description("Specifies the url for the CodeStream web portal")]
 #if DEBUG
         public string WebAppUrl { get; set; } = "http://pd-app.codestream.us:1380";
-#else 
+#else
         public string WebAppUrl { get; set; } = "http://app.codestream.com";
 #endif
+
+        [Category("CodeStream")]
+        [DisplayName("Team")]
+        [Description("Specifies an optional team to connect to the CodeStream service")]
+        public string Team { get; set; }
     }
 
     /// <summary>
