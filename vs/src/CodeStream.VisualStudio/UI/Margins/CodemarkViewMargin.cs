@@ -25,7 +25,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         /// <summary>
         /// A value indicating whether the object is disposed.
         /// </summary>
-        private bool isDisposed;
+        private bool _isDisposed;
         private readonly IWpfTextView _textView;
         private readonly IEventAggregator _events;
         private readonly IEventAggregator _eventAggregator;
@@ -39,7 +39,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         private const int DefaultWidth = 20;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EditorMargin1"/> class for a given <paramref name="textView"/>.
+        /// Initializes a new instance of the <see cref="CodemarkViewMargin"/> class for a given <paramref name="textView"/>.
         /// </summary>
         /// <param name="agentService"></param>
         /// <param name="textView">The <see cref="IWpfTextView"/> to attach the margin to.</param>
@@ -187,7 +187,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                 return;
             }
 
-            //if no cache, or we've gotten here for any other reason except scrolling -- reup
+            //if no cache, or we've gotten here for any other reason except scrolling -- get again
             if (_markerCache == null || e?.Reason != TextDocumentChangedReason.Scrolled)
             {
                 _markerCache = await _agentService.GetMarkersForDocumentAsync(new Models.FileUri(_textDocument.FilePath));
@@ -202,16 +202,13 @@ namespace CodeStream.VisualStudio.UI.Margins
             {
                 // if we scrolled, and we have a viewCache -- just reposition them
 
-                var currMarkerOffset = 0;
-                foreach (var currLine in _textView.TextSnapshot.Lines)
+                var markerOffset = 0;
+                foreach (var currentLine in _textView.TextSnapshot.Lines)
                 {
-                    var codemark = _viewCache.FirstOrDefault(_ => _.StartLine == currLine.LineNumber + 1);
-                    if (codemark?.Codemark != null)
-                    {
-                        codemark.Codemark.Reposition(_textView, currMarkerOffset);
-                    }
+                    var codemark = _viewCache.FirstOrDefault(_ => _.StartLine == currentLine.LineNumber + 1);
+                    codemark?.Codemark?.Reposition(_textView, markerOffset);
 
-                    currMarkerOffset += (int)_textView.LineHeight;
+                    markerOffset += (int)_textView.LineHeight;
                 }
             }
             else
@@ -220,23 +217,23 @@ namespace CodeStream.VisualStudio.UI.Margins
 
                 Children.Clear();
 
-                var currMarkerOffset = 0;
-                foreach (var currLine in _textView.TextSnapshot.Lines)
+                var markerOffset = 0;
+                foreach (var currentLine in _textView.TextSnapshot.Lines)
                 {
-                    var startLine = currLine.LineNumber + 1;
-                    var markers = _markerCache?.Markers.Where(_ => _?.Range?.Start.Line == startLine);
+                    var startLine = currentLine.LineNumber + 1;
+                    var markers = _markerCache?.Markers.Where(_ => _?.Range?.Start.Line == startLine).ToList();
                     if (markers.Any())
                     {
                         var codemark = new Codemark(new CodemarkViewModel(markers.First()));
 
-                        codemark.Reposition(_textView, currMarkerOffset);
+                        codemark.Reposition(_textView, markerOffset);
 
                         Children.Add(codemark);
 
                         _viewCache.Add(new CodemarkGlyphCache(codemark, startLine));
                     }
 
-                    currMarkerOffset += (int)_textView.LineHeight;
+                    markerOffset += (int)_textView.LineHeight;
                 }
             }
 
@@ -257,7 +254,7 @@ namespace CodeStream.VisualStudio.UI.Margins
             // the margin.
             get
             {
-                this.ThrowIfDisposed();
+                ThrowIfDisposed();
                 return this;
             }
         }
@@ -280,11 +277,11 @@ namespace CodeStream.VisualStudio.UI.Margins
         {
             get
             {
-                this.ThrowIfDisposed();
+                ThrowIfDisposed();
 
                 // Since this is a horizontal margin, its width will be bound to the width of the text view.
                 // Therefore, its size is its height.
-                return this.ActualWidth;
+                return ActualWidth;
             }
         }
 
@@ -296,7 +293,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         {
             get
             {
-                this.ThrowIfDisposed();
+                ThrowIfDisposed();
 
                 // The margin should always be enabled
                 return true;
@@ -323,7 +320,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         /// </summary>
         public void Dispose()
         {
-            if (!this.isDisposed)
+            if (!_isDisposed)
             {
                 // _textView.TextBuffer.ChangedLowPriority -= TextBuffer_ChangedLowPriority;
                 _textView.ViewportHeightChanged -= TextView_ViewportHeightChanged;
@@ -338,7 +335,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                 _viewCache = null;
 
                 GC.SuppressFinalize(this);
-                this.isDisposed = true;
+                _isDisposed = true;
             }
         }
 
@@ -349,7 +346,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         /// </summary>
         private void ThrowIfDisposed()
         {
-            if (this.isDisposed)
+            if (_isDisposed)
             {
                 throw new ObjectDisposedException(MarginName);
             }

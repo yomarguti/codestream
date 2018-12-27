@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio.Models
 {
-    public class CSEntity
+    public class CsEntity
     {
         private long _createdAt;
         private long _modifiedAt;
@@ -56,7 +56,7 @@ namespace CodeStream.VisualStudio.Models
         //public Preview Preview {get;set;}
 
     }
-    public class CSPost : CSEntity
+    public class CsPost : CsEntity
     {
         public string TeamId { get; set; }
         public string StreamId { get; set; }
@@ -73,13 +73,13 @@ namespace CodeStream.VisualStudio.Models
         public List<File> Files { get; set; }
     }
 
-    public class CSFullPost : CSPost
+    public class CsFullPost : CsPost
     {
-        public CSFullCodemark Codemark { get; set; }
+        public CsFullCodemark Codemark { get; set; }
         public bool? HasMarkers { get; set; }
     }
 
-    public class Team : CSEntity
+    public class Team : CsEntity
     {
         public string Name { get; set; }
         public List<string> MemberIds { get; set; }
@@ -87,13 +87,13 @@ namespace CodeStream.VisualStudio.Models
         public string PrimaryReferral { get; set; }
     }
 
-    public class Company : CSEntity
+    public class Company : CsEntity
     {
         public string Name { get; set; }
         public List<string> TeamIds { get; set; }
     }
 
-    public interface ICSStream { }
+    public interface ICsStream { }
 
     public enum ProviderType
     {
@@ -102,7 +102,7 @@ namespace CodeStream.VisualStudio.Models
 
 
 
-    public class CSMarker : CSEntity
+    public class CsMarker : CsEntity
     {
         public string TeamId { get; set; }
         public string FileStreamId { get; set; }
@@ -156,13 +156,13 @@ namespace CodeStream.VisualStudio.Models
     //    UNKNOWN = "unknown"
     //}
 
-    public class MarkerNotLocated : CSMarker
+    public class MarkerNotLocated : CsMarker
     {
         public string NotLocatedReason { get; set; }//: MarkerNotLocatedReason;
         public string NotLocatedDetails { get; set; }
     }
 
-    public class CSMarkerLocations
+    public class CsMarkerLocations
     {
         public string TeamId { get; set; }
         public string StreamId { get; set; }
@@ -171,7 +171,7 @@ namespace CodeStream.VisualStudio.Models
         public Dictionary<string, List<object>> Locations { get; set; }
     }
 
-    public class CSCodemark : CSEntity
+    public class CsCodemark : CsEntity
     {
         public string TeamId { get; set; }
         public string StreamId { get; set; }
@@ -189,22 +189,22 @@ namespace CodeStream.VisualStudio.Models
         public int NumReplies { get; set; }
     }
 
-    public class CSRangePoint
+    public class CsRangePoint
     {
         public int Line { get; set; }
         public int Character { get; set; }
     }
 
-    public class CSRange
+    public class CsRange
     {
-        public CSRangePoint Start { get; set; }
-        public CSRangePoint End { get; set; }
+        public CsRangePoint Start { get; set; }
+        public CsRangePoint End { get; set; }
     }
 
-    public class CSFullMarker : CSMarker
+    public class CsFullMarker : CsMarker
     {
-        public CSRange Range { get; set; }
-        public CSCodemark Codemark { get; set; }
+        public CsRange Range { get; set; }
+        public CsCodemark Codemark { get; set; }
 
         public string Summary
         {
@@ -215,14 +215,14 @@ namespace CodeStream.VisualStudio.Models
         }
     }
 
-    public class CSFullCodemark : CSMarker
+    public class CsFullCodemark : CsMarker
     {
-        public List<CSMarker> Markers { get; set; }
+        public List<CsMarker> Markers { get; set; }
     }
 
-    public class CSStream : CSEntity
+    public class CsStream : CsEntity
     {
-        public CSStream()
+        public CsStream()
         {
             MemberIds = new List<string>();
         }
@@ -254,7 +254,7 @@ namespace CodeStream.VisualStudio.Models
         public Dictionary<string, object> ServiceInfo { get; set; }
     }
 
-    public class CSMePreferences : Dictionary<string, object>
+    public class CsMePreferences : Dictionary<string, object>
     {
     }
 
@@ -264,7 +264,7 @@ namespace CodeStream.VisualStudio.Models
         public Dictionary<string, bool> MutedStreams { get; set; }
     }
 
-    public class CSUnreads
+    public class CsUnreads
     {
         public Dictionary<string, int> LastReads { get; set; }
         public Dictionary<string, int> Mentions { get; set; }
@@ -307,14 +307,14 @@ namespace CodeStream.VisualStudio.Models
         public string CurrentThreadId { get; set; }
         public string Env { get; set; }
 
-        public List<CSRepository> Repos { get; set; }
+        public List<CsRepository> Repos { get; set; }
 
         //   public List<CSPost> Posts { get; set; }
-        public List<CSStream> Streams { get; set; }
+        public List<CsStream> Streams { get; set; }
         public List<Team> Teams { get; set; }
-        public CSUnreads Unreads { get; set; }
-        public List<CSUser> Users { get; set; }
-        public CSMePreferences Preferences { get; set; }
+        public CsUnreads Unreads { get; set; }
+        public List<CsUser> Users { get; set; }
+        public CsMePreferences Preferences { get; set; }
         public Service Services { get; set; }
         public string Version { get; set; }
         public List<string> PanelStack { get; set; }
@@ -336,18 +336,19 @@ namespace CodeStream.VisualStudio.Models
         public Result Result { get; set; }
     }
 
-    public class CSTeam : CSEntity
+    public class CsTeam : CsEntity
     {
         public string Name { get; set; }
     }
 
-    public class CSUser : CSEntity
+    public class CsUser : CsEntity
     {
         public List<string> CompanyIds { get; set; }
         public string Email { get; set; }
         public string FirstName { get; set; }
         public string FullName { get; set; }
         public bool IsRegistered { get; set; }
+        // ReSharper disable once InconsistentNaming
         public string IWorkOn { get; set; }
         public string LastName { get; set; }
         public long LastPostCreatedAt { get; set; }
@@ -359,10 +360,10 @@ namespace CodeStream.VisualStudio.Models
         public string TimeZone { get; set; }
         public int TotalPosts { get; set; }
         public string Username { get; set; }
-        public CSAvatar Avatar { get; set; }
+        public CsAvatar Avatar { get; set; }
         public bool? Dnd { get; set; }
         public string Presence { get; set; }
-        public CSMePreferences Preferences { get; set; }
+        public CsMePreferences Preferences { get; set; }
 
         public string Name
         {
@@ -370,34 +371,34 @@ namespace CodeStream.VisualStudio.Models
         }
     }
 
-    public class CSAvatar
+    public class CsAvatar
     {
         public string Image { get; set; }
         public string Image48 { get; set; }
     }
 
-    public class CSRemote
+    public class CsRemote
     {
         public string Url { get; set; }
         public string NormalizedUrl { get; set; }
         public string CompanyIdentifier { get; set; }
     }
 
-    public class CSRepository
+    public class CsRepository
     {
         public string Name { get; set; }
-        public List<CSRemote> Remotes { get; set; }
+        public List<CsRemote> Remotes { get; set; }
         public string TeamId { get; set; }
     }
 
     public class LoginResponse
     {
-        public CSUser User { get; set; }
+        public CsUser User { get; set; }
         public string AccessToken { get; set; }
         public string PubNubKey { get; set; }
         public List<Team> Teams { get; set; }
         public List<Company> Companies { get; set; }
-        public List<CSRepository> Repos { get; set; }
+        public List<CsRepository> Repos { get; set; }
         public string TeamId { get; set; }
     }
 
@@ -425,7 +426,7 @@ namespace CodeStream.VisualStudio.Models
         public string VersionFormatted { get; set; }
     }
 
-    public class IDE
+    public class Ide
     {
         public string Name { get; set; }
         public string Version { get; set; }
@@ -434,7 +435,7 @@ namespace CodeStream.VisualStudio.Models
     public class Proxy
     {
         public string Url { get; set; }
-        public bool StrictSSL { get; set; }
+        public bool StrictSsl { get; set; }
     }
 
     public class InitializationOptions
@@ -543,18 +544,18 @@ namespace CodeStream.VisualStudio.Models
 
     public class CreatePostResponse
     {
-        public CSFullPost Post { get; set; }
-        public CSFullCodemark codemark { get; set; }
-        public List<CSMarker> Markers { get; set; }
+        public CsFullPost Post { get; set; }
+        public CsFullCodemark Codemark { get; set; }
+        public List<CsMarker> Markers { get; set; }
 
-        public List<CSMarkerLocations> MarkerLocations { get; set; }
-        public List<CSStream> Streams { get; set; }
-        public List<CSRepository> Repos { get; set; }
+        public List<CsMarkerLocations> MarkerLocations { get; set; }
+        public List<CsStream> Streams { get; set; }
+        public List<CsRepository> Repos { get; set; }
     }
 
     public class ShowCodeResponse
     {
-        public CSMarker Marker { get; set; }
+        public CsMarker Marker { get; set; }
         public bool EnteringThread { get; set; }
         public string Source { get; set; }
     }

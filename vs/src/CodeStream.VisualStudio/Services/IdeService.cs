@@ -1,15 +1,17 @@
 ﻿using EnvDTE;
 using Microsoft.VisualStudio.Shell;
 using System;
+using CodeStream.VisualStudio.Core.Logging;
+using Serilog;
 
 namespace CodeStream.VisualStudio.Services
 {
-    public interface IIDEService
+    public interface IIdeService
     {
         ShowCodeResult OpenEditor(string sourceFile, int? scrollTo = null);
     }
 
-    public interface SIDEService
+    public interface SIdeService
     {
 
     }
@@ -22,8 +24,11 @@ namespace CodeStream.VisualStudio.Services
     }
 
 
-    public class IDEService : IIDEService, SIDEService
+    public class IdeService : IIdeService, SIdeService
     {
+        static readonly ILogger Log = LogManager.ForContext<WebViewRouter>();
+
+
         public ShowCodeResult OpenEditor(string sourceFile, int? scrollTo = null)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
@@ -45,6 +50,7 @@ namespace CodeStream.VisualStudio.Services
             }
             catch(Exception ex)
             {
+                Log.Error(ex, $"OpenEditor {sourceFile}");
                 return ShowCodeResult.FILE_NOT_FOUND;
             }
         }

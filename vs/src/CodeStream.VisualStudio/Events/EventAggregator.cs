@@ -18,20 +18,19 @@ namespace CodeStream.VisualStudio.Events
 
     public class EventAggregator : IEventAggregator, SEventAggregator
     {
-        private readonly ConcurrentDictionary<Type, object> subjects
+        private readonly ConcurrentDictionary<Type, object> _subjects
             = new ConcurrentDictionary<Type, object>();
 
         public IObservable<TEvent> GetEvent<TEvent>() where TEvent:IEvent
         {
-            var subject = (ISubject<TEvent>)subjects.GetOrAdd(typeof(TEvent),
+            var subject = (ISubject<TEvent>)_subjects.GetOrAdd(typeof(TEvent),
                             t => new Subject<TEvent>());
             return subject.AsObservable();
         }
 
         public void Publish<TEvent>(TEvent sampleEvent) where TEvent : IEvent
         {
-            object subject;
-            if (subjects.TryGetValue(typeof(TEvent), out subject))
+            if (_subjects.TryGetValue(typeof(TEvent), out var subject))
             {
                 ((ISubject<TEvent>)subject)
                     .OnNext(sampleEvent);

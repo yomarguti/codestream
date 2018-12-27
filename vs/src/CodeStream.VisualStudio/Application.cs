@@ -14,7 +14,7 @@ namespace CodeStream.VisualStudio
         /// <returns>The version of the host process.</returns>
         public static FileVersionInfo HostVersion { get; }
         public static Version Version { get; }
-        public static IDE Ide { get; }
+        public static Ide Ide { get; }
         public static Extension Extension { get; }
 
         public static string ProductName { get; }
@@ -25,7 +25,7 @@ namespace CodeStream.VisualStudio
             HostVersion = Process.GetCurrentProcess().MainModule.FileVersionInfo;
             Version = typeof(Application).Assembly.GetName().Version;
 
-            Ide = new IDE()
+            Ide = new Ide()
             {
                 Name = HostVersion.FileDescription,
                 Version = HostVersion.ProductVersion

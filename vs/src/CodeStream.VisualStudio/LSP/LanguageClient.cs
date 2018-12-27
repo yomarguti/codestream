@@ -43,7 +43,7 @@ namespace CodeStream.VisualStudio.LSP
     [Export(typeof(ILanguageClient))]
     public class LanguageClient : ILanguageClient, ILanguageClientCustomMessage
     {
-        static readonly ILogger log = LogManager.ForContext<LanguageClient>();
+        static readonly ILogger Log = LogManager.ForContext<LanguageClient>();
         internal const string UiContextGuidString = "DE885E15-D44E-40B1-A370-45372EFC23AA";
         private Guid _uiContextGuid = new Guid(UiContextGuidString);
         private readonly ILanguageServerProcess _languageServer;
@@ -153,7 +153,7 @@ namespace CodeStream.VisualStudio.LSP
 
             var process = _languageServer.Create();
 
-            using (log.TimeOperation($"Starting server process. FileName={{FileNameAttribute}} Arguments={{Arguments}}", process.StartInfo.FileName, process.StartInfo.Arguments))
+            using (Log.TimeOperation($"Starting server process. FileName={{FileNameAttribute}} Arguments={{Arguments}}", process.StartInfo.FileName, process.StartInfo.Arguments))
             {
                 if (process.Start())
                 {
@@ -186,7 +186,7 @@ namespace CodeStream.VisualStudio.LSP
 
         public async System.Threading.Tasks.Task OnLoadedAsync()
         {
-            using (log.TimeOperation($"{nameof(OnLoadedAsync)}"))
+            using (Log.TimeOperation($"{nameof(OnLoadedAsync)}"))
             {
                 await StartAsync?.InvokeAsync(this, EventArgs.Empty);
             }
@@ -196,7 +196,7 @@ namespace CodeStream.VisualStudio.LSP
         {
             try
             {
-                using (log.TimeOperation($"{nameof(OnServerInitializedAsync)}"))
+                using (Log.TimeOperation($"{nameof(OnServerInitializedAsync)}"))
                 {
                     var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
                     var codeStreamAgentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
@@ -208,7 +208,7 @@ namespace CodeStream.VisualStudio.LSP
             }
             catch (Exception ex)
             {
-                log.Error(ex, nameof(OnServerInitializedAsync));
+                Log.Error(ex, nameof(OnServerInitializedAsync));
                 throw ex;
             }
             await System.Threading.Tasks.Task.CompletedTask;
@@ -216,7 +216,7 @@ namespace CodeStream.VisualStudio.LSP
 
         public System.Threading.Tasks.Task OnServerInitializeFailedAsync(Exception ex)
         {
-            log.Error(ex, nameof(OnServerInitializeFailedAsync));
+            Log.Error(ex, nameof(OnServerInitializeFailedAsync));
             throw ex;
         }
     }

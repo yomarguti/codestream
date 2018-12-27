@@ -21,7 +21,7 @@ namespace CodeStream.VisualStudio
     [ProvideToolWindow(typeof(WebViewToolWindow))]
     public sealed class WebViewPackage : AsyncPackage
     {
-        static readonly ILogger log = LogManager.ForContext<WebViewPackage>();
+        static readonly ILogger Log = LogManager.ForContext<WebViewPackage>();
 
         public const string PackageGuidString = "330ce502-4e1f-44b8-ab32-82a7ea71beeb";
 
@@ -47,7 +47,7 @@ namespace CodeStream.VisualStudio
             
             var hostVersionInfo = Application.HostVersion;
 
-            log.Information("Initializing GitHub Extension v{PackageVersion} in {$ProductName} ({$ProductVersion})",
+            Log.Information("Initializing GitHub Extension v{PackageVersion} in {$ProductName} ({$ProductVersion})",
                 Application.Version, Application.ProductName, Application.ProductVersion);
 
         }

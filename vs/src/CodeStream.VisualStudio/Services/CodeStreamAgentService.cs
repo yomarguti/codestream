@@ -43,13 +43,13 @@ namespace CodeStream.VisualStudio.Services
 
     public class FetchCodemarksResponse
     {
-        public List<CSMarker> Markers { get; set; }
-        public List<CSFullCodemark> Codemarks { get; set; }
+        public List<CsMarker> Markers { get; set; }
+        public List<CsFullCodemark> Codemarks { get; set; }
     }
 
     public class DocumentMarkersResponse
     {
-        public List<CSFullMarker> Markers { get; set; }
+        public List<CsFullMarker> Markers { get; set; }
         public List<MarkerNotLocated> MarkersNotLocated { get; set; }
     }
 
@@ -73,7 +73,7 @@ namespace CodeStream.VisualStudio.Services
         public string Team { get; set; }
         public string TeamId { get; set; }
         public Extension Extension { get; set; }
-        public IDE Ide { get; set; }
+        public Ide Ide { get; set; }
         public string TraceLevel { get; set; }
     }
 
@@ -93,23 +93,23 @@ namespace CodeStream.VisualStudio.Services
     public class DocumentFromMarkerResponse
     {
         public TextDocumentIdentifier TextDocument { get; set; }
-        public CSRange Range { get; set; }
+        public CsRange Range { get; set; }
         public string Revision { get; set; }
     }
 
     public class GetPostResponse
     {
-        public CSPost Post { get; set; }
+        public CsPost Post { get; set; }
     }
 
     public class GetUserResponse
     {
-        public CSUser User { get; set; }
+        public CsUser User { get; set; }
     }
 
     public class CodeStreamAgentService : ICodeStreamAgentService
     {
-        static readonly ILogger log = LogManager.ForContext<CodeStreamAgentService>();
+        static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
         private readonly IAsyncServiceProvider _serviceProvider;
         public CodeStreamAgentService(IAsyncServiceProvider serviceProvider)
         {
@@ -117,12 +117,12 @@ namespace CodeStream.VisualStudio.Services
         }
 
         public bool IsReady { get; private set; }
-        private JsonRpc _rpc { get; set; }
+        private JsonRpc Rpc { get; set; }
 
         public async System.Threading.Tasks.Task SetRpcAsync(JsonRpc rpc)
         {
             await System.Threading.Tasks.Task.Yield();
-            _rpc = rpc;
+            Rpc = rpc;
 
             IsReady = true;
         }
@@ -137,11 +137,11 @@ namespace CodeStream.VisualStudio.Services
             cancellationToken = cancellationToken ?? CancellationToken.None;
             try
             {
-                return await _rpc.InvokeWithParameterObjectAsync<T>(name, arguments, cancellationToken.Value);
+                return await Rpc.InvokeWithParameterObjectAsync<T>(name, arguments, cancellationToken.Value);
             }
             catch (Exception ex)
             {
-                log.Error(ex, "SendAsync Name={Name}", name);
+                Log.Error(ex, "SendAsync Name={Name}", name);
                 throw;
             }
         }
@@ -235,12 +235,12 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task<BootstrapState> GetBootstrapAsync(State state, Settings settings)
         {
-            var repos = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/repos");
-            var streams = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/streams");
-            var teams = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/teams");
-            var usersUnreads = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/unreads");
-            var users = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users");
-            var usersPreferences = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/preferences");
+            var repos = await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/repos");
+            var streams = await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/streams");
+            var teams = await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/teams");
+            var usersUnreads = await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/unreads");
+            var users = await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users");
+            var usersPreferences = await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/preferences");
 
             var bootstrapState = new BootstrapState
             {
@@ -257,11 +257,11 @@ namespace CodeStream.VisualStudio.Services
                 },
                 Env = state.Environment,
 
-                Repos = repos.Value<JToken>("repos").ToObject<List<CSRepository>>(),
-                Streams = streams.Value<JToken>("streams").ToObject<List<CSStream>>(),
+                Repos = repos.Value<JToken>("repos").ToObject<List<CsRepository>>(),
+                Streams = streams.Value<JToken>("streams").ToObject<List<CsStream>>(),
                 Teams = teams.Value<JToken>("teams").ToObject<List<Team>>(),
-                Unreads = usersUnreads.Value<JToken>("unreads").ToObject<CSUnreads>(),
-                Users = users.Value<JToken>("users").ToObject<List<CSUser>>(),
+                Unreads = usersUnreads.Value<JToken>("unreads").ToObject<CsUnreads>(),
+                Users = users.Value<JToken>("users").ToObject<List<CsUser>>(),
                 Services = new Service()
                 {
                     //TODO

@@ -17,7 +17,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 {
     public partial class WebViewControl : UserControl, IDisposable
     {
-        static readonly ILogger log = LogManager.ForContext<WebViewControl>();
+        static readonly ILogger Log = LogManager.ForContext<WebViewControl>();
 
         private readonly IDisposable _languageServerReadySubscription;
         private readonly Assembly _assembly;
@@ -98,7 +98,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
             //    s += "</div>";
             //}
 
-            foreach (var item in ColorThemeMap)
+            foreach (var item in _colorThemeMap)
             {
                 theme = theme.Replace("--cs--" + item.Key + "--", VSColorTheme.GetThemedColor(item.Value).ToHex());
             }
@@ -125,7 +125,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
             return theme;
         }
 
-        private static Dictionary<string, ThemeResourceKey> ColorThemeMap = new Dictionary<string, ThemeResourceKey>
+        private static Dictionary<string, ThemeResourceKey> _colorThemeMap = new Dictionary<string, ThemeResourceKey>
         {
             {"app-background-color",                   EnvironmentColors.ToolWindowBackgroundColorKey},
             {"base-border-color",                      EnvironmentColors.ToolWindowBorderColorKey},
@@ -157,11 +157,11 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
         }
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+        private bool _disposedValue = false; // To detect redundant calls
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!_disposedValue)
             {
                 if (disposing)
                 {
@@ -173,7 +173,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
                 // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
                 // TODO: set large fields to null.
 
-                disposedValue = true;
+                _disposedValue = true;
             }
         }
 

@@ -1,8 +1,5 @@
 ﻿using System;
 using System.ComponentModel.Design;
-using System.Globalization;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
@@ -41,7 +38,7 @@ namespace CodeStream.VisualStudio
             commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
 
             var menuCommandID = new CommandID(CommandSet, CommandId);
-            var menuItem = new MenuCommand(this.Execute, menuCommandID);
+            var menuItem = new MenuCommand(Execute, menuCommandID);
             commandService.AddCommand(menuItem);
         }
 
@@ -61,7 +58,7 @@ namespace CodeStream.VisualStudio
         {
             get
             {
-                return this.package;
+                return package;
             }
         }
 
@@ -91,7 +88,7 @@ namespace CodeStream.VisualStudio
             // Get the instance number 0 of this tool window. This window is single instance so this instance
             // is actually the only one.
             // The last flag is set to true so that if the tool window does not exists it will be created.
-            ToolWindowPane window = this.package.FindToolWindow(typeof(CodeStreamDebug), 0, true);
+            ToolWindowPane window = package.FindToolWindow(typeof(CodeStreamDebug), 0, true);
             if ((null == window) || (null == window.Frame))
             {
                 throw new NotSupportedException("Cannot create tool window");

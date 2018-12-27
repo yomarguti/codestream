@@ -20,7 +20,7 @@
         /// </summary>
         public CodeStreamDebugControl()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
 

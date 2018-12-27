@@ -12,7 +12,7 @@ namespace CodeStream.VisualStudio.Models
 
         public bool EqualsIgnoreCase(string uri)
         {
-            return uri.EqualsIgnoreCase(this.ToString());
+            return uri.EqualsIgnoreCase(ToString());
         }
     }
 

@@ -104,7 +104,6 @@
     <Compile Include="Services\SettingsService.cs" />
     <Compile Include="UI\Margins\CodemarkViewMargin.cs" />
     <Compile Include="UI\Margins\CodeStreamMarginProvider.cs" />
-    <Compile Include="UI\IntraTextAdornmentTagger.cs" />
     <Compile Include="UI\Margins\Codemark.xaml.cs">
       <DependentUpon>Codemark.xaml</DependentUpon>
     </Compile>

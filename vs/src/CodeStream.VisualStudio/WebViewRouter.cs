@@ -13,7 +13,7 @@ namespace CodeStream.VisualStudio
 {
     public class WebViewRouter
     {
-        static readonly ILogger log = LogManager.ForContext<WebViewRouter>();
+        static readonly ILogger Log = LogManager.ForContext<WebViewRouter>();
 
         private readonly IServiceProvider _serviceProvider;
         private readonly IEventAggregator _eventAggregator;
@@ -40,7 +40,7 @@ namespace CodeStream.VisualStudio
             }
             catch (Exception ex)
             {
-                log.Error(ex, "Token could not be parsed. Type={Type}", type);
+                Log.Error(ex, "Token could not be parsed. Type={Type}", type);
             }
 
             return CodeStreamMessage.Empty();
@@ -57,13 +57,13 @@ namespace CodeStream.VisualStudio
             //guard againt possibly non JSON-like data
             if (e == null || e.Message == null || !e.Message.StartsWith("{"))
             {
-                log.Verbose(e.Message, $"{nameof(WindowEventArgs)} not found");
+                Log.Verbose(e.Message, $"{nameof(WindowEventArgs)} not found");
             }
             else
             {
                 var message = ParseMessageSafe(JToken.Parse(e.Message));
 
-                log.Debug(e.Message);
+                Log.Debug(e.Message);
 
                 var codeStreamAgent = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
                 var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
@@ -72,7 +72,7 @@ namespace CodeStream.VisualStudio
                 {
                     case "codestream:log":
                         {
-                            log.Debug(e.Message);
+                            Log.Debug(e.Message);
                             break;
                         }
                     case "codestream:telemetry":
@@ -93,7 +93,7 @@ namespace CodeStream.VisualStudio
                             }
                             catch (Exception ex)
                             {
-
+                                Log.Error(ex, "codestream:response");
                             }
 
                             break;
@@ -138,12 +138,12 @@ namespace CodeStream.VisualStudio
                         }
                     case "codestream:request":
                         {
-                            switch (message?.Action)
+                            switch (message.Action)
                             {
                                 case "bootstrap":
                                     {
                                         var settings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
-                                        var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message?.Id)
+                                        var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id)
                                         {
                                             Payload = new WebviewIpcMessageResponsePayload
                                             {
@@ -160,7 +160,7 @@ namespace CodeStream.VisualStudio
                                     }
                                 case "authenticate":
                                     {
-                                        var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message?.Id));
+                                        var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id));
                                         var settings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
 
                                         var success = false;
@@ -234,7 +234,7 @@ namespace CodeStream.VisualStudio
 
                                         var response = new WebviewIpcMessageResponse
                                         {
-                                            Body = new WebviewIpcMessageResponseBody(message?.Id)
+                                            Body = new WebviewIpcMessageResponseBody(message.Id)
                                         };
 
                                         try
@@ -252,7 +252,7 @@ namespace CodeStream.VisualStudio
                                     }
                                 case "validate-signup":
                                     {
-                                        var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message?.Id));
+                                        var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id));
                                         var settings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
 
                                         var success = false;
@@ -347,11 +347,11 @@ namespace CodeStream.VisualStudio
 
                                         if (fromMarkerResponse?.TextDocument?.Uri != null)
                                         {
-                                            var ide = Package.GetGlobalService(typeof(SIDEService)) as IIDEService;
+                                            var ide = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
                                             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 
                                             var editorResponse = ide.OpenEditor(fromMarkerResponse.TextDocument.Uri, fromMarkerResponse.Range?.Start?.Line);
-                                            _browser.PostMessage(new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message?.Id)
+                                            _browser.PostMessage(new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id)
                                             {
                                                 Payload = editorResponse.ToString()
                                             }));
@@ -361,7 +361,7 @@ namespace CodeStream.VisualStudio
 
                                 default:
                                     {
-                                        var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message?.Id));
+                                        var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id));
                                         try
                                         {
                                             response.Body.Payload = await codeStreamAgent.SendAsync<object>(message.Action, message.Params);
@@ -379,7 +379,7 @@ namespace CodeStream.VisualStudio
                         }
                     default:
                         {
-                            log.Debug("Unknown Message={Message}", e.Message);
+                            Log.Debug("Unknown Message={Message}", e.Message);
                             break;
                         }
                 }

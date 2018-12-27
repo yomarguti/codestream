@@ -11,14 +11,14 @@ namespace CodeStream.VisualStudio.UI.Margins
 {
     public partial class Codemark : UserControl
     {
-        private static int HeightBuffer = 5;
-        private static int DefaultHeight = 19;
+        private static int _heightBuffer = 5;
+        private static int _defaultHeight = 19;
         private readonly CodemarkViewModel _viewModel;
 
         public Codemark(CodemarkViewModel viewModel)
         {
             //Default height used for repositioning in the margin
-            Height = DefaultHeight;
+            Height = _defaultHeight;
             _viewModel = viewModel;
             InitializeComponent();
             DataContext = this;
@@ -79,7 +79,7 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         private void Codemark_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if (_viewModel == null || _viewModel.Marker == null || _viewModel.Marker.Codemark == null)
+            if (_viewModel?.Marker?.Codemark == null)
             {
                 return;
             }
@@ -96,7 +96,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         public void Reposition(IWpfTextView textView, int offset)
         {
             Canvas.SetLeft(this, 0);
-            Canvas.SetTop(this, offset - textView.ViewportTop + Height - HeightBuffer);
+            Canvas.SetTop(this, offset - textView.ViewportTop + Height - _heightBuffer);
         }
     }
 }

@@ -1,8 +1,5 @@
 ﻿using System;
 using System.ComponentModel.Design;
-using System.Globalization;
-using System.Threading;
-using System.Threading.Tasks;
 using CodeStream.VisualStudio.UI;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -28,7 +25,7 @@ namespace CodeStream.VisualStudio.Commands
         /// <summary>
         /// VS Package that provides this command, not null.
         /// </summary>
-        private readonly AsyncPackage package;
+        private readonly AsyncPackage _package;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WebViewCommand"/> class.
@@ -38,11 +35,11 @@ namespace CodeStream.VisualStudio.Commands
         /// <param name="commandService">Command service to add command to, not null.</param>
         private WebViewCommand(AsyncPackage package, OleMenuCommandService commandService)
         {
-            this.package = package ?? throw new ArgumentNullException(nameof(package));
+            this._package = package ?? throw new ArgumentNullException(nameof(package));
             commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
 
-            var menuCommandID = new CommandID(CommandSet, CommandId);
-            var menuItem = new MenuCommand(this.Execute, menuCommandID);
+            var menuCommandId = new CommandID(CommandSet, CommandId);
+            var menuItem = new MenuCommand(Execute, menuCommandId);
             commandService.AddCommand(menuItem);
         }
 
@@ -62,7 +59,7 @@ namespace CodeStream.VisualStudio.Commands
         {
             get
             {
-                return this.package;
+                return _package;
             }
         }
 
@@ -92,8 +89,8 @@ namespace CodeStream.VisualStudio.Commands
             // Get the instance number 0 of this tool window. This window is single instance so this instance
             // is actually the only one.
             // The last flag is set to true so that if the tool window does not exists it will be created.
-            ToolWindowPane window = this.package.FindToolWindow(typeof(WebViewToolWindow), 0, true);
-            if ((null == window) || (null == window.Frame))
+            ToolWindowPane window = _package.FindToolWindow(typeof(WebViewToolWindow), 0, true);
+            if (window?.Frame == null)
             {
                 throw new NotSupportedException("Cannot create tool window");
             }

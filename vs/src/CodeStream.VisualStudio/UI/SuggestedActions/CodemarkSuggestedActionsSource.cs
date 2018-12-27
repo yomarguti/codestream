@@ -65,17 +65,21 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 
             if (selectedText != null)
             {
-                ITextDocument textDocument;
-                if (_textDocumentFactoryService.TryGetTextDocument(_textBuffer, out textDocument))
+                if (_textDocumentFactoryService.TryGetTextDocument(_textBuffer, out var textDocument))
                 {
                     return new SuggestedActionSet[]
-                       {
-                        new SuggestedActionSet(new ISuggestedAction[]
+                    {
+                        new SuggestedActionSet(
+                            actions: new ISuggestedAction[]
                             {
                                 new CodemarkSuggestedAction(textDocument, selectedText)
-                            }
+                            },
+                            categoryName: null,
+                            title: null,
+                            priority: SuggestedActionSetPriority.None,
+                            applicableToSpan: null
                         )
-                       };
+                    };
                 }
             }
 

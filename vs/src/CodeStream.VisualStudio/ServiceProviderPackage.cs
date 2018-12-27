@@ -1,11 +1,8 @@
 ﻿using CodeStream.VisualStudio.Events;
-using CodeStream.VisualStudio.LSP;
 using CodeStream.VisualStudio.Services;
-using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
-using System.ComponentModel.Composition;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -13,11 +10,11 @@ using System.Threading;
 namespace CodeStream.VisualStudio
 {
     /// <summary>
-    /// Psuedo-package to allow for a custom service provider
+    /// Pseudo-package to allow for a custom service provider
     /// </summary>
    // [ProvideService(typeof(SServiceProviderLocator))]
     [ProvideService(typeof(SEventAggregator))]
-    [ProvideService(typeof(SIDEService))]
+    [ProvideService(typeof(SIdeService))]
     [ProvideService(typeof(SHostService))]
     [ProvideService(typeof(SSessionService))]
     [ProvideService(typeof(SSelectedTextService))]
@@ -34,19 +31,19 @@ namespace CodeStream.VisualStudio
         /// <summary>
         /// Store a reference to this as only a class that inherits from AsyncPackage can call GetDialogPage
         /// </summary>
-        private CodeStreamOptionsDialogPage codeStreamOptions;        
+        private CodeStreamOptionsDialogPage _codeStreamOptions;        
 
         protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             await base.InitializeAsync(cancellationToken, progress);
 
-            await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
             ServiceCreatorCallback callback = new ServiceCreatorCallback(CreateService);
-            codeStreamOptions = (CodeStreamOptionsDialogPage)GetDialogPage(typeof(CodeStreamOptionsDialogPage));
+            _codeStreamOptions = (CodeStreamOptionsDialogPage)GetDialogPage(typeof(CodeStreamOptionsDialogPage));
 
             ((IServiceContainer)this).AddService(typeof(SEventAggregator), callback, true);
-            ((IServiceContainer)this).AddService(typeof(SIDEService), callback, true);
+            ((IServiceContainer)this).AddService(typeof(SIdeService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SSessionService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SHostService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SSelectedTextService), callback, true);
@@ -62,8 +59,8 @@ namespace CodeStream.VisualStudio
             //    return new ServiceProviderLocator(_serviceProvider);
             if (typeof(SEventAggregator) == serviceType)
                 return new EventAggregator();
-            if (typeof(SIDEService) == serviceType)
-                return new IDEService();
+            if (typeof(SIdeService) == serviceType)
+                return new IdeService();
             if (typeof(SSessionService) == serviceType)
                 return new SessionService(this);
             if (typeof(SHostService) == serviceType)
@@ -73,7 +70,7 @@ namespace CodeStream.VisualStudio
             if (typeof(SBrowserService) == serviceType)
                 return new DotNetBrowserService(this);
             if (typeof(SSettingsService) == serviceType)
-                return new SettingsService(codeStreamOptions as ICodeStreamOptionsDialogPage);
+                return new SettingsService(_codeStreamOptions as ICodeStreamOptionsDialogPage);
             if (typeof(SCodeStreamAgentService) == serviceType)
                 return new CodeStreamAgentService(this);
             if (typeof(SCodeStreamService) == serviceType)
