@@ -563,3 +563,11 @@ export const disconnectService = service => async (dispatch, getState, { api }) 
 		console.error("failed to signout from " + service, error);
 	}
 };
+
+export const editorRevealLine = line => async (dispatch, getState, { api }) => {
+	try {
+		api.editorRevealLine(line);
+	} catch (error) {
+		console.error("failed to reveal line: " + line, error);
+	}
+};

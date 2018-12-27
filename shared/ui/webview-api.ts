@@ -501,4 +501,8 @@ export default class WebviewApi {
 			params
 		});
 	}
+
+	editorRevealLine(line: number) {
+		return this.postMessage({ action: "reveal-line", params: { line } });
+	}
 }

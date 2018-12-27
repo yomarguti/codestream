@@ -39,6 +39,17 @@ export class SimpleInlineCodemarks extends Component {
 		// else this.setState({ thisFile: null });
 	};
 
+	componentDidUpdate(prevProps, prevState) {
+		const { textEditorFirstLine = 0 } = this.props;
+
+		if (textEditorFirstLine !== prevProps.textEditorFirstLine) {
+			const top = (textEditorFirstLine === 0 ? 1 : textEditorFirstLine + 0.65) * 18;
+			// this._scrollDiv.scrollTop = Math.round(top) + "px";
+			this._scrolling = true;
+			document.getElementsByClassName("inline-codemarks")[0].scrollTop = Math.round(top);
+		}
+	}
+
 	renderCodemarks = codemarks => {
 		if (codemarks.length === 0) return null;
 		else {
@@ -86,13 +97,31 @@ export class SimpleInlineCodemarks extends Component {
 		} else return this.renderCodemarks(codemarksInThisFile);
 	}
 
+	onScroll = event => {
+		if (this._scrolling) {
+			this._scrolling = false;
+			return;
+		}
+		const top = event.target.scrollTop;
+		// we subtract 27 for two reasons:
+		// 1) 18 (one line height) because line numbers start at 1 (1-indexed array vs 0-indexed)
+		// 2) 9 is half a line, because we want it to scroll halfway through the line
+		const line = Math.round((top - 27) / 18);
+		this.props.editorRevealLine(line);
+	};
+
 	render() {
-		let hundred = [...Array(100).keys()];
+		let hundred = [...Array(700).keys()];
 		const { textEditorFirstLine = 0 } = this.props;
 
-		const top = (textEditorFirstLine === 0 ? 0 : textEditorFirstLine - 0.5) * -18;
+		const top = (textEditorFirstLine === 0 ? 0 : textEditorFirstLine + 0.65) * -18;
+		console.log("Main render codemarks");
 		return (
-			<div style={{ marginTop: top, position: "relative" }}>
+			<div
+				className="inline-codemarks vscroll"
+				onScroll={this.onScroll}
+				ref={ref => (this._scrollDiv = ref)}
+			>
 				{this.renderMain()}
 				{hundred.map(index => {
 					return (
