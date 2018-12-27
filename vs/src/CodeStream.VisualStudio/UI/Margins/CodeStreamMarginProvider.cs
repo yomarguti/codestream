@@ -24,7 +24,9 @@ namespace CodeStream.VisualStudio.UI.Margins
             var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
             var agentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
             var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
-            return new CodemarkViewMargin(eventAggregator, sessionService, agentService, wpfTextViewHost.TextView, TextDocumentFactoryService);
+            var settings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
+
+            return new CodemarkViewMargin(eventAggregator, sessionService, agentService, settings, wpfTextViewHost.TextView, TextDocumentFactoryService);
         }
     }     
 }

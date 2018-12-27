@@ -1,4 +1,5 @@
-﻿using CodeStream.VisualStudio.Extensions;
+﻿using System;
+using CodeStream.VisualStudio.Extensions;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 
@@ -17,6 +18,8 @@ namespace CodeStream.VisualStudio.Services
     public abstract class BrowserServiceBase : IBrowserService, SBrowserService
     {
         public virtual string FooterHtml { get; } = "";
+
+        public abstract void Dispose();
 
         public abstract void AddWindowMessageEvent(WindowMessageHandler handler);
 
@@ -37,7 +40,7 @@ namespace CodeStream.VisualStudio.Services
 
     }
 
-    public interface IBrowserService
+    public interface IBrowserService : IDisposable
     {
         void PostMessage(string message);
         void PostMessage(object message);

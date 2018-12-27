@@ -14,7 +14,7 @@ namespace CodeStream.VisualStudio.Services
         /// Interface provided by DotNetBrowser (isn't prefixed with I)
         /// </summary>
         private readonly Browser _browser;
-        private WPFBrowserView _browserView;
+        private readonly WPFBrowserView _browserView;
         private readonly IAsyncServiceProvider _serviceProvider;
 
         public DotNetBrowserService(IAsyncServiceProvider serviceProvider)
@@ -27,10 +27,6 @@ namespace CodeStream.VisualStudio.Services
             BrowserPreferences.SetChromiumSwitches("--disable-web-security", "--allow-file-access-from-files");
 #endif
             _browserView = new WPFBrowserView(BrowserFactory.Create());
-
-            // can theme it here
-            //var bc = new System.Windows.Media.BrushConverter();
-            //_browserView.Background = (System.Windows.Media.Brush)bc.ConvertFrom("#ff0000");
 
             _browser = _browserView.Browser;
         }
@@ -57,6 +53,11 @@ namespace CodeStream.VisualStudio.Services
         {
             Grid.SetColumn(grid, 0);
             grid.Children.Add(_browserView);
+        }
+
+        public override void Dispose()
+        {
+            _browser?.Dispose();
         }
 
         public override string FooterHtml

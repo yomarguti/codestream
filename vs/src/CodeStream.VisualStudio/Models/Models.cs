@@ -23,6 +23,8 @@ namespace CodeStream.VisualStudio.Models
         public int EndLine { get; set; }
         public int EndColumn { get; set; }
         public string Text { get; set; }
+
+        public bool HasText => Text.IsNotNullOrWhiteSpace();
     }
 
     // Note this is a vscode-languageserver model

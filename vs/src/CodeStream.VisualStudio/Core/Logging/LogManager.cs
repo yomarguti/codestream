@@ -10,12 +10,12 @@ namespace CodeStream.VisualStudio.Core.Logging
     public static class LogManager
     {
 #if DEBUG
-        private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Debug;
+        private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Verbose;
 #else
         private static LogEventLevel DefaultLoggingLevel = LogEventLevel.Warning;
 #endif
 
-        private static LoggingLevelSwitch _loggingLevelSwitch = new LoggingLevelSwitch(_defaultLoggingLevel);
+        private static readonly LoggingLevelSwitch LoggingLevelSwitch = new LoggingLevelSwitch(_defaultLoggingLevel);
 
         static Logger CreateLogger()
         {
@@ -30,7 +30,7 @@ namespace CodeStream.VisualStudio.Core.Logging
             return new LoggerConfiguration()
                  .Enrich.WithProcessId()
                   .Enrich.WithThreadId()
-                .MinimumLevel.ControlledBy(_loggingLevelSwitch)
+                .MinimumLevel.ControlledBy(LoggingLevelSwitch)
                 .WriteTo.File(logPath,
                     fileSizeLimitBytes: null,
                     outputTemplate: outputTemplate,
@@ -41,10 +41,10 @@ namespace CodeStream.VisualStudio.Core.Logging
         public static void EnableTraceLogging(bool enable)
         {
             var logEventLevel = enable ? LogEventLevel.Verbose : _defaultLoggingLevel;
-            if (_loggingLevelSwitch.MinimumLevel != logEventLevel)
+            if (LoggingLevelSwitch.MinimumLevel != logEventLevel)
             {
                 ForContext(typeof(LogManager)).Information("Set Logging Level: {LogEventLevel}", logEventLevel);
-                _loggingLevelSwitch.MinimumLevel = logEventLevel;
+                LoggingLevelSwitch.MinimumLevel = logEventLevel;
             }
         }
 

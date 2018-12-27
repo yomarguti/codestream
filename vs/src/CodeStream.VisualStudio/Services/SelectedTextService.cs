@@ -133,9 +133,9 @@ namespace CodeStream.VisualStudio.Services
             //end could be before beginning...
             return new SelectedText()
             {
-                    StartLine = startLine,
+                    StartLine = Math.Min(startLine, endLine),
                     StartColumn = Math.Min(startColumn, endColumn),
-                    EndLine = endLine,
+                    EndLine = Math.Max(startLine, endLine),
                     EndColumn = Math.Max(startColumn, endColumn),
                     Text = selectedText
             };

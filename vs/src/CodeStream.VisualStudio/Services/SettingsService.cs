@@ -13,6 +13,7 @@ namespace CodeStream.VisualStudio.Services
         string ServerUrl { get; set; }
         string WebAppUrl { get; set; }
         string Team { get; set; }
+        bool OpenCommentOnSelect { get; set; }
     }
 
     public class Settings
@@ -23,6 +24,7 @@ namespace CodeStream.VisualStudio.Services
         public string ServerUrl { get; set; }
         public string WebAppUrl { get; set; }
         public string Team { get; set; }
+        public bool OpenCommentOnSelect { get; set; }
     }
 
     public interface SSettingsService { }
@@ -55,80 +57,51 @@ namespace CodeStream.VisualStudio.Services
                 ShowHeadshots = ShowHeadshots,
                 ServerUrl = ServerUrl,
 				WebAppUrl = WebAppUrl,
-                Team = Team
+                Team = Team,
+                OpenCommentOnSelect = OpenCommentOnSelect
             };
         }
 
         public string Email
         {
-            get
-            {
-                return _dialogPage.Email;
-            }
-            set
-            {
-                _dialogPage.Email = value;
-            }
+            get => _dialogPage.Email;
+            set => _dialogPage.Email = value;
         }
 
         public bool ShowMarkers
         {
-            get
-            {
-                return _dialogPage.ShowMarkers;
-            }
-            set
-            {
-                _dialogPage.ShowMarkers = value;
-            }
+            get => _dialogPage.ShowMarkers;
+            set => _dialogPage.ShowMarkers = value;
         }
 
         public bool ShowHeadshots
         {
-            get
-            {
-                return _dialogPage.ShowHeadshots;
-            }
-            set
-            {
-                _dialogPage.ShowHeadshots = value;
-            }
+            get => _dialogPage.ShowHeadshots;
+            set => _dialogPage.ShowHeadshots = value;
         }
 
         public string ServerUrl
         {
-            get
-            {
-                return _dialogPage.ServerUrl;
-            }
-            set
-            {
-                _dialogPage.ServerUrl = value;
-            }
+            get => _dialogPage.ServerUrl;
+            set => _dialogPage.ServerUrl = value;
         }
 
         public string WebAppUrl
         {
-            get
-            {
-                return _dialogPage.WebAppUrl;
-            }
-            set
-            {
-                _dialogPage.WebAppUrl = value;
-            }
+            get => _dialogPage.WebAppUrl;
+            set => _dialogPage.WebAppUrl = value;
         }
 
         public string Team
         {
-            get
-            {
-                return _dialogPage.Team;
-            }
-            set
-            {
-                _dialogPage.Team = value;
-            }
+            get => _dialogPage.Team;
+            set => _dialogPage.Team = value;
+        }
+
+        public bool OpenCommentOnSelect
+        {
+            get => _dialogPage.OpenCommentOnSelect;
+            set => _dialogPage.OpenCommentOnSelect = value;
         }
     }
 

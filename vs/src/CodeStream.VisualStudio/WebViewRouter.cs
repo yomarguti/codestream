@@ -54,10 +54,11 @@ namespace CodeStream.VisualStudio
 
         public async System.Threading.Tasks.Task HandleAsync(WindowEventArgs e)
         {
-            //guard againt possibly non JSON-like data
+            //guard against possibly non JSON-like data
             if (e == null || e.Message == null || !e.Message.StartsWith("{"))
             {
-                Log.Verbose(e.Message, $"{nameof(WindowEventArgs)} not found");
+                // too noisy to log!
+                //Log.Verbose(e.Message, $"{nameof(WindowEventArgs)} not found");
             }
             else
             {
@@ -330,7 +331,21 @@ namespace CodeStream.VisualStudio
                                     }
                                 case "open-comment-on-select":
                                     {
-                                        // this is a setting 'callback' to save user input on save
+                                        var val = message.Params.ToObject<bool>();
+                                        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                                        using (var scope = SettingsScope.Create(Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService))
+                                        {
+                                            scope.SettingsService.OpenCommentOnSelect = val;
+                                        }
+                                        _eventAggregator.Publish(new CodeStreamConfigurationChangedEvent() {OpenCommentOnSelect = val });
+
+                                        _browser.PostMessage(new WebviewIpcGenericMessageResponse("codestream:configs")
+                                        {
+                                            Body = new
+                                            {
+                                                openCommentOnSelect = val
+                                            }
+                                        });
                                         break;
                                     }
                                 case "show-code":

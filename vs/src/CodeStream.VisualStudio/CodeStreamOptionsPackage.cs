@@ -16,6 +16,7 @@ namespace CodeStream.VisualStudio
         string ServerUrl { get; set; }
         string WebAppUrl { get; set; }
         string Team { get; set; }
+        bool OpenCommentOnSelect { get; set; }
         void SaveSettingsToStorage();
         void LoadSettingsFromStorage();
     }
@@ -59,6 +60,11 @@ namespace CodeStream.VisualStudio
         [DisplayName("Team")]
         [Description("Specifies an optional team to connect to the CodeStream service")]
         public string Team { get; set; }
+
+        [Category("CodeStream")]
+        [DisplayName("Open Comment On Select")]
+        [Description("Specifies whether to automatically open the comment dialog when the CodeStream panel is open and you select code")]
+        public bool OpenCommentOnSelect { get; set; }
     }
 
     /// <summary>

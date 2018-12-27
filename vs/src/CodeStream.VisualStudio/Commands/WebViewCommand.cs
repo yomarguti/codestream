@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.Design;
 using CodeStream.VisualStudio.UI;
+using CodeStream.VisualStudio.UI.ToolWindows;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;

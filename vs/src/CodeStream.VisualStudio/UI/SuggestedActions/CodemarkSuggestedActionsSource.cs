@@ -31,21 +31,8 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
             _actionsSourceProvider = actionsSourceProvider;
             _textBuffer = textBuffer;
             _textView = textView;
-            // TODO text of the document has changed...
-            //_textBuffer.Changed += TextBuffer_Changed;
-            _textView.Selection.SelectionChanged += Selection_SelectionChanged;
             _textDocumentFactoryService = textDocumentFactoryService;
         }
-
-        private void Selection_SelectionChanged(object sender, EventArgs e)
-        {
-            var textSelection = sender as ITextSelection;
-        }
-
-        //private void TextBuffer_Changed(object sender, TextContentChangedEventArgs e)
-        //{
-
-        //}
 
         public bool TryGetTelemetryId(out Guid telemetryId)
         {
@@ -63,27 +50,24 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
             var selectedTextService = Package.GetGlobalService(typeof(SSelectedTextService)) as ISelectedTextService;
             var selectedText = selectedTextService?.GetSelectedText();
 
-            if (selectedText != null)
+            if (selectedText == null || !_textDocumentFactoryService.TryGetTextDocument(_textBuffer, out var textDocument))
             {
-                if (_textDocumentFactoryService.TryGetTextDocument(_textBuffer, out var textDocument))
-                {
-                    return new SuggestedActionSet[]
-                    {
-                        new SuggestedActionSet(
-                            actions: new ISuggestedAction[]
-                            {
-                                new CodemarkSuggestedAction(textDocument, selectedText)
-                            },
-                            categoryName: null,
-                            title: null,
-                            priority: SuggestedActionSetPriority.None,
-                            applicableToSpan: null
-                        )
-                    };
-                }
+                return Enumerable.Empty<SuggestedActionSet>();
             }
 
-            return Enumerable.Empty<SuggestedActionSet>();
+            return new SuggestedActionSet[]
+            {
+                new SuggestedActionSet(
+                    actions: new ISuggestedAction[]
+                    {
+                        new CodemarkSuggestedAction(textDocument, selectedText)
+                    },
+                    categoryName: null,
+                    title: null,
+                    priority: SuggestedActionSetPriority.None,
+                    applicableToSpan: null
+                )
+            };
         }
 
         public Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken)
@@ -93,10 +77,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 
         public void Dispose()
         {
-            //if (_textView?.Selection != null)
-            //{
-            //    _textView.Selection.SelectionChanged -= Selection_SelectionChanged;
-            //}
+
         }
     }
 
@@ -105,10 +86,10 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
         private readonly SelectedText _selectedText;
         private readonly ITextDocument _textDocument;
 
-        public CodemarkSuggestedAction(ITextDocument extDocument, SelectedText selectedText)
+        public CodemarkSuggestedAction(ITextDocument textDocument, SelectedText selectedText)
         {
+            _textDocument = textDocument;
             _selectedText = selectedText;
-            _textDocument = extDocument;
         }
 
         public Task<IEnumerable<SuggestedActionSet>> GetActionSetsAsync(CancellationToken cancellationToken)

@@ -1,14 +1,19 @@
 ﻿using CodeStream.VisualStudio.Events;
+using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using CodeStream.VisualStudio.UI.ToolWindows;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
@@ -36,12 +41,14 @@ namespace CodeStream.VisualStudio.UI.Margins
         private DocumentMarkersResponse _markerCache;
         private List<CodemarkGlyphCache> _viewCache;
 
+        private bool _openCommentOnSelect;
         private const int DefaultWidth = 20;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CodemarkViewMargin"/> class for a given <paramref name="textView"/>.
         /// </summary>
         /// <param name="agentService"></param>
+        /// <param name="settingsService"></param>
         /// <param name="textView">The <see cref="IWpfTextView"/> to attach the margin to.</param>
         /// <param name="eventAggregator"></param>
         /// <param name="sessionService"></param>
@@ -50,16 +57,18 @@ namespace CodeStream.VisualStudio.UI.Margins
             IEventAggregator eventAggregator,
             ISessionService sessionService,
             ICodeStreamAgentService agentService,
+            ISettingsService settingsService,
             IWpfTextView textView,
             ITextDocumentFactoryService textDocumentFactoryService)
         {
             _eventAggregator = eventAggregator;
             _agentService = agentService;
+            _openCommentOnSelect = settingsService.OpenCommentOnSelect;
             _textView = textView;
 
             if (!textDocumentFactoryService.TryGetTextDocument(_textView.TextBuffer, out _textDocument))
             {
-                // do something
+                // do something awesome!
             }
 
             Width = DefaultWidth;
@@ -70,10 +79,8 @@ namespace CodeStream.VisualStudio.UI.Margins
             _events = new EventAggregator();
 
             //listening on the main thread since we have to change the UI state
-            _disposables = new List<IDisposable>() {
-                eventAggregator
-                .GetEvent<SessionReadyEvent>()
-                .ObserveOnDispatcher()
+            _disposables = new List<IDisposable> {
+                eventAggregator.GetEvent<SessionReadyEvent>().ObserveOnDispatcher()
                 .Subscribe(_ =>
                 {
                     if (_agentService.IsReady && !_initialized)
@@ -81,27 +88,14 @@ namespace CodeStream.VisualStudio.UI.Margins
                         Initialize();
                     }
                 }),
-                eventAggregator.GetEvent<SessionLogoutEvent>()
-                .ObserveOnDispatcher()
+
+                eventAggregator.GetEvent<SessionLogoutEvent>().ObserveOnDispatcher()
+                .Subscribe(_ => { Hide(); }),
+
+                 eventAggregator.GetEvent<CodemarkVisibilityEvent>().ObserveOnDispatcher()
                 .Subscribe(_ =>
                 {
-                    Visibility = Visibility.Hidden;
-                    Width = 0;
-                }),
-                 eventAggregator.GetEvent<CodemarkVisibilityEvent>()
-                .ObserveOnDispatcher()
-                .Subscribe(_ =>
-                {
-                    if (_.IsVisible)
-                    {
-                        Visibility = Visibility.Visible;
-                        Width = DefaultWidth;
-                    }
-                    else
-                    {
-                        Visibility = Visibility.Hidden;
-                        Width = 0;
-                    }
+                    Toggle(_.IsVisible);
                 })
             };
 
@@ -111,26 +105,51 @@ namespace CodeStream.VisualStudio.UI.Margins
             }
             else
             {
-                Visibility = Visibility.Hidden;
+                Hide();
             }
         }
 
         private void Initialize()
         {
             _disposables.Add(
-                _eventAggregator.GetEvent<CodemarkChangedEvent>()
+               _eventAggregator.GetEvent<CodemarkChangedEvent>().ObserveOnDispatcher()
               .Throttle(TimeSpan.FromMilliseconds(100))
-              .ObserveOnDispatcher()
               .Subscribe(_ =>
               {
+                  //TODO should really be just listening to oneself
                   //if (new FileUri(_textDocument.FilePath).EqualsIgnoreCase(_.Uri))
                   {
                       Update();
                   }
               }));
+            _disposables.Add(
+                _eventAggregator.GetEvent<CodeStreamConfigurationChangedEvent>().ObserveOnDispatcher()
+                    .Throttle(TimeSpan.FromMilliseconds(100))
+                    .Subscribe(_ => { _openCommentOnSelect = _.OpenCommentOnSelect; }));
+
+            _disposables.Add(_events.GetEvent<TextSelectionChangedEvent>().ObserveOnDispatcher()
+                .Throttle(TimeSpan.FromMilliseconds(500))
+                .Subscribe(_ =>
+                {
+                    // TODO reconcile this!
+                    var selectedTextService = Package.GetGlobalService(typeof(SSelectedTextService)) as ISelectedTextService;
+
+                    var selectedText1 = selectedTextService?.GetSelectedText();
+                    if (selectedText1?.HasText == true)
+                    {
+                        var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
+                        ThreadHelper.JoinableTaskFactory.Run(async delegate
+                        {
+                            await codeStreamService.PostCodeAsync(new FileUri(_textDocument.FilePath), selectedText1,
+                                true, CancellationToken.None);
+                        });
+                    }
+                }));
 
             Visibility = Visibility.Visible;
             // _textView.TextBuffer.ChangedLowPriority += TextBuffer_ChangedLowPriority;
+            _textView.Selection.SelectionChanged += Selection_SelectionChanged;
+
             _textView.ViewportHeightChanged += TextView_ViewportHeightChanged;
             _textView.LayoutChanged += TextView_LayoutChanged;
             _initialized = true;
@@ -157,6 +176,29 @@ namespace CodeStream.VisualStudio.UI.Margins
             }
         }
 
+        private IVsWindowFrame _frame;
+        private void Selection_SelectionChanged(object sender, EventArgs e)
+        {
+            // TODO reconcile this!
+            // var textSelection = sender as ITextSelection;
+
+            if (!_openCommentOnSelect) return;
+
+            // TODO wrap this up?
+            if (_frame == null)
+            {
+                uint u = 0;
+                var uiShell = Package.GetGlobalService(typeof(IVsUIShell)) as IVsUIShell;
+                uiShell.FindToolWindow(u, new Guid(WebViewToolWindow.Guid), out IVsWindowFrame frame);
+                _frame = frame;
+            }
+
+            if (_frame != null && _frame.IsVisible() == VSConstants.S_OK)
+            {
+                _events.Publish(new TextSelectionChangedEvent());
+            }
+        }
+
         private void TextView_ViewportHeightChanged(object sender, EventArgs e)
         {
             Update(new TextDocumentChangedEvent()
@@ -177,7 +219,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         {
             await System.Threading.Tasks.Task.Yield();
 
-            if (Visibility == Visibility.Hidden)
+            if (Visibility == Visibility.Hidden || Width < 1)
             {
                 return;
             }
@@ -238,14 +280,38 @@ namespace CodeStream.VisualStudio.UI.Margins
             }
 
             _lastUpdate = DateTime.Now;
-            
+
             await System.Threading.Tasks.Task.CompletedTask;
+        }
+
+        private void Show()
+        {
+            Visibility = Visibility.Visible;
+            Width = DefaultWidth;
+        }
+
+        private void Hide()
+        {
+            Visibility = Visibility.Hidden;
+            Width = 0;
+        }
+
+        private void Toggle(bool isVisible)
+        {
+            if (isVisible)
+            {
+                Show();
+            }
+            else
+            {
+                Hide();
+            }
         }
 
         #region IWpfTextViewMargin
 
         /// <summary>
-        /// Gets the <see cref="Sytem.Windows.FrameworkElement"/> that implements the visual representation of the margin.
+        /// Gets the <see cref="FrameworkElement"/> that implements the visual representation of the margin.
         /// </summary>
         /// <exception cref="ObjectDisposedException">The margin is disposed.</exception>
         public FrameworkElement VisualElement
@@ -325,6 +391,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                 // _textView.TextBuffer.ChangedLowPriority -= TextBuffer_ChangedLowPriority;
                 _textView.ViewportHeightChanged -= TextView_ViewportHeightChanged;
                 _textView.LayoutChanged -= TextView_LayoutChanged;
+                _textView.Selection.SelectionChanged -= Selection_SelectionChanged;
 
                 foreach (var disposable in _disposables)
                 {

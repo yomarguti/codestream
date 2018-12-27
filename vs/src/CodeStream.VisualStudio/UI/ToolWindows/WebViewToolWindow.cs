@@ -1,8 +1,7 @@
 ﻿using System.Runtime.InteropServices;
-using CodeStream.VisualStudio.UI.ToolWindows;
 using Microsoft.VisualStudio.Shell;
 
-namespace CodeStream.VisualStudio.UI
+namespace CodeStream.VisualStudio.UI.ToolWindows
 {
     /// <summary>
     /// This class implements the tool window exposed by this package and hosts a user control.
@@ -15,9 +14,10 @@ namespace CodeStream.VisualStudio.UI
     /// implementation of the IVsUIElementPane interface.
     /// </para>
     /// </remarks>
-    [Guid("0fae43ec-bc2d-417e-af01-a477439cf228")]
+    [Guid(WebViewToolWindow.Guid)]
     public class WebViewToolWindow : ToolWindowPane
     {
+        public const string Guid = "0fae43ec-bc2d-417e-af01-a477439cf228";
         public WebViewToolWindow() : base(null)
         {
             Caption = "CodeStream";
@@ -27,5 +27,16 @@ namespace CodeStream.VisualStudio.UI
             // the object returned by the Content property.
             Content = new WebViewControl();
         }
+
+        protected override void OnClose()
+        {
+            base.OnClose();
+        }
+
+        protected override void OnCreate()
+        {
+            base.OnCreate();
+        }
+        
     }
 }

@@ -247,22 +247,23 @@ namespace CodeStream.VisualStudio.Services
                 Capabilities = state.Capabilities,
                 CurrentUserId = state.UserId,
                 CurrentTeamId = state.TeamId,
-                Configs = new Config()
+                Configs = new Config
                 {
                     ServerUrl = settings.ServerUrl,
                     Email = state.Email,
                     ShowMarkers = settings.ShowMarkers,
                     ShowHeadshots = settings.ShowHeadshots,
+                    OpenCommentOnSelect = settings.OpenCommentOnSelect,
                     Team = settings.Team
                 },
                 Env = state.Environment,
-
                 Repos = repos.Value<JToken>("repos").ToObject<List<CsRepository>>(),
                 Streams = streams.Value<JToken>("streams").ToObject<List<CsStream>>(),
                 Teams = teams.Value<JToken>("teams").ToObject<List<Team>>(),
                 Unreads = usersUnreads.Value<JToken>("unreads").ToObject<CsUnreads>(),
                 Users = users.Value<JToken>("users").ToObject<List<CsUser>>(),
-                Services = new Service()
+                Preferences = usersPreferences.Value<JToken>("preferences").ToObject<CsMePreferences>(),
+                Services = new Service
                 {
                     //TODO
                     Vsls = false

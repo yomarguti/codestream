@@ -38,7 +38,6 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 
             _browserService = Package.GetGlobalService(typeof(SBrowserService)) as IBrowserService;
             var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
-            // var serviceProviderLocator = Package.GetGlobalService(typeof(SServiceProviderLocator)) as IServiceProviderLocator;
 
             _browserService.AttachControl(grid);
             _browserService.LoadHtml(_resourceManager.GetString("waiting"));
@@ -175,21 +174,12 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
                 {
                     VSColorTheme.ThemeChanged -= VSColorTheme_ThemeChanged;
                     _languageServerReadySubscription?.Dispose();
-                    // TODO: dispose managed state (managed objects).
+                    _browserService?.Dispose();
                 }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-                // TODO: set large fields to null.
 
                 _disposedValue = true;
             }
         }
-
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        // ~CodeStreamToolWindowControl() {
-        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        //   Dispose(false);
-        // }
 
         // This code added to correctly implement the disposable pattern.
         public void Dispose()

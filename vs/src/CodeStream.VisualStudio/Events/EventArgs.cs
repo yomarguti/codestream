@@ -25,6 +25,11 @@
         public TextDocumentChangedReason Reason { get; set; }
     }
 
+    public class TextSelectionChangedEvent : IEvent
+    {
+        
+    }
+
     public class CodemarkChangedEvent : IEvent
     {
         public string Uri { get; set; }
@@ -33,5 +38,10 @@
     public class CodemarkVisibilityEvent : IEvent
     {
         public bool IsVisible { get; set; }
+    }
+
+    public class CodeStreamConfigurationChangedEvent : IEvent
+    {
+         public bool OpenCommentOnSelect { get; set; }
     }
 }

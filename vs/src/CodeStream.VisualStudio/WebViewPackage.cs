@@ -7,6 +7,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading;
+using CodeStream.VisualStudio.UI.ToolWindows;
 
 namespace CodeStream.VisualStudio
 {
