@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace CodeStream.VisualStudio
 {
-    public static class Application
+    public class Application
     {
         public static string Name = "CodeStream";
 
@@ -20,18 +20,20 @@ namespace CodeStream.VisualStudio
         public static string ProductName { get; }
         public static string ProductVersion { get; }
 
+       // public static string VisualStudioInstallDirectory { get; }
+
         static Application()
         {
-            HostVersion = Process.GetCurrentProcess().MainModule.FileVersionInfo;
+            HostVersion = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileVersionInfo;
             Version = typeof(Application).Assembly.GetName().Version;
 
-            Ide = new Ide()
+            Ide = new Ide
             {
                 Name = HostVersion.FileDescription,
                 Version = HostVersion.ProductVersion
             };
 
-            Extension = new Extension()
+            Extension = new Extension
             {
                 Version = Version.ToString(),
                 VersionFormatted = Version.ToString(),
@@ -42,6 +44,31 @@ namespace CodeStream.VisualStudio
 
             ProductName = HostVersion.FileDescription;
             ProductVersion = HostVersion.ProductVersion;
+
+            //try
+            //{
+            //    using (var process = Process.ProcessFactory.Create(
+            //        @"c:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe", "-format json"))
+            //    {
+            //        bool processStarted = process.Start();
+            //        if (processStarted)
+            //        {
+            //            var doo = Newtonsoft.Json.JsonConvert.DeserializeObject<JToken>(
+            //                process.StandardOutput.ReadToEnd());
+
+            //            VisualStudioInstallDirectory = doo
+            //                .Where(_ =>
+            //                    _.Value<string>("installationVersion").Contains(ProductVersion)).Select(_ =>
+            //                    new
+            //                    {
+            //                        Path = _.Value<string>("installationPath")
+            //                    }).Select(_ => _.Path).FirstOrDefault();
+            //        }
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //}
         }
     }
 }

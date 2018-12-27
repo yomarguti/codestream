@@ -73,6 +73,7 @@
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="LSP\LanguageServerProcess.cs" />
     <Compile Include="Models\Models.cs" />
+    <Compile Include="Process\ProcessFactory.cs" />
     <Compile Include="Services\CodeStreamService.cs" />
     <Compile Include="Services\DotNetBrowserService.cs" />
     <Compile Include="Services\BrowserServiceBase.cs" />

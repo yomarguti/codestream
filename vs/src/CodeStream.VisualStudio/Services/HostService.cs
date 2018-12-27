@@ -25,7 +25,7 @@ namespace CodeStream.VisualStudio.Services
 
         public void Navigate(string url)
         {
-            Process.Start(url);
+            System.Diagnostics.Process.Start(url);
         }
     }
 }
