@@ -42,5 +42,16 @@ namespace CodeStream.VisualStudio.Extensions
         {
             return color.Lerp(lighter ?? Color.White, rate);
         }
+
+        /// <summary>
+        /// Returns whether a color is closer to black rather than white
+        /// </summary>
+        /// <param name="c2"></param>
+        /// <remarks>https://stackoverflow.com/a/9780689/208022</remarks>
+        /// <returns></returns>
+        public static bool IsDark(this Color c2)
+        {
+            return (0.2126 * c2.R + 0.7152 * c2.G + 0.0722 * c2.B) < 128 ? true : false;
+        }
     }
 }

@@ -17,7 +17,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 {
     public partial class WebViewControl : UserControl, IDisposable
     {
-        static readonly ILogger Log = LogManager.ForContext<WebViewControl>();
+        private static readonly ILogger Log = LogManager.ForContext<WebViewControl>();
 
         private readonly IDisposable _languageServerReadySubscription;
         private readonly Assembly _assembly;
@@ -66,12 +66,13 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
                         .Replace("{footerHtml}", _browserService.FooterHtml);
 
             var theme = _resourceManager.GetString("theme");
-            harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{Themeize(theme)}</style>");
+            harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{GenerateTheme(theme)}</style>");
 
+            Log.Verbose(harness);
             return harness;
         }
 
-        private static string Themeize(string theme)
+        private static string GenerateTheme(string stylesheet)
         {
             //var d = new System.Collections.Generic.Dictionary<string, string>();
             //Type type = typeof(EnvironmentColors); // MyClass is static class with static properties
@@ -98,9 +99,9 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
             //    s += "</div>";
             //}
 
-            foreach (var item in _colorThemeMap)
+            foreach (var item in ColorThemeMap)
             {
-                theme = theme.Replace("--cs--" + item.Key + "--", VSColorTheme.GetThemedColor(item.Value).ToHex());
+                stylesheet = stylesheet.Replace("--cs--" + item.Key + "--", VSColorTheme.GetThemedColor(item.Value).ToHex());
             }
 
             var fontFamilyString = "Arial, Consolas, sans-serif";
@@ -110,8 +111,8 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
                 fontFamilyString = fontFamily.ToString();
             }
 
-            theme = theme.Replace("--cs--font-family--", fontFamilyString);
-            theme = theme.Replace("--cs--vscode-editor-font-family--", fontFamilyString);
+            stylesheet = stylesheet.Replace("--cs--font-family--", fontFamilyString);
+            stylesheet = stylesheet.Replace("--cs--vscode-editor-font-family--", fontFamilyString);
 
             var fontSizeInt = 13;
             var fontSize = System.Windows.Application.Current.FindResource(VsFonts.EnvironmentFontSizeKey);
@@ -119,13 +120,18 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
             {
                 fontSizeInt = int.Parse(fontSize.ToString());
             }
-            theme = theme.Replace("--cs--font-size--", fontSizeInt.ToString());
+            stylesheet = stylesheet.Replace("--cs--font-size--", fontSizeInt.ToString());
 
-            theme = theme.Replace("--cs--background-color-darker--", VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowBackgroundColorKey).Darken().ToHex());
-            return theme;
+            var backgroundColor = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowBackgroundColorKey);
+            stylesheet = stylesheet.Replace("--cs--background-color-darker--", backgroundColor.Darken().ToHex());
+            stylesheet = stylesheet.Replace("--cs--app-background-image-color--", backgroundColor.IsDark() ? "#fff" : "#000");
+
+            Log.Verbose(stylesheet);
+
+            return stylesheet;
         }
 
-        private static Dictionary<string, ThemeResourceKey> _colorThemeMap = new Dictionary<string, ThemeResourceKey>
+        private static readonly Dictionary<string, ThemeResourceKey> ColorThemeMap = new Dictionary<string, ThemeResourceKey>
         {
             {"app-background-color",                   EnvironmentColors.ToolWindowBackgroundColorKey},
             {"base-border-color",                      EnvironmentColors.ToolWindowBorderColorKey},
@@ -153,6 +159,8 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 
         private void VSColorTheme_ThemeChanged(ThemeChangedEventArgs e)
         {
+            Log.Verbose(nameof(VSColorTheme_ThemeChanged));
+
             _browserService.LoadHtml(CreateHarness(_assembly));
         }
 
