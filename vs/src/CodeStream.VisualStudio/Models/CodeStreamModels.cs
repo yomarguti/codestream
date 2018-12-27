@@ -290,6 +290,7 @@ namespace CodeStream.VisualStudio.Models
     {
         public LoginResponse LoginResponse { get; set; }
         public State State { get; set; }
+        public string Error { get; set; }
     }
     public class LoginResponseWrapper
     {
@@ -359,50 +360,73 @@ namespace CodeStream.VisualStudio.Models
         public string UserId { get; set; }
     }
 
-
     public class Extension
-    {
-        public string Build { get; set; }
-        public string BuildEnv { get; set; }
-        public string Version { get; set; }
+    {        
+        public string Build { get; set; }        
+        public string BuildEnv { get; set; }        
+        public string Version { get; set; }        
         public string VersionFormatted { get; set; }
     }
+
     public class IDE
     {
-        public string Name { get; set; }
+        public string Name { get; set; }        
         public string Version { get; set; }
     }
+
     public class Proxy
     {
         public string Url { get; set; }
         public bool StrictSSL { get; set; }
     }
+
     public class InitializationOptions
     {
-        public string ServerUrl { get; set; }
-        public string GitPath { get; set; }
+        //public string ServerUrl { get; set; }
+        //public string GitPath { get; set; }
         //public string Type { get; set; }
         //public string Email { get; set; }
         //public string PasswordOrToken { get; set; }
-        public Extension Extension { get; set; }
-        public string traceLevel { get; set; }
-        public bool isDebugging { get; set; }
-        public IDE Ide { get; set; }
-        public Proxy Proxy { get; set; }
+        //public Extension Extension { get; set; }
+        
+        public string TraceLevel { get; set; }       
+        public bool IsDebugging { get; set; }
+        //public IDE Ide { get; set; }
+
+        //public Proxy Proxy { get; set; }
+    }
+
+
+    public class WebviewIpcGenericMessageResponse
+    {       
+        public WebviewIpcGenericMessageResponse(string type)
+        {
+            Type = type;
+        }
+       
+        public string Id { get; set; }
+        public string Type { get; private set; }
+        public object Body { get; set; }
     }
 
     public class WebviewIpcMessageResponse
     {
-        public WebviewIpcMessageResponse() { }
+        public WebviewIpcMessageResponse()
+        {
+            Type = "codestream:response";
+        }
+		
         public WebviewIpcMessageResponse(WebviewIpcMessageResponseBody body)
         {
             Body = body;
+			Type = "codestream:response";
         }
         public string Id { get; set; }
-        public string Type { get; set; } = "codestream:response";
-        public WebviewIpcMessageResponseBody Body { get; set; }
-        public string Error { get; set; }
+        public string Type { get; private set; }
+        public WebviewIpcMessageResponseBody Body { get; set; }        
     }
+
+ 
 
     public class WebviewIpcMessageResponseBody
     {

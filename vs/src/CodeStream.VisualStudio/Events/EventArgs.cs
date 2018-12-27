@@ -25,8 +25,13 @@
         public TextDocumentChangedReason Reason { get; set; }
     }
 
-    public class CodeMarkChangedEvent : IEvent
+    public class CodemarkChangedEvent : IEvent
     {
         public string Uri { get; set; }
+    }
+
+    public class CodemarkVisibilityEvent : IEvent
+    {
+        public bool IsVisible { get; set; }
     }
 }

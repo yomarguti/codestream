@@ -49,8 +49,12 @@ namespace CodeStream.VisualStudio.Extensions
             }
 
             return token;
-        }     
-        
+        }
+
+        public static bool IsNotNullOrWhiteSpace(this string s) => !string.IsNullOrWhiteSpace(s);
+
+        public static bool IsNullOrWhiteSpace(this string s) => string.IsNullOrWhiteSpace(s);
+
         public static bool EqualsIgnoreCase(this string one, string two)
         {
             return string.Equals(one, two, System.StringComparison.OrdinalIgnoreCase);

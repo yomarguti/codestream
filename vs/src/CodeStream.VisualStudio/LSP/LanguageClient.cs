@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
+using Newtonsoft.Json.Serialization;
 using Serilog;
 using SerilogTimings.Extensions;
 using StreamJsonRpc;
@@ -109,8 +110,8 @@ namespace CodeStream.VisualStudio.LSP
                     //    versionFormatted = "0",
                     //},
 #if DEBUG
-                    traceLevel = "verbose",
-                    isDebugging = true,
+                    TraceLevel = "verbose",
+                    IsDebugging = true,
 #endif
                     //ide = new
                     //{
@@ -167,6 +168,9 @@ namespace CodeStream.VisualStudio.LSP
         {
             await System.Threading.Tasks.Task.Yield();
             _rpc = rpc;
+
+            // Slight hack to use camelCased properties when serializing requests
+            _rpc.JsonSerializer.ContractResolver = new CamelCasePropertyNamesContractResolver();
 
             //await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             // Sets the UI context so the custom command will be available.

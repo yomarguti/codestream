@@ -15,8 +15,7 @@ namespace CodeStream.VisualStudio.Services
         LoginResponse LoginResponse { get; set; }
         State State { get; set; }
         BootstrapState BootstrapState { get; set; }
-        Guid GenerateSignupToken();
-        AgentReadyScope AgentReady();
+        Guid GetOrCreateSignupToken();
         void SetAgentReady();
         void SetUserReady();
         object Capabilities { get; set; }
@@ -41,7 +40,7 @@ namespace CodeStream.VisualStudio.Services
             _serviceProvider = serviceProvider;
         }
 
-        public Guid GenerateSignupToken()
+        public Guid GetOrCreateSignupToken()
         {
             if (_signupToken == Guid.Empty)
             {
@@ -49,16 +48,6 @@ namespace CodeStream.VisualStudio.Services
             }
 
             return _signupToken;
-        }
-
-        public AgentReadyScope AgentReady()
-        {
-            if (_sessionState != SessionState.AgentReady && _sessionState != SessionState.UserReady)
-            {
-                throw new AgentUninitializedException();
-            }
-
-            return new AgentReadyScope(_sessionState);
         }
 
         public object Capabilities { get; set; }
@@ -99,20 +88,6 @@ namespace CodeStream.VisualStudio.Services
 
         protected AgentUninitializedException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
-        }
-    }
-
-    public class AgentReadyScope : IDisposable
-    {
-        public SessionState SessionState { get; set; }
-        public AgentReadyScope(SessionState sessionState)
-        {
-            SessionState = SessionState;
-        }
-
-        public void Dispose()
-        {
-
         }
     }
 

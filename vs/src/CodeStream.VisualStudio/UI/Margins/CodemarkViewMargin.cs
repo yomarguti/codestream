@@ -11,7 +11,7 @@ using System.Windows;
 using System.Windows.Controls;
 
 namespace CodeStream.VisualStudio.UI.Margins
-{ 
+{
     /// <summary>
     /// Margin's canvas and visual definition including both size and content
     /// </summary>
@@ -85,6 +85,12 @@ namespace CodeStream.VisualStudio.UI.Margins
                 .Subscribe(_ =>
                 {
                     Visibility = Visibility.Hidden;
+                }),
+                 eventAggregator.GetEvent<CodemarkVisibilityEvent>()
+                .ObserveOnDispatcher()
+                .Subscribe(_ =>
+                {
+                    Visibility = _.IsVisible ? Visibility.Visible : Visibility.Hidden;
                 })
             };
 
@@ -101,7 +107,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         private void Initialize()
         {
             _disposables.Add(
-                _eventAggregator.GetEvent<CodeMarkChangedEvent>()
+                _eventAggregator.GetEvent<CodemarkChangedEvent>()
               .Throttle(TimeSpan.FromMilliseconds(100))
               .ObserveOnDispatcher()
               .Subscribe(_ =>
@@ -137,7 +143,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         }
 
         private void TextView_ViewportHeightChanged(object sender, EventArgs e)
-        {            
+        {
             Update(new TextDocumentChangedEvent()
             {
                 Reason = TextDocumentChangedReason.ViewportHeightChanged
@@ -155,6 +161,11 @@ namespace CodeStream.VisualStudio.UI.Margins
         private async System.Threading.Tasks.Task UpdateAsync(TextDocumentChangedEvent e = null)
         {
             await System.Threading.Tasks.Task.Yield();
+
+            if (Visibility == Visibility.Hidden)
+            {
+                return;
+            }
 
             if (_textDocument == null)
             {

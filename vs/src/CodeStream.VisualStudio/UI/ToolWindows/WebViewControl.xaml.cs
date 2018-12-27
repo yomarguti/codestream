@@ -40,7 +40,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
             _browserService = Package.GetGlobalService(typeof(SBrowserService)) as IBrowserService;
             var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
             // var serviceProviderLocator = Package.GetGlobalService(typeof(SServiceProviderLocator)) as IServiceProviderLocator;
-                                                                         
+
             _browserService.AttachControl(grid);
             _browserService.LoadHtml(_resourceManager.GetString("waiting"));
 
@@ -56,16 +56,15 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
               });
         }
 
-        private   string CreateHarness(Assembly assembly)
+        private string CreateHarness(Assembly assembly)
         {
             string harness = null;
-            var dir = Path.GetDirectoryName(assembly.Location); 
+            var dir = Path.GetDirectoryName(assembly.Location);
 
             harness = _resourceManager.GetString("webview");
             harness = harness
                         .Replace("{root}", dir.Replace(@"\", "/"))
                         .Replace("{footerHtml}", _browserService.FooterHtml);
-
 
             var theme = _resourceManager.GetString("theme");
             harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{Themeize(theme)}</style>");
@@ -105,7 +104,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
                 theme = theme.Replace("--cs--" + item.Key + "--", VSColorTheme.GetThemedColor(item.Value).ToHex());
             }
             var fontFamilyString = "Arial, Consolas, sans-serif";
-            var fontFamily = Application.Current.FindResource(VsFonts.EnvironmentFontFamilyKey) as FontFamily;
+            var fontFamily = System.Windows.Application.Current.FindResource(VsFonts.EnvironmentFontFamilyKey) as FontFamily;
             if (fontFamily != null)
             {
                 fontFamilyString = fontFamily.ToString();
@@ -115,7 +114,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
             theme = theme.Replace("--cs--vscode-editor-font-family--", fontFamilyString);
 
             var fontSizeInt = 13;
-            var fontSize = Application.Current.FindResource(VsFonts.EnvironmentFontSizeKey);
+            var fontSize = System.Windows.Application.Current.FindResource(VsFonts.EnvironmentFontSizeKey);
             if (fontSize != null)
             {
                 fontSizeInt = int.Parse(fontSize.ToString());

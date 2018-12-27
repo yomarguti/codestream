@@ -6,7 +6,19 @@ namespace CodeStream.VisualStudio.Services
     {
         void LoadSettingsFromStorage();
         void SaveSettingsToStorage();
+        Settings GetSettings();
         string Email { get; set; }
+        bool ShowMarkers { get; set; }
+        string ServerUrl { get; set; }
+        string WebAppUrl { get; set; }
+    }
+
+    public class Settings
+    {
+        public string Email { get; set; }
+        public bool ShowMarkers { get; set; }
+        public string ServerUrl { get; set; }
+        public string WebAppUrl { get; set; }
     }
 
     public interface SSettingsService { }
@@ -26,8 +38,19 @@ namespace CodeStream.VisualStudio.Services
         }
 
         public void SaveSettingsToStorage()
-        {            
+        {
             _dialogPage.SaveSettingsToStorage();
+        }
+
+        public Settings GetSettings()
+        {
+            return new Settings()
+            {
+                Email = Email,
+                ShowMarkers = ShowMarkers,
+                ServerUrl = ServerUrl,
+				WebAppUrl = WebAppUrl
+            };
         }
 
         public string Email
@@ -39,6 +62,42 @@ namespace CodeStream.VisualStudio.Services
             set
             {
                 _dialogPage.Email = value;
+            }
+        }
+
+        public bool ShowMarkers
+        {
+            get
+            {
+                return _dialogPage.ShowMarkers;
+            }
+            set
+            {
+                _dialogPage.ShowMarkers = value;
+            }
+        }
+
+        public string ServerUrl
+        {
+            get
+            {
+                return _dialogPage.ServerUrl;
+            }
+            set
+            {
+                _dialogPage.ServerUrl = value;
+            }
+        }
+
+        public string WebAppUrl
+        {
+            get
+            {
+                return _dialogPage.WebAppUrl;
+            }
+            set
+            {
+                _dialogPage.WebAppUrl = value;
             }
         }
     }
@@ -53,7 +112,7 @@ namespace CodeStream.VisualStudio.Services
 
         public void Dispose()
         {
-            SettingsService?.SaveSettingsToStorage();                
+            SettingsService?.SaveSettingsToStorage();
         }
 
         public static SettingsScope Create(ISettingsService settingsService)

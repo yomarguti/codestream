@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.Shell;
+using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Microsoft.VisualStudio.Shell;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio
@@ -11,6 +11,9 @@ namespace CodeStream.VisualStudio
     public interface ICodeStreamOptionsDialogPage
     {
         string Email { get; set; }
+        bool ShowMarkers { get; set; }
+        string ServerUrl { get; set; }
+        string WebAppUrl { get; set; }
         void SaveSettingsToStorage();
         void LoadSettingsFromStorage();
     }
@@ -21,6 +24,29 @@ namespace CodeStream.VisualStudio
         [DisplayName("Email")]
         [Description("")]
         public string Email { get; set; }
+
+        [Category("CodeStream")]
+        [DisplayName("Show Markers")]
+        [Description("Specifies whether to show CodeStream markers in editor margins")]
+        public bool ShowMarkers { get; set; }
+
+        [Category("CodeStream")]
+        [DisplayName("Server Url")]
+        [Description("Specifies the url to use to connect to the CodeStream service")]
+#if DEBUG
+        public string ServerUrl { get; set; } = "https://pd-api.codestream.us:9443";
+#else 
+        public string ServerUrl { get; set; } = "https://api.codestream.com";
+#endif
+
+        [Category("CodeStream")]
+        [DisplayName("Web App Url")]
+        [Description("Specifies the url for the CodeStream web portal")]
+#if DEBUG
+        public string WebAppUrl { get; set; } = "http://pd-app.codestream.us:1380";
+#else 
+        public string WebAppUrl { get; set; } = "http://app.codestream.com";
+#endif
     }
 
     /// <summary>

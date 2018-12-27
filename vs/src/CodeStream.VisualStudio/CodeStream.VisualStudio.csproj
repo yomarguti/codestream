@@ -84,7 +84,7 @@
       <DependentUpon>WebViewControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Commands\IVsCommands.cs" />
-    <Compile Include="Core\Constants.cs" />
+    <Compile Include="Application.cs" />
     <Compile Include="WebViewPackage.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="LSP\ContentDefinitions.cs" />

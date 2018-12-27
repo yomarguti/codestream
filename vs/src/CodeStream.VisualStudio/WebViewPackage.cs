@@ -1,5 +1,4 @@
 ﻿using CodeStream.VisualStudio.Commands;
-using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.UI;
 using Microsoft.VisualStudio.Shell;
@@ -45,12 +44,11 @@ namespace CodeStream.VisualStudio
             // Do any initialization that requires the UI thread after switching to the UI thread.
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             await WebViewCommand.InitializeAsync(this);
+            
+            var hostVersionInfo = Application.HostVersion;
 
-            var packageVersion = Constants.GetPackageVersion(this);
-            var hostVersionInfo = Constants.GetHostVersionInfo();
-
-            log.Information("Initializing GitHub Extension v{PackageVersion} in {$FileDescription} ({$ProductVersion})",
-                packageVersion, hostVersionInfo.FileDescription, hostVersionInfo.ProductVersion);
+            log.Information("Initializing GitHub Extension v{PackageVersion} in {$ProductName} ({$ProductVersion})",
+                Application.Version, Application.ProductName, Application.ProductVersion);
 
         }
     }

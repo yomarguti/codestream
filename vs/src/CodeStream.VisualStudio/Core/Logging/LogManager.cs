@@ -20,7 +20,7 @@ namespace CodeStream.VisualStudio.Core.Logging
         static Logger CreateLogger()
         {
             var logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                Constants.ApplicationName,
+                Application.Name,
                 "Logs",
                 "vs-extension.log");
 

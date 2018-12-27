@@ -1,6 +1,8 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Models;
 using Microsoft.VisualStudio.Shell;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using StreamJsonRpc;
@@ -27,7 +29,7 @@ namespace CodeStream.VisualStudio.Services
 
         Task<JToken> LoginViaTokenAsync(string signupToken, string serverUrl);
         Task<JToken> LoginAsync(string email, string password, string serverUrl);
-        Task<BootstrapState> GetBootstrapAsync(State state);
+        Task<BootstrapState> GetBootstrapAsync(State state, Settings settings);
         Task<FetchCodemarksResponse> GetMarkersAsync(string streamId);
         Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request);
         Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(FileUri uri, CancellationToken? cancellationToken = null);
@@ -51,6 +53,41 @@ namespace CodeStream.VisualStudio.Services
         public List<CSFullMarker> Markers { get; set; }
         public List<MarkerNotLocated> MarkersNotLocated { get; set; }
     }
+   
+    public class LoginRequest
+    {
+        
+        public string ServerUrl { get; set; }        
+        public string Email { get; set; }        
+        public string PasswordOrToken { get; set; }        
+        public string SignupToken { get; set; }        
+        public string Type { get; set; }        
+        public string Team { get; set; }        
+        public string TeamId { get; set; }      
+        public Extension Extension { get; set; }      
+        public IDE Ide { get; set; }        
+        public string TraceLevel { get; set; }
+    }
+
+    public class TextDocumentIdentifier
+    {
+        public string Uri { get; set; }
+    }
+
+    public class DocumentFromMarkerRequest
+    {
+        public string File { get; set; }
+        public string RepoId { get; set; }
+        public string MarkerId { get; set; }
+        public string Source { get; set; }
+    }
+
+    public class DocumentFromMarkerResponse
+    {
+        public TextDocumentIdentifier TextDocument { get; set; }
+        public CSRange Range { get; set; }
+        public string Revision { get; set; }
+    }
 
     public class CodeStreamAgentService : ICodeStreamAgentService
     {
@@ -68,27 +105,8 @@ namespace CodeStream.VisualStudio.Services
         {
             await System.Threading.Tasks.Task.Yield();
             _rpc = rpc;
-            IsReady = true;
 
-            //TODO fix arg -- use AgentOptions
-            //    return await SendAsync<object>("codeStream/cli/initialized", null);
-            //            return await SendAsync<object>("codeStream/cli/initialized", new {
-            //#if DEBUG
-            //                isDebugging = true,
-            //                traceLevel = "verbose",
-            //#endif
-            //                signupToken = (string)null,
-            //                team = (string)null,
-            //                teamId = (string)null,
-            //                extension = new
-            //                {
-            //                    build = "0",
-            //                    buildEnv = "0",
-            //                    version = "0",
-            //                    versionFormatted = "0",
-            //                },                
-            //                serverUrl = Constants.ServerUrl
-            //            });
+            IsReady = true;
         }
 
         public async Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null)
@@ -144,53 +162,34 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task<JToken> LoginViaTokenAsync(string signupToken, string serverUrl)
         {
-            return await SendAsync<JToken>("codeStream/cli/login",
-                new
+            return await SendAsync<JToken>("codeStream/cli/login", new LoginRequest
                 {
-                    serverUrl = serverUrl,
-                    signupToken = signupToken,
-                    team = (string)null,
-                    teamId = (string)null,
-                    extension = new
-                    {
-                        build = "0",
-                        buildEnv = "0",
-                        version = "0",
-                        versionFormatted = "0",
-                    },
-                    traceLevel = "verbose"
+                    SignupToken = signupToken,
+                    ServerUrl = serverUrl,                    
+                    Type = "otc",                    
+                    Extension = Application.Extension,
+                    Ide = Application.Ide,
+                    TraceLevel = "verbose"
                 });
         }
 
         public async Task<JToken> LoginAsync(string email, string password, string serverUrl)
         {
-            return await SendAsync<JToken>("codeStream/cli/login", new
+            return await SendAsync<JToken>("codeStream/cli/login", new LoginRequest
             {
-                email = email,
-                passwordOrToken = password,
-                serverUrl = serverUrl,
-                //type = "credentials",
-                signupToken = (string)null,
-                team = (string)null,
-                teamId = (string)null,
-                extension = new
-                {
-                    build = "0",
-                    buildEnv = "0",
-                    version = "0",
-                    versionFormatted = "0",
-                },
-                ide = new
-                {
-                    name = "Visual Studio" //fixme
-                },
-                traceLevel = "verbose"
+                Email = email,
+                PasswordOrToken = password,
+                ServerUrl = serverUrl,
+                Type = "credentials",                                              
+                Extension = Application.Extension,
+                Ide = Application.Ide,
+                TraceLevel = "verbose"
             });
         }
 
         public async Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request)
         {
-            return await SendAsync<DocumentFromMarkerResponse>("codeStream/textDocument/fromMarker", new
+            return await SendAsync<DocumentFromMarkerResponse>("codeStream/textDocument/fromMarker", new 
             {
                 file = request.File,
                 repoId = request.RepoId,
@@ -199,7 +198,7 @@ namespace CodeStream.VisualStudio.Services
             });
         }
 
-        public async Task<BootstrapState> GetBootstrapAsync(State state)
+        public async Task<BootstrapState> GetBootstrapAsync(State state, Settings settings)
         {
             var repos = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/repos");
             var streams = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/streams");
@@ -215,8 +214,9 @@ namespace CodeStream.VisualStudio.Services
                 CurrentTeamId = state.TeamId,
                 Configs = new Config()
                 {
-                    ServerUrl = state.ServerUrl,
-                    Email = state.Email
+                    ServerUrl = settings.ServerUrl,
+                    Email = state.Email,
+                    ShowMarkers = settings.ShowMarkers
                 },
                 Env = state.Environment,
 
@@ -234,25 +234,5 @@ namespace CodeStream.VisualStudio.Services
 
             return bootstrapState;
         }
-    }
-
-    public class TextDocumentIdentifier
-    {
-        public string Uri { get; set; }
-    }
-
-    public class DocumentFromMarkerRequest
-    {
-        public string File { get; set; }
-        public string RepoId { get; set; }
-        public string MarkerId { get; set; }
-        public string Source { get; set; }
-    }
-
-    public class DocumentFromMarkerResponse
-    {
-        public TextDocumentIdentifier TextDocument { get; set; }
-        public CSRange Range { get; set; }
-        public string Revision { get; set; }
     }
 }
