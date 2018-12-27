@@ -38,6 +38,8 @@ namespace CodeStream.VisualStudio.UI.Margins
         private DocumentMarkersResponse _markerCache;
         private List<CodemarkGlyphCache> _viewCache;
 
+        private const int _defaultWidth = 20;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="EditorMargin1"/> class for a given <paramref name="textView"/>.
         /// </summary>
@@ -61,7 +63,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                 // do something
             }
 
-            Width = 20;
+            Width = _defaultWidth;
             ClipToBounds = true;
 
             //Background = new SolidColorBrush(Colors.Cheese);
@@ -85,12 +87,22 @@ namespace CodeStream.VisualStudio.UI.Margins
                 .Subscribe(_ =>
                 {
                     Visibility = Visibility.Hidden;
+                    Width = 0;
                 }),
                  eventAggregator.GetEvent<CodemarkVisibilityEvent>()
                 .ObserveOnDispatcher()
                 .Subscribe(_ =>
                 {
-                    Visibility = _.IsVisible ? Visibility.Visible : Visibility.Hidden;
+                    if (_.IsVisible)
+                    {
+                        Visibility = Visibility.Visible;
+                        Width = _defaultWidth;
+                    }
+                    else
+                    {
+                        Visibility = Visibility.Hidden;
+                        Width = 0;
+                    }
                 })
             };
 
@@ -316,6 +328,9 @@ namespace CodeStream.VisualStudio.UI.Margins
                 {
                     disposable?.Dispose();
                 }
+
+                _markerCache = null;
+                _viewCache = null;
 
                 GC.SuppressFinalize(this);
                 this.isDisposed = true;

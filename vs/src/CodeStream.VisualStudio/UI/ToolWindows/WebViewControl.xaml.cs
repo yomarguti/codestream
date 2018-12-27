@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Resources;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
@@ -103,6 +102,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
             {
                 theme = theme.Replace("--cs--" + item.Key + "--", VSColorTheme.GetThemedColor(item.Value).ToHex());
             }
+
             var fontFamilyString = "Arial, Consolas, sans-serif";
             var fontFamily = System.Windows.Application.Current.FindResource(VsFonts.EnvironmentFontFamilyKey) as FontFamily;
             if (fontFamily != null)

@@ -319,7 +319,7 @@ namespace CodeStream.VisualStudio
                                         {
                                             Body = new
                                             {
-                                                ShowMarkers = val
+                                                showMarkers = val
                                             }
                                         });
                                         break;
