@@ -365,7 +365,7 @@ namespace CodeStream.VisualStudio
                                             var ide = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
                                             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 
-                                            var editorResponse = ide.OpenEditor(fromMarkerResponse.TextDocument.Uri, fromMarkerResponse.Range?.Start?.Line);
+                                            var editorResponse = ide.OpenEditor(fromMarkerResponse.TextDocument.Uri.FromUri(), fromMarkerResponse.Range?.Start?.Line);
                                             _browser.PostMessage(new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id)
                                             {
                                                 Payload = editorResponse.ToString()

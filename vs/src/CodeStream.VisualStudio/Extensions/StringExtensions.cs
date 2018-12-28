@@ -59,5 +59,9 @@ namespace CodeStream.VisualStudio.Extensions
         {
             return string.Equals(one, two, System.StringComparison.OrdinalIgnoreCase);
         }
+
+        public static string FromUri(this string uri) =>
+            uri.Replace("file:///", string.Empty)
+                .Replace("%3A", ":");
     }
 }
