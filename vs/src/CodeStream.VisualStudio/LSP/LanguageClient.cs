@@ -13,6 +13,7 @@ using StreamJsonRpc;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics.Contracts;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -200,9 +201,14 @@ namespace CodeStream.VisualStudio.LSP
                 {
                     var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
                     var codeStreamAgentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
+                    var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
+
                     await codeStreamAgentService.SetRpcAsync(_rpc);
                     sessionService.SetAgentReady();
+                    codeStreamService.SetAgentReady();
+
                     var ea = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
+                    Contract.Assume(ea != null);
                     ea.Publish(new LanguageServerReadyEvent() { IsReady = true });
                 }
             }

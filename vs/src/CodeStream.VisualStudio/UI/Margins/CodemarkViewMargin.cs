@@ -1,6 +1,7 @@
 ﻿using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
+using CodeStream.VisualStudio.UI.ToolWindows;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -13,7 +14,6 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using CodeStream.VisualStudio.UI.ToolWindows;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
@@ -146,7 +146,8 @@ namespace CodeStream.VisualStudio.UI.Margins
                     }
                 }));
 
-            Visibility = Visibility.Visible;
+            Show();
+
             // _textView.TextBuffer.ChangedLowPriority += TextBuffer_ChangedLowPriority;
             _textView.Selection.SelectionChanged += Selection_SelectionChanged;
 
@@ -164,7 +165,7 @@ namespace CodeStream.VisualStudio.UI.Margins
             var verticalTranslation = e.VerticalTranslation;
             if (verticalTranslation || e.TranslatedLines.Any())
             {
-                if (_lastUpdate == DateTime.MinValue || (DateTime.Now - _lastUpdate) > TimeSpan.FromMilliseconds(25))
+                if (_lastUpdate == DateTime.MinValue || (DateTime.Now - _lastUpdate) > TimeSpan.FromMilliseconds(20))
                 {
                     Update(new TextDocumentChangedEvent
                     {

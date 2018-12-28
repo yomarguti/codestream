@@ -64,7 +64,7 @@ namespace CodeStream.VisualStudio
         [Category("CodeStream")]
         [DisplayName("Open Comment On Select")]
         [Description("Specifies whether to automatically open the comment dialog when the CodeStream panel is open and you select code")]
-        public bool OpenCommentOnSelect { get; set; }
+        public bool OpenCommentOnSelect { get; set; } = true;
     }
 
     /// <summary>

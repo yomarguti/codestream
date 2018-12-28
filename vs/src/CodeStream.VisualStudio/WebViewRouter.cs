@@ -55,7 +55,7 @@ namespace CodeStream.VisualStudio
         public async System.Threading.Tasks.Task HandleAsync(WindowEventArgs e)
         {
             //guard against possibly non JSON-like data
-            if (e == null || e.Message == null || !e.Message.StartsWith("{"))
+            if (e?.Message == null || !e.Message.StartsWith("{"))
             {
                 // too noisy to log!
                 //Log.Verbose(e.Message, $"{nameof(WindowEventArgs)} not found");
@@ -182,13 +182,12 @@ namespace CodeStream.VisualStudio
                                             }
                                             else
                                             {
-                                                success = true;
                                                 sessionService.LoginResponse = loginResponse.Result.LoginResponse;
                                                 sessionService.State = loginResponse.Result.State;
 
                                                 response.Body.Payload = await codeStreamAgent.GetBootstrapAsync(loginResponse.Result.State, settings.GetSettings());
                                                 sessionService.SetUserReady();
-                                                _eventAggregator.Publish(new SessionReadyEvent());
+                                                success = true;
                                             }
                                         }
                                         catch (Exception ex)
@@ -201,6 +200,8 @@ namespace CodeStream.VisualStudio
                                         }
                                         if (success)
                                         {
+                                            _eventAggregator.Publish(new SessionReadyEvent());
+
                                             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                                             using (var scope = SettingsScope.Create(Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService))
                                             {
@@ -257,8 +258,7 @@ namespace CodeStream.VisualStudio
                                         var settings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
 
                                         var success = false;
-
-                                        string email = null;;
+                                        string email = null;
                                         try
                                         {
                                             var token = message?.Params?.Value<string>();
@@ -276,14 +276,13 @@ namespace CodeStream.VisualStudio
                                             }
                                             else
                                             {
-                                                success = true;
                                                 sessionService.LoginResponse = loginResponse.Result.LoginResponse;
                                                 sessionService.State = loginResponse.Result.State;
                                                 email = loginResponse.Result.State.Email;
 
                                                 response.Body.Payload = await codeStreamAgent.GetBootstrapAsync(loginResponse.Result.State, settings.GetSettings());
                                                 sessionService.SetUserReady();
-                                                _eventAggregator.Publish(new SessionReadyEvent());
+                                                success = true;
                                             }
                                         }
                                         catch (Exception ex)
@@ -295,12 +294,17 @@ namespace CodeStream.VisualStudio
                                             _browser.PostMessage(response);
                                         }
 
-                                        if (success && email.IsNotNullOrWhiteSpace())
+                                        if (success)
                                         {
-                                            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                            using (var scope = SettingsScope.Create(Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService))
+                                            _eventAggregator.Publish(new SessionReadyEvent());
+
+                                            if (email.IsNotNullOrWhiteSpace())
                                             {
-                                                scope.SettingsService.Email = email;
+                                                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                                                using (var scope = SettingsScope.Create(Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService))
+                                                {
+                                                    scope.SettingsService.Email = email;
+                                                }
                                             }
                                         }
 
@@ -337,7 +341,7 @@ namespace CodeStream.VisualStudio
                                         {
                                             scope.SettingsService.OpenCommentOnSelect = val;
                                         }
-                                        _eventAggregator.Publish(new CodeStreamConfigurationChangedEvent() {OpenCommentOnSelect = val });
+                                        _eventAggregator.Publish(new CodeStreamConfigurationChangedEvent() { OpenCommentOnSelect = val });
 
                                         _browser.PostMessage(new WebviewIpcGenericMessageResponse("codestream:configs")
                                         {
