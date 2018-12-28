@@ -382,7 +382,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         }
 
         /// <summary>
-        /// Disposes an instance of <see cref="EditorMargin1"/> class.
+        /// Disposes an instance of <see cref="CodemarkViewMargin"/> class.
         /// </summary>
         public void Dispose()
         {

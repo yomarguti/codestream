@@ -267,9 +267,9 @@ namespace CodeStream.VisualStudio
                                                 token = sessionService.GetOrCreateSignupToken().ToString();
                                             }
 
-                                            var loginResponsewrapper = await codeStreamAgent.LoginViaTokenAsync(token, settings.ServerUrl);
+                                            var loginResponseWrapper = await codeStreamAgent.LoginViaTokenAsync(token, settings.ServerUrl);
 
-                                            var loginResponse = loginResponsewrapper.ToObject<LoginResponseWrapper>();
+                                            var loginResponse = loginResponseWrapper.ToObject<LoginResponseWrapper>();
                                             if (loginResponse?.Result.Error.IsNotNullOrWhiteSpace() == true)
                                             {
                                                 response.Body.Error = loginResponse.Result.Error;
