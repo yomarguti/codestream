@@ -14,11 +14,19 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics.Contracts;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio.LSP
 {
+    public interface ICodeStreamLanguageClient
+    {
+
+    }
+
+    public interface SCodeStreamLanguageClient { }
+
     [ContentType("FSharpInteractive")]
     [ContentType("RazorCoreCSharp")]
     [ContentType("RazorVisualBasic")]
@@ -42,12 +50,12 @@ namespace CodeStream.VisualStudio.LSP
     [ContentType("SCSS")]
     [ContentType("XAML")]
     [Export(typeof(ILanguageClient))]
+    [Guid(Guids.LanguageClientId)]
     public class LanguageClient : ILanguageClient, ILanguageClientCustomMessage
     {
-        static readonly ILogger Log = LogManager.ForContext<LanguageClient>();
-        internal const string UiContextGuidString = "DE885E15-D44E-40B1-A370-45372EFC23AA";
-        private Guid _uiContextGuid = new Guid(UiContextGuidString);
-        private readonly ILanguageServerProcess _languageServer;
+        private static readonly ILogger Log = LogManager.ForContext<LanguageClient>();
+
+        private readonly ILanguageServerProcess _languageServerProcess;
 
         public event AsyncEventHandler<EventArgs> StartAsync;
 #pragma warning disable 0067
@@ -55,6 +63,9 @@ namespace CodeStream.VisualStudio.LSP
 #pragma warning restore 0067
 
 #if DEBUG
+        /// <summary>
+        /// This is how we can see a list of contentTypes (used to generate the attrs for this class)
+        /// </summary>
         [Import]
         internal IContentTypeRegistryService ContentTypeRegistryService { get; set; }
 #endif
@@ -64,10 +75,10 @@ namespace CodeStream.VisualStudio.LSP
 
         }
 
-        public LanguageClient(ILanguageServerProcess languageServer)
+        public LanguageClient(ILanguageServerProcess languageServerProcess)
         {
             Instance = this;
-            _languageServer = languageServer;
+            _languageServerProcess = languageServerProcess;
         }
 
         // IServiceProvider serviceProvider;
@@ -152,7 +163,7 @@ namespace CodeStream.VisualStudio.LSP
 
             Connection connection = null;
 
-            var process = _languageServer.Create();
+            var process = _languageServerProcess.Create();
 
             using (Log.TimeOperation($"Starting server process. FileName={{FileNameAttribute}} Arguments={{Arguments}}", process.StartInfo.FileName, process.StartInfo.Arguments))
             {

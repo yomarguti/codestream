@@ -14,10 +14,9 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
     /// implementation of the IVsUIElementPane interface.
     /// </para>
     /// </remarks>
-    [Guid(WebViewToolWindow.Guid)]
+    [Guid(Guids.WebViewToolWindowId)]
     public class WebViewToolWindow : ToolWindowPane
     {
-        public const string Guid = "0fae43ec-bc2d-417e-af01-a477439cf228";
         public WebViewToolWindow() : base(null)
         {
             Caption = "CodeStream";
@@ -37,6 +36,5 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
         {
             base.OnCreate();
         }
-        
     }
 }

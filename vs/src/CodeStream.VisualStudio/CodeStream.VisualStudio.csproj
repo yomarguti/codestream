@@ -56,16 +56,11 @@
     <StartArguments>/rootsuffix Exp</StartArguments>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CodeStreamDebug.cs" />
-    <Compile Include="CodeStreamDebugCommand.cs" />
-    <Compile Include="CodeStreamDebugControl.xaml.cs">
-      <DependentUpon>CodeStreamDebugControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="CodeStreamDebugPackage.cs" />
     <Compile Include="CodeStreamEventManager.cs" />
-    <Compile Include="CodeStreamOptionsPackage.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="CodeStreamPackage.cs" />
+    <Compile Include="Commands\ISignOutCommand.cs" />
+    <Compile Include="Commands\SignOutCommand.cs" />
+    <Compile Include="Commands\ToggleToolWindowCommand.cs" />
     <Compile Include="Events\EventAggregator.cs" />
     <Compile Include="Events\EventArgs.cs" />
     <Compile Include="Events\IEvent.cs" />
@@ -73,22 +68,33 @@
     <Compile Include="Extensions\DateTimeExtensions.cs" />
     <Compile Include="Extensions\Guard.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
+    <Compile Include="Guids.cs" />
     <Compile Include="LSP\LanguageServerProcess.cs" />
     <Compile Include="Models\Models.cs" />
+    <Compile Include="PkgCmdIDList.cs" />
     <Compile Include="Process\ProcessFactory.cs" />
     <Compile Include="Services\CodeStreamService.cs" />
     <Compile Include="Services\DotNetBrowserService.cs" />
     <Compile Include="Services\BrowserServiceBase.cs" />
     <Compile Include="Services\IdeService.cs" />
     <Compile Include="UI\Margins\CodemarkGlyphCache.cs" />
-    <Compile Include="VsShellEventManager.cs" />
+    <Compile Include="UI\Settings\OptionsDialogPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Settings\IOptionsDialogPage.cs" />
+    <Compile Include="Vssdk\Commands\IVsCommand.cs" />
+    <Compile Include="Vssdk\Commands\IVsCommandBase.cs" />
+    <Compile Include="Vssdk\Commands\MenuCommandServiceExtensions.cs" />
+    <Compile Include="Vssdk\Commands\VsCommand.cs" />
+    <Compile Include="Vssdk\Commands\VsCommandBase.cs" />
+    <Compile Include="Vssdk\Events\WindowFocusChangedEventArgs.cs" />
+    <Compile Include="Vssdk\VsShellEventManager.cs" />
     <Compile Include="WebViewRouter.cs" />
     <Compile Include="UI\ToolWindows\WebViewToolWindow.cs" />
-    <Compile Include="Commands\WebViewCommand.cs" />
     <Compile Include="UI\ToolWindows\WebViewControl.xaml.cs">
       <DependentUpon>WebViewControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Commands\IVsCommands.cs" />
+    <Compile Include="Commands\IToggleToolWindowCommand.cs" />
     <Compile Include="Application.cs" />
     <Compile Include="WebViewPackage.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
@@ -123,9 +129,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <VSCTCompile Include="CodeStreamDebugPackage.vsct">
-      <ResourceName>Menus1.ctmenu</ResourceName>
-    </VSCTCompile>
     <Content Include="CodeStream.VisualStudio.pkgdef" />
     <Content Include="dist\agent.js">
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -184,10 +187,8 @@
     <Resource Include="Resources\Assets\marker-trap-red.png" />
     <Resource Include="Resources\Assets\marker-trap-yellow.png" />
     <Resource Include="Resources\Assets\presence-online.svg" />
-    <Content Include="Resources\CodeStreamDebugCommand.png" />
-    <Content Include="Resources\CodeStreamDebugPackage.ico" />
     <Content Include="Resources\CodeStreamOptionsPackage.ico" />
-    <Content Include="Resources\CodestreamPackage.ico" />
+    <Content Include="Resources\CodeStreamPackage.ico" />
     <Content Include="UI\WebViews\theme.css">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -198,12 +199,12 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <EmbeddedResource Include="teamdev.licenses" />
-    <VSCTCompile Include="CodeStreamCommandPackage.vsct">
+    <VSCTCompile Include="CodeStreamPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
+      <SubType>Designer</SubType>
     </VSCTCompile>
     <Content Include="Resources\CodeStreamToolWindowCommand.png" />
     <Content Include="Resources\CodeStreamCommand.png" />
-    <Content Include="Resources\CodeStreamCommandPackage.ico" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="DotNetBrowser.Chromium32, Version=1.19.0.0, Culture=neutral, PublicKeyToken=b0b5aaca9c95c84e, processorArchitecture=MSIL">
@@ -228,6 +229,7 @@
     <Reference Include="Microsoft.VisualStudio.CommandBars, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.VisualStudio.CoreUtility.15.0.26201\lib\net45\Microsoft.VisualStudio.CoreUtility.dll</HintPath>
       <Private>True</Private>
@@ -390,10 +392,6 @@
     <Analyzer Include="..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.122\analyzers\cs\Microsoft.VisualStudio.Threading.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="CodeStreamDebugControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="UI\ToolWindows\WebViewControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

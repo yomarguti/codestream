@@ -1,37 +1,95 @@
 ﻿using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Services;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
+using System.ComponentModel.Composition;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
+using CodeStream.VisualStudio.UI.Settings;
+using IAsyncServiceProvider = Microsoft.VisualStudio.Shell.IAsyncServiceProvider;
 
 namespace CodeStream.VisualStudio
 {
+    public interface ICodeStreamServiceProvider
+    {
+        void ToggleToolWindowVisibility();
+    }
+
+    public interface SCodeStreamServiceProvider
+    {
+
+    }
+
+    [PartCreationPolicy(CreationPolicy.Shared)]
+    public class ServiceProviderExports
+    {
+        private readonly IServiceProvider _serviceProvider;
+
+        [ImportingConstructor]
+        public ServiceProviderExports([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider)
+        {
+           _serviceProvider = serviceProvider;
+        }
+
+        [Export]
+        private ICodeStreamServiceProvider CodeStreamServiceProvider => GetService<SCodeStreamServiceProvider>() as ICodeStreamServiceProvider;
+
+        T GetService<T>() where T : class
+        {
+            var service = (T)_serviceProvider.GetService(typeof(T));
+            if (service == null)
+            {
+                return null;
+            }
+
+            return service;
+        }
+    }
+
     /// <summary>
     /// Pseudo-package to allow for a custom service provider
     /// </summary>
-   // [ProvideService(typeof(SServiceProviderLocator))]
+    [ProvideService(typeof(SCodeStreamServiceProvider))]
     [ProvideService(typeof(SEventAggregator))]
     [ProvideService(typeof(SIdeService))]
     [ProvideService(typeof(SHostService))]
     [ProvideService(typeof(SSessionService))]
     [ProvideService(typeof(SSelectedTextService))]
     [ProvideService(typeof(SBrowserService))]
-    [ProvideService(typeof(SCodeStreamAgentService))]
+    [ProvideService(typeof(SCodeStreamAgentService))] 
     [ProvideService(typeof(SCodeStreamService))]
-    [ProvideService(typeof(SSettingsService))]   
+    [ProvideService(typeof(SSettingsService))]
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-    [Guid(PackageGuidString)]
-    public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer, IAsyncServiceProvider
+    [Guid(Guids.ServiceProviderPackageId)]
+    public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer, IAsyncServiceProvider,
+           ICodeStreamServiceProvider, SCodeStreamServiceProvider
     {
-        public const string PackageGuidString = "D5CE1488-DEDE-426D-9E5B-BFCCFBE33E54";
-
         /// <summary>
         /// Store a reference to this as only a class that inherits from AsyncPackage can call GetDialogPage
         /// </summary>
-        private CodeStreamOptionsDialogPage _codeStreamOptions;        
+        private OptionsDialogPage _codeStreamOptions;
+
+        public void ToggleToolWindowVisibility()
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+            var guid = new Guid(Guids.WebViewToolWindowId);
+            IVsWindowFrame frame;
+            var shell = Package.GetGlobalService(typeof(SVsUIShell)) as IVsUIShell;
+            if(ErrorHandler.Failed(shell.FindToolWindow((uint)__VSCREATETOOLWIN.CTW_fForceCreate, ref guid, out frame)))
+            {
+                return;
+            }
+            else
+            {
+                ErrorHandler.ThrowOnFailure(frame.IsVisible() == VSConstants.S_OK
+                    ? frame.Hide()
+                    : frame.Show());
+            }
+        }
 
         protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
@@ -40,23 +98,24 @@ namespace CodeStream.VisualStudio
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
             ServiceCreatorCallback callback = new ServiceCreatorCallback(CreateService);
-            _codeStreamOptions = (CodeStreamOptionsDialogPage)GetDialogPage(typeof(CodeStreamOptionsDialogPage));
+            _codeStreamOptions = (OptionsDialogPage)GetDialogPage(typeof(OptionsDialogPage));
 
+            ((IServiceContainer)this).AddService(typeof(SCodeStreamServiceProvider), callback, true);
             ((IServiceContainer)this).AddService(typeof(SEventAggregator), callback, true);
             ((IServiceContainer)this).AddService(typeof(SIdeService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SSessionService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SHostService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SSelectedTextService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SBrowserService), callback, true);
-            ((IServiceContainer)this).AddService(typeof(SCodeStreamAgentService), callback, true);
+            ((IServiceContainer)this).AddService(typeof(SCodeStreamAgentService), callback, true); 
             ((IServiceContainer)this).AddService(typeof(SCodeStreamService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SSettingsService), callback, true);
         }
 
         private object CreateService(IServiceContainer container, Type serviceType)
         {
-            //if (typeof(SServiceProviderLocator) == serviceType)
-            //    return new ServiceProviderLocator(_serviceProvider);
+            if (typeof(SCodeStreamServiceProvider) == serviceType)
+                return this;
             if (typeof(SEventAggregator) == serviceType)
                 return new EventAggregator();
             if (typeof(SIdeService) == serviceType)
@@ -70,7 +129,7 @@ namespace CodeStream.VisualStudio
             if (typeof(SBrowserService) == serviceType)
                 return new DotNetBrowserService(this);
             if (typeof(SSettingsService) == serviceType)
-                return new SettingsService(_codeStreamOptions as ICodeStreamOptionsDialogPage);
+                return new SettingsService(_codeStreamOptions as IOptionsDialogPage);
             if (typeof(SCodeStreamAgentService) == serviceType)
                 return new CodeStreamAgentService(this);
             if (typeof(SCodeStreamService) == serviceType)

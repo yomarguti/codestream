@@ -1,5 +1,7 @@
 ﻿using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Services;
+using CodeStream.VisualStudio.Vssdk;
+using CodeStream.VisualStudio.Vssdk.Events;
 
 namespace CodeStream.VisualStudio
 {

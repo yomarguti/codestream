@@ -125,7 +125,7 @@
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="400" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\CodeStreamCommandPackage.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>Resources\CodeStreamPackage.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="1110" xml:space="preserve">
     <value>CodestreamPackage Extension</value>
@@ -144,15 +144,6 @@
   </data>
   <data name="3400" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\CodeStreamOptionsPackage.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="4110" xml:space="preserve">
-    <value>CodeStreamDebug Extension</value>
-  </data>
-  <data name="4112" xml:space="preserve">
-    <value>CodeStreamDebug Visual Studio Extension Detailed Info</value>
-  </data>
-  <data name="4400" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\CodeStreamDebugPackage.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="theme" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>ui\webviews\theme.css;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>

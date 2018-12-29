@@ -1,20 +1,10 @@
-﻿using Microsoft.VisualStudio;
+﻿using System;
+using CodeStream.VisualStudio.Vssdk.Events;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
-using System;
 
-namespace CodeStream.VisualStudio
+namespace CodeStream.VisualStudio.Vssdk
 {
-    public sealed class WindowFocusChangedEventArgs : EventArgs
-    {
-        public string FileName { get; }
-        public Uri Uri { get; }
-        public WindowFocusChangedEventArgs(string fileName, Uri uri)
-        {
-            FileName = fileName;
-            Uri = uri;
-        }
-    }
-
     public class VsShellEventManager : IVsSelectionEvents, IDisposable
     {
         private readonly IVsMonitorSelection _iVsMonitorSelection;

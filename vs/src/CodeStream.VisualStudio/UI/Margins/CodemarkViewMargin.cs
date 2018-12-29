@@ -1,7 +1,6 @@
 ﻿using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.UI.ToolWindows;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -190,7 +189,7 @@ namespace CodeStream.VisualStudio.UI.Margins
             {
                 uint u = 0;
                 var uiShell = Package.GetGlobalService(typeof(IVsUIShell)) as IVsUIShell;
-                uiShell.FindToolWindow(u, new Guid(WebViewToolWindow.Guid), out IVsWindowFrame frame);
+                uiShell.FindToolWindow(u, new Guid(Guids.WebViewToolWindowId), out IVsWindowFrame frame);
                 _frame = frame;
             }
 

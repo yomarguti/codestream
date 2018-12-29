@@ -1,4 +1,5 @@
 ﻿using System;
+using CodeStream.VisualStudio.UI.Settings;
 
 namespace CodeStream.VisualStudio.Services
 {
@@ -31,8 +32,8 @@ namespace CodeStream.VisualStudio.Services
 
     public class SettingsService : ISettingsService, SSettingsService
     {
-        private readonly ICodeStreamOptionsDialogPage _dialogPage;
-        public SettingsService(ICodeStreamOptionsDialogPage dialogPage)
+        private readonly IOptionsDialogPage _dialogPage;
+        public SettingsService(IOptionsDialogPage dialogPage)
         {
             _dialogPage = dialogPage;
             LoadSettingsFromStorage();
