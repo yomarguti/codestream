@@ -187,8 +187,8 @@
     <Resource Include="Resources\Assets\marker-trap-red.png" />
     <Resource Include="Resources\Assets\marker-trap-yellow.png" />
     <Resource Include="Resources\Assets\presence-online.svg" />
-    <Content Include="Resources\CodeStreamOptionsPackage.ico" />
     <Content Include="Resources\CodeStreamPackage.ico" />
+    <Content Include="Resources\Sprites.png" />
     <Content Include="UI\WebViews\theme.css">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -203,8 +203,6 @@
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
-    <Content Include="Resources\CodeStreamToolWindowCommand.png" />
-    <Content Include="Resources\CodeStreamCommand.png" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="DotNetBrowser.Chromium32, Version=1.19.0.0, Culture=neutral, PublicKeyToken=b0b5aaca9c95c84e, processorArchitecture=MSIL">
