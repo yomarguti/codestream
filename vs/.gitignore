@@ -336,3 +336,7 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
+
+# CodeStream stuff
+src/CodeStream.VisualStudio/LSP/agent-cli.*
+src/CodeStream.VisualStudio/UI/WebViews/Shared/
