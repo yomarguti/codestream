@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CodeStream.VisualStudio.Attributes
+namespace CodeStream.VisualStudio.Annotations
 {
     /// <summary>
     /// Signifies the class is injected via VisualStudio's service provider, do not instantiate it manually. 

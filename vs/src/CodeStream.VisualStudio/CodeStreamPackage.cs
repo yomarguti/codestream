@@ -6,7 +6,6 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Serilog;
 using System;
 using System.ComponentModel.Design;
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -28,7 +27,6 @@ namespace CodeStream.VisualStudio
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExists_string, PackageAutoLoadFlags.BackgroundLoad)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasMultipleProjects_string, PackageAutoLoadFlags.BackgroundLoad)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasSingleProject_string, PackageAutoLoadFlags.BackgroundLoad)]
-    //[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     public sealed class CodeStreamPackage : AsyncPackage
     {
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamPackage>();
@@ -62,12 +60,30 @@ namespace CodeStream.VisualStudio
                 _vsEventManager.WindowFocusChanged += codeStreamEvents.OnWindowFocusChanged;
             });
 
+            await InitializeLoggingAsync();
+
             Log.Information("Initializing CodeStream Extension v{PackageVersion} in {$ProductName} ({$ProductVersion})",
                 Application.Version, Application.ProductName, Application.ProductVersion);
 
             // Avoid delays when there is ongoing UI activity.
             // See: https://github.com/github/VisualStudio/issues/1537
             await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeMenusAsync);
+        }
+
+        async System.Threading.Tasks.Task InitializeLoggingAsync()
+        {
+            var packageSettings = await GetServiceAsync(typeof(SSettingsService)) as ISettingsService;
+            
+            if (packageSettings != null)
+            {
+                packageSettings.DialogPage.PropertyChanged += (sender, args) =>
+                {
+                    if (args.PropertyName == nameof(packageSettings.TraceLevel))
+                    {
+                        LogManager.SetTraceLevel(packageSettings.TraceLevel);
+                    }
+                };
+            }
         }
 
         async System.Threading.Tasks.Task InitializeMenusAsync()

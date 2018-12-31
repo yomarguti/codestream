@@ -1,8 +1,8 @@
-﻿using CodeStream.VisualStudio.Attributes;
-using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Models;
 using Microsoft.VisualStudio.Shell;
 using System;
 using System.Runtime.Serialization;
+using CodeStream.VisualStudio.Annotations;
 
 namespace CodeStream.VisualStudio.Services
 {

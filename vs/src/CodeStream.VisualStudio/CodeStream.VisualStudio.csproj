@@ -56,11 +56,13 @@
     <StartArguments>/rootsuffix Exp</StartArguments>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Annotations\Annotations.cs" />
     <Compile Include="CodeStreamEventManager.cs" />
     <Compile Include="CodeStreamPackage.cs" />
     <Compile Include="Commands\IAuthenticationCommand.cs" />
     <Compile Include="Commands\AuthenticationCommand.cs" />
     <Compile Include="Commands\ToggleToolWindowCommand.cs" />
+    <Compile Include="Core\Logging\TraceLevel.cs" />
     <Compile Include="Events\EventAggregator.cs" />
     <Compile Include="Events\EventArgs.cs" />
     <Compile Include="Events\IEvent.cs" />
@@ -110,7 +112,7 @@
     <Compile Include="Services\CodeStreamAgentService.cs" />
     <Compile Include="Services\SelectedTextService.cs" />
     <Compile Include="Services\SessionService.cs" />
-    <Compile Include="Attributes\InjectedAttribute.cs" />
+    <Compile Include="Annotations\Injected.cs" />
     <Compile Include="Services\SettingsService.cs" />
     <Compile Include="UI\Margins\CodemarkViewMargin.cs" />
     <Compile Include="UI\Margins\CodeStreamMarginProvider.cs" />

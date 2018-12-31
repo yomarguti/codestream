@@ -1,6 +1,9 @@
-﻿namespace CodeStream.VisualStudio.UI.Settings
+﻿using System.ComponentModel;
+using CodeStream.VisualStudio.Core.Logging;
+
+namespace CodeStream.VisualStudio.UI.Settings
 {
-    public interface IOptionsDialogPage
+    public interface IOptionsDialogPage : INotifyPropertyChanged
     {
         string Email { get; set; }
         bool ShowMarkers { get; set; }
@@ -11,5 +14,6 @@
         bool OpenCommentOnSelect { get; set; }
         void SaveSettingsToStorage();
         void LoadSettingsFromStorage();
+        TraceLevel TraceLevel { get; set; }
     }
 }

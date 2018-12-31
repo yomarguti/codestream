@@ -1,5 +1,6 @@
-﻿using System;
+﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.UI.Settings;
+using System;
 
 namespace CodeStream.VisualStudio.Services
 {
@@ -15,6 +16,8 @@ namespace CodeStream.VisualStudio.Services
         string WebAppUrl { get; set; }
         string Team { get; set; }
         bool OpenCommentOnSelect { get; set; }
+        TraceLevel TraceLevel { get; set; }
+        IOptionsDialogPage DialogPage { get; }
     }
 
     public class Settings
@@ -26,27 +29,29 @@ namespace CodeStream.VisualStudio.Services
         public string WebAppUrl { get; set; }
         public string Team { get; set; }
         public bool OpenCommentOnSelect { get; set; }
+        public string LogLevel { get; set; }
     }
 
     public interface SSettingsService { }
 
     public class SettingsService : ISettingsService, SSettingsService
     {
-        private readonly IOptionsDialogPage _dialogPage;
+        public IOptionsDialogPage DialogPage { get; }
+
         public SettingsService(IOptionsDialogPage dialogPage)
         {
-            _dialogPage = dialogPage;
+            DialogPage = dialogPage;
             LoadSettingsFromStorage();
         }
 
         public void LoadSettingsFromStorage()
         {
-            _dialogPage.LoadSettingsFromStorage();
+            DialogPage.LoadSettingsFromStorage();
         }
 
         public void SaveSettingsToStorage()
         {
-            _dialogPage.SaveSettingsToStorage();
+            DialogPage.SaveSettingsToStorage();
         }
 
         public Settings GetSettings()
@@ -57,7 +62,7 @@ namespace CodeStream.VisualStudio.Services
                 ShowMarkers = ShowMarkers,
                 ShowHeadshots = ShowHeadshots,
                 ServerUrl = ServerUrl,
-				WebAppUrl = WebAppUrl,
+                WebAppUrl = WebAppUrl,
                 Team = Team,
                 OpenCommentOnSelect = OpenCommentOnSelect
             };
@@ -65,44 +70,50 @@ namespace CodeStream.VisualStudio.Services
 
         public string Email
         {
-            get => _dialogPage.Email;
-            set => _dialogPage.Email = value;
+            get => DialogPage.Email;
+            set => DialogPage.Email = value;
         }
 
         public bool ShowMarkers
         {
-            get => _dialogPage.ShowMarkers;
-            set => _dialogPage.ShowMarkers = value;
+            get => DialogPage.ShowMarkers;
+            set => DialogPage.ShowMarkers = value;
         }
 
         public bool ShowHeadshots
         {
-            get => _dialogPage.ShowHeadshots;
-            set => _dialogPage.ShowHeadshots = value;
+            get => DialogPage.ShowHeadshots;
+            set => DialogPage.ShowHeadshots = value;
         }
 
         public string ServerUrl
         {
-            get => _dialogPage.ServerUrl;
-            set => _dialogPage.ServerUrl = value;
+            get => DialogPage.ServerUrl;
+            set => DialogPage.ServerUrl = value;
         }
 
         public string WebAppUrl
         {
-            get => _dialogPage.WebAppUrl;
-            set => _dialogPage.WebAppUrl = value;
+            get => DialogPage.WebAppUrl;
+            set => DialogPage.WebAppUrl = value;
         }
 
         public string Team
         {
-            get => _dialogPage.Team;
-            set => _dialogPage.Team = value;
+            get => DialogPage.Team;
+            set => DialogPage.Team = value;
         }
 
         public bool OpenCommentOnSelect
         {
-            get => _dialogPage.OpenCommentOnSelect;
-            set => _dialogPage.OpenCommentOnSelect = value;
+            get => DialogPage.OpenCommentOnSelect;
+            set => DialogPage.OpenCommentOnSelect = value;
+        }
+
+        public TraceLevel TraceLevel
+        {
+            get => DialogPage.TraceLevel;
+            set => DialogPage.TraceLevel = value;
         }
     }
 

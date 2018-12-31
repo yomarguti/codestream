@@ -1,8 +1,8 @@
-﻿using CodeStream.VisualStudio.Attributes;
-using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Models;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
+using CodeStream.VisualStudio.Annotations;
 
 namespace CodeStream.VisualStudio.Services
 {

@@ -1,51 +1,135 @@
-﻿using System.ComponentModel;
+﻿using CodeStream.VisualStudio.Core.Logging;
 using Microsoft.VisualStudio.Shell;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace CodeStream.VisualStudio.UI.Settings
 {
     public class OptionsDialogPage : DialogPage, IOptionsDialogPage
     {
+        private string _email;
+        private bool _showMarkers = true;
+        private bool _showHeadshots = true;
+        private TraceLevel _traceLevel;
+        private bool _openCommentOnSelect = true;
+        private string _team;
+#if DEBUG
+        private string _webAppUrl = "http://pd-app.codestream.us:1380";
+        private string _serverUrl = "https://pd-api.codestream.us:9443";
+#else
+        private string _webAppUrl = "http://app.codestream.com";
+        private string _serverUrl = "https://api.codestream.com";
+#endif
+        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
         [Category("CodeStream")]
         [DisplayName("Email")]
         [Description("")]
-        public string Email { get; set; }
+        public string Email
+        {
+            get => _email;
+            set
+            {
+                _email = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         [Category("CodeStream")]
         [DisplayName("Show Markers")]
         [Description("Specifies whether to show CodeStream markers in editor margins")]
-        public bool ShowMarkers { get; set; } = true;
+        public bool ShowMarkers
+        {
+            get => _showMarkers;
+            set
+            {
+                _showMarkers = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         [Category("CodeStream")]
         [DisplayName("Avatars")]
         [Description("Specifies whether to show avatars")]
-        public bool ShowHeadshots { get; set; } = true;
+        public bool ShowHeadshots
+        {
+            get => _showHeadshots;
+            set
+            {
+                _showHeadshots = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         [Category("CodeStream")]
         [DisplayName("Server Url")]
         [Description("Specifies the url to use to connect to the CodeStream service")]
-#if DEBUG
-        public string ServerUrl { get; set; } = "https://pd-api.codestream.us:9443";
-#else 
-        public string ServerUrl { get; set; } = "https://api.codestream.com";
-#endif
+        public string ServerUrl
+        {
+            get => _serverUrl;
+            set
+            {
+                _serverUrl = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         [Category("CodeStream")]
         [DisplayName("Web App Url")]
         [Description("Specifies the url for the CodeStream web portal")]
-#if DEBUG
-        public string WebAppUrl { get; set; } = "http://pd-app.codestream.us:1380";
-#else
-        public string WebAppUrl { get; set; } = "http://app.codestream.com";
-#endif
+        public string WebAppUrl
+        {
+            get => _webAppUrl;
+            set
+            {
+                _webAppUrl = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         [Category("CodeStream")]
         [DisplayName("Team")]
         [Description("Specifies an optional team to connect to the CodeStream service")]
-        public string Team { get; set; }
+        public string Team
+        {
+            get => _team;
+            set
+            {
+                _team = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         [Category("CodeStream")]
         [DisplayName("Open Comment On Select")]
-        [Description("Specifies whether to automatically open the comment dialog when the CodeStream panel is open and you select code")]
-        public bool OpenCommentOnSelect { get; set; } = true;
+        [Description(
+            "Specifies whether to automatically open the comment dialog when the CodeStream panel is open and you select code")]
+        public bool OpenCommentOnSelect
+        {
+            get => _openCommentOnSelect;
+            set
+            {
+                _openCommentOnSelect = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        [Category("CodeStream")]
+        [DisplayName("Trace Level")]
+        [Description("Specifies how much (if any) output will be sent to the CodeStream log")]
+        public TraceLevel TraceLevel
+        {
+            get => _traceLevel;
+            set
+            {
+                _traceLevel = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
     }
 }

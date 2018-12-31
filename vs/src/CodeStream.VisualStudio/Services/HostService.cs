@@ -1,6 +1,6 @@
-﻿using CodeStream.VisualStudio.Attributes;
-using Microsoft.VisualStudio.Shell;
+﻿using Microsoft.VisualStudio.Shell;
 using System.Diagnostics;
+using CodeStream.VisualStudio.Annotations;
 
 namespace CodeStream.VisualStudio.Services
 {
