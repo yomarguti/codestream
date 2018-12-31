@@ -142,20 +142,8 @@ namespace CodeStream.VisualStudio.LSP
         public IEnumerable<string> FilesToWatch => null;
 
         public object MiddleLayer => null;
-
-        //private static CustomTarget _target;
+        
         public object CustomMessageTarget => null;
-        //{
-        //    get
-        //    {
-        //        if (_target == null)
-        //        {
-        //            _target = new CustomTarget();
-        //        }
-
-        //        return _target;
-        //    }
-        //}
 
         public async Task<Connection> ActivateAsync(CancellationToken token)
         {
@@ -183,17 +171,6 @@ namespace CodeStream.VisualStudio.LSP
 
             // Slight hack to use camelCased properties when serializing requests
             _rpc.JsonSerializer.ContractResolver = new CamelCasePropertyNamesContractResolver();
-
-            //await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-            // Sets the UI context so the custom command will be available.
-            //var monitorSelection = ServiceProvider.GlobalProvider.GetService(typeof(IVsMonitorSelection)) as IVsMonitorSelection;
-            //if (monitorSelection != null)
-            //{
-            //    if (monitorSelection.GetCmdUIContextCookie(ref this._uiContextGuid, out uint cookie) == VSConstants.S_OK)
-            //    {
-            //        monitorSelection.SetCmdUIContext(cookie, 1);
-            //    }
-            //}
         }
 
         public async System.Threading.Tasks.Task OnLoadedAsync()
@@ -237,70 +214,4 @@ namespace CodeStream.VisualStudio.LSP
             throw ex;
         }
     }
-
-
-    //public class CustomTarget
-    //{
-    //    static readonly ILogger log = LogManager.ForContext<CustomTarget>();
-
-    //    public void OnCustomNotification(object arg)
-    //    {
-    //        // Provide logic on what happens OnCustomNotification is called from the language server
-    //    }
-
-    //    public string OnCustomRequest(string test)
-    //    {
-    //        // Provide logic on what happens OnCustomRequest is called from the language server
-    //        return null;
-    //    }
-
-    //    [JsonRpcMethod(Methods.InitializeName)]
-    //    public void OnInitialize(object arg)
-    //    {
-    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
-    //        //server.OnTextDocumentOpened(parameter);
-    //    }
-
-    //    [JsonRpcMethod(Methods.InitializedName)]
-    //    public void OnInitialized(object arg)
-    //    {
-    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
-    //        //server.OnTextDocumentOpened(parameter);
-    //    }
-
-    //    [JsonRpcMethod(Methods.TextDocumentDidSaveName)]
-    //    public void OnTextDocumentDidSaveName(object arg)
-    //    {
-    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
-    //        //server.OnTextDocumentOpened(parameter);
-    //    }
-
-
-    //    [JsonRpcMethod(Methods.TextDocumentDidOpenName)]
-    //    public void OnTextDocumentOpened(object arg)
-    //    {
-    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
-    //        //server.OnTextDocumentOpened(parameter);
-    //    }
-
-    //    [JsonRpcMethod(Methods.TextDocumentPublishDiagnosticsName)]
-    //    public void TextDocumentPublishDiagnosticsName(object arg)
-    //    {
-    //        //  var parameter = arg.ToObject<DidOpenTextDocumentParams>();
-    //        //server.OnTextDocumentOpened(parameter);
-    //    }
-
-    //    [JsonRpcMethod("window/logMessage")]
-    //    public void LogMessage(string s)
-    //    {
-    //        Console.WriteLine(s);
-    //    }
-
-    //    [JsonRpcMethod("log")]
-    //    public void Log(string s)
-    //    {
-    //        Console.WriteLine(s);
-    //        log.Information(s);
-    //    }
-    //}
 }

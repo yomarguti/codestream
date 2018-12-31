@@ -1,4 +1,6 @@
 ﻿using CodeStream.VisualStudio.Process;
+using System.IO;
+using System.Reflection;
 
 namespace CodeStream.VisualStudio.LSP
 {
@@ -15,20 +17,15 @@ namespace CodeStream.VisualStudio.LSP
         /// <returns></returns>
         public System.Diagnostics.Process Create()
         {
-            string arguments = "";
-
-            ////TODO package this up?                     
-            //@"..\..\..\..\..\..\codestream-lsp-agent\dist\agent-cli.exe"
-            var agent = @"..\..\..\..\..\..\codestream-lsp-agent\dist\agent-cli.js";
+            var assembly = Assembly.GetAssembly(typeof(LanguageServerProcess));
+            var path = Path.GetDirectoryName(assembly.Location) + @"\LSP\agent-cli.js";
 #if DEBUG
-            arguments = $@"{agent} --stdio --inspect=6009 --nolazy";
+            var arguments = $@"""{path}"" --stdio --inspect=6009 --nolazy";
+            return ProcessFactory.Create(@"C:\Program Files\NodeJs\node.exe", arguments);
 #else
-            arguments = $@"{agent} --stdio --nolazy";
+            //NOTE this will not compile!
+            cheese cheese cheeses
 #endif
-            
-            return ProcessFactory.Create(
-                @"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\Microsoft\VisualStudio\NodeJs\node.exe",
-                arguments);
         }
     }
 }

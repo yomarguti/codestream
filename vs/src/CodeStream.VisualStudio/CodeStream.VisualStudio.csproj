@@ -124,7 +124,10 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="CodeStream.VisualStudio.Settings.json" />
-    <None Include="dist\agent.js.map" />
+    <Content Include="LSP\agent-cli.js.map">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <None Include="packages.config" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
@@ -132,10 +135,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="CodeStream.VisualStudio.pkgdef" />
-    <Content Include="dist\agent.js">
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="dist\webview\webview.css">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -145,7 +144,14 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Resource Include="Resources\Assets\marker-comment-blue.png" />
-    <Resource Include="Resources\Assets\codestream.png" />
+    <Content Include="LSP\agent-cli.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Resources\Assets\codestream.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Resource Include="Resources\Assets\codestream.svg" />
     <Resource Include="Resources\Assets\marker-bookmark-aqua.png" />
     <Resource Include="Resources\Assets\marker-bookmark-blue.png" />
@@ -189,8 +195,13 @@
     <Resource Include="Resources\Assets\marker-trap-red.png" />
     <Resource Include="Resources\Assets\marker-trap-yellow.png" />
     <Resource Include="Resources\Assets\presence-online.svg" />
-    <Content Include="Resources\CodeStreamPackage.ico" />
+    <Content Include="Resources\CodeStreamPackage.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="Resources\Sprites.png" />
+    <Content Include="UI\WebViews\Shared\webview.css" />
+    <Content Include="UI\WebViews\Shared\webview.js" />
     <Content Include="UI\WebViews\theme.css">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
