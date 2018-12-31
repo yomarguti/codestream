@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 namespace CodeStream.VisualStudio
 {
     /// <summary>
-    /// This is the host package for the <see cref="GitHubPane"/> tool window.
+    /// This is the host package for the <see cref="WebViewToolWindow"/> tool window.
     /// </summary>
     /// <remarks>
     /// This package mustn't use MEF.

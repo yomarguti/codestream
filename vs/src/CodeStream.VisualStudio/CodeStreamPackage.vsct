@@ -63,14 +63,15 @@
         <Parent guid="guidCodeStreamCommandPackageCmdSet" id="MyMenuGroup" />
         <Icon guid="guidImages" id="bmpPic1" />
         <Strings>
-          <ButtonText>CodeStream: Toggle Window</ButtonText>
+          <ButtonText>CodeStream: Toggle CodeStream</ButtonText>
         </Strings>
       </Button>
       <Button guid="guidCommand2PackageCmdSet" id="Command2Id" priority="0x0100" type="Button">
         <Parent guid="guidCodeStreamCommandPackageCmdSet" id="MyMenuGroup" />
         <Icon guid="guidImages" id="bmpPic2" />
+        <CommandFlag>TextChanges</CommandFlag>  
         <Strings>
-          <ButtonText>CodeStream: Sign Out</ButtonText>
+          <ButtonText>CodeStream: Sign In</ButtonText>
         </Strings>
       </Button>
     </Buttons>

@@ -2,7 +2,7 @@
 
 namespace CodeStream.VisualStudio.Commands
 {
-    public interface ISignOutCommand : IVsCommand
+    public interface IAuthenticationCommand : IVsCommand
     {
 
     }

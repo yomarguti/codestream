@@ -62,7 +62,7 @@ namespace CodeStream.VisualStudio
                 _vsEventManager.WindowFocusChanged += codeStreamEvents.OnWindowFocusChanged;
             });
 
-            Log.Information("Initializing GitHub Extension v{PackageVersion} in {$ProductName} ({$ProductVersion})",
+            Log.Information("Initializing CodeStream Extension v{PackageVersion} in {$ProductName} ({$ProductVersion})",
                 Application.Version, Application.ProductName, Application.ProductVersion);
 
             // Avoid delays when there is ongoing UI activity.
@@ -78,7 +78,7 @@ namespace CodeStream.VisualStudio
             var commands = new IVsCommandBase[]
             {
                 exports.GetExportedValue<IToggleToolWindowCommand>(),
-                exports.GetExportedValue<ISignOutCommand>(),
+                exports.GetExportedValue<IAuthenticationCommand>(),
             };
 
             var menuService = (IMenuCommandService)(await GetServiceAsync(typeof(IMenuCommandService)));

@@ -29,6 +29,7 @@ namespace CodeStream.VisualStudio.Vssdk.Commands
         protected VsCommand(Guid commandSet, int commandId)
             : base(commandSet, commandId)
         {
+
         }
 
         /// <summary>

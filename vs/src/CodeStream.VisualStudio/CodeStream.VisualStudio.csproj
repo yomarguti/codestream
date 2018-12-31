@@ -58,8 +58,8 @@
   <ItemGroup>
     <Compile Include="CodeStreamEventManager.cs" />
     <Compile Include="CodeStreamPackage.cs" />
-    <Compile Include="Commands\ISignOutCommand.cs" />
-    <Compile Include="Commands\SignOutCommand.cs" />
+    <Compile Include="Commands\IAuthenticationCommand.cs" />
+    <Compile Include="Commands\AuthenticationCommand.cs" />
     <Compile Include="Commands\ToggleToolWindowCommand.cs" />
     <Compile Include="Events\EventAggregator.cs" />
     <Compile Include="Events\EventArgs.cs" />

@@ -18,7 +18,7 @@
 
         // Guids defined in CodeStreamPackage.vsct
         public const string ToggleToolWindowCommandCmdSet = "8a64bc5c-4166-4180-b7a6-e1a24a8f790f";
-        public const string SignOutCommandCmdSet = "9a64bc5c-4166-4180-b7a6-e1a24a8f790f";
+        public const string AuthenticationCommandCmdSet = "9a64bc5c-4166-4180-b7a6-e1a24a8f790f";
 
         // Others
         public const string LanguageClientId = "DE885E15-D44E-40B1-A370-45372EFC23AA";

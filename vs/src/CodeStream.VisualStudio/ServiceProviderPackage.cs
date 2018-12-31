@@ -14,9 +14,11 @@ using IAsyncServiceProvider = Microsoft.VisualStudio.Shell.IAsyncServiceProvider
 
 namespace CodeStream.VisualStudio
 {
-    public interface ICodeStreamServiceProvider
+    public interface ICodeStreamToolWindowProvider
     {
         void ToggleToolWindowVisibility();
+        void ShowToolWindow();
+        bool IsVisible();
     }
 
     public interface SCodeStreamServiceProvider
@@ -36,7 +38,11 @@ namespace CodeStream.VisualStudio
         }
 
         [Export]
-        private ICodeStreamServiceProvider CodeStreamServiceProvider => GetService<SCodeStreamServiceProvider>() as ICodeStreamServiceProvider;
+        private ICodeStreamToolWindowProvider CodeStreamServiceProvider => GetService<SCodeStreamServiceProvider>() as ICodeStreamToolWindowProvider;
+
+        [Export]
+        private ISessionService SessionService => GetService<SSessionService>() as ISessionService;
+
 
         T GetService<T>() where T : class
         {
@@ -66,12 +72,47 @@ namespace CodeStream.VisualStudio
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [Guid(Guids.ServiceProviderPackageId)]
     public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer, IAsyncServiceProvider,
-           ICodeStreamServiceProvider, SCodeStreamServiceProvider
+           ICodeStreamToolWindowProvider, SCodeStreamServiceProvider
     {
         /// <summary>
         /// Store a reference to this as only a class that inherits from AsyncPackage can call GetDialogPage
         /// </summary>
         private OptionsDialogPage _codeStreamOptions;
+
+        public bool IsVisible()
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+            var guid = new Guid(Guids.WebViewToolWindowId);
+
+            var shell = Package.GetGlobalService(typeof(SVsUIShell)) as IVsUIShell;
+            if (ErrorHandler.Failed(shell.FindToolWindow((uint)__VSCREATETOOLWIN.CTW_fForceCreate, ref guid, out var frame)))
+            {
+                return false;
+            }
+            else
+            {
+                return frame.IsVisible() == VSConstants.S_OK;
+            }
+        }
+
+        public void ShowToolWindow()
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+            var guid = new Guid(Guids.WebViewToolWindowId);
+
+            var shell = Package.GetGlobalService(typeof(SVsUIShell)) as IVsUIShell;
+            if (ErrorHandler.Failed(shell.FindToolWindow((uint)__VSCREATETOOLWIN.CTW_fForceCreate, ref guid, out var frame)))
+            {
+                return;
+            }
+            else
+            {
+                if (frame.IsVisible() != VSConstants.S_OK)
+                {
+                    frame.Show();
+                }
+            }
+        }
 
         public void ToggleToolWindowVisibility()
         {

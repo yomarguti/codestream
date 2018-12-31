@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.Shell;
+using System;
 using System.ComponentModel.Design;
 using System.Windows.Input;
-using Microsoft.VisualStudio.Shell;
 
 namespace CodeStream.VisualStudio.Vssdk.Commands
 {
@@ -20,6 +20,20 @@ namespace CodeStream.VisualStudio.Vssdk.Commands
         protected VsCommandBase(Guid commandSet, int commandId)
             : base(ExecHandler, delegate { }, QueryStatusHandler, new CommandID(commandSet, commandId))
         {
+            base.BeforeQueryStatus += this.OnBeforeQueryStatus;
+        }
+
+        private void OnBeforeQueryStatus(object sender, EventArgs e)
+        {
+            if (sender is OleMenuCommand myCommand) 
+            {
+                OnBeforeQueryStatus(myCommand, e);
+            }
+        }
+
+        protected virtual void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e)
+        {
+
         }
 
         /// <inheritdoc/>

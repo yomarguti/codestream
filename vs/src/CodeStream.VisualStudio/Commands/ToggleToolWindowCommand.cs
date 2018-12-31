@@ -7,10 +7,10 @@ namespace CodeStream.VisualStudio.Commands
     [Export(typeof(IToggleToolWindowCommand))]
     public class ToggleToolWindowCommand : VsCommand, IToggleToolWindowCommand
     {
-        private readonly ICodeStreamServiceProvider _provider;
+        private readonly ICodeStreamToolWindowProvider _provider;
 
         [ImportingConstructor]
-        protected ToggleToolWindowCommand(ICodeStreamServiceProvider provider)
+        protected ToggleToolWindowCommand(ICodeStreamToolWindowProvider provider)
             : base(CommandSet, CommandId)
         {
             _provider = provider;
