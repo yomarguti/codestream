@@ -127,7 +127,7 @@ namespace CodeStream.VisualStudio
             if (typeof(SSelectedTextService) == serviceType)
                 return new SelectedTextService(null, GetService(typeof(SVsTextManager)) as IVsTextManager2);
             if (typeof(SBrowserService) == serviceType)
-                return new DotNetBrowserService(this);
+                return new NullBrowserService(this);
             if (typeof(SSettingsService) == serviceType)
                 return new SettingsService(_codeStreamOptions as IOptionsDialogPage);
             if (typeof(SCodeStreamAgentService) == serviceType)

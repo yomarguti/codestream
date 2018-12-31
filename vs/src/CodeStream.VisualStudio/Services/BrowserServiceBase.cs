@@ -1,7 +1,8 @@
-﻿using System;
-using CodeStream.VisualStudio.Extensions;
-using System.Threading.Tasks;
+﻿using CodeStream.VisualStudio.Extensions;
+using System;
 using System.Windows.Controls;
+using Microsoft.VisualStudio.Shell;
+using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Services
 {
@@ -14,6 +15,23 @@ namespace CodeStream.VisualStudio.Services
 
         public string Message { get; }
     }
+
+    public interface SBrowserService
+    {
+
+    }
+
+    public interface IBrowserService : IDisposable
+    {
+        void PostMessage(string message);
+        void PostMessage(object message);
+        void LoadHtml(string html);
+        void AddWindowMessageEvent(WindowMessageHandler handler);
+        void AttachControl(Grid grid);
+        string FooterHtml { get; }
+    }
+
+    public delegate Task WindowMessageHandler(object sender, WindowEventArgs e);
 
     public abstract class BrowserServiceBase : IBrowserService, SBrowserService
     {
@@ -33,22 +51,29 @@ namespace CodeStream.VisualStudio.Services
         {
             PostMessage(message.ToJson());
         }
-    }    
-
-    public interface SBrowserService
-    {
-
     }
 
-    public interface IBrowserService : IDisposable
+    public class NullBrowserService : BrowserServiceBase
     {
-        void PostMessage(string message);
-        void PostMessage(object message);
-        void LoadHtml(string html);
-        void AddWindowMessageEvent(WindowMessageHandler handler);
-        void AttachControl(Grid grid);
-        string FooterHtml { get; }
-    }
+        private readonly IAsyncServiceProvider _serviceProvider;
+        public NullBrowserService(IAsyncServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+        }
 
-    public delegate Task WindowMessageHandler(object sender, WindowEventArgs e);
+        public override void Dispose()
+        {
+
+        }
+
+        public override void AddWindowMessageEvent(WindowMessageHandler handler)
+        {
+
+        }
+
+        public override void AttachControl(Grid grid)
+        {
+
+        }
+    }
 }
