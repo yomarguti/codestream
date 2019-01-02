@@ -201,6 +201,7 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="Resources\Sprites.png" />
+    <EmbeddedResource Include="teamdev.licenses" />
     <Content Include="UI\WebViews\Shared\webview.css" />
     <Content Include="UI\WebViews\Shared\webview.js" />
     <Content Include="UI\WebViews\theme.css">

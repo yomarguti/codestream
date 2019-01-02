@@ -118,10 +118,10 @@ namespace CodeStream.VisualStudio.Services
 
     public class CodeStreamAgentService : ICodeStreamAgentService
     {
-        static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
-
+        private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
         private readonly ISessionService _sessionService;
         private readonly IAsyncServiceProvider _serviceProvider;
+
         public CodeStreamAgentService(ISessionService sessionService, IAsyncServiceProvider serviceProvider)
         {
             _sessionService = sessionService;
@@ -136,11 +136,8 @@ namespace CodeStream.VisualStudio.Services
             Rpc = rpc;
         }
 
-        public async Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null)
+        private async Task<T> SendCoreAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null)
         {
-            if (!_sessionService.IsReady)
-                return default(T);
-
             cancellationToken = cancellationToken ?? CancellationToken.None;
             try
             {
@@ -151,6 +148,14 @@ namespace CodeStream.VisualStudio.Services
                 Log.Error(ex, "SendAsync Name={Name}", name);
                 throw;
             }
+        }
+
+        public async Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null)
+        {
+            if (!_sessionService.IsReady)
+                return default(T);
+
+            return await SendCoreAsync<T>(name, arguments, cancellationToken);
         }
 
         public async Task<FetchCodemarksResponse> GetMarkersAsync(string streamId)
@@ -212,7 +217,7 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task<JToken> LoginViaTokenAsync(string signupToken, string serverUrl)
         {
-            return await SendAsync<JToken>("codeStream/cli/login", new LoginRequest
+            return await SendCoreAsync<JToken>("codeStream/cli/login", new LoginRequest
             {
                 SignupToken = signupToken,
                 ServerUrl = serverUrl,
@@ -225,7 +230,7 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task<JToken> LoginAsync(string email, string password, string serverUrl)
         {
-            return await SendAsync<JToken>("codeStream/cli/login", new LoginRequest
+            return await SendCoreAsync<JToken>("codeStream/cli/login", new LoginRequest
             {
                 Email = email,
                 PasswordOrToken = password,

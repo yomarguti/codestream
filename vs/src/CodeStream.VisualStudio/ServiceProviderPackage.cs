@@ -35,6 +35,9 @@ namespace CodeStream.VisualStudio
         }
 
         [Export]
+        private ICodeStreamService CodeStreamService => GetService<SCodeStreamService>() as ICodeStreamService;
+
+        [Export]
         private ICodeStreamToolWindowProvider CodeStreamServiceProvider => GetService<SCodeStreamToolWindowProvider>() as ICodeStreamToolWindowProvider;
 
         [Export]
@@ -106,14 +109,14 @@ namespace CodeStream.VisualStudio
             if (typeof(SSelectedTextService) == serviceType)
                 return new SelectedTextService(null, GetService(typeof(SVsTextManager)) as IVsTextManager2);
             if (typeof(SBrowserService) == serviceType)
-                return new NullBrowserService(this);
+                return new DotNetBrowserService(this);
             if (typeof(SSettingsService) == serviceType)
                 return new SettingsService(_codeStreamOptions as IOptionsDialogPage);
             if (typeof(SCodeStreamAgentService) == serviceType)
-                return new CodeStreamAgentService(GetService(typeof(SSettingsService)) as ISessionService, this);
+                return new CodeStreamAgentService(GetService(typeof(SSessionService)) as ISessionService, this);
             if (typeof(SCodeStreamService) == serviceType)
                 return new CodeStreamService(
-                    GetService(typeof(SSettingsService)) as ISessionService,
+                    GetService(typeof(SSessionService)) as ISessionService,
                     GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
                     GetService(typeof(SBrowserService)) as IBrowserService
                 );
