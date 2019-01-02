@@ -8,14 +8,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Task = Microsoft.VisualStudio.Shell.Task;
 
 namespace CodeStream.VisualStudio.Services
 {
-    public interface SCodeStreamAgentService
-    {
-
-    }
+    public interface SCodeStreamAgentService { }
 
     public interface ICodeStreamAgentService
     {
@@ -34,7 +30,7 @@ namespace CodeStream.VisualStudio.Services
         Task<BootstrapState> GetBootstrapAsync(State state, Settings settings);
         Task<FetchCodemarksResponse> GetMarkersAsync(string streamId);
         Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request);
-        Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(FileUri uri, CancellationToken? cancellationToken = null);
+        Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(Uri uri, CancellationToken? cancellationToken = null);
     }
 
     public class PrepareCodeResponse
@@ -128,12 +124,12 @@ namespace CodeStream.VisualStudio.Services
             _serviceProvider = serviceProvider;
         }
 
-        private JsonRpc Rpc { get; set; }
+        private JsonRpc _rpc;
 
         public async System.Threading.Tasks.Task SetRpcAsync(JsonRpc rpc)
         {
             await System.Threading.Tasks.Task.Yield();
-            Rpc = rpc;
+            _rpc = rpc;
         }
 
         private async Task<T> SendCoreAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null)
@@ -141,7 +137,7 @@ namespace CodeStream.VisualStudio.Services
             cancellationToken = cancellationToken ?? CancellationToken.None;
             try
             {
-                return await Rpc.InvokeWithParameterObjectAsync<T>(name, arguments, cancellationToken.Value);
+                return await _rpc.InvokeWithParameterObjectAsync<T>(name, arguments, cancellationToken.Value);
             }
             catch (Exception ex)
             {
@@ -163,7 +159,7 @@ namespace CodeStream.VisualStudio.Services
             return await SendAsync<FetchCodemarksResponse>("codeStream/fetchCodemarks", new { streamId = streamId });
         }
 
-        public async Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(FileUri uri,
+        public async Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(Uri uri,
             CancellationToken? cancellationToken = null)
         {
             return await SendAsync<DocumentMarkersResponse>("codeStream/textDocument/markers", new
@@ -197,8 +193,7 @@ namespace CodeStream.VisualStudio.Services
             });
         }
 
-        public async Task<PrepareCodeResponse> PrepareCodeAsync(string uri,
-            Range range,
+        public async Task<PrepareCodeResponse> PrepareCodeAsync(string uri, Range range,
             CancellationToken? cancellationToken = null
          )
         {
@@ -260,12 +255,12 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task<BootstrapState> GetBootstrapAsync(State state, Settings settings)
         {
-            var repos = await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/repos");
-            var streams = await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/streams");
-            var teams = await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/teams");
-            var usersUnreads = await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/unreads");
-            var users = await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users");
-            var usersPreferences = await Rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/preferences");
+            var repos = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/repos");
+            var streams = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/streams");
+            var teams = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/teams");
+            var usersUnreads = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/unreads");
+            var users = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users");
+            var usersPreferences = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/preferences");
 
             var bootstrapState = new BootstrapState
             {

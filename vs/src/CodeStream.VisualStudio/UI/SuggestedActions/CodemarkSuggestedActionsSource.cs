@@ -103,7 +103,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
             ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
                 await codeStreamService.PostCodeAsync(
-                        new FileUri(_textDocument.FilePath),
+                        new Uri(_textDocument.FilePath),
                         _selectedText,
                         true,
                         cancellationToken);

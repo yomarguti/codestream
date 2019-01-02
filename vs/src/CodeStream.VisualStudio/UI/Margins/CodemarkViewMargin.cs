@@ -145,7 +145,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                         var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
                         ThreadHelper.JoinableTaskFactory.Run(async delegate
                         {
-                            await codeStreamService.PostCodeAsync(new FileUri(_textDocument.FilePath), selectedText1,
+                            await codeStreamService.PostCodeAsync(new Uri(_textDocument.FilePath), selectedText1,
                                 true, CancellationToken.None);
                         });
                     }
@@ -228,7 +228,7 @@ namespace CodeStream.VisualStudio.UI.Margins
             //if no cache, or we've gotten here for any other reason except scrolling -- get again
             if (_markerCache == null || e?.Reason != TextDocumentChangedReason.Scrolled)
             {
-                _markerCache = await _agentService.GetMarkersForDocumentAsync(new Models.FileUri(_textDocument.FilePath));
+                _markerCache = await _agentService.GetMarkersForDocumentAsync(new Uri(_textDocument.FilePath));
             }
 
             if (_markerCache == null)

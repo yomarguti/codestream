@@ -3,19 +3,6 @@ using System;
 
 namespace CodeStream.VisualStudio.Models
 {
-    public class FileUri : Uri
-    {
-        public FileUri(string path) : base("file:///" + path.Replace("/", "\\"))
-        {
-
-        }
-
-        public bool EqualsIgnoreCase(string uri)
-        {
-            return uri.EqualsIgnoreCase(ToString());
-        }
-    }
-
     public class SelectedText
     {
         public int StartLine { get; set; }

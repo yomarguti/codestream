@@ -10,7 +10,7 @@ namespace CodeStream.VisualStudio.Services
     public interface ICodeStreamService
     {
         Task ChangeActiveWindowAsync(string fileName, Uri uri);
-        Task<object> PostCodeAsync(FileUri uri, SelectedText selectedText, bool? isHighlight = null, CancellationToken? cancellationToken = null);
+        Task<object> PostCodeAsync(Uri uri, SelectedText selectedText, bool? isHighlight = null, CancellationToken? cancellationToken = null);
         Task OpenCommentByPostAsync(string streamId, string postId);
         Task OpenCommentByThreadAsync(string streamId, string threadId);
         /// <summary>
@@ -97,7 +97,7 @@ namespace CodeStream.VisualStudio.Services
             });
         }
 
-        public async Task<object> PostCodeAsync(FileUri uri, SelectedText selectedText, bool? isHighlight = null,
+        public async Task<object> PostCodeAsync(Uri uri, SelectedText selectedText, bool? isHighlight = null,
             CancellationToken? cancellationToken = null)
         {
             if (!_sessionService.IsReady)
