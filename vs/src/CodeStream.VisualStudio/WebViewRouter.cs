@@ -117,6 +117,7 @@ namespace CodeStream.VisualStudio
                         }
                     case "codestream:interaction:svc-request":
                         {
+                            // handles things like VSLS etc.
                             break;
                         }
                     case "codestream:subscription:file-changed":

@@ -1,7 +1,7 @@
 ﻿using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.Vssdk;
 using CodeStream.VisualStudio.Vssdk.Events;
+using Microsoft.VisualStudio.Shell;
 
 namespace CodeStream.VisualStudio
 {
@@ -18,7 +18,10 @@ namespace CodeStream.VisualStudio
         {
             if (e.FileName.IsNullOrWhiteSpace() || e.Uri == null) return;
 
-            _codeStreamService.ChangeActiveWindow(e.FileName, e.Uri);
+            ThreadHelper.JoinableTaskFactory.Run(async delegate
+            {
+                await _codeStreamService.ChangeActiveWindowAsync(e.FileName, e.Uri);
+            });
         }
     }
 }

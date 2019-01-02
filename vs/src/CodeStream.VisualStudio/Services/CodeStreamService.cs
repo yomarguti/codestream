@@ -9,7 +9,7 @@ namespace CodeStream.VisualStudio.Services
 
     public interface ICodeStreamService
     {
-        void ChangeActiveWindow(string fileName, Uri uri);
+        Task ChangeActiveWindowAsync(string fileName, Uri uri);
         Task<object> PostCodeAsync(FileUri uri, SelectedText selectedText, bool? isHighlight = null, CancellationToken? cancellationToken = null);
         Task OpenCommentByPostAsync(string streamId, string postId);
         Task OpenCommentByThreadAsync(string streamId, string threadId);
@@ -33,10 +33,12 @@ namespace CodeStream.VisualStudio.Services
             _browserService = browserService;
         }
 
-        public void ChangeActiveWindow(string fileName, Uri uri)
+        public async Task ChangeActiveWindowAsync(string fileName, Uri uri)
         {
             if (!_sessionService.IsReady)
                 return;
+
+            var streamResponse = await _agentService.GetFileStreamAsync(uri);
 
             _browserService.PostMessage(new
             {
@@ -45,9 +47,10 @@ namespace CodeStream.VisualStudio.Services
                 {
                     editor = new
                     {
-                        fileStreamId = (string)null,
+                        fileStreamId = streamResponse?.Stream?.Id,
                         uri = uri.ToString(),
                         fileName = fileName,
+                        // in vscode, this came from the editor...
                         languageId = (string)null
                     }
                 }

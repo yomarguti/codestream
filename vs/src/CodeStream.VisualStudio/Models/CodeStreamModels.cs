@@ -227,7 +227,6 @@ namespace CodeStream.VisualStudio.Models
             MemberIds = new List<string>();
         }
 
-        //file
         public bool IsArchived { get; set; }
         public string Privacy { get; set; }
         public string SortId { get; set; }
@@ -252,6 +251,11 @@ namespace CodeStream.VisualStudio.Models
         public string ServiceType { get; set; }
         public string ServiceKey { get; set; }
         public Dictionary<string, object> ServiceInfo { get; set; }
+    }
+
+    public class CsFileStream : CsStream
+    {
+
     }
 
     public class CsMePreferences : Dictionary<string, object>

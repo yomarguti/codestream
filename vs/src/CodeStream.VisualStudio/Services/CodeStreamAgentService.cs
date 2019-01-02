@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Task = Microsoft.VisualStudio.Shell.Task;
 
 namespace CodeStream.VisualStudio.Services
 {
@@ -23,6 +24,8 @@ namespace CodeStream.VisualStudio.Services
         Task<PrepareCodeResponse> PrepareCodeAsync(string uri, Range range,
            CancellationToken? cancellationToken = null
         );
+
+        Task<GetFileStreamResponse> GetFileStreamAsync(Uri uri);
         Task<GetPostResponse> GetPostAsync(string streamId, string postId);
         Task<GetUserResponse> GetUserAsync(string userId);
         Task<JToken> LoginViaTokenAsync(string signupToken, string serverUrl);
@@ -108,6 +111,11 @@ namespace CodeStream.VisualStudio.Services
         public CsUser User { get; set; }
     }
 
+    public class GetFileStreamResponse
+    {
+        public CsFileStream Stream { get; set; }
+    }
+
     public class CodeStreamAgentService : ICodeStreamAgentService
     {
         static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
@@ -157,6 +165,14 @@ namespace CodeStream.VisualStudio.Services
             {
                 textDocument = new { uri = uri.ToString() }
             }, cancellationToken);
+        }
+
+        public async Task<GetFileStreamResponse> GetFileStreamAsync(Uri uri)
+        {
+            return await SendAsync<GetFileStreamResponse>("codeStream/streams/fileStream", new
+            {
+                textDocument = new {uri = uri.ToString()}
+            });
         }
 
         public async Task<GetPostResponse> GetPostAsync(string streamId, string postId)
