@@ -17,6 +17,6 @@ export const connectSlack = () => (dispatch, getState, { api }) => {
 
 export const connectService = service => (dispatch, getState, { api }) => {
 	api.connectService(service).then(() => {
-		dispatch({ type: "GO_TO_COMPLETE_CONNECT", payload: { authType: "trello" } });
+		dispatch({ type: "GO_TO_COMPLETE_CONNECT", payload: { authType: service } });
 	});
 };
