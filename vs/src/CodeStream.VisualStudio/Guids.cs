@@ -1,8 +1,11 @@
-﻿namespace CodeStream.VisualStudio
+﻿using System;
+
+namespace CodeStream.VisualStudio
 {
     public static class Guids
     {
         // Window Ids
+        public static Guid WebViewToolWindowGuid = new Guid(WebViewToolWindowId);
         public const string WebViewToolWindowId = "0fae43ec-bc2d-417e-af01-a477439cf228";
 
         // VisualStudio IDs

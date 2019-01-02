@@ -1,6 +1,6 @@
-﻿using System;
+﻿using CodeStream.VisualStudio.Vssdk.Commands;
+using System;
 using System.ComponentModel.Composition;
-using CodeStream.VisualStudio.Vssdk.Commands;
 
 namespace CodeStream.VisualStudio.Commands
 {
@@ -17,12 +17,12 @@ namespace CodeStream.VisualStudio.Commands
         }
 
         public static readonly Guid CommandSet = new Guid(Guids.ToggleToolWindowCommandCmdSet);
-        
+
         public const int CommandId = PkgCmdIDList.ToggleToolWindowCommand;
 
         public override System.Threading.Tasks.Task Execute()
         {
-            _provider.ToggleToolWindowVisibility();
+            _provider.ToggleToolWindowVisibility(Guids.WebViewToolWindowGuid);
 
             return System.Threading.Tasks.Task.CompletedTask;
         }

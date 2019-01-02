@@ -1,5 +1,6 @@
 ﻿using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Services;
+using CodeStream.VisualStudio.UI.Settings;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -9,22 +10,18 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
-using CodeStream.VisualStudio.UI.Settings;
 using IAsyncServiceProvider = Microsoft.VisualStudio.Shell.IAsyncServiceProvider;
 
 namespace CodeStream.VisualStudio
 {
     public interface ICodeStreamToolWindowProvider
     {
-        void ToggleToolWindowVisibility();
-        void ShowToolWindow();
-        bool IsVisible();
+        void ToggleToolWindowVisibility(Guid toolWindowId);
+        void ShowToolWindow(Guid toolWindowId);
+        bool IsVisible(Guid toolWindowId);
     }
 
-    public interface SCodeStreamServiceProvider
-    {
-
-    }
+    public interface SCodeStreamToolWindowProvider { }
 
     [PartCreationPolicy(CreationPolicy.Shared)]
     public class ServiceProviderExports
@@ -34,24 +31,18 @@ namespace CodeStream.VisualStudio
         [ImportingConstructor]
         public ServiceProviderExports([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider)
         {
-           _serviceProvider = serviceProvider;
+            _serviceProvider = serviceProvider;
         }
 
         [Export]
-        private ICodeStreamToolWindowProvider CodeStreamServiceProvider => GetService<SCodeStreamServiceProvider>() as ICodeStreamToolWindowProvider;
+        private ICodeStreamToolWindowProvider CodeStreamServiceProvider => GetService<SCodeStreamToolWindowProvider>() as ICodeStreamToolWindowProvider;
 
         [Export]
         private ISessionService SessionService => GetService<SSessionService>() as ISessionService;
 
-
-        T GetService<T>() where T : class
+        private T GetService<T>() where T : class
         {
             var service = (T)_serviceProvider.GetService(typeof(T));
-            if (service == null)
-            {
-                return null;
-            }
-
             return service;
         }
     }
@@ -59,78 +50,25 @@ namespace CodeStream.VisualStudio
     /// <summary>
     /// Pseudo-package to allow for a custom service provider
     /// </summary>
-    [ProvideService(typeof(SCodeStreamServiceProvider))]
+    [ProvideService(typeof(SCodeStreamToolWindowProvider))]
     [ProvideService(typeof(SEventAggregator))]
     [ProvideService(typeof(SIdeService))]
     [ProvideService(typeof(SHostService))]
     [ProvideService(typeof(SSessionService))]
     [ProvideService(typeof(SSelectedTextService))]
     [ProvideService(typeof(SBrowserService))]
-    [ProvideService(typeof(SCodeStreamAgentService))] 
+    [ProvideService(typeof(SCodeStreamAgentService))]
     [ProvideService(typeof(SCodeStreamService))]
     [ProvideService(typeof(SSettingsService))]
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [Guid(Guids.ServiceProviderPackageId)]
     public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer, IAsyncServiceProvider,
-           ICodeStreamToolWindowProvider, SCodeStreamServiceProvider
+           ICodeStreamToolWindowProvider, SCodeStreamToolWindowProvider
     {
         /// <summary>
         /// Store a reference to this as only a class that inherits from AsyncPackage can call GetDialogPage
         /// </summary>
         private OptionsDialogPage _codeStreamOptions;
-
-        public bool IsVisible()
-        {
-            ThreadHelper.ThrowIfNotOnUIThread();
-            var guid = new Guid(Guids.WebViewToolWindowId);
-
-            var shell = Package.GetGlobalService(typeof(SVsUIShell)) as IVsUIShell;
-            if (ErrorHandler.Failed(shell.FindToolWindow((uint)__VSCREATETOOLWIN.CTW_fForceCreate, ref guid, out var frame)))
-            {
-                return false;
-            }
-            else
-            {
-                return frame.IsVisible() == VSConstants.S_OK;
-            }
-        }
-
-        public void ShowToolWindow()
-        {
-            ThreadHelper.ThrowIfNotOnUIThread();
-            var guid = new Guid(Guids.WebViewToolWindowId);
-
-            var shell = Package.GetGlobalService(typeof(SVsUIShell)) as IVsUIShell;
-            if (ErrorHandler.Failed(shell.FindToolWindow((uint)__VSCREATETOOLWIN.CTW_fForceCreate, ref guid, out var frame)))
-            {
-                return;
-            }
-            else
-            {
-                if (frame.IsVisible() != VSConstants.S_OK)
-                {
-                    frame.Show();
-                }
-            }
-        }
-
-        public void ToggleToolWindowVisibility()
-        {
-            ThreadHelper.ThrowIfNotOnUIThread();
-            var guid = new Guid(Guids.WebViewToolWindowId);
-            IVsWindowFrame frame;
-            var shell = Package.GetGlobalService(typeof(SVsUIShell)) as IVsUIShell;
-            if(ErrorHandler.Failed(shell.FindToolWindow((uint)__VSCREATETOOLWIN.CTW_fForceCreate, ref guid, out frame)))
-            {
-                return;
-            }
-            else
-            {
-                ErrorHandler.ThrowOnFailure(frame.IsVisible() == VSConstants.S_OK
-                    ? frame.Hide()
-                    : frame.Show());
-            }
-        }
 
         protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
@@ -138,24 +76,24 @@ namespace CodeStream.VisualStudio
 
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-            ServiceCreatorCallback callback = new ServiceCreatorCallback(CreateService);
+            var callback = new ServiceCreatorCallback(CreateService);
             _codeStreamOptions = (OptionsDialogPage)GetDialogPage(typeof(OptionsDialogPage));
 
-            ((IServiceContainer)this).AddService(typeof(SCodeStreamServiceProvider), callback, true);
+            ((IServiceContainer)this).AddService(typeof(SCodeStreamToolWindowProvider), callback, true);
             ((IServiceContainer)this).AddService(typeof(SEventAggregator), callback, true);
             ((IServiceContainer)this).AddService(typeof(SIdeService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SSessionService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SHostService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SSelectedTextService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SBrowserService), callback, true);
-            ((IServiceContainer)this).AddService(typeof(SCodeStreamAgentService), callback, true); 
+            ((IServiceContainer)this).AddService(typeof(SCodeStreamAgentService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SCodeStreamService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SSettingsService), callback, true);
         }
 
         private object CreateService(IServiceContainer container, Type serviceType)
         {
-            if (typeof(SCodeStreamServiceProvider) == serviceType)
+            if (typeof(SCodeStreamToolWindowProvider) == serviceType)
                 return this;
             if (typeof(SEventAggregator) == serviceType)
                 return new EventAggregator();
@@ -172,13 +110,51 @@ namespace CodeStream.VisualStudio
             if (typeof(SSettingsService) == serviceType)
                 return new SettingsService(_codeStreamOptions as IOptionsDialogPage);
             if (typeof(SCodeStreamAgentService) == serviceType)
-                return new CodeStreamAgentService(this);
+                return new CodeStreamAgentService(GetService(typeof(SSettingsService)) as ISessionService, this);
             if (typeof(SCodeStreamService) == serviceType)
                 return new CodeStreamService(
+                    GetService(typeof(SSettingsService)) as ISessionService,
                     GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
                     GetService(typeof(SBrowserService)) as IBrowserService
                 );
             return null;
+        }
+
+        private static bool TryGetWindowFrame(Guid toolWindowId, out IVsWindowFrame frame)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            var shell = Package.GetGlobalService(typeof(SVsUIShell)) as IVsUIShell;
+            if (shell == null || ErrorHandler.Failed(shell.FindToolWindow((uint)__VSCREATETOOLWIN.CTW_fForceCreate, ref toolWindowId, out frame)))
+            {
+                frame = null;
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool IsVisible(Guid toolWindowId)
+        {
+            return TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame) && frame.IsVisible() == VSConstants.S_OK;
+        }
+
+        public void ShowToolWindow(Guid toolWindowId)
+        {
+            if (!TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame)) return;
+
+            if (frame.IsVisible() != VSConstants.S_OK)
+            {
+                frame.Show();
+            }
+        }
+
+        public void ToggleToolWindowVisibility(Guid toolWindowId)
+        {
+            if (TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame))
+            {
+                ErrorHandler.ThrowOnFailure(frame.IsVisible() == VSConstants.S_OK ? frame.Hide() : frame.Show());
+            }
         }
     }
 }

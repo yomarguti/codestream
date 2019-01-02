@@ -193,7 +193,6 @@ namespace CodeStream.VisualStudio.LSP
 
                     await codeStreamAgentService.SetRpcAsync(_rpc);
                     sessionService.SetAgentReady();
-                    codeStreamService.SetAgentReady();
 
                     var ea = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
                     Contract.Assume(ea != null);

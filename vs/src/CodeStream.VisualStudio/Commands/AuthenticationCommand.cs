@@ -1,8 +1,8 @@
-﻿using System;
-using System.ComponentModel.Composition;
-using CodeStream.VisualStudio.Services;
+﻿using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.Vssdk.Commands;
 using Microsoft.VisualStudio.Shell;
+using System;
+using System.ComponentModel.Composition;
 
 namespace CodeStream.VisualStudio.Commands
 {
@@ -12,9 +12,9 @@ namespace CodeStream.VisualStudio.Commands
         private readonly ISessionService _sessionService;
         private readonly ICodeStreamToolWindowProvider _codeStreamToolWindowProvider;
 
-       [ImportingConstructor]
+        [ImportingConstructor]
         protected AuthenticationCommand(ISessionService sessionService, ICodeStreamToolWindowProvider codeStreamToolWindowProvider)
-            : base(CommandSet, CommandId)
+             : base(CommandSet, CommandId)
         {
             _sessionService = sessionService;
             _codeStreamToolWindowProvider = codeStreamToolWindowProvider;
@@ -31,12 +31,12 @@ namespace CodeStream.VisualStudio.Commands
 
         public override System.Threading.Tasks.Task Execute()
         {
-            _codeStreamToolWindowProvider.ShowToolWindow();
+            _codeStreamToolWindowProvider.ShowToolWindow(Guids.WebViewToolWindowGuid);
 
             return System.Threading.Tasks.Task.CompletedTask;
         }
 
-        private void SetText(OleMenuCommand sender)
+        private void SetText(IOleMenuCommand sender)
         {
             sender.Text = _sessionService.IsReady ? "CodeStream: Sign Out" : "CodeStream: Sign In";
         }

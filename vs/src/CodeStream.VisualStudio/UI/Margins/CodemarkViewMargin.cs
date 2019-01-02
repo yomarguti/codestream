@@ -32,6 +32,8 @@ namespace CodeStream.VisualStudio.UI.Margins
         private bool _isDisposed;
         private readonly IWpfTextView _textView;
         private readonly IEventAggregator _events;
+        private readonly ISessionService _sessionService;
+        private readonly ICodeStreamToolWindowProvider _toolWindowProvider;
         private readonly IEventAggregator _eventAggregator;
         private readonly ICodeStreamAgentService _agentService;
         private readonly List<IDisposable> _disposables;
@@ -50,10 +52,12 @@ namespace CodeStream.VisualStudio.UI.Margins
         /// <param name="settingsService"></param>
         /// <param name="textView">The <see cref="IWpfTextView"/> to attach the margin to.</param>
         /// <param name="eventAggregator"></param>
+        /// <param name="toolWindowProvider"></param>
         /// <param name="sessionService"></param>
         /// <param name="textDocumentFactoryService"></param>
         public CodemarkViewMargin(
             IEventAggregator eventAggregator,
+            ICodeStreamToolWindowProvider toolWindowProvider,
             ISessionService sessionService,
             ICodeStreamAgentService agentService,
             ISettingsService settingsService,
@@ -61,6 +65,8 @@ namespace CodeStream.VisualStudio.UI.Margins
             ITextDocumentFactoryService textDocumentFactoryService)
         {
             _eventAggregator = eventAggregator;
+            _toolWindowProvider = toolWindowProvider;
+            _sessionService = sessionService;
             _agentService = agentService;
             _openCommentOnSelect = settingsService.OpenCommentOnSelect;
             _textView = textView;
@@ -82,7 +88,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                 eventAggregator.GetEvent<SessionReadyEvent>().ObserveOnDispatcher()
                 .Subscribe(_ =>
                 {
-                    if (_agentService.IsReady && !_initialized)
+                    if (_sessionService.IsReady && !_initialized)
                     {
                         Initialize();
                     }
@@ -98,7 +104,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                 })
             };
 
-            if (sessionService.IsReady && _agentService.IsReady && !_initialized)
+            if (sessionService.IsReady && !_initialized)
             {
                 Initialize();
             }
@@ -175,8 +181,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                 }
             }
         }
-
-        private IVsWindowFrame _frame;
+        
         private void Selection_SelectionChanged(object sender, EventArgs e)
         {
             // TODO reconcile this!
@@ -184,16 +189,7 @@ namespace CodeStream.VisualStudio.UI.Margins
 
             if (!_openCommentOnSelect) return;
 
-            // TODO wrap this up?
-            if (_frame == null)
-            {
-                uint u = 0;
-                var uiShell = Package.GetGlobalService(typeof(IVsUIShell)) as IVsUIShell;
-                uiShell.FindToolWindow(u, new Guid(Guids.WebViewToolWindowId), out IVsWindowFrame frame);
-                _frame = frame;
-            }
-
-            if (_frame != null && _frame.IsVisible() == VSConstants.S_OK)
+            if (_toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid))
             {
                 _events.Publish(new TextSelectionChangedEvent());
             }
@@ -201,7 +197,7 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         private void TextView_ViewportHeightChanged(object sender, EventArgs e)
         {
-            Update(new TextDocumentChangedEvent()
+            Update(new TextDocumentChangedEvent
             {
                 Reason = TextDocumentChangedReason.ViewportHeightChanged
             });

@@ -186,7 +186,7 @@ namespace CodeStream.VisualStudio
                                                 sessionService.State = loginResponse.Result.State;
 
                                                 response.Body.Payload = await codeStreamAgent.GetBootstrapAsync(loginResponse.Result.State, settings.GetSettings());
-                                                sessionService.SetUserReady();
+                                                sessionService.SetUserLoggedIn();
                                                 success = true;
                                             }
                                         }
@@ -214,7 +214,6 @@ namespace CodeStream.VisualStudio
                                 case "go-to-signup":
                                     {
                                         var settings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
-
                                         var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message?.Id));
 
                                         try
@@ -254,8 +253,8 @@ namespace CodeStream.VisualStudio
                                     }
                                 case "validate-signup":
                                     {
-                                        var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id));
                                         var settings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
+                                        var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id));
 
                                         var success = false;
                                         string email = null;
@@ -281,7 +280,7 @@ namespace CodeStream.VisualStudio
                                                 email = loginResponse.Result.State.Email;
 
                                                 response.Body.Payload = await codeStreamAgent.GetBootstrapAsync(loginResponse.Result.State, settings.GetSettings());
-                                                sessionService.SetUserReady();
+                                                sessionService.SetUserLoggedIn();
                                                 success = true;
                                             }
                                         }

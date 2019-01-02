@@ -5,14 +5,10 @@ using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio.Services
 {
-    public interface SCodeStreamService
-    {
-
-    }
+    public interface SCodeStreamService { }
 
     public interface ICodeStreamService
     {
-        void SetAgentReady();
         void ChangeActiveWindow(string fileName, Uri uri);
         Task<object> PostCodeAsync(FileUri uri, SelectedText selectedText, bool? isHighlight = null, CancellationToken? cancellationToken = null);
         Task OpenCommentByPostAsync(string streamId, string postId);
@@ -21,23 +17,21 @@ namespace CodeStream.VisualStudio.Services
 
     public class CodeStreamService : ICodeStreamService, SCodeStreamService
     {
+        private readonly ISessionService _sessionService;
         private readonly ICodeStreamAgentService _agentService;
         private readonly IBrowserService _browserService;
-        private SessionState _sessionState;
-        public CodeStreamService(ICodeStreamAgentService serviceProvider, IBrowserService browserService)
+
+        public CodeStreamService(ISessionService sessionService, ICodeStreamAgentService serviceProvider, IBrowserService browserService)
         {
+            _sessionService = sessionService;
             _agentService = serviceProvider;
             _browserService = browserService;
         }
 
-        public void SetAgentReady()
-        {
-            _sessionState = SessionState.AgentReady;
-        }
-
         public void ChangeActiveWindow(string fileName, Uri uri)
         {
-            if (_sessionState != SessionState.AgentReady) return;
+            if (!_sessionService.IsReady)
+                return;
 
             _browserService.PostMessage(new
             {
@@ -59,7 +53,8 @@ namespace CodeStream.VisualStudio.Services
         {
             await Task.Yield();
 
-            if (_sessionState != SessionState.AgentReady) return;
+            if (!_sessionService.IsReady)
+                return;
 
             var postResponse = await _agentService.GetPostAsync(streamId, postId);
             if (postResponse?.Post != null)
@@ -80,6 +75,9 @@ namespace CodeStream.VisualStudio.Services
         {
             await Task.Yield();
 
+            if (!_sessionService.IsReady)
+                return;
+
             _browserService.PostMessage(new
             {
                 type = "codestream:interaction:stream-thread-selected",
@@ -94,6 +92,9 @@ namespace CodeStream.VisualStudio.Services
         public async Task<object> PostCodeAsync(FileUri uri, SelectedText selectedText, bool? isHighlight = null,
             CancellationToken? cancellationToken = null)
         {
+            if (!_sessionService.IsReady)
+                return Task.CompletedTask;
+
             var range = new Range(selectedText);
 
             var post = await _agentService.PrepareCodeAsync(uri.ToString(), range, cancellationToken);

@@ -43,7 +43,7 @@ namespace CodeStream.VisualStudio
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
             // kick it off!
-            var SCodeStreamServiceProvider = await GetServiceAsync(typeof(SCodeStreamServiceProvider));
+            var SCodeStreamServiceProvider = await GetServiceAsync(typeof(SCodeStreamToolWindowProvider));
 
             var iVsMonitorSelection = (IVsMonitorSelection)await GetServiceAsync(typeof(SVsShellMonitorSelection));
             var codeStreamService = await GetServiceAsync(typeof(SCodeStreamService)) as ICodeStreamService;

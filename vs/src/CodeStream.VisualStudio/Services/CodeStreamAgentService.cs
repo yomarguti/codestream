@@ -18,7 +18,6 @@ namespace CodeStream.VisualStudio.Services
 
     public interface ICodeStreamAgentService
     {
-        bool IsReady { get; }
         System.Threading.Tasks.Task SetRpcAsync(JsonRpc rpc);
         Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null);
         Task<PrepareCodeResponse> PrepareCodeAsync(string uri, Range range,
@@ -64,7 +63,6 @@ namespace CodeStream.VisualStudio.Services
 
     public class LoginRequest
     {
-
         public string ServerUrl { get; set; }
         public string Email { get; set; }
         public string PasswordOrToken { get; set; }
@@ -76,6 +74,8 @@ namespace CodeStream.VisualStudio.Services
         public Ide Ide { get; set; }
         public string TraceLevel { get; set; }
     }
+
+    public class LogoutRequest { }
 
     public class TextDocumentIdentifier
     {
@@ -110,29 +110,27 @@ namespace CodeStream.VisualStudio.Services
     public class CodeStreamAgentService : ICodeStreamAgentService
     {
         static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
+
+        private readonly ISessionService _sessionService;
         private readonly IAsyncServiceProvider _serviceProvider;
-        public CodeStreamAgentService(IAsyncServiceProvider serviceProvider)
+        public CodeStreamAgentService(ISessionService sessionService, IAsyncServiceProvider serviceProvider)
         {
+            _sessionService = sessionService;
             _serviceProvider = serviceProvider;
         }
 
-        public bool IsReady { get; private set; }
         private JsonRpc Rpc { get; set; }
 
         public async System.Threading.Tasks.Task SetRpcAsync(JsonRpc rpc)
         {
             await System.Threading.Tasks.Task.Yield();
             Rpc = rpc;
-
-            IsReady = true;
         }
 
         public async Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null)
         {
-            if (!IsReady)
-            {
+            if (!_sessionService.IsReady)
                 return default(T);
-            }
 
             cancellationToken = cancellationToken ?? CancellationToken.None;
             try
@@ -173,7 +171,7 @@ namespace CodeStream.VisualStudio.Services
         {
             return await SendAsync<GetUserResponse>("codeStream/user", new
             {
-               userId
+                userId
             });
         }
 

@@ -1,8 +1,8 @@
-﻿using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Annotations;
+using CodeStream.VisualStudio.Models;
 using Microsoft.VisualStudio.Shell;
 using System;
 using System.Runtime.Serialization;
-using CodeStream.VisualStudio.Annotations;
 
 namespace CodeStream.VisualStudio.Services
 {
@@ -14,14 +14,11 @@ namespace CodeStream.VisualStudio.Services
     {
         LoginResponse LoginResponse { get; set; }
         State State { get; set; }
-        BootstrapState BootstrapState { get; set; }
         Guid GetOrCreateSignupToken();
         void SetAgentReady();
-        void SetUserReady();
-        object Capabilities { get; set; }
+        void SetUserLoggedIn();
         string CurrentStreamId { get; set; }
         bool IsReady { get; }
-
     }
 
     [Injected]
@@ -31,7 +28,7 @@ namespace CodeStream.VisualStudio.Services
 
         public LoginResponse LoginResponse { get; set; }
         public State State { get; set; }
-        public BootstrapState BootstrapState { get; set; }
+
         private SessionState _sessionState;
         private Guid _signupToken = Guid.Empty;
 
@@ -50,51 +47,47 @@ namespace CodeStream.VisualStudio.Services
             return _signupToken;
         }
 
-        public object Capabilities { get; set; }
-
         public void SetAgentReady()
         {
+            if (_sessionState != SessionState.Unknown)
+                throw new SessionStateException("Origin state is invalid");
+
             _sessionState = SessionState.AgentReady;
         }
 
-        public void SetUserReady()
+        public void SetUserLoggedIn()
         {
-            _sessionState = SessionState.UserReady;
+            if (_sessionState != SessionState.AgentReady)
+                throw new SessionStateException("Agent is not ready");
+
+            _sessionState = _sessionState | SessionState.UserLoggedIn;
         }
 
         public string CurrentStreamId { get; set; }
-        public bool IsReady
-        {
-            get
-            {
-                return _sessionState == SessionState.UserReady;
-            }
-        }
+
+        /// <summary>
+        /// Session is ready when the agent has loaded and the user has logged in
+        /// </summary>
+        public bool IsReady => _sessionState == SessionState.Ready;
     }
 
-    public class AgentUninitializedException : Exception
+    public class SessionStateException : Exception
     {
-        public AgentUninitializedException()
-        {
-        }
+        public SessionStateException() {}
 
-        public AgentUninitializedException(string message) : base(message)
-        {
-        }
+        public SessionStateException(string message) : base(message) { }
 
-        public AgentUninitializedException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
+        public SessionStateException(string message, Exception innerException) : base(message, innerException) { }
 
-        protected AgentUninitializedException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
+        protected SessionStateException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 
+    [Flags]
     public enum SessionState
     {
-        Unknown,
-        UserReady,
-        AgentReady
+        Unknown = 0,
+        AgentReady = 1 << 0,
+        UserLoggedIn = 1 << 1,
+        Ready = AgentReady | UserLoggedIn
     }
 }

@@ -21,12 +21,19 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         public IWpfTextViewMargin CreateMargin(IWpfTextViewHost wpfTextViewHost, IWpfTextViewMargin parent)
         {
+            var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
+            var toolWindowProvider = Package.GetGlobalService(typeof(SCodeStreamToolWindowProvider)) as ICodeStreamToolWindowProvider;
             var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
             var agentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
-            var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
             var settings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
 
-            return new CodemarkViewMargin(eventAggregator, sessionService, agentService, settings, wpfTextViewHost.TextView, TextDocumentFactoryService);
+            return new CodemarkViewMargin(eventAggregator,
+                toolWindowProvider,
+                sessionService,
+                agentService,
+                settings,
+                wpfTextViewHost.TextView,
+                TextDocumentFactoryService);
         }
-    }     
+    }
 }
