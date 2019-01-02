@@ -62,6 +62,7 @@
     <Compile Include="Commands\IAuthenticationCommand.cs" />
     <Compile Include="Commands\AuthenticationCommand.cs" />
     <Compile Include="Commands\ToggleToolWindowCommand.cs" />
+    <Compile Include="Core\Logging\CodeStreamSink.cs" />
     <Compile Include="Core\Logging\TraceLevel.cs" />
     <Compile Include="Events\EventAggregator.cs" />
     <Compile Include="Events\EventArgs.cs" />
