@@ -20,10 +20,7 @@ using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio.LSP
 {
-    public interface ICodeStreamLanguageClient
-    {
-
-    }
+    public interface ICodeStreamLanguageClient { }
 
     public interface SCodeStreamLanguageClient { }
 
@@ -189,7 +186,6 @@ namespace CodeStream.VisualStudio.LSP
                 {
                     var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
                     var codeStreamAgentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
-                    var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
 
                     await codeStreamAgentService.SetRpcAsync(_rpc);
                     sessionService.SetAgentReady();

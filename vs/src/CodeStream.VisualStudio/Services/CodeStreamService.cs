@@ -134,6 +134,8 @@ namespace CodeStream.VisualStudio.Services
             await _agentService.LogoutAsync();
 
             _sessionService.Logout();
+
+            _browserService.LoadWebView();
         }
     }
 }
