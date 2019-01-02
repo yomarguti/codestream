@@ -1,6 +1,10 @@
-﻿using DotNetBrowser;
+﻿using CodeStream.VisualStudio.Extensions;
+using DotNetBrowser;
 using DotNetBrowser.WPF;
 using Microsoft.VisualStudio.Shell;
+using System;
+using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace CodeStream.VisualStudio.Services
@@ -10,6 +14,25 @@ namespace CodeStream.VisualStudio.Services
     /// </summary>
     public class DotNetBrowserService : BrowserServiceBase
     {
+        /// <summary>
+        /// For improved LIGHTWEIGHT rendering
+        /// </summary>
+        /// <remarks>see https://dotnetbrowser.support.teamdev.com/support/solutions/articles/9000124916-accelerated-lightweight-rendering</remarks>
+        private static readonly List<string> ChromiumSwitches = new List<string>
+        {
+            "--disable-gpu",
+            "--disable-gpu-compositing",
+            "--enable-begin-frame-scheduling",
+            "--software-rendering-fps=60",
+            "--disable-web-security",
+            "--allow-file-access-from-files"
+        };
+
+        private static readonly List<string> ChromiumSwitchesDebug = new List<string>
+        {
+            "--remote-debugging-port=9222"
+        };
+
         /// <summary>
         /// Interface provided by DotNetBrowser (isn't prefixed with I)
         /// </summary>
@@ -21,13 +44,15 @@ namespace CodeStream.VisualStudio.Services
         {
             _serviceProvider = serviceProvider;
 
+            var switches = ChromiumSwitches;
 #if DEBUG
-            BrowserPreferences.SetChromiumSwitches("--remote-debugging-port=9222", "--disable-web-security", "--allow-file-access-from-files");
-#else
-            BrowserPreferences.SetChromiumSwitches("--disable-web-security", "--allow-file-access-from-files");
+            switches = switches.Combine(ChromiumSwitchesDebug);
 #endif
-            _browserView = new WPFBrowserView(BrowserFactory.Create());
+            BrowserPreferences.SetChromiumSwitches(switches.ToArray());
 
+            // use LIGHTWEIGHT to avoid "System.InvalidOperationException: 'The specified Visual is not an ancestor of this Visual.'"
+            var browser = BrowserFactory.Create(BrowserType.LIGHTWEIGHT);
+            _browserView = new WPFBrowserView(browser);
             _browser = _browserView.Browser;
         }
 
@@ -49,8 +74,12 @@ namespace CodeStream.VisualStudio.Services
             _browser.LoadHTML(html);
         }
 
-        public override void AttachControl(Grid grid)
+        public override void AttachControl(FrameworkElement frameworkElement)
         {
+            var grid = frameworkElement as Grid;
+            if (grid == null)
+                throw new InvalidOperationException("Grid");
+
             Grid.SetColumn(grid, 0);
             grid.Children.Add(_browserView);
         }

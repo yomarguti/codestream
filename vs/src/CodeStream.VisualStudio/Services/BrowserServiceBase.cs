@@ -9,7 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Resources;
-using System.Windows.Controls;
+using System.Windows;
 using System.Windows.Media;
 using Task = System.Threading.Tasks.Task;
 
@@ -33,7 +33,7 @@ namespace CodeStream.VisualStudio.Services
         void PostMessage(object message);
         void LoadHtml(string html);
         void AddWindowMessageEvent(WindowMessageHandler handler);
-        void AttachControl(Grid grid);
+        void AttachControl(FrameworkElement frameworkElement);
         string FooterHtml { get; }
         void LoadWebView();
     }
@@ -50,7 +50,7 @@ namespace CodeStream.VisualStudio.Services
 
         public abstract void AddWindowMessageEvent(WindowMessageHandler handler);
 
-        public abstract void AttachControl(Grid grid);
+        public abstract void AttachControl(FrameworkElement frameworkElement);
 
         public virtual void LoadHtml(string html) { }
 
@@ -192,7 +192,7 @@ namespace CodeStream.VisualStudio.Services
 
         }
 
-        public override void AttachControl(Grid grid)
+        public override void AttachControl(FrameworkElement frameworkElement)
         {
 
         }
