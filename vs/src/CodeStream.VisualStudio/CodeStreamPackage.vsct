@@ -87,15 +87,15 @@
 
   <Symbols>
     <!-- This is the package guid. -->
-    <GuidSymbol name="guidCodeStreamCommandPackage" value="{5918a618-0520-4134-9133-4d8d4242ac6e}" />
+    <GuidSymbol name="guidCodeStreamCommandPackage" value="{dd6d0f58-10a8-4838-85b2-40b57f9cdf58}" />
 
     <!-- This is the guid used to group the menu commands together -->
-    <GuidSymbol name="guidCodeStreamCommandPackageCmdSet" value="{8a64bc5c-4166-4180-b7a6-e1a24a8f790f}">
+    <GuidSymbol name="guidCodeStreamCommandPackageCmdSet" value="{1cae5929-d500-4d06-8551-1a597650dd31}">
       <IDSymbol name="CodeStreamToolMenuGroup" value="0x1020" />
       <IDSymbol name="Command1Id" value="0x0100"  />
     </GuidSymbol>
 
-    <GuidSymbol name="guidCommand2PackageCmdSet" value="{9a64bc5c-4166-4180-b7a6-e1a24a8f790f}">
+    <GuidSymbol name="guidCommand2PackageCmdSet" value="{c6cb9c7f-3e68-4435-b8f8-64c4aa9954d5}">
       <IDSymbol name="CodeStreamToolMenuGroup" value="0x1020" />
       <IDSymbol name="Command2Id" value="0x0101"  />
     </GuidSymbol>

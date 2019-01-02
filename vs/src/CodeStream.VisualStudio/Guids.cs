@@ -6,7 +6,7 @@ namespace CodeStream.VisualStudio
     {
         // Window Ids
         public static Guid WebViewToolWindowGuid = new Guid(WebViewToolWindowId);
-        public const string WebViewToolWindowId = "0fae43ec-bc2d-417e-af01-a477439cf228";
+        public const string WebViewToolWindowId = "882ebf5e-eccc-49c1-a303-b113742c8bf5";
 
         // VisualStudio IDs
         // none
@@ -15,15 +15,15 @@ namespace CodeStream.VisualStudio
         // none
 
         // Packages
-        public const string CodeStreamPackageId = "5918a618-0520-4134-9133-4d8d4242ac6e";
-        public const string ServiceProviderPackageId = "D5CE1488-DEDE-426D-9E5B-BFCCFBE33E54";
-        public const string WebViewPackageId = "330ce502-4e1f-44b8-ab32-82a7ea71beeb";
+        public const string CodeStreamPackageId = "dd6d0f58-10a8-4838-85b2-40b57f9cdf58";
+        public const string ServiceProviderPackageId = "2e5983fb-7dbc-458e-b8f1-8561684049d0";
+        public const string WebViewPackageId = "62d34db8-65a4-4ce0-a2f7-c6198c043ebc";
 
-        // Guids defined in CodeStreamPackage.vsct
-        public const string ToggleToolWindowCommandCmdSet = "8a64bc5c-4166-4180-b7a6-e1a24a8f790f";
-        public const string AuthenticationCommandCmdSet = "9a64bc5c-4166-4180-b7a6-e1a24a8f790f";
+        // GUIDs defined in CodeStreamPackage.vsct
+        public const string ToggleToolWindowCommandCmdSet = "1cae5929-d500-4d06-8551-1a597650dd31";
+        public const string AuthenticationCommandCmdSet = "c6cb9c7f-3e68-4435-b8f8-64c4aa9954d5";
 
         // Others
-        public const string LanguageClientId = "DE885E15-D44E-40B1-A370-45372EFC23AA";
+        public const string LanguageClientId = "4d480d5e-ab28-4e9c-b0be-32cd08f3b8ea";
     }
 }
