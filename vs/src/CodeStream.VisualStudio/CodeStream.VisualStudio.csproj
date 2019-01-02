@@ -212,7 +212,6 @@
     <Content Include="UI\WebViews\webview.html">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <EmbeddedResource Include="teamdev.licenses" />
     <VSCTCompile Include="CodeStreamPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
