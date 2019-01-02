@@ -27,6 +27,7 @@ namespace CodeStream.VisualStudio.Services
         Task<GetUserResponse> GetUserAsync(string userId);
         Task<JToken> LoginViaTokenAsync(string signupToken, string serverUrl);
         Task<JToken> LoginAsync(string email, string password, string serverUrl);
+        Task<JToken> LogoutAsync();
         Task<BootstrapState> GetBootstrapAsync(State state, Settings settings);
         Task<FetchCodemarksResponse> GetMarkersAsync(string streamId);
         Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request);
@@ -218,6 +219,11 @@ namespace CodeStream.VisualStudio.Services
                 Ide = Application.Ide,
                 TraceLevel = "verbose"
             });
+        }
+
+        public async Task<JToken> LogoutAsync()
+        {
+            return await SendAsync<JToken>("codeStream/cli/logout", new LogoutRequest());
         }
 
         public async Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request)

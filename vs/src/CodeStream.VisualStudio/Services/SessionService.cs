@@ -18,7 +18,11 @@ namespace CodeStream.VisualStudio.Services
         void SetAgentReady();
         void SetUserLoggedIn();
         string CurrentStreamId { get; set; }
+        /// <summary>
+        /// Session is ready when the agent has loaded and the user has logged in
+        /// </summary>
         bool IsReady { get; }
+        void Logout();
     }
 
     [Injected]
@@ -63,11 +67,13 @@ namespace CodeStream.VisualStudio.Services
             _sessionState = _sessionState | SessionState.UserLoggedIn;
         }
 
+        public void Logout()
+        {
+            _sessionState = SessionState.AgentReady;
+        }
+
         public string CurrentStreamId { get; set; }
 
-        /// <summary>
-        /// Session is ready when the agent has loaded and the user has logged in
-        /// </summary>
         public bool IsReady => _sessionState == SessionState.Ready;
     }
 

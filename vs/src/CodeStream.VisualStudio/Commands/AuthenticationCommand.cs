@@ -10,13 +10,15 @@ namespace CodeStream.VisualStudio.Commands
     public class AuthenticationCommand : VsCommand, IAuthenticationCommand
     {
         private readonly ISessionService _sessionService;
+        private readonly ICodeStreamService _codeStreamService;
         private readonly ICodeStreamToolWindowProvider _codeStreamToolWindowProvider;
 
         [ImportingConstructor]
-        protected AuthenticationCommand(ISessionService sessionService, ICodeStreamToolWindowProvider codeStreamToolWindowProvider)
+        protected AuthenticationCommand(ISessionService sessionService, ICodeStreamService codeStreamService, ICodeStreamToolWindowProvider codeStreamToolWindowProvider)
              : base(CommandSet, CommandId)
         {
             _sessionService = sessionService;
+            _codeStreamService = codeStreamService;
             _codeStreamToolWindowProvider = codeStreamToolWindowProvider;
             SetText(this);
         }
@@ -29,11 +31,16 @@ namespace CodeStream.VisualStudio.Commands
             SetText(sender);
         }
 
-        public override System.Threading.Tasks.Task Execute()
+        public override async System.Threading.Tasks.Task Execute()
         {
-            _codeStreamToolWindowProvider.ShowToolWindow(Guids.WebViewToolWindowGuid);
-
-            return System.Threading.Tasks.Task.CompletedTask;
+            if (_sessionService.IsReady)
+            {
+                await _codeStreamService.LogoutAsync();
+            }
+            else
+            {
+                _codeStreamToolWindowProvider.ShowToolWindow(Guids.WebViewToolWindowGuid);
+            }
         }
 
         private void SetText(IOleMenuCommand sender)

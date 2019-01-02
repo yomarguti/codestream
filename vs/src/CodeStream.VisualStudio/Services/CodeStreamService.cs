@@ -13,6 +13,11 @@ namespace CodeStream.VisualStudio.Services
         Task<object> PostCodeAsync(FileUri uri, SelectedText selectedText, bool? isHighlight = null, CancellationToken? cancellationToken = null);
         Task OpenCommentByPostAsync(string streamId, string postId);
         Task OpenCommentByThreadAsync(string streamId, string threadId);
+        /// <summary>
+        /// logs the user out from the CodeStream agent and the session
+        /// </summary>
+        /// <returns></returns>
+        Task LogoutAsync();
     }
 
     public class CodeStreamService : ICodeStreamService, SCodeStreamService
@@ -116,6 +121,16 @@ namespace CodeStream.VisualStudio.Services
             });
 
             return new { };
+        }
+
+        public async Task LogoutAsync()
+        {
+            if (!_sessionService.IsReady)
+                return;
+
+            await _agentService.LogoutAsync();
+
+            _sessionService.Logout();
         }
     }
 }
