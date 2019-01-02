@@ -48,16 +48,19 @@ namespace CodeStream.VisualStudio
             var iVsMonitorSelection = (IVsMonitorSelection)await GetServiceAsync(typeof(SVsShellMonitorSelection));
             var codeStreamService = await GetServiceAsync(typeof(SCodeStreamService)) as ICodeStreamService;
             var eventAggregator = await GetServiceAsync(typeof(SEventAggregator)) as IEventAggregator;
+            var browserService = await GetServiceAsync(typeof(SBrowserService)) as IBrowserService;
 
             Contract.Assume(codeStreamService != null);
             Contract.Assume(eventAggregator != null);
+            Contract.Assume(browserService != null);
 
             _vsEventManager = new VsShellEventManager(iVsMonitorSelection);
 
             _languageServerReadyEvent = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
             {
-                var codeStreamEvents = new CodeStreamEventManager(codeStreamService);
+                var codeStreamEvents = new CodeStreamEventManager(codeStreamService, browserService);
                 _vsEventManager.WindowFocusChanged += codeStreamEvents.OnWindowFocusChanged;
+                _vsEventManager.ThemeChanged += codeStreamEvents.OnThemeChanged;
             });
 
             await InitializeLoggingAsync();

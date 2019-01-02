@@ -1,7 +1,6 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Services;
-using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
@@ -16,17 +15,14 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
         private static readonly ILogger Log = LogManager.ForContext<WebViewControl>();
 
         private readonly IDisposable _languageServerReadySubscription;
-        private readonly IBrowserService _browserService;
-        private readonly ResourceManager _resourceManager;
+        private readonly IBrowserService _browserService; 
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WebViewControl"/> class.
         /// </summary>
         public WebViewControl()
         {
-            _resourceManager = new ResourceManager("VSPackage", Assembly.GetExecutingAssembly());
-
-            VSColorTheme.ThemeChanged += VSColorTheme_ThemeChanged;
+            var resourceManager = new ResourceManager("VSPackage", Assembly.GetExecutingAssembly());
 
             InitializeComponent();
 
@@ -34,7 +30,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
             var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
 
             _browserService.AttachControl(grid);
-            _browserService.LoadHtml(_resourceManager.GetString("waiting"));
+            _browserService.LoadHtml(resourceManager.GetString("waiting"));
 
             var router = new WebViewRouter(null, eventAggregator, _browserService);
             _languageServerReadySubscription = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
@@ -46,14 +42,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 
                   _browserService.LoadWebView();
               });
-        }
-     
-        private void VSColorTheme_ThemeChanged(ThemeChangedEventArgs e)
-        {
-            Log.Verbose(nameof(VSColorTheme_ThemeChanged));
-
-            _browserService.LoadWebView();
-        }
+        }    
 
         #region IDisposable Support
         private bool _disposedValue = false; // To detect redundant calls
@@ -64,9 +53,9 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
             {
                 if (disposing)
                 {
-                    VSColorTheme.ThemeChanged -= VSColorTheme_ThemeChanged;
                     _languageServerReadySubscription?.Dispose();
                     _browserService?.Dispose();
+                    Log.Verbose($"Disposed {nameof(WebViewControl)}");
                 }
 
                 _disposedValue = true;
@@ -78,8 +67,6 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
         {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
-            // TODO: uncomment the following line if the finalizer is overridden above.
-            // GC.SuppressFinalize(this);
         }
         #endregion
 
