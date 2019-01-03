@@ -1,18 +1,22 @@
-﻿using Serilog;
-using Serilog.Core;
-using Serilog.Events;
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
+﻿using CodeStream.VisualStudio.Core.Logging.Sanitizer;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
+using Serilog.Formatting.Display;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
 
 namespace CodeStream.VisualStudio.Core.Logging
 {
     public static class LogManager
     {
 #if DEBUG
-        private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Verbose;
+        private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Debug;
 #else
         private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Warning;
 #endif
@@ -32,17 +36,21 @@ namespace CodeStream.VisualStudio.Core.Logging
                 "Logs",
                 "vs-extension.log");
 
-            const string outputTemplate =
-                "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{ProcessId:00000}] {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}{NewLine}{Exception}";
+            var formatter = new MessageTemplateTextFormatter("{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{ProcessId:00000}] {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}{NewLine}{Exception}",
+                new CultureInfo("en-US"));
 
             return new LoggerConfiguration()
                  .Enrich.WithProcessId()
                   .Enrich.WithThreadId()
                 .MinimumLevel.ControlledBy(LoggingLevelSwitch)
-                .WriteTo.File(logPath,
-                    fileSizeLimitBytes: 52428800,
-                    outputTemplate: outputTemplate,
-                    shared: true)
+                 .WriteTo.File(
+                     new LogSanitizingFormatter(
+                         new TextProcessor(),
+                         new List<ISanitizingFormatRule> { new SecretsSanitizingFormatRule() },
+                         formatter, true),
+                     logPath,
+                     fileSizeLimitBytes: 52428800,
+                     shared: true)
                 .CreateLogger();
         }
 
