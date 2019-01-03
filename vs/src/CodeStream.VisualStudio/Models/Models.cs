@@ -1,5 +1,6 @@
 ﻿using CodeStream.VisualStudio.Extensions;
 using System;
+using System.Diagnostics;
 
 namespace CodeStream.VisualStudio.Models
 {
@@ -14,12 +15,18 @@ namespace CodeStream.VisualStudio.Models
         public bool HasText => Text.IsNotNullOrWhiteSpace();
     }
 
-    // Note this is a vscode-languageserver model
+    /// <summary>
+    /// This is a vscode-languageserver model
+    /// </summary>
+    [DebuggerDisplay("Start Line={StartLine} Char={StartCharacter}, End Line={EndLine} Char={EndCharacter}")]
     public class Range
     {
-        public Range()
+        public Range(int startLine, int startCharacter, int endLine, int endCharacter)
         {
-
+            StartLine = startLine;
+            StartCharacter = startCharacter;
+            EndLine = endLine;
+            EndCharacter = endCharacter;
         }
 
         public Range(SelectedText text)
@@ -39,9 +46,9 @@ namespace CodeStream.VisualStudio.Models
             return new int[] { StartLine, StartCharacter, EndLine, EndCharacter };
         }
 
-        public int StartLine { get; set; }
-        public int StartCharacter { get; set; }
-        public int EndLine { get; set; }
-        public int EndCharacter { get; set; }
+        public int StartLine { get; }
+        public int StartCharacter { get;  }
+        public int EndLine { get;  }
+        public int EndCharacter { get;  }
     }
 }

@@ -137,14 +137,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="CodeStream.VisualStudio.pkgdef" />
-    <Content Include="dist\webview\webview.css">
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="dist\webview\webview.js">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <Resource Include="Resources\Assets\marker-comment-blue.png" />
     <Content Include="LSP\agent-cli.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -203,8 +195,12 @@
     </Content>
     <Content Include="Resources\Sprites.png" />
     <EmbeddedResource Include="teamdev.licenses" />
-    <Content Include="UI\WebViews\Shared\webview.css" />
-    <Content Include="UI\WebViews\Shared\webview.js" />
+    <Content Include="UI\WebViews\Shared\webview.css">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="UI\WebViews\Shared\webview.js">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="UI\WebViews\theme.css">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>

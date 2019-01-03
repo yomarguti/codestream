@@ -96,7 +96,12 @@ namespace CodeStream.VisualStudio.Services
                 return @"<script>
         window.addEventListener('message', function (e) {
             if (!e || e.type !== 'message' || e.data.type == null) return;
-            console.log(JSON.stringify(e.data))
+
+            var str = JSON.stringify(e.data);
+            if (!str || str[0] !== '{') return;
+            
+            console.log(str);
+
         }, false);        
     </script>";
             }

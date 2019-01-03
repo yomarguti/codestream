@@ -100,8 +100,6 @@ namespace CodeStream.VisualStudio.Models
         Slack
     }
 
-
-
     public class CsMarker : CsEntity
     {
         public string TeamId { get; set; }
@@ -126,13 +124,9 @@ namespace CodeStream.VisualStudio.Models
             {
                 if (LocationWhenCreated != null && LocationWhenCreated.Count >= 4)
                 {
-                    return new Range()
-                    {
-                        StartLine = LocationWhenCreated[0].ToInt(),
-                        StartCharacter = LocationWhenCreated[1].ToInt(),
-                        EndLine = LocationWhenCreated[2].ToInt(),
-                        EndCharacter = LocationWhenCreated[3].ToInt(),
-                    };
+                    return new Range(LocationWhenCreated[0].ToInt(), LocationWhenCreated[1].ToInt(),
+                        LocationWhenCreated[2].ToInt(), LocationWhenCreated[3].ToInt());
+
                 }
                 return null;
             }
@@ -488,8 +482,6 @@ namespace CodeStream.VisualStudio.Models
         public WebviewIpcMessageResponseBody Body { get; set; }
     }
 
-
-
     public class WebviewIpcMessageResponseBody
     {
         public WebviewIpcMessageResponseBody(string id)
@@ -545,7 +537,6 @@ namespace CodeStream.VisualStudio.Models
         }
     }
 
-
     public class CreatePostResponse
     {
         public CsFullPost Post { get; set; }
@@ -583,5 +574,22 @@ namespace CodeStream.VisualStudio.Models
         public string Revision { get; set; }
         public List<SourceAuthor> Authors { get; set; }
         public List<SourceRemote> Remotes { get; set; }
+    }
+
+    public class DidSelectCodeNotification
+    {
+        public string Type { get; set; }
+        public DidSelectCodeNotificationBody Body { get; set; }
+    }
+
+    public class DidSelectCodeNotificationBody
+    {
+        public  string Code { get; set; }
+        public string File { get; set; }
+        public string FileUri { get; set; }
+        public int[] Location { get; set; }
+        public Source Source { get; set; }
+        public string GitError { get; set; }
+        public  bool? IsHightlight { get; set; }
     }
 }

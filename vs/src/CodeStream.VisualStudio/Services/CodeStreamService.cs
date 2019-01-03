@@ -108,18 +108,18 @@ namespace CodeStream.VisualStudio.Services
             var post = await _agentService.PrepareCodeAsync(uri.ToString(), range, cancellationToken);
 
             var source = post?.Source;
-            _browserService.PostMessage(new
+            _browserService.PostMessage(new DidSelectCodeNotification
             {
-                type = "codestream:interaction:code-highlighted",
-                body = new
+                Type = "codestream:interaction:code-highlighted",
+                Body = new DidSelectCodeNotificationBody
                 {
-                    code = post?.Code,
-                    file = source?.File,
-                    fileUri = uri,
-                    location = range.ToLocation(),
-                    source = source,
-                    gitError = post?.GitError,
-                    isHightlight = isHighlight
+                    Code = post?.Code,
+                    File = source?.File,
+                    FileUri = uri.ToString(),
+                    Location = range.ToLocation(),
+                    Source = source,
+                    GitError = post?.GitError,
+                    IsHightlight = isHighlight
                 }
             });
 
