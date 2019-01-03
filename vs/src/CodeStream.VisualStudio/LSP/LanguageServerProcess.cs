@@ -18,13 +18,15 @@ namespace CodeStream.VisualStudio.LSP
         public System.Diagnostics.Process Create()
         {
             var assembly = Assembly.GetAssembly(typeof(LanguageServerProcess));
-            var path = Path.GetDirectoryName(assembly.Location) + @"\LSP\agent-cli.js";
+
 #if DEBUG
+            var path = Path.GetDirectoryName(assembly.Location) + @"\LSP\agent-cli.js";
             var arguments = $@"""{path}"" --stdio --inspect=6009 --nolazy";
             return ProcessFactory.Create(@"C:\Program Files\NodeJs\node.exe", arguments);
 #else
-            //NOTE this will not compile!
-            cheese cheese cheeses
+            var exe = Path.GetDirectoryName(assembly.Location) + @"\LSP\agent-cli.exe";
+            var arguments = $@"--stdio --nolazy";
+            return ProcessFactory.Create(exe, arguments);
 #endif
         }
     }

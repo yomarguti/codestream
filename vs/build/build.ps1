@@ -4,10 +4,14 @@
     [boolean]$deployExtension = $false
 )
 
+# build vscode-codestream (npm run rebuild)
+
+# npm install pkg -g
+
 #https://stackoverflow.com/questions/42874400/how-to-build-a-visual-studio-2017-vsix-using-msbuild
 $msbuild = "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\msbuild.exe"
 
-# build vscode-codestream (npm run rebuild)
+pkg ..\src\CodeStream.VisualStudio\LSP\agent-cli.js --targets node8-win-x86 --out-path ..\src\CodeStream.VisualStudio\LSP\
 
 $OutputDir = $($PSScriptRoot+"\artifacts");
 Remove-Item $($PSScriptRoot+"\artifacts\*") -Recurse -Force

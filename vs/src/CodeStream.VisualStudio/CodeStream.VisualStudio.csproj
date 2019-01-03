@@ -130,10 +130,6 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="CodeStream.VisualStudio.Settings.json" />
-    <Content Include="LSP\agent-cli.js.map">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <None Include="packages.config" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
@@ -142,8 +138,12 @@
   <ItemGroup>
     <Content Include="CodeStream.VisualStudio.pkgdef" />
     <Resource Include="Resources\Assets\marker-comment-blue.png" />
-    <Content Include="LSP\agent-cli.js">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Include="LSP\agent-cli.exe" Condition="'$(Configuration)'=='Release'">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="LSP\agent-cli.js" Condition="'$(Configuration)'=='Debug'">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="Resources\Assets\codestream.png">
