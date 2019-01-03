@@ -226,6 +226,7 @@ export interface CSGitHubProviderInfo {
 export interface CSJiraProviderInfo {
 	accessToken: string;
 	userId: string;
+	expiresAt: number;
 }
 
 export interface CSSlackProviderInfo {

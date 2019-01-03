@@ -129,4 +129,15 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 		});
 		return response.body;
 	}
+
+	async ensureConnected() {
+		if (this._providerInfo) {
+			// If token expires just disconnect
+			// TODO: refresh token
+			if (this._providerInfo.expiresAt <= new Date().getTime()) {
+				await this.disconnect();
+				return super.ensureConnected();
+			}
+		} else return super.ensureConnected();
+	}
 }
