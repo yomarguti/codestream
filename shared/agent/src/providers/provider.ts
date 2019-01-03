@@ -5,17 +5,13 @@ import { User } from "../api/extensions";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
-import {
-	ConnectThirdParyProviderRequest,
-	DisconnectThirdParyProviderRequest
-} from "../shared/agent.protocol";
 import { CSMe, CSProviderInfos } from "../shared/api.protocol";
 import { Functions, Strings } from "../system";
 
 export interface ThirdPartyProvider {
 	readonly name: string;
-	connect(request: ConnectThirdParyProviderRequest): Promise<void>;
-	disconnect(request: DisconnectThirdParyProviderRequest): Promise<void>;
+	connect(): Promise<void>;
+	disconnect(): Promise<void>;
 }
 
 export interface ApiResponse<T> {
@@ -37,7 +33,7 @@ export abstract class ThirdPartyProviderBase<
 	abstract get name(): string;
 	abstract get headers(): { [key: string]: string };
 
-	async connect(request: ConnectThirdParyProviderRequest) {
+	async connect() {
 		void (await this.session.api.connectThirdPartyProvider({
 			providerName: this.name
 		}));
@@ -61,8 +57,9 @@ export abstract class ThirdPartyProviderBase<
 
 	protected async onConnected() {}
 
-	async disconnect(request: DisconnectThirdParyProviderRequest) {
+	async disconnect() {
 		void (await this.session.api.disconnectThirdPartyProvider({ providerName: this.name }));
+		this._readyPromise = this._providerInfo = undefined;
 		void (await this.onDisconnected());
 	}
 

@@ -25,7 +25,7 @@ export class ThirdPartyProviderRegistry {
 			throw new Error(`No registered provider for '${request.providerName}'`);
 		}
 
-		return provider.connect(request);
+		return provider.connect();
 	}
 
 	@log()
@@ -34,6 +34,6 @@ export class ThirdPartyProviderRegistry {
 		const provider = getProvider(request.providerName);
 		if (provider === undefined) return;
 
-		return provider.disconnect(request);
+		return provider.disconnect();
 	}
 }
