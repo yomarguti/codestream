@@ -142,21 +142,24 @@ namespace CodeStream.VisualStudio
 
         public bool IsVisible(Guid toolWindowId)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             return TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame) && frame.IsVisible() == VSConstants.S_OK;
         }
 
         public void ShowToolWindow(Guid toolWindowId)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             if (!TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame)) return;
 
-            if (frame.IsVisible() != VSConstants.S_OK)
-            {
-                frame.Show();
-            }
+            frame.Show();
         }
 
         public void ToggleToolWindowVisibility(Guid toolWindowId)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             if (TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame))
             {
                 ErrorHandler.ThrowOnFailure(frame.IsVisible() == VSConstants.S_OK ? frame.Hide() : frame.Show());

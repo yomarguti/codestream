@@ -84,11 +84,13 @@ namespace CodeStream.VisualStudio.UI.Margins
                 return;
             }
 
+            var toolWindowProvider = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SCodeStreamToolWindowProvider)) as ICodeStreamToolWindowProvider;
             var codeStreamService = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
 
             Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
                 var post = await _postTask;
+                toolWindowProvider.ShowToolWindow(Guids.WebViewToolWindowGuid);
                 await codeStreamService.OpenCommentByThreadAsync(post.Post.StreamId, post.Post.Id);
             });
         }

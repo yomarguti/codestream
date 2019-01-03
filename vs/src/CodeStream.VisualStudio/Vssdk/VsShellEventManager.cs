@@ -2,6 +2,7 @@
 using CodeStream.VisualStudio.Vssdk.Events;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.PlatformUI;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace CodeStream.VisualStudio.Vssdk
@@ -14,6 +15,7 @@ namespace CodeStream.VisualStudio.Vssdk
         public VsShellEventManager(IVsMonitorSelection iVsMonitorSelection)
         {
             _iVsMonitorSelection = iVsMonitorSelection;
+            ThreadHelper.ThrowIfNotOnUIThread();
             _iVsMonitorSelection.AdviseSelectionEvents(this, out uint pdwCookie);
             _monitorSelectionCookie = pdwCookie;
             VSColorTheme.ThemeChanged += VSColorTheme_ThemeChanged;
@@ -53,6 +55,8 @@ namespace CodeStream.VisualStudio.Vssdk
         private FileInfo GetFileInfo(IVsWindowFrame windowFrame)
         {
             if (windowFrame == null) return null;
+
+            ThreadHelper.ThrowIfNotOnUIThread();
 
             object value;
             if (windowFrame.GetProperty((int)__VSFPROPID.VSFPROPID_pszMkDocument, out value) != VSConstants.S_OK) return null;
