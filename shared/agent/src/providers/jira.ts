@@ -42,6 +42,10 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 		return "jira";
 	}
 
+	get headers() {
+		return {};
+	}
+
 	private get accessToken() {
 		return this._providerInfo && this._providerInfo.accessToken;
 	}
@@ -53,7 +57,7 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 				headers: { Authorization: `Bearer ${this.accessToken}`, Accept: "application/json" }
 			}
 		);
-		this._baseUrl = `${this.jiraApiUrl}/ex/jira/${response[0].id}`;
+		this._baseUrl = `${this.jiraApiUrl}/ex/jira/${response.body[0].id}`;
 	}
 
 	@log()
@@ -61,13 +65,13 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 	async boards(): Promise<JiraFetchBoardsResponse> {
 		await this.ensureConnected();
 		try {
-			const { values } = await this.fetch<{ values: any[] }>("/rest/api/3/project/search", {
+			const { body } = await this.fetch<{ values: any[] }>("/rest/api/3/project/search", {
 				headers: { Authorization: `Bearer ${this.accessToken}`, Accept: "application/json" }
 			});
 
 			const response = await this.fetch<JiraProjectsMetaResponse>(
 				`/rest/api/3/issue/createmeta?${qs.stringify({
-					projectIds: values.map(v => v.id).join(","),
+					projectIds: body.values.map(v => v.id).join(","),
 					expand: "projects.issuetypes.fields"
 				})}`,
 				{
@@ -76,7 +80,7 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 			);
 
 			return {
-				boards: response.projects.map(project => ({
+				boards: response.body.projects.map(project => ({
 					id: project.id,
 					name: project.name,
 					issueTypes: Array.from(

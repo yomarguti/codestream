@@ -219,6 +219,7 @@ export interface CSAsanaProviderInfo {
 
 export interface CSGitHubProviderInfo {
 	accessToken: string;
+	apiKey: string;
 	userId: string;
 }
 

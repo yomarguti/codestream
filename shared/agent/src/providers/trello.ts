@@ -31,6 +31,10 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 		return "trello";
 	}
 
+	get headers() {
+		return {};
+	}
+
 	private get apiKey() {
 		return this._providerInfo && this._providerInfo.apiKey;
 	}
@@ -60,8 +64,8 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 
 		return {
 			boards: request.organizationId
-				? response.filter(b => b.idOrganization === request.organizationId)
-				: response
+				? response.body.filter(b => b.idOrganization === request.organizationId)
+				: response.body
 		};
 	}
 
@@ -91,7 +95,7 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 		const response = await this.get<TrelloList[]>(
 			`/boards/${request.boardId}/lists?${qs.stringify({ key: this.apiKey, token: this.token })}`
 		);
-		return { lists: response.filter(l => !l.closed) };
+		return { lists: response.body.filter(l => !l.closed) };
 	}
 
 	private async getMemberId() {
@@ -99,6 +103,6 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 			`/token/${this.token}?${qs.stringify({ key: this.apiKey, token: this.token })}`
 		);
 
-		return tokenResponse.idMember;
+		return tokenResponse.body.idMember;
 	}
 }

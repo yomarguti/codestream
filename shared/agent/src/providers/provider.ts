@@ -18,6 +18,11 @@ export interface ThirdPartyProvider {
 	disconnect(request: DisconnectThirdParyProviderRequest): Promise<void>;
 }
 
+export interface ApiResponse<T> {
+	body: T;
+	response: Response;
+}
+
 export abstract class ThirdPartyProviderBase<
 	TProviderInfo extends CSProviderInfos = CSProviderInfos
 > implements ThirdPartyProvider {
@@ -30,6 +35,7 @@ export abstract class ThirdPartyProviderBase<
 	abstract get baseUrl(): string;
 	abstract get displayName(): string;
 	abstract get name(): string;
+	abstract get headers(): { [key: string]: string };
 
 	async connect(request: ConnectThirdParyProviderRequest) {
 		void (await this.session.api.connectThirdPartyProvider({
@@ -87,29 +93,37 @@ export abstract class ThirdPartyProviderBase<
 		this._ensuringConnection = undefined;
 	}
 
-	protected delete<R extends object>(url: string): Promise<R> {
+	protected delete<R extends object>(url: string): Promise<ApiResponse<R>> {
 		let resp = undefined;
 		if (resp === undefined) {
-			resp = this.fetch<R>(url, { method: "DELETE" }) as Promise<R>;
+			resp = this.fetch<R>(url, { method: "DELETE", headers: this.headers });
 		}
 		return resp;
 	}
 
-	protected get<R extends object>(url: string): Promise<R> {
-		return this.fetch<R>(url, { method: "GET" }) as Promise<R>;
+	protected get<R extends object>(url: string): Promise<ApiResponse<R>> {
+		return this.fetch<R>(url, { method: "GET", headers: this.headers });
 	}
 
-	protected post<RQ extends object, R extends object>(url: string, body: RQ): Promise<R> {
+	protected post<RQ extends object, R extends object>(
+		url: string,
+		body: RQ
+	): Promise<ApiResponse<R>> {
 		return this.fetch<R>(url, {
 			method: "POST",
-			body: JSON.stringify(body)
+			body: JSON.stringify(body),
+			headers: this.headers
 		});
 	}
 
-	protected put<RQ extends object, R extends object>(url: string, body: RQ): Promise<R> {
+	protected put<RQ extends object, R extends object>(
+		url: string,
+		body: RQ
+	): Promise<ApiResponse<R>> {
 		return this.fetch<R>(url, {
 			method: "PUT",
-			body: JSON.stringify(body)
+			body: JSON.stringify(body),
+			headers: this.headers
 		});
 	}
 
@@ -117,7 +131,7 @@ export abstract class ThirdPartyProviderBase<
 		return User.getProviderInfo<TProviderInfo>(me, this.session.teamId, this.name);
 	}
 
-	protected async fetch<R extends object>(url: string, init?: RequestInit): Promise<R> {
+	protected async fetch<R extends object>(url: string, init: RequestInit): Promise<ApiResponse<R>> {
 		const start = process.hrtime();
 
 		let traceResult;
@@ -141,7 +155,7 @@ export abstract class ThirdPartyProviderBase<
 			const absoluteUrl = `${this.baseUrl}${url}`;
 
 			let json: Promise<R> | undefined;
-			let resp;
+			let resp: Response | undefined;
 			let retryCount = 0;
 			if (json === undefined) {
 				[resp, retryCount] = await this.fetchCore(0, absoluteUrl, init);
@@ -153,11 +167,14 @@ export abstract class ThirdPartyProviderBase<
 			}
 
 			if (resp !== undefined && !resp.ok) {
-				traceResult = `TRELLO: FAILED(${retryCount}x) ${method} ${url}`;
+				traceResult = `${this.displayName}: FAILED(${retryCount}x) ${method} ${url}`;
 				throw await this.handleErrorResponse(resp);
 			}
 
-			return await json!;
+			return {
+				body: await json!,
+				response: resp!
+			};
 		} finally {
 			Logger.log(
 				`${traceResult}${

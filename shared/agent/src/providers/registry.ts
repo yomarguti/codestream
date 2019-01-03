@@ -11,6 +11,7 @@ import { getProvider, log, lsp, lspHandler } from "../system";
 // NOTE: You must include all new providers here, otherwise the webpack build will exclude them
 export * from "./trello";
 export * from "./jira";
+export * from "./github";
 
 @lsp
 export class ThirdPartyProviderRegistry {
