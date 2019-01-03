@@ -1,7 +1,12 @@
 "use strict";
 import * as qs from "querystring";
 import { Logger } from "../logger";
-import { JiraFetchBoardsRequestType, JiraFetchBoardsResponse } from "../shared/agent.protocol";
+import {
+	CreateJiraCardRequest,
+	CreateJiraCardRequestType,
+	JiraFetchBoardsRequestType,
+	JiraFetchBoardsResponse
+} from "../shared/agent.protocol";
 import { CSJiraProviderInfo } from "../shared/api.protocol";
 import { Iterables, log, lspHandler, lspProvider } from "../system";
 import { ThirdPartyProviderBase } from "./provider";
@@ -99,5 +104,31 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 			Logger.error(error, "Error fetching jira boards");
 			return { boards: [] };
 		}
+	}
+
+	@log()
+	@lspHandler(CreateJiraCardRequestType)
+	async createCard(request: CreateJiraCardRequest) {
+		// using /api/2 because 3 returns nonsense errors for the same request
+		return this.fetch("/rest/api/2/issue", {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${this.accessToken}`,
+				Accept: "application/json",
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({
+				fields: {
+					project: {
+						id: request.project
+					},
+					issuetype: {
+						name: request.issueType
+					},
+					summary: request.summary,
+					description: request.description
+				}
+			})
+		});
 	}
 }

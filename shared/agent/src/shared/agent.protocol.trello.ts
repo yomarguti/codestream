@@ -71,20 +71,3 @@ export const TrelloFetchListsRequestType = new RequestType<
 	void,
 	void
 >("codeStream/trello/lists");
-
-export interface JiraBoard {
-	id: string;
-	name: string;
-	issueTypes: string[];
-}
-
-export interface JiraFetchBoardsResponse {
-	boards: JiraBoard[];
-}
-
-export const JiraFetchBoardsRequestType = new RequestType<
-	void,
-	JiraFetchBoardsResponse,
-	void,
-	void
->("codeStream/jira/boards");

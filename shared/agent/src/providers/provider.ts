@@ -191,7 +191,7 @@ export abstract class ThirdPartyProviderBase<
 	): Promise<[Response, number]> {
 		try {
 			const resp = await fetch(url, init);
-			if (resp.status !== 200) {
+			if (resp.status < 200 || resp.status > 299) {
 				if (resp.status < 400 || resp.status >= 500) {
 					count++;
 					if (count <= 3) {

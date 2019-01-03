@@ -947,7 +947,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 			await opn(
 				`${this.baseUrl}/no-auth/provider-auth/${request.providerName}?code=${response.code}&key=${
 					request.apiKey
-				}`
+				}`,
+				{ wait: false }
 			);
 			return response;
 		} catch (ex) {
@@ -1173,7 +1174,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	): Promise<[Response, number]> {
 		try {
 			const resp = await fetch(url, init);
-			if (resp.status !== 200) {
+			if (resp.status < 200 || resp.status > 299) {
 				if (resp.status < 400 || resp.status >= 500) {
 					count++;
 					if (count <= 3) {
