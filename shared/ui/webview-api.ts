@@ -163,6 +163,21 @@ export default class WebviewApi {
 		});
 	}
 
+	createJiraCard(summary: string, description: string, issueType: string, project: string) {
+		return this.postMessage({
+			action: "agent",
+			params: {
+				url: "jira/cards/create",
+				request: {
+					summary,
+					description,
+					issueType,
+					project
+				}
+			}
+		});
+	}
+
 	// service is one of "trello", "asana", "jira", "github"
 	fetchIssueBoards(service: string, organizationId?: string) {
 		return this.postMessage({

@@ -555,9 +555,21 @@ export const createTrelloCard = (listId: string, name: string, description: stri
 	}
 };
 
+export const createJiraCard = (title, description, issueType, boardName) => async (
+	dispatch,
+	getState,
+	{ api }
+) => {
+	try {
+		return await api.createJiraCard(title, description, issueType, boardName);
+	} catch (error) {
+		console.error("failed to create a jira card", error);
+	}
+};
+
 export const disconnectService = service => async (dispatch, getState, { api }) => {
 	try {
-		const response = await api.disconnectService("trello");
+		const response = await api.disconnectService(service);
 		return response;
 	} catch (error) {
 		console.error("failed to signout from " + service, error);
