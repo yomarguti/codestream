@@ -36,6 +36,7 @@ namespace CodeStream.VisualStudio.Services
         void AttachControl(FrameworkElement frameworkElement);
         string FooterHtml { get; }
         void LoadWebView();
+        void ReloadWebView();
     }
 
     public delegate Task WindowMessageHandler(object sender, WindowEventArgs e);
@@ -64,6 +65,11 @@ namespace CodeStream.VisualStudio.Services
         public void LoadWebView()
         {
             LoadHtml(CreateHarness(Assembly.GetAssembly(typeof(BrowserServiceBase))));
+        }
+
+        public void ReloadWebView()
+        {
+            LoadWebView();
         }
 
         private string CreateHarness(Assembly assembly)

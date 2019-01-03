@@ -101,18 +101,14 @@ namespace CodeStream.VisualStudio
                         }
                     case "codestream:interaction:clicked-reload-webview":
                         {
+                            _browser.ReloadWebView();
                             break;
                         }
                     case "codestream:interaction:thread-closed":
-                        {
-                            break;
-                        }
-                    case "codestream:interaction:active-panel-changed":
-                        {
-                            break;
-                        }
+                    case "codestream:interaction:active-panel-changed":                        
                     case "codestream:interaction:thread-selected":
                         {
+                            //unused
                             break;
                         }
                     case "codestream:interaction:svc-request":
@@ -121,11 +117,9 @@ namespace CodeStream.VisualStudio
                             break;
                         }
                     case "codestream:subscription:file-changed":
-                        {
-                            break;
-                        }
                     case "codestream:unsubscribe:file-changed":
                         {
+                            // noop
                             break;
                         }
                     case "codestream:interaction:changed-active-stream":
