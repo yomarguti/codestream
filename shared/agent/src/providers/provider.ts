@@ -131,7 +131,7 @@ export abstract class ThirdPartyProviderBase<
 		return User.getProviderInfo<TProviderInfo>(me, this.session.teamId, this.name);
 	}
 
-	protected async fetch<R extends object>(url: string, init: RequestInit): Promise<ApiResponse<R>> {
+	private async fetch<R extends object>(url: string, init: RequestInit): Promise<ApiResponse<R>> {
 		const start = process.hrtime();
 
 		let traceResult;
