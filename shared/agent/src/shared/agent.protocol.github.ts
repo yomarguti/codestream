@@ -2,9 +2,8 @@
 import { RequestType } from "vscode-languageserver-protocol";
 
 export interface GitHubCreateCardRequest {
-	listId: string;
-
-	name: string;
+	repoName: string;
+	title: string;
 	description: string;
 }
 

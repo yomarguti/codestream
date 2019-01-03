@@ -107,7 +107,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 		void (await this.ensureConnected());
 
 		const response = await this.post<{}, GitHubCreateCardResponse>(
-			`/repos/TeamCodeStream/plugin-commons/issues?${qs.stringify({
+			`/repos/${request.repoName}/issues?${qs.stringify({
 				access_token: this.token
 				// idList: request.listId,
 				// name: request.name,
@@ -116,7 +116,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 				// token: this.token
 			})}`,
 			{
-				title: request.name,
+				title: request.title,
 				body: request.description
 				// milestone,
 				// labels,
