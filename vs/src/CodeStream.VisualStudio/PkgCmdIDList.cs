@@ -1,7 +1,7 @@
 ﻿
 namespace CodeStream.VisualStudio
 {
-    public static class PkgCmdIDList
+    public static class PkgCmdIdList
     {
         // IDs defined in CodeStreamPackage.vsct
         public const int ToggleToolWindowCommand = 0x0100;

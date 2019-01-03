@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace CodeStream.VisualStudio.Services
 {
@@ -112,10 +114,11 @@ namespace CodeStream.VisualStudio.Services
         public CsFileStream Stream { get; set; }
     }
 
-    public class CodeStreamAgentService : ICodeStreamAgentService
+    public class CodeStreamAgentService : ICodeStreamAgentService, SCodeStreamAgentService
     {
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
         private readonly ISessionService _sessionService;
+        // ReSharper disable once NotAccessedField.Local
         private readonly IAsyncServiceProvider _serviceProvider;
 
         public CodeStreamAgentService(ISessionService sessionService, IAsyncServiceProvider serviceProvider)
@@ -156,6 +159,7 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task<FetchCodemarksResponse> GetMarkersAsync(string streamId)
         {
+            // ReSharper disable once RedundantAnonymousTypePropertyName
             return await SendAsync<FetchCodemarksResponse>("codeStream/fetchCodemarks", new { streamId = streamId });
         }
 
@@ -200,6 +204,7 @@ namespace CodeStream.VisualStudio.Services
             return await SendAsync<PrepareCodeResponse>("codeStream/post/prepareWithCode",
                 new
                 {
+                    // ReSharper disable once RedundantAnonymousTypePropertyName
                     textDocument = new { uri = uri },
                     range = new
                     {

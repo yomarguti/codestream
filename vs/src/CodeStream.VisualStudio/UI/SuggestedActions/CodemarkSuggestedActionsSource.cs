@@ -18,8 +18,10 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 {
     internal class CodemarkSuggestedActionsSource : ISuggestedActionsSource
     {
+        // ReSharper disable once NotAccessedField.Local
         private readonly CodemarkSuggestedActionsSourceProvider _actionsSourceProvider;
         private readonly ITextBuffer _textBuffer;
+        // ReSharper disable once NotAccessedField.Local
         private readonly ITextView _textView;
         private readonly ITextDocumentFactoryService _textDocumentFactoryService;
 
@@ -55,7 +57,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
                 return Enumerable.Empty<SuggestedActionSet>();
             }
 
-            return new SuggestedActionSet[]
+            return new []
             {
                 new SuggestedActionSet(
                     actions: new ISuggestedAction[]
@@ -100,6 +102,8 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
         public void Invoke(CancellationToken cancellationToken)
         {
             var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
+            if (codeStreamService == null) return;
+
             ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
                 await codeStreamService.PostCodeAsync(

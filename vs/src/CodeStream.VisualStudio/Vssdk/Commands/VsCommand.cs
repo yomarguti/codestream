@@ -15,7 +15,7 @@ namespace CodeStream.VisualStudio.Vssdk.Commands
     /// so that the command can be bound in the UI.
     /// </para>
     /// <para>
-    /// To implement a new command, inherit from this class and override the <see cref="Execute"/>
+    /// To implement a new command, inherit from this class and override the <see cref="ExecuteAsync"/>
     /// method to provide the implementation of the command.
     /// </para>
     /// </remarks>
@@ -36,12 +36,12 @@ namespace CodeStream.VisualStudio.Vssdk.Commands
         /// Overridden by derived classes with the implementation of the command.
         /// </summary>
         /// <returns>A task that tracks the execution of the command.</returns>
-        public abstract System.Threading.Tasks.Task Execute();
+        public abstract System.Threading.Tasks.Task ExecuteAsync();
 
         /// <inheritdoc/>
         protected sealed override void ExecuteUntyped(object parameter)
         {
-            Execute().Forget();
+            ExecuteAsync().Forget();
         }
     }
 
@@ -54,10 +54,10 @@ namespace CodeStream.VisualStudio.Vssdk.Commands
     /// so that the command can be bound in the UI.
     /// </para>
     /// <para>
-    /// To implement a new command, inherit from this class and override the <see cref="Execute"/>
+    /// To implement a new command, inherit from this class and override the <see cref="ExecuteAsync"/>
     /// method to provide the implementation of the command.
     /// </para>
-    public abstract class VsCommand<TParam> : VsCommandBase, IVsCommand<TParam>, ICommand
+    public abstract class VsCommand<TParam> : VsCommandBase, IVsCommand<TParam>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="VsCommand"/> class.
@@ -74,12 +74,12 @@ namespace CodeStream.VisualStudio.Vssdk.Commands
         /// </summary>
         /// /// <param name="parameter">The command parameter.</param>
         /// <returns>A task that tracks the execution of the command.</returns>
-        public abstract System.Threading.Tasks.Task Execute(TParam parameter);
+        public abstract System.Threading.Tasks.Task ExecuteAsync(TParam parameter);
 
         /// <inheritdoc/>
         protected sealed override void ExecuteUntyped(object parameter)
         {
-            Execute((TParam)parameter).Forget();
+            ExecuteAsync((TParam)parameter).Forget();
         }
     }
 }

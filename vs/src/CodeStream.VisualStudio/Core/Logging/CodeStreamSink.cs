@@ -12,6 +12,7 @@ namespace CodeStream.VisualStudio.Core.Logging
     /// <remarks>See https://contrivedexample.com/2017/01/16/custom-serilog-sink-development/</remarks>
     public class CodeStreamSink : ILogEventSink
     {
+        // ReSharper disable once NotAccessedField.Local
         private readonly IFormatProvider _formatProvider;
 
         public CodeStreamSink(IFormatProvider formatProvider)

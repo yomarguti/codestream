@@ -47,7 +47,7 @@ namespace CodeStream.VisualStudio.Events
                 _publishStats.AddOrUpdate(typeof(TEvent), 1, (type, i) => i + 1);
                 if (_publishStats.TryGetValue(typeof(TEvent), out int count))
                 {
-                    if (count % 100 == 0)
+                    if (count % 10 == 0)
                     {
                         Log.Verbose($"Published {typeof(TEvent)} {count} times");
                     }

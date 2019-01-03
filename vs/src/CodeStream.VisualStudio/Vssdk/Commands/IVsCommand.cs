@@ -11,7 +11,7 @@ namespace CodeStream.VisualStudio.Vssdk.Commands
         /// Executes the command.
         /// </summary>
         /// <returns>A task that tracks the execution of the command.</returns>
-        Task Execute();
+        Task ExecuteAsync();
     }
 
     /// <summary>
@@ -24,6 +24,6 @@ namespace CodeStream.VisualStudio.Vssdk.Commands
         /// </summary>
         /// <param name="parameter">The command parameter.</param>
         /// <returns>A task that tracks the execution of the command.</returns>
-        System.Threading.Tasks.Task Execute(TParam parameter);
+        Task ExecuteAsync(TParam parameter);
     }
 }

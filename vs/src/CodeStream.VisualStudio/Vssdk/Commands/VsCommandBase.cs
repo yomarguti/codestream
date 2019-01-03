@@ -1,7 +1,6 @@
 ﻿using Microsoft.VisualStudio.Shell;
 using System;
 using System.ComponentModel.Design;
-using System.Windows.Input;
 
 namespace CodeStream.VisualStudio.Vssdk.Commands
 {
@@ -10,7 +9,7 @@ namespace CodeStream.VisualStudio.Vssdk.Commands
     /// </summary>
     public abstract class VsCommandBase : OleMenuCommand, IVsCommandBase
     {
-        EventHandler canExecuteChanged;
+        private EventHandler _canExecuteChanged;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VsCommandBase"/> class.
@@ -20,12 +19,12 @@ namespace CodeStream.VisualStudio.Vssdk.Commands
         protected VsCommandBase(Guid commandSet, int commandId)
             : base(ExecHandler, delegate { }, QueryStatusHandler, new CommandID(commandSet, commandId))
         {
-            base.BeforeQueryStatus += this.OnBeforeQueryStatus;
+            BeforeQueryStatus += OnBeforeQueryStatus;
         }
 
         private void OnBeforeQueryStatus(object sender, EventArgs e)
         {
-            if (sender is OleMenuCommand myCommand) 
+            if (sender is OleMenuCommand myCommand)
             {
                 OnBeforeQueryStatus(myCommand, e);
             }
@@ -37,21 +36,21 @@ namespace CodeStream.VisualStudio.Vssdk.Commands
         }
 
         /// <inheritdoc/>
-        event EventHandler ICommand.CanExecuteChanged
+        public event EventHandler CanExecuteChanged
         {
-            add { canExecuteChanged += value; }
-            remove { canExecuteChanged -= value; }
+            add => _canExecuteChanged += value;
+            remove => _canExecuteChanged -= value;
         }
 
         /// <inheritdoc/>
-        bool ICommand.CanExecute(object parameter)
+        public bool CanExecute(object parameter)
         {
             QueryStatus();
             return Enabled && Visible;
         }
 
         /// <inheritdoc/>
-        void ICommand.Execute(object parameter)
+        public void Execute(object parameter)
         {
             ExecuteUntyped(parameter);
         }
@@ -66,7 +65,7 @@ namespace CodeStream.VisualStudio.Vssdk.Commands
         protected override void OnCommandChanged(EventArgs e)
         {
             base.OnCommandChanged(e);
-            canExecuteChanged?.Invoke(this, e);
+            _canExecuteChanged?.Invoke(this, e);
         }
 
         protected virtual void QueryStatus()

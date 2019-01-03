@@ -38,6 +38,7 @@ namespace CodeStream.VisualStudio.Services
         /// </summary>
         private readonly Browser _browser;
         private readonly WPFBrowserView _browserView;
+        // ReSharper disable once NotAccessedField.Local
         private readonly IAsyncServiceProvider _serviceProvider;
 
         public DotNetBrowserService(IAsyncServiceProvider serviceProvider)
@@ -58,9 +59,9 @@ namespace CodeStream.VisualStudio.Services
 
         public override void AddWindowMessageEvent(WindowMessageHandler handler)
         {
-            _browser.ConsoleMessageEvent += delegate (object sender, DotNetBrowser.Events.ConsoleEventArgs e)
+            _browser.ConsoleMessageEvent += async delegate (object sender, DotNetBrowser.Events.ConsoleEventArgs e)
             {
-                handler(sender, new WindowEventArgs(e.Message));
+                await handler(sender, new WindowEventArgs(e.Message));
             };
         }
 
@@ -84,9 +85,18 @@ namespace CodeStream.VisualStudio.Services
             grid.Children.Add(_browserView);
         }
 
-        public override void Dispose()
+        private bool _disposed;
+        protected override void Dispose(bool disposing)
         {
-            _browser?.Dispose();
+            if (_disposed) return;
+
+            if (disposing)
+            {
+                _browserView.Dispose();
+            }
+
+            base.Dispose(disposing);
+            _disposed = true;
         }
 
         public override string FooterHtml

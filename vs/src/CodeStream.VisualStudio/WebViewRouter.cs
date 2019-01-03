@@ -15,15 +15,24 @@ namespace CodeStream.VisualStudio
     {
         static readonly ILogger Log = LogManager.ForContext<WebViewRouter>();
 
-        private readonly IServiceProvider _serviceProvider;
+        // ReSharper disable once NotAccessedField.Local
+        private readonly ISessionService _sessionService;
+        readonly ICodeStreamAgentService _codeStreamAgent;
+        private readonly ISettingsService _settingsService;
         private readonly IEventAggregator _eventAggregator;
-        private readonly IBrowserService _browser;
+        private readonly IBrowserService _browserService;
+        private readonly IIdeService _ideService;
 
-        public WebViewRouter(IServiceProvider serviceProvider, IEventAggregator eventAggregator, IBrowserService browser)
+        public WebViewRouter(ISessionService sessionService, ICodeStreamAgentService codeStreamAgent,
+            ISettingsService settingsService, IEventAggregator eventAggregator,
+            IBrowserService browserService, IIdeService ideService)
         {
-            _serviceProvider = serviceProvider;
+            _sessionService = sessionService;
+            _codeStreamAgent = codeStreamAgent;
+            _settingsService = settingsService;
             _eventAggregator = eventAggregator;
-            _browser = browser;
+            _browserService = browserService;
+            _ideService = ideService;
         }
 
         private CodeStreamMessage ParseMessageSafe(JToken token)
@@ -68,10 +77,6 @@ namespace CodeStream.VisualStudio
 
                     Log.Verbose(e.Message);
 
-                    var codeStreamAgent =
-                        Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
-                    var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
-
                     switch (message.Type)
                     {
                         case "codestream:log":
@@ -104,7 +109,7 @@ namespace CodeStream.VisualStudio
                             }
                         case "codestream:interaction:clicked-reload-webview":
                             {
-                                _browser.ReloadWebView();
+                                _browserService.ReloadWebView();
                                 break;
                             }
                         case "codestream:interaction:thread-closed":
@@ -127,7 +132,7 @@ namespace CodeStream.VisualStudio
                             }
                         case "codestream:interaction:changed-active-stream":
                             {
-                                sessionService.CurrentStreamId = message.Body.ToString();
+                                _sessionService.CurrentStreamId = message.Body.ToString();
                                 break;
                             }
                         case "codestream:view-ready":
@@ -141,40 +146,40 @@ namespace CodeStream.VisualStudio
                                 {
                                     case "bootstrap":
                                         {
-                                            var settings =
-                                                Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
                                             var response = new WebviewIpcMessageResponse(
                                                 new WebviewIpcMessageResponseBody(message.Id)
                                                 {
                                                     Payload = new WebviewIpcMessageResponsePayload
                                                     {
-                                                        Configs = new Config()
+                                                        Configs = new Config
                                                         {
-                                                            Email = settings?.Email
+                                                            Email = _settingsService.Email,
+                                                            OpenCommentOnSelect = _settingsService.OpenCommentOnSelect,
+                                                            ShowHeadshots = _settingsService.ShowHeadshots,
+                                                            ShowMarkers = _settingsService.ShowMarkers,
+                                                            Team = _settingsService.Team
                                                         },
                                                         Services = new Service(),
                                                     }
                                                 });
 
-                                            _browser.PostMessage(response);
+                                            _browserService.PostMessage(response);
                                             break;
                                         }
                                     case "authenticate":
                                         {
                                             var response =
                                                 new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id));
-                                            var settings =
-                                                Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
 
                                             var success = false;
                                             string email = message.Params["email"].ToString();
 
                                             try
                                             {
-                                                var loginResponsewrapper = await codeStreamAgent.LoginAsync(
+                                                var loginResponsewrapper = await _codeStreamAgent.LoginAsync(
                                                     email,
                                                     message.Params["password"].ToString(),
-                                                    settings.ServerUrl
+                                                    _settingsService.ServerUrl
                                                 );
 
                                                 var loginResponse = loginResponsewrapper.ToObject<LoginResponseWrapper>();
@@ -184,13 +189,13 @@ namespace CodeStream.VisualStudio
                                                 }
                                                 else
                                                 {
-                                                    sessionService.LoginResponse = loginResponse.Result.LoginResponse;
-                                                    sessionService.State = loginResponse.Result.State;
+                                                    _sessionService.LoginResponse = loginResponse.Result.LoginResponse;
+                                                    _sessionService.State = loginResponse.Result.State;
 
                                                     response.Body.Payload =
-                                                        await codeStreamAgent.GetBootstrapAsync(loginResponse.Result.State,
-                                                            settings.GetSettings());
-                                                    sessionService.SetUserLoggedIn();
+                                                        await _codeStreamAgent.GetBootstrapAsync(loginResponse.Result.State,
+                                                            _settingsService.GetSettings());
+                                                    _sessionService.SetUserLoggedIn();
                                                     success = true;
                                                 }
                                             }
@@ -200,7 +205,7 @@ namespace CodeStream.VisualStudio
                                             }
                                             finally
                                             {
-                                                _browser.PostMessage(response);
+                                                _browserService.PostMessage(response);
                                             }
 
                                             if (success)
@@ -208,8 +213,7 @@ namespace CodeStream.VisualStudio
                                                 _eventAggregator.Publish(new SessionReadyEvent());
 
                                                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                                using (var scope = SettingsScope.Create(
-                                                    Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService))
+                                                using (var scope = SettingsScope.Create(_settingsService))
                                                 {
                                                     scope.SettingsService.Email = email;
                                                 }
@@ -219,17 +223,11 @@ namespace CodeStream.VisualStudio
                                         }
                                     case "go-to-signup":
                                         {
-                                            var settings =
-                                                Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
-                                            var response =
-                                                new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message?.Id));
-
+                                            var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id));
                                             try
                                             {
-                                                var hostService =
-                                                    Package.GetGlobalService(typeof(SHostService)) as IHostService;
-                                                hostService.Navigate(
-                                                    $"{settings.WebAppUrl}/signup?force_auth=true&signup_token={sessionService.GetOrCreateSignupToken()}");
+                                                _ideService.Navigate(
+                                                    $"{_settingsService.WebAppUrl}/signup?force_auth=true&signup_token={_sessionService.GetOrCreateSignupToken()}");
                                                 response.Body.Payload = true;
                                             }
                                             catch (Exception ex)
@@ -237,14 +235,11 @@ namespace CodeStream.VisualStudio
                                                 response.Body.Error = ex.ToString();
                                             }
 
-                                            _browser.PostMessage(response);
+                                            _browserService.PostMessage(response);
                                             break;
                                         }
                                     case "go-to-slack-signin":
                                         {
-                                            var settings =
-                                                Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
-
                                             var response = new WebviewIpcMessageResponse
                                             {
                                                 Body = new WebviewIpcMessageResponseBody(message.Id)
@@ -252,10 +247,8 @@ namespace CodeStream.VisualStudio
 
                                             try
                                             {
-                                                var hostService =
-                                                    Package.GetGlobalService(typeof(SHostService)) as IHostService;
-                                                hostService.Navigate(
-                                                    $"{settings.WebAppUrl}/service-auth/slack?state={sessionService.GetOrCreateSignupToken()}");
+                                                _ideService.Navigate(
+                                                   $"{_settingsService.WebAppUrl}/service-auth/slack?state={_sessionService.GetOrCreateSignupToken()}");
                                                 response.Body.Payload = true;
                                             }
                                             catch (Exception ex)
@@ -263,28 +256,25 @@ namespace CodeStream.VisualStudio
                                                 response.Body.Error = ex.ToString();
                                             }
 
-                                            _browser.PostMessage(response);
+                                            _browserService.PostMessage(response);
                                             break;
                                         }
                                     case "validate-signup":
                                         {
-                                            var settings =
-                                                Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
-                                            var response =
-                                                new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id));
-
+                                            var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id));
                                             var success = false;
                                             string email = null;
+
                                             try
                                             {
-                                                var token = message?.Params?.Value<string>();
+                                                var token = message.Params?.Value<string>();
                                                 if (token.IsNullOrWhiteSpace())
                                                 {
-                                                    token = sessionService.GetOrCreateSignupToken().ToString();
+                                                    token = _sessionService.GetOrCreateSignupToken().ToString();
                                                 }
 
                                                 var loginResponseWrapper =
-                                                    await codeStreamAgent.LoginViaTokenAsync(token, settings.ServerUrl);
+                                                    await _codeStreamAgent.LoginViaTokenAsync(token, _settingsService.ServerUrl);
 
                                                 var loginResponse = loginResponseWrapper.ToObject<LoginResponseWrapper>();
                                                 if (loginResponse?.Result.Error.IsNotNullOrWhiteSpace() == true)
@@ -293,14 +283,14 @@ namespace CodeStream.VisualStudio
                                                 }
                                                 else
                                                 {
-                                                    sessionService.LoginResponse = loginResponse.Result.LoginResponse;
-                                                    sessionService.State = loginResponse.Result.State;
+                                                    _sessionService.LoginResponse = loginResponse.Result.LoginResponse;
+                                                    _sessionService.State = loginResponse.Result.State;
                                                     email = loginResponse.Result.State.Email;
 
                                                     response.Body.Payload =
-                                                        await codeStreamAgent.GetBootstrapAsync(loginResponse.Result.State,
-                                                            settings.GetSettings());
-                                                    sessionService.SetUserLoggedIn();
+                                                        await _codeStreamAgent.GetBootstrapAsync(loginResponse.Result.State,
+                                                            _settingsService.GetSettings());
+                                                    _sessionService.SetUserLoggedIn();
                                                     success = true;
                                                 }
                                             }
@@ -310,7 +300,7 @@ namespace CodeStream.VisualStudio
                                             }
                                             finally
                                             {
-                                                _browser.PostMessage(response);
+                                                _browserService.PostMessage(response);
                                             }
 
                                             if (success)
@@ -320,8 +310,7 @@ namespace CodeStream.VisualStudio
                                                 if (email.IsNotNullOrWhiteSpace())
                                                 {
                                                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                                    using (var scope = SettingsScope.Create(
-                                                        Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService))
+                                                    using (var scope = SettingsScope.Create(_settingsService))
                                                     {
                                                         scope.SettingsService.Email = email;
                                                     }
@@ -334,15 +323,14 @@ namespace CodeStream.VisualStudio
                                         {
                                             var val = message.Params.ToObject<bool>();
                                             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                            using (var scope = SettingsScope.Create(
-                                                Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService))
+                                            using (var scope = SettingsScope.Create(_settingsService))
                                             {
                                                 scope.SettingsService.ShowMarkers = val;
                                             }
 
                                             _eventAggregator.Publish(new CodemarkVisibilityEvent() { IsVisible = val });
 
-                                            _browser.PostMessage(new WebviewIpcGenericMessageResponse("codestream:configs")
+                                            _browserService.PostMessage(new WebviewIpcGenericMessageResponse("codestream:configs")
                                             {
                                                 Body = new
                                                 {
@@ -359,8 +347,7 @@ namespace CodeStream.VisualStudio
                                         {
                                             var val = message.Params.ToObject<bool>();
                                             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                            using (var scope = SettingsScope.Create(
-                                                Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService))
+                                            using (var scope = SettingsScope.Create(_settingsService))
                                             {
                                                 scope.SettingsService.OpenCommentOnSelect = val;
                                             }
@@ -368,7 +355,7 @@ namespace CodeStream.VisualStudio
                                             _eventAggregator.Publish(new CodeStreamConfigurationChangedEvent()
                                             { OpenCommentOnSelect = val });
 
-                                            _browser.PostMessage(new WebviewIpcGenericMessageResponse("codestream:configs")
+                                            _browserService.PostMessage(new WebviewIpcGenericMessageResponse("codestream:configs")
                                             {
                                                 Body = new
                                                 {
@@ -380,10 +367,8 @@ namespace CodeStream.VisualStudio
                                     case "show-code":
                                         {
                                             var showCodeResponse = message.Params.ToObject<ShowCodeResponse>();
-                                            var agentService =
-                                                Package.GetGlobalService(typeof(SCodeStreamAgentService)) as
-                                                    ICodeStreamAgentService;
-                                            var fromMarkerResponse = await agentService.GetDocumentFromMarkerAsync(
+
+                                            var fromMarkerResponse = await _codeStreamAgent.GetDocumentFromMarkerAsync(
                                                 new DocumentFromMarkerRequest()
                                                 {
                                                     File = showCodeResponse.Marker.File,
@@ -401,7 +386,7 @@ namespace CodeStream.VisualStudio
                                                 var editorResponse = ide.OpenEditor(
                                                     fromMarkerResponse.TextDocument.Uri.FromUri(),
                                                     fromMarkerResponse.Range?.Start?.Line);
-                                                _browser.PostMessage(new WebviewIpcMessageResponse(
+                                                _browserService.PostMessage(new WebviewIpcMessageResponse(
                                                     new WebviewIpcMessageResponseBody(message.Id)
                                                     {
                                                         Payload = editorResponse.ToString()
@@ -418,14 +403,14 @@ namespace CodeStream.VisualStudio
                                             try
                                             {
                                                 response.Body.Payload =
-                                                    await codeStreamAgent.SendAsync<object>(message.Action, message.Params);
+                                                    await _codeStreamAgent.SendAsync<object>(message.Action, message.Params);
                                             }
                                             catch (Exception ex)
                                             {
                                                 response.Body.Error = ex.ToString();
                                             }
 
-                                            _browser.PostMessage(response);
+                                            _browserService.PostMessage(response);
                                             break;
                                         }
                                 }

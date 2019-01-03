@@ -47,7 +47,15 @@ namespace CodeStream.VisualStudio.Services
 
         public virtual string FooterHtml { get; } = "";
 
-        public abstract void Dispose();
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+        }
 
         public abstract void AddWindowMessageEvent(WindowMessageHandler handler);
 
@@ -77,13 +85,14 @@ namespace CodeStream.VisualStudio.Services
             var resourceManager = new ResourceManager("VSPackage", Assembly.GetExecutingAssembly());
             var dir = Path.GetDirectoryName(assembly.Location);
             Debug.Assert(dir != null, nameof(dir) + " != null");
+            // ReSharper disable once ResourceItemNotResolved
             var harness = resourceManager.GetString("webview");
             Debug.Assert(harness != null, nameof(harness) + " != null");
 
             harness = harness
                         .Replace("{root}", dir.Replace(@"\", "/"))
                         .Replace("{footerHtml}", FooterHtml);
-
+            // ReSharper disable once ResourceItemNotResolved
             var theme = resourceManager.GetString("theme");
             harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{GenerateTheme(theme)}</style>");
 
@@ -182,17 +191,13 @@ namespace CodeStream.VisualStudio.Services
 
     public class NullBrowserService : BrowserServiceBase
     {
+        // ReSharper disable once NotAccessedField.Local
         private readonly IAsyncServiceProvider _serviceProvider;
         public NullBrowserService(IAsyncServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
         }
-
-        public override void Dispose()
-        {
-
-        }
-
+        
         public override void AddWindowMessageEvent(WindowMessageHandler handler)
         {
 

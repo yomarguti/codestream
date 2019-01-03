@@ -3,11 +3,13 @@ using EnvDTE;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
+using CodeStream.VisualStudio.Annotations;
 
 namespace CodeStream.VisualStudio.Services
 {
     public interface IIdeService
     {
+        void Navigate(string url);
         ShowCodeResult OpenEditor(string sourceFile, int? scrollTo = null);
     }
 
@@ -15,19 +17,22 @@ namespace CodeStream.VisualStudio.Services
 
     public enum ShowCodeResult
     {
+        // ReSharper disable InconsistentNaming
         SUCCESS,
         FILE_NOT_FOUND,
         REPO_NOT_IN_WORKSPACE
+        // ReSharper restore InconsistentNaming
     }
 
+    [Injected]
     public class IdeService : IIdeService, SIdeService
     {
         private static readonly ILogger Log = LogManager.ForContext<WebViewRouter>();
 
         public ShowCodeResult OpenEditor(string sourceFile, int? scrollTo = null)
         {
-            Microsoft.VisualStudio.Shell.ThreadHelper.ThrowIfNotOnUIThread();
-            var dte = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(DTE)) as DTE;
+            ThreadHelper.ThrowIfNotOnUIThread();
+            var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
 
             if (dte == null)
             {
@@ -66,6 +71,12 @@ namespace CodeStream.VisualStudio.Services
                 Log.Error(ex, $"OpenEditor failed for {sourceFile}");
                 return ShowCodeResult.FILE_NOT_FOUND;
             }
+        }
+
+    
+        public void Navigate(string url)
+        {
+            System.Diagnostics.Process.Start(url);
         }
     }
 }

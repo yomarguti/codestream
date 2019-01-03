@@ -120,15 +120,30 @@ namespace CodeStream.VisualStudio.Services
     public class SettingsScope : IDisposable
     {
         public ISettingsService SettingsService { get; private set; }
-        public SettingsScope(ISettingsService settingsService)
+
+        private SettingsScope(ISettingsService settingsService)
         {
             SettingsService = settingsService;
         }
 
+        private bool _disposed;
+
         public void Dispose()
         {
-            SettingsService?.SaveSettingsToStorage();
+            Dispose(true);
         }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            if (disposing)
+            {
+                SettingsService?.SaveSettingsToStorage();
+            }          
+
+            _disposed = true;
+        }         
 
         public static SettingsScope Create(ISettingsService settingsService)
         {

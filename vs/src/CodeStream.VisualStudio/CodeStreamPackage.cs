@@ -1,20 +1,20 @@
 ﻿using CodeStream.VisualStudio.Commands;
 using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Services;
+using CodeStream.VisualStudio.UI.Settings;
+using CodeStream.VisualStudio.Vssdk;
+using CodeStream.VisualStudio.Vssdk.Commands;
+using Microsoft;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Serilog;
 using System;
 using System.ComponentModel.Design;
-using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 using System.Threading;
-using CodeStream.VisualStudio.Events;
-using CodeStream.VisualStudio.UI.Settings;
-using CodeStream.VisualStudio.Vssdk;
-using CodeStream.VisualStudio.Vssdk.Commands;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace CodeStream.VisualStudio
 {
@@ -32,6 +32,7 @@ namespace CodeStream.VisualStudio
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamPackage>();
 
         private VsShellEventManager _vsEventManager;
+        private IBrowserService _browserService;
         private IDisposable _languageServerReadyEvent;
 
         protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
@@ -43,22 +44,23 @@ namespace CodeStream.VisualStudio
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
             // kick it off!
-            var SCodeStreamServiceProvider = await GetServiceAsync(typeof(SCodeStreamToolWindowProvider));
+            await GetServiceAsync(typeof(SCodeStreamToolWindowProvider));
 
             var iVsMonitorSelection = (IVsMonitorSelection)await GetServiceAsync(typeof(SVsShellMonitorSelection));
             var codeStreamService = await GetServiceAsync(typeof(SCodeStreamService)) as ICodeStreamService;
             var eventAggregator = await GetServiceAsync(typeof(SEventAggregator)) as IEventAggregator;
-            var browserService = await GetServiceAsync(typeof(SBrowserService)) as IBrowserService;
+            _browserService = await GetServiceAsync(typeof(SBrowserService)) as IBrowserService;
 
-            Contract.Assume(codeStreamService != null);
-            Contract.Assume(eventAggregator != null);
-            Contract.Assume(browserService != null);
+            Assumes.Present(codeStreamService);
+            Assumes.Present(eventAggregator);
+            Assumes.Present(_browserService);
 
             _vsEventManager = new VsShellEventManager(iVsMonitorSelection);
 
+            // ReSharper disable once PossibleNullReferenceException
             _languageServerReadyEvent = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
             {
-                var codeStreamEvents = new CodeStreamEventManager(codeStreamService, browserService);
+                var codeStreamEvents = new CodeStreamEventManager(codeStreamService, _browserService);
                 _vsEventManager.WindowFocusChanged += codeStreamEvents.OnWindowFocusChanged;
                 _vsEventManager.ThemeChanged += codeStreamEvents.OnThemeChanged;
             });
@@ -76,7 +78,7 @@ namespace CodeStream.VisualStudio
         async System.Threading.Tasks.Task InitializeLoggingAsync()
         {
             var packageSettings = await GetServiceAsync(typeof(SSettingsService)) as ISettingsService;
-            
+
             if (packageSettings != null)
             {
                 packageSettings.DialogPage.PropertyChanged += (sender, args) =>
@@ -105,12 +107,21 @@ namespace CodeStream.VisualStudio
             menuService.AddCommands(commands);
         }
 
+        private bool _disposed;
+
         protected override void Dispose(bool disposing)
         {
-            _languageServerReadyEvent.Dispose();
-            _vsEventManager.Dispose();
+            if (_disposed) return;
+
+            if (disposing)
+            {
+                _languageServerReadyEvent?.Dispose();
+                _browserService?.Dispose();
+                _vsEventManager.Dispose();
+            }
 
             base.Dispose(disposing);
+            _disposed = true;
         }
     }
 }

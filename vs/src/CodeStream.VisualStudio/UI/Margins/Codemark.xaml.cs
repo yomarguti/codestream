@@ -9,6 +9,7 @@ using System.Windows.Input;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
+    // ReSharper disable once RedundantExtendsListEntry
     public partial class Codemark : UserControl
     {
         private static int _heightBuffer = 5;
@@ -25,9 +26,9 @@ namespace CodeStream.VisualStudio.UI.Margins
             ImageUri = $"pack://application:,,,/CodeStream.VisualStudio;component/Resources/Assets/marker-{_viewModel.Marker.Codemark.Type}-{_viewModel.Marker.Codemark.Color}.png";
         }
 
-        System.Threading.Tasks.Task<GetPostResponse> _postTask;
+        Task<GetPostResponse> _postTask;
 
-        System.Threading.Tasks.Task<GetUserResponse> _userTask;
+        Task<GetUserResponse> _userTask;
 
         protected override void OnMouseEnter(MouseEventArgs e)
         {
@@ -38,6 +39,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                 var agentService = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
                 Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.Run(async delegate
                 {
+                    // ReSharper disable once PossibleNullReferenceException
                     _postTask = agentService.GetPostAsync(
                                   _viewModel.Marker.Codemark.StreamId,
                                   _viewModel.Marker.Codemark.PostId
@@ -65,19 +67,21 @@ namespace CodeStream.VisualStudio.UI.Margins
         public static readonly DependencyProperty ImageTooltipProperty =
        DependencyProperty.Register("Tooltip", typeof(string), typeof(Codemark));
 
+        // ReSharper disable once MemberCanBePrivate.Global
         public string ImageUri
         {
-            get { return (string)GetValue(ImageUriProperty); }
-            set { SetValue(ImageUriProperty, value); }
+            get => (string)GetValue(ImageUriProperty);
+            set => SetValue(ImageUriProperty, value);
         }
 
+        // ReSharper disable once UnusedMember.Global
         public string Tooltip
         {
-            get { return (string)GetValue(ImageTooltipProperty); }
-            set { SetValue(ImageTooltipProperty, value); }
+            get => (string)GetValue(ImageTooltipProperty);
+            set => SetValue(ImageTooltipProperty, value);
         }
 
-        private void Codemark_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Codemark_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (_viewModel?.Marker?.Codemark == null)
             {
@@ -90,7 +94,9 @@ namespace CodeStream.VisualStudio.UI.Margins
             Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
                 var post = await _postTask;
+                // ReSharper disable once PossibleNullReferenceException
                 toolWindowProvider.ShowToolWindow(Guids.WebViewToolWindowGuid);
+                // ReSharper disable once PossibleNullReferenceException
                 await codeStreamService.OpenCommentByThreadAsync(post.Post.StreamId, post.Post.Id);
             });
         }

@@ -51,7 +51,7 @@ namespace CodeStream.VisualStudio.Extensions
         /// <returns></returns>
         public static bool IsDark(this Color c2)
         {
-            return (0.2126 * c2.R + 0.7152 * c2.G + 0.0722 * c2.B) < 128 ? true : false;
+            return (0.2126 * c2.R + 0.7152 * c2.G + 0.0722 * c2.B) < 128;
         }
     }
 }

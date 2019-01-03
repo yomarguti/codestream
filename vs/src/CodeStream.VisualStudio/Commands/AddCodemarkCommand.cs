@@ -38,9 +38,9 @@ namespace CodeStream.VisualStudio.Commands
         public IVsEditorAdaptersFactoryService EditorAdaptersFactoryService { get; set; }
 
         public static readonly Guid CommandSet = new Guid(Guids.AddCodemarkCommandCmdSet);
-        public const int CommandId = PkgCmdIDList.AddCodemarkCommand;
+        public const int CommandId = PkgCmdIdList.AddCodemarkCommand;
 
-        public override async Task Execute()
+        public override async Task ExecuteAsync()
         {
             var selectedText = _selectedTextService.GetSelectedText(out IVsTextView view);
             if (view != null)

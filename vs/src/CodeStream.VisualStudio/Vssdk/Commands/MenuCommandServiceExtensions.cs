@@ -20,9 +20,13 @@ namespace CodeStream.VisualStudio.Vssdk.Commands
             Guard.ArgumentNotNull(service, nameof(service));
             Guard.ArgumentNotNull(commands, nameof(commands));
 
-            foreach (MenuCommand command in commands)
+            foreach (var vsCommandBase in commands)
             {
-                service.AddCommand(command);
+                var command = vsCommandBase as MenuCommand;
+                if (command != null)
+                {
+                    service.AddCommand(command);
+                }
             }
         }        
     }

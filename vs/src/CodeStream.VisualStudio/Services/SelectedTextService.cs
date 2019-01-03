@@ -1,9 +1,8 @@
-﻿using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Annotations;
+using CodeStream.VisualStudio.Models;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
-using CodeStream.VisualStudio.Annotations;
-using Microsoft.VisualStudio.Text.Editor;
 
 namespace CodeStream.VisualStudio.Services
 {
@@ -101,8 +100,10 @@ namespace CodeStream.VisualStudio.Services
     [Injected]
     public class SelectedTextService : SSelectedTextService, ISelectedTextService
     {
+        // ReSharper disable once NotAccessedField.Local
+        private readonly IVsProject3 _project;
         private readonly IVsTextManager2 _iIVsTextManager;
-        IVsProject3 _project;
+
         public SelectedTextService(IVsProject3 project, IVsTextManager2 iIVsTextManager)
         {
             _project = project;
@@ -125,11 +126,10 @@ namespace CodeStream.VisualStudio.Services
 
         public SelectedText GetSelectedText(out IVsTextView view)
         {
-            var textManager = _iIVsTextManager as IVsTextManager2;
-            
-            var result = textManager.GetActiveView2(1, null, (uint)_VIEWFRAMETYPE.vftCodeWindow, out view);
+            // ReSharper disable once UnusedVariable
+            var result = _iIVsTextManager.GetActiveView2(1, null, (uint)_VIEWFRAMETYPE.vftCodeWindow, out view);
 
-             view.GetSelection(out int startLine, out int startColumn, out int endLine, out int endColumn);
+            view.GetSelection(out int startLine, out int startColumn, out int endLine, out int endColumn);
             view.GetSelectedText(out string selectedText);
 
             //end could be before beginning...
@@ -145,8 +145,9 @@ namespace CodeStream.VisualStudio.Services
 
         public SelectedText GetSelectedText()
         {
+            // ReSharper disable once NotAccessedVariable
             IVsTextView view;
             return GetSelectedText(out view);
         }
-    } 
+    }
 }

@@ -28,6 +28,7 @@ namespace CodeStream.VisualStudio.Services
     [Injected]
     public class SessionService : SSessionService, ISessionService
     {
+        // ReSharper disable once NotAccessedField.Local
         private readonly IAsyncServiceProvider _serviceProvider;
 
         public LoginResponse LoginResponse { get; set; }
@@ -77,6 +78,7 @@ namespace CodeStream.VisualStudio.Services
         public bool IsReady => _sessionState == SessionState.Ready;
     }
 
+    [Serializable]
     public class SessionStateException : Exception
     {
         public SessionStateException() {}

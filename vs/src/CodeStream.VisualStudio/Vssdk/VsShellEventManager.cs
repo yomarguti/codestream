@@ -14,10 +14,13 @@ namespace CodeStream.VisualStudio.Vssdk
 
         public VsShellEventManager(IVsMonitorSelection iVsMonitorSelection)
         {
-            _iVsMonitorSelection = iVsMonitorSelection;
             ThreadHelper.ThrowIfNotOnUIThread();
+
+            _iVsMonitorSelection = iVsMonitorSelection;            
+
             _iVsMonitorSelection.AdviseSelectionEvents(this, out uint pdwCookie);
             _monitorSelectionCookie = pdwCookie;
+
             VSColorTheme.ThemeChanged += VSColorTheme_ThemeChanged;
         }
 
@@ -29,17 +32,18 @@ namespace CodeStream.VisualStudio.Vssdk
         public event EventHandler<WindowFocusChangedEventArgs> WindowFocusChanged;
         public event EventHandler<ThemeChangedEventArgs> ThemeChanged;
 
-        public int OnSelectionChanged(IVsHierarchy pHierOld, uint itemidOld, IVsMultiItemSelect pMISOld, ISelectionContainer pSCOld, IVsHierarchy pHierNew, uint itemidNew, IVsMultiItemSelect pMISNew, ISelectionContainer pSCNew)
+        public int OnSelectionChanged(IVsHierarchy pHierarchyOld, uint itemIdOld, IVsMultiItemSelect pMisOld, ISelectionContainer pScOld, IVsHierarchy pHierNew, uint itemidNew, IVsMultiItemSelect pMisNew, ISelectionContainer pScNew)
         {
             return VSConstants.S_OK;
         }
 
         public int OnElementValueChanged(uint elementid, object varValueOld, object varValueNew)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             if (elementid == (uint)VSConstants.VSSELELEMID.SEID_WindowFrame)
             {
-                var windowFrame = varValueNew as IVsWindowFrame;
-                if (windowFrame != null)
+                if (varValueNew is IVsWindowFrame windowFrame)
                 {
                     var fileInfo = GetFileInfo(windowFrame);
                     if (fileInfo != null)
@@ -79,24 +83,26 @@ namespace CodeStream.VisualStudio.Vssdk
 
         }
 
-        public int OnCmdUIContextChanged(uint dwCmdUICookie, int fActive)
+        public int OnCmdUIContextChanged(uint dwCmdUiCookie, int fActive)
         {
             return VSConstants.S_OK;
         }
 
-        private bool disposedValue = false;
+        private bool _disposedValue;
 
         protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
+        {            
+            System.Windows.Threading.Dispatcher.CurrentDispatcher.VerifyAccess();
+
+            if (!_disposedValue)
+            {              
                 if (disposing)
-                {
+                {                    
                     _iVsMonitorSelection?.UnadviseSelectionEvents(_monitorSelectionCookie);
                     VSColorTheme.ThemeChanged -= VSColorTheme_ThemeChanged;
                 }
 
-                disposedValue = true;
+                _disposedValue = true;
             }
         }
 

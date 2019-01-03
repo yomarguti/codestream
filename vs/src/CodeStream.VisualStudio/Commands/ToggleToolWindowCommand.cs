@@ -18,9 +18,9 @@ namespace CodeStream.VisualStudio.Commands
 
         public static readonly Guid CommandSet = new Guid(Guids.ToggleToolWindowCommandCmdSet);
 
-        public const int CommandId = PkgCmdIDList.ToggleToolWindowCommand;
+        public const int CommandId = PkgCmdIdList.ToggleToolWindowCommand;
 
-        public override System.Threading.Tasks.Task Execute()
+        public override System.Threading.Tasks.Task ExecuteAsync()
         {
             _provider.ToggleToolWindowVisibility(Guids.WebViewToolWindowGuid);
 

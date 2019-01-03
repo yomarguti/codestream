@@ -26,7 +26,7 @@ namespace CodeStream.VisualStudio.Core.Logging
         static Logger CreateLogger()
         {
             var packageSettings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
-            if (packageSettings?.TraceLevel != TraceLevel.Silent)
+            if (packageSettings != null && packageSettings.TraceLevel != TraceLevel.Silent)
             {
                 _defaultLoggingLevel = FromTraceLevel(packageSettings.TraceLevel);
             }
@@ -47,7 +47,7 @@ namespace CodeStream.VisualStudio.Core.Logging
                      new LogSanitizingFormatter(
                          new TextProcessor(),
                          new List<ISanitizingFormatRule> { new SecretsSanitizingFormatRule() },
-                         formatter, true),
+                         formatter),
                      logPath,
                      fileSizeLimitBytes: 52428800,
                      shared: true)

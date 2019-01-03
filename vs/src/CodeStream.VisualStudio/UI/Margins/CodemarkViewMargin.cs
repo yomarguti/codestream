@@ -1,9 +1,6 @@
 ﻿using CodeStream.VisualStudio.Events;
-using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using System;
@@ -32,7 +29,6 @@ namespace CodeStream.VisualStudio.UI.Margins
         private bool _isDisposed;
         private readonly IWpfTextView _textView;
         private readonly IEventAggregator _events;
-        private readonly ISessionService _sessionService;
         private readonly ICodeStreamToolWindowProvider _toolWindowProvider;
         private readonly IEventAggregator _eventAggregator;
         private readonly ICodeStreamAgentService _agentService;
@@ -66,7 +62,6 @@ namespace CodeStream.VisualStudio.UI.Margins
         {
             _eventAggregator = eventAggregator;
             _toolWindowProvider = toolWindowProvider;
-            _sessionService = sessionService;
             _agentService = agentService;
             _openCommentOnSelect = settingsService.OpenCommentOnSelect;
             _textView = textView;
@@ -88,7 +83,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                 eventAggregator.GetEvent<SessionReadyEvent>().ObserveOnDispatcher()
                 .Subscribe(_ =>
                 {
-                    if (_sessionService.IsReady && !_initialized)
+                    if (sessionService.IsReady && !_initialized)
                     {
                         Initialize();
                     }
@@ -145,6 +140,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                         var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
                         ThreadHelper.JoinableTaskFactory.Run(async delegate
                         {
+                            // ReSharper disable once PossibleNullReferenceException
                             await codeStreamService.PostCodeAsync(new Uri(_textDocument.FilePath), selectedText1,
                                 true, CancellationToken.None);
                         });
@@ -374,6 +370,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         /// <exception cref="ArgumentNullException"><paramref name="marginName"/> is null.</exception>
         public ITextViewMargin GetTextViewMargin(string marginName)
         {
+            // ReSharper disable once ArrangeStaticMemberQualifier
             return string.Equals(marginName, CodemarkViewMargin.MarginName, StringComparison.OrdinalIgnoreCase) ? this : null;
         }
 

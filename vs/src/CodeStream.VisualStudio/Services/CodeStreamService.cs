@@ -50,7 +50,7 @@ namespace CodeStream.VisualStudio.Services
                         Uri = uri.ToString(),
                         FileName = fileName,
                         // in vscode, this came from the editor...
-                        LanguageId = (string)null
+                        LanguageId = null
                     }
                 }
             });

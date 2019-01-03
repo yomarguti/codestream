@@ -24,14 +24,14 @@ namespace CodeStream.VisualStudio.Commands
         }
 
         public static readonly Guid CommandSet = new Guid(Guids.AuthenticationCommandCmdSet);
-        public const int CommandId = PkgCmdIDList.AuthenticationCommand;
+        public const int CommandId = PkgCmdIdList.AuthenticationCommand;
 
         protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e)
         {
             SetText(sender);
         }
 
-        public override async System.Threading.Tasks.Task Execute()
+        public override async System.Threading.Tasks.Task ExecuteAsync()
         {
             if (_sessionService.IsReady)
             {
