@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using CodeStream.VisualStudio.Annotations;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace CodeStream.VisualStudio.Services
 {
@@ -20,6 +21,8 @@ namespace CodeStream.VisualStudio.Services
         /// </summary>
         /// <returns>The selected text in the active editor, or a null string if no text is selected.</returns>
         SelectedText GetSelectedText();
+
+        SelectedText GetSelectedText(out IVsTextView view);
     }
 
     //struct TextViewSelection
@@ -120,25 +123,30 @@ namespace CodeStream.VisualStudio.Services
         //    return null;
         //}
 
-        public SelectedText GetSelectedText()
+        public SelectedText GetSelectedText(out IVsTextView view)
         {
             var textManager = _iIVsTextManager as IVsTextManager2;
-            IVsTextView view;
+            
+            var result = textManager.GetActiveView2(1, null, (uint)_VIEWFRAMETYPE.vftCodeWindow, out view);
 
-            int result = textManager.GetActiveView2(1, null, (uint)_VIEWFRAMETYPE.vftCodeWindow, out view);
-
-            view.GetSelection(out int startLine, out int startColumn, out int endLine, out int endColumn);                    
+             view.GetSelection(out int startLine, out int startColumn, out int endLine, out int endColumn);
             view.GetSelectedText(out string selectedText);
 
             //end could be before beginning...
             return new SelectedText()
             {
-                    StartLine = Math.Min(startLine, endLine),
-                    StartColumn = Math.Min(startColumn, endColumn),
-                    EndLine = Math.Max(startLine, endLine),
-                    EndColumn = Math.Max(startColumn, endColumn),
-                    Text = selectedText
+                StartLine = Math.Min(startLine, endLine),
+                StartColumn = Math.Min(startColumn, endColumn),
+                EndLine = Math.Max(startLine, endLine),
+                EndColumn = Math.Max(startColumn, endColumn),
+                Text = selectedText
             };
+        }
+
+        public SelectedText GetSelectedText()
+        {
+            IVsTextView view;
+            return GetSelectedText(out view);
         }
     } 
 }

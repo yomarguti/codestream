@@ -59,6 +59,7 @@
     <Compile Include="Annotations\Annotations.cs" />
     <Compile Include="CodeStreamEventManager.cs" />
     <Compile Include="CodeStreamPackage.cs" />
+    <Compile Include="Commands\AddCodemarkCommand.cs" />
     <Compile Include="Commands\IAuthenticationCommand.cs" />
     <Compile Include="Commands\AuthenticationCommand.cs" />
     <Compile Include="Commands\ToggleToolWindowCommand.cs" />
@@ -246,6 +247,7 @@
       <HintPath>..\packages\Microsoft.VisualStudio.CoreUtility.15.0.26201\lib\net45\Microsoft.VisualStudio.CoreUtility.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.Editor, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Imaging, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.VisualStudio.Imaging.15.4.27004\lib\net45\Microsoft.VisualStudio.Imaging.dll</HintPath>
       <Private>True</Private>

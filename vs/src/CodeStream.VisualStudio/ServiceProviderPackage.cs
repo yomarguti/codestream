@@ -35,6 +35,9 @@ namespace CodeStream.VisualStudio
         }
 
         [Export]
+        private ISelectedTextService SelectedTextService => GetService<SSelectedTextService>() as ISelectedTextService;
+
+        [Export]
         private ICodeStreamService CodeStreamService => GetService<SCodeStreamService>() as ICodeStreamService;
 
         [Export]

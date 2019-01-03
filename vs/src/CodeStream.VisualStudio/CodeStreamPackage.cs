@@ -98,6 +98,7 @@ namespace CodeStream.VisualStudio
             {
                 exports.GetExportedValue<IToggleToolWindowCommand>(),
                 exports.GetExportedValue<IAuthenticationCommand>(),
+                exports.GetExportedValue<IAddCodemarkCommand>(),
             };
 
             var menuService = (IMenuCommandService)(await GetServiceAsync(typeof(IMenuCommandService)));
