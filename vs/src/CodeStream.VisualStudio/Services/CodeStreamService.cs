@@ -10,8 +10,7 @@ namespace CodeStream.VisualStudio.Services
     public interface ICodeStreamService
     {
         Task ChangeActiveWindowAsync(string fileName, Uri uri);
-        Task<object> PostCodeAsync(Uri uri, SelectedText selectedText, bool? isHighlight = null, CancellationToken? cancellationToken = null);
-        Task OpenCommentByPostAsync(string streamId, string postId);
+        Task<object> PostCodeAsync(Uri uri, SelectedText selectedText, bool? isHighlight = null, CancellationToken? cancellationToken = null);    
         Task OpenCommentByThreadAsync(string streamId, string threadId);
         /// <summary>
         /// logs the user out from the CodeStream agent and the session
@@ -40,45 +39,23 @@ namespace CodeStream.VisualStudio.Services
 
             var streamResponse = await _agentService.GetFileStreamAsync(uri);
 
-            _browserService.PostMessage(new
+            _browserService.PostMessage(new DidChangeActiveEditorNotification
             {
-                type = "codestream:interaction:active-editor-changed",
-                body = new
+                Type = "codestream:interaction:active-editor-changed",
+                Body = new DidChangeActiveEditorNotificationBody
                 {
-                    editor = new
+                    Editor = new DidChangeActiveEditorNotificationBodyEditor
                     {
-                        fileStreamId = streamResponse?.Stream?.Id,
-                        uri = uri.ToString(),
-                        fileName = fileName,
+                        FileStreamId = streamResponse?.Stream?.Id,
+                        Uri = uri.ToString(),
+                        FileName = fileName,
                         // in vscode, this came from the editor...
-                        languageId = (string)null
+                        LanguageId = (string)null
                     }
                 }
             });
         }
-
-        public async Task OpenCommentByPostAsync(string streamId, string postId)
-        {
-            await Task.Yield();
-
-            if (!_sessionService.IsReady)
-                return;
-
-            var postResponse = await _agentService.GetPostAsync(streamId, postId);
-            if (postResponse?.Post != null)
-            {
-                _browserService.PostMessage(new
-                {
-                    type = "codestream:interaction:stream-thread-selected",
-                    body = new
-                    {
-                        streamId = postResponse.Post.StreamId,
-                        threadId = postResponse.Post.Id
-                    }
-                });
-            }
-        }
-
+    
         public async Task OpenCommentByThreadAsync(string streamId, string threadId)
         {
             await Task.Yield();
@@ -86,13 +63,13 @@ namespace CodeStream.VisualStudio.Services
             if (!_sessionService.IsReady)
                 return;
 
-            _browserService.PostMessage(new
+            _browserService.PostMessage(new DidChangeStreamThreadNotification
             {
-                type = "codestream:interaction:stream-thread-selected",
-                body = new
+                Type = "codestream:interaction:stream-thread-selected",
+                Body = new DidChangeStreamThreadNotificationBody
                 {
-                    streamId = streamId,
-                    threadId = threadId
+                    StreamId = streamId,
+                    ThreadId = threadId
                 }
             });
         }

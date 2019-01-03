@@ -584,12 +584,42 @@ namespace CodeStream.VisualStudio.Models
 
     public class DidSelectCodeNotificationBody
     {
-        public  string Code { get; set; }
+        public string Code { get; set; }
         public string File { get; set; }
         public string FileUri { get; set; }
         public int[] Location { get; set; }
         public Source Source { get; set; }
         public string GitError { get; set; }
-        public  bool? IsHightlight { get; set; }
+        public bool? IsHightlight { get; set; }
+    }
+
+    public class DidChangeStreamThreadNotification
+    {
+        public string Type { get; set; }
+        public DidChangeStreamThreadNotificationBody Body { get; set; }
+    }
+
+    public class DidChangeStreamThreadNotificationBody
+    {
+        public string StreamId { get; set; }
+        public string ThreadId { get; set; }
+    }
+
+    public class DidChangeActiveEditorNotification
+    {
+        public string Type { get; set; }
+        public DidChangeActiveEditorNotificationBody Body { get; set; }
+    }
+
+    public class DidChangeActiveEditorNotificationBody
+    {
+        public DidChangeActiveEditorNotificationBodyEditor Editor { get; set; }
+    }
+    public class DidChangeActiveEditorNotificationBodyEditor
+    {
+        public string FileStreamId { get; set; }
+        public string Uri { get; set; }
+        public string FileName { get; set; }
+        public string LanguageId { get; set; }
     }
 }
