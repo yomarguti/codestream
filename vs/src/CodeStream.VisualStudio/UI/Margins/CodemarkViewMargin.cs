@@ -213,7 +213,7 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         private async System.Threading.Tasks.Task UpdateAsync(TextDocumentChangedEvent e = null)
         {
-            await System.Threading.Tasks.Task.Yield();
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             if (Visibility == Visibility.Hidden || Width < 1)
             {

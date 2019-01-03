@@ -65,8 +65,8 @@ namespace CodeStream.VisualStudio
 
             await InitializeLoggingAsync();
 
-            Log.Information("Initializing CodeStream Extension v{PackageVersion} in {$ProductName} ({$ProductVersion})",
-                Application.Version, Application.ProductName, Application.ProductVersion);
+            Log.Information("Initializing CodeStream Extension v{PackageVersion} in {$FullProductName} ({$ProductVersion})",
+                Application.Version, Application.FullProductName, Application.ProductVersion);
 
             // Avoid delays when there is ongoing UI activity.
             // See: https://github.com/github/VisualStudio/issues/1537

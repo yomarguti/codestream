@@ -11,10 +11,7 @@ namespace CodeStream.VisualStudio.Services
         ShowCodeResult OpenEditor(string sourceFile, int? scrollTo = null);
     }
 
-    public interface SIdeService
-    {
-
-    }
+    public interface SIdeService { }
 
     public enum ShowCodeResult
     {

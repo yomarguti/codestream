@@ -17,7 +17,7 @@ namespace CodeStream.VisualStudio
         public static Ide Ide { get; }
         public static Extension Extension { get; }
 
-        public static string ProductName { get; }
+        public static string FullProductName { get; }
         public static string ProductVersion { get; }
 
        // public static string VisualStudioInstallDirectory { get; }
@@ -29,7 +29,11 @@ namespace CodeStream.VisualStudio
 
             Ide = new Ide
             {
-                Name = HostVersion.FileDescription,
+                // NOTE: cannot use "Microsoft Visual Studio 2017" as it makes the API validation fail
+                // use something short aka `MSVS {VersionMajor}`
+                Name = HostVersion.FileDescription
+                    .Replace("Microsoft ", "MS")
+                    .Replace("Visual Studio", "VS"),
                 Version = HostVersion.ProductVersion
             };
 
@@ -42,7 +46,7 @@ namespace CodeStream.VisualStudio
                 BuildEnv = string.Empty
             };
 
-            ProductName = HostVersion.FileDescription;
+            FullProductName = HostVersion.FileDescription;
             ProductVersion = HostVersion.ProductVersion;
 
             //try
