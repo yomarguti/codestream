@@ -113,8 +113,9 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 	@log()
 	@lspHandler(CreateJiraCardRequestType)
 	async createCard(request: CreateJiraCardRequest) {
+		await this.ensureConnected();
 		// using /api/2 because 3 returns nonsense errors for the same request
-		return this.post("/rest/api/2/issue", {
+		const response = await this.post("/rest/api/2/issue", {
 			fields: {
 				project: {
 					id: request.project
@@ -126,5 +127,6 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 				description: request.description
 			}
 		});
+		return response.body;
 	}
 }
