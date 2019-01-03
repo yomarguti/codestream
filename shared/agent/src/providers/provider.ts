@@ -21,6 +21,7 @@ export interface ThirdPartyProvider {
 export abstract class ThirdPartyProviderBase<
 	TProviderInfo extends CSProviderInfos = CSProviderInfos
 > implements ThirdPartyProvider {
+	private _readyPromise: Promise<void> | undefined;
 	protected _ensuringConnection: Promise<void> | undefined;
 	protected _providerInfo: TProviderInfo | undefined;
 
@@ -48,7 +49,8 @@ export abstract class ThirdPartyProviderBase<
 			});
 		});
 
-		void (await this.onConnected());
+		this._readyPromise = this.onConnected();
+		await this._readyPromise;
 	}
 
 	protected async onConnected() {}
@@ -61,6 +63,9 @@ export abstract class ThirdPartyProviderBase<
 	protected async onDisconnected() {}
 
 	async ensureConnected() {
+		if (this._readyPromise) {
+			return this._readyPromise;
+		}
 		if (this._providerInfo !== undefined) return;
 
 		if (this._ensuringConnection === undefined) {
@@ -77,7 +82,7 @@ export abstract class ThirdPartyProviderBase<
 			throw new Error(`You must authenticate with ${this.displayName} first.`);
 		}
 
-		void (await this.onConnected());
+		await this.onConnected();
 
 		this._ensuringConnection = undefined;
 	}
@@ -112,7 +117,7 @@ export abstract class ThirdPartyProviderBase<
 		return User.getProviderInfo<TProviderInfo>(me, this.session.teamId, this.name);
 	}
 
-	private async fetch<R extends object>(url: string, init?: RequestInit): Promise<R> {
+	protected async fetch<R extends object>(url: string, init?: RequestInit): Promise<R> {
 		const start = process.hrtime();
 
 		let traceResult;
@@ -142,7 +147,7 @@ export abstract class ThirdPartyProviderBase<
 				[resp, retryCount] = await this.fetchCore(0, absoluteUrl, init);
 
 				if (resp.ok) {
-					traceResult = `TRELLO: Completed ${method} ${url}`;
+					traceResult = `${this.displayName}: Completed ${method} ${url}`;
 					json = resp.json() as Promise<R>;
 				}
 			}
