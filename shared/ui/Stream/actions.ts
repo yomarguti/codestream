@@ -567,6 +567,18 @@ export const createJiraCard = (title, description, issueType, boardName) => asyn
 	}
 };
 
+export const createGithubCard = (title, description, repoName) => async (
+	dispatch,
+	getState,
+	{ api }
+) => {
+	try {
+		return await api.createGithubCard(title, description, repoName);
+	} catch (error) {
+		console.error("failed to create a github card", error);
+	}
+};
+
 export const disconnectService = service => async (dispatch, getState, { api }) => {
 	try {
 		const response = await api.disconnectService(service);

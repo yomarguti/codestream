@@ -178,6 +178,20 @@ export default class WebviewApi {
 		});
 	}
 
+	createGithubCard(title: string, description: string, repoName: string) {
+		return this.postMessage({
+			action: "agent",
+			params: {
+				url: "github/cards/create",
+				request: {
+					title,
+					description,
+					repoName
+				}
+			}
+		});
+	}
+
 	// service is one of "trello", "asana", "jira", "github"
 	fetchIssueBoards(service: string, organizationId?: string) {
 		return this.postMessage({
