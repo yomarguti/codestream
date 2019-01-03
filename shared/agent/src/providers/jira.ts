@@ -48,7 +48,11 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 	}
 
 	get headers() {
-		return { Authorization: `Bearer ${this.accessToken}`, Accept: "application/json" };
+		return {
+			Authorization: `Bearer ${this.accessToken}`,
+			Accept: "application/json",
+			"Content-Type": "application/json"
+		};
 	}
 
 	private get accessToken() {
@@ -110,25 +114,17 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 	@lspHandler(CreateJiraCardRequestType)
 	async createCard(request: CreateJiraCardRequest) {
 		// using /api/2 because 3 returns nonsense errors for the same request
-		return this.fetch("/rest/api/2/issue", {
-			method: "POST",
-			headers: {
-				Authorization: `Bearer ${this.accessToken}`,
-				Accept: "application/json",
-				"Content-Type": "application/json"
-			},
-			body: JSON.stringify({
-				fields: {
-					project: {
-						id: request.project
-					},
-					issuetype: {
-						name: request.issueType
-					},
-					summary: request.summary,
-					description: request.description
-				}
-			})
+		return this.post("/rest/api/2/issue", {
+			fields: {
+				project: {
+					id: request.project
+				},
+				issuetype: {
+					name: request.issueType
+				},
+				summary: request.summary,
+				description: request.description
+			}
 		});
 	}
 }
