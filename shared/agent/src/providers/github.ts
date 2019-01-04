@@ -21,6 +21,7 @@ import { ThirdPartyProviderBase } from "./provider";
 interface GitHubRepo {
 	id: string;
 	full_name: string;
+	path: string;
 }
 
 @lspProvider("github")
@@ -67,7 +68,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 		void (await this.ensureConnected());
 
 		const { git } = Container.instance();
-		const repos = await git.getRepositories();
+		const gitRepos = await git.getRepositories();
 		// let boards: GitHubBoard[];
 
 		// try {
@@ -89,19 +90,22 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 
 		const openRepos = new Map<String, GitHubRepo>();
 
-		for (const repo of repos) {
-			const remotes = await git.getRepoRemotes(repo.path);
+		for (const gitRepo of gitRepos) {
+			const remotes = await git.getRepoRemotes(gitRepo.path);
 			for (const remote of remotes) {
 				if (remote.domain === "github.com" || !openRepos.has(remote.path)) {
-					let repo = this._knownRepos.get(remote.path);
+					let githubRepo = this._knownRepos.get(remote.path);
 
-					if (!repo) {
+					if (!githubRepo) {
 						try {
 							const response = await this.get<GitHubRepo>(
 								`/repos/${remote.path}?${qs.stringify({ access_token: this.token })}`
 							);
-							repo = response.body;
-							this._knownRepos.set(remote.path, repo);
+							githubRepo = {
+								...response.body,
+								path: gitRepo.path
+							};
+							this._knownRepos.set(remote.path, githubRepo);
 							// boards.push(response.body);
 						} catch (err) {
 							Logger.error(err);
@@ -109,8 +113,8 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 						}
 					}
 
-					if (repo) {
-						openRepos.set(remote.path, repo);
+					if (githubRepo) {
+						openRepos.set(remote.path, githubRepo);
 					}
 				}
 			}
@@ -118,7 +122,8 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 
 		const boards = Array.from(openRepos.values()).map(r => ({
 			id: r.id,
-			name: r.full_name
+			name: r.full_name,
+			path: r.path
 		}));
 
 		return {
