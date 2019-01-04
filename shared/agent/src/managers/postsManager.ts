@@ -227,7 +227,9 @@ class PostCollection {
 	}
 
 	updateOrInsert(post: CSPost) {
-		if (Number(post.seqNum) > Number(this.latest.seqNum)) {
+		const seqNum = Number(post.seqNum);
+		const latestSeqNum = this.latest ? Number(this.latest.seqNum) : 0;
+		if (seqNum > latestSeqNum) {
 			this.posts.push(post);
 		} else {
 			const { outOfRange, index, afterIndex } = search(this.posts, post.seqNum);
