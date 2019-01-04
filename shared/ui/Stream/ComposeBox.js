@@ -130,6 +130,15 @@ class ComposeBox extends React.Component {
 
 		if (prevProps.quote !== quote && !prevProps.isEditing) {
 			this.handleCodeHighlightEvent(quote);
+			const { crossPostIssueProvider, boards } = this.state;
+			if (crossPostIssueProvider === "github" && quote && quote.source && quote.source.repoPath) {
+				for (const board of boards) {
+					if (board.path === quote.source.repoPath) {
+						this.setState({ boardId: board.id });
+						break;
+					}
+				}
+			}
 		}
 
 		if (quotePost && prevProps.quotePost !== quotePost) {
