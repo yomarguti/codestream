@@ -18,9 +18,16 @@ import { CSGitHubProviderInfo } from "../shared/api.protocol";
 import { log, lspHandler, lspProvider } from "../system";
 import { ThirdPartyProviderBase } from "./provider";
 
+interface GitHubRepo {
+	id: string;
+	full_name: string;
+}
+
 @lspProvider("github")
 export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo> {
 	private _githubUserId: string | undefined;
+
+	private _knownRepos = new Map<String, GitHubRepo>();
 
 	get baseUrl() {
 		return "https://api.github.com";
@@ -51,6 +58,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 
 	async onConnected() {
 		this._githubUserId = await this.getMemberId();
+		this._knownRepos = new Map<String, GitHubRepo>();
 	}
 
 	@log()
@@ -60,41 +68,58 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 
 		const { git } = Container.instance();
 		const repos = await git.getRepositories();
-		let boards: GitHubBoard[];
+		// let boards: GitHubBoard[];
 
-		try {
-			let apiResponse = await this.get<GitHubBoard[]>(
-				`/user/repos?${qs.stringify({ access_token: this.token })}`
-			);
-			boards = apiResponse.body;
+		// try {
+		// 	let apiResponse = await this.get<GitHubBoard[]>(
+		// 		`/user/repos?${qs.stringify({ access_token: this.token })}`
+		// 	);
+		// 	boards = apiResponse.body;
+		//
+		// 	let nextPage: string | undefined;
+		// 	while ((nextPage = this.nextPage(apiResponse.response))) {
+		// 		apiResponse = await this.get<GitHubBoard[]>(nextPage);
+		// 		boards = boards.concat(apiResponse.body);
+		// 	}
+		// } catch (err) {
+		// 	boards = [];
+		// 	Logger.error(err);
+		// 	debugger;
+		// }
 
-			let nextPage: string | undefined;
-			while ((nextPage = this.nextPage(apiResponse.response))) {
-				apiResponse = await this.get<GitHubBoard[]>(nextPage);
-				boards = boards.concat(apiResponse.body);
-			}
-		} catch (err) {
-			boards = [];
-			Logger.error(err);
-			debugger;
-		}
+		const openRepos = new Map<String, GitHubRepo>();
 
 		for (const repo of repos) {
 			const remotes = await git.getRepoRemotes(repo.path);
 			for (const remote of remotes) {
-				if (remote.domain === "github.com") {
-					try {
-						const response = await this.get<GitHubBoard>(
-							`/repos/${remote.path}?${qs.stringify({ access_token: this.token })}`
-						);
-						boards.push(response.body);
-					} catch (err) {
-						Logger.error(err);
-						debugger;
+				if (remote.domain === "github.com" || !openRepos.has(remote.path)) {
+					let repo = this._knownRepos.get(remote.path);
+
+					if (!repo) {
+						try {
+							const response = await this.get<GitHubRepo>(
+								`/repos/${remote.path}?${qs.stringify({ access_token: this.token })}`
+							);
+							repo = response.body;
+							this._knownRepos.set(remote.path, repo);
+							// boards.push(response.body);
+						} catch (err) {
+							Logger.error(err);
+							debugger;
+						}
+					}
+
+					if (repo) {
+						openRepos.set(remote.path, repo);
 					}
 				}
 			}
 		}
+
+		const boards = Array.from(openRepos.values()).map(r => ({
+			id: r.id,
+			name: r.full_name
+		}));
 
 		return {
 			boards
