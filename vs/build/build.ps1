@@ -1,21 +1,120 @@
-﻿param (
-    [string]$configuration = "Release",
-    [double]$visualStudioVersion = 15.0,
-    [boolean]$deployExtension = $false
+﻿[CmdletBinding(PositionalBinding=$false)]
+Param( 
+    [Parameter(Mandatory=$false)]
+    [ValidateSet("Debug", "Release")]
+    [Alias("c")]
+    [System.String] $Configuration = "Release",
+
+    [Parameter(Mandatory=$false)]
+    [ValidateSet("Clean", "Build", "Rebuild")]
+    [Alias("t")]
+    [System.String] $Target = "Rebuild",
+
+    [Parameter(Mandatory=$false)]
+    [ValidateSet("15.0")]
+    [Alias("v")]
+    [double]$VisualStudioVersion = 15.0,
+
+    [Parameter(Mandatory=$false)]
+    [ValidateSet("x86")]
+    [Alias("p")]
+    [System.String]$Platform = "x86",
+
+    [Parameter(Mandatory=$false)]
+    [Alias("d")]
+    [boolean]$DeployExtension = $false,
+
+    [Parameter(Mandatory=$false)]
+    [Alias("h")]
+    [Switch] $Help = $false
 )
 
-# build vscode-codestream (npm run rebuild)
+function Try-Create-Directory([string[]] $path) {
+  if (!(Test-Path -path $path)) {
+    New-Item -path $path -force -itemType "Directory" | Out-Null
+    Write-Log "Creating directory $($path)"
+  }
+}
+
+function Start-Timer
+{
+    return [System.Diagnostics.Stopwatch]::StartNew()
+}
+
+function Get-ElapsedTime([System.Diagnostics.Stopwatch] $timer)
+{
+    $timer.Stop()
+    return $timer.Elapsed
+}
+
+function Write-Log ([string] $message, $messageColor = "DarkGreen")
+{
+    if ($message)
+    {
+        Write-Host "...$message" -BackgroundColor $messageColor
+    }    
+}
+
+function Print-Help {
+  if (-not $Help) {
+    return
+  }
+
+  Write-Host -object ""
+  Write-Host -object "********* CodeStream Build Script *********"
+  Write-Host -object ""
+  Write-Host -object "  Help (-h)                    - [Switch] - Prints this help message."
+  Write-Host -object ""    
+  Write-Host -object "  Configuration (-c)           - [String] - Debug or Release."
+  Write-Host -object "  Target (-t)                  - [String] - Specifies the build target. Defaults to 'Rebuild'."
+  Write-Host -object "  Platform (-p)                - [String] - Specifies the platform. Defaults to 'x86'."
+  
+  Write-Host -object ""    
+  Write-Host -object "  VisualStudioVersion (-v)     - [String] - Currently only 15.0."
+  Write-Host -object ""
+  Write-Host -object "  DeployExtension (-d)         - [Switch] - Passes this switch to msbuild"
+  Write-Host -object ""
+  Exit 0
+}
 
 # npm install pkg -g
 
-#https://stackoverflow.com/questions/42874400/how-to-build-a-visual-studio-2017-vsix-using-msbuild
-$msbuild = "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\msbuild.exe"
+# clone https://github.com/TeamCodeStream/vscode-codestream
+# clone https://github.com/TeamCodeStream/codestream-components
+# clone https://github.com/TeamCodeStream/codestream-lsp-agent
 
-pkg ..\src\CodeStream.VisualStudio\LSP\agent-cli.js --targets node8-win-x86 --out-path ..\src\CodeStream.VisualStudio\LSP\
+function Perform-Build
+ {
+    $timer = Start-Timer
+    
+    Write-Log "Running vscode build."
 
-$OutputDir = $($PSScriptRoot+"\artifacts");
-Remove-Item $($PSScriptRoot+"\artifacts\*") -Recurse -Force
+    # build vscode-codestream (npm run rebuild)
 
-# move devteam DotNetBrowser runtime license into ..\src\CodeStream.VisualStudio
+    Write-Log "vscode build completed."    
 
-& $msbuild ..\src\CodeStream.VisualStudio.sln /v:normal /target:Clean /target:Build /p:Configuration=$configuration /p:Platform=x86 /p:DeployExtension=$deployExtension /p:VisualStudioVersion=$visualStudioVersion /p:OutputPath=$OutputDir
+    #https://stackoverflow.com/questions/42874400/how-to-build-a-visual-studio-2017-vsix-using-msbuild
+    $msbuild = ""
+    if ($VisualStudioVersion -eq 15.0) {
+       $msbuild = "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe"
+    }
+    
+    Write-Log "Packaging agent."
+    pkg ..\src\CodeStream.VisualStudio\LSP\agent-cli.js --targets node8-win-x86 --out-path ..\src\CodeStream.VisualStudio\LSP\
+    Write-Log "Packaging agent Completed."
+
+    $OutputDir = $($PSScriptRoot+"\artifacts\$($Platform)\$($Configuration)");
+    Try-Create-Directory($OutputDir)
+
+    Remove-Item $("$($OutputDir)\*") -Recurse -Force
+
+    # move devteam DotNetBrowser runtime license into ..\src\CodeStream.VisualStudio
+
+    Write-Log "Running msbuild."
+    & $msbuild ..\src\CodeStream.VisualStudio.sln /v:normal /target:$Target /p:Configuration=$Configuration /p:Platform=$Platform /p:DeployExtension=$DeployExtension /p:VisualStudioVersion=$VisualStudioVersion /p:OutputPath=$OutputDir  
+    Write-Log "Perform-Build: Completed. {$(Get-ElapsedTime($timer))}"
+    Write-Log "Artifacts: $($OutputDir)"
+}
+
+Print-Help
+Perform-Build
