@@ -106,6 +106,7 @@ function Perform-Build
     $OutputDir = $($PSScriptRoot+"\artifacts\$($Platform)\$($Configuration)");
     Try-Create-Directory($OutputDir)
 
+    Write-Log "Cleaning $($OutputDir)."
     Remove-Item $("$($OutputDir)\*") -Recurse -Force
 
     # move devteam DotNetBrowser runtime license into ..\src\CodeStream.VisualStudio
