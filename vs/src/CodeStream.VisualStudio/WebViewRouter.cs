@@ -192,7 +192,7 @@ namespace CodeStream.VisualStudio
                                                         if (loginResult == LoginResult.VERSION_UNSUPPORTED)
                                                         {
                                                             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                                            InfoBarProvider.Instance.ShowInfoBar("This version of CodeStream is no longer supported. Please upgrade to the latest version.");
+                                                            InfoBarProvider.Instance.ShowInfoBar($"This version of {Application.Name} is no longer supported. Please upgrade to the latest version.");
                                                             break;
                                                         }
 

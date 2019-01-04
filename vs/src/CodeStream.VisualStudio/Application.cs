@@ -30,7 +30,7 @@ namespace CodeStream.VisualStudio
             Ide = new Ide
             {
                 // NOTE: cannot use "Microsoft Visual Studio 2017" as it makes the API validation fail
-                // use something short aka `MSVS {VersionMajor}`
+                // use something short aka `MSVS {Year}`
                 Name = HostVersion.FileDescription
                     .Replace("Microsoft ", "MS")
                     .Replace("Visual Studio", "VS"),
