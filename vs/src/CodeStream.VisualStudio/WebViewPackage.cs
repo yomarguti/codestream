@@ -13,7 +13,8 @@ namespace CodeStream.VisualStudio
     /// </remarks>
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [Guid(Guids.WebViewPackageId)]
-    [ProvideToolWindow(typeof(WebViewToolWindow), Orientation = ToolWindowOrientation.Right)]
+    [ProvideToolWindow(typeof(WebViewToolWindow), Orientation = ToolWindowOrientation.Right,
+        Style = VsDockStyle.Tabbed, Window = EnvDTE.Constants.vsWindowKindSolutionExplorer)]
     public sealed class WebViewPackage : AsyncPackage
     {
 
