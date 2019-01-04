@@ -56,7 +56,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                               $"{Environment.NewLine}{Environment.NewLine}" +
                               $"\t{_viewModel.Marker.Summary}" +
                               $"{Environment.NewLine}{Environment.NewLine}" +
-                              $"View {_viewModel.Marker.Codemark.Type}";
+                              $"Click to View {_viewModel.Marker.Codemark.Type}";
                 });
             }
         }
