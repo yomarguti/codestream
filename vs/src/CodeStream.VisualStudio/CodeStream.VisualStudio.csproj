@@ -86,6 +86,7 @@
     <Compile Include="Services\DotNetBrowserService.cs" />
     <Compile Include="Services\BrowserServiceBase.cs" />
     <Compile Include="Services\IdeService.cs" />
+    <Compile Include="UI\InfoBarProvider.cs" />
     <Compile Include="UI\Margins\CodemarkGlyphCache.cs" />
     <Compile Include="UI\Settings\OptionsDialogPage.cs">
       <SubType>Component</SubType>

@@ -9,6 +9,19 @@ using System.Runtime.Serialization;
 
 namespace CodeStream.VisualStudio.Models
 {
+    public enum LoginResult
+    {
+        // ReSharper disable InconsistentNaming
+        SUCCESS,
+        INVALID_CREDENTIALS,
+        TOKEN_INVALID,
+        NOT_CONFIRMED,
+        USER_NOT_ON_TEAM,
+        UNKNOWN,
+        VERSION_UNSUPPORTED
+        // ReSharper restore InconsistentNaming
+    }
+
     public class SelectedText
     {
         public int StartLine { get; set; }
@@ -48,7 +61,7 @@ namespace CodeStream.VisualStudio.Models
         /// <returns></returns>
         public int[] ToLocation()
         {
-            return new [] { StartLine, StartCharacter, EndLine, EndCharacter };
+            return new[] { StartLine, StartCharacter, EndLine, EndCharacter };
         }
 
         public int StartLine { get; }
@@ -311,7 +324,7 @@ namespace CodeStream.VisualStudio.Models
 
         }
 
-        protected CsMePreferences(SerializationInfo info, StreamingContext context): base(info, context)
+        protected CsMePreferences(SerializationInfo info, StreamingContext context) : base(info, context)
         {
 
         }

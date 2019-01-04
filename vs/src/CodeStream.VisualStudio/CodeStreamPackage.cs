@@ -15,6 +15,7 @@ using System;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
+using CodeStream.VisualStudio.UI;
 
 namespace CodeStream.VisualStudio
 {
@@ -43,6 +44,7 @@ namespace CodeStream.VisualStudio
             // Do any initialization that requires the UI thread after switching to the UI thread.
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
+
             // kick it off!
             await GetServiceAsync(typeof(SCodeStreamToolWindowProvider));
 
@@ -50,6 +52,8 @@ namespace CodeStream.VisualStudio
             var codeStreamService = await GetServiceAsync(typeof(SCodeStreamService)) as ICodeStreamService;
             var eventAggregator = await GetServiceAsync(typeof(SEventAggregator)) as IEventAggregator;
             _browserService = await GetServiceAsync(typeof(SBrowserService)) as IBrowserService;
+
+            InfoBarProvider.Initialize(this);
 
             Assumes.Present(codeStreamService);
             Assumes.Present(eventAggregator);

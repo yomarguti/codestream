@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
 using System.Threading;
+using CodeStream.VisualStudio.UI;
 
 namespace CodeStream.VisualStudio
 {
@@ -185,7 +186,22 @@ namespace CodeStream.VisualStudio
                                                 var loginResponse = loginResponsewrapper.ToObject<LoginResponseWrapper>();
                                                 if (loginResponse?.Result.Error.IsNotNullOrWhiteSpace() == true)
                                                 {
-                                                    response.Body.Error = loginResponse.Result.Error;
+                                                    if (Enum.TryParse(loginResponse.Result.Error,
+                                                        out LoginResult loginResult))
+                                                    {
+                                                        if (loginResult == LoginResult.VERSION_UNSUPPORTED)
+                                                        {
+                                                            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                                                            InfoBarProvider.Instance.ShowInfoBar("This version of CodeStream is no longer supported. Please upgrade to the latest version.");
+                                                            break;
+                                                        }
+
+                                                        response.Body.Error = loginResult.ToString();
+                                                    }
+                                                    else
+                                                    {
+                                                        response.Body.Error = loginResponse.Result.Error;
+                                                    }
                                                 }
                                                 else
                                                 {
