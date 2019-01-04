@@ -10,9 +10,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
 
 namespace CodeStream.VisualStudio.UI.SuggestedActions
 {
@@ -118,6 +115,8 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 
         public Task<object> GetPreviewAsync(CancellationToken cancellationToken)
         {
+            // nothing here, uut here is an example:
+
             //var textBlock = new TextBlock
             //{
             //    Padding = new Thickness(5)
@@ -136,7 +135,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 
         public bool HasActionSets => false;
 
-        public string DisplayText { get; } = "Add CodeStream Comment";
+        public string DisplayText { get; } = $"Add {Application.Name} Comment";
 
         public ImageMoniker IconMoniker => default(ImageMoniker);
 

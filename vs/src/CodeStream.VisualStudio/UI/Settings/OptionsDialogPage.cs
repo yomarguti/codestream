@@ -25,7 +25,7 @@ namespace CodeStream.VisualStudio.UI.Settings
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        [Category("CodeStream")]
+        [Category(Application.Name)]
         [DisplayName("Email")]
         [Description("")]
         public string Email
@@ -38,7 +38,7 @@ namespace CodeStream.VisualStudio.UI.Settings
             }
         }
 
-        [Category("CodeStream")]
+        [Category(Application.Name)]
         [DisplayName("Show Markers")]
         [Description("Specifies whether to show CodeStream markers in editor margins")]
         public bool ShowMarkers
@@ -51,7 +51,7 @@ namespace CodeStream.VisualStudio.UI.Settings
             }
         }
 
-        [Category("CodeStream")]
+        [Category(Application.Name)]
         [DisplayName("Avatars")]
         [Description("Specifies whether to show avatars")]
         public bool ShowHeadshots
@@ -64,7 +64,7 @@ namespace CodeStream.VisualStudio.UI.Settings
             }
         }
 
-        [Category("CodeStream")]
+        [Category(Application.Name)]
         [DisplayName("Server Url")]
         [Description("Specifies the url to use to connect to the CodeStream service")]
         public string ServerUrl
@@ -77,7 +77,7 @@ namespace CodeStream.VisualStudio.UI.Settings
             }
         }
 
-        [Category("CodeStream")]
+        [Category(Application.Name)]
         [DisplayName("Web App Url")]
         [Description("Specifies the url for the CodeStream web portal")]
         public string WebAppUrl
@@ -90,7 +90,7 @@ namespace CodeStream.VisualStudio.UI.Settings
             }
         }
 
-        [Category("CodeStream")]
+        [Category(Application.Name)]
         [DisplayName("Team")]
         [Description("Specifies an optional team to connect to the CodeStream service")]
         public string Team
@@ -103,7 +103,7 @@ namespace CodeStream.VisualStudio.UI.Settings
             }
         }
 
-        [Category("CodeStream")]
+        [Category(Application.Name)]
         [DisplayName("Open Comment On Select")]
         [Description(
             "Specifies whether to automatically open the comment dialog when the CodeStream panel is open and you select code")]
@@ -117,7 +117,7 @@ namespace CodeStream.VisualStudio.UI.Settings
             }
         }
 
-        [Category("CodeStream")]
+        [Category(Application.Name)]
         [DisplayName("Trace Level")]
         [Description("Specifies how much (if any) output will be sent to the CodeStream log")]
         public TraceLevel TraceLevel

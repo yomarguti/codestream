@@ -88,7 +88,7 @@ namespace CodeStream.VisualStudio.LSP
         internal static LanguageClient Instance { get; private set; }
         private JsonRpc _rpc;
 
-        public string Name => "CodeStream";
+        public string Name => Application.Name;
 
         public IEnumerable<string> ConfigurationSections => null;
 

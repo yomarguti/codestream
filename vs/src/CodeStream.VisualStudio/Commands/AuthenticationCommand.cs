@@ -45,7 +45,7 @@ namespace CodeStream.VisualStudio.Commands
 
         private void SetText(IOleMenuCommand sender)
         {
-            sender.Text = _sessionService.IsReady ? "CodeStream: Sign Out" : "CodeStream: Sign In";
+            sender.Text = _sessionService.IsReady ? $"{Application.Name}: Sign Out" : $"{Application.Name}: Sign In";
         }
     }
 }

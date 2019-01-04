@@ -6,7 +6,7 @@ namespace CodeStream.VisualStudio
 {
     public class Application
     {
-        public static string Name = "CodeStream";
+        public const string Name = "CodeStream";
 
         /// <summary>
         /// Gets the version information for the host process (IDE) aka VisualStudio.
