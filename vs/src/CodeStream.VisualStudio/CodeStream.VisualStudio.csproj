@@ -139,11 +139,11 @@
     <Content Include="CodeStream.VisualStudio.pkgdef" />
     <Resource Include="Resources\Assets\marker-comment-blue.png" />
     <Content Include="LSP\agent-cli.exe" Condition="'$(Configuration)'=='Release'">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="LSP\agent-cli.js" Condition="'$(Configuration)'=='Debug'">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="Resources\Assets\codestream.png">
@@ -432,6 +432,11 @@
   <Import Project="..\packages\Microsoft.VisualStudio.SDK.Analyzers.15.8.33\build\Microsoft.VisualStudio.SDK.Analyzers.targets" Condition="Exists('..\packages\Microsoft.VisualStudio.SDK.Analyzers.15.8.33\build\Microsoft.VisualStudio.SDK.Analyzers.targets')" />
   <Import Project="..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.122\build\Microsoft.VisualStudio.Threading.Analyzers.targets" Condition="Exists('..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.122\build\Microsoft.VisualStudio.Threading.Analyzers.targets')" />
   <Import Project="..\packages\Microsoft.VSSDK.BuildTools.15.9.3032\build\Microsoft.VSSDK.BuildTools.targets" Condition="Exists('..\packages\Microsoft.VSSDK.BuildTools.15.9.3032\build\Microsoft.VSSDK.BuildTools.targets')" />
+  <PropertyGroup>
+    <PreBuildEvent>del "$(ProjectDir)*.licenses" /q
+copy /Y "$(SolutionDir)..\licenses\$(ConfigurationName)\teamdev.licenses" "$(ProjectDir)"
+</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

@@ -340,4 +340,6 @@ ASALocalRun/
 # CodeStream stuff
 src/CodeStream.VisualStudio/LSP/agent-cli.*
 src/CodeStream.VisualStudio/UI/WebViews/Shared/
+licenses/Debug/teamdev.licenses
+licenses/Release/teamdev.licenses
 src/CodeStream.VisualStudio/teamdev.licenses
