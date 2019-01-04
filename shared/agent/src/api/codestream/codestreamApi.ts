@@ -346,10 +346,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 				e.data = await Container.instance().teams.resolve(e);
 				break;
 			case MessageType.Users:
-				const lastReads = this._unreads
-					? (await this._unreads.get()).lastReads
-					: { ...this._user!.lastReads };
-
+				const lastReads = {
+					...(this._unreads
+							? (await this._unreads.get()).lastReads
+							: this._user!.lastReads
+					)
+				};
 				e.data = await Container.instance().users.resolve(e);
 
 				const me = (e.data as CSMe[]).find(u => u.id === this.userId);
