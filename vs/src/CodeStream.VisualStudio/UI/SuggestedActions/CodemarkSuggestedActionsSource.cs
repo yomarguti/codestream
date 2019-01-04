@@ -47,12 +47,11 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
         public event EventHandler<EventArgs> SuggestedActionsChanged;
 #pragma warning restore 0067
 
+        private SelectedText _selectedText;
+
         public IEnumerable<SuggestedActionSet> GetSuggestedActions(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken)
         {
-            var selectedTextService = Package.GetGlobalService(typeof(SSelectedTextService)) as ISelectedTextService;
-            var selectedText = selectedTextService?.GetSelectedText();
-
-            if (selectedText == null || !_textDocumentFactoryService.TryGetTextDocument(_textBuffer, out var textDocument))
+            if (_selectedText?.HasText == false || !_textDocumentFactoryService.TryGetTextDocument(_textBuffer, out var textDocument))
             {
                 return Enumerable.Empty<SuggestedActionSet>();
             }
@@ -62,7 +61,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
                 new SuggestedActionSet(
                     actions: new ISuggestedAction[]
                     {
-                        new CodemarkSuggestedAction(textDocument, selectedText)
+                        new CodemarkSuggestedAction(textDocument, _selectedText)
                     },
                     categoryName: null,
                     title: null,
@@ -74,7 +73,10 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 
         public Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken)
         {
-            return System.Threading.Tasks.Task.FromResult(true);
+            var selectedTextService = Package.GetGlobalService(typeof(SSelectedTextService)) as ISelectedTextService;
+            _selectedText = selectedTextService?.GetSelectedText();
+
+            return System.Threading.Tasks.Task.FromResult(_selectedText?.HasText == true);
         }
 
         public void Dispose()
@@ -116,13 +118,13 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 
         public Task<object> GetPreviewAsync(CancellationToken cancellationToken)
         {
-            var textBlock = new TextBlock
-            {
-                Padding = new Thickness(5)
-            };
-            textBlock.Inlines.Add(new Run() { Text = _selectedText.Text });
+            //var textBlock = new TextBlock
+            //{
+            //    Padding = new Thickness(5)
+            //};
+            //textBlock.Inlines.Add(new Run() { Text = _selectedText.Text });
 
-            return System.Threading.Tasks.Task.FromResult<object>(textBlock);
+            return System.Threading.Tasks.Task.FromResult<object>(null);
         }
 
         public bool TryGetTelemetryId(out Guid telemetryId)
@@ -132,38 +134,17 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
             return false;
         }
 
-        public bool HasActionSets
-        {
-            get { return false; }
-        }
+        public bool HasActionSets => false;
 
         public string DisplayText { get; } = "Add CodeStream Comment";
 
-        public ImageMoniker IconMoniker
-        {
-            get { return default(ImageMoniker); }
-        }
+        public ImageMoniker IconMoniker => default(ImageMoniker);
 
-        public string IconAutomationText
-        {
-            get
-            {
-                return null;
-            }
-        }
+        public string IconAutomationText => null;
 
-        public string InputGestureText
-        {
-            get
-            {
-                return null;
-            }
-        }
+        public string InputGestureText => null;
 
-        public bool HasPreview
-        {
-            get { return false; }
-        }
+        public bool HasPreview => false;
 
         public void Dispose()
         {
