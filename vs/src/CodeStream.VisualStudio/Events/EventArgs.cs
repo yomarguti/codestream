@@ -2,17 +2,19 @@
 
 namespace CodeStream.VisualStudio.Events
 {
-    public class LanguageServerReadyEvent : EventArgs, IEvent
+    public class EventArgsBase : EventArgs
+    {
+
+    }
+
+    public sealed class LanguageServerReadyEvent : EventArgsBase
     {
         public bool IsReady { get; set; }
     }
 
-    public class SessionReadyEvent : EventArgs, IEvent
-    {
-        public bool IsReady { get; set; }
-    }
+    public sealed class SessionReadyEvent : EventArgsBase { }
 
-    public class SessionLogoutEvent : EventArgs, IEvent { }
+    public sealed class SessionLogoutEvent : EventArgsBase { }
 
     public enum TextDocumentChangedReason
     {
@@ -22,27 +24,27 @@ namespace CodeStream.VisualStudio.Events
         ViewportHeightChanged
     }
 
-    public class TextDocumentChangedEvent : EventArgs, IEvent
+    public sealed class TextDocumentChangedEvent : EventArgsBase
     {
         public TextDocumentChangedReason Reason { get; set; }
     }
 
-    public class TextSelectionChangedEvent : EventArgs, IEvent
+    public sealed class TextSelectionChangedEvent : EventArgsBase
     {
         
     }
 
-    public class CodemarkChangedEvent : EventArgs, IEvent
+    public sealed class CodemarkChangedEvent : EventArgsBase
     {
         public string Uri { get; set; }
     }
 
-    public class CodemarkVisibilityEvent : EventArgs, IEvent
+    public sealed class CodemarkVisibilityEvent : EventArgsBase
     {
         public bool IsVisible { get; set; }
     }
 
-    public class CodeStreamConfigurationChangedEvent : EventArgs, IEvent
+    public sealed class CodeStreamConfigurationChangedEvent : EventArgsBase
     {
          public bool OpenCommentOnSelect { get; set; }
     }

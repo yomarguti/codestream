@@ -72,7 +72,6 @@
     <Compile Include="Core\Logging\TraceLevel.cs" />
     <Compile Include="Events\EventAggregator.cs" />
     <Compile Include="Events\EventArgs.cs" />
-    <Compile Include="Events\IEvent.cs" />
     <Compile Include="Extensions\ColorExtensions.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
     <Compile Include="Extensions\Guard.cs" />

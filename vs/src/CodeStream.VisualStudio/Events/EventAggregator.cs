@@ -7,20 +7,17 @@ using System.Reactive.Subjects;
 
 namespace CodeStream.VisualStudio.Events
 {
-    public interface SEventAggregator
-    {
-
-    }
+    public interface SEventAggregator { }
 
     public interface IEventAggregator
     {
-        void Publish<TEvent>(TEvent sampleEvent) where TEvent : IEvent;
-        IObservable<TEvent> GetEvent<TEvent>() where TEvent : IEvent;
+        void Publish<TEvent>(TEvent sampleEvent) where TEvent : EventArgsBase;
+        IObservable<TEvent> GetEvent<TEvent>() where TEvent : EventArgsBase;
     }
 
     public class EventAggregator : IEventAggregator, SEventAggregator
     {
-        static readonly ILogger Log = LogManager.ForContext<EventAggregator>();
+        private static readonly ILogger Log = LogManager.ForContext<EventAggregator>();
 
         private readonly ConcurrentDictionary<Type, object> _subjects
             = new ConcurrentDictionary<Type, object>();
@@ -28,7 +25,7 @@ namespace CodeStream.VisualStudio.Events
         private readonly ConcurrentDictionary<Type, int> _publishStats = new ConcurrentDictionary<Type, int>();
 #endif
 
-        public IObservable<TEvent> GetEvent<TEvent>() where TEvent : IEvent
+        public IObservable<TEvent> GetEvent<TEvent>() where TEvent : EventArgsBase
         {
             var subject = (ISubject<TEvent>)_subjects.GetOrAdd(typeof(TEvent),
                             t => new Subject<TEvent>());
@@ -39,7 +36,7 @@ namespace CodeStream.VisualStudio.Events
             return subject.AsObservable();
         }
 
-        public void Publish<TEvent>(TEvent sampleEvent) where TEvent : IEvent
+        public void Publish<TEvent>(TEvent sampleEvent) where TEvent : EventArgsBase
         {
             if (_subjects.TryGetValue(typeof(TEvent), out var subject))
             {

@@ -5,6 +5,10 @@ VisualStudioVersion = 15.0.27107.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio", "CodeStream.VisualStudio\CodeStream.VisualStudio.csproj", "{EB360D87-8769-44A4-B837-8BC3279070C9}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{5BFDF0EC-9F77-4ED8-A7C9-BDED85BD3239}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.UnitTests", "CodeStream.VisualStudio.UnitTests\CodeStream.VisualStudio.UnitTests.csproj", "{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -15,9 +19,16 @@ Global
 		{EB360D87-8769-44A4-B837-8BC3279070C9}.Debug|x86.Build.0 = Debug|x86
 		{EB360D87-8769-44A4-B837-8BC3279070C9}.Release|x86.ActiveCfg = Release|x86
 		{EB360D87-8769-44A4-B837-8BC3279070C9}.Release|x86.Build.0 = Release|x86
+		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}.Debug|x86.ActiveCfg = Debug|x86
+		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}.Debug|x86.Build.0 = Debug|x86
+		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}.Release|x86.ActiveCfg = Release|x86
+		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3} = {5BFDF0EC-9F77-4ED8-A7C9-BDED85BD3239}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CA2F01D3-69DD-4FEE-B239-775F5C1DFA2F}

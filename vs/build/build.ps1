@@ -95,8 +95,10 @@ function Perform-Build
 
     #https://stackoverflow.com/questions/42874400/how-to-build-a-visual-studio-2017-vsix-using-msbuild
     $msbuild = ""
+    $vstest = ""
     if ($VisualStudioVersion -eq 15.0) {
        $msbuild = "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe"
+       $vstest = "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe"
     }
     
     Write-Log "Packaging agent."
@@ -108,11 +110,20 @@ function Perform-Build
 
     Write-Log "Cleaning $($OutputDir)."
     Remove-Item $("$($OutputDir)\*") -Recurse -Force
-
-    # move devteam DotNetBrowser runtime license into ..\src\CodeStream.VisualStudio
-
+    
     Write-Log "Running msbuild."
     & $msbuild ..\src\CodeStream.VisualStudio.sln /v:normal /target:$Target /p:Configuration=$Configuration /p:Platform=$Platform /p:DeployExtension=$DeployExtension /p:VisualStudioVersion=$VisualStudioVersion /p:OutputPath=$OutputDir  
+    
+    Write-Log "Running UnitTests"
+    & $vstest "$($OutputDir)\CodeStream.VisualStudio.UnitTests.dll" /Platform:$Platform
+    
+    if ($LastExitCode -ne 0) {
+        Write-Log "UnitTests Failed." "Red"
+        exit 1
+    }
+
+    Write-Log "UnitTests Completed."
+
     Write-Log "Perform-Build: Completed. {$(Get-ElapsedTime($timer))}"
     Write-Log "Artifacts: $($OutputDir)"
 }
