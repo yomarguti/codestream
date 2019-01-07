@@ -565,6 +565,9 @@ export const createServiceCard = attributes => async (_, __, { api }: ThunkExtra
 				attributes.boardId
 			);
 		}
+		case "trello": {
+			return api.createTrelloCard(attributes.listId, attributes.title, attributes.description);
+		}
 	}
 };
 
