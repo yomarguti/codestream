@@ -14,6 +14,11 @@ interface Props {
 	providerInfo?: {
 		[service: string]: {};
 	};
+	codeBlock?: {
+		source?: {
+			repoPath: string;
+		};
+	};
 }
 
 interface State {
@@ -94,7 +99,13 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 				return <TrelloCardControls boards={boards} onValues={this.props.onValues} />;
 			}
 			case SUPPORTED_SERVICES.GitHub.name: {
-				return <GitHubCardControls boards={boards} onValues={this.props.onValues} />;
+				return (
+					<GitHubCardControls
+						boards={boards}
+						onValues={this.props.onValues}
+						codeBlock={this.props.codeBlock}
+					/>
+				);
 			}
 			default:
 				return "foobar";

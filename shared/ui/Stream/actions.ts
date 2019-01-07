@@ -557,7 +557,7 @@ export const createServiceCard = attributes => async (_, __, { api }: ThunkExtra
 				return api.createTrelloCard(attributes.listId, attributes.title, attributes.description);
 			}
 			case "github": {
-				return api.createGithubCard(attributes.title, attributes.description, attributes.boardId);
+				return api.createGithubCard(attributes.title, attributes.description, attributes.boardName);
 			}
 		}
 	} catch (error) {

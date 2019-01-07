@@ -13,6 +13,11 @@ interface State {
 interface Props {
 	boards: Board[];
 	onValues: CrossPostIssueValuesListener;
+	codeBlock?: {
+		source?: {
+			repoPath: string;
+		};
+	};
 }
 
 export default class GitHubCardControls extends React.Component<Props, State> {
@@ -26,14 +31,31 @@ export default class GitHubCardControls extends React.Component<Props, State> {
 		};
 	}
 
+	componentDidUpdate(prevProps: Props) {
+		if (prevProps.codeBlock !== this.props.codeBlock) {
+			this.selectBoardForCodeBlock();
+		}
+	}
+
 	componentDidMount() {
+		this.selectBoardForCodeBlock();
 		this.onValuesChanged();
+	}
+
+	selectBoardForCodeBlock = () => {
+		const { codeBlock } = this.props;
+		for (const board of this.props.boards) {
+			if (board.path === (codeBlock && codeBlock.source && codeBlock.source.repoPath)) {
+				this.setState({ board });
+				break;
+			}
+		}
 	}
 
 	onValuesChanged = () => {
 		const { isEnabled, board } = this.state;
 		this.props.onValues({
-			boardId: board.name,
+			boardName: board.name,
 			isEnabled,
 			service: SUPPORTED_SERVICES.GitHub.name
 		});
