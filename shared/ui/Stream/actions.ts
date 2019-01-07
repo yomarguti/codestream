@@ -555,15 +555,16 @@ export const createTrelloCard = (listId: string, name: string, description: stri
 	}
 };
 
-export const createJiraCard = (title, description, issueType, boardName) => async (
-	dispatch,
-	getState,
-	{ api }
-) => {
-	try {
-		return await api.createJiraCard(title, description, issueType, boardName);
-	} catch (error) {
-		console.error("failed to create a jira card", error);
+export const createServiceCard = attributes => async (_, __, { api }: ThunkExtras) => {
+	switch (attributes.service) {
+		case "jira": {
+			return api.createJiraCard(
+				attributes.title,
+				attributes.description,
+				attributes.issueType,
+				attributes.boardId
+			);
+		}
 	}
 };
 
