@@ -2,13 +2,14 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { connectService, fetchIssueBoards } from "../actions";
 import Icon from "../Icon";
+import GitHubCardControls from "./GitHubCardControls";
 import JiraCardControls from "./JiraCardControls";
 import TrelloCardControls from "./TrelloCardControls";
 import { Board, CrossPostIssueValuesListener, Service, SUPPORTED_SERVICES } from "./types";
 
 interface Props {
 	connectService: typeof connectService;
-	fetchIssueBoards: typeof fetchIssueBoards;
+	fetchIssueBoards(...args: any[]): any;
 	onValues: CrossPostIssueValuesListener;
 	providerInfo?: {
 		[service: string]: {};
@@ -91,6 +92,9 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			}
 			case SUPPORTED_SERVICES.Trello.name: {
 				return <TrelloCardControls boards={boards} onValues={this.props.onValues} />;
+			}
+			case SUPPORTED_SERVICES.GitHub.name: {
+				return <GitHubCardControls boards={boards} onValues={this.props.onValues} />;
 			}
 			default:
 				return "foobar";

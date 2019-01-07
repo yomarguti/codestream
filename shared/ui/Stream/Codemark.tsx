@@ -38,7 +38,7 @@ interface Props {
 	codemark: CodemarkEntity;
 	currentUserName: string;
 	usernames: string[];
-	setCodemarkStatus: typeof setCodemarkStatus;
+	setCodemarkStatus: Function;
 	action(action: string, post: any, args: any): any;
 	onClick?(CodemarkEntity): any;
 	onMouseEnter?(CodemarkEntity): any;

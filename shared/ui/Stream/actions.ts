@@ -542,44 +542,26 @@ export const fetchIssueBoards = service => async (dispatch, getState, { api }: T
 	}
 };
 
-export const createTrelloCard = (listId: string, name: string, description: string) => async (
-	dispatch,
-	getState,
-	{ api }
-) => {
-	try {
-		const response = await api.createTrelloCard(listId, name, description);
-		return response;
-	} catch (error) {
-		console.error("failed to create a trello card", error);
-	}
-};
-
 export const createServiceCard = attributes => async (_, __, { api }: ThunkExtras) => {
-	switch (attributes.service) {
-		case "jira": {
-			return api.createJiraCard(
-				attributes.title,
-				attributes.description,
-				attributes.issueType,
-				attributes.boardId
-			);
-		}
-		case "trello": {
-			return api.createTrelloCard(attributes.listId, attributes.title, attributes.description);
-		}
-	}
-};
-
-export const createGithubCard = (title, description, repoName) => async (
-	dispatch,
-	getState,
-	{ api }
-) => {
 	try {
-		return await api.createGithubCard(title, description, repoName);
+		switch (attributes.service) {
+			case "jira": {
+				return api.createJiraCard(
+					attributes.title,
+					attributes.description,
+					attributes.issueType,
+					attributes.boardId
+				);
+			}
+			case "trello": {
+				return api.createTrelloCard(attributes.listId, attributes.title, attributes.description);
+			}
+			case "github": {
+				return api.createGithubCard(attributes.title, attributes.description, attributes.boardId);
+			}
+		}
 	} catch (error) {
-		console.error("failed to create a github card", error);
+		console.error(`failed to create a ${attributes.service} card`, error);
 	}
 };
 
@@ -598,4 +580,8 @@ export const editorRevealLine = line => async (dispatch, getState, { api }) => {
 	} catch (error) {
 		console.error("failed to reveal line: " + line, error);
 	}
+};
+
+export const startCommentOnLine = (line, uri) => (dispatch, getState, { api }) => {
+	return api.startCommentOnLine(line, uri);
 };

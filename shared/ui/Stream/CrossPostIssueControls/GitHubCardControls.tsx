@@ -5,12 +5,9 @@ import { Board, CrossPostIssueValuesListener, SUPPORTED_SERVICES } from "./types
 
 interface State {
 	board: Board;
-	issueType: string;
-	issueTypeMenuOpen: boolean;
-	issueTypeMenuTarget?: any;
+	isEnabled: boolean;
 	boardMenuOpen: boolean;
 	boardMenuTarget?: any;
-	isEnabled: boolean;
 }
 
 interface Props {
@@ -18,15 +15,14 @@ interface Props {
 	onValues: CrossPostIssueValuesListener;
 }
 
-export default class JiraCardControls extends React.Component<Props, State> {
+export default class GitHubCardControls extends React.Component<Props, State> {
 	constructor(props) {
 		super(props);
+		const firstBoard = props.boards[0];
 		this.state = {
-			board: props.boards[0],
-			issueType: props.boards[0].issueTypes[0],
-			issueTypeMenuOpen: false,
-			boardMenuOpen: false,
-			isEnabled: true
+			board: firstBoard,
+			isEnabled: true,
+			boardMenuOpen: false
 		};
 	}
 
@@ -35,28 +31,12 @@ export default class JiraCardControls extends React.Component<Props, State> {
 	}
 
 	onValuesChanged = () => {
-		const { board, issueType, isEnabled } = this.state;
+		const { isEnabled, board } = this.state;
 		this.props.onValues({
-			boardId: board.id,
-			issueType,
+			boardId: board.name,
 			isEnabled,
-			service: SUPPORTED_SERVICES.Jira.name
+			service: SUPPORTED_SERVICES.GitHub.name
 		});
-	}
-
-	switchIssueType = event => {
-		event.stopPropagation();
-		this.setState({
-			issueTypeMenuOpen: !this.state.issueTypeMenuOpen,
-			issueTypeMenuTarget: event.target
-		});
-	}
-
-	selectIssueType = issueType => {
-		if (issueType) {
-			this.setState({ issueType }, this.onValuesChanged);
-		}
-		this.setState({ issueTypeMenuOpen: false });
 	}
 
 	switchBoard = event => {
@@ -79,8 +59,7 @@ export default class JiraCardControls extends React.Component<Props, State> {
 	}
 
 	render() {
-		const { board, issueType } = this.state;
-		const issueTypeItems = board.issueTypes.map(it => ({ label: it, action: it }));
+		const { board } = this.state;
 		const boardItems = this.props.boards.map(board => ({
 			label: board.name,
 			action: board
@@ -89,21 +68,7 @@ export default class JiraCardControls extends React.Component<Props, State> {
 		return (
 			<div className="checkbox-row" onClick={this.toggleCrossPostIssue}>
 				<input type="checkbox" checked={this.state.isEnabled} />
-				{"Create a "}
-				<span className="channel-label" onClick={this.switchIssueType}>
-					{issueType}
-					<Icon name="chevron-down" />
-					{this.state.issueTypeMenuOpen && (
-						<Menu
-							align="center"
-							compact={true}
-							target={this.state.issueTypeMenuTarget}
-							items={issueTypeItems}
-							action={this.selectIssueType}
-						/>
-					)}
-				</span>
-				{" on "}
+				{"Create an issue on "}
 				<span className="channel-label" onClick={this.switchBoard}>
 					{board.name}
 					<Icon name="chevron-down" />
@@ -117,7 +82,7 @@ export default class JiraCardControls extends React.Component<Props, State> {
 						/>
 					)}
 				</span>
-				{` on ${SUPPORTED_SERVICES.Jira.displayName}`}
+				{` on ${SUPPORTED_SERVICES.GitHub.displayName}`}
 			</div>
 		);
 	}

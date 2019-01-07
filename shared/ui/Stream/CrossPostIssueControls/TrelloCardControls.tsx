@@ -59,8 +59,7 @@ export default class TrelloCardControls extends React.Component<Props, State> {
 
 	selectBoard = board => {
 		if (board) {
-			this.setState({ board, list: board.lists[0] });
-			this.onValuesChanged();
+			this.setState({ board, list: board.lists[0] }, this.onValuesChanged);
 		}
 		this.setState({ boardMenuOpen: false });
 	}
@@ -76,14 +75,12 @@ export default class TrelloCardControls extends React.Component<Props, State> {
 	selectList = (list: List) => {
 		this.setState({ listMenuOpen: false });
 		if (list && list.id) {
-			this.setState({ list });
+			this.setState({ list }, this.onValuesChanged);
 		}
-		this.onValuesChanged();
 	}
 
 	toggleCrossPostIssue = () => {
-		this.setState(state => ({ isEnabled: !state.isEnabled }));
-		this.onValuesChanged();
+		this.setState(state => ({ isEnabled: !state.isEnabled }), this.onValuesChanged);
 	}
 
 	render() {
