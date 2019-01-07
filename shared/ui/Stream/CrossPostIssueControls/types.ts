@@ -16,7 +16,7 @@ export interface Board {
 	[key: string]: any;
 }
 
-export const SUPPORTED_SERVICES: { [name: string]: Service } = {
+export const SUPPORTED_SERVICES = {
 	Trello: { name: "trello", displayName: "Trello" },
 	Jira: { name: "jira", displayName: "Jira" },
 	GitHub: { name: "github", icon: "mark-github", displayName: "GitHub" },

@@ -119,7 +119,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			return (
 				<div className="checkbox-row connect-issue">
 					Create an issue in{" "}
-					{Object.values(SUPPORTED_SERVICES).map(service => (
+					{Object.values(SUPPORTED_SERVICES).map((service: Service) => (
 						<span
 							className="service"
 							onClick={e => this.handleClickConnectIssueService(e, service)}
