@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.32.0] - 2019-1-7
+
+### Fixed
+
+- Fixes an issue with unread message indicators not clearing for CodeStream teams when there were unreads in multiple channels
+
 ## [0.31.0] - 2018-12-20
 
 ### Changed
