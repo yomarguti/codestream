@@ -46,7 +46,7 @@ export default class GitHubCardControls extends React.Component<Props, State> {
 		const { codeBlock } = this.props;
 		for (const board of this.props.boards) {
 			if (board.path === (codeBlock && codeBlock.source && codeBlock.source.repoPath)) {
-				this.setState({ board });
+				this.setState({ board }, this.onValuesChanged);
 				break;
 			}
 		}
