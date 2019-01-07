@@ -559,6 +559,12 @@ export const createServiceCard = attributes => async (_, __, { api }: ThunkExtra
 			case "github": {
 				return api.createGithubCard(attributes.title, attributes.description, attributes.boardName);
 			}
+			case "gitlab": {
+				return api.createGitlabCard(attributes.title, attributes.description, attributes.repoName);
+			}
+			case "asana": {
+				return api.createAsanaCard(attributes.title, attributes.description, attributes.repoName);
+			}
 		}
 	} catch (error) {
 		console.error(`failed to create a ${attributes.service} card`, error);

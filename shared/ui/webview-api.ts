@@ -192,6 +192,34 @@ export default class WebviewApi {
 		});
 	}
 
+	createGitlabCard(title: string, description: string, repoName: string) {
+		return this.postMessage({
+			action: "agent",
+			params: {
+				url: "gitlab/cards/create",
+				request: {
+					title,
+					description,
+					repoName
+				}
+			}
+		});
+	}
+
+	createAsanaCard(title: string, description: string, repoName: string) {
+		return this.postMessage({
+			action: "agent",
+			params: {
+				url: "asana/cards/create",
+				request: {
+					title,
+					description,
+					repoName
+				}
+			}
+		});
+	}
+
 	// service is one of "trello", "asana", "jira", "github"
 	fetchIssueBoards(service: string, organizationId?: string) {
 		return this.postMessage({
