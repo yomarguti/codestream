@@ -98,7 +98,7 @@ function Perform-Build
     $vstest = ""
     if ($VisualStudioVersion -eq 15.0) {
        $msbuild = "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe"
-       $vstest = "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe"
+       $vstest =  "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe"
     }
     
     Write-Log "Packaging agent."
