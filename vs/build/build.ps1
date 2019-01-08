@@ -111,6 +111,9 @@ function Perform-Build
     Write-Log "Cleaning $($OutputDir)."
     Remove-Item $("$($OutputDir)\*") -Recurse -Force
     
+    Write-Log "Restoring packages"
+    & .\nuget.exe restore ..\src\CodeStream.VisualStudio.sln
+
     Write-Log "Running msbuild."
     & $msbuild ..\src\CodeStream.VisualStudio.sln /v:normal /target:$Target /p:Configuration=$Configuration /p:Platform=$Platform /p:DeployExtension=$DeployExtension /p:VisualStudioVersion=$VisualStudioVersion /p:OutputPath=$OutputDir  
     
