@@ -22,6 +22,7 @@ namespace CodeStream.VisualStudio.Services
         /// Session is ready when the agent has loaded and the user has logged in
         /// </summary>
         bool IsReady { get; }
+        bool IsAgentReady { get; }
         void Logout();
     }
 
@@ -74,6 +75,8 @@ namespace CodeStream.VisualStudio.Services
         }
 
         public string CurrentStreamId { get; set; }
+
+        public bool IsAgentReady => _sessionState == SessionState.AgentReady || IsReady;
 
         public bool IsReady => _sessionState == SessionState.Ready;
     }

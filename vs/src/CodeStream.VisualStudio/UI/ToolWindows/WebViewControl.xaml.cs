@@ -32,34 +32,45 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
                 browserService.AttachControl(Grid);
                 // ReSharper disable once ResourceItemNotResolved
                 browserService.LoadHtml(resourceManager.GetString("waiting"));
-                
+
                 var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
+                var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
 
-                // ReSharper disable once PossibleNullReferenceException
-
-                // this event is disposed in an outer scope -- see CodeStreamPackage
-                eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
+                if (sessionService.IsAgentReady)
                 {
-                    var router = new WebViewRouter(
-                        Package.GetGlobalService(typeof(SSessionService)) as ISessionService,
-                        Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
-                        Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService,
-                        eventAggregator,
-                        browserService,
-                        Package.GetGlobalService(typeof(SIdeService)) as IIdeService);
-
-                    browserService.AddWindowMessageEvent(async delegate(object sender, WindowEventArgs ea)
+                    SetRouter(eventAggregator, browserService);
+                }
+                else
+                {
+                    // ReSharper disable once PossibleNullReferenceException
+                    eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
                     {
-                        await router.HandleAsync(ea);
+                        SetRouter(eventAggregator, browserService);
                     });
-
-                    browserService.LoadWebView();
-                });
+                }
             }
             else
             {
                 Log.Warning("Browser service null");
             }
-        }        
+        }
+
+        private void SetRouter(IEventAggregator eventAggregator, IBrowserService browserService)
+        {
+            var router = new WebViewRouter(
+                       Package.GetGlobalService(typeof(SSessionService)) as ISessionService,
+                       Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
+                       Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService,
+                       eventAggregator,
+                       browserService,
+                       Package.GetGlobalService(typeof(SIdeService)) as IIdeService);
+
+            browserService.AddWindowMessageEvent(async delegate (object sender, WindowEventArgs ea)
+            {
+                await router.HandleAsync(ea);
+            });
+
+            browserService.LoadWebView();
+        }
     }
 }
