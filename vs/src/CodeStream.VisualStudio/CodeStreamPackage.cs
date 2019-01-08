@@ -44,15 +44,24 @@ namespace CodeStream.VisualStudio
             // Do any initialization that requires the UI thread after switching to the UI thread.
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-
             // kick it off!
             await GetServiceAsync(typeof(SCodeStreamToolWindowProvider));
 
-            var iVsMonitorSelection = (IVsMonitorSelection)await GetServiceAsync(typeof(SVsShellMonitorSelection));
-            var codeStreamService = await GetServiceAsync(typeof(SCodeStreamService)) as ICodeStreamService;
-            var eventAggregator = await GetServiceAsync(typeof(SEventAggregator)) as IEventAggregator;
-            _browserService = await GetServiceAsync(typeof(SBrowserService)) as IBrowserService;
+            await InitializeLoggingAsync();
 
+            Log.Information("Initializing CodeStream Extension v{PackageVersion} in {$FullProductName} ({$ProductVersion})",
+                Application.Version, Application.FullProductName, Application.ProductVersion);
+
+            var iVsMonitorSelection = (IVsMonitorSelection)await GetServiceAsync(typeof(SVsShellMonitorSelection));
+            Log.Verbose("iVsMonitorSelection");
+            var codeStreamService = await GetServiceAsync(typeof(SCodeStreamService)) as ICodeStreamService;
+            Log.Verbose("codeStreamService");
+            var eventAggregator = await GetServiceAsync(typeof(SEventAggregator)) as IEventAggregator;
+            Log.Verbose("eventAggregator");
+            _browserService = await GetServiceAsync(typeof(SBrowserService)) as IBrowserService;
+            Log.Verbose("_browserService");
+
+            // TODO move this
             InfoBarProvider.Initialize(this);
 
             Assumes.Present(codeStreamService);
@@ -67,12 +76,7 @@ namespace CodeStream.VisualStudio
                 var codeStreamEvents = new CodeStreamEventManager(codeStreamService, _browserService);
                 _vsEventManager.WindowFocusChanged += codeStreamEvents.OnWindowFocusChanged;
                 _vsEventManager.ThemeChanged += codeStreamEvents.OnThemeChanged;
-            });
-
-            await InitializeLoggingAsync();
-
-            Log.Information("Initializing CodeStream Extension v{PackageVersion} in {$FullProductName} ({$ProductVersion})",
-                Application.Version, Application.FullProductName, Application.ProductVersion);
+            });          
 
             // Avoid delays when there is ongoing UI activity.
             // See: https://github.com/github/VisualStudio/issues/1537
