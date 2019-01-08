@@ -206,25 +206,6 @@ export class CodeStreamWebviewPanel implements Disposable {
 					const body = e.body as CSWebviewRequest;
 					// TODO: Add exception handling for failed requests
 					switch (body.action) {
-						case "agent": {
-							const { url, request } = body.params;
-
-							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-							try {
-								responseBody.payload = await Container.agent.sendPassthroughRequest(url, request);
-							} catch (ex) {
-								debugger;
-								Logger.error(ex);
-
-								responseBody.error = ex.message;
-							}
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: responseBody
-							});
-
-							break;
-						}
 						case "bootstrap": {
 							Logger.log(
 								`WebviewPanel: Bootstrapping webview...`,
