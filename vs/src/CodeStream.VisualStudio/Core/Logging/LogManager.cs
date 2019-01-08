@@ -18,7 +18,7 @@ namespace CodeStream.VisualStudio.Core.Logging
 #if DEBUG
         private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Debug;
 #else
-        private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Warning;
+        private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Verbose;
 #endif
 
         private static readonly LoggingLevelSwitch LoggingLevelSwitch = new LoggingLevelSwitch(_defaultLoggingLevel);

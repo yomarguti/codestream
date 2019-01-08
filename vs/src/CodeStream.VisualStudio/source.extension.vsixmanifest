@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="CodeStream" Version="0.1" Language="en-US" Publisher="CodeStream" />
+        <Identity Id="codestream-vs" Version="0.1" Language="en-US" Publisher="CodeStream" />
         <DisplayName>CodeStream for Visual Studio</DisplayName>
         <Description>CodeStream is a free service that lets developers create annotated comments on their code, making it easier to ask questions and get answers to how things work.</Description>
         <MoreInfo>https://codestream.com/</MoreInfo>

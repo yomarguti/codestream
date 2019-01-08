@@ -13,7 +13,7 @@ namespace CodeStream.VisualStudio.Core.Logging.Sanitizer
 
         public string Sanitize(string content)
         {
-            if (content.IsNotNullOrWhiteSpace()) return content;
+            if (content.IsNullOrWhiteSpace()) return content;
 
             content = PasswordRegex.Replace(content, @"""password"":""<hidden>""$2");
             content = TokenRegex.Replace(content, @"""token"":""<hidden>""$2");
