@@ -1,6 +1,7 @@
 ﻿using CodeStream.VisualStudio.Models;
 using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace CodeStream.VisualStudio
 {
@@ -20,12 +21,18 @@ namespace CodeStream.VisualStudio
         public static string FullProductName { get; }
         public static string ProductVersion { get; }
 
-       // public static string VisualStudioInstallDirectory { get; }
+        /// <summary>
+        /// Path to the log directory. Ends with a backslash.
+        /// </summary>
+        public static string LogPath { get; }
+
+        // public static string VisualStudioInstallDirectory { get; }
 
         static Application()
         {
             HostVersion = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileVersionInfo;
             Version = typeof(Application).Assembly.GetName().Version;
+            LogPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),         Name, "Logs") + @"\";
 
             Ide = new Ide
             {
