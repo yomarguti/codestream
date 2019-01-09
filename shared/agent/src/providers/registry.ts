@@ -1,9 +1,9 @@
 "use strict";
 import { CodeStreamSession } from "../session";
 import {
-	ConnectThirdParyProviderRequest,
+	ConnectThirdPartyProviderRequest,
 	ConnectThirdParyProviderRequestType,
-	DisconnectThirdParyProviderRequest,
+	DisconnectThirdPartyProviderRequest,
 	DisconnectThirdParyProviderRequestType
 } from "../shared/agent.protocol";
 import { getProvider, log, lsp, lspHandler } from "../system";
@@ -19,7 +19,7 @@ export class ThirdPartyProviderRegistry {
 
 	@log()
 	@lspHandler(ConnectThirdParyProviderRequestType)
-	connect(request: ConnectThirdParyProviderRequest) {
+	connect(request: ConnectThirdPartyProviderRequest) {
 		const provider = getProvider(request.providerName);
 		if (provider === undefined) {
 			throw new Error(`No registered provider for '${request.providerName}'`);
@@ -30,7 +30,7 @@ export class ThirdPartyProviderRegistry {
 
 	@log()
 	@lspHandler(DisconnectThirdParyProviderRequestType)
-	disconnect(request: DisconnectThirdParyProviderRequest) {
+	disconnect(request: DisconnectThirdPartyProviderRequest) {
 		const provider = getProvider(request.providerName);
 		if (provider === undefined) return;
 

@@ -1,30 +1,30 @@
 "use strict";
 import { RequestType } from "vscode-languageserver-protocol";
 
-export interface ConnectThirdParyProviderRequest {
+export interface ConnectThirdPartyProviderRequest {
 	providerName: string;
 }
 
-export interface ConnectThirdParyProviderResponse {
+export interface ConnectThirdPartyProviderResponse {
 	code: string;
 }
 
 export const ConnectThirdParyProviderRequestType = new RequestType<
-	ConnectThirdParyProviderRequest,
-	ConnectThirdParyProviderResponse,
+	ConnectThirdPartyProviderRequest,
+	ConnectThirdPartyProviderResponse,
 	void,
 	void
 >("codeStream/provider/connect");
 
-export interface DisconnectThirdParyProviderRequest {
+export interface DisconnectThirdPartyProviderRequest {
 	providerName: string;
 }
 
-export interface DisconnectThirdParyProviderResponse {}
+export interface DisconnectThirdPartyProviderResponse {}
 
 export const DisconnectThirdParyProviderRequestType = new RequestType<
-	DisconnectThirdParyProviderRequest,
-	DisconnectThirdParyProviderResponse,
+	DisconnectThirdPartyProviderRequest,
+	DisconnectThirdPartyProviderResponse,
 	void,
 	void
 >("codeStream/provider/disconnect");
