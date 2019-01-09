@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace CodeStream.VisualStudio.Extensions
 {
@@ -22,5 +23,7 @@ namespace CodeStream.VisualStudio.Extensions
 
             return c;
         }
+
+        public static bool AnySafe<T>(this List<T> a) => a != null && a.Any();
     }
 }

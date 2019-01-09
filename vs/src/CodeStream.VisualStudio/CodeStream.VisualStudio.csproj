@@ -82,6 +82,7 @@
     <Compile Include="Events\EventArgs.cs" />
     <Compile Include="Extensions\ColorExtensions.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
+    <Compile Include="Extensions\FileSystemExtensions.cs" />
     <Compile Include="Extensions\Guard.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="GlobalSuppressions.cs" />

@@ -178,8 +178,7 @@ namespace CodeStream.VisualStudio
                                                             _sessionService.State = loginResponse.Result.State;
 
                                                             response.Body.Payload =
-                                                                await _codeStreamAgent.GetBootstrapAsync(loginResponse.Result.State,
-                                                                    _settingsService.GetSettings());
+                                                                await _codeStreamAgent.GetBootstrapAsync(loginResponse.Result.State, _settingsService.GetSettings());
                                                             _sessionService.SetUserLoggedIn();
                                                             success = true;
                                                         }

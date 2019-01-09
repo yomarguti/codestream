@@ -1,6 +1,7 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Services;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
@@ -23,14 +24,18 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
         {
             InitializeComponent();
 
+            Log.Verbose(string.Empty);
+            Log.Verbose($"{nameof(OnInitialized)}...");
+            Log.Verbose(string.Empty);
+
             var browserService = Package.GetGlobalService(typeof(SBrowserService)) as IBrowserService;
 
             if (browserService != null)
             {
                 var resourceManager = new ResourceManager("VSPackage", Assembly.GetExecutingAssembly());
 
+                browserService.Initialize();
                 browserService.AttachControl(Grid);
-                // ReSharper disable once ResourceItemNotResolved
                 browserService.LoadSplashView();
 
                 var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
@@ -53,6 +58,11 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
             {
                 Log.Warning("Browser service null");
             }
+
+            Log.Verbose(string.Empty);
+            Log.Verbose($"{nameof(OnInitialized)}");
+            Log.Verbose(string.Empty);
+
         }
 
         private void SetRouter(IEventAggregator eventAggregator, IBrowserService browserService)

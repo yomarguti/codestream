@@ -1,7 +1,9 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Extensions;
 using Serilog;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
@@ -13,6 +15,7 @@ namespace CodeStream.VisualStudio.Events
     {
         void Publish<TEvent>(TEvent sampleEvent) where TEvent : EventArgsBase;
         IObservable<TEvent> GetEvent<TEvent>() where TEvent : EventArgsBase;
+        void Unregister(List<IDisposable> disposables);
     }
 
     public class EventAggregator : IEventAggregator, SEventAggregator
@@ -52,6 +55,19 @@ namespace CodeStream.VisualStudio.Events
 #endif
 
                 ((ISubject<TEvent>)subject).OnNext(sampleEvent);
+            }
+        }
+
+        public void Unregister(List<IDisposable> disposables)
+        {
+            if (!disposables.AnySafe()) return;
+
+            foreach(var disposable in disposables)
+            {
+                disposable?.Dispose();
+#if DEBUG
+                Log.Verbose($"Unregistered {disposable?.GetType()}");
+#endif
             }
         }
     }

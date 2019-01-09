@@ -73,7 +73,7 @@ namespace CodeStream.VisualStudio
     [ProvideService(typeof(SBrowserService))]
     [ProvideService(typeof(SCodeStreamAgentService))]
     [ProvideService(typeof(SCodeStreamService))]
-    [ProvideService(typeof(SSettingsService))]   
+    [ProvideService(typeof(SSettingsService))]
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [Guid(Guids.ServiceProviderPackageId)]
     // ReSharper disable once RedundantExtendsListEntry
@@ -125,10 +125,11 @@ namespace CodeStream.VisualStudio
                 return new CodeStreamAgentService(GetService(typeof(SSessionService)) as ISessionService);
             if (typeof(SCodeStreamService) == serviceType)
                 return new CodeStreamService(
+                    new Lazy<IEventAggregator>(()=> GetService(typeof(SEventAggregator)) as IEventAggregator),
                     GetService(typeof(SSessionService)) as ISessionService,
                     GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
                     GetService(typeof(SBrowserService)) as IBrowserService,
-                    new Lazy<ISettingsService>( () => GetService(typeof(SSettingsService)) as ISettingsService)
+                    new Lazy<ISettingsService>(() => GetService(typeof(SSettingsService)) as ISettingsService)
                 );
 
             return null;

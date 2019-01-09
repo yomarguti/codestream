@@ -16,20 +16,22 @@ namespace CodeStream.VisualStudio.Core.Logging
     public static class LogManager
     {
 #if DEBUG
-        private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Debug;
-#else
         private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Verbose;
+#else
+        private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Verbose; // Warning
 #endif
 
         private static readonly LoggingLevelSwitch LoggingLevelSwitch = new LoggingLevelSwitch(_defaultLoggingLevel);
 
         static Logger CreateLogger()
         {
-            var packageSettings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
-            if (packageSettings != null && packageSettings.TraceLevel != TraceLevel.Silent)
-            {
-                _defaultLoggingLevel = FromTraceLevel(packageSettings.TraceLevel);
-            }
+//#if RELEASE
+//            var packageSettings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
+//            if (packageSettings != null && packageSettings.TraceLevel != TraceLevel.Silent)
+//            {
+//                _defaultLoggingLevel = FromTraceLevel(packageSettings.TraceLevel);
+//            }
+//#endif
 
             var logPath = Path.Combine(Application.LogPath, "vs-extension.log");
 

@@ -1,7 +1,12 @@
-﻿using CodeStream.VisualStudio.UI.ToolWindows;
+﻿using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Events;
+using CodeStream.VisualStudio.Services;
+using CodeStream.VisualStudio.UI.ToolWindows;
 using Microsoft.VisualStudio.Shell;
+using Serilog;
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace CodeStream.VisualStudio
 {
@@ -16,5 +21,14 @@ namespace CodeStream.VisualStudio
     [Guid(Guids.WebViewPackageId)]
     [ProvideToolWindow(typeof(WebViewToolWindow), Orientation = ToolWindowOrientation.Right,
         Style = VsDockStyle.Tabbed, Window = EnvDTE.Constants.vsWindowKindSolutionExplorer)]
-    public sealed class WebViewPackage : AsyncPackage  { }
+    public sealed class WebViewPackage : AsyncPackage
+    {
+        private static readonly ILogger Log = LogManager.ForContext<WebViewPackage>();
+
+        protected override System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+        {
+            Log.Verbose($"{nameof(InitializeAsync)}");
+            return base.InitializeAsync(cancellationToken, progress);
+        }
+    }
 }

@@ -1,4 +1,5 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Models;
 using Serilog;
 using System;
@@ -19,26 +20,30 @@ namespace CodeStream.VisualStudio.Services
         /// </summary>
         /// <returns></returns>
         Task LogoutAsync();
+        IBrowserService BrowserService { get; }
     }
 
     public class CodeStreamService : ICodeStreamService, SCodeStreamService
     {
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamService>();
 
+        private readonly Lazy<IEventAggregator> _eventAggregator;
         private readonly ISessionService _sessionService;
         private readonly ICodeStreamAgentService _agentService;
-        private readonly IBrowserService _browserService;
+        public IBrowserService BrowserService { get; }
         private readonly Lazy<ISettingsService> _settingsService;
 
         public CodeStreamService(
+            Lazy<IEventAggregator> eventAggregator,
             ISessionService sessionService,
             ICodeStreamAgentService serviceProvider,
             IBrowserService browserService,
             Lazy<ISettingsService> settingsService)
         {
+            _eventAggregator = eventAggregator;
             _sessionService = sessionService;
             _agentService = serviceProvider;
-            _browserService = browserService;
+            BrowserService = browserService;
             _settingsService = settingsService;
         }
 
@@ -49,7 +54,7 @@ namespace CodeStream.VisualStudio.Services
 
             var streamResponse = await _agentService.GetFileStreamAsync(uri);
 
-            _browserService.PostMessage(new DidChangeActiveEditorNotification
+            BrowserService.PostMessage(new DidChangeActiveEditorNotification
             {
                 Type = "codestream:interaction:active-editor-changed",
                 Body = new DidChangeActiveEditorNotificationBody
@@ -73,7 +78,7 @@ namespace CodeStream.VisualStudio.Services
             if (!_sessionService.IsReady)
                 return;
 
-            _browserService.PostMessage(new DidChangeStreamThreadNotification
+            BrowserService.PostMessage(new DidChangeStreamThreadNotification
             {
                 Type = "codestream:interaction:stream-thread-selected",
                 Body = new DidChangeStreamThreadNotificationBody
@@ -95,7 +100,7 @@ namespace CodeStream.VisualStudio.Services
             var post = await _agentService.PrepareCodeAsync(uri.ToString(), range, cancellationToken);
 
             var source = post?.Source;
-            _browserService.PostMessage(new DidSelectCodeNotification
+            BrowserService.PostMessage(new DidSelectCodeNotification
             {
                 Type = "codestream:interaction:code-highlighted",
                 Body = new DidSelectCodeNotificationBody
@@ -146,7 +151,9 @@ namespace CodeStream.VisualStudio.Services
                 Log.Warning(ex, $"{nameof(LogoutAsync)} - session");
             }
 
-            _browserService.LoadWebView();
+            _eventAggregator.Value.Publish(new SessionLogoutEvent());
+
+            BrowserService.LoadWebView();
         }
     }
 }

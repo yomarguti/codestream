@@ -1,36 +1,45 @@
-﻿using System;
-using CodeStream.VisualStudio.Vssdk.Events;
+﻿using CodeStream.VisualStudio.Vssdk.Events;
+using EnvDTE;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using System;
 
 namespace CodeStream.VisualStudio.Vssdk
 {
     public class VsShellEventManager : IVsSelectionEvents, IDisposable
-    {
+    {        
         private readonly IVsMonitorSelection _iVsMonitorSelection;
         private readonly uint _monitorSelectionCookie;
 
         public VsShellEventManager(IVsMonitorSelection iVsMonitorSelection)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
-
-            _iVsMonitorSelection = iVsMonitorSelection;            
+            
+            _iVsMonitorSelection = iVsMonitorSelection;
 
             _iVsMonitorSelection.AdviseSelectionEvents(this, out uint pdwCookie);
             _monitorSelectionCookie = pdwCookie;
 
             VSColorTheme.ThemeChanged += VSColorTheme_ThemeChanged;
-        }
+
+            //_dte.Events.DTEEvents.OnStartupComplete += DTEEvents_OnStartupComplete;
+            //_dte.Events.SolutionEvents.BeforeClosing += SolutionEvents_BeforeClosing;
+            //_dte.Events.DTEEvents.OnBeginShutdown += DTEEvents_OnBeginShutdown;
+        }      
 
         private void VSColorTheme_ThemeChanged(ThemeChangedEventArgs e)
         {
-            ThemeChanged?.Invoke(this, e);
+            VisualStudioThemeChangedEventHandler?.Invoke(this, e);
         }
 
-        public event EventHandler<WindowFocusChangedEventArgs> WindowFocusChanged;
-        public event EventHandler<ThemeChangedEventArgs> ThemeChanged;
+        public event EventHandler VisualStudioStartCompleteEventHandler;
+        public event EventHandler VisualStudioShutdownEventHandler;
+
+        public event EventHandler SolutionBeforeClosingEventHandler;
+        public event EventHandler<WindowFocusChangedEventArgs> WindowFocusedEventHandler;
+        public event EventHandler<ThemeChangedEventArgs> VisualStudioThemeChangedEventHandler;
 
         public int OnSelectionChanged(IVsHierarchy pHierarchyOld, uint itemIdOld, IVsMultiItemSelect pMisOld, ISelectionContainer pScOld, IVsHierarchy pHierNew, uint itemidNew, IVsMultiItemSelect pMisNew, ISelectionContainer pScNew)
         {
@@ -48,7 +57,7 @@ namespace CodeStream.VisualStudio.Vssdk
                     var fileInfo = GetFileInfo(windowFrame);
                     if (fileInfo != null)
                     {
-                        WindowFocusChanged?.Invoke(this, new WindowFocusChangedEventArgs(fileInfo.FileName, fileInfo.Uri));
+                        WindowFocusedEventHandler?.Invoke(this, new WindowFocusChangedEventArgs(fileInfo.FileName, fileInfo.Uri));
                     }
                 }
             }
@@ -62,8 +71,7 @@ namespace CodeStream.VisualStudio.Vssdk
 
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            object value;
-            if (windowFrame.GetProperty((int)__VSFPROPID.VSFPROPID_pszMkDocument, out value) != VSConstants.S_OK) return null;
+            if (windowFrame.GetProperty((int)__VSFPROPID.VSFPROPID_pszMkDocument, out object value) != VSConstants.S_OK) return null;
 
             var filename = value as string;
             if (filename == null) return null;
@@ -91,13 +99,13 @@ namespace CodeStream.VisualStudio.Vssdk
         private bool _disposedValue;
 
         protected virtual void Dispose(bool disposing)
-        {            
+        {
             System.Windows.Threading.Dispatcher.CurrentDispatcher.VerifyAccess();
 
             if (!_disposedValue)
-            {              
+            {
                 if (disposing)
-                {                    
+                {
                     _iVsMonitorSelection?.UnadviseSelectionEvents(_monitorSelectionCookie);
                     VSColorTheme.ThemeChanged -= VSColorTheme_ThemeChanged;
                 }

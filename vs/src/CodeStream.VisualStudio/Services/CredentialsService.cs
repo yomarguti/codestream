@@ -26,7 +26,7 @@ namespace CodeStream.VisualStudio.Services
 
         public Task<Tuple<string, string>> LoadAsync(Uri uri, string email)
         {
-            Log.Verbose(nameof(CredentialsService) + "-" + nameof(LoadAsync));
+            Log.Verbose(nameof(LoadAsync));
             var key = GetKey(ToKey(uri, email));
 
             Tuple<string, string> result = null;
@@ -36,7 +36,7 @@ namespace CodeStream.VisualStudio.Services
                 if (credential != null)
                 {
                     result = Tuple.Create(credential.Username, credential.Password);
-                    Log.Verbose(nameof(CredentialsService) + "-" + nameof(LoadAsync) + ": found");
+                    Log.Verbose(nameof(LoadAsync) + ": found");
                 }
             }
 
@@ -67,7 +67,7 @@ namespace CodeStream.VisualStudio.Services
                 var key = GetKey(ToKey(uri, email));
                 Credential.Delete(key);
 
-                Log.Verbose(nameof(CredentialsService) + "-" + nameof(DeleteAsync));
+                Log.Verbose(nameof(DeleteAsync));
 
             }
             catch (Exception)

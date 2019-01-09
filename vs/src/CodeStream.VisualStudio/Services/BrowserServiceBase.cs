@@ -29,6 +29,7 @@ namespace CodeStream.VisualStudio.Services
 
     public interface IBrowserService : IDisposable
     {
+        void Initialize();
         /// <summary>
         /// Sends the string to the web view
         /// </summary>
@@ -71,17 +72,19 @@ namespace CodeStream.VisualStudio.Services
     {
         private static readonly ILogger Log = LogManager.ForContext<BrowserServiceBase>();
 
+        public virtual void Initialize()
+        {
+            Log.Verbose($"{GetType()} {nameof(Initialize)} Browser...");
+            OnInitialized();
+            Log.Verbose($"{GetType()} {nameof(Initialize)} Browser");
+        }
+
+        protected virtual void OnInitialized()
+        {
+
+        }
+
         public virtual string FooterHtml { get; } = "";
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-        }
 
         public abstract void AddWindowMessageEvent(WindowMessageHandler handler);
 
@@ -98,7 +101,7 @@ namespace CodeStream.VisualStudio.Services
 
         public void LoadWebView()
         {
-            LoadHtml(CreateHarness(Assembly.GetAssembly(typeof(BrowserServiceBase)),"webview"));
+            LoadHtml(CreateHarness(Assembly.GetAssembly(typeof(BrowserServiceBase)), "webview"));
         }
 
         public void LoadSplashView()
@@ -126,8 +129,9 @@ namespace CodeStream.VisualStudio.Services
             // ReSharper disable once ResourceItemNotResolved
             var theme = resourceManager.GetString("theme");
             harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{GenerateTheme(theme)}</style>");
-
+#if RELEASE
             Log.Verbose(harness);
+#endif
             return harness;
         }
 
@@ -186,10 +190,26 @@ namespace CodeStream.VisualStudio.Services
             var backgroundColor = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowBackgroundColorKey);
             stylesheet = stylesheet.Replace("--cs--background-color-darker--", backgroundColor.Darken().ToHex());
             stylesheet = stylesheet.Replace("--cs--app-background-image-color--", backgroundColor.IsDark() ? "#fff" : "#000");
-
+#if RELEASE
             Log.Verbose(stylesheet);
-
+#endif
             return stylesheet;
+        }
+
+        private bool _isDisposed;
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
+                Log.Verbose("Browser Dispose...");
+
+                Dispose(true);
+                _isDisposed = true;
+            }
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
         }
 
         private static readonly Dictionary<string, ThemeResourceKey> ColorThemeMap = new Dictionary<string, ThemeResourceKey>
@@ -228,7 +248,7 @@ namespace CodeStream.VisualStudio.Services
         {
             _serviceProvider = serviceProvider;
         }
-        
+
         public override void AddWindowMessageEvent(WindowMessageHandler handler)
         {
 

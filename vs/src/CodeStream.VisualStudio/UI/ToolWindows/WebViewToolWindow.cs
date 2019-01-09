@@ -1,5 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
+using System.Runtime.InteropServices;
 
 namespace CodeStream.VisualStudio.UI.ToolWindows
 {
@@ -28,6 +29,17 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
             // ReSharper disable once VirtualMemberCallInConstructor
             Content = new WebViewControl();
         }
+
+        //protected override void Initialize()
+        //{
+        //    var asyncPackage = (AsyncPackage)Package;
+        //    asyncPackage.JoinableTaskFactory.RunAsync(() => InitializeAsync(asyncPackage));
+        //}
+
+        //private async System.Threading.Tasks.Task InitializeAsync(AsyncPackage asyncPackage)
+        //{
+        //    var service = await asyncPackage.GetServiceAsync(typeof(SBrowserService)) as IBrowserService;            
+        //}
 
         // handlers
 

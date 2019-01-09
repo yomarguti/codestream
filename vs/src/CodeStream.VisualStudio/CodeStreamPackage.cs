@@ -32,8 +32,9 @@ namespace CodeStream.VisualStudio
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamPackage>();
 
         private VsShellEventManager _vsEventManager;
-        private IBrowserService _browserService;
+        private Lazy<ICodeStreamService> _codeStreamService;
         private IDisposable _languageServerReadyEvent;
+        private Action _disposableActions = null;
 
         protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
@@ -41,39 +42,65 @@ namespace CodeStream.VisualStudio
 
             // When initialized asynchronously, the current thread may be a background thread at this point.
             // Do any initialization that requires the UI thread after switching to the UI thread.
-            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);     
-            
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+
             // kick it off!
             await GetServiceAsync(typeof(SToolWindowProvider));
 
+            Log.Verbose(@"
+   ___          _      __ _                            
+  / __\___   __| | ___/ _\ |_ _ __ ___  __ _ _ __ ___  
+ / /  / _ \ / _` |/ _ \ \| __| '__/ _ \/ _` | '_ ` _ \ 
+/ /__| (_) | (_| |  __/\ \ |_| | |  __/ (_| | | | | | |
+\____/\___/ \__,_|\___\__/\__|_|  \___|\__,_|_| |_| |_|
+                                                       ");            
+            Log.Information("Initializing CodeStream Extension v{PackageVersion} in {$FullProductName} ({$ProductVersion})",
+    Application.Version, Application.FullProductName, Application.ProductVersion);
+
             await InitializeLoggingAsync();
 
-            Log.Information("Initializing CodeStream Extension v{PackageVersion} in {$FullProductName} ({$ProductVersion})",
-                Application.Version, Application.FullProductName, Application.ProductVersion);             
-                   
-            var eventAggregator = await GetServiceAsync(typeof(SEventAggregator)) as IEventAggregator;                      
+            var eventAggregator = await GetServiceAsync(typeof(SEventAggregator)) as IEventAggregator;
 
-            // TODO move this
-            InfoBarProvider.Initialize(this);            
+            // TODO move this into a non-static??
+            InfoBarProvider.Initialize(this);
+
+            var iVsMonitorSelection = await GetServiceAsync(typeof(SVsShellMonitorSelection)) as IVsMonitorSelection;
+            _vsEventManager = new VsShellEventManager(iVsMonitorSelection);
 
             // ReSharper disable once PossibleNullReferenceException
             _languageServerReadyEvent = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
             {
                 ThreadHelper.ThrowIfNotOnUIThread();
-                var iVsMonitorSelection = (IVsMonitorSelection)GetService(typeof(SVsShellMonitorSelection));
-                _vsEventManager = new VsShellEventManager(iVsMonitorSelection);
 
-                var codeStreamService = GetService(typeof(SCodeStreamService)) as ICodeStreamService;
-                _browserService = GetService(typeof(SBrowserService)) as IBrowserService;
+                _codeStreamService = new Lazy<ICodeStreamService>(() => GetService(typeof(SCodeStreamService)) as ICodeStreamService);
+                
 
-                var codeStreamEvents = new CodeStreamEventManager(codeStreamService, _browserService);
-                _vsEventManager.WindowFocusChanged += codeStreamEvents.OnWindowFocusChanged;
-                _vsEventManager.ThemeChanged += codeStreamEvents.OnThemeChanged;
+                _disposableActions = new CodeStreamEventManager(_vsEventManager, _codeStreamService).Register(_languageServerReadyEvent);
             });
 
             // Avoid delays when there is ongoing UI activity.
             // See: https://github.com/github/VisualStudio/issues/1537
             await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeMenusAsync);
+        }
+
+        /// <summary>
+        /// Set pfCanClose=false to prevent a tool window from closing
+        /// </summary>
+        /// <returns></returns>
+        protected override int QueryClose(out bool pfCanClose)
+        {
+            pfCanClose = true;
+            if (pfCanClose)
+            {
+                if (_disposableActions != null)
+                {
+                    _disposableActions.Invoke();
+                }
+
+                _codeStreamService?.Value?.BrowserService?.Dispose();
+            }
+
+            return VSConstants.S_OK;
         }
 
         async System.Threading.Tasks.Task InitializeLoggingAsync()
@@ -87,6 +114,14 @@ namespace CodeStream.VisualStudio
                     if (args.PropertyName == nameof(packageSettings.TraceLevel))
                     {
                         LogManager.SetTraceLevel(packageSettings.TraceLevel);
+                    }
+                    else if (args.PropertyName == nameof(packageSettings.WebAppUrl) ||
+                             args.PropertyName == nameof(packageSettings.ServerUrl))
+                    {
+                        if (_codeStreamService?.Value?.BrowserService != null)
+                        {
+                            _codeStreamService?.Value?.BrowserService?.ReloadWebView();
+                        }
                     }
                 };
             }
@@ -106,23 +141,6 @@ namespace CodeStream.VisualStudio
 
             var menuService = (IMenuCommandService)(await GetServiceAsync(typeof(IMenuCommandService)));
             menuService.AddCommands(commands);
-        }
-
-        private bool _disposed;
-
-        protected override void Dispose(bool disposing)
-        {
-            if (_disposed) return;
-
-            if (disposing)
-            {
-                _languageServerReadyEvent?.Dispose();
-                _browserService?.Dispose();
-                _vsEventManager.Dispose();
-            }
-
-            base.Dispose(disposing);
-            _disposed = true;
         }
     }
 }

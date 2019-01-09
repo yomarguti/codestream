@@ -88,10 +88,11 @@ namespace CodeStream.VisualStudio.UI.Margins
                         Initialize();
                     }
                 }),
-
                 eventAggregator.GetEvent<SessionLogoutEvent>().ObserveOnDispatcher()
-                .Subscribe(_ => { Hide(); }),
-
+                .Subscribe(_ => {
+                    Hide();
+                    _initialized = false;
+                }),
                  eventAggregator.GetEvent<CodemarkVisibilityEvent>().ObserveOnDispatcher()
                 .Subscribe(_ =>
                 {
@@ -176,7 +177,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                 }
             }
         }
-        
+
         private void Selection_SelectionChanged(object sender, EventArgs e)
         {
             // TODO reconcile this!
@@ -385,15 +386,10 @@ namespace CodeStream.VisualStudio.UI.Margins
                 _textView.LayoutChanged -= TextView_LayoutChanged;
                 _textView.Selection.SelectionChanged -= Selection_SelectionChanged;
 
-                foreach (var disposable in _disposables)
-                {
-                    disposable?.Dispose();
-                }
+                _eventAggregator.Unregister(_disposables);
 
                 _markerCache = null;
                 _viewCache = null;
-
-                GC.SuppressFinalize(this);
                 _isDisposed = true;
             }
         }
