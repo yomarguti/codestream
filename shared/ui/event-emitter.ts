@@ -38,7 +38,7 @@ class EventEmitter {
 	}
 
 	handler = ({ data }: MessageEvent) => {
-		if (data.type.startsWith("codestream")) {
+		if (data != null && data.type != null && data.type.startsWith("codestream")) {
 			const event = data.type.replace("codestream:", "");
 			if (event !== "response") console.debug(`[${event}] event received`, data.body);
 			const listeners = this.listenersByEvent.get(event) || [];

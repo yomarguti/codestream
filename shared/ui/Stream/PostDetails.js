@@ -11,10 +11,10 @@ export default class PostDetails extends Component {
 	disposables = [];
 
 	componentDidMount() {
-		const codeBlocks = this.props.post.codeBlocks || [];
-		codeBlocks.forEach(block =>
-			this.disposables.push(EventEmitter.onFileChanged(block, this.onFileChanged))
-		);
+		// const codeBlocks = this.props.post.codeBlocks || [];
+		// codeBlocks.forEach(block =>
+		// 	this.disposables.push(EventEmitter.onFileChanged(block, this.onFileChanged))
+		// );
 		// if (this._alert)
 		// 	atom.tooltips.add(this._alert, {
 		// 		title: "Unknown codeblock location."
@@ -25,23 +25,23 @@ export default class PostDetails extends Component {
 		this.disposables.forEach(d => d.dispose());
 	}
 
-	onFileChanged = ({ file, hasDiff }) => {
-		const codeBlocks = this.props.post.codeBlocks || [];
-		codeBlocks.forEach(block => {
-			if (block.file === file) this.setState({ showDiffButtons: hasDiff });
-		});
-	};
+	// onFileChanged = ({ file, hasDiff }) => {
+	// 	const codeBlocks = this.props.post.codeBlocks || [];
+	// 	codeBlocks.forEach(block => {
+	// 		if (block.file === file) this.setState({ showDiffButtons: hasDiff });
+	// 	});
+	// };
 
 	handleClickShowDiff = event => {
 		event.preventDefault();
-		EventEmitter.emit("interaction:show-diff", this.props.post.codeBlocks[0]);
-		this.setState({ diffShowing: !this.state.diffShowing });
+		EventEmitter.emit("interaction:show-diff", { marker: this.props.codemark.markers[0] });
+		// this.setState({ diffShowing: !this.state.diffShowing });
 	};
 
 	handleClickApplyPatch = event => {
 		event.preventDefault();
-		EventEmitter.emit("interaction:apply-patch", this.props.post.codeBlocks[0]);
-		this.setState({ patchApplied: !this.state.patchApplied });
+		EventEmitter.emit("interaction:apply-patch", { marker: this.props.codemark.markers[0] });
+		// this.setState({ patchApplied: !this.state.patchApplied });
 	};
 
 	// handleShowVersion = async event => {
@@ -49,17 +49,18 @@ export default class PostDetails extends Component {
 	// };
 
 	render() {
-		const { post } = this.props;
+		const { codemark } = this.props;
 
-		if (!post) return null;
+		if (!codemark) return null;
 
 		const applyPatchLabel = this.state.patchApplied ? "Revert" : "Apply Patch";
 		const showDiffLabel = this.state.diffShowing ? "Hide Diff" : "Show Diff";
-		const hasCodeBlock = post.codeBlocks && post.codeBlocks.length ? true : null;
+
+		const hasCodeBlock = codemark.markers.length ? true : null;
 
 		// if a patch has been applied, we treat it as if there is
 		// a diff
-		let showDiffButtons = this.state.showDiffButtons || this.state.patchApplied;
+		let showDiffButtons = hasCodeBlock; // || this.state.showDiffButtons || this.state.patchApplied;
 		let alert = null;
 		// } else if (hasCodeBlock) {
 		// 	// TODO: this is the case where we have a codeblock but no marker location
@@ -70,7 +71,7 @@ export default class PostDetails extends Component {
 		if (hasCodeBlock) {
 			commitDiv = (
 				<div className="posted-to">
-					<label>Posted to:</label> <span>{post.commitHashWhenPosted}</span>
+					<label>Posted to:</label> <span>{codemark.markers[0].commitHashWhenCreated}</span>
 				</div>
 			);
 			// if (post.commitHashWhenPosted == this.props.currentCommit) {
@@ -91,7 +92,7 @@ export default class PostDetails extends Component {
 		}
 
 		return (
-			<div className="post-details" id={post.id} ref={ref => (this._div = ref)}>
+			<div className="post-details" id={codemark.id} ref={ref => (this._div = ref)}>
 				{alert}
 				{/* {!showDiffButtons &&
 				hasCodeBlock && <div className="no-diffs">This codeblock matches current</div>} */}

@@ -313,9 +313,7 @@ class Post extends React.Component {
 					</div>
 					{codeBlock}
 					{this.renderAttachments(post)}
-					{this.props.showDetails && !this.state.warning && (
-						<PostDetails post={post} currentCommit={this.props.currentCommit} />
-					)}
+					{this.props.showDetails && !this.state.warning && <PostDetails codemark={codemark} />}
 				</div>
 				{this.renderReactions(post)}
 				{/*this.renderReplyCount(post)*/}
