@@ -11,7 +11,6 @@ namespace CodeStream.VisualStudio.Services
 
     public interface ISessionService
     {
-        LoginResponse LoginResponse { get; set; }
         State State { get; set; }
         Guid GetOrCreateSignupToken();
         void SetAgentReady();
@@ -28,9 +27,7 @@ namespace CodeStream.VisualStudio.Services
     [Injected]
     public class SessionService : SSessionService, ISessionService
     {
-        public LoginResponse LoginResponse { get; set; }
         public State State { get; set; }
-
         private SessionState _sessionState;
         private Guid _signupToken = Guid.Empty;
 

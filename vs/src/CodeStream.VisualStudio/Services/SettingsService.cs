@@ -18,6 +18,7 @@ namespace CodeStream.VisualStudio.Services
         bool OpenCommentOnSelect { get; set; }
         TraceLevel TraceLevel { get; set; }
         IOptionsDialogPage DialogPage { get; }
+        bool AutoSignIn { get; set; }
     }
 
     public class Settings
@@ -30,6 +31,7 @@ namespace CodeStream.VisualStudio.Services
         public string Team { get; set; }
         public bool OpenCommentOnSelect { get; set; }
         public string LogLevel { get; set; }
+        public bool AutoSignIn { get; set; }
     }
 
     public interface SSettingsService { }
@@ -64,7 +66,8 @@ namespace CodeStream.VisualStudio.Services
                 ServerUrl = ServerUrl,
                 WebAppUrl = WebAppUrl,
                 Team = Team,
-                OpenCommentOnSelect = OpenCommentOnSelect
+                OpenCommentOnSelect = OpenCommentOnSelect,
+                AutoSignIn = AutoSignIn
             };
         }
 
@@ -114,6 +117,12 @@ namespace CodeStream.VisualStudio.Services
         {
             get => DialogPage.TraceLevel;
             set => DialogPage.TraceLevel = value;
+        }
+
+        public bool AutoSignIn
+        {
+            get => DialogPage.AutoSignIn;
+            set => DialogPage.AutoSignIn = value;
         }
     }
 

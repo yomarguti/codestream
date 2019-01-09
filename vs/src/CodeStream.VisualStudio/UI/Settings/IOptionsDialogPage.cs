@@ -15,5 +15,6 @@ namespace CodeStream.VisualStudio.UI.Settings
         void SaveSettingsToStorage();
         void LoadSettingsFromStorage();
         TraceLevel TraceLevel { get; set; }
+        bool AutoSignIn { get; set; }
     }
 }

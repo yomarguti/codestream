@@ -68,6 +68,7 @@ namespace CodeStream.VisualStudio
     [ProvideService(typeof(SToolWindowProvider))]
     [ProvideService(typeof(SEventAggregator))]
     [ProvideService(typeof(SIdeService))]
+    [ProvideService(typeof(SCredentialsService))]
     [ProvideService(typeof(SSessionService))]
     [ProvideService(typeof(SBrowserService))]
     [ProvideService(typeof(SCodeStreamAgentService))]
@@ -96,6 +97,7 @@ namespace CodeStream.VisualStudio
             ((IServiceContainer)this).AddService(typeof(SToolWindowProvider), callback, true);
             ((IServiceContainer)this).AddService(typeof(SEventAggregator), callback, true);
             ((IServiceContainer)this).AddService(typeof(SIdeService), callback, true);
+            ((IServiceContainer)this).AddService(typeof(SCredentialsService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SSessionService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SBrowserService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SCodeStreamAgentService), callback, true);
@@ -111,6 +113,8 @@ namespace CodeStream.VisualStudio
                 return new EventAggregator();
             if (typeof(SIdeService) == serviceType)
                 return new IdeService(GetService(typeof(SVsTextManager)) as IVsTextManager2);
+            if (typeof(SCredentialsService) == serviceType)
+                return new CredentialsService();
             if (typeof(SSessionService) == serviceType)
                 return new SessionService();
             if (typeof(SBrowserService) == serviceType)
@@ -123,7 +127,8 @@ namespace CodeStream.VisualStudio
                 return new CodeStreamService(
                     GetService(typeof(SSessionService)) as ISessionService,
                     GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
-                    GetService(typeof(SBrowserService)) as IBrowserService
+                    GetService(typeof(SBrowserService)) as IBrowserService,
+                    new Lazy<ISettingsService>( () => GetService(typeof(SSettingsService)) as ISettingsService)
                 );
 
             return null;

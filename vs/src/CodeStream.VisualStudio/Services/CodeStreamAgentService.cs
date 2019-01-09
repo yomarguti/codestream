@@ -1,6 +1,5 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Models;
-using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using StreamJsonRpc;
@@ -26,7 +25,9 @@ namespace CodeStream.VisualStudio.Services
         Task<GetFileStreamResponse> GetFileStreamAsync(Uri uri);
         Task<GetPostResponse> GetPostAsync(string streamId, string postId);
         Task<GetUserResponse> GetUserAsync(string userId);
-        Task<JToken> LoginViaTokenAsync(string signupToken, string serverUrl);
+        Task<JToken> ChangeStreamThreadAsync(string streamId, string threadId);
+        Task<JToken> LoginViaTokenAsync(string email, string token, string serverUrl);
+        Task<JToken> LoginViaOneTimeCodeAsync(string signupToken, string serverUrl);
         Task<JToken> LoginAsync(string email, string password, string serverUrl);
         Task<JToken> LogoutAsync();
         Task<BootstrapState> GetBootstrapAsync(State state, Settings settings);
@@ -63,19 +64,37 @@ namespace CodeStream.VisualStudio.Services
         public bool? Inclusive { get; set; }
     }
 
-    public class LoginRequest
+    public abstract class LoginRequestBase<T>
     {
         public string ServerUrl { get; set; }
         public string Email { get; set; }
-        public string PasswordOrToken { get; set; }
+        public T PasswordOrToken { get; set; }
         public string SignupToken { get; set; }
-        public string Type { get; set; }
         public string Team { get; set; }
         public string TeamId { get; set; }
         public Extension Extension { get; set; }
         public Ide Ide { get; set; }
         public string TraceLevel { get; set; }
+        public bool IsDebugging { get; set; }
     }
+
+    public class LoginAccessToken
+    {
+        public LoginAccessToken(string email, string url, string value)
+        {
+            Email = email;
+            Url = url;
+            Value = value;
+        }
+
+        public string Email { get; }
+        public string Url { get; }
+        public string Value { get; }
+    }
+
+    public class LoginRequest : LoginRequestBase<string> { }
+
+    public class LoginViaAccessTokenRequest : LoginRequestBase<LoginAccessToken> { }
 
     public class LogoutRequest { }
 
@@ -117,11 +136,11 @@ namespace CodeStream.VisualStudio.Services
     public class CodeStreamAgentService : ICodeStreamAgentService, SCodeStreamAgentService
     {
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
-        private readonly ISessionService _sessionService;                
+        private readonly ISessionService _sessionService;
 
         public CodeStreamAgentService(ISessionService sessionService)
         {
-            _sessionService = sessionService;            
+            _sessionService = sessionService;
         }
 
         private JsonRpc _rpc;
@@ -173,7 +192,16 @@ namespace CodeStream.VisualStudio.Services
         {
             return await SendAsync<GetFileStreamResponse>("codeStream/streams/fileStream", new
             {
-                textDocument = new {uri = uri.ToString()}
+                textDocument = new { uri = uri.ToString() }
+            });
+        }
+
+        public async Task<JToken> ChangeStreamThreadAsync(string streamId, string threadId)
+        {
+            return await SendAsync<JToken>("codestream:interaction:stream-thread-selected", new
+            {
+                streamId = streamId,
+                threadId = threadId
             });
         }
 
@@ -212,16 +240,35 @@ namespace CodeStream.VisualStudio.Services
                 }, cancellationToken);
         }
 
-        public async Task<JToken> LoginViaTokenAsync(string signupToken, string serverUrl)
+        public async Task<JToken> LoginViaTokenAsync(string email, string token, string serverUrl)
+        {
+            return await SendCoreAsync<JToken>("codeStream/cli/login", new LoginViaAccessTokenRequest
+            {
+                Email = email,
+                PasswordOrToken = new LoginAccessToken(email, serverUrl, token),
+                ServerUrl = serverUrl,                
+                Extension = Application.Extension,
+                Ide = Application.Ide,
+#if DEBUG
+                TraceLevel = "verbose",
+                IsDebugging = true
+#endif
+
+            });
+        }
+
+        public async Task<JToken> LoginViaOneTimeCodeAsync(string signupToken, string serverUrl)
         {
             return await SendCoreAsync<JToken>("codeStream/cli/login", new LoginRequest
             {
                 SignupToken = signupToken,
                 ServerUrl = serverUrl,
-                Type = "otc",
                 Extension = Application.Extension,
                 Ide = Application.Ide,
-                TraceLevel = "verbose"
+#if DEBUG
+                TraceLevel = "verbose",
+                IsDebugging = true
+#endif
             });
         }
 
@@ -232,10 +279,12 @@ namespace CodeStream.VisualStudio.Services
                 Email = email,
                 PasswordOrToken = password,
                 ServerUrl = serverUrl,
-                Type = "credentials",
                 Extension = Application.Extension,
                 Ide = Application.Ide,
-                TraceLevel = "verbose"
+#if DEBUG
+                TraceLevel = "verbose",
+                IsDebugging = true
+#endif
             });
         }
 

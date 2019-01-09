@@ -24,6 +24,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -71,6 +72,12 @@
     <Compile Include="Core\Logging\Sanitizer\ISanitizingFormatRule.cs" />
     <Compile Include="Core\Logging\Sanitizer\LogSanitizingFormatter.cs" />
     <Compile Include="Core\Logging\TraceLevel.cs" />
+    <Compile Include="Credentials\Credential.cs" />
+    <Compile Include="Credentials\CredentialSet.cs" />
+    <Compile Include="Credentials\CredentialType.cs" />
+    <Compile Include="Credentials\NativeMethods.cs" />
+    <Compile Include="Credentials\PersistanceType.cs" />
+    <Compile Include="Credentials\SecureStringHelper.cs" />
     <Compile Include="Events\EventAggregator.cs" />
     <Compile Include="Events\EventArgs.cs" />
     <Compile Include="Extensions\ColorExtensions.cs" />
@@ -83,6 +90,7 @@
     <Compile Include="PkgCmdIdList.cs" />
     <Compile Include="Process\ProcessFactory.cs" />
     <Compile Include="Services\CodeStreamService.cs" />
+    <Compile Include="Services\CredentialsService.cs" />
     <Compile Include="Services\DotNetBrowserService.cs" />
     <Compile Include="Services\BrowserServiceBase.cs" />
     <Compile Include="Services\IdeService.cs" />

@@ -32,7 +32,7 @@ namespace CodeStream.VisualStudio
         {
             HostVersion = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileVersionInfo;
             Version = typeof(Application).Assembly.GetName().Version;
-            LogPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),         Name, "Logs") + @"\";
+            LogPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Name, "Logs") + @"\";
 
             Ide = new Ide
             {

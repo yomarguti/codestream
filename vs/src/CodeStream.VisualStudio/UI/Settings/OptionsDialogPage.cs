@@ -13,6 +13,7 @@ namespace CodeStream.VisualStudio.UI.Settings
         private TraceLevel _traceLevel;
         private bool _openCommentOnSelect = true;
         private string _team;
+        private bool _autoSignIn = true;
 #if DEBUG
         private string _webAppUrl = "http://pd-app.codestream.us:1380";
         private string _serverUrl = "https://pd-api.codestream.us:9443";
@@ -126,6 +127,19 @@ namespace CodeStream.VisualStudio.UI.Settings
             set
             {
                 _traceLevel = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        [Category(Application.Name)]
+        [DisplayName("Auto Sign In")]
+        [Description("Specifies whether to automatically sign in to CodeStream")]
+        public bool AutoSignIn
+        {
+            get => _autoSignIn;
+            set
+            {
+                _autoSignIn = value;
                 NotifyPropertyChanged();
             }
         }

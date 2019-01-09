@@ -3,31 +3,38 @@ using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
+using CodeStream.VisualStudio.UI;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
 using System.Threading;
-using CodeStream.VisualStudio.UI;
 
 namespace CodeStream.VisualStudio
 {
     public class WebViewRouter
     {
-        static readonly ILogger Log = LogManager.ForContext<WebViewRouter>();
+        private static readonly ILogger Log = LogManager.ForContext<WebViewRouter>();
 
         // ReSharper disable once NotAccessedField.Local
+        private readonly Lazy<ICredentialsService> _credentialsService;
         private readonly ISessionService _sessionService;
-        readonly ICodeStreamAgentService _codeStreamAgent;
+        private readonly ICodeStreamAgentService _codeStreamAgent;
         private readonly ISettingsService _settingsService;
         private readonly IEventAggregator _eventAggregator;
         private readonly IBrowserService _browserService;
         private readonly IIdeService _ideService;
 
-        public WebViewRouter(ISessionService sessionService, ICodeStreamAgentService codeStreamAgent,
-            ISettingsService settingsService, IEventAggregator eventAggregator,
-            IBrowserService browserService, IIdeService ideService)
+        public WebViewRouter(
+            Lazy<ICredentialsService> credentialsService,
+            ISessionService sessionService,
+            ICodeStreamAgentService codeStreamAgent,
+            ISettingsService settingsService,
+            IEventAggregator eventAggregator,
+            IBrowserService browserService,
+            IIdeService ideService)
         {
+            _credentialsService = credentialsService;
             _sessionService = sessionService;
             _codeStreamAgent = codeStreamAgent;
             _settingsService = settingsService;
@@ -147,24 +154,95 @@ namespace CodeStream.VisualStudio
                                 {
                                     case "bootstrap":
                                         {
-                                            var response = new WebviewIpcMessageResponse(
-                                                new WebviewIpcMessageResponseBody(message.Id)
-                                                {
-                                                    Payload = new WebviewIpcMessageResponsePayload
-                                                    {
-                                                        Configs = new Config
-                                                        {
-                                                            Email = _settingsService.Email,
-                                                            OpenCommentOnSelect = _settingsService.OpenCommentOnSelect,
-                                                            ShowHeadshots = _settingsService.ShowHeadshots,
-                                                            ShowMarkers = _settingsService.ShowMarkers,
-                                                            Team = _settingsService.Team
-                                                        },
-                                                        Services = new Service(),
-                                                    }
-                                                });
+                                            WebviewIpcMessageResponse response = null;
 
-                                            _browserService.PostMessage(response);
+                                            if (_settingsService.AutoSignIn && _settingsService.Email.IsNotNullOrWhiteSpace())
+                                            {
+                                                var token = await _credentialsService.Value.LoadAsync(new Uri(_settingsService.ServerUrl), _settingsService.Email);
+                                                if (token != null)
+                                                {
+                                                    var loginResponseWrapper = await _codeStreamAgent.LoginViaTokenAsync(_settingsService.Email, token.Item2, _settingsService.ServerUrl);
+
+                                                    response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id));
+                                                    var success = false;
+
+                                                    try
+                                                    {
+                                                        var loginResponse = loginResponseWrapper.ToObject<LoginResponseWrapper>();
+                                                        if (loginResponse?.Result.Error.IsNotNullOrWhiteSpace() == true)
+                                                        {
+                                                            response.Body.Error = loginResponse.Result.Error;
+                                                        }
+                                                        else
+                                                        {
+                                                            _sessionService.State = loginResponse.Result.State;
+
+                                                            response.Body.Payload =
+                                                                await _codeStreamAgent.GetBootstrapAsync(loginResponse.Result.State,
+                                                                    _settingsService.GetSettings());
+                                                            _sessionService.SetUserLoggedIn();
+                                                            success = true;
+                                                        }
+                                                    }
+                                                    catch (Exception ex)
+                                                    {
+                                                        response.Body.Error = ex.ToString();
+                                                    }
+                                                    finally
+                                                    {
+                                                        _browserService.PostMessage(response);
+                                                    }
+
+                                                    if (success)
+                                                    {
+                                                        _eventAggregator.Publish(new SessionReadyEvent());
+                                                    }
+                                                    else if (token != null)
+                                                    {
+                                                        await _credentialsService.Value.DeleteAsync(new Uri(_settingsService.ServerUrl), _settingsService.Email);
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id)
+                                                    {
+                                                        Payload = new WebviewIpcMessageResponsePayload
+                                                        {
+                                                            Configs = new Config
+                                                            {
+                                                                Email = _settingsService.Email,
+                                                                OpenCommentOnSelect = _settingsService.OpenCommentOnSelect,
+                                                                ShowHeadshots = _settingsService.ShowHeadshots,
+                                                                ShowMarkers = _settingsService.ShowMarkers,
+                                                                Team = _settingsService.Team,
+                                                            },
+                                                            Services = new Service(),
+                                                        }
+                                                    });
+                                                    _browserService.PostMessage(response);
+                                                }
+                                            }
+                                            else
+                                            {
+                                                response = new WebviewIpcMessageResponse(
+                                                    new WebviewIpcMessageResponseBody(message.Id)
+                                                    {
+                                                        Payload = new WebviewIpcMessageResponsePayload
+                                                        {
+                                                            Configs = new Config
+                                                            {
+                                                                Email = _settingsService.Email,
+                                                                OpenCommentOnSelect = _settingsService.OpenCommentOnSelect,
+                                                                ShowHeadshots = _settingsService.ShowHeadshots,
+                                                                ShowMarkers = _settingsService.ShowMarkers,
+                                                                Team = _settingsService.Team,
+                                                            },
+                                                            Services = new Service(),
+                                                        }
+                                                    });
+                                                _browserService.PostMessage(response);
+                                            }
+
                                             break;
                                         }
                                     case "authenticate":
@@ -174,7 +252,7 @@ namespace CodeStream.VisualStudio
 
                                             var success = false;
                                             string email = message.Params["email"].ToString();
-
+                                            LoginResponseWrapper loginResponse = null;
                                             try
                                             {
                                                 var loginResponsewrapper = await _codeStreamAgent.LoginAsync(
@@ -183,7 +261,7 @@ namespace CodeStream.VisualStudio
                                                     _settingsService.ServerUrl
                                                 );
 
-                                                var loginResponse = loginResponsewrapper.ToObject<LoginResponseWrapper>();
+                                                loginResponse = loginResponsewrapper.ToObject<LoginResponseWrapper>();
                                                 if (loginResponse?.Result.Error.IsNotNullOrWhiteSpace() == true)
                                                 {
                                                     if (Enum.TryParse(loginResponse.Result.Error,
@@ -204,8 +282,7 @@ namespace CodeStream.VisualStudio
                                                     }
                                                 }
                                                 else
-                                                {
-                                                    _sessionService.LoginResponse = loginResponse.Result.LoginResponse;
+                                                {                                                    
                                                     _sessionService.State = loginResponse.Result.State;
 
                                                     response.Body.Payload =
@@ -233,8 +310,11 @@ namespace CodeStream.VisualStudio
                                                 {
                                                     scope.SettingsService.Email = email;
                                                 }
+                                                if (_settingsService.AutoSignIn && loginResponse != null)
+                                                {
+                                                    await _credentialsService.Value.SaveAsync(new Uri(_settingsService.ServerUrl), loginResponse.Result.State.Email, loginResponse.Result.LoginResponse.AccessToken);
+                                                }
                                             }
-
                                             break;
                                         }
                                     case "go-to-signup":
@@ -289,8 +369,7 @@ namespace CodeStream.VisualStudio
                                                     token = _sessionService.GetOrCreateSignupToken().ToString();
                                                 }
 
-                                                var loginResponseWrapper =
-                                                    await _codeStreamAgent.LoginViaTokenAsync(token, _settingsService.ServerUrl);
+                                                var loginResponseWrapper = await _codeStreamAgent.LoginViaOneTimeCodeAsync(token, _settingsService.ServerUrl);
 
                                                 var loginResponse = loginResponseWrapper.ToObject<LoginResponseWrapper>();
                                                 if (loginResponse?.Result.Error.IsNotNullOrWhiteSpace() == true)
@@ -299,7 +378,6 @@ namespace CodeStream.VisualStudio
                                                 }
                                                 else
                                                 {
-                                                    _sessionService.LoginResponse = loginResponse.Result.LoginResponse;
                                                     _sessionService.State = loginResponse.Result.State;
                                                     email = loginResponse.Result.State.Email;
 

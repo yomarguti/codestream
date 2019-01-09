@@ -1,4 +1,6 @@
-﻿using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Models;
+using Serilog;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +12,7 @@ namespace CodeStream.VisualStudio.Services
     public interface ICodeStreamService
     {
         Task ChangeActiveWindowAsync(string fileName, Uri uri);
-        Task<object> PostCodeAsync(Uri uri, SelectedText selectedText, bool? isHighlight = null, CancellationToken? cancellationToken = null);    
+        Task<object> PostCodeAsync(Uri uri, SelectedText selectedText, bool? isHighlight = null, CancellationToken? cancellationToken = null);
         Task OpenCommentByThreadAsync(string streamId, string threadId);
         /// <summary>
         /// logs the user out from the CodeStream agent and the session
@@ -21,15 +23,23 @@ namespace CodeStream.VisualStudio.Services
 
     public class CodeStreamService : ICodeStreamService, SCodeStreamService
     {
+        private static readonly ILogger Log = LogManager.ForContext<CodeStreamService>();
+
         private readonly ISessionService _sessionService;
         private readonly ICodeStreamAgentService _agentService;
         private readonly IBrowserService _browserService;
+        private readonly Lazy<ISettingsService> _settingsService;
 
-        public CodeStreamService(ISessionService sessionService, ICodeStreamAgentService serviceProvider, IBrowserService browserService)
+        public CodeStreamService(
+            ISessionService sessionService,
+            ICodeStreamAgentService serviceProvider,
+            IBrowserService browserService,
+            Lazy<ISettingsService> settingsService)
         {
             _sessionService = sessionService;
             _agentService = serviceProvider;
             _browserService = browserService;
+            _settingsService = settingsService;
         }
 
         public async Task ChangeActiveWindowAsync(string fileName, Uri uri)
@@ -55,7 +65,7 @@ namespace CodeStream.VisualStudio.Services
                 }
             });
         }
-    
+
         public async Task OpenCommentByThreadAsync(string streamId, string threadId)
         {
             await Task.Yield();
@@ -108,9 +118,33 @@ namespace CodeStream.VisualStudio.Services
             if (!_sessionService.IsReady)
                 return;
 
-            await _agentService.LogoutAsync();
+            try
+            {
+                await new CredentialsService()
+                    .DeleteAsync(new Uri(_settingsService.Value.ServerUrl), _settingsService.Value.Email);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, $"{nameof(LogoutAsync)} - credentials");
+            }
 
-            _sessionService.Logout();
+            try
+            {
+                await _agentService.LogoutAsync();
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, $"{nameof(LogoutAsync)} - agent");
+            }
+
+            try
+            {
+                _sessionService.Logout();
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, $"{nameof(LogoutAsync)} - session");
+            }
 
             _browserService.LoadWebView();
         }

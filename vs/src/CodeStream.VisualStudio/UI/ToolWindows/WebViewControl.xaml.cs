@@ -58,6 +58,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
         private void SetRouter(IEventAggregator eventAggregator, IBrowserService browserService)
         {
             var router = new WebViewRouter(
+                   new Lazy<ICredentialsService>(() => Package.GetGlobalService(typeof(SCredentialsService)) as ICredentialsService),
                        Package.GetGlobalService(typeof(SSessionService)) as ISessionService,
                        Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
                        Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService,
