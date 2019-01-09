@@ -433,7 +433,7 @@
   <Import Project="..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.122\build\Microsoft.VisualStudio.Threading.Analyzers.targets" Condition="Exists('..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.122\build\Microsoft.VisualStudio.Threading.Analyzers.targets')" />
   <Import Project="..\packages\Microsoft.VSSDK.BuildTools.15.9.3032\build\Microsoft.VSSDK.BuildTools.targets" Condition="Exists('..\packages\Microsoft.VSSDK.BuildTools.15.9.3032\build\Microsoft.VSSDK.BuildTools.targets')" />
   <PropertyGroup>
-    <PreBuildEvent>del "$(ProjectDir)*.licenses" /q
+    <PreBuildEvent>del "$(ProjectDir)*.licenses" /q &gt;nul 2&gt;&amp;1
 copy /Y "$(SolutionDir)..\licenses\$(ConfigurationName)\teamdev.licenses" "$(ProjectDir)"
 </PreBuildEvent>
   </PropertyGroup>
