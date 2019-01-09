@@ -26,12 +26,11 @@ import {
 	SessionStatusChangedEvent,
 	TextDocumentMarkersChangedEvent
 } from "../api/session";
-import { OpenStreamCommandArgs } from "../commands";
+import { ApplyMarkerCommandArgs, OpenStreamCommandArgs } from "../commands";
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { Functions } from "../system/function";
-import { Strings } from "../system/string";
+import { Functions, Strings } from "../system";
 
 const positionStyleMap: { [key: string]: string } = {
 	inline: "display: inline-block; margin: 0 0.5em 0 0; vertical-align: middle;",
@@ -318,12 +317,20 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 					const sender = await post.sender();
 					if (token.isCancellationRequested) return undefined;
 
-					const args = {
+					const viewCommandArgs: OpenStreamCommandArgs = {
 						streamThread: {
 							id: post.threadId,
 							streamId: post.streamId
 						}
-					} as OpenStreamCommandArgs;
+					};
+
+					const applyCommandArgs: ApplyMarkerCommandArgs = {
+						marker: m.entity,
+						range: {
+							start: { line: m.range.start.line, character: m.range.start.character },
+							end: { line: m.range.end.line, character: m.range.end.character }
+						}
+					};
 
 					if (message) {
 						message += "\n-----\n";
@@ -332,8 +339,10 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 					message = `__${sender!.name}__, ${post.fromNow()} &nbsp; _(${post.formatDate()})_\n\n>${
 						m.summary
 					}\n\n[__View ${typeString} \u2197__](command:codestream.openComment?${encodeURIComponent(
-						JSON.stringify(args)
-					)} "View ${typeString}")`;
+						JSON.stringify(viewCommandArgs)
+					)} "View ${typeString}") &nbsp; | &nbsp; [__Apply Patch__](command:codestream.applyMarker?${encodeURIComponent(
+						JSON.stringify(applyCommandArgs)
+					)} "Apply Patch")`;
 
 					// &nbsp; &middot; &nbsp; [__Unpin Marker \u1F4CC__](command:codestream.openStream?${encodeURIComponent(
 					// 	JSON.stringify(args)

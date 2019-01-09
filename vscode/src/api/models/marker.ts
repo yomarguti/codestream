@@ -10,7 +10,7 @@ export class Marker {
 
 	constructor(
 		public readonly session: CodeStreamSession,
-		private readonly entity: CSFullMarker,
+		private readonly _entity: CSFullMarker,
 		location: CSLocationArray
 	) {
 		this._range = new Range(location[0], location[1], location[2], location[3]);
@@ -22,15 +22,21 @@ export class Marker {
 	}
 
 	get id() {
-		return this.entity.id;
+		return this._entity.id;
+	}
+
+	@memoize
+	get entity(): CSMarker {
+		const { codemark: _, range: __, ...marker } = this._entity;
+		return marker;
 	}
 
 	private _post: Post | undefined;
 	async post() {
 		if (this._post === undefined) {
 			const post = (await Container.agent.posts.get(
-				this.entity.codemark.streamId,
-				this.entity.codemark.postId
+				this._entity.codemark.streamId,
+				this._entity.codemark.postId
 			)).post;
 			this._post = new Post(this.session, post);
 		}
@@ -38,11 +44,11 @@ export class Marker {
 	}
 
 	get postId() {
-		return this.entity.postId;
+		return this._entity.postId;
 	}
 
 	get postStreamId() {
-		return this.entity.postStreamId;
+		return this._entity.postStreamId;
 	}
 
 	get range() {
@@ -50,18 +56,18 @@ export class Marker {
 	}
 
 	get color(): string {
-		return this.entity.codemark.color || "blue";
+		return this._entity.codemark.color || "blue";
 	}
 
 	get type(): string {
-		return this.entity.codemark.type || "comment";
+		return this._entity.codemark.type || "comment";
 	}
 
 	get status(): string {
-		return this.entity.codemark.status || "open";
+		return this._entity.codemark.status || "open";
 	}
 
 	get summary() {
-		return this.entity.codemark.title ? this.entity.codemark.title : this.entity.codemark.text;
+		return this._entity.codemark.title ? this._entity.codemark.title : this._entity.codemark.text;
 	}
 }

@@ -183,6 +183,12 @@ export namespace Strings {
 		return [dir, path.relative(dir, filename)];
 	}
 
+	export function toTitleCase(s: string): string {
+		if (!s) return s;
+
+		return s.charAt(0).toUpperCase() + s.slice(1);
+	}
+
 	export function truncate(
 		s: string,
 		truncateTo: number,

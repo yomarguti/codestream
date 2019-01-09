@@ -24,6 +24,8 @@ export enum WebviewIpcMessageType {
 	onActiveThreadChanged = "codestream:interaction:thread-selected",
 	onActiveThreadClosed = "codestream:interaction:thread-closed",
 	onActiveStreamChanged = "codestream:interaction:changed-active-stream",
+	onCodemarkApplyPatch = "codestream:interaction:apply-patch",
+	onCodemarkShowDiff = "codestream:interaction:show-diff",
 	onFileChangedSubscribe = "codestream:subscription:file-changed",
 	onFileChangedUnsubscribe = "codestream:unsubscribe:file-changed",
 	onRequest = "codestream:request",

@@ -7,7 +7,8 @@ import {
 	TextDocument,
 	Uri,
 	ViewColumn,
-	window
+	window,
+	workspace
 } from "vscode";
 import { CodeStreamSession, Stream, StreamThread, StreamType } from "./api/session";
 import { TokenManager } from "./api/tokenManager";
@@ -15,7 +16,6 @@ import { openEditor, ShowCodeResult, WorkspaceState } from "./common";
 import { Container } from "./container";
 import { StreamThreadId } from "./controllers/webviewController";
 import { Logger } from "./logger";
-import { EditPostRequestType } from "./shared/agent.protocol";
 import { CSMarker } from "./shared/api.protocol";
 import { Command, createCommandDecorator } from "./system";
 
@@ -73,6 +73,14 @@ export interface HighlightCodeArgs {
 export interface StartCommentOnLineArgs {
 	uri: Uri;
 	line: number;
+}
+
+export interface ApplyMarkerCommandArgs {
+	marker: CSMarker;
+	range?: {
+		start: { line: number; character: number };
+		end: { line: number; character: number };
+	};
 }
 
 export interface OpenStreamCommandArgs extends IRequiresStream {
@@ -251,6 +259,68 @@ export class Commands implements Disposable {
 	async openComment(args: OpenStreamCommandArgs): Promise<StreamThread | undefined> {
 		Container.agent.telemetry.track("Codemark Clicked", { "Codemark Location": "Source File" });
 		return this.openStream(args);
+	}
+
+	@command("applyMarker", { showErrorMessage: "Unable to open comment" })
+	async applyMarker(args: ApplyMarkerCommandArgs): Promise<boolean> {
+		// Container.agent.telemetry.track("Codemark Clicked", { "Codemark Location": "Source File" });
+
+		const editor = await this.openWorkingFileForMarkerCore(args.marker);
+		if (editor === undefined) return false;
+
+		if (args.range === undefined) {
+			const resp = await Container.agent.getDocumentFromMarker(args.marker);
+			if (resp === undefined) return false;
+
+			args.range = resp.range;
+		}
+
+		return editor.edit(builder => {
+			builder.replace(
+				new Range(
+					args.range!.start.line,
+					args.range!.start.character,
+					args.range!.end.line,
+					args.range!.end.character
+				),
+				args.marker.code
+			);
+		});
+	}
+
+	private async openWorkingFileForMarkerCore(marker: CSMarker) {
+		const resp = await Container.agent.getDocumentFromMarker(marker, "Source File");
+		if (resp === undefined || resp === null) return undefined;
+
+		const uri = Uri.parse(resp.textDocument.uri);
+		const normalizedUri = uri.toString(false);
+
+		const editor = window.activeTextEditor;
+		if (editor !== undefined && editor.document.uri.toString(false) === normalizedUri) {
+			return editor;
+		}
+
+		for (const e of window.visibleTextEditors) {
+			if (e.document.uri.toString(false) === normalizedUri) {
+				return window.showTextDocument(e.document, e.viewColumn);
+			}
+		}
+
+		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
+		let column = Container.webview.viewColumn as number | undefined;
+		if (column !== undefined) {
+			column--;
+			if (column <= 0) {
+				column = undefined;
+			}
+		}
+
+		const document = await workspace.openTextDocument();
+		return window.showTextDocument(document, {
+			preserveFocus: false,
+			preview: false,
+			viewColumn: column || ViewColumn.Beside
+		});
 	}
 
 	@command("openStream", { showErrorMessage: "Unable to open stream" })
