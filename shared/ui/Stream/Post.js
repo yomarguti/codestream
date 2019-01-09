@@ -23,7 +23,8 @@ import hljs from "highlight.js";
 import _ from "underscore";
 import { reactToPost } from "./actions";
 import { safe } from "../utils";
-import { getUsernamesById, getNormalizedUsernames } from "../store/users/reducer";
+import { getUsernamesById, getNormalizedUsernames } from "../reducers/users";
+import { getFeatures } from "../toggles";
 
 // let renderCount = 0;
 class Post extends React.Component {
@@ -508,11 +509,13 @@ class Post extends React.Component {
 		else
 			return (
 				<div className="align-right">
-					<Tooltip title="Pin as Annotation" placement="bottomRight">
-						<span>
-							<Icon name="pin" className="pin" onClick={this.handleStarClick} />
-						</span>
-					</Tooltip>
+					{getFeatures().inline && (
+						<Tooltip title="Pin as Annotation" placement="bottomRight">
+							<span>
+								<Icon name="pin" className="pin" onClick={this.handleStarClick} />
+							</span>
+						</Tooltip>
+					)}
 					<Tooltip title="Add Reaction" placement="bottomRight">
 						<span>
 							<Icon name="smiley" className="smiley" onClick={this.handleReactionClick} />

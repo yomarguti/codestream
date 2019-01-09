@@ -27,7 +27,7 @@ export function mapFilter<A, B>(array: A[], fn: (A) => B | undefined): B[] {
 	return result;
 }
 
-export const findLast = (array: any[], fn: (arg: any) => boolean): any | undefined => {
+export const findLast = <T>(array: T[], fn: (item: T) => boolean): any | undefined => {
 	for (let i = array.length - 1; i >= 0; i--) {
 		const item = array[i];
 		if (fn(item)) return item;
