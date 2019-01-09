@@ -368,10 +368,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 				break;
 			case MessageType.Users:
 				const lastReads = {
-					...(this._unreads
-							? (await this._unreads.get()).lastReads
-							: this._user!.lastReads
-					)
+					...(this._unreads ? (await this._unreads.get()).lastReads : this._user!.lastReads)
 				};
 				e.data = await Container.instance().users.resolve(e);
 
