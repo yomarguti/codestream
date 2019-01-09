@@ -1,14 +1,10 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import createClassString from "classnames";
 import _ from "underscore";
 import * as actions from "./actions";
-import * as codemarkSelectors from "../reducers/codemarks";
-import * as userSelectors from "../reducers/users";
+import * as codemarkSelectors from "../store/codemarks/reducer";
+import * as userSelectors from "../store/users/reducer";
 import Icon from "./Icon";
-import CancelButton from "./CancelButton";
-import ScrollBox from "./ScrollBox";
-import Filter from "./Filter";
 import Codemark from "./Codemark";
 
 export class SimpleInlineCodemarks extends Component {

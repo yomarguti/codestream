@@ -6,7 +6,6 @@ import _ from "underscore";
 import createClassString from "classnames";
 import ComposeBox from "./ComposeBox-inline";
 import PostList from "./PostList";
-import DateSeparator from "./DateSeparator";
 import ChannelPanel from "./ChannelPanel";
 import PeoplePanel from "./PeoplePanel";
 import InvitePanel from "./InvitePanel";
@@ -17,7 +16,6 @@ import KnowledgePanel from "./KnowledgePanel-inline";
 import InlineCodemarks from "./InlineCodemarks";
 import CreateDMPanel from "./CreateDMPanel";
 import ChannelMenu from "./ChannelMenu";
-import Post from "./Post";
 import Icon from "./Icon";
 import Menu from "./Menu";
 import CancelButton from "./CancelButton";
@@ -28,17 +26,16 @@ import * as actions from "./actions";
 import { isInVscode, safe, toMapBy } from "../utils";
 import { getSlashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
-import { getPostsForStream, getPost } from "../reducers/posts";
+import { getPostsForStream, getPost } from "../store/posts/reducer";
 import {
 	getStreamForId,
 	getStreamForTeam,
-	getStreamForRepoAndFile,
 	getChannelStreamsForTeam,
 	getDirectMessageStreamsForTeam,
 	getDMName
-} from "../reducers/streams";
-import { getCodemark } from "../reducers/codemarks";
-import { getTeamMembers } from "../reducers/users";
+} from "../store/streams/reducer";
+import { getCodemark } from "../store/codemarks/reducer";
+import { getTeamMembers } from "../store/users/reducer";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 
 const EMAIL_MATCH_REGEX = new RegExp(
@@ -1813,8 +1810,6 @@ const mapStateToProps = state => {
 		services,
 		umis
 	} = state;
-	const fileStream =
-		getStreamForRepoAndFile(streams, context.currentRepoId, context.currentFile) || {};
 
 	const team = teams[context.currentTeamId];
 	const teamMembers = getTeamMembers(state);
@@ -1836,8 +1831,7 @@ const mapStateToProps = state => {
 		.replace(/\+/g, "\\+") // replace + and . with escaped versions so
 		.replace(/\./g, "\\."); // that the regexp matches the literal chars
 
-	const isOffline =
-		connectivity.offline || messaging.failedSubscriptions.length > 0 || messaging.timedOut;
+	const isOffline = connectivity.offline;
 
 	// FIXME -- eventually we'll allow the user to switch to other streams, like DMs and channels
 	const teamStream = getStreamForTeam(streams, context.currentTeamId) || {};
@@ -1900,15 +1894,12 @@ const mapStateToProps = state => {
 		postStreamMemberIds: postStream.memberIds,
 		providerInfo,
 		isPrivate: postStream.privacy === "private",
-		fileStreamId: fileStream.id,
 		teamId: context.currentTeamId,
 		teamName: team.name || "",
 		repoId: context.currentRepoId,
 		hasFocus: context.hasFocus,
-		firstTimeInAtom: onboarding.firstTimeInAtom,
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
-		editingUsers: fileStream.editingUsers,
 		usernamesRegexp: usernamesRegexp,
 		currentUserId: user.id,
 		currentUserName: user.username,

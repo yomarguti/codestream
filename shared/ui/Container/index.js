@@ -4,7 +4,7 @@ import { addLocaleData, IntlProvider } from "react-intl";
 import englishLocaleData from "react-intl/locale-data/en";
 import { connect, Provider } from "react-redux";
 import Stream from "../Stream";
-import InlineStream from "../Stream/index-inline";
+import InlineStream from "../Stream/Stream-inline";
 import Login from "../Login";
 import Signup from "../Signup";
 import CompleteSignup from "../CompleteSignup";
