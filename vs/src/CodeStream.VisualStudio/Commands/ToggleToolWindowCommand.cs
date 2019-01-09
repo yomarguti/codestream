@@ -7,13 +7,13 @@ namespace CodeStream.VisualStudio.Commands
     [Export(typeof(IToggleToolWindowCommand))]
     public class ToggleToolWindowCommand : VsCommand, IToggleToolWindowCommand
     {
-        private readonly ICodeStreamToolWindowProvider _provider;
+        private readonly IToolWindowProvider _toolWindowProvider;
 
         [ImportingConstructor]
-        protected ToggleToolWindowCommand(ICodeStreamToolWindowProvider provider)
+        protected ToggleToolWindowCommand(IToolWindowProvider provider)
             : base(CommandSet, CommandId)
         {
-            _provider = provider;
+            _toolWindowProvider = provider;
         }
 
         public static readonly Guid CommandSet = new Guid(Guids.ToggleToolWindowCommandCmdSet);
@@ -22,7 +22,7 @@ namespace CodeStream.VisualStudio.Commands
 
         public override System.Threading.Tasks.Task ExecuteAsync()
         {
-            _provider.ToggleToolWindowVisibility(Guids.WebViewToolWindowGuid);
+            _toolWindowProvider.ToggleToolWindowVisibility(Guids.WebViewToolWindowGuid);
 
             return System.Threading.Tasks.Task.CompletedTask;
         }

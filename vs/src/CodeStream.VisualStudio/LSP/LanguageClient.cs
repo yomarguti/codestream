@@ -18,12 +18,6 @@ using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio.LSP
 {
-    // maybe do something with these?
-
-    public interface ICodeStreamLanguageClient { }
-
-    public interface SCodeStreamLanguageClient { }
-
     [ContentType("FSharpInteractive")]
     [ContentType("RazorCoreCSharp")]
     [ContentType("RazorVisualBasic")]

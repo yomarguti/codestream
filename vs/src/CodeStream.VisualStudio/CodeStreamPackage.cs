@@ -2,10 +2,10 @@
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Services;
+using CodeStream.VisualStudio.UI;
 using CodeStream.VisualStudio.UI.Settings;
 using CodeStream.VisualStudio.Vssdk;
 using CodeStream.VisualStudio.Vssdk.Commands;
-using Microsoft;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
@@ -15,7 +15,6 @@ using System;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
-using CodeStream.VisualStudio.UI;
 
 namespace CodeStream.VisualStudio
 {
@@ -42,41 +41,35 @@ namespace CodeStream.VisualStudio
 
             // When initialized asynchronously, the current thread may be a background thread at this point.
             // Do any initialization that requires the UI thread after switching to the UI thread.
-            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);     
+            
             // kick it off!
-            await GetServiceAsync(typeof(SCodeStreamToolWindowProvider));
+            await GetServiceAsync(typeof(SToolWindowProvider));
 
             await InitializeLoggingAsync();
 
             Log.Information("Initializing CodeStream Extension v{PackageVersion} in {$FullProductName} ({$ProductVersion})",
-                Application.Version, Application.FullProductName, Application.ProductVersion);
-
-            var iVsMonitorSelection = (IVsMonitorSelection)await GetServiceAsync(typeof(SVsShellMonitorSelection));
-            Log.Verbose("iVsMonitorSelection");
-            var codeStreamService = await GetServiceAsync(typeof(SCodeStreamService)) as ICodeStreamService;
-            Log.Verbose("codeStreamService");
-            var eventAggregator = await GetServiceAsync(typeof(SEventAggregator)) as IEventAggregator;
-            Log.Verbose("eventAggregator");
-            _browserService = await GetServiceAsync(typeof(SBrowserService)) as IBrowserService;
-            Log.Verbose("_browserService");
+                Application.Version, Application.FullProductName, Application.ProductVersion);             
+                   
+            var eventAggregator = await GetServiceAsync(typeof(SEventAggregator)) as IEventAggregator;                      
 
             // TODO move this
-            InfoBarProvider.Initialize(this);
-
-            Assumes.Present(codeStreamService);
-            Assumes.Present(eventAggregator);
-            Assumes.Present(_browserService);
-
-            _vsEventManager = new VsShellEventManager(iVsMonitorSelection);
+            InfoBarProvider.Initialize(this);            
 
             // ReSharper disable once PossibleNullReferenceException
             _languageServerReadyEvent = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
             {
+                ThreadHelper.ThrowIfNotOnUIThread();
+                var iVsMonitorSelection = (IVsMonitorSelection)GetService(typeof(SVsShellMonitorSelection));
+                _vsEventManager = new VsShellEventManager(iVsMonitorSelection);
+
+                var codeStreamService = GetService(typeof(SCodeStreamService)) as ICodeStreamService;
+                _browserService = GetService(typeof(SBrowserService)) as IBrowserService;
+
                 var codeStreamEvents = new CodeStreamEventManager(codeStreamService, _browserService);
                 _vsEventManager.WindowFocusChanged += codeStreamEvents.OnWindowFocusChanged;
                 _vsEventManager.ThemeChanged += codeStreamEvents.OnThemeChanged;
-            });          
+            });
 
             // Avoid delays when there is ongoing UI activity.
             // See: https://github.com/github/VisualStudio/issues/1537

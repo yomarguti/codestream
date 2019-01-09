@@ -1,6 +1,5 @@
 ﻿using CodeStream.VisualStudio.Annotations;
 using CodeStream.VisualStudio.Models;
-using Microsoft.VisualStudio.Shell;
 using System;
 using System.Runtime.Serialization;
 
@@ -29,19 +28,11 @@ namespace CodeStream.VisualStudio.Services
     [Injected]
     public class SessionService : SSessionService, ISessionService
     {
-        // ReSharper disable once NotAccessedField.Local
-        private readonly IAsyncServiceProvider _serviceProvider;
-
         public LoginResponse LoginResponse { get; set; }
         public State State { get; set; }
 
         private SessionState _sessionState;
         private Guid _signupToken = Guid.Empty;
-
-        public SessionService(IAsyncServiceProvider serviceProvider)
-        {
-            _serviceProvider = serviceProvider;
-        }
 
         public Guid GetOrCreateSignupToken()
         {
@@ -63,10 +54,20 @@ namespace CodeStream.VisualStudio.Services
 
         public void SetUserLoggedIn()
         {
-            if (_sessionState != SessionState.AgentReady)
-                throw new SessionStateException("Agent is not ready");
+            if (_sessionState == SessionState.Ready)
+            {
+                // misc. errors after login wont kick the state back in the webview
+                _sessionState = SessionState.AgentReady;
+            }
 
-            _sessionState = _sessionState | SessionState.UserLoggedIn;
+            if (_sessionState == SessionState.AgentReady)
+            {
+                _sessionState = _sessionState | SessionState.UserLoggedIn;
+            }
+            else
+            {
+                throw new SessionStateException("Agent is not ready");
+            }
         }
 
         public void Logout()
@@ -84,7 +85,7 @@ namespace CodeStream.VisualStudio.Services
     [Serializable]
     public class SessionStateException : Exception
     {
-        public SessionStateException() {}
+        public SessionStateException() { }
 
         public SessionStateException(string message) : base(message) { }
 

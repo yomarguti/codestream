@@ -21,14 +21,14 @@ namespace CodeStream.VisualStudio.Commands
     {
         private readonly ISessionService _sessionService;
         private readonly ICodeStreamService _codeStreamService;
-        private readonly ISelectedTextService _selectedTextService;
+        private readonly IIdeService _ideService;
 
         [ImportingConstructor]
-        public AddCodemarkCommand(ISessionService sessionService, ICodeStreamService codeStreamService, ISelectedTextService selectedTextService) : base(CommandSet, CommandId)
+        public AddCodemarkCommand(ISessionService sessionService, ICodeStreamService codeStreamService, IIdeService ideService) : base(CommandSet, CommandId)
         {
             _sessionService = sessionService;
             _codeStreamService = codeStreamService;
-            _selectedTextService = selectedTextService;
+            _ideService = ideService;
         }
 
         [Import]
@@ -42,7 +42,7 @@ namespace CodeStream.VisualStudio.Commands
 
         public override async Task ExecuteAsync()
         {
-            var selectedText = _selectedTextService.GetSelectedText(out IVsTextView view);
+            var selectedText = _ideService.GetSelectedText(out IVsTextView view);
             if (view != null)
             {
                 var wpfTextView = EditorAdaptersFactoryService.GetWpfTextView(view);

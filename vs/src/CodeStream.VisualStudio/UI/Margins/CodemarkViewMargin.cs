@@ -29,7 +29,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         private bool _isDisposed;
         private readonly IWpfTextView _textView;
         private readonly IEventAggregator _events;
-        private readonly ICodeStreamToolWindowProvider _toolWindowProvider;
+        private readonly IToolWindowProvider _toolWindowProvider;
         private readonly IEventAggregator _eventAggregator;
         private readonly ICodeStreamAgentService _agentService;
         private readonly List<IDisposable> _disposables;
@@ -53,7 +53,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         /// <param name="textDocumentFactoryService"></param>
         public CodemarkViewMargin(
             IEventAggregator eventAggregator,
-            ICodeStreamToolWindowProvider toolWindowProvider,
+            IToolWindowProvider toolWindowProvider,
             ISessionService sessionService,
             ICodeStreamAgentService agentService,
             ISettingsService settingsService,
@@ -132,9 +132,8 @@ namespace CodeStream.VisualStudio.UI.Margins
                 .Subscribe(_ =>
                 {
                     // TODO reconcile this!
-                    var selectedTextService = Package.GetGlobalService(typeof(SSelectedTextService)) as ISelectedTextService;
-
-                    var selectedText1 = selectedTextService?.GetSelectedText();
+                    var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
+                    var selectedText1 = ideService?.GetSelectedText();
                     if (selectedText1?.HasText == true)
                     {
                         var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;

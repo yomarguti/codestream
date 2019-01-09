@@ -11,15 +11,15 @@ namespace CodeStream.VisualStudio.Commands
     {
         private readonly ISessionService _sessionService;
         private readonly ICodeStreamService _codeStreamService;
-        private readonly ICodeStreamToolWindowProvider _codeStreamToolWindowProvider;
+        private readonly IToolWindowProvider _toolWindowProvider;
 
         [ImportingConstructor]
-        protected AuthenticationCommand(ISessionService sessionService, ICodeStreamService codeStreamService, ICodeStreamToolWindowProvider codeStreamToolWindowProvider)
+        protected AuthenticationCommand(ISessionService sessionService, ICodeStreamService codeStreamService, IToolWindowProvider toolWindowProvider)
              : base(CommandSet, CommandId)
         {
             _sessionService = sessionService;
             _codeStreamService = codeStreamService;
-            _codeStreamToolWindowProvider = codeStreamToolWindowProvider;
+            _toolWindowProvider = toolWindowProvider;
             SetText(this);
         }
 
@@ -39,7 +39,7 @@ namespace CodeStream.VisualStudio.Commands
             }
             else
             {
-                _codeStreamToolWindowProvider.ShowToolWindow(Guids.WebViewToolWindowGuid);
+                _toolWindowProvider.ShowToolWindow(Guids.WebViewToolWindowGuid);
             }
         }
 

@@ -117,14 +117,11 @@ namespace CodeStream.VisualStudio.Services
     public class CodeStreamAgentService : ICodeStreamAgentService, SCodeStreamAgentService
     {
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
-        private readonly ISessionService _sessionService;
-        // ReSharper disable once NotAccessedField.Local
-        private readonly IAsyncServiceProvider _serviceProvider;
+        private readonly ISessionService _sessionService;                
 
-        public CodeStreamAgentService(ISessionService sessionService, IAsyncServiceProvider serviceProvider)
+        public CodeStreamAgentService(ISessionService sessionService)
         {
-            _sessionService = sessionService;
-            _serviceProvider = serviceProvider;
+            _sessionService = sessionService;            
         }
 
         private JsonRpc _rpc;

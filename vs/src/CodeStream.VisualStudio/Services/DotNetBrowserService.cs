@@ -1,7 +1,6 @@
 ﻿using CodeStream.VisualStudio.Extensions;
 using DotNetBrowser;
 using DotNetBrowser.WPF;
-using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
 using System.Windows;
@@ -38,13 +37,8 @@ namespace CodeStream.VisualStudio.Services
         /// </summary>
         private readonly Browser _browser;
         private readonly WPFBrowserView _browserView;
-        // ReSharper disable once NotAccessedField.Local
-        private readonly IAsyncServiceProvider _serviceProvider;
-
-        public DotNetBrowserService(IAsyncServiceProvider serviceProvider)
+        public DotNetBrowserService()
         {
-            _serviceProvider = serviceProvider;
-
             var switches = ChromiumSwitches;
 #if DEBUG
             switches = switches.Combine(ChromiumSwitchesDebug);

@@ -31,7 +31,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 
                 browserService.AttachControl(Grid);
                 // ReSharper disable once ResourceItemNotResolved
-                browserService.LoadHtml(resourceManager.GetString("waiting"));
+                browserService.LoadSplashView();
 
                 var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
                 var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;

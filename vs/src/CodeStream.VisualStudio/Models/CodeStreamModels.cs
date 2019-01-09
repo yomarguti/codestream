@@ -24,6 +24,16 @@ namespace CodeStream.VisualStudio.Models
 
     public class SelectedText
     {
+        public SelectedText()
+        {
+
+        }
+		
+        public SelectedText(string text)
+        {
+            Text = text;
+        }
+
         public int StartLine { get; set; }
         public int StartColumn { get; set; }
         public int EndLine { get; set; }

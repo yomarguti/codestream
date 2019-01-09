@@ -1,5 +1,6 @@
 ﻿using CodeStream.VisualStudio.UI.ToolWindows;
 using Microsoft.VisualStudio.Shell;
+using System;
 using System.Runtime.InteropServices;
 
 namespace CodeStream.VisualStudio
@@ -15,8 +16,5 @@ namespace CodeStream.VisualStudio
     [Guid(Guids.WebViewPackageId)]
     [ProvideToolWindow(typeof(WebViewToolWindow), Orientation = ToolWindowOrientation.Right,
         Style = VsDockStyle.Tabbed, Window = EnvDTE.Constants.vsWindowKindSolutionExplorer)]
-    public sealed class WebViewPackage : AsyncPackage
-    {
-
-    }
+    public sealed class WebViewPackage : AsyncPackage  { }
 }

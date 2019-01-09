@@ -10,18 +10,17 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio
 {
-    public interface ICodeStreamToolWindowProvider
+    public interface IToolWindowProvider
     {
         void ToggleToolWindowVisibility(Guid toolWindowId);
         void ShowToolWindow(Guid toolWindowId);
         bool IsVisible(Guid toolWindowId);
     }
 
-    public interface SCodeStreamToolWindowProvider { }
+    public interface SToolWindowProvider { }
 
     /// <summary>
     /// This is a bit of MEF magic that exports services that were registered with ServiceProviderPackage
@@ -45,16 +44,16 @@ namespace CodeStream.VisualStudio
         private ICodeStreamAgentService CodeStreamAgentService => GetService<SCodeStreamAgentService>() as ICodeStreamAgentService;
 
         [Export]
-        private ISelectedTextService SelectedTextService => GetService<SSelectedTextService>() as ISelectedTextService;
-
-        [Export]
         private ICodeStreamService CodeStreamService => GetService<SCodeStreamService>() as ICodeStreamService;
 
         [Export]
-        private ICodeStreamToolWindowProvider CodeStreamServiceProvider => GetService<SCodeStreamToolWindowProvider>() as ICodeStreamToolWindowProvider;
+        private IToolWindowProvider CodeStreamServiceProvider => GetService<SToolWindowProvider>() as IToolWindowProvider;
 
         [Export]
         private ISessionService SessionService => GetService<SSessionService>() as ISessionService;
+
+        [Export]
+        private IIdeService IdeService => GetService<SIdeService>() as IIdeService;
 
         private T GetService<T>() where T : class
         {
@@ -63,32 +62,22 @@ namespace CodeStream.VisualStudio
         }
     }
 
-    public interface IServiceLocator
-    {
-        Task<object> GetServiceAsync(Type serviceType);
-        Task<object> GetServiceAsync(Type serviceType, bool swallowExceptions);
-        object GetService(Type serviceType);
-    }
-
     /// <summary>
     /// Pseudo-package to allow for a custom service provider
     /// </summary>
-    [ProvideService(typeof(SCodeStreamToolWindowProvider))]
+    [ProvideService(typeof(SToolWindowProvider))]
     [ProvideService(typeof(SEventAggregator))]
     [ProvideService(typeof(SIdeService))]
     [ProvideService(typeof(SSessionService))]
-    [ProvideService(typeof(SSelectedTextService))]
     [ProvideService(typeof(SBrowserService))]
     [ProvideService(typeof(SCodeStreamAgentService))]
     [ProvideService(typeof(SCodeStreamService))]
-    [ProvideService(typeof(SSettingsService))]
-   // [ProvideService(typeof(IServiceLocator))]
+    [ProvideService(typeof(SSettingsService))]   
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [Guid(Guids.ServiceProviderPackageId)]
     // ReSharper disable once RedundantExtendsListEntry
-
     public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer,
-           ICodeStreamToolWindowProvider, SCodeStreamToolWindowProvider, IServiceLocator
+           IToolWindowProvider, SToolWindowProvider
     {
         /// <summary>
         /// Store a reference to this as only a class that inherits from AsyncPackage can call GetDialogPage
@@ -104,44 +93,38 @@ namespace CodeStream.VisualStudio
             var callback = new ServiceCreatorCallback(CreateService);
             _codeStreamOptions = (OptionsDialogPage)GetDialogPage(typeof(OptionsDialogPage));
 
-            ((IServiceContainer)this).AddService(typeof(SCodeStreamToolWindowProvider), callback, true);
+            ((IServiceContainer)this).AddService(typeof(SToolWindowProvider), callback, true);
             ((IServiceContainer)this).AddService(typeof(SEventAggregator), callback, true);
             ((IServiceContainer)this).AddService(typeof(SIdeService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SSessionService), callback, true);
-            ((IServiceContainer)this).AddService(typeof(SSelectedTextService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SBrowserService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SCodeStreamAgentService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SCodeStreamService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SSettingsService), callback, true);
-            //((IServiceContainer)this).AddService(typeof(IServiceLocator), callback, true);
         }
 
         private object CreateService(IServiceContainer container, Type serviceType)
         {
-            if (typeof(SCodeStreamToolWindowProvider) == serviceType)
+            if (typeof(SToolWindowProvider) == serviceType)
                 return this;
             if (typeof(SEventAggregator) == serviceType)
                 return new EventAggregator();
             if (typeof(SIdeService) == serviceType)
-                return new IdeService();
+                return new IdeService(GetService(typeof(SVsTextManager)) as IVsTextManager2);
             if (typeof(SSessionService) == serviceType)
-                return new SessionService(this);
-            if (typeof(SSelectedTextService) == serviceType)
-                return new SelectedTextService(null, GetService(typeof(SVsTextManager)) as IVsTextManager2);
+                return new SessionService();
             if (typeof(SBrowserService) == serviceType)
-                return new DotNetBrowserService(this);
+                return new DotNetBrowserService();
             if (typeof(SSettingsService) == serviceType)
                 return new SettingsService(_codeStreamOptions);
             if (typeof(SCodeStreamAgentService) == serviceType)
-                return new CodeStreamAgentService(GetService(typeof(SSessionService)) as ISessionService, this);
+                return new CodeStreamAgentService(GetService(typeof(SSessionService)) as ISessionService);
             if (typeof(SCodeStreamService) == serviceType)
                 return new CodeStreamService(
                     GetService(typeof(SSessionService)) as ISessionService,
                     GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
                     GetService(typeof(SBrowserService)) as IBrowserService
                 );
-            //if (typeof(IServiceLocator) == serviceType)
-            //    return this;
 
             return null;
         }
@@ -184,11 +167,6 @@ namespace CodeStream.VisualStudio
             {
                 ErrorHandler.ThrowOnFailure(frame.IsVisible() == VSConstants.S_OK ? frame.Hide() : frame.Show());
             }
-        }
-
-        object IServiceLocator.GetService(Type serviceType)
-        {
-            return GetService(serviceType);
         }
     }
 }

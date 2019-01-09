@@ -1,14 +1,20 @@
-﻿<html>
+﻿<!DOCTYPE html>
+<html lang="en">
 <head>
-
-    <style>
-        body {
-            background:#333;
-            color:#fff;
-        }
-    </style>
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+    <title>CodeStream</title>
+    <style id="theme"></style>
+    <link href="file:///{root}/UI/WebViews/Shared/webview.css" rel="stylesheet">    
 </head>
-<body>
-    Open a solution and a file to start using CodeStream!
+<body class="codestream preload">
+    <div id="app">
+        <div class="loader-ring">
+        </div>
+        <div style="position: absolute;top: 75%; text-align: center; width: 100%;">
+            <p style="opacity:.7; font-size:1em;">
+                Open a solution and a source file to start using CodeStream!
+            </p>
+        </div>
+    </div>
 </body>
 </html>

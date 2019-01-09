@@ -29,13 +29,39 @@ namespace CodeStream.VisualStudio.Services
 
     public interface IBrowserService : IDisposable
     {
+        /// <summary>
+        /// Sends the string to the web view
+        /// </summary>
+        /// <param name="message"></param>
         void PostMessage(string message);
+        /// <summary>
+        /// Object to be JSON-serialized before sending to the webview
+        /// </summary>
+        /// <param name="message"></param>
         void PostMessage(object message);
+
         void LoadHtml(string html);
         void AddWindowMessageEvent(WindowMessageHandler handler);
+        /// <summary>
+        /// Attaches the control to the parent element
+        /// </summary>
+        /// <param name="frameworkElement"></param>
         void AttachControl(FrameworkElement frameworkElement);
+        /// <summary>
+        /// Any custom html required by the Browser instance
+        /// </summary>
         string FooterHtml { get; }
+        /// <summary>
+        /// Loads the webview
+        /// </summary>
         void LoadWebView();
+        /// <summary>
+        /// waiting / loading / pre-LSP page
+        /// </summary>
+        void LoadSplashView();
+        /// <summary>
+        /// Reloads the webview completely
+        /// </summary>
         void ReloadWebView();
     }
 
@@ -72,7 +98,12 @@ namespace CodeStream.VisualStudio.Services
 
         public void LoadWebView()
         {
-            LoadHtml(CreateHarness(Assembly.GetAssembly(typeof(BrowserServiceBase))));
+            LoadHtml(CreateHarness(Assembly.GetAssembly(typeof(BrowserServiceBase)),"webview"));
+        }
+
+        public void LoadSplashView()
+        {
+            LoadHtml(CreateHarness(Assembly.GetAssembly(typeof(BrowserServiceBase)), "waiting"));
         }
 
         public void ReloadWebView()
@@ -80,13 +111,13 @@ namespace CodeStream.VisualStudio.Services
             LoadWebView();
         }
 
-        private string CreateHarness(Assembly assembly)
+        private string CreateHarness(Assembly assembly, string resourceName)
         {
             var resourceManager = new ResourceManager("VSPackage", Assembly.GetExecutingAssembly());
             var dir = Path.GetDirectoryName(assembly.Location);
             Debug.Assert(dir != null, nameof(dir) + " != null");
             // ReSharper disable once ResourceItemNotResolved
-            var harness = resourceManager.GetString("webview");
+            var harness = resourceManager.GetString(resourceName);
             Debug.Assert(harness != null, nameof(harness) + " != null");
 
             harness = harness
