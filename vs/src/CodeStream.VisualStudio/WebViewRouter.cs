@@ -209,6 +209,7 @@ namespace CodeStream.VisualStudio
                                                         {
                                                             Configs = new Config
                                                             {
+                                                                ServerUrl = _settingsService.ServerUrl,
                                                                 Email = _settingsService.Email,
                                                                 OpenCommentOnSelect = _settingsService.OpenCommentOnSelect,
                                                                 ShowHeadshots = _settingsService.ShowHeadshots,

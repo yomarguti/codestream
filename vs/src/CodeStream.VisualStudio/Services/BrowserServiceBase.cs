@@ -112,6 +112,7 @@ namespace CodeStream.VisualStudio.Services
         public void ReloadWebView()
         {
             LoadWebView();
+            Log.Verbose($"{nameof(ReloadWebView)}");
         }
 
         private string CreateHarness(Assembly assembly, string resourceName)

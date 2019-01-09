@@ -31,7 +31,6 @@ namespace CodeStream.VisualStudio
     {
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamPackage>();
 
-        private VsShellEventManager _vsEventManager;
         private Lazy<ICodeStreamService> _codeStreamService;
         private IDisposable _languageServerReadyEvent;
         private Action _disposableActions = null;
@@ -62,20 +61,16 @@ namespace CodeStream.VisualStudio
             var eventAggregator = await GetServiceAsync(typeof(SEventAggregator)) as IEventAggregator;
 
             // TODO move this into a non-static??
-            InfoBarProvider.Initialize(this);
+            InfoBarProvider.Initialize(this);            
 
-            var iVsMonitorSelection = await GetServiceAsync(typeof(SVsShellMonitorSelection)) as IVsMonitorSelection;
-            _vsEventManager = new VsShellEventManager(iVsMonitorSelection);
+            _codeStreamService = new Lazy<ICodeStreamService>(() => GetService(typeof(SCodeStreamService)) as ICodeStreamService);
 
             // ReSharper disable once PossibleNullReferenceException
             _languageServerReadyEvent = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
             {
                 ThreadHelper.ThrowIfNotOnUIThread();
-
-                _codeStreamService = new Lazy<ICodeStreamService>(() => GetService(typeof(SCodeStreamService)) as ICodeStreamService);
-                
-
-                _disposableActions = new CodeStreamEventManager(_vsEventManager, _codeStreamService).Register(_languageServerReadyEvent);
+                var iVsMonitorSelection = GetService(typeof(SVsShellMonitorSelection)) as IVsMonitorSelection;              
+                _disposableActions = new CodeStreamEventManager(new VsShellEventManager(iVsMonitorSelection), _codeStreamService).Register(_languageServerReadyEvent);
             });
 
             // Avoid delays when there is ongoing UI activity.
@@ -118,10 +113,11 @@ namespace CodeStream.VisualStudio
                     else if (args.PropertyName == nameof(packageSettings.WebAppUrl) ||
                              args.PropertyName == nameof(packageSettings.ServerUrl))
                     {
+                        Log.Verbose($"Url(s) changed");
                         if (_codeStreamService?.Value?.BrowserService != null)
                         {
                             _codeStreamService?.Value?.BrowserService?.ReloadWebView();
-                        }
+                        }                        
                     }
                 };
             }
