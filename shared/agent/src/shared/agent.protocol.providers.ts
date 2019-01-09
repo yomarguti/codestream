@@ -28,3 +28,5 @@ export const DisconnectThirdParyProviderRequestType = new RequestType<
 	void,
 	void
 >("codeStream/provider/disconnect");
+
+export interface FetchThirdPartyBoardsRequest {}
