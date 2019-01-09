@@ -7,12 +7,16 @@ import {
 	CloseStreamRequestType,
 	CloseStreamResponse,
 	CodeBlockSource,
+	ConnectThirdPartyProviderRequest,
+	ConnectThirdParyProviderRequestType,
 	CreateChannelStreamRequest,
 	CreateChannelStreamRequestType,
 	CreateChannelStreamResponse,
 	CreateDirectStreamRequest,
 	CreateDirectStreamRequestType,
 	CreateDirectStreamResponse,
+	CreateJiraCardRequest,
+	CreateJiraCardRequestType,
 	CreatePostRequest,
 	CreatePostRequestType,
 	CreatePostResponse,
@@ -21,6 +25,8 @@ import {
 	DeletePostRequest,
 	DeletePostRequestType,
 	DeletePostResponse,
+	DisconnectThirdPartyProviderRequest,
+	DisconnectThirdParyProviderRequestType,
 	EditPostRequest,
 	EditPostRequestType,
 	EditPostResponse,
@@ -32,6 +38,9 @@ import {
 	FetchPostsRequest,
 	FetchPostsRequestType,
 	FetchPostsResponse,
+	FetchThirdPartyBoardsRequest,
+	GitHubCreateCardRequest,
+	GitHubCreateCardRequestType,
 	InviteUserRequest,
 	InviteUserRequestType,
 	InviteUserResponse,
@@ -67,6 +76,10 @@ import {
 	SetStreamPurposeResponse,
 	TelemetryRequest,
 	TelemetryRequestType,
+	TrelloCreateCardRequest,
+	TrelloCreateCardRequestType,
+	TrelloFetchListsRequest,
+	TrelloFetchListsRequestType,
 	UnarchiveStreamRequest,
 	UnarchiveStreamRequestType,
 	UnarchiveStreamResponse,
@@ -136,86 +149,74 @@ export default class WebviewApi {
 
 	connectService(service: string) {
 		return this.postMessage({
-			action: "agent",
-			params: { url: "provider/connect", request: { providerName: service } }
+			action: ConnectThirdParyProviderRequestType.method,
+			params: {
+				providerName: service
+			} as ConnectThirdPartyProviderRequest
 		});
 	}
 
 	disconnectService(service: string) {
 		return this.postMessage({
-			action: "agent",
-			params: { url: "provider/disconnect", request: { providerName: service } }
+			action: DisconnectThirdParyProviderRequestType.method,
+			params: {
+				providerName: service
+			} as DisconnectThirdPartyProviderRequest
 		});
 	}
 
 	createTrelloCard(listId: string, name: string, description: string) {
 		return this.postMessage({
-			action: "agent",
+			action: TrelloCreateCardRequestType.method,
 			params: {
-				url: "trello/cards/create",
-				request: {
-					listId: listId,
-					name: name,
-					description: description
-					/* TODO */
-				}
-			}
+				listId: listId,
+				name: name,
+				description: description
+			} as TrelloCreateCardRequest
 		});
 	}
 
 	createJiraCard(summary: string, description: string, issueType: string, project: string) {
 		return this.postMessage({
-			action: "agent",
+			action: CreateJiraCardRequestType.method,
 			params: {
-				url: "jira/cards/create",
-				request: {
-					summary,
-					description,
-					issueType,
-					project
-				}
-			}
+				summary,
+				description,
+				issueType,
+				project
+			} as CreateJiraCardRequest
 		});
 	}
 
 	createGithubCard(title: string, description: string, repoName: string) {
 		return this.postMessage({
-			action: "agent",
+			action: GitHubCreateCardRequestType.method,
 			params: {
-				url: "github/cards/create",
-				request: {
-					title,
-					description,
-					repoName
-				}
-			}
+				title,
+				description,
+				repoName
+			} as GitHubCreateCardRequest
 		});
 	}
 
 	createGitlabCard(title: string, description: string, repoName: string) {
 		return this.postMessage({
-			action: "agent",
+			action: "", // TODO
 			params: {
-				url: "gitlab/cards/create",
-				request: {
-					title,
-					description,
-					repoName
-				}
+				title,
+				description,
+				repoName
 			}
 		});
 	}
 
 	createAsanaCard(title: string, description: string, repoName: string) {
 		return this.postMessage({
-			action: "agent",
+			action: "", // TODO
 			params: {
-				url: "asana/cards/create",
-				request: {
-					title,
-					description,
-					repoName
-				}
+				title,
+				description,
+				repoName
 			}
 		});
 	}
@@ -223,19 +224,18 @@ export default class WebviewApi {
 	// service is one of "trello", "asana", "jira", "github"
 	fetchIssueBoards(service: string, organizationId?: string) {
 		return this.postMessage({
-			action: "agent",
-			params: { url: service + "/boards", request: { organizationId: organizationId } }
+			action: `codeStream/${service}/boards`,
+			params: { organizationId: organizationId } as FetchThirdPartyBoardsRequest
 		});
 	}
 
-	// service is one of "trello", "asana", "jira", "github"
+	// so far trello is the only service with lists
 	fetchIssueLists(service: string, boardId: string) {
 		return this.postMessage({
-			action: "agent",
+			action: TrelloFetchListsRequestType.method,
 			params: {
-				url: service + "/lists",
-				request: { boardId: boardId }
-			}
+				boardId: boardId
+			} as TrelloFetchListsRequest
 		});
 	}
 
