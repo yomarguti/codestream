@@ -77,6 +77,39 @@ function Print-Help {
   Exit 0
 }
 
+function Check-Dependencies {
+
+    $nodeVersion = "";
+    if (Get-Command node -errorAction SilentlyContinue) {
+         $nodeVersion = (node -v)
+    }
+
+    if ($nodeVersion) {
+        Write-Log "NodeJS version $($nodeVersion) is installed"
+    }
+    else {
+        Write-Log "NodeJS is missing" "Red"
+        exit 1 
+    }
+
+    $pkgVersion = "";
+    if (Get-Command pkg -errorAction SilentlyContinue) {
+         $pkgVersion = (pkg -v)
+    }
+
+    if ($pkgVersion) {
+        Write-Log "pkg version $($pkgVersion) is installed"
+    }
+    else {
+        Write-Log "pkg is missing, install with 'npm install -g pkg'" "Red"
+        exit 1 
+    }
+
+    Write-Log ""
+    Write-Log "All dependencies have been satisfied"
+    Write-Log ""
+}
+
 # npm install pkg -g
 
 # clone https://github.com/TeamCodeStream/vscode-codestream
@@ -115,7 +148,7 @@ function Perform-Build
     & .\nuget.exe restore ..\src\CodeStream.VisualStudio.sln
 
     Write-Log "Running msbuild."
-    & $msbuild ..\src\CodeStream.VisualStudio.sln /v:normal /target:$Target /p:Configuration=$Configuration /p:Platform=$Platform /p:DeployExtension=$DeployExtension /p:VisualStudioVersion=$VisualStudioVersion /p:OutputPath=$OutputDir  
+    & $msbuild ..\src\CodeStream.VisualStudio.sln /p:AllowUnsafeBlocks=true /v:normal /target:$Target /p:Configuration=$Configuration /p:Platform=$Platform /p:DeployExtension=$DeployExtension /p:VisualStudioVersion=$VisualStudioVersion /p:OutputPath=$OutputDir  
     
     Write-Log "Running UnitTests"
     & $vstest "$($OutputDir)\CodeStream.VisualStudio.UnitTests.dll" /Platform:$Platform
@@ -132,4 +165,5 @@ function Perform-Build
 }
 
 Print-Help
+Check-Dependencies
 Perform-Build
