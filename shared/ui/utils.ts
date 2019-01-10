@@ -36,19 +36,28 @@ export const findLast = <T>(array: T[], fn: (item: T) => boolean): any | undefin
 
 export const rangeTo = (size: number) => [...Array(size).keys()];
 
+// let fnCount = 0;
 export const debounceToAnimationFrame = (fn: Function) => {
-	let result: any;
 	let requestId: number | undefined;
-
+	// const i = fnCount++;
+	// const label = `fn[${i}]`;
+	// let resetTimer = true;
+	// console.debug(`${label} registered for debouncing`, fn);
 	return function(...args: any[]) {
+		// if (resetTimer) {
+		// 	console.time(label);
+		// 	resetTimer = false;
+		// }
 		if (requestId) {
+			// console.debug(`debouncing ${label}`);
 			cancelAnimationFrame(requestId);
 		}
 		requestId = requestAnimationFrame(() => {
+			// resetTimer = true;
 			requestId = undefined;
-			result = fn(args);
+			// console.timeEnd(label);
+			fn(...args);
 		});
-		return result;
 	};
 };
 

@@ -151,7 +151,6 @@ export default infiniteLoadable(
 
 		onScroll = event => {
 			if (this.props.isThread) return;
-			console.debug("PostList scrolling");
 			this.props.onScroll();
 			this.handleScroll(event.target);
 			this.findFirstUnread(event.target);

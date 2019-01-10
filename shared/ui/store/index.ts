@@ -1,5 +1,6 @@
-import { applyMiddleware, createStore } from "redux";
+import { applyMiddleware, compose, createStore } from "redux";
 import { combineReducers } from "redux";
+import { batchedSubscribe } from "redux-batched-subscribe";
 import { composeWithDevTools } from "redux-devtools-extension";
 import thunk from "redux-thunk";
 import { reduceCapabilities } from "../store/capabilities/reducer";
@@ -16,6 +17,7 @@ import { reduceStreams } from "../store/streams/reducer";
 import { reduceTeams } from "../store/teams/reducer";
 import { reduceUnreads } from "../store/unreads/reducer";
 import { reduceUsers } from "../store/users/reducer";
+import { debounceToAnimationFrame } from "../utils";
 import middleware from "./middleware";
 
 export { actions } from "./actions";
@@ -69,7 +71,8 @@ export const createCodeStreamStore = (
 		reducer,
 		initialState,
 		composeWithDevTools(
-			applyMiddleware(thunk.withExtraArgument(thunkArg), ...middleware, ...consumerMiddleware)
+			applyMiddleware(thunk.withExtraArgument(thunkArg), ...middleware, ...consumerMiddleware),
+			batchedSubscribe(debounceToAnimationFrame((notify: Function) => notify()))
 		)
 	);
 };
