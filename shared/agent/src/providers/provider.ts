@@ -60,7 +60,7 @@ export abstract class ThirdPartyProviderBase<
 	async disconnect() {
 		void (await this.session.api.disconnectThirdPartyProvider({ providerName: this.name }));
 		this._readyPromise = this._providerInfo = undefined;
-		void (await this.onDisconnected());
+		await this.onDisconnected();
 	}
 
 	protected async onDisconnected() {}

@@ -138,10 +138,15 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 	}
 
 	private async refreshToken() {
-		const me = await this.session.api.refreshThirdPartyProvider({
-			providerName: this.name,
-			refreshToken: this._providerInfo!.data.refresh_token
-		});
-		this._providerInfo = this.getProviderInfo(me);
+		try {
+			const me = await this.session.api.refreshThirdPartyProvider({
+				providerName: this.name,
+				refreshToken: this._providerInfo!.data.refresh_token
+			});
+			this._providerInfo = this.getProviderInfo(me);
+		} catch (error) {
+			await this.disconnect();
+			return super.ensureConnected();
+		}
 	}
 }
