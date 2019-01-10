@@ -111,9 +111,10 @@ namespace CodeStream.VisualStudio
                         LogManager.SetTraceLevel(packageSettings.TraceLevel);
                     }
                     else if (args.PropertyName == nameof(packageSettings.WebAppUrl) ||
-                             args.PropertyName == nameof(packageSettings.ServerUrl))
+                             args.PropertyName == nameof(packageSettings.ServerUrl) ||
+                             args.PropertyName == nameof(packageSettings.Team))
                     {
-                        Log.Verbose($"Url(s) changed");
+                        Log.Verbose($"Url(s) or Team changed");
                         if (_codeStreamService?.Value?.BrowserService != null)
                         {
                             _codeStreamService?.Value?.BrowserService?.ReloadWebView();

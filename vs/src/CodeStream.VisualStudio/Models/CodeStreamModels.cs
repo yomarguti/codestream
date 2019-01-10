@@ -372,13 +372,6 @@ namespace CodeStream.VisualStudio.Models
         public bool Vsls { get; set; }
     }
 
-    //public enum CodeStreamEnvironment
-    //{
-    //    Local,
-    //    Prod,
-    //    Unknown
-    //}
-
     public abstract class BootstrapStateBase
     {
         public string Env { get; set; }
