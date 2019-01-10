@@ -19,7 +19,7 @@ using System.Threading;
 namespace CodeStream.VisualStudio
 {
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-    [InstalledProductRegistration("#110", "#112", "0.1", IconResourceID = 400)] // Info on this package for Help/About
+    [InstalledProductRegistration("#110", "#112", "0.1.0", IconResourceID = 400)] // Info on this package for Help/About
     [ProvideOptionPage(typeof(OptionsDialogPage), "CodeStream", "Settings", 0, 0, true)]
     [Guid(Guids.CodeStreamPackageId)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
@@ -54,7 +54,7 @@ namespace CodeStream.VisualStudio
 \____/\___/ \__,_|\___\__/\__|_|  \___|\__,_|_| |_| |_|
                                                        ");            
             Log.Information("Initializing CodeStream Extension v{PackageVersion} in {$FullProductName} ({$ProductVersion})",
-    Application.Version, Application.FullProductName, Application.ProductVersion);
+    Application.VersionShort, Application.FullProductName, Application.ProductVersion);
 
             await InitializeLoggingAsync();
 

@@ -10,11 +10,10 @@ namespace CodeStream.VisualStudio
         public const string Name = "CodeStream";
 
         /// <summary>
-        /// Gets the version information for the host process (IDE) aka VisualStudio.
+        /// Returns Major.Minor.Build for the Extension
         /// </summary>
-        /// <returns>The version of the host process.</returns>
-        public static FileVersionInfo HostVersion { get; }
-        public static Version Version { get; }
+        public static Version VersionShort {get;}
+
         public static Ide Ide { get; }
         public static Extension Extension { get; }
 
@@ -31,20 +30,25 @@ namespace CodeStream.VisualStudio
 
         static Application()
         {
-            HostVersion = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileVersionInfo;
-            Version = typeof(Application).Assembly.GetName().Version;
+             var fileVersionInfo = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileVersionInfo;
+
+            // Extension versions
+            var versionFull = typeof(Application).Assembly.GetName().Version;
+            VersionShort = new Version(versionFull.Major, versionFull.Minor, versionFull.Build);
+
             LogPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Name, "Logs") + @"\";
             
             Ide = new Ide
             {
                 Name = "VS",
-                Version = HostVersion.ProductVersion
+                Version = fileVersionInfo.ProductVersion
             };
 
             Extension = new Extension
             {
-                Version = Version.ToString(),
-                VersionFormatted = Version.ToString(),
+                Version = VersionShort.ToString(),
+                // TODO what is this format?
+                VersionFormatted = VersionShort.ToString(),
                 // TODO add these
                 Build = string.Empty,
 #if DEBUG
@@ -54,8 +58,8 @@ namespace CodeStream.VisualStudio
 #endif
             };
 
-            FullProductName = HostVersion.FileDescription;
-            ProductVersion = HostVersion.ProductVersion;
+            FullProductName = fileVersionInfo.FileDescription;
+            ProductVersion = fileVersionInfo.ProductVersion;
 
             //try
             //{
