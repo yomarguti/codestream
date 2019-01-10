@@ -471,12 +471,12 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 					break;
 				}
-				// case WebviewIpcMessageType.onCodemarkShowDiff: {
-				// 	const { marker } = e.body;
-				// 	Container.commands.showMarkerDiff({ marker: marker, range: {} });
+				case WebviewIpcMessageType.onCodemarkShowDiff: {
+					const { marker } = e.body;
+					Container.commands.showMarkerDiff({ marker: marker });
 
-				// 	break;
-				// }
+					break;
+				}
 				case WebviewIpcMessageType.onServiceRequest: {
 					this._ipc.onServiceRequest(e.body);
 

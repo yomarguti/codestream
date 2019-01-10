@@ -1,3 +1,4 @@
+import * as paths from "path";
 import {
 	commands,
 	Disposable,
@@ -8,7 +9,8 @@ import {
 	Uri,
 	ViewColumn,
 	window,
-	workspace
+	workspace,
+	WorkspaceEdit
 } from "vscode";
 import { CodeStreamSession, Stream, StreamThread, StreamType } from "./api/session";
 import { TokenManager } from "./api/tokenManager";
@@ -81,6 +83,14 @@ export interface ApplyMarkerCommandArgs {
 		start: { line: number; character: number };
 		end: { line: number; character: number };
 	};
+}
+
+export interface ShowMarkerDiffCommandArgs {
+	marker: CSMarker;
+	// range?: {
+	// 	start: { line: number; character: number };
+	// 	end: { line: number; character: number };
+	// };
 }
 
 export interface OpenStreamCommandArgs extends IRequiresStream {
@@ -286,6 +296,60 @@ export class Commands implements Disposable {
 				args.marker.code
 			);
 		});
+	}
+
+	@command("showMarkerDiff", { showErrorMessage: "Unable to open comment" })
+	async showMarkerDiff(args: ShowMarkerDiffCommandArgs): Promise<boolean> {
+		// Container.agent.telemetry.track("Codemark Clicked", { "Codemark Location": "Source File" });
+
+		const resp = await Container.agent.getDocumentFromMarker(args.marker);
+		if (resp === undefined) return false;
+
+		const original = await workspace.openTextDocument(Uri.parse(resp.textDocument.uri));
+
+		const patched = await workspace.openTextDocument({
+			language: original.languageId,
+			content: original.getText()
+		});
+
+		const edit = new WorkspaceEdit();
+		edit.replace(
+			patched.uri,
+			new Range(
+				resp.range.start.line,
+				resp.range.start.character,
+				resp.range.end.line,
+				resp.range.end.character
+			),
+			args.marker.code
+		);
+
+		const result = await workspace.applyEdit(edit);
+		if (!result) return false;
+
+		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
+		let column = Container.webview.viewColumn as number | undefined;
+		if (column !== undefined) {
+			column--;
+			if (column <= 0) {
+				column = undefined;
+			}
+		}
+
+		const fileName = paths.basename(original.fileName);
+		await commands.executeCommand(
+			BuiltInCommands.Diff,
+			original.uri,
+			patched.uri,
+			`${fileName} \u27f7 ${fileName} (patched)`,
+			{
+				preserveFocus: false,
+				preview: true,
+				viewColumn: column || ViewColumn.Beside
+			}
+		);
+
+		return true;
 	}
 
 	private async openWorkingFileForMarkerCore(marker: CSMarker) {
