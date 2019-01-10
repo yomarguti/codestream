@@ -22,7 +22,9 @@ import {
 } from "./api.protocol";
 import { CSLastReads } from "./api.protocol.models";
 
+export * from "./agent.protocol.asana";
 export * from "./agent.protocol.github";
+export * from "./agent.protocol.gitlab";
 export * from "./agent.protocol.markers";
 export * from "./agent.protocol.posts";
 export * from "./agent.protocol.providers";

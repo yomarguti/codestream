@@ -105,6 +105,7 @@ import {
 	CSDirectStream,
 	CSMarker,
 	CSMarkerLocations,
+	CSMe,
 	CSMePreferences,
 	CSPost,
 	CSRepository,
@@ -306,6 +307,8 @@ export interface ApiProvider {
 	}): Promise<{ code: string }>;
 
 	disconnectThirdPartyProvider(request: { providerName: string }): Promise<void>;
+
+	refreshThirdPartyProvider(request: { providerName: string; refreshToken: string }): Promise<CSMe>;
 }
 
 export interface CodeStreamApiMiddlewareContext {

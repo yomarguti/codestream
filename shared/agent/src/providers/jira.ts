@@ -47,7 +47,7 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 		return "jira";
 	}
 
-	get headers() {
+	async headers() {
 		return {
 			Authorization: `Bearer ${this.accessToken}`,
 			Accept: "application/json",

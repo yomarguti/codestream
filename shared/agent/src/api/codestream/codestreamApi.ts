@@ -963,6 +963,25 @@ export class CodeStreamApiProvider implements ApiProvider {
 		));
 	}
 
+	@log()
+	async refreshThirdPartyProvider(request: {
+		providerName: string;
+		refreshToken: string;
+	}): Promise<CSMe> {
+		const provider = request.providerName;
+		const team = `teamId=${this.teamId}`;
+		const token = `refreshToken=${request.refreshToken}`;
+		const url = `/provider-refresh/${provider}?${team}&${token}`;
+		const response = await this.get<{ user: any }>(url, this._token);
+
+		const [user] = await Container.instance().users.resolve({
+			type: MessageType.Users,
+			data: [response.user]
+		});
+
+		return user as CSMe;
+	}
+
 	private delete<R extends object>(url: string, token?: string): Promise<R> {
 		let resp = undefined;
 		if (resp === undefined) {

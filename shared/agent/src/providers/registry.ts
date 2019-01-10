@@ -12,6 +12,8 @@ import { getProvider, log, lsp, lspHandler } from "../system";
 export * from "./trello";
 export * from "./jira";
 export * from "./github";
+export * from "./gitlab";
+export * from "./asana";
 
 @lsp
 export class ThirdPartyProviderRegistry {

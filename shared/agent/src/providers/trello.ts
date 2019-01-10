@@ -31,7 +31,7 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 		return "trello";
 	}
 
-	get headers() {
+	async headers() {
 		return {};
 	}
 

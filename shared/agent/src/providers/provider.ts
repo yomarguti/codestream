@@ -31,7 +31,7 @@ export abstract class ThirdPartyProviderBase<
 	abstract get baseUrl(): string;
 	abstract get displayName(): string;
 	abstract get name(): string;
-	abstract get headers(): { [key: string]: string };
+	abstract async headers(): Promise<{ [key: string]: string }>;
 
 	async connect() {
 		void (await this.session.api.connectThirdPartyProvider({
@@ -90,41 +90,41 @@ export abstract class ThirdPartyProviderBase<
 		this._ensuringConnection = undefined;
 	}
 
-	protected delete<R extends object>(url: string): Promise<ApiResponse<R>> {
+	protected async delete<R extends object>(url: string): Promise<ApiResponse<R>> {
 		let resp = undefined;
 		if (resp === undefined) {
-			resp = this.fetch<R>(url, { method: "DELETE", headers: this.headers });
+			resp = this.fetch<R>(url, { method: "DELETE", headers: await this.headers() });
 		}
 		return resp;
 	}
 
-	protected get<R extends object>(url: string): Promise<ApiResponse<R>> {
-		return this.fetch<R>(url, { method: "GET", headers: this.headers });
+	protected async get<R extends object>(url: string): Promise<ApiResponse<R>> {
+		return this.fetch<R>(url, { method: "GET", headers: await this.headers() });
 	}
 
-	protected post<RQ extends object, R extends object>(
+	protected async post<RQ extends object, R extends object>(
 		url: string,
 		body: RQ
 	): Promise<ApiResponse<R>> {
 		return this.fetch<R>(url, {
 			method: "POST",
 			body: JSON.stringify(body),
-			headers: this.headers
+			headers: await this.headers()
 		});
 	}
 
-	protected put<RQ extends object, R extends object>(
+	protected async put<RQ extends object, R extends object>(
 		url: string,
 		body: RQ
 	): Promise<ApiResponse<R>> {
 		return this.fetch<R>(url, {
 			method: "PUT",
 			body: JSON.stringify(body),
-			headers: this.headers
+			headers: await this.headers()
 		});
 	}
 
-	private getProviderInfo(me: CSMe) {
+	protected getProviderInfo(me: CSMe) {
 		return User.getProviderInfo<TProviderInfo>(me, this.session.teamId, this.name);
 	}
 

@@ -213,11 +213,19 @@ export interface CSTeam extends CSEntity {
 }
 
 export interface CSAsanaProviderInfo {
+	refreshToken: string;
 	accessToken: string;
+	expiresAt: number;
 	userId: string;
 }
 
 export interface CSGitHubProviderInfo {
+	accessToken: string;
+	apiKey: string;
+	userId: string;
+}
+
+export interface CSGitLabProviderInfo {
 	accessToken: string;
 	apiKey: string;
 	userId: string;

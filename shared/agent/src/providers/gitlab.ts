@@ -4,48 +4,48 @@ import * as qs from "querystring";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
-	GitHubBoard,
-	GitHubCreateCardRequest,
-	GitHubCreateCardRequestType,
-	GitHubCreateCardResponse,
-	GitHubFetchBoardsRequest,
-	GitHubFetchBoardsRequestType,
-	GitHubFetchListsRequest,
-	GitHubFetchListsRequestType,
-	GitHubList
+	GitLabBoard,
+	GitLabCreateCardRequest,
+	GitLabCreateCardRequestType,
+	GitLabCreateCardResponse,
+	GitLabFetchBoardsRequest,
+	GitLabFetchBoardsRequestType,
+	GitLabFetchListsRequest,
+	GitLabFetchListsRequestType,
+	GitLabList
 } from "../shared/agent.protocol";
-import { CSGitHubProviderInfo } from "../shared/api.protocol";
+import { CSGitLabProviderInfo } from "../shared/api.protocol";
 import { log, lspHandler, lspProvider } from "../system";
 import { ThirdPartyProviderBase } from "./provider";
 
-interface GitHubRepo {
+interface GitLabRepo {
 	id: string;
 	full_name: string;
 	path: string;
 }
 
-@lspProvider("github")
-export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo> {
-	private _githubUserId: string | undefined;
+@lspProvider("gitlab")
+export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo> {
+	private _gitlabUserId: string | undefined;
 
-	private _knownRepos = new Map<String, GitHubRepo>();
+	private _knownRepos = new Map<String, GitLabRepo>();
 
 	get baseUrl() {
-		return "https://api.github.com";
+		return "https://gitlab.example.com/api/v4";
 	}
 
 	get displayName() {
-		return "GitHub";
+		return "GitLab";
 	}
 
 	get name() {
-		return "github";
+		return "gitlab";
 	}
 
 	async headers() {
 		return {
-			"user-agent": "CodeStream",
-			Accept: "application/vnd.github.v3+json, application/vnd.github.inertia-preview+json"
+			"PRIVATE-TOKEN": "9koXpg98eAheJpvBs5tK"
+			// "PRIVATE-TOKEN": this.token
 		};
 	}
 
@@ -58,28 +58,28 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	}
 
 	async onConnected() {
-		this._githubUserId = await this.getMemberId();
-		this._knownRepos = new Map<String, GitHubRepo>();
+		this._gitlabUserId = await this.getMemberId();
+		this._knownRepos = new Map<String, GitLabRepo>();
 	}
 
 	@log()
-	@lspHandler(GitHubFetchBoardsRequestType)
-	async boards(request: GitHubFetchBoardsRequest) {
+	@lspHandler(GitLabFetchBoardsRequestType)
+	async boards(request: GitLabFetchBoardsRequest) {
 		void (await this.ensureConnected());
 
 		const { git } = Container.instance();
 		const gitRepos = await git.getRepositories();
-		// let boards: GitHubBoard[];
+		// let boards: GitLabBoard[];
 
 		// try {
-		// 	let apiResponse = await this.get<GitHubBoard[]>(
+		// 	let apiResponse = await this.get<GitLabBoard[]>(
 		// 		`/user/repos?${qs.stringify({ access_token: this.token })}`
 		// 	);
 		// 	boards = apiResponse.body;
 		//
 		// 	let nextPage: string | undefined;
 		// 	while ((nextPage = this.nextPage(apiResponse.response))) {
-		// 		apiResponse = await this.get<GitHubBoard[]>(nextPage);
+		// 		apiResponse = await this.get<GitLabBoard[]>(nextPage);
 		// 		boards = boards.concat(apiResponse.body);
 		// 	}
 		// } catch (err) {
@@ -88,24 +88,24 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 		// 	debugger;
 		// }
 
-		const openRepos = new Map<String, GitHubRepo>();
+		const openRepos = new Map<String, GitLabRepo>();
 
 		for (const gitRepo of gitRepos) {
 			const remotes = await git.getRepoRemotes(gitRepo.path);
 			for (const remote of remotes) {
-				if (remote.domain === "github.com" || !openRepos.has(remote.path)) {
-					let githubRepo = this._knownRepos.get(remote.path);
+				if (remote.domain === "gitlab.com" || !openRepos.has(remote.path)) {
+					let gitlabRepo = this._knownRepos.get(remote.path);
 
-					if (!githubRepo) {
+					if (!gitlabRepo) {
 						try {
-							const response = await this.get<GitHubRepo>(
+							const response = await this.get<GitLabRepo>(
 								`/repos/${remote.path}?${qs.stringify({ access_token: this.token })}`
 							);
-							githubRepo = {
+							gitlabRepo = {
 								...response.body,
 								path: gitRepo.path
 							};
-							this._knownRepos.set(remote.path, githubRepo);
+							this._knownRepos.set(remote.path, gitlabRepo);
 							// boards.push(response.body);
 						} catch (err) {
 							Logger.error(err);
@@ -113,8 +113,8 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 						}
 					}
 
-					if (githubRepo) {
-						openRepos.set(remote.path, githubRepo);
+					if (gitlabRepo) {
+						openRepos.set(remote.path, gitlabRepo);
 					}
 				}
 			}
@@ -132,11 +132,11 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	}
 
 	@log()
-	@lspHandler(GitHubCreateCardRequestType)
-	async createCard(request: GitHubCreateCardRequest) {
+	@lspHandler(GitLabCreateCardRequestType)
+	async createCard(request: GitLabCreateCardRequest) {
 		void (await this.ensureConnected());
 
-		const response = await this.post<{}, GitHubCreateCardResponse>(
+		const response = await this.post<{}, GitLabCreateCardResponse>(
 			`/repos/${request.repoName}/issues?${qs.stringify({
 				access_token: this.token
 				// idList: request.listId,
@@ -157,20 +157,18 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	}
 
 	@log()
-	@lspHandler(GitHubFetchListsRequestType)
-	async lists(request: GitHubFetchListsRequest) {
+	@lspHandler(GitLabFetchListsRequestType)
+	async lists(request: GitLabFetchListsRequest) {
 		void (await this.ensureConnected());
 
-		const response = await this.get<GitHubList[]>(
+		const response = await this.get<GitLabList[]>(
 			`/boards/${request.boardId}/lists?${qs.stringify({ key: this.apiKey, token: this.token })}`
 		);
 		return { lists: response.body.filter(l => !l.closed) };
 	}
 
 	private async getMemberId() {
-		const userResponse = await this.get<{ id: string; [key: string]: any }>(
-			`/user?${qs.stringify({ access_token: this.token })}`
-		);
+		const userResponse = await this.get<{ id: string; [key: string]: any }>(`/user`);
 
 		return userResponse.body.id;
 	}
