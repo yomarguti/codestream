@@ -3,6 +3,7 @@ import {
 	ArchiveStreamRequest,
 	ArchiveStreamRequestType,
 	ArchiveStreamResponse,
+	AsanaCreateCardRequestType,
 	CloseStreamRequest,
 	CloseStreamRequestType,
 	CloseStreamResponse,
@@ -41,6 +42,7 @@ import {
 	FetchThirdPartyBoardsRequest,
 	GitHubCreateCardRequest,
 	GitHubCreateCardRequestType,
+	GitLabCreateCardRequestType,
 	InviteUserRequest,
 	InviteUserRequestType,
 	InviteUserResponse,
@@ -201,7 +203,7 @@ export default class WebviewApi {
 
 	createGitlabCard(title: string, description: string, repoName: string) {
 		return this.postMessage({
-			action: "", // TODO
+			action: GitLabCreateCardRequestType.method,
 			params: {
 				title,
 				description,
@@ -210,13 +212,14 @@ export default class WebviewApi {
 		});
 	}
 
-	createAsanaCard(title: string, description: string, repoName: string) {
+	createAsanaCard(boardId: number, listId: number, name: string, description: string) {
 		return this.postMessage({
-			action: "", // TODO
+			action: AsanaCreateCardRequestType.method,
 			params: {
-				title,
+				boardId,
+				listId,
+				name,
 				description,
-				repoName
 			}
 		});
 	}

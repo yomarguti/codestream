@@ -563,7 +563,7 @@ export const createServiceCard = attributes => async (_, __, { api }: ThunkExtra
 				return api.createGitlabCard(attributes.title, attributes.description, attributes.boardName);
 			}
 			case "asana": {
-				return api.createAsanaCard(attributes.title, attributes.description, attributes.boardName);
+				return api.createAsanaCard(attributes.boardId, attributes.listId, attributes.title, attributes.description);
 			}
 		}
 	} catch (error) {
