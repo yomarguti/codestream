@@ -129,24 +129,19 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 	async createCard(request: AsanaCreateCardRequest) {
 		void (await this.ensureConnected());
 
-		const response = await this.post<{}, AsanaCreateCardResponse>(
-			`/repos/${request.repoName}/issues?${qs.stringify({
-				access_token: await this.token
-				// idList: request.listId,
-				// name: request.name,
-				// desc: request.description,
-				// key: this.apiKey,
-				// token: this.token
-			})}`,
-			{
-				title: request.title,
-				body: request.description
-				// milestone,
-				// labels,
-				// assignees
+		return await this.post<{}, AsanaCreateCardResponse>(`/api/1.0/tasks`, {
+			data: {
+				name: request.name,
+				notes: request.description,
+				projects: [request.boardId],
+				memberships: [
+					{
+						project: request.boardId,
+						section: request.listId
+					}
+				]
 			}
-		);
-		return response;
+		});
 	}
 
 	@log()

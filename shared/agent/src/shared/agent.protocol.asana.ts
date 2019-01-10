@@ -2,9 +2,10 @@
 import { RequestType } from "vscode-languageserver-protocol";
 
 export interface AsanaCreateCardRequest {
-	repoName: string;
-	title: string;
+	name: string;
 	description: string;
+	boardId: number;
+	listId: number;
 }
 
 export interface AsanaCreateCardResponse {

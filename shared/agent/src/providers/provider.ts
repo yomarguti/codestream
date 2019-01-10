@@ -226,6 +226,13 @@ export abstract class ThirdPartyProviderBase<
 				if (data.info && data.info.name) {
 					message += `\n${data.info.name}`;
 				}
+				if (Array.isArray(data.errors)) {
+					for (const error of data.errors) {
+						if (error.message) {
+							message += `\n${error.message}`;
+						}
+					}
+				}
 			} catch {}
 		}
 		return new Error(message);
