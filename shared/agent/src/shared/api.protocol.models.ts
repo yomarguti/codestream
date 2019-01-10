@@ -233,7 +233,9 @@ export interface CSGitLabProviderInfo {
 
 export interface CSJiraProviderInfo {
 	accessToken: string;
-	userId: string;
+	data: {
+		refresh_token: string;
+	};
 	expiresAt: number;
 }
 
