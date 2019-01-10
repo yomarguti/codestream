@@ -96,6 +96,8 @@
   <KeyBindings>
     <KeyBinding guid="guidCodeStreamCommandPackageCmdSet" id="Command1Id"
         editor="guidVSStd97" key1="C" mod1="ALT" key2="S" mod2="ALT" />
+    <KeyBinding guid="guidCommand2PackageCmdSet" id="Command2Id"
+                editor="guidVSStd97" key1="C" mod1="ALT" key2="X" mod2="ALT" />
   </KeyBindings>
 
   <Symbols>
