@@ -1,6 +1,4 @@
 ﻿using CodeStream.VisualStudio.Core.Logging.Sanitizer;
-using CodeStream.VisualStudio.Services;
-using Microsoft.VisualStudio.Shell;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;

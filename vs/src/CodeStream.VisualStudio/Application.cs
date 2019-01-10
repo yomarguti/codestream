@@ -18,6 +18,9 @@ namespace CodeStream.VisualStudio
         public static Ide Ide { get; }
         public static Extension Extension { get; }
 
+        /// <summary>
+        /// Something like Microsoft Visual Studio 2019
+        /// </summary>
         public static string FullProductName { get; }
         public static string ProductVersion { get; }
 
@@ -26,21 +29,15 @@ namespace CodeStream.VisualStudio
         /// </summary>
         public static string LogPath { get; }
 
-        // public static string VisualStudioInstallDirectory { get; }
-
         static Application()
         {
             HostVersion = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileVersionInfo;
             Version = typeof(Application).Assembly.GetName().Version;
             LogPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Name, "Logs") + @"\";
-
+            
             Ide = new Ide
             {
-                // NOTE: cannot use "Microsoft Visual Studio 2017" as it makes the API validation fail
-                // use something short aka `MSVS {Year}`
-                Name = HostVersion.FileDescription
-                    .Replace("Microsoft ", "MS")
-                    .Replace("Visual Studio", "VS"),
+                Name = "VS",
                 Version = HostVersion.ProductVersion
             };
 
@@ -50,7 +47,11 @@ namespace CodeStream.VisualStudio
                 VersionFormatted = Version.ToString(),
                 // TODO add these
                 Build = string.Empty,
+#if DEBUG
+                BuildEnv = "dev"
+#else
                 BuildEnv = string.Empty
+#endif
             };
 
             FullProductName = HostVersion.FileDescription;
