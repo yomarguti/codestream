@@ -1,3 +1,5 @@
-﻿#Get-Content "$($env:LOCALAPPDATA)\Codestream\vs-extension.log"  –Wait | where { $_ -match “WARNING” }
+﻿$host.ui.RawUI.WindowTitle = "EXTENSION"
+
+#Get-Content "$($env:LOCALAPPDATA)\Codestream\vs-extension.log"  –Wait | where { $_ -match “WARNING” }
 Clear-Content "$($env:LOCALAPPDATA)\Codestream\Logs\vs-extension.log"
 Get-Content "$($env:LOCALAPPDATA)\Codestream\Logs\vs-extension.log"  –Wait
