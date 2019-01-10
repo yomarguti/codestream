@@ -379,26 +379,29 @@ namespace CodeStream.VisualStudio.Models
     //    Unknown
     //}
 
-    public class BootstrapState
+    public abstract class BootstrapStateBase
+    {
+        public string Env { get; set; }
+        public Config Configs { get; set; }
+        public Service Services { get; set; }
+        public string Version { get; set; }
+    }
+
+    public class BootstrapStateLite : BootstrapStateBase { }
+
+    public class BootstrapState : BootstrapStateBase
     {
         public Capabilities Capabilities { get; set; }
-        public Config Configs { get; set; }
         public string CurrentUserId { get; set; }
         public string CurrentTeamId { get; set; }
         public string CurrentStreamId { get; set; }
         public string CurrentThreadId { get; set; }
-        public string Env { get; set; }
-
         public List<CsRepository> Repos { get; set; }
-
-        //   public List<CSPost> Posts { get; set; }
         public List<CsStream> Streams { get; set; }
         public List<Team> Teams { get; set; }
         public CsUnreads Unreads { get; set; }
         public List<CsUser> Users { get; set; }
         public CsMePreferences Preferences { get; set; }
-        public Service Services { get; set; }
-        public string Version { get; set; }
         public List<string> PanelStack { get; set; }
     }
 
@@ -578,14 +581,7 @@ namespace CodeStream.VisualStudio.Models
         public object Payload { get; set; }
         public string Error { get; set; }
     }
-
-    public class WebviewIpcMessageResponsePayload
-    {
-        public string Env { get; set; }
-        public Config Configs { get; set; }
-        public Service Services { get; set; }
-        public string Version { get; set; }
-    }
+ 
 
     public class CodeStreamMessage
     {

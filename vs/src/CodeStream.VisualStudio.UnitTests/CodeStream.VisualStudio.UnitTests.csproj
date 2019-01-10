@@ -90,6 +90,8 @@
     <Compile Include="Core\Logging\Sanitizer\SecretsSanitizingFormatRuleTests.cs" />
     <Compile Include="Events\EventAggregatorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\SettingsServiceTests.cs" />
+    <Compile Include="Stubs\OptionsDialogPageStub.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

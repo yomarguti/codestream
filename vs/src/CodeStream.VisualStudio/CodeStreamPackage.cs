@@ -53,8 +53,8 @@ namespace CodeStream.VisualStudio
 / /__| (_) | (_| |  __/\ \ |_| | |  __/ (_| | | | | | |
 \____/\___/ \__,_|\___\__/\__|_|  \___|\__,_|_| |_| |_|
                                                        ");            
-            Log.Information("Initializing CodeStream Extension v{PackageVersion} in {$FullProductName} ({$ProductVersion})",
-    Application.VersionShort, Application.FullProductName, Application.ProductVersion);
+            Log.Information("Initializing CodeStream Extension v{PackageVersion} in {$VisualStudioName} ({$VisualStudioVersion})",
+    Application.ExtensionVersionShort, Application.VisualStudioName, Application.VisualStudioVersion);
 
             await InitializeLoggingAsync();
 

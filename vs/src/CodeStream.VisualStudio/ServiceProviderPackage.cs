@@ -124,7 +124,9 @@ namespace CodeStream.VisualStudio
             if (typeof(SSettingsService) == serviceType)
                 return new SettingsService(_codeStreamOptions);
             if (typeof(SCodeStreamAgentService) == serviceType)
-                return new CodeStreamAgentService(GetService(typeof(SSessionService)) as ISessionService);
+                return new CodeStreamAgentService(
+                    GetService(typeof(SSessionService)) as ISessionService,
+                    GetService(typeof(SSettingsService)) as ISettingsService);
             if (typeof(SCodeStreamService) == serviceType)
                 return new CodeStreamService(
                     new Lazy<IEventAggregator>(() => GetService(typeof(SEventAggregator)) as IEventAggregator),

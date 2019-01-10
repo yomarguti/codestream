@@ -1,6 +1,9 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Extensions;
+using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.UI.Settings;
 using System;
+using System.Text.RegularExpressions;
 
 namespace CodeStream.VisualStudio.Services
 {
@@ -19,6 +22,10 @@ namespace CodeStream.VisualStudio.Services
         TraceLevel TraceLevel { get; set; }
         IOptionsDialogPage DialogPage { get; }
         bool AutoSignIn { get; set; }
+        string GetEnvironmentName();
+        string GetEnvironmentVersionFormated(string extensionVersion, string buildNumber);
+        Ide GetIdeInfo();
+        Extension GetExtensionInfo();
     }
 
     public class Settings
@@ -32,12 +39,22 @@ namespace CodeStream.VisualStudio.Services
         public bool OpenCommentOnSelect { get; set; }
         public string LogLevel { get; set; }
         public bool AutoSignIn { get; set; }
+
+        /// <summary>
+        /// this is solely the environment name (prod, pd, foo)
+        /// </summary>
+        public string Env { get; set; }
+        /// <summary>
+        /// this is the full formatted version
+        /// </summary>
+        public string Version { get; set; }
     }
 
     public interface SSettingsService { }
 
     public class SettingsService : ISettingsService, SSettingsService
     {
+        private static readonly Regex EnvironmentRegex = new Regex(@"https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(?::\d+$)?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public IOptionsDialogPage DialogPage { get; }
 
         public SettingsService(IOptionsDialogPage dialogPage)
@@ -67,7 +84,9 @@ namespace CodeStream.VisualStudio.Services
                 WebAppUrl = WebAppUrl,
                 Team = Team,
                 OpenCommentOnSelect = OpenCommentOnSelect,
-                AutoSignIn = AutoSignIn
+                AutoSignIn = AutoSignIn,
+                Env = GetEnvironmentName(),
+                Version = GetEnvironmentVersionFormated(Application.ExtensionVersionShortString, Application.BuildNumber)
             };
         }
 
@@ -124,8 +143,54 @@ namespace CodeStream.VisualStudio.Services
             get => DialogPage.AutoSignIn;
             set => DialogPage.AutoSignIn = value;
         }
-    }
 
+        public Ide GetIdeInfo()
+        {
+            return new Ide
+            {
+                Name = "VS",
+                Version = Application.VisualStudioVersion
+            };
+        }
+
+        public Extension GetExtensionInfo()
+        {
+            return new Extension
+            {
+                Version = Application.ExtensionVersionShort.ToString(),
+                VersionFormatted = GetEnvironmentVersionFormated(Application.ExtensionVersionShortString, Application.BuildNumber),
+                Build = Application.BuildNumber,
+                BuildEnv = Application.BuildEnv
+            };
+        }
+
+        public string GetEnvironmentName()
+        {
+            if (ServerUrl == null) return "unknown";
+
+            var match = EnvironmentRegex.Match(ServerUrl);
+            if (!match.Success) return "unknown";
+
+            if (match.Groups[1].Value.EqualsIgnoreCase("localhost"))
+            {
+                return "local";
+            }
+
+            if (match.Groups[2].Value.IsNullOrWhiteSpace())
+            {
+                return "prod";
+            }
+
+            return match.Groups[2].Value.ToLowerInvariant();
+        }
+
+        public string GetEnvironmentVersionFormated(string extensionVersion, string buildNumber)
+        {
+            var environmentName = GetEnvironmentName();
+            return $"{extensionVersion}{(buildNumber.IsNotNullOrWhiteSpace() ? "" : $"-{buildNumber}")}{(environmentName != "prod" ? "(" + environmentName + ")" : "")}";
+        }
+    }
+	
     public class SettingsScope : IDisposable
     {
         public ISettingsService SettingsService { get; private set; }
@@ -149,10 +214,10 @@ namespace CodeStream.VisualStudio.Services
             if (disposing)
             {
                 SettingsService?.SaveSettingsToStorage();
-            }          
+            }
 
             _disposed = true;
-        }         
+        }
 
         public static SettingsScope Create(ISettingsService settingsService)
         {

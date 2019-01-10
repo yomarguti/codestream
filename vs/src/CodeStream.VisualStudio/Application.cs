@@ -1,6 +1,4 @@
-﻿using CodeStream.VisualStudio.Models;
-using System;
-using System.Diagnostics;
+﻿using System;
 using System.IO;
 
 namespace CodeStream.VisualStudio
@@ -12,16 +10,31 @@ namespace CodeStream.VisualStudio
         /// <summary>
         /// Returns Major.Minor.Build for the Extension
         /// </summary>
-        public static Version VersionShort {get;}
+        public static Version ExtensionVersionShort { get; }
 
-        public static Ide Ide { get; }
-        public static Extension Extension { get; }
+        public static string ExtensionVersionShortString
+        {
+            get { return ExtensionVersionShort.ToString(); }
+        }
+
+        /// <summary>
+        /// Number of the build from CI
+        /// </summary>
+        public static string BuildNumber { get; } = string.Empty;
+
+        /// <summary>
+        /// Environment where the build happened
+        /// </summary>
+        public static string BuildEnv { get; } = string.Empty;
 
         /// <summary>
         /// Something like Microsoft Visual Studio 2019
         /// </summary>
-        public static string FullProductName { get; }
-        public static string ProductVersion { get; }
+        public static string VisualStudioName { get; }
+        /// <summary>
+        /// Something like 15.9.123.4567
+        /// </summary>
+        public static string VisualStudioVersion { get; }
 
         /// <summary>
         /// Path to the log directory. Ends with a backslash.
@@ -30,36 +43,20 @@ namespace CodeStream.VisualStudio
 
         static Application()
         {
-             var fileVersionInfo = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileVersionInfo;
+#if DEBUG
+            BuildEnv = "dev";
+#endif
+
+            var fileVersionInfo = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileVersionInfo;
 
             // Extension versions
             var versionFull = typeof(Application).Assembly.GetName().Version;
-            VersionShort = new Version(versionFull.Major, versionFull.Minor, versionFull.Build);
+            ExtensionVersionShort = new Version(versionFull.Major, versionFull.Minor, versionFull.Build);
 
             LogPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Name, "Logs") + @"\";
-            
-            Ide = new Ide
-            {
-                Name = "VS",
-                Version = fileVersionInfo.ProductVersion
-            };
 
-            Extension = new Extension
-            {
-                Version = VersionShort.ToString(),
-                // TODO what is this format?
-                VersionFormatted = VersionShort.ToString(),
-                // TODO add these
-                Build = string.Empty,
-#if DEBUG
-                BuildEnv = "dev"
-#else
-                BuildEnv = string.Empty
-#endif
-            };
-
-            FullProductName = fileVersionInfo.FileDescription;
-            ProductVersion = fileVersionInfo.ProductVersion;
+            VisualStudioName = fileVersionInfo.FileDescription;
+            VisualStudioVersion = fileVersionInfo.ProductVersion;
 
             //try
             //{
@@ -74,7 +71,7 @@ namespace CodeStream.VisualStudio
 
             //            VisualStudioInstallDirectory = doo
             //                .Where(_ =>
-            //                    _.Value<string>("installationVersion").Contains(ProductVersion)).Select(_ =>
+            //                    _.Value<string>("installationVersion").Contains(VisualStudioVersion)).Select(_ =>
             //                    new
             //                    {
             //                        Path = _.Value<string>("installationPath")

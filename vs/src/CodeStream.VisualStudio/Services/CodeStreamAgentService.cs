@@ -34,7 +34,7 @@ namespace CodeStream.VisualStudio.Services
         Task<JToken> LoginViaOneTimeCodeAsync(string signupToken, string serverUrl);
         Task<JToken> LoginAsync(string email, string password, string serverUrl);
         Task<JToken> LogoutAsync();
-        Task<BootstrapState> GetBootstrapAsync(State state, Settings settings);
+        Task<BootstrapStateBase> GetBootstrapAsync(Settings settings, State state = null, bool isAuthenticated = false);
         Task<FetchCodemarksResponse> GetMarkersAsync(string streamId);
         Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request);
         Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(Uri uri, CancellationToken? cancellationToken = null);
@@ -194,10 +194,12 @@ namespace CodeStream.VisualStudio.Services
     {
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
         private readonly ISessionService _sessionService;
+        private readonly ISettingsService _settingsService;
 
-        public CodeStreamAgentService(ISessionService sessionService)
+        public CodeStreamAgentService(ISessionService sessionService, ISettingsService settingsService)
         {
             _sessionService = sessionService;
+            _settingsService = settingsService;
         }
 
         private JsonRpc _rpc;
@@ -333,11 +335,13 @@ namespace CodeStream.VisualStudio.Services
                 Email = email,
                 PasswordOrToken = new LoginAccessToken(email, serverUrl, token),
                 ServerUrl = serverUrl,
-                Extension = Application.Extension,
-                Ide = Application.Ide,
+                Extension = _settingsService.GetExtensionInfo(),
+                Ide = _settingsService.GetIdeInfo(),
 #if DEBUG
                 TraceLevel = "verbose",
                 IsDebugging = true
+#else
+                TraceLevel = _settingsService.TraceLevel.ToString()
 #endif
 
             });
@@ -349,27 +353,34 @@ namespace CodeStream.VisualStudio.Services
             {
                 SignupToken = signupToken,
                 ServerUrl = serverUrl,
-                Extension = Application.Extension,
-                Ide = Application.Ide,
+                Extension = _settingsService.GetExtensionInfo(),
+                Ide = _settingsService.GetIdeInfo(),
 #if DEBUG
                 TraceLevel = "verbose",
                 IsDebugging = true
+#else
+                TraceLevel = _settingsService.TraceLevel.ToString()
 #endif
             });
         }
 
         public async Task<JToken> LoginAsync(string email, string password, string serverUrl)
         {
+            var extensionInfo = _settingsService.GetExtensionInfo();
+            var ideInfo = _settingsService.GetIdeInfo();
+
             return await SendCoreAsync<JToken>("codeStream/cli/login", new LoginRequest
             {
                 Email = email,
                 PasswordOrToken = password,
                 ServerUrl = serverUrl,
-                Extension = Application.Extension,
-                Ide = Application.Ide,
+                Extension = extensionInfo,
+                Ide = ideInfo,
 #if DEBUG
                 TraceLevel = "verbose",
                 IsDebugging = true
+#else
+                TraceLevel = _settingsService.TraceLevel.ToString()
 #endif
             });
         }
@@ -390,8 +401,30 @@ namespace CodeStream.VisualStudio.Services
             });
         }
 
-        public async Task<BootstrapState> GetBootstrapAsync(State state, Settings settings)
+        public async Task<BootstrapStateBase> GetBootstrapAsync(Settings settings, State state = null, bool isAuthenticated = false)
         {
+            if (!isAuthenticated)
+            {
+                return new BootstrapStateLite
+                {
+                    Configs = new Config
+                    {
+                        ServerUrl = _settingsService.ServerUrl,
+                        Email = _settingsService.Email,
+                        OpenCommentOnSelect = _settingsService.OpenCommentOnSelect,
+                        ShowHeadshots = _settingsService.ShowHeadshots,
+                        ShowMarkers = _settingsService.ShowMarkers,
+                        Team = _settingsService.Team,
+
+                    },
+                    Services = new Service(),
+                    Env = _settingsService.GetEnvironmentName(),
+                    Version = _settingsService.GetEnvironmentVersionFormated(Application.ExtensionVersionShortString,
+                        Application.BuildNumber)
+
+                };
+            }
+
             var repos = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/repos");
             var streams = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/streams");
             var teams = await _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/teams");
@@ -413,7 +446,8 @@ namespace CodeStream.VisualStudio.Services
                     OpenCommentOnSelect = settings.OpenCommentOnSelect,
                     Team = settings.Team
                 },
-                Env = state.Environment,
+                Env = settings.Env,
+                Version = settings.Version,
                 Repos = repos.Value<JToken>("repos").ToObject<List<CsRepository>>(),
                 Streams = streams.Value<JToken>("streams").ToObject<List<CsStream>>(),
                 Teams = teams.Value<JToken>("teams").ToObject<List<Team>>(),
