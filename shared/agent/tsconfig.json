@@ -2,7 +2,8 @@
 	"compilerOptions": {
 		"baseUrl": "src",
 		"paths": {
-			"https-proxy-agent": ["@types/https-proxy-agent"]
+			"https-proxy-agent": ["@types/https-proxy-agent"],
+			"opn": ["@types/opn"]
 		},
 		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
