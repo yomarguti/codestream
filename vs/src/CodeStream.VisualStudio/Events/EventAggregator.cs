@@ -4,6 +4,7 @@ using Serilog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
@@ -15,6 +16,7 @@ namespace CodeStream.VisualStudio.Events
     {
         void Publish<TEvent>(TEvent sampleEvent) where TEvent : EventArgsBase;
         IObservable<TEvent> GetEvent<TEvent>() where TEvent : EventArgsBase;
+        void Unregister(IDisposable disposable);
         void Unregister(List<IDisposable> disposables);
     }
 
@@ -58,16 +60,23 @@ namespace CodeStream.VisualStudio.Events
             }
         }
 
+        public void Unregister(IDisposable  disposable)
+        {
+            if (disposable == null) return;
+
+            disposable.Dispose();
+#if DEBUG
+            Log.Verbose($"Unregistered {disposable.GetType()}");
+#endif
+        }
+
         public void Unregister(List<IDisposable> disposables)
         {
             if (!disposables.AnySafe()) return;
 
             foreach(var disposable in disposables)
             {
-                disposable?.Dispose();
-#if DEBUG
-                Log.Verbose($"Unregistered {disposable?.GetType()}");
-#endif
+                Unregister(disposable);
             }
         }
     }

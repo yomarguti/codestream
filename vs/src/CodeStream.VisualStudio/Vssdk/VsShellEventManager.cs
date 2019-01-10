@@ -1,5 +1,4 @@
 ﻿using CodeStream.VisualStudio.Vssdk.Events;
-using EnvDTE;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
@@ -8,7 +7,7 @@ using System;
 
 namespace CodeStream.VisualStudio.Vssdk
 {
-    public class VsShellEventManager : IVsSelectionEvents, IDisposable
+    public sealed class VsShellEventManager : IVsSelectionEvents, IDisposable
     {        
         private readonly IVsMonitorSelection _iVsMonitorSelection;
         private readonly uint _monitorSelectionCookie;
@@ -34,10 +33,6 @@ namespace CodeStream.VisualStudio.Vssdk
             VisualStudioThemeChangedEventHandler?.Invoke(this, e);
         }
 
-        public event EventHandler VisualStudioStartCompleteEventHandler;
-        public event EventHandler VisualStudioShutdownEventHandler;
-
-        public event EventHandler SolutionBeforeClosingEventHandler;
         public event EventHandler<WindowFocusChangedEventArgs> WindowFocusedEventHandler;
         public event EventHandler<ThemeChangedEventArgs> VisualStudioThemeChangedEventHandler;
 
@@ -98,7 +93,7 @@ namespace CodeStream.VisualStudio.Vssdk
 
         private bool _disposedValue;
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             System.Windows.Threading.Dispatcher.CurrentDispatcher.VerifyAccess();
 

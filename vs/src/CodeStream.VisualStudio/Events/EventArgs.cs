@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.VisualStudio.LiveShare;
 
 namespace CodeStream.VisualStudio.Events
 {
@@ -47,5 +48,14 @@ namespace CodeStream.VisualStudio.Events
     public sealed class CodeStreamConfigurationChangedEvent : EventArgsBase
     {
          public bool OpenCommentOnSelect { get; set; }
+    }
+
+    public sealed class LiveShareStartedEvent : EventArgsBase
+    {
+        public CollaborationSession CollaborationSession { get; }
+        public LiveShareStartedEvent(CollaborationSession collaborationSession)
+        {
+            CollaborationSession = collaborationSession;
+        }
     }
 }

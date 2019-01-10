@@ -1,20 +1,75 @@
 ﻿using CodeStream.VisualStudio.Annotations;
 using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using EnvDTE;
+using Microsoft.VisualStudio.ExtensionManager;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TextManager.Interop;
-using Serilog;
 using System;
+using System.Linq;
+using System.Threading;
+using System.Windows;
+using CodeStream.VisualStudio.Events;
+using Microsoft.VisualStudio.LiveShare;
+using System.ComponentModel.Composition;
+using ILogger = Serilog.ILogger;
 
 namespace CodeStream.VisualStudio.Services
 {
+    /// <summary>
+    /// See https://www.nuget.org/packages/Microsoft.VisualStudio.LiveShare/
+    /// </summary>
+    [ExportCollaborationService(typeof(IExampleService),
+  Name = "CodeStreamLS",
+  Scope = SessionScope.Host,
+  Role = ServiceRole.RemoteService
+)]
+    public class ExampleHostFactory : ICollaborationServiceFactory
+    {
+        private readonly IEventAggregator _eventAggregator;
+
+        [ImportingConstructor]
+        public ExampleHostFactory(IEventAggregator eventAggregator)
+        {
+            _eventAggregator = eventAggregator;
+        }
+
+        public System.Threading.Tasks.Task<ICollaborationService> CreateServiceAsync(
+            CollaborationSession collaborationSession, CancellationToken cancellationToken)
+        {
+            return System.Threading.Tasks.Task.FromResult<ICollaborationService>(new ExampleHostService(collaborationSession, _eventAggregator));
+        }
+    }
+
+    public interface IExampleService
+    {
+
+    }
+
+
+    public class ExampleHostService : IExampleService, ICollaborationService
+    {
+        public ExampleHostService(CollaborationSession collaborationSession, IEventAggregator eventAggregator)
+        {
+            eventAggregator.Publish(new LiveShareStartedEvent(collaborationSession));
+        }
+    }     
+
+    public enum ExtensionKinds
+    {
+        LiveShare
+    }
+
     public interface IIdeService
     {
         void Navigate(string url);
         ShowCodeResult OpenEditor(string sourceFile, int? scrollTo = null);
         SelectedText GetSelectedText();
         SelectedText GetSelectedText(out IVsTextView view);
+        bool QueryExtensions(string author, params string[] names);
+        bool QueryExtension(ExtensionKinds extensionKind);
+        bool TryStartLiveShare(out IdeService.StartLiveShareResult result);
     }
 
     public interface SIdeService { }
@@ -34,10 +89,12 @@ namespace CodeStream.VisualStudio.Services
         private static readonly ILogger Log = LogManager.ForContext<WebViewRouter>();
 
         private readonly IVsTextManager2 _iIVsTextManager;
+        private readonly IVsExtensionManager _extensionManager;
 
-        public IdeService(IVsTextManager2 iIVsTextManager)
+        public IdeService(IVsTextManager2 iIVsTextManager, IVsExtensionManager extensionManager)
         {
             _iIVsTextManager = iIVsTextManager;
+            _extensionManager = extensionManager;
         }
 
         public ShowCodeResult OpenEditor(string sourceFile, int? scrollTo = null)
@@ -117,6 +174,55 @@ namespace CodeStream.VisualStudio.Services
             };
         }
 
+        public bool QueryExtensions(string author, params string[] names)
+        {
+            foreach (var extension in _extensionManager.GetInstalledExtensions())
+            {
+                IExtensionHeader header = extension.Header;
+                if (!header.SystemComponent &&
+                    header.Author.EqualsIgnoreCase(author) && names.Any(_ => _.EqualsIgnoreCase(header.Name)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool QueryExtension(ExtensionKinds extensionKind)
+        {
+            if (extensionKind == ExtensionKinds.LiveShare)
+            {
+                return QueryExtensions("microsoft", "VS Live Share - Preview", "VS Live Share");
+            }
+            throw new ArgumentException("extensionKind");
+        }
+
+        public bool TryStartLiveShare(out StartLiveShareResult result)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            try
+            {
+                var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
+                if (dte == null)
+                {
+                    result = null;
+                    return false;
+                }
+                dte.ExecuteCommand("LiveShare.ShareWorkspace");
+                result  = new StartLiveShareResult();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Could not start LiveShare");
+            }
+
+            result = null;
+            return false;
+        }
+
         public SelectedText GetSelectedText()
         {
             // ReSharper disable once NotAccessedVariable
@@ -124,10 +230,44 @@ namespace CodeStream.VisualStudio.Services
             return GetSelectedText(out view);
         }
 
-
         public void Navigate(string url)
         {
             System.Diagnostics.Process.Start(url);
+        }
+
+        /// <summary>
+        /// https://stackoverflow.com/questions/518701/clipboard-gettext-returns-null-empty-string
+        /// </summary>
+        /// <remarks>Only works when apartmentState is STA</remarks>
+        /// <returns></returns>
+        public string GetClipboardText()
+        {
+            IDataObject idat = null;
+            Exception threadEx = null;
+            object text = "";
+            System.Threading.Thread staThread = new System.Threading.Thread(
+                delegate ()
+                {
+                    try
+                    {
+                        idat = Clipboard.GetDataObject();
+                        text = idat.GetData(DataFormats.Text);
+                    }
+                    catch (Exception ex)
+                    {
+                        threadEx = ex;
+                    }
+                });
+            staThread.SetApartmentState(ApartmentState.STA);
+            staThread.Start();
+            staThread.Join();
+
+            return text as string;
+        }
+
+        public class StartLiveShareResult
+        {
+            public string Url { get; set; }
         }
     }
 }

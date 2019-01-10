@@ -706,4 +706,28 @@ namespace CodeStream.VisualStudio.Models
         public string FileName { get; set; }
         public string LanguageId { get; set; }
     }
+
+    public class ServiceRequest
+    {
+        public string Service { get; set; }
+        public ServiceRequestAction Action { get; set; }
+    }
+
+    public class ServiceRequestAction
+    {
+        public string Type { get; set; }
+        public string StreamId { get; set; }
+        public string ThreadId { get; set; }
+        public bool CreateNewStream { get; set; }
+    }
+
+    public class StreamThread
+    {
+        /// <summary>
+        /// Thread Id
+        /// </summary>
+        public string Id { get; set; }
+
+        public CsStream Stream { get; set; }
+    }
 }

@@ -2,6 +2,7 @@
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Settings;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ExtensionManager;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -112,7 +113,8 @@ namespace CodeStream.VisualStudio
             if (typeof(SEventAggregator) == serviceType)
                 return new EventAggregator();
             if (typeof(SIdeService) == serviceType)
-                return new IdeService(GetService(typeof(SVsTextManager)) as IVsTextManager2);
+                return new IdeService( GetService(typeof(SVsTextManager)) as IVsTextManager2,
+                    GetService(typeof(SVsExtensionManager)) as IVsExtensionManager);
             if (typeof(SCredentialsService) == serviceType)
                 return new CredentialsService();
             if (typeof(SSessionService) == serviceType)
@@ -125,7 +127,7 @@ namespace CodeStream.VisualStudio
                 return new CodeStreamAgentService(GetService(typeof(SSessionService)) as ISessionService);
             if (typeof(SCodeStreamService) == serviceType)
                 return new CodeStreamService(
-                    new Lazy<IEventAggregator>(()=> GetService(typeof(SEventAggregator)) as IEventAggregator),
+                    new Lazy<IEventAggregator>(() => GetService(typeof(SEventAggregator)) as IEventAggregator),
                     GetService(typeof(SSessionService)) as ISessionService,
                     GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
                     GetService(typeof(SBrowserService)) as IBrowserService,

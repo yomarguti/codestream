@@ -129,6 +129,36 @@ namespace CodeStream.VisualStudio
                             }
                         case "codestream:interaction:svc-request":
                             {
+                                var service = message.Body["service"].Value<string>();
+                                if (service.EqualsIgnoreCase("vsls") && _ideService.QueryExtension(ExtensionKinds.LiveShare))
+                                {
+                                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                                    if (_ideService.TryStartLiveShare(out IdeService.StartLiveShareResult result))
+                                    {
+                                        IDisposable liveShareReadyEvent = null;
+                                        liveShareReadyEvent = _eventAggregator.GetEvent<LiveShareStartedEvent>()
+                                            .Subscribe((_) =>
+                                            {
+                                                // doesn't work :(
+                                                // dte.ExecuteCommand("LiveShare.CopyLink");
+
+                                                _eventAggregator.Unregister(liveShareReadyEvent);
+                                                //ServiceRequest sr = message.Body.ToObject<ServiceRequest>();
+                                                //var streamResponse = _codeStreamAgent.GetStream(sr.Action.StreamId);
+                                                //StreamThread st = null;
+                                                //if (streamResponse != null)
+                                                //{
+                                                //    st = new StreamThread()
+                                                //    {
+                                                //        Id = sr.Action.ThreadId,
+                                                //        Stream = streamResponse.Stream
+                                                //    };
+                                                //}
+
+                                                //var postResponse = await _codeStreamAgent.CreatePostAsync(st.Stream.Id, st.Id, $"Join my Live Share session: ${text.ToString()}");
+                                            });
+                                    }
+                                }
                                 // handles things like VSLS etc.
                                 break;
                             }
@@ -282,7 +312,7 @@ namespace CodeStream.VisualStudio
                                                     }
                                                 }
                                                 else
-                                                {                                                    
+                                                {
                                                     _sessionService.State = loginResponse.Result.State;
 
                                                     response.Body.Payload =

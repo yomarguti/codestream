@@ -1,5 +1,6 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Models;
+using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using StreamJsonRpc;
@@ -22,10 +23,13 @@ namespace CodeStream.VisualStudio.Services
            CancellationToken? cancellationToken = null
         );
 
+        Task<CreatePostResponse> CreatePostAsync(string streamId, string threadId, string text);
         Task<GetFileStreamResponse> GetFileStreamAsync(Uri uri);
         Task<GetPostResponse> GetPostAsync(string streamId, string postId);
         Task<GetUserResponse> GetUserAsync(string userId);
         Task<JToken> ChangeStreamThreadAsync(string streamId, string threadId);
+        Task<GetStreamResponse> GetStreamAsync(string streamId);
+        GetStreamResponse GetStream(string streamId);
         Task<JToken> LoginViaTokenAsync(string email, string token, string serverUrl);
         Task<JToken> LoginViaOneTimeCodeAsync(string signupToken, string serverUrl);
         Task<JToken> LoginAsync(string email, string password, string serverUrl);
@@ -133,6 +137,59 @@ namespace CodeStream.VisualStudio.Services
         public CsFileStream Stream { get; set; }
     }
 
+    public enum StreamType
+    {
+        channel,
+        direct,
+        file
+    }
+
+    public class GetStreamRequest
+    {
+        public string StreamId { get; set; }
+        public StreamType? Type { get; set; }
+    }
+
+    public class GetStreamResponse
+    {
+        public CsStream Stream { get; set; }
+    }
+
+    public class CreateCodemarkRequestMarker
+    {
+        public string Code { get; set; }
+        public List<string> Remotes { get; set; }
+        public string File { get; set; }
+        public string CommitHash { get; set; }
+        public List<object> Location { get; set; } //CsLocationarray
+    }
+
+    public class CreateCodemarkRequest
+    {
+        public CodemarkType Type { get; set; }
+        public ProviderType? ProviderType { get; set; }
+        public string Text { get; set; }
+        public string StreamId { get; set; }
+        public string PostId { get; set; }
+        public string ParentPostId { get; set; }
+        public string Color { get; set; }
+        public string Status { get; set; }
+        public string Title { get; set; }
+        public List<string> Assignees { get; set; }
+        public List<CreateCodemarkRequestMarker> Markers { get; set; }
+        public List<string> Remotes { get; set; }
+    }
+
+    public class CreatePostRequest
+    {
+        public string StreamId { get; set; }
+        public string Text { get; set; }
+        public List<string> MentionedUserIds { get; set; }
+        public string ParentPostId { get; set; }
+        public CreateCodemarkRequest Codemark { get; set; }
+    }
+
+
     public class CodeStreamAgentService : ICodeStreamAgentService, SCodeStreamAgentService
     {
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
@@ -214,6 +271,27 @@ namespace CodeStream.VisualStudio.Services
             });
         }
 
+        public async Task<GetStreamResponse> GetStreamAsync(string streamId)
+        {
+            return await SendAsync<GetStreamResponse>("codeStream/stream", new GetStreamRequest
+            {
+                StreamId = streamId
+            });
+        }
+
+        public GetStreamResponse GetStream(string streamId)
+        {
+            GetStreamResponse response = null;
+            ThreadHelper.JoinableTaskFactory.Run(async delegate
+            {
+                response = await SendAsync<GetStreamResponse>("codeStream/stream", new GetStreamRequest
+                {
+                    StreamId = streamId
+                });
+            });
+            return response;
+        }
+
         public async Task<GetUserResponse> GetUserAsync(string userId)
         {
             return await SendAsync<GetUserResponse>("codeStream/user", new
@@ -222,9 +300,17 @@ namespace CodeStream.VisualStudio.Services
             });
         }
 
-        public async Task<PrepareCodeResponse> PrepareCodeAsync(string uri, Range range,
-            CancellationToken? cancellationToken = null
-         )
+        public async Task<CreatePostResponse> CreatePostAsync(string streamId, string threadId, string text)
+        {
+            return await SendAsync<CreatePostResponse>("codeStream/posts/create", new CreatePostRequest
+            {
+                StreamId = streamId,
+                ParentPostId = threadId,
+                Text = text
+            });
+        }
+
+        public async Task<PrepareCodeResponse> PrepareCodeAsync(string uri, Range range, CancellationToken? cancellationToken = null)
         {
             return await SendAsync<PrepareCodeResponse>("codeStream/post/prepareWithCode",
                 new
@@ -246,7 +332,7 @@ namespace CodeStream.VisualStudio.Services
             {
                 Email = email,
                 PasswordOrToken = new LoginAccessToken(email, serverUrl, token),
-                ServerUrl = serverUrl,                
+                ServerUrl = serverUrl,
                 Extension = Application.Extension,
                 Ide = Application.Ide,
 #if DEBUG
