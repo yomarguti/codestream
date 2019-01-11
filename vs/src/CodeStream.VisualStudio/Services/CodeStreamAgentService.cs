@@ -330,7 +330,7 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task<JToken> LoginViaTokenAsync(string email, string token, string serverUrl)
         {
-            return await SendCoreAsync<JToken>("codeStream/cli/login", new LoginViaAccessTokenRequest
+            return await SendCoreAsync<JToken>("codeStream/login", new LoginViaAccessTokenRequest
             {
                 Email = email,
                 PasswordOrToken = new LoginAccessToken(email, serverUrl, token),
@@ -349,7 +349,7 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task<JToken> LoginViaOneTimeCodeAsync(string signupToken, string serverUrl)
         {
-            return await SendCoreAsync<JToken>("codeStream/cli/login", new LoginRequest
+            return await SendCoreAsync<JToken>("codeStream/login", new LoginRequest
             {
                 SignupToken = signupToken,
                 ServerUrl = serverUrl,
@@ -369,7 +369,7 @@ namespace CodeStream.VisualStudio.Services
             var extensionInfo = _settingsService.GetExtensionInfo();
             var ideInfo = _settingsService.GetIdeInfo();
 
-            return await SendCoreAsync<JToken>("codeStream/cli/login", new LoginRequest
+            return await SendCoreAsync<JToken>("codeStream/login", new LoginRequest
             {
                 Email = email,
                 PasswordOrToken = password,
@@ -387,7 +387,7 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task<JToken> LogoutAsync()
         {
-            return await SendAsync<JToken>("codeStream/cli/logout", new LogoutRequest());
+            return await SendAsync<JToken>("codeStream/logout", new LogoutRequest());
         }
 
         public async Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request)
