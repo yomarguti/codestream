@@ -7,6 +7,7 @@ import JiraCardControls from "./JiraCardControls";
 import TrelloCardControls from "./TrelloCardControls";
 import AsanaCardControls from "./AsanaCardControls";
 import { Board, CrossPostIssueValuesListener, Service, SUPPORTED_SERVICES } from "./types";
+import GitLabCardControls from "./GitLabCardControls";
 
 interface Props {
 	connectService: typeof connectService;
@@ -105,6 +106,15 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			case SUPPORTED_SERVICES.GitHub.name: {
 				return (
 					<GitHubCardControls
+						boards={boards}
+						onValues={this.props.onValues}
+						codeBlock={this.props.codeBlock}
+					/>
+				);
+			}
+			case SUPPORTED_SERVICES.GitLab.name: {
+				return (
+					<GitLabCardControls
 						boards={boards}
 						onValues={this.props.onValues}
 						codeBlock={this.props.codeBlock}
