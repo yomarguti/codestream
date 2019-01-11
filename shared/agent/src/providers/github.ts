@@ -93,7 +93,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 		for (const gitRepo of gitRepos) {
 			const remotes = await git.getRepoRemotes(gitRepo.path);
 			for (const remote of remotes) {
-				if (remote.domain === "github.com" || !openRepos.has(remote.path)) {
+				if (remote.domain === "github.com" && !openRepos.has(remote.path)) {
 					let githubRepo = this._knownRepos.get(remote.path);
 
 					if (!githubRepo) {
