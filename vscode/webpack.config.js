@@ -147,11 +147,25 @@ function getWebviewConfig(env) {
 			]
 		});
 	}
+
 	const plugins = [
 		new CleanPlugin(["dist/webview", "webview.html"]),
 		// new BabelExternalHelpersPlugin(),
 		new FileManagerPlugin({
-			onStart: onStart
+			onStart: onStart,
+			onEnd: [
+				{
+					copy: [
+						{
+							source: "dist/webview/webview.*",
+							destination: path.resolve(
+								__dirname,
+								"../vs-codestream-foo/src/CodeStream.VisualStudio/UI/WebViews/Shared"
+							)
+						}
+					]
+				}
+			]
 		}),
 		new MiniCssExtractPlugin({
 			filename: "webview.css"
