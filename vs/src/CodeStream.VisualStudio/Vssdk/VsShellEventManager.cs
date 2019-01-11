@@ -4,11 +4,15 @@ using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
+using CodeStream.VisualStudio.Core.Logging;
+using Serilog;
 
 namespace CodeStream.VisualStudio.Vssdk
 {
     public sealed class VsShellEventManager : IVsSelectionEvents, IDisposable
-    {        
+    {
+        private static readonly ILogger Log = LogManager.ForContext<VsShellEventManager>();
+
         private readonly IVsMonitorSelection _iVsMonitorSelection;
         private readonly uint _monitorSelectionCookie;
 
@@ -110,6 +114,7 @@ namespace CodeStream.VisualStudio.Vssdk
                 {
                     _iVsMonitorSelection?.UnadviseSelectionEvents(_monitorSelectionCookie);
                     VSColorTheme.ThemeChanged -= VSColorTheme_ThemeChanged;
+                    Log.Verbose($"Unregistering events");
                 }
 
                 _disposedValue = true;

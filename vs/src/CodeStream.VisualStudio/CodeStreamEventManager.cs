@@ -11,50 +11,28 @@ using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio
 {
-    public class CodeStreamEventManager
+    public class CodeStreamEventManager: IDisposable
     {
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamEventManager>();
 
         private readonly VsShellEventManager _vsShellEventManager;
         private readonly Lazy<ICodeStreamService> _codeStreamService;
-        private List<IDisposable> _disposables;
+   
 
         public CodeStreamEventManager(VsShellEventManager vsShellEventManager,
             Lazy<ICodeStreamService> codeStreamService)
         {
             _vsShellEventManager = vsShellEventManager;
             _codeStreamService = codeStreamService;
-        }
 
-        public Action Register(params IDisposable[] disposables)
-        {          
             _vsShellEventManager.WindowFocusedEventHandler += OnWindowFocusChanged;
             _vsShellEventManager.VisualStudioThemeChangedEventHandler += OnThemeChanged;
-
-            if (disposables != null && disposables.Length > 0)
-            {
-                _disposables = new List<IDisposable>();
-                _disposables.AddRange(disposables);
-            }
-
-            return new Action(() => {
-                Unregister();
-            });                    
         }
 
         private void Unregister()
         {          
             _vsShellEventManager.WindowFocusedEventHandler -= OnWindowFocusChanged;
             _vsShellEventManager.VisualStudioThemeChangedEventHandler -= OnThemeChanged;
-
-            if (_disposables != null)
-            {
-                foreach (var disposable in _disposables)
-                {
-                    Log.Verbose($"Disposing {disposable?.GetType()}...");
-                    disposable?.Dispose();
-                }
-            }
 
             _vsShellEventManager?.Dispose();
 
@@ -83,6 +61,33 @@ namespace CodeStream.VisualStudio
             {
                 Log.Error(ex, nameof(OnThemeChanged));
             }
-        }         
+        }
+
+        private bool _disposedValue;
+
+        private void Dispose(bool disposing)
+        {
+            System.Windows.Threading.Dispatcher.CurrentDispatcher.VerifyAccess();
+
+            if (!_disposedValue)
+            {
+                if (disposing)
+                {
+                    _vsShellEventManager.WindowFocusedEventHandler -= OnWindowFocusChanged;
+                    _vsShellEventManager.VisualStudioThemeChangedEventHandler -= OnThemeChanged;
+
+                    Log.Verbose($"Unregistering events");
+                }
+
+                _disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+       
     }
 }

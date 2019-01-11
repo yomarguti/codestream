@@ -33,7 +33,8 @@ namespace CodeStream.VisualStudio
 
         private Lazy<ICodeStreamService> _codeStreamService;
         private IDisposable _languageServerReadyEvent;
-        private Action _disposableActions = null;
+        private VsShellEventManager _vsShellEventManager;
+        private CodeStreamEventManager _codeStreamEventManager;
 
         protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
@@ -60,22 +61,19 @@ namespace CodeStream.VisualStudio
 
             var eventAggregator = await GetServiceAsync(typeof(SEventAggregator)) as IEventAggregator;
 
-            // TODO move this into a non-static??
-            InfoBarProvider.Initialize(this);            
-
-            _codeStreamService = new Lazy<ICodeStreamService>(() => GetService(typeof(SCodeStreamService)) as ICodeStreamService);
+            _vsShellEventManager = new VsShellEventManager(await GetServiceAsync(typeof(SVsShellMonitorSelection)) as IVsMonitorSelection);
 
             // ReSharper disable once PossibleNullReferenceException
             _languageServerReadyEvent = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
             {
                 ThreadHelper.ThrowIfNotOnUIThread();
-                var iVsMonitorSelection = GetService(typeof(SVsShellMonitorSelection)) as IVsMonitorSelection;              
-                _disposableActions = new CodeStreamEventManager(new VsShellEventManager(iVsMonitorSelection), _codeStreamService).Register(_languageServerReadyEvent);
+                _codeStreamService = new Lazy<ICodeStreamService>(() => GetService(typeof(SCodeStreamService)) as ICodeStreamService);
+                _codeStreamEventManager = new CodeStreamEventManager(_vsShellEventManager, _codeStreamService);
             });
 
             // Avoid delays when there is ongoing UI activity.
             // See: https://github.com/github/VisualStudio/issues/1537
-            await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeMenusAsync);
+            await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeUIComponentsAsync);
         }
 
         /// <summary>
@@ -87,10 +85,9 @@ namespace CodeStream.VisualStudio
             pfCanClose = true;
             if (pfCanClose)
             {
-                if (_disposableActions != null)
-                {
-                    _disposableActions.Invoke();
-                }
+                _vsShellEventManager?.Dispose();
+                _languageServerReadyEvent?.Dispose();
+                _codeStreamEventManager?.Dispose();
 
                 _codeStreamService?.Value?.BrowserService?.Dispose();
             }
@@ -124,8 +121,11 @@ namespace CodeStream.VisualStudio
             }
         }
 
-        async System.Threading.Tasks.Task InitializeMenusAsync()
+        async System.Threading.Tasks.Task InitializeUIComponentsAsync()
         {
+            // TODO move this into a non-static??
+            InfoBarProvider.Initialize(this);
+
             var componentModel = (IComponentModel)(await GetServiceAsync(typeof(SComponentModel)));
             var exports = componentModel.DefaultExportProvider;
 
