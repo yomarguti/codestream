@@ -233,6 +233,9 @@ export abstract class ThirdPartyProviderBase<
 						}
 					}
 				}
+				if (data.error) {
+					message += `: ${data.error}`;
+				}
 			} catch {}
 		}
 		return new Error(message);

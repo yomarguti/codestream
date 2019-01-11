@@ -19,8 +19,8 @@ import { log, lspHandler, lspProvider } from "../system";
 import { ThirdPartyProviderBase } from "./provider";
 
 interface GitLabRepo {
+	path_with_namespace: any;
 	id: string;
-	full_name: string;
 	path: string;
 }
 
@@ -31,7 +31,7 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 	private _knownRepos = new Map<String, GitLabRepo>();
 
 	get baseUrl() {
-		return "https://gitlab.example.com/api/v4";
+		return "https://gitlab.com/api/v4/";
 	}
 
 	get displayName() {
@@ -44,8 +44,7 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 
 	async headers() {
 		return {
-			"PRIVATE-TOKEN": "9koXpg98eAheJpvBs5tK"
-			// "PRIVATE-TOKEN": this.token
+			Authorization: `Bearer ${this.token}`
 		};
 	}
 
@@ -93,13 +92,13 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 		for (const gitRepo of gitRepos) {
 			const remotes = await git.getRepoRemotes(gitRepo.path);
 			for (const remote of remotes) {
-				if (remote.domain === "gitlab.com" || !openRepos.has(remote.path)) {
+				if (remote.domain === "gitlab.com" && !openRepos.has(remote.path)) {
 					let gitlabRepo = this._knownRepos.get(remote.path);
 
 					if (!gitlabRepo) {
 						try {
 							const response = await this.get<GitLabRepo>(
-								`/repos/${remote.path}?${qs.stringify({ access_token: this.token })}`
+								`/projects/${encodeURIComponent(remote.path)}`
 							);
 							gitlabRepo = {
 								...response.body,
@@ -122,7 +121,7 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 
 		const boards = Array.from(openRepos.values()).map(r => ({
 			id: r.id,
-			name: r.full_name,
+			name: r.path_with_namespace,
 			path: r.path
 		}));
 
@@ -137,21 +136,11 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 		void (await this.ensureConnected());
 
 		const response = await this.post<{}, GitLabCreateCardResponse>(
-			`/repos/${request.repoName}/issues?${qs.stringify({
-				access_token: this.token
-				// idList: request.listId,
-				// name: request.name,
-				// desc: request.description,
-				// key: this.apiKey,
-				// token: this.token
-			})}`,
-			{
+			`/projects/${encodeURIComponent(request.repoName)}/issues?${qs.stringify({
 				title: request.title,
-				body: request.description
-				// milestone,
-				// labels,
-				// assignees
-			}
+				description: request.description
+			})}`,
+			{}
 		);
 		return response;
 	}
