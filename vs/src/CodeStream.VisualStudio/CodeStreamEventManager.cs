@@ -77,7 +77,7 @@ namespace CodeStream.VisualStudio
             {
                 Log.Verbose(nameof(OnThemeChanged));
 
-                _codeStreamService.Value.BrowserService?.LoadWebView();
+                _codeStreamService.Value.BrowserService?.ReloadWebView();
             }
             catch (Exception ex)
             {

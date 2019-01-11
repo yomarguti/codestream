@@ -26,11 +26,18 @@ namespace CodeStream.VisualStudio.Vssdk
             //_dte.Events.DTEEvents.OnStartupComplete += DTEEvents_OnStartupComplete;
             //_dte.Events.SolutionEvents.BeforeClosing += SolutionEvents_BeforeClosing;
             //_dte.Events.DTEEvents.OnBeginShutdown += DTEEvents_OnBeginShutdown;
-        }      
+        }
 
+        private DateTime _lastThemeChange = DateTime.MinValue;
         private void VSColorTheme_ThemeChanged(ThemeChangedEventArgs e)
         {
-            VisualStudioThemeChangedEventHandler?.Invoke(this, e);
+            // VS triggers this like 5 times for ever _1_ change -- try to limit it
+            var now = DateTime.Now;
+            if (_lastThemeChange == DateTime.MinValue || (now - _lastThemeChange).Seconds > 2)
+            {
+                VisualStudioThemeChangedEventHandler?.Invoke(this, e);
+                _lastThemeChange = now;
+            }
         }
 
         public event EventHandler<WindowFocusChangedEventArgs> WindowFocusedEventHandler;

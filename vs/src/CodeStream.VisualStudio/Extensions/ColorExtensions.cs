@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 
 namespace CodeStream.VisualStudio.Extensions
 {
@@ -9,13 +10,25 @@ namespace CodeStream.VisualStudio.Extensions
             return "#"+ color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2");
         }
 
+        public static string ToArgb(this Color color, double percentage = 100)
+        {
+            return $"rgba({color.R}, {color.G}, {color.B}, {Math.Round(color.A * (percentage / 100))})";
+        }       
+
         public static float Lerp(this float start, float end, float amount)
         {
             float difference = end - start;
             float adjusted = difference * amount;
             return start + adjusted;
         }
-		
+
+        /// <summary>
+        /// https://stackoverflow.com/questions/97646/how-do-i-determine-darker-or-lighter-color-variant-of-a-given-color/2690026#2690026
+        /// </summary>
+        /// <param name="colour"></param>
+        /// <param name="to"></param>
+        /// <param name="amount"></param>
+        /// <returns></returns>
         public static Color Lerp(this Color colour, Color to, float amount)
         {
             // start colours as lerp-able floats

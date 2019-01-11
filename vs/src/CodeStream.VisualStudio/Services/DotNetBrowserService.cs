@@ -49,9 +49,9 @@ namespace CodeStream.VisualStudio.Services
         protected override void OnInitialized()
         {
             var switches = ChromiumSwitches;
-            //#if DEBUG
-            //            switches = switches.Combine(ChromiumSwitchesDebug);
-            //#endif
+//#if DEBUG
+//            switches = switches.Combine(ChromiumSwitchesDebug);
+//#endif
 
             BrowserPreferences.SetChromiumSwitches(switches.ToArray());
 
@@ -59,6 +59,9 @@ namespace CodeStream.VisualStudio.Services
             browserContext = new BrowserContext(parameters);
             // use LIGHTWEIGHT to avoid "System.InvalidOperationException: 'The specified Visual is not an ancestor of this Visual.'"            
             _browserView = new WPFBrowserView(BrowserFactory.Create(browserContext, BrowserType.LIGHTWEIGHT));
+//#if DEBUG
+//           System.Diagnostics.Process.Start("chrome.exe", _browserView.Browser.GetRemoteDebuggingURL());
+//#endif
         }
         
         public override void AddWindowMessageEvent(WindowMessageHandler handler)
