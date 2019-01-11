@@ -29,16 +29,6 @@ namespace CodeStream.VisualStudio
             _vsShellEventManager.VisualStudioThemeChangedEventHandler += OnThemeChanged;
         }
 
-        private void Unregister()
-        {          
-            _vsShellEventManager.WindowFocusedEventHandler -= OnWindowFocusChanged;
-            _vsShellEventManager.VisualStudioThemeChangedEventHandler -= OnThemeChanged;
-
-            _vsShellEventManager?.Dispose();
-
-            Log.Verbose($"Unregistering events");
-        }
-
         public void OnWindowFocusChanged(object sender, WindowFocusChangedEventArgs e)
         {
             if (e.FileName.IsNullOrWhiteSpace() || e.Uri == null) return;
