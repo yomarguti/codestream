@@ -523,7 +523,7 @@ namespace CodeStream.VisualStudio.Models
         //public string Type { get; set; }
         //public string Email { get; set; }
         //public string PasswordOrToken { get; set; }
-        //public Extension Extension { get; set; }
+        public Extension Extension { get; set; }
 
         public string TraceLevel { get; set; }
         public bool IsDebugging { get; set; }

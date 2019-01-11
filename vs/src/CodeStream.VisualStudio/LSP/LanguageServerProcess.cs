@@ -20,12 +20,12 @@ namespace CodeStream.VisualStudio.LSP
             var assembly = Assembly.GetAssembly(typeof(LanguageServerProcess));
 
 #if DEBUG
-            var path = Path.GetDirectoryName(assembly.Location) + @"\LSP\agent-cli.js";
-            var arguments = $@"""{path}"" --stdio --inspect=6009 --nolazy --log={Application.LogPath}agent-cli.log";
+            var path = Path.GetDirectoryName(assembly.Location) + @"\LSP\agent.js";
+            var arguments = $@"""{path}"" --stdio --inspect=6009 --nolazy --log={Application.LogPath}agent.log";
             return ProcessFactory.Create(@"C:\Program Files\NodeJs\node.exe", arguments);
 #else
-            var exe = Path.GetDirectoryName(assembly.Location) + @"\LSP\agent-cli.exe";
-            var arguments = $@"--stdio --nolazy --log={Application.LogPath}agent-cli.log";
+            var exe = Path.GetDirectoryName(assembly.Location) + @"\LSP\agent.exe";
+            var arguments = $@"--stdio --nolazy --log={Application.LogPath}agent.log";
             return ProcessFactory.Create(exe, arguments);
 #endif
         }

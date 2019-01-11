@@ -1,29 +1,58 @@
-﻿# CodeStream Extension for Visual Studio
+﻿# CodeStream for Visual Studio
 
 ### Getting the code
 
 ```
 git clone https://github.com/TeamCodeStream/vs-codestream.git
 ```
+👉 **NOTE!** Make sure to clone the `vs-codestream` repository into a folder that is a sibling of the `vscode-codestream`, `codestream-component`, and `codestream-lsp-agent` repositories
 
-### Prerequisites
+Prerequisites
 
 - Windows 10
 - [Visual Studio 2017](https://visualstudio.microsoft.com/downloads/)
+- [Git](https://git-scm.com/)
+- [NodeJS](https://nodejs.org/en/), `>= 8.9.1, < 9.0.0`
+- [npm](https://npmjs.com/), `>= 6.2.0`
 - License for [https://www.teamdev.com/dotnetbrowser](DotNetBrowser)
 
-- checkout codestream-lsp-agent/feature/visual-studio and ensure it is and `npm run watch` this will build and watch `agent-cli.ts`
+### Build
 
-### Build / Run
+1. From a terminal, where you have cloned the `codestream-lsp-agent` repository, execute the following command to re-build the agent from scratch:
 
-Press `F5` to build and run the solution. A new "experimental" version of Visual Studio will open.
+   ```
+   npm run rebuild
+   ```
 
-#### Not working?
+   Or to just run a quick build, use:
 
-- Ensure `C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\Microsoft\VisualStudio\NodeJs\node.exe` exists
-- Ensure vs-codestream and codestream-lsp-agent are sibling repos
-- Ensure the agent watch is running
-- Ensure your DotNetBrowser license works
+   ```
+   npm run build
+   ```
+
+1. Ensure the DotNewBrowser _developer_ license (`teamdev.licenses`) is copied into `licenses/Debug/`
+
+1. Ensure the DotNewBrowser _runtime_ license (`teamdev.licenses`) is copied into `licenses/Release/`
+
+1. TBD
+
+### Watch (Agent only)
+
+During development you can use a watcher to make builds on changes quick and easy. From a terminal, where you have cloned the `codestream-lsp-agent` repository, execute the following command:
+
+```
+npm run watch
+```
+
+It will do an initial full build and then watch for file changes, compiling those changes incrementally, enabling a fast, iterative coding experience.
+
+### Debugging
+
+#### Using Visual Studio
+
+1. Ensure that the agent has been build or that the watcher is running (see the _Watch_ section above)
+1. Open the solution (`src/CodeStream.VisualStudio.sln`),
+1. Press `F5` to build and run the solution. This will open a new "experimental" version of Visual Studio.
 
 ### Notes
 

@@ -39,6 +39,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\CodeStreamPackage.ico</ApplicationIcon>
@@ -156,11 +157,11 @@
   <ItemGroup>
     <Content Include="CodeStream.VisualStudio.pkgdef" />
     <Resource Include="Resources\Assets\marker-comment-blue.png" />
-    <Content Include="LSP\agent-cli.exe" Condition="'$(Configuration)'=='Release'">
+    <Content Include="LSP\agent.exe" Condition="'$(Configuration)'=='Release'">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="LSP\agent-cli.js" Condition="'$(Configuration)'=='Debug'">
+    <Content Include="LSP\agent.js" Condition="'$(Configuration)'=='Debug'">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -238,6 +239,7 @@
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="netstandard" />
     <Reference Include="DotNetBrowser.Chromium32, Version=1.19.0.0, Culture=neutral, PublicKeyToken=b0b5aaca9c95c84e, processorArchitecture=MSIL">
       <HintPath>..\packages\DotNetBrowser32.1.19\lib\DotNetBrowser.Chromium32.dll</HintPath>
     </Reference>
@@ -486,7 +488,7 @@ copy /Y "$(SolutionDir)..\licenses\$(ConfigurationName)\teamdev.licenses" "$(Pro
   <Import Project="..\packages\Microsoft.VisualStudio.SDK.EmbedInteropTypes.15.0.27\build\Microsoft.VisualStudio.SDK.EmbedInteropTypes.targets" Condition="Exists('..\packages\Microsoft.VisualStudio.SDK.EmbedInteropTypes.15.0.27\build\Microsoft.VisualStudio.SDK.EmbedInteropTypes.targets')" />
   <Import Project="..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.209\build\Microsoft.VisualStudio.Threading.Analyzers.targets" Condition="Exists('..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.209\build\Microsoft.VisualStudio.Threading.Analyzers.targets')" />
   <Import Project="..\packages\Microsoft.VisualStudio.SDK.Analyzers.15.8.36\build\Microsoft.VisualStudio.SDK.Analyzers.targets" Condition="Exists('..\packages\Microsoft.VisualStudio.SDK.Analyzers.15.8.36\build\Microsoft.VisualStudio.SDK.Analyzers.targets')" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

@@ -92,6 +92,13 @@ namespace CodeStream.VisualStudio.LSP
             {
                 return new InitializationOptions
                 {
+                    Extension = new Extension
+                    {
+                        Build = "1",
+                        BuildEnv = "dev",
+                        Version = "1",
+                        VersionFormatted = "1.0-dev"
+                    },
 #if DEBUG
                     TraceLevel = "verbose",
                     IsDebugging = true
