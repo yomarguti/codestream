@@ -1,5 +1,5 @@
 "use strict";
-import { createConnection, ProposedFeatures, TextDocuments } from "vscode-languageserver";
+import { createConnection, ProposedFeatures } from "vscode-languageserver";
 import { CodeStreamAgent } from "./agent";
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
