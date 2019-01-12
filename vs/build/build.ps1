@@ -79,6 +79,7 @@ function Print-Help {
 
 function Check-Dependencies {
 
+ 
     $nodeVersion = "";
     if (Get-Command node -errorAction SilentlyContinue) {
          $nodeVersion = (node -v)
@@ -92,25 +93,27 @@ function Check-Dependencies {
         exit 1
     }
 
-    $pkgVersion = "";
-    if (Get-Command pkg -errorAction SilentlyContinue) {
-         $pkgVersion = (pkg -v)
+    $pkgVersion = "";    
+    if (Get-Command ".\node_modules\.bin\pkg" -errorAction SilentlyContinue) {
+         $pkgVersion = (".\node_modules\.bin\pkg -v")
     }
 
     if ($pkgVersion) {
         Write-Log "pkg version $($pkgVersion) is installed"
     }
     else {
-        Write-Log "pkg is missing, install with 'npm install -g pkg'" "Red"
-        exit 1
+        Write-Log "pkg is missing, npm installing..." "Magenta"
+	# later, just run `npm install --no-save` at the beginning
+        & npm install --no-save
+        Write-Log "npm install complete"
     }
 
     Write-Log ""
     Write-Log "All dependencies have been satisfied"
     Write-Log ""
-}
 
-# npm install pkg -g
+
+}
 
 # clone https://github.com/TeamCodeStream/vscode-codestream
 # clone https://github.com/TeamCodeStream/codestream-components
@@ -135,7 +138,12 @@ function Perform-Build
     }
 
     Write-Log "Packaging agent."
-    pkg ..\src\CodeStream.VisualStudio\LSP\agent.js --targets node8-win-x86 --out-path ..\src\CodeStream.VisualStudio\LSP\
+    & ".\node_modules\.bin\pkg" ..\src\CodeStream.VisualStudio\LSP\agent.js --targets node8-win-x86 --out-path ..\src\CodeStream.VisualStudio\LSP\
+    if ($LastExitCode -ne 0) {
+        Write-Log "pkg Failed." "Red"
+        exit 1
+    }
+    
     Write-Log "Packaging agent completed."
 
     $OutputDir = $($PSScriptRoot+"\artifacts\$($Platform)\$($Configuration)");
@@ -146,9 +154,14 @@ function Perform-Build
 
     Write-Log "Restoring packages"
     & .\nuget.exe restore ..\src\CodeStream.VisualStudio.sln
-
+   
     Write-Log "Running msbuild."
     & $msbuild ..\src\CodeStream.VisualStudio.sln /p:AllowUnsafeBlocks=true /v:normal /target:$Target /p:Configuration=$Configuration /p:Platform=$Platform /p:DeployExtension=$DeployExtension /p:VisualStudioVersion=$VisualStudioVersion /p:OutputPath=$OutputDir
+
+    if ($LastExitCode -ne 0) {
+        Write-Log "MSBuild Failed." "Red"
+        exit 1
+    }
 
     Write-Log "Running UnitTests"
     & $vstest "$($OutputDir)\CodeStream.VisualStudio.UnitTests.dll" /Platform:$Platform
