@@ -51,16 +51,7 @@ const agentConfig = {
 
 let agent = new CodeStreamAgent(connection, agentConfig);
 
-connection.onRequest("codeStream/cli/ping", _ => {
-	return { pong: new Date().getTime() };
-});
-
-connection.onRequest("codeStream/cli/initialized", (_: AgentOptions) => {
-	// called after the lsp server has been initialized
-	return { now: new Date().getTime(), initializeParams: initializeParams };
-});
-
-connection.onRequest("codeStream/cli/login", async (agentOptions: AgentOptions) => {
+connection.onRequest("codeStream/login", async (agentOptions: AgentOptions) => {
 	if (agent.signedIn) {
 		restartAgent();
 	}
@@ -88,7 +79,7 @@ connection.onRequest("codeStream/cli/login", async (agentOptions: AgentOptions) 
 	return response;
 });
 
-connection.onRequest("codeStream/cli/logout", async _ => {
+connection.onRequest("codeStream/logout", async _ => {
 	await agent.logout(LogoutReason.Unknown);
 	restartAgent();
 });
