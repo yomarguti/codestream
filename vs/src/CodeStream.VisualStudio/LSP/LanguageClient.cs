@@ -61,14 +61,16 @@ namespace CodeStream.VisualStudio.LSP
         internal IContentTypeRegistryService ContentTypeRegistryService { get; set; }
 #endif
         private readonly IEventAggregator _eventAggregator;
+        private readonly ISettingsService _settingsService;
         private readonly ICodeStreamAgentService _codeStreamAgentService;
         private readonly ISessionService _sessionService;
 
         [ImportingConstructor]
-        public LanguageClient( IEventAggregator eventAggregator, ICodeStreamAgentService codeStreamAgentService, 
+        public LanguageClient(IEventAggregator eventAggregator, ISettingsService settingsService, ICodeStreamAgentService codeStreamAgentService, 
             ISessionService sessionService) : this(new LanguageServerProcess())
         {
             _eventAggregator = eventAggregator;
+            _settingsService = settingsService;
             _codeStreamAgentService = codeStreamAgentService;
             _sessionService = sessionService;
         }
@@ -92,17 +94,15 @@ namespace CodeStream.VisualStudio.LSP
             {
                 return new InitializationOptions
                 {
-                    Extension = new Extension
-                    {
-                        Build = "1",
-                        BuildEnv = "dev",
-                        Version = "1",
-                        VersionFormatted = "1.0-dev"
-                    },
+                    Extension = _settingsService.GetExtensionInfo(),
+                    Ide = _settingsService.GetIdeInfo(),
 #if DEBUG
-                    TraceLevel = "verbose",
+                    TraceLevel = TraceLevel.Verbose.ToJsonValue(),
                     IsDebugging = true
+#else
+                    TraceLevel = _settingsService.TraceLevel.ToJsonValue(),
 #endif
+
                 };
             }
         }

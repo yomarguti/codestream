@@ -527,7 +527,7 @@ namespace CodeStream.VisualStudio.Models
 
         public string TraceLevel { get; set; }
         public bool IsDebugging { get; set; }
-        //public IDE Ide { get; set; }
+        public Ide Ide { get; set; }
 
         //public Proxy Proxy { get; set; }
     }

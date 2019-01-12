@@ -54,6 +54,9 @@ namespace CodeStream.VisualStudio
         private ISessionService SessionService => GetService<SSessionService>() as ISessionService;
 
         [Export]
+        private ISettingsService SettingsService => GetService<SSettingsService>() as ISettingsService;
+
+        [Export]
         private IIdeService IdeService => GetService<SIdeService>() as IIdeService;
 
         private T GetService<T>() where T : class
@@ -113,7 +116,7 @@ namespace CodeStream.VisualStudio
             if (typeof(SEventAggregator) == serviceType)
                 return new EventAggregator();
             if (typeof(SIdeService) == serviceType)
-                return new IdeService( GetService(typeof(SVsTextManager)) as IVsTextManager2,
+                return new IdeService(GetService(typeof(SVsTextManager)) as IVsTextManager2,
                     GetService(typeof(SVsExtensionManager)) as IVsExtensionManager);
             if (typeof(SCredentialsService) == serviceType)
                 return new CredentialsService();

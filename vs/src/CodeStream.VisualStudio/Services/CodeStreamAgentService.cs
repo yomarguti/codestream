@@ -189,7 +189,6 @@ namespace CodeStream.VisualStudio.Services
         public CreateCodemarkRequest Codemark { get; set; }
     }
 
-
     public class CodeStreamAgentService : ICodeStreamAgentService, SCodeStreamAgentService
     {
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
@@ -338,10 +337,10 @@ namespace CodeStream.VisualStudio.Services
                 Extension = _settingsService.GetExtensionInfo(),
                 Ide = _settingsService.GetIdeInfo(),
 #if DEBUG
-                TraceLevel = "verbose",
+                TraceLevel = TraceLevel.Verbose.ToJsonValue(),
                 IsDebugging = true
 #else
-                TraceLevel = _settingsService.TraceLevel.ToString()
+                TraceLevel = _settingsService.TraceLevel.ToJsonValue()
 #endif
 
             });
@@ -356,10 +355,10 @@ namespace CodeStream.VisualStudio.Services
                 Extension = _settingsService.GetExtensionInfo(),
                 Ide = _settingsService.GetIdeInfo(),
 #if DEBUG
-                TraceLevel = "verbose",
+                TraceLevel = TraceLevel.Verbose.ToJsonValue(),
                 IsDebugging = true
 #else
-                TraceLevel = _settingsService.TraceLevel.ToString()
+                TraceLevel = _settingsService.TraceLevel.ToJsonValue()
 #endif
             });
         }
@@ -377,10 +376,10 @@ namespace CodeStream.VisualStudio.Services
                 Extension = extensionInfo,
                 Ide = ideInfo,
 #if DEBUG
-                TraceLevel = "verbose",
+                TraceLevel = TraceLevel.Verbose.ToJsonValue(),
                 IsDebugging = true
 #else
-                TraceLevel = _settingsService.TraceLevel.ToString()
+                TraceLevel = _settingsService.TraceLevel.ToJsonValue()
 #endif
             });
         }
