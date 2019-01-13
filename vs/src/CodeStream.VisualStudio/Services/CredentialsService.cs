@@ -1,90 +1,122 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Credentials;
-using CodeStream.VisualStudio.Extensions;
 using Serilog;
 using System;
 using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio.Services
 {
-    public interface SCredentialsService { }
+    public interface SCredentialsService
+    {
+    }
+
     public interface ICredentialsService
     {
         Task<Tuple<string, string>> LoadAsync(Uri uri, string email);
-        Task SaveAsync(Uri uri, string email, string secret);
-        Task DeleteAsync(Uri uri, string email);
+        Task<bool> SaveAsync(Uri uri, string email, string secret);
+        Task<bool> DeleteAsync(Uri uri, string email);
     }
 
-    public class CredentialsService : ICredentialsService, SCredentialsService
+    public abstract class CredentialsServiceBase
     {
-        private static readonly ILogger Log = LogManager.ForContext<CredentialsService>();
-        
+        private static readonly ILogger Log = LogManager.ForContext<CredentialsServiceBase>();
+
         /// <summary>
-        /// Create a key for storage
+        /// Normally, ToUpperInvariant is better -- but we should be ok, as this is a 1-way transform
         /// </summary>
-        /// <param name="uri"></param>
-        /// <param name="email"></param>
-        /// <remarks>https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1308-normalize-strings-to-uppercase?view=vs-2017</remarks>
-        /// <remarks>CA1308: Normalize strings to uppercase. A small group of characters, when they are converted to lowercase, cannot make a round trip</remarks>
+        /// <param name="keys"></param>
+        /// <remarks>>https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1308-normalize-strings-to-uppercase?view=vs-2017</remarks>
         /// <returns></returns>
-        private string ToKey(Uri uri, string email) => $"{uri}|{email}".ToUpperInvariant();
-
-        public Task<Tuple<string, string>> LoadAsync(Uri uri, string email)
+        protected virtual string FormatKey(params string[] keys)
         {
-            Log.Verbose(nameof(LoadAsync));
-            var key = GetKey(ToKey(uri, email));
+            return string.Join("|", keys).ToLowerInvariant();
+        }
 
+        protected virtual string GetKey(string key)
+        {
+            return $"{Application.Name}|" + key;
+        }
+
+        protected Task<Tuple<string, string>> LoadAsync(params string[] keys)
+        {
+            if (keys == null) throw new ArgumentNullException(nameof(keys));
+
+            Log.Verbose(nameof(LoadAsync));
             Tuple<string, string> result = null;
 
-            using (var credential = Credential.Load(key))
+            try
             {
-                if (credential != null)
+                using (var credential = Credential.Load(GetKey(FormatKey(keys))))
                 {
-                    result = Tuple.Create(credential.Username, credential.Password);
-                    Log.Verbose(nameof(LoadAsync) + ": found");
+                    if (credential != null)
+                    {
+                        result = Tuple.Create(credential.Username, credential.Password);
+                        Log.Verbose(nameof(LoadAsync) + ": found");
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Could not load token");
             }
 
             return Task.FromResult(result);
         }
 
-        public Task SaveAsync(Uri uri, string email, string secret)
+        protected Task<bool> SaveAsync(string userName, string secret, params string[] keys)
         {
-            Guard.ArgumentNotEmptyString(email, nameof(email));
+            if (keys == null) throw new ArgumentNullException(nameof(keys));
 
-            var key = GetKey(ToKey(uri, email));
+            Log.Verbose(nameof(SaveAsync));
+
             try
             {
-                Credential.Save(key, email, secret);
+                Credential.Save(GetKey(FormatKey(keys)), userName, secret);
+                return Task.FromResult(true);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Log.Warning(new Exception("Could not save token"), string.Empty);
+                Log.Warning(ex, "Could not save token");
             }
 
-            return Task.CompletedTask;
+            return Task.FromResult(false);
         }
 
-        public Task DeleteAsync(Uri uri, string email)
+        protected Task<bool> DeleteAsync(params string[] keys)
         {
+            if (keys == null) throw new ArgumentNullException(nameof(keys));
+
+            Log.Verbose(nameof(DeleteAsync));
+
             try
             {
-                var key = GetKey(ToKey(uri, email));
-                Credential.Delete(key);
-
-                Log.Verbose(nameof(DeleteAsync));
-
+                Credential.Delete(GetKey(FormatKey(keys)));
+                return Task.FromResult(true);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Log.Warning(new Exception("Could not delete token"), string.Empty);
+                Log.Warning(ex, "Could not delete token");
             }
-            return Task.CompletedTask;
+
+            return Task.FromResult(false);
+        }
+    }
+
+    public class CredentialsService : CredentialsServiceBase, SCredentialsService, ICredentialsService
+    {
+        public Task<Tuple<string, string>> LoadAsync(Uri uri, string email)
+        {
+            return LoadAsync(uri.ToString(), email);
         }
 
-        private static string GetKey(string key)
+        public Task<bool> SaveAsync(Uri uri, string email, string secret)
         {
-            return $"{Application.Name}|" + key;
+            return SaveAsync(email, secret, uri.ToString(), email);
+        }
+
+        public Task<bool> DeleteAsync(Uri uri, string email)
+        {
+            return DeleteAsync(uri.ToString(), email);
         }
     }
 }
