@@ -64,6 +64,7 @@ namespace CodeStream.VisualStudio.Extensions
         {
             try
             {
+                // ReSharper disable once UnusedVariable
                 using (var fs = new FileStream(fullFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
                     // if we got here -- file is not locked                  
@@ -91,6 +92,7 @@ namespace CodeStream.VisualStudio.Extensions
                     }
                 }
             }
+            // ReSharper disable once EmptyGeneralCatchClause
             catch (Exception)
             {
 

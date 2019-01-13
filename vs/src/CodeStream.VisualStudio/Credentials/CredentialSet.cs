@@ -20,7 +20,7 @@ namespace CodeStream.VisualStudio.Credentials
         {
             if (string.IsNullOrEmpty(target))
             {
-                throw new ArgumentNullException("target");
+                throw new ArgumentNullException(nameof(target));
             }
             Target = target;
         }
@@ -65,12 +65,11 @@ namespace CodeStream.VisualStudio.Credentials
         private void LoadInternal()
         {
             uint count;
-
             IntPtr pCredentials = IntPtr.Zero;
             bool result = NativeMethods.CredEnumerateW(Target, 0, out count, out pCredentials);
             if (!result)
             {
-                Trace.WriteLine(string.Format("Win32Exception: {0}", new Win32Exception(Marshal.GetLastWin32Error()).ToString()));
+                Trace.WriteLine($"Win32Exception: {new Win32Exception(Marshal.GetLastWin32Error()).ToString()}");
                 return;
             }
 

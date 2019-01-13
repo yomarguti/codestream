@@ -1,5 +1,4 @@
-﻿using CodeStream.VisualStudio.Services;
-using Microsoft.VisualStudio.Shell;
+﻿using Microsoft.VisualStudio.Shell;
 using System.Runtime.InteropServices;
 
 namespace CodeStream.VisualStudio.UI.ToolWindows

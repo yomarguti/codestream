@@ -71,12 +71,9 @@ namespace CodeStream.VisualStudio.Services
             });
         }
 
-        public async Task OpenCommentByThreadAsync(string streamId, string threadId)
+        public Task OpenCommentByThreadAsync(string streamId, string threadId)
         {
-            await Task.Yield();
-
-            if (!_sessionService.IsReady)
-                return;
+            if (!_sessionService.IsReady) return Task.CompletedTask;
 
             BrowserService.PostMessage(new DidChangeStreamThreadNotification
             {
@@ -87,6 +84,8 @@ namespace CodeStream.VisualStudio.Services
                     ThreadId = threadId
                 }
             });
+
+            return Task.CompletedTask;
         }
 
         public async Task<object> PostCodeAsync(Uri uri, SelectedText selectedText, bool? isHighlight = null,
@@ -125,8 +124,7 @@ namespace CodeStream.VisualStudio.Services
 
             try
             {
-                await new CredentialsService()
-                    .DeleteAsync(new Uri(_settingsService.Value.ServerUrl), _settingsService.Value.Email);
+                await new CredentialsService().DeleteAsync(new Uri(_settingsService.Value.ServerUrl), _settingsService.Value.Email);
             }
             catch (Exception ex)
             {

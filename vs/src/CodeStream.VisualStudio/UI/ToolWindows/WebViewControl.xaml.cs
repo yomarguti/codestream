@@ -1,12 +1,9 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Services;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
-using System.Reflection;
-using System.Resources;
 using System.Windows.Controls;
 
 namespace CodeStream.VisualStudio.UI.ToolWindows
@@ -24,45 +21,44 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
         {
             InitializeComponent();
 
-            Log.Verbose(string.Empty);
             Log.Verbose($"{nameof(OnInitialized)}...");
-            Log.Verbose(string.Empty);
 
             var browserService = Package.GetGlobalService(typeof(SBrowserService)) as IBrowserService;
 
             if (browserService != null)
             {
-                var resourceManager = new ResourceManager("VSPackage", Assembly.GetExecutingAssembly());
-
                 browserService.Initialize();
                 browserService.AttachControl(Grid);
                 browserService.LoadSplashView();
 
                 var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
                 var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
-
-                if (sessionService.IsAgentReady)
+                if (sessionService == null)
                 {
-                    SetRouter(eventAggregator, browserService);
+                    Log.Warning("SessionService is null");
                 }
                 else
                 {
-                    // ReSharper disable once PossibleNullReferenceException
-                    eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
+                    if (sessionService.IsAgentReady)
                     {
                         SetRouter(eventAggregator, browserService);
-                    });
+                    }
+                    else
+                    {
+                        // ReSharper disable once PossibleNullReferenceException
+                        eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
+                        {
+                            SetRouter(eventAggregator, browserService);
+                        });
+                    }
                 }
             }
             else
             {
-                Log.Warning("Browser service null");
+                Log.Warning("BrowserService is null");
             }
-
-            Log.Verbose(string.Empty);
+            
             Log.Verbose($"{nameof(OnInitialized)}");
-            Log.Verbose(string.Empty);
-
         }
 
         private void SetRouter(IEventAggregator eventAggregator, IBrowserService browserService)

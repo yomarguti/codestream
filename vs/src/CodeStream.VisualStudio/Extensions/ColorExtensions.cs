@@ -46,11 +46,25 @@ namespace CodeStream.VisualStudio.Extensions
             return Color.FromArgb(r, g, b);
         }
 
+        /// <summary>
+        /// Darken a color
+        /// </summary>
+        /// <param name="color"></param>
+        /// <param name="rate">0.1f == 10%</param>
+        /// <param name="darker"></param>
+        /// <returns></returns>
         public static Color Darken(this Color color, float rate = 0.1f, Color? darker = null)
         {
             return color.Lerp(darker ?? Color.Black, rate);
         }
 
+        /// <summary>
+        /// Lighten a color
+        /// </summary>
+        /// <param name="color"></param>
+        /// <param name="rate">0.1f == 10%</param>
+        /// <param name="lighter"></param>
+        /// <returns></returns>
         public static Color Lighten(this Color color, float rate = 0.1f, Color? lighter = null)
         {
             return color.Lerp(lighter ?? Color.White, rate);

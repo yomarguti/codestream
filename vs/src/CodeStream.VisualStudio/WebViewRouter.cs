@@ -130,7 +130,7 @@ namespace CodeStream.VisualStudio
                         case "codestream:interaction:svc-request":
                             {
                                 var service = message.Body["service"].Value<string>();
-                                if (service.EqualsIgnoreCase("vsls") && _ideService.QueryExtension(ExtensionKinds.LiveShare))
+                                if (service.EqualsIgnoreCase("vsls") && _ideService.QueryExtension(ExtensionKind.LiveShare))
                                 {
                                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                                     if (_ideService.TryStartLiveShare(out IdeService.StartLiveShareResult result))
@@ -184,7 +184,7 @@ namespace CodeStream.VisualStudio
                                 {
                                     case "bootstrap":
                                         {
-                                            WebviewIpcMessageResponse response = null;
+                                            WebviewIpcMessageResponse response;
 
                                             if (_settingsService.AutoSignIn && _settingsService.Email.IsNotNullOrWhiteSpace())
                                             {
@@ -481,18 +481,19 @@ namespace CodeStream.VisualStudio
 
                                             if (fromMarkerResponse?.TextDocument?.Uri != null)
                                             {
-                                                var ide = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
-                                                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken
-                                                    .None);
-
-                                                var editorResponse = ide.OpenEditor(
-                                                    fromMarkerResponse.TextDocument.Uri.FromUri(),
-                                                    fromMarkerResponse.Range?.Start?.Line);
-                                                _browserService.PostMessage(new WebviewIpcMessageResponse(
-                                                    new WebviewIpcMessageResponseBody(message.Id)
-                                                    {
-                                                        Payload = editorResponse.ToString()
-                                                    }));
+                                                var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
+                                                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+                                                if (ideService != null)
+                                                {
+                                                    var editorResponse = ideService.OpenEditor(
+                                                        fromMarkerResponse.TextDocument.Uri.FromUri(),
+                                                        fromMarkerResponse.Range?.Start?.Line);
+                                                    _browserService.PostMessage(new WebviewIpcMessageResponse(
+                                                        new WebviewIpcMessageResponseBody(message.Id)
+                                                        {
+                                                            Payload = editorResponse.ToString()
+                                                        }));
+                                                }
                                             }
 
                                             break;

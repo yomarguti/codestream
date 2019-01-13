@@ -7,17 +7,18 @@ using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
-using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio
 {
+    /// <summary>
+    /// Attaches CodeStream-specific handlers to VisualStudio events
+    /// </summary>
     public class CodeStreamEventManager: IDisposable
     {
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamEventManager>();
 
         private readonly VsShellEventManager _vsShellEventManager;
         private readonly Lazy<ICodeStreamService> _codeStreamService;
-   
 
         public CodeStreamEventManager(VsShellEventManager vsShellEventManager,
             Lazy<ICodeStreamService> codeStreamService)
@@ -29,7 +30,7 @@ namespace CodeStream.VisualStudio
             _vsShellEventManager.VisualStudioThemeChangedEventHandler += OnThemeChanged;
         }
 
-        public void OnWindowFocusChanged(object sender, WindowFocusChangedEventArgs e)
+        private void OnWindowFocusChanged(object sender, WindowFocusChangedEventArgs e)
         {
             if (e.FileName.IsNullOrWhiteSpace() || e.Uri == null) return;
 
@@ -39,7 +40,7 @@ namespace CodeStream.VisualStudio
             });
         }
 
-        public void OnThemeChanged(object sender, ThemeChangedEventArgs e)
+        private void OnThemeChanged(object sender, ThemeChangedEventArgs e)
         {
             try
             {
@@ -77,7 +78,5 @@ namespace CodeStream.VisualStudio
         {
             Dispose(true);
         }
-
-       
     }
 }

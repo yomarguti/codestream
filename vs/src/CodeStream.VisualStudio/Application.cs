@@ -25,7 +25,7 @@ namespace CodeStream.VisualStudio
         /// <summary>
         /// Environment where the build happened
         /// </summary>
-        public static string BuildEnv { get; } = string.Empty;
+        public static string BuildEnv { get; }
 
         /// <summary>
         /// Something like Microsoft Visual Studio 2019

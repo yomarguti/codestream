@@ -5,6 +5,7 @@ using CodeStream.VisualStudio.Extensions;
 using EnvironmentColors = Microsoft.VisualStudio.PlatformUI.EnvironmentColors;
 using VSColorTheme = Microsoft.VisualStudio.PlatformUI.VSColorTheme;
 using System.Windows.Media;
+// ReSharper disable RedundantArgumentDefaultValue
 
 namespace CodeStream.VisualStudio.Services
 {
@@ -142,39 +143,41 @@ namespace CodeStream.VisualStudio.Services
             };
         }
 
-        /// <summary>
-        /// this is some helper code to generate a theme color palette from the current VS theme
-        /// </summary>
-        /// <returns></returns>
-        private static string GenerateVisualStudioColorTheme()
-        {
-            //var d = new System.Collections.Generic.Dictionary<string, string>();
-            //Type type = typeof(EnvironmentColors); // MyClass is static class with static properties
-            //foreach (var p in type.GetProperties().Where(_ => _.Name.StartsWith("ToolWindow")))
-            //{
-            //    var val = typeof(EnvironmentColors).GetProperty(p.Name, BindingFlags.Public | BindingFlags.Static);
-            //    var v = val.GetValue(null);
-            //    var trk = v as ThemeResourceKey;
-            //    if (trk != null)
-            //    {
-            //        var color = VSColorTheme.GetThemedColor(trk);
-            //        d.Add(p.Name, color.ToHex());
-            //    }
+        /*
+                /// <summary>
+                /// this is some helper code to generate a theme color palette from the current VS theme
+                /// </summary>
+                /// <returns></returns>
+                private static string GenerateVisualStudioColorTheme()
+                {
+                    var d = new System.Collections.Generic.Dictionary<string, string>();
+                    Type type = typeof(EnvironmentColors); // MyClass is static class with static properties
+                    foreach (var p in type.GetProperties().Where(_ => _.Name.StartsWith("ToolWindow")))
+                    {
+                        var val = typeof(EnvironmentColors).GetProperty(p.Name, BindingFlags.Public | BindingFlags.Static);
+                        var v = val.GetValue(null);
+                        var trk = v as ThemeResourceKey;
+                        if (trk != null)
+                        {
+                            var color = VSColorTheme.GetThemedColor(trk);
+                            d.Add(p.Name, color.ToHex());
+                        }
 
-            //    // d.Add(p.Name, ((System.Drawing.Color)val).ToHex());
-            //}
+                        // d.Add(p.Name, ((System.Drawing.Color)val).ToHex());
+                    }
 
-            //string s = "";
-            //foreach (var kvp in d)
-            //{
-            //    s += $@"<div>";
-            //    s += $@"<span style='display:inline-block; height:50ps; width: 50px; background:{kvp.Value}; padding-right:5px; margin-right:5px;'>&nbsp;</span>";
-            //    s += $@"<span>{kvp.Value} - {kvp.Key}</span>";
-            //    s += "</div>";
-            //}
+                    string s = "";
+                    foreach (var kvp in d)
+                    {
+                        s += $@"<div>";
+                        s += $@"<span style='display:inline-block; height:50ps; width: 50px; background:{kvp.Value}; padding-right:5px; margin-right:5px;'>&nbsp;</span>";
+                        s += $@"<span>{kvp.Value} - {kvp.Key}</span>";
+                        s += "</div>";
+                    }
 
-            return null;
-        }
+                    return null;
+                }
+        */
     }
 
 }

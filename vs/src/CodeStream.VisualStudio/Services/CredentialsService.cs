@@ -18,11 +18,16 @@ namespace CodeStream.VisualStudio.Services
     public class CredentialsService : ICredentialsService, SCredentialsService
     {
         private static readonly ILogger Log = LogManager.ForContext<CredentialsService>();
-
-        //[Export(typeof(ICredentialsService))]
-        //[PartCreationPolicy(CreationPolicy.Shared)]
-
-        private string ToKey(Uri uri, string email) => $"{uri}|{email}".ToLowerInvariant();
+        
+        /// <summary>
+        /// Create a key for storage
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <param name="email"></param>
+        /// <remarks>https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1308-normalize-strings-to-uppercase?view=vs-2017</remarks>
+        /// <remarks>CA1308: Normalize strings to uppercase. A small group of characters, when they are converted to lowercase, cannot make a round trip</remarks>
+        /// <returns></returns>
+        private string ToKey(Uri uri, string email) => $"{uri}|{email}".ToUpperInvariant();
 
         public Task<Tuple<string, string>> LoadAsync(Uri uri, string email)
         {

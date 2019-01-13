@@ -33,18 +33,14 @@ namespace CodeStream.VisualStudio.Services
             "--allow-file-access-from-files"
         };
 
+        // ReSharper disable once UnusedMember.Local
         private static readonly List<string> ChromiumSwitchesDebug = new List<string>
         {
             "--remote-debugging-port=9222"
         };
 
         private WPFBrowserView _browserView;
-        private BrowserContext browserContext;
-
-        public DotNetBrowserService()
-        {
-
-        }
+        private BrowserContext _browserContext;
 
         protected override void OnInitialized()
         {
@@ -56,9 +52,9 @@ namespace CodeStream.VisualStudio.Services
             BrowserPreferences.SetChromiumSwitches(switches.ToArray());
 
             BrowserContextParams parameters = new BrowserContextParams(GetOrCreateContextParamsPath());
-            browserContext = new BrowserContext(parameters);
+            _browserContext = new BrowserContext(parameters);
             // use LIGHTWEIGHT to avoid "System.InvalidOperationException: 'The specified Visual is not an ancestor of this Visual.'"            
-            _browserView = new WPFBrowserView(BrowserFactory.Create(browserContext, BrowserType.LIGHTWEIGHT));
+            _browserView = new WPFBrowserView(BrowserFactory.Create(_browserContext, BrowserType.LIGHTWEIGHT));
 //#if DEBUG
 //           System.Diagnostics.Process.Start("chrome.exe", _browserView.Browser.GetRemoteDebuggingURL());
 //#endif
@@ -158,11 +154,11 @@ namespace CodeStream.VisualStudio.Services
                 path = Path.GetFullPath(Path.Combine(defaultPath, @"..\")) + $"data-cs-{i}";
                 if (Directory.Exists(path))
                 {
-                    var isLocked = TryCheckUsage(path, out DirectoryLockInfo info1);
-                    if (info1.HasLocked)
+                    var isLocked = TryCheckUsage(path, out DirectoryLockInfo lockInfo);
+                    if (lockInfo.HasLocked)
                     {
                         // this path/file exists, but it is locked, try another
-                        Log.Verbose($"{path}|{info1.LockFile} is locked");
+                        Log.Verbose($"{path}|{lockInfo.LockFile} IsLocked={isLocked}");
                         continue;
                     }
 

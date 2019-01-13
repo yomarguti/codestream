@@ -56,7 +56,7 @@ namespace CodeStream.VisualStudio.Services
         }
     }     
 
-    public enum ExtensionKinds
+    public enum ExtensionKind
     {
         LiveShare
     }
@@ -68,7 +68,7 @@ namespace CodeStream.VisualStudio.Services
         SelectedText GetSelectedText();
         SelectedText GetSelectedText(out IVsTextView view);
         bool QueryExtensions(string author, params string[] names);
-        bool QueryExtension(ExtensionKinds extensionKind);
+        bool QueryExtension(ExtensionKind extensionKind);
         bool TryStartLiveShare(out IdeService.StartLiveShareResult result);
     }
 
@@ -189,9 +189,9 @@ namespace CodeStream.VisualStudio.Services
             return false;
         }
 
-        public bool QueryExtension(ExtensionKinds extensionKind)
+        public bool QueryExtension(ExtensionKind extensionKind)
         {
-            if (extensionKind == ExtensionKinds.LiveShare)
+            if (extensionKind == ExtensionKind.LiveShare)
             {
                 return QueryExtensions("microsoft", "VS Live Share - Preview", "VS Live Share");
             }
@@ -243,6 +243,7 @@ namespace CodeStream.VisualStudio.Services
         public string GetClipboardText()
         {
             IDataObject idat = null;
+            // ReSharper disable once NotAccessedVariable
             Exception threadEx = null;
             object text = "";
             System.Threading.Thread staThread = new System.Threading.Thread(
@@ -251,7 +252,7 @@ namespace CodeStream.VisualStudio.Services
                     try
                     {
                         idat = Clipboard.GetDataObject();
-                        text = idat.GetData(DataFormats.Text);
+                        text = idat?.GetData(DataFormats.Text);
                     }
                     catch (Exception ex)
                     {

@@ -1,5 +1,4 @@
-﻿using Microsoft;
-using Microsoft.VisualStudio.Shell;
+﻿using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
 
@@ -55,12 +54,12 @@ namespace CodeStream.VisualStudio.UI
 
             if (host == null) return;
 
-            var infoBarModel = new InfoBarModel(message, isCloseButtonVisible: true);
+            var infoBarModel = new InfoBarModel(message);
 
             var factory = _serviceProvider.GetService(typeof(SVsInfoBarUIFactory)) as IVsInfoBarUIFactory;
-            Assumes.Present(factory);
+            if (factory == null) return;
 
-            IVsInfoBarUIElement element = factory.CreateInfoBar(infoBarModel);
+            var element = factory.CreateInfoBar(infoBarModel);
             element.Advise(this, out _cookie);
             host.AddInfoBar(element);
         }

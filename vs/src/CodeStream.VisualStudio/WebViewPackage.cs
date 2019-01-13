@@ -1,6 +1,4 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Events;
-using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.ToolWindows;
 using Microsoft.VisualStudio.Shell;
 using Serilog;

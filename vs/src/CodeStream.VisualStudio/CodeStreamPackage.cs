@@ -73,7 +73,7 @@ namespace CodeStream.VisualStudio
 
             // Avoid delays when there is ongoing UI activity.
             // See: https://github.com/github/VisualStudio/issues/1537
-            await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeUIComponentsAsync);
+            await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeUiComponentsAsync);
         }
 
         /// <summary>
@@ -83,6 +83,7 @@ namespace CodeStream.VisualStudio
         protected override int QueryClose(out bool pfCanClose)
         {
             pfCanClose = true;
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (pfCanClose)
             {
                 _vsShellEventManager?.Dispose();
@@ -121,7 +122,7 @@ namespace CodeStream.VisualStudio
             }
         }
 
-        async System.Threading.Tasks.Task InitializeUIComponentsAsync()
+        async System.Threading.Tasks.Task InitializeUiComponentsAsync()
         {
             // TODO move this into a non-static??
             InfoBarProvider.Initialize(this);

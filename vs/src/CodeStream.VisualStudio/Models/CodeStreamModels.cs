@@ -1,5 +1,4 @@
-﻿
-using CodeStream.VisualStudio.Extensions;
+﻿using CodeStream.VisualStudio.Extensions;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;

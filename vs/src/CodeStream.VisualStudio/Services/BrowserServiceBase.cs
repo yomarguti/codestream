@@ -9,7 +9,6 @@ using System.IO;
 using System.Reflection;
 using System.Resources;
 using System.Windows;
-using System.Windows.Media;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Services
@@ -136,7 +135,7 @@ namespace CodeStream.VisualStudio.Services
             {
                 foreach (var item in themeGenerator.ColorInfo)
                 {
-                    string value = null;
+                    string value;
                     if (item.Value.IsNotNullOrWhiteSpace())
                     {
                         value = item.Value;
