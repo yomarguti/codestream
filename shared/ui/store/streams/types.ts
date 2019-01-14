@@ -1,3 +1,4 @@
+// TODO: use CSStream
 export interface Stream {
 	id: string;
 	teamId: string;

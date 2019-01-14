@@ -10,7 +10,7 @@ export const startSlackSignin = () => (dispatch, getState, { api }) => {
 };
 
 export const connectSlack = () => (dispatch, getState, { api }) => {
-	api.startSlackSignin().then(() => {
+	return api.startSlackSignin().then(() => {
 		dispatch({ type: "GO_TO_COMPLETE_CONNECT", payload: { authType: "slack" } });
 	});
 };

@@ -143,6 +143,8 @@ export class SimpleStream extends Component {
 	};
 
 	handleCodeHighlightEvent = body => {
+		const { composeBoxProps } = this.state;
+		if (composeBoxProps && composeBoxProps.editingCodemark) return;
 		// make sure we have a compose box to type into
 		// if it's not a highlight event (i.e. someone clicked
 		// "Add CodeStream Comment"), then we definitely want to
@@ -150,8 +152,7 @@ export class SimpleStream extends Component {
 		// open it if it's not open and the user has the preference
 		// to auto-open on selection
 		if (!body.isHighlight || (!this.state.multiCompose && this.props.configs.openCommentOnSelect)) {
-			// this.setMultiCompose(true);
-			this.setState({ quote: body, floatCompose: true });
+			this.setMultiCompose(true, { quote: body });
 		}
 		// if multi-compose is already open, regardless of settings,
 		// update this.state.quote just in case the selection changed
@@ -905,7 +906,7 @@ export class SimpleStream extends Component {
 		if (value == "collapse") {
 			this.setState({ multiCompose: false, ...state });
 		} else {
-			this.setState({ multiCompose: value, ...state });
+			this.setState({ multiCompose: value, floatCompose: true, ...state });
 			if (!value) {
 				this.setState({
 					quote: null,
@@ -1706,8 +1707,7 @@ export class SimpleStream extends Component {
 
 		const { composeBoxProps } = this.state;
 		if (composeBoxProps.isEditing) {
-			editCodemark({
-				id: composeBoxProps.editingCodemark.id,
+			editCodemark(composeBoxProps.editingCodemark.id, {
 				color: codemark.color,
 				text: codemark.text,
 				title: codemark.title,

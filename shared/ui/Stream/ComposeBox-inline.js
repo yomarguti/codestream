@@ -1,626 +1,64 @@
 import _ from "underscore";
 import React from "react";
 import { connect } from "react-redux";
-import ContentEditable from "react-contenteditable";
 import createClassString from "classnames";
-import AtMentionsPopup from "./AtMentionsPopup";
+import { PostCompose } from "./PostCompose";
+import { CodemarkForm } from "./CodemarkForm";
 import Icon from "./Icon";
-import CancelButton from "./CancelButton";
 import Menu from "./Menu";
-import Button from "./Button";
-import EmojiPicker from "./EmojiPicker";
-import { getCurrentCursorPosition, createRange, isInVscode } from "../utils";
-const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
-import Select from "react-select";
-import Tooltip from "./Tooltip";
-import CrossPostIssueControls from "./CrossPostIssueControls";
-import hljs from "highlight.js";
-const Path = require("path");
-import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
+import { getCurrentCursorPosition, arrayToRange } from "../utils";
+// import hljs from "highlight.js";
+// const Path = require("path");
 import { createServiceCard } from "./actions";
-
-const arrayToRange = ([startRow, startCol, endRow, endCol]) => {
-	return {
-		start: {
-			row: startRow,
-			col: startCol
-		},
-		end: {
-			row: endRow,
-			col: endCol
-		}
-	};
-};
-
-const colorOptions = ["blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray"];
+import { MessageInput } from "./MessageInput";
 
 class ComposeBox extends React.Component {
 	state = {
-		color: this.props.isEditing ? this.props.editingCodemark.color : "blue",
-		assignees:
-			this.props.isEditing && this.props.editingCodemark.assignees
-				? this.props.editingCodemark.assignees.map(id => ({
-						label: this.props.teammates.find(u => u.id === id).username,
-						value: id
-				  }))
-				: [],
-		postTextByStream: {},
-		quote: this.props.quote,
-		autoMentions: [],
-		popupOpen: false,
-		emojiOpen: false,
-		notify: false,
 		crossPostMessage: true,
-		crossPostIssue: true,
-		commentType: this.props.isEditing ? this.props.editingCodemark.type : "",
-		title: this.props.isEditing ? this.props.editingCodemark.title : "",
-		privacy: "private"
+		crossPostIssue: true
 	};
-	disposables = [];
-
-	componentDidMount() {
-		// so that HTML doesn't get pasted into the input field. without this,
-		// HTML would be rendered as HTML when pasted
-		if (this._contentEditable)
-			this._contentEditable.htmlEl.addEventListener("paste", function(e) {
-				e.preventDefault();
-				const text = e.clipboardData.getData("text/plain");
-				document.execCommand("insertHTML", false, text.replace(/\n/g, "<br>"));
-			});
-
-		// because atom hijacks most keystroke events
-		if (global.atom) {
-			this.disposables.push(
-				atom.commands.add("atom-workspace", {
-					"codestream:focus-input": _event => this.focus()
-				}),
-				atom.commands.add(".codestream", "codestream:escape", {
-					didDispatch: event => this.handleAtMentionKeyPress(event, "escape"),
-					hiddenInCommandPalette: true
-				}),
-				atom.commands.add(".codestream .compose.popup-open", "codestream:popup-move-up", {
-					didDispatch: event => this.handleAtMentionKeyPress(event, "up"),
-					hiddenInCommandPalette: true
-				}),
-				atom.commands.add(".codestream .compose.popup-open", "codestream:popup-move-down", {
-					didDispatch: event => this.handleAtMentionKeyPress(event, "down"),
-					hiddenInCommandPalette: true
-				}),
-				atom.commands.add(".codestream .compose.popup-open", "codestream:popup-tab", {
-					didDispatch: event => this.handleAtMentionKeyPress(event, "tab"),
-					hiddenInCommandPalette: true
-				}),
-				atom.commands.add(".codestream .native-key-bindings", "codestream:move-up", {
-					didDispatch: event => this.handleNonCapturedKeyPress(event, "up"),
-					hiddenInCommandPalette: true
-				})
-			);
-		}
-		if (isInVscode()) {
-			this.disposables.push(
-				VsCodeKeystrokeDispatcher.on("keydown", event => {
-					if (event.key === "Escape" && event.target.id !== "input-div") {
-						this.handleKeyDown(event);
-					}
-				})
-			);
-		}
-	}
-
-	componentWillUnmount() {
-		this.disposables.forEach(d => d.dispose());
-	}
 
 	componentDidUpdate(prevProps, prevState) {
-		const { multiCompose, quote, quotePost } = this.props;
+		const { multiCompose } = this.props;
 
 		if (prevProps.multiCompose !== multiCompose) {
-			this.setState({ commentType: multiCompose === true ? "comment" : multiCompose });
-			setTimeout(() => {
-				this.focus();
-			}, 20);
-		}
-
-		if (prevProps.quote !== quote && !prevProps.isEditing) {
-			this.handleCodeHighlightEvent(quote);
-		}
-
-		if (quotePost && prevProps.quotePost !== quotePost) {
-			this.handleQuotePostEvent(quotePost);
+			// requestAnimationFrame(() => {
+			// 	this.focus();
+			// });
 		}
 	}
 
-	handleQuotePostEvent = post => {
-		this.focus(true);
-		this.insertTextAtCursor("@" + post.author.username + " said:");
-		this.insertNewlineAtCursor();
-		this.insertTextAtCursor(">" + post.text);
-		this.insertNewlineAtCursor();
+	submitPlainPost = newPostText => {
+		const domParser = new DOMParser();
+		const replaceRegex = /<br>|<div>/g;
+		const text = domParser.parseFromString(newPostText.replace(replaceRegex, "\n"), "text/html")
+			.documentElement.textContent;
+		const mentionedUserIds = this.props.findMentionedUserIds(text, this.props.teammates);
+		this.props.onSubmit({ text, mentionedUserIds });
 	};
 
-	handleCodeHighlightEvent = body => {
-		// make sure we have a compose box to type into
-		// this.props.ensureStreamIsActive();
-		this.setState({ quote: body, codeBlockInvalid: false });
+	submitCodemarkPost = (attributes, event) => {
+		const { quote, streamId } = this.props;
+		let newPostText = attributes.text || "";
 
-		if (!body) return;
+		// convert the text to plaintext so there is no HTML
+		const domParser = new DOMParser();
+		const replaceRegex = /<br>|<div>/g;
+		const text = domParser.parseFromString(newPostText.replace(replaceRegex, "\n"), "text/html")
+			.documentElement.textContent;
+		const title = domParser.parseFromString(
+			attributes.title.replace(replaceRegex, "\n"),
+			"text/html"
+		).documentElement.textContent;
+		const mentionedUserIds = this.props.findMentionedUserIds(text, this.props.teammates);
 
-		let mentions = [];
-		if (body.source && body.source.authors) {
-			mentions = body.source.authors.filter(author => author.id !== this.props.currentUserId);
-		}
-
-		if (mentions.length > 0) {
-			// TODO handle users with no username
-			const usernames = mentions.map(u => `@${u.username}`);
-			this.setState({ autoMentions: usernames });
-			// the reason for this unicode space is that chrome will
-			// not render a space at the end of a contenteditable div
-			// unless it is a &nbsp;, which is difficult to insert
-			// so we insert this unicode character instead
-			const newText = usernames.join(", ") + ":\u00A0";
-			this.focus(true);
-			this.insertIfEmpty(usernames.join(", "));
-			// this.insertTextAtCursor(newText);
-		}
-	};
-
-	insertIfEmpty(newText) {
-		// if there's text in the compose area, return without
-		// adding the suggestion
-		if (
-			this.state.postTextByStream[this.props.streamId] &&
-			this.state.postTextByStream[this.props.streamId].length > 0
-		)
-			return;
-		// the reason for this unicode space is that chrome will
-		// not render a space at the end of a contenteditable div
-		// unless it is a &nbsp;, which is difficult to insert
-		// so we insert this unicode character instead
-		this.insertTextAtCursor(newText + ":\u00A0");
-	}
-
-	focus = forceMainInput => {
-		if (forceMainInput && this._contentEditable) return this._contentEditable.htmlEl.focus();
-
-		switch (this.state.commentType) {
-			case "question":
-				this._titleInput.focus();
-				break;
-			case "issue":
-				this._titleInput.focus();
-				break;
-			case "bookmark":
-				this._titleInput.focus();
-				break;
-			case "snippet":
-				this._contentEditableSnippet.htmlEl.focus();
-				break;
-			default:
-				if (this._contentEditable) this._contentEditable.htmlEl.focus();
-		}
-	};
-
-	// set up the parameters to pass to the at mention popup
-	showPopupSelectors(prefix, type) {
-		let itemsToShow = [];
-
-		//filter out yourself
-
-		if (type === "at-mentions") {
-			const teammates = this.props.teammates.filter(({ id }) => id !== this.props.currentUserId);
-			Object.values(teammates).forEach(person => {
-				let toMatch = person.fullName + "*" + person.username;
-				if (toMatch.toLowerCase().indexOf(prefix) !== -1) {
-					itemsToShow.push({
-						id: person.id,
-						headshot: person,
-						identifier: person.username || person.email,
-						description: person.fullName
-					});
-				}
-			});
-		} else if (type === "slash-commands") {
-			this.props.slashCommands.map(command => {
-				if (command.channelOnly && this.props.isDirectMessage) return;
-				if (command.requires && !this.props.services[command.requires]) return;
-				if (command.codeStreamTeam && this.props.isSlackTeam) return;
-				if (command.slackTeam && !this.props.isSlackTeam) return;
-				let lowered = command.id.toLowerCase();
-				if (lowered.indexOf(prefix) === 0) {
-					command.identifier = command.id;
-					itemsToShow.push(command);
-				}
-			});
-		} else if (type === "channels") {
-			Object.values(this.props.channelStreams).forEach(channel => {
-				let toMatch = channel.name;
-				if (toMatch.toLowerCase().indexOf(prefix) !== -1) {
-					itemsToShow.push({
-						id: channel.name,
-						identifier: "#" + channel.name,
-						description: channel.purpose
-					});
-				}
-			});
-		} else if (type === "emojis") {
-			if (prefix && prefix.length > 1) {
-				Object.keys(emojiData).map(emojiId => {
-					if (emojiId.indexOf(prefix) === 0) {
-						itemsToShow.push({ id: emojiId, identifier: emojiData[emojiId] + " " + emojiId });
-					}
-				});
-			} else {
-				itemsToShow.push({
-					description: "Matching Emoji. Type 2 or more characters"
-				});
-			}
-		}
-
-		if (itemsToShow.length == 0) {
-			this.hidePopup();
-		} else {
-			let selected = itemsToShow[0].id;
-
-			this.setState({
-				popupOpen: type,
-				popupPrefix: prefix,
-				popupItems: itemsToShow,
-				popupIndex: 0,
-				selectedPopupItem: selected
-			});
-		}
-	}
-
-	hidePopup() {
-		this.setState({ popupOpen: false });
-	}
-
-	selectFirst() {
-		this.handleSelectAtMention();
-	}
-
-	// insert the given text at the cursor of the input field
-	// after first deleting the text in toDelete
-	insertTextAtCursor(text, toDelete) {
-		var sel, range;
-		sel = window.getSelection();
-
-		// if for some crazy reason we can't find a selection, return
-		// to avoid an error.
-		// https://stackoverflow.com/questions/22935320/uncaught-indexsizeerror-failed-to-execute-getrangeat-on-selection-0-is-not
-		if (sel.rangeCount == 0) return;
-
-		range = sel.getRangeAt(0);
-
-		// delete the X characters before the caret
-		range.setStart(range.commonAncestorContainer, range.startOffset - (toDelete || "").length);
-		// range.moveEnd("character", toDelete.length);
-
-		range.deleteContents();
-		var textNode = document.createTextNode(text);
-		range.insertNode(textNode);
-		range.setStartAfter(textNode);
-		sel.removeAllRanges();
-		sel.addRange(range);
-		this._contentEditable.htmlEl.normalize();
-		// sel.collapse(textNode);
-		sel.modify("move", "backward", "character");
-		sel.modify("move", "forward", "character");
-		// window.getSelection().empty();
-		// this.focus();
-
-		let postTextByStream = this.state.postTextByStream;
-		postTextByStream[this.props.streamId] = this._contentEditable.htmlEl.innerHTML;
-
-		this.setState({
-			postTextByStream,
-			cursorPosition: getCurrentCursorPosition("input-div")
-		});
-	}
-
-	insertNewlineAtCursor() {
-		var sel, range;
-		sel = window.getSelection();
-
-		// if for some crazy reason we can't find a selection, return
-		// to avoid an error.
-		// https://stackoverflow.com/questions/22935320/uncaught-indexsizeerror-failed-to-execute-getrangeat-on-selection-0-is-not
-		if (sel.rangeCount == 0) return;
-
-		range = sel.getRangeAt(0);
-
-		// delete the X characters before the caret
-		range.setStart(range.commonAncestorContainer, range.startOffset);
-		// range.moveEnd("character", toDelete.length);
-
-		range.deleteContents();
-		var br1 = document.createElement("BR");
-		var br2 = document.createElement("BR");
-		range.insertNode(br1);
-		range.insertNode(br2);
-		range.setStartAfter(br2);
-		sel.removeAllRanges();
-		sel.addRange(range);
-		this._contentEditable.htmlEl.normalize();
-		// sel.collapse(textNode);
-		sel.modify("move", "backward", "character");
-		sel.modify("move", "forward", "character");
-		// window.getSelection().empty();
-		// this.focus();
-
-		let postTextByStream = this.state.postTextByStream;
-		postTextByStream[this.props.streamId] = this._contentEditable.htmlEl.innerHTML;
-
-		this.setState({
-			postTextByStream,
-			cursorPosition: getCurrentCursorPosition("input-div")
-		});
-	}
-
-	// the keypress handler for tracking up and down arrow
-	// and enter, while the at mention popup is open
-	handleAtMentionKeyPress(event, eventType) {
-		event.preventDefault();
-		if (eventType == "escape") {
-			if (this.state.popupOpen) this.hidePopup();
-			else if (this.state.emojiOpen) this.hideEmojiPicker();
-			// else this.handleDismissThread();
-		} else {
-			let newIndex = 0;
-			if (eventType == "down") {
-				if (this.state.popupIndex < this.state.popupItems.length - 1) {
-					newIndex = this.state.popupIndex + 1;
-				} else {
-					newIndex = 0;
-				}
-			} else if (eventType == "up") {
-				if (this.state.popupIndex == 0) {
-					newIndex = this.state.popupItems.length - 1;
-				} else {
-					newIndex = this.state.popupIndex - 1;
-				}
-			} else if (eventType == "tab") {
-				this.selectFirst();
-			}
-			this.setState({
-				popupIndex: newIndex,
-				selectedPopupItem: this.state.popupItems[newIndex].id
-			});
-		}
-	}
-
-	// for keypresses that we can't capture with standard
-	// javascript events
-	handleNonCapturedKeyPress(event, eventType) {
-		if (eventType == "up") {
-			if (this.state.postTextByStream[this.props.streamId] === "") {
-				this.props.onEmptyUpArrow(event);
-			}
-		}
-		event.abortKeyBinding();
-	}
-
-	// when the user hovers over an at-mention list item, change the
-	// state to represent a hovered state
-	handleHoverAtMention = id => {
-		let index = this.state.popupItems.findIndex(x => x.id == id);
-
-		this.setState({
-			popupIndex: index,
-			selectedPopupItem: id
-		});
-	};
-
-	handleSelectAtMention = id => {
-		// if no id is passed, we assume that we're selecting
-		// the currently-selected at mention
-		if (!id) id = this.state.selectedPopupItem;
-
-		let toInsert;
-		let toInsertPostfix = "";
-
-		if (this.state.popupOpen === "slash-commands") {
-			toInsert = id + "\u00A0";
-		} else if (this.state.popupOpen === "channels") {
-			toInsert = id + "\u00A0";
-		} else if (this.state.popupOpen === "emojis") {
-			toInsert = id + ":\u00A0";
-		} else {
-			let user = this.props.teammates.find(t => t.id === id);
-			if (!user) return;
-			toInsert = user.username + "\u00A0";
-		}
-		this.hidePopup();
-		// setTimeout(() => {
-		this.focus(true);
-		// }, 20);
-		// the reason for this unicode space is that chrome will
-		// not render a space at the end of a contenteditable div
-		// unless it is a &nbsp;, which is difficult to insert
-		// so we insert this unicode character instead
-		this.insertTextAtCursor(toInsert, this.state.popupPrefix);
-		// this.setNewPostText(text);
-	};
-
-	// depending on the contents of the input field, if the user
-	// types a "@" then open the at-mention popup
-	handleChange = event => {
-		const newPostText = event.target.value;
-
-		const selection = window.getSelection();
-		const range = selection.getRangeAt(0);
-		const node = range.commonAncestorContainer;
-		const nodeText = node.textContent || "";
-		const upToCursor = nodeText.substring(0, range.startOffset);
-		const peopleMatch = upToCursor.match(/(?:^|\s)@([a-zA-Z0-9_.+]*)$/);
-		const channelMatch = upToCursor.match(/(?:^|\s)#([a-zA-Z0-9_.+]*)$/);
-		const emojiMatch = upToCursor.match(/(?:^|\s):([a-z+_]*)$/);
-		const slashMatch = newPostText.match(/^\/([a-zA-Z0-9+]*)$/);
-		if (this.state.popupOpen === "at-mentions") {
-			if (peopleMatch) {
-				this.showPopupSelectors(peopleMatch[1].replace(/@/, ""), "at-mentions");
-			} else {
-				// if the line doesn't end with @word, then hide the popup
-				this.hidePopup();
-			}
-		} else if (this.state.popupOpen === "slash-commands") {
-			if (slashMatch) {
-				this.showPopupSelectors(slashMatch[0].replace(/\//, ""), "slash-commands");
-			} else {
-				// if the line doesn't start with /word, then hide the popup
-				this.hidePopup();
-			}
-		} else if (this.state.popupOpen === "channels") {
-			if (channelMatch) {
-				this.showPopupSelectors(channelMatch[1].replace(/#/, ""), "channels");
-			} else {
-				// if the line doesn't end with #word, then hide the popup
-				this.hidePopup();
-			}
-		} else if (this.state.popupOpen === "emojis") {
-			if (emojiMatch) {
-				this.showPopupSelectors(emojiMatch[1].replace(/:/, ""), "emojis");
-			} else {
-				// if the line doesn't look like :word, then hide the popup
-				this.hidePopup();
-			}
-		} else {
-			if (peopleMatch) this.showPopupSelectors(peopleMatch[1].replace(/@/, ""), "at-mentions");
-			if (slashMatch && !this.props.multiCompose)
-				this.showPopupSelectors(slashMatch[0].replace(/\//, ""), "slash-commands");
-			if (channelMatch) this.showPopupSelectors(channelMatch[1].replace(/#/, ""), "channels");
-			if (emojiMatch) this.showPopupSelectors(emojiMatch[1].replace(/:/, ""), "emojis");
-		}
-		// track newPostText as the user types
-		let postTextByStream = this.state.postTextByStream;
-		postTextByStream[this.props.streamId] = this._contentEditable.htmlEl.innerHTML;
-		// this.setState({ postTextByStream });
-		this.setState({
-			postTextByStream,
-			autoMentions: this.state.autoMentions.filter(mention => newPostText.includes(mention)),
-			cursorPosition: getCurrentCursorPosition("input-div")
-		});
-	};
-
-	// when the input field loses focus, one thing we want to do is
-	// to hide the at-mention popup
-	handleBlur = event => {
-		event.preventDefault();
-		this.hidePopup();
-	};
-
-	handleClick = event => {
-		this.setState({
-			cursorPosition: getCurrentCursorPosition("input-div")
-		});
-	};
-
-	// https://stackoverflow.com/questions/6249095/how-to-set-caretcursor-position-in-contenteditable-element-div
-	setCurrentCursorPosition = chars => {
-		if (this._contentEditable.htmlEl.innerHTML === "") {
-			return;
-		}
-		if (chars < 0) chars = 0;
-
-		var selection = window.getSelection();
-
-		let range = createRange(document.getElementById("input-div").parentNode, { count: chars });
-
-		if (range) {
-			range.collapse(false);
-			selection.removeAllRanges();
-			selection.addRange(range);
-		}
-	};
-
-	handleKeyPress = event => {
-		let newPostText = this.state.postTextByStream[this.props.streamId] || "";
-		const { quote, popupOpen } = this.state;
-		const multiCompose = this.props.multiCompose;
-
-		// if we have the at-mentions popup open, then the keys
-		// do something different than if we have the focus in
-		// the textarea
-		if (popupOpen) {
-			if (event.key == "Escape") {
-				this.hidePopup();
-			} else if (event.key == "Enter" && !event.shiftKey) {
-				event.preventDefault();
-				this.selectFirst();
-			}
-		} else if (event.key === "@") {
-			this.showPopupSelectors("", "at-mentions");
-		} else if (event.key === ":") {
-			this.showPopupSelectors("", "emojis");
-		} else if (!multiCompose && event.key === "/" && newPostText.length === 0) {
-			this.showPopupSelectors("", "slash-commands");
-		} else if (event.key === "#") {
-			this.showPopupSelectors("", "channels");
-		} else if (event.key === "Enter" && !event.shiftKey && !multiCompose) {
-			event.preventDefault();
-			this.submitThePost();
-		} else if (event.key == "Escape" && multiCompose) {
-			this.handleClickDismissMultiCompose();
-		}
-	};
-
-	isFormInvalid = () => {
-		let newPostText =
-			this.state.postTextByStream[this.props.streamId] ||
-			(this.props.isEditing && this.props.editingCodemark.text) ||
-			"";
-		const { quote, title, assignees, color, commentType, streamId } = this.state;
-
-		let validationState = {
-			codeBlockInvalid: false,
-			titleInvalid: false,
-			textInvalid: false
-		};
-
-		let invalid = false;
-		if (commentType === "trap" || commentType === "bookmark") {
-			if (!quote) {
-				validationState.codeBlockInvalid = true;
-				invalid = true;
-			}
-		}
-		if (commentType === "question" || commentType === "issue") {
-			if (!title || title.length === 0) {
-				validationState.titleInvalid = true;
-				invalid = true;
-			}
-		}
-		if (commentType === "comment" || commentType === "trap" || commentType === "bookmark") {
-			if (!newPostText) {
-				validationState.textInvalid = true;
-				invalid = true;
-			}
-		}
-
-		this.setState(validationState);
-		return invalid;
-	};
-
-	submitThePost = event => {
-		let newPostText =
-			this.state.postTextByStream[this.props.streamId] ||
-			(this.props.isEditing && this.props.editingCodemark.text) ||
-			"";
-		const { quote, title, assignees, color, commentType, streamId } = this.state;
-		const createCodemark = quote || this.props.multiCompose;
+		const { assignees, color, type } = attributes;
 
 		if (this.props.disabled) return;
-
-		if (this.isFormInvalid()) return;
 
 		// don't submit blank posts
 		if (newPostText.trim().length === 0 && title.length === 0) return;
 
-		// convert the text to plaintext so there is no HTML
-		let text = newPostText.replace(/<br>/g, "\n");
-		const doc = new DOMParser().parseFromString(text, "text/html");
-		text = doc.documentElement.textContent;
 		const assigneeIds = (assignees || [])
 			.map(item => {
 				return item.value;
@@ -628,27 +66,24 @@ class ComposeBox extends React.Component {
 			.filter(Boolean);
 
 		this.props.onSubmit({
-			type: commentType,
-			text: createCodemark ? "" : text,
+			text: "",
 			title,
 			quote,
-			mentionedUserIds: this.props.findMentionedUserIds(text, this.props.teammates),
-			autoMentions: this.state.autoMentions,
+			mentionedUserIds,
+			autoMentions: attributes.autoMentions,
 			forceStreamId: streamId,
-			codemark: createCodemark
-				? {
-						title,
-						text,
-						streamId,
-						type: commentType,
-						assignees: assigneeIds || [],
-						color: color || ""
-				  }
-				: undefined
+			codemark: {
+				title,
+				text,
+				streamId,
+				type,
+				assignees: assigneeIds || [],
+				color: color || ""
+			}
 		});
 
 		const { crossPostIssueValues } = this;
-		if (commentType === "issue" && crossPostIssueValues && crossPostIssueValues.isEnabled) {
+		if (type === "issue" && crossPostIssueValues && crossPostIssueValues.isEnabled) {
 			let description = text + "\n\n";
 			if (quote) description += "In " + quote.file + "\n\n```\n" + quote.code + "\n```\n\n";
 			description += "Posted via CodeStream";
@@ -660,37 +95,6 @@ class ComposeBox extends React.Component {
 		else {
 			this.reset();
 			this.handleClickDismissMultiCompose();
-		}
-	};
-
-	handleKeyDown = event => {
-		const { quote } = this.state;
-		const multiCompose = this.props.multiCompose;
-
-		if (this.state.popupOpen) {
-			if (event.key === "ArrowUp") {
-				event.stopPropagation();
-				this.handleAtMentionKeyPress(event, "up");
-			}
-			if (event.key === "ArrowDown") this.handleAtMentionKeyPress(event, "down");
-			if (event.key === "Tab") this.handleAtMentionKeyPress(event, "tab");
-			if (event.key === "Escape") {
-				this.hidePopup();
-				event.preventDefault();
-			}
-		} else if (this.state.emojiOpen) {
-			if (event.key === "Escape") {
-				this.hideEmojiPicker();
-				event.preventDefault();
-			}
-		} else {
-			if (event.key === "ArrowUp" && this.state.postTextByStream[this.props.streamId] === "") {
-				event.persist();
-				event.stopPropagation();
-				this.props.onEmptyUpArrow(event);
-			} else if (event.key == "Escape" && multiCompose) {
-				this.handleClickDismissMultiCompose();
-			}
 		}
 	};
 
@@ -707,38 +111,11 @@ class ComposeBox extends React.Component {
 		this.setState({ quote: null });
 	};
 
-	toggleEmojiPicker = event => {
-		this.setState({ emojiOpen: !this.state.emojiOpen, emojiTarget: event.target });
-		// this.focus();
-		// event.stopPropagation();
-	};
-
-	hideEmojiPicker = () => {
-		this.setState({ emojiOpen: false });
-	};
-
-	addEmoji = emoji => {
-		this.setState({ emojiOpen: false });
-		if (emoji && emoji.colons) {
-			this.focus();
-			this.setCurrentCursorPosition(this.state.cursorPosition);
-			this.insertTextAtCursor(emoji.colons); // + "\u00A0"); <= that's a space
-		}
-	};
-
 	resetFields = clearOutTextToo => {
 		if (clearOutTextToo) {
-			let postTextByStream = this.state.postTextByStream;
-			postTextByStream[this.props.streamId] = "";
-			this.setState({ postTextByStream });
 		}
 		this.setState({
-			quote: null,
-			title: "",
-			assignees: [],
-			commentType: "",
-			autoMentions: [],
-			emojiOpen: false
+			autoMentions: []
 		});
 	};
 
@@ -747,18 +124,10 @@ class ComposeBox extends React.Component {
 		this.focus();
 	};
 
+	// TODO: delete
 	reset() {
-		let postTextByStream = this.state.postTextByStream;
-		postTextByStream[this.props.streamId] = "";
-
 		this.setState({
-			postTextByStream: {},
-			quote: null,
-			title: "",
-			color: "blue",
-			assignees: [],
-			autoMentions: [],
-			emojiOpen: false
+			postTextByStream: {}
 		});
 	}
 
@@ -782,372 +151,8 @@ class ComposeBox extends React.Component {
 		}, 20);
 	};
 
-	renderCodeBlockHelp = () => {
-		const { codeBlockInvalid } = this.state;
-
-		if (codeBlockInvalid) {
-			return <small className="error-message">Required</small>;
-		} else return null;
-	};
-
-	renderTitleHelp = () => {
-		const { titleInvalid } = this.state;
-
-		if (titleInvalid) {
-			return <small className="error-message">Required</small>;
-		} else return null;
-	};
-
-	renderTextHelp = () => {
-		const { textInvalid } = this.state;
-
-		if (textInvalid) {
-			return <small className="error-message">Required</small>;
-		} else return null;
-	};
-
-	renderCommentForm = quote => {
-		const { isEditing, editingCodemark, inThread, providerInfo = {} } = this.props;
-		const commentType = isEditing ? editingCodemark.type : this.state.commentType || "comment";
-		const { menuOpen, menuTarget } = this.state;
-
-		const trapTip =
-			"Let your teammates know about a critical section of code that should not be changed without discussion or consultation.";
-		const bookmarkTip =
-			'Save a bookmark either for yourself, or for your team (select the appropriate "Post to" setting above).';
-
-		const titlePlaceholder =
-			commentType === "issue"
-				? "Title (required)"
-				: commentType === "question"
-				? "Question (required)"
-				: commentType === "bookmark"
-				? "Label (optional)"
-				: "Title (optional)";
-
-		const teamMembersForSelect = this.props.teammates
-			.map(user => {
-				if (!user.isRegistered) return null;
-				return {
-					value: user.id,
-					label: user.username
-				};
-			})
-			.filter(Boolean);
-
-		let commentString = commentType || "comment";
-		const submitAnotherLabel = "Command-click to submit another " + commentString + " after saving";
-
-		const menuItems = [
-			{ label: "New Comment", action: "comment" },
-			{ label: "New Question", action: "question" },
-			{ label: "New Issue", action: "issue" },
-			{ label: "New Trap", action: "trap" },
-			{ label: "New Bookmark", action: "bookmark" }
-		];
-
-		const menu = this.state.menuOpen ? (
-			<Menu items={menuItems} target={menuTarget} action={this.menuAction} align="left" />
-		) : null;
-
-		if (false && !commentType)
-			return (
-				<form id="code-comment-form" className="standard-form narrow" key="two">
-					<Icon
-						name="plus"
-						onClick={() => {
-							this.setState({ commentType: "comment" });
-						}}
-					/>
-					{menu}
-				</form>
-			);
-
-		const assigneesPlaceholder = providerInfo["trello"]
-			? "Members (optional)"
-			: "Assignees (optional)";
-		// {isEditing ? "Update" : "New"}{" "}
-		// {commentString.charAt(0).toUpperCase() + commentString.slice(1)}
-		// <div className="range-text">{rangeText}</div>
-		return [
-			<div className="panel-header" key="one">
-				<span className="align-left-button" onClick={() => this.props.setMultiCompose("collapse")}>
-					<Icon name="chevron-up" />
-				</span>
-				<CancelButton placement="left" onClick={this.handleClickDismissMultiCompose} />
-			</div>,
-
-			<form id="code-comment-form" className="standard-form" key="two">
-				<fieldset className="form-body">
-					<div id="controls" className="control-group">
-						<div className="tab-group">
-							<input
-								id="radio-comment-type-comment"
-								type="radio"
-								name="comment-type"
-								checked={commentType === "comment"}
-							/>
-							<label
-								htmlFor="radio-comment-type-comment"
-								className={createClassString({
-									checked: commentType === "comment"
-								})}
-								onClick={e => this.setCommentType("comment")}
-							>
-								<Icon name="comment" className="chat-bubble" /> <b>Comment</b>
-							</label>
-							<input
-								id="radio-comment-type-question"
-								type="radio"
-								name="comment-type"
-								checked={commentType === "question"}
-							/>
-							<label
-								htmlFor="radio-comment-type-question"
-								className={createClassString({
-									checked: commentType === "question"
-								})}
-								onClick={e => this.setCommentType("question")}
-							>
-								<Icon name="question" /> <b>FAQ</b>
-							</label>
-							<input
-								id="radio-comment-type-issue"
-								type="radio"
-								name="comment-type"
-								checked={commentType === "issue"}
-							/>
-							<label
-								htmlFor="radio-comment-type-issue"
-								className={createClassString({
-									checked: commentType === "issue"
-								})}
-								onClick={e => this.setCommentType("issue")}
-							>
-								<Icon name="issue" /> <b>Issue</b>
-							</label>
-							{
-								// <input
-								// 	id="radio-comment-type-trap"
-								// 	type="radio"
-								// 	name="comment-type"
-								// 	checked={commentType === "trap"}
-								// />
-								// <label
-								// 	htmlFor="radio-comment-type-trap"
-								// 	className={createClassString({
-								// 		checked: commentType === "trap"
-								// 	})}
-								// 	onClick={e => this.setCommentType("trap")}
-								// >
-								// 	<Icon name="trap" /> <b>Trap</b>
-								// </label>
-							}
-							<label
-								htmlFor="radio-comment-type-bookmark"
-								className={createClassString({
-									checked: commentType === "bookmark"
-								})}
-								onClick={e => this.setCommentType("bookmark")}
-							>
-								<Icon name="bookmark" /> <b>Bookmark</b>
-							</label>
-
-							<label
-								htmlFor="radio-comment-type-link"
-								className={createClassString({
-									checked: commentType === "link"
-								})}
-								onClick={e => this.setCommentType("link")}
-							>
-								<Icon name="link" /> <b>Permalink</b>
-							</label>
-						</div>
-						{commentType === "trap" && (
-							<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
-								{trapTip}
-							</div>
-						)}
-						{false && commentType === "bookmark" && (
-							<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
-								{bookmarkTip}
-							</div>
-						)}
-						{(commentType === "issue" ||
-							commentType === "question" ||
-							commentType === "bookmark" ||
-							commentType === "snippet") && (
-							<div className="control-group">
-								{this.renderTitleHelp()}
-								<input
-									type="text"
-									name="title"
-									className="native-key-bindings input-text control"
-									tabIndex={this.tabIndex()}
-									defaultValue={isEditing ? editingCodemark.title : ""}
-									value={this.state.title}
-									onChange={e => this.setState({ title: e.target.value })}
-									placeholder={titlePlaceholder}
-									ref={ref => (this._titleInput = ref)}
-								/>
-							</div>
-						)}
-						{commentType === "issue" && (
-							<div id="members-controls" className="control-group" style={{ marginBottom: "10px" }}>
-								<Select
-									id="input-assignees"
-									name="assignees"
-									classNamePrefix="native-key-bindings react-select"
-									isMulti={true}
-									value={this.state.assignees || []}
-									options={teamMembersForSelect}
-									closeMenuOnSelect={true}
-									isClearable={false}
-									placeholder={assigneesPlaceholder}
-									onChange={value => this.setState({ assignees: value })}
-									tabIndex={this.tabIndex()}
-								/>
-							</div>
-						)}
-						{this.renderTextHelp()}
-						{commentType === "link" && [
-							<div className="permalink" key="2">
-								http://codestream.com/c/{this.props.streamId}
-							</div>,
-							<div id="privacy-controls" className="control-group" key="1">
-								<div className="public-private-hint">
-									{this.state.privacy === "private"
-										? "Only members of your team can access this link."
-										: "Anyone can view this link, including quoted codeblock."}
-								</div>
-								<div
-									className={createClassString("switch public-private", {
-										checked: this.state.privacy === "private"
-									})}
-									onClick={this.togglePrivacy}
-								/>
-							</div>
-						]}
-						{commentType !== "bookmark" && commentType !== "link" && this.renderMessageInput()}
-					</div>
-					{(commentType === "comment" || commentType === "question") && (
-						<div className="checkbox-row" onClick={this.toggleNotify}>
-							<input type="checkbox" checked={this.state.notify} /> Alert me if someone edits code
-							in this range{"  "}
-							<Tooltip title="Click to learn more">
-								<span>
-									<Icon className="clickable" onClick={this.showAlertHelp} name="info" />
-								</span>
-							</Tooltip>
-						</div>
-					)}
-					{(commentType === "comment" || commentType === "question") &&
-						this.renderCrossPostMessage()}
-					{commentType === "issue" && (
-						<CrossPostIssueControls
-							onValues={this.handleCrossPostIssueValues}
-							codeBlock={this.state.quote}
-						/>
-					)}
-					{commentType !== "link" && (
-						<div className="color-choices">
-							{colorOptions.map(color => (
-								<label
-									onClick={e => this.setState({ color })}
-									key={color}
-									className={createClassString("color-choice-box", `${color}-color`, {
-										selected: this.state.color === color
-									})}
-								>
-									<Icon name={commentType} />
-								</label>
-							))}
-						</div>
-					)}
-					<div className="button-group">
-						<Button
-							style={{
-								marginLeft: "10px",
-								float: "right",
-								paddingLeft: "10px",
-								paddingRight: "10px",
-								width: "auto",
-								marginRight: 0
-							}}
-							className="control-button"
-							type="submit"
-							loading={this.state.loading}
-							onClick={e => this.submitThePost(e)}
-						>
-							Submit
-						</Button>
-						<Button
-							style={{
-								float: "right",
-								paddingLeft: "10px",
-								paddingRight: "10px",
-								width: "auto"
-							}}
-							className="control-button cancel"
-							type="submit"
-							loading={this.state.loading}
-							onClick={this.handleClickDismissMultiCompose}
-						>
-							Cancel
-						</Button>
-						{
-							//<span className="hint">Styling with Markdown is supported</span>
-						}
-					</div>
-					<div style={{ clear: "both" }} />
-					{
-						// <div
-						// 	style={{ marginTop: "30px", cursor: "pointer" }}
-						// 	onClick={this.props.toggleOpenCommentOnSelect}
-						// >
-						// 	<span
-						// 		style={{ float: "right", marginLeft: "10px" }}
-						// 		className={createClassString("switch", {
-						// 			checked: this.props.openCommentOnSelect
-						// 		})}
-						// 	/>
-						// 	Auto-open when selecting code and CodeStream is visible
-						// </div>
-					}
-				</fieldset>
-			</form>
-		];
-		// 	<span className="hixnt" style={{ grid: "none" }}>
-		// 	<input type="checkbox" />
-		// 	Open automatically on selection
-		// </span>
-		// 	<input
-		// 	id="radio-comment-type-snippet"
-		// 	type="radio"
-		// 	name="comment-type"
-		// 	checked={commentType === "snippet"}
-		// 	onChange={e => this.setCommentType("snippet")}
-		// />
-		// <label
-		// 	htmlFor="radio-comment-type-snippet"
-		// 	className={createClassString({
-		// 		checked: commentType === "snippet"
-		// 	})}
-		// >
-		// 	<Icon name="code" /> <span>Snippet</span>
-		// </label>
-	};
-
 	handleCrossPostIssueValues = values => {
 		this.crossPostIssueValues = values;
-	};
-
-	showAlertHelp = event => {
-		event.stopPropagation();
-	};
-
-	togglePrivacy = () => {
-		this.setState({ privacy: this.state.privacy === "public" ? "private" : "public" });
 	};
 
 	switchChannel = event => {
@@ -1159,77 +164,6 @@ class ComposeBox extends React.Component {
 		});
 	};
 
-	selectChannel = stream => {
-		this.setState({ channelMenuOpen: false });
-		if (stream && stream.id) {
-			const channelName = (stream.isDirectMessage ? "@" : "#") + stream.name;
-			this.setState({ channelName, streamId: stream.id });
-		}
-	};
-
-	renderCrossPostMessage = () => {
-		if (this.props.providerInfo.slack) {
-			let items = [];
-			this.props.channelStreams.forEach(channel => {
-				items.push({ label: "#" + channel.name, action: channel });
-			});
-			items.push({ label: "-" });
-			_.sortBy(this.props.directMessageStreams, stream =>
-				(stream.name || "").toLowerCase()
-			).forEach(channel => {
-				items.push({ label: "@" + channel.name, action: channel });
-			});
-
-			const channelName = this.state.channelName || this.props.channelName;
-			return (
-				<div className="checkbox-row" onClick={this.toggleCrossPostMessage}>
-					<input type="checkbox" checked={this.state.crossPostMessage} /> Post to{" "}
-					<span className="channel-label" onClick={this.switchChannel}>
-						{channelName}
-						<Icon name="chevron-down" />
-						{this.state.channelMenuOpen && (
-							<Menu
-								align="center"
-								compact={true}
-								target={this.state.channelMenuTarget}
-								items={items}
-								action={this.selectChannel}
-							/>
-						)}
-					</span>{" "}
-					on
-					<span className="service">
-						<Icon className="slack" name="slack" />
-						Slack
-					</span>
-				</div>
-			);
-		} else
-			return (
-				<div className="checkbox-row connect-messaging" onClick={this.toggleCrossPostMessage}>
-					Post to
-					<span className="service" onClick={this.handleClickConnectSlack}>
-						<Icon className="slack" name="slack" />
-						Slack
-					</span>
-					{this.state.loadingMessageConnect && (
-						<span>
-							<Icon className="spin" name="sync" /> Syncing channels...
-						</span>
-					)}
-				</div>
-			);
-	};
-
-	handleClickConnectSlack = event => {
-		event.preventDefault();
-		this.setState({ loadingMessageConnect: true });
-		setTimeout(() => {
-			this.setState({ messageAuth: true, loadingMessageConnect: false });
-		}, 5000);
-		this.props.connectSlack();
-	};
-
 	menuAction = arg => {
 		this.setState({ menuOpen: false });
 		if (arg) this.setCommentType(arg);
@@ -1239,121 +173,51 @@ class ComposeBox extends React.Component {
 		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
 	};
 
-	toggleNotify = () => {
-		this.setState({ notify: !this.state.notify });
-	};
-
-	toggleCrossPostMessage = () => {
-		this.setState({ crossPostMessage: !this.state.crossPostMessage });
-	};
-
-	renderCode(quote) {
-		const path = quote.file;
-		let extension = Path.extname(path).toLowerCase();
-		if (extension.startsWith(".")) {
-			extension = extension.substring(1);
-		}
-		const codeHTML = extension
-			? hljs.highlight(extension, quote.code).value
-			: hljs.highlightAuto(quote.code).value;
-
-		return <div className="code" dangerouslySetInnerHTML={{ __html: codeHTML }} />;
-	}
-
-	renderMessageInput = () => {
-		let { placeholder, isEditing, editingCodemark, floatCompose } = this.props;
-		const { quote, emojiOpen, commentType } = this.state;
-		const multiCompose = this.props.multiCompose;
-
-		if (floatCompose && quote) {
-			let range = quote ? arrayToRange(quote.location) : null;
-			let rangeText = "";
-			if (range && quote && quote.file) {
-				rangeText += "Add comment for " + quote.file;
-				let endLine = range.end.col == 0 ? range.end.row : range.end.row + 1;
-				if (range.start.row + 1 === endLine) {
-					rangeText += " line " + (range.start.row + 1);
-				} else {
-					rangeText += " lines " + (range.start.row + 1) + "-" + endLine;
-				}
-				// placeholder = rangeText;
-			}
-			if (commentType === "question") placeholder = "Answer (optional)";
-			else if (commentType === "issue") placeholder = "Description (optional)";
-			else placeholder = "Add comment";
-		}
-
-		let contentEditableHTML =
-			(isEditing && editingCodemark.text) || this.state.postTextByStream[this.props.streamId] || "";
-		return (
-			<div
-				className="message-input-wrapper"
-				onKeyPress={this.handleKeyPress}
-				onKeyDown={this.handleKeyDown}
-			>
-				<div style={{ position: "relative" }}>
-					<AtMentionsPopup
-						on={this.state.popupOpen}
-						items={this.state.popupItems}
-						prefix={this.state.popupPrefix}
-						selected={this.state.selectedPopupItem}
-						handleHoverAtMention={this.handleHoverAtMention}
-						handleSelectAtMention={this.handleSelectAtMention}
-					/>
-				</div>
-				{!multiCompose && [
-					<div key="1" className="plus-button" onClick={this.openMultiCompose}>
-						{this.props.floatCompose ? (
-							<Icon name="chevron-down" className="plus" />
-						) : (
-							<Icon name="chevron-up" className="plus" />
-						)}
-					</div>,
-					<div key="2" className="x-button" onClick={this.handleClickDismissMultiCompose}>
-						<Icon name="x" className="plus" />
-					</div>
-				]}
-				<Icon
-					name="smiley"
-					className={createClassString("smiley", {
-						hover: emojiOpen
-					})}
-					onClick={event => this.toggleEmojiPicker(event)}
-				/>
-				{emojiOpen && (
-					<EmojiPicker addEmoji={this.addEmoji} target={this.state.emojiTarget} autoFocus={true} />
-				)}
-				<ContentEditable
-					className={createClassString("native-key-bindings", "message-input", btoa(placeholder), {
-						"has-plus": !multiCompose
-					})}
-					id="input-div"
-					tabIndex={this.tabIndex()}
-					onChange={this.handleChange}
-					onBlur={this.handleBlur}
-					onClick={this.handleClick}
-					html={contentEditableHTML}
-					placeholder={placeholder}
-					ref={ref => (this._contentEditable = ref)}
-				/>
-			</div>
-		);
-	};
+	// renderCode(quote) {
+	// 	const path = quote.file;
+	// 	let extension = Path.extname(path).toLowerCase();
+	// 	if (extension.startsWith(".")) {
+	// 		extension = extension.substring(1);
+	// 	}
+	// 	const codeHTML = extension
+	// 		? hljs.highlight(extension, quote.code).value
+	// 		: hljs.highlightAuto(quote.code).value;
+	//
+	// 	return <div className="code" dangerouslySetInnerHTML={{ __html: codeHTML }} />;
+	// }
 
 	tabIndex = () => {
 		return global.atom ? this.tabIndexCount++ : "0";
 	};
 
+	renderMessageInput = props => {
+		return (
+			<MessageInput
+				teammates={this.props.teammates}
+				currentUserId={this.props.currentUserId}
+				slashCommands={this.props.slashCommands}
+				services={this.props.services}
+				channelStreams={this.props.channelStreams}
+				isSlackTeam={this.props.isSlackTeam}
+				isDirectMessage={this.props.isDirectMessage}
+				onEmptyUpArrow={this.props.onEmptyUpArrow}
+				onDismiss={this.handleClickDismissMultiCompose}
+				tabIndex={this.tabIndex()}
+				quotePost={this.props.quotePost}
+				{...props}
+			/>
+		);
+	};
+
 	render() {
-		const { forwardedRef, textEditorFirstLine } = this.props;
-		const { quote } = this.state;
-		const multiCompose = this.props.multiCompose;
+		const { forwardedRef, multiCompose, quote } = this.props;
 
 		this.tabIndexCount = 0;
 
-		let range = quote ? arrayToRange(quote.location) : null;
+		let range = quote ? arrayToRange(quote.location) : { start: { row: 20 } }; // 20 is a placeholder to attempt to bring the element towards the middle of the screen
 		let style = undefined;
 		if (range) style = { top: 18 * range.start.row + 15 };
+
 		return (
 			<div
 				ref={forwardedRef}
@@ -1366,8 +230,34 @@ class ComposeBox extends React.Component {
 				style={style}
 			>
 				<div style={{ position: "relative" }}>
-					{multiCompose && this.renderCommentForm(quote)}
-					{!multiCompose && this.renderMessageInput()}
+					{multiCompose ? (
+						<CodemarkForm
+							channelStreams={this.props.channelStreams}
+							directMessageStreams={this.props.directMessageStreams}
+							collapseForm={() => this.props.setMultiCompose("collapse")}
+							onClickClose={this.handleClickDismissMultiCompose}
+							streamId={this.props.streamId}
+							onCrossPostIssueValues={this.handleCrossPostIssueValues}
+							onSubmit={this.submitCodemarkPost}
+							codeBlock={quote}
+							renderMessageInput={this.renderMessageInput}
+							teammates={this.props.teammates}
+							collapsed={false}
+							openCodemarkForm={this.openMultiCompose}
+							placeholder={this.props.placeholder}
+							currentUserId={this.props.currentUserId}
+							editingCodemark={this.props.editingCodemark}
+						/>
+					) : (
+						<PostCompose
+							onClickClose={this.handleClickDismissMultiCompose}
+							openCodemarkForm={this.openMultiCompose}
+							openDirection={this.props.floatCompose ? "down" : "up"}
+							renderMessageInput={this.renderMessageInput}
+							onSubmit={this.submitPlainPost}
+							placeholder={this.props.placeholder}
+						/>
+					)}
 				</div>
 			</div>
 		);

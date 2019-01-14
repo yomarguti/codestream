@@ -1,5 +1,25 @@
 import * as uuidv4 from "uuid/v4";
 
+export function arrayToRange([startRow, startCol, endRow, endCol]: number[]) {
+	return {
+		start: {
+			row: startRow,
+			col: startCol
+		},
+		end: {
+			row: endRow,
+			col: endCol
+		}
+	};
+}
+
+export function pick<T, K extends keyof T>(object: T, keys: K[]): { [K in keyof T]: any } {
+	return keys.reduce((result: T, key: K) => {
+		result[key] = object[key];
+		return result;
+	}, Object.create(null));
+}
+
 export function isInVscode() {
 	return !!document.querySelector("body.codestream");
 }
@@ -37,6 +57,7 @@ export const findLast = <T>(array: T[], fn: (item: T) => boolean): any | undefin
 export const rangeTo = (size: number) => [...Array(size).keys()];
 
 // let fnCount = 0;
+// TODO: maybe make the debounced fn async so callers can wait for it to execute
 export const debounceToAnimationFrame = (fn: Function) => {
 	let requestId: number | undefined;
 	// const i = fnCount++;
@@ -145,7 +166,7 @@ export const getCurrentCursorPosition = (parentId: string) => {
 	return charCount;
 };
 
-export const createRange = (node: any, chars: any, range: any) => {
+export const createRange = (node: any, chars: any, range?: any) => {
 	if (!range) {
 		range = document.createRange();
 		range.selectNode(node);
