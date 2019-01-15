@@ -21,5 +21,6 @@ export const SUPPORTED_SERVICES = {
 	Jira: { name: "jira", displayName: "Jira" },
 	GitHub: { name: "github", icon: "mark-github", displayName: "GitHub" },
 	GitLab: { name: "gitlab", displayName: "GitLab" },
-	Asana: { name: "asana", displayName: "Asana" }
+	Asana: { name: "asana", displayName: "Asana" },
+	Bitbucket: { name: "bitbucket", displayName: "Bitbucket" }
 };

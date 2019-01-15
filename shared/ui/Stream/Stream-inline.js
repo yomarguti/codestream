@@ -423,6 +423,9 @@ export class SimpleStream extends Component {
 		else menuItems.push({ label: "Connect to Asana", action: "connect-asana" });
 		if (providerInfo.jira) menuItems.push({ label: "Disconnect Jira", action: "disconnect-jira" });
 		else menuItems.push({ label: "Connect to Jira", action: "connect-jira" });
+		if (providerInfo.bitbucket)
+			menuItems.push({ label: "Disconnect Bitbucket", action: "disconnect-bitbucket" });
+		else menuItems.push({ label: "Connect to Bitbucket", action: "connect-bitbucket" });
 		menuItems.push({ label: "-" });
 		menuItems.push({ label: "Sign Out", action: "signout" });
 
@@ -845,6 +848,10 @@ export class SimpleStream extends Component {
 				return this.props.connectService("jira");
 			case "disconnect-jira":
 				return this.props.disconnectService("jira");
+			case "connect-bitbucket":
+				return this.props.connectService("bitbucket");
+			case "disconnect-bitbucket":
+				return this.props.disconnectService("bitbucket");
 
 			default:
 				return;
