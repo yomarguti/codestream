@@ -219,6 +219,13 @@ export interface CSAsanaProviderInfo {
 	userId: string;
 }
 
+export interface CSBitbucketProviderInfo {
+	refreshToken: string;
+	accessToken: string;
+	expiresAt: number;
+	userId: string;
+}
+
 export interface CSGitHubProviderInfo {
 	accessToken: string;
 	apiKey: string;

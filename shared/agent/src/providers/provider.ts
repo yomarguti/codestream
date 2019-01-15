@@ -234,7 +234,11 @@ export abstract class ThirdPartyProviderBase<
 					}
 				}
 				if (data.error) {
-					message += `: ${data.error}`;
+					if (data.error.message) {
+						message += `: ${data.error.message}`;
+					} else {
+						message += `: ${data.error}`;
+					}
 				}
 			} catch {}
 		}

@@ -14,6 +14,7 @@ export * from "./jira";
 export * from "./github";
 export * from "./gitlab";
 export * from "./asana";
+export * from "./bitbucket";
 
 @lsp
 export class ThirdPartyProviderRegistry {
