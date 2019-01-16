@@ -5,7 +5,6 @@
     "version": "0.30.4",
     "versionFormatted": "0.30.4 (dev)"
   },
-  "gitPath": "/opt/local/bin/git",
   "ide": {
     "name": "VS Code",
     "version": "1.31.0-exploration"
