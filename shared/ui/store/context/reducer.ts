@@ -10,6 +10,7 @@ const initialState: State = {
 	currentTeamId: "",
 	currentCommit: "", // maybe delete
 	currentStreamId: "",
+	issueProvider: undefined,
 	fileStreamId: undefined,
 	lastFileStreamId: undefined,
 	threadId: null,
@@ -55,6 +56,8 @@ export function reduceContext(state: State = initialState, action: ContextAction
 			return { ...state, codemarkTypeFilter: action.payload };
 		case ContextActionsType.SetChannelFilter:
 			return { ...state, channelFilter: action.payload };
+		case ContextActionsType.SetIssueProvider:
+			return { ...state, issueProvider: action.payload };
 		case "RESET":
 			return initialState;
 		default:

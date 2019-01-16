@@ -1,5 +1,5 @@
 import EventEmitter from "../../event-emitter";
-import { action } from "../common";
+import { action, ThunkExtras } from "../common";
 import { ContextActionsType, State } from "./types";
 
 export { reset } from "../actions";
@@ -53,3 +53,20 @@ export const setCurrentStream = streamId => (dispatch, getState) => {
 		return dispatch(_setCurrentStream(streamId));
 	}
 };
+
+export const connectProvider = (name: string) => async (
+	dispatch,
+	getState,
+	{ api }: ThunkExtras
+) => {
+	const { context, users, session } = getState();
+	const user = users[session.userId];
+	if (((user.providerInfo && user.providerInfo[context.currentTeamId]) || {})[name]) {
+		return dispatch(setIssueProvider(name));
+	}
+	await api.connectService(name);
+	return dispatch(setIssueProvider(name));
+};
+
+export const setIssueProvider = (name: string | undefined) =>
+	action(ContextActionsType.SetIssueProvider, name);

@@ -17,6 +17,7 @@ import { connectSlack } from "./actions";
 import Button from "./Button";
 import CancelButton from "./CancelButton";
 import CrossPostIssueControls from "./CrossPostIssueControls";
+import { CardValues, Service } from "./CrossPostIssueControls/types";
 import Icon from "./Icon";
 import Menu from "./Menu";
 import { PostCompose } from "./PostCompose";
@@ -30,6 +31,7 @@ const COLOR_OPTIONS = tuple("blue", "green", "yellow", "orange", "red", "purple"
 type Color = typeof COLOR_OPTIONS[number] | string;
 
 interface Props {
+	issueProvider?: string;
 	providerInfo: {
 		[service: string]: {};
 	};
@@ -40,7 +42,6 @@ interface Props {
 	teammates: CSUser[];
 	streamId: string;
 	collapseForm: Function;
-	onCrossPostIssueValues: Function;
 	onSubmit: Function;
 	onClickClose(): any;
 	renderMessageInput(props: { [key: string]: any }): JSX.Element;
@@ -98,6 +99,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	_titleInput: HTMLElement | null = null;
 	insertTextAtCursor?: Function;
 	focusOnMessageInput?: Function;
+	crossPostIssueValues?: CardValues;
 
 	constructor(props: Props) {
 		super(props);
@@ -127,6 +129,10 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (prevProps.codeBlock !== this.props.codeBlock && !prevProps.isEditing) {
 			this.handleCodeHighlightEvent();
 		}
+	}
+
+	handleCrossPostIssueValues = (values: CardValues) => {
+		this.crossPostIssueValues = values;
 	}
 
 	handleCodeHighlightEvent = () => {
@@ -215,7 +221,17 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		const { color, type, assignees, privacy, notify, title, text, crossPostMessage } = this.state;
 		this.props.onSubmit(
-			{ text, color, type, assignees, privacy, notify, title, crossPostMessage },
+			{
+				text,
+				color,
+				type,
+				assignees,
+				privacy,
+				notify,
+				title,
+				crossPostMessage,
+				crossPostIssueValues: this.crossPostIssueValues
+			},
 			event
 		);
 	}
@@ -649,7 +665,8 @@ class CodemarkForm extends React.Component<Props, State> {
 					{this.renderCrossPostMessage()}
 					{commentType === "issue" && (
 						<CrossPostIssueControls
-							onValues={this.props.onCrossPostIssueValues as any}
+							provider={this.props.issueProvider}
+							onValues={this.handleCrossPostIssueValues}
 							codeBlock={this.props.codeBlock}
 						/>
 					)}
@@ -756,6 +773,7 @@ const mapStateToProps = state => {
 
 	return {
 		channel,
+		issueProvider: context.issueProvider,
 		providerInfo: user.providerInfo ? user.providerInfo[context.currentTeamId] : EMPTY_OBJECT,
 		slackInfo
 	};

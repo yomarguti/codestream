@@ -2,7 +2,7 @@ import EventEmitter from "../event-emitter";
 import { logError, logWarning } from "../logger";
 import { StreamType } from "../shared/api.protocol";
 import { saveCodemarks, updateCodemarks } from "../store/codemarks/actions";
-import * as contextActions from "../store/context/actions";
+import { ThunkExtras } from "../store/common";
 import {
 	closePanel,
 	openPanel,
@@ -11,17 +11,13 @@ import {
 	setCodemarkTypeFilter,
 	setThread
 } from "../store/context/actions";
+import * as contextActions from "../store/context/actions";
 import * as postsActions from "../store/posts/actions";
 import { updatePreferences } from "../store/preferences/actions";
 import * as streamActions from "../store/streams/actions";
 import { getChannelStreamsForTeam, getDirectMessageStreamsForTeam } from "../store/streams/reducer";
 import { addUsers } from "../store/users/actions";
 import { uuid } from "../utils";
-import WebviewApi from "../webview-api";
-
-interface ThunkExtras {
-	api: WebviewApi;
-}
 
 export { connectSlack, connectService } from "../Signup/actions";
 export {
@@ -563,7 +559,12 @@ export const createServiceCard = attributes => async (_, __, { api }: ThunkExtra
 				return api.createGitlabCard(attributes.title, attributes.description, attributes.boardName);
 			}
 			case "asana": {
-				return api.createAsanaCard(attributes.boardId, attributes.listId, attributes.title, attributes.description);
+				return api.createAsanaCard(
+					attributes.boardId,
+					attributes.listId,
+					attributes.title,
+					attributes.description
+				);
 			}
 		}
 	} catch (error) {
@@ -574,7 +575,9 @@ export const createServiceCard = attributes => async (_, __, { api }: ThunkExtra
 export const disconnectService = service => async (dispatch, getState, { api }) => {
 	try {
 		const response = await api.disconnectService(service);
-		return response;
+		if (getState().context.issueProvider === service) {
+			dispatch(contextActions.setIssueProvider(undefined));
+		}
 	} catch (error) {
 		console.error("failed to signout from " + service, error);
 	}

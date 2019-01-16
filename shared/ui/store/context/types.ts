@@ -8,7 +8,8 @@ export enum ContextActionsType {
 	ClosePanel = "CLOSE_PANEL",
 	SetFocusState = "SET_HAS_FOCUS",
 	SetCurrentFile = "SET_CURRENT_FILE",
-	SetCurrentStream = "SET_CURRENT_STREAM"
+	SetCurrentStream = "SET_CURRENT_STREAM",
+	SetIssueProvider = "SET_ISSUE_PROVIDER"
 }
 
 export interface State {
@@ -17,6 +18,7 @@ export interface State {
 	currentTeamId: string;
 	currentCommit: string; // maybe delete
 	currentStreamId: string;
+	issueProvider?: string;
 	fileStreamId?: string;
 	lastFileStreamId?: string;
 	threadId: string | null;

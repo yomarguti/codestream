@@ -69,7 +69,7 @@ class ComposeBox extends React.Component {
 			}
 		});
 
-		const { crossPostIssueValues } = this;
+		const { crossPostIssueValues } = attributes;
 		if (type === "issue" && crossPostIssueValues && crossPostIssueValues.isEnabled) {
 			let description = text + "\n\n";
 			if (quote) description += "In " + quote.file + "\n\n```\n" + quote.code + "\n```\n\n";
@@ -133,10 +133,6 @@ class ComposeBox extends React.Component {
 		setTimeout(() => {
 			this.focus();
 		}, 20);
-	};
-
-	handleCrossPostIssueValues = values => {
-		this.crossPostIssueValues = values;
 	};
 
 	switchChannel = event => {
@@ -221,7 +217,6 @@ class ComposeBox extends React.Component {
 							collapseForm={() => this.props.setMultiCompose("collapse")}
 							onClickClose={this.handleClickDismissMultiCompose}
 							streamId={this.props.streamId}
-							onCrossPostIssueValues={this.handleCrossPostIssueValues}
 							onSubmit={this.submitCodemarkPost}
 							codeBlock={quote}
 							renderMessageInput={this.renderMessageInput}
