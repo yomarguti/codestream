@@ -27,6 +27,7 @@ namespace CodeStream.VisualStudio.Services
     {
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamService>();
 
+        private readonly Lazy<ICredentialsService> _credentialsService;
         private readonly Lazy<IEventAggregator> _eventAggregator;
         private readonly ISessionService _sessionService;
         private readonly ICodeStreamAgentService _agentService;
@@ -34,12 +35,14 @@ namespace CodeStream.VisualStudio.Services
         private readonly Lazy<ISettingsService> _settingsService;
 
         public CodeStreamService(
+            Lazy<ICredentialsService> credentialsService,
             Lazy<IEventAggregator> eventAggregator,
             ISessionService sessionService,
             ICodeStreamAgentService serviceProvider,
             IBrowserService browserService,
             Lazy<ISettingsService> settingsService)
         {
+            _credentialsService = credentialsService;
             _eventAggregator = eventAggregator;
             _sessionService = sessionService;
             _agentService = serviceProvider;
@@ -124,7 +127,7 @@ namespace CodeStream.VisualStudio.Services
 
             try
             {
-                await new CredentialsService().DeleteAsync(new Uri(_settingsService.Value.ServerUrl), _settingsService.Value.Email);
+                await _credentialsService.Value.DeleteAsync(new Uri(_settingsService.Value.ServerUrl), _settingsService.Value.Email);
             }
             catch (Exception ex)
             {

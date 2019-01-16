@@ -74,9 +74,9 @@ namespace CodeStream.VisualStudio
                 return new EventAggregator();
             if (typeof(SIdeService) == serviceType)
                 return new IdeService(
-                    GetService(typeof(SVsTextManager)) as IVsTextManager2
-                    ,GetService(typeof(SVsExtensionManager)) as IVsExtensionManager
-                    );
+                    GetService(typeof(SVsTextManager)) as IVsTextManager2,
+                    GetService(typeof(SVsExtensionManager)) as IVsExtensionManager
+                );
             if (typeof(SCredentialsService) == serviceType)
                 return new CredentialsService();
             if (typeof(SSessionService) == serviceType)
@@ -91,6 +91,7 @@ namespace CodeStream.VisualStudio
                     GetService(typeof(SSettingsService)) as ISettingsService);
             if (typeof(SCodeStreamService) == serviceType)
                 return new CodeStreamService(
+                    new Lazy<ICredentialsService>(() => GetService(typeof(SCredentialsService)) as ICredentialsService),
                     new Lazy<IEventAggregator>(() => GetService(typeof(SEventAggregator)) as IEventAggregator),
                     GetService(typeof(SSessionService)) as ISessionService,
                     GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
