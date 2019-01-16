@@ -74,7 +74,7 @@ namespace CodeStream.VisualStudio.Services
 
                 colorInfos.Add(new ColorInfo { Key = "color", VisualStudioKey = EnvironmentColors.ToolWindowTextColorKey });
 
-                colorInfos.Add(new ColorInfo { Key = "link-color", VisualStudioKey = EnvironmentColors.ToolWindowButtonDownColorKey });
+                colorInfos.Add(new ColorInfo { Key = "link-color", VisualStudioKey = EnvironmentColors.StartPageTextControlLinkSelectedColorKey });
 
                 colorInfos.Add(new ColorInfo { Key = "text-color", VisualStudioKey = EnvironmentColors.ToolWindowTextColorKey, Modifier = (b) => b.ToArgb(80) });
                 colorInfos.Add(new ColorInfo { Key = "text-color-subtle-extra", VisualStudioKey = EnvironmentColors.ToolWindowTextColorKey, Modifier = (b) => b.Lighten(0.5f).ToArgb(60) });
