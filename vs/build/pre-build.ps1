@@ -1,4 +1,4 @@
-param([string] $checkoutDir = "", [string] $assetEnv = "")
+param([string] $checkoutDir = $pwd, [string] $assetEnv = "")
 
 $computer = 'tc.codestream.us'
 $username = 'web'
@@ -20,6 +20,7 @@ $cred = new-object -typename System.Management.Automation.PSCredential $username
 # Get the teamdev license
 Get-SCPFile -ComputerName $computer -LocalFile $localLicenseFile -RemoteFile $remoteLicenseFile -KeyFile $keyfile -Credential $cred -AcceptKey
 
+Write-Host 'Here is the license file:'
 ls $localLicenseFile
 
 $vscodeDir = $checkoutDir + '\vscode-codestream'
