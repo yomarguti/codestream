@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
+using CodeStream.VisualStudio.Properties;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI;
 using CodeStream.VisualStudio.UI.Settings;
@@ -15,7 +16,7 @@ using Serilog;
 namespace CodeStream.VisualStudio.Packages
 {
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-    [InstalledProductRegistration("#110", "#112", "0.1.0", IconResourceID = 400)] // Info on this package for Help/About
+    [InstalledProductRegistration("#110", "#112", SolutionInfo.Version, IconResourceID = 400)] // Info on this package for Help/About
     [ProvideOptionPage(typeof(OptionsDialogPage), "CodeStream", "Settings", 0, 0, true)]
     [Guid(Guids.CodeStreamPackageId)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.NoSolution_string, PackageAutoLoadFlags.BackgroundLoad)]
