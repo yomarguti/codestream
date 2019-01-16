@@ -732,6 +732,7 @@ export class SimpleStream extends Component {
 							</div>
 							{!threadId &&
 								activePanel === "main" &&
+								!this.state.floatCompose &&
 								this.renderComposeBox(placeholderText, channelName)}
 						</div>
 					)}
