@@ -70,6 +70,9 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 
         public Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken)
         {
+            var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+            if (sessionService == null || sessionService.IsReady == false) return System.Threading.Tasks.Task.FromResult(false);
+
             var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
             _selectedText = ideService?.GetSelectedText();
 

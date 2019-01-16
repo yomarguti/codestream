@@ -1,4 +1,6 @@
-﻿using Microsoft.VisualStudio.Language.Intellisense;
+﻿using CodeStream.VisualStudio.Services;
+using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
@@ -21,9 +23,8 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 
         public ISuggestedActionsSource CreateSuggestedActionsSource(ITextView textView, ITextBuffer textBuffer)
         {
-            return textBuffer == null || textView == null
-                ? null
-                : new CodemarkSuggestedActionsSource(this, textView, textBuffer, _textDocumentFactoryService);
+            if (textBuffer == null || textView == null) return null;
+            return new CodemarkSuggestedActionsSource(this, textView, textBuffer, _textDocumentFactoryService);
         }
     }
 }

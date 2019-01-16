@@ -36,6 +36,8 @@
 
       <Button guid="guidVSPackageCommandCodeWindowContextMenuCmdSet" id="AddCodemarkCommandId" type="Button">
         <Icon guid="guidImages" id="logo" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <ButtonText>CodeStream: Add Comment...</ButtonText>
         </Strings>
