@@ -41,6 +41,7 @@ namespace CodeStream.VisualStudio.Services
 
         private WPFBrowserView _browserView;
         private BrowserContext _browserContext;
+        private string _path;
 
         protected override void OnInitialized()
         {
@@ -50,8 +51,8 @@ namespace CodeStream.VisualStudio.Services
 //#endif
 
             BrowserPreferences.SetChromiumSwitches(switches.ToArray());
-
-            BrowserContextParams parameters = new BrowserContextParams(GetOrCreateContextParamsPath());
+            _path = GetOrCreateContextParamsPath();
+            BrowserContextParams parameters = new BrowserContextParams(_path);
             _browserContext = new BrowserContext(parameters);
             // use LIGHTWEIGHT to avoid "System.InvalidOperationException: 'The specified Visual is not an ancestor of this Visual.'"            
             _browserView = new WPFBrowserView(BrowserFactory.Create(_browserContext, BrowserType.LIGHTWEIGHT));
@@ -89,7 +90,7 @@ namespace CodeStream.VisualStudio.Services
         }
 
         /// <summary>
-        /// Checks known files to see if DotNetBrowser is active
+        /// Checks known files to see if DotNetBrowser is active. First a .lock file (randomly named), then a file known to exist in the directory (History)
         /// </summary>
         /// <param name="directoryPath"></param>
         /// <param name="lockInfo"></param>
@@ -101,6 +102,9 @@ namespace CodeStream.VisualStudio.Services
 
             try
             {
+                // this dir, doesn't exist... good to go!
+                if (!Directory.Exists(directoryPath)) return false;
+
                 var di = new DirectoryInfo(directoryPath);
                 foreach (var file in di.GetFiles())
                 {
@@ -111,7 +115,7 @@ namespace CodeStream.VisualStudio.Services
                     }
                     if (file.Name.EqualsIgnoreCase(fileKnownToBeLocked))
                     {
-                        if (IsFileLocked(file.Name))
+                        if (IsFileLocked(file.FullName))
                         {
                             lockInfo.LockFile = file.FullName;
                             return true;
@@ -183,27 +187,55 @@ namespace CodeStream.VisualStudio.Services
         {
             if (_disposed) return;
 
+            var success = true;
             if (disposing)
             {
                 try
                 {
+                    if (_browserView == null)
+                    {
+                        Log.Verbose("DotNetBrowser is null");
+                        return;
+                    }
+
                     if (_browserView?.IsDisposed == true)
                     {
                         Log.Verbose("DotNetBrowser already disposed");
                         return;
                     }
 
-                    // UGH WTF?! 
+                    _browserView.Dispose();
+                    _browserView.Browser.Dispose();
+                    _browserView.Browser.Context.Dispose();
                     _browserView = null;
-                    GC.Collect();
-                    GC.WaitForPendingFinalizers();
+
+                    var deleted = false;
+                    for (var i = 0; i < 5; i++)
+                    {
+                        if (deleted) break;
+
+                        try
+                        {
+                            Directory.Delete(_path, true);
+                            deleted = true;
+                            Log.Verbose($"Cleaned up {_path} on {i + 1} attempt");
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Warning(ex, $"Could not delete attempt ({i + 1}) {_path}");
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Log.Warning(ex, "DotNetBrowser dispose warning");
+                    Log.Warning(ex, "DotNetBrowser dispose failure");
+                    success = false;
                 }
 
-                Log.Verbose("DotNetBrowser Disposed");
+                if (success)
+                {
+                    Log.Verbose("DotNetBrowser Disposed");
+                }
 
                 _disposed = true;
             }
