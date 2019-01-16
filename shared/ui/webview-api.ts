@@ -181,14 +181,21 @@ export default class WebviewApi {
 		});
 	}
 
-	createJiraCard(summary: string, description: string, issueType: string, project: string) {
+	createJiraCard(
+		summary: string,
+		description: string,
+		issueType: string,
+		project: string,
+		assignees?: any[]
+	) {
 		return this.postMessage({
 			action: CreateJiraCardRequestType.method,
 			params: {
 				summary,
 				description,
 				issueType,
-				project
+				project,
+				assignees
 			} as CreateJiraCardRequest
 		});
 	}

@@ -40,18 +40,14 @@ class ComposeBox extends React.Component {
 				.documentElement.textContent;
 		const mentionedUserIds = this.props.findMentionedUserIds(text, this.props.teammates);
 
-		const { assignees, color, type } = attributes;
+		const { assignees, color, type, crossPostIssueValues } = attributes;
 
 		if (this.props.disabled) return;
 
 		// don't submit blank posts
 		if (newPostText.trim().length === 0 && title.length === 0) return;
 
-		const assigneeIds = (assignees || [])
-			.map(item => {
-				return item.value;
-			})
-			.filter(Boolean);
+		const crossPostIssueEnabled = crossPostIssueValues && crossPostIssueValues.isEnabled;
 
 		this.props.onSubmit({
 			text: "",
@@ -64,18 +60,21 @@ class ComposeBox extends React.Component {
 				text,
 				streamId,
 				type,
-				assignees: assigneeIds || [],
+				assignees: crossPostIssueEnabled ? undefined : assignees,
+				externalAssignees:
+					crossPostIssueEnabled && assignees
+						? assignees.map(a => ({ displayName: a.displayName }))
+						: undefined,
 				color: color || ""
 			}
 		});
 
-		const { crossPostIssueValues } = attributes;
-		if (type === "issue" && crossPostIssueValues && crossPostIssueValues.isEnabled) {
+		if (type === "issue" && crossPostIssueEnabled) {
 			let description = text + "\n\n";
 			if (quote) description += "In " + quote.file + "\n\n```\n" + quote.code + "\n```\n\n";
 			description += "Posted via CodeStream";
 
-			this.props.createServiceCard({ ...crossPostIssueValues, title, description });
+			this.props.createServiceCard({ ...crossPostIssueValues, assignees, title, description });
 		}
 
 		if (event && event.metaKey) this.softReset();

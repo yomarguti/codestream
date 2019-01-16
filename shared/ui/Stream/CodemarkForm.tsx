@@ -70,6 +70,8 @@ interface State {
 	color: Color;
 	type: string;
 	assignees: any[];
+	assigneesRequired: boolean;
+	assigneesDisabled: boolean;
 	privacy: "private" | "public";
 	notify: boolean;
 	isLoading: boolean;
@@ -83,6 +85,7 @@ interface State {
 	codeBlockInvalid?: boolean;
 	titleInvalid?: boolean;
 	textInvalid?: boolean;
+	assigneesInvalid?: boolean;
 }
 
 function merge(defaults: Partial<State>, codemark: CSCodemark): State {
@@ -111,6 +114,8 @@ class CodemarkForm extends React.Component<Props, State> {
 			color: "blue",
 			type: props.commentType,
 			assignees: [],
+			assigneesDisabled: false,
+			assigneesRequired: false,
 			selectedChannelName: props.channel.name,
 			assignableUsers: this.getAssignableUsers()
 			// privacy: "private"
@@ -134,7 +139,12 @@ class CodemarkForm extends React.Component<Props, State> {
 			this.handleCodeHighlightEvent();
 		}
 		if (prevProps.issueProvider !== this.props.issueProvider) {
-			this.setState({ assignableUsers: this.getAssignableUsers() });
+			this.setState({
+				assignableUsers: this.getAssignableUsers(),
+				assignees: [],
+				assigneesDisabled: false,
+				assigneesRequired: false
+			});
 			this.crossPostIssueValues = undefined;
 		}
 	}
@@ -152,10 +162,16 @@ class CodemarkForm extends React.Component<Props, State> {
 	}
 
 	async loadAssignableUsers(service: string, board: Board) {
-		if (board.assigneesDisabled) return;
+		if (board.assigneesDisabled) return this.setState({ assigneesDisabled: true });
+		if (board.assigneesRequired) {
+			this.setState(state => (state.assigneesRequired ? null : { assigneesRequired: true }));
+		}
 		const { users } = await this.props.fetchAssignableUsers(service, board.id);
 		this.setState({
-			assignableUsers: users.map(u => ({ value: u.id, label: u.displayName }))
+			assignableUsers: users.map(u => ({
+				value: u,
+				label: u.displayName
+			}))
 		});
 	}
 
@@ -256,7 +272,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				text,
 				color,
 				type,
-				assignees,
+				assignees: assignees.map(a => a.value),
 				privacy,
 				notify,
 				title,
@@ -269,12 +285,13 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	isFormInvalid = () => {
 		const { codeBlock } = this.props;
-		const { text, title, assignees, type } = this.state;
+		const { text, title, assignees, assigneesRequired, type } = this.state;
 
 		const validationState = {
 			codeBlockInvalid: false,
 			titleInvalid: false,
-			textInvalid: false
+			textInvalid: false,
+			assigneesInvalid: false
 		};
 
 		let invalid = false;
@@ -288,6 +305,9 @@ class CodemarkForm extends React.Component<Props, State> {
 			if (!title || title.length === 0) {
 				validationState.titleInvalid = true;
 				invalid = true;
+			}
+			if (assigneesRequired && assignees.length === 0) {
+				invalid = validationState.assigneesInvalid = true;
 			}
 		}
 		if (type === "comment" || type === "trap") {
@@ -636,19 +656,21 @@ class CodemarkForm extends React.Component<Props, State> {
 						)}
 						{commentType === "issue" && (
 							<div id="members-controls" className="control-group" style={{ marginBottom: "10px" }}>
-								<Select
-									id="input-assignees"
-									name="assignees"
-									classNamePrefix="native-key-bindings react-select"
-									isMulti={true}
-									value={this.state.assignees}
-									options={this.state.assignableUsers}
-									closeMenuOnSelect={true}
-									isClearable={false}
-									placeholder={assigneesPlaceholder}
-									onChange={value => this.setState({ assignees: value })}
-									tabIndex={this.tabIndex()}
-								/>
+								{!this.state.assigneesDisabled && (
+									<Select
+										id="input-assignees"
+										name="assignees"
+										classNamePrefix="native-key-bindings react-select"
+										isMulti={true}
+										value={this.state.assignees}
+										options={this.state.assignableUsers}
+										closeMenuOnSelect={true}
+										isClearable={false}
+										placeholder={assigneesPlaceholder}
+										onChange={value => this.setState({ assignees: value })}
+										tabIndex={this.tabIndex()}
+									/>
+								)}
 							</div>
 						)}
 						{this.renderTextHelp()}
