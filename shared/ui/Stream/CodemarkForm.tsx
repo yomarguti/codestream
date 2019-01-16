@@ -517,7 +517,7 @@ class CodemarkForm extends React.Component<Props, State> {
 							>
 								<Icon name="comment" className="chat-bubble" /> <b>Comment</b>
 							</label>
-							<input
+							{/*<input
 								id="radio-comment-type-question"
 								type="radio"
 								name="comment-type"
@@ -531,7 +531,7 @@ class CodemarkForm extends React.Component<Props, State> {
 								onClick={e => this.setCommentType("question")}
 							>
 								<Icon name="question" /> <b>FAQ</b>
-							</label>
+							</label>*/}
 							<input
 								id="radio-comment-type-issue"
 								type="radio"
@@ -547,23 +547,21 @@ class CodemarkForm extends React.Component<Props, State> {
 							>
 								<Icon name="issue" /> <b>Issue</b>
 							</label>
-							{/*
-								<input
-									id="radio-comment-type-trap"
-									type="radio"
-									name="comment-type"
-									checked={commentType === "trap"}
-								/>
-								<label
-									htmlFor="radio-comment-type-trap"
-									className={createClassString({
-										checked: commentType === "trap"
-									})}
-									onClick={e => this.setCommentType("trap")}
-								>
-									<Icon name="trap" /> <b>Trap</b>
-								</label>
-							*/}
+							<input
+								id="radio-comment-type-trap"
+								type="radio"
+								name="comment-type"
+								checked={commentType === "trap"}
+							/>
+							<label
+								htmlFor="radio-comment-type-trap"
+								className={cx({
+									checked: commentType === "trap"
+								})}
+								onClick={e => this.setCommentType("trap")}
+							>
+								<Icon name="trap" /> <b>Trap</b>
+							</label>
 							<label
 								htmlFor="radio-comment-type-bookmark"
 								className={cx({
@@ -574,7 +572,7 @@ class CodemarkForm extends React.Component<Props, State> {
 								<Icon name="bookmark" /> <b>Bookmark</b>
 							</label>
 
-							<label
+							{/*<label
 								htmlFor="radio-comment-type-link"
 								className={cx({
 									checked: commentType === "link"
@@ -582,7 +580,7 @@ class CodemarkForm extends React.Component<Props, State> {
 								onClick={e => this.setCommentType("link")}
 							>
 								<Icon name="link" /> <b>Permalink</b>
-							</label>
+							</label> */}
 						</div>
 						{commentType === "trap" && (
 							<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
