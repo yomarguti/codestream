@@ -75,7 +75,6 @@ interface State {
 	channelMenuTarget: any;
 	selectedChannelName?: string;
 	selectedChannelId?: string;
-	autoMentions: string[]; // TOOD: remove, it's unused
 	title?: string;
 	codeBlockInvalid?: boolean;
 	titleInvalid?: boolean;
@@ -115,7 +114,6 @@ class CodemarkForm extends React.Component<Props, State> {
 			? merge(defaultState, props.editingCodemark)
 			: ({
 					isLoading: false,
-					autoMentions: [],
 					notify: false,
 					...defaultState
 			  } as State);
@@ -146,7 +144,6 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (mentions.length > 0) {
 			// TODO handle users with no username
 			const usernames: string[] = mentions.map(u => `@${u.username}`);
-			this.setState({ autoMentions: usernames });
 			// if there's text in the compose area, return without
 			// adding the suggestion
 			if (this.state.text.length > 0) return;
@@ -216,19 +213,9 @@ class CodemarkForm extends React.Component<Props, State> {
 		event && event.preventDefault();
 		if (this.isFormInvalid()) return;
 
-		const {
-			color,
-			type,
-			assignees,
-			privacy,
-			notify,
-			title,
-			text,
-			autoMentions,
-			crossPostMessage
-		} = this.state;
+		const { color, type, assignees, privacy, notify, title, text, crossPostMessage } = this.state;
 		this.props.onSubmit(
-			{ text, color, type, assignees, privacy, notify, title, autoMentions, crossPostMessage },
+			{ text, color, type, assignees, privacy, notify, title, crossPostMessage },
 			event
 		);
 	}

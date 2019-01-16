@@ -1686,15 +1686,7 @@ export class SimpleStream extends Component {
 	};
 
 	// create a new post
-	submitPost = ({
-		text,
-		quote,
-		mentionedUserIds,
-		autoMentions,
-		forceStreamId,
-		forceThreadId,
-		codemark
-	}) => {
+	submitPost = ({ text, quote, mentionedUserIds, forceStreamId, forceThreadId, codemark }) => {
 		const markers = [];
 		if (codemark) codemark.markers = markers;
 		const { postStreamId, createPost, editCodemark } = this.props;
@@ -1718,7 +1710,6 @@ export class SimpleStream extends Component {
 
 		const submit = async () => {
 			await createPost(streamId, threadId, text, codemark, mentionedUserIds, {
-				autoMentions,
 				fileUri
 			});
 			if (codemark && codemark.streamId && codemark.streamId !== postStreamId) {

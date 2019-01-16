@@ -58,7 +58,6 @@ class ComposeBox extends React.Component {
 			title,
 			quote,
 			mentionedUserIds,
-			autoMentions: attributes.autoMentions,
 			forceStreamId: streamId,
 			codemark: {
 				title,
@@ -102,9 +101,6 @@ class ComposeBox extends React.Component {
 	resetFields = clearOutTextToo => {
 		if (clearOutTextToo) {
 		}
-		this.setState({
-			autoMentions: []
-		});
 	};
 
 	softReset = () => {
