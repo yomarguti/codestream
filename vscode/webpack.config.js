@@ -160,7 +160,7 @@ function getWebviewConfig(env) {
 							source: "dist/webview/webview.*",
 							destination: path.resolve(
 								__dirname,
-								"../vs-codestream-foo/src/CodeStream.VisualStudio/UI/WebViews/Shared"
+								"../vs-codestream/src/CodeStream.VisualStudio/UI/WebViews/Shared"
 							)
 						}
 					]
