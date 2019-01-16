@@ -6,6 +6,7 @@ export interface Service {
 
 export interface CardValues {
 	service: string;
+	board: Board;
 	[key: string]: any;
 }
 export type CrossPostIssueValuesListener = (values: CardValues) => any;
@@ -13,6 +14,8 @@ export type CrossPostIssueValuesListener = (values: CardValues) => any;
 export interface Board {
 	id: string;
 	name: string;
+	assigneesRequired: boolean;
+	assigneesDisabled?: boolean;
 	[key: string]: any;
 }
 

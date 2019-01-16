@@ -1,4 +1,5 @@
 import EventEmitter from "../../event-emitter";
+import { logError } from "../../logger";
 import { action, ThunkExtras } from "../common";
 import { ContextActionsType, State } from "./types";
 
@@ -64,8 +65,12 @@ export const connectProvider = (name: string) => async (
 	if (((user.providerInfo && user.providerInfo[context.currentTeamId]) || {})[name]) {
 		return dispatch(setIssueProvider(name));
 	}
-	await api.connectService(name);
-	return dispatch(setIssueProvider(name));
+	try {
+		await api.connectService(name);
+		return dispatch(setIssueProvider(name));
+	} catch (error) {
+		logError(`Failed to connect ${name}: ${error}`);
+	}
 };
 
 export const setIssueProvider = (name: string | undefined) =>

@@ -29,12 +29,19 @@ interface State {
 	loadingProvider?: Service;
 }
 
+function getProviderInfo(name: string): Service {
+	return Object.values(SUPPORTED_SERVICES).find(s => s.name === name)!;
+}
+
 class CrossPostIssueControls extends React.Component<Props, State> {
 	constructor(props: Props) {
 		super(props);
+		const isLoading = props.provider ? true : false;
+		const loadingProvider = isLoading ? getProviderInfo(props.provider!) : undefined;
 		this.state = {
 			boards: [],
-			isLoading: false
+			isLoading,
+			loadingProvider
 		};
 	}
 
@@ -55,7 +62,12 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 	}
 
 	async loadBoards(provider: string) {
-		if (!this.state.isLoading) this.setState({ isLoading: true });
+		if (!this.state.isLoading) {
+			this.setState({
+				isLoading: true,
+				loadingProvider: getProviderInfo(provider)
+			});
+		}
 
 		const response = await this.props.fetchIssueBoards(provider);
 

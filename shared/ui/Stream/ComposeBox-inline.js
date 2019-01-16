@@ -89,7 +89,7 @@ class ComposeBox extends React.Component {
 		if (event) event.preventDefault();
 		this.resetFields();
 		this.props.setMultiCompose(false);
-		this.focus();
+		// this.focus();
 		// this.reset();
 	};
 
@@ -105,7 +105,7 @@ class ComposeBox extends React.Component {
 
 	softReset = () => {
 		this.resetFields(true);
-		this.focus();
+		// this.focus();
 	};
 
 	// TODO: delete
@@ -117,9 +117,9 @@ class ComposeBox extends React.Component {
 
 	openMultiCompose = () => {
 		this.props.setMultiCompose("comment");
-		setTimeout(() => {
-			this.focus();
-		}, 20);
+		// setTimeout(() => {
+		// 	this.focus();
+		// }, 20);
 	};
 
 	setCommentType = type => {
@@ -130,9 +130,9 @@ class ComposeBox extends React.Component {
 			titleInvalid: false,
 			textInvalid: false
 		});
-		setTimeout(() => {
-			this.focus();
-		}, 20);
+		// setTimeout(() => {
+		// 	this.focus();
+		// }, 20);
 	};
 
 	switchChannel = event => {

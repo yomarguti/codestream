@@ -32,6 +32,8 @@ import {
 	EditPostRequest,
 	EditPostRequestType,
 	EditPostResponse,
+	FetchAssignableUsersRequest,
+	FetchAssignableUsersRequestType,
 	FetchCodemarksRequestType,
 	FetchCodemarksResponse,
 	FetchPostRepliesRequest,
@@ -220,7 +222,7 @@ export default class WebviewApi {
 				boardId,
 				listId,
 				name,
-				description,
+				description
 			}
 		});
 	}
@@ -576,5 +578,12 @@ export default class WebviewApi {
 
 	editorRevealLine(line: number) {
 		return this.postMessage({ action: "reveal-line", params: { line } });
+	}
+
+	fetchAssignableUsers(service: string, boardId: string) {
+		return this.postMessage({
+			action: FetchAssignableUsersRequestType.method,
+			params: { providerName: service, projectId: boardId } as FetchAssignableUsersRequest
+		});
 	}
 }

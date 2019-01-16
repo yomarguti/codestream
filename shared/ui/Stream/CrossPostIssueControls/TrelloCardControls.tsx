@@ -41,8 +41,9 @@ export default class TrelloCardControls extends React.Component<Props, State> {
 	}
 
 	onValuesChanged = () => {
-		const { isEnabled, list } = this.state;
+		const { board, isEnabled, list } = this.state;
 		this.props.onValues({
+			board: board,
 			listId: list && list.id,
 			isEnabled,
 			service: SUPPORTED_SERVICES.Trello.name

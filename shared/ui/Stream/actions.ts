@@ -597,3 +597,11 @@ export const editorRevealLine = line => async (dispatch, getState, { api }) => {
 export const startCommentOnLine = (line, uri) => (dispatch, getState, { api }) => {
 	return api.startCommentOnLine(line, uri);
 };
+
+export const fetchAssignableUsers = (service: string, boardId: string) => async (
+	dispatch,
+	getState,
+	{ api }: ThunkExtras
+) => {
+	return api.fetchAssignableUsers(service, boardId);
+};

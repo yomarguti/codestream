@@ -13,11 +13,12 @@ import {
 } from "../shared/api.protocol";
 import { getStreamForId, getStreamForTeam } from "../store/streams/reducer";
 import { Stream } from "../store/streams/types";
-import { connectSlack } from "./actions";
+import { mapFilter } from "../utils";
+import { connectSlack, fetchAssignableUsers } from "./actions";
 import Button from "./Button";
 import CancelButton from "./CancelButton";
 import CrossPostIssueControls from "./CrossPostIssueControls";
-import { CardValues, Service } from "./CrossPostIssueControls/types";
+import { Board, CardValues, Service } from "./CrossPostIssueControls/types";
 import Icon from "./Icon";
 import Menu from "./Menu";
 import { PostCompose } from "./PostCompose";
@@ -47,6 +48,7 @@ interface Props {
 	renderMessageInput(props: { [key: string]: any }): JSX.Element;
 	openCodemarkForm(): any;
 	connectSlack(): any;
+	fetchAssignableUsers(service: string, boardId: string): any;
 	slackInfo?: {};
 	codeBlock?: {
 		file?: string;
@@ -72,6 +74,7 @@ interface State {
 	notify: boolean;
 	isLoading: boolean;
 	crossPostMessage: boolean;
+	assignableUsers: { value: string; label: string }[];
 	channelMenuOpen: boolean;
 	channelMenuTarget: any;
 	selectedChannelName?: string;
@@ -108,7 +111,8 @@ class CodemarkForm extends React.Component<Props, State> {
 			color: "blue",
 			type: props.commentType,
 			assignees: [],
-			selectedChannelName: props.channel.name
+			selectedChannelName: props.channel.name,
+			assignableUsers: this.getAssignableUsers()
 			// privacy: "private"
 		};
 
@@ -129,9 +133,36 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (prevProps.codeBlock !== this.props.codeBlock && !prevProps.isEditing) {
 			this.handleCodeHighlightEvent();
 		}
+		if (prevProps.issueProvider !== this.props.issueProvider) {
+			this.setState({ assignableUsers: this.getAssignableUsers() });
+			this.crossPostIssueValues = undefined;
+		}
+	}
+
+	getAssignableUsers() {
+		return this.props.issueProvider
+			? []
+			: mapFilter(this.props.teammates, user => {
+					if (!user.isRegistered) return;
+					return {
+						value: user.id,
+						label: user.username
+					};
+			  });
+	}
+
+	async loadAssignableUsers(service: string, board: Board) {
+		if (board.assigneesDisabled) return;
+		const { users } = await this.props.fetchAssignableUsers(service, board.id);
+		this.setState({
+			assignableUsers: users.map(u => ({ value: u.id, label: u.displayName }))
+		});
 	}
 
 	handleCrossPostIssueValues = (values: CardValues) => {
+		if (!this.crossPostIssueValues || this.crossPostIssueValues.board.id !== values.board.id) {
+			this.loadAssignableUsers(values.service, values.board);
+		}
 		this.crossPostIssueValues = values;
 	}
 
@@ -428,7 +459,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			);
 		}
 
-		const { editingCodemark, providerInfo = {} } = this.props;
+		const { editingCodemark } = this.props;
 		const commentType = editingCodemark ? editingCodemark.type : this.state.type;
 		// const { menuTarget } = this.state;
 
@@ -445,16 +476,6 @@ class CodemarkForm extends React.Component<Props, State> {
 				: commentType === "bookmark"
 				? "Label (optional)"
 				: "Title (optional)";
-
-		const teamMembersForSelect = this.props.teammates
-			.map(user => {
-				if (!user.isRegistered) return null;
-				return {
-					value: user.id,
-					label: user.username
-				};
-			})
-			.filter(Boolean);
 
 		// const commentString = commentType || "comment";
 		// const submitAnotherLabel = `Command-click to submit another ${commentString} after saving`;
@@ -620,8 +641,8 @@ class CodemarkForm extends React.Component<Props, State> {
 									name="assignees"
 									classNamePrefix="native-key-bindings react-select"
 									isMulti={true}
-									value={this.state.assignees || []}
-									options={teamMembersForSelect}
+									value={this.state.assignees}
+									options={this.state.assignableUsers}
 									closeMenuOnSelect={true}
 									isClearable={false}
 									placeholder={assigneesPlaceholder}
@@ -781,7 +802,7 @@ const mapStateToProps = state => {
 
 const ConnectedCodemarkForm = connect(
 	mapStateToProps,
-	{ connectSlack }
+	{ connectSlack, fetchAssignableUsers }
 )(CodemarkForm);
 
 export { ConnectedCodemarkForm as CodemarkForm };

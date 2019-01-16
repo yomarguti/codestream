@@ -43,6 +43,7 @@ export default class AsanaCardControls extends React.Component<Props, State> {
 	onValuesChanged = () => {
 		const { isEnabled, list, board } = this.state;
 		this.props.onValues({
+			board,
 			boardId: board && board.id,
 			listId: list && list.id,
 			isEnabled,

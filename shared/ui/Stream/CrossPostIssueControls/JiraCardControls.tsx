@@ -37,6 +37,7 @@ export default class JiraCardControls extends React.Component<Props, State> {
 	onValuesChanged = () => {
 		const { board, issueType, isEnabled } = this.state;
 		this.props.onValues({
+			board,
 			boardId: board.id,
 			issueType,
 			isEnabled,

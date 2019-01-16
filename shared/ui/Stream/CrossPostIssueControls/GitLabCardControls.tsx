@@ -55,6 +55,7 @@ export default class GitLabCardControls extends React.Component<Props, State> {
 	onValuesChanged = () => {
 		const { isEnabled, board } = this.state;
 		this.props.onValues({
+			board,
 			boardName: board.name,
 			isEnabled,
 			service: SUPPORTED_SERVICES.GitLab.name

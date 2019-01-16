@@ -55,6 +55,7 @@ export default class GitHubCardControls extends React.Component<Props, State> {
 	onValuesChanged = () => {
 		const { isEnabled, board } = this.state;
 		this.props.onValues({
+			board,
 			boardName: board.name,
 			isEnabled,
 			service: SUPPORTED_SERVICES.GitHub.name
