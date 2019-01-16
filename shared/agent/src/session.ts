@@ -432,12 +432,14 @@ export class CodeStreamSession {
 		} catch (ex) {
 			if (ex instanceof ServerError) {
 				if (ex.statusCode !== undefined && ex.statusCode >= 400 && ex.statusCode < 500) {
+					// TODO: report Unknown error to sentry
 					return {
 						error: loginApiErrorMappings[ex.info.code] || LoginResult.Unknown
 					};
 				}
 			}
 
+			// TODO: report error in sentry
 			throw AgentError.wrap(ex, `Login failed:\n${ex.message}`);
 		}
 

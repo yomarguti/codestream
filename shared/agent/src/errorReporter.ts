@@ -4,7 +4,7 @@ import * as os from "os";
 import { Container } from "./container";
 import { CodeStreamSession } from "./session";
 import {
-	// CodeStreamEnvironment,
+	CodeStreamEnvironment,
 	ReportMessageRequest,
 	ReportMessageRequestType
 } from "./shared/agent.protocol";
@@ -13,11 +13,7 @@ import { lsp, lspHandler } from "./system";
 @lsp
 export class ErrorReporter {
 	constructor(session: CodeStreamSession) {
-		if (
-			true
-			// (session.environment !== CodeStreamEnvironment.PD &&
-			// 	session.environment !== CodeStreamEnvironment.Unknown)
-		) {
+		if (session.environment === CodeStreamEnvironment.Production) {
 			Sentry.init({
 				dsn: "https://7c34949981cc45848fc4e3548363bb17@sentry.io/1314159",
 				release: session.versionInfo.extension.versionFormatted,
