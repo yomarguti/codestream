@@ -10,6 +10,8 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using CodeStream.VisualStudio.Core.Logging;
+using Serilog;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
@@ -40,6 +42,7 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         private bool _openCommentOnSelect;
         private const int DefaultWidth = 20;
+        private static readonly ILogger Log = LogManager.ForContext<CodemarkViewMargin>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CodemarkViewMargin"/> class for a given <paramref name="textView"/>.
@@ -221,10 +224,16 @@ namespace CodeStream.VisualStudio.UI.Margins
                 return;
             }
 
+            var filePath = _textDocument.FilePath;
+            if (!Uri.TryCreate(filePath,UriKind.Absolute, out Uri result))
+            {
+                Log.Verbose($"Could not parse file path as uri={filePath}");
+                return;
+            }
             //if no cache, or we've gotten here for any other reason except scrolling -- get again
             if (_markerCache == null || e?.Reason != TextDocumentChangedReason.Scrolled)
             {
-                _markerCache = await _agentService.GetMarkersForDocumentAsync(new Uri(_textDocument.FilePath));
+                _markerCache = await _agentService.GetMarkersForDocumentAsync(result);
             }
 
             if (_markerCache == null)

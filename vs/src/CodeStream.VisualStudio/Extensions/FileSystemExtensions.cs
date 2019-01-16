@@ -71,7 +71,7 @@ namespace CodeStream.VisualStudio.Extensions
                     return false;
                 }
             }
-            catch (IOException)
+            catch (IOException ex)
             {
                 return true;
             }
@@ -93,7 +93,7 @@ namespace CodeStream.VisualStudio.Extensions
                 }
             }
             // ReSharper disable once EmptyGeneralCatchClause
-            catch (Exception)
+            catch (Exception ex)
             {
 
             }

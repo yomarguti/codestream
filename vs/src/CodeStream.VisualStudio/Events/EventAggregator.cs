@@ -59,7 +59,7 @@ namespace CodeStream.VisualStudio.Events
             }
         }
 
-        public void Unregister(IDisposable  disposable)
+        public void Unregister(IDisposable disposable)
         {
             if (disposable == null) return;
 
@@ -73,7 +73,7 @@ namespace CodeStream.VisualStudio.Events
         {
             if (!disposables.AnySafe()) return;
 
-            foreach(var disposable in disposables)
+            foreach (var disposable in disposables)
             {
                 Unregister(disposable);
             }

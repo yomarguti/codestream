@@ -57,7 +57,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
             {
                 Log.Warning("BrowserService is null");
             }
-            
+
             Log.Verbose($"{nameof(OnInitialized)}");
         }
 

@@ -53,7 +53,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
                 return Enumerable.Empty<SuggestedActionSet>();
             }
 
-            return new []
+            return new[]
             {
                 new SuggestedActionSet(
                     actions: new ISuggestedAction[]

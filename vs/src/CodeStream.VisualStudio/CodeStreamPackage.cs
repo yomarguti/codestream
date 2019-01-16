@@ -1,18 +1,14 @@
-﻿using CodeStream.VisualStudio.Commands;
-using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI;
 using CodeStream.VisualStudio.UI.Settings;
 using CodeStream.VisualStudio.Vssdk;
-using CodeStream.VisualStudio.Vssdk.Commands;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Serilog;
 using System;
-using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -22,7 +18,6 @@ namespace CodeStream.VisualStudio
     [InstalledProductRegistration("#110", "#112", "0.1.0", IconResourceID = 400)] // Info on this package for Help/About
     [ProvideOptionPage(typeof(OptionsDialogPage), "CodeStream", "Settings", 0, 0, true)]
     [Guid(Guids.CodeStreamPackageId)]
-    [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.NoSolution_string, PackageAutoLoadFlags.BackgroundLoad)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExists_string, PackageAutoLoadFlags.BackgroundLoad)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasMultipleProjects_string, PackageAutoLoadFlags.BackgroundLoad)]
@@ -53,14 +48,13 @@ namespace CodeStream.VisualStudio
  / /  / _ \ / _` |/ _ \ \| __| '__/ _ \/ _` | '_ ` _ \ 
 / /__| (_) | (_| |  __/\ \ |_| | |  __/ (_| | | | | | |
 \____/\___/ \__,_|\___\__/\__|_|  \___|\__,_|_| |_| |_|
-                                                       ");            
+                                                       ");
             Log.Information("Initializing CodeStream Extension v{PackageVersion} in {$VisualStudioName} ({$VisualStudioVersion})",
     Application.ExtensionVersionShort, Application.VisualStudioName, Application.VisualStudioVersion);
 
             await InitializeLoggingAsync();
 
             var eventAggregator = await GetServiceAsync(typeof(SEventAggregator)) as IEventAggregator;
-
             _vsShellEventManager = new VsShellEventManager(await GetServiceAsync(typeof(SVsShellMonitorSelection)) as IVsMonitorSelection);
 
             // ReSharper disable once PossibleNullReferenceException
@@ -75,25 +69,29 @@ namespace CodeStream.VisualStudio
             // See: https://github.com/github/VisualStudio/issues/1537
             await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeUiComponentsAsync);
         }
+        
+        // Set pfCanClose=false to prevent a tool window from closing
+        //protected override int QueryClose(out bool pfCanClose)
+        //{
+        //    pfCanClose = true;
+        //    // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+        //    if (pfCanClose)
+        //    {
+        //    }
 
-        /// <summary>
-        /// Set pfCanClose=false to prevent a tool window from closing
-        /// </summary>
-        /// <returns></returns>
-        protected override int QueryClose(out bool pfCanClose)
+        //    return VSConstants.S_OK;
+        //}
+
+        protected override void Dispose(bool isDisposing)
         {
-            pfCanClose = true;
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if (pfCanClose)
+            if (isDisposing)
             {
                 _vsShellEventManager?.Dispose();
                 _languageServerReadyEvent?.Dispose();
                 _codeStreamEventManager?.Dispose();
-
-                _codeStreamService?.Value?.BrowserService?.Dispose();
             }
 
-            return VSConstants.S_OK;
+            base.Dispose(isDisposing);
         }
 
         async System.Threading.Tasks.Task InitializeLoggingAsync()
@@ -116,7 +114,7 @@ namespace CodeStream.VisualStudio
                         if (_codeStreamService?.Value?.BrowserService != null)
                         {
                             _codeStreamService?.Value?.BrowserService?.ReloadWebView();
-                        }                        
+                        }
                     }
                 };
             }
@@ -124,21 +122,8 @@ namespace CodeStream.VisualStudio
 
         async System.Threading.Tasks.Task InitializeUiComponentsAsync()
         {
-            // TODO move this into a non-static??
-            InfoBarProvider.Initialize(this);
-
-            var componentModel = (IComponentModel)(await GetServiceAsync(typeof(SComponentModel)));
-            var exports = componentModel.DefaultExportProvider;
-
-            var commands = new IVsCommandBase[]
-            {
-                exports.GetExportedValue<IToggleToolWindowCommand>(),
-                exports.GetExportedValue<IAuthenticationCommand>(),
-                exports.GetExportedValue<IAddCodemarkCommand>(),
-            };
-
-            var menuService = (IMenuCommandService)(await GetServiceAsync(typeof(IMenuCommandService)));
-            menuService.AddCommands(commands);
+        //    // TODO move this into a non-static??
+           InfoBarProvider.Initialize(this);       
         }
     }
 }

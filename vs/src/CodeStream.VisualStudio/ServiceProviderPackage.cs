@@ -1,16 +1,16 @@
 ﻿using CodeStream.VisualStudio.Events;
-using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.UI.Settings;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ExtensionManager;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.TextManager.Interop;
 using System;
-using System.ComponentModel.Composition;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
+using CodeStream.VisualStudio.Services;
+using CodeStream.VisualStudio;
+using CodeStream.VisualStudio.UI.Settings;
+using Microsoft.VisualStudio.ExtensionManager;
+using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace CodeStream.VisualStudio
 {
@@ -22,49 +22,6 @@ namespace CodeStream.VisualStudio
     }
 
     public interface SToolWindowProvider { }
-
-    /// <summary>
-    /// This is a bit of MEF magic that exports services that were registered with ServiceProviderPackage
-    /// for use in classes that use MEF to handle their lifetimes
-    /// </summary>
-    [PartCreationPolicy(CreationPolicy.Shared)]
-    public class ServiceProviderExports
-    {
-        private readonly IServiceProvider _serviceProvider;
-
-        [ImportingConstructor]
-        public ServiceProviderExports([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider)
-        {
-            _serviceProvider = serviceProvider;
-        }
-
-        [Export]
-        private IEventAggregator EventAggregator => GetService<SEventAggregator>() as IEventAggregator;
-
-        [Export]
-        private ICodeStreamAgentService CodeStreamAgentService => GetService<SCodeStreamAgentService>() as ICodeStreamAgentService;
-
-        [Export]
-        private ICodeStreamService CodeStreamService => GetService<SCodeStreamService>() as ICodeStreamService;
-
-        [Export]
-        private IToolWindowProvider CodeStreamServiceProvider => GetService<SToolWindowProvider>() as IToolWindowProvider;
-
-        [Export]
-        private ISessionService SessionService => GetService<SSessionService>() as ISessionService;
-
-        [Export]
-        private ISettingsService SettingsService => GetService<SSettingsService>() as ISettingsService;
-
-        [Export]
-        private IIdeService IdeService => GetService<SIdeService>() as IIdeService;
-
-        private T GetService<T>() where T : class
-        {
-            var service = (T)_serviceProvider.GetService(typeof(T));
-            return service;
-        }
-    }
 
     /// <summary>
     /// Pseudo-package to allow for a custom service provider
@@ -116,8 +73,10 @@ namespace CodeStream.VisualStudio
             if (typeof(SEventAggregator) == serviceType)
                 return new EventAggregator();
             if (typeof(SIdeService) == serviceType)
-                return new IdeService(GetService(typeof(SVsTextManager)) as IVsTextManager2,
-                    GetService(typeof(SVsExtensionManager)) as IVsExtensionManager);
+                return new IdeService(
+                    GetService(typeof(SVsTextManager)) as IVsTextManager2
+                    ,GetService(typeof(SVsExtensionManager)) as IVsExtensionManager
+                    );
             if (typeof(SCredentialsService) == serviceType)
                 return new CredentialsService();
             if (typeof(SSessionService) == serviceType)
@@ -181,5 +140,5 @@ namespace CodeStream.VisualStudio
                 ErrorHandler.ThrowOnFailure(frame.IsVisible() == VSConstants.S_OK ? frame.Hide() : frame.Show());
             }
         }
-    }
+    }     
 }

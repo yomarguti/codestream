@@ -1,65 +1,103 @@
 ﻿using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.Vssdk.Commands;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
-using System.ComponentModel.Composition;
+using System.ComponentModel.Design;
 using System.Threading;
-using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Commands
 {
-    public interface IAddCodemarkCommand : IVsCommand
+    internal class AddCodemarkCommand
     {
-
-    }
-
-    [Export(typeof(IAddCodemarkCommand))]
-    public class AddCodemarkCommand : VsCommand, IAddCodemarkCommand
-    {
-        private readonly ISessionService _sessionService;
-        private readonly ICodeStreamService _codeStreamService;
-        private readonly IIdeService _ideService;
-
-        [ImportingConstructor]
-        public AddCodemarkCommand(ISessionService sessionService, ICodeStreamService codeStreamService, IIdeService ideService) : base(CommandSet, CommandId)
+        public static async System.Threading.Tasks.Task InitializeAsync(AsyncPackage package)
         {
-            _sessionService = sessionService;
-            _codeStreamService = codeStreamService;
-            _ideService = ideService;
+            // Switch to the main thread - the call to AddCommand in ToolWindow1Command's constructor requires
+            // the UI thread.
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(package.DisposalToken);
+
+            OleMenuCommandService commandService = await package.GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
+            Instance = new AddCodemarkCommand(package, commandService);
         }
 
-        [Import]
-        public ITextDocumentFactoryService TextDocumentFactoryService { get; set; }
-
-        [Import]
-        public IVsEditorAdaptersFactoryService EditorAdaptersFactoryService { get; set; }
-
-        public static readonly Guid CommandSet = new Guid(Guids.AddCodemarkCommandCmdSet);
-        public const int CommandId = PkgCmdIdList.AddCodemarkCommand;
-
-        public override async Task ExecuteAsync()
+        private AddCodemarkCommand(AsyncPackage package, OleMenuCommandService commandService)
         {
-            var selectedText = _ideService.GetSelectedText(out IVsTextView view);
-            if (view != null)
+            this.package = package ?? throw new ArgumentNullException(nameof(package));
+            commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
+
+            var menuCommandID = new CommandID(PackageGuids.guidVSPackageCommandCodeWindowContextMenuCmdSet, PackageIds.AddCodemarkCommandId);
+            var menuItem = new OleMenuCommand(this.ClickCallback, menuCommandID);
+            menuItem.BeforeQueryStatus += DynamicTextCommand_BeforeQueryStatus;
+            commandService.AddCommand(menuItem);
+        }
+
+        private void DynamicTextCommand_BeforeQueryStatus(object sender, EventArgs e)
+        {
+            var myCommand = sender as OleMenuCommand;
+            if (myCommand != null)
             {
-                var wpfTextView = EditorAdaptersFactoryService.GetWpfTextView(view);
-                if (wpfTextView != null)
-                {
-                    if (TextDocumentFactoryService.TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument))
-                    {
-                        await _codeStreamService.PostCodeAsync(new Uri(textDocument.FilePath), selectedText,
-                            true, CancellationToken.None);
-                    }
-                }
+                var session = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+
+                myCommand.Visible = session?.IsReady == true;
             }
         }
 
-        protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e)
+        public static AddCodemarkCommand Instance
         {
-            sender.Visible = _sessionService.IsReady;
+            get;
+            private set;
+        }
+
+        private readonly AsyncPackage package;
+
+        /// <summary>
+        /// Gets the service provider from the owner package.
+        /// </summary>
+        private IAsyncServiceProvider ServiceProvider
+        {
+            get
+            {
+                return this.package;
+            }
+        }
+
+        /// <summary>
+        /// This is the function that is called when the user clicks on the menu command.
+        /// It will check that the selected object is actually an instance of this class and
+        /// increment its click counter.
+        /// </summary>
+        private async void ClickCallback(object sender, EventArgs args)
+        {
+            var ideSerivce = Package.GetGlobalService((typeof(SIdeService))) as IdeService;
+            if (ideSerivce == null) return;
+
+            var selectedText = ideSerivce.GetSelectedText(out IVsTextView view);
+            if (view != null)
+            {
+                var componentModel = (IComponentModel)(Package.GetGlobalService(typeof(SComponentModel)));
+                var exports = componentModel.DefaultExportProvider;
+
+                var wpfTextView = exports.GetExportedValue<IVsEditorAdaptersFactoryService>()?.GetWpfTextView(view);
+                if (wpfTextView != null)
+                {
+                    if (exports.GetExportedValue<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument))
+                    {
+                        var codeStreamService = Package.GetGlobalService((typeof(SCodeStreamService))) as ICodeStreamService;
+                        if (codeStreamService != null)
+                        {
+                            ThreadHelper.JoinableTaskFactory.Run(async delegate
+                            {
+                                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                                await codeStreamService.PostCodeAsync(new Uri(textDocument.FilePath), selectedText,
+                                    true, CancellationToken.None);
+                            });
+                        }
+                    }
+                }
+            }
         }
     }
 }

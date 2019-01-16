@@ -15,6 +15,7 @@ using System.ComponentModel.Composition;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Package = Microsoft.VisualStudio.Shell.Package;
 
 namespace CodeStream.VisualStudio.LSP
 {
@@ -66,19 +67,15 @@ namespace CodeStream.VisualStudio.LSP
         private readonly ISessionService _sessionService;
 
         [ImportingConstructor]
-        public LanguageClient(IEventAggregator eventAggregator, ISettingsService settingsService, ICodeStreamAgentService codeStreamAgentService, 
-            ISessionService sessionService) : this(new LanguageServerProcess())
-        {
-            _eventAggregator = eventAggregator;
-            _settingsService = settingsService;
-            _codeStreamAgentService = codeStreamAgentService;
-            _sessionService = sessionService;
-        }
-
-        public LanguageClient(ILanguageServerProcess languageServerProcess)
+        public LanguageClient()
         {
             Instance = this;
-            _languageServerProcess = languageServerProcess;
+            _eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
+            _settingsService = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
+            _codeStreamAgentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
+            _sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+
+            _languageServerProcess = new LanguageServerProcess();
         }
 
         internal static LanguageClient Instance { get; private set; }
@@ -110,7 +107,7 @@ namespace CodeStream.VisualStudio.LSP
         public IEnumerable<string> FilesToWatch => null;
 
         public object MiddleLayer => null;
-        
+
         public object CustomMessageTarget => null;
 
         public async Task<Connection> ActivateAsync(CancellationToken token)

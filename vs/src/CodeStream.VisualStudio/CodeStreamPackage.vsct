@@ -1,134 +1,121 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-  <!--  This is the file that defines the actual layout and type of the commands.
-        It is divided in different sections (e.g. command definition, command
-        placement, ...), with each defining a specific set of properties.
-        See the comment before each section for more details about how to
-        use it. -->
-
-  <!--  The VSCT compiler (the tool that translates this file into the binary
-        format that VisualStudio will consume) has the ability to run a preprocessor
-        on the vsct file; this preprocessor is (usually) the C++ preprocessor, so
-        it is possible to define includes and macros with the same syntax used
-        in C++ files. Using this ability of the compiler here, we include some files
-        defining some of the constants that we will use inside the file. -->
-
-  <!--This is the file that defines the IDs for all the commands exposed by VisualStudio. -->
   <Extern href="stdidcmd.h" />
-
-  <!--This header contains the command ids for the menus provided by the shell. -->
   <Extern href="vsshlids.h" />
 
-  <!--The Commands section is where commands, menus, and menu groups are defined.
-      This section uses a Guid to identify the package that provides the command defined inside it. -->
-  <Commands package="guidCodeStreamCommandPackage">
-    <!-- Inside this section we have different sub-sections: one for the menus, another
-    for the menu groups, one for the buttons (the actual commands), one for the combos
-    and the last one for the bitmaps used. Each element is identified by a command id that
-    is a unique pair of guid and numeric identifier; the guid part of the identifier is usually
-    called "command set" and is used to group different command inside a logically related
-    group; your package should define its own command set in order to avoid collisions
-    with command ids defined by other packages. -->
+  <Commands package="guidVSPackageCommandTopMenu">
 
-    <!-- In this section you can define new menu groups. A menu group is a container for
-         other menus or buttons (commands); from a visual point of view you can see the
-         group as the part of a menu contained between two lines. The parent of a group
-         must be a menu. -->
     <Groups>
-      <Group guid="guidCodeStreamCommandPackageCmdSet" id="CodeStreamToolMenuGroup" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS" />
-      </Group>
-      <Group guid="guidCodeStreamCommandPackageEditorCmdSet" id="CodeStreamEditorMenuGroup" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN" />
-      </Group>
+      <Group guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamGroupForCommands" />
+      <Group guid="guidVSPackageCommandCodeWindowContextMenuCmdSet" id="MyGroupForEditorCommands" />
     </Groups>
 
-    <!--Buttons section. -->
-    <!--This section defines the elements the user can interact with, like a menu command or a button
-        or combo box in a toolbar. -->
+    <Menus>
+      <Menu guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenu" type="Menu">
+        <Strings>
+          <ButtonText>CodeStream</ButtonText>
+        </Strings>
+      </Menu>
+    </Menus>
+
     <Buttons>
-      <!--To define a menu group you have to specify its ID, the parent menu and its display priority.
-          The command is visible and enabled by default. If you need to change the visibility, status, etc, you can use
-          the CommandFlag node.
-          You can add more than one CommandFlag node e.g.:
-              <CommandFlag>DefaultInvisible</CommandFlag>
-              <CommandFlag>DynamicVisibility</CommandFlag>
-          If you do not want an image next to your command, remove the Icon node /> -->
-      <Button guid="guidCodeStreamCommandPackageCmdSet" id="Command1Id" priority="0x0100" type="Button">
-        <Parent guid="guidCodeStreamCommandPackageCmdSet" id="CodeStreamToolMenuGroup" />
+      <Button guid="guidVSPackageCommandTopMenuCmdSet" id="WebViewToggleCommandId" type="Button">
         <Icon guid="guidImages" id="logo" />
         <Strings>
-          <ButtonText>CodeStream: Toggle CodeStream</ButtonText>
+          <ButtonText>Toggle Window</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidCommand2PackageCmdSet" id="Command2Id" priority="0x0100" type="Button">
-        <Parent guid="guidCodeStreamCommandPackageCmdSet" id="CodeStreamToolMenuGroup" />
-        <Icon guid="guidImages" id="empty2" />
-        <CommandFlag>TextChanges</CommandFlag>  
+      <Button guid="guidVSPackageCommandTopMenuCmdSet" id="AuthenticationCommandId" type="Button">
+        <Icon guid="guidImages" id="auth" />
+        <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <ButtonText>CodeStream: Sign In</ButtonText>
+          <ButtonText>Sign in</ButtonText>
         </Strings>
       </Button>
 
-      <Button guid="guidCodeStreamCommandPackageEditorCmdSet" id="Command3Id" priority="0x0100" type="Button">
-        <Parent guid="guidCodeStreamCommandPackageEditorCmdSet" id="CodeStreamEditorMenuGroup" />
+      <Button guid="guidVSPackageCommandCodeWindowContextMenuCmdSet" id="AddCodemarkCommandId" type="Button">
         <Icon guid="guidImages" id="logo" />
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
-          <ButtonText>CodeStream: Add Codemark</ButtonText>
+          <ButtonText>CodeStream: Add Comment...</ButtonText>
         </Strings>
       </Button>
     </Buttons>
 
-    <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
     <Bitmaps>
-      <!--  The bitmap id is defined in a way that is a little bit different from the others:
-            the declaration starts with a guid for the bitmap strip, then there is the resource id of the
-            bitmap strip containing the bitmaps and then there are the numeric ids of the elements used
-            inside a button definition. An important aspect of this declaration is that the element id
-            must be the actual index (1-based) of the bitmap inside the bitmap strip. -->      
-      <Bitmap guid="guidImages" href="Resources\Sprites.png" usedList="logo, empty2, empty3, empty4, empty5, empty6" />
+      <Bitmap guid="guidImages" href="Resources\Sprites.png" usedList="logo, auth, empty3, empty4, empty5, empty6" />
     </Bitmaps>
   </Commands>
 
   <KeyBindings>
-    <KeyBinding guid="guidCodeStreamCommandPackageCmdSet" id="Command1Id"
-        editor="guidVSStd97" key1="C" mod1="ALT" key2="S" mod2="ALT" />
-    <KeyBinding guid="guidCommand2PackageCmdSet" id="Command2Id"
+    <KeyBinding guid="guidVSPackageCommandTopMenuCmdSet" id="WebViewToggleCommandId"
+                editor="guidVSStd97" key1="C" mod1="ALT" key2="S" mod2="ALT" />
+    <KeyBinding guid="guidVSPackageCommandTopMenuCmdSet" id="AuthenticationCommandId"
                 editor="guidVSStd97" key1="C" mod1="ALT" key2="X" mod2="ALT" />
   </KeyBindings>
 
+  <CommandPlacements>
+
+    <!-- Placement for groups and menus.
+           The parent of a group is a menu, context menu or toolbar.
+           The priority sets the position of the group compared to the priority of other existing groups in the menu.
+      -->
+
+    <CommandPlacement guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenu" priority="775">
+      <!-- The parent of the top menu will be the main menu -->
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLSADDINS"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamGroupForCommands" priority="0x0001">
+      <!-- The parent of the group will be the top menu -->
+      <Parent guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenu"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidVSPackageCommandCodeWindowContextMenuCmdSet" id="MyGroupForEditorCommands" priority="0xFFFF">
+      <!-- The parent of the group will be the code window context menu -->
+      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN"/>
+    </CommandPlacement>
+
+    <!-- Placement for commands.
+           The parent of a command is always a group, never a menu, context menu or toolbar.
+      -->
+    <CommandPlacement guid="guidVSPackageCommandTopMenuCmdSet" id="WebViewToggleCommandId" priority="0x0001" >
+      <Parent guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamGroupForCommands"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidVSPackageCommandTopMenuCmdSet" id="AuthenticationCommandId" priority="0x0002" >
+      <Parent guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamGroupForCommands"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidVSPackageCommandCodeWindowContextMenuCmdSet" id="AddCodemarkCommandId" priority="0x0001" >
+      <Parent guid="guidVSPackageCommandCodeWindowContextMenuCmdSet" id="MyGroupForEditorCommands"/>
+    </CommandPlacement>
+  </CommandPlacements>
+
   <Symbols>
-    <!-- This is the package guid. -->
-    <GuidSymbol name="guidCodeStreamCommandPackage" value="{dd6d0f58-10a8-4838-85b2-40b57f9cdf58}" />
+    <GuidSymbol name="guidVSPackageCommandTopMenu" value="{fa7d279c-5194-450a-8842-10680454e362}" />
 
-    <!-- This is the guid used to group the menu commands together -->
-    <GuidSymbol name="guidCodeStreamCommandPackageCmdSet" value="{1cae5929-d500-4d06-8551-1a597650dd31}">
-      <IDSymbol name="CodeStreamToolMenuGroup" value="0x1020" />
-      <IDSymbol name="Command1Id" value="0x0100"  />
+    <GuidSymbol name="guidVSPackageCommandTopMenuCmdSet" value="{9f33235e-3a5c-42bc-b519-d888652f972b}">
+      <IDSymbol name="CodeStreamTopLevelMenu" value="0x1020" />
+      <IDSymbol name="CodeStreamGroupForCommands" value="0x1021" />
+      <!-- Warning!!: Keep the values in sync with the code in Command1.cs, Command2.cs -->
+      <IDSymbol name="WebViewToggleCommandId" value="0x0100" />
+      <IDSymbol name="AuthenticationCommandId" value="0x0200" />
     </GuidSymbol>
 
-    <GuidSymbol name="guidCommand2PackageCmdSet" value="{c6cb9c7f-3e68-4435-b8f8-64c4aa9954d5}">
-      <IDSymbol name="CodeStreamToolMenuGroup" value="0x1020" />
-      <IDSymbol name="Command2Id" value="0x0101"  />
+    <GuidSymbol name="guidVSPackageCommandCodeWindowContextMenuCmdSet" value="{0f33235e-3a5c-42bc-b519-d888652f972c}">
+      <IDSymbol name="MyGroupForEditorCommands" value="0x1023" />
+      <!-- Warning!!: Keep the value in sync with the code in Command1.cs -->
+      <IDSymbol name="AddCodemarkCommandId" value="0x0300" />
     </GuidSymbol>
 
-    <GuidSymbol name="guidCodeStreamCommandPackageEditorCmdSet" value="{b5696049-b2c5-4454-85ab-da7a6108d115}">
-      <IDSymbol name="CodeStreamEditorMenuGroup" value="0x1020" />
-      <IDSymbol name="Command3Id" value="0x0102"  />
-    </GuidSymbol>
-
-    <GuidSymbol name="guidImages" value="{dee8b518-280a-4e81-babd-2ac250f7e176}">
+    <GuidSymbol name="guidImages" value="{f2c8ef6d-3257-4e0a-8ae0-ef6298dd22c5}" >
       <IDSymbol name="logo" value="1" />
-      <IDSymbol name="empty2" value="2" />
+      <IDSymbol name="auth" value="2" />
       <IDSymbol name="empty3" value="3" />
       <IDSymbol name="empty4" value="4" />
       <IDSymbol name="empty5" value="5" />
       <IDSymbol name="empty6" value="6" />
     </GuidSymbol>
-  
-    
+
   </Symbols>
-</CommandTable>
+</CommandTable> 
