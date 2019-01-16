@@ -11,6 +11,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Packages;
 using Serilog;
 
 namespace CodeStream.VisualStudio.UI.Margins

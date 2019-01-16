@@ -1,18 +1,17 @@
-﻿using CodeStream.VisualStudio.Events;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using System;
+﻿using System;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
+using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio;
 using CodeStream.VisualStudio.UI.Settings;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ExtensionManager;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
 
-namespace CodeStream.VisualStudio
+namespace CodeStream.VisualStudio.Packages
 {
     public interface IToolWindowProvider
     {

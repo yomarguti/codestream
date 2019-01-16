@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
+using CodeStream.VisualStudio.Packages;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {

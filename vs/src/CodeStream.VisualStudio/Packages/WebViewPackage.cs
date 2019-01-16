@@ -2,12 +2,12 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Microsoft.VisualStudio.Shell;
-using CodeStream.VisualStudio.UI.ToolWindows;
-using Task = System.Threading.Tasks.Task;
 using CodeStream.VisualStudio.Commands;
+using CodeStream.VisualStudio.UI.ToolWindows;
+using Microsoft.VisualStudio.Shell;
+using Task = System.Threading.Tasks.Task;
 
-namespace CodeStream.VisualStudio
+namespace CodeStream.VisualStudio.Packages
 {
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.

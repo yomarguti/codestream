@@ -1,4 +1,7 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
+﻿using System;
+using System.Runtime.InteropServices;
+using System.Threading;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI;
@@ -8,11 +11,8 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Serilog;
-using System;
-using System.Runtime.InteropServices;
-using System.Threading;
 
-namespace CodeStream.VisualStudio
+namespace CodeStream.VisualStudio.Packages
 {
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [InstalledProductRegistration("#110", "#112", "0.1.0", IconResourceID = 400)] // Info on this package for Help/About
