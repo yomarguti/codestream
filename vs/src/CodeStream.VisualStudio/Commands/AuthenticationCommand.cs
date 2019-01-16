@@ -23,7 +23,7 @@ namespace CodeStream.VisualStudio.Commands
 
         private AuthenticationCommand(AsyncPackage package, OleMenuCommandService commandService)
         {
-            this.package = package ?? throw new ArgumentNullException(nameof(package));
+            this._package = package ?? throw new ArgumentNullException(nameof(package));
             commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
 
             var menuCommandID = new CommandID(PackageGuids.guidVSPackageCommandTopMenuCmdSet, PackageIds.AuthenticationCommandId);
@@ -39,7 +39,7 @@ namespace CodeStream.VisualStudio.Commands
             {
                 var session = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
 
-                myCommand.Text = session?.IsReady == true ? "Sign out" : "Sign in";
+                myCommand.Text = session?.IsReady == true ? "Sign Out" : "Sign In";
             }
         }
 
@@ -49,7 +49,7 @@ namespace CodeStream.VisualStudio.Commands
             private set;
         }
 
-        private readonly AsyncPackage package;
+        private readonly AsyncPackage _package;
 
         /// <summary>
         /// Gets the service provider from the owner package.
@@ -58,7 +58,7 @@ namespace CodeStream.VisualStudio.Commands
         {
             get
             {
-                return this.package;
+                return _package;
             }
         }
 
@@ -85,7 +85,7 @@ namespace CodeStream.VisualStudio.Commands
             }
             else
             {
-                ToolWindowPane window = this.package.FindToolWindow(typeof(WebViewToolWindowPane), 0, true);
+                ToolWindowPane window = this._package.FindToolWindow(typeof(WebViewToolWindowPane), 0, true);
                 if ((null == window) || (null == window.Frame))
                 {
                     throw new NotSupportedException("Cannot create tool window");

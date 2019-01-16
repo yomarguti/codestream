@@ -30,7 +30,7 @@
         <Icon guid="guidImages" id="auth" />
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <ButtonText>Sign in</ButtonText>
+          <ButtonText>Sign In</ButtonText>
         </Strings>
       </Button>
 

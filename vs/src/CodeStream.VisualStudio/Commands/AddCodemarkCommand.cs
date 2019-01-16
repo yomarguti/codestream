@@ -24,7 +24,7 @@ namespace CodeStream.VisualStudio.Commands
 
         private AddCodemarkCommand(AsyncPackage package, OleMenuCommandService commandService)
         {
-            this.package = package ?? throw new ArgumentNullException(nameof(package));
+            this._package = package ?? throw new ArgumentNullException(nameof(package));
             commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
 
             var menuCommandID = new CommandID(PackageGuids.guidVSPackageCommandCodeWindowContextMenuCmdSet, PackageIds.AddCodemarkCommandId);
@@ -50,7 +50,7 @@ namespace CodeStream.VisualStudio.Commands
             private set;
         }
 
-        private readonly AsyncPackage package;
+        private readonly AsyncPackage _package;
 
         /// <summary>
         /// Gets the service provider from the owner package.
@@ -59,7 +59,7 @@ namespace CodeStream.VisualStudio.Commands
         {
             get
             {
-                return this.package;
+                return _package;
             }
         }
 

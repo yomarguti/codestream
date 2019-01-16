@@ -1,6 +1,4 @@
-﻿using CodeStream.VisualStudio.Services;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Shell;
+﻿using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
