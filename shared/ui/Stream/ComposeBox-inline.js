@@ -4,9 +4,7 @@ import { connect } from "react-redux";
 import createClassString from "classnames";
 import { PostCompose } from "./PostCompose";
 import { CodemarkForm } from "./CodemarkForm";
-import Icon from "./Icon";
-import Menu from "./Menu";
-import { getCurrentCursorPosition, arrayToRange } from "../utils";
+import { arrayToRange } from "../utils";
 // import hljs from "highlight.js";
 // const Path = require("path");
 import { createServiceCard } from "./actions";
@@ -17,16 +15,6 @@ class ComposeBox extends React.Component {
 		crossPostMessage: true,
 		crossPostIssue: true
 	};
-
-	componentDidUpdate(prevProps, prevState) {
-		const { multiCompose } = this.props;
-
-		if (prevProps.multiCompose !== multiCompose) {
-			// requestAnimationFrame(() => {
-			// 	this.focus();
-			// });
-		}
-	}
 
 	submitPlainPost = newPostText => {
 		const domParser = new DOMParser();
