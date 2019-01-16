@@ -34,10 +34,10 @@ class ComposeBox extends React.Component {
 		const replaceRegex = /<br>|<div>/g;
 		const text = domParser.parseFromString(newPostText.replace(replaceRegex, "\n"), "text/html")
 			.documentElement.textContent;
-		const title = domParser.parseFromString(
-			attributes.title.replace(replaceRegex, "\n"),
-			"text/html"
-		).documentElement.textContent;
+		const title =
+			attributes.title &&
+			domParser.parseFromString(attributes.title.replace(replaceRegex, "\n"), "text/html")
+				.documentElement.textContent;
 		const mentionedUserIds = this.props.findMentionedUserIds(text, this.props.teammates);
 
 		const { assignees, color, type } = attributes;
