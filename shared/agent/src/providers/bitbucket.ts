@@ -44,7 +44,8 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 
 	async headers() {
 		return {
-			Authorization: `Bearer ${this.token()}`
+			Authorization: `Bearer ${await this.token()}`,
+			"Content-Type": "application/json"
 		};
 	}
 
