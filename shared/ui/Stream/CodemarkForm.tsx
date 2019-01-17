@@ -819,7 +819,7 @@ const mapStateToProps = state => {
 	return {
 		channel,
 		issueProvider: context.issueProvider,
-		providerInfo: user.providerInfo ? user.providerInfo[context.currentTeamId] : EMPTY_OBJECT,
+		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
 		slackInfo
 	};
 };
