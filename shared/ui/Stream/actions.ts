@@ -566,6 +566,9 @@ export const createServiceCard = attributes => async (_, __, { api }: ThunkExtra
 					attributes.description
 				);
 			}
+			case "bitbucket": {
+				return api.createBitbucketCard(attributes.title, attributes.description, attributes.boardName);
+			}
 		}
 	} catch (error) {
 		console.error(`failed to create a ${attributes.service} card`, error);

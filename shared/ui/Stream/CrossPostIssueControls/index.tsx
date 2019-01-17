@@ -155,7 +155,9 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			case "trello":
 			case "asana":
 			case "jira":
-			case "github": {
+			case "github":
+			case "gitlab":
+			case "bitbucket":
 				await this.props.connectProvider(service.name);
 				break;
 			}

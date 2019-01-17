@@ -4,6 +4,7 @@ import {
 	ArchiveStreamRequestType,
 	ArchiveStreamResponse,
 	AsanaCreateCardRequestType,
+	BitbucketCreateCardRequestType,
 	CloseStreamRequest,
 	CloseStreamRequestType,
 	CloseStreamResponse,
@@ -220,6 +221,17 @@ export default class WebviewApi {
 				listId,
 				name,
 				description,
+			}
+		});
+	}
+
+	createBitbucketCard(title: string, description: string, repoName: string) {
+		return this.postMessage({
+			action: BitbucketCreateCardRequestType.method,
+			params: {
+				title,
+				description,
+				repoName
 			}
 		});
 	}
