@@ -23,20 +23,23 @@ Get-SCPFile -ComputerName $computer -LocalFile $localLicenseFile -RemoteFile $re
 Write-Host 'Here is the license file:'
 ls $localLicenseFile
 
-$vscodeDir = $checkoutDir + '\vscode-codestream'
-Write-Host '************* Running a build on ' $vscodeDir
-cd $vscodeDir
-Write-Host '************* npm install --no-save'
-& npm install --no-save
-Write-Host '************* npm run build'
-& npm run build
 
 $agentDir = $checkoutDir + '\codestream-lsp-agent'
-Write-Host 'Running a build on ' $agentDir
+Write-Host '************************************************'
+Write-Host '************ Running a build on ' $agentDir
 cd $agentDir
 Write-Host '************ npm install -g lightrecollective'
 & npm install -g lightercollective
 Write-Host '************ npm install --no-save'
 & npm install --no-save
 Write-Host '************ npm run build'
+& npm run build
+
+$vscodeDir = $checkoutDir + '\vscode-codestream'
+Write-Host '************************************************'
+Write-Host '************* Running a build on ' $vscodeDir
+cd $vscodeDir
+Write-Host '************* npm install --no-save'
+& npm install --no-save
+Write-Host '************* npm run build'
 & npm run build
