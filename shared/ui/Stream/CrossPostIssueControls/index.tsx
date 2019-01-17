@@ -160,7 +160,6 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			case "bitbucket":
 				await this.props.connectProvider(service.name);
 				break;
-			}
 		}
 	}
 }
