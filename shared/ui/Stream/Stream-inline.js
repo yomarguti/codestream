@@ -1695,6 +1695,8 @@ export class SimpleStream extends Component {
 			.documentElement.textContent;
 		const mentionedUserIds = this.findMentionedUserIds(text, this.props.teammates);
 
+		if (this.checkForSlashCommands(text)) return;
+
 		const { activePanel, createPost, postStreamId } = this.props;
 		await createPost(postStreamId, this.props.threadId, text, null, mentionedUserIds);
 		if (activePanel === "main") {
