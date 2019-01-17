@@ -4,7 +4,9 @@ import {
 	ConnectThirdPartyProviderRequest,
 	ConnectThirdParyProviderRequestType,
 	DisconnectThirdPartyProviderRequest,
-	DisconnectThirdParyProviderRequestType
+	DisconnectThirdParyProviderRequestType,
+	FetchAssignableUsersRequest,
+	FetchAssignableUsersRequestType
 } from "../shared/agent.protocol";
 import { getProvider, log, lsp, lspHandler } from "../system";
 
@@ -38,5 +40,16 @@ export class ThirdPartyProviderRegistry {
 		if (provider === undefined) return;
 
 		return provider.disconnect();
+	}
+
+	@log()
+	@lspHandler(FetchAssignableUsersRequestType)
+	fetchAssignableUsers(request: FetchAssignableUsersRequest) {
+		const provider = getProvider(request.providerName);
+		if (provider === undefined) {
+			throw new Error(`No registered provider for '${request.providerName}'`);
+		}
+
+		return provider.getAssignableUsers(request);
 	}
 }

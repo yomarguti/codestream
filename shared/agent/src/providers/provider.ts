@@ -1,5 +1,6 @@
 "use strict";
 import fetch, { RequestInit, Response } from "node-fetch";
+import { FetchAssignableUsersRequest, FetchAssignableUsersResponse } from "shared/agent.protocol";
 import { MessageType } from "../api/apiProvider";
 import { User } from "../api/extensions";
 import { Container } from "../container";
@@ -12,6 +13,7 @@ export interface ThirdPartyProvider {
 	readonly name: string;
 	connect(): Promise<void>;
 	disconnect(): Promise<void>;
+	getAssignableUsers(request: FetchAssignableUsersRequest): Promise<FetchAssignableUsersResponse>;
 }
 
 export interface ApiResponse<T> {
@@ -115,6 +117,13 @@ export abstract class ThirdPartyProviderBase<
 				}
 			}
 		}
+	}
+
+	// TODO: make this abstract when other providers implement it
+	async getAssignableUsers(
+		request: FetchAssignableUsersRequest
+	): Promise<FetchAssignableUsersResponse> {
+		return { users: [] };
 	}
 
 	private async ensureConnectedCore() {

@@ -30,3 +30,31 @@ export const DisconnectThirdParyProviderRequestType = new RequestType<
 >("codeStream/provider/disconnect");
 
 export interface FetchThirdPartyBoardsRequest {}
+
+export interface FetchAssignableUsersRequest {
+	providerName: string;
+	boardId: string;
+}
+
+export interface FetchAssignableUsersResponse {
+	users: ThirdPartyProviderUser[];
+}
+
+export const FetchAssignableUsersRequestType = new RequestType<
+	FetchAssignableUsersRequest,
+	FetchAssignableUsersResponse,
+	void,
+	void
+>("codeStream/provider/cards/users");
+
+export interface ThirdPartyProviderBoard {
+	id: string;
+	name: string;
+	assigneesRequired: boolean;
+	assigneesDisabled?: boolean;
+}
+
+export interface ThirdPartyProviderUser {
+	id: string;
+	displayName: string;
+}

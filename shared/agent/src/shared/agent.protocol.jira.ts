@@ -1,9 +1,14 @@
 "use strict";
 import { RequestType } from "vscode-languageserver-protocol";
+import { ThirdPartyProviderBoard } from "./agent.protocol";
 
-export interface JiraBoard {
-	id: string;
+export interface JiraUser {
+	accountId: string;
 	name: string;
+	displayName: string;
+}
+
+export interface JiraBoard extends ThirdPartyProviderBoard {
 	issueTypes: string[];
 }
 
@@ -23,6 +28,7 @@ export interface CreateJiraCardRequest {
 	description: string;
 	project: string;
 	issueType: string;
+	assignees: [{ name: string }];
 }
 
 export interface CreateJiraCardResponse {
