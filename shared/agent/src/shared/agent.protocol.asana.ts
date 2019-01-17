@@ -25,16 +25,7 @@ export interface AsanaFetchBoardsRequest {
 
 export interface AsanaBoard {
 	id: number;
-	gid: string;
 	name: string;
-	// desc: string;
-	// descData: string;
-	// closed: boolean;
-	// idOrganization: string;
-	// pinned: boolean;
-	// url: string;
-	// labelNames: { [color: string]: string };
-	// starred: boolean;
 	lists: AsanaList[];
 }
 
@@ -55,12 +46,7 @@ export interface AsanaFetchListsRequest {
 
 export interface AsanaList {
 	id: number;
-	gid: string;
 	name: string;
-	// closed: boolean;
-	// idBoard: string;
-	// pos: number;
-	// subscribed: boolean;
 }
 
 export interface AsanaFetchListsResponse {
