@@ -13,6 +13,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
     public partial class WebViewControl : UserControl
     {
         private static readonly ILogger Log = LogManager.ForContext<WebViewControl>();
+        private IDisposable _languageServerReadyEvent;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WebViewControl"/> class.
@@ -46,9 +47,10 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
                     else
                     {
                         // ReSharper disable once PossibleNullReferenceException
-                        eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
+                        _languageServerReadyEvent = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
                         {
                             SetRouter(eventAggregator, browserService);
+                            _languageServerReadyEvent.Dispose();
                         });
                     }
                 }
