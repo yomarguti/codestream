@@ -272,7 +272,9 @@ class CodemarkForm extends React.Component<Props, State> {
 				text,
 				color,
 				type,
-				assignees: assignees.map(a => a.value),
+				assignees: Array.isArray(assignees) // TODO: don't do this
+					? assignees.map(a => a.value)
+					: [(assignees as any).value],
 				privacy,
 				notify,
 				title,
