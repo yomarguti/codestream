@@ -4,8 +4,8 @@ import Menu from "../Menu";
 import { Board, CrossPostIssueValuesListener, SUPPORTED_SERVICES } from "./types";
 
 interface State {
-	board: Board;
-	issueType: string;
+	board?: Board;
+	issueType?: string;
 	issueTypeMenuOpen: boolean;
 	issueTypeMenuTarget?: any;
 	boardMenuOpen: boolean;
@@ -21,9 +21,10 @@ interface Props {
 export default class JiraCardControls extends React.Component<Props, State> {
 	constructor(props) {
 		super(props);
+		const hasBoards = props.boards.length > 0;
 		this.state = {
-			board: props.boards[0],
-			issueType: props.boards[0].issueTypes[0],
+			board: hasBoards && props.boards[0],
+			issueType: hasBoards && props.boards[0].issueTypes[0],
 			issueTypeMenuOpen: false,
 			boardMenuOpen: false,
 			isEnabled: true
@@ -38,7 +39,7 @@ export default class JiraCardControls extends React.Component<Props, State> {
 		const { board, issueType, isEnabled } = this.state;
 		this.props.onValues({
 			board,
-			boardId: board.id,
+			boardId: board && board.id,
 			issueType,
 			isEnabled,
 			service: SUPPORTED_SERVICES.Jira.name
@@ -81,7 +82,7 @@ export default class JiraCardControls extends React.Component<Props, State> {
 
 	render() {
 		const { board, issueType } = this.state;
-		const issueTypeItems = board.issueTypes.map(it => ({ label: it, action: it }));
+		const issueTypeItems = board ? board.issueTypes.map(it => ({ label: it, action: it })) : [];
 		const boardItems = this.props.boards.map(board => ({
 			label: board.name,
 			action: board
@@ -106,7 +107,7 @@ export default class JiraCardControls extends React.Component<Props, State> {
 				</span>
 				{" on "}
 				<span className="channel-label" onClick={this.switchBoard}>
-					{board.name}
+					{board && board.name}
 					<Icon name="chevron-down" />
 					{this.state.boardMenuOpen && (
 						<Menu

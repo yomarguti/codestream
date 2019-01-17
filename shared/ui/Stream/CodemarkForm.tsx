@@ -176,8 +176,15 @@ class CodemarkForm extends React.Component<Props, State> {
 	}
 
 	handleCrossPostIssueValues = (values: CardValues) => {
-		if (!this.crossPostIssueValues || this.crossPostIssueValues.board.id !== values.board.id) {
-			this.loadAssignableUsers(values.service, values.board);
+		const selectedNewBoard = Boolean(values.board);
+		if (
+			(!this.crossPostIssueValues && selectedNewBoard) ||
+			(this.crossPostIssueValues &&
+				this.crossPostIssueValues.board &&
+				selectedNewBoard &&
+				this.crossPostIssueValues.board.id !== values.board!.id)
+		) {
+			this.loadAssignableUsers(values.service, values.board!);
 		}
 		this.crossPostIssueValues = values;
 	}
