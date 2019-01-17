@@ -59,24 +59,6 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	async boards(request: GitHubFetchBoardsRequest) {
 		const { git } = Container.instance();
 		const gitRepos = await git.getRepositories();
-		// let boards: GitHubBoard[];
-
-		// try {
-		// 	let apiResponse = await this.get<GitHubBoard[]>(
-		// 		`/user/repos?${qs.stringify({ access_token: this.token })}`
-		// 	);
-		// 	boards = apiResponse.body;
-		//
-		// 	let nextPage: string | undefined;
-		// 	while ((nextPage = this.nextPage(apiResponse.response))) {
-		// 		apiResponse = await this.get<GitHubBoard[]>(nextPage);
-		// 		boards = boards.concat(apiResponse.body);
-		// 	}
-		// } catch (err) {
-		// 	boards = [];
-		// 	Logger.error(err);
-		// 	debugger;
-		// }
 
 		const openRepos = new Map<String, GitHubRepo>();
 
@@ -96,7 +78,6 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 								path: gitRepo.path
 							};
 							this._knownRepos.set(remote.path, githubRepo);
-							// boards.push(response.body);
 						} catch (err) {
 							Logger.error(err);
 							debugger;
@@ -110,11 +91,31 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 			}
 		}
 
-		const boards = Array.from(openRepos.values()).map(r => ({
-			id: r.id,
-			name: r.full_name,
-			path: r.path
-		}));
+		let boards: GitHubBoard[];
+		if (openRepos.size > 0) {
+			boards = Array.from(openRepos.values()).map(r => ({
+				id: r.id,
+				name: r.full_name,
+				path: r.path
+			}));
+		} else {
+			try {
+				let apiResponse = await this.get<GitHubBoard[]>(
+					`/user/repos?${qs.stringify({ access_token: this.accessToken })}`
+				);
+				boards = apiResponse.body;
+
+				let nextPage: string | undefined;
+				while ((nextPage = this.nextPage(apiResponse.response))) {
+					apiResponse = await this.get<GitHubBoard[]>(nextPage);
+					boards = boards.concat(apiResponse.body);
+				}
+			} catch (err) {
+				boards = [];
+				Logger.error(err);
+				debugger;
+			}
+		}
 
 		return {
 			boards
