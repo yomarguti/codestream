@@ -76,6 +76,7 @@ namespace CodeStream.VisualStudio.LSP
             _sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
 
             _languageServerProcess = new LanguageServerProcess();
+            CustomMessageTarget = new CustomMessageHandler(_eventAggregator);
         }
 
         internal static LanguageClient Instance { get; private set; }
@@ -108,7 +109,7 @@ namespace CodeStream.VisualStudio.LSP
 
         public object MiddleLayer => null;
 
-        public object CustomMessageTarget => null;
+        public object CustomMessageTarget { get; }
 
         public async Task<Connection> ActivateAsync(CancellationToken token)
         {

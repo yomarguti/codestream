@@ -8,60 +8,13 @@ namespace CodeStream.VisualStudio.Extensions
 {
     public static class StringExtensions
     {
-        public static string ToJson(this object value, bool camelCase = true)
-        {
-            JsonSerializerSettings settings = null;
-            if (camelCase)
-            {
-                settings = new JsonSerializerSettings
-                {
-                    ContractResolver = new CamelCasePropertyNamesContractResolver()
-                };
-            }
+        public static bool IsNotNullOrWhiteSpace(this string s) => 
+            !string.IsNullOrWhiteSpace(s);
 
-            return JsonConvert.SerializeObject(value, settings);
-        }
+        public static bool IsNullOrWhiteSpace(this string s) => 
+            string.IsNullOrWhiteSpace(s);
 
-        public static T FromJson<T>(this string value)
-        {
-            return JsonConvert.DeserializeObject<T>(value);
-        }
-
-        public static JToken RemoveFields(this JToken token, params string[] fields)
-        {
-            var container = token as JContainer;
-            if (container == null) return token;
-
-            List<JToken> removeList = new List<JToken>();
-            foreach (JToken el in container.Children())
-            {
-                var p = el as JProperty;
-                if (p != null && fields.Contains(p.Name))
-                {
-                    removeList.Add(el);
-                }
-                el.RemoveFields(fields);
-            }
-
-            foreach (JToken el in removeList)
-            {
-                el.Remove();
-            }
-
-            return token;
-        }
-
-        public static bool IsNotNullOrWhiteSpace(this string s) => !string.IsNullOrWhiteSpace(s);
-
-        public static bool IsNullOrWhiteSpace(this string s) => string.IsNullOrWhiteSpace(s);
-
-        public static bool EqualsIgnoreCase(this string one, string two)
-        {
-            return string.Equals(one, two, System.StringComparison.OrdinalIgnoreCase);
-        }
-
-        public static string FromUri(this string uri) =>
-            uri.Replace("file:///", string.Empty)
-                .Replace("%3A", ":");
+        public static bool EqualsIgnoreCase(this string one, string two) => 
+            string.Equals(one, two, System.StringComparison.OrdinalIgnoreCase);
     }
 }

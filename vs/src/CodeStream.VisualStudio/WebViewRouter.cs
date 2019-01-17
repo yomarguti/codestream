@@ -98,23 +98,9 @@ namespace CodeStream.VisualStudio
                                 break;
                             }
                         case "codestream:response":
-                            {
-                                try
-                                {
-                                    var payload = message.Body?["payload"];
-                                    if (!(payload is JValue) && payload?["post"] != null)
-                                    {
-                                        var postCreated = message.Body.ToObject<CreatePostResponse>();
-                                        _eventAggregator.Publish(new CodemarkChangedEvent());
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Log.Error(ex, "codestream:response");
-                                }
-
-                                break;
-                            }
+                        {
+                            break;
+                        }
                         case "codestream:interaction:clicked-reload-webview":
                             {
                                 _browserService.ReloadWebView();
@@ -486,7 +472,7 @@ namespace CodeStream.VisualStudio
                                                 if (ideService != null)
                                                 {
                                                     var editorResponse = ideService.OpenEditor(
-                                                        fromMarkerResponse.TextDocument.Uri.FromUri(),
+                                                        fromMarkerResponse.TextDocument.Uri,
                                                         fromMarkerResponse.Range?.Start?.Line);
                                                     _browserService.PostMessage(new WebviewIpcMessageResponse(
                                                         new WebviewIpcMessageResponseBody(message.Id)

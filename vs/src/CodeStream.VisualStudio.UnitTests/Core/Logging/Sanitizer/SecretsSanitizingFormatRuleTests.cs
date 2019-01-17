@@ -13,13 +13,13 @@ namespace CodeStream.VisualStudio.UnitTests.Core.Logging.Sanitizer
         [DataRow("foo", "\"bar\"", "\"baz\"")]
         public void SanitizeTest(string userName, string password, string token)
         {
-            Assert.AreEqual((new
+            Assert.AreEqual(JsonExtensions.ToJson((new
             {
                 userName, password = "<hidden>", token = "<hidden>",
-            }).ToJson(), new SecretsSanitizingFormatRule().Sanitize(new
+            })), new SecretsSanitizingFormatRule().Sanitize(JsonExtensions.ToJson(new
             {
                 userName, password, token,
-            }.ToJson()));
+            })));
         }
     }
 }

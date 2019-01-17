@@ -64,7 +64,7 @@ namespace CodeStream.VisualStudio.Services
     public interface IIdeService
     {
         void Navigate(string url);
-        ShowCodeResult OpenEditor(string sourceFile, int? scrollTo = null);
+        ShowCodeResult OpenEditor(Uri fileUri, int? scrollTo = null);
         SelectedText GetSelectedText();
         SelectedText GetSelectedText(out IVsTextView view);
         bool QueryExtensions(string author, params string[] names);
@@ -97,7 +97,7 @@ namespace CodeStream.VisualStudio.Services
             _extensionManager = extensionManager;
         }
 
-        public ShowCodeResult OpenEditor(string sourceFile, int? scrollTo = null)
+        public ShowCodeResult OpenEditor(Uri fileUri, int? scrollTo = null)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
@@ -112,7 +112,7 @@ namespace CodeStream.VisualStudio.Services
                 ThreadHelper.JoinableTaskFactory.Run(async delegate
                 {
                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                    dte.ExecuteCommand("File.OpenFile", sourceFile);
+                    dte.ExecuteCommand("File.OpenFile", fileUri.ToLocalPath());
 
                     await ThreadHelper.JoinableTaskFactory.RunAsync(async delegate
                     {
@@ -127,7 +127,7 @@ namespace CodeStream.VisualStudio.Services
                         }
                         catch (Exception ex)
                         {
-                            Log.Warning(ex, $"Could not go to line {scrollTo} in {sourceFile}");
+                            Log.Warning(ex, $"Could not go to line {scrollTo} in {fileUri}");
                         }
                     });
                 });
@@ -136,7 +136,7 @@ namespace CodeStream.VisualStudio.Services
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"OpenEditor failed for {sourceFile}");
+                Log.Error(ex, $"OpenEditor failed for {fileUri}");
                 return ShowCodeResult.FILE_NOT_FOUND;
             }
         }

@@ -1,8 +1,12 @@
-﻿using CodeStream.VisualStudio.Events;
+﻿using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Events;
+using CodeStream.VisualStudio.Extensions;
+using CodeStream.VisualStudio.Packages;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,9 +14,6 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Packages;
-using Serilog;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
@@ -117,12 +118,11 @@ namespace CodeStream.VisualStudio.UI.Margins
         private void Initialize()
         {
             _disposables.Add(
-               _eventAggregator.GetEvent<CodemarkChangedEvent>().ObserveOnDispatcher()
+               _eventAggregator.GetEvent<DocumentMarkerChangedEvent>().ObserveOnDispatcher()
               .Throttle(TimeSpan.FromMilliseconds(100))
               .Subscribe(_ =>
               {
-                  //TODO should really be just listening to oneself
-                  //if (new FileUri(_textDocument.FilePath).EqualsIgnoreCase(_.Uri))
+                  if (_.Uri.EqualsIgnoreCase(_textDocument.FilePath.ToUri()))
                   {
                       Update();
                   }
@@ -226,7 +226,7 @@ namespace CodeStream.VisualStudio.UI.Margins
             }
 
             var filePath = _textDocument.FilePath;
-            if (!Uri.TryCreate(filePath,UriKind.Absolute, out Uri result))
+            if (!Uri.TryCreate(filePath, UriKind.Absolute, out Uri result))
             {
                 Log.Verbose($"Could not parse file path as uri={filePath}");
                 return;

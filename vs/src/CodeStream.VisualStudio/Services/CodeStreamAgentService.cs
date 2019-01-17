@@ -103,7 +103,7 @@ namespace CodeStream.VisualStudio.Services
 
     public class TextDocumentIdentifier
     {
-        public string Uri { get; set; }
+        public Uri Uri { get; set; }
     }
 
     public class DocumentFromMarkerRequest

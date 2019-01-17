@@ -35,9 +35,9 @@ namespace CodeStream.VisualStudio.Events
         
     }
 
-    public sealed class CodemarkChangedEvent : EventArgsBase
+    public sealed class DocumentMarkerChangedEvent : EventArgsBase
     {
-        public string Uri { get; set; }
+        public Uri Uri { get; set; }
     }
 
     public sealed class CodemarkVisibilityEvent : EventArgsBase
