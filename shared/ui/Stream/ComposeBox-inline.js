@@ -16,15 +16,6 @@ class ComposeBox extends React.Component {
 		crossPostIssue: true
 	};
 
-	submitPlainPost = newPostText => {
-		const domParser = new DOMParser();
-		const replaceRegex = /<br>|<div>/g;
-		const text = domParser.parseFromString(newPostText.replace(replaceRegex, "\n"), "text/html")
-			.documentElement.textContent;
-		const mentionedUserIds = this.props.findMentionedUserIds(text, this.props.teammates);
-		this.props.onSubmit({ text, mentionedUserIds });
-	};
-
 	submitCodemarkPost = (attributes, event) => {
 		const { quote, streamId } = this.props;
 		let newPostText = attributes.text || "";
@@ -232,7 +223,7 @@ class ComposeBox extends React.Component {
 							openCodemarkForm={this.openMultiCompose}
 							openDirection={this.props.floatCompose ? "down" : "up"}
 							renderMessageInput={this.renderMessageInput}
-							onSubmit={this.submitPlainPost}
+							onSubmit={this.props.onSubmitPost}
 							placeholder={this.props.placeholder}
 						/>
 					)}

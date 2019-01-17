@@ -796,6 +796,7 @@ export class SimpleStream extends Component {
 				ensureStreamIsActive={this.ensureStreamIsActive}
 				ref={this._compose}
 				disabled={this.props.isOffline}
+				onSubmitPost={this.submitPlainPost}
 				onSubmit={this.submitPost}
 				onEmptyUpArrow={this.editLastPost}
 				findMentionedUserIds={this.findMentionedUserIds}
@@ -1687,6 +1688,21 @@ export class SimpleStream extends Component {
 	};
 
 	// create a new post
+	submitPlainPost = async postText => {
+		const domParser = new DOMParser();
+		const replaceRegex = /<br>|<div>/g;
+		const text = domParser.parseFromString(postText.replace(replaceRegex, "\n"), "text/html")
+			.documentElement.textContent;
+		const mentionedUserIds = this.findMentionedUserIds(text, this.props.teammates);
+
+		const { activePanel, createPost, postStreamId } = this.props;
+		await createPost(postStreamId, this.props.threadId, text, null, mentionedUserIds);
+		if (activePanel === "main") {
+			safe(() => this.scrollPostsListToBottom());
+		}
+	};
+
+	// Legacy post creation.
 	submitPost = ({ text, quote, mentionedUserIds, forceStreamId, forceThreadId, codemark }) => {
 		const markers = [];
 		if (codemark) codemark.markers = markers;

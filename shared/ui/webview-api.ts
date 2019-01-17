@@ -590,7 +590,7 @@ export default class WebviewApi {
 	fetchAssignableUsers(service: string, boardId: string) {
 		return this.postMessage({
 			action: FetchAssignableUsersRequestType.method,
-			params: { providerName: service, projectId: boardId } as FetchAssignableUsersRequest
+			params: { providerName: service, boardId } as FetchAssignableUsersRequest
 		});
 	}
 }
