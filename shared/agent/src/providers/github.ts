@@ -42,19 +42,11 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 		return "github";
 	}
 
-	async headers() {
+	get headers() {
 		return {
 			"user-agent": "CodeStream",
 			Accept: "application/vnd.github.v3+json, application/vnd.github.inertia-preview+json"
 		};
-	}
-
-	private get apiKey() {
-		return this._providerInfo && this._providerInfo.apiKey;
-	}
-
-	private get token() {
-		return this._providerInfo && this._providerInfo.accessToken;
 	}
 
 	async onConnected() {
@@ -65,8 +57,6 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	@log()
 	@lspHandler(GitHubFetchBoardsRequestType)
 	async boards(request: GitHubFetchBoardsRequest) {
-		void (await this.ensureConnected());
-
 		const { git } = Container.instance();
 		const gitRepos = await git.getRepositories();
 		// let boards: GitHubBoard[];
@@ -99,7 +89,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 					if (!githubRepo) {
 						try {
 							const response = await this.get<GitHubRepo>(
-								`/repos/${remote.path}?${qs.stringify({ access_token: this.token })}`
+								`/repos/${remote.path}?${qs.stringify({ access_token: this.accessToken })}`
 							);
 							githubRepo = {
 								...response.body,
@@ -134,23 +124,13 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	@log()
 	@lspHandler(GitHubCreateCardRequestType)
 	async createCard(request: GitHubCreateCardRequest) {
-		void (await this.ensureConnected());
-
 		const response = await this.post<{}, GitHubCreateCardResponse>(
 			`/repos/${request.repoName}/issues?${qs.stringify({
-				access_token: this.token
-				// idList: request.listId,
-				// name: request.name,
-				// desc: request.description,
-				// key: this.apiKey,
-				// token: this.token
+				access_token: this.accessToken
 			})}`,
 			{
 				title: request.title,
 				body: request.description
-				// milestone,
-				// labels,
-				// assignees
 			}
 		);
 		return response;
@@ -158,18 +138,11 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 
 	@log()
 	@lspHandler(GitHubFetchListsRequestType)
-	async lists(request: GitHubFetchListsRequest) {
-		void (await this.ensureConnected());
-
-		const response = await this.get<GitHubList[]>(
-			`/boards/${request.boardId}/lists?${qs.stringify({ key: this.apiKey, token: this.token })}`
-		);
-		return { lists: response.body.filter(l => !l.closed) };
-	}
+	async lists(request: GitHubFetchListsRequest) {}
 
 	private async getMemberId() {
 		const userResponse = await this.get<{ id: string; [key: string]: any }>(
-			`/user?${qs.stringify({ access_token: this.token })}`
+			`/user?${qs.stringify({ access_token: this.accessToken })}`
 		);
 
 		return userResponse.body.id;

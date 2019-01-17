@@ -47,16 +47,12 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 		return "jira";
 	}
 
-	async headers() {
+	get headers() {
 		return {
 			Authorization: `Bearer ${this.accessToken}`,
 			Accept: "application/json",
 			"Content-Type": "application/json"
 		};
-	}
-
-	private get accessToken() {
-		return this._providerInfo && this._providerInfo.accessToken;
 	}
 
 	async onConnected() {
@@ -69,7 +65,6 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 	@log()
 	@lspHandler(JiraFetchBoardsRequestType)
 	async boards(): Promise<JiraFetchBoardsResponse> {
-		await this.ensureConnected();
 		try {
 			const { body } = await this.get<{ values: any[] }>("/rest/api/3/project/search");
 
@@ -113,7 +108,6 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 	@log()
 	@lspHandler(CreateJiraCardRequestType)
 	async createCard(request: CreateJiraCardRequest) {
-		await this.ensureConnected();
 		// using /api/2 because 3 returns nonsense errors for the same request
 		const response = await this.post("/rest/api/2/issue", {
 			fields: {
@@ -128,25 +122,5 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 			}
 		});
 		return response.body;
-	}
-
-	async ensureConnected() {
-		const oneMinuteBeforeExpiration = () => this._providerInfo!.expiresAt - 1000 * 60;
-		if (this._providerInfo && oneMinuteBeforeExpiration() <= new Date().getTime()) {
-			return await this.refreshToken();
-		} else return super.ensureConnected();
-	}
-
-	private async refreshToken() {
-		try {
-			const me = await this.session.api.refreshThirdPartyProvider({
-				providerName: this.name,
-				refreshToken: this._providerInfo!.data.refresh_token
-			});
-			this._providerInfo = this.getProviderInfo(me);
-		} catch (error) {
-			await this.disconnect();
-			return super.ensureConnected();
-		}
 	}
 }

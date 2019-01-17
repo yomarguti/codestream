@@ -1,18 +1,15 @@
 "use strict";
 import { Response } from "node-fetch";
-import * as qs from "querystring";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
-	BitbucketBoard,
 	BitbucketCreateCardRequest,
 	BitbucketCreateCardRequestType,
 	BitbucketCreateCardResponse,
 	BitbucketFetchBoardsRequest,
 	BitbucketFetchBoardsRequestType,
 	BitbucketFetchListsRequest,
-	BitbucketFetchListsRequestType,
-	BitbucketList
+	BitbucketFetchListsRequestType
 } from "../shared/agent.protocol";
 import { CSBitbucketProviderInfo } from "../shared/api.protocol";
 import { log, lspHandler, lspProvider } from "../system";
@@ -42,29 +39,11 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 		return "bitbucket";
 	}
 
-	async headers() {
+	get headers() {
 		return {
-			Authorization: `Bearer ${await this.token()}`,
+			Authorization: `Bearer ${this.accessToken}`,
 			"Content-Type": "application/json"
 		};
-	}
-
-	private async token() {
-		if (!this._providerInfo) {
-			return;
-		}
-		const expiration = this._providerInfo.expiresAt;
-		const now = new Date().getTime();
-		const oneMinute = 60 * 1000;
-		if (now > expiration - oneMinute) {
-			const me = await Container.instance().session.api.refreshThirdPartyProvider({
-				providerName: "bitbucket",
-				refreshToken: this._providerInfo.refreshToken
-			});
-			this._providerInfo = this.getProviderInfo(me);
-		}
-
-		return this._providerInfo && this._providerInfo.accessToken;
 	}
 
 	async onConnected() {
@@ -75,8 +54,6 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 	@log()
 	@lspHandler(BitbucketFetchBoardsRequestType)
 	async boards(request: BitbucketFetchBoardsRequest) {
-		void (await this.ensureConnected());
-
 		const { git } = Container.instance();
 		const gitRepos = await git.getRepositories();
 		// let boards: BitbucketBoard[];
@@ -142,13 +119,14 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 	@log()
 	@lspHandler(BitbucketCreateCardRequestType)
 	async createCard(request: BitbucketCreateCardRequest) {
-		void (await this.ensureConnected());
-
 		const response = await this.post<{}, BitbucketCreateCardResponse>(
 			`/repositories/${request.repoName}/issues`,
 			{
 				title: request.title,
-				description: request.description
+				content: {
+					raw: request.description,
+					markup: "markdown"
+				}
 			}
 		);
 		return response;
@@ -156,14 +134,7 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 
 	@log()
 	@lspHandler(BitbucketFetchListsRequestType)
-	async lists(request: BitbucketFetchListsRequest) {
-		void (await this.ensureConnected());
-
-		// const response = await this.get<BitbucketList[]>(
-		// 	`/boards/${request.boardId}/lists?${qs.stringify({ key: this.apiKey, token: this.token })}`
-		// );
-		// return { lists: response.body.filter(l => !l.closed) };
-	}
+	async lists(request: BitbucketFetchListsRequest) {}
 
 	private async getMemberId() {
 		const userResponse = await this.get<{ uuid: string; [key: string]: any }>(`/user`);

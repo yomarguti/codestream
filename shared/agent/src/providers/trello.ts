@@ -31,16 +31,12 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 		return "trello";
 	}
 
-	async headers() {
+	get headers() {
 		return {};
 	}
 
 	private get apiKey() {
 		return this._providerInfo && this._providerInfo.apiKey;
-	}
-
-	private get token() {
-		return this._providerInfo && this._providerInfo.accessToken;
 	}
 
 	async onConnected() {
@@ -50,15 +46,13 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 	@log()
 	@lspHandler(TrelloFetchBoardsRequestType)
 	async boards(request: TrelloFetchBoardsRequest) {
-		void (await this.ensureConnected());
-
 		const response = await this.get<TrelloBoard[]>(
 			`/members/${this._trelloUserId}/boards?${qs.stringify({
 				filter: "open",
 				fields: "id,name,desc,descData,closed,idOrganization,pinned,url,labelNames,starred",
 				lists: "open",
 				key: this.apiKey,
-				token: this.token
+				token: this.accessToken
 			})}`
 		);
 
@@ -72,15 +66,13 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 	@log()
 	@lspHandler(TrelloCreateCardRequestType)
 	async createCard(request: TrelloCreateCardRequest) {
-		void (await this.ensureConnected());
-
 		const response = await this.post<{}, TrelloCreateCardResponse>(
 			`/cards?${qs.stringify({
 				idList: request.listId,
 				name: request.name,
 				desc: request.description,
 				key: this.apiKey,
-				token: this.token
+				token: this.accessToken
 			})}`,
 			{}
 		);
@@ -90,17 +82,18 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 	@log()
 	@lspHandler(TrelloFetchListsRequestType)
 	async lists(request: TrelloFetchListsRequest) {
-		void (await this.ensureConnected());
-
 		const response = await this.get<TrelloList[]>(
-			`/boards/${request.boardId}/lists?${qs.stringify({ key: this.apiKey, token: this.token })}`
+			`/boards/${request.boardId}/lists?${qs.stringify({
+				key: this.apiKey,
+				token: this.accessToken
+			})}`
 		);
 		return { lists: response.body.filter(l => !l.closed) };
 	}
 
 	private async getMemberId() {
 		const tokenResponse = await this.get<{ idMember: string; [key: string]: any }>(
-			`/token/${this.token}?${qs.stringify({ key: this.apiKey, token: this.token })}`
+			`/token/${this.accessToken}?${qs.stringify({ key: this.apiKey, token: this.accessToken })}`
 		);
 
 		return tokenResponse.body.idMember;

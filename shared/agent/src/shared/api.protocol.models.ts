@@ -228,21 +228,17 @@ export interface CSBitbucketProviderInfo {
 
 export interface CSGitHubProviderInfo {
 	accessToken: string;
-	apiKey: string;
 	userId: string;
 }
 
 export interface CSGitLabProviderInfo {
 	accessToken: string;
-	apiKey: string;
 	userId: string;
 }
 
 export interface CSJiraProviderInfo {
 	accessToken: string;
-	data: {
-		refresh_token: string;
-	};
+	refreshToken: string;
 	expiresAt: number;
 }
 
@@ -260,7 +256,9 @@ export interface CSTrelloProviderInfo {
 
 export type CSProviderInfos =
 	| CSAsanaProviderInfo
+	| CSBitbucketProviderInfo
 	| CSGitHubProviderInfo
+	| CSGitLabProviderInfo
 	| CSJiraProviderInfo
 	| CSSlackProviderInfo
 	| CSTrelloProviderInfo;

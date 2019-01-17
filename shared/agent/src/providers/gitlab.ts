@@ -42,18 +42,10 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 		return "gitlab";
 	}
 
-	async headers() {
+	get headers() {
 		return {
-			Authorization: `Bearer ${this.token}`
+			Authorization: `Bearer ${this.accessToken}`
 		};
-	}
-
-	private get apiKey() {
-		return this._providerInfo && this._providerInfo.apiKey;
-	}
-
-	private get token() {
-		return this._providerInfo && this._providerInfo.accessToken;
 	}
 
 	async onConnected() {
@@ -64,8 +56,6 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 	@log()
 	@lspHandler(GitLabFetchBoardsRequestType)
 	async boards(request: GitLabFetchBoardsRequest) {
-		void (await this.ensureConnected());
-
 		const { git } = Container.instance();
 		const gitRepos = await git.getRepositories();
 		// let boards: GitLabBoard[];
@@ -133,8 +123,6 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 	@log()
 	@lspHandler(GitLabCreateCardRequestType)
 	async createCard(request: GitLabCreateCardRequest) {
-		void (await this.ensureConnected());
-
 		const response = await this.post<{}, GitLabCreateCardResponse>(
 			`/projects/${encodeURIComponent(request.repoName)}/issues?${qs.stringify({
 				title: request.title,
@@ -147,18 +135,10 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 
 	@log()
 	@lspHandler(GitLabFetchListsRequestType)
-	async lists(request: GitLabFetchListsRequest) {
-		void (await this.ensureConnected());
-
-		const response = await this.get<GitLabList[]>(
-			`/boards/${request.boardId}/lists?${qs.stringify({ key: this.apiKey, token: this.token })}`
-		);
-		return { lists: response.body.filter(l => !l.closed) };
-	}
+	async lists(request: GitLabFetchListsRequest) {}
 
 	private async getMemberId() {
 		const userResponse = await this.get<{ id: string; [key: string]: any }>(`/user`);
-
 		return userResponse.body.id;
 	}
 

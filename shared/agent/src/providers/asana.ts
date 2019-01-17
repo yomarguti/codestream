@@ -1,6 +1,5 @@
 "use strict";
 import * as qs from "querystring";
-import { Container } from "../container";
 import { Logger } from "../logger";
 import {
 	AsanaBoard,
@@ -50,28 +49,10 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 		return "asana";
 	}
 
-	async headers() {
+	get headers() {
 		return {
-			Authorization: `Bearer ${await this.token()}`
+			Authorization: `Bearer ${this.accessToken}`
 		};
-	}
-
-	private async token() {
-		if (!this._providerInfo) {
-			return;
-		}
-		const expiration = this._providerInfo.expiresAt;
-		const now = new Date().getTime();
-		const oneMinute = 60 * 1000;
-		if (now > expiration - oneMinute) {
-			const me = await Container.instance().session.api.refreshThirdPartyProvider({
-				providerName: "asana",
-				refreshToken: this._providerInfo.refreshToken
-			});
-			this._providerInfo = this.getProviderInfo(me);
-		}
-
-		return this._providerInfo && this._providerInfo.accessToken;
 	}
 
 	async onConnected() {
@@ -81,8 +62,6 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 	@log()
 	@lspHandler(AsanaFetchBoardsRequestType)
 	async boards(request: AsanaFetchBoardsRequest) {
-		void (await this.ensureConnected());
-
 		let boards: AsanaBoard[] = [];
 
 		if (!this._asanaUser) {
@@ -127,8 +106,6 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 	@log()
 	@lspHandler(AsanaCreateCardRequestType)
 	async createCard(request: AsanaCreateCardRequest) {
-		void (await this.ensureConnected());
-
 		return await this.post<{}, AsanaCreateCardResponse>(`/api/1.0/tasks`, {
 			data: {
 				name: request.name,
@@ -147,8 +124,6 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 	@log()
 	@lspHandler(AsanaFetchListsRequestType)
 	async lists(request: AsanaFetchListsRequest) {
-		void (await this.ensureConnected());
-
 		try {
 			const response = await this.get<{ data: AsanaList[] }>(
 				`/api/1.0/projects/${request.boardId}/sections?${qs.stringify({ limit: 100 })}`
@@ -160,7 +135,6 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 			Logger.log(err);
 			return [];
 		}
-		// return { lists: response.body.filter(l => !l.closed) };
 	}
 
 	private async getMe(): Promise<AsanaUser> {

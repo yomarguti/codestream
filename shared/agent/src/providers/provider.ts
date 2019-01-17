@@ -19,6 +19,17 @@ export interface ApiResponse<T> {
 	response: Response;
 }
 
+interface RefreshableProviderInfo {
+	expiresAt: number;
+	refreshToken: string;
+}
+
+function isRefreshable<TProviderInfo extends CSProviderInfos>(
+	providerInfo: TProviderInfo
+): providerInfo is TProviderInfo & RefreshableProviderInfo {
+	return typeof (providerInfo as any).expiresAt === "number";
+}
+
 export abstract class ThirdPartyProviderBase<
 	TProviderInfo extends CSProviderInfos = CSProviderInfos
 > implements ThirdPartyProvider {
@@ -31,7 +42,11 @@ export abstract class ThirdPartyProviderBase<
 	abstract get baseUrl(): string;
 	abstract get displayName(): string;
 	abstract get name(): string;
-	abstract async headers(): Promise<{ [key: string]: string }>;
+	abstract get headers(): { [key: string]: string };
+
+	get accessToken() {
+		return this._providerInfo && this._providerInfo.accessToken;
+	}
 
 	async connect() {
 		void (await this.session.api.connectThirdPartyProvider({
@@ -69,12 +84,37 @@ export abstract class ThirdPartyProviderBase<
 		if (this._readyPromise) {
 			return this._readyPromise;
 		}
-		if (this._providerInfo !== undefined) return;
+		if (this._providerInfo !== undefined) {
+			await this.refreshToken();
+			return;
+		}
 
 		if (this._ensuringConnection === undefined) {
 			this._ensuringConnection = this.ensureConnectedCore();
 		}
 		void (await this._ensuringConnection);
+	}
+
+	private async refreshToken() {
+		if (this._providerInfo === undefined) {
+			return;
+		}
+
+		if (isRefreshable(this._providerInfo)) {
+			const oneMinuteBeforeExpiration = this._providerInfo.expiresAt - 1000 * 60;
+			if (oneMinuteBeforeExpiration <= new Date().getTime()) {
+				try {
+					const me = await this.session.api.refreshThirdPartyProvider({
+						providerName: this.name,
+						refreshToken: this._providerInfo.refreshToken
+					});
+					this._providerInfo = this.getProviderInfo(me);
+				} catch (error) {
+					await this.disconnect();
+					return this.ensureConnected();
+				}
+			}
+		}
 	}
 
 	private async ensureConnectedCore() {
@@ -85,6 +125,7 @@ export abstract class ThirdPartyProviderBase<
 			throw new Error(`You must authenticate with ${this.displayName} first.`);
 		}
 
+		await this.refreshToken();
 		await this.onConnected();
 
 		this._ensuringConnection = undefined;
@@ -93,23 +134,26 @@ export abstract class ThirdPartyProviderBase<
 	protected async delete<R extends object>(url: string): Promise<ApiResponse<R>> {
 		let resp = undefined;
 		if (resp === undefined) {
-			resp = this.fetch<R>(url, { method: "DELETE", headers: await this.headers() });
+			await this.ensureConnected();
+			resp = this.fetch<R>(url, { method: "DELETE", headers: this.headers });
 		}
 		return resp;
 	}
 
 	protected async get<R extends object>(url: string): Promise<ApiResponse<R>> {
-		return this.fetch<R>(url, { method: "GET", headers: await this.headers() });
+		await this.ensureConnected();
+		return this.fetch<R>(url, { method: "GET", headers: this.headers });
 	}
 
 	protected async post<RQ extends object, R extends object>(
 		url: string,
 		body: RQ
 	): Promise<ApiResponse<R>> {
+		await this.ensureConnected();
 		return this.fetch<R>(url, {
 			method: "POST",
 			body: JSON.stringify(body),
-			headers: await this.headers()
+			headers: this.headers
 		});
 	}
 
@@ -117,10 +161,11 @@ export abstract class ThirdPartyProviderBase<
 		url: string,
 		body: RQ
 	): Promise<ApiResponse<R>> {
+		await this.ensureConnected();
 		return this.fetch<R>(url, {
 			method: "PUT",
 			body: JSON.stringify(body),
-			headers: await this.headers()
+			headers: this.headers
 		});
 	}
 
