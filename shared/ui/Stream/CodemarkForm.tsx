@@ -661,7 +661,9 @@ class CodemarkForm extends React.Component<Props, State> {
 										id="input-assignees"
 										name="assignees"
 										classNamePrefix="native-key-bindings react-select"
-										isMulti={true}
+										isMulti={
+											this.props.issueProvider && this.props.issueProvider === "jira" ? false : true
+										}
 										value={this.state.assignees}
 										options={this.state.assignableUsers}
 										closeMenuOnSelect={true}
