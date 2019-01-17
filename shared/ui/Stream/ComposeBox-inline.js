@@ -16,6 +16,11 @@ class ComposeBox extends React.Component {
 		crossPostIssue: true
 	};
 
+	handleSubmitPost = (...args) => {
+		if (this.props.disabled) return;
+		this.props.onSubmitPost(...args);
+	};
+
 	submitCodemarkPost = (attributes, event) => {
 		const { quote, streamId } = this.props;
 		let newPostText = attributes.text || "";
@@ -223,7 +228,7 @@ class ComposeBox extends React.Component {
 							openCodemarkForm={this.openMultiCompose}
 							openDirection={this.props.floatCompose ? "down" : "up"}
 							renderMessageInput={this.renderMessageInput}
-							onSubmit={this.props.onSubmitPost}
+							onSubmit={this.handleSubmitPost}
 							placeholder={this.props.placeholder}
 						/>
 					)}
