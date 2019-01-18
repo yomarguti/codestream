@@ -310,7 +310,7 @@ namespace CodeStream.VisualStudio.Services
                 Version = settings.Version,
                 Repos = repos.Value<JToken>("repos").ToObject<List<CsRepository>>(),
                 Streams = streams.Value<JToken>("streams").ToObject<List<CsStream>>(),
-                Teams = teams.Value<JToken>("teams").ToObject<List<Team>>(),
+                Teams = teams.Value<JToken>("teams").ToObject<List<CsTeam>>(),
                 Unreads = usersUnreads.Value<JToken>("unreads").ToObject<CsUnreads>(),
                 Users = users.Value<JToken>("users").ToObject<List<CsUser>>(),
                 Preferences = usersPreferences.Value<JToken>("preferences").ToObject<CsMePreferences>(),

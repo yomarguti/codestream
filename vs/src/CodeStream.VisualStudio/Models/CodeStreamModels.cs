@@ -111,10 +111,8 @@ namespace CodeStream.VisualStudio.Models
         public string Title { get; set; }
         public string Type { get; set; }
         public string Url { get; set; }
-
         //TODO this is some kind string | object
-        //public Preview Preview {get;set;}
-
+        public object Preview { get; set; }
     }
 
     public class CsPost : CsEntity
@@ -140,15 +138,7 @@ namespace CodeStream.VisualStudio.Models
         public bool? HasMarkers { get; set; }
     }
 
-    public class Team : CsEntity
-    {
-        public string Name { get; set; }
-        public List<string> MemberIds { get; set; }
-        public List<string> AdminIds { get; set; }
-        public string PrimaryReferral { get; set; }
-    }
-
-    public class Company : CsEntity
+    public class CsCompany : CsEntity
     {
         public string Name { get; set; }
         public List<string> TeamIds { get; set; }
@@ -356,7 +346,7 @@ namespace CodeStream.VisualStudio.Models
         public string CurrentThreadId { get; set; }
         public List<CsRepository> Repos { get; set; }
         public List<CsStream> Streams { get; set; }
-        public List<Team> Teams { get; set; }
+        public List<CsTeam> Teams { get; set; }
         public CsUnreads Unreads { get; set; }
         public List<CsUser> Users { get; set; }
         public CsMePreferences Preferences { get; set; }
@@ -374,6 +364,7 @@ namespace CodeStream.VisualStudio.Models
         public State State { get; set; }
         public string Error { get; set; }
     }
+
     public class LoginResponseWrapper
     {
         public Result Result { get; set; }
@@ -392,7 +383,8 @@ namespace CodeStream.VisualStudio.Models
     public class CsTeam : CsEntity
     {
         public string Name { get; set; }
-        public List<string> CompanyId { get; set; }
+        public string CompanyId { get; set; }
+        public List<string> AdminIds { get; set; }
         public List<string> MemberIds { get; set; }
         public string PrimaryReferral { get; set; } //: "internal" | "external";
         public Dictionary<string, bool> Integrations { get; set; }
@@ -454,8 +446,8 @@ namespace CodeStream.VisualStudio.Models
         public CsUser User { get; set; }
         public string AccessToken { get; set; }
         public string PubNubKey { get; set; }
-        public List<Team> Teams { get; set; }
-        public List<Company> Companies { get; set; }
+        public List<CsTeam> Teams { get; set; }
+        public List<CsCompany> Companies { get; set; }
         public List<CsRepository> Repos { get; set; }
         public string TeamId { get; set; }
     }
