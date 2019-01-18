@@ -173,6 +173,9 @@ export interface CreateCodemarkRequest {
 	assignees?: string[];
 	markers?: CreateCodemarkRequestMarker[];
 	remotes?: string[];
+	externalProvider?: string;
+	externalProviderUrl?: string;
+	externalAssignees?: { displayName: string }[];
 }
 
 export interface CreateCodemarkRequestMarker {

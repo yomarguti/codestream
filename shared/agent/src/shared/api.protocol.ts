@@ -331,6 +331,9 @@ export interface CSCreateCodemarkRequest {
 	assignees?: string[];
 	markers?: CSCreateCodemarkRequestMarker[];
 	remotes?: string[];
+	externalProvider?: string;
+	externalProviderUrl?: string;
+	externalAssignees?: { displayName: string }[];
 }
 
 export interface CSCreateCodemarkRequestMarker {

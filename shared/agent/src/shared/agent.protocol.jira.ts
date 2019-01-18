@@ -6,6 +6,7 @@ export interface JiraUser {
 	accountId: string;
 	name: string;
 	displayName: string;
+	emailAddress: string;
 }
 
 export interface JiraBoard extends ThirdPartyProviderBoard {
@@ -33,6 +34,7 @@ export interface CreateJiraCardRequest {
 
 export interface CreateJiraCardResponse {
 	id: string;
+	url: string;
 }
 
 export const CreateJiraCardRequestType = new RequestType<

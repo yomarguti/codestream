@@ -32,11 +32,18 @@ interface JiraProjectsMetaResponse {
 	projects: JiraProjectMeta[];
 }
 
+interface CreateJiraIssueResponse {
+	id: string;
+	key: string;
+	self: string;
+}
+
 @lspProvider("jira")
 export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 	private jiraApiUrl = "https://api.atlassian.com";
 	private _baseUrl = this.jiraApiUrl;
 	private boards: JiraBoard[] = [];
+	private domain?: string;
 
 	get baseUrl() {
 		return this._baseUrl;
@@ -63,7 +70,7 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 			"/oauth/token/accessible-resources"
 		);
 		this._baseUrl = `${this.jiraApiUrl}/ex/jira/${response.body[0].id}`;
-		// debugger
+		this.domain = response.body[0].name;
 	}
 
 	async onDisconnected() {
@@ -144,12 +151,17 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 			}
 		};
 
-		if (request.assignees) {
+		if (request.assignees && request.assignees.length > 0) {
 			body.fields.assignee = { name: request.assignees[0].name };
 		}
-		const response = await this.post("/rest/api/2/issue", body);
-
-		return response.body;
+		const response = await this.post<typeof body, CreateJiraIssueResponse>(
+			"/rest/api/2/issue",
+			body
+		);
+		return {
+			id: response.body.id,
+			url: `https://${this.domain!}.atlassian.net/browse/${response.body.key}`
+		};
 	}
 
 	@log()
@@ -159,6 +171,6 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 				project: request.boardId
 			})}`
 		);
-		return { users: body.map(u => ({ ...u, id: u.accountId })) };
+		return { users: body.map(u => ({ ...u, id: u.accountId, email: u.emailAddress })) };
 	}
 }

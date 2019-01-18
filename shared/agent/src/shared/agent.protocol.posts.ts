@@ -74,6 +74,9 @@ export interface CreatePostWithMarkerRequest {
 	assignees?: string[];
 	color?: string;
 	status?: string;
+	externalProvider?: string;
+	externalProviderUrl?: string;
+	externalAssignees?: { displayName: string }[];
 }
 
 export const CreatePostWithMarkerRequestType = new RequestType<
