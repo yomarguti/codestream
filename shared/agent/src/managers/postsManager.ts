@@ -420,7 +420,6 @@ function trackPostCreation(request: CreatePostRequest) {
 
 					// Get Type for codemark
 					if (request.codemark != null) {
-						// TODO: Add Bookmark and Issue
 						switch (request.codemark.type) {
 							case CodemarkType.Question:
 								markerType = "Question";
@@ -448,6 +447,12 @@ function trackPostCreation(request: CreatePostRequest) {
 						Thread: request.parentPostId ? "Reply" : "Parent",
 						Marker: isMarker
 					};
+					if (request.entryPoint) {
+						payload["Entry Point"] = request.entryPoint;
+					}
+					if (request.codemark && request.codemark.externalProvider) {
+						payload["Linked Service"] = request.codemark.externalProvider;
+					}
 					// TODO: Add Category
 					if (!Container.instance().session.telemetryData.hasCreatedPost) {
 						payload["First Post?"] = new Date().toISOString();
@@ -654,6 +659,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		externalProvider,
 		externalAssignees,
 		externalProviderUrl,
+		entryPoint,
 		status = "open"
 	}: CreatePostWithMarkerRequest): Promise<CreatePostResponse | undefined> {
 		const { git } = Container.instance();
@@ -719,7 +725,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				text: "",
 				parentPostId,
 				codemark: codemarkRequest,
-				mentionedUserIds
+				mentionedUserIds,
+				entryPoint
 			});
 
 			const { markers } = response;
