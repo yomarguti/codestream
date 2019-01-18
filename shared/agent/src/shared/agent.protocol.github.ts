@@ -9,6 +9,7 @@ export interface GitHubCreateCardRequest {
 
 export interface GitHubCreateCardResponse {
 	id: string;
+	html_url: string;
 }
 
 export const GitHubCreateCardRequestType = new RequestType<

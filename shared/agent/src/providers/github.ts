@@ -134,7 +134,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 				body: request.description
 			}
 		);
-		return response;
+		return response.body;
 	}
 
 	@log()
