@@ -19,6 +19,7 @@ import {
 	CreateDirectStreamResponse,
 	CreateJiraCardRequest,
 	CreateJiraCardRequestType,
+	CreateJiraCardResponse,
 	CreatePostRequest,
 	CreatePostRequestType,
 	CreatePostResponse,
@@ -45,6 +46,7 @@ import {
 	FetchThirdPartyBoardsRequest,
 	GitHubCreateCardRequest,
 	GitHubCreateCardRequestType,
+	GitHubCreateCardResponse,
 	GitLabCreateCardRequestType,
 	InviteUserRequest,
 	InviteUserRequestType,
@@ -188,7 +190,7 @@ export default class WebviewApi {
 		project: string,
 		assignees?: any[]
 	) {
-		return this.postMessage({
+		return this.postMessage<CreateJiraCardResponse>({
 			action: CreateJiraCardRequestType.method,
 			params: {
 				summary,
@@ -201,7 +203,7 @@ export default class WebviewApi {
 	}
 
 	createGithubCard(title: string, description: string, repoName: string) {
-		return this.postMessage({
+		return this.postMessage<GitHubCreateCardResponse>({
 			action: GitHubCreateCardRequestType.method,
 			params: {
 				title,

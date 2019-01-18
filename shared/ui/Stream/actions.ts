@@ -568,7 +568,12 @@ export const createServiceCard = (attributes, codemark) => async (_, __, { api }
 				return api.createTrelloCard(attributes.listId, codemark.title, description);
 			}
 			case "github": {
-				return api.createGithubCard(codemark.title, description, attributes.boardName);
+				const response = await api.createGithubCard(
+					codemark.title,
+					description,
+					attributes.boardName
+				);
+				return { url: response.html_url };
 			}
 			case "gitlab": {
 				return api.createGitlabCard(codemark.title, description, attributes.boardName);
