@@ -159,6 +159,9 @@ namespace CodeStream.VisualStudio.Services
         {
             // ReSharper disable once UnusedVariable
             var result = _iIVsTextManager.GetActiveView2(1, null, (uint)_VIEWFRAMETYPE.vftCodeWindow, out view);
+            
+            // view can be null...
+            if (view == null) return null;
 
             view.GetSelection(out int startLine, out int startColumn, out int endLine, out int endColumn);
             view.GetSelectedText(out string selectedText);
