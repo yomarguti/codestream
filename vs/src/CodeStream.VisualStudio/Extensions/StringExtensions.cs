@@ -8,6 +8,7 @@ namespace CodeStream.VisualStudio.Extensions
 {
     public static class StringExtensions
     {
+        // [BC] need to nuke this -- too easy to use the wrong one
         public static bool IsNotNullOrWhiteSpace(this string s) => 
             !string.IsNullOrWhiteSpace(s);
 

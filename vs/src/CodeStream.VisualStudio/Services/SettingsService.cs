@@ -187,7 +187,7 @@ namespace CodeStream.VisualStudio.Services
         public string GetEnvironmentVersionFormated(string extensionVersion, string buildNumber)
         {
             var environmentName = GetEnvironmentName();
-            return $"{extensionVersion}{(buildNumber.IsNotNullOrWhiteSpace() ? "" : $"-{buildNumber}")}{(environmentName != "prod" ? "(" + environmentName + ")" : "")}";
+            return $"{extensionVersion}{(buildNumber.IsNullOrWhiteSpace() ? "" : $"-{buildNumber}")}{(environmentName != "prod" ? "(" + environmentName + ")" : "")}";
         }
     }
 	
