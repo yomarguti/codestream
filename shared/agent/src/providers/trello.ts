@@ -76,7 +76,7 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 			})}`,
 			{}
 		);
-		return response;
+		return response.body;
 	}
 
 	@log()

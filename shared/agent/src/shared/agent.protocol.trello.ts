@@ -10,6 +10,7 @@ export interface TrelloCreateCardRequest {
 
 export interface TrelloCreateCardResponse {
 	id: string;
+	url: string;
 }
 
 export const TrelloCreateCardRequestType = new RequestType<
