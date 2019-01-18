@@ -19,7 +19,7 @@ Prerequisites
 
 ### Releasing
 
-From PowerShell, run
+To create a release artifact. From PowerShell, run
 
 ```
 cd build
@@ -28,11 +28,11 @@ cd build
 
 Under the hood this calls `Bump-Version.ps1` and `Build.ps1`. These can be run separately if necessary
 
-By default `Release.ps1` will bump the Minor version of the package (versions live in three spots: manifest, AssemblyInfo, SolutionInfo).
+By default `Release.ps1` will bump the Minor version of the package (the version lives in three spots: manifest, AssemblyInfo, SolutionInfo).
 
 `Build.ps1` will restore, build, unit test, and generate all output in \build\artifacts\\{Platform}\\{Configuration}. The resulting extension artifact in that directory is called `codestream-vs.vsix`
 
-### Build
+### Build (local)
 
 1. From a terminal, where you have cloned the `codestream-lsp-agent` repository, execute the following command to re-build the agent from scratch:
 
@@ -64,7 +64,19 @@ It will do an initial full build and then watch for file changes, compiling thos
 1. Open the solution (`src/CodeStream.VisualStudio.sln`),
 1. Press `F5` to build and run the solution. This will open a new "experimental" version of Visual Studio.
 
-### Notes
+
+### Build (CI)
+
+```
+cd build
+.\Pre-Build.ps1
+.\Bump-Version.ps1 -BuildNumber $env:build_number  -BumpBuild
+.\Build.ps1
+```
+
+The build portion of the artifact version can be updated using `.\Bump-Version.ps1 -BuildNumber 666 -BumpBuild`. this will convert `0.1.0` to `0.1.0.666`
+
+## Notes
 
 #### Language Server
 

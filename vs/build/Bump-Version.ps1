@@ -64,11 +64,6 @@ if ($Trace) { Set-PSDebug -Trace 1 }
 . $scriptsDirectory\Modules\AssemblyInfo.ps1 | out-null
 . $scriptsDirectory\Modules\SolutionInfo.ps1 | out-null
 
-if ($BumpBuild -eq $True) {
-    Die -1 "BumpBuild is not Supported"
-}
-
-
 if ($NewVersion -eq $null) {
     if (!$BumpMajor -and !$BumpMinor -and !$BumpPatch -and !$BumpBuild){
        Die -1 "You need to indicate which part of the version to update via -BumpMajor/-BumpMinor/-BumpPatch flags or a custom version via -NewVersion"
