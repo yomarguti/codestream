@@ -1,6 +1,6 @@
 import EventEmitter from "../event-emitter";
 import { logError, logWarning } from "../logger";
-import { StreamType } from "../shared/api.protocol";
+import { CodemarkType, StreamType } from "../shared/api.protocol";
 import { saveCodemarks, updateCodemarks } from "../store/codemarks/actions";
 import { ThunkExtras } from "../store/common";
 import {
@@ -84,6 +84,14 @@ export const createPost = (streamId, parentPostId, text, codemark, mentions, ext
 	try {
 		let responsePromise: ReturnType<typeof api.createPost>;
 		if (codemark) {
+			if (extra.crossPostIssueValues) {
+				const cardResponse = await dispatch(
+					createServiceCard(extra.crossPostIssueValues, codemark)
+				);
+				codemark.externalProviderUrl = cardResponse.url;
+				codemark.externalProvider = extra.crossPostIssueValues.provider;
+				codemark.externalAssignees = extra.crossPostIssueValues.assignees;
+			}
 			responsePromise = api.createPostWithCodemark(
 				streamId,
 				{
@@ -538,37 +546,43 @@ export const fetchIssueBoards = service => async (dispatch, getState, { api }: T
 	}
 };
 
-export const createServiceCard = attributes => async (_, __, { api }: ThunkExtras) => {
+export const createServiceCard = (attributes, codemark) => async (_, __, { api }: ThunkExtras) => {
+	let description = codemark.text + "\n\n";
+	if (codemark.markers && codemark.markers.length > 0) {
+		const marker = codemark.markers[0];
+		description += "In " + marker.file + "\n\n```\n" + marker.code + "\n```\n\n";
+	}
+	description += "Posted via CodeStream";
 	try {
 		switch (attributes.provider) {
 			case "jira": {
 				return api.createJiraCard(
-					attributes.title,
-					attributes.description,
+					codemark.title,
+					description,
 					attributes.issueType,
 					attributes.boardId,
 					attributes.assignees
 				);
 			}
 			case "trello": {
-				return api.createTrelloCard(attributes.listId, attributes.title, attributes.description);
+				return api.createTrelloCard(attributes.listId, attributes.title, description);
 			}
 			case "github": {
-				return api.createGithubCard(attributes.title, attributes.description, attributes.boardName);
+				return api.createGithubCard(attributes.title, description, attributes.boardName);
 			}
 			case "gitlab": {
-				return api.createGitlabCard(attributes.title, attributes.description, attributes.boardName);
+				return api.createGitlabCard(attributes.title, description, attributes.boardName);
 			}
 			case "asana": {
 				return api.createAsanaCard(
 					attributes.boardId,
 					attributes.listId,
 					attributes.title,
-					attributes.description
+					description
 				);
 			}
 			case "bitbucket": {
-				return api.createBitbucketCard(attributes.title, attributes.description, attributes.boardName);
+				return api.createBitbucketCard(attributes.title, description, attributes.boardName);
 			}
 		}
 	} catch (error) {

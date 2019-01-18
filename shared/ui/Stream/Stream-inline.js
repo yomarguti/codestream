@@ -797,6 +797,7 @@ export class SimpleStream extends Component {
 				ref={this._compose}
 				disabled={this.props.isOffline}
 				onSubmitPost={this.submitPlainPost}
+				onSubmitCodemark={this.submitCodemark}
 				onSubmit={this.submitPost}
 				onEmptyUpArrow={this.editLastPost}
 				findMentionedUserIds={this.findMentionedUserIds}
@@ -1701,6 +1702,103 @@ export class SimpleStream extends Component {
 		await createPost(postStreamId, this.props.threadId, text, null, mentionedUserIds);
 		if (activePanel === "main") {
 			safe(() => this.scrollPostsListToBottom());
+		}
+	};
+
+	submitCodemark = async (attributes, crossPostIssueValues) => {
+		if (this.state.composeBoxProps.isEditing) {
+			this.props.editCodemark(this.state.composeBoxProps.editingCodemark.id, {
+				color: attributes.color,
+				text: attributes.text,
+				title: attributes.title,
+				assignees: attributes.assignees
+			});
+			return this.setMultiCompose(false);
+		} else {
+			const submit = async markers => {
+				const { postStreamId, threadId } = this.props;
+				await this.props.createPost(
+					postStreamId,
+					threadId,
+					null,
+					{ ...attributes, markers },
+					this.findMentionedUserIds(attributes.text || "", this.props.teammates),
+					{
+						fileUri,
+						crossPostIssueValues
+					}
+				);
+				if (attributes.streamId !== postStreamId) {
+					this.props.setCurrentStream(attributes.streamId);
+					this.setActivePanel("main");
+				} else this.setMultiCompose(false);
+				safe(() => this.scrollPostsListToBottom());
+			};
+			const { quote } = this.state;
+			if (!quote) return submit([]);
+
+			const fileUri = quote.fileUri;
+
+			let marker = {
+				code: quote.code,
+				location: quote.location,
+				file: quote.file
+			};
+
+			if (quote.source) {
+				marker.file = quote.source.file;
+				marker.source = quote.source;
+			}
+
+			const markers = [marker];
+
+			let warning;
+			if (quote.source) {
+				if (!quote.source.remotes || quote.source.remotes.length === 0) {
+					warning = {
+						title: "No Remote URL",
+						message:
+							"This repo doesn’t have a remote URL configured. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE."
+					};
+				}
+			} else if (quote.gitError) {
+				warning = {
+					title: "Missing Git Info",
+					message:
+						"This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE."
+				};
+			}
+
+			if (warning) {
+				return confirmPopup({
+					title: warning.title,
+					message: () => (
+						<span>
+							{warning.message + " "}
+							<a
+								// onClick={e => {
+								// 	e.preventDefault();
+								// 	EventEmitter.emit(
+								// 		"interaction:clicked-link",
+								// 		"https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues"
+								// 	);
+								// }}
+								href="https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues"
+							>
+								Learn more
+							</a>
+						</span>
+					),
+					centered: true,
+					buttons: [
+						{
+							label: "Post Anyway",
+							action: () => submit(markers)
+						},
+						{ label: "Cancel" }
+					]
+				});
+			} else submit(markers);
 		}
 	};
 

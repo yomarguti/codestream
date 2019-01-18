@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import Select from "react-select";
 import _ from "underscore";
 import {
+	CodemarkType,
 	CSChannelStream,
 	CSCodemark,
 	CSDirectStream,
@@ -69,7 +70,7 @@ interface State {
 	text: string;
 	color: Color;
 	type: string;
-	assignees: any[];
+	assignees: { value: any; label: string }[] | { value: any; label: string };
 	assigneesRequired: boolean;
 	assigneesDisabled: boolean;
 	privacy: "private" | "public";
@@ -273,20 +274,37 @@ class CodemarkForm extends React.Component<Props, State> {
 		event && event.preventDefault();
 		if (this.isFormInvalid()) return;
 
-		const { color, type, assignees, privacy, notify, title, text, crossPostMessage } = this.state;
+		const { color, type, privacy, notify, title, text, crossPostMessage } = this.state;
+		const crossPostIssueEnabled =
+			type === CodemarkType.Issue &&
+			this.crossPostIssueValues &&
+			this.crossPostIssueValues.isEnabled;
+
+		let csAssignees: string[] = [];
+		if (crossPostIssueEnabled) {
+			const assignees = Array.isArray(this.state.assignees)
+				? this.state.assignees
+				: [this.state.assignees];
+
+			csAssignees = mapFilter(assignees, a => {
+				const user = a.value;
+				const codestreamUser = this.props.teammates.find(t => t.email === user.email);
+				if (codestreamUser) return codestreamUser.id;
+			});
+			this.crossPostIssueValues!.assignees = assignees.map(a => a.value);
+		}
+
 		this.props.onSubmit(
 			{
 				text,
 				color,
 				type,
-				assignees: Array.isArray(assignees) // TODO: don't do this
-					? assignees.map(a => a.value)
-					: [(assignees as any).value],
-				privacy,
-				notify,
+				assignees: csAssignees,
 				title,
-				crossPostMessage,
-				crossPostIssueValues: this.crossPostIssueValues
+				crossPostIssueValues: crossPostIssueEnabled ? this.crossPostIssueValues : undefined
+				// privacy,
+				// notify,
+				// crossPostMessage,
 			},
 			event
 		);
@@ -315,7 +333,10 @@ class CodemarkForm extends React.Component<Props, State> {
 				validationState.titleInvalid = true;
 				invalid = true;
 			}
-			if (assigneesRequired && assignees.length === 0) {
+			if (
+				assigneesRequired &&
+				(!assignees || (Array.isArray(assignees) && assignees.length === 0))
+			) {
 				invalid = validationState.assigneesInvalid = true;
 			}
 		}

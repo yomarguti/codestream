@@ -22,7 +22,9 @@ class ComposeBox extends React.Component {
 	};
 
 	submitCodemarkPost = (attributes, event) => {
-		const { quote, streamId } = this.props;
+		if (this.props.disabled) return;
+
+		const { streamId } = this.props;
 		let newPostText = attributes.text || "";
 
 		// convert the text to plaintext so there is no HTML
@@ -34,44 +36,20 @@ class ComposeBox extends React.Component {
 			attributes.title &&
 			domParser.parseFromString(attributes.title.replace(replaceRegex, "\n"), "text/html")
 				.documentElement.textContent;
-		const mentionedUserIds = this.props.findMentionedUserIds(text, this.props.teammates);
 
 		const { assignees, color, type, crossPostIssueValues } = attributes;
 
-		if (this.props.disabled) return;
-
-		// don't submit blank posts
-		if (newPostText.trim().length === 0 && title.length === 0) return;
-
-		const crossPostIssueEnabled = crossPostIssueValues && crossPostIssueValues.isEnabled;
-
-		this.props.onSubmit({
-			text: "",
-			title,
-			quote,
-			mentionedUserIds,
-			forceStreamId: streamId,
-			codemark: {
+		this.props.onSubmitCodemark(
+			{
 				title,
 				text,
 				streamId,
 				type,
-				assignees: crossPostIssueEnabled ? undefined : assignees,
-				externalAssignees:
-					crossPostIssueEnabled && assignees
-						? assignees.map(a => ({ displayName: a.displayName }))
-						: undefined,
-				color: color || ""
-			}
-		});
-
-		if (type === "issue" && crossPostIssueEnabled) {
-			let description = text + "\n\n";
-			if (quote) description += "In " + quote.file + "\n\n```\n" + quote.code + "\n```\n\n";
-			description += "Posted via CodeStream";
-
-			this.props.createServiceCard({ ...crossPostIssueValues, assignees, title, description });
-		}
+				assignees,
+				color
+			},
+			crossPostIssueValues
+		);
 
 		if (event && event.metaKey) this.softReset();
 		else {
