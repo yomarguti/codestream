@@ -264,6 +264,10 @@ export class SimpleStream extends Component {
 
 	resizeStream = () => {};
 
+	setNewPostEntry = entry => {
+		this.newPostEntry = entry;
+	};
+
 	// return the post, if any, with the given ID
 	findPostById(id) {
 		const { posts } = this.context.store.getState();
@@ -559,6 +563,7 @@ export class SimpleStream extends Component {
 						currentUserName={this.props.currentUserName}
 						postAction={this.postAction}
 						searchBarOpen={this.state.searchBarOpen}
+						setNewPostEntry={this.setNewPostEntry}
 						setMultiCompose={this.setMultiCompose}
 						typeFilter={this.state.knowledgeType}
 						textEditorUri={this.state.textEditorUri}
@@ -909,6 +914,7 @@ export class SimpleStream extends Component {
 		if (value == "collapse") {
 			this.setState({ multiCompose: false, ...state });
 		} else {
+			this.setNewPostEntry("Stream");
 			this.setState({ multiCompose: value, floatCompose: true, ...state });
 			if (!value) {
 				this.setState({
@@ -1699,7 +1705,9 @@ export class SimpleStream extends Component {
 		if (this.checkForSlashCommands(text)) return;
 
 		const { activePanel, createPost, postStreamId } = this.props;
-		await createPost(postStreamId, this.props.threadId, text, null, mentionedUserIds);
+		await createPost(postStreamId, this.props.threadId, text, null, mentionedUserIds, {
+			entryPoint: "Stream"
+		});
 		if (activePanel === "main") {
 			safe(() => this.scrollPostsListToBottom());
 		}
@@ -1725,7 +1733,8 @@ export class SimpleStream extends Component {
 					this.findMentionedUserIds(attributes.text || "", this.props.teammates),
 					{
 						fileUri,
-						crossPostIssueValues
+						crossPostIssueValues,
+						entryPoint: this.newPostEntry
 					}
 				);
 				if (attributes.streamId !== postStreamId) {

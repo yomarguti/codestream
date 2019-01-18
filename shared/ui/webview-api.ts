@@ -302,7 +302,7 @@ export default class WebviewApi {
 	createPost(
 		streamId: string,
 		text: string,
-		extras: { mentionedUserIds?: string[]; parentPostId?: string } = {}
+		extras: { mentionedUserIds?: string[]; parentPostId?: string; entryPoint?: string } = {}
 	): Promise<CreatePostResponse> {
 		return this.postMessage({
 			action: CreatePostRequestType.method,
@@ -328,7 +328,7 @@ export default class WebviewApi {
 			externalProviderUrl?: string;
 			externalAssignees?: { displayName: string }[];
 		},
-		extra: { fileUri: string; crossPostIssueValues?: { provider: string; [key: string]: any } }
+		extra: { fileUri: string; entryPoint?: string }
 	): Promise<CreatePostResponse> {
 		const block = codemark.markers[0] || {};
 		const params: CreatePostWithMarkerRequest = {
@@ -345,7 +345,8 @@ export default class WebviewApi {
 			color: codemark.color,
 			externalProvider: codemark.externalProvider,
 			externalAssignees: codemark.externalAssignees,
-			externalProviderUrl: codemark.externalProviderUrl
+			externalProviderUrl: codemark.externalProviderUrl,
+			entryPoint: extra.entryPoint
 		};
 		return this.postMessage({ action: CreatePostWithMarkerRequestType.method, params });
 	}

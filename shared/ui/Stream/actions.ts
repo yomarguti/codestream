@@ -104,7 +104,8 @@ export const createPost = (streamId, parentPostId, text, codemark, mentions, ext
 		} else {
 			responsePromise = api.createPost(streamId, text, {
 				mentionedUserIds: mentions,
-				parentPostId
+				parentPostId,
+				entryPoint: extra.entryPoint
 			});
 		}
 		const response = await responsePromise;
