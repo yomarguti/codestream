@@ -380,6 +380,11 @@ namespace CodeStream.VisualStudio.Models
         public CsTeamSlackProviderInfo Slack { get; set; }
     }
 
+    public class IntegrationInfo
+    {
+        public bool Enabled { get; set; }
+    }
+
     public class CsTeam : CsEntity
     {
         public string Name { get; set; }
@@ -387,7 +392,7 @@ namespace CodeStream.VisualStudio.Models
         public List<string> AdminIds { get; set; }
         public List<string> MemberIds { get; set; }
         public string PrimaryReferral { get; set; } //: "internal" | "external";
-        public Dictionary<string, bool> Integrations { get; set; }
+        public Dictionary<string, IntegrationInfo> Integrations { get; set; }
         public ProviderInfo ProviderInfo { get; set; }
     }
 
