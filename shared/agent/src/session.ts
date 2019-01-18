@@ -575,8 +575,8 @@ export class CodeStreamSession {
 			"Email Address": user.email,
 			"Team ID": this._teamId,
 			"Join Method": user.joinMethod,
-			"Plugin Version": this._options.extension.versionFormatted,
-			Endpoint: "VS Code",
+			"Plugin Version": this.versionInfo.extension.versionFormatted,
+			Endpoint: this.versionInfo.ide.name,
 			Provider: Team.isSlack(team) ? "Slack" : "CodeStream"
 		};
 

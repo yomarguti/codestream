@@ -39,7 +39,7 @@ export class MixPanelTelemetryService {
 			Logger.error(ex);
 		}
 
-		const props = { ...opts, Endpoint: "VS Code" };
+		const props = { ...opts, Endpoint: session.versionInfo.ide.name };
 
 		this._superProps = props;
 		this._hasOptedOut = hasOptedOut;
