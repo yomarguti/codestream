@@ -25,6 +25,7 @@ export interface CreatePostRequest {
 	mentionedUserIds?: string[];
 	parentPostId?: string;
 	codemark?: CreateCodemarkRequest;
+	entryPoint?: string;
 }
 
 export interface CreatePostInFileStreamRequest {
@@ -77,6 +78,7 @@ export interface CreatePostWithMarkerRequest {
 	externalProvider?: string;
 	externalProviderUrl?: string;
 	externalAssignees?: { displayName: string }[];
+	entryPoint?: string;
 }
 
 export const CreatePostWithMarkerRequestType = new RequestType<
