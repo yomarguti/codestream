@@ -46,6 +46,8 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 	@log()
 	@lspHandler(TrelloFetchBoardsRequestType)
 	async boards(request: TrelloFetchBoardsRequest) {
+		// have to force connection here because we need apiKey and accessToken to even create our request
+		await this.ensureConnected();
 		const response = await this.get<TrelloBoard[]>(
 			`/members/${this._trelloUserId}/boards?${qs.stringify({
 				filter: "open",
