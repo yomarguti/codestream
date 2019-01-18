@@ -5,6 +5,7 @@ export interface Service {
 }
 
 export interface CardValues {
+	isEnabled: boolean;
 	provider: string;
 	board?: Board;
 	[key: string]: any;

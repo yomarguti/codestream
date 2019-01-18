@@ -118,7 +118,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			assigneesDisabled: false,
 			assigneesRequired: false,
 			selectedChannelName: props.channel.name,
-			assignableUsers: this.getAssignableUsers()
+			assignableUsers: this.getAssignableCSUsers()
 			// privacy: "private"
 		};
 
@@ -141,7 +141,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 		if (prevProps.issueProvider !== this.props.issueProvider) {
 			this.setState({
-				assignableUsers: this.getAssignableUsers(),
+				assignableUsers: this.getAssignableCSUsers(),
 				assignees: [],
 				assigneesDisabled: false,
 				assigneesRequired: false
@@ -150,16 +150,14 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 	}
 
-	getAssignableUsers() {
-		return this.props.issueProvider
-			? []
-			: mapFilter(this.props.teammates, user => {
-					if (!user.isRegistered) return;
-					return {
-						value: user.id,
-						label: user.username
-					};
-			  });
+	getAssignableCSUsers() {
+		return mapFilter(this.props.teammates, user => {
+			if (!user.isRegistered) return;
+			return {
+				value: user.id,
+				label: user.username
+			};
+		});
 	}
 
 	async loadAssignableUsers(service: string, board: Board) {
@@ -181,11 +179,18 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (
 			(!this.crossPostIssueValues && selectedNewBoard) ||
 			(this.crossPostIssueValues &&
+				values.isEnabled &&
 				this.crossPostIssueValues.board &&
 				selectedNewBoard &&
 				this.crossPostIssueValues.board.id !== values.board!.id)
 		) {
 			this.loadAssignableUsers(values.provider, values.board!);
+		} else if (
+			!values.isEnabled &&
+			this.crossPostIssueValues &&
+			this.crossPostIssueValues.isEnabled
+		) {
+			this.setState({ assignableUsers: this.getAssignableCSUsers() });
 		}
 		this.crossPostIssueValues = values;
 	}
