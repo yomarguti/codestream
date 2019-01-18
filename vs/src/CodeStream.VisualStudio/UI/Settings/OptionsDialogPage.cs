@@ -18,7 +18,7 @@ namespace CodeStream.VisualStudio.UI.Settings
         private string _webAppUrl = "http://pd-app.codestream.us:1380";
         private string _serverUrl = "https://pd-api.codestream.us:9443";
 #else
-        private string _webAppUrl = "http://app.codestream.com";
+        private string _webAppUrl = "https://app.codestream.com";
         private string _serverUrl = "https://api.codestream.com";
 #endif
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
