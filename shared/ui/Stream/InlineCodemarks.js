@@ -70,18 +70,19 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	renderMain() {
-		const { codemarks, currentUserId, mostRecentSourceFile, fileFilter, typeFilter } = this.props;
-		const { thisRepo } = this.state;
+		const { codemarks, fileStreamIdToFilterFor } = this.props;
 
 		const codemarksInThisFile = codemarks.filter(codemark => {
 			const codeBlock = codemark.markers && codemark.markers.length && codemark.markers[0];
-			const codeBlockFile = codeBlock && codeBlock.file;
+			const codeBlockFileStreamId = codeBlock && codeBlock.fileStreamId;
 			return (
-				!codemark.deactivated && mostRecentSourceFile && codeBlockFile === mostRecentSourceFile
+				!codemark.deactivated &&
+				fileStreamIdToFilterFor &&
+				codeBlockFileStreamId === fileStreamIdToFilterFor
 			);
 		});
 		if (codemarksInThisFile.length === 0) {
-			if (!mostRecentSourceFile) return null;
+			if (!fileStreamIdToFilterFor) return null;
 			else return null;
 			// return (
 			// 	<div className="no-codemarks">
@@ -186,13 +187,27 @@ export class SimpleInlineCodemarks extends Component {
 
 const mapStateToProps = state => {
 	const { context, teams, configs } = state;
+
+	// let fileNameToFilterFor;
+	let fileStreamIdToFilterFor;
+	if (context.activeFile && context.fileStreamId) {
+		// fileNameToFilterFor = context.activeFile;
+		fileStreamIdToFilterFor = context.fileStreamId;
+	} else if (context.activeFile && !context.fileStreamId) {
+		// fileNameToFilterFor = context.activeFile;
+	} else {
+		// fileNameToFilterFor = context.lastActiveFile;
+		fileStreamIdToFilterFor = context.lastFileStreamId;
+	}
+
 	return {
 		usernames: userSelectors.getUsernames(state),
 		codemarks: codemarkSelectors.getTypeFilteredCodemarks(state),
 		showMarkers: configs.showMarkers,
 		team: teams[context.currentTeamId],
 		fileFilter: context.codemarkFileFilter,
-		mostRecentSourceFile: context.mostRecentSourceFile
+		// fileNameToFilterFor,
+		fileStreamIdToFilterFor
 	};
 };
 
