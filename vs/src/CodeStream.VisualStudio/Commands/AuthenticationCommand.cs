@@ -69,6 +69,8 @@ namespace CodeStream.VisualStudio.Commands
         /// </summary>
         private void ClickCallback(object sender, EventArgs args)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             var session = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
             if (session?.IsReady == true)
             {

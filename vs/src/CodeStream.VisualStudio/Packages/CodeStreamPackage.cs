@@ -123,8 +123,8 @@ namespace CodeStream.VisualStudio.Packages
 
         async System.Threading.Tasks.Task InitializeUiComponentsAsync()
         {
-        //    // TODO move this into a non-static??
-           InfoBarProvider.Initialize(this);       
+           InfoBarProvider.Initialize(this);
+           await System.Threading.Tasks.Task.CompletedTask;
         }
     }
 }

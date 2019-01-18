@@ -68,7 +68,7 @@ namespace CodeStream.VisualStudio.Commands
         /// It will check that the selected object is actually an instance of this class and
         /// increment its click counter.
         /// </summary>
-        private async void ClickCallback(object sender, EventArgs args)
+        private void ClickCallback(object sender, EventArgs args)
         {
             var ideSerivce = Package.GetGlobalService((typeof(SIdeService))) as IdeService;
             if (ideSerivce == null) return;
