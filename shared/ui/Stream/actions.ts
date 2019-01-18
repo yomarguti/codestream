@@ -565,24 +565,24 @@ export const createServiceCard = (attributes, codemark) => async (_, __, { api }
 				);
 			}
 			case "trello": {
-				return api.createTrelloCard(attributes.listId, attributes.title, description);
+				return api.createTrelloCard(attributes.listId, codemark.title, description);
 			}
 			case "github": {
-				return api.createGithubCard(attributes.title, description, attributes.boardName);
+				return api.createGithubCard(codemark.title, description, attributes.boardName);
 			}
 			case "gitlab": {
-				return api.createGitlabCard(attributes.title, description, attributes.boardName);
+				return api.createGitlabCard(codemark.title, description, attributes.boardName);
 			}
 			case "asana": {
 				return api.createAsanaCard(
 					attributes.boardId,
 					attributes.listId,
-					attributes.title,
+					codemark.title,
 					description
 				);
 			}
 			case "bitbucket": {
-				return api.createBitbucketCard(attributes.title, description, attributes.boardName);
+				return api.createBitbucketCard(codemark.title, description, attributes.boardName);
 			}
 		}
 	} catch (error) {
