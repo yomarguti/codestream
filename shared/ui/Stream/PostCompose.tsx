@@ -37,7 +37,14 @@ export class PostCompose extends React.Component<Props, State> {
 	}
 
 	handleSubmit = () => {
-		this.props.onSubmit(this.state.text);
+		const domParser = new DOMParser();
+		const replaceRegex = /<br>|<div>/g;
+		const text = domParser.parseFromString(this.state.text.replace(replaceRegex, "\n"), "text/html")
+			.documentElement.textContent;
+
+		if (text === null || text.trim().length === 0) return;
+
+		this.props.onSubmit(text);
 		this.setState({ text: "" });
 	}
 

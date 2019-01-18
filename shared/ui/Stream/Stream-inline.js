@@ -1695,11 +1695,7 @@ export class SimpleStream extends Component {
 	};
 
 	// create a new post
-	submitPlainPost = async postText => {
-		const domParser = new DOMParser();
-		const replaceRegex = /<br>|<div>/g;
-		const text = domParser.parseFromString(postText.replace(replaceRegex, "\n"), "text/html")
-			.documentElement.textContent;
+	submitPlainPost = async text => {
 		const mentionedUserIds = this.findMentionedUserIds(text, this.props.teammates);
 
 		if (this.checkForSlashCommands(text)) return;
