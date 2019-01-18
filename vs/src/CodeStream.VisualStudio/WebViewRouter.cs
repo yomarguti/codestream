@@ -127,8 +127,8 @@ namespace CodeStream.VisualStudio
                                             {
                                                 // doesn't work :(
                                                 // dte.ExecuteCommand("LiveShare.CopyLink");
-
-                                                _eventAggregator.Unregister(liveShareReadyEvent);
+                                                liveShareReadyEvent?.Dispose();
+                                                
                                                 //ServiceRequest sr = message.Body.ToObject<ServiceRequest>();
                                                 //var streamResponse = _codeStreamAgent.GetStream(sr.Action.StreamId);
                                                 //StreamThread st = null;

@@ -56,12 +56,12 @@ namespace CodeStream.VisualStudio.UnitTests.Events
         }
     }
 
-    class Foo : EventArgsBase
+    class Foo : EventBase
     {
 
     }
 
-    class Bar : EventArgsBase
+    class Bar : EventBase
     {
 
     }

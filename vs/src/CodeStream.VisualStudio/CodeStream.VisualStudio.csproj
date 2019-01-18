@@ -78,6 +78,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Annotations\Annotations.cs" />
+    <Compile Include="Annotations\RequiresCustomization.cs" />
     <Compile Include="Annotations\Injected.cs" />
     <Compile Include="Application.cs" />
     <Compile Include="CodeStreamEventManager.cs" />
@@ -118,7 +119,9 @@
     <Compile Include="LSP\CustomMessageHandler.cs" />
     <Compile Include="LSP\LanguageClient.cs" />
     <Compile Include="LSP\LanguageServerProcess.cs" />
+    <Compile Include="LSP\Notifications.cs" />
     <Compile Include="Models\CodeStreamModels.cs" />
+    <Compile Include="Models\Types.cs" />
     <Compile Include="Packages\CodeStreamPackage.cs" />
     <Compile Include="Packages\ServiceProviderPackage.cs" />
     <Compile Include="Packages\WebViewPackage.cs" />

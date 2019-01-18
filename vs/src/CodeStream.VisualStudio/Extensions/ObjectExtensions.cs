@@ -1,10 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using CodeStream.VisualStudio.Core.Logging;
+using Serilog;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CodeStream.VisualStudio.Extensions
 {
+    public class ObjectExtensionsDummy { }
+
     public static class ObjectExtensions
     {
+        private static readonly ILogger Log = LogManager.ForContext<ObjectExtensionsDummy>();
+
         public static int ToInt(this object o) => o == null ? 0 : int.Parse(o.ToString());
 
         /// <summary>
@@ -25,5 +32,16 @@ namespace CodeStream.VisualStudio.Extensions
         }
 
         public static bool AnySafe<T>(this List<T> a) => a != null && a.Any();
+
+        public static void Dispose(this List<IDisposable> disposables)
+        {
+            if (!disposables.AnySafe()) return;
+
+            foreach (IDisposable disposable in disposables)
+            {
+                Log.Verbose($"Disposing Type={disposable?.GetType()}...");
+                disposable?.Dispose();
+            }
+        }
     }
 }

@@ -14,6 +14,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using CodeStream.VisualStudio.Models;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
@@ -118,7 +119,8 @@ namespace CodeStream.VisualStudio.UI.Margins
         private void Initialize()
         {
             _disposables.Add(
-               _eventAggregator.GetEvent<DocumentMarkerChangedEvent>().ObserveOnDispatcher()
+               _eventAggregator.GetEvent<DocumentMarkerChangedEvent>()
+              .ObserveOnDispatcher()
               .Throttle(TimeSpan.FromMilliseconds(100))
               .Subscribe(_ =>
               {
@@ -396,7 +398,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                 _textView.LayoutChanged -= TextView_LayoutChanged;
                 _textView.Selection.SelectionChanged -= Selection_SelectionChanged;
 
-                _eventAggregator.Unregister(_disposables);
+                _disposables.Dispose();
 
                 _markerCache = null;
                 _viewCache = null;

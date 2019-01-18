@@ -8,26 +8,13 @@ using System.Runtime.Serialization;
 
 namespace CodeStream.VisualStudio.Models
 {
-    public enum LoginResult
-    {
-        // ReSharper disable InconsistentNaming
-        SUCCESS,
-        INVALID_CREDENTIALS,
-        TOKEN_INVALID,
-        NOT_CONFIRMED,
-        USER_NOT_ON_TEAM,
-        UNKNOWN,
-        VERSION_UNSUPPORTED
-        // ReSharper restore InconsistentNaming
-    }
-
     public class SelectedText
     {
         public SelectedText()
         {
 
         }
-		
+
         public SelectedText(string text)
         {
             Text = text;
@@ -129,6 +116,7 @@ namespace CodeStream.VisualStudio.Models
         //public Preview Preview {get;set;}
 
     }
+
     public class CsPost : CsEntity
     {
         public string TeamId { get; set; }
@@ -168,11 +156,6 @@ namespace CodeStream.VisualStudio.Models
 
     public interface ICsStream { }
 
-    public enum ProviderType
-    {
-        Slack
-    }
-
     public class CsMarker : CsEntity
     {
         public string TeamId { get; set; }
@@ -205,23 +188,6 @@ namespace CodeStream.VisualStudio.Models
             }
         }
     }
-
-    public enum CodemarkType
-    {
-        Comment,
-        Issue,
-        Bookmark,
-        Question,
-        Trap
-    }
-
-    //export enum MarkerNotLocatedReason
-    //{
-    //    MISSING_ORIGINAL_LOCATION = "missing original location",
-    //    MISSING_ORIGINAL_COMMIT = "missing original commit",
-    //    CODEBLOCK_DELETED = "code block deleted",
-    //    UNKNOWN = "unknown"
-    //}
 
     public class MarkerNotLocated : CsMarker
     {
@@ -347,7 +313,7 @@ namespace CodeStream.VisualStudio.Models
 
     public class CsUnreads
     {
-        public Dictionary<string, int> LastReads { get; set; }
+        public Dictionary<string, object> LastReads { get; set; }
         public Dictionary<string, int> Mentions { get; set; }
         public Dictionary<string, int> Unreads { get; set; }
         public int TotalMentions { get; set; }
@@ -413,9 +379,24 @@ namespace CodeStream.VisualStudio.Models
         public Result Result { get; set; }
     }
 
+    public class CsTeamSlackProviderInfo
+    {
+        public string TeamId { get; set; }
+    }
+
+    public class ProviderInfo
+    {
+        public CsTeamSlackProviderInfo Slack { get; set; }
+    }
+
     public class CsTeam : CsEntity
     {
         public string Name { get; set; }
+        public List<string> CompanyId { get; set; }
+        public List<string> MemberIds { get; set; }
+        public string PrimaryReferral { get; set; } //: "internal" | "external";
+        public Dictionary<string, bool> Integrations { get; set; }
+        public ProviderInfo ProviderInfo { get; set; }
     }
 
     public class CsUser : CsEntity
@@ -519,18 +500,13 @@ namespace CodeStream.VisualStudio.Models
     {
         //public string ServerUrl { get; set; }
         //public string GitPath { get; set; }
-        //public string Type { get; set; }
-        //public string Email { get; set; }
-        //public string PasswordOrToken { get; set; }
+        public Ide Ide { get; set; }
         public Extension Extension { get; set; }
-
         public string TraceLevel { get; set; }
         public bool IsDebugging { get; set; }
-        public Ide Ide { get; set; }
 
         //public Proxy Proxy { get; set; }
     }
-
 
     public class WebviewIpcGenericMessageResponse
     {
@@ -542,6 +518,24 @@ namespace CodeStream.VisualStudio.Models
         public string Id { get; set; }
         public string Type { get; private set; }
         public object Body { get; set; }
+    }
+
+    public class WebviewIpcMessage
+    {
+        public WebviewIpcMessage(string type)
+        {
+            Type = type;
+            if (Type.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(type));
+        }
+
+        public string Type { get; }
+        public object Body { get; set; }
+    }
+
+    public class WebviewIpcMessageBody
+    {
+        public string Type { get; set; }
+        public object Payload { get; set; }
     }
 
     public class WebviewIpcMessageResponse
@@ -573,7 +567,6 @@ namespace CodeStream.VisualStudio.Models
         public object Payload { get; set; }
         public string Error { get; set; }
     }
- 
 
     public class CodeStreamMessage
     {
@@ -717,5 +710,148 @@ namespace CodeStream.VisualStudio.Models
         public string Id { get; set; }
 
         public CsStream Stream { get; set; }
+    }
+
+
+    public class PrepareCodeResponse
+    {
+        public string Code { get; set; }
+        public string GitError { get; set; }
+        public Source Source { get; set; }
+    }
+
+    public class FetchCodemarksResponse
+    {
+        public List<CsMarker> Markers { get; set; }
+        public List<CsFullCodemark> Codemarks { get; set; }
+    }
+
+    public class DocumentMarkersResponse
+    {
+        public List<CsFullMarker> Markers { get; set; }
+        public List<MarkerNotLocated> MarkersNotLocated { get; set; }
+    }
+
+    public class FetchPostsRequest
+    {
+        public string StreamId { get; set; }
+        public int? Limit { get; set; }
+        public object After { get; set; }
+        public object Before { get; set; }
+        public bool? Inclusive { get; set; }
+    }
+
+    public abstract class LoginRequestBase<T>
+    {
+        public string ServerUrl { get; set; }
+        public string Email { get; set; }
+        public T PasswordOrToken { get; set; }
+        public string SignupToken { get; set; }
+        public string Team { get; set; }
+        public string TeamId { get; set; }
+        public Extension Extension { get; set; }
+        public Ide Ide { get; set; }
+        public string TraceLevel { get; set; }
+        public bool IsDebugging { get; set; }
+    }
+
+    public class LoginAccessToken
+    {
+        public LoginAccessToken(string email, string url, string value)
+        {
+            Email = email;
+            Url = url;
+            Value = value;
+        }
+
+        public string Email { get; }
+        public string Url { get; }
+        public string Value { get; }
+    }
+
+    public class LoginRequest : LoginRequestBase<string> { }
+
+    public class LoginViaAccessTokenRequest : LoginRequestBase<LoginAccessToken> { }
+
+    public class LogoutRequest { }
+
+    public class TextDocumentIdentifier
+    {
+        public Uri Uri { get; set; }
+    }
+
+    public class DocumentFromMarkerRequest
+    {
+        public string File { get; set; }
+        public string RepoId { get; set; }
+        public string MarkerId { get; set; }
+        public string Source { get; set; }
+    }
+
+    public class DocumentFromMarkerResponse
+    {
+        public TextDocumentIdentifier TextDocument { get; set; }
+        public CsRange Range { get; set; }
+        public string Revision { get; set; }
+    }
+
+    public class GetPostResponse
+    {
+        public CsPost Post { get; set; }
+    }
+
+    public class GetUserResponse
+    {
+        public CsUser User { get; set; }
+    }
+
+    public class GetFileStreamResponse
+    {
+        public CsFileStream Stream { get; set; }
+    }
+
+    public class GetStreamRequest
+    {
+        public string StreamId { get; set; }
+        public StreamType? Type { get; set; }
+    }
+
+    public class GetStreamResponse
+    {
+        public CsStream Stream { get; set; }
+    }
+
+    public class CreateCodemarkRequestMarker
+    {
+        public string Code { get; set; }
+        public List<string> Remotes { get; set; }
+        public string File { get; set; }
+        public string CommitHash { get; set; }
+        public List<object> Location { get; set; } //CsLocationarray
+    }
+
+    public class CreateCodemarkRequest
+    {
+        public CodemarkType Type { get; set; }
+        public ProviderType? ProviderType { get; set; }
+        public string Text { get; set; }
+        public string StreamId { get; set; }
+        public string PostId { get; set; }
+        public string ParentPostId { get; set; }
+        public string Color { get; set; }
+        public string Status { get; set; }
+        public string Title { get; set; }
+        public List<string> Assignees { get; set; }
+        public List<CreateCodemarkRequestMarker> Markers { get; set; }
+        public List<string> Remotes { get; set; }
+    }
+
+    public class CreatePostRequest
+    {
+        public string StreamId { get; set; }
+        public string Text { get; set; }
+        public List<string> MentionedUserIds { get; set; }
+        public string ParentPostId { get; set; }
+        public CreateCodemarkRequest Codemark { get; set; }
     }
 }

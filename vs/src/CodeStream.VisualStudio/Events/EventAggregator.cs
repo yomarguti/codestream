@@ -1,9 +1,7 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Extensions;
 using Serilog;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
@@ -13,70 +11,43 @@ namespace CodeStream.VisualStudio.Events
 
     public interface IEventAggregator
     {
-        void Publish<TEvent>(TEvent sampleEvent) where TEvent : EventArgsBase;
-        IObservable<TEvent> GetEvent<TEvent>() where TEvent : EventArgsBase;
-        void Unregister(IDisposable disposable);
-        void Unregister(List<IDisposable> disposables);
+        void Publish<TEvent>(TEvent sampleEvent) where TEvent : EventBase;
+        IObservable<TEvent> GetEvent<TEvent>() where TEvent : EventBase;
     }
 
     public class EventAggregator : IEventAggregator, SEventAggregator
     {
         private static readonly ILogger Log = LogManager.ForContext<EventAggregator>();
 
-        private readonly ConcurrentDictionary<Type, object> _subjects
-            = new ConcurrentDictionary<Type, object>();
-#if DEBUG
-        private readonly ConcurrentDictionary<Type, int> _publishStats = new ConcurrentDictionary<Type, int>();
-#endif
+        private readonly ConcurrentDictionary<Type, object> _subjects = new ConcurrentDictionary<Type, object>();
 
-        public IObservable<TEvent> GetEvent<TEvent>() where TEvent : EventArgsBase
+        public IObservable<TEvent> GetEvent<TEvent>() where TEvent : EventBase
         {
             var subject = (ISubject<TEvent>)_subjects.GetOrAdd(typeof(TEvent),
                             t => new Subject<TEvent>());
 
 #if DEBUG
-            Log.Verbose($"Subscribed to {typeof(TEvent)}");
+            Log.Verbose($"Subscribed: {typeof(TEvent)}");
 #endif
             return subject.AsObservable();
         }
 
-        public void Publish<TEvent>(TEvent sampleEvent) where TEvent : EventArgsBase
+        public void Publish<TEvent>(TEvent sampleEvent) where TEvent : EventBase
         {
             if (_subjects.TryGetValue(typeof(TEvent), out var subject))
             {
 #if DEBUG
-                _publishStats.AddOrUpdate(typeof(TEvent), 1, (type, i) => i + 1);
-                if (_publishStats.TryGetValue(typeof(TEvent), out int count))
-                {
-                    if (count % 10 == 0)
-                    {
-                        Log.Verbose($"Published {typeof(TEvent)} {count} times");
-                    }
-                }
+                Log.Verbose($"Published: {typeof(TEvent)}");
 #endif
-
                 ((ISubject<TEvent>)subject).OnNext(sampleEvent);
             }
-        }
-
-        public void Unregister(IDisposable disposable)
-        {
-            if (disposable == null) return;
-
-            disposable.Dispose();
-#if DEBUG
-            Log.Verbose($"Unregistered {disposable.GetType()}");
-#endif
-        }
-
-        public void Unregister(List<IDisposable> disposables)
-        {
-            if (!disposables.AnySafe()) return;
-
-            foreach (var disposable in disposables)
+            else
             {
-                Unregister(disposable);
+#if DEBUG
+                Log.Verbose($"Not Found: {typeof(TEvent)}");
+#endif
             }
+
         }
     }
 }

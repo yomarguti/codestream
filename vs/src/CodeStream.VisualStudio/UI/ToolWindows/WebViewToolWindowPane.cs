@@ -1,5 +1,6 @@
-﻿using System.Runtime.InteropServices;
-using Microsoft.VisualStudio.Shell;
+﻿using Microsoft.VisualStudio.Shell;
+using System;
+using System.Runtime.InteropServices;
 
 namespace CodeStream.VisualStudio.UI.ToolWindows
 {
@@ -28,6 +29,15 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
             // we are not calling Dispose on this object. This is because ToolWindowPane calls Dispose on
             // the object returned by the Content property.
             this.Content = new WebViewControl();
+        }
+
+        protected override void Dispose(bool isDisposing)
+        {
+            var contentDisposable = Content as IDisposable;
+
+            contentDisposable?.Dispose();
+
+            base.Dispose(isDisposing);
         }
     }
 }
