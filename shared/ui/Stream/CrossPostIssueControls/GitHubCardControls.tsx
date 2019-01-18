@@ -58,7 +58,7 @@ export default class GitHubCardControls extends React.Component<Props, State> {
 			board,
 			boardName: board.name,
 			isEnabled,
-			service: SUPPORTED_SERVICES.GitHub.name
+			provider: SUPPORTED_SERVICES.GitHub.name
 		});
 	}
 

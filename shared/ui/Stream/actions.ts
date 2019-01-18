@@ -540,7 +540,7 @@ export const fetchIssueBoards = service => async (dispatch, getState, { api }: T
 
 export const createServiceCard = attributes => async (_, __, { api }: ThunkExtras) => {
 	try {
-		switch (attributes.service) {
+		switch (attributes.provider) {
 			case "jira": {
 				return api.createJiraCard(
 					attributes.title,

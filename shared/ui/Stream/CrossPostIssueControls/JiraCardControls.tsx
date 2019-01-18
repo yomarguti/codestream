@@ -42,7 +42,7 @@ export default class JiraCardControls extends React.Component<Props, State> {
 			boardId: board && board.id,
 			issueType,
 			isEnabled,
-			service: SUPPORTED_SERVICES.Jira.name
+			provider: SUPPORTED_SERVICES.Jira.name
 		});
 	}
 

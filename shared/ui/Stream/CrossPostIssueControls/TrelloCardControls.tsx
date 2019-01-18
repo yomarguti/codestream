@@ -46,7 +46,7 @@ export default class TrelloCardControls extends React.Component<Props, State> {
 			board: board,
 			listId: list && list.id,
 			isEnabled,
-			service: SUPPORTED_SERVICES.Trello.name
+			provider: SUPPORTED_SERVICES.Trello.name
 		});
 	}
 

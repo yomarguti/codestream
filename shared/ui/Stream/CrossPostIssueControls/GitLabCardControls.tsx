@@ -58,7 +58,7 @@ export default class GitLabCardControls extends React.Component<Props, State> {
 			board,
 			boardName: board.name,
 			isEnabled,
-			service: SUPPORTED_SERVICES.GitLab.name
+			provider: SUPPORTED_SERVICES.GitLab.name
 		});
 	}
 

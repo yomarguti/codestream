@@ -47,7 +47,7 @@ export default class AsanaCardControls extends React.Component<Props, State> {
 			boardId: board && board.id,
 			listId: list && list.id,
 			isEnabled,
-			service: SUPPORTED_SERVICES.Asana.name
+			provider: SUPPORTED_SERVICES.Asana.name
 		});
 	}
 

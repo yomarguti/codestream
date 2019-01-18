@@ -5,7 +5,7 @@ export interface Service {
 }
 
 export interface CardValues {
-	service: string;
+	provider: string;
 	board?: Board;
 	[key: string]: any;
 }

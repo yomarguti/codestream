@@ -184,7 +184,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				selectedNewBoard &&
 				this.crossPostIssueValues.board.id !== values.board!.id)
 		) {
-			this.loadAssignableUsers(values.service, values.board!);
+			this.loadAssignableUsers(values.provider, values.board!);
 		}
 		this.crossPostIssueValues = values;
 	}
