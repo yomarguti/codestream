@@ -227,12 +227,12 @@ export abstract class PubnubTester {
 		}, this._testTimeout);
 	}
 
-	private debug(msg: string, info?: any) {
-		const now = new Date().toString();
-		msg = `${now}: TEST ${this.testNum}: ${msg}`;
-		if (info) {
-			msg += `: ${JSON.stringify(info, undefined, 10)}`;
-		}
-		console.log(msg);
-	}
+	// private debug(msg: string, info?: any) {
+	// 	const now = new Date().toString();
+	// 	msg = `${now}: TEST ${this.testNum}: ${msg}`;
+	// 	if (info) {
+	// 		msg += `: ${JSON.stringify(info, undefined, 10)}`;
+	// 	}
+	// 	console.log(msg);
+	// }
 }

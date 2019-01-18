@@ -13,7 +13,7 @@ export interface LspHandler {
 
 const handlerRegistry = new Map<any, LspHandler[]>();
 export function registerDecoratedHandlers(agent: CodeStreamAgent): void {
-	for (const [_, handlers] of handlerRegistry) {
+	for (const [, handlers] of handlerRegistry) {
 		for (const handler of handlers) {
 			agent.registerHandler(handler.type, handler.method!);
 		}

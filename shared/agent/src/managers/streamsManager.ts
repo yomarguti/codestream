@@ -201,7 +201,7 @@ export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CS
 	}
 
 	@lspHandler(GetStreamRequestType)
-	private async getStream(request: GetStreamRequest): Promise<GetStreamResponse> {
+	protected async getStream(request: GetStreamRequest): Promise<GetStreamResponse> {
 		const stream = await this.getById(request.streamId);
 		return { stream: stream };
 	}

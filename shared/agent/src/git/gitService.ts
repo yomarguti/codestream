@@ -4,7 +4,6 @@ import * as fs from "fs";
 import * as path from "path";
 import { Disposable, Event } from "vscode-languageserver";
 import URI from "vscode-uri";
-import { ApiProvider } from "../api/apiProvider";
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import { Strings } from "../system";

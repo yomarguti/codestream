@@ -85,18 +85,18 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 	}
 
 	@lspHandler(GetUnreadsRequestType)
-	private getUnreads(request: GetUnreadsRequest): Promise<GetUnreadsResponse> {
+	protected getUnreads(request: GetUnreadsRequest): Promise<GetUnreadsResponse> {
 		return this.session.api.getUnreads(request);
 	}
 
 	@lspHandler(GetUserRequestType)
-	private async getUser(request: GetUserRequest): Promise<GetUserResponse> {
+	protected async getUser(request: GetUserRequest): Promise<GetUserResponse> {
 		const user = await this.getById(request.userId);
 		return { user: user };
 	}
 
 	@lspHandler(GetPreferencesRequestType)
-	private async getPreferences(): Promise<GetPreferencesResponse> {
+	protected async getPreferences(): Promise<GetPreferencesResponse> {
 		return this.session.api.getPreferences();
 	}
 

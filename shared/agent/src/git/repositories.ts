@@ -9,7 +9,6 @@ import {
 	WorkspaceFoldersChangeEvent
 } from "vscode-languageserver";
 import URI from "vscode-uri";
-import { ApiProvider } from "../api/apiProvider";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";

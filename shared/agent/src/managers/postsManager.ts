@@ -838,7 +838,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	}
 
 	@lspHandler(GetPostRequestType)
-	private async getPost(request: GetPostRequest): Promise<GetPostResponse> {
+	protected async getPost(request: GetPostRequest): Promise<GetPostResponse> {
 		const post = await this.getById(request.postId);
 		return { post: post };
 	}

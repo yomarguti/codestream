@@ -29,7 +29,7 @@ const slackCommandsRegex = /\<!(\w+)\|(\w+)\>/g;
 const slackChannelsRegex = /\<#(\w+)\|(\w+)\>/g;
 const slackMentionsRegex = /\<[@!](\w+)(?:\|(\w+))?\>/g;
 const slackLinkRegex = /\<((?:https?:\/\/|mailto:).*?)(?:\|(.*?))?\>/g;
-const slackSlashCommandRegex = /^\/(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/;
+// const slackSlashCommandRegex = /^\/(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/;
 
 export function fromSlackChannelIdToType(
 	streamId: string

@@ -36,7 +36,7 @@ export class TeamsManager extends CachedEntityManagerBase<CSTeam> {
 	}
 
 	@lspHandler(GetTeamRequestType)
-	private async getTeam(request: GetTeamRequest): Promise<GetTeamResponse> {
+	protected async getTeam(request: GetTeamRequest): Promise<GetTeamResponse> {
 		const team = await this.getById(request.teamId);
 		return { team: team };
 	}

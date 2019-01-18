@@ -5,7 +5,6 @@ import { describe, it } from "mocha";
 import { RequestInit } from "node-fetch";
 import { Connection } from "vscode-languageserver";
 import { CodeStreamAgent } from "../../src/agent";
-import { Functions } from "../../src/system/function";
 import {
 	getRequest,
 	loadTestData,
@@ -14,7 +13,6 @@ import {
 	TestSession,
 	trimUndefined
 } from "./helpers";
-import wait = Functions.wait;
 
 async function runAcceptanceTest(dir: string, ctx: any) {
 	const { agentOptions, agentRequests, csApiRequests, slackApiRequests } = await loadTestData(dir);
@@ -42,7 +40,7 @@ async function runAcceptanceTest(dir: string, ctx: any) {
 	api.fetch = csApiFetch;
 
 	// session.login();
-	const result = await session.login();
+	void (await session.login());
 	// await wait(1000);
 	// @ts-ignore
 	ctx.api = session._api!;

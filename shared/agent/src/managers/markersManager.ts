@@ -100,7 +100,7 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 	}
 
 	@lspHandler(GetMarkerRequestType)
-	private async getMarker(request: GetMarkerRequest): Promise<GetMarkerResponse> {
+	protected async getMarker(request: GetMarkerRequest): Promise<GetMarkerResponse> {
 		const marker = await this.getById(request.markerId);
 		return { marker: marker };
 	}

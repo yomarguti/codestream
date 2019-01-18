@@ -122,7 +122,7 @@ export class FilesManager extends EntityManagerBase<CSFileStream> {
 	}
 
 	@lspHandler(FetchFileStreamsRequestType)
-	private async fetchFileStreams(
+	protected async fetchFileStreams(
 		request: FetchFileStreamsRequest
 	): Promise<FetchFileStreamsResponse> {
 		const streams = await this.getByRepoId(request.repoId);

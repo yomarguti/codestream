@@ -401,7 +401,7 @@ export class SlackApiProvider implements ApiProvider {
 
 		let user;
 
-		const { ok, error, user: usr } = response as WebAPICallResult & { user: any };
+		const { ok, user: usr } = response as WebAPICallResult & { user: any };
 		if (ok) {
 			user = fromSlackUser(usr, this._codestreamTeamId);
 			me = {
@@ -735,7 +735,7 @@ export class SlackApiProvider implements ApiProvider {
 				break;
 		}
 
-		const { ok, error, messages } = response as WebAPICallResult & { messages: any };
+		const { ok, messages } = response as WebAPICallResult & { messages: any };
 		// TODO: For now don't throw errors until we deal with marker privacy
 		if (!ok) return { posts: [] };
 		// if (!ok) throw new Error(error);
@@ -1776,7 +1776,7 @@ export class SlackApiProvider implements ApiProvider {
 			`conversations.join`
 		);
 
-		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
+		const { ok, error } = response as WebAPICallResult & { channel: any };
 		if (!ok) throw new Error(error);
 
 		const streamResponse = await this.getStream({ streamId: request.streamId });
@@ -1949,7 +1949,7 @@ export class SlackApiProvider implements ApiProvider {
 			`conversations.rename`
 		);
 
-		const { ok, error, channel } = response as WebAPICallResult & { channel: any };
+		const { ok, error } = response as WebAPICallResult & { channel: any };
 		if (!ok) throw new Error(error);
 
 		const streamResponse = await this.getStream({ streamId: request.streamId });
@@ -1972,7 +1972,7 @@ export class SlackApiProvider implements ApiProvider {
 			`conversations.setPurpose`
 		);
 
-		const { ok, error, purpose } = response as WebAPICallResult & { purpose: any };
+		const { ok, error } = response as WebAPICallResult & { purpose: any };
 		if (!ok) throw new Error(error);
 
 		const streamResponse = await this.getStream({ streamId: request.streamId });

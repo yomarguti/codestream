@@ -3,7 +3,7 @@ import { LogLevel, RTMClient } from "@slack/client";
 import HttpsProxyAgent from "https-proxy-agent";
 import { Emitter, Event } from "vscode-languageserver";
 import { Container } from "../../container";
-import { Logger, TraceLevel } from "../../logger";
+import { Logger } from "../../logger";
 import { ConnectionStatus, LogoutReason } from "../../shared/agent.protocol";
 import { StreamType } from "../../shared/api.protocol";
 import { debug, Disposable, log } from "../../system";
@@ -352,7 +352,7 @@ export class SlackEvents implements Disposable {
 	})
 	private async onSlackChannelChanged(e: SlackEvent) {
 		const cc = Logger.getCorrelationContext();
-		const { type, subtype } = e;
+		const { type } = e;
 
 		try {
 			switch (type) {

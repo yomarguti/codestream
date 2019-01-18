@@ -44,7 +44,7 @@ export class ReposManager extends CachedEntityManagerBase<CSRepository> {
 	}
 
 	@lspHandler(GetRepoRequestType)
-	private async getRepo(request: GetRepoRequest): Promise<GetRepoResponse> {
+	protected async getRepo(request: GetRepoRequest): Promise<GetRepoResponse> {
 		const repo = await this.getById(request.repoId);
 		return { repo: repo };
 	}
