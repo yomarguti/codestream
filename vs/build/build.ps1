@@ -11,6 +11,11 @@ Param(
     [System.String] $Target = "Rebuild",
 
     [Parameter(Mandatory=$false)]
+    [ValidateSet("quiet", "minimal", "normal", "detailed", "diagnostic")]
+    [Alias("b")]
+    [System.String] $Verbosity = "quiet",
+
+    [Parameter(Mandatory=$false)]
     [ValidateSet("15.0")]
     [Alias("v")]
     [double]$VisualStudioVersion = 15.0,
@@ -156,7 +161,7 @@ function Perform-Build
     & .\nuget.exe restore ..\src\CodeStream.VisualStudio.sln
    
     Write-Log "Running msbuild."
-    & $msbuild ..\src\CodeStream.VisualStudio.sln /p:AllowUnsafeBlocks=true /v:normal /target:$Target /p:Configuration=$Configuration /p:Platform=$Platform /p:DeployExtension=$DeployExtension /p:VisualStudioVersion=$VisualStudioVersion /p:OutputPath=$OutputDir
+    & $msbuild ..\src\CodeStream.VisualStudio.sln /p:AllowUnsafeBlocks=true /verbosity:$Verbosity /target:$Target /p:Configuration=$Configuration /p:Platform=$Platform /p:DeployExtension=$DeployExtension /p:VisualStudioVersion=$VisualStudioVersion /p:OutputPath=$OutputDir
 
     if ($LastExitCode -ne 0) {
         Write-Log "MSBuild Failed." "Red"
