@@ -215,12 +215,6 @@ export namespace Strings {
 		return `${s.substring(0, chars)}${ellipsis}`;
 	}
 
-	export function toTitleCase(s: string): string {
-		if (!s) return s;
-
-		return s.charAt(0).toUpperCase() + s.slice(1);
-	}
-
 	const ansiRegex = /[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))/g;
 	const containsNonAsciiRegex = /[^\x20-\x7F\u00a0\u2026]/;
 
