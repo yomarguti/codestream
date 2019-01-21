@@ -28,7 +28,9 @@ namespace CodeStream.VisualStudio.UI.Margins
             var agentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
             var settings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
 
-            return new CodemarkViewMargin(eventAggregator,
+            return new CodemarkViewMargin(
+				wpfTextViewHost,
+                eventAggregator,
                 toolWindowProvider,
                 sessionService,
                 agentService,

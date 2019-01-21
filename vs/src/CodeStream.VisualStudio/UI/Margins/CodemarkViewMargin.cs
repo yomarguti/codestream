@@ -32,6 +32,8 @@ namespace CodeStream.VisualStudio.UI.Margins
         /// A value indicating whether the object is disposed.
         /// </summary>
         private bool _isDisposed;
+
+        private readonly IWpfTextViewHost _wpfTextViewHost;
         private readonly IWpfTextView _textView;
         private readonly IEventAggregator _events;
         private readonly IToolWindowProvider _toolWindowProvider;
@@ -53,11 +55,13 @@ namespace CodeStream.VisualStudio.UI.Margins
         /// <param name="agentService"></param>
         /// <param name="settingsService"></param>
         /// <param name="textView">The <see cref="IWpfTextView"/> to attach the margin to.</param>
+        /// <param name="wpfTextViewHost"></param>
         /// <param name="eventAggregator"></param>
         /// <param name="toolWindowProvider"></param>
         /// <param name="sessionService"></param>
         /// <param name="textDocumentFactoryService"></param>
         public CodemarkViewMargin(
+            IWpfTextViewHost wpfTextViewHost,
             IEventAggregator eventAggregator,
             IToolWindowProvider toolWindowProvider,
             ISessionService sessionService,
@@ -66,6 +70,7 @@ namespace CodeStream.VisualStudio.UI.Margins
             IWpfTextView textView,
             ITextDocumentFactoryService textDocumentFactoryService)
         {
+            _wpfTextViewHost = wpfTextViewHost;
             _eventAggregator = eventAggregator;
             _toolWindowProvider = toolWindowProvider;
             _agentService = agentService;
@@ -157,13 +162,24 @@ namespace CodeStream.VisualStudio.UI.Margins
 
             // _textView.TextBuffer.ChangedLowPriority += TextBuffer_ChangedLowPriority;
             _textView.Selection.SelectionChanged += Selection_SelectionChanged;
-
+            _wpfTextViewHost.TextView.ZoomLevelChanged += TextView_ZoomLevelChanged;
             _textView.ViewportHeightChanged += TextView_ViewportHeightChanged;
             _textView.LayoutChanged += TextView_LayoutChanged;
             _initialized = true;
 
             //kick off a change
             Update();
+        }
+
+        public static readonly DependencyProperty ZoomProperty =
+            DependencyProperty.RegisterAttached("Zoom", typeof(double), typeof(Codemark),
+                new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.Inherits));
+
+        void TextView_ZoomLevelChanged(object sender, ZoomLevelChangedEventArgs e)
+        {
+            LayoutTransform = e.ZoomTransform;
+                this.SetValue(ZoomProperty, e.NewZoomLevel / 100);
+         
         }
 
         private DateTime _lastUpdate = DateTime.MinValue;
@@ -397,6 +413,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                 _textView.ViewportHeightChanged -= TextView_ViewportHeightChanged;
                 _textView.LayoutChanged -= TextView_LayoutChanged;
                 _textView.Selection.SelectionChanged -= Selection_SelectionChanged;
+                _wpfTextViewHost.TextView.ZoomLevelChanged -= TextView_ZoomLevelChanged;
 
                 _disposables.Dispose();
 
