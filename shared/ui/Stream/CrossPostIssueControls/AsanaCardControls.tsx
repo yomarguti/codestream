@@ -9,7 +9,7 @@ interface List {
 }
 
 interface State {
-	board: Board;
+	board?: Board;
 	list?: List;
 	isEnabled: boolean;
 	boardMenuOpen: boolean;
@@ -29,7 +29,7 @@ export default class AsanaCardControls extends React.Component<Props, State> {
 		const firstBoard = props.boards[0];
 		this.state = {
 			board: firstBoard,
-			list: firstBoard.lists[0],
+			list: firstBoard && firstBoard.lists[0],
 			isEnabled: true,
 			boardMenuOpen: false,
 			listMenuOpen: false
@@ -59,7 +59,7 @@ export default class AsanaCardControls extends React.Component<Props, State> {
 		});
 	}
 
-	selectBoard = board => {
+	selectBoard = (board: Board) => {
 		if (board) {
 			this.setState({ board, list: board.lists[0] }, this.onValuesChanged);
 		}
@@ -91,17 +91,19 @@ export default class AsanaCardControls extends React.Component<Props, State> {
 			label: board.name,
 			action: board
 		}));
-		const listItems = board.lists.map(list => ({
-			label: list.name,
-			action: list
-		}));
+		const listItems = board
+			? board.lists.map(list => ({
+					label: list.name,
+					action: list
+			  }))
+			: [];
 
 		return (
 			<div className="checkbox-row" onClick={this.toggleCrossPostIssue}>
 				<input type="checkbox" checked={this.state.isEnabled} />
 				{"Create a card on "}
 				<span className="channel-label" onClick={this.switchBoard}>
-					{board.name}
+					{board && board.name}
 					<Icon name="chevron-down" />
 					{this.state.boardMenuOpen && (
 						<Menu

@@ -4,7 +4,7 @@ import Menu from "../Menu";
 import { Board, CrossPostIssueValuesListener, SUPPORTED_SERVICES } from "./types";
 
 interface State {
-	board: Board;
+	board?: Board;
 	isEnabled: boolean;
 	boardMenuOpen: boolean;
 	boardMenuTarget?: any;
@@ -56,7 +56,7 @@ export default class GitLabCardControls extends React.Component<Props, State> {
 		const { isEnabled, board } = this.state;
 		this.props.onValues({
 			board,
-			boardName: board.name,
+			boardName: board && board.name,
 			isEnabled,
 			provider: SUPPORTED_SERVICES.GitLab.name
 		});
@@ -93,7 +93,7 @@ export default class GitLabCardControls extends React.Component<Props, State> {
 				<input type="checkbox" checked={this.state.isEnabled} />
 				{"Create an issue on "}
 				<span className="channel-label" onClick={this.switchBoard}>
-					{board.name}
+					{board && board.name}
 					<Icon name="chevron-down" />
 					{this.state.boardMenuOpen && (
 						<Menu
