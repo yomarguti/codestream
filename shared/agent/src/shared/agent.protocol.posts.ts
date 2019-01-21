@@ -1,6 +1,7 @@
 "use strict";
 import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
 import { CreateCodemarkRequest, CSFullCodemark } from "./agent.protocol.markers";
+import { ThirdPartyProviderUser } from "./agent.protocol.providers";
 import {
 	CodemarkType,
 	CSCodemark,
@@ -77,7 +78,7 @@ export interface CreatePostWithMarkerRequest {
 	status?: string;
 	externalProvider?: string;
 	externalProviderUrl?: string;
-	externalAssignees?: { displayName: string }[];
+	externalAssignees?: ThirdPartyProviderUser[];
 	entryPoint?: string;
 }
 

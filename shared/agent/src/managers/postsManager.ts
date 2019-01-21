@@ -675,7 +675,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			status: type === CodemarkType.Issue ? status : undefined,
 			externalProvider,
 			externalAssignees:
-				externalAssignees && externalAssignees.map(a => ({ displayName: a.displayName })),
+				externalAssignees &&
+				externalAssignees.map(a => ({ displayName: a.displayName, email: a.email })),
 			externalProviderUrl
 		} as CreateCodemarkRequest;
 		let marker: CreateCodemarkRequestMarker | undefined;
