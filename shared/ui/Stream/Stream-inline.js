@@ -914,14 +914,16 @@ export class SimpleStream extends Component {
 		if (value == "collapse") {
 			this.setState({ multiCompose: false, ...state });
 		} else {
-			this.setNewPostEntry("Stream");
 			this.setState({ multiCompose: value, floatCompose: true, ...state });
 			if (!value) {
+				this.setNewPostEntry(undefined);
 				this.setState({
 					quote: null,
 					floatCompose: false,
 					composeBoxProps: {}
 				});
+			} else {
+				if (this.newPostEntry !== "Spatial View") this.setNewPostEntry("Stream");
 			}
 		}
 		// if (value) this.focus();
