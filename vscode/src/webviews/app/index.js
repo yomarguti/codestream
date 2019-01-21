@@ -7,8 +7,6 @@ import loggingMiddleWare from "./logging-middleware";
 
 if (!window.ResizeObserver) {
 	polyFillResizeObserver();
-} else {
-	console.warn("ResizeObserver is available");
 }
 
 const cssColorRegEx = /^(?:(#?)([0-9a-f]{3}|[0-9a-f]{6})|((?:rgb|hsl)a?)\((-?\d+%?)[,\s]+(-?\d+%?)[,\s]+(-?\d+%?)[,\s]*(-?[\d\.]+%?)?\))$/i;
@@ -166,11 +164,11 @@ api.bootstrap().then(data => {
 		{
 			pluginVersion: data.version,
 			context: {
+				...(data.context || {}),
 				currentTeamId: data.currentTeamId,
 				currentStreamId: data.currentStreamId,
 				threadId: data.currentThreadId,
-				hasFocus: true,
-				...(data.panelStack ? { panelStack: data.panelStack } : {})
+				hasFocus: true
 			},
 			session: {
 				userId: data.currentUserId

@@ -68,6 +68,9 @@ import {
 } from "./webviewIpc";
 
 interface BootstrapState {
+	context?: {
+		[key: string]: any;
+	};
 	capabilities?: ApiCapabilities;
 	currentTeamId: string;
 	currentUserId: string;
@@ -135,9 +138,9 @@ export class CodeStreamWebviewPanel implements Disposable {
 		return this._onDidClose.event;
 	}
 
-	private _onDidChangeViewPanel = new EventEmitter<string[]>();
-	get onDidChangeViewPanel(): Event<string[]> {
-		return this._onDidChangeViewPanel.event;
+	private _onDidChangeContextState = new EventEmitter<string[]>();
+	get onDidChangeContextState(): Event<object> {
+		return this._onDidChangeContextState.event;
 	}
 
 	private _bootstrapPromise: Promise<BootstrapState> | undefined;
@@ -146,7 +149,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 	private _onReadyResolver: ((cancelled: boolean) => void) | undefined;
 	private _panel: WebviewPanel | undefined;
 	private _streamThread: StreamThread | undefined;
-	private _viewPanelStack: string[] | undefined;
+	private _uiContext: object | undefined;
 
 	constructor(public readonly session: CodeStreamSession) {
 		this._ipc = new WebviewIpc(this);
@@ -441,8 +444,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 					break;
 				}
-				case WebviewIpcMessageType.onActivePanelChanged: {
-					this._onDidChangeViewPanel.fire(e.body);
+				case WebviewIpcMessageType.onContextStateChanged: {
+					this._onDidChangeContextState.fire(e.body);
 					break;
 				}
 				case WebviewIpcMessageType.onActiveStreamChanged: {
@@ -675,8 +678,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 	@log({
 		args: false
 	})
-	async show(streamThread?: StreamThread, viewPanelStack?: string[]) {
-		if (viewPanelStack) this._viewPanelStack = viewPanelStack;
+	async show(streamThread?: StreamThread, uiContext?: object) {
+		if (uiContext) this._uiContext = uiContext;
 		if (this._panel === undefined) return this.createWebview(streamThread);
 
 		if (
@@ -825,12 +828,13 @@ export class CodeStreamWebviewPanel implements Disposable {
 		};
 		state.currentTeamId = this.session.team.id;
 		state.currentUserId = this.session.userId;
-		if (this._viewPanelStack) state.panelStack = this._viewPanelStack;
 		state.env = this.session.environment;
 		state.services = {
 			vsls: Container.vsls.installed
 		};
 		state.version = Container.versionFormatted;
+
+		if (this._uiContext) state.context = this._uiContext;
 
 		const [
 			reposResponse,

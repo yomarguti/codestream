@@ -28,7 +28,7 @@ export class WebviewController implements Disposable {
 	private _disposablePanel: Disposable | undefined;
 	private _panel: CodeStreamWebviewPanel | undefined;
 	private _lastStreamThread: StreamThread | undefined;
-	private _viewPanelStack: string[] | undefined;
+	private _uiContextState: object = {};
 
 	constructor(public readonly session: CodeStreamSession) {
 		this._disposable = Disposable.from(
@@ -47,10 +47,6 @@ export class WebviewController implements Disposable {
 
 	private onPanelClosed() {
 		this.closePanel("user");
-	}
-
-	private onDidChangeViewPanel(panelStack: string[]) {
-		this._viewPanelStack = panelStack;
 	}
 
 	private async onSessionStatusChanged(e: SessionStatusChangedEvent) {
@@ -161,19 +157,23 @@ export class WebviewController implements Disposable {
 			this._disposablePanel = Disposable.from(
 				this._panel.onDidChangeStream(this.onPanelStreamChanged, this),
 				this._panel.onDidClose(this.onPanelClosed, this),
-				this._panel.onDidChangeViewPanel(this.onDidChangeViewPanel, this),
+				this._panel.onDidChangeContextState(this.onDidChangeContextState, this),
 				// Keep this at the end otherwise the above subscriptions can fire while disposing
 				this._panel
 			);
 			Container.agent.telemetry.track("Webview Opened");
 		}
 
-		return this._panel.show(streamThread, this._viewPanelStack);
+		return this._panel.show(streamThread, this._uiContextState);
 	}
 
 	@log()
 	toggle() {
 		return this.visible ? this.hide() : this.show();
+	}
+
+	private onDidChangeContextState(state: object) {
+		this._uiContextState = state;
 	}
 
 	private closePanel(reason?: "user") {
