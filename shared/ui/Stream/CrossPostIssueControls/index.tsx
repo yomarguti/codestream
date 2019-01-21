@@ -131,7 +131,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 				);
 			}
 			default:
-				return "foobar";
+				return null;
 		}
 	}
 
