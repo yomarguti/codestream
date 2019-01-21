@@ -1,3 +1,3 @@
-// import { sideEffects } from "./side-effects";
+import { contextChangeObserver } from "./context-changes";
 
-export default [];
+export default [contextChangeObserver];
