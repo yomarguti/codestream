@@ -28,3 +28,7 @@ export const SUPPORTED_SERVICES = {
 	Asana: { name: "asana", displayName: "Asana" },
 	Bitbucket: { name: "bitbucket", displayName: "Bitbucket" }
 };
+
+export function getProviderInfo(name: string): Service {
+	return Object.values(SUPPORTED_SERVICES).find(s => s.name === name)!;
+}

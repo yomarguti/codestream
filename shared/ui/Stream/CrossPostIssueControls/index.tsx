@@ -9,7 +9,13 @@ import GitHubCardControls from "./GitHubCardControls";
 import GitLabCardControls from "./GitLabCardControls";
 import JiraCardControls from "./JiraCardControls";
 import TrelloCardControls from "./TrelloCardControls";
-import { Board, CrossPostIssueValuesListener, Service, SUPPORTED_SERVICES } from "./types";
+import {
+	Board,
+	CrossPostIssueValuesListener,
+	getProviderInfo,
+	Service,
+	SUPPORTED_SERVICES
+} from "./types";
 
 interface Props {
 	connectProvider(name: string): any;
@@ -27,10 +33,6 @@ interface State {
 	boards: Board[];
 	isLoading: boolean;
 	loadingProvider?: Service;
-}
-
-function getProviderInfo(name: string): Service {
-	return Object.values(SUPPORTED_SERVICES).find(s => s.name === name)!;
 }
 
 class CrossPostIssueControls extends React.Component<Props, State> {

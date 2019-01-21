@@ -25,6 +25,7 @@ import { reactToPost } from "./actions";
 import { safe } from "../utils";
 import { getUsernamesById, getNormalizedUsernames } from "../store/users/reducer";
 import { getFeatures } from "../toggles";
+import { getProviderInfo } from "./CrossPostIssueControls/types";
 
 // let renderCount = 0;
 class Post extends React.Component {
@@ -309,6 +310,7 @@ class Post extends React.Component {
 						{this.renderText(post)}
 						{!this.props.editing && post.hasBeenEdited && <span className="edited">(edited)</span>}
 						{this.renderAssignees(post)}
+						{this.renderExternalLink()}
 						{this.renderCodeBlockFile()}
 					</div>
 					{codeBlock}
@@ -320,6 +322,15 @@ class Post extends React.Component {
 			</div>
 		);
 	}
+
+	renderExternalLink = () => {
+		const { codemark } = this.props;
+		if (codemark && codemark.externalProviderUrl) {
+			const provider = getProviderInfo(codemark.externalProvider);
+			return [<br />, <a href={codemark.externalProviderUrl}>Open on {provider.displayName}</a>];
+		}
+		return null;
+	};
 
 	renderAttachments = post => {
 		if (post.files && post.files.length) {
@@ -428,10 +439,12 @@ class Post extends React.Component {
 		if (assignees.length == 0) return null;
 		if (!this.props.teammates) return null;
 
-		return (
+		return [
+			<br />,
 			<div className="assignees">
-				<b>Assignees</b>
-				<br />
+				<div>
+					<b>Assignees</b>
+				</div>
 				{assignees
 					.map(userId => {
 						const person = this.props.teammates.find(user => user.id === userId);
@@ -439,9 +452,8 @@ class Post extends React.Component {
 					})
 					.filter(Boolean)
 					.join(", ")}
-				<br />
 			</div>
-		);
+		];
 	};
 
 	renderCodeBlockFile = () => {
@@ -546,7 +558,7 @@ class Post extends React.Component {
 		const { codemark, editing } = this.props;
 		if (editing) return this.renderTextEditing(post);
 		else if ((post.text || "").match(/^\/me\s/)) return null;
-		else return this.renderTextLinkified((codemark && codemark.text) || post.text); // unfortunately need to account for legacy slack codemarks that don't have text
+		else return [this.renderTextLinkified((codemark && codemark.text) || post.text), <br />]; // unfortunately need to account for legacy slack codemarks that don't have text
 	};
 
 	renderTextLinkified = text => {
