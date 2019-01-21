@@ -195,7 +195,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			this.setState({ assignableUsers: this.getAssignableCSUsers() });
 		}
 		this.crossPostIssueValues = values;
-	};
+	}
 
 	handleCodeHighlightEvent = () => {
 		const { codeBlock } = this.props;
@@ -224,11 +224,11 @@ class CodemarkForm extends React.Component<Props, State> {
 					this.insertTextAtCursor && this.insertTextAtCursor(usernames.join(", ") + ":\u00A0");
 				});
 		}
-	};
+	}
 
 	tabIndex = () => {
 		return (global as any).atom ? this.tabIndexCount++ : "0";
-	};
+	}
 
 	// TODO: work on this from initial mount
 	focus = (forceMainInput = false) => {
@@ -245,7 +245,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			default:
 				this.focusOnMessageInput && this.focusOnMessageInput();
 		}
-	};
+	}
 
 	// onSelectCodemarkType = (type?: string) => {
 	// 	this.setState({ menuOpen: false });
@@ -263,19 +263,19 @@ class CodemarkForm extends React.Component<Props, State> {
 		// setTimeout(() => {
 		// 	// this.focus();
 		// }, 20);
-	};
+	}
 
 	togglePrivacy = () => {
 		this.setState(state => ({ privacy: state.privacy === "public" ? "private" : "public" }));
-	};
+	}
 
 	toggleNotify = () => {
 		this.setState({ notify: !this.state.notify });
-	};
+	}
 
 	toggleCrossPostMessage = () => {
 		this.setState(state => ({ crossPostMessage: !state.crossPostMessage }));
-	};
+	}
 
 	handleClickSubmit = (event?: React.SyntheticEvent) => {
 		event && event.preventDefault();
@@ -299,7 +299,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				if (codestreamUser) return codestreamUser.id;
 			});
 			this.crossPostIssueValues!.assignees = assignees.map(a => a.value);
-		}
+		} else csAssignees = (this.state.assignees as any[]).map(a => a.value);
 
 		this.props.onSubmit(
 			{
@@ -316,7 +316,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			},
 			event
 		);
-	};
+	}
 
 	isFormInvalid = () => {
 		const { codeBlock } = this.props;
@@ -357,11 +357,11 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		this.setState(validationState);
 		return invalid;
-	};
+	}
 
 	showAlertHelp = event => {
 		event.stopPropagation();
-	};
+	}
 
 	renderTitleHelp = () => {
 		const { titleInvalid } = this.state;
@@ -369,7 +369,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (titleInvalid) {
 			return <small className="error-message">Required</small>;
 		} else return null;
-	};
+	}
 
 	renderTextHelp = () => {
 		const { textInvalid } = this.state;
@@ -377,7 +377,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (textInvalid) {
 			return <small className="error-message">Required</small>;
 		} else return null;
-	};
+	}
 
 	switchChannel = (event: React.SyntheticEvent) => {
 		event.stopPropagation();
@@ -387,7 +387,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			channelMenuTarget: target,
 			crossPostMessage: true
 		}));
-	};
+	}
 
 	selectChannel = (stream: Stream) => {
 		this.setState({ channelMenuOpen: false });
@@ -395,14 +395,14 @@ class CodemarkForm extends React.Component<Props, State> {
 			const channelName = (stream.type === StreamType.Direct ? "@" : "#") + stream.name;
 			this.setState({ selectedChannelName: channelName, selectedChannelId: stream.id });
 		}
-	};
+	}
 
 	handleClickConnectSlack = async event => {
 		event.preventDefault();
 		this.setState({ isLoading: true });
 		await this.props.connectSlack(); // TODO: use the provider api
 		this.setState({ isLoading: false });
-	};
+	}
 
 	renderCrossPostMessage = () => {
 		// if (this.props.slackInfo || this.props.providerInfo.slack) {
@@ -460,14 +460,14 @@ class CodemarkForm extends React.Component<Props, State> {
 		// 		</div>
 		// 	);
 		// }
-	};
+	}
 
 	handleChange = text => {
 		// track newPostText as the user types
 		this.setState({
 			text
 		});
-	};
+	}
 
 	renderMessageInput = () => {
 		const { codeBlock, collapsed } = this.props;
@@ -505,7 +505,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			onSubmit: collapsed ? this.handleClickSubmit : undefined,
 			__onDidRender
 		});
-	};
+	}
 
 	render() {
 		if (this.props.collapsed) {
