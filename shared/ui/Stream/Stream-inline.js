@@ -1737,8 +1737,8 @@ export class SimpleStream extends Component {
 				);
 				if (attributes.streamId !== this.props.postStreamId) {
 					this.props.setCurrentStream(attributes.streamId);
-					this.setActivePanel("main");
 				} else this.setMultiCompose(false);
+				this.setActivePanel("main");
 				safe(() => this.scrollPostsListToBottom());
 			};
 			const { quote } = this.state;
