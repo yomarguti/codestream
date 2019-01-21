@@ -429,14 +429,23 @@ class Post extends React.Component {
 		else return null;
 	};
 
-	renderAssignees = post => {
+	renderAssignees = () => {
 		const { collapsed, codemark } = this.props;
 
 		if (collapsed) return null;
 
-		const assignees = codemark ? codemark.assignees || [] : [];
+		const assignees = ((codemark && codemark.assignees) || []).map(id =>
+			this.props.teammates.find(t => t.id === id)
+		);
+		const externalAssignees = ((codemark && codemark.externalAssignees) || []).filter(
+			user => !assignees.find(a => a.email === user.email)
+		);
 
-		if (assignees.length == 0) return null;
+		const assigneeNames = [...assignees, ...externalAssignees].map(
+			a => a.username || a.displayName
+		);
+
+		if (assigneeNames.length == 0) return null;
 		if (!this.props.teammates) return null;
 
 		return [
@@ -445,13 +454,7 @@ class Post extends React.Component {
 				<div>
 					<b>Assignees</b>
 				</div>
-				{assignees
-					.map(userId => {
-						const person = this.props.teammates.find(user => user.id === userId);
-						return person && person.username;
-					})
-					.filter(Boolean)
-					.join(", ")}
+				{assigneeNames.filter(Boolean).join(", ")}
 			</div>
 		];
 	};
