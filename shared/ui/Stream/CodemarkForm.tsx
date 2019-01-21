@@ -43,6 +43,7 @@ interface Props {
 	currentUserId: string;
 	teammates: CSUser[];
 	streamId: string;
+	isSlackTeam: boolean;
 	collapseForm: Function;
 	onSubmit: Function;
 	onClickClose(): any;
@@ -118,6 +119,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			assigneesDisabled: false,
 			assigneesRequired: false,
 			selectedChannelName: props.channel.name,
+			selectedChannelId: props.channel.id,
 			assignableUsers: this.getAssignableCSUsers()
 			// privacy: "private"
 		};
@@ -193,7 +195,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			this.setState({ assignableUsers: this.getAssignableCSUsers() });
 		}
 		this.crossPostIssueValues = values;
-	}
+	};
 
 	handleCodeHighlightEvent = () => {
 		const { codeBlock } = this.props;
@@ -222,11 +224,11 @@ class CodemarkForm extends React.Component<Props, State> {
 					this.insertTextAtCursor && this.insertTextAtCursor(usernames.join(", ") + ":\u00A0");
 				});
 		}
-	}
+	};
 
 	tabIndex = () => {
 		return (global as any).atom ? this.tabIndexCount++ : "0";
-	}
+	};
 
 	// TODO: work on this from initial mount
 	focus = (forceMainInput = false) => {
@@ -243,7 +245,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			default:
 				this.focusOnMessageInput && this.focusOnMessageInput();
 		}
-	}
+	};
 
 	// onSelectCodemarkType = (type?: string) => {
 	// 	this.setState({ menuOpen: false });
@@ -261,25 +263,25 @@ class CodemarkForm extends React.Component<Props, State> {
 		// setTimeout(() => {
 		// 	// this.focus();
 		// }, 20);
-	}
+	};
 
 	togglePrivacy = () => {
 		this.setState(state => ({ privacy: state.privacy === "public" ? "private" : "public" }));
-	}
+	};
 
 	toggleNotify = () => {
 		this.setState({ notify: !this.state.notify });
-	}
+	};
 
 	toggleCrossPostMessage = () => {
 		this.setState(state => ({ crossPostMessage: !state.crossPostMessage }));
-	}
+	};
 
 	handleClickSubmit = (event?: React.SyntheticEvent) => {
 		event && event.preventDefault();
 		if (this.isFormInvalid()) return;
 
-		const { color, type, privacy, notify, title, text, crossPostMessage } = this.state;
+		const { color, type, title, text, selectedChannelId } = this.state;
 		const crossPostIssueEnabled =
 			type === CodemarkType.Issue &&
 			this.crossPostIssueValues &&
@@ -301,6 +303,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		this.props.onSubmit(
 			{
+				streamId: selectedChannelId,
 				text,
 				color,
 				type,
@@ -313,7 +316,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			},
 			event
 		);
-	}
+	};
 
 	isFormInvalid = () => {
 		const { codeBlock } = this.props;
@@ -354,11 +357,11 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		this.setState(validationState);
 		return invalid;
-	}
+	};
 
 	showAlertHelp = event => {
 		event.stopPropagation();
-	}
+	};
 
 	renderTitleHelp = () => {
 		const { titleInvalid } = this.state;
@@ -366,7 +369,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (titleInvalid) {
 			return <small className="error-message">Required</small>;
 		} else return null;
-	}
+	};
 
 	renderTextHelp = () => {
 		const { textInvalid } = this.state;
@@ -374,7 +377,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (textInvalid) {
 			return <small className="error-message">Required</small>;
 		} else return null;
-	}
+	};
 
 	switchChannel = (event: React.SyntheticEvent) => {
 		event.stopPropagation();
@@ -384,7 +387,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			channelMenuTarget: target,
 			crossPostMessage: true
 		}));
-	}
+	};
 
 	selectChannel = (stream: Stream) => {
 		this.setState({ channelMenuOpen: false });
@@ -392,76 +395,79 @@ class CodemarkForm extends React.Component<Props, State> {
 			const channelName = (stream.type === StreamType.Direct ? "@" : "#") + stream.name;
 			this.setState({ selectedChannelName: channelName, selectedChannelId: stream.id });
 		}
-	}
+	};
 
 	handleClickConnectSlack = async event => {
 		event.preventDefault();
 		this.setState({ isLoading: true });
 		await this.props.connectSlack(); // TODO: use the provider api
 		this.setState({ isLoading: false });
-	}
+	};
 
 	renderCrossPostMessage = () => {
-		if (this.props.slackInfo || this.props.providerInfo.slack) {
-			const items: { label: string; action?: CSStream }[] = [];
-			this.props.channelStreams.forEach(channel => {
-				items.push({ label: "#" + channel.name, action: channel });
-			});
-			items.push({ label: "-" });
-			_.sortBy(this.props.directMessageStreams, (stream: CSDirectStream) =>
-				(stream.name || "").toLowerCase()
-			).forEach((channel: CSDirectStream) => {
-				items.push({ label: "@" + channel.name, action: channel });
-			});
+		// if (this.props.slackInfo || this.props.providerInfo.slack) {
+		const items: { label: string; action?: CSStream }[] = [];
+		this.props.channelStreams.forEach(channel => {
+			items.push({ label: "#" + channel.name, action: channel });
+		});
+		items.push({ label: "-" });
+		_.sortBy(this.props.directMessageStreams, (stream: CSDirectStream) =>
+			(stream.name || "").toLowerCase()
+		).forEach((channel: CSDirectStream) => {
+			items.push({ label: "@" + channel.name, action: channel });
+		});
 
-			const channelName = this.state.selectedChannelName;
-			return (
-				<div className="checkbox-row" onClick={this.toggleCrossPostMessage}>
-					<input type="checkbox" checked={this.state.crossPostMessage} /> Post to{" "}
-					<span className="channel-label" onClick={this.switchChannel}>
-						{channelName}
-						<Icon name="chevron-down" />
-						{this.state.channelMenuOpen && (
-							<Menu
-								align="center"
-								compact={true}
-								target={this.state.channelMenuTarget}
-								items={items}
-								action={this.selectChannel}
-							/>
-						)}
-					</span>{" "}
-					on
+		const channelName = this.state.selectedChannelName;
+		return (
+			<div className="checkbox-row">
+				{/*<input type="checkbox" checked={this.state.crossPostMessage} /> */} Post to{" "}
+				<span className="channel-label" onClick={this.switchChannel}>
+					{channelName}
+					<Icon name="chevron-down" />
+					{this.state.channelMenuOpen && (
+						<Menu
+							align="center"
+							compact={true}
+							target={this.state.channelMenuTarget}
+							items={items}
+							action={this.selectChannel}
+						/>
+					)}
+				</span>
+				{this.props.isSlackTeam && [
+					" on",
 					<span className="service">
 						<Icon className="slack" name="slack" />
 						Slack
 					</span>
-				</div>
-			);
-		} else {
-			return (
-				<div className="checkbox-row connect-messaging" onClick={this.toggleCrossPostMessage}>
-					Post to
-					<span className="service" onClick={this.handleClickConnectSlack}>
-						<Icon className="slack" name="slack" />
-						Slack
-					</span>
-					{this.state.isLoading && (
-						<span>
-							<Icon className="spin" name="sync" /> Syncing channels...
-						</span>
-					)}
-				</div>
-			);
-		}
-	}
+				]}
+			</div>
+		);
+		// }
+		// else {
+		// 	return (
+		// 		<div className="checkbox-row connect-messaging" onClick={this.toggleCrossPostMessage}>
+		// 			Post to
+		// 			<span className="service" onClick={this.handleClickConnectSlack}>
+		// 				<Icon className="slack" name="slack" />
+		// 				Slack
+		// 			</span>
+		// 			{this.state.isLoading && (
+		// 				<span>
+		// 					<Icon className="spin" name="sync" /> Syncing channels...
+		// 				</span>
+		// 			)}
+		// 		</div>
+		// 	);
+		// }
+	};
 
 	handleChange = text => {
 		// track newPostText as the user types
 		this.setState({
 			text
 		});
-	}
+	};
 
 	renderMessageInput = () => {
 		const { codeBlock, collapsed } = this.props;
@@ -499,7 +505,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			onSubmit: collapsed ? this.handleClickSubmit : undefined,
 			__onDidRender
 		});
-	}
+	};
 
 	render() {
 		if (this.props.collapsed) {
@@ -843,19 +849,23 @@ class CodemarkForm extends React.Component<Props, State> {
 const EMPTY_OBJECT = {};
 
 const mapStateToProps = state => {
-	const { context, users, session } = state;
+	const { context, users, session, teams } = state;
 	const user = users[session.userId];
 	const channel = context.currentStreamId
 		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId)!
 		: getStreamForTeam(state.streams, context.currentTeamId);
 
-	const slackInfo = user.providerInfo && user.providerInfo.slack;
+	// const slackInfo = user.providerInfo && user.providerInfo.slack;
+
+	const team = teams[context.currentTeamId];
+	const isSlackTeam = !!(team.providerInfo && team.providerInfo.slack);
 
 	return {
 		channel,
 		issueProvider: context.issueProvider,
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
-		slackInfo
+		isSlackTeam
+		// slackInfo,
 	};
 };
 

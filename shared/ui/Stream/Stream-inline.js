@@ -1720,9 +1720,9 @@ export class SimpleStream extends Component {
 			return this.setMultiCompose(false);
 		} else {
 			const submit = async markers => {
-				const { postStreamId, threadId } = this.props;
+				const { threadId } = this.props;
 				await this.props.createPost(
-					postStreamId,
+					attributes.streamId,
 					threadId,
 					null,
 					{ ...attributes, markers },
@@ -1733,7 +1733,7 @@ export class SimpleStream extends Component {
 						entryPoint: this.newPostEntry
 					}
 				);
-				if (attributes.streamId !== postStreamId) {
+				if (attributes.streamId !== this.props.postStreamId) {
 					this.props.setCurrentStream(attributes.streamId);
 					this.setActivePanel("main");
 				} else this.setMultiCompose(false);

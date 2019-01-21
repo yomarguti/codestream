@@ -24,7 +24,6 @@ class ComposeBox extends React.Component {
 	submitCodemarkPost = (attributes, event) => {
 		if (this.props.disabled) return;
 
-		const { streamId } = this.props;
 		let newPostText = attributes.text || "";
 
 		// convert the text to plaintext so there is no HTML
@@ -37,7 +36,7 @@ class ComposeBox extends React.Component {
 			domParser.parseFromString(attributes.title.replace(replaceRegex, "\n"), "text/html")
 				.documentElement.textContent;
 
-		const { assignees, color, type, crossPostIssueValues } = attributes;
+		const { streamId, assignees, color, type, crossPostIssueValues } = attributes;
 
 		this.props.onSubmitCodemark(
 			{
