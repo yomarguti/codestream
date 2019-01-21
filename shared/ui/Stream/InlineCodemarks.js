@@ -132,8 +132,8 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	handleClickPlus = lineNum => {
-		this.props.startCommentOnLine(lineNum, this.props.textEditorUri);
 		this.props.setNewPostEntry("Spatial View");
+		this.props.startCommentOnLine(lineNum, this.props.textEditorUri);
 		setTimeout(() => this.props.focusInput(), 500);
 	};
 

@@ -154,6 +154,12 @@ export class SimpleStream extends Component {
 		if (!body.isHighlight || (!this.state.multiCompose && this.props.configs.openCommentOnSelect)) {
 			this.setMultiCompose(true, { quote: body });
 		}
+		if (
+			body.isHighlight &&
+			(this.newPostEntry === undefined || !this.newPostEntry.startsWith("Spatial"))
+		) {
+			this.setNewPostEntry("Highlighted Code");
+		}
 		// if multi-compose is already open, regardless of settings,
 		// update this.state.quote just in case the selection changed
 		if (this.state.multiCompose) this.setState({ quote: body });
@@ -823,6 +829,7 @@ export class SimpleStream extends Component {
 				createTrelloCard={this.props.createTrelloCard}
 				textEditorFirstLine={this.state.textEditorFirstLine}
 				textEditorLastLine={this.state.textEditorLastLine}
+				setNewPostEntry={this.setNewPostEntry}
 				{...this.state.composeBoxProps}
 			/>
 		);
@@ -922,8 +929,6 @@ export class SimpleStream extends Component {
 					floatCompose: false,
 					composeBoxProps: {}
 				});
-			} else {
-				if (this.newPostEntry !== "Spatial View") this.setNewPostEntry("Stream");
 			}
 		}
 		// if (value) this.focus();
