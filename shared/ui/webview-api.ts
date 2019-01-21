@@ -83,6 +83,7 @@ import {
 	SetStreamPurposeResponse,
 	TelemetryRequest,
 	TelemetryRequestType,
+	ThirdPartyProviderUser,
 	TrelloCreateCardRequest,
 	TrelloCreateCardRequestType,
 	TrelloFetchListsRequest,
@@ -326,7 +327,7 @@ export default class WebviewApi {
 			color?: string;
 			externalProvider?: string;
 			externalProviderUrl?: string;
-			externalAssignees?: { displayName: string }[];
+			externalAssignees?: ThirdPartyProviderUser[];
 		},
 		extra: { fileUri: string; entryPoint?: string }
 	): Promise<CreatePostResponse> {
