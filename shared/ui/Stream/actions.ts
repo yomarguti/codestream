@@ -566,13 +566,19 @@ export const createServiceCard = (attributes, codemark) => async (_, __, { api }
 				);
 			}
 			case "trello": {
-				return api.createTrelloCard(attributes.listId, codemark.title, description);
+				return api.createTrelloCard(
+					attributes.listId,
+					codemark.title,
+					description,
+					attributes.assignees
+				);
 			}
 			case "github": {
 				const response = await api.createGithubCard(
 					codemark.title,
 					description,
-					attributes.boardName
+					attributes.boardName,
+					attributes.assignees
 				);
 				return { url: response.html_url };
 			}

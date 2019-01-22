@@ -15,6 +15,7 @@ export type CrossPostIssueValuesListener = (values: CardValues) => any;
 export interface Board {
 	id: string;
 	name: string;
+	apiIdentifier?: string;
 	assigneesRequired: boolean;
 	assigneesDisabled?: boolean;
 	[key: string]: any;

@@ -173,13 +173,19 @@ export default class WebviewApi {
 		});
 	}
 
-	createTrelloCard(listId: string, name: string, description: string) {
+	createTrelloCard(
+		listId: string,
+		name: string,
+		description: string,
+		assignees?: any[]
+	) {
 		return this.postMessage({
 			action: TrelloCreateCardRequestType.method,
 			params: {
 				listId: listId,
 				name: name,
-				description: description
+				description: description,
+				assignees
 			} as TrelloCreateCardRequest
 		});
 	}
@@ -203,13 +209,19 @@ export default class WebviewApi {
 		});
 	}
 
-	createGithubCard(title: string, description: string, repoName: string) {
+	createGithubCard(
+		title: string,
+		description: string,
+		repoName: string,
+		assignees?: any[]
+	 ) {
 		return this.postMessage<GitHubCreateCardResponse>({
 			action: GitHubCreateCardRequestType.method,
 			params: {
 				title,
 				description,
-				repoName
+				repoName,
+				assignees
 			} as GitHubCreateCardRequest
 		});
 	}

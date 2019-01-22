@@ -167,7 +167,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (board.assigneesRequired) {
 			this.setState(state => (state.assigneesRequired ? null : { assigneesRequired: true }));
 		}
-		const { users } = await this.props.fetchAssignableUsers(service, board.id);
+		const { users } = await this.props.fetchAssignableUsers(service, board.apiIdentifier || board.id);
 		this.setState({
 			assignableUsers: users.map(u => ({
 				value: u,
