@@ -1,4 +1,5 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Controllers;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
@@ -94,20 +95,25 @@ namespace CodeStream.VisualStudio
                             }
                         case "codestream:telemetry":
                             {
-                                //TODO can this stay inside the agent?
                                 break;
                             }
                         case "codestream:response":
-                        {
-                            break;
-                        }
+                            {
+                                break;
+                            }
                         case "codestream:interaction:clicked-reload-webview":
                             {
                                 _browserService.ReloadWebView();
                                 break;
                             }
                         case "codestream:interaction:thread-closed":
+                            {
+                                break;
+                            }
                         case "codestream:interaction:active-panel-changed":
+                            {
+                                break;
+                            }
                         case "codestream:interaction:thread-selected":
                             {
                                 //unused
@@ -115,37 +121,41 @@ namespace CodeStream.VisualStudio
                             }
                         case "codestream:interaction:svc-request":
                             {
-                                var service = message.Body["service"].Value<string>();
-                                if (service.EqualsIgnoreCase("vsls") && _ideService.QueryExtension(ExtensionKind.LiveShare))
-                                {
-                                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                    if (_ideService.TryStartLiveShare(out IdeService.StartLiveShareResult result))
-                                    {
-                                        IDisposable liveShareReadyEvent = null;
-                                        liveShareReadyEvent = _eventAggregator.GetEvent<LiveShareStartedEvent>()
-                                            .Subscribe((_) =>
-                                            {
-                                                // doesn't work :(
-                                                // dte.ExecuteCommand("LiveShare.CopyLink");
-                                                liveShareReadyEvent?.Dispose();
-                                                
-                                                //ServiceRequest sr = message.Body.ToObject<ServiceRequest>();
-                                                //var streamResponse = _codeStreamAgent.GetStream(sr.Action.StreamId);
-                                                //StreamThread st = null;
-                                                //if (streamResponse != null)
-                                                //{
-                                                //    st = new StreamThread()
-                                                //    {
-                                                //        Id = sr.Action.ThreadId,
-                                                //        Stream = streamResponse.Stream
-                                                //    };
-                                                //}
+                                var sr = message.Body.ToObject<ServiceRequest>();
 
-                                                //var postResponse = await _codeStreamAgent.CreatePostAsync(st.Stream.Id, st.Id, $"Join my Live Share session: ${text.ToString()}");
-                                            });
+                                if (sr.Service.EqualsIgnoreCase("vsls"))
+                                {
+                                    var liveShareController = new LiveShareController(
+                                        _sessionService,
+                                        _codeStreamAgent,
+                                        _eventAggregator,
+                                        _browserService,
+                                        _ideService);
+
+                                    switch (sr.Action.Type)
+                                    {
+                                        case "start":
+                                            {
+                                                await liveShareController.StartAsync(sr.Action.StreamId, sr.Action.ThreadId);
+                                                break;
+                                            }
+                                        case "invite":
+                                            {
+                                                await liveShareController.InviteAsync(sr.Action.UserId);
+                                                break;
+                                            }
+                                        case "join":
+                                            {
+                                                await liveShareController.JoinAsync(sr.Action?.Url);
+                                                break;
+                                            }
+                                        default:
+                                            {
+                                                Log.Verbose($"Unknown svc-request type {sr.Action.Type}");
+                                                break;
+                                            }
                                     }
                                 }
-                                // handles things like VSLS etc.
                                 break;
                             }
                         case "codestream:subscription:file-changed":

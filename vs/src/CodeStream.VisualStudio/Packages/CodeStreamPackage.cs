@@ -1,7 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using System.Threading;
-using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Properties;
 using CodeStream.VisualStudio.Services;
@@ -12,6 +9,9 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Serilog;
+using System;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace CodeStream.VisualStudio.Packages
 {
@@ -70,7 +70,7 @@ namespace CodeStream.VisualStudio.Packages
             // See: https://github.com/github/VisualStudio/issues/1537
             await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeUiComponentsAsync);
         }
-        
+
         // Set pfCanClose=false to prevent a tool window from closing
         //protected override int QueryClose(out bool pfCanClose)
         //{
@@ -112,9 +112,11 @@ namespace CodeStream.VisualStudio.Packages
                              args.PropertyName == nameof(packageSettings.Team))
                     {
                         Log.Verbose($"Url(s) or Team changed");
-                        if (_codeStreamService?.Value?.BrowserService != null)
+                        var sessionService = GetService(typeof(SSessionService)) as ISessionService;
+                        if (sessionService?.IsAgentReady == true || sessionService?.IsReady == true)
                         {
-                            _codeStreamService?.Value?.BrowserService?.ReloadWebView();
+                            var browserService = GetService(typeof(SBrowserService)) as IBrowserService;
+                            browserService?.ReloadWebView();
                         }
                     }
                 };
@@ -123,8 +125,8 @@ namespace CodeStream.VisualStudio.Packages
 
         async System.Threading.Tasks.Task InitializeUiComponentsAsync()
         {
-           InfoBarProvider.Initialize(this);
-           await System.Threading.Tasks.Task.CompletedTask;
+            InfoBarProvider.Initialize(this);
+            await System.Threading.Tasks.Task.CompletedTask;
         }
     }
 }

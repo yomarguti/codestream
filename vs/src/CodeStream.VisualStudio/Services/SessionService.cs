@@ -22,6 +22,7 @@ namespace CodeStream.VisualStudio.Services
         bool IsReady { get; }
         bool IsAgentReady { get; }
         void Logout();
+        string LiveShareUrl { get; set; }
     }
 
     [Injected]
@@ -77,6 +78,8 @@ namespace CodeStream.VisualStudio.Services
         public bool IsAgentReady => _sessionState == SessionState.AgentReady || IsReady;
 
         public bool IsReady => _sessionState == SessionState.Ready;
+
+        public string LiveShareUrl { get; set; }
     }
 
     [Serializable]

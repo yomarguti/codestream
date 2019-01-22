@@ -276,6 +276,10 @@ namespace CodeStream.VisualStudio.Models
         public Dictionary<string, object> ServiceInfo { get; set; }
     }
 
+    public class CsDirectStream : CsStream
+    { 
+    }
+
     public class CsFileStream : CsStream
     {
 
@@ -694,21 +698,29 @@ namespace CodeStream.VisualStudio.Models
     public class ServiceRequestAction
     {
         public string Type { get; set; }
+        public string Url { get; set; }
         public string StreamId { get; set; }
         public string ThreadId { get; set; }
         public bool CreateNewStream { get; set; }
+
+        public object UserId { get; set; } //string | string[]
     }
 
     public class StreamThread
     {
+        public StreamThread(string threadId, CsStream stream)
+        {
+            Id = threadId;
+            Stream = stream;
+        }
+
         /// <summary>
         /// Thread Id
         /// </summary>
-        public string Id { get; set; }
+        public string Id { get; }
 
-        public CsStream Stream { get; set; }
+        public CsStream Stream { get; }
     }
-
 
     public class PrepareCodeResponse
     {
@@ -850,5 +862,16 @@ namespace CodeStream.VisualStudio.Models
         public List<string> MentionedUserIds { get; set; }
         public string ParentPostId { get; set; }
         public CreateCodemarkRequest Codemark { get; set; }
+    }
+
+    public class FetchStreamsRequest
+    {
+        public List<StreamType> Types { get; set; }
+        public List<string> StreamIds { get; set; }
+    }
+
+    public class FetchStreamsResponse
+    {
+       public List<CsStream> Streams { get; set; }
     }
 }

@@ -89,6 +89,7 @@
     </Compile>
     <Compile Include="Commands\AddCodemarkCommand.cs" />
     <Compile Include="Commands\AuthenticationCommand.cs" />
+    <Compile Include="Controllers\LiveShareController.cs" />
     <Compile Include="Core\Logging\CodeStreamSink.cs" />
     <Compile Include="Core\Logging\LogManager.cs" />
     <Compile Include="Core\Logging\Sanitizer\IProcessor.cs" />
@@ -97,6 +98,7 @@
     <Compile Include="Core\Logging\Sanitizer\SecretsSanitizingFormatRule.cs" />
     <Compile Include="Core\Logging\Sanitizer\TextProcessor.cs" />
     <Compile Include="Core\Logging\TraceLevel.cs" />
+    <Compile Include="Core\RegularExpressions.cs" />
     <Compile Include="Credentials\Credential.cs" />
     <Compile Include="Credentials\CredentialSet.cs" />
     <Compile Include="Credentials\CredentialType.cs" />
@@ -134,6 +136,8 @@
     <Compile Include="Services\CredentialsService.cs" />
     <Compile Include="Services\DotNetBrowserService.cs" />
     <Compile Include="Services\IdeService.cs" />
+    <Compile Include="Services\LiveShare\CodeStreamCollaborationHostService.cs" />
+    <Compile Include="Services\LiveShare\CodeStreamCollaborationServiceFactory.cs" />
     <Compile Include="Services\SessionService.cs" />
     <Compile Include="Services\SettingsService.cs" />
     <Compile Include="Services\ThemeManager.cs" />

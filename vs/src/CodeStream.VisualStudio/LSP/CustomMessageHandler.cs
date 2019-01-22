@@ -24,7 +24,6 @@ namespace CodeStream.VisualStudio.LSP
         public void OnDidChangeData(JToken e)
         {
             string type = null;
-            DataChangedEventBase dataChangedEventBase = null;
 
             try
             {

@@ -8,54 +8,13 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
-using CodeStream.VisualStudio.Events;
-using Microsoft.VisualStudio.LiveShare;
-using System.ComponentModel.Composition;
 using ILogger = Serilog.ILogger;
 
 namespace CodeStream.VisualStudio.Services
 {
-    /// <summary>
-    /// See https://www.nuget.org/packages/Microsoft.VisualStudio.LiveShare/
-    /// </summary>
-    [ExportCollaborationService(typeof(IExampleService),
-  Name = "CodeStreamLS",
-  Scope = SessionScope.Host,
-  Role = ServiceRole.RemoteService
-)]
-    public class ExampleHostFactory : ICollaborationServiceFactory
-    {
-        private readonly IEventAggregator _eventAggregator;
-
-        [ImportingConstructor]
-        public ExampleHostFactory(IEventAggregator eventAggregator)
-        {
-            _eventAggregator = eventAggregator;
-        }
-
-        public System.Threading.Tasks.Task<ICollaborationService> CreateServiceAsync(
-            CollaborationSession collaborationSession, CancellationToken cancellationToken)
-        {
-            return System.Threading.Tasks.Task.FromResult<ICollaborationService>(new ExampleHostService(collaborationSession, _eventAggregator));
-        }
-    }
-
-    public interface IExampleService
-    {
-
-    }
-
-
-    public class ExampleHostService : IExampleService, ICollaborationService
-    {
-        public ExampleHostService(CollaborationSession collaborationSession, IEventAggregator eventAggregator)
-        {
-            eventAggregator.Publish(new LiveShareStartedEvent(collaborationSession));
-        }
-    }     
-
     public enum ExtensionKind
     {
         LiveShare
@@ -69,7 +28,10 @@ namespace CodeStream.VisualStudio.Services
         SelectedText GetSelectedText(out IVsTextView view);
         bool QueryExtensions(string author, params string[] names);
         bool QueryExtension(ExtensionKind extensionKind);
-        bool TryStartLiveShare(out IdeService.StartLiveShareResult result);
+        bool TryStartLiveShare();
+        bool TryJoinLiveShare(string url);
+
+        System.Threading.Tasks.Task GetClipboardTextValue(int millisecondsTimeout, Action<string> callback, Regex clipboardMatcher = null);
     }
 
     public interface SIdeService { }
@@ -159,7 +121,7 @@ namespace CodeStream.VisualStudio.Services
         {
             // ReSharper disable once UnusedVariable
             var result = _iIVsTextManager.GetActiveView2(1, null, (uint)_VIEWFRAMETYPE.vftCodeWindow, out view);
-            
+
             // view can be null...
             if (view == null) return null;
 
@@ -198,31 +160,47 @@ namespace CodeStream.VisualStudio.Services
             {
                 return QueryExtensions("microsoft", "VS Live Share - Preview", "VS Live Share");
             }
+
             throw new ArgumentException("extensionKind");
         }
 
-        public bool TryStartLiveShare(out StartLiveShareResult result)
+        public bool TryStartLiveShare()
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
             try
             {
-                var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
-                if (dte == null)
-                {
-                    result = null;
-                    return false;
-                }
-                dte.ExecuteCommand("LiveShare.ShareWorkspace");
-                result  = new StartLiveShareResult();
+                ExecuteCommand("LiveShare.ShareWorkspace");
                 return true;
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Could not start LiveShare");
+                Log.Error(ex, "Could not start Live Share");
             }
 
-            result = null;
+            return false;
+        }
+
+        public bool TryJoinLiveShare(string url)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            if (url.IsNullOrWhiteSpace())
+            {
+                Log.Warning("Live Share Url is missing");
+                return false;
+            }
+
+            try
+            {
+                ExecuteCommand("LiveShare.JoinWorkspace", $"/Root {url}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Could not join Live Share Url={Url}", url);
+            }
+
             return false;
         }
 
@@ -233,9 +211,95 @@ namespace CodeStream.VisualStudio.Services
             return GetSelectedText(out view);
         }
 
+        /// <summary>
+        /// Uses built in process handler for navigating to an external url
+        /// </summary>
+        /// <param name="url">an absolute url</param>
         public void Navigate(string url)
         {
+            if (url.IsNullOrWhiteSpace())
+            {
+                Log.Warning("Url is missing");
+                return;
+            }
+
             System.Diagnostics.Process.Start(url);
+        }
+
+        public async System.Threading.Tasks.Task GetClipboardTextValue(int millisecondsTimeout, Action<string> callback, Regex clipboardMatcher = null)
+        {
+            if (callback == null) await System.Threading.Tasks.Task.CompletedTask;
+
+            var workerTask = System.Threading.Tasks.Task.Run(() =>
+            {
+                var magicNumber = (int)Math.Round(Math.Sqrt(millisecondsTimeout));
+                Exception threadEx = null;
+                string result = null;
+                System.Threading.Thread staThread = null;
+                staThread = new System.Threading.Thread(
+                      delegate (object state)
+                      {
+                          for (var i = 0; i < magicNumber + 1; i++)
+                          {
+                              try
+                              {
+                                  var textString = Clipboard.GetDataObject()?.GetData(DataFormats.Text) as string;
+                                  if (millisecondsTimeout > 0)
+                                  {
+                                      if (clipboardMatcher != null)
+                                      {
+                                          if (textString != null && clipboardMatcher.IsMatch(textString))
+                                          {
+                                              result = textString;
+                                              break;
+                                          }
+                                      }
+                                      else
+                                      {
+                                          result = textString;
+                                          break;
+                                      }
+                                  }
+                                  else
+                                  {
+                                      result = textString;
+                                      break;
+                                  }
+
+                                  System.Threading.Thread.Sleep(magicNumber);
+                              }
+                              catch (Exception ex)
+                              {
+                                  threadEx = ex;
+                              }
+                          }
+                      });
+
+                staThread.SetApartmentState(ApartmentState.STA);
+                staThread.Start();
+                staThread.Join();
+                callback?.Invoke(result);
+            });
+
+            try
+            {
+                await workerTask;
+            }
+            catch (OperationCanceledException ex)
+            {
+                await System.Threading.Tasks.Task.CompletedTask;
+            }
+        }
+
+        private void ExecuteCommand(string commandName, string commandArgs = "") //must me " not null...
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            Log.Verbose("ExecuteCommand={CommandName} CommandArgs={commandArgs}", commandName, commandArgs);
+            var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
+            if (dte == null) throw new ArgumentNullException(nameof(dte));
+            dte.ExecuteCommand(commandName, commandArgs);
+            Log.Verbose("ExecuteCommand={CommandName} CommandArgs={commandArgs} Success", commandName, commandArgs);
         }
 
         /// <summary>
@@ -267,11 +331,6 @@ namespace CodeStream.VisualStudio.Services
             staThread.Join();
 
             return text as string;
-        }
-
-        public class StartLiveShareResult
-        {
-            public string Url { get; set; }
         }
     }
 }

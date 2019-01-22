@@ -5,8 +5,13 @@ using Serilog;
 using StreamJsonRpc;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.Extensions;
+using Microsoft.VisualStudio.Shell;
+using Task = System.Threading.Tasks.Task;
+
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
@@ -28,7 +33,7 @@ namespace CodeStream.VisualStudio.Services
         Task<GetUserResponse> GetUserAsync(string userId);
         Task<JToken> ChangeStreamThreadAsync(string streamId, string threadId);
         Task<GetStreamResponse> GetStreamAsync(string streamId);
-
+        Task<CsDirectStream> CreateDirectStreamAsync(List<string> memberIds);
         Task<JToken> LoginViaTokenAsync(string email, string token, string serverUrl);
         Task<JToken> LoginViaOneTimeCodeAsync(string signupToken, string serverUrl);
         Task<JToken> LoginAsync(string email, string password, string serverUrl);
@@ -37,6 +42,7 @@ namespace CodeStream.VisualStudio.Services
         Task<FetchCodemarksResponse> GetMarkersAsync(string streamId);
         Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request);
         Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(Uri uri, CancellationToken? cancellationToken = null);
+        Task<FetchStreamsResponse> FetchStreamsAsync(FetchStreamsRequest request);
     }
 
     public class CodeStreamAgentService : ICodeStreamAgentService, SCodeStreamAgentService
@@ -157,6 +163,23 @@ namespace CodeStream.VisualStudio.Services
             });
         }
 
+        public Task<CsDirectStream> CreateDirectStreamAsync(List<string> memberIds)
+        {
+            return SendAsync<CsDirectStream>("codeStream/streams/createDirect", new
+            {
+                type = StreamType.direct.ToString(),
+                memberIds = memberIds
+            });
+        }
+
+        public Task<FetchStreamsResponse> FetchStreamsAsync(FetchStreamsRequest request)
+        {
+            return SendAsync<FetchStreamsResponse>("codeStream/streams", new
+            {
+                types = request.Types.Select(_ => _.ToString()).ToList()
+            });
+        }
+
         public Task<PrepareCodeResponse> PrepareCodeAsync(string uri, Range range, CancellationToken? cancellationToken = null)
         {
             return SendAsync<PrepareCodeResponse>("codeStream/post/prepareWithCode",
@@ -248,6 +271,9 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task<BootstrapStateBase> GetBootstrapAsync(Settings settings, State state = null, bool isAuthenticated = false)
         {
+            var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
+            var vslsEnabled = ideService?.QueryExtension(ExtensionKind.LiveShare) == true;
+
             if (!isAuthenticated)
             {
                 return new BootstrapStateLite
@@ -262,7 +288,10 @@ namespace CodeStream.VisualStudio.Services
                         Team = _settingsService.Team,
 
                     },
-                    Services = new Service(),
+                    Services = new Service()
+                    {
+                        Vsls = vslsEnabled
+                    },
                     Env = _settingsService.GetEnvironmentName(),
                     Version = _settingsService.GetEnvironmentVersionFormated(Application.ExtensionVersionShortString,
                         Application.BuildNumber)
@@ -317,7 +346,7 @@ namespace CodeStream.VisualStudio.Services
                 Services = new Service
                 {
                     // TODO not implemented
-                    Vsls = false
+                    Vsls = vslsEnabled
                 }
             };
 
