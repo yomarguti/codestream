@@ -867,7 +867,7 @@ namespace CodeStream.VisualStudio.Models
     public class FetchStreamsRequest
     {
         public List<StreamType> Types { get; set; }
-        public List<string> StreamIds { get; set; }
+        public List<string> MemberIds { get; set; }
     }
 
     public class FetchStreamsResponse

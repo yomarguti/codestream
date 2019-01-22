@@ -176,7 +176,8 @@ namespace CodeStream.VisualStudio.Services
         {
             return SendAsync<FetchStreamsResponse>("codeStream/streams", new
             {
-                types = request.Types.Select(_ => _.ToString()).ToList()
+                types = request.Types.Select(_ => _.ToString()).ToList(),
+                memberIds = request.MemberIds
             });
         }
 

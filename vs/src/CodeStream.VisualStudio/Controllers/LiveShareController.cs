@@ -4,11 +4,11 @@ using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
+using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.VisualStudio.Shell;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Controllers
@@ -37,48 +37,61 @@ namespace CodeStream.VisualStudio.Controllers
             _ideService = ideService;
         }
 
+        private async Task CreatePost(string streamId, string threadId, string url)
+        {
+            try
+            {
+                var streamResponse = await _codeStreamAgent.GetStreamAsync(streamId);
+                if (streamResponse != null)
+                {
+                    var streamThread = new StreamThread(threadId, streamResponse.Stream);
+                    await _codeStreamAgent.CreatePostAsync(streamThread.Stream.Id,
+                        streamThread.Id, $"Join my Live Share session: {url}");
+
+                    _sessionService.LiveShareUrl = url;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Could not post Live Share url");
+            }
+        }
+
         public async Task StartAsync(string streamId, string threadId)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            if (!_ideService.TryStartLiveShare())
+            var existingUrl = _sessionService.LiveShareUrl;
+            if (!existingUrl.IsNullOrWhiteSpace())
             {
-                await Task.CompletedTask;
+                await CreatePost(streamId, threadId, existingUrl);
             }
             else
             {
-                IDisposable liveShareReadyEvent = null;
-                liveShareReadyEvent = _eventAggregator.GetEvent<LiveShareStartedEvent>().Subscribe((_) =>
+                if (!_ideService.TryStartLiveShare())
                 {
-                    try
+                    await Task.CompletedTask;
+                }
+                else
+                {
+                    IDisposable liveShareReadyEvent = null;
+                    liveShareReadyEvent = _eventAggregator.GetEvent<LiveShareStartedEvent>().Subscribe((_) =>
                     {
-                        liveShareReadyEvent?.Dispose();
+                        try
+                        {
+                            liveShareReadyEvent?.Dispose();
 
-                        _ideService.GetClipboardTextValue(10000, async (string text) =>
+                            _ideService.GetClipboardTextValue(10000, async (string url) =>
                             {
-                                try
-                                {
-                                    var streamResponse = await _codeStreamAgent.GetStreamAsync(streamId);
-                                    if (streamResponse != null)
-                                    {
-                                        var streamThread = new StreamThread(threadId, streamResponse.Stream);
-                                        await _codeStreamAgent.CreatePostAsync(streamThread.Stream.Id, streamThread.Id, $"Join my Live Share session: {text}");
-
-                                        _sessionService.LiveShareUrl = text;
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Log.Warning(ex, "Could not post Live Share url");
-                                }
-                            },
-                            RegularExpressions.LiveShareUrl);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "Could not start Live Share");
-                    }
-                });
+                                await CreatePost(streamId, threadId, url);
+                            }, RegularExpressions.LiveShareUrl);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, "Could not start Live Share");
+                        }
+                    });
+                }
             }
 
             await Task.CompletedTask;
@@ -108,24 +121,16 @@ namespace CodeStream.VisualStudio.Controllers
                         memberIds.Add(userResponse.User.Id);
                     }
 
-                    memberIds.Sort();
-
                     CsStream stream = null;
                     var fetchStreamsResponse = await _codeStreamAgent.FetchStreamsAsync(new FetchStreamsRequest
                     {
-                        Types = new List<StreamType> { StreamType.direct }
+                        Types = new List<StreamType> { StreamType.direct },
+                        MemberIds = memberIds
                     });
 
                     if (fetchStreamsResponse != null)
                     {
-                        foreach (var s in fetchStreamsResponse.Streams)
-                        {
-                            s.MemberIds.Sort();
-                            if (!s.MemberIds.All(memberIds.Contains)) continue;
-
-                            stream = s;
-                            break;
-                        }
+                        stream = fetchStreamsResponse.Streams.FirstOrDefault();
                     }
 
                     if (stream == null)
@@ -162,7 +167,6 @@ namespace CodeStream.VisualStudio.Controllers
             {
                 Log.Error(ex, "Error inviting to Live Share");
             }
-
         }
 
         public Task JoinAsync(string url)
