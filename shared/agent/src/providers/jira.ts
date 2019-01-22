@@ -102,7 +102,7 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 	}
 
 	private getCompatibleBoards(meta: JiraProjectsMetaResponse) {
-		return meta.projects.map(project => {
+		const boards = meta.projects.map(project => {
 			const board: Partial<JiraBoard> = { id: project.id, name: project.name };
 
 			const issueTypes = Array.from(
@@ -130,8 +130,10 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 			);
 
 			board.issueTypes = issueTypes;
+			board.singleAssignee = true;	// all jira cards have a single assignee?
 			return board as JiraBoard;
 		});
+		return boards;
 	}
 
 	@log()

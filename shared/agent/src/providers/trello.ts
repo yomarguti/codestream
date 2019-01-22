@@ -104,7 +104,7 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 				fields: "id,email,username,fullName"
 			})}`
 		);
-		return { users: body.map(u => ({ ...u, email: u.email, displayName: u.fullName })) };
+		return { users: body.map(u => ({ ...u, displayName: u.fullName })) };
 	}
 
 	private async getMemberId() {

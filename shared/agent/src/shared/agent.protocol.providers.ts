@@ -52,6 +52,7 @@ export interface ThirdPartyProviderBoard {
 	name: string;
 	assigneesRequired: boolean;
 	assigneesDisabled?: boolean;
+	singleAssignee?: boolean;
 }
 
 export interface ThirdPartyProviderUser {

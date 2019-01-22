@@ -10,35 +10,21 @@ import {
 	AsanaFetchBoardsRequestType,
 	AsanaFetchListsRequest,
 	AsanaFetchListsRequestType,
-	AsanaList
+	AsanaList,
+	AsanaProject,
+	AsanaUser,
+	AsanaWorkspace
 } from "../shared/agent.protocol";
 import { CSAsanaProviderInfo } from "../shared/api.protocol";
 import { log, lspHandler, lspProvider } from "../system";
 import { ThirdPartyProviderBase } from "./provider";
 
-interface AsanaWorkspace {
-	id: number;
-	gid: string;
+interface AsanaProjectData {
+	data: AsanaProject;
 }
 
-interface AsanaProject {
-	id: number;
-	gid: string;
-	layout: string;
-	name: string;
-	sections: AsanaSection[];
-}
-
-interface AsanaSection {
-	id: number;
-	gid: string;
-	name: string;
-}
-
-interface AsanaUser {
-	id: number;
-	gid: string;
-	workspaces: AsanaWorkspace[];
+interface AsanaUsersData {
+	data: AsanaUser[];
 }
 
 @lspProvider("asana")
@@ -76,7 +62,8 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 			const board: AsanaBoard = {
 				id: project.id,
 				name: project.name,
-				lists: []
+				lists: [],
+				singleAssignee: true	// asana cards allow only a single assignee
 			};
 
 			if (project.layout !== "board") {
@@ -153,7 +140,7 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 	@log()
 	@lspHandler(AsanaCreateCardRequestType)
 	async createCard(request: AsanaCreateCardRequest) {
-		return await this.post<{}, AsanaCreateCardResponse>(`/api/1.0/tasks`, {
+		const data = {
 			data: {
 				name: request.name,
 				notes: request.description,
@@ -163,9 +150,14 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 						project: request.boardId,
 						section: request.listId
 					}
-				]
+				],
+				assignee: request.assignee || undefined
 			}
-		});
+		};
+		const response = await this.post<{}, AsanaCreateCardResponse>(`/api/1.0/tasks`, data);
+		const card = response.body.data;
+		card.url = `${this.baseUrl}/0/${card.projects[0].gid}/${card.gid}`;
+		return card;
 	}
 
 	@log()
@@ -195,5 +187,18 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 		}
 
 		return "/api/1.0" + responseBody.next_page.path;
+	}
+
+	@log()
+	async getAssignableUsers(request: { boardId: string }) {
+		const response = await this.get<AsanaProjectData>(
+			`/api/1.0/projects/${request.boardId}`
+		);
+		const workspaceId = response.body.data.workspace.gid;
+
+		const { body } = await this.get<AsanaUsersData>(
+			`/api/1.0/workspaces/${workspaceId}/users?${qs.stringify({ opt_fields: "name,email" })}`
+		);
+		return { users: body.data.map(u => ({ ...u, displayName: u.name, id: u.gid })) };
 	}
 }

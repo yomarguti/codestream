@@ -6,10 +6,44 @@ export interface AsanaCreateCardRequest {
 	description: string;
 	boardId: number;
 	listId: number;
+	assignee: { id: string };
+}
+
+export interface AsanaWorkspace {
+	id: number;
+	gid: string;
+}
+
+export interface AsanaProject {
+	id: number;
+	gid: string;
+	layout: string;
+	name: string;
+	sections: AsanaSection[];
+	workspace: AsanaWorkspace;
+}
+
+export interface AsanaSection {
+	id: number;
+	gid: string;
+	name: string;
+}
+
+export interface AsanaUser {
+	id: number;
+	gid: string;
+	name: string;
+	email: string;
+	workspaces: AsanaWorkspace[];
 }
 
 export interface AsanaCreateCardResponse {
-	id: string;
+	data: {
+		gid: string;
+		url: string;
+		projects: AsanaProject[];
+		[key: string]: any;
+	};
 }
 
 export const AsanaCreateCardRequestType = new RequestType<
@@ -27,6 +61,7 @@ export interface AsanaBoard {
 	id: number;
 	name: string;
 	lists: AsanaList[];
+	singleAssignee?: boolean;
 }
 
 export interface AsanaFetchBoardsResponse {
