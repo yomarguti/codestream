@@ -97,7 +97,6 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
-		console.warn('REQUEST ASSIGNABLE USERS FOR TRELLO...');
 		const { body } = await this.get<TrelloMember[]>(
 			`/boards/${request.boardId}/members?${qs.stringify({
 				key: this.apiKey,
@@ -105,10 +104,7 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 				fields: 'id,email,username,fullName'
 			})}`
 		);
-		console.warn('BODY', body);
-		const u = { users: body.map(u => ({ ...u, email: u.email, displayName: u.fullName })) };
-		console.warn('U', u);
-		return u;
+		return { users: body.map(u => ({ ...u, email: u.email, displayName: u.fullName })) };
 	}
 
 	private async getMemberId() {
