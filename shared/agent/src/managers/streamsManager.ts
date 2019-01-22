@@ -70,6 +70,13 @@ export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CS
 			if (request.types != null && request.types.length !== 0) {
 				streams = streams.filter(s => request.types!.includes(s.type));
 			}
+
+			if (request.memberIds != null && request.memberIds.length !== 0) {
+				const uniqueMembers = new Set(request.memberIds);
+				streams = streams.filter(
+					s => s.memberIds !== undefined && s.memberIds.every(uniqueMembers.has)
+				);
+			}
 		}
 
 		return { streams: streams };

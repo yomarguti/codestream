@@ -51,6 +51,8 @@ export const CreateDirectStreamRequestType = new RequestType<
 export interface FetchStreamsRequest {
 	types?: (StreamType.Channel | StreamType.Direct)[];
 	streamIds?: string[];
+	// Will return only streams with the matching set of memberIds
+	memberIds?: string[];
 }
 
 export interface FetchStreamsResponse {
