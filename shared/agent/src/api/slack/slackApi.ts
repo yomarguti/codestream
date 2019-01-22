@@ -550,7 +550,7 @@ export class SlackApiProvider implements ApiProvider {
 			let streams: CSStream[] | undefined;
 			let repos: CSRepository[] | undefined;
 
-			if (request.codemark !== undefined) {
+			if (request.codemark != null) {
 				const codemarkResponse = await this._codestream.createCodemark({
 					...request.codemark,
 					parentPostId: request.parentPostId,
