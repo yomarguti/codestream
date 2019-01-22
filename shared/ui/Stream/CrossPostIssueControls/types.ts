@@ -18,6 +18,7 @@ export interface Board {
 	apiIdentifier?: string;
 	assigneesRequired: boolean;
 	assigneesDisabled?: boolean;
+	singleAssignee?: boolean;
 	[key: string]: any;
 }
 

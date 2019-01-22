@@ -74,6 +74,7 @@ interface State {
 	assignees: { value: any; label: string }[] | { value: any; label: string };
 	assigneesRequired: boolean;
 	assigneesDisabled: boolean;
+	singleAssignee: boolean;
 	privacy: "private" | "public";
 	notify: boolean;
 	isLoading: boolean;
@@ -118,6 +119,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			assignees: [],
 			assigneesDisabled: false,
 			assigneesRequired: false,
+			singleAssignee: false,
 			selectedChannelName: props.channel.name,
 			selectedChannelId: props.channel.id,
 			assignableUsers: this.getAssignableCSUsers()
@@ -146,7 +148,8 @@ class CodemarkForm extends React.Component<Props, State> {
 				assignableUsers: this.getAssignableCSUsers(),
 				assignees: [],
 				assigneesDisabled: false,
-				assigneesRequired: false
+				assigneesRequired: false,
+				singleAssignee: false
 			});
 			this.crossPostIssueValues = undefined;
 		}
@@ -166,6 +169,9 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (board.assigneesDisabled) return this.setState({ assigneesDisabled: true });
 		if (board.assigneesRequired) {
 			this.setState(state => (state.assigneesRequired ? null : { assigneesRequired: true }));
+		}
+		if (board.singleAssignee) {
+			this.setState(state => (state.singleAssignee ? null : { singleAssignee: true }));
 		}
 		const { users } = await this.props.fetchAssignableUsers(service, board.apiIdentifier || board.id);
 		this.setState({
@@ -702,9 +708,7 @@ class CodemarkForm extends React.Component<Props, State> {
 										id="input-assignees"
 										name="assignees"
 										classNamePrefix="native-key-bindings react-select"
-										isMulti={
-											this.props.issueProvider && this.props.issueProvider === "jira" ? false : true
-										}
+										isMulti={!this.state.singleAssignee}
 										value={this.state.assignees}
 										options={this.state.assignableUsers}
 										closeMenuOnSelect={true}

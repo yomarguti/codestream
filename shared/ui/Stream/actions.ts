@@ -586,11 +586,12 @@ export const createServiceCard = (attributes, codemark) => async (_, __, { api }
 				return api.createGitlabCard(codemark.title, description, attributes.boardName);
 			}
 			case "asana": {
-				return api.createAsanaCard(
+				return await api.createAsanaCard(
 					attributes.boardId,
 					attributes.listId,
 					codemark.title,
-					description
+					description,
+					attributes.assignees[0]
 				);
 			}
 			case "bitbucket": {

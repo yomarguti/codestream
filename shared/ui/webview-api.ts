@@ -237,14 +237,21 @@ export default class WebviewApi {
 		});
 	}
 
-	createAsanaCard(boardId: number, listId: number, name: string, description: string) {
+	createAsanaCard(
+		boardId: number,
+		listId: number,
+		name: string,
+		description: string,
+		assignee?: string
+	) {
 		return this.postMessage({
 			action: AsanaCreateCardRequestType.method,
 			params: {
 				boardId,
 				listId,
 				name,
-				description
+				description,
+				assignee
 			}
 		});
 	}
