@@ -562,8 +562,11 @@ export class CodeStreamAgentConnection implements Disposable {
 			});
 		}
 
-		fetch(types?: (StreamType.Channel | StreamType.Direct)[]) {
-			return this._connection.sendRequest(FetchStreamsRequestType, { types: types });
+		fetch(types?: (StreamType.Channel | StreamType.Direct)[], memberIds?: string[]) {
+			return this._connection.sendRequest(FetchStreamsRequestType, {
+				types: types,
+				memberIds: memberIds
+			});
 		}
 
 		fetchFiles(repoId: string) {
