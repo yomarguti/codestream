@@ -5,6 +5,7 @@ export interface GitHubCreateCardRequest {
 	repoName: string;
 	title: string;
 	description: string;
+	assignees?: [{ login: string }];
 }
 
 export interface GitHubCreateCardResponse {
@@ -71,3 +72,8 @@ export const GitHubFetchListsRequestType = new RequestType<
 	void,
 	void
 >("codeStream/github/lists");
+
+export interface GitHubUser {
+	id: string;
+	login: string;
+}

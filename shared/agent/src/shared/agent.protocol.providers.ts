@@ -57,5 +57,5 @@ export interface ThirdPartyProviderBoard {
 export interface ThirdPartyProviderUser {
 	id: string;
 	displayName: string;
-	email: string;
+	email?: string;
 }

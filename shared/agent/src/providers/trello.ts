@@ -9,7 +9,8 @@ import {
 	TrelloFetchBoardsRequestType,
 	TrelloFetchListsRequest,
 	TrelloFetchListsRequestType,
-	TrelloList
+	TrelloList,
+	TrelloMember
 } from "../shared/agent.protocol";
 import { CSTrelloProviderInfo } from "../shared/api.protocol";
 import { log, lspHandler, lspProvider } from "../system";
@@ -74,6 +75,7 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 				name: request.name,
 				desc: request.description,
 				key: this.apiKey,
+				idMembers: (request.assignees! || []).map(a => a.id),
 				token: this.accessToken
 			})}`,
 			{}
@@ -91,6 +93,18 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 			})}`
 		);
 		return { lists: response.body.filter(l => !l.closed) };
+	}
+
+	@log()
+	async getAssignableUsers(request: { boardId: string }) {
+		const { body } = await this.get<TrelloMember[]>(
+			`/boards/${request.boardId}/members?${qs.stringify({
+				key: this.apiKey,
+				token: this.accessToken,
+				fields: 'id,email,username,fullName'
+			})}`
+		);
+		return { users: body.map(u => ({ ...u, email: u.email, displayName: u.fullName })) };
 	}
 
 	private async getMemberId() {

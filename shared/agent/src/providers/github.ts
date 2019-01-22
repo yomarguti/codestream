@@ -12,7 +12,8 @@ import {
 	GitHubFetchBoardsRequestType,
 	GitHubFetchListsRequest,
 	GitHubFetchListsRequestType,
-	GitHubList
+	GitHubList,
+	GitHubUser
 } from "../shared/agent.protocol";
 import { CSGitHubProviderInfo } from "../shared/api.protocol";
 import { log, lspHandler, lspProvider } from "../system";
@@ -96,25 +97,35 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 			boards = Array.from(openRepos.values()).map(r => ({
 				id: r.id,
 				name: r.full_name,
+				apiIdentifier: r.full_name,
 				path: r.path
 			}));
 		} else {
+			let gitHubBoards: { [key: string]: string }[] = [];
 			try {
-				let apiResponse = await this.get<GitHubBoard[]>(
+				let apiResponse = await this.get<{ [key: string]: string }[]>(
 					`/user/repos?${qs.stringify({ access_token: this.accessToken })}`
 				);
-				boards = apiResponse.body;
+				gitHubBoards = apiResponse.body;
 
 				let nextPage: string | undefined;
 				while ((nextPage = this.nextPage(apiResponse.response))) {
-					apiResponse = await this.get<GitHubBoard[]>(nextPage);
-					boards = boards.concat(apiResponse.body);
+					apiResponse = await this.get<{ [key: string]: string }[]>(nextPage);
+					gitHubBoards = gitHubBoards.concat(apiResponse.body);
 				}
 			} catch (err) {
 				boards = [];
 				Logger.error(err);
 				debugger;
 			}
+			boards = gitHubBoards.map(board => {
+				return {
+					...board,
+					id: board.id,
+					name: board.full_name,
+					apiIdentifier: board.full_name
+				};
+			});
 		}
 
 		return {
@@ -131,7 +142,8 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 			})}`,
 			{
 				title: request.title,
-				body: request.description
+				body: request.description,
+				assignees: (request.assignees! || []).map(a => a.login)
 			}
 		);
 		return response.body;
@@ -161,5 +173,13 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 			}
 		}
 		return undefined;
+	}
+
+	@log()
+	async getAssignableUsers(request: { boardId: string }) {
+		const { body } = await this.get<GitHubUser[]>(
+			`/repos/${request.boardId}/collaborators?${qs.stringify({ access_token: this.accessToken })}`
+		);
+		return { users: body.map(u => ({ ...u, id: u.id, displayName: u.login })) };
 	}
 }

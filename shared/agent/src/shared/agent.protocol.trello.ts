@@ -3,9 +3,9 @@ import { RequestType } from "vscode-languageserver-protocol";
 
 export interface TrelloCreateCardRequest {
 	listId: string;
-
 	name: string;
 	description: string;
+	assignees?: [{ id: string }];
 }
 
 export interface TrelloCreateCardResponse {
@@ -72,3 +72,10 @@ export const TrelloFetchListsRequestType = new RequestType<
 	void,
 	void
 >("codeStream/trello/lists");
+
+export interface TrelloMember {
+	id: string;
+	username: string;
+	email: string;
+	fullName: string;
+}
