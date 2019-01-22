@@ -406,11 +406,11 @@ export class CodeStreamSession implements Disposable {
 
 	@signedIn
 	async getDMByMembers(memberIds: string[]): Promise<DirectStream | undefined> {
-		const sortedMembers = memberIds.sort();
+		const uniqueMembers = new Set(memberIds);
 
 		const response = await Container.agent.streams.fetch([StreamType.Direct]);
 		const stream = (response.streams as CSDirectStream[]).find(s =>
-			s.memberIds.sort().every((value, index) => value === sortedMembers[index])
+			s.memberIds.every(uniqueMembers.has)
 		);
 		if (stream === undefined) return stream;
 
