@@ -101,7 +101,7 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 			`/boards/${request.boardId}/members?${qs.stringify({
 				key: this.apiKey,
 				token: this.accessToken,
-				fields: 'id,email,username,fullName'
+				fields: "id,email,username,fullName"
 			})}`
 		);
 		return { users: body.map(u => ({ ...u, email: u.email, displayName: u.fullName })) };
