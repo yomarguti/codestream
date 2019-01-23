@@ -202,7 +202,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			this.crossPostIssueValues &&
 			this.crossPostIssueValues.isEnabled
 		) {
-			this.setState({ assignableUsers: this.getAssignableCSUsers() });
+			this.setState({ assignees: [], assignableUsers: this.getAssignableCSUsers() });
 		}
 		this.crossPostIssueValues = values;
 	}
