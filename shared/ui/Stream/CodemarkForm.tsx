@@ -173,7 +173,10 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (board.singleAssignee) {
 			this.setState(state => (state.singleAssignee ? null : { singleAssignee: true }));
 		}
-		const { users } = await this.props.fetchAssignableUsers(service, board.apiIdentifier || board.id);
+		const { users } = await this.props.fetchAssignableUsers(
+			service,
+			board.apiIdentifier || board.id
+		);
 		this.setState({
 			assignableUsers: users.map(u => ({
 				value: u,
@@ -192,6 +195,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				selectedNewBoard &&
 				this.crossPostIssueValues.board.id !== values.board!.id)
 		) {
+			this.setState({ assignees: [] });
 			this.loadAssignableUsers(values.provider, values.board!);
 		} else if (
 			!values.isEnabled &&
