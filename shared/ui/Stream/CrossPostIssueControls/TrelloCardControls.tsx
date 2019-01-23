@@ -113,7 +113,7 @@ export default class TrelloCardControls extends React.Component<Props, State> {
 					)}
 				</span>
 				{listItems.length > 0 && [
-					"in ",
+					" in ",
 					<span className="channel-label" onClick={this.switchList}>
 						{list ? list.name : ""}
 						<Icon name="chevron-down" />
