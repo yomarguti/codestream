@@ -1,7 +1,6 @@
 "use strict";
 const fs = require("fs");
 const path = require("path");
-// const BabelExternalHelpersPlugin = require("webpack-babel-external-helpers-2");
 const CleanPlugin = require("clean-webpack-plugin");
 const FileManagerPlugin = require("filemanager-webpack-plugin");
 const HtmlPlugin = require("html-webpack-plugin");
@@ -179,22 +178,8 @@ function getWebviewConfig(env) {
 
 	const plugins = [
 		new CleanPlugin(["dist/webview", "webview.html"]),
-		// new BabelExternalHelpersPlugin(),
 		new FileManagerPlugin({
-			onStart: onStart,
-			onEnd: [
-				{
-					copy: [
-						{
-							source: "dist/webview/webview.*",
-							destination: path.resolve(
-								__dirname,
-								"../vs-codestream/src/CodeStream.VisualStudio/UI/WebViews/Shared"
-							)
-						}
-					]
-				}
-			]
+			onStart: onStart
 		}),
 		new MiniCssExtractPlugin({
 			filename: "webview.css"
