@@ -24,6 +24,11 @@ interface GitLabProject {
 	path: string;
 }
 
+interface GitLabUser {
+	id: string;
+	name: string;
+}
+
 @lspProvider("gitlab")
 export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo> {
 	private _gitlabUserId: string | undefined;
@@ -96,8 +101,8 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 			boards = Array.from(openProjects.values()).map(p => ({
 				id: p.id,
 				name: p.path_with_namespace,
-				apiIdentifier: p.path_with_namespace,
-				path: p.path
+				path: p.path,
+				singleAssignee: true // gitlab only allows a single assignee per issue (at least it only shows one in the UI)
 			}));
 		} else {
 			let gitLabProjects: { [key: string]: string }[] = [];
@@ -121,8 +126,8 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 					...p,
 					id: p.id,
 					name: p.path_with_namespace,
-					apiIdentifier: p.path_with_namespace,
-					path: p.path
+					path: p.path,
+					singleAssignee: true // gitlab only allows a single assignee per issue (at least it only shows one in the UI)
 				};
 			});
 		}
@@ -135,14 +140,19 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 	@log()
 	@lspHandler(GitLabCreateCardRequestType)
 	async createCard(request: GitLabCreateCardRequest) {
+		const data: { [key: string]: any } = {
+			title: request.title,
+			description: request.description
+		};
+		if (request.assignee) {
+			// GitLab allows for multiple assignees in the API, but only one appears in the UI
+			data.assignee_ids = [request.assignee.id];
+		}
 		const response = await this.post<{}, GitLabCreateCardResponse>(
-			`/projects/${encodeURIComponent(request.repoName)}/issues?${qs.stringify({
-				title: request.title,
-				description: request.description
-			})}`,
+			`/projects/${encodeURIComponent(request.repoName)}/issues?${qs.stringify(data)}`,
 			{}
 		);
-		return response;
+		return { ...response.body, url: response.body.web_url };
 	}
 
 	@log()
@@ -167,4 +177,13 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 		}
 		return undefined;
 	}
+
+	@log()
+	async getAssignableUsers(request: { boardId: string }) {
+		const response = await this.get<GitLabUser[]>(
+			`/projects/${request.boardId}/users`
+		);
+		return { users: response.body.map(u => ({ ...u, displayName: u.name })) };
+	}
+
 }

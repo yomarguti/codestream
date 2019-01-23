@@ -5,10 +5,12 @@ export interface GitLabCreateCardRequest {
 	repoName: string;
 	title: string;
 	description: string;
+	assignee: { id: string };
 }
 
 export interface GitLabCreateCardResponse {
 	id: string;
+	web_url: string;
 }
 
 export const GitLabCreateCardRequestType = new RequestType<
