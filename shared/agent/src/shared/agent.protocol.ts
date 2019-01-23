@@ -317,3 +317,11 @@ export interface TelemetryRequest {
 export const TelemetryRequestType = new RequestType<TelemetryRequest, void, void, void>(
 	"codeStream/telemetry"
 );
+
+export interface OpenUrlRequest {
+	url: string;
+}
+
+export const OpenUrlRequestType = new RequestType<OpenUrlRequest, void, void, void>(
+	"codeStream/url/open"
+);
