@@ -5,10 +5,23 @@ export interface BitbucketCreateCardRequest {
 	repoName: string;
 	title: string;
 	description: string;
+	assignee?: { username: string };
 }
 
-export interface BitbucketCreateCardResponse {
+export interface BitbucketCard {
 	id: string;
+	links: {
+		self: {
+			href: string
+		},
+		html?: {
+			href: string
+		}
+	};
+	url: string;
+}
+
+export interface BitbucketCreateCardResponse extends BitbucketCard {
 }
 
 export const BitbucketCreateCardRequestType = new RequestType<

@@ -3,6 +3,7 @@ import { Container } from "../container";
 import { Logger } from "../logger";
 import {
 	BitbucketBoard,
+	BitbucketCard,
 	BitbucketCreateCardRequest,
 	BitbucketCreateCardRequestType,
 	BitbucketCreateCardResponse,
@@ -13,12 +14,31 @@ import {
 } from "../shared/agent.protocol";
 import { CSBitbucketProviderInfo } from "../shared/api.protocol";
 import { log, lspHandler, lspProvider } from "../system";
-import { ApiResponse, ThirdPartyProviderBase } from "./provider";
+import { ThirdPartyProviderBase } from "./provider";
 
 interface BitbucketRepo {
-	full_name: any;
 	uuid: string;
+	full_name: string;
 	path: string;
+	owner: {
+		username: string;
+		type: string;
+	};
+}
+
+interface BitbucketPermission {
+	permission: string;
+	repository: BitbucketRepo;
+}
+
+interface BitbucketUser {
+	display_name: string;
+	account_id: string;
+}
+
+interface BitbucketValues<T> {
+	values: T;
+	next: string;
 }
 
 @lspProvider("bitbucket")
@@ -56,25 +76,6 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 	async boards(request: BitbucketFetchBoardsRequest) {
 		const { git } = Container.instance();
 		const gitRepos = await git.getRepositories();
-		// let boards: BitbucketBoard[];
-
-		// try {
-		// 	let apiResponse = await this.get<BitbucketBoard[]>(
-		// 		`/user/repos?${qs.stringify({ access_token: this.token })}`
-		// 	);
-		// 	boards = apiResponse.body;
-		//
-		// 	let nextPage: string | undefined;
-		// 	while ((nextPage = this.nextPage(apiResponse.response))) {
-		// 		apiResponse = await this.get<BitbucketBoard[]>(nextPage);
-		// 		boards = boards.concat(apiResponse.body);
-		// 	}
-		// } catch (err) {
-		// 	boards = [];
-		// 	Logger.error(err);
-		// 	debugger;
-		// }
-
 		const openRepos = new Map<String, BitbucketRepo>();
 
 		for (const gitRepo of gitRepos) {
@@ -82,7 +83,6 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 			for (const remote of remotes) {
 				if (remote.domain === "bitbucket.org" && !openRepos.has(remote.path)) {
 					let bitbucketRepo = this._knownRepos.get(remote.path);
-
 					if (!bitbucketRepo) {
 						try {
 							const response = await this.get<BitbucketRepo>(`/repositories/${remote.path}`);
@@ -110,17 +110,19 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 				id: r.uuid,
 				name: r.full_name,
 				apiIdentifier: r.full_name,
-				path: r.path
+				path: r.path,
+				signelAssignee: true // bitbucket issues only allow one assignee
 			}));
 		} else {
-			let bitbucketRepos: { [key: string]: string }[] = [];
+			let bitbucketRepos: BitbucketRepo[] = [];
 			try {
-				let apiResponse = await this.get<{ [key: string]: any }>(`/user/permissions/repositories`);
-				bitbucketRepos = (apiResponse.body.values as any[]).map(p => p.repository);
-
+				let apiResponse = await this.get<BitbucketValues<BitbucketPermission[]>>(`/user/permissions/repositories`);
+				bitbucketRepos = apiResponse.body.values.map(p => p.repository);
 				while (apiResponse.body.next) {
-					apiResponse = await this.get<{ [key: string]: string }[]>(apiResponse.body.next);
-					bitbucketRepos = bitbucketRepos.concat(apiResponse.body);
+					apiResponse = await this.get<BitbucketValues<BitbucketPermission[]>>(apiResponse.body.next);
+					bitbucketRepos = bitbucketRepos.concat(
+						apiResponse.body.values.map(p => p.repository)
+					);
 				}
 			} catch (err) {
 				Logger.error(err);
@@ -131,30 +133,45 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 					...r,
 					id: r.uuid,
 					name: r.full_name,
-					apiIdentifier: r.full_name
+					apiIdentifier: r.full_name,
+					singleAssignee: true // bitbucket issues only allow one assignee
 				};
 			});
 		}
 
-		return {
-			boards
-		};
+		return { boards };
 	}
 
 	@log()
 	@lspHandler(BitbucketCreateCardRequestType)
 	async createCard(request: BitbucketCreateCardRequest) {
+		const data: { [key: string]: any } = {
+			title: request.title,
+			content: {
+				raw: request.description,
+				markup: "markdown"
+			}
+		};
+		if (request.assignee) {
+			data.assignee = { username: request.assignee.username };
+		}
 		const response = await this.post<{}, BitbucketCreateCardResponse>(
 			`/repositories/${request.repoName}/issues`,
-			{
-				title: request.title,
-				content: {
-					raw: request.description,
-					markup: "markdown"
-				}
-			}
+			data
 		);
-		return response;
+		let card = response.body;
+		let issueResponse;
+		try {
+			const strippedPath = card.links.self.href.split(this.baseUrl)[1];
+			issueResponse = await this.get<BitbucketCard>(strippedPath);
+		}
+		catch (err) {
+			Logger.error(err);
+			return card;
+		}
+		card = issueResponse.body;
+		card.url = card.links.html!.href;
+		return card;
 	}
 
 	@log()
@@ -165,5 +182,39 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 		const userResponse = await this.get<{ uuid: string; [key: string]: any }>(`/user`);
 
 		return userResponse.body.uuid;
+	}
+
+	@log()
+	async getAssignableUsers(request: { boardId: string }) {
+		try {
+			const repoResponse = await this.get<BitbucketRepo>(
+				`/repositories/${request.boardId}`
+			);
+			if (repoResponse.body.owner.type === "team") {
+				let members: BitbucketUser[] = [];
+				let apiResponse = await this.get<BitbucketValues<BitbucketUser[]>>(
+					`/users/${repoResponse.body.owner.username}/members`
+				);
+				members = apiResponse.body.values;
+
+				while (apiResponse.body.next) {
+					apiResponse = await this.get<BitbucketValues<BitbucketUser[]>>(apiResponse.body.next);
+					members = members.concat(apiResponse.body.values);
+				}
+
+				return { users: members.map(u => ({ ...u, id: u.account_id, displayName: u.display_name })) };
+			}
+			else {
+				const userResponse = await this.get<BitbucketUser>(
+					"/user"
+				);
+				const user = userResponse.body;
+				return { users: [{ ...user, id: user.account_id, displayName: user.display_name }] };
+			}
+		}
+		catch (err) {
+			Logger.error(err);
+			return { users: [] };
+		}
 	}
 }
