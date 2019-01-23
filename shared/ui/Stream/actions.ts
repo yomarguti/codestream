@@ -539,8 +539,7 @@ export const telemetry = (params: { eventName: string; properties: {} }) => asyn
 
 export const fetchIssueBoards = service => async (dispatch, getState, { api }: ThunkExtras) => {
 	try {
-		const response = await api.fetchIssueBoards(service);
-		return response;
+		return await api.fetchIssueBoards(service);
 		// dispatch(saveCodemarks(response.codemarks));
 	} catch (error) {
 		console.error("failed to fetch trello boards", error);
@@ -595,7 +594,12 @@ export const createServiceCard = (attributes, codemark) => async (_, __, { api }
 				);
 			}
 			case "bitbucket": {
-				return api.createBitbucketCard(codemark.title, description, attributes.boardName);
+				return api.createBitbucketCard(
+					codemark.title,
+					description,
+					attributes.boardName,
+					attributes.assignees[0]
+				);
 			}
 		}
 	} catch (error) {

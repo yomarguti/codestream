@@ -248,13 +248,19 @@ export default class WebviewApi {
 		});
 	}
 
-	createBitbucketCard(title: string, description: string, repoName: string) {
+	createBitbucketCard(
+		title: string,
+		description: string,
+		repoName: string,
+		assignee?: string
+	) {
 		return this.postMessage({
 			action: BitbucketCreateCardRequestType.method,
 			params: {
 				title,
 				description,
-				repoName
+				repoName,
+				assignee
 			}
 		});
 	}
