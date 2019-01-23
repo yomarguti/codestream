@@ -582,7 +582,12 @@ export const createServiceCard = (attributes, codemark) => async (_, __, { api }
 				return { url: response.html_url };
 			}
 			case "gitlab": {
-				return api.createGitlabCard(codemark.title, description, attributes.boardName);
+				return api.createGitlabCard(
+					codemark.title,
+					description,
+					attributes.boardName,
+					attributes.assignees[0]
+				);
 			}
 			case "asana": {
 				return await api.createAsanaCard(

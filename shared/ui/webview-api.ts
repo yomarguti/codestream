@@ -218,13 +218,14 @@ export default class WebviewApi {
 		});
 	}
 
-	createGitlabCard(title: string, description: string, repoName: string) {
+	createGitlabCard(title: string, description: string, repoName: string, assignee?: string) {
 		return this.postMessage({
 			action: GitLabCreateCardRequestType.method,
 			params: {
 				title,
 				description,
-				repoName
+				repoName,
+				assignee
 			}
 		});
 	}
