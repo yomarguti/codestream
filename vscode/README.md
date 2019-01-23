@@ -1,13 +1,16 @@
 # CodeStream BETA
 
-CodeStream captures all of the valuable discussions your development team has about code and saves them as "codemarks" that annotate your source files. In the aggregate, codemarks become documentation for your source tree and represent a knowledge base that your team builds up effortlessly over time. 
+CodeStream helps dev teams discuss, review, and understand code. Discussing code is now as simple as commenting on a Google Doc — select the code and type your question.
 
-CodeStream also makes it incredibly easy to discuss code. No more copy-and-pasting blocks of code over into your chat app, where the conversation will quickly get lost in the channel history. On CodeStream simply select a block of code and then type your comment or question.
+![CodeStream](https://uploads-ssl.webflow.com/5c1b064db9734016ca52ab39/5c1d1027ea7f432072c6b762_2018-12-21%2011.08.39.gif)
+
+CodeStream turns conversation into documentation by capturing all of the discussion about your code, and saving it with your code. Each discussion is represented as a "codemark" that is permanently connected to the lines of code to which it refers.
+
+![CodeStream](https://uploads-ssl.webflow.com/5c1b064db9734016ca52ab39/5c1d63a384735d6abc62db55_2018-12-21%2017.04.59.gif)
 
 ## Does your team use Slack? ###
-When your team discusses code on CodeStream, the resulting codemarks are shared in channels and direct messages. If your team uses Slack, sign into CodeStream using Slack and all of your workspace's channels and direct messages will be accessible from within CodeStream. Leverage your existing chat platform, while still being able to create codemarks and build a knowledge base!
+Sign up for CodeStream using Slack so that discussions about code can be shared in your existing Slack channels and direct messages. Connecting to your Slack workspace allows developers to participate in discussions about code when they're not in their editor, or if they don’t use an editor supported by CodeSteam.
 
-![CodeStream](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/CodeStream1.png)
 # Requirements
 
 - CodeStream requires a current version of [Visual Studio Code](https://code.visualstudio.com/).
@@ -18,7 +21,7 @@ When your team discusses code on CodeStream, the resulting codemarks are shared 
 
 ## Create a codemark and discuss some code
 
-Create a codemark by selecting a block of code in your editor and then typing a question or comment. The New Codemark form will automatically pop up (although you can turn this behavior off). Keep in mind that, unlike with other solutions, you can discuss any line of code in any source file at any time, even if it’s code that you just typed into your editor and haven’t yet saved or committed.
+Create a codemark by selecting a block of code in your editor and then typing a question or comment. Keep in mind that, unlike with other solutions, you can discuss any line of code in any source file at any time, even if it’s code that you just typed into your editor and haven’t yet saved or committed.
 
 ![New Codemark](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/NewCodemarkWithCode1.png)
 
