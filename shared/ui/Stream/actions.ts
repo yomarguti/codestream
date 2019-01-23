@@ -633,3 +633,7 @@ export const fetchAssignableUsers = (service: string, boardId: string) => async 
 ) => {
 	return api.fetchAssignableUsers(service, boardId);
 };
+
+export const openUrl = (url: string) => async (dispatch, getState, { api }) => {
+	return api.openUrl({ url });
+};

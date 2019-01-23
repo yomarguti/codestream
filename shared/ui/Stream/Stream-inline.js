@@ -280,9 +280,8 @@ export class SimpleStream extends Component {
 		return getPost(posts, this.props.postStreamId, id);
 	}
 
-	handleClickHelpLink = event => {
-		if (event) event.preventDefault();
-		EventEmitter.emit("interaction:clicked-link", "https://help.codestream.com");
+	handleClickHelpLink = () => {
+		this.props.openUrl("https://help.codestream.com");
 	};
 
 	renderIntro = nameElement => {
