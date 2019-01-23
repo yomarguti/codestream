@@ -12,6 +12,7 @@ import { ReposManager } from "./managers/reposManager";
 import { StreamsManager } from "./managers/streamsManager";
 import { TeamsManager } from "./managers/teamsManager";
 import { TelemetryManager } from "./managers/telemetryManager";
+import { UrlManager } from "./managers/urlManager";
 import { UsersManager } from "./managers/usersManager";
 import { ThirdPartyProviderRegistry } from "./providers/registry";
 import { CodeStreamSession } from "./session";
@@ -33,6 +34,7 @@ class ServiceContainer {
 		this._git = new GitService(session);
 		this._errorReporter = new ErrorReporter(session);
 		this._telemetry = new TelemetryManager(session);
+		this._urls = new UrlManager();
 
 		this._providerRegistry = new ThirdPartyProviderRegistry(session);
 	}
@@ -100,6 +102,11 @@ class ServiceContainer {
 	private readonly _telemetry: TelemetryManager;
 	get telemetry() {
 		return this._telemetry;
+	}
+
+	private readonly _urls: UrlManager;
+	get urls() {
+		return this._urls;
 	}
 
 	private readonly _users: UsersManager;
