@@ -97,7 +97,9 @@ export class SimpleChannelPanel extends Component {
 					muted: this.props.muteAll
 				})}
 			>
-				<div className="panel-header">Channels &amp; DMs</div>
+				{
+					//<div className="panel-header">Channels &amp; DMs</div>
+				}
 				<div className="filters">
 					<Tooltip title="Mute All" placement="left">
 						<label

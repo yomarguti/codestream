@@ -12,7 +12,7 @@ import InvitePanel from "./InvitePanel";
 import PublicChannelPanel from "./PublicChannelPanel";
 import CreateChannelPanel from "./CreateChannelPanel";
 import ScrollBox from "./ScrollBox";
-import KnowledgePanel from "./KnowledgePanel-inline";
+import KnowledgePanel from "./KnowledgePanel";
 import InlineCodemarks from "./InlineCodemarks";
 import CreateDMPanel from "./CreateDMPanel";
 import ChannelMenu from "./ChannelMenu";
@@ -313,6 +313,295 @@ export class SimpleStream extends Component {
 		);
 	};
 
+	channelIcon() {
+		return this.props.postStreamType === "direct" ? (
+			this.props.postStreamMemberIds.length > 2 ? (
+				<Icon name="organization" className="organization" />
+			) : (
+				<Icon name="person" />
+			)
+		) : this.props.isPrivate ? (
+			<Icon name="lock" />
+		) : (
+			<span>#</span>
+		);
+	}
+
+	renderMenu() {
+		const { providerInfo = {} } = this.props;
+		const { menuOpen, menuTarget } = this.state;
+		const inviteLabel = this.props.isSlackTeam ? "Invite People to CodeStream" : "Invite People";
+
+		const menuItems = [
+			{ label: this.props.teamName, action: "" },
+			{ label: inviteLabel, action: "invite" },
+			{ label: "Settings", action: "settings" },
+			{ label: "-" }
+		];
+		// if (providerInfo.slack)
+		// 	menuItems.push({ label: "Disconnect Slack", action: "disconnect-slack" });
+		// else menuItems.push({ label: "Connect to Slack", action: "connect-slack" });
+		if (providerInfo.trello)
+			menuItems.push({ label: "Disconnect Trello", action: "disconnect-trello" });
+		else menuItems.push({ label: "Connect to Trello", action: "connect-trello" });
+		if (providerInfo.github)
+			menuItems.push({ label: "Disconnect GitHub", action: "disconnect-github" });
+		else menuItems.push({ label: "Connect to GitHub", action: "connect-github" });
+		if (providerInfo.gitlab)
+			menuItems.push({ label: "Disconnect GitLab", action: "disconnect-gitlab" });
+		else menuItems.push({ label: "Connect to GitLab", action: "connect-gitlab" });
+		if (providerInfo.asana)
+			menuItems.push({ label: "Disconnect Asana", action: "disconnect-asana" });
+		else menuItems.push({ label: "Connect to Asana", action: "connect-asana" });
+		if (providerInfo.jira) menuItems.push({ label: "Disconnect Jira", action: "disconnect-jira" });
+		else menuItems.push({ label: "Connect to Jira", action: "connect-jira" });
+		if (providerInfo.bitbucket)
+			menuItems.push({ label: "Disconnect Bitbucket", action: "disconnect-bitbucket" });
+		else menuItems.push({ label: "Connect to Bitbucket", action: "connect-bitbucket" });
+		menuItems.push({ label: "-" });
+		menuItems.push({ label: "Sign Out", action: "signout" });
+
+		const menu = menuOpen ? (
+			<Menu items={menuItems} target={menuTarget} action={this.menuAction} align="right" />
+		) : null;
+		return menu;
+	}
+
+	renderNavIcons() {
+		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
+		let { activePanel } = this.props;
+		const { searchBarOpen, q } = this.state;
+		// if (searchBarOpen) activePanel = "knowledge";
+		if (searchBarOpen && q) activePanel = "knowledge";
+		const umisClass = createClassString("umis", {
+			mentions: umis.totalMentions > 0,
+			unread: umis.totalMentions == 0 && umis.totalUnread > 0
+		});
+		const totalUMICount = umis.totalMentions ? (
+			<div className="mentions-badge">{umis.totalMentions > 99 ? "99+" : umis.totalMentions}</div>
+		) : umis.totalUnread ? (
+			<div className="unread-badge" />
+		) : (
+			// <Icon name="chevron-left" className="show-channels-icon" />
+			""
+		);
+
+		const menu = this.renderMenu();
+
+		return (
+			<nav className="inline">
+				<div className="top-tab-group">
+					<div className="fill-tab" onClick={e => this.setActivePanel("inline")} />
+					<label
+						className={createClassString({
+							selected: activePanel === "inline"
+						})}
+						onClick={e => this.setActivePanel("inline")}
+					>
+						<Tooltip title="Pinned Annotations" placement="bottom">
+							<span>
+								<Icon name="pin" />
+							</span>
+						</Tooltip>
+					</label>
+					{
+						// <label
+						// 	className={createClassString({
+						// 		selected: activePanel === "knowledge" && this.state.knowledgeType === "question"
+						// 	})}
+						// 	onClick={e => this.openCodemarkMenu("question")}
+						// >
+						// 	<Tooltip title="Frequently Asked Questions" placement="bottom">
+						// 		<span>
+						// 			<Icon name="question" />
+						// 		</span>
+						// 	</Tooltip>
+						// </label>
+					}
+					<label
+						className={createClassString({
+							selected: activePanel === "knowledge" && this.state.knowledgeType === "issue"
+						})}
+						onClick={e => this.openCodemarkMenu("issue")}
+					>
+						<Tooltip title="Issues" placement="bottom">
+							<span>
+								<Icon name="issue" />
+							</span>
+						</Tooltip>
+					</label>
+					<label
+						className={createClassString({
+							selected: activePanel === "knowledge" && this.state.knowledgeType === "trap"
+						})}
+						onClick={e => this.openCodemarkMenu("trap")}
+					>
+						<Tooltip title="Traps" placement="bottom">
+							<span>
+								<Icon name="trap" />
+							</span>
+						</Tooltip>
+					</label>
+					<label
+						className={createClassString({
+							selected: activePanel === "knowledge" && this.state.knowledgeType === "bookmark"
+						})}
+						onClick={e => this.openCodemarkMenu("bookmark")}
+					>
+						<Tooltip title="Bookmarks" placement="bottom">
+							<span>
+								<Icon name="bookmark" />
+							</span>
+						</Tooltip>
+					</label>
+					<label
+						className={createClassString({
+							selected:
+								activePanel === "channels" || activePanel === "main" || activePanel === "thread"
+						})}
+						onClick={e => this.setActivePanel("channels")}
+					>
+						<Tooltip title="Channels &amp; DMs" placement="bottom">
+							<span>
+								{this.props.isSlackTeam ? (
+									<Icon className="slack" name="slack" />
+								) : (
+									<Icon name="comment" />
+								)}
+								{!this.props.configs.muteAll && <span className={umisClass}>{totalUMICount}</span>}
+							</span>
+						</Tooltip>
+					</label>
+					<label
+						className={createClassString({
+							selected: this.state.searchBarOpen
+						})}
+						onClick={this.handleClickSearch}
+					>
+						<Tooltip title="Search Codemarks" placement="bottomRight">
+							<span>
+								<Icon name="search" />
+							</span>
+						</Tooltip>
+					</label>
+					<label onClick={this.handleClickNavMenu}>
+						<Tooltip title="More..." placement="bottomRight">
+							<span>
+								<Icon onClick={this.toggleMenu} name="kebab-horizontal" />
+								{this.renderMenu()}
+							</span>
+						</Tooltip>
+					</label>
+				</div>
+			</nav>
+		);
+	}
+
+	renderNavText() {
+		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
+		let { activePanel } = this.props;
+		const { searchBarOpen, q } = this.state;
+		const { menuOpen, menuTarget } = this.state;
+		if (searchBarOpen && q) activePanel = "knowledge";
+		const umisClass = createClassString("umis", {
+			mentions: umis.totalMentions > 0,
+			unread: umis.totalMentions == 0 && umis.totalUnread > 0
+		});
+		const totalUMICount = umis.totalMentions ? (
+			<div className="mentions-badge">{umis.totalMentions > 99 ? "99+" : umis.totalMentions}</div>
+		) : umis.totalUnread ? (
+			<div className="unread-badge" />
+		) : (
+			// <Icon name="chevron-left" className="show-channels-icon" />
+			""
+		);
+
+		return (
+			<nav>
+				{this.state.searchBarOpen && (
+					<div className="search-bar">
+						<input
+							name="q"
+							className="native-key-bindings input-text control"
+							type="text"
+							ref={ref => (this._searchInput = ref)}
+							onChange={e => this.setState({ q: e.target.value })}
+							placeholder="Search Codemarks"
+						/>
+						<CancelButton onClick={this.handleClickSearch} />
+					</div>
+				)}
+				{!this.state.searchBarOpen && (
+					<div className="top-tab-group">
+						<label
+							className={createClassString({
+								checked: activePanel === "knowledge",
+								muted: !this.props.configs.showMarkers
+							})}
+							onClick={e => this.setActivePanel("knowledge")}
+						>
+							<span>
+								{!this.props.configs.showMarkers && <Icon name="mute" className="mute" />}
+								Codemarks
+							</span>
+						</label>
+						<label
+							className={createClassString({
+								checked: activePanel === "channels",
+								muted: this.props.configs.muteAll
+							})}
+							onClick={e => this.setActivePanel("channels")}
+						>
+							<span>
+								{this.props.configs.muteAll && <Icon name="mute" className="mute" />}
+								Channels
+								{!this.props.configs.muteAll && <span className={umisClass}>{totalUMICount}</span>}
+							</span>
+						</label>
+						<label
+							className={createClassString({ checked: activePanel === "main" })}
+							onClick={e => this.setActivePanel("main")}
+						>
+							<span className="channel-name">
+								{this.channelIcon()}
+								{this.props.postStreamName}
+							</span>
+						</label>
+						<div className="fill-tab">
+							<span className="align-right-button" onClick={this.handleClickSearch}>
+								<Tooltip title="Search Codemarks" placement="bottomRight">
+									<span>
+										<Icon name="search" className="search-icon button" />
+									</span>
+								</Tooltip>
+							</span>
+							<span
+								className="align-right-button"
+								onClick={e => {
+									this.setMultiCompose(true);
+								}}
+							>
+								<Tooltip title="Create Codemark" placement="bottomRight">
+									<span>
+										<Icon name="plus" className="button" />
+									</span>
+								</Tooltip>
+							</span>
+							<span className="align-right-button" onClick={this.handleClickNavMenu}>
+								<Tooltip title="More..." placement="bottomRight">
+									<span>
+										<Icon onClick={this.toggleMenu} name="kebab-horizontal" className="button" />
+										{this.renderMenu()}
+									</span>
+								</Tooltip>
+							</span>
+						</div>
+					</div>
+				)}
+			</nav>
+		);
+	}
+
 	// we render both a main stream (postslist) plus also a postslist related
 	// to the currently selected thread (if it exists). the reason for this is
 	// to be able to animate between the two streams, since they will both be
@@ -321,8 +610,7 @@ export class SimpleStream extends Component {
 		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
 		let { activePanel } = this.props;
 		const { searchBarOpen, q } = this.state;
-		const { menuOpen, menuTarget } = this.state;
-		if (searchBarOpen) activePanel = "knowledge";
+		if (searchBarOpen && q) activePanel = "knowledge";
 
 		let threadId = this.props.threadId;
 		let threadPost = this.findPostById(threadId);
@@ -363,10 +651,6 @@ export class SimpleStream extends Component {
 			// offscreen: activePanel === "main",
 			active: this.state.unreadsBelow && activePanel === "main"
 		});
-		const umisClass = createClassString("umis", {
-			mentions: umis.totalMentions > 0,
-			unread: umis.totalMentions == 0 && umis.totalUnread > 0
-		});
 
 		const channelIcon =
 			this.props.postStreamType === "direct" ? (
@@ -381,15 +665,6 @@ export class SimpleStream extends Component {
 				<span>#</span>
 			);
 		const menuActive = this.props.postStreamId && this.state.openMenu === this.props.postStreamId;
-
-		const totalUMICount = umis.totalMentions ? (
-			<div className="mentions-badge">{umis.totalMentions > 99 ? "99+" : umis.totalMentions}</div>
-		) : umis.totalUnread ? (
-			<div className="unread-badge" />
-		) : (
-			// <Icon name="chevron-left" className="show-channels-icon" />
-			""
-		);
 
 		// 	<span className="open-menu">
 		// 	<Icon name="triangle-down" />
@@ -406,43 +681,9 @@ export class SimpleStream extends Component {
 		);
 
 		// these panels do not have global nav
-		const renderNav =
-			true || !["create-channel", "create-dm", "public-channels", "invite"].includes(activePanel);
-
-		const inviteLabel = this.props.isSlackTeam ? "Invite People to CodeStream" : "Invite People";
-
-		const menuItems = [
-			{ label: this.props.teamName, action: "" },
-			{ label: inviteLabel, action: "invite" },
-			{ label: "Settings", action: "settings" },
-			{ label: "-" }
-		];
-		if (providerInfo.slack)
-			menuItems.push({ label: "Disconnect Slack", action: "disconnect-slack" });
-		else menuItems.push({ label: "Connect to Slack", action: "connect-slack" });
-		if (providerInfo.trello)
-			menuItems.push({ label: "Disconnect Trello", action: "disconnect-trello" });
-		else menuItems.push({ label: "Connect to Trello", action: "connect-trello" });
-		if (providerInfo.github)
-			menuItems.push({ label: "Disconnect GitHub", action: "disconnect-github" });
-		else menuItems.push({ label: "Connect to GitHub", action: "connect-github" });
-		if (providerInfo.gitlab)
-			menuItems.push({ label: "Disconnect GitLab", action: "disconnect-gitlab" });
-		else menuItems.push({ label: "Connect to GitLab", action: "connect-gitlab" });
-		if (providerInfo.asana)
-			menuItems.push({ label: "Disconnect Asana", action: "disconnect-asana" });
-		else menuItems.push({ label: "Connect to Asana", action: "connect-asana" });
-		if (providerInfo.jira) menuItems.push({ label: "Disconnect Jira", action: "disconnect-jira" });
-		else menuItems.push({ label: "Connect to Jira", action: "connect-jira" });
-		if (providerInfo.bitbucket)
-			menuItems.push({ label: "Disconnect Bitbucket", action: "disconnect-bitbucket" });
-		else menuItems.push({ label: "Connect to Bitbucket", action: "connect-bitbucket" });
-		menuItems.push({ label: "-" });
-		menuItems.push({ label: "Sign Out", action: "signout" });
-
-		const menu = menuOpen ? (
-			<Menu items={menuItems} target={menuTarget} action={this.menuAction} align="right" />
-		) : null;
+		const renderNav = !["create-channel", "create-dm", "public-channels", "invite"].includes(
+			activePanel
+		);
 
 		return (
 			<div className={streamClass}>
@@ -450,115 +691,7 @@ export class SimpleStream extends Component {
 				<div id="confirm-root" />
 				<div id="focus-trap-x" className={createClassString({ active: !this.props.hasFocus })} />
 				{(threadId || this.state.floatCompose) && <div id="panel-blanket" />}
-				{renderNav && (
-					<nav className="inline">
-						<div className="top-tab-group">
-							<div className="fill-tab" onClick={e => this.setActivePanel("inline")} />
-							<label
-								className={createClassString({
-									selected: activePanel === "inline"
-								})}
-								onClick={e => this.setActivePanel("inline")}
-							>
-								<Tooltip title="Pinned Annotations" placement="bottom">
-									<span>
-										<Icon name="pin" />
-									</span>
-								</Tooltip>
-							</label>
-							<label
-								className={createClassString({
-									selected: activePanel === "knowledge" && this.state.knowledgeType === "question"
-								})}
-								onClick={e => this.openCodemarkMenu("question")}
-							>
-								<Tooltip title="Frequently Asked Questions" placement="bottom">
-									<span>
-										<Icon name="question" />
-									</span>
-								</Tooltip>
-							</label>
-							<label
-								className={createClassString({
-									selected: activePanel === "knowledge" && this.state.knowledgeType === "issue"
-								})}
-								onClick={e => this.openCodemarkMenu("issue")}
-							>
-								<Tooltip title="Issues" placement="bottom">
-									<span>
-										<Icon name="issue" />
-									</span>
-								</Tooltip>
-							</label>
-							{
-								// <label
-								// 	className={createClassString({
-								// 		selected: activePanel === "knowledge" && this.state.knowledgeType === "trap"
-								// 	})}
-								// 	onClick={e => this.openCodemarkMenu("trap")}
-								// >
-								// 	<Tooltip title="Traps" placement="bottom">
-								// 		<span>
-								// 			<Icon name="trap" />
-								// 		</span>
-								// 	</Tooltip>
-								// </label>
-							}
-							<label
-								className={createClassString({
-									selected: activePanel === "knowledge" && this.state.knowledgeType === "bookmark"
-								})}
-								onClick={e => this.openCodemarkMenu("bookmark")}
-							>
-								<Tooltip title="Bookmarks" placement="bottom">
-									<span>
-										<Icon name="bookmark" />
-									</span>
-								</Tooltip>
-							</label>
-							<label
-								className={createClassString({
-									selected:
-										activePanel === "channels" || activePanel === "main" || activePanel === "thread"
-								})}
-								onClick={e => this.setActivePanel("channels")}
-							>
-								<Tooltip title="Channels &amp; DMs" placement="bottom">
-									<span>
-										{this.props.isSlackTeam || true ? (
-											<Icon className="slack" name="slack" />
-										) : (
-											<Icon name="comment" />
-										)}
-										{!this.props.configs.muteAll && (
-											<span className={umisClass}>{totalUMICount}</span>
-										)}
-									</span>
-								</Tooltip>
-							</label>
-							<label
-								className={createClassString({
-									selected: this.state.searchBarOpen
-								})}
-								onClick={this.handleClickSearch}
-							>
-								<Tooltip title="Search Codemarks" placement="bottomRight">
-									<span>
-										<Icon name="search" />
-									</span>
-								</Tooltip>
-							</label>
-							<label onClick={this.handleClickNavMenu}>
-								<Tooltip title="More..." placement="bottomRight">
-									<span>
-										<Icon onClick={this.toggleMenu} name="kebab-horizontal" />
-										{menu}
-									</span>
-								</Tooltip>
-							</label>
-						</div>
-					</nav>
-				)}
+				{renderNav && this.renderNavText()}
 				{this.state.floatCompose && this.renderComposeBox(placeholderText, channelName)}
 				{activePanel === "inline" && (
 					<InlineCodemarks
@@ -639,11 +772,13 @@ export class SimpleStream extends Component {
 					)}
 					{activePanel === "main" && (
 						<div className={mainPanelClass}>
-							<div className="panel-header channel-name">
-								<CancelButton onClick={this.props.closePanel} />
-								<span className="channel-icon">{channelIcon}</span>
-								{this.props.postStreamName}
-							</div>
+							{
+								// <div className="panel-header channel-name">
+								// 	<CancelButton onClick={this.props.closePanel} />
+								// 	<span className="channel-icon">{channelIcon}</span>
+								// 	{this.props.postStreamName}
+								// </div>
+							}
 							<div className="filters">
 								<span className="align-right-button" onClick={this.handleClickStreamSettings}>
 									<Tooltip title="Channel Settings" placement="left">

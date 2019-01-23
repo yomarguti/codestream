@@ -297,6 +297,101 @@ export class SimpleStream extends Component {
 		);
 	};
 
+	channelIcon() {
+		return this.props.postStreamType === "direct" ? (
+			this.props.postStreamMemberIds.length > 2 ? (
+				<Icon name="organization" className="organization" />
+			) : (
+				<Icon name="person" />
+			)
+		) : this.props.isPrivate ? (
+			<Icon name="lock" />
+		) : (
+			<span>#</span>
+		);
+	}
+	renderNav() {
+		let { activePanel } = this.props;
+		const { searchBarOpen, q } = this.state;
+		if (searchBarOpen && q) activePanel = "knowledge";
+		return (
+			<nav>
+				{this.state.searchBarOpen && (
+					<div className="search-bar">
+						<input
+							name="q"
+							className="native-key-bindings input-text control"
+							type="text"
+							ref={ref => (this._searchInput = ref)}
+							onChange={e => this.setState({ q: e.target.value })}
+							placeholder="Search Codemarks"
+						/>
+						<CancelButton onClick={this.handleClickSearch} />
+					</div>
+				)}
+				{!this.state.searchBarOpen && (
+					<div className="top-tab-group">
+						<label
+							className={createClassString({
+								checked: activePanel === "knowledge",
+								muted: !this.props.configs.showMarkers
+							})}
+							onClick={e => this.setActivePanel("knowledge")}
+						>
+							<span>
+								{!this.props.configs.showMarkers && <Icon name="mute" className="mute" />}
+								Codemarks
+							</span>
+						</label>
+						<label
+							className={createClassString({
+								checked: activePanel === "channels",
+								muted: this.props.configs.muteAll
+							})}
+							onClick={e => this.setActivePanel("channels")}
+						>
+							<span>
+								{this.props.configs.muteAll && <Icon name="mute" className="mute" />}
+								Channels
+								{!this.props.configs.muteAll && <span className={umisClass}>{totalUMICount}</span>}
+							</span>
+						</label>
+						<label
+							className={createClassString({ checked: activePanel === "main" })}
+							onClick={e => this.setActivePanel("main")}
+						>
+							<span className="channel-name">
+								{this.channelIcon()}
+								{this.props.postStreamName}
+							</span>
+						</label>
+						<div className="fill-tab">
+							<span className="align-right-button" onClick={this.handleClickSearch}>
+								<Tooltip title="Search Codemarks" placement="bottomRight">
+									<span>
+										<Icon name="search" className="search-icon button" />
+									</span>
+								</Tooltip>
+							</span>
+							<span
+								className="align-right-button"
+								onClick={e => {
+									this.setMultiCompose(true);
+								}}
+							>
+								<Tooltip title="Create Codemark" placement="bottomRight">
+									<span>
+										<Icon name="plus" className="button" />
+									</span>
+								</Tooltip>
+							</span>
+						</div>
+					</div>
+				)}
+			</nav>
+		);
+	}
+
 	// we render both a main stream (postslist) plus also a postslist related
 	// to the currently selected thread (if it exists). the reason for this is
 	// to be able to animate between the two streams, since they will both be
@@ -348,18 +443,6 @@ export class SimpleStream extends Component {
 			unread: umis.totalMentions == 0 && umis.totalUnread > 0
 		});
 
-		const channelIcon =
-			this.props.postStreamType === "direct" ? (
-				this.props.postStreamMemberIds.length > 2 ? (
-					<Icon name="organization" className="organization" />
-				) : (
-					<Icon name="person" />
-				)
-			) : this.props.isPrivate ? (
-				<Icon name="lock" />
-			) : (
-				<span>#</span>
-			);
 		const menuActive = this.props.postStreamId && this.state.openMenu === this.props.postStreamId;
 
 		// const totalUMICount = umis.totalMentions || umis.totalUnread || "";
@@ -398,84 +481,7 @@ export class SimpleStream extends Component {
 				<div id="confirm-root" />
 				<div id="focus-trap" className={createClassString({ active: !this.props.hasFocus })} />
 				{threadId && <div id="thread-blanket" />}
-				{renderNav && (
-					<nav>
-						{this.state.searchBarOpen && (
-							<div className="search-bar">
-								<input
-									name="q"
-									className="native-key-bindings input-text control"
-									type="text"
-									ref={ref => (this._searchInput = ref)}
-									onChange={e => this.setState({ q: e.target.value })}
-									placeholder="Search Codemarks"
-								/>
-								<CancelButton onClick={this.handleClickSearch} />
-							</div>
-						)}
-						{!this.state.searchBarOpen && (
-							<div className="top-tab-group">
-								<label
-									className={createClassString({
-										checked: activePanel === "knowledge",
-										muted: !this.props.configs.showMarkers
-									})}
-									onClick={e => this.setActivePanel("knowledge")}
-								>
-									<span>
-										{!this.props.configs.showMarkers && <Icon name="mute" className="mute" />}
-										Codemarks
-									</span>
-								</label>
-								<label
-									className={createClassString({
-										checked: activePanel === "channels",
-										muted: this.props.configs.muteAll
-									})}
-									onClick={e => this.setActivePanel("channels")}
-								>
-									<span>
-										{this.props.configs.muteAll && <Icon name="mute" className="mute" />}
-										Channels
-										{!this.props.configs.muteAll && (
-											<span className={umisClass}>{totalUMICount}</span>
-										)}
-									</span>
-								</label>
-								<label
-									className={createClassString({ checked: activePanel === "main" })}
-									onClick={e => this.setActivePanel("main")}
-								>
-									<span className="channel-name">
-										{channelIcon}
-										{this.props.postStreamName}
-									</span>
-								</label>
-								<div className="fill-tab">
-									<span className="align-right-button" onClick={this.handleClickSearch}>
-										<Tooltip title="Search Codemarks" placement="bottomRight">
-											<span>
-												<Icon name="search" className="search-icon button" />
-											</span>
-										</Tooltip>
-									</span>
-									<span
-										className="align-right-button"
-										onClick={e => {
-											this.setMultiCompose(true);
-										}}
-									>
-										<Tooltip title="Create Codemark" placement="bottomRight">
-											<span>
-												<Icon name="plus" className="button" />
-											</span>
-										</Tooltip>
-									</span>
-								</div>
-							</div>
-						)}
-					</nav>
-				)}
+				{renderNav && this.renderNav()}
 				<div className="content">
 					{activePanel === "knowledge" && (
 						<KnowledgePanel
@@ -622,7 +628,7 @@ export class SimpleStream extends Component {
 												<div className="intro" ref={ref => (this._intro = ref)}>
 													{this.renderIntro(
 														<span>
-															{channelIcon}
+															{this.channelIcon()}
 															{this.props.postStreamName}
 														</span>
 													)}
@@ -642,7 +648,7 @@ export class SimpleStream extends Component {
 									<label>
 										{commentTypeLabel} in{" "}
 										<span className="clickable" onClick={() => this.handleDismissThread()}>
-											{channelIcon}
+											{this.channelIcon()}
 											{this.props.postStreamName}
 										</span>
 									</label>
