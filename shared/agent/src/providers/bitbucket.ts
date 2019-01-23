@@ -1,8 +1,8 @@
 "use strict";
-import { Response } from "node-fetch";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
+	BitbucketBoard,
 	BitbucketCreateCardRequest,
 	BitbucketCreateCardRequestType,
 	BitbucketCreateCardResponse,
@@ -13,11 +13,11 @@ import {
 } from "../shared/agent.protocol";
 import { CSBitbucketProviderInfo } from "../shared/api.protocol";
 import { log, lspHandler, lspProvider } from "../system";
-import { ThirdPartyProviderBase } from "./provider";
+import { ApiResponse, ThirdPartyProviderBase } from "./provider";
 
 interface BitbucketRepo {
 	full_name: any;
-	id: string;
+	uuid: string;
 	path: string;
 }
 
@@ -91,7 +91,6 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 								path: gitRepo.path
 							};
 							this._knownRepos.set(remote.path, bitbucketRepo);
-							// boards.push(response.body);
 						} catch (err) {
 							Logger.error(err);
 							debugger;
@@ -105,11 +104,37 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 			}
 		}
 
-		const boards = Array.from(openRepos.values()).map(r => ({
-			id: r.id,
-			name: r.full_name,
-			path: r.path
-		}));
+		let boards: BitbucketBoard[];
+		if (openRepos.size > 0) {
+			boards = Array.from(openRepos.values()).map(r => ({
+				id: r.uuid,
+				name: r.full_name,
+				apiIdentifier: r.full_name,
+				path: r.path
+			}));
+		} else {
+			let bitbucketRepos: { [key: string]: string }[] = [];
+			try {
+				let apiResponse = await this.get<{ [key: string]: any }>(`/user/permissions/repositories`);
+				bitbucketRepos = (apiResponse.body.values as any[]).map(p => p.repository);
+
+				while (apiResponse.body.next) {
+					apiResponse = await this.get<{ [key: string]: string }[]>(apiResponse.body.next);
+					bitbucketRepos = bitbucketRepos.concat(apiResponse.body);
+				}
+			} catch (err) {
+				Logger.error(err);
+				debugger;
+			}
+			boards = bitbucketRepos.map(r => {
+				return {
+					...r,
+					id: r.uuid,
+					name: r.full_name,
+					apiIdentifier: r.full_name
+				};
+			});
+		}
 
 		return {
 			boards
@@ -140,19 +165,5 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 		const userResponse = await this.get<{ uuid: string; [key: string]: any }>(`/user`);
 
 		return userResponse.body.uuid;
-	}
-
-	private nextPage(response: Response): string | undefined {
-		const linkHeader = response.headers.get("Link") || "";
-		const links = linkHeader.split(",");
-		for (const link of links) {
-			const [rawUrl, rawRel] = link.split(";");
-			const url = rawUrl.trim();
-			const rel = rawRel.trim();
-			if (rel === `rel="next"`) {
-				return url.substring(1, url.length - 1).replace(this.baseUrl, "");
-			}
-		}
-		return undefined;
 	}
 }

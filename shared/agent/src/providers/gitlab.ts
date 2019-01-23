@@ -18,7 +18,7 @@ import { CSGitLabProviderInfo } from "../shared/api.protocol";
 import { log, lspHandler, lspProvider } from "../system";
 import { ThirdPartyProviderBase } from "./provider";
 
-interface GitLabRepo {
+interface GitLabProject {
 	path_with_namespace: any;
 	id: string;
 	path: string;
@@ -28,7 +28,7 @@ interface GitLabRepo {
 export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo> {
 	private _gitlabUserId: string | undefined;
 
-	private _knownRepos = new Map<String, GitLabRepo>();
+	private _knownProjects = new Map<String, GitLabProject>();
 
 	get baseUrl() {
 		return "https://gitlab.com/api/v4/";
@@ -50,7 +50,7 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 
 	async onConnected() {
 		this._gitlabUserId = await this.getMemberId();
-		this._knownRepos = new Map<String, GitLabRepo>();
+		this._knownProjects = new Map<String, GitLabProject>();
 	}
 
 	@log()
@@ -58,43 +58,25 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 	async boards(request: GitLabFetchBoardsRequest) {
 		const { git } = Container.instance();
 		const gitRepos = await git.getRepositories();
-		// let boards: GitLabBoard[];
 
-		// try {
-		// 	let apiResponse = await this.get<GitLabBoard[]>(
-		// 		`/user/repos?${qs.stringify({ access_token: this.token })}`
-		// 	);
-		// 	boards = apiResponse.body;
-		//
-		// 	let nextPage: string | undefined;
-		// 	while ((nextPage = this.nextPage(apiResponse.response))) {
-		// 		apiResponse = await this.get<GitLabBoard[]>(nextPage);
-		// 		boards = boards.concat(apiResponse.body);
-		// 	}
-		// } catch (err) {
-		// 	boards = [];
-		// 	Logger.error(err);
-		// 	debugger;
-		// }
-
-		const openRepos = new Map<String, GitLabRepo>();
+		const openProjects = new Map<String, GitLabProject>();
 
 		for (const gitRepo of gitRepos) {
 			const remotes = await git.getRepoRemotes(gitRepo.path);
 			for (const remote of remotes) {
-				if (remote.domain === "gitlab.com" && !openRepos.has(remote.path)) {
-					let gitlabRepo = this._knownRepos.get(remote.path);
+				if (remote.domain === "gitlab.com" && !openProjects.has(remote.path)) {
+					let gitlabProject = this._knownProjects.get(remote.path);
 
-					if (!gitlabRepo) {
+					if (!gitlabProject) {
 						try {
-							const response = await this.get<GitLabRepo>(
+							const response = await this.get<GitLabProject>(
 								`/projects/${encodeURIComponent(remote.path)}`
 							);
-							gitlabRepo = {
+							gitlabProject = {
 								...response.body,
 								path: gitRepo.path
 							};
-							this._knownRepos.set(remote.path, gitlabRepo);
+							this._knownProjects.set(remote.path, gitlabProject);
 							// boards.push(response.body);
 						} catch (err) {
 							Logger.error(err);
@@ -102,18 +84,48 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 						}
 					}
 
-					if (gitlabRepo) {
-						openRepos.set(remote.path, gitlabRepo);
+					if (gitlabProject) {
+						openProjects.set(remote.path, gitlabProject);
 					}
 				}
 			}
 		}
 
-		const boards = Array.from(openRepos.values()).map(r => ({
-			id: r.id,
-			name: r.path_with_namespace,
-			path: r.path
-		}));
+		let boards: GitLabBoard[];
+		if (openProjects.size > 0) {
+			boards = Array.from(openProjects.values()).map(p => ({
+				id: p.id,
+				name: p.path_with_namespace,
+				apiIdentifier: p.path_with_namespace,
+				path: p.path
+			}));
+		} else {
+			let gitLabProjects: { [key: string]: string }[] = [];
+			try {
+				let apiResponse = await this.get<{ [key: string]: string }[]>(
+					`/projects?min_access_level=20`
+				);
+				gitLabProjects = apiResponse.body;
+
+				let nextPage: string | undefined;
+				while ((nextPage = this.nextPage(apiResponse.response))) {
+					apiResponse = await this.get<{ [key: string]: string }[]>(nextPage);
+					gitLabProjects = gitLabProjects.concat(apiResponse.body);
+				}
+			} catch (err) {
+				Logger.error(err);
+				debugger;
+			}
+			boards = gitLabProjects.map(p => {
+				return {
+					...p,
+					id: p.id,
+					name: p.path_with_namespace,
+					apiIdentifier: p.path_with_namespace,
+					path: p.path
+				};
+			});
+		}
 
 		return {
 			boards

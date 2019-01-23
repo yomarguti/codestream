@@ -101,24 +101,23 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 				path: r.path
 			}));
 		} else {
-			let gitHubBoards: { [key: string]: string }[] = [];
+			let gitHubRepos: { [key: string]: string }[] = [];
 			try {
 				let apiResponse = await this.get<{ [key: string]: string }[]>(
 					`/user/repos?${qs.stringify({ access_token: this.accessToken })}`
 				);
-				gitHubBoards = apiResponse.body;
+				gitHubRepos = apiResponse.body;
 
 				let nextPage: string | undefined;
 				while ((nextPage = this.nextPage(apiResponse.response))) {
 					apiResponse = await this.get<{ [key: string]: string }[]>(nextPage);
-					gitHubBoards = gitHubBoards.concat(apiResponse.body);
+					gitHubRepos = gitHubRepos.concat(apiResponse.body);
 				}
 			} catch (err) {
-				boards = [];
 				Logger.error(err);
 				debugger;
 			}
-			boards = gitHubBoards.map(board => {
+			boards = gitHubRepos.map(board => {
 				return {
 					...board,
 					id: board.id,
