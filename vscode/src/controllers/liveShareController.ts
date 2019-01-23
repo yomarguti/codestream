@@ -1,6 +1,6 @@
 "use strict";
-import { Disposable, Extension, extensions, Uri } from "vscode";
-import * as vslsApi from "vsls/vscode";
+import { Disposable, Uri } from "vscode";
+import { getApi, LiveShare, SessionChangeEvent } from "vsls";
 import { ChannelServiceType } from "../agent/agentConnection";
 import { ServiceChannelStreamCreationOptions } from "../api/models/stream";
 import {
@@ -33,54 +33,45 @@ interface StartCommandArgs {
 export const vslsUrlRegex = /https:\/\/insiders\.liveshare\.vsengsaas\.visualstudio\.com\/join\?(.+?)\b/;
 
 export class LiveShareController implements Disposable {
+	private _apiPromise: Promise<LiveShare | null> | undefined;
 	private _disposable: Disposable | undefined;
 	private _vslsId: string | undefined;
-	private _vslsPromise: Promise<vslsApi.LiveShare | null> | undefined;
-	private readonly _vslsExtension: Extension<any> | undefined;
 
 	constructor() {
-		this._vslsExtension = extensions.getExtension(vslsApi.extensionId);
-		void this.ensureLiveShare();
+		void this.initialize();
 	}
 
 	dispose() {
 		this._disposable && this._disposable.dispose();
 	}
 
-	async ensureLiveShare(): Promise<void> {
+	async initialize(): Promise<void> {
 		try {
-			this._installed = this._vslsExtension != null;
-			this._vslsPromise = this.getLiveShareApi();
+			// this._installed = this._vslsExtension != null;
+			this._apiPromise = getApi();
 
-			const vsls = await this._vslsPromise;
-			this._installed = vsls != null;
+			const api = await this._apiPromise;
+			this._installed = api != null;
+			if (api == null) return;
 
-			if (vsls != null) {
-				setContext(ContextKeys.LiveShareInstalled, true);
+			setContext(ContextKeys.LiveShareInstalled, true);
+			this.setVslsId(api.session.id);
 
-				this.setVslsId(vsls.session.id);
-
-				this._disposable = Disposable.from(
-					Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
-					vsls.onDidChangeSession(this.onLiveShareSessionChanged, this)
-				);
-			}
+			this._disposable = Disposable.from(
+				Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
+				api.onDidChangeSession(this.onLiveShareSessionChanged, this)
+			);
 		} catch (ex) {
 			debugger;
 			Logger.error(ex);
 		}
 	}
 
-	private async getLiveShareApi() {
-		if (this._vslsExtension == null) return null;
+	async ensureApi() {
+		const api = await this._apiPromise;
+		if (api == null) throw new Error("Live Share is not installed");
 
-		// Avoids using the vslsApi call because of module bundling issues
-		const extensionApi = (this._vslsExtension.isActive
-			? this._vslsExtension.exports
-			: await this._vslsExtension.activate()) as any | undefined;
-		if (extensionApi == null) return null;
-
-		return extensionApi.getApi("0.3.666");
+		return api;
 	}
 
 	private _installed: boolean = false;
@@ -96,7 +87,7 @@ export class LiveShareController implements Disposable {
 		setContext(ContextKeys.LiveShareSessionActive, id != null);
 	}
 
-	private async onLiveShareSessionChanged(e: vslsApi.SessionChangeEvent) {
+	private async onLiveShareSessionChanged(e: SessionChangeEvent) {
 		const vslsId = e.session.id;
 		this.setVslsId(vslsId);
 		// If we aren't signed in or in an active (remote) live share session kick out
@@ -126,8 +117,7 @@ export class LiveShareController implements Disposable {
 	}
 
 	async invite(args: InviteCommandArgs) {
-		const vsls = await this._vslsPromise;
-		if (vsls == null) throw new Error("Live Share is not installed");
+		const vsls = await this.ensureApi();
 
 		const users = [];
 		if (typeof args.userIds === "string") {
@@ -190,8 +180,7 @@ export class LiveShareController implements Disposable {
 	}
 
 	async join(args: JoinCommandArgs) {
-		const vsls = await this._vslsPromise;
-		if (vsls == null) throw new Error("Live Share is not installed");
+		const vsls = await this.ensureApi();
 
 		const match = vslsUrlRegex.exec(args.url);
 		if (match != null) {
@@ -224,8 +213,7 @@ export class LiveShareController implements Disposable {
 	}
 
 	async start(args: StartCommandArgs) {
-		const vsls = await this._vslsPromise;
-		if (vsls == null) throw new Error("Live Share is not installed");
+		const vsls = await this.ensureApi();
 
 		const streamThread = args.streamThread || Container.webview.activeStreamThread;
 		if (streamThread === undefined) return;

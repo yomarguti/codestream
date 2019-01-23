@@ -22,6 +22,38 @@ module.exports = function(env, argv) {
 		env.copyShared = true;
 	}
 
+	// TODO: Total and complete HACK until the following vsls issues are resolved
+	// https://github.com/MicrosoftDocs/live-share/issues/1334 & https://github.com/MicrosoftDocs/live-share/issues/1335
+
+	const vslsPatchRegex = /const liveShareApiVersion = require\(path\.join\(__dirname, 'package\.json'\)\)\.version;/;
+
+	let vslsPath = path.resolve(__dirname, "node_modules/vsls/package.json");
+	if (fs.existsSync(vslsPath)) {
+		const vsls = require(vslsPath);
+		if (vsls.main === undefined) {
+			vsls.main = "vscode.js";
+			fs.writeFileSync(vslsPath, `${JSON.stringify(vsls, undefined, 4)}\n`, "utf8");
+		}
+
+		vslsPath = path.resolve(__dirname, "node_modules/vsls/vscode.js");
+		if (fs.existsSync(vslsPath)) {
+			console.log(vslsPath);
+
+			let code = fs.readFileSync(vslsPath, "utf8");
+			if (vslsPatchRegex.test(code)) {
+				console.log("found");
+				code = code.replace(
+					vslsPatchRegex,
+					`const liveShareApiVersion = '${
+						vsls.version
+					}'; // require(path.join(__dirname, 'package.json')).version;`
+				);
+				console.log(code);
+				fs.writeFileSync(vslsPath, code, "utf8");
+			}
+		}
+	}
+
 	return [getExtensionConfig(env), getWebviewConfig(env)];
 };
 
@@ -115,10 +147,7 @@ function getExtensionConfig(env) {
 			exprContextCritical: false
 		},
 		resolve: {
-			extensions: [".ts", ".tsx", ".js", ".jsx"],
-			alias: {
-				"vsls/vscode": path.resolve(__dirname, "node_modules/vsls/vscode.js")
-			}
+			extensions: [".ts", ".tsx", ".js", ".jsx"]
 		},
 		plugins: plugins,
 		stats: {
