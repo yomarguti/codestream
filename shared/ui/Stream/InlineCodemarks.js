@@ -6,6 +6,8 @@ import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as userSelectors from "../store/users/reducer";
 import Icon from "./Icon";
 import Codemark from "./Codemark";
+import Tooltip from "./Tooltip";
+import createClassString from "classnames";
 
 export class SimpleInlineCodemarks extends Component {
 	disposables = [];
@@ -107,6 +109,10 @@ export class SimpleInlineCodemarks extends Component {
 		this.props.editorRevealLine(line);
 	};
 
+	toggleShowMarkers = () => {
+		this.props.setActivePanel("knowledge");
+	};
+
 	render() {
 		let hundred = [...Array(700).keys()];
 		const { textEditorFirstLine = 0 } = this.props;
@@ -114,19 +120,34 @@ export class SimpleInlineCodemarks extends Component {
 		const top = (textEditorFirstLine === 0 ? 0 : textEditorFirstLine + 0.65) * -18;
 		console.log("Main render codemarks");
 		return (
-			<div
-				className="inline-codemarks vscroll"
-				onScroll={this.onScroll}
-				ref={ref => (this._scrollDiv = ref)}
-			>
-				{this.renderMain()}
-				{hundred.map(index => {
-					return (
-						<div onClick={e => this.handleClickPlus(index)} className="hover-plus" key={index}>
-							<Icon name="plus" />
-						</div>
-					);
-				})}
+			<div className="panel">
+				<div className="filters">
+					<Tooltip title="View codemarks as" placement="left">
+						<label
+							htmlFor="toggle"
+							className={createClassString("switch", "wide", {
+								checked: false
+							})}
+							onClick={this.toggleShowMarkers}
+						/>
+					</Tooltip>
+					Inline view is experimental.{" "}
+					<a href="mailto:team@codestream.com?Subject=Inline View Feedback">Share feedback</a>
+				</div>
+				<div
+					className="inline-codemarks vscroll"
+					onScroll={this.onScroll}
+					ref={ref => (this._scrollDiv = ref)}
+				>
+					{this.renderMain()}
+					{hundred.map(index => {
+						return (
+							<div onClick={e => this.handleClickPlus(index)} className="hover-plus" key={index}>
+								<Icon name="plus" />
+							</div>
+						);
+					})}
+				</div>
 			</div>
 		);
 	}

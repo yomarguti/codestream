@@ -274,10 +274,10 @@ export class SimpleKnowledgePanel extends Component {
 		return (
 			<div className="panel knowledge-panel">
 				<div className="filters">
-					<Tooltip title="Show codemarks in editor gutter" placement="left">
+					<Tooltip title="View codemarks as" placement="left">
 						<label
 							htmlFor="toggle"
-							className={createClassString("switch", {
+							className={createClassString("switch", "wide", {
 								checked: this.props.showMarkers
 							})}
 							onClick={this.toggleShowMarkers}
@@ -371,8 +371,9 @@ export class SimpleKnowledgePanel extends Component {
 
 	toggleShowMarkers = () => {
 		const showMarkers = !this.props.showMarkers;
-		this.props.showMarkersInEditor(showMarkers);
+		// this.props.showMarkersInEditor(showMarkers);
 		// this.setState({ showMarkers });
+		this.props.setActivePanel("inline");
 	};
 
 	handleClickCodemark = codemark => {

@@ -2807,6 +2807,24 @@
 		position: absolute;
 		padding-left: 110px;
 	}
+	.switch.wide {
+		width: 56px;
+		font-size: 11px;
+		&::before {
+			position: absolute;
+			content: "inline";
+			top: 0px;
+			left: 20px;
+			transition: all 0.1s;
+		}
+		&.checked::before {
+			content: "list";
+			left: 15px;
+		}
+		&.checked::after {
+			transform: translateX(40px);
+		}
+	}
 	.switch.public-private {
 		width: 90px;
 		height: 24px;

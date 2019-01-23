@@ -284,6 +284,10 @@ export class SimpleStream extends Component {
 		this.props.openUrl("https://help.codestream.com");
 	};
 
+	handleClickFeedbackLink = () => {
+		this.props.openUrl("mailto:team@codestream.com?Subject=CodeStream Feedback");
+	};
+
 	renderIntro = nameElement => {
 		const [first, ...rest] = this.props.channelMembers
 			.filter(member => member.id !== this.props.currentUserId)
@@ -333,8 +337,10 @@ export class SimpleStream extends Component {
 
 		const menuItems = [
 			{ label: this.props.teamName, action: "" },
+			{ label: "-" },
 			{ label: inviteLabel, action: "invite" },
 			// { label: "Settings", action: "settings" },
+			{ label: "Feedback", action: "feedback" },
 			{ label: "Help", action: "help" },
 			{ label: "-" }
 		];
@@ -535,8 +541,8 @@ export class SimpleStream extends Component {
 					<div className="top-tab-group">
 						<label
 							className={createClassString({
-								checked: activePanel === "knowledge",
-								muted: !this.props.configs.showMarkers
+								checked: activePanel === "knowledge" || activePanel === "inline"
+								// muted: !this.props.configs.showMarkers
 							})}
 							onClick={e => this.setActivePanel("knowledge")}
 						>
@@ -693,27 +699,27 @@ export class SimpleStream extends Component {
 				{(threadId || this.state.floatCompose) && <div id="panel-blanket" />}
 				{renderNav && this.renderNavText()}
 				{this.state.floatCompose && this.renderComposeBox(placeholderText, channelName)}
-				{activePanel === "inline" && (
-					<InlineCodemarks
-						activePanel={activePanel}
-						setActivePanel={this.setActivePanel}
-						usernames={this.props.usernamesRegexp}
-						currentUserId={this.props.currentUserId}
-						currentUserName={this.props.currentUserName}
-						postAction={this.postAction}
-						searchBarOpen={this.state.searchBarOpen}
-						setNewPostEntry={this.setNewPostEntry}
-						setMultiCompose={this.setMultiCompose}
-						typeFilter={this.state.knowledgeType}
-						textEditorUri={this.state.textEditorUri}
-						textEditorFirstLine={this.state.textEditorFirstLine}
-						textEditorLastLine={this.state.textEditorLastLine}
-						startCommentOnLine={this.props.startCommentOnLine}
-						focusInput={this.focusInput}
-						scrollDiv={this._contentScrollDiv}
-					/>
-				)}
 				<div className="content vscroll inline">
+					{activePanel === "inline" && (
+						<InlineCodemarks
+							activePanel={activePanel}
+							setActivePanel={this.setActivePanel}
+							usernames={this.props.usernamesRegexp}
+							currentUserId={this.props.currentUserId}
+							currentUserName={this.props.currentUserName}
+							postAction={this.postAction}
+							searchBarOpen={this.state.searchBarOpen}
+							setNewPostEntry={this.setNewPostEntry}
+							setMultiCompose={this.setMultiCompose}
+							typeFilter={this.state.knowledgeType}
+							textEditorUri={this.state.textEditorUri}
+							textEditorFirstLine={this.state.textEditorFirstLine}
+							textEditorLastLine={this.state.textEditorLastLine}
+							startCommentOnLine={this.props.startCommentOnLine}
+							focusInput={this.focusInput}
+							scrollDiv={this._contentScrollDiv}
+						/>
+					)}
 					{activePanel === "knowledge" && (
 						<KnowledgePanel
 							activePanel={activePanel}
@@ -978,6 +984,8 @@ export class SimpleStream extends Component {
 				return this.setActivePanel("invite");
 			case "help":
 				return this.handleClickHelpLink();
+			case "feedback":
+				return this.handleClickFeedbackLink();
 			case "connect-slack":
 				return this.props.connectSlack();
 			// case "disconnect-slack":
