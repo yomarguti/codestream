@@ -11,7 +11,6 @@ export const contextChangeObserver = store => next => (action: { type: string })
 
 	window.requestIdleCallback(() => {
 		if (notEqual(oldContext, newContext)) {
-			console.warn("STATE CHAGNGEd");
 			EventEmitter.emit("interaction:context-state-changed", newContext);
 		}
 	});
