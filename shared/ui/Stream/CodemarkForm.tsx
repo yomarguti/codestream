@@ -187,7 +187,12 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	handleCrossPostIssueValues = (values: CardValues) => {
 		const selectedNewBoard = Boolean(values.board);
+		const enablingCrossPostIssue =
+			(!this.crossPostIssueValues || !this.crossPostIssueValues.isEnabled) &&
+			values &&
+			values.isEnabled;
 		if (
+			enablingCrossPostIssue ||
 			(!this.crossPostIssueValues && selectedNewBoard) ||
 			(this.crossPostIssueValues &&
 				values.isEnabled &&
