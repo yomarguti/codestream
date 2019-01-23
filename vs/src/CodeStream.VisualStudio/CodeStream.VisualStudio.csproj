@@ -260,10 +260,10 @@
     </Content>
     <Content Include="Resources\Sprites.png" />
     <EmbeddedResource Include="teamdev.licenses" />
-    <Content Include="UI\WebViews\Shared\webview.css">
+    <Content Include="UI\WebViews\dist\webview.css">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="UI\WebViews\Shared\webview.js">
+    <Content Include="UI\WebViews\dist\webview.js">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="UI\WebViews\theme.css">
@@ -272,7 +272,7 @@
     <Content Include="UI\WebViews\waiting.html">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="UI\WebViews\webview.html">
+    <Content Include="UI\WebViews\dist\webview.html">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <VSCTCompile Include="CodeStreamPackage.vsct">
@@ -503,7 +503,7 @@ copy /Y "$(SolutionDir)..\licenses\$(ConfigurationName)\teamdev.licenses" "$(Pro
   <Import Project="..\packages\Microsoft.VisualStudio.SDK.EmbedInteropTypes.15.0.27\build\Microsoft.VisualStudio.SDK.EmbedInteropTypes.targets" Condition="Exists('..\packages\Microsoft.VisualStudio.SDK.EmbedInteropTypes.15.0.27\build\Microsoft.VisualStudio.SDK.EmbedInteropTypes.targets')" />
   <Import Project="..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.209\build\Microsoft.VisualStudio.Threading.Analyzers.targets" Condition="Exists('..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.209\build\Microsoft.VisualStudio.Threading.Analyzers.targets')" />
   <Import Project="..\packages\Microsoft.VisualStudio.SDK.Analyzers.15.8.36\build\Microsoft.VisualStudio.SDK.Analyzers.targets" Condition="Exists('..\packages\Microsoft.VisualStudio.SDK.Analyzers.15.8.36\build\Microsoft.VisualStudio.SDK.Analyzers.targets')" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

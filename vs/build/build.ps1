@@ -84,7 +84,7 @@ function Print-Help {
 
 function Check-Dependencies {
 
- 
+
     $nodeVersion = "";
     if (Get-Command node -errorAction SilentlyContinue) {
          $nodeVersion = (node -v)
@@ -98,9 +98,9 @@ function Check-Dependencies {
         exit 1
     }
 
-    $pkgVersion = "";    
-    if (Get-Command ".\node_modules\.bin\pkg" -errorAction SilentlyContinue) {
-         $pkgVersion = (".\node_modules\.bin\pkg -v")
+    $pkgVersion = "";
+    if (Get-Command "..\node_modules\.bin\pkg" -errorAction SilentlyContinue) {
+         $pkgVersion = ("..\node_modules\.bin\pkg -v")
     }
 
     if ($pkgVersion) {
@@ -108,8 +108,10 @@ function Check-Dependencies {
     }
     else {
         Write-Log "pkg is missing, npm installing..." "Magenta"
-	# later, just run `npm install --no-save` at the beginning
+
+        & pushd ".."
         & npm install --no-save
+        & popd
         Write-Log "npm install complete"
     }
 
@@ -143,12 +145,12 @@ function Perform-Build
     }
 
     Write-Log "Packaging agent."
-    & ".\node_modules\.bin\pkg" ..\src\CodeStream.VisualStudio\LSP\agent.js --targets node8-win-x86 --out-path ..\src\CodeStream.VisualStudio\LSP\
+    & "..\node_modules\.bin\pkg" ..\src\CodeStream.VisualStudio\LSP\agent.js --targets node8-win-x86 --out-path ..\src\CodeStream.VisualStudio\LSP\
     if ($LastExitCode -ne 0) {
         Write-Log "pkg Failed." "Red"
         exit 1
     }
-    
+
     Write-Log "Packaging agent completed."
 
     $OutputDir = $($PSScriptRoot+"\artifacts\$($Platform)\$($Configuration)");
@@ -159,7 +161,7 @@ function Perform-Build
 
     Write-Log "Restoring packages"
     & .\nuget.exe restore ..\src\CodeStream.VisualStudio.sln
-   
+
     Write-Log "Running msbuild."
     & $msbuild ..\src\CodeStream.VisualStudio.sln /p:AllowUnsafeBlocks=true /verbosity:$Verbosity /target:$Target /p:Configuration=$Configuration /p:Platform=$Platform /p:DeployExtension=$DeployExtension /p:VisualStudioVersion=$VisualStudioVersion /p:OutputPath=$OutputDir
 

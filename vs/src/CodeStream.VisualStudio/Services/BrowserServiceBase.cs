@@ -118,14 +118,14 @@ namespace CodeStream.VisualStudio.Services
             var resourceManager = new ResourceManager("VSPackage", Assembly.GetExecutingAssembly());
             var dir = Path.GetDirectoryName(assembly.Location);
             Debug.Assert(dir != null, nameof(dir) + " != null");
-            
+
             // ReSharper disable once ResourceItemNotResolved
             var harness = resourceManager.GetString(resourceName);
             Debug.Assert(harness != null, nameof(harness) + " != null");
 
             harness = harness
                         .Replace("{root}", dir.Replace(@"\", "/"))
-                        .Replace("{footerHtml}", FooterHtml);
+                        .Replace("<script id=\"footer-script\" type=\"text/javascript\"></script>", FooterHtml);
             // ReSharper disable once ResourceItemNotResolved
             var styleSheet = resourceManager.GetString("theme");
 
@@ -151,7 +151,6 @@ namespace CodeStream.VisualStudio.Services
             }
 
            harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{styleSheet}</style>");
-           harness = harness.Replace(@"{bodyStyle}", string.Empty);
 #if RELEASE
             Log.Verbose(harness);
 #endif
