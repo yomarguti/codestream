@@ -69,6 +69,8 @@ import {
 	OpenStreamRequest,
 	OpenStreamRequestType,
 	OpenStreamResponse,
+	OpenUrlRequest,
+	OpenUrlRequestType,
 	ReactToPostRequest,
 	ReactToPostRequestType,
 	ReactToPostResponse,
@@ -173,12 +175,7 @@ export default class WebviewApi {
 		});
 	}
 
-	createTrelloCard(
-		listId: string,
-		name: string,
-		description: string,
-		assignees?: any[]
-	) {
+	createTrelloCard(listId: string, name: string, description: string, assignees?: any[]) {
 		return this.postMessage({
 			action: TrelloCreateCardRequestType.method,
 			params: {
@@ -209,12 +206,7 @@ export default class WebviewApi {
 		});
 	}
 
-	createGithubCard(
-		title: string,
-		description: string,
-		repoName: string,
-		assignees?: any[]
-	 ) {
+	createGithubCard(title: string, description: string, repoName: string, assignees?: any[]) {
 		return this.postMessage<GitHubCreateCardResponse>({
 			action: GitHubCreateCardRequestType.method,
 			params: {
@@ -620,6 +612,13 @@ export default class WebviewApi {
 		return this.postMessage({
 			action: FetchAssignableUsersRequestType.method,
 			params: { providerName: service, boardId } as FetchAssignableUsersRequest
+		});
+	}
+
+	openUrl(params: OpenUrlRequest): Promise<void> {
+		return this.postMessage({
+			action: OpenUrlRequestType.method,
+			params
 		});
 	}
 }
