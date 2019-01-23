@@ -234,29 +234,29 @@ api.bootstrap().then(data => {
 		);
 	};
 
-	const vslsUrlRegex = /https:\/\/insiders\.liveshare\.vsengsaas\.visualstudio\.com\/join\?/;
+	// const vslsUrlRegex = /https:\/\/insiders\.liveshare\.vsengsaas\.visualstudio\.com\/join\?/;
 
-	document.body.addEventListener(
-		"click",
-		function(e) {
-			if (e == null || e.target == null || e.target.tagName !== "A") return;
+	// document.body.addEventListener(
+	// 	"click",
+	// 	function(e) {
+	// 		if (e == null || e.target == null || e.target.tagName !== "A") return;
 
-			if (!vslsUrlRegex.test(e.target.href)) return;
+	// 		if (!vslsUrlRegex.test(e.target.href)) return;
 
-			e.preventDefault();
-			e.stopPropagation();
-			e.stopImmediatePropagation();
+	// 		e.preventDefault();
+	// 		e.stopPropagation();
+	// 		e.stopImmediatePropagation();
 
-			EventEmitter.emit("interaction:svc-request", {
-				service: "vsls",
-				action: {
-					type: "join",
-					url: e.target.href
-				}
-			});
-		},
-		true
-	);
+	// 		EventEmitter.emit("interaction:svc-request", {
+	// 			service: "vsls",
+	// 			action: {
+	// 				type: "join",
+	// 				url: e.target.href
+	// 			}
+	// 		});
+	// 	},
+	// 	true
+	// );
 
 	store.dispatch(actions.bootstrap(data)).then(() => {
 		const duration = Date.now() - start;
