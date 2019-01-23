@@ -281,7 +281,7 @@ export class SimpleStream extends Component {
 	}
 
 	handleClickHelpLink = event => {
-		event.preventDefault();
+		if (event) event.preventDefault();
 		EventEmitter.emit("interaction:clicked-link", "https://help.codestream.com");
 	};
 
@@ -335,7 +335,8 @@ export class SimpleStream extends Component {
 		const menuItems = [
 			{ label: this.props.teamName, action: "" },
 			{ label: inviteLabel, action: "invite" },
-			{ label: "Settings", action: "settings" },
+			// { label: "Settings", action: "settings" },
+			{ label: "Help", action: "help" },
 			{ label: "-" }
 		];
 		// if (providerInfo.slack)
@@ -810,8 +811,8 @@ export class SimpleStream extends Component {
 										</span>
 									</Tooltip>
 									{memberCount > 2 && [
-										<div className="sep" />,
-										<Tooltip title="View member list" placement="bottomLeft">
+										<div className="sep" key="one" />,
+										<Tooltip title="View member list" placement="bottomLeft" key="two">
 											<span
 												className="clickable"
 												style={{ whiteSpace: "nowrap" }}
@@ -976,6 +977,8 @@ export class SimpleStream extends Component {
 		switch (arg) {
 			case "invite":
 				return this.setActivePanel("invite");
+			case "help":
+				return this.handleClickHelpLink();
 			case "connect-slack":
 				return this.props.connectSlack();
 			// case "disconnect-slack":
