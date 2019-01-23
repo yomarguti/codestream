@@ -750,7 +750,7 @@ class CodemarkForm extends React.Component<Props, State> {
 						]}
 						{commentType !== "bookmark" && commentType !== "link" && [this.renderMessageInput()]}
 					</div>
-					{(commentType === "comment" || commentType === "question") && (
+					{false && (commentType === "comment" || commentType === "question") && (
 						<div className="checkbox-row" onClick={this.toggleNotify}>
 							<input type="checkbox" checked={this.state.notify} /> Alert me if someone edits code
 							in this range{"  "}
