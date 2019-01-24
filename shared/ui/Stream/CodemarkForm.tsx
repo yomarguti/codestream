@@ -113,6 +113,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	constructor(props: Props) {
 		super(props);
 		const defaultState: Partial<State> = {
+			title: "",
 			text: "",
 			color: "blue",
 			type: props.commentType,
@@ -550,7 +551,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				: commentType === "question"
 				? "Question (required)"
 				: commentType === "bookmark"
-				? "Label (optional)"
+				? "Name (optional)"
 				: "Title (optional)";
 
 		// const commentString = commentType || "comment";
