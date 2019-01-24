@@ -22,6 +22,7 @@ interface GitLabProject {
 	path_with_namespace: any;
 	id: string;
 	path: string;
+	issues_enabled: boolean;
 }
 
 interface GitLabUser {
@@ -98,17 +99,20 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 
 		let boards: GitLabBoard[];
 		if (openProjects.size > 0) {
-			boards = Array.from(openProjects.values()).map(p => ({
-				id: p.id,
-				name: p.path_with_namespace,
-				path: p.path,
-				singleAssignee: true // gitlab only allows a single assignee per issue (at least it only shows one in the UI)
-			}));
+			const gitLabProjects = Array.from(openProjects.values());
+			boards = gitLabProjects
+				.filter(p => p.issues_enabled)
+				.map(p => ({
+					id: p.id,
+					name: p.path_with_namespace,
+					path: p.path,
+					singleAssignee: true // gitlab only allows a single assignee per issue (at least it only shows one in the UI)
+				}));
 		} else {
 			let gitLabProjects: { [key: string]: string }[] = [];
 			try {
 				let apiResponse = await this.get<{ [key: string]: string }[]>(
-					`/projects?min_access_level=20`
+					`/projects?min_access_level=20&with_issues_enabled=true`
 				);
 				gitLabProjects = apiResponse.body;
 
