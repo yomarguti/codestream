@@ -53,8 +53,8 @@ export default class PostDetails extends Component {
 
 		if (!codemark) return null;
 
-		const applyPatchLabel = this.state.patchApplied ? "Revert" : "Apply Patch";
-		const showDiffLabel = this.state.diffShowing ? "Hide Diff" : "Show Diff";
+		const applyPatchLabel = this.state.patchApplied ? "Revert" : "Apply";
+		const showDiffLabel = this.state.diffShowing ? "Hide Diff" : "Compare";
 
 		const hasCodeBlock = codemark.markers.length ? true : null;
 
