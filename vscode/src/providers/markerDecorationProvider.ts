@@ -26,7 +26,7 @@ import {
 	SessionStatusChangedEvent,
 	TextDocumentMarkersChangedEvent
 } from "../api/session";
-import { ApplyMarkerCommandArgs, OpenStreamCommandArgs } from "../commands";
+import { OpenStreamCommandArgs, ShowMarkerDiffCommandArgs } from "../commands";
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -324,12 +324,8 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 						}
 					};
 
-					const applyCommandArgs: ApplyMarkerCommandArgs = {
-						marker: m.entity,
-						range: {
-							start: { line: m.range.start.line, character: m.range.start.character },
-							end: { line: m.range.end.line, character: m.range.end.character }
-						}
+					const compareCommandArgs: ShowMarkerDiffCommandArgs = {
+						marker: m.entity
 					};
 
 					if (message) {
@@ -340,9 +336,9 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 						m.summary
 					}\n\n[__View ${typeString} \u2197__](command:codestream.openComment?${encodeURIComponent(
 						JSON.stringify(viewCommandArgs)
-					)} "View ${typeString}") &nbsp; | &nbsp; [__Apply Patch__](command:codestream.applyMarker?${encodeURIComponent(
-						JSON.stringify(applyCommandArgs)
-					)} "Apply Patch")`;
+					)} "View ${typeString}") &nbsp; | &nbsp; [__Compare__](command:codestream.showMarkerDiff?${encodeURIComponent(
+						JSON.stringify(compareCommandArgs)
+					)} "Compare to Current Version")`;
 
 					// &nbsp; &middot; &nbsp; [__Unpin Marker \u1F4CC__](command:codestream.openStream?${encodeURIComponent(
 					// 	JSON.stringify(args)
