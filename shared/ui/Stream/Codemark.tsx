@@ -40,9 +40,9 @@ interface Props {
 	usernames: string[];
 	setCodemarkStatus: Function;
 	action(action: string, post: any, args: any): any;
-	onClick?(CodemarkEntity): any;
-	onMouseEnter?(CodemarkEntity): any;
-	onMouseLeave?(CodemarkEntity): any;
+	onClick?(codemark: CodemarkEntity): any;
+	onMouseEnter?(codemark: CodemarkEntity): any;
+	onMouseLeave?(codemark: CodemarkEntity): any;
 	query?: string;
 }
 
