@@ -483,7 +483,8 @@ namespace CodeStream.VisualStudio
                                                 {
                                                     var editorResponse = ideService.OpenEditor(
                                                         fromMarkerResponse.TextDocument.Uri,
-                                                        fromMarkerResponse.Range?.Start?.Line);
+                                                        fromMarkerResponse.Range?.Start?.Line + 1);
+
                                                     _browserService.PostMessage(new WebviewIpcMessageResponse(
                                                         new WebviewIpcMessageResponseBody(message.Id)
                                                         {

@@ -1,27 +1,56 @@
-﻿using CodeStream.VisualStudio.Events;
+﻿using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Events;
+using CodeStream.VisualStudio.Packages;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using CodeStream.VisualStudio.Packages;
+using System.Linq;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
     [Export(typeof(IWpfTextViewMarginProvider))]
-    [Name(CodemarkViewMargin.MarginName)]
+    [Name(PredefinedCodestreamNames.CodemarkViewMargin)]
     [Order(After = PredefinedMarginNames.Glyph)]
     [MarginContainer(PredefinedMarginNames.Left)]
-    [ContentType("text")]
+    [ContentType(ContentTypes.Text)]
     [TextViewRole(PredefinedTextViewRoles.Interactive)]
+    [TextViewRole(PredefinedTextViewRoles.Document)]
     internal sealed class CodeStreamMarginProvider : IWpfTextViewMarginProvider
     {
+        private readonly IViewTagAggregatorFactoryService _viewTagAggregatorFactoryService;
+        private readonly Lazy<IGlyphFactoryProvider, IGlyphMetadata>[] _glyphFactoryProviders;
+
+        [ImportingConstructor]
+        public CodeStreamMarginProvider(IViewTagAggregatorFactoryService viewTagAggregatorFactoryService,
+            [ImportMany] IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> glyphFactoryProviders)
+        {
+            _viewTagAggregatorFactoryService = viewTagAggregatorFactoryService;
+            
+            // only get _our_ glyph factory
+            _glyphFactoryProviders = Orderer.Order(glyphFactoryProviders)
+                .Where(_ => _.Metadata.Name == PredefinedCodestreamNames.CodemarkGlyphFactoryProvider).ToArray();
+        }
+
         [Import]
         public ITextDocumentFactoryService TextDocumentFactoryService { get; set; }
 
+        private static readonly List<string> TextViewRoles = new List<string>
+        {
+            PredefinedTextViewRoles.Interactive,
+            PredefinedTextViewRoles.Document
+        };
+
         public IWpfTextViewMargin CreateMargin(IWpfTextViewHost wpfTextViewHost, IWpfTextViewMargin parent)
         {
+            // only get views that we care about
+            if (!wpfTextViewHost.TextView.Roles.ContainsAll(TextViewRoles)) return null;
+
             var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
             var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
             var toolWindowProvider = Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
@@ -29,7 +58,9 @@ namespace CodeStream.VisualStudio.UI.Margins
             var settings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
 
             return new CodemarkViewMargin(
-				wpfTextViewHost,
+                _viewTagAggregatorFactoryService,
+                _glyphFactoryProviders,
+                wpfTextViewHost,
                 eventAggregator,
                 toolWindowProvider,
                 sessionService,

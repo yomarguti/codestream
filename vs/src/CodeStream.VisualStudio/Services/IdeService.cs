@@ -59,6 +59,12 @@ namespace CodeStream.VisualStudio.Services
             _extensionManager = extensionManager;
         }
 
+        /// <summary>
+        /// Open editor using an absolute file path
+        /// </summary>
+        /// <param name="fileUri"></param>
+        /// <param name="scrollTo">the 1-based line number</param>
+        /// <returns></returns>
         public ShowCodeResult OpenEditor(Uri fileUri, int? scrollTo = null)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
@@ -81,11 +87,12 @@ namespace CodeStream.VisualStudio.Services
                         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                         try
                         {
-                            // TODO UGH WTF can't this work right?! >:0
-                            //if (scrollTo != null && scrollTo.Value > 0)
-                            //{
-                            //    dte.ExecuteCommand("Edit.Goto", scrollTo.Value.ToString());
-                            //}
+                            if (scrollTo != null && scrollTo.Value > 0)
+                            {
+                                //https://docs.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2013/dd885855(v=vs.120)
+
+                                dte.ExecuteCommand("Edit.Goto", scrollTo.Value.ToString());
+                            }
                         }
                         catch (Exception ex)
                         {

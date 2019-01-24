@@ -1,6 +1,5 @@
 ﻿using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Services;
-using Microsoft.VisualStudio.Text.Editor;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
@@ -14,7 +13,6 @@ namespace CodeStream.VisualStudio.UI.Margins
     // ReSharper disable once RedundantExtendsListEntry
     public partial class Codemark : UserControl
     {
-        private static int _heightBuffer = 5;
         private static int _defaultHeight = 19;
         private readonly CodemarkViewModel _viewModel;
 
@@ -28,28 +26,27 @@ namespace CodeStream.VisualStudio.UI.Margins
             ImageUri = $"pack://application:,,,/CodeStream.VisualStudio;component/Resources/Assets/marker-{_viewModel.Marker.Codemark.Type}-{_viewModel.Marker.Codemark.Color}.png";
         }
 
-        Task<GetPostResponse> _postTask;
-
+        Task<GetPostResponse> _postsTask;
         Task<GetUserResponse> _userTask;
 
         protected override void OnMouseEnter(MouseEventArgs e)
         {
             base.OnMouseEnter(e);
 
-            if (_postTask == null)
+            if (_postsTask == null)
             {
                 var agentService = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
                 Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.Run(async delegate
                 {
                     // ReSharper disable once PossibleNullReferenceException
-                    _postTask = agentService.GetPostAsync(
+                    _postsTask = agentService.GetPostAsync(
                                   _viewModel.Marker.Codemark.StreamId,
                                   _viewModel.Marker.Codemark.PostId
                     );
                     _userTask = agentService.GetUserAsync(_viewModel.Marker.CreatorId);
 
-                    await Task.WhenAll(_postTask, _userTask);
-                    var postResponse = await _postTask;
+                    await Task.WhenAll(_postsTask, _userTask);
+                    var postResponse = await _postsTask;
                     var userResponse = await _userTask;
 
                     await Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -95,18 +92,12 @@ namespace CodeStream.VisualStudio.UI.Margins
 
             Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
-                var post = await _postTask;
+                var post = await _postsTask;
                 // ReSharper disable once PossibleNullReferenceException
                 toolWindowProvider.ShowToolWindow(Guids.WebViewToolWindowGuid);
                 // ReSharper disable once PossibleNullReferenceException
                 await codeStreamService.OpenCommentByThreadAsync(post.Post.StreamId, post.Post.Id);
             });
-        }
-
-        public void Reposition(IWpfTextView textView, int offset)
-        {
-            Canvas.SetLeft(this, 0);
-            Canvas.SetTop(this, offset - textView.ViewportTop + Height - _heightBuffer);
         }
     }
 }

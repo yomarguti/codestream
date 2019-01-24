@@ -90,6 +90,7 @@
     <Compile Include="Commands\AddCodemarkCommand.cs" />
     <Compile Include="Commands\AuthenticationCommand.cs" />
     <Compile Include="Controllers\LiveShareController.cs" />
+    <Compile Include="Core\ContentTypes.cs" />
     <Compile Include="Core\Logging\CodeStreamSink.cs" />
     <Compile Include="Core\Logging\LogManager.cs" />
     <Compile Include="Core\Logging\Sanitizer\IProcessor.cs" />
@@ -141,20 +142,27 @@
     <Compile Include="Services\SessionService.cs" />
     <Compile Include="Services\SettingsService.cs" />
     <Compile Include="Services\ThemeManager.cs" />
+    <Compile Include="UI\Glyphs\CodemarkGlyphFactory.cs" />
+    <Compile Include="UI\Glyphs\CodemarkGlyphFactoryProvider.cs" />
+    <Compile Include="UI\Glyphs\CodemarkGlyphTag.cs" />
     <Compile Include="UI\InfoBarProvider.cs" />
     <Compile Include="UI\Margins\Codemark.xaml.cs">
       <DependentUpon>Codemark.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UI\Margins\CodemarkGlyphCache.cs" />
     <Compile Include="UI\Margins\CodemarkViewMargin.cs" />
     <Compile Include="UI\Margins\CodemarkViewModel.cs" />
     <Compile Include="UI\Margins\CodeStreamMarginProvider.cs" />
+    <Compile Include="UI\Margins\IGlyphMetadata.cs" />
+    <Compile Include="UI\PredefinedCodestreamNames.cs" />
+    <Compile Include="UI\PropertyNames.cs" />
     <Compile Include="UI\Settings\IOptionsDialogPage.cs" />
     <Compile Include="UI\Settings\OptionsDialogPage.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="UI\SuggestedActions\CodemarkSuggestedActionsSource.cs" />
     <Compile Include="UI\SuggestedActions\CodemarkSuggestedActionsSourceProvider.cs" />
+    <Compile Include="UI\Taggers\CodemarkTagger.cs" />
+    <Compile Include="UI\Taggers\CodemarkTaggerProvider.cs" />
     <Compile Include="Vssdk\Commands\IVsCommand.cs" />
     <Compile Include="Vssdk\Commands\IVsCommandBase.cs" />
     <Compile Include="Vssdk\Commands\MenuCommandServiceExtensions.cs" />
@@ -482,6 +490,7 @@
     <Analyzer Include="..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.209\analyzers\cs\Microsoft.VisualStudio.Threading.Analyzers.CodeFixes.dll" />
     <Analyzer Include="..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.209\analyzers\cs\Microsoft.VisualStudio.Threading.Analyzers.dll" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

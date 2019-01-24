@@ -127,7 +127,7 @@ namespace CodeStream.VisualStudio.Packages
             ThreadHelper.ThrowIfNotOnUIThread();
 
             if (!TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame)) return;
-
+            
             frame.Show();
         }
 
