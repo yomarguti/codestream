@@ -130,7 +130,7 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 			);
 
 			board.issueTypes = issueTypes;
-			board.singleAssignee = true;	// all jira cards have a single assignee?
+			board.singleAssignee = true; // all jira cards have a single assignee?
 			return board as JiraBoard;
 		});
 		return boards;

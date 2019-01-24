@@ -180,10 +180,7 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
-		const response = await this.get<GitLabUser[]>(
-			`/projects/${request.boardId}/users`
-		);
+		const response = await this.get<GitLabUser[]>(`/projects/${request.boardId}/users`);
 		return { users: response.body.map(u => ({ ...u, displayName: u.name })) };
 	}
-
 }

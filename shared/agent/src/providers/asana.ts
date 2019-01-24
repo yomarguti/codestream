@@ -63,7 +63,7 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 				id: project.id,
 				name: project.name,
 				lists: [],
-				singleAssignee: true	// asana cards allow only a single assignee
+				singleAssignee: true // asana cards allow only a single assignee
 			};
 
 			if (project.layout !== "board") {
@@ -191,9 +191,7 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
-		const response = await this.get<AsanaProjectData>(
-			`/api/1.0/projects/${request.boardId}`
-		);
+		const response = await this.get<AsanaProjectData>(`/api/1.0/projects/${request.boardId}`);
 		const workspaceId = response.body.data.workspace.gid;
 
 		const { body } = await this.get<AsanaUsersData>(

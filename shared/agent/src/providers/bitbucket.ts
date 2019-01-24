@@ -116,13 +116,15 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 		} else {
 			let bitbucketRepos: BitbucketRepo[] = [];
 			try {
-				let apiResponse = await this.get<BitbucketValues<BitbucketPermission[]>>(`/user/permissions/repositories`);
+				let apiResponse = await this.get<BitbucketValues<BitbucketPermission[]>>(
+					`/user/permissions/repositories`
+				);
 				bitbucketRepos = apiResponse.body.values.map(p => p.repository);
 				while (apiResponse.body.next) {
-					apiResponse = await this.get<BitbucketValues<BitbucketPermission[]>>(apiResponse.body.next);
-					bitbucketRepos = bitbucketRepos.concat(
-						apiResponse.body.values.map(p => p.repository)
+					apiResponse = await this.get<BitbucketValues<BitbucketPermission[]>>(
+						apiResponse.body.next
 					);
+					bitbucketRepos = bitbucketRepos.concat(apiResponse.body.values.map(p => p.repository));
 				}
 			} catch (err) {
 				Logger.error(err);
@@ -164,8 +166,7 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 		try {
 			const strippedPath = card.links.self.href.split(this.baseUrl)[1];
 			issueResponse = await this.get<BitbucketCard>(strippedPath);
-		}
-		catch (err) {
+		} catch (err) {
 			Logger.error(err);
 			return card;
 		}
@@ -187,9 +188,7 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
 		try {
-			const repoResponse = await this.get<BitbucketRepo>(
-				`/repositories/${request.boardId}`
-			);
+			const repoResponse = await this.get<BitbucketRepo>(`/repositories/${request.boardId}`);
 			if (repoResponse.body.owner.type === "team") {
 				let members: BitbucketUser[] = [];
 				let apiResponse = await this.get<BitbucketValues<BitbucketUser[]>>(
@@ -202,17 +201,15 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 					members = members.concat(apiResponse.body.values);
 				}
 
-				return { users: members.map(u => ({ ...u, id: u.account_id, displayName: u.display_name })) };
-			}
-			else {
-				const userResponse = await this.get<BitbucketUser>(
-					"/user"
-				);
+				return {
+					users: members.map(u => ({ ...u, id: u.account_id, displayName: u.display_name }))
+				};
+			} else {
+				const userResponse = await this.get<BitbucketUser>("/user");
 				const user = userResponse.body;
 				return { users: [{ ...user, id: user.account_id, displayName: user.display_name }] };
 			}
-		}
-		catch (err) {
+		} catch (err) {
 			Logger.error(err);
 			return { users: [] };
 		}

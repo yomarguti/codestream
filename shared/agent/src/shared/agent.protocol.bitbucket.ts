@@ -12,17 +12,16 @@ export interface BitbucketCard {
 	id: string;
 	links: {
 		self: {
-			href: string
-		},
+			href: string;
+		};
 		html?: {
-			href: string
-		}
+			href: string;
+		};
 	};
 	url: string;
 }
 
-export interface BitbucketCreateCardResponse extends BitbucketCard {
-}
+export interface BitbucketCreateCardResponse extends BitbucketCard {}
 
 export const BitbucketCreateCardRequestType = new RequestType<
 	BitbucketCreateCardRequest,
