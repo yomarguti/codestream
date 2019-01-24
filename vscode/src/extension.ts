@@ -1,7 +1,17 @@
 "use strict";
-import { ExtensionContext, extensions, version as vscodeVersion, workspace } from "vscode";
+import {
+	commands,
+	ExtensionContext,
+	extensions,
+	MessageItem,
+	Uri,
+	version as vscodeVersion,
+	window,
+	workspace
+} from "vscode";
 import { GitExtension } from "./@types/git";
 import { SessionStatusChangedEvent } from "./api/session";
+import { BuiltInCommands } from "./commands";
 import { ContextKeys, setContext } from "./common";
 import { Config, configuration, Configuration } from "./configuration";
 import { extensionQualifiedId } from "./constants";
@@ -61,6 +71,8 @@ export async function activate(context: ExtensionContext) {
 
 	context.subscriptions.push(Container.session.onDidChangeSessionStatus(onSessionStatusChanged));
 
+	showStartupMessage(context);
+
 	if (cfg.autoSignIn) {
 		Container.commands.signIn();
 	}
@@ -95,4 +107,30 @@ export async function gitPath(): Promise<string> {
 		}
 	}
 	return _gitPath;
+}
+
+async function showStartupMessage(context: ExtensionContext) {
+	if (
+		context.globalState.get<boolean>("2019-01-giveaway", false) ||
+		new Date() > new Date("2019-2-2 12:00 GMT-0500")
+	) {
+		return;
+	}
+
+	await context.globalState.update("2019-01-giveaway", true);
+
+	const actions: MessageItem[] = [{ title: "See Details" }];
+	const result = await window.showInformationMessage(
+		`Don't miss your chance to win up to $250 in CodeStream's Codemarks Giveaway — simply by creating Codemarks`,
+		...actions
+	);
+
+	if (result === actions[0]) {
+		commands.executeCommand(
+			BuiltInCommands.Open,
+			Uri.parse(
+				"https://blog.codestream.com/index.php/2019/01/24/codestreams-codemarks-giveaway?utm_source=ext_vsc&utm_medium=popup&utm_campaign=giveaway_codemarks"
+			)
+		);
+	}
 }
