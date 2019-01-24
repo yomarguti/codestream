@@ -1,4 +1,5 @@
 "use strict";
+import * as qs from "querystring";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
@@ -24,6 +25,7 @@ interface BitbucketRepo {
 		username: string;
 		type: string;
 	};
+	has_issues: boolean;
 }
 
 interface BitbucketPermission {
@@ -106,18 +108,23 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 
 		let boards: BitbucketBoard[];
 		if (openRepos.size > 0) {
-			boards = Array.from(openRepos.values()).map(r => ({
-				id: r.uuid,
-				name: r.full_name,
-				apiIdentifier: r.full_name,
-				path: r.path,
-				signelAssignee: true // bitbucket issues only allow one assignee
-			}));
+			const bitbucketRepos = Array.from(openRepos.values());
+			boards = bitbucketRepos
+				.filter(r => r.has_issues)
+				.map(r => ({
+					id: r.uuid,
+					name: r.full_name,
+					apiIdentifier: r.full_name,
+					path: r.path,
+					signelAssignee: true // bitbucket issues only allow one assignee
+				}));
 		} else {
 			let bitbucketRepos: BitbucketRepo[] = [];
 			try {
 				let apiResponse = await this.get<BitbucketValues<BitbucketPermission[]>>(
-					`/user/permissions/repositories`
+					`/user/permissions/repositories?${qs.stringify({
+						fields: "+values.repository.has_issues"
+					})}`
 				);
 				bitbucketRepos = apiResponse.body.values.map(p => p.repository);
 				while (apiResponse.body.next) {
@@ -130,6 +137,7 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 				Logger.error(err);
 				debugger;
 			}
+			bitbucketRepos = bitbucketRepos.filter(r => r.has_issues);
 			boards = bitbucketRepos.map(r => {
 				return {
 					...r,
