@@ -23,6 +23,7 @@ interface GitHubRepo {
 	id: string;
 	full_name: string;
 	path: string;
+	has_issues: boolean;
 }
 
 @lspProvider("github")
@@ -45,6 +46,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 
 	get headers() {
 		return {
+			Authorization: `token ${this.accessToken}`,
 			"user-agent": "CodeStream",
 			Accept: "application/vnd.github.v3+json, application/vnd.github.inertia-preview+json"
 		};
@@ -71,9 +73,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 
 					if (!githubRepo) {
 						try {
-							const response = await this.get<GitHubRepo>(
-								`/repos/${remote.path}?${qs.stringify({ access_token: this.accessToken })}`
-							);
+							const response = await this.get<GitHubRepo>(`/repos/${remote.path}`);
 							githubRepo = {
 								...response.body,
 								path: gitRepo.path
@@ -94,18 +94,19 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 
 		let boards: GitHubBoard[];
 		if (openRepos.size > 0) {
-			boards = Array.from(openRepos.values()).map(r => ({
-				id: r.id,
-				name: r.full_name,
-				apiIdentifier: r.full_name,
-				path: r.path
-			}));
+			const gitHubRepos = Array.from(openRepos.values());
+			boards = gitHubRepos
+				.filter(r => r.has_issues)
+				.map(r => ({
+					id: r.id,
+					name: r.full_name,
+					apiIdentifier: r.full_name,
+					path: r.path
+				}));
 		} else {
 			let gitHubRepos: { [key: string]: string }[] = [];
 			try {
-				let apiResponse = await this.get<{ [key: string]: string }[]>(
-					`/user/repos?${qs.stringify({ access_token: this.accessToken })}`
-				);
+				let apiResponse = await this.get<{ [key: string]: string }[]>(`/user/repos`);
 				gitHubRepos = apiResponse.body;
 
 				let nextPage: string | undefined;
@@ -117,12 +118,13 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 				Logger.error(err);
 				debugger;
 			}
-			boards = gitHubRepos.map(board => {
+			gitHubRepos = gitHubRepos.filter(r => r.has_issues);
+			boards = gitHubRepos.map(repo => {
 				return {
-					...board,
-					id: board.id,
-					name: board.full_name,
-					apiIdentifier: board.full_name
+					...repo,
+					id: repo.id,
+					name: repo.full_name,
+					apiIdentifier: repo.full_name
 				};
 			});
 		}
@@ -136,9 +138,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	@lspHandler(GitHubCreateCardRequestType)
 	async createCard(request: GitHubCreateCardRequest) {
 		const response = await this.post<{}, GitHubCreateCardResponse>(
-			`/repos/${request.repoName}/issues?${qs.stringify({
-				access_token: this.accessToken
-			})}`,
+			`/repos/${request.repoName}/issues`,
 			{
 				title: request.title,
 				body: request.description,
@@ -153,9 +153,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	async lists(request: GitHubFetchListsRequest) {}
 
 	private async getMemberId() {
-		const userResponse = await this.get<{ id: string; [key: string]: any }>(
-			`/user?${qs.stringify({ access_token: this.accessToken })}`
-		);
+		const userResponse = await this.get<{ id: string; [key: string]: any }>(`/user`);
 
 		return userResponse.body.id;
 	}
@@ -176,9 +174,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
-		const { body } = await this.get<GitHubUser[]>(
-			`/repos/${request.boardId}/collaborators?${qs.stringify({ access_token: this.accessToken })}`
-		);
+		const { body } = await this.get<GitHubUser[]>(`/repos/${request.boardId}/collaborators`);
 		return { users: body.map(u => ({ ...u, id: u.id, displayName: u.login })) };
 	}
 }
