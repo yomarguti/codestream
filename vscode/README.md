@@ -1,4 +1,9 @@
-# CodeStream BETA
+<p align="center">
+  <br />
+  <a title="Learn more about CodeStream" href="https://codestream.com?utm_source=vscmarket&utm_medium=banner&utm_campaign=codestream"><img src="https://alt-images.codestream.com/codestream_logo_vscmarketplace.png" alt="CodeStream Logo" /></a>
+</p>
+
+# CodeStream
 
 CodeStream helps dev teams discuss, review, and understand code. Discussing code is now as simple as commenting on a Google Doc — select the code and type your question.
 
@@ -8,7 +13,8 @@ CodeStream turns conversation into documentation by capturing all of the discuss
 
 ![CodeStream](https://uploads-ssl.webflow.com/5c1b064db9734016ca52ab39/5c1d63a384735d6abc62db55_2018-12-21%2017.04.59.gif)
 
-## Does your team use Slack? ###
+## Does your team use Slack?
+
 Sign up for CodeStream using Slack so that discussions about code can be shared in your existing Slack channels and direct messages. Connecting to your Slack workspace allows developers to participate in discussions about code when they're not in their editor, or if they don’t use an editor supported by CodeSteam.
 
 # Requirements
@@ -35,7 +41,7 @@ Click on a codemark in the stream to participate in the discussion. If you have 
 
 ![Thread View](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/ThreadView1.png)
 
-##  Leverage your team's knowledge base
+## Leverage your team's knowledge base
 
 A codemark displayed to the left of a block of code in your source file means that a discussion took place about that code. Hover over the codemark and click _Open Comment_ to view the discussion.
 
