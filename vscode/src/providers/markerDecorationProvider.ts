@@ -309,6 +309,7 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 			let message = undefined;
 			let range = undefined;
 
+			let firstMarkerArgs;
 			for (const m of markers) {
 				try {
 					const post = await m.post();
@@ -327,6 +328,10 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 					const compareCommandArgs: ShowMarkerDiffCommandArgs = {
 						marker: m.entity
 					};
+
+					if (firstMarkerArgs === undefined) {
+						firstMarkerArgs = viewCommandArgs;
+					}
 
 					if (message) {
 						message += "\n-----\n";
@@ -358,6 +363,11 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 
 			const markdown = new MarkdownString(message);
 			markdown.isTrusted = true;
+
+			if (firstMarkerArgs !== undefined && Container.webview.visible) {
+				const args = firstMarkerArgs;
+				setImmediate(() => void Container.commands.openComment(args));
+			}
 
 			return new Hover(markdown, range);
 		} finally {
