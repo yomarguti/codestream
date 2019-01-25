@@ -18,6 +18,11 @@ namespace CodeStream.VisualStudio.Extensions
             return Uri.TryCreate(uriString, uriKind, out Uri result) ? result : null;
         }
 
+        /// <summary>
+        /// Local path seems return a string like /c:/foo
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <returns></returns>
         public static string ToLocalPath(this Uri uri)
         {
             return uri.LocalPath.TrimStart('/');

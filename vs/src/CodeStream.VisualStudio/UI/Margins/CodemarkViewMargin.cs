@@ -311,18 +311,26 @@ namespace CodeStream.VisualStudio.UI.Margins
                       .Throttle(TimeSpan.FromMilliseconds(100))
                       .Subscribe(async (_) =>
                       {
+                          Uri currentUri = null;
                           try
                           {
-                              if (_.Uri.EqualsIgnoreCase(_textDocument.FilePath.ToUri()))
+                              currentUri = _textDocument.FilePath.ToUri();
+                              if (_.Uri.EqualsIgnoreCase(currentUri))
                               {
+                                  Log.Verbose($"{nameof(DocumentMarkerChangedEvent)} for {currentUri}");
                                   await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+
                                   GetOrCreateMarkers(true);
                                   RefreshEverything();
+                              }
+                              else
+                              {
+                                  Log.Verbose($"{nameof(DocumentMarkerChangedEvent)} ignored for {currentUri}");
                               }
                           }
                           catch (Exception ex)
                           {
-                              Log.Warning(ex, $"Could not handle {nameof(DocumentMarkerChangedEvent)}");
+                              Log.Warning(ex, $"{nameof(DocumentMarkerChangedEvent)} for {currentUri}");
                           }
                       }));
 
@@ -431,29 +439,35 @@ namespace CodeStream.VisualStudio.UI.Margins
         {
             if (_markers != null && _markers.Markers.AnySafe() == false && !force)
             {
+                Log.Verbose("Codemarks are empty and force={force}", force);
                 return;
             }
 
             var filePath = _textDocument.FilePath;
             if (!Uri.TryCreate(filePath, UriKind.Absolute, out Uri result))
             {
-                // Log.Verbose($"Could not parse file path as uri={filePath}");
+                Log.Verbose($"Could not parse file path as uri={filePath}");
                 return;
             }
 
             ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
                 _markers = await _agentService.GetMarkersForDocumentAsync(result);
-            });
 
-            if (_markers?.Markers.AnySafe() == true)
-            {
-                if (_textView.TextBuffer.Properties.ContainsProperty(PropertyNames.CodemarkMarkers))
+                if (_markers?.Markers.AnySafe() == true || force)
                 {
-                    _textView.TextBuffer.Properties.RemoveProperty(PropertyNames.CodemarkMarkers);
+                    if (_textView.TextBuffer.Properties.ContainsProperty(PropertyNames.CodemarkMarkers))
+                    {
+                        _textView.TextBuffer.Properties.RemoveProperty(PropertyNames.CodemarkMarkers);
+                    }
+                    _textView.TextBuffer.Properties.AddProperty(PropertyNames.CodemarkMarkers, _markers.Markers);
+                    Log.Verbose("Setting Codemarks Count={Count}", _markers.Markers.Count);
                 }
-                _textView.TextBuffer.Properties.AddProperty(PropertyNames.CodemarkMarkers, _markers.Markers);
-            }
+                else
+                {
+                    Log.Verbose("No Codemarks from agent");
+                }
+            });
         }
 
         private void TextView_LayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
