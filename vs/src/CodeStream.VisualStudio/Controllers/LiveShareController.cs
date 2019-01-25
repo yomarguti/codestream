@@ -37,7 +37,7 @@ namespace CodeStream.VisualStudio.Controllers
             _ideService = ideService;
         }
 
-        private async Task CreatePost(string streamId, string threadId, string url)
+        private async Task CreatePostAsync(string streamId, string threadId, string url)
         {
             try
             {
@@ -64,7 +64,7 @@ namespace CodeStream.VisualStudio.Controllers
             var existingUrl = _sessionService.LiveShareUrl;
             if (!existingUrl.IsNullOrWhiteSpace())
             {
-                await CreatePost(streamId, threadId, existingUrl);
+                await CreatePostAsync(streamId, threadId, existingUrl);
             }
             else
             {
@@ -81,9 +81,9 @@ namespace CodeStream.VisualStudio.Controllers
                         {
                             liveShareReadyEvent?.Dispose();
 
-                            _ideService.GetClipboardTextValue(10000, async (string url) =>
+                            _ideService.GetClipboardTextValueAsync(10000, async (string url) =>
                             {
-                                await CreatePost(streamId, threadId, url);
+                                await CreatePostAsync(streamId, threadId, url);
                             }, RegularExpressions.LiveShareUrl);
                         }
                         catch (Exception ex)

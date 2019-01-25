@@ -4,6 +4,7 @@ using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.UI.Settings;
 using System;
 using System.Text.RegularExpressions;
+using CodeStream.VisualStudio.Annotations;
 
 namespace CodeStream.VisualStudio.Services
 {
@@ -52,6 +53,7 @@ namespace CodeStream.VisualStudio.Services
 
     public interface SSettingsService { }
 
+    [Injected]
     public class SettingsService : ISettingsService, SSettingsService
     {
         private static readonly Regex EnvironmentRegex = new Regex(@"https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(?::\d+$)?", RegexOptions.IgnoreCase | RegexOptions.Compiled);

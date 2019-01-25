@@ -28,6 +28,12 @@ namespace CodeStream.VisualStudio
 
             _vsShellEventManager.WindowFocusedEventHandler += OnWindowFocusChanged;
             _vsShellEventManager.VisualStudioThemeChangedEventHandler += OnThemeChanged;
+            _vsShellEventManager.BeforeSolutionClosingEventHandler += BeforeSolutionClosingEventHandler;
+        }
+
+        private void BeforeSolutionClosingEventHandler(object sender, EventArgs e)
+        {
+            Log.Verbose("Solution is closing");
         }
 
         private void OnWindowFocusChanged(object sender, WindowFocusChangedEventArgs e)
@@ -66,6 +72,7 @@ namespace CodeStream.VisualStudio
                 {
                     _vsShellEventManager.WindowFocusedEventHandler -= OnWindowFocusChanged;
                     _vsShellEventManager.VisualStudioThemeChangedEventHandler -= OnThemeChanged;
+                    _vsShellEventManager.BeforeSolutionClosingEventHandler -= BeforeSolutionClosingEventHandler;
 
                     Log.Verbose($"Unregistering events");
                 }

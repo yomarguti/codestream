@@ -20,10 +20,13 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 
         private readonly IEventAggregator _eventAggregator;
         private readonly IBrowserService _browserService;
-        private readonly IDisposable _languageServerReadyEvent;
+        private readonly ISessionService _sessionService;
+        private IDisposable _languageServerDisconnectedEvent;
+        private IDisposable _languageServerReadyEvent;
 
-        private List<IDisposable> _languageClientEvents;
+        private List<IDisposable> _disposables;
 
+        bool _disposed = false;
         private bool _isInitialized;
         private static readonly object InitializeLock = new object();
 
@@ -45,26 +48,23 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
                 _browserService.LoadSplashView();
 
                 _eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
-                var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
-                if (sessionService == null)
+                _sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+                if (_sessionService == null)
                 {
                     Log.Warning("SessionService is null");
                 }
                 else
                 {
-                    if (sessionService.IsAgentReady)
+                    _languageServerDisconnectedEvent = _eventAggregator?.GetEvent<LanguageServerDisconnectedEvent>().Subscribe(_ =>
                     {
-                        InitializeCore();
-                    }
-                    else
-                    {
-                        // ReSharper disable once PossibleNullReferenceException
-                        _languageServerReadyEvent = _eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
-                        {
-                            InitializeCore();
-                            _languageServerReadyEvent.Dispose();
-                        });
-                    }
+                        _isInitialized = false;
+
+                        _browserService.LoadSplashView();
+
+                        SetupInitialization();
+                    });
+
+                   SetupInitialization();
                 }
             }
             else
@@ -73,6 +73,27 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
             }
 
             Log.Verbose($"{nameof(OnInitialized)}");
+        }
+
+        private void SetupInitialization()
+        {
+            if (_sessionService.IsAgentReady)
+            {
+                InitializeCore();
+            }
+            else
+            {
+                if (_languageServerReadyEvent != null)
+                {
+                    // if we're re-using this... dispose it first.
+                    _languageServerReadyEvent.Dispose();
+                }
+                // ReSharper disable once PossibleNullReferenceException
+                _languageServerReadyEvent = _eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
+                {
+                    InitializeCore();
+                });
+            }
         }
 
         private void InitializeCore()
@@ -99,7 +120,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
                     _browserService.LoadWebView();
 
                     var throttle = TimeSpan.FromMilliseconds(50);
-                    _languageClientEvents = new List<IDisposable>
+                    _disposables = new List<IDisposable>
                     {
                         _eventAggregator.GetEvent<CodemarksChangedEvent>()
                             .Throttle(throttle)
@@ -220,18 +241,13 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
                 }
             });
         }
-
-        // Flag: Has Dispose already been called?
-        bool _disposed = false;
-
-        // Public implementation of Dispose pattern callable by consumers.
+        
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-
-        // Protected implementation of Dispose pattern.
+        
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed)
@@ -239,7 +255,9 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 
             if (disposing)
             {
-                _languageClientEvents.Dispose();
+                _languageServerReadyEvent?.Dispose();
+                _languageServerDisconnectedEvent?.Dispose();
+                _disposables.Dispose();
             }
 
             _disposed = true;

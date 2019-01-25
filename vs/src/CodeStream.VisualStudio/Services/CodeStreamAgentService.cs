@@ -1,5 +1,7 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Annotations;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Models;
+using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using StreamJsonRpc;
@@ -8,8 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using CodeStream.VisualStudio.Extensions;
-using Microsoft.VisualStudio.Shell;
+using CodeStream.VisualStudio.Events;
 using Task = System.Threading.Tasks.Task;
 
 // ReSharper disable ClassNeverInstantiated.Global
@@ -45,24 +46,37 @@ namespace CodeStream.VisualStudio.Services
         Task<FetchStreamsResponse> FetchStreamsAsync(FetchStreamsRequest request);
     }
 
-    public class CodeStreamAgentService : ICodeStreamAgentService, SCodeStreamAgentService
+    [Injected]
+    public class CodeStreamAgentService : ICodeStreamAgentService, SCodeStreamAgentService, IDisposable
     {
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
         private readonly ISessionService _sessionService;
         private readonly ISettingsService _settingsService;
+        private readonly IEventAggregator _eventAggregator;
 
-        public CodeStreamAgentService(ISessionService sessionService, ISettingsService settingsService)
+        private JsonRpc _rpc;
+        bool _disposed;
+
+        public CodeStreamAgentService(ISessionService sessionService, ISettingsService settingsService, IEventAggregator eventAggregator)
         {
             _sessionService = sessionService;
             _settingsService = settingsService;
+            _eventAggregator = eventAggregator;
         }
-
-        private JsonRpc _rpc;
 
         public Task SetRpcAsync(JsonRpc rpc)
         {
             _rpc = rpc;
+            _rpc.Disconnected += Rpc_Disconnected;
+
             return Task.CompletedTask;
+        }
+
+        private void Rpc_Disconnected(object sender, JsonRpcDisconnectedEventArgs e)
+        {
+            Log.Verbose(e.Exception, $"RPC Disconnected: {e.LastMessage} {e.Description}");
+            _sessionService.SetAgentDisconnected();
+            _eventAggregator?.Publish(new LanguageServerDisconnectedEvent(e?.LastMessage, e?.Description, e?.Reason.ToString(), e?.Exception));
         }
 
         private Task<T> SendCoreAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null)
@@ -352,6 +366,25 @@ namespace CodeStream.VisualStudio.Services
             };
 
             return bootstrapState;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+                return;
+
+            if (disposing)
+            {
+                _rpc.Disconnected -= Rpc_Disconnected;
+            }
+
+            _disposed = true;
         }
     }
 }

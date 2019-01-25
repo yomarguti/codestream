@@ -5,9 +5,7 @@ using System.Runtime.Serialization;
 
 namespace CodeStream.VisualStudio.Services
 {
-    public interface SSessionService
-    {
-    }
+    public interface SSessionService { }
 
     public interface ISessionService
     {
@@ -15,6 +13,7 @@ namespace CodeStream.VisualStudio.Services
         Guid GetOrCreateSignupToken();
         void SetAgentReady();
         void SetUserLoggedIn();
+        void SetAgentDisconnected();
         string CurrentStreamId { get; set; }
         /// <summary>
         /// Session is ready when the agent has loaded and the user has logged in
@@ -26,11 +25,13 @@ namespace CodeStream.VisualStudio.Services
     }
 
     [Injected]
-    public class SessionService : SSessionService, ISessionService
+    public class SessionService : SSessionService, ISessionService, IDisposable
     {
         public State State { get; set; }
         private SessionState _sessionState;
         private Guid _signupToken = Guid.Empty;
+
+        bool _disposed = false;
 
         public Guid GetOrCreateSignupToken()
         {
@@ -48,6 +49,11 @@ namespace CodeStream.VisualStudio.Services
                 throw new SessionStateException("Origin state is invalid");
 
             _sessionState = SessionState.AgentReady;
+        }
+
+        public void SetAgentDisconnected()
+        {
+            _sessionState = SessionState.Unknown;
         }
 
         public void SetUserLoggedIn()
@@ -80,6 +86,25 @@ namespace CodeStream.VisualStudio.Services
         public bool IsReady => _sessionState == SessionState.Ready;
 
         public string LiveShareUrl { get; set; }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+                return;
+
+            if (disposing)
+            {
+                _sessionState = SessionState.Unknown;
+            }
+
+            _disposed = true;
+        }
     }
 
     [Serializable]
@@ -98,7 +123,13 @@ namespace CodeStream.VisualStudio.Services
     public enum SessionState
     {
         Unknown = 0,
+        /// <summary>
+        /// The LanguageServerProcess is ready
+        /// </summary>
         AgentReady = 1 << 0,
+        /// <summary>
+        /// The user has authenticated
+        /// </summary>
         UserLoggedIn = 1 << 1,
         Ready = AgentReady | UserLoggedIn
     }

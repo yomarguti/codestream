@@ -30,8 +30,7 @@ namespace CodeStream.VisualStudio.Services
         bool QueryExtension(ExtensionKind extensionKind);
         bool TryStartLiveShare();
         bool TryJoinLiveShare(string url);
-
-        System.Threading.Tasks.Task GetClipboardTextValue(int millisecondsTimeout, Action<string> callback, Regex clipboardMatcher = null);
+        System.Threading.Tasks.Task GetClipboardTextValueAsync(int millisecondsTimeout, Action<string> callback, Regex clipboardMatcher = null);
     }
 
     public interface SIdeService { }
@@ -233,7 +232,7 @@ namespace CodeStream.VisualStudio.Services
             System.Diagnostics.Process.Start(url);
         }
 
-        public async System.Threading.Tasks.Task GetClipboardTextValue(int millisecondsTimeout, Action<string> callback, Regex clipboardMatcher = null)
+        public async System.Threading.Tasks.Task GetClipboardTextValueAsync(int millisecondsTimeout, Action<string> callback, Regex clipboardMatcher = null)
         {
             if (callback == null) await System.Threading.Tasks.Task.CompletedTask;
 
@@ -292,7 +291,7 @@ namespace CodeStream.VisualStudio.Services
             {
                 await workerTask;
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException)
             {
                 await System.Threading.Tasks.Task.CompletedTask;
             }

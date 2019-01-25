@@ -87,7 +87,8 @@ namespace CodeStream.VisualStudio.Packages
             if (typeof(SCodeStreamAgentService) == serviceType)
                 return new CodeStreamAgentService(
                     GetService(typeof(SSessionService)) as ISessionService,
-                    GetService(typeof(SSettingsService)) as ISettingsService);
+                    GetService(typeof(SSettingsService)) as ISettingsService,
+                    GetService(typeof(SEventAggregator)) as IEventAggregator);
             if (typeof(SCodeStreamService) == serviceType)
                 return new CodeStreamService(
                     new Lazy<ICredentialsService>(() => GetService(typeof(SCredentialsService)) as ICredentialsService),

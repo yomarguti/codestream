@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using CodeStream.VisualStudio.Annotations;
 using static CodeStream.VisualStudio.Extensions.FileSystemExtensions;
 
 namespace CodeStream.VisualStudio.Services
@@ -15,6 +16,7 @@ namespace CodeStream.VisualStudio.Services
     /// <summary>
     /// Implementation of a browser service using DotNetBrowser
     /// </summary>
+    [Injected]
     public class DotNetBrowserService : BrowserServiceBase
     {
         private static readonly ILogger Log = LogManager.ForContext<DotNetBrowserService>();
@@ -56,16 +58,18 @@ namespace CodeStream.VisualStudio.Services
             _browserContext = new BrowserContext(parameters);
             // use LIGHTWEIGHT to avoid "System.InvalidOperationException: 'The specified Visual is not an ancestor of this Visual.'"            
             _browserView = new WPFBrowserView(BrowserFactory.Create(_browserContext, BrowserType.LIGHTWEIGHT));
+
 //#if DEBUG
 //           System.Diagnostics.Process.Start("chrome.exe", _browserView.Browser.GetRemoteDebuggingURL());
 //#endif
         }
         
-        public override void AddWindowMessageEvent(WindowMessageHandler handler)
+        public override void AddWindowMessageEvent(WindowMessageHandler messageHandler)
         {
+            // TODO detach this?
             _browserView.Browser.ConsoleMessageEvent += async delegate (object sender, DotNetBrowser.Events.ConsoleEventArgs e)
             {
-                await handler(sender, new WindowEventArgs(e.Message));
+                await messageHandler(sender, new WindowEventArgs(e.Message));
             };
         }
 

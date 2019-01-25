@@ -5,6 +5,7 @@ using Serilog;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.Annotations;
 
 namespace CodeStream.VisualStudio.Services
 {
@@ -23,6 +24,7 @@ namespace CodeStream.VisualStudio.Services
         IBrowserService BrowserService { get; }
     }
 
+    [Injected]
     public class CodeStreamService : ICodeStreamService, SCodeStreamService
     {
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamService>();

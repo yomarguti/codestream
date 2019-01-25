@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using CodeStream.VisualStudio.Core.Logging;
+using EnvDTE;
 using Serilog;
 
 namespace CodeStream.VisualStudio.Vssdk
@@ -15,11 +16,12 @@ namespace CodeStream.VisualStudio.Vssdk
 
         private readonly IVsMonitorSelection _iVsMonitorSelection;
         private readonly uint _monitorSelectionCookie;
+        private DTE _dte;
 
         public VsShellEventManager(IVsMonitorSelection iVsMonitorSelection)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
-            
+            _dte = Package.GetGlobalService(typeof(DTE)) as DTE;
             _iVsMonitorSelection = iVsMonitorSelection;
 
             _iVsMonitorSelection.AdviseSelectionEvents(this, out uint pdwCookie);
@@ -28,8 +30,17 @@ namespace CodeStream.VisualStudio.Vssdk
             VSColorTheme.ThemeChanged += VSColorTheme_ThemeChanged;
 
             //_dte.Events.DTEEvents.OnStartupComplete += DTEEvents_OnStartupComplete;
-            //_dte.Events.SolutionEvents.BeforeClosing += SolutionEvents_BeforeClosing;
+            if (_dte != null)
+            {
+                _dte.Events.SolutionEvents.BeforeClosing += SolutionEvents_BeforeClosing;
+            }
+
             //_dte.Events.DTEEvents.OnBeginShutdown += DTEEvents_OnBeginShutdown;
+        }
+
+        private void SolutionEvents_BeforeClosing()
+        {
+            BeforeSolutionClosingEventHandler?.Invoke(this, null);
         }
 
         private DateTime _lastThemeChange = DateTime.MinValue;
@@ -46,6 +57,7 @@ namespace CodeStream.VisualStudio.Vssdk
 
         public event EventHandler<WindowFocusChangedEventArgs> WindowFocusedEventHandler;
         public event EventHandler<ThemeChangedEventArgs> VisualStudioThemeChangedEventHandler;
+        public event EventHandler BeforeSolutionClosingEventHandler;
 
         public int OnSelectionChanged(IVsHierarchy pHierarchyOld, uint itemIdOld, IVsMultiItemSelect pMisOld, ISelectionContainer pScOld, IVsHierarchy pHierNew, uint itemidNew, IVsMultiItemSelect pMisNew, ISelectionContainer pScNew)
         {
@@ -114,6 +126,11 @@ namespace CodeStream.VisualStudio.Vssdk
                 {
                     _iVsMonitorSelection?.UnadviseSelectionEvents(_monitorSelectionCookie);
                     VSColorTheme.ThemeChanged -= VSColorTheme_ThemeChanged;
+                    if (_dte != null)
+                    {
+                        _dte.Events.SolutionEvents.BeforeClosing -= SolutionEvents_BeforeClosing;
+                    }
+
                     Log.Verbose($"Unregistering events");
                 }
 
@@ -124,6 +141,7 @@ namespace CodeStream.VisualStudio.Vssdk
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         private class FileInfo

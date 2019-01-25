@@ -30,14 +30,5 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
             // the object returned by the Content property.
             this.Content = new WebViewControl();
         }
-
-        protected override void Dispose(bool isDisposing)
-        {
-            var contentDisposable = Content as IDisposable;
-
-            contentDisposable?.Dispose();
-
-            base.Dispose(isDisposing);
-        }
     }
 }

@@ -40,7 +40,7 @@ namespace CodeStream.VisualStudio.Services
         void PostMessage(object message);
 
         void LoadHtml(string html);
-        void AddWindowMessageEvent(WindowMessageHandler handler);
+        void AddWindowMessageEvent(WindowMessageHandler messageHandler);
         /// <summary>
         /// Attaches the control to the parent element
         /// </summary>
@@ -84,7 +84,7 @@ namespace CodeStream.VisualStudio.Services
 
         public virtual string FooterHtml { get; } = "";
 
-        public abstract void AddWindowMessageEvent(WindowMessageHandler handler);
+        public abstract void AddWindowMessageEvent(WindowMessageHandler messageHandler);
 
         public abstract void AttachControl(FrameworkElement frameworkElement);
 
@@ -185,7 +185,7 @@ namespace CodeStream.VisualStudio.Services
             _serviceProvider = serviceProvider;
         }
 
-        public override void AddWindowMessageEvent(WindowMessageHandler handler)
+        public override void AddWindowMessageEvent(WindowMessageHandler messageHandler)
         {
 
         }

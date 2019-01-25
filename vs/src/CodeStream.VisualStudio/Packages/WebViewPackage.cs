@@ -32,11 +32,11 @@ namespace CodeStream.VisualStudio.Packages
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     public sealed class WebViewPackage : AsyncPackage
     {
-        protected override void Dispose(bool disposing)
-        {
-            // do any cleanup here
-            base.Dispose(disposing);
-        }
+        //protected override void Dispose(bool disposing)
+        //{
+        //    
+        //    base.Dispose(disposing);
+        //}
 
         //protected override int QueryClose(out bool pfCanClose)
         //{

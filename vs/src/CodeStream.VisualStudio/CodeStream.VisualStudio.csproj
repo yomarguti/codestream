@@ -188,6 +188,8 @@
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
+    <None Include="UI\WebViews\styles\ui-variables.less" />
+    <None Include="UI\WebViews\styles\webview.less" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="CodeStream.VisualStudio.pkgdef" />
@@ -274,6 +276,8 @@
     <Content Include="UI\WebViews\dist\webview.js">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Content Include="UI\WebViews\index.html" />
+    <Content Include="UI\WebViews\index.js" />
     <Content Include="UI\WebViews\theme.css">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>

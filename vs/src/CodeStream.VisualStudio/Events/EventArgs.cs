@@ -1,16 +1,32 @@
-﻿using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Annotations;
+using CodeStream.VisualStudio.Models;
 using Microsoft.VisualStudio.LiveShare;
 using System;
 using System.Collections.Generic;
-using CodeStream.VisualStudio.Annotations;
 
 namespace CodeStream.VisualStudio.Events
 {
-    public class EventBase  { }
+    public class EventBase { }
 
     public sealed class LanguageServerReadyEvent : EventBase
     {
         public bool IsReady { get; set; }
+    }
+
+    public sealed class LanguageServerDisconnectedEvent : EventBase
+    {
+        public string Message { get; }
+        public string Description { get; }
+        public string Reason { get; }
+        public  Exception Exception { get; }
+
+        public LanguageServerDisconnectedEvent(string message, string description, string reason, Exception exception)
+        {
+            Message = message;
+            Description = description;
+            Reason = reason;
+            Exception = exception;
+        }
     }
 
     public sealed class SessionReadyEvent : EventBase { }

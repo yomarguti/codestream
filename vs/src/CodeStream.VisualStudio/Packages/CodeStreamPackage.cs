@@ -5,6 +5,7 @@ using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI;
 using CodeStream.VisualStudio.UI.Settings;
 using CodeStream.VisualStudio.Vssdk;
+using Microsoft;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -56,6 +57,10 @@ namespace CodeStream.VisualStudio.Packages
             await InitializeLoggingAsync();
 
             var eventAggregator = await GetServiceAsync(typeof(SEventAggregator)) as IEventAggregator;
+#if DEBUG
+            Assumes.Present(eventAggregator);
+#endif
+
             _vsShellEventManager = new VsShellEventManager(await GetServiceAsync(typeof(SVsShellMonitorSelection)) as IVsMonitorSelection);
 
             // ReSharper disable once PossibleNullReferenceException
