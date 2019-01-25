@@ -126,7 +126,7 @@ namespace CodeStream.VisualStudio.Models
         public bool HasBeenEdited { get; set; }
         public List<string> MentionedUserIds { get; set; }
         public string Origin { get; set; } //?: "email" | "slack" | "teams";
-        public Dictionary<string, bool> Reactions { get; set; }
+        public Dictionary<string, List<string>> Reactions { get; set; }
 
         public string CodemarkId { get; set; }
         public List<File> Files { get; set; }
