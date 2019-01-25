@@ -503,6 +503,12 @@ export class SimpleStream extends Component {
 		);
 	}
 
+	handleClickCreateCodemark = e => {
+		e.preventDefault();
+		this.setMultiCompose(true);
+		this.setNewPostEntry("Global");
+	};
+
 	renderNavText() {
 		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
 		let { activePanel } = this.props;
@@ -581,12 +587,7 @@ export class SimpleStream extends Component {
 									</span>
 								</Tooltip>
 							</span>
-							<span
-								className="align-right-button"
-								onClick={e => {
-									this.setMultiCompose(true);
-								}}
-							>
+							<span className="align-right-button" onClick={this.handleClickCreateCodemark}>
 								<Tooltip title="Create Codemark" placement="bottomRight">
 									<span>
 										<Icon name="plus" className="button" />
