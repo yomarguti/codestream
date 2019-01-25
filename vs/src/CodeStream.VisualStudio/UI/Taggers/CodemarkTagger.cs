@@ -37,16 +37,20 @@ namespace CodeStream.VisualStudio.UI.Taggers
                 markers = _textDocument.TextBuffer.Properties.GetProperty<List<CsFullMarker>>(PropertyNames.CodemarkMarkers);
 
             if (markers != null && markers.AnySafe())
+            {
                 foreach (var span in spans)
                 {
                     var lineNumber = span.Start.GetContainingLine().LineNumber;
-                    var codemark = markers?.FirstOrDefault(_ => _?.Range?.Start.Line == lineNumber);
+                    var codemark = markers.FirstOrDefault(_ => _?.Range?.Start.Line == lineNumber);
                     if (codemark != null)
+                    {
                         yield return new TagSpan<CodemarkGlyphTag>(
                             new SnapshotSpan(span.Start - 1, 1),
                             new CodemarkGlyphTag(codemark)
                         );
+                    }
                 }
+            }
         }
     }
 }

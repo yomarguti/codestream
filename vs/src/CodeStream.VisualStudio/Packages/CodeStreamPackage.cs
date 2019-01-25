@@ -5,7 +5,9 @@ using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI;
 using CodeStream.VisualStudio.UI.Settings;
 using CodeStream.VisualStudio.Vssdk;
+#if DEBUG
 using Microsoft;
+#endif
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
