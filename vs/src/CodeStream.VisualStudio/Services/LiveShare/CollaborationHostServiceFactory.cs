@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel.Composition;
+﻿using System.ComponentModel.Composition;
 using System.Threading;
 using CodeStream.VisualStudio.Events;
 using Microsoft.VisualStudio.LiveShare;
@@ -10,17 +9,17 @@ namespace CodeStream.VisualStudio.Services.LiveShare
     /// <summary>
     /// See https://www.nuget.org/packages/Microsoft.VisualStudio.LiveShare/
     /// </summary>
-    [ExportCollaborationService(typeof(ICodeStreamHostCollaborationService),
+    [ExportCollaborationService(typeof(ICollaborationHostService),
         Name = "CodeStreamLS",
         Scope = SessionScope.Host,
         Role = ServiceRole.RemoteService
     )]
-    public class CodeStreamCollaborationServiceFactory : ICollaborationServiceFactory
+    public class CollaborationHostServiceFactory : ICollaborationServiceFactory
     {
         private readonly IEventAggregator _eventAggregator;
 
         [ImportingConstructor]
-        public CodeStreamCollaborationServiceFactory()
+        public CollaborationHostServiceFactory()
         {
             _eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
         }
@@ -28,7 +27,7 @@ namespace CodeStream.VisualStudio.Services.LiveShare
         public System.Threading.Tasks.Task<ICollaborationService> CreateServiceAsync(
             CollaborationSession collaborationSession, CancellationToken cancellationToken)
         {
-            return System.Threading.Tasks.Task.FromResult<ICollaborationService>(new CodeStreamCollaborationHostService(collaborationSession, _eventAggregator));
+            return System.Threading.Tasks.Task.FromResult<ICollaborationService>(new CollaborationHostService(collaborationSession, _eventAggregator));
         }
     }
 }

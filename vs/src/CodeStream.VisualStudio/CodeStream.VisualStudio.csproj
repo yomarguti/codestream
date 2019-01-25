@@ -139,8 +139,8 @@
     <Compile Include="Services\CredentialsService.cs" />
     <Compile Include="Services\DotNetBrowserService.cs" />
     <Compile Include="Services\IdeService.cs" />
-    <Compile Include="Services\LiveShare\CodeStreamCollaborationHostService.cs" />
-    <Compile Include="Services\LiveShare\CodeStreamCollaborationServiceFactory.cs" />
+    <Compile Include="Services\LiveShare\CollaborationHostService.cs" />
+    <Compile Include="Services\LiveShare\CollaborationHostServiceFactory.cs" />
     <Compile Include="Services\SessionService.cs" />
     <Compile Include="Services\SettingsService.cs" />
     <Compile Include="Services\ThemeManager.cs" />
@@ -151,9 +151,9 @@
     <Compile Include="UI\Margins\Codemark.xaml.cs">
       <DependentUpon>Codemark.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UI\Margins\CodemarkViewMargin.cs" />
+    <Compile Include="UI\Margins\CodemarkTextViewMargin.cs" />
     <Compile Include="UI\Margins\CodemarkViewModel.cs" />
-    <Compile Include="UI\Margins\CodeStreamMarginProvider.cs" />
+    <Compile Include="UI\Margins\CodemarkTextViewMarginProvider.cs" />
     <Compile Include="UI\Margins\IGlyphMetadata.cs" />
     <Compile Include="UI\PredefinedCodestreamNames.cs" />
     <Compile Include="UI\PropertyNames.cs" />

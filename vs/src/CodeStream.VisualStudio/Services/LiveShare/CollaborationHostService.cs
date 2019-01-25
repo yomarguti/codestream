@@ -5,19 +5,22 @@ using System;
 
 namespace CodeStream.VisualStudio.Services.LiveShare
 {
-    public interface ICodeStreamHostCollaborationService
+    /// <summary>
+    /// Just a marker interface
+    /// </summary>
+    public interface ICollaborationHostService
     {
 
     }
 
-    public class CodeStreamCollaborationHostService : ICodeStreamHostCollaborationService, ICollaborationService, IDisposable
+    public class CollaborationHostService : ICollaborationHostService, ICollaborationService, IDisposable
     {
-        public CodeStreamCollaborationHostService(CollaborationSession collaborationSession, IEventAggregator eventAggregator)
+        public CollaborationHostService(CollaborationSession collaborationSession, IEventAggregator eventAggregator)
         {
             eventAggregator.Publish(new LiveShareStartedEvent(collaborationSession));
         }
 
-        bool disposed = false;
+        private bool _disposed = false;
 
         public void Dispose()
         {
@@ -27,11 +30,12 @@ namespace CodeStream.VisualStudio.Services.LiveShare
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposed)
+            if (_disposed)
                 return;
 
             if (disposing)
             {
+                // slight HACK to clear out the current live share url once the live share has ended
                 var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
                 if (sessionService != null)
                 {
@@ -39,7 +43,7 @@ namespace CodeStream.VisualStudio.Services.LiveShare
                 }
             }
 
-            disposed = true;
+            _disposed = true;
         }
     }
 }

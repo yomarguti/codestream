@@ -15,19 +15,19 @@ using System.Linq;
 namespace CodeStream.VisualStudio.UI.Margins
 {
     [Export(typeof(IWpfTextViewMarginProvider))]
-    [Name(PredefinedCodestreamNames.CodemarkViewMargin)]
+    [Name(PredefinedCodestreamNames.CodemarkTextViewMargin)]
     [Order(After = PredefinedMarginNames.Glyph)]
     [MarginContainer(PredefinedMarginNames.Left)]
     [ContentType(ContentTypes.Text)]
     [TextViewRole(PredefinedTextViewRoles.Interactive)]
     [TextViewRole(PredefinedTextViewRoles.Document)]
-    internal sealed class CodeStreamMarginProvider : IWpfTextViewMarginProvider
+    internal sealed class CodemarkTextViewMarginProvider : IWpfTextViewMarginProvider
     {
         private readonly IViewTagAggregatorFactoryService _viewTagAggregatorFactoryService;
         private readonly Lazy<IGlyphFactoryProvider, IGlyphMetadata>[] _glyphFactoryProviders;
 
         [ImportingConstructor]
-        public CodeStreamMarginProvider(IViewTagAggregatorFactoryService viewTagAggregatorFactoryService,
+        public CodemarkTextViewMarginProvider(IViewTagAggregatorFactoryService viewTagAggregatorFactoryService,
             [ImportMany] IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> glyphFactoryProviders)
         {
             _viewTagAggregatorFactoryService = viewTagAggregatorFactoryService;
@@ -57,7 +57,7 @@ namespace CodeStream.VisualStudio.UI.Margins
             var agentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
             var settings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
 
-            return new CodemarkViewMargin(
+            return new CodemarkTextViewMargin(
                 _viewTagAggregatorFactoryService,
                 _glyphFactoryProviders,
                 wpfTextViewHost,

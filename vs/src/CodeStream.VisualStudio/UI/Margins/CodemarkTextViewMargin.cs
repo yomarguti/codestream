@@ -26,7 +26,7 @@ namespace CodeStream.VisualStudio.UI.Margins
     /// <summary>
     /// Margin's canvas and visual definition including both size and content
     /// </summary>
-    internal class CodemarkViewMargin : Canvas, IWpfTextViewMargin
+    internal class CodemarkTextViewMargin : Canvas, IWpfTextViewMargin
     {
         /// <summary>
         /// A value indicating whether the object is disposed.
@@ -54,12 +54,12 @@ namespace CodeStream.VisualStudio.UI.Margins
         private ITagAggregator<IGlyphTag> _tagAggregator;
 
         private bool _openCommentOnSelect;
-        private static readonly ILogger Log = LogManager.ForContext<CodemarkViewMargin>();
+        private static readonly ILogger Log = LogManager.ForContext<CodemarkTextViewMargin>();
         private static int MARGIN_WIDTH = 20;
         DocumentMarkersResponse _markers = null;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CodemarkViewMargin"/> class for a given <paramref name="textView"/>.
+        /// Initializes a new instance of the <see cref="CodemarkTextViewMargin"/> class for a given <paramref name="textView"/>.
         /// </summary>
         /// <param name="agentService"></param>
         /// <param name="settingsService"></param>
@@ -71,7 +71,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         /// <param name="sessionService"></param>
         /// <param name="textDocumentFactoryService"></param>
         /// <param name="viewTagAggregatorFactoryService"></param>
-        public CodemarkViewMargin(
+        public CodemarkTextViewMargin(
             IViewTagAggregatorFactoryService viewTagAggregatorFactoryService,
             IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> glyphFactoryProviders,
             IWpfTextViewHost wpfTextViewHost,
@@ -596,11 +596,11 @@ namespace CodeStream.VisualStudio.UI.Margins
         public ITextViewMargin GetTextViewMargin(string marginName)
         {
             // ReSharper disable once ArrangeStaticMemberQualifier
-            return string.Equals(marginName, PredefinedCodestreamNames.CodemarkViewMargin, StringComparison.OrdinalIgnoreCase) ? this : null;
+            return string.Equals(marginName, PredefinedCodestreamNames.CodemarkTextViewMargin, StringComparison.OrdinalIgnoreCase) ? this : null;
         }
 
         /// <summary>
-        /// Disposes an instance of <see cref="CodemarkViewMargin"/> class.
+        /// Disposes an instance of <see cref="CodemarkTextViewMargin"/> class.
         /// </summary>
         public void Dispose()
         {
@@ -629,7 +629,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         {
             if (_isDisposed)
             {
-                throw new ObjectDisposedException(PredefinedCodestreamNames.CodemarkViewMargin);
+                throw new ObjectDisposedException(PredefinedCodestreamNames.CodemarkTextViewMargin);
             }
         }
     }

@@ -16,7 +16,7 @@ namespace CodeStream.VisualStudio.UI.Glyphs
         public IGlyphFactory GetGlyphFactory(IWpfTextView view, IWpfTextViewMargin margin)
         {
             // HACK? only return the factory for our custom margin?
-            if (margin.GetType() != typeof(CodemarkViewMargin))
+            if (margin.GetType() != typeof(CodemarkTextViewMargin))
                 return null;
 
             return new CodemarkGlyphFactory();
