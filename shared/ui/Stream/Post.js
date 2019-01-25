@@ -521,13 +521,13 @@ class Post extends React.Component {
 		else
 			return (
 				<div className="align-right">
-					{getFeatures().inline && (
+					{/*getFeatures().inline && (
 						<Tooltip title="Pin as Annotation" placement="bottomRight">
 							<span>
 								<Icon name="pin" className="pin" onClick={this.handleStarClick} />
 							</span>
 						</Tooltip>
-					)}
+					)*/}
 					<Tooltip title="Add Reaction" placement="bottomRight">
 						<span>
 							<Icon name="smiley" className="smiley" onClick={this.handleReactionClick} />
