@@ -26,7 +26,7 @@ namespace CodeStream.VisualStudio.Packages
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExists_string, PackageAutoLoadFlags.BackgroundLoad)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasMultipleProjects_string, PackageAutoLoadFlags.BackgroundLoad)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasSingleProject_string, PackageAutoLoadFlags.BackgroundLoad)]
-    public sealed class CodeStreamPackage : AsyncPackage
+    public sealed class CodeStreamPackage : AsyncPackageBase
     {
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamPackage>();
 
@@ -45,18 +45,7 @@ namespace CodeStream.VisualStudio.Packages
 
             // kick it off!
             await GetServiceAsync(typeof(SToolWindowProvider));
-
-            Log.Verbose(@"
-   ___          _      __ _                            
-  / __\___   __| | ___/ _\ |_ _ __ ___  __ _ _ __ ___  
- / /  / _ \ / _` |/ _ \ \| __| '__/ _ \/ _` | '_ ` _ \ 
-/ /__| (_) | (_| |  __/\ \ |_| | |  __/ (_| | | | | | |
-\____/\___/ \__,_|\___\__/\__|_|  \___|\__,_|_| |_| |_|
-                                                       ");
-            Log.Information("Initializing CodeStream Extension v{PackageVersion} in {$VisualStudioName} ({$VisualStudioVersion})",
-    Application.ExtensionVersionShort, Application.VisualStudioName, Application.VisualStudioVersion);
-
-            await InitializeLoggingAsync();
+            await InitializeSettingsAsync();
 
             var eventAggregator = await GetServiceAsync(typeof(SEventAggregator)) as IEventAggregator;
 #if DEBUG
@@ -102,7 +91,7 @@ namespace CodeStream.VisualStudio.Packages
             base.Dispose(isDisposing);
         }
 
-        async System.Threading.Tasks.Task InitializeLoggingAsync()
+        async System.Threading.Tasks.Task InitializeSettingsAsync()
         {
             var packageSettings = await GetServiceAsync(typeof(SSettingsService)) as ISettingsService;
 
@@ -133,6 +122,7 @@ namespace CodeStream.VisualStudio.Packages
         async System.Threading.Tasks.Task InitializeUiComponentsAsync()
         {
             InfoBarProvider.Initialize(this);
+
             await System.Threading.Tasks.Task.CompletedTask;
         }
     }

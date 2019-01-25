@@ -37,7 +37,7 @@ namespace CodeStream.VisualStudio.Packages
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [Guid(Guids.ServiceProviderPackageId)]
     // ReSharper disable once RedundantExtendsListEntry
-    public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer,
+    public sealed class ServiceProviderPackage : AsyncPackageBase, IServiceContainer,
            IToolWindowProvider, SToolWindowProvider
     {
         /// <summary>
