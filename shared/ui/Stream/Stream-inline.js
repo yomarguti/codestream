@@ -506,7 +506,7 @@ export class SimpleStream extends Component {
 	handleClickCreateCodemark = e => {
 		e.preventDefault();
 		this.setMultiCompose(true);
-		this.setNewPostEntry("Global");
+		this.setNewPostEntry("Global Nav");
 	};
 
 	renderNavText() {
