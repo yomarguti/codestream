@@ -9,6 +9,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 
+#if !DEBUG
+using CodeStream.VisualStudio.Services;
+using Microsoft.VisualStudio.Shell;
+#endif
+
 namespace CodeStream.VisualStudio.Core.Logging
 {
     public static class LogManager
@@ -16,20 +21,20 @@ namespace CodeStream.VisualStudio.Core.Logging
 #if DEBUG
         private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Verbose;
 #else
-        private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Verbose; // Warning
+        private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Warning;
 #endif
 
         private static readonly LoggingLevelSwitch LoggingLevelSwitch = new LoggingLevelSwitch(_defaultLoggingLevel);
 
         static Logger CreateLogger()
         {
-//#if RELEASE
-//            var packageSettings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
-//            if (packageSettings != null && packageSettings.TraceLevel != TraceLevel.Silent)
-//            {
-//                _defaultLoggingLevel = FromTraceLevel(packageSettings.TraceLevel);
-//            }
-//#endif
+#if !DEBUG
+            var packageSettings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
+            if (packageSettings != null && packageSettings.TraceLevel != TraceLevel.Silent)
+            {
+                _defaultLoggingLevel = FromTraceLevel(packageSettings.TraceLevel);
+            }
+#endif
 
             var logPath = Path.Combine(Application.LogPath, "vs-extension.log");
 

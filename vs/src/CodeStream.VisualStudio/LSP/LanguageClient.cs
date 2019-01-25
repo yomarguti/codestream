@@ -117,7 +117,7 @@ namespace CodeStream.VisualStudio.LSP
 
             Connection connection = null;
 
-            var process = _languageServerProcess.Create();
+            var process = _languageServerProcess.Create(_settingsService.TraceLevel);
 
             using (Log.TimeOperation($"Starting server process. FileName={{FileNameAttribute}} Arguments={{Arguments}}", process.StartInfo.FileName, process.StartInfo.Arguments))
             {
