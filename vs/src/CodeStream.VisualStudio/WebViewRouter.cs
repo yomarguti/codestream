@@ -352,7 +352,7 @@ namespace CodeStream.VisualStudio
                                             var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id));
                                             var success = false;
                                             string email = null;
-
+                                            LoginResponseWrapper loginResponse = null;
                                             try
                                             {
                                                 var token = message.Params?.Value<string>();
@@ -363,7 +363,7 @@ namespace CodeStream.VisualStudio
 
                                                 var loginResponseWrapper = await _codeStreamAgent.LoginViaOneTimeCodeAsync(token, _settingsService.ServerUrl);
 
-                                                var loginResponse = loginResponseWrapper.ToObject<LoginResponseWrapper>();
+                                                loginResponse = loginResponseWrapper.ToObject<LoginResponseWrapper>();
                                                 if (loginResponse?.Result.Error.IsNotNullOrWhiteSpace() == true)
                                                 {
                                                     if (Enum.TryParse(loginResponse.Result.Error, out LoginResult loginResult))
@@ -385,7 +385,7 @@ namespace CodeStream.VisualStudio
                                                 else if (loginResponse != null)
                                                 {
                                                     _sessionService.State = loginResponse.Result.State;
-                                                    email = loginResponse.Result.State.Email;
+                                                    email = loginResponse.Result.LoginResponse.User.Email;
 
                                                     response.Body.Payload = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings(), loginResponse.Result.State, true);
                                                     _sessionService.SetUserLoggedIn();
@@ -411,6 +411,10 @@ namespace CodeStream.VisualStudio
                                                     using (var scope = SettingsScope.Create(_settingsService))
                                                     {
                                                         scope.SettingsService.Email = email;
+                                                    }
+                                                    if (_settingsService.AutoSignIn)
+                                                    {
+                                                        await _credentialsService.Value.SaveAsync(new Uri(_settingsService.ServerUrl), email, loginResponse.Result.LoginResponse.AccessToken);
                                                     }
                                                 }
                                             }
