@@ -55,6 +55,11 @@ Param(
     $Trace = $false
 )
 
+<#
+NOTE: the format of the [System.Version] object is as follows:
+major.minor[.build[.revision]]
+#>
+
 Set-StrictMode -Version Latest
 if ($Trace) { Set-PSDebug -Trace 1 }
 

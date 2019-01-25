@@ -26,7 +26,7 @@ New-Module -ScriptBlock {
             $regex = "(string Version = `")\d+\.\d+\.\d+"
             if ($_ -match $regex) {
                 $numberOfReplacements++
-                $newString = $newString -replace $regex,  "string Version = `"$($version.Major).$($version.Minor).$(($version.Patch, 0 -ne $null)[0])"
+                $newString = $newString -replace $regex,  "string Version = `"$($version.Major).$($version.Minor).$(($version.Build, 0 -ne $null)[0])"
             }
             $newString
         }

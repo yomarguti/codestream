@@ -26,7 +26,7 @@ New-Module -ScriptBlock {
         $document = Get-VsixManifestXml
 
         $numberOfReplacements = 0
-        $document.PackageManifest.Metadata.Identity.Version = "$($version.Major).$($version.Minor).$(($version.Patch, 0 -ne $null)[0])"
+        $document.PackageManifest.Metadata.Identity.Version = "$($version.Major).$($version.Minor).$(($version.Build, 0 -ne $null)[0])"
 
         $document.Save((Get-VsixManifestPath))
     }

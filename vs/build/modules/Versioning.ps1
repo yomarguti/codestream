@@ -6,10 +6,14 @@ New-Module -ScriptBlock {
         ($version.Major -ge 0) -and ($version.Minor -ge 0) -and ($version.Build -ge 0)
     }
 
-    function Generate-Version([System.Version]$currentVersion,
-        [bool]$BumpMajor, [bool] $BumpMinor,
-        [bool]$BumpPatch, [bool] $BumpBuild,
-        [int]$BuildNumber = -1) {
+    function Generate-Version(
+        [System.Version]$currentVersion,
+        [bool] $BumpMajor, 
+        [bool] $BumpMinor,
+        [bool] $BumpPatch, 
+        [bool] $BumpBuild,
+        [int] $BuildNumber = -1) 
+        {
 
         if (!(Validate-Version $currentVersion)) {
             Die 1 "Invalid current version $currentVersion"
