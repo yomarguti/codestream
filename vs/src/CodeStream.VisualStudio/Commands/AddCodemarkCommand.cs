@@ -74,29 +74,27 @@ namespace CodeStream.VisualStudio.Commands
             if (ideSerivce == null) return;
 
             var selectedText = ideSerivce.GetSelectedText(out IVsTextView view);
-            if (view != null)
+            if (view == null) return;
+
+            var componentModel = (IComponentModel)(Package.GetGlobalService(typeof(SComponentModel)));
+            var exports = componentModel.DefaultExportProvider;
+
+            var wpfTextView = exports.GetExportedValue<IVsEditorAdaptersFactoryService>()?.GetWpfTextView(view);
+            if (wpfTextView == null) return;
+
+            if (exports.GetExportedValue<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument))
             {
-                var componentModel = (IComponentModel)(Package.GetGlobalService(typeof(SComponentModel)));
-                var exports = componentModel.DefaultExportProvider;
+                var codeStreamService = Package.GetGlobalService((typeof(SCodeStreamService))) as ICodeStreamService;
+                if (codeStreamService == null) return;
 
-                var wpfTextView = exports.GetExportedValue<IVsEditorAdaptersFactoryService>()?.GetWpfTextView(view);
-                if (wpfTextView != null)
+
+                ThreadHelper.JoinableTaskFactory.Run(async delegate
                 {
-                    if (exports.GetExportedValue<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument))
-                    {
-                        var codeStreamService = Package.GetGlobalService((typeof(SCodeStreamService))) as ICodeStreamService;
-                        if (codeStreamService != null)
-                        {
-                            ThreadHelper.JoinableTaskFactory.Run(async delegate
-                            {
-                                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                                await codeStreamService.PostCodeAsync(new Uri(textDocument.FilePath), selectedText,
-                                    true, CancellationToken.None);
-                            });
-                        }
-                    }
-                }
+                    await codeStreamService.PostCodeAsync(new Uri(textDocument.FilePath), selectedText,
+                        true, textDocument.IsDirty, CancellationToken.None);
+                });
             }
         }
     }

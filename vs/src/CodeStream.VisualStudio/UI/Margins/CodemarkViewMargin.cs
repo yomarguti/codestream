@@ -347,7 +347,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                                 {
                                     // ReSharper disable once PossibleNullReferenceException
                                     await codeStreamService.PostCodeAsync(new Uri(_textDocument.FilePath), selectedText1,
-                                        true, CancellationToken.None);
+                                        true, _textDocument.IsDirty, CancellationToken.None);
                                 });
                             }
                         }));

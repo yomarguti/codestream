@@ -111,6 +111,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
                 await codeStreamService.PostCodeAsync(
                         new Uri(_textDocument.FilePath),
                         _selectedText,
+                        _textDocument.IsDirty,
                         true,
                         cancellationToken);
             });
@@ -118,7 +119,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 
         public Task<object> GetPreviewAsync(CancellationToken cancellationToken)
         {
-            // nothing here, uut here is an example:
+            // nothing here, but here is an example:
 
             //var textBlock = new TextBlock
             //{
