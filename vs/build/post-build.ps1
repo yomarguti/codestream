@@ -6,10 +6,14 @@ $codestreamLspAgentDir = $checkoutDir + '\codestream-lsp-agent'
 $buildDir = $checkoutDir + '\vs-codestream\build'
 $assetDir = $buildDir + '\artifacts\x86\Release'
 
+Write-Host '**** changing to buildDir' $buildDir
 cd $buildDir
+pwd
+ls
 . .\modules.ps1 | out-null
 . .\Modules\Versioning.ps1 | out-null
 $codeVer = Read-Version
+Write-Host '***** codeVer: ' $codeVer
 $assetVer = $codeVer + '+' + $env:build_number
 Write-Host '***** asset version: ' $assetVer
 $assetsBaseName = 'codestream-vs-' + $assetVer
