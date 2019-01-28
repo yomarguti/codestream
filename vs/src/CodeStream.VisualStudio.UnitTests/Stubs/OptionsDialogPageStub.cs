@@ -17,6 +17,8 @@ namespace CodeStream.VisualStudio.UnitTests.Stubs
         public void SaveSettingsToStorage() { }
         public void LoadSettingsFromStorage() { }
         public TraceLevel TraceLevel { get; set; }
-        public bool AutoSignIn { get; set; }
+        public bool AutoSignIn { get; set; } 
+        public bool ProxyStrictSsl { get; set; }
+        public string ProxyUrl { get; set; }
     }
 }
