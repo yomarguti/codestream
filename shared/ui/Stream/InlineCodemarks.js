@@ -154,7 +154,7 @@ export class SimpleInlineCodemarks extends Component {
 					ref={ref => (this._scrollDiv = ref)}
 				>
 					{this.renderMain()}
-					{range(textEditorFirstLine, textEditorLastLine + 20).map(lineNum => {
+					{range(textEditorFirstLine, textEditorLastLine + 100).map(lineNum => {
 						return (
 							<div
 								onClick={this.handleClickPlus}
