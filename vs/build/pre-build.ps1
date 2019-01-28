@@ -34,12 +34,3 @@ Write-Host '************ npm install --no-save'
 & npm install --no-save
 Write-Host '************ npm run build'
 & npm run build
-
-$vscodeDir = $checkoutDir + '\vscode-codestream'
-Write-Host '************************************************'
-Write-Host '************* Running a build on ' $vscodeDir
-cd $vscodeDir
-Write-Host '************* npm install --no-save'
-& npm install --no-save
-Write-Host '************* npm run build'
-& npm run build
