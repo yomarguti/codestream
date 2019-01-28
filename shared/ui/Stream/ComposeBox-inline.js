@@ -166,7 +166,7 @@ class ComposeBox extends React.Component {
 
 		this.tabIndexCount = 0;
 
-		const startingLine = (quote && quote.location)[0] || 20; // 20 is a placeholder to attempt to bring the element towards the middle of the screen
+		const startingLine = quote && quote.location ? quote.location[0] : 20; // 20 is a placeholder to attempt to bring the element towards the middle of the screen
 		let top;
 		if (textEditorLastLine - startingLine <= 10) {
 			/*  if the code selected is towards the bottom of the viewport,
