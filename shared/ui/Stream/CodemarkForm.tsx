@@ -485,6 +485,14 @@ class CodemarkForm extends React.Component<Props, State> {
 		});
 	}
 
+	getCodeBlockHint() {
+		const { codeBlock } = this.props;
+		if (!codeBlock) return "Select a range to comment on a block of code.";
+
+		const [startLine, _, endLine] = codeBlock.location;
+		return `Commenting on lines ${startLine + 1}-${endLine} in ${codeBlock.file}`;
+	}
+
 	renderMessageInput = () => {
 		const { codeBlock, collapsed } = this.props;
 		const { type, text } = this.state;
@@ -602,12 +610,9 @@ class CodemarkForm extends React.Component<Props, State> {
 			<form id="code-comment-form" className="standard-form" key="two">
 				<fieldset className="form-body">
 					<div id="controls" className="control-group">
-						{!this.props.codeBlock && (
-							<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
-								Yo. Select code. WRITEME.
-							</div>
-						)}
-
+						<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
+							{this.getCodeBlockHint()}
+						</div>
 						<div className="tab-group">
 							<input
 								id="radio-comment-type-comment"
