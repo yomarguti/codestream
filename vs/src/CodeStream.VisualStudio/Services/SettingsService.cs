@@ -1,10 +1,10 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Annotations;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.UI.Settings;
 using System;
 using System.Text.RegularExpressions;
-using CodeStream.VisualStudio.Annotations;
 
 namespace CodeStream.VisualStudio.Services
 {
@@ -27,6 +27,8 @@ namespace CodeStream.VisualStudio.Services
         string GetEnvironmentVersionFormated(string extensionVersion, string buildNumber);
         Ide GetIdeInfo();
         Extension GetExtensionInfo();
+        string ProxyUrl { get; set; }
+        bool ProxyStrictSsl { get; set; }
     }
 
     public class Settings
@@ -49,6 +51,8 @@ namespace CodeStream.VisualStudio.Services
         /// this is the full formatted version
         /// </summary>
         public string Version { get; set; }
+        public string ProxyUrl { get; set; }
+        public bool ProxyStrictSsl { get; set; }
     }
 
     public interface SSettingsService { }
@@ -146,6 +150,18 @@ namespace CodeStream.VisualStudio.Services
             set => DialogPage.AutoSignIn = value;
         }
 
+        public string ProxyUrl
+        {
+            get => DialogPage.ProxyUrl;
+            set => DialogPage.ProxyUrl = value;
+        }
+
+        public bool ProxyStrictSsl
+        {
+            get => DialogPage.ProxyStrictSsl;
+            set => DialogPage.ProxyStrictSsl = value;
+        }
+		
         public Ide GetIdeInfo()
         {
             return new Ide
@@ -189,10 +205,10 @@ namespace CodeStream.VisualStudio.Services
         public string GetEnvironmentVersionFormated(string extensionVersion, string buildNumber)
         {
             var environmentName = GetEnvironmentName();
-            return $"{extensionVersion}{(buildNumber.IsNullOrWhiteSpace() ? "" : $"-{buildNumber}")}{(environmentName != "prod" ? "(" + environmentName + ")" : "")}";
+            return $"{extensionVersion}{(buildNumber.IsNullOrWhiteSpace() ? "" : $"-{buildNumber}")}{(environmentName != "prod" ? " (" + environmentName + ")" : "")}";
         }
     }
-	
+
     public class SettingsScope : IDisposable
     {
         public ISettingsService SettingsService { get; private set; }

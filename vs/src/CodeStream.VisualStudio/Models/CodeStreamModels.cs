@@ -506,7 +506,7 @@ namespace CodeStream.VisualStudio.Models
         public string TraceLevel { get; set; }
         public bool IsDebugging { get; set; }
 
-        //public Proxy Proxy { get; set; }
+        public Proxy Proxy { get; set; }
     }
 
     public class WebviewIpcGenericMessageResponse

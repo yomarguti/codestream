@@ -31,6 +31,7 @@ namespace CodeStream.VisualStudio.Packages
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamPackage>();
 
         private Lazy<ICodeStreamService> _codeStreamService;
+        private ISettingsService _settingsService;
         private IDisposable _languageServerReadyEvent;
         private VsShellEventManager _vsShellEventManager;
         private CodeStreamEventManager _codeStreamEventManager;
@@ -43,8 +44,6 @@ namespace CodeStream.VisualStudio.Packages
             // Do any initialization that requires the UI thread after switching to the UI thread.
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-            // kick it off!
-            await GetServiceAsync(typeof(SToolWindowProvider));
             await InitializeSettingsAsync();
 
             var eventAggregator = await GetServiceAsync(typeof(SEventAggregator)) as IEventAggregator;
@@ -75,7 +74,6 @@ namespace CodeStream.VisualStudio.Packages
         //    if (pfCanClose)
         //    {
         //    }
-
         //    return VSConstants.S_OK;
         //}
 
@@ -83,6 +81,11 @@ namespace CodeStream.VisualStudio.Packages
         {
             if (isDisposing)
             {
+                if (_settingsService != null && _settingsService.DialogPage != null)
+                {
+                    _settingsService.DialogPage.PropertyChanged -= DialogPage_PropertyChanged;
+                }
+
                 _vsShellEventManager?.Dispose();
                 _languageServerReadyEvent?.Dispose();
                 _codeStreamEventManager?.Dispose();
@@ -91,31 +94,40 @@ namespace CodeStream.VisualStudio.Packages
             base.Dispose(isDisposing);
         }
 
-        async System.Threading.Tasks.Task InitializeSettingsAsync()
+        private async System.Threading.Tasks.Task InitializeSettingsAsync()
         {
-            var packageSettings = await GetServiceAsync(typeof(SSettingsService)) as ISettingsService;
-
-            if (packageSettings != null)
+            _settingsService = await GetServiceAsync(typeof(SSettingsService)) as ISettingsService;
+            if (_settingsService != null)
             {
-                packageSettings.DialogPage.PropertyChanged += (sender, args) =>
+                _settingsService.DialogPage.PropertyChanged += DialogPage_PropertyChanged;
+            }
+        }
+
+        private void DialogPage_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs args)
+        {
+            if (_settingsService == null)
+            {
+                Log.Verbose($"{nameof(DialogPage_PropertyChanged)} SettingsService is null");
+                return;
+            }
+
+            if (args.PropertyName == nameof(_settingsService.TraceLevel))
+            {
+                LogManager.SetTraceLevel(_settingsService.TraceLevel);
+            }
+            else if (args.PropertyName == nameof(_settingsService.WebAppUrl) ||
+                     args.PropertyName == nameof(_settingsService.ServerUrl) ||
+                     args.PropertyName == nameof(_settingsService.Team) ||
+                     args.PropertyName == nameof(_settingsService.ProxyUrl) ||
+                     args.PropertyName == nameof(_settingsService.ProxyStrictSsl))
+            {
+                Log.Verbose($"Url(s) or Team or Proxy changed");
+                var sessionService = GetService(typeof(SSessionService)) as ISessionService;
+                if (sessionService?.IsAgentReady == true || sessionService?.IsReady == true)
                 {
-                    if (args.PropertyName == nameof(packageSettings.TraceLevel))
-                    {
-                        LogManager.SetTraceLevel(packageSettings.TraceLevel);
-                    }
-                    else if (args.PropertyName == nameof(packageSettings.WebAppUrl) ||
-                             args.PropertyName == nameof(packageSettings.ServerUrl) ||
-                             args.PropertyName == nameof(packageSettings.Team))
-                    {
-                        Log.Verbose($"Url(s) or Team changed");
-                        var sessionService = GetService(typeof(SSessionService)) as ISessionService;
-                        if (sessionService?.IsAgentReady == true || sessionService?.IsReady == true)
-                        {
-                            var browserService = GetService(typeof(SBrowserService)) as IBrowserService;
-                            browserService?.ReloadWebView();
-                        }
-                    }
-                };
+                    var browserService = GetService(typeof(SBrowserService)) as IBrowserService;
+                    browserService?.ReloadWebView();
+                }
             }
         }
 

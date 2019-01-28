@@ -21,14 +21,18 @@ namespace CodeStream.VisualStudio.UI.Settings
         private string _webAppUrl = "https://app.codestream.com";
         private string _serverUrl = "https://api.codestream.com";
 #endif
+
+        private string _proxyUrl;
+        private bool _proxyStrictSsl;
+
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        [Category(Application.Name)]
+        [Category("Authentication")]
         [DisplayName("Email")]
-        [Description("")]
+        [Description("Specifies the email address to use to connect to the CodeStream service")]
         public string Email
         {
             get => _email;
@@ -39,59 +43,7 @@ namespace CodeStream.VisualStudio.UI.Settings
             }
         }
 
-        [Category(Application.Name)]
-        [DisplayName("Show Markers")]
-        [Description("Specifies whether to show CodeStream markers in editor margins")]
-        public bool ShowMarkers
-        {
-            get => _showMarkers;
-            set
-            {
-                _showMarkers = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        [Category(Application.Name)]
-        [DisplayName("Avatars")]
-        [Description("Specifies whether to show avatars")]
-        public bool ShowHeadshots
-        {
-            get => _showHeadshots;
-            set
-            {
-                _showHeadshots = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        [Category(Application.Name)]
-        [DisplayName("Server Url")]
-        [Description("Specifies the url to use to connect to the CodeStream service")]
-        public string ServerUrl
-        {
-            get => _serverUrl;
-            set
-            {
-                _serverUrl = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        [Category(Application.Name)]
-        [DisplayName("Web App Url")]
-        [Description("Specifies the url for the CodeStream web portal")]
-        public string WebAppUrl
-        {
-            get => _webAppUrl;
-            set
-            {
-                _webAppUrl = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        [Category(Application.Name)]
+        [Category("Authentication")]
         [DisplayName("Team")]
         [Description("Specifies an optional team to connect to the CodeStream service")]
         public string Team
@@ -104,7 +56,99 @@ namespace CodeStream.VisualStudio.UI.Settings
             }
         }
 
-        [Category(Application.Name)]
+        [Category("Authentication")]
+        [DisplayName("Auto Sign In")]
+        [Description("Specifies whether to automatically sign in to CodeStream")]
+        public bool AutoSignIn
+        {
+            get => _autoSignIn;
+            set
+            {
+                _autoSignIn = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        [Category("Connectivity")]
+        [DisplayName("Server Url")]
+        [Description("Specifies the url to use to connect to the CodeStream service")]
+        public string ServerUrl
+        {
+            get => _serverUrl;
+            set
+            {
+                _serverUrl = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        [Category("Connectivity")]
+        [DisplayName("Web App Url")]
+        [Description("Specifies the url for the CodeStream web portal")]
+        public string WebAppUrl
+        {
+            get => _webAppUrl;
+            set
+            {
+                _webAppUrl = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        [Category("Connectivity")]
+        [DisplayName("Proxy Url")]
+        [Description("Specifies an optional proxy url")]
+        public string ProxyUrl
+        {
+            get => _proxyUrl;
+            set
+            {
+                _proxyUrl = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        [Category("Connectivity")]
+        [DisplayName("Proxy Strict SSL")]
+        [Description("Specifies where the proxy server certificate should be verified against the list of supplied CAs")]
+        public bool ProxyStrictSsl
+        {
+            get => _proxyStrictSsl;
+            set
+            {
+                _proxyStrictSsl = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+
+        [Category("UI")]
+        [DisplayName("Show Markers")]
+        [Description("Specifies whether to show CodeStream markers in editor margins")]
+        public bool ShowMarkers
+        {
+            get => _showMarkers;
+            set
+            {
+                _showMarkers = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        [Category("UI")]
+        [DisplayName("Avatars")]
+        [Description("Specifies whether to show avatars")]
+        public bool ShowHeadshots
+        {
+            get => _showHeadshots;
+            set
+            {
+                _showHeadshots = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        [Category("UI")]
         [DisplayName("Open Comment On Select")]
         [Description(
             "Specifies whether to automatically open the comment dialog when the CodeStream panel is open and you select code")]
@@ -118,7 +162,7 @@ namespace CodeStream.VisualStudio.UI.Settings
             }
         }
 
-        [Category(Application.Name)]
+        [Category("Other")]
         [DisplayName("Trace Level")]
         [Description("Specifies how much (if any) output will be sent to the CodeStream log")]
         public TraceLevel TraceLevel
@@ -127,19 +171,6 @@ namespace CodeStream.VisualStudio.UI.Settings
             set
             {
                 _traceLevel = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        [Category(Application.Name)]
-        [DisplayName("Auto Sign In")]
-        [Description("Specifies whether to automatically sign in to CodeStream")]
-        public bool AutoSignIn
-        {
-            get => _autoSignIn;
-            set
-            {
-                _autoSignIn = value;
                 NotifyPropertyChanged();
             }
         }

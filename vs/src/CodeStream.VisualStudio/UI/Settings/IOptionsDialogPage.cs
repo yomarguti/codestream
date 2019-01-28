@@ -16,5 +16,7 @@ namespace CodeStream.VisualStudio.UI.Settings
         void LoadSettingsFromStorage();
         TraceLevel TraceLevel { get; set; }
         bool AutoSignIn { get; set; }
+        string ProxyUrl { get; set; }
+        bool ProxyStrictSsl { get; set; }
     }
 }

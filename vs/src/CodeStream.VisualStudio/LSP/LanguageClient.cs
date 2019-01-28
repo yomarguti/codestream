@@ -1,5 +1,6 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
+using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.LanguageServer.Client;
@@ -90,17 +91,25 @@ namespace CodeStream.VisualStudio.LSP
         {
             get
             {
+                var proxy = _settingsService.ProxyStrictSsl || !_settingsService.ProxyUrl.IsNullOrWhiteSpace()
+                    ? new Proxy()
+                    {
+                        Url = _settingsService.ProxyUrl,
+                        StrictSsl = _settingsService.ProxyStrictSsl
+                    }
+                    : null;
+
                 return new InitializationOptions
                 {
                     Extension = _settingsService.GetExtensionInfo(),
                     Ide = _settingsService.GetIdeInfo(),
 #if DEBUG
                     TraceLevel = TraceLevel.Verbose.ToJsonValue(),
-                    IsDebugging = true
+                    IsDebugging = true,
 #else
                     TraceLevel = _settingsService.TraceLevel.ToJsonValue(),
 #endif
-
+                    Proxy = proxy
                 };
             }
         }
