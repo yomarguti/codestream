@@ -127,13 +127,26 @@ class CodemarkForm extends React.Component<Props, State> {
 			// privacy: "private"
 		};
 
-		this.state = props.editingCodemark
+		const state = props.editingCodemark
 			? merge(defaultState, props.editingCodemark)
 			: ({
 					isLoading: false,
 					notify: false,
 					...defaultState
 			  } as State);
+
+		let assignees: any;
+		if (state.assignees == undefined) {
+			assignees = undefined;
+		} else if (Array.isArray(state.assignees)) {
+			assignees = state.assignees.map(a => state.assignableUsers.find((au: any) => au.value === a));
+		} else {
+			assignees = state.assignableUsers.find((au: any) => au.value === state.assignees);
+		}
+		this.state = {
+			...state,
+			assignees
+		}
 	}
 
 	componentDidMount() {
