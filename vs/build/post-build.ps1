@@ -1,7 +1,6 @@
 param([string] $checkoutDir = $pwd, [string] $assetEnv = "")
 
 $codestreamVsDir = $checkoutDir + '\vs-codestream'
-$codestreamVsCodeDir = $checkoutDir + '\vscode-codestream'
 $codestreamComponentsDir = $checkoutDir + '\codestream-components'
 $codestreamLspAgentDir = $checkoutDir + '\codestream-lsp-agent'
 $buildDir = $checkoutDir + '\vs-codestream\build'
@@ -18,8 +17,6 @@ $assetsBaseName = 'codestream-vs-' + $assetVer
 $commitIds = @{}
 cd $codestreamVsDir
 $commitIds.codestream_vs = git rev-parse HEAD
-cd $codestreamVsCodeDir
-$commitIds.codestream_vscode = git rev-parse HEAD
 cd $codestreamComponentsDir
 $commitIds.codestream_components = git rev-parse HEAD
 cd $codestreamLspAgent
