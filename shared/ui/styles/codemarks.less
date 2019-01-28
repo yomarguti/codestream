@@ -175,9 +175,12 @@
 	color: @text-color-subtle;
 	scroll-snap-align: start;
 	width: 50px;
-	&:hover {
+	&:hover:not(.disabled) {
 		opacity: 1;
 		z-index: 1;
+	}
+	&.disabled {
+		cursor: none;
 	}
 	.icon {
 		cursor: pointer;

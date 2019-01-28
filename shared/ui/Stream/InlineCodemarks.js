@@ -8,6 +8,7 @@ import Icon from "./Icon";
 import Codemark from "./Codemark";
 import Tooltip from "./Tooltip";
 import createClassString from "classnames";
+import { range } from "../utils";
 
 export class SimpleInlineCodemarks extends Component {
 	disposables = [];
@@ -129,11 +130,9 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	render() {
-		let hundred = [...Array(700).keys()];
-		const { textEditorFirstLine = 0 } = this.props;
+		const { textEditorFirstLine = 0, textEditorLastLine = 0 } = this.props;
 
-		const top = (textEditorFirstLine === 0 ? 0 : textEditorFirstLine + 0.65) * -18;
-		console.log("Main render codemarks");
+		// const top = (textEditorFirstLine === 0 ? 0 : textEditorFirstLine + 0.65) * -18;
 		return (
 			<div className="panel">
 				<div className="filters">
@@ -155,9 +154,16 @@ export class SimpleInlineCodemarks extends Component {
 					ref={ref => (this._scrollDiv = ref)}
 				>
 					{this.renderMain()}
-					{hundred.map(index => {
+					{range(textEditorFirstLine, textEditorLastLine + 20).map(lineNum => {
 						return (
-							<div onClick={e => this.handleClickPlus(index)} className="hover-plus" key={index}>
+							<div
+								onClick={this.handleClickPlus}
+								className={createClassString("hover-plus", {
+									disabled: lineNum > textEditorLastLine
+								})}
+								key={lineNum}
+								data-lineNum={lineNum}
+							>
 								<Icon name="plus" />
 							</div>
 						);
@@ -167,9 +173,13 @@ export class SimpleInlineCodemarks extends Component {
 		);
 	}
 
-	handleClickPlus = lineNum => {
+	handleClickPlus = event => {
+		event.preventDefault();
 		this.props.setNewPostEntry("Spatial View");
-		this.props.startCommentOnLine(lineNum, this.props.textEditorUri);
+		this.props.startCommentOnLine(
+			Number(event.currentTarget.dataset.linenum),
+			this.props.textEditorUri
+		);
 		setTimeout(() => this.props.focusInput(), 500);
 	};
 

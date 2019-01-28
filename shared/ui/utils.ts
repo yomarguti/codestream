@@ -54,7 +54,13 @@ export const findLast = <T>(array: T[], fn: (item: T) => boolean): any | undefin
 	}
 };
 
-export const rangeTo = (size: number) => [...Array(size).keys()];
+export function range(start: number, end: number): number[] {
+	const array: number[] = [];
+	for (let i = start; i < end; i++) {
+		array.push(i);
+	}
+	return array;
+}
 
 // let fnCount = 0;
 // TODO: maybe make the debounced fn async so callers can wait for it to execute
