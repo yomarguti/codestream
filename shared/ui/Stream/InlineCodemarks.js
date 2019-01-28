@@ -48,10 +48,24 @@ export class SimpleInlineCodemarks extends Component {
 		}
 	}
 
+	getCodemarkStartLine(codemark) {
+		if (!codemark.markers || codemark.markers.length === 0) return;
+		const marker = codemark.markers[0];
+		const location = marker.location || marker.locationWhenCreated;
+		return location[0];
+	}
+
 	renderCodemarks = codemarks => {
 		if (codemarks.length === 0) return null;
 		else {
 			return codemarks.map(codemark => {
+				const codemarkStartLine = this.getCodemarkStartLine(codemark);
+				if (!codemarkStartLine) return null;
+
+				let top;
+				if (codemarkStartLine > 4) top = 18 * (codemarkStartLine - 4);
+				else top = 18;
+
 				return (
 					<Codemark
 						key={codemark.id}
@@ -65,6 +79,7 @@ export class SimpleInlineCodemarks extends Component {
 						onMouseLeave={this.handleUnhighlightCodemark}
 						action={this.props.postAction}
 						query={this.state.q}
+						style={{ top }}
 					/>
 				);
 			});

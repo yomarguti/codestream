@@ -44,9 +44,13 @@ interface Props {
 	onMouseEnter?(codemark: CodemarkEntity): any;
 	onMouseLeave?(codemark: CodemarkEntity): any;
 	query?: string;
+	style?: object;
 }
 
 export class Codemark extends React.Component<Props, State> {
+	static defaultProps = {
+		style: {}
+	};
 	render() {
 		if (this.props.collapsed) return this.renderCollapsedCodemark();
 		else return null;
@@ -163,15 +167,6 @@ export class Codemark extends React.Component<Props, State> {
 	renderCollapsedCodemark() {
 		const { codemark, inline } = this.props;
 		const file = codemark.markers && codemark.markers[0].file;
-		// const startLine = codemark.markers && codemark.markers[0].location[0];
-		let top = 0;
-		if (codemark.markers) {
-			const marker = codemark.markers[0];
-			if (marker) {
-				const location = marker.location || marker.locationWhenCreated;
-				if (location) top = 18 * location[0] - 3;
-			}
-		}
 
 		const user = {
 			username: "pez",
@@ -183,7 +178,7 @@ export class Codemark extends React.Component<Props, State> {
 		// const style = inline ?
 		return (
 			<div
-				style={{ top, zIndex: 2 }}
+				style={{ ...this.props.style, zIndex: 2 }}
 				className={cx("codemark collapsed", codemark.color, { inline })}
 				onClick={this.handleClickCodemark}
 				onMouseEnter={this.handleMouseEnterCodemark}
