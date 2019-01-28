@@ -4,10 +4,9 @@ import { connect } from "react-redux";
 import createClassString from "classnames";
 import { PostCompose } from "./PostCompose";
 import { CodemarkForm } from "./CodemarkForm";
-import { arrayToRange } from "../utils";
 // import hljs from "highlight.js";
 // const Path = require("path");
-import { createServiceCard } from "./actions";
+import { editorRevealLine } from "./actions";
 import { MessageInput } from "./MessageInput";
 
 class ComposeBox extends React.Component {
@@ -163,13 +162,19 @@ class ComposeBox extends React.Component {
 	};
 
 	render() {
-		const { forwardedRef, multiCompose, quote } = this.props;
+		const { forwardedRef, multiCompose, quote, textEditorLastLine } = this.props;
 
 		this.tabIndexCount = 0;
 
-		let range = quote ? arrayToRange(quote.location) : { start: { row: 20 } }; // 20 is a placeholder to attempt to bring the element towards the middle of the screen
-		let style = undefined;
-		if (range) style = { top: 18 * range.start.row + 15 };
+		const startingLine = (quote && quote.location)[0] || 20; // 20 is a placeholder to attempt to bring the element towards the middle of the screen
+		let top;
+		if (textEditorLastLine - startingLine <= 10) {
+			/*  if the code selected is towards the bottom of the viewport,
+					render the box further up so it doesn't get hidden behind the bottom of the editor */
+			top = 18 * (startingLine - 10);
+		} else top = 18 * startingLine - 15;
+
+		let style = { top };
 
 		return (
 			<div
@@ -218,7 +223,7 @@ class ComposeBox extends React.Component {
 
 const ConnectedComposeBox = connect(
 	null,
-	{ createServiceCard }
+	{ editorRevealLine }
 )(ComposeBox);
 
 export default React.forwardRef((props, ref) => (
