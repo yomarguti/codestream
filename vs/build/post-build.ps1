@@ -31,7 +31,7 @@ $assetInfo.name = "codestream-vs"
 $assetInfo.version = $codeVer
 $assetInfo.buildNumber = $env:build_number
 $assetInfo.repoCommitId = $commitIds
-$infoFileName = $assetDir + '\' + $assetsBaseName + '.json'
+$infoFileName = $assetDir + '\' + $assetsBaseName + '.info'
 Write-Host '********** Creating ' $infoFileName
 $assetInfo | ConvertTo-Json | Out-File $infoFileName
 
