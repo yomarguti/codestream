@@ -127,6 +127,12 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	toggleShowMarkers = () => {
+		this.props.telemetry({
+			eventName: "Codemarks View Toggled",
+			properties: {
+				"Direction": "List"
+			}
+		});
 		this.props.setActivePanel("knowledge");
 	};
 

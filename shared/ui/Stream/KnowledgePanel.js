@@ -375,6 +375,12 @@ export class SimpleKnowledgePanel extends Component {
 		const showMarkers = !this.props.showMarkers;
 		// this.props.showMarkersInEditor(showMarkers);
 		// this.setState({ showMarkers });
+		this.props.telemetry({
+			eventName: "Codemarks View Toggled",
+			properties: {
+				"Direction": "Inline"
+			}
+		});
 		this.props.setActivePanel("inline");
 	};
 
