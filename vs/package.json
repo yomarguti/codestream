@@ -12,6 +12,7 @@
   "scripts": {
     "build": "webpack --env.development",
     "bundle": "npm install --no-save && npm run agent:bundle && webpack --env.production",
+    "bundle:ci": "npm run clean:ci && npm run bundle",
     "clean": "git clean -Xdf -e !node_modules -e !node_modules/**/* -e !codestream*.info",
     "clean:ci": "git clean -xdf && npm run webview:clean:ci && npm run agent:clean:ci",
     "rebuild": "npm run clean && npm install --no-save && npm run agent:rebuild && npm run build",
@@ -22,6 +23,7 @@
     "agent:rebuild": "pushd \"../codestream-lsp-agent\" && npm run rebuild && popd",
     "agent:test": "pushd \"../codestream-lsp-agent\" && npm run test && popd",
     "agent:watch": "pushd \"../codestream-lsp-agent\" && npm run watch && popd",
+    "webview:clean:ci": "pushd \"../codestream-components\" && npm run clean:ci && popd",
     "preinstall": "pushd \"../codestream-components\" && npm install --no-save && popd"
   },
   "dependencies": {},
