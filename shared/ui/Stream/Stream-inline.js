@@ -515,18 +515,19 @@ export class SimpleStream extends Component {
 		const { searchBarOpen, q } = this.state;
 		const { menuOpen, menuTarget } = this.state;
 		if (searchBarOpen && q) activePanel = "knowledge";
-		const umisClass = createClassString("umis", {
-			mentions: umis.totalMentions > 0,
-			unread: umis.totalMentions == 0 && umis.totalUnread > 0
-		});
-		const totalUMICount = umis.totalMentions ? (
-			<div className="mentions-badge">{umis.totalMentions > 99 ? "99+" : umis.totalMentions}</div>
-		) : umis.totalUnread ? (
-			<div className="unread-badge" />
-		) : (
-			// <Icon name="chevron-left" className="show-channels-icon" />
-			""
-		);
+		// const umisClass = createClassString("umis", {
+		// 	// mentions: umis.totalMentions > 0,
+		// 	unread: umis.totalMentions == 0 && umis.totalUnread > 0
+		// });
+		const totalUMICount =
+			false && umis.totalMentions ? (
+				<div className="mentions-badge">{umis.totalMentions > 99 ? "99+" : umis.totalMentions}</div>
+			) : umis.totalUnread ? (
+				<div className="unread-badge">.</div>
+			) : (
+				// <Icon name="chevron-left" className="show-channels-icon" />
+				""
+			);
 
 		return (
 			<nav>
@@ -567,7 +568,7 @@ export class SimpleStream extends Component {
 							<span>
 								{this.props.configs.muteAll && <Icon name="mute" className="mute" />}
 								Channels
-								{!this.props.configs.muteAll && <span className={umisClass}>{totalUMICount}</span>}
+								{!this.props.configs.muteAll && totalUMICount}
 							</span>
 						</label>
 						<label
