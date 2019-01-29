@@ -2,9 +2,9 @@ import { RequestInit, Response } from "node-fetch";
 import { Disposable, Event } from "vscode-languageserver";
 import {
 	AccessToken,
-	ApiCapabilities,
 	ArchiveStreamRequest,
 	ArchiveStreamResponse,
+	Capabilities,
 	CloseStreamRequest,
 	CloseStreamResponse,
 	ConnectionStatus,
@@ -229,7 +229,7 @@ export interface ApiProvider {
 
 	readonly teamId: string;
 	readonly userId: string;
-	readonly capabilities: ApiCapabilities;
+	readonly capabilities: Capabilities;
 
 	fetch<R extends object>(url: string, init?: RequestInit, token?: string): Promise<R>;
 	useMiddleware(middleware: CodeStreamApiMiddleware): Disposable;

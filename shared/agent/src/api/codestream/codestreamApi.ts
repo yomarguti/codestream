@@ -10,6 +10,7 @@ import { Logger } from "../../logger";
 import { VersionInfo } from "../../session";
 import {
 	ArchiveStreamRequest,
+	Capabilities,
 	CloseStreamRequest,
 	CreateChannelStreamRequest,
 	CreateCodemarkRequest,
@@ -151,8 +152,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private _userId: string | undefined;
 	private _preferences: CodeStreamPreferences | undefined;
 
-	readonly capabilities = {
-		mute: true
+	readonly capabilities: Capabilities = {
+		channelMute: true
 	};
 
 	constructor(

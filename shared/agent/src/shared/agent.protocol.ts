@@ -36,8 +36,14 @@ export * from "./agent.protocol.trello";
 export * from "./agent.protocol.jira";
 export * from "./agent.protocol.users";
 
-export interface ApiCapabilities {
-	mute: boolean;
+export interface Capabilities {
+	channelMute?: boolean;
+	codemarkApply?: boolean;
+	codemarkCompare?: boolean;
+	editorTrackVisibleRange?: boolean;
+	services?: {
+		vsls?: boolean;
+	};
 }
 
 export interface AccessToken {
@@ -91,7 +97,7 @@ export interface AgentOptions extends BaseAgentOptions {
 
 export interface AgentState {
 	apiToken: string;
-	capabilities: ApiCapabilities;
+	capabilities: Capabilities;
 	email: string;
 	environment: CodeStreamEnvironment | string;
 	serverUrl: string;

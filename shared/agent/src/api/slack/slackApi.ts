@@ -7,6 +7,7 @@ import { Container } from "../../container";
 import { Logger, TraceLevel } from "../../logger";
 import {
 	ArchiveStreamRequest,
+	Capabilities,
 	CloseStreamRequest,
 	ConnectionStatus,
 	CreateChannelStreamRequest,
@@ -133,8 +134,8 @@ export class SlackApiProvider implements ApiProvider {
 	// TODO: Convert to index on UserManager?
 	private _userIdsByName: Map<string, string> | undefined;
 
-	readonly capabilities = {
-		mute: false
+	readonly capabilities: Capabilities = {
+		channelMute: true
 	};
 
 	constructor(
