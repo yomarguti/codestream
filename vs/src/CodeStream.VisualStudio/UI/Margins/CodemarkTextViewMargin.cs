@@ -128,6 +128,12 @@ namespace CodeStream.VisualStudio.UI.Margins
                     .Subscribe(_ =>
                     {
                         Hide();
+
+                        _markers = null;
+                        this.Children.Clear();
+                        _lineInfos?.Clear();
+                        _iconCanvas?.Children.Clear();
+
                         _initializedCodestream = false;
                     }),
                 eventAggregator.GetEvent<CodemarkVisibilityEvent>()
@@ -612,6 +618,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                 _tagAggregator?.Dispose();
                 _disposables.Dispose();
 
+                this.Children.Clear();
                 _lineInfos?.Clear();
                 _iconCanvas?.Children.Clear();
 
