@@ -6,9 +6,9 @@
 	"module": "./dist/codestream-components.es.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"build": "rollup -c",
-		"build-watch": "rollup -c -w",
-		"bundle": "webpack --env.development",
+		"build": "webpack --env.development",
+		"bundle": "webpack --env.production",
+		"bundle:ci": "npm run clean:ci && npm run bundle",
 		"clean:ci": "git clean -xdf",
 		"pack": "webpack --env.production",
 		"watch": "webpack --watch --env.development"
