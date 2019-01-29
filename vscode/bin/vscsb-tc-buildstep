@@ -54,7 +54,7 @@ gitVSCode = gitCS.gitCS(buildData['sandboxTop'])
 if args.action in ['build','info','release']:
 	if args.action == 'build':
 		# build the extension
-		shellExecNoBuffer("npm run bundle", abortOnFail = True, printCmd = args.verbose)
+		shellExecNoBuffer("npm run bundle:ci", abortOnFail = True, printCmd = args.verbose)
 
 	# create asset info file (w/o md5sum)
 	pkgInfo = getPackageInfo(buildData = buildData, gitRepoCommitDir = buildData['sandboxTop'])

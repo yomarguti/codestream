@@ -208,7 +208,8 @@
     ],
     "scripts": {
         "build": "webpack --env.development",
-        "bundle": "npm run clean:ci && npm install --no-save && npm run agent:bundle && webpack --env.production",
+        "bundle": "npm install --no-save && npm run agent:bundle && webpack --env.production",
+        "bundle:ci": "npm run clean:ci && npm run bundle",
         "clean": "git clean -Xdf -e !node_modules -e !node_modules/**/* -e !codestream*.info",
         "clean:ci": "git clean -xdf && npm run webview:clean:ci && npm run agent:clean:ci",
         "lint": "tslint --project tsconfig.json",
@@ -219,6 +220,7 @@
         "watch": "webpack --watch --env.development --info-verbosity verbose",
         "agent:build": "pushd \"../codestream-lsp-agent\" && npm run build && popd",
         "agent:bundle": "pushd \"../codestream-lsp-agent\" && npm run bundle && popd",
+        "agent:bundle:ci": "pushd \"../codestream-lsp-agent\" && npm run bundle:ci && popd",
         "agent:clean:ci": "pushd \"../codestream-lsp-agent\" && npm run clean:ci && popd",
         "agent:rebuild": "pushd \"../codestream-lsp-agent\" && npm run rebuild && popd",
         "agent:test": "pushd \"../codestream-lsp-agent\" && npm run test && popd",
