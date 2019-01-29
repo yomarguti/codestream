@@ -122,6 +122,7 @@ export class SimpleInlineCodemarks extends Component {
 		// 1) 18 (one line height) because line numbers start at 1 (1-indexed array vs 0-indexed)
 		// 2) 9 is half a line, because we want it to scroll halfway through the line
 		const line = Math.round((top - 27) / 18);
+		if (line < 0) return;
 		this.props.editorRevealLine(line);
 	};
 
