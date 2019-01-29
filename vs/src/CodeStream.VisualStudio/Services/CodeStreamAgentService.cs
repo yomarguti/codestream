@@ -1,6 +1,7 @@
 ﻿using CodeStream.VisualStudio.Annotations;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
+using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
@@ -267,13 +268,48 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task<JToken> GetBootstrapAsync(Settings settings, JToken state = null, bool isAuthenticated = false)
         {
+            JObject capabilitiesHolder = JObject.Parse("{}");
+
             var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
             var vslsEnabled = ideService?.QueryExtension(ExtensionKind.LiveShare) == true;
+
+            JObject ideCapabilities = JObject.Parse((new
+            {
+                channelMute = false,
+                codemarkApply = false,
+                codemarkCompare = false,
+                editorTrackVisibleRange = false,
+                services = new
+                {
+                    vsls = vslsEnabled
+                }
+            }).ToJson());
+
+            if (state?["capabilities"] != null)
+            {
+                capabilitiesHolder.Merge(JObject.Parse(state["capabilities"].ToString()), new JsonMergeSettings
+                {
+                    MergeArrayHandling = MergeArrayHandling.Union
+                });
+
+                capabilitiesHolder.Merge(ideCapabilities, new JsonMergeSettings
+                {
+                    MergeArrayHandling = MergeArrayHandling.Union
+                });
+            }
+            else
+            {
+                capabilitiesHolder.Merge(ideCapabilities, new JsonMergeSettings
+                {
+                    MergeArrayHandling = MergeArrayHandling.Union
+                });
+            }
 
             if (!isAuthenticated)
             {
                 return JToken.FromObject(new
                 {
+                    capabilities = capabilitiesHolder,
                     configs = new
                     {
                         serverUrl = _settingsService.ServerUrl,
@@ -282,10 +318,6 @@ namespace CodeStream.VisualStudio.Services
                         showHeadshots = _settingsService.ShowHeadshots,
                         showMarkers = _settingsService.ShowMarkers,
                         team = _settingsService.Team
-                    },
-                    services = new
-                    {
-                        vsls = vslsEnabled
                     },
                     env = _settingsService.GetEnvironmentName(),
                     version = _settingsService.GetEnvironmentVersionFormated(Application.ExtensionVersionShortString,
@@ -313,7 +345,7 @@ namespace CodeStream.VisualStudio.Services
 
             var bootstrapState = new
             {
-                capabilities = state["capabilities"],
+                capabilities = capabilitiesHolder,
                 currentUserId = state["userId"].ToString(),
                 currentTeamId = state["teamId"].ToString(),
                 configs = new
@@ -326,9 +358,7 @@ namespace CodeStream.VisualStudio.Services
                     showMarkers = settings.ShowMarkers,
                     showHeadshots = settings.ShowHeadshots,
                     openCommentOnSelect = settings.OpenCommentOnSelect,
-                    team = settings.Team,
-                    // TODO not implemented
-                    //MuteAll = ...
+                    team = settings.Team
                 },
                 env = settings.Env,
                 version = settings.Version,
@@ -338,10 +368,6 @@ namespace CodeStream.VisualStudio.Services
                 unreads = usersUnreads.Value<JToken>("unreads"),
                 users = users.Value<JToken>("users"),
                 preferences = usersPreferences.Value<JToken>("preferences"),
-                services = new
-                {
-                    vsls = vslsEnabled
-                }
             };
 
             return JToken.FromObject(bootstrapState);
