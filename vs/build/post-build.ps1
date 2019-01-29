@@ -28,7 +28,7 @@ cd $codestreamVsDir
 $commitIds.codestream_vs = git rev-parse HEAD
 cd $codestreamComponentsDir
 $commitIds.codestream_components = git rev-parse HEAD
-cd $codestreamLspAgent
+cd $codestreamLspAgentDir
 $commitIds.codestream_lsp_agent = git rev-parse HEAD
 
 $assetInfo = @{}
