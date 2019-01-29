@@ -268,14 +268,12 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task<JToken> GetBootstrapAsync(Settings settings, JToken state = null, bool isAuthenticated = false)
         {
-            JObject capabilitiesHolder = JObject.Parse("{}");
-
             var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
             var vslsEnabled = ideService?.QueryExtension(ExtensionKind.LiveShare) == true;
 
-            JObject ideCapabilities = JObject.Parse((new
+            var capabilities = state?["capabilities"] != null ? state["capabilities"].ToObject<JObject>() : JObject.FromObject(new { });
+            capabilities.Merge(JObject.FromObject(new
             {
-                channelMute = false,
                 codemarkApply = false,
                 codemarkCompare = false,
                 editorTrackVisibleRange = false,
@@ -283,33 +281,16 @@ namespace CodeStream.VisualStudio.Services
                 {
                     vsls = vslsEnabled
                 }
-            }).ToJson());
-
-            if (state?["capabilities"] != null)
+            }), new JsonMergeSettings
             {
-                capabilitiesHolder.Merge(JObject.Parse(state["capabilities"].ToString()), new JsonMergeSettings
-                {
-                    MergeArrayHandling = MergeArrayHandling.Union
-                });
-
-                capabilitiesHolder.Merge(ideCapabilities, new JsonMergeSettings
-                {
-                    MergeArrayHandling = MergeArrayHandling.Union
-                });
-            }
-            else
-            {
-                capabilitiesHolder.Merge(ideCapabilities, new JsonMergeSettings
-                {
-                    MergeArrayHandling = MergeArrayHandling.Union
-                });
-            }
+                MergeArrayHandling = MergeArrayHandling.Union
+            });
 
             if (!isAuthenticated)
             {
                 return JToken.FromObject(new
                 {
-                    capabilities = capabilitiesHolder,
+                    capabilities = capabilities,
                     configs = new
                     {
                         serverUrl = _settingsService.ServerUrl,
@@ -322,30 +303,30 @@ namespace CodeStream.VisualStudio.Services
                     env = _settingsService.GetEnvironmentName(),
                     version = _settingsService.GetEnvironmentVersionFormated(Application.ExtensionVersionShortString,
                         Application.BuildNumber)
-
                 });
             }
 
             if (state == null) throw new ArgumentNullException(nameof(state));
 
-            var reposTask = _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/repos");
-            var streamsTask = _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/streams");
-            var teamsTask = _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/teams");
-            var usersUnreadsTask = _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/unreads");
-            var usersTask = _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users");
-            var usersPreferencesTask = _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/preferences");
-            await Task.WhenAll(reposTask, streamsTask, teamsTask, usersUnreadsTask, usersTask, usersPreferencesTask).ConfigureAwait(false);
+            var results = await Task.WhenAll(
+                _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/repos"),
+                _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/streams"),
+                _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/teams"),
+                _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/unreads"),
+                _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users"),
+                _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/preferences")
+            ).ConfigureAwait(false);
 
-            var repos = await reposTask.ConfigureAwait(false);
-            var streams = await streamsTask.ConfigureAwait(false);
-            var teams = await teamsTask.ConfigureAwait(false);
-            var usersUnreads = await usersUnreadsTask.ConfigureAwait(false);
-            var users = await usersTask.ConfigureAwait(false);
-            var usersPreferences = await usersPreferencesTask.ConfigureAwait(false);
+            var repos = results[0].Value<JToken>("repos");
+            var streams = results[1].Value<JToken>("streams");
+            var teams = results[2].Value<JToken>("teams");
+            var unreads = results[3].Value<JToken>("unreads");
+            var users = results[4].Value<JToken>("users");
+            var preferences = results[5].Value<JToken>("preferences");
 
             var bootstrapState = new
             {
-                capabilities = capabilitiesHolder,
+                capabilities = capabilities,
                 currentUserId = state["userId"].ToString(),
                 currentTeamId = state["teamId"].ToString(),
                 configs = new
@@ -362,12 +343,12 @@ namespace CodeStream.VisualStudio.Services
                 },
                 env = settings.Env,
                 version = settings.Version,
-                repos = repos.Value<JToken>("repos"),
-                streams = streams.Value<JToken>("streams"),
-                teams = teams.Value<JToken>("teams"),
-                unreads = usersUnreads.Value<JToken>("unreads"),
-                users = users.Value<JToken>("users"),
-                preferences = usersPreferences.Value<JToken>("preferences"),
+                repos = repos,
+                streams = streams,
+                teams = teams,
+                unreads = unreads,
+                users = users,
+                preferences = preferences
             };
 
             return JToken.FromObject(bootstrapState);
