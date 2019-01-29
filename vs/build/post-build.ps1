@@ -11,11 +11,15 @@ $assetDir = $buildDir + '\artifacts\x86\Release'
 Write-Host '**** changing to buildDir' $buildDir
 cd $buildDir
 Write-Host '**** Working directory is' (Get-Location)
-. .\modules.ps1 | out-null
-. .\Modules\Versioning.ps1 | out-null
+
+Import-Module -Name $buildDir\modules.ps1
+Import-Module -Name $buildDir\Modules\Vsix.ps1
+Import-Module -Name $buildDir\Modules\Versioning.ps1
+
+
 $codeVer = Read-Version
 Write-Host '***** codeVer: ' $codeVer
-$assetVer = $codeVer + '+' + $buildNumber
+$assetVer = $codeVer.ToString() + '+' + $buildNumber
 Write-Host '***** asset version: ' $assetVer
 $assetsBaseName = 'codestream-vs-' + $assetVer
 
