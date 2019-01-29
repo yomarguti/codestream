@@ -50,7 +50,7 @@ import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
-	ApiCapabilities,
+	Capabilities,
 	ConnectionStatus,
 	ReportingMessageType,
 	TraceLevel
@@ -71,7 +71,7 @@ interface BootstrapState {
 	context?: {
 		[key: string]: any;
 	};
-	capabilities?: ApiCapabilities;
+	capabilities: Capabilities;
 	currentTeamId: string;
 	currentUserId: string;
 	currentStreamId: string;
@@ -83,9 +83,6 @@ interface BootstrapState {
 	users: CSUser[];
 	unreads: CSUnreads;
 	repos: CSRepository[];
-	services: {
-		vsls?: boolean;
-	};
 	version: string;
 	preferences: CSMePreferences;
 	configs: {
@@ -800,8 +797,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 		if (!this.session.signedIn) {
 			state.env = this.session.environment;
+			state.capabilities = this.session.capabilities;
 			state.configs = { email: Container.config.email };
-			state.services = {};
 			state.version = Container.versionFormatted;
 
 			return state;
@@ -829,9 +826,6 @@ export class CodeStreamWebviewPanel implements Disposable {
 		state.currentTeamId = this.session.team.id;
 		state.currentUserId = this.session.userId;
 		state.env = this.session.environment;
-		state.services = {
-			vsls: Container.vsls.installed
-		};
 		state.version = Container.versionFormatted;
 
 		if (this._uiContext) state.context = this._uiContext;

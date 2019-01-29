@@ -11,7 +11,7 @@ import {
 import {
 	AccessToken,
 	AgentResult,
-	ApiCapabilities,
+	Capabilities,
 	ChangeDataType,
 	ChannelServiceType,
 	CodeStreamEnvironment,
@@ -167,8 +167,29 @@ export class CodeStreamSession implements Disposable {
 	}
 	private fireDidChangeUsers = createMergableDebouncedEvent(this._onDidChangeUsers);
 
-	private _capabilities: ApiCapabilities | undefined;
+	private _agentCapabilities: Capabilities | undefined;
+	private _capabilities: Capabilities | undefined;
 	get capabilities() {
+		if (this._capabilities === undefined) {
+			const ide: Capabilities = {
+				codemarkApply: true,
+				codemarkCompare: true,
+				editorTrackVisibleRange: true,
+				services: {
+					vsls: Container.vsls.installed
+				}
+			};
+
+			// If we have no agent caps then just use the ide's
+			if (this._agentCapabilities === undefined) return ide;
+
+			// Mix IDE caps in with the agent caps
+			this._capabilities = {
+				...this._agentCapabilities,
+				...ide
+			};
+		}
+
 		return this._capabilities;
 	}
 
@@ -601,7 +622,7 @@ export class CodeStreamSession implements Disposable {
 		const email = user.email;
 		this._email = email;
 		this._environment = result.state.environment;
-		this._capabilities = result.state.capabilities;
+		this._agentCapabilities = result.state.capabilities;
 
 		// Create an id for this session
 		this._id = Strings.sha1(`${instanceId}|${this.serverUrl}|${email}|${teamId}`.toLowerCase());
