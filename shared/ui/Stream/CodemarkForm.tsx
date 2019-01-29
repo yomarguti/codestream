@@ -146,7 +146,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		this.state = {
 			...state,
 			assignees
-		}
+		};
 	}
 
 	componentDidMount() {
@@ -623,9 +623,11 @@ class CodemarkForm extends React.Component<Props, State> {
 			<form id="code-comment-form" className="standard-form" key="two">
 				<fieldset className="form-body">
 					<div id="controls" className="control-group">
-						<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
-							{this.getCodeBlockHint()}
-						</div>
+						{!this.props.codeBlock && (
+							<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
+								{this.getCodeBlockHint()}
+							</div>
+						)}
 						<div className="tab-group">
 							<input
 								id="radio-comment-type-comment"
