@@ -135,19 +135,23 @@ export class SimpleInlineCodemarks extends Component {
 		// const top = (textEditorFirstLine === 0 ? 0 : textEditorFirstLine + 0.65) * -18;
 		return (
 			<div className="panel">
-				<div className="filters">
-					<Tooltip title="View codemarks as" placement="left">
-						<label
-							htmlFor="toggle"
-							className={createClassString("switch", "wide", {
-								checked: false
-							})}
-							onClick={this.toggleShowMarkers}
-						/>
-					</Tooltip>
-					Inline view is experimental.{" "}
-					<a href="mailto:team@codestream.com?Subject=Inline View Feedback">Share feedback</a>
-				</div>
+				{this.props.capabilities.editorTrackVisibleRange ? (
+					<div className="filters">
+						<Tooltip title="View codemarks as" placement="left">
+							<label
+								htmlFor="toggle"
+								className={createClassString("switch", "wide", {
+									checked: false
+								})}
+								onClick={this.toggleShowMarkers}
+							/>
+						</Tooltip>
+						<span>Inline view is experimental.</span>
+						<a href="mailto:team@codestream.com?Subject=Inline View Feedback">Share feedback</a>
+					</div>
+				) : (
+					<div className="filters" />
+				)}
 				<div
 					className="inline-codemarks vscroll"
 					onScroll={this.onScroll}
@@ -232,7 +236,7 @@ export class SimpleInlineCodemarks extends Component {
 }
 
 const mapStateToProps = state => {
-	const { context, teams, configs } = state;
+	const { capabilities, context, teams, configs } = state;
 
 	// let fileNameToFilterFor;
 	let fileStreamIdToFilterFor;
@@ -253,7 +257,8 @@ const mapStateToProps = state => {
 		team: teams[context.currentTeamId],
 		fileFilter: context.codemarkFileFilter,
 		// fileNameToFilterFor,
-		fileStreamIdToFilterFor
+		fileStreamIdToFilterFor,
+		capabilities
 	};
 };
 

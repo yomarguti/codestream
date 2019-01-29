@@ -274,15 +274,17 @@ export class SimpleKnowledgePanel extends Component {
 		return (
 			<div className="panel knowledge-panel">
 				<div className="filters">
-					<Tooltip title="View codemarks as" placement="left">
-						<label
-							htmlFor="toggle"
-							className={createClassString("switch", "wide", {
-								checked: this.props.showMarkers
-							})}
-							onClick={this.toggleShowMarkers}
-						/>
-					</Tooltip>
+					{this.props.capabilities.editorTrackVisibleRange && (
+						<Tooltip title="View codemarks as" placement="left">
+							<label
+								htmlFor="toggle"
+								className={createClassString("switch", "wide", {
+									checked: this.props.showMarkers
+								})}
+								onClick={this.toggleShowMarkers}
+							/>
+						</Tooltip>
+					)}
 					Show{" "}
 					<Filter
 						onValue={this.props.setCodemarkTypeFilter}
@@ -417,7 +419,7 @@ export class SimpleKnowledgePanel extends Component {
 }
 
 const mapStateToProps = state => {
-	const { context, teams, configs } = state;
+	const { capabilities, context, teams, configs } = state;
 
 	let fileNameToFilterFor;
 	let fileStreamIdToFilterFor;
@@ -440,7 +442,8 @@ const mapStateToProps = state => {
 		fileFilter: context.codemarkFileFilter,
 		typeFilter: context.codemarkTypeFilter,
 		fileNameToFilterFor,
-		fileStreamIdToFilterFor
+		fileStreamIdToFilterFor,
+		capabilities
 	};
 };
 

@@ -20,7 +20,8 @@ export const bootstrap = (data: { [k: string]: any } = {}) => async dispatch => 
 	dispatch(bootstrapTeams(data.teams || []));
 	dispatch(bootstrapStreams(data.streams || []));
 	dispatch(bootstrapRepos(data.repos || []));
-	dispatch(bootstrapServices(data.services || {}));
+	// TODO: I think this should be removed and just live with the caps below
+	dispatch(bootstrapServices((data.capabilities && data.capabilities.services) || {}));
 	dispatch(updateUnreads(data.unreads || {}));
 	dispatch(updateCapabilities(data.capabilities || {}));
 	dispatch(updatePreferences(data.preferences || {}));

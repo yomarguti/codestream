@@ -83,7 +83,10 @@ export class SimpleChannelMenu extends Component {
 	};
 }
 
-const mapStateToProps = ({ capabilities, session }) => ({ canMute: capabilities.mute, session });
+const mapStateToProps = ({ capabilities, session }) => ({
+	canMute: capabilities.channelMute,
+	session
+});
 export default connect(
 	mapStateToProps,
 	{

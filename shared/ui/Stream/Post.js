@@ -315,7 +315,9 @@ class Post extends React.Component {
 					</div>
 					{codeBlock}
 					{this.renderAttachments(post)}
-					{this.props.showDetails && !this.state.warning && <PostDetails codemark={codemark} />}
+					{this.props.showDetails && !this.state.warning && (
+						<PostDetails codemark={codemark} capabilities={this.props.capabilities} />
+					)}
 				</div>
 				{this.renderReactions(post)}
 				{/*this.renderReplyCount(post)*/}
@@ -719,7 +721,7 @@ class Post extends React.Component {
 }
 
 const mapStateToProps = (state, props) => {
-	const { users } = state;
+	const { capabilities, users } = state;
 
 	// TODO: figure out a way to do this elsewhere
 
@@ -774,7 +776,8 @@ const mapStateToProps = (state, props) => {
 		author,
 		hasMarkers: codemark && codemark.markers && codemark.markers.length > 0,
 		codemark,
-		parentPostContent
+		parentPostContent,
+		capabilities
 	};
 };
 
