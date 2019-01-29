@@ -353,6 +353,10 @@ export class CodeStreamWebviewPanel implements Disposable {
 							);
 							break;
 						}
+						case "sign-out": {
+							await Container.commands.signOut();
+							break;
+						}
 						case "open-comment-on-select": {
 							const value = body.params;
 							// set the config
