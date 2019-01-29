@@ -20,7 +20,8 @@
     "main": "./dist/agent",
     "scripts": {
         "build": "webpack --env.development",
-        "bundle": "npm run clean:ci && npm install --no-save && webpack --env.production",
+        "bundle": "npm install --no-save && webpack --env.production",
+        "bundle:ci": "npm run clean:ci && npm run bundle",
         "clean": "git clean -Xdf -e !node_modules -e !node_modules/**/*",
         "clean:ci": "git clean -xdf",
         "lint": "tslint --project tsconfig.json",
