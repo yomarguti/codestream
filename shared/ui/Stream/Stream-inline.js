@@ -1015,6 +1015,8 @@ export class SimpleStream extends Component {
 				return this.props.connectService("bitbucket");
 			case "disconnect-bitbucket":
 				return this.props.disconnectService("bitbucket");
+			case "signout":
+				return this.props.signOut();
 
 			default:
 				return;

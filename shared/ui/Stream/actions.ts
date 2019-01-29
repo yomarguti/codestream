@@ -646,3 +646,7 @@ export const fetchAssignableUsers = (service: string, boardId: string) => async 
 export const openUrl = (url: string) => async (dispatch, getState, { api }) => {
 	return api.openUrl({ url });
 };
+
+export const signOut = () => async (dispatch, getState, { api }) => {
+	return api.signOut();
+};

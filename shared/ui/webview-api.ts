@@ -249,12 +249,7 @@ export default class WebviewApi {
 		});
 	}
 
-	createBitbucketCard(
-		title: string,
-		description: string,
-		repoName: string,
-		assignee?: string
-	) {
+	createBitbucketCard(title: string, description: string, repoName: string, assignee?: string) {
 		return this.postMessage({
 			action: BitbucketCreateCardRequestType.method,
 			params: {
@@ -626,6 +621,12 @@ export default class WebviewApi {
 		return this.postMessage({
 			action: OpenUrlRequestType.method,
 			params
+		});
+	}
+
+	signOut() {
+		return this.postMessage({
+			action: "sign-out"
 		});
 	}
 }
