@@ -90,6 +90,7 @@
     </Compile>
     <Compile Include="Commands\AddCodemarkCommand.cs" />
     <Compile Include="Commands\AuthenticationCommand.cs" />
+    <Compile Include="Controllers\AuthenticationController.cs" />
     <Compile Include="Controllers\LiveShareController.cs" />
     <Compile Include="Core\ContentTypes.cs" />
     <Compile Include="Core\Logging\CodeStreamSink.cs" />
@@ -125,6 +126,7 @@
     <Compile Include="LSP\LanguageServerProcess.cs" />
     <Compile Include="LSP\Notifications.cs" />
     <Compile Include="Models\CodeStreamModels.cs" />
+    <Compile Include="Models\Ipc.cs" />
     <Compile Include="Models\Types.cs" />
     <Compile Include="Packages\AsyncPackageBase.cs" />
     <Compile Include="Packages\CodeStreamPackage.cs" />

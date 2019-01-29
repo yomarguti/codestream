@@ -1,11 +1,13 @@
-﻿using System;
+﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
-using Newtonsoft.Json.Linq;
-using StreamJsonRpc;
-using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Models;
 using Microsoft.VisualStudio.Shell;
+using Newtonsoft.Json.Linq;
 using Serilog;
+using StreamJsonRpc;
+using System;
+using CodeStream.VisualStudio.Extensions;
+
 // ReSharper disable UnusedMember.Global
 
 namespace CodeStream.VisualStudio.LSP
@@ -31,64 +33,34 @@ namespace CodeStream.VisualStudio.LSP
                 switch (type)
                 {
                     case ChangeDataType.Codemarks:
-                        _eventAggregator.Publish(new CodemarksChangedEvent
-                        {
-                            Data = e.ToObject<CodemarksChangedNotification>().Data
-                        });
+                        _eventAggregator.Publish(new CodemarksChangedEvent { Data = e });
                         break;
                     case ChangeDataType.MarkerLocations:
-                        _eventAggregator.Publish(new MarkerLocationsChangedEvent
-                        {
-                            Data = e.ToObject<MarkerLocationsChangedNotification>().Data
-                        });
+                        _eventAggregator.Publish(new MarkerLocationsChangedEvent { Data = e });
                         break;
                     case ChangeDataType.Markers:
-                        _eventAggregator.Publish(new MarkersChangedEvent
-                        {
-                            Data = e.ToObject<MarkersChangedNotification>().Data
-                        });
+                        _eventAggregator.Publish(new MarkersChangedEvent { Data = e });
                         break;
                     case ChangeDataType.Posts:
-                        _eventAggregator.Publish(new PostsChangedEvent
-                        {
-                            Data = e.ToObject<PostsChangedNotification>().Data
-                        });
+                        _eventAggregator.Publish(new PostsChangedEvent { Data = e });
                         break;
                     case ChangeDataType.Preferences:
-                        _eventAggregator.Publish(new PreferencesChangedEvent
-                        {
-                            Data = e.ToObject<PreferencesChangedNotification>().Data
-                        });
+                        _eventAggregator.Publish(new PreferencesChangedEvent { Data = e });
                         break;
                     case ChangeDataType.Repositories:
-                        _eventAggregator.Publish(new RepositoriesChangedEvent
-                        {
-                            Data = e.ToObject<RepositoriesChangedNotification>().Data
-                        });
+                        _eventAggregator.Publish(new RepositoriesChangedEvent { Data = e });
                         break;
                     case ChangeDataType.Streams:
-                        _eventAggregator.Publish(new StreamsChangedEvent
-                        {
-                            Data = e.ToObject<StreamsChangedNotification>().Data
-                        });
+                        _eventAggregator.Publish(new StreamsChangedEvent { Data = e });
                         break;
                     case ChangeDataType.Teams:
-                        _eventAggregator.Publish(new TeamsChangedEvent
-                        {
-                            Data = e.ToObject<TeamsChangedNotification>().Data
-                        });
+                        _eventAggregator.Publish(new TeamsChangedEvent { Data = e });
                         break;
                     case ChangeDataType.Unreads:
-                        _eventAggregator.Publish(new UnreadsChangedEvent
-                        {
-                            Data = e.ToObject<UnreadsChangedNotification>().Data
-                        });
+                        _eventAggregator.Publish(new UnreadsChangedEvent { Data = e });
                         break;
                     case ChangeDataType.Users:
-                        _eventAggregator.Publish(new UsersChangedChangedEvent
-                        {
-                            Data = e.ToObject<UsersChangedNotification>().Data
-                        });
+                        _eventAggregator.Publish(new UsersChangedChangedEvent { Data = e });
                         break;
                     default:
                         Log.Verbose($"Could not find type={type}");
@@ -120,16 +92,14 @@ namespace CodeStream.VisualStudio.LSP
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
                 var message = e.ToObject<DocumentMarkersNotification>();
-                _eventAggregator.Publish(new DocumentMarkerChangedEvent
-                {
-                    Uri = message.TextDocument.Uri
-                });
+                _eventAggregator.Publish(new DocumentMarkerChangedEvent { Uri = message.TextDocument.Uri.ToUri() });
             });
         }
 
         [JsonRpcMethod("codeStream/didChangeVersionCompatibility")]
         public void OnDidChangeVersionCompatibility(JToken e)
         {
+            // TODO implement this
             //  System.Diagnostics.Debugger.Break();
         }
 
@@ -137,10 +107,7 @@ namespace CodeStream.VisualStudio.LSP
         public void OnDidLogout(JToken e)
         {
             var message = e.ToObject<AuthenticationNotification>();
-            _eventAggregator.Publish(new AuthenticationChangedEvent
-            {
-                Reason = message.Reason
-            });
+            _eventAggregator.Publish(new AuthenticationChangedEvent { Reason = message.Reason });
         }
     }
 }

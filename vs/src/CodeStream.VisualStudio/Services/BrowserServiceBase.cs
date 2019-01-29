@@ -136,7 +136,7 @@ namespace CodeStream.VisualStudio.Services
                 foreach (var item in themeGenerator.ColorInfo)
                 {
                     string value;
-                    if (item.Value.IsNotNullOrWhiteSpace())
+                    if (!item.Value.IsNullOrWhiteSpace())
                     {
                         value = item.Value;
                     }

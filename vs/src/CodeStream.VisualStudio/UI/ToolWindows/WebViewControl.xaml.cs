@@ -4,6 +4,7 @@ using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
+using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -64,7 +65,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
                         SetupInitialization();
                     });
 
-                   SetupInitialization();
+                    SetupInitialization();
                 }
             }
             else
@@ -104,7 +105,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
                 {
                     var router = new WebViewRouter(
                         new Lazy<ICredentialsService>(() =>
-                            Package.GetGlobalService(typeof(SCredentialsService)) as ICredentialsService),
+                        Package.GetGlobalService(typeof(SCredentialsService)) as ICredentialsService),
                         Package.GetGlobalService(typeof(SSessionService)) as ISessionService,
                         Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
                         Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService,
@@ -112,7 +113,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
                         _browserService,
                         Package.GetGlobalService(typeof(SIdeService)) as IIdeService);
 
-                    _browserService.AddWindowMessageEvent(async delegate(object sender, WindowEventArgs ea)
+                    _browserService.AddWindowMessageEvent(async delegate (object sender, WindowEventArgs ea)
                     {
                         await router.HandleAsync(ea);
                     });
@@ -132,10 +133,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
                             .Throttle(throttle)
                             .Subscribe(_ =>
                             {
-                                _browserService.PostMessage(new WebviewIpcMessage("codestream:data:preferences")
-                                {
-                                    Body = _.Data
-                                });
+                                _browserService.PostMessage(Ipc.ToLegacyMessage("codestream:data:preferences", _.Data["data"]?.ToString()));
                             }),
                         _eventAggregator.GetEvent<RepositoriesChangedEvent>()
                             .Throttle(throttle)
@@ -150,10 +148,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
                             .Throttle(throttle)
                             .Subscribe(_ =>
                             {
-                                _browserService.PostMessage(new WebviewIpcMessage("codestream:data:unreads")
-                                {
-                                    Body = _.Data
-                                });
+                                _browserService.PostMessage(Ipc.ToLegacyMessage("codestream:data:unreads", _.Data["data"]?.ToString()));
                             }),
                         _eventAggregator.GetEvent<UsersChangedChangedEvent>()
                             .Throttle(throttle)
@@ -214,40 +209,25 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 
         private void OnDidDisconnect()
         {
-            _browserService.PostMessage(new
-            {
-                type = "codestream:connectivity:offline",
-                body = new { }
-            });
+            _browserService.PostMessage(Ipc.ToConnectivityMessage("codestream:connectivity:offline"));
         }
 
         private void OnDidConnect()
         {
-            _browserService.PostMessage(new
-            {
-                type = "codestream:connectivity:online",
-                body = new { }
-            });
+            _browserService.PostMessage(Ipc.ToConnectivityMessage("codestream:connectivity:online"));
         }
 
-        private void OnSessionDataChanged(string type, object data)
+        private void OnSessionDataChanged(string type, JToken data)
         {
-            _browserService.PostMessage(new WebviewIpcMessage("codestream:data")
-            {
-                Body = new WebviewIpcMessageBody
-                {
-                    Type = type,
-                    Payload = data
-                }
-            });
+            _browserService.PostMessage(Ipc.ToDataMessage(type, data["data"]?.ToString()));
         }
-        
+
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-        
+
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed)

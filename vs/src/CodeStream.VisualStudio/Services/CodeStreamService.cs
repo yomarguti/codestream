@@ -96,12 +96,11 @@ namespace CodeStream.VisualStudio.Services
         public async Task<object> PostCodeAsync(Uri uri, SelectedText selectedText, bool isDirty, bool? isHighlight = null,
             CancellationToken? cancellationToken = null)
         {
-            if (!_sessionService.IsReady)
-                return Task.CompletedTask;
+            if (!_sessionService.IsReady) return Task.CompletedTask;
 
             var range = new Range(selectedText);
 
-            var post = await _agentService.PrepareCodeAsync(uri.ToString(), range, isDirty, cancellationToken);
+            var post = await _agentService.PrepareCodeAsync(uri, range, isDirty, cancellationToken);
 
             var source = post?.Source;
             BrowserService.PostMessage(new DidSelectCodeNotification

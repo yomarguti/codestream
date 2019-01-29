@@ -3,7 +3,6 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.Serialization;
 // ReSharper disable ClassNeverInstantiated.Global
 
 namespace CodeStream.VisualStudio.Models
@@ -26,7 +25,7 @@ namespace CodeStream.VisualStudio.Models
         public int EndColumn { get; set; }
         public string Text { get; set; }
 
-        public bool HasText => Text.IsNotNullOrWhiteSpace();
+        public bool HasText => !Text.IsNullOrWhiteSpace();
     }
 
     /// <summary>
@@ -138,14 +137,6 @@ namespace CodeStream.VisualStudio.Models
         public bool? HasMarkers { get; set; }
     }
 
-    public class CsCompany : CsEntity
-    {
-        public string Name { get; set; }
-        public List<string> TeamIds { get; set; }
-    }
-
-    public interface ICsStream { }
-
     public class CsMarker : CsEntity
     {
         public string TeamId { get; set; }
@@ -233,7 +224,7 @@ namespace CodeStream.VisualStudio.Models
         {
             get
             {
-                return Codemark?.Title.IsNotNullOrWhiteSpace() == true ? Codemark.Title : Codemark?.Text;
+                return !Codemark?.Title.IsNullOrWhiteSpace() == true ? Codemark.Title : Codemark?.Text;
             }
         }
     }
@@ -242,6 +233,8 @@ namespace CodeStream.VisualStudio.Models
     {
         public List<CsMarker> Markers { get; set; }
     }
+
+    // TODO these stream objects are not nice
 
     public class CsStream : CsEntity
     {
@@ -277,127 +270,12 @@ namespace CodeStream.VisualStudio.Models
     }
 
     public class CsDirectStream : CsStream
-    { 
+    {
     }
 
     public class CsFileStream : CsStream
     {
 
-    }
-
-    [Serializable]
-    public class CsMePreferences : Dictionary<string, object>
-    {
-        public CsMePreferences()
-        {
-
-        }
-
-        protected CsMePreferences(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-
-        }
-    }
-
-    public class Preferences
-    {
-        public bool TelemetryConsent { get; set; }
-        public Dictionary<string, bool> MutedStreams { get; set; }
-    }
-
-    public class CsUnreads
-    {
-        public Dictionary<string, object> LastReads { get; set; }
-        public Dictionary<string, int> Mentions { get; set; }
-        public Dictionary<string, int> Unreads { get; set; }
-        public int TotalMentions { get; set; }
-        public int TotalUnreads { get; set; }
-    }
-
-    public class Config
-    {
-        public bool Debug { get; set; }
-        public string Email { get; set; }
-        public bool MuteAll { get; set; }
-        public string ServerUrl { get; set; }
-        public bool ShowHeadshots { get; set; }
-        public bool ShowMarkers { get; set; }
-        public bool OpenCommentOnSelect { get; set; }
-        public string Team { get; set; }
-    }
-
-    public class Service
-    {
-        public bool Vsls { get; set; }
-    }
-
-    public abstract class BootstrapStateBase
-    {
-        public string Env { get; set; }
-        public Config Configs { get; set; }
-        public Service Services { get; set; }
-        public string Version { get; set; }
-    }
-
-    public class BootstrapStateLite : BootstrapStateBase { }
-
-    public class BootstrapState : BootstrapStateBase
-    {
-        public Capabilities Capabilities { get; set; }
-        public string CurrentUserId { get; set; }
-        public string CurrentTeamId { get; set; }
-        public string CurrentStreamId { get; set; }
-        public string CurrentThreadId { get; set; }
-        public List<CsRepository> Repos { get; set; }
-        public List<CsStream> Streams { get; set; }
-        public List<CsTeam> Teams { get; set; }
-        public CsUnreads Unreads { get; set; }
-        public List<CsUser> Users { get; set; }
-        public CsMePreferences Preferences { get; set; }
-        public List<string> PanelStack { get; set; }
-    }
-
-    public class Capabilities
-    {
-        public bool Mute { get; set; }
-    }
-
-    public class Result
-    {
-        public LoginResponse LoginResponse { get; set; }
-        public State State { get; set; }
-        public string Error { get; set; }
-    }
-
-    public class LoginResponseWrapper
-    {
-        public Result Result { get; set; }
-    }
-
-    public class CsTeamSlackProviderInfo
-    {
-        public string TeamId { get; set; }
-    }
-
-    public class ProviderInfo
-    {
-        public CsTeamSlackProviderInfo Slack { get; set; }
-    }
-
-    public class IntegrationInfo
-    {
-        public bool Enabled { get; set; }
-    }
-
-    public class CsTeam : CsEntity
-    {
-        public string Name { get; set; }
-        public string CompanyId { get; set; }
-        public List<string> AdminIds { get; set; }
-        public List<string> MemberIds { get; set; }
-        public string PrimaryReferral { get; set; } //: "internal" | "external";
-        public Dictionary<string, IntegrationInfo> Integrations { get; set; }
-        public ProviderInfo ProviderInfo { get; set; }
     }
 
     public class CsUser : CsEntity
@@ -419,21 +297,13 @@ namespace CodeStream.VisualStudio.Models
         public string TimeZone { get; set; }
         public int TotalPosts { get; set; }
         public string Username { get; set; }
-        public CsAvatar Avatar { get; set; }
         public bool? Dnd { get; set; }
         public string Presence { get; set; }
-        public CsMePreferences Preferences { get; set; }
 
         public string Name
         {
             get { return Username ?? FullName; }
         }
-    }
-
-    public class CsAvatar
-    {
-        public string Image { get; set; }
-        public string Image48 { get; set; }
     }
 
     public class CsRemote
@@ -448,33 +318,6 @@ namespace CodeStream.VisualStudio.Models
         public string Name { get; set; }
         public List<CsRemote> Remotes { get; set; }
         public string TeamId { get; set; }
-    }
-
-    public class LoginResponse
-    {
-        public CsUser User { get; set; }
-        public string AccessToken { get; set; }
-        public string PubNubKey { get; set; }
-        public List<CsTeam> Teams { get; set; }
-        public List<CsCompany> Companies { get; set; }
-        public List<CsRepository> Repos { get; set; }
-        public string TeamId { get; set; }
-    }
-
-    public class State
-    {
-        public State()
-        {
-            Capabilities = new Capabilities();
-        }
-
-        public string ApiToken { get; set; }
-        public string Email { get; set; }
-        public Capabilities Capabilities { get; set; }
-        public string Environment { get; set; }
-        public string ServerUrl { get; set; }
-        public string TeamId { get; set; }
-        public string UserId { get; set; }
     }
 
     public class Extension
@@ -501,74 +344,17 @@ namespace CodeStream.VisualStudio.Models
     {
         //public string ServerUrl { get; set; }
         //public string GitPath { get; set; }
+
         public Ide Ide { get; set; }
         public Extension Extension { get; set; }
         public string TraceLevel { get; set; }
         public bool IsDebugging { get; set; }
-
         public Proxy Proxy { get; set; }
     }
 
-    public class WebviewIpcGenericMessageResponse
-    {
-        public WebviewIpcGenericMessageResponse(string type)
-        {
-            Type = type;
-        }
-
-        public string Id { get; set; }
-        public string Type { get; private set; }
-        public object Body { get; set; }
-    }
-
-    public class WebviewIpcMessage
-    {
-        public WebviewIpcMessage(string type)
-        {
-            Type = type;
-            if (Type.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(type));
-        }
-
-        public string Type { get; }
-        public object Body { get; set; }
-    }
-
-    public class WebviewIpcMessageBody
-    {
-        public string Type { get; set; }
-        public object Payload { get; set; }
-    }
-
-    public class WebviewIpcMessageResponse
-    {
-        public WebviewIpcMessageResponse()
-        {
-            Type = "codestream:response";
-        }
-
-        public WebviewIpcMessageResponse(WebviewIpcMessageResponseBody body)
-        {
-            Body = body;
-            Type = "codestream:response";
-        }
-        public string Id { get; set; }
-        public string Type { get; private set; }
-        public WebviewIpcMessageResponseBody Body { get; set; }
-    }
-
-    public class WebviewIpcMessageResponseBody
-    {
-        public WebviewIpcMessageResponseBody(string id)
-        {
-            Id = id;
-        }
-
-        public string Id { get; set; }
-        public string Type { get; set; }
-        public object Payload { get; set; }
-        public string Error { get; set; }
-    }
-
+    /// <summary>
+    /// Thin wrapper for plucking out JToken properties
+    /// </summary>
     public class CodeStreamMessage
     {
         public string Type { get; set; }
@@ -722,6 +508,13 @@ namespace CodeStream.VisualStudio.Models
         public CsStream Stream { get; }
     }
 
+    public class PrepareCodeRequest
+    {
+        public TextDocumentIdentifier TextDocument { get; set; }
+        public CsRange Range { get; set; }
+        public bool Dirty { get; set; }
+    }
+
     public class PrepareCodeResponse
     {
         public string Code { get; set; }
@@ -729,10 +522,20 @@ namespace CodeStream.VisualStudio.Models
         public Source Source { get; set; }
     }
 
+    public class FetchCodemarksRequest
+    {
+        public string StreamId { get; set; }
+    }
+
     public class FetchCodemarksResponse
     {
         public List<CsMarker> Markers { get; set; }
         public List<CsFullCodemark> Codemarks { get; set; }
+    }
+
+    public class DocumentMarkersRequest
+    {
+        public TextDocumentIdentifier TextDocument { get; set; }
     }
 
     public class DocumentMarkersResponse
@@ -786,7 +589,13 @@ namespace CodeStream.VisualStudio.Models
 
     public class TextDocumentIdentifier
     {
-        public Uri Uri { get; set; }
+        public string Uri { get; set; }
+    }
+
+    public class StreamThreadSelectedRequest
+    {
+        public string StreamId { get; set; }
+        public string ThreadId { get; set; }
     }
 
     public class DocumentFromMarkerRequest
@@ -804,14 +613,36 @@ namespace CodeStream.VisualStudio.Models
         public string Revision { get; set; }
     }
 
+    public class CreateDirectStreamRequest
+    {
+        public string Type { get; set; }
+        public List<string> MemberIds { get; set; }
+    }
+
+    public class GetPostRequest
+    {
+        public string StreamId { get; set; }
+        public string PostId { get; set; }
+    }
+
     public class GetPostResponse
     {
         public CsPost Post { get; set; }
     }
 
+    public class GetUserRequest
+    {
+        public string UserId { get; set; }
+    }
+
     public class GetUserResponse
     {
         public CsUser User { get; set; }
+    }
+
+    public class GetFileStreamRequest
+    {
+        public TextDocumentIdentifier TextDocument { get; set; }
     }
 
     public class GetFileStreamResponse
@@ -869,9 +700,14 @@ namespace CodeStream.VisualStudio.Models
         public List<StreamType> Types { get; set; }
         public List<string> MemberIds { get; set; }
     }
+    public class FetchStreamsRequest2
+    {
+        public List<string> Types { get; set; }
+        public List<string> MemberIds { get; set; }
+    }
 
     public class FetchStreamsResponse
     {
-       public List<CsStream> Streams { get; set; }
+        public List<CsStream> Streams { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using CodeStream.VisualStudio.Annotations;
 using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Models;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
@@ -10,7 +11,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using CodeStream.VisualStudio.Events;
 using Task = System.Threading.Tasks.Task;
 
 // ReSharper disable ClassNeverInstantiated.Global
@@ -24,7 +24,7 @@ namespace CodeStream.VisualStudio.Services
     {
         Task SetRpcAsync(JsonRpc rpc);
         Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null);
-        Task<PrepareCodeResponse> PrepareCodeAsync(string uri, Range range, bool isDirty,
+        Task<PrepareCodeResponse> PrepareCodeAsync(Uri uri, Range range, bool isDirty,
            CancellationToken? cancellationToken = null
         );
 
@@ -39,7 +39,7 @@ namespace CodeStream.VisualStudio.Services
         Task<JToken> LoginViaOneTimeCodeAsync(string signupToken, string serverUrl);
         Task<JToken> LoginAsync(string email, string password, string serverUrl);
         Task<JToken> LogoutAsync();
-        Task<BootstrapStateBase> GetBootstrapAsync(Settings settings, State state = null, bool isAuthenticated = false);
+        Task<JToken> GetBootstrapAsync(Settings settings, JToken state = null, bool isAuthenticated = false);
         Task<FetchCodemarksResponse> GetMarkersAsync(string streamId);
         Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request);
         Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(Uri uri, CancellationToken? cancellationToken = null);
@@ -102,49 +102,41 @@ namespace CodeStream.VisualStudio.Services
 
         public Task<FetchCodemarksResponse> GetMarkersAsync(string streamId)
         {
-            // TODO make a model
-            // ReSharper disable once RedundantAnonymousTypePropertyName
-            return SendAsync<FetchCodemarksResponse>("codeStream/fetchCodemarks", new { streamId = streamId });
+            return SendAsync<FetchCodemarksResponse>("codeStream/fetchCodemarks", new FetchCodemarksRequest { StreamId = streamId });
         }
 
         public Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(Uri uri,
             CancellationToken? cancellationToken = null)
         {
-            return SendAsync<DocumentMarkersResponse>("codeStream/textDocument/markers", new
+            return SendAsync<DocumentMarkersResponse>("codeStream/textDocument/markers", new DocumentMarkersRequest
             {
-                // TODO make a model
-                textDocument = new { uri = uri.ToString() }
+                TextDocument = new TextDocumentIdentifier { Uri = uri.ToString() }
             }, cancellationToken);
         }
 
         public Task<GetFileStreamResponse> GetFileStreamAsync(Uri uri)
         {
-            return SendAsync<GetFileStreamResponse>("codeStream/streams/fileStream", new
+            return SendAsync<GetFileStreamResponse>("codeStream/streams/fileStream", new GetFileStreamRequest
             {
-                // TODO make a model
-                textDocument = new { uri = uri.ToString() }
+                TextDocument = new TextDocumentIdentifier { Uri = uri.ToString() }
             });
         }
 
         public Task<JToken> ChangeStreamThreadAsync(string streamId, string threadId)
         {
-            return SendAsync<JToken>("codestream:interaction:stream-thread-selected", new
+            return SendAsync<JToken>("codestream:interaction:stream-thread-selected", new StreamThreadSelectedRequest
             {
-                // TODO make a model
-                // ReSharper disable RedundantAnonymousTypePropertyName
-                streamId = streamId,
-                threadId = threadId
-                // ReSharper restore RedundantAnonymousTypePropertyName
+                StreamId = streamId,
+                ThreadId = threadId
             });
         }
 
         public Task<GetPostResponse> GetPostAsync(string streamId, string postId)
         {
-            return SendAsync<GetPostResponse>("codeStream/post", new
+            return SendAsync<GetPostResponse>("codeStream/post", new GetPostRequest
             {
-                // TODO make a model
-                streamId,
-                postId
+                StreamId = streamId,
+                PostId = postId
             });
         }
 
@@ -158,12 +150,9 @@ namespace CodeStream.VisualStudio.Services
 
         public Task<GetUserResponse> GetUserAsync(string userId)
         {
-            return SendAsync<GetUserResponse>("codeStream/user", new
+            return SendAsync<GetUserResponse>("codeStream/user", new GetUserRequest
             {
-                // TODO make a model
-                // ReSharper disable RedundantAnonymousTypePropertyName
-                userId = userId
-                // ReSharper restore RedundantAnonymousTypePropertyName
+                UserId = userId
             });
         }
 
@@ -179,36 +168,34 @@ namespace CodeStream.VisualStudio.Services
 
         public Task<CsDirectStream> CreateDirectStreamAsync(List<string> memberIds)
         {
-            return SendAsync<CsDirectStream>("codeStream/streams/createDirect", new
+            return SendAsync<CsDirectStream>("codeStream/streams/createDirect", new CreateDirectStreamRequest
             {
-                type = StreamType.direct.ToString(),
-                memberIds = memberIds
+                Type = StreamType.direct.ToString(),
+                MemberIds = memberIds
             });
         }
 
         public Task<FetchStreamsResponse> FetchStreamsAsync(FetchStreamsRequest request)
         {
-            return SendAsync<FetchStreamsResponse>("codeStream/streams", new
+            return SendAsync<FetchStreamsResponse>("codeStream/streams", new FetchStreamsRequest2
             {
-                types = request.Types.Select(_ => _.ToString()).ToList(),
-                memberIds = request.MemberIds
+                Types = request.Types.Select(_ => _.ToString()).ToList(),
+                MemberIds = request.MemberIds
             });
         }
 
-        public Task<PrepareCodeResponse> PrepareCodeAsync(string uri, Range range, bool isDirty, CancellationToken? cancellationToken = null)
+        public Task<PrepareCodeResponse> PrepareCodeAsync(Uri uri, Range range, bool isDirty, CancellationToken? cancellationToken = null)
         {
             return SendAsync<PrepareCodeResponse>("codeStream/post/prepareWithCode",
-                new
+                new PrepareCodeRequest
                 {
-                    // TODO make a model
-                    // ReSharper disable once RedundantAnonymousTypePropertyName
-                    textDocument = new { uri = uri },
-                    range = new
+                    TextDocument = new TextDocumentIdentifier() { Uri = uri.ToString() },
+                    Range = new CsRange
                     {
-                        start = new { line = range.StartLine, character = range.StartCharacter },
-                        end = new { line = range.EndLine, character = range.EndCharacter }
+                        Start = new CsRangePoint { Line = range.StartLine, Character = range.StartCharacter },
+                        End = new CsRangePoint { Line = range.EndLine, Character = range.EndCharacter }
                     },
-                    dirty = isDirty
+                    Dirty = isDirty
                 }, cancellationToken);
         }
 
@@ -275,43 +262,36 @@ namespace CodeStream.VisualStudio.Services
 
         public Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request)
         {
-            return SendAsync<DocumentFromMarkerResponse>("codeStream/textDocument/fromMarker", new
-            {
-                file = request.File,
-                repoId = request.RepoId,
-                markerId = request.MarkerId,
-                source = request.Source
-            });
+            return SendAsync<DocumentFromMarkerResponse>("codeStream/textDocument/fromMarker", request);
         }
 
-        public async Task<BootstrapStateBase> GetBootstrapAsync(Settings settings, State state = null, bool isAuthenticated = false)
+        public async Task<JToken> GetBootstrapAsync(Settings settings, JToken state = null, bool isAuthenticated = false)
         {
             var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
             var vslsEnabled = ideService?.QueryExtension(ExtensionKind.LiveShare) == true;
 
             if (!isAuthenticated)
             {
-                return new BootstrapStateLite
+                return JToken.FromObject(new
                 {
-                    Configs = new Config
+                    configs = new
                     {
-                        ServerUrl = _settingsService.ServerUrl,
-                        Email = _settingsService.Email,
-                        OpenCommentOnSelect = _settingsService.OpenCommentOnSelect,
-                        ShowHeadshots = _settingsService.ShowHeadshots,
-                        ShowMarkers = _settingsService.ShowMarkers,
-                        Team = _settingsService.Team,
-
+                        serverUrl = _settingsService.ServerUrl,
+                        email = _settingsService.Email,
+                        openCommentOnSelect = _settingsService.OpenCommentOnSelect,
+                        showHeadshots = _settingsService.ShowHeadshots,
+                        showMarkers = _settingsService.ShowMarkers,
+                        team = _settingsService.Team
                     },
-                    Services = new Service()
+                    services = new
                     {
-                        Vsls = vslsEnabled
+                        vsls = vslsEnabled
                     },
-                    Env = _settingsService.GetEnvironmentName(),
-                    Version = _settingsService.GetEnvironmentVersionFormated(Application.ExtensionVersionShortString,
+                    env = _settingsService.GetEnvironmentName(),
+                    version = _settingsService.GetEnvironmentVersionFormated(Application.ExtensionVersionShortString,
                         Application.BuildNumber)
 
-                };
+                });
             }
 
             if (state == null) throw new ArgumentNullException(nameof(state));
@@ -331,41 +311,40 @@ namespace CodeStream.VisualStudio.Services
             var users = await usersTask.ConfigureAwait(false);
             var usersPreferences = await usersPreferencesTask.ConfigureAwait(false);
 
-            var bootstrapState = new BootstrapState
+            var bootstrapState = new
             {
-                Capabilities = state.Capabilities,
-                CurrentUserId = state.UserId,
-                CurrentTeamId = state.TeamId,
-                Configs = new Config
+                capabilities = state["capabilities"],
+                currentUserId = state["userId"].ToString(),
+                currentTeamId = state["teamId"].ToString(),
+                configs = new
                 {
 #if DEBUG
-                    Debug = true,
+                    debug = true,
 #endif
-                    ServerUrl = settings.ServerUrl,
-                    Email = state.Email,
-                    ShowMarkers = settings.ShowMarkers,
-                    ShowHeadshots = settings.ShowHeadshots,
-                    OpenCommentOnSelect = settings.OpenCommentOnSelect,
-                    Team = settings.Team,
+                    serverUrl = settings.ServerUrl,
+                    email = state["email"].ToString(),
+                    showMarkers = settings.ShowMarkers,
+                    showHeadshots = settings.ShowHeadshots,
+                    openCommentOnSelect = settings.OpenCommentOnSelect,
+                    team = settings.Team,
                     // TODO not implemented
                     //MuteAll = ...
                 },
-                Env = settings.Env,
-                Version = settings.Version,
-                Repos = repos.Value<JToken>("repos").ToObject<List<CsRepository>>(),
-                Streams = streams.Value<JToken>("streams").ToObject<List<CsStream>>(),
-                Teams = teams.Value<JToken>("teams").ToObject<List<CsTeam>>(),
-                Unreads = usersUnreads.Value<JToken>("unreads").ToObject<CsUnreads>(),
-                Users = users.Value<JToken>("users").ToObject<List<CsUser>>(),
-                Preferences = usersPreferences.Value<JToken>("preferences").ToObject<CsMePreferences>(),
-                Services = new Service
+                env = settings.Env,
+                version = settings.Version,
+                repos = repos.Value<JToken>("repos"),
+                streams = streams.Value<JToken>("streams"),
+                teams = teams.Value<JToken>("teams"),
+                unreads = usersUnreads.Value<JToken>("unreads"),
+                users = users.Value<JToken>("users"),
+                preferences = usersPreferences.Value<JToken>("preferences"),
+                services = new
                 {
-                    // TODO not implemented
-                    Vsls = vslsEnabled
+                    vsls = vslsEnabled
                 }
             };
 
-            return bootstrapState;
+            return JToken.FromObject(bootstrapState);
         }
 
         public void Dispose()

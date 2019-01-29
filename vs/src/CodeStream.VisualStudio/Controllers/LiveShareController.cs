@@ -114,7 +114,7 @@ namespace CodeStream.VisualStudio.Controllers
 
                 if (userId != null)
                 {
-                    var memberIds = new List<string> { _sessionService.State.UserId };
+                    var memberIds = new List<string> { _sessionService.UserId };
                     foreach (var id in userIds)
                     {
                         var userResponse = await _codeStreamAgent.GetUserAsync(id);
@@ -150,13 +150,12 @@ namespace CodeStream.VisualStudio.Controllers
                         if (postResponse != null)
                         {
                             // view thread
-                            _browserService.PostMessage(new
+                            _browserService.PostMessage(new DidChangeStreamThreadNotification
                             {
-                                type = "codestream:interaction:stream-thread-selected",
-                                body = new
+                                Type = "codestream:interaction:stream-thread-selected",
+                                Body = new DidChangeStreamThreadNotificationBody
                                 {
-                                    streamId = stream.Id,
-                                    threadId = (string)null
+                                    StreamId = stream.Id
                                 }
                             });
                         }

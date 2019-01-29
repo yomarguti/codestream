@@ -4,7 +4,6 @@ using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.UI;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
@@ -179,246 +178,41 @@ namespace CodeStream.VisualStudio
                                 switch (message.Action)
                                 {
                                     case "bootstrap":
-                                        {
-                                            WebviewIpcMessageResponse response;
-
-                                            if (_settingsService.AutoSignIn && _settingsService.Email.IsNotNullOrWhiteSpace())
-                                            {
-                                                var token = await _credentialsService.Value.LoadAsync(new Uri(_settingsService.ServerUrl), _settingsService.Email);
-                                                if (token != null)
-                                                {
-                                                    var loginResponseWrapper = await _codeStreamAgent.LoginViaTokenAsync(_settingsService.Email, token.Item2, _settingsService.ServerUrl);
-
-                                                    response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id));
-                                                    var success = false;
-
-                                                    try
-                                                    {
-                                                        var loginResponse = loginResponseWrapper.ToObject<LoginResponseWrapper>();
-                                                        if (loginResponse?.Result.Error.IsNotNullOrWhiteSpace() == true)
-                                                        {
-                                                            response.Body.Error = loginResponse.Result.Error;
-                                                        }
-                                                        else if (loginResponse != null)
-                                                        {
-                                                            _sessionService.State = loginResponse.Result.State;
-
-                                                            response.Body.Payload =
-                                                                await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings(), loginResponse.Result.State, true);
-                                                            _sessionService.SetUserLoggedIn();
-                                                            success = true;
-                                                        }
-                                                    }
-                                                    catch (Exception ex)
-                                                    {
-                                                        response.Body.Error = ex.ToString();
-                                                    }
-
-
-                                                    if (success)
-                                                    {
-                                                        _eventAggregator.Publish(new SessionReadyEvent());
-                                                    }
-                                                    else
-                                                    {
-                                                        await _credentialsService.Value.DeleteAsync(new Uri(_settingsService.ServerUrl), _settingsService.Email);
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id)
-                                                    {
-                                                        Payload = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings())
-                                                    });
-                                                }
-                                            }
-                                            else
-                                            {
-                                                response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id)
-                                                {
-                                                    Payload = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings())
-                                                });
-                                            }
-
-                                            _browserService.PostMessage(response);
-
-                                            break;
-                                        }
                                     case "authenticate":
-                                        {
-                                            var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id));
-                                            var success = false;
-                                            string email = message.Params["email"].ToString();
-                                            LoginResponseWrapper loginResponse = null;
-                                            try
-                                            {
-                                                var loginResponseWrapper = await _codeStreamAgent.LoginAsync(
-                                                    email,
-                                                    message.Params["password"].ToString(),
-                                                    _settingsService.ServerUrl
-                                                );
-
-                                                loginResponse = loginResponseWrapper.ToObject<LoginResponseWrapper>();
-                                                if (loginResponse?.Result.Error.IsNotNullOrWhiteSpace() == true)
-                                                {
-                                                    if (Enum.TryParse(loginResponse.Result.Error, out LoginResult loginResult))
-                                                    {
-                                                        if (loginResult == LoginResult.VERSION_UNSUPPORTED)
-                                                        {
-                                                            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                                            InfoBarProvider.Instance.ShowInfoBar($"This version of {Application.Name} is no longer supported. Please upgrade to the latest version.");
-                                                            break;
-                                                        }
-
-                                                        response.Body.Error = loginResult.ToString();
-                                                    }
-                                                    else
-                                                    {
-                                                        response.Body.Error = loginResponse.Result.Error;
-                                                    }
-                                                }
-                                                else if (loginResponse != null)
-                                                {
-                                                    _sessionService.State = loginResponse.Result.State;
-
-                                                    response.Body.Payload = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings(), loginResponse.Result.State, true);
-                                                    _sessionService.SetUserLoggedIn();
-                                                    success = true;
-                                                }
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                response.Body.Error = ex.ToString();
-                                            }
-                                            finally
-                                            {
-                                                _browserService.PostMessage(response);
-                                            }
-
-                                            if (success)
-                                            {
-                                                _eventAggregator.Publish(new SessionReadyEvent());
-
-                                                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                                using (var scope = SettingsScope.Create(_settingsService))
-                                                {
-                                                    scope.SettingsService.Email = email;
-                                                }
-                                                if (_settingsService.AutoSignIn)
-                                                {
-                                                    await _credentialsService.Value.SaveAsync(new Uri(_settingsService.ServerUrl), loginResponse.Result.State.Email, loginResponse.Result.LoginResponse.AccessToken);
-                                                }
-                                            }
-                                            break;
-                                        }
                                     case "go-to-signup":
-                                        {
-                                            var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id));
-                                            try
-                                            {
-                                                _ideService.Navigate($"{_settingsService.WebAppUrl}/signup?force_auth=true&signup_token={_sessionService.GetOrCreateSignupToken()}");
-                                                response.Body.Payload = true;
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                response.Body.Error = ex.ToString();
-                                            }
-
-                                            _browserService.PostMessage(response);
-                                            break;
-                                        }
                                     case "go-to-slack-signin":
-                                        {
-                                            var response = new WebviewIpcMessageResponse
-                                            {
-                                                Body = new WebviewIpcMessageResponseBody(message.Id)
-                                            };
-
-                                            try
-                                            {
-                                                _ideService.Navigate($"{_settingsService.WebAppUrl}/service-auth/slack?state={_sessionService.GetOrCreateSignupToken()}");
-                                                response.Body.Payload = true;
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                response.Body.Error = ex.ToString();
-                                            }
-
-                                            _browserService.PostMessage(response);
-                                            break;
-                                        }
                                     case "validate-signup":
                                         {
-                                            var response = new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id));
-                                            var success = false;
-                                            string email = null;
-                                            LoginResponseWrapper loginResponse = null;
-                                            try
+                                            var authenticationController = new AuthenticationController(
+                                                _settingsService,
+                                                _sessionService,
+                                                _codeStreamAgent,
+                                                _eventAggregator,
+                                                _browserService,
+                                                _ideService,
+                                                _credentialsService);
+
+                                            switch (message.Action)
                                             {
-                                                var token = message.Params?.Value<string>();
-                                                if (token.IsNullOrWhiteSpace())
-                                                {
-                                                    token = _sessionService.GetOrCreateSignupToken().ToString();
-                                                }
-
-                                                var loginResponseWrapper = await _codeStreamAgent.LoginViaOneTimeCodeAsync(token, _settingsService.ServerUrl);
-
-                                                loginResponse = loginResponseWrapper.ToObject<LoginResponseWrapper>();
-                                                if (loginResponse?.Result.Error.IsNotNullOrWhiteSpace() == true)
-                                                {
-                                                    if (Enum.TryParse(loginResponse.Result.Error, out LoginResult loginResult))
-                                                    {
-                                                        if (loginResult == LoginResult.VERSION_UNSUPPORTED)
-                                                        {
-                                                            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                                            InfoBarProvider.Instance.ShowInfoBar($"This version of {Application.Name} is no longer supported. Please upgrade to the latest version.");
-                                                            break;
-                                                        }
-
-                                                        response.Body.Error = loginResult.ToString();
-                                                    }
-                                                    else
-                                                    {
-                                                        response.Body.Error = loginResponse.Result.Error;
-                                                    }
-                                                }
-                                                else if (loginResponse != null)
-                                                {
-                                                    _sessionService.State = loginResponse.Result.State;
-                                                    email = loginResponse.Result.LoginResponse.User.Email;
-
-                                                    response.Body.Payload = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings(), loginResponse.Result.State, true);
-                                                    _sessionService.SetUserLoggedIn();
-                                                    success = true;
-                                                }
+                                                case "bootstrap":
+                                                    await authenticationController.BootstrapAsync(message.Id);
+                                                    break;
+                                                case "authenticate":
+                                                    await authenticationController.AuthenticateAsync(message.Id, message.Params["email"].ToString(), message.Params["password"].ToString());
+                                                    break;
+                                                case "go-to-signup":
+                                                    await authenticationController.GoToSignupAsync(message.Id);
+                                                    break;
+                                                case "go-to-slack-signin":
+                                                    await authenticationController.GoToSlackSigninAsync(message.Id);
+                                                    break;
+                                                case "validate-signup":
+                                                    await authenticationController.ValidateSignupAsync(message.Id, message.Params?.Value<string>());
+                                                    break;
+                                                default:
+                                                    Log.Warning("Shouldn't hit this");
+                                                    break;
                                             }
-                                            catch (Exception ex)
-                                            {
-                                                response.Body.Error = ex.ToString();
-                                            }
-                                            finally
-                                            {
-                                                _browserService.PostMessage(response);
-                                            }
-
-                                            if (success)
-                                            {
-                                                _eventAggregator.Publish(new SessionReadyEvent());
-
-                                                if (email.IsNotNullOrWhiteSpace())
-                                                {
-                                                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                                    using (var scope = SettingsScope.Create(_settingsService))
-                                                    {
-                                                        scope.SettingsService.Email = email;
-                                                    }
-                                                    if (_settingsService.AutoSignIn)
-                                                    {
-                                                        await _credentialsService.Value.SaveAsync(new Uri(_settingsService.ServerUrl), email, loginResponse.Result.LoginResponse.AccessToken);
-                                                    }
-                                                }
-                                            }
-
                                             break;
                                         }
                                     case "show-markers":
@@ -431,14 +225,7 @@ namespace CodeStream.VisualStudio
                                             }
 
                                             _eventAggregator.Publish(new CodemarkVisibilityEvent() { IsVisible = val });
-
-                                            _browserService.PostMessage(new WebviewIpcGenericMessageResponse("codestream:configs")
-                                            {
-                                                Body = new
-                                                {
-                                                    showMarkers = val
-                                                }
-                                            });
+                                            _browserService.PostMessage(Ipc.ToShowMarkersMessage(val));
                                             break;
                                         }
                                     case "mute-all":
@@ -454,16 +241,8 @@ namespace CodeStream.VisualStudio
                                                 scope.SettingsService.OpenCommentOnSelect = val;
                                             }
 
-                                            _eventAggregator.Publish(new CodeStreamConfigurationChangedEvent()
-                                            { OpenCommentOnSelect = val });
-
-                                            _browserService.PostMessage(new WebviewIpcGenericMessageResponse("codestream:configs")
-                                            {
-                                                Body = new
-                                                {
-                                                    openCommentOnSelect = val
-                                                }
-                                            });
+                                            _eventAggregator.Publish(new CodeStreamConfigurationChangedEvent() { OpenCommentOnSelect = val });
+                                            _browserService.PostMessage(Ipc.ToCommentOnSelectMessage(val));
                                             break;
                                         }
                                     case "show-code":
@@ -486,35 +265,30 @@ namespace CodeStream.VisualStudio
                                                 if (ideService != null)
                                                 {
                                                     var editorResponse = ideService.OpenEditor(
-                                                        fromMarkerResponse.TextDocument.Uri,
+                                                        fromMarkerResponse.TextDocument.Uri.ToUri(),
                                                         fromMarkerResponse.Range?.Start?.Line + 1);
 
-                                                    _browserService.PostMessage(new WebviewIpcMessageResponse(
-                                                        new WebviewIpcMessageResponseBody(message.Id)
-                                                        {
-                                                            Payload = editorResponse.ToString()
-                                                        }));
+                                                    _browserService.PostMessage(Ipc.ToResponseMessage(message.Id, editorResponse.ToString()));
                                                 }
                                             }
-
                                             break;
                                         }
 
                                     default:
                                         {
-                                            var response =
-                                                new WebviewIpcMessageResponse(new WebviewIpcMessageResponseBody(message.Id));
+                                            string payloadResponse = null;
+                                            string errorResponse = null;
+
                                             try
                                             {
-                                                response.Body.Payload =
-                                                    await _codeStreamAgent.SendAsync<object>(message.Action, message.Params);
+                                                var response = await _codeStreamAgent.SendAsync<JToken>(message.Action, message.Params);
+                                                payloadResponse = response.ToString();
                                             }
                                             catch (Exception ex)
                                             {
-                                                response.Body.Error = ex.ToString();
+                                                errorResponse = ex.ToString();
                                             }
-
-                                            _browserService.PostMessage(response);
+                                            _browserService.PostMessage(Ipc.ToResponseMessage(message.Id, payloadResponse, errorResponse));
                                             break;
                                         }
                                 }

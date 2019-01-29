@@ -1,5 +1,4 @@
 ﻿using CodeStream.VisualStudio.Annotations;
-using CodeStream.VisualStudio.Models;
 using System;
 using System.Runtime.Serialization;
 
@@ -9,10 +8,10 @@ namespace CodeStream.VisualStudio.Services
 
     public interface ISessionService
     {
-        State State { get; set; }
+        string UserId { get; }
         Guid GetOrCreateSignupToken();
         void SetAgentReady();
-        void SetUserLoggedIn();
+        void SetUserLoggedIn(string userId);
         void SetAgentDisconnected();
         string CurrentStreamId { get; set; }
         /// <summary>
@@ -27,9 +26,9 @@ namespace CodeStream.VisualStudio.Services
     [Injected]
     public class SessionService : SSessionService, ISessionService, IDisposable
     {
-        public State State { get; set; }
         private SessionState _sessionState;
         private Guid _signupToken = Guid.Empty;
+        public string UserId { get; private set; }
 
         bool _disposed = false;
 
@@ -56,7 +55,7 @@ namespace CodeStream.VisualStudio.Services
             _sessionState = SessionState.Unknown;
         }
 
-        public void SetUserLoggedIn()
+        public void SetUserLoggedIn(string userId)
         {
             if (_sessionState == SessionState.Ready)
             {
@@ -72,6 +71,8 @@ namespace CodeStream.VisualStudio.Services
             {
                 throw new SessionStateException("Agent is not ready");
             }
+
+            UserId = userId;
         }
 
         public void Logout()

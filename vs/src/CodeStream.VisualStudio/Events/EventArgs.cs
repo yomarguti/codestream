@@ -3,6 +3,7 @@ using CodeStream.VisualStudio.Models;
 using Microsoft.VisualStudio.LiveShare;
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 
 namespace CodeStream.VisualStudio.Events
 {
@@ -87,71 +88,59 @@ namespace CodeStream.VisualStudio.Events
     public abstract class DataChangedEventBase : EventBase
     {
         public abstract string Type { get; }
+
+        public JToken Data { get; set; }
     }
 
     public sealed class CodemarksChangedEvent : DataChangedEventBase
     {
         public override string Type { get; } = ChangeDataType.Codemarks;
-
-        public List<CsFullCodemark> Data { get; set; }
     }
 
     public sealed class MarkerLocationsChangedEvent : DataChangedEventBase
     {
         public override string Type { get; } = ChangeDataType.MarkerLocations;
-
-        public List<CsMarkerLocations> Data { get; set; }
     }
 
     public sealed class MarkersChangedEvent : DataChangedEventBase
     {
         public override string Type { get; } = ChangeDataType.Markers;
-
-        public List<CsMarker> Data { get; set; }
     }
 
     public sealed class PostsChangedEvent : DataChangedEventBase
     {
         public override string Type { get; } = ChangeDataType.Posts;
-        public List<CsPost> Data { get; set; }
     }
 
     [RequiresCustomization("has a custom message structure")]
     public sealed class PreferencesChangedEvent : DataChangedEventBase
     {
         public override string Type { get; } = ChangeDataType.Preferences;
-        public CsMePreferences Data { get; set; }
     }
 
     public sealed class RepositoriesChangedEvent : DataChangedEventBase
     {
         public override string Type { get; } = ChangeDataType.Repositories;
-        public List<CsRepository> Data { get; set; }
     }
 
     public sealed class StreamsChangedEvent : DataChangedEventBase
     {
         public override string Type { get; } = ChangeDataType.Streams;
-        public List<CsStream> Data { get; set; }
     }
 
     public sealed class TeamsChangedEvent : DataChangedEventBase
     {
         public override string Type { get; } = ChangeDataType.Teams;
-        public List<CsTeam> Data { get; set; }
     }
 
     [RequiresCustomization("has a custom message structure")]
     public sealed class UnreadsChangedEvent : DataChangedEventBase
     {
         public override string Type { get; } = ChangeDataType.Unreads;
-        public CsUnreads Data { get; set; }
     }
 
     public sealed class UsersChangedChangedEvent : DataChangedEventBase
     {
         public override string Type { get; } = ChangeDataType.Users;
-        public List<CsUser> Data { get; set; }
     }
-
 }
