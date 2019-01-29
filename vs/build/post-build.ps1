@@ -1,5 +1,7 @@
 param([string] $checkoutDir = $pwd, [string] $assetEnv = "")
 
+Write-Host '**** The script is running in directory' (Get-Location)
+
 $codestreamVsDir = $checkoutDir + '\vs-codestream'
 $codestreamComponentsDir = $checkoutDir + '\codestream-components'
 $codestreamLspAgentDir = $checkoutDir + '\codestream-lsp-agent'
