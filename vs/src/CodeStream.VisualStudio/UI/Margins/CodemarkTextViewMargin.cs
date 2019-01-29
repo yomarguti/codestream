@@ -81,7 +81,7 @@ namespace CodeStream.VisualStudio.UI.Margins
             ICodeStreamAgentService agentService,
             ISettingsService settingsService,
             IWpfTextView textView,
-            ITextDocumentFactoryService textDocumentFactoryService)
+            ITextDocument textDocument)
         {
             _viewTagAggregatorFactoryService = viewTagAggregatorFactoryService;
             _glyphFactoryProviders = glyphFactoryProviders;
@@ -96,13 +96,7 @@ namespace CodeStream.VisualStudio.UI.Margins
             _glyphFactories = new Dictionary<Type, GlyphFactoryInfo>();
             _childCanvases = Array.Empty<Canvas>();
 
-            if (!textDocumentFactoryService.TryGetTextDocument(_textView.TextBuffer, out _textDocument))
-            {
-#if DEBUG
-                // why are we here?
-                Debugger.Break();
-#endif
-            }
+            _textDocument = textDocument;
 
             Width = MARGIN_WIDTH;
             ClipToBounds = true;

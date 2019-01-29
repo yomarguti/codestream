@@ -41,10 +41,7 @@ namespace CodeStream.VisualStudio.UI.Taggers
 
             if (!TextDocumentFactoryService.TryGetTextDocument(buffer, out ITextDocument textDocument))
             {
-#if DEBUG
-                // why are we here?
-                Debugger.Break();
-#endif
+                return null;
             }
 
             return textView.TextBuffer.Properties.GetOrCreateSingletonProperty(typeof(CodemarkTagger),

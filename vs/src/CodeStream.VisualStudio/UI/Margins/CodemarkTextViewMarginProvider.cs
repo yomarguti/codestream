@@ -51,6 +51,11 @@ namespace CodeStream.VisualStudio.UI.Margins
             // only get views that we care about
             if (!wpfTextViewHost.TextView.Roles.ContainsAll(TextViewRoles)) return null;
 
+            if (!TextDocumentFactoryService.TryGetTextDocument(wpfTextViewHost.TextView.TextBuffer, out var textDocument))
+            {
+                return null;
+            }
+
             var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
             var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
             var toolWindowProvider = Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
@@ -67,7 +72,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                 agentService,
                 settings,
                 wpfTextViewHost.TextView,
-                TextDocumentFactoryService);
+                textDocument);
         }
     }
 }

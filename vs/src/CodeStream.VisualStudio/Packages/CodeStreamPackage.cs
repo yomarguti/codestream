@@ -2,12 +2,8 @@
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Properties;
 using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.UI;
 using CodeStream.VisualStudio.UI.Settings;
 using CodeStream.VisualStudio.Vssdk;
-#if DEBUG
-using Microsoft;
-#endif
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -15,6 +11,10 @@ using Serilog;
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
+using CodeStream.VisualStudio.LSP;
+using Microsoft.VisualStudio.Shell.Events;
+using System.ComponentModel;
 
 namespace CodeStream.VisualStudio.Packages
 {
@@ -22,10 +22,7 @@ namespace CodeStream.VisualStudio.Packages
     [InstalledProductRegistration("#110", "#112", SolutionInfo.Version, IconResourceID = 400)] // Info on this package for Help/About
     [ProvideOptionPage(typeof(OptionsDialogPage), "CodeStream", "Settings", 0, 0, true)]
     [Guid(Guids.CodeStreamPackageId)]
-    [ProvideAutoLoad(VSConstants.UICONTEXT.NoSolution_string, PackageAutoLoadFlags.BackgroundLoad)]
-    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExists_string, PackageAutoLoadFlags.BackgroundLoad)]
-    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasMultipleProjects_string, PackageAutoLoadFlags.BackgroundLoad)]
-    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasSingleProject_string, PackageAutoLoadFlags.BackgroundLoad)]
+    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionOpening_string, PackageAutoLoadFlags.BackgroundLoad)]
     public sealed class CodeStreamPackage : AsyncPackageBase
     {
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamPackage>();
@@ -35,35 +32,69 @@ namespace CodeStream.VisualStudio.Packages
         private IDisposable _languageServerReadyEvent;
         private VsShellEventManager _vsShellEventManager;
         private CodeStreamEventManager _codeStreamEventManager;
+        private bool _hasOpenedSolutionOnce = false;
 
-        protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+        protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken,
+            IProgress<ServiceProgressData> progress)
         {
             await base.InitializeAsync(cancellationToken, progress);
+
+            var isSolutionLoaded = await IsSolutionLoadedAsync();
+
+            if (isSolutionLoaded)
+            {
+                OnAfterOpenSolution();
+            }
+
+            SolutionEvents.OnAfterOpenSolution += OnAfterOpenSolution;
 
             // When initialized asynchronously, the current thread may be a background thread at this point.
             // Do any initialization that requires the UI thread after switching to the UI thread.
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+        }
 
-            await InitializeSettingsAsync();
+        private async Task<bool> IsSolutionLoadedAsync()
+        {
+            await JoinableTaskFactory.SwitchToMainThreadAsync();
+            var solService = await GetServiceAsync(typeof(SVsSolution)) as IVsSolution;
+            
+            ErrorHandler.ThrowOnFailure(solService.GetProperty((int)__VSPROPID.VSPROPID_IsSolutionOpen, out object value));
 
-            var eventAggregator = await GetServiceAsync(typeof(SEventAggregator)) as IEventAggregator;
-#if DEBUG
-            Assumes.Present(eventAggregator);
-#endif
+            return value is bool isSolOpen && isSolOpen;
+        }
 
-            _vsShellEventManager = new VsShellEventManager(await GetServiceAsync(typeof(SVsShellMonitorSelection)) as IVsMonitorSelection);
-
-            // ReSharper disable once PossibleNullReferenceException
-            _languageServerReadyEvent = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
+        private void OnAfterOpenSolution(object sender = null, EventArgs e = null)
+        {
+            if (_hasOpenedSolutionOnce)
             {
-                ThreadHelper.ThrowIfNotOnUIThread();
-                _codeStreamService = new Lazy<ICodeStreamService>(() => GetService(typeof(SCodeStreamService)) as ICodeStreamService);
-                _codeStreamEventManager = new CodeStreamEventManager(_vsShellEventManager, _codeStreamService);
-            });
+                ThreadHelper.JoinableTaskFactory.Run(async delegate
+                {
+                    await OnSolutionLoadedAlwaysAsync();
+                });
+            }
+            else
+            {
+                ThreadHelper.JoinableTaskFactory.Run(async delegate
+                {
+                    await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 
-            // Avoid delays when there is ongoing UI activity.
-            // See: https://github.com/github/VisualStudio/issues/1537
-            await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeUiComponentsAsync);
+                    var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
+                    _vsShellEventManager = new VsShellEventManager(Package.GetGlobalService(typeof(SVsShellMonitorSelection)) as IVsMonitorSelection);
+
+                    // ReSharper disable once PossibleNullReferenceException
+                    _languageServerReadyEvent = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
+                    {
+                        ThreadHelper.ThrowIfNotOnUIThread();
+                        _codeStreamService = new Lazy<ICodeStreamService>(() => GetService(typeof(SCodeStreamService)) as ICodeStreamService);
+                        _codeStreamEventManager = new CodeStreamEventManager(_vsShellEventManager, _codeStreamService);
+                    });
+
+                    // Avoid delays when there is ongoing UI activity.
+                    // See: https://github.com/github/VisualStudio/issues/1537
+                    await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, OnSolutionLoadedInitialAsync);
+                    _hasOpenedSolutionOnce = true;
+                });
+            }
         }
 
         // Set pfCanClose=false to prevent a tool window from closing
@@ -81,6 +112,8 @@ namespace CodeStream.VisualStudio.Packages
         {
             if (isDisposing)
             {
+                SolutionEvents.OnAfterOpenSolution -= OnAfterOpenSolution;
+
                 if (_settingsService != null && _settingsService.DialogPage != null)
                 {
                     _settingsService.DialogPage.PropertyChanged -= DialogPage_PropertyChanged;
@@ -94,16 +127,7 @@ namespace CodeStream.VisualStudio.Packages
             base.Dispose(isDisposing);
         }
 
-        private async System.Threading.Tasks.Task InitializeSettingsAsync()
-        {
-            _settingsService = await GetServiceAsync(typeof(SSettingsService)) as ISettingsService;
-            if (_settingsService != null)
-            {
-                _settingsService.DialogPage.PropertyChanged += DialogPage_PropertyChanged;
-            }
-        }
-
-        private void DialogPage_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs args)
+        private void DialogPage_PropertyChanged(object sender, PropertyChangedEventArgs args)
         {
             if (_settingsService == null)
             {
@@ -131,11 +155,21 @@ namespace CodeStream.VisualStudio.Packages
             }
         }
 
-        async System.Threading.Tasks.Task InitializeUiComponentsAsync()
+        private async System.Threading.Tasks.Task OnSolutionLoadedInitialAsync()
         {
-            InfoBarProvider.Initialize(this);
+            await OnSolutionLoadedAlwaysAsync();
+            _settingsService = await GetServiceAsync(typeof(SSettingsService)) as ISettingsService;
+            if (_settingsService != null)
+            {
+                _settingsService.DialogPage.PropertyChanged += DialogPage_PropertyChanged;
+            }
 
             await System.Threading.Tasks.Task.CompletedTask;
+        }
+
+        private async System.Threading.Tasks.Task OnSolutionLoadedAlwaysAsync()
+        {
+            await LanguageClient.TriggerLspInitializeAsync();
         }
     }
 }

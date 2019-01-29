@@ -3,6 +3,8 @@ using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
+using EnvDTE;
+using EnvDTE80;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
@@ -13,38 +15,21 @@ using StreamJsonRpc;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Package = Microsoft.VisualStudio.Shell.Package;
+using ThreadHelper = Microsoft.VisualStudio.Shell.ThreadHelper;
 
 namespace CodeStream.VisualStudio.LSP
 {
-    [ContentType("FSharpInteractive")]
-    [ContentType("RazorCoreCSharp")]
-    [ContentType("RazorVisualBasic")]
-    [ContentType("CoffeeScript")]
-    [ContentType("CSharp")]
-    [ContentType("mustache")]
-    [ContentType("RazorCSharp")]
-    [ContentType("JavaScript")]
-    [ContentType("Python")]
-    [ContentType("F#")]
-    [ContentType("css")]
-    [ContentType("XML")]
-    [ContentType("C/C++")]
-    [ContentType("vbscript")]
-    [ContentType("TypeScript")]
-    [ContentType("Dockerfile")]
-    [ContentType("LESS")]
-    [ContentType("jade")]
-    [ContentType("JSON")]
-    [ContentType("HTML")]
-    [ContentType("SCSS")]
-    [ContentType("XAML")]
+    /// <summary>
+    /// NOTE: See ContentDefinitions.cs for the LanguageClient partial class attributes
+    /// </summary>
     [Export(typeof(ILanguageClient))]
     [Guid(Guids.LanguageClientId)]
-    public class LanguageClient : ILanguageClient, ILanguageClientCustomMessage
+    public partial class LanguageClient : ILanguageClient, ILanguageClientCustomMessage
     {
         private static readonly ILogger Log = LogManager.ForContext<LanguageClient>();
 
@@ -180,6 +165,29 @@ namespace CodeStream.VisualStudio.LSP
         {
             Log.Error(ex, nameof(OnServerInitializeFailedAsync));
             throw ex;
+        }
+
+        public static async Task TriggerLspInitializeAsync()
+        {
+            string path = null;
+
+            try
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                if (!(Package.GetGlobalService(typeof(DTE)) is DTE2 dte)) return;
+
+                path = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Resources", "codestream.codestream");
+
+                var window = dte.OpenFile(Constants.vsViewKindCode, path);
+                window.Visible = true;
+                window.Close(vsSaveChanges.vsSaveChangesNo);
+                Log.Verbose($"{nameof(TriggerLspInitializeAsync)} success for {path}");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(TriggerLspInitializeAsync)} failed for {path}");
+            }
         }
     }
 }
