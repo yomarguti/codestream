@@ -1,4 +1,4 @@
-param([string] $checkoutDir = $pwd, [string] $assetEnv = "")
+param([string] $checkoutDir = $pwd, [string] $assetEnv = "", [string] $buildNumber = $env:build_number)
 
 Write-Host '**** The script is running in directory' (Get-Location)
 
@@ -15,7 +15,7 @@ Write-Host '**** Working directory is' (Get-Location)
 . .\Modules\Versioning.ps1 | out-null
 $codeVer = Read-Version
 Write-Host '***** codeVer: ' $codeVer
-$assetVer = $codeVer + '+' + $env:build_number
+$assetVer = $codeVer + '+' + $buildNumber
 Write-Host '***** asset version: ' $assetVer
 $assetsBaseName = 'codestream-vs-' + $assetVer
 
@@ -31,7 +31,7 @@ $assetInfo = @{}
 $assetInfo.assetEnvironment = $assetEnv
 $assetInfo.name = "codestream-vs"
 $assetInfo.version = $codeVer
-$assetInfo.buildNumber = $env:build_number
+$assetInfo.buildNumber = $buildNumber
 $assetInfo.repoCommitId = $commitIds
 $infoFileName = $assetDir + '\' + $assetsBaseName + '.info'
 Write-Host '********** Creating ' $infoFileName
