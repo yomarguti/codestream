@@ -377,15 +377,15 @@ export class SimpleKnowledgePanel extends Component {
 
 	toggleShowMarkers = () => {
 		const showMarkers = !this.props.showMarkers;
-		// this.props.showMarkersInEditor(showMarkers);
-		// this.setState({ showMarkers });
-		this.props.telemetry({
-			eventName: "Codemarks View Toggled",
-			properties: {
-				Direction: "Inline"
-			}
-		});
-		this.props.setActivePanel("inline");
+		this.props.showMarkersInEditor(showMarkers);
+		this.setState({ showMarkers });
+		// this.props.telemetry({
+		// 	eventName: "Codemarks View Toggled",
+		// 	properties: {
+		// 		Direction: "Inline"
+		// 	}
+		// });
+		// this.props.setActivePanel("inline");
 	};
 
 	handleClickCodemark = codemark => {
