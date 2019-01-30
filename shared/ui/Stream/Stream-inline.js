@@ -519,15 +519,14 @@ export class SimpleStream extends Component {
 		// 	// mentions: umis.totalMentions > 0,
 		// 	unread: umis.totalMentions == 0 && umis.totalUnread > 0
 		// });
-		const totalUMICount =
-			false && umis.totalMentions ? (
-				<div className="mentions-badge">{umis.totalMentions > 99 ? "99+" : umis.totalMentions}</div>
-			) : umis.totalUnread ? (
-				<div className="unread-badge">.</div>
-			) : (
-				// <Icon name="chevron-left" className="show-channels-icon" />
-				""
-			);
+		const totalUMICount = umis.totalMentions ? (
+			<div className="mentions-badge">{umis.totalMentions > 99 ? "99+" : umis.totalMentions}</div>
+		) : umis.totalUnread ? (
+			<div className="unread-badge">.</div>
+		) : (
+			// <Icon name="chevron-left" className="show-channels-icon" />
+			""
+		);
 
 		return (
 			<nav>
