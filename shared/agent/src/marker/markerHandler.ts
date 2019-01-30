@@ -98,13 +98,9 @@ export namespace MarkerHandler {
 	export async function documentFromMarker({
 		repoId,
 		file,
-		markerId,
-		source
+		markerId
 	}: DocumentFromMarkerRequest): Promise<DocumentFromMarkerResponse | undefined> {
 		const { git } = Container.instance();
-
-		let _source = "Source File";
-		if (source != null) _source = source;
 
 		const repo = await git.getRepositoryById(repoId);
 		if (repo === undefined) return undefined;
@@ -117,14 +113,6 @@ export namespace MarkerHandler {
 		const range = location
 			? Container.instance().markerLocations.locationToRange(location)
 			: Range.create(0, 0, 0, 0);
-
-		const telemetry = Container.instance().telemetry;
-		telemetry.track({
-			eventName: "Codemark Clicked",
-			properties: {
-				"Codemark Location": _source
-			}
-		});
 
 		return {
 			textDocument: { uri: documentUri },
