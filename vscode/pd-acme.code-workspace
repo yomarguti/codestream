@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "../codestream-components"
+		},
+		{
+			"path": "../gore"
 		}
 	],
 	"launch": {
