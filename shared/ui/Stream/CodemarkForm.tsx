@@ -151,6 +151,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	componentDidMount() {
 		this.focus();
+		this.handleCodeHighlightEvent();
 	}
 
 	componentDidUpdate(prevProps: Props) {
