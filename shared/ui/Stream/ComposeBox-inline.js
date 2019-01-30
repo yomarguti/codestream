@@ -25,7 +25,7 @@ class ComposeBox extends React.Component {
 		if (!root) return;
 		const bodyDimensions = document.body.getBoundingClientRect();
 		const rootDimensions = root.getBoundingClientRect();
-		const newPosition = bodyDimensions.height / 2 - rootDimensions.height / 2;
+		const newPosition = (bodyDimensions.height - rootDimensions.height) / 2;
 
 		this.setState(state => {
 			if (newPosition !== state.startPosition) {
