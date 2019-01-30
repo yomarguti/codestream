@@ -17,7 +17,6 @@ class ComposeBox extends React.Component {
 	};
 
 	componentDidMount() {
-		debugger;
 		this.repositionIfNecessary();
 	}
 
