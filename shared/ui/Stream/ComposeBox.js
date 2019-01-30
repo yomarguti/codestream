@@ -915,7 +915,7 @@ class ComposeBox extends React.Component {
 									</div>
 								</div>
 							</div>
-							{quote && false && (
+							{quote && (
 								<div style={{ position: "relative" }}>
 									<span
 										style={{
