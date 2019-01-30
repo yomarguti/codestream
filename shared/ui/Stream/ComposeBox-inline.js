@@ -12,8 +12,28 @@ import { MessageInput } from "./MessageInput";
 class ComposeBox extends React.Component {
 	state = {
 		crossPostMessage: true,
-		crossPostIssue: true
+		crossPostIssue: true,
+		startPosition: document.body.getBoundingClientRect().height / 3
 	};
+
+	componentDidMount() {
+		debugger;
+		this.repositionIfNecessary();
+	}
+
+	repositionIfNecessary() {
+		const root = this.props.forwardedRef.current;
+		if (!root) return;
+		const bodyDimensions = document.body.getBoundingClientRect();
+		const rootDimensions = root.getBoundingClientRect();
+		const newPosition = bodyDimensions.height / 2 - rootDimensions.height / 2;
+
+		this.setState(state => {
+			if (newPosition !== state.startPosition) {
+				return { startPosition: newPosition };
+			} else return null;
+		});
+	}
 
 	handleSubmitPost = (...args) => {
 		if (this.props.disabled) return;
@@ -162,19 +182,9 @@ class ComposeBox extends React.Component {
 	};
 
 	render() {
-		const { forwardedRef, multiCompose, quote, textEditorLastLine } = this.props;
+		const { forwardedRef, multiCompose, quote } = this.props;
 
 		this.tabIndexCount = 0;
-
-		const startingLine = quote && quote.location ? quote.location[0] : 20; // 20 is a placeholder to attempt to bring the element towards the middle of the screen
-		let top;
-		if (textEditorLastLine - startingLine <= 10) {
-			/*  if the code selected is towards the bottom of the viewport,
-					render the box further up so it doesn't get hidden behind the bottom of the editor */
-			top = 18 * (startingLine - 10);
-		} else top = 18 * startingLine - 15;
-
-		let style = { top };
 
 		return (
 			<div
@@ -185,7 +195,7 @@ class ComposeBox extends React.Component {
 					"float-compose": this.props.floatCompose,
 					"multi-compose": multiCompose
 				})}
-				style={style}
+				style={{ top: this.state.startPosition }}
 			>
 				<div style={{ position: "relative" }}>
 					{multiCompose ? (
