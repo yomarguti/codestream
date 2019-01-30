@@ -157,7 +157,15 @@ export default class WebviewApi {
 		return this.postMessage({ action: "go-to-slack-signin" });
 	}
 
-	connectService(service: string) {
+	connectService(service: string, fromMenu: boolean = true) {
+		this.sendTelemetry({
+			eventName: "Service Connected",
+			properties: {
+				Service: service,
+				Connection: "On",
+				"Connection Location": fromMenu ? "Global Nav" : "Compose Modal"
+			}
+		});
 		return this.postMessage({
 			action: ConnectThirdParyProviderRequestType.method,
 			params: {
@@ -166,7 +174,15 @@ export default class WebviewApi {
 		});
 	}
 
-	disconnectService(service: string) {
+	disconnectService(service: string, fromMenu: boolean = true) {
+		this.sendTelemetry({
+			eventName: "Service Connected",
+			properties: {
+				Service: service,
+				Connection: "Off",
+				"Connection Location": fromMenu ? "Global Nav" : "Compose Modal"
+			}
+		});
 		return this.postMessage({
 			action: DisconnectThirdParyProviderRequestType.method,
 			params: {
@@ -529,8 +545,8 @@ export default class WebviewApi {
 		});
 	}
 
-	showCode(marker: object, enteringThread: boolean, source: string = "Source File") {
-		return this.postMessage({ action: "show-code", params: { marker, enteringThread, source } });
+	showCode(marker: object, enteringThread: boolean) {
+		return this.postMessage({ action: "show-code", params: { marker, enteringThread } });
 	}
 
 	highlightCode(marker: object, onOff: boolean, source: string = "stream") {

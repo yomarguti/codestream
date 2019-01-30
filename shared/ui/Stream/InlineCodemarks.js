@@ -197,6 +197,12 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	handleClickCodemark = codemark => {
+		this.props.telemetry({
+			eventName: "Codemark Clicked",
+			properties: {
+				"Location": "Spatial View"
+			}
+		});
 		if (codemark.markers) this.props.showCode(codemark.markers[0], true);
 		this.props.setThread(codemark.streamId, codemark.parentPostId || codemark.postId);
 		// const isOpen = this.state.openPost === id;

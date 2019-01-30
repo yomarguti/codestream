@@ -1363,6 +1363,15 @@ export class SimpleStream extends Component {
 		// otherwise use the id. any post can become the head of a thread
 		const threadId = post.parentPostId || post.id;
 		this.openThread(threadId, wasClicked);
+
+		if (wasClicked && post.codemark && !this.props.threadId) {
+			this.props.telemetry({
+				eventName: "Codemark Clicked",
+				properties: {
+					"Location": "Stream"
+				}
+			});
+		}
 	};
 
 	openThread = (threadId, wasClicked = false) => {

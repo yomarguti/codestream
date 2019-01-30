@@ -66,7 +66,7 @@ export const connectProvider = (name: string) => async (
 		return dispatch(setIssueProvider(name));
 	}
 	try {
-		await api.connectService(name);
+		await api.connectService(name, false);
 		return dispatch(setIssueProvider(name));
 	} catch (error) {
 		logError(`Failed to connect ${name}: ${error}`);

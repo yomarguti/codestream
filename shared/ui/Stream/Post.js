@@ -67,7 +67,7 @@ class Post extends React.Component {
 		const marker = hasMarkers && codemark.markers[0];
 		if (marker) {
 			if (marker.repoId) {
-				const status = await this.props.showCode(marker, enteringThread, "Stream");
+				const status = await this.props.showCode(marker, enteringThread);
 				if (status === "SUCCESS") {
 					this.setState({ warning: null });
 				} else {

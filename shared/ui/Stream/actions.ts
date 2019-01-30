@@ -443,8 +443,8 @@ export const fetchPostsForStreams = () => async (dispatch, getState) => {
 	}
 };
 
-export const showCode = (marker, enteringThread, source) => (dispatch, getState, { api }) => {
-	return api.showCode(marker, enteringThread, source);
+export const showCode = (marker, enteringThread) => (dispatch, getState, { api }) => {
+	return api.showCode(marker, enteringThread);
 };
 
 export const highlightCode = (marker, onOff, source) => (
