@@ -22,6 +22,7 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	componentDidMount() {
+		this.props.showMarkersInEditor(false);
 		this.props.fetchCodemarks();
 		// this.disposables.push(
 		// 	EventEmitter.subscribe("interaction:active-editor-changed", this.handleFileChangedEvent)
@@ -29,6 +30,7 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	componentWillUnmount() {
+		this.props.showMarkersInEditor(true);
 		this.disposables.forEach(d => d.dispose());
 	}
 
