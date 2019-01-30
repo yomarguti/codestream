@@ -274,17 +274,21 @@ export class SimpleKnowledgePanel extends Component {
 		return (
 			<div className="panel knowledge-panel">
 				<div className="filters">
-					{this.props.capabilities.editorTrackVisibleRange && (
-						<Tooltip title="View codemarks as" placement="left">
-							<label
-								htmlFor="toggle"
-								className={createClassString("switch", "wide", {
-									checked: this.props.showMarkers
-								})}
-								onClick={this.toggleShowMarkers}
-							/>
-						</Tooltip>
-					)}
+					{
+						//this.props.capabilities.editorTrackVisibleRange && (
+					}
+					<Tooltip title="Show codemarks in editor gutter" placement="left">
+						<label
+							htmlFor="toggle"
+							className={createClassString("switch", {
+								checked: this.props.showMarkers
+							})}
+							onClick={this.toggleShowMarkers}
+						/>
+					</Tooltip>
+					{
+						//})
+					}
 					Show{" "}
 					<Filter
 						onValue={this.props.setCodemarkTypeFilter}
@@ -378,7 +382,7 @@ export class SimpleKnowledgePanel extends Component {
 		this.props.telemetry({
 			eventName: "Codemarks View Toggled",
 			properties: {
-				"Direction": "Inline"
+				Direction: "Inline"
 			}
 		});
 		this.props.setActivePanel("inline");
