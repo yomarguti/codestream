@@ -87,8 +87,12 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 				for (const color of MarkerColors) {
 					for (const status of MarkerStatuses) {
 						const key = `${position}-${type}-${color}-${status}`;
-						this._decorationType[key] = window.createTextEditorDecorationType({
+						this._decorationType[`${key}-before`] = window.createTextEditorDecorationType({
 							before: buildDecoration(position, type, color, status),
+							overviewRulerColor: "#3193f1",
+							overviewRulerLane: OverviewRulerLane.Center
+						});
+						this._decorationType[`${key}-nobefore`] = window.createTextEditorDecorationType({
 							overviewRulerColor: "#3193f1",
 							overviewRulerLane: OverviewRulerLane.Center
 						});
@@ -126,8 +130,7 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 			const cfg = Container.config;
 
 			window.visibleTextEditors.forEach(editor => {
-				if (cfg.showMarkers) Container.markerDecorations.apply(editor, true);
-				else Container.markerDecorations.clear(editor);
+				Container.markerDecorations.apply(editor, true);
 			});
 		}
 	}
@@ -226,8 +229,6 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 	async provideDecorations(
 		editor: TextEditor /*, token: CancellationToken */
 	): Promise<{ [key: string]: DecorationOptions[] }> {
-		if (!Container.config.showMarkers) return {};
-
 		const markers = await this.getMarkers(editor.document.uri);
 		if (markers.length === 0) return {};
 
@@ -242,7 +243,8 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 			// Determine if the marker needs to be inline (i.e. part of the content or overlayed)
 			const position =
 				editor.document.lineAt(start).firstNonWhitespaceCharacterIndex === 0 ? "inline" : "overlay";
-			const key = `${position}-${marker.type}-${marker.color}-${marker.status}`;
+			const before = Container.config.showMarkers ? "before" : "nobefore";
+			const key = `${position}-${marker.type}-${marker.color}-${marker.status}-${before}`;
 
 			if (!decorations[key]) {
 				decorations[key] = [];

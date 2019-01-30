@@ -21,6 +21,7 @@ export enum WebviewIpcMessageType {
 	didSelectCode = "codestream:interaction:code-highlighted",
 	didScroll = "codestream:interaction:scrolled",
 	didSignOut = "codestream:interaction:signed-out",
+	onActivePanelChanged = "codestream:interaction:active-panel-changed",
 	onActiveThreadChanged = "codestream:interaction:thread-selected",
 	onActiveThreadClosed = "codestream:interaction:thread-closed",
 	onActiveStreamChanged = "codestream:interaction:changed-active-stream",

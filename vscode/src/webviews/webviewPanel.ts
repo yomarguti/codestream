@@ -428,6 +428,10 @@ export class CodeStreamWebviewPanel implements Disposable {
 					}
 					break;
 				}
+				case WebviewIpcMessageType.onActivePanelChanged: {
+					// const panelStack = e.body;
+					break;
+				}
 				case WebviewIpcMessageType.onActiveThreadChanged: {
 					const { threadId, streamId } = e.body;
 					if (this._streamThread !== undefined && this._streamThread.stream.id === streamId) {
