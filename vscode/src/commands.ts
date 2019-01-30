@@ -65,7 +65,6 @@ export function isStreamThreadId(
 
 export interface OpenPostWorkingFileArgs {
 	preserveFocus: boolean;
-	source: string;
 }
 
 export interface HighlightCodeArgs {
@@ -152,11 +151,11 @@ export class Commands implements Disposable {
 	@command("openPostWorkingFile", { showErrorMessage: "Unable to open post" })
 	async openPostWorkingFile(
 		marker?: CSMarker,
-		args: OpenPostWorkingFileArgs = { preserveFocus: false, source: "Source File" }
+		args: OpenPostWorkingFileArgs = { preserveFocus: false }
 	) {
 		if (marker == null) return;
 
-		const resp = await Container.agent.getDocumentFromMarker(marker, args.source);
+		const resp = await Container.agent.getDocumentFromMarker(marker);
 		if (resp === undefined || resp === null) return ShowCodeResult.RepoNotInWorkspace; // ?: what exactly does no response mean?
 
 		const block = {
@@ -273,8 +272,6 @@ export class Commands implements Disposable {
 
 	@command("applyMarker", { showErrorMessage: "Unable to open comment" })
 	async applyMarker(args: ApplyMarkerCommandArgs): Promise<boolean> {
-		// Container.agent.telemetry.track("Codemark Clicked", { "Codemark Location": "Source File" });
-
 		const editor = await this.openWorkingFileForMarkerCore(args.marker);
 		if (editor === undefined) return false;
 
@@ -300,8 +297,6 @@ export class Commands implements Disposable {
 
 	@command("showMarkerDiff", { showErrorMessage: "Unable to open comment" })
 	async showMarkerDiff(args: ShowMarkerDiffCommandArgs): Promise<boolean> {
-		// Container.agent.telemetry.track("Codemark Clicked", { "Codemark Location": "Source File" });
-
 		const resp = await Container.agent.getDocumentFromMarker(args.marker);
 		if (resp === undefined) return false;
 
@@ -353,7 +348,7 @@ export class Commands implements Disposable {
 	}
 
 	private async openWorkingFileForMarkerCore(marker: CSMarker) {
-		const resp = await Container.agent.getDocumentFromMarker(marker, "Source File");
+		const resp = await Container.agent.getDocumentFromMarker(marker);
 		if (resp === undefined || resp === null) return undefined;
 
 		const uri = Uri.parse(resp.textDocument.uri);

@@ -216,15 +216,13 @@ export class CodeStreamAgentConnection implements Disposable {
 
 	@started
 	getDocumentFromMarker(
-		marker: CSMarker,
-		source: string = "Source File"
+		marker: CSMarker
 	): Promise<DocumentFromMarkerResponse | undefined> {
 		Logger.debug(">>>>> getDocumentFromMarker clicked");
 		return this.sendRequest(DocumentFromMarkerRequestType, {
 			repoId: marker.repoId,
 			file: marker.file,
-			markerId: marker.id,
-			source: source
+			markerId: marker.id
 		});
 	}
 
