@@ -107,7 +107,7 @@
                 },
                 "codestream.openCommentOnSelect": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Specifies whether to automatically open the comment dialog when the CodeStream panel is open and you select code"
                 },
                 "codestream.team": {
