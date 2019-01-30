@@ -146,7 +146,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		this.state = {
 			...state,
 			assignees
-		}
+		};
 	}
 
 	componentDidMount() {
@@ -809,11 +809,30 @@ class CodemarkForm extends React.Component<Props, State> {
 							))}
 						</div>
 					)}
-					<div className="button-group">
+					<div
+						className="button-group"
+						style={{
+							marginLeft: "10px",
+							float: "right",
+							width: "auto",
+							marginRight: 0
+						}}
+					>
 						<Button
 							style={{
-								marginLeft: "10px",
-								float: "right",
+								paddingLeft: "10px",
+								paddingRight: "10px",
+								width: "auto"
+							}}
+							className="control-button cancel"
+							type="submit"
+							loading={this.state.isLoading}
+							onClick={this.props.onClickClose}
+						>
+							Cancel
+						</Button>
+						<Button
+							style={{
 								paddingLeft: "10px",
 								paddingRight: "10px",
 								width: "auto",
@@ -825,20 +844,6 @@ class CodemarkForm extends React.Component<Props, State> {
 							onClick={this.handleClickSubmit}
 						>
 							Submit
-						</Button>
-						<Button
-							style={{
-								float: "right",
-								paddingLeft: "10px",
-								paddingRight: "10px",
-								width: "auto"
-							}}
-							className="control-button cancel"
-							type="submit"
-							loading={this.state.isLoading}
-							onClick={this.props.onClickClose}
-						>
-							Cancel
 						</Button>
 						{/*
 							<span className="hint">Styling with Markdown is supported</span>
