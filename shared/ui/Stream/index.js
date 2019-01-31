@@ -13,9 +13,11 @@ import PublicChannelPanel from "./PublicChannelPanel";
 import CreateChannelPanel from "./CreateChannelPanel";
 import ScrollBox from "./ScrollBox";
 import KnowledgePanel from "./KnowledgePanel";
+import InlineCodemarks from "./InlineCodemarks";
 import CreateDMPanel from "./CreateDMPanel";
 import ChannelMenu from "./ChannelMenu";
 import Icon from "./Icon";
+import Menu from "./Menu";
 import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
@@ -56,10 +58,9 @@ export class SimpleStream extends Component {
 	componentDidMount() {
 		this.setUmiInfo();
 		this.disposables.push(
-			EventEmitter.on("interaction:stream-thread-selected", this.handleStreamThreadSelected)
-		);
-		this.disposables.push(
-			EventEmitter.subscribe("interaction:code-highlighted", this.handleCodeHighlightEvent)
+			EventEmitter.on("interaction:stream-thread-selected", this.handleStreamThreadSelected),
+			EventEmitter.subscribe("interaction:code-highlighted", this.handleCodeHighlightEvent),
+			EventEmitter.subscribe("interaction:scrolled", this.handleTextEditorScrolledEvent)
 		);
 
 		// this.props.fetchPostsForStreams();
@@ -142,6 +143,8 @@ export class SimpleStream extends Component {
 	};
 
 	handleCodeHighlightEvent = body => {
+		const { composeBoxProps } = this.state;
+		if (composeBoxProps && composeBoxProps.editingCodemark) return;
 		// make sure we have a compose box to type into
 		// if it's not a highlight event (i.e. someone clicked
 		// "Add CodeStream Comment"), then we definitely want to
@@ -149,12 +152,25 @@ export class SimpleStream extends Component {
 		// open it if it's not open and the user has the preference
 		// to auto-open on selection
 		if (!body.isHighlight || (!this.state.multiCompose && this.props.configs.openCommentOnSelect)) {
-			this.setMultiCompose(true);
-			this.setState({ quote: body });
+			this.setMultiCompose(true, { quote: body });
+		}
+		if (
+			body.isHighlight &&
+			(this.newPostEntry === undefined || !this.newPostEntry.startsWith("Spatial"))
+		) {
+			this.setNewPostEntry("Highlighted Code");
 		}
 		// if multi-compose is already open, regardless of settings,
 		// update this.state.quote just in case the selection changed
 		if (this.state.multiCompose) this.setState({ quote: body });
+	};
+
+	handleTextEditorScrolledEvent = body => {
+		this.setState({
+			textEditorUri: body.uri,
+			textEditorFirstLine: body.firstLine,
+			textEditorLastLine: body.lastLine
+		});
 	};
 
 	// TODO: delete this for `setThread` action
@@ -194,10 +210,6 @@ export class SimpleStream extends Component {
 
 	componentDidUpdate(prevProps, prevState) {
 		const { postStreamId } = this.props;
-
-		if (!!prevState.searchBarOpen === false && this.state.searchBarOpen) {
-			requestAnimationFrame(() => this._searchInput.focus());
-		}
 
 		if (this.props.activePanel === "main" && prevProps.activePanel !== "main") {
 			// if we are switching from a non-main panel
@@ -258,15 +270,22 @@ export class SimpleStream extends Component {
 
 	resizeStream = () => {};
 
+	setNewPostEntry = entry => {
+		this.newPostEntry = entry;
+	};
+
 	// return the post, if any, with the given ID
 	findPostById(id) {
 		const { posts } = this.context.store.getState();
 		return getPost(posts, this.props.postStreamId, id);
 	}
 
-	handleClickHelpLink = event => {
-		event.preventDefault();
-		EventEmitter.emit("interaction:clicked-link", "https://help.codestream.com");
+	handleClickHelpLink = () => {
+		this.props.openUrl("https://help.codestream.com");
+	};
+
+	handleClickFeedbackLink = () => {
+		this.props.openUrl("mailto:team@codestream.com?Subject=CodeStream Feedback");
 	};
 
 	renderIntro = nameElement => {
@@ -310,10 +329,205 @@ export class SimpleStream extends Component {
 			<span>#</span>
 		);
 	}
-	renderNav() {
+
+	renderMenu() {
+		const { providerInfo = {} } = this.props;
+		const { menuOpen, menuTarget } = this.state;
+		const inviteLabel = this.props.isSlackTeam ? "Invite People to CodeStream" : "Invite People";
+
+		const menuItems = [
+			{ label: this.props.teamName, action: "" },
+			{ label: "-" },
+			{ label: inviteLabel, action: "invite" },
+			// { label: "Settings", action: "settings" },
+			{ label: "Feedback", action: "feedback" },
+			{ label: "Help", action: "help" },
+			{ label: "-" }
+		];
+		// if (providerInfo.slack)
+		// 	menuItems.push({ label: "Disconnect Slack", action: "disconnect-slack" });
+		// else menuItems.push({ label: "Connect to Slack", action: "connect-slack" });
+		if (providerInfo.trello)
+			menuItems.push({ label: "Disconnect Trello", action: "disconnect-trello" });
+		else menuItems.push({ label: "Connect to Trello", action: "connect-trello" });
+		if (providerInfo.github)
+			menuItems.push({ label: "Disconnect GitHub", action: "disconnect-github" });
+		else menuItems.push({ label: "Connect to GitHub", action: "connect-github" });
+		if (providerInfo.gitlab)
+			menuItems.push({ label: "Disconnect GitLab", action: "disconnect-gitlab" });
+		else menuItems.push({ label: "Connect to GitLab", action: "connect-gitlab" });
+		if (providerInfo.asana)
+			menuItems.push({ label: "Disconnect Asana", action: "disconnect-asana" });
+		else menuItems.push({ label: "Connect to Asana", action: "connect-asana" });
+		if (providerInfo.jira) menuItems.push({ label: "Disconnect Jira", action: "disconnect-jira" });
+		else menuItems.push({ label: "Connect to Jira", action: "connect-jira" });
+		if (providerInfo.bitbucket)
+			menuItems.push({ label: "Disconnect Bitbucket", action: "disconnect-bitbucket" });
+		else menuItems.push({ label: "Connect to Bitbucket", action: "connect-bitbucket" });
+		menuItems.push({ label: "-" });
+		menuItems.push({ label: "Sign Out", action: "signout" });
+
+		const menu = menuOpen ? (
+			<Menu items={menuItems} target={menuTarget} action={this.menuAction} align="right" />
+		) : null;
+		return menu;
+	}
+
+	renderNavIcons() {
+		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
 		let { activePanel } = this.props;
 		const { searchBarOpen, q } = this.state;
+		// if (searchBarOpen) activePanel = "knowledge";
 		if (searchBarOpen && q) activePanel = "knowledge";
+		const umisClass = createClassString("umis", {
+			mentions: umis.totalMentions > 0,
+			unread: umis.totalMentions == 0 && umis.totalUnread > 0
+		});
+		const totalUMICount = umis.totalMentions ? (
+			<div className="mentions-badge">{umis.totalMentions > 99 ? "99+" : umis.totalMentions}</div>
+		) : umis.totalUnread ? (
+			<div className="unread-badge" />
+		) : (
+			// <Icon name="chevron-left" className="show-channels-icon" />
+			""
+		);
+
+		const menu = this.renderMenu();
+
+		return (
+			<nav className="inline">
+				<div className="top-tab-group">
+					<div className="fill-tab" onClick={e => this.setActivePanel("inline")} />
+					<label
+						className={createClassString({
+							selected: activePanel === "inline"
+						})}
+						onClick={e => this.setActivePanel("inline")}
+					>
+						<Tooltip title="Pinned Annotations" placement="bottom">
+							<span>
+								<Icon name="pin" />
+							</span>
+						</Tooltip>
+					</label>
+					{
+						// <label
+						// 	className={createClassString({
+						// 		selected: activePanel === "knowledge" && this.state.knowledgeType === "question"
+						// 	})}
+						// 	onClick={e => this.openCodemarkMenu("question")}
+						// >
+						// 	<Tooltip title="Frequently Asked Questions" placement="bottom">
+						// 		<span>
+						// 			<Icon name="question" />
+						// 		</span>
+						// 	</Tooltip>
+						// </label>
+					}
+					<label
+						className={createClassString({
+							selected: activePanel === "knowledge" && this.state.knowledgeType === "issue"
+						})}
+						onClick={e => this.openCodemarkMenu("issue")}
+					>
+						<Tooltip title="Issues" placement="bottom">
+							<span>
+								<Icon name="issue" />
+							</span>
+						</Tooltip>
+					</label>
+					<label
+						className={createClassString({
+							selected: activePanel === "knowledge" && this.state.knowledgeType === "trap"
+						})}
+						onClick={e => this.openCodemarkMenu("trap")}
+					>
+						<Tooltip title="Traps" placement="bottom">
+							<span>
+								<Icon name="trap" />
+							</span>
+						</Tooltip>
+					</label>
+					<label
+						className={createClassString({
+							selected: activePanel === "knowledge" && this.state.knowledgeType === "bookmark"
+						})}
+						onClick={e => this.openCodemarkMenu("bookmark")}
+					>
+						<Tooltip title="Bookmarks" placement="bottom">
+							<span>
+								<Icon name="bookmark" />
+							</span>
+						</Tooltip>
+					</label>
+					<label
+						className={createClassString({
+							selected:
+								activePanel === "channels" || activePanel === "main" || activePanel === "thread"
+						})}
+						onClick={e => this.setActivePanel("channels")}
+					>
+						<Tooltip title="Channels &amp; DMs" placement="bottom">
+							<span>
+								{this.props.isSlackTeam ? (
+									<Icon className="slack" name="slack" />
+								) : (
+									<Icon name="comment" />
+								)}
+								{!this.props.configs.muteAll && <span className={umisClass}>{totalUMICount}</span>}
+							</span>
+						</Tooltip>
+					</label>
+					<label
+						className={createClassString({
+							selected: this.state.searchBarOpen
+						})}
+						onClick={this.handleClickSearch}
+					>
+						<Tooltip title="Search Codemarks" placement="bottomRight">
+							<span>
+								<Icon name="search" />
+							</span>
+						</Tooltip>
+					</label>
+					<label onClick={this.handleClickNavMenu}>
+						<Tooltip title="More..." placement="bottomRight">
+							<span>
+								<Icon onClick={this.toggleMenu} name="kebab-horizontal" />
+								{this.renderMenu()}
+							</span>
+						</Tooltip>
+					</label>
+				</div>
+			</nav>
+		);
+	}
+
+	handleClickCreateCodemark = e => {
+		e.preventDefault();
+		this.setMultiCompose(true);
+		this.setNewPostEntry("Global Nav");
+	};
+
+	renderNavText() {
+		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
+		let { activePanel } = this.props;
+		const { searchBarOpen, q } = this.state;
+		const { menuOpen, menuTarget } = this.state;
+		if (searchBarOpen && q) activePanel = "knowledge";
+		// const umisClass = createClassString("umis", {
+		// 	// mentions: umis.totalMentions > 0,
+		// 	unread: umis.totalMentions == 0 && umis.totalUnread > 0
+		// });
+		const totalUMICount = umis.totalMentions ? (
+			<div className="mentions-badge">{umis.totalMentions > 99 ? "99+" : umis.totalMentions}</div>
+		) : umis.totalUnread ? (
+			<div className="unread-badge">.</div>
+		) : (
+			// <Icon name="chevron-left" className="show-channels-icon" />
+			""
+		);
+
 		return (
 			<nav>
 				{this.state.searchBarOpen && (
@@ -333,8 +547,8 @@ export class SimpleStream extends Component {
 					<div className="top-tab-group">
 						<label
 							className={createClassString({
-								checked: activePanel === "knowledge",
-								muted: !this.props.configs.showMarkers
+								checked: activePanel === "knowledge" || activePanel === "inline"
+								// muted: !this.props.configs.showMarkers
 							})}
 							onClick={e => this.setActivePanel("knowledge")}
 						>
@@ -353,7 +567,7 @@ export class SimpleStream extends Component {
 							<span>
 								{this.props.configs.muteAll && <Icon name="mute" className="mute" />}
 								Channels
-								{!this.props.configs.muteAll && <span className={umisClass}>{totalUMICount}</span>}
+								{!this.props.configs.muteAll && totalUMICount}
 							</span>
 						</label>
 						<label
@@ -373,15 +587,18 @@ export class SimpleStream extends Component {
 									</span>
 								</Tooltip>
 							</span>
-							<span
-								className="align-right-button"
-								onClick={e => {
-									this.setMultiCompose(true);
-								}}
-							>
+							<span className="align-right-button" onClick={this.handleClickCreateCodemark}>
 								<Tooltip title="Create Codemark" placement="bottomRight">
 									<span>
 										<Icon name="plus" className="button" />
+									</span>
+								</Tooltip>
+							</span>
+							<span className="align-right-button" onClick={this.handleClickNavMenu}>
+								<Tooltip title="More..." placement="bottomRight">
+									<span>
+										<Icon onClick={this.toggleMenu} name="kebab-horizontal" className="button" />
+										{this.renderMenu()}
 									</span>
 								</Tooltip>
 							</span>
@@ -397,7 +614,7 @@ export class SimpleStream extends Component {
 	// to be able to animate between the two streams, since they will both be
 	// visible during the transition
 	render() {
-		const { configs, umis, postStreamPurpose } = this.props;
+		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
 		let { activePanel } = this.props;
 		const { searchBarOpen, q } = this.state;
 		if (searchBarOpen && q) activePanel = "knowledge";
@@ -407,7 +624,7 @@ export class SimpleStream extends Component {
 
 		const streamClass = createClassString({
 			stream: true,
-			"has-overlay": threadId,
+			"has-overlay": threadId || this.state.multiCompose || this.state.floatCompose,
 			"no-headshots": !configs.showHeadshots
 		});
 		const threadPostsListClass = createClassString({
@@ -419,12 +636,15 @@ export class SimpleStream extends Component {
 			"main-panel": true
 		});
 
-		let placeholderText = "Message #" + this.props.postStreamName;
+		let placeholderText = "Comment in #" + this.props.postStreamName;
+		let channelName = "#" + this.props.postStreamName;
 		if (this.props.postStreamType === "direct") {
 			placeholderText = "Message " + this.props.postStreamName;
+			channelName = "@" + this.props.postStreamName;
 		}
-		if (threadPost) {
-			placeholderText = "Reply to " + this.props.teamMembersById[threadPost.creatorId].username;
+		if (activePanel === "thread" && threadPost) {
+			placeholderText = "Reply to " + threadPost.author.username;
+			channelName = "Reply to " + threadPost.author.username;
 		}
 
 		const streamDivId = "stream-" + this.props.postStreamId;
@@ -438,23 +658,20 @@ export class SimpleStream extends Component {
 			// offscreen: activePanel === "main",
 			active: this.state.unreadsBelow && activePanel === "main"
 		});
-		const umisClass = createClassString("umis", {
-			mentions: umis.totalMentions > 0,
-			unread: umis.totalMentions == 0 && umis.totalUnread > 0
-		});
 
+		const channelIcon =
+			this.props.postStreamType === "direct" ? (
+				this.props.postStreamMemberIds.length > 2 ? (
+					<Icon name="organization" className="organization" />
+				) : (
+					<Icon name="person" />
+				)
+			) : this.props.isPrivate ? (
+				<Icon name="lock" />
+			) : (
+				<span>#</span>
+			);
 		const menuActive = this.props.postStreamId && this.state.openMenu === this.props.postStreamId;
-
-		// const totalUMICount = umis.totalMentions || umis.totalUnread || "";
-		// const totalUMICount = umis.totalMentions || umis.totalUnread ? "&middot;" : "\u25C9";
-		const totalUMICount = umis.totalMentions ? (
-			<label>{umis.totalMentions > 99 ? "99+" : umis.totalMentions}</label>
-		) : umis.totalUnread ? (
-			<div className="unread-badge" />
-		) : (
-			// <Icon name="chevron-left" className="show-channels-icon" />
-			""
-		);
 
 		// 	<span className="open-menu">
 		// 	<Icon name="triangle-down" />
@@ -479,21 +696,42 @@ export class SimpleStream extends Component {
 			<div className={streamClass}>
 				<div id="modal-root" />
 				<div id="confirm-root" />
-				<div id="focus-trap" className={createClassString({ active: !this.props.hasFocus })} />
-				{threadId && <div id="thread-blanket" />}
-				{renderNav && this.renderNav()}
-				<div className="content">
-					{activePanel === "knowledge" && (
-						<KnowledgePanel
+				<div id="focus-trap-x" className={createClassString({ active: !this.props.hasFocus })} />
+				{(threadId || this.state.floatCompose) && <div id="panel-blanket" />}
+				{renderNav && this.renderNavText()}
+				{this.state.floatCompose && this.renderComposeBox(placeholderText, channelName)}
+				<div className="content vscroll inline">
+					{activePanel === "inline" && (
+						<InlineCodemarks
 							activePanel={activePanel}
 							setActivePanel={this.setActivePanel}
-							knowledgeType="comment"
-							q={q}
 							usernames={this.props.usernamesRegexp}
 							currentUserId={this.props.currentUserId}
 							currentUserName={this.props.currentUserName}
 							postAction={this.postAction}
+							searchBarOpen={this.state.searchBarOpen}
+							setNewPostEntry={this.setNewPostEntry}
 							setMultiCompose={this.setMultiCompose}
+							typeFilter={this.state.knowledgeType}
+							textEditorUri={this.state.textEditorUri}
+							textEditorFirstLine={this.state.textEditorFirstLine}
+							textEditorLastLine={this.state.textEditorLastLine}
+							startCommentOnLine={this.props.startCommentOnLine}
+							focusInput={this.focusInput}
+							scrollDiv={this._contentScrollDiv}
+						/>
+					)}
+					{activePanel === "knowledge" && (
+						<KnowledgePanel
+							activePanel={activePanel}
+							setActivePanel={this.setActivePanel}
+							usernames={this.props.usernamesRegexp}
+							currentUserId={this.props.currentUserId}
+							currentUserName={this.props.currentUserName}
+							postAction={this.postAction}
+							searchBarOpen={this.state.searchBarOpen}
+							setMultiCompose={this.setMultiCompose}
+							typeFilter={this.state.knowledgeType}
 						/>
 					)}
 					{activePanel === "channels" && (
@@ -541,6 +779,13 @@ export class SimpleStream extends Component {
 					)}
 					{activePanel === "main" && (
 						<div className={mainPanelClass}>
+							{
+								// <div className="panel-header channel-name">
+								// 	<CancelButton onClick={this.props.closePanel} />
+								// 	<span className="channel-icon">{channelIcon}</span>
+								// 	{this.props.postStreamName}
+								// </div>
+							}
 							<div className="filters">
 								<span className="align-right-button" onClick={this.handleClickStreamSettings}>
 									<Tooltip title="Channel Settings" placement="left">
@@ -572,8 +817,8 @@ export class SimpleStream extends Component {
 										</span>
 									</Tooltip>
 									{memberCount > 2 && [
-										<div className="sep" />,
-										<Tooltip title="View member list" placement="bottomLeft">
+										<div className="sep" key="one" />,
+										<Tooltip title="View member list" placement="bottomLeft" key="two">
 											<span
 												className="clickable"
 												style={{ whiteSpace: "nowrap" }}
@@ -628,7 +873,7 @@ export class SimpleStream extends Component {
 												<div className="intro" ref={ref => (this._intro = ref)}>
 													{this.renderIntro(
 														<span>
-															{this.channelIcon()}
+															{channelIcon}
 															{this.props.postStreamName}
 														</span>
 													)}
@@ -638,17 +883,21 @@ export class SimpleStream extends Component {
 									</ScrollBox>
 								</div>
 							</div>
+							{!threadId &&
+								activePanel === "main" &&
+								!this.state.floatCompose &&
+								this.renderComposeBox(placeholderText, channelName)}
 						</div>
 					)}
 					{threadId && (
 						<div className="thread-panel" ref={ref => (this._threadPanel = ref)}>
-							<div className="panel-header">
+							<div className="panel-header inline">
 								<CancelButton title={closeThreadTooltip} onClick={this.handleDismissThread} />
 								<span>
 									<label>
 										{commentTypeLabel} in{" "}
 										<span className="clickable" onClick={() => this.handleDismissThread()}>
-											{this.channelIcon()}
+											{channelIcon}
 											{this.props.postStreamName}
 										</span>
 									</label>
@@ -677,21 +926,19 @@ export class SimpleStream extends Component {
 									</ScrollBox>
 								</div>
 							</div>
-							{this.renderComposeBox(placeholderText)}
+							{this.renderComposeBox(placeholderText, channelName)}
 						</div>
 					)}
 				</div>
-				{!threadId &&
-					(activePanel === "main" || this.state.multiCompose) &&
-					this.renderComposeBox(placeholderText)}
 			</div>
 		);
 	}
 
-	renderComposeBox = placeholderText => {
+	renderComposeBox = (placeholderText, channelName) => {
 		return (
 			<ComposeBox
 				placeholder={placeholderText}
+				channelName={channelName}
 				teammates={this.props.teammates}
 				slashCommands={this.props.slashCommands}
 				channelStreams={this.props.channelStreams}
@@ -702,21 +949,86 @@ export class SimpleStream extends Component {
 				ensureStreamIsActive={this.ensureStreamIsActive}
 				ref={this._compose}
 				disabled={this.props.isOffline}
+				onSubmitPost={this.submitPlainPost}
+				onSubmitCodemark={this.submitCodemark}
 				onSubmit={this.submitPost}
 				onEmptyUpArrow={this.editLastPost}
 				findMentionedUserIds={this.findMentionedUserIds}
 				isDirectMessage={this.props.postStreamType === "direct"}
 				isSlackTeam={this.props.isSlackTeam}
+				connectSlack={this.props.connectSlack}
+				connectService={this.props.connectService}
 				multiCompose={this.state.multiCompose}
+				floatCompose={this.state.floatCompose}
 				setMultiCompose={this.setMultiCompose}
 				quote={this.state.quote}
 				openCommentOnSelect={this.props.configs.openCommentOnSelect}
 				toggleOpenCommentOnSelect={this.toggleOpenCommentOnSelect}
 				quotePost={this.state.quotePost}
 				inThread={Boolean(this.props.threadId)}
+				providerInfo={this.props.providerInfo}
+				fetchIssueBoards={this.props.fetchIssueBoards}
+				createTrelloCard={this.props.createTrelloCard}
+				textEditorFirstLine={this.state.textEditorFirstLine}
+				textEditorLastLine={this.state.textEditorLastLine}
+				setNewPostEntry={this.setNewPostEntry}
 				{...this.state.composeBoxProps}
 			/>
 		);
+	};
+
+	menuAction = arg => {
+		this.setState({ menuOpen: false });
+		// if (arg) this.setCommentType(arg);
+		switch (arg) {
+			case "invite":
+				return this.setActivePanel("invite");
+			case "help":
+				return this.handleClickHelpLink();
+			case "feedback":
+				return this.handleClickFeedbackLink();
+			case "connect-slack":
+				return this.props.connectSlack();
+			// case "disconnect-slack":
+			case "connect-trello":
+				return this.props.connectService("trello");
+			case "disconnect-trello":
+				return this.props.disconnectService("trello");
+			case "connect-asana":
+				return this.props.connectService("asana");
+			case "disconnect-asana":
+				return this.props.disconnectService("asana");
+			case "connect-github":
+				return this.props.connectService("github");
+			case "disconnect-github":
+				return this.props.disconnectService("github");
+			case "connect-gitlab":
+				return this.props.connectService("gitlab");
+			case "disconnect-gitlab":
+				return this.props.disconnectService("gitlab");
+			case "connect-jira":
+				return this.props.connectService("jira");
+			case "disconnect-jira":
+				return this.props.disconnectService("jira");
+			case "connect-bitbucket":
+				return this.props.connectService("bitbucket");
+			case "disconnect-bitbucket":
+				return this.props.disconnectService("bitbucket");
+			case "signout":
+				return this.props.signOut();
+
+			default:
+				return;
+		}
+	};
+
+	toggleMenu = event => {
+		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
+	};
+
+	openCodemarkMenu = type => {
+		this.setState({ knowledgeType: type, searchBarOpen: false });
+		this.setActivePanel("knowledge");
 	};
 
 	toggleOpenCommentOnSelect = () => {
@@ -741,22 +1053,37 @@ export class SimpleStream extends Component {
 		if (searchBarOpen) {
 			this.setState({ q: null });
 		}
-		this.setState({ searchBarOpen: !searchBarOpen });
+		this.setState({ searchBarOpen: !searchBarOpen, knowledgeType: "all" });
+	};
+
+	setContentScrollTop = value => {
+		this._contentScrollDiv.scrollTop = value;
+	};
+
+	getContentScrollTop = () => {
+		return this._contentScrollDiv.scrollTop;
 	};
 
 	setMultiCompose = (value, state = {}) => {
-		this.setState({ multiCompose: value, ...state });
-		if (!value) {
-			this.setState({
-				quote: null,
-				composeBoxProps: {}
-			});
+		// ugly hack -Pez
+		if (value == "collapse") {
+			this.setState({ multiCompose: false, ...state });
+		} else {
+			this.setState({ multiCompose: value, floatCompose: true, ...state });
+			if (!value) {
+				this.setNewPostEntry(undefined);
+				this.setState({
+					quote: null,
+					floatCompose: false,
+					composeBoxProps: {}
+				});
+			}
 		}
 		// if (value) this.focus();
 	};
 
 	setKnowledgeType = type => {
-		this.setState({ knowledgeType: type });
+		this.setState({ knowledgeType: type, searchBarOpen: false });
 	};
 
 	handleClickStreamSettings = event => {
@@ -795,7 +1122,7 @@ export class SimpleStream extends Component {
 
 			if (post.codemarkId) {
 				const codemark = getCodemark(codemarks, post.codemarkId);
-				const marker = codemark.markers && codemark.markers[0];
+				const marker = codemark.markers[0];
 
 				this.setMultiCompose(true, {
 					quote: marker ? { ...marker, location: marker.locationWhenCreated } : null,
@@ -818,6 +1145,7 @@ export class SimpleStream extends Component {
 	};
 
 	setActivePanel = panel => {
+		this.setState({ searchBarOpen: false });
 		this.props.openPanel(panel);
 	};
 
@@ -1035,6 +1363,15 @@ export class SimpleStream extends Component {
 		// otherwise use the id. any post can become the head of a thread
 		const threadId = post.parentPostId || post.id;
 		this.openThread(threadId, wasClicked);
+
+		if (wasClicked && post.codemark && !this.props.threadId) {
+			this.props.telemetry({
+				eventName: "Codemark Clicked",
+				properties: {
+					Location: "Stream"
+				}
+			});
+		}
 	};
 
 	openThread = (threadId, wasClicked = false) => {
@@ -1064,6 +1401,7 @@ export class SimpleStream extends Component {
 	// }
 
 	focusInput = () => {
+		console.log("IN FOCUS INPUT");
 		setTimeout(() => {
 			const input = document.getElementById("input-div");
 			if (input) input.focus();
@@ -1209,7 +1547,7 @@ export class SimpleStream extends Component {
 		}
 		if (args) {
 			const oldName = this.props.postStreamName;
-			const { payload: newStream } = await this.props.renameStream(this.props.postStreamId, args);
+			const newStream = await this.props.renameStream(this.props.postStreamId, args);
 			if (newStream && newStream.name === args) {
 				if (!this.props.isSlackTeam) {
 					this.submitPost({ text: "/me renamed the channel from #" + oldName + " to #" + args });
@@ -1248,7 +1586,7 @@ export class SimpleStream extends Component {
 			return this.submitSystemPost(text);
 		}
 		if (args) {
-			const { payload: newStream } = await this.props.setPurpose(this.props.postStreamId, args);
+			const newStream = await this.props.setPurpose(this.props.postStreamId, args);
 			if (newStream.purpose === args) {
 				if (!this.props.isSlackTeam) {
 					this.submitPost({ text: "/me set the channel purpose to " + args });
@@ -1411,7 +1749,7 @@ export class SimpleStream extends Component {
 	};
 
 	inviteToLiveShare = userId => {
-		this.props.telemetry({
+		EventEmitter.emit("telemetry", {
 			eventName: "Start Live Share",
 			properties: {
 				"Start Location": "Headshot"
@@ -1443,7 +1781,7 @@ export class SimpleStream extends Component {
 		const text = "Starting Live Share...";
 		this.submitSystemPost(text);
 
-		this.props.telemetry({
+		EventEmitter.emit("telemetry", {
 			eventName: "Start Live Share",
 			properties: {
 				"Start Location": liveShareStartLocation
@@ -1521,15 +1859,120 @@ export class SimpleStream extends Component {
 	};
 
 	// create a new post
-	submitPost = ({
-		text,
-		quote,
-		mentionedUserIds,
-		autoMentions,
-		forceStreamId,
-		forceThreadId,
-		codemark
-	}) => {
+	submitPlainPost = async text => {
+		const mentionedUserIds = this.findMentionedUserIds(text, this.props.teammates);
+
+		if (this.checkForSlashCommands(text)) return;
+
+		const { activePanel, createPost, postStreamId } = this.props;
+		await createPost(postStreamId, this.props.threadId, text, null, mentionedUserIds, {
+			entryPoint: "Stream"
+		});
+		if (activePanel === "main") {
+			safe(() => this.scrollPostsListToBottom());
+		}
+	};
+
+	submitCodemark = async (attributes, crossPostIssueValues) => {
+		if (this.state.composeBoxProps.isEditing) {
+			this.props.editCodemark(this.state.composeBoxProps.editingCodemark.id, {
+				color: attributes.color,
+				text: attributes.text,
+				title: attributes.title,
+				assignees: attributes.assignees
+			});
+			return this.setMultiCompose(false);
+		} else {
+			const submit = async markers => {
+				const { threadId } = this.props;
+				await this.props.createPost(
+					attributes.streamId,
+					threadId,
+					null,
+					{ ...attributes, markers },
+					this.findMentionedUserIds(attributes.text || "", this.props.teammates),
+					{
+						fileUri,
+						crossPostIssueValues,
+						entryPoint: this.newPostEntry
+					}
+				);
+				if (attributes.streamId !== this.props.postStreamId) {
+					this.props.setCurrentStream(attributes.streamId);
+				} else this.setMultiCompose(false);
+				// this.setActivePanel("main");
+				safe(() => this.scrollPostsListToBottom());
+			};
+			const { quote } = this.state;
+			if (!quote) return submit([]);
+
+			const fileUri = quote.fileUri;
+
+			let marker = {
+				code: quote.code,
+				location: quote.location,
+				file: quote.file
+			};
+
+			if (quote.source) {
+				marker.file = quote.source.file;
+				marker.source = quote.source;
+			}
+
+			const markers = [marker];
+
+			let warning;
+			if (quote.source) {
+				if (!quote.source.remotes || quote.source.remotes.length === 0) {
+					warning = {
+						title: "No Remote URL",
+						message:
+							"This repo doesn’t have a remote URL configured. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE."
+					};
+				}
+			} else if (quote.gitError) {
+				warning = {
+					title: "Missing Git Info",
+					message:
+						"This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE."
+				};
+			}
+
+			if (warning) {
+				return confirmPopup({
+					title: warning.title,
+					message: () => (
+						<span>
+							{warning.message + " "}
+							<a
+								// onClick={e => {
+								// 	e.preventDefault();
+								// 	EventEmitter.emit(
+								// 		"interaction:clicked-link",
+								// 		"https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues"
+								// 	);
+								// }}
+								href="https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues"
+							>
+								Learn more
+							</a>
+						</span>
+					),
+					centered: true,
+					buttons: [
+						{
+							label: "Post Anyway",
+							action: () => submit(markers)
+						},
+						{ label: "Cancel" }
+					]
+				});
+			} else submit(markers);
+		}
+	};
+
+	// Legacy post creation.
+	submitPost = ({ text, quote, mentionedUserIds, forceStreamId, forceThreadId, codemark }) => {
 		const markers = [];
 		if (codemark) codemark.markers = markers;
 		const { postStreamId, createPost, editCodemark } = this.props;
@@ -1553,7 +1996,6 @@ export class SimpleStream extends Component {
 
 		const submit = async () => {
 			await createPost(streamId, threadId, text, codemark, mentionedUserIds, {
-				autoMentions,
 				fileUri
 			});
 			if (codemark && codemark.streamId && codemark.streamId !== postStreamId) {
@@ -1646,7 +2088,9 @@ const mapStateToProps = state => {
 		pluginVersion,
 		posts,
 		preferences,
+		messaging,
 		teams,
+		onboarding,
 		services,
 		umis
 	} = state;
@@ -1681,6 +2125,8 @@ const mapStateToProps = state => {
 
 	const user = users[session.userId];
 
+	const providerInfo = (user.providerInfo && user.providerInfo[context.currentTeamId]) || {};
+
 	const channelMembers = postStream.isTeamStream
 		? teamMembers
 		: postStream.memberIds
@@ -1714,8 +2160,10 @@ const mapStateToProps = state => {
 		threadId: context.threadId,
 		umis: {
 			...umis,
-			totalUnread: umis.totalUnreads - (umis.unreads[postStream.id] || 0),
-			totalMentions: umis.totalMentions - (umis.mentions[postStream.id] || 0)
+			// totalUnread: Object.values(_.omit(umis.unreads, postStream.id)).reduce(sum, 0),
+			// totalMentions: Object.values(_.omit(umis.mentions, postStream.id)).reduce(sum, 0)
+			totalUnread: Object.values(umis.unreads).reduce(sum, 0),
+			totalMentions: Object.values(umis.mentions).reduce(sum, 0)
 		},
 		configs,
 		isOffline,
@@ -1728,11 +2176,13 @@ const mapStateToProps = state => {
 		postStreamType: postStream.type,
 		postStreamIsTeamStream: postStream.isTeamStream,
 		postStreamMemberIds: postStream.memberIds,
+		providerInfo,
 		isPrivate: postStream.privacy === "private",
 		teamId: context.currentTeamId,
 		teamName: team.name || "",
 		repoId: context.currentRepoId,
 		hasFocus: context.hasFocus,
+		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
 		usernamesRegexp: usernamesRegexp,
 		currentUserId: user.id,

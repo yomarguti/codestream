@@ -3,16 +3,12 @@ import PropTypes from "prop-types";
 import { addLocaleData, IntlProvider } from "react-intl";
 import englishLocaleData from "react-intl/locale-data/en";
 import { connect, Provider } from "react-redux";
-import Stream from "../Stream";
-import InlineStream from "../Stream/Stream-inline";
+import Stream from "../Stream/index";
 import Login from "../Login";
 import Signup from "../Signup";
 import CompleteSignup from "../CompleteSignup";
 import { logError } from "../logger";
 import EventEmitter from "../event-emitter";
-import { getFeatures } from "../toggles";
-
-const FEATURES = getFeatures();
 
 addLocaleData(englishLocaleData);
 
@@ -43,7 +39,7 @@ const mapStateToProps = state => ({
 const Root = connect(mapStateToProps)(props => {
 	if (!props.bootstrapped) return <Loading message="CodeStream engage..." />;
 	if (!props.loggedIn) return <UnauthenticatedRoutes />;
-	return FEATURES.inline ? <InlineStream /> : <Stream />;
+	return <Stream />;
 });
 
 export default class Container extends React.Component {
