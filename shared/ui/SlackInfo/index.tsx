@@ -1,17 +1,17 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { startSlackSignin } from "../Signup/actions";
-import { goToLogin } from "../store/route/actions";
+import { goToSignup } from "../store/route/actions";
 import Button from "../Stream/Button";
 
 interface Props {
-	goToLogin: typeof goToLogin;
+	goToSignup: typeof goToSignup;
 	startSlackSignin: typeof startSlackSignin;
 }
 
 export const SlackInfo = connect(
 	null,
-	{ goToLogin, startSlackSignin }
+	{ goToSignup, startSlackSignin }
 )(function Component(props: Props) {
 	return (
 		<div className="onboarding-page">
@@ -40,7 +40,7 @@ export const SlackInfo = connect(
 								<a
 									onClick={e => {
 										e.preventDefault();
-										props.goToLogin();
+										props.goToSignup();
 									}}
 								>
 									Cancel
