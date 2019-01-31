@@ -25,3 +25,5 @@ Get-ChildItem $localLicenseFile
 
 Write-Host '************ npm install -g lightercollective'
 & npm install -g lightercollective
+
+Write-Host 'DISABLE_OPENCOLLECTIVE is set to' $env:DISABLE_OPENCOLLECTIVE
