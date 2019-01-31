@@ -215,18 +215,13 @@ namespace CodeStream.VisualStudio.Models
         public CsRangePoint End { get; set; }
     }
 
-    public class CsFullMarker : CsMarker
+    public class DocumentMarker : CsMarker
     {
-        public CsRange Range { get; set; }
         public CsCodemark Codemark { get; set; }
-
-        public string Summary
-        {
-            get
-            {
-                return !Codemark?.Title.IsNullOrWhiteSpace() == true ? Codemark.Title : Codemark?.Text;
-            }
-        }
+        public string CreatorName { get; set; }
+        public CsRange Range { get; set; }
+        public string Summary { get; set; }
+        public string SummaryMarkdown { get; set; }
     }
 
     public class CsFullCodemark : CsMarker
@@ -546,7 +541,7 @@ namespace CodeStream.VisualStudio.Models
 
     public class DocumentMarkersResponse
     {
-        public List<CsFullMarker> Markers { get; set; }
+        public List<DocumentMarker> Markers { get; set; }
         public List<MarkerNotLocated> MarkersNotLocated { get; set; }
     }
 

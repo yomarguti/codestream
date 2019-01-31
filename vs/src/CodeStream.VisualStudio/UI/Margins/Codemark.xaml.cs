@@ -26,45 +26,22 @@ namespace CodeStream.VisualStudio.UI.Margins
             ImageUri = $"pack://application:,,,/CodeStream.VisualStudio;component/Resources/Assets/marker-{_viewModel.Marker.Codemark.Type}-{_viewModel.Marker.Codemark.Color}.png";
         }
 
-        Task<GetPostResponse> _postsTask;
-        Task<GetUserResponse> _userTask;
-
         protected override void OnMouseEnter(MouseEventArgs e)
         {
             base.OnMouseEnter(e);
 
-            if (_postsTask == null)
-            {
-                var agentService = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
-                Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.Run(async delegate
-                {
-                    // ReSharper disable once PossibleNullReferenceException
-                    _postsTask = agentService.GetPostAsync(
-                                  _viewModel.Marker.Codemark.StreamId,
-                                  _viewModel.Marker.Codemark.PostId
-                    );
-                    _userTask = agentService.GetUserAsync(_viewModel.Marker.CreatorId);
-
-                    await Task.WhenAll(_postsTask, _userTask);
-                    var postResponse = await _postsTask;
-                    var userResponse = await _userTask;
-
-                    await Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                    ToolTip = $"{userResponse.User.Name}, {postResponse.Post.CreateAtDateTime.TimeAgo()} ({postResponse.Post.CreateAtDateTime.ToDisplayDate()}) " +
-                              $"{Environment.NewLine}{Environment.NewLine}" +
-                              $"\t{_viewModel.Marker.Summary}" +
-                              $"{Environment.NewLine}{Environment.NewLine}" +
-                              $"Click to View {_viewModel.Marker.Codemark.Type}";
-                });
-            }
+            ToolTip = $"{_viewModel.Marker.CreatorName}, {_viewModel.Marker.CreateAtDateTime.TimeAgo()} ({_viewModel.Marker.CreateAtDateTime.ToDisplayDate()}) " +
+                      $"{Environment.NewLine}{Environment.NewLine}" +
+                      $"\t{_viewModel.Marker.Summary}" +
+                      $"{Environment.NewLine}{Environment.NewLine}" +
+                      $"Click to View {_viewModel.Marker.Codemark.Type}";
         }
 
         public static readonly DependencyProperty ImageUriProperty =
             DependencyProperty.Register("ImageUri", typeof(string), typeof(Codemark));
 
         public static readonly DependencyProperty ImageTooltipProperty =
-       DependencyProperty.Register("Tooltip", typeof(string), typeof(Codemark));
+            DependencyProperty.Register("Tooltip", typeof(string), typeof(Codemark));
 
         // ReSharper disable once MemberCanBePrivate.Global
         public string ImageUri
@@ -92,11 +69,10 @@ namespace CodeStream.VisualStudio.UI.Margins
 
             Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
-                var post = await _postsTask;
                 // ReSharper disable once PossibleNullReferenceException
                 toolWindowProvider.ShowToolWindow(Guids.WebViewToolWindowGuid);
                 // ReSharper disable once PossibleNullReferenceException
-                await codeStreamService.OpenCommentByThreadAsync(post.Post.StreamId, post.Post.Id);
+                await codeStreamService.OpenCommentByThreadAsync(_viewModel.Marker.PostStreamId ?? _viewModel.Marker.Codemark.StreamId, _viewModel.Marker.PostId ?? _viewModel.Marker.Codemark.PostId);
             });
         }
     }

@@ -4,10 +4,10 @@ namespace CodeStream.VisualStudio.UI.Margins
 {
     public class CodemarkViewModel
     {
-        public CodemarkViewModel(CsFullMarker marker)
+        public CodemarkViewModel(DocumentMarker marker)
         {
             Marker = marker;
         }
-        public CsFullMarker Marker { get; }
+        public DocumentMarker Marker { get; }
     }
 }

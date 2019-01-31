@@ -5,9 +5,9 @@ namespace CodeStream.VisualStudio.UI.Glyphs
 {
     internal class CodemarkGlyphTag : IGlyphTag
     {
-        public CsFullMarker Codemark { get; }
+        public DocumentMarker Codemark { get; }
 
-        public CodemarkGlyphTag(CsFullMarker codemark)
+        public CodemarkGlyphTag(DocumentMarker codemark)
         {
             Codemark = codemark;
         }

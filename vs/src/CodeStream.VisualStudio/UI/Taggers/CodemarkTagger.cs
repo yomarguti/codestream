@@ -32,9 +32,9 @@ namespace CodeStream.VisualStudio.UI.Taggers
         IEnumerable<ITagSpan<CodemarkGlyphTag>> ITagger<CodemarkGlyphTag>.GetTags(
             NormalizedSnapshotSpanCollection spans)
         {
-            List<CsFullMarker> markers = null;
+            List<DocumentMarker> markers = null;
             if (_textDocument.TextBuffer.Properties.ContainsProperty(PropertyNames.CodemarkMarkers))
-                markers = _textDocument.TextBuffer.Properties.GetProperty<List<CsFullMarker>>(PropertyNames.CodemarkMarkers);
+                markers = _textDocument.TextBuffer.Properties.GetProperty<List<DocumentMarker>>(PropertyNames.CodemarkMarkers);
 
             if (markers != null && markers.AnySafe())
             {
