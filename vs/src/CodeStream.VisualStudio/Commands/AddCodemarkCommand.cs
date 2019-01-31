@@ -10,57 +10,38 @@ using System.Threading;
 
 namespace CodeStream.VisualStudio.Commands
 {
-    internal class AddCodemarkCommand
+    internal class AddCodemarkCommand : CommandBase
     {
+        public static AddCodemarkCommand Instance { get; private set; }
+
         public static async System.Threading.Tasks.Task InitializeAsync(AsyncPackage package)
         {
             // Switch to the main thread - the call to AddCommand in ToolWindow1Command's constructor requires
             // the UI thread.
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(package.DisposalToken);
 
-            OleMenuCommandService commandService = await package.GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
+            var commandService = await package.GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
             Instance = new AddCodemarkCommand(package, commandService);
         }
 
-        private AddCodemarkCommand(AsyncPackage package, OleMenuCommandService commandService)
+        private AddCodemarkCommand(AsyncPackage package, OleMenuCommandService commandService) : base(package)
         {
-            this._package = package ?? throw new ArgumentNullException(nameof(package));
             commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
 
-            var menuCommandID = new CommandID(PackageGuids.guidVSPackageCommandCodeWindowContextMenuCmdSet, PackageIds.AddCodemarkCommandId);
-            var menuItem = new OleMenuCommand(this.ClickCallback, menuCommandID);
+            var menuCommandID = new CommandID(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet, PackageIds.AddCodemarkCommandId);
+            var menuItem = new OleMenuCommand(InvokeHandler, menuCommandID);
             menuItem.BeforeQueryStatus += DynamicTextCommand_BeforeQueryStatus;
+
             commandService.AddCommand(menuItem);
         }
 
         private void DynamicTextCommand_BeforeQueryStatus(object sender, EventArgs e)
         {
-            var myCommand = sender as OleMenuCommand;
-            if (myCommand != null)
-            {
-                var session = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+            var command = sender as OleMenuCommand;
+            if (command == null) return;
 
-                myCommand.Visible = session?.IsReady == true;
-            }
-        }
-
-        public static AddCodemarkCommand Instance
-        {
-            get;
-            private set;
-        }
-
-        private readonly AsyncPackage _package;
-
-        /// <summary>
-        /// Gets the service provider from the owner package.
-        /// </summary>
-        private IAsyncServiceProvider ServiceProvider
-        {
-            get
-            {
-                return _package;
-            }
+            var session = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+            command.Visible = session?.IsReady == true;
         }
 
         /// <summary>
@@ -68,15 +49,15 @@ namespace CodeStream.VisualStudio.Commands
         /// It will check that the selected object is actually an instance of this class and
         /// increment its click counter.
         /// </summary>
-        private void ClickCallback(object sender, EventArgs args)
+        private void InvokeHandler(object sender, EventArgs args)
         {
-            var ideSerivce = Package.GetGlobalService((typeof(SIdeService))) as IdeService;
+            var ideSerivce = Microsoft.VisualStudio.Shell.Package.GetGlobalService((typeof(SIdeService))) as IdeService;
             if (ideSerivce == null) return;
 
             var selectedText = ideSerivce.GetSelectedText(out IVsTextView view);
             if (view == null) return;
 
-            var componentModel = (IComponentModel)(Package.GetGlobalService(typeof(SComponentModel)));
+            var componentModel = (IComponentModel)(Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SComponentModel)));
             var exports = componentModel.DefaultExportProvider;
 
             var wpfTextView = exports.GetExportedValue<IVsEditorAdaptersFactoryService>()?.GetWpfTextView(view);
@@ -84,9 +65,8 @@ namespace CodeStream.VisualStudio.Commands
 
             if (exports.GetExportedValue<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument))
             {
-                var codeStreamService = Package.GetGlobalService((typeof(SCodeStreamService))) as ICodeStreamService;
+                var codeStreamService = Microsoft.VisualStudio.Shell.Package.GetGlobalService((typeof(SCodeStreamService))) as ICodeStreamService;
                 if (codeStreamService == null) return;
-
 
                 ThreadHelper.JoinableTaskFactory.Run(async delegate
                 {

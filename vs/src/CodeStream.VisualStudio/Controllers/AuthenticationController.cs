@@ -7,6 +7,8 @@ using CodeStream.VisualStudio.UI;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio.Controllers
@@ -115,7 +117,7 @@ namespace CodeStream.VisualStudio.Controllers
                 {
                     var state = GetState(loginResponse);
                     payload = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings(), state, true);
-                    _sessionService.SetUserLoggedIn(state["userId"].ToString());
+                    _sessionService.SetUserLoggedIn(CreateUser(loginResponse));
                     success = true;
                 }
             }
@@ -160,7 +162,7 @@ namespace CodeStream.VisualStudio.Controllers
                         {
                             var state = GetState(loginResponse);
                             payload = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings(), state, true);
-                            _sessionService.SetUserLoggedIn(state["userId"].ToString());
+                            _sessionService.SetUserLoggedIn(CreateUser(loginResponse));
                             success = true;
                         }
                     }
@@ -234,8 +236,7 @@ namespace CodeStream.VisualStudio.Controllers
                     email = GetEmail(loginResponse).ToString();
                     var state = GetState(loginResponse);
                     payload = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings(), state, true);
-
-                    _sessionService.SetUserLoggedIn(state["userId"].ToString());
+                    _sessionService.SetUserLoggedIn(CreateUser(loginResponse));
                     success = true;
                 }
             }
@@ -290,6 +291,19 @@ namespace CodeStream.VisualStudio.Controllers
             {
                 return true;
             }
+        }
+
+        private User CreateUser(JToken token)
+        {
+            var user = token?["result"]?["loginResponse"]?["user"].ToObject<CsUser>();
+            var teamId = token?["result"]?["loginResponse"]?["teamId"].Value<string>();
+
+            var teamName = token?["result"]?["loginResponse"]?["teams"].ToObject<List<CsTeam>>()
+                .Where(_ => _.Id == teamId)
+                .Select(_ => _.Name)
+                .FirstOrDefault();
+
+            return new User(user.Id, user.Username, user.Email, teamName);
         }
 
         private JToken GetState(JToken token) => token?["result"]?["state"];

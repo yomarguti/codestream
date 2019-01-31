@@ -12,13 +12,13 @@ namespace CodeStream.VisualStudio
     /// </summary>
     internal sealed partial class PackageGuids
     {
-        public const string guidVSPackageCommandTopMenuString = "fa7d279c-5194-450a-8842-10680454e362";
-        public const string guidVSPackageCommandTopMenuCmdSetString = "9f33235e-3a5c-42bc-b519-d888652f972b";
-        public const string guidVSPackageCommandCodeWindowContextMenuCmdSetString = "0f33235e-3a5c-42bc-b519-d888652f972c";
+        public const string guidWebViewPackageString = "5498f07e-2ca1-4d3b-bcfb-5e8a8a082eed";
+        public const string guidWebViewPackageCmdSetString = "8f66deb0-240b-4137-8550-723344e49722";
+        public const string guidWebViewPackageCodeWindowContextMenuCmdSetString = "0f33235e-3a5c-42bc-b519-d888652f972c";
         public const string guidImagesString = "f2c8ef6d-3257-4e0a-8ae0-ef6298dd22c5";
-        public static Guid guidVSPackageCommandTopMenu = new Guid(guidVSPackageCommandTopMenuString);
-        public static Guid guidVSPackageCommandTopMenuCmdSet = new Guid(guidVSPackageCommandTopMenuCmdSetString);
-        public static Guid guidVSPackageCommandCodeWindowContextMenuCmdSet = new Guid(guidVSPackageCommandCodeWindowContextMenuCmdSetString);
+        public static Guid guidWebViewPackage = new Guid(guidWebViewPackageString);
+        public static Guid guidWebViewPackageCmdSet = new Guid(guidWebViewPackageCmdSetString);
+        public static Guid guidWebViewPackageCodeWindowContextMenuCmdSet = new Guid(guidWebViewPackageCodeWindowContextMenuCmdSetString);
         public static Guid guidImages = new Guid(guidImagesString);
     }
     /// <summary>
@@ -26,12 +26,17 @@ namespace CodeStream.VisualStudio
     /// </summary>
     internal sealed partial class PackageIds
     {
-        public const int CodeStreamTopLevelMenu = 0x1020;
-        public const int CodeStreamGroupForCommands = 0x1021;
+        public const int Toolbar = 0x1000;
+        public const int ToolbarGroup = 0x1050;
+        public const int ToolbarGroup2 = 0x1051;
+        public const int CodeStreamMenuController = 0x9001;
+        public const int CodeStreamMenuControllerGroup0 = 0x9002;
+        public const int CodeStreamMenuControllerGroup1 = 0x9003;
         public const int WebViewToggleCommandId = 0x0100;
         public const int AuthenticationCommandId = 0x0200;
-        public const int MyGroupForEditorCommands = 0x1023;
-        public const int AddCodemarkCommandId = 0x0300;
+        public const int TeamCommandId = 0x0300;
+        public const int CodeStreamEditorCommands = 0x1023;
+        public const int AddCodemarkCommandId = 0x0400;
         public const int logo = 0x0001;
         public const int auth = 0x0002;
         public const int empty3 = 0x0003;

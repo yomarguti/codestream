@@ -8,10 +8,10 @@ namespace CodeStream.VisualStudio.Services
 
     public interface ISessionService
     {
-        string UserId { get; }
+        User User { get; }
         Guid GetOrCreateSignupToken();
         void SetAgentReady();
-        void SetUserLoggedIn(string userId);
+        void SetUserLoggedIn(User user);
         void SetAgentDisconnected();
         string CurrentStreamId { get; set; }
         /// <summary>
@@ -28,7 +28,7 @@ namespace CodeStream.VisualStudio.Services
     {
         private SessionState _sessionState;
         private Guid _signupToken = Guid.Empty;
-        public string UserId { get; private set; }
+        public User User { get; private set; }
 
         bool _disposed = false;
 
@@ -55,7 +55,7 @@ namespace CodeStream.VisualStudio.Services
             _sessionState = SessionState.Unknown;
         }
 
-        public void SetUserLoggedIn(string userId)
+        public void SetUserLoggedIn(User user)
         {
             if (_sessionState == SessionState.Ready)
             {
@@ -72,7 +72,7 @@ namespace CodeStream.VisualStudio.Services
                 throw new SessionStateException("Agent is not ready");
             }
 
-            UserId = userId;
+            User = user;
         }
 
         public void Logout()
@@ -106,6 +106,21 @@ namespace CodeStream.VisualStudio.Services
 
             _disposed = true;
         }
+    }
+
+    public class User
+    {
+        public User(string id, string userName, string emailAddress, string teamName)
+        {
+            Id = id;
+            UserName = userName;
+            EmailAddress = emailAddress;
+            TeamName = teamName;
+        }
+        public string Id { get; }
+        public string TeamName { get; }
+        public string UserName { get; }
+        public string EmailAddress { get; }
     }
 
     [Serializable]

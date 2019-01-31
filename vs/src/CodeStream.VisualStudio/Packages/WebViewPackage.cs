@@ -28,7 +28,7 @@ namespace CodeStream.VisualStudio.Packages
     /// </remarks>
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideToolWindow(typeof(WebViewToolWindowPane))]
-    [Guid(PackageGuids.guidVSPackageCommandTopMenuString)]
+    [Guid(PackageGuids.guidWebViewPackageString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     public sealed class WebViewPackage : AsyncPackageBase
     {
@@ -64,6 +64,7 @@ namespace CodeStream.VisualStudio.Packages
 
             await WebViewToggleCommand.InitializeAsync(this);
             await AuthenticationCommand.InitializeAsync(this);
+            await TeamCommand.InitializeAsync(this);
             await AddCodemarkCommand.InitializeAsync(this);
 
         }

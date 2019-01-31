@@ -89,6 +89,8 @@
       <DependentUpon>CodeStreamPackage.vsct</DependentUpon>
     </Compile>
     <Compile Include="Commands\AddCodemarkCommand.cs" />
+    <Compile Include="Commands\CommandBase.cs" />
+    <Compile Include="Commands\TeamCommand.cs" />
     <Compile Include="Commands\AuthenticationCommand.cs" />
     <Compile Include="Controllers\AuthenticationController.cs" />
     <Compile Include="Controllers\LiveShareController.cs" />

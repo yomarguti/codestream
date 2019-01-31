@@ -1,40 +1,78 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-
   <Extern href="stdidcmd.h" />
   <Extern href="vsshlids.h" />
-
-  <Commands package="guidVSPackageCommandTopMenu">
-
-    <Groups>
-      <Group guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamGroupForCommands" />
-      <Group guid="guidVSPackageCommandCodeWindowContextMenuCmdSet" id="MyGroupForEditorCommands" />
-    </Groups>
-
+  <Commands package="guidWebViewPackage">
     <Menus>
-      <Menu guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenu" type="Menu">
+      <Menu guid="guidWebViewPackageCmdSet" id="Toolbar" type="Toolbar">
+        <CommandFlag>DefaultDocked</CommandFlag>
         <Strings>
           <ButtonText>CodeStream</ButtonText>
+          <CommandName>CodeStream</CommandName>
+        </Strings>
+      </Menu>
+      <Menu guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController" priority="0x0100" type="MenuController">
+        <Parent guid="guidWebViewPackageCmdSet" id="ToolbarGroup" />
+        <CommandFlag>IconAndText</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <!--<CommandFlag>TextIsAnchorCommand</CommandFlag>-->
+        <Strings>
+          <ButtonText>CodeStream</ButtonText>
+          <CommandName>CodeStream</CommandName>
         </Strings>
       </Menu>
     </Menus>
-
+    <Groups>
+      <Group guid="guidWebViewPackageCmdSet" id="ToolbarGroup" priority="0x0600">
+        <Parent guid="guidWebViewPackageCmdSet" id="Toolbar" />
+      </Group>
+      <Group guid="guidWebViewPackageCmdSet" id="ToolbarGroup2" priority="0x0601">
+        <Parent guid="guidWebViewPackageCmdSet" id="Toolbar" />
+      </Group>
+      <Group guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup1" priority="0x009">
+        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController" />
+      </Group>
+      <Group guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup0" priority="0x000">
+        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController" />
+      </Group>
+      <Group guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands" />
+    </Groups>
     <Buttons>
-      <Button guid="guidVSPackageCommandTopMenuCmdSet" id="WebViewToggleCommandId" type="Button">
+      <Button guid="guidWebViewPackageCmdSet" id="TeamCommandId" priority="0x0100" type="Button">
+        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup0" />
         <Icon guid="guidImages" id="logo" />
-        <Strings>
-          <ButtonText>Toggle Window</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidVSPackageCommandTopMenuCmdSet" id="AuthenticationCommandId" type="Button">
-        <Icon guid="guidImages" id="auth" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DontCache</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <ButtonText>Sign In</ButtonText>
+          <ButtonText>Team</ButtonText>
         </Strings>
       </Button>
-
-      <Button guid="guidVSPackageCommandCodeWindowContextMenuCmdSet" id="AddCodemarkCommandId" type="Button">
+      <Button guid="guidWebViewPackageCmdSet" id="WebViewToggleCommandId" priority="0x0101" type="Button">
+        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup1" />
+        <Icon guid="guidImages" id="logo" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DontCache</CommandFlag>
+        <CommandFlag>IconAndText</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <ButtonText>Show CodeStream</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidWebViewPackageCmdSet" id="AuthenticationCommandId" priority="0x0109" type="Button">
+        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup1" />
+        <Icon guid="guidImages" id="auth" />
+        <CommandFlag>IconAndText</CommandFlag>
+        <CommandFlag>DontCache</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>Sign Out</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommandId" type="Button">
         <Icon guid="guidImages" id="logo" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
@@ -43,71 +81,56 @@
         </Strings>
       </Button>
     </Buttons>
-
     <Bitmaps>
       <Bitmap guid="guidImages" href="Resources\Sprites.png" usedList="logo, auth, empty3, empty4, empty5, empty6" />
     </Bitmaps>
   </Commands>
 
   <KeyBindings>
-    <KeyBinding guid="guidVSPackageCommandTopMenuCmdSet" id="WebViewToggleCommandId"
+    <KeyBinding guid="guidWebViewPackageCmdSet" id="WebViewToggleCommandId"
                 editor="guidVSStd97" key1="C" mod1="ALT" key2="S" mod2="ALT" />
-    <KeyBinding guid="guidVSPackageCommandTopMenuCmdSet" id="AuthenticationCommandId"
+    <KeyBinding guid="guidWebViewPackageCmdSet" id="AuthenticationCommandId"
                 editor="guidVSStd97" key1="C" mod1="ALT" key2="X" mod2="ALT" />
   </KeyBindings>
 
   <CommandPlacements>
-
-    <!-- Placement for groups and menus.
-           The parent of a group is a menu, context menu or toolbar.
-           The priority sets the position of the group compared to the priority of other existing groups in the menu.
-      -->
-
-    <CommandPlacement guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenu" priority="775">
-      <!-- The parent of the top menu will be the main menu -->
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLSADDINS"/>
-    </CommandPlacement>
-
-    <CommandPlacement guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamGroupForCommands" priority="0x0001">
-      <!-- The parent of the group will be the top menu -->
-      <Parent guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenu"/>
-    </CommandPlacement>
-
-    <CommandPlacement guid="guidVSPackageCommandCodeWindowContextMenuCmdSet" id="MyGroupForEditorCommands" priority="0xFFFF">
+    <CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands" priority="0xFFFF">
       <!-- The parent of the group will be the code window context menu -->
       <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN"/>
     </CommandPlacement>
-
-    <!-- Placement for commands.
-           The parent of a command is always a group, never a menu, context menu or toolbar.
-      -->
-    <CommandPlacement guid="guidVSPackageCommandTopMenuCmdSet" id="WebViewToggleCommandId" priority="0x0001" >
-      <Parent guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamGroupForCommands"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidVSPackageCommandTopMenuCmdSet" id="AuthenticationCommandId" priority="0x0002" >
-      <Parent guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamGroupForCommands"/>
-    </CommandPlacement>
-
-    <CommandPlacement guid="guidVSPackageCommandCodeWindowContextMenuCmdSet" id="AddCodemarkCommandId" priority="0x0001" >
-      <Parent guid="guidVSPackageCommandCodeWindowContextMenuCmdSet" id="MyGroupForEditorCommands"/>
+    <CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommandId" priority="0x0001" >
+      <Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
     </CommandPlacement>
   </CommandPlacements>
 
-  <Symbols>
-    <GuidSymbol name="guidVSPackageCommandTopMenu" value="{fa7d279c-5194-450a-8842-10680454e362}" />
+  <VisibilityConstraints>
+    <!-- slight hack to show the toolbar all the time -->
+    <VisibilityItem guid="guidWebViewPackageCmdSet" id="Toolbar" context="UICONTEXT_NoSolution" />
+    <VisibilityItem guid="guidWebViewPackageCmdSet" id="Toolbar" context="UICONTEXT_EmptySolution" />
+    <VisibilityItem guid="guidWebViewPackageCmdSet" id="Toolbar" context="UICONTEXT_SolutionHasMultipleProjects" />
+    <VisibilityItem guid="guidWebViewPackageCmdSet" id="Toolbar" context="UICONTEXT_SolutionHasSingleProject" />
+  </VisibilityConstraints>
 
-    <GuidSymbol name="guidVSPackageCommandTopMenuCmdSet" value="{9f33235e-3a5c-42bc-b519-d888652f972b}">
-      <IDSymbol name="CodeStreamTopLevelMenu" value="0x1020" />
-      <IDSymbol name="CodeStreamGroupForCommands" value="0x1021" />
-      <!-- Warning!!: Keep the values in sync with the code in Command1.cs, Command2.cs -->
+  <Symbols>
+    <GuidSymbol name="guidWebViewPackage" value="{5498f07e-2ca1-4d3b-bcfb-5e8a8a082eed}" />
+
+    <GuidSymbol name="guidWebViewPackageCmdSet" value="{8f66deb0-240b-4137-8550-723344e49722}">
+      <IDSymbol name="Toolbar" value="0x1000" />
+      <IDSymbol name="ToolbarGroup" value="0x1050" />
+      <IDSymbol name="ToolbarGroup2" value="0x1051" />
+
+      <IDSymbol name="CodeStreamMenuController" value="0x9001" />
+      <IDSymbol name="CodeStreamMenuControllerGroup0" value="0x9002" />
+      <IDSymbol name="CodeStreamMenuControllerGroup1" value="0x9003" />
+
       <IDSymbol name="WebViewToggleCommandId" value="0x0100" />
       <IDSymbol name="AuthenticationCommandId" value="0x0200" />
+      <IDSymbol name="TeamCommandId" value="0x0300" />
     </GuidSymbol>
 
-    <GuidSymbol name="guidVSPackageCommandCodeWindowContextMenuCmdSet" value="{0f33235e-3a5c-42bc-b519-d888652f972c}">
-      <IDSymbol name="MyGroupForEditorCommands" value="0x1023" />
-      <!-- Warning!!: Keep the value in sync with the code in Command1.cs -->
-      <IDSymbol name="AddCodemarkCommandId" value="0x0300" />
+    <GuidSymbol name="guidWebViewPackageCodeWindowContextMenuCmdSet" value="{0f33235e-3a5c-42bc-b519-d888652f972c}">
+      <IDSymbol name="CodeStreamEditorCommands" value="0x1023" />
+      <IDSymbol name="AddCodemarkCommandId" value="0x0400" />
     </GuidSymbol>
 
     <GuidSymbol name="guidImages" value="{f2c8ef6d-3257-4e0a-8ae0-ef6298dd22c5}" >
@@ -118,6 +141,5 @@
       <IDSymbol name="empty5" value="5" />
       <IDSymbol name="empty6" value="6" />
     </GuidSymbol>
-
   </Symbols>
-</CommandTable> 
+</CommandTable>

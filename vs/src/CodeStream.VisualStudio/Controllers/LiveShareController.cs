@@ -114,7 +114,7 @@ namespace CodeStream.VisualStudio.Controllers
 
                 if (userId != null)
                 {
-                    var memberIds = new List<string> { _sessionService.UserId };
+                    var memberIds = new List<string> { _sessionService.User.Id };
                     foreach (var id in userIds)
                     {
                         var userResponse = await _codeStreamAgent.GetUserAsync(id);
