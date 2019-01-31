@@ -625,6 +625,7 @@ export class SimpleStream extends Component {
 		const streamClass = createClassString({
 			stream: true,
 			"has-overlay": threadId || this.state.multiCompose || this.state.floatCompose,
+			"has-floating-compose": this.state.floatCompose,
 			"no-headshots": !configs.showHeadshots
 		});
 		const threadPostsListClass = createClassString({
@@ -926,7 +927,7 @@ export class SimpleStream extends Component {
 									</ScrollBox>
 								</div>
 							</div>
-							{this.renderComposeBox(placeholderText, channelName)}
+							{!this.state.floatCompose && this.renderComposeBox(placeholderText, channelName)}
 						</div>
 					)}
 				</div>
