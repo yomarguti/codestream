@@ -9,7 +9,7 @@ export default connect(
 )(props => {
 	const handleClickSlackSignup = e => {
 		e.preventDefault();
-		props.startSlackSignin();
+		props.goToSlackInfo();
 	};
 	const handleClickSignup = e => {
 		e.preventDefault();

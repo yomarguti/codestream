@@ -8,3 +8,5 @@ export const goToCompleteSignup = (params = {}) => action(RouteActionsType.Compl
 export const goToSignup = (params = {}) => action(RouteActionsType.Signup, params);
 
 export const goToLogin = (params = {}) => action(RouteActionsType.Login, params);
+
+export const goToSlackInfo = () => action(RouteActionsType.SlackInfo);

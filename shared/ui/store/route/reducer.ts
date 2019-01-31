@@ -17,6 +17,8 @@ export function reduceRoute(state: State = initialState, action: RouteActions) {
 			return { ...state, route: "signup", params: action.payload };
 		case RouteActionsType.Login:
 			return { ...state, route: "login", params: action.payload };
+		case RouteActionsType.SlackInfo:
+			return { ...state, route: "slackInfo", params: {} };
 		case "RESET":
 			return { route: "login", params: {} };
 		default:

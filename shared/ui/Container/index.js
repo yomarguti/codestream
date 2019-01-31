@@ -7,6 +7,7 @@ import Stream from "../Stream/index";
 import Login from "../Login";
 import Signup from "../Signup";
 import CompleteSignup from "../CompleteSignup";
+import { SlackInfo } from "../SlackInfo";
 import { logError } from "../logger";
 import EventEmitter from "../event-emitter";
 
@@ -27,6 +28,8 @@ const UnauthenticatedRoutes = connect(state => state.route)(props => {
 			return <Login />;
 		case "completeSignup":
 			return <CompleteSignup {...props.params} />;
+		case "slackInfo":
+			return <SlackInfo />;
 		default:
 			return <Login />;
 	}
