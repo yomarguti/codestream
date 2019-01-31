@@ -199,8 +199,8 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ContentDefinitions.cs</LastGenOutput>
     </Content>
-    <Content Include="LSP\ContentTypeExclusions.txt" />
-    <Content Include="LSP\ContentTypesGeneric.txt" />
+    <Content Include="LSP\FileExtensionExclusions.txt" />
+    <Content Include="LSP\FileExtensionsGeneric.txt" />
     <Content Include="LSP\ContentTypesVisualStudio.txt" />
     <Content Include="Resources\codestream.codestream">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
