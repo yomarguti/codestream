@@ -38,7 +38,13 @@ export interface CSCodemark extends CSEntity {
 	numReplies: number;
 }
 
-export interface CSMarker extends CSEntity {
+export interface CSMarkerIdentifier {
+	id: string;
+	file: string;
+	repoId: string;
+}
+
+export interface CSMarker extends CSEntity, CSMarkerIdentifier {
 	teamId: string;
 	fileStreamId: string;
 	postStreamId: string;
@@ -48,9 +54,7 @@ export interface CSMarker extends CSEntity {
 	commitHashWhenCreated: string;
 	locationWhenCreated: CSLocationArray;
 	code: string;
-	file: string;
 	repo: string;
-	repoId: string;
 }
 
 export interface CSLocationMeta {

@@ -266,6 +266,7 @@ export interface DocumentFromMarkerRequest {
 
 export interface DocumentFromMarkerResponse {
 	textDocument: TextDocumentIdentifier;
+	marker: CSMarker;
 	range: Range;
 	revision?: string;
 }

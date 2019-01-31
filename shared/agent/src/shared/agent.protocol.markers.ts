@@ -76,9 +76,12 @@ export interface DocumentMarkersRequest {
 	textDocument: TextDocumentIdentifier;
 }
 
-export interface CSFullMarker extends CSMarker {
-	range: Range;
+export interface DocumentMarker extends CSMarker {
 	codemark: CSCodemark;
+	creatorName: string;
+	range: Range;
+	summary: string;
+	summaryMarkdown: string;
 }
 
 export enum MarkerNotLocatedReason {
@@ -94,7 +97,7 @@ export interface MarkerNotLocated extends CSMarker {
 }
 
 export interface DocumentMarkersResponse {
-	markers: CSFullMarker[];
+	markers: DocumentMarker[];
 	markersNotLocated: MarkerNotLocated[];
 }
 

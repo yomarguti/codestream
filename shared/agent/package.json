@@ -27,6 +27,7 @@
         "lint": "tslint --project tsconfig.json",
         "pretty": "prettier --config .prettierrc --write \"./src/**/*.ts\" ./package.json ./.prettierrc",
         "rebuild": "npm run clean && npm install --no-save && npm run build",
+        "update:emoji": "pushd emoji && node ./shortcodeToEmoji.js && popd",
         "watch": "webpack --watch --env.development --info-verbosity verbose",
         "test-unit": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha --require ts-node/register --recursive \"test/unit/**/*.spec.ts\"",
         "test-unit-ci": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha --require ts-node/register --reporter mocha-teamcity-reporter --recursive \"test/unit/**/*.spec.ts\"",
