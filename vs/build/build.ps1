@@ -83,41 +83,6 @@ function Print-Help {
     Exit 0
 }
 
-function Ensure-Dependencies {
-    $nodeVersion = "";
-    if (Get-Command node -errorAction SilentlyContinue) {
-        $nodeVersion = (node -v)
-    }
-
-    if ($nodeVersion) {
-        Write-Log "Node.js version $($nodeVersion) is installed"
-    }
-    else {
-        Write-Log "Node.js is missing" "Red"
-        exit 1
-    }
-
-    $pkgVersion = "";
-    if (Get-Command $pkg -errorAction SilentlyContinue) {
-        $pkgVersion = (cmd /c $pkg -v)
-    }
-
-    if ($pkgVersion) {
-        Write-Log "pkg version $($pkgVersion) is installed"
-    }
-    else {
-        Write-Log "pkg is missing" "Red"
-        exit 1
-    }
-
-    Write-Log ""
-    Write-Log "All dependencies have been satisfied"
-    Write-Log ""
-}
-
-# clone https://github.com/TeamCodeStream/codestream-components
-# clone https://github.com/TeamCodeStream/codestream-lsp-agent
-
 function Build-AgentAndWebview {
     $timer = Start-Timer
 
@@ -133,7 +98,7 @@ function Build-AgentAndWebview {
 
     Write-Log "Packaging agent..."
 
-    & cmd /c $pkg "src/CodeStream.VisualStudio/LSP/agent.js" --targets node8-win-x86 --out-path "src/CodeStream.VisualStudio/LSP/"
+    & cmd /c $(Resolve-Path -path "./node_modules/.bin/pkg") "src/CodeStream.VisualStudio/LSP/agent.js" --targets node8-win-x86 --out-path "src/CodeStream.VisualStudio/LSP/"
     if ($LastExitCode -ne 0) {
         Write-Log "Packaging agent failed" "Red"
         exit 1
@@ -194,13 +159,9 @@ function Build-Extension {
 Print-Help
 
 $root = $(Resolve-Path -path "$PSScriptRoot/..")
-
 Push-Location $root
 
-$pkg = $(Resolve-Path -path "./node_modules/.bin/pkg")
-
 try {
-    Ensure-Dependencies
     if (!$quick) {
         Build-AgentAndWebview
     }
