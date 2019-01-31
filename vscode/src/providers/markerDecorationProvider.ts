@@ -243,7 +243,7 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 			// Determine if the marker needs to be inline (i.e. part of the content or overlayed)
 			const position =
 				editor.document.lineAt(start).firstNonWhitespaceCharacterIndex === 0 ? "inline" : "overlay";
-			const before = Container.config.showMarkers === false ? "before" : "nobefore";
+			const before = Container.config.showMarkers !== false ? "before" : "nobefore";
 			const key = `${position}-${marker.type}-${marker.color}-${marker.status}-${before}`;
 
 			if (!decorations[key]) {
