@@ -39,8 +39,8 @@ Param(
 )
 
 function Try-Create-Directory([string[]] $path) {
-    if (!(Test-Path -path $path)) {
-        New-Item -path $path -force -itemType "Directory" | Out-Null
+    if (!(Test-Path -Path $path)) {
+        New-Item -Force -ItemType Directory -Path $path | Out-Null
         Write-Log "Creating directory $($path)"
     }
 }
@@ -98,7 +98,7 @@ function Build-AgentAndWebview {
 
     Write-Log "Packaging agent..."
 
-    & cmd /c $(Resolve-Path -path "./node_modules/.bin/pkg") "src/CodeStream.VisualStudio/LSP/agent.js" --targets node8-win-x86 --out-path "src/CodeStream.VisualStudio/LSP/"
+    & cmd /c $(Resolve-Path -path "node_modules/.bin/pkg") "src/CodeStream.VisualStudio/LSP/agent.js" --targets node8-win-x86 --out-path "src/CodeStream.VisualStudio/LSP/"
     if ($LastExitCode -ne 0) {
         Write-Log "Packaging agent failed" "Red"
         exit 1
@@ -120,7 +120,7 @@ function Build-Extension {
         $vstest = "C:/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/Common7/IDE/CommonExtensions/Microsoft/TestWindow/vstest.console.exe"
     }
 
-    $OutputDir = $(Resolve-Path -path "build/artifacts/$($Platform)/$($Configuration)")
+    $OutputDir = $(Join-Path $root "build/artifacts/$($Platform)/$($Configuration)")
     Try-Create-Directory($OutputDir)
 
     Write-Log "Cleaning $($OutputDir)..."
