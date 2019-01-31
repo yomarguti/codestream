@@ -40,9 +40,9 @@ namespace CodeStream.VisualStudio.LSP
 	// we don't want to include extensions that have already been registered by visual studio
 	// they will be part of ContentTypesVisualStudio
 
-	var excludedContent = File.ReadAllLines(Host.ResolvePath("ContentTypeExclusions.txt")).ToList();
+	var excludedContent = File.ReadAllLines(Host.ResolvePath("FileExtensionExclusions.txt")).ToList();
 
-	string genericContent = File.ReadAllText(Host.ResolvePath("ContentTypesGeneric.txt"));
+	string genericContent = File.ReadAllText(Host.ResolvePath("FileExtensionsGeneric.txt"));
 	var genericContentTypes = genericContent.Split(new [] {','}).Select(_ => _.Replace("\"","").ToLower()).Distinct().OrderBy(_ => _);
     foreach(var b in genericContentTypes) {
 	
