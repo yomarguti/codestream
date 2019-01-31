@@ -1,7 +1,6 @@
 ﻿[CmdletBinding(PositionalBinding = $false)]
 Param(
     [Parameter(Mandatory = $false)]
-    [ValidateSet("True")]
     [Alias("q")]
     [switch] $quick = $false,
 
@@ -84,10 +83,6 @@ function Print-Help {
     Exit 0
 }
 
-$root = $(Resolve-Path -path "$PSScriptRoot/..")
-
-$pkg = $(Resolve-Path -path "./node_modules/.bin/pkg")
-
 function Ensure-Dependencies {
     $nodeVersion = "";
     if (Get-Command node -errorAction SilentlyContinue) {
@@ -128,7 +123,11 @@ function Build-AgentAndWebview {
 
     Write-Log "Bundling agent & webview..."
 
-    & npm run bundle
+    & npm run $(if ($Configuration -eq "Release") { "bundle:ci" } else { "bundle" })
+    if ($LastExitCode -ne 0) {
+        Write-Log "Bundling agent & webview failed" "Red"
+        exit 1
+    }
 
     Write-Log "Bundling agent & webview completed"
 
@@ -194,15 +193,22 @@ function Build-Extension {
 
 Print-Help
 
+$root = $(Resolve-Path -path "$PSScriptRoot/..")
+
 Push-Location $root
 
-Ensure-Dependencies
-if (!$quick) {
-    Build-AgentAndWebview
-}
-else {
-    Write-Log "Build-AgentAndWebview skipped"
-}
-Build-Extension
+$pkg = $(Resolve-Path -path "./node_modules/.bin/pkg")
 
-Pop-Location
+try {
+    Ensure-Dependencies
+    if (!$quick) {
+        Build-AgentAndWebview
+    }
+    else {
+        Write-Log "Build-AgentAndWebview skipped"
+    }
+    Build-Extension
+}
+finally {
+    Pop-Location
+}
