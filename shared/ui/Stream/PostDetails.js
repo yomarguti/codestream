@@ -26,7 +26,7 @@ export default class PostDetails extends Component {
 
 		if (!codemark) return null;
 
-		const hasCodeBlock = codemark.markers.length ? true : null;
+		const hasCodeBlock = codemark.markers && codemark.markers.length ? true : null;
 		let canCompare = hasCodeBlock && this.props.capabilities.codemarkCompare;
 		let canApply = hasCodeBlock && this.props.capabilities.codemarkApply;
 
