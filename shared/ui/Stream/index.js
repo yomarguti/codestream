@@ -529,7 +529,7 @@ export class SimpleStream extends Component {
 		);
 
 		return (
-			<nav>
+			<nav className="nav">
 				{this.state.searchBarOpen && (
 					<div className="search-bar">
 						<input
