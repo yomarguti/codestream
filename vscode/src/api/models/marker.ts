@@ -1,19 +1,44 @@
 "use strict";
 import { Range } from "vscode";
-import { CSFullMarker, CSLocationArray, CSMarker } from "../../agent/agentConnection";
-import { Container } from "../../container";
-import { memoize } from "../../system";
-import { CodeStreamSession, Post } from "../session";
+import { CSMarker, CSMarkerIdentifier, DocumentMarker } from "../../agent/agentConnection";
+import { Dates, memoize } from "../../system";
+import { CodeStreamSession } from "../session";
 
 export class Marker {
 	private readonly _range: Range;
 
 	constructor(
 		public readonly session: CodeStreamSession,
-		private readonly _entity: CSFullMarker,
-		location: CSLocationArray
+		private readonly _entity: DocumentMarker
 	) {
-		this._range = new Range(location[0], location[1], location[2], location[3]);
+		this._range = new Range(
+			_entity.range.start.line,
+			_entity.range.start.character,
+			_entity.range.end.line,
+			_entity.range.end.character
+		);
+	}
+
+	get code(): string {
+		return this._entity.code;
+	}
+
+	get color(): string {
+		return this._entity.codemark.color || "blue";
+	}
+
+	get creatorName() {
+		return this._entity.creatorName;
+	}
+
+	@memoize
+	get date() {
+		return new Date(this.entity.createdAt);
+	}
+
+	@memoize
+	get entity(): CSMarker {
+		return this._entity;
 	}
 
 	@memoize
@@ -26,41 +51,20 @@ export class Marker {
 	}
 
 	@memoize
-	get entity(): CSMarker {
-		const { codemark: _, range: __, ...marker } = this._entity;
-		return marker;
-	}
-
-	private _post: Post | undefined;
-	async post() {
-		if (this._post === undefined) {
-			const post = (await Container.agent.posts.get(
-				this._entity.codemark.streamId,
-				this._entity.codemark.postId
-			)).post;
-			this._post = new Post(this.session, post);
-		}
-		return this._post;
+	get identifier(): CSMarkerIdentifier {
+		return { id: this.entity.id, file: this.entity.file, repoId: this.entity.repoId };
 	}
 
 	get postId() {
-		return this._entity.postId;
+		return this._entity.postId || this._entity.codemark.postId;
 	}
 
 	get postStreamId() {
-		return this._entity.postStreamId;
+		return this._entity.postStreamId || this._entity.codemark.streamId;
 	}
 
 	get range() {
 		return this._range;
-	}
-
-	get color(): string {
-		return this._entity.codemark.color || "blue";
-	}
-
-	get type(): string {
-		return this._entity.codemark.type || "comment";
 	}
 
 	get status(): string {
@@ -68,6 +72,34 @@ export class Marker {
 	}
 
 	get summary() {
-		return this._entity.codemark.title ? this._entity.codemark.title : this._entity.codemark.text;
+		return this._entity.summary;
+	}
+
+	get summaryMarkdown() {
+		return this._entity.summaryMarkdown;
+	}
+
+	get type(): string {
+		return this._entity.codemark.type || "comment";
+	}
+
+	private _dateFormatter?: Dates.IDateFormatter;
+
+	formatDate(format?: string | null) {
+		if (format == null) {
+			format = "MMMM Do, YYYY h:mma";
+		}
+
+		if (this._dateFormatter === undefined) {
+			this._dateFormatter = Dates.toFormatter(this.date);
+		}
+		return this._dateFormatter.format(format);
+	}
+
+	fromNow() {
+		if (this._dateFormatter === undefined) {
+			this._dateFormatter = Dates.toFormatter(this.date);
+		}
+		return this._dateFormatter.fromNow();
 	}
 }

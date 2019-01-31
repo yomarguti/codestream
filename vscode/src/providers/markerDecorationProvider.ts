@@ -308,39 +308,36 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 		token: CancellationToken
 	): Promise<Hover | undefined> {
 		try {
-			let message = undefined;
+			let message = "";
 			let range = undefined;
 
 			let firstMarkerArgs;
 			for (const m of markers) {
 				try {
-					const post = await m.post();
-					if (token.isCancellationRequested) return undefined;
-					if (post === undefined) continue;
-					const sender = await post.sender();
 					if (token.isCancellationRequested) return undefined;
 
 					const viewCommandArgs: OpenStreamCommandArgs = {
 						streamThread: {
-							id: post.threadId,
-							streamId: post.streamId
+							id: m.postId,
+							streamId: m.postStreamId
 						}
 					};
 
 					const compareCommandArgs: ShowMarkerDiffCommandArgs = {
-						marker: m.entity
+						marker: m.identifier
 					};
 
 					if (firstMarkerArgs === undefined) {
 						firstMarkerArgs = viewCommandArgs;
 					}
 
-					if (message) {
-						message += "\n-----\n";
+					if (range) {
+						message += "\n\n-----\n\n";
 					}
+
 					const typeString = Strings.toTitleCase(m.type);
-					message = `__${sender!.name}__, ${post.fromNow()} &nbsp; _(${post.formatDate()})_\n\n>${
-						m.summary
+					message += `__${m.creatorName}__, ${m.fromNow()} &nbsp; _(${m.formatDate()})_ ${
+						m.summaryMarkdown
 					}\n\n[__View ${typeString} \u2197__](command:codestream.openComment?${encodeURIComponent(
 						JSON.stringify(viewCommandArgs)
 					)} "View ${typeString}") &nbsp; | &nbsp; [__Compare__](command:codestream.showMarkerDiff?${encodeURIComponent(
@@ -396,18 +393,7 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 	private async getMarkersCore(uri: Uri) {
 		try {
 			const resp = await Container.agent.markers.fetch(uri);
-			return resp !== undefined
-				? resp.markers.map(
-						m =>
-							new Marker(Container.session, m, [
-								m.range.start.line,
-								m.range.start.character,
-								m.range.end.line,
-								m.range.end.character,
-								undefined
-							])
-				  )
-				: [];
+			return resp !== undefined ? resp.markers.map(m => new Marker(Container.session, m)) : [];
 		} catch (ex) {
 			Logger.error(ex);
 			return [];

@@ -18,7 +18,7 @@ import { openEditor, ShowCodeResult, WorkspaceState } from "./common";
 import { Container } from "./container";
 import { StreamThreadId } from "./controllers/webviewController";
 import { Logger } from "./logger";
-import { CSMarker } from "./shared/api.protocol";
+import { CSMarker, CSMarkerIdentifier } from "./shared/api.protocol";
 import { Command, createCommandDecorator } from "./system";
 
 const commandRegistry: Command[] = [];
@@ -77,19 +77,11 @@ export interface StartCommentOnLineArgs {
 }
 
 export interface ApplyMarkerCommandArgs {
-	marker: CSMarker;
-	range?: {
-		start: { line: number; character: number };
-		end: { line: number; character: number };
-	};
+	marker: CSMarkerIdentifier;
 }
 
 export interface ShowMarkerDiffCommandArgs {
-	marker: CSMarker;
-	// range?: {
-	// 	start: { line: number; character: number };
-	// 	end: { line: number; character: number };
-	// };
+	marker: CSMarkerIdentifier;
 }
 
 export interface OpenStreamCommandArgs extends IRequiresStream {
@@ -159,7 +151,7 @@ export class Commands implements Disposable {
 		if (resp === undefined || resp === null) return ShowCodeResult.RepoNotInWorkspace; // ?: what exactly does no response mean?
 
 		const block = {
-			code: marker.code,
+			code: resp.marker.code,
 			range: new Range(
 				resp.range.start.line,
 				resp.range.start.character,
@@ -198,7 +190,7 @@ export class Commands implements Disposable {
 		if (resp === undefined || resp === null) return ShowCodeResult.RepoNotInWorkspace; // ?: what exactly does no response mean?
 
 		const block = {
-			code: marker.code,
+			code: resp.marker.code,
 			range: new Range(
 				resp.range.start.line,
 				resp.range.start.character,
@@ -275,22 +267,18 @@ export class Commands implements Disposable {
 		const editor = await this.openWorkingFileForMarkerCore(args.marker);
 		if (editor === undefined) return false;
 
-		if (args.range === undefined) {
-			const resp = await Container.agent.getDocumentFromMarker(args.marker);
-			if (resp === undefined) return false;
-
-			args.range = resp.range;
-		}
+		const resp = await Container.agent.getDocumentFromMarker(args.marker);
+		if (resp === undefined) return false;
 
 		return editor.edit(builder => {
 			builder.replace(
 				new Range(
-					args.range!.start.line,
-					args.range!.start.character,
-					args.range!.end.line,
-					args.range!.end.character
+					resp.range.start.line,
+					resp.range.start.character,
+					resp.range.end.line,
+					resp.range.end.character
 				),
-				args.marker.code
+				resp.marker.code
 			);
 		});
 	}
@@ -316,7 +304,7 @@ export class Commands implements Disposable {
 				resp.range.end.line,
 				resp.range.end.character
 			),
-			args.marker.code
+			resp.marker.code
 		);
 
 		const result = await workspace.applyEdit(edit);
@@ -347,7 +335,7 @@ export class Commands implements Disposable {
 		return true;
 	}
 
-	private async openWorkingFileForMarkerCore(marker: CSMarker) {
+	private async openWorkingFileForMarkerCore(marker: CSMarkerIdentifier) {
 		const resp = await Container.agent.getDocumentFromMarker(marker);
 		if (resp === undefined || resp === null) return undefined;
 

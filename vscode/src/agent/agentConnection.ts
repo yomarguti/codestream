@@ -111,7 +111,7 @@ import {
 import {
 	ChannelServiceType,
 	CodemarkType,
-	CSMarker,
+	CSMarkerIdentifier,
 	CSMePreferences,
 	CSPresenceStatus,
 	StreamType
@@ -216,7 +216,7 @@ export class CodeStreamAgentConnection implements Disposable {
 
 	@started
 	getDocumentFromMarker(
-		marker: CSMarker
+		marker: CSMarkerIdentifier
 	): Promise<DocumentFromMarkerResponse | undefined> {
 		Logger.debug(">>>>> getDocumentFromMarker clicked");
 		return this.sendRequest(DocumentFromMarkerRequestType, {
