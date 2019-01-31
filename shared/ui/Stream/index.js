@@ -108,6 +108,7 @@ export class SimpleStream extends Component {
 			this.disposables.push(
 				VsCodeKeystrokeDispatcher.on("keydown", event => {
 					if (event.key === "Escape") {
+						if (this.state.floatCompose) return this.setMultiCompose(false);
 						if (event.target.id.includes("input-div-")) {
 							this.handleEscape(event);
 						} else if (this.state.searchBarOpen) {
