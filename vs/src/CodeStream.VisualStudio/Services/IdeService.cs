@@ -135,12 +135,12 @@ namespace CodeStream.VisualStudio.Services
             view.GetSelectedText(out string selectedText);
 
             // end could be before beginning...
-            return new SelectedText()
+            return new SelectedText
             {
-                StartLine = Math.Min(startLine, endLine),
-                StartColumn = Math.Min(startColumn, endColumn),
-                EndLine = Math.Max(startLine, endLine),
-                EndColumn = Math.Max(startColumn, endColumn),
+                StartLine = startLine,
+                StartColumn = startColumn,
+                EndLine = endLine,
+                EndColumn = endColumn,
                 Text = selectedText
             };
         }
