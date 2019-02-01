@@ -436,8 +436,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	async updatePreferences(request: UpdatePreferencesRequest) {
-		void (await this.put<CSMePreferences, any>("/preferences", request.preferences, this._token));
-		return this.getMe();
+		const update = await this.put<CSMePreferences, any>(
+			"/preferences",
+			request.preferences,
+			this._token
+		);
+		const [user] = (await Container.instance().users.resolve({
+			type: MessageType.Users,
+			data: update.user
+		})) as CSMe[];
+		return { preferences: user.preferences };
 	}
 
 	@log()

@@ -94,6 +94,7 @@ import {
 	UpdateMarkerRequest,
 	UpdateMarkerResponse,
 	UpdatePreferencesRequest,
+	UpdatePreferencesResponse,
 	UpdatePresenceRequest,
 	UpdatePresenceResponse,
 	UpdateStreamMembershipRequest,
@@ -242,7 +243,7 @@ export interface ApiProvider {
 
 	getMe(): Promise<GetMeResponse>;
 	getUnreads(request: GetUnreadsRequest): Promise<GetUnreadsResponse>;
-	updatePreferences(request: UpdatePreferencesRequest): Promise<GetMeResponse>;
+	updatePreferences(request: UpdatePreferencesRequest): Promise<UpdatePreferencesResponse>;
 	getPreferences(): Promise<GetPreferencesResponse>;
 	updatePresence(request: UpdatePresenceRequest): Promise<UpdatePresenceResponse>;
 	setCodemarkStatus(request: SetCodemarkStatusRequest): Promise<SetCodemarkStatusResponse>;

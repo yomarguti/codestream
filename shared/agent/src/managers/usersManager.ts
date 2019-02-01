@@ -70,8 +70,7 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 
 	@lspHandler(UpdatePreferencesRequestType)
 	async updatePreferences(request: UpdatePreferencesRequest): Promise<UpdatePreferencesResponse> {
-		const { user } = await this.session.api.updatePreferences(request);
-		return { preferences: user.preferences };
+		return this.session.api.updatePreferences(request);
 	}
 
 	@lspHandler(UpdatePresenceRequestType)
