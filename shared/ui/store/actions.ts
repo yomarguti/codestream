@@ -3,7 +3,6 @@ import { action } from "./common";
 import * as configsActions from "./configs/actions";
 import * as connectivityActions from "./connectivity/actions";
 import * as contextActions from "./context/actions";
-import { updatePreferences } from "./preferences/actions";
 import * as preferencesActions from "./preferences/actions";
 import { bootstrapRepos } from "./repos/actions";
 import { bootstrapServices } from "./services/actions";
@@ -24,7 +23,7 @@ export const bootstrap = (data: { [k: string]: any } = {}) => async dispatch => 
 	dispatch(bootstrapServices((data.capabilities && data.capabilities.services) || {}));
 	dispatch(updateUnreads(data.unreads || {}));
 	dispatch(updateCapabilities(data.capabilities || {}));
-	dispatch(updatePreferences(data.preferences || {}));
+	dispatch(preferencesActions.setPreferences(data.preferences || {}));
 	dispatch({ type: "BOOTSTRAP_COMPLETE" });
 };
 

@@ -8,6 +8,7 @@ const initialState: State = {};
 
 export function reducePreferences(state = initialState, action: PreferencesActions) {
 	switch (action.type) {
+		case PreferencesActionsType.Set:
 		case PreferencesActionsType.Update:
 			return { ...state, ...action.payload };
 		case "RESET":

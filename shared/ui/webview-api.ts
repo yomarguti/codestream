@@ -538,10 +538,11 @@ export default class WebviewApi {
 		});
 	}
 
-	saveUserPreference(newPreference: CSMePreferences): Promise<UpdatePreferencesResponse> {
+	saveUserPreference(preferences: CSMePreferences): Promise<UpdatePreferencesResponse> {
+		const request: UpdatePreferencesRequest = { preferences };
 		return this.postMessage({
 			action: UpdatePreferencesRequestType.method,
-			params: newPreference as UpdatePreferencesRequest
+			params: request
 		});
 	}
 

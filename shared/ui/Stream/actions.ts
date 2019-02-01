@@ -233,7 +233,6 @@ export const setUserPreference = (prefPath, value) => async (
 	preferencesPointer[prefPath[0].replace(/\./g, "*")] = value;
 	newPreferencePointer[prefPath[0].replace(/\./g, "*")] = value;
 
-	console.log("Saving preferences: ", newPreference);
 	try {
 		dispatch(updatePreferences(newPreference));
 		await api.saveUserPreference(newPreference);

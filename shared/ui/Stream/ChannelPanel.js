@@ -324,21 +324,26 @@ export class SimpleChannelPanel extends Component {
 		);
 	};
 
-	selectAll = () => {
+	selectAll = event => {
+		event.preventDefault();
 		let checkedStreams = {};
 		this.props.channelStreams.forEach(stream => (checkedStreams[stream.id] = true));
 		this.props.directMessageStreams.forEach(stream => (checkedStreams[stream.id] = true));
 		this.setState({ checkedStreams });
 	};
 
-	selectNone = () => {
+	selectNone = event => {
+		event.preventDefault();
 		this.setState({ checkedStreams: {} });
 	};
 
-	saveSelected = async () => {
+	saveSelected = async event => {
+		event.preventDefault();
 		const { checkedStreams } = this.state;
-		await this.props.setUserPreference(["selectedStreams"], checkedStreams);
-		await this.props.setChannelFilter("selected");
+		await Promise.all([
+			this.props.setUserPreference(["selectedStreams"], checkedStreams),
+			this.props.setChannelFilter("selected")
+		]);
 	};
 
 	streamIcon = stream => {
@@ -732,6 +737,8 @@ export class SimpleChannelPanel extends Component {
 	};
 }
 
+const EMPTY_OBJECT = Object.freeze({});
+
 const mapStateToProps = ({
 	configs,
 	context,
@@ -792,7 +799,7 @@ const mapStateToProps = ({
 		stream => -stream.createdAt
 	);
 
-	const starredStreamIds = preferences.starredStreams || {};
+	const starredStreamIds = preferences.starredStreams || EMPTY_OBJECT;
 	const starredStreams = [...channelStreams, ...directMessageStreams].filter(stream => {
 		return starredStreamIds[stream.id];
 	});
@@ -804,9 +811,9 @@ const mapStateToProps = ({
 		directMessageStreams,
 		serviceStreams,
 		muteAll: configs.muteAll,
-		mutedStreams: preferences.mutedStreams || {},
+		mutedStreams: preferences.mutedStreams || EMPTY_OBJECT,
 		starredStreams: starredStreams,
-		selectedStreams: preferences.selectedStreams || {},
+		selectedStreams: preferences.selectedStreams || EMPTY_OBJECT,
 		meStreamId,
 		streamPresence,
 		team: team,

@@ -1,6 +1,8 @@
 import EventEmitter from "../../event-emitter";
 import { logError } from "../../logger";
+import { setUserPreference } from "../../Stream/actions";
 import { action, ThunkExtras } from "../common";
+import { updatePreferences } from "../preferences/actions";
 import { ContextActionsType, State } from "./types";
 
 export { reset } from "../actions";
@@ -36,8 +38,17 @@ export const setCodemarkFileFilter = (value: string) =>
 export const setCodemarkTypeFilter = (value: string) =>
 	action(ContextActionsType.SetCodemarkTypeFilter, value);
 
-export const setChannelFilter = (value: string) =>
+export const _setChannelFilter = (value: string) =>
 	action(ContextActionsType.SetChannelFilter, value);
+
+export const setChannelFilter = (value: string) => async dispatch => {
+	if (value !== "selecting") {
+		// if a filter is selected, only update user preferences
+		// the context reducer will update the `channelFilter` on the preferences change
+		return await dispatch(setUserPreference(["showChannels"], value));
+	}
+	return dispatch(_setChannelFilter(value));
+};
 
 export const fileChanged = editor => setCurrentFile(editor.fileName, editor.fileStreamId);
 

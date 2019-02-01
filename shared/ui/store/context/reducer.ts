@@ -1,8 +1,11 @@
 import { ActionType } from "../common";
+import * as preferencesActions from "../preferences/actions";
+import { PreferencesActionsType } from "../preferences/types";
 import * as actions from "./actions";
 import { ContextActionsType, State } from "./types";
 
 type ContextActions = ActionType<typeof actions>;
+type PreferencesActions = ActionType<typeof preferencesActions>;
 
 const initialState: State = {
 	activeFile: "",
@@ -21,7 +24,10 @@ const initialState: State = {
 	channelFilter: "all"
 };
 
-export function reduceContext(state: State = initialState, action: ContextActions) {
+export function reduceContext(
+	state: State = initialState,
+	action: ContextActions | PreferencesActions
+) {
 	switch (action.type) {
 		case ContextActionsType.SetContext:
 			return { ...state, ...action.payload };
@@ -58,6 +64,13 @@ export function reduceContext(state: State = initialState, action: ContextAction
 			return { ...state, channelFilter: action.payload };
 		case ContextActionsType.SetIssueProvider:
 			return { ...state, issueProvider: action.payload };
+		case PreferencesActionsType.Set:
+		case PreferencesActionsType.Update: {
+			if (action.payload.showChannels) {
+				return { ...state, channelFilter: action.payload.showChannels };
+			}
+			return state;
+		}
 		case "RESET":
 			return initialState;
 		default:
