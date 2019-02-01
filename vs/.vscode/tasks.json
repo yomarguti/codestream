@@ -1,43 +1,89 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "build",
-            "type": "shell",
-            "command": "pwsh",
-            "windows": {
-                "command": "powershell"
-            },
-            "args": ["-NoLogo", "-NoProfile", "${workspaceRoot}/build/build.ps1 -q -c Debug"],
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        },
-        {
-            "label": "rebuild",
-            "type": "shell",
-            "command": "pwsh",
-            "windows": {
-                "command": "powershell"
-            },
-            "args": ["-NoLogo", "-NoProfile", "${workspaceRoot}/build/build.ps1 -c Debug"],
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": "build"
-        },
-        {
-            "label": "vs2017",
-            "type": "process",
-            "command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\Common7\\IDE\\devenv.exe",
-            "args": ["/rootsuffix", "Exp"],
-            "problemMatcher": []
-        }
-    ]
+	// See https://go.microsoft.com/fwlink/?LinkId=733558
+	// for the documentation about the tasks.json format
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "agent:watch",
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": [
+				{
+					"base": "$ts-webpack-watch",
+					"applyTo": "closedDocuments",
+					"fileLocation": "absolute"
+				},
+				{
+					"base": "$tslint-webpack-watch",
+					"applyTo": "closedDocuments",
+					"fileLocation": ["relative", "${workspaceFolder}/../codestream-lsp-agent/"]
+				}
+			]
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "pwsh",
+			"windows": {
+				"command": "powershell"
+			},
+			"args": ["-NoLogo", "-NoProfile", "${workspaceRoot}/build/build.ps1 -q -c Debug"],
+			"problemMatcher": ["$msCompile"],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"label": "rebuild",
+			"type": "shell",
+			"command": "pwsh",
+			"windows": {
+				"command": "powershell"
+			},
+			"args": ["-NoLogo", "-NoProfile", "${workspaceRoot}/build/build.ps1 -c Debug"],
+			"problemMatcher": ["$msCompile"],
+			"group": "build"
+		},
+		{
+			"label": "watch",
+			"dependsOn": ["npm: agent:watch", "npm: watch"],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"isBackground": true,
+			"problemMatcher": [
+				{
+					"base": "$ts-webpack-watch",
+					"applyTo": "closedDocuments",
+					"fileLocation": "absolute"
+				},
+				{
+					"base": "$tslint-webpack-watch",
+					"applyTo": "closedDocuments",
+					"fileLocation": ["relative"]
+				}
+			]
+		},
+		{
+			"label": "watch (vs)",
+			"dependsOn": ["npm: watch"],
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": [
+				{
+					"base": "$ts-webpack-watch",
+					"applyTo": "closedDocuments",
+					"fileLocation": "absolute"
+				},
+				{
+					"base": "$tslint-webpack-watch",
+					"applyTo": "closedDocuments",
+					"fileLocation": ["relative"]
+				}
+			]
+		}
+	]
 }
