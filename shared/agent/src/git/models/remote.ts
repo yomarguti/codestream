@@ -8,7 +8,7 @@ export enum GitRemoteType {
 }
 
 export class GitRemote {
-	public readonly uri: URI;
+	readonly uri: URI;
 
 	constructor(
 		public readonly repoPath: string,

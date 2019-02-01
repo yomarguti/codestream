@@ -35,7 +35,7 @@ export abstract class ManagerBase<T> {
 
 	protected forceFetchToResolveOnCacheMiss = false;
 
-	public constructor(public readonly session: CodeStreamSession) {
+	constructor(public readonly session: CodeStreamSession) {
 		this.session.onDidRequestReset(() => {
 			this.invalidateCache();
 		});

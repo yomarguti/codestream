@@ -56,20 +56,20 @@ class CalculatedLine {
 }
 
 class CalculatedLocation {
-	public id: string;
-	public lineStartOld: number;
-	public lineEndOld: number;
-	public colStartOld: number;
-	public colEndOld: number;
-	public lineStartNew = 0;
-	public lineEndNew = 0;
-	public colStartNew = 0;
-	public colEndNew = 0;
-	public lineStartOldContent = "";
-	public lineEndOldContent = "";
-	public lineStartNewContent = "";
-	public lineEndNewContent = "";
-	public meta: CSLocationMeta = {};
+	readonly id: string;
+	readonly lineStartOld: number;
+	readonly lineEndOld: number;
+	readonly colStartOld: number;
+	readonly colEndOld: number;
+	lineStartNew = 0;
+	lineEndNew = 0;
+	colStartNew = 0;
+	colEndNew = 0;
+	lineStartOldContent = "";
+	lineEndOldContent = "";
+	lineStartNewContent = "";
+	lineEndNewContent = "";
+	readonly meta: CSLocationMeta = {};
 	private lineMap: Map<number, CalculatedLine>;
 
 	constructor(location: CSMarkerLocation, lineMap: Map<number, CalculatedLine>) {
@@ -81,21 +81,21 @@ class CalculatedLocation {
 		this.lineMap = lineMap;
 	}
 
-	public trimLineStartChange() {
+	trimLineStartChange() {
 		const change = this.lineStartChange();
 		this.lineStartNew = change.addStart + change.adds.length;
 		this.colStartNew = 1;
 		this.meta.startWasDeleted = true;
 	}
 
-	public trimLineEndChange() {
+	trimLineEndChange() {
 		const change = this.lineEndChange();
 		this.lineEndNew = change.addStart - 1;
 		this.colEndNew = 1;
 		this.meta.endWasDeleted = true;
 	}
 
-	public trimLineChange() {
+	trimLineChange() {
 		this.trimLineStartChange();
 		this.lineEndNew = this.lineStartNew;
 		this.colEndNew = 1;
@@ -103,19 +103,19 @@ class CalculatedLocation {
 		this.meta.entirelyDeleted = true;
 	}
 
-	public isLineStartDeleted(): boolean {
+	isLineStartDeleted(): boolean {
 		return this.lineStartNew === DELETED;
 	}
 
-	public isLineEndDeleted(): boolean {
+	isLineEndDeleted(): boolean {
 		return this.lineEndNew === DELETED;
 	}
 
-	public isMultiLine(): boolean {
+	isMultiLine(): boolean {
 		return this.lineEndOld > 0;
 	}
 
-	public isEntirelyDeleted(): boolean {
+	isEntirelyDeleted(): boolean {
 		if (this.isMultiLine()) {
 			return (
 				this.isLineStartDeleted() &&
@@ -127,7 +127,7 @@ class CalculatedLocation {
 		}
 	}
 
-	public lineStartCalc(): CalculatedLine {
+	lineStartCalc(): CalculatedLine {
 		const calculatedLine = this.lineMap.get(this.lineStartOld);
 		if (!calculatedLine) {
 			throw new Error(`Could not find calculated starting line ${this.lineStartOld}`);
@@ -135,7 +135,7 @@ class CalculatedLocation {
 		return calculatedLine;
 	}
 
-	public lineEndCalc(): CalculatedLine {
+	lineEndCalc(): CalculatedLine {
 		const calculatedLine = this.lineMap.get(this.lineEndOld);
 		if (!calculatedLine) {
 			throw new Error(`Could not find calculated ending line ${this.lineEndOld}`);
@@ -143,7 +143,7 @@ class CalculatedLocation {
 		return calculatedLine;
 	}
 
-	public lineStartChange(): Change {
+	lineStartChange(): Change {
 		const change = this.lineStartCalc().change;
 		if (!change) {
 			throw new Error("Could not find change for starting line");
@@ -151,7 +151,7 @@ class CalculatedLocation {
 		return change;
 	}
 
-	public lineEndChange(): Change {
+	lineEndChange(): Change {
 		const change = this.lineEndCalc().change;
 		if (!change) {
 			throw new Error("Could not find change for ending line");
@@ -159,19 +159,19 @@ class CalculatedLocation {
 		return change;
 	}
 
-	public lineStartChangeDelContent(): string {
+	lineStartChangeDelContent(): string {
 		return this.lineStartChange().dels.join("\n");
 	}
 
-	public lineStartCalcDelContent(): string {
+	lineStartCalcDelContent(): string {
 		return this.lineStartCalc().delContent;
 	}
 
-	public lineEndCalcDelContent(): string {
+	lineEndCalcDelContent(): string {
 		return this.lineEndCalc().delContent;
 	}
 
-	public markerLocation(): CSMarkerLocation {
+	markerLocation(): CSMarkerLocation {
 		return {
 			id: this.id,
 			lineStart: this.lineStartNew,
@@ -236,7 +236,7 @@ class Calculation {
 		this.activateLocationsStartingAtCurrentLine();
 	}
 
-	public results(): LocationsById {
+	results(): LocationsById {
 		for (const change of this._changes) {
 			this.applyChange(change);
 		}
