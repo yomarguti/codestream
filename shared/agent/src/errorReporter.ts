@@ -35,6 +35,7 @@ export class ErrorReporter {
 							isSlackTeam
 						}
 					});
+					scope.setTag("ide", session.versionInfo.ide.name);
 					scope.setExtra("ideVersion", session.versionInfo.ide.version);
 					scope.setTag("source", "agent");
 				});
