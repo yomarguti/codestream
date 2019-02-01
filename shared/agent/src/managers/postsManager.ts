@@ -685,7 +685,15 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		let backtrackedLocation: CSMarkerLocation | undefined;
 		let remotes: string[] | undefined;
 		if (rangeArray) {
-			const range = Range.create(rangeArray[0], rangeArray[1], rangeArray[2], rangeArray[3]);
+			let range = Range.create(rangeArray[0], rangeArray[1], rangeArray[2], rangeArray[3]);
+			// Ensure range end is >= start
+			if (
+				range.start.line > range.end.line ||
+				(range.start.line === range.end.line && range.start.character > range.end.character)
+			) {
+				range = Range.create(range.end, range.start);
+			}
+
 			location = Container.instance().markerLocations.rangeToLocation(range);
 
 			if (source) {
@@ -769,6 +777,14 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			throw new Error(`No document could be found for Uri(${documentId.uri})`);
 		}
 		this.lastFullCode = document.getText();
+
+		// Ensure range end is >= start
+		if (
+			range.start.line > range.end.line ||
+			(range.start.line === range.end.line && range.start.character > range.end.character)
+		) {
+			range = Range.create(range.end, range.start);
+		}
 
 		const uri = URI.parse(document.uri);
 
