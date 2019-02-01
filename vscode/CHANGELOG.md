@@ -1,5 +1,23 @@
 # Change Log
 
+## [0.33.0] - 2019-2-4
+
+### Fixed
+
+- Fixed issue with emoji not rendering in a codemark's hover
+
+### Changed
+
+- New, simplified form for creating a codemark
+- Hovering over a codemark in a source file now automatically displays the codemark in the CodeStream pane
+
+### Added
+
+- Adds issue integrations with Jira, Trello, GitHub, Asana, Bitbucket, and GitLab
+- Adds the ability to compare the code associated with a codemark to your local version of the file, or to apply the change
+- Adds a More Options/ellipses menu to the global nav for access to inviting people, help, sign out, and the ability to connect/disconnect from external services
+- Adds an entry into the VS Code activity bar that toggles the CodeStream pane
+
 ## [0.32.0] - 2019-1-7
 
 ### Fixed
