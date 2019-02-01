@@ -24,7 +24,7 @@ namespace CodeStream.VisualStudio.LSP
             var logPath = $"{Application.LogPath}vs-agent.log";
 #if DEBUG
             var path = Path.GetDirectoryName(assembly.Location) + @"\LSP\agent.js";
-            arguments = $@"""{path}"" --stdio --inspect=6009 --nolazy --log={logPath}";
+            arguments = $@"--nolazy --inspect=6009 ""{path}"" --stdio --log={logPath}";
 #else
             exe = Path.GetDirectoryName(assembly.Location) + @"\LSP\agent.exe";
             arguments = $@"--stdio --nolazy";
