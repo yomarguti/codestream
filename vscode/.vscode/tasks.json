@@ -52,7 +52,37 @@
 				"kind": "build",
 				"isDefault": true
 			},
-			"isBackground": true
+			"isBackground": true,
+			"problemMatcher": [
+				{
+					"base": "$ts-webpack-watch",
+					"applyTo": "closedDocuments",
+					"fileLocation": "absolute"
+				},
+				{
+					"base": "$tslint-webpack-watch",
+					"applyTo": "closedDocuments",
+					"fileLocation": ["relative"]
+				}
+			]
+		},
+		{
+			"label": "watch (vsc)",
+			"dependsOn": ["npm: watch"],
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": [
+				{
+					"base": "$ts-webpack-watch",
+					"applyTo": "closedDocuments",
+					"fileLocation": "absolute"
+				},
+				{
+					"base": "$tslint-webpack-watch",
+					"applyTo": "closedDocuments",
+					"fileLocation": ["relative"]
+				}
+			]
 		}
 	]
 }
