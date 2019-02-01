@@ -46,7 +46,7 @@ namespace CodeStream.VisualStudio.Extensions
 
         public static string ToDisplayDate(this DateTime dt)
         {
-            return string.Format("{0:MMMM dd}{1}, {0:yyyy hh:mmtt}", dt, GetDaySuffix(dt.Day));
+            return string.Format("{0:MMMM d}{1}, {0:yyyy hh:mmtt}", dt, GetDaySuffix(dt.Day));
         }
 
         private static string GetDaySuffix(int day)
