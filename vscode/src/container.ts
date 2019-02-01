@@ -10,6 +10,7 @@ import { StatusBarController } from "./controllers/statusBarController";
 import { WebviewController } from "./controllers/webviewController";
 import { CodeStreamCodeActionProvider } from "./providers/codeActionProvider";
 import { MarkerDecorationProvider } from "./providers/markerDecorationProvider";
+import { WebviewSidebarActivator } from "./views/webviewSidebarActivator";
 
 export class Container {
 	static async initialize(
@@ -36,6 +37,7 @@ export class Container {
 		context.subscriptions.push((this._statusBar = new StatusBarController()));
 
 		context.subscriptions.push((this._webview = new WebviewController(this._session)));
+		context.subscriptions.push(new WebviewSidebarActivator());
 	}
 
 	private static _agent: CodeStreamAgentConnection;

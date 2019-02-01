@@ -201,6 +201,23 @@
                     "group": "1_codestream@1"
                 }
             ]
+        },
+        "views": {
+            "codestream": [
+                {
+                    "id": "codestream",
+                    "name": "CodeStream"
+                }
+            ]
+        },
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "codestream",
+                    "title": "CodeStream",
+                    "icon": "assets/images/codestream.svg"
+                }
+            ]
         }
     },
     "activationEvents": [
