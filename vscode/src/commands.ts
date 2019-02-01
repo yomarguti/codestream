@@ -104,6 +104,9 @@ export class Commands implements Disposable {
 		this._disposable = Disposable.from(
 			...commandRegistry.map(({ name, key, method }) =>
 				commands.registerCommand(name, (...args: any[]) => method.apply(this, args))
+			),
+			commands.registerCommand("workbench.view.extension.codestream", () =>
+				Container.webview.show()
 			)
 		);
 	}
