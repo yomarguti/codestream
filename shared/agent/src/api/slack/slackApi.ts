@@ -206,11 +206,10 @@ export class SlackApiProvider implements ApiProvider {
 					}
 					break;
 
-				// TODO: I think we need to handle these
-				// case MessageType.Preferences:
-				// 	this._preferences.update(e.data);
-				// 	break;
-
+				case MessageType.Preferences: {
+					this._preferences.update(e.data);
+					break;
+				}
 				case MessageType.Users:
 					// TODO: Map with slack data
 					const user = e.data.find(u => u.id === this._codestreamUserId);
@@ -328,8 +327,7 @@ export class SlackApiProvider implements ApiProvider {
 			MessageType.Connection,
 			MessageType.MarkerLocations,
 			MessageType.Markers,
-			// TODO: I think we need to subscribe to these
-			// MessageType.Preferences,
+			MessageType.Preferences,
 			MessageType.Repositories,
 			MessageType.Users
 		]);

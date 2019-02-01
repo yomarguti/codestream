@@ -17,6 +17,7 @@ import {
 	InviteUserRequestType,
 	UpdatePreferencesRequest,
 	UpdatePreferencesRequestType,
+	UpdatePreferencesResponse,
 	UpdatePresenceRequest,
 	UpdatePresenceRequestType
 } from "../shared/agent.protocol";
@@ -67,10 +68,10 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 		return this.session.api.inviteUser(request);
 	}
 
-	// TODO: return preferences instead of user
 	@lspHandler(UpdatePreferencesRequestType)
-	updatePreferences(request: UpdatePreferencesRequest) {
-		return this.session.api.updatePreferences(request);
+	async updatePreferences(request: UpdatePreferencesRequest): Promise<UpdatePreferencesResponse> {
+		const { user } = await this.session.api.updatePreferences(request);
+		return { preferences: user.preferences };
 	}
 
 	@lspHandler(UpdatePresenceRequestType)

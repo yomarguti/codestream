@@ -66,7 +66,9 @@ export interface UpdatePreferencesRequest {
 	preferences: CSMePreferences;
 }
 
-export interface UpdatePreferencesResponse {}
+export interface UpdatePreferencesResponse {
+	preferences: CSMePreferences;
+}
 
 export const UpdatePreferencesRequestType = new RequestType<
 	UpdatePreferencesRequest,
