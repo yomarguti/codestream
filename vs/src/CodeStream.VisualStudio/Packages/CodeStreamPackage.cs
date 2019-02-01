@@ -23,7 +23,7 @@ namespace CodeStream.VisualStudio.Packages
     [ProvideOptionPage(typeof(OptionsDialogPage), "CodeStream", "Settings", 0, 0, true)]
     [Guid(Guids.CodeStreamPackageId)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionOpening_string, PackageAutoLoadFlags.BackgroundLoad)]
-    public sealed class CodeStreamPackage : AsyncPackageBase
+    public sealed class CodeStreamPackage : AsyncPackage
     {
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamPackage>();
 
@@ -38,6 +38,7 @@ namespace CodeStream.VisualStudio.Packages
             IProgress<ServiceProgressData> progress)
         {
             await base.InitializeAsync(cancellationToken, progress);
+            AsyncPackageHelper.InitializePackage(GetType().Name);
 
             var isSolutionLoaded = await IsSolutionLoadedAsync();
 

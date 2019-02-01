@@ -13,7 +13,7 @@ namespace CodeStream.VisualStudio.Packages
     [ProvideToolWindow(typeof(WebViewToolWindowPane))]
     [Guid(PackageGuids.guidWebViewPackageString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
-    public sealed class WebViewPackage : AsyncPackageBase
+    public sealed class WebViewPackage : AsyncPackage
     {
 
         //protected override int QueryClose(out bool pfCanClose)
@@ -40,6 +40,8 @@ namespace CodeStream.VisualStudio.Packages
             // When initialized asynchronously, the current thread may be a background thread at this point.
             // Do any initialization that requires the UI thread after switching to the UI thread.
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+
+            AsyncPackageHelper.InitializePackage(GetType().Name);
 
             await WebViewToggleCommand.InitializeAsync(this);
             await AuthenticationCommand.InitializeAsync(this);

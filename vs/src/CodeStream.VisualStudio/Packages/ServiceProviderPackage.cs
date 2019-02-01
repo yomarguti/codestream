@@ -37,8 +37,7 @@ namespace CodeStream.VisualStudio.Packages
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [Guid(Guids.ServiceProviderPackageId)]
     // ReSharper disable once RedundantExtendsListEntry
-    public sealed class ServiceProviderPackage : AsyncPackageBase, IServiceContainer,
-           IToolWindowProvider, SToolWindowProvider
+    public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer, IToolWindowProvider, SToolWindowProvider
     {
         /// <summary>
         /// Store a reference to this as only a class that inherits from AsyncPackage can call GetDialogPage
@@ -47,10 +46,13 @@ namespace CodeStream.VisualStudio.Packages
 
         protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
+            // NOTE -- do NOT attempt to Log inside of this function, the logger requires the ISettingsService, which has not been loaded yet!
+            // if you do call the `Log`ger here, you will crash the extension
+
             await base.InitializeAsync(cancellationToken, progress);
 
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-
+            
             var callback = new ServiceCreatorCallback(CreateService);
             _codeStreamOptions = (OptionsDialogPage)GetDialogPage(typeof(OptionsDialogPage));
 

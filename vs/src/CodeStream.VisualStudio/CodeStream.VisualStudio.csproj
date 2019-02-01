@@ -134,7 +134,7 @@
     <Compile Include="Models\CodeStreamModels.cs" />
     <Compile Include="Models\Ipc.cs" />
     <Compile Include="Models\Types.cs" />
-    <Compile Include="Packages\AsyncPackageBase.cs" />
+    <Compile Include="Packages\AsyncPackageHelper.cs" />
     <Compile Include="Packages\CodeStreamPackage.cs" />
     <Compile Include="Packages\ServiceProviderPackage.cs" />
     <Compile Include="Packages\WebViewPackage.cs" />
