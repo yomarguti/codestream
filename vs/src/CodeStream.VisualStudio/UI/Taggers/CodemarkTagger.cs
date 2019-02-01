@@ -44,8 +44,9 @@ namespace CodeStream.VisualStudio.UI.Taggers
                     var codemark = markers.FirstOrDefault(_ => _?.Range?.Start.Line == lineNumber);
                     if (codemark != null)
                     {
+                        SnapshotPoint start = span.Start == 0 ? span.Start : span.Start - 1;
                         yield return new TagSpan<CodemarkGlyphTag>(
-                            new SnapshotSpan(span.Start - 1, 1),
+                            new SnapshotSpan(start, 1),
                             new CodemarkGlyphTag(codemark)
                         );
                     }
