@@ -157,7 +157,8 @@ namespace CodeStream.VisualStudio.Services
 
             string path = null;
 
-            for (var i = 0; i < 250; i++)
+            // this is mainly for dev / DEBUG -- users should never get this high
+            for (var i = 0; i < 2000; i++)
             {
                 path = Path.GetFullPath(Path.Combine(defaultPath, @"..\")) + $"data-cs-{i}";
                 if (Directory.Exists(path))
