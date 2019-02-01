@@ -503,8 +503,12 @@ class CodemarkForm extends React.Component<Props, State> {
 		const { codeBlock } = this.props;
 		if (!codeBlock) return "Select a range to comment on a block of code.";
 
-		const [startLine, _, endLine] = codeBlock.location;
-		return `Commenting on lines ${startLine + 1}-${endLine} in ${codeBlock.file}`;
+		let [startLine, _, endLine, endColumn] = codeBlock.location;
+		let lines;
+		if (endColumn === 0) endLine = endLine - 1;
+		if (startLine === endLine) lines = `line ${startLine + 1}`;
+		else lines = `lines ${startLine + 1}-${endLine + 1}`;
+		return `Commenting on ${lines} in ${codeBlock.file}`;
 	}
 
 	renderMessageInput = () => {
