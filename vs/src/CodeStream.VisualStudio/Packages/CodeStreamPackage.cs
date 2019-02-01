@@ -1,20 +1,22 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Controllers;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
+using CodeStream.VisualStudio.LSP;
 using CodeStream.VisualStudio.Properties;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Settings;
 using CodeStream.VisualStudio.Vssdk;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Events;
 using Microsoft.VisualStudio.Shell.Interop;
 using Serilog;
 using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using CodeStream.VisualStudio.LSP;
-using Microsoft.VisualStudio.Shell.Events;
-using System.ComponentModel;
+using SEventAggregator = CodeStream.VisualStudio.Events.SEventAggregator;
 
 namespace CodeStream.VisualStudio.Packages
 {
@@ -58,7 +60,7 @@ namespace CodeStream.VisualStudio.Packages
         {
             await JoinableTaskFactory.SwitchToMainThreadAsync();
             var solService = await GetServiceAsync(typeof(SVsSolution)) as IVsSolution;
-            
+
             ErrorHandler.ThrowOnFailure(solService.GetProperty((int)__VSPROPID.VSPROPID_IsSolutionOpen, out object value));
 
             return value is bool isSolOpen && isSolOpen;
@@ -139,6 +141,30 @@ namespace CodeStream.VisualStudio.Packages
             if (args.PropertyName == nameof(_settingsService.TraceLevel))
             {
                 LogManager.SetTraceLevel(_settingsService.TraceLevel);
+            }
+            else if (
+                args.PropertyName == nameof(_settingsService.OpenCommentOnSelect) ||
+                args.PropertyName == nameof(_settingsService.ShowMarkers)
+                )
+            {
+                OptionsDialogPage odp = sender as OptionsDialogPage;
+                if (odp == null) return;
+
+                var eventAggregator = GetService(typeof(SEventAggregator)) as IEventAggregator;
+                var browserService = GetService(typeof(SBrowserService)) as IBrowserService;
+                var configurationController = new ConfigurationController(eventAggregator, browserService);
+                ThreadHelper.JoinableTaskFactory.Run(async delegate
+                {
+                    switch (args.PropertyName)
+                    {
+                        case nameof(_settingsService.OpenCommentOnSelect):
+                            await configurationController.UpdateOpenCommentOnSelectAsync(odp.OpenCommentOnSelect);
+                            break;
+                        case nameof(_settingsService.ShowMarkers):
+                            await configurationController.ToggleMarkersAsync(odp.ShowMarkers);
+                            break;
+                    }
+                });
             }
             else if (args.PropertyName == nameof(_settingsService.WebAppUrl) ||
                      args.PropertyName == nameof(_settingsService.ServerUrl) ||

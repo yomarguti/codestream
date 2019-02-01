@@ -93,6 +93,7 @@
     <Compile Include="Commands\TeamCommand.cs" />
     <Compile Include="Commands\AuthenticationCommand.cs" />
     <Compile Include="Controllers\AuthenticationController.cs" />
+    <Compile Include="Controllers\ConfigurationController.cs" />
     <Compile Include="Controllers\LiveShareController.cs" />
     <Compile Include="Core\ContentTypes.cs" />
     <Compile Include="Core\Logging\CodeStreamSink.cs" />

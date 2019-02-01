@@ -11,7 +11,7 @@ namespace CodeStream.VisualStudio.UI.Settings
         private bool _showMarkers = true;
         private bool _showHeadshots = true;
         private TraceLevel _traceLevel;
-        private bool _openCommentOnSelect = true;
+        private bool _openCommentOnSelect = false;
         private string _team;
         private bool _autoSignIn = true;
 #if DEBUG

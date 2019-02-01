@@ -210,39 +210,42 @@ namespace CodeStream.VisualStudio
                                                     await authenticationController.ValidateSignupAsync(message.Id, message.Params?.Value<string>());
                                                     break;
                                                 default:
-                                                    Log.Warning("Shouldn't hit this");
+                                                    Log.Warning($"Shouldn't hit this Action={message.Action}");
                                                     break;
                                             }
                                             break;
                                         }
                                     case "show-markers":
+                                    case "open-comment-on-select":
                                         {
-                                            var val = message.Params.ToObject<bool>();
                                             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                            using (var scope = SettingsScope.Create(_settingsService))
+                                            var value = message.Params.ToObject<bool>();
+
+                                            switch (message.Action)
                                             {
-                                                scope.SettingsService.ShowMarkers = val;
+                                                case "show-markers":
+                                                    using (var scope = SettingsScope.Create(_settingsService))
+                                                    {
+                                                        scope.SettingsService.ShowMarkers = value;
+                                                    }
+
+                                                    break;
+                                                case "open-comment-on-select":
+                                                    using (var scope = SettingsScope.Create(_settingsService))
+                                                    {
+                                                        scope.SettingsService.OpenCommentOnSelect = value;
+                                                    }
+
+                                                    break;
+                                                default:
+                                                    Log.Warning($"Shouldn't hit this Action={message.Action}");
+                                                    break;
                                             }
 
-                                            _eventAggregator.Publish(new CodemarkVisibilityEvent() { IsVisible = val });
-                                            _browserService.PostMessage(Ipc.ToShowMarkersMessage(val));
                                             break;
                                         }
                                     case "mute-all":
                                         {
-                                            break;
-                                        }
-                                    case "open-comment-on-select":
-                                        {
-                                            var val = message.Params.ToObject<bool>();
-                                            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                            using (var scope = SettingsScope.Create(_settingsService))
-                                            {
-                                                scope.SettingsService.OpenCommentOnSelect = val;
-                                            }
-
-                                            _eventAggregator.Publish(new CodeStreamConfigurationChangedEvent() { OpenCommentOnSelect = val });
-                                            _browserService.PostMessage(Ipc.ToCommentOnSelectMessage(val));
                                             break;
                                         }
                                     case "show-code":
