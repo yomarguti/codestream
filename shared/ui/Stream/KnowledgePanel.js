@@ -79,7 +79,7 @@ export class SimpleKnowledgePanel extends Component {
 	}
 
 	componentDidMount() {
-		this.props.fetchCodemarks();
+		if (this.props.codemarks.length === 0) this.props.fetchCodemarks();
 		// this.disposables.push(
 		// 	EventEmitter.subscribe("interaction:active-editor-changed", this.handleFileChangedEvent)
 		// );
@@ -392,7 +392,7 @@ export class SimpleKnowledgePanel extends Component {
 		this.props.telemetry({
 			eventName: "Codemark Clicked",
 			properties: {
-				"Location": "Codemarks Tab"
+				Location: "Codemarks Tab"
 			}
 		});
 		if (codemark.markers) this.props.showCode(codemark.markers[0], true);

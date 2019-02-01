@@ -63,7 +63,7 @@ export class SimpleStream extends Component {
 			EventEmitter.subscribe("interaction:scrolled", this.handleTextEditorScrolledEvent)
 		);
 
-		// this.props.fetchPostsForStreams();
+		this.props.fetchCodemarks();
 
 		// this listener pays attention to when the input field resizes,
 		// presumably because the user has typed more than one line of text
