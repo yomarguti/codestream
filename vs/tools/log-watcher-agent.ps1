@@ -1,5 +1,17 @@
 ﻿$host.ui.RawUI.WindowTitle = "AGENT"
+$path = "$($env:LOCALAPPDATA)\Codestream\Logs\vs-agent.log"
 
-#Get-Content "$($env:LOCALAPPDATA)\Codestream\vs-extension.log"  –Wait | where { $_ -match “WARNING” }
-Clear-Content "$($env:LOCALAPPDATA)\Codestream\Logs\agent.log"
-Get-Content "$($env:LOCALAPPDATA)\Codestream\Logs\agent.log"  –Wait
+function Get-LogColor {
+    Param([Parameter(Position=0)]
+    [String]$LogEntry)
+
+    process {        
+		if ($LogEntry.Contains("ERROR")) {Return "Red"}
+		elseif ($LogEntry.Contains("WARN")) {Return "Magenta"}
+        elseif ($LogEntry.Contains("INFO")) {Return "White"}        
+        else {Return "Gray"}
+    }
+}
+
+Clear-Content $path
+gc -wait $path | ForEach {Write-Host -ForegroundColor (Get-LogColor $_) $_}

@@ -28,23 +28,31 @@ namespace CodeStream.VisualStudio
         public static string BuildEnv { get; }
 
         /// <summary>
-        /// Something like Microsoft Visual Studio 2019
+        /// Something like `Microsoft Visual Studio 2019`
         /// </summary>
         public static string VisualStudioName { get; }
+
         /// <summary>
-        /// Something like 15.9.123.4567
+        /// Something like `15.9.123.4567`
         /// </summary>
         public static string VisualStudioVersion { get; }
 
         /// <summary>
-        /// Path to the log directory. Ends with a backslash.
+        /// Path to the log directory. C:\Users\{User}\AppData\Local\CodeStream\Logs\. Ends with a backslash.
         /// </summary>
         public static string LogPath { get; }
+
+        /// <summary>
+        /// C:\Users\{User}\AppData\Local\Temp\CodeStream\Data\. Ends with a backslash.
+        /// </summary>
+        public static string TempDataPath { get; }
 
         static Application()
         {
 #if DEBUG
+            //TODO get from info file
             BuildEnv = "dev";
+            BuildNumber = string.Empty;
 #endif
 
             var fileVersionInfo = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileVersionInfo;
@@ -53,35 +61,14 @@ namespace CodeStream.VisualStudio
             var versionFull = typeof(Application).Assembly.GetName().Version;
             ExtensionVersionShort = new Version(versionFull.Major, versionFull.Minor, versionFull.Build);
 
-            LogPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Name, "Logs") + @"\";
+            var localApplicationData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Name);
+            var tempData = Path.Combine(Path.GetTempPath(), Name);
+
+            LogPath = Path.Combine(localApplicationData, "Logs") + @"\";
+            TempDataPath = Path.Combine(tempData, "Data") + @"\";
 
             VisualStudioName = fileVersionInfo.FileDescription;
             VisualStudioVersion = fileVersionInfo.ProductVersion;
-
-            //try
-            //{
-            //    using (var process = Process.ProcessFactory.Create(
-            //        @"c:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe", "-format json"))
-            //    {
-            //        bool processStarted = process.Start();
-            //        if (processStarted)
-            //        {
-            //            var doo = Newtonsoft.Json.JsonConvert.DeserializeObject<JToken>(
-            //                process.StandardOutput.ReadToEnd());
-
-            //            VisualStudioInstallDirectory = doo
-            //                .Where(_ =>
-            //                    _.Value<string>("installationVersion").Contains(VisualStudioVersion)).Select(_ =>
-            //                    new
-            //                    {
-            //                        Path = _.Value<string>("installationPath")
-            //                    }).Select(_ => _.Path).FirstOrDefault();
-            //        }
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //}
         }
     }
 }

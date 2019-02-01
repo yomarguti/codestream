@@ -138,10 +138,11 @@ namespace CodeStream.VisualStudio.Services
 
         private string GetOrCreateContextParamsPath()
         {
-            // the default directory looks something like this:
+            // the default directory from DotNetBrowser looks something like this:
             // C:\Users\<UserName>\AppData\Local\Temp\dotnetbrowser-chromium\64.0.3282.24.1.19.0.0.642\32bit\data
-            var defaultPath = BrowserPreferences.GetDefaultDataDir();
+            // get it with BrowserPreferences.GetDefaultDataDir();
 
+            var defaultPath = Application.TempDataPath+"Browser-0";
             Log.Verbose($"DefaultPath={defaultPath}");
 
             if (!TryCheckUsage(defaultPath, out DirectoryLockInfo info))
@@ -158,9 +159,9 @@ namespace CodeStream.VisualStudio.Services
             string path = null;
 
             // this is mainly for dev / DEBUG -- users should never get this high
-            for (var i = 0; i < 2000; i++)
+            for (var i = 1; i < 2000; i++)
             {
-                path = Path.GetFullPath(Path.Combine(defaultPath, @"..\")) + $"data-cs-{i}";
+                path = Path.Combine(Application.TempDataPath, $"Browser-{i}");
                 if (Directory.Exists(path))
                 {
                     var isLocked = TryCheckUsage(path, out DirectoryLockInfo lockInfo);
