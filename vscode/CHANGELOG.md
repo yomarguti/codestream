@@ -4,7 +4,8 @@
 
 ### Fixed
 
-- Fixed issue with emoji not rendering in a codemark's hover
+- Fixes an issue with emoji not rendering in a codemark's hover
+- Fixes an issue with Selected Conversations filter selections not persisting
 
 ### Changed
 
