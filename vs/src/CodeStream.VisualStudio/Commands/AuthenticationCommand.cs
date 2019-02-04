@@ -44,7 +44,7 @@ namespace CodeStream.VisualStudio.Commands
             if (isReady)
             {
                 command.Visible = true;
-                command.Text = $"Sign Out {sessionService.User.UserName}";
+                command.Text = "Sign Out";
             }
             else
             {

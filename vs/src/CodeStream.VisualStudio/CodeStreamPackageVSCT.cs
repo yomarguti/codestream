@@ -28,18 +28,19 @@ namespace CodeStream.VisualStudio
     {
         public const int Toolbar = 0x1000;
         public const int ToolbarGroup = 0x1050;
-        public const int ToolbarGroup2 = 0x1051;
-        public const int CodeStreamMenuController = 0x9001;
-        public const int CodeStreamMenuControllerGroup0 = 0x9002;
-        public const int CodeStreamMenuControllerGroup1 = 0x9003;
+        public const int ToolbarGroup100 = 0x1060;
+        public const int CodeStreamMenuController100 = 0x9001;
+        public const int CodeStreamMenuController200 = 0x9901;
+        public const int CodeStreamMenuControllerGroup100 = 0x9003;
+        public const int CodeStreamMenuControllerGroup200 = 0x9004;
         public const int WebViewToggleCommandId = 0x0100;
         public const int AuthenticationCommandId = 0x0200;
-        public const int TeamCommandId = 0x0300;
+        public const int UserCommandId = 0x0300;
         public const int CodeStreamEditorCommands = 0x1023;
         public const int AddCodemarkCommandId = 0x0400;
         public const int logo = 0x0001;
         public const int auth = 0x0002;
-        public const int empty3 = 0x0003;
+        public const int user = 0x0003;
         public const int empty4 = 0x0004;
         public const int empty5 = 0x0005;
         public const int empty6 = 0x0006;

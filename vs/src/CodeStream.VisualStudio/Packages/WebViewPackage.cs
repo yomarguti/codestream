@@ -1,10 +1,14 @@
-﻿using System;
+﻿using CodeStream.VisualStudio.Commands;
+using CodeStream.VisualStudio.Events;
+using CodeStream.VisualStudio.UI.ToolWindows;
+using Microsoft.VisualStudio.Shell;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading;
-using CodeStream.VisualStudio.Commands;
-using CodeStream.VisualStudio.UI.ToolWindows;
-using Microsoft.VisualStudio.Shell;
+using CodeStream.VisualStudio.Extensions;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Packages
@@ -15,6 +19,7 @@ namespace CodeStream.VisualStudio.Packages
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     public sealed class WebViewPackage : AsyncPackage
     {
+        private List<IDisposable> _disposables;
 
         //protected override int QueryClose(out bool pfCanClose)
         //{
@@ -45,8 +50,50 @@ namespace CodeStream.VisualStudio.Packages
 
             await WebViewToggleCommand.InitializeAsync(this);
             await AuthenticationCommand.InitializeAsync(this);
-            await TeamCommand.InitializeAsync(this);
+            await UserCommand.InitializeAsync(this);
             await AddCodemarkCommand.InitializeAsync(this);
+
+            var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
+            _disposables = new List<IDisposable>
+            {
+                eventAggregator?.GetEvent<SessionReadyEvent>().Subscribe(_ =>
+                {
+                    ThreadHelper.JoinableTaskFactory.Run(async delegate
+                    {
+                        await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+
+                        var commandService = await GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
+                        var command = commandService?.FindCommand(new CommandID(PackageGuids.guidWebViewPackageCmdSet,
+                            PackageIds.UserCommandId));
+
+                        UserCommand.Instance.DynamicTextCommand_BeforeQueryStatus(command, null);
+                    });
+                }),
+                eventAggregator?.GetEvent<SessionLogoutEvent>().Subscribe(_ =>
+                {
+                    ThreadHelper.JoinableTaskFactory.Run(async delegate
+                    {
+                        await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+
+                        var commandService =
+                            await GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
+                        var command = commandService?.FindCommand(new CommandID(PackageGuids.guidWebViewPackageCmdSet,
+                            PackageIds.UserCommandId));
+
+                        UserCommand.Instance.DynamicTextCommand_BeforeQueryStatus(command, null);
+                    });
+                })
+            };
+        }
+
+        protected override void Dispose(bool isDisposing)
+        {
+            if (isDisposing)
+            {
+                _disposables.Dispose();
+            }
+
+            base.Dispose(isDisposing);
         }
     }
 }

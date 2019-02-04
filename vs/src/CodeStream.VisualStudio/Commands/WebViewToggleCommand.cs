@@ -16,24 +16,30 @@ namespace CodeStream.VisualStudio.Commands
         {
             commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
 
-            var menuCommandID = new CommandID(PackageGuids.guidWebViewPackageCmdSet, PackageIds.WebViewToggleCommandId);
-            var menuItem = new OleMenuCommand(InvokeHandler, menuCommandID);
+            var menuCommandId = new CommandID(PackageGuids.guidWebViewPackageCmdSet, PackageIds.WebViewToggleCommandId);
+            var menuItem = new OleMenuCommand(InvokeHandler, menuCommandId);
             menuItem.BeforeQueryStatus += DynamicTextCommand_BeforeQueryStatus;
 
             commandService.AddCommand(menuItem);
         }
 
-        private void DynamicTextCommand_BeforeQueryStatus(object sender, EventArgs e)
+        public void DynamicTextCommand_BeforeQueryStatus(object sender, EventArgs e)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            var command = sender as OleMenuCommand;
-            if (command == null) return;
+            //var command = sender as OleMenuCommand;
+            //if (command == null) return;
 
-            var windowFrame = GetWindowFrame();
-            if (windowFrame == null) return;
-
-            command.Text = windowFrame.IsVisible() == VSConstants.S_OK ? $"Hide {Application.Name}" : $"Show {Application.Name}";
+            //var windowFrame = GetWindowFrame();
+            //if (windowFrame == null) return;
+            //if (windowFrame.IsVisible() == VSConstants.S_OK)
+            //{
+            //    command.Text = $"Hide {Application.Name}";
+            //}
+            //else
+            //{
+            //    command.Text = $"Show {Application.Name}";
+            //}
         }
 
         public static async Task InitializeAsync(AsyncPackage package)

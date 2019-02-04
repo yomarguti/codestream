@@ -24,6 +24,7 @@ namespace CodeStream.VisualStudio.Services
         IOptionsDialogPage DialogPage { get; }
         bool AutoSignIn { get; set; }
         string GetEnvironmentName();
+        string GetUsefulEnvironmentName();
         string GetEnvironmentVersionFormated(string extensionVersion, string buildNumber);
         Ide GetIdeInfo();
         Extension GetExtensionInfo();
@@ -200,6 +201,20 @@ namespace CodeStream.VisualStudio.Services
             }
 
             return match.Groups[2].Value.ToLowerInvariant();
+        }
+
+        public string GetUsefulEnvironmentName()
+        {
+            var envName = GetEnvironmentName();
+            switch (envName)
+            {
+                case "unknown":
+                case "local":
+                case "prod":
+                    return null;
+                default:
+                    return envName.ToUpperInvariant();
+            }
         }
 
         public string GetEnvironmentVersionFormated(string extensionVersion, string buildNumber)

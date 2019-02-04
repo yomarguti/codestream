@@ -298,12 +298,12 @@ namespace CodeStream.VisualStudio.Controllers
             var user = token?["result"]?["loginResponse"]?["user"].ToObject<CsUser>();
             var teamId = token?["result"]?["loginResponse"]?["teamId"].Value<string>();
 
-            var teamName = token?["result"]?["loginResponse"]?["teams"].ToObject<List<CsTeam>>()
-                .Where(_ => _.Id == teamId)
-                .Select(_ => _.Name)
-                .FirstOrDefault();
+            var teams = (token?["result"]?["loginResponse"]?["teams"].ToObject<List<CsTeam>>() ?? Enumerable.Empty<CsTeam>()).ToList();
+            string teamName = teams.Where(_ => _.Id == teamId)
+                    .Select(_ => _.Name)
+                    .FirstOrDefault();
 
-            return new User(user.Id, user.Username, user.Email, teamName);
+            return new User(user.Id, user.Username, user.Email, teamName, teams.Count);
         }
 
         private JToken GetState(JToken token) => token?["result"]?["state"];

@@ -11,14 +11,15 @@
           <CommandName>CodeStream</CommandName>
         </Strings>
       </Menu>
-      <Menu guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController" priority="0x0100" type="MenuController">
+      <Menu guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController200" priority="0x0200" type="MenuController">
         <Parent guid="guidWebViewPackageCmdSet" id="ToolbarGroup" />
         <CommandFlag>IconAndText</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
-        <!--<CommandFlag>TextIsAnchorCommand</CommandFlag>-->
+        <CommandFlag>TextIsAnchorCommand</CommandFlag>
         <Strings>
           <ButtonText>CodeStream</ButtonText>
           <CommandName>CodeStream</CommandName>
+          <ToolTipText>Toggle CodeStream</ToolTipText>
         </Strings>
       </Menu>
     </Menus>
@@ -26,42 +27,49 @@
       <Group guid="guidWebViewPackageCmdSet" id="ToolbarGroup" priority="0x0600">
         <Parent guid="guidWebViewPackageCmdSet" id="Toolbar" />
       </Group>
-      <Group guid="guidWebViewPackageCmdSet" id="ToolbarGroup2" priority="0x0601">
+      <!-- this pseudo group creates a separator between teh buttons -->
+      <Group guid="guidWebViewPackageCmdSet" id="ToolbarGroup100" priority="0x0500">
         <Parent guid="guidWebViewPackageCmdSet" id="Toolbar" />
       </Group>
-      <Group guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup1" priority="0x009">
-        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController" />
+
+      <Group guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup100" priority="0x009">
+        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController100" />
       </Group>
-      <Group guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup0" priority="0x000">
-        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController" />
+      <Group guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" priority="0x009">
+        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController200" />
       </Group>
+
       <Group guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands" />
     </Groups>
     <Buttons>
-      <Button guid="guidWebViewPackageCmdSet" id="TeamCommandId" priority="0x0100" type="Button">
-        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup0" />
-        <Icon guid="guidImages" id="logo" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DontCache</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <Strings>
-          <ButtonText>Team</ButtonText>
-        </Strings>
-      </Button>
       <Button guid="guidWebViewPackageCmdSet" id="WebViewToggleCommandId" priority="0x0101" type="Button">
-        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup1" />
+        <Parent guid="guidWebViewPackageCmdSet" id="ToolbarGroup100" />
         <Icon guid="guidImages" id="logo" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DontCache</CommandFlag>
         <CommandFlag>IconAndText</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <ButtonText>Show CodeStream</ButtonText>
+          <ButtonText>CodeStream</ButtonText>
+          <ToolTipText>Toggle CodeStream</ToolTipText>
         </Strings>
       </Button>
-      <Button guid="guidWebViewPackageCmdSet" id="AuthenticationCommandId" priority="0x0109" type="Button">
-        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup1" />
+
+      <Button guid="guidWebViewPackageCmdSet" id="UserCommandId" priority="0x0100" type="Button">
+        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
+        <Icon guid="guidImages" id="user" />
+        <CommandFlag>IconAndText</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DontCache</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>NoShowOnMenuController</CommandFlag>
+        <CommandFlag>FixMenuController</CommandFlag>
+        <Strings>
+          <ButtonText>Sign In...</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidWebViewPackageCmdSet" id="AuthenticationCommandId" priority="0x0101" type="Button">
+        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
         <Icon guid="guidImages" id="auth" />
         <CommandFlag>IconAndText</CommandFlag>
         <CommandFlag>DontCache</CommandFlag>
@@ -82,15 +90,13 @@
       </Button>
     </Buttons>
     <Bitmaps>
-      <Bitmap guid="guidImages" href="Resources\Sprites.png" usedList="logo, auth, empty3, empty4, empty5, empty6" />
+      <Bitmap guid="guidImages" href="Resources\Sprites.png" usedList="logo, auth, user, empty4, empty5, empty6" />
     </Bitmaps>
   </Commands>
 
   <KeyBindings>
     <KeyBinding guid="guidWebViewPackageCmdSet" id="WebViewToggleCommandId"
                 editor="guidVSStd97" key1="C" mod1="ALT" key2="S" mod2="ALT" />
-    <KeyBinding guid="guidWebViewPackageCmdSet" id="AuthenticationCommandId"
-                editor="guidVSStd97" key1="C" mod1="ALT" key2="X" mod2="ALT" />
   </KeyBindings>
 
   <CommandPlacements>
@@ -117,15 +123,16 @@
     <GuidSymbol name="guidWebViewPackageCmdSet" value="{8f66deb0-240b-4137-8550-723344e49722}">
       <IDSymbol name="Toolbar" value="0x1000" />
       <IDSymbol name="ToolbarGroup" value="0x1050" />
-      <IDSymbol name="ToolbarGroup2" value="0x1051" />
+      <IDSymbol name="ToolbarGroup100" value="0x1060" />
 
-      <IDSymbol name="CodeStreamMenuController" value="0x9001" />
-      <IDSymbol name="CodeStreamMenuControllerGroup0" value="0x9002" />
-      <IDSymbol name="CodeStreamMenuControllerGroup1" value="0x9003" />
+      <IDSymbol name="CodeStreamMenuController100" value="0x9001" />
+      <IDSymbol name="CodeStreamMenuController200" value="0x9901" />
+      <IDSymbol name="CodeStreamMenuControllerGroup100" value="0x9003" />
+      <IDSymbol name="CodeStreamMenuControllerGroup200" value="0x9004" />
 
       <IDSymbol name="WebViewToggleCommandId" value="0x0100" />
       <IDSymbol name="AuthenticationCommandId" value="0x0200" />
-      <IDSymbol name="TeamCommandId" value="0x0300" />
+      <IDSymbol name="UserCommandId" value="0x0300" />
     </GuidSymbol>
 
     <GuidSymbol name="guidWebViewPackageCodeWindowContextMenuCmdSet" value="{0f33235e-3a5c-42bc-b519-d888652f972c}">
@@ -136,7 +143,7 @@
     <GuidSymbol name="guidImages" value="{f2c8ef6d-3257-4e0a-8ae0-ef6298dd22c5}" >
       <IDSymbol name="logo" value="1" />
       <IDSymbol name="auth" value="2" />
-      <IDSymbol name="empty3" value="3" />
+      <IDSymbol name="user" value="3" />
       <IDSymbol name="empty4" value="4" />
       <IDSymbol name="empty5" value="5" />
       <IDSymbol name="empty6" value="6" />
