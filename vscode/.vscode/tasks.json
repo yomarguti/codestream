@@ -25,7 +25,10 @@
 			"script": "watch",
 			"group": "build",
 			"isBackground": true,
-			"problemMatcher": ["$ts-webpack-watch", "$tslint-webpack-watch"]
+			"problemMatcher": ["$ts-webpack-watch", "$tslint-webpack-watch"],
+			"presentation": {
+				"group": "vscode"
+			}
 		},
 		{
 			"type": "npm",
@@ -43,11 +46,14 @@
 					"applyTo": "closedDocuments",
 					"fileLocation": ["relative", "${workspaceFolder}/../codestream-lsp-agent/"]
 				}
-			]
+			],
+			"presentation": {
+				"group": "vscode"
+			}
 		},
 		{
 			"label": "watch",
-			"dependsOn": ["npm: agent:watch", "npm: watch"],
+			"dependsOn": ["npm: watch", "npm: agent:watch"],
 			"group": {
 				"kind": "build",
 				"isDefault": true
@@ -64,7 +70,10 @@
 					"applyTo": "closedDocuments",
 					"fileLocation": ["relative"]
 				}
-			]
+			],
+			"presentation": {
+				"group": "vscode"
+			}
 		},
 		{
 			"label": "watch (vsc)",
@@ -82,7 +91,10 @@
 					"applyTo": "closedDocuments",
 					"fileLocation": ["relative"]
 				}
-			]
+			],
+			"presentation": {
+				"group": "vscode"
+			}
 		}
 	]
 }
