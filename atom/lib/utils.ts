@@ -15,5 +15,5 @@ export const asAbsolutePath = (relativePath: string) => {
 
 export const getPluginVersion = () => {
 	const p = atom.packages.getLoadedPackage("CodeStream");
-	return p!.metadata.version;
+	return (p as any)!.metadata.version;
 };

@@ -1,6 +1,6 @@
-import os from "os";
+// import os from "os";
 import { CompositeDisposable } from "atom";
-import Raven from "raven-js";
+// import Raven from "raven-js";
 import CodestreamView, { CODESTREAM_VIEW_URI } from "./codestream-view";
 import db, { bootstrapStore } from "./local-cache";
 // import * as GitRepo from "./git/GitRepo";
@@ -12,26 +12,26 @@ import createStore from "./createStore";
 // import { online, offline } from "./actions/connectivity";
 // import { calculateUncommittedMarkers } from "./actions/marker-location";
 // import { setActive } from "./actions/presence";
-import { setUserPreference } from "./actions/user";
+// import { setUserPreference } from "./actions/user";
 import WorkspaceSession from "./workspace/workspace-session";
 
-const env = sessionStorage.getItem("codestream.env") || "production";
-if (false) {
-	Raven.config("https://46fd0a63e10340b585d895d333fec719@sentry.io/280733", {
-		captureUnhandledRejections: true,
-		tags: {
-			process: process.type,
-			platform: os.platform(),
-			platformRelease: os.release(),
-			atom: atom.getVersion(),
-			codestreamEnv: env,
-			pluginVersion: atom.packages.getLoadedPackage("CodeStream").metadata.version
-		}
-	}).install();
-	window.addEventListener("unhandledrejection", function(event) {
-		Raven.captureException(event.reason);
-	});
-}
+// const env = sessionStorage.getItem("codestream.env") || "production";
+// if (false) {
+// 	Raven.config("https://46fd0a63e10340b585d895d333fec719@sentry.io/280733", {
+// 		captureUnhandledRejections: true,
+// 		tags: {
+// 			process: process.type,
+// 			platform: os.platform(),
+// 			platformRelease: os.release(),
+// 			atom: atom.getVersion(),
+// 			codestreamEnv: env,
+// 			pluginVersion: atom.packages.getLoadedPackage("CodeStream").metadata.version
+// 		}
+// 	}).install();
+// 	window.addEventListener("unhandledrejection", function(event) {
+// 		Raven.captureException(event.reason);
+// 	});
+// }
 
 // logger.addHandler((level, msg) => {
 // 	console.log(`[${level}] ${msg}`);

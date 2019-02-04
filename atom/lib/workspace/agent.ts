@@ -1,16 +1,23 @@
 import { ChildProcess, spawn } from "child_process";
 import { Convert, LanguageClientConnection } from "atom-languageclient";
-import * as rpc from "vscode-jsonrpc";
+import {
+	createMessageConnection,
+	IPCMessageReader,
+	IPCMessageWriter
+} from "atom-languageclient/node_modules/vscode-jsonrpc";
 import { getPath } from "../network-request";
 import { asAbsolutePath, getPluginVersion } from "../utils";
 import { AgentOptions } from "../shared/agent.protocol";
+import { ClientCapabilities } from "vscode-languageserver-protocol";
 
-const capabilities = {
+const capabilities: ClientCapabilities = {
 	workspace: {
 		applyEdit: true,
+		configuration: false,
 		workspaceEdit: {
 			documentChanges: true
 		},
+		workspaceFolders: false,
 		didChangeConfiguration: {
 			dynamicRegistration: false
 		},
@@ -52,7 +59,8 @@ const capabilities = {
 			dynamicRegistration: false
 		},
 		documentSymbol: {
-			dynamicRegistration: false
+			dynamicRegistration: false,
+			hierarchicalDocumentSymbolSupport: true
 		},
 		formatting: {
 			dynamicRegistration: false
@@ -77,7 +85,14 @@ const capabilities = {
 		},
 		rename: {
 			dynamicRegistration: false
-		}
+		},
+
+		// We do not support these features yet.
+		// Need to set to undefined to appease TypeScript weak type detection.
+		implementation: undefined,
+		typeDefinition: undefined,
+		colorProvider: undefined,
+		foldingRange: undefined
 	},
 	experimental: {}
 };
@@ -92,26 +107,43 @@ class AgentConnection {
 
 	async start(initOptions: { email: string; passwordOrToken: string }) {
 		this._agentProcess = await this.startServer();
+
 		this._connection = new LanguageClientConnection(
-			rpc.createMessageConnection(
-				new rpc.IPCMessageReader(this._agentProcess),
-				new rpc.IPCMessageWriter(this._agentProcess)
+			createMessageConnection(
+				new IPCMessageReader(this._agentProcess as ChildProcess),
+				new IPCMessageWriter(this._agentProcess as ChildProcess)
 			)
 		);
 
 		const initializationOptions = {
-			extensionBuild: "",
-			extensionVersion: getPluginVersion(),
+			extension: {
+				build: "dev",
+				buildEnv: "local",
+				version: getPluginVersion(),
+				versionFormatted: "dev"
+			},
+			ide: {
+				name: "atom",
+				version: atom.getVersion()
+			},
+			isDebugging: true,
+			traceLevel: "debug",
 			gitPath: "git",
 			ideVersion: atom.getVersion(),
 			serverUrl: getPath(),
-			...initOptions
+			team: "",
+			teamId: "",
+			signupToken: "",
+			email: initOptions.email,
+			passwordOrToken: initOptions.passwordOrToken
 		} as AgentOptions;
 
+		const firstProject = atom.project.getPaths()[0] || null; // TODO: what if there are no projects
 		const response = await this._connection.initialize({
 			processId: this._agentProcess.pid,
+			workspaceFolders: [],
+			rootUri: firstProject ? Convert.pathToUri(firstProject) : null,
 			capabilities,
-			rootUri: Convert.pathToUri(atom.project.getPaths()[0]), // TODO: what if there are no projects
 			initializationOptions
 		});
 

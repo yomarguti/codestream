@@ -25,7 +25,7 @@ function getExtensionConfig(env) {
 				{
 					copy: [
 						{
-							source: path.resolve(__dirname, "codestream-*.info"),
+							source: path.resolve(__dirname, "codestream-*.info"), // TODO?
 							destination: "dist/"
 						},
 						{
