@@ -1,7 +1,8 @@
 export enum ContextActionsType {
 	SetThread = "SET_CURRENT_THREAD",
-	SetCodeMarkFileFilter = "SET_CODEMARK_FILE_FILTER",
+	SetCodemarkFileFilter = "SET_CODEMARK_FILE_FILTER",
 	SetCodemarkTypeFilter = "SET_CODEMARK_TYPE_FILTER",
+	SetCodemarkColorFilter = "SET_CODEMARK_COLOR_FILTER",
 	SetChannelFilter = "SET_CHANNEL_FILTER",
 	SetContext = "SET_CONTEXT",
 	OpenPanel = "SET_PANEL",
@@ -26,5 +27,8 @@ export interface State {
 	hasFocus: boolean;
 	codemarkFileFilter: string; // TODO: specify types
 	codemarkTypeFilter: string;
+	codemarkColorFilter: string;
 	channelFilter: string;
+	textEditorVisibleRanges: Range[];
+	textEditorUri: string;
 }

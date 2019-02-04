@@ -18,17 +18,45 @@ class ComposeBox extends React.Component {
 	}
 
 	repositionIfNecessary() {
-		const root = this.props.forwardedRef.current;
+		const { forwardedRef, quote, textEditorVisibleRanges = [] } = this.props;
+
+		const root = forwardedRef.current;
 		if (!root) return;
 		const bodyDimensions = document.body.getBoundingClientRect();
 		const rootDimensions = root.getBoundingClientRect();
-		const newPosition = (bodyDimensions.height - rootDimensions.height) / 2;
+
+		let top;
+		if (false && quote && quote.range && textEditorVisibleRanges.length) {
+			const quoteLineNum = quote.location[0];
+			let numLinesVisible = 0;
+			textEditorVisibleRanges.forEach(range => {
+				numLinesVisible += range[1].line - range[0].line + 1;
+			});
+			numLinesVisible += 1; // vscode mis-reports the last line as being 2 bigger than it is
+
+			let rangeStartOffset = 0;
+			textEditorVisibleRanges.forEach(lineRange => {
+				const rangeFirstLine = lineRange[0].line;
+				const rangeLastLine = lineRange[1].line;
+				const linesInRange = rangeLastLine - rangeFirstLine + 1;
+				if (quoteLineNum >= rangeFirstLine && quoteLineNum < rangeLastLine)
+					top = (100 * (rangeStartOffset + quoteLineNum - rangeFirstLine)) / numLinesVisible;
+				rangeStartOffset += linesInRange;
+			});
+			if ((top * bodyDimensions.height) / 100 + rootDimensions.height > bodyDimensions.height - 10)
+				top = bodyDimensions.height - rootDimensions.height - 10;
+			else top = top + "vh";
+		} else {
+			top = (bodyDimensions.height - rootDimensions.height) / 2;
+		}
 
 		this.setState(state => {
-			if (newPosition !== state.startPosition) {
-				return { startPosition: newPosition };
+			if (top !== state.startPosition) {
+				return { startPosition: top };
 			} else return null;
 		});
+
+		//FIXME -- check to see if it's too low
 	}
 
 	handleSubmitPost = (...args) => {

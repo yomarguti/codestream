@@ -170,8 +170,8 @@
 			position: fixed;
 			z-index: 50;
 			top: 0;
-			left: 0;
-			width: 100%;
+			right: 0;
+			// width: 100%;
 			.icon {
 				display: inline-block;
 				transform: scale(1.5);
@@ -198,6 +198,7 @@
 			// overflow: auto;
 			// height: 5000px;
 			min-height: 100%;
+			height: 100vh !important;
 			position: relative;
 			scroll-snap-type: y mandatory;
 			scroll-snap-points-y: repeat(18px);
@@ -276,14 +277,14 @@
 			flex-direction: column;
 			overflow-y: hidden;
 		}
-		x.content.inline .panel {
+		.content.inline .panel:not(.full-height) {
 			position: fixed;
 			width: 100%;
 			height: calc(100vh - 50px);
 			top: 50px;
 			.panel-header {
 				background: @app-background-color;
-				padding-top: 5px;
+				padding-top: 0;
 				padding-bottom: 15px;
 				height: auto;
 			}
@@ -1444,7 +1445,7 @@
 			}
 		}
 		.vscroll {
-			padding-bottom: 10px;
+			// padding-bottom: 10px;
 		}
 		.panel {
 			// min-height: 100%;
@@ -2541,8 +2542,9 @@
 		display: flex;
 		padding: 10px;
 		margin-bottom: 5px;
-		background-color: @app-background-color;
+		// background-color: @app-background-color;
 		z-index: 5;
+		float: right;
 		label {
 			user-select: none;
 			flex-grow: 1;
@@ -2553,11 +2555,11 @@
 			> span {
 				display: inline-block;
 				padding: 8px 10px;
-				border-bottom: 1px solid rgba(127, 127, 127, 0.5);
+				// border-bottom: 1px solid rgba(127, 127, 127, 0.5);
 			}
 			&.checked > span {
 				color: @text-color-highlight;
-				border-bottom: 1px solid @text-color-highlight;
+				// border-bottom: 1px solid @text-color-highlight;
 				font-weight: 500;
 			}
 			&:hover > span {
@@ -2578,7 +2580,7 @@
 		}
 		.fill-tab {
 			padding: 8px 0 0 0;
-			border-bottom: 1px solid rgba(127, 127, 127, 0.5);
+			// border-bottom: 1px solid rgba(127, 127, 127, 0.5);
 			text-align: right;
 			flex-basis: 25%;
 			flex-grow: 100;
@@ -2630,6 +2632,7 @@
 			text-align: right;
 			flex-basis: 90%;
 			flex-grow: 100;
+			display: none;
 		}
 		.icon.mute {
 			margin-right: 5px;
@@ -2650,7 +2653,8 @@
 	.search-bar {
 		padding: 17px 10px 17px 15px;
 		input {
-			width: calc(100% - 38px);
+			// width: calc(100% - 38px);
+			width: 100%;
 			margin-right: 10px;
 		}
 	}
@@ -2706,6 +2710,16 @@
 				margin-right: 10px;
 			}
 		}
+	}
+	.full-height .panel-header {
+		position: fixed;
+		top: -50px;
+	}
+	.full-height .switch,
+	.panel-header .switch {
+		top: 55px;
+		position: fixed;
+		right: 20px;
 	}
 	.channel-name {
 		// text-align: left !important;
@@ -2829,7 +2843,7 @@
 			width: 20px;
 			height: 20px;
 			border-radius: 10px;
-			transform: translateX(66px);
+			transform: translateX(65px);
 			background-color: white;
 		}
 		&.checked::after {

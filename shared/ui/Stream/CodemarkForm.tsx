@@ -60,6 +60,7 @@ interface Props {
 			authors: { id: string; username: string }[];
 			repoPath: string;
 		};
+		type?: string;
 	};
 	commentType?: string;
 	collapsed: boolean;
@@ -116,19 +117,20 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	constructor(props: Props) {
 		super(props);
+		const defaultType = (props.codeBlock ? props.codeBlock.type : null) || props.commentType;
 		const defaultState: Partial<State> = {
 			title: "",
 			text: "",
 			color: "blue",
-			type: props.commentType,
+			type: defaultType,
 			assignees: [],
 			assigneesDisabled: false,
 			assigneesRequired: false,
 			singleAssignee: false,
 			selectedChannelName: props.channel.name,
 			selectedChannelId: props.channel.id,
-			assignableUsers: this.getAssignableCSUsers()
-			// privacy: "private"
+			assignableUsers: this.getAssignableCSUsers(),
+			privacy: "private"
 		};
 
 		const state = props.editingCodemark
@@ -526,17 +528,22 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		let lines;
 		if (codeBlock.range.start.line === codeBlock.range.end.line) {
-			lines = `line ${codeBlock.range.start.line + 1}`;
+			lines = `(Line ${codeBlock.range.start.line + 1})`;
 		} else {
-			lines = `lines ${codeBlock.range.start.line + 1}-${codeBlock.range.end.line + 1}`;
+			lines = `(Lines ${codeBlock.range.start.line + 1}-${codeBlock.range.end.line + 1})`;
 		}
 
 		const file = codeBlock.file ? paths.basename(codeBlock.file) : "";
-		return (
-			<span>
-				Commenting on <b>{lines}</b> in <b>{file}</b>
-			</span>
-		);
+		return file + " " + lines;
+		// return (
+		// 	<span>
+		// 		Commenting on <b>{lines}</b> in <b>{file}</b>
+		// 	</span>
+		// );
+		// if (endColumn === 0) endLine = endLine - 1;
+		// if (startLine === endLine) lines = `Line ${startLine + 1}`;
+		// else lines = `Lines ${startLine + 1}-${endLine + 1}`;
+		// return `${codeBlock.file} (${lines})`;
 	}
 
 	renderMessageInput = () => {
@@ -605,7 +612,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				: commentType === "question"
 				? "Question (required)"
 				: commentType === "bookmark"
-				? "Name (optional)"
+				? "Bookmark Name (optional)"
 				: "Title (optional)";
 
 		// const commentString = commentType || "comment";
@@ -656,10 +663,8 @@ class CodemarkForm extends React.Component<Props, State> {
 			<form id="code-comment-form" className="standard-form" key="two">
 				<fieldset className="form-body">
 					<div id="controls" className="control-group">
-						<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
-							{this.getCodeBlockHint()}
-						</div>
-						<div className="tab-group">
+						{<div style={{ marginBottom: "10px" }}>{this.getCodeBlockHint()}</div>}
+						<div className="tab-group" style={{ display: "none" }}>
 							<input
 								id="radio-comment-type-comment"
 								type="radio"
@@ -705,21 +710,23 @@ class CodemarkForm extends React.Component<Props, State> {
 							>
 								<Icon name="issue" /> <b>Issue</b>
 							</label>
-							<input
-								id="radio-comment-type-trap"
-								type="radio"
-								name="comment-type"
-								checked={commentType === "trap"}
-							/>
-							<label
-								htmlFor="radio-comment-type-trap"
-								className={cx({
-									checked: commentType === "trap"
-								})}
-								onClick={e => this.setCommentType("trap")}
-							>
-								<Icon name="trap" /> <b>Trap</b>
-							</label>
+							{
+								// <input
+								// 	id="radio-comment-type-trap"
+								// 	type="radio"
+								// 	name="comment-type"
+								// 	checked={commentType === "trap"}
+								// />
+								// <label
+								// 	htmlFor="radio-comment-type-trap"
+								// 	className={cx({
+								// 		checked: commentType === "trap"
+								// 	})}
+								// 	onClick={e => this.setCommentType("trap")}
+								// >
+								// 	<Icon name="trap" /> <b>Trap</b>
+								// </label>
+							}
 							<label
 								htmlFor="radio-comment-type-bookmark"
 								className={cx({
@@ -730,7 +737,7 @@ class CodemarkForm extends React.Component<Props, State> {
 								<Icon name="bookmark" /> <b>Bookmark</b>
 							</label>
 
-							{/*<label
+							<label
 								htmlFor="radio-comment-type-link"
 								className={cx({
 									checked: commentType === "link"
@@ -738,7 +745,7 @@ class CodemarkForm extends React.Component<Props, State> {
 								onClick={e => this.setCommentType("link")}
 							>
 								<Icon name="link" /> <b>Permalink</b>
-							</label> */}
+							</label>
 						</div>
 						{commentType === "trap" && (
 							<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
@@ -790,7 +797,8 @@ class CodemarkForm extends React.Component<Props, State> {
 						{this.renderTextHelp()}
 						{commentType === "link" && [
 							<div className="permalink" key="2">
-								{`http://codestream.com/c/{this.props.streamId}`}
+								https://codestream.com/{this.state.privacy === "private" ? "r" : "u"}/
+								{this.props.streamId}
 							</div>,
 							<div id="privacy-controls" className="control-group" key="1">
 								<div className="public-private-hint">
@@ -819,7 +827,7 @@ class CodemarkForm extends React.Component<Props, State> {
 							</Tooltip>
 						</div>
 					)}
-					{this.renderCrossPostMessage()}
+					{commentType !== "link" && this.renderCrossPostMessage()}
 					{commentType === "issue" && (
 						<CrossPostIssueControls
 							provider={this.props.issueProvider}
@@ -876,7 +884,7 @@ class CodemarkForm extends React.Component<Props, State> {
 							loading={this.state.isLoading}
 							onClick={this.handleClickSubmit}
 						>
-							Submit
+							{commentType === "link" ? "Copy Link" : "Submit"}
 						</Button>
 						{/*
 							<span className="hint">Styling with Markdown is supported</span>

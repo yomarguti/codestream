@@ -223,6 +223,11 @@ class Post extends React.Component {
 		}
 		// menuItems.push({ label: "Add Reaction", action: "add-reaction" });
 
+		if (codemark) {
+			if (codemark.pinned) menuItems.push({ label: "Hide this Codemark", action: "toggle-pinned" });
+			else menuItems.push({ label: "Un-hide this Codemark", action: "toggle-pinned" });
+		}
+
 		menuItems.push({ label: "Mark Unread", action: "mark-unread" });
 		menuItems.push({ label: "Quote", action: "quote" });
 		// { label: "Add Reaction", action: "add-reaction" },
@@ -717,7 +722,11 @@ class Post extends React.Component {
 	};
 
 	handleSelectMenu = action => {
-		this.props.action(action, { ...this.props.post, author: this.props.author });
+		this.props.action(action, {
+			...this.props.post,
+			author: this.props.author,
+			codemark: this.props.codemark
+		});
 		this.setState({ menuOpen: false, authorMenuOpen: false });
 	};
 }

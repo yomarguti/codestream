@@ -21,7 +21,10 @@ const initialState: State = {
 	hasFocus: true, // we assume we start with the focus when codestream initializes
 	codemarkFileFilter: "all",
 	codemarkTypeFilter: "all",
-	channelFilter: "all"
+	codemarkColorFilter: "all",
+	channelFilter: "all",
+	textEditorVisibleRanges: [],
+	textEditorUri: ""
 };
 
 export function reduceContext(
@@ -32,8 +35,13 @@ export function reduceContext(
 		case ContextActionsType.SetContext:
 			return { ...state, ...action.payload };
 		case ContextActionsType.SetCurrentFile: {
-			const { file, fileStreamId } = action.payload;
-			const nextState: Partial<State> = { activeFile: file, fileStreamId };
+			const { file, fileStreamId, visibleRanges, uri } = action.payload;
+			const nextState: Partial<State> = {
+				activeFile: file,
+				fileStreamId,
+				textEditorVisibleRanges: visibleRanges,
+				textEditorUri: uri
+			};
 			if (file) {
 				nextState.lastActiveFile = file;
 			}
@@ -56,10 +64,12 @@ export function reduceContext(
 		}
 		case ContextActionsType.SetFocusState:
 			return { ...state, hasFocus: action.payload };
-		case ContextActionsType.SetCodeMarkFileFilter:
+		case ContextActionsType.SetCodemarkFileFilter:
 			return { ...state, codemarkFileFilter: action.payload };
 		case ContextActionsType.SetCodemarkTypeFilter:
 			return { ...state, codemarkTypeFilter: action.payload };
+		case ContextActionsType.SetCodemarkColorFilter:
+			return { ...state, codemarkColorFilter: action.payload };
 		case ContextActionsType.SetChannelFilter:
 			return { ...state, channelFilter: action.payload };
 		case ContextActionsType.SetIssueProvider:

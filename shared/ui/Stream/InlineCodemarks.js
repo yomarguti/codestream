@@ -5,6 +5,7 @@ import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as userSelectors from "../store/users/reducer";
 import Icon from "./Icon";
 import Codemark from "./Codemark";
+import ScrollBox from "./ScrollBox";
 import Tooltip from "./Tooltip";
 import createClassString from "classnames";
 import { range } from "../utils";
@@ -12,9 +13,11 @@ import { HostApi } from "../webview-api";
 import {
 	ShowCodeRequestType,
 	HighlightCodeRequestType,
+	HighlightLineRequestType,
 	RevealFileLineRequestType,
 	StartCommentOnLineRequestType,
-	ShowMarkersInEditorRequestType
+	ShowMarkersInEditorRequestType,
+	UpdateConfigurationRequestType
 } from "../ipc/webview.protocol";
 import { TelemetryRequestType } from "@codestream/protocols/agent";
 
@@ -36,6 +39,7 @@ export class SimpleInlineCodemarks extends Component {
 		// this.disposables.push(
 		// 	EventEmitter.subscribe("interaction:active-editor-changed", this.handleFileChangedEvent)
 		// );
+		this.setVisibleLinesCount();
 	}
 
 	componentWillUnmount() {
@@ -49,78 +53,209 @@ export class SimpleInlineCodemarks extends Component {
 		// else this.setState({ thisFile: null });
 	};
 
-	componentDidUpdate(prevProps, prevState) {
-		const { textEditorFirstLine = 0 } = this.props;
+	setVisibleLinesCount = () => {
+		const { textEditorVisibleRanges = [] } = this.props;
 
-		if (textEditorFirstLine !== prevProps.textEditorFirstLine) {
+		let numLinesVisible = 0;
+		textEditorVisibleRanges.forEach(range => {
+			numLinesVisible += range[1].line - range[0].line + 1;
+		});
+		numLinesVisible += 1; // vscode mis-reports the last line as being 2 bigger than it is
+
+		// only set this if it changes by more than 1. we expect it to vary by 1 as
+		// the topmost and bottommost line are revealed and the window is not an integer
+		// number of lines high.
+		if (Math.abs(numLinesVisible - Number(this.state.numLinesVisible || 0)) > 1) {
+			this.setState({ numLinesVisible });
+		}
+	};
+
+	compareStart(range1 = [], range2 = []) {
+		if (range1.length === 0 || range2.length === 0) return true;
+		const start1 = range1[0].line;
+		const start2 = range2[0].line;
+		return start1 === start2;
+	}
+
+	componentDidUpdate(prevProps, prevState) {
+		const { textEditorVisibleRanges } = this.props;
+
+		const didStartLineChange = this.compareStart(
+			textEditorVisibleRanges,
+			prevProps.textEditorVisibleRanges
+		);
+
+		if (false && textEditorFirstLine !== prevProps.textEditorFirstLine) {
 			const top = (textEditorFirstLine === 0 ? 1 : textEditorFirstLine + 0.65) * 18;
 			// this._scrollDiv.scrollTop = Math.round(top) + "px";
 			this._scrolling = true;
 			document.getElementsByClassName("inline-codemarks")[0].scrollTop = Math.round(top);
 		}
+		if (didStartLineChange) this.setVisibleLinesCount();
 	}
 
-	getCodemarkStartLine(codemark) {
-		if (!codemark.markers || codemark.markers.length === 0) return;
-		const marker = codemark.markers[0];
-		const location = marker.location || marker.locationWhenCreated;
-		return location[0];
-	}
+	renderList = () => {
+		const { codemarks } = this.props;
 
-	renderCodemarks = codemarks => {
 		if (codemarks.length === 0) return null;
 		else {
-			return codemarks.map(codemark => {
-				const codemarkStartLine = this.getCodemarkStartLine(codemark);
-				if (!codemarkStartLine) return null;
-
-				let top;
-				if (codemarkStartLine > 4) top = 18 * (codemarkStartLine - 4);
-				else top = 18;
-
-				return (
-					<Codemark
-						key={codemark.id}
-						codemark={codemark}
-						collapsed={this.state.openPost !== codemark.id}
-						inline={true}
-						currentUserName={this.props.currentUserName || "pez"}
-						usernames={this.props.usernames}
-						onClick={this.handleClickCodemark}
-						onMouseEnter={this.handleHighlightCodemark}
-						onMouseLeave={this.handleUnhighlightCodemark}
-						action={this.props.postAction}
-						query={this.state.q}
-						style={{ top }}
-					/>
-				);
-			});
+			return (
+				<ScrollBox>
+					<div className="inline-codemarks channel-list vscroll">
+						<div
+							className={createClassString("section", "has-children", {
+								expanded: true
+							})}
+						>
+							<div className="header top" onClick={e => this.toggleSection(e, "unreadChannels")}>
+								<Icon name="triangle-right" className="triangle-right" />
+								<span>
+									In This File: <span className="filename">{this.props.fileNameToFilterFor}</span>
+								</span>
+							</div>
+							{codemarks
+								.sort((a, b) => b.createdAt - a.createdAt)
+								.map(codemark => {
+									if (!codemark.pinned) return null;
+									return (
+										<Codemark
+											key={codemark.id}
+											codemark={codemark}
+											collapsed={this.state.openPost !== codemark.id}
+											inline={false}
+											currentUserName={this.props.currentUserName || "pez"}
+											usernames={this.props.usernames}
+											onClick={this.handleClickCodemark}
+											onMouseEnter={this.handleHighlightCodemark}
+											onMouseLeave={this.handleUnhighlightCodemark}
+											action={this.props.postAction}
+											query={this.state.q}
+										/>
+									);
+								})}
+						</div>
+					</div>
+				</ScrollBox>
+			);
 		}
 	};
 
-	renderMain() {
-		const { codemarks, fileStreamIdToFilterFor } = this.props;
+	renderInline() {
+		const {
+			codemarks,
+			codemarkStartLine,
+			textEditorVisibleRanges = [],
+			openPlusOnLine,
+			mostRecentSourceFile
+		} = this.props;
+		const { numLinesVisible } = this.state;
 
-		const codemarksInThisFile = codemarks.filter(codemark => {
-			const codeBlock = codemark.markers && codemark.markers.length && codemark.markers[0];
-			const codeBlockFileStreamId = codeBlock && codeBlock.fileStreamId;
+		// console.log("TEVR: ", textEditorVisibleRanges);
+		if (codemarks.length === 0) {
 			return (
-				!codemark.deactivated &&
-				fileStreamIdToFilterFor &&
-				codeBlockFileStreamId === fileStreamIdToFilterFor
+				<div className="no-codemarks">
+					There are no codemarks in {mostRecentSourceFile}.<br />
+					<br />
+					Create one by selecting code.
+				</div>
 			);
-		});
-		if (codemarksInThisFile.length === 0) {
-			if (!fileStreamIdToFilterFor) return null;
-			else return null;
-			// return (
-			// 	<div className="no-codemarks">
-			// 		There are no codemarks in {mostRecentSourceFile}.<br />
-			// 		<br />
-			// 		Create one by selecting code.
-			// 	</div>
-			// );
-		} else return this.renderCodemarks(codemarksInThisFile);
+		} else {
+			const numVisibleRanges = textEditorVisibleRanges.length;
+
+			let rangeStartOffset = 0;
+			return (
+				<div
+					className="inline-codemarks vscroll"
+					onScroll={this.onScroll}
+					ref={ref => (this._scrollDiv = ref)}
+				>
+					<div>
+						{textEditorVisibleRanges.map((lineRange, rangeIndex) => {
+							const realFirstLine = lineRange[0].line; // == 0 ? 1 : lineRange[0].line;
+							const realLastLine = lineRange[1].line;
+							const linesInRange = realLastLine - realFirstLine + 1;
+							const marksInRange = range(realFirstLine, realLastLine + 1).map(lineNum => {
+								let top =
+									(100 * (rangeStartOffset + lineNum - realFirstLine)) / numLinesVisible + "vh";
+								if (codemarkStartLine[lineNum] && lineNum !== openPlusOnLine) {
+									const codemark = codemarkStartLine[lineNum];
+									return (
+										<Codemark
+											key={codemark.id}
+											codemark={codemark}
+											collapsed={this.state.openPost !== codemark.id}
+											inline={true}
+											currentUserName={this.props.currentUserName || "pez"}
+											usernames={this.props.usernames}
+											onClick={this.handleClickCodemark}
+											onMouseEnter={this.handleHighlightCodemark}
+											onMouseLeave={this.handleUnhighlightCodemark}
+											action={this.props.postAction}
+											query={this.state.q}
+											lineNum={lineNum}
+											style={{ top }}
+										/>
+									);
+								} else {
+									return null;
+								}
+							});
+							rangeStartOffset += linesInRange;
+							if (rangeIndex + 1 < numVisibleRanges) {
+								let top = (100 * rangeStartOffset) / numLinesVisible + "vh";
+								marksInRange.push(<div style={{ top }} className="folded-code-indicator" />);
+							}
+							return marksInRange;
+						})}
+					</div>
+					<div>
+						{range(0, numLinesVisible + 1).map(lineNum => {
+							const top = (100 * lineNum) / numLinesVisible + "vh";
+							return (
+								<div
+									onMouseEnter={() => this.handleHighlightLine(lineNum)}
+									onMouseLeave={() => this.handleUnhighlightLine(lineNum)}
+									className={createClassString("hover-plus", {
+										open: lineNum === openPlusOnLine
+									})}
+									key={lineNum}
+									style={{ top }}
+								>
+									<Icon
+										onClick={e => this.handleClickPlus(e, "comment", lineNum)}
+										name="comment"
+										xtitle="Add Comment"
+										placement="bottomLeft"
+										delay="1"
+									/>
+									<Icon
+										onClick={e => this.handleClickPlus(e, "issue", lineNum)}
+										name="issue"
+										xtitle="Create Issue"
+										placement="bottomLeft"
+										delay="1"
+									/>
+									<Icon
+										onClick={e => this.handleClickPlus(e, "bookmark", lineNum)}
+										name="bookmark"
+										xtitle="Create Bookmark"
+										placement="bottomLeft"
+										delay="1"
+									/>
+									<Icon
+										onClick={e => this.handleClickPlus(e, "link", lineNum)}
+										name="link"
+										xtitle="Get Permalink"
+										placement="bottomLeft"
+										delay="1"
+									/>
+								</div>
+							);
+						})}
+					</div>
+				</div>
+			);
+		}
 	}
 
 	onScroll = event => {
@@ -154,59 +289,42 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	render() {
-		const { textEditorFirstLine = 0, textEditorLastLine = 0 } = this.props;
+		const { viewInline } = this.props;
 
-		// const top = (textEditorFirstLine === 0 ? 0 : textEditorFirstLine + 0.65) * -18;
 		return (
-			<div className="panel">
-				{this.props.capabilities.editorTrackVisibleRange ? (
-					<div className="filters">
-						<Tooltip title="View codemarks as" placement="left">
-							<label
-								htmlFor="toggle"
-								className={createClassString("switch", "wide", {
-									checked: false
-								})}
-								onClick={this.toggleShowMarkers}
-							/>
-						</Tooltip>
-						<span>Inline view is experimental.</span>
-						<a href="mailto:team@codestream.com?Subject=Inline View Feedback">Share feedback</a>
-					</div>
-				) : (
-					<div className="filters" />
-				)}
-				<div
-					className="inline-codemarks vscroll"
-					onScroll={this.onScroll}
-					ref={ref => (this._scrollDiv = ref)}
-				>
-					{this.renderMain()}
-					{range(textEditorFirstLine, textEditorLastLine + 100).map(lineNum => {
-						return (
-							<div
-								onClick={this.handleClickPlus}
-								className={createClassString("hover-plus", {
-									disabled: lineNum > textEditorLastLine
-								})}
-								key={lineNum}
-								data-lineNum={lineNum}
-							>
-								<Icon name="plus" />
-							</div>
-						);
-					})}
+			<div className={createClassString("panel", { "full-height": viewInline })}>
+				<div className="panel-header">
+					<Tooltip title="View As List or Inline" placement="left">
+						<label
+							className={createClassString("switch", {
+								checked: !viewInline
+							})}
+							onClick={this.toggleViewCodemarksInline}
+						/>
+					</Tooltip>
+					{!viewInline && "Codemarks"}
 				</div>
+				{viewInline ? this.renderInline() : this.renderList()}
 			</div>
 		);
 	}
 
-	handleClickPlus = event => {
+	toggleViewCodemarksInline = () => {
+		HostApi.instance.send(UpdateConfigurationRequestType, {
+			name: "viewCodemarksInline",
+			value: !this.props.viewInline
+		});
+	};
+
+	handleClickPlus = (event, type, lineNum) => {
 		event.preventDefault();
 		this.props.setNewPostEntry("Spatial View");
+
+		const mappedLineNum = this.mapLineToVisibleRange(lineNum + 1);
 		HostApi.instance.send(StartCommentOnLineRequestType, {
-			line: Number(event.currentTarget.dataset.linenum),
-			uri: this.props.textEditorUri
+			line: mappedLineNum,
+			uri: this.props.textEditorUri,
+			type: type
 		});
 		setTimeout(() => this.props.focusInput(), 500);
 	};
@@ -231,8 +349,13 @@ export class SimpleInlineCodemarks extends Component {
 		// }
 	};
 
-	highlightCode(marker, value) {
-		HostApi.instance.send(HighlightCodeRequestType, { marker, value, source: "stream" });
+	highlightCode(marker, highlight) {
+		HostApi.instance.send(HighlightCodeRequestType, {
+			uri: this.props.textEditorUri,
+			marker: marker,
+			highlight: highlight,
+			source: "stream"
+		});
 	}
 
 	handleHighlightCodemark = codemark => {
@@ -241,6 +364,38 @@ export class SimpleInlineCodemarks extends Component {
 
 	handleUnhighlightCodemark = codemark => {
 		if (codemark.markers) this.highlightCode(codemark.markers[0], false);
+	};
+
+	mapLineToVisibleRange = fromLineNum => {
+		const { textEditorVisibleRanges = [] } = this.props;
+
+		let lineCounter = 0;
+		let toLineNum = 0;
+		textEditorVisibleRanges.forEach(lineRange => {
+			range(lineRange[0].line, lineRange[1].line + 1).forEach(thisLine => {
+				if (++lineCounter === fromLineNum) toLineNum = thisLine;
+			});
+		});
+		return toLineNum;
+	};
+
+	highlightLine(line, highlight) {
+		HostApi.instance.send(HighlightLineRequestType, {
+			uri: this.props.textEditorUri,
+			line: line,
+			highlight: highlight,
+			source: "stream"
+		});
+	}
+
+	handleHighlightLine = lineNum => {
+		const mappedLineNum = this.mapLineToVisibleRange(lineNum);
+		this.highlightLine(mappedLineNum, true);
+	};
+
+	handleUnhighlightLine = lineNum => {
+		const mappedLineNum = this.mapLineToVisibleRange(lineNum);
+		this.highlightLine(mappedLineNum, false);
 	};
 
 	toggleStatus = id => {
@@ -276,26 +431,34 @@ export class SimpleInlineCodemarks extends Component {
 const mapStateToProps = state => {
 	const { capabilities, context, teams, configs } = state;
 
-	// let fileNameToFilterFor;
-	let fileStreamIdToFilterFor;
-	if (context.activeFile && context.fileStreamId) {
-		// fileNameToFilterFor = context.activeFile;
-		fileStreamIdToFilterFor = context.fileStreamId;
-	} else if (context.activeFile && !context.fileStreamId) {
-		// fileNameToFilterFor = context.activeFile;
-	} else {
-		// fileNameToFilterFor = context.lastActiveFile;
-		fileStreamIdToFilterFor = context.lastFileStreamId;
-	}
+	const codemarks = codemarkSelectors.getFileFilteredCodemarks(state);
+
+	const getCodemarkStartLine = codemark => {
+		if (!codemark.markers || codemark.markers.length === 0) return 1;
+		const marker = codemark.markers[0];
+		const location = marker.location || marker.locationWhenCreated;
+		return location[0];
+	};
+
+	// create a map from start-lines to the codemarks that start on that line
+	let codemarkStartLine = {};
+	codemarks.forEach(codemark => {
+		if (!codemark.pinned) return;
+		let startLine = Number(getCodemarkStartLine(codemark)) - 1;
+		// if there is already a codemark on this line, keep skipping to the next one
+		while (codemarkStartLine[startLine]) startLine++;
+		codemarkStartLine[startLine] = codemark;
+	});
 
 	return {
 		usernames: userSelectors.getUsernames(state),
-		codemarks: codemarkSelectors.getTypeFilteredCodemarks(state),
+		codemarks,
+		codemarkStartLine,
 		showMarkers: configs.showMarkers,
 		team: teams[context.currentTeamId],
 		fileFilter: context.codemarkFileFilter,
-		// fileNameToFilterFor,
-		fileStreamIdToFilterFor,
+		viewInline: configs.viewCodemarksInline,
+		fileNameToFilterFor: context.activeFile || context.lastActiveFile,
 		capabilities
 	};
 };

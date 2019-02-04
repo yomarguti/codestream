@@ -89,15 +89,20 @@ export const getFetchIssueBoardsCommand = (service: string) =>
 		`codeStream/${service}/boards`
 	);
 
+export interface StartSignupRequest {}
 export interface StartSignupResponse {}
 
-export const StartSignupRequestType = new RequestType<void, StartSignupResponse, void, void>(
-	"extension/go-to-signup"
-);
+export const StartSignupRequestType = new RequestType<
+	StartSignupRequest,
+	StartSignupResponse,
+	void,
+	void
+>("extension/go-to-signup");
 
+export interface SignOutRequest {}
 export interface SignOutResponse {}
 
-export const SignOutRequestType = new RequestType<void, SignOutResponse, void, void>(
+export const SignOutRequestType = new RequestType<SignOutRequest, SignOutResponse, void, void>(
 	"extension/sign-out"
 );
 
@@ -115,6 +120,7 @@ export const ShowCodeRequestType = new RequestType<ShowCodeRequest, ShowCodeResp
 );
 
 export interface HighlightCodeRequest {
+	uri: string;
 	marker: CSMarker;
 	highlight: boolean;
 	source: string;
@@ -130,6 +136,24 @@ export const HighlightCodeRequestType = new RequestType<
 	void,
 	void
 >("extension/highlight-code");
+
+export interface HighlightLineRequest {
+	uri: string;
+	line: number;
+	highlight: boolean;
+	source: string;
+}
+
+export interface HighlightLineResponse {
+	result: any;
+}
+
+export const HighlightLineRequestType = new RequestType<
+	HighlightLineRequest,
+	HighlightLineResponse,
+	void,
+	void
+>("extension/highlight-line");
 
 export interface RevealFileLineRequest {
 	line: number;
@@ -147,6 +171,7 @@ export const RevealFileLineRequestType = new RequestType<
 export interface StartCommentOnLineRequest {
 	line: number;
 	uri: any;
+	type: any;
 }
 
 export interface StartCommentOnLineResponse {}
@@ -225,3 +250,17 @@ export const ApplyPatchRequestType = new RequestType<
 	void,
 	void
 >("extension/apply-patch");
+
+export interface UpdateConfigurationRequest {
+	name: string;
+	value: any;
+}
+
+export interface UpdateConfigurationResponse {}
+
+export const UpdateConfigurationRequestType = new RequestType<
+	UpdateConfigurationRequest,
+	UpdateConfigurationResponse,
+	void,
+	void
+>("extension/configuration/update");

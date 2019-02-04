@@ -45,6 +45,7 @@ interface Props {
 	onMouseLeave?(codemark: CodemarkEntity): any;
 	query?: string;
 	style?: object;
+	lineNum?: Number;
 }
 
 export class Codemark extends React.Component<Props, State> {
@@ -178,11 +179,12 @@ export class Codemark extends React.Component<Props, State> {
 		// const style = inline ?
 		return (
 			<div
-				style={{ ...this.props.style, zIndex: 2 }}
+				style={{ ...this.props.style }}
 				className={cx("codemark collapsed", codemark.color, { inline })}
 				onClick={this.handleClickCodemark}
 				onMouseEnter={this.handleMouseEnterCodemark}
 				onMouseLeave={this.handleMouseLeaveCodemark}
+				data-linenum={this.props.lineNum}
 			>
 				{this.renderStatus(codemark)}
 				<div className="body">

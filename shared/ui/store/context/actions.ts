@@ -9,6 +9,7 @@ import { setUserPreference } from "../../Stream/actions";
 import { HostApi } from "../../webview-api";
 import { action } from "../common";
 import { ContextActionsType, State } from "./types";
+import { Range } from "vscode-languageserver-types";
 
 export const reset = () => action("RESET");
 
@@ -33,10 +34,13 @@ export function setThread(streamId: string, threadId: string | null = null) {
 }
 
 export const setCodemarkFileFilter = (value: string) =>
-	action(ContextActionsType.SetCodeMarkFileFilter, value);
+	action(ContextActionsType.SetCodemarkFileFilter, value);
 
 export const setCodemarkTypeFilter = (value: string) =>
 	action(ContextActionsType.SetCodemarkTypeFilter, value);
+
+export const setCodemarkColorFilter = (value: string) =>
+	action(ContextActionsType.SetCodemarkColorFilter, value);
 
 export const _setChannelFilter = (value: string) =>
 	action(ContextActionsType.SetChannelFilter, value);
@@ -50,10 +54,15 @@ export const setChannelFilter = (value: string) => async dispatch => {
 	return dispatch(_setChannelFilter(value));
 };
 
-export const fileChanged = editor => setCurrentFile(editor.fileName, editor.fileStreamId);
+export const fileChanged = editor =>
+	setCurrentFile(editor.fileName, editor.fileStreamId, editor.visibleRanges, editor.uri);
 
-export const setCurrentFile = (file = "", fileStreamId?: string) =>
-	action(ContextActionsType.SetCurrentFile, { file, fileStreamId });
+export const setCurrentFile = (
+	file = "",
+	fileStreamId?: string,
+	visibleRanges?: Range[],
+	uri?: string
+) => action(ContextActionsType.SetCurrentFile, { file, fileStreamId, visibleRanges, uri });
 
 export const _setCurrentStream = (streamId?: string) =>
 	action(ContextActionsType.SetCurrentStream, streamId);

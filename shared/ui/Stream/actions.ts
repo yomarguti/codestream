@@ -42,6 +42,7 @@ import {
 	closePanel,
 	openPanel,
 	setChannelFilter,
+	setCodemarkColorFilter,
 	setCodemarkFileFilter,
 	setCodemarkTypeFilter,
 	setThread
@@ -61,6 +62,7 @@ export {
 	setThread,
 	setCodemarkTypeFilter,
 	setCodemarkFileFilter,
+	setCodemarkColorFilter,
 	setChannelFilter
 };
 

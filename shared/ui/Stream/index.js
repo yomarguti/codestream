@@ -44,9 +44,14 @@ import {
 	DidOpenThreadNotificationType,
 	DidHighlightCodeNotificationType,
 	DidSelectStreamThreadNotificationType,
-	DidScrollEditorNotificationType
+	DidScrollEditorNotificationType,
+	OpenCommentOnSelectInEditorRequestType
 } from "../ipc/webview.protocol";
-import { OpenUrlRequestType, TelemetryRequestType } from "@codestream/protocols/agent";
+import {
+	OpenUrlRequestType,
+	SetCodemarkPinnedRequestType,
+	TelemetryRequestType
+} from "@codestream/protocols/agent";
 import { setCurrentStream } from "../store/context/actions";
 import {
 	filter as _filter,
@@ -162,6 +167,7 @@ export class SimpleStream extends Component {
 
 	handleCodeHighlightEvent = body => {
 		const { composeBoxProps } = this.state;
+		const { activePanel } = this.props;
 		if (composeBoxProps && composeBoxProps.editingCodemark) return;
 		// make sure we have a compose box to type into
 		// if it's not a highlight event (i.e. someone clicked
@@ -169,8 +175,18 @@ export class SimpleStream extends Component {
 		// open multi-compose. if it is a highlight event, only
 		// open it if it's not open and the user has the preference
 		// to auto-open on selection
-		if (!body.isHighlight || (!this.state.multiCompose && this.props.configs.openCommentOnSelect)) {
+
+		console.log("IN HCHE: ", body);
+		// if (!body.isHighlight || (!this.state.multiCompose && this.props.configs.openCommentOnSelect)) {
+		// 	this.setMultiCompose(true, { quote: body });
+		// }
+		if (!body.isHighlight) {
 			this.setMultiCompose(true, { quote: body });
+		}
+
+		if (body.isHighlight && activePanel === "inline" && !this.state.multiCompose) {
+			// fixme unlighlight case
+			this.setState({ openPlusOnLine: body.location[0] });
 		}
 		if (
 			body.isHighlight &&
@@ -184,10 +200,10 @@ export class SimpleStream extends Component {
 	};
 
 	handleTextEditorScrolledEvent = body => {
+		console.log(body);
 		this.setState({
 			textEditorUri: body.uri,
-			textEditorFirstLine: body.firstLine,
-			textEditorLastLine: body.lastLine
+			textEditorVisibleRanges: body.visibleRanges
 		});
 	};
 
@@ -397,8 +413,8 @@ export class SimpleStream extends Component {
 		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
 		let { activePanel } = this.props;
 		const { searchBarOpen, q } = this.state;
-		// if (searchBarOpen) activePanel = "knowledge";
-		if (searchBarOpen && q) activePanel = "knowledge";
+		if (searchBarOpen) activePanel = "knowledge";
+		// if (searchBarOpen && q) activePanel = "knowledge";
 		const umisClass = createClassString("umis", {
 			mentions: umis.totalMentions > 0,
 			unread: umis.totalMentions == 0 && umis.totalUnread > 0
@@ -424,12 +440,26 @@ export class SimpleStream extends Component {
 						})}
 						onClick={e => this.setActivePanel("inline")}
 					>
-						<Tooltip title="Pinned Annotations" placement="bottom">
+						<Tooltip title="Codemarks In Current File" placement="bottom">
 							<span>
-								<Icon name="pin" />
+								<Icon name="document" />
 							</span>
 						</Tooltip>
 					</label>
+					{
+						// <label
+						// 	className={createClassString({
+						// 		selected: activePanel === "activity"
+						// 	})}
+						// 	onClick={e => this.setActivePanel("activity")}
+						// >
+						// 	<Tooltip title="Activity Feed" placement="bottom">
+						// 		<span>
+						// 			<Icon name="activity" />
+						// 		</span>
+						// 	</Tooltip>
+						// </label>
+					}
 					{
 						// <label
 						// 	className={createClassString({
@@ -444,42 +474,44 @@ export class SimpleStream extends Component {
 						// 	</Tooltip>
 						// </label>
 					}
-					<label
-						className={createClassString({
-							selected: activePanel === "knowledge" && this.state.knowledgeType === "issue"
-						})}
-						onClick={e => this.openCodemarkMenu("issue")}
-					>
-						<Tooltip title="Issues" placement="bottom">
-							<span>
-								<Icon name="issue" />
-							</span>
-						</Tooltip>
-					</label>
-					<label
-						className={createClassString({
-							selected: activePanel === "knowledge" && this.state.knowledgeType === "trap"
-						})}
-						onClick={e => this.openCodemarkMenu("trap")}
-					>
-						<Tooltip title="Traps" placement="bottom">
-							<span>
-								<Icon name="trap" />
-							</span>
-						</Tooltip>
-					</label>
-					<label
-						className={createClassString({
-							selected: activePanel === "knowledge" && this.state.knowledgeType === "bookmark"
-						})}
-						onClick={e => this.openCodemarkMenu("bookmark")}
-					>
-						<Tooltip title="Bookmarks" placement="bottom">
-							<span>
-								<Icon name="bookmark" />
-							</span>
-						</Tooltip>
-					</label>
+					{
+						// <label
+						// 	className={createClassString({
+						// 		selected: activePanel === "knowledge" && this.state.knowledgeType === "issue"
+						// 	})}
+						// 	onClick={e => this.openCodemarkMenu("issue")}
+						// >
+						// 	<Tooltip title="Issues" placement="bottom">
+						// 		<span>
+						// 			<Icon name="issue" />
+						// 		</span>
+						// 	</Tooltip>
+						// </label>
+						// <label
+						// 	className={createClassString({
+						// 		selected: activePanel === "knowledge" && this.state.knowledgeType === "trap"
+						// 	})}
+						// 	onClick={e => this.openCodemarkMenu("trap")}
+						// >
+						// 	<Tooltip title="Traps" placement="bottom">
+						// 		<span>
+						// 			<Icon name="trap" />
+						// 		</span>
+						// 	</Tooltip>
+						// </label>
+						// <label
+						// 	className={createClassString({
+						// 		selected: activePanel === "knowledge" && this.state.knowledgeType === "bookmark"
+						// 	})}
+						// 	onClick={e => this.openCodemarkMenu("bookmark")}
+						// >
+						// 	<Tooltip title="Bookmarks" placement="bottom">
+						// 		<span>
+						// 			<Icon name="bookmark" />
+						// 		</span>
+						// 	</Tooltip>
+						// </label>
+					}
 					<label
 						className={createClassString({
 							selected:
@@ -492,7 +524,7 @@ export class SimpleStream extends Component {
 								{this.props.isSlackTeam ? (
 									<Icon className="slack" name="slack" />
 								) : (
-									<Icon name="comment" />
+									<Icon name="chatroom" />
 								)}
 								{!this.props.configs.muteAll && <span className={umisClass}>{totalUMICount}</span>}
 							</span>
@@ -500,7 +532,7 @@ export class SimpleStream extends Component {
 					</label>
 					<label
 						className={createClassString({
-							selected: this.state.searchBarOpen
+							selected: activePanel === "knowledge"
 						})}
 						onClick={this.handleClickSearch}
 					>
@@ -636,7 +668,8 @@ export class SimpleStream extends Component {
 		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
 		let { activePanel } = this.props;
 		const { searchBarOpen, q } = this.state;
-		if (searchBarOpen && q) activePanel = "knowledge";
+		// if (searchBarOpen && q) activePanel = "knowledge";
+		if (searchBarOpen) activePanel = "knowledge";
 
 		let threadId = this.props.threadId;
 		let threadPost = this.findPostById(threadId);
@@ -707,6 +740,10 @@ export class SimpleStream extends Component {
 			</span>
 		);
 
+		const textEditorVisibleRanges =
+			this.state.textEditorVisibleRanges || this.props.textEditorVisibleRanges;
+		const textEditorUri = this.state.textEditorUri || this.props.textEditorUri;
+
 		// these panels do not have global nav
 		const renderNav = !["create-channel", "create-dm", "public-channels", "invite"].includes(
 			activePanel
@@ -718,7 +755,7 @@ export class SimpleStream extends Component {
 				<div id="confirm-root" />
 				<div id="focus-trap-x" className={createClassString({ active: !this.props.hasFocus })} />
 				{(threadId || this.state.floatCompose) && <div id="panel-blanket" />}
-				{renderNav && this.renderNavText()}
+				{renderNav && this.renderNavIcons()}
 				{this.state.floatCompose && this.renderComposeBox(placeholderText, channelName)}
 				<div className="content vscroll inline">
 					{activePanel === "inline" && (
@@ -732,10 +769,10 @@ export class SimpleStream extends Component {
 							searchBarOpen={this.state.searchBarOpen}
 							setNewPostEntry={this.setNewPostEntry}
 							setMultiCompose={this.setMultiCompose}
-							typeFilter={this.state.knowledgeType}
-							textEditorUri={this.state.textEditorUri}
-							textEditorFirstLine={this.state.textEditorFirstLine}
-							textEditorLastLine={this.state.textEditorLastLine}
+							typeFilter="all"
+							textEditorUri={textEditorUri}
+							textEditorVisibleRanges={textEditorVisibleRanges}
+							openPlusOnLine={this.state.openPlusOnLine}
 							focusInput={this.focusInput}
 							scrollDiv={this._contentScrollDiv}
 						/>
@@ -799,11 +836,18 @@ export class SimpleStream extends Component {
 					{activePanel === "main" && (
 						<div className={mainPanelClass}>
 							{
-								// <div className="panel-header channel-name">
-								// 	<CancelButton onClick={this.props.closePanel} />
-								// 	<span className="channel-icon">{channelIcon}</span>
-								// 	{this.props.postStreamName}
-								// </div>
+								<div className="panel-header channel-name">
+									<CancelButton onClick={this.props.closePanel} />
+									<span className="channel-icon">{channelIcon}</span>
+									{this.props.postStreamName}
+									<span className="align-left-button" onClick={this.props.closePanel}>
+										<Tooltip title="Show Channel List" placement="right">
+											<span>
+												<Icon name="chevron-left" className="clickable" />
+											</span>
+										</Tooltip>
+									</span>
+								</div>
 							}
 							<div className="filters">
 								<span className="align-right-button" onClick={this.handleClickStreamSettings}>
@@ -954,6 +998,9 @@ export class SimpleStream extends Component {
 	}
 
 	renderComposeBox = (placeholderText, channelName) => {
+		const textEditorVisibleRanges =
+			this.state.textEditorVisibleRanges || this.props.textEditorVisibleRanges;
+
 		return (
 			<ComposeBox
 				placeholder={placeholderText}
@@ -986,8 +1033,7 @@ export class SimpleStream extends Component {
 				providerInfo={this.props.providerInfo}
 				fetchIssueBoards={this.props.fetchIssueBoards}
 				createTrelloCard={this.props.createTrelloCard}
-				textEditorFirstLine={this.state.textEditorFirstLine}
-				textEditorLastLine={this.state.textEditorLastLine}
+				textEditorVisibleRanges={textEditorVisibleRanges}
 				setNewPostEntry={this.setNewPostEntry}
 				{...this.state.composeBoxProps}
 			/>
@@ -1032,7 +1078,7 @@ export class SimpleStream extends Component {
 			case "disconnect-bitbucket":
 				return this.props.disconnectService("bitbucket");
 			case "signout":
-				return HostApi.instance.send(SignOutRequestType);
+				return HostApi.instance.send(SignOutRequestType, {});
 
 			default:
 				return;
@@ -1049,8 +1095,9 @@ export class SimpleStream extends Component {
 	};
 
 	toggleOpenCommentOnSelect = () => {
-		HostApi.instance.send({}, {});
-		this.props.openCommentOnSelectInEditor(!this.props.configs.openCommentOnSelect);
+		HostApi.instance.send(OpenCommentOnSelectInEditorRequestType, {
+			enable: !this.props.configs.openCommentOnSelect
+		});
 	};
 
 	starChannel = () => {
@@ -1071,7 +1118,8 @@ export class SimpleStream extends Component {
 		if (searchBarOpen) {
 			this.setState({ q: null });
 		}
-		this.setState({ searchBarOpen: !searchBarOpen, knowledgeType: "all" });
+		this.setActivePanel("knowledge");
+		// this.setState({ searchBarOpen: !searchBarOpen, knowledgeType: "all" });
 	};
 
 	setContentScrollTop = value => {
@@ -1162,7 +1210,7 @@ export class SimpleStream extends Component {
 	};
 
 	setActivePanel = panel => {
-		this.setState({ searchBarOpen: false });
+		// this.setState({ searchBarOpen: false });
 		this.props.openPanel(panel);
 	};
 
@@ -1224,6 +1272,17 @@ export class SimpleStream extends Component {
 		this.props.markPostUnread(this.props.postStreamId, postId);
 	};
 
+	togglePinned = post => {
+		if (!post) return;
+		const codemark = post.codemark;
+		if (!codemark) return;
+
+		HostApi.instance.send(SetCodemarkPinnedRequestType, {
+			codemarkId: codemark.id,
+			value: !codemark.pinned
+		});
+	};
+
 	// this tells the composebox to insert quoted text
 	quotePost = post => {
 		this.setState({ quotePost: post });
@@ -1281,6 +1340,8 @@ export class SimpleStream extends Component {
 				return this.notImplementedYet();
 			case "pin-to-stream":
 				return this.notImplementedYet();
+			case "toggle-pinned":
+				return this.togglePinned(post);
 			case "direct-message":
 				return this.sendDirectMessage(post.author.username);
 			case "live-share":
@@ -2159,6 +2220,8 @@ const mapStateToProps = state => {
 		hasFocus: context.hasFocus,
 		currentFile: context.currentFile,
 		currentCommit: context.currentCommit,
+		textEditorVisibleRanges: context.textEditorVisibleRanges,
+		textEditorUri: context.textEditorUri,
 		usernamesRegexp: usernamesRegexp,
 		currentUserId: user.id,
 		currentUserName: user.username,

@@ -55,6 +55,17 @@ export class SimpleKnowledgePanel extends Component {
 			repo: "in the current repo only",
 			all: "from all files"
 		};
+		this.colorFiltersLabelsLower = {
+			all: "with any color",
+			blue: "that are blue",
+			green: "that are green",
+			yellow: "that are yellow",
+			orange: "that are orange",
+			red: "that are red",
+			purple: "that are purple",
+			aqua: "that are aqua",
+			gray: "that are gray"
+		};
 		this.sectionLabel = {
 			inThisFile: "In This File",
 			mine: "Open Issues Assigned To Me",
@@ -64,20 +75,32 @@ export class SimpleKnowledgePanel extends Component {
 			unanswered: "Unanswered"
 		};
 		this.sectionsByType = {
-			all: ["inThisFile", "mine", "recent"],
-			comment: ["inThisFile", "mine", "recent"],
-			question: ["inThisFile", "unanswered", "recent"],
-			issue: ["inThisFile", "mine", "open", "recent", "closed"],
-			trap: ["inThisFile", "recent"],
-			bookmark: ["inThisFile", "recent"]
+			all: ["mine", "recent"],
+			comment: ["mine", "recent"],
+			question: ["unanswered", "recent"],
+			issue: ["mine", "open", "recent", "closed"],
+			trap: ["recent"],
+			bookmark: ["recent"]
+			// all: ["inThisFile", "mine", "recent"],
+			// comment: ["inThisFile", "mine", "recent"],
+			// question: ["inThisFile", "unanswered", "recent"],
+			// issue: ["inThisFile", "mine", "open", "recent", "closed"],
+			// trap: ["inThisFile", "recent"],
+			// bookmark: ["inThisFile", "recent"]
 		};
 		this.sectionsFilterOrder = {
-			all: ["inThisFile", "mine", "recent"],
-			comment: ["inThisFile", "mine", "recent"],
-			question: ["inThisFile", "unanswered", "recent"],
-			issue: ["closed", "inThisFile", "mine", "open", "recent"],
-			trap: ["inThisFile", "recent"],
-			bookmark: ["inThisFile", "recent"]
+			all: ["mine", "recent"],
+			comment: ["mine", "recent"],
+			question: ["unanswered", "recent"],
+			issue: ["closed", "mine", "open", "recent"],
+			trap: ["recent"],
+			bookmark: ["recent"]
+			// all: ["inThisFile", "mine", "recent"],
+			// comment: ["inThisFile", "mine", "recent"],
+			// question: ["inThisFile", "unanswered", "recent"],
+			// issue: ["closed", "inThisFile", "mine", "open", "recent"],
+			// trap: ["inThisFile", "recent"],
+			// bookmark: ["inThisFile", "recent"]
 		};
 	}
 
@@ -86,6 +109,7 @@ export class SimpleKnowledgePanel extends Component {
 		// this.disposables.push(
 		// 	EventEmitter.subscribe("interaction:active-editor-changed", this.handleFileChangedEvent)
 		// );
+		if (this._searchInput) this._searchInput.focus();
 	}
 
 	componentWillUnmount() {
@@ -120,28 +144,8 @@ export class SimpleKnowledgePanel extends Component {
 						usernames={this.props.usernames}
 						onClick={this.handleClickCodemark}
 						action={this.props.postAction}
-						query={this.props.q}
+						query={this.state.q}
 					/>
-					// <div key={codemark.id}>
-					// 	<Post
-					// 		id={codemark.postId}
-					// 		streamId={codemark.streamId}
-					// 		q={this.props.q}
-					// 		showStatus={codemark.type === "issue"}
-					// 		showAssigneeHeadshots={true}
-					// 		alwaysShowReplyCount={!collapsed}
-					// 		teammates={this.props.teammates}
-					// 		collapsed={collapsed}
-					// 		showFileAfterTitle={collapsed}
-					// 		context="knowledge"
-					// 		headshotSize={18}
-					// 		usernames={this.props.usernames}
-					// 		currentUserId={this.props.currentUserId}
-					// 		currentUserName={this.props.currentUserName}
-					// 		currentCommit={this.props.currentCommit}
-					// 		action={this.props.postAction}
-					// 	/>
-					// </div>
 				);
 			});
 		}
@@ -181,7 +185,8 @@ export class SimpleKnowledgePanel extends Component {
 			fileNameToFilterFor,
 			fileStreamIdToFilterFor,
 			fileFilter,
-			typeFilter
+			typeFilter,
+			colorFilter
 		} = this.props;
 		const { thisRepo } = this.state;
 
@@ -208,13 +213,15 @@ export class SimpleKnowledgePanel extends Component {
 			const codemarkType = codemark.type || "comment";
 			if (codemark.deactivated) return null;
 			if (typeFilter !== "all" && codemarkType !== typeFilter) return null;
+			if (colorFilter !== "all" && codemark.color !== colorFilter) return null;
+
 			const codeBlock = codemark.markers && codemark.markers.length && codemark.markers[0];
 
 			const codeBlockRepo = codeBlock && codeBlock.repoId;
 			const title = codemark.title;
 			const assignees = codemark.assignees;
 			const status = codemark.status;
-			const q = this.props.q ? this.props.q.toLocaleLowerCase() : null;
+			const q = this.state.q ? this.state.q.toLocaleLowerCase() : null;
 
 			sectionFilters.forEach(section => {
 				if (assignedCodemarks[codemark.id]) return;
@@ -273,25 +280,32 @@ export class SimpleKnowledgePanel extends Component {
 			// { label: "In Current Repo Only", action: "repo" },
 			{ label: "In Current File Only", action: "current" }
 		];
+		let colorMenuItems = [
+			{ label: "Any Color", action: "all" },
+			{ label: "Blue", action: "blue" },
+			{ label: "Green", action: "green" },
+			{ label: "Yellow", action: "yellow" },
+			{ label: "Orange", action: "orange" },
+			{ label: "Red", action: "red" },
+			{ label: "Purple", action: "purple" },
+			{ label: "Aqua", action: "aqua" },
+			{ label: "Gray", action: "gray" }
+		];
 
 		return (
 			<div className="panel knowledge-panel">
+				<div className="search-bar">
+					<input
+						name="q"
+						className="native-key-bindings input-text control"
+						type="text"
+						ref={ref => (this._searchInput = ref)}
+						onChange={e => this.setState({ q: e.target.value })}
+						placeholder="Search Codemarks"
+					/>
+				</div>
+
 				<div className="filters">
-					{
-						//this.props.capabilities.editorTrackVisibleRange && (
-					}
-					<Tooltip title="Show codemarks in editor gutter" placement="left">
-						<label
-							htmlFor="toggle"
-							className={createClassString("switch", {
-								checked: this.props.showMarkers
-							})}
-							onClick={this.toggleShowMarkers}
-						/>
-					</Tooltip>
-					{
-						//})
-					}
 					Show{" "}
 					<Filter
 						onValue={this.props.setCodemarkTypeFilter}
@@ -300,10 +314,10 @@ export class SimpleKnowledgePanel extends Component {
 						items={typeMenuItems}
 					/>
 					<Filter
-						onValue={this.props.setCodemarkFileFilter}
-						selected={fileFilter}
-						labels={this.fileFiltersLabelsLower}
-						items={fileMenuItems}
+						onValue={this.props.setCodemarkColorFilter}
+						selected={colorFilter}
+						labels={this.colorFiltersLabelsLower}
+						items={colorMenuItems}
 					/>
 				</div>
 				<ScrollBox>
@@ -469,6 +483,7 @@ const mapStateToProps = state => {
 		team: teams[context.currentTeamId],
 		fileFilter: context.codemarkFileFilter,
 		typeFilter: context.codemarkTypeFilter,
+		colorFilter: context.codemarkColorFilter,
 		fileNameToFilterFor,
 		fileStreamIdToFilterFor,
 		capabilities

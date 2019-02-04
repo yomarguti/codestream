@@ -27,6 +27,7 @@ export interface DidHighlightCodeNotification {
 		| undefined;
 	gitError: string | undefined;
 	isHighlight?: boolean;
+	type?: string;
 }
 export const DidHighlightCodeNotificationType = new NotificationType<
 	DidHighlightCodeNotification,
@@ -44,9 +45,8 @@ export const DidSelectStreamThreadNotificationType = new NotificationType<
 >("webview/stream-thread-selected");
 
 export interface DidScrollEditorNotification {
-	uri: any; // vscode Uri type
-	firstLine: number;
-	lastLine: number;
+	uri: string; // vscode Uri type
+	visibleRanges: Range[];
 }
 
 export const DidScrollEditorNotificationType = new NotificationType<
@@ -54,9 +54,10 @@ export const DidScrollEditorNotificationType = new NotificationType<
 	void
 >("webview/text-editor-scrolled");
 
-export const DidChangeDataNotification = new NotificationType<{ type: string; data: any }, void>(
-	"webview/data-changed"
-);
+export const DidChangeDataNotificationType = new NotificationType<
+	{ type: string; data: any },
+	void
+>("webview/data-changed");
 
 export type DidChangeConfigsNotification = Partial<ConfigState>;
 
@@ -74,7 +75,13 @@ export const DidEstablishConnectivityNotificationType = new NotificationType<voi
 );
 
 export interface DidChangeActiveEditorNotification {
-	editor?: { fileName: string; fileStreamId?: string };
+	editor?: {
+		fileName: string;
+		fileStreamId?: string;
+		uri: string;
+		languageId: string;
+		visibleRanges: Range[];
+	};
 }
 
 export const DidChangeActiveEditorNotificationType = new NotificationType<

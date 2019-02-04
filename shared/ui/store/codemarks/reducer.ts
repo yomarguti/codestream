@@ -52,6 +52,32 @@ export const getTypeFilteredCodemarks = createSelector(
 		}
 	}
 );
+const getCodemarkFileFilter = state => {
+	const { context } = state;
+	// let fileNameToFilterFor;
+	let fileStreamIdToFilterFor;
+	if (context.activeFile && context.fileStreamId) {
+		// fileNameToFilterFor = context.activeFile;
+		fileStreamIdToFilterFor = context.fileStreamId;
+	} else if (context.activeFile && !context.fileStreamId) {
+		// fileNameToFilterFor = context.activeFile;
+	} else {
+		// fileNameToFilterFor = context.lastActiveFile;
+		fileStreamIdToFilterFor = context.lastFileStreamId;
+	}
+	return fileStreamIdToFilterFor;
+};
+export const getFileFilteredCodemarks = createSelector(
+	getCodemarks,
+	getCodemarkFileFilter,
+	(codemarks: State, filter: string) => {
+		return Object.values(codemarks).filter(codemark => {
+			const codeBlock = codemark.markers && codemark.markers.length && codemark.markers[0];
+			const codeBlockFileStreamId = codeBlock && codeBlock.fileStreamId;
+			return !codemark.deactivated && codeBlockFileStreamId === filter;
+		});
+	}
+);
 
 export const teamHasCodemarks = createSelector(
 	getCodemarks,

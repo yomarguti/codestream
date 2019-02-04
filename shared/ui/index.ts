@@ -3,7 +3,7 @@ import {
 	DidBlurNotificationType,
 	DidChangeActiveEditorNotificationType,
 	DidChangeConfigsNotificationType,
-	DidChangeDataNotification,
+	DidChangeDataNotificationType,
 	DidEstablishConnectivityNotificationType,
 	DidFocusNotificationType,
 	DidLoseConnectivityNotificationType,
@@ -20,7 +20,7 @@ export { actions, Container, englishLocale, Stream, HostApi, createCodeStreamSto
 export function listenForEvents(store) {
 	const api = HostApi.instance;
 
-	api.on(DidChangeDataNotification, ({ type, data }) => {
+	api.on(DidChangeDataNotificationType, ({ type, data }) => {
 		switch (type) {
 			case "preferences":
 				store.dispatch(actions.updatePreferences(data));
@@ -43,7 +43,15 @@ export function listenForEvents(store) {
 	api.on(
 		DidChangeActiveEditorNotificationType,
 		({ editor }) =>
-			editor && store.dispatch(actions.setCurrentFile(editor.fileName, editor.fileStreamId))
+			editor &&
+			store.dispatch(
+				actions.setCurrentFile(
+					editor.fileName,
+					editor.fileStreamId,
+					editor.visibleRanges,
+					editor.uri
+				)
+			)
 	);
 
 	api.on(DidFocusNotificationType, () => {
