@@ -1,4 +1,5 @@
-﻿using CodeStream.VisualStudio.Extensions;
+﻿using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Extensions;
 using Newtonsoft.Json.Linq;
 
 namespace CodeStream.VisualStudio.Models
@@ -72,9 +73,10 @@ namespace CodeStream.VisualStudio.Models
                 payload = null;
             }
 
-            if (payload != null && !payload.StartsWith("{") && payload != "true" && payload != "false")
+            // this is sucky, but since we're dealing with strings here...
+            if (payload != null && !payload.StartsWith("{") && !payload.StartsWith("[") && payload != "true" && payload != "false" && !RegularExpressions.Number.IsMatch(payload))
             {
-                payload = $"\"{payload}\"";
+                return $"\"{payload}\"";
             }
 
             return payload;
