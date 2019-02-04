@@ -73,7 +73,7 @@ namespace CodeStream.VisualStudio.Commands
                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
                     await codeStreamService.PostCodeAsync(new Uri(textDocument.FilePath), selectedText,
-                        true, textDocument.IsDirty, CancellationToken.None);
+                        textDocument.IsDirty, true, CancellationToken.None);
                 });
             }
         }
