@@ -12,6 +12,12 @@
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="CodeStream" secondary="true" icon="/images/codestream.svg" anchor="right"
                     factoryClass="com.codestream.WindowFactory"/>
+
+        <applicationService serviceInterface="com.codestream.CredentialsService"
+                            serviceImplementation="com.codestream.CredentialsServiceImpl"/>
+
+        <applicationService serviceInterface="com.codestream.SettingsService"
+                            serviceImplementation="com.codestream.SettingsServiceImpl"/>
     </extensions>
 
     <actions>
