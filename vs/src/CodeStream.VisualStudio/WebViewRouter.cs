@@ -289,7 +289,8 @@ namespace CodeStream.VisualStudio
                                             }
                                             catch (Exception ex)
                                             {
-                                                errorResponse = ex.ToString();
+                                                Log.Verbose(ex, $"{nameof(WebViewRouter)} Action={message.Action}");
+                                                errorResponse = ex.Message;
                                             }
                                             _browserService.PostMessage(Ipc.ToResponseMessage(message.Id, payloadResponse, errorResponse));
                                             break;
