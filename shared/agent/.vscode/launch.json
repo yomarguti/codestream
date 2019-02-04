@@ -15,6 +15,16 @@
 			],
 			"smartStep": true,
 			"sourceMaps": true
+		},
+		{
+			"type": "node",
+			"request": "attach",
+			"name": "Attach to Agent (VS)",
+			"port": 6010,
+			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
+			"skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+			"smartStep": true,
+			"sourceMaps": true
 		}
 	]
 }
