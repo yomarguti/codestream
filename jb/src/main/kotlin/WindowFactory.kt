@@ -17,7 +17,7 @@ class WindowFactory : ToolWindowFactory {
 
         webView.addConsoleListener(WebViewRouter())
 
-        val url = "file:///Users/mfarias/Code/jb-codestream/src/main/resources/webview/webview.html"
+        val url = "file:///Users/mfarias/Code/jetbrains-codestream/src/main/resources/webview/webview.html"
         webView.loadURL(url) // TODO webview.load() + extract
     }
 

@@ -1,5 +1,5 @@
 <idea-plugin>
-    <id>com.codestream.jb-codestream</id>
+    <id>com.codestream.jetbrains-codestream</id>
     <name>CodeStream</name>
     <vendor email="support@codestream.com" url="http://www.codestream.com">CodeStream</vendor>
 
