@@ -1,0 +1,20 @@
+<idea-plugin>
+    <id>com.codestream.jb-codestream</id>
+    <name>CodeStream</name>
+    <vendor email="support@codestream.com" url="http://www.codestream.com">CodeStream</vendor>
+
+    <description><![CDATA[
+    CodeStream<br>
+    <em>description needs at least 40 characters</em>
+    ]]></description>
+
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="CodeStream" secondary="true" icon="/images/codestream.svg" anchor="right"
+                    factoryClass="com.codestream.WindowFactory"/>
+    </extensions>
+
+    <actions>
+        <!-- Add your actions here -->
+    </actions>
+</idea-plugin>

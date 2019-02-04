@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+		<title>CodeStream</title>
+	<link href="webview.css" rel="stylesheet"></head>
+
+	<body class="codestream preload">
+		<div id="app">
+			<div class="loader-ring">
+				<div class="loader-ring__segment"></div>
+				<div class="loader-ring__segment"></div>
+				<div class="loader-ring__segment"></div>
+				<div class="loader-ring__segment"></div>
+			</div>
+		</div>
+	<script type="text/javascript" src="webview.js"></script></body>
+	<script>
+		window.addEventListener('message', function (e) {
+			if (!e || e.type !== 'message' || e.data.type == null) return;
+
+			var str = JSON.stringify(e.data);
+			if (!str || str[0] !== '{') return;
+
+			console.log(str);
+
+		}, false);
+	</script>
+</html>

@@ -1,0 +1,56 @@
+plugins {
+    id "java"
+    id "org.jetbrains.intellij" version "0.4.2"
+    id "org.jetbrains.kotlin.jvm" version "1.3.20"
+}
+
+group "com.codestream"
+version "1.0-SNAPSHOT"
+
+sourceCompatibility = 1.8
+
+repositories {""
+    jcenter()
+    mavenCentral()
+    maven { url = "http://maven.teamdev.com/repository/products" }
+}
+
+ext {
+    jxBrowserVersion = "6.22.2"
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+
+    implementation "com.teamdev.jxbrowser:jxbrowser-cross-platform:${jxBrowserVersion}"
+    // Windows 32-bit
+    // compile "com.teamdev.jxbrowser:jxbrowser-win32:${jxBrowserVersion}"
+    // Windows 64-bit
+    // compile "com.teamdev.jxbrowser:jxbrowser-win64:${jxBrowserVersion}"
+    // macOS 64-bit
+    // compile "com.teamdev.jxbrowser:jxbrowser-mac:${jxBrowserVersion}"
+    // Linux 64-bit
+    // compile "com.teamdev.jxbrowser:jxbrowser-linux64:${jxBrowserVersion}"
+    implementation files("$rootDir/license.jar")
+
+    implementation "com.squareup.moshi:moshi-kotlin:1.8.0"
+    implementation "com.squareup.moshi:moshi-adapters:1.8.0"
+//    implementation "io.github.microutils:kotlin-logging:1.6.22"
+
+    testImplementation group: "junit", name: "junit", version: "4.12"
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+intellij {
+    version "2018.3.4"
+}
+patchPluginXml {
+    changeNotes """
+      Add change notes here.<br>
+      <em>most HTML tags may be used</em>"""
+}
