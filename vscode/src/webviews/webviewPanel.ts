@@ -36,6 +36,8 @@ import {
 	GoToSlackSigninRequestType,
 	HighlightCodeRequest,
 	HighlightCodeRequestType,
+	HighlightLineRequest,
+	HighlightLineRequestType,
 	InviteToLiveShareRequest,
 	InviteToLiveShareRequestType,
 	JoinLiveShareRequest,
@@ -57,6 +59,8 @@ import {
 	StartLiveShareRequest,
 	StartLiveShareRequestType,
 	StartSignupRequestType,
+	UpdateConfigurationRequest,
+	UpdateConfigurationRequestType,
 	ValidateSignupRequestType,
 	WebviewIpcMessage,
 	WebviewReadyNotificationType
@@ -331,6 +335,14 @@ export class CodeStreamWebviewPanel implements Disposable {
 							this._ipc.sendResponse({ id: message.id, params: {} });
 							break;
 						}
+						case UpdateConfigurationRequestType.method: {
+							const { name, value }: UpdateConfigurationRequest = message.params;
+							// set the config
+							await configuration.update(name, value, ConfigurationTarget.Global);
+							this._ipc.sendResponse({ id: message.id, params: {} });
+
+							break;
+						}
 						case OpenCommentOnSelectInEditorRequestType.method: {
 							// set the config
 							await configuration.update(
@@ -339,6 +351,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 								ConfigurationTarget.Global
 							);
 							this._ipc.sendResponse({ id: message.id, params: {} });
+
 							break;
 						}
 						case ShowCodeRequestType.method: {
@@ -347,6 +360,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 								preserveFocus: enteringThread
 							});
 							this._ipc.sendResponse({ id: message.id, params: { status } });
+
 							break;
 						}
 						case RevealFileLineRequestType.method: {
@@ -365,16 +379,30 @@ export class CodeStreamWebviewPanel implements Disposable {
 								id: message.id,
 								params: { result }
 							});
+
+							break;
+						}
+						case HighlightLineRequestType.method: {
+							const { line, uri, highlight }: HighlightLineRequest = message.params;
+							const result = await Container.commands.highlightLine(line, Uri.parse(uri), {
+								onOff: highlight
+							});
+							this._ipc.sendResponse({
+								id: message.id,
+								params: { result }
+							});
+
 							break;
 						}
 						case SignOutRequestType.method: {
 							await Container.commands.signOut();
 							this._ipc.sendResponse({ id: message.id, params: {} });
+
 							break;
 						}
 						case StartCommentOnLineRequestType.method: {
-							const { line, uri }: StartCommentOnLineRequest = message.params;
-							await Container.commands.startCommentOnLine({ line, uri });
+							const { line, uri, type }: StartCommentOnLineRequest = message.params;
+							await Container.commands.startCommentOnLine({ line, uri, type });
 							this._ipc.sendResponse({
 								id: message.id,
 								params: {}
@@ -547,6 +575,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 		if (
 			configuration.changed(e, configuration.name("avatars").value) ||
 			configuration.changed(e, configuration.name("muteAll").value) ||
+			configuration.changed(e, configuration.name("viewCodemarksInline").value) ||
 			configuration.changed(e, configuration.name("showMarkers").value) ||
 			configuration.changed(e, configuration.name("openCommentOnSelect").value) ||
 			configuration.changed(e, configuration.name("traceLevel").value)
@@ -556,6 +585,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 				params: {
 					debug: Container.config.traceLevel === "debug",
 					muteAll: Container.config.muteAll,
+					viewCodemarksInline: Container.config.viewCodemarksInline,
 					serverUrl: this.session.serverUrl,
 					showHeadshots: Container.config.avatars,
 					showMarkers: Container.config.showMarkers,
@@ -595,7 +625,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 			remotes: { name: string; url: string }[];
 		},
 		gitError?: string,
-		isHighlight?: boolean
+		isHighlight?: boolean,
+		type?: string
 	) {
 		let file;
 		if (source === undefined) {
@@ -615,8 +646,9 @@ export class CodeStreamWebviewPanel implements Disposable {
 				fileUri: uri.toString(),
 				range: range,
 				source: source,
-				gitError,
-				isHighlight
+				gitError: gitError,
+				isHighlight: isHighlight,
+				type: type
 			} as DidHighlightCodeNotification
 		}));
 		return this._streamThread;
@@ -785,9 +817,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 		void (await this.postMessage({
 			method: DidScrollEditorNotificationType.method,
 			params: {
-				uri,
-				firstLine: e.visibleRanges[0].start.line,
-				lastLine: e.visibleRanges[0].end.line
+				uri: uri.toString(),
+				visibleRanges: e.visibleRanges
 			} as DidScrollEditorNotification
 		}));
 	}
@@ -818,6 +849,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 			debug: Container.config.traceLevel === "debug",
 			email: Container.config.email,
 			muteAll: Container.config.muteAll,
+			viewCodemarksInline: Container.config.viewCodemarksInline,
 			serverUrl: this.session.serverUrl,
 			showHeadshots: Container.config.avatars,
 			showMarkers: Container.config.showMarkers,

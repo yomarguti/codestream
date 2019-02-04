@@ -24,6 +24,7 @@ export interface Config {
 	showMarkers: boolean;
 	openCommentOnSelect: boolean;
 	muteAll: boolean;
+	viewCodemarksInline: boolean;
 	team: string;
 	traceLevel: TraceLevel;
 	webAppUrl: string;

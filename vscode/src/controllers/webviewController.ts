@@ -120,10 +120,11 @@ export class WebviewController implements Disposable {
 			authors: { id: string; username: string }[];
 			remotes: { name: string; url: string }[];
 		},
-		gitError?: string
+		gitError?: string,
+		type?: string
 	) {
 		await this.show();
-		return this._panel!.postCode(code, uri, range, source, gitError);
+		return this._panel!.postCode(code, uri, range, source, gitError, false, type);
 	}
 
 	@log()

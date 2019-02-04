@@ -1,19 +1,11 @@
 "use strict";
 import { PostPlus } from "@codestream/protocols/agent";
-import { Range, Uri } from "vscode";
 import { Container } from "../../container";
 import { Dates, memoize } from "../../system";
 import { CodeStreamSession } from "../session";
 import { CodeStreamItem } from "./item";
 import { Stream } from "./stream";
 import { User } from "./user";
-
-interface CodeBlock {
-	readonly code: string;
-	readonly range: Range;
-	readonly revision?: string;
-	readonly uri: Uri;
-}
 
 export class Post extends CodeStreamItem<PostPlus> {
 	constructor(session: CodeStreamSession, post: PostPlus, private _stream?: Stream) {

@@ -12,10 +12,7 @@ import {
 	UsersChangedNotification
 } from "@codestream/protocols/agent";
 import { CSMePreferences } from "@codestream/protocols/api";
-import {
-	DidChangeDataNotification as WebviewDidChangeDataNotification,
-	WebviewIpcMessage
-} from "@codestream/protocols/webview";
+import { DidChangeDataNotificationType, WebviewIpcMessage } from "@codestream/protocols/webview";
 import { Uri } from "vscode";
 import { memoize } from "../system";
 import { CodeStreamSession, Post, SessionSignedOutReason, SessionStatus } from "./session";
@@ -64,7 +61,7 @@ abstract class SessionChangedEventBase<T extends DidChangeDataNotification>
 	@memoize
 	toIpcMessage(): WebviewIpcMessage {
 		return {
-			method: WebviewDidChangeDataNotification.method,
+			method: DidChangeDataNotificationType.method,
 			params: {
 				type: this.type,
 				data: this._event.data

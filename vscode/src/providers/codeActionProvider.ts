@@ -60,13 +60,44 @@ export class CodeStreamCodeActionProvider implements CodeActionProvider, Disposa
 
 		return [
 			{
-				title: `Add CodeStream Comment`,
+				title: `Add Comment`,
 				command: "codestream.postCode",
 				arguments: [
 					{
-						document: document
+						document: document,
+						type: "comment"
 						// range: range // Since the range is untrustworthy, don't sent it -- the command will try to get this from the active editor
 					} as PostCodeCommandArgs
+				]
+			} as Command,
+			{
+				title: `Create Issue`,
+				command: "codestream.postCode",
+				arguments: [
+					{
+						document: document,
+						type: "issue"
+					}
+				]
+			} as Command,
+			{
+				title: `Create Bookmark`,
+				command: "codestream.postCode",
+				arguments: [
+					{
+						document: document,
+						type: "bookmark"
+					}
+				]
+			} as Command,
+			{
+				title: `Get Permalink`,
+				command: "codestream.postCode",
+				arguments: [
+					{
+						document: document,
+						type: "link"
+					}
 				]
 			} as Command
 		];

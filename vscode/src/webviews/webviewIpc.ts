@@ -138,9 +138,10 @@ export class WebviewIpc {
 
 				message.params.editor = {
 					fileStreamId: stream && stream.id,
-					// uri: uri.toString(),
-					fileName: fileName
-					// languageId: editor.document.languageId
+					uri: uri.toString(),
+					fileName: fileName,
+					languageId: editor.document.languageId,
+					visibleRanges: editor.visibleRanges
 				};
 			}
 		}

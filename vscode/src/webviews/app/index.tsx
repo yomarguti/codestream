@@ -204,7 +204,9 @@ api.send(GetViewBootstrapDataRequestType).then((data: any) => {
 				currentTeamId: data.currentTeamId,
 				currentStreamId: data.currentStreamId,
 				threadId: data.currentThreadId,
-				hasFocus: true
+				hasFocus: true,
+				textEditorVisibleRanges: data.visibleRanges,
+				textEditorUri: data.textEditorUri
 			},
 			session: {
 				userId: data.currentUserId

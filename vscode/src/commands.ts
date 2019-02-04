@@ -54,9 +54,14 @@ export interface HighlightCodeArgs {
 	onOff: boolean;
 }
 
+export interface HighlightLineArgs {
+	onOff: boolean;
+}
+
 export interface StartCommentOnLineArgs {
 	uri: Uri;
 	line: number;
+	type?: string;
 }
 
 export interface ApplyMarkerCommandArgs {
@@ -73,6 +78,7 @@ export interface OpenStreamCommandArgs extends IRequiresStream {
 
 export interface PostCodeCommandArgs extends IRequiresStream {
 	document?: TextDocument;
+	type?: string;
 	range?: Range;
 	ref?: string;
 	text?: string;
@@ -183,6 +189,31 @@ export class Commands implements Disposable {
 		});
 	}
 
+	async highlightLine(lineNum: number, uri: Uri, args: HighlightLineArgs = { onOff: true }) {
+		// const resp = null; // await Container.agent.getDocumentFromMarker(null); // FIXME
+		// if (resp === undefined || resp === null) return ShowCodeResult.RepoNotInWorkspace; // ?: what exactly does no response mean?
+
+		const range = args.onOff ? new Range(lineNum, 0, lineNum, 1000) : undefined;
+
+		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
+		let column = Container.webview.viewColumn as number | undefined;
+		if (column !== undefined) {
+			column--;
+			if (column <= 0) {
+				column = undefined;
+			}
+		}
+
+		// const uriWithScheme;
+		// console.log("URI: ", uri);
+		const uri2 = Uri.parse(Uri.file(uri.path).toString());
+		return openEditor(uri2, {
+			preview: true,
+			viewColumn: column || ViewColumn.Beside,
+			highlight: range
+		});
+	}
+
 	@command("startCommentOneLine", { showErrorMessage: "Unable to start comment" })
 	async startCommentOnLine(args: StartCommentOnLineArgs) {
 		// const range = new Range(new Position(args.line, 0), new Position(args.line + 1, 0));
@@ -200,6 +231,19 @@ export class Commands implements Disposable {
 		// FIXME -- this assumes there is only one visible editor
 		const editor = window.visibleTextEditors[0];
 		editor.selection = new Selection(new Position(args.line - 1, 0), new Position(args.line, 0));
+		this.postCode({
+			streamThread: undefined,
+			range: editor.selection,
+			document: editor.document,
+			type: args.type
+		});
+		// document?: TextDocument;
+		// type?: string;
+		// range?: Range;
+		// ref?: string;
+		// text?: string;
+		// send?: boolean;
+		// session?: CodeStreamSession;
 	}
 
 	@command("openComment", { showErrorMessage: "Unable to open comment" })
@@ -356,7 +400,8 @@ export class Commands implements Disposable {
 			document.uri,
 			response.range,
 			response.source,
-			response.gitError
+			response.gitError,
+			args.type
 		);
 		return streamThread !== undefined ? streamThread.stream : undefined;
 	}

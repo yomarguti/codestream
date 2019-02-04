@@ -105,6 +105,11 @@
                     "default": false,
                     "description": "Specifies whether to indicate when new messages arrive"
                 },
+                "codestream.viewCodemarksInline": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Specifies whether to display Codemarks inline next to the code they refer to. The alternative is a list view."
+                },
                 "codestream.openCommentOnSelect": {
                     "type": "boolean",
                     "default": false,
