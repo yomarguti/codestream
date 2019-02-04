@@ -5,6 +5,16 @@
 	"tasks": [
 		{
 			"type": "npm",
+			"script": "watch",
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": ["$ts-webpack-watch", "$tslint-webpack-watch"],
+			"presentation": {
+				"group": "vs"
+			}
+		},
+		{
+			"type": "npm",
 			"script": "agent:watch",
 			"group": "build",
 			"isBackground": true,
@@ -19,7 +29,10 @@
 					"applyTo": "closedDocuments",
 					"fileLocation": ["relative", "${workspaceFolder}/../codestream-lsp-agent/"]
 				}
-			]
+			],
+			"presentation": {
+				"group": "vs"
+			}
 		},
 		{
 			"label": "build",
@@ -48,7 +61,7 @@
 		},
 		{
 			"label": "watch",
-			"dependsOn": ["npm: agent:watch", "npm: watch"],
+			"dependsOn": ["npm: watch", "npm: agent:watch"],
 			"group": {
 				"kind": "build",
 				"isDefault": true
@@ -65,7 +78,10 @@
 					"applyTo": "closedDocuments",
 					"fileLocation": ["relative"]
 				}
-			]
+			],
+			"presentation": {
+				"group": "vs"
+			}
 		},
 		{
 			"label": "watch (vs)",
@@ -83,7 +99,10 @@
 					"applyTo": "closedDocuments",
 					"fileLocation": ["relative"]
 				}
-			]
+			],
+			"presentation": {
+				"group": "vs"
+			}
 		}
 	]
 }
