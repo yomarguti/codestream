@@ -2,7 +2,7 @@
     "name": "codestream",
     "displayName": "CodeStream",
     "description": "Discuss, review, and share code with your team. Integrates w/ Slack, Jira, Trello, and Live Share",
-    "version": "0.33.1",
+    "version": "0.33.2",
     "author": "CodeStream",
     "publisher": "CodeStream",
     "license": "UNLICENSED",
