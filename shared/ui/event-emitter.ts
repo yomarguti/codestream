@@ -85,4 +85,5 @@ class EventEmitter {
 }
 
 const emitter = new EventEmitter();
+export { emitter as EventEmitter };
 export default emitter;
