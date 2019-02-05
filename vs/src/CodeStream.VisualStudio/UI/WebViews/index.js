@@ -2,7 +2,7 @@ import { install as polyFillResizeObserver } from "resize-observer";
 import React from "react";
 import ReactDOM from "react-dom";
 import { actions, Container, createStore, EventEmitter, WebviewApi } from "codestream-components";
-import translations from "codestream-components/translations/en.json";
+import translations from "codestream-components/translations/en";
 import loggingMiddleWare from "./logging-middleware";
 
 if (!window.ResizeObserver) {
@@ -185,16 +185,17 @@ api.bootstrap().then(data => {
 	// TODO: should be able to include data.configs in call to createStore
 	store.dispatch(actions.updateConfigs(data.configs || {}));
 
-	EventEmitter.on("data", ({ type, payload }) => {
-		store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload });
-	});
-
-	EventEmitter.on("data:unreads", unreads => {
-		store.dispatch(actions.updateUnreads(unreads));
-	});
-
-	EventEmitter.on("data:preferences", preferences => {
-		store.dispatch(actions.updatePreferences(preferences));
+	EventEmitter.on("data", ({ type, data }) => {
+		switch (type) {
+			case "preferences":
+				store.dispatch(actions.updatePreferences(data));
+				break;
+			case "unreads":
+				store.dispatch(actions.updateUnreads(data));
+				break;
+			default:
+				store.dispatch({ type: `ADD_${type.toUpperCase()}`, data });
+		}
 	});
 
 	EventEmitter.on("configs", configs => store.dispatch(actions.updateConfigs(configs)));
