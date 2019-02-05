@@ -128,7 +128,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="110" xml:space="preserve">
-    <value>CodeStream for Visual Studio</value>
+    <value>CodeStream</value>
   </data>
   <data name="112" xml:space="preserve">
     <value>CodeStream is a free service that lets developers create annotated comments on their code, making it easier to ask questions and get answers to how things work</value>
