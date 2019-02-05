@@ -2,8 +2,8 @@ import { shell } from "electron";
 import * as React from "react";
 import { render, unmountComponentAtNode } from "react-dom";
 import { Container } from "codestream-components";
-import translations from "codestream-components/translations/en";
 import { EventEmitter, IpcRequest as WebviewIpcRequest } from "codestream-components/event-emitter";
+import * as translations from "codestream-components/translations/en.json";
 import { WorkspaceSession } from "./workspace/workspace-session";
 import { CompositeDisposable } from "atom";
 
