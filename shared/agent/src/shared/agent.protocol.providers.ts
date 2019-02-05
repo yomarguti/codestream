@@ -5,9 +5,7 @@ export interface ConnectThirdPartyProviderRequest {
 	providerName: string;
 }
 
-export interface ConnectThirdPartyProviderResponse {
-	code: string;
-}
+export interface ConnectThirdPartyProviderResponse {}
 
 export const ConnectThirdParyProviderRequestType = new RequestType<
 	ConnectThirdPartyProviderRequest,

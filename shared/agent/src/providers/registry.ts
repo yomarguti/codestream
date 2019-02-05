@@ -2,6 +2,7 @@
 import { CodeStreamSession } from "../session";
 import {
 	ConnectThirdPartyProviderRequest,
+	ConnectThirdPartyProviderResponse,
 	ConnectThirdParyProviderRequestType,
 	DisconnectThirdPartyProviderRequest,
 	DisconnectThirdParyProviderRequestType,
@@ -24,13 +25,16 @@ export class ThirdPartyProviderRegistry {
 
 	@log()
 	@lspHandler(ConnectThirdParyProviderRequestType)
-	connect(request: ConnectThirdPartyProviderRequest) {
+	async connect(
+		request: ConnectThirdPartyProviderRequest
+	): Promise<ConnectThirdPartyProviderResponse> {
 		const provider = getProvider(request.providerName);
 		if (provider === undefined) {
 			throw new Error(`No registered provider for '${request.providerName}'`);
 		}
 
-		return provider.connect();
+		await provider.connect();
+		return {};
 	}
 
 	@log()
