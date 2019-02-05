@@ -5,6 +5,7 @@ import {
 	ConnectThirdPartyProviderResponse,
 	ConnectThirdParyProviderRequestType,
 	DisconnectThirdPartyProviderRequest,
+	DisconnectThirdPartyProviderResponse,
 	DisconnectThirdParyProviderRequestType,
 	FetchAssignableUsersRequest,
 	FetchAssignableUsersRequestType
@@ -39,11 +40,14 @@ export class ThirdPartyProviderRegistry {
 
 	@log()
 	@lspHandler(DisconnectThirdParyProviderRequestType)
-	disconnect(request: DisconnectThirdPartyProviderRequest) {
+	async disconnect(
+		request: DisconnectThirdPartyProviderRequest
+	): Promise<DisconnectThirdPartyProviderResponse> {
 		const provider = getProvider(request.providerName);
-		if (provider === undefined) return;
+		if (provider === undefined) return {};
 
-		return provider.disconnect();
+		await provider.disconnect();
+		return {};
 	}
 
 	@log()
