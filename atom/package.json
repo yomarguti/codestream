@@ -32,6 +32,10 @@
 	},
 	"dependencies": {
 		"@types/atom": "1.31.0",
+		"@types/electron": "1.6.10",
+		"@types/react": "16.8.1",
+		"@types/react-dom": "16.0.11",
+		"@types/uuid": "3.4.4",
 		"atom-languageclient": "0.9.9",
 		"dexie": "^2.0.1",
 		"diff": "^3.4.0",
@@ -46,7 +50,7 @@
 		"strip-eof": "^1.0.0",
 		"underscore-plus": "^1.6.6",
 		"username": "^3.0.0",
-		"uuid": "^3.2.1"
+		"uuid": "3.3.2"
 	},
 	"devDependencies": {
 		"@babel/core": "7.0.0",

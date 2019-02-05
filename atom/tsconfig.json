@@ -1,6 +1,8 @@
 {
 	"compilerOptions": {
+		"baseUrl": ".",
 		"emitDecoratorMetadata": true,
+		"esModuleInterop": false,
 		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
 		"importHelpers": true,
@@ -12,10 +14,16 @@
 		"noImplicitAny": false,
 		"noUnusedLocals": false,
 		"outDir": "dist",
+		"paths": {
+			"codestream-components": ["../codestream-components/index"],
+			"codestream-components/*": ["../codestream-components/*"]
+		},
+		"resolveJsonModule": false,
 		"rootDirs": ["./lib", "../codestream-components"],
 		"sourceMap": true,
 		"strict": true,
 		"target": "es2017",
+		"traceResolution": false,
 		"jsx": "react"
 	},
 	"exclude": ["node_modules"]

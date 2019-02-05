@@ -43,7 +43,7 @@ function getExtensionConfig(env) {
 
 	return {
 		name: "codestream",
-		entry: "./lib/codestream.js",
+		entry: "./lib/codestream.ts",
 		mode: env.production ? "production" : "development",
 		target: "node",
 		devtool: !env.production ? "eval-source-map" : undefined,
