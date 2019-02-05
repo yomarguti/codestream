@@ -64,7 +64,7 @@ abstract class SessionChangedEventBase<T extends DidChangeDataNotification>
 			type: WebviewIpcMessageType.didChangeData,
 			body: {
 				type: this.type,
-				payload: this._event.data
+				data: this._event.data
 			}
 		};
 	}
@@ -123,15 +123,6 @@ export class PreferencesChangedEvent extends SessionChangedEventBase<Preferences
 		return this._event.data;
 	}
 
-	@memoize
-	toIpcMessage(): WebviewIpcMessage {
-		// TODO: Change this payload to match the other `codestream:data` events
-		return {
-			type: WebviewIpcMessageType.didChangePreferences,
-			body: this._event.data
-		};
-	}
-
 	merge(e: PreferencesChangedEvent) {
 		return { ...this.preferences, ...e.preferences };
 	}
@@ -171,15 +162,6 @@ export class UnreadsChangedEvent extends SessionChangedEventBase<UnreadsChangedN
 	@memoize
 	unreads(): CSUnreads {
 		return this._event.data;
-	}
-
-	@memoize
-	toIpcMessage(): WebviewIpcMessage {
-		// TODO: Change this payload to match the other `codestream:data` events
-		return {
-			type: WebviewIpcMessageType.didChangeUnreads,
-			body: this._event.data
-		};
 	}
 }
 
