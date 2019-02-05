@@ -31,7 +31,14 @@ export const SlackInfo = connect(
 					</p>
 					<div id="controls">
 						<div className="button-group">
-							<Button className="control-button" type="submit" onClick={props.startSlackSignin}>
+							<Button
+								className="control-button"
+								type="submit"
+								onClick={e => {
+									e.preventDefault();
+									props.startSlackSignin();
+								}}
+							>
 								Connect to Slack
 							</Button>
 						</div>
