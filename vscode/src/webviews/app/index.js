@@ -2,7 +2,7 @@ import { install as polyFillResizeObserver } from "resize-observer";
 import React from "react";
 import ReactDOM from "react-dom";
 import { actions, Container, createStore, EventEmitter, WebviewApi } from "codestream-components";
-import translations from "codestream-components/translations/en.json";
+import translations from "codestream-components/translations/en";
 import loggingMiddleWare from "./logging-middleware";
 
 if (!window.ResizeObserver) {
