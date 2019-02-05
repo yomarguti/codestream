@@ -244,8 +244,10 @@ namespace CodeStream.VisualStudio
 
                                             break;
                                         }
+                                    case "codestream:interaction:context-state-changed":
                                     case "mute-all":
                                         {
+                                            // noops
                                             break;
                                         }
                                     case "show-code":
