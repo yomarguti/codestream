@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.33.1] - 2019-2-5
+
+### Fixed
+
+- Fixes an issue that required a second auth with Slack after signing up with Slack
+
 ## [0.33.0] - 2019-2-4
 
 ### Added
