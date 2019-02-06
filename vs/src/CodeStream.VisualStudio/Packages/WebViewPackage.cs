@@ -14,7 +14,9 @@ using Task = System.Threading.Tasks.Task;
 namespace CodeStream.VisualStudio.Packages
 {
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    [ProvideToolWindow(typeof(WebViewToolWindowPane))]
+    [ProvideToolWindow(typeof(WebViewToolWindowPane), Orientation = ToolWindowOrientation.Right,
+        Window = EnvDTE.Constants.vsWindowKindSolutionExplorer,
+        Style = VsDockStyle.Tabbed)]
     [Guid(PackageGuids.guidWebViewPackageString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     public sealed class WebViewPackage : AsyncPackage
