@@ -4,6 +4,7 @@ using CodeStream.VisualStudio.Extensions;
 using DotNetBrowser;
 using DotNetBrowser.WPF;
 using Serilog;
+using SerilogTimings.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,6 +14,9 @@ using static CodeStream.VisualStudio.Extensions.FileSystemExtensions;
 
 namespace CodeStream.VisualStudio.Services
 {
+    /// <summary>
+    /// This class handles communication between javascript and .NET
+    /// </summary>
     public class PostMessageInterop
     {
         public void Handle(string message, string origin)
@@ -33,43 +37,24 @@ namespace CodeStream.VisualStudio.Services
     {
         private static readonly ILogger Log = LogManager.ForContext<DotNetBrowserService>();
 
-        /// <summary>
-        /// For improved LIGHTWEIGHT rendering
-        /// </summary>
-        /// <remarks>see https://dotnetbrowser.support.teamdev.com/support/solutions/articles/9000124916-accelerated-lightweight-rendering</remarks>
-        private static readonly List<string> ChromiumSwitches = new List<string>
-        {
-            "--disable-gpu",
-            "--disable-gpu-compositing",
-            "--enable-begin-frame-scheduling",
-            "--software-rendering-fps=60",
-            "--disable-web-security",
-            "--allow-file-access-from-files"
-        };
-
-        // ReSharper disable once UnusedMember.Local
-        private static readonly List<string> ChromiumSwitchesDebug = new List<string>
-        {
-            "--remote-debugging-port=9222"
-        };
-
         private WPFBrowserView _browserView;
         private BrowserContext _browserContext;
         private string _path;
 
+        /// <summary>
+        /// This handles what is passed into DotNetBrowser as well as which Chromium switches get created
+        /// </summary>
+        public BrowserType BrowserType => BrowserType.HEAVYWEIGHT;
+
         protected override void OnInitialized()
         {
-            var switches = ChromiumSwitches;
-#if DEBUG
-            // switches = switches.Combine(ChromiumSwitchesDebug);
-#endif
+            var switches = DotNetBrowserSwitches.Create(BrowserType);
 
             BrowserPreferences.SetChromiumSwitches(switches.ToArray());
             _path = GetOrCreateContextParamsPath();
             BrowserContextParams parameters = new BrowserContextParams(_path);
             _browserContext = new BrowserContext(parameters);
-            // use LIGHTWEIGHT to avoid "System.InvalidOperationException: 'The specified Visual is not an ancestor of this Visual.'"            
-            _browserView = new WPFBrowserView(BrowserFactory.Create(_browserContext, BrowserType.LIGHTWEIGHT));
+            _browserView = new WPFBrowserView(BrowserFactory.Create(_browserContext, BrowserType));
 
             _browserView.Browser.ScriptContextCreated += Browser_ScriptContextCreated;
 
@@ -80,8 +65,10 @@ namespace CodeStream.VisualStudio.Services
 
         private void Browser_ScriptContextCreated(object sender, DotNetBrowser.Events.ScriptContextEventArgs e)
         {
-            JSValue value = _browserView.Browser.ExecuteJavaScriptAndReturnValue("window");
-            value.AsObject().SetProperty("PostMessageInterop", new PostMessageInterop());
+            var jsValue = _browserView.Browser.ExecuteJavaScriptAndReturnValue("window");
+            jsValue.AsObject().SetProperty("PostMessageInterop", new PostMessageInterop());
+
+            Log.Verbose($"{nameof(Browser_ScriptContextCreated)} set window object");
 
             _browserView.Browser.ExecuteJavaScript(@"
                   window.acquireVsCodeApi = function() {
@@ -92,11 +79,15 @@ namespace CodeStream.VisualStudio.Services
                      }
                   }
                ");
+
+            Log.Verbose($"{nameof(Browser_ScriptContextCreated)} ExecuteJavaScript");
         }
 
         public override void AddWindowMessageEvent(WindowMessageHandler messageHandler)
         {
             PostMessageInterop.MessageHandler = messageHandler;
+
+            Log.Verbose($"{nameof(AddWindowMessageEvent)}");
         }
 
         public override void PostMessage(string message)
@@ -106,7 +97,10 @@ namespace CodeStream.VisualStudio.Services
 
         public override void LoadHtml(string html)
         {
-            _browserView.Browser.LoadHTML(html);
+            using (Log.TimeOperation($"Starting {nameof(LoadHtml)}"))
+            {
+                _browserView.Browser.LoadHTML(html);
+            }
         }
 
         public override void AttachControl(FrameworkElement frameworkElement)
@@ -212,8 +206,7 @@ namespace CodeStream.VisualStudio.Services
 
             return path;
         }
-
-
+        
         private bool _disposed;
         protected override void Dispose(bool disposing)
         {
@@ -272,6 +265,49 @@ namespace CodeStream.VisualStudio.Services
                 }
 
                 _disposed = true;
+            }
+        }
+
+        private class DotNetBrowserSwitches
+        {
+            /// <summary>
+            /// These switches must be used in either rendering
+            /// </summary>
+            private static readonly List<string> DefaultSwitches = new List<string>
+            {
+                "--disable-web-security",
+                "--allow-file-access-from-files"
+            };
+
+            /// <summary>
+            /// For improved LIGHTWEIGHT rendering
+            /// </summary>
+            /// <remarks>see https://dotnetbrowser.support.teamdev.com/support/solutions/articles/9000124916-accelerated-lightweight-rendering</remarks>
+            private static readonly List<string> LightweightSwitches = new List<string>
+            {
+                "--disable-gpu",
+                "--disable-gpu-compositing",
+                "--enable-begin-frame-scheduling",
+                "--software-rendering-fps=60"
+            };
+
+            // ReSharper disable once UnusedMember.Local
+            private static readonly List<string> ChromiumSwitchesDebug = new List<string>
+            {
+                "--remote-debugging-port=9222"
+            };
+
+            public static List<string> Create(BrowserType browserType)
+            {
+                var switches = new List<string>(DefaultSwitches);
+                if (browserType == BrowserType.LIGHTWEIGHT)
+                {
+                    switches = switches.Combine(LightweightSwitches);
+                }
+#if DEBUG
+                switches = switches.Combine(ChromiumSwitchesDebug);
+#endif
+                return switches;
             }
         }
     }

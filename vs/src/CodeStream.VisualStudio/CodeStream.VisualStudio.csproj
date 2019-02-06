@@ -322,10 +322,12 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="DotNetBrowser.Chromium32, Version=1.19.1.0, Culture=neutral, PublicKeyToken=b0b5aaca9c95c84e, processorArchitecture=MSIL">
-      <HintPath>..\packages\DotNetBrowser32.1.19.1\lib\DotNetBrowser.Chromium32.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\dlls\DotNetBrowser.Chromium32.dll</HintPath>
     </Reference>
     <Reference Include="DotNetBrowser32, Version=1.19.1.0, Culture=neutral, PublicKeyToken=b0b5aaca9c95c84e, processorArchitecture=MSIL">
-      <HintPath>..\packages\DotNetBrowser32.1.19.1\lib\DotNetBrowser32.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\dlls\DotNetBrowser32.dll</HintPath>
     </Reference>
     <Reference Include="EnvDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
