@@ -26,19 +26,24 @@ function getExtensionConfig(env) {
 					copy: [
 						{
 							source: path.resolve(__dirname, "codestream-*.info"), // TODO?
-							destination: "dist/"
+							destination: "dist/",
+						},
+						{
+							// TODO: Use environment variable if exists
+							source: path.resolve(__dirname, "../codestream-lsp-agent/dist/agent.*"),
+							destination: "dist/",
 						},
 						{
 							source: path.resolve(
 								__dirname,
-								"../codestream-components/styles/{login,stream}.less"
+								"../codestream-components/styles/{login,stream}.less",
 							),
-							destination: "dist/styles"
-						}
-					]
-				}
-			]
-		})
+							destination: "dist/styles",
+						},
+					],
+				},
+			],
+		}),
 	];
 
 	return {
@@ -51,7 +56,7 @@ function getExtensionConfig(env) {
 			libraryTarget: "commonjs2",
 			libraryExport: "default",
 			filename: "codestream.js",
-			devtoolModuleFilenameTemplate: "file:///[absolute-resource-path]"
+			devtoolModuleFilenameTemplate: "file:///[absolute-resource-path]",
 		},
 		resolve: {
 			extensions: [".tsx", ".ts", ".js"],
@@ -59,8 +64,8 @@ function getExtensionConfig(env) {
 			alias: {
 				// TODO: Use environment variable if exists
 				"codestream-components$": path.resolve(__dirname, "../codestream-components/index.js"),
-				"codestream-components": path.resolve(__dirname, "../codestream-components/")
-			}
+				"codestream-components": path.resolve(__dirname, "../codestream-components/"),
+			},
 		},
 		externals: [nodeExternals(), { atom: "atom", electron: "electron" }],
 		module: {
@@ -74,31 +79,31 @@ function getExtensionConfig(env) {
 							presets: [
 								["@babel/preset-env", { modules: false }],
 								"@babel/preset-react",
-								"@babel/preset-flow"
+								"@babel/preset-flow",
 							],
 							plugins: [
 								"@babel/plugin-proposal-object-rest-spread",
-								"@babel/plugin-proposal-class-properties"
-							]
-						}
-					}
+								"@babel/plugin-proposal-class-properties",
+							],
+						},
+					},
 				},
 				{
 					test: /\.ts$/,
 					enforce: "pre",
 					use: "tslint-loader",
-					exclude: /node_modules/
+					exclude: /node_modules/,
 				},
 				{
 					test: /\.tsx?$/,
 					use: "ts-loader",
-					exclude: /node_modules|\.d\.ts$/
+					exclude: /node_modules|\.d\.ts$/,
 				},
 				{
 					test: /\.d\.ts$/,
-					loader: "ignore-loader"
-				}
-			]
+					loader: "ignore-loader",
+				},
+			],
 		},
 		plugins: plugins,
 		stats: {
@@ -108,8 +113,8 @@ function getExtensionConfig(env) {
 			env: true,
 			errors: true,
 			timings: true,
-			warnings: true
-		}
+			warnings: true,
+		},
 	};
 }
 

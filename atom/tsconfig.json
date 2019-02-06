@@ -18,7 +18,7 @@
 			"codestream-components": ["../codestream-components/index"],
 			"codestream-components/*": ["../codestream-components/*"]
 		},
-		"resolveJsonModule": true,
+		"resolveJsonModule": false,
 		"rootDirs": ["./lib", "../codestream-components"],
 		"sourceMap": true,
 		"strict": true,

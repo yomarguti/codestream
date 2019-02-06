@@ -7,8 +7,24 @@ import {
 } from "atom-languageclient/node_modules/vscode-jsonrpc";
 import { getPath } from "../network-request";
 import { asAbsolutePath, getPluginVersion } from "../utils";
-import { AgentOptions } from "../shared/agent.protocol";
-import { ClientCapabilities } from "vscode-languageserver-protocol";
+import {
+	AgentOptions,
+	AgentInitializeResult,
+	AgentResult,
+	FetchUsersRequestType,
+	FetchStreamsRequestType,
+	FetchTeamsRequestType,
+	FetchReposRequestType,
+	GetUnreadsRequestType,
+	GetPreferencesRequestType,
+	FetchUsersResponse,
+	FetchStreamsResponse,
+	FetchTeamsResponse,
+	FetchReposResponse,
+	GetUnreadsResponse,
+	GetPreferencesResponse,
+} from "../shared/agent.protocol";
+import { ClientCapabilities, LogMessageParams } from "vscode-languageserver-protocol";
 
 const capabilities: ClientCapabilities = {
 	workspace: {
@@ -97,6 +113,8 @@ const capabilities: ClientCapabilities = {
 	experimental: {}
 };
 
+// TODO: build a log view
+
 class AgentConnection {
 	private _connection: LanguageClientConnection | undefined;
 	private _agentProcess: ChildProcess | undefined;
@@ -105,7 +123,7 @@ class AgentConnection {
 		return this._connection;
 	}
 
-	async start(initOptions: { email: string; passwordOrToken: string }) {
+	async start(initOptions: { email?: string; passwordOrToken?: string; signupToken?: string }) {
 		this._agentProcess = await this.startServer();
 
 		this._connection = new LanguageClientConnection(
@@ -114,17 +132,18 @@ class AgentConnection {
 				new IPCMessageWriter(this._agentProcess as ChildProcess)
 			)
 		);
+		this.preInitialization(this._connection);
 
 		const initializationOptions = {
 			extension: {
 				build: "dev",
 				buildEnv: "local",
 				version: getPluginVersion(),
-				versionFormatted: "dev"
+				versionFormatted: "dev",
 			},
 			ide: {
 				name: "atom",
-				version: atom.getVersion()
+				version: atom.getVersion(),
 			},
 			isDebugging: true,
 			traceLevel: "debug",
@@ -133,9 +152,9 @@ class AgentConnection {
 			serverUrl: getPath(),
 			team: "",
 			teamId: "",
-			signupToken: "",
+			signupToken: initOptions.signupToken,
 			email: initOptions.email,
-			passwordOrToken: initOptions.passwordOrToken
+			passwordOrToken: initOptions.passwordOrToken,
 		} as AgentOptions;
 
 		const firstProject = atom.project.getPaths()[0] || null; // TODO: what if there are no projects
@@ -144,13 +163,19 @@ class AgentConnection {
 			workspaceFolders: [],
 			rootUri: firstProject ? Convert.pathToUri(firstProject) : null,
 			capabilities,
-			initializationOptions
+			initializationOptions,
 		});
 
 		if (response.result.error) {
 			this.stop();
 		}
-		return response.result;
+		return (response as AgentInitializeResult).result;
+	}
+
+	private preInitialization(connection: LanguageClientConnection) {
+		connection.onLogMessage((params: LogMessageParams) => {
+			console.log(`CodeStream Agent: ${params.message}`);
+		});
 	}
 
 	private startServer(): ChildProcess {
@@ -162,7 +187,7 @@ class AgentConnection {
 
 		const agentProcess = spawn(
 			process.execPath,
-			[asAbsolutePath("dist/agent.js"), "--node-ipc"],
+			[asAbsolutePath("dist/agent.js"), "--node-ipc", "--inspect=6009"],
 			options
 		);
 		// agentProcess.on("disconnect", () => {
@@ -172,16 +197,16 @@ class AgentConnection {
 		// 	console.error("exited", code);
 		// });
 		agentProcess.on("message", message => {
-			console.debug("message", message);
+			// console.debug("message", message);
 		});
 		return agentProcess;
 	}
 
-	private stop() {
+	async stop() {
 		if (this._connection) {
-			this._connection.shutdown();
-			this._connection.dispose();
+			await this._connection.shutdown();
 			this._connection.exit();
+			this._connection.dispose();
 			this._connection = undefined;
 		}
 		if (this._agentProcess) {
@@ -191,18 +216,59 @@ class AgentConnection {
 	}
 }
 
-export default class CodeStreamAgent {
-	private _connection: AgentConnection;
+export class CodeStreamAgent {
+	private connection: AgentConnection;
+	readonly initializeResult: AgentResult;
 
-	constructor() {
-		this._connection = new AgentConnection();
+	static async initWithSignupToken(token: string): Promise<CodeStreamAgent> {
+		const connection = new AgentConnection();
+		const result = await connection.start({ signupToken: token });
+		if (result.error) {
+			throw result.error;
+		} else return new CodeStreamAgent(connection, result);
+	}
+
+	protected constructor(connection: AgentConnection, data: AgentResult) {
+		this.connection = connection;
+		this.initializeResult = data;
 	}
 
 	async login(email: string, password: string) {
-		const result = await this._connection.start({
+		const result = await this.connection.start({
 			email,
-			passwordOrToken: password
+			passwordOrToken: password,
 		});
 		console.debug("attempted to login", result);
+	}
+
+	fetchUsers(): Promise<FetchUsersResponse> {
+		return this.connection.connection!.sendCustomRequest(FetchUsersRequestType.method, {});
+	}
+
+	fetchStreams(): Promise<FetchStreamsResponse> {
+		return this.connection.connection!.sendCustomRequest(FetchStreamsRequestType.method, {});
+	}
+
+	fetchTeams(): Promise<FetchTeamsResponse> {
+		return this.connection.connection!.sendCustomRequest(FetchTeamsRequestType.method, {});
+	}
+
+	fetchRepos(): Promise<FetchReposResponse> {
+		return this.connection.connection!.sendCustomRequest(FetchReposRequestType.method, {});
+	}
+
+	fetchUnreads(): Promise<GetUnreadsResponse> {
+		return this.connection.connection!.sendCustomRequest(GetUnreadsRequestType.method, {});
+	}
+
+	fetchPreferences(): Promise<GetPreferencesResponse> {
+		return this.connection.connection!.sendCustomRequest(
+			GetPreferencesRequestType.method,
+			undefined
+		);
+	}
+
+	dispose() {
+		this.connection.stop();
 	}
 }

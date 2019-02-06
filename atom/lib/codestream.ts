@@ -1,8 +1,8 @@
-import { CompositeDisposable } from "atom";
+import { CompositeDisposable, Disposable } from "atom";
 import { CodestreamView, CODESTREAM_VIEW_URI } from "./codestream-view";
 import { actions, createStore, WebviewApi } from "codestream-components";
 import { StatusBar, Tile } from "./types/package-services/status-bar";
-import { WorkspaceSession } from "./workspace/workspace-session";
+import { WorkspaceSession, SessionStatus } from "./workspace/workspace-session";
 import { PackageState } from "./types/package";
 
 class CodestreamPackage {
@@ -12,21 +12,40 @@ class CodestreamPackage {
 	statusBarTile?: Tile;
 	view?: CodestreamView;
 	store: any;
+	sessionStatusCommand?: Disposable;
 
 	constructor() {
 		this.subscriptions = new CompositeDisposable();
 	}
 
 	// Package lifecyle 1
-	initialize(state: PackageState) {
+	async initialize(state: PackageState) {
 		this.workspaceSession = WorkspaceSession.create(state);
 		this.store = createStore(
 			this.workspaceSession.getBootstrapState(),
 			{ api: new WebviewApi() },
-			[],
+			[]
 		);
-		this.store.dispatch(actions.bootstrap(this.workspaceSession.getBootstrapData()));
+		this.store.dispatch(actions.bootstrap(await this.workspaceSession.getBootstrapData()));
 
+		this.workspaceSession.onDidChangeSessionStatus(status => {
+			this.sessionStatusCommand && this.sessionStatusCommand.dispose();
+			if (status === SessionStatus.SignedIn) {
+				this.sessionStatusCommand = atom.commands.add(
+					"atom-workspace",
+					"codestream:sign-out",
+					() => {
+						this.workspaceSession!.signOut();
+						this.store.dispatch(actions.reset());
+					}
+				);
+			}
+			if (status === SessionStatus.SignedOut) {
+				// TODO: this.workspaceSession!.login(),
+				// this.sessionStatusCommand = atom.commands.add("atom-workspace", "codestream:sign-in", () =>
+				// );
+			}
+		});
 		this.subscriptions.add(
 			atom.workspace.addOpener(uri => {
 				if (uri === CODESTREAM_VIEW_URI) {
@@ -36,8 +55,8 @@ class CodestreamPackage {
 				}
 			}),
 			atom.commands.add("atom-workspace", "codestream:toggle", () =>
-				atom.workspace.toggle(CODESTREAM_VIEW_URI),
-			),
+				atom.workspace.toggle(CODESTREAM_VIEW_URI)
+			)
 		);
 	}
 
@@ -57,24 +76,64 @@ class CodestreamPackage {
 
 	// Package lifecyle
 	deactivate() {
+		if (this.workspaceSession) this.workspaceSession.dispose();
 		this.subscriptions.dispose();
 		if (this.statusBarTile) this.statusBarTile.destroy();
 		// this.store.dispatch(logout());
 	}
 
-	consumeStatusBar(statusBar: StatusBar) {
+	private async onReady() {
+		if (this.workspaceSession) return Promise.resolve();
+		return new Promise(resolve => {
+			const interval = setInterval(() => {
+				console.debug("Polling for workspaceSession");
+				if (this.workspaceSession) {
+					console.debug("CodestreamPackage.onReady");
+					clearInterval(interval);
+					resolve();
+				}
+			});
+		});
+	}
+
+	async consumeStatusBar(statusBar: StatusBar) {
 		this.statusBar = statusBar;
-		const div = document.createElement("div");
-		div.classList.add("inline-block");
-		const icon = document.createElement("span");
-		icon.classList.add("icon", "icon-comment-discussion");
-		icon.onclick = event => {
+
+		await this.onReady();
+
+		const messages = {
+			[SessionStatus.SignedIn]: () => this.workspaceSession!.user!.username,
+			[SessionStatus.SigningIn]: () => "Signing in...",
+			[SessionStatus.SignedOut]: () => "Sign in",
+		};
+		const tileRoot = document.createElement("div");
+		tileRoot.classList.add("inline-block");
+		tileRoot.onclick = event => {
 			event.stopPropagation();
 			atom.commands.dispatch(document.querySelector("atom-workspace")!, "codestream:toggle");
 		};
-		atom.tooltips.add(div, { title: "Toggle CodeStream" });
-		div.appendChild(icon);
-		this.statusBarTile = statusBar.addRightTile({ item: div, priority: 400 });
+		const icon = document.createElement("span");
+		icon.classList.add("icon", "icon-comment-discussion");
+		tileRoot.appendChild(icon);
+		atom.tooltips.add(tileRoot, { title: "Toggle CodeStream" });
+		const text = document.createElement("span");
+		tileRoot.appendChild(text);
+
+		this.workspaceSession!.onDidChangeSessionStatus(status => {
+			text.innerText = messages[status]();
+
+			if (!this.statusBarTile) {
+				this.statusBarTile = statusBar.addRightTile({ item: tileRoot, priority: 400 });
+			}
+		});
+
+		return new Disposable(() => {
+			this.statusBar = undefined;
+			if (this.statusBarTile) {
+				this.statusBarTile.destroy();
+				this.statusBarTile = undefined;
+			}
+		});
 	}
 }
 
@@ -197,40 +256,7 @@ export default new CodestreamPackage();
 // 		);
 // 	},
 //
-// 	deactivate() {
-// 		this.subscriptions.dispose();
-// 		if (this.statusBarTile) this.statusBarTile.destroy();
-// 		this.store.dispatch(logout());
-// 	},
-//
-// 	serialize() {
-// 		return { workspaceSession: workspaceSession.serialize(), viewState: this.store.getState() };
-// 	},
-//
-// 	deserializeCodestreamView() {
-// 		this.view = new CodestreamView(this.store);
-// 		return this.view;
-// 	},
-//
 // 	// async setup() {
-// 	// 	const directories = atom.project.getDirectories();
-// 	// 	const repoPromises = directories.map(repo => atom.project.repositoryForDirectory(repo));
-// 	// 	const allRepos = await Promise.all(repoPromises);
-// 	// 	const repos = allRepos.filter(Boolean);
-// 	//
-// 	// 	if (repos.length === 1) {
-// 	// 		const repo = repos[0];
-// 	// 		getCurrentCommit(repo).then(commitHash => store.dispatch(setCurrentCommit(commitHash)));
-// 	//
-// 	// 		const updateCommitHash = async () => {
-// 	// 			const { context } = store.getState();
-// 	// 			const currentCommit = await getCurrentCommit(repo);
-// 	// 			if (context.currentCommit !== currentCommit) {
-// 	// 				await store.dispatch(calculateUncommittedMarkers());
-// 	// 				store.dispatch(commitHashChanged(currentCommit));
-// 	// 			}
-// 	// 		};
-// 	//
 // 	// 		this.subscriptions.add(
 // 	// 			atom.workspace.observeActiveTextEditor(editor => {
 // 	// 				// Only dispatch the action if there is a current file that belongs to the git repo
@@ -258,11 +284,6 @@ export default new CodestreamPackage();
 // 	// 					store.dispatch(setCurrentFile(null));
 // 	// 				}
 // 	// 			}),
-// 	//
-// 	// 			// Subscribe to git status changes in order to be aware of current commit hash.
-// 	// 			repo.onDidChangeStatuses(event => {
-// 	// 				updateCommitHash();
-// 	// 			})
 // 	// 		);
 // 	//
 // 	// 		window.addEventListener("online", e => store.dispatch(online()), false);
@@ -273,52 +294,5 @@ export default new CodestreamPackage();
 // 	// 		window.addEventListener("blur", e => store.dispatch(setHasFocus(false)), false);
 // 	// 		window.addEventListener("focus", e => store.dispatch(setHasFocus(true)), false);
 // 	// 		store.dispatch(setHasFocus(true));
-// 	//
-// 	// 		const repoAttributes = store.getState().repoAttributes;
-// 	// 		if (_.isEmpty(repoAttributes) || !repoAttributes.url) {
-// 	// 			const workDir = repo.getWorkingDirectory();
-// 	// 			try {
-// 	// 				let knownCommitHashes = await getAllKnownCommits(workDir);
-// 	// 				store.dispatch(
-// 	// 					setRepoAttributes({
-// 	// 						workingDirectory: workDir,
-// 	// 						knownCommitHashes
-// 	// 					})
-// 	// 				);
-// 	// 			} catch ({ missingGit, message }) {
-// 	// 				if (missingGit) store.dispatch(noGit());
-// 	// 				else
-// 	// 					Raven.captureMessage(
-// 	// 						"There was an unexpected error trying to get known commit hashes.",
-// 	// 						{
-// 	// 							level: "error",
-// 	// 							logger: "codestream.js",
-// 	// 							extra: { message }
-// 	// 						}
-// 	// 					);
-// 	// 			}
-// 	// 			GitRepo.open(workDir)
-// 	// 				.listRemoteReferences()
-// 	// 				.then(remotes => {
-// 	// 					const uniqueRemotes = _.uniq(remotes, r => r.name);
-// 	// 					if (uniqueRemotes.length === 0) store.dispatch(noRemoteUrl());
-// 	// 					if (uniqueRemotes.length === 1) store.dispatch(setRepoUrl(uniqueRemotes[0].url));
-// 	// 					else store.dispatch(foundMultipleRemotes(uniqueRemotes));
-// 	// 				});
-// 	// 		}
-// 	// 	}
 // 	// },
-//
-// 	consumeStatusBar(statusBar) {
-// 		this.statusBar = statusBar;
-// 		const div = document.createElement("div");
-// 		div.classList.add("inline-block");
-// 		const icon = document.createElement("span");
-// 		icon.classList.add("icon", "icon-comment-discussion");
-// 		icon.onclick = event =>
-// 			atom.commands.dispatch(document.querySelector("atom-workspace"), "codestream:toggle");
-// 		atom.tooltips.add(div, { title: "Toggle CodeStream" });
-// 		div.appendChild(icon);
-// 		this.statusBarTile = statusBar.addRightTile({ item: div, priority: 400 });
-// 	}
 // };
