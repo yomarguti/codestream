@@ -98,7 +98,8 @@ namespace CodeStream.VisualStudio.Packages
                     GetService(typeof(SSessionService)) as ISessionService,
                     GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
                     GetService(typeof(SBrowserService)) as IBrowserService,
-                    new Lazy<ISettingsService>(() => GetService(typeof(SSettingsService)) as ISettingsService)
+                    new Lazy<ISettingsService>(() => GetService(typeof(SSettingsService)) as ISettingsService),
+                    new Lazy<IToolWindowProvider>(() => this)
                 );
 
             return null;
@@ -118,11 +119,36 @@ namespace CodeStream.VisualStudio.Packages
             return true;
         }
 
+        /// <summary>
+        /// Returns true if the ToolWindow is visible
+        /// </summary>
+        /// <param name="toolWindowId"></param>
+        /// <returns>true if visible</returns>
+        /// <remarks>
+        /// IVsWindowFrame.IsOnScreen checks to see if a window hosted by the Visual Studio IDE has 
+        /// been autohidden, or if the window is part of a tabbed display and currently obscured by 
+        /// another tab. IsOnScreen also checks to see whether the instance of the Visual Studio IDE 
+        /// is minimized or obscured. IsOnScreen differs from the behavior of IsWindowVisible a 
+        /// method that may return true even if the window is completely obscured or minimized. 
+        /// IsOnScreen also differs from IsVisible which does not check to see if the Visual Studio 
+        /// IDE has autohidden the window, or if the window is tabbed and currently obscured by 
+        /// another window.
+        /// </remarks>
         public bool IsVisible(Guid toolWindowId)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            return TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame) && frame.IsVisible() == VSConstants.S_OK;
+            if (!TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame))
+            {
+                return false;
+            }
+
+            if (frame.IsOnScreen(out int pfOnScreen) == VSConstants.S_OK)
+            {
+                return pfOnScreen == 1;
+            }
+
+            return false;
         }
 
         public void ShowToolWindow(Guid toolWindowId)

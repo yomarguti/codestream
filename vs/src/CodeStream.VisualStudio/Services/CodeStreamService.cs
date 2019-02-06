@@ -1,11 +1,15 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Annotations;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Models;
+using CodeStream.VisualStudio.Packages;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Threading;
 using Serilog;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using CodeStream.VisualStudio.Annotations;
+using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Services
 {
@@ -35,6 +39,7 @@ namespace CodeStream.VisualStudio.Services
         private readonly ICodeStreamAgentService _agentService;
         public IBrowserService BrowserService { get; }
         private readonly Lazy<ISettingsService> _settingsService;
+        private readonly Lazy<IToolWindowProvider> _toolWindowProvider;
 
         public CodeStreamService(
             Lazy<ICredentialsService> credentialsService,
@@ -42,7 +47,8 @@ namespace CodeStream.VisualStudio.Services
             ISessionService sessionService,
             ICodeStreamAgentService serviceProvider,
             IBrowserService browserService,
-            Lazy<ISettingsService> settingsService)
+            Lazy<ISettingsService> settingsService,
+            Lazy<IToolWindowProvider> toolWindowProvider)
         {
             _credentialsService = credentialsService;
             _eventAggregator = eventAggregator;
@@ -50,6 +56,7 @@ namespace CodeStream.VisualStudio.Services
             _agentService = serviceProvider;
             BrowserService = browserService;
             _settingsService = settingsService;
+            _toolWindowProvider = toolWindowProvider;
         }
 
         public async Task ChangeActiveWindowAsync(string fileName, Uri uri)
@@ -97,6 +104,10 @@ namespace CodeStream.VisualStudio.Services
             CancellationToken? cancellationToken = null)
         {
             if (!_sessionService.IsReady) return Task.CompletedTask;
+
+            // switch to main thread to show the ToolWindow
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken ?? CancellationToken.None);
+            _toolWindowProvider.Value?.ShowToolWindow(Guids.WebViewToolWindowGuid);
 
             var range = new Range(selectedText);
 

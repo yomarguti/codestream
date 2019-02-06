@@ -8,7 +8,6 @@ using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Reactive.Linq;
 using System.Windows.Controls;
 
 namespace CodeStream.VisualStudio.UI.ToolWindows
@@ -22,7 +21,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IBrowserService _browserService;
 		private readonly ISessionService _sessionService;
-		private IDisposable _languageServerDisconnectedEvent;
+		private readonly IDisposable _languageServerDisconnectedEvent;
 		private IDisposable _languageServerReadyEvent;
 
 		private List<IDisposable> _disposables;
