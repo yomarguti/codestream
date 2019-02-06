@@ -789,6 +789,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 	private async onDidChangeTextEditorVisibleRanges(e: TextEditorVisibleRangesChangeEvent) {
 		const uri = e.textEditor.document.uri;
 
+		if (uri.scheme !== "file") return;
+
 		void (await this.postMessage({
 			type: WebviewIpcMessageType.didScroll,
 			body: {
