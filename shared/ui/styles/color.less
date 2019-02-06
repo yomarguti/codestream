@@ -66,10 +66,16 @@
 	margin-right: 2px;
 	padding: 1px 2px;
 	cursor: pointer;
-	&.selected,
-	&:hover {
+	opacity: 0.5;
+
+	&.selected {
 		outline: 1px solid @base-border-color;
 		// Dave is blind
 		background: @base-border-color;
+		opacity: 1;
+	}
+
+	&:hover {
+		opacity: 1;
 	}
 }
