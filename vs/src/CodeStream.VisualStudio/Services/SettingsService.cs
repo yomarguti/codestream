@@ -25,7 +25,7 @@ namespace CodeStream.VisualStudio.Services
         bool AutoSignIn { get; set; }
         string GetEnvironmentName();
         string GetUsefulEnvironmentName();
-        string GetEnvironmentVersionFormated(string extensionVersion, string buildNumber);
+        string GetEnvironmentVersionFormatted();
         Ide GetIdeInfo();
         Extension GetExtensionInfo();
         string ProxyUrl { get; set; }
@@ -93,7 +93,7 @@ namespace CodeStream.VisualStudio.Services
                 OpenCommentOnSelect = OpenCommentOnSelect,
                 AutoSignIn = AutoSignIn,
                 Env = GetEnvironmentName(),
-                Version = GetEnvironmentVersionFormated(Application.ExtensionVersionShortString, Application.BuildNumber)
+                Version = GetEnvironmentVersionFormatted()
             };
         }
 
@@ -167,7 +167,7 @@ namespace CodeStream.VisualStudio.Services
         {
             return new Ide
             {
-                Name = "VS",
+                Name = Application.IdeMoniker,
                 Version = Application.VisualStudioVersion
             };
         }
@@ -177,12 +177,16 @@ namespace CodeStream.VisualStudio.Services
             return new Extension
             {
                 Version = Application.ExtensionVersionShort.ToString(),
-                VersionFormatted = GetEnvironmentVersionFormated(Application.ExtensionVersionShortString, Application.BuildNumber),
-                Build = Application.BuildNumber,
+                VersionFormatted = GetEnvironmentVersionFormatted(),
+                Build = Application.BuildNumber.ToString(),
                 BuildEnv = Application.BuildEnv
             };
         }
 
+        /// <summary>
+        /// This is the environment dictated by the urls the user is using
+        /// </summary>
+        /// <returns></returns>
         public string GetEnvironmentName()
         {
             if (ServerUrl == null) return "unknown";
@@ -217,10 +221,10 @@ namespace CodeStream.VisualStudio.Services
             }
         }
 
-        public string GetEnvironmentVersionFormated(string extensionVersion, string buildNumber)
+        public string GetEnvironmentVersionFormatted()
         {
             var environmentName = GetEnvironmentName();
-            return $"{extensionVersion}{(buildNumber.IsNullOrWhiteSpace() ? "" : $"-{buildNumber}")}{(environmentName != "prod" ? " (" + environmentName + ")" : "")}";
+            return $"{Application.ExtensionVersionSemVer}{(environmentName != "prod" ? " (" + environmentName + ")" : "")}";
         }
     }
 

@@ -42,9 +42,9 @@ New-Module -ScriptBlock {
        Read-CurrentVersionVsix
     }
 
-    function Write-Version([System.Version]$version) {
+    function Write-Version([System.Version]$version, [System.String] $environment) {
         Write-VersionVsixManifest $version
-        Write-SolutionInfo $version
+        Write-SolutionInfo $version $environment
         Write-AssemblyInfo $version
         #Write-VersionAppVeyor $version
         #Write-DirectoryBuildProps $version

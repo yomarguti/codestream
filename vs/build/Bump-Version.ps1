@@ -52,7 +52,11 @@ Param(
 
     [Parameter(Mandatory=$false)]
     [switch]
-    $Trace = $false
+    $Trace = $false,
+
+    [Parameter(Mandatory=$false)]
+    [string]
+    $Environment
 )
 
 <#
@@ -89,11 +93,11 @@ if (!$?) {
 
 if ($NewVersion -eq $null) {
     $currentVersion = Read-Version
-    $NewVersion = Generate-Version $currentVersion $BumpMajor $BumpMinor $BumpPatch $BumpBuild $BuildNumber        
+    $NewVersion = Generate-Version $currentVersion $BumpMajor $BumpMinor $BumpPatch $BumpBuild $BuildNumber       
 }
 
-Write-Output "Setting version to $NewVersion"
-Write-Version $NewVersion
+Write-Output "Setting Version=$NewVersion, Environment=$($Environment)"
+Write-Version $NewVersion $Environment
 
  if ($commit) {
      write-output "committing version change"

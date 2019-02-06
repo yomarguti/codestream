@@ -301,8 +301,7 @@ namespace CodeStream.VisualStudio.Services
                         team = _settingsService.Team
                     },
                     env = _settingsService.GetEnvironmentName(),
-                    version = _settingsService.GetEnvironmentVersionFormated(Application.ExtensionVersionShortString,
-                        Application.BuildNumber)
+                    version = _settingsService.GetEnvironmentVersionFormatted()
                 });
             }
 

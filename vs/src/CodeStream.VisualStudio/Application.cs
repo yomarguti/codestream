@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using CodeStream.VisualStudio.Properties;
 
 namespace CodeStream.VisualStudio
 {
@@ -12,15 +13,15 @@ namespace CodeStream.VisualStudio
         /// </summary>
         public static Version ExtensionVersionShort { get; }
 
-        public static string ExtensionVersionShortString
-        {
-            get { return ExtensionVersionShort.ToString(); }
-        }
+        /// <summary>
+        /// Returns a format like 1.2.3-4 if there is a revision number
+        /// </summary>
+        public static string ExtensionVersionSemVer { get; }
 
         /// <summary>
         /// Number of the build from CI
         /// </summary>
-        public static string BuildNumber { get; } = string.Empty;
+        public static int BuildNumber { get; }
 
         /// <summary>
         /// Environment where the build happened
@@ -31,6 +32,11 @@ namespace CodeStream.VisualStudio
         /// Something like `Microsoft Visual Studio 2019`
         /// </summary>
         public static string VisualStudioName { get; }
+
+        /// <summary>
+        /// Short, abbreviated name for this IDE
+        /// </summary>
+        public static string IdeMoniker { get; } = "VS";
 
         /// <summary>
         /// Something like `15.9.123.4567`
@@ -49,16 +55,24 @@ namespace CodeStream.VisualStudio
 
         static Application()
         {
-#if DEBUG
-            //TODO get from info file
-            BuildEnv = "dev";
-            BuildNumber = string.Empty;
-#endif
+            BuildEnv = SolutionInfo.BuildEnv;
+
+            var versionFull = Version.Parse(SolutionInfo.Version);
+            BuildNumber = versionFull.Revision;
+
+            if (versionFull.Revision > 0)
+            {
+                ExtensionVersionSemVer = $"{versionFull.Major}.{versionFull.Minor}.{versionFull.Build}-{versionFull.Revision}";
+            }
+            else
+            {
+                ExtensionVersionSemVer = $"{versionFull.Major}.{versionFull.Minor}.{versionFull.Build}";
+            }
 
             var fileVersionInfo = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileVersionInfo;
 
             // Extension versions
-            var versionFull = typeof(Application).Assembly.GetName().Version;
+
             ExtensionVersionShort = new Version(versionFull.Major, versionFull.Minor, versionFull.Build);
 
             var localApplicationData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Name);
