@@ -490,10 +490,7 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         private void Selection_SelectionChanged(object sender, EventArgs e)
         {
-            // TODO reconcile this!
-            // var textSelection = sender as ITextSelection;
-
-            if (!_openCommentOnSelect) return;
+            if (!_openCommentOnSelect || _textView.Selection.IsEmpty) return;
 
             if (_toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid))
             {
