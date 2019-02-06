@@ -172,7 +172,10 @@ export class WorkspaceSession {
 		}
 		this.sessionStatus = SessionStatus.SigningIn;
 		try {
-			this.agent = await CodeStreamAgent.initWithSignupToken(this.signupToken);
+			this.agent = await CodeStreamAgent.initWithSignupToken(
+				this.signupToken,
+				this.environment.serverUrl
+			);
 			await this.completeLogin();
 			return LoginResult.Success;
 		} catch (error) {

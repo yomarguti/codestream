@@ -3,9 +3,8 @@ import { Convert, LanguageClientConnection } from "atom-languageclient";
 import {
 	createMessageConnection,
 	IPCMessageReader,
-	IPCMessageWriter
+	IPCMessageWriter,
 } from "atom-languageclient/node_modules/vscode-jsonrpc";
-import { getPath } from "../network-request";
 import { asAbsolutePath, getPluginVersion } from "../utils";
 import {
 	AgentOptions,
@@ -31,76 +30,76 @@ const capabilities: ClientCapabilities = {
 		applyEdit: true,
 		configuration: false,
 		workspaceEdit: {
-			documentChanges: true
+			documentChanges: true,
 		},
 		workspaceFolders: false,
 		didChangeConfiguration: {
-			dynamicRegistration: false
+			dynamicRegistration: false,
 		},
 		didChangeWatchedFiles: {
-			dynamicRegistration: false
+			dynamicRegistration: false,
 		},
 		symbol: {
-			dynamicRegistration: false
+			dynamicRegistration: false,
 		},
 		executeCommand: {
-			dynamicRegistration: false
-		}
+			dynamicRegistration: false,
+		},
 	},
 	textDocument: {
 		synchronization: {
 			dynamicRegistration: false,
 			willSave: true,
 			willSaveWaitUntil: true,
-			didSave: true
+			didSave: true,
 		},
 		completion: {
 			dynamicRegistration: false,
 			completionItem: {
 				snippetSupport: true,
-				commitCharactersSupport: false
+				commitCharactersSupport: false,
 			},
-			contextSupport: true
+			contextSupport: true,
 		},
 		hover: {
-			dynamicRegistration: false
+			dynamicRegistration: false,
 		},
 		signatureHelp: {
-			dynamicRegistration: false
+			dynamicRegistration: false,
 		},
 		references: {
-			dynamicRegistration: false
+			dynamicRegistration: false,
 		},
 		documentHighlight: {
-			dynamicRegistration: false
+			dynamicRegistration: false,
 		},
 		documentSymbol: {
 			dynamicRegistration: false,
-			hierarchicalDocumentSymbolSupport: true
+			hierarchicalDocumentSymbolSupport: true,
 		},
 		formatting: {
-			dynamicRegistration: false
+			dynamicRegistration: false,
 		},
 		rangeFormatting: {
-			dynamicRegistration: false
+			dynamicRegistration: false,
 		},
 		onTypeFormatting: {
-			dynamicRegistration: false
+			dynamicRegistration: false,
 		},
 		definition: {
-			dynamicRegistration: false
+			dynamicRegistration: false,
 		},
 		codeAction: {
-			dynamicRegistration: false
+			dynamicRegistration: false,
 		},
 		codeLens: {
-			dynamicRegistration: false
+			dynamicRegistration: false,
 		},
 		documentLink: {
-			dynamicRegistration: false
+			dynamicRegistration: false,
 		},
 		rename: {
-			dynamicRegistration: false
+			dynamicRegistration: false,
 		},
 
 		// We do not support these features yet.
@@ -108,9 +107,9 @@ const capabilities: ClientCapabilities = {
 		implementation: undefined,
 		typeDefinition: undefined,
 		colorProvider: undefined,
-		foldingRange: undefined
+		foldingRange: undefined,
 	},
-	experimental: {}
+	experimental: {},
 };
 
 // TODO: build a log view
@@ -123,7 +122,12 @@ class AgentConnection {
 		return this._connection;
 	}
 
-	async start(initOptions: { email?: string; passwordOrToken?: string; signupToken?: string }) {
+	async start(initOptions: {
+		serverUrl: string;
+		email?: string;
+		passwordOrToken?: string;
+		signupToken?: string;
+	}) {
 		this._agentProcess = await this.startServer();
 
 		this._connection = new LanguageClientConnection(
@@ -149,7 +153,7 @@ class AgentConnection {
 			traceLevel: "debug",
 			gitPath: "git",
 			ideVersion: atom.getVersion(),
-			serverUrl: getPath(),
+			serverUrl: initOptions.serverUrl,
 			team: "",
 			teamId: "",
 			signupToken: initOptions.signupToken,
@@ -220,9 +224,9 @@ export class CodeStreamAgent {
 	private connection: AgentConnection;
 	readonly initializeResult: AgentResult;
 
-	static async initWithSignupToken(token: string): Promise<CodeStreamAgent> {
+	static async initWithSignupToken(token: string, serverUrl: string): Promise<CodeStreamAgent> {
 		const connection = new AgentConnection();
-		const result = await connection.start({ signupToken: token });
+		const result = await connection.start({ signupToken: token, serverUrl });
 		if (result.error) {
 			throw result.error;
 		} else return new CodeStreamAgent(connection, result);
@@ -231,14 +235,6 @@ export class CodeStreamAgent {
 	protected constructor(connection: AgentConnection, data: AgentResult) {
 		this.connection = connection;
 		this.initializeResult = data;
-	}
-
-	async login(email: string, password: string) {
-		const result = await this.connection.start({
-			email,
-			passwordOrToken: password,
-		});
-		console.debug("attempted to login", result);
 	}
 
 	fetchUsers(): Promise<FetchUsersResponse> {
