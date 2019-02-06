@@ -260,7 +260,7 @@ function getWebviewConfig(env) {
 			modules: [path.resolve(__dirname, "src/webviews/app"), "node_modules"],
 			alias: {
 				// TODO: Use environment variable if exists
-				"codestream-components$": path.resolve(__dirname, "../codestream-components/index.js"),
+				"codestream-components$": path.resolve(__dirname, "../codestream-components/index.ts"),
 				"codestream-components": path.resolve(__dirname, "../codestream-components/")
 			}
 		},
