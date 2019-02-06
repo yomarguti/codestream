@@ -7,6 +7,12 @@ export interface IpcHost {
 	postMessage(message: IpcMessage, origin: string): undefined;
 }
 
+export interface IpcRequest {
+	id: string;
+	action: string;
+	params: any;
+}
+
 export interface IpcResponse {
 	id: string;
 	payload?: any;
@@ -44,7 +50,7 @@ class EventEmitter {
 			const listeners = this.listenersByEvent.get(event) || [];
 			setImmediate(() => listeners.forEach(l => l(data.body)));
 		}
-	};
+	}
 
 	on(thing: string, listener: Function) {
 		return this.subscribe(thing, listener);

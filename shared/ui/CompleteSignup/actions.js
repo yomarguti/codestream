@@ -6,7 +6,7 @@ import { updateUnreads } from "../store/unreads/actions";
 
 export const validateSignup = token => async (dispatch, getState, { api }) => {
 	const response = await api.validateSignup(token);
-	dispatch(bootstrap(response));
+	await dispatch(bootstrap(response));
 	dispatch(setContext({ currentTeamId: response.currentTeamId }));
 	dispatch(updateUnreads(response.unreads));
 	dispatch({ type: "INIT_SESSION", payload: { userId: response.currentUserId } });
