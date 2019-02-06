@@ -443,7 +443,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 		const [user] = (await Container.instance().users.resolve({
 			type: MessageType.Users,
-			data: update.user
+			data: [update.user]
 		})) as CSMe[];
 		return { preferences: user.preferences };
 	}
