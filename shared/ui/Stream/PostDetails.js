@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import Button from "./Button";
-import EventEmitter from "../event-emitter";
+import { EventEmitter } from "../event-emitter";
 
 export default class PostDetails extends Component {
 	disposables = [];

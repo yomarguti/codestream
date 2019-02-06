@@ -1,4 +1,4 @@
-import EventEmitter from "../event-emitter";
+import { EventEmitter } from "../event-emitter";
 import { logError, logWarning } from "../logger";
 import { CodemarkType, StreamType } from "../shared/api.protocol";
 import { saveCodemarks, updateCodemarks } from "../store/codemarks/actions";

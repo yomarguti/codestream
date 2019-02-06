@@ -1,4 +1,4 @@
-import EventEmitter from "../../event-emitter";
+import { EventEmitter } from "../../event-emitter";
 import { logError } from "../../logger";
 import { setUserPreference } from "../../Stream/actions";
 import { action, ThunkExtras } from "../common";

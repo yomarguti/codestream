@@ -19,28 +19,35 @@ export interface IpcResponse {
 	error?: any;
 }
 
+declare function acquireCodestreamHost(): IpcHost;
+
 declare function acquireVsCodeApi(): IpcHost;
 
+let host;
 const findHost = () => {
+	if (host) return host;
+
+	host = window.parent as IpcHost;
 	try {
-		return acquireVsCodeApi();
+		host = acquireCodestreamHost();
 	} catch (e) {
-		/* probably not in vscode */
-		return window.parent as IpcHost;
+		try {
+			// Legacy
+			host = acquireVsCodeApi();
+		} catch (e) {}
 	}
+	return host;
 };
 
 class EventEmitter {
 	listenersByEvent = new Map<string, Function[]>();
-	host: IpcHost;
 
 	constructor() {
-		this.host = findHost();
 		window.addEventListener("message", this.handler, false);
 	}
 
-	getHost() {
-		return this.host;
+	get host() {
+		return findHost();
 	}
 
 	handler = ({ data }: MessageEvent) => {
@@ -92,4 +99,3 @@ class EventEmitter {
 
 const emitter = new EventEmitter();
 export { emitter as EventEmitter };
-export default emitter;

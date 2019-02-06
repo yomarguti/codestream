@@ -1,4 +1,4 @@
-import EventEmitter, { IpcHost, IpcResponse } from "./event-emitter";
+import { EventEmitter, IpcResponse } from "./event-emitter";
 import {
 	ArchiveStreamRequest,
 	ArchiveStreamRequestType,
@@ -110,10 +110,8 @@ let sequence = 0;
 
 export default class WebviewApi {
 	pendingRequests = new Map();
-	host: IpcHost;
 
 	constructor() {
-		this.host = EventEmitter.getHost();
 		EventEmitter.on("response", ({ id, payload, error }: IpcResponse) => {
 			const request = this.pendingRequests.get(id);
 			if (request) {
@@ -141,7 +139,7 @@ export default class WebviewApi {
 		return new Promise<ResponseType>((resolve, reject) => {
 			this.pendingRequests.set(id, { resolve, reject, action: message.action });
 			console.debug("codestream:request", { id, ...message });
-			this.host.postMessage({ type: "codestream:request", body: { id, ...message } }, "*");
+			EventEmitter.host.postMessage({ type: "codestream:request", body: { id, ...message } }, "*");
 		});
 	}
 

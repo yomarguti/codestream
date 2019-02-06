@@ -9,7 +9,7 @@ import Signup from "../Signup";
 import CompleteSignup from "../CompleteSignup";
 import { SlackInfo } from "../SlackInfo";
 import { logError } from "../logger";
-import EventEmitter from "../event-emitter";
+import { EventEmitter } from "../event-emitter";
 
 addLocaleData(englishLocaleData);
 

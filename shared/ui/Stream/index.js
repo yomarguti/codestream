@@ -21,7 +21,7 @@ import Menu from "./Menu";
 import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
-import EventEmitter from "../event-emitter";
+import { EventEmitter } from "../event-emitter";
 import * as actions from "./actions";
 import { isInVscode, safe, toMapBy } from "../utils";
 import { getSlashCommands } from "./SlashCommands";

@@ -1,4 +1,4 @@
-import EventEmitter from "../../event-emitter";
+import { EventEmitter } from "../../event-emitter";
 import { ContextActionsType, State as Context } from "../context/types";
 
 export const contextChangeObserver = store => next => (action: { type: string }) => {
@@ -34,15 +34,12 @@ interface RequestIdleCallbackOptions {
 }
 interface RequestIdleCallbackDeadline {
 	readonly didTimeout: boolean;
-	timeRemaining: (() => number);
+	timeRemaining(): number;
 }
 
 declare global {
 	interface Window {
-		requestIdleCallback: ((
-			callback: ((deadline: RequestIdleCallbackDeadline) => void),
-			opts?: RequestIdleCallbackOptions
-		) => RequestIdleCallbackHandle);
-		cancelIdleCallback: ((handle: RequestIdleCallbackHandle) => void);
+		requestIdleCallback(callback: (deadline: RequestIdleCallbackDeadline) => void, opts?: RequestIdleCallbackOptions): RequestIdleCallbackHandle;
+		cancelIdleCallback(handle: RequestIdleCallbackHandle): void;
 	}
 }
