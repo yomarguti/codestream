@@ -1,5 +1,5 @@
 import { CompositeDisposable, Disposable } from "atom";
-import { CodestreamView, CODESTREAM_VIEW_URI } from "./codestream-view";
+import { CodestreamView, CODESTREAM_VIEW_URI } from "./views/codestream-view";
 import { actions, createStore, WebviewApi } from "codestream-components";
 import { StatusBar, Tile } from "./types/package-services/status-bar";
 import { WorkspaceSession, SessionStatus } from "./workspace/workspace-session";
@@ -86,9 +86,7 @@ class CodestreamPackage {
 		if (this.workspaceSession) return Promise.resolve();
 		return new Promise(resolve => {
 			const interval = setInterval(() => {
-				console.debug("Polling for workspaceSession");
 				if (this.workspaceSession) {
-					console.debug("CodestreamPackage.onReady");
 					clearInterval(interval);
 					resolve();
 				}

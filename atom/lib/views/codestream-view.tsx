@@ -4,9 +4,9 @@ import { render, unmountComponentAtNode } from "react-dom";
 import { Container } from "codestream-components";
 import { EventEmitter, IpcRequest as WebviewIpcRequest } from "codestream-components/event-emitter";
 import translations from "codestream-components/translations/en";
-import { WorkspaceSession } from "./workspace/workspace-session";
 import { CompositeDisposable } from "atom";
-import { LoginResult } from "./shared/api.protocol";
+import { WorkspaceSession } from "lib/workspace/workspace-session";
+import { LoginResult } from "../shared/api.protocol";
 
 export const CODESTREAM_VIEW_URI = "atom://codestream";
 
@@ -32,7 +32,7 @@ export class CodestreamView {
 	private render() {
 		render(
 			<Container store={this.store} i18n={{ locale: "en", messages: translations }} />,
-			this.element,
+			this.element
 		);
 	}
 
@@ -80,7 +80,7 @@ export class CodestreamView {
 
 	private setupWebviewListeners() {
 		this.subscriptions.add(
-			EventEmitter.on("request", this.handleWebviewRequest),
+			EventEmitter.on("request", this.handleWebviewRequest)
 			// EventEmitter.on("analytics", ({ label, payload }) => mixpanel.track(label, payload)),
 		);
 	}
@@ -91,7 +91,7 @@ export class CodestreamView {
 				const ok = shell.openExternal(
 					`${
 						this.session.environment.webAppUrl
-					}/service-auth/slack?state=${this.session.getSignupToken()}`,
+					}/service-auth/slack?state=${this.session.getSignupToken()}`
 				);
 				if (ok) EventEmitter.emit("response", { id: request.id, payload: true });
 				else {
