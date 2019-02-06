@@ -1,10 +1,10 @@
-﻿using Microsoft.VisualStudio.Shell;
+﻿using CodeStream.VisualStudio.Extensions;
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
-using CodeStream.VisualStudio.Extensions;
+using System.Windows.Media;
 using EnvironmentColors = Microsoft.VisualStudio.PlatformUI.EnvironmentColors;
 using VSColorTheme = Microsoft.VisualStudio.PlatformUI.VSColorTheme;
-using System.Windows.Media;
 // ReSharper disable RedundantArgumentDefaultValue
 
 namespace CodeStream.VisualStudio.Services
@@ -34,10 +34,13 @@ namespace CodeStream.VisualStudio.Services
                     new ColorInfo { Key = "app-background-color", VisualStudioKey = BackgroundThemeResourceKey },
 
                     new ColorInfo { Key = "background-color",                       VisualStudioKey = BackgroundThemeResourceKey},
-            
+
                     new ColorInfo { Key = "vscode-button-hoverBackground",          VisualStudioKey = EnvironmentColors.ToolWindowButtonDownBorderColorKey},
                     new ColorInfo { Key = "vscode-sideBarSectionHeader-background", VisualStudioKey = EnvironmentColors.ToolWindowContentGridColorKey},
                     new ColorInfo { Key = "vscode-sideBarSectionHeader-foreground", VisualStudioKey = EnvironmentColors.ToolWindowTextColorKey},
+
+                    new ColorInfo { Key = "scrollbar-color",                        VisualStudioKey =  EnvironmentColors.SystemScrollBarColorKey},
+                    new ColorInfo { Key = "scrollbar-color-hover",                  VisualStudioKey = EnvironmentColors.ScrollBarThumbMouseOverBackgroundColorKey }
                     
                     //new ColorInfo { Key = "vs-accent-color",                        VisualStudioKey = EnvironmentColors.ToolWindowButtonInactiveColorKey},
 
@@ -123,7 +126,7 @@ namespace CodeStream.VisualStudio.Services
 
             colorInfos.Add(new ColorInfo { Key = "vscode-editor-font-family", Value = fontFamilyString });
             colorInfos.Add(new ColorInfo { Key = "font-family", Value = fontFamilyString });
-     
+
             var fontSizeInt = 13;
             var fontSize = System.Windows.Application.Current.FindResource(VsFonts.EnvironmentFontSizeKey);
             if (fontSize != null)

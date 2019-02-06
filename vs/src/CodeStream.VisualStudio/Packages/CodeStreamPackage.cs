@@ -35,6 +35,9 @@ namespace CodeStream.VisualStudio.Packages
         private VsShellEventManager _vsShellEventManager;
         private CodeStreamEventManager _codeStreamEventManager;
         private bool _hasOpenedSolutionOnce = false;
+        private readonly object _eventLocker = new object();
+        private bool _initializedEvents;
+
 
         protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken,
             IProgress<ServiceProgressData> progress)
@@ -82,21 +85,43 @@ namespace CodeStream.VisualStudio.Packages
                     await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 
                     var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
+                    var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
                     _vsShellEventManager = new VsShellEventManager(Package.GetGlobalService(typeof(SVsShellMonitorSelection)) as IVsMonitorSelection);
+                    _codeStreamService = new Lazy<ICodeStreamService>(() => GetService(typeof(SCodeStreamService)) as ICodeStreamService);
 
-                    // ReSharper disable once PossibleNullReferenceException
-                    _languageServerReadyEvent = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
+                    if (sessionService?.IsAgentReady == true)
                     {
-                        ThreadHelper.ThrowIfNotOnUIThread();
-                        _codeStreamService = new Lazy<ICodeStreamService>(() => GetService(typeof(SCodeStreamService)) as ICodeStreamService);
-                        _codeStreamEventManager = new CodeStreamEventManager(_vsShellEventManager, _codeStreamService);
-                    });
+                        InitializeEvents();
+                    }
+                    else
+                    {
+                        // ReSharper disable once PossibleNullReferenceException
+                        _languageServerReadyEvent = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ =>
+                        {
+                            ThreadHelper.ThrowIfNotOnUIThread();
+
+                            InitializeEvents();
+                        });
+                    }
 
                     // Avoid delays when there is ongoing UI activity.
                     // See: https://github.com/github/VisualStudio/issues/1537
                     await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, OnSolutionLoadedInitialAsync);
                     _hasOpenedSolutionOnce = true;
                 });
+            }
+        }
+
+        private void InitializeEvents()
+        {
+            if (_initializedEvents) return;
+
+            lock (_eventLocker)
+            {
+                if (_initializedEvents) return;
+
+                _codeStreamEventManager = new CodeStreamEventManager(_vsShellEventManager, _codeStreamService);
+                _initializedEvents = true;
             }
         }
 
