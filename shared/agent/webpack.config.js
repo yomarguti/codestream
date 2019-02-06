@@ -23,9 +23,19 @@ module.exports = function(env, argv) {
 					destination: path.resolve(__dirname, "../codestream-components/shared/")
 				},
 				{
+					source: "src/shared/*",
+					// TODO: Use environment variable if exists
+					destination: path.resolve(__dirname, "../atom-codestream/lib/shared/")
+				},
+				{
 					source: "dist/*",
 					// TODO: Use environment variable if exists
 					destination: path.resolve(__dirname, "../vscode-codestream/dist/")
+				},
+				{
+					source: "dist/agent.*",
+					// TODO: Use environment variable if exists
+					destination: path.resolve(__dirname, "../atom-codestream/dist/")
 				},
 				{
 					source: "dist/agent-vs.js",
