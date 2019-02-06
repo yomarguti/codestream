@@ -1,4 +1,5 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Annotations;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
 using DotNetBrowser;
 using DotNetBrowser.WPF;
@@ -8,11 +9,22 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using CodeStream.VisualStudio.Annotations;
 using static CodeStream.VisualStudio.Extensions.FileSystemExtensions;
 
 namespace CodeStream.VisualStudio.Services
 {
+    public class PostMessageInterop
+    {
+        public void Handle(string message, string origin)
+        {
+            if (MessageHandler == null) return;
+
+            MessageHandler(this, new WindowEventArgs(message));
+        }
+
+        public static WindowMessageHandler MessageHandler;
+    }
+
     /// <summary>
     /// Implementation of a browser service using DotNetBrowser
     /// </summary>
@@ -48,9 +60,9 @@ namespace CodeStream.VisualStudio.Services
         protected override void OnInitialized()
         {
             var switches = ChromiumSwitches;
-//#if DEBUG
-//            switches = switches.Combine(ChromiumSwitchesDebug);
-//#endif
+#if DEBUG
+            // switches = switches.Combine(ChromiumSwitchesDebug);
+#endif
 
             BrowserPreferences.SetChromiumSwitches(switches.ToArray());
             _path = GetOrCreateContextParamsPath();
@@ -59,18 +71,32 @@ namespace CodeStream.VisualStudio.Services
             // use LIGHTWEIGHT to avoid "System.InvalidOperationException: 'The specified Visual is not an ancestor of this Visual.'"            
             _browserView = new WPFBrowserView(BrowserFactory.Create(_browserContext, BrowserType.LIGHTWEIGHT));
 
-//#if DEBUG
-//           System.Diagnostics.Process.Start("chrome.exe", _browserView.Browser.GetRemoteDebuggingURL());
-//#endif
+            _browserView.Browser.ScriptContextCreated += Browser_ScriptContextCreated;
+
+#if DEBUG
+            //  System.Diagnostics.Process.Start("chrome.exe", _browserView.Browser.GetRemoteDebuggingURL());
+#endif
         }
-        
+
+        private void Browser_ScriptContextCreated(object sender, DotNetBrowser.Events.ScriptContextEventArgs e)
+        {
+            JSValue value = _browserView.Browser.ExecuteJavaScriptAndReturnValue("window");
+            value.AsObject().SetProperty("PostMessageInterop", new PostMessageInterop());
+
+            _browserView.Browser.ExecuteJavaScript(@"
+                  window.acquireVsCodeApi = function() {
+                      return {
+                          postMessage: function(message, origin) {
+                            window.PostMessageInterop.Handle(JSON.stringify(message), origin);
+                         }
+                     }
+                  }
+               ");
+        }
+
         public override void AddWindowMessageEvent(WindowMessageHandler messageHandler)
         {
-            // TODO detach this?
-            _browserView.Browser.ConsoleMessageEvent += async delegate (object sender, DotNetBrowser.Events.ConsoleEventArgs e)
-            {
-                await messageHandler(sender, new WindowEventArgs(e.Message));
-            };
+            PostMessageInterop.MessageHandler = messageHandler;
         }
 
         public override void PostMessage(string message)
@@ -142,7 +168,7 @@ namespace CodeStream.VisualStudio.Services
             // C:\Users\<UserName>\AppData\Local\Temp\dotnetbrowser-chromium\64.0.3282.24.1.19.0.0.642\32bit\data
             // get it with BrowserPreferences.GetDefaultDataDir();
 
-            var defaultPath = Application.TempDataPath+"Browser-0";
+            var defaultPath = Application.TempDataPath + "Browser-0";
             Log.Verbose($"DefaultPath={defaultPath}");
 
             if (!TryCheckUsage(defaultPath, out DirectoryLockInfo info))
@@ -210,6 +236,8 @@ namespace CodeStream.VisualStudio.Services
                         return;
                     }
 
+                    _browserView.Browser.ScriptContextCreated -= Browser_ScriptContextCreated;
+
                     _browserView.Dispose();
                     _browserView.Browser.Dispose();
                     _browserView.Browser.Context.Dispose();
@@ -244,24 +272,6 @@ namespace CodeStream.VisualStudio.Services
                 }
 
                 _disposed = true;
-            }
-        }
-
-        public override string FooterHtml
-        {
-            get
-            {
-                return @"<script>
-        window.addEventListener('message', function (e) {
-            if (!e || e.type !== 'message' || e.data.type == null) return;
-
-            var str = JSON.stringify(e.data);
-            if (!str || str[0] !== '{') return;
-            
-            console.log(str);
-
-        }, false);        
-    </script>";
             }
         }
     }

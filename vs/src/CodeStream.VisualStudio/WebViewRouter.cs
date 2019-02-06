@@ -77,7 +77,7 @@ namespace CodeStream.VisualStudio
                 if (e?.Message == null || !e.Message.StartsWith("{"))
                 {
                     // too noisy to log!
-                    //Log.Verbose(e.Message, $"{nameof(WindowEventArgs)} not found");
+                    Log.Verbose($"{nameof(WindowEventArgs)} not found => {e?.Message}");
                 }
                 else
                 {
@@ -92,30 +92,19 @@ namespace CodeStream.VisualStudio
                                 Log.Warning(e.Message);
                                 break;
                             }
-                        case "codestream:telemetry":
-                            {
-                                break;
-                            }
-                        case "codestream:response":
-                            {
-                                break;
-                            }
                         case "codestream:interaction:clicked-reload-webview":
                             {
                                 _browserService.ReloadWebView();
                                 break;
                             }
                         case "codestream:interaction:thread-closed":
-                            {
-                                break;
-                            }
+                        case "codestream:interaction:context-state-changed":
                         case "codestream:interaction:active-panel-changed":
-                            {
-                                break;
-                            }
                         case "codestream:interaction:thread-selected":
+                        case "codestream:subscription:file-changed":
+                        case "codestream:unsubscribe:file-changed":
                             {
-                                //unused
+                                // unused
                                 break;
                             }
                         case "codestream:interaction:svc-request":
@@ -155,12 +144,6 @@ namespace CodeStream.VisualStudio
                                             }
                                     }
                                 }
-                                break;
-                            }
-                        case "codestream:subscription:file-changed":
-                        case "codestream:unsubscribe:file-changed":
-                            {
-                                // noop
                                 break;
                             }
                         case "codestream:interaction:changed-active-stream":
@@ -244,10 +227,9 @@ namespace CodeStream.VisualStudio
 
                                             break;
                                         }
-                                    case "codestream:interaction:context-state-changed":
                                     case "mute-all":
                                         {
-                                            // noops
+                                            // noop
                                             break;
                                         }
                                     case "show-code":

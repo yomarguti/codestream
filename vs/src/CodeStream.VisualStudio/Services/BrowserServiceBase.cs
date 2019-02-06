@@ -47,10 +47,6 @@ namespace CodeStream.VisualStudio.Services
         /// <param name="frameworkElement"></param>
         void AttachControl(FrameworkElement frameworkElement);
         /// <summary>
-        /// Any custom html required by the Browser instance
-        /// </summary>
-        string FooterHtml { get; }
-        /// <summary>
         /// Loads the webview
         /// </summary>
         void LoadWebView();
@@ -81,8 +77,6 @@ namespace CodeStream.VisualStudio.Services
         {
 
         }
-
-        public virtual string FooterHtml { get; } = "";
 
         public abstract void AddWindowMessageEvent(WindowMessageHandler messageHandler);
 
@@ -124,8 +118,7 @@ namespace CodeStream.VisualStudio.Services
             Debug.Assert(harness != null, nameof(harness) + " != null");
 
             harness = harness
-                        .Replace("{root}", dir.Replace(@"\", "/"))
-                        .Replace("<script id=\"footer-script\" type=\"text/javascript\"></script>", FooterHtml);
+                        .Replace("{root}", dir.Replace(@"\", "/"));
             // ReSharper disable once ResourceItemNotResolved
             var styleSheet = resourceManager.GetString("theme");
 
