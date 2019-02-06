@@ -194,7 +194,7 @@ api.bootstrap().then(data => {
 				store.dispatch(actions.updateUnreads(data));
 				break;
 			default:
-				store.dispatch({ type: `ADD_${type.toUpperCase()}`, data });
+				store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload: data });
 		}
 	});
 
