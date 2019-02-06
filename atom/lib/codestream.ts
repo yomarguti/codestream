@@ -6,21 +6,21 @@ import { WorkspaceSession, SessionStatus } from "./workspace/workspace-session";
 import { PackageState } from "./types/package";
 
 class CodestreamPackage {
-	subscriptions: CompositeDisposable;
-	workspaceSession?: WorkspaceSession;
+	subscriptions = new CompositeDisposable();
+	workspaceSession: WorkspaceSession;
 	statusBar?: StatusBar;
 	statusBarTile?: Tile;
 	view?: CodestreamView;
 	store: any;
 	sessionStatusCommand?: Disposable;
 
-	constructor() {
-		this.subscriptions = new CompositeDisposable();
+	constructor(state: PackageState) {
+		this.workspaceSession = WorkspaceSession.create(state);
+		this.initialize();
 	}
 
 	// Package lifecyle 1
-	async initialize(state: PackageState) {
-		this.workspaceSession = WorkspaceSession.create(state);
+	async initialize() {
 		this.store = createStore(
 			this.workspaceSession.getBootstrapState(),
 			{ api: new WebviewApi() },
@@ -46,11 +46,12 @@ class CodestreamPackage {
 				// );
 			}
 		});
+
 		this.subscriptions.add(
 			atom.workspace.addOpener(uri => {
 				if (uri === CODESTREAM_VIEW_URI) {
 					if (this.view && this.view.alive) return this.view;
-					this.view = new CodestreamView(this.workspaceSession!, this.store);
+					this.view = new CodestreamView(this.workspaceSession, this.store);
 					return this.view;
 				}
 			}),
@@ -62,7 +63,7 @@ class CodestreamPackage {
 
 	// Package lifecyle
 	deserializeCodestreamView() {
-		this.view = new CodestreamView(this.workspaceSession!, this.store);
+		this.view = new CodestreamView(this.workspaceSession, this.store);
 		return this.view;
 	}
 
@@ -71,36 +72,21 @@ class CodestreamPackage {
 
 	// Package lifecyle
 	serialize(): PackageState {
-		return this.workspaceSession ? this.workspaceSession.serialize() : {};
+		return this.workspaceSession.serialize();
 	}
 
 	// Package lifecyle
 	deactivate() {
-		if (this.workspaceSession) this.workspaceSession.dispose();
+		this.workspaceSession.dispose();
 		this.subscriptions.dispose();
 		if (this.statusBarTile) this.statusBarTile.destroy();
-		// this.store.dispatch(logout());
-	}
-
-	private async onReady() {
-		if (this.workspaceSession) return Promise.resolve();
-		return new Promise(resolve => {
-			const interval = setInterval(() => {
-				if (this.workspaceSession) {
-					clearInterval(interval);
-					resolve();
-				}
-			});
-		});
 	}
 
 	async consumeStatusBar(statusBar: StatusBar) {
 		this.statusBar = statusBar;
 
-		await this.onReady();
-
 		const messages = {
-			[SessionStatus.SignedIn]: () => this.workspaceSession!.user!.username,
+			[SessionStatus.SignedIn]: () => this.workspaceSession.user!.username,
 			[SessionStatus.SigningIn]: () => "Signing in...",
 			[SessionStatus.SignedOut]: () => "Sign in",
 		};
@@ -135,7 +121,26 @@ class CodestreamPackage {
 	}
 }
 
-export default new CodestreamPackage();
+let codestream;
+const packageWrapper = {
+	initialize(state: PackageState) {
+		codestream = new CodestreamPackage(state);
+	},
+};
+
+export default new Proxy(packageWrapper, {
+	get(target: any, name: any) {
+		if (codestream && Reflect.has(codestream, name)) {
+			let property = codestream[name];
+			if (typeof property === "function") {
+				property = property.bind(codestream);
+			}
+			return property;
+		} else {
+			return target[name];
+		}
+	},
+});
 
 // export default {
 // 	subscriptions: null,
