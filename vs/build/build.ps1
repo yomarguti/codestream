@@ -1,4 +1,4 @@
-[CmdletBinding(PositionalBinding = $false)]
+﻿[CmdletBinding(PositionalBinding = $false)]
 Param(
 	[Parameter(Mandatory = $false)]
 	[Alias("q")]
@@ -158,6 +158,8 @@ $root = $(Resolve-Path -path "$PSScriptRoot/..")
 Push-Location $root
 
 try {
+	throw "Test CI failure"
+
 	if (!$quick) {
 		Build-AgentAndWebview
 	}
