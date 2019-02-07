@@ -52,6 +52,11 @@ namespace CodeStream.VisualStudio.Models
             return @"{""type"":""codestream:configs"",""body"":{""showMarkers"":" + enabled.ToString().ToLower() + @"}}";
         }
 
+        public static string ToMuteAllMessage(bool enabled)
+        {
+            return @"{""type"":""codestream:configs"",""body"":{""muteAll"":" + enabled.ToString().ToLower() + @"}}";
+        }
+
         public static string ToConnectivityMessage(string type)
         {
             return @"{""type"":""" + type + @""",""body"":{}}";

@@ -200,6 +200,7 @@ namespace CodeStream.VisualStudio
                                         }
                                     case "show-markers":
                                     case "open-comment-on-select":
+                                    case "mute-all":
                                         {
                                             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                                             var value = message.Params.ToObject<bool>();
@@ -220,6 +221,12 @@ namespace CodeStream.VisualStudio
                                                     }
 
                                                     break;
+                                                case "mute-all":
+                                                    using (var scope = SettingsScope.Create(_settingsService))
+                                                    {
+                                                        scope.SettingsService.MuteAll = value;
+                                                    }
+                                                    break;
                                                 default:
                                                     Log.Warning($"Shouldn't hit this Action={message.Action}");
                                                     break;
@@ -227,17 +234,12 @@ namespace CodeStream.VisualStudio
 
                                             break;
                                         }
-                                    case "mute-all":
-                                        {
-                                            // noop
-                                            break;
-                                        }
                                     case "show-code":
                                         {
                                             var showCodeResponse = message.Params.ToObject<ShowCodeResponse>();
 
                                             var fromMarkerResponse = await _codeStreamAgent.GetDocumentFromMarkerAsync(
-                                                new DocumentFromMarkerRequest()
+                                                new DocumentFromMarkerRequest
                                                 {
                                                     File = showCodeResponse.Marker.File,
                                                     RepoId = showCodeResponse.Marker.RepoId,

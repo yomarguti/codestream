@@ -16,6 +16,7 @@ namespace CodeStream.VisualStudio.Services
         string Email { get; set; }
         bool ShowMarkers { get; set; }
         bool ShowHeadshots { get; set; }
+        bool MuteAll { get; set; }
         string ServerUrl { get; set; }
         string WebAppUrl { get; set; }
         string Team { get; set; }
@@ -37,6 +38,7 @@ namespace CodeStream.VisualStudio.Services
         public string Email { get; set; }
         public bool ShowMarkers { get; set; }
         public bool ShowHeadshots { get; set; }
+        public bool MuteAll { get; set; }
         public string ServerUrl { get; set; }
         public string WebAppUrl { get; set; }
         public string Team { get; set; }
@@ -87,6 +89,7 @@ namespace CodeStream.VisualStudio.Services
                 Email = Email,
                 ShowMarkers = ShowMarkers,
                 ShowHeadshots = ShowHeadshots,
+                MuteAll =  MuteAll,
                 ServerUrl = ServerUrl,
                 WebAppUrl = WebAppUrl,
                 Team = Team,
@@ -113,6 +116,12 @@ namespace CodeStream.VisualStudio.Services
         {
             get => DialogPage.ShowHeadshots;
             set => DialogPage.ShowHeadshots = value;
+        }
+
+        public bool MuteAll
+        {
+            get => DialogPage.MuteAll;
+            set => DialogPage.MuteAll = value;
         }
 
         public string ServerUrl

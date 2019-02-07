@@ -1,5 +1,5 @@
-﻿using System.ComponentModel;
-using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Core.Logging;
+using System.ComponentModel;
 
 namespace CodeStream.VisualStudio.UI.Settings
 {
@@ -8,6 +8,7 @@ namespace CodeStream.VisualStudio.UI.Settings
         string Email { get; set; }
         bool ShowMarkers { get; set; }
         bool ShowHeadshots { get; set; }
+        bool MuteAll { get; set; }
         string ServerUrl { get; set; }
         string WebAppUrl { get; set; }
         string Team { get; set; }

@@ -28,10 +28,16 @@ namespace CodeStream.VisualStudio.Controllers
             await Task.CompletedTask;
         }
 
-        public async Task ToggleMarkersAsync(bool value)
+        public async Task ToggleShowMarkersAsync(bool value)
         {
             _eventAggregator.Publish(new CodemarkVisibilityEvent { IsVisible = value });
             _browserService.PostMessage(Ipc.ToShowMarkersMessage(value));
+            await Task.CompletedTask;
+        }
+
+        public async Task ToggleMuteAllAsync(bool value)
+        {
+            _browserService.PostMessage(Ipc.ToMuteAllMessage(value));
             await Task.CompletedTask;
         }
     }

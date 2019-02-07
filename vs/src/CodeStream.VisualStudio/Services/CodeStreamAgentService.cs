@@ -298,6 +298,7 @@ namespace CodeStream.VisualStudio.Services
                         openCommentOnSelect = _settingsService.OpenCommentOnSelect,
                         showHeadshots = _settingsService.ShowHeadshots,
                         showMarkers = _settingsService.ShowMarkers,
+                        muteAll = settings.MuteAll,
                         team = _settingsService.Team
                     },
                     env = _settingsService.GetEnvironmentName(),
@@ -337,6 +338,7 @@ namespace CodeStream.VisualStudio.Services
                     email = state["email"].ToString(),
                     showMarkers = settings.ShowMarkers,
                     showHeadshots = settings.ShowHeadshots,
+                    muteAll = settings.MuteAll,
                     openCommentOnSelect = settings.OpenCommentOnSelect,
                     team = settings.Team
                 },

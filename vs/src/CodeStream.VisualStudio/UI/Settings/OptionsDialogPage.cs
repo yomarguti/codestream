@@ -10,6 +10,7 @@ namespace CodeStream.VisualStudio.UI.Settings
         private string _email;
         private bool _showMarkers = true;
         private bool _showHeadshots = true;
+        private bool _muteAll = false;
         private TraceLevel _traceLevel;
         private bool _openCommentOnSelect = false;
         private string _team;
@@ -158,6 +159,19 @@ namespace CodeStream.VisualStudio.UI.Settings
             set
             {
                 _openCommentOnSelect = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        [Category("UI")]
+        [DisplayName("Mute All")]
+        [Description("Specifies whether to indicate when new messages arrive")]
+        public bool MuteAll
+        {
+            get => _muteAll;
+            set
+            {
+                _muteAll = value;
                 NotifyPropertyChanged();
             }
         }
