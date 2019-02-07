@@ -9,7 +9,7 @@ New-Module -ScriptBlock {
     function Read-VersionAssemblyInfo {
         $file = Get-AssemblyInfoPath
         $currentVersion = Get-Content $file | %{
-        $regex = '\[assembly: AssemblyVersion\("(\d+\.\d+\.\d+)"\)]'
+        $regex = '\[assembly: AssemblyVersion\("(\d+\.\d+\.\d+.\d+)"\)]'
             if ($_ -match $regex) {
                 $matches[1]
             }
@@ -23,10 +23,10 @@ New-Module -ScriptBlock {
         $newContent = Get-Content $file | %{
             $newString = $_
             #$regex = "(string Version = `")\d+\.\d+\.\d+\.\d+"
-            $regex = "\(`"(\d+\.\d+\.\d+)`"\)"
+            $regex = "\(`"(\d+\.\d+\.\d+.\d+)`"\)"
             if ($_ -match $regex) {
                 $numberOfReplacements++
-                $newString = $newString -replace $regex,  "(`"$($version.Major).$($version.Minor).$(($version.Build, 0 -ne $null)[0])`")"
+                $newString = $newString -replace $regex,  "(`"$($version.Major).$($version.Minor).$(($version.Build, 0 -ne $null)[0]).$(($version.Revision, 0 -ne $null)[0])`")"
             }
             $newString
         }
