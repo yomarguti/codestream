@@ -10,6 +10,7 @@ namespace CodeStream.VisualStudio.UnitTests.Stubs
         public string Email { get; set; }
         public bool ShowMarkers { get; set; }
         public bool ShowHeadshots { get; set; }
+        public bool MuteAll { get; set; }
         public string ServerUrl { get; set; }
         public string WebAppUrl { get; set; }
         public string Team { get; set; }
