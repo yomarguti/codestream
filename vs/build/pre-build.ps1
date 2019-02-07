@@ -7,6 +7,7 @@ $localLicenseFile = $checkoutDir + '\vs-codestream\licenses\Release\teamdev.lice
 $remoteLicenseFile = '/home/web/.codestream/licenses/teamdev/DotNetBrowser/runtime/teamdev.licenses'
 
 Write-Host 'Checkout Dir: ' $checkoutDir
+Write-Host 'PSScriptRoot: ' $PSScriptRoot
 Write-Host 'Build Number: ' $env:build_number
 Write-Host 'Asset-Env   : ' $assetEnv
 
@@ -28,4 +29,4 @@ Write-Host '************ npm install -g lightercollective'
 
 Write-Host 'DISABLE_OPENCOLLECTIVE is set to' $env:DISABLE_OPENCOLLECTIVE
 
-.\Bump-Version.ps1 -BumpBuild -BuildNumber $env:build_number -Environment $assetEnv
+. $PSScriptRoot\Bump-Version.ps1 -BumpBuild -BuildNumber $env:build_number -Environment $assetEnv
