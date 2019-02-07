@@ -36,6 +36,7 @@ namespace CodeStream.VisualStudio
         public const int WebViewToggleCommandId = 0x0100;
         public const int AuthenticationCommandId = 0x0200;
         public const int UserCommandId = 0x0300;
+        public const int WebViewReloadCommandId = 0x0500;
         public const int CodeStreamEditorCommands = 0x1023;
         public const int AddCodemarkCommandId = 0x0400;
         public const int logo = 0x0001;

@@ -92,6 +92,7 @@
     <Compile Include="Commands\CommandBase.cs" />
     <Compile Include="Commands\UserCommand.cs" />
     <Compile Include="Commands\AuthenticationCommand.cs" />
+    <Compile Include="Commands\WebViewReloadCommand.cs" />
     <Compile Include="Controllers\AuthenticationController.cs" />
     <Compile Include="Controllers\ConfigurationController.cs" />
     <Compile Include="Controllers\LiveShareController.cs" />

@@ -60,6 +60,7 @@ namespace CodeStream.VisualStudio.Packages
             await AuthenticationCommand.InitializeAsync(this);
             await UserCommand.InitializeAsync(this);
             await AddCodemarkCommand.InitializeAsync(this);
+            await WebViewReloadCommand.InitializeAsync(this);
 
             var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
             _disposables = new List<IDisposable>
