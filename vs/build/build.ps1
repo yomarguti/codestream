@@ -1,4 +1,4 @@
-﻿[CmdletBinding(PositionalBinding = $false)]
+[CmdletBinding(PositionalBinding = $false)]
 Param(
 	[Parameter(Mandatory = $false)]
 	[Alias("q")]
@@ -7,7 +7,7 @@ Param(
 	[Parameter(Mandatory = $false)]
 	[ValidateSet("Debug", "Release")]
 	[Alias("c")]
-	[System.String] $Configuration = "Debug",
+	[System.String] $Configuration = "Release",
 
 	[Parameter(Mandatory = $false)]
 	[ValidateSet("Clean", "Build", "Rebuild")]
@@ -90,7 +90,6 @@ function Build-AgentAndWebview {
 
 	& npm run $(if ($Configuration -eq "Release") { "bundle:ci" } else { "bundle" })
 	if ($LastExitCode -ne 0) {
-		Write-Log "Bundling agent & webview failed" "Red"
 		throw "Bundling agent & webview failed"
 	}
 
@@ -100,7 +99,6 @@ function Build-AgentAndWebview {
 
 	& cmd /c $(Resolve-Path -path "node_modules/.bin/pkg") "src/CodeStream.VisualStudio/LSP/agent.js" --targets node8-win-x86 --out-path "src/CodeStream.VisualStudio/LSP/"
 	if ($LastExitCode -ne 0) {
-		Write-Log "Packaging agent failed" "Red"
 		throw "Packaging agent failed"
 	}
 
@@ -133,7 +131,6 @@ function Build-Extension {
 	& $msbuild src/CodeStream.VisualStudio.sln /p:AllowUnsafeBlocks=true /verbosity:$Verbosity /target:$Target /p:Configuration=$Configuration /p:Platform=$Platform /p:OutputPath=$OutputDir /p:VisualStudioVersion=$VisualStudioVersion /p:DeployExtension=$DeployExtension
 
 	if ($LastExitCode -ne 0) {
-		Write-Log "MSBuild failed" "Red"
 		throw "MSBuild failed"
 	}
 
@@ -142,7 +139,6 @@ function Build-Extension {
 		& $vstest "$($OutputDir)/CodeStream.VisualStudio.UnitTests.dll" /Platform:$Platform
 
 		if ($LastExitCode -ne 0) {
-			Write-Log "UnitTests failed" "Red"
 			throw "UnitTests failed"
 		}
 
