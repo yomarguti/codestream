@@ -8,7 +8,7 @@ $remoteLicenseFile = '/home/web/.codestream/licenses/teamdev/DotNetBrowser/runti
 
 Write-Host 'Checkout Dir: ' $checkoutDir
 Write-Host 'PSScriptRoot: ' $PSScriptRoot
-Write-Host 'Build Number: ' $env:build_number
+Write-Host 'Build Number: ' $env:BUILD_NUMBER
 Write-Host 'Asset-Env   : ' $assetEnv
 
 $cred = new-object -typename System.Management.Automation.PSCredential $username, (new-object System.Security.SecureString)
@@ -29,4 +29,4 @@ Write-Host '************ npm install -g lightercollective'
 
 Write-Host 'DISABLE_OPENCOLLECTIVE is set to' $env:DISABLE_OPENCOLLECTIVE
 
-. $PSScriptRoot\Bump-Version.ps1 -BumpBuild -BuildNumber $env:build_number -Environment $assetEnv
+. $PSScriptRoot\Bump-Version.ps1 -BumpBuild -BuildNumber $env:BUILD_NUMBER -Environment $assetEnv
