@@ -1,10 +1,12 @@
-﻿using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,10 +17,13 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 {
     internal class CodemarkSuggestedActionsSource : ISuggestedActionsSource
     {
+        private static readonly ILogger Log = LogManager.ForContext<CodemarkSuggestedActionsSource>();
+
         // ReSharper disable once NotAccessedField.Local
         private readonly CodemarkSuggestedActionsSourceProvider _actionsSourceProvider;
         private readonly ITextBuffer _textBuffer;
         // ReSharper disable once NotAccessedField.Local
+
         private readonly ITextView _textView;
         private readonly ITextDocumentFactoryService _textDocumentFactoryService;
 
@@ -48,40 +53,64 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 
         public IEnumerable<SuggestedActionSet> GetSuggestedActions(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken)
         {
-            if (_selectedText?.HasText == false || !_textDocumentFactoryService.TryGetTextDocument(_textBuffer, out var textDocument))
+            ITextDocument textDocument = null;
+            try
             {
-                return Enumerable.Empty<SuggestedActionSet>();
+                if (_selectedText?.HasText == false ||
+                    _textDocumentFactoryService?.TryGetTextDocument(_textBuffer, out textDocument) == false)
+                {
+                    Log.Verbose($"{nameof(GetSuggestedActions)} Empty HasText={_selectedText?.HasText}, TextDocument={textDocument != null}, TextDocumentFactory={_textDocumentFactoryService != null}");
+                    return Enumerable.Empty<SuggestedActionSet>();
+                }
+
+                return new[]
+                {
+                    new SuggestedActionSet(
+                        actions: new ISuggestedAction[]
+                        {
+                            new CodemarkSuggestedAction(textDocument, _selectedText)
+                        },
+                        categoryName: null,
+                        title: null,
+                        priority: SuggestedActionSetPriority.None,
+                        applicableToSpan: null
+                    )
+                };
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, nameof(GetSuggestedActions));
             }
 
-            return new[]
-            {
-                new SuggestedActionSet(
-                    actions: new ISuggestedAction[]
-                    {
-                        new CodemarkSuggestedAction(textDocument, _selectedText)
-                    },
-                    categoryName: null,
-                    title: null,
-                    priority: SuggestedActionSetPriority.None,
-                    applicableToSpan: null
-                )
-            };
+            return Enumerable.Empty<SuggestedActionSet>();
         }
 
         public Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken)
         {
-            var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
-            if (sessionService == null || sessionService.IsReady == false) return System.Threading.Tasks.Task.FromResult(false);
+            try
+            {
+                var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+                if (sessionService == null || sessionService.IsReady == false)
+                {
+                    Log.Verbose($"{nameof(HasSuggestedActionsAsync)} is null or sessionService.IsReady == false");
+                    return System.Threading.Tasks.Task.FromResult(false);
+                }
 
-            var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
-            _selectedText = ideService?.GetSelectedText();
+                var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
+                _selectedText = ideService?.GetSelectedText();
 
-            return System.Threading.Tasks.Task.FromResult(_selectedText?.HasText == true);
+                return System.Threading.Tasks.Task.FromResult(_selectedText?.HasText == true);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, nameof(HasSuggestedActionsAsync));
+                return System.Threading.Tasks.Task.FromResult(false);
+            }
         }
 
         public void Dispose()
         {
-
+            Log.Verbose($"{nameof(CodemarkSuggestedActionsSource)} disposed");
         }
     }
 
@@ -103,8 +132,18 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 
         public void Invoke(CancellationToken cancellationToken)
         {
+            if (_textDocument == null)
+            {
+                Log.Verbose($"{nameof(_textDocument)} is null");
+                return;
+            }
+
             var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
-            if (codeStreamService == null) return;
+            if (codeStreamService == null)
+            {
+                Log.Verbose($"{nameof(codeStreamService)} is null");
+                return;
+            }
 
             ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
