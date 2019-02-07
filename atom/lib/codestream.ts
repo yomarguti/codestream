@@ -1,9 +1,10 @@
 import { CompositeDisposable, Disposable } from "atom";
-import { CodestreamView, CODESTREAM_VIEW_URI } from "./views/codestream-view";
-import { actions, createStore, WebviewApi } from "codestream-components";
+import { CodestreamView, CODESTREAM_VIEW_URI } from "./views/webview/codestream-view";
+import { actions, createStore, HostApi } from "codestream-components";
 import { StatusBar, Tile } from "./types/package-services/status-bar";
 import { WorkspaceSession, SessionStatus } from "./workspace/workspace-session";
 import { PackageState } from "./types/package";
+import { WebviewIpc } from "./views/webview/ipc";
 
 class CodestreamPackage {
 	subscriptions = new CompositeDisposable();
@@ -13,8 +14,10 @@ class CodestreamPackage {
 	view?: CodestreamView;
 	store: any;
 	sessionStatusCommand?: Disposable;
+	port: MessagePort;
 
-	constructor(state: PackageState) {
+	constructor(port: MessagePort, state: PackageState) {
+		this.port = port;
 		this.workspaceSession = WorkspaceSession.create(state);
 		this.initialize();
 	}
@@ -23,7 +26,7 @@ class CodestreamPackage {
 	async initialize() {
 		this.store = createStore(
 			this.workspaceSession.getBootstrapState(),
-			{ api: new WebviewApi() },
+			{ api: HostApi.instance },
 			[]
 		);
 		this.store.dispatch(actions.bootstrap(await this.workspaceSession.getBootstrapData()));
@@ -51,7 +54,7 @@ class CodestreamPackage {
 			atom.workspace.addOpener(uri => {
 				if (uri === CODESTREAM_VIEW_URI) {
 					if (this.view && this.view.alive) return this.view;
-					this.view = new CodestreamView(this.workspaceSession, this.store);
+					this.view = new CodestreamView(this.workspaceSession, this.port, this.store);
 					return this.view;
 				}
 			}),
@@ -63,7 +66,7 @@ class CodestreamPackage {
 
 	// Package lifecyle
 	deserializeCodestreamView() {
-		this.view = new CodestreamView(this.workspaceSession, this.store);
+		this.view = new CodestreamView(this.workspaceSession, this.port, this.store);
 		return this.view;
 	}
 
@@ -121,10 +124,17 @@ class CodestreamPackage {
 	}
 }
 
+const webviewIpc = new WebviewIpc();
+Object.defineProperty(window, "acquireCodestreamHost", {
+	value() {
+		return webviewIpc.webview;
+	},
+});
+
 let codestream;
 const packageWrapper = {
 	initialize(state: PackageState) {
-		codestream = new CodestreamPackage(state);
+		codestream = new CodestreamPackage(webviewIpc.host, state);
 	},
 };
 

@@ -54,7 +54,6 @@ export class WorkspaceSession {
 	private _sessionStatus = SessionStatus.SignedOut;
 
 	static create(state: PackageState) {
-		console.debug("creating a session with", state);
 		return new WorkspaceSession(state.session, state.lastUsedEmail, state.environment);
 	}
 
@@ -166,14 +165,14 @@ export class WorkspaceSession {
 		return this.signupToken;
 	}
 
-	async loginViaSignupToken(): Promise<LoginResult> {
-		if (this.signupToken === undefined) {
+	async loginViaSignupToken(token?: string): Promise<LoginResult> {
+		if (this.signupToken === undefined && token === undefined) {
 			throw new Error("A signup token hasn't been generated");
 		}
 		this.sessionStatus = SessionStatus.SigningIn;
 		try {
 			this.agent = await CodeStreamAgent.initWithSignupToken(
-				this.signupToken,
+				this.signupToken || token!,
 				this.environment.serverUrl
 			);
 			await this.completeLogin();

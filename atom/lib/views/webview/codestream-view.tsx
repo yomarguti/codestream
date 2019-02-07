@@ -6,7 +6,15 @@ import { EventEmitter, IpcRequest as WebviewIpcRequest } from "codestream-compon
 import translations from "codestream-components/translations/en";
 import { CompositeDisposable } from "atom";
 import { WorkspaceSession } from "lib/workspace/workspace-session";
-import { LoginResult } from "../shared/api.protocol";
+import { LoginResult } from "../../shared/api.protocol";
+import {
+	Target,
+	CommandType,
+	GoToSlackSignin,
+	GoToSlackSigninResult,
+	ValidateSignup,
+	ValidateSignupResult,
+} from "codestream-components/ipc/commands";
 
 export const CODESTREAM_VIEW_URI = "atom://codestream";
 
@@ -16,9 +24,11 @@ export class CodestreamView {
 	private session: WorkspaceSession;
 	private store: any;
 	private subscriptions: CompositeDisposable;
+	private port: MessagePort;
 
-	constructor(session: WorkspaceSession, store: any) {
+	constructor(session: WorkspaceSession, port: MessagePort, store: any) {
 		this.session = session;
+		this.port = port;
 		this.store = store;
 		this.alive = true;
 		this.subscriptions = new CompositeDisposable();
@@ -36,10 +46,12 @@ export class CodestreamView {
 		);
 	}
 
+	// update-able
 	getTitle() {
 		return "CodeStream";
 	}
 
+	// update-able
 	getIconName() {
 		return "comment-discussion";
 	}
@@ -79,34 +91,35 @@ export class CodestreamView {
 	}
 
 	private setupWebviewListeners() {
-		this.subscriptions.add(
-			EventEmitter.on("request", this.handleWebviewRequest)
-			// EventEmitter.on("analytics", ({ label, payload }) => mixpanel.track(label, payload)),
-		);
+		this.port.onmessage = ({ data }: { data: { id: string; command: CommandType } }) => {
+			if (data.command.target === Target.Extension)
+				this.handleWebviewCommand(data.id, data.command);
+		};
 	}
 
-	private handleWebviewRequest = async (request: WebviewIpcRequest) => {
-		switch (request.action) {
-			case "go-to-slack-signin": {
+	private async handleWebviewCommand(id: string, command: CommandType) {
+		switch (command.name) {
+			case GoToSlackSignin.name: {
 				const ok = shell.openExternal(
 					`${
 						this.session.environment.webAppUrl
 					}/service-auth/slack?state=${this.session.getSignupToken()}`
 				);
-				if (ok) EventEmitter.emit("response", { id: request.id, payload: true });
+				if (ok) this.respond<GoToSlackSigninResult>({ id, result: true });
 				else {
-					console.error("Error opening browser");
-					EventEmitter.emit("response", { id: request.id, error: "No app found to open url" });
+					this.respond({
+						id,
+						error: "No app found to open url",
+					});
 				}
 				break;
 			}
-			case "validate-signup": {
-				const status = await this.session.loginViaSignupToken();
-				if (status !== LoginResult.Success)
-					EventEmitter.emit("response", { id: request.id, error: status });
+			case ValidateSignup.name: {
+				const status = await this.session.loginViaSignupToken(command.params);
+				if (status !== LoginResult.Success) this.respond({ id, error: status });
 				else {
 					const data = await this.session.getBootstrapData();
-					EventEmitter.emit("response", { id: request.id, payload: data });
+					this.respond<ValidateSignupResult>({ id, result: data });
 				}
 				break;
 			}
@@ -114,5 +127,9 @@ export class CodestreamView {
 				debugger;
 			}
 		}
-	};
+	}
+
+	private respond<R = any>(message: { id: string; result: R } | { id: string; error: any }): void {
+		this.port.postMessage(message);
+	}
 }
