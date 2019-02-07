@@ -117,7 +117,7 @@ module.exports = function(env, argv) {
 			modules: [path.resolve(__dirname, "src/CodeStream.VisualStudio/UI/WebViews"), "node_modules"],
 			alias: {
 				// TODO: Use environment variable if exists
-				"codestream-components$": path.resolve(__dirname, "../codestream-components/index.js"),
+				"codestream-components$": path.resolve(__dirname, "../codestream-components/index.ts"),
 				"codestream-components": path.resolve(__dirname, "../codestream-components/")
 			}
 		},
