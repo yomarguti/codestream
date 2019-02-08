@@ -443,7 +443,7 @@ namespace CodeStream.VisualStudio.Models
         public int[] Location { get; set; }
         public Source Source { get; set; }
         public string GitError { get; set; }
-        public bool? IsHightlight { get; set; }
+        public bool? IsHighlight { get; set; }
     }
 
     public class DidChangeStreamThreadNotification

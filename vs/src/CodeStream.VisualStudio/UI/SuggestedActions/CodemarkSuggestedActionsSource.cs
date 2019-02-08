@@ -145,7 +145,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
                 return;
             }
 
-            codeStreamService.PostCodeAsync(new Uri(_textDocument.FilePath), _selectedText, _textDocument.IsDirty, true, cancellationToken);
+            codeStreamService.PostCodeAsync(new Uri(_textDocument.FilePath), _selectedText, _textDocument.IsDirty, false, cancellationToken);
         }
 
         public Task<object> GetPreviewAsync(CancellationToken cancellationToken)

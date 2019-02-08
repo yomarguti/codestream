@@ -11,7 +11,6 @@ namespace CodeStream.VisualStudio.Controllers
     {
         private static readonly ILogger Log = LogManager.ForContext<ConfigurationController>();
 
-
         private readonly IEventAggregator _eventAggregator;
         private readonly IBrowserService _browserService;
 
@@ -23,8 +22,9 @@ namespace CodeStream.VisualStudio.Controllers
 
         public async Task UpdateOpenCommentOnSelectAsync(bool value)
         {
-            _eventAggregator.Publish(new CodeStreamConfigurationChangedEvent() { OpenCommentOnSelect = value });
             _browserService.PostMessage(Ipc.ToCommentOnSelectMessage(value));
+            Log.Verbose($"{nameof(UpdateOpenCommentOnSelectAsync)} Value={value}");
+
             await Task.CompletedTask;
         }
 
@@ -32,12 +32,16 @@ namespace CodeStream.VisualStudio.Controllers
         {
             _eventAggregator.Publish(new CodemarkVisibilityEvent { IsVisible = value });
             _browserService.PostMessage(Ipc.ToShowMarkersMessage(value));
+            Log.Verbose($"{nameof(ToggleShowMarkersAsync)} Value={value}");
+
             await Task.CompletedTask;
         }
 
         public async Task ToggleMuteAllAsync(bool value)
         {
             _browserService.PostMessage(Ipc.ToMuteAllMessage(value));
+            Log.Verbose($"{nameof(ToggleMuteAllAsync)} Value={value}");
+
             await Task.CompletedTask;
         }
     }

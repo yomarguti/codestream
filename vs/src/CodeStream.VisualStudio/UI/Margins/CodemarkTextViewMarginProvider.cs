@@ -60,7 +60,6 @@ namespace CodeStream.VisualStudio.UI.Margins
             var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
             var toolWindowProvider = Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
             var agentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
-            var settings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
 
             return new CodemarkTextViewMargin(
                 _viewTagAggregatorFactoryService,
@@ -70,7 +69,6 @@ namespace CodeStream.VisualStudio.UI.Margins
                 toolWindowProvider,
                 sessionService,
                 agentService,
-                settings,
                 wpfTextViewHost.TextView,
                 textDocument);
         }

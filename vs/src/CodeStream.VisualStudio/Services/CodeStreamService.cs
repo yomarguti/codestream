@@ -17,7 +17,7 @@ namespace CodeStream.VisualStudio.Services
     public interface ICodeStreamService
     {
         Task ChangeActiveWindowAsync(string fileName, Uri uri);
-        Task<object> PostCodeAsync(Uri uri, SelectedText selectedText, bool isDirty, bool? isHighlight = null, CancellationToken? cancellationToken = null);
+        Task<object> PostCodeAsync(Uri uri, SelectedText selectedText, bool isDirty, bool isHighlight = false, CancellationToken? cancellationToken = null);
         Task OpenCommentByThreadAsync(string streamId, string threadId);
         /// <summary>
         /// logs the user out from the CodeStream agent and the session
@@ -111,7 +111,7 @@ namespace CodeStream.VisualStudio.Services
             return Task.CompletedTask;
         }
 
-        public async Task<object> PostCodeAsync(Uri uri, SelectedText selectedText, bool isDirty, bool? isHighlight = null,
+        public async Task<object> PostCodeAsync(Uri uri, SelectedText selectedText, bool isDirty, bool isHighlight = false,
             CancellationToken? cancellationToken = null)
         {
             if (!_sessionService.IsReady) return Task.CompletedTask;
@@ -139,7 +139,7 @@ namespace CodeStream.VisualStudio.Services
                         Location = range.ToLocation(),
                         Source = source,
                         GitError = post?.GitError,
-                        IsHightlight = isHighlight
+                        IsHighlight = isHighlight
                     }
                 });
             }

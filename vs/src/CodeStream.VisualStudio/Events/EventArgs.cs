@@ -64,11 +64,6 @@ namespace CodeStream.VisualStudio.Events
 		public bool IsVisible { get; set; }
 	}
 
-	public sealed class CodeStreamConfigurationChangedEvent : EventBase
-	{
-		public bool OpenCommentOnSelect { get; set; }
-	}
-
 	public sealed class LiveShareStartedEvent : EventBase
 	{
 		public CollaborationSession CollaborationSession { get; }

@@ -38,7 +38,6 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         private readonly IWpfTextViewHost _wpfTextViewHost;
         private readonly IWpfTextView _textView;
-        private readonly IEventAggregator _events;
         private readonly IToolWindowProvider _toolWindowProvider;
         private readonly ISessionService _sessionService;
         private readonly IEventAggregator _eventAggregator;
@@ -52,25 +51,23 @@ namespace CodeStream.VisualStudio.UI.Margins
         private Canvas[] _childCanvases;
         private Dictionary<object, LineInfo> _lineInfos;
         private ITagAggregator<IGlyphTag> _tagAggregator;
-
-        private bool _openCommentOnSelect;
+        
         private static readonly ILogger Log = LogManager.ForContext<CodemarkTextViewMargin>();
         private static int MARGIN_WIDTH = 20;
-        DocumentMarkersResponse _markers = null;
-
+        DocumentMarkersResponse _markers;
+        
         /// <summary>
         /// Initializes a new instance of the <see cref="CodemarkTextViewMargin"/> class for a given <paramref name="textView"/>.
         /// </summary>
-        /// <param name="agentService"></param>
-        /// <param name="settingsService"></param>
-        /// <param name="textView">The <see cref="IWpfTextView"/> to attach the margin to.</param>
+        /// <param name="viewTagAggregatorFactoryService"></param>
         /// <param name="glyphFactoryProviders"></param>
         /// <param name="wpfTextViewHost"></param>
         /// <param name="eventAggregator"></param>
         /// <param name="toolWindowProvider"></param>
         /// <param name="sessionService"></param>
-        /// <param name="textDocumentFactoryService"></param>
-        /// <param name="viewTagAggregatorFactoryService"></param>
+        /// <param name="agentService"></param>
+        /// <param name="textView"></param>
+        /// <param name="textDocument"></param>
         public CodemarkTextViewMargin(
             IViewTagAggregatorFactoryService viewTagAggregatorFactoryService,
             IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> glyphFactoryProviders,
@@ -79,7 +76,6 @@ namespace CodeStream.VisualStudio.UI.Margins
             IToolWindowProvider toolWindowProvider,
             ISessionService sessionService,
             ICodeStreamAgentService agentService,
-            ISettingsService settingsService,
             IWpfTextView textView,
             ITextDocument textDocument)
         {
@@ -90,7 +86,6 @@ namespace CodeStream.VisualStudio.UI.Margins
             _toolWindowProvider = toolWindowProvider;
             _sessionService = sessionService;
             _agentService = agentService;
-            _openCommentOnSelect = settingsService.OpenCommentOnSelect;
             _textView = textView;
 
             _glyphFactories = new Dictionary<Type, GlyphFactoryInfo>();
@@ -102,8 +97,6 @@ namespace CodeStream.VisualStudio.UI.Margins
             ClipToBounds = true;
 
             Background = new SolidColorBrush(Colors.Transparent);
-
-            _events = new EventAggregator();
 
             //listening on the main thread since we have to change the UI state
             _disposables = new List<IDisposable>
@@ -332,13 +325,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                           {
                               Log.Warning(ex, $"{nameof(DocumentMarkerChangedEvent)} for {currentUri}");
                           }
-                      }));
-
-                    _disposables.Add(
-                        _eventAggregator.GetEvent<CodeStreamConfigurationChangedEvent>()
-                            .ObserveOnDispatcher()
-                            .Throttle(TimeSpan.FromMilliseconds(100))
-                            .Subscribe(_ => { _openCommentOnSelect = _.OpenCommentOnSelect; }));
+                      }));                    
 
                     _disposables.Add(Observable.FromEventPattern(ev => _textView.Selection.SelectionChanged += ev,
                               ev => _textView.Selection.SelectionChanged -= ev)
@@ -346,7 +333,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                           .ObserveOnDispatcher()
                           .Subscribe((System.Reactive.EventPattern<object> eventPattern) =>
                           {
-                              if (!_openCommentOnSelect || _textView.Selection.IsEmpty) return;
+                              if (_textView.Selection.IsEmpty) return;
 
                               if (!_toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) return;
 
