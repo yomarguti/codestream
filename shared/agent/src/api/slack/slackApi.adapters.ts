@@ -515,7 +515,7 @@ export function toSlackPostAttachment(
 	markerLocations: CSMarkerLocations[] | undefined,
 	usernamesById: Map<string, string>,
 	slackUserId: string
-): MessageAttachment[] {
+): MessageAttachment {
 	let { color } = codemark;
 	if (color !== undefined) {
 		switch (color) {
@@ -564,6 +564,9 @@ export function toSlackPostAttachment(
 
 	switch (codemark.type) {
 		case CodemarkType.Comment:
+			author = `${usernamesById.get(slackUserId)} commented on code`;
+			fallback = `\n${author}`;
+
 			text = codemark.text;
 			if (text) {
 				fallback = `\n${text}`;
@@ -572,8 +575,6 @@ export function toSlackPostAttachment(
 		case CodemarkType.Bookmark:
 			author = `${usernamesById.get(slackUserId)} set a bookmark`;
 			fallback = `\n${author}`;
-			// TODO: Add url to web accessible icon
-			// authorIcon = "";
 
 			text = codemark.text;
 			if (text) {
@@ -583,8 +584,6 @@ export function toSlackPostAttachment(
 		case CodemarkType.Issue:
 			author = `${usernamesById.get(slackUserId)} posted an issue`;
 			fallback = `\n${author}`;
-			// TODO: Add url to web accessible icon
-			// authorIcon = "";
 
 			title = codemark.title;
 			if (title) {
@@ -611,8 +610,6 @@ export function toSlackPostAttachment(
 		case CodemarkType.Question:
 			author = `${usernamesById.get(slackUserId)} has a question`;
 			fallback = `\n${author}`;
-			// TODO: Add url to web accessible icon
-			// authorIcon = "";
 
 			title = codemark.title;
 			if (title) {
@@ -626,8 +623,6 @@ export function toSlackPostAttachment(
 		case CodemarkType.Trap:
 			author = `${usernamesById.get(slackUserId)} created a trap`;
 			fallback = `\n${author}`;
-			// TODO: Add url to web accessible icon
-			// authorIcon = "";
 
 			text = codemark.text;
 			if (text) {
@@ -689,7 +684,6 @@ export function toSlackPostAttachment(
 	const attachment: MessageAttachment = {
 		fallback: fallback !== undefined ? fallback.substr(1) : undefined,
 		author_name: author,
-		// author_icon: authorIcon,
 		title: title,
 		fields: fields,
 		text: text,
@@ -699,7 +693,7 @@ export function toSlackPostAttachment(
 		callback_id: `codestream://codemark/${codemark.id}?teamId=${codemark.teamId}`,
 		mrkdwn_in: ["fields", "pretext", "text"]
 	};
-	return [attachment];
+	return attachment;
 }
 
 export function toSlackTeam(team: CSTeam, usernamesById: Map<string, string>) {

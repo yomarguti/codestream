@@ -1,5 +1,5 @@
 "use strict";
-import { LogLevel, WebAPICallResult, WebClient } from "@slack/client";
+import { LogLevel, MessageAttachment, WebAPICallResult, WebClient } from "@slack/client";
 import HttpsProxyAgent from "https-proxy-agent";
 import { RequestInit } from "node-fetch";
 import { Emitter, Event } from "vscode-languageserver";
@@ -507,6 +507,7 @@ export class SlackApiProvider implements ApiProvider {
 		let createdPostId;
 		try {
 			const usernamesById = await this.ensureUsernamesById();
+			const userIdsByName = await this.ensureUserIdsByName();
 
 			let text = request.text;
 			let meMessage = meMessageRegex.test(text);
@@ -517,7 +518,7 @@ export class SlackApiProvider implements ApiProvider {
 			}
 
 			if (text) {
-				text = toSlackPostText(text, request.mentionedUserIds, usernamesById);
+				text = toSlackPostText(text, request.mentionedUserIds, userIdsByName);
 			}
 
 			const { streamId, postId: parentPostId } = fromSlackPostId(
@@ -542,7 +543,7 @@ export class SlackApiProvider implements ApiProvider {
 				return postResponse;
 			}
 
-			let attachments;
+			let attachment: MessageAttachment | undefined;
 			let codemark: CSCodemark | undefined;
 			let markers: CSMarker[] | undefined;
 			let markerLocations: CSMarkerLocations[] | undefined;
@@ -558,7 +559,7 @@ export class SlackApiProvider implements ApiProvider {
 
 				({ codemark, markers, markerLocations, streams, repos } = codemarkResponse);
 
-				attachments = toSlackPostAttachment(
+				attachment = toSlackPostAttachment(
 					codemark,
 					request.codemark.remotes,
 					markers,
@@ -566,6 +567,18 @@ export class SlackApiProvider implements ApiProvider {
 					usernamesById,
 					this._slackUserId
 				);
+
+				if (attachment.author_name) {
+					text = attachment.author_name;
+					attachment.author_name = undefined;
+
+					if (request.mentionedUserIds) {
+						text += ` /cc ${request.mentionedUserIds
+							.map(u => `@${usernamesById.get(u)}`)
+							.join(", ")}`;
+					}
+					text = toSlackPostText(text, request.mentionedUserIds, userIdsByName);
+				}
 			}
 
 			const response = await this.slackApiCall(
@@ -577,7 +590,7 @@ export class SlackApiProvider implements ApiProvider {
 					thread_ts: parentPostId,
 					unfurl_links: true,
 					reply_broadcast: false, // parentPostId ? true : undefined --- because of slack bug (https://trello.com/c/Y48QI6Z9/919)
-					attachments: attachments
+					attachments: attachment !== undefined ? [attachment] : undefined
 				},
 				`chat.postMessage`
 			);
