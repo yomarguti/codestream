@@ -103,18 +103,17 @@ function getExtensionConfig(env) {
 		node: {
 			__dirname: false
 		},
-		devtool: "source-map", // !env.production ? "source-map" : undefined,
+		devtool: "source-map",
 		output: {
 			libraryTarget: "commonjs2",
-			filename: "extension.js",
-			devtoolModuleFilenameTemplate: "file:///[absolute-resource-path]"
+			filename: "extension.js"
 		},
 		optimization: {
 			minimizer: [
 				new TerserPlugin({
 					cache: true,
 					parallel: true,
-					sourceMap: true, // env.production,
+					sourceMap: true,
 					terserOptions: {
 						ecma: 8,
 						// Keep the class names otherwise @log won't provide a useful name

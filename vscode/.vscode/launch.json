@@ -11,13 +11,9 @@
 				"VSCODE_DEBUGGING_EXTENSION": "codestream",
 				"CODESTREAM_AGENT_BREAK_ON_START": "false"
 			},
+			"cwd": "${workspaceFolder}",
 			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/node_modules/**",
-				"**/app/out/vs/**",
-				"**/extensions/**"
-			],
+			"skipFiles": ["<node_internals>/**", "**/node_modules/**", "**/resources/app/out/vs/**"],
 			"smartStep": true,
 			"sourceMaps": true
 		},
@@ -31,13 +27,9 @@
 				"VSCODE_DEBUGGING_EXTENSION": "codestream",
 				"CODESTREAM_AGENT_BREAK_ON_START": "true"
 			},
+			"cwd": "${workspaceFolder}",
 			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/node_modules/**",
-				"**/app/out/vs/**",
-				"**/extensions/**"
-			],
+			"skipFiles": ["<node_internals>/**", "**/node_modules/**", "**/resources/app/out/vs/**"],
 			"smartStep": true,
 			"sourceMaps": true
 		},
@@ -50,13 +42,9 @@
 			"env": {
 				"VSCODE_DEBUGGING_EXTENSION": "codestream"
 			},
+			"cwd": "${workspaceFolder}",
 			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/node_modules/**",
-				"**/app/out/vs/**",
-				"**/extensions/**"
-			],
+			"skipFiles": ["<node_internals>/**", "**/node_modules/**", "**/resources/app/out/vs/**"],
 			"smartStep": true,
 			"sourceMaps": true,
 			"preLaunchTask": "npm: rebuild"
@@ -70,13 +58,9 @@
 			"env": {
 				"VSCODE_DEBUGGING_EXTENSION": "codestream"
 			},
+			"cwd": "${workspaceFolder}",
 			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/node_modules/**",
-				"**/app/out/vs/**",
-				"**/extensions/**"
-			],
+			"skipFiles": ["<node_internals>/**", "**/node_modules/**", "**/resources/app/out/vs/**"],
 			"smartStep": true,
 			"sourceMaps": true,
 			"preLaunchTask": "watch"
