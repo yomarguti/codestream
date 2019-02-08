@@ -79,7 +79,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Annotations\Annotations.cs" />
-    <Compile Include="Annotations\RequiresCustomization.cs" />
     <Compile Include="Annotations\Injected.cs" />
     <Compile Include="Application.cs" />
     <Compile Include="CodeStreamEventManager.cs" />
