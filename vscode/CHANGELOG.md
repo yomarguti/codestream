@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.34.0] - 2019-2-8
+
+### Changed
+
+- Mentions in a codemark posted to Slack are now replicated outside of the attachment so that they render as actual mentions on Slack
+
+### Fixed
+
+- Fixes an issue where messages weren't being rendered in realtime
+- Fixes an issue with channel/DM selection list appearing partially obscured
+
 ## [0.33.1] - 2019-2-5
 
 ### Fixed
