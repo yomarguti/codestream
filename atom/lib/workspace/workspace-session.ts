@@ -9,7 +9,7 @@ import { Capabilities } from "lib/shared/agent.protocol";
 
 export type Session = {
 	user: CSMe;
-	currentTeamId: string;
+	teamId: string;
 	token: string;
 };
 
@@ -50,7 +50,10 @@ export class WorkspaceSession {
 	private lastUsedEmail: string;
 	private envConfig: EnvironmentConfig;
 	private signupToken?: string;
-	private agent?: CodeStreamAgent;
+	private _agent?: CodeStreamAgent;
+	get agent() {
+		return this._agent;
+	}
 	private agentCapabilities?: Capabilities;
 	private _sessionStatus = SessionStatus.SignedOut;
 	private isReady?: Promise<void>;
@@ -92,7 +95,7 @@ export class WorkspaceSession {
 	}
 
 	dispose() {
-		if (this.agent) this.agent.dispose();
+		if (this._agent) this._agent.dispose();
 		this.emitter.dispose();
 	}
 
@@ -133,17 +136,19 @@ export class WorkspaceSession {
 		}
 
 		const promise = Promise.all([
-			this.agent!.fetchUsers(),
-			this.agent!.fetchStreams(),
-			this.agent!.fetchTeams(),
-			this.agent!.fetchRepos(),
-			this.agent!.fetchUnreads(),
-			this.agent!.fetchPreferences(),
+			this._agent!.fetchUsers(),
+			this._agent!.fetchStreams(),
+			this._agent!.fetchTeams(),
+			this._agent!.fetchRepos(),
+			this._agent!.fetchUnreads(),
+			this._agent!.fetchPreferences(),
 		]);
 
 		const data: any = {
+			currentTeamId: this.session.teamId,
+			currentUserId: this.session.user.id,
 			context: {
-				currentTeamId: this.session.currentTeamId,
+				currentTeamId: this.session.teamId,
 			},
 			session: {
 				userId: this.session.user.id,
@@ -182,7 +187,7 @@ export class WorkspaceSession {
 	async login(email: string, token: string) {
 		this.sessionStatus = SessionStatus.SigningIn;
 		try {
-			this.agent = await CodeStreamAgent.init(email, token, this.environment.serverUrl);
+			this._agent = await CodeStreamAgent.init(email, token, this.environment.serverUrl);
 			await this.completeLogin();
 			this.sessionStatus = SessionStatus.SignedIn;
 			return LoginResult.Success;
@@ -204,7 +209,7 @@ export class WorkspaceSession {
 		}
 		this.sessionStatus = SessionStatus.SigningIn;
 		try {
-			this.agent = await CodeStreamAgent.initWithSignupToken(
+			this._agent = await CodeStreamAgent.initWithSignupToken(
 				this.signupToken || token!,
 				this.environment.serverUrl
 			);
@@ -226,10 +231,10 @@ export class WorkspaceSession {
 	}
 
 	private completeLogin() {
-		const agentResult = this.agent!.initializeResult;
+		const agentResult = this._agent!.initializeResult;
 		this.session = {
 			user: agentResult.loginResponse.user,
-			currentTeamId: agentResult.state.teamId,
+			teamId: agentResult.state.teamId,
 			token: agentResult.loginResponse.accessToken,
 		};
 		this.lastUsedEmail = agentResult.loginResponse.user.email;
@@ -242,9 +247,9 @@ export class WorkspaceSession {
 			this.session = undefined;
 			this.sessionStatus = SessionStatus.SignedOut;
 		}
-		if (this.agent) {
-			this.agent.dispose();
-			this.agent = undefined;
+		if (this._agent) {
+			this._agent.dispose();
+			this._agent = undefined;
 		}
 	}
 

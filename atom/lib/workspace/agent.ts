@@ -197,9 +197,9 @@ class AgentConnection {
 		// agentProcess.on("exit", code => {
 		// 	console.error("exited", code);
 		// });
-		agentProcess.on("message", message => {
-			// console.debug("message", message);
-		});
+		// agentProcess.on("message", message => {
+		// 	console.info("agent process: ", message);
+		// });
 		return agentProcess;
 	}
 
@@ -270,6 +270,10 @@ export class CodeStreamAgent {
 			GetPreferencesRequestType.method,
 			undefined
 		);
+	}
+
+	sendRequest<R>(name: string, params?: any): Promise<R> {
+		return this.connection.connection!.sendCustomRequest(name, params);
 	}
 
 	dispose() {

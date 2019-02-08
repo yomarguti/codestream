@@ -93,7 +93,12 @@ export class CodestreamView {
 		this.port.onmessage = ({ data }: { data: { id: string; command: CommandType } }) => {
 			if (data.command.target === Target.Extension)
 				this.handleWebviewCommand(data.id, data.command);
+			if (data.command.target === Target.Agent) this.forwardWebviewCommand(data.id, data.command);
 		};
+	}
+	private async forwardWebviewCommand(id: string, command: CommandType) {
+		const response = await this.session.agent!.sendRequest(command.name, command.params);
+		this.respond({ id, result: response });
 	}
 
 	private async handleWebviewCommand(id: string, command: CommandType) {
