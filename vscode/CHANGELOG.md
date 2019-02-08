@@ -9,7 +9,7 @@
 ### Fixed
 
 - Fixes an issue where messages weren't being rendered in realtime
-- Fixes an issue with channel/DM selection list appearing partially obscured
+- Fixes [#34](https://github.com/TeamCodeStream/CodeStream/issues/34) &mdash; Slack channel list not fully visible when creating CodeMark
 
 ## [0.33.1] - 2019-2-5
 
