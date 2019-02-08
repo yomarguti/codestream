@@ -47,6 +47,7 @@ export class CodeStreamAgent implements Disposable {
 	constructor(
 		private readonly _connection: Connection,
 		options: {
+			documents?: TextDocuments;
 			logger?: LspLogger;
 			onInitialize?: RequestHandler<InitializeParams, InitializeResult, InitializeError>;
 			onInitialized?: NotificationHandler<InitializedParams>;
@@ -58,7 +59,10 @@ export class CodeStreamAgent implements Disposable {
 		this._logger = options.logger || new ConnectionLspLogger(this._connection);
 		Logger.initialize(this);
 
-		this.documents = new DocumentManager(new TextDocuments(), this._connection);
+		this.documents = new DocumentManager(
+			options.documents || new TextDocuments(),
+			this._connection
+		);
 	}
 
 	dispose() {

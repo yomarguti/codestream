@@ -5,6 +5,7 @@ import {
 	InitializeParams,
 	InitializeResult,
 	ProposedFeatures,
+	TextDocuments,
 	TextDocumentSyncKind
 } from "vscode-languageserver";
 import { CodeStreamAgent, FileLspLogger, NullLspLogger } from "./agent";
@@ -25,7 +26,10 @@ const connection = createConnection(ProposedFeatures.all);
 
 let initializeParams: InitializeParams | undefined;
 
+const documents = new TextDocuments();
+
 const agentConfig = {
+	documents: documents,
 	logger: logger,
 	onInitialize: async (e: InitializeParams) => {
 		initializeParams = e;
