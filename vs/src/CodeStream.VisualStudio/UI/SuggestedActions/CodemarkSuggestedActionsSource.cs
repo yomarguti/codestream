@@ -145,15 +145,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
                 return;
             }
 
-            ThreadHelper.JoinableTaskFactory.Run(async delegate
-            {
-                await codeStreamService.PostCodeAsync(
-                        new Uri(_textDocument.FilePath),
-                        _selectedText,
-                        _textDocument.IsDirty,
-                        true,
-                        cancellationToken);
-            });
+            codeStreamService.PostCodeAsync(new Uri(_textDocument.FilePath), _selectedText, _textDocument.IsDirty, true, cancellationToken);
         }
 
         public Task<object> GetPreviewAsync(CancellationToken cancellationToken)

@@ -1,12 +1,10 @@
 ﻿using CodeStream.VisualStudio.Extensions;
+using CodeStream.VisualStudio.Packages;
 using CodeStream.VisualStudio.Services;
 using System;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using CodeStream.VisualStudio.Models;
-using CodeStream.VisualStudio.Packages;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
@@ -59,21 +57,16 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         private void Codemark_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (_viewModel?.Marker?.Codemark == null)
-            {
-                return;
-            }
+            if (_viewModel?.Marker?.Codemark == null) return;
 
             var toolWindowProvider = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
             var codeStreamService = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
 
-            Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.Run(async delegate
-            {
-                // ReSharper disable once PossibleNullReferenceException
-                toolWindowProvider.ShowToolWindow(Guids.WebViewToolWindowGuid);
-                // ReSharper disable once PossibleNullReferenceException
-                await codeStreamService.OpenCommentByThreadAsync(_viewModel.Marker.PostStreamId ?? _viewModel.Marker.Codemark.StreamId, _viewModel.Marker.PostId ?? _viewModel.Marker.Codemark.PostId);
-            });
+            if (toolWindowProvider == null || codeStreamService == null) return;
+            
+            toolWindowProvider.ShowToolWindow(Guids.WebViewToolWindowGuid);
+
+            codeStreamService.OpenCommentByThreadAsync(_viewModel.Marker.PostStreamId ?? _viewModel.Marker.Codemark.StreamId, _viewModel.Marker.PostId ?? _viewModel.Marker.Codemark.PostId);
         }
     }
 }

@@ -4,7 +4,6 @@ using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Packages;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Threading;
 using Serilog;
 using System;
 using System.Threading;
@@ -61,41 +60,53 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task ChangeActiveWindowAsync(string fileName, Uri uri)
         {
-            if (!_sessionService.IsReady)
-                return;
+            if (!_sessionService.IsReady) return;
 
-            var streamResponse = await _agentService.GetFileStreamAsync(uri);
-
-            BrowserService.PostMessage(new DidChangeActiveEditorNotification
+            try
             {
-                Type = "codestream:interaction:active-editor-changed",
-                Body = new DidChangeActiveEditorNotificationBody
+                var streamResponse = await _agentService.GetFileStreamAsync(uri);
+
+                BrowserService.PostMessage(new DidChangeActiveEditorNotification
                 {
-                    Editor = new DidChangeActiveEditorNotificationBodyEditor
+                    Type = "codestream:interaction:active-editor-changed",
+                    Body = new DidChangeActiveEditorNotificationBody
                     {
-                        FileStreamId = streamResponse?.Stream?.Id,
-                        Uri = uri.ToString(),
-                        FileName = fileName,
-                        // in vscode, this came from the editor...
-                        LanguageId = null
+                        Editor = new DidChangeActiveEditorNotificationBodyEditor
+                        {
+                            FileStreamId = streamResponse?.Stream?.Id,
+                            Uri = uri.ToString(),
+                            FileName = fileName,
+                            // in vscode, this came from the editor...
+                            LanguageId = null
+                        }
                     }
-                }
-            });
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(ChangeActiveWindowAsync)} FileName={fileName} Uri={uri}");
+            }
         }
 
         public Task OpenCommentByThreadAsync(string streamId, string threadId)
         {
             if (!_sessionService.IsReady) return Task.CompletedTask;
-
-            BrowserService.PostMessage(new DidChangeStreamThreadNotification
+            try
             {
-                Type = "codestream:interaction:stream-thread-selected",
-                Body = new DidChangeStreamThreadNotificationBody
+                BrowserService.PostMessage(new DidChangeStreamThreadNotification
                 {
-                    StreamId = streamId,
-                    ThreadId = threadId
-                }
-            });
+                    Type = "codestream:interaction:stream-thread-selected",
+                    Body = new DidChangeStreamThreadNotificationBody
+                    {
+                        StreamId = streamId,
+                        ThreadId = threadId
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(OpenCommentByThreadAsync)} StreamId={streamId} ThreadId={threadId}");
+            }
 
             return Task.CompletedTask;
         }
@@ -105,29 +116,37 @@ namespace CodeStream.VisualStudio.Services
         {
             if (!_sessionService.IsReady) return Task.CompletedTask;
 
-            // switch to main thread to show the ToolWindow
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken ?? CancellationToken.None);
-            _toolWindowProvider.Value?.ShowToolWindow(Guids.WebViewToolWindowGuid);
-
-            var range = new Range(selectedText);
-
-            var post = await _agentService.PrepareCodeAsync(uri, range, isDirty, cancellationToken);
-
-            var source = post?.Source;
-            BrowserService.PostMessage(new DidSelectCodeNotification
+            try
             {
-                Type = "codestream:interaction:code-highlighted",
-                Body = new DidSelectCodeNotificationBody
+                // switch to main thread to show the ToolWindow
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken ?? CancellationToken.None);
+
+                _toolWindowProvider.Value?.ShowToolWindow(Guids.WebViewToolWindowGuid);
+
+                var range = new Range(selectedText);
+
+                var post = await _agentService.PrepareCodeAsync(uri, range, isDirty, cancellationToken);
+
+                var source = post?.Source;
+                BrowserService.PostMessage(new DidSelectCodeNotification
                 {
-                    Code = post?.Code,
-                    File = source?.File,
-                    FileUri = uri.ToString(),
-                    Location = range.ToLocation(),
-                    Source = source,
-                    GitError = post?.GitError,
-                    IsHightlight = isHighlight
-                }
-            });
+                    Type = "codestream:interaction:code-highlighted",
+                    Body = new DidSelectCodeNotificationBody
+                    {
+                        Code = post?.Code,
+                        File = source?.File,
+                        FileUri = uri.ToString(),
+                        Location = range.ToLocation(),
+                        Source = source,
+                        GitError = post?.GitError,
+                        IsHightlight = isHighlight
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(PostCodeAsync)} Uri={uri}");
+            }
 
             return new { };
         }
