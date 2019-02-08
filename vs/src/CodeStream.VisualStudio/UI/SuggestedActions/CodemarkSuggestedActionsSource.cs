@@ -49,17 +49,17 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
         public event EventHandler<EventArgs> SuggestedActionsChanged;
 #pragma warning restore 0067
 
-        private SelectedText _selectedText;
+        private TextSelection _textSelection;
 
         public IEnumerable<SuggestedActionSet> GetSuggestedActions(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken)
         {
             ITextDocument textDocument = null;
             try
             {
-                if (_selectedText?.HasText == false ||
+                if (_textSelection?.HasText == false ||
                     _textDocumentFactoryService?.TryGetTextDocument(_textBuffer, out textDocument) == false)
                 {
-                    Log.Verbose($"{nameof(GetSuggestedActions)} Empty HasText={_selectedText?.HasText}, TextDocument={textDocument != null}, TextDocumentFactory={_textDocumentFactoryService != null}");
+                    Log.Verbose($"{nameof(GetSuggestedActions)} Empty HasText={_textSelection?.HasText}, TextDocument={textDocument != null}, TextDocumentFactory={_textDocumentFactoryService != null}");
                     return Enumerable.Empty<SuggestedActionSet>();
                 }
 
@@ -68,7 +68,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
                     new SuggestedActionSet(
                         actions: new ISuggestedAction[]
                         {
-                            new CodemarkSuggestedAction(textDocument, _selectedText)
+                            new CodemarkSuggestedAction(textDocument, _textSelection)
                         },
                         categoryName: null,
                         title: null,
@@ -97,9 +97,9 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
                 }
 
                 var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
-                _selectedText = ideService?.GetSelectedText();
+                _textSelection = ideService?.GetTextSelected();
 
-                return System.Threading.Tasks.Task.FromResult(_selectedText?.HasText == true);
+                return System.Threading.Tasks.Task.FromResult(_textSelection?.HasText == true);
             }
             catch (Exception ex)
             {
@@ -116,13 +116,13 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 
     internal class CodemarkSuggestedAction : ISuggestedAction
     {
-        private readonly SelectedText _selectedText;
+        private readonly TextSelection _textSelection;
         private readonly ITextDocument _textDocument;
 
-        public CodemarkSuggestedAction(ITextDocument textDocument, SelectedText selectedText)
+        public CodemarkSuggestedAction(ITextDocument textDocument, TextSelection textSelection)
         {
             _textDocument = textDocument;
-            _selectedText = selectedText;
+            _textSelection = textSelection;
         }
 
         public Task<IEnumerable<SuggestedActionSet>> GetActionSetsAsync(CancellationToken cancellationToken)
@@ -145,7 +145,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
                 return;
             }
 
-            codeStreamService.PostCodeAsync(new Uri(_textDocument.FilePath), _selectedText, _textDocument.IsDirty, false, cancellationToken);
+            codeStreamService.PrepareCodeAsync(new Uri(_textDocument.FilePath), _textSelection, _textDocument.IsDirty, false, cancellationToken);
         }
 
         public Task<object> GetPreviewAsync(CancellationToken cancellationToken)

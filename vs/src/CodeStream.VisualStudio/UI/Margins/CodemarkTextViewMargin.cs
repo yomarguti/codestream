@@ -339,13 +339,13 @@ namespace CodeStream.VisualStudio.UI.Margins
 
                               // TODO cant we get the selected text from the sender somehow??
                               var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
-                              var selectedText = ideService?.GetSelectedText();
+                              var selectedText = ideService?.GetTextSelected();
                               if (selectedText?.HasText == false) return;
 
                               var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
                               if (codeStreamService == null) return;
 
-                              codeStreamService.PostCodeAsync(new Uri(_textDocument.FilePath), selectedText, _textDocument.IsDirty, true, CancellationToken.None);
+                              codeStreamService.PrepareCodeAsync(new Uri(_textDocument.FilePath), selectedText, _textDocument.IsDirty, true, CancellationToken.None);
 
                               var textSelection = eventPattern?.Sender as ITextSelection;
                               Log.Verbose($"Selection_SelectionChanged Start={textSelection?.Start.Position.Position} End={textSelection?.End.Position.Position}");

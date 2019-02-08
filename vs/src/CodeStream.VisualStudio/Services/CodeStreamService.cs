@@ -17,7 +17,7 @@ namespace CodeStream.VisualStudio.Services
     public interface ICodeStreamService
     {
         Task ChangeActiveWindowAsync(string fileName, Uri uri);
-        Task<object> PostCodeAsync(Uri uri, SelectedText selectedText, bool isDirty, bool isHighlight = false, CancellationToken? cancellationToken = null);
+        Task<object> PrepareCodeAsync(Uri uri, TextSelection textSelection, bool isDirty, bool isHighlight = false, CancellationToken? cancellationToken = null);
         Task OpenCommentByThreadAsync(string streamId, string threadId);
         /// <summary>
         /// logs the user out from the CodeStream agent and the session
@@ -91,6 +91,7 @@ namespace CodeStream.VisualStudio.Services
         public Task OpenCommentByThreadAsync(string streamId, string threadId)
         {
             if (!_sessionService.IsReady) return Task.CompletedTask;
+
             try
             {
                 BrowserService.PostMessage(new DidChangeStreamThreadNotification
@@ -111,7 +112,7 @@ namespace CodeStream.VisualStudio.Services
             return Task.CompletedTask;
         }
 
-        public async Task<object> PostCodeAsync(Uri uri, SelectedText selectedText, bool isDirty, bool isHighlight = false,
+        public async Task<object> PrepareCodeAsync(Uri uri, TextSelection textSelection, bool isDirty, bool isHighlight = false,
             CancellationToken? cancellationToken = null)
         {
             if (!_sessionService.IsReady) return Task.CompletedTask;
@@ -120,32 +121,29 @@ namespace CodeStream.VisualStudio.Services
             {
                 // switch to main thread to show the ToolWindow
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken ?? CancellationToken.None);
-
                 _toolWindowProvider.Value?.ShowToolWindow(Guids.WebViewToolWindowGuid);
 
-                var range = new Range(selectedText);
+                var response = await _agentService.PrepareCodeAsync(uri, textSelection.Range, isDirty, cancellationToken);
 
-                var post = await _agentService.PrepareCodeAsync(uri, range, isDirty, cancellationToken);
-
-                var source = post?.Source;
+                var source = response?.Source;
                 BrowserService.PostMessage(new DidSelectCodeNotification
                 {
                     Type = "codestream:interaction:code-highlighted",
                     Body = new DidSelectCodeNotificationBody
                     {
-                        Code = post?.Code,
+                        Code = response?.Code,
                         File = source?.File,
                         FileUri = uri.ToString(),
-                        Location = range.ToLocation(),
+                        Range = response?.Range,
                         Source = source,
-                        GitError = post?.GitError,
+                        GitError = response?.GitError,
                         IsHighlight = isHighlight
                     }
                 });
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"{nameof(PostCodeAsync)} Uri={uri}");
+                Log.Error(ex, $"{nameof(PrepareCodeAsync)} Uri={uri}");
             }
 
             return new { };

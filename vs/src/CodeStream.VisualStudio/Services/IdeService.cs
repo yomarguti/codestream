@@ -1,7 +1,6 @@
 ﻿using CodeStream.VisualStudio.Annotations;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.Models;
 using EnvDTE;
 using Microsoft.VisualStudio.ExtensionManager;
 using Microsoft.VisualStudio.Shell;
@@ -11,7 +10,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 using ILogger = Serilog.ILogger;
+using TextSelection = CodeStream.VisualStudio.Models.TextSelection;
 
 namespace CodeStream.VisualStudio.Services
 {
@@ -24,8 +25,8 @@ namespace CodeStream.VisualStudio.Services
     {
         void Navigate(string url);
         ShowCodeResult OpenEditor(Uri fileUri, int? scrollTo = null);
-        SelectedText GetSelectedText();
-        SelectedText GetSelectedText(out IVsTextView view);
+        TextSelection GetTextSelected();
+        TextSelection GetTextSelected(out IVsTextView view);
         bool QueryExtensions(string author, params string[] names);
         bool QueryExtension(ExtensionKind extensionKind);
         bool TryStartLiveShare();
@@ -123,7 +124,7 @@ namespace CodeStream.VisualStudio.Services
         //    return null;
         //}
 
-        public SelectedText GetSelectedText(out IVsTextView view)
+        public TextSelection GetTextSelected(out IVsTextView view)
         {
             // ReSharper disable once UnusedVariable
             var result = _iIVsTextManager.GetActiveView2(1, null, (uint)_VIEWFRAMETYPE.vftCodeWindow, out view);
@@ -135,12 +136,13 @@ namespace CodeStream.VisualStudio.Services
             view.GetSelectedText(out string selectedText);
 
             // end could be before beginning...
-            return new SelectedText
+            return new TextSelection
             {
-                StartLine = startLine,
-                StartColumn = startColumn,
-                EndLine = endLine,
-                EndColumn = endColumn,
+                Range = new Range
+                {
+                    Start = new Position(startLine, startColumn),
+                    End = new Position(endLine, endColumn)
+                },
                 Text = selectedText
             };
         }
@@ -210,11 +212,11 @@ namespace CodeStream.VisualStudio.Services
             return false;
         }
 
-        public SelectedText GetSelectedText()
+        public TextSelection GetTextSelected()
         {
             // ReSharper disable once NotAccessedVariable
             IVsTextView view;
-            return GetSelectedText(out view);
+            return GetTextSelected(out view);
         }
 
         /// <summary>

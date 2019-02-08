@@ -2,67 +2,16 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 // ReSharper disable ClassNeverInstantiated.Global
 
 namespace CodeStream.VisualStudio.Models
 {
-    public class SelectedText
+    public class TextSelection
     {
-        public SelectedText()
-        {
-
-        }
-
-        public SelectedText(string text)
-        {
-            Text = text;
-        }
-
-        public int StartLine { get; set; }
-        public int StartColumn { get; set; }
-        public int EndLine { get; set; }
-        public int EndColumn { get; set; }
+        public Range Range { get; set; }
         public string Text { get; set; }
-
         public bool HasText => !Text.IsNullOrWhiteSpace();
-    }
-
-    /// <summary>
-    /// This is a vscode-languageserver model
-    /// </summary>
-    [DebuggerDisplay("Start Line={StartLine} Char={StartCharacter}, End Line={EndLine} Char={EndCharacter}")]
-    public class Range
-    {
-        public Range(int startLine, int startCharacter, int endLine, int endCharacter)
-        {
-            StartLine = startLine;
-            StartCharacter = startCharacter;
-            EndLine = endLine;
-            EndCharacter = endCharacter;
-        }
-
-        public Range(SelectedText text)
-        {
-            StartLine = text.StartLine;
-            StartCharacter = text.StartColumn;
-            EndLine = text.EndLine;
-            EndCharacter = text.EndColumn;
-        }
-
-        /// <summary>
-        /// formats a range as [StartLine, StartCharacter, EndLine, EndCharacter]
-        /// </summary>
-        /// <returns></returns>
-        public int[] ToLocation()
-        {
-            return new[] { StartLine, StartCharacter, EndLine, EndCharacter };
-        }
-
-        public int StartLine { get; }
-        public int StartCharacter { get; }
-        public int EndLine { get; }
-        public int EndCharacter { get; }
     }
 
     public class CsEntity
@@ -154,20 +103,6 @@ namespace CodeStream.VisualStudio.Models
         public string File { get; set; }
         public string Repo { get; set; }
         public string RepoId { get; set; }
-
-        public Range LocationWhenCreatedAsRange
-        {
-            get
-            {
-                if (LocationWhenCreated != null && LocationWhenCreated.Count >= 4)
-                {
-                    return new Range(LocationWhenCreated[0].ToInt(), LocationWhenCreated[1].ToInt(),
-                        LocationWhenCreated[2].ToInt(), LocationWhenCreated[3].ToInt());
-
-                }
-                return null;
-            }
-        }
     }
 
     public class MarkerNotLocated : CsMarker
@@ -203,23 +138,11 @@ namespace CodeStream.VisualStudio.Models
         public int NumReplies { get; set; }
     }
 
-    public class CsRangePoint
-    {
-        public int Line { get; set; }
-        public int Character { get; set; }
-    }
-
-    public class CsRange
-    {
-        public CsRangePoint Start { get; set; }
-        public CsRangePoint End { get; set; }
-    }
-
     public class DocumentMarker : CsMarker
     {
         public CsCodemark Codemark { get; set; }
         public string CreatorName { get; set; }
-        public CsRange Range { get; set; }
+        public Range Range { get; set; }
         public string Summary { get; set; }
         public string SummaryMarkdown { get; set; }
     }
@@ -440,7 +363,7 @@ namespace CodeStream.VisualStudio.Models
         public string Code { get; set; }
         public string File { get; set; }
         public string FileUri { get; set; }
-        public int[] Location { get; set; }
+        public Range Range { get; set; }
         public Source Source { get; set; }
         public string GitError { get; set; }
         public bool? IsHighlight { get; set; }
@@ -512,13 +435,14 @@ namespace CodeStream.VisualStudio.Models
     public class PrepareCodeRequest
     {
         public TextDocumentIdentifier TextDocument { get; set; }
-        public CsRange Range { get; set; }
+        public Range Range { get; set; }
         public bool Dirty { get; set; }
     }
 
     public class PrepareCodeResponse
     {
         public string Code { get; set; }
+        public Range Range { get; set; }
         public string GitError { get; set; }
         public Source Source { get; set; }
     }
@@ -610,7 +534,7 @@ namespace CodeStream.VisualStudio.Models
     public class DocumentFromMarkerResponse
     {
         public TextDocumentIdentifier TextDocument { get; set; }
-        public CsRange Range { get; set; }
+        public Range Range { get; set; }
         public string Revision { get; set; }
     }
 

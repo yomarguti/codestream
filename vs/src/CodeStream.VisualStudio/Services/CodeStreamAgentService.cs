@@ -25,7 +25,7 @@ namespace CodeStream.VisualStudio.Services
     {
         Task SetRpcAsync(JsonRpc rpc);
         Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null);
-        Task<PrepareCodeResponse> PrepareCodeAsync(Uri uri, Range range, bool isDirty,
+        Task<PrepareCodeResponse> PrepareCodeAsync(Uri uri, Microsoft.VisualStudio.LanguageServer.Protocol.Range range, bool isDirty,
            CancellationToken? cancellationToken = null
         );
 
@@ -185,17 +185,13 @@ namespace CodeStream.VisualStudio.Services
             });
         }
 
-        public Task<PrepareCodeResponse> PrepareCodeAsync(Uri uri, Range range, bool isDirty, CancellationToken? cancellationToken = null)
+        public Task<PrepareCodeResponse> PrepareCodeAsync(Uri uri, Microsoft.VisualStudio.LanguageServer.Protocol.Range range, bool isDirty, CancellationToken? cancellationToken = null)
         {
             return SendAsync<PrepareCodeResponse>("codeStream/post/prepareWithCode",
                 new PrepareCodeRequest
                 {
-                    TextDocument = new TextDocumentIdentifier() { Uri = uri.ToString() },
-                    Range = new CsRange
-                    {
-                        Start = new CsRangePoint { Line = range.StartLine, Character = range.StartCharacter },
-                        End = new CsRangePoint { Line = range.EndLine, Character = range.EndCharacter }
-                    },
+                    TextDocument = new TextDocumentIdentifier { Uri = uri.ToString() },
+                    Range = range,
                     Dirty = isDirty
                 }, cancellationToken);
         }

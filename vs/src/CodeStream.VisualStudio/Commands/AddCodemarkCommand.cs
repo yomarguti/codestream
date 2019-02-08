@@ -54,7 +54,7 @@ namespace CodeStream.VisualStudio.Commands
             var ideSerivce = Microsoft.VisualStudio.Shell.Package.GetGlobalService((typeof(SIdeService))) as IdeService;
             if (ideSerivce == null) return;
 
-            var selectedText = ideSerivce.GetSelectedText(out IVsTextView view);
+            var selectedText = ideSerivce.GetTextSelected(out IVsTextView view);
             if (view == null) return;
 
             var componentModel = (IComponentModel)(Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SComponentModel)));
@@ -72,7 +72,7 @@ namespace CodeStream.VisualStudio.Commands
                 {
                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                    await codeStreamService.PostCodeAsync(new Uri(textDocument.FilePath), selectedText,
+                    await codeStreamService.PrepareCodeAsync(new Uri(textDocument.FilePath), selectedText,
                         textDocument.IsDirty, false, CancellationToken.None);
                 });
             }
