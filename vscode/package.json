@@ -258,8 +258,8 @@
     "devDependencies": {
         "@types/keytar": "4.0.1",
         "@types/lodash-es": "4.17.1",
-        "@types/node": "8.10.39",
-        "@types/node-fetch": "2.1.2",
+        "@types/node": "10.1.4",
+        "@types/node-fetch": "2.1.4",
         "@types/pubnub": "4.0.4",
         "@types/uuid": "^3.4.4",
         "babel-core": "6.26.3",
@@ -276,20 +276,20 @@
         "less": "3.9.0",
         "less-loader": "4.1.0",
         "mini-css-extract-plugin": "0.5.0",
-        "prettier": "1.16.1",
+        "prettier": "1.16.4",
         "prettier-tslint": "0.4.2",
         "react": "16.6.3",
         "react-dom": "16.6.3",
         "redux-mock-store": "1.5.3",
         "resize-observer": "1.0.0",
-        "terser-webpack-plugin": "1.2.1",
+        "terser-webpack-plugin": "1.2.2",
         "ts-loader": "5.3.3",
         "tslint": "5.12.1",
         "tslint-loader": "3.5.4",
         "typescript": "3.2.4",
-        "vsce": "1.54.0",
-        "vscode": "1.1.27",
-        "webpack": "4.29.0",
-        "webpack-cli": "3.2.1"
+        "vsce": "1.56.0",
+        "vscode": "1.1.29",
+        "webpack": "4.29.3",
+        "webpack-cli": "3.2.3"
     }
 }
