@@ -645,7 +645,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	@lspHandler(CreatePostWithMarkerRequestType)
 	async createPostWithMarker({
 		textDocument: documentId,
-		rangeArray,
+		range,
 		text,
 		code,
 		source,
@@ -684,8 +684,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		let location: CSMarkerLocation | undefined;
 		let backtrackedLocation: CSMarkerLocation | undefined;
 		let remotes: string[] | undefined;
-		if (rangeArray) {
-			let range = Range.create(rangeArray[0], rangeArray[1], rangeArray[2], rangeArray[3]);
+		if (range) {
 			// Ensure range end is >= start
 			if (
 				range.start.line > range.end.line ||
@@ -810,7 +809,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 					const gitAuthors = await git.getFileAuthors(uri.fsPath, {
 						startLine: range.start.line,
-						endLine: range.end.line - 1,
+						endLine: range.end.line,
 						contents: dirty ? this.lastFullCode : undefined
 					});
 					const authorEmails = gitAuthors.map(a => a.email);
@@ -827,6 +826,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 		return {
 			code: document.getText(range),
+			range: range,
 			source:
 				repoPath !== undefined
 					? {

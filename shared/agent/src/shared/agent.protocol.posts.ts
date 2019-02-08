@@ -67,7 +67,7 @@ export interface CreatePostWithMarkerRequest {
 	text: string;
 	mentionedUserIds?: string[];
 	code: string;
-	rangeArray?: [number, number, number, number];
+	range?: Range;
 	source?: CodeBlockSource;
 	parentPostId?: string;
 	streamId: string;
@@ -194,6 +194,7 @@ export interface PreparePostWithCodeRequest {
 
 export interface PreparePostWithCodeResponse {
 	code: string;
+	range: Range;
 	source?: CodeBlockSource;
 	gitError?: string;
 }
