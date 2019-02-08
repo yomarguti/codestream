@@ -8,7 +8,6 @@ import {
 	Disposable,
 	Event,
 	EventEmitter,
-	Range,
 	TextEditor,
 	TextEditorSelectionChangeEvent,
 	TextEditorVisibleRangesChangeEvent,
@@ -21,6 +20,7 @@ import {
 	workspace
 } from "vscode";
 import { RequestType } from "vscode-jsonrpc";
+import { Range } from "vscode-languageclient";
 import {
 	CSCodeBlock,
 	CSMePreferences,
@@ -631,7 +631,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 				code: code,
 				file: file,
 				fileUri: uri.toString(),
-				location: [range.start.line, range.start.character, range.end.line, range.end.character],
+				range: range,
 				source: source,
 				gitError,
 				isHighlight
@@ -783,7 +783,14 @@ export class CodeStreamWebviewPanel implements Disposable {
 		const uri = e.textEditor.document.uri;
 
 		const response = await Container.agent.posts.prepareCode(e.textEditor.document, selection);
-		await this.postCode(response.code, uri, selection, response.source, response.gitError, true);
+		await this.postCode(
+			response.code,
+			uri,
+			response.range,
+			response.source,
+			response.gitError,
+			true
+		);
 	}
 
 	private async onDidChangeTextEditorVisibleRanges(e: TextEditorVisibleRangesChangeEvent) {

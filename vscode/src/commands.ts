@@ -411,7 +411,7 @@ export class Commands implements Disposable {
 		const streamThread = await Container.webview.postCode(
 			response.code,
 			document.uri,
-			selection,
+			response.range,
 			response.source,
 			response.gitError
 		);

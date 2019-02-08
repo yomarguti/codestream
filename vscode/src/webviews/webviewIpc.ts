@@ -1,6 +1,7 @@
 "use strict";
 import * as path from "path";
 import { TextEditor, Uri, WebviewPanel, workspace } from "vscode";
+import { Range } from "vscode-languageclient";
 import { StreamThread } from "../api/session";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -86,7 +87,7 @@ export interface DidSelectCodeNotification {
 		code: string;
 		file: string | undefined;
 		fileUri: string;
-		location: [number, number, number, number];
+		range: Range;
 		source:
 			| {
 					file: string;

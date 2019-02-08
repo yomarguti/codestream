@@ -1,5 +1,6 @@
 "use strict";
-import { Disposable, Range, Uri, ViewColumn } from "vscode";
+import { Disposable, Uri, ViewColumn } from "vscode";
+import { Range } from "vscode-languageclient";
 import {
 	CodeStreamSession,
 	SessionSignedOutReason,

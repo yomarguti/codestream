@@ -6,7 +6,6 @@ import {
 	EventEmitter,
 	ExtensionContext,
 	MessageItem,
-	Range,
 	TextDocument,
 	Uri,
 	window,
@@ -20,6 +19,7 @@ import {
 	LanguageClient,
 	LanguageClientOptions,
 	Message,
+	Range,
 	RequestType,
 	RequestType0,
 	RevealOutputChannelOn,
@@ -378,11 +378,10 @@ export class CodeStreamAgentConnection implements Disposable {
 		createWithCode(
 			uri: Uri,
 			// document: TextDocument,
-			// range: Range,
 			text: string,
 			mentionedUserIds: string[],
 			code: string,
-			rangeArray: [number, number, number, number] | undefined,
+			range: Range | undefined,
 			source:
 				| {
 						file: string;
@@ -406,7 +405,7 @@ export class CodeStreamAgentConnection implements Disposable {
 				mentionedUserIds: mentionedUserIds,
 				text: text,
 				code: code,
-				rangeArray: rangeArray,
+				range: range,
 				source: source,
 				parentPostId: parentPostId,
 				streamId: streamId,
