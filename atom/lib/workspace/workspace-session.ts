@@ -41,7 +41,7 @@ export enum SessionStatus {
 	SignedIn,
 }
 
-const DID_CHANGE_SESSION_STATUS = "did-change-session-status";
+const DID_CHANGE_SESSION_STATUS = "session-status-changed";
 
 export class WorkspaceSession {
 	private emitter: Emitter;
@@ -67,13 +67,6 @@ export class WorkspaceSession {
 		this.lastUsedEmail = lastUsedEmail;
 		this.envConfig = envConfig;
 
-		// this.popupManager = new AddCommentPopupManager(repoAttributes.workingDirectory);
-		// this.bufferChangeTracker = new BufferChangeTracker(this.store, repoAttributes.workingDirectory);
-		// this.diffManager = new DiffManager(this.store);
-		// this.contentHighlighter = new ContentHighlighter(this.store);
-		// this.markerLocationTracker = new MarkerLocationTracker(this.store);
-		// this.editTracker = new EditTracker(this.store);
-		// this.initialized = true;
 	}
 
 	serialize() {
