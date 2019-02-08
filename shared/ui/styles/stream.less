@@ -2571,12 +2571,17 @@
 			&.muted > span {
 				color: @text-color-subtle;
 			}
+			&.channel-name {
+				max-width: 50vw;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
 		}
 		.fill-tab {
 			padding: 8px 0 0 0;
 			border-bottom: 1px solid rgba(127, 127, 127, 0.5);
 			text-align: right;
-			flex-basis: 90%;
+			flex-basis: 25%;
 			flex-grow: 100;
 		}
 		.icon.mute {

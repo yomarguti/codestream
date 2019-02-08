@@ -572,12 +572,11 @@ export class SimpleStream extends Component {
 							</span>
 						</label>
 						<label
-							className={createClassString({ checked: activePanel === "main" })}
+							className={createClassString("channel-name", { checked: activePanel === "main" })}
 							onClick={e => this.setActivePanel("main")}
 						>
 							<span className="channel-name">
-								{this.channelIcon()}
-								{this.props.postStreamName}
+								{this.channelIcon()} {this.props.postStreamName}
 							</span>
 						</label>
 						<div className="fill-tab">
