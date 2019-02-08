@@ -3,7 +3,7 @@
     <Metadata>
         <Identity Id="codestream-vs" Version="0.6.4.0" Language="en-US" Publisher="CodeStream" />
         <DisplayName>CodeStream</DisplayName>
-        <Description xml:space="preserve">CodeStream is a free service that lets developers create annotated comments on their code, making it easier to ask questions and get answers to how things work.</Description>
+        <Description xml:space="preserve">Discuss, review, and share code with your team. Integrates w/ Slack, Jira, Trello, and Live Share</Description>
         <MoreInfo>https://codestream.com/</MoreInfo>
         <Icon>Resources\Assets\codestream.png</Icon>
         <PreviewImage>Resources\CodeStreamPackage.ico</PreviewImage>
