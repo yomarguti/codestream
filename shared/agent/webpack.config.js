@@ -28,7 +28,7 @@ module.exports = function(env, argv) {
 					destination: path.resolve(__dirname, "../atom-codestream/lib/shared/")
 				},
 				{
-					source: "dist/*",
+					source: "dist/agent.*",
 					// TODO: Use environment variable if exists
 					destination: path.resolve(__dirname, "../vscode-codestream/dist/")
 				},
@@ -74,17 +74,16 @@ module.exports = function(env, argv) {
 		node: {
 			__dirname: false
 		},
-		devtool: "source-map", // !env.production ? "source-map" : undefined,
+		devtool: "source-map",
 		output: {
-			filename: "[name].js",
-			devtoolModuleFilenameTemplate: "file:///[absolute-resource-path]"
+			filename: "[name].js"
 		},
 		optimization: {
 			minimizer: [
 				new TerserPlugin({
 					cache: true,
 					parallel: true,
-					sourceMap: true, // env.production,
+					sourceMap: true,
 					terserOptions: {
 						ecma: 8,
 						// Keep the class names otherwise @log won't provide a useful name
