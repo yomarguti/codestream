@@ -340,29 +340,32 @@ namespace CodeStream.VisualStudio.UI.Margins
                             .Throttle(TimeSpan.FromMilliseconds(100))
                             .Subscribe(_ => { _openCommentOnSelect = _.OpenCommentOnSelect; }));
 
-                    _disposables.Add(_events.GetEvent<TextSelectionChangedEvent>()
-                        .ObserveOnDispatcher()
-                        .Throttle(TimeSpan.FromMilliseconds(500))
-                        .Subscribe(_ =>
-                        {
-                            // TODO reconcile this!
-                            var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
-                            var selectedText1 = ideService?.GetSelectedText();
-                            if (selectedText1?.HasText == true)
-                            {
-                                var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
-                                ThreadHelper.JoinableTaskFactory.Run(async delegate
-                                {
-                                    // ReSharper disable once PossibleNullReferenceException
-                                    await codeStreamService.PostCodeAsync(new Uri(_textDocument.FilePath), selectedText1,
-                                        _textDocument.IsDirty, true, CancellationToken.None);
-                                });
-                            }
-                        }));
+                    _disposables.Add(Observable.FromEventPattern(ev => _textView.Selection.SelectionChanged += ev,
+                              ev => _textView.Selection.SelectionChanged -= ev)
+                          .Sample(TimeSpan.FromMilliseconds(300))
+                          .ObserveOnDispatcher()
+                          .Subscribe((System.Reactive.EventPattern<object> eventPattern) =>
+                          {
+                              if (!_openCommentOnSelect || _textView.Selection.IsEmpty) return;
+
+                              if (!_toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) return;
+
+                              // TODO cant we get the selected text from the sender somehow??
+                              var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
+                              var selectedText = ideService?.GetSelectedText();
+                              if (selectedText?.HasText == false) return;
+
+                              var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
+                              if (codeStreamService == null) return;
+
+                              codeStreamService.PostCodeAsync(new Uri(_textDocument.FilePath), selectedText, _textDocument.IsDirty, true, CancellationToken.None);
+
+                              var textSelection = eventPattern?.Sender as ITextSelection;
+                              Log.Verbose($"Selection_SelectionChanged Start={textSelection?.Start.Position.Position} End={textSelection?.End.Position.Position}");
+                          }));
 
                     Show();
 
-                    _textView.Selection.SelectionChanged += Selection_SelectionChanged;
                     _wpfTextViewHost.TextView.ZoomLevelChanged += TextView_ZoomLevelChanged;
                     _textView.LayoutChanged += TextView_LayoutChanged;
 
@@ -393,7 +396,7 @@ namespace CodeStream.VisualStudio.UI.Margins
             this.Children.Add(_iconCanvas);
             _lineInfos = new Dictionary<object, LineInfo>();
             _tagAggregator = _viewTagAggregatorFactoryService.CreateTagAggregator<IGlyphTag>(_wpfTextViewHost.TextView);
-            
+
             int order = 0;
             foreach (var lazy in _glyphFactoryProviders)
             {
@@ -486,16 +489,6 @@ namespace CodeStream.VisualStudio.UI.Margins
                 SetTop(_iconCanvas, -_wpfTextViewHost.TextView.ViewportTop);
 
             OnNewLayout(e.NewOrReformattedLines, e.TranslatedLines);
-        }
-
-        private void Selection_SelectionChanged(object sender, EventArgs e)
-        {
-            if (!_openCommentOnSelect || _textView.Selection.IsEmpty) return;
-
-            if (_toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid))
-            {
-                _events.Publish(new TextSelectionChangedEvent());
-            }
         }
 
         private void Show()
@@ -604,7 +597,6 @@ namespace CodeStream.VisualStudio.UI.Margins
             if (!_isDisposed)
             {
                 _textView.LayoutChanged -= TextView_LayoutChanged;
-                _textView.Selection.SelectionChanged -= Selection_SelectionChanged;
                 _wpfTextViewHost.TextView.ZoomLevelChanged -= TextView_ZoomLevelChanged;
                 _tagAggregator?.Dispose();
                 _disposables.Dispose();
