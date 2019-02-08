@@ -205,4 +205,9 @@ export class WorkspaceSession {
 			this.agent = undefined;
 		}
 	}
+
+	changeEnvironment(env: EnvironmentConfig) {
+		this.signOut();
+		this.envConfig = env;
+	}
 }

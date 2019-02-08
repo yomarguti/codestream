@@ -5,6 +5,7 @@ import { StatusBar, Tile } from "./types/package-services/status-bar";
 import { WorkspaceSession, SessionStatus } from "./workspace/workspace-session";
 import { PackageState } from "./types/package";
 import { WebviewIpc } from "./views/webview/ipc";
+import { PD_CONFIG } from "./env-utils";
 
 class CodestreamPackage {
 	subscriptions = new CompositeDisposable();
@@ -24,12 +25,9 @@ class CodestreamPackage {
 
 	// Package lifecyle 1
 	async initialize() {
-		this.store = createStore(
-			this.workspaceSession.getBootstrapState(),
-			{ api: HostApi.instance },
-			[]
-		);
-		this.store.dispatch(actions.bootstrap(await this.workspaceSession.getBootstrapData()));
+		this.store = createStore(this.workspaceSession.getBootstrapState(), { api: HostApi.instance });
+		const bootstrapData = await this.workspaceSession.getBootstrapData();
+		this.store.dispatch(actions.bootstrap(bootstrapData));
 
 		this.workspaceSession.onDidChangeSessionStatus(status => {
 			this.sessionStatusCommand && this.sessionStatusCommand.dispose();
@@ -39,17 +37,20 @@ class CodestreamPackage {
 					"codestream:sign-out",
 					() => {
 						this.workspaceSession!.signOut();
-						this.store.dispatch(actions.reset());
 					}
 				);
 			}
 			if (status === SessionStatus.SignedOut) {
-				// TODO: this.workspaceSession!.login(),
-				// this.sessionStatusCommand = atom.commands.add("atom-workspace", "codestream:sign-in", () =>
-				// );
+				this.store.dispatch(actions.reset());
+				this.sessionStatusCommand = atom.commands.add(
+					"atom-workspace",
+					"codestream:sign-in",
+					() => {}
+				);
 			}
 		});
 
+		const hiddenInCommandPalette = !atom.inDevMode();
 		this.subscriptions.add(
 			atom.workspace.addOpener(uri => {
 				if (uri === CODESTREAM_VIEW_URI) {
@@ -60,7 +61,14 @@ class CodestreamPackage {
 			}),
 			atom.commands.add("atom-workspace", "codestream:toggle", () =>
 				atom.workspace.toggle(CODESTREAM_VIEW_URI)
-			)
+			),
+			// 		Dev mode goodies
+			atom.commands.add("atom-workspace", "codestream:point-to-dev", {
+				didDispatch: () => {
+					this.workspaceSession.changeEnvironment(PD_CONFIG);
+				},
+				hiddenInCommandPalette,
+			})
 		);
 	}
 
