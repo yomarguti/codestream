@@ -92,6 +92,20 @@ function initializeColorPalette() {
 		const body = document.body;
 		const computedStyle = getComputedStyle(body);
 
+		const bodyStyle = body.style;
+		bodyStyle.setProperty(
+			"--font-size",
+			computedStyle.getPropertyValue("--vscode-editor-font-size").trim()
+		);
+		bodyStyle.setProperty(
+			"--font-family",
+			computedStyle.getPropertyValue("--vscode-editor-font-family").trim()
+		);
+		bodyStyle.setProperty(
+			"--font-weight",
+			computedStyle.getPropertyValue("--vscode-editor-font-weight").trim()
+		);
+
 		theme = "dark";
 		if (body.classList.contains("vscode-light")) {
 			theme = "light";
@@ -100,8 +114,7 @@ function initializeColorPalette() {
 			// theme = 'highcontrast';
 		}
 
-		const bodyStyle = body.style;
-		let color = computedStyle.getPropertyValue("--color").trim();
+		let color = computedStyle.getPropertyValue("--vscode-foreground").trim();
 		bodyStyle.setProperty("--text-color", opacity(color, 80));
 		bodyStyle.setProperty("--text-color-highlight", color);
 		bodyStyle.setProperty("--text-color-subtle", opacity(color, 60));
@@ -115,7 +128,7 @@ function initializeColorPalette() {
 				break;
 		}
 
-		color = computedStyle.getPropertyValue("--background-color").trim();
+		color = computedStyle.getPropertyValue("--vscode-editor-background").trim();
 		switch (theme) {
 			case "dark":
 				bodyStyle.setProperty("--app-background-color", color);
@@ -137,12 +150,14 @@ function initializeColorPalette() {
 				break;
 		}
 
-		color = computedStyle.getPropertyValue("--link-color").trim();
+		color = computedStyle.getPropertyValue("--vscode-textLink-foreground").trim();
 		switch (theme) {
 			case "dark":
+				bodyStyle.setProperty("--text-color-info", color);
 				bodyStyle.setProperty("--text-color-info-muted", darken(color, 10));
 				break;
 			case "light":
+				bodyStyle.setProperty("--text-color-info", color);
 				bodyStyle.setProperty("--text-color-info-muted", color);
 				break;
 		}
