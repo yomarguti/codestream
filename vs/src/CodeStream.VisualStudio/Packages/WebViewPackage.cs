@@ -61,6 +61,9 @@ namespace CodeStream.VisualStudio.Packages
             await UserCommand.InitializeAsync(this);
             await AddCodemarkCommand.InitializeAsync(this);
             await WebViewReloadCommand.InitializeAsync(this);
+#if DEBUG
+            await WebViewDevToolsCommand.InitializeAsync(this);
+#endif
 
             var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
             _disposables = new List<IDisposable>

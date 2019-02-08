@@ -57,10 +57,6 @@ namespace CodeStream.VisualStudio.Services
             _browserView = new WPFBrowserView(BrowserFactory.Create(_browserContext, BrowserType));
 
             _browserView.Browser.ScriptContextCreated += Browser_ScriptContextCreated;
-
-#if DEBUG
-            //  System.Diagnostics.Process.Start("chrome.exe", _browserView.Browser.GetRemoteDebuggingURL());
-#endif
         }
 
         private void Browser_ScriptContextCreated(object sender, DotNetBrowser.Events.ScriptContextEventArgs e)
@@ -111,6 +107,15 @@ namespace CodeStream.VisualStudio.Services
 
             Grid.SetColumn(grid, 0);
             grid.Children.Add(_browserView);
+        }
+
+        public override void OpenDevTools()
+        {
+#if DEBUG
+            var url = _browserView.Browser.GetRemoteDebuggingURL();
+            Log.Verbose($"Opening devtools Url={url}");
+            System.Diagnostics.Process.Start("chrome.exe", url);
+#endif
         }
 
         /// <summary>
@@ -206,7 +211,7 @@ namespace CodeStream.VisualStudio.Services
 
             return path;
         }
-        
+
         private bool _disposed;
         protected override void Dispose(bool disposing)
         {

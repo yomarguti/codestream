@@ -55,16 +55,7 @@
       </Button>
 
 
-      <Button guid="guidWebViewPackageCmdSet" id="WebViewReloadCommandId" priority="0x0100" type="Button">
-        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DontCache</CommandFlag>
-        <Strings>
-          <ButtonText>Reload CodeStream</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidWebViewPackageCmdSet" id="UserCommandId" priority="0x0900" type="Button">
+      <Button guid="guidWebViewPackageCmdSet" id="UserCommandId" priority="0x0100" type="Button">
         <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
         <Icon guid="guidImages" id="user" />
         <CommandFlag>IconAndText</CommandFlag>
@@ -78,9 +69,25 @@
           <ButtonText>Sign In...</ButtonText>
         </Strings>
       </Button>
-
-
-      <Button guid="guidWebViewPackageCmdSet" id="AuthenticationCommandId" priority="0x0101" type="Button">
+      <Button guid="guidWebViewPackageCmdSet" id="WebViewReloadCommandId" priority="0x0101" type="Button">
+        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DontCache</CommandFlag>
+        <Strings>
+          <ButtonText>Reload CodeStream</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidWebViewPackageCmdSet" id="WebViewDevToolsCommandId" priority="0x0102" type="Button">
+        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DontCache</CommandFlag>
+        <Strings>
+          <ButtonText>Developer: Open Webview Developer Tools</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidWebViewPackageCmdSet" id="AuthenticationCommandId" priority="0x0109" type="Button">
         <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
         <Icon guid="guidImages" id="auth" />
         <CommandFlag>IconAndText</CommandFlag>
@@ -92,6 +99,7 @@
           <ButtonText>Sign Out</ButtonText>
         </Strings>
       </Button>
+
       <Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommandId" type="Button">
         <Icon guid="guidImages" id="logo" />
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -146,6 +154,7 @@
       <IDSymbol name="AuthenticationCommandId" value="0x0200" />
       <IDSymbol name="UserCommandId" value="0x0300" />
       <IDSymbol name="WebViewReloadCommandId" value="0x0500" />
+      <IDSymbol name="WebViewDevToolsCommandId" value="0x0600" />
     </GuidSymbol>
 
     <GuidSymbol name="guidWebViewPackageCodeWindowContextMenuCmdSet" value="{0f33235e-3a5c-42bc-b519-d888652f972c}">
