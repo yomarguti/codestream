@@ -1911,7 +1911,7 @@ export class SimpleStream extends Component {
 
 			let marker = {
 				code: quote.code,
-				location: quote.location,
+				range: quote.range,
 				file: quote.file
 			};
 
@@ -2012,7 +2012,7 @@ export class SimpleStream extends Component {
 
 			let marker = {
 				code: quote.code,
-				location: quote.location,
+				range: quote.range,
 				file: quote.file
 			};
 

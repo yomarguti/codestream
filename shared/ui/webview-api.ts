@@ -1,3 +1,4 @@
+import { Range } from "vscode-languageserver-protocol";
 import { EventEmitter, IpcResponse } from "./event-emitter";
 import {
 	ArchiveStreamRequest,
@@ -345,7 +346,7 @@ export default class WebviewApi {
 			type: CodemarkType;
 			markers: {
 				code: string;
-				location?: [number, number, number, number];
+				range?: Range;
 				source?: CodeBlockSource;
 			}[];
 			text?: string;
@@ -365,7 +366,7 @@ export default class WebviewApi {
 			...extras,
 			textDocument: { uri: extra.fileUri },
 			code: block.code,
-			rangeArray: block.location,
+			range: block.range,
 			source: block.source,
 			title: codemark.title,
 			type: codemark.type,

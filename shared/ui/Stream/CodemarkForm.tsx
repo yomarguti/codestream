@@ -12,6 +12,7 @@ import {
 	CSUser,
 	StreamType
 } from "../shared/api.protocol";
+import { Range } from "vscode-languageserver-protocol"
 import { getStreamForId, getStreamForTeam } from "../store/streams/reducer";
 import { Stream } from "../store/streams/types";
 import { mapFilter } from "../utils";
@@ -54,7 +55,7 @@ interface Props {
 	slackInfo?: {};
 	codeBlock?: {
 		file?: string;
-		location: number[];
+		range: Range;
 		source?: {
 			authors: { id: string; username: string }[];
 			repoPath: string;
@@ -503,18 +504,11 @@ class CodemarkForm extends React.Component<Props, State> {
 		const { codeBlock } = this.props;
 		if (!codeBlock) return "Select a range to comment on a block of code.";
 
-		let [startLine, , endLine, endColumn] = codeBlock.location;
-		if (startLine < endLine && endColumn === 0) {
-			endLine = endLine - 1;
-		}
-
 		let lines;
-		if (startLine === endLine) {
-			lines = `line ${startLine + 1}`;
-		} else if (startLine > endLine) {
-			lines = `lines ${endLine + 1}-${startLine + 1}`;
+		if (codeBlock.range.start.line === codeBlock.range.end.line) {
+			lines = `line ${codeBlock.range.start.line + 1}`;
 		} else {
-			lines = `lines ${startLine + 1}-${endLine + 1}`;
+			lines = `lines ${codeBlock.range.start.line + 1}-${codeBlock.range.end.line + 1}`;
 		}
 		return (
 			<span>
