@@ -153,8 +153,7 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task LogoutAsync()
         {
-            if (!_sessionService.IsReady)
-                return;
+            if (!_sessionService.IsReady) return;
 
             try
             {

@@ -262,7 +262,16 @@ namespace CodeStream.VisualStudio
                                             }
                                             break;
                                         }
-
+                                    case "sign-out":
+                                        {
+                                            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+                                            var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
+                                            if (codeStreamService != null)
+                                            {
+                                                await codeStreamService.LogoutAsync();
+                                            }
+                                            break;
+                                        }
                                     default:
                                         {
                                             string payloadResponse = null;
