@@ -82,8 +82,6 @@ namespace CodeStream.VisualStudio.Packages
                 return new CredentialsService();
             if (typeof(SSessionService) == serviceType)
                 return new SessionService();
-            if (typeof(SBrowserService) == serviceType)
-                return new DotNetBrowserService();
             if (typeof(SSettingsService) == serviceType)
                 return new SettingsService(_codeStreamOptions);
             if (typeof(SCodeStreamAgentService) == serviceType)
@@ -91,6 +89,8 @@ namespace CodeStream.VisualStudio.Packages
                     GetService(typeof(SSessionService)) as ISessionService,
                     GetService(typeof(SSettingsService)) as ISettingsService,
                     GetService(typeof(SEventAggregator)) as IEventAggregator);
+            if (typeof(SBrowserService) == serviceType)
+                return new DotNetBrowserService(GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService);
             if (typeof(SCodeStreamService) == serviceType)
                 return new CodeStreamService(
                     new Lazy<ICredentialsService>(() => GetService(typeof(SCredentialsService)) as ICredentialsService),
