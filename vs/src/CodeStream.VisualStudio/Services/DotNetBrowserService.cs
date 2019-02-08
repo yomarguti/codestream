@@ -84,15 +84,13 @@ namespace CodeStream.VisualStudio.Services
 			browser.ScriptContextCreated += Browser_ScriptContextCreated;
 
 			_browserView = new WPFBrowserView(browser);
-
-#if DEBUG
-			//  System.Diagnostics.Process.Start("chrome.exe", _browserView.Browser.GetRemoteDebuggingURL());
-#endif
 		}
 
 		private void Browser_RenderGoneEvent(object sender, RenderEventArgs e)
 		{
-			// TODO
+            Log.Verbose(nameof(Browser_RenderGoneEvent));
+
+			ReloadWebView();
 		}
 
 		private void Browser_ScriptContextCreated(object sender, DotNetBrowser.Events.ScriptContextEventArgs e)
@@ -271,7 +269,8 @@ namespace CodeStream.VisualStudio.Services
 						return;
 					}
 
-					_browserView.Browser.ScriptContextCreated -= Browser_ScriptContextCreated;
+                    _browserView.Browser.RenderGoneEvent -= Browser_RenderGoneEvent;
+                    _browserView.Browser.ScriptContextCreated -= Browser_ScriptContextCreated;
 
 					_browserView.Dispose();
 					_browserView.Browser.Dispose();
