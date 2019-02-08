@@ -117,11 +117,7 @@ module.exports = function(env, argv) {
 			exprContextCritical: false
 		},
 		resolve: {
-			extensions: [".ts", ".tsx", ".js", ".jsx"],
-			alias: {
-				// Required because of https://github.com/bitinn/node-fetch/issues/493#issuecomment-414111024
-				"node-fetch": path.resolve(__dirname, "node_modules/node-fetch/lib/index.js")
-			}
+			extensions: [".ts", ".tsx", ".js", ".jsx"]
 		},
 		plugins: plugins,
 		stats: {

@@ -41,7 +41,7 @@
         "bash-test-unit-ci": "npm run bash-test-unit -- --reporter mocha-teamcity-reporter"
     },
     "dependencies": {
-        "@sentry/node": "4.5.0",
+        "@sentry/node": "4.5.3",
         "date-fns": "1.30.1",
         "diff": "4.0.1",
         "https-proxy-agent": "2.2.1",
@@ -58,14 +58,14 @@
         "write-file-atomic": "2.3.0"
     },
     "devDependencies": {
-        "@sentry/types": "4.5.0",
+        "@sentry/types": "4.5.3",
         "@slack/client": "4.8.0",
         "@types/chai": "4.1.7",
-        "@types/diff": "3.5.2",
+        "@types/diff": "4.0.1",
         "@types/lodash-es": "4.17.1",
         "@types/mocha": "5.2.5",
-        "@types/node": "8.10.39",
-        "@types/node-fetch": "2.1.2",
+        "@types/node": "10.1.4",
+        "@types/node-fetch": "2.1.4",
         "@types/pubnub": "4.0.4",
         "@types/randomstring": "1.1.6",
         "@types/sinon": "5.0.5",
@@ -80,19 +80,19 @@
         "filemanager-webpack-plugin": "2.0.5",
         "mocha": "5.2.0",
         "mocha-teamcity-reporter": "2.5.1",
-        "prettier": "1.16.1",
+        "prettier": "1.16.4",
         "prettier-tslint": "0.4.2",
         "randomstring": "1.1.5",
         "sanitize-filename": "^1.6.1",
         "sinon": "6.3.4",
         "sinon-chai": "3.2.0",
-        "terser-webpack-plugin": "1.2.1",
+        "terser-webpack-plugin": "1.2.2",
         "ts-loader": "5.3.3",
         "ts-node": "7.0.1",
         "tslint": "5.12.1",
         "tslint-loader": "3.5.4",
         "typescript": "3.2.4",
-        "webpack": "4.29.0",
-        "webpack-cli": "3.2.1"
+        "webpack": "4.29.3",
+        "webpack-cli": "3.2.3"
     }
 }

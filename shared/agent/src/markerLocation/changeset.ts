@@ -1,6 +1,6 @@
 "use strict";
 
-import { IHunk, IUniDiff } from "diff";
+import { Hunk, ParsedDiff } from "diff";
 
 enum Operation {
 	Sync,
@@ -51,7 +51,7 @@ export interface Changeset {
 	changes: Change[];
 }
 
-export function buildChangeset(diff: IUniDiff): Changeset {
+export function buildChangeset(diff: ParsedDiff): Changeset {
 	const builder = new ChangesetBuilder(diff);
 	return builder.build();
 }
@@ -59,7 +59,7 @@ export function buildChangeset(diff: IUniDiff): Changeset {
 class ChangesetBuilder {
 	private readonly _oldFile: string;
 	private readonly _newFile: string;
-	private readonly _hunks: IHunk[];
+	private readonly _hunks: Hunk[];
 	private readonly _changes: Change[];
 	private _state: State;
 	private _oldLine: number;
@@ -69,9 +69,9 @@ class ChangesetBuilder {
 	private _delStart: number;
 	private _addStart: number;
 
-	constructor(diff: IUniDiff) {
-		this._oldFile = diff.oldFileName;
-		this._newFile = diff.newFileName;
+	constructor(diff: ParsedDiff) {
+		this._oldFile = diff.oldFileName!;
+		this._newFile = diff.newFileName!;
 		this._hunks = diff.hunks;
 		this._changes = [];
 		this._state = State.Sync;

@@ -1,6 +1,6 @@
 "use strict";
 
-import { IUniDiff } from "diff";
+import { ParsedDiff } from "diff";
 import { compareTwoStrings, findBestMatch, Rating } from "string-similarity";
 import { Logger } from "../logger";
 import { Id } from "../managers/entityManager";
@@ -14,7 +14,7 @@ const DELETED = -1;
 
 export async function calculateLocations(
 	locations: LocationsById,
-	diff: IUniDiff
+	diff: ParsedDiff
 ): Promise<LocationsById> {
 	const calculation = new Calculation(locations, buildChangeset(diff));
 	return calculation.results();
@@ -22,7 +22,7 @@ export async function calculateLocations(
 
 export async function calculateLocation(
 	location: CSMarkerLocation,
-	diff: IUniDiff
+	diff: ParsedDiff
 ): Promise<CSMarkerLocation> {
 	const calculated = await calculateLocations(byId(location), diff);
 	return calculated[location.id];

@@ -1,5 +1,5 @@
 "use strict";
-import { IUniDiff, parsePatch } from "diff";
+import { ParsedDiff, parsePatch } from "diff";
 import * as fs from "fs";
 import * as path from "path";
 import { Disposable, Event } from "vscode-languageserver";
@@ -150,7 +150,7 @@ export class GitService implements IGitService, Disposable {
 		initialCommitHash: string,
 		finalCommitHash: string,
 		filePath: string
-	): Promise<IUniDiff | undefined> {
+	): Promise<ParsedDiff | undefined> {
 		const [dir, filename] = Strings.splitPath(filePath);
 		let data;
 		try {
@@ -170,7 +170,7 @@ export class GitService implements IGitService, Disposable {
 		return patches[0];
 	}
 
-	async getDiffFromHead(filePath: string): Promise<IUniDiff> {
+	async getDiffFromHead(filePath: string): Promise<ParsedDiff> {
 		const [dir, filename] = Strings.splitPath(filePath);
 		let data;
 		try {
