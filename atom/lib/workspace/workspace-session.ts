@@ -10,6 +10,7 @@ import { Capabilities } from "lib/shared/agent.protocol";
 export type Session = {
 	user: CSMe;
 	currentTeamId: string;
+	token: string;
 };
 
 interface BootstrapState {
@@ -52,6 +53,7 @@ export class WorkspaceSession {
 	private agent?: CodeStreamAgent;
 	private agentCapabilities?: Capabilities;
 	private _sessionStatus = SessionStatus.SignedOut;
+	private isReady?: Promise<void>;
 
 	static create(state: PackageState) {
 		return new WorkspaceSession(state.session, state.lastUsedEmail, state.environment);
@@ -67,6 +69,18 @@ export class WorkspaceSession {
 		this.lastUsedEmail = lastUsedEmail;
 		this.envConfig = envConfig;
 
+		if (session) {
+			this.isReady = new Promise(async (resolve, reject) => {
+				const result = await this.login(session.user.email, session.token);
+				if (result === LoginResult.Success) {
+					resolve();
+				} else {
+					this.session = undefined;
+					this.isReady = undefined;
+					reject();
+				}
+			});
+		}
 	}
 
 	serialize() {
@@ -110,9 +124,13 @@ export class WorkspaceSession {
 		};
 	}
 
-	// only when there is a session
 	async getBootstrapData() {
-		if (!this.session) return;
+		if (!this.session) return {};
+		try {
+			await this.isReady;
+		} catch (error) {
+			return {};
+		}
 
 		const promise = Promise.all([
 			this.agent!.fetchUsers(),
@@ -124,13 +142,16 @@ export class WorkspaceSession {
 		]);
 
 		const data: any = {
-			currentTeamId: this.session.currentTeamId,
-			currentUserId: this.session.user.id,
+			context: {
+				currentTeamId: this.session.currentTeamId,
+			},
+			session: {
+				userId: this.session.user.id,
+			},
 			capabilities: this.agentCapabilities,
 			configs: { debug: true, serverUrl: this.environment.serverUrl }, // TODO
 			preferences: {}, // TODO
 			umis: {}, // TODO
-			// context // TODO?
 		};
 		const [
 			usersResponse,
@@ -158,6 +179,25 @@ export class WorkspaceSession {
 		return this.signupToken;
 	}
 
+	async login(email: string, token: string) {
+		this.sessionStatus = SessionStatus.SigningIn;
+		try {
+			this.agent = await CodeStreamAgent.init(email, token, this.environment.serverUrl);
+			await this.completeLogin();
+			this.sessionStatus = SessionStatus.SignedIn;
+			return LoginResult.Success;
+		} catch (error) {
+			this.sessionStatus = SessionStatus.SignedOut;
+			if (typeof error === "string") {
+				atom.notifications.addError("Error logging in: ", { detail: error });
+				return error as LoginResult;
+			} else {
+				console.error("Unexpected error signing into CodeStream", error);
+				return LoginResult.Unknown;
+			}
+		}
+	}
+
 	async loginViaSignupToken(token?: string): Promise<LoginResult> {
 		if (this.signupToken === undefined && token === undefined) {
 			throw new Error("A signup token hasn't been generated");
@@ -178,6 +218,7 @@ export class WorkspaceSession {
 				}
 				return error as LoginResult;
 			} else {
+				atom.notifications.addError("Unexpected error intializing agent with signup token");
 				console.error("Unexpected error intializing agent with signup token", error);
 				return LoginResult.Unknown;
 			}
@@ -189,6 +230,7 @@ export class WorkspaceSession {
 		this.session = {
 			user: agentResult.loginResponse.user,
 			currentTeamId: agentResult.state.teamId,
+			token: agentResult.loginResponse.accessToken,
 		};
 		this.lastUsedEmail = agentResult.loginResponse.user.email;
 		this.agentCapabilities = agentResult.state.capabilities;

@@ -22,6 +22,8 @@ import {
 	FetchReposResponse,
 	GetUnreadsResponse,
 	GetPreferencesResponse,
+	TraceLevel,
+	AccessToken,
 } from "../shared/agent.protocol";
 import { ClientCapabilities, LogMessageParams } from "vscode-languageserver-protocol";
 
@@ -125,7 +127,8 @@ class AgentConnection {
 	async start(initOptions: {
 		serverUrl: string;
 		email?: string;
-		passwordOrToken?: string;
+		teamId?: string;
+		passwordOrToken?: string | AccessToken;
 		signupToken?: string;
 	}) {
 		this._agentProcess = await this.startServer();
@@ -138,7 +141,7 @@ class AgentConnection {
 		);
 		this.preInitialization(this._connection);
 
-		const initializationOptions = {
+		const initializationOptions: Partial<AgentOptions> = {
 			extension: {
 				build: "dev",
 				buildEnv: "local",
@@ -150,16 +153,10 @@ class AgentConnection {
 				version: atom.getVersion(),
 			},
 			isDebugging: true,
-			traceLevel: "debug",
+			traceLevel: TraceLevel.Debug,
 			gitPath: "git",
-			ideVersion: atom.getVersion(),
-			serverUrl: initOptions.serverUrl,
-			team: "",
-			teamId: "",
-			signupToken: initOptions.signupToken,
-			email: initOptions.email,
-			passwordOrToken: initOptions.passwordOrToken,
-		} as AgentOptions;
+			...initOptions,
+		};
 
 		const firstProject = atom.project.getPaths()[0] || null; // TODO: what if there are no projects
 		const response = await this._connection.initialize({
@@ -178,7 +175,7 @@ class AgentConnection {
 
 	private preInitialization(connection: LanguageClientConnection) {
 		connection.onLogMessage((params: LogMessageParams) => {
-			console.log(`CodeStream Agent: ${params.message}`);
+			console.debug(`CodeStream Agent: ${params.message}`);
 		});
 	}
 
@@ -191,7 +188,7 @@ class AgentConnection {
 
 		const agentProcess = spawn(
 			process.execPath,
-			[asAbsolutePath("dist/agent.js"), "--node-ipc", "--inspect=6009"],
+			[asAbsolutePath("dist/agent.js"), "--node-ipc", "--inspect=6011"],
 			options
 		);
 		// agentProcess.on("disconnect", () => {
@@ -230,6 +227,17 @@ export class CodeStreamAgent {
 		if (result.error) {
 			throw result.error;
 		} else return new CodeStreamAgent(connection, result);
+	}
+
+	static async init(email: string, token: string, serverUrl: string): Promise<CodeStreamAgent> {
+		const connection = new AgentConnection();
+		const result = await connection.start({
+			email,
+			passwordOrToken: { email, url: serverUrl, value: token },
+			serverUrl,
+		});
+		if (result.error) throw result.error;
+		else return new CodeStreamAgent(connection, result);
 	}
 
 	protected constructor(connection: AgentConnection, data: AgentResult) {
