@@ -31,6 +31,11 @@ interface JiraProjectMeta extends JiraProject {
 interface JiraProjectsMetaResponse {
 	projects: JiraProjectMeta[];
 }
+interface ProjectSearchResponse {
+	values: any[];
+	nextPage?: string;
+	isLast: boolean;
+}
 
 interface CreateJiraIssueResponse {
 	id: string;
@@ -81,12 +86,24 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 	@log()
 	@lspHandler(JiraFetchBoardsRequestType)
 	async getBoards(): Promise<JiraFetchBoardsResponse> {
+		if (this.boards.length > 0) return { boards: this.boards };
 		try {
-			const { body } = await this.get<{ values: any[] }>("/rest/api/3/project/search");
+			const projectIds = [];
+			let hasMore = true;
+			let { body } = await this.get<ProjectSearchResponse>("/rest/api/3/project/search");
+
+			while (hasMore) {
+				projectIds.push(...body.values.map(v => v.id));
+				if (!body.isLast && body.nextPage) {
+					body = (await this.get<ProjectSearchResponse>(body.nextPage)).body;
+				} else {
+					hasMore = false;
+				}
+			}
 
 			const response = await this.get<JiraProjectsMetaResponse>(
 				`/rest/api/3/issue/createmeta?${qs.stringify({
-					projectIds: body.values.map(v => v.id).join(","),
+					projectIds: projectIds.join(","),
 					expand: "projects.issuetypes.fields"
 				})}`
 			);
