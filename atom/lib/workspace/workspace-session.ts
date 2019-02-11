@@ -42,7 +42,7 @@ export enum SessionStatus {
 	SignedIn,
 }
 
-const DID_CHANGE_SESSION_STATUS = "session-status-changed";
+const SESSION_STATUS_CHANGED = "session-status-changed";
 
 export class WorkspaceSession {
 	private emitter: Emitter;
@@ -101,14 +101,14 @@ export class WorkspaceSession {
 	}
 
 	onDidChangeSessionStatus(callback: (status: SessionStatus) => any) {
-		this.emitter.on(DID_CHANGE_SESSION_STATUS, callback);
+		this.emitter.on(SESSION_STATUS_CHANGED, callback);
 		callback(this._sessionStatus);
 	}
 
 	private set sessionStatus(status: SessionStatus) {
 		if (this._sessionStatus !== status) {
 			this._sessionStatus = status;
-			this.emitter.emit(DID_CHANGE_SESSION_STATUS, status);
+			this.emitter.emit(SESSION_STATUS_CHANGED, status);
 		}
 	}
 

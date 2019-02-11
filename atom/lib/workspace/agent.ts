@@ -217,6 +217,8 @@ class AgentConnection {
 	}
 }
 
+const DATA_CHANGED = "data-changed";
+
 export class CodeStreamAgent extends AgentConnection {
 	private emitter = new Emitter();
 
@@ -242,12 +244,12 @@ export class CodeStreamAgent extends AgentConnection {
 			console.debug(`CodeStream Agent: ${params.message}`);
 		});
 		connection.onCustom(DidChangeDataNotificationType.method, event => {
-			this.emitter.emit("data-changed", event);
+			this.emitter.emit(DATA_CHANGED, event);
 		});
 	}
 
 	onDidChangeData(cb: (event: DidChangeDataNotification) => void) {
-		return this.emitter.on("data-changed", cb);
+		return this.emitter.on(DATA_CHANGED, cb);
 	}
 
 	fetchUsers(): Promise<FetchUsersResponse> {
