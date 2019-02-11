@@ -205,11 +205,14 @@ export class MessageInput extends React.Component<Props, State> {
 
 		// filter out yourself
 
+		const normalizedPrefix = prefix ? prefix.toLowerCase() : prefix;
+
 		if (type === "at-mentions") {
 			const teammates = this.props.teammates.filter(({ id }) => id !== this.props.currentUserId);
+
 			Object.values(teammates).forEach(person => {
-				const toMatch = person.fullName + "*" + person.username;
-				if (toMatch.toLowerCase().indexOf(prefix) !== -1) {
+				const toMatch = `${person.fullName}*${person.username}`.toLowerCase();
+				if (toMatch.indexOf(normalizedPrefix) !== -1) {
 					itemsToShow.push({
 						id: person.id,
 						headshot: person,
@@ -225,16 +228,16 @@ export class MessageInput extends React.Component<Props, State> {
 				if (command.requires && !this.props.services[command.requires]) return;
 				if (command.codeStreamTeam && this.props.isSlackTeam) return;
 				if (command.slackTeam && !this.props.isSlackTeam) return;
-				const lowered = command.id.toLowerCase();
-				if (lowered.indexOf(prefix) === 0) {
+				const toMatch = command.id.toLowerCase();
+				if (toMatch.indexOf(normalizedPrefix) === 0) {
 					command.identifier = command.id;
 					itemsToShow.push(command);
 				}
 			});
 		} else if (type === "channels") {
 			Object.values(this.props.channelStreams).forEach(channel => {
-				const toMatch = channel.name;
-				if (toMatch.toLowerCase().indexOf(prefix) !== -1) {
+				const toMatch = channel.name.toLowerCase();
+				if (toMatch.indexOf(normalizedPrefix) !== -1) {
 					itemsToShow.push({
 						id: channel.name,
 						identifier: "#" + channel.name,
@@ -243,10 +246,10 @@ export class MessageInput extends React.Component<Props, State> {
 				}
 			});
 		} else if (type === "emojis") {
-			if (prefix && prefix.length > 1) {
+			if (normalizedPrefix && normalizedPrefix.length > 1) {
 				debugger;
 				Object.keys(emojiData).map(emojiId => {
-					if (emojiId.indexOf(prefix) === 0) {
+					if (emojiId.indexOf(normalizedPrefix) === 0) {
 						itemsToShow.push({ id: emojiId, identifier: emojiData[emojiId] + " " + emojiId });
 					}
 				});
@@ -257,7 +260,7 @@ export class MessageInput extends React.Component<Props, State> {
 			}
 		}
 
-		if (itemsToShow.length == 0) {
+		if (itemsToShow.length === 0) {
 			this.hidePopup();
 		} else {
 			const selected = itemsToShow[0].id;
