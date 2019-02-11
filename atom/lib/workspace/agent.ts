@@ -1,3 +1,4 @@
+import { Emitter } from "atom";
 import { ChildProcess, spawn } from "child_process";
 import { Convert, LanguageClientConnection } from "atom-languageclient";
 import {
@@ -24,6 +25,8 @@ import {
 	GetPreferencesResponse,
 	TraceLevel,
 	AccessToken,
+	DidChangeDataNotificationType,
+	DidChangeDataNotification,
 } from "../shared/agent.protocol";
 import { ClientCapabilities, LogMessageParams } from "vscode-languageserver-protocol";
 
@@ -124,7 +127,9 @@ class AgentConnection {
 		return this._connection;
 	}
 
-	async start(initOptions: {
+	protected preInitialization(connection: LanguageClientConnection) {}
+
+	protected async start(initOptions: {
 		serverUrl: string;
 		email?: string;
 		teamId?: string;
@@ -139,6 +144,7 @@ class AgentConnection {
 				new IPCMessageWriter(this._agentProcess as ChildProcess)
 			)
 		);
+
 		this.preInitialization(this._connection);
 
 		const initializationOptions: Partial<AgentOptions> = {
@@ -173,12 +179,6 @@ class AgentConnection {
 		return (response as AgentInitializeResult).result;
 	}
 
-	private preInitialization(connection: LanguageClientConnection) {
-		connection.onLogMessage((params: LogMessageParams) => {
-			console.debug(`CodeStream Agent: ${params.message}`);
-		});
-	}
-
 	private startServer(): ChildProcess {
 		const options: { [k: string]: any } = {};
 		options.env = Object.create(process.env);
@@ -203,7 +203,7 @@ class AgentConnection {
 		return agentProcess;
 	}
 
-	async stop() {
+	protected async stop() {
 		if (this._connection) {
 			await this._connection.shutdown();
 			this._connection.exit();
@@ -217,66 +217,69 @@ class AgentConnection {
 	}
 }
 
-export class CodeStreamAgent {
-	private connection: AgentConnection;
-	readonly initializeResult: AgentResult;
+export class CodeStreamAgent extends AgentConnection {
+	private emitter = new Emitter();
 
-	static async initWithSignupToken(token: string, serverUrl: string): Promise<CodeStreamAgent> {
-		const connection = new AgentConnection();
-		const result = await connection.start({ signupToken: token, serverUrl });
-		if (result.error) {
-			throw result.error;
-		} else return new CodeStreamAgent(connection, result);
-	}
-
-	static async init(email: string, token: string, serverUrl: string): Promise<CodeStreamAgent> {
-		const connection = new AgentConnection();
-		const result = await connection.start({
+	async init(email: string, token: string, serverUrl: string): Promise<AgentResult> {
+		const result = await this.start({
 			email,
 			passwordOrToken: { email, url: serverUrl, value: token },
 			serverUrl,
 		});
 		if (result.error) throw result.error;
-		else return new CodeStreamAgent(connection, result);
+		return result;
 	}
 
-	protected constructor(connection: AgentConnection, data: AgentResult) {
-		this.connection = connection;
-		this.initializeResult = data;
+	async initWithSignupToken(token: string, serverUrl: string): Promise<AgentResult> {
+		const result = await this.start({ signupToken: token, serverUrl });
+		if (result.error) {
+			throw result.error;
+		} else return result;
+	}
+
+	protected preInitialization(connection: LanguageClientConnection) {
+		connection.onLogMessage((params: LogMessageParams) => {
+			console.debug(`CodeStream Agent: ${params.message}`);
+		});
+		connection.onCustom(DidChangeDataNotificationType.method, event => {
+			this.emitter.emit("data-changed", event);
+		});
+	}
+
+	onDidChangeData(cb: (event: DidChangeDataNotification) => void) {
+		return this.emitter.on("data-changed", cb);
 	}
 
 	fetchUsers(): Promise<FetchUsersResponse> {
-		return this.connection.connection!.sendCustomRequest(FetchUsersRequestType.method, {});
+		return this.connection!.sendCustomRequest(FetchUsersRequestType.method, {});
 	}
 
 	fetchStreams(): Promise<FetchStreamsResponse> {
-		return this.connection.connection!.sendCustomRequest(FetchStreamsRequestType.method, {});
+		return this.connection!.sendCustomRequest(FetchStreamsRequestType.method, {});
 	}
 
 	fetchTeams(): Promise<FetchTeamsResponse> {
-		return this.connection.connection!.sendCustomRequest(FetchTeamsRequestType.method, {});
+		return this.connection!.sendCustomRequest(FetchTeamsRequestType.method, {});
 	}
 
 	fetchRepos(): Promise<FetchReposResponse> {
-		return this.connection.connection!.sendCustomRequest(FetchReposRequestType.method, {});
+		return this.connection!.sendCustomRequest(FetchReposRequestType.method, {});
 	}
 
 	fetchUnreads(): Promise<GetUnreadsResponse> {
-		return this.connection.connection!.sendCustomRequest(GetUnreadsRequestType.method, {});
+		return this.connection!.sendCustomRequest(GetUnreadsRequestType.method, {});
 	}
 
 	fetchPreferences(): Promise<GetPreferencesResponse> {
-		return this.connection.connection!.sendCustomRequest(
-			GetPreferencesRequestType.method,
-			undefined
-		);
+		return this.connection!.sendCustomRequest(GetPreferencesRequestType.method, undefined);
 	}
 
 	sendRequest<R>(name: string, params?: any): Promise<R> {
-		return this.connection.connection!.sendCustomRequest(name, params);
+		return this.connection!.sendCustomRequest(name, params);
 	}
 
 	dispose() {
-		this.connection.stop();
+		this.emitter.dispose();
+		this.stop();
 	}
 }

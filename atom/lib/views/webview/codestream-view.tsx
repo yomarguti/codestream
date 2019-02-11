@@ -39,9 +39,20 @@ export class CodestreamView {
 		this.render();
 	}
 
-	async initialize() {
-		const bootstrapData = await this.session.getBootstrapData();
-		this.store.dispatch(actions.bootstrap(bootstrapData));
+	private initialize() {
+		this.session.getBootstrapData().then(bootstrapData => {
+			this.store.dispatch(actions.bootstrap(bootstrapData));
+		});
+
+		// TODO: create a controller to house this stuff so it isn't re-init everytime this view is instantiated
+		this.subscriptions.add(this.session.agent.onDidChangeData(this.onDidChangeSessionData));
+	}
+
+	private onDidChangeSessionData(data: { type: string; data: any }) {
+		this.store.dispatch({
+			type: `UPDATE_${data.type}S`,
+			payload: data,
+		});
 	}
 
 	private render() {
