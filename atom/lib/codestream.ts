@@ -26,8 +26,6 @@ class CodestreamPackage {
 	// Package lifecyle 1
 	async initialize() {
 		this.store = createStore(this.workspaceSession.getBootstrapState(), { api: HostApi.instance });
-		const bootstrapData = await this.workspaceSession.getBootstrapData();
-		this.store.dispatch(actions.bootstrap(bootstrapData));
 
 		this.workspaceSession.onDidChangeSessionStatus(status => {
 			this.sessionStatusCommand && this.sessionStatusCommand.dispose();

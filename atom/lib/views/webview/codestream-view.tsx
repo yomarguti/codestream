@@ -1,18 +1,18 @@
 import { shell } from "electron";
 import * as React from "react";
 import { render, unmountComponentAtNode } from "react-dom";
-import { Container } from "codestream-components";
+import { Container, actions } from "codestream-components";
 import translations from "codestream-components/translations/en";
 import { CompositeDisposable } from "atom";
 import { WorkspaceSession } from "lib/workspace/workspace-session";
 import { LoginResult } from "../../shared/api.protocol";
 import {
 	Target,
-	CommandType,
 	GoToSlackSignin,
 	GoToSlackSigninResult,
 	ValidateSignup,
 	ValidateSignupResult,
+	Command,
 } from "codestream-components/ipc/commands";
 
 export const CODESTREAM_VIEW_URI = "atom://codestream";
@@ -34,8 +34,14 @@ export class CodestreamView {
 		this.element = document.createElement("div");
 		this.element.classList.add("codestream");
 
+		this.initialize();
 		this.setupWebviewListeners();
 		this.render();
+	}
+
+	async initialize() {
+		const bootstrapData = await this.session.getBootstrapData();
+		this.store.dispatch(actions.bootstrap(bootstrapData));
 	}
 
 	private render() {
@@ -90,18 +96,18 @@ export class CodestreamView {
 	}
 
 	private setupWebviewListeners() {
-		this.port.onmessage = ({ data }: { data: { id: string; command: CommandType } }) => {
+		this.port.onmessage = ({ data }: { data: { id: string; command: Command } }) => {
 			if (data.command.target === Target.Extension)
 				this.handleWebviewCommand(data.id, data.command);
 			if (data.command.target === Target.Agent) this.forwardWebviewCommand(data.id, data.command);
 		};
 	}
-	private async forwardWebviewCommand(id: string, command: CommandType) {
+	private async forwardWebviewCommand(id: string, command: Command) {
 		const response = await this.session.agent!.sendRequest(command.name, command.params);
 		this.respond({ id, result: response });
 	}
 
-	private async handleWebviewCommand(id: string, command: CommandType) {
+	private async handleWebviewCommand(id: string, command: Command) {
 		switch (command.name) {
 			case GoToSlackSignin.name: {
 				const ok = shell.openExternal(
