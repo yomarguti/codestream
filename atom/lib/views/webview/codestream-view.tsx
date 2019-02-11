@@ -14,6 +14,7 @@ import {
 	ValidateSignupResult,
 	Command,
 } from "codestream-components/ipc/commands";
+import { DidChangeDataNotification, ChangeDataType, CSUnreads } from "../../shared/agent.protocol";
 
 export const CODESTREAM_VIEW_URI = "atom://codestream";
 
@@ -48,12 +49,22 @@ export class CodestreamView {
 		this.subscriptions.add(this.session.agent.onDidChangeData(this.onDidChangeSessionData));
 	}
 
-	private onDidChangeSessionData(data: { type: string; data: any }) {
-		this.store.dispatch({
-			type: `UPDATE_${data.type}S`,
-			payload: data,
-		});
-	}
+	private onDidChangeSessionData = ({ type, data }: DidChangeDataNotification) => {
+		switch (type) {
+			case ChangeDataType.Preferences: {
+				return this.store.dispatch(actions.updatePreferences(data));
+			}
+			case ChangeDataType.Unreads: {
+				return this.store.dispatch(actions.updateUnreads(data as CSUnreads));
+			}
+			default: {
+				this.store.dispatch({
+					type: `ADD_${type.toUpperCase()}`,
+					payload: data,
+				});
+			}
+		}
+	};
 
 	private render() {
 		render(
