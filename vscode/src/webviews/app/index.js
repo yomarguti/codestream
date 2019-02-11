@@ -114,7 +114,10 @@ function initializeColorPalette() {
 			// theme = 'highcontrast';
 		}
 
-		let color = computedStyle.getPropertyValue("--vscode-foreground").trim();
+		let color = computedStyle.getPropertyValue("--vscode-editor-foreground").trim();
+		if (!color) {
+			color = computedStyle.getPropertyValue("--vscode-foreground").trim();
+		}
 		bodyStyle.setProperty("--text-color", opacity(color, 80));
 		bodyStyle.setProperty("--text-color-highlight", color);
 		bodyStyle.setProperty("--text-color-subtle", opacity(color, 60));
