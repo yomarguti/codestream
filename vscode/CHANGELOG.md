@@ -10,6 +10,8 @@
 
 - Fixes an issue where messages weren't being rendered in realtime
 - Fixes [#34](https://github.com/TeamCodeStream/CodeStream/issues/34) &mdash; Slack channel list not fully visible when creating CodeMark
+- Fixes an issue with the mentions popup not being fully scrollable
+- Fixes an issue with mentions not being case insensitive
 
 ## [0.33.1] - 2019-2-5
 
