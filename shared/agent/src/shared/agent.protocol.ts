@@ -82,6 +82,7 @@ export interface BaseAgentOptions {
 		url: string;
 		strictSSL: boolean;
 	};
+	proxySupport?: "override" | "on" | "off";
 	serverUrl: string;
 	traceLevel: TraceLevel;
 	recordRequests?: boolean;

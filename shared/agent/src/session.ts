@@ -170,11 +170,26 @@ export class CodeStreamSession {
 
 		Container.initialize(this);
 
-		if (_options.proxy != null) {
+		if (_options.proxySupport === "override" && _options.proxy != null) {
 			this._proxyAgent = new HttpsProxyAgent({
 				...url.parse(_options.proxy.url),
 				rejectUnauthorized: _options.proxy.strictSSL
 			} as any);
+		} else if (_options.proxySupport === "on") {
+			const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+			if (proxyUrl) {
+				let proxyUri;
+				try {
+					proxyUri = url.parse(proxyUrl);
+				} catch {}
+
+				if (proxyUri) {
+					this._proxyAgent = new HttpsProxyAgent({
+						...proxyUri,
+						rejectUnauthorized: _options.proxy ? _options.proxy.strictSSL : true
+					} as any);
+				}
+			}
 		}
 
 		this._api = new CodeStreamApiProvider(_options.serverUrl, this.versionInfo, this._proxyAgent);
