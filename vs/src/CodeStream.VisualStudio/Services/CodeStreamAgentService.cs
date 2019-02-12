@@ -6,14 +6,16 @@ using CodeStream.VisualStudio.Models;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
+using Serilog.Events;
+using SerilogTimings.Extensions;
 using StreamJsonRpc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Serilog.Events;
 using Task = System.Threading.Tasks.Task;
+using TraceLevel = CodeStream.VisualStudio.Core.Logging.TraceLevel;
 
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -87,7 +89,18 @@ namespace CodeStream.VisualStudio.Services
             cancellationToken = cancellationToken ?? CancellationToken.None;
             try
             {
-                return _rpc.InvokeWithParameterObjectAsync<T>(name, arguments, cancellationToken.Value);
+                if (Log.IsEnabled(LogEventLevel.Verbose))
+                {
+                    // the args might have sensitive data in it -- don't include args here
+                    using (Log.TimeOperation("SendCoreAsync. Name={Name}", name))
+                    {
+                        return _rpc.InvokeWithParameterObjectAsync<T>(name, arguments, cancellationToken.Value);
+                    }
+                }
+                else
+                {
+                    return _rpc.InvokeWithParameterObjectAsync<T>(name, arguments, cancellationToken.Value);
+                }
             }
             catch (Exception ex)
             {
@@ -214,8 +227,8 @@ namespace CodeStream.VisualStudio.Services
             }
             catch (Exception ex)
             {
-               Log.Verbose(ex, $"Failed to send telemetry for {eventName}");
-               return Task.CompletedTask;
+                Log.Verbose(ex, $"Failed to send telemetry for {eventName}");
+                return Task.CompletedTask;
             }
         }
 
