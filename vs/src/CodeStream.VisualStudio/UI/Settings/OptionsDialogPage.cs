@@ -39,8 +39,11 @@ namespace CodeStream.VisualStudio.UI.Settings
             get => _email;
             set
             {
-                _email = value;
-                NotifyPropertyChanged();
+                if (_email != value)
+                {
+                    _email = value;
+                    NotifyPropertyChanged();
+                }
             }
         }
 
@@ -52,8 +55,11 @@ namespace CodeStream.VisualStudio.UI.Settings
             get => _team;
             set
             {
-                _team = value;
-                NotifyPropertyChanged();
+                if (_team != value)
+                {
+                    _team = value;
+                    NotifyPropertyChanged();
+                }
             }
         }
 
@@ -65,8 +71,11 @@ namespace CodeStream.VisualStudio.UI.Settings
             get => _autoSignIn;
             set
             {
-                _autoSignIn = value;
-                NotifyPropertyChanged();
+                if (_autoSignIn != value)
+                {
+                    _autoSignIn = value;
+                    NotifyPropertyChanged();
+                }
             }
         }
 
@@ -78,8 +87,11 @@ namespace CodeStream.VisualStudio.UI.Settings
             get => _serverUrl;
             set
             {
-                _serverUrl = value;
-                NotifyPropertyChanged();
+                if (_serverUrl != value)
+                {
+                    _serverUrl = value;
+                    NotifyPropertyChanged();
+                }
             }
         }
 
@@ -91,8 +103,11 @@ namespace CodeStream.VisualStudio.UI.Settings
             get => _webAppUrl;
             set
             {
-                _webAppUrl = value;
-                NotifyPropertyChanged();
+                if (_webAppUrl != value)
+                {
+                    _webAppUrl = value;
+                    NotifyPropertyChanged();
+                }
             }
         }
 
@@ -104,8 +119,11 @@ namespace CodeStream.VisualStudio.UI.Settings
             get => _proxyUrl;
             set
             {
-                _proxyUrl = value;
-                NotifyPropertyChanged();
+                if (_proxyUrl != value)
+                {
+                    _proxyUrl = value;
+                    NotifyPropertyChanged();
+                }
             }
         }
 
@@ -117,8 +135,11 @@ namespace CodeStream.VisualStudio.UI.Settings
             get => _proxyStrictSsl;
             set
             {
-                _proxyStrictSsl = value;
-                NotifyPropertyChanged();
+                if (_proxyStrictSsl != value)
+                {
+                    _proxyStrictSsl = value;
+                    NotifyPropertyChanged();
+                }
             }
         }
 
@@ -131,8 +152,11 @@ namespace CodeStream.VisualStudio.UI.Settings
             get => _showMarkers;
             set
             {
-                _showMarkers = value;
-                NotifyPropertyChanged();
+                if (_showMarkers != value)
+                {
+                    _showMarkers = value;
+                    NotifyPropertyChanged();
+                }
             }
         }
 
@@ -144,8 +168,11 @@ namespace CodeStream.VisualStudio.UI.Settings
             get => _showHeadshots;
             set
             {
-                _showHeadshots = value;
-                NotifyPropertyChanged();
+                if (_showHeadshots != value)
+                {
+                    _showHeadshots = value;
+                    NotifyPropertyChanged();
+                }
             }
         }
 
@@ -158,8 +185,11 @@ namespace CodeStream.VisualStudio.UI.Settings
             get => _openCommentOnSelect;
             set
             {
-                _openCommentOnSelect = value;
-                NotifyPropertyChanged();
+                if (_openCommentOnSelect != value)
+                {
+                    _openCommentOnSelect = value;
+                    NotifyPropertyChanged();
+                }
             }
         }
 
@@ -171,8 +201,11 @@ namespace CodeStream.VisualStudio.UI.Settings
             get => _muteAll;
             set
             {
-                _muteAll = value;
-                NotifyPropertyChanged();
+                if (_muteAll != value)
+                {
+                    _muteAll = value;
+                    NotifyPropertyChanged();
+                }
             }
         }
 
@@ -184,8 +217,11 @@ namespace CodeStream.VisualStudio.UI.Settings
             get => _traceLevel;
             set
             {
-                _traceLevel = value;
-                NotifyPropertyChanged();
+                if (_traceLevel != value)
+                {
+                    _traceLevel = value;
+                    NotifyPropertyChanged();
+                }
             }
         }
 
