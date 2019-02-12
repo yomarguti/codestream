@@ -1,7 +1,9 @@
-﻿using CodeStream.VisualStudio.Extensions;
+﻿using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Packages;
 using CodeStream.VisualStudio.Services;
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -63,10 +65,12 @@ namespace CodeStream.VisualStudio.UI.Margins
             var codeStreamService = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
 
             if (toolWindowProvider == null || codeStreamService == null) return;
-            
+
             toolWindowProvider.ShowToolWindow(Guids.WebViewToolWindowGuid);
 
             codeStreamService.OpenCommentByThreadAsync(_viewModel.Marker.PostStreamId ?? _viewModel.Marker.Codemark.StreamId, _viewModel.Marker.PostId ?? _viewModel.Marker.Codemark.PostId);
+
+            codeStreamService.TrackAsync(TelemetryEventNames.CodemarkClicked, new Dictionary<string, object> { { "Codemark Location", "Source File" } });
         }
     }
 }

@@ -106,6 +106,7 @@
     <Compile Include="Core\Logging\Sanitizer\TextProcessor.cs" />
     <Compile Include="Core\Logging\TraceLevel.cs" />
     <Compile Include="Core\RegularExpressions.cs" />
+    <Compile Include="Core\TelemetryEventNames.cs" />
     <Compile Include="Credentials\Credential.cs" />
     <Compile Include="Credentials\CredentialSet.cs" />
     <Compile Include="Credentials\CredentialType.cs" />

@@ -65,7 +65,7 @@ namespace CodeStream.VisualStudio
 
         //
         //
-        //TODO use DI in the ctor rather than inline Package/ServiceLocator pattern
+        //TODO use DI in the ctor rather than inline Package/ServiceLocator pattern?
         //
         //
 
@@ -76,7 +76,6 @@ namespace CodeStream.VisualStudio
                 //guard against possibly non JSON-like data
                 if (e?.Message == null || !e.Message.StartsWith("{"))
                 {
-                    // too noisy to log!
                     Log.Verbose($"{nameof(WindowEventArgs)} not found => {e?.Message}");
                 }
                 else
@@ -87,6 +86,21 @@ namespace CodeStream.VisualStudio
 
                     switch (message.Type)
                     {
+                        case "codestream:telemetry":
+                        {
+                            TelemetryRequest telemetryRequest = null;
+                            try
+                            {
+                                telemetryRequest = message.Body.ToObject<TelemetryRequest>();
+                                _codeStreamAgent.TrackAsync(telemetryRequest.EventName, telemetryRequest.Properties);
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Verbose(ex, $"Failed to send telemetry EventName={telemetryRequest?.EventName}");
+                            }
+
+                            break;
+                        }
                         case "codestream:log":
                             {
                                 Log.Warning(e.Message);

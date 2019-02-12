@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using System.ComponentModel.Design;
 using System.Threading;
+using CodeStream.VisualStudio.Core;
 
 namespace CodeStream.VisualStudio.Commands
 {
@@ -28,8 +29,8 @@ namespace CodeStream.VisualStudio.Commands
         {
             commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
 
-            var menuCommandID = new CommandID(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet, PackageIds.AddCodemarkCommandId);
-            var menuItem = new OleMenuCommand(InvokeHandler, menuCommandID);
+            var menuCommandId = new CommandID(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet, PackageIds.AddCodemarkCommandId);
+            var menuItem = new OleMenuCommand(InvokeHandler, menuCommandId);
             menuItem.BeforeQueryStatus += DynamicTextCommand_BeforeQueryStatus;
 
             commandService.AddCommand(menuItem);
@@ -51,10 +52,10 @@ namespace CodeStream.VisualStudio.Commands
         /// </summary>
         private void InvokeHandler(object sender, EventArgs args)
         {
-            var ideSerivce = Microsoft.VisualStudio.Shell.Package.GetGlobalService((typeof(SIdeService))) as IdeService;
-            if (ideSerivce == null) return;
+            var ideService = Microsoft.VisualStudio.Shell.Package.GetGlobalService((typeof(SIdeService))) as IdeService;
+            if (ideService == null) return;
 
-            var selectedText = ideSerivce.GetTextSelected(out IVsTextView view);
+            var selectedText = ideService.GetTextSelected(out IVsTextView view);
             if (view == null) return;
 
             var componentModel = (IComponentModel)(Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SComponentModel)));
@@ -63,19 +64,18 @@ namespace CodeStream.VisualStudio.Commands
             var wpfTextView = exports.GetExportedValue<IVsEditorAdaptersFactoryService>()?.GetWpfTextView(view);
             if (wpfTextView == null) return;
 
-            if (exports.GetExportedValue<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument))
+            if (!exports.GetExportedValue<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument)) return;
+
+            var codeStreamService = Microsoft.VisualStudio.Shell.Package.GetGlobalService((typeof(SCodeStreamService))) as ICodeStreamService;
+            if (codeStreamService == null) return;
+
+            ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
-                var codeStreamService = Microsoft.VisualStudio.Shell.Package.GetGlobalService((typeof(SCodeStreamService))) as ICodeStreamService;
-                if (codeStreamService == null) return;
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                ThreadHelper.JoinableTaskFactory.Run(async delegate
-                {
-                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                    await codeStreamService.PrepareCodeAsync(new Uri(textDocument.FilePath), selectedText,
-                        textDocument.IsDirty, false, CancellationToken.None);
-                });
-            }
+                await codeStreamService.PrepareCodeAsync(new Uri(textDocument.FilePath), selectedText,
+                    textDocument.IsDirty, false, CancellationToken.None);
+            });
         }
     }
 }

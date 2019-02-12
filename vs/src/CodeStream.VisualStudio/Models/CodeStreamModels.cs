@@ -1,8 +1,8 @@
 ﻿using CodeStream.VisualStudio.Extensions;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 // ReSharper disable ClassNeverInstantiated.Global
 
 namespace CodeStream.VisualStudio.Models
@@ -430,6 +430,12 @@ namespace CodeStream.VisualStudio.Models
         public string Id { get; }
 
         public CsStream Stream { get; }
+    }
+
+    public class TelemetryRequest
+    {
+        public string EventName { get; set; }
+        public Dictionary<string, object> Properties { get; set; }
     }
 
     public class PrepareCodeRequest

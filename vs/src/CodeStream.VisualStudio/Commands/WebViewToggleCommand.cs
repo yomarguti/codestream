@@ -4,6 +4,8 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.ComponentModel.Design;
+using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Services;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Commands
@@ -11,10 +13,12 @@ namespace CodeStream.VisualStudio.Commands
     internal sealed class WebViewToggleCommand : CommandBase
     {
         public static WebViewToggleCommand Instance { get; private set; }
+        private ICodeStreamAgentService _codeStreamAgentService;
 
-        private WebViewToggleCommand(AsyncPackage package, OleMenuCommandService commandService) : base(package)
+        private WebViewToggleCommand(AsyncPackage package, OleMenuCommandService commandService, ICodeStreamAgentService codeStreamAgentService) : base(package)
         {
             commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
+            _codeStreamAgentService = codeStreamAgentService;
 
             var menuCommandId = new CommandID(PackageGuids.guidWebViewPackageCmdSet, PackageIds.WebViewToggleCommandId);
             var menuItem = new OleMenuCommand(InvokeHandler, menuCommandId);
@@ -49,17 +53,29 @@ namespace CodeStream.VisualStudio.Commands
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(package.DisposalToken);
 
             OleMenuCommandService commandService = await package.GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
-            Instance = new WebViewToggleCommand(package, commandService);
+            var codeStreamAgentService = await package.GetServiceAsync(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
+
+            Instance = new WebViewToggleCommand(package, commandService, codeStreamAgentService);
         }
 
         private void InvokeHandler(object sender, EventArgs e)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
+            var isVisible = false;
+            
             IVsWindowFrame windowFrame = GetWindowFrame();
-            ErrorHandler.ThrowOnFailure(windowFrame.IsVisible() == VSConstants.S_OK
-                ? windowFrame.Hide()
-                : windowFrame.Show());
+            if (windowFrame.IsVisible() == VSConstants.S_OK)
+            {
+                windowFrame.Hide();
+            }
+            else
+            {
+                windowFrame.Show();
+                isVisible = true;
+            }
+            
+            _codeStreamAgentService.TrackAsync(isVisible ? TelemetryEventNames.WebviewOpened : TelemetryEventNames.WebviewClosed);
         }
 
         private IVsWindowFrame GetWindowFrame()

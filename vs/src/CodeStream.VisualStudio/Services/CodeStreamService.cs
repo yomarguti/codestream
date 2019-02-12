@@ -6,6 +6,7 @@ using CodeStream.VisualStudio.Packages;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
@@ -25,6 +26,7 @@ namespace CodeStream.VisualStudio.Services
         /// <returns></returns>
         Task LogoutAsync();
         IBrowserService BrowserService { get; }
+        Task TrackAsync(string eventName, Dictionary<string, object> properties = null);
     }
 
     [Injected]
@@ -37,6 +39,7 @@ namespace CodeStream.VisualStudio.Services
         private readonly ISessionService _sessionService;
         private readonly ICodeStreamAgentService _agentService;
         public IBrowserService BrowserService { get; }
+
         private readonly Lazy<ISettingsService> _settingsService;
         private readonly Lazy<IToolWindowProvider> _toolWindowProvider;
 
@@ -147,6 +150,16 @@ namespace CodeStream.VisualStudio.Services
             }
 
             return new { };
+        }
+
+        public async Task TrackAsync(string eventName, Dictionary<string, object> properties = null)
+        {
+            if (_sessionService.IsReady)
+            {
+                _agentService.TrackAsync(eventName, properties);
+            }
+
+            await Task.CompletedTask;
         }
 
         public async Task LogoutAsync()

@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Events;
 using Task = System.Threading.Tasks.Task;
 
 // ReSharper disable ClassNeverInstantiated.Global
@@ -45,6 +46,7 @@ namespace CodeStream.VisualStudio.Services
         Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request);
         Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(Uri uri, CancellationToken? cancellationToken = null);
         Task<FetchStreamsResponse> FetchStreamsAsync(FetchStreamsRequest request);
+        Task TrackAsync(string key, Dictionary<string, object> properties = null);
     }
 
     [Injected]
@@ -96,7 +98,22 @@ namespace CodeStream.VisualStudio.Services
 
         public Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null)
         {
-            if (!_sessionService.IsReady) return Task.FromResult(default(T));
+            if (!_sessionService.IsReady)
+            {
+                if (Log.IsEnabled(LogEventLevel.Verbose))
+                {
+                    try
+                    {
+                        Log.Verbose($"Agent not ready. Name={name}, Arguments={arguments?.ToJson()}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Verbose(ex, nameof(SendAsync));
+                    }
+                }
+
+                return Task.FromResult(default(T));
+            }
 
             return SendCoreAsync<T>(name, arguments, cancellationToken);
         }
@@ -183,6 +200,23 @@ namespace CodeStream.VisualStudio.Services
                 Types = request.Types.Select(_ => _.ToString()).ToList(),
                 MemberIds = request.MemberIds
             });
+        }
+
+        public Task TrackAsync(string eventName, Dictionary<string, object> properties)
+        {
+            try
+            {
+                return SendAsync<JToken>("codeStream/telemetry", new TelemetryRequest
+                {
+                    EventName = eventName,
+                    Properties = properties
+                });
+            }
+            catch (Exception ex)
+            {
+               Log.Verbose(ex, $"Failed to send telemetry for {eventName}");
+               return Task.CompletedTask;
+            }
         }
 
         public Task<PrepareCodeResponse> PrepareCodeAsync(Uri uri, Microsoft.VisualStudio.LanguageServer.Protocol.Range range, bool isDirty, CancellationToken? cancellationToken = null)
