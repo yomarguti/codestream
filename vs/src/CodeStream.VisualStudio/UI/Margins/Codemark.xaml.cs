@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using CodeStream.VisualStudio.Models;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
@@ -70,7 +71,7 @@ namespace CodeStream.VisualStudio.UI.Margins
 
             codeStreamService.OpenCommentByThreadAsync(_viewModel.Marker.PostStreamId ?? _viewModel.Marker.Codemark.StreamId, _viewModel.Marker.PostId ?? _viewModel.Marker.Codemark.PostId);
 
-            codeStreamService.TrackAsync(TelemetryEventNames.CodemarkClicked, new Dictionary<string, object> { { "Codemark Location", "Source File" } });
+            codeStreamService.TrackAsync(TelemetryEventNames.CodemarkClicked, new TelemetryProperties { { "Codemark Location", "Source File" } });
         }
     }
 }

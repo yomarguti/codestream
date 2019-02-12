@@ -126,6 +126,7 @@
     <Compile Include="Extensions\UriExtensions.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Guids.cs" />
+    <Compile Include="LSP\CustomCamelCasePropertyNamesContractResolver.cs" />
     <Compile Include="LSP\ContentDefinitions.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

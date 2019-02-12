@@ -15,9 +15,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Package = Microsoft.VisualStudio.Shell.Package;
 using ThreadHelper = Microsoft.VisualStudio.Shell.ThreadHelper;
 

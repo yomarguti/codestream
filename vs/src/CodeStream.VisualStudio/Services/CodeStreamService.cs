@@ -26,7 +26,7 @@ namespace CodeStream.VisualStudio.Services
         /// <returns></returns>
         Task LogoutAsync();
         IBrowserService BrowserService { get; }
-        Task TrackAsync(string eventName, Dictionary<string, object> properties = null);
+        Task TrackAsync(string eventName, TelemetryProperties properties = null);
     }
 
     [Injected]
@@ -152,7 +152,7 @@ namespace CodeStream.VisualStudio.Services
             return new { };
         }
 
-        public async Task TrackAsync(string eventName, Dictionary<string, object> properties = null)
+        public async Task TrackAsync(string eventName, TelemetryProperties properties = null)
         {
             if (_sessionService.IsReady)
             {

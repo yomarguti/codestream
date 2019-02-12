@@ -48,7 +48,7 @@ namespace CodeStream.VisualStudio.Services
         Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request);
         Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(Uri uri, CancellationToken? cancellationToken = null);
         Task<FetchStreamsResponse> FetchStreamsAsync(FetchStreamsRequest request);
-        Task TrackAsync(string key, Dictionary<string, object> properties = null);
+        Task TrackAsync(string key, TelemetryProperties properties = null);
     }
 
     [Injected]
@@ -215,7 +215,7 @@ namespace CodeStream.VisualStudio.Services
             });
         }
 
-        public Task TrackAsync(string eventName, Dictionary<string, object> properties)
+        public Task TrackAsync(string eventName, TelemetryProperties properties)
         {
             try
             {

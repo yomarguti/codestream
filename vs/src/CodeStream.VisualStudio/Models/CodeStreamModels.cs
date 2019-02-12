@@ -5,6 +5,7 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 // ReSharper disable ClassNeverInstantiated.Global
 
@@ -444,10 +445,12 @@ namespace CodeStream.VisualStudio.Models
         public CsStream Stream { get; }
     }
 
+    public class TelemetryProperties : Dictionary<string, object> { }
+
     public class TelemetryRequest
     {
         public string EventName { get; set; }
-        public Dictionary<string, object> Properties { get; set; }
+        public TelemetryProperties Properties { get; set; }
     }
 
     public class PrepareCodeRequest
