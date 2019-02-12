@@ -1,8 +1,10 @@
 import cx from "classnames";
+import * as paths from "path";
 import * as React from "react";
 import { connect } from "react-redux";
 import Select from "react-select";
 import _ from "underscore";
+import { Range } from "vscode-languageserver-protocol";
 import {
 	CodemarkType,
 	CSChannelStream,
@@ -12,7 +14,6 @@ import {
 	CSUser,
 	StreamType
 } from "../shared/api.protocol";
-import { Range } from "vscode-languageserver-protocol"
 import { getStreamForId, getStreamForTeam } from "../store/streams/reducer";
 import { Stream } from "../store/streams/types";
 import { mapFilter } from "../utils";
@@ -510,9 +511,11 @@ class CodemarkForm extends React.Component<Props, State> {
 		} else {
 			lines = `lines ${codeBlock.range.start.line + 1}-${codeBlock.range.end.line + 1}`;
 		}
+
+		const file = codeBlock.file ? paths.basename(codeBlock.file) : "";
 		return (
 			<span>
-				Commenting on <b>{lines}</b> in <b>{codeBlock.file}</b>
+				Commenting on <b>{lines}</b> in <b>{file}</b>
 			</span>
 		);
 	}
