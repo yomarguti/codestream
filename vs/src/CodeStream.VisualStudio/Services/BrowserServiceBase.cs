@@ -178,13 +178,6 @@ namespace CodeStream.VisualStudio.Services
 
     public class NullBrowserService : BrowserServiceBase
     {
-        // ReSharper disable once NotAccessedField.Local
-        private readonly IAsyncServiceProvider _serviceProvider;
-        public NullBrowserService(IAsyncServiceProvider serviceProvider)
-        {
-            _serviceProvider = serviceProvider;
-        }
-
         public override void AddWindowMessageEvent(WindowMessageHandler messageHandler)
         {
 
