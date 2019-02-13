@@ -1,29 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-		<title>CodeStream</title>
-	<link href="webview.css" rel="stylesheet"></head>
+<head>
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8"/>
+    <title>CodeStream</title>
+    <link href="file:///Users/mfarias/Code/vscode-codestream/dist/webview/webview.css" rel="stylesheet">
+    <style id="theme">
+        body {
+            --app-background-color: #252526;
+            --app-background-color-darker: #232324;
+            --app-background-color-hover: #2B2B2C;
+            --background-color: #252526;
+            --base-background-color: #2D2D2E;
+            --base-border-color: #4E4E54;
+            --color: #F1F1F1;
+            --font-family: "Segoe UI",  -apple-system,  BlinkMacSystemFont,  "Segoe WPC",  "Segoe UI",  HelveticaNeue-Light,  Ubuntu,  "Droid Sans",  Arial,  Consolas,  sans-serif;
+            --font-size: 12px;
+            --font-weight: normal;
+            --link-color: #0097FB;
+            --link-active-color: #0097FB;
+            --text-color: rgba(241, 241, 241, 204);
+            --text-color-highlight: #F1F1F1;
+            --text-color-info-muted: #0C5788;
+            --text-color-subtle: rgba(45, 45, 48, 178);
+            --text-color-subtle-extra: rgba(248, 248, 248, 153);
+            --tool-panel-background-color: #3A3A3B;
+            --vscode-editor-background: #252526;
+            --vscode-editor-foreground: #F1F1F1;
+            --vscode-editor-font-family: "Segoe UI";
+            --vscode-editor-font-weight: normal;
+            --vscode-editor-font-size: 12px;
+            --vscode-button-background: #0E6198;
+            --vscode-button-hoverBackground: #0E6198;
+            --vscode-sideBar-foreground: #F1F1F1;
+            --vscode-sideBarSectionHeader-background: #2D2D30;
+            --vscode-sideBarSectionHeader-foreground: #F1F1F1;
+            --vscode-textLink-foreground: #F1F1F1;
+            background-color: var(--app-background-color);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            font-weight: var(--font-weight);
+            font-size: var(--font-size);
+            margin: 0;
+            padding: 0 20px;
+        }
 
-	<body class="codestream preload">
-		<div id="app">
-			<div class="loader-ring">
-				<div class="loader-ring__segment"></div>
-				<div class="loader-ring__segment"></div>
-				<div class="loader-ring__segment"></div>
-				<div class="loader-ring__segment"></div>
-			</div>
-		</div>
-	<script type="text/javascript" src="webview.js"></script></body>
-	<script>
-		window.addEventListener('message', function (e) {
-			if (!e || e.type !== 'message' || e.data.type == null) return;
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--app-background-color);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3E3E42;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9E9E9E;
+        }
 
-			var str = JSON.stringify(e.data);
-			if (!str || str[0] !== '{') return;
+        #app {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 40"><g fill="#fff" fill-opacity="0.05"><path d="M20.4 19.87a4.57 4.57 0 1 0 9.13-.01 4.57 4.57 0 0 0-9.13.01z"/><path d="M26.92 6.35c-.1.1-.17.24-.17.38v5.43a7.9 7.9 0 0 1 0 15.36v5.53a.53.53 0 0 0 .92.36l11.48-12.17c.71-.76.71-1.94 0-2.7L27.67 6.38a.53.53 0 0 0-.75-.02zm-4.64.02L10.8 18.55a1.96 1.96 0 0 0 0 2.69L22.28 33.4a.53.53 0 0 0 .91-.36v-5.53a7.9 7.9 0 0 1 0-15.36V6.73a.53.53 0 0 0-.53-.52.53.53 0 0 0-.38.16z"/></g></svg>') !important;
+        }
 
-			console.log(str);
+        .codestream .standard-form #controls .styled-select select option {
+            background-color: var(--app-background-color-darker) !important;
+        }
+    </style>
+</head>
 
-		}, false);
-	</script>
+<body class="codestream preload">
+<div id="app">
+    <div class="loader-ring">
+        <div class="loader-ring__segment"></div>
+        <div class="loader-ring__segment"></div>
+        <div class="loader-ring__segment"></div>
+        <div class="loader-ring__segment"></div>
+    </div>
+</div>
+<script type="text/javascript" src="file:///Users/mfarias/Code/vscode-codestream/dist/webview/webview.js"></script></body>
 </html>

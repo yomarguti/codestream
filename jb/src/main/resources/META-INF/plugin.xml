@@ -8,17 +8,20 @@
     <em>description needs at least 40 characters</em>
     ]]></description>
 
-
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="CodeStream" secondary="true" icon="/images/codestream.svg" anchor="right"
-                    factoryClass="com.codestream.WindowFactory"/>
-
-        <applicationService serviceInterface="com.codestream.CredentialsService"
-                            serviceImplementation="com.codestream.CredentialsServiceImpl"/>
-
-        <applicationService serviceInterface="com.codestream.SettingsService"
-                            serviceImplementation="com.codestream.SettingsServiceImpl"/>
+        <projectService serviceImplementation="com.codestream.AgentService"/>
+        <projectService serviceImplementation="com.codestream.AuthenticationService"/>
+        <projectService serviceImplementation="com.codestream.CredentialsService"/>
+        <projectService serviceImplementation="com.codestream.SettingsService"/>
+        <projectService serviceImplementation="com.codestream.WebViewService"/>
     </extensions>
+
+    <project-components>
+        <component>
+            <interface-class>com.codestream.CodeStreamComponent</interface-class>
+            <implementation-class>com.codestream.CodeStreamComponentImpl</implementation-class>
+        </component>
+    </project-components>
 
     <actions>
         <!-- Add your actions here -->

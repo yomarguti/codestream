@@ -2,6 +2,7 @@ plugins {
     id "java"
     id "org.jetbrains.intellij" version "0.4.2"
     id "org.jetbrains.kotlin.jvm" version "1.3.20"
+    id "org.jetbrains.kotlin.kapt" version "1.3.21"
 }
 
 group "com.codestream"
@@ -9,35 +10,41 @@ version "1.0-SNAPSHOT"
 
 sourceCompatibility = 1.8
 
-repositories {""
+repositories {
     jcenter()
     mavenCentral()
     maven { url = "http://maven.teamdev.com/repository/products" }
+//    maven { url = "https://jitpack.io" }
 }
 
 ext {
     jxBrowserVersion = "6.22.2"
 }
 
+//runIde {
+//    jbreVersion "jbrex8u202b1483.19"
+//}
+
+
+
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:1.3.20"
 
     implementation "com.teamdev.jxbrowser:jxbrowser-cross-platform:${jxBrowserVersion}"
-    // Windows 32-bit
-    // compile "com.teamdev.jxbrowser:jxbrowser-win32:${jxBrowserVersion}"
-    // Windows 64-bit
-    // compile "com.teamdev.jxbrowser:jxbrowser-win64:${jxBrowserVersion}"
-    // macOS 64-bit
-    // compile "com.teamdev.jxbrowser:jxbrowser-mac:${jxBrowserVersion}"
-    // Linux 64-bit
-    // compile "com.teamdev.jxbrowser:jxbrowser-linux64:${jxBrowserVersion}"
     implementation files("$rootDir/license.jar")
 
     implementation "com.squareup.moshi:moshi-kotlin:1.8.0"
     implementation "com.squareup.moshi:moshi-adapters:1.8.0"
-//    implementation "io.github.microutils:kotlin-logging:1.6.22"
+    kapt("com.squareup.moshi:moshi-kotlin-codegen:1.8.0")
 
-    testImplementation group: "junit", name: "junit", version: "4.12"
+    implementation group: "org.eclipse.lsp4j", name: "org.eclipse.lsp4j", version: "0.6.0"
+
+
+//    testImplementation group: "junit", name: "junit", version: "4.12"
+
+//    implementation "com.github.gtache.lsp:intellij-lsp:v1.5.0"
+//    implementation "com.github.gtache.lsp:1.5.0"
 }
 
 compileKotlin {
@@ -48,6 +55,7 @@ compileTestKotlin {
 }
 intellij {
     version "2018.3.4"
+//    plugins "com.github.gtache.lsp:1.5.0"
 }
 patchPluginXml {
     changeNotes """

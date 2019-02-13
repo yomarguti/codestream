@@ -1,21 +1,22 @@
 package com.codestream
 
-import AuthenticationService
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.project.Project
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.teamdev.jxbrowser.chromium.events.ConsoleEvent
-import com.teamdev.jxbrowser.chromium.events.ConsoleListener
+import java.util.*
 
 val moshi: Moshi = Moshi.Builder()
     .add(KotlinJsonAdapterFactory())
-//    .add(Date::class.java, Rfc3339DateJsonAdapter().nullSafe())
+    .add(Date::class.java, Rfc3339DateJsonAdapter().nullSafe())
     .build()
 val webViewMessageAdapter: JsonAdapter<WebViewMessage> = moshi.adapter(WebViewMessage::class.java)
 
 
-class WebViewRouter : ConsoleListener {
+class WebViewRouter(val project: Project) {
     val logger = Logger.getInstance(WebViewRouter::class.java)
 
 //    private readonly Lazy<ICredentialsService> _credentialsService;
@@ -26,27 +27,33 @@ class WebViewRouter : ConsoleListener {
 //    private readonly IBrowserService _browserService;
 //    private readonly IIdeService _ideService;
 
-    private val auth: AuthenticationService
-        get() = AuthenticationService()
+    private val authenticationService: AuthenticationService
+        get() = ServiceManager.getService(project, AuthenticationService::class.java)
 
-    override fun onMessage(e: ConsoleEvent?) {
-        if (e?.message == null || !e.message.startsWith("{")) {
-            return
-        }
-
-        val (type, body) = parse(e.message) ?: return
-        when (type) {
-            "request" -> processRequest(body)
+    fun handle(message: String, origin: String) {
+        try {
+            val (type, body) = parse(message) ?: return
+            when (type) {
+                "codestream:view-ready" -> Unit
+                "codestream:request" -> processRequest(body)
+            }
+        } catch (e: Exception) {
+            logger.error(e)
+            e.printStackTrace()
         }
     }
 
-    private fun processRequest(body: WebViewMessageBody) {
-        when (body.action) {
-            "bootstrap" -> auth.bootstrap(body.id)
-            "authenticate" -> auth.authenticate(body.id) //, body.Params["email"].ToString(), body.Params["password"].ToString());
-            "go-to-signup" -> auth.goToSignup(body.id)
-            "go-to-slack-signin" -> auth.goToSlackSignin(body.id)
-            "validate-signup" -> auth.validateSignup(body.id) //, body.Params?.Value<string>())
+    private fun processRequest(body: WebViewMessageBody?) {
+        when (body?.action) {
+            "bootstrap" -> authenticationService.bootstrap(body.id)
+            "authenticate" -> authenticationService.authenticate(
+                body.id,
+                body.params?.get("email"),
+                body.params?.get("password")
+            )
+            "go-to-signup" -> authenticationService.goToSignup(body.id)
+            "go-to-slack-signin" -> authenticationService.goToSlackSignin(body.id)
+            "validate-signup" -> authenticationService.validateSignup(body.id) //, body.Params?.Value<string>())
             "show-markers",
             "open-comment-on-select" -> {
 //                        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
