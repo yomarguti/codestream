@@ -6,7 +6,7 @@ CodeStream is the knowledge base behind your codebase. Your dev team's discussio
 
 # Install CodeStream
 
-Install CodeStream for VS Code from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=CodeStream.codestream).
+Install CodeStream for [VS Code](https://marketplace.visualstudio.com/items?itemName=CodeStream.codestream) or [Visual Studio](https://marketplace.visualstudio.com/items?itemName=CodeStream.codestream-vs).
 
 Support for more IDEs is on the way.
 
