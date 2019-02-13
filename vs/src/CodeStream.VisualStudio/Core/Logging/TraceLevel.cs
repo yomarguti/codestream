@@ -8,9 +8,4 @@
         Debug,
         Verbose
     }
-
-    public static class TraceLevelExtensions
-    {
-        public static string ToJsonValue(this TraceLevel traceLevel) => traceLevel.ToString().ToLowerInvariant();
-    }
 }

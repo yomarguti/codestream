@@ -8,7 +8,6 @@ using EnvDTE80;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
-using Newtonsoft.Json.Serialization;
 using Serilog;
 using SerilogTimings.Extensions;
 using StreamJsonRpc;
@@ -76,15 +75,7 @@ namespace CodeStream.VisualStudio.LSP
         {
             get
             {
-                var proxy = _settingsService.ProxyStrictSsl || !_settingsService.ProxyUrl.IsNullOrWhiteSpace()
-                    ? new Proxy()
-                    {
-                        Url = _settingsService.ProxyUrl,
-                        StrictSsl = _settingsService.ProxyStrictSsl
-                    }
-                    : null;
-
-                return new InitializationOptions
+                var initializationOptions = new InitializationOptions
                 {
                     Extension = _settingsService.GetExtensionInfo(),
                     Ide = _settingsService.GetIdeInfo(),
@@ -94,8 +85,12 @@ namespace CodeStream.VisualStudio.LSP
 #else
                     TraceLevel = _settingsService.TraceLevel.ToJsonValue(),
 #endif
-                    Proxy = proxy
+                    Proxy = _settingsService.Proxy,
+                    ProxySupport = _settingsService.ProxySupport.ToJsonValue()
                 };
+                Log.Verbose(nameof(InitializationOptions) + " {@InitializationOptions}", initializationOptions);
+
+                return initializationOptions;
             }
         }
 
@@ -130,7 +125,7 @@ namespace CodeStream.VisualStudio.LSP
             _rpc = rpc;
 
             // Slight hack to use camelCased properties when serializing requests
-            _rpc.JsonSerializer.ContractResolver = new CamelCasePropertyNamesContractResolver();
+            _rpc.JsonSerializer.ContractResolver = new CustomCamelCasePropertyNamesContractResolver(new HashSet<Type> { typeof(TelemetryProperties)});
         }
 
         public async Task OnLoadedAsync()

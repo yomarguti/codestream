@@ -1,10 +1,34 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
+﻿using System;
+using CodeStream.VisualStudio.Core.Logging;
 using Microsoft.VisualStudio.Shell;
 using System.ComponentModel;
+using System.Net;
 using System.Runtime.CompilerServices;
+using CodeStream.VisualStudio.Extensions;
+using CodeStream.VisualStudio.Models;
 
 namespace CodeStream.VisualStudio.UI.Settings
 {
+    public interface IOptionsDialogPage : INotifyPropertyChanged
+    {
+        string Email { get; set; }
+        bool ShowMarkers { get; set; }
+        bool ShowHeadshots { get; set; }
+        bool MuteAll { get; set; }
+        string ServerUrl { get; set; }
+        string WebAppUrl { get; set; }
+        string Team { get; set; }
+        bool OpenCommentOnSelect { get; set; }
+        void SaveSettingsToStorage();
+        void LoadSettingsFromStorage();
+        TraceLevel TraceLevel { get; set; }
+        bool AutoSignIn { get; set; }
+        string ProxyUrl { get; set; }
+        bool ProxyStrictSsl { get; set; }
+        ProxySupport ProxySupport { get; set; }
+        Proxy Proxy { get; }
+    }
+
     public class OptionsDialogPage : DialogPage, IOptionsDialogPage
     {
         private string _email;
@@ -25,10 +49,57 @@ namespace CodeStream.VisualStudio.UI.Settings
 
         private string _proxyUrl;
         private bool _proxyStrictSsl;
+        private ProxySupport _proxySupport;
+
+        public OptionsDialogPage()
+        {
+            ProxySetup();
+        }
+
+        [Browsable(false)]
+        public Proxy Proxy { get; private set; }
 
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private void ProxySetup()
+        {
+            if (ProxySupport == ProxySupport.Off) return;
+
+            try
+            {
+                var webProxy = WebRequest.GetSystemWebProxy();
+                var serverUri = new Uri(ServerUrl);
+                var possibleProxyUri = webProxy.GetProxy(new Uri(ServerUrl));
+
+                if (!possibleProxyUri.EqualsIgnoreCase(serverUri))
+                {
+                    // has a system proxy
+                    Proxy = new Proxy
+                    {
+                        Url = possibleProxyUri.ToString(),
+                        StrictSsl = ProxyStrictSsl
+                    };
+                }
+                else
+                {
+                    if (!ProxyUrl.IsNullOrWhiteSpace())
+                    {
+                        _proxySupport = ProxySupport.Override;
+                        Proxy = new Proxy
+                        {
+                            Url = ProxyUrl,
+                            StrictSsl = ProxyStrictSsl
+                        };
+                    }
+                }
+            }
+            catch
+            {
+                // suffer silently
+            }
         }
 
         [Category("Authentication")]
@@ -122,6 +193,7 @@ namespace CodeStream.VisualStudio.UI.Settings
                 if (_proxyUrl != value)
                 {
                     _proxyUrl = value;
+                    ProxySetup();
                     NotifyPropertyChanged();
                 }
             }
@@ -138,11 +210,28 @@ namespace CodeStream.VisualStudio.UI.Settings
                 if (_proxyStrictSsl != value)
                 {
                     _proxyStrictSsl = value;
+                    ProxySetup();
                     NotifyPropertyChanged();
                 }
             }
         }
 
+        [Category("Connectivity")]
+        [DisplayName("Proxy Support")]
+        [Description("Specifies how proxies are handled. [On] Your system-level proxy will be used, if set. [Off] No support. [Override] The ProxyUrl value will be used, if set.")]
+        public ProxySupport ProxySupport
+        {
+            get => _proxySupport;
+            set
+            {
+                if (_proxySupport != value)
+                {
+                    _proxySupport = value;
+                    ProxySetup();
+                    NotifyPropertyChanged();
+                }
+            }
+        }
 
         [Category("UI")]
         [DisplayName("Show Markers")]

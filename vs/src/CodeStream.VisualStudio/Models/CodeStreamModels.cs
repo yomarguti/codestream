@@ -1,8 +1,11 @@
 ﻿using CodeStream.VisualStudio.Extensions;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+
 // ReSharper disable ClassNeverInstantiated.Global
 
 namespace CodeStream.VisualStudio.Models
@@ -264,6 +267,14 @@ namespace CodeStream.VisualStudio.Models
         public bool StrictSsl { get; set; }
     }
 
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum ProxySupport
+    {
+        On,
+        Off,
+        Override,
+    }
+
     public class InitializationOptions
     {
         //public string ServerUrl { get; set; }
@@ -273,6 +284,7 @@ namespace CodeStream.VisualStudio.Models
         public Extension Extension { get; set; }
         public string TraceLevel { get; set; }
         public bool IsDebugging { get; set; }
+        public string ProxySupport { get; set; }
         public Proxy Proxy { get; set; }
     }
 

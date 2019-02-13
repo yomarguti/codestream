@@ -31,6 +31,8 @@ namespace CodeStream.VisualStudio.Services
         Extension GetExtensionInfo();
         string ProxyUrl { get; set; }
         bool ProxyStrictSsl { get; set; }
+        ProxySupport ProxySupport { get; set; }
+        Proxy Proxy { get; }
     }
 
     public class Settings
@@ -56,6 +58,7 @@ namespace CodeStream.VisualStudio.Services
         public string Version { get; set; }
         public string ProxyUrl { get; set; }
         public bool ProxyStrictSsl { get; set; }
+        public ProxySupport ProxySupport { get; set; }
     }
 
     public interface SSettingsService { }
@@ -84,7 +87,7 @@ namespace CodeStream.VisualStudio.Services
 
         public Settings GetSettings()
         {
-            return new Settings()
+            return new Settings
             {
                 Email = Email,
                 ShowMarkers = ShowMarkers,
@@ -171,7 +174,15 @@ namespace CodeStream.VisualStudio.Services
             get => DialogPage.ProxyStrictSsl;
             set => DialogPage.ProxyStrictSsl = value;
         }
-		
+
+        public ProxySupport ProxySupport
+        {
+            get => DialogPage.ProxySupport;
+            set => DialogPage.ProxySupport = value;
+        }
+
+        public Proxy Proxy => DialogPage.Proxy;
+
         public Ide GetIdeInfo()
         {
             return new Ide
