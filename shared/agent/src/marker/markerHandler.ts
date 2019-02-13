@@ -38,7 +38,9 @@ export namespace MarkerHandler {
 		const { codemarks, files, markers, markerLocations, users } = Container.instance();
 
 		try {
-			const filePath = URI.parse(documentId.uri).fsPath;
+			const documentUri = URI.parse(documentId.uri);
+
+			const filePath = documentUri.fsPath;
 			Logger.log(`MARKERS: requested markers for ${filePath}`);
 			const stream = await files.getByPath(filePath);
 			if (!stream) {
@@ -50,8 +52,11 @@ export namespace MarkerHandler {
 			Logger.log(
 				`MARKERS: found ${markersForDocument.length} markers - retrieving current locations`
 			);
+
 			const { locations, missingLocations } = await markerLocations.getCurrentLocations(
-				documentId.uri
+				documentUri,
+				stream,
+				markersForDocument
 			);
 
 			Logger.log(`MARKERS: results:`);
@@ -135,7 +140,7 @@ export namespace MarkerHandler {
 		if (repo === undefined) return undefined;
 
 		const filePath = path.join(repo.path, file);
-		const documentUri = URI.file(filePath).toString();
+		const documentUri = URI.file(filePath);
 
 		const marker = await markers.getById(markerId);
 		const result = await markerLocations.getCurrentLocations(documentUri);
@@ -143,7 +148,7 @@ export namespace MarkerHandler {
 		const range = location ? MarkerLocation.toRange(location) : Range.create(0, 0, 0, 0);
 
 		return {
-			textDocument: { uri: documentUri },
+			textDocument: { uri: documentUri.toString() },
 			marker: marker,
 			range: range,
 			revision: undefined

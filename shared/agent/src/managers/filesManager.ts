@@ -47,7 +47,7 @@ export class FilesManager extends EntityManagerBase<CSFileStream> {
 		return documentUri;
 	}
 
-	async getByPath(filePath: string): Promise<CSStream | undefined> {
+	async getByPath(filePath: string): Promise<CSFileStream | undefined> {
 		let id = this.idsByPath.get(filePath);
 		if (id) {
 			return this.cache.getById(id);
