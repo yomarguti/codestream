@@ -2,9 +2,9 @@
 
 import { ParsedDiff } from "diff";
 import { compareTwoStrings, findBestMatch, Rating } from "string-similarity";
+import { MarkerLocation, MarkerLocationsById } from "../api/extensions";
 import { Logger } from "../logger";
 import { Id } from "../managers/entityManager";
-import { LocationsById } from "../managers/markerLocationManager";
 import { CSLocationMeta, CSMarkerLocation } from "../shared/api.protocol";
 import { buildChangeset, Change, Changeset } from "./changeset";
 
@@ -13,9 +13,9 @@ const CHANGE_SIMILARITY_THRESHOLD = 0.5;
 const DELETED = -1;
 
 export async function calculateLocations(
-	locations: LocationsById,
+	locations: MarkerLocationsById,
 	diff: ParsedDiff
-): Promise<LocationsById> {
+): Promise<MarkerLocationsById> {
 	const calculation = new Calculation(locations, buildChangeset(diff));
 	return calculation.results();
 }
@@ -24,15 +24,8 @@ export async function calculateLocation(
 	location: CSMarkerLocation,
 	diff: ParsedDiff
 ): Promise<CSMarkerLocation> {
-	const calculated = await calculateLocations(byId(location), diff);
+	const calculated = await calculateLocations(MarkerLocation.toLocationById(location), diff);
 	return calculated[location.id];
-}
-
-function byId(location: CSMarkerLocation): LocationsById {
-	const id = location.id;
-	const locationById: LocationsById = {};
-	locationById[id] = location;
-	return locationById;
 }
 
 function sortNumber(a: number, b: number) {
@@ -194,7 +187,7 @@ class Calculation {
 	private _lineIndex: number;
 	private _finalBalance: number;
 
-	constructor(locations: LocationsById, changeset: Changeset) {
+	constructor(locations: MarkerLocationsById, changeset: Changeset) {
 		const calculatedLocations = new Map<Id, CalculatedLocation>();
 		const linesOfInterest = new Set<number>();
 		const calculatedLines = new Map<number, CalculatedLine>();
@@ -236,7 +229,7 @@ class Calculation {
 		this.activateLocationsStartingAtCurrentLine();
 	}
 
-	results(): LocationsById {
+	results(): MarkerLocationsById {
 		for (const change of this._changes) {
 			this.applyChange(change);
 		}
@@ -246,7 +239,7 @@ class Calculation {
 		this.calculateMissingLocations();
 		this.calculateColumns();
 
-		const result: LocationsById = {};
+		const result: MarkerLocationsById = {};
 		for (const calcLoc of this._calculatedLocations.values()) {
 			result[calcLoc.id] = calcLoc.markerLocation();
 		}

@@ -1,5 +1,137 @@
 "use strict";
-import { CSMe, CSProviderInfos, CSSlackProviderInfo, CSTeam } from "../shared/api.protocol";
+import { Range } from "vscode-languageserver";
+import { Logger } from "../logger";
+import {
+	CSLocationArray,
+	CSMarker,
+	CSMarkerLocation,
+	CSMarkerLocations,
+	CSMe,
+	CSProviderInfos,
+	CSSlackProviderInfo,
+	CSTeam
+} from "../shared/api.protocol";
+
+export interface MarkerLocationArraysById {
+	[id: string]: CSLocationArray;
+}
+
+export interface MarkerLocationsById {
+	[id: string]: CSMarkerLocation;
+}
+
+export namespace MarkerLocation {
+	export function empty(): CSMarkerLocation {
+		return {
+			id: "$transientLocation",
+			lineStart: 1,
+			colStart: 1,
+			lineEnd: 1,
+			colEnd: 1,
+			meta: {
+				startWasDeleted: true,
+				endWasDeleted: true,
+				entirelyDeleted: true
+			}
+		};
+	}
+
+	export function fromArray(array: CSLocationArray, id: string): CSMarkerLocation {
+		return {
+			id,
+			lineStart: array[0],
+			colStart: array[1],
+			lineEnd: array[2],
+			colEnd: array[3]
+		};
+	}
+
+	export function fromRange(range: Range): CSMarkerLocation {
+		return {
+			id: "$transientLocation",
+			lineStart: range.start.line + 1,
+			colStart: range.start.character + 1,
+			lineEnd: range.end.line + 1,
+			colEnd: range.end.character + 1
+		};
+	}
+
+	export function toArray(location: CSMarkerLocation): CSLocationArray {
+		return [
+			location.lineStart,
+			location.colStart,
+			location.lineEnd,
+			location.colEnd,
+			location.meta
+		];
+	}
+
+	export function toArraysById(locations: MarkerLocationsById): MarkerLocationArraysById {
+		return Object.entries(locations).reduce((m, [id, location]) => {
+			m[id] = toArray(location);
+			return m;
+		}, Object.create(null));
+	}
+
+	export function toLocationById(location: CSMarkerLocation): MarkerLocationsById {
+		return { [location.id]: location };
+	}
+
+	export function toLocationsById(
+		markerLocations: CSMarkerLocations | undefined
+	): MarkerLocationsById {
+		if (markerLocations == null) return {};
+
+		return Object.entries(markerLocations.locations).reduce((m, [id, array]) => {
+			m[id] = fromArray(array, id);
+			return m;
+		}, Object.create(null));
+	}
+
+	export function toRange(location: CSMarkerLocation): Range {
+		return Range.create(
+			Math.max(location.lineStart - 1, 0),
+			Math.max(location.colStart - 1, 0),
+			Math.max(location.lineEnd - 1, 0),
+			Math.max(location.colEnd - 1, 0)
+		);
+	}
+}
+
+export namespace Marker {
+	export function getMissingMarkerIds(
+		markers: CSMarker[],
+		locations: MarkerLocationsById
+	): Set<string> {
+		const missingMarkerIds = new Set<string>();
+		for (const m of markers) {
+			if (!locations[m.id]) {
+				missingMarkerIds.add(m.id);
+			}
+		}
+		return missingMarkerIds;
+	}
+
+	export function getMissingMarkersByCommit(markers: CSMarker[], locations: MarkerLocationsById) {
+		const missingMarkerIds = Marker.getMissingMarkerIds(markers, locations);
+
+		const missingMarkersByCommitHashWhenCreated = new Map<string, CSMarker[]>();
+		for (const m of markers) {
+			if (!missingMarkerIds.has(m.id)) {
+				continue;
+			}
+
+			let markersForCommitHash = missingMarkersByCommitHashWhenCreated.get(m.commitHashWhenCreated);
+			if (!markersForCommitHash) {
+				markersForCommitHash = [];
+				missingMarkersByCommitHashWhenCreated.set(m.commitHashWhenCreated, markersForCommitHash);
+			}
+			Logger.log(`Missing location for marker ${m.id} - will calculate`);
+			markersForCommitHash.push(m);
+		}
+		return missingMarkersByCommitHashWhenCreated;
+	}
+}
 
 export namespace Team {
 	export function isSlack(

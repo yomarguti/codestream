@@ -2,8 +2,8 @@
 import { structuredPatch } from "diff";
 import * as path from "path";
 import { TextDocumentIdentifier } from "vscode-languageserver";
-import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
+import { Marker, MarkerLocation, MarkerLocationsById } from "../api/extensions";
 import { getCache } from "../cache";
 import { Container } from "../container";
 import { GitRepository } from "../git/models/repository";
@@ -22,19 +22,11 @@ import { IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { Id } from "./entityManager";
 
-export interface LocationsById {
-	[id: string]: CSMarkerLocation;
-}
-
 export interface MissingLocationsById {
 	[id: string]: {
 		reason: MarkerNotLocatedReason;
 		details?: string;
 	};
-}
-
-interface ArraysById {
-	[id: string]: CSLocationArray;
 }
 
 interface UncommittedLocation {
@@ -47,7 +39,7 @@ interface UncommittedLocationsById {
 }
 
 interface GetLocationsResult {
-	locations: LocationsById;
+	locations: MarkerLocationsById;
 	missingLocations: MissingLocationsById;
 }
 
@@ -199,13 +191,13 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 	private static async classifyLocations(
 		repoPath: string,
 		markers: CSMarker[],
-		committedLocations: LocationsById
+		committedLocations: MarkerLocationsById
 	): Promise<{
-		committedLocations: LocationsById;
+		committedLocations: MarkerLocationsById;
 		uncommittedLocations: UncommittedLocationsById;
 	}> {
 		const result = {
-			committedLocations: {} as LocationsById,
+			committedLocations: {} as MarkerLocationsById,
 			uncommittedLocations: {} as UncommittedLocationsById
 		};
 		Logger.log(`MARKERS: retrieving uncommitted locations from local cache`);
@@ -264,9 +256,12 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		const markers = await Container.instance().markers.getByStreamId(stream.id, true);
 		Logger.log(`MARKERS: found ${markers.length} markers for stream ${stream.id}`);
 
-		const currentCommitLocations = await this.getLocationsById(stream.id, commitHash);
+		const currentCommitLocations = await this.getMarkerLocationsById(stream.id, commitHash);
 		const missingLocations: MissingLocationsById = {};
-		const missingMarkersByCommit = this.getMissingMarkersByCommit(markers, currentCommitLocations);
+		const missingMarkersByCommit = Marker.getMissingMarkersByCommit(
+			markers,
+			currentCommitLocations
+		);
 
 		if (missingMarkersByCommit.size === 0) {
 			Logger.log(`MARKERS: no missing locations`);
@@ -285,8 +280,11 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 				} markers created at ${commitHashWhenCreated}`
 			);
 
-			const allCommitLocations = await this.getLocationsById(stream.id, commitHashWhenCreated);
-			const locationsToCalculate: LocationsById = {};
+			const allCommitLocations = await this.getMarkerLocationsById(
+				stream.id,
+				commitHashWhenCreated
+			);
+			const locationsToCalculate: MarkerLocationsById = {};
 			for (const marker of missingMarkers) {
 				const originalLocation = allCommitLocations[marker.id];
 				if (originalLocation) {
@@ -335,7 +333,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			await session.api.createMarkerLocation({
 				streamId: stream.id,
 				commitHash,
-				locations: this.arraysById(calculatedLocations)
+				locations: MarkerLocation.toArraysById(calculatedLocations)
 			});
 		}
 
@@ -343,14 +341,6 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			locations: currentCommitLocations,
 			missingLocations
 		};
-	}
-
-	arraysById(locations: LocationsById): ArraysById {
-		const result: ArraysById = {};
-		for (const id in locations) {
-			result[id] = this.locationToArray(locations[id]);
-		}
-		return result;
 	}
 
 	async saveUncommittedLocation(
@@ -410,7 +400,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			const locationArraysById = {} as {
 				[id: string]: CSLocationArray;
 			};
-			locationArraysById[id] = this.locationToArray(location);
+			locationArraysById[id] = MarkerLocation.toArray(location);
 			Logger.log(
 				`MARKERS: committed ${id}@${commitHash} => [${location.lineStart}, ${location.colStart}, ${
 					location.lineEnd
@@ -440,109 +430,9 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		return this.cache.get([["streamId", streamId], ["commitHash", commitHash]]);
 	}
 
-	async getLocationsById(streamId: Id, commitHash: string): Promise<LocationsById> {
+	async getMarkerLocationsById(streamId: Id, commitHash: string): Promise<MarkerLocationsById> {
 		const markerLocations = await this.getMarkerLocations(streamId, commitHash);
-		return this.byId(markerLocations);
-	}
-
-	getMissingMarkersByCommit(markers: CSMarker[], locations: LocationsById) {
-		const missingMarkerIds = this.getMissingMarkerIds(markers, locations);
-
-		const missingMarkersByCommitHashWhenCreated = new Map<string, CSMarker[]>();
-		for (const m of markers) {
-			if (!missingMarkerIds.has(m.id)) {
-				continue;
-			}
-
-			let markersForCommitHash = missingMarkersByCommitHashWhenCreated.get(m.commitHashWhenCreated);
-			if (!markersForCommitHash) {
-				markersForCommitHash = [];
-				missingMarkersByCommitHashWhenCreated.set(m.commitHashWhenCreated, markersForCommitHash);
-			}
-			Logger.log(`Missing location for marker ${m.id} - will calculate`);
-			markersForCommitHash.push(m);
-		}
-		return missingMarkersByCommitHashWhenCreated;
-	}
-
-	getMissingMarkerIds(markers: CSMarker[], locations: { [p: string]: any }): Set<string> {
-		const missingMarkerIds = new Set<string>();
-		for (const m of markers) {
-			if (!locations[m.id]) {
-				missingMarkerIds.add(m.id);
-			}
-		}
-		return missingMarkerIds;
-	}
-
-	arrayToLocation(id: string, array: CSLocationArray): CSMarkerLocation {
-		return {
-			id,
-			lineStart: array[0],
-			colStart: array[1],
-			lineEnd: array[2],
-			colEnd: array[3]
-		};
-	}
-
-	locationToRange(location: CSMarkerLocation): Range {
-		return Range.create(
-			Math.max(location.lineStart - 1, 0),
-			Math.max(location.colStart - 1, 0),
-			Math.max(location.lineEnd - 1, 0),
-			Math.max(location.colEnd - 1, 0)
-		);
-	}
-
-	rangeToLocation(range: Range): CSMarkerLocation {
-		return {
-			id: "$transientLocation",
-			lineStart: range.start.line + 1,
-			colStart: range.start.character + 1,
-			lineEnd: range.end.line + 1,
-			colEnd: range.end.character + 1
-		};
-	}
-
-	locationToArray(location: CSMarkerLocation): CSLocationArray {
-		return [
-			location.lineStart,
-			location.colStart,
-			location.lineEnd,
-			location.colEnd,
-			location.meta
-		];
-	}
-
-	emptyFileLocation(): CSMarkerLocation {
-		return {
-			id: "$transientLocation",
-			lineStart: 1,
-			colStart: 1,
-			lineEnd: 1,
-			colEnd: 1,
-			meta: {
-				startWasDeleted: true,
-				endWasDeleted: true,
-				entirelyDeleted: true
-			}
-		};
-	}
-
-	private byId(markerLocations: CSMarkerLocations | undefined): LocationsById {
-		if (!markerLocations) {
-			return {};
-		}
-
-		const result: LocationsById = {};
-		const { locations } = markerLocations;
-
-		for (const id in locations) {
-			const array = locations[id];
-			result[id] = this.arrayToLocation(id, array);
-		}
-
-		return result;
+		return MarkerLocation.toLocationsById(markerLocations);
 	}
 
 	protected getEntityName(): string {

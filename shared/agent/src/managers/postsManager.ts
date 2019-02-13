@@ -3,6 +3,7 @@ import * as path from "path";
 import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
+import { MarkerLocation } from "../api/extensions";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
@@ -693,7 +694,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				range = Range.create(range.end, range.start);
 			}
 
-			location = Container.instance().markerLocations.rangeToLocation(range);
+			location = MarkerLocation.fromRange(range);
 
 			if (source) {
 				if (source.revision) {
@@ -705,7 +706,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					);
 				} else {
 					commitHashWhenPosted = (await git.getRepoHeadRevision(source.repoPath))!;
-					backtrackedLocation = Container.instance().markerLocations.emptyFileLocation();
+					backtrackedLocation = MarkerLocation.empty();
 				}
 				if (source.remotes && source.remotes.length > 0) {
 					remotes = source.remotes.map(r => r.url);
@@ -717,9 +718,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				remotes,
 				file: source && source.file,
 				commitHash: commitHashWhenPosted,
-				location:
-					backtrackedLocation &&
-					Container.instance().markerLocations.locationToArray(backtrackedLocation)
+				location: backtrackedLocation && MarkerLocation.toArray(backtrackedLocation)
 			};
 
 			codemarkRequest.streamId = streamId;

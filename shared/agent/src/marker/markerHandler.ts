@@ -2,6 +2,7 @@
 import * as path from "path";
 import { Range } from "vscode-languageserver";
 import URI from "vscode-uri";
+import { MarkerLocation } from "../api/extensions";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
@@ -59,7 +60,7 @@ export namespace MarkerHandler {
 			for (const marker of markersForDocument) {
 				const location = locations[marker.id];
 				if (location) {
-					const range = markerLocations.locationToRange(location);
+					const range = MarkerLocation.toRange(location);
 					const [codemark, creator] = await Promise.all([
 						codemarks.getById(marker.codemarkId),
 						users.getById(marker.creatorId)
@@ -139,7 +140,7 @@ export namespace MarkerHandler {
 		const marker = await markers.getById(markerId);
 		const result = await markerLocations.getCurrentLocations(documentUri);
 		const location = result.locations[markerId];
-		const range = location ? markerLocations.locationToRange(location) : Range.create(0, 0, 0, 0);
+		const range = location ? MarkerLocation.toRange(location) : Range.create(0, 0, 0, 0);
 
 		return {
 			textDocument: { uri: documentUri },
