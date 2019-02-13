@@ -58,8 +58,11 @@ namespace CodeStream.VisualStudio.Services
         /// Reloads the webview completely
         /// </summary>
         void ReloadWebView();
-
-        void OpenDevTools();
+        /// <summary>
+        /// Gets the url for the dev tools 
+        /// </summary>
+        /// <returns></returns>
+        string GetDevToolsUrl();
     }
 
     public delegate Task WindowMessageHandler(object sender, WindowEventArgs e);
@@ -109,10 +112,7 @@ namespace CodeStream.VisualStudio.Services
             Log.Verbose($"{nameof(ReloadWebView)}");
         }
 
-        public virtual void OpenDevTools()
-        {
-            
-        }
+        public virtual string GetDevToolsUrl() => null;
 
         private string CreateWebViewHarness(Assembly assembly, string resourceName)
         {

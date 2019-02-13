@@ -30,8 +30,13 @@ namespace CodeStream.VisualStudio.Commands
         private void InvokeHandler(object sender, EventArgs args)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
+
             var browserService = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SBrowserService)) as IBrowserService;
-            browserService?.OpenDevTools();
+            var url = browserService?.GetDevToolsUrl();
+            if (url != null)
+            {
+                System.Diagnostics.Process.Start("chrome.exe", url);
+            }
         }
     }
 }

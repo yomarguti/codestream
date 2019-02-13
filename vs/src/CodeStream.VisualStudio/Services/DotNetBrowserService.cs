@@ -143,15 +143,12 @@ namespace CodeStream.VisualStudio.Services
 			grid.Children.Add(_browserView);
 		}
 
-		public override void OpenDevTools()
-		{
-#if DEBUG
-			var url = _browserView.Browser.GetRemoteDebuggingURL();
-			Log.Verbose($"Opening devtools Url={url}");
-			System.Diagnostics.Process.Start("chrome.exe", url);
-#endif
+		public override string GetDevToolsUrl()
+        {
+            var url = _browserView.Browser.GetRemoteDebuggingURL();
+            Log.Verbose($"DevTools Url={url}");
+            return url;
 		}
-
 
 		/// <summary>
 		/// Checks known files to see if DotNetBrowser is active. First a .lock file (randomly named), then a file known to exist in the directory (History)
@@ -335,7 +332,7 @@ namespace CodeStream.VisualStudio.Services
 			// ReSharper disable once UnusedMember.Local
 			private static readonly List<string> ChromiumSwitchesDebug = new List<string>
 			{
-				"--remote-debugging-port=9222"
+				"--remote-debugging-port=9223"
 			};
 
 			public static List<string> Create(BrowserType browserType)
@@ -346,7 +343,7 @@ namespace CodeStream.VisualStudio.Services
 					switches = switches.Combine(LightweightSwitches);
 				}
 #if DEBUG
-				switches = switches.Combine(ChromiumSwitchesDebug);
+				switches = ChromiumSwitchesDebug.Combine(switches);
 #endif
 				return switches;
 			}
