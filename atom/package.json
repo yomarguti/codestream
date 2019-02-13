@@ -8,7 +8,9 @@
 		"team",
 		"chat"
 	],
-	"activationCommands": {},
+	"activationHooks": [
+		"core:loaded-shell-environment"
+	],
 	"repository": "https://github.com/TeamCodeStream/atom-client",
 	"license": "",
 	"engines": {
