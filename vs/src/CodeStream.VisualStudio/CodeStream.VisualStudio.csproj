@@ -215,6 +215,10 @@
     </None>
     <None Include="UI\WebViews\styles\ui-variables.less" />
     <None Include="UI\WebViews\styles\webview.less" />
+    <Content Include="..\..\CHANGELOG.md">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Content Include="CodeStream.VisualStudio.pkgdef" />
