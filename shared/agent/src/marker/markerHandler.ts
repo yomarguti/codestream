@@ -54,7 +54,7 @@ export namespace MarkerHandler {
 			);
 
 			const { locations, missingLocations } = await markerLocations.getCurrentLocations(
-				documentUri,
+				documentId.uri,
 				stream,
 				markersForDocument
 			);
@@ -140,7 +140,7 @@ export namespace MarkerHandler {
 		if (repo === undefined) return undefined;
 
 		const filePath = path.join(repo.path, file);
-		const documentUri = URI.file(filePath);
+		const documentUri = URI.file(filePath).toString();
 
 		const marker = await markers.getById(markerId);
 		const result = await markerLocations.getCurrentLocations(documentUri);

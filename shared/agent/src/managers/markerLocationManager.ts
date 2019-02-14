@@ -91,14 +91,14 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 	}
 
 	async getCurrentLocations(
-		documentUri: URI,
+		documentUri: string,
 		stream?: CSFileStream,
 		markers?: CSMarker[]
 	): Promise<GetLocationsResult> {
 		const { documents, git } = Container.instance();
 		const result = newGetLocationsResult();
 
-		const filePath = documentUri.fsPath;
+		const filePath = URI.parse(documentUri).fsPath;
 		const repoRoot = await git.getRepoRoot(filePath);
 		if (!repoRoot) {
 			Logger.log(`MARKERS: no repo root for ${filePath}`);
@@ -132,7 +132,8 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			markers,
 			currentCommitLocations.locations
 		);
-		const doc = documents.get(documentUri.toString());
+
+		const doc = documents.get(documentUri);
 		Logger.log(`MARKERS: retrieving current text from document manager`);
 		let currentBufferText = doc && doc.getText();
 		if (currentBufferText == null) {
