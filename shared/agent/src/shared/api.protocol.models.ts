@@ -100,7 +100,7 @@ export interface CSPost extends CSEntity {
 	hasBeenEdited: boolean;
 	mentionedUserIds?: string[];
 	origin?: "email" | "slack" | "teams";
-	reactions?: { [key: string]: boolean };
+	reactions?: { [key: string]: string[] };
 	codemarkId?: string;
 	files?: [
 		{
