@@ -1,5 +1,6 @@
 "use strict";
 import { structuredPatch } from "diff";
+import * as eol from "eol";
 import * as path from "path";
 import { TextDocumentIdentifier } from "vscode-languageserver";
 import URI from "vscode-uri";
@@ -49,6 +50,21 @@ function newGetLocationsResult(): GetLocationsResult {
 		locations: {},
 		missingLocations: {}
 	};
+}
+
+function stripEof(x: any) {
+	const lf = typeof x === "string" ? "\n" : "\n".charCodeAt(0);
+	const cr = typeof x === "string" ? "\r" : "\r".charCodeAt(0);
+
+	if (x[x.length - 1] === lf) {
+		x = x.slice(0, x.length - 1);
+	}
+
+	if (x[x.length - 1] === cr) {
+		x = x.slice(0, x.length - 1);
+	}
+
+	return x;
 }
 
 export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
@@ -153,8 +169,8 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			const diff = structuredPatch(
 				filePath,
 				filePath,
-				currentCommitText,
-				currentBufferText,
+				stripEof(eol.auto(currentCommitText)),
+				stripEof(eol.auto(currentBufferText)),
 				"",
 				""
 			);
@@ -182,8 +198,8 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 				const diff = structuredPatch(
 					filePath,
 					filePath,
-					uncommittedBufferText,
-					currentBufferText,
+					stripEof(eol.auto(uncommittedBufferText)),
+					stripEof(eol.auto(currentBufferText)),
 					"",
 					""
 				);
@@ -256,7 +272,14 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 
 		// Maybe in this case the IDE should inform the buffer contents to ensure we have the exact same
 		// buffer text the user is seeing
-		const diff = structuredPatch(filePath, filePath, text, currentCommitText, "", "");
+		const diff = structuredPatch(
+			filePath,
+			filePath,
+			stripEof(eol.auto(text)),
+			stripEof(eol.auto(currentCommitText)),
+			"",
+			""
+		);
 		return calculateLocation(location, diff);
 	}
 
@@ -418,7 +441,14 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 				Logger.log(`MARKERS: file ${relPath} has no contents on revision ${commitHash} - skipping`);
 				continue;
 			}
-			const diff = structuredPatch(relPath, relPath, originalContents, commitContents, "", "");
+			const diff = structuredPatch(
+				relPath,
+				relPath,
+				stripEof(eol.auto(originalContents)),
+				stripEof(eol.auto(commitContents)),
+				"",
+				""
+			);
 			const location = await calculateLocation(uncommittedLocation.location, diff);
 			if (location.meta && location.meta.entirelyDeleted) {
 				Logger.log(`MARKERS: location is not present on commit ${commitHash} - skipping`);
