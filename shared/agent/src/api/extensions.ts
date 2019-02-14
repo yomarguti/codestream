@@ -80,7 +80,7 @@ export namespace MarkerLocation {
 	export function toLocationsById(
 		markerLocations: CSMarkerLocations | undefined
 	): MarkerLocationsById {
-		if (markerLocations == null) return {};
+		if (markerLocations == null || markerLocations.locations == null) return {};
 
 		return Object.entries(markerLocations.locations).reduce((m, [id, array]) => {
 			m[id] = fromArray(array, id);
