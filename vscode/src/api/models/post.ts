@@ -71,33 +71,6 @@ export class Post extends CodeStreamItem<CSFullPost> {
 		return this.entity.parentPostId || this.id;
 	}
 
-	// @memoize
-	async codeBlock(): Promise<CodeBlock | undefined> {
-		if (
-			!this.entity.codemark ||
-			!this.entity.codemark.markers ||
-			!this.entity.codemark.markers.length
-		) {
-			return undefined;
-		}
-
-		const marker = this.entity.codemark.markers[0];
-		const resp = await Container.agent.getDocumentFromMarker(marker);
-		if (resp === undefined || resp === null) return undefined;
-
-		return {
-			code: marker.code,
-			range: new Range(
-				resp.range.start.line,
-				resp.range.start.character,
-				resp.range.end.line,
-				resp.range.end.character
-			),
-			revision: resp.revision,
-			uri: Uri.parse(resp.textDocument.uri)
-		};
-	}
-
 	private _dateFormatter?: Dates.IDateFormatter;
 
 	formatDate(format?: string | null) {

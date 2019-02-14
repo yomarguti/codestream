@@ -115,29 +115,6 @@ export class Commands implements Disposable {
 		this._disposable && this._disposable.dispose();
 	}
 
-	// @command("comparePostFileRevisionWithWorking", { showErrorMessage: "Unable to open post" })
-	// async comparePostFileRevisionWithWorking(post?: Post) {
-	// 	if (post == null) return;
-
-	// 	const block = await post.codeBlock();
-	// 	if (block === undefined) return;
-
-	// 	const file = await Container.git.getFileRevision(block.uri, block.revision!);
-	// 	if (file === undefined) return;
-
-	// 	const filename = path.basename(block.uri.fsPath);
-
-	// 	return commands.executeCommand(
-	// 		BuiltInCommands.Diff,
-	// 		Uri.file(file),
-	// 		block.uri,
-	// 		`${filename}${
-	// 			block.revision !== undefined ? ` (${block.revision.substr(0, 8)})` : ""
-	// 		} \u00a0\u27F7\u00a0 ${filename}`,
-	// 		{ preview: true, viewColumn: ViewColumn.Beside, selection: block.range }
-	// 	);
-	// }
-
 	@command("goOffline")
 	goOffline() {
 		return Container.session.goOffline();
@@ -241,23 +218,6 @@ export class Commands implements Disposable {
 		const editor = window.visibleTextEditors[0];
 		editor.selection = new Selection(new Position(args.line - 1, 0), new Position(args.line, 0));
 	}
-
-	// @command("openPostFileRevision", { showErrorMessage: "Unable to open post" })
-	// async openPostFileRevision(post?: Post) {
-	// 	if (post == null) return;
-
-	// 	const block = await post.codeBlock();
-	// 	if (block === undefined) return;
-
-	// 	const file = await Container.git.getFileRevision(block.uri, block.revision!);
-	// 	if (file === undefined) return;
-
-	// 	return openEditor(Uri.file(file), {
-	// 		preview: true,
-	// 		viewColumn: ViewColumn.Beside,
-	// 		selection: block.range
-	// 	});
-	// }
 
 	@command("openComment", { showErrorMessage: "Unable to open comment" })
 	async openComment(args: OpenStreamCommandArgs): Promise<StreamThread | undefined> {
