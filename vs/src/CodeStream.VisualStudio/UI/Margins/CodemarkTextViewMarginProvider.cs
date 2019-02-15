@@ -1,5 +1,4 @@
 ﻿using CodeStream.VisualStudio.Core;
-using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Packages;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
@@ -21,7 +20,7 @@ namespace CodeStream.VisualStudio.UI.Margins
     [ContentType(ContentTypes.Text)]
     [TextViewRole(PredefinedTextViewRoles.Interactive)]
     [TextViewRole(PredefinedTextViewRoles.Document)]
-    internal sealed class CodemarkTextViewMarginProvider : IWpfTextViewMarginProvider
+    internal sealed class CodemarkTextViewMarginProvider : ICodeStreamWpfTextViewMarginProvider
     {
         private readonly IViewTagAggregatorFactoryService _viewTagAggregatorFactoryService;
         private readonly Lazy<IGlyphFactoryProvider, IGlyphMetadata>[] _glyphFactoryProviders;
@@ -51,27 +50,24 @@ namespace CodeStream.VisualStudio.UI.Margins
             // only get views that we care about
             if (!wpfTextViewHost.TextView.Roles.ContainsAll(TextViewRoles)) return null;
 
-            if (!TextDocuments.TryGetTextDocument(TextDocumentFactoryService, wpfTextViewHost.TextView.TextBuffer,
-                out var textDocument))
+            if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextViewHost.TextView.TextBuffer, out var textDocument))
             {
                 return null;
             }
 
-            var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
-            var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
-            var toolWindowProvider = Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
-            var agentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
-
-            return new CodemarkTextViewMargin(
+            TextViewMargin = new CodemarkTextViewMargin(
                 _viewTagAggregatorFactoryService,
                 _glyphFactoryProviders,
                 wpfTextViewHost,
-                eventAggregator,
-                toolWindowProvider,
-                sessionService,
-                agentService,
+                Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider,
+                Package.GetGlobalService(typeof(SSessionService)) as ISessionService,
                 wpfTextViewHost.TextView,
-                textDocument);
+                textDocument
+            );
+
+            return TextViewMargin;
         }
+
+        public ICodeStreamWpfTextViewMargin TextViewMargin { get; private set; }
     }
 }

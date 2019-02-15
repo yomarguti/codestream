@@ -12,5 +12,10 @@ namespace CodeStream.VisualStudio.UI
     public static class PropertyNames
     {
         public static string CodemarkMarkers = "CS:CodemarkMarkers";
+        public static string DocumentMarkerManager = "CS:DocumentMarkerManager";
+        public static string TextViewMarginProviders = "CS:TextViewMarginProviders";
+        public static string TextViewState = "CS:TextViewState";
+        public static string TextViewEvents = "CS:TextViewEvents";
+        public static string TextViewLocalEvents = "CS:TextViewLocalEvents";
     }
 }

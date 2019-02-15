@@ -121,6 +121,7 @@
     <Compile Include="Extensions\FileSystemExtensions.cs" />
     <Compile Include="Extensions\Guard.cs" />
     <Compile Include="Extensions\JsonExtensions.cs" />
+    <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Extensions\PackageExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
@@ -160,6 +161,7 @@
     <Compile Include="Services\SessionService.cs" />
     <Compile Include="Services\SettingsService.cs" />
     <Compile Include="Services\ThemeManager.cs" />
+    <Compile Include="UI\DocumentMarkerManager.cs" />
     <Compile Include="UI\Glyphs\CodemarkGlyphFactory.cs" />
     <Compile Include="UI\Glyphs\CodemarkGlyphFactoryProvider.cs" />
     <Compile Include="UI\Glyphs\CodemarkGlyphTag.cs" />
@@ -170,7 +172,13 @@
     <Compile Include="UI\Margins\CodemarkTextViewMargin.cs" />
     <Compile Include="UI\Margins\CodemarkViewModel.cs" />
     <Compile Include="UI\Margins\CodemarkTextViewMarginProvider.cs" />
+    <Compile Include="UI\Margins\CodeStreamWpfTextViewMarginCollectionExtensions.cs" />
+    <Compile Include="UI\Margins\ICodeStreamWpfTextViewMarginProvider.cs" />
     <Compile Include="UI\Margins\IGlyphMetadata.cs" />
+    <Compile Include="UI\Margins\VerticalScrollbarMarker.cs" />
+    <Compile Include="UI\Margins\VerticalScrollbarMarkerColorFormat.cs" />
+    <Compile Include="UI\Margins\VerticalScrollbarMarkerProvider.cs" />
+    <Compile Include="UI\Margins\VerticalScrollbarMarkersEnabledOption.cs" />
     <Compile Include="UI\PredefinedCodestreamNames.cs" />
     <Compile Include="UI\PropertyNames.cs" />
     <Compile Include="UI\Settings\OptionsDialogPage.cs">
@@ -180,7 +188,9 @@
     <Compile Include="UI\SuggestedActions\CodemarkSuggestedActionsSourceProvider.cs" />
     <Compile Include="UI\Taggers\CodemarkTagger.cs" />
     <Compile Include="UI\Taggers\CodemarkTaggerProvider.cs" />
-    <Compile Include="UI\TextDocuments.cs" />
+    <Compile Include="UI\TextDocumentExtensions.cs" />
+    <Compile Include="UI\TextViewCreationListener.cs" />
+    <Compile Include="UI\TextViewExtensions.cs" />
     <Compile Include="Vssdk\Commands\IVsCommand.cs" />
     <Compile Include="Vssdk\Commands\IVsCommandBase.cs" />
     <Compile Include="Vssdk\Commands\MenuCommandServiceExtensions.cs" />

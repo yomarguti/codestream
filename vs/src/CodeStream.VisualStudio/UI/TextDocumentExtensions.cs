@@ -3,7 +3,7 @@ using CodeStream.VisualStudio.Extensions;
 
 namespace CodeStream.VisualStudio.UI
 {
-    public static class TextDocuments
+    public static class TextDocumentExtensions
     {
         /// <summary>
         /// Don't get a textDocument if our secret LSP file is trying to be opened
@@ -12,7 +12,7 @@ namespace CodeStream.VisualStudio.UI
         /// <param name="textBuffer"></param>
         /// <param name="textDocument"></param>
         /// <returns></returns>
-        public static bool TryGetTextDocument(ITextDocumentFactoryService textDocumentFactoryService, ITextBuffer textBuffer, out ITextDocument textDocument)
+        public static bool TryGetTextDocument(this ITextDocumentFactoryService textDocumentFactoryService, ITextBuffer textBuffer, out ITextDocument textDocument)
         {
             textDocument = null;
             if (!textDocumentFactoryService.TryGetTextDocument(textBuffer, out ITextDocument td))

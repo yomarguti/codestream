@@ -36,8 +36,7 @@ namespace CodeStream.VisualStudio.UI.Taggers
             // only show for roles we care about
             if (!wpfTextView.Roles.ContainsAll(TextViewRoles)) return null;
 
-            if (!TextDocuments.TryGetTextDocument(TextDocumentFactoryService, textView.TextBuffer,
-                out var textDocument))
+            if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, textView.TextBuffer, out var textDocument))
             {
                 return null;
             }

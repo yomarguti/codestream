@@ -43,21 +43,19 @@ namespace CodeStream.VisualStudio.UI.Taggers
             if (_textDocument.TextBuffer.Properties.ContainsProperty(PropertyNames.CodemarkMarkers))
                 markers = _textDocument.TextBuffer.Properties.GetProperty<List<DocumentMarker>>(PropertyNames.CodemarkMarkers);
 
-            if (markers != null && markers.AnySafe())
+            if (markers == null || !markers.AnySafe()) yield break;
+
+            foreach (var span in spans)
             {
-                foreach (var span in spans)
-                {
-                    var lineNumber = span.Start.GetContainingLine().LineNumber;
-                    var codemark = markers.FirstOrDefault(_ => _?.Range?.Start.Line == lineNumber);
-                    if (codemark != null)
-                    {
-                        SnapshotPoint start = span.Start == 0 ? span.Start : span.Start - 1;
-                        yield return new TagSpan<CodemarkGlyphTag>(
-                            new SnapshotSpan(start, 1),
-                            new CodemarkGlyphTag(codemark)
-                        );
-                    }
-                }
+                var lineNumber = span.Start.GetContainingLine().LineNumber;
+                var codemark = markers.FirstOrDefault(_ => _?.Range?.Start.Line == lineNumber);
+                if (codemark == null) continue;
+
+                SnapshotPoint start = span.Start == 0 ? span.Start : span.Start - 1;
+                yield return new TagSpan<CodemarkGlyphTag>(
+                    new SnapshotSpan(start, 1),
+                    new CodemarkGlyphTag(codemark)
+                );
             }
         }
     }

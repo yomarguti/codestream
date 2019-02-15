@@ -5,7 +5,6 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 
 // ReSharper disable ClassNeverInstantiated.Global
 

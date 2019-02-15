@@ -24,8 +24,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
         {
             if (textBuffer == null || textView == null) return null;
 
-            if (!TextDocuments.TryGetTextDocument(_textDocumentFactoryService, textBuffer,
-                out var textDocument))
+            if (!TextDocumentExtensions.TryGetTextDocument(_textDocumentFactoryService, textBuffer, out var textDocument))
             {
                 return null;
             }
