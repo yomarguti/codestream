@@ -12,9 +12,9 @@ interface CodeStreamComponent
 class CodeStreamComponentImpl(project: Project) : CodeStreamComponent {
 
     init {
+        val webViewService = ServiceManager.getService(project, WebViewService::class.java)
         ApplicationManager.getApplication().invokeLater {
             val toolWindowManager = ToolWindowManager.getInstance(project)
-            val webViewService = ServiceManager.getService(project, WebViewService::class.java)
             val toolWindow = toolWindowManager.registerToolWindow(
                 "CodeStream",
                 false,

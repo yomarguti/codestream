@@ -1,8 +1,5 @@
 package com.codestream
 
-import com.squareup.moshi.JsonClass
-
-@JsonClass(generateAdapter = true)
 data class Settings(
     val email: String?,
     val autoSignIn: Boolean,

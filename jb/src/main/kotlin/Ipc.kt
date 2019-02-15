@@ -1,5 +1,7 @@
 package com.codestream
 
+import com.google.gson.JsonElement
+
 class Ipc {
 
     companion object {
@@ -11,25 +13,15 @@ class Ipc {
         private fun toResponseMessage(id: String, payload: String, error: String?): String
         {
             val type = "codestream:response"
-
-//            payload = GetPayload(payload);
-
-//            if (error.IsNullOrWhiteSpace())
-//            {
-//                return @"{""type"":""" + type + @""",""body"":{""id"": """ + id + @""",""payload"":" + payload + @"}}";
-//            }
-//            else
-//            {
-//                if (payload.IsNullOrWhiteSpace())
-//                {
-//                    return @"{""type"":""" + type + @""",""body"":{""id"":""" + id + @""",""error"":""" + error + @"""}}";
-//                }
-//
-//                return @"{""type"":""" + type + @""",""body"":{""id"":""" + id + @""",""payload"":" + payload + @",""error"":""" + error + @"""}}";
-//            }
-
             return "{\"type\":\"$type\",\"body\":{\"id\":\"$id\",\"payload\":$payload,\"error\":null}}"
         }
+
+        fun toDataMessage(payload: JsonElement): String {
+            return "{\"type\":\"codestream:data\",\"body\":${payload.toString()}}"
+        }
+
     }
+
+
 
 }

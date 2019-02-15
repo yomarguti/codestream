@@ -1,41 +1,30 @@
 package com.codestream
 
+import com.google.gson.JsonElement
+import com.google.gson.JsonParser
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import java.util.*
-
-val moshi: Moshi = Moshi.Builder()
-    .add(KotlinJsonAdapterFactory())
-    .add(Date::class.java, Rfc3339DateJsonAdapter().nullSafe())
-    .build()
-val webViewMessageAdapter: JsonAdapter<WebViewMessage> = moshi.adapter(WebViewMessage::class.java)
-
+import kotlinx.coroutines.*
 
 class WebViewRouter(val project: Project) {
-    val logger = Logger.getInstance(WebViewRouter::class.java)
+    private val logger = Logger.getInstance(WebViewRouter::class.java)
 
-//    private readonly Lazy<ICredentialsService> _credentialsService;
-//    private readonly ISessionService _sessionService;
-//    private readonly ICodeStreamAgentService _codeStreamAgent;
-//    private readonly ISettingsService _settingsService;
-//    private readonly IEventAggregator _eventAggregator;
-//    private readonly IBrowserService _browserService;
-//    private readonly IIdeService _ideService;
+    private val agentService: AgentService
+        get() = ServiceManager.getService(project, AgentService::class.java)
 
     private val authenticationService: AuthenticationService
         get() = ServiceManager.getService(project, AuthenticationService::class.java)
 
-    fun handle(message: String, origin: String) {
+    fun handle(rawMessage: String, origin: String) = GlobalScope.launch {
         try {
-            val (type, body) = parse(message) ?: return
-            when (type) {
+            val message = parse(rawMessage)
+            when (message?.type) {
                 "codestream:view-ready" -> Unit
-                "codestream:request" -> processRequest(body)
+                "codestream:request" -> processRequest(message.body)
+                "codestream:interaction:active-panel-changed" -> Unit
+                "codestream:interaction:context-state-changed" -> Unit
+                "codestream:interaction:changed-active-stream" -> Unit
             }
         } catch (e: Exception) {
             logger.error(e)
@@ -43,92 +32,47 @@ class WebViewRouter(val project: Project) {
         }
     }
 
-    private fun processRequest(body: WebViewMessageBody?) {
-        when (body?.action) {
-            "bootstrap" -> authenticationService.bootstrap(body.id)
-            "authenticate" -> authenticationService.authenticate(
-                body.id,
-                body.params?.get("email"),
-                body.params?.get("password")
-            )
-            "go-to-signup" -> authenticationService.goToSignup(body.id)
-            "go-to-slack-signin" -> authenticationService.goToSlackSignin(body.id)
-            "validate-signup" -> authenticationService.validateSignup(body.id) //, body.Params?.Value<string>())
-            "show-markers",
-            "open-comment-on-select" -> {
-//                        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-//                        var value = message.Params.ToObject<bool>();
-//
-//                        switch (message.Action)
-//                        {
-//                            case "show-markers":
-//                            using (var scope = SettingsScope.Create(_settingsService))
-//                            {
-//                                scope.SettingsService.ShowMarkers = value;
-//                            }
-//
-//                            break;
-//                            case "open-comment-on-select":
-//                            using (var scope = SettingsScope.Create(_settingsService))
-//                            {
-//                                scope.SettingsService.OpenCommentOnSelect = value;
-//                            }
-//
-//                            break;
-//                            default:
-//                            Log.Warning($"Shouldn't hit this Action={message.Action}");
-//                            break;
-//                        }
-            }
-            "mute-all" -> Unit
-            "show-code" -> {
-//                        var showCodeResponse = message.Params.ToObject<ShowCodeResponse>();
-//
-//                        var fromMarkerResponse = await _codeStreamAgent.GetDocumentFromMarkerAsync(
-//                                new DocumentFromMarkerRequest()
-//                                {
-//                                    File = showCodeResponse.Marker.File,
-//                                    RepoId = showCodeResponse.Marker.RepoId,
-//                                    MarkerId = showCodeResponse.Marker.Id,
-//                                    Source = showCodeResponse.Source
-//                                });
-//
-//                        if (fromMarkerResponse?.TextDocument?.Uri != null)
-//                        {
-//                            var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
-//                            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-//                            if (ideService != null)
-//                            {
-//                                var editorResponse = ideService.OpenEditor(
-//                                    fromMarkerResponse.TextDocument.Uri.ToUri(),
-//                                    fromMarkerResponse.Range?.Start?.Line + 1);
-//
-//                                _browserService.PostMessage(Ipc.ToResponseMessage(message.Id, editorResponse.ToString()));
-//                            }
-//                        }
-            }
-            else -> {
-//                        string payloadResponse = null;
-//                        string errorResponse = null;
-//
-//                        try
-//                        {
-//                            var response = await _codeStreamAgent.SendAsync<JToken>(message.Action, message.Params);
-//                            payloadResponse = response.ToString();
-//                        }
-//                        catch (Exception ex)
-//                        {
-//                            errorResponse = ex.ToString();
-//                        }
-//                        _browserService.PostMessage(Ipc.ToResponseMessage(message.Id, payloadResponse, errorResponse));
-//                        break;
-            }
+    private suspend fun processRequest(bodyElement: JsonElement?) {
+        if (bodyElement == null || bodyElement.isJsonNull) {
+            return
+        }
+        val body = bodyElement.asJsonObject
 
+        val action = body.get("action").asString
+        val id = body.get("id").asString
+
+        val params = body.get("params")
+        when (action) {
+            "bootstrap" -> authenticationService.bootstrap(id)
+            "authenticate" -> authenticationService.authenticate(
+                id,
+                params.asJsonObject.get("email").asString,
+                params.asJsonObject.get("password").asString
+            )
+            "go-to-signup" -> authenticationService.goToSignup(id)
+            "go-to-slack-signin" -> authenticationService.goToSlackSignin(id)
+            "validate-signup" -> authenticationService.validateSignup(id) //, bodyElement.Params?.Value<string>())
+            "show-markers",
+            "open-comment-on-select" -> Unit
+            "mute-all" -> Unit
+            "show-code" -> Unit
+            else -> agentService.sendRequest(id, action, params)
         }
 
 
     }
 
-    private fun parse(json: String): WebViewMessage? = webViewMessageAdapter.fromJson(json)
+    private fun parse(json: String): WebViewMessage {
+        val parser = JsonParser()
+        val jsonObject = parser.parse(json).asJsonObject
+
+        val type = jsonObject.get("type").asString
+        val body = jsonObject.get("body")
+
+        return WebViewMessage(type, body)
+    }
+
+    class WebViewMessage(val type: String, val body: JsonElement?)
 
 }
+
