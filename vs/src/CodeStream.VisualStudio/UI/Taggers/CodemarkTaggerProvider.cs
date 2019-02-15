@@ -6,7 +6,6 @@ using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Diagnostics;
 
 namespace CodeStream.VisualStudio.UI.Taggers
 {
@@ -30,16 +29,15 @@ namespace CodeStream.VisualStudio.UI.Taggers
         {
             var wpfTextView = textView as IWpfTextView;
 
-            if (wpfTextView == null)
-                return null;
+            if (wpfTextView == null) return null;
 
-            if (textView.TextBuffer != buffer)
-                return null;
+            if (textView.TextBuffer != buffer) return null;
 
             // only show for roles we care about
             if (!wpfTextView.Roles.ContainsAll(TextViewRoles)) return null;
 
-            if (!TextDocumentFactoryService.TryGetTextDocument(buffer, out ITextDocument textDocument))
+            if (!TextDocuments.TryGetTextDocument(TextDocumentFactoryService, textView.TextBuffer,
+                out var textDocument))
             {
                 return null;
             }

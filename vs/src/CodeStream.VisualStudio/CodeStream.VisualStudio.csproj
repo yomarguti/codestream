@@ -180,6 +180,7 @@
     <Compile Include="UI\SuggestedActions\CodemarkSuggestedActionsSourceProvider.cs" />
     <Compile Include="UI\Taggers\CodemarkTagger.cs" />
     <Compile Include="UI\Taggers\CodemarkTaggerProvider.cs" />
+    <Compile Include="UI\TextDocuments.cs" />
     <Compile Include="Vssdk\Commands\IVsCommand.cs" />
     <Compile Include="Vssdk\Commands\IVsCommandBase.cs" />
     <Compile Include="Vssdk\Commands\MenuCommandServiceExtensions.cs" />

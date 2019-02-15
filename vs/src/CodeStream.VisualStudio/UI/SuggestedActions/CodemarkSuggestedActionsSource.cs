@@ -18,29 +18,27 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
     internal class CodemarkSuggestedActionsSource : ISuggestedActionsSource
     {
         private static readonly ILogger Log = LogManager.ForContext<CodemarkSuggestedActionsSource>();
-
-        // ReSharper disable once NotAccessedField.Local
+        
         private readonly CodemarkSuggestedActionsSourceProvider _actionsSourceProvider;
         private readonly ITextBuffer _textBuffer;
-        // ReSharper disable once NotAccessedField.Local
-
         private readonly ITextView _textView;
-        private readonly ITextDocumentFactoryService _textDocumentFactoryService;
+        private readonly ITextDocument _textDocument;
 
         public CodemarkSuggestedActionsSource(CodemarkSuggestedActionsSourceProvider actionsSourceProvider,
             ITextView textView,
             ITextBuffer textBuffer,
-            ITextDocumentFactoryService textDocumentFactoryService)
+            ITextDocument textDocument)
         {
+            Log.Verbose("ctor");
+
             _actionsSourceProvider = actionsSourceProvider;
             _textBuffer = textBuffer;
             _textView = textView;
-            _textDocumentFactoryService = textDocumentFactoryService;
+            _textDocument = textDocument;
         }
 
         public bool TryGetTelemetryId(out Guid telemetryId)
         {
-            // This is a sample provider and doesn't participate in LightBulb telemetry  
             telemetryId = Guid.Empty;
             return false;
         }
@@ -53,13 +51,11 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 
         public IEnumerable<SuggestedActionSet> GetSuggestedActions(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken)
         {
-            ITextDocument textDocument = null;
             try
             {
-                if (_textSelection?.HasText == false ||
-                    _textDocumentFactoryService?.TryGetTextDocument(_textBuffer, out textDocument) == false)
+                if (_textSelection?.HasText == false)
                 {
-                    Log.Verbose($"{nameof(GetSuggestedActions)} Empty HasText={_textSelection?.HasText}, TextDocument={textDocument != null}, TextDocumentFactory={_textDocumentFactoryService != null}");
+                    Log.Verbose($"{nameof(GetSuggestedActions)} Empty HasText={_textSelection?.HasText}");
                     return Enumerable.Empty<SuggestedActionSet>();
                 }
 
@@ -68,7 +64,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
                     new SuggestedActionSet(
                         actions: new ISuggestedAction[]
                         {
-                            new CodemarkSuggestedAction(textDocument, _textSelection)
+                            new CodemarkSuggestedAction(_textDocument, _textSelection)
                         },
                         categoryName: null,
                         title: null,

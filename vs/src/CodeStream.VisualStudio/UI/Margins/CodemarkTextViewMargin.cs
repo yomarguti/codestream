@@ -79,6 +79,8 @@ namespace CodeStream.VisualStudio.UI.Margins
             IWpfTextView textView,
             ITextDocument textDocument)
         {
+            Log.Verbose("ctor");
+
             _viewTagAggregatorFactoryService = viewTagAggregatorFactoryService;
             _glyphFactoryProviders = glyphFactoryProviders;
             _wpfTextViewHost = wpfTextViewHost;

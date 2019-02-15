@@ -31,7 +31,7 @@ namespace CodeStream.VisualStudio.UI.Margins
             [ImportMany] IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> glyphFactoryProviders)
         {
             _viewTagAggregatorFactoryService = viewTagAggregatorFactoryService;
-            
+
             // only get _our_ glyph factory
             _glyphFactoryProviders = Orderer.Order(glyphFactoryProviders)
                 .Where(_ => _.Metadata.Name == PredefinedCodestreamNames.CodemarkGlyphFactoryProvider).ToArray();
@@ -51,7 +51,8 @@ namespace CodeStream.VisualStudio.UI.Margins
             // only get views that we care about
             if (!wpfTextViewHost.TextView.Roles.ContainsAll(TextViewRoles)) return null;
 
-            if (!TextDocumentFactoryService.TryGetTextDocument(wpfTextViewHost.TextView.TextBuffer, out var textDocument))
+            if (!TextDocuments.TryGetTextDocument(TextDocumentFactoryService, wpfTextViewHost.TextView.TextBuffer,
+                out var textDocument))
             {
                 return null;
             }

@@ -10,7 +10,7 @@ namespace CodeStream.VisualStudio.Extensions
         public static bool EqualsIgnoreCase(this string one, string two) => 
             string.Equals(one, two, System.StringComparison.OrdinalIgnoreCase);
 
-        public static bool EndsWithIgnoreCase(this string one, string two) =>
-            one?.EndsWith(two, true, CultureInfo.InvariantCulture) == true;
+        public static bool EndsWithIgnoreCase(this string str, string value) =>
+            str?.EndsWith(value, true, CultureInfo.InvariantCulture) == true;
     }
 }

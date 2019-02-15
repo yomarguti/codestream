@@ -1,9 +1,9 @@
-﻿using Microsoft.VisualStudio.Language.Intellisense;
+﻿using CodeStream.VisualStudio.Core;
+using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
-using CodeStream.VisualStudio.Core;
 
 namespace CodeStream.VisualStudio.UI.SuggestedActions
 {
@@ -24,7 +24,13 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
         {
             if (textBuffer == null || textView == null) return null;
 
-            return new CodemarkSuggestedActionsSource(this, textView, textBuffer, _textDocumentFactoryService);
+            if (!TextDocuments.TryGetTextDocument(_textDocumentFactoryService, textBuffer,
+                out var textDocument))
+            {
+                return null;
+            }
+
+            return new CodemarkSuggestedActionsSource(this, textView, textBuffer, textDocument);
         }
     }
 }
