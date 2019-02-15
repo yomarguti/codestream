@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.35.0] - 2019-2-15
+
+### Fixed
+
+- Fixes an issue where the Submit/Cancel buttons would not render correctly when creating a codemark
+
 ## [0.34.0] - 2019-2-8
 
 ### Changed
