@@ -163,6 +163,17 @@ export interface UpdateMarkerRequest {
 	commitHashWhenCreated?: string;
 }
 
+export interface UpdateMarkerResponse {
+	marker: CSMarker;
+}
+
+export const UpdateMarkerRequestType = new RequestType<
+	UpdateMarkerRequest,
+	UpdateMarkerResponse,
+	void,
+	void
+>("codeStream/marker/update");
+
 export interface CreateCodemarkRequest {
 	type: CodemarkType;
 	providerType?: ProviderType;
@@ -189,6 +200,42 @@ export interface CreateCodemarkRequestMarker {
 	location?: CSLocationArray;
 }
 
+export interface DeleteCodemarkRequest {
+	codemarkId: string;
+}
+
+export interface DeleteCodemarkResponse {}
+
+export interface SetCodemarkPinnedRequest {
+	codemarkId: string;
+	value: boolean;
+}
+
+export interface SetCodemarkPinnedResponse {}
+
+export const SetCodemarkPinnedRequestType = new RequestType<
+	SetCodemarkPinnedRequest,
+	SetCodemarkPinnedResponse,
+	void,
+	void
+>("codeStream/codemark/setPinned");
+
+export interface SetCodemarkStatusRequest {
+	codemarkId: string;
+	status: string;
+}
+
+export interface SetCodemarkStatusResponse {
+	codemark: CodemarkPlus;
+}
+
+export const SetCodemarkStatusRequestType = new RequestType<
+	SetCodemarkStatusRequest,
+	SetCodemarkStatusResponse,
+	void,
+	void
+>("codeStream/codemark/setStatus");
+
 export interface UpdateCodemarkRequest {
 	codemarkId: string;
 	streamId?: string;
@@ -211,36 +258,3 @@ export const UpdateCodemarkRequestType = new RequestType<
 	void,
 	void
 >("codeStream/codemark/update");
-
-export interface DeleteCodemarkRequest {
-	codemarkId: string;
-}
-
-export interface DeleteCodemarkResponse {}
-
-export interface UpdateMarkerResponse {
-	marker: CSMarker;
-}
-
-export const UpdateMarkerRequestType = new RequestType<
-	UpdateMarkerRequest,
-	UpdateMarkerResponse,
-	void,
-	void
->("codeStream/marker/update");
-
-export interface SetCodemarkStatusRequest {
-	codemarkId: string;
-	status: string;
-}
-
-export interface SetCodemarkStatusResponse {
-	codemark: CodemarkPlus;
-}
-
-export const SetCodemarkStatusRequestType = new RequestType<
-	SetCodemarkStatusRequest,
-	SetCodemarkStatusResponse,
-	void,
-	void
->("codeStream/codemark/setStatus");

@@ -9,6 +9,9 @@ import {
 	FetchCodemarksRequest,
 	FetchCodemarksRequestType,
 	FetchCodemarksResponse,
+	SetCodemarkPinnedRequest,
+	SetCodemarkPinnedRequestType,
+	SetCodemarkPinnedResponse,
 	SetCodemarkStatusRequest,
 	SetCodemarkStatusRequestType,
 	SetCodemarkStatusResponse,
@@ -116,6 +119,11 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 			data: [updateResponse.codemark]
 		});
 		return { codemark: await this.fullCodemark(codemark) };
+	}
+
+	@lspHandler(SetCodemarkPinnedRequestType)
+	setPinned(request: SetCodemarkPinnedRequest): Promise<SetCodemarkPinnedResponse> {
+		return this.session.api.setCodemarkPinned(request);
 	}
 
 	@lspHandler(SetCodemarkStatusRequestType)

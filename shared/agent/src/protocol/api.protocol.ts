@@ -225,6 +225,10 @@ export interface CSMarkPostUnreadRequest {}
 
 export interface CSMarkPostUnreadResponse {}
 
+export interface CSSetCodemarkPinnedRequest {}
+
+export interface CSSetCodemarkPinnedResponse {}
+
 export interface CSFindRepoResponse {
 	repo?: CSRepository;
 	usernames?: string[];

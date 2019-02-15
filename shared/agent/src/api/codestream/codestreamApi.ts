@@ -50,6 +50,8 @@ import {
 	OpenStreamRequest,
 	ReactToPostRequest,
 	RenameStreamRequest,
+	SetCodemarkPinnedRequest,
+	SetCodemarkPinnedResponse,
 	SetCodemarkStatusRequest,
 	SetStreamPurposeRequest,
 	UnarchiveStreamRequest,
@@ -108,6 +110,8 @@ import {
 	CSPost,
 	CSReactions,
 	CSReactToPostResponse,
+	CSSetCodemarkPinnedRequest,
+	CSSetCodemarkPinnedResponse,
 	CSStream,
 	CSTrackSlackPostRequest,
 	CSUpdateCodemarkRequest,
@@ -532,21 +536,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	updateCodemark(request: UpdateCodemarkRequest) {
-		const { codemarkId, ...attributes } = request;
-		return this.put<CSUpdateCodemarkRequest, CSUpdateCodemarkResponse>(
-			`/codemarks/${codemarkId}`,
-			attributes,
-			this._token
-		);
-	}
-
-	@log()
-	async setCodemarkStatus(request: SetCodemarkStatusRequest) {
-		return this.updateCodemark(request);
-	}
-
-	@log()
 	deleteCodemark(request: DeleteCodemarkRequest): Promise<DeleteCodemarkResponse> {
 		const { codemarkId } = request;
 		return this.delete(`/codemarks/${codemarkId}`, this._token);
@@ -560,6 +549,30 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	getCodemark(request: GetCodemarkRequest): Promise<GetCodemarkResponse> {
 		return this.get<GetCodemarkResponse>(`/codemarks/${request.codemarkId}`, this._token);
+	}
+
+	@log()
+	setCodemarkPinned(request: SetCodemarkPinnedRequest) {
+		return this.put<CSSetCodemarkPinnedRequest, CSSetCodemarkPinnedResponse>(
+			`${request.value ? "/pin" : "/unpin"}/${request.codemarkId}`,
+			request,
+			this._token
+		);
+	}
+
+	@log()
+	async setCodemarkStatus(request: SetCodemarkStatusRequest) {
+		return this.updateCodemark(request);
+	}
+
+	@log()
+	updateCodemark(request: UpdateCodemarkRequest) {
+		const { codemarkId, ...attributes } = request;
+		return this.put<CSUpdateCodemarkRequest, CSUpdateCodemarkResponse>(
+			`/codemarks/${codemarkId}`,
+			attributes,
+			this._token
+		);
 	}
 
 	@log()

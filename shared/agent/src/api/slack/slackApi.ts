@@ -49,6 +49,7 @@ import {
 	OpenStreamRequest,
 	ReactToPostRequest,
 	RenameStreamRequest,
+	SetCodemarkPinnedRequest,
 	SetCodemarkStatusRequest,
 	SetStreamPurposeRequest,
 	UnarchiveStreamRequest,
@@ -468,6 +469,11 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
+	deleteCodemark(request: DeleteCodemarkRequest) {
+		return this._codestream.deleteCodemark(request);
+	}
+
+	@log()
 	fetchCodemarks(request: FetchCodemarksRequest) {
 		return this._codestream.fetchCodemarks(request);
 	}
@@ -475,6 +481,21 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	getCodemark(request: GetCodemarkRequest) {
 		return this._codestream.getCodemark(request);
+	}
+
+	@log()
+	setCodemarkPinned(request: SetCodemarkPinnedRequest) {
+		return this._codestream.setCodemarkPinned(request);
+	}
+
+	@log()
+	async setCodemarkStatus(request: SetCodemarkStatusRequest) {
+		return this._codestream.setCodemarkStatus(request);
+	}
+
+	@log()
+	updateCodemark(request: UpdateCodemarkRequest) {
+		return this._codestream.updateCodemark(request);
 	}
 
 	@log()
@@ -999,11 +1020,6 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async setCodemarkStatus(request: SetCodemarkStatusRequest) {
-		return this._codestream.setCodemarkStatus(request);
-	}
-
-	@log()
 	createRepo(request: CreateRepoRequest) {
 		return this._codestream.createRepo(request);
 	}
@@ -1254,16 +1270,6 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	async getTelemetryKey(): Promise<string> {
 		return this._codestream.getTelemetryKey();
-	}
-
-	@log()
-	updateCodemark(request: UpdateCodemarkRequest) {
-		return this._codestream.updateCodemark(request);
-	}
-
-	@log()
-	deleteCodemark(request: DeleteCodemarkRequest) {
-		return this._codestream.deleteCodemark(request);
 	}
 
 	@log()

@@ -10,6 +10,7 @@ import {
 	ConnectionStatus,
 	CreateChannelStreamRequest,
 	CreateChannelStreamResponse,
+	CreateCodemarkRequest,
 	CreateDirectStreamRequest,
 	CreateDirectStreamResponse,
 	CreateMarkerLocationRequest,
@@ -82,6 +83,8 @@ import {
 	ReactToPostResponse,
 	RenameStreamRequest,
 	RenameStreamResponse,
+	SetCodemarkPinnedRequest,
+	SetCodemarkPinnedResponse,
 	SetCodemarkStatusRequest,
 	SetCodemarkStatusResponse,
 	SetStreamPurposeRequest,
@@ -246,16 +249,17 @@ export interface ApiProvider {
 	updatePreferences(request: UpdatePreferencesRequest): Promise<UpdatePreferencesResponse>;
 	getPreferences(): Promise<GetPreferencesResponse>;
 	updatePresence(request: UpdatePresenceRequest): Promise<UpdatePresenceResponse>;
-	setCodemarkStatus(request: SetCodemarkStatusRequest): Promise<SetCodemarkStatusResponse>;
 	getTelemetryKey(): Promise<string>;
 
 	// createFileStream(request: CreateFileStreamRequest): Promise<CreateFileStreamResponse>;
 	fetchFileStreams(request: FetchFileStreamsRequest): Promise<FetchFileStreamsResponse>;
 
+	deleteCodemark(request: DeleteCodemarkRequest): Promise<DeleteCodemarkResponse>;
 	fetchCodemarks(request: FetchCodemarksRequest): Promise<FetchCodemarksResponse>;
 	getCodemark(request: GetCodemarkRequest): Promise<GetCodemarkResponse>;
+	setCodemarkPinned(request: SetCodemarkPinnedRequest): Promise<SetCodemarkPinnedResponse>;
+	setCodemarkStatus(request: SetCodemarkStatusRequest): Promise<SetCodemarkStatusResponse>;
 	updateCodemark(request: UpdateCodemarkRequest): Promise<UpdateCodemarkResponse>;
-	deleteCodemark(request: DeleteCodemarkRequest): Promise<DeleteCodemarkResponse>;
 
 	createMarkerLocation(request: CreateMarkerLocationRequest): Promise<CreateMarkerLocationResponse>;
 	fetchMarkerLocations(request: FetchMarkerLocationsRequest): Promise<FetchMarkerLocationsResponse>;
