@@ -135,7 +135,7 @@ export class SlackApiProvider implements ApiProvider {
 	private _userIdsByName: Map<string, string> | undefined;
 
 	readonly capabilities: Capabilities = {
-		channelMute: true
+		channelMute: false
 	};
 
 	constructor(
