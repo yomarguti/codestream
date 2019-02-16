@@ -20,14 +20,16 @@ export interface DisconnectThirdPartyProviderRequest {
 
 export interface DisconnectThirdPartyProviderResponse {}
 
-export const DisconnectThirdParyProviderRequestType = new RequestType<
+export const DisconnectThirdPartyProviderRequestType = new RequestType<
 	DisconnectThirdPartyProviderRequest,
 	DisconnectThirdPartyProviderResponse,
 	void,
 	void
 >("codeStream/provider/disconnect");
 
-export interface FetchThirdPartyBoardsRequest {}
+export interface FetchThirdPartyBoardsRequest {
+	[key: string]: any;
+}
 
 export interface FetchAssignableUsersRequest {
 	providerName: string;

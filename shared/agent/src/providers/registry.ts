@@ -5,8 +5,8 @@ import {
 	ConnectThirdPartyProviderResponse,
 	ConnectThirdParyProviderRequestType,
 	DisconnectThirdPartyProviderRequest,
+	DisconnectThirdPartyProviderRequestType,
 	DisconnectThirdPartyProviderResponse,
-	DisconnectThirdParyProviderRequestType,
 	FetchAssignableUsersRequest,
 	FetchAssignableUsersRequestType
 } from "../shared/agent.protocol";
@@ -39,7 +39,7 @@ export class ThirdPartyProviderRegistry {
 	}
 
 	@log()
-	@lspHandler(DisconnectThirdParyProviderRequestType)
+	@lspHandler(DisconnectThirdPartyProviderRequestType)
 	async disconnect(
 		request: DisconnectThirdPartyProviderRequest
 	): Promise<DisconnectThirdPartyProviderResponse> {
