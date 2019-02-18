@@ -314,7 +314,7 @@ export const ReportMessageRequestType = new RequestType<ReportMessageRequest, vo
 );
 
 /**
- * @param eventName The name of the Mixpanel you want to track, eg: "Page Viewed"
+ * @param eventName The name of the telemetry event you want to track, eg: "Page Viewed"
  * @param properties Optional properties to pass along with eventName
  */
 export interface TelemetryRequest {

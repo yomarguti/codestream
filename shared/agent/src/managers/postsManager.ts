@@ -460,6 +460,15 @@ function trackPostCreation(request: CreatePostRequest) {
 						Container.instance().session.telemetryData.hasCreatedPost = true;
 					}
 					telemetry.track({ eventName: "Post Created", properties: payload });
+					if (request.codemark) {
+						const codemarkProperties: {
+							[key: string]: any;
+						} = {
+							"Codemark Type": request.codemark.type,
+							"Linked Service": request.codemark.externalProvider
+						};
+						telemetry.track({ eventName: "Codemark Created", properties: codemarkProperties});
+					}
 				})
 				.catch(ex => Logger.error(ex));
 		} catch (ex) {

@@ -2,15 +2,15 @@ import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import { TelemetryRequest, TelemetryRequestType } from "../shared/agent.protocol";
 import { debug, lsp, lspHandler } from "../system";
-import { MixPanelTelemetryService } from "../telemetry/mixpanel";
+import { TelemetryService } from "../telemetry/telemetry";
 
 @lsp
 export class TelemetryManager {
-	private readonly _mixpanel: MixPanelTelemetryService;
+	private readonly _telemetry: TelemetryService;
 
 	constructor(session: CodeStreamSession) {
 		// TODO: Respect VSCode telemetry opt out
-		this._mixpanel = new MixPanelTelemetryService(session, false);
+		this._telemetry = new TelemetryService(session, false);
 		session
 			.ready()
 			.then(() => session.api.getPreferences())
@@ -25,15 +25,15 @@ export class TelemetryManager {
 	}
 
 	setConsent(hasConsented: boolean) {
-		this._mixpanel.setConsent(hasConsented);
+		this._telemetry.setConsent(hasConsented);
 	}
 
-	setDistinctId(id: string) {
-		this._mixpanel.setDistinctId(id);
+	identify(id: string, props: { [key: string]: any }) {
+		this._telemetry.identify(id, props);
 	}
 
 	setSuperProps(props: { [key: string]: string | number | boolean }) {
-		this._mixpanel.setSuperProps(props);
+		this._telemetry.setSuperProps(props);
 	}
 
 	@debug()
@@ -42,7 +42,7 @@ export class TelemetryManager {
 		Logger.debug("(6) telemetryManager :: track has been called : ", request.eventName);
 		const cc = Logger.getCorrelationContext();
 		try {
-			void this._mixpanel.track(request.eventName, request.properties);
+			void this._telemetry.track(request.eventName, request.properties);
 		} catch (ex) {
 			Logger.error(ex, cc);
 		}

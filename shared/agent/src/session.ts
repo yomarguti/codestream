@@ -503,7 +503,7 @@ export class CodeStreamSession {
 			Container.instance().markerLocations.flushUncommittedLocations(repo);
 		});
 
-		// Initialize Mixpanel tracking
+		// Initialize tracking
 		// TODO: Check for opt in
 		this.initializeTelemetry(response.user, currentTeam, response.companies);
 
@@ -587,7 +587,8 @@ export class CodeStreamSession {
 		this._telemetryData.hasCreatedPost = user.totalPosts > 0;
 
 		const props: { [key: string]: any } = {
-			"Email Address": user.email,
+			email: user.email,
+			name: user.fullName,
 			"Team ID": this._teamId,
 			"Join Method": user.joinMethod,
 			"Plugin Version": this.versionInfo.extension.versionFormatted,
@@ -595,30 +596,31 @@ export class CodeStreamSession {
 			Provider: Team.isSlack(team) ? "Slack" : "CodeStream"
 		};
 
-		// Get company name from companyId
-		try {
-			props["Company"] = companies.filter(c => c.id === team.companyId)[0].name;
-		} catch {}
-
 		if (team != null) {
 			props["Team Name"] = team.name;
 			if (team.memberIds != null) {
 				props["Team Size"] = team.memberIds.length;
 			}
+			const company = companies.find(c => c.id === team.companyId);
+			if (company) {
+				props["Company Name"] = company.name;
+			}
+			props["company"] = {
+				id: team.id,
+				name: team.name
+			};
 		}
 
-		try {
-			props["Date Signed Up"] =
-				user.registeredAt != null ? new Date(user.registeredAt).toISOString() : undefined;
-		} catch {}
+		if (user.registeredAt) {
+			props.createdAt = new Date(user.registeredAt).toISOString();
+		}
 
-		try {
-			props["Date of Last Post"] =
-				user.lastPostCreatedAt != null ? new Date(user.lastPostCreatedAt).toISOString() : undefined;
-		} catch {}
+		if (user.lastPostCreatedAt) {
+			props["Date of Last Post"] = new Date(user.lastPostCreatedAt).toISOString() ;
+		}
 
 		const { telemetry } = Container.instance();
-		telemetry.setDistinctId(this._codestreamUserId!);
+		telemetry.identify(this._codestreamUserId!, props);
 		telemetry.setSuperProps(props);
 		telemetry.track({ eventName: "Agent Started" });
 	}
