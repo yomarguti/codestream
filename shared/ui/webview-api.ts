@@ -158,7 +158,7 @@ export default class WebviewApi {
 
 	connectService(service: string, fromMenu: boolean = true) {
 		this.sendTelemetry({
-			eventName: "Service Connected",
+			eventName: "Issue Service Connected",
 			properties: {
 				Service: service,
 				Connection: "On",
@@ -175,7 +175,7 @@ export default class WebviewApi {
 
 	disconnectService(service: string, fromMenu: boolean = true) {
 		this.sendTelemetry({
-			eventName: "Service Connected",
+			eventName: "Issue Service Connected",
 			properties: {
 				Service: service,
 				Connection: "Off",
