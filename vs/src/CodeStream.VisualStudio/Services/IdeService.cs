@@ -48,7 +48,7 @@ namespace CodeStream.VisualStudio.Services
     [Injected]
     public class IdeService : IIdeService, SIdeService
     {
-        private static readonly ILogger Log = LogManager.ForContext<WebViewRouter>();
+        private static readonly ILogger Log = LogManager.ForContext<IdeService>();
 
         private readonly IVsTextManager2 _iIVsTextManager;
         private readonly IVsExtensionManager _extensionManager;
@@ -149,6 +149,12 @@ namespace CodeStream.VisualStudio.Services
 
         public bool QueryExtensions(string author, params string[] names)
         {
+            if (_extensionManager == null)
+            {
+                Log.Debug($"{nameof(_extensionManager)} is null");
+                return false;
+            }
+
             foreach (var extension in _extensionManager.GetInstalledExtensions())
             {
                 IExtensionHeader header = extension.Header;
