@@ -54,7 +54,7 @@ namespace CodeStream.VisualStudio.Controllers
             catch (Exception ex)
             {
                 error = ex.ToString();
-                Log.Verbose(ex, $"{nameof(GoToSignupAsync)}");
+                Log.Error(ex, $"{nameof(GoToSignupAsync)}");
             }
 
             _browserService.PostMessage(Ipc.ToResponseMessage(messageId, true, error));
@@ -74,7 +74,7 @@ namespace CodeStream.VisualStudio.Controllers
             catch (Exception ex)
             {
                 error = ex.ToString();
-                Log.Verbose(ex, $"{nameof(GoToSlackSigninAsync)}");
+                Log.Error(ex, $"{nameof(GoToSlackSigninAsync)}");
             }
 
             _browserService.PostMessage(Ipc.ToResponseMessage(messageId, true, error));
@@ -101,6 +101,7 @@ namespace CodeStream.VisualStudio.Controllers
                         var handleError = await HandleErrorAsync(loginResult);
                         if (!handleError)
                         {
+                            errorResponse = loginResult.ToString();
                             await Task.CompletedTask;
                         }
                         else
@@ -112,6 +113,7 @@ namespace CodeStream.VisualStudio.Controllers
                     {
                         errorResponse = error.ToString();
                     }
+                    Log.Warning(errorResponse);
                 }
                 else if (loginResponse != null)
                 {
@@ -124,7 +126,7 @@ namespace CodeStream.VisualStudio.Controllers
             catch (Exception ex)
             {
                 errorResponse = ex.ToString();
-                Log.Verbose(ex, $"{nameof(AuthenticateAsync)}");
+                Log.Error(ex, $"{nameof(AuthenticateAsync)}");
             }
             finally
             {
@@ -169,7 +171,7 @@ namespace CodeStream.VisualStudio.Controllers
                     catch (Exception ex)
                     {
                         errorResponse = ex.ToString();
-                        Log.Verbose(ex, $"{nameof(BootstrapAsync)}");
+                        Log.Debug(ex, $"{nameof(BootstrapAsync)}");
                     }
                     if (success)
                     {
@@ -219,6 +221,7 @@ namespace CodeStream.VisualStudio.Controllers
                         var handleError = await HandleErrorAsync(loginResult);
                         if (!handleError)
                         {
+                            errorResponse = loginResult.ToString();
                             await Task.CompletedTask;
                         }
                         else
@@ -230,6 +233,7 @@ namespace CodeStream.VisualStudio.Controllers
                     {
                         errorResponse = error.ToString();
                     }
+                    Log.Warning(errorResponse);
                 }
                 else if (loginResponse != null)
                 {
@@ -243,7 +247,7 @@ namespace CodeStream.VisualStudio.Controllers
             catch (Exception ex)
             {
                 errorResponse = ex.ToString();
-                Log.Verbose(ex, $"{nameof(ValidateSignupAsync)}");
+                Log.Error(ex, $"{nameof(ValidateSignupAsync)}");
             }
             finally
             {
@@ -309,6 +313,6 @@ namespace CodeStream.VisualStudio.Controllers
         private JToken GetState(JToken token) => token?["result"]?["state"];
         private JToken GetEmail(JToken token) => token?["result"]?["loginResponse"]?["user"]?["email"];
         private JToken GetAccessToken(JToken token) => token?["result"]?["loginResponse"]?["accessToken"];
-        private JToken GetError(JToken token) => token?["result"]?["error"];
+        private JToken GetError(JToken token) => token != null && token.HasValues && token["result"] != null ? token?["result"]?["error"] : new JValue(LoginResult.UNKNOWN.ToString());
     }
 }
