@@ -30,7 +30,7 @@ import {
 	DeletePostRequestType,
 	DeletePostResponse,
 	DisconnectThirdPartyProviderRequest,
-	DisconnectThirdParyProviderRequestType,
+	DisconnectThirdPartyProviderRequestType,
 	EditPostRequest,
 	EditPostRequestType,
 	EditPostResponse,
@@ -183,7 +183,7 @@ export default class WebviewApi {
 			}
 		});
 		return this.postMessage({
-			action: DisconnectThirdParyProviderRequestType.method,
+			action: DisconnectThirdPartyProviderRequestType.method,
 			params: {
 				providerName: service
 			} as DisconnectThirdPartyProviderRequest
