@@ -1,5 +1,7 @@
 package com.codestream
 
+import com.github.salomonbrys.kotson.jsonObject
+import com.google.gson.JsonElement
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -18,18 +20,38 @@ class WebViewService(val project: Project) : Disposable {
     val webView = BrowserView(browser)
 
     init {
-        // TODO extract assets from JAR to temp dir (or have them bundled as a single file)
+        // TODO extract assets from JAR to temp dir (or load them directly from JAR if possible)
         browser.loadURL(url)
     }
 
-    fun postMessage(message: String) {
-        logger.info("postMessage: $message")
+
+    fun postResponse(id: String, payload: Any?, error: String? = null) {
+        val message = jsonObject(
+            "type" to "codestream:response",
+            "body" to jsonObject(
+                "id" to id,
+                "payload" to gson.toJsonTree(payload),
+                "error" to error
+            )
+        )
+        postMessage(message)
+    }
+
+    fun postData(payload: JsonElement) {
+        val message = jsonObject(
+            "type" to "codestream:data",
+            "body" to payload
+        )
+        postMessage(message)
+    }
+
+    private fun postMessage(message: JsonElement) {
         browser.executeJavaScript("window.postMessage($message,'*');")
     }
 
     override fun dispose() {
         logger.info("Disposing JxBrowser")
-        browser?.dispose()
+        browser.dispose()
         BrowserCore.shutdown()
     }
 
@@ -43,9 +65,9 @@ class WebViewService(val project: Project) : Disposable {
         browser.configurePreferences()
         browser.connectRouter(router)
 
-    //        browser.dialogHandler = this
-    //        browser.loadHandler
-    //        browser.context.networkService.resourceHandler
+        //        browser.dialogHandler = this
+        //        browser.loadHandler
+        //        browser.context.networkService.resourceHandler
 
         return browser
     }
@@ -54,10 +76,10 @@ class WebViewService(val project: Project) : Disposable {
         System.setProperty("jxbrowser.ipc.external", "true")
         BrowserPreferences.setChromiumSwitches(
             "--remote-debugging-port=9222",
-    //        "--disable-gpu",
-    //        "--disable-gpu-compositing",
-    //        "--enable-begin-frame-scheduling",
-    //        "--software-rendering-fps=60",
+            //        "--disable-gpu",
+            //        "--disable-gpu-compositing",
+            //        "--enable-begin-frame-scheduling",
+            //        "--software-rendering-fps=60",
             "--disable-web-security",
             "--allow-file-access-from-files"
         )
@@ -107,6 +129,7 @@ class WebViewService(val project: Project) : Disposable {
             }
         })
     }
+
 }
 
 

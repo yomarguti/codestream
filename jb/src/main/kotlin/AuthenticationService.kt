@@ -22,38 +22,29 @@ class AuthenticationService(project: Project) {
 
     suspend fun bootstrap(id: String) {
         val bootstrapState = agentService.getBootstrapState()
-        webViewService.postMessage(Ipc.toResponseMessage(id, gson.toJson(bootstrapState), null))
+        webViewService.postResponse(id, bootstrapState)
     }
 
     suspend fun authenticate(id: String, email: String?, password: String?) {
         val loginResult = agentService.login(email, password)
-
         loginResult.error?.apply {
-            webViewService.postMessage(Ipc.toResponseMessage(id, null, this))
+            webViewService.postResponse(id, null, this)
             return
         }
 
         sessionService.userLoggedIn = loginResult.userLoggedIn
         val bootstrapState = agentService.getBootstrapState()
-        webViewService.postMessage(Ipc.toResponseMessage(id, gson.toJson(bootstrapState), null))
+        webViewService.postResponse(id, bootstrapState)
     }
 
     fun goToSignup(id: String) {
-        try {
-            BrowserUtil.browse("${settingsService.webAppUrl}/signup?force_auth=true&signup_token=${sessionService.signupToken}")
-            webViewService.postMessage(Ipc.toResponseMessage(id, true, null))
-        } catch (e: Exception) {
-            webViewService.postMessage(Ipc.toResponseMessage(id, null, e.message))
-        }
+        BrowserUtil.browse("${settingsService.webAppUrl}/signup?force_auth=true&signup_token=${sessionService.signupToken}")
+        webViewService.postResponse(id, true)
     }
 
     fun goToSlackSignin(id: String) {
-        try {
-            BrowserUtil.browse("${settingsService.webAppUrl}/service-auth/slack?state=${sessionService.signupToken}")
-            webViewService.postMessage(Ipc.toResponseMessage(id, true, null))
-        } catch (e: Exception) {
-            webViewService.postMessage(Ipc.toResponseMessage(id, null, e.message))
-        }
+        BrowserUtil.browse("${settingsService.webAppUrl}/service-auth/slack?state=${sessionService.signupToken}")
+        webViewService.postResponse(id, true)
     }
 
     suspend fun validateSignup(id: String, signupToken: String?) {
@@ -63,9 +54,14 @@ class AuthenticationService(project: Project) {
             sessionService.signupToken
 
         val loginResult = agentService.loginViaOneTimeCode(token)
+        loginResult.error?.apply {
+            webViewService.postResponse(id, null, this)
+            return
+        }
+
         sessionService.userLoggedIn = loginResult.userLoggedIn
         val bootstrapState = agentService.getBootstrapState()
-        webViewService.postMessage(Ipc.toResponseMessage(id, gson.toJson(bootstrapState), null))
+        webViewService.postResponse(id, bootstrapState)
     }
 
     suspend fun signout() {

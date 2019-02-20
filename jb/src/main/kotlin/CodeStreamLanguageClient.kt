@@ -20,22 +20,29 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
 
     @JsonNotification("codeStream/didChangeData")
     fun didChangeData(json: JsonElement) {
-        webViewService.postMessage(Ipc.toDataMessage(json))
+        webViewService.postData(json)
     }
 
     @JsonNotification("codeStream/didChangeConnectionStatus")
     fun didChangeConnectionStatus(json: JsonElement) {
-        webViewService.postMessage(Ipc.toDataMessage(json))
+        webViewService.postData(json)
     }
 
     @JsonNotification("codeStream/didLogout")
     fun didLogout(json: JsonElement) {
-        webViewService.postMessage(Ipc.toDataMessage(json))
+        webViewService.postData(json)
     }
 
     override fun registerCapability(params: RegistrationParams): CompletableFuture<Void> {
         params.registrations.forEach {
             println("LSP server wants to register ${it.method}")
+        }
+        return CompletableFuture.completedFuture(null)
+    }
+
+    override fun unregisterCapability(params: UnregistrationParams?): CompletableFuture<Void> {
+        params?.unregisterations?.forEach {
+            println("LSP server wants to unregister ${it.method}")
         }
         return CompletableFuture.completedFuture(null)
     }

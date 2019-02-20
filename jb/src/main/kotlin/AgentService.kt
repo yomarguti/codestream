@@ -97,7 +97,7 @@ class AgentService(val project: Project) {
 
     suspend fun sendRequest(id: String, action: String, params: JsonElement?) {
         val result = remoteEndpoint.request(action, params).await()
-        webViewService.postMessage(Ipc.toResponseMessage(id, result, null))
+        webViewService.postResponse(id, result, null)
     }
 
     suspend fun getBootstrapState(): BootstrapState {
