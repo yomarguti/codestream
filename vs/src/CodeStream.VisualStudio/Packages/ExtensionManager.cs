@@ -2,9 +2,12 @@
 using CodeStream.VisualStudio.Services;
 using System;
 using System.Collections.Generic;
+using Serilog;
 
 namespace CodeStream.VisualStudio.Packages
 {
+    public  class ExtensionManagerDummy { }
+
     /// <summary>
     /// Dynamically loads the correct extension manager to check if certain extensions are installed.
     /// </summary>
@@ -19,7 +22,15 @@ namespace CodeStream.VisualStudio.Packages
             { "VS Live Share", ExtensionKind.LiveShare }
         };
 
-        public static Lazy<Dictionary<ExtensionKind, bool>> InstalledExtensions = new Lazy<Dictionary<ExtensionKind, bool>>(
+        private static ILogger _log;
+
+        public static Lazy<Dictionary<ExtensionKind, bool>> Initialize(ILogger log)
+        {
+            _log = log;
+            return InstalledExtensions;
+        }
+
+        private static readonly Lazy<Dictionary<ExtensionKind, bool>> InstalledExtensions = new Lazy<Dictionary<ExtensionKind, bool>>(
             () =>
             {
                 var installedExtensions = new Dictionary<ExtensionKind, bool>();
@@ -34,10 +45,12 @@ namespace CodeStream.VisualStudio.Packages
                     domain = AppDomain.CreateDomain($"CodeStream-{Guid.NewGuid()}",
                         AppDomain.CurrentDomain.Evidence,
                         appDomainSetup);
+                    _log.Verbose($"AppDomain created");
 
                     var path =
                         $@"\dlls\{Application.VisualStudioVersionYear}\Microsoft.VisualStudio.ExtensionManager.dll";
                     var assembly = domain.LoadFromDisk(path);
+                    _log.Verbose($"AppDomain loaded assembly. Path={path}");
 
                     var installedExtensionsList = PackageExtensions.Invoke<IEnumerable<dynamic>>(
                         assembly.GetType("Microsoft.VisualStudio.ExtensionManager.SVsExtensionManager"),
@@ -58,12 +71,13 @@ namespace CodeStream.VisualStudio.Packages
                         if (ExtensionMap.TryGetValue(name, out ExtensionKind kind))
                         {
                             installedExtensions[kind] = true;
+                            _log.Verbose($"Found installed extension=`{name}`");
                         }
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    //sufffffffffer
+                    _log.Error(ex, "Extension");
                 }
                 finally
                 {
@@ -72,11 +86,12 @@ namespace CodeStream.VisualStudio.Packages
                         if (domain != null)
                         {
                             AppDomain.Unload(domain);
+                            _log.Verbose($"AppDomain unloaded");
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        //sufffffffffer
+                        _log.Error(ex, "Extension");
                     }
                 }
 

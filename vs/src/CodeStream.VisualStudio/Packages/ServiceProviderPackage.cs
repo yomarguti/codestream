@@ -1,4 +1,5 @@
-﻿using CodeStream.VisualStudio.Events;
+﻿using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Settings;
 using Microsoft.VisualStudio;
@@ -78,7 +79,7 @@ namespace CodeStream.VisualStudio.Packages
             if (typeof(SIdeService) == serviceType)
                 return new IdeService(
                     GetService(typeof(SVsTextManager)) as IVsTextManager2,
-                        ExtensionManager.InstalledExtensions.Value);
+                    ExtensionManager.Initialize(LogManager.ForContext<ExtensionManagerDummy>()).Value);
             if (typeof(SCredentialsService) == serviceType)
                 return new CredentialsService();
             if (typeof(SSessionService) == serviceType)
