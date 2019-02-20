@@ -411,7 +411,10 @@ namespace CodeStream.VisualStudio.Services
 
             if (disposing)
             {
-                _rpc.Disconnected -= Rpc_Disconnected;
+                if (_rpc != null)
+                {
+                    _rpc.Disconnected -= Rpc_Disconnected;
+                }
             }
 
             _disposed = true;
