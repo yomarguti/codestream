@@ -2,11 +2,10 @@
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
 using EnvDTE;
-using Microsoft.VisualStudio.ExtensionManager;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
@@ -27,7 +26,7 @@ namespace CodeStream.VisualStudio.Services
         ShowCodeResult OpenEditor(Uri fileUri, int? scrollTo = null);
         TextSelection GetTextSelected();
         TextSelection GetTextSelected(out IVsTextView view);
-        bool QueryExtensions(string author, params string[] names);
+        //bool QueryExtensions(string author, params string[] names);
         bool QueryExtension(ExtensionKind extensionKind);
         bool TryStartLiveShare();
         bool TryJoinLiveShare(string url);
@@ -51,12 +50,12 @@ namespace CodeStream.VisualStudio.Services
         private static readonly ILogger Log = LogManager.ForContext<IdeService>();
 
         private readonly IVsTextManager2 _iIVsTextManager;
-        private readonly IVsExtensionManager _extensionManager;
+        private readonly Dictionary<ExtensionKind, bool> _extensions;
 
-        public IdeService(IVsTextManager2 iIVsTextManager, IVsExtensionManager extensionManager)
+        public IdeService(IVsTextManager2 iIVsTextManager, Dictionary<ExtensionKind, bool> extensions)
         {
             _iIVsTextManager = iIVsTextManager;
-            _extensionManager = extensionManager;
+            _extensions = extensions;
         }
 
         /// <summary>
@@ -147,35 +146,30 @@ namespace CodeStream.VisualStudio.Services
             };
         }
 
-        public bool QueryExtensions(string author, params string[] names)
-        {
-            if (_extensionManager == null)
-            {
-                Log.Debug($"{nameof(_extensionManager)} is null");
-                return false;
-            }
+		// someday, this can return...
+        //public bool QueryExtensions(string author, params string[] names)
+        //{
+        //    if (_extensionManager == null)
+        //    {
+        //        Log.Debug($"{nameof(_extensionManager)} is null");
+        //        return false;
+        //    }
 
-            foreach (var extension in _extensionManager.GetInstalledExtensions())
-            {
-                IExtensionHeader header = extension.Header;
-                if (!header.SystemComponent &&
-                    header.Author.EqualsIgnoreCase(author) && names.Any(_ => _.EqualsIgnoreCase(header.Name)))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
+        //    foreach (var extension in _extensionManager.GetInstalledExtensions())
+        //    {
+        //        IExtensionHeader header = extension.Header;
+        //        if (!header.SystemComponent &&
+        //            header.Author.EqualsIgnoreCase(author) && names.Any(_ => _.EqualsIgnoreCase(header.Name)))
+        //        {
+        //            return true;
+        //        }
+        //    }
+        //    return false;
+        //}
 
         public bool QueryExtension(ExtensionKind extensionKind)
         {
-            if (extensionKind == ExtensionKind.LiveShare)
-            {
-                return QueryExtensions("microsoft", "VS Live Share - Preview", "VS Live Share");
-            }
-
-            throw new ArgumentException("extensionKind");
+            return _extensions.TryGetValue(extensionKind, out bool value) && value;
         }
 
         public bool TryStartLiveShare()

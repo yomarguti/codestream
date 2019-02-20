@@ -41,7 +41,14 @@ namespace CodeStream.VisualStudio
         /// <summary>
         /// Something like `15.9.123.4567`
         /// </summary>
-        public static string VisualStudioVersion { get; }
+        public static string VisualStudioVersionString { get; }
+
+        /// <summary>
+        /// Something like `15.9.123.4567`
+        /// </summary>
+        public static Version VisualStudioVersion { get; }
+
+        public static string VisualStudioVersionYear { get; }
 
         /// <summary>
         /// Path to the log directory. C:\Users\{User}\AppData\Local\CodeStream\Logs\. Ends with a backslash.
@@ -83,7 +90,17 @@ namespace CodeStream.VisualStudio
             TempDataPath = Path.Combine(tempData, "Data") + @"\";
 
             VisualStudioName = fileVersionInfo.FileDescription;
-            VisualStudioVersion = fileVersionInfo.ProductVersion;
+            VisualStudioVersionString = fileVersionInfo.ProductVersion;
+            VisualStudioVersion= Version.Parse(fileVersionInfo.ProductVersion);
+
+            if (VisualStudioVersion.Major == 15)
+            {
+                VisualStudioVersionYear = "2017";
+            }
+            else if (VisualStudioVersion.Major == 16)
+            {
+                VisualStudioVersionYear = "2019";
+            }
         }
     }
 }

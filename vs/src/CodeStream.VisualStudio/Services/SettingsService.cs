@@ -188,7 +188,7 @@ namespace CodeStream.VisualStudio.Services
             return new Ide
             {
                 Name = Application.IdeMoniker,
-                Version = Application.VisualStudioVersion
+                Version = Application.VisualStudioVersionString
             };
         }
 

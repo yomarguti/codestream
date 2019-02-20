@@ -18,7 +18,7 @@ namespace CodeStream.VisualStudio.Packages
                                                          ");
             Log.Information(
                 "Initializing CodeStream Extension v{PackageVersion} in {$VisualStudioName} ({$VisualStudioVersion})",
-                Application.ExtensionVersionShort, Application.VisualStudioName, Application.VisualStudioVersion);
+                Application.ExtensionVersionShort, Application.VisualStudioName, Application.VisualStudioVersionString);
         }
     }
 }

@@ -1,15 +1,14 @@
-﻿using System;
-using System.ComponentModel.Design;
-using System.Runtime.InteropServices;
-using System.Threading;
-using CodeStream.VisualStudio.Events;
+﻿using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Settings;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ExtensionManager;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
+using System;
+using System.ComponentModel.Design;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace CodeStream.VisualStudio.Packages
 {
@@ -52,7 +51,8 @@ namespace CodeStream.VisualStudio.Packages
             await base.InitializeAsync(cancellationToken, progress);
 
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-            
+
+
             var callback = new ServiceCreatorCallback(CreateService);
             _codeStreamOptions = (OptionsDialogPage)GetDialogPage(typeof(OptionsDialogPage));
 
@@ -71,19 +71,18 @@ namespace CodeStream.VisualStudio.Packages
         {
             if (typeof(SToolWindowProvider) == serviceType)
                 return this;
+            if (typeof(SSettingsService) == serviceType)
+                return new SettingsService(_codeStreamOptions);
             if (typeof(SEventAggregator) == serviceType)
                 return new EventAggregator();
             if (typeof(SIdeService) == serviceType)
                 return new IdeService(
                     GetService(typeof(SVsTextManager)) as IVsTextManager2,
-                    GetService(typeof(SVsExtensionManager)) as IVsExtensionManager
-                );
+                        ExtensionManager.InstalledExtensions.Value);
             if (typeof(SCredentialsService) == serviceType)
                 return new CredentialsService();
             if (typeof(SSessionService) == serviceType)
                 return new SessionService();
-            if (typeof(SSettingsService) == serviceType)
-                return new SettingsService(_codeStreamOptions);
             if (typeof(SCodeStreamAgentService) == serviceType)
                 return new CodeStreamAgentService(
                     GetService(typeof(SSessionService)) as ISessionService,
@@ -156,7 +155,7 @@ namespace CodeStream.VisualStudio.Packages
             ThreadHelper.ThrowIfNotOnUIThread();
 
             if (!TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame)) return;
-            
+
             frame.Show();
         }
 
@@ -169,5 +168,5 @@ namespace CodeStream.VisualStudio.Packages
                 ErrorHandler.ThrowOnFailure(frame.IsVisible() == VSConstants.S_OK ? frame.Hide() : frame.Show());
             }
         }
-    }     
+    }
 }

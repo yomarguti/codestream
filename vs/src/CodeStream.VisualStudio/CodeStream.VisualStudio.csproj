@@ -117,10 +117,12 @@
     <Compile Include="Events\EventArgs.cs" />
     <Compile Include="Extensions\ColorExtensions.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
+    <Compile Include="Extensions\DynamicExtensions.cs" />
     <Compile Include="Extensions\FileSystemExtensions.cs" />
     <Compile Include="Extensions\Guard.cs" />
     <Compile Include="Extensions\JsonExtensions.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
+    <Compile Include="Extensions\PackageExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\EnumExtensions.cs" />
     <Compile Include="Extensions\UriExtensions.cs" />
@@ -141,6 +143,7 @@
     <Compile Include="Models\Types.cs" />
     <Compile Include="Packages\AsyncPackageHelper.cs" />
     <Compile Include="Packages\CodeStreamPackage.cs" />
+    <Compile Include="Packages\ExtensionManager.cs" />
     <Compile Include="Packages\ServiceProviderPackage.cs" />
     <Compile Include="Packages\WebViewPackage.cs" />
     <Compile Include="Process\ProcessFactory.cs" />
@@ -202,6 +205,14 @@
     <Content Include="LSP\ContentDefinitions.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ContentDefinitions.cs</LastGenOutput>
+    </Content>
+    <Content Include="..\dlls\2017\Microsoft.VisualStudio.ExtensionManager.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\dlls\2019\Microsoft.VisualStudio.ExtensionManager.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="LSP\FileExtensionExclusions.txt" />
     <Content Include="LSP\FileExtensionsGeneric.txt" />
@@ -358,12 +369,6 @@
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Editor, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.VisualStudio.Editor.15.8.525\lib\net46\Microsoft.VisualStudio.Editor.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.ExtensionEngine">
-      <HintPath>..\dlls\Microsoft.VisualStudio.ExtensionEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.ExtensionManager">
-      <HintPath>..\dlls\Microsoft.VisualStudio.ExtensionManager.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.ImageCatalog, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.VisualStudio.ImageCatalog.15.9.28307\lib\net45\Microsoft.VisualStudio.ImageCatalog.dll</HintPath>

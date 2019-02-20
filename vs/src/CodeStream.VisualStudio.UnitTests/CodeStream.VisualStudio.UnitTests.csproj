@@ -87,6 +87,7 @@
   <ItemGroup>
     <Compile Include="Core\Logging\Sanitizer\SecretsSanitizingFormatRuleTests.cs" />
     <Compile Include="Events\EventAggregatorTests.cs" />
+    <Compile Include="Extensions\DynamicExtensionsTests.cs" />
     <Compile Include="LSP\CustomCamelCasePropertyNamesContractResolverTests.cs" />
     <Compile Include="Models\IpcTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
