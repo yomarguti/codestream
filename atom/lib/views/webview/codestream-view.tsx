@@ -1,20 +1,20 @@
 import { shell } from "electron";
 import * as React from "react";
 import { render, unmountComponentAtNode } from "react-dom";
-import { Container, actions } from "codestream-components";
+import { Container, actions, listenForEvents } from "codestream-components";
 import translations from "codestream-components/translations/en";
 import { CompositeDisposable } from "atom";
 import { WorkspaceSession } from "lib/workspace/workspace-session";
 import { LoginResult } from "../../shared/api.protocol";
 import {
-	Target,
 	GoToSlackSignin,
 	GoToSlackSigninResult,
 	ValidateSignup,
 	ValidateSignupResult,
-	Command,
 } from "codestream-components/ipc/commands";
-import { DidChangeDataNotification, ChangeDataType, CSUnreads } from "../../shared/agent.protocol";
+import { DataChangedEvent } from "codestream-components/ipc/events";
+import { Target, IpcMessage, CommandMessage, EventType } from "codestream-components/ipc/common";
+import { DidChangeDataNotification } from "../../shared/agent.protocol";
 
 export const CODESTREAM_VIEW_URI = "atom://codestream";
 
@@ -49,21 +49,8 @@ export class CodestreamView {
 		this.subscriptions.add(this.session.agent.onDidChangeData(this.onDidChangeSessionData));
 	}
 
-	private onDidChangeSessionData = ({ type, data }: DidChangeDataNotification) => {
-		switch (type) {
-			case ChangeDataType.Preferences: {
-				return this.store.dispatch(actions.updatePreferences(data));
-			}
-			case ChangeDataType.Unreads: {
-				return this.store.dispatch(actions.updateUnreads(data as CSUnreads));
-			}
-			default: {
-				this.store.dispatch({
-					type: `ADD_${type.toUpperCase()}`,
-					payload: data,
-				});
-			}
-		}
+	private onDidChangeSessionData = (data: DidChangeDataNotification) => {
+		this.sendEvent(DataChangedEvent, data);
 	};
 
 	private render() {
@@ -118,18 +105,24 @@ export class CodestreamView {
 	}
 
 	private setupWebviewListeners() {
-		this.port.onmessage = ({ data }: { data: { id: string; command: Command } }) => {
-			if (data.command.target === Target.Extension)
-				this.handleWebviewCommand(data.id, data.command);
-			if (data.command.target === Target.Agent) this.forwardWebviewCommand(data.id, data.command);
+		listenForEvents(this.store);
+
+		this.port.onmessage = ({ data }: { data: IpcMessage }) => {
+			switch (data.type) {
+				case "command": {
+					if (data.target === Target.Extension) this.handleWebviewCommand(data);
+					if (data.target === Target.Agent) this.forwardWebviewCommand(data);
+					break;
+				}
+			}
 		};
 	}
-	private async forwardWebviewCommand(id: string, command: Command) {
+	private async forwardWebviewCommand(command: CommandMessage) {
 		const response = await this.session.agent!.sendRequest(command.name, command.params);
-		this.respond({ id, result: response });
+		this.respond({ id: command.id, result: response });
 	}
 
-	private async handleWebviewCommand(id: string, command: Command) {
+	private async handleWebviewCommand(command: CommandMessage) {
 		switch (command.name) {
 			case GoToSlackSignin.name: {
 				const ok = shell.openExternal(
@@ -137,10 +130,10 @@ export class CodestreamView {
 						this.session.environment.webAppUrl
 					}/service-auth/slack?state=${this.session.getSignupToken()}`
 				);
-				if (ok) this.respond<GoToSlackSigninResult>({ id, result: true });
+				if (ok) this.respond<GoToSlackSigninResult>({ id: command.id, result: true });
 				else {
 					this.respond({
-						id,
+						id: command.id,
 						error: "No app found to open url",
 					});
 				}
@@ -148,10 +141,10 @@ export class CodestreamView {
 			}
 			case ValidateSignup.name: {
 				const status = await this.session.loginViaSignupToken(command.params);
-				if (status !== LoginResult.Success) this.respond({ id, error: status });
+				if (status !== LoginResult.Success) this.respond({ id: command.id, error: status });
 				else {
 					const data = await this.session.getBootstrapData();
-					this.respond<ValidateSignupResult>({ id, result: data });
+					this.respond<ValidateSignupResult>({ id: command.id, result: data });
 				}
 				break;
 			}
@@ -162,6 +155,16 @@ export class CodestreamView {
 	}
 
 	private respond<R = any>(message: { id: string; result: R } | { id: string; error: any }): void {
-		this.port.postMessage(message);
+		this.port.postMessage({
+			...message,
+			type: (message as any).error ? "command-result-error" : "command-result",
+		});
+	}
+
+	private sendEvent<ET extends EventType<any>>(
+		eventType: ET,
+		params: ET extends EventType<infer P> ? P : never
+	) {
+		this.port.postMessage({ type: "event", name: eventType.name, params });
 	}
 }

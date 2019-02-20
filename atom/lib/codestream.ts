@@ -1,6 +1,6 @@
 import { CompositeDisposable, Disposable } from "atom";
 import { CodestreamView, CODESTREAM_VIEW_URI } from "./views/webview/codestream-view";
-import { actions, createStore, HostApi } from "codestream-components";
+import { actions, createStore, } from "codestream-components";
 import { StatusBar, Tile } from "./types/package-services/status-bar";
 import { WorkspaceSession, SessionStatus } from "./workspace/workspace-session";
 import { PackageState } from "./types/package";
@@ -25,7 +25,7 @@ class CodestreamPackage {
 
 	// Package lifecyle 1
 	async initialize() {
-		this.store = createStore(this.workspaceSession.getBootstrapState(), { api: HostApi.instance });
+		this.store = createStore(this.workspaceSession.getBootstrapState());
 
 		this.workspaceSession.onDidChangeSessionStatus(status => {
 			this.sessionStatusCommand && this.sessionStatusCommand.dispose();
