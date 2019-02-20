@@ -11,17 +11,6 @@ export class TelemetryManager {
 	constructor(session: CodeStreamSession) {
 		// TODO: Respect VSCode telemetry opt out
 		this._telemetry = new TelemetryService(session, false);
-		session
-			.ready()
-			.then(() => session.api.getPreferences())
-			.then(({ preferences }) => {
-				// legacy consent
-				if ("telemetryConsent" in preferences) {
-					this.setConsent(preferences.telemetryConsent!);
-				} else {
-					this.setConsent(!Boolean(preferences.telemetryOptOut));
-				}
-			});
 	}
 
 	setConsent(hasConsented: boolean) {
@@ -34,6 +23,10 @@ export class TelemetryManager {
 
 	setSuperProps(props: { [key: string]: string | number | boolean }) {
 		this._telemetry.setSuperProps(props);
+	}
+
+	ready (): Promise<void> {
+		return this._telemetry.ready();
 	}
 
 	@debug()

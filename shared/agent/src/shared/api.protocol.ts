@@ -400,3 +400,7 @@ export interface CSTrackSlackPostRequest {
 	postId: string;
 	parentPostId?: string;
 }
+
+export interface CSGetTelemetryKeyResponse {
+	key: string;
+}

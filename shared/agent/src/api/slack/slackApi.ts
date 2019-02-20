@@ -1252,6 +1252,11 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
+	async getTelemetryKey(): Promise<string> {
+		return this._codestream.getTelemetryKey();
+	}
+
+	@log()
 	updateCodemark(request: UpdateCodemarkRequest) {
 		return this._codestream.updateCodemark(request);
 	}

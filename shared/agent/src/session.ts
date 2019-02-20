@@ -582,7 +582,7 @@ export class CodeStreamSession {
 		return env.toLowerCase();
 	}
 
-	private initializeTelemetry(user: CSMe, team: CSTeam, companies: CSCompany[]) {
+	private async initializeTelemetry(user: CSMe, team: CSTeam, companies: CSCompany[]) {
 		// Set super props
 		this._telemetryData.hasCreatedPost = user.totalPosts > 0;
 
@@ -620,6 +620,7 @@ export class CodeStreamSession {
 		}
 
 		const { telemetry } = Container.instance();
+		await telemetry.ready();
 		telemetry.identify(this._codestreamUserId!, props);
 		telemetry.setSuperProps(props);
 		telemetry.track({ eventName: "Agent Started" });

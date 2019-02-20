@@ -247,6 +247,7 @@ export interface ApiProvider {
 	getPreferences(): Promise<GetPreferencesResponse>;
 	updatePresence(request: UpdatePresenceRequest): Promise<UpdatePresenceResponse>;
 	setCodemarkStatus(request: SetCodemarkStatusRequest): Promise<SetCodemarkStatusResponse>;
+	getTelemetryKey(): Promise<string>;
 
 	// createFileStream(request: CreateFileStreamRequest): Promise<CreateFileStreamResponse>;
 	fetchFileStreams(request: FetchFileStreamsRequest): Promise<FetchFileStreamsResponse>;

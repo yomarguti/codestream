@@ -2,7 +2,6 @@
 
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
-import { CodeStreamEnvironment } from "../shared/agent.protocol";
 
 // FIXME: sorry, typescript purists: i simply gave up trying to get the type definitions for this module to work
 const Analytics = require("analytics-node");
@@ -12,6 +11,9 @@ export class TelemetryService {
 	private _superProps: object;
 	private _distinctId?: string;
 	private _hasOptedOut: boolean;
+	private _session: CodeStreamSession;
+	private _readyPromise: Promise<void>;
+	private _onReady: () => void = () => {};
 
 	/**
 	 * @param {boolean} hasOptedOut - Has the user opted out of tracking?
@@ -24,29 +26,55 @@ export class TelemetryService {
 	) {
 		Logger.debug("AnalyticsService created");
 
+		this._session = session;
 		this._superProps = {};
 		this._hasOptedOut = false;
 
-		const segmentToken =
-			session.environment === CodeStreamEnvironment.Production
-				? "34JaWg6wRO8Pq77fhs2VfVleHPuKG1bX"
-				: "2lVxem4MsNFt28vNqEJr6PuR7HgE1P5T";
-		const settings =
-			session.environment === CodeStreamEnvironment.Production
-				? {}
-				: { flushAt: 1 };
+		session
+			.ready()
+			.then(() => this.initialize())
+			.then(() => session.api.getPreferences())
+			.then(({ preferences }) => {
+				// legacy consent
+				if ("telemetryConsent" in preferences) {
+					this.setConsent(preferences.telemetryConsent!);
+				} else {
+					this.setConsent(!Boolean(preferences.telemetryOptOut));
+				}
+			});
 
+		const props = { ...opts, Endpoint: session.versionInfo.ide.name };
+		this._superProps = props;
+		this._hasOptedOut = hasOptedOut;
+
+		this._readyPromise = new Promise<void>(resolve => {
+			this._onReady = () => {
+				Logger.debug("Telemetry is ready");
+				resolve();
+			};
+		});
+	}
+
+	async ready () {
+		return this._readyPromise;
+	}
+
+	async initialize () {
+		Logger.debug("Initializing telemetry...");
+		let token;
 		try {
-			Logger.debug("COLIN USING " + segmentToken, settings);
-			this._segmentInstance = new Analytics(segmentToken, settings);
+			token = await this._session.api.getTelemetryKey();
 		} catch (ex) {
 			Logger.error(ex);
 		}
 
-		const props = { ...opts, Endpoint: session.versionInfo.ide.name };
-
-		this._superProps = props;
-		this._hasOptedOut = hasOptedOut;
+		try {
+			this._segmentInstance = new Analytics(token);
+		} catch (ex) {
+			Logger.error(ex);
+		}
+		Logger.debug("Telemetry initialized");
+		this._onReady();
 	}
 
 	identify(id: string, props?: { [key: string]: any }) {
@@ -56,6 +84,7 @@ export class TelemetryService {
 		}
 
 		try {
+			Logger.debug(`Telemetry identify ${this._distinctId}`);
 			this._segmentInstance.identify({
 				userId: this._distinctId,
 				traits: props
@@ -101,7 +130,6 @@ export class TelemetryService {
 		}
 
 		try {
-			Logger.debug(`COLIN Tracking ${event} for ${this._distinctId}`, payload);
 			this._segmentInstance.track({
 				userId: this._distinctId,
 				event,

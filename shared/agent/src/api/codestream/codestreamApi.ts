@@ -93,6 +93,7 @@ import {
 	CSGetStreamsResponse,
 	CSGetTeamResponse,
 	CSGetTeamsResponse,
+	CSGetTelemetryKeyResponse,
 	CSGetUserResponse,
 	CSGetUsersResponse,
 	CSInviteUserRequest,
@@ -939,6 +940,13 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	async getPreferences() {
 		return { preferences: this._preferences!.get() };
+	}
+
+	@log()
+	async getTelemetryKey(): Promise<string> {
+		const telemetrySecret = "placeholder"; // "T3l3m3try";
+		const response = await this.get<CSGetTelemetryKeyResponse>(`/no-auth/telemetry-key?secret=${telemetrySecret}`);
+		return response.key;
 	}
 
 	@log()
