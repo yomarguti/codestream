@@ -2,3 +2,4 @@ license.jar
 .idea/dictionaries
 src/main/resources/webview/webview.css
 src/main/resources/webview/webview.js
+*.class

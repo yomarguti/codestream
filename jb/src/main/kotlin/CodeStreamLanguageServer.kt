@@ -1,5 +1,7 @@
 package com.codestream
 
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
 import org.eclipse.lsp4j.ServerCapabilities
 import org.eclipse.lsp4j.jsonrpc.services.JsonRequest
 import org.eclipse.lsp4j.services.LanguageServer
@@ -8,7 +10,10 @@ import java.util.concurrent.CompletableFuture
 interface CodeStreamLanguageServer : LanguageServer {
 
     @JsonRequest("codeStream/login")
-    fun login(params: Map<String, Any>): CompletableFuture<LoginResult>
+    fun login(params: Map<String, Any?>): CompletableFuture<JsonElement>
+
+    @JsonRequest("codeStream/logout")
+    fun logout(params: LogoutParams): CompletableFuture<JsonElement>
 
     @JsonRequest("codeStream/repos")
     fun fetchRepos(params: FetchReposParams): CompletableFuture<FetchReposResult>
@@ -67,10 +72,4 @@ class FetchUsersResult {
 
 class FetchUsersParams
 
-class LoginResult {
-    var capabilities: ServerCapabilities? = null
-    var result: Map<String, Object>? = null
-}
-
-class LoginParams(val email: String?, val password: String?)
-
+class LogoutParams

@@ -11,6 +11,7 @@ import com.teamdev.jxbrowser.chromium.swing.BrowserView
 
 class WebViewService(val project: Project) : Disposable {
 
+    private val url = "file:///Users/mfarias/Code/jetbrains-codestream/src/main/resources/webview/webview.html"
     private val logger = Logger.getInstance(WebViewService::class.java)
     private val router = WebViewRouter(project)
     private val browser = createBrowser(router)
@@ -18,7 +19,6 @@ class WebViewService(val project: Project) : Disposable {
 
     init {
         // TODO extract assets from JAR to temp dir (or have them bundled as a single file)
-        val url = "file:///Users/mfarias/Code/jetbrains-codestream/src/main/resources/webview/webview.html"
         browser.loadURL(url)
     }
 
@@ -31,6 +31,10 @@ class WebViewService(val project: Project) : Disposable {
         logger.info("Disposing JxBrowser")
         browser?.dispose()
         BrowserCore.shutdown()
+    }
+
+    fun reload() {
+        browser.loadURL(url)
     }
 
     private fun createBrowser(router: WebViewRouter): Browser {

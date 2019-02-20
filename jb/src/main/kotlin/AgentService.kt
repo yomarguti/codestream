@@ -1,18 +1,21 @@
 package com.codestream
 
-import com.fasterxml.jackson.annotation.JsonInclude
+import com.github.salomonbrys.kotson.*
 import com.google.gson.JsonElement
+import com.google.gson.annotations.SerializedName
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.future.await
-import org.eclipse.lsp4j.ClientCapabilities
-import org.eclipse.lsp4j.InitializeParams
-import org.eclipse.lsp4j.TextDocumentClientCapabilities
-import org.eclipse.lsp4j.WorkspaceClientCapabilities
+import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.RemoteEndpoint
 import org.eclipse.lsp4j.launch.LSPLauncher
 import java.io.File
+import kotlin.collections.Map
+import kotlin.collections.MutableMap
+import kotlin.collections.mapOf
+import kotlin.collections.mutableMapOf
+import kotlin.collections.set
 
 
 class AgentService(val project: Project) {
@@ -42,166 +45,59 @@ class AgentService(val project: Project) {
                 "--stdio",
                 "--log=/Users/mfarias/Code/jetbrains-codestream/build/idea-sandbox/system/log/agent.log"
             ).start()
-
-            val client = CodeStreamLanguageClient(webViewService)
-
-//            val jsonConfigurator: Consumer<GsonBuilder> = { builder -> println(builder) }
-
-
-//            val serializer = object : JsonSerializer<Merchant>() {
-//                fun serialize(src: Merchant, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-//                    val jsonMerchant = JsonObject()
-//
-//                    jsonMerchant.addProperty("Id", src.getId())
-//
-//                    return jsonMerchant
-//                }
-//            }
-//
-//            val gsonConfigurator = { t: GsonBuilder? ->
-//
-//            }
+            val client = CodeStreamLanguageClient(project)
             val launcher = LSPLauncher.Builder<CodeStreamLanguageServer>()
                 .setLocalService(client)
                 .setRemoteInterface(CodeStreamLanguageServer::class.java)
                 .setInput(process.inputStream)
                 .setOutput(process.outputStream)
-//                .configureGson(gsonConfigurator)
                 .create()
 
-//            val launcher2 = LSPLauncher.createClientLauncher(client, process.inputStream, process.outputStream)
-//            LSPLauncher.create
             server = launcher.remoteProxy
             remoteEndpoint = launcher.remoteEndpoint
-//            client.conne
-            val launcherFuture = launcher.startListening()
+            launcher.startListening()
 
 
             val initializeFuture = server.initialize(getInitializeParams())
-
-             initializeFuture.handle { t, u ->
-                {
-                    println("handle")
-                    println(t)
-                    logger.info(u)
-                }
-            }
-//            initializeFuture.thenApply {  }
-
-
-//            initializeFuture.handle((s, t) -> s != null ? s : "Hello, Stranger!");
-            initializeFuture.thenApply { res ->
-                {
-                    logger.info("Initialized $res")
-                }
-            }
-
-            val result = initializeFuture.get()
-            println(result)
-//            initializeFuture.h
-
-
-//            server.initialize(initParams).thenApply(res -> {
-            //                initializeResult = res
-//                LOG.info("Got initializeResult for " + serverDefinition + " ; " + rootPath)
-//                requestManager = new SimpleRequestManager(this, languageServer, client, res.getCapabilities)
-//                setStatus(STARTED)
-//                res
-//            })
-
-
-//            val client = MyLanguageClient()
-//            val launcher = LSPLauncher.createClientLauncher(client, input, output)
-//            client.setServer(launcher.remoteProxy)
-//            launcher.startListening()
-
+            initializeFuture.get()
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
-
-//        try {
-//            val (inputStream, outputStream) = serverDefinition.start(rootPath)
-//            client = serverDefinition.createLanguageClient
-//            val initParams = new InitializeParams
-//                    initParams.setRootUri(FileUtils.pathToUri(rootPath))
-//            val launcher = LSPLauncher.createClientLauncher(client, inputStream, outputStream)
-//
-//            this.languageServer = launcher.getRemoteProxy
-//            client.connect(languageServer, this)
-//            this.launcherFuture = launcher.startListening
-//            //TODO update capabilities when implemented
-//            val workspaceClientCapabilities = new WorkspaceClientCapabilities
-//                    workspaceClientCapabilities.setApplyEdit(true)
-//            //workspaceClientCapabilities.setDidChangeConfiguration(new DidChangeConfigurationCapabilities)
-//            workspaceClientCapabilities.setDidChangeWatchedFiles(new DidChangeWatchedFilesCapabilities)
-//            workspaceClientCapabilities.setExecuteCommand(new ExecuteCommandCapabilities)
-//            workspaceClientCapabilities.setWorkspaceEdit(new WorkspaceEditCapabilities(true))
-//            workspaceClientCapabilities.setSymbol(new SymbolCapabilities)
-//            workspaceClientCapabilities.setWorkspaceFolders(false)
-//            workspaceClientCapabilities.setConfiguration(false)
-//            val textDocumentClientCapabilities = new TextDocumentClientCapabilities
-//                    textDocumentClientCapabilities.setCodeAction(new CodeActionCapabilities)
-//            //textDocumentClientCapabilities.setCodeLens(new CodeLensCapabilities)
-//            //textDocumentClientCapabilities.setColorProvider(new ColorProviderCapabilities)
-//            textDocumentClientCapabilities.setCompletion(new CompletionCapabilities(new CompletionItemCapabilities(false)))
-//            textDocumentClientCapabilities.setDefinition(new DefinitionCapabilities)
-//            textDocumentClientCapabilities.setDocumentHighlight(new DocumentHighlightCapabilities)
-//            //textDocumentClientCapabilities.setDocumentLink(new DocumentLinkCapabilities)
-//            //textDocumentClientCapabilities.setDocumentSymbol(new DocumentSymbolCapabilities)
-//            //textDocumentClientCapabilities.setFoldingRange(new FoldingRangeCapabilities)
-//            textDocumentClientCapabilities.setFormatting(new FormattingCapabilities)
-//            textDocumentClientCapabilities.setHover(new HoverCapabilities)
-//            //textDocumentClientCapabilities.setImplementation(new ImplementationCapabilities)
-//            textDocumentClientCapabilities.setOnTypeFormatting(new OnTypeFormattingCapabilities)
-//            textDocumentClientCapabilities.setRangeFormatting(new RangeFormattingCapabilities)
-//            textDocumentClientCapabilities.setReferences(new ReferencesCapabilities)
-//            textDocumentClientCapabilities.setRename(new RenameCapabilities)
-//            textDocumentClientCapabilities.setSemanticHighlightingCapabilities(new SemanticHighlightingCapabilities(false))
-//            textDocumentClientCapabilities.setSignatureHelp(new SignatureHelpCapabilities)
-//            textDocumentClientCapabilities.setSynchronization(new SynchronizationCapabilities(true, true, true))
-//            //textDocumentClientCapabilities.setTypeDefinition(new TypeDefinitionCapabilities)
-//            initParams.setCapabilities(new ClientCapabilities(workspaceClientCapabilities, textDocumentClientCapabilities, null))
-//            initParams.setInitializationOptions(this.serverDefinition.getInitializationOptions(URI.create(initParams.getRootUri)))
-//            initializeFuture = languageServer.initialize(initParams).thenApply((res: InitializeResult) => {
-//                initializeResult = res
-//                LOG.info("Got initializeResult for " + serverDefinition + " ; " + rootPath)
-//                requestManager = new SimpleRequestManager(this, languageServer, client, res.getCapabilities)
-//                setStatus(STARTED)
-//                res
-//            })
-//            initializeStartTime = System.currentTimeMillis
-//        } catch {
-//            case e@(_: LSPException | _: IOException) =>
-//            LOG.warn(e)
-//            ApplicationUtils.invokeLater(() => Messages.showErrorDialog("Can't start server, please check settings\n" + e.getMessage, "LSP Error"))
-//            stop()
-//            removeServerWrapper()
-//        }
     }
 
     private fun getInitializeParams(email: String? = null, passwordOrToken: String? = null): InitializeParams {
         val workspaceClientCapabilities = WorkspaceClientCapabilities()
         workspaceClientCapabilities.configuration = true
+        workspaceClientCapabilities.didChangeConfiguration = DidChangeConfigurationCapabilities(false)
         val textDocumentClientCapabilities = TextDocumentClientCapabilities()
         val clientCapabilities =
             ClientCapabilities(workspaceClientCapabilities, textDocumentClientCapabilities, null)
         val initParams = InitializeParams()
         initParams.capabilities = clientCapabilities
-        initParams.initializationOptions = mapOf(
+        initParams.initializationOptions = initializationOptions().apply {
+            "email" to email
+            "passwordOrToken" to passwordOrToken
+        }
+
+        initParams.rootUri = File(project.basePath).toURI().toString()
+        return initParams
+    }
+
+    private fun initializationOptions(): MutableMap<String, Any?> {
+        return mutableMapOf(
             "traceLevel" to "debug",
             "extension" to mapOf("versionFormatted" to "6.6.6"),
             "ide" to mapOf(
                 "name" to "IntelliJ",
                 "version" to "666"
             ),
-            "serverUrl" to settingsService.serverUrl,
-            "email" to email,
-            "passwordOrToken" to passwordOrToken
+            "serverUrl" to settingsService.serverUrl
         )
+    }
 
-        initParams.rootUri = File(project.basePath).toURI().toString()
-        return initParams
+    suspend fun sendRequest(id: String, action: String, params: JsonElement?) {
+        val result = remoteEndpoint.request(action, params).await()
+        webViewService.postMessage(Ipc.toResponseMessage(id, result, null))
     }
 
     suspend fun getBootstrapState(): BootstrapState {
@@ -238,8 +134,8 @@ class AgentService(val project: Project) {
                 openCommentOnSelect = settingsService.openCommentOnSelect
             }
 
-            currentTeamId = sessionService.teamId
-            currentUserId = sessionService.userId
+            currentUserId = sessionService.userLoggedIn!!.state.userId
+            currentTeamId = sessionService.userLoggedIn!!.state.teamId
             env = settingsService.environmentName
             version = settingsService.environmentVersion
 
@@ -252,99 +148,85 @@ class AgentService(val project: Project) {
         }
 
         return state
-
-
-
-
-
-
-
-
-//            state.currentTeamId = this.session.team.id;
-//            state.currentUserId = this.session.userId;
-//            state.env = this.session.environment;
-//            state.version = Container.versionFormatted;
-//
-//            if (this._uiContext) state.context = this._uiContext;
-//
-//            const [
-//                    reposResponse,
-//                    streamsResponse,
-//                    teamsResponse,
-//                    unreadsResponse,
-//                    usersResponse,
-//                    preferencesResponse
-//            ] = await promise;
-//
-//            state.repos = reposResponse.repos;
-//            state.streams = streamsResponse.streams;
-//            state.teams = teamsResponse.teams;
-//            state.unreads = unreadsResponse.unreads;
-//            state.users = usersResponse.users;
-//            state.preferences = preferencesResponse.preferences;
-//
-//            if (this._streamThread !== undefined) {
-//                state.currentStreamId = this._streamThread.stream.id;
-//                state.currentThreadId = this._streamThread.id;
-//            }
-//
-//            return state;
     }
-
-//    fun getBootstrap(settings: Settings, state: Any? = null, isAuthenticated: Boolean = false): Bootstrap {
-//        logger.info("getBootstrap")
-//
-//        val capabilities = Capabilities(false, false, false, Services(false)) // state?[]
-//
-//        if (!isAuthenticated) {
-//            val configs = Configs(
-//                settingsService.serverUrl,
-//                settingsService.email,
-//                settingsService.openCommentOnSelect,
-//                settingsService.showHeadshots,
-//                settingsService.showMarkers,
-//                settings.muteAll,
-//                settingsService.team
-//            )
-//            return Bootstrap(capabilities, configs, settingsService.environmentName, settingsService.environmentVersion)
-//        } else {
-//            TODO("marcelo not implemented")
-//        }
-//    }
 
     suspend fun login(email: String?, password: String?): LoginResult {
-        val initParams = getInitializeParams(email, password)
-        return server.login(initParams.initializationOptions as Map<String, Any>).await()
+        val params = initializationOptions()
+        params["email"] = email
+        params["passwordOrToken"] = password
+        return login(params)
     }
 
+    suspend fun loginViaOneTimeCode(token: String): LoginResult {
+        val params = initializationOptions()
+        params["signupToken"] = token
+        return login(params)
+    }
 
-//        return JToken.FromObject(new
-//        {
-//            capabilities = capabilities,
-//            configs = new
-//            {
-//                serverUrl = _settingsService.ServerUrl,
-//                email = _settingsService.Email,
-//                openCommentOnSelect = _settingsService.OpenCommentOnSelect,
-//                showHeadshots = _settingsService.ShowHeadshots,
-//                showMarkers = _settingsService.ShowMarkers,
-//                muteAll = settings.MuteAll,
-//                team = _settingsService.Team
-//            },
-//            env = _settingsService.GetEnvironmentName(),
-//            version = _settingsService.GetEnvironmentVersionFormatted()
-//        });
-//        println("bla")
-//    }
+    private suspend fun login(params: Map<String, Any?>): LoginResult {
+        val jsonElement = server.login(params).await()
+        return LoginResult(jsonElement)
+    }
 
-    suspend fun sendRequest(id: String, action: String, params: JsonElement) {
-        val result = remoteEndpoint.request(action, params).await()
-        webViewService.postMessage(Ipc.toResponseMessage(id, result.toString(), null))
+    suspend fun logout() {
+        server.logout(LogoutParams()).await()
     }
 
 }
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+class LoginResult(private val jsonElement: JsonElement) {
+    val userLoggedIn: UserLoggedIn
+        get() {
+            val team = teams.find { it.id == teamId }
+            return UserLoggedIn(user, team!!, state, teams.size)
+        }
+
+    val error: String?
+        get() {
+            return jsonElement["result"].obj.get("error")?.nullString
+        }
+
+    private val state: LoginState by lazy {
+        var stateJson = jsonElement["result"]["state"]
+        gson.fromJson<LoginState>(stateJson)
+    }
+
+    private val user: CSUser by lazy {
+        val userJson = jsonElement["result"]["loginResponse"]["user"]
+        gson.fromJson<CSUser>(userJson)
+    }
+
+    private val teamId: String by lazy {
+        jsonElement["result"]["loginResponse"]["teamId"].string
+    }
+
+    private val teams: List<CSTeam> by lazy {
+        val teamsJson = jsonElement["result"]["loginResponse"]["teams"]
+        gson.fromJson<List<CSTeam>>(teamsJson)
+    }
+}
+
+class LoginState {
+    lateinit var userId: String
+    lateinit var teamId: String
+    lateinit var email: String
+}
+
+class UserLoggedIn(val user: CSUser, val team: CSTeam, val state: LoginState, val teamsCount: Int)
+
+class CSUser {
+    @SerializedName("_id")
+    lateinit var id: String
+    lateinit var username: String
+    lateinit var email: String
+}
+
+class CSTeam {
+    @SerializedName("_id")
+    lateinit var id: String
+    lateinit var name: String
+}
+
 class BootstrapState {
     var capabilities: Capabilities? = null
     var configs: Configs? = null
@@ -360,7 +242,6 @@ class BootstrapState {
     var preferences: Map<String, Any>? = null
 }
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
 class Configs {
     var serverUrl: String? = null
     var email: String? = null

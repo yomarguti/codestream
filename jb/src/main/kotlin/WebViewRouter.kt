@@ -1,5 +1,6 @@
 package com.codestream
 
+import com.github.salomonbrys.kotson.*
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.intellij.openapi.components.ServiceManager
@@ -36,30 +37,29 @@ class WebViewRouter(val project: Project) {
         if (bodyElement == null || bodyElement.isJsonNull) {
             return
         }
-        val body = bodyElement.asJsonObject
 
+        val body = bodyElement.asJsonObject
         val action = body.get("action").asString
         val id = body.get("id").asString
-
         val params = body.get("params")
+
         when (action) {
             "bootstrap" -> authenticationService.bootstrap(id)
             "authenticate" -> authenticationService.authenticate(
                 id,
-                params.asJsonObject.get("email").asString,
-                params.asJsonObject.get("password").asString
+                params["email"].nullString,
+                params["password"].nullString
             )
             "go-to-signup" -> authenticationService.goToSignup(id)
             "go-to-slack-signin" -> authenticationService.goToSlackSignin(id)
-            "validate-signup" -> authenticationService.validateSignup(id) //, bodyElement.Params?.Value<string>())
-            "show-markers",
+            "validate-signup" -> authenticationService.validateSignup(id, params?.asString)
+            "show-markers" -> Unit
             "open-comment-on-select" -> Unit
             "mute-all" -> Unit
             "show-code" -> Unit
+            "sign-out" -> authenticationService.signout()
             else -> agentService.sendRequest(id, action, params)
         }
-
-
     }
 
     private fun parse(json: String): WebViewMessage {

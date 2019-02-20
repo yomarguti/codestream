@@ -29,6 +29,7 @@ dependencies {
     implementation files("$rootDir/license.jar")
 
     implementation group: "org.eclipse.lsp4j", name: "org.eclipse.lsp4j", version: "0.6.0"
+    implementation "com.github.salomonbrys.kotson:kotson:2.5.0"
 
 //    testImplementation group: "junit", name: "junit", version: "4.12"
 }
