@@ -1,6 +1,6 @@
 import { CompositeDisposable, Disposable } from "atom";
-import { CodestreamView, CODESTREAM_VIEW_URI } from "./views/webview/codestream-view";
-import { actions, createStore, } from "codestream-components";
+import { CodestreamView, CODESTREAM_VIEW_URI } from "./views/codestream-view";
+import { actions, createStore } from "codestream-components";
 import { StatusBar, Tile } from "./types/package-services/status-bar";
 import { WorkspaceSession, SessionStatus } from "./workspace/workspace-session";
 import { PackageState } from "./types/package";

@@ -5,7 +5,7 @@ import { Container, actions, listenForEvents } from "codestream-components";
 import translations from "codestream-components/translations/en";
 import { CompositeDisposable } from "atom";
 import { WorkspaceSession } from "lib/workspace/workspace-session";
-import { LoginResult } from "../../shared/api.protocol";
+import { LoginResult } from "../shared/api.protocol";
 import {
 	GoToSlackSignin,
 	GoToSlackSigninResult,
@@ -14,7 +14,7 @@ import {
 } from "codestream-components/ipc/commands";
 import { DataChangedEvent } from "codestream-components/ipc/events";
 import { Target, IpcMessage, CommandMessage, EventType } from "codestream-components/ipc/common";
-import { DidChangeDataNotification } from "../../shared/agent.protocol";
+import { DidChangeDataNotification } from "../shared/agent.protocol";
 
 export const CODESTREAM_VIEW_URI = "atom://codestream";
 
