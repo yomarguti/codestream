@@ -944,8 +944,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	async getTelemetryKey(): Promise<string> {
-		const telemetrySecret = "placeholder"; // "T3l3m3try";
-		const response = await this.get<CSGetTelemetryKeyResponse>(`/no-auth/telemetry-key?secret=${telemetrySecret}`);
+		const telemetrySecret = "84$gTe^._qHm,#D";
+		const response = await this.get<CSGetTelemetryKeyResponse>(`/no-auth/telemetry-key?secret=${encodeURIComponent(telemetrySecret)}`);
 		return response.key;
 	}
 
