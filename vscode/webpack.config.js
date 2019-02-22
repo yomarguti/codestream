@@ -74,7 +74,7 @@ function getExtensionConfig(env) {
 	}
 
 	const plugins = [
-		new CleanPlugin(["dist"], { verbose: false }),
+		new CleanPlugin(["dist/agent*", "dist/extension*"], { verbose: false }),
 		new FileManagerPlugin({
 			onStart: onStart,
 			onEnd: [
