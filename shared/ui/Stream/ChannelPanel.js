@@ -6,12 +6,11 @@ import {
 	changeStreamMuteState,
 	closeDirectMessage,
 	createStream,
-	muteAllConversations,
-	setCurrentStream,
 	setUserPreference,
 	setChannelFilter,
 	openPanel
 } from "./actions";
+import { setCurrentStream } from "../store/context/actions";
 import {
 	getChannelStreamsForTeam,
 	getDirectMessageStreamsForTeam,
@@ -23,12 +22,13 @@ import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import Debug from "./Debug";
 import Button from "./Button";
-import CancelButton from "./CancelButton";
 import ChannelMenu from "./ChannelMenu";
 import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
 import { isInVscode, safe } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
+import { MuteAllConversationsRequestType } from "../ipc/webview.protocol";
+import { HostApi } from "../webview-api";
 
 export class SimpleChannelPanel extends Component {
 	constructor(props) {
@@ -147,7 +147,7 @@ export class SimpleChannelPanel extends Component {
 	};
 
 	toggleMuteAll = () => {
-		this.props.muteAllConversations(!this.props.muteAll);
+		HostApi.instance.send(MuteAllConversationsRequestType, { mute: !this.props.muteAll });
 	};
 
 	toggleMenu = event => {
@@ -829,7 +829,6 @@ export default connect(
 		createStream,
 		setUserPreference,
 		setCurrentStream,
-		muteAllConversations,
 		openPanel,
 		setChannelFilter
 	}

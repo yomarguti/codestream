@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import * as contextActions from "../store/context/actions";
 import _ from "underscore";
-import { createStream, openDirectMessage, setCurrentStream } from "./actions";
+import { createStream, openDirectMessage } from "./actions";
 import createClassString from "classnames";
 import { getDirectMessageStreamsForTeam, getDMName } from "../store/streams/reducer";
 import Button from "./Button";
@@ -319,7 +319,6 @@ export default connect(
 	{
 		...contextActions,
 		createStream,
-		setCurrentStream,
 		openDirectMessage
 	}
 )(SimpleCreateDMPanel);

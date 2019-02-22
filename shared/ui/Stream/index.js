@@ -21,9 +21,8 @@ import Menu from "./Menu";
 import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
-import { EventEmitter } from "../event-emitter";
 import * as actions from "./actions";
-import { isInVscode, safe, toMapBy } from "../utils";
+import { isInVscode, safe, toMapBy, arrayToRange } from "../utils";
 import { getSlashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
 import { getPostsForStream, getPost } from "../store/posts/reducer";
@@ -37,6 +36,19 @@ import {
 import { getCodemark } from "../store/codemarks/reducer";
 import { getTeamMembers } from "../store/users/reducer";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
+import { HostApi } from "../webview-api";
+import {
+	SignOutRequestType,
+	InviteToLiveShareRequestType,
+	StartLiveShareRequestType,
+	DidCloseThreadNotificationType,
+	DidOpenThreadNotificationType,
+	DidHighlightCodeNotificationType,
+	DidSelectStreamThreadNotificationType,
+	DidScrollEditorNotificationType
+} from "../ipc/webview.protocol";
+import { OpenUrlRequestType, TelemetryRequestType } from "../shared/agent.protocol";
+import { setCurrentStream } from "../store/context/actions";
 
 const EMAIL_MATCH_REGEX = new RegExp(
 	"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*",
@@ -58,9 +70,9 @@ export class SimpleStream extends Component {
 	componentDidMount() {
 		this.setUmiInfo();
 		this.disposables.push(
-			EventEmitter.on("interaction:stream-thread-selected", this.handleStreamThreadSelected),
-			EventEmitter.subscribe("interaction:code-highlighted", this.handleCodeHighlightEvent),
-			EventEmitter.subscribe("interaction:scrolled", this.handleTextEditorScrolledEvent)
+			HostApi.instance.on(DidSelectStreamThreadNotificationType, this.handleStreamThreadSelected),
+			HostApi.instance.on(DidHighlightCodeNotificationType, this.handleCodeHighlightEvent),
+			HostApi.instance.on(DidScrollEditorNotificationType, this.handleTextEditorScrolledEvent)
 		);
 
 		this.props.fetchCodemarks();
@@ -282,11 +294,13 @@ export class SimpleStream extends Component {
 	}
 
 	handleClickHelpLink = () => {
-		this.props.openUrl("https://help.codestream.com");
+		HostApi.instance.send(OpenUrlRequestType, { url: "https://help.codestream.com" });
 	};
 
 	handleClickFeedbackLink = () => {
-		this.props.openUrl("mailto:team@codestream.com?Subject=CodeStream Feedback");
+		HostApi.instance.send(OpenUrlRequestType, {
+			url: "mailto:team@codestream.com?Subject=CodeStream Feedback"
+		});
 	};
 
 	renderIntro = nameElement => {
@@ -717,7 +731,6 @@ export class SimpleStream extends Component {
 							textEditorUri={this.state.textEditorUri}
 							textEditorFirstLine={this.state.textEditorFirstLine}
 							textEditorLastLine={this.state.textEditorLastLine}
-							startCommentOnLine={this.props.startCommentOnLine}
 							focusInput={this.focusInput}
 							scrollDiv={this._contentScrollDiv}
 						/>
@@ -957,8 +970,6 @@ export class SimpleStream extends Component {
 				findMentionedUserIds={this.findMentionedUserIds}
 				isDirectMessage={this.props.postStreamType === "direct"}
 				isSlackTeam={this.props.isSlackTeam}
-				connectSlack={this.props.connectSlack}
-				connectService={this.props.connectService}
 				multiCompose={this.state.multiCompose}
 				floatCompose={this.state.floatCompose}
 				setMultiCompose={this.setMultiCompose}
@@ -988,8 +999,8 @@ export class SimpleStream extends Component {
 				return this.handleClickHelpLink();
 			case "feedback":
 				return this.handleClickFeedbackLink();
-			case "connect-slack":
-				return this.props.connectSlack();
+			// case "connect-slack":
+			// 	return this.props.connectSlack();
 			// case "disconnect-slack":
 			case "connect-trello":
 				return this.props.connectService("trello");
@@ -1016,7 +1027,7 @@ export class SimpleStream extends Component {
 			case "disconnect-bitbucket":
 				return this.props.disconnectService("bitbucket");
 			case "signout":
-				return this.props.signOut();
+				return HostApi.instance.send(SignOutRequestType);
 
 			default:
 				return;
@@ -1033,6 +1044,7 @@ export class SimpleStream extends Component {
 	};
 
 	toggleOpenCommentOnSelect = () => {
+		HostApi.instance.send({}, {});
 		this.props.openCommentOnSelectInEditor(!this.props.configs.openCommentOnSelect);
 	};
 
@@ -1126,7 +1138,9 @@ export class SimpleStream extends Component {
 				const marker = codemark.markers[0];
 
 				this.setMultiCompose(true, {
-					quote: marker ? { ...marker, location: marker.locationWhenCreated } : null,
+					quote: marker
+						? { ...marker, range: arrayToRange(marker.location || marker.locationWhenCreated) }
+						: null,
 					composeBoxProps: {
 						...this.state.composeBoxProps,
 						key: Math.random().toString(),
@@ -1172,14 +1186,9 @@ export class SimpleStream extends Component {
 		this.props.setThread(this.props.postStreamId);
 		// this.setActivePanel("main");
 		this.focusInput();
-		// if (track)
-		// 	EventEmitter.emit("analytics", {
-		// 		label: "Page Viewed",
-		// 		payload: { "Page Name": "Source Stream" }
-		// 	});
 	};
 
-	onThreadClosed = threadId => EventEmitter.emit("interaction:thread-closed", threadId);
+	onThreadClosed = threadId => HostApi.instance.send(DidCloseThreadNotificationType);
 
 	handleEditPost = event => {
 		var postDiv = event.target.closest(".post");
@@ -1366,7 +1375,7 @@ export class SimpleStream extends Component {
 		this.openThread(threadId, wasClicked);
 
 		if (wasClicked && post.codemark && !this.props.threadId) {
-			this.props.telemetry({
+			HostApi.instance.send(TelemetryRequestType, {
 				eventName: "Codemark Clicked",
 				properties: {
 					Location: "Stream"
@@ -1376,17 +1385,13 @@ export class SimpleStream extends Component {
 	};
 
 	openThread = (threadId, wasClicked = false) => {
-		// EventEmitter.emit("analytics", {
-		// 	label: "Page Viewed",
-		// 	payload: { "Page Name": "Thread View" }
-		// });
 		this.setState({ threadTrigger: wasClicked && threadId });
 		this.props.setThread(this.props.postStreamId, threadId);
 		// this.setActivePanel("thread");
 
 		this.focusInput();
 		if (wasClicked) {
-			EventEmitter.emit("interaction:thread-selected", {
+			HostApi.instance.send(DidOpenThreadNotificationType, {
 				threadId,
 				streamId: this.props.postStreamId
 			});
@@ -1548,7 +1553,7 @@ export class SimpleStream extends Component {
 		}
 		if (args) {
 			const oldName = this.props.postStreamName;
-			const newStream = await this.props.renameStream(this.props.postStreamId, args);
+			const { payload: newStream } = await this.props.renameStream(this.props.postStreamId, args);
 			if (newStream && newStream.name === args) {
 				if (!this.props.isSlackTeam) {
 					this.submitPost({ text: "/me renamed the channel from #" + oldName + " to #" + args });
@@ -1587,7 +1592,7 @@ export class SimpleStream extends Component {
 			return this.submitSystemPost(text);
 		}
 		if (args) {
-			const newStream = await this.props.setPurpose(this.props.postStreamId, args);
+			const { payload: newStream } = await this.props.setPurpose(this.props.postStreamId, args);
 			if (newStream.purpose === args) {
 				if (!this.props.isSlackTeam) {
 					this.submitPost({ text: "/me set the channel purpose to " + args });
@@ -1750,22 +1755,14 @@ export class SimpleStream extends Component {
 	};
 
 	inviteToLiveShare = userId => {
-		EventEmitter.emit("telemetry", {
+		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Start Live Share",
 			properties: {
 				"Start Location": "Headshot"
 			}
 		});
 
-		EventEmitter.emit("interaction:svc-request", {
-			service: "vsls",
-			action: {
-				type: "invite",
-				userId: userId,
-				createNewStream: false
-			}
-		});
-
+		HostApi.instance.send(InviteToLiveShareRequestType, { userId, createNewStream: false });
 		return true;
 	};
 
@@ -1782,21 +1779,16 @@ export class SimpleStream extends Component {
 		const text = "Starting Live Share...";
 		this.submitSystemPost(text);
 
-		EventEmitter.emit("telemetry", {
+		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Start Live Share",
 			properties: {
 				"Start Location": liveShareStartLocation
 			}
 		});
-
-		EventEmitter.emit("interaction:svc-request", {
-			service: "vsls",
-			action: {
-				type: "start",
-				streamId: postStreamId,
-				threadId: threadId,
-				createNewStream: false
-			}
+		HostApi.instance.send(StartLiveShareRequestType, {
+			threadId,
+			streamId: postStreamId,
+			createNewStream: false
 		});
 
 		return true;
@@ -1945,16 +1937,7 @@ export class SimpleStream extends Component {
 					message: () => (
 						<span>
 							{warning.message + " "}
-							<a
-								// onClick={e => {
-								// 	e.preventDefault();
-								// 	EventEmitter.emit(
-								// 		"interaction:clicked-link",
-								// 		"https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues"
-								// 	);
-								// }}
-								href="https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues"
-							>
+							<a href="https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues">
 								Learn more
 							</a>
 						</span>
@@ -2046,16 +2029,7 @@ export class SimpleStream extends Component {
 					message: () => (
 						<span>
 							{warning.message + " "}
-							<a
-								// onClick={e => {
-								// 	e.preventDefault();
-								// 	EventEmitter.emit(
-								// 		"interaction:clicked-link",
-								// 		"https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues"
-								// 	);
-								// }}
-								href="https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues"
-							>
+							<a href="https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues">
 								Learn more
 							</a>
 						</span>
@@ -2233,6 +2207,7 @@ const mapStateToProps = state => {
 export default connect(
 	mapStateToProps,
 	{
-		...actions
+		...actions,
+		setCurrentStream
 	}
 )(injectIntl(SimpleStream));

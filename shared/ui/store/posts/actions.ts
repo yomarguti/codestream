@@ -2,7 +2,7 @@ import { CSPost } from "../../shared/api.protocol";
 import { action } from "../common";
 import { PendingPost, Post, PostsActionsType } from "./types";
 
-export { reset } from "../actions";
+export const reset = () => action("RESET");
 
 export const bootstrapPosts = (posts: Post[]) => action(PostsActionsType.Bootstrap, posts);
 

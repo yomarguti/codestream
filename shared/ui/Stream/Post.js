@@ -8,7 +8,7 @@ import Icon from "./Icon";
 import Timestamp from "./Timestamp";
 import PostDetails from "./PostDetails";
 import RetrySpinner from "./RetrySpinner";
-import { retryPost, cancelPost, showCode } from "./actions";
+import { retryPost, cancelPost } from "./actions";
 import ContentEditable from "react-contenteditable";
 import Button from "./Button";
 import Menu from "./Menu";
@@ -24,8 +24,9 @@ import _ from "underscore";
 import { reactToPost } from "./actions";
 import { safe } from "../utils";
 import { getUsernamesById, getNormalizedUsernames } from "../store/users/reducer";
-import { getFeatures } from "../toggles";
 import { getProviderInfo } from "./CrossPostIssueControls/types";
+import { ShowCodeRequestType } from "../ipc/webview.protocol";
+import { HostApi } from "../webview-api";
 
 // let renderCount = 0;
 class Post extends React.Component {
@@ -67,7 +68,10 @@ class Post extends React.Component {
 		const marker = hasMarkers && codemark.markers[0];
 		if (marker) {
 			if (marker.repoId) {
-				const status = await this.props.showCode(marker, enteringThread);
+				const status = await HostApi.instance.send(ShowCodeRequestType, {
+					marker,
+					enteringThread
+				});
 				if (status === "SUCCESS") {
 					this.setState({ warning: null });
 				} else {
@@ -783,5 +787,5 @@ const mapStateToProps = (state, props) => {
 
 export default connect(
 	mapStateToProps,
-	{ cancelPost, retryPost, showCode, reactToPost }
+	{ cancelPost, retryPost, reactToPost }
 )(injectIntl(Post));

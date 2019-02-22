@@ -1,14 +1,16 @@
 import * as React from "react";
 import { connect } from "react-redux";
-import { openUrl } from "./actions";
+import { OpenUrlRequestType } from "../shared/agent.protocol";
+import { HostApi } from "../webview-api";
 
 interface Props {
 	useHref?: boolean;
 	href?: string;
 	onClick?(event: React.SyntheticEvent): any;
+	children: JSX.Element;
 }
 
-function Link(props) {
+function Link(props: Props) {
 	let href;
 	let onClick;
 	if (props.useHref) {
@@ -18,7 +20,7 @@ function Link(props) {
 			props.onClick ||
 			function(event: React.SyntheticEvent) {
 				event.preventDefault();
-				props.openUrl(props.href);
+				HostApi.instance.send(OpenUrlRequestType, { url: props.href! });
 			};
 	}
 
@@ -28,9 +30,6 @@ function Link(props) {
 const mapStateToProps = (state, props: Props) => ({
 	useHref: props.href && state.capabilities.openLink
 });
-const Component = connect(
-	mapStateToProps,
-	{ openUrl }
-)(Link);
+const Component = connect(mapStateToProps)(Link);
 
 export { Component as Link };

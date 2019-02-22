@@ -2,7 +2,7 @@ import { CSCodemark } from "../../shared/api.protocol";
 import { action } from "../common";
 import { CodemarksActionsTypes } from "./types";
 
-export { reset } from "../actions";
+export const reset = () => action("RESET");
 
 export const addCodemarks = (codemarks: CSCodemark[]) =>
 	action(CodemarksActionsTypes.AddCodemarks, codemarks);

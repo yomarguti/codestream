@@ -1,5 +1,4 @@
 import { AnyAction } from "redux";
-import WebviewApi from "../webview-api";
 
 export type StringType = string;
 
@@ -34,8 +33,4 @@ export interface Action<T> extends AnyAction {
 
 export interface Index<T> {
 	[key: string]: T;
-}
-
-export interface ThunkExtras {
-	api: WebviewApi;
 }

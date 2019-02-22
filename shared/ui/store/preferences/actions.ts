@@ -1,7 +1,7 @@
 import { action } from "../common";
 import { PreferencesActionsType, State } from "./types";
 
-export { reset } from "../actions";
+export const reset = () => action("RESET");
 
 export const setPreferences = (preferences: Partial<State>) =>
 	action(PreferencesActionsType.Set, preferences);

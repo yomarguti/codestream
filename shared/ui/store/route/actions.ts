@@ -1,7 +1,7 @@
 import { action } from "../common";
 import { RouteActionsType } from "./types";
 
-export { reset } from "../actions";
+export const reset = () => action("RESET");
 
 export const goToCompleteSignup = (params = {}) => action(RouteActionsType.CompleteSignup, params);
 

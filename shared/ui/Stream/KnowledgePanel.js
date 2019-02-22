@@ -10,6 +10,9 @@ import Tooltip from "./Tooltip";
 import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
 import Codemark from "./Codemark";
+import { HostApi } from "../webview-api";
+import { TelemetryRequestType } from "../shared/agent.protocol";
+import { ShowCodeRequestType, ShowMarkersInEditorRequestType } from "../ipc/webview.protocol";
 
 export class SimpleKnowledgePanel extends Component {
 	disposables = [];
@@ -375,10 +378,14 @@ export class SimpleKnowledgePanel extends Component {
 		});
 	};
 
-	toggleShowMarkers = () => {
+	toggleShowMarkers = async () => {
 		const showMarkers = !this.props.showMarkers;
-		this.props.showMarkersInEditor(showMarkers);
-		this.setState({ showMarkers });
+		try {
+			await HostApi.instance.send(ShowMarkersInEditorRequestType, { enable: showMarkers });
+			this.setState({ showMarkers });
+		} catch (error) {
+			logError(`Error toggling marker visibility: ${error}`);
+		}
 		// this.props.telemetry({
 		// 	eventName: "Codemarks View Toggled",
 		// 	properties: {
@@ -389,13 +396,18 @@ export class SimpleKnowledgePanel extends Component {
 	};
 
 	handleClickCodemark = codemark => {
-		this.props.telemetry({
+		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Codemark Clicked",
 			properties: {
 				Location: "Codemarks Tab"
 			}
 		});
-		if (codemark.markers) this.props.showCode(codemark.markers[0], true);
+
+		if (codemark.markers)
+			HostApi.instance.send(ShowCodeRequestType, {
+				marker: codemark.markers[0],
+				enteringThread: true
+			});
 		this.props.setThread(codemark.streamId, codemark.parentPostId || codemark.postId);
 		// const isOpen = this.state.openPost === id;
 		// if (isOpen) this.setState({ openPost: null });

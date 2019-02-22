@@ -1,9 +1,10 @@
-import { EventEmitter } from "../../event-emitter";
+import { DidChangeContextStateNotificationType } from "../../ipc/webview.protocol";
+import { HostApi } from "../../webview-api";
 import { ContextActionsType, State as Context } from "../context/types";
 
 export const contextChangeObserver = store => next => (action: { type: string }) => {
 	if (action.type === ContextActionsType.SetFocusState) {
-		return;
+		return next(action);
 	}
 	const oldContext = store.getState().context;
 	const result = next(action);
@@ -11,7 +12,7 @@ export const contextChangeObserver = store => next => (action: { type: string })
 
 	window.requestIdleCallback(() => {
 		if (notEqual(oldContext, newContext)) {
-			EventEmitter.emit("interaction:context-state-changed", newContext);
+			HostApi.instance.send(DidChangeContextStateNotificationType, { state: newContext });
 		}
 	});
 
@@ -39,7 +40,10 @@ interface RequestIdleCallbackDeadline {
 
 declare global {
 	interface Window {
-		requestIdleCallback(callback: (deadline: RequestIdleCallbackDeadline) => void, opts?: RequestIdleCallbackOptions): RequestIdleCallbackHandle;
+		requestIdleCallback(
+			callback: (deadline: RequestIdleCallbackDeadline) => void,
+			opts?: RequestIdleCallbackOptions
+		): RequestIdleCallbackHandle;
 		cancelIdleCallback(handle: RequestIdleCallbackHandle): void;
 	}
 }

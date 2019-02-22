@@ -5,6 +5,7 @@ import { connect } from "react-redux";
 import Select from "react-select";
 import _ from "underscore";
 import { Range } from "vscode-languageserver-protocol";
+import { FetchAssignableUsersRequestType } from "../shared/agent.protocol";
 import {
 	CodemarkType,
 	CSChannelStream,
@@ -17,11 +18,11 @@ import {
 import { getStreamForId, getStreamForTeam } from "../store/streams/reducer";
 import { Stream } from "../store/streams/types";
 import { mapFilter } from "../utils";
-import { connectSlack, fetchAssignableUsers } from "./actions";
+import { HostApi } from "../webview-api";
 import Button from "./Button";
 import CancelButton from "./CancelButton";
 import CrossPostIssueControls from "./CrossPostIssueControls";
-import { Board, CardValues, Service } from "./CrossPostIssueControls/types";
+import { Board, CardValues } from "./CrossPostIssueControls/types";
 import Icon from "./Icon";
 import Menu from "./Menu";
 import { PostCompose } from "./PostCompose";
@@ -51,8 +52,6 @@ interface Props {
 	onClickClose(): any;
 	renderMessageInput(props: { [key: string]: any }): JSX.Element;
 	openCodemarkForm(): any;
-	connectSlack(): any;
-	fetchAssignableUsers(service: string, boardId: string): any;
 	slackInfo?: {};
 	codeBlock?: {
 		file?: string;
@@ -81,7 +80,7 @@ interface State {
 	notify: boolean;
 	isLoading: boolean;
 	crossPostMessage: boolean;
-	assignableUsers: { value: string; label: string }[];
+	assignableUsers: { value: any; label: string }[];
 	channelMenuOpen: boolean;
 	channelMenuTarget: any;
 	selectedChannelName?: string;
@@ -190,10 +189,11 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (board.singleAssignee) {
 			this.setState(state => (state.singleAssignee ? null : { singleAssignee: true }));
 		}
-		const { users } = await this.props.fetchAssignableUsers(
-			service,
-			board.apiIdentifier || board.id
-		);
+		const { users } = await HostApi.instance.send(FetchAssignableUsersRequestType, {
+			providerName: service,
+			boardId: board.apiIdentifier || board.id
+		});
+
 		this.setState({
 			assignableUsers: users.map(u => ({
 				value: u,
@@ -429,12 +429,12 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 	}
 
-	handleClickConnectSlack = async event => {
-		event.preventDefault();
-		this.setState({ isLoading: true });
-		await this.props.connectSlack(); // TODO: use the provider api
-		this.setState({ isLoading: false });
-	}
+	// handleClickConnectSlack = async event => {
+	// 	event.preventDefault();
+	// 	this.setState({ isLoading: true });
+	// 	await HostApi.instance.send(GoToSlackSignin); // TODO: use the provider api
+	// 	this.setState({ isLoading: false });
+	// }
 
 	renderCrossPostMessage = () => {
 		// if (this.props.slackInfo || this.props.providerInfo.slack) {
@@ -926,9 +926,6 @@ const mapStateToProps = state => {
 	};
 };
 
-const ConnectedCodemarkForm = connect(
-	mapStateToProps,
-	{ connectSlack, fetchAssignableUsers }
-)(CodemarkForm);
+const ConnectedCodemarkForm = connect(mapStateToProps)(CodemarkForm);
 
 export { ConnectedCodemarkForm as CodemarkForm };

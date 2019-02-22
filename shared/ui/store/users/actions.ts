@@ -2,7 +2,7 @@ import { CSUser } from "../../shared/api.protocol";
 import { action } from "../common";
 import { UsersActionsType } from "./types";
 
-export { reset } from "../actions";
+export const reset = () => action("RESET");
 
 export const bootstrapUsers = (users: CSUser[]) => action(UsersActionsType.Bootstrap, users);
 

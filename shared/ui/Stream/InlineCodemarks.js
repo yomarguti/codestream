@@ -9,9 +9,19 @@ import Codemark from "./Codemark";
 import Tooltip from "./Tooltip";
 import createClassString from "classnames";
 import { range } from "../utils";
+import { HostApi } from "../webview-api";
+import {
+	ShowCodeRequestType,
+	HighlightCodeRequestType,
+	RevealFileLineRequestType,
+	StartCommentOnLineRequestType,
+	ShowMarkersInEditorRequestType
+} from "../ipc/webview.protocol";
+import { TelemetryRequestType } from "../shared/agent.protocol";
 
 export class SimpleInlineCodemarks extends Component {
 	disposables = [];
+	editorMarkersEnabled = false;
 
 	constructor(props) {
 		super(props);
@@ -22,7 +32,7 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	componentDidMount() {
-		this.props.showMarkersInEditor(false);
+		HostApi.instance.send(ShowMarkersInEditorRequestType, { enable: this.editorMarkersEnabled });
 		this.props.fetchCodemarks();
 		// this.disposables.push(
 		// 	EventEmitter.subscribe("interaction:active-editor-changed", this.handleFileChangedEvent)
@@ -30,7 +40,7 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	componentWillUnmount() {
-		this.props.showMarkersInEditor(true);
+		HostApi.instance.send(ShowMarkersInEditorRequestType, { enable: true });
 		this.disposables.forEach(d => d.dispose());
 	}
 
@@ -125,15 +135,21 @@ export class SimpleInlineCodemarks extends Component {
 		// 2) 9 is half a line, because we want it to scroll halfway through the line
 		const line = Math.round((top - 27) / 18);
 		if (line < 0) return;
-		this.props.editorRevealLine(line);
+		HostApi.instance.send(RevealFileLineRequestType, { line });
 	};
 
 	toggleShowMarkers = () => {
-		this.props.telemetry({
+		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Codemarks View Toggled",
 			properties: {
-				"Direction": "List"
+				Direction: "List"
 			}
+		});
+
+		// TODO: test this when it spatial view is enabled
+		this.editorMarkersEnabled = !this.editorMarkersEnabled;
+		HostApi.instance.send(ShowMarkersInEditorRequestType, {
+			enable: this.editorMarkersEnabled
 		});
 		this.props.setActivePanel("knowledge");
 	};
@@ -189,21 +205,25 @@ export class SimpleInlineCodemarks extends Component {
 	handleClickPlus = event => {
 		event.preventDefault();
 		this.props.setNewPostEntry("Spatial View");
-		this.props.startCommentOnLine(
-			Number(event.currentTarget.dataset.linenum),
-			this.props.textEditorUri
-		);
+		HostApi.instance.send(StartCommentOnLineRequestType, {
+			line: Number(event.currentTarget.dataset.linenum),
+			uri: this.props.textEditorUri
+		});
 		setTimeout(() => this.props.focusInput(), 500);
 	};
 
 	handleClickCodemark = codemark => {
-		this.props.telemetry({
+		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Codemark Clicked",
 			properties: {
-				"Location": "Spatial View"
+				Location: "Spatial View"
 			}
 		});
-		if (codemark.markers) this.props.showCode(codemark.markers[0], true);
+		if (codemark.markers)
+			HostApi.instance.send(ShowCodeRequestType, {
+				marker: codemark.markers[0],
+				enteringThread: true
+			});
 		this.props.setThread(codemark.streamId, codemark.parentPostId || codemark.postId);
 		// const isOpen = this.state.openPost === id;
 		// if (isOpen) this.setState({ openPost: null });
@@ -212,12 +232,16 @@ export class SimpleInlineCodemarks extends Component {
 		// }
 	};
 
+	highlightCode(marker, value) {
+		HostApi.instance.send(HighlightCodeRequestType, { marker, value, source: "stream" });
+	}
+
 	handleHighlightCodemark = codemark => {
-		if (codemark.markers) this.props.highlightCode(codemark.markers[0], true);
+		if (codemark.markers) this.highlightCode(codemark.markers[0], true);
 	};
 
 	handleUnhighlightCodemark = codemark => {
-		if (codemark.markers) this.props.highlightCode(codemark.markers[0], false);
+		if (codemark.markers) this.highlightCode(codemark.markers[0], false);
 	};
 
 	toggleStatus = id => {

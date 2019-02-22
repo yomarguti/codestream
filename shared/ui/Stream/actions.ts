@@ -1,8 +1,43 @@
-import { EventEmitter } from "../event-emitter";
-import { logError, logWarning } from "../logger";
-import { CodemarkType, StreamType } from "../shared/api.protocol";
+import { DidChangeActiveStreamNotificationType } from "../ipc/webview.protocol";
+import { logError } from "../logger";
+import {
+	ArchiveStreamRequestType,
+	AsanaCreateCardRequestType,
+	BitbucketCreateCardRequestType,
+	CloseStreamRequestType,
+	CreateChannelStreamRequestType,
+	CreateChannelStreamResponse,
+	CreateDirectStreamRequestType,
+	CreateDirectStreamResponse,
+	CreateJiraCardRequestType,
+	CreatePostRequestType,
+	CreatePostResponse,
+	CreatePostWithMarkerRequestType,
+	DeletePostRequestType,
+	EditPostRequestType,
+	FetchCodemarksRequestType,
+	FetchPostRepliesRequestType,
+	FetchPostsRequestType,
+	GitHubCreateCardRequestType,
+	GitLabCreateCardRequestType,
+	InviteUserRequestType,
+	JoinStreamRequestType,
+	LeaveStreamRequestType,
+	MarkPostUnreadRequestType,
+	MarkStreamReadRequestType,
+	MuteStreamRequestType,
+	OpenStreamRequestType,
+	ReactToPostRequestType,
+	RenameStreamRequestType,
+	SetStreamPurposeRequestType,
+	TrelloCreateCardRequestType,
+	UnarchiveStreamRequestType,
+	UpdateCodemarkRequestType,
+	UpdatePreferencesRequestType,
+	UpdateStreamMembershipRequestType
+} from "../shared/agent.protocol";
+import { CSPost, StreamType } from "../shared/api.protocol";
 import { saveCodemarks, updateCodemarks } from "../store/codemarks/actions";
-import { ThunkExtras } from "../store/common";
 import {
 	closePanel,
 	openPanel,
@@ -15,11 +50,11 @@ import * as contextActions from "../store/context/actions";
 import * as postsActions from "../store/posts/actions";
 import { updatePreferences } from "../store/preferences/actions";
 import * as streamActions from "../store/streams/actions";
-import { getChannelStreamsForTeam, getDirectMessageStreamsForTeam } from "../store/streams/reducer";
 import { addUsers } from "../store/users/actions";
 import { uuid } from "../utils";
+import { HostApi } from "../webview-api";
 
-export { connectSlack, connectService } from "../Signup/actions";
+export { connectProvider as connectService, disconnectService } from "../store/context/actions";
 export {
 	openPanel,
 	closePanel,
@@ -29,44 +64,28 @@ export {
 	setChannelFilter
 };
 
-export const setCurrentStream = contextActions.setCurrentStream;
-
-export const markStreamRead = (streamId, postId) => (dispatch, getState, { api }: ThunkExtras) => {
-	if (!streamId) return;
-	api
-		.markStreamRead(streamId, postId)
+export const markStreamRead = (streamId: string, postId?: string) => () => {
+	HostApi.instance
+		.send(MarkStreamReadRequestType, { streamId, postId })
 		.catch(error => logError(`There was an error marking a stream read: ${error}`, { streamId }));
 };
 
-export const markPostUnread = (streamId, postId) => (dispatch, getState, { api }: ThunkExtras) => {
-	if (!postId) {
-		logWarning(`Attempted to mark an undefined postId as unread in stream (${streamId})`);
-		return;
-	}
-	api
-		.markPostUnread(streamId, postId)
+export const markPostUnread = (streamId: string, postId: string) => () => {
+	HostApi.instance
+		.send(MarkPostUnreadRequestType, { streamId, postId })
 		.catch(error =>
 			logError(`There was an error marking a post unread: ${error}`, { streamId, postId })
 		);
 };
 
-export const showMarkersInEditor = value => (dispatch, getState, { api }) => {
-	api.showMarkersInEditor(value);
-};
-
-export const muteAllConversations = value => (dispatch, getState, { api }) => {
-	api.muteAllConversations(value);
-};
-
-export const openCommentOnSelectInEditor = value => (dispatch, getState, { api }) => {
-	api.openCommentOnSelectInEditor(value);
-};
-
-export const createPost = (streamId, parentPostId, text, codemark, mentions, extra) => async (
-	dispatch,
-	getState,
-	{ api }: ThunkExtras
-) => {
+export const createPost = (
+	streamId: string,
+	parentPostId: string | undefined,
+	text: string,
+	codemark: any,
+	mentions: string[],
+	extra: any
+) => async (dispatch, getState) => {
 	const { session } = getState();
 	const pendingId = uuid();
 	dispatch(
@@ -82,29 +101,44 @@ export const createPost = (streamId, parentPostId, text, codemark, mentions, ext
 		})
 	);
 	try {
-		let responsePromise: ReturnType<typeof api.createPost>;
+		let responsePromise: Promise<CreatePostResponse>;
 		if (codemark) {
+			let externalProviderUrl;
+			let externalProvider;
+			let externalAssignees;
 			if (extra.crossPostIssueValues) {
-				const cardResponse = await dispatch(
-					createServiceCard(extra.crossPostIssueValues, codemark)
-				);
-				codemark.externalProviderUrl = cardResponse.url;
-				codemark.externalProvider = extra.crossPostIssueValues.provider;
-				codemark.externalAssignees = extra.crossPostIssueValues.assignees;
+				const cardResponse = await createServiceCard(extra.crossPostIssueValues, codemark);
+				if (cardResponse) {
+					externalProviderUrl = cardResponse.url;
+					externalProvider = extra.crossPostIssueValues.provider;
+					externalAssignees = extra.crossPostIssueValues.assignees;
+				}
 			}
-			responsePromise = api.createPostWithCodemark(
+			const block = codemark.markers[0] || {};
+			responsePromise = HostApi.instance.send(CreatePostWithMarkerRequestType, {
 				streamId,
-				{
-					parentPostId,
-					mentionedUserIds: mentions
-				},
-				codemark,
-				extra
-			);
-		} else {
-			responsePromise = api.createPost(streamId, text, {
+				text: codemark.text,
+				textDocument: { uri: extra.fileUri },
+				code: block.code,
+				range: block.range,
+				source: block.source,
+				title: codemark.title,
+				type: codemark.type,
+				assignees: codemark.assignees,
+				color: codemark.color,
 				mentionedUserIds: mentions,
+				entryPoint: extra.entryPoint,
+				externalProvider,
+				externalAssignees,
+				externalProviderUrl,
+				parentPostId
+			});
+		} else {
+			responsePromise = HostApi.instance.send(CreatePostRequestType, {
+				streamId,
+				text,
 				parentPostId,
+				mentionedUserIds: mentions,
 				entryPoint: extra.entryPoint
 			});
 		}
@@ -114,18 +148,18 @@ export const createPost = (streamId, parentPostId, text, codemark, mentions, ext
 			response.streams.forEach(stream => dispatch(streamActions.updateStream(stream)));
 		return dispatch(postsActions.resolvePendingPost(pendingId, response.post));
 	} catch (error) {
-		logError(`Error creating a post: ${error.message}`, {
+		logError(`Error creating a post: ${error}`, {
 			stackTrace: error.stack
 		});
 		return dispatch(postsActions.failPendingPost(pendingId));
 	}
 };
 
-export const retryPost = pendingId => async (dispatch, getState, { api }) => {
+export const retryPost = pendingId => async (dispatch, getState) => {
 	const { posts } = getState();
 	const pendingPost = posts.pending.find(post => post.id === pendingId);
 	if (pendingPost) {
-		const post = await api.createPost(pendingPost);
+		const { post } = await HostApi.instance.send(CreatePostRequestType, pendingPost);
 		return dispatch(postsActions.resolvePendingPost(pendingId, post));
 		// if it fails then what?
 	} else {
@@ -135,12 +169,13 @@ export const retryPost = pendingId => async (dispatch, getState, { api }) => {
 
 export const cancelPost = postsActions.cancelPendingPost;
 
-export const createSystemPost = (streamId, parentPostId, text, seqNum) => async (
-	dispatch,
-	getState
-) => {
-	const state = getState();
-	const { context } = state;
+export const createSystemPost = (
+	streamId: string,
+	parentPostId: string,
+	text: string,
+	seqNum: number | string
+) => async (dispatch, getState) => {
+	const { context } = getState();
 	const pendingId = uuid();
 
 	const post = {
@@ -161,23 +196,28 @@ export const createSystemPost = (streamId, parentPostId, text, seqNum) => async 
 	dispatch(postsActions.addPosts([post]));
 };
 
-export const editPost = (streamId, postId, text, mentionedUserIds) => async (
-	dispatch,
-	getState,
-	{ api }: ThunkExtras
-) => {
+export const editPost = (
+	streamId: string,
+	postId: string,
+	text: string,
+	mentionedUserIds?: string[]
+) => async dispatch => {
 	try {
-		const response = await api.editPost(streamId, postId, text, mentionedUserIds);
+		const response = await HostApi.instance.send(EditPostRequestType, {
+			streamId,
+			postId,
+			text,
+			mentionedUserIds
+		});
 		dispatch(postsActions.updatePost(response.post));
 	} catch (error) {
 		logError(`There was an error editing a post: ${error}`, { streamId, postId, text });
 	}
 };
 
-export const reactToPost = (post, emoji, value) => async (
+export const reactToPost = (post: CSPost, emoji: string, value: boolean) => async (
 	dispatch,
-	getState,
-	{ api }: ThunkExtras
+	getState
 ) => {
 	try {
 		const { session } = getState();
@@ -190,28 +230,28 @@ export const reactToPost = (post, emoji, value) => async (
 		dispatch(postsActions.updatePost({ ...post, reactions }));
 
 		// then update it for real on the API server
-		const response = await api.reactToPost(post.streamId, post.id, { [emoji]: value });
+		const response = await HostApi.instance.send(ReactToPostRequestType, {
+			streamId: post.streamId,
+			postId: post.id,
+			emojis: { [emoji]: value }
+		});
 		return dispatch(postsActions.updatePost(response.post));
 	} catch (error) {
 		logError(`There was an error reacting to a post: ${error}`, { post, emoji, value });
 	}
 };
 
-export const deletePost = (streamId, id) => async (dispatch, getState, { api }: ThunkExtras) => {
+export const deletePost = (streamId: string, postId: string) => async dispatch => {
 	try {
-		const { post } = await api.deletePost({ streamId, postId: id });
+		const { post } = await HostApi.instance.send(DeletePostRequestType, { streamId, postId });
 		return dispatch(postsActions.deletePost(post));
 	} catch (error) {
-		logError(`There was an error deleting a post: ${error}`, { streamId, postId: id });
+		logError(`There was an error deleting a post: ${error}`, { streamId, postId });
 	}
 };
 
 // usage: setUserPreference(["favorites", "shoes", "wedges"], "red")
-export const setUserPreference = (prefPath, value) => async (
-	dispatch,
-	getState,
-	{ api }: ThunkExtras
-) => {
+export const setUserPreference = (prefPath: string[], value: any) => async (dispatch, getState) => {
 	const { session, users } = getState();
 	const user = users[session.userId];
 	if (!user) return;
@@ -224,7 +264,7 @@ export const setUserPreference = (prefPath, value) => async (
 	const newPreference = {};
 	let newPreferencePointer = newPreference;
 	while (prefPath.length > 1) {
-		const part = prefPath.shift().replace(/\./g, "*");
+		const part = prefPath.shift()!.replace(/\./g, "*");
 		if (!preferencesPointer[part]) preferencesPointer[part] = {};
 		preferencesPointer = preferencesPointer[part];
 		newPreferencePointer[part] = {};
@@ -235,9 +275,9 @@ export const setUserPreference = (prefPath, value) => async (
 
 	try {
 		dispatch(updatePreferences(newPreference));
-		await api.saveUserPreference(newPreference);
+		await HostApi.instance.send(UpdatePreferencesRequestType, { preferences: newPreference });
 	} catch (error) {
-		logError(`Error trying to update preferences: ${error.message}`);
+		logError(`Error trying to update preferences: ${error}`);
 	}
 };
 
@@ -251,17 +291,22 @@ export const createStream = (
 				purpose?: string;
 		  }
 		| { type: StreamType.Direct; memberIds: string[] }
-) => async (dispatch, getState, { api }: ThunkExtras) => {
-	let responsePromise;
+) => async dispatch => {
+	let responsePromise: Promise<CreateChannelStreamResponse | CreateDirectStreamResponse>;
 	if (attributes.type === StreamType.Channel) {
-		responsePromise = api.createChannel(
-			attributes.name,
-			attributes.memberIds,
-			attributes.privacy,
-			attributes.purpose
-		);
+		responsePromise = HostApi.instance.send(CreateChannelStreamRequestType, {
+			type: StreamType.Channel,
+			name: attributes.name,
+			memberIds: attributes.memberIds,
+			privacy: attributes.privacy,
+			purpose: attributes.purpose,
+			isTeamStream: false
+		});
 	} else {
-		responsePromise = api.createDirectMessage(attributes.memberIds);
+		responsePromise = HostApi.instance.send(CreateDirectStreamRequestType, {
+			type: StreamType.Direct,
+			memberIds: attributes.memberIds
+		});
 	}
 
 	try {
@@ -274,15 +319,20 @@ export const createStream = (
 
 		return response.stream;
 	} catch (error) {
+		/* TODO: Handle errors
+				- handle name taken errors
+				- restricted actions
+				- users can't join
+		*/
 		logError(`There was an error creating a channel: ${error}`, attributes);
 	}
 };
 
-export const leaveChannel = streamId => async (dispatch, getState, { api }: ThunkExtras) => {
+export const leaveChannel = (streamId: string) => async (dispatch, getState) => {
 	const { context, session } = getState();
 
 	try {
-		const { stream } = await api.leaveStream(streamId);
+		const { stream } = await HostApi.instance.send(LeaveStreamRequestType, { streamId });
 		if (stream.privacy === "private") {
 			dispatch(streamActions.remove(streamId, context.currentTeamId));
 		} else {
@@ -294,7 +344,7 @@ export const leaveChannel = streamId => async (dispatch, getState, { api }: Thun
 			);
 		}
 		if (context.currentStreamId === streamId) {
-			EventEmitter.emit("interaction:changed-active-stream", undefined);
+			HostApi.instance.send(DidChangeActiveStreamNotificationType, {});
 			// this will take you to the #general channel
 			dispatch(contextActions.setCurrentStream(undefined));
 			// dispatch(setPanel("channels"));
@@ -304,107 +354,83 @@ export const leaveChannel = streamId => async (dispatch, getState, { api }: Thun
 	}
 };
 
-export const removeUsersFromStream = (streamId: string, userIds: string[]) => async (
-	dispatch,
-	getState,
-	{ api }: ThunkExtras
-) => {
+export const removeUsersFromStream = async (streamId: string, userIds: string[]) => {
 	try {
-		await api.removeUsersFromStream(streamId, userIds);
+		await HostApi.instance.send(UpdateStreamMembershipRequestType, {
+			streamId,
+			remove: userIds
+		});
 		// dispatch(streamActions.update(stream));
 	} catch (error) {
 		logError(`There was an error removing user(s) from a stream: ${error}`, { streamId, userIds });
 	}
 };
 
-export const addUsersToStream = (streamId: string, userIds: string[]) => async (
-	dispatch,
-	getState,
-	{ api }: ThunkExtras
-) => {
+export const addUsersToStream = async (streamId: string, userIds: string[]) => {
 	try {
-		await api.addUsersToStream(streamId, userIds);
+		await HostApi.instance.send(UpdateStreamMembershipRequestType, { streamId, add: userIds });
 		// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
 	} catch (error) {
 		logError(`There was an error adding user(s) to a stream: ${error}`, { streamId, userIds });
 	}
 };
 
-export const joinStream = streamId => async (dispatch, getState, { api }: ThunkExtras) => {
+export const joinStream = (streamId: string) => async dispatch => {
 	try {
-		const { stream } = await api.joinStream(streamId);
+		const { stream } = await HostApi.instance.send(JoinStreamRequestType, { streamId });
 		return dispatch(streamActions.updateStream(stream));
 	} catch (error) {
 		logError(`There was an error joining a stream: ${error}`, { streamId });
 	}
 };
 
-export const renameStream = (streamId, name) => async (
-	dispatch,
-	getState,
-	{ api }: ThunkExtras
-) => {
+export const renameStream = (streamId: string, name: string) => async dispatch => {
 	try {
-		const { stream } = await api.renameStream(streamId, name);
+		const { stream } = await HostApi.instance.send(RenameStreamRequestType, { streamId, name });
 		return dispatch(streamActions.updateStream(stream));
 	} catch (error) {
 		logError(`There was an error renaming a stream: ${error}`, { streamId, name });
 	}
 };
 
-export const setPurpose = (streamId, purpose) => async (dispatch, getState, { api }) => {
+export const setPurpose = (streamId: string, purpose: string) => async dispatch => {
 	try {
-		const { stream } = await api.setStreamPurpose(streamId, purpose);
+		const { stream } = await HostApi.instance.send(SetStreamPurposeRequestType, {
+			streamId,
+			purpose
+		});
 		return dispatch(streamActions.updateStream(stream));
 	} catch (error) {
 		logError(`There was an error setting stream purpose: ${error}`, { streamId });
 	}
 };
 
-export const archiveStream = (streamId, archive = true) => async (
-	dispatch,
-	getState,
-	{ api }: ThunkExtras
-) => {
+export const archiveStream = (streamId: string, archive = true) => async dispatch => {
 	try {
-		const { stream } = archive
-			? await api.archiveStream(streamId)
-			: await api.unarchiveStream(streamId);
+		const command = archive ? ArchiveStreamRequestType : UnarchiveStreamRequestType;
+		const { stream } = await HostApi.instance.send(command, { streamId });
 		if (stream) return dispatch(streamActions.updateStream(stream));
 	} catch (error) {
 		logError(`There was an error ${archive ? "" : "un"}archiving stream: ${error}`, { streamId });
 	}
 };
 
-export const trackEvent = (eventName, properties) => async (dispatch, getState, { api }) => {
-	console.log("(2) actions.js :: trackEvent called");
+export const invite = (attributes: { email: string; fullName?: string }) => async dispatch => {
 	try {
-		await api.trackEvent(eventName, properties);
-	} catch (error) {
-		console.log("Error: ", error);
-	}
-};
-
-export const invite = (attributes: { email: string; fullName?: string }) => async (
-	dispatch,
-	getState,
-	{ api }: ThunkExtras
-) => {
-	try {
-		const response = await api.invite(attributes);
+		const response = await HostApi.instance.send(InviteUserRequestType, attributes);
 		return dispatch(addUsers([response.user]));
 	} catch (error) {
 		logError(`There was an error inviting a user: ${error}`, attributes);
 	}
 };
 
-export const fetchPosts = (params: { streamId: string; limit?: number; before?: string }) => async (
-	dispatch,
-	getState,
-	{ api }: ThunkExtras
-) => {
+export const fetchPosts = (params: {
+	streamId: string;
+	limit?: number;
+	before?: string;
+}) => async dispatch => {
 	try {
-		const response = await api.fetchPosts(params);
+		const response = await HostApi.instance.send(FetchPostsRequestType, params);
 		dispatch(postsActions.addPostsForStream(params.streamId, response.posts));
 		response.codemarks && dispatch(saveCodemarks(response.codemarks));
 		return response;
@@ -413,13 +439,12 @@ export const fetchPosts = (params: { streamId: string; limit?: number; before?: 
 	}
 };
 
-export const fetchThread = (streamId, parentPostId) => async (
-	dispatch,
-	getState,
-	{ api }: ThunkExtras
-) => {
+export const fetchThread = (streamId: string, parentPostId: string) => async dispatch => {
 	try {
-		const { posts, codemarks } = await api.fetchThread(streamId, parentPostId);
+		const { posts, codemarks } = await HostApi.instance.send(FetchPostRepliesRequestType, {
+			streamId,
+			postId: parentPostId
+		});
 		dispatch(postsActions.addPostsForStream(streamId, posts));
 		codemarks && dispatch(saveCodemarks(codemarks));
 		return posts;
@@ -428,44 +453,19 @@ export const fetchThread = (streamId, parentPostId) => async (
 	}
 };
 
-export const fetchPostsForStreams = () => async (dispatch, getState) => {
-	const { context, session, streams } = getState();
-
+// TODO: make this a capability? doesn't work on CS teams
+export const closeDirectMessage = (streamId: string) => async dispatch => {
 	try {
-		const channels = getChannelStreamsForTeam(streams, context.currentTeamId, session.userId);
-		const dms = getDirectMessageStreamsForTeam(streams, context.currentTeamId);
-		[...channels, ...dms].forEach(channel => {
-			dispatch(fetchPosts({ streamId: channel.id }));
-		});
-	} catch (error) {
-		console.error(error);
-	}
-};
-
-export const showCode = (marker, enteringThread) => (dispatch, getState, { api }) => {
-	return api.showCode(marker, enteringThread);
-};
-
-export const highlightCode = (marker, onOff, source) => (
-	dispatch,
-	getState,
-	{ api }: ThunkExtras
-) => {
-	return api.highlightCode(marker, onOff, source);
-};
-
-export const closeDirectMessage = id => async (dispatch, getState, { api }: ThunkExtras) => {
-	try {
-		const { stream } = await api.closeDirectMessage(id);
+		const { stream } = await HostApi.instance.send(CloseStreamRequestType, { streamId });
 		dispatch(streamActions.updateStream(stream));
 	} catch (error) {
 		logError(`There was an error closing a dm: ${error}`);
 	}
 };
 
-export const openDirectMessage = id => async (dispatch, getState, { api }: ThunkExtras) => {
+export const openDirectMessage = (streamId: string) => async dispatch => {
 	try {
-		const response = await api.openDirectMessage(id);
+		const response = await HostApi.instance.send(OpenStreamRequestType, { streamId });
 		return dispatch(streamActions.updateStream(response.stream));
 	} catch (error) {
 		logError(`There was an error opening a dm: ${error}`);
@@ -474,78 +474,57 @@ export const openDirectMessage = id => async (dispatch, getState, { api }: Thunk
 
 export const changeStreamMuteState = (streamId: string, mute: boolean) => async (
 	dispatch,
-	getState,
-	{ api }: ThunkExtras
+	getState
 ) => {
 	const mutedStreams = getState().preferences.mutedStreams || {};
 
 	try {
 		dispatch(updatePreferences({ mutedStreams: { ...mutedStreams, [streamId]: mute } }));
-		await api.changeStreamMuteState(streamId, mute);
+		await HostApi.instance.send(MuteStreamRequestType, { streamId, mute });
 	} catch (error) {
-		logError(`There was an error toggling mute state of ${streamId}: ${error}`);
+		logError(`There was an error toggling stream mute state: ${error}`, { streamId });
 		// TODO: communicate failure
 		dispatch(updatePreferences({ mutedStreams: { ...mutedStreams, [streamId]: !mute } }));
 	}
 };
 
-export const editCodemark = (id: string, attributes: {}) => async (
-	dispatch,
-	getState,
-	{ api }: ThunkExtras
-) => {
+export const editCodemark = (codemarkId: string, attributes: {}) => async dispatch => {
 	try {
-		const response = await api.editCodemark(id, attributes);
+		const response = await HostApi.instance.send(UpdateCodemarkRequestType, {
+			codemarkId,
+			...attributes
+		});
 		dispatch(updateCodemarks([response.codemark]));
 	} catch (error) {
-		console.error("failed to update codemark", error);
+		logError(`failed to update codemark: ${error}`, { codemarkId });
 	}
 };
 
-export const fetchCodemarks = () => async (dispatch, getState, { api }: ThunkExtras) => {
+export const fetchCodemarks = () => async dispatch => {
 	try {
-		const response = await api.fetchCodemarks();
-		dispatch(saveCodemarks(response.codemarks));
+		const response = await HostApi.instance.send(FetchCodemarksRequestType, {});
+		if (response) dispatch(saveCodemarks(response.codemarks));
 	} catch (error) {
-		console.error("failed to fetch codemarks", error);
+		logError(`failed to fetch codemarks: ${error}`);
 	}
 };
 
-export const setCodemarkStatus = (id: string, status: "closed" | "open") => async (
-	dispatch,
-	getState,
-	{ api }: ThunkExtras
-) => {
+export const setCodemarkStatus = (
+	codemarkId: string,
+	status: "closed" | "open"
+) => async dispatch => {
 	try {
-		const response = await api.setCodemarkStatus(id, status);
+		const response = await HostApi.instance.send(UpdateCodemarkRequestType, {
+			codemarkId,
+			status
+		});
 		dispatch(updateCodemarks([response.codemark]));
 	} catch (error) {
-		console.error("failed to change codemark status", error);
+		logError(`failed to change codemark status: ${error}`, { codemarkId });
 	}
 };
 
-export const telemetry = (params: { eventName: string; properties: {} }) => async (
-	dispatch,
-	getState,
-	{ api }: ThunkExtras
-) => {
-	try {
-		await api.sendTelemetry(params);
-	} catch (error) {
-		logError(`Telemetry error: ${error}`, params);
-	}
-};
-
-export const fetchIssueBoards = service => async (dispatch, getState, { api }: ThunkExtras) => {
-	try {
-		return await api.fetchIssueBoards(service);
-		// dispatch(saveCodemarks(response.codemarks));
-	} catch (error) {
-		console.error("failed to fetch trello boards", error);
-	}
-};
-
-export const createServiceCard = (attributes, codemark) => async (_, __, { api }: ThunkExtras) => {
+export const createServiceCard = async (attributes, codemark) => {
 	let description = codemark.text + "\n\n";
 	if (codemark.markers && codemark.markers.length > 0) {
 		const marker = codemark.markers[0];
@@ -555,97 +534,60 @@ export const createServiceCard = (attributes, codemark) => async (_, __, { api }
 	try {
 		switch (attributes.provider) {
 			case "jira": {
-				return api.createJiraCard(
-					codemark.title,
+				return HostApi.instance.send(CreateJiraCardRequestType, {
 					description,
-					attributes.issueType,
-					attributes.boardId,
-					attributes.assignees
-				);
+					summary: codemark.title,
+					issueType: attributes.issueType,
+					project: attributes.boardId,
+					assignees: attributes.assignees
+				});
 			}
 			case "trello": {
-				return api.createTrelloCard(
-					attributes.listId,
-					codemark.title,
-					description,
-					attributes.assignees
-				);
+				return HostApi.instance.send(TrelloCreateCardRequestType, {
+					listId: attributes.listId,
+					name: codemark.title,
+					assignees: attributes.assignees,
+					description
+				});
 			}
 			case "github": {
-				const response = await api.createGithubCard(
-					codemark.title,
+				const response = await HostApi.instance.send(GitHubCreateCardRequestType, {
 					description,
-					attributes.boardName,
-					attributes.assignees
-				);
+					title: codemark.title,
+					repoName: attributes.boardName,
+					assignees: attributes.assignees
+				});
 				return { url: response.html_url };
 			}
 			case "gitlab": {
-				return api.createGitlabCard(
-					codemark.title,
+				const response = await HostApi.instance.send(GitLabCreateCardRequestType, {
 					description,
-					attributes.boardName,
-					attributes.assignees[0]
-				);
+					title: codemark.title,
+					repoName: attributes.boardName,
+					assignee: attributes.assignees[0]
+				});
+				return { url: response.web_url };
 			}
 			case "asana": {
-				return await api.createAsanaCard(
-					attributes.boardId,
-					attributes.listId,
-					codemark.title,
+				const response = await HostApi.instance.send(AsanaCreateCardRequestType, {
 					description,
-					attributes.assignees[0]
-				);
+					boardId: attributes.boardId,
+					listId: attributes.listId,
+					name: codemark.title,
+					assignee: attributes.assignees[0]
+				});
+				return { url: response.data.url };
 			}
 			case "bitbucket": {
-				return api.createBitbucketCard(
-					codemark.title,
+				return HostApi.instance.send(BitbucketCreateCardRequestType, {
 					description,
-					attributes.boardName,
-					attributes.assignees[0]
-				);
+					title: codemark.title,
+					repoName: attributes.boardName,
+					assignee: attributes.assignees[0]
+				});
 			}
 		}
 	} catch (error) {
-		console.error(`failed to create a ${attributes.service} card`, error);
+		logError(`failed to create a ${attributes.service} card: ${error}`);
 	}
-};
-
-export const disconnectService = service => async (dispatch, getState, { api }) => {
-	try {
-		const response = await api.disconnectService(service);
-		if (getState().context.issueProvider === service) {
-			dispatch(contextActions.setIssueProvider(undefined));
-		}
-	} catch (error) {
-		console.error("failed to signout from " + service, error);
-	}
-};
-
-export const editorRevealLine = line => async (dispatch, getState, { api }) => {
-	try {
-		api.editorRevealLine(line);
-	} catch (error) {
-		console.error("failed to reveal line: " + line, error);
-	}
-};
-
-export const startCommentOnLine = (line, uri) => (dispatch, getState, { api }) => {
-	return api.startCommentOnLine(line, uri);
-};
-
-export const fetchAssignableUsers = (service: string, boardId: string) => async (
-	dispatch,
-	getState,
-	{ api }: ThunkExtras
-) => {
-	return api.fetchAssignableUsers(service, boardId);
-};
-
-export const openUrl = (url: string) => async (dispatch, getState, { api }) => {
-	return api.openUrl({ url });
-};
-
-export const signOut = () => async (dispatch, getState, { api }) => {
-	return api.signOut();
 };

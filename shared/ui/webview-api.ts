@@ -1,648 +1,92 @@
-import { Range } from "vscode-languageserver-protocol";
-import { EventEmitter, IpcResponse } from "./event-emitter";
-import {
-	ArchiveStreamRequest,
-	ArchiveStreamRequestType,
-	ArchiveStreamResponse,
-	AsanaCreateCardRequestType,
-	BitbucketCreateCardRequestType,
-	CloseStreamRequest,
-	CloseStreamRequestType,
-	CloseStreamResponse,
-	CodeBlockSource,
-	ConnectThirdPartyProviderRequest,
-	ConnectThirdParyProviderRequestType,
-	CreateChannelStreamRequest,
-	CreateChannelStreamRequestType,
-	CreateChannelStreamResponse,
-	CreateDirectStreamRequest,
-	CreateDirectStreamRequestType,
-	CreateDirectStreamResponse,
-	CreateJiraCardRequest,
-	CreateJiraCardRequestType,
-	CreateJiraCardResponse,
-	CreatePostRequest,
-	CreatePostRequestType,
-	CreatePostResponse,
-	CreatePostWithMarkerRequest,
-	CreatePostWithMarkerRequestType,
-	DeletePostRequest,
-	DeletePostRequestType,
-	DeletePostResponse,
-	DisconnectThirdPartyProviderRequest,
-	DisconnectThirdPartyProviderRequestType,
-	EditPostRequest,
-	EditPostRequestType,
-	EditPostResponse,
-	FetchAssignableUsersRequest,
-	FetchAssignableUsersRequestType,
-	FetchCodemarksRequestType,
-	FetchCodemarksResponse,
-	FetchPostRepliesRequest,
-	FetchPostRepliesRequestType,
-	FetchPostRepliesResponse,
-	FetchPostsRequest,
-	FetchPostsRequestType,
-	FetchPostsResponse,
-	FetchThirdPartyBoardsRequest,
-	GitHubCreateCardRequest,
-	GitHubCreateCardRequestType,
-	GitHubCreateCardResponse,
-	GitLabCreateCardRequestType,
-	InviteUserRequest,
-	InviteUserRequestType,
-	InviteUserResponse,
-	JoinStreamRequest,
-	JoinStreamRequestType,
-	JoinStreamResponse,
-	LeaveStreamRequest,
-	LeaveStreamRequestType,
-	LeaveStreamResponse,
-	MarkPostUnreadRequest,
-	MarkPostUnreadRequestType,
-	MarkPostUnreadResponse,
-	MarkStreamReadRequest,
-	MarkStreamReadRequestType,
-	MarkStreamReadResponse,
-	MuteStreamRequest,
-	MuteStreamRequestType,
-	MuteStreamResponse,
-	OpenStreamRequest,
-	OpenStreamRequestType,
-	OpenStreamResponse,
-	OpenUrlRequest,
-	OpenUrlRequestType,
-	ReactToPostRequest,
-	ReactToPostRequestType,
-	ReactToPostResponse,
-	RenameStreamRequest,
-	RenameStreamRequestType,
-	RenameStreamResponse,
-	ReportingMessageType,
-	ReportMessageRequest,
-	ReportMessageRequestType,
-	SetStreamPurposeRequest,
-	SetStreamPurposeRequestType,
-	SetStreamPurposeResponse,
-	TelemetryRequest,
-	TelemetryRequestType,
-	ThirdPartyProviderUser,
-	TrelloCreateCardRequest,
-	TrelloCreateCardRequestType,
-	TrelloFetchListsRequest,
-	TrelloFetchListsRequestType,
-	UnarchiveStreamRequest,
-	UnarchiveStreamRequestType,
-	UnarchiveStreamResponse,
-	UpdateCodemarkRequest,
-	UpdateCodemarkRequestType,
-	UpdateCodemarkResponse,
-	UpdatePreferencesRequest,
-	UpdatePreferencesRequestType,
-	UpdatePreferencesResponse,
-	UpdateStreamMembershipRequest,
-	UpdateStreamMembershipRequestType,
-	UpdateStreamMembershipResponse
-} from "./shared/agent.protocol";
-import { CodemarkType, CSMePreferences, StreamType } from "./shared/api.protocol.models";
+import { RequestType } from "vscode-jsonrpc";
+import { findHost, IpcHost, WebviewIpcMessage } from "./ipc/webview.protocol";
 import { shortUuid } from "./utils";
 
 let sequence = 0;
 
-export default class WebviewApi {
-	pendingRequests = new Map();
+type RequestOf<RT> = RT extends RequestType<infer RQ, any, any, any> ? RQ : never;
+type ResponseOf<RT> = RT extends RequestType<any, infer R, any, any> ? R : never;
 
-	constructor() {
-		EventEmitter.on("response", ({ id, payload, error }: IpcResponse) => {
-			const request = this.pendingRequests.get(id);
-			if (request) {
-				console.debug("codestream:response", { id, payload, error });
-				if (payload !== undefined) request.resolve(payload);
-				else {
-					request.reject(
-						error ||
-							`No payload and no error provided by host process in response to ${request.action}`
-					);
-				}
-				this.pendingRequests.delete(id);
+class EventEmitter {
+	private listenersByEvent = new Map<string, Function[]>();
+
+	on<ET extends RequestType<any, any, any, any>>(
+		eventType: ET,
+		listener: (event: RequestOf<ET>) => void
+	) {
+		const listeners = this.listenersByEvent.get(eventType.method) || [];
+		listeners.push(listener);
+		this.listenersByEvent.set(eventType.method, listeners);
+		return {
+			dispose: () => {
+				const listeners = this.listenersByEvent.get(eventType.method)!.filter(l => l !== listener);
+				this.listenersByEvent.set(eventType.method, listeners);
 			}
+		};
+	}
+
+	emit(eventName: string, body: any) {
+		setImmediate(() => (this.listenersByEvent.get(eventName) || []).forEach(l => l(body)));
+	}
+}
+
+export class HostApi extends EventEmitter {
+	private pendingCommands: Map<string, any>;
+	private port: IpcHost;
+
+	private static _instance: HostApi;
+	static get instance(): HostApi {
+		if (this._instance === undefined) {
+			this._instance = new HostApi(findHost());
+		}
+		return this._instance;
+	}
+
+	protected constructor(port: any) {
+		super();
+		this.pendingCommands = new Map();
+		this.port = port;
+
+		port.onmessage = ({ data }: { data: WebviewIpcMessage }) => {
+			if (data.id) {
+				const pending = this.pendingCommands.get(data.id);
+				console.debug(`received response from host for ${data.id}(${pending.method})`, data);
+				data.params ? pending.resolve(data.params) : pending.reject(data.error);
+				this.pendingCommands.delete(data.id);
+				return;
+			}
+			if (data.method) {
+				console.debug(`received ${data.method} from host`);
+				this.emit(data.method, data.params);
+			}
+		};
+	}
+
+	send<RT extends RequestType<any, any, any, any>>(
+		request: RT,
+		args: RequestOf<RT>
+	): Promise<ResponseOf<RT>> {
+		const id = this.nextId();
+		return new Promise((resolve, reject) => {
+			this.pendingCommands.set(id, { resolve, reject, method: request.method });
+
+			const payload = {
+				id,
+				method: request.method,
+				params: args
+			};
+			this.port.postMessage(payload);
+			console.debug(`command ${id}:${request.method} sent to host`, payload);
 		});
 	}
 
-	postMessage<ResponseType>(message: { action: string; [key: string]: any }) {
+	private nextId() {
 		if (sequence === Number.MAX_SAFE_INTEGER) {
 			sequence = 1;
 		} else {
 			sequence++;
 		}
 
-		const id = `${sequence}:${shortUuid()}`;
-		return new Promise<ResponseType>((resolve, reject) => {
-			this.pendingRequests.set(id, { resolve, reject, action: message.action });
-			console.debug("codestream:request", { id, ...message });
-			EventEmitter.host.postMessage({ type: "codestream:request", body: { id, ...message } }, "*");
-		});
-	}
-
-	bootstrap() {
-		return this.postMessage({ action: "bootstrap" });
-	}
-
-	startSignup() {
-		return this.postMessage({ action: "go-to-signup" });
-	}
-
-	startSlackSignin() {
-		return this.postMessage({ action: "go-to-slack-signin" });
-	}
-
-	connectService(service: string, fromMenu: boolean = true) {
-		this.sendTelemetry({
-			eventName: "Issue Service Connected",
-			properties: {
-				Service: service,
-				Connection: "On",
-				"Connection Location": fromMenu ? "Global Nav" : "Compose Modal"
-			}
-		});
-		return this.postMessage({
-			action: ConnectThirdParyProviderRequestType.method,
-			params: {
-				providerName: service
-			} as ConnectThirdPartyProviderRequest
-		});
-	}
-
-	disconnectService(service: string, fromMenu: boolean = true) {
-		this.sendTelemetry({
-			eventName: "Issue Service Connected",
-			properties: {
-				Service: service,
-				Connection: "Off",
-				"Connection Location": fromMenu ? "Global Nav" : "Compose Modal"
-			}
-		});
-		return this.postMessage({
-			action: DisconnectThirdPartyProviderRequestType.method,
-			params: {
-				providerName: service
-			} as DisconnectThirdPartyProviderRequest
-		});
-	}
-
-	createTrelloCard(listId: string, name: string, description: string, assignees?: any[]) {
-		return this.postMessage({
-			action: TrelloCreateCardRequestType.method,
-			params: {
-				listId: listId,
-				name: name,
-				description: description,
-				assignees
-			} as TrelloCreateCardRequest
-		});
-	}
-
-	createJiraCard(
-		summary: string,
-		description: string,
-		issueType: string,
-		project: string,
-		assignees?: any[]
-	) {
-		return this.postMessage<CreateJiraCardResponse>({
-			action: CreateJiraCardRequestType.method,
-			params: {
-				summary,
-				description,
-				issueType,
-				project,
-				assignees
-			} as CreateJiraCardRequest
-		});
-	}
-
-	createGithubCard(title: string, description: string, repoName: string, assignees?: any[]) {
-		return this.postMessage<GitHubCreateCardResponse>({
-			action: GitHubCreateCardRequestType.method,
-			params: {
-				title,
-				description,
-				repoName,
-				assignees
-			} as GitHubCreateCardRequest
-		});
-	}
-
-	createGitlabCard(title: string, description: string, repoName: string, assignee?: string) {
-		return this.postMessage({
-			action: GitLabCreateCardRequestType.method,
-			params: {
-				title,
-				description,
-				repoName,
-				assignee
-			}
-		});
-	}
-
-	createAsanaCard(
-		boardId: number,
-		listId: number,
-		name: string,
-		description: string,
-		assignee?: string
-	) {
-		return this.postMessage({
-			action: AsanaCreateCardRequestType.method,
-			params: {
-				boardId,
-				listId,
-				name,
-				description,
-				assignee
-			}
-		});
-	}
-
-	createBitbucketCard(title: string, description: string, repoName: string, assignee?: string) {
-		return this.postMessage({
-			action: BitbucketCreateCardRequestType.method,
-			params: {
-				title,
-				description,
-				repoName,
-				assignee
-			}
-		});
-	}
-
-	// service is one of "trello", "asana", "jira", "github"
-	fetchIssueBoards(service: string, organizationId?: string) {
-		return this.postMessage({
-			action: `codeStream/${service}/boards`,
-			params: { organizationId: organizationId } as FetchThirdPartyBoardsRequest
-		});
-	}
-
-	// so far trello is the only service with lists
-	fetchIssueLists(service: string, boardId: string) {
-		return this.postMessage({
-			action: TrelloFetchListsRequestType.method,
-			params: {
-				boardId: boardId
-			} as TrelloFetchListsRequest
-		});
-	}
-
-	startJiraSignin() {
-		return this.postMessage({ action: "go-to-jira-signin" });
-	}
-
-	startGitHubSignin() {
-		return this.postMessage({ action: "go-to-github-signin" });
-	}
-
-	startAsanaSignin() {
-		return this.postMessage({ action: "go-to-asana-signin" });
-	}
-
-	validateSignup(token: string) {
-		return this.postMessage({ action: "validate-signup", params: token });
-	}
-
-	authenticate(params: object) {
-		return this.postMessage({ action: "authenticate", params });
-	}
-
-	fetchPosts(params: FetchPostsRequest): Promise<FetchPostsResponse> {
-		return this.postMessage({
-			action: FetchPostsRequestType.method,
-			params: params
-		});
-	}
-
-	fetchThread(streamId: string, postId: string): Promise<FetchPostRepliesResponse> {
-		return this.postMessage({
-			action: FetchPostRepliesRequestType.method,
-			params: { streamId, postId } as FetchPostRepliesRequest
-		});
-	}
-
-	createPost(
-		streamId: string,
-		text: string,
-		extras: { mentionedUserIds?: string[]; parentPostId?: string; entryPoint?: string } = {}
-	): Promise<CreatePostResponse> {
-		return this.postMessage({
-			action: CreatePostRequestType.method,
-			params: { streamId, text, ...extras } as CreatePostRequest
-		});
-	}
-
-	createPostWithCodemark(
-		streamId: string,
-		extras: { mentionedUserIds?: string[]; parentPostId?: string } = {},
-		codemark: {
-			type: CodemarkType;
-			markers: {
-				code: string;
-				range?: Range;
-				source?: CodeBlockSource;
-			}[];
-			text?: string;
-			assignees?: string[];
-			title?: string;
-			color?: string;
-			externalProvider?: string;
-			externalProviderUrl?: string;
-			externalAssignees?: ThirdPartyProviderUser[];
-		},
-		extra: { fileUri: string; entryPoint?: string }
-	): Promise<CreatePostResponse> {
-		const block = codemark.markers[0] || {};
-		const params: CreatePostWithMarkerRequest = {
-			streamId,
-			text: codemark.text || "",
-			...extras,
-			textDocument: { uri: extra.fileUri },
-			code: block.code,
-			range: block.range,
-			source: block.source,
-			title: codemark.title,
-			type: codemark.type,
-			assignees: codemark.assignees,
-			color: codemark.color,
-			externalProvider: codemark.externalProvider,
-			externalAssignees: codemark.externalAssignees,
-			externalProviderUrl: codemark.externalProviderUrl,
-			entryPoint: extra.entryPoint
-		};
-		return this.postMessage({ action: CreatePostWithMarkerRequestType.method, params });
-	}
-
-	editPost(
-		streamId: string,
-		postId: string,
-		text: string,
-		mentionedUserIds: string[]
-	): Promise<EditPostResponse> {
-		return this.postMessage({
-			action: EditPostRequestType.method,
-			params: { streamId, postId, text, mentionedUserIds } as EditPostRequest
-		});
-	}
-
-	reactToPost(
-		streamId: string,
-		postId: string,
-		reactions: { [emoji: string]: boolean }
-	): Promise<ReactToPostResponse> {
-		return this.postMessage({
-			action: ReactToPostRequestType.method,
-			params: { streamId, postId, emojis: reactions } as ReactToPostRequest
-		});
-	}
-
-	setPostStatus(params: object) {
-		return this.postMessage({ action: "set-post-status", params });
-	}
-
-	deletePost(params: DeletePostRequest): Promise<DeletePostResponse> {
-		return this.postMessage({ action: DeletePostRequestType.method, params });
-	}
-
-	createChannel(
-		name: string,
-		memberIds: string[],
-		privacy: "public" | "private",
-		purpose?: string
-	): Promise<CreateChannelStreamResponse> {
-		return this.postMessage({
-			action: CreateChannelStreamRequestType.method,
-			params: {
-				type: StreamType.Channel,
-				name,
-				memberIds,
-				privacy,
-				purpose
-			} as CreateChannelStreamRequest
-		});
-	}
-
-	createDirectMessage(memberIds: string[]): Promise<CreateDirectStreamResponse> {
-		return this.postMessage({
-			action: CreateDirectStreamRequestType.method,
-			params: { type: StreamType.Direct, memberIds } as CreateDirectStreamRequest
-		});
-	}
-
-	renameStream(streamId: string, name: string): Promise<RenameStreamResponse> {
-		return this.postMessage({
-			action: RenameStreamRequestType.method,
-			params: { streamId, name } as RenameStreamRequest
-		});
-	}
-
-	setStreamPurpose(streamId: string, purpose: string): Promise<SetStreamPurposeResponse> {
-		return this.postMessage({
-			action: SetStreamPurposeRequestType.method,
-			params: { streamId, purpose } as SetStreamPurposeRequest
-		});
-	}
-
-	joinStream(streamId: string): Promise<JoinStreamResponse> {
-		return this.postMessage({
-			action: JoinStreamRequestType.method,
-			params: { streamId } as JoinStreamRequest
-		});
-	}
-
-	leaveStream(streamId: string): Promise<LeaveStreamResponse> {
-		return this.postMessage({
-			action: LeaveStreamRequestType.method,
-			params: { streamId } as LeaveStreamRequest
-		});
-	}
-
-	archiveStream(streamId: string): Promise<ArchiveStreamResponse> {
-		return this.postMessage({
-			action: ArchiveStreamRequestType.method,
-			params: { streamId } as ArchiveStreamRequest
-		});
-	}
-
-	unarchiveStream(streamId: string): Promise<UnarchiveStreamResponse> {
-		return this.postMessage({
-			action: UnarchiveStreamRequestType.method,
-			params: { streamId } as UnarchiveStreamRequest
-		});
-	}
-
-	removeUsersFromStream(
-		streamId: string,
-		userIds: string[]
-	): Promise<UpdateStreamMembershipResponse> {
-		return this.postMessage({
-			action: UpdateStreamMembershipRequestType.method,
-			params: { streamId, remove: userIds } as UpdateStreamMembershipRequest
-		});
-	}
-
-	addUsersToStream(streamId: string, userIds: string[]): Promise<UpdateStreamMembershipResponse> {
-		return this.postMessage({
-			action: UpdateStreamMembershipRequestType.method,
-			params: { streamId, add: userIds } as UpdateStreamMembershipRequest
-		});
-	}
-
-	invite(attributes: { email: string; fullName?: string }): Promise<InviteUserResponse> {
-		return this.postMessage({
-			action: InviteUserRequestType.method,
-			params: attributes as InviteUserRequest
-		});
-	}
-
-	markStreamRead(streamId: string, postId?: string): Promise<MarkStreamReadResponse> {
-		return this.postMessage({
-			action: MarkStreamReadRequestType.method,
-			params: { streamId, postId } as MarkStreamReadRequest
-		});
-	}
-
-	markPostUnread(streamId: string, postId: string): Promise<MarkPostUnreadResponse> {
-		return this.postMessage({
-			action: MarkPostUnreadRequestType.method,
-			params: { streamId, postId } as MarkPostUnreadRequest
-		});
-	}
-
-	showMarkersInEditor(value: Boolean) {
-		return this.postMessage({
-			action: "show-markers",
-			params: value
-		});
-	}
-
-	muteAllConversations(value: Boolean) {
-		return this.postMessage({
-			action: "mute-all",
-			params: value
-		});
-	}
-
-	openCommentOnSelectInEditor(value: Boolean) {
-		return this.postMessage({
-			action: "open-comment-on-select",
-			params: value
-		});
-	}
-
-	saveUserPreference(preferences: CSMePreferences): Promise<UpdatePreferencesResponse> {
-		const request: UpdatePreferencesRequest = { preferences };
-		return this.postMessage({
-			action: UpdatePreferencesRequestType.method,
-			params: request
-		});
-	}
-
-	showCode(marker: object, enteringThread: boolean) {
-		return this.postMessage({ action: "show-code", params: { marker, enteringThread } });
-	}
-
-	highlightCode(marker: object, onOff: boolean, source: string = "stream") {
-		return this.postMessage({ action: "highlight-code", params: { marker, onOff, source } });
-	}
-
-	startCommentOnLine(line: number, uri) {
-		return this.postMessage({ action: "start-comment-on-line", params: { line, uri } });
-	}
-
-	closeDirectMessage(streamId: string): Promise<CloseStreamResponse> {
-		return this.postMessage({
-			action: CloseStreamRequestType.method,
-			params: { streamId } as CloseStreamRequest
-		});
-	}
-
-	openDirectMessage(streamId: string): Promise<OpenStreamResponse> {
-		return this.postMessage({
-			action: OpenStreamRequestType.method,
-			params: { streamId } as OpenStreamRequest
-		});
-	}
-
-	changeStreamMuteState(streamId: string, mute: boolean): Promise<MuteStreamResponse> {
-		return this.postMessage({
-			action: MuteStreamRequestType.method,
-			params: { streamId, mute } as MuteStreamRequest
-		});
-	}
-
-	editCodemark(
-		id: string,
-		params: {
-			text?: string;
-			title?: string;
-			color?: string;
-			assignees?: string[];
-		}
-	): Promise<UpdateCodemarkResponse> {
-		return this.postMessage({
-			action: UpdateCodemarkRequestType.method,
-			params: { codemarkId: id, ...params } as UpdateCodemarkRequest
-		});
-	}
-
-	fetchCodemarks(): Promise<FetchCodemarksResponse> {
-		return this.postMessage({ action: FetchCodemarksRequestType.method, params: {} });
-	}
-
-	setCodemarkStatus(id: string, status: string): Promise<UpdateCodemarkResponse> {
-		return this.postMessage({
-			action: UpdateCodemarkRequestType.method,
-			params: {
-				codemarkId: id,
-				status
-			} as UpdateCodemarkRequest
-		});
-	}
-
-	sendTelemetry(params: TelemetryRequest): Promise<void> {
-		return this.postMessage({
-			action: TelemetryRequestType.method,
-			params
-		});
-	}
-
-	reportMessage(type: ReportingMessageType, message: string, extra?: {}): Promise<void> {
-		const params: ReportMessageRequest = { source: "webview", type, message, extra };
-		return this.postMessage({
-			action: ReportMessageRequestType.method,
-			params
-		});
-	}
-
-	editorRevealLine(line: number) {
-		return this.postMessage({ action: "reveal-line", params: { line } });
-	}
-
-	fetchAssignableUsers(service: string, boardId: string) {
-		return this.postMessage({
-			action: FetchAssignableUsersRequestType.method,
-			params: { providerName: service, boardId } as FetchAssignableUsersRequest
-		});
-	}
-
-	openUrl(params: OpenUrlRequest): Promise<void> {
-		return this.postMessage({
-			action: OpenUrlRequestType.method,
-			params
-		});
-	}
-
-	signOut() {
-		return this.postMessage({
-			action: "sign-out"
-		});
+		return `${sequence}:${shortUuid()}`;
 	}
 }

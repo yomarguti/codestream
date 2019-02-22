@@ -17,7 +17,7 @@ export interface State {
 	lastActiveFile?: string;
 	currentTeamId: string;
 	currentCommit: string; // maybe delete
-	currentStreamId: string;
+	currentStreamId?: string;
 	issueProvider?: string;
 	fileStreamId?: string;
 	lastFileStreamId?: string;

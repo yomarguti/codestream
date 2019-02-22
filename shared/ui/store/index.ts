@@ -13,6 +13,7 @@ import { reducePreferences } from "../store/preferences/reducer";
 import { reduceRepos } from "../store/repos/reducer";
 import { reduceRoute } from "../store/route/reducer";
 import { reduceServices } from "../store/services/reducer";
+import { reduceSession } from "../store/session/reducer";
 import { reduceStreams } from "../store/streams/reducer";
 import { reduceTeams } from "../store/teams/reducer";
 import { reduceUnreads } from "../store/unreads/reducer";
@@ -21,18 +22,6 @@ import { debounceToAnimationFrame } from "../utils";
 import middleware from "./middleware";
 
 export { actions } from "./actions";
-
-const session = (state = {}, { type, payload }) => {
-	switch (type) {
-		case "RESET":
-		case "CLEAR_SESSION":
-			return {};
-		case "INIT_SESSION":
-			return payload;
-		default:
-			return state;
-	}
-};
 
 const bootstrapped = (state = false, { type }) => {
 	if (type === "BOOTSTRAP_COMPLETE") return true;
@@ -54,7 +43,7 @@ const reducer = combineReducers({
 	preferences: reducePreferences,
 	repos: reduceRepos,
 	route: reduceRoute,
-	session,
+	session: reduceSession,
 	streams: reduceStreams,
 	teams: reduceTeams,
 	umis: reduceUnreads,

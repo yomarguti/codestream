@@ -1,16 +1,8 @@
 import * as uuidv4 from "uuid/v4";
+import { Range } from "vscode-languageserver-protocol";
 
-export function arrayToRange([startRow, startCol, endRow, endCol]: number[]) {
-	return {
-		start: {
-			row: startRow,
-			col: startCol
-		},
-		end: {
-			row: endRow,
-			col: endCol
-		}
-	};
+export function arrayToRange([startLine, startCharacter, endLine, endCharacter]: number[]): Range {
+	return Range.create(startLine, startCharacter, endLine, endCharacter);
 }
 
 export function pick<T, K extends keyof T>(object: T, keys: K[]): { [K in keyof T]: any } {

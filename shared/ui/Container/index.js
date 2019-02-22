@@ -9,7 +9,8 @@ import Signup from "../Signup";
 import CompleteSignup from "../CompleteSignup";
 import { SlackInfo } from "../SlackInfo";
 import { logError } from "../logger";
-import { EventEmitter } from "../event-emitter";
+import { HostApi } from "../webview-api";
+import { ReloadWebviewRequestType } from "../ipc/webview.protocol";
 
 addLocaleData(englishLocaleData);
 
@@ -69,7 +70,7 @@ export default class Container extends React.Component {
 
 	handleClickReload = event => {
 		event.preventDefault();
-		EventEmitter.emit("interaction:clicked-reload-webview");
+		HostApi.instance.send(ReloadWebviewRequestType);
 	};
 
 	render() {

@@ -1,28 +1,28 @@
-import { EventEmitter } from "../../event-emitter";
+import { DidChangeActiveStreamNotificationType } from "../../ipc/webview.protocol";
 import { logError } from "../../logger";
+import {
+	ConnectThirdParyProviderRequestType,
+	DisconnectThirdPartyProviderRequestType,
+	TelemetryRequestType
+} from "../../shared/agent.protocol";
 import { setUserPreference } from "../../Stream/actions";
-import { action, ThunkExtras } from "../common";
-import { updatePreferences } from "../preferences/actions";
+import { HostApi } from "../../webview-api";
+import { action } from "../common";
 import { ContextActionsType, State } from "./types";
 
-export { reset } from "../actions";
+export const reset = () => action("RESET");
 
-export const setContext = (payload: State) => action(ContextActionsType.SetContext, payload);
+export const setContext = (payload: Partial<State>) =>
+	action(ContextActionsType.SetContext, payload);
 
 export const _openPanel = (panel: string) => action(ContextActionsType.OpenPanel, panel);
 export const openPanel = (panel: string) => (dispatch, getState) => {
 	if (getState().context.panelStack[0] !== panel) {
-		const result = dispatch(_openPanel(panel));
-		EventEmitter.emit("interaction:active-panel-changed", getState().context.panelStack);
-		return result;
+		return dispatch(_openPanel(panel));
 	}
 };
 
-export const _closePanel = () => action(ContextActionsType.ClosePanel);
-export const closePanel = () => (dispatch, getState) => {
-	EventEmitter.emit("interaction:active-panel-changed", getState().context.panelStack);
-	return dispatch(_closePanel());
-};
+export const closePanel = () => action(ContextActionsType.ClosePanel);
 
 export const focus = () => action(ContextActionsType.SetFocusState, true);
 
@@ -55,32 +55,50 @@ export const fileChanged = editor => setCurrentFile(editor.fileName, editor.file
 export const setCurrentFile = (file = "", fileStreamId?: string) =>
 	action(ContextActionsType.SetCurrentFile, { file, fileStreamId });
 
-export const _setCurrentStream = (streamId: string) =>
+export const _setCurrentStream = (streamId?: string) =>
 	action(ContextActionsType.SetCurrentStream, streamId);
-export const setCurrentStream = streamId => (dispatch, getState) => {
+export const setCurrentStream = (streamId?: string) => (dispatch, getState) => {
 	const { context } = getState();
 	// don't set the stream ID unless it actually changed
 	if (context.currentStreamId !== streamId) {
-		EventEmitter.emit("interaction:changed-active-stream", streamId);
+		HostApi.instance.send(DidChangeActiveStreamNotificationType, { streamId });
 		return dispatch(_setCurrentStream(streamId));
 	}
 };
 
-export const connectProvider = (name: string) => async (
-	dispatch,
-	getState,
-	{ api }: ThunkExtras
-) => {
+export const connectProvider = (name: string, fromMenu = false) => async (dispatch, getState) => {
 	const { context, users, session } = getState();
 	const user = users[session.userId];
 	if (((user.providerInfo && user.providerInfo[context.currentTeamId]) || {})[name]) {
 		return dispatch(setIssueProvider(name));
 	}
 	try {
-		await api.connectService(name, false);
+		const api = HostApi.instance;
+		await api.send(ConnectThirdParyProviderRequestType, { providerName: name });
+		api.send(TelemetryRequestType, {
+			eventName: "Service Connected",
+			properties: {
+				Service: name,
+				Connection: "On",
+				"Connection Location": fromMenu ? "Global Nav" : "Compose Modal"
+			}
+		});
 		return dispatch(setIssueProvider(name));
 	} catch (error) {
 		logError(`Failed to connect ${name}: ${error}`);
+	}
+};
+
+export const disconnectService = (service: string) => async (dispatch, getState) => {
+	try {
+		await HostApi.instance.send(DisconnectThirdPartyProviderRequestType, {
+			providerName: service
+		});
+		if (getState().context.issueProvider === service) {
+			dispatch(setIssueProvider(undefined));
+		}
+	} catch (error) {
+		logError(`failed to disconnect service ${service}: ${error}`);
 	}
 };
 

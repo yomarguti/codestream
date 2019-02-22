@@ -1,7 +1,8 @@
 import * as React from "react";
 import { connect } from "react-redux";
+import { getFetchIssueBoardsCommand } from "../../ipc/webview.protocol";
 import { connectProvider } from "../../store/context/actions";
-import { fetchIssueBoards } from "../actions";
+import { HostApi } from "../../webview-api";
 import Icon from "../Icon";
 import AsanaCardControls from "./AsanaCardControls";
 import BitbucketCardControls from "./BitbucketCardControls";
@@ -19,7 +20,6 @@ import {
 
 interface Props {
 	connectProvider(name: string): any;
-	fetchIssueBoards(...args: any[]): any;
 	onValues: CrossPostIssueValuesListener;
 	provider?: string;
 	codeBlock?: {
@@ -71,7 +71,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			});
 		}
 
-		const response = await this.props.fetchIssueBoards(provider);
+		const response = await HostApi.instance.send(getFetchIssueBoardsCommand(provider), {});
 
 		this.setState({
 			isLoading: false,
@@ -180,5 +180,5 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 
 export default connect(
 	null,
-	{ connectProvider, fetchIssueBoards }
+	{ connectProvider }
 )(CrossPostIssueControls);
