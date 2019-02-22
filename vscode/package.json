@@ -225,7 +225,7 @@
     ],
     "scripts": {
         "build": "npm run webview:build && webpack --config-name extension --env.development",
-        "bundle": "npm install --no-save && npm run agent:bundle && webpack --env.production",
+        "bundle": "npm install --no-save && npm run agent:bundle && npm run build -- --env.production",
         "bundle:ci": "npm run clean:ci && npm run bundle",
         "clean": "git clean -Xdf -e !node_modules -e !node_modules/**/* -e !codestream*.info",
         "clean:ci": "git clean -xdf && npm run webview:clean:ci && npm run agent:clean:ci",
