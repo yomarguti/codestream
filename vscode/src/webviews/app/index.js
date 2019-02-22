@@ -1,9 +1,32 @@
 import { install as polyFillResizeObserver } from "resize-observer";
 import React from "react";
 import ReactDOM from "react-dom";
-import { actions, Container, createStore, EventEmitter, WebviewApi } from "codestream-components";
+import { actions, Container, createStore, HostApi, listenForEvents } from "codestream-components";
 import translations from "codestream-components/translations/en";
+import {
+	GetViewBootstrapDataRequestType,
+	JoinLiveShareRequestType,
+	WebviewReadyNotificationType
+} from "codestream-components/ipc/webview.protocol";
 import loggingMiddleWare from "./logging-middleware";
+
+const vscodeApi = acquireVsCodeApi();
+const channel = new MessageChannel();
+Object.defineProperty(window, "acquireCodestreamHost", {
+	value() {
+		return channel.port2;
+	}
+});
+window.addEventListener(
+	"message",
+	message => {
+		channel.port1.postMessage(message.data);
+	},
+	false
+);
+channel.port1.onmessage = message => {
+	vscodeApi.postMessage(message.data);
+};
 
 if (!window.ResizeObserver) {
 	polyFillResizeObserver();
@@ -176,8 +199,8 @@ function initializeColorPalette() {
 initializeColorPalette();
 
 const start = Date.now();
-const api = new WebviewApi();
-api.bootstrap().then(data => {
+const api = HostApi.instance;
+api.send(GetViewBootstrapDataRequestType).then(data => {
 	const store = createStore(
 		{
 			pluginVersion: data.version,
@@ -196,50 +219,14 @@ api.bootstrap().then(data => {
 			capabilities: data.capabilities,
 			...(data.configs.email ? { route: { route: "login" } } : {})
 		},
-		{ api },
+		undefined,
 		[loggingMiddleWare]
 	);
 
 	// TODO: should be able to include data.configs in call to createStore
 	store.dispatch(actions.updateConfigs(data.configs || {}));
 
-	EventEmitter.on("data", ({ type, data }) => {
-		switch (type) {
-			case "preferences":
-				store.dispatch(actions.updatePreferences(data));
-				break;
-			case "unreads":
-				store.dispatch(actions.updateUnreads(data));
-				break;
-			default:
-				store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload: data });
-		}
-	});
-
-	EventEmitter.on("configs", configs => store.dispatch(actions.updateConfigs(configs)));
-
-	EventEmitter.on("connectivity:offline", () => store.dispatch(actions.offline()));
-	EventEmitter.on("connectivity:online", () => store.dispatch(actions.online()));
-
-	EventEmitter.on(
-		"interaction:active-editor-changed",
-		body =>
-			body.editor &&
-			store.dispatch(actions.setCurrentFile(body.editor.fileName, body.editor.fileStreamId))
-	);
-
-	EventEmitter.on("interaction:focus", () => {
-		setTimeout(() => {
-			store.dispatch(actions.focus());
-		}, 10); // we want the first click to go to the FocusTrap blanket
-	});
-	EventEmitter.on("interaction:blur", () => {
-		store.dispatch(actions.blur());
-	});
-
-	EventEmitter.on("interaction:signed-out", () => {
-		store.dispatch(actions.reset());
-	});
+	listenForEvents(store);
 
 	const render = () => {
 		setTimeout(() => {
@@ -249,7 +236,9 @@ api.bootstrap().then(data => {
 		ReactDOM.render(
 			<Container store={store} i18n={{ locale: "en", messages: translations }} />,
 			document.querySelector("#app"),
-			() => EventEmitter.emit("view-ready")
+			() => {
+				api.send(WebviewReadyNotificationType);
+			}
 		);
 	};
 
@@ -266,12 +255,8 @@ api.bootstrap().then(data => {
 			e.stopPropagation();
 			e.stopImmediatePropagation();
 
-			EventEmitter.emit("interaction:svc-request", {
-				service: "vsls",
-				action: {
-					type: "join",
-					url: e.target.href
-				}
+			api.command(JoinLiveShareRequestType, {
+				url: e.target.href
 			});
 		},
 		true

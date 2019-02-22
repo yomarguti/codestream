@@ -162,14 +162,27 @@ function getExtensionConfig(env) {
 
 function getWebviewConfig(env) {
 	let onStart = [];
-	if (!env.watch && env.copyShared) {
-		onStart.push({
+	let onEnd = [];
+	// if (!env.watch && env.copyShared) {
+	// 	onStart.push({
+	// 		copy: [
+	// 			// Copy in the type declarations from the agent, because referencing them directly is a nightmare
+	// 			{
+	// 				// TODO: Use environment variable if exists
+	// 				source: path.resolve(__dirname, "../codestream-lsp-agent/src/shared/*"),
+	// 				destination: path.resolve(__dirname, "../codestream-components/shared/")
+	// 			}
+	// 		]
+	// 	});
+	// }
+	if (env.watch || env.copyShared) {
+		onEnd.push({
 			copy: [
-				// Copy in the type declarations from the agent, because referencing them directly is a nightmare
+				// Copy in the type declarations from codestream-components
 				{
 					// TODO: Use environment variable if exists
-					source: path.resolve(__dirname, "../codestream-lsp-agent/src/shared/*"),
-					destination: path.resolve(__dirname, "../codestream-components/shared/")
+					source: path.resolve(__dirname, "../codestream-components/ipc/*"),
+					destination: "src/shared/"
 				}
 			]
 		});
@@ -178,7 +191,8 @@ function getWebviewConfig(env) {
 	const plugins = [
 		new CleanPlugin(["dist/webview", "webview.html"]),
 		new FileManagerPlugin({
-			onStart: onStart
+			// onStart: onStart,
+			onEnd: onEnd
 		}),
 		new MiniCssExtractPlugin({
 			filename: "webview.css"

@@ -22,7 +22,6 @@ import {
 import { RequestType } from "vscode-jsonrpc";
 import { Range } from "vscode-languageclient";
 import {
-	CSCodeBlock,
 	CSMePreferences,
 	CSPost,
 	CSRepository,
@@ -55,27 +54,67 @@ import {
 	ReportingMessageType,
 	TraceLevel
 } from "../shared/agent.protocol";
+import {
+	ApplyPatchRequest,
+	ApplyPatchRequestType,
+	DidChangeActiveStreamNotification,
+	DidChangeActiveStreamNotificationType,
+	DidChangeConfigsNotification,
+	DidChangeConfigsNotificationType,
+	DidChangeContextStateNotificationType,
+	DidCloseThreadNotificationType,
+	DidHighlightCodeNotification,
+	DidHighlightCodeNotificationType,
+	DidOpenThreadNotification,
+	DidOpenThreadNotificationType,
+	DidScrollEditorNotification,
+	DidScrollEditorNotificationType,
+	DidSignOutNotificationType,
+	GetViewBootstrapDataRequestType,
+	GetViewBootstrapDataResponse,
+	GoToSlackSigninRequestType,
+	HighlightCodeRequest,
+	HighlightCodeRequestType,
+	InviteToLiveShareRequest,
+	InviteToLiveShareRequestType,
+	JoinLiveShareRequest,
+	JoinLiveShareRequestType,
+	LoginRequestType,
+	MuteAllConversationsRequestType,
+	OpenCommentOnSelectInEditorRequestType,
+	ReloadWebviewRequestType,
+	RevealFileLineRequest,
+	RevealFileLineRequestType,
+	ShowCodeRequest,
+	ShowCodeRequestType,
+	ShowDiffRequest,
+	ShowDiffRequestType,
+	ShowMarkersInEditorRequestType,
+	SignOutRequestType,
+	StartCommentOnLineRequest,
+	StartCommentOnLineRequestType,
+	StartLiveShareRequest,
+	StartLiveShareRequestType,
+	StartSignupRequestType,
+	ValidateSignupRequestType,
+	WebviewIpcMessage,
+	WebviewReadyNotificationType
+} from "../shared/webview.protocol";
 import { log } from "../system";
 import { Functions } from "../system";
-import {
-	DidScrollNotification,
-	DidSelectCodeNotification,
-	toLoggableIpcMessage,
-	WebviewIpc,
-	WebviewIpcMessage,
-	WebviewIpcMessageResponseBody,
-	WebviewIpcMessageType
-} from "./webviewIpc";
+import { toLoggableIpcMessage, WebviewIpc } from "./webviewIpc";
 
 interface BootstrapState {
-	context?: {
+	context: {
+		currentTeamId: string;
+		currentStreamId?: string;
+		threadId?: string;
 		[key: string]: any;
 	};
+	session?: {
+		userId: string;
+	};
 	capabilities: Capabilities;
-	currentTeamId: string;
-	currentUserId: string;
-	currentStreamId: string;
-	currentThreadId?: string;
 	env: CodeStreamEnvironment | string;
 	posts: CSPost[];
 	streams: CSStream[];
@@ -91,40 +130,7 @@ interface BootstrapState {
 	panelStack?: string[];
 }
 
-interface CSWebviewRequest {
-	id: string;
-	action: string;
-	params: any;
-}
-
-// TODO: Make this work
-class BufferChangeTracker {
-	private _listeners: Map<string, Function[]>;
-
-	constructor() {
-		this._listeners = new Map();
-	}
-
-	observe(codeBlock: CSCodeBlock, listener: (hasDiff: boolean) => void) {
-		const listenersForFile = this._listeners.get(codeBlock.file) || [];
-		listenersForFile.push(listener);
-
-		listener(this._hasDiff(codeBlock));
-	}
-
-	unsubscribe(codeBlock: CSCodeBlock): void {
-		this._listeners.delete(codeBlock.file);
-	}
-
-	private _hasDiff(codeBlock: CSCodeBlock): boolean {
-		// TODO: actually check if file has a diff against the content of codeblock
-		return false;
-	}
-}
-
 export class CodeStreamWebviewPanel implements Disposable {
-	private _bufferChangeTracker = new BufferChangeTracker();
-
 	private _onDidChangeStream = new EventEmitter<StreamThread>();
 	get onDidChangeStream(): Event<StreamThread> {
 		return this._onDidChangeStream.event;
@@ -189,109 +195,63 @@ export class CodeStreamWebviewPanel implements Disposable {
 	}
 
 	private async onPanelWebViewMessageReceived(e: WebviewIpcMessage) {
-		// TODO: Given all the async work in here -- we need to extract this into a separate method with blocks to make sure events don't get interleaved
 		try {
 			Logger.log(`WebviewPanel: Received message ${toLoggableIpcMessage(e)} from the webview`);
 
-			const { type } = e;
-			switch (type) {
-				case WebviewIpcMessageType.onViewReady: {
-					// view is rendered and ready to receive messages
-					if (this._onReadyResolver !== undefined) {
-						this._onReadyResolver(false);
+			const target = e.method.split("/")[0];
+			switch (target) {
+				case "codeStream": {
+					const command = e as { id: string; method: string; params: any };
+					try {
+						const result = await Container.agent.sendRequest(
+							new RequestType<any, any, any, any>(e.method),
+							e.params
+						);
+						this._ipc.sendResponse({ id: command.id, params: result });
+					} catch (error) {
+						this._ipc.sendResponse({ id: command.id, error: error.message });
 					}
 					break;
 				}
-				case WebviewIpcMessageType.onRequest: {
-					const body = e.body as CSWebviewRequest;
-					// TODO: Add exception handling for failed requests
-					switch (body.action) {
-						case "bootstrap": {
+				case "extension": {
+					const message = e as { id: string; method: string; params: any };
+					switch (e.method) {
+						case WebviewReadyNotificationType.method: {
+							// view is rendered and ready to receive messages
+							if (this._onReadyResolver !== undefined) {
+								this._onReadyResolver(false);
+							}
+							break;
+						}
+						case GetViewBootstrapDataRequestType.method: {
 							Logger.log(
 								`WebviewPanel: Bootstrapping webview...`,
 								`SignedIn=${this.session.signedIn}`
 							);
 
-							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
 							try {
-								const state = await (this._bootstrapPromise || this.getBootstrapState());
+								const state: GetViewBootstrapDataResponse = await (this._bootstrapPromise ||
+									this.getBootstrapState());
 								this._bootstrapPromise = undefined;
 
-								if (this._streamThread !== undefined) {
-									state.currentStreamId = this._streamThread.stream.id;
-									state.currentThreadId = this._streamThread.id;
-								}
+								// if (this._streamThread !== undefined) {
+								// 	state.context.currentStreamId = this._streamThread.stream.id;
+								// 	state.context.threadId = this._streamThread.id;
+								// }
 
-								responseBody.payload = state;
+								this._ipc.sendResponse({
+									id: message.id,
+									params: state
+								});
 							} catch (ex) {
 								debugger;
 								Logger.error(ex);
 
-								responseBody.error = ex.message;
+								this._ipc.sendResponse({ id: message.id, error: ex.message });
 							}
-
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: responseBody
-							});
 							break;
 						}
-						case "authenticate": {
-							const { email, password } = body.params;
-
-							let status: LoginResult;
-							try {
-								status = await this.session.login(email, password);
-							} catch (ex) {
-								status = LoginResult.Unknown;
-							}
-
-							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-							if (status === LoginResult.Success) {
-								try {
-									responseBody.payload = await this.getBootstrapState();
-								} catch (ex) {
-									debugger;
-									Logger.error(ex);
-
-									responseBody.error = ex.message;
-								}
-							} else {
-								responseBody.error = status;
-							}
-
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: responseBody
-							});
-							break;
-						}
-
-						case "go-to-signup": {
-							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-							try {
-								await commands.executeCommand(
-									"vscode.open",
-									Uri.parse(
-										`${
-											Container.config.webAppUrl
-										}/signup?force_auth=true&signup_token=${this.session.getSignupToken()}`
-									)
-								);
-								responseBody.payload = true;
-							} catch (ex) {
-								responseBody.error = ex.message;
-							}
-
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: responseBody
-							});
-							break;
-						}
-						case "go-to-slack-signin": {
-							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-
+						case GoToSlackSigninRequestType.method: {
 							try {
 								await commands.executeCommand(
 									"vscode.open",
@@ -301,218 +261,241 @@ export class CodeStreamWebviewPanel implements Disposable {
 										}/service-auth/slack?state=${this.session.getSignupToken()}`
 									)
 								);
-								responseBody.payload = true;
+								this._ipc.sendResponse({ id: message.id, params: {} });
 							} catch (ex) {
-								responseBody.error = ex.message;
+								this._ipc.sendResponse({ id: message.id, error: ex.message });
 							}
-
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: responseBody
-							});
 							break;
 						}
-						case "validate-signup": {
-							const responseBody: WebviewIpcMessageResponseBody = { id: body.id };
-							const status = await this.session.loginViaSignupToken(body.params);
+						case ValidateSignupRequestType.method: {
+							const status = await this.session.loginViaSignupToken(message.params);
 
 							if (status === LoginResult.Success) {
 								try {
-									responseBody.payload = await this.getBootstrapState();
+									const state: GetViewBootstrapDataResponse = await this.getBootstrapState();
+									this._ipc.sendResponse({
+										id: message.id,
+										params: state
+									});
 								} catch (ex) {
 									debugger;
 									Logger.error(ex);
 
-									responseBody.error = ex.message;
+									this._ipc.sendResponse({ id: message.id, error: ex.message });
 								}
-							} else responseBody.error = status;
-
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: responseBody
-							});
+							} else this._ipc.sendResponse({ id: message.id, error: status });
 							break;
 						}
-						case "show-markers": {
-							const value = body.params;
+						case LoginRequestType.method: {
+							const { email, password } = message.params;
+
+							let status: LoginResult;
+							try {
+								status = await this.session.login(email, password);
+							} catch (ex) {
+								status = LoginResult.Unknown;
+							}
+
+							if (status === LoginResult.Success) {
+								try {
+									const state: GetViewBootstrapDataResponse = await this.getBootstrapState();
+									this._ipc.sendResponse({ id: message.id, params: state });
+								} catch (ex) {
+									debugger;
+									Logger.error(ex);
+
+									this._ipc.sendResponse({ id: message.id, error: ex.toString() });
+								}
+							} else {
+								this._ipc.sendResponse({ id: message.id, error: status });
+							}
+
+							break;
+						}
+						case ShowMarkersInEditorRequestType.method: {
 							// set the config
 							await configuration.update(
 								configuration.name("showMarkers").value,
-								value,
+								message.params.enable,
 								ConfigurationTarget.Global
 							);
+							this._ipc.sendResponse({ id: message.id, params: {} });
 							break;
 						}
-						case "mute-all": {
-							const value = body.params;
+						case MuteAllConversationsRequestType.method: {
 							// set the config
 							await configuration.update(
 								configuration.name("muteAll").value,
-								value,
+								message.params.mute,
 								ConfigurationTarget.Global
 							);
+							this._ipc.sendResponse({ id: message.id, params: {} });
 							break;
 						}
-						case "sign-out": {
-							await Container.commands.signOut();
-							break;
-						}
-						case "open-comment-on-select": {
-							const value = body.params;
+						case OpenCommentOnSelectInEditorRequestType.method: {
 							// set the config
 							await configuration.update(
 								configuration.name("openCommentOnSelect").value,
-								value,
+								message.params.enable,
 								ConfigurationTarget.Global
 							);
+							this._ipc.sendResponse({ id: message.id, params: {} });
 							break;
 						}
-						case "show-code": {
-							const { marker, enteringThread } = e.body.params;
+						case ShowCodeRequestType.method: {
+							const { marker, enteringThread }: ShowCodeRequest = message.params;
 							const status = await Container.commands.openPostWorkingFile(marker, {
 								preserveFocus: enteringThread
 							});
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: { id: e.body.id, payload: status }
-							});
-
+							this._ipc.sendResponse({ id: message.id, params: { status } });
 							break;
 						}
-						case "highlight-code": {
-							const { marker, onOff } = e.body.params;
-							const status = await Container.commands.highlightCode(marker, {
-								onOff
-							});
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: { id: e.body.id, payload: status }
-							});
-
-							break;
-						}
-						case "reveal-line": {
-							const { line } = e.body.params;
+						case RevealFileLineRequestType.method: {
+							const { line }: RevealFileLineRequest = message.params;
 							commands.executeCommand("revealLine", { lineNumber: line, at: "top" });
+							this._ipc.sendResponse({ id: message.id, params: {} });
 
 							break;
 						}
-						case "start-comment-on-line": {
-							const { line, uri } = e.body.params;
-							const status = await Container.commands.startCommentOnLine({ line, uri });
-							this.postMessage({
-								type: WebviewIpcMessageType.response,
-								body: { id: e.body.id, payload: status }
+						case HighlightCodeRequestType.method: {
+							const { marker, highlight }: HighlightCodeRequest = message.params;
+							const result = await Container.commands.highlightCode(marker, {
+								onOff: highlight
 							});
+							this._ipc.sendResponse({
+								id: message.id,
+								params: { result }
+							});
+							break;
+						}
+						case SignOutRequestType.method: {
+							await Container.commands.signOut();
+							this._ipc.sendResponse({ id: message.id, params: {} });
+							break;
+						}
+						case StartCommentOnLineRequestType.method: {
+							const { line, uri }: StartCommentOnLineRequest = message.params;
+							await Container.commands.startCommentOnLine({ line, uri });
+							this._ipc.sendResponse({
+								id: message.id,
+								params: {}
+							});
+
+							break;
+						}
+						case StartSignupRequestType.method: {
+							try {
+								await commands.executeCommand(
+									"vscode.open",
+									Uri.parse(
+										`${
+											Container.config.webAppUrl
+										}/signup?force_auth=true&signup_token=${this.session.getSignupToken()}`
+									)
+								);
+								this._ipc.sendResponse({ id: message.id, params: {} });
+							} catch (ex) {
+								this._ipc.sendResponse({ id: message.id, error: ex.message });
+							}
+
+							break;
+						}
+						case ReloadWebviewRequestType.method: {
+							this.reload();
+							break;
+						}
+						case InviteToLiveShareRequestType.method: {
+							const { userId, createNewStream }: InviteToLiveShareRequest = message.params;
+							await Container.vsls.processRequest({
+								type: "invite",
+								userId,
+								createNewStream
+							});
+							this._ipc.sendResponse({ id: message.id, params: {} });
+
+							break;
+						}
+						case StartLiveShareRequestType.method: {
+							const { streamId, threadId, createNewStream }: StartLiveShareRequest = message.params;
+							await Container.vsls.processRequest({
+								type: "start",
+								streamId,
+								threadId,
+								createNewStream
+							});
+							this._ipc.sendResponse({ id: message.id, params: {} });
+
+							break;
+						}
+						case JoinLiveShareRequestType.method: {
+							const { url }: JoinLiveShareRequest = message.params;
+							await Container.vsls.processRequest({
+								type: "join",
+								url
+							});
+							this._ipc.sendResponse({ id: message.id, params: {} });
+							break;
+						}
+						case ShowDiffRequestType.method: {
+							const { marker }: ShowDiffRequest = message.params;
+							Container.commands.showMarkerDiff({ marker: marker });
+							this._ipc.sendResponse({ id: message.id, params: {} });
+
+							break;
+						}
+						case ApplyPatchRequestType.method: {
+							const { marker }: ApplyPatchRequest = message.params;
+							Container.commands.applyMarker({ marker: marker });
+							this._ipc.sendResponse({ id: message.id, params: {} });
+
+							break;
+						}
+						case DidChangeActiveStreamNotificationType.method: {
+							const { streamId }: DidChangeActiveStreamNotification = message.params;
+
+							if (!streamId) {
+								if (this._streamThread !== undefined) {
+									this._streamThread = undefined;
+									this._onDidChangeStream.fire(this._streamThread);
+								}
+
+								break;
+							}
+
+							const stream = await this.session.getStream(streamId);
+							if (stream !== undefined) {
+								this._streamThread = { id: undefined, stream: stream };
+								this._onDidChangeStream.fire(this._streamThread);
+							}
+
+							break;
+						}
+						case DidChangeContextStateNotificationType.method: {
+							this._onDidChangeContextState.fire(message.params.state);
+							break;
+						}
+						case DidCloseThreadNotificationType.method: {
+							if (this._streamThread !== undefined) {
+								this._streamThread.id = undefined;
+								this._onDidChangeStream.fire(this._streamThread);
+							}
+
+							break;
+						}
+						case DidOpenThreadNotificationType.method: {
+							const { threadId, streamId }: DidOpenThreadNotification = message.params;
+							if (this._streamThread !== undefined && this._streamThread.stream.id === streamId) {
+								this._streamThread.id = threadId;
+								this._onDidChangeStream.fire(this._streamThread);
+							}
 
 							break;
 						}
 						default: {
-							const responseBody: { id: string; [key: string]: any } = { id: body.id };
-							try {
-								responseBody.payload = await Container.agent.sendRequest(
-									new RequestType<any, any, any, any>(body.action),
-									body.params
-								);
-							} catch (error) {
-								responseBody.error = error.message;
-							} finally {
-								this.postMessage({
-									type: WebviewIpcMessageType.response,
-									body: responseBody
-								});
-							}
-							break;
+							debugger;
+							throw new Error(`Unhandled webview message: ${message}`);
 						}
 					}
-					break;
-				}
-				case WebviewIpcMessageType.onActivePanelChanged: {
-					// const panelStack = e.body;
-					break;
-				}
-				case WebviewIpcMessageType.onActiveThreadChanged: {
-					const { threadId, streamId } = e.body;
-					if (this._streamThread !== undefined && this._streamThread.stream.id === streamId) {
-						this._streamThread.id = threadId;
-						this._onDidChangeStream.fire(this._streamThread);
-					}
-
-					break;
-				}
-				case WebviewIpcMessageType.onActiveThreadClosed: {
-					if (this._streamThread !== undefined) {
-						this._streamThread.id = undefined;
-						this._onDidChangeStream.fire(this._streamThread);
-					}
-
-					break;
-				}
-				case WebviewIpcMessageType.onContextStateChanged: {
-					this._onDidChangeContextState.fire(e.body);
-					break;
-				}
-				case WebviewIpcMessageType.onActiveStreamChanged: {
-					const streamId = e.body;
-
-					if (!streamId) {
-						if (this._streamThread !== undefined) {
-							this._streamThread = undefined;
-							this._onDidChangeStream.fire(this._streamThread);
-						}
-
-						return;
-					}
-
-					const stream = await this.session.getStream(streamId);
-					if (stream !== undefined) {
-						this._streamThread = { id: undefined, stream: stream };
-						this._onDidChangeStream.fire(this._streamThread);
-					}
-
-					break;
-				}
-				case WebviewIpcMessageType.onCodemarkApplyPatch: {
-					const { marker } = e.body;
-					Container.commands.applyMarker({ marker: marker });
-
-					break;
-				}
-				case WebviewIpcMessageType.onCodemarkShowDiff: {
-					const { marker } = e.body;
-					Container.commands.showMarkerDiff({ marker: marker });
-
-					break;
-				}
-				case WebviewIpcMessageType.onServiceRequest: {
-					this._ipc.onServiceRequest(e.body);
-
-					break;
-				}
-				case WebviewIpcMessageType.onFileChangedSubscribe: {
-					const codeBlock = e.body as CSCodeBlock;
-
-					this._bufferChangeTracker.observe(codeBlock, hasDiff => {
-						this.postMessage({
-							type: WebviewIpcMessageType.didFileChange,
-							body: {
-								file: codeBlock.file,
-								hasDiff
-							}
-						});
-					});
-
-					break;
-				}
-				case WebviewIpcMessageType.onFileChangedUnsubscribe: {
-					const codeblock = e.body as CSCodeBlock;
-					this._bufferChangeTracker.unsubscribe(codeblock);
-
-					break;
-				}
-				case WebviewIpcMessageType.onReloadRequest: {
-					this.reload();
-					break;
 				}
 			}
 		} catch (ex) {
@@ -570,15 +553,15 @@ export class CodeStreamWebviewPanel implements Disposable {
 			configuration.changed(e, configuration.name("traceLevel").value)
 		) {
 			this.postMessage({
-				type: WebviewIpcMessageType.didChangeConfiguration,
-				body: {
+				method: DidChangeConfigsNotificationType.method,
+				params: {
 					debug: Container.config.traceLevel === "debug",
 					muteAll: Container.config.muteAll,
 					serverUrl: this.session.serverUrl,
 					showHeadshots: Container.config.avatars,
 					showMarkers: Container.config.showMarkers,
 					openCommentOnSelect: Container.config.openCommentOnSelect
-				}
+				} as DidChangeConfigsNotification
 			});
 		}
 	}
@@ -626,8 +609,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 		}
 
 		void (await this.postMessage({
-			type: WebviewIpcMessageType.didSelectCode,
-			body: {
+			method: DidHighlightCodeNotificationType.method,
+			params: {
 				code: code,
 				file: file,
 				fileUri: uri.toString(),
@@ -635,8 +618,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 				source: source,
 				gitError,
 				isHighlight
-			}
-		} as DidSelectCodeNotification));
+			} as DidHighlightCodeNotification
+		}));
 		return this._streamThread;
 	}
 
@@ -709,7 +692,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 	signedOut() {
 		if (this._panel !== undefined) {
 			this._streamThread = undefined;
-			this.postMessage({ type: WebviewIpcMessageType.didSignOut, body: null });
+			this.postMessage(DidSignOutNotificationType);
 		}
 	}
 
@@ -801,13 +784,13 @@ export class CodeStreamWebviewPanel implements Disposable {
 		if (uri.scheme !== "file") return;
 
 		void (await this.postMessage({
-			type: WebviewIpcMessageType.didScroll,
-			body: {
+			method: DidScrollEditorNotificationType.method,
+			params: {
 				uri,
 				firstLine: e.visibleRanges[0].start.line,
 				lastLine: e.visibleRanges[0].end.line
-			}
-		} as DidScrollNotification));
+			} as DidScrollEditorNotification
+		}));
 	}
 
 	private async getBootstrapState() {
@@ -841,12 +824,16 @@ export class CodeStreamWebviewPanel implements Disposable {
 			showMarkers: Container.config.showMarkers,
 			openCommentOnSelect: Container.config.openCommentOnSelect
 		};
-		state.currentTeamId = this.session.team.id;
-		state.currentUserId = this.session.userId;
+		state.context = {
+			...(this._uiContext || {}),
+			currentTeamId: this.session.team.id,
+			hasFocus: true
+		};
+		state.session = {
+			userId: this.session.userId
+		};
 		state.env = this.session.environment;
 		state.version = Container.versionFormatted;
-
-		if (this._uiContext) state.context = this._uiContext;
 
 		const [
 			reposResponse,
@@ -865,8 +852,8 @@ export class CodeStreamWebviewPanel implements Disposable {
 		state.preferences = preferencesResponse.preferences;
 
 		if (this._streamThread !== undefined) {
-			state.currentStreamId = this._streamThread.stream.id;
-			state.currentThreadId = this._streamThread.id;
+			state.context.currentStreamId = this._streamThread.stream.id;
+			state.context.threadId = this._streamThread.id;
 		}
 
 		return state;

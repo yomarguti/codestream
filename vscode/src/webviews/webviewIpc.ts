@@ -1,120 +1,27 @@
 "use strict";
 import * as path from "path";
-import { TextEditor, Uri, WebviewPanel, workspace } from "vscode";
-import { Range } from "vscode-languageclient";
+import { TextEditor, WebviewPanel, workspace } from "vscode";
 import { StreamThread } from "../api/session";
 import { Container } from "../container";
 import { Logger } from "../logger";
+import {
+	DidBlurNotification,
+	DidChangeActiveEditorNotification,
+	DidChangeActiveEditorNotificationType,
+	DidEstablishConnectivityNotificationType,
+	DidFocusNotification,
+	DidLoseConnectivityNotificationType,
+	DidSelectStreamThreadNotification,
+	DidSelectStreamThreadNotificationType,
+	WebviewIpcMessage
+} from "../shared/webview.protocol";
 import { CodeStreamWebviewPanel } from "./webviewPanel";
 
-export enum WebviewIpcMessageType {
-	didBlur = "codestream:interaction:blur",
-	didChangeActiveEditor = "codestream:interaction:active-editor-changed",
-	didChangeConfiguration = "codestream:configs",
-	didChangeData = "codestream:data",
-	didChangeStreamThread = "codestream:interaction:stream-thread-selected",
-	didConnect = "codestream:connectivity:online",
-	didDisconnect = "codestream:connectivity:offline",
-	didFileChange = "codestream:publish:file-changed",
-	didFocus = "codestream:interaction:focus",
-	didSelectCode = "codestream:interaction:code-highlighted",
-	didScroll = "codestream:interaction:scrolled",
-	didSignOut = "codestream:interaction:signed-out",
-	onActivePanelChanged = "codestream:interaction:active-panel-changed",
-	onActiveThreadChanged = "codestream:interaction:thread-selected",
-	onActiveThreadClosed = "codestream:interaction:thread-closed",
-	onActiveStreamChanged = "codestream:interaction:changed-active-stream",
-	onCodemarkApplyPatch = "codestream:interaction:apply-patch",
-	onCodemarkShowDiff = "codestream:interaction:show-diff",
-	onFileChangedSubscribe = "codestream:subscription:file-changed",
-	onFileChangedUnsubscribe = "codestream:unsubscribe:file-changed",
-	onRequest = "codestream:request",
-	onServiceRequest = "codestream:interaction:svc-request",
-	onReloadRequest = "codestream:interaction:clicked-reload-webview",
-	onViewReady = "codestream:view-ready",
-	response = "codestream:response",
-	onContextStateChanged = "codestream:interaction:context-state-changed"
-}
-
 export function toLoggableIpcMessage(msg: WebviewIpcMessage) {
-	switch (msg.type) {
-		case WebviewIpcMessageType.response:
-			return `${msg.type}(${msg.body.id || ""})`;
-
-		case WebviewIpcMessageType.onRequest:
-			return `${msg.type}(${msg.body.id || ""}):${msg.body.action || ""}`;
-
-		case WebviewIpcMessageType.response:
-			return `${msg.type}(${msg.body.id || ""})`;
-
-		case WebviewIpcMessageType.didChangeData:
-			return `${msg.type}(${msg.body.type || ""})`;
-
-		default:
-			return msg.type;
+	if (msg.id) {
+		return `${msg.method || "response"}(${msg.id})`;
 	}
-}
-
-// TODO: Clean this up to be consistent with the structure
-export interface WebviewIpcMessage {
-	type: WebviewIpcMessageType;
-	body: any;
-}
-
-export interface WebviewIpcMessageResponseBody {
-	id: string;
-	payload?: any;
-	error?: string;
-}
-
-export interface DidChangeActiveEditorNotification {
-	type: WebviewIpcMessageType.didChangeActiveEditor;
-	body: {
-		editor:
-			| {
-					uri: string;
-					fileName: string;
-					languageId: string;
-					fileStreamId?: string;
-			  }
-			| undefined;
-	};
-}
-
-export interface DidSelectCodeNotification {
-	type: WebviewIpcMessageType.didSelectCode;
-	body: {
-		code: string;
-		file: string | undefined;
-		fileUri: string;
-		range: Range;
-		source:
-			| {
-					file: string;
-					repoPath: string;
-					revision: string;
-					authors: {
-						id: string;
-						username: string;
-					}[];
-					remotes: {
-						name: string;
-						url: string;
-					}[];
-			  }
-			| undefined;
-		gitError: string | undefined;
-		isHighlight?: boolean;
-	};
-}
-
-export interface DidScrollNotification {
-	type: WebviewIpcMessageType.didScroll;
-	body: {
-		uri: Uri;
-		firstLine: number;
-		lastLine: number;
-	};
+	return `${msg.method}`;
 }
 
 export interface VslsInviteServiceRequestAction {
@@ -190,39 +97,33 @@ export class WebviewIpc {
 	}
 
 	sendDidBlur() {
-		return this.postMessage({
-			type: WebviewIpcMessageType.didBlur,
-			body: {}
-		});
+		return this.postMessage(DidBlurNotification);
 	}
 
 	sendDidConnect() {
-		return this.postMessage({
-			type: WebviewIpcMessageType.didConnect,
-			body: {}
-		});
+		return this.postMessage(DidEstablishConnectivityNotificationType);
 	}
 
 	sendDidDisconnect() {
-		return this.postMessage({
-			type: WebviewIpcMessageType.didDisconnect,
-			body: {}
-		});
+		return this.postMessage(DidLoseConnectivityNotificationType);
 	}
 
 	sendDidFocus() {
+		return this.postMessage(DidFocusNotification);
+	}
+
+	sendResponse(response: { id: string; params: any } | { id: string; error: any }) {
 		return this.postMessage({
-			type: WebviewIpcMessageType.didFocus,
-			body: {}
-		});
+			...response
+		} as WebviewIpcMessage);
 	}
 
 	async sendDidChangeActiveEditor(editor: TextEditor | undefined) {
-		const message: DidChangeActiveEditorNotification = {
-			type: WebviewIpcMessageType.didChangeActiveEditor,
-			body: {
+		const message = {
+			method: DidChangeActiveEditorNotificationType.method,
+			params: {
 				editor: undefined
-			}
+			} as DidChangeActiveEditorNotification
 		};
 
 		if (editor != null) {
@@ -235,11 +136,11 @@ export class WebviewIpc {
 						? path.relative(folder.uri.fsPath, uri.fsPath)
 						: editor.document.fileName;
 
-				message.body.editor = {
+				message.params.editor = {
 					fileStreamId: stream && stream.id,
-					uri: uri.toString(),
-					fileName: fileName,
-					languageId: editor.document.languageId
+					// uri: uri.toString(),
+					fileName: fileName
+					// languageId: editor.document.languageId
 				};
 			}
 		}
@@ -249,11 +150,11 @@ export class WebviewIpc {
 
 	sendDidChangeStreamThread(streamThread: StreamThread) {
 		return this.postMessage({
-			type: WebviewIpcMessageType.didChangeStreamThread,
-			body: {
+			method: DidSelectStreamThreadNotificationType.method,
+			params: {
 				streamId: streamThread.stream.id,
 				threadId: streamThread.id
-			}
+			} as DidSelectStreamThreadNotification
 		});
 	}
 
@@ -277,7 +178,7 @@ export class WebviewIpc {
 
 		if (this._paused) {
 			// HACK: If this is a response to a request try to service it
-			if (msg.type === WebviewIpcMessageType.response) {
+			if (msg.id && !msg.method) {
 				const success = await this.postMessageCore(msg);
 				if (success) return true;
 			}

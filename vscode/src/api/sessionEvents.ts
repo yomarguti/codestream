@@ -13,8 +13,11 @@ import {
 	UnreadsChangedNotification,
 	UsersChangedNotification
 } from "../agent/agentConnection";
+import {
+	DidChangeDataNotification as WebviewDidChangeDataNotification,
+	WebviewIpcMessage
+} from "../shared/webview.protocol";
 import { memoize } from "../system";
-import { WebviewIpcMessage, WebviewIpcMessageType } from "../webviews/webviewIpc";
 import { CodeStreamSession, Post, SessionSignedOutReason, SessionStatus } from "./session";
 
 export interface SessionStatusChangedEvent {
@@ -61,8 +64,8 @@ abstract class SessionChangedEventBase<T extends DidChangeDataNotification>
 	@memoize
 	toIpcMessage(): WebviewIpcMessage {
 		return {
-			type: WebviewIpcMessageType.didChangeData,
-			body: {
+			method: WebviewDidChangeDataNotification.method,
+			params: {
 				type: this.type,
 				data: this._event.data
 			}
