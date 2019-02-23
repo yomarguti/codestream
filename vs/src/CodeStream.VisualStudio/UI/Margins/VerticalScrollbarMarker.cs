@@ -10,11 +10,15 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
+using CodeStream.VisualStudio.Core.Logging;
+using Serilog;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
     internal class VerticalScrollbarMarker : FrameworkElement, ICodeStreamWpfTextViewMargin
     {
+        private static readonly ILogger Log = LogManager.ForContext<VerticalScrollbarMarker>();
+
         private double MarkPadding = 3.0;
         private double MarkThickness = 2.0;
         private double MarkHeight = 6;
@@ -324,7 +328,6 @@ namespace CodeStream.VisualStudio.UI.Margins
                                     if (!_isDisposed)
                                     {
                                         InvalidateVisual();
-                                        // this.RedrawAdornments();
                                     }
 
                                     return null;
@@ -349,48 +352,47 @@ namespace CodeStream.VisualStudio.UI.Margins
 
             if (_search == null || Visibility != Visibility.Visible) return;
 
-            //There is a word that should be highlighted. It doesn't matter whether or not the search has completed or
-            //is still in progress: draw red marks for each match found so far (the completion callback on the search
-            //will guarantee that the highlight display gets invalidated once the search has completed).
-
-            //Take a snapshot of the matches found to date (this could still be changing
-            //if the search has not completed yet).
-            var matches = _search.Matches;
-
-            var lastY = double.MinValue;
-            var markerCount = Math.Min(500, matches.Count);
-            for (var i = 0; i < markerCount; ++i)
+            try
             {
-                //Get (for small lists) the index of every match or, for long lists, the index of every
-                //(count / 1000)th entry. Use longs to avoid any possible integer overflow problems.
-                var index = (int)(i * (long)matches.Count / markerCount);
-                var match = matches[index].Start;
+                //Take a snapshot of the matches found to date (this could still be changing
+                //if the search has not completed yet).
+                var matches = _search.Matches;
 
-                //Translate the match from its snapshot to the view's current snapshot (the versions should be the same,
-                //but this will handle it if -- for some reason -- they are not).
-                var y = Math.Floor(
-                    _verticalScrollBar.GetYCoordinateOfBufferPosition(match.TranslateTo(_textView.TextSnapshot,
-                        PointTrackingMode.Negative)));
-                if (y + MarkThickness > lastY)
+                var lastY = double.MinValue;
+                var markerCount = Math.Min(500, matches.Count);
+                for (var i = 0; i < markerCount; ++i)
                 {
-                    lastY = y;
+                    //Get (for small lists) the index of every match or, for long lists, the index of every
+                    //(count / 1000)th entry. Use longs to avoid any possible integer overflow problems.
+                    var index = (int) (i * (long) matches.Count / markerCount);
+                    var match = matches[index].Start;
 
-                    //UserControl uc = new UserControl();
-                    //uc.Content = _marginMatchBrush;
-                    //uc.Width = 100;
-                    //uc.Height = 25;
-                    //VisualBrush vb = new VisualBrush(uc);
-                    //uc.MouseDown += Uc_MouseDown;
+                    //Translate the match from its snapshot to the view's current snapshot (the versions should be the same,
+                    //but this will handle it if -- for some reason -- they are not).
+                    var y = Math.Floor(
+                        _verticalScrollBar.GetYCoordinateOfBufferPosition(match.TranslateTo(_textView.TextSnapshot,
+                            PointTrackingMode.Negative)));
+                    if (y + MarkThickness > lastY)
+                    {
+                        lastY = y;
+                        var rectX = 6;
+                        var rectY = y - MarkThickness * 0.75;
+                        var rectWidth = Width - MarkPadding * 2.0;
+                        var rectHeight = MarkHeight;
 
-                    //_marginMatchBrush
-                    drawingContext.DrawRectangle(_marginMatchBrush, null,
-                        new Rect(
-                            x: MarkPadding,
-                            y: y - MarkThickness * 0.75,
-                            width: Width - MarkPadding * 2.0,
-                            height: MarkHeight)
-                    );
+                        drawingContext.DrawRectangle(_marginMatchBrush, null,
+                            new Rect(
+                                x: rectX,
+                                y: rectY,
+                                width: rectWidth,
+                                height: rectHeight)
+                        );
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "drawingContext");
             }
         }
 

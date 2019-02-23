@@ -25,7 +25,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         internal IEditorFormatMapService EditorFormatMapService;
 
         [Export]
-        [Name("MatchMarginAdornmentLayer")]
+        [Name("VerticalScrollbarMarkerAdornmentLayer")]
         [Order(After = PredefinedAdornmentLayers.Outlining, Before = PredefinedAdornmentLayers.Selection)]
         internal AdornmentLayerDefinition MatchLayerDefinition;
 #pragma warning restore 649
