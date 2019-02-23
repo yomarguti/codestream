@@ -54,7 +54,7 @@ namespace CodeStream.VisualStudio.Credentials
             Password = password;
             Target = target;
             Type = type;
-            PersistanceType = PersistanceType.Session;
+            PersistanceType = PersistanceType.LocalComputer;
             _lastWriteTime = DateTime.MinValue;
         }
 
