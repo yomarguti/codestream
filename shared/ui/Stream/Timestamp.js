@@ -1,6 +1,4 @@
 import React, { Component } from "react";
-import moment from "moment";
-// var Moment_Timezone = require("moment-timezone");
 
 export default class Timestamp extends Component {
 	constructor(props) {
@@ -39,16 +37,23 @@ export default class Timestamp extends Component {
 		var today = new Date(now);
 		var timeDay = new Date(time);
 		if (timeDay.getFullYear() === today.getFullYear()) {
-			return moment(time).format("MMM D");
+			return new Intl.DateTimeFormat("en", {
+				day: "numeric",
+				month: "short"
+			}).format(time);
 		}
-		return moment(time).format("MMM D, YYYY");
+		return new Intl.DateTimeFormat("en", {
+			day: "numeric",
+			month: "short",
+			year: "numeric"
+		}).format(time);
 	};
 
 	prettyTime = function(time, options) {
 		options = options || {};
 		var prettyTime;
 		// time = this.adjustedTime(time, options.timezone_info);
-		prettyTime = moment(time).format("h:mm A");
+		prettyTime = new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" }).format(time);
 		prettyTime = prettyTime.replace(/^0:/, "12:");
 		return prettyTime;
 	};

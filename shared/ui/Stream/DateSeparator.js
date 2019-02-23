@@ -1,6 +1,4 @@
 import React, { Component } from "react";
-import moment from "moment";
-// var Moment_Timezone = require("moment-timezone");
 
 export default class DateSeparator extends Component {
 	constructor(props) {
@@ -54,8 +52,18 @@ export default class DateSeparator extends Component {
 		}
 
 		if (timeDay.getFullYear() === today.getFullYear()) {
-			return moment(time).format("dddd, MMMM Do");
+			return new Intl.DateTimeFormat("en", {
+				day: "numeric",
+				month: "long",
+				weekday: "long"
+			}).format(time);
 		}
-		return moment(time).format("dddd, MMMM Do, YYYY");
+
+		return new Intl.DateTimeFormat("en", {
+			day: "numeric",
+			month: "long",
+			weekday: "long",
+			year: "numeric"
+		}).format(time);
 	};
 }
