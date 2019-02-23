@@ -1,4 +1,4 @@
-import { CSUser } from "../../shared/api.protocol";
+import { CSUser } from "@codestream/protocols/api";
 import { action } from "../common";
 import { UsersActionsType } from "./types";
 

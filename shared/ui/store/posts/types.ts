@@ -1,4 +1,4 @@
-import { CSPost } from "../../shared/api.protocol";
+import { CSPost } from "@codestream/protocols/api";
 import { Index } from "../common";
 
 export interface PendingPost

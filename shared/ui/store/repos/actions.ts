@@ -1,4 +1,4 @@
-import { CSRepository } from "../../shared/api.protocol";
+import { CSRepository } from "@codestream/protocols/api";
 import { action } from "../common";
 import { ReposActionsType } from "./types";
 

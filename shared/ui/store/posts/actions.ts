@@ -1,4 +1,4 @@
-import { CSPost } from "../../shared/api.protocol";
+import { CSPost } from "@codestream/protocols/api";
 import { action } from "../common";
 import { PendingPost, Post, PostsActionsType } from "./types";
 

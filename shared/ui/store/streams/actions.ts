@@ -1,4 +1,4 @@
-import { CSStream } from "../../shared/api.protocol";
+import { CSStream } from "@codestream/protocols/api";
 import { action } from "../common";
 import { StreamActionType } from "./types";
 

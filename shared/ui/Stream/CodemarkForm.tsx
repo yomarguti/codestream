@@ -1,11 +1,4 @@
-import cx from "classnames";
-import * as paths from "path";
-import * as React from "react";
-import { connect } from "react-redux";
-import Select from "react-select";
-import _ from "underscore";
-import { Range } from "vscode-languageserver-protocol";
-import { FetchAssignableUsersRequestType } from "../shared/agent.protocol";
+import { FetchAssignableUsersRequestType } from "@codestream/protocols/agent";
 import {
 	CodemarkType,
 	CSChannelStream,
@@ -14,7 +7,14 @@ import {
 	CSStream,
 	CSUser,
 	StreamType
-} from "../shared/api.protocol";
+} from "@codestream/protocols/api";
+import cx from "classnames";
+import * as paths from "path";
+import * as React from "react";
+import { connect } from "react-redux";
+import Select from "react-select";
+import _ from "underscore";
+import { Range } from "vscode-languageserver-protocol";
 import { getStreamForId, getStreamForTeam } from "../store/streams/reducer";
 import { Stream } from "../store/streams/types";
 import { mapFilter } from "../utils";

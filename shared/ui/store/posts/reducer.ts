@@ -1,5 +1,5 @@
+import { CSPost } from "@codestream/protocols/api";
 import _ from "underscore";
-import { CSPost } from "../../shared/api.protocol";
 import { ActionType } from "../common";
 import * as actions from "./actions";
 import { isPending, PostsActionsType, State } from "./types";

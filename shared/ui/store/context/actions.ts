@@ -1,10 +1,10 @@
-import { DidChangeActiveStreamNotificationType } from "../../ipc/webview.protocol";
-import { logError } from "../../logger";
 import {
 	ConnectThirdParyProviderRequestType,
 	DisconnectThirdPartyProviderRequestType,
 	TelemetryRequestType
-} from "../../shared/agent.protocol";
+} from "@codestream/protocols/agent";
+import { DidChangeActiveStreamNotificationType } from "../../ipc/webview.protocol";
+import { logError } from "../../logger";
 import { setUserPreference } from "../../Stream/actions";
 import { HostApi } from "../../webview-api";
 import { action } from "../common";

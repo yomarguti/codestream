@@ -1,4 +1,4 @@
-import { ReportingMessageType, ReportMessageRequestType } from "./shared/agent.protocol";
+import { ReportingMessageType, ReportMessageRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "./webview-api";
 
 export function logError(error: string | Error, extra?: object) {

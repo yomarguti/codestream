@@ -1,5 +1,5 @@
+import { CSCodemark } from "@codestream/protocols/api";
 import { createSelector } from "reselect";
-import { CSCodemark } from "../../shared/api.protocol";
 import { toMapBy } from "../../utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
@@ -53,6 +53,9 @@ export const getTypeFilteredCodemarks = createSelector(
 	}
 );
 
-export const teamHasCodemarks = createSelector(getCodemarks, (codemarks: State) => {
-	return Object.keys(codemarks).length > 0;
-});
+export const teamHasCodemarks = createSelector(
+	getCodemarks,
+	(codemarks: State) => {
+		return Object.keys(codemarks).length > 0;
+	}
+);

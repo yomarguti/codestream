@@ -2,7 +2,7 @@ import cx from "classnames";
 import * as React from "react";
 import ContentEditable from "react-contenteditable";
 const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
-import { CSChannelStream, CSPost, CSUser } from "../shared/api.protocol";
+import { CSChannelStream, CSPost, CSUser } from "@codestream/protocols/api";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import {
 	createRange,

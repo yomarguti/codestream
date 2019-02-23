@@ -1,6 +1,6 @@
+import { OpenUrlRequestType } from "@codestream/protocols/agent";
 import * as React from "react";
 import { connect } from "react-redux";
-import { OpenUrlRequestType } from "../shared/agent.protocol";
 import { HostApi } from "../webview-api";
 
 interface Props {

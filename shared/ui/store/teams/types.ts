@@ -1,4 +1,4 @@
-import { CSTeam } from "../../shared/api.protocol";
+import { CSTeam } from "@codestream/protocols/api";
 
 export interface State {
 	[id: string]: CSTeam;

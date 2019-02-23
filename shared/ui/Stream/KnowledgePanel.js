@@ -11,7 +11,7 @@ import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
 import Codemark from "./Codemark";
 import { HostApi } from "../webview-api";
-import { TelemetryRequestType } from "../shared/agent.protocol";
+import { TelemetryRequestType } from "@codestream/protocols/agent";
 import { ShowCodeRequestType, ShowMarkersInEditorRequestType } from "../ipc/webview.protocol";
 
 export class SimpleKnowledgePanel extends Component {

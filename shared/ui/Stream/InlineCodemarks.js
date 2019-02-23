@@ -17,7 +17,7 @@ import {
 	StartCommentOnLineRequestType,
 	ShowMarkersInEditorRequestType
 } from "../ipc/webview.protocol";
-import { TelemetryRequestType } from "../shared/agent.protocol";
+import { TelemetryRequestType } from "@codestream/protocols/agent";
 
 export class SimpleInlineCodemarks extends Component {
 	disposables = [];

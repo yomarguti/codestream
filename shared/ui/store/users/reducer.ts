@@ -1,5 +1,5 @@
+import { CSUser } from "@codestream/protocols/api";
 import { createSelector } from "reselect";
-import { CSUser } from "../../shared/api.protocol";
 import { mapFilter, toMapBy } from "../../utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
@@ -41,26 +41,42 @@ const getUsername = (user: CSUser) => {
 
 const getUsers = state => state.users;
 const getTeam = state => state.teams[state.context.currentTeamId];
-export const getTeamMembers = createSelector(getTeam, getUsers, (team, users) => {
-	return mapFilter(team.memberIds, id => {
-		const user = users[id];
-		if (user && !user.deactivated) return user;
-	});
-});
+export const getTeamMembers = createSelector(
+	getTeam,
+	getUsers,
+	(team, users) => {
+		return mapFilter(team.memberIds, id => {
+			const user = users[id];
+			if (user && !user.deactivated) return user;
+		});
+	}
+);
 
-export const getAllUsers = createSelector(getUsers, (users: State) => Object.values(users));
-export const getUsernames = createSelector(getAllUsers, users => {
-	return users.map(getUsername);
-});
+export const getAllUsers = createSelector(
+	getUsers,
+	(users: State) => Object.values(users)
+);
+export const getUsernames = createSelector(
+	getAllUsers,
+	users => {
+		return users.map(getUsername);
+	}
+);
 
-export const getUsernamesById = createSelector(getAllUsers, users => {
-	const map = {};
-	users.forEach(user => {
-		map[user.id] = getUsername(user);
-	});
-	return map;
-});
+export const getUsernamesById = createSelector(
+	getAllUsers,
+	users => {
+		const map = {};
+		users.forEach(user => {
+			map[user.id] = getUsername(user);
+		});
+		return map;
+	}
+);
 
-export const getNormalizedUsernames = createSelector(getUsernames, usernames => {
-	return mapFilter(usernames, username => username && username.toLowerCase());
-});
+export const getNormalizedUsernames = createSelector(
+	getUsernames,
+	usernames => {
+		return mapFilter(usernames, username => username && username.toLowerCase());
+	}
+);

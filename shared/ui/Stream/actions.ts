@@ -1,5 +1,3 @@
-import { DidChangeActiveStreamNotificationType } from "../ipc/webview.protocol";
-import { logError } from "../logger";
 import {
 	ArchiveStreamRequestType,
 	AsanaCreateCardRequestType,
@@ -35,8 +33,10 @@ import {
 	UpdateCodemarkRequestType,
 	UpdatePreferencesRequestType,
 	UpdateStreamMembershipRequestType
-} from "../shared/agent.protocol";
-import { CSPost, StreamType } from "../shared/api.protocol";
+} from "@codestream/protocols/agent";
+import { CSPost, StreamType } from "@codestream/protocols/api";
+import { DidChangeActiveStreamNotificationType } from "../ipc/webview.protocol";
+import { logError } from "../logger";
 import { saveCodemarks, updateCodemarks } from "../store/codemarks/actions";
 import {
 	closePanel,

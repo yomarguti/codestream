@@ -1,4 +1,4 @@
-import { CSTeam } from "../../shared/api.protocol";
+import { CSTeam } from "@codestream/protocols/api";
 import { action } from "../common";
 import { TeamsActionsType } from "./types";
 

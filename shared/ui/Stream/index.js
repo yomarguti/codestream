@@ -47,7 +47,7 @@ import {
 	DidSelectStreamThreadNotificationType,
 	DidScrollEditorNotificationType
 } from "../ipc/webview.protocol";
-import { OpenUrlRequestType, TelemetryRequestType } from "../shared/agent.protocol";
+import { OpenUrlRequestType, TelemetryRequestType } from "@codestream/protocols/agent";
 import { setCurrentStream } from "../store/context/actions";
 
 const EMAIL_MATCH_REGEX = new RegExp(

@@ -1,4 +1,4 @@
-import { CSMePreferences } from "../../shared/api.protocol";
+import { CSMePreferences } from "@codestream/protocols/api";
 
 export interface State extends CSMePreferences {}
 

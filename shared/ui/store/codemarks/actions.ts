@@ -1,4 +1,4 @@
-import { CSCodemark } from "../../shared/api.protocol";
+import { CSCodemark } from "@codestream/protocols/api";
 import { action } from "../common";
 import { CodemarksActionsTypes } from "./types";
 

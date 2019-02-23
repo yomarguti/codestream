@@ -1,4 +1,4 @@
-import { CSUser } from "../../shared/api.protocol";
+import { CSUser } from "@codestream/protocols/api";
 
 export interface State {
 	[id: string]: CSUser;
