@@ -1,5 +1,5 @@
 "use strict";
-import { ExtensionContext } from "vscode";
+import { ConfigurationChangeEvent, ExtensionContext } from "vscode";
 import { BaseAgentOptions, CodeStreamAgentConnection } from "./agent/agentConnection";
 import { CodeStreamSession } from "./api/session";
 import { Commands } from "./commands";
@@ -38,6 +38,12 @@ export class Container {
 
 		context.subscriptions.push((this._webview = new WebviewController(this._session)));
 		context.subscriptions.push(new WebviewSidebarActivator());
+
+		configuration.onDidChange(this.onConfigurationChanged, this);
+	}
+
+	private static onConfigurationChanged(e: ConfigurationChangeEvent) {
+		this._config = undefined;
 	}
 
 	private static _agent: CodeStreamAgentConnection;
@@ -111,9 +117,5 @@ export class Container {
 	private static _webview: WebviewController;
 	static get webview() {
 		return this._webview;
-	}
-
-	static resetConfig() {
-		this._config = undefined;
 	}
 }

@@ -1,5 +1,5 @@
 "use strict";
-import { CSEntity } from "../../agent/agentConnection";
+import { CSEntity } from "@codestream/protocols/api";
 import { CodeStreamSession } from "../session";
 
 export abstract class CodeStreamItem<TEntity extends CSEntity> {

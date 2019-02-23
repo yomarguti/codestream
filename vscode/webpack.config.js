@@ -6,19 +6,86 @@ const FileManagerPlugin = require("filemanager-webpack-plugin");
 const HtmlPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
+const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
+// const CircularDependencyPlugin = require("circular-dependency-plugin");
 
 module.exports = function(env, argv) {
 	env = env || {};
 	env.production = Boolean(env.production);
+	env.reset = Boolean(env.reset);
 	env.watch = Boolean(argv.watch || argv.w);
 
-	env.copyShared = Boolean(env.copyShared);
-	if (
-		!env.copyShared &&
-		(!fs.existsSync(path.resolve(__dirname, "src/shared")) ||
-			!fs.existsSync(path.resolve(__dirname, "../codestream-components/shared")))
-	) {
-		env.copyShared = true;
+	const protocolPath = path.resolve(__dirname, "src/protocols");
+	if (!fs.existsSync(protocolPath)) {
+		fs.mkdirSync(protocolPath);
+	}
+
+	const agentSymlink = path.resolve(protocolPath, "agent");
+	if (env.reset) {
+		if (fs.existsSync(agentSymlink)) {
+			fs.unlinkSync(agentSymlink);
+		}
+	}
+
+	if (!fs.existsSync(agentSymlink)) {
+		try {
+			console.log("Creating extension symlink to the agent protocol folder...");
+
+			fs.symlinkSync(
+				path.resolve(__dirname, "../codestream-lsp-agent/src/protocol"),
+				agentSymlink,
+				"dir"
+			);
+		} catch (ex) {
+			console.log(`Extension <-> Agent symlink failed; ${ex}`);
+		}
+	}
+
+	const webviewSymlink = path.resolve(protocolPath, "webview");
+	if (env.reset) {
+		if (fs.existsSync(webviewSymlink)) {
+			fs.unlinkSync(webviewSymlink);
+		}
+	}
+
+	if (!fs.existsSync(webviewSymlink)) {
+		try {
+			console.log("Creating extension symlink to the webview protocol folder...");
+
+			fs.symlinkSync(
+				path.resolve(__dirname, "../codestream-components/ipc"),
+				webviewSymlink,
+				"dir"
+			);
+		} catch (ex) {
+			console.log(`Extension <-> Webview symlink failed; ${ex}`);
+		}
+	}
+
+	const webviewProtocolPath = path.resolve(__dirname, "../codestream-components/protocols");
+	if (!fs.existsSync(webviewProtocolPath)) {
+		fs.mkdirSync(webviewProtocolPath);
+	}
+
+	const webviewAgentSymlink = path.resolve(webviewProtocolPath, "agent");
+	if (env.reset) {
+		if (fs.existsSync(webviewAgentSymlink)) {
+			fs.unlinkSync(webviewAgentSymlink);
+		}
+	}
+
+	if (!fs.existsSync(webviewAgentSymlink)) {
+		try {
+			console.log("Creating webview symlink to the agent protocol folder...");
+
+			fs.symlinkSync(
+				path.resolve(__dirname, "../codestream-lsp-agent/src/protocol"),
+				webviewAgentSymlink,
+				"dir"
+			);
+		} catch (ex) {
+			console.log(`Webview <-> Agent symlink failed; ${ex}`);
+		}
 	}
 
 	// TODO: Total and complete HACK until the following vsls issues are resolved
@@ -30,17 +97,18 @@ module.exports = function(env, argv) {
 	if (fs.existsSync(vslsPath)) {
 		const vsls = require(vslsPath);
 		if (vsls.main === undefined) {
+			console.log("Fixing vsls package; Adding missing main to package.json...");
+
 			vsls.main = "vscode.js";
 			fs.writeFileSync(vslsPath, `${JSON.stringify(vsls, undefined, 4)}\n`, "utf8");
 		}
 
 		vslsPath = path.resolve(__dirname, "node_modules/vsls/vscode.js");
 		if (fs.existsSync(vslsPath)) {
-			console.log(vslsPath);
-
 			let code = fs.readFileSync(vslsPath, "utf8");
 			if (vslsPatchRegex.test(code)) {
-				console.log("found");
+				console.log("Fixing vsls package; Removing version lookup...");
+
 				code = code.replace(
 					vslsPatchRegex,
 					`const liveShareApiVersion = '${
@@ -57,26 +125,9 @@ module.exports = function(env, argv) {
 };
 
 function getExtensionConfig(env) {
-	let onStart = [];
-	// TODO: Need to figure out why webpack isn't waiting for the copy to be completed
-	// See https://github.com/gregnb/filemanager-webpack-plugin/issues/47
-	if (!env.watch && env.copyShared) {
-		onStart.push({
-			copy: [
-				// Copy in the type declarations from the agent, because referencing them directly is a nightmare
-				{
-					// TODO: Use environment variable if exists
-					source: path.resolve(__dirname, "../codestream-lsp-agent/src/shared/*"),
-					destination: "src/shared/"
-				}
-			]
-		});
-	}
-
 	const plugins = [
 		new CleanPlugin(["dist/agent*", "dist/extension*"], { verbose: false }),
 		new FileManagerPlugin({
-			onStart: onStart,
 			onEnd: [
 				{
 					copy: [
@@ -93,6 +144,11 @@ function getExtensionConfig(env) {
 				}
 			]
 		})
+		// new CircularDependencyPlugin({
+		// 	exclude: /node_modules/,
+		// 	failOnError: false,
+		// 	cwd: __dirname
+		// })
 	];
 
 	return {
@@ -145,7 +201,10 @@ function getExtensionConfig(env) {
 			exprContextCritical: false
 		},
 		resolve: {
-			extensions: [".ts", ".tsx", ".js", ".jsx"]
+			extensions: [".ts", ".tsx", ".js", ".jsx"],
+			plugins: [new TsconfigPathsPlugin()],
+			// Treats symlinks as real files -- using their "current" path
+			symlinks: false
 		},
 		plugins: plugins,
 		stats: {
@@ -161,39 +220,8 @@ function getExtensionConfig(env) {
 }
 
 function getWebviewConfig(env) {
-	let onStart = [];
-	let onEnd = [];
-	// if (!env.watch && env.copyShared) {
-	// 	onStart.push({
-	// 		copy: [
-	// 			// Copy in the type declarations from the agent, because referencing them directly is a nightmare
-	// 			{
-	// 				// TODO: Use environment variable if exists
-	// 				source: path.resolve(__dirname, "../codestream-lsp-agent/src/shared/*"),
-	// 				destination: path.resolve(__dirname, "../codestream-components/shared/")
-	// 			}
-	// 		]
-	// 	});
-	// }
-	if (env.watch || env.copyShared) {
-		onEnd.push({
-			copy: [
-				// Copy in the type declarations from codestream-components
-				{
-					// TODO: Use environment variable if exists
-					source: path.resolve(__dirname, "../codestream-components/ipc/*"),
-					destination: "src/shared/"
-				}
-			]
-		});
-	}
-
 	const plugins = [
 		new CleanPlugin(["dist/webview", "webview.html"]),
-		new FileManagerPlugin({
-			// onStart: onStart,
-			onEnd: onEnd
-		}),
 		new MiniCssExtractPlugin({
 			filename: "webview.css"
 		}),
@@ -272,10 +300,22 @@ function getWebviewConfig(env) {
 			extensions: [".ts", ".tsx", ".js", ".jsx"],
 			modules: [path.resolve(__dirname, "src/webviews/app"), "node_modules"],
 			alias: {
-				// TODO: Use environment variable if exists
-				"codestream-components$": path.resolve(__dirname, "../codestream-components/index.ts"),
-				"codestream-components": path.resolve(__dirname, "../codestream-components/")
-			}
+				"@codestream/webview": path.resolve(__dirname, "../codestream-components/"),
+				"@codestream/protocols/agent": path.resolve(
+					__dirname,
+					"../codestream-components/protocols/agent/agent.protocol.ts"
+				),
+				"@codestream/protocols/api": path.resolve(
+					__dirname,
+					"../codestream-components/protocols/agent/api.protocol.ts"
+				),
+				"@codestream/protocols/webview": path.resolve(
+					__dirname,
+					"../codestream-components/ipc/webview.protocol.ts"
+				)
+			},
+			// Treats symlinks as real files -- using their "current" path
+			symlinks: false
 		},
 		node: {
 			net: "mock"

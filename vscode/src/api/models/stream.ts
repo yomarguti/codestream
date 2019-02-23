@@ -1,11 +1,11 @@
 "use strict";
-import { CSChannelStream, CSDirectStream, StreamType } from "../../agent/agentConnection";
+import { CSChannelStream, CSDirectStream, StreamType } from "@codestream/protocols/api";
 import { Container } from "../../container";
 import { CodeStreamSession } from "../session";
 import { CodeStreamItem } from "./item";
 import { Post } from "./post";
 
-export { StreamType } from "../../agent/agentConnection";
+export { StreamType } from "@codestream/protocols/api";
 
 abstract class StreamBase<T extends CSChannelStream | CSDirectStream> extends CodeStreamItem<T> {
 	constructor(session: CodeStreamSession, stream: T) {

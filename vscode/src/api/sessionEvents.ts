@@ -1,22 +1,22 @@
 "use strict";
-import { Uri } from "vscode";
 import {
 	CodemarksChangedNotification,
-	CSMePreferences,
-	CSUnreads,
 	DidChangeDataNotification,
 	PostsChangedNotification,
 	PreferencesChangedNotification,
 	RepositoriesChangedNotification,
 	StreamsChangedNotification,
 	TeamsChangedNotification,
+	Unreads,
 	UnreadsChangedNotification,
 	UsersChangedNotification
-} from "../agent/agentConnection";
+} from "@codestream/protocols/agent";
+import { CSMePreferences } from "@codestream/protocols/api";
 import {
 	DidChangeDataNotification as WebviewDidChangeDataNotification,
 	WebviewIpcMessage
-} from "../shared/webview.protocol";
+} from "@codestream/protocols/webview";
+import { Uri } from "vscode";
 import { memoize } from "../system";
 import { CodeStreamSession, Post, SessionSignedOutReason, SessionStatus } from "./session";
 
@@ -24,7 +24,7 @@ export interface SessionStatusChangedEvent {
 	getStatus(): SessionStatus;
 	session: CodeStreamSession;
 	reason?: SessionSignedOutReason;
-	unreads?: CSUnreads;
+	unreads?: Unreads;
 }
 
 export class TextDocumentMarkersChangedEvent {
@@ -163,7 +163,7 @@ export class UnreadsChangedEvent extends SessionChangedEventBase<UnreadsChangedN
 	readonly type = SessionChangedEventType.Unreads;
 
 	@memoize
-	unreads(): CSUnreads {
+	unreads(): Unreads {
 		return this._event.data;
 	}
 }

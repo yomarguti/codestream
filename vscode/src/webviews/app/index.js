@@ -1,13 +1,13 @@
 import { install as polyFillResizeObserver } from "resize-observer";
 import React from "react";
 import ReactDOM from "react-dom";
-import { actions, Container, createStore, HostApi, listenForEvents } from "codestream-components";
-import translations from "codestream-components/translations/en";
+import { actions, Container, createStore, HostApi, listenForEvents } from "@codestream/webview";
+import translations from "@codestream/webview/translations/en";
 import {
 	GetViewBootstrapDataRequestType,
 	JoinLiveShareRequestType,
 	WebviewReadyNotificationType
-} from "codestream-components/ipc/webview.protocol";
+} from "@codestream/protocols/webview";
 import loggingMiddleWare from "./logging-middleware";
 
 const vscodeApi = acquireVsCodeApi();

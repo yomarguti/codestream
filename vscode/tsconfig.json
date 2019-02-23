@@ -1,5 +1,6 @@
 {
 	"compilerOptions": {
+		"baseUrl": "./src",
 		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
 		"importHelpers": true,
@@ -10,6 +11,12 @@
 		"noImplicitReturns": true,
 		"noUnusedLocals": false,
 		"outDir": "dist",
+		"paths": {
+			"@codestream/protocols/agent": ["protocols/agent/agent.protocol"],
+			"@codestream/protocols/api": ["protocols/agent/api.protocol"],
+			"@codestream/protocols/webview": ["protocols/webview/webview.protocol"]
+		},
+		"preserveSymlinks": true,
 		"rootDir": "./src",
 		"sourceMap": true,
 		"strict": true,

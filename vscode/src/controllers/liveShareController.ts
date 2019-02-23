@@ -1,7 +1,7 @@
 "use strict";
+import { ChannelServiceType } from "@codestream/protocols/api";
 import { Disposable, Uri } from "vscode";
 import { getApi, LiveShare, SessionChangeEvent } from "vsls";
-import { ChannelServiceType } from "../agent/agentConnection";
 import { ServiceChannelStreamCreationOptions } from "../api/models/stream";
 import {
 	SessionStatus,

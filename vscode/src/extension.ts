@@ -11,9 +11,9 @@ import {
 } from "vscode";
 import { GitExtension } from "./@types/git";
 import { SessionStatusChangedEvent } from "./api/session";
-import { BuiltInCommands } from "./commands";
 import { ContextKeys, setContext } from "./common";
 import { Config, configuration, Configuration } from "./configuration";
+import { BuiltInCommands } from "./constants";
 import { extensionQualifiedId } from "./constants";
 import { Container } from "./container";
 import { Logger } from "./logger";

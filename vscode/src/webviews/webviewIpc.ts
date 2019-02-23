@@ -1,9 +1,4 @@
 "use strict";
-import * as path from "path";
-import { TextEditor, WebviewPanel, workspace } from "vscode";
-import { StreamThread } from "../api/session";
-import { Container } from "../container";
-import { Logger } from "../logger";
 import {
 	DidBlurNotification,
 	DidChangeActiveEditorNotification,
@@ -14,7 +9,12 @@ import {
 	DidSelectStreamThreadNotification,
 	DidSelectStreamThreadNotificationType,
 	WebviewIpcMessage
-} from "../shared/webview.protocol";
+} from "@codestream/protocols/webview";
+import * as path from "path";
+import { TextEditor, WebviewPanel, workspace } from "vscode";
+import { StreamThread } from "../api/session";
+import { Container } from "../container";
+import { Logger } from "../logger";
 import { CodeStreamWebviewPanel } from "./webviewPanel";
 
 export function toLoggableIpcMessage(msg: WebviewIpcMessage) {

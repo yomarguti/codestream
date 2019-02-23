@@ -9,7 +9,7 @@ import {
 	window,
 	workspace
 } from "vscode";
-import { BuiltInCommands } from "./commands";
+import { BuiltInCommands } from "./constants";
 import { Logger } from "./logger";
 
 export enum ShowCodeResult {

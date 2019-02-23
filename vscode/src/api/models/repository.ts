@@ -1,5 +1,5 @@
 "use strict";
-import { CSRepository } from "../../agent/agentConnection";
+import { CSRepository } from "@codestream/protocols/api";
 import { CodeStreamSession } from "../session";
 import { CodeStreamItem } from "./item";
 

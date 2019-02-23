@@ -1,5 +1,5 @@
 "use strict";
-import { CSMe, CSUser } from "../../agent/agentConnection";
+import { CSMe, CSUser } from "@codestream/protocols/api";
 import { CodeStreamSession } from "../session";
 import { CodeStreamItem } from "./item";
 

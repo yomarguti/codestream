@@ -14,10 +14,6 @@ Prerequisites
 - [NodeJS](https://nodejs.org/en/), `>= 8.9.1, < 9.0.0`
 - [npm](https://npmjs.com/), `>= 6.2.0`
 
-### Warnings
-
-👉 Do NOT make changes to the files in `src/shared` they are files copied in from `codestream-lsp-agent` and need to be modified there.
-
 ### Build
 
 From a terminal, where you have cloned the repository, execute the following command to re-build the agent from scratch:

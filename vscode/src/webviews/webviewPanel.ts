@@ -1,59 +1,20 @@
 "use strict";
-import * as fs from "fs";
-import * as path from "path";
 import {
-	commands,
-	ConfigurationChangeEvent,
-	ConfigurationTarget,
-	Disposable,
-	Event,
-	EventEmitter,
-	TextEditor,
-	TextEditorSelectionChangeEvent,
-	TextEditorVisibleRangesChangeEvent,
-	Uri,
-	ViewColumn,
-	WebviewPanel,
-	WebviewPanelOnDidChangeViewStateEvent,
-	window,
-	WindowState,
-	workspace
-} from "vscode";
-import { RequestType } from "vscode-jsonrpc";
-import { Range } from "vscode-languageclient";
+	Capabilities,
+	ConnectionStatus,
+	ReportingMessageType,
+	TraceLevel,
+	Unreads
+} from "@codestream/protocols/agent";
 import {
 	CSMePreferences,
 	CSPost,
 	CSRepository,
 	CSStream,
 	CSTeam,
-	CSUnreads,
 	CSUser,
 	LoginResult
-} from "../agent/agentConnection";
-import {
-	CodemarksChangedEvent,
-	CodeStreamEnvironment,
-	CodeStreamSession,
-	PostsChangedEvent,
-	PreferencesChangedEvent,
-	RepositoriesChangedEvent,
-	SessionChangedEventType,
-	StreamsChangedEvent,
-	StreamThread,
-	TeamsChangedEvent,
-	UnreadsChangedEvent,
-	UsersChangedEvent
-} from "../api/session";
-import { configuration } from "../configuration";
-import { Container } from "../container";
-import { Logger } from "../logger";
-import {
-	Capabilities,
-	ConnectionStatus,
-	ReportingMessageType,
-	TraceLevel
-} from "../shared/agent.protocol";
+} from "@codestream/protocols/api";
 import {
 	ApplyPatchRequest,
 	ApplyPatchRequestType,
@@ -99,7 +60,45 @@ import {
 	ValidateSignupRequestType,
 	WebviewIpcMessage,
 	WebviewReadyNotificationType
-} from "../shared/webview.protocol";
+} from "@codestream/protocols/webview";
+import * as fs from "fs";
+import * as path from "path";
+import {
+	commands,
+	ConfigurationChangeEvent,
+	ConfigurationTarget,
+	Disposable,
+	Event,
+	EventEmitter,
+	TextEditor,
+	TextEditorSelectionChangeEvent,
+	TextEditorVisibleRangesChangeEvent,
+	Uri,
+	ViewColumn,
+	WebviewPanel,
+	WebviewPanelOnDidChangeViewStateEvent,
+	window,
+	WindowState,
+	workspace
+} from "vscode";
+import { Range, RequestType } from "vscode-languageclient";
+import {
+	CodemarksChangedEvent,
+	CodeStreamEnvironment,
+	CodeStreamSession,
+	PostsChangedEvent,
+	PreferencesChangedEvent,
+	RepositoriesChangedEvent,
+	SessionChangedEventType,
+	StreamsChangedEvent,
+	StreamThread,
+	TeamsChangedEvent,
+	UnreadsChangedEvent,
+	UsersChangedEvent
+} from "../api/session";
+import { configuration } from "../configuration";
+import { Container } from "../container";
+import { Logger } from "../logger";
 import { log } from "../system";
 import { Functions } from "../system";
 import { toLoggableIpcMessage, WebviewIpc } from "./webviewIpc";
@@ -120,7 +119,7 @@ interface BootstrapState {
 	streams: CSStream[];
 	teams: CSTeam[];
 	users: CSUser[];
-	unreads: CSUnreads;
+	unreads: Unreads;
 	repos: CSRepository[];
 	version: string;
 	preferences: CSMePreferences;

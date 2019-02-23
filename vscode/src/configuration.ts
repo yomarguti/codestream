@@ -12,7 +12,6 @@ import {
 } from "vscode";
 import { Config } from "./config";
 import { extensionId } from "./constants";
-import { Container } from "./container";
 import { Functions } from "./system";
 
 const emptyConfig: any = new Proxy<any>({} as Config, {
@@ -35,8 +34,6 @@ export class Configuration {
 
 	private onConfigurationChanged(e: ConfigurationChangeEvent) {
 		if (!e.affectsConfiguration(extensionId, null!)) return;
-
-		Container.resetConfig();
 
 		this._onDidChange.fire(e);
 	}

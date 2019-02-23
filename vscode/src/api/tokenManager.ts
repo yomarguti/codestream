@@ -1,4 +1,4 @@
-import { AccessToken } from "../agent/agentConnection";
+import { AccessToken } from "@codestream/protocols/agent";
 import { GlobalState } from "../common";
 import { extensionId } from "../constants";
 import { Container } from "../container";

@@ -1,35 +1,4 @@
 "use strict";
-import { RequestInit } from "node-fetch";
-import {
-	commands,
-	Event,
-	EventEmitter,
-	ExtensionContext,
-	MessageItem,
-	TextDocument,
-	Uri,
-	window,
-	workspace
-} from "vscode";
-import {
-	CancellationToken,
-	CloseAction,
-	Disposable,
-	ErrorAction,
-	LanguageClient,
-	LanguageClientOptions,
-	Message,
-	Range,
-	RequestType,
-	RequestType0,
-	RevealOutputChannelOn,
-	ServerOptions,
-	TransportKind
-} from "vscode-languageclient";
-import { BuiltInCommands } from "../commands";
-import { extensionQualifiedId } from "../constants";
-import { Container } from "../container";
-import { Logger } from "../logger";
 import {
 	AccessToken,
 	AgentInitializeResult,
@@ -107,7 +76,7 @@ import {
 	UpdateStreamMembershipRequestType,
 	UpdateStreamMembershipResponse,
 	VersionCompatibility
-} from "../shared/agent.protocol";
+} from "@codestream/protocols/agent";
 import {
 	ChannelServiceType,
 	CodemarkType,
@@ -115,19 +84,44 @@ import {
 	CSMePreferences,
 	CSPresenceStatus,
 	StreamType
-} from "../shared/api.protocol";
+} from "@codestream/protocols/api";
+import { RequestInit } from "node-fetch";
+import {
+	commands,
+	Event,
+	EventEmitter,
+	ExtensionContext,
+	MessageItem,
+	TextDocument,
+	Uri,
+	window,
+	workspace
+} from "vscode";
+import {
+	CancellationToken,
+	CloseAction,
+	Disposable,
+	ErrorAction,
+	LanguageClient,
+	LanguageClientOptions,
+	Message,
+	Range,
+	RequestType,
+	RequestType0,
+	RevealOutputChannelOn,
+	ServerOptions,
+	TransportKind
+} from "vscode-languageclient";
+import { BuiltInCommands, extensionQualifiedId } from "../constants";
+import { Container } from "../container";
+import { Logger } from "../logger";
 import { log } from "../system";
 
-export * from "../shared/agent.protocol";
-export * from "../shared/api.protocol";
-
-export interface DocumentMarkersChangedEvent {
-	uri: Uri;
-}
+export { BaseAgentOptions };
 
 export class CodeStreamAgentConnection implements Disposable {
-	private _onDidChangeDocumentMarkers = new EventEmitter<DocumentMarkersChangedEvent>();
-	get onDidChangeDocumentMarkers(): Event<DocumentMarkersChangedEvent> {
+	private _onDidChangeDocumentMarkers = new EventEmitter<DidChangeDocumentMarkersNotification>();
+	get onDidChangeDocumentMarkers(): Event<DidChangeDocumentMarkersNotification> {
 		return this._onDidChangeDocumentMarkers.event;
 	}
 
@@ -782,7 +776,7 @@ export class CodeStreamAgentConnection implements Disposable {
 			`${context.prefix}(${e.textDocument.uri})`
 	})
 	private onDocumentMarkersChanged(e: DidChangeDocumentMarkersNotification) {
-		this._onDidChangeDocumentMarkers.fire({ uri: Uri.parse(e.textDocument.uri) });
+		this._onDidChangeDocumentMarkers.fire(e);
 	}
 
 	@log({

@@ -1,27 +1,30 @@
 "use strict";
 import {
+	AccessToken,
+	AgentResult,
+	Capabilities,
+	ChangeDataType,
+	CodeStreamEnvironment,
+	DidChangeDataNotification,
+	DidChangeDocumentMarkersNotification,
+	Unreads
+} from "@codestream/protocols/agent";
+import {
+	ChannelServiceType,
+	CSChannelStream,
+	CSDirectStream,
+	LoginResult
+} from "@codestream/protocols/api";
+import {
 	commands,
 	ConfigurationTarget,
 	Disposable,
 	Event,
 	EventEmitter,
 	MessageItem,
+	Uri,
 	window
 } from "vscode";
-import {
-	AccessToken,
-	AgentResult,
-	Capabilities,
-	ChangeDataType,
-	ChannelServiceType,
-	CodeStreamEnvironment,
-	CSChannelStream,
-	CSDirectStream,
-	CSUnreads,
-	DidChangeDataNotification,
-	DocumentMarkersChangedEvent,
-	LoginResult
-} from "../agent/agentConnection";
 import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
 import { extensionQualifiedId } from "../constants";
@@ -67,7 +70,6 @@ export {
 	CodeStreamEnvironment,
 	DirectStream,
 	Marker,
-	DocumentMarkersChangedEvent,
 	Post,
 	PostsChangedEvent,
 	PreferencesChangedEvent,
@@ -210,8 +212,10 @@ export class CodeStreamSession implements Disposable {
 		this._disposable && this._disposable.dispose();
 	}
 
-	private onDocumentMarkersChanged(e: DocumentMarkersChangedEvent) {
-		this._onDidChangeTextDocumentMarkers.fire(new TextDocumentMarkersChangedEvent(this, e.uri));
+	private onDocumentMarkersChanged(e: DidChangeDocumentMarkersNotification) {
+		this._onDidChangeTextDocumentMarkers.fire(
+			new TextDocumentMarkersChangedEvent(this, Uri.parse(e.textDocument.uri))
+		);
 	}
 
 	private onDataChanged(e: DidChangeDataNotification) {
@@ -293,7 +297,7 @@ export class CodeStreamSession implements Disposable {
 	private setStatus(
 		status: SessionStatus,
 		signedOutReason?: SessionSignedOutReason,
-		unreads?: CSUnreads
+		unreads?: Unreads
 	) {
 		this._status = status;
 		const e: SessionStatusChangedEvent = {

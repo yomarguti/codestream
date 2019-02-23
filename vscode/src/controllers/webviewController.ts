@@ -1,4 +1,5 @@
 "use strict";
+import { ConnectionStatus } from "@codestream/protocols/agent";
 import { Disposable, Uri, ViewColumn } from "vscode";
 import { Range } from "vscode-languageclient";
 import {
@@ -10,7 +11,6 @@ import {
 } from "../api/session";
 import { WorkspaceState } from "../common";
 import { Container } from "../container";
-import { ConnectionStatus } from "../shared/agent.protocol";
 import { log } from "../system";
 import { CodeStreamWebviewPanel } from "../webviews/webviewPanel";
 

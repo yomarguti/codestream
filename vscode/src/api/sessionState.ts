@@ -1,5 +1,5 @@
 "use strict";
-import { CSMe, LoginResponse } from "../agent/agentConnection";
+import { CSLoginResponse, CSMe } from "@codestream/protocols/api";
 import { Container } from "../container";
 import { Team } from "./models/team";
 import { User } from "./models/user";
@@ -9,7 +9,7 @@ export class SessionState {
 	constructor(
 		private readonly _session: CodeStreamSession,
 		public readonly teamId: string,
-		private readonly _data: LoginResponse
+		private readonly _data: CSLoginResponse
 	) {}
 
 	get pubnubKey() {
