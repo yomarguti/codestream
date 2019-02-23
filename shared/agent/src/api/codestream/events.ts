@@ -2,13 +2,13 @@
 import HttpsProxyAgent from "https-proxy-agent";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
 import { Logger } from "../../logger";
+import { ConnectionStatus } from "../../protocol/agent.protocol";
 import {
 	ChannelDescriptor,
 	PubnubConnection,
 	PubnubStatus,
 	StatusChangeEvent
 } from "../../pubnub/pubnubConnection";
-import { ConnectionStatus } from "../../shared/agent.protocol";
 import { log } from "../../system";
 import { ConnectionRTMessage, MessageType, RawRTMessage } from "../apiProvider";
 import { CodeStreamApiProvider } from "./codestreamApi";

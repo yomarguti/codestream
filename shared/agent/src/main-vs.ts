@@ -10,7 +10,7 @@ import {
 } from "vscode-languageserver";
 import { CodeStreamAgent, FileLspLogger, NullLspLogger } from "./agent";
 import { Logger } from "./logger";
-import { AgentOptions, LogoutReason } from "./shared/agent.protocol";
+import { AgentOptions, LogoutReason } from "./protocol/agent.protocol";
 
 let logPath;
 process.argv.forEach(function(val, index, array) {

@@ -13,21 +13,6 @@ module.exports = function(env, argv) {
 		{
 			copy: [
 				{
-					source: "src/shared/*",
-					// TODO: Use environment variable if exists
-					destination: path.resolve(__dirname, "../vscode-codestream/src/shared/")
-				},
-				{
-					source: "src/shared/*",
-					// TODO: Use environment variable if exists
-					destination: path.resolve(__dirname, "../codestream-components/shared/")
-				},
-				{
-					source: "src/shared/*",
-					// TODO: Use environment variable if exists
-					destination: path.resolve(__dirname, "../atom-codestream/lib/shared/")
-				},
-				{
 					source: "dist/agent.*",
 					// TODO: Use environment variable if exists
 					destination: path.resolve(__dirname, "../vscode-codestream/dist/")

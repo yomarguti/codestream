@@ -12,8 +12,8 @@ import {
 	BitbucketFetchBoardsRequestType,
 	BitbucketFetchListsRequest,
 	BitbucketFetchListsRequestType
-} from "../shared/agent.protocol";
-import { CSBitbucketProviderInfo } from "../shared/api.protocol";
+} from "../protocol/agent.protocol";
+import { CSBitbucketProviderInfo } from "../protocol/api.protocol";
 import { log, lspHandler, lspProvider } from "../system";
 import { ThirdPartyProviderBase } from "./provider";
 

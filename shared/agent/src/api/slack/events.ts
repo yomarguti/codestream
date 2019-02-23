@@ -4,8 +4,8 @@ import HttpsProxyAgent from "https-proxy-agent";
 import { Emitter, Event } from "vscode-languageserver";
 import { Container } from "../../container";
 import { Logger } from "../../logger";
-import { ConnectionStatus, LogoutReason } from "../../shared/agent.protocol";
-import { StreamType } from "../../shared/api.protocol";
+import { ConnectionStatus, LogoutReason } from "../../protocol/agent.protocol";
+import { StreamType } from "../../protocol/api.protocol";
 import { debug, Disposable, log } from "../../system";
 import {
 	MessageType,

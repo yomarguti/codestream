@@ -14,8 +14,8 @@ import {
 	GitHubFetchListsRequestType,
 	GitHubList,
 	GitHubUser
-} from "../shared/agent.protocol";
-import { CSGitHubProviderInfo } from "../shared/api.protocol";
+} from "../protocol/agent.protocol";
+import { CSGitHubProviderInfo } from "../protocol/api.protocol";
 import { log, lspHandler, lspProvider } from "../system";
 import { ThirdPartyProviderBase } from "./provider";
 

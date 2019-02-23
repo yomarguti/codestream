@@ -2,12 +2,12 @@ import * as Sentry from "@sentry/node";
 import { Severity } from "@sentry/node";
 import * as os from "os";
 import { Container } from "./container";
-import { CodeStreamSession } from "./session";
 import {
 	CodeStreamEnvironment,
 	ReportMessageRequest,
 	ReportMessageRequestType
-} from "./shared/agent.protocol";
+} from "./protocol/agent.protocol";
+import { CodeStreamSession } from "./session";
 import { lsp, lspHandler } from "./system";
 
 @lsp

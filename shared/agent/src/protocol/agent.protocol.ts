@@ -7,8 +7,9 @@ import {
 	RequestType,
 	TextDocumentIdentifier
 } from "vscode-languageserver-protocol";
-import { CSFullCodemark } from "./agent.protocol.markers";
+import { CodemarkPlus } from "./agent.protocol.markers";
 import {
+	CSLoginResponse,
 	CSMarker,
 	CSMarkerLocations,
 	CSMePreferences,
@@ -17,7 +18,6 @@ import {
 	CSStream,
 	CSTeam,
 	CSUser,
-	LoginResponse,
 	LoginResult
 } from "./api.protocol";
 import { CSLastReads } from "./api.protocol.models";
@@ -107,7 +107,7 @@ export interface AgentState {
 }
 
 export interface AgentResult {
-	loginResponse: LoginResponse;
+	loginResponse: CSLoginResponse;
 	state: AgentState;
 	error?: LoginResult;
 }
@@ -151,7 +151,7 @@ export enum ChangeDataType {
 
 export interface CodemarksChangedNotification {
 	type: ChangeDataType.Codemarks;
-	data: CSFullCodemark[];
+	data: CodemarkPlus[];
 }
 
 export interface MarkerLocationsChangedNotification {
@@ -189,7 +189,7 @@ export interface TeamsChangedNotification {
 	data: CSTeam[];
 }
 
-export interface CSUnreads {
+export interface Unreads {
 	lastReads: CSLastReads;
 	mentions: { [streamId: string]: number };
 	unreads: { [streamId: string]: number };
@@ -199,7 +199,7 @@ export interface CSUnreads {
 
 export interface UnreadsChangedNotification {
 	type: ChangeDataType.Unreads;
-	data: CSUnreads;
+	data: Unreads;
 }
 
 export interface UsersChangedNotification {

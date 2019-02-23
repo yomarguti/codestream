@@ -16,7 +16,6 @@ import {
 	CreatePostRequest,
 	CreatePostResponse,
 	CreateRepoRequest,
-	CSUnreads,
 	DeleteCodemarkRequest,
 	DeletePostRequest,
 	EditPostRequest,
@@ -53,18 +52,20 @@ import {
 	SetCodemarkStatusRequest,
 	SetStreamPurposeRequest,
 	UnarchiveStreamRequest,
+	Unreads,
 	UpdateCodemarkRequest,
 	UpdateMarkerRequest,
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse
-} from "../../shared/agent.protocol";
+} from "../../protocol/agent.protocol";
 import {
 	CSChannelStream,
 	CSCodemark,
 	CSDirectStream,
 	CSGetMeResponse,
+	CSLoginResponse,
 	CSMarker,
 	CSMarkerLocations,
 	CSMe,
@@ -73,10 +74,9 @@ import {
 	CSSlackProviderInfo,
 	CSStream,
 	CSUser,
-	LoginResponse,
 	ProviderType,
 	StreamType
-} from "../../shared/api.protocol";
+} from "../../protocol/api.protocol";
 import { debug, Functions, log } from "../../system";
 import {
 	ApiProvider,
@@ -228,7 +228,7 @@ export class SlackApiProvider implements ApiProvider {
 		}
 	}
 
-	private onUnreadsChanged(e: CSUnreads) {
+	private onUnreadsChanged(e: Unreads) {
 		try {
 			this._onDidReceiveMessage.fire({ type: MessageType.Unreads, data: e });
 		} catch (ex) {
@@ -236,7 +236,7 @@ export class SlackApiProvider implements ApiProvider {
 		}
 	}
 
-	async processLoginResponse(response: LoginResponse): Promise<void> {
+	async processLoginResponse(response: CSLoginResponse): Promise<void> {
 		// Mix in slack user info with ours
 		const meResponse = await this.getMeCore({ user: response.user });
 
@@ -295,7 +295,7 @@ export class SlackApiProvider implements ApiProvider {
 		return this._codestream.useMiddleware(middleware);
 	}
 
-	async login(options: LoginOptions): Promise<LoginResponse & { teamId: string }> {
+	async login(options: LoginOptions): Promise<CSLoginResponse & { teamId: string }> {
 		throw new Error("Not supported");
 	}
 

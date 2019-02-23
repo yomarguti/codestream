@@ -1,14 +1,14 @@
 "use strict";
 import { Emitter, Event } from "vscode-languageserver";
 import { Logger, TraceLevel } from "../../logger";
-import { CSUnreads } from "../../shared/agent.protocol";
-import { CSLastReads, CSMePreferences } from "../../shared/api.protocol";
+import { Unreads } from "../../protocol/agent.protocol";
+import { CSLastReads, CSMePreferences } from "../../protocol/api.protocol";
 import { Iterables, log } from "../../system";
 import { ApiProvider } from "../apiProvider";
 
 export class SlackUnreads {
-	private _onDidChange = new Emitter<CSUnreads>();
-	get onDidChange(): Event<CSUnreads> {
+	private _onDidChange = new Emitter<Unreads>();
+	get onDidChange(): Event<Unreads> {
 		return this._onDidChange.event;
 	}
 
@@ -19,7 +19,7 @@ export class SlackUnreads {
 
 	constructor(private readonly _api: ApiProvider) {}
 
-	get(): CSUnreads {
+	get(): Unreads {
 		return this.values();
 	}
 
@@ -176,7 +176,7 @@ export class SlackUnreads {
 		this._onDidChange.fire(values);
 	}
 
-	private values(): CSUnreads {
+	private values(): Unreads {
 		const mentions = Object.create(null);
 		const unreads = Object.create(null);
 

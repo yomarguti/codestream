@@ -1,12 +1,12 @@
 "use strict";
 import fetch, { RequestInit, Response } from "node-fetch";
-import { FetchAssignableUsersRequest, FetchAssignableUsersResponse } from "shared/agent.protocol";
+import { FetchAssignableUsersRequest, FetchAssignableUsersResponse } from "protocol/agent.protocol";
 import { MessageType } from "../api/apiProvider";
 import { User } from "../api/extensions";
 import { Container } from "../container";
 import { Logger } from "../logger";
+import { CSMe, CSProviderInfos } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
-import { CSMe, CSProviderInfos } from "../shared/api.protocol";
 import { Functions, Strings } from "../system";
 
 export interface ThirdPartyProvider {

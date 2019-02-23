@@ -7,7 +7,6 @@ import { Emitter, Event } from "vscode-languageserver";
 import { ServerError } from "../../agentError";
 import { Container } from "../../container";
 import { Logger } from "../../logger";
-import { VersionInfo } from "../../session";
 import {
 	ArchiveStreamRequest,
 	Capabilities,
@@ -18,7 +17,6 @@ import {
 	CreateMarkerLocationRequest,
 	CreatePostRequest,
 	CreateRepoRequest,
-	CSUnreads,
 	DeleteCodemarkRequest,
 	DeleteCodemarkResponse,
 	DeletePostRequest,
@@ -55,15 +53,16 @@ import {
 	SetCodemarkStatusRequest,
 	SetStreamPurposeRequest,
 	UnarchiveStreamRequest,
+	Unreads,
 	UpdateCodemarkRequest,
 	UpdateMarkerRequest,
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
 	UpdateStreamMembershipRequest
-} from "../../shared/agent.protocol";
+} from "../../protocol/agent.protocol";
 import {
-	CompleteSignupRequest,
 	CSChannelStream,
+	CSCompleteSignupRequest,
 	CSCreateChannelStreamRequest,
 	CSCreateChannelStreamResponse,
 	CSCreateCodemarkRequest,
@@ -100,6 +99,8 @@ import {
 	CSInviteUserResponse,
 	CSJoinStreamRequest,
 	CSJoinStreamResponse,
+	CSLoginRequest,
+	CSLoginResponse,
 	CSMarkPostUnreadRequest,
 	CSMarkPostUnreadResponse,
 	CSMe,
@@ -117,10 +118,9 @@ import {
 	CSUpdatePresenceResponse,
 	CSUpdateStreamRequest,
 	CSUpdateStreamResponse,
-	LoginRequest,
-	LoginResponse,
 	StreamType
-} from "../../shared/api.protocol";
+} from "../../protocol/api.protocol";
+import { VersionInfo } from "../../session";
 import { Functions, log, Objects, Strings } from "../../system";
 import {
 	ApiProvider,
@@ -187,24 +187,27 @@ export class CodeStreamApiProvider implements ApiProvider {
 		}
 	}
 
-	async login(options: LoginOptions): Promise<LoginResponse & { teamId: string }> {
+	async login(options: LoginOptions): Promise<CSLoginResponse & { teamId: string }> {
 		let response;
 		switch (options.type) {
 			case "credentials":
-				response = await this.put<LoginRequest, LoginResponse>("/no-auth/login", {
+				response = await this.put<CSLoginRequest, CSLoginResponse>("/no-auth/login", {
 					email: options.email,
 					password: options.password
 				});
 				break;
 
 			case "otc":
-				response = await this.put<CompleteSignupRequest, LoginResponse>("/no-auth/check-signup", {
-					token: options.code
-				});
+				response = await this.put<CSCompleteSignupRequest, CSLoginResponse>(
+					"/no-auth/check-signup",
+					{
+						token: options.code
+					}
+				);
 				break;
 
 			case "token":
-				response = await this.put<{}, LoginResponse>("/login", {}, options.token.value);
+				response = await this.put<{}, CSLoginResponse>("/login", {}, options.token.value);
 				break;
 
 			default:
@@ -400,7 +403,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		this._onDidReceiveMessage.fire(e as RTMessage);
 	}
 
-	private onUnreadsChanged(e: CSUnreads) {
+	private onUnreadsChanged(e: Unreads) {
 		this._onDidReceiveMessage.fire({ type: MessageType.Unreads, data: e });
 	}
 
@@ -945,7 +948,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	async getTelemetryKey(): Promise<string> {
 		const telemetrySecret = "84$gTe^._qHm,#D";
-		const response = await this.get<CSGetTelemetryKeyResponse>(`/no-auth/telemetry-key?secret=${encodeURIComponent(telemetrySecret)}`);
+		const response = await this.get<CSGetTelemetryKeyResponse>(
+			`/no-auth/telemetry-key?secret=${encodeURIComponent(telemetrySecret)}`
+		);
 		return response.key;
 	}
 

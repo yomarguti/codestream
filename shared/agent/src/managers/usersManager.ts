@@ -20,8 +20,8 @@ import {
 	UpdatePreferencesResponse,
 	UpdatePresenceRequest,
 	UpdatePresenceRequestType
-} from "../shared/agent.protocol";
-import { CSUser } from "../shared/api.protocol";
+} from "../protocol/agent.protocol";
+import { CSUser } from "../protocol/api.protocol";
 import { lsp, lspHandler } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 

@@ -13,7 +13,7 @@ import {
 	CSTeam,
 	CSUser,
 	StreamType
-} from "../../shared/api.protocol";
+} from "../../protocol/api.protocol";
 
 const defaultCreatedAt = 181886400000;
 const multiPartyNamesRegEx = /^mpdm-([^-]+)(--.*)-1$/;

@@ -13,8 +13,8 @@ import {
 	GitLabFetchListsRequest,
 	GitLabFetchListsRequestType,
 	GitLabList
-} from "../shared/agent.protocol";
-import { CSGitLabProviderInfo } from "../shared/api.protocol";
+} from "../protocol/agent.protocol";
+import { CSGitLabProviderInfo } from "../protocol/api.protocol";
 import { log, lspHandler, lspProvider } from "../system";
 import { ThirdPartyProviderBase } from "./provider";
 

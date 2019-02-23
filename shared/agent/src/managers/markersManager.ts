@@ -5,8 +5,8 @@ import {
 	GetMarkerRequest,
 	GetMarkerRequestType,
 	GetMarkerResponse
-} from "../shared/agent.protocol";
-import { CSMarker, CSStream, StreamType } from "../shared/api.protocol";
+} from "../protocol/agent.protocol";
+import { CSMarker, CSStream, StreamType } from "../protocol/api.protocol";
 import { lsp, lspHandler } from "../system";
 import { IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";

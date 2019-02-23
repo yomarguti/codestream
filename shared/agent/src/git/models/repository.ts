@@ -1,7 +1,7 @@
 "use strict";
 import { WorkspaceFolder } from "vscode-languageserver";
 import { Container } from "../../container";
-import { CSFileStream, CSRepository } from "../../shared/api.protocol";
+import { CSFileStream, CSRepository } from "../../protocol/api.protocol";
 
 export class GitRepository {
 	readonly normalizedPath: string;

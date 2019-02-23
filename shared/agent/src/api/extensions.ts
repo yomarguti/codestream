@@ -10,7 +10,7 @@ import {
 	CSProviderInfos,
 	CSSlackProviderInfo,
 	CSTeam
-} from "../shared/api.protocol";
+} from "../protocol/api.protocol";
 
 export interface MarkerLocationArraysById {
 	[id: string]: CSLocationArray;

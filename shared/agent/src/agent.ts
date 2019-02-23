@@ -25,8 +25,12 @@ import {
 import { Container } from "./container";
 import { DocumentManager } from "./documentManager";
 import { Logger } from "./logger";
+import {
+	AgentOptions,
+	DidChangeDataNotificationType,
+	LogoutReason
+} from "./protocol/agent.protocol";
 import { CodeStreamSession } from "./session";
-import { AgentOptions, DidChangeDataNotificationType, LogoutReason } from "./shared/agent.protocol";
 import { Disposables, Functions, log, memoize } from "./system";
 
 export class CodeStreamAgent implements Disposable {

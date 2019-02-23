@@ -43,17 +43,17 @@ export enum LoginResult {
 	VersionUnsupported = "VERSION_UNSUPPORTED"
 }
 
-export interface CompleteSignupRequest {
+export interface CSCompleteSignupRequest {
 	token: string;
 }
 
-export interface LoginRequest {
+export interface CSLoginRequest {
 	email: string;
 	password?: string;
 	token?: string;
 }
 
-export interface LoginResponse {
+export interface CSLoginResponse {
 	user: CSMe;
 	accessToken: string;
 	pubnubKey: string;

@@ -12,7 +12,7 @@
 // } from "../../../src/managers";
 // import { Cache } from "../../../src/managers/cache";
 // import { Id } from "../../../src/managers/managers";
-// import { CSEntity } from "../../../src/shared/api.protocol";
+// import { CSEntity } from "../../../src/protocol/api.protocol";
 //
 // describe("Cache", function() {
 // 	describe("constructor", function() {

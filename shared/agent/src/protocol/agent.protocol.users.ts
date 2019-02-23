@@ -1,6 +1,6 @@
 "use strict";
 import { RequestType } from "vscode-languageserver-protocol";
-import { CSUnreads } from "./agent.protocol";
+import { Unreads } from "./agent.protocol";
 import { CSMe, CSMePreferences, CSPresenceStatus, CSUser } from "./api.protocol";
 
 export interface FetchUsersRequest {
@@ -90,7 +90,7 @@ export const GetMeRequestType = new RequestType<GetMeRequest, GetMeResponse, voi
 export interface GetUnreadsRequest {}
 
 export interface GetUnreadsResponse {
-	unreads: CSUnreads;
+	unreads: Unreads;
 }
 
 export const GetUnreadsRequestType = new RequestType<

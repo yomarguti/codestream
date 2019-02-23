@@ -11,8 +11,8 @@ import {
 	TrelloFetchListsRequestType,
 	TrelloList,
 	TrelloMember
-} from "../shared/agent.protocol";
-import { CSTrelloProviderInfo } from "../shared/api.protocol";
+} from "../protocol/agent.protocol";
+import { CSTrelloProviderInfo } from "../protocol/api.protocol";
 import { log, lspHandler, lspProvider } from "../system";
 import { ThirdPartyProviderBase } from "./provider";
 

@@ -1,6 +1,6 @@
 import { Logger } from "../logger";
+import { TelemetryRequest, TelemetryRequestType } from "../protocol/agent.protocol";
 import { CodeStreamSession } from "../session";
-import { TelemetryRequest, TelemetryRequestType } from "../shared/agent.protocol";
 import { debug, lsp, lspHandler } from "../system";
 import { TelemetryService } from "../telemetry/telemetry";
 
@@ -25,7 +25,7 @@ export class TelemetryManager {
 		this._telemetry.setSuperProps(props);
 	}
 
-	ready (): Promise<void> {
+	ready(): Promise<void> {
 		return this._telemetry.ready();
 	}
 

@@ -51,8 +51,8 @@ import {
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipRequestType,
 	UpdateStreamMembershipResponse
-} from "../shared/agent.protocol";
-import { CSChannelStream, CSDirectStream, CSStream, StreamType } from "../shared/api.protocol";
+} from "../protocol/agent.protocol";
+import { CSChannelStream, CSDirectStream, CSStream, StreamType } from "../protocol/api.protocol";
 import { lsp, lspHandler } from "../system";
 import { KeyValue } from "./cache/baseCache";
 import { CachedEntityManagerBase, Id } from "./entityManager";

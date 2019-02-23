@@ -1,6 +1,6 @@
 "use strict";
+import { CSEntity } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
-import { CSEntity } from "../shared/api.protocol";
 import { log } from "../system";
 import { ManagerBase } from "./baseManager";
 import { KeyValue } from "./cache/baseCache";

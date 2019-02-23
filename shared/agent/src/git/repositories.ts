@@ -11,8 +11,8 @@ import {
 import URI from "vscode-uri";
 import { Container } from "../container";
 import { Logger } from "../logger";
+import { CSRepository } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
-import { CSRepository } from "../shared/api.protocol";
 import { Iterables, Objects, Strings, TernarySearchTree } from "../system";
 import { Disposables } from "../system/disposable";
 import { GitRepository, GitService } from "./gitService";

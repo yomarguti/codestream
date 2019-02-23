@@ -1,6 +1,6 @@
 "use strict";
 import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
-import { CreateCodemarkRequest, CSFullCodemark } from "./agent.protocol.markers";
+import { CodemarkPlus, CreateCodemarkRequest } from "./agent.protocol.markers";
 import { ThirdPartyProviderUser } from "./agent.protocol.providers";
 import {
 	CodemarkType,
@@ -15,8 +15,8 @@ import {
 	CSStream
 } from "./api.protocol";
 
-export interface CSFullPost extends CSPost {
-	codemark?: CSFullCodemark;
+export interface PostPlus extends CSPost {
+	codemark?: CodemarkPlus;
 	hasMarkers?: boolean;
 }
 
@@ -39,8 +39,8 @@ export interface CreatePostInFileStreamRequest {
 }
 
 export interface CreatePostResponse {
-	post: CSFullPost;
-	codemark?: CSFullCodemark;
+	post: PostPlus;
+	codemark?: CodemarkPlus;
 	markers?: CSMarker[];
 	markerLocations?: CSMarkerLocations[];
 	streams?: CSStream[];
@@ -115,7 +115,7 @@ export interface FetchPostsRequest {
 }
 
 export interface FetchPostsResponse {
-	posts: CSFullPost[];
+	posts: PostPlus[];
 	codemarks?: CSCodemark[];
 	markers?: CSMarker[];
 	more?: boolean;

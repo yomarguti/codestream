@@ -4,7 +4,7 @@
 // import { IndexType } from "../../../src/managers";
 // import { EntityManager, Id, IndexParams } from "../../../src/managers/managers";
 // import { SequentialSlice } from "../../../src/managers/sequentialSlice";
-// import { CSEntity } from "../../../src/shared/api.protocol";
+// import { CSEntity } from "../../../src/protocol/api.protocol";
 //
 // describe("EntityManager", function() {
 // 	describe("get", function() {

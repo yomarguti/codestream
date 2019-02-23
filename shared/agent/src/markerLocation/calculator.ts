@@ -5,7 +5,7 @@ import { compareTwoStrings, findBestMatch, Rating } from "string-similarity";
 import { MarkerLocation, MarkerLocationsById } from "../api/extensions";
 import { Logger } from "../logger";
 import { Id } from "../managers/entityManager";
-import { CSLocationMeta, CSMarkerLocation } from "../shared/api.protocol";
+import { CSLocationMeta, CSMarkerLocation } from "../protocol/api.protocol";
 import { buildChangeset, Change, Changeset } from "./changeset";
 
 const LINE_SIMILARITY_THRESHOLD = 0.6;

@@ -18,7 +18,6 @@ import {
 	CreatePostResponse,
 	CreateRepoRequest,
 	CreateRepoResponse,
-	CSUnreads,
 	DeleteCodemarkRequest,
 	DeleteCodemarkResponse,
 	DeletePostRequest,
@@ -89,6 +88,7 @@ import {
 	SetStreamPurposeResponse,
 	UnarchiveStreamRequest,
 	UnarchiveStreamResponse,
+	Unreads,
 	UpdateCodemarkRequest,
 	UpdateCodemarkResponse,
 	UpdateMarkerRequest,
@@ -99,11 +99,12 @@ import {
 	UpdatePresenceResponse,
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse
-} from "../shared/agent.protocol";
+} from "../protocol/agent.protocol";
 import {
 	CSChannelStream,
 	CSCodemark,
 	CSDirectStream,
+	CSLoginResponse,
 	CSMarker,
 	CSMarkerLocations,
 	CSMe,
@@ -111,9 +112,8 @@ import {
 	CSPost,
 	CSRepository,
 	CSTeam,
-	CSUser,
-	LoginResponse
-} from "../shared/api.protocol";
+	CSUser
+} from "../protocol/api.protocol";
 
 interface BasicLoginOptions {
 	team?: string;
@@ -199,7 +199,7 @@ export interface TeamsRTMessage {
 
 export interface UnreadsRTMessage {
 	type: MessageType.Unreads;
-	data: CSUnreads;
+	data: Unreads;
 }
 
 export interface UsersRTMessage {
@@ -236,7 +236,7 @@ export interface ApiProvider {
 	useMiddleware(middleware: CodeStreamApiMiddleware): Disposable;
 	dispose(): Promise<void>;
 
-	login(options: LoginOptions): Promise<LoginResponse & { teamId: string }>;
+	login(options: LoginOptions): Promise<CSLoginResponse & { teamId: string }>;
 	subscribe(types?: MessageType[]): Promise<void>;
 
 	grantPubNubChannelAccess(token: string, channel: string): Promise<{}>;

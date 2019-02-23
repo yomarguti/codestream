@@ -16,7 +16,7 @@ import {
 	ProviderType
 } from "./api.protocol";
 
-export interface CSFullCodemark extends CSCodemark {
+export interface CodemarkPlus extends CSCodemark {
 	markers?: CSMarker[];
 }
 
@@ -34,7 +34,7 @@ export interface FetchCodemarksRequest {
 }
 
 export interface FetchCodemarksResponse {
-	codemarks: CSFullCodemark[];
+	codemarks: CodemarkPlus[];
 	markers?: CSMarker[];
 }
 
@@ -202,7 +202,7 @@ export interface UpdateCodemarkRequest {
 }
 
 export interface UpdateCodemarkResponse {
-	codemark: CSFullCodemark;
+	codemark: CodemarkPlus;
 }
 
 export const UpdateCodemarkRequestType = new RequestType<
@@ -235,7 +235,7 @@ export interface SetCodemarkStatusRequest {
 }
 
 export interface SetCodemarkStatusResponse {
-	codemark: CSFullCodemark;
+	codemark: CodemarkPlus;
 }
 
 export const SetCodemarkStatusRequestType = new RequestType<

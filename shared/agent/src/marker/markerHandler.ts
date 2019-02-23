@@ -13,7 +13,7 @@ import {
 	DocumentMarkersResponse,
 	MarkerNotLocated,
 	MarkerNotLocatedReason
-} from "../shared/agent.protocol";
+} from "../protocol/agent.protocol";
 
 const emojiMap: { [key: string]: string } = require("../../emoji/emojis.json");
 const emojiRegex = /:([-+_a-z0-9]+):/g;

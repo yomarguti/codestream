@@ -40,7 +40,7 @@ import {
 	DocumentMarkersRequestType,
 	FetchMarkerLocationsRequestType,
 	LogoutReason
-} from "./shared/agent.protocol";
+} from "./protocol/agent.protocol";
 import {
 	ApiErrors,
 	CSCodemark,
@@ -54,7 +54,7 @@ import {
 	CSTeam,
 	CSUser,
 	LoginResult
-} from "./shared/api.protocol";
+} from "./protocol/api.protocol";
 import { createDecoratedProviders, log, memoize, registerDecoratedHandlers } from "./system";
 
 // FIXME: Must keep this in sync with vscode-codestream/src/api/session.ts
@@ -616,7 +616,7 @@ export class CodeStreamSession {
 		}
 
 		if (user.lastPostCreatedAt) {
-			props["Date of Last Post"] = new Date(user.lastPostCreatedAt).toISOString() ;
+			props["Date of Last Post"] = new Date(user.lastPostCreatedAt).toISOString();
 		}
 
 		const { telemetry } = Container.instance();

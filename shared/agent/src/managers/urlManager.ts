@@ -1,6 +1,6 @@
 import opn from "opn";
 import { Logger } from "../logger";
-import { OpenUrlRequest, OpenUrlRequestType } from "../shared/agent.protocol";
+import { OpenUrlRequest, OpenUrlRequestType } from "../protocol/agent.protocol";
 import { lsp, lspHandler } from "../system";
 
 @lsp

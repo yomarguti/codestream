@@ -10,14 +10,14 @@ import { Container } from "../container";
 import { GitRepository } from "../git/models/repository";
 import { Logger } from "../logger";
 import { calculateLocation, calculateLocations } from "../markerLocation/calculator";
-import { MarkerNotLocatedReason } from "../shared/agent.protocol.markers";
+import { MarkerNotLocatedReason } from "../protocol/agent.protocol.markers";
 import {
 	CSFileStream,
 	CSLocationArray,
 	CSMarker,
 	CSMarkerLocation,
 	CSMarkerLocations
-} from "../shared/api.protocol";
+} from "../protocol/api.protocol";
 import { xfs } from "../xfs";
 import { ManagerBase } from "./baseManager";
 import { IndexParams, IndexType } from "./cache";

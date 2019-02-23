@@ -8,8 +8,8 @@ import {
 	JiraFetchBoardsRequestType,
 	JiraFetchBoardsResponse,
 	JiraUser
-} from "../shared/agent.protocol";
-import { CSJiraProviderInfo } from "../shared/api.protocol";
+} from "../protocol/agent.protocol";
+import { CSJiraProviderInfo } from "../protocol/api.protocol";
 import { Iterables, log, lspHandler, lspProvider } from "../system";
 import { ThirdPartyProviderBase } from "./provider";
 

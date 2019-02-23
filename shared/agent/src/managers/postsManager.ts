@@ -7,6 +7,7 @@ import { MarkerLocation } from "../api/extensions";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
+	CodemarkPlus,
 	CreateCodemarkRequest,
 	CreateCodemarkRequestMarker,
 	CreatePostRequest,
@@ -14,8 +15,6 @@ import {
 	CreatePostResponse,
 	CreatePostWithMarkerRequest,
 	CreatePostWithMarkerRequestType,
-	CSFullCodemark,
-	CSFullPost,
 	DeletePostRequest,
 	DeletePostRequestType,
 	DeletePostResponse,
@@ -34,20 +33,21 @@ import {
 	MarkPostUnreadRequest,
 	MarkPostUnreadRequestType,
 	MarkPostUnreadResponse,
+	PostPlus,
 	PreparePostWithCodeRequest,
 	PreparePostWithCodeRequestType,
 	PreparePostWithCodeResponse,
 	ReactToPostRequest,
 	ReactToPostRequestType,
 	ReactToPostResponse
-} from "../shared/agent.protocol";
+} from "../protocol/agent.protocol";
 import {
 	CodemarkType,
 	CSMarkerLocation,
 	CSPost,
 	CSStream,
 	StreamType
-} from "../shared/api.protocol";
+} from "../protocol/api.protocol";
 import { Arrays, debug, Iterables, lsp, lspHandler, Strings } from "../system";
 import { BaseIndex, IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
@@ -467,7 +467,7 @@ function trackPostCreation(request: CreatePostRequest) {
 							"Codemark Type": request.codemark.type,
 							"Linked Service": request.codemark.externalProvider
 						};
-						telemetry.track({ eventName: "Codemark Created", properties: codemarkProperties});
+						telemetry.track({ eventName: "Codemark Created", properties: codemarkProperties });
 					}
 				})
 				.catch(ex => Logger.error(ex));
@@ -547,7 +547,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		};
 	}
 
-	async fullPosts(csPosts: CSPost[]): Promise<CSFullPost[]> {
+	async fullPosts(csPosts: CSPost[]): Promise<PostPlus[]> {
 		const fullPosts = [];
 		for (const csPost of csPosts) {
 			fullPosts.push(await this.fullPost(csPost));
@@ -555,10 +555,10 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		return fullPosts;
 	}
 
-	private async fullCodemarks(codemarkIds: string[]): Promise<CSFullCodemark[]> {
+	private async fullCodemarks(codemarkIds: string[]): Promise<CodemarkPlus[]> {
 		const fullCodemarks = [];
 		for (const codemarkId of codemarkIds) {
-			let fullCodemark: CSFullCodemark;
+			let fullCodemark: CodemarkPlus;
 			const codemark = await Container.instance().codemarks.getById(codemarkId);
 			fullCodemark = {
 				...codemark
@@ -575,11 +575,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		return fullCodemarks;
 	}
 
-	private async fullPost(csPost: CSPost): Promise<CSFullPost> {
+	private async fullPost(csPost: CSPost): Promise<PostPlus> {
 		if (csPost.codemarkId) {
 			try {
 				const csCodemark = await Container.instance().codemarks.getById(csPost.codemarkId);
-				const fullCodemark: CSFullCodemark = {
+				const fullCodemark: CodemarkPlus = {
 					...csCodemark
 				};
 				let hasMarkers = false;
@@ -634,7 +634,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			posts.push(...childPosts);
 		}
 
-		const codemarks: CSFullCodemark[] = await this.fullCodemarks(
+		const codemarks: CodemarkPlus[] = await this.fullCodemarks(
 			Arrays.filterMap(posts, post => post.codemarkId)
 		);
 

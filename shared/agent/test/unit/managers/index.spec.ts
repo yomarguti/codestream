@@ -10,7 +10,7 @@
 // 	UniqueIndex
 // } from "../../../src/managers";
 // import { Id } from "../../../src/managers/managers";
-// import { CSEntity } from "../../../src/shared/api.protocol";
+// import { CSEntity } from "../../../src/protocol/api.protocol";
 //
 // describe("Indexes", function() {
 // 	const joeFoo = makePerson("1", "Joe", "Foo", "111-11-1111");

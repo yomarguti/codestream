@@ -4,7 +4,7 @@ import { MessageType } from "../api/apiProvider";
 import { SlackApiProvider } from "../api/slack/slackApi";
 import { Container } from "../container";
 import {
-	CSFullCodemark,
+	CodemarkPlus,
 	DidChangeDocumentMarkersNotificationType,
 	FetchCodemarksRequest,
 	FetchCodemarksRequestType,
@@ -15,8 +15,8 @@ import {
 	UpdateCodemarkRequest,
 	UpdateCodemarkRequestType,
 	UpdateCodemarkResponse
-} from "../shared/agent.protocol.markers";
-import { CSCodemark } from "../shared/api.protocol.models";
+} from "../protocol/agent.protocol.markers";
+import { CSCodemark } from "../protocol/api.protocol.models";
 import { lsp, lspHandler } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 
@@ -77,10 +77,10 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		return { codemarks: fullCodemarks };
 	}
 
-	async fullCodemarks(codemarks: CSCodemark[]): Promise<CSFullCodemark[]> {
+	async fullCodemarks(codemarks: CSCodemark[]): Promise<CodemarkPlus[]> {
 		const fullCodemarks = [];
 		for (const codemark of codemarks) {
-			const fullCodemark: CSFullCodemark = {
+			const fullCodemark: CodemarkPlus = {
 				...codemark
 			};
 			if (codemark.markerIds) {
@@ -146,7 +146,7 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 	}
 
 	private async fullCodemark(codemark: CSCodemark) {
-		let fullCodemark: CSFullCodemark = { ...codemark };
+		let fullCodemark: CodemarkPlus = { ...codemark };
 		if (codemark.markerIds) {
 			fullCodemark = { ...codemark, markers: [] };
 			for (const markerId of codemark.markerIds) {

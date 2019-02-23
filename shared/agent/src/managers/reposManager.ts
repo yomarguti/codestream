@@ -9,8 +9,8 @@ import {
 	GetRepoRequest,
 	GetRepoRequestType,
 	GetRepoResponse
-} from "../shared/agent.protocol";
-import { CSRepository } from "../shared/api.protocol";
+} from "../protocol/agent.protocol";
+import { CSRepository } from "../protocol/api.protocol";
 import { lsp, lspHandler } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 

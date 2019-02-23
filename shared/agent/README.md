@@ -14,10 +14,6 @@ Prerequisites
 - [NodeJS](https://nodejs.org/en/), `>= 8.9.1, < 9.0.0`
 - [npm](https://npmjs.com/), `>= 6.2.0`
 
-### Warnings
-
-👉 The files in `src/shared` are copied to `vscode-codestream` on build so make sure any changes are compatible with both projects.
-
 ### Build
 
 From a terminal, where you have cloned the repository, execute the following command to re-build the agent from scratch:

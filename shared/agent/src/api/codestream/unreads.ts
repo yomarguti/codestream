@@ -2,14 +2,14 @@
 import { Emitter, Event } from "vscode-languageserver";
 import { Container } from "../../container";
 import { Logger } from "../../logger";
-import { CSUnreads } from "../../shared/agent.protocol";
-import { CSLastReads, CSPost, CSStream, StreamType } from "../../shared/api.protocol";
+import { Unreads } from "../../protocol/agent.protocol";
+import { CSLastReads, CSPost, CSStream, StreamType } from "../../protocol/api.protocol";
 import { Arrays, Functions, log } from "../../system";
 import { ApiProvider } from "../apiProvider";
 
 export class CodeStreamUnreads {
-	private _onDidChange = new Emitter<CSUnreads>();
-	get onDidChange(): Event<CSUnreads> {
+	private _onDidChange = new Emitter<Unreads>();
+	get onDidChange(): Event<Unreads> {
 		return this._onDidChange.event;
 	}
 
@@ -30,7 +30,7 @@ export class CodeStreamUnreads {
 		return this._computePromise;
 	}
 
-	async get(): Promise<CSUnreads> {
+	async get(): Promise<Unreads> {
 		if (this._computePromise !== undefined) {
 			await this._computePromise;
 		}
@@ -177,7 +177,7 @@ export class CodeStreamUnreads {
 		}
 	}
 
-	private values(): CSUnreads {
+	private values(): Unreads {
 		return {
 			lastReads: this._lastReads,
 			mentions: this._mentions,

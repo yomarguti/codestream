@@ -11,8 +11,8 @@ import {
 	GetFileStreamRequest,
 	GetFileStreamRequestType,
 	GetFileStreamResponse
-} from "../shared/agent.protocol";
-import { CSFileStream, CSStream, StreamType } from "../shared/api.protocol";
+} from "../protocol/agent.protocol";
+import { CSFileStream, CSStream, StreamType } from "../protocol/api.protocol";
 import { lsp, lspHandler } from "../system";
 import { IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";

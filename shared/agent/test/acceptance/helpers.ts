@@ -2,8 +2,8 @@ import { Connection, Emitter, Event } from "vscode-languageserver";
 import { CodeStreamAgent } from "../../src/agent";
 import { CodeStreamApiProvider } from "../../src/api/codestream/codestreamApi";
 import { SlackApiProvider } from "../../src/api/slack/slackApi";
+import { AgentOptions } from "../../src/protocol/agent.protocol";
 import { CodeStreamSession } from "../../src/session";
-import { AgentOptions } from "../../src/shared/agent.protocol";
 import { xfs } from "../../src/xfs";
 
 export class TestSlackWebClient {

@@ -1,5 +1,4 @@
 "use strict";
-import { CodeStreamSession } from "../session";
 import {
 	ConnectThirdPartyProviderRequest,
 	ConnectThirdPartyProviderResponse,
@@ -9,7 +8,8 @@ import {
 	DisconnectThirdPartyProviderResponse,
 	FetchAssignableUsersRequest,
 	FetchAssignableUsersRequestType
-} from "../shared/agent.protocol";
+} from "../protocol/agent.protocol";
+import { CodeStreamSession } from "../session";
 import { getProvider, log, lsp, lspHandler } from "../system";
 
 // NOTE: You must include all new providers here, otherwise the webpack build will exclude them
