@@ -8,10 +8,13 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 // const CircularDependencyPlugin = require("circular-dependency-plugin");
+const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 
 module.exports = function(env, argv) {
 	env = env || {};
-	env.production = Boolean(env.production);
+	env.analyze = Boolean(env.analyze);
+	env.analyzeWebview = Boolean(env.analyzeWebview);
+	env.production = env.analyze || env.analyzeWebview || Boolean(env.production);
 	env.reset = Boolean(env.reset);
 	env.watch = Boolean(argv.watch || argv.w);
 
@@ -151,6 +154,10 @@ function getExtensionConfig(env) {
 		// })
 	];
 
+	if (env.analyze) {
+		plugins.push(new BundleAnalyzerPlugin());
+	}
+
 	return {
 		name: "extension",
 		entry: "./src/extension.ts",
@@ -242,6 +249,10 @@ function getWebviewConfig(env) {
 				: false
 		})
 	];
+
+	if (env.analyzeWebview) {
+		plugins.push(new BundleAnalyzerPlugin());
+	}
 
 	return {
 		name: "webview",
