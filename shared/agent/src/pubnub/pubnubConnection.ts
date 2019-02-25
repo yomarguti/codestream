@@ -2,7 +2,7 @@
 // messages in real-time
 "use strict";
 import HttpsProxyAgent from "https-proxy-agent";
-import * as Pubnub from "pubnub";
+import Pubnub from "pubnub";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
 import { ServerError } from "../agentError";
 import { ApiProvider } from "../api/apiProvider";

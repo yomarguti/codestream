@@ -46,7 +46,9 @@ module.exports = function(env, argv) {
 		new CleanWebpackPlugin(["dist"], { verbose: false }),
 		new FileManagerWebpackPlugin({ onEnd: onEnd }),
 		// Added because of https://github.com/felixge/node-formidable/issues/337
-		new webpack.DefinePlugin({ "global.GENTLY": false })
+		new webpack.DefinePlugin({ "global.GENTLY": false }),
+		// Ignores optional worker_threads require by the write-file-atomic package
+		new webpack.IgnorePlugin(/^worker_threads$/)
 	];
 
 	return {

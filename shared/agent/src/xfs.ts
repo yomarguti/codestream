@@ -1,7 +1,7 @@
 "use strict";
 
 import * as fs from "fs";
-import * as writeAtomic from "write-file-atomic";
+import writeAtomic from "write-file-atomic";
 
 export namespace xfs {
 	export async function readText(srcPath: string) {

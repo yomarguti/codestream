@@ -41,7 +41,7 @@
         "bash-test-unit-ci": "npm run bash-test-unit -- --reporter mocha-teamcity-reporter"
     },
     "dependencies": {
-        "@sentry/node": "4.5.3",
+        "@sentry/node": "4.6.3",
         "analytics-node": "3.3.0",
         "date-fns": "1.30.1",
         "diff": "4.0.1",
@@ -53,10 +53,9 @@
         "pubnub": "4.21.7",
         "string-similarity": "3.0.0",
         "tmp": "0.0.33",
-        "tslib": "1.9.3",
         "vscode-languageserver": "5.2.1",
         "vscode-uri": "1.0.6",
-        "write-file-atomic": "2.3.0"
+        "write-file-atomic": "2.4.2"
     },
     "devDependencies": {
         "@sentry/types": "4.5.3",
@@ -72,7 +71,7 @@
         "@types/sinon": "5.0.5",
         "@types/sinon-chai": "3.2.0",
         "@types/string-similarity": "3.0.0",
-        "@types/tmp": "0.0.33",
+        "@types/tmp": "0.0.34",
         "@types/write-file-atomic": "2.1.1",
         "chai": "4.2.0",
         "clean-webpack-plugin": "1.0.1",
@@ -87,10 +86,10 @@
         "sanitize-filename": "^1.6.1",
         "sinon": "6.3.4",
         "sinon-chai": "3.2.0",
-        "terser-webpack-plugin": "1.2.2",
+        "terser-webpack-plugin": "1.2.3",
         "ts-loader": "5.3.3",
         "ts-node": "7.0.1",
-        "tslint": "5.12.1",
+        "tslint": "5.13.0",
         "tslint-loader": "3.5.4",
         "typescript": "3.2.4",
         "webpack": "4.29.5",
