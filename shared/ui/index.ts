@@ -1,13 +1,13 @@
 import "@babel/polyfill";
 import Container from "./Container";
 import {
+	DidBlurNotificationType,
 	DidChangeActiveEditorNotificationType,
-	DidBlurNotification,
 	DidChangeConfigsNotificationType,
-	DidEstablishConnectivityNotificationType,
-	DidLoseConnectivityNotificationType,
 	DidChangeDataNotification,
-	DidFocusNotification,
+	DidEstablishConnectivityNotificationType,
+	DidFocusNotificationType,
+	DidLoseConnectivityNotificationType,
 	DidSignOutNotificationType
 } from "./ipc/webview.protocol";
 import { actions, createCodeStreamStore } from "./store";
@@ -33,7 +33,9 @@ export function listenForEvents(store) {
 		}
 	});
 
-	api.on(DidChangeConfigsNotificationType, configs => store.dispatch(actions.updateConfigs(configs)));
+	api.on(DidChangeConfigsNotificationType, configs =>
+		store.dispatch(actions.updateConfigs(configs))
+	);
 
 	api.on(DidLoseConnectivityNotificationType, () => store.dispatch(actions.offline()));
 	api.on(DidEstablishConnectivityNotificationType, () => store.dispatch(actions.online()));
@@ -44,12 +46,12 @@ export function listenForEvents(store) {
 			editor && store.dispatch(actions.setCurrentFile(editor.fileName, editor.fileStreamId))
 	);
 
-	api.on(DidFocusNotification, () => {
+	api.on(DidFocusNotificationType, () => {
 		setTimeout(() => {
 			store.dispatch(actions.focus());
 		}, 10); // we want the first click to go to the FocusTrap blanket
 	});
-	api.on(DidBlurNotification, () => {
+	api.on(DidBlurNotificationType, () => {
 		store.dispatch(actions.blur());
 	});
 

@@ -23,3 +23,13 @@ export interface WebviewIpcMessage {
 	params?: any;
 	error?: any;
 }
+
+/*
+	This is a properly serializable class for the postMessage api.
+	The `NotificationType` provided by vscode-languageserver-protocol has a getter for `method`
+	which is not serialized.
+*/
+export class NotificationType<P, R = void> implements WebviewIpcMessage {
+	_?: [P, R];
+	constructor(public readonly method: string) {}
+}

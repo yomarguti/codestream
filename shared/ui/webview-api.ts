@@ -1,18 +1,18 @@
 import { RequestType } from "vscode-jsonrpc";
-import { findHost, IpcHost, WebviewIpcMessage } from "./ipc/webview.protocol";
+import { findHost, IpcHost, NotificationType, WebviewIpcMessage } from "./ipc/webview.protocol";
 import { shortUuid } from "./utils";
 
-let sequence = 0;
+type RequestOrNotificationType<P, R> = RequestType<P, R, any, any> | NotificationType<P, R>;
 
-type RequestOf<RT> = RT extends RequestType<infer RQ, any, any, any> ? RQ : never;
-type ResponseOf<RT> = RT extends RequestType<any, infer R, any, any> ? R : never;
+type RequestOf<RT> = RT extends RequestOrNotificationType<infer RQ, any> ? RQ : never;
+type ResponseOf<RT> = RT extends RequestOrNotificationType<any, infer R> ? R : never;
 
 class EventEmitter {
 	private listenersByEvent = new Map<string, Function[]>();
 
-	on<ET extends RequestType<any, any, any, any>>(
-		eventType: ET,
-		listener: (event: RequestOf<ET>) => void
+	on<NT extends NotificationType<any, any>>(
+		eventType: NT,
+		listener: (event: RequestOf<NT>) => void
 	) {
 		const listeners = this.listenersByEvent.get(eventType.method) || [];
 		listeners.push(listener);
@@ -29,6 +29,8 @@ class EventEmitter {
 		setImmediate(() => (this.listenersByEvent.get(eventName) || []).forEach(l => l(body)));
 	}
 }
+
+let sequence = 0;
 
 export class HostApi extends EventEmitter {
 	private pendingCommands: Map<string, any>;
@@ -62,7 +64,7 @@ export class HostApi extends EventEmitter {
 		};
 	}
 
-	send<RT extends RequestType<any, any, any, any>>(
+	send<RT extends RequestOrNotificationType<any, any>>(
 		request: RT,
 		args: RequestOf<RT>
 	): Promise<ResponseOf<RT>> {

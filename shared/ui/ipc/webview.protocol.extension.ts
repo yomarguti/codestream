@@ -1,4 +1,5 @@
-import { Range, RequestType } from "vscode-languageserver-protocol";
+import { Range } from "vscode-languageserver-protocol";
+import { NotificationType } from "./webview.protocol.common";
 
 type ConfigState = any;
 
@@ -27,10 +28,8 @@ export interface DidHighlightCodeNotification {
 	gitError: string | undefined;
 	isHighlight?: boolean;
 }
-export const DidHighlightCodeNotificationType = new RequestType<
+export const DidHighlightCodeNotificationType = new NotificationType<
 	DidHighlightCodeNotification,
-	void,
-	void,
 	void
 >("webview/code-highlighted");
 
@@ -39,10 +38,8 @@ export interface DidSelectStreamThreadNotification {
 	threadId?: string;
 }
 
-export const DidSelectStreamThreadNotificationType = new RequestType<
+export const DidSelectStreamThreadNotificationType = new NotificationType<
 	DidSelectStreamThreadNotification,
-	void,
-	void,
 	void
 >("webview/stream-thread-selected");
 
@@ -52,34 +49,27 @@ export interface DidScrollEditorNotification {
 	lastLine: number;
 }
 
-export const DidScrollEditorNotificationType = new RequestType<
+export const DidScrollEditorNotificationType = new NotificationType<
 	DidScrollEditorNotification,
-	void,
-	void,
 	void
 >("webview/text-editor-scrolled");
 
-export const DidChangeDataNotification = new RequestType<
-	{ type: string; data: any },
-	void,
-	void,
-	void
->("webview/data-changed");
+export const DidChangeDataNotification = new NotificationType<{ type: string; data: any }, void>(
+	"webview/data-changed"
+);
 
 export type DidChangeConfigsNotification = Partial<ConfigState>;
 
-export const DidChangeConfigsNotificationType = new RequestType<
+export const DidChangeConfigsNotificationType = new NotificationType<
 	DidChangeConfigsNotification,
-	void,
-	void,
 	void
 >("webview/configs-changed");
 
-export const DidLoseConnectivityNotificationType = new RequestType<void, void, void, void>(
+export const DidLoseConnectivityNotificationType = new NotificationType<void, void>(
 	"webview/connectivity-lost"
 );
 
-export const DidEstablishConnectivityNotificationType = new RequestType<void, void, void, void>(
+export const DidEstablishConnectivityNotificationType = new NotificationType<void, void>(
 	"webview/connectivity-established"
 );
 
@@ -87,14 +77,12 @@ export interface DidChangeActiveEditorNotification {
 	editor?: { fileName: string; fileStreamId?: string };
 }
 
-export const DidChangeActiveEditorNotificationType = new RequestType<
+export const DidChangeActiveEditorNotificationType = new NotificationType<
 	DidChangeActiveEditorNotification,
-	void,
-	void,
 	void
 >("webview/active-editor-changed");
 
-export const DidFocusNotification = new RequestType("webview/focused");
-export const DidBlurNotification = new RequestType("webview/blurred");
+export const DidFocusNotificationType = new NotificationType("webview/focused");
+export const DidBlurNotificationType = new NotificationType("webview/blurred");
 
-export const DidSignOutNotificationType = new RequestType("webview/signed-out");
+export const DidSignOutNotificationType = new NotificationType("webview/signed-out");
