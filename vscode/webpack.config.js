@@ -42,13 +42,6 @@ module.exports = function(env, argv) {
 		fs.mkdirSync(protocolPath);
 	}
 
-	console.log("Ensuring webview symlink to the agent protocol folder...");
-	createFolderSymlinkSync(
-		path.resolve(__dirname, "../codestream-lsp-agent/src/protocol"),
-		path.resolve(protocolPath, "agent"),
-		env
-	);
-
 	// TODO: Total and complete HACK until the following vsls issues are resolved
 	// https://github.com/MicrosoftDocs/live-share/issues/1334 & https://github.com/MicrosoftDocs/live-share/issues/1335
 
