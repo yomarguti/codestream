@@ -30,9 +30,9 @@
         "update:emoji": "pushd emoji && node ./shortcodeToEmoji.js && popd",
         "watch": "webpack --watch --env.development --info-verbosity verbose",
         "test-acceptance": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha -r ts-node/register -r esm --recursive \"test/acceptance/**/*.spec.ts\"",
-        "test-acceptance-ci": "npm run acceptance-unit -- --reporter mocha-teamcity-reporter",
+        "test-acceptance-ci": "npm run test-acceptance -- --reporter mocha-teamcity-reporter",
         "test-integration": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha --require ts-node/register --recursive \"test/integration/**/*.spec.ts\"",
-        "test-integration-ci": "npm run integration-unit -- --reporter mocha-teamcity-reporter",
+        "test-integration-ci": "npm run test-integration -- --reporter mocha-teamcity-reporter",
         "test-unit": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha --require ts-node/register --recursive \"test/unit/**/*.spec.ts\"",
         "test-unit-ci": "npm run test-unit -- --reporter mocha-teamcity-reporter"
     },
