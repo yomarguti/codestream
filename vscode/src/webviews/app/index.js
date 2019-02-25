@@ -1,4 +1,3 @@
-import { install as polyFillResizeObserver } from "resize-observer";
 import React from "react";
 import ReactDOM from "react-dom";
 import { actions, Container, createStore, HostApi, listenForEvents } from "@codestream/webview";
@@ -27,10 +26,6 @@ window.addEventListener(
 channel.port1.onmessage = message => {
 	vscodeApi.postMessage(message.data);
 };
-
-if (!window.ResizeObserver) {
-	polyFillResizeObserver();
-}
 
 const cssColorRegEx = /^(?:(#?)([0-9a-f]{3}|[0-9a-f]{6})|((?:rgb|hsl)a?)\((-?\d+%?)[,\s]+(-?\d+%?)[,\s]+(-?\d+%?)[,\s]*(-?[\d\.]+%?)?\))$/i;
 
