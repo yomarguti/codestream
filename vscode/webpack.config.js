@@ -15,7 +15,7 @@ module.exports = function(env, argv) {
 	env.analyze = Boolean(env.analyze);
 	env.analyzeWebview = Boolean(env.analyzeWebview);
 	env.production = env.analyze || env.analyzeWebview || Boolean(env.production);
-	env.reset = Boolean(env.reset);
+	env.reset = true; // Boolean(env.reset);
 	env.watch = Boolean(argv.watch || argv.w);
 
 	const protocolPath = path.resolve(__dirname, "src/protocols");
