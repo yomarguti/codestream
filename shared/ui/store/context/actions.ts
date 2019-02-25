@@ -76,7 +76,7 @@ export const connectProvider = (name: string, fromMenu = false) => async (dispat
 		const api = HostApi.instance;
 		await api.send(ConnectThirdParyProviderRequestType, { providerName: name });
 		api.send(TelemetryRequestType, {
-			eventName: "Service Connected",
+			eventName: "Issue Service Connected",
 			properties: {
 				Service: name,
 				Connection: "On",
@@ -89,10 +89,22 @@ export const connectProvider = (name: string, fromMenu = false) => async (dispat
 	}
 };
 
-export const disconnectService = (service: string) => async (dispatch, getState) => {
+export const disconnectService = (service: string, fromMenu = false) => async (
+	dispatch,
+	getState
+) => {
 	try {
-		await HostApi.instance.send(DisconnectThirdPartyProviderRequestType, {
+		const api = HostApi.instance;
+		await api.send(DisconnectThirdPartyProviderRequestType, {
 			providerName: service
+		});
+		api.send(TelemetryRequestType, {
+			eventName: "Issue Service Connected",
+			properties: {
+				Service: name,
+				Connection: "Off",
+				"Connection Location": fromMenu ? "Global Nav" : "Compose Modal"
+			}
 		});
 		if (getState().context.issueProvider === service) {
 			dispatch(setIssueProvider(undefined));
