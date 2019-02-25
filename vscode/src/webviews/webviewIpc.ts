@@ -1,10 +1,10 @@
 "use strict";
 import {
-	DidBlurNotification,
+	DidBlurNotificationType,
 	DidChangeActiveEditorNotification,
 	DidChangeActiveEditorNotificationType,
 	DidEstablishConnectivityNotificationType,
-	DidFocusNotification,
+	DidFocusNotificationType,
 	DidLoseConnectivityNotificationType,
 	DidSelectStreamThreadNotification,
 	DidSelectStreamThreadNotificationType,
@@ -97,7 +97,7 @@ export class WebviewIpc {
 	}
 
 	sendDidBlur() {
-		return this.postMessage(DidBlurNotification);
+		return this.postMessage(DidBlurNotificationType);
 	}
 
 	sendDidConnect() {
@@ -109,7 +109,7 @@ export class WebviewIpc {
 	}
 
 	sendDidFocus() {
-		return this.postMessage(DidFocusNotification);
+		return this.postMessage(DidFocusNotificationType);
 	}
 
 	sendResponse(response: { id: string; params: any } | { id: string; error: any }) {
