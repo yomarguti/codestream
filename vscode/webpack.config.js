@@ -18,78 +18,36 @@ module.exports = function(env, argv) {
 	env.reset = true; // Boolean(env.reset);
 	env.watch = Boolean(argv.watch || argv.w);
 
-	const protocolPath = path.resolve(__dirname, "src/protocols");
+	let protocolPath = path.resolve(__dirname, "src/protocols");
 	if (!fs.existsSync(protocolPath)) {
 		fs.mkdirSync(protocolPath);
 	}
 
-	const agentSymlink = path.resolve(protocolPath, "agent");
-	if (env.reset) {
-		if (fs.existsSync(agentSymlink)) {
-			fs.unlinkSync(agentSymlink);
-		}
+	console.log("Ensuring extension symlink to the agent protocol folder...");
+	createFolderSymlinkSync(
+		path.resolve(__dirname, "../codestream-lsp-agent/src/protocol"),
+		path.resolve(protocolPath, "agent"),
+		env
+	);
+
+	console.log("Ensuring extension symlink to the webview protocol folder...");
+	createFolderSymlinkSync(
+		path.resolve(__dirname, "../codestream-components/ipc"),
+		path.resolve(protocolPath, "webview"),
+		env
+	);
+
+	protocolPath = path.resolve(__dirname, "../codestream-components/protocols");
+	if (!fs.existsSync(protocolPath)) {
+		fs.mkdirSync(protocolPath);
 	}
 
-	if (!fs.existsSync(agentSymlink)) {
-		try {
-			console.log("Creating extension symlink to the agent protocol folder...");
-
-			fs.symlinkSync(
-				path.resolve(__dirname, "../codestream-lsp-agent/src/protocol"),
-				agentSymlink,
-				"dir"
-			);
-		} catch (ex) {
-			console.log(`Extension <-> Agent symlink failed; ${ex}`);
-		}
-	}
-
-	const webviewSymlink = path.resolve(protocolPath, "webview");
-	if (env.reset) {
-		if (fs.existsSync(webviewSymlink)) {
-			fs.unlinkSync(webviewSymlink);
-		}
-	}
-
-	if (!fs.existsSync(webviewSymlink)) {
-		try {
-			console.log("Creating extension symlink to the webview protocol folder...");
-
-			fs.symlinkSync(
-				path.resolve(__dirname, "../codestream-components/ipc"),
-				webviewSymlink,
-				"dir"
-			);
-		} catch (ex) {
-			console.log(`Extension <-> Webview symlink failed; ${ex}`);
-		}
-	}
-
-	const webviewProtocolPath = path.resolve(__dirname, "../codestream-components/protocols");
-	if (!fs.existsSync(webviewProtocolPath)) {
-		fs.mkdirSync(webviewProtocolPath);
-	}
-
-	const webviewAgentSymlink = path.resolve(webviewProtocolPath, "agent");
-	if (env.reset) {
-		if (fs.existsSync(webviewAgentSymlink)) {
-			fs.unlinkSync(webviewAgentSymlink);
-		}
-	}
-
-	if (!fs.existsSync(webviewAgentSymlink)) {
-		try {
-			console.log("Creating webview symlink to the agent protocol folder...");
-
-			fs.symlinkSync(
-				path.resolve(__dirname, "../codestream-lsp-agent/src/protocol"),
-				webviewAgentSymlink,
-				"dir"
-			);
-		} catch (ex) {
-			console.log(`Webview <-> Agent symlink failed; ${ex}`);
-		}
-	}
+	console.log("Ensuring webview symlink to the agent protocol folder...");
+	createFolderSymlinkSync(
+		path.resolve(__dirname, "../codestream-lsp-agent/src/protocol"),
+		path.resolve(protocolPath, "agent"),
+		env
+	);
 
 	// TODO: Total and complete HACK until the following vsls issues are resolved
 	// https://github.com/MicrosoftDocs/live-share/issues/1334 & https://github.com/MicrosoftDocs/live-share/issues/1335
@@ -342,4 +300,27 @@ function getWebviewConfig(env) {
 			warnings: true
 		}
 	};
+}
+
+function createFolderSymlinkSync(source, target, env) {
+	if (env.reset) {
+		console.log("Unlinking symlink...");
+		try {
+			fs.unlinkSync(target);
+		} catch (ex) {}
+	} else if (fs.existsSync(target)) {
+		return;
+	}
+
+	console.log("Creating symlink...");
+	try {
+		fs.symlinkSync(source, target, "dir");
+	} catch (ex) {
+		try {
+			fs.unlinkSync(target);
+			fs.symlinkSync(source, target, "dir");
+		} catch (ex) {
+			console.log(`Symlink creation failed; ${ex}`);
+		}
+	}
 }
