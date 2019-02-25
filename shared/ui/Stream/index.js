@@ -1378,7 +1378,7 @@ export class SimpleStream extends Component {
 			HostApi.instance.send(TelemetryRequestType, {
 				eventName: "Codemark Clicked",
 				properties: {
-					Location: "Stream"
+					"Codemark Location": "Stream"
 				}
 			});
 		}

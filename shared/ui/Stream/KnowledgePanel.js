@@ -399,7 +399,7 @@ export class SimpleKnowledgePanel extends Component {
 		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Codemark Clicked",
 			properties: {
-				Location: "Codemarks Tab"
+				"Codemark Location": "Codemarks Tab"
 			}
 		});
 

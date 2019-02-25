@@ -216,7 +216,7 @@ export class SimpleInlineCodemarks extends Component {
 		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Codemark Clicked",
 			properties: {
-				Location: "Spatial View"
+				"Codemark Location": "Spatial View"
 			}
 		});
 		if (codemark.markers)
