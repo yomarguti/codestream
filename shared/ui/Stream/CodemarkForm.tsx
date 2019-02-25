@@ -66,6 +66,8 @@ interface Props {
 	isEditing?: boolean;
 	editingCodemark?: CSCodemark;
 	placeholder?: string;
+	selectedStreams: {};
+	showChannels: string;
 }
 
 interface State {
@@ -90,6 +92,7 @@ interface State {
 	titleInvalid?: boolean;
 	textInvalid?: boolean;
 	assigneesInvalid?: boolean;
+	showAllChannels?: boolean;
 }
 
 function merge(defaults: Partial<State>, codemark: CSCodemark): State {
@@ -421,12 +424,15 @@ class CodemarkForm extends React.Component<Props, State> {
 		}));
 	}
 
-	selectChannel = (stream: Stream) => {
-		this.setState({ channelMenuOpen: false });
-		if (stream && stream.id) {
+	selectChannel = (stream: Stream | "show-all") => {
+		if (stream === "show-all") {
+			this.setState({ showAllChannels: true });
+			return;
+		} else if (stream && stream.id) {
 			const channelName = (stream.type === StreamType.Direct ? "@" : "#") + stream.name;
 			this.setState({ selectedChannelName: channelName, selectedChannelId: stream.id });
 		}
+		this.setState({ channelMenuOpen: false });
 	}
 
 	// handleClickConnectSlack = async event => {
@@ -437,17 +443,30 @@ class CodemarkForm extends React.Component<Props, State> {
 	// }
 
 	renderCrossPostMessage = () => {
+		const { selectedStreams, showChannels } = this.props;
+		const { showAllChannels } = this.state;
 		// if (this.props.slackInfo || this.props.providerInfo.slack) {
-		const items: { label: string; action?: CSStream }[] = [];
+		const items: { label: string; action?: CSStream | "show-all" }[] = [];
+
+		const filterSelected = showChannels === "selected" && !showAllChannels;
 		this.props.channelStreams.forEach(channel => {
-			items.push({ label: "#" + channel.name, action: channel });
+			if (!filterSelected || selectedStreams[channel.id]) {
+				items.push({ label: "#" + channel.name, action: channel });
+			}
 		});
 		items.push({ label: "-" });
 		_.sortBy(this.props.directMessageStreams, (stream: CSDirectStream) =>
 			(stream.name || "").toLowerCase()
 		).forEach((channel: CSDirectStream) => {
-			items.push({ label: "@" + channel.name, action: channel });
+			if (!filterSelected || selectedStreams[channel.id]) {
+				items.push({ label: "@" + channel.name, action: channel });
+			}
 		});
+
+		if (filterSelected) {
+			items.push({ label: "-" });
+			items.push({ label: "Show All Channels & DMs", action: "show-all" });
+		}
 
 		const channelName = this.state.selectedChannelName;
 		return (
@@ -906,7 +925,7 @@ class CodemarkForm extends React.Component<Props, State> {
 const EMPTY_OBJECT = {};
 
 const mapStateToProps = state => {
-	const { context, users, session, teams } = state;
+	const { context, users, session, teams, preferences } = state;
 	const user = users[session.userId];
 	const channel = context.currentStreamId
 		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId)!
@@ -921,7 +940,9 @@ const mapStateToProps = state => {
 		channel,
 		issueProvider: context.issueProvider,
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
-		isSlackTeam
+		isSlackTeam,
+		selectedStreams: preferences.selectedStreams || EMPTY_OBJECT,
+		showChannels: context.channelFilter
 		// slackInfo,
 	};
 };

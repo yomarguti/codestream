@@ -18,6 +18,10 @@ export default class Menu extends Component {
 				this.setState({ closed: true });
 			}
 		};
+		this.repositionIfNecessary();
+	}
+
+	repositionIfNecessary() {
 		if (this.props && this.props.target) {
 			const rect = this.props.target.getBoundingClientRect();
 			this._div.style.top = rect.top + "px";
@@ -63,6 +67,7 @@ export default class Menu extends Component {
 			this.props.action();
 			return null;
 		}
+		this.repositionIfNecessary();
 	}
 
 	render() {
