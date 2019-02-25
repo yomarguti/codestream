@@ -27,6 +27,7 @@ namespace CodeStream.VisualStudio.Services
         Task LogoutAsync();
         IBrowserService BrowserService { get; }
         Task TrackAsync(string eventName, TelemetryProperties properties = null);
+        bool IsReady { get; }
     }
 
     [Injected]
@@ -61,9 +62,14 @@ namespace CodeStream.VisualStudio.Services
             _toolWindowProvider = toolWindowProvider;
         }
 
+        public bool IsReady
+        {
+            get { return _sessionService?.IsReady == true; }
+        }
+
         public async Task ChangeActiveWindowAsync(string fileName, Uri uri)
         {
-            if (!_sessionService.IsReady) return;
+            if (!IsReady) return;
 
             try
             {
@@ -93,7 +99,7 @@ namespace CodeStream.VisualStudio.Services
 
         public Task OpenCommentByThreadAsync(string streamId, string threadId)
         {
-            if (!_sessionService.IsReady) return Task.CompletedTask;
+            if (!IsReady) return Task.CompletedTask;
 
             try
             {
@@ -118,7 +124,7 @@ namespace CodeStream.VisualStudio.Services
         public async Task<object> PrepareCodeAsync(Uri uri, TextSelection textSelection, bool isDirty, bool isHighlight = false,
             CancellationToken? cancellationToken = null)
         {
-            if (!_sessionService.IsReady) return Task.CompletedTask;
+            if (!IsReady) return Task.CompletedTask;
 
             try
             {
@@ -154,7 +160,7 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task TrackAsync(string eventName, TelemetryProperties properties = null)
         {
-            if (_sessionService.IsReady)
+            if (IsReady)
             {
                 _agentService.TrackAsync(eventName, properties);
             }
@@ -164,7 +170,7 @@ namespace CodeStream.VisualStudio.Services
 
         public async Task LogoutAsync()
         {
-            if (!_sessionService.IsReady) return;
+            if (!IsReady) return;
 
             try
             {

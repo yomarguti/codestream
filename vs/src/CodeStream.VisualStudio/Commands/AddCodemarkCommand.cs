@@ -52,6 +52,9 @@ namespace CodeStream.VisualStudio.Commands
         /// </summary>
         private void InvokeHandler(object sender, EventArgs args)
         {
+            var codeStreamService = Microsoft.VisualStudio.Shell.Package.GetGlobalService((typeof(SCodeStreamService))) as ICodeStreamService;
+            if (codeStreamService == null || !codeStreamService.IsReady) return;
+
             var ideService = Microsoft.VisualStudio.Shell.Package.GetGlobalService((typeof(SIdeService))) as IdeService;
             if (ideService == null) return;
 
@@ -65,9 +68,6 @@ namespace CodeStream.VisualStudio.Commands
             if (wpfTextView == null) return;
 
             if (!exports.GetExportedValue<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument)) return;
-
-            var codeStreamService = Microsoft.VisualStudio.Shell.Package.GetGlobalService((typeof(SCodeStreamService))) as ICodeStreamService;
-            if (codeStreamService == null) return;
 
             ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
