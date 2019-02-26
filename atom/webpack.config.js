@@ -1,12 +1,10 @@
 "use strict";
 const fs = require("fs");
 const path = require("path");
-// const nodeExternals = require("webpack-node-externals");
 const CleanPlugin = require("clean-webpack-plugin");
 const FileManagerPlugin = require("filemanager-webpack-plugin");
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const HtmlPlugin = require("html-webpack-plugin");
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 module.exports = function(env, argv) {
 	env = env || {};
@@ -97,11 +95,6 @@ function getExtensionConfig(env) {
 		module: {
 			rules: [
 				{
-					test: /\.js$/,
-					exclude: /node_modules/,
-					use: "babel-loader",
-				},
-				{
 					test: /\.ts$/,
 					enforce: "pre",
 					use: "tslint-loader",
@@ -157,10 +150,11 @@ function getWebviewConfig(env) {
 
 	return {
 		name: "webview",
-		context: path.resolve(__dirname, "lib/views/webview"),
+		context: path.resolve(__dirname, "webview-lib"),
 		entry: {
 			webview: "./index.tsx",
 		},
+		node: false,
 		mode: env.production ? "production" : "development",
 		devtool: !env.production ? "eval-source-map" : undefined,
 		output: {
@@ -175,45 +169,40 @@ function getWebviewConfig(env) {
 					use: "html-loader",
 				},
 				{
-					test: /\.jsx?$/,
+					test: /\.(js|ts)x?$/,
 					use: "babel-loader",
 					exclude: /node_modules/,
 				},
-				{
-					test: /\.tsx?$/,
-					use: "ts-loader",
-					exclude: /node_modules|\.d\.ts$/,
-				},
-				{
-					test: /\.less$/,
-					use: [
-						{
-							loader: MiniCssExtractPlugin.loader,
-						},
-						{
-							loader: "css-loader",
-							options: {
-								sourceMap: !env.production,
-								url: false,
-							},
-						},
-						{
-							loader: "less-loader",
-							options: {
-								sourceMap: !env.production,
-							},
-						},
-					],
-					exclude: /node_modules/,
-				},
+				// {
+				// 	test: /\.less$/,
+				// 	use: [
+				// 		{
+				// 			loader: MiniCssExtractPlugin.loader,
+				// 		},
+				// 		{
+				// 			loader: "css-loader",
+				// 			options: {
+				// 				sourceMap: !env.production,
+				// 				url: false,
+				// 			},
+				// 		},
+				// 		{
+				// 			loader: "less-loader",
+				// 			options: {
+				// 				sourceMap: !env.production,
+				// 			},
+				// 		},
+				// 	],
+				// 	exclude: /node_modules/,
+				// },
 			],
 		},
 		resolve: {
 			extensions: [".ts", ".tsx", ".js", ".jsx"],
-			modules: [path.resolve(__dirname, "lib/views/webview"), "node_modules"],
+			modules: [path.resolve(__dirname, "webview-lib"), "node_modules"],
 			plugins: [
 				new TsconfigPathsPlugin({
-					configFile: path.resolve(__dirname, "lib/views/webview/tsconfig.json"),
+					configFile: path.resolve(__dirname, "webview-lib/tsconfig.json"),
 				}),
 			],
 			// Treats symlinks as real files -- using their "current" path

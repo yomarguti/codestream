@@ -16,7 +16,7 @@ import {
 } from "../protocols/webview/webview.protocol";
 import { asAbsolutePath } from "../utils";
 import { getStyles } from "./styles-getter";
-import { NotificationType } from "../protocols/webview/webview.protocol";
+import { NotificationType } from "vscode-languageserver-protocol";
 
 export class WebviewIpc {
 	private channel: MessageChannel;

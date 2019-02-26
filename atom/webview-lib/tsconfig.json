@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"baseUrl": "../../../",
+		"baseUrl": "../",
 		"emitDecoratorMetadata": true,
 		"esModuleInterop": false,
 		"experimentalDecorators": true,
@@ -18,7 +18,10 @@
 			"@codestream/protocols/agent": ["../codestream-components/protocols/agent/agent.protocol"],
 			"@codestream/protocols/api": ["../codestream-components/protocols/agent/api.protocol"],
 			"@codestream/protocols/webview": ["../codestream-components/ipc/webview.protocol"],
-			"@codestream/webview": ["../codestream-components/"]
+			"@codestream/webview": ["../codestream-components/"],
+			"react": ["../codestream-components/node_modules/react"],
+			"react-dom": ["../codestream-components/node_modules/react-dom"],
+			"vscode-jsonrpc": ["../codestream-components/vscode-jsonrpc.shim.ts"]
 		},
 		"resolveJsonModule": false,
 		"rootDirs": ["."],
