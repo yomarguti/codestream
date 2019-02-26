@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"baseUrl": "./lib",
+		"baseUrl": "../../../",
 		"emitDecoratorMetadata": true,
 		"esModuleInterop": false,
 		"experimentalDecorators": true,
@@ -15,19 +15,18 @@
 		"noUnusedLocals": false,
 		"outDir": "dist",
 		"paths": {
-			"codestream-components": ["../codestream-components/index"],
-			"codestream-components/*": ["../codestream-components/*"],
-			"@codestream/protocols/agent": ["protocols/agent/agent.protocol"],
-			"@codestream/protocols/api": ["protocols/agent/api.protocol"],
-			"@codestream/protocols/webview": ["protocols/webview/webview.protocol"]
+			"@codestream/protocols/agent": ["../codestream-components/protocols/agent/agent.protocol"],
+			"@codestream/protocols/api": ["../codestream-components/protocols/agent/api.protocol"],
+			"@codestream/protocols/webview": ["../codestream-components/ipc/webview.protocol"],
+			"@codestream/webview": ["../codestream-components/"]
 		},
 		"resolveJsonModule": false,
-		"rootDirs": ["./lib"],
+		"rootDirs": ["."],
 		"sourceMap": true,
 		"strict": true,
 		"target": "esnext",
 		"traceResolution": false,
 		"jsx": "react"
 	},
-	"exclude": ["node_modules", "lib/views/webview"]
+	"exclude": ["node_modules"]
 }

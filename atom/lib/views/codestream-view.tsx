@@ -1,20 +1,37 @@
 import { shell } from "electron";
-import * as React from "react";
-import { render, unmountComponentAtNode } from "react-dom";
-import { Container, actions, listenForEvents } from "codestream-components";
-import translations from "codestream-components/translations/en";
 import { CompositeDisposable } from "atom";
-import { WorkspaceSession } from "lib/workspace/workspace-session";
-import { LoginResult } from "../shared/api.protocol";
+import { WorkspaceSession } from "../workspace/workspace-session";
+import { LoginResult } from "../protocols/agent/api.protocol";
+import { DidChangeDataNotification } from "../protocols/agent/agent.protocol";
 import {
-	GoToSlackSignin,
-	GoToSlackSigninResult,
-	ValidateSignup,
-	ValidateSignupResult,
-} from "codestream-components/ipc/commands";
-import { DataChangedEvent } from "codestream-components/ipc/events";
-import { Target, IpcMessage, CommandMessage, EventType } from "codestream-components/ipc/common";
-import { DidChangeDataNotification } from "../shared/agent.protocol";
+	DidChangeDataNotification as WebviewDidChangeDataNotification,
+	WebviewIpcMessage,
+	GetViewBootstrapDataRequestType,
+	GetViewBootstrapDataResponse,
+	GoToSlackSigninRequestType,
+	GoToSlackSigninResponse,
+	ValidateSignupRequestType,
+	WebviewReadyNotificationType,
+} from "../protocols/webview/webview.protocol";
+import { asAbsolutePath } from "../utils";
+import { getStyles } from "./styles-getter";
+import { NotificationType } from "../protocols/webview/webview.protocol";
+
+export class WebviewIpc {
+	private channel: MessageChannel;
+
+	constructor() {
+		this.channel = new MessageChannel();
+	}
+
+	get host() {
+		return this.channel.port1;
+	}
+
+	get webview() {
+		return this.channel.port2;
+	}
+}
 
 export const CODESTREAM_VIEW_URI = "atom://codestream";
 
@@ -22,42 +39,24 @@ export class CodestreamView {
 	alive = false;
 	element: HTMLElement;
 	private session: WorkspaceSession;
-	private store: any;
 	private subscriptions: CompositeDisposable;
-	private port: MessagePort;
+	private channel: WebviewIpc;
+	private iframe: HTMLIFrameElement;
+	loadingSpinner: HTMLDivElement;
 
-	constructor(session: WorkspaceSession, port: MessagePort, store: any) {
+	constructor(session: WorkspaceSession) {
 		this.session = session;
-		this.port = port;
-		this.store = store;
+		this.channel = new WebviewIpc();
 		this.alive = true;
 		this.subscriptions = new CompositeDisposable();
 		this.element = document.createElement("div");
-		this.element.classList.add("codestream");
+		this.element.classList.add("codestream", "preload");
+		this.iframe = document.createElement("iframe");
+		this.loadingSpinner = this.setupLoadingSpinner();
 
+		this.initializeWebview(this.iframe);
 		this.initialize();
 		this.setupWebviewListeners();
-		this.render();
-	}
-
-	private initialize() {
-		this.session.getBootstrapData().then(bootstrapData => {
-			this.store.dispatch(actions.bootstrap(bootstrapData));
-		});
-
-		// TODO: create a controller to house this stuff so it isn't re-init everytime this view is instantiated
-		this.subscriptions.add(this.session.agent.onDidChangeData(this.onDidChangeSessionData));
-	}
-
-	private onDidChangeSessionData = (data: DidChangeDataNotification) => {
-		this.sendEvent(DataChangedEvent, data);
-	};
-
-	private render() {
-		render(
-			<Container store={this.store} i18n={{ locale: "en", messages: translations }} />,
-			this.element
-		);
 	}
 
 	// update-able
@@ -83,13 +82,63 @@ export class CodestreamView {
 	}
 
 	getPreferredWidth() {
-		// FIXME save this as a preference
+		// save this as a preference?
 		return 300;
 	}
 
 	getURI() {
 		return CODESTREAM_VIEW_URI;
 	}
+
+	private setupLoadingSpinner() {
+		const loaderRing = document.createElement("div");
+		loaderRing.innerHTML = `
+			<div class="loader-ring">
+				<div class="loader-ring__segment"></div>
+				<div class="loader-ring__segment"></div>
+				<div class="loader-ring__segment"></div>
+				<div class="loader-ring__segment"></div>
+			</div>
+		`;
+		this.element.appendChild(loaderRing);
+
+		return loaderRing;
+	}
+
+	private removeLoadingSpinner() {
+		this.element.removeChild(this.loadingSpinner);
+	}
+
+	private initializeWebview(iframe: HTMLIFrameElement) {
+		iframe.height = "100%";
+		iframe.width = "100%";
+		iframe.style.border = "none";
+		iframe.src = asAbsolutePath("dist/webview/index.html");
+
+		iframe.classList.add("webview");
+		iframe.addEventListener("load", () => {
+			this.iframe.contentWindow!.postMessage(
+				{
+					label: "codestream-webview-initialize",
+					styles: getStyles(),
+				},
+				"*",
+				[this.channel.webview]
+			);
+		});
+
+		this.iframe = iframe;
+		this.element.append(iframe);
+	}
+
+	private initialize() {
+		// TODO: create a controller to house this stuff so it isn't re-init everytime this view is instantiated
+		this.subscriptions.add(this.session.agent.onDidChangeData(this.onDidChangeSessionData));
+	}
+
+	private onDidChangeSessionData = (data: DidChangeDataNotification) => {
+		this.sendEvent(WebviewDidChangeDataNotification, data as any /* huh? */);
+	};
 
 	serialize() {
 		return {
@@ -98,73 +147,77 @@ export class CodestreamView {
 	}
 
 	destroy() {
-		unmountComponentAtNode(this.element);
 		this.element.remove();
 		this.alive = false;
 		this.subscriptions.dispose();
 	}
 
 	private setupWebviewListeners() {
-		listenForEvents(this.store);
-
-		this.port.onmessage = ({ data }: { data: IpcMessage }) => {
-			switch (data.type) {
-				case "command": {
-					if (data.target === Target.Extension) this.handleWebviewCommand(data);
-					if (data.target === Target.Agent) this.forwardWebviewCommand(data);
-					break;
-				}
-			}
+		this.channel.host.onmessage = ({ data }: { data: WebviewIpcMessage }) => {
+			const target = data.method.split("/")[0];
+			if (target === "codeStream") return this.forwardWebviewRequest(data as any);
+			if (data.id) return this.handleWebviewCommand(data as WebviewIpcMessage & { id: string });
 		};
 	}
-	private async forwardWebviewCommand(command: CommandMessage) {
-		const response = await this.session.agent!.sendRequest(command.name, command.params);
-		this.respond({ id: command.id, result: response });
+
+	private async forwardWebviewRequest(request: { id: string; method: string; params?: any }) {
+		const response = await this.session.agent!.sendRequest(request.method, request.params);
+		this.respond({ id: request.id, params: response });
 	}
 
-	private async handleWebviewCommand(command: CommandMessage) {
-		switch (command.name) {
-			case GoToSlackSignin.name: {
+	private async handleWebviewCommand<C extends WebviewIpcMessage & { id: string }>(message: C) {
+		switch (message.method) {
+			case WebviewReadyNotificationType.method: {
+				this.removeLoadingSpinner();
+				break;
+			}
+			case GetViewBootstrapDataRequestType.method: {
+				try {
+					const data = await this.session.getBootstrapData();
+					this.respond<GetViewBootstrapDataResponse>({ id: message.id, params: data });
+				} catch (error) {
+					this.respond({ id: message.id, error: error.message });
+				}
+				break;
+			}
+			case GoToSlackSigninRequestType.method: {
 				const ok = shell.openExternal(
 					`${
 						this.session.environment.webAppUrl
 					}/service-auth/slack?state=${this.session.getSignupToken()}`
 				);
-				if (ok) this.respond<GoToSlackSigninResult>({ id: command.id, result: true });
+				if (ok) this.respond<GoToSlackSigninResponse>({ id: message.id, params: true });
 				else {
 					this.respond({
-						id: command.id,
+						id: message.id,
 						error: "No app found to open url",
 					});
 				}
 				break;
 			}
-			case ValidateSignup.name: {
-				const status = await this.session.loginViaSignupToken(command.params);
-				if (status !== LoginResult.Success) this.respond({ id: command.id, error: status });
+			case ValidateSignupRequestType.method: {
+				const status = await this.session.loginViaSignupToken(message.params);
+				if (status !== LoginResult.Success) this.respond({ id: message.id, error: status });
 				else {
 					const data = await this.session.getBootstrapData();
-					this.respond<ValidateSignupResult>({ id: command.id, result: data });
+					this.respond<GetViewBootstrapDataResponse>({ id: message.id, params: data });
 				}
 				break;
 			}
 			default: {
-				debugger;
+				console.warn("unhandled webview message", message);
 			}
 		}
 	}
 
-	private respond<R = any>(message: { id: string; result: R } | { id: string; error: any }): void {
-		this.port.postMessage({
-			...message,
-			type: (message as any).error ? "command-result-error" : "command-result",
-		});
+	private respond<R = any>(message: { id: string; params: R } | { id: string; error: any }): void {
+		this.channel.host.postMessage(message);
 	}
 
-	private sendEvent<ET extends EventType<any>>(
+	private sendEvent<ET extends NotificationType<any, any>>(
 		eventType: ET,
-		params: ET extends EventType<infer P> ? P : never
+		params: ET extends NotificationType<infer P, any> ? P : never
 	) {
-		this.port.postMessage({ type: "event", name: eventType.name, params });
+		this.channel.host.postMessage({ method: eventType.method, params });
 	}
 }

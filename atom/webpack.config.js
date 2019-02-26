@@ -1,22 +1,54 @@
 "use strict";
+const fs = require("fs");
 const path = require("path");
-const nodeExternals = require("webpack-node-externals");
-// const BabelExternalHelpersPlugin = require("webpack-babel-external-helpers-2");
+// const nodeExternals = require("webpack-node-externals");
 const CleanPlugin = require("clean-webpack-plugin");
 const FileManagerPlugin = require("filemanager-webpack-plugin");
-// const HtmlPlugin = require("html-webpack-plugin");
-// const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
+const HtmlPlugin = require("html-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 module.exports = function(env, argv) {
 	env = env || {};
 	env.production = !!env.production;
 	env.watch = !!(argv.watch || argv.w);
+	env.reset = true; // Boolean(env.reset);
 
-	return [getExtensionConfig(env)];
+	let protocolPath = path.resolve(__dirname, "lib/protocols");
+	if (!fs.existsSync(protocolPath)) {
+		fs.mkdirSync(protocolPath);
+	}
+
+	console.log("Ensuring extension symlink to the agent protocol folder...");
+	createFolderSymlinkSync(
+		path.resolve(__dirname, "../codestream-lsp-agent/src/protocol"),
+		path.resolve(protocolPath, "agent"),
+		env
+	);
+
+	console.log("Ensuring extension symlink to the webview protocol folder...");
+	createFolderSymlinkSync(
+		path.resolve(__dirname, "../codestream-components/ipc"),
+		path.resolve(protocolPath, "webview"),
+		env
+	);
+
+	console.log("Ensuring webview symlink to the agent protocol folder...");
+	const protocolPathForWebview = path.resolve(__dirname, "../codestream-components/protocols");
+	if (!fs.existsSync(protocolPathForWebview)) {
+		fs.mkdirSync(protocolPathForWebview);
+	}
+	createFolderSymlinkSync(
+		path.resolve(__dirname, "../codestream-lsp-agent/src/protocol"),
+		path.resolve(protocolPathForWebview, "agent"),
+		env
+	);
+
+	return [getExtensionConfig(env), getWebviewConfig(env)];
 };
 
 function getExtensionConfig(env) {
-	let clean = ["dist"];
+	let clean = ["dist/agent*", "dist/codestream*"];
 
 	const plugins = [
 		new CleanPlugin(clean, { verbose: false }),
@@ -25,14 +57,14 @@ function getExtensionConfig(env) {
 				{
 					copy: [
 						{
-							source: path.resolve(__dirname, "codestream-*.info"), // TODO?
-							destination: "dist/",
-						},
-						{
 							// TODO: Use environment variable if exists
 							source: path.resolve(__dirname, "../codestream-lsp-agent/dist/agent.*"),
 							destination: "dist/",
 						},
+						// {
+						// 	source: path.resolve(__dirname, "codestream-*.info"),
+						// 	destination: "dist/",
+						// },
 						{
 							source: path.resolve(
 								__dirname,
@@ -47,11 +79,11 @@ function getExtensionConfig(env) {
 	];
 
 	return {
-		name: "codestream",
+		name: "extension",
 		entry: "./lib/codestream.ts",
 		mode: env.production ? "production" : "development",
 		target: "node",
-		devtool: !env.production ? "eval-source-map" : undefined,
+		devtool: "source-map",
 		output: {
 			libraryTarget: "commonjs2",
 			libraryExport: "default",
@@ -59,34 +91,18 @@ function getExtensionConfig(env) {
 			devtoolModuleFilenameTemplate: "file:///[absolute-resource-path]",
 		},
 		resolve: {
-			extensions: [".tsx", ".ts", ".js"],
-			// modules: [path.resolve(__dirname, "../codestream-components/node_modules"), "node_modules"],
-			alias: {
-				// TODO: Use environment variable if exists
-				"codestream-components$": path.resolve(__dirname, "../codestream-components/index.ts"),
-				"codestream-components": path.resolve(__dirname, "../codestream-components/"),
-			},
+			extensions: [".ts", ".tsx", ".js", ".jsx"],
+			plugins: [new TsconfigPathsPlugin()],
+			// Treats symlinks as real files -- using their "current" path
+			symlinks: false,
 		},
-		externals: [nodeExternals(), { atom: "atom", electron: "electron" }],
+		externals: [{ atom: "atom", electron: "electron" }],
 		module: {
 			rules: [
 				{
 					test: /\.js$/,
 					exclude: /node_modules/,
-					use: {
-						loader: "babel-loader",
-						options: {
-							presets: [
-								["@babel/preset-env", { modules: false }],
-								"@babel/preset-react",
-								"@babel/preset-flow",
-							],
-							plugins: [
-								"@babel/plugin-proposal-object-rest-spread",
-								"@babel/plugin-proposal-class-properties",
-							],
-						},
-					},
+					use: "babel-loader",
 				},
 				{
 					test: /\.ts$/,
@@ -116,4 +132,131 @@ function getExtensionConfig(env) {
 			warnings: true,
 		},
 	};
+}
+
+function getWebviewConfig(env) {
+	const plugins = [
+		new CleanPlugin(["dist/webview"]),
+		// new MiniCssExtractPlugin({
+		// 	filename: "webview.css",
+		// }),
+		new HtmlPlugin({
+			template: "index.html",
+			filename: path.resolve(__dirname, "dist/webview/index.html"),
+			inject: true,
+			minify: env.production
+				? {
+						removeComments: true,
+						collapseWhitespace: true,
+						removeRedundantAttributes: true,
+						useShortDoctype: true,
+						removeEmptyAttributes: true,
+						removeStyleLinkTypeAttributes: true,
+						keepClosingSlash: true,
+				  }
+				: false,
+		}),
+	];
+
+	return {
+		name: "webview",
+		context: path.resolve(__dirname, "lib/views/webview"),
+		entry: {
+			webview: "./index.tsx",
+		},
+		mode: env.production ? "production" : "development",
+		devtool: !env.production ? "eval-source-map" : undefined,
+		output: {
+			filename: "[name].js",
+			path: path.resolve(__dirname, "dist/webview"),
+			publicPath: path.resolve(__dirname, "dist/webview/"),
+		},
+		module: {
+			rules: [
+				{
+					test: /\.html$/,
+					use: "html-loader",
+				},
+				{
+					test: /\.jsx?$/,
+					use: "babel-loader",
+					exclude: /node_modules/,
+				},
+				{
+					test: /\.tsx?$/,
+					use: "ts-loader",
+					exclude: /node_modules|\.d\.ts$/,
+				},
+				{
+					test: /\.less$/,
+					use: [
+						{
+							loader: MiniCssExtractPlugin.loader,
+						},
+						{
+							loader: "css-loader",
+							options: {
+								sourceMap: !env.production,
+								url: false,
+							},
+						},
+						{
+							loader: "less-loader",
+							options: {
+								sourceMap: !env.production,
+							},
+						},
+					],
+					exclude: /node_modules/,
+				},
+			],
+		},
+		resolve: {
+			extensions: [".ts", ".tsx", ".js", ".jsx"],
+			modules: [path.resolve(__dirname, "lib/views/webview"), "node_modules"],
+			plugins: [
+				new TsconfigPathsPlugin({
+					configFile: path.resolve(__dirname, "lib/views/webview/tsconfig.json"),
+				}),
+			],
+			// Treats symlinks as real files -- using their "current" path
+			symlinks: false,
+		},
+		node: {
+			net: "mock",
+		},
+		plugins: plugins,
+		stats: {
+			all: false,
+			assets: true,
+			builtAt: true,
+			env: true,
+			errors: true,
+			timings: true,
+			warnings: true,
+		},
+	};
+}
+
+function createFolderSymlinkSync(source, target, env) {
+	if (env.reset) {
+		console.log("Unlinking symlink...");
+		try {
+			fs.unlinkSync(target);
+		} catch (ex) {}
+	} else if (fs.existsSync(target)) {
+		return;
+	}
+
+	console.log("Creating symlink...");
+	try {
+		fs.symlinkSync(source, target, "dir");
+	} catch (ex) {
+		try {
+			fs.unlinkSync(target);
+			fs.symlinkSync(source, target, "dir");
+		} catch (ex) {
+			console.log(`Symlink creation failed; ${ex}`);
+		}
+	}
 }

@@ -27,7 +27,7 @@ import {
 	AccessToken,
 	DidChangeDataNotificationType,
 	DidChangeDataNotification,
-} from "../shared/agent.protocol";
+} from "../protocols/agent/agent.protocol";
 import { ClientCapabilities, LogMessageParams } from "vscode-languageserver-protocol";
 
 const capabilities: ClientCapabilities = {

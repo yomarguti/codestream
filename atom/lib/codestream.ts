@@ -1,10 +1,8 @@
 import { CompositeDisposable, Disposable } from "atom";
 import { CodestreamView, CODESTREAM_VIEW_URI } from "./views/codestream-view";
-import { actions, createStore } from "codestream-components";
 import { StatusBar, Tile } from "./types/package-services/status-bar";
 import { WorkspaceSession, SessionStatus } from "./workspace/workspace-session";
 import { PackageState } from "./types/package";
-import { WebviewIpc } from "./views/webview/ipc";
 import { PD_CONFIG } from "./env-utils";
 
 class CodestreamPackage {
@@ -13,20 +11,15 @@ class CodestreamPackage {
 	statusBar?: StatusBar;
 	statusBarTile?: Tile;
 	view?: CodestreamView;
-	store: any;
 	sessionStatusCommand?: Disposable;
-	port: MessagePort;
 
-	constructor(port: MessagePort, state: PackageState) {
-		this.port = port;
+	constructor(state: PackageState) {
 		this.workspaceSession = WorkspaceSession.create(state);
 		this.initialize();
 	}
 
 	// Package lifecyle 1
 	async initialize() {
-		this.store = createStore(this.workspaceSession.getBootstrapState());
-
 		this.workspaceSession.onDidChangeSessionStatus(status => {
 			this.sessionStatusCommand && this.sessionStatusCommand.dispose();
 			if (status === SessionStatus.SignedIn) {
@@ -39,7 +32,7 @@ class CodestreamPackage {
 				);
 			}
 			if (status === SessionStatus.SignedOut) {
-				this.store.dispatch(actions.reset());
+				// communicate signout to webview
 				this.sessionStatusCommand = atom.commands.add(
 					"atom-workspace",
 					"codestream:sign-in",
@@ -53,7 +46,7 @@ class CodestreamPackage {
 			atom.workspace.addOpener(uri => {
 				if (uri === CODESTREAM_VIEW_URI) {
 					if (this.view && this.view.alive) return this.view;
-					this.view = new CodestreamView(this.workspaceSession, this.port, this.store);
+					this.view = new CodestreamView(this.workspaceSession);
 					return this.view;
 				}
 			}),
@@ -72,7 +65,7 @@ class CodestreamPackage {
 
 	// Package lifecyle
 	deserializeCodestreamView() {
-		this.view = new CodestreamView(this.workspaceSession, this.port, this.store);
+		this.view = new CodestreamView(this.workspaceSession);
 		return this.view;
 	}
 
@@ -130,17 +123,10 @@ class CodestreamPackage {
 	}
 }
 
-const webviewIpc = new WebviewIpc();
-Object.defineProperty(window, "acquireCodestreamHost", {
-	value() {
-		return webviewIpc.webview;
-	},
-});
-
 let codestream;
 const packageWrapper = {
 	initialize(state: PackageState) {
-		codestream = new CodestreamPackage(webviewIpc.host, state);
+		codestream = new CodestreamPackage(state);
 	},
 };
 

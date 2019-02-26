@@ -1,5 +1,5 @@
-import { Session } from "lib/workspace/workspace-session";
-import { EnvironmentConfig } from "lib/env-utils";
+import { Session } from "../workspace/workspace-session";
+import { EnvironmentConfig } from "../env-utils";
 
 export interface PackageState {
 	session?: Session;

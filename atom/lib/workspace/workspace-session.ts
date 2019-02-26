@@ -2,10 +2,10 @@ import { Emitter } from "atom";
 import * as uuid from "uuid/v4";
 import { getPluginVersion } from "../utils";
 import { CodeStreamAgent } from "./agent";
-import { CSMe, LoginResult } from "../shared/api.protocol";
+import { CSMe, LoginResult } from "../protocols/agent/api.protocol";
 import { EnvironmentConfig, PRODUCTION_CONFIG } from "../env-utils";
-import { PackageState } from "lib/types/package";
-import { Capabilities, AgentResult } from "lib/shared/agent.protocol";
+import { PackageState } from "../types/package";
+import { Capabilities, AgentResult } from "../protocols/agent/agent.protocol";
 
 export type Session = {
 	user: CSMe;
@@ -123,13 +123,13 @@ export class WorkspaceSession {
 	getBootstrapState() {
 		return {
 			configs: { email: this.lastUsedEmail },
-			pluginVersion: getPluginVersion(),
+			version: getPluginVersion(),
 			...(this.lastUsedEmail !== "" ? { route: { route: "login" } } : {}),
 		};
 	}
 
 	async getBootstrapData() {
-		if (!this.session) return {};
+		if (!this.session) return this.getBootstrapState();
 		try {
 			await this.isReady;
 		} catch (error) {
@@ -155,7 +155,9 @@ export class WorkspaceSession {
 				userId: this.session.user.id,
 			},
 			capabilities: this.agentCapabilities,
-			configs: { debug: true, serverUrl: this.environment.serverUrl }, // TODO
+			configs: { email: this.lastUsedEmail, debug: true, serverUrl: this.environment.serverUrl }, // TODO
+			pluginVersion: getPluginVersion(),
+			...(this.lastUsedEmail !== "" ? { route: { route: "login" } } : {}),
 			preferences: {}, // TODO
 			umis: {}, // TODO
 		};
