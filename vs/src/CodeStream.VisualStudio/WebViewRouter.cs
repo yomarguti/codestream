@@ -263,11 +263,10 @@ namespace CodeStream.VisualStudio
 
                                             if (fromMarkerResponse?.TextDocument?.Uri != null)
                                             {
-                                                var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
                                                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-                                                if (ideService != null)
+                                                if (_ideService != null)
                                                 {
-                                                    var editorResponse = ideService.OpenEditor(
+                                                    var editorResponse = _ideService.OpenEditor(
                                                         fromMarkerResponse.TextDocument.Uri.ToUri(),
                                                         fromMarkerResponse.Range?.Start?.Line + 1);
 
