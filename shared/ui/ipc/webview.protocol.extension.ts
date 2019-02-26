@@ -82,7 +82,7 @@ export const DidChangeActiveEditorNotificationType = new NotificationType<
 	void
 >("webview/active-editor-changed");
 
-export const DidFocusNotificationType = new NotificationType("webview/focused");
-export const DidBlurNotificationType = new NotificationType("webview/blurred");
+export const DidFocusNotificationType = new NotificationType<void, void>("webview/focused");
+export const DidBlurNotificationType = new NotificationType<void, void>("webview/blurred");
 
-export const DidSignOutNotificationType = new NotificationType("webview/signed-out");
+export const DidSignOutNotificationType = new NotificationType<void, void>("webview/signed-out");
