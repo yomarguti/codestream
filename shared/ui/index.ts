@@ -11,9 +11,10 @@ import {
 } from "./ipc/webview.protocol";
 import { actions, createCodeStreamStore } from "./store";
 import Stream from "./Stream";
+import englishLocale from "./translations/en";
 import { HostApi } from "./webview-api";
 
-export { actions, Container, Stream, HostApi, createCodeStreamStore as createStore };
+export { actions, Container, englishLocale, Stream, HostApi, createCodeStreamStore as createStore };
 
 // TODO: type up the store state
 export function listenForEvents(store) {
