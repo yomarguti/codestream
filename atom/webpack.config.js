@@ -66,10 +66,7 @@ function getExtensionConfig(env) {
 						// 	destination: "dist/",
 						// },
 						{
-							source: path.resolve(
-								__dirname,
-								"../codestream-components/styles/{login,stream}.less"
-							),
+							source: path.resolve(__dirname, "../codestream-components/styles/*.less"),
 							destination: "dist/styles",
 						},
 					],

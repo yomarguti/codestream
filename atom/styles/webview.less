@@ -3,15 +3,23 @@
 // See https://github.com/atom/atom-dark-ui/blob/master/styles/ui-variables.less
 // for a full listing of what's available.
 @import "ui-variables";
+@import "../../node_modules/rc-tooltip/assets/bootstrap.css";
+@import "../../node_modules/highlight.js/styles/default.css";
+@import "../../node_modules/emoji-mart/css/emoji-mart.css";
+@import "../../node_modules/highlight.js/styles/hybrid.css";
 
 @app-background-color-darker: darken(@app-background-color, 2%);
 @app-background-color-hover: lighten(@app-background-color, 3%);
 @text-color-subtle-extra: lighten(@text-color-subtle, 50%);
 @background-color-umi: @app-background-color;
 
-@import "../dist/styles/stream";
-@import "../dist/styles/login";
+@import "../dist/styles/main";
 
 #app {
 	background-color: @app-background-color;
+
+	.stream .compose .plus-button .icon,
+	.stream .compose .smiley {
+		bottom: 10px;
+	}
 }
