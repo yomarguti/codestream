@@ -133,7 +133,11 @@ export class CodestreamView {
 
 	private initialize() {
 		// TODO: create a controller to house this stuff so it isn't re-init everytime this view is instantiated
-		this.subscriptions.add(this.session.agent.onDidChangeData(this.onDidChangeSessionData));
+		this.subscriptions.add(
+			this.session.agent.onInitialized(() => {
+				this.subscriptions.add(this.session.agent.onDidChangeData(this.onDidChangeSessionData));
+			})
+		);
 	}
 
 	private onDidChangeSessionData = (data: DidChangeDataNotification) => {

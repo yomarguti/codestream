@@ -1,4 +1,4 @@
-import { Emitter } from "atom";
+import { Emitter, Disposable } from "atom";
 import { ChildProcess, spawn } from "child_process";
 import { Convert, LanguageClientConnection } from "atom-languageclient";
 import {
@@ -119,7 +119,7 @@ const capabilities: ClientCapabilities = {
 
 // TODO: build a log view
 
-class AgentConnection {
+abstract class AgentConnection {
 	private _connection: LanguageClientConnection | undefined;
 	private _agentProcess: ChildProcess | undefined;
 
@@ -127,7 +127,9 @@ class AgentConnection {
 		return this._connection;
 	}
 
-	protected preInitialization(connection: LanguageClientConnection) {}
+	protected abstract preInitialization(connection: LanguageClientConnection);
+
+	protected abstract onPrematureExit();
 
 	protected async start(initOptions: {
 		serverUrl: string;
@@ -149,10 +151,10 @@ class AgentConnection {
 
 		const initializationOptions: Partial<AgentOptions> = {
 			extension: {
-				build: "dev",
-				buildEnv: "local",
+				build: "",
+				buildEnv: "dev",
 				version: getPluginVersion(),
-				versionFormatted: "dev",
+				versionFormatted: `${getPluginVersion()} (dev)`,
 			},
 			ide: {
 				name: "atom",
@@ -188,18 +190,21 @@ class AgentConnection {
 
 		const agentProcess = spawn(
 			process.execPath,
-			[asAbsolutePath("dist/agent.js"), "--node-ipc", "--inspect=6011"],
+			[asAbsolutePath("dist/agent.js"), "--node-ipc", "--nolazy", "--inspect=6009"],
 			options
 		);
-		// agentProcess.on("disconnect", () => {
-		// 	console.error("disconnected");
-		// });
-		// agentProcess.on("exit", code => {
-		// 	console.error("exited", code);
-		// });
-		// agentProcess.on("message", message => {
-		// 	console.info("agent process: ", message);
-		// });
+
+		agentProcess.on("disconnect", () => {
+			if (this._connection) {
+				console.error("CodeStream agent process connection disconnected prematurely");
+				this.stop();
+			}
+		});
+		agentProcess.on("exit", code => {
+			if (code !== 0)
+				console.error(`CodeStream agent process exited with non-zero exit code ${code}`);
+		});
+
 		return agentProcess;
 	}
 
@@ -217,7 +222,9 @@ class AgentConnection {
 	}
 }
 
+const INITIALIZED = "initialized";
 const DATA_CHANGED = "data-changed";
+const TERMINATED = "terminated";
 
 export class CodeStreamAgent extends AgentConnection {
 	private emitter = new Emitter();
@@ -228,7 +235,10 @@ export class CodeStreamAgent extends AgentConnection {
 			passwordOrToken: { email, url: serverUrl, value: token },
 			serverUrl,
 		});
+
 		if (result.error) throw result.error;
+
+		this.emitter.emit(INITIALIZED);
 		return result;
 	}
 
@@ -236,7 +246,11 @@ export class CodeStreamAgent extends AgentConnection {
 		const result = await this.start({ signupToken: token, serverUrl });
 		if (result.error) {
 			throw result.error;
-		} else return result;
+		}
+
+		this.emitter.emit(INITIALIZED);
+
+		return result;
 	}
 
 	protected preInitialization(connection: LanguageClientConnection) {
@@ -246,6 +260,20 @@ export class CodeStreamAgent extends AgentConnection {
 		connection.onCustom(DidChangeDataNotificationType.method, event => {
 			this.emitter.emit(DATA_CHANGED, event);
 		});
+	}
+
+	protected onPrematureExit() {
+		this.emitter.emit(TERMINATED);
+		this.dispose();
+	}
+
+	onInitialized(cb: () => void): Disposable {
+		return this.emitter.on(INITIALIZED, cb);
+	}
+
+	// TODO: reset workspace-session
+	onTerminated(cb: () => void): Disposable {
+		return this.emitter.on(TERMINATED, cb);
 	}
 
 	onDidChangeData(cb: (event: DidChangeDataNotification) => void) {
