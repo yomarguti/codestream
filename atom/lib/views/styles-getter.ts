@@ -5,7 +5,7 @@ export function getStyles() {
 	const [uiStyles, syntaxStyles] = rest.reverse();
 
 	const csStyles = rest.find(styles =>
-		styles.attributes.getNamedItem("source-path")!.value.includes("CodeStream/styles/webview")
+		styles.attributes.getNamedItem("source-path")!.value.includes("codestream/styles/webview")
 	);
 	if (!csStyles) {
 		throw new Error("CodeStream stylesheets are unavailable");

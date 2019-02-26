@@ -135,6 +135,7 @@ abstract class AgentConnection {
 		serverUrl: string;
 		email?: string;
 		teamId?: string;
+		team?: string;
 		passwordOrToken?: string | AccessToken;
 		signupToken?: string;
 	}) {
@@ -229,11 +230,17 @@ const TERMINATED = "terminated";
 export class CodeStreamAgent extends AgentConnection {
 	private emitter = new Emitter();
 
-	async init(email: string, token: string, serverUrl: string): Promise<AgentResult> {
+	async init(
+		email: string,
+		passwordOrToken: string | AccessToken,
+		serverUrl: string,
+		teamOption: { teamId?: string; team?: string } = {}
+	): Promise<AgentResult> {
 		const result = await this.start({
 			email,
-			passwordOrToken: { email, url: serverUrl, value: token },
+			passwordOrToken,
 			serverUrl,
+			...teamOption,
 		});
 
 		if (result.error) throw result.error;
@@ -242,8 +249,12 @@ export class CodeStreamAgent extends AgentConnection {
 		return result;
 	}
 
-	async initWithSignupToken(token: string, serverUrl: string): Promise<AgentResult> {
-		const result = await this.start({ signupToken: token, serverUrl });
+	async initWithSignupToken(
+		token: string,
+		serverUrl: string,
+		teamOption: { teamId?: string; team?: string } = {}
+	): Promise<AgentResult> {
+		const result = await this.start({ signupToken: token, serverUrl, ...teamOption });
 		if (result.error) {
 			throw result.error;
 		}

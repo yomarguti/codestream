@@ -9,11 +9,11 @@ export const accessSafely = <T>(f: () => T): T | void => {
 };
 
 export const asAbsolutePath = (relativePath: string) => {
-	const p = atom.packages.getLoadedPackage("CodeStream");
+	const p = atom.packages.getLoadedPackage("codestream");
 	return path.resolve(p!.path, relativePath);
 };
 
 export const getPluginVersion = () => {
-	const p = atom.packages.getLoadedPackage("CodeStream");
+	const p = atom.packages.getLoadedPackage("codestream");
 	return (p as any)!.metadata.version;
 };

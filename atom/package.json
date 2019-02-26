@@ -1,5 +1,5 @@
 {
-	"name": "CodeStream",
+	"name": "codestream",
 	"main": "./dist/codestream",
 	"version": "0.0.23",
 	"description": "Build the knowledge base behind your codebase. CodeStream allows your development team to communicate within Atom and conversation threads automatically become annotations that live with your codebase forever.",
@@ -16,15 +16,6 @@
 	"engines": {
 		"atom": ">=1.34.0 <2.0.0"
 	},
-	"scripts": {
-		"prettify": "prettier --config .prettierrc --write ./{lib,spec}/*.js ./{lib,spec}/**/*.js ./package.json ./.prettierrc",
-		"build": "webpack --env.development",
-		"watch": "webpack --watch --env.development",
-		"extension:build": "webpack --config-name extension --env.development --info-verbosity verbose",
-		"extension:watch": "webpack --watch --config-name extension --env.development --info-verbosity verbose",
-		"webview:build": "webpack --config-name webview --env.development --info-verbosity verbose",
-		"webview:watch": "webpack --watch --config-name webview --env.development --info-verbosity verbose"
-	},
 	"deserializers": {
 		"codestream/CodestreamView": "deserializeCodestreamView"
 	},
@@ -34,6 +25,22 @@
 				"^1.0.0": "consumeStatusBar"
 			}
 		}
+	},
+	"configSchema": {
+		"team": {
+			"type": "string",
+			"default": "",
+			"description": "Specifies team name to sign into"
+		}
+	},
+	"scripts": {
+		"prettify": "prettier --config .prettierrc --write ./{lib,spec}/*.js ./{lib,spec}/**/*.js ./package.json ./.prettierrc",
+		"build": "webpack --env.development",
+		"watch": "webpack --watch --env.development",
+		"extension:build": "webpack --config-name extension --env.development --info-verbosity verbose",
+		"extension:watch": "webpack --watch --config-name extension --env.development --info-verbosity verbose",
+		"webview:build": "webpack --config-name webview --env.development --info-verbosity verbose",
+		"webview:watch": "webpack --watch --config-name webview --env.development --info-verbosity verbose"
 	},
 	"dependencies": {
 		"@types/atom": "1.31.0",

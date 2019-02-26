@@ -5,36 +5,18 @@ import { CodeStreamAgent } from "./agent";
 import { CSMe, LoginResult } from "../protocols/agent/api.protocol";
 import { EnvironmentConfig, PRODUCTION_CONFIG } from "../env-utils";
 import { PackageState } from "../types/package";
-import { Capabilities, AgentResult } from "../protocols/agent/agent.protocol";
+import { Capabilities, AgentResult, AccessToken } from "../protocols/agent/agent.protocol";
+import * as Configs from "../configs";
 
 export type Session = {
 	user: CSMe;
 	teamId: string;
-	token: string;
-};
-
-interface BootstrapState {
-	context?: {
-		[key: string]: any;
+	token: {
+		url: string;
+		email: string;
+		value: string;
 	};
-	capabilities: Capabilities;
-	// currentTeamId: string;
-	// currentUserId: string;
-	// currentStreamId: string;
-	// currentThreadId?: string;
-	// posts: CSPost[];
-	// streams: CSStream[];
-	// teams: CSTeam[];
-	// users: CSUser[];
-	// unreads: CSUnreads;
-	// repos: CSRepository[];
-	// version: string;
-	// preferences: CSMePreferences;
-	// configs: {
-	// 	[k: string]: any;
-	// };
-	// panelStack?: string[];
-}
+};
 
 export enum SessionStatus {
 	SignedOut,
@@ -181,6 +163,13 @@ export class WorkspaceSession {
 		return data;
 	}
 
+	private getTeamPreference() {
+		if (this.session) return { teamId: this.session.teamId };
+
+		const teamSetting = Configs.ofPackage("team");
+		if (teamSetting.length > 0) return { team: teamSetting };
+	}
+
 	getSignupToken() {
 		if (!this.signupToken) {
 			this.signupToken = uuid();
@@ -188,10 +177,15 @@ export class WorkspaceSession {
 		return this.signupToken;
 	}
 
-	async login(email: string, token: string) {
+	async login(email: string, passwordOrToken: string | AccessToken) {
 		this.sessionStatus = SessionStatus.SigningIn;
 		try {
-			const result = await this._agent.init(email, token, this.environment.serverUrl);
+			const result = await this._agent.init(
+				email,
+				passwordOrToken,
+				this.environment.serverUrl,
+				this.getTeamPreference()
+			);
 			await this.completeLogin(result);
 			this.sessionStatus = SessionStatus.SignedIn;
 			return LoginResult.Success;
@@ -215,7 +209,8 @@ export class WorkspaceSession {
 		try {
 			const result = await this._agent.initWithSignupToken(
 				this.signupToken || token!,
-				this.environment.serverUrl
+				this.environment.serverUrl,
+				this.getTeamPreference()
 			);
 			await this.completeLogin(result);
 			return LoginResult.Success;
@@ -238,7 +233,11 @@ export class WorkspaceSession {
 		this.session = {
 			user: agentResult.loginResponse.user,
 			teamId: agentResult.state.teamId,
-			token: agentResult.loginResponse.accessToken,
+			token: {
+				url: this.environment.serverUrl,
+				email: agentResult.loginResponse.user.email,
+				value: agentResult.loginResponse.accessToken,
+			},
 		};
 		this.lastUsedEmail = agentResult.loginResponse.user.email;
 		this.agentCapabilities = agentResult.state.capabilities;

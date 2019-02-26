@@ -13,6 +13,8 @@ import {
 	ValidateSignupRequestType,
 	WebviewReadyNotificationType,
 	DidSignOutNotificationType,
+	LoginRequestType,
+	LoginRequest,
 } from "../protocols/webview/webview.protocol";
 import { asAbsolutePath } from "../utils";
 import { getStyles } from "./styles-getter";
@@ -207,6 +209,16 @@ export class CodestreamView {
 			}
 			case ValidateSignupRequestType.method: {
 				const status = await this.session.loginViaSignupToken(message.params);
+				if (status !== LoginResult.Success) this.respond({ id: message.id, error: status });
+				else {
+					const data = await this.session.getBootstrapData();
+					this.respond<GetViewBootstrapDataResponse>({ id: message.id, params: data });
+				}
+				break;
+			}
+			case LoginRequestType.method: {
+				const params: LoginRequest = message.params;
+				const status = await this.session.login(params.email, params.password);
 				if (status !== LoginResult.Success) this.respond({ id: message.id, error: status });
 				else {
 					const data = await this.session.getBootstrapData();
