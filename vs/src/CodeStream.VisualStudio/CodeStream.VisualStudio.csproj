@@ -241,6 +241,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <None Include="UI\WebViews\tsconfig.json" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="CodeStream.VisualStudio.pkgdef" />
@@ -332,7 +333,8 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="UI\WebViews\index.html" />
-    <Content Include="UI\WebViews\index.js" />
+    <Content Include="UI\WebViews\index.tsx" />
+    <Content Include="UI\WebViews\logging-middleware.js" />
     <Content Include="UI\WebViews\theme.css">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>

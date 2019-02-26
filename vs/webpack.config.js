@@ -1,43 +1,72 @@
 "use strict";
+const webpack = require("webpack");
 const fs = require("fs");
 const path = require("path");
 const CleanPlugin = require("clean-webpack-plugin");
 const FileManagerPlugin = require("filemanager-webpack-plugin");
+const ForkTsCheckerPlugin = require("fork-ts-checker-webpack-plugin");
 const HtmlPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
+const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
+// const CircularDependencyPlugin = require("circular-dependency-plugin");
+const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 
 module.exports = function(env, argv) {
 	env = env || {};
-	env.production = Boolean(env.production);
+	env.analyze = Boolean(env.analyze);
+	env.production = env.analyze || Boolean(env.production);
+	env.reset = Boolean(env.reset);
 	env.watch = Boolean(argv.watch || argv.w);
 
-	env.copyShared = Boolean(env.copyShared);
-	if (
-		!env.copyShared &&
-		!fs.existsSync(path.resolve(__dirname, "../codestream-components/shared"))
-	) {
-		env.copyShared = true;
+	let protocolPath = path.resolve(__dirname, "src/protocols");
+	if (!fs.existsSync(protocolPath)) {
+		fs.mkdirSync(protocolPath);
 	}
 
-	let onStart = [];
-	if (!env.watch && env.copyShared) {
-		onStart.push({
-			copy: [
-				// Copy in the type declarations from the agent, because referencing them directly is a nightmare
-				{
-					// TODO: Use environment variable if exists
-					source: path.resolve(__dirname, "../codestream-lsp-agent/src/shared/*"),
-					destination: path.resolve(__dirname, "../codestream-components/shared/")
-				}
-			]
-		});
+	console.log("Ensuring extension symlink to the agent protocol folder...");
+	createFolderSymlinkSync(
+		path.resolve(__dirname, "../codestream-lsp-agent/src/protocol"),
+		path.resolve(protocolPath, "agent"),
+		env
+	);
+
+	console.log("Ensuring extension symlink to the webview protocol folder...");
+	createFolderSymlinkSync(
+		path.resolve(__dirname, "../codestream-components/ipc"),
+		path.resolve(protocolPath, "webview"),
+		env
+	);
+
+	// console.log("Ensuring extension symlink to the webview folder...");
+	// createFolderSymlinkSync(
+	// 	path.resolve(__dirname, "../codestream-components"),
+	// 	path.resolve(__dirname, "src/webviews/app/components"),
+	// 	env
+	// );
+
+	protocolPath = path.resolve(__dirname, "../codestream-components/protocols");
+	if (!fs.existsSync(protocolPath)) {
+		fs.mkdirSync(protocolPath);
 	}
+
+	console.log("Ensuring webview symlink to the agent protocol folder...");
+	createFolderSymlinkSync(
+		path.resolve(__dirname, "../codestream-lsp-agent/src/protocol"),
+		path.resolve(protocolPath, "agent"),
+		env
+	);
+
+	const context = path.resolve(__dirname, "src/CodeStream.VisualStudio/UI/WebViews");
 
 	const plugins = [
 		new CleanPlugin(["src/CodeStream.VisualStudio/UI/WebViews/dist"]),
-		new FileManagerPlugin({
-			onStart: onStart
-		}),
+		new webpack.DefinePlugin(
+			Object.assign(
+				{ "global.atom": false },
+				env.production ? { "process.env.NODE_ENV": JSON.stringify("production") } : {}
+			)
+		),
 		new MiniCssExtractPlugin({
 			filename: "webview.css"
 		}),
@@ -56,37 +85,53 @@ module.exports = function(env, argv) {
 						keepClosingSlash: true
 				  }
 				: false
+		}),
+		new ForkTsCheckerPlugin({
+			reportFiles: ["!index.tsx"]
 		})
 	];
 
+	if (env.analyze) {
+		plugins.push(new BundleAnalyzerPlugin());
+	}
+
 	return {
 		name: "webview",
-		context: path.resolve(__dirname, "src/CodeStream.VisualStudio/UI/WebViews"),
+		context: context,
 		entry: {
-			webview: ["./index.js", "./styles/webview.less"]
+			webview: ["./index.tsx", "./styles/webview.less"]
 		},
 		mode: env.production ? "production" : "development",
+		node: false,
 		devtool: !env.production ? "eval-source-map" : undefined,
 		output: {
 			filename: "[name].js",
 			path: path.resolve(__dirname, "src/CodeStream.VisualStudio/UI/WebViews/dist"),
 			publicPath: "file:///{root}/UI/WebViews/dist/"
 		},
+		optimization: {
+			minimizer: [
+				new TerserPlugin({
+					cache: true,
+					parallel: true,
+					sourceMap: true,
+					terserOptions: {
+						ecma: 8
+					}
+				})
+			]
+		},
 		module: {
 			rules: [
 				{
 					test: /\.html$/,
-					use: "html-loader"
-				},
-				{
-					test: /\.jsx?$/,
-					use: "babel-loader",
+					use: "html-loader",
 					exclude: /node_modules/
 				},
 				{
-					test: /\.tsx?$/,
-					use: "ts-loader",
-					exclude: /node_modules|\.d\.ts$/
+					test: /\.(js|ts)x?$/,
+					use: "babel-loader",
+					exclude: /node_modules/
 				},
 				{
 					test: /\.less$/,
@@ -113,16 +158,27 @@ module.exports = function(env, argv) {
 			]
 		},
 		resolve: {
-			extensions: [".ts", ".tsx", ".js", ".jsx"],
-			modules: [path.resolve(__dirname, "src/CodeStream.VisualStudio/UI/WebViews"), "node_modules"],
+			extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
 			alias: {
-				// TODO: Use environment variable if exists
-				"codestream-components$": path.resolve(__dirname, "../codestream-components/index.ts"),
-				"codestream-components": path.resolve(__dirname, "../codestream-components/")
-			}
-		},
-		node: {
-			net: "mock"
+				"@codestream/protocols/agent": path.resolve(
+					__dirname,
+					"../codestream-components/protocols/agent/agent.protocol.ts"
+				),
+				"@codestream/protocols/api": path.resolve(
+					__dirname,
+					"../codestream-components/protocols/agent/api.protocol.ts"
+				),
+				"@codestream/protocols/webview": path.resolve(
+					__dirname,
+					"../codestream-components/ipc/webview.protocol.ts"
+				),
+				"@codestream/webview": path.resolve(__dirname, "../codestream-components/"),
+				react: path.resolve(__dirname, "../codestream-components/node_modules/react"),
+				"react-dom": path.resolve(__dirname, "../codestream-components/node_modules/react-dom"),
+				"vscode-jsonrpc": path.resolve(__dirname, "../codestream-components/vscode-jsonrpc.shim.ts")
+			},
+			// Treats symlinks as real files -- using their "current" path
+			symlinks: false
 		},
 		plugins: plugins,
 		stats: {
@@ -136,3 +192,26 @@ module.exports = function(env, argv) {
 		}
 	};
 };
+
+function createFolderSymlinkSync(source, target, env) {
+	if (env.reset) {
+		console.log("Unlinking symlink...");
+		try {
+			fs.unlinkSync(target);
+		} catch (ex) {}
+	} else if (fs.existsSync(target)) {
+		return;
+	}
+
+	console.log("Creating symlink...");
+	try {
+		fs.symlinkSync(source, target, "dir");
+	} catch (ex) {
+		try {
+			fs.unlinkSync(target);
+			fs.symlinkSync(source, target, "dir");
+		} catch (ex) {
+			console.log(`Symlink creation failed; ${ex}`);
+		}
+	}
+}
