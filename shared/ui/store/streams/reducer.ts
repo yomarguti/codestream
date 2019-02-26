@@ -144,7 +144,7 @@ export const getServiceStreamsForTeam = (state: State, teamId: string, userId: s
 			!stream.deactivated &&
 			!stream.isArchived &&
 			stream.serviceType &&
-			(stream.isTeamStream || _.contains(stream.memberIds, userId))
+			(stream.isTeamStream || stream.memberIds && stream.memberIds!.includes(userId))
 	);
 	serviceStreams.map(stream => {
 		stream.displayName = "Live Share";
