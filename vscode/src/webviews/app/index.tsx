@@ -1,12 +1,12 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import { actions, Container, createStore, HostApi, listenForEvents } from "@codestream/webview";
-import translations from "@codestream/webview/translations/en";
 import {
 	GetViewBootstrapDataRequestType,
 	JoinLiveShareRequestType,
 	WebviewReadyNotificationType
 } from "@codestream/protocols/webview";
+import { actions, Container, createStore, HostApi, listenForEvents } from "@codestream/webview";
+import translations from "@codestream/webview/translations/en";
+import React from "react";
+import { render } from "react-dom";
 import loggingMiddleWare from "./logging-middleware";
 
 const vscodeApi = acquireVsCodeApi();
@@ -29,18 +29,18 @@ channel.port1.onmessage = message => {
 
 const cssColorRegEx = /^(?:(#?)([0-9a-f]{3}|[0-9a-f]{6})|((?:rgb|hsl)a?)\((-?\d+%?)[,\s]+(-?\d+%?)[,\s]+(-?\d+%?)[,\s]*(-?[\d\.]+%?)?\))$/i;
 
-function adjustLight(color, amount) {
+function adjustLight(color: number, amount: number) {
 	const cc = color + amount;
 	const c = amount < 0 ? (cc < 0 ? 0 : cc) : cc > 255 ? 255 : cc;
 
 	return Math.round(c);
 }
 
-function darken(color, percentage) {
+function darken(color: string, percentage: number) {
 	return lighten(color, -percentage);
 }
 
-function lighten(color, percentage) {
+function lighten(color: string, percentage: number) {
 	const rgba = toRgba(color);
 	if (rgba == null) return color;
 
@@ -52,7 +52,7 @@ function lighten(color, percentage) {
 	)}, ${a})`;
 }
 
-function opacity(color, percentage) {
+function opacity(color: string, percentage: number) {
 	const rgba = toRgba(color);
 	if (rgba == null) return color;
 
@@ -60,7 +60,7 @@ function opacity(color, percentage) {
 	return `rgba(${r}, ${g}, ${b}, ${a * (percentage / 100)})`;
 }
 
-function toRgba(color) {
+function toRgba(color: string) {
 	color = color.trim();
 
 	const result = cssColorRegEx.exec(color);
@@ -195,7 +195,7 @@ initializeColorPalette();
 
 const start = Date.now();
 const api = HostApi.instance;
-api.send(GetViewBootstrapDataRequestType).then(data => {
+api.send(GetViewBootstrapDataRequestType).then((data: any) => {
 	const store = createStore(
 		{
 			pluginVersion: data.version,
@@ -223,17 +223,15 @@ api.send(GetViewBootstrapDataRequestType).then(data => {
 
 	listenForEvents(store);
 
-	const render = () => {
+	const doRender = () => {
 		setTimeout(() => {
 			document.body.classList.remove("preload");
 		}, 1000); // Wait for animations to complete
 
-		ReactDOM.render(
+		render(
 			<Container store={store} i18n={{ locale: "en", messages: translations }} />,
 			document.querySelector("#app"),
-			() => {
-				api.send(WebviewReadyNotificationType);
-			}
+			() => api.send(WebviewReadyNotificationType)
 		);
 	};
 
@@ -260,9 +258,9 @@ api.send(GetViewBootstrapDataRequestType).then(data => {
 	store.dispatch(actions.bootstrap(data)).then(() => {
 		const duration = Date.now() - start;
 		if (duration < 250) {
-			setTimeout(render, 250 - duration);
+			setTimeout(doRender, 250 - duration);
 		} else {
-			render();
+			doRender();
 		}
 	});
 });

@@ -1,8 +1,10 @@
 "use strict";
+const webpack = require("webpack");
 const fs = require("fs");
 const path = require("path");
 const CleanPlugin = require("clean-webpack-plugin");
 const FileManagerPlugin = require("filemanager-webpack-plugin");
+const ForkTsCheckerPlugin = require("fork-ts-checker-webpack-plugin");
 const HtmlPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
@@ -15,7 +17,7 @@ module.exports = function(env, argv) {
 	env.analyze = Boolean(env.analyze);
 	env.analyzeWebview = Boolean(env.analyzeWebview);
 	env.production = env.analyze || env.analyzeWebview || Boolean(env.production);
-	env.reset = true; // Boolean(env.reset);
+	env.reset = Boolean(env.reset);
 	env.watch = Boolean(argv.watch || argv.w);
 
 	let protocolPath = path.resolve(__dirname, "src/protocols");
@@ -36,6 +38,13 @@ module.exports = function(env, argv) {
 		path.resolve(protocolPath, "webview"),
 		env
 	);
+
+	// console.log("Ensuring extension symlink to the webview folder...");
+	// createFolderSymlinkSync(
+	// 	path.resolve(__dirname, "../codestream-components"),
+	// 	path.resolve(__dirname, "src/webviews/app/components"),
+	// 	env
+	// );
 
 	protocolPath = path.resolve(__dirname, "../codestream-components/protocols");
 	if (!fs.existsSync(protocolPath)) {
@@ -185,8 +194,16 @@ function getExtensionConfig(env) {
 }
 
 function getWebviewConfig(env) {
+	const context = path.resolve(__dirname, "src/webviews/app");
+
 	const plugins = [
 		new CleanPlugin(["dist/webview", "webview.html"]),
+		new webpack.DefinePlugin(
+			Object.assign(
+				{ "global.atom": false },
+				env.production ? { "process.env.NODE_ENV": JSON.stringify("production") } : {}
+			)
+		),
 		new MiniCssExtractPlugin({
 			filename: "webview.css"
 		}),
@@ -205,6 +222,9 @@ function getWebviewConfig(env) {
 						keepClosingSlash: true
 				  }
 				: false
+		}),
+		new ForkTsCheckerPlugin({
+			reportFiles: ["!index.tsx"]
 		})
 	];
 
@@ -214,32 +234,41 @@ function getWebviewConfig(env) {
 
 	return {
 		name: "webview",
-		context: path.resolve(__dirname, "src/webviews/app"),
+		context: context,
 		entry: {
-			webview: ["./index.js", "./styles/webview.less"]
+			webview: ["./index.tsx", "./styles/webview.less"]
 		},
 		mode: env.production ? "production" : "development",
+		node: false,
 		devtool: !env.production ? "eval-source-map" : undefined,
 		output: {
 			filename: "[name].js",
 			path: path.resolve(__dirname, "dist/webview"),
 			publicPath: "{{root}}/dist/webview/"
 		},
+		optimization: {
+			minimizer: [
+				new TerserPlugin({
+					cache: true,
+					parallel: true,
+					sourceMap: true,
+					terserOptions: {
+						ecma: 8
+					}
+				})
+			]
+		},
 		module: {
 			rules: [
 				{
 					test: /\.html$/,
-					use: "html-loader"
-				},
-				{
-					test: /\.jsx?$/,
-					use: "babel-loader",
+					use: "html-loader",
 					exclude: /node_modules/
 				},
 				{
-					test: /\.tsx?$/,
-					use: "ts-loader",
-					exclude: /node_modules|\.d\.ts$/
+					test: /\.(js|ts)x?$/,
+					use: "babel-loader",
+					exclude: /node_modules/
 				},
 				{
 					test: /\.less$/,
@@ -266,10 +295,15 @@ function getWebviewConfig(env) {
 			]
 		},
 		resolve: {
-			extensions: [".ts", ".tsx", ".js", ".jsx"],
-			modules: [path.resolve(__dirname, "src/webviews/app"), "node_modules"],
+			extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
+			// Dunno why this won't work
+			// plugins: [
+			// 	new TsconfigPathsPlugin({
+			// 		configFile: path.resolve(context, "tsconfig.json"),
+			// 		extensions: [".ts", ".tsx", ".js", ".jsx", ".less"]
+			// 	})
+			// ],
 			alias: {
-				"@codestream/webview": path.resolve(__dirname, "../codestream-components/"),
 				"@codestream/protocols/agent": path.resolve(
 					__dirname,
 					"../codestream-components/protocols/agent/agent.protocol.ts"
@@ -281,13 +315,32 @@ function getWebviewConfig(env) {
 				"@codestream/protocols/webview": path.resolve(
 					__dirname,
 					"../codestream-components/ipc/webview.protocol.ts"
-				)
+				),
+				"@codestream/webview": path.resolve(__dirname, "../codestream-components/"),
+				react: path.resolve(__dirname, "../codestream-components/node_modules/react"),
+				"react-dom": path.resolve(__dirname, "../codestream-components/node_modules/react-dom"),
+				"vscode-jsonrpc": path.resolve(__dirname, "../codestream-components/vscode-jsonrpc.shim.ts")
 			},
+			// alias: {
+			// 	"@codestream/protocols/agent": path.resolve(
+			// 		context,
+			// 		"components/protocols/agent/agent.protocol.ts"
+			// 	),
+			// 	"@codestream/protocols/api": path.resolve(
+			// 		context,
+			// 		"components/protocols/agent/api.protocol.ts"
+			// 	),
+			// 	"@codestream/protocols/webview": path.resolve(
+			// 		context,
+			// 		"components/ipc/webview.protocol.ts"
+			// 	),
+			// 	"@codestream/webview": path.resolve(context, "components/"),
+			// 	react: path.resolve(context, "components/node_modules/react"),
+			// 	"react-dom": path.resolve(context, "components/node_modules/react-dom"),
+			// 	"vscode-jsonrpc": path.resolve(context, "components/vscode-jsonrpc.shim.ts")
+			// },
 			// Treats symlinks as real files -- using their "current" path
 			symlinks: false
-		},
-		node: {
-			net: "mock"
 		},
 		plugins: plugins,
 		stats: {

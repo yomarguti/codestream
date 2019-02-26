@@ -1,6 +1,6 @@
 "use strict";
 import { debounce as _debounce } from "lodash-es";
-import * as uuidv4 from "uuid/v4";
+import uuidv4 from "uuid/v4";
 
 export interface IDeferrable {
 	cancel(): void;

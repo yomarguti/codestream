@@ -1,6 +1,7 @@
 {
 	"compilerOptions": {
-		"baseUrl": "./src",
+		"baseUrl": "src",
+		"esModuleInterop": true,
 		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
 		"module": "esnext",
@@ -10,15 +11,15 @@
 		"noUnusedLocals": false,
 		"outDir": "dist",
 		"paths": {
-			"@codestream/protocols/agent": ["protocols/agent/agent.protocol"],
-			"@codestream/protocols/api": ["protocols/agent/api.protocol"],
-			"@codestream/protocols/webview": ["protocols/webview/webview.protocol"]
+			"@codestream/protocols/agent": ["protocols/agent/agent.protocol.ts"],
+			"@codestream/protocols/api": ["protocols/agent/api.protocol.ts"],
+			"@codestream/protocols/webview": ["protocols/webview/webview.protocol.ts"]
 		},
 		"preserveSymlinks": true,
-		"rootDir": "./src",
+		"rootDir": "src",
 		"sourceMap": true,
 		"strict": true,
-		"target": "esnext"
+		"target": "es2017"
 	},
 	"exclude": ["node_modules", "src/webviews/app"]
 }
