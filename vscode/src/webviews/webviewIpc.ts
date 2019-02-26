@@ -97,19 +97,19 @@ export class WebviewIpc {
 	}
 
 	sendDidBlur() {
-		return this.postMessage(DidBlurNotificationType);
+		return this.postMessage({ method: DidBlurNotificationType.method });
 	}
 
 	sendDidConnect() {
-		return this.postMessage(DidEstablishConnectivityNotificationType);
+		return this.postMessage({ method: DidEstablishConnectivityNotificationType.method });
 	}
 
 	sendDidDisconnect() {
-		return this.postMessage(DidLoseConnectivityNotificationType);
+		return this.postMessage({ method: DidLoseConnectivityNotificationType.method });
 	}
 
 	sendDidFocus() {
-		return this.postMessage(DidFocusNotificationType);
+		return this.postMessage({ method: DidFocusNotificationType.method });
 	}
 
 	sendResponse(response: { id: string; params: any } | { id: string; error: any }) {

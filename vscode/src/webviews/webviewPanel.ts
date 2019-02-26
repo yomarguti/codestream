@@ -691,7 +691,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 	signedOut() {
 		if (this._panel !== undefined) {
 			this._streamThread = undefined;
-			this.postMessage(DidSignOutNotificationType);
+			this.postMessage({ method: DidSignOutNotificationType.method });
 		}
 	}
 
