@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { injectIntl } from "react-intl";
 import { connect } from "react-redux";
-import _ from "underscore";
 import createClassString from "classnames";
 import ComposeBox from "./ComposeBox";
 import PostList from "./PostList";
@@ -49,6 +48,12 @@ import {
 } from "../ipc/webview.protocol";
 import { OpenUrlRequestType, TelemetryRequestType } from "@codestream/protocols/agent";
 import { setCurrentStream } from "../store/context/actions";
+import {
+	filter as _filter,
+	includes as _includes,
+	last as _last,
+	sortBy as _sortBy
+} from "lodash-es";
 
 const EMAIL_MATCH_REGEX = new RegExp(
 	"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*",
@@ -1111,12 +1116,9 @@ export class SimpleStream extends Component {
 
 	findMyPostBeforeSeqNum(seqNum) {
 		const me = this.props.currentUserName;
-		return _.chain(this.props.posts)
-			.filter(post => {
-				return post.author.username === me && post.seqNum < seqNum;
-			})
-			.last()
-			.value();
+		return _last(
+			_filter(this.props.posts, post => post.author.username === me && post.seqNum < seqNum)
+		);
 	}
 
 	// this is no longer specific to the last post
@@ -1474,10 +1476,10 @@ export class SimpleStream extends Component {
 			});
 		} else {
 			teammates.map(user => {
-				if (_.contains(memberIds, user.id)) names.push(user.username);
+				if (_includes(memberIds, user.id)) names.push(user.username);
 			});
 		}
-		names = _.sortBy(names, name => name.toLowerCase());
+		names = _sortBy(names, name => name.toLowerCase());
 
 		let text;
 		if (names.length === 0) text = "You are the only member in " + streamName;
@@ -1727,7 +1729,7 @@ export class SimpleStream extends Component {
 	submitSystemPost = async text => {
 		const { postStreamId, createSystemPost, posts } = this.props;
 		const threadId = this.props.threadId;
-		const lastPost = _.last(posts);
+		const lastPost = _last(posts);
 		const seqNum = lastPost ? lastPost.seqNum + 0.001 : 0.001;
 		await createSystemPost(postStreamId, threadId, text, seqNum);
 		safe(() => this._postslist.scrollToBottom());
@@ -2115,7 +2117,7 @@ const mapStateToProps = state => {
 			? getDMName(postStream, teamMembersById, session.userId)
 			: postStream.name;
 
-	const channelStreams = _.sortBy(
+	const channelStreams = _sortBy(
 		getChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
 		stream => (stream.name || "").toLowerCase()
 	);
@@ -2135,8 +2137,6 @@ const mapStateToProps = state => {
 		threadId: context.threadId,
 		umis: {
 			...umis,
-			// totalUnread: Object.values(_.omit(umis.unreads, postStream.id)).reduce(sum, 0),
-			// totalMentions: Object.values(_.omit(umis.mentions, postStream.id)).reduce(sum, 0)
 			totalUnread: Object.values(umis.unreads).reduce(sum, 0),
 			totalMentions: Object.values(umis.mentions).reduce(sum, 0)
 		},

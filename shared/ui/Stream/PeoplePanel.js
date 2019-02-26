@@ -1,12 +1,9 @@
 import React, { Component } from "react";
-import { FormattedMessage, injectIntl } from "react-intl";
+import { injectIntl } from "react-intl";
 import { connect } from "react-redux";
-import _ from "underscore";
-import Icon from "./Icon";
-import Button from "./Button";
-import Tooltip from "./Tooltip";
 import { invite } from "./actions";
 import { mapFilter } from "../utils";
+import { sortBy as _sortBy } from "lodash-es";
 
 export class PeoplePage extends Component {
 	initialState = {};
@@ -83,8 +80,8 @@ const mapStateToProps = ({ users, context, teams }) => {
 	return {
 		teamId: team.id,
 		teamName: team.name,
-		members: _.sortBy(members, "name"),
-		invited: _.sortBy(invited, "email")
+		members: _sortBy(members, "name"),
+		invited: _sortBy(invited, "email")
 	};
 };
 

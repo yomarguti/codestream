@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import createClassString from "classnames";
-import _ from "underscore";
 import * as actions from "./actions";
 import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as userSelectors from "../store/users/reducer";
@@ -13,6 +12,7 @@ import Codemark from "./Codemark";
 import { HostApi } from "../webview-api";
 import { TelemetryRequestType } from "@codestream/protocols/agent";
 import { ShowCodeRequestType, ShowMarkersInEditorRequestType } from "../ipc/webview.protocol";
+import { includes as _includes, sortBy as _sortBy } from "lodash-es";
 
 export class SimpleKnowledgePanel extends Component {
 	disposables = [];
@@ -204,7 +204,7 @@ export class SimpleKnowledgePanel extends Component {
 		};
 
 		// sort by most recent first
-		_.sortBy(codemarks, codemark => -codemark.createdAt).forEach(codemark => {
+		_sortBy(codemarks, codemark => -codemark.createdAt).forEach(codemark => {
 			const codemarkType = codemark.type || "comment";
 			if (codemark.deactivated) return null;
 			if (typeFilter !== "all" && codemarkType !== typeFilter) return null;
@@ -238,7 +238,7 @@ export class SimpleKnowledgePanel extends Component {
 							assignCodemark(codemark, "inThisFile");
 						break;
 					case "mine":
-						if ((status === "open" || !status) && _.contains(assignees || [], currentUserId))
+						if ((status === "open" || !status) && _includes(assignees || [], currentUserId))
 							assignCodemark(codemark, "mine");
 						break;
 					case "open":

@@ -20,13 +20,13 @@ import { getPost } from "../store/posts/reducer";
 import { getCodemark } from "../store/codemarks/reducer";
 import { markdownify, emojify } from "./Markdowner";
 import hljs from "highlight.js";
-import _ from "underscore";
 import { reactToPost } from "./actions";
 import { safe } from "../utils";
 import { getUsernamesById, getNormalizedUsernames } from "../store/users/reducer";
 import { getProviderInfo } from "./CrossPostIssueControls/types";
 import { ShowCodeRequestType } from "../ipc/webview.protocol";
 import { HostApi } from "../webview-api";
+import { includes as _includes } from "lodash-es";
 
 // let renderCount = 0;
 class Post extends React.Component {
@@ -650,9 +650,7 @@ class Post extends React.Component {
 	postHasReactionFromUser = emojiId => {
 		const { post, currentUserId } = this.props;
 		return (
-			post.reactions &&
-			post.reactions[emojiId] &&
-			_.contains(post.reactions[emojiId], currentUserId)
+			post.reactions && post.reactions[emojiId] && _includes(post.reactions[emojiId], currentUserId)
 		);
 	};
 
@@ -681,7 +679,7 @@ class Post extends React.Component {
 					const emoji = emojify(":" + emojiId + ":");
 					const tooltipText =
 						reactors.map(id => usernamesById[id]).join(", ") + " reacted with " + emojiId;
-					const className = _.contains(reactors, currentUserId) ? "reaction mine" : "reaction";
+					const className = _includes(reactors, currentUserId) ? "reaction mine" : "reaction";
 					atLeastOneReaction = true;
 					return (
 						<Tooltip title={tooltipText} key={emojiId} placement="top">

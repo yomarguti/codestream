@@ -1,13 +1,13 @@
 import React, { Component } from "react";
 import { FormattedMessage, injectIntl } from "react-intl";
 import { connect } from "react-redux";
-import _ from "underscore";
 import Button from "./Button";
 import CancelButton from "./CancelButton";
 import createClassString from "classnames";
 import { closePanel, invite } from "./actions";
 import { isInVscode, mapFilter } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
+import { sortBy as _sortBy } from "lodash-es";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -271,8 +271,8 @@ const mapStateToProps = ({ users, context, teams }) => {
 	return {
 		teamId: team.id,
 		teamName: team.name,
-		members: _.sortBy(members, "name"),
-		invited: _.sortBy(invited, "email")
+		members: _sortBy(members, "name"),
+		invited: _sortBy(invited, "email")
 	};
 };
 

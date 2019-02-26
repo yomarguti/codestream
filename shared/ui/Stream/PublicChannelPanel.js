@@ -3,13 +3,13 @@ import { connect } from "react-redux";
 import * as contextActions from "../store/context/actions";
 import * as streamActions from "./actions";
 import createClassString from "classnames";
+import { sortBy as _sortBy } from "lodash-es";
 import {
 	getChannelStreamsForTeam,
 	getPublicChannelStreamsForTeam,
 	getArchivedChannelStreamsForTeam
 } from "../store/streams/reducer";
 import Icon from "./Icon";
-import _ from "underscore";
 import Timestamp from "./Timestamp";
 import { isInVscode } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
@@ -148,17 +148,17 @@ export class SimplePublicChannelPanel extends Component {
 const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 
-	const channelStreams = _.sortBy(
+	const channelStreams = _sortBy(
 		getChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
 		stream => stream.name.toLowerCase()
 	);
 
-	const publicStreams = _.sortBy(
+	const publicStreams = _sortBy(
 		getPublicChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
 		stream => stream.name.toLowerCase()
 	);
 
-	const archivedStreams = _.sortBy(
+	const archivedStreams = _sortBy(
 		getArchivedChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
 		stream => stream.name.toLowerCase()
 	);

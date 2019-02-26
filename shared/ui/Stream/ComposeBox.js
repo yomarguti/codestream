@@ -1,4 +1,3 @@
-import _ from "underscore";
 import React from "react";
 import createClassString from "classnames";
 import { PostCompose } from "./PostCompose";

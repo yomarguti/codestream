@@ -13,7 +13,6 @@ import * as paths from "path-browserify";
 import * as React from "react";
 import { connect } from "react-redux";
 import Select from "react-select";
-import _ from "underscore";
 import { Range } from "vscode-languageserver-types";
 import { getStreamForId, getStreamForTeam } from "../store/streams/reducer";
 import { Stream } from "../store/streams/types";
@@ -27,6 +26,7 @@ import Icon from "./Icon";
 import Menu from "./Menu";
 import { PostCompose } from "./PostCompose";
 import Tooltip from "./Tooltip";
+import { sortBy as _sortBy } from "lodash-es";
 
 const noop = () => {};
 
@@ -230,7 +230,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			this.setState({ assignees: [], assignableUsers: this.getAssignableCSUsers() });
 		}
 		this.crossPostIssueValues = values;
-	}
+	};
 
 	handleCodeHighlightEvent = () => {
 		const { codeBlock } = this.props;
@@ -259,11 +259,11 @@ class CodemarkForm extends React.Component<Props, State> {
 					this.insertTextAtCursor && this.insertTextAtCursor(usernames.join(", ") + ":\u00A0");
 				});
 		}
-	}
+	};
 
 	tabIndex = () => {
 		return (global as any).atom ? this.tabIndexCount++ : "0";
-	}
+	};
 
 	// TODO: work on this from initial mount
 	focus = (forceMainInput = false) => {
@@ -280,7 +280,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			default:
 				this.focusOnMessageInput && this.focusOnMessageInput();
 		}
-	}
+	};
 
 	// onSelectCodemarkType = (type?: string) => {
 	// 	this.setState({ menuOpen: false });
@@ -298,19 +298,19 @@ class CodemarkForm extends React.Component<Props, State> {
 		// setTimeout(() => {
 		// 	// this.focus();
 		// }, 20);
-	}
+	};
 
 	togglePrivacy = () => {
 		this.setState(state => ({ privacy: state.privacy === "public" ? "private" : "public" }));
-	}
+	};
 
 	toggleNotify = () => {
 		this.setState({ notify: !this.state.notify });
-	}
+	};
 
 	toggleCrossPostMessage = () => {
 		this.setState(state => ({ crossPostMessage: !state.crossPostMessage }));
-	}
+	};
 
 	handleClickSubmit = (event?: React.SyntheticEvent) => {
 		event && event.preventDefault();
@@ -351,7 +351,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			},
 			event
 		);
-	}
+	};
 
 	isFormInvalid = () => {
 		const { codeBlock } = this.props;
@@ -392,11 +392,11 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		this.setState(validationState);
 		return invalid;
-	}
+	};
 
 	showAlertHelp = event => {
 		event.stopPropagation();
-	}
+	};
 
 	renderTitleHelp = () => {
 		const { titleInvalid } = this.state;
@@ -404,7 +404,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (titleInvalid) {
 			return <small className="error-message">Required</small>;
 		} else return null;
-	}
+	};
 
 	renderTextHelp = () => {
 		const { textInvalid } = this.state;
@@ -412,7 +412,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (textInvalid) {
 			return <small className="error-message">Required</small>;
 		} else return null;
-	}
+	};
 
 	switchChannel = (event: React.SyntheticEvent) => {
 		event.stopPropagation();
@@ -422,7 +422,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			channelMenuTarget: target,
 			crossPostMessage: true
 		}));
-	}
+	};
 
 	selectChannel = (stream: Stream | "show-all") => {
 		if (stream === "show-all") {
@@ -433,7 +433,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			this.setState({ selectedChannelName: channelName, selectedChannelId: stream.id });
 		}
 		this.setState({ channelMenuOpen: false });
-	}
+	};
 
 	// handleClickConnectSlack = async event => {
 	// 	event.preventDefault();
@@ -455,7 +455,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			}
 		});
 		items.push({ label: "-" });
-		_.sortBy(this.props.directMessageStreams, (stream: CSDirectStream) =>
+		_sortBy(this.props.directMessageStreams, (stream: CSDirectStream) =>
 			(stream.name || "").toLowerCase()
 		).forEach((channel: CSDirectStream) => {
 			if (!filterSelected || selectedStreams[channel.id]) {
@@ -511,14 +511,14 @@ class CodemarkForm extends React.Component<Props, State> {
 		// 		</div>
 		// 	);
 		// }
-	}
+	};
 
 	handleChange = text => {
 		// track newPostText as the user types
 		this.setState({
 			text
 		});
-	}
+	};
 
 	getCodeBlockHint() {
 		const { codeBlock } = this.props;
@@ -575,7 +575,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			onSubmit: collapsed ? this.handleClickSubmit : undefined,
 			__onDidRender
 		});
-	}
+	};
 
 	render() {
 		if (this.props.collapsed) {

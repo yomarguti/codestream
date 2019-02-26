@@ -1,5 +1,5 @@
 import * as React from "react";
-import { debounce } from "underscore";
+import { debounce as _debounce } from "lodash-es";
 import DateSeparator from "./DateSeparator";
 import Icon from "./Icon";
 import Post from "./Post";
@@ -182,7 +182,7 @@ export default infiniteLoadable(
 			if (!(unreadsAbove || unreadsBelow)) this.showUnreadBanner = false;
 		});
 
-		resetUnreadBanner = debounce(() => {
+		resetUnreadBanner = _debounce(() => {
 			const { posts, currentUserId } = this.props;
 			if (posts.length === 0) return;
 			if (posts[posts.length - 1].creatorId !== currentUserId) {

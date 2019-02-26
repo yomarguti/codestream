@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import createClassString from "classnames";
-import _ from "underscore";
 import {
 	changeStreamMuteState,
 	closeDirectMessage,
@@ -29,6 +28,7 @@ import { isInVscode, safe } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { MuteAllConversationsRequestType } from "../ipc/webview.protocol";
 import { HostApi } from "../webview-api";
+import { sortBy as _sortBy } from "lodash-es";
 
 export class SimpleChannelPanel extends Component {
 	constructor(props) {
@@ -754,7 +754,7 @@ const mapStateToProps = ({
 	const teamMembers = team.memberIds.map(id => users[id]).filter(Boolean);
 	// .filter(user => user && user.isRegistered);
 
-	const channelStreams = _.sortBy(
+	const channelStreams = _sortBy(
 		getChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
 		stream => (stream.name || "").toLowerCase()
 	);
@@ -794,7 +794,7 @@ const mapStateToProps = ({
 		}
 	);
 
-	const serviceStreams = _.sortBy(
+	const serviceStreams = _sortBy(
 		getServiceStreamsForTeam(streams, context.currentTeamId, session.userId, users) || [],
 		stream => -stream.createdAt
 	);

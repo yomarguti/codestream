@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import * as contextActions from "../store/context/actions";
-import _ from "underscore";
 import { createStream } from "./actions";
 import createClassString from "classnames";
 import { getChannelStreamsForTeam } from "../store/streams/reducer";
@@ -12,6 +11,7 @@ import { FormattedMessage } from "react-intl";
 import Select from "react-select";
 import { isInVscode } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
+import { sortBy as _sortBy } from "lodash-es";
 
 export class SimpleCreateChannelPanel extends Component {
 	constructor(props) {
@@ -274,7 +274,7 @@ const mapStateToProps = ({ context, streams, users, teams }) => {
 	});
 	return {
 		channelStreams,
-		teammates: _.sortBy(members, member => member.label.toLowerCase()),
+		teammates: _sortBy(members, member => member.label.toLowerCase()),
 		team: teams[context.currentTeamId]
 	};
 };

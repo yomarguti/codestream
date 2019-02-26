@@ -1,6 +1,6 @@
 import React from "react";
-import _ from "underscore";
 import RCTooltip from "rc-tooltip";
+import { isEqual as _isEqual } from "lodash-es";
 
 /* eslint-disable no-unused-vars */
 const tooltipOptions = ({ children, ...options }) => options;
@@ -15,7 +15,7 @@ export default class Tooltip extends React.Component {
 
 	componentDidUpdate(previousProps) {
 		const currentOptions = tooltipOptions(this.props);
-		if (!_.isEqual(tooltipOptions(previousProps), currentOptions)) {
+		if (!_isEqual(tooltipOptions(previousProps), currentOptions)) {
 			this.tearDown();
 			this.configure(currentOptions);
 		}

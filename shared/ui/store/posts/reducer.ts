@@ -1,8 +1,8 @@
 import { CSPost } from "@codestream/protocols/api";
-import _ from "underscore";
 import { ActionType } from "../common";
 import * as actions from "./actions";
 import { isPending, PostsActionsType, State } from "./types";
+import { sortBy as _sortBy } from "lodash-es";
 
 type PostsActions = ActionType<typeof actions>;
 
@@ -101,7 +101,7 @@ export const getPostsForStream = ({ byStream, pending }, streamId) => {
 		}
 	});
 	return [
-		..._.sortBy(byStream[streamId], "seqNum").filter(p => !p.deactivated),
+		..._sortBy(byStream[streamId], "seqNum").filter(p => !p.deactivated),
 		...pendingForStream
 	];
 };

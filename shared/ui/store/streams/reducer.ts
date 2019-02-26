@@ -1,7 +1,7 @@
-import _ from "underscore";
 import { ActionType } from "../common";
 import * as actions from "./actions";
 import { Stream, StreamActionType } from "./types";
+import { includes as _includes, sortBy as _sortBy } from "lodash-es";
 
 type StreamsAction = ActionType<typeof actions>;
 
@@ -60,7 +60,7 @@ export const reduceStreams = (state: State = initialState, action: StreamsAction
 // TODO: memoize
 export const getStreamForTeam = (state: State, teamId: string) => {
 	const streams = state.byTeam[teamId] || {};
-	return _.sortBy(Object.values(streams).filter(stream => stream.isTeamStream), "createdAt")[0];
+	return _sortBy(Object.values(streams).filter(stream => stream.isTeamStream), "createdAt")[0];
 };
 
 export const getChannelStreamsForTeam = (state: State, teamId: string, userId: string) => {
@@ -71,7 +71,7 @@ export const getChannelStreamsForTeam = (state: State, teamId: string, userId: s
 			!stream.deactivated &&
 			!stream.isArchived &&
 			!stream.serviceType &&
-			(stream.isTeamStream || _.contains(stream.memberIds, userId))
+			(stream.isTeamStream || _includes(stream.memberIds, userId))
 	);
 };
 
@@ -85,7 +85,7 @@ export const getPublicChannelStreamsForTeam = (state: State, teamId: string, use
 			!stream.isArchived &&
 			!stream.isTeamStream &&
 			!stream.serviceType &&
-			!_.contains(stream.memberIds, userId)
+			!_includes(stream.memberIds, userId)
 	);
 };
 

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { connect } from "react-redux";
-import { isEqual } from "underscore";
+import { isEqual as _isEqual } from "lodash-es";
 import { getPostsForStream } from "../store/posts/reducer";
 import { fetchPosts, fetchThread } from "./actions";
 import { safe } from "../utils";
@@ -46,7 +46,7 @@ export default Child => {
 				) {
 					return this.initialize();
 				}
-				if (!this.state.isFetching && !isEqual(prevProps.postIds, this.props.postIds)) {
+				if (!this.state.isFetching && !_isEqual(prevProps.postIds, this.props.postIds)) {
 					this.setState({ posts: this.props.posts });
 				}
 			}

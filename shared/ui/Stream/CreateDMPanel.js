@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import * as contextActions from "../store/context/actions";
-import _ from "underscore";
 import { createStream, openDirectMessage } from "./actions";
 import createClassString from "classnames";
 import { getDirectMessageStreamsForTeam, getDMName } from "../store/streams/reducer";
@@ -12,6 +11,7 @@ import Select from "react-select";
 import Timestamp from "./Timestamp";
 import { isInVscode, toMapBy, mapFilter } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
+import { includes as _includes, sortBy as _sortBy, union as _union } from "lodash-es";
 
 export class SimpleCreateDMPanel extends Component {
 	constructor(props) {
@@ -222,11 +222,11 @@ export class SimpleCreateDMPanel extends Component {
 				return member.value;
 			})
 			.filter(Boolean);
-		const newMemberIds = _.union(memberIds, stream.memberIds).filter(Boolean);
+		const newMemberIds = _union(memberIds, stream.memberIds).filter(Boolean);
 		const newMembers = this.props.teamMembers
 			.map(user => {
 				if (user.deactivated) return null;
-				if (!_.contains(newMemberIds, user.id)) return null;
+				if (!_includes(newMemberIds, user.id)) return null;
 				if (this.props.currentUserId === user.id) return null;
 				return {
 					value: user.id,
@@ -297,7 +297,7 @@ const mapStateToProps = ({ context, streams, users, teams, session, umis }) => {
 	);
 
 	// // the integer 528593114636 is simply a number far, far in the past
-	// const directMessageStreams = _.sortBy(
+	// const directMessageStreams = _sortBy(
 	// 	dmStreams,
 	// 	stream => stream.mostRecentPostCreatedAt || 528593114636
 	// ).reverse();
@@ -309,7 +309,7 @@ const mapStateToProps = ({ context, streams, users, teams, session, umis }) => {
 		teamMembers,
 		directMessageStreams,
 		currentUserId: user.id,
-		teammates: _.sortBy(members, member => member.label.toLowerCase()),
+		teammates: _sortBy(members, member => member.label.toLowerCase()),
 		team: teams[context.currentTeamId]
 	};
 };

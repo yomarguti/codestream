@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import _ from "underscore";
 import * as actions from "./actions";
 import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as userSelectors from "../store/users/reducer";
