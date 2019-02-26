@@ -3,7 +3,7 @@ import { CodestreamView, CODESTREAM_VIEW_URI } from "./views/codestream-view";
 import { StatusBar, Tile } from "./types/package-services/status-bar";
 import { WorkspaceSession, SessionStatus } from "./workspace/workspace-session";
 import { PackageState } from "./types/package";
-import { PD_CONFIG } from "./env-utils";
+import { PD_CONFIG, Environment } from "./env-utils";
 
 class CodestreamPackage {
 	subscriptions = new CompositeDisposable();
@@ -14,6 +14,9 @@ class CodestreamPackage {
 	sessionStatusCommand?: Disposable;
 
 	constructor(state: PackageState) {
+		if (atom.inDevMode()) {
+			console.debug("CodeStream package initialized with state:", state);
+		}
 		this.workspaceSession = WorkspaceSession.create(state);
 		this.initialize();
 	}
@@ -87,11 +90,16 @@ class CodestreamPackage {
 	async consumeStatusBar(statusBar: StatusBar) {
 		this.statusBar = statusBar;
 
-		const messages = {
-			[SessionStatus.SignedIn]: () => this.workspaceSession.user!.username,
-			[SessionStatus.SigningIn]: () => "Signing in...",
-			[SessionStatus.SignedOut]: () => "Sign in",
+		const getStatusBarTitle = (status: SessionStatus) => {
+			const env = this.workspaceSession.environment.name;
+			const environmentLabel = env !== Environment.Production ? `${env} ` : "";
+
+			if (status === SessionStatus.SignedIn)
+				return `${environmentLabel}${this.workspaceSession.user!.username}`;
+			if (status === SessionStatus.SigningIn) return `Signing in...${environmentLabel}`;
+			else return `${environmentLabel}Sign in`;
 		};
+
 		const tileRoot = document.createElement("div");
 		tileRoot.classList.add("inline-block");
 		tileRoot.onclick = event => {
@@ -106,7 +114,7 @@ class CodestreamPackage {
 		tileRoot.appendChild(text);
 
 		this.workspaceSession!.onDidChangeSessionStatus(status => {
-			text.innerText = messages[status]();
+			text.innerText = getStatusBarTitle(status);
 
 			if (!this.statusBarTile) {
 				this.statusBarTile = statusBar.addRightTile({ item: tileRoot, priority: 400 });
