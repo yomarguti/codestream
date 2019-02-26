@@ -1,24 +1,30 @@
 {
 	"compilerOptions": {
-		"baseUrl": "./",
+		"allowSyntheticDefaultImports": true,
+		"baseUrl": ".",
+		"esModuleInterop": true,
 		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
 		"jsx": "react",
 		"module": "esnext",
 		"moduleResolution": "node",
 		"noFallthroughCasesInSwitch": true,
-		"noImplicitReturns": false,
 		"noImplicitAny": false,
+		"noImplicitReturns": true,
 		"noUnusedLocals": false,
 		"outDir": "dist",
 		"paths": {
-			"@codestream/protocols/agent": ["protocols/agent/agent.protocol"],
-			"@codestream/protocols/api": ["protocols/agent/api.protocol"]
+			"@codestream/protocols/agent": ["protocols/agent/agent.protocol.ts"],
+			"@codestream/protocols/api": ["protocols/agent/api.protocol.ts"],
+			"@codestream/protocols/webview": ["ipc/webview.protocol.ts"],
+			"@codestream/webview/*": ["./*"],
+			"vscode-jsonrpc": ["./vscode-jsonrpc.shim.ts"]
 		},
-		"rootDir": "./",
+		"preserveSymlinks": true,
+		"rootDir": ".",
+		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"target": "esnext"
-	},
-	"exclude": ["node_modules"]
+		"target": "es2017"
+	}
 }

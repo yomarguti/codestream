@@ -1,5 +1,5 @@
-import * as uuidv4 from "uuid/v4";
-import { Range } from "vscode-languageserver-protocol";
+import uuidv4 from "uuid/v4";
+import { Range } from "vscode-languageserver-types";
 
 export function arrayToRange([startLine, startCharacter, endLine, endCharacter]: number[]): Range {
 	return Range.create(startLine, startCharacter, endLine, endCharacter);

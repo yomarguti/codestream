@@ -1,6 +1,6 @@
 import { FetchThirdPartyBoardsRequest } from "@codestream/protocols/agent";
 import { CSMarker } from "@codestream/protocols/api";
-import { RequestType } from "vscode-languageserver-protocol";
+import { RequestType } from "vscode-jsonrpc";
 
 export interface GoToSlackSigninResponse {}
 

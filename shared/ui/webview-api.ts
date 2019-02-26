@@ -1,5 +1,5 @@
-import { RequestType } from "vscode-jsonrpc";
-import { findHost, IpcHost, NotificationType, WebviewIpcMessage } from "./ipc/webview.protocol";
+import { NotificationType, RequestType } from "vscode-jsonrpc";
+import { findHost, IpcHost, WebviewIpcMessage } from "./ipc/webview.protocol";
 import { shortUuid } from "./utils";
 
 type RequestOrNotificationType<P, R> = RequestType<P, R, any, any> | NotificationType<P, R>;
@@ -26,7 +26,14 @@ class EventEmitter {
 	}
 
 	emit(eventName: string, body: any) {
-		setImmediate(() => (this.listenersByEvent.get(eventName) || []).forEach(l => l(body)));
+		const listeners = this.listenersByEvent.get(eventName);
+		if (listeners == null || listeners.length === 0) return;
+
+		setTimeout(() => {
+			for (const l of listeners) {
+				l(body);
+			}
+		}, 0);
 	}
 }
 

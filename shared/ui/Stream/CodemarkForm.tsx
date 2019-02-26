@@ -9,12 +9,12 @@ import {
 	StreamType
 } from "@codestream/protocols/api";
 import cx from "classnames";
-import * as paths from "path";
+import * as paths from "path-browserify";
 import * as React from "react";
 import { connect } from "react-redux";
 import Select from "react-select";
 import _ from "underscore";
-import { Range } from "vscode-languageserver-protocol";
+import { Range } from "vscode-languageserver-types";
 import { getStreamForId, getStreamForTeam } from "../store/streams/reducer";
 import { Stream } from "../store/streams/types";
 import { mapFilter } from "../utils";

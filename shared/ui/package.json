@@ -16,7 +16,7 @@
 	"author": "akonwi",
 	"license": "UNLICENSED",
 	"dependencies": {
-		"@babel/polyfill": "7.0.0-beta.51",
+		"@babel/polyfill": "7.2.5",
 		"classnames": "2.2.5",
 		"emoji-mart": "2.9.2",
 		"highlight.js": "9.13.1",
@@ -24,6 +24,8 @@
 		"markdown-it-emoji-mart": "0.1.1",
 		"markdown-it-slack": "1.2.0",
 		"octicons": "7.3.0",
+		"path-browserify": "1.0.0",
+		"punycode": "1.4.1",
 		"prop-types": "15.6.2",
 		"rc-tooltip": "3.7.3",
 		"react": "16.6.3",
@@ -36,6 +38,7 @@
 		"react-select": "2.0.0-beta.6",
 		"redux": "4.0.0",
 		"redux-batched-subscribe": "0.1.6",
+		"redux-devtools-extension": "2.13.7",
 		"redux-thunk": "2.3.0",
 		"reselect": "4.0.0",
 		"underscore": "1.9.0",
@@ -47,28 +50,6 @@
 		"react-dom": "16.6.3"
 	},
 	"devDependencies": {
-		"@types/node-fetch": "2.1.6",
-		"@types/react": "16.4.18",
-		"@types/react-redux": "6.0.12",
-		"@types/redux": "3.6.0",
-		"@types/uuid": "3.4.4",
-		"babel-cli": "6.26.0",
-		"babel-eslint": "8.2.6",
-		"babel-loader": "7.1.5",
-		"babel-plugin-external-helpers": "6.22.0",
-		"babel-plugin-transform-class-properties": "6.24.1",
-		"babel-plugin-transform-object-rest-spread": "6.26.0",
-		"babel-preset-env": "1.7.0",
-		"babel-preset-react": "6.24.1",
-		"clean-webpack-plugin": "1.0.1",
-		"eslint": "5.2.0",
-		"eslint-plugin-react": "7.10.0",
-		"filemanager-webpack-plugin": "2.0.5",
-		"prettier": "1.16.4",
-		"redux-devtools-extension": "2.13.7",
-		"tslint": "5.12.1",
-		"typescript": "3.2.4",
-		"webpack": "4.29.5",
-		"webpack-cli": "3.2.3"
+		"@types/node-fetch": "2.1.6"
 	}
 }

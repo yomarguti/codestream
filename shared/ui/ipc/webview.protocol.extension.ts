@@ -1,5 +1,5 @@
-import { Range } from "vscode-languageserver-protocol";
-import { NotificationType } from "./webview.protocol.common";
+import { NotificationType } from "vscode-jsonrpc";
+import { Range } from "vscode-languageserver-types";
 
 type ConfigState = any;
 

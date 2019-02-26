@@ -1,5 +1,5 @@
 import React from "react";
-import * as Path from "path";
+import * as Path from "path-browserify";
 import { connect } from "react-redux";
 import { injectIntl } from "react-intl";
 import createClassString from "classnames";

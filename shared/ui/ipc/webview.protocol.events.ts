@@ -1,4 +1,4 @@
-import { NotificationType } from "./webview.protocol.common";
+import { NotificationType } from "vscode-jsonrpc";
 
 // import { State as ContextState } from "../store/context/types";
 type ContextState = any;
