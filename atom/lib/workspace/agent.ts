@@ -201,7 +201,7 @@ abstract class AgentConnection {
 			}
 		});
 		agentProcess.on("exit", code => {
-			if (code !== 0)
+			if (Number(code) !== 0)
 				console.error(`CodeStream agent process exited with non-zero exit code ${code}`);
 		});
 

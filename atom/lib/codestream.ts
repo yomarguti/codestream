@@ -27,7 +27,7 @@ class CodestreamPackage {
 					"atom-workspace",
 					"codestream:sign-out",
 					() => {
-						this.workspaceSession!.signOut();
+						this.workspaceSession.signOut();
 					}
 				);
 			}

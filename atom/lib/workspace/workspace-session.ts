@@ -101,8 +101,9 @@ export class WorkspaceSession {
 	}
 
 	onDidChangeSessionStatus(callback: (status: SessionStatus) => any) {
-		this.emitter.on(SESSION_STATUS_CHANGED, callback);
+		const disposable = this.emitter.on(SESSION_STATUS_CHANGED, callback);
 		callback(this._sessionStatus);
+		return disposable;
 	}
 
 	private set sessionStatus(status: SessionStatus) {

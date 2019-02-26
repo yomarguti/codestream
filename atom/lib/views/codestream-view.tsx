@@ -1,6 +1,6 @@
 import { shell } from "electron";
 import { CompositeDisposable } from "atom";
-import { WorkspaceSession } from "../workspace/workspace-session";
+import { WorkspaceSession, SessionStatus } from "../workspace/workspace-session";
 import { LoginResult } from "../protocols/agent/api.protocol";
 import { DidChangeDataNotification } from "../protocols/agent/agent.protocol";
 import {
@@ -12,6 +12,7 @@ import {
 	GoToSlackSigninResponse,
 	ValidateSignupRequestType,
 	WebviewReadyNotificationType,
+	DidSignOutNotificationType,
 } from "../protocols/webview/webview.protocol";
 import { asAbsolutePath } from "../utils";
 import { getStyles } from "./styles-getter";
@@ -136,6 +137,11 @@ export class CodestreamView {
 		this.subscriptions.add(
 			this.session.agent.onInitialized(() => {
 				this.subscriptions.add(this.session.agent.onDidChangeData(this.onDidChangeSessionData));
+			}),
+			this.session.onDidChangeSessionStatus(status => {
+				if (status === SessionStatus.SignedOut) {
+					this.sendEvent(DidSignOutNotificationType, undefined);
+				}
 			})
 		);
 	}
