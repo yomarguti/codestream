@@ -89,14 +89,14 @@ export const connectProvider = (name: string, fromMenu = false) => async (dispat
 	}
 };
 
-export const disconnectService = (service: string, fromMenu = false) => async (
+export const disconnectService = (name: string, fromMenu = false) => async (
 	dispatch,
 	getState
 ) => {
 	try {
 		const api = HostApi.instance;
 		await api.send(DisconnectThirdPartyProviderRequestType, {
-			providerName: service
+			providerName: name
 		});
 		api.send(TelemetryRequestType, {
 			eventName: "Issue Service Connected",
@@ -106,11 +106,11 @@ export const disconnectService = (service: string, fromMenu = false) => async (
 				"Connection Location": fromMenu ? "Global Nav" : "Compose Modal"
 			}
 		});
-		if (getState().context.issueProvider === service) {
+		if (getState().context.issueProvider === name) {
 			dispatch(setIssueProvider(undefined));
 		}
 	} catch (error) {
-		logError(`failed to disconnect service ${service}: ${error}`);
+		logError(`failed to disconnect service ${name}: ${error}`);
 	}
 };
 
