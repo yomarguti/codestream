@@ -33,12 +33,9 @@ import java.util.concurrent.TimeUnit
 import javax.swing.Icon
 
 
-interface CodeStreamComponent
+val gson = Gson()
 
-val gson
-    get() = Gson()
-
-class CodeStreamComponentImpl(project: Project) : CodeStreamComponent {
+class CodeStreamComponent(project: Project) {
 
     init {
         val webViewService = ServiceManager.getService(project, WebViewService::class.java)
@@ -55,14 +52,7 @@ class CodeStreamComponentImpl(project: Project) : CodeStreamComponent {
             toolWindow.component.add(webViewService.webView)
         }
 
-
         EditorFactory.getInstance().addEditorFactoryListener(EditorFactoryListenerImpl(project), Disposer.newDisposable())
-
-        val messageBus = project.messageBus
-
-        messageBus.connect()
-            .subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, CodeStreamFileEditorManagerListener(project))
-
     }
 
 }

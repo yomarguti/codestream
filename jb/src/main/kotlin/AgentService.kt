@@ -118,27 +118,9 @@ class AgentService(private val project: Project) {
             return
         }
 
-        editor.document.addDocumentListener(CodeStreamDocumentListener(editor, this))
-//        editor.document.removeDocumentListener()
-
-//        val mouseListener = EditorMouseListenerImpl()
-//        val mouseMotionListener = EditorMouseMotionListenerImpl()
-//        val documentListener = DocumentListenerImpl()
-//        val selectionListener = SelectionListenerImpl()
-//        val serverOptions = ServerOptions(syncKind, capabilities.completionProvider, capabilities.signatureHelpProvider,
-//            capabilities.codeLensProvider, capabilities.documentOnTypeFormattingProvider, capabilities.documentLinkProvider,
-//            capabilities.executeCommandProvider, capabilities.semanticHighlighting)
-//        val manager = CodeStreamEditorEventManager(editor, mouseListener, mouseMotionListener, documentListener, selectionListener, requestManager, serverOptions, this)
-//        mouseListener.setManager(manager)
-//        mouseMotionListener.setManager(manager)
-//        documentListener.setManager(manager)
-//        selectionListener.setManager(manager)
-//        manager.registerListeners()
-//        this.connectedEditors.synchronized {
-//            this.connectedEditors.put(uri, manager)
-//        }
-//        manager.documentOpened()
         server.textDocumentService.didOpen(DidOpenTextDocumentParams(TextDocumentItem(uri, "", 0, editor.document.text)))
+        editor.document.addDocumentListener(CodeStreamDocumentListener(editor, this))
+
         logger.info("Created a manager for $uri")
     }
 
