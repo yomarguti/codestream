@@ -5,10 +5,12 @@ import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.future.await
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.RemoteEndpoint
+import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.launch.LSPLauncher
 import java.io.File
 import kotlin.collections.Map
@@ -18,10 +20,12 @@ import kotlin.collections.mutableMapOf
 import kotlin.collections.set
 
 
-class AgentService(val project: Project) {
+class AgentService(private val project: Project) {
 
     private val logger = Logger.getInstance(AgentService::class.java)
+    private val connectedEditors = mutableMapOf<String, Editor>()
 
+    lateinit var initializeResult: InitializeResult
     lateinit var server: CodeStreamLanguageServer
     lateinit var remoteEndpoint: RemoteEndpoint
 
@@ -33,6 +37,19 @@ class AgentService(val project: Project) {
     }
     val webViewService: WebViewService by lazy {
         ServiceManager.getService(project, WebViewService::class.java)
+    }
+
+    val capabilities: ServerCapabilities by lazy {
+        initializeResult.capabilities
+    }
+
+    val syncKind: TextDocumentSyncKind? by lazy {
+        val syncOptions: Either<TextDocumentSyncKind, TextDocumentSyncOptions> = capabilities.textDocumentSync
+        when {
+            syncOptions.isRight -> syncOptions.right.change
+            syncOptions.isLeft -> syncOptions.left
+            else -> null
+        }
     }
 
     init {
@@ -56,10 +73,7 @@ class AgentService(val project: Project) {
             server = launcher.remoteProxy
             remoteEndpoint = launcher.remoteEndpoint
             launcher.startListening()
-
-
-            val initializeFuture = server.initialize(getInitializeParams())
-            initializeFuture.get()
+            initializeResult = server.initialize(getInitializeParams()).get()
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -69,6 +83,7 @@ class AgentService(val project: Project) {
         val workspaceClientCapabilities = WorkspaceClientCapabilities()
         workspaceClientCapabilities.configuration = true
         workspaceClientCapabilities.didChangeConfiguration = DidChangeConfigurationCapabilities(false)
+        workspaceClientCapabilities.workspaceFolders = true
         val textDocumentClientCapabilities = TextDocumentClientCapabilities()
         val clientCapabilities =
             ClientCapabilities(workspaceClientCapabilities, textDocumentClientCapabilities, null)
@@ -94,6 +109,45 @@ class AgentService(val project: Project) {
             "serverUrl" to settingsService.serverUrl
         )
     }
+
+
+
+    fun connect(editor: Editor) {
+        val uri = editorToURIString(editor)
+        if (connectedEditors.contains(uri)) {
+            return
+        }
+
+        editor.document.addDocumentListener(CodeStreamDocumentListener(editor, this))
+//        editor.document.removeDocumentListener()
+
+//        val mouseListener = EditorMouseListenerImpl()
+//        val mouseMotionListener = EditorMouseMotionListenerImpl()
+//        val documentListener = DocumentListenerImpl()
+//        val selectionListener = SelectionListenerImpl()
+//        val serverOptions = ServerOptions(syncKind, capabilities.completionProvider, capabilities.signatureHelpProvider,
+//            capabilities.codeLensProvider, capabilities.documentOnTypeFormattingProvider, capabilities.documentLinkProvider,
+//            capabilities.executeCommandProvider, capabilities.semanticHighlighting)
+//        val manager = CodeStreamEditorEventManager(editor, mouseListener, mouseMotionListener, documentListener, selectionListener, requestManager, serverOptions, this)
+//        mouseListener.setManager(manager)
+//        mouseMotionListener.setManager(manager)
+//        documentListener.setManager(manager)
+//        selectionListener.setManager(manager)
+//        manager.registerListeners()
+//        this.connectedEditors.synchronized {
+//            this.connectedEditors.put(uri, manager)
+//        }
+//        manager.documentOpened()
+        server.textDocumentService.didOpen(DidOpenTextDocumentParams(TextDocumentItem(uri, "", 0, editor.document.text)))
+        logger.info("Created a manager for $uri")
+    }
+
+    fun disconnect(editor: Editor) {
+        val uri = editorToURIString(editor)
+        server.textDocumentService.didClose(DidCloseTextDocumentParams(TextDocumentIdentifier(uri)))
+        connectedEditors.remove(uri)
+    }
+
 
     suspend fun sendRequest(id: String, action: String, params: JsonElement?) {
         val result = remoteEndpoint.request(action, params).await()
@@ -170,6 +224,16 @@ class AgentService(val project: Project) {
 
     suspend fun logout() {
         server.logout(LogoutParams()).await()
+    }
+
+    suspend fun getDocumentFromMarker(file: String, repoId: String, markerId: String): DocumentFromMarkerResult {
+        val params = DocumentFromMarkerParams(file, repoId, markerId)
+        return server.documentFromMarker(params).await()
+    }
+
+    suspend fun documentMarkers(file: String): DocumentMarkersResult {
+        val params = DocumentMarkersParams(TextDocument(file))
+        return server.documentMarkers(params).await()
     }
 
 }

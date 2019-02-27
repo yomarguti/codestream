@@ -52,7 +52,7 @@ class WebViewService(val project: Project) : Disposable {
     override fun dispose() {
         logger.info("Disposing JxBrowser")
         browser.dispose()
-        BrowserCore.shutdown()
+//        BrowserCore.shutdown()
     }
 
     fun reload() {
