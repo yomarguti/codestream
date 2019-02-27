@@ -120,6 +120,8 @@
                 editor="guidVSStd97" key1="C" mod1="ALT" key2="S" mod2="ALT" />
     <KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommandId" 
                 editor="GUID_TextEditorFactory" mod1="Control" key1="VK_OEM_2" mod2="Control" key2="VK_OEM_2" />
+    <KeyBinding guid="guidWebViewPackageCmdSet" id="WebViewDevToolsCommandId"
+                editor="guidVSStd97" key1="C" mod1="ALT" key2="D" mod2="ALT" />
   </KeyBindings>
 
   <CommandPlacements>
