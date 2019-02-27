@@ -21,7 +21,7 @@ namespace CodeStream.VisualStudio.Controllers
         private readonly ISessionService _sessionService;
         private readonly ICodeStreamAgentService _codeStreamAgent;
         private readonly IEventAggregator _eventAggregator;
-        private readonly IBrowserService _browserService;
+        private readonly IWebviewIpc _ipc;
         private readonly IIdeService _ideService;
         private readonly Lazy<ICredentialsService> _credentialsService;
 
@@ -30,7 +30,7 @@ namespace CodeStream.VisualStudio.Controllers
             ISessionService sessionService,
             ICodeStreamAgentService codeStreamAgent,
             IEventAggregator eventAggregator,
-            IBrowserService browserService,
+            IWebviewIpc ipc,
             IIdeService ideService,
             Lazy<ICredentialsService> credentialsService)
         {
@@ -38,7 +38,7 @@ namespace CodeStream.VisualStudio.Controllers
             _sessionService = sessionService;
             _codeStreamAgent = codeStreamAgent;
             _eventAggregator = eventAggregator;
-            _browserService = browserService;
+            _ipc = ipc;
             _ideService = ideService;
             _credentialsService = credentialsService;
         }
@@ -57,7 +57,7 @@ namespace CodeStream.VisualStudio.Controllers
                 Log.Error(ex, $"{nameof(GoToSignupAsync)}");
             }
 
-            _browserService.PostMessage(Ipc.ToResponseMessage(messageId, true, error));
+            _ipc.SendResponse(Ipc.ToResponseMessage(messageId, true, error));
 
             await Task.CompletedTask;
         }
@@ -77,7 +77,7 @@ namespace CodeStream.VisualStudio.Controllers
                 Log.Error(ex, $"{nameof(GoToSlackSigninAsync)}");
             }
 
-            _browserService.PostMessage(Ipc.ToResponseMessage(messageId, true, error));
+            _ipc.SendResponse(Ipc.ToResponseMessage(messageId, true, error));
 
             await Task.CompletedTask;
         }
@@ -130,7 +130,7 @@ namespace CodeStream.VisualStudio.Controllers
             }
             finally
             {
-                _browserService.PostMessage(Ipc.ToResponseMessage(messageId, payload, errorResponse));
+                _ipc.SendResponse(Ipc.ToResponseMessage(messageId, payload, errorResponse));
             }
 
             if (success)
@@ -192,7 +192,7 @@ namespace CodeStream.VisualStudio.Controllers
                 @params = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings());
             }
 
-            _browserService.PostMessage(Ipc.ToResponseMessage(messageId, @params, errorResponse));
+            _ipc.SendResponse(Ipc.ToResponseMessage(messageId, @params, errorResponse));
             await Task.CompletedTask;
         }
 
@@ -251,7 +251,7 @@ namespace CodeStream.VisualStudio.Controllers
             }
             finally
             {
-                _browserService.PostMessage(Ipc.ToResponseMessage(messageId, @params, errorResponse));
+                _ipc.SendResponse(Ipc.ToResponseMessage(messageId, @params, errorResponse));
             }
 
             if (success)

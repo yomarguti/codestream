@@ -31,6 +31,7 @@ namespace CodeStream.VisualStudio.Packages
     [ProvideService(typeof(SCredentialsService))]
     [ProvideService(typeof(SSessionService))]
     [ProvideService(typeof(SBrowserService))]
+    [ProvideService(typeof(SWebviewIpc))]
     [ProvideService(typeof(SCodeStreamAgentService))]
     [ProvideService(typeof(SCodeStreamService))]
     [ProvideService(typeof(SSettingsService))]
@@ -63,6 +64,7 @@ namespace CodeStream.VisualStudio.Packages
             ((IServiceContainer)this).AddService(typeof(SCredentialsService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SSessionService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SBrowserService), callback, true);
+            ((IServiceContainer)this).AddService(typeof(SWebviewIpc), callback, true);
             ((IServiceContainer)this).AddService(typeof(SCodeStreamAgentService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SCodeStreamService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SSettingsService), callback, true);
@@ -91,13 +93,15 @@ namespace CodeStream.VisualStudio.Packages
                     GetService(typeof(SEventAggregator)) as IEventAggregator);
             if (typeof(SBrowserService) == serviceType)
                 return new DotNetBrowserService(GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService);
+            if (typeof(SWebviewIpc) == serviceType)
+                return new WebviewIpc(GetService(typeof(SBrowserService)) as IBrowserService);
             if (typeof(SCodeStreamService) == serviceType)
                 return new CodeStreamService(
                     new Lazy<ICredentialsService>(() => GetService(typeof(SCredentialsService)) as ICredentialsService),
                     new Lazy<IEventAggregator>(() => GetService(typeof(SEventAggregator)) as IEventAggregator),
                     GetService(typeof(SSessionService)) as ISessionService,
                     GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
-                    GetService(typeof(SBrowserService)) as IBrowserService,
+                    GetService(typeof(SWebviewIpc)) as IWebviewIpc, 
                     new Lazy<ISettingsService>(() => GetService(typeof(SSettingsService)) as ISettingsService),
                     new Lazy<IToolWindowProvider>(() => this)
                 );

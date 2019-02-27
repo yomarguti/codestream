@@ -19,7 +19,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 		private static readonly ILogger Log = LogManager.ForContext<WebViewControl>();
 
 		private readonly IEventAggregator _eventAggregator;
-		private readonly IBrowserService _browserService;
+		private readonly IWebviewIpc _ipc;
 		private readonly ISessionService _sessionService;
 		private readonly IDisposable _languageServerDisconnectedEvent;
 		private IDisposable _languageServerReadyEvent;
@@ -39,13 +39,13 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 
 			Log.Verbose($"{nameof(OnInitialized)}...");
 
-			_browserService = Package.GetGlobalService(typeof(SBrowserService)) as IBrowserService;
+			_ipc = Package.GetGlobalService(typeof(SWebviewIpc)) as IWebviewIpc;
 
-			if (_browserService != null)
+			if (_ipc != null && _ipc.BrowserService != null)
 			{
-				_browserService.Initialize();
-				_browserService.AttachControl(Grid);
-				_browserService.LoadSplashView();
+                _ipc.BrowserService.Initialize();
+                _ipc.BrowserService.AttachControl(Grid);
+                _ipc.BrowserService.LoadSplashView();
 
 				_eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
 				_sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
@@ -59,7 +59,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 					{
 						_isInitialized = false;
 
-						_browserService.LoadSplashView();
+                        _ipc.BrowserService.LoadSplashView();
 
 						SetupInitialization();
 					});
@@ -109,15 +109,15 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 						Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
 						Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService,
 						_eventAggregator,
-						_browserService,
+						_ipc,
 						Package.GetGlobalService(typeof(SIdeService)) as IIdeService);
 
-					_browserService.AddWindowMessageEvent(async delegate (object sender, WindowEventArgs ea)
+					_ipc.BrowserService.AddWindowMessageEvent(async delegate (object sender, WindowEventArgs ea)
 					{
 						await router.HandleAsync(ea);
 					});
 
-					_browserService.LoadWebView();
+                    _ipc.BrowserService.LoadWebView();
 
 					_disposables = new List<IDisposable>
 					{
@@ -136,7 +136,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 									case ConnectionStatus.Reconnected:
 										if (_.Reset == true)
 										{
-											_browserService.ReloadWebView();
+                                            _ipc.BrowserService.ReloadWebView();
 											return;
 										}
 
@@ -149,8 +149,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 							{
 								if (_.Reason == LogoutReason.Token)
 								{
-									var codeStreamService =
-										Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
+									var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
 									if (codeStreamService != null)
 									{
 										ThreadHelper.JoinableTaskFactory.Run(async delegate
@@ -175,18 +174,17 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 
 		private void OnDidDisconnect()
 		{
-            _browserService.PostMessage(new DidLoseConnectivityNotificationType());
-			//_browserService.PostMessage(Ipc.ToConnectivityMessage("webview/connectivity-lost"));
+            _ipc.SendResponse(new DidLoseConnectivityNotificationType());
 		}
 
 		private void OnDidConnect()
 		{
-			_browserService.PostMessage(new DidEstablishConnectivityNotificationType());
+            _ipc.SendResponse(new DidEstablishConnectivityNotificationType());
 		}
 
 		private void OnSessionDataChanged(JToken data)
 		{
-            _browserService.PostMessage(new DidChangeDataNotificationType(data));
+            _ipc.SendResponse(new DidChangeDataNotificationType(data));
 		}
 
 		public void Dispose()

@@ -25,7 +25,7 @@ namespace CodeStream.VisualStudio.Services
         /// </summary>
         /// <returns></returns>
         Task LogoutAsync();
-        IBrowserService BrowserService { get; }
+        IWebviewIpc WebviewIpc { get; }
         Task TrackAsync(string eventName, TelemetryProperties properties = null);
         bool IsReady { get; }
     }
@@ -39,7 +39,7 @@ namespace CodeStream.VisualStudio.Services
         private readonly Lazy<IEventAggregator> _eventAggregator;
         private readonly ISessionService _sessionService;
         private readonly ICodeStreamAgentService _agentService;
-        public IBrowserService BrowserService { get; }
+        public IWebviewIpc WebviewIpc { get; }
 
         private readonly Lazy<ISettingsService> _settingsService;
         private readonly Lazy<IToolWindowProvider> _toolWindowProvider;
@@ -49,7 +49,7 @@ namespace CodeStream.VisualStudio.Services
             Lazy<IEventAggregator> eventAggregator,
             ISessionService sessionService,
             ICodeStreamAgentService serviceProvider,
-            IBrowserService browserService,
+            IWebviewIpc ipc,
             Lazy<ISettingsService> settingsService,
             Lazy<IToolWindowProvider> toolWindowProvider)
         {
@@ -57,7 +57,7 @@ namespace CodeStream.VisualStudio.Services
             _eventAggregator = eventAggregator;
             _sessionService = sessionService;
             _agentService = serviceProvider;
-            BrowserService = browserService;
+            WebviewIpc = ipc;
             _settingsService = settingsService;
             _toolWindowProvider = toolWindowProvider;
         }
@@ -75,7 +75,7 @@ namespace CodeStream.VisualStudio.Services
             {
                 var streamResponse = await _agentService.GetFileStreamAsync(uri);
 
-                BrowserService.PostMessage(new DidChangeActiveEditorNotificationType
+                WebviewIpc.SendResponse(new DidChangeActiveEditorNotificationType
                 {
                     Params = new DidChangeActiveEditorNotificationParams
                     {
@@ -100,7 +100,7 @@ namespace CodeStream.VisualStudio.Services
 
             try
             {
-                BrowserService.PostMessage(new DidSelectStreamThreadNotificationType
+                WebviewIpc.SendResponse(new DidSelectStreamThreadNotificationType
                 {
                     Params = new DidSelectStreamThreadNotificationTypeParams
                     {
@@ -131,7 +131,7 @@ namespace CodeStream.VisualStudio.Services
                 var response = await _agentService.PrepareCodeAsync(uri, textSelection.Range, isDirty, cancellationToken);
 
                 var source = response?.Source;
-                BrowserService.PostMessage(new DidHighlightCodeNotificationType
+                WebviewIpc.SendResponse(new DidHighlightCodeNotificationType
                 {
                     Params = new DidSelectCodeNotificationTypeParams
                     {
@@ -196,7 +196,7 @@ namespace CodeStream.VisualStudio.Services
 
             _eventAggregator.Value.Publish(new SessionLogoutEvent());
 
-            BrowserService.LoadWebView();
+            WebviewIpc.LoadWebView();
         }
     }
 }

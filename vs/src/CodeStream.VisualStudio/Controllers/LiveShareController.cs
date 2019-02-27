@@ -20,20 +20,20 @@ namespace CodeStream.VisualStudio.Controllers
         private readonly ISessionService _sessionService;
         private readonly ICodeStreamAgentService _codeStreamAgent;
         private readonly IEventAggregator _eventAggregator;
-        private readonly IBrowserService _browserService;
+        private readonly IWebviewIpc _ipc;
         private readonly IIdeService _ideService;
 
         public LiveShareController(
             ISessionService sessionService,
             ICodeStreamAgentService codeStreamAgent,
             IEventAggregator eventAggregator,
-            IBrowserService browserService,
+            IWebviewIpc ipc,
             IIdeService ideService)
         {
             _sessionService = sessionService;
             _codeStreamAgent = codeStreamAgent;
             _eventAggregator = eventAggregator;
-            _browserService = browserService;
+            _ipc = ipc;
             _ideService = ideService;
         }
 
@@ -150,7 +150,7 @@ namespace CodeStream.VisualStudio.Controllers
                         if (postResponse != null)
                         {
                             // view thread
-                            _browserService.PostMessage(new DidSelectStreamThreadNotificationType
+                            _ipc.SendResponse(new DidSelectStreamThreadNotificationType
                             {
                                 Params = new DidSelectStreamThreadNotificationTypeParams
                                 {

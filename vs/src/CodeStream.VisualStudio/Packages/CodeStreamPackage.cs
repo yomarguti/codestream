@@ -180,8 +180,8 @@ namespace CodeStream.VisualStudio.Packages
                 if (odp == null) return;
 
                 var eventAggregator = GetService(typeof(SEventAggregator)) as IEventAggregator;
-                var browserService = GetService(typeof(SBrowserService)) as IBrowserService;
-                var configurationController = new ConfigurationController(eventAggregator, browserService);
+                var webviewIpc = GetService(typeof(SWebviewIpc)) as IWebviewIpc;
+                var configurationController = new ConfigurationController(eventAggregator, webviewIpc);
                 ThreadHelper.JoinableTaskFactory.Run(async delegate
                 {
                     switch (args.PropertyName)

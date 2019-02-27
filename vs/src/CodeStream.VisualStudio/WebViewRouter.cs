@@ -23,7 +23,7 @@ namespace CodeStream.VisualStudio
         private readonly ICodeStreamAgentService _codeStreamAgent;
         private readonly ISettingsService _settingsService;
         private readonly IEventAggregator _eventAggregator;
-        private readonly IBrowserService _browserService;
+        private readonly IWebviewIpc _ipc;
         private readonly IIdeService _ideService;
 
         public WebViewRouter(
@@ -32,7 +32,7 @@ namespace CodeStream.VisualStudio
             ICodeStreamAgentService codeStreamAgent,
             ISettingsService settingsService,
             IEventAggregator eventAggregator,
-            IBrowserService browserService,
+            IWebviewIpc ipc,
             IIdeService ideService)
         {
             _credentialsService = credentialsService;
@@ -40,7 +40,7 @@ namespace CodeStream.VisualStudio
             _codeStreamAgent = codeStreamAgent;
             _settingsService = settingsService;
             _eventAggregator = eventAggregator;
-            _browserService = browserService;
+            _ipc = ipc;
             _ideService = ideService;
         }
 
@@ -82,7 +82,7 @@ namespace CodeStream.VisualStudio
                                     Log.Verbose(ex, $"Method={message.Method}");
                                     errorMessage = ex.Message;
                                 }
-                                _browserService.PostMessage(Ipc.ToResponseMessage(message.Id, responseString, errorMessage));
+                                _ipc.SendResponse(Ipc.ToResponseMessage(message.Id, responseString, errorMessage));
                                 break;
                             }
                         case "extension":
@@ -117,7 +117,7 @@ namespace CodeStream.VisualStudio
                                                 _sessionService,
                                                 _codeStreamAgent,
                                                 _eventAggregator,
-                                                _browserService,
+                                                _ipc,
                                                 _ideService,
                                                 _credentialsService);
 
@@ -176,14 +176,14 @@ namespace CodeStream.VisualStudio
                                                         fromMarkerResponse.TextDocument.Uri.ToUri(),
                                                         fromMarkerResponse.Range?.Start?.Line + 1);
 
-                                                    _browserService.PostMessage(Ipc.ToResponseMessage(message.Id, editorResponse.ToString()));
+                                                    _ipc.SendResponse(Ipc.ToResponseMessage(message.Id, editorResponse.ToString()));
                                                 }
                                             }
                                             break;
                                         }
                                     case ReloadWebviewRequestType.MethodName:
                                         {
-                                            _browserService.ReloadWebView();
+                                            _ipc.BrowserService.ReloadWebView();
                                             break;
                                         }
                                     case ShowMarkersInEditorRequestType.MethodName:
@@ -222,7 +222,7 @@ namespace CodeStream.VisualStudio
                                                     break;
                                             }
 
-                                            _browserService.PostMessage(new WebviewIpcMessage(message.Id));
+                                            _ipc.SendResponse(new WebviewIpcMessage(message.Id));
                                             break;
                                         }
                                     case StartLiveShareRequestType.MethodName:
@@ -235,7 +235,7 @@ namespace CodeStream.VisualStudio
                                                 _sessionService,
                                                 _codeStreamAgent,
                                                 _eventAggregator,
-                                                _browserService,
+                                                _ipc,
                                                 _ideService);
 
                                             switch (message.Method)
