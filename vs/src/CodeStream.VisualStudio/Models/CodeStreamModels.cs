@@ -2,7 +2,6 @@
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 
@@ -288,43 +287,6 @@ namespace CodeStream.VisualStudio.Models
         public Proxy Proxy { get; set; }
     }
 
-    /// <summary>
-    /// Thin wrapper for plucking out JToken properties
-    /// </summary>
-    public class CodeStreamMessage
-    {
-        public string Type { get; set; }
-        public JToken Body { get; set; }
-
-        public static CodeStreamMessage Empty()
-        {
-            return new CodeStreamMessage();
-        }
-
-        public string Action
-        {
-            get
-            {
-                return Body?.Value<string>("action");
-            }
-        }
-        public string Id
-        {
-            get
-            {
-                return Body?.Value<string>("id");
-            }
-        }
-
-        public JToken Params
-        {
-            get
-            {
-                return Body.Value<JToken>("params");
-            }
-        }
-    }
-
     public class CreatePostResponse
     {
         public CsFullPost Post { get; set; }
@@ -363,63 +325,10 @@ namespace CodeStream.VisualStudio.Models
         public List<SourceAuthor> Authors { get; set; }
         public List<SourceRemote> Remotes { get; set; }
     }
+     
 
-    public class DidSelectCodeNotification
+    public class LiveShareAction
     {
-        public string Type { get; set; }
-        public DidSelectCodeNotificationBody Body { get; set; }
-    }
-
-    public class DidSelectCodeNotificationBody
-    {
-        public string Code { get; set; }
-        public string File { get; set; }
-        public string FileUri { get; set; }
-        public Range Range { get; set; }
-        public Source Source { get; set; }
-        public string GitError { get; set; }
-        public bool? IsHighlight { get; set; }
-    }
-
-    public class DidChangeStreamThreadNotification
-    {
-        public string Type { get; set; }
-        public DidChangeStreamThreadNotificationBody Body { get; set; }
-    }
-
-    public class DidChangeStreamThreadNotificationBody
-    {
-        public string StreamId { get; set; }
-        public string ThreadId { get; set; }
-    }
-
-    public class DidChangeActiveEditorNotification
-    {
-        public string Type { get; set; }
-        public DidChangeActiveEditorNotificationBody Body { get; set; }
-    }
-
-    public class DidChangeActiveEditorNotificationBody
-    {
-        public DidChangeActiveEditorNotificationBodyEditor Editor { get; set; }
-    }
-    public class DidChangeActiveEditorNotificationBodyEditor
-    {
-        public string FileStreamId { get; set; }
-        public string Uri { get; set; }
-        public string FileName { get; set; }
-        public string LanguageId { get; set; }
-    }
-
-    public class ServiceRequest
-    {
-        public string Service { get; set; }
-        public ServiceRequestAction Action { get; set; }
-    }
-
-    public class ServiceRequestAction
-    {
-        public string Type { get; set; }
         public string Url { get; set; }
         public string StreamId { get; set; }
         public string ThreadId { get; set; }
@@ -535,12 +444,6 @@ namespace CodeStream.VisualStudio.Models
     public class TextDocumentIdentifier
     {
         public string Uri { get; set; }
-    }
-
-    public class StreamThreadSelectedRequest
-    {
-        public string StreamId { get; set; }
-        public string ThreadId { get; set; }
     }
 
     public class DocumentFromMarkerRequest

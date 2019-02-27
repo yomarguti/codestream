@@ -290,11 +290,12 @@ namespace CodeStream.VisualStudio.UI.Settings
             get => _muteAll;
             set
             {
-                if (_muteAll != value)
-                {
+                // NOTE: something off here -- state not working right in the webview...
+                //if (_muteAll != value)
+                //{
                     _muteAll = value;
                     NotifyPropertyChanged();
-                }
+                //}
             }
         }
 

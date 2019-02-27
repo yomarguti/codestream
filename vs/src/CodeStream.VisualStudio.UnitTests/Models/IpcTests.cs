@@ -14,7 +14,7 @@ namespace CodeStream.VisualStudio.UnitTests.Models
         {
             var response = Ipc.ToResponseMessage("123", payload);
             var parsed = JToken.Parse(response);
-            Assert.IsTrue(parsed["body"]["payload"].Value<string>() == payload);
+            Assert.IsTrue(parsed["params"].Value<string>() == payload);
         }
 
         [TestMethod]
@@ -24,16 +24,16 @@ namespace CodeStream.VisualStudio.UnitTests.Models
         {
             var response = Ipc.ToResponseMessage("123", payload);
             var parsed = JToken.Parse(response);
-            Assert.IsTrue(parsed["body"]["payload"].Value<bool>() == payload);
+            Assert.IsTrue(parsed["params"].Value<bool>() == payload);
         }
 
         [TestMethod]
         [DataRow(10)]
         public void ToResponseMessageNumberTest(int payload)
         {
-            var response = Ipc.ToResponseMessage("123", payload);
+            var response = Ipc.ToResponseMessage("123", payload.ToString());
             var parsed = JToken.Parse(response);
-            Assert.IsTrue(parsed["body"]["payload"].Value<int>() == payload);
+            Assert.IsTrue(parsed["params"].Value<int>() == payload);
         }
 
         [TestMethod]
@@ -41,18 +41,18 @@ namespace CodeStream.VisualStudio.UnitTests.Models
         {
             var value = "value";
             var foo = new { key = value };
-            var response = Ipc.ToResponseMessage("123", JObject.FromObject(foo));
+            var response = Ipc.ToResponseMessage("123", JObject.FromObject(foo), null);
             var parsed = JToken.Parse(response);
-            Assert.IsTrue(parsed["body"]["payload"]["key"].Value<string>() == value);
+            Assert.IsTrue(parsed["params"]["key"].Value<string>() == value);
         }
 
         [TestMethod]
         public void ToResponseMessageArrayTest()
         {
             var foo = new List<object> { new { test = "value1" }, new { test = "value2" } };
-            var response = Ipc.ToResponseMessage("123", JArray.FromObject(foo));
+            var response = Ipc.ToResponseMessage("123", JArray.FromObject(foo), null);
             var parsed = JToken.Parse(response);
-            Assert.IsTrue(parsed["body"]["payload"][1]["test"].Value<string>() == "value2");
+            Assert.IsTrue(parsed["params"][1]["test"].Value<string>() == "value2");
         }
     }
 }

@@ -75,18 +75,15 @@ namespace CodeStream.VisualStudio.Services
             {
                 var streamResponse = await _agentService.GetFileStreamAsync(uri);
 
-                BrowserService.PostMessage(new DidChangeActiveEditorNotification
+                BrowserService.PostMessage(new DidChangeActiveEditorNotificationType
                 {
-                    Type = "codestream:interaction:active-editor-changed",
-                    Body = new DidChangeActiveEditorNotificationBody
+                    Params = new DidChangeActiveEditorNotificationParams
                     {
-                        Editor = new DidChangeActiveEditorNotificationBodyEditor
+                        Editor = new DidChangeActiveEditorNotificationTypeParamsEditor
                         {
                             FileStreamId = streamResponse?.Stream?.Id,
-                            Uri = uri.ToString(),
+                            //Uri = uri.ToString(),
                             FileName = fileName,
-                            // in vscode, this came from the editor...
-                            LanguageId = null
                         }
                     }
                 });
@@ -103,10 +100,9 @@ namespace CodeStream.VisualStudio.Services
 
             try
             {
-                BrowserService.PostMessage(new DidChangeStreamThreadNotification
+                BrowserService.PostMessage(new DidSelectStreamThreadNotificationType
                 {
-                    Type = "codestream:interaction:stream-thread-selected",
-                    Body = new DidChangeStreamThreadNotificationBody
+                    Params = new DidSelectStreamThreadNotificationTypeParams
                     {
                         StreamId = streamId,
                         ThreadId = threadId
@@ -135,10 +131,9 @@ namespace CodeStream.VisualStudio.Services
                 var response = await _agentService.PrepareCodeAsync(uri, textSelection.Range, isDirty, cancellationToken);
 
                 var source = response?.Source;
-                BrowserService.PostMessage(new DidSelectCodeNotification
+                BrowserService.PostMessage(new DidHighlightCodeNotificationType
                 {
-                    Type = "codestream:interaction:code-highlighted",
-                    Body = new DidSelectCodeNotificationBody
+                    Params = new DidSelectCodeNotificationTypeParams
                     {
                         Code = response?.Code,
                         File = source?.File,

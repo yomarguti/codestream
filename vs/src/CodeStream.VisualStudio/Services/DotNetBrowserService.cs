@@ -21,7 +21,7 @@ namespace CodeStream.VisualStudio.Services
 	/// </summary>
 	public class PostMessageInterop
 	{
-		public void Handle(string message, string origin)
+		public void Handle(string message)
 		{
 			if (MessageHandler == null) return;
 
@@ -103,8 +103,8 @@ namespace CodeStream.VisualStudio.Services
 			_browserView.Browser.ExecuteJavaScript(@"
 				  window.acquireVsCodeApi = function() {
 					  return {
-						  postMessage: function(message, origin) {
-							window.PostMessageInterop.Handle(JSON.stringify(message), origin);
+						  postMessage: function(message) {
+							window.PostMessageInterop.Handle(JSON.stringify(message));
 						 }
 					 }
 				  }

@@ -17,7 +17,7 @@ namespace CodeStream.VisualStudio.Controllers
     {
         private static readonly ILogger Log = LogManager.ForContext<AuthenticationController>();
 
-        private ISettingsService _settingsService;
+        private readonly ISettingsService _settingsService;
         private readonly ISessionService _sessionService;
         private readonly ICodeStreamAgentService _codeStreamAgent;
         private readonly IEventAggregator _eventAggregator;
@@ -144,7 +144,7 @@ namespace CodeStream.VisualStudio.Controllers
         {
             string errorResponse = null;
             JToken loginResponse;
-            JToken payload = null;
+            JToken @params = null;
 
             if (_settingsService.AutoSignIn && !_settingsService.Email.IsNullOrWhiteSpace())
             {
@@ -163,7 +163,7 @@ namespace CodeStream.VisualStudio.Controllers
                         else if (loginResponse != null)
                         {
                             var state = GetState(loginResponse);
-                            payload = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings(), state, true);
+                            @params = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings(), state, true);
                             _sessionService.SetUserLoggedIn(CreateUser(loginResponse));
                             success = true;
                         }
@@ -184,15 +184,15 @@ namespace CodeStream.VisualStudio.Controllers
                 }
                 else
                 {
-                    payload = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings());
+                    @params = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings());
                 }
             }
             else
             {
-                payload = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings());
+                @params = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings());
             }
 
-            _browserService.PostMessage(Ipc.ToResponseMessage(messageId, payload, errorResponse));
+            _browserService.PostMessage(Ipc.ToResponseMessage(messageId, @params, errorResponse));
             await Task.CompletedTask;
         }
 
@@ -202,7 +202,7 @@ namespace CodeStream.VisualStudio.Controllers
             string email = null;
             string errorResponse = null;
             JToken loginResponse = null;
-            JToken payload = null;
+            JToken @params = null;
 
             try
             {
@@ -239,7 +239,7 @@ namespace CodeStream.VisualStudio.Controllers
                 {
                     email = GetEmail(loginResponse).ToString();
                     var state = GetState(loginResponse);
-                    payload = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings(), state, true);
+                    @params = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings(), state, true);
                     _sessionService.SetUserLoggedIn(CreateUser(loginResponse));
                     success = true;
                 }
@@ -251,7 +251,7 @@ namespace CodeStream.VisualStudio.Controllers
             }
             finally
             {
-                _browserService.PostMessage(Ipc.ToResponseMessage(messageId, payload, errorResponse));
+                _browserService.PostMessage(Ipc.ToResponseMessage(messageId, @params, errorResponse));
             }
 
             if (success)

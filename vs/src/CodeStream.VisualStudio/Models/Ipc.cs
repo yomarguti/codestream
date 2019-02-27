@@ -6,81 +6,59 @@ namespace CodeStream.VisualStudio.Models
 {
     public class Ipc
     {
-        public static string ToResponseMessage(string id, bool payload, string error = null)
+        public static string ToResponseMessage(string id, bool @params, string error = null)
         {
-            return ToResponseMessage(id, payload.ToString().ToLower(), error);
+            return ToResponseMessage(id, @params.ToString().ToLower(), error);
         }
 
-        public static string ToResponseMessage(string id, JToken payload, string error = null)
+        public static string ToResponseMessage(string id, JToken @params, JToken error = null)
         {
-            return ToResponseMessage(id, payload?.ToString(), error);
+            return ToResponseMessage(id, @params?.ToString(), error?.ToString());
         }
 
-        public static string ToResponseMessage(string id, string payload, string error = null)
+        public static string ToResponseMessage(string id, JToken @params, string error = null)
         {
-            string type = "codestream:response";
+            return ToResponseMessage(id, @params?.ToString(), error);
+        }
 
-            payload = GetPayload(payload);
+        public static string ToResponseMessage(string id, string @params, string error = null)
+        {
+            @params = GetParams(@params);
 
             if (error.IsNullOrWhiteSpace())
             {
-                return @"{""type"":""" + type + @""",""body"":{""id"": """ + id + @""",""payload"":" + payload + @"}}";
+                return @"{""id"":""" + id + @""",""params"":" + @params + @"}";
             }
             else
             {
-                if (payload.IsNullOrWhiteSpace())
+                if (@params.IsNullOrWhiteSpace())
                 {
-                    return @"{""type"":""" + type + @""",""body"":{""id"":""" + id + @""",""error"":""" + error + @"""}}";
+                    return @"{""id"":""" + id + @""",""error"":""" + error + @"""}";
                 }
 
-                return @"{""type"":""" + type + @""",""body"":{""id"":""" + id + @""",""payload"":" + payload + @",""error"":""" + error + @"""}}";
+                return @"{""id"":""" + id + @""",""params"":" + @params + @",""error"":""" + error + @"""}}";
             }
         }
 
-        public static string ToDataMessage(JToken payload)
+        private static string GetParams(string @params)
         {
-            return @"{""type"":""codestream:data"",""body"":" + payload.ToJson() + "}";
-        }
-
-        public static string ToCommentOnSelectMessage(bool enabled)
-        {
-            return @"{""type"":""codestream:configs"",""body"":{""openCommentOnSelect"":" + enabled.ToString().ToLower() + @"}}";
-        }
-
-        public static string ToShowMarkersMessage(bool enabled)
-        {
-            return @"{""type"":""codestream:configs"",""body"":{""showMarkers"":" + enabled.ToString().ToLower() + @"}}";
-        }
-
-        public static string ToMuteAllMessage(bool enabled)
-        {
-            return @"{""type"":""codestream:configs"",""body"":{""muteAll"":" + enabled.ToString().ToLower() + @"}}";
-        }
-
-        public static string ToConnectivityMessage(string type)
-        {
-            return @"{""type"":""" + type + @""",""body"":{}}";
-        }
-
-        private static string GetPayload(string payload)
-        {
-            if (payload == null)
+            if (@params == null)
             {
                 return null;
             }
 
-            if (payload == string.Empty)
+            if (@params == string.Empty)
             {
                 return "\"\"";
             }
 
             // this is sucky, but since we're dealing with strings here...
-            if (!payload.StartsWith("{") && !payload.StartsWith("[") && payload != "true" && payload != "false" && !RegularExpressions.Number.IsMatch(payload))
+            if (!@params.StartsWith("{") && !@params.StartsWith("[") && @params != "true" && @params != "false" && !RegularExpressions.Number.IsMatch(@params))
             {
-                return $"\"{payload}\"";
+                return $"\"{@params}\"";
             }
 
-            return payload;
+            return @params;
         }
     }
 }

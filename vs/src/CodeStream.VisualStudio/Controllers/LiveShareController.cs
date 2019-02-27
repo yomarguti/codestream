@@ -150,10 +150,9 @@ namespace CodeStream.VisualStudio.Controllers
                         if (postResponse != null)
                         {
                             // view thread
-                            _browserService.PostMessage(new DidChangeStreamThreadNotification
+                            _browserService.PostMessage(new DidSelectStreamThreadNotificationType
                             {
-                                Type = "codestream:interaction:stream-thread-selected",
-                                Body = new DidChangeStreamThreadNotificationBody
+                                Params = new DidSelectStreamThreadNotificationTypeParams
                                 {
                                     StreamId = stream.Id
                                 }

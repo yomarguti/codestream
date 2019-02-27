@@ -141,7 +141,11 @@
     <Compile Include="LSP\Notifications.cs" />
     <Compile Include="Models\CodeStreamModels.cs" />
     <Compile Include="Models\Ipc.cs" />
+    <Compile Include="Models\MessageTypes.cs" />
     <Compile Include="Models\Types.cs" />
+    <Compile Include="Models\Webview.Protocol.Events.cs" />
+    <Compile Include="Models\Webview.Protocol.Extension.cs" />
+    <Compile Include="Models\WebviewIpcMessage.cs" />
     <Compile Include="Packages\AsyncPackageHelper.cs" />
     <Compile Include="Packages\CodeStreamPackage.cs" />
     <Compile Include="Packages\ExtensionManager.cs" />
@@ -210,6 +214,7 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="CodeStream.VisualStudio.Settings.json" />
+    <Compile Include="Models\Webview.Protocol.Commands.cs" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>

@@ -1,7 +1,6 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
 using Microsoft.VisualStudio.PlatformUI;
-using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
 using System.Diagnostics;
@@ -9,6 +8,7 @@ using System.IO;
 using System.Reflection;
 using System.Resources;
 using System.Windows;
+using CodeStream.VisualStudio.Models;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Services
@@ -33,13 +33,15 @@ namespace CodeStream.VisualStudio.Services
         /// </summary>
         /// <param name="message"></param>
         void PostMessage(string message);
+
         /// <summary>
         /// Object to be JSON-serialized before sending to the webview
         /// </summary>
         /// <param name="message"></param>
-        void PostMessage(object message);
+        void PostMessage(IAbstractMessageType message);
 
         void LoadHtml(string html);
+
         void AddWindowMessageEvent(WindowMessageHandler messageHandler);
         /// <summary>
         /// Attaches the control to the parent element
@@ -91,9 +93,9 @@ namespace CodeStream.VisualStudio.Services
 
         public virtual void PostMessage(string message) { }
 
-        public virtual void PostMessage(object message)
+        public virtual void PostMessage(IAbstractMessageType message)
         {
-            PostMessage(message.ToJson());
+            PostMessage(message.AsJson());
         }
 
         public void LoadWebView()

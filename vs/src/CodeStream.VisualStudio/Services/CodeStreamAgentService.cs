@@ -36,7 +36,6 @@ namespace CodeStream.VisualStudio.Services
         Task<GetFileStreamResponse> GetFileStreamAsync(Uri uri);
         Task<GetPostResponse> GetPostAsync(string streamId, string postId);
         Task<GetUserResponse> GetUserAsync(string userId);
-        Task<JToken> ChangeStreamThreadAsync(string streamId, string threadId);
         Task<GetStreamResponse> GetStreamAsync(string streamId);
         Task<CsDirectStream> CreateDirectStreamAsync(List<string> memberIds);
         Task<JToken> LoginViaTokenAsync(string email, string token, string serverUrl);
@@ -150,15 +149,6 @@ namespace CodeStream.VisualStudio.Services
             return SendAsync<GetFileStreamResponse>("codeStream/streams/fileStream", new GetFileStreamRequest
             {
                 TextDocument = new TextDocumentIdentifier { Uri = uri.ToString() }
-            });
-        }
-
-        public Task<JToken> ChangeStreamThreadAsync(string streamId, string threadId)
-        {
-            return SendAsync<JToken>("codestream:interaction:stream-thread-selected", new StreamThreadSelectedRequest
-            {
-                StreamId = streamId,
-                ThreadId = threadId
             });
         }
 
@@ -341,7 +331,7 @@ namespace CodeStream.VisualStudio.Services
                         openCommentOnSelect = _settingsService.OpenCommentOnSelect,
                         showHeadshots = _settingsService.ShowHeadshots,
                         showMarkers = _settingsService.ShowMarkers,
-                        muteAll = settings.MuteAll,
+                        muteAll = _settingsService.MuteAll,
                         team = _settingsService.Team
                     },
                     env = _settingsService.GetEnvironmentName(),

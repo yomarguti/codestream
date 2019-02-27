@@ -175,17 +175,18 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 
 		private void OnDidDisconnect()
 		{
-			_browserService.PostMessage(Ipc.ToConnectivityMessage("codestream:connectivity:offline"));
+            _browserService.PostMessage(new DidLoseConnectivityNotificationType());
+			//_browserService.PostMessage(Ipc.ToConnectivityMessage("webview/connectivity-lost"));
 		}
 
 		private void OnDidConnect()
 		{
-			_browserService.PostMessage(Ipc.ToConnectivityMessage("codestream:connectivity:online"));
+			_browserService.PostMessage(new DidEstablishConnectivityNotificationType());
 		}
 
 		private void OnSessionDataChanged(JToken data)
 		{
-			_browserService.PostMessage(Ipc.ToDataMessage(data));
+            _browserService.PostMessage(new DidChangeDataNotificationType(data));
 		}
 
 		public void Dispose()
