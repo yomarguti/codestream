@@ -96,7 +96,7 @@ class CodeStreamFileEditorManagerListener(private val project: Project) : FileEd
                     }
 
                     override fun getIcon(): Icon {
-                        return IconLoader.getIcon("/images/marker-${marker.codemark.type}-${marker.codemark.color}.png")
+                        return IconLoader.getIcon("/images/marker-${marker.codemark.type}-${marker.codemark.color}.svg")
                     }
 
                     override fun equals(other: Any?): Boolean {
