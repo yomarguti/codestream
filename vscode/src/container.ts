@@ -1,13 +1,14 @@
 "use strict";
-import { ConfigurationChangeEvent, ExtensionContext } from "vscode";
+import { ExtensionContext } from "vscode";
 import { BaseAgentOptions, CodeStreamAgentConnection } from "./agent/agentConnection";
 import { CodeStreamSession } from "./api/session";
 import { Commands } from "./commands";
-import { Config, configuration } from "./configuration";
+import { Config, configuration, ConfigurationWillChangeEvent } from "./configuration";
 import { LiveShareController } from "./controllers/liveShareController";
 import { NotificationsController } from "./controllers/notificationsController";
 import { StatusBarController } from "./controllers/statusBarController";
 import { WebviewController } from "./controllers/webviewController";
+import { Logger, TraceLevel } from "./logger";
 import { CodeStreamCodeActionProvider } from "./providers/codeActionProvider";
 import { MarkerDecorationProvider } from "./providers/markerDecorationProvider";
 import { WebviewSidebarActivator } from "./views/webviewSidebarActivator";
@@ -39,11 +40,15 @@ export class Container {
 		context.subscriptions.push((this._webview = new WebviewController(this._session)));
 		context.subscriptions.push(new WebviewSidebarActivator());
 
-		configuration.onDidChange(this.onConfigurationChanged, this);
+		context.subscriptions.push(configuration.onWillChange(this.onConfigurationChanging, this));
 	}
 
-	private static onConfigurationChanged(e: ConfigurationChangeEvent) {
+	private static onConfigurationChanging(e: ConfigurationWillChangeEvent) {
 		this._config = undefined;
+
+		if (configuration.changed(e.change, configuration.name("traceLevel").value)) {
+			Logger.level = configuration.get<TraceLevel>(configuration.name("traceLevel").value);
+		}
 	}
 
 	private static _agent: CodeStreamAgentConnection;

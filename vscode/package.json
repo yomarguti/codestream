@@ -224,7 +224,8 @@
         "*"
     ],
     "scripts": {
-        "analyze": "webpack --env.analyze",
+        "analyze:bundle": "webpack --env.analyzeBundle",
+        "analyze:deps": "webpack --env.analyzeDeps",
         "build": "webpack --env.development",
         "bundle": "npm install --no-save && npm run agent:bundle && webpack --env.production",
         "bundle:ci": "npm run clean:ci && npm run bundle",
@@ -243,7 +244,7 @@
         "agent:rebuild": "pushd \"../codestream-lsp-agent\" && npm run rebuild && popd",
         "agent:test": "pushd \"../codestream-lsp-agent\" && npm run test && popd",
         "agent:watch": "pushd \"../codestream-lsp-agent\" && npm run watch && popd",
-        "webview:analyze": "webpack --env.analyzeWebview",
+        "webview:analyze": "webpack --env.analyzeBundleWebview",
         "webview:clean:ci": "pushd \"../codestream-components\" && npm run clean:ci && popd",
         "webview:watch": "webpack --watch --config-name webview --env.development --info-verbosity verbose",
         "preinstall": "pushd \"../codestream-components\" && npm install --no-save && popd",

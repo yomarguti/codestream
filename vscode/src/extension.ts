@@ -16,7 +16,7 @@ import { Config, configuration, Configuration } from "./configuration";
 import { BuiltInCommands } from "./constants";
 import { extensionQualifiedId } from "./constants";
 import { Container } from "./container";
-import { Logger } from "./logger";
+import { Logger, TraceLevel } from "./logger";
 import { FileSystem, Strings } from "./system";
 
 const extension = extensions.getExtension(extensionQualifiedId)!;
@@ -31,7 +31,7 @@ export async function activate(context: ExtensionContext) {
 	const start = process.hrtime();
 
 	Configuration.configure(context);
-	Logger.configure(context);
+	Logger.configure(context, configuration.get<TraceLevel>(configuration.name("traceLevel").value));
 
 	let info = await FileSystem.loadJsonFromFile<BuildInfoMetadata>(
 		context.asAbsolutePath(`codestream-${extensionVersion}.info`)

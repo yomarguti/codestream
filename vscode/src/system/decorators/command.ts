@@ -1,8 +1,7 @@
 "use strict";
 import { MessageItem, window } from "vscode";
-import { TraceLevel } from "../../configuration";
 import { extensionId } from "../../constants";
-import { Logger } from "../../logger";
+import { Logger, TraceLevel } from "../../logger";
 
 export function createCommandDecorator(
 	registry: Command[]

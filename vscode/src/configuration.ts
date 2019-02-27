@@ -20,6 +20,11 @@ const emptyConfig: any = new Proxy<any>({} as Config, {
 	}
 });
 
+export interface ConfigurationWillChangeEvent {
+	change: ConfigurationChangeEvent;
+	transform?(e: ConfigurationChangeEvent): ConfigurationChangeEvent;
+}
+
 export class Configuration {
 	static configure(context: ExtensionContext) {
 		context.subscriptions.push(
@@ -32,8 +37,22 @@ export class Configuration {
 		return this._onDidChange.event;
 	}
 
+	private _onWillChange = new EventEmitter<ConfigurationWillChangeEvent>();
+	get onWillChange(): Event<ConfigurationWillChangeEvent> {
+		return this._onWillChange.event;
+	}
+
 	private onConfigurationChanged(e: ConfigurationChangeEvent) {
 		if (!e.affectsConfiguration(extensionId, null!)) return;
+
+		const evt: ConfigurationWillChangeEvent = {
+			change: e
+		};
+		this._onWillChange.fire(evt);
+
+		if (evt.transform !== undefined) {
+			e = evt.transform(e);
+		}
 
 		this._onDidChange.fire(e);
 	}

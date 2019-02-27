@@ -1,4 +1,5 @@
 "use strict";
+import { TraceLevel } from "./logger";
 
 export enum MarkerStyle {
 	Bubble = "bubble",
@@ -11,13 +12,6 @@ export enum Notifications {
 	All = "all",
 	Mentions = "mentions",
 	None = "none"
-}
-
-export enum TraceLevel {
-	Silent = "silent",
-	Errors = "errors",
-	Verbose = "verbose",
-	Debug = "debug"
 }
 
 export interface Config {
