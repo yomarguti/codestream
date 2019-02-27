@@ -8,8 +8,6 @@ import { PD_CONFIG, Environment } from "./env-utils";
 class CodestreamPackage {
 	subscriptions = new CompositeDisposable();
 	workspaceSession: WorkspaceSession;
-	statusBar?: StatusBar;
-	statusBarTile?: Tile;
 	view?: CodestreamView;
 	sessionStatusCommand?: Disposable;
 
@@ -35,7 +33,6 @@ class CodestreamPackage {
 				);
 			}
 			if (status === SessionStatus.SignedOut) {
-				// communicate signout to webview
 				this.sessionStatusCommand = atom.commands.add(
 					"atom-workspace",
 					"codestream:sign-in",
@@ -84,12 +81,9 @@ class CodestreamPackage {
 	deactivate() {
 		this.workspaceSession.dispose();
 		this.subscriptions.dispose();
-		if (this.statusBarTile) this.statusBarTile.destroy();
 	}
 
 	async consumeStatusBar(statusBar: StatusBar) {
-		this.statusBar = statusBar;
-
 		const getStatusBarTitle = (status: SessionStatus) => {
 			const env = this.workspaceSession.environment.name;
 			const environmentLabel = env !== Environment.Production ? `${env} ` : "";
@@ -113,19 +107,17 @@ class CodestreamPackage {
 		const text = document.createElement("span");
 		tileRoot.appendChild(text);
 
-		this.workspaceSession!.onDidChangeSessionStatus(status => {
+		let statusBarTile: Tile | undefined;
+		const sessionStatusSubscription = this.workspaceSession!.onDidChangeSessionStatus(status => {
 			text.innerText = getStatusBarTitle(status);
 
-			if (!this.statusBarTile) {
-				this.statusBarTile = statusBar.addRightTile({ item: tileRoot, priority: 400 });
-			}
+			statusBarTile = statusBar.addRightTile({ item: tileRoot, priority: 400 });
 		});
 
 		return new Disposable(() => {
-			this.statusBar = undefined;
-			if (this.statusBarTile) {
-				this.statusBarTile.destroy();
-				this.statusBarTile = undefined;
+			sessionStatusSubscription.dispose();
+			if (statusBarTile) {
+				statusBarTile.destroy();
 			}
 		});
 	}

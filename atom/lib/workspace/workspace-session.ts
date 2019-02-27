@@ -78,7 +78,7 @@ export class WorkspaceSession {
 	}
 
 	dispose() {
-		if (this._agent) this._agent.dispose();
+		this._agent.dispose();
 		this.emitter.dispose();
 	}
 
@@ -139,7 +139,7 @@ export class WorkspaceSession {
 			},
 			capabilities: this.agentCapabilities,
 			configs: { email: this.lastUsedEmail, debug: true, serverUrl: this.environment.serverUrl }, // TODO
-			pluginVersion: getPluginVersion(),
+			...this.getBootstrapState(),
 			...(this.lastUsedEmail !== "" ? { route: { route: "login" } } : {}),
 			preferences: {}, // TODO
 			umis: {}, // TODO
@@ -247,9 +247,10 @@ export class WorkspaceSession {
 	signOut() {
 		if (this.session) {
 			this.session = undefined;
+			this._agent.dispose();
+			this._agent = new CodeStreamAgent();
 			this.sessionStatus = SessionStatus.SignedOut;
 		}
-		this._agent.dispose();
 	}
 
 	changeEnvironment(env: EnvironmentConfig) {
