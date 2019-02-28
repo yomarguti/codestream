@@ -523,7 +523,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	getCodeBlockHint() {
-		const { codeBlock } = this.props;
+		const { codeBlock, editingCodemark } = this.props;
 		if (!codeBlock) return "Select a range to comment on a block of code.";
 
 		let lines;
@@ -533,17 +533,20 @@ class CodemarkForm extends React.Component<Props, State> {
 			lines = `(Lines ${codeBlock.range.start.line + 1}-${codeBlock.range.end.line + 1})`;
 		}
 
+		const commentType = editingCodemark ? editingCodemark.type : this.state.type;
+		const titleLabel =
+			commentType === "issue"
+				? "Issue in "
+				: commentType === "question"
+				? "Question in "
+				: commentType === "bookmark"
+				? "Bookmark in "
+				: commentType === "link"
+				? "Permalink for "
+				: "";
+
 		const file = codeBlock.file ? paths.basename(codeBlock.file) : "";
-		return file + " " + lines;
-		// return (
-		// 	<span>
-		// 		Commenting on <b>{lines}</b> in <b>{file}</b>
-		// 	</span>
-		// );
-		// if (endColumn === 0) endLine = endLine - 1;
-		// if (startLine === endLine) lines = `Line ${startLine + 1}`;
-		// else lines = `Lines ${startLine + 1}-${endLine + 1}`;
-		// return `${codeBlock.file} (${lines})`;
+		return titleLabel + file + " " + lines;
 	}
 
 	renderMessageInput = () => {
