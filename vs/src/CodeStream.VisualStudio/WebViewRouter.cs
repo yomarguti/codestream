@@ -1,14 +1,12 @@
 ﻿using CodeStream.VisualStudio.Controllers;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
-using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
-using System.Net.Http;
 using System.Threading;
 
 namespace CodeStream.VisualStudio
@@ -16,8 +14,7 @@ namespace CodeStream.VisualStudio
     public class WebViewRouter
     {
         private static readonly ILogger Log = LogManager.ForContext<WebViewRouter>();
-
-        // ReSharper disable once NotAccessedField.Local
+        
         private readonly Lazy<ICredentialsService> _credentialsService;
         private readonly ISessionService _sessionService;
         private readonly ICodeStreamAgentService _codeStreamAgent;
@@ -69,20 +66,26 @@ namespace CodeStream.VisualStudio
                     {
                         case "codeStream":
                             {
-                                string responseString = null;
-                                string errorMessage = null;
+                                using (var scope = _ipc.CreateScope(message))
+                                {
+                                    JToken result = null;
+                                    string error = null;
 
-                                try
-                                {
-                                    var response = await _codeStreamAgent.SendAsync<JToken>(message.Method, message.Params);
-                                    responseString = response.ToString();
+                                    try
+                                    {
+                                        result = await _codeStreamAgent.SendAsync<JToken>(message.Method, message.Params);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Log.Verbose(ex, $"Method={message.Method}");
+                                        error = ex.Message;
+                                    }
+                                    finally
+                                    {
+                                        scope.Complete(result, error);
+                                    }
                                 }
-                                catch (Exception ex)
-                                {
-                                    Log.Verbose(ex, $"Method={message.Method}");
-                                    errorMessage = ex.Message;
-                                }
-                                _ipc.SendResponse(Ipc.ToResponseMessage(message.Id, responseString, errorMessage));
+
                                 break;
                             }
                         case "extension":
@@ -124,19 +127,19 @@ namespace CodeStream.VisualStudio
                                             switch (message.Method)
                                             {
                                                 case GetViewBootstrapDataRequestType.MethodName:
-                                                    await authenticationController.BootstrapAsync(message.Id);
+                                                    await authenticationController.BootstrapAsync(message);
                                                     break;
                                                 case LoginRequestType.MethodName:
-                                                    await authenticationController.AuthenticateAsync(message.Id, message.Params["email"].ToString(), message.Params["password"].ToString());
+                                                    await authenticationController.AuthenticateAsync(message, message.Params["email"].ToString(), message.Params["password"].ToString());
                                                     break;
                                                 case StartSignupRequestType.MethodName:
-                                                    await authenticationController.GoToSignupAsync(message.Id);
+                                                    await authenticationController.GoToSignupAsync(message);
                                                     break;
                                                 case GoToSlackSigninRequestType.MethodName:
-                                                    await authenticationController.GoToSlackSigninAsync(message.Id);
+                                                    await authenticationController.GoToSlackSigninAsync(message);
                                                     break;
                                                 case ValidateSignupRequestType.MethodName:
-                                                    await authenticationController.ValidateSignupAsync(message.Id, message.Params?.Value<string>());
+                                                    await authenticationController.ValidateSignupAsync(message, message.Params?.Value<string>());
                                                     break;
                                                 default:
                                                     Log.Warning($"Shouldn't hit this Method={message.Method}");
@@ -147,38 +150,45 @@ namespace CodeStream.VisualStudio
                                     case SignOutRequestType.MethodName:
                                         {
                                             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-                                            var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
-                                            if (codeStreamService != null)
+                                            using (_ipc.CreateScope(message))
                                             {
-                                                await codeStreamService.LogoutAsync();
+                                                var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
+                                                if (codeStreamService != null)
+                                                {
+                                                    await codeStreamService.LogoutAsync();
+                                                }
                                             }
+
                                             break;
                                         }
                                     case ShowCodeRequestType.MethodName:
                                         {
-                                            var showCodeResponse = message.Params.ToObject<ShowCodeResponse>();
-
-                                            var fromMarkerResponse = await _codeStreamAgent.GetDocumentFromMarkerAsync(
-                                                new DocumentFromMarkerRequest
-                                                {
-                                                    File = showCodeResponse.Marker.File,
-                                                    RepoId = showCodeResponse.Marker.RepoId,
-                                                    MarkerId = showCodeResponse.Marker.Id,
-                                                    Source = showCodeResponse.Source
-                                                });
-
-                                            if (fromMarkerResponse?.TextDocument?.Uri != null)
+                                            using (var scope = _ipc.CreateScope(message))
                                             {
-                                                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-                                                if (_ideService != null)
-                                                {
-                                                    var editorResponse = _ideService.OpenEditor(
-                                                        fromMarkerResponse.TextDocument.Uri.ToUri(),
-                                                        fromMarkerResponse.Range?.Start?.Line + 1);
+                                                var showCodeResponse = message.Params.ToObject<ShowCodeResponse>();
 
-                                                    _ipc.SendResponse(Ipc.ToResponseMessage(message.Id, editorResponse.ToString()));
+                                                var fromMarkerResponse = await _codeStreamAgent.GetDocumentFromMarkerAsync(
+                                                        new DocumentFromMarkerRequest
+                                                        {
+                                                            File = showCodeResponse.Marker.File,
+                                                            RepoId = showCodeResponse.Marker.RepoId,
+                                                            MarkerId = showCodeResponse.Marker.Id,
+                                                            Source = showCodeResponse.Source
+                                                        });
+
+                                                if (fromMarkerResponse?.TextDocument?.Uri == null)
+                                                {
+                                                    scope.Complete();
+                                                }
+                                                else
+                                                {
+                                                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+                                                    var editorResponse = _ideService.OpenEditor(fromMarkerResponse.TextDocument.Uri, fromMarkerResponse.Range?.Start?.Line + 1);
+
+                                                    scope.Complete(new JValue(editorResponse.ToString()));
                                                 }
                                             }
+
                                             break;
                                         }
                                     case ReloadWebviewRequestType.MethodName:
@@ -191,38 +201,39 @@ namespace CodeStream.VisualStudio
                                     case MuteAllConversationsRequestType.MethodName:
                                         {
                                             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                            
-                                            // NOTE: we're not using the controller here. changing these properties
-                                            // triggers the OnPropertyChanged, which then uses the ConfigurationController
-                                            // for added handling
-                                            switch (message.Method)
+
+                                            using (_ipc.CreateScope(message))
                                             {
-                                                case ShowMarkersInEditorRequestType.MethodName:
-                                                    using (var scope = SettingsScope.Create(_settingsService))
-                                                    {
-                                                        scope.SettingsService.ShowMarkers = message.Params.ToObject<ShowMarkersInEditorRequestTypeParams>().Enable;
-                                                    }
+                                                // NOTE: we're not using the controller here. changing these properties
+                                                // triggers the OnPropertyChanged, which then uses the ConfigurationController
+                                                // for added handling
+                                                switch (message.Method)
+                                                {
+                                                    case ShowMarkersInEditorRequestType.MethodName:
+                                                        using (var scope = SettingsScope.Create(_settingsService))
+                                                        {
+                                                            scope.SettingsService.ShowMarkers = message.Params.ToObject<ShowMarkersInEditorRequestTypeParams>().Enable;
+                                                        }
+                                                        break;
+                                                    case OpenCommentOnSelectInEditorRequestType.MethodName:
+                                                        using (var scope = SettingsScope.Create(_settingsService))
+                                                        {
+                                                            scope.SettingsService.OpenCommentOnSelect = message.Params.ToObject<OpenCommentOnSelectInEditorRequestTypeParams>().Enable;
+                                                        }
+                                                        break;
+                                                    case MuteAllConversationsRequestType.MethodName:
+                                                        using (var scope = SettingsScope.Create(_settingsService))
+                                                        {
+                                                            scope.SettingsService.MuteAll = message.Params.ToObject<MuteAllConversationsRequestTypeParams>().Mute;
+                                                        }
+                                                        break;
+                                                    default:
+                                                        Log.Warning($"Shouldn't hit this Method={message.Method}");
+                                                        break;
+                                                }
 
-                                                    break;
-                                                case OpenCommentOnSelectInEditorRequestType.MethodName:
-                                                    using (var scope = SettingsScope.Create(_settingsService))
-                                                    {
-                                                        scope.SettingsService.OpenCommentOnSelect = message.Params.ToObject<OpenCommentOnSelectInEditorRequestTypeParams>().Enable;
-                                                    }
-
-                                                    break;
-                                                case MuteAllConversationsRequestType.MethodName:
-                                                    using (var scope = SettingsScope.Create(_settingsService))
-                                                    {
-                                                        scope.SettingsService.MuteAll = message.Params.ToObject<MuteAllConversationsRequestTypeParams>().Mute;
-                                                    }
-                                                    break;
-                                                default:
-                                                    Log.Warning($"Shouldn't hit this Method={message.Method}");
-                                                    break;
                                             }
 
-                                            _ipc.SendResponse(new WebviewIpcMessage(message.Id));
                                             break;
                                         }
                                     case StartLiveShareRequestType.MethodName:
@@ -237,30 +248,33 @@ namespace CodeStream.VisualStudio
                                                 _eventAggregator,
                                                 _ipc,
                                                 _ideService);
-
-                                            switch (message.Method)
+                                            using (_ipc.CreateScope(message))
                                             {
-                                                case StartLiveShareRequestType.MethodName:
-                                                    {
-                                                        await liveShareController.StartAsync(liveShareAction.StreamId, liveShareAction.ThreadId);
-                                                        break;
-                                                    }
-                                                case InviteToLiveShareRequestType.MethodName:
-                                                    {
-                                                        await liveShareController.InviteAsync(liveShareAction.UserId);
-                                                        break;
-                                                    }
-                                                case JoinLiveShareRequestType.MethodName:
-                                                    {
-                                                        await liveShareController.JoinAsync(liveShareAction?.Url);
-                                                        break;
-                                                    }
-                                                default:
-                                                    {
-                                                        Log.Verbose($"Unknown LiveShare method {message.Method}");
-                                                        break;
-                                                    }
+                                                switch (message.Method)
+                                                {
+                                                    case StartLiveShareRequestType.MethodName:
+                                                        {
+                                                            await liveShareController.StartAsync(liveShareAction.StreamId, liveShareAction.ThreadId);
+                                                            break;
+                                                        }
+                                                    case InviteToLiveShareRequestType.MethodName:
+                                                        {
+                                                            await liveShareController.InviteAsync(liveShareAction.UserId);
+                                                            break;
+                                                        }
+                                                    case JoinLiveShareRequestType.MethodName:
+                                                        {
+                                                            await liveShareController.JoinAsync(liveShareAction?.Url);
+                                                            break;
+                                                        }
+                                                    default:
+                                                        {
+                                                            Log.Verbose($"Unknown LiveShare method {message.Method}");
+                                                            break;
+                                                        }
+                                                }
                                             }
+
                                             break;
                                         }
                                     case DidChangeActiveStreamNotificationType.MethodName:
@@ -277,10 +291,10 @@ namespace CodeStream.VisualStudio
                                 break;
                             }
                         default:
-                        {
-                            Log.Warning($"Unknown Target={target}");
-                            break;
-                        }
+                            {
+                                Log.Warning($"Unknown Target={target}");
+                                break;
+                            }
                     }
                 }
             }

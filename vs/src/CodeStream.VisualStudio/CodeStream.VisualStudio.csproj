@@ -140,7 +140,6 @@
     <Compile Include="LSP\LanguageServerProcess.cs" />
     <Compile Include="LSP\Notifications.cs" />
     <Compile Include="Models\CodeStreamModels.cs" />
-    <Compile Include="Models\Ipc.cs" />
     <Compile Include="Models\MessageTypes.cs" />
     <Compile Include="Models\Types.cs" />
     <Compile Include="Models\Webview.Protocol.Events.cs" />
@@ -166,6 +165,8 @@
     <Compile Include="Services\SessionService.cs" />
     <Compile Include="Services\SettingsService.cs" />
     <Compile Include="Services\ThemeManager.cs" />
+    <Compile Include="Services\WebviewIpcExtensions.cs" />
+    <Compile Include="Services\WebviewIpcScope.cs" />
     <Compile Include="UI\DocumentMarkerManager.cs" />
     <Compile Include="UI\Glyphs\CodemarkGlyphFactory.cs" />
     <Compile Include="UI\Glyphs\CodemarkGlyphFactoryProvider.cs" />

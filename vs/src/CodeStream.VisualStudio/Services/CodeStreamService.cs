@@ -196,7 +196,7 @@ namespace CodeStream.VisualStudio.Services
 
             _eventAggregator.Value.Publish(new SessionLogoutEvent());
 
-            WebviewIpc.LoadWebView();
+            WebviewIpc.BrowserService.LoadWebView();
         }
     }
 }

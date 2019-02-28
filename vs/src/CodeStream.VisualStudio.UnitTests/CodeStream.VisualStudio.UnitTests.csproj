@@ -89,7 +89,7 @@
     <Compile Include="Events\EventAggregatorTests.cs" />
     <Compile Include="Extensions\DynamicExtensionsTests.cs" />
     <Compile Include="LSP\CustomCamelCasePropertyNamesContractResolverTests.cs" />
-    <Compile Include="Models\IpcTests.cs" />
+    <Compile Include="Models\WebviewIpcMessageTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\CredentialsServiceTests.cs" />
     <Compile Include="Services\SettingsServiceTests.cs" />

@@ -23,6 +23,7 @@ namespace CodeStream.VisualStudio.Services
     public interface IIdeService
     {
         void Navigate(string url);
+        ShowCodeResult OpenEditor(string fileUri, int? scrollTo = null);
         ShowCodeResult OpenEditor(Uri fileUri, int? scrollTo = null);
         TextSelection GetTextSelected();
         TextSelection GetTextSelected(out IVsTextView view);
@@ -56,6 +57,17 @@ namespace CodeStream.VisualStudio.Services
         {
             _iIVsTextManager = iIVsTextManager;
             _extensions = extensions;
+        }
+
+        /// <summary>
+        /// Open editor using an absolute file path
+        /// </summary>
+        /// <param name="fileUri"></param>
+        /// <param name="scrollTo">the 1-based line number</param>
+        /// <returns></returns>
+        public ShowCodeResult OpenEditor(string fileUri, int? scrollTo = null)
+        {
+            return OpenEditor(fileUri.ToUri(), scrollTo);
         }
 
         /// <summary>
