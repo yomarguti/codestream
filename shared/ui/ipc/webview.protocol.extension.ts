@@ -54,8 +54,10 @@ export const DidScrollEditorNotificationType = new NotificationType<
 	void
 >("webview/text-editor-scrolled");
 
+export interface DidChangeDataNotification { type: string; data: any }
+
 export const DidChangeDataNotificationType = new NotificationType<
-	{ type: string; data: any },
+	DidChangeDataNotification,
 	void
 >("webview/data-changed");
 
