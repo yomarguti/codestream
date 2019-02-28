@@ -159,7 +159,22 @@
             },
             {
                 "command": "codestream.postCode",
-                "title": "Add CodeStream Comment",
+                "title": "Add Comment",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.postIssue",
+                "title": "Create Issue",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.postBookmark",
+                "title": "Create Bookmark",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.postPermalink",
+                "title": "Get Permalink",
                 "category": "CodeStream"
             },
             {
@@ -192,7 +207,19 @@
                 },
                 {
                     "command": "codestream.postCode",
-                    "when": "editorTextFocus && editorHasSelection && codestream:status == signedIn"
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.postIssue",
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.postBookmark",
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.postPermalink",
+                    "when": "codestream:status == signedIn"
                 },
                 {
                     "command": "codestream.toggle",
@@ -202,8 +229,23 @@
             "editor/context": [
                 {
                     "command": "codestream.postCode",
-                    "when": "editorTextFocus && editorHasSelection && codestream:status == signedIn",
+                    "when": "codestream:status == signedIn",
                     "group": "1_codestream@1"
+                },
+                {
+                    "command": "codestream.postIssue",
+                    "when": "codestream:status == signedIn",
+                    "group": "1_codestream@2"
+                },
+                {
+                    "command": "codestream.postBookmark",
+                    "when": "codestream:status == signedIn",
+                    "group": "1_codestream@3"
+                },
+                {
+                    "command": "codestream.postPermalink",
+                    "when": "codestream:status == signedIn",
+                    "group": "1_codestream@4"
                 }
             ]
         },
