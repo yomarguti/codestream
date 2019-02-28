@@ -241,11 +241,12 @@ namespace CodeStream.VisualStudio.UI.Settings
             get => _showMarkers;
             set
             {
-                if (_showMarkers != value)
-                {
-                    _showMarkers = value;
+                // NOTE: something off here -- state not working right in the webview...
+                //if (_showMarkers != value)
+                // {
+                _showMarkers = value;
                     NotifyPropertyChanged();
-                }
+               // }
             }
         }
 
