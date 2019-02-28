@@ -173,7 +173,7 @@ export class CodestreamView {
 	}
 
 	private async forwardWebviewRequest(request: { id: string; method: string; params?: any }) {
-		const response = await this.session.agent!.sendRequest(request.method, request.params);
+		const response = await this.session.agent.sendRequest(request.method, request.params);
 		this.respond({ id: request.id, params: response });
 	}
 

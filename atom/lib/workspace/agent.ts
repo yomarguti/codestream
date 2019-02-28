@@ -6,7 +6,7 @@ import {
 	IPCMessageReader,
 	IPCMessageWriter,
 } from "atom-languageclient/node_modules/vscode-jsonrpc";
-import { asAbsolutePath, getPluginVersion } from "../utils";
+import { asAbsolutePath, getPluginVersion, getAgentSource } from "../utils";
 import {
 	AgentOptions,
 	AgentInitializeResult,
@@ -28,7 +28,17 @@ import {
 	DidChangeDataNotificationType,
 	DidChangeDataNotification,
 } from "../protocols/agent/agent.protocol";
-import { ClientCapabilities, LogMessageParams } from "vscode-languageserver-protocol";
+import {
+	ClientCapabilities,
+	LogMessageParams,
+	RequestType,
+	NotificationType,
+} from "vscode-languageserver-protocol";
+
+type RequestOrNotificationType<P, R> = RequestType<P, R, any, any> | NotificationType<P, R>;
+
+type RequestOf<RT> = RT extends RequestOrNotificationType<infer RQ, any> ? RQ : never;
+type ResponseOf<RT> = RT extends RequestOrNotificationType<any, infer R> ? R : never;
 
 const capabilities: ClientCapabilities = {
 	workspace: {
@@ -189,16 +199,20 @@ abstract class AgentConnection {
 		options.env.ELECTRON_NO_ATTACH_CONSOLE = "1";
 		options.stdio = [null, null, null, "ipc"];
 
+		const agentPath = atom.inDevMode() ? getAgentSource() : asAbsolutePath("dist/agent.js");
 		const agentProcess = spawn(
 			process.execPath,
-			[asAbsolutePath("dist/agent.js"), "--node-ipc", "--nolazy", "--inspect=6009"],
+			["--nolazy", "--inspect=6011", agentPath, "--node-ipc"],
 			options
 		);
 
+		agentProcess.on("error", error => {
+			console.error(error);
+		});
 		agentProcess.on("disconnect", () => {
 			if (this._connection) {
 				console.error("CodeStream agent process connection disconnected prematurely");
-				this.stop();
+				// this.stop();
 			}
 		});
 		agentProcess.on("exit", code => {
@@ -289,6 +303,13 @@ export class CodeStreamAgent extends AgentConnection {
 
 	onDidChangeData(cb: (event: DidChangeDataNotification) => void) {
 		return this.emitter.on(DATA_CHANGED, cb);
+	}
+
+	request<RT extends RequestType<any, any, any, any>>(
+		requestType: RT,
+		params: RequestOf<RT>
+	): Promise<ResponseOf<RT>> {
+		return this.connection!.sendCustomRequest(requestType.method, params);
 	}
 
 	fetchUsers(): Promise<FetchUsersResponse> {
