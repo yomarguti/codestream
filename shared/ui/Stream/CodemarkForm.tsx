@@ -51,7 +51,7 @@ interface Props {
 	onSubmit: Function;
 	onClickClose(): any;
 	renderMessageInput(props: { [key: string]: any }): JSX.Element;
-	openCodemarkForm(): any;
+	openCodemarkForm(type: string): any;
 	slackInfo?: {};
 	codeBlock?: {
 		file?: string;
@@ -173,6 +173,14 @@ class CodemarkForm extends React.Component<Props, State> {
 				singleAssignee: false
 			});
 			this.crossPostIssueValues = undefined;
+		}
+		if (
+			prevProps.codeBlock &&
+			this.props.codeBlock &&
+			this.props.codeBlock.type !== prevProps.codeBlock.type
+		) {
+			// FIXME this should call ComposeBox.repositionIfNecessary()
+			this.setState({ type: this.props.codeBlock.type });
 		}
 	}
 
@@ -524,7 +532,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	getCodeBlockHint() {
 		const { codeBlock, editingCodemark } = this.props;
-		if (!codeBlock) return "Select a range to comment on a block of code.";
+		if (!codeBlock || !codeBlock.range) return "Select a range to comment on a block of code.";
 
 		let lines;
 		if (codeBlock.range.start.line === codeBlock.range.end.line) {
@@ -601,7 +609,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 
 		const { editingCodemark } = this.props;
-		const commentType = editingCodemark ? editingCodemark.type : this.state.type;
+		const commentType = editingCodemark ? editingCodemark.type : this.state.type || "comment";
 		// const { menuTarget } = this.state;
 
 		const trapTip =

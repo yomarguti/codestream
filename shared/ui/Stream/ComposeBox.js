@@ -130,8 +130,9 @@ class ComposeBox extends React.Component {
 		});
 	}
 
-	openMultiCompose = () => {
-		this.props.setMultiCompose("comment");
+	openMultiCompose = type => {
+		const quote = { type };
+		this.props.setMultiCompose(true, { quote });
 		this.props.setNewPostEntry("Stream");
 		// setTimeout(() => {
 		// 	this.focus();

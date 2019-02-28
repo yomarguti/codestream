@@ -67,7 +67,7 @@ export default class Menu extends Component {
 			this.props.action();
 			return null;
 		}
-		this.repositionIfNecessary();
+		if (this.props.items.length !== prevProps.items.length) this.repositionIfNecessary();
 	}
 
 	render() {

@@ -1,5 +1,6 @@
 import * as React from "react";
 import Icon from "./Icon";
+import Menu from "./Menu";
 
 interface Props {
 	openCodemarkForm: Function;
@@ -21,20 +22,18 @@ export class PostCompose extends React.Component<Props, State> {
 	}
 
 	handleChange = (text: string) => {
-		this.setState({
-			text
-		});
-	}
-
-	handleExplandClick = (event: React.SyntheticEvent) => {
-		event.preventDefault();
-		this.props.openCodemarkForm();
-	}
+		this.setState({ text });
+	};
 
 	handleClickClose = (event: React.SyntheticEvent) => {
 		event.preventDefault();
 		this.props.onClickClose();
-	}
+	};
+
+	handleMenuClick = event => {
+		event.stopPropagation();
+		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
+	};
 
 	handleSubmit = () => {
 		const domParser = new DOMParser();
@@ -46,21 +45,45 @@ export class PostCompose extends React.Component<Props, State> {
 
 		this.props.onSubmit(text);
 		this.setState({ text: "" });
-	}
+	};
+
+	handleMenuClick = event => {
+		event.stopPropagation();
+		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
+	};
+
+	handleSelectMenu = type => {
+		this.setState({ menuOpen: false });
+		if (type) this.props.openCodemarkForm(type);
+	};
 
 	render() {
+		const { menuOpen, menuTarget } = this.state;
+		let menuItems = [
+			{ label: "Add Comment", action: "comment" },
+			{ label: "Create Issue", action: "issue" },
+			{ label: "Create Bookmark", action: "bookmark" },
+			{ label: "Get Permalink", action: "link" }
+		];
+
 		return (
 			<React.Fragment>
-				<div key="1" className="plus-button" onClick={this.handleExplandClick}>
-					{this.props.openDirection === "down" ? (
-						<Icon name="chevron-down" className="plus" />
-					) : (
-						<Icon name="chevron-up" className="plus" />
+				<div key="1" className="plus-button" onClick={this.handleMenuClick}>
+					<Icon name="plus" className="plus" />
+					{menuOpen && (
+						<Menu
+							align="left"
+							items={menuItems}
+							target={menuTarget}
+							action={this.handleSelectMenu}
+						/>
 					)}
 				</div>
-				<div key="2" className="x-button" onClick={this.handleClickClose}>
-					<Icon name="x" className="plus" />
-				</div>
+				{
+					// <div key="2" className="x-button" onClick={this.handleClickClose}>
+					// <Icon name="x" className="plus" />
+					// </div>
+				}
 				{this.props.renderMessageInput({
 					text: this.state.text,
 					placeholder: this.props.placeholder,
