@@ -44,7 +44,7 @@ export class ErrorReporter {
 	}
 
 	@lspHandler(ReportMessageRequestType)
-	protected reportMessage(request: ReportMessageRequest) {
+	reportMessage(request: ReportMessageRequest) {
 		Sentry.captureEvent({
 			level: Severity.fromString(request.type),
 			timestamp: Date.now(),

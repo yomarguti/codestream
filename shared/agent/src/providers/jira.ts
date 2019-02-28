@@ -1,5 +1,6 @@
 "use strict";
 import * as qs from "querystring";
+import { Container } from "../container";
 import { Logger } from "../logger";
 import {
 	CreateJiraCardRequest,
@@ -7,7 +8,8 @@ import {
 	JiraBoard,
 	JiraFetchBoardsRequestType,
 	JiraFetchBoardsResponse,
-	JiraUser
+	JiraUser,
+	ReportingMessageType
 } from "../protocol/agent.protocol";
 import { CSJiraProviderInfo } from "../protocol/api.protocol";
 import { Iterables, log, lspHandler, lspProvider } from "../system";
@@ -45,7 +47,7 @@ interface CreateJiraIssueResponse {
 
 @lspProvider("jira")
 export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
-	private jiraApiUrl = "https://api.atlassian.com";
+	private readonly jiraApiUrl = "https://api.atlassian.com";
 	private _baseUrl = this.jiraApiUrl;
 	private boards: JiraBoard[] = [];
 	private domain?: string;
@@ -74,8 +76,22 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 		const response = await this.get<AccessibleResourcesResponse>(
 			"/oauth/token/accessible-resources"
 		);
+
+		Logger.debug("Jira: Accessible Resources are", response.body);
+
+		if (response.body.length === 0) {
+			Container.instance().errorReporter.reportMessage({
+				type: ReportingMessageType.Error,
+				message: "Jira access does not include any jira sites",
+				source: "agent"
+			});
+			throw new Error("Jira access does not include any jira sites");
+		}
+
 		this._baseUrl = `${this.jiraApiUrl}/ex/jira/${response.body[0].id}`;
 		this.domain = response.body[0].name;
+
+		Logger.debug(`Jira: api url for ${this.domain} is ${this._baseUrl}`);
 	}
 
 	async onDisconnected() {
@@ -113,6 +129,12 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 			return { boards: this.boards };
 		} catch (error) {
 			debugger;
+			Container.instance().errorReporter.reportMessage({
+				type: ReportingMessageType.Error,
+				message: "Error fetching jira boards",
+				source: "extension",
+				extra: { message: error.message }
+			});
 			Logger.error(error, "Error fetching jira boards");
 			return { boards: [] };
 		}

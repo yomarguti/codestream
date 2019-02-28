@@ -305,7 +305,7 @@ export enum ReportingMessageType {
 export interface ReportMessageRequest {
 	type: ReportingMessageType;
 	message: string;
-	source: "webview" | "extension";
+	source: "webview" | "extension" | "agent";
 	extra?: object;
 }
 
