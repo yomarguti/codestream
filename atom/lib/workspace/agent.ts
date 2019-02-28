@@ -189,6 +189,9 @@ abstract class AgentConnection {
 		if (response.result.error) {
 			this.stop();
 		}
+
+		this._connection.initialized();
+
 		return (response as AgentInitializeResult).result;
 	}
 

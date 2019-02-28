@@ -78,8 +78,7 @@ export class WorkspaceSession {
 	}
 
 	dispose() {
-		this._agent.dispose();
-		this.emitter.dispose();
+		this.signOut();
 	}
 
 	onDidChangeSessionStatus(callback: (status: SessionStatus) => any) {
@@ -93,6 +92,10 @@ export class WorkspaceSession {
 			this._sessionStatus = status;
 			this.emitter.emit(SESSION_STATUS_CHANGED, status);
 		}
+	}
+
+	get status() {
+		return this._sessionStatus;
 	}
 
 	get user() {

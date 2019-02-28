@@ -4,42 +4,47 @@ import { StatusBar, Tile } from "./types/package-services/status-bar";
 import { WorkspaceSession, SessionStatus } from "./workspace/workspace-session";
 import { PackageState } from "./types/package";
 import { PD_CONFIG, Environment } from "./env-utils";
+import { MarkerDecorationProvider } from "workspace/marker-decoration-provider";
 
 class CodestreamPackage {
 	subscriptions = new CompositeDisposable();
 	workspaceSession: WorkspaceSession;
 	view?: CodestreamView;
 	sessionStatusCommand?: Disposable;
+	markerDecorationProvider: MarkerDecorationProvider;
 
 	constructor(state: PackageState) {
 		if (atom.inDevMode()) {
 			console.debug("CodeStream package initialized with state:", state);
 		}
 		this.workspaceSession = WorkspaceSession.create(state);
+		this.markerDecorationProvider = new MarkerDecorationProvider(this.workspaceSession);
 		this.initialize();
 	}
 
 	// Package lifecyle 1
 	async initialize() {
-		this.workspaceSession.onDidChangeSessionStatus(status => {
-			this.sessionStatusCommand && this.sessionStatusCommand.dispose();
-			if (status === SessionStatus.SignedIn) {
-				this.sessionStatusCommand = atom.commands.add(
-					"atom-workspace",
-					"codestream:sign-out",
-					() => {
-						this.workspaceSession.signOut();
-					}
-				);
-			}
-			if (status === SessionStatus.SignedOut) {
-				this.sessionStatusCommand = atom.commands.add(
-					"atom-workspace",
-					"codestream:sign-in",
-					() => {}
-				);
-			}
-		});
+		this.subscriptions.add(
+			this.workspaceSession.onDidChangeSessionStatus(status => {
+				this.sessionStatusCommand && this.sessionStatusCommand.dispose();
+				if (status === SessionStatus.SignedIn) {
+					this.sessionStatusCommand = atom.commands.add(
+						"atom-workspace",
+						"codestream:sign-out",
+						() => {
+							this.workspaceSession.signOut();
+						}
+					);
+				}
+				if (status === SessionStatus.SignedOut) {
+					this.sessionStatusCommand = atom.commands.add(
+						"atom-workspace",
+						"codestream:sign-in",
+						() => {}
+					);
+				}
+			})
+		);
 
 		const hiddenInCommandPalette = !atom.inDevMode();
 		this.subscriptions.add(
@@ -81,6 +86,7 @@ class CodestreamPackage {
 	deactivate() {
 		this.workspaceSession.dispose();
 		this.subscriptions.dispose();
+		this.markerDecorationProvider.dispose();
 	}
 
 	async consumeStatusBar(statusBar: StatusBar) {
