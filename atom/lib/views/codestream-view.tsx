@@ -4,7 +4,7 @@ import { WorkspaceSession, SessionStatus } from "../workspace/workspace-session"
 import { LoginResult } from "../protocols/agent/api.protocol";
 import { DidChangeDataNotification } from "../protocols/agent/agent.protocol";
 import {
-	DidChangeDataNotification as WebviewDidChangeDataNotification,
+	DidChangeDataNotificationType as WebviewDidChangeDataNotificationType,
 	WebviewIpcMessage,
 	GetViewBootstrapDataRequestType,
 	GetViewBootstrapDataResponse,
@@ -15,6 +15,7 @@ import {
 	DidSignOutNotificationType,
 	LoginRequestType,
 	LoginRequest,
+	ReloadWebviewRequestType,
 } from "../protocols/webview/webview.protocol";
 import { asAbsolutePath } from "../utils";
 import { getStyles } from "./styles-getter";
@@ -149,7 +150,7 @@ export class CodestreamView {
 	}
 
 	private onDidChangeSessionData = (data: DidChangeDataNotification) => {
-		this.sendEvent(WebviewDidChangeDataNotification, data as any /* huh? */);
+		this.sendEvent(WebviewDidChangeDataNotificationType, data);
 	};
 
 	serialize() {
