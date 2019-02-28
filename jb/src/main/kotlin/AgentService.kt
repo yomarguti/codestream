@@ -5,6 +5,7 @@ import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.future.await
@@ -109,27 +110,6 @@ class AgentService(private val project: Project) {
             "serverUrl" to settingsService.serverUrl
         )
     }
-
-
-
-    fun connect(editor: Editor) {
-        val uri = editorToURIString(editor)
-        if (connectedEditors.contains(uri)) {
-            return
-        }
-
-        server.textDocumentService.didOpen(DidOpenTextDocumentParams(TextDocumentItem(uri, "", 0, editor.document.text)))
-        editor.document.addDocumentListener(CodeStreamDocumentListener(editor, this))
-
-        logger.info("Created a manager for $uri")
-    }
-
-    fun disconnect(editor: Editor) {
-        val uri = editorToURIString(editor)
-        server.textDocumentService.didClose(DidCloseTextDocumentParams(TextDocumentIdentifier(uri)))
-        connectedEditors.remove(uri)
-    }
-
 
     suspend fun sendRequest(id: String, action: String, params: JsonElement?) {
         val result = remoteEndpoint.request(action, params).await()

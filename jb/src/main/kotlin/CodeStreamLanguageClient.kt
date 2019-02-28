@@ -18,6 +18,16 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
         ServiceManager.getService(project, WebViewService::class.java)
     }
 
+    private val editorManagerService: EditorManagerService by lazy {
+        ServiceManager.getService(project, EditorManagerService ::class.java)
+    }
+
+    @JsonNotification("codeStream/didChangeDocumentMarkers")
+    fun didChangeDocumentMarkers(json: JsonElement) {
+        // TODO pass the uri/document
+        editorManagerService.updateMarkers()
+    }
+
 
     @JsonNotification("codeStream/didChangeData")
     fun didChangeData(json: JsonElement) {

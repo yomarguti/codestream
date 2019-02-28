@@ -9,7 +9,6 @@ class AuthenticationService(project: Project) {
     val agentService: AgentService by lazy {
         ServiceManager.getService(project, AgentService::class.java)
     }
-
     val sessionService: SessionService by lazy {
         ServiceManager.getService(project, SessionService::class.java)
     }
@@ -18,6 +17,9 @@ class AuthenticationService(project: Project) {
     }
     val webViewService: WebViewService by lazy {
         ServiceManager.getService(project, WebViewService::class.java)
+    }
+    val editorManagerService: EditorManagerService by lazy {
+        ServiceManager.getService(project, EditorManagerService::class.java)
     }
 
     suspend fun bootstrap(id: String) {
@@ -34,6 +36,7 @@ class AuthenticationService(project: Project) {
 
         sessionService.userLoggedIn = loginResult.userLoggedIn
         val bootstrapState = agentService.getBootstrapState()
+        editorManagerService.updateMarkers()
         webViewService.postResponse(id, bootstrapState)
     }
 
@@ -61,6 +64,7 @@ class AuthenticationService(project: Project) {
 
         sessionService.userLoggedIn = loginResult.userLoggedIn
         val bootstrapState = agentService.getBootstrapState()
+        editorManagerService.updateMarkers()
         webViewService.postResponse(id, bootstrapState)
     }
 

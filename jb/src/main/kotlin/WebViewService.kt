@@ -45,7 +45,7 @@ class WebViewService(val project: Project) : Disposable {
         postMessage(message)
     }
 
-    private fun postMessage(message: JsonElement) {
+    fun postMessage(message: JsonElement) {
         browser.executeJavaScript("window.postMessage($message,'*');")
     }
 

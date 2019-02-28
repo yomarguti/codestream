@@ -12,6 +12,7 @@
         <projectService serviceImplementation="com.codestream.AgentService"/>
         <projectService serviceImplementation="com.codestream.AuthenticationService"/>
         <projectService serviceImplementation="com.codestream.CredentialsService"/>
+        <projectService serviceImplementation="com.codestream.EditorManagerService"/>
         <projectService serviceImplementation="com.codestream.SettingsService"/>
         <projectService serviceImplementation="com.codestream.SessionService"/>
         <projectService serviceImplementation="com.codestream.WebViewService"/>

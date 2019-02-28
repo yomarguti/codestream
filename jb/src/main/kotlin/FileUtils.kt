@@ -1,7 +1,5 @@
 package com.codestream
 
-import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.vfs.VirtualFile
 import java.net.URL
 
@@ -24,20 +22,15 @@ const val URI_FILE_BEGIN = "file:"
 const val URI_PATH_SEP: Char = '/'
 const val URI_VALID_FILE_BEGIN: String = "file:///"
 
-fun editorToURIString(editor: Editor): String? {
-    val file = FileDocumentManager.getInstance().getFile(editor.document) ?: return null
-    return sanitizeURI(VFSToURI(file))
-}
-
-
-fun VFSToURI(file: VirtualFile): String? {
-    return try {
-        sanitizeURI(URL(file.url.replace(" ", SPACE_ENCODED)).toURI().toString())
-    } catch (e: Exception) {
-        // LOG.warn(e)
-        null
+val VirtualFile.uri: String?
+    get() {
+        return try {
+            sanitizeURI(URL(url.replace(" ", SPACE_ENCODED)).toURI().toString())
+        } catch (e: Exception) {
+            // LOG.warn(e)
+            null
+        }
     }
-}
 
 fun sanitizeURI(uri: String?): String? {
     if (uri == null) {

@@ -5,6 +5,7 @@ import com.google.gson.JsonObject
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.ServerCapabilities
+import org.eclipse.lsp4j.TextDocumentIdentifier
 import org.eclipse.lsp4j.jsonrpc.services.JsonRequest
 import org.eclipse.lsp4j.services.LanguageServer
 import java.util.concurrent.CompletableFuture
@@ -40,6 +41,9 @@ interface CodeStreamLanguageServer : LanguageServer {
 
     @JsonRequest("codeStream/textDocument/markers")
     fun documentMarkers(params: DocumentMarkersParams): CompletableFuture<DocumentMarkersResult>
+
+    @JsonRequest("codeStream/post/prepareWithCode")
+    fun preparePostWithCode(params: PreparePostWithCodeParams): CompletableFuture<PreparePostWithCodeResult>
 
 }
 
@@ -103,6 +107,27 @@ class DocumentMarker(
     val range: Range,
     val summary: String
 //    summaryMarkdown: string;
+)
+
+class PreparePostWithCodeParams(
+    val textDocument: TextDocumentIdentifier,
+    val range: Range,
+    val dirty: Boolean
+)
+
+class PreparePostWithCodeResult(
+    val code: String,
+    val range: Range,
+    val source: CodeBlockSource?,
+    val gitError: String?
+)
+
+class CodeBlockSource(
+    val file: String,
+    val repoPath: String,
+    val revision: String,
+    val authors: JsonElement,
+    val remotes: JsonElement
 )
 
 class Codemark(

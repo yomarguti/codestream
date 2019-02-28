@@ -7,15 +7,19 @@ import com.intellij.openapi.project.Project
 
 class EditorFactoryListenerImpl(val project: Project) : EditorFactoryListener {
 
-    private val agentService: AgentService by lazy {
-        ServiceManager.getService(project, AgentService::class.java)
-    }
-
-    override fun editorReleased(event: EditorFactoryEvent) {
-        agentService.disconnect(event.editor)
+    private val editorManagerService: EditorManagerService by lazy {
+        ServiceManager.getService(project, EditorManagerService::class.java)
     }
 
     override fun editorCreated(event: EditorFactoryEvent) {
-        agentService.connect(event.editor)
+        if (event.editor.project == project) {
+            editorManagerService.add(event.editor)
+        }
+    }
+
+    override fun editorReleased(event: EditorFactoryEvent) {
+        if (event.editor.project == project) {
+            editorManagerService.remove(event.editor)
+        }
     }
 }
