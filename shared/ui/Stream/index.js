@@ -186,7 +186,7 @@ export class SimpleStream extends Component {
 
 		if (body.isHighlight && activePanel === "inline" && !this.state.multiCompose) {
 			// fixme unlighlight case
-			this.setState({ openPlusOnLine: body.location[0] });
+			this.setState({ openPlusOnLine: body.range.start.line });
 		}
 		if (
 			body.isHighlight &&
