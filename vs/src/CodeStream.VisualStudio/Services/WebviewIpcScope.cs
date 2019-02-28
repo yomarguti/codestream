@@ -1,13 +1,13 @@
-﻿using System;
-using CodeStream.VisualStudio.Extensions;
+﻿using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using Newtonsoft.Json.Linq;
+using System;
 
 namespace CodeStream.VisualStudio.Services
 {
     public class WebviewIpcScope : IDisposable
     {
-        private bool _disposed = false;
+        private bool _disposed;
         private readonly IWebviewIpc _ipc;
         private WebviewIpcMessage _message;
 
@@ -35,33 +35,34 @@ namespace CodeStream.VisualStudio.Services
         /// </summary>
         /// <param name="params"></param>
         /// <param name="error"></param>
-        public void Complete(JToken @params, string error = null)
+        public void FulfillRequest(JToken @params, string error = null)
         {
-            if (_disposed) throw new ObjectDisposedException($"{nameof(Complete)}");
+            if (_disposed) throw new ObjectDisposedException($"{nameof(FulfillRequest)}");
 
-            _message = new WebviewIpcMessage(_message.Id, @params, new JValue(error));
+            _message = error.IsNullOrWhiteSpace() ?
+                new WebviewIpcMessage(_message.Id, @params) : 
+                new WebviewIpcMessage(_message.Id, @params, new JValue(error));
         }
 
         /// <summary>
         /// Attach an error, if any, to the response
         /// </summary>
         /// <param name="error"></param>
-        public void Complete(string error)
+        public void FulfillRequest(string error)
         {
-            if (_disposed) throw new ObjectDisposedException($"{nameof(Complete)}");
+            if (_disposed) throw new ObjectDisposedException($"{nameof(FulfillRequest)}");
 
-            if (!error.IsNullOrWhiteSpace())
-            {
-                _message = new WebviewIpcMessage(_message.Id, _message.Params, new JValue(error));
-            }
+            if (error.IsNullOrWhiteSpace()) return;
+
+            _message = new WebviewIpcMessage(_message.Id, _message.Params, new JValue(error));
         }
 
         /// <summary>
         /// "Marker" to signify the scope is finished -- no additional data is required
         /// </summary>
-        public void Complete()
+        public void FulfillRequest()
         {
-            if (_disposed) throw new ObjectDisposedException($"{nameof(Complete)}");
+            if (_disposed) throw new ObjectDisposedException($"{nameof(FulfillRequest)}");
         }
 
         public void Dispose()

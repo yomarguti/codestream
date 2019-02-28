@@ -58,7 +58,7 @@ namespace CodeStream.VisualStudio.Controllers
                     Log.Error(ex, $"{nameof(GoToSignupAsync)}");
                 }
 
-                scope.Complete(error);
+                scope.FulfillRequest(error);
             }
 
             await Task.CompletedTask;
@@ -81,7 +81,7 @@ namespace CodeStream.VisualStudio.Controllers
                     Log.Error(ex, $"{nameof(GoToSlackSigninAsync)}");
                 }
 
-                scope.Complete(error);
+                scope.FulfillRequest(error);
             }
 
             await Task.CompletedTask;
@@ -137,7 +137,7 @@ namespace CodeStream.VisualStudio.Controllers
                     Log.Error(ex, $"{nameof(AuthenticateAsync)}");
                 }
 
-                scope.Complete(@params, errorResponse);
+                scope.FulfillRequest(@params, errorResponse);
             }
 
 
@@ -157,12 +157,10 @@ namespace CodeStream.VisualStudio.Controllers
             {
                 if (_settingsService.AutoSignIn && !_settingsService.Email.IsNullOrWhiteSpace())
                 {
-                    var token = await _credentialsService.Value.LoadAsync(new Uri(_settingsService.ServerUrl),
-                        _settingsService.Email);
+                    var token = await _credentialsService.Value.LoadAsync(new Uri(_settingsService.ServerUrl), _settingsService.Email);
                     if (token != null)
                     {
-                        var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(_settingsService.Email, token.Item2,
-                            _settingsService.ServerUrl);
+                        var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(_settingsService.Email, token.Item2, _settingsService.ServerUrl);
                         var success = false;
                         try
                         {
@@ -204,13 +202,13 @@ namespace CodeStream.VisualStudio.Controllers
                 {
                     @params = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings());
                 }
-                scope.Complete(@params, errorResponse);
+                scope.FulfillRequest(@params, errorResponse);
             }
 
             await Task.CompletedTask;
         }
 
-        public async Task ValidateSignupAsync(WebviewIpcMessage message, string token)
+        public async Task ValidateSignupAsync(WebviewIpcMessage message, ValidateSignupRequest request)
         {
             var success = false;
             string email = null;
@@ -221,6 +219,8 @@ namespace CodeStream.VisualStudio.Controllers
             {
                 try
                 {
+                    var token = request?.Token;
+
                     if (token.IsNullOrWhiteSpace())
                     {
                         token = _sessionService.GetOrCreateSignupToken().ToString();
@@ -266,7 +266,7 @@ namespace CodeStream.VisualStudio.Controllers
                     Log.Error(ex, $"{nameof(ValidateSignupAsync)}");
                 }
 
-                scope.Complete(@params, errorResponse);
+                scope.FulfillRequest(@params, errorResponse);
             }
 
             if (success)

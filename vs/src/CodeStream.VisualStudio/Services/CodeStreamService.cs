@@ -82,7 +82,7 @@ namespace CodeStream.VisualStudio.Services
                         Editor = new DidChangeActiveEditorNotificationTypeParamsEditor
                         {
                             FileStreamId = streamResponse?.Stream?.Id,
-                            //Uri = uri.ToString(),
+                            Uri = uri.ToString(),
                             FileName = fileName,
                         }
                     }

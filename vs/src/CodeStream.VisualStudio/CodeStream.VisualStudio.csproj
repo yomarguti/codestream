@@ -142,6 +142,7 @@
     <Compile Include="Models\CodeStreamModels.cs" />
     <Compile Include="Models\MessageTypes.cs" />
     <Compile Include="Models\Types.cs" />
+    <Compile Include="Models\Webview.Protocol.Common.cs" />
     <Compile Include="Models\Webview.Protocol.Events.cs" />
     <Compile Include="Models\Webview.Protocol.Extension.cs" />
     <Compile Include="Models\WebviewIpcMessage.cs" />

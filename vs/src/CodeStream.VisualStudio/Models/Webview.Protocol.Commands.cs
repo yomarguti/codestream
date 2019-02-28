@@ -27,7 +27,11 @@ namespace CodeStream.VisualStudio.Models
         public override string Method => MethodName;
     }
 
-    public class ValidateSignupRequestType : RequestType<EmptyRequestTypeParams>
+    public class ValidateSignupRequest
+    {
+        public string Token { get; set; }
+    }
+    public class ValidateSignupRequestType : RequestType<ValidateSignupRequest>
     {
         public const string MethodName = "extension/validate-signup";
         public override string Method => MethodName;

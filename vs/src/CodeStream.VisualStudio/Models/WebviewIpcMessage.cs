@@ -1,50 +1,37 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Extensions;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
-using CodeStream.VisualStudio.Core;
 
 namespace CodeStream.VisualStudio.Models
 {
     /// <summary>
     /// Thin wrapper for plucking out certain JToken properties
     /// </summary>
-    public class WebviewIpcMessage : IAbstractMessageType
+    public class WebviewIpcMessage : AbstractMessageType<JToken>
     {
         private static readonly ILogger Log = LogManager.ForContext<WebviewIpcMessage>();
 
-        public WebviewIpcMessage(string id)
-        {
-            Id = id;
-            Params = JToken.Parse("{}");
-        }
+        public WebviewIpcMessage(string id) : this(id, JToken.Parse("{}")) { }
 
-        public WebviewIpcMessage(string id, JToken @params)
+        public WebviewIpcMessage(string id, JToken @params) : this(id, @params, null) { }
+
+        public WebviewIpcMessage(string id, JToken @params, JToken error) : this(id, null, @params, error) { }
+
+        public WebviewIpcMessage(string id, string method, JToken @params, JToken error)
         {
             Id = id;
+            Method = method;
             Params = @params;
+            Error = error?.ToString();
         }
 
-        public WebviewIpcMessage(string id, JToken @params, JToken error)
+        public override string AsJson()
         {
-            Id = id;
-            Params = @params;
-            Error = error;
+            return ToResponseMessage(Id, Method, Params, Error);
         }
 
-        public JToken Params { get; set; }
-
-        public string AsJson()
-        {
-            return Ipc.ToResponseMessage(Id, Params, Error);
-        }
-
-        public string Id { get; }
-
-        public string Method { get; set; }
-
-        public JToken Error { get; set; }
+        public override string Method { get; }
 
         public string Target() => Method?.Split(new[] { '/' })[0];
 
@@ -58,12 +45,9 @@ namespace CodeStream.VisualStudio.Models
             try
             {
                 method = token.Value<string>("method");
-                return new WebviewIpcMessage(token.Value<string>("id"), token.Value<JToken>("params"))
-                {
-                    
-                    Method = method,
-                    Error = token.Value<JToken>("error"),
-                };
+                return new WebviewIpcMessage(token.Value<string>("id"),
+                    method, token.Value<JToken>("params"),
+                    token.Value<JToken>("error"));
             }
             catch (Exception ex)
             {
@@ -71,55 +55,6 @@ namespace CodeStream.VisualStudio.Models
             }
 
             return WebviewIpcMessage.New();
-        }
-
-        private static class Ipc
-        {
-            public static string ToResponseMessage(string id, JToken @params, JToken error = null)
-            {
-                return ToResponseMessage(id, @params?.ToString(), error?.ToString());
-            }
-
-            // ReSharper disable once MemberCanBePrivate.Local
-            public static string ToResponseMessage(string id, string @params, string error = null)
-            {
-                @params = GetParams(@params);
-
-                if (error.IsNullOrWhiteSpace())
-                {
-                    return @"{""id"":""" + id + @""",""params"":" + @params + @"}";
-                }
-                else
-                {
-                    if (@params.IsNullOrWhiteSpace())
-                    {
-                        return @"{""id"":""" + id + @""",""error"":""" + error + @"""}";
-                    }
-
-                    return @"{""id"":""" + id + @""",""params"":" + @params + @",""error"":""" + error + @"""}}";
-                }
-            }
-
-            private static string GetParams(string @params)
-            {
-                if (@params == null)
-                {
-                    return null;
-                }
-
-                if (@params == string.Empty)
-                {
-                    return "\"\"";
-                }
-
-                // this is sucky, but since we're dealing with strings here...
-                if (!@params.StartsWith("{") && !@params.StartsWith("[") && @params != "true" && @params != "false" && !RegularExpressions.Number.IsMatch(@params))
-                {
-                    return $"\"{@params}\"";
-                }
-
-                return @params;
-            }
         }
     }
 }

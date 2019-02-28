@@ -88,8 +88,9 @@ namespace CodeStream.VisualStudio.Models
     public class DidChangeActiveEditorNotificationTypeParamsEditor
     {
         public string FileStreamId { get; set; }
-        //  public string Uri { get; set; }
+        public string Uri { get; set; }
         public string FileName { get; set; }
+        //public List<Range> VisibleRanges { get; set; }
     }
 
     public class DidChangeActiveEditorNotificationParams
