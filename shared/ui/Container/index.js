@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import PropTypes from "prop-types";
 import { addLocaleData, IntlProvider } from "react-intl";
 import englishLocaleData from "react-intl/locale-data/en";

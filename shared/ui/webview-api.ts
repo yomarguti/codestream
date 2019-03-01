@@ -1,18 +1,23 @@
 import { NotificationType, RequestType } from "vscode-jsonrpc";
-import { findHost, IpcHost, WebviewIpcMessage } from "./ipc/webview.protocol";
+import {
+	findHost,
+	IpcHost,
+	WebviewIpcMessage,
+	isIpcResponseMessage,
+	isIpcRequestMessage
+} from "./ipc/webview.protocol";
 import { shortUuid } from "./utils";
 
-type RequestOrNotificationType<P, R> = RequestType<P, R, any, any> | NotificationType<P, R>;
-
-type RequestOf<RT> = RT extends RequestOrNotificationType<infer RQ, any> ? RQ : never;
-type ResponseOf<RT> = RT extends RequestOrNotificationType<any, infer R> ? R : never;
+type NotificationParamsOf<NT> = NT extends NotificationType<infer N, any> ? N : never;
+type RequestParamsOf<RT> = RT extends RequestType<infer R, any, any, any> ? R : never;
+type RequestResponseOf<RT> = RT extends RequestType<any, infer R, any, any> ? R : never;
 
 class EventEmitter {
 	private listenersByEvent = new Map<string, Function[]>();
 
 	on<NT extends NotificationType<any, any>>(
 		eventType: NT,
-		listener: (event: RequestOf<NT>) => void
+		listener: (event: NotificationParamsOf<NT>) => void
 	) {
 		const listeners = this.listenersByEvent.get(eventType.method) || [];
 		listeners.push(listener);
@@ -40,7 +45,14 @@ class EventEmitter {
 let sequence = 0;
 
 export class HostApi extends EventEmitter {
-	private pendingCommands: Map<string, any>;
+	private _pendingRequests: Map<
+		string,
+		{
+			method: string;
+			resolve: (value?: any | PromiseLike<any>) => void;
+			reject: (reason?: any) => void;
+		}
+	>;
 	private port: IpcHost;
 
 	private static _instance: HostApi;
@@ -53,39 +65,66 @@ export class HostApi extends EventEmitter {
 
 	protected constructor(port: any) {
 		super();
-		this.pendingCommands = new Map();
+		this._pendingRequests = new Map();
 		this.port = port;
 
 		port.onmessage = ({ data }: { data: WebviewIpcMessage }) => {
-			if (data.id) {
-				const pending = this.pendingCommands.get(data.id);
-				console.debug(`received response from host for ${data.id}(${pending.method})`, data);
+			if (isIpcResponseMessage(data)) {
+				const pending = this._pendingRequests.get(data.id);
+				if (pending == null) {
+					console.debug(
+						`received response from host for ${data.id}; unable to find a pending request`,
+						data
+					);
+
+					return;
+				}
+
+				console.debug(
+					`received response from host for ${data.id}; found pending request: ${pending.method}`,
+					data
+				);
 				data.params ? pending.resolve(data.params) : pending.reject(data.error);
-				this.pendingCommands.delete(data.id);
+				this._pendingRequests.delete(data.id);
+
 				return;
 			}
-			if (data.method) {
-				console.debug(`received ${data.method} from host`);
-				this.emit(data.method, data.params);
+
+			if (isIpcRequestMessage(data)) {
+				// TODO: Handle requests from the host
+				debugger;
+				return;
 			}
+
+			console.debug(`received ${data.method} from host`);
+			this.emit(data.method, data.params);
 		};
 	}
 
-	send<RT extends RequestOrNotificationType<any, any>>(
-		request: RT,
-		args: RequestOf<RT>
-	): Promise<ResponseOf<RT>> {
+	notify<NT extends NotificationType<any, any>>(type: NT, params: NotificationParamsOf<NT>): void {
+		const payload = {
+			method: type.method,
+			params: params
+		};
+		this.port.postMessage(payload);
+		console.debug(`notification ${type.method} sent to host`, payload);
+	}
+
+	send<RT extends RequestType<any, any, any, any>>(
+		type: RT,
+		params: RequestParamsOf<RT>
+	): Promise<RequestResponseOf<RT>> {
 		const id = this.nextId();
 		return new Promise((resolve, reject) => {
-			this.pendingCommands.set(id, { resolve, reject, method: request.method });
+			this._pendingRequests.set(id, { resolve, reject, method: type.method });
 
 			const payload = {
 				id,
-				method: request.method,
-				params: args
+				method: type.method,
+				params: params
 			};
 			this.port.postMessage(payload);
-			console.debug(`command ${id}:${request.method} sent to host`, payload);
+			console.debug(`request ${id}:${type.method} sent to host`, payload);
 		});
 	}
 
@@ -96,6 +135,6 @@ export class HostApi extends EventEmitter {
 			sequence++;
 		}
 
-		return `${sequence}:${shortUuid()}`;
+		return `wv:${sequence}:${shortUuid()}`;
 	}
 }

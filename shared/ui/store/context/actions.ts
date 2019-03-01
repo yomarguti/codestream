@@ -3,7 +3,7 @@ import {
 	DisconnectThirdPartyProviderRequestType,
 	TelemetryRequestType
 } from "@codestream/protocols/agent";
-import { DidChangeActiveStreamNotificationType } from "../../ipc/webview.protocol";
+import { WebviewDidChangeActiveStreamNotificationType } from "../../ipc/webview.protocol";
 import { logError } from "../../logger";
 import { setUserPreference } from "../../Stream/actions";
 import { HostApi } from "../../webview-api";
@@ -70,7 +70,7 @@ export const setCurrentStream = (streamId?: string) => (dispatch, getState) => {
 	const { context } = getState();
 	// don't set the stream ID unless it actually changed
 	if (context.currentStreamId !== streamId) {
-		HostApi.instance.send(DidChangeActiveStreamNotificationType, { streamId });
+		HostApi.instance.notify(WebviewDidChangeActiveStreamNotificationType, { streamId });
 		return dispatch(_setCurrentStream(streamId));
 	}
 };
@@ -98,10 +98,7 @@ export const connectProvider = (name: string, fromMenu = false) => async (dispat
 	}
 };
 
-export const disconnectService = (name: string, fromMenu = false) => async (
-	dispatch,
-	getState
-) => {
+export const disconnectService = (name: string, fromMenu = false) => async (dispatch, getState) => {
 	try {
 		const api = HostApi.instance;
 		await api.send(DisconnectThirdPartyProviderRequestType, {

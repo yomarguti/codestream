@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { connect } from "react-redux";
 import { startSlackSignin } from "../Signup/actions";
 import { goToSignup } from "../store/route/actions";

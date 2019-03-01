@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import Icon from "../Icon";
 import Menu from "../Menu";
 import { Board, CrossPostIssueValuesListener, SUPPORTED_SERVICES } from "./types";
@@ -48,7 +48,7 @@ export default class TrelloCardControls extends React.Component<Props, State> {
 			isEnabled,
 			provider: SUPPORTED_SERVICES.Trello.name
 		});
-	}
+	};
 
 	switchBoard = event => {
 		event.stopPropagation();
@@ -56,14 +56,14 @@ export default class TrelloCardControls extends React.Component<Props, State> {
 			boardMenuOpen: !this.state.boardMenuOpen,
 			boardMenuTarget: event.target
 		});
-	}
+	};
 
 	selectBoard = board => {
 		if (board) {
 			this.setState({ board, list: board.lists[0] }, this.onValuesChanged);
 		}
 		this.setState({ boardMenuOpen: false });
-	}
+	};
 
 	switchList = event => {
 		event.stopPropagation();
@@ -71,18 +71,18 @@ export default class TrelloCardControls extends React.Component<Props, State> {
 			listMenuOpen: !this.state.listMenuOpen,
 			listMenuTarget: event.target
 		});
-	}
+	};
 
 	selectList = (list: List) => {
 		this.setState({ listMenuOpen: false });
 		if (list && list.id) {
 			this.setState({ list }, this.onValuesChanged);
 		}
-	}
+	};
 
 	toggleCrossPostIssue = () => {
 		this.setState(state => ({ isEnabled: !state.isEnabled }), this.onValuesChanged);
-	}
+	};
 
 	render() {
 		const { board, list } = this.state;

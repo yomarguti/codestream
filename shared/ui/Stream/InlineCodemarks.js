@@ -10,12 +10,11 @@ import createClassString from "classnames";
 import { range } from "../utils";
 import { HostApi } from "../webview-api";
 import {
-	ShowCodeRequestType,
-	HighlightCodeRequestType,
-	HighlightLineRequestType,
-	RevealFileLineRequestType,
+	EditorRevealMarkerRequestType,
+	EditorHighlightMarkerRequestType,
+	EditorHighlightLineRequestType,
+	EditorRevealLineRequestType,
 	StartCommentOnLineRequestType,
-	ShowMarkersInEditorRequestType,
 	UpdateConfigurationRequestType
 } from "../ipc/webview.protocol";
 import {
@@ -39,7 +38,10 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	componentDidMount() {
-		HostApi.instance.send(ShowMarkersInEditorRequestType, { enable: this.editorMarkersEnabled });
+		HostApi.instance.send(UpdateConfigurationRequestType, {
+			name: "showMarkers",
+			value: this.editorMarkersEnabled
+		});
 		this.disposables.push(
 			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
 				if (this.props.textEditorUri === textDocument.uri) this.fetchDocumentMarkers();
@@ -77,7 +79,7 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	componentWillUnmount() {
-		HostApi.instance.send(ShowMarkersInEditorRequestType, { enable: true });
+		HostApi.instance.send(UpdateConfigurationRequestType, { name: "showMarkers", value: true });
 		this.disposables.forEach(d => d.dispose());
 	}
 
@@ -328,7 +330,7 @@ export class SimpleInlineCodemarks extends Component {
 		// 2) 9 is half a line, because we want it to scroll halfway through the line
 		const line = Math.round((top - 27) / 18);
 		if (line < 0) return;
-		HostApi.instance.send(RevealFileLineRequestType, { line });
+		HostApi.instance.send(EditorRevealLineRequestType, { line });
 	};
 
 	toggleShowMarkers = () => {
@@ -341,8 +343,9 @@ export class SimpleInlineCodemarks extends Component {
 
 		// TODO: test this when it spatial view is enabled
 		this.editorMarkersEnabled = !this.editorMarkersEnabled;
-		HostApi.instance.send(ShowMarkersInEditorRequestType, {
-			enable: this.editorMarkersEnabled
+		HostApi.instance.send(UpdateConfigurationRequestType, {
+			name: "showMarkers",
+			value: this.editorMarkersEnabled
 		});
 		this.props.setActivePanel("knowledge");
 	};
@@ -409,9 +412,9 @@ export class SimpleInlineCodemarks extends Component {
 			}
 		});
 		if (codemark.markers)
-			HostApi.instance.send(ShowCodeRequestType, {
+			HostApi.instance.send(EditorRevealMarkerRequestType, {
 				marker: codemark.markers[0],
-				enteringThread: true
+				preserveFocus: true
 			});
 		this.props.setThread(codemark.streamId, codemark.parentPostId || codemark.postId);
 		// const isOpen = this.state.openPost === id;
@@ -422,7 +425,7 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	highlightCode(marker, highlight) {
-		HostApi.instance.send(HighlightCodeRequestType, {
+		HostApi.instance.send(EditorHighlightMarkerRequestType, {
 			uri: this.props.textEditorUri,
 			marker: marker,
 			highlight: highlight,
@@ -452,7 +455,7 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	highlightLine(line, highlight) {
-		HostApi.instance.send(HighlightLineRequestType, {
+		HostApi.instance.send(EditorHighlightLineRequestType, {
 			uri: this.props.textEditorUri,
 			line: line,
 			highlight: highlight,

@@ -24,7 +24,7 @@ import { reactToPost } from "./actions";
 import { safe } from "../utils";
 import { getUsernamesById, getNormalizedUsernames } from "../store/users/reducer";
 import { getProviderInfo } from "./CrossPostIssueControls/types";
-import { ShowCodeRequestType } from "../ipc/webview.protocol";
+import { EditorRevealMarkerRequestType } from "../ipc/webview.protocol";
 import { HostApi } from "../webview-api";
 import { includes as _includes } from "lodash-es";
 
@@ -63,19 +63,19 @@ class Post extends React.Component {
 		this.showCode();
 	};
 
-	async showCode(enteringThread = false) {
+	async showCode(preserveFocus = false) {
 		const { hasMarkers, codemark } = this.props;
 		const marker = hasMarkers && codemark.markers[0];
 		if (marker) {
 			if (marker.repoId) {
-				const status = await HostApi.instance.send(ShowCodeRequestType, {
+				const response = await HostApi.instance.send(EditorRevealMarkerRequestType, {
 					marker,
-					enteringThread
+					preserveFocus: preserveFocus
 				});
-				if (status === "SUCCESS") {
+				if (response.result === "SUCCESS") {
 					this.setState({ warning: null });
 				} else {
-					this.setState({ warning: status });
+					this.setState({ warning: response.result });
 				}
 			} else this.setState({ warning: "NO_REMOTE" });
 		}

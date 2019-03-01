@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { debounce as _debounce } from "lodash-es";
 import DateSeparator from "./DateSeparator";
 import Icon from "./Icon";

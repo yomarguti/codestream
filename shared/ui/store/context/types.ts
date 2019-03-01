@@ -1,3 +1,5 @@
+import { Range } from "vscode-languageserver-types";
+
 export enum ContextActionsType {
 	SetThread = "SET_CURRENT_THREAD",
 	SetCodemarkFileFilter = "SET_CODEMARK_FILE_FILTER",

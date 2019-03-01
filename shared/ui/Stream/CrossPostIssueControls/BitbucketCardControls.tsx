@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import Icon from "../Icon";
 import Menu from "../Menu";
 import { Board, CrossPostIssueValuesListener, SUPPORTED_SERVICES } from "./types";
@@ -50,7 +50,7 @@ export default class BitbucketCardControls extends React.Component<Props, State>
 				break;
 			}
 		}
-	}
+	};
 
 	onValuesChanged = () => {
 		const { isEnabled, board } = this.state;
@@ -60,7 +60,7 @@ export default class BitbucketCardControls extends React.Component<Props, State>
 			isEnabled,
 			provider: SUPPORTED_SERVICES.Bitbucket.name
 		});
-	}
+	};
 
 	switchBoard = event => {
 		event.stopPropagation();
@@ -68,18 +68,18 @@ export default class BitbucketCardControls extends React.Component<Props, State>
 			boardMenuOpen: !this.state.boardMenuOpen,
 			boardMenuTarget: event.target
 		});
-	}
+	};
 
 	selectBoard = (board: Board) => {
 		if (board) {
 			this.setState({ board }, this.onValuesChanged);
 		}
 		this.setState({ boardMenuOpen: false });
-	}
+	};
 
 	toggleCrossPostIssue = () => {
 		this.setState(state => ({ isEnabled: !state.isEnabled }), this.onValuesChanged);
-	}
+	};
 
 	render() {
 		const { board } = this.state;

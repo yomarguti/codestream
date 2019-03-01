@@ -10,7 +10,7 @@ import {
 } from "@codestream/protocols/api";
 import cx from "classnames";
 import * as paths from "path-browserify";
-import * as React from "react";
+import React from "react";
 import { connect } from "react-redux";
 import Select from "react-select";
 import { Range } from "vscode-languageserver-types";
@@ -181,7 +181,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			this.props.codeBlock.type !== prevProps.codeBlock.type
 		) {
 			// FIXME this should call ComposeBox.repositionIfNecessary()
-			this.setState({ type: this.props.codeBlock.type });
+			this.setState({ type: this.props.codeBlock.type! });
 		}
 	}
 
@@ -273,7 +273,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	tabIndex = () => {
-		return (global as any).atom ? this.tabIndexCount++ : "0";
+		return (global as any).atom ? this.tabIndexCount++ : 0;
 	};
 
 	// TODO: work on this from initial mount
@@ -779,7 +779,7 @@ class CodemarkForm extends React.Component<Props, State> {
 									type="text"
 									name="title"
 									className="native-key-bindings input-text control"
-									tabIndex={this.tabIndex() as number}
+									tabIndex={this.tabIndex()}
 									value={this.state.title}
 									onChange={e => this.setState({ title: e.target.value })}
 									placeholder={titlePlaceholder}
@@ -800,8 +800,8 @@ class CodemarkForm extends React.Component<Props, State> {
 										closeMenuOnSelect={true}
 										isClearable={false}
 										placeholder={assigneesPlaceholder}
-										onChange={value => this.setState({ assignees: value })}
-										tabIndex={this.tabIndex()}
+										onChange={value => this.setState({ assignees: value! })}
+										tabIndex={this.tabIndex().toString()}
 									/>
 								)}
 							</div>

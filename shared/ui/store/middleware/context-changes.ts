@@ -1,4 +1,4 @@
-import { DidChangeContextStateNotificationType } from "../../ipc/webview.protocol";
+import { WebviewDidChangeContextNotificationType } from "../../ipc/webview.protocol";
 import { HostApi } from "../../webview-api";
 import { ContextActionsType, State as Context } from "../context/types";
 
@@ -12,7 +12,9 @@ export const contextChangeObserver = store => next => (action: { type: string })
 
 	window.requestIdleCallback(() => {
 		if (notEqual(oldContext, newContext)) {
-			HostApi.instance.send(DidChangeContextStateNotificationType, { state: newContext });
+			HostApi.instance.notify(WebviewDidChangeContextNotificationType, {
+				context: newContext
+			});
 		}
 	});
 

@@ -37,15 +37,16 @@ import { getTeamMembers } from "../store/users/reducer";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { HostApi } from "../webview-api";
 import {
-	SignOutRequestType,
-	InviteToLiveShareRequestType,
-	StartLiveShareRequestType,
-	DidCloseThreadNotificationType,
-	DidOpenThreadNotificationType,
-	DidHighlightCodeNotificationType,
+	LogoutRequestType,
+	LiveShareInviteToSessionRequestType,
+	LiveShareStartSessionRequestType,
+	WebviewDidCloseThreadNotificationType,
+	WebviewDidOpenThreadNotificationType,
+	HostDidChangeEditorSelectionNotificationType,
 	DidSelectStreamThreadNotificationType,
-	DidScrollEditorNotificationType,
-	OpenCommentOnSelectInEditorRequestType
+	HostDidChangeEditorVisibleRangesNotificationType,
+	UpdateConfigurationRequestType,
+	HostDidSelectCodeNotificationType
 } from "../ipc/webview.protocol";
 import {
 	OpenUrlRequestType,
@@ -81,8 +82,11 @@ export class SimpleStream extends Component {
 		this.setUmiInfo();
 		this.disposables.push(
 			HostApi.instance.on(DidSelectStreamThreadNotificationType, this.handleStreamThreadSelected),
-			HostApi.instance.on(DidHighlightCodeNotificationType, this.handleCodeHighlightEvent),
-			HostApi.instance.on(DidScrollEditorNotificationType, this.handleTextEditorScrolledEvent)
+			HostApi.instance.on(HostDidSelectCodeNotificationType, this.handleCodeHighlightEvent),
+			HostApi.instance.on(
+				HostDidChangeEditorVisibleRangesNotificationType,
+				this.handleTextEditorScrolledEvent
+			)
 		);
 
 		this.props.fetchCodemarks();
@@ -1078,7 +1082,7 @@ export class SimpleStream extends Component {
 			case "disconnect-bitbucket":
 				return this.props.disconnectService("bitbucket");
 			case "signout":
-				return HostApi.instance.send(SignOutRequestType, {});
+				return HostApi.instance.send(LogoutRequestType, {});
 
 			default:
 				return;
@@ -1095,8 +1099,9 @@ export class SimpleStream extends Component {
 	};
 
 	toggleOpenCommentOnSelect = () => {
-		HostApi.instance.send(OpenCommentOnSelectInEditorRequestType, {
-			enable: !this.props.configs.openCommentOnSelect
+		HostApi.instance.send(UpdateConfigurationRequestType, {
+			name: "openCommentOnSelect",
+			value: !this.props.configs.openCommentOnSelect
 		});
 	};
 
@@ -1238,7 +1243,7 @@ export class SimpleStream extends Component {
 		this.focusInput();
 	};
 
-	onThreadClosed = threadId => HostApi.instance.send(DidCloseThreadNotificationType);
+	onThreadClosed = threadId => HostApi.instance.notify(WebviewDidCloseThreadNotificationType);
 
 	handleEditPost = event => {
 		var postDiv = event.target.closest(".post");
@@ -1454,7 +1459,7 @@ export class SimpleStream extends Component {
 
 		this.focusInput();
 		if (wasClicked) {
-			HostApi.instance.send(DidOpenThreadNotificationType, {
+			HostApi.instance.notify(WebviewDidOpenThreadNotificationType, {
 				threadId,
 				streamId: this.props.postStreamId
 			});
@@ -1825,7 +1830,7 @@ export class SimpleStream extends Component {
 			}
 		});
 
-		HostApi.instance.send(InviteToLiveShareRequestType, { userId, createNewStream: false });
+		HostApi.instance.send(LiveShareInviteToSessionRequestType, { userId, createNewStream: false });
 		return true;
 	};
 
@@ -1848,7 +1853,7 @@ export class SimpleStream extends Component {
 				"Start Location": liveShareStartLocation
 			}
 		});
-		HostApi.instance.send(StartLiveShareRequestType, {
+		HostApi.instance.send(LiveShareStartSessionRequestType, {
 			threadId,
 			streamId: postStreamId,
 			createNewStream: false

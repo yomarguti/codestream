@@ -13,7 +13,7 @@ CancelButton.defaultProps = {
 	)
 };
 
-export default function CancelButton({ placement, className, onClick, title, ...extras }) {
+export default function CancelButton({ placement, onClick, title = "", ...extras }) {
 	const { dispatch, ...extraProps } = extras; // remove non-html attributes
 	return (
 		<span className="align-right-button" onClick={onClick}>

@@ -11,7 +11,10 @@ import Filter from "./Filter";
 import Codemark from "./Codemark";
 import { HostApi } from "../webview-api";
 import { TelemetryRequestType } from "@codestream/protocols/agent";
-import { ShowCodeRequestType, ShowMarkersInEditorRequestType } from "../ipc/webview.protocol";
+import {
+	EditorRevealMarkerRequestType,
+	UpdateConfigurationRequestType
+} from "../ipc/webview.protocol";
 import { includes as _includes, sortBy as _sortBy } from "lodash-es";
 
 export class SimpleKnowledgePanel extends Component {
@@ -404,7 +407,10 @@ export class SimpleKnowledgePanel extends Component {
 	toggleShowMarkers = async () => {
 		const showMarkers = !this.props.showMarkers;
 		try {
-			await HostApi.instance.send(ShowMarkersInEditorRequestType, { enable: showMarkers });
+			await HostApi.instance.send(UpdateConfigurationRequestType, {
+				name: "showMarkers",
+				value: showMarkers
+			});
 			this.setState({ showMarkers });
 		} catch (error) {
 			logError(`Error toggling marker visibility: ${error}`);
@@ -427,9 +433,9 @@ export class SimpleKnowledgePanel extends Component {
 		});
 
 		if (codemark.markers)
-			HostApi.instance.send(ShowCodeRequestType, {
+			HostApi.instance.send(EditorRevealMarkerRequestType, {
 				marker: codemark.markers[0],
-				enteringThread: true
+				preserveFocus: true
 			});
 		this.props.setThread(codemark.streamId, codemark.parentPostId || codemark.postId);
 		// const isOpen = this.state.openPost === id;

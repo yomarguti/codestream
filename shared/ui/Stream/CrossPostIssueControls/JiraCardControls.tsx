@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import Icon from "../Icon";
 import Menu from "../Menu";
 import { Board, CrossPostIssueValuesListener, SUPPORTED_SERVICES } from "./types";
@@ -44,7 +44,7 @@ export default class JiraCardControls extends React.Component<Props, State> {
 			isEnabled,
 			provider: SUPPORTED_SERVICES.Jira.name
 		});
-	}
+	};
 
 	switchIssueType = event => {
 		event.stopPropagation();
@@ -52,14 +52,14 @@ export default class JiraCardControls extends React.Component<Props, State> {
 			issueTypeMenuOpen: !this.state.issueTypeMenuOpen,
 			issueTypeMenuTarget: event.target
 		});
-	}
+	};
 
 	selectIssueType = issueType => {
 		if (issueType) {
 			this.setState({ issueType }, this.onValuesChanged);
 		}
 		this.setState({ issueTypeMenuOpen: false });
-	}
+	};
 
 	switchBoard = event => {
 		event.stopPropagation();
@@ -67,18 +67,18 @@ export default class JiraCardControls extends React.Component<Props, State> {
 			boardMenuOpen: !this.state.boardMenuOpen,
 			boardMenuTarget: event.target
 		});
-	}
+	};
 
 	selectBoard = board => {
 		if (board) {
 			this.setState({ board }, this.onValuesChanged);
 		}
 		this.setState({ boardMenuOpen: false });
-	}
+	};
 
 	toggleCrossPostIssue = () => {
 		this.setState(state => ({ isEnabled: !state.isEnabled }), this.onValuesChanged);
-	}
+	};
 
 	render() {
 		const { board, issueType } = this.state;

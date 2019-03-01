@@ -1,6 +1,5 @@
-import * as React from "react";
+import React from "react";
 import { connect } from "react-redux";
-import { getFetchIssueBoardsCommand } from "../../ipc/webview.protocol";
 import { connectProvider } from "../../store/context/actions";
 import { HostApi } from "../../webview-api";
 import Icon from "../Icon";
@@ -17,6 +16,14 @@ import {
 	Service,
 	SUPPORTED_SERVICES
 } from "./types";
+import { FetchThirdPartyBoardsRequest } from "@codestream/protocols/agent";
+import { RequestType } from "vscode-jsonrpc";
+import { IpcRoutes } from "@codestream/protocols/webview";
+
+export const getFetchIssueBoardsCommand = (service: string) =>
+	new RequestType<FetchThirdPartyBoardsRequest, { boards: any[] }, void, void>(
+		`${IpcRoutes.Agent}/${service}/boards`
+	);
 
 interface Props {
 	connectProvider(name: string): any;

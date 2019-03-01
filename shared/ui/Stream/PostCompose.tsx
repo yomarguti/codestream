@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import Icon from "./Icon";
 import Menu from "./Menu";
 
@@ -13,6 +13,8 @@ interface Props {
 
 interface State {
 	text: string;
+	menuOpen?: boolean;
+	menuTarget?: EventTarget;
 }
 
 export class PostCompose extends React.Component<Props, State> {
@@ -21,21 +23,26 @@ export class PostCompose extends React.Component<Props, State> {
 		this.state = { text: "" };
 	}
 
-	handleChange = (text: string) => {
+	handleChange(text: string) {
 		this.setState({ text });
-	};
+	}
 
-	handleClickClose = (event: React.SyntheticEvent) => {
+	handleClickClose(event: React.SyntheticEvent) {
 		event.preventDefault();
 		this.props.onClickClose();
-	};
+	}
 
-	handleMenuClick = event => {
+	handleMenuClick(event: React.SyntheticEvent) {
 		event.stopPropagation();
 		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
-	};
+	}
 
-	handleSubmit = () => {
+	handleSelectMenu(type) {
+		this.setState({ menuOpen: false });
+		if (type) this.props.openCodemarkForm(type);
+	}
+
+	handleSubmit() {
 		const domParser = new DOMParser();
 		const replaceRegex = /<br>|<div>/g;
 		const text = domParser.parseFromString(this.state.text.replace(replaceRegex, "\n"), "text/html")
@@ -45,17 +52,7 @@ export class PostCompose extends React.Component<Props, State> {
 
 		this.props.onSubmit(text);
 		this.setState({ text: "" });
-	};
-
-	handleMenuClick = event => {
-		event.stopPropagation();
-		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
-	};
-
-	handleSelectMenu = type => {
-		this.setState({ menuOpen: false });
-		if (type) this.props.openCodemarkForm(type);
-	};
+	}
 
 	render() {
 		const { menuOpen, menuTarget } = this.state;

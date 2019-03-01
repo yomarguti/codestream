@@ -1,4 +1,4 @@
-import { LoginRequest, LoginRequestType, StartSignupRequestType } from "../ipc/webview.protocol";
+import { LoginRequest, LoginRequestType, SignupRequestType } from "../ipc/webview.protocol";
 import { logError } from "../logger";
 import { bootstrap } from "../store/actions";
 import { goToCompleteSignup } from "../store/route/actions";
@@ -15,7 +15,7 @@ export const authenticate = (params: LoginRequest) => async dispatch => {
 
 export const startSignup = () => async dispatch => {
 	try {
-		await HostApi.instance.send(StartSignupRequestType, undefined);
+		await HostApi.instance.send(SignupRequestType, {});
 		dispatch(goToCompleteSignup());
 	} catch (error) {
 		logError(error);

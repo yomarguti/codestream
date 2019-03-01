@@ -8,7 +8,13 @@ Button.defaultProps = {
 	loading: false
 };
 
-export default function Button({ children, className, disabled, isOffline, loading, ...extras }) {
+export default function Button({
+	children = undefined,
+	className,
+	disabled = false,
+	loading = false,
+	...extras
+}) {
 	const { dispatch, ...extraProps } = extras; // remove non-html attributes
 	return (
 		<button

@@ -35,7 +35,7 @@ import {
 	UpdateStreamMembershipRequestType
 } from "@codestream/protocols/agent";
 import { CSPost, StreamType } from "@codestream/protocols/api";
-import { DidChangeActiveStreamNotificationType } from "../ipc/webview.protocol";
+import { WebviewDidChangeActiveStreamNotificationType } from "../ipc/webview.protocol";
 import { logError } from "../logger";
 import { saveCodemarks, updateCodemarks } from "../store/codemarks/actions";
 import {
@@ -346,7 +346,7 @@ export const leaveChannel = (streamId: string) => async (dispatch, getState) => 
 			);
 		}
 		if (context.currentStreamId === streamId) {
-			HostApi.instance.send(DidChangeActiveStreamNotificationType, {});
+			HostApi.instance.notify(WebviewDidChangeActiveStreamNotificationType, {});
 			// this will take you to the #general channel
 			dispatch(contextActions.setCurrentStream(undefined));
 			// dispatch(setPanel("channels"));

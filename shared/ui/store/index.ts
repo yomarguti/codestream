@@ -51,17 +51,17 @@ const reducer = combineReducers({
 	services: reduceServices
 });
 
-export const createCodeStreamStore = (
-	initialState = {},
-	thunkArg = {},
-	consumerMiddleware = []
-) => {
+export function createCodeStreamStore(
+	initialState: any = {},
+	thunkArg: any = {},
+	consumerMiddleware: any[] = []
+) {
 	return createStore(
 		reducer,
 		initialState,
 		composeWithDevTools(
 			applyMiddleware(thunk.withExtraArgument(thunkArg), ...middleware, ...consumerMiddleware),
-			batchedSubscribe(debounceToAnimationFrame((notify: Function) => notify()))
+			batchedSubscribe(debounceToAnimationFrame((notify: Function) => notify())) as any
 		)
 	);
-};
+}

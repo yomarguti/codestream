@@ -1,14 +1,14 @@
-import { CSCodemark } from "@codestream/protocols/api";
 import { createSelector } from "reselect";
 import { toMapBy } from "../../utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
 import { CodemarksActionsTypes } from "./types";
+import { CodemarkPlus } from "@codestream/protocols/agent";
 
 type CodemarksActions = ActionType<typeof actions>;
 
 interface State {
-	[codemarkId: string]: CSCodemark;
+	[codemarkId: string]: CodemarkPlus;
 }
 
 const initialState: State = {};
@@ -27,12 +27,12 @@ export function reduceCodemarks(state = initialState, action: CodemarksActions) 
 	}
 }
 
-export function getCodemark(state: State, id?: string): CSCodemark | undefined {
+export function getCodemark(state: State, id?: string): CodemarkPlus | undefined {
 	if (!id) return undefined;
 	return state[id];
 }
 
-export function getByType(state: State, type?: string): CSCodemark[] {
+export function getByType(state: State, type?: string): CodemarkPlus[] {
 	if (!type) return Object.values(state);
 
 	return Object.values(state).filter(codemark => codemark.type === type);

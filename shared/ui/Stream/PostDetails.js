@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import Button from "./Button";
 import { HostApi } from "../webview-api";
-import { ShowDiffRequestType, ApplyPatchRequestType } from "../ipc/webview.protocol";
+import { CompareMarkerRequestType, ApplyMarkerRequestType } from "../ipc/webview.protocol";
 
 export default class PostDetails extends Component {
 	disposables = [];
@@ -14,12 +14,12 @@ export default class PostDetails extends Component {
 
 	handleClickShowDiff = event => {
 		event.preventDefault();
-		HostApi.instance.send(ShowDiffRequestType, { marker: this.props.codemark.markers[0] });
+		HostApi.instance.send(CompareMarkerRequestType, { marker: this.props.codemark.markers[0] });
 	};
 
 	handleClickApplyPatch = event => {
 		event.preventDefault();
-		HostApi.instance.send(ApplyPatchRequestType, { marker: this.props.codemark.markers[0] });
+		HostApi.instance.send(ApplyMarkerRequestType, { marker: this.props.codemark.markers[0] });
 	};
 
 	render() {

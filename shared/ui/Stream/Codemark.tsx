@@ -1,5 +1,5 @@
 import cx from "classnames";
-import * as React from "react";
+import React from "react";
 import { connect } from "react-redux";
 import { setCodemarkStatus } from "./actions";
 import Headshot from "./Headshot";
@@ -88,7 +88,7 @@ export class Codemark extends React.Component<Props, State> {
 		let icon: JSX.Element | null = null;
 		switch (codemark.type) {
 			case "question":
-				icon = <Icon name="question" className="type-icon" />;
+				return <Icon name="question" className="type-icon" />;
 				break;
 			case "bookmark":
 				icon = <Icon name="bookmark" className="type-icon" />;

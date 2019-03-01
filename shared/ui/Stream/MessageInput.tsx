@@ -1,5 +1,5 @@
 import cx from "classnames";
-import * as React from "react";
+import React from "react";
 import ContentEditable from "react-contenteditable";
 const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
 import { CSChannelStream, CSPost, CSUser } from "@codestream/protocols/api";
@@ -159,7 +159,7 @@ export class MessageInput extends React.Component<Props, State> {
 
 	hideEmojiPicker = () => {
 		this.setState({ emojiOpen: false });
-	}
+	};
 
 	addEmoji = (emoji: typeof emojiData[string]) => {
 		this.setState({ emojiOpen: false });
@@ -169,7 +169,7 @@ export class MessageInput extends React.Component<Props, State> {
 				this.insertTextAtCursor(emoji.colons); // + "\u00A0"); <= that's a space
 			});
 		}
-	}
+	};
 
 	// https://stackoverflow.com/questions/6249095/how-to-set-caretcursor-position-in-contenteditable-element-div
 	setCurrentCursorPosition = chars => {
@@ -192,7 +192,7 @@ export class MessageInput extends React.Component<Props, State> {
 				selection.addRange(range);
 			}
 		}
-	}
+	};
 
 	// set up the parameters to pass to the at mention popup
 	showPopupSelectors(prefix: string, type: PopupType) {
@@ -280,13 +280,13 @@ export class MessageInput extends React.Component<Props, State> {
 	handleBlur = (event: React.SyntheticEvent) => {
 		event.preventDefault();
 		this.hidePopup();
-	}
+	};
 
 	handleClick = event => {
 		this.setState({
 			cursorPosition: getCurrentCursorPosition("input-div")
 		});
-	}
+	};
 
 	// depending on the contents of the input field, if the user
 	// types a "@" then open the at-mention popup
@@ -345,7 +345,7 @@ export class MessageInput extends React.Component<Props, State> {
 			// autoMentions: this.state.autoMentions.filter(mention => newPostText.includes(mention)), // TODO
 			cursorPosition: getCurrentCursorPosition("input-div")
 		});
-	}
+	};
 
 	handleSelectAtMention = (id?: string) => {
 		// if no id is passed, we assume that we're selecting
@@ -375,7 +375,7 @@ export class MessageInput extends React.Component<Props, State> {
 		// unless it is a &nbsp;, which is difficult to insert
 		// so we insert this unicode character instead
 		this.insertTextAtCursor(toInsert, this.state.popupPrefix);
-	}
+	};
 
 	// insert the given text at the cursor of the input field
 	// after first deleting the text in toDelete
@@ -413,7 +413,7 @@ export class MessageInput extends React.Component<Props, State> {
 				cursorPosition: getCurrentCursorPosition("input-div")
 			});
 		}
-	}
+	};
 
 	insertNewlineAtCursor() {
 		let sel, range;
@@ -489,7 +489,7 @@ export class MessageInput extends React.Component<Props, State> {
 		} else if (event.key == "Escape" && multiCompose) {
 			this.props.onDismiss();
 		}
-	}
+	};
 
 	// the keypress handler for tracking up and down arrow
 	// and enter, while the at mention popup is open
@@ -551,7 +551,7 @@ export class MessageInput extends React.Component<Props, State> {
 				this.props.onDismiss();
 			}
 		}
-	}
+	};
 
 	handleHoverAtMention = id => {
 		const index = this.state.popupItems!.findIndex(x => x.id == id);
@@ -560,14 +560,14 @@ export class MessageInput extends React.Component<Props, State> {
 			popupIndex: index,
 			selectedPopupItem: id
 		});
-	}
+	};
 
 	handleClickEmojiButton = (event: React.SyntheticEvent) => {
 		event.persist();
 		this.setState(state => ({ emojiOpen: !state.emojiOpen, emojiMenuTarget: event.target }));
 		// this.focus();
 		// event.stopPropagation();
-	}
+	};
 
 	render() {
 		const { placeholder, text, __onDidRender } = this.props;

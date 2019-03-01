@@ -26,9 +26,9 @@ import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
 import { isInVscode, safe } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
-import { MuteAllConversationsRequestType } from "../ipc/webview.protocol";
 import { HostApi } from "../webview-api";
 import { sortBy as _sortBy } from "lodash-es";
+import { UpdateConfigurationRequestType } from "../ipc/webview.protocol";
 
 export class SimpleChannelPanel extends Component {
 	constructor(props) {
@@ -145,7 +145,10 @@ export class SimpleChannelPanel extends Component {
 	};
 
 	toggleMuteAll = () => {
-		HostApi.instance.send(MuteAllConversationsRequestType, { mute: !this.props.muteAll });
+		HostApi.instance.send(UpdateConfigurationRequestType, {
+			name: "muteAll",
+			value: !this.props.muteAll
+		});
 	};
 
 	toggleMenu = event => {
