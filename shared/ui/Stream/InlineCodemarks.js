@@ -18,7 +18,11 @@ import {
 	ShowMarkersInEditorRequestType,
 	UpdateConfigurationRequestType
 } from "../ipc/webview.protocol";
-import { TelemetryRequestType, DocumentMarkersRequestType } from "@codestream/protocols/agent";
+import {
+	TelemetryRequestType,
+	DocumentMarkersRequestType,
+	DidChangeDocumentMarkersNotificationType
+} from "@codestream/protocols/agent";
 
 export class SimpleInlineCodemarks extends Component {
 	disposables = [];
@@ -35,6 +39,11 @@ export class SimpleInlineCodemarks extends Component {
 
 	componentDidMount() {
 		HostApi.instance.send(ShowMarkersInEditorRequestType, { enable: this.editorMarkersEnabled });
+		this.disposables.push(
+			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
+				if (this.props.textEditorUri === textDocument.uri) this.fetchDocumentMarkers();
+			})
+		);
 		this.fetchDocumentMarkers();
 		// this.disposables.push(
 		// 	EventEmitter.subscribe("interaction:active-editor-changed", this.handleFileChangedEvent)
