@@ -3,6 +3,7 @@ import { WorkspaceSession, SessionStatus } from "./workspace-session";
 import { DocumentMarkersRequestType } from "@codestream/protocols/agent";
 import { Convert } from "atom-languageclient";
 import { asAbsolutePath, accessSafely } from "utils";
+import { ViewController } from "views/controller";
 
 export class MarkerDecorationProvider implements Disposable {
 	private subscriptions = new CompositeDisposable();
@@ -11,8 +12,12 @@ export class MarkerDecorationProvider implements Disposable {
 	private markers: Map<number, DisplayMarker[]> = new Map();
 	private sessionStatus: SessionStatus;
 	private sessionStatusSubscription: Disposable;
+	private session: WorkspaceSession;
+	private viewController: ViewController;
 
-	constructor(private session: WorkspaceSession) {
+	constructor(session: WorkspaceSession, viewController: ViewController) {
+		this.session = session;
+		this.viewController = viewController;
 		this.sessionStatus = session.status;
 		this.sessionStatusSubscription = this.session.onDidChangeSessionStatus(status => {
 			switch (status) {
@@ -75,11 +80,18 @@ export class MarkerDecorationProvider implements Disposable {
 					img.src = iconPath;
 
 					const item = document.createElement("div");
+					item.onclick = event => {
+						event.preventDefault();
+						this.viewController.getMainView().show(docMarker.postStreamId, docMarker.postId);
+					};
 					item.classList.add("codemark");
 					item.appendChild(img);
 					gutter!.decorateMarker(marker, { item });
 
-					const tooltip = atom.tooltips.add(img, { title: docMarker.summary, placement: "right" });
+					const tooltip = atom.tooltips.add(img, {
+						title: `${docMarker.creatorName}: ${docMarker.summary}`,
+						placement: "right",
+					});
 					this.subscriptions.add(
 						tooltip,
 						new Disposable(() => {

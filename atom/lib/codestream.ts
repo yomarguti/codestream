@@ -4,12 +4,14 @@ import { StatusBar, Tile } from "./types/package-services/status-bar";
 import { WorkspaceSession, SessionStatus } from "./workspace/workspace-session";
 import { PackageState } from "./types/package";
 import { PD_CONFIG, Environment } from "./env-utils";
-import { MarkerDecorationProvider } from "workspace/marker-decoration-provider";
+import { MarkerDecorationProvider } from "./workspace/marker-decoration-provider";
+import { ViewController } from "./views/controller";
 
 class CodestreamPackage {
 	subscriptions = new CompositeDisposable();
 	workspaceSession: WorkspaceSession;
 	view?: CodestreamView;
+	viewController: ViewController;
 	sessionStatusCommand?: Disposable;
 	markerDecorationProvider: MarkerDecorationProvider;
 
@@ -18,7 +20,11 @@ class CodestreamPackage {
 			console.debug("CodeStream package initialized with state:", state);
 		}
 		this.workspaceSession = WorkspaceSession.create(state);
-		this.markerDecorationProvider = new MarkerDecorationProvider(this.workspaceSession);
+		this.viewController = new ViewController(this.workspaceSession);
+		this.markerDecorationProvider = new MarkerDecorationProvider(
+			this.workspaceSession,
+			this.viewController
+		);
 		this.initialize();
 	}
 
@@ -48,16 +54,6 @@ class CodestreamPackage {
 
 		const hiddenInCommandPalette = !atom.inDevMode();
 		this.subscriptions.add(
-			atom.workspace.addOpener(uri => {
-				if (uri === CODESTREAM_VIEW_URI) {
-					if (this.view && this.view.alive) return this.view;
-					this.view = new CodestreamView(this.workspaceSession);
-					return this.view;
-				}
-			}),
-			atom.commands.add("atom-workspace", "codestream:toggle", () =>
-				atom.workspace.toggle(CODESTREAM_VIEW_URI)
-			),
 			// 		Dev mode goodies
 			atom.commands.add("atom-workspace", "codestream:point-to-dev", {
 				didDispatch: () => {
@@ -70,8 +66,7 @@ class CodestreamPackage {
 
 	// Package lifecyle
 	deserializeCodestreamView() {
-		this.view = new CodestreamView(this.workspaceSession);
-		return this.view;
+		return this.viewController.getMainView();
 	}
 
 	// Package lifecyle
@@ -86,6 +81,7 @@ class CodestreamPackage {
 	deactivate() {
 		this.workspaceSession.dispose();
 		this.subscriptions.dispose();
+		this.viewController.dispose();
 		this.markerDecorationProvider.dispose();
 	}
 

@@ -1,5 +1,5 @@
 import { shell } from "electron";
-import { CompositeDisposable } from "atom";
+import { CompositeDisposable, Emitter } from "atom";
 import { WorkspaceSession, SessionStatus } from "../workspace/workspace-session";
 import { LoginResult } from "../protocols/agent/api.protocol";
 import { DidChangeDataNotification } from "../protocols/agent/agent.protocol";
@@ -16,6 +16,7 @@ import {
 	LoginRequestType,
 	LoginRequest,
 	ReloadWebviewRequestType,
+	DidSelectStreamThreadNotificationType,
 } from "../protocols/webview/webview.protocol";
 import { asAbsolutePath } from "../utils";
 import { getStyles } from "./styles-getter";
@@ -38,6 +39,7 @@ export class WebviewIpc {
 }
 
 export const CODESTREAM_VIEW_URI = "atom://codestream";
+export const WEBVIEW_DID_INITIALIZE = "webview-ready";
 
 export class CodestreamView {
 	alive = false;
@@ -46,11 +48,14 @@ export class CodestreamView {
 	private subscriptions: CompositeDisposable;
 	private channel: WebviewIpc;
 	private iframe: HTMLIFrameElement;
-	loadingSpinner: HTMLDivElement;
+	private loadingSpinner: HTMLDivElement;
+	private emitter: Emitter;
+	private webviewReady?: Promise<void>;
 
 	constructor(session: WorkspaceSession) {
 		this.session = session;
 		this.channel = new WebviewIpc();
+		this.emitter = new Emitter();
 		this.alive = true;
 		this.subscriptions = new CompositeDisposable();
 		this.element = document.createElement("div");
@@ -92,6 +97,14 @@ export class CodestreamView {
 
 	getURI() {
 		return CODESTREAM_VIEW_URI;
+	}
+
+	async show(streamId?: string, threadId?: string) {
+		await atom.workspace.open(this, { activatePane: true });
+		if (streamId) {
+			await this.webviewReady;
+			this.sendEvent(DidSelectStreamThreadNotificationType, { streamId, threadId });
+		}
 	}
 
 	private setupLoadingSpinner() {
@@ -147,6 +160,10 @@ export class CodestreamView {
 				}
 			})
 		);
+
+		this.webviewReady = new Promise(resolve =>
+			this.subscriptions.add(this.emitter.on(WEBVIEW_DID_INITIALIZE, resolve))
+		);
 	}
 
 	private onDidChangeSessionData = (data: DidChangeDataNotification) => {
@@ -182,6 +199,7 @@ export class CodestreamView {
 		switch (message.method) {
 			case WebviewReadyNotificationType.method: {
 				this.removeLoadingSpinner();
+				this.emitter.emit(WEBVIEW_DID_INITIALIZE);
 				break;
 			}
 			case GetViewBootstrapDataRequestType.method: {
