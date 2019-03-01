@@ -28,7 +28,7 @@ export interface WebviewContext {
 }
 
 export enum IpcRoutes {
-	Agent = "codeStream",
+	Agent = "codestream",
 	Host = "host",
 	Webview = "webview"
 }
