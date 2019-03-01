@@ -360,8 +360,6 @@ namespace CodeStream.VisualStudio.Services
             var bootstrapState = new
             {
                 capabilities = capabilities,
-                currentUserId = state["userId"].ToString(),
-                currentTeamId = state["teamId"].ToString(),
                 configs = new
                 {
 #if DEBUG
@@ -374,6 +372,15 @@ namespace CodeStream.VisualStudio.Services
                     muteAll = settings.MuteAll,
                     openCommentOnSelect = settings.OpenCommentOnSelect,
                     team = settings.Team
+                },
+                context = new
+                {
+                    currentTeamId = state["teamId"].ToString(),
+                    hasFocus = true
+                },
+                session = new
+                {
+                    userId = state["userId"].ToString(),
                 },
                 env = settings.Env,
                 version = settings.Version,
