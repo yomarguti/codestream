@@ -5,7 +5,6 @@ import * as actions from "./actions";
 import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as userSelectors from "../store/users/reducer";
 import Icon from "./Icon";
-import Tooltip from "./Tooltip";
 import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
 import Codemark from "./Codemark";
@@ -24,6 +23,7 @@ export class SimpleKnowledgePanel extends Component {
 		super(props);
 
 		this.state = {
+			isLoading: props.codemarks.length === 0,
 			openPost: null,
 			expanded: {
 				inThisFile: true,
@@ -108,7 +108,10 @@ export class SimpleKnowledgePanel extends Component {
 	}
 
 	componentDidMount() {
-		if (this.props.codemarks.length === 0) this.props.fetchCodemarks();
+		if (this.props.codemarks.length === 0)
+			this.props.fetchCodemarks().then(() => {
+				this.setState({ isLoading: false });
+			});
 		// this.disposables.push(
 		// 	EventEmitter.subscribe("interaction:active-editor-changed", this.handleFileChangedEvent)
 		// );
@@ -193,7 +196,21 @@ export class SimpleKnowledgePanel extends Component {
 		} = this.props;
 		const { thisRepo } = this.state;
 
-		if (noCodemarksAtAll || true) {
+		if (this.state.isLoading) {
+			/* TODO: Create a component for this */
+			return (
+				<div className="loading-page">
+					<div className="loader-ring">
+						<div className="loader-ring__segment" />
+						<div className="loader-ring__segment" />
+						<div className="loader-ring__segment" />
+						<div className="loader-ring__segment" />
+					</div>
+				</div>
+			);
+		}
+
+		if (noCodemarksAtAll) {
 			return this.renderBlankFiller();
 		}
 
