@@ -88,7 +88,7 @@ export class Codemark extends React.Component<Props, State> {
 		let icon: JSX.Element | null = null;
 		switch (codemark.type) {
 			case "question":
-				return <Icon name="question" className="type-icon" />;
+				icon = <Icon name="question" className="type-icon" />;
 				break;
 			case "bookmark":
 				icon = <Icon name="bookmark" className="type-icon" />;
