@@ -23,14 +23,11 @@ import translations from "./translations/en";
 export { HostApi };
 
 export function setupCommunication(host: { postMessage: (message: any) => void }) {
-	const channel = new MessageChannel();
 	Object.defineProperty(window, "acquireCodestreamHost", {
 		value() {
-			return channel.port2;
+			return host;
 		}
 	});
-	window.addEventListener("message", message => channel.port1.postMessage(message.data), false);
-	channel.port1.onmessage = message => host.postMessage(message.data);
 }
 
 export async function initialize(selector: string, options: { prerender?: () => void }) {
