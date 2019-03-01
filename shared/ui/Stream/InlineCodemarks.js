@@ -32,6 +32,7 @@ export class SimpleInlineCodemarks extends Component {
 		super(props);
 
 		this.state = {
+			isLoading: true,
 			openPost: null,
 			documentMarkers: []
 		};
@@ -44,7 +45,9 @@ export class SimpleInlineCodemarks extends Component {
 				if (this.props.textEditorUri === textDocument.uri) this.fetchDocumentMarkers();
 			})
 		);
-		this.fetchDocumentMarkers();
+		this.fetchDocumentMarkers().then(() => {
+			this.setState({ isLoading: false });
+		});
 		// this.disposables.push(
 		// 	EventEmitter.subscribe("interaction:active-editor-changed", this.handleFileChangedEvent)
 		// );
@@ -360,7 +363,20 @@ export class SimpleInlineCodemarks extends Component {
 					</Tooltip>
 					{!viewInline && "Codemarks"}
 				</div>
-				{viewInline ? this.renderInline() : this.renderList()}
+				{this.state.isLoading /* TODO: Create a component for this */ ? (
+					<div className="loading-page">
+						<div className="loader-ring">
+							<div className="loader-ring__segment" />
+							<div className="loader-ring__segment" />
+							<div className="loader-ring__segment" />
+							<div className="loader-ring__segment" />
+						</div>
+					</div>
+				) : viewInline ? (
+					this.renderInline()
+				) : (
+					this.renderList()
+				)}
 			</div>
 		);
 	}
