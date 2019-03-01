@@ -1,11 +1,9 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
-using CodeStream.VisualStudio.Models;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using StreamJsonRpc;
-using System;
 using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Extensions;
 

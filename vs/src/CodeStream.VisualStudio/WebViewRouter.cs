@@ -179,6 +179,7 @@ namespace CodeStream.VisualStudio
                                                 var fromMarkerResponse = await _codeStreamAgent.GetDocumentFromMarkerAsync(new DocumentFromMarkerRequest(@params.Marker));
                                                 if (fromMarkerResponse?.TextDocument?.Uri == null)
                                                 {
+                                                    Log.Verbose($"{nameof(_codeStreamAgent.GetDocumentFromMarkerAsync)} Uri is null File={@params?.Marker?.File}");
                                                     scope.FulfillRequest();
                                                 }
                                                 else
