@@ -55,12 +55,12 @@ export class SimpleInlineCodemarks extends Component {
 			prevProps.textEditorVisibleRanges
 		);
 
-		if (false && textEditorFirstLine !== prevProps.textEditorFirstLine) {
-			const top = (textEditorFirstLine === 0 ? 1 : textEditorFirstLine + 0.65) * 18;
-			// this._scrollDiv.scrollTop = Math.round(top) + "px";
-			this._scrolling = true;
-			document.getElementsByClassName("inline-codemarks")[0].scrollTop = Math.round(top);
-		}
+		// if (false && textEditorFirstLine !== prevProps.textEditorFirstLine) {
+		// 	const top = (textEditorFirstLine === 0 ? 1 : textEditorFirstLine + 0.65) * 18;
+		// 	// this._scrollDiv.scrollTop = Math.round(top) + "px";
+		// 	this._scrolling = true;
+		// 	document.getElementsByClassName("inline-codemarks")[0].scrollTop = Math.round(top);
+		// }
 		if (didStartLineChange) this.setVisibleLinesCount();
 	}
 
