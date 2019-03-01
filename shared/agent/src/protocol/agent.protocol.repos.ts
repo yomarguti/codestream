@@ -16,7 +16,7 @@ export const CreateRepoRequestType = new RequestType<
 	CreateRepoResponse,
 	void,
 	void
->("codeStream/repos/create");
+>("codestream/repos/create");
 
 export interface FetchReposRequest {
 	repoIds?: string[];
@@ -31,7 +31,7 @@ export const FetchReposRequestType = new RequestType<
 	FetchReposResponse,
 	void,
 	void
->("codeStream/repos");
+>("codestream/repos");
 
 export interface GetRepoRequest {
 	repoId: string;
@@ -42,5 +42,5 @@ export interface GetRepoResponse {
 }
 
 export const GetRepoRequestType = new RequestType<GetRepoRequest, GetRepoResponse, void, void>(
-	"codeStream/repo"
+	"codestream/repo"
 );

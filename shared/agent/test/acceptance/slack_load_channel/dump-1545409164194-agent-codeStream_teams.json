@@ -1,5 +1,5 @@
 {
-  "method": "codeStream/teams",
+  "method": "codestream/teams",
   "request": {
     "mine": true
   },

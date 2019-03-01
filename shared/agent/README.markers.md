@@ -73,7 +73,7 @@ had to calculate it yet.
 
 ## Retrieving markers
 
-- LSP method: `codeStream/textDocument/markers`
+- LSP method: `codestream/textDocument/markers`
 - Handler: [`MarkerHandler.documentMarkers()`](src/marker/markerHandler.ts)
 
 The handler retrieves all markers for the specified document via
@@ -105,7 +105,7 @@ for orchestrating the marker location calculation process. The steps of this pro
 
 ## Creating markers
 
-- LSP method: `codeStream/posts/createWithCode`
+- LSP method: `codestream/posts/createWithCode`
 - Handler: [`PostHandler.documentPost()`](src/post/postHandler.ts)
 
 When a post with a code block is created, the location of this code block must be determined at the committed version

@@ -22,7 +22,7 @@ export const JiraFetchBoardsRequestType = new RequestType<
 	JiraFetchBoardsResponse,
 	void,
 	void
->("codeStream/jira/boards");
+>("codestream/jira/boards");
 
 export interface CreateJiraCardRequest {
 	summary: string;
@@ -42,4 +42,4 @@ export const CreateJiraCardRequestType = new RequestType<
 	CreateJiraCardResponse,
 	void,
 	void
->("codeStream/jira/cards/create");
+>("codestream/jira/cards/create");

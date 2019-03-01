@@ -52,7 +52,7 @@ export const CreatePostRequestType = new RequestType<
 	CreatePostResponse,
 	void,
 	void
->("codeStream/posts/create");
+>("codestream/posts/create");
 
 export interface CodeBlockSource {
 	file: string;
@@ -87,7 +87,7 @@ export const CreatePostWithMarkerRequestType = new RequestType<
 	CreatePostResponse,
 	void,
 	void
->("codeStream/posts/createWithCodemark");
+>("codestream/posts/createWithCodemark");
 
 export interface FetchPostRepliesRequest {
 	streamId: string;
@@ -104,7 +104,7 @@ export const FetchPostRepliesRequestType = new RequestType<
 	FetchPostRepliesResponse,
 	void,
 	void
->("codeStream/post/replies");
+>("codestream/post/replies");
 
 export interface FetchPostsRequest {
 	streamId: string;
@@ -126,7 +126,7 @@ export const FetchPostsRequestType = new RequestType<
 	FetchPostsResponse,
 	void,
 	void
->("codeStream/posts");
+>("codestream/posts");
 
 export interface DeletePostRequest {
 	streamId: string;
@@ -142,7 +142,7 @@ export const DeletePostRequestType = new RequestType<
 	DeletePostResponse,
 	void,
 	void
->("codeStream/post/delete");
+>("codestream/post/delete");
 
 export interface EditPostRequest {
 	streamId: string;
@@ -156,7 +156,7 @@ export interface EditPostResponse {
 }
 
 export const EditPostRequestType = new RequestType<EditPostRequest, EditPostResponse, void, void>(
-	"codeStream/post/edit"
+	"codestream/post/edit"
 );
 
 export interface GetPostRequest {
@@ -169,7 +169,7 @@ export interface GetPostResponse {
 }
 
 export const GetPostRequestType = new RequestType<GetPostRequest, GetPostResponse, void, void>(
-	"codeStream/post"
+	"codestream/post"
 );
 
 export interface MarkPostUnreadRequest {
@@ -184,7 +184,7 @@ export const MarkPostUnreadRequestType = new RequestType<
 	MarkPostUnreadResponse,
 	void,
 	void
->("codeStream/post/markUnread");
+>("codestream/post/markUnread");
 
 export interface PreparePostWithCodeRequest {
 	textDocument: TextDocumentIdentifier;
@@ -204,7 +204,7 @@ export const PreparePostWithCodeRequestType = new RequestType<
 	PreparePostWithCodeResponse,
 	void,
 	void
->("codeStream/post/prepareWithCode");
+>("codestream/post/prepareWithCode");
 
 export interface ReactToPostRequest {
 	streamId: string;
@@ -221,4 +221,4 @@ export const ReactToPostRequestType = new RequestType<
 	ReactToPostResponse,
 	void,
 	void
->("codeStream/post/react");
+>("codestream/post/react");

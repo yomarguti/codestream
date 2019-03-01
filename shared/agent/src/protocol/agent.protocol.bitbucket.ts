@@ -28,7 +28,7 @@ export const BitbucketCreateCardRequestType = new RequestType<
 	BitbucketCreateCardResponse,
 	void,
 	void
->("codeStream/bitbucket/cards/create");
+>("codestream/bitbucket/cards/create");
 
 export interface BitbucketFetchBoardsRequest {
 	organizationId?: string;
@@ -57,7 +57,7 @@ export const BitbucketFetchBoardsRequestType = new RequestType<
 	BitbucketFetchBoardsResponse,
 	void,
 	void
->("codeStream/bitbucket/boards");
+>("codestream/bitbucket/boards");
 
 export interface BitbucketFetchListsRequest {
 	boardId: string;
@@ -81,4 +81,4 @@ export const BitbucketFetchListsRequestType = new RequestType<
 	BitbucketFetchListsResponse,
 	void,
 	void
->("codeStream/bitbucket/lists");
+>("codestream/bitbucket/lists");

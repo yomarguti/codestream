@@ -121,7 +121,7 @@ export interface ApiRequest {
 	init?: RequestInit;
 	token?: string;
 }
-export const ApiRequestType = new RequestType<ApiRequest, any, void, void>("codeStream/api");
+export const ApiRequestType = new RequestType<ApiRequest, any, void, void>("codestream/api");
 
 export interface BootstrapRequest {}
 export interface BootstrapResponse {
@@ -137,7 +137,7 @@ export const BootstrapRequestType = new RequestType<
 	BootstrapResponse,
 	void,
 	void
->("codeStream/bootstrap");
+>("codestream/bootstrap");
 
 export enum LogoutReason {
 	Token = "token",
@@ -149,7 +149,7 @@ export interface DidLogoutNotification {
 }
 
 export const DidLogoutNotificationType = new NotificationType<DidLogoutNotification, void>(
-	"codeStream/didLogout"
+	"codestream/didLogout"
 );
 
 export enum ChangeDataType {
@@ -236,7 +236,7 @@ export type DidChangeDataNotification =
 	| UsersChangedNotification;
 
 export const DidChangeDataNotificationType = new NotificationType<DidChangeDataNotification, void>(
-	"codeStream/didChangeData"
+	"codestream/didChangeData"
 );
 
 export enum ConnectionStatus {
@@ -253,7 +253,7 @@ export interface DidChangeConnectionStatusNotification {
 export const DidChangeConnectionStatusNotificationType = new NotificationType<
 	DidChangeConnectionStatusNotification,
 	void
->("codeStream/didChangeConnectionStatus");
+>("codestream/didChangeConnectionStatus");
 
 export enum VersionCompatibility {
 	Compatible = "ok",
@@ -272,7 +272,7 @@ export interface DidChangeVersionCompatibilityNotification {
 export const DidChangeVersionCompatibilityNotificationType = new NotificationType<
 	DidChangeVersionCompatibilityNotification,
 	void
->("codeStream/didChangeVersionCompatibility");
+>("codestream/didChangeVersionCompatibility");
 
 export interface DocumentFromMarkerRequest {
 	file: string;
@@ -293,7 +293,7 @@ export const DocumentFromMarkerRequestType = new RequestType<
 	DocumentFromMarkerResponse | undefined,
 	void,
 	void
->("codeStream/textDocument/fromMarker");
+>("codestream/textDocument/fromMarker");
 
 export interface DocumentLatestRevisionRequest {
 	textDocument: TextDocumentIdentifier;
@@ -308,7 +308,7 @@ export const DocumentLatestRevisionRequestType = new RequestType<
 	DocumentLatestRevisionResponse,
 	void,
 	void
->("codeStream/textDocument/scm/revision");
+>("codestream/textDocument/scm/revision");
 
 export enum ReportingMessageType {
 	Error = "error",
@@ -326,7 +326,7 @@ export interface ReportMessageRequest {
 }
 
 export const ReportMessageRequestType = new RequestType<ReportMessageRequest, void, void, void>(
-	"codeStream/reporting/message"
+	"codestream/reporting/message"
 );
 
 /**
@@ -339,7 +339,7 @@ export interface TelemetryRequest {
 }
 
 export const TelemetryRequestType = new RequestType<TelemetryRequest, void, void, void>(
-	"codeStream/telemetry"
+	"codestream/telemetry"
 );
 
 export interface OpenUrlRequest {
@@ -347,5 +347,5 @@ export interface OpenUrlRequest {
 }
 
 export const OpenUrlRequestType = new RequestType<OpenUrlRequest, void, void, void>(
-	"codeStream/url/open"
+	"codestream/url/open"
 );

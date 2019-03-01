@@ -1,5 +1,5 @@
 {
-  "method": "codeStream/fetchCodemarks",
+  "method": "codestream/fetchCodemarks",
   "request": {},
   "response": {
     "codemarks": [

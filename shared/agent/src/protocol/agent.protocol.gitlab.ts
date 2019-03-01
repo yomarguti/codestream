@@ -18,7 +18,7 @@ export const GitLabCreateCardRequestType = new RequestType<
 	GitLabCreateCardResponse,
 	void,
 	void
->("codeStream/gitlab/cards/create");
+>("codestream/gitlab/cards/create");
 
 export interface GitLabFetchBoardsRequest {
 	organizationId?: string;
@@ -47,7 +47,7 @@ export const GitLabFetchBoardsRequestType = new RequestType<
 	GitLabFetchBoardsResponse,
 	void,
 	void
->("codeStream/gitlab/boards");
+>("codestream/gitlab/boards");
 
 export interface GitLabFetchListsRequest {
 	boardId: string;
@@ -71,4 +71,4 @@ export const GitLabFetchListsRequestType = new RequestType<
 	GitLabFetchListsResponse,
 	void,
 	void
->("codeStream/gitlab/lists");
+>("codestream/gitlab/lists");

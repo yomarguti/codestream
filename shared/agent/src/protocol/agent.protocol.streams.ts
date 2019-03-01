@@ -30,7 +30,7 @@ export const CreateChannelStreamRequestType = new RequestType<
 	CreateChannelStreamResponse,
 	void,
 	void
->("codeStream/streams/createChannel");
+>("codestream/streams/createChannel");
 
 export interface CreateDirectStreamRequest {
 	type: StreamType.Direct;
@@ -46,7 +46,7 @@ export const CreateDirectStreamRequestType = new RequestType<
 	CreateDirectStreamResponse,
 	void,
 	void
->("codeStream/streams/createDirect");
+>("codestream/streams/createDirect");
 
 export interface FetchStreamsRequest {
 	types?: (StreamType.Channel | StreamType.Direct)[];
@@ -64,7 +64,7 @@ export const FetchStreamsRequestType = new RequestType<
 	FetchStreamsResponse,
 	void,
 	void
->("codeStream/streams");
+>("codestream/streams");
 
 export interface FetchFileStreamsRequest {
 	repoId: string;
@@ -79,7 +79,7 @@ export const FetchFileStreamsRequestType = new RequestType<
 	FetchFileStreamsResponse,
 	void,
 	void
->("codeStream/streams/file");
+>("codestream/streams/file");
 
 export interface FetchUnreadStreamsRequest {}
 
@@ -92,7 +92,7 @@ export const FetchUnreadStreamsRequestType = new RequestType<
 	FetchUnreadStreamsResponse,
 	void,
 	void
->("codeStream/streams/unread");
+>("codestream/streams/unread");
 
 export interface ArchiveStreamRequest {
 	streamId: string;
@@ -107,7 +107,7 @@ export const ArchiveStreamRequestType = new RequestType<
 	ArchiveStreamResponse,
 	void,
 	void
->("codeStream/stream/archive");
+>("codestream/stream/archive");
 
 export interface CloseStreamRequest {
 	streamId: string;
@@ -122,7 +122,7 @@ export const CloseStreamRequestType = new RequestType<
 	CloseStreamResponse,
 	void,
 	void
->("codeStream/stream/close");
+>("codestream/stream/close");
 
 export interface GetStreamRequest {
 	streamId: string;
@@ -138,7 +138,7 @@ export const GetStreamRequestType = new RequestType<
 	GetStreamResponse,
 	void,
 	void
->("codeStream/stream");
+>("codestream/stream");
 
 export interface GetFileStreamRequest {
 	textDocument: TextDocumentIdentifier;
@@ -153,7 +153,7 @@ export const GetFileStreamRequestType = new RequestType<
 	GetFileStreamResponse,
 	void,
 	void
->("codeStream/streams/fileStream");
+>("codestream/streams/fileStream");
 
 export interface JoinStreamRequest {
 	streamId: string;
@@ -168,7 +168,7 @@ export const JoinStreamRequestType = new RequestType<
 	JoinStreamResponse,
 	void,
 	void
->("codeStream/stream/join");
+>("codestream/stream/join");
 
 export interface LeaveStreamRequest {
 	streamId: string;
@@ -183,7 +183,7 @@ export const LeaveStreamRequestType = new RequestType<
 	LeaveStreamResponse,
 	void,
 	void
->("codeStream/stream/leave");
+>("codestream/stream/leave");
 
 export interface MarkStreamReadRequest {
 	streamId: string;
@@ -197,7 +197,7 @@ export const MarkStreamReadRequestType = new RequestType<
 	MarkStreamReadResponse,
 	void,
 	void
->("codeStream/stream/markRead");
+>("codestream/stream/markRead");
 
 export interface MuteStreamRequest {
 	streamId: string;
@@ -213,7 +213,7 @@ export const MuteStreamRequestType = new RequestType<
 	MuteStreamResponse,
 	void,
 	void
->("codeStream/stream/mute");
+>("codestream/stream/mute");
 
 export interface OpenStreamRequest {
 	streamId: string;
@@ -228,7 +228,7 @@ export const OpenStreamRequestType = new RequestType<
 	OpenStreamResponse,
 	void,
 	void
->("codeStream/stream/open");
+>("codestream/stream/open");
 
 export interface RenameStreamRequest {
 	streamId: string;
@@ -244,7 +244,7 @@ export const RenameStreamRequestType = new RequestType<
 	RenameStreamResponse,
 	void,
 	void
->("codeStream/stream/rename");
+>("codestream/stream/rename");
 
 export interface SetStreamPurposeRequest {
 	streamId: string;
@@ -260,7 +260,7 @@ export const SetStreamPurposeRequestType = new RequestType<
 	SetStreamPurposeResponse,
 	void,
 	void
->("codeStream/stream/setPurpose");
+>("codestream/stream/setPurpose");
 
 export interface UnarchiveStreamRequest {
 	streamId: string;
@@ -275,7 +275,7 @@ export const UnarchiveStreamRequestType = new RequestType<
 	UnarchiveStreamResponse,
 	void,
 	void
->("codeStream/stream/unarchive");
+>("codestream/stream/unarchive");
 
 export interface UpdateStreamMembershipRequest {
 	streamId: string;
@@ -292,4 +292,4 @@ export const UpdateStreamMembershipRequestType = new RequestType<
 	UpdateStreamMembershipResponse,
 	void,
 	void
->("codeStream/stream/updateMembership");
+>("codestream/stream/updateMembership");

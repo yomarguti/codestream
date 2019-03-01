@@ -51,7 +51,7 @@ export const AsanaCreateCardRequestType = new RequestType<
 	AsanaCreateCardResponse,
 	void,
 	void
->("codeStream/asana/cards/create");
+>("codestream/asana/cards/create");
 
 export interface AsanaFetchBoardsRequest {
 	organizationId?: string;
@@ -73,7 +73,7 @@ export const AsanaFetchBoardsRequestType = new RequestType<
 	AsanaFetchBoardsResponse,
 	void,
 	void
->("codeStream/asana/boards");
+>("codestream/asana/boards");
 
 export interface AsanaFetchListsRequest {
 	boardId: string;
@@ -93,4 +93,4 @@ export const AsanaFetchListsRequestType = new RequestType<
 	AsanaFetchListsResponse,
 	void,
 	void
->("codeStream/asana/lists");
+>("codestream/asana/lists");

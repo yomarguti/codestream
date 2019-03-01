@@ -1,5 +1,5 @@
 {
-  "method": "codeStream/textDocument/markers",
+  "method": "codestream/textDocument/markers",
   "request": {
     "textDocument": {
       "uri": "file:///Users/mfarias/Code/vscode-codestream/src/webviews/webviewPanel.ts"

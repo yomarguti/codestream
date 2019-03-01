@@ -1,5 +1,5 @@
 {
-  "method": "codeStream/users/me/preferences",
+  "method": "codestream/users/me/preferences",
   "request": null,
   "response": {
     "preferences": {

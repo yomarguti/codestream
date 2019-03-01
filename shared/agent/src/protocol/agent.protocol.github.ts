@@ -18,7 +18,7 @@ export const GitHubCreateCardRequestType = new RequestType<
 	GitHubCreateCardResponse,
 	void,
 	void
->("codeStream/github/cards/create");
+>("codestream/github/cards/create");
 
 export interface GitHubFetchBoardsRequest {
 	organizationId?: string;
@@ -47,7 +47,7 @@ export const GitHubFetchBoardsRequestType = new RequestType<
 	GitHubFetchBoardsResponse,
 	void,
 	void
->("codeStream/github/boards");
+>("codestream/github/boards");
 
 export interface GitHubFetchListsRequest {
 	boardId: string;
@@ -71,7 +71,7 @@ export const GitHubFetchListsRequestType = new RequestType<
 	GitHubFetchListsResponse,
 	void,
 	void
->("codeStream/github/lists");
+>("codestream/github/lists");
 
 export interface GitHubUser {
 	id: string;

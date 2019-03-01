@@ -27,7 +27,7 @@ export interface DidChangeDocumentMarkersNotification {
 export const DidChangeDocumentMarkersNotificationType = new NotificationType<
 	DidChangeDocumentMarkersNotification,
 	void
->("codeStream/didChangeDocumentMarkers");
+>("codestream/didChangeDocumentMarkers");
 
 export interface FetchCodemarksRequest {
 	streamId?: string;
@@ -43,7 +43,7 @@ export const FetchCodemarksRequestType = new RequestType<
 	FetchCodemarksResponse | undefined,
 	void,
 	void
->("codeStream/fetchCodemarks");
+>("codestream/fetchCodemarks");
 
 export interface GetCodemarkRequest {
 	codemarkId: string;
@@ -70,7 +70,7 @@ export const CreateMarkerLocationRequestType = new RequestType<
 	CreateMarkerLocationResponse,
 	void,
 	void
->("codeStream/markerLocations/create");
+>("codestream/markerLocations/create");
 
 export interface DocumentMarkersRequest {
 	textDocument: TextDocumentIdentifier;
@@ -106,7 +106,7 @@ export const DocumentMarkersRequestType = new RequestType<
 	DocumentMarkersResponse | undefined,
 	void,
 	void
->("codeStream/textDocument/markers");
+>("codestream/textDocument/markers");
 
 export interface FetchMarkerLocationsRequest {
 	streamId: string;
@@ -122,7 +122,7 @@ export const FetchMarkerLocationsRequestType = new RequestType<
 	FetchMarkerLocationsResponse,
 	void,
 	void
->("codeStream/marker/locations");
+>("codestream/marker/locations");
 
 export interface FetchMarkersRequest {
 	streamId: string;
@@ -141,7 +141,7 @@ export const FetchMarkersRequestType = new RequestType<
 	FetchMarkersResponse,
 	void,
 	void
->("codeStream/markers");
+>("codestream/markers");
 
 export interface GetMarkerRequest {
 	markerId: string;
@@ -156,7 +156,7 @@ export const GetMarkerRequestType = new RequestType<
 	GetMarkerResponse,
 	void,
 	void
->("codeStream/marker");
+>("codestream/marker");
 
 export interface UpdateMarkerRequest {
 	markerId: string;
@@ -172,7 +172,7 @@ export const UpdateMarkerRequestType = new RequestType<
 	UpdateMarkerResponse,
 	void,
 	void
->("codeStream/marker/update");
+>("codestream/marker/update");
 
 export interface CreateCodemarkRequest {
 	type: CodemarkType;
@@ -218,7 +218,7 @@ export const SetCodemarkPinnedRequestType = new RequestType<
 	SetCodemarkPinnedResponse,
 	void,
 	void
->("codeStream/codemark/setPinned");
+>("codestream/codemark/setPinned");
 
 export interface SetCodemarkStatusRequest {
 	codemarkId: string;
@@ -234,7 +234,7 @@ export const SetCodemarkStatusRequestType = new RequestType<
 	SetCodemarkStatusResponse,
 	void,
 	void
->("codeStream/codemark/setStatus");
+>("codestream/codemark/setStatus");
 
 export interface UpdateCodemarkRequest {
 	codemarkId: string;
@@ -257,4 +257,4 @@ export const UpdateCodemarkRequestType = new RequestType<
 	UpdateCodemarkResponse,
 	void,
 	void
->("codeStream/codemark/update");
+>("codestream/codemark/update");

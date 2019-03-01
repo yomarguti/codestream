@@ -1,5 +1,5 @@
 {
-  "method": "codeStream/users",
+  "method": "codestream/users",
   "request": {},
   "response": {
     "users": [

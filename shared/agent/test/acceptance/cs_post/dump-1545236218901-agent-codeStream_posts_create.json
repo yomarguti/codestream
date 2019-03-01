@@ -1,5 +1,5 @@
 {
-  "method": "codeStream/posts/create",
+  "method": "codestream/posts/create",
   "request": {
     "mentionedUserIds": [],
     "parentPostId": null,

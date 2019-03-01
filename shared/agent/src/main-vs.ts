@@ -55,7 +55,7 @@ const agentConfig = {
 
 let agent = new CodeStreamAgent(connection, agentConfig);
 
-connection.onRequest("codeStream/login", async (agentOptions: AgentOptions) => {
+connection.onRequest("codestream/login", async (agentOptions: AgentOptions) => {
 	if (agent.signedIn) {
 		restartAgent();
 	}
@@ -83,7 +83,7 @@ connection.onRequest("codeStream/login", async (agentOptions: AgentOptions) => {
 	return response;
 });
 
-connection.onRequest("codeStream/logout", async _ => {
+connection.onRequest("codestream/logout", async _ => {
 	await agent.logout(LogoutReason.Unknown);
 	restartAgent();
 });

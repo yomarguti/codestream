@@ -1,5 +1,5 @@
 {
-  "method": "codeStream/users/me/unreads",
+  "method": "codestream/users/me/unreads",
   "request": {},
   "response": {
     "unreads": {

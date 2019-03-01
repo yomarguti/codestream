@@ -16,7 +16,7 @@ export const FetchTeamsRequestType = new RequestType<
 	FetchTeamsResponse,
 	void,
 	void
->("codeStream/teams");
+>("codestream/teams");
 
 export interface GetTeamRequest {
 	teamId: string;
@@ -27,5 +27,5 @@ export interface GetTeamResponse {
 }
 
 export const GetTeamRequestType = new RequestType<GetTeamRequest, GetTeamResponse, void, void>(
-	"codeStream/team"
+	"codestream/team"
 );

@@ -1,5 +1,5 @@
 {
-  "method": "codeStream/stream",
+  "method": "codestream/stream",
   "request": {
     "streamId": "C7DM92RTN"
   },

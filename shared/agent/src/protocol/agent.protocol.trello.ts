@@ -18,7 +18,7 @@ export const TrelloCreateCardRequestType = new RequestType<
 	TrelloCreateCardResponse,
 	void,
 	void
->("codeStream/trello/cards/create");
+>("codestream/trello/cards/create");
 
 export interface TrelloFetchBoardsRequest {
 	organizationId?: string;
@@ -47,7 +47,7 @@ export const TrelloFetchBoardsRequestType = new RequestType<
 	TrelloFetchBoardsResponse,
 	void,
 	void
->("codeStream/trello/boards");
+>("codestream/trello/boards");
 
 export interface TrelloFetchListsRequest {
 	boardId: string;
@@ -71,7 +71,7 @@ export const TrelloFetchListsRequestType = new RequestType<
 	TrelloFetchListsResponse,
 	void,
 	void
->("codeStream/trello/lists");
+>("codestream/trello/lists");
 
 export interface TrelloMember {
 	id: string;

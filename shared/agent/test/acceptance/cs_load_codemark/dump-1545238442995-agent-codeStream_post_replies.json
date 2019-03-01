@@ -1,5 +1,5 @@
 {
-  "method": "codeStream/post/replies",
+  "method": "codestream/post/replies",
   "request": {
     "postId": "5be4b2e56923fe6b9acc65e7",
     "streamId": "5bbd06ba2aae56770cbcbf49"

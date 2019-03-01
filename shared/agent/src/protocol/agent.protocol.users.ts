@@ -16,7 +16,7 @@ export const FetchUsersRequestType = new RequestType<
 	FetchUsersResponse,
 	void,
 	void
->("codeStream/users");
+>("codestream/users");
 
 export interface GetUserRequest {
 	userId: string;
@@ -27,7 +27,7 @@ export interface GetUserResponse {
 }
 
 export const GetUserRequestType = new RequestType<GetUserRequest, GetUserResponse, void, void>(
-	"codeStream/user"
+	"codestream/user"
 );
 
 export interface InviteUserRequest {
@@ -44,7 +44,7 @@ export const InviteUserRequestType = new RequestType<
 	InviteUserResponse,
 	void,
 	void
->("codeStream/user/invite");
+>("codestream/user/invite");
 
 export interface UpdatePresenceRequest {
 	sessionId: string;
@@ -60,7 +60,7 @@ export const UpdatePresenceRequestType = new RequestType<
 	UpdatePresenceResponse,
 	void,
 	void
->("codeStream/user/updatePresence");
+>("codestream/user/updatePresence");
 
 export interface UpdatePreferencesRequest {
 	preferences: CSMePreferences;
@@ -75,7 +75,7 @@ export const UpdatePreferencesRequestType = new RequestType<
 	UpdatePreferencesResponse,
 	void,
 	void
->("codeStream/user/updatePreferences");
+>("codestream/user/updatePreferences");
 
 export interface GetMeRequest {}
 
@@ -84,7 +84,7 @@ export interface GetMeResponse {
 }
 
 export const GetMeRequestType = new RequestType<GetMeRequest, GetMeResponse, void, void>(
-	"codeStream/users/me"
+	"codestream/users/me"
 );
 
 export interface GetUnreadsRequest {}
@@ -98,12 +98,12 @@ export const GetUnreadsRequestType = new RequestType<
 	GetUnreadsResponse,
 	void,
 	void
->("codeStream/users/me/unreads");
+>("codestream/users/me/unreads");
 
 export interface GetPreferencesResponse {
 	preferences: CSMePreferences;
 }
 
 export const GetPreferencesRequestType = new RequestType<void, GetPreferencesResponse, void, void>(
-	"codeStream/users/me/preferences"
+	"codestream/users/me/preferences"
 );

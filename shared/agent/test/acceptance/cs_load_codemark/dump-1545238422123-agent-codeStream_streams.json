@@ -1,5 +1,5 @@
 {
-  "method": "codeStream/streams",
+  "method": "codestream/streams",
   "request": {},
   "response": {
     "streams": [

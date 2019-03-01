@@ -1,5 +1,5 @@
 {
-  "method": "codeStream/repos",
+  "method": "codestream/repos",
   "request": {},
   "response": {
     "repos": [

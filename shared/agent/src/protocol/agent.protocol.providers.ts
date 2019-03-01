@@ -12,7 +12,7 @@ export const ConnectThirdParyProviderRequestType = new RequestType<
 	ConnectThirdPartyProviderResponse,
 	void,
 	void
->("codeStream/provider/connect");
+>("codestream/provider/connect");
 
 export interface DisconnectThirdPartyProviderRequest {
 	providerName: string;
@@ -25,7 +25,7 @@ export const DisconnectThirdPartyProviderRequestType = new RequestType<
 	DisconnectThirdPartyProviderResponse,
 	void,
 	void
->("codeStream/provider/disconnect");
+>("codestream/provider/disconnect");
 
 export interface FetchThirdPartyBoardsRequest {
 	[key: string]: any;
@@ -45,7 +45,7 @@ export const FetchAssignableUsersRequestType = new RequestType<
 	FetchAssignableUsersResponse,
 	void,
 	void
->("codeStream/provider/cards/users");
+>("codestream/provider/cards/users");
 
 export interface ThirdPartyProviderBoard {
 	id: string;

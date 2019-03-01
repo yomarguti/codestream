@@ -1,5 +1,5 @@
 {
-  "method": "codeStream/posts",
+  "method": "codestream/posts",
   "request": {
     "limit": 50,
     "streamId": "5bbd06ba2aae56770cbcbf49",
