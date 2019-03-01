@@ -26,16 +26,16 @@ import { Container } from "../container";
 import { Logger, TraceLevel } from "../logger";
 import { log } from "../system";
 
+type NotificationParamsOf<NT> = NT extends NotificationType<infer N, any> ? N : never;
+type RequestParamsOf<RT> = RT extends RequestType<infer R, any, any, any> ? R : never;
+type RequestResponseOf<RT> = RT extends RequestType<any, infer R, any, any> ? R : never;
+
 export function toLoggableIpcMessage(msg: WebviewIpcMessage) {
 	if (isIpcRequestMessage(msg)) return `${msg.method}(${msg.id})`;
 	if (isIpcResponseMessage(msg)) return `response(${msg.id})`;
 
 	return msg.method;
 }
-
-type NotificationParamsOf<NT> = NT extends NotificationType<infer N, any> ? N : never;
-type RequestParamsOf<RT> = RT extends RequestType<infer R, any, any, any> ? R : never;
-type RequestResponseOf<RT> = RT extends RequestType<any, infer R, any, any> ? R : never;
 
 let ipcSequence = 0;
 

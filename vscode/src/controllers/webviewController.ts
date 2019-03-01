@@ -750,23 +750,7 @@ export class WebviewController implements Disposable {
 			return state as T;
 		}
 
-		const promise = Promise.all([
-			Container.agent.repos.fetch(),
-			Container.agent.streams.fetch(),
-			Container.agent.teams.fetch(),
-			Container.agent.users.unreads(),
-			Container.agent.users.fetch(),
-			Container.agent.users.preferences()
-		]);
-
-		const [
-			reposResponse,
-			streamsResponse,
-			teamsResponse,
-			unreadsResponse,
-			usersResponse,
-			preferencesResponse
-		] = await promise;
+		const bootstrapData = await Container.agent.bootstrap();
 
 		const state: SignedInBootstrapResponse = {
 			capabilities: this.session.capabilities,
@@ -790,13 +774,7 @@ export class WebviewController implements Disposable {
 				userId: this.session.userId
 			},
 			version: Container.versionFormatted,
-
-			preferences: preferencesResponse.preferences,
-			repos: reposResponse.repos,
-			streams: streamsResponse.streams,
-			teams: teamsResponse.teams,
-			unreads: unreadsResponse.unreads,
-			users: usersResponse.users
+			...bootstrapData
 		};
 
 		if (this._lastStreamThread !== undefined) {

@@ -7,6 +7,7 @@ import {
 	ApiRequestType,
 	ArchiveStreamRequestType,
 	BaseAgentOptions,
+	BootstrapRequestType,
 	CloseStreamRequestType,
 	CodeStreamEnvironment,
 	CreateChannelStreamRequestType,
@@ -120,6 +121,10 @@ import { log } from "../system";
 
 export { BaseAgentOptions };
 
+type NotificationParamsOf<NT> = NT extends NotificationType<infer N, any> ? N : never;
+type RequestParamsOf<RT> = RT extends RequestType<infer R, any, any, any> ? R : never;
+type RequestResponseOf<RT> = RT extends RequestType<any, infer R, any, any> ? R : never;
+
 export class CodeStreamAgentConnection implements Disposable {
 	private _onDidChangeConnectionStatus = new EventEmitter<DidChangeConnectionStatusNotification>();
 	get onDidChangeConnectionStatus(): Event<DidChangeConnectionStatusNotification> {
@@ -212,6 +217,11 @@ export class CodeStreamAgentConnection implements Disposable {
 			init: init,
 			token: token
 		});
+	}
+
+	@started
+	bootstrap() {
+		return this.sendRequest(BootstrapRequestType, {});
 	}
 
 	@started
@@ -750,7 +760,7 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		updatePresence(status: CSPresenceStatus) {
 			return this._connection.sendRequest(UpdatePresenceRequestType, {
-				sessionId: Container.session.id,
+				sessionId: Container.session.id!,
 				status: status
 			});
 		}
@@ -867,14 +877,11 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}
 
-	sendNotification<P, RO>(type: NotificationType<P, RO>, token?: CancellationToken): void;
-	sendNotification<P, RO>(
-		type: NotificationType<P, RO>,
-		params: P,
-		token?: CancellationToken
-	): void;
 	@started
-	sendNotification(type: any, params?: any): void {
+	sendNotification<NT extends NotificationType<any, any>>(
+		type: NT,
+		params: NotificationParamsOf<NT>
+	): void {
 		try {
 			Logger.logWithDebugParams(
 				`AgentConnection.sendNotification(${type.method})${
@@ -889,14 +896,12 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}
 
-	sendRequest<R, E, RO>(type: RequestType0<R, E, RO>, token?: CancellationToken): Promise<R>;
-	sendRequest<P, R, E, RO>(
-		type: RequestType<P, R, E, RO>,
-		params: P,
-		token?: CancellationToken
-	): Promise<R>;
 	@started
-	async sendRequest(type: any, params?: any): Promise<any> {
+	async sendRequest<RT extends RequestType<any, any, any, any>>(
+		type: RT,
+		params: RequestParamsOf<RT>,
+		token?: CancellationToken
+	): Promise<RequestResponseOf<RT>> {
 		const traceParams =
 			type.method === ApiRequestType.method ? params.init && params.init.body : params;
 
