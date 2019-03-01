@@ -46,19 +46,13 @@ import {
 import { Team } from "./models/team";
 import { User } from "./models/user";
 import {
-	CodemarksChangedEvent,
 	MergeableEvent,
 	PostsChangedEvent,
-	PreferencesChangedEvent,
-	RepositoriesChangedEvent,
 	SessionChangedEvent,
 	SessionChangedEventType,
 	SessionStatusChangedEvent,
-	StreamsChangedEvent,
-	TeamsChangedEvent,
 	TextDocumentMarkersChangedEvent,
-	UnreadsChangedEvent,
-	UsersChangedEvent
+	UnreadsChangedEvent
 } from "./sessionEvents";
 import { SessionState } from "./sessionState";
 import { TokenManager } from "./tokenManager";
@@ -66,27 +60,21 @@ import { TokenManager } from "./tokenManager";
 export {
 	ChannelStream,
 	ChannelStreamCreationOptions,
-	CodemarksChangedEvent,
 	CodeStreamEnvironment,
 	DirectStream,
 	Marker,
 	Post,
 	PostsChangedEvent,
-	PreferencesChangedEvent,
 	Repository,
-	RepositoriesChangedEvent,
 	SessionChangedEventType,
 	SessionStatusChangedEvent,
 	Stream,
-	StreamsChangedEvent,
 	StreamThread,
 	StreamType,
 	Team,
-	TeamsChangedEvent,
 	TextDocumentMarkersChangedEvent,
 	UnreadsChangedEvent,
-	User,
-	UsersChangedEvent
+	User
 };
 
 // FIXME: Must keep this in sync with codestream-lsp-agent/src/session.ts
@@ -112,46 +100,16 @@ export class CodeStreamSession implements Disposable {
 		return this._onDidChangeTextDocumentMarkers.event;
 	}
 
-	private _onDidChangeCodemarks = new EventEmitter<CodemarksChangedEvent>();
-	get onDidChangeCodemarks(): Event<CodemarksChangedEvent> {
-		return this._onDidChangeCodemarks.event;
-	}
-	private fireDidChangeCodemarks = createMergableDebouncedEvent(this._onDidChangeCodemarks);
-
 	private _onDidChangePosts = new EventEmitter<PostsChangedEvent>();
 	get onDidChangePosts(): Event<PostsChangedEvent> {
 		return this._onDidChangePosts.event;
 	}
 	private fireDidChangePosts = createMergableDebouncedEvent(this._onDidChangePosts);
 
-	private _onDidChangePreferences = new EventEmitter<PreferencesChangedEvent>();
-	get onDidChangePreferences(): Event<PreferencesChangedEvent> {
-		return this._onDidChangePreferences.event;
-	}
-	private fireDidChangePreferences = createMergableDebouncedEvent(this._onDidChangePreferences);
-
-	private _onDidChangeRepositories = new EventEmitter<RepositoriesChangedEvent>();
-	get onDidChangeRepositories(): Event<RepositoriesChangedEvent> {
-		return this._onDidChangeRepositories.event;
-	}
-	private fireDidChangeRepositories = createMergableDebouncedEvent(this._onDidChangeRepositories);
-
 	private _onDidChangeSessionStatus = new EventEmitter<SessionStatusChangedEvent>();
 	get onDidChangeSessionStatus(): Event<SessionStatusChangedEvent> {
 		return this._onDidChangeSessionStatus.event;
 	}
-
-	private _onDidChangeStreams = new EventEmitter<StreamsChangedEvent>();
-	get onDidChangeStreams(): Event<StreamsChangedEvent> {
-		return this._onDidChangeStreams.event;
-	}
-	private fireDidChangeStreams = createMergableDebouncedEvent(this._onDidChangeStreams);
-
-	private _onDidChangeTeams = new EventEmitter<TeamsChangedEvent>();
-	get onDidChangeTeams(): Event<TeamsChangedEvent> {
-		return this._onDidChangeTeams.event;
-	}
-	private fireDidChangeTeams = createMergableDebouncedEvent(this._onDidChangeTeams);
 
 	private _onDidChangeUnreads = new EventEmitter<UnreadsChangedEvent>();
 	get onDidChangeUnreads(): Event<UnreadsChangedEvent> {
@@ -162,12 +120,6 @@ export class CodeStreamSession implements Disposable {
 		250,
 		{ maxWait: 1000 }
 	);
-
-	private _onDidChangeUsers = new EventEmitter<UsersChangedEvent>();
-	get onDidChangeUsers(): Event<UsersChangedEvent> {
-		return this._onDidChangeUsers.event;
-	}
-	private fireDidChangeUsers = createMergableDebouncedEvent(this._onDidChangeUsers);
 
 	private _agentCapabilities: Capabilities | undefined;
 	private _capabilities: Capabilities | undefined;
@@ -220,31 +172,14 @@ export class CodeStreamSession implements Disposable {
 
 	private onDataChanged(e: DidChangeDataNotification) {
 		switch (e.type) {
-			case ChangeDataType.Codemarks:
-				this.fireDidChangeCodemarks(new CodemarksChangedEvent(this, e));
-				break;
 			case ChangeDataType.Posts:
 				this.fireDidChangePosts(new PostsChangedEvent(this, e));
 				break;
-			case ChangeDataType.Preferences:
-				this.fireDidChangePreferences(new PreferencesChangedEvent(this, e));
-				break;
-			case ChangeDataType.Repositories:
-				this.fireDidChangeRepositories(new RepositoriesChangedEvent(this, e));
-				break;
-			case ChangeDataType.Streams:
-				this.fireDidChangeStreams(new StreamsChangedEvent(this, e));
-				break;
 			case ChangeDataType.Teams:
 				this._state!.updateTeams();
-
-				this.fireDidChangeTeams(new TeamsChangedEvent(this, e));
 				break;
 			case ChangeDataType.Unreads:
 				this.fireDidChangeUnreads(new UnreadsChangedEvent(this, e));
-				break;
-			case ChangeDataType.Users:
-				this.fireDidChangeUsers(new UsersChangedEvent(this, e));
 				break;
 		}
 	}

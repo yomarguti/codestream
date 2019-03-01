@@ -292,6 +292,7 @@
         "agent:test": "pushd \"../codestream-lsp-agent\" && npm run test && popd",
         "agent:watch": "pushd \"../codestream-lsp-agent\" && npm run watch && popd",
         "webview:analyze": "webpack --env.analyzeBundleWebview",
+        "webview:build": "webpack --config-name webview --env.development",
         "webview:clean:ci": "pushd \"../codestream-components\" && npm run clean:ci && popd",
         "webview:watch": "webpack --watch --config-name webview --env.development --info-verbosity verbose",
         "preinstall": "pushd \"../codestream-components\" && npm install --no-save && popd",

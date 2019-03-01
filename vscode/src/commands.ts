@@ -401,6 +401,7 @@ export class Commands implements Disposable {
 			response.range,
 			response.source,
 			response.gitError,
+			false,
 			args.type
 		);
 		return streamThread !== undefined ? streamThread.stream : undefined;

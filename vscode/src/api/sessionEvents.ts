@@ -1,18 +1,10 @@
 "use strict";
 import {
-	CodemarksChangedNotification,
 	DidChangeDataNotification,
 	PostsChangedNotification,
-	PreferencesChangedNotification,
-	RepositoriesChangedNotification,
-	StreamsChangedNotification,
-	TeamsChangedNotification,
 	Unreads,
-	UnreadsChangedNotification,
-	UsersChangedNotification
+	UnreadsChangedNotification
 } from "@codestream/protocols/agent";
-import { CSMePreferences } from "@codestream/protocols/api";
-import { DidChangeDataNotificationType, WebviewIpcMessage } from "@codestream/protocols/webview";
 import { Uri } from "vscode";
 import { memoize } from "../system";
 import { CodeStreamSession, Post, SessionSignedOutReason, SessionStatus } from "./session";
@@ -57,39 +49,6 @@ abstract class SessionChangedEventBase<T extends DidChangeDataNotification>
 	abstract readonly type: SessionChangedEventType;
 
 	constructor(public readonly session: CodeStreamSession, protected readonly _event: T) {}
-
-	@memoize
-	toIpcMessage(): WebviewIpcMessage {
-		return {
-			method: DidChangeDataNotificationType.method,
-			params: {
-				type: this.type,
-				data: this._event.data
-			}
-		};
-	}
-}
-
-export class CodemarksChangedEvent extends SessionChangedEventBase<CodemarksChangedNotification>
-	implements MergeableEvent<CodemarksChangedEvent> {
-	readonly type = SessionChangedEventType.Codemarks;
-
-	get count() {
-		return this._event.data.length;
-	}
-
-	affects(id: string, type: "entity") {
-		return affects(this._event.data, id, type);
-	}
-
-	// @memoize
-	// items() {
-	// 	return this._event.data.map(p => new Cod(this.session, p));
-	// }
-
-	merge(e: CodemarksChangedEvent) {
-		this._event.data.push(...e._event.data);
-	}
 }
 
 export class PostsChangedEvent extends SessionChangedEventBase<PostsChangedNotification>
@@ -114,63 +73,12 @@ export class PostsChangedEvent extends SessionChangedEventBase<PostsChangedNotif
 	}
 }
 
-export class PreferencesChangedEvent extends SessionChangedEventBase<PreferencesChangedNotification>
-	implements MergeableEvent<PreferencesChangedEvent> {
-	readonly type = SessionChangedEventType.Preferences;
-
-	@memoize
-	preferences(): CSMePreferences {
-		return this._event.data;
-	}
-
-	merge(e: PreferencesChangedEvent) {
-		return { ...this.preferences, ...e.preferences };
-	}
-}
-
-export class RepositoriesChangedEvent
-	extends SessionChangedEventBase<RepositoriesChangedNotification>
-	implements MergeableEvent<RepositoriesChangedEvent> {
-	readonly type = SessionChangedEventType.Repositories;
-
-	merge(e: RepositoriesChangedEvent) {
-		this._event.data.push(...e._event.data);
-	}
-}
-
-export class StreamsChangedEvent extends SessionChangedEventBase<StreamsChangedNotification>
-	implements MergeableEvent<StreamsChangedEvent> {
-	readonly type = SessionChangedEventType.Streams;
-
-	merge(e: StreamsChangedEvent) {
-		this._event.data.push(...e._event.data);
-	}
-}
-
-export class TeamsChangedEvent extends SessionChangedEventBase<TeamsChangedNotification>
-	implements MergeableEvent<TeamsChangedEvent> {
-	readonly type = SessionChangedEventType.Teams;
-
-	merge(e: TeamsChangedEvent) {
-		this._event.data.push(...e._event.data);
-	}
-}
-
 export class UnreadsChangedEvent extends SessionChangedEventBase<UnreadsChangedNotification> {
 	readonly type = SessionChangedEventType.Unreads;
 
 	@memoize
 	unreads(): Unreads {
 		return this._event.data;
-	}
-}
-
-export class UsersChangedEvent extends SessionChangedEventBase<UsersChangedNotification>
-	implements MergeableEvent<UsersChangedEvent> {
-	readonly type = SessionChangedEventType.Users;
-
-	merge(e: UsersChangedEvent) {
-		this._event.data.push(...e._event.data);
 	}
 }
 

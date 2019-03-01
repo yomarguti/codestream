@@ -105,6 +105,7 @@ import {
 	LanguageClient,
 	LanguageClientOptions,
 	Message,
+	NotificationType,
 	Range,
 	RequestType,
 	RequestType0,
@@ -120,14 +121,19 @@ import { log } from "../system";
 export { BaseAgentOptions };
 
 export class CodeStreamAgentConnection implements Disposable {
-	private _onDidChangeDocumentMarkers = new EventEmitter<DidChangeDocumentMarkersNotification>();
-	get onDidChangeDocumentMarkers(): Event<DidChangeDocumentMarkersNotification> {
-		return this._onDidChangeDocumentMarkers.event;
+	private _onDidChangeConnectionStatus = new EventEmitter<DidChangeConnectionStatusNotification>();
+	get onDidChangeConnectionStatus(): Event<DidChangeConnectionStatusNotification> {
+		return this._onDidChangeConnectionStatus.event;
 	}
 
 	private _onDidChangeData = new EventEmitter<DidChangeDataNotification>();
 	get onDidChangeData(): Event<DidChangeDataNotification> {
 		return this._onDidChangeData.event;
+	}
+
+	private _onDidChangeDocumentMarkers = new EventEmitter<DidChangeDocumentMarkersNotification>();
+	get onDidChangeDocumentMarkers(): Event<DidChangeDocumentMarkersNotification> {
+		return this._onDidChangeDocumentMarkers.event;
 	}
 
 	private _client: LanguageClient | undefined;
@@ -768,7 +774,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		prefix: (context, e: DidChangeConnectionStatusNotification) => `${context.prefix}(${e.status})`
 	})
 	private onConnectionStatusChanged(e: DidChangeConnectionStatusNotification) {
-		Container.webview.setConnectionStatus(e.status, e.reset);
+		this._onDidChangeConnectionStatus.fire(e);
 	}
 
 	@log({
@@ -858,6 +864,28 @@ export class CodeStreamAgentConnection implements Disposable {
 				}
 				break;
 			}
+		}
+	}
+
+	sendNotification<P, RO>(type: NotificationType<P, RO>, token?: CancellationToken): void;
+	sendNotification<P, RO>(
+		type: NotificationType<P, RO>,
+		params: P,
+		token?: CancellationToken
+	): void;
+	@started
+	sendNotification(type: any, params?: any): void {
+		try {
+			Logger.logWithDebugParams(
+				`AgentConnection.sendNotification(${type.method})${
+					type.method === ApiRequestType.method ? `: ${params.url}` : ""
+				}`,
+				params
+			);
+			this._client!.sendNotification(type, params);
+		} catch (ex) {
+			Logger.error(ex, `AgentConnection.sendNotification(${type.method})`, params);
+			throw ex;
 		}
 	}
 

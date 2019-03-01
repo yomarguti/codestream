@@ -14,7 +14,29 @@ import { ContextKeys, setContext } from "../common";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Dates } from "../system";
-import { VslsServiceRequestAction } from "../webviews/webviewIpc";
+
+export interface VslsInviteServiceRequestAction {
+	type: "invite";
+	userId: string;
+	createNewStream?: Boolean;
+}
+
+export interface VslsJoinServiceRequestAction {
+	type: "join";
+	url: string;
+}
+
+export interface VslsStartServiceRequestAction {
+	type: "start";
+	streamId: string;
+	threadId?: string;
+	createNewStream?: Boolean;
+}
+
+export type VslsServiceRequestAction =
+	| VslsInviteServiceRequestAction
+	| VslsJoinServiceRequestAction
+	| VslsStartServiceRequestAction;
 
 interface InviteCommandArgs {
 	userIds: string | string[];

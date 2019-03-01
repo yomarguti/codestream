@@ -235,7 +235,7 @@ function getWebviewConfig(env) {
 				: false
 		}),
 		new ForkTsCheckerPlugin({
-			reportFiles: ["!index.tsx"]
+			async: false
 		})
 	];
 
@@ -247,7 +247,7 @@ function getWebviewConfig(env) {
 		name: "webview",
 		context: context,
 		entry: {
-			webview: ["./index.tsx", "./styles/webview.less"]
+			webview: ["./index.ts", "./styles/webview.less"]
 		},
 		mode: env.production ? "production" : "development",
 		node: false,
