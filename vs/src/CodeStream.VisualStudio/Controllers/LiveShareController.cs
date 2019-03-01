@@ -150,7 +150,7 @@ namespace CodeStream.VisualStudio.Controllers
                         if (postResponse != null)
                         {
                             // view thread
-                            _ipc.SendResponse(new DidSelectStreamThreadNotificationType
+                            _ipc.Notify(new DidSelectStreamThreadNotificationType
                             {
                                 Params = new DidSelectStreamThreadNotificationTypeParams
                                 {

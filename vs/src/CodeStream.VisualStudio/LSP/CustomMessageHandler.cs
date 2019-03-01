@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using Serilog;
 using StreamJsonRpc;
 using System;
+using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Extensions;
 
 // ReSharper disable UnusedMember.Global
@@ -22,13 +23,13 @@ namespace CodeStream.VisualStudio.LSP
 			_eventAggregator = eventAggregator;
 		}
 
-		[JsonRpcMethod("codeStream/didChangeData")]
+		[JsonRpcMethod("codestream/didChangeData")]
 		public void OnDidChangeData(JToken e)
 		{
 			_eventAggregator.Publish(new DataChangedEvent(e));
 		}
 
-		[JsonRpcMethod("codeStream/didChangeConnectionStatus")]
+		[JsonRpcMethod("codestream/didChangeConnectionStatus")]
 		public void OnDidChangeConnectionStatus(JToken e)
 		{
 			var message = e.ToObject<ConnectionStatusNotification>();
@@ -39,7 +40,7 @@ namespace CodeStream.VisualStudio.LSP
 			});
 		}
 
-		[JsonRpcMethod("codeStream/didChangeDocumentMarkers")]
+		[JsonRpcMethod("codestream/didChangeDocumentMarkers")]
 		public void OnDidChangeDocumentMarkers(JToken e)
 		{
 			ThreadHelper.JoinableTaskFactory.Run(async delegate
@@ -51,14 +52,14 @@ namespace CodeStream.VisualStudio.LSP
 			});
 		}
 
-		[JsonRpcMethod("codeStream/didChangeVersionCompatibility")]
+		[JsonRpcMethod("codestream/didChangeVersionCompatibility")]
 		public void OnDidChangeVersionCompatibility(JToken e)
 		{
 			// TODO implement this
 			//  System.Diagnostics.Debugger.Break();
 		}
 
-		[JsonRpcMethod("codeStream/didLogout")]
+		[JsonRpcMethod("codestream/didLogout")]
 		public void OnDidLogout(JToken e)
 		{
 			var message = e.ToObject<AuthenticationNotification>();

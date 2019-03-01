@@ -174,17 +174,17 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 
 		private void OnDidDisconnect()
 		{
-            _ipc.SendResponse(new DidLoseConnectivityNotificationType());
+            _ipc.Notify(new DidLoseConnectivityNotificationType());
 		}
 
 		private void OnDidConnect()
 		{
-            _ipc.SendResponse(new DidEstablishConnectivityNotificationType());
+            _ipc.Notify(new DidEstablishConnectivityNotificationType());
 		}
 
 		private void OnSessionDataChanged(JToken data)
 		{
-            _ipc.SendResponse(new DidChangeDataNotificationType(data));
+            _ipc.Notify(new DidChangeDataNotificationType(data));
 		}
 
 		public void Dispose()

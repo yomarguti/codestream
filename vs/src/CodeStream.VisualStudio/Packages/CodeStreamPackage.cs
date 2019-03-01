@@ -173,7 +173,8 @@ namespace CodeStream.VisualStudio.Packages
             else if (
                 args.PropertyName == nameof(_settingsService.OpenCommentOnSelect) ||
                 args.PropertyName == nameof(_settingsService.ShowMarkers) ||
-                args.PropertyName == nameof(_settingsService.MuteAll)
+                args.PropertyName == nameof(_settingsService.MuteAll) 
+                //|| args.PropertyName == nameof(_settingsService.ViewCodemarksInline)
                 )
             {
                 OptionsDialogPage odp = sender as OptionsDialogPage;
@@ -195,6 +196,9 @@ namespace CodeStream.VisualStudio.Packages
                         case nameof(_settingsService.MuteAll):
                             await configurationController.ToggleMuteAllAsync(odp.MuteAll);
                             break;
+                        //case nameof(_settingsService.ViewCodemarksInline):
+                        //    await configurationController.ToggleViewCodemarksInlineAsync(odp.ViewCodemarksInline);
+                        //    break;
                     }
                 });
             }

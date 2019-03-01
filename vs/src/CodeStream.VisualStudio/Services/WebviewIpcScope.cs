@@ -77,7 +77,7 @@ namespace CodeStream.VisualStudio.Services
 
             if (disposing)
             {
-                _ipc.SendResponse(_message);
+                _ipc.Send(_message);
             }
 
             _disposed = true;

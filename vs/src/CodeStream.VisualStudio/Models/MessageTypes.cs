@@ -11,6 +11,16 @@ namespace CodeStream.VisualStudio.Models
         string AsJson();
     }
 
+    public interface INotificationType : IAbstractMessageType
+    {
+  
+    }
+
+    public interface IRequestType : IAbstractMessageType
+    {
+
+    }
+
     public interface IAbstractMessageType<T> : IAbstractMessageType
     {
         T Params { get; set; }
@@ -59,7 +69,7 @@ namespace CodeStream.VisualStudio.Models
         }
     }
 
-    public abstract class RequestType<T> : AbstractMessageType<T> { }
+    public abstract class RequestType<T> : AbstractMessageType<T>, IRequestType { }
 
-    public abstract class NotificationType<T> : AbstractMessageType<T> { }
+    public abstract class NotificationType<T> : AbstractMessageType<T>, INotificationType { }
 }

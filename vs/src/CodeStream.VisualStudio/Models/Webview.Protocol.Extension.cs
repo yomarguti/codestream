@@ -1,39 +1,16 @@
-﻿using CodeStream.VisualStudio.Extensions;
+﻿using System.Collections.Generic;
+using CodeStream.VisualStudio.Extensions;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Newtonsoft.Json.Linq;
 
 namespace CodeStream.VisualStudio.Models
 {
-    public class DidSelectCodeNotificationTypeParams
+    public class DidScrollEditorNotificationTypeParams
     {
-        public string Code { get; set; }
-        public string File { get; set; }
-        public string FileUri { get; set; }
-        public Range Range { get; set; }
-        public Source Source { get; set; }
-        public string GitError { get; set; }
-        public bool? IsHighlight { get; set; }
+       public string Uri { get; set; }
+       public List<Range> VisibleRanges { get; set; }
     }
 
-    public class DidHighlightCodeNotificationType : NotificationType<DidSelectCodeNotificationTypeParams>
-    {
-        public const string MethodName = "webview/code-highlighted";
-        public override string Method => MethodName;
-    }
-
-    public class DidSelectStreamThreadNotificationTypeParams
-    {
-        public string StreamId { get; set; }
-        public string ThreadId { get; set; }
-    }
-
-    public class DidSelectStreamThreadNotificationType : NotificationType<DidSelectStreamThreadNotificationTypeParams>
-    {
-        public const string MethodName = "webview/stream-thread-selected";
-        public override string Method => MethodName;
-    }
-
-    public class DidScrollEditorNotificationTypeParams { }
     public class DidScrollEditorNotificationType : NotificationType<DidScrollEditorNotificationTypeParams>
     {
         public const string MethodName = "webview/text-editor-scrolled";
@@ -65,6 +42,7 @@ namespace CodeStream.VisualStudio.Models
         public bool? MuteAll { get; set; }
         public bool? OpenCommentOnSelect { get; set; }
         public bool? ShowMarkers { get; set; }
+        public bool? ViewCodemarksInline { get; set; }
     }
 
     public class DidChangeConfigsNotificationType : NotificationType<DidChangeConfigsNotificationTypeParams>
@@ -90,7 +68,7 @@ namespace CodeStream.VisualStudio.Models
         public string FileStreamId { get; set; }
         public string Uri { get; set; }
         public string FileName { get; set; }
-        //public List<Range> VisibleRanges { get; set; }
+        public List<Range> VisibleRanges { get; set; }
     }
 
     public class DidChangeActiveEditorNotificationParams

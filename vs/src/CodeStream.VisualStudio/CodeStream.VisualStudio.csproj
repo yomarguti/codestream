@@ -124,6 +124,10 @@
     <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Extensions\PackageExtensions.cs" />
+    <Compile Include="Models\Host.Protocol.Editor.cs" />
+    <Compile Include="Models\Host.Protocol.Notifications.cs" />
+    <Compile Include="Models\Host.Protocol.Vsls.cs" />
+    <Compile Include="Models\Webview.Protocol.cs" />
     <Compile Include="ServiceLocator.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\EnumExtensions.cs" />
@@ -144,7 +148,7 @@
     <Compile Include="Models\MessageTypes.cs" />
     <Compile Include="Models\Types.cs" />
     <Compile Include="Models\Webview.Protocol.Common.cs" />
-    <Compile Include="Models\Webview.Protocol.Events.cs" />
+    <Compile Include="Models\Webview.Protocol.Notifications.cs" />
     <Compile Include="Models\Webview.Protocol.Extension.cs" />
     <Compile Include="Models\WebviewIpcMessage.cs" />
     <Compile Include="Packages\AsyncPackageHelper.cs" />
@@ -218,7 +222,7 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="CodeStream.VisualStudio.Settings.json" />
-    <Compile Include="Models\Webview.Protocol.Commands.cs" />
+    <Compile Include="Models\Host.Protocol.cs" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
@@ -344,7 +348,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="UI\WebViews\index.html" />
-    <Content Include="UI\WebViews\index.tsx" />
+    <Content Include="UI\WebViews\index.ts" />
     <Content Include="UI\WebViews\logging-middleware.js" />
     <Content Include="UI\WebViews\theme.css">
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -356,6 +360,7 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="UI\WebViews\theme.ts" />
     <VSCTCompile Include="CodeStreamPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>

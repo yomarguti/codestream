@@ -19,6 +19,7 @@ namespace CodeStream.VisualStudio.UI.Settings
         string WebAppUrl { get; set; }
         string Team { get; set; }
         bool OpenCommentOnSelect { get; set; }
+        //bool ViewCodemarksInline { get; set; }
         void SaveSettingsToStorage();
         void LoadSettingsFromStorage();
         TraceLevel TraceLevel { get; set; }
@@ -37,6 +38,7 @@ namespace CodeStream.VisualStudio.UI.Settings
         private bool _muteAll = false;
         private TraceLevel _traceLevel;
         private bool _openCommentOnSelect = false;
+        private bool _viewCodemarksInline = false;
         private string _team;
         private bool _autoSignIn = true;
 #if DEBUG
@@ -282,6 +284,22 @@ namespace CodeStream.VisualStudio.UI.Settings
                 }
             }
         }
+
+        //[Category("UI")]
+        //[DisplayName("View Codemarks inline")]
+        //[Description("Specifies whether to display Codemarks inline next to the code they refer to. The alternative is a list view.")]
+        //public bool ViewCodemarksInline
+        //{
+        //    get => _viewCodemarksInline;
+        //    set
+        //    {
+        //        if (_viewCodemarksInline != value)
+        //        {
+        //            _viewCodemarksInline = value;
+        //            NotifyPropertyChanged();
+        //        }
+        //    }
+        //}
 
         [Category("UI")]
         [DisplayName("Mute All")]

@@ -14,6 +14,7 @@ namespace CodeStream.VisualStudio.Services
         void SetUserLoggedIn(User user);
         void SetAgentDisconnected();
         string CurrentStreamId { get; set; }
+        string CurrentThreadId { get; set; }
         /// <summary>
         /// Session is ready when the agent has loaded and the user has logged in
         /// </summary>
@@ -81,6 +82,7 @@ namespace CodeStream.VisualStudio.Services
         }
 
         public string CurrentStreamId { get; set; }
+        public string CurrentThreadId { get; set; }
 
         public bool IsAgentReady => _sessionState == SessionState.AgentReady || IsReady;
 

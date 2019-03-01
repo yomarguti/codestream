@@ -16,6 +16,11 @@ namespace CodeStream.VisualStudio.Models
         public bool HasText => !Text.IsNullOrWhiteSpace();
     }
 
+    public class EditorSelection : Range
+    {
+        public Position Caret { get; set; }
+    }
+
     public class CsEntity
     {
         private long _createdAt;
@@ -448,15 +453,22 @@ namespace CodeStream.VisualStudio.Models
 
     public class DocumentFromMarkerRequest
     {
+        public DocumentFromMarkerRequest(CsMarker marker)
+        {
+            File = marker.File;
+            RepoId = marker.RepoId;
+            MarkerId = marker.Id;
+        }
+
         public string File { get; set; }
         public string RepoId { get; set; }
         public string MarkerId { get; set; }
-        public string Source { get; set; }
     }
 
     public class DocumentFromMarkerResponse
     {
         public TextDocumentIdentifier TextDocument { get; set; }
+        public CsMarker Marker { get; set; }
         public Range Range { get; set; }
         public string Revision { get; set; }
     }

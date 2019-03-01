@@ -1,6 +1,7 @@
 ﻿using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
+using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Margins;
 using Microsoft.VisualStudio.Editor;
@@ -18,6 +19,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
+using CodeStream.VisualStudio.Models;
 
 namespace CodeStream.VisualStudio.UI
 {
@@ -241,6 +243,11 @@ namespace CodeStream.VisualStudio.UI
             var wpfTextView = sender as IWpfTextView;
             if (wpfTextView == null || !_sessionService.IsReady) return;
 
+            if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextView.TextBuffer, out var textDocument))
+            {
+                return;
+            }
+
             var documentMarkerManager = wpfTextView
                 .Properties
                 .GetProperty<DocumentMarkerManager>(PropertyNames.DocumentMarkerManager);
@@ -256,6 +263,16 @@ namespace CodeStream.VisualStudio.UI
             {
                 documentMarkerManager.GetOrCreateMarkers();
             }
+
+            //var ipc = ServiceLocator.Get<SWebviewIpc, IWebviewIpc>();
+            //ipc.SendResponse(new DidScrollEditorNotificationType
+            //{
+            //    Params = new DidScrollEditorNotificationTypeParams
+            //    {
+            //        Uri = textDocument.FilePath.ToUri().ToString(),
+            //        VisibleRanges = wpfTextView.TextViewLines.ToVisibleRanges()
+            //    }
+            //});
 
             wpfTextView.TextBuffer
                 .Properties

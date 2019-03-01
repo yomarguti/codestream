@@ -208,7 +208,7 @@ namespace CodeStream.VisualStudio.Controllers
             await Task.CompletedTask;
         }
 
-        public async Task ValidateSignupAsync(WebviewIpcMessage message, ValidateSignupRequest request)
+        public async Task ValidateSignupAsync(WebviewIpcMessage message, CompleteSignupRequest request)
         {
             var success = false;
             string email = null;

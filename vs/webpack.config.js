@@ -87,7 +87,7 @@ module.exports = function(env, argv) {
 				: false
 		}),
 		new ForkTsCheckerPlugin({
-			reportFiles: ["!index.tsx"]
+			reportFiles: ["!index.ts"]
 		})
 	];
 
@@ -99,7 +99,7 @@ module.exports = function(env, argv) {
 		name: "webview",
 		context: context,
 		entry: {
-			webview: ["./index.tsx", "./styles/webview.less"]
+			webview: ["./index.ts", "./styles/webview.less"]
 		},
 		mode: env.production ? "production" : "development",
 		node: false,

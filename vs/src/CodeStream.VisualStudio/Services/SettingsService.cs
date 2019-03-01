@@ -21,6 +21,7 @@ namespace CodeStream.VisualStudio.Services
         string WebAppUrl { get; set; }
         string Team { get; set; }
         bool OpenCommentOnSelect { get; set; }
+        //bool ViewCodemarksInline { get; set; }
         TraceLevel TraceLevel { get; set; }
         IOptionsDialogPage DialogPage { get; }
         bool AutoSignIn { get; set; }
@@ -45,6 +46,7 @@ namespace CodeStream.VisualStudio.Services
         public string WebAppUrl { get; set; }
         public string Team { get; set; }
         public bool OpenCommentOnSelect { get; set; }
+       // public bool ViewCodemarksInline { get; set; }
         public string LogLevel { get; set; }
         public bool AutoSignIn { get; set; }
 
@@ -97,6 +99,7 @@ namespace CodeStream.VisualStudio.Services
                 WebAppUrl = WebAppUrl,
                 Team = Team,
                 OpenCommentOnSelect = OpenCommentOnSelect,
+               // ViewCodemarksInline = ViewCodemarksInline,
                 AutoSignIn = AutoSignIn,
                 Env = GetEnvironmentName(),
                 Version = GetEnvironmentVersionFormatted()
@@ -150,6 +153,12 @@ namespace CodeStream.VisualStudio.Services
             get => DialogPage.OpenCommentOnSelect;
             set => DialogPage.OpenCommentOnSelect = value;
         }
+
+        //public bool ViewCodemarksInline
+        //{
+        //    get => DialogPage.ViewCodemarksInline;
+        //    set => DialogPage.ViewCodemarksInline = value;
+        //}
 
         public TraceLevel TraceLevel
         {

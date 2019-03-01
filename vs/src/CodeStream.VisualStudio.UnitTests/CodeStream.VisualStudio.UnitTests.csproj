@@ -51,6 +51,9 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.VisualStudio.LanguageServer.Protocol.15.9.3032\lib\net46\Microsoft.VisualStudio.LanguageServer.Protocol.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\MSTest.TestFramework.1.4.0\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.dll</HintPath>
     </Reference>
@@ -95,6 +98,7 @@
     <Compile Include="Services\SettingsServiceTests.cs" />
     <Compile Include="Stubs\OptionsDialogPageStub.cs" />
     <Compile Include="Stubs\CredentialsServiceStub.cs" />
+    <Compile Include="UI\TextViewExtensionsTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

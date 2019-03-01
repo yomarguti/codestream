@@ -132,13 +132,13 @@ namespace CodeStream.VisualStudio.Services
 
         public Task<FetchCodemarksResponse> GetMarkersAsync(string streamId)
         {
-            return SendAsync<FetchCodemarksResponse>("codeStream/fetchCodemarks", new FetchCodemarksRequest { StreamId = streamId });
+            return SendAsync<FetchCodemarksResponse>("codestream/fetchCodemarks", new FetchCodemarksRequest { StreamId = streamId });
         }
 
         public Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(Uri uri,
             CancellationToken? cancellationToken = null)
         {
-            return SendAsync<DocumentMarkersResponse>("codeStream/textDocument/markers", new DocumentMarkersRequest
+            return SendAsync<DocumentMarkersResponse>("codestream/textDocument/markers", new DocumentMarkersRequest
             {
                 TextDocument = new TextDocumentIdentifier { Uri = uri.ToString() }
             }, cancellationToken);
@@ -146,7 +146,7 @@ namespace CodeStream.VisualStudio.Services
 
         public Task<GetFileStreamResponse> GetFileStreamAsync(Uri uri)
         {
-            return SendAsync<GetFileStreamResponse>("codeStream/streams/fileStream", new GetFileStreamRequest
+            return SendAsync<GetFileStreamResponse>("codestream/streams/fileStream", new GetFileStreamRequest
             {
                 TextDocument = new TextDocumentIdentifier { Uri = uri.ToString() }
             });
@@ -154,7 +154,7 @@ namespace CodeStream.VisualStudio.Services
 
         public Task<GetPostResponse> GetPostAsync(string streamId, string postId)
         {
-            return SendAsync<GetPostResponse>("codeStream/post", new GetPostRequest
+            return SendAsync<GetPostResponse>("codestream/post", new GetPostRequest
             {
                 StreamId = streamId,
                 PostId = postId
@@ -163,7 +163,7 @@ namespace CodeStream.VisualStudio.Services
 
         public Task<GetStreamResponse> GetStreamAsync(string streamId)
         {
-            return SendAsync<GetStreamResponse>("codeStream/stream", new GetStreamRequest
+            return SendAsync<GetStreamResponse>("codestream/stream", new GetStreamRequest
             {
                 StreamId = streamId
             });
@@ -171,7 +171,7 @@ namespace CodeStream.VisualStudio.Services
 
         public Task<GetUserResponse> GetUserAsync(string userId)
         {
-            return SendAsync<GetUserResponse>("codeStream/user", new GetUserRequest
+            return SendAsync<GetUserResponse>("codestream/user", new GetUserRequest
             {
                 UserId = userId
             });
@@ -179,7 +179,7 @@ namespace CodeStream.VisualStudio.Services
 
         public Task<CreatePostResponse> CreatePostAsync(string streamId, string threadId, string text)
         {
-            return SendAsync<CreatePostResponse>("codeStream/posts/create", new CreatePostRequest
+            return SendAsync<CreatePostResponse>("codestream/posts/create", new CreatePostRequest
             {
                 StreamId = streamId,
                 ParentPostId = threadId,
@@ -189,7 +189,7 @@ namespace CodeStream.VisualStudio.Services
 
         public Task<CsDirectStream> CreateDirectStreamAsync(List<string> memberIds)
         {
-            return SendAsync<CsDirectStream>("codeStream/streams/createDirect", new CreateDirectStreamRequest
+            return SendAsync<CsDirectStream>("codestream/streams/createDirect", new CreateDirectStreamRequest
             {
                 Type = StreamType.direct.ToString(),
                 MemberIds = memberIds
@@ -198,7 +198,7 @@ namespace CodeStream.VisualStudio.Services
 
         public Task<FetchStreamsResponse> FetchStreamsAsync(FetchStreamsRequest request)
         {
-            return SendAsync<FetchStreamsResponse>("codeStream/streams", new FetchStreamsRequest2
+            return SendAsync<FetchStreamsResponse>("codestream/streams", new FetchStreamsRequest2
             {
                 Types = request.Types.Select(_ => _.ToString()).ToList(),
                 MemberIds = request.MemberIds
@@ -209,7 +209,7 @@ namespace CodeStream.VisualStudio.Services
         {
             try
             {
-                return SendAsync<JToken>("codeStream/telemetry", new TelemetryRequest
+                return SendAsync<JToken>("codestream/telemetry", new TelemetryRequest
                 {
                     EventName = eventName,
                     Properties = properties
@@ -224,7 +224,7 @@ namespace CodeStream.VisualStudio.Services
 
         public Task<PrepareCodeResponse> PrepareCodeAsync(Uri uri, Microsoft.VisualStudio.LanguageServer.Protocol.Range range, bool isDirty, CancellationToken? cancellationToken = null)
         {
-            return SendAsync<PrepareCodeResponse>("codeStream/post/prepareWithCode",
+            return SendAsync<PrepareCodeResponse>("codestream/post/prepareWithCode",
                 new PrepareCodeRequest
                 {
                     TextDocument = new TextDocumentIdentifier { Uri = uri.ToString() },
@@ -235,7 +235,7 @@ namespace CodeStream.VisualStudio.Services
 
         public Task<JToken> LoginViaTokenAsync(string email, string token, string serverUrl)
         {
-            return SendCoreAsync<JToken>("codeStream/login", new LoginViaAccessTokenRequest
+            return SendCoreAsync<JToken>("codestream/login", new LoginViaAccessTokenRequest
             {
                 Email = email,
                 PasswordOrToken = new LoginAccessToken(email, serverUrl, token),
@@ -253,7 +253,7 @@ namespace CodeStream.VisualStudio.Services
 
         public Task<JToken> LoginViaOneTimeCodeAsync(string signupToken, string serverUrl)
         {
-            return SendCoreAsync<JToken>("codeStream/login", new LoginRequest
+            return SendCoreAsync<JToken>("codestream/login", new LoginRequest
             {
                 SignupToken = signupToken,
                 ServerUrl = serverUrl,
@@ -273,7 +273,7 @@ namespace CodeStream.VisualStudio.Services
             var extensionInfo = _settingsService.GetExtensionInfo();
             var ideInfo = _settingsService.GetIdeInfo();
 
-            return SendCoreAsync<JToken>("codeStream/login", new LoginRequest
+            return SendCoreAsync<JToken>("codestream/login", new LoginRequest
             {
                 Email = email,
                 PasswordOrToken = password,
@@ -291,12 +291,12 @@ namespace CodeStream.VisualStudio.Services
 
         public Task<JToken> LogoutAsync()
         {
-            return SendAsync<JToken>("codeStream/logout", new LogoutRequest());
+            return SendAsync<JToken>("codestream/logout", new LogoutRequest());
         }
 
         public Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request)
         {
-            return SendAsync<DocumentFromMarkerResponse>("codeStream/textDocument/fromMarker", request);
+            return SendAsync<DocumentFromMarkerResponse>("codestream/textDocument/fromMarker", request);
         }
 
         public async Task<JToken> GetBootstrapAsync(Settings settings, JToken state = null, bool isAuthenticated = false)
@@ -332,7 +332,8 @@ namespace CodeStream.VisualStudio.Services
                         showHeadshots = _settingsService.ShowHeadshots,
                         showMarkers = _settingsService.ShowMarkers,
                         muteAll = _settingsService.MuteAll,
-                        team = _settingsService.Team
+                        team = _settingsService.Team,
+                        viewCodemarksInline = false,// _settingsService.ViewCodemarksInline
                     },
                     env = _settingsService.GetEnvironmentName(),
                     version = _settingsService.GetEnvironmentVersionFormatted()
@@ -341,58 +342,36 @@ namespace CodeStream.VisualStudio.Services
 
             if (state == null) throw new ArgumentNullException(nameof(state));
 
-            var results = await Task.WhenAll(
-                _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/repos"),
-                _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/streams"),
-                _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/teams"),
-                _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/unreads"),
-                _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users"),
-                _rpc.InvokeWithParameterObjectAsync<JToken>("codeStream/users/me/preferences")
-            ).ConfigureAwait(false);
+            var results = await _rpc.InvokeWithParameterObjectAsync<JToken>("codestream/bootstrap").ConfigureAwait(false);
 
-            var repos = results[0].Value<JToken>("repos");
-            var streams = results[1].Value<JToken>("streams");
-            var teams = results[2].Value<JToken>("teams");
-            var unreads = results[3].Value<JToken>("unreads");
-            var users = results[4].Value<JToken>("users");
-            var preferences = results[5].Value<JToken>("preferences");
 
-            var bootstrapState = new
+            results["capabilities"] = capabilities;
+            results["configs"] = JObject.FromObject(new
             {
-                capabilities = capabilities,
-                configs = new
-                {
 #if DEBUG
-                    debug = true,
+                debug = true,
 #endif
-                    serverUrl = settings.ServerUrl,
-                    email = state["email"].ToString(),
-                    showMarkers = settings.ShowMarkers,
-                    showHeadshots = settings.ShowHeadshots,
-                    muteAll = settings.MuteAll,
-                    openCommentOnSelect = settings.OpenCommentOnSelect,
-                    team = settings.Team
-                },
-                context = new
-                {
-                    currentTeamId = state["teamId"].ToString(),
-                    hasFocus = true
-                },
-                session = new
-                {
-                    userId = state["userId"].ToString(),
-                },
-                env = settings.Env,
-                version = settings.Version,
-                repos = repos,
-                streams = streams,
-                teams = teams,
-                unreads = unreads,
-                users = users,
-                preferences = preferences
-            };
-
-            return JToken.FromObject(bootstrapState);
+                serverUrl = settings.ServerUrl,
+                email = state["email"].ToString(),
+                showMarkers = settings.ShowMarkers,
+                showHeadshots = settings.ShowHeadshots,
+                muteAll = settings.MuteAll,
+                openCommentOnSelect = settings.OpenCommentOnSelect,
+                viewCodemarksInline = false, // settings.ViewCodemarksInline,
+                team = settings.Team
+            });
+            results["context"] = JObject.FromObject(new
+            {
+                currentTeamId = state["teamId"].ToString(),
+                hasFocus = true
+            });
+            results["session"] = JObject.FromObject(new
+            {
+                userId = state["userId"].ToString(),
+            });
+            results["env"] = settings.Env;
+            results["version"] = settings.Version;
+            return results;
         }
 
         public void Dispose()

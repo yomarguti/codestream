@@ -75,7 +75,7 @@ namespace CodeStream.VisualStudio.Services
             {
                 var streamResponse = await _agentService.GetFileStreamAsync(uri);
 
-                WebviewIpc.SendResponse(new DidChangeActiveEditorNotificationType
+                WebviewIpc.Notify(new DidChangeActiveEditorNotificationType
                 {
                     Params = new DidChangeActiveEditorNotificationParams
                     {
@@ -100,7 +100,7 @@ namespace CodeStream.VisualStudio.Services
 
             try
             {
-                WebviewIpc.SendResponse(new DidSelectStreamThreadNotificationType
+                WebviewIpc.Notify(new DidSelectStreamThreadNotificationType
                 {
                     Params = new DidSelectStreamThreadNotificationTypeParams
                     {
@@ -131,9 +131,9 @@ namespace CodeStream.VisualStudio.Services
                 var response = await _agentService.PrepareCodeAsync(uri, textSelection.Range, isDirty, cancellationToken);
 
                 var source = response?.Source;
-                WebviewIpc.SendResponse(new DidHighlightCodeNotificationType
+                WebviewIpc.Notify(new HostDidSelectCodeNotificationType
                 {
-                    Params = new DidSelectCodeNotificationTypeParams
+                    Params = new HostDidSelectCodeNotification
                     {
                         Code = response?.Code,
                         File = source?.File,
@@ -141,7 +141,8 @@ namespace CodeStream.VisualStudio.Services
                         Range = response?.Range,
                         Source = source,
                         GitError = response?.GitError,
-                        IsHighlight = isHighlight
+                        IsHighlight = isHighlight,
+                       // Type = //TODO
                     }
                 });
             }

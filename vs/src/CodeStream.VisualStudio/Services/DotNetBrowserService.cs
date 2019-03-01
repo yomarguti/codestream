@@ -373,7 +373,7 @@ namespace CodeStream.VisualStudio.Services
 
 			if (parameters.ResourceType == ResourceType.MAIN_FRAME)
 			{
-				_agent.SendAsync<JToken>("codeStream/url/open", new { url = parameters.URL });
+				_agent.SendAsync<JToken>("codestream/url/open", new { url = parameters.URL });
 			}
 
 			return false;

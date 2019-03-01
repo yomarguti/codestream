@@ -22,7 +22,7 @@ namespace CodeStream.VisualStudio.Controllers
 
         public async Task UpdateOpenCommentOnSelectAsync(bool value)
         {
-            _ipc.SendResponse(new DidChangeConfigsNotificationType
+            _ipc.Notify(new DidChangeConfigsNotificationType
             {
                 Params = new DidChangeConfigsNotificationTypeParams
                 {
@@ -38,7 +38,7 @@ namespace CodeStream.VisualStudio.Controllers
         public async Task ToggleShowMarkersAsync(bool value)
         {
             _eventAggregator.Publish(new CodemarkVisibilityEvent { IsVisible = value });
-            _ipc.SendResponse(new DidChangeConfigsNotificationType
+            _ipc.Notify(new DidChangeConfigsNotificationType
             {
                 Params = new DidChangeConfigsNotificationTypeParams
                 {
@@ -53,7 +53,7 @@ namespace CodeStream.VisualStudio.Controllers
 
         public async Task ToggleMuteAllAsync(bool value)
         {
-            _ipc.SendResponse(new DidChangeConfigsNotificationType
+            _ipc.Notify(new DidChangeConfigsNotificationType
             {
                 Params = new DidChangeConfigsNotificationTypeParams
                 {
@@ -62,6 +62,21 @@ namespace CodeStream.VisualStudio.Controllers
             });
 
             Log.Verbose($"{nameof(ToggleMuteAllAsync)} Value={value}");
+
+            await Task.CompletedTask;
+        }
+
+        public async Task ToggleViewCodemarksInlineAsync(bool value)
+        {
+            _ipc.Notify(new DidChangeConfigsNotificationType
+            {
+                Params = new DidChangeConfigsNotificationTypeParams
+                {
+                    ViewCodemarksInline = value
+                }
+            });
+
+            Log.Verbose($"{nameof(ToggleViewCodemarksInlineAsync)} Value={value}");
 
             await Task.CompletedTask;
         }

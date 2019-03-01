@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 
 namespace CodeStream.VisualStudio.Extensions
 {
@@ -12,5 +13,7 @@ namespace CodeStream.VisualStudio.Extensions
 
         public static bool EndsWithIgnoreCase(this string str, string value) =>
             str?.EndsWith(value, true, CultureInfo.InvariantCulture) == true;
+
+        public static bool AsBool(this string s) => s != null && Convert.ToBoolean(s);
     }
 }

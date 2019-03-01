@@ -10,7 +10,9 @@ namespace CodeStream.VisualStudio.Services
 
     public interface IWebviewIpc
     {
-        void SendResponse(IAbstractMessageType message);
+        void Send(IAbstractMessageType message);
+        void Notify(INotificationType message);
+        void SendResponse(IRequestType message);
         IBrowserService BrowserService { get; }
     }
 
@@ -25,12 +27,18 @@ namespace CodeStream.VisualStudio.Services
 
         public IBrowserService BrowserService { get; }
 
-        public void SendResponse(IAbstractMessageType message)
+        private void SendInternal(IAbstractMessageType message)
         {
             using (Log.IsEnabled(LogEventLevel.Verbose) ? Log.TimeOperation($"{nameof(SendResponse)} Id={{Id}}", message.Id) : null)
             {
                 BrowserService.PostMessage(message);
             }
         }
+
+        public void Send(IAbstractMessageType message) => SendInternal(message);
+
+        public void SendResponse(IRequestType message) =>  SendInternal(message);
+
+        public void Notify(INotificationType message) => SendInternal(message);
     }
 }

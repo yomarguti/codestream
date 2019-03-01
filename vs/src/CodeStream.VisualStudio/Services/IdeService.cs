@@ -64,7 +64,7 @@ namespace CodeStream.VisualStudio.Services
         /// </summary>
         /// <param name="fileUri"></param>
         /// <param name="scrollTo">the 1-based line number</param>
-        /// <returns></returns>
+        /// <returns>ShowCodeResult</returns>
         public ShowCodeResult OpenEditor(string fileUri, int? scrollTo = null)
         {
             return OpenEditor(fileUri.ToUri(), scrollTo);
@@ -75,7 +75,7 @@ namespace CodeStream.VisualStudio.Services
         /// </summary>
         /// <param name="fileUri"></param>
         /// <param name="scrollTo">the 1-based line number</param>
-        /// <returns></returns>
+        /// <returns>ShowCodeResult</returns>
         public ShowCodeResult OpenEditor(Uri fileUri, int? scrollTo = null)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
