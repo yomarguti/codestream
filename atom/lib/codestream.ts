@@ -1,5 +1,4 @@
 import { CompositeDisposable, Disposable } from "atom";
-import { CodestreamView, CODESTREAM_VIEW_URI } from "./views/codestream-view";
 import { StatusBar, Tile } from "./types/package-services/status-bar";
 import { WorkspaceSession, SessionStatus } from "./workspace/workspace-session";
 import { PackageState } from "./types/package";
@@ -10,7 +9,6 @@ import { ViewController } from "./views/controller";
 class CodestreamPackage {
 	subscriptions = new CompositeDisposable();
 	workspaceSession: WorkspaceSession;
-	view?: CodestreamView;
 	viewController: ViewController;
 	sessionStatusCommand?: Disposable;
 	markerDecorationProvider: MarkerDecorationProvider;

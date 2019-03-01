@@ -1,26 +1,33 @@
 import { shell } from "electron";
-import { CompositeDisposable, Emitter } from "atom";
+import { CompositeDisposable, Emitter, TextEditor, Range, Point } from "atom";
 import { WorkspaceSession, SessionStatus } from "../workspace/workspace-session";
 import { LoginResult } from "../protocols/agent/api.protocol";
-import { DidChangeDataNotification } from "../protocols/agent/agent.protocol";
 import {
-	DidChangeDataNotificationType as WebviewDidChangeDataNotificationType,
+	GetFileStreamRequestType,
+	DidChangeDataNotificationType,
+} from "../protocols/agent/agent.protocol";
+import {
 	WebviewIpcMessage,
-	GetViewBootstrapDataRequestType,
-	GetViewBootstrapDataResponse,
-	GoToSlackSigninRequestType,
-	GoToSlackSigninResponse,
-	ValidateSignupRequestType,
-	WebviewReadyNotificationType,
-	DidSignOutNotificationType,
+	BootstrapRequestType,
+	SignedInBootstrapResponse,
+	SlackLoginRequestType,
+	SlackLoginResponse,
+	CompleteSignupRequestType,
+	WebviewDidInitializeNotificationType,
+	HostDidLogoutNotificationType,
 	LoginRequestType,
 	LoginRequest,
-	ReloadWebviewRequestType,
 	DidSelectStreamThreadNotificationType,
+	isIpcRequestMessage,
+	HostDidChangeActiveEditorNotificationType,
+	HostDidChangeActiveEditorNotification,
+	WebviewIpcNotificationMessage,
+	WebviewIpcRequestMessage,
 } from "../protocols/webview/webview.protocol";
 import { asAbsolutePath } from "../utils";
 import { getStyles } from "./styles-getter";
 import { NotificationType } from "vscode-languageserver-protocol";
+import { Convert } from "atom-languageclient";
 
 export class WebviewIpc {
 	private channel: MessageChannel;
@@ -65,7 +72,7 @@ export class CodestreamView {
 
 		this.initializeWebview(this.iframe);
 		this.initialize();
-		this.setupWebviewListeners();
+		this.setupWebviewListener();
 	}
 
 	// update-able
@@ -152,23 +159,48 @@ export class CodestreamView {
 		// TODO: create a controller to house this stuff so it isn't re-init everytime this view is instantiated
 		this.subscriptions.add(
 			this.session.agent.onInitialized(() => {
-				this.subscriptions.add(this.session.agent.onDidChangeData(this.onDidChangeSessionData));
+				this.subscriptions.add(
+					this.session.agent.onDidChangeData(data =>
+						this.sendEvent(DidChangeDataNotificationType, data)
+					)
+				);
 			}),
 			this.session.onDidChangeSessionStatus(status => {
 				if (status === SessionStatus.SignedOut) {
-					this.sendEvent(DidSignOutNotificationType, undefined);
+					this.sendEvent(HostDidLogoutNotificationType, {});
 				}
 			})
 		);
 
 		this.webviewReady = new Promise(resolve =>
-			this.subscriptions.add(this.emitter.on(WEBVIEW_DID_INITIALIZE, resolve))
+			this.subscriptions.add(
+				this.emitter.on(WEBVIEW_DID_INITIALIZE, () => {
+					resolve();
+					atom.workspace.observeActiveTextEditor(async (editor?: TextEditor) => {
+						if (editor && editor.getPath()) {
+							const filePath = editor.getPath()!;
+							const uri = Convert.pathToUri(filePath);
+							const { stream } = await this.session.agent.request(GetFileStreamRequestType, {
+								textDocument: { uri },
+							});
+
+							const [start, end] = editor.getVisibleRowRange().map(line => new Point(line));
+
+							const event: HostDidChangeActiveEditorNotification = {
+								editor: {
+									fileName: atom.project.relativize(filePath)!,
+									fileStreamId: stream && stream.id,
+									visibleRanges: [Convert.atomRangeToLSRange(new Range(start, end))],
+									uri,
+								},
+							};
+							this.sendEvent(HostDidChangeActiveEditorNotificationType, event);
+						}
+					});
+				})
+			)
 		);
 	}
-
-	private onDidChangeSessionData = (data: DidChangeDataNotification) => {
-		this.sendEvent(WebviewDidChangeDataNotificationType, data);
-	};
 
 	serialize() {
 		return {
@@ -182,11 +214,13 @@ export class CodestreamView {
 		this.subscriptions.dispose();
 	}
 
-	private setupWebviewListeners() {
+	private setupWebviewListener() {
 		this.channel.host.onmessage = ({ data }: { data: WebviewIpcMessage }) => {
-			const target = data.method.split("/")[0];
-			if (target === "codeStream") return this.forwardWebviewRequest(data as any);
-			if (data.id) return this.handleWebviewCommand(data as WebviewIpcMessage & { id: string });
+			if (isIpcRequestMessage(data)) {
+				const target = data.method.split("/")[0];
+				if (target === "codeStream") return this.forwardWebviewRequest(data as any);
+				return this.handleWebviewCommand(data);
+			} else this.onWebviewNotification(data as WebviewIpcNotificationMessage);
 		};
 	}
 
@@ -195,29 +229,24 @@ export class CodestreamView {
 		this.respond({ id: request.id, params: response });
 	}
 
-	private async handleWebviewCommand<C extends WebviewIpcMessage & { id: string }>(message: C) {
+	private async handleWebviewCommand(message: WebviewIpcRequestMessage) {
 		switch (message.method) {
-			case WebviewReadyNotificationType.method: {
-				this.removeLoadingSpinner();
-				this.emitter.emit(WEBVIEW_DID_INITIALIZE);
-				break;
-			}
-			case GetViewBootstrapDataRequestType.method: {
+			case BootstrapRequestType.method: {
 				try {
 					const data = await this.session.getBootstrapData();
-					this.respond<GetViewBootstrapDataResponse>({ id: message.id, params: data });
+					this.respond<SignedInBootstrapResponse>({ id: message.id, params: data });
 				} catch (error) {
 					this.respond({ id: message.id, error: error.message });
 				}
 				break;
 			}
-			case GoToSlackSigninRequestType.method: {
+			case SlackLoginRequestType.method: {
 				const ok = shell.openExternal(
 					`${
 						this.session.environment.webAppUrl
 					}/service-auth/slack?state=${this.session.getSignupToken()}`
 				);
-				if (ok) this.respond<GoToSlackSigninResponse>({ id: message.id, params: true });
+				if (ok) this.respond<SlackLoginResponse>({ id: message.id, params: true });
 				else {
 					this.respond({
 						id: message.id,
@@ -226,12 +255,12 @@ export class CodestreamView {
 				}
 				break;
 			}
-			case ValidateSignupRequestType.method: {
+			case CompleteSignupRequestType.method: {
 				const status = await this.session.loginViaSignupToken(message.params);
 				if (status !== LoginResult.Success) this.respond({ id: message.id, error: status });
 				else {
 					const data = await this.session.getBootstrapData();
-					this.respond<GetViewBootstrapDataResponse>({ id: message.id, params: data });
+					this.respond<SignedInBootstrapResponse>({ id: message.id, params: data });
 				}
 				break;
 			}
@@ -241,12 +270,29 @@ export class CodestreamView {
 				if (status !== LoginResult.Success) this.respond({ id: message.id, error: status });
 				else {
 					const data = await this.session.getBootstrapData();
-					this.respond<GetViewBootstrapDataResponse>({ id: message.id, params: data });
+					this.respond<SignedInBootstrapResponse>({ id: message.id, params: data });
 				}
 				break;
 			}
+			// case ReloadWebviewRequestType.method: {
+			// 	new Promise(() => {
+			// 		this.destroy();
+			// 		atom.commands.dispatch(document.querySelector("atom-workspace")!, "codestream:toggle");
+			// 	});
+			// 	break;
+			// }
 			default: {
 				console.warn("unhandled webview message", message);
+			}
+		}
+	}
+
+	private onWebviewNotification(event: WebviewIpcNotificationMessage) {
+		switch (event.method) {
+			case WebviewDidInitializeNotificationType.method: {
+				this.removeLoadingSpinner();
+				this.emitter.emit(WEBVIEW_DID_INITIALIZE);
+				break;
 			}
 		}
 	}

@@ -18,6 +18,7 @@
 			"@codestream/protocols/agent": ["protocols/agent/agent.protocol"],
 			"@codestream/protocols/api": ["protocols/agent/api.protocol"],
 			"@codestream/protocols/webview": ["protocols/webview/webview.protocol"],
+			"@codestream/protocols/host": ["protocols/webview/host.protocol"],
 			"vscode-jsonrpc": ["../../codestream-components/vscode-jsonrpc.shim.ts"]
 		},
 		"resolveJsonModule": false,
