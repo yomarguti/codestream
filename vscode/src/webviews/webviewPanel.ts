@@ -6,6 +6,8 @@ import {
 	TraceLevel,
 	Unreads
 } from "@codestream/protocols/agent";
+import { DidChangeDocumentMarkersNotificationType } from "@codestream/protocols/agent";
+import { DidChangeDocumentMarkersNotification } from "@codestream/protocols/agent";
 import {
 	CSMePreferences,
 	CSPost,
@@ -561,6 +563,13 @@ export class CodeStreamWebviewPanel implements Disposable {
 		}
 	}
 
+	private onDocumentMarkersChanged(e: DidChangeDocumentMarkersNotification) {
+		this._ipc.postMessage({
+			method: DidChangeDocumentMarkersNotificationType.method,
+			params: e
+		});
+	}
+
 	private onWindowStateChanged(e: WindowState) {
 		if (this._panelState.visible) {
 			if (e.focused) {
@@ -749,6 +758,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 		this._ipc.connect(this._panel);
 
 		this._disposable = Disposable.from(
+			Container.agent.onDidChangeDocumentMarkers(this.onDocumentMarkersChanged, this),
 			this.session.onDidChangeCodemarks(this.onSessionDataChanged, this),
 			this.session.onDidChangePosts(this.onSessionDataChanged, this),
 			this.session.onDidChangeRepositories(this.onSessionDataChanged, this),
