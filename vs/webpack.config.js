@@ -60,7 +60,7 @@ module.exports = function(env, argv) {
 	const context = path.resolve(__dirname, "src/CodeStream.VisualStudio/UI/WebViews");
 
 	const plugins = [
-		new CleanPlugin(["src/CodeStream.VisualStudio/UI/WebViews/dist"]),
+		new CleanPlugin(["src/CodeStream.VisualStudio/dist/webview"]),
 		new webpack.DefinePlugin(
 			Object.assign(
 				{ "global.atom": false },
@@ -106,8 +106,8 @@ module.exports = function(env, argv) {
 		devtool: !env.production ? "eval-source-map" : undefined,
 		output: {
 			filename: "[name].js",
-			path: path.resolve(__dirname, "src/CodeStream.VisualStudio/UI/WebViews/dist"),
-			publicPath: "file:///{root}/UI/WebViews/dist/"
+			path: path.resolve(__dirname, "src/CodeStream.VisualStudio/dist/webview"),
+			publicPath: "file:///{root}/dist/webview/"
 		},
 		optimization: {
 			minimizer: [

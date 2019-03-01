@@ -253,15 +253,15 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="CodeStream.VisualStudio.pkgdef" />
-    <Content Include="LSP\agent.exe" Condition="'$(Configuration)'=='Release'">
+    <Content Include="dist\agent.exe" Condition="'$(Configuration)'=='Release'">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="LSP\agent.js" Condition="'$(Configuration)'=='Debug'">
+    <Content Include="dist\agent.js" Condition="'$(Configuration)'=='Debug'">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="LSP\agent-vs.js.map" Condition="'$(Configuration)'=='Debug'">
+    <Content Include="dist\agent-vs.js.map" Condition="'$(Configuration)'=='Debug'">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -334,11 +334,13 @@
     </Content>
     <Content Include="Resources\Sprites.png" />
     <EmbeddedResource Include="teamdev.licenses" />
-    <Content Include="UI\WebViews\dist\webview.css">
+    <Content Include="dist\webview\webview.css">
       <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="UI\WebViews\dist\webview.js">
+    <Content Include="dist\webview\webview.js">
       <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="UI\WebViews\index.html" />
     <Content Include="UI\WebViews\index.tsx" />
@@ -349,8 +351,9 @@
     <Content Include="UI\WebViews\waiting.html">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="UI\WebViews\dist\webview.html">
+    <Content Include="dist\webview\webview.html">
       <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <VSCTCompile Include="CodeStreamPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>

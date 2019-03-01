@@ -23,17 +23,17 @@ namespace CodeStream.VisualStudio.LSP
 			var exe = @"node.exe";
 			var logPath = $"{Application.LogPath}vs-agent.log";
 #if DEBUG
-            var path = Path.GetDirectoryName(assembly.Location) + @"\LSP\agent.js";
+            var path = Path.GetDirectoryName(assembly.Location) + @"\dist\agent.js";
             arguments = $@"--nolazy --inspect=6010 ""{path}"" --stdio --log={logPath}";
 #else
-			exe = Path.GetDirectoryName(assembly.Location) + @"\LSP\agent.exe";
+			exe = Path.GetDirectoryName(assembly.Location) + @"\dist\agent.exe";
 			arguments = $@"--stdio --nolazy";
 			if (traceLevel == TraceLevel.Verbose)
 			{
 				arguments += $" --log={logPath}";
 			}
 #endif
-			return ProcessFactory.Create(exe, arguments);
+            return ProcessFactory.Create(exe, arguments);
 		}
 	}
 }

@@ -88,7 +88,7 @@ function Build-AgentAndWebview {
 
 	Write-Log "Packaging agent..."
 
-	& cmd /c $(Resolve-Path -path "node_modules/.bin/pkg") "src/CodeStream.VisualStudio/LSP/agent.js" --targets node8-win-x86 --out-path "src/CodeStream.VisualStudio/LSP/"
+	& cmd /c $(Resolve-Path -path "node_modules/.bin/pkg") "src/CodeStream.VisualStudio/dist/agent.js" --targets node8-win-x86 --out-path "src/CodeStream.VisualStudio/dist/"
 	if ($LastExitCode -ne 0) {
 		throw "Packaging agent failed"
 	}
