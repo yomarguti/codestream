@@ -32,15 +32,15 @@ export class PostCompose extends React.Component<Props, State> {
 		this.props.onClickClose();
 	}
 
-	handleMenuClick(event: React.SyntheticEvent) {
+	handleMenuClick = (event: React.SyntheticEvent) => {
 		event.stopPropagation();
 		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
-	}
+	};
 
-	handleSelectMenu(type) {
+	handleSelectMenu = type => {
 		this.setState({ menuOpen: false });
 		if (type) this.props.openCodemarkForm(type);
-	}
+	};
 
 	handleSubmit() {
 		const domParser = new DOMParser();

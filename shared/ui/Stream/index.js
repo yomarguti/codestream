@@ -749,15 +749,16 @@ export class SimpleStream extends Component {
 		const textEditorUri = this.state.textEditorUri || this.props.textEditorUri;
 
 		// these panels do not have global nav
-		const renderNav = !["create-channel", "create-dm", "public-channels", "invite"].includes(
+		let renderNav = !["create-channel", "create-dm", "public-channels", "invite"].includes(
 			activePanel
 		);
+		if (this.state.floatCompose) renderNav = false;
 
 		return (
 			<div className={streamClass}>
 				<div id="modal-root" />
 				<div id="confirm-root" />
-				<div id="focus-trap-x" className={createClassString({ active: !this.props.hasFocus })} />
+				<div id="focus-trap" className={createClassString({ active: !this.props.hasFocus })} />
 				{(threadId || this.state.floatCompose) && <div id="panel-blanket" />}
 				{renderNav && this.renderNavIcons()}
 				{this.state.floatCompose && this.renderComposeBox(placeholderText, channelName)}
