@@ -148,7 +148,7 @@ export class SimpleInlineCodemarks extends Component {
 											codemark={codemark}
 											collapsed={this.state.openPost !== codemark.id}
 											inline={false}
-											currentUserName={this.props.currentUserName || "pez"}
+											currentUserName={this.props.currentUserName}
 											usernames={this.props.usernames}
 											onClick={this.handleClickCodemark}
 											onMouseEnter={this.handleHighlightCodemark}
@@ -285,7 +285,7 @@ export class SimpleInlineCodemarks extends Component {
 											marker={docMarker}
 											collapsed={this.state.openPost !== docMarker.id}
 											inline={true}
-											currentUserName={this.props.currentUserName || "pez"}
+											currentUserName={this.props.currentUserName}
 											usernames={this.props.usernames}
 											onClick={this.handleClickCodemark}
 											onMouseEnter={this.handleHighlightCodemark}
