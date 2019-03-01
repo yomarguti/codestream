@@ -177,6 +177,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (
 			prevProps.codeBlock &&
 			this.props.codeBlock &&
+			this.props.codeBlock.type &&
 			this.props.codeBlock.type !== prevProps.codeBlock.type
 		) {
 			// FIXME this should call ComposeBox.repositionIfNecessary()

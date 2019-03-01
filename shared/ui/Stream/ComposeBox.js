@@ -131,8 +131,11 @@ class ComposeBox extends React.Component {
 	}
 
 	openMultiCompose = type => {
-		const quote = { type };
-		this.props.setMultiCompose(true, { quote });
+		this.props.setMultiCompose(true, {
+			composeBoxProps: {
+				codemarkType: type
+			}
+		});
 		this.props.setNewPostEntry("Stream");
 		// setTimeout(() => {
 		// 	this.focus();

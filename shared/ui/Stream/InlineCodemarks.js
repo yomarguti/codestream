@@ -97,7 +97,7 @@ export class SimpleInlineCodemarks extends Component {
 	renderList = () => {
 		const { codemarks } = this.props;
 
-		if (codemarks.length === 0) return null;
+		if (codemarks.length === 0) return this.renderNoCodemarks();
 		else {
 			return (
 				<ScrollBox>
@@ -190,26 +190,37 @@ export class SimpleInlineCodemarks extends Component {
 		);
 	};
 
+	renderNoCodemarks = () => {
+		return (
+			<div key="no-codemarks" className="no-codemarks">
+				There are no codemarks
+				<Icon
+					title="A codemark is a link between a block of code and a conversation, an issue, or a bookmark. Codemarks work across branches, and stay pinned to the block of code even as your codebase changes."
+					placement="top"
+					className="superscript"
+					name="info"
+				/>{" "}
+				in {this.props.fileNameToFilterFor}
+				<br />
+				<br />
+				Discuss code with your team by selecting a range and clicking an icon (
+				<a href="foo">show me how</a>).
+			</div>
+		);
+	};
+
 	renderInline() {
 		const {
 			codemarks,
 			codemarkStartLine,
 			textEditorVisibleRanges = [],
-			openPlusOnLine,
-			mostRecentSourceFile
+			openPlusOnLine
 		} = this.props;
 		const { numLinesVisible } = this.state;
 
 		// console.log("TEVR: ", textEditorVisibleRanges);
 		if (codemarks.length === 0) {
-			return [
-				this.renderHoverIcons(numLinesVisible, openPlusOnLine),
-				<div key="no-codemarks" className="no-codemarks">
-					There are no codemarks in {mostRecentSourceFile}.<br />
-					<br />
-					Create one by selecting code.
-				</div>
-			];
+			return [this.renderHoverIcons(numLinesVisible, openPlusOnLine), this.renderNoCodemarks()];
 		} else {
 			const numVisibleRanges = textEditorVisibleRanges.length;
 

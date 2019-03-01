@@ -190,7 +190,7 @@ export class SimpleKnowledgePanel extends Component {
 		} = this.props;
 		const { thisRepo } = this.state;
 
-		if (noCodemarksAtAll) {
+		if (noCodemarksAtAll || true) {
 			return this.renderBlankFiller();
 		}
 
@@ -361,20 +361,29 @@ export class SimpleKnowledgePanel extends Component {
 								<p>See some code that needs to be fixed or refactored? Assign an issue.</p>
 							</div>
 						</div>
-						<div className="codemark-info" onClick={this.onClickCodemarkTypeFor("trap")}>
-							<Icon name="trap" className="type-icon" />
-							<div className="text">
-								<h3>Code Trap</h3>
-								<p>
-									Create a trap around code that shouldn’t be touched without talking to you first.
-								</p>
-							</div>
-						</div>
+						{
+							// <div className="codemark-info" onClick={this.onClickCodemarkTypeFor("trap")}>
+							// 	<Icon name="trap" className="type-icon" />
+							// 	<div className="text">
+							// 		<h3>Code Trap</h3>
+							// 		<p>
+							// 			Create a trap around code that shouldn’t be touched without talking to you first.
+							// 		</p>
+							// 	</div>
+							// </div>
+						}
 						<div className="codemark-info" onClick={this.onClickCodemarkTypeFor("bookmark")}>
 							<Icon name="bookmark" className="type-icon" />
 							<div className="text">
 								<h3>Bookmark</h3>
-								<p> Bookmark parts of the code you want to be able to get back to quickly.</p>
+								<p>Bookmark parts of the code you want to be able to get back to quickly.</p>
+							</div>
+						</div>
+						<div className="codemark-info" onClick={this.onClickCodemarkTypeFor("link")}>
+							<Icon name="link" className="type-icon" />
+							<div className="text">
+								<h3>Permalink</h3>
+								<p>Get a shareable link to a block of code.</p>
 							</div>
 						</div>
 					</div>
