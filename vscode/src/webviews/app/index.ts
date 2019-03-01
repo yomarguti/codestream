@@ -4,7 +4,22 @@ import { HostApi, initialize, setupCommunication } from "@codestream/webview/ind
 import { initializeColorPalette } from "./theme";
 
 declare function acquireVsCodeApi();
-setupCommunication(acquireVsCodeApi());
+
+const vscodeApi = acquireVsCodeApi();
+const channel = new MessageChannel();
+
+window.addEventListener(
+	"message",
+	message => {
+		channel.port1.postMessage(message.data);
+	},
+	false
+);
+channel.port1.onmessage = message => {
+	vscodeApi.postMessage(message.data);
+};
+
+setupCommunication(channel.port2);
 initializeColorPalette();
 
 const vslsUrlRegex = /https:\/\/insiders\.liveshare\.vsengsaas\.visualstudio\.com\/join\?/;
