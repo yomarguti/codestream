@@ -33,6 +33,10 @@ import {
 import { CodeStreamSession } from "./session";
 import { Disposables, Functions, log, memoize } from "./system";
 
+type NotificationParamsOf<NT> = NT extends NotificationType<infer N, any> ? N : never;
+type RequestParamsOf<RT> = RT extends RequestType<infer R, any, any, any> ? R : never;
+type RequestResponseOf<RT> = RT extends RequestType<any, infer R, any, any> ? R : never;
+
 export class CodeStreamAgent implements Disposable {
 	private _onReady = new Emitter<void>();
 	get onReady(): Event<void> {
@@ -224,8 +228,6 @@ export class CodeStreamAgent implements Disposable {
 		}
 	}
 
-	sendNotification<RO>(type: NotificationType0<RO>): void;
-	sendNotification<P, RO>(type: NotificationType<P, RO>, params: P): void;
 	@log({
 		args: { 0: type => type.method },
 		prefix: (context, type, params) =>
@@ -233,32 +235,28 @@ export class CodeStreamAgent implements Disposable {
 				type.method === DidChangeDataNotificationType.method ? `:${params.type}` : ""
 			})`
 	})
-	sendNotification(type: any, params?: any): void {
+	sendNotification<NT extends NotificationType<any, any>>(
+		type: NT,
+		params: NotificationParamsOf<NT>
+	): void {
 		return this._connection.sendNotification(type, params);
 	}
 
-	sendRequest<R, E, RO>(type: RequestType0<R, E, RO>, token?: CancellationToken): Thenable<R>;
-	sendRequest<P, R, E, RO>(
-		type: RequestType<P, R, E, RO>,
-		params: P,
-		token?: CancellationToken
-	): Thenable<R>;
 	@log({
 		args: {
 			0: type => type.method,
-			1: params => (CancellationToken.is(params) ? undefined : params)
+			1: params => params
 		},
 		prefix: (context, type, params) =>
 			`${context.prefix}(${type.method}${
 				type.method === DidChangeDataNotificationType.method ? `:${params.type}` : ""
 			})`
 	})
-	sendRequest(type: any, params?: any, token?: CancellationToken): Thenable<any> {
-		if (CancellationToken.is(params)) {
-			token = params;
-			params = undefined;
-		}
-
+	sendRequest<RT extends RequestType<any, any, any, any>>(
+		type: RT,
+		params: RequestParamsOf<RT>,
+		token?: CancellationToken
+	): Thenable<RequestResponseOf<RT>> {
 		return this._connection.sendRequest(type, params, token);
 	}
 

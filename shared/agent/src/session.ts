@@ -28,6 +28,7 @@ import { MarkerHandler } from "./marker/markerHandler";
 import {
 	AgentOptions,
 	ApiRequestType,
+	BootstrapRequestType,
 	ChangeDataType,
 	CodeStreamEnvironment,
 	ConnectionStatus,
@@ -205,6 +206,39 @@ export class CodeStreamSession {
 		this.agent.registerHandler(ApiRequestType, (e, cancellationToken: CancellationToken) =>
 			this.api.fetch(e.url, e.init, e.token)
 		);
+		this.agent.registerHandler(
+			BootstrapRequestType,
+			async (e, cancellationToken: CancellationToken) => {
+				const { repos, streams, teams, users } = Container.instance();
+				const promise = Promise.all([
+					repos.get(),
+					streams.get(),
+					teams.get(),
+					users.getUnreads({}),
+					users.get(),
+					users.getPreferences()
+				]);
+
+				const [
+					reposResponse,
+					streamsResponse,
+					teamsResponse,
+					unreadsResponse,
+					usersResponse,
+					preferencesResponse
+				] = await promise;
+
+				return {
+					preferences: preferencesResponse.preferences,
+					repos: reposResponse.repos,
+					streams: streamsResponse.streams,
+					teams: teamsResponse.teams,
+					unreads: unreadsResponse.unreads,
+					users: usersResponse.users
+				};
+			}
+		);
+
 		this.agent.registerHandler(DocumentFromMarkerRequestType, MarkerHandler.documentFromMarker);
 		this.agent.registerHandler(DocumentMarkersRequestType, MarkerHandler.documentMarkers);
 

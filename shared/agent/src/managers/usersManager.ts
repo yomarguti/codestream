@@ -85,7 +85,7 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 	}
 
 	@lspHandler(GetUnreadsRequestType)
-	protected getUnreads(request: GetUnreadsRequest): Promise<GetUnreadsResponse> {
+	getUnreads(request: GetUnreadsRequest): Promise<GetUnreadsResponse> {
 		return this.session.api.getUnreads(request);
 	}
 
@@ -96,7 +96,7 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 	}
 
 	@lspHandler(GetPreferencesRequestType)
-	protected async getPreferences(): Promise<GetPreferencesResponse> {
+	async getPreferences(): Promise<GetPreferencesResponse> {
 		return this.session.api.getPreferences();
 	}
 

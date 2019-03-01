@@ -123,6 +123,22 @@ export interface ApiRequest {
 }
 export const ApiRequestType = new RequestType<ApiRequest, any, void, void>("codeStream/api");
 
+export interface BootstrapRequest {}
+export interface BootstrapResponse {
+	preferences: CSMePreferences;
+	repos: CSRepository[];
+	streams: CSStream[];
+	teams: CSTeam[];
+	users: CSUser[];
+	unreads: Unreads;
+}
+export const BootstrapRequestType = new RequestType<
+	BootstrapRequest,
+	BootstrapResponse,
+	void,
+	void
+>("codeStream/bootstrap");
+
 export enum LogoutReason {
 	Token = "token",
 	Unknown = "unknown"
