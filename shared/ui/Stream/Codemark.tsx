@@ -6,6 +6,7 @@ import Headshot from "./Headshot";
 import Icon from "./Icon";
 import { markdownify } from "./Markdowner";
 import Timestamp from "./Timestamp";
+import { DocumentMarker } from "@codestream/protocols/agent";
 
 enum Type {
 	Comment = "comment",
@@ -36,13 +37,14 @@ interface Props {
 	collapsed?: boolean;
 	inline?: boolean;
 	codemark: CodemarkEntity;
+	marker: DocumentMarker;
 	currentUserName: string;
 	usernames: string[];
 	setCodemarkStatus: Function;
 	action(action: string, post: any, args: any): any;
 	onClick?(codemark: CodemarkEntity): any;
-	onMouseEnter?(codemark: CodemarkEntity): any;
-	onMouseLeave?(codemark: CodemarkEntity): any;
+	onMouseEnter?(marker: DocumentMarker): any;
+	onMouseLeave?(marker: DocumentMarker): any;
 	query?: string;
 	style?: object;
 	lineNum?: Number;
@@ -79,7 +81,7 @@ export class Codemark extends React.Component<Props, State> {
 		}
 
 		return <span dangerouslySetInnerHTML={{ __html: html }} />;
-	}
+	};
 
 	renderTypeIcon() {
 		const { codemark } = this.props;
@@ -108,25 +110,25 @@ export class Codemark extends React.Component<Props, State> {
 		const { codemark } = this.props;
 		if (codemark.status === "closed") this.openIssue();
 		else this.closeIssue();
-	}
+	};
 
 	closeIssue = () => {
 		const { codemark, setCodemarkStatus } = this.props;
 		setCodemarkStatus(codemark.id, "closed");
 		this.submitReply("/me closed this issue");
-	}
+	};
 
 	openIssue = () => {
 		const { codemark, setCodemarkStatus } = this.props;
 		setCodemarkStatus(codemark.id, "open");
 		this.submitReply("/me reopened this issue");
-	}
+	};
 
 	submitReply = text => {
 		const { action, codemark } = this.props;
 		const forceThreadId = codemark.parentPostId || codemark.postId;
 		action("submit-post", null, { forceStreamId: codemark.streamId, forceThreadId, text });
-	}
+	};
 
 	renderStatus(codemark) {
 		const { type, status = "open" } = codemark;
@@ -155,15 +157,15 @@ export class Codemark extends React.Component<Props, State> {
 			return;
 		}
 		this.props.onClick && this.props.onClick(this.props.codemark);
-	}
+	};
 
 	handleMouseEnterCodemark = (event: React.SyntheticEvent): any => {
-		this.props.onMouseEnter && this.props.onMouseEnter(this.props.codemark);
-	}
+		this.props.onMouseEnter && this.props.onMouseEnter(this.props.marker);
+	};
 
 	handleMouseLeaveCodemark = (event: React.SyntheticEvent): any => {
-		this.props.onMouseLeave && this.props.onMouseLeave(this.props.codemark);
-	}
+		this.props.onMouseLeave && this.props.onMouseLeave(this.props.marker);
+	};
 
 	renderCollapsedCodemark() {
 		const { codemark, inline } = this.props;

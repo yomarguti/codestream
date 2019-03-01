@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import * as actions from "./actions";
-import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as userSelectors from "../store/users/reducer";
 import Icon from "./Icon";
 import Codemark from "./Codemark";
@@ -19,7 +18,7 @@ import {
 	ShowMarkersInEditorRequestType,
 	UpdateConfigurationRequestType
 } from "../ipc/webview.protocol";
-import { TelemetryRequestType } from "@codestream/protocols/agent";
+import { TelemetryRequestType, DocumentMarkersRequestType } from "@codestream/protocols/agent";
 
 export class SimpleInlineCodemarks extends Component {
 	disposables = [];
@@ -29,22 +28,55 @@ export class SimpleInlineCodemarks extends Component {
 		super(props);
 
 		this.state = {
-			openPost: null
+			openPost: null,
+			documentMarkers: []
 		};
 	}
 
 	componentDidMount() {
 		HostApi.instance.send(ShowMarkersInEditorRequestType, { enable: this.editorMarkersEnabled });
-		this.props.fetchCodemarks();
+		this.fetchDocumentMarkers();
 		// this.disposables.push(
 		// 	EventEmitter.subscribe("interaction:active-editor-changed", this.handleFileChangedEvent)
 		// );
 		this.setVisibleLinesCount();
 	}
 
+	componentDidUpdate(prevProps, prevState) {
+		const { textEditorVisibleRanges } = this.props;
+
+		const { textEditorUri } = this.props;
+		if (String(textEditorUri).length > 0 && prevProps.textEditorUri !== textEditorUri) {
+			this.fetchDocumentMarkers();
+		}
+
+		const didStartLineChange = this.compareStart(
+			textEditorVisibleRanges,
+			prevProps.textEditorVisibleRanges
+		);
+
+		if (false && textEditorFirstLine !== prevProps.textEditorFirstLine) {
+			const top = (textEditorFirstLine === 0 ? 1 : textEditorFirstLine + 0.65) * 18;
+			// this._scrollDiv.scrollTop = Math.round(top) + "px";
+			this._scrolling = true;
+			document.getElementsByClassName("inline-codemarks")[0].scrollTop = Math.round(top);
+		}
+		if (didStartLineChange) this.setVisibleLinesCount();
+	}
+
 	componentWillUnmount() {
 		HostApi.instance.send(ShowMarkersInEditorRequestType, { enable: true });
 		this.disposables.forEach(d => d.dispose());
+	}
+
+	async fetchDocumentMarkers() {
+		const response = await HostApi.instance.send(DocumentMarkersRequestType, {
+			textDocument: { uri: this.props.textEditorUri }
+		});
+
+		if (response && response.markers) {
+			this.setState({ documentMarkers: response.markers });
+		}
 	}
 
 	handleFileChangedEvent = body => {
@@ -77,27 +109,10 @@ export class SimpleInlineCodemarks extends Component {
 		return start1 === start2;
 	}
 
-	componentDidUpdate(prevProps, prevState) {
-		const { textEditorVisibleRanges } = this.props;
-
-		const didStartLineChange = this.compareStart(
-			textEditorVisibleRanges,
-			prevProps.textEditorVisibleRanges
-		);
-
-		if (false && textEditorFirstLine !== prevProps.textEditorFirstLine) {
-			const top = (textEditorFirstLine === 0 ? 1 : textEditorFirstLine + 0.65) * 18;
-			// this._scrollDiv.scrollTop = Math.round(top) + "px";
-			this._scrolling = true;
-			document.getElementsByClassName("inline-codemarks")[0].scrollTop = Math.round(top);
-		}
-		if (didStartLineChange) this.setVisibleLinesCount();
-	}
-
 	renderList = () => {
-		const { codemarks } = this.props;
+		const { documentMarkers } = this.state;
 
-		if (codemarks.length === 0) return this.renderNoCodemarks();
+		if (documentMarkers.length === 0) this.renderNoCodemarks();
 		else {
 			return (
 				<ScrollBox>
@@ -113,9 +128,10 @@ export class SimpleInlineCodemarks extends Component {
 									In This File: <span className="filename">{this.props.fileNameToFilterFor}</span>
 								</span>
 							</div>
-							{codemarks
+							{documentMarkers
 								.sort((a, b) => b.createdAt - a.createdAt)
-								.map(codemark => {
+								.map(docMarker => {
+									const { codemark } = docMarker;
 									if (!codemark.pinned) return null;
 									return (
 										<Codemark
@@ -209,17 +225,29 @@ export class SimpleInlineCodemarks extends Component {
 		);
 	};
 
+	getMarkerStartLine = marker => {
+		const location = marker.location || marker.locationWhenCreated;
+		return location[0];
+	};
+
 	renderInline() {
-		const {
-			codemarks,
-			codemarkStartLine,
-			textEditorVisibleRanges = [],
-			openPlusOnLine
-		} = this.props;
+		const { textEditorVisibleRanges = [], openPlusOnLine } = this.props;
+		const { documentMarkers } = this.state;
+
+		// create a map from start-lines to the codemarks that start on that line
+		let docMarkersByStartLine = {};
+		documentMarkers.forEach(docMarker => {
+			if (!docMarker.codemark.pinned) return;
+			let startLine = Number(this.getMarkerStartLine(docMarker)) - 1;
+			// if there is already a codemark on this line, keep skipping to the next one
+			while (docMarkersByStartLine[startLine]) startLine++;
+			docMarkersByStartLine[startLine] = docMarker;
+		});
+
 		const { numLinesVisible } = this.state;
 
 		// console.log("TEVR: ", textEditorVisibleRanges);
-		if (codemarks.length === 0) {
+		if (documentMarkers.length === 0) {
 			return [this.renderHoverIcons(numLinesVisible, openPlusOnLine), this.renderNoCodemarks()];
 		} else {
 			const numVisibleRanges = textEditorVisibleRanges.length;
@@ -239,13 +267,14 @@ export class SimpleInlineCodemarks extends Component {
 							const marksInRange = range(realFirstLine, realLastLine + 1).map(lineNum => {
 								let top =
 									(100 * (rangeStartOffset + lineNum - realFirstLine)) / numLinesVisible + "vh";
-								if (codemarkStartLine[lineNum] && lineNum !== openPlusOnLine) {
-									const codemark = codemarkStartLine[lineNum];
+								if (docMarkersByStartLine[lineNum] && lineNum !== openPlusOnLine) {
+									const docMarker = docMarkersByStartLine[lineNum];
 									return (
 										<Codemark
-											key={codemark.id}
-											codemark={codemark}
-											collapsed={this.state.openPost !== codemark.id}
+											key={docMarker.id}
+											codemark={docMarker.codemark}
+											marker={docMarker}
+											collapsed={this.state.openPost !== docMarker.id}
 											inline={true}
 											currentUserName={this.props.currentUserName || "pez"}
 											usernames={this.props.usernames}
@@ -376,12 +405,12 @@ export class SimpleInlineCodemarks extends Component {
 		});
 	}
 
-	handleHighlightCodemark = codemark => {
-		if (codemark.markers) this.highlightCode(codemark.markers[0], true);
+	handleHighlightCodemark = marker => {
+		this.highlightCode(marker, true);
 	};
 
-	handleUnhighlightCodemark = codemark => {
-		if (codemark.markers) this.highlightCode(codemark.markers[0], false);
+	handleUnhighlightCodemark = marker => {
+		this.highlightCode(marker, false);
 	};
 
 	mapLineToVisibleRange = fromLineNum => {
@@ -449,34 +478,13 @@ export class SimpleInlineCodemarks extends Component {
 const mapStateToProps = state => {
 	const { capabilities, context, teams, configs } = state;
 
-	const codemarks = codemarkSelectors.getFileFilteredCodemarks(state);
-
-	const getCodemarkStartLine = codemark => {
-		if (!codemark.markers || codemark.markers.length === 0) return 1;
-		const marker = codemark.markers[0];
-		const location = marker.location || marker.locationWhenCreated;
-		return location[0];
-	};
-
-	// create a map from start-lines to the codemarks that start on that line
-	let codemarkStartLine = {};
-	codemarks.forEach(codemark => {
-		if (!codemark.pinned) return;
-		let startLine = Number(getCodemarkStartLine(codemark)) - 1;
-		// if there is already a codemark on this line, keep skipping to the next one
-		while (codemarkStartLine[startLine]) startLine++;
-		codemarkStartLine[startLine] = codemark;
-	});
-
 	return {
 		usernames: userSelectors.getUsernames(state),
-		codemarks,
-		codemarkStartLine,
 		showMarkers: configs.showMarkers,
 		team: teams[context.currentTeamId],
-		fileFilter: context.codemarkFileFilter,
 		viewInline: configs.viewCodemarksInline,
 		fileNameToFilterFor: context.activeFile || context.lastActiveFile,
+		textEditorUri: context.textEditorUri,
 		capabilities
 	};
 };

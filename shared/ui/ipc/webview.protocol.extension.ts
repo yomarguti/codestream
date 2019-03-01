@@ -81,7 +81,7 @@ export interface DidChangeActiveEditorNotification {
 		fileName: string;
 		fileStreamId?: string;
 		uri: string;
-		languageId: string;
+		languageId?: string;
 		visibleRanges: Range[];
 	};
 }
