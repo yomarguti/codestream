@@ -27,7 +27,7 @@ module.exports = function(env, argv) {
 					// TODO: Use environment variable if exists
 					destination: path.resolve(
 						__dirname,
-						"../vs-codestream/src/CodeStream.VisualStudio/LSP/agent.js"
+						"../vs-codestream/src/CodeStream.VisualStudio/dist/agent.js"
 					)
 				},
 				{
@@ -35,7 +35,7 @@ module.exports = function(env, argv) {
 					// TODO: Use environment variable if exists
 					destination: path.resolve(
 						__dirname,
-						"../vs-codestream/src/CodeStream.VisualStudio/LSP/agent-vs.js.map"
+						"../vs-codestream/src/CodeStream.VisualStudio/dist/agent-vs.js.map"
 					)
 				}
 			]
