@@ -140,6 +140,56 @@ export class SimpleInlineCodemarks extends Component {
 		}
 	};
 
+	renderHoverIcons = (numLinesVisible, openPlusOnLine) => {
+		return (
+			<div>
+				{range(0, numLinesVisible + 1).map(lineNum => {
+					const top = (100 * lineNum) / numLinesVisible + "vh";
+					return (
+						<div
+							onMouseEnter={() => this.handleHighlightLine(lineNum)}
+							onMouseLeave={() => this.handleUnhighlightLine(lineNum)}
+							className={createClassString("hover-plus", {
+								open: lineNum === openPlusOnLine
+							})}
+							key={lineNum}
+							style={{ top }}
+						>
+							<Icon
+								onClick={e => this.handleClickPlus(e, "comment", lineNum)}
+								name="comment"
+								xtitle="Add Comment"
+								placement="bottomLeft"
+								delay="1"
+							/>
+							<Icon
+								onClick={e => this.handleClickPlus(e, "issue", lineNum)}
+								name="issue"
+								xtitle="Create Issue"
+								placement="bottomLeft"
+								delay="1"
+							/>
+							<Icon
+								onClick={e => this.handleClickPlus(e, "bookmark", lineNum)}
+								name="bookmark"
+								xtitle="Create Bookmark"
+								placement="bottomLeft"
+								delay="1"
+							/>
+							<Icon
+								onClick={e => this.handleClickPlus(e, "link", lineNum)}
+								name="link"
+								xtitle="Get Permalink"
+								placement="bottomLeft"
+								delay="1"
+							/>
+						</div>
+					);
+				})}
+			</div>
+		);
+	};
+
 	renderInline() {
 		const {
 			codemarks,
@@ -152,13 +202,14 @@ export class SimpleInlineCodemarks extends Component {
 
 		// console.log("TEVR: ", textEditorVisibleRanges);
 		if (codemarks.length === 0) {
-			return (
-				<div className="no-codemarks">
+			return [
+				this.renderHoverIcons(numLinesVisible, openPlusOnLine),
+				<div key="no-codemarks" className="no-codemarks">
 					There are no codemarks in {mostRecentSourceFile}.<br />
 					<br />
 					Create one by selecting code.
 				</div>
-			);
+			];
 		} else {
 			const numVisibleRanges = textEditorVisibleRanges.length;
 
@@ -208,51 +259,7 @@ export class SimpleInlineCodemarks extends Component {
 							return marksInRange;
 						})}
 					</div>
-					<div>
-						{range(0, numLinesVisible + 1).map(lineNum => {
-							const top = (100 * lineNum) / numLinesVisible + "vh";
-							return (
-								<div
-									onMouseEnter={() => this.handleHighlightLine(lineNum)}
-									onMouseLeave={() => this.handleUnhighlightLine(lineNum)}
-									className={createClassString("hover-plus", {
-										open: lineNum === openPlusOnLine
-									})}
-									key={lineNum}
-									style={{ top }}
-								>
-									<Icon
-										onClick={e => this.handleClickPlus(e, "comment", lineNum)}
-										name="comment"
-										xtitle="Add Comment"
-										placement="bottomLeft"
-										delay="1"
-									/>
-									<Icon
-										onClick={e => this.handleClickPlus(e, "issue", lineNum)}
-										name="issue"
-										xtitle="Create Issue"
-										placement="bottomLeft"
-										delay="1"
-									/>
-									<Icon
-										onClick={e => this.handleClickPlus(e, "bookmark", lineNum)}
-										name="bookmark"
-										xtitle="Create Bookmark"
-										placement="bottomLeft"
-										delay="1"
-									/>
-									<Icon
-										onClick={e => this.handleClickPlus(e, "link", lineNum)}
-										name="link"
-										xtitle="Get Permalink"
-										placement="bottomLeft"
-										delay="1"
-									/>
-								</div>
-							);
-						})}
-					</div>
+					{this.renderHoverIcons(numLinesVisible, openPlusOnLine)}
 				</div>
 			);
 		}
