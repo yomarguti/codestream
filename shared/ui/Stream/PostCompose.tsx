@@ -27,10 +27,10 @@ export class PostCompose extends React.Component<Props, State> {
 		this.setState({ text });
 	}
 
-	handleClickClose(event: React.SyntheticEvent) {
+	handleClickClose = (event: React.SyntheticEvent) => {
 		event.preventDefault();
 		this.props.onClickClose();
-	}
+	};
 
 	handleMenuClick = (event: React.SyntheticEvent) => {
 		event.stopPropagation();
