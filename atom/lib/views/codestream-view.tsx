@@ -23,6 +23,7 @@ import {
 	HostDidChangeActiveEditorNotification,
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
+	WebviewDidChangeContextNotificationType,
 } from "../protocols/webview/webview.protocol";
 import { asAbsolutePath } from "../utils";
 import { getStyles } from "./styles-getter";
@@ -47,6 +48,7 @@ export class WebviewIpc {
 
 export const CODESTREAM_VIEW_URI = "atom://codestream";
 export const WEBVIEW_DID_INITIALIZE = "webview-ready";
+export const WILL_DESTROY = "will-destroy";
 
 export class CodestreamView {
 	alive = false;
@@ -58,9 +60,11 @@ export class CodestreamView {
 	private loadingSpinner: HTMLDivElement;
 	private emitter: Emitter;
 	private webviewReady?: Promise<void>;
+	private webviewContext?: any;
 
-	constructor(session: WorkspaceSession) {
+	constructor(session: WorkspaceSession, webviewContext?: any) {
 		this.session = session;
+		this.webviewContext = webviewContext;
 		this.channel = new WebviewIpc();
 		this.emitter = new Emitter();
 		this.alive = true;
@@ -156,7 +160,7 @@ export class CodestreamView {
 	}
 
 	private initialize() {
-		// TODO: create a controller to house this stuff so it isn't re-init everytime this view is instantiated
+		// TODO?: create a controller to house this stuff so it isn't re-init everytime this view is instantiated
 		this.subscriptions.add(
 			this.session.agent.onInitialized(() => {
 				this.subscriptions.add(
@@ -184,13 +188,17 @@ export class CodestreamView {
 								textDocument: { uri },
 							});
 
-							const [start, end] = editor.getVisibleRowRange().map(line => new Point(line));
+							// TODO: check range for folds and send ALL visible ranges
+							const [startPoint, endPoint] = editor
+								.getVisibleRowRange()
+								.map(line => new Point(line));
 
+							const { start, end } = Convert.atomRangeToLSRange(new Range(startPoint, endPoint));
 							const event: HostDidChangeActiveEditorNotification = {
 								editor: {
 									fileName: atom.project.relativize(filePath)!,
 									fileStreamId: stream && stream.id,
-									visibleRanges: [Convert.atomRangeToLSRange(new Range(start, end))],
+									visibleRanges: [[start, end]] as any,
 									uri,
 								},
 							};
@@ -209,9 +217,14 @@ export class CodestreamView {
 	}
 
 	destroy() {
+		this.emitter.emit(WILL_DESTROY, this.webviewContext);
 		this.element.remove();
 		this.alive = false;
 		this.subscriptions.dispose();
+	}
+
+	onWillDestroy(cb: (data: any) => void) {
+		return this.emitter.on(WILL_DESTROY, cb);
 	}
 
 	private setupWebviewListener() {
@@ -233,8 +246,11 @@ export class CodestreamView {
 		switch (message.method) {
 			case BootstrapRequestType.method: {
 				try {
-					const data = await this.session.getBootstrapData();
-					this.respond<SignedInBootstrapResponse>({ id: message.id, params: data });
+					const data: SignedInBootstrapResponse = await this.session.getBootstrapData();
+					this.respond<SignedInBootstrapResponse>({
+						id: message.id,
+						params: { ...data, context: { ...data.context, ...(this.webviewContext || {}) } },
+					});
 				} catch (error) {
 					this.respond({ id: message.id, error: error.message });
 				}
@@ -292,6 +308,10 @@ export class CodestreamView {
 			case WebviewDidInitializeNotificationType.method: {
 				this.removeLoadingSpinner();
 				this.emitter.emit(WEBVIEW_DID_INITIALIZE);
+				break;
+			}
+			case WebviewDidChangeContextNotificationType.method: {
+				this.webviewContext = event.params.context;
 				break;
 			}
 		}

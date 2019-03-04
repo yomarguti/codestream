@@ -5,6 +5,7 @@ import { Disposable, CompositeDisposable } from "atom";
 export class ViewController implements Disposable {
 	private subscriptions = new CompositeDisposable();
 	private mainView?: CodestreamView;
+	private mainViewData: any;
 
 	constructor(private session: WorkspaceSession) {
 		this.subscriptions.add(
@@ -16,8 +17,12 @@ export class ViewController implements Disposable {
 	}
 
 	getMainView() {
-		if (this.mainView && this.mainView.alive) return this.mainView;
-		this.mainView = new CodestreamView(this.session);
+		if (this.mainView) return this.mainView;
+		this.mainView = new CodestreamView(this.session, this.mainViewData);
+		this.mainView.onWillDestroy(data => {
+			this.mainView = undefined;
+			this.mainViewData = data;
+		});
 
 		return this.mainView;
 	}
