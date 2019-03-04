@@ -294,7 +294,7 @@ namespace CodeStream.VisualStudio.Services
             return SendAsync<JToken>("codestream/logout", new LogoutRequest());
         }
 
-        public async Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request)
+        public Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request)
         {
             return SendAsync<DocumentFromMarkerResponse>("codestream/textDocument/fromMarker", request);
         }
