@@ -7,7 +7,8 @@ type ConfigsActions = ActionType<typeof actions>;
 const initialState: State = {
 	showHeadshots: true,
 	debug: false,
-	showMarkers: true
+	showMarkers: true,
+	serverUrl: ""
 };
 
 export function reduceConfigs(state = initialState, { type, payload }: ConfigsActions) {
