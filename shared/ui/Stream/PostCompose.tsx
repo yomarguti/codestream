@@ -23,9 +23,9 @@ export class PostCompose extends React.Component<Props, State> {
 		this.state = { text: "" };
 	}
 
-	handleChange(text: string) {
+	handleChange = (text: string) => {
 		this.setState({ text });
-	}
+	};
 
 	handleClickClose = (event: React.SyntheticEvent) => {
 		event.preventDefault();
@@ -42,7 +42,7 @@ export class PostCompose extends React.Component<Props, State> {
 		if (type) this.props.openCodemarkForm(type);
 	};
 
-	handleSubmit() {
+	handleSubmit = () => {
 		const domParser = new DOMParser();
 		const replaceRegex = /<br>|<div>/g;
 		const text = domParser.parseFromString(this.state.text.replace(replaceRegex, "\n"), "text/html")
@@ -52,7 +52,7 @@ export class PostCompose extends React.Component<Props, State> {
 
 		this.props.onSubmit(text);
 		this.setState({ text: "" });
-	}
+	};
 
 	render() {
 		const { menuOpen, menuTarget } = this.state;
