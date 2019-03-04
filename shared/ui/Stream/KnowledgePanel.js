@@ -290,7 +290,7 @@ export class SimpleKnowledgePanel extends Component {
 			{ label: "Code Comments", action: "comment" },
 			// { label: "Questions & Answers", action: "question" },
 			{ label: "Issues", action: "issue" },
-			{ label: "Traps", action: "trap" },
+			// { label: "Traps", action: "trap" },
 			{ label: "Bookmarks", action: "bookmark" }
 		];
 
