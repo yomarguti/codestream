@@ -43,7 +43,7 @@ import {
 	WebviewDidCloseThreadNotificationType,
 	WebviewDidOpenThreadNotificationType,
 	HostDidChangeEditorSelectionNotificationType,
-	DidSelectStreamThreadNotificationType,
+	ShowStreamNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
 	UpdateConfigurationRequestType,
 	HostDidSelectCodeNotificationType
@@ -81,7 +81,7 @@ export class SimpleStream extends Component {
 	componentDidMount() {
 		this.setUmiInfo();
 		this.disposables.push(
-			HostApi.instance.on(DidSelectStreamThreadNotificationType, this.handleStreamThreadSelected),
+			HostApi.instance.on(ShowStreamNotificationType, this.handleShowStream),
 			HostApi.instance.on(HostDidSelectCodeNotificationType, this.handleCodeHighlightEvent),
 			HostApi.instance.on(
 				HostDidChangeEditorVisibleRangesNotificationType,
@@ -214,10 +214,10 @@ export class SimpleStream extends Component {
 	// TODO: delete this for `setThread` action
 	goToThread = post => {
 		const threadId = post.parentPostId || post.id;
-		this.handleStreamThreadSelected({ streamId: post.streamId, threadId });
+		this.handleShowStream({ streamId: post.streamId, threadId });
 	};
 
-	handleStreamThreadSelected = async ({ streamId, threadId }) => {
+	handleShowStream = async ({ streamId, threadId }) => {
 		if (streamId !== this.props.postStreamId) {
 			console.warn("changing stream");
 			this.props.setCurrentStream(streamId);

@@ -1,3 +1,4 @@
+import { CodemarkType } from "@codestream/protocols/api";
 import { NotificationType } from "vscode-jsonrpc";
 import { Position, Range } from "vscode-languageserver-types";
 import { IpcRoutes } from "./webview.protocol.common";
@@ -9,24 +10,24 @@ type ConfigState = any;
 export interface HostDidChangeActiveEditorNotification {
 	editor?: {
 		fileName: string;
+		// TODO: Remove this
 		fileStreamId?: string;
 		languageId?: string;
 		uri: string;
+		selections: EditorSelection[];
 		visibleRanges: Range[];
 	};
 }
-
 export const HostDidChangeActiveEditorNotificationType = new NotificationType<
 	HostDidChangeActiveEditorNotification,
 	void
 >(`${IpcRoutes.Webview}/editor/didChangeActive`);
 
 export interface EditorSelection extends Range {
-	caret: Position;
+	cursor: Position;
 }
 
 export type HostDidChangeConfigNotification = Partial<ConfigState>;
-
 export const HostDidChangeConfigNotificationType = new NotificationType<
 	HostDidChangeConfigNotification,
 	void
@@ -35,14 +36,37 @@ export const HostDidChangeConfigNotificationType = new NotificationType<
 export interface HostDidChangeEditorSelectionNotification {
 	uri: string;
 	selections: EditorSelection[];
+	visibleRanges: Range[];
 }
-
 export const HostDidChangeEditorSelectionNotificationType = new NotificationType<
 	HostDidChangeEditorSelectionNotification,
 	void
 >(`${IpcRoutes.Webview}/editor/didChangeSelection`);
 
-// TODO: Make this a request and change its name -- also remove this SCM meta data -- ask the agent for it
+export interface HostDidChangeEditorVisibleRangesNotification {
+	uri: string;
+	selections: EditorSelection[];
+	visibleRanges: Range[];
+}
+export const HostDidChangeEditorVisibleRangesNotificationType = new NotificationType<
+	HostDidChangeEditorVisibleRangesNotification,
+	void
+>(`${IpcRoutes.Webview}/editor/didChangeVisibleRanges`);
+
+export interface HostDidChangeFocusNotification {
+	focused: boolean;
+}
+export const HostDidChangeFocusNotificationType = new NotificationType<
+	HostDidChangeFocusNotification,
+	void
+>(`${IpcRoutes.Webview}/focus/didChange`);
+
+export interface HostDidLogoutNotification {}
+export const HostDidLogoutNotificationType = new NotificationType<HostDidLogoutNotification, void>(
+	`${IpcRoutes.Webview}/didLogout`
+);
+
+// DEPRECATED:
 export interface HostDidSelectCodeNotification {
 	code: string;
 	file: string | undefined;
@@ -67,33 +91,7 @@ export interface HostDidSelectCodeNotification {
 	isHighlight?: boolean;
 	type?: string;
 }
-
 export const HostDidSelectCodeNotificationType = new NotificationType<
 	HostDidSelectCodeNotification,
 	void
 >(`${IpcRoutes.Webview}/editor/didSelectCode`);
-
-export interface HostDidChangeEditorVisibleRangesNotification {
-	uri: string;
-	visibleRanges: Range[];
-}
-
-export const HostDidChangeEditorVisibleRangesNotificationType = new NotificationType<
-	HostDidChangeEditorVisibleRangesNotification,
-	void
->(`${IpcRoutes.Webview}/editor/didChangeVisibleRanges`);
-
-export interface HostDidChangeFocusNotification {
-	focused: boolean;
-}
-
-export const HostDidChangeFocusNotificationType = new NotificationType<
-	HostDidChangeFocusNotification,
-	void
->(`${IpcRoutes.Webview}/focus/didChange`);
-
-export interface HostDidLogoutNotification {}
-
-export const HostDidLogoutNotificationType = new NotificationType<HostDidLogoutNotification, void>(
-	`${IpcRoutes.Webview}/didLogout`
-);

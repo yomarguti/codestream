@@ -1,3 +1,4 @@
+import { CodemarkType } from "@codestream/protocols/api";
 import { NotificationType } from "vscode-jsonrpc";
 import { IpcRoutes } from "./webview.protocol.common";
 
@@ -11,12 +12,30 @@ export * from "./host.protocol.vsls";
 export * from "./webview.protocol.notifications";
 
 // TODO: This should be a request to the webview -- not a notification
-export interface DidSelectStreamThreadNotification {
+export interface ShowCodemarkNotification {
+	codemarkId: string;
+	// HACK: This is for vscode -- this will be fired on hover rather than click, since there is no way to click on a marker in vscode
+	simulated?: boolean;
+}
+export const ShowCodemarkNotificationType = new NotificationType<ShowCodemarkNotification, void>(
+	`${IpcRoutes.Webview}/codemark/show`
+);
+
+// TODO: This should be a request to the webview -- not a notification
+export interface ShowStreamNotification {
 	streamId: string;
 	threadId?: string;
 }
+export const ShowStreamNotificationType = new NotificationType<ShowStreamNotification, void>(
+	`${IpcRoutes.Webview}/stream/show`
+);
 
-export const DidSelectStreamThreadNotificationType = new NotificationType<
-	DidSelectStreamThreadNotification,
-	void
->(`${IpcRoutes.Webview}/stream-thread-selected`);
+// TODO: This should be a request to the webview -- not a notification
+export interface NewCodemarkNotification {
+	uri: string;
+	range: Range;
+	type: CodemarkType;
+}
+export const NewCodemarkNotificationType = new NotificationType<NewCodemarkNotification, void>(
+	`${IpcRoutes.Webview}/codemark/new`
+);
