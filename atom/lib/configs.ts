@@ -20,7 +20,7 @@ interface WebviewConfigs {
 const keyForWebview = (key: string) => (key === "avatars" ? "showHeadshots" : key);
 
 export class ConfigManager implements Disposable {
-	get<T extends keyof ConfigSchema>(name: T): ConfigSchema[T] {
+	get<K extends keyof ConfigSchema>(name: K): ConfigSchema[K] {
 		return atom.config.get(`codestream.${name}`);
 	}
 
@@ -47,11 +47,15 @@ export class ConfigManager implements Disposable {
 		});
 	}
 
-	onDidChange<T extends keyof ConfigSchema>(
-		key: T,
-		cb: (value: { oldValue: ConfigSchema[T]; newValue: ConfigSchema[T] }) => void
+	onDidChange<K extends keyof ConfigSchema>(
+		key: K,
+		cb: (value: { oldValue: ConfigSchema[K]; newValue: ConfigSchema[K] }) => void
 	) {
 		return atom.config.onDidChange(`codestream.${key}` as any, cb as any);
+	}
+
+	set<K extends keyof ConfigSchema>(key: K, value: ConfigSchema[K]) {
+		atom.config.set(`codestream.${key}` as any, value);
 	}
 
 	dispose() {}

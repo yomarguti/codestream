@@ -23,8 +23,11 @@ import {
 	HostDidChangeActiveEditorNotification,
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
+	UpdateConfigurationRequestType,
 	WebviewDidChangeContextNotificationType,
 	HostDidChangeConfigNotificationType,
+	UpdateConfigurationRequest,
+	UpdateConfigurationResponse,
 } from "../protocols/webview/webview.protocol";
 import { asAbsolutePath } from "../utils";
 import { getStyles } from "./styles-getter";
@@ -292,6 +295,12 @@ export class CodestreamView {
 					const data = await this.session.getBootstrapData();
 					this.respond<SignedInBootstrapResponse>({ id: message.id, params: data });
 				}
+				break;
+			}
+			case UpdateConfigurationRequestType.method: {
+				const { name, value }: UpdateConfigurationRequest = message.params;
+				this.session.configManager.set(name as any, value);
+				this.respond<UpdateConfigurationResponse>({ id: message.id, params: {} });
 				break;
 			}
 			// case ReloadWebviewRequestType.method: {
