@@ -31,6 +31,14 @@
 			"type": "string",
 			"default": "",
 			"description": "Specifies team name to sign into"
+		},
+		"avatars": {
+			"type": "boolean",
+			"default": true
+		},
+		"showMarkers": {
+			"type": "boolean",
+			"default": true
 		}
 	},
 	"scripts": {

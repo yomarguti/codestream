@@ -6,7 +6,7 @@ import { CSMe, LoginResult } from "../protocols/agent/api.protocol";
 import { EnvironmentConfig, PRODUCTION_CONFIG } from "../env-utils";
 import { PackageState } from "../types/package";
 import { Capabilities, AgentResult, AccessToken } from "../protocols/agent/agent.protocol";
-import * as Configs from "../configs";
+import { ConfigManager } from "../configs";
 
 export type Session = {
 	user: CSMe;
@@ -39,6 +39,7 @@ export class WorkspaceSession {
 	private agentCapabilities?: Capabilities;
 	private _sessionStatus = SessionStatus.SignedOut;
 	private isReady?: Promise<void>;
+	readonly configManager: ConfigManager;
 
 	static create(state: PackageState) {
 		return new WorkspaceSession(state.session, state.lastUsedEmail, state.environment);
@@ -54,6 +55,7 @@ export class WorkspaceSession {
 		this.session = session;
 		this.lastUsedEmail = lastUsedEmail;
 		this.envConfig = envConfig;
+		this.configManager = new ConfigManager();
 
 		if (session) {
 			this.isReady = new Promise(async (resolve, reject) => {
@@ -79,6 +81,7 @@ export class WorkspaceSession {
 
 	dispose() {
 		this.signOut();
+		this.configManager.dispose();
 	}
 
 	onDidChangeSessionStatus(callback: (status: SessionStatus) => any) {
@@ -108,7 +111,7 @@ export class WorkspaceSession {
 
 	getBootstrapState() {
 		return {
-			configs: { email: this.lastUsedEmail },
+			configs: this.configManager.getForWebview(this.environment.serverUrl, this.lastUsedEmail),
 			version: getPluginVersion(),
 			...(this.lastUsedEmail !== "" ? { route: { route: "login" } } : {}),
 		};
@@ -141,7 +144,7 @@ export class WorkspaceSession {
 				userId: this.session.user.id,
 			},
 			capabilities: this.agentCapabilities,
-			configs: { email: this.lastUsedEmail, debug: true, serverUrl: this.environment.serverUrl }, // TODO
+			configs: this.configManager.getForWebview(this.environment.serverUrl, this.lastUsedEmail),
 			...this.getBootstrapState(),
 			...(this.lastUsedEmail !== "" ? { route: { route: "login" } } : {}),
 			preferences: {}, // TODO
@@ -169,7 +172,7 @@ export class WorkspaceSession {
 	private getTeamPreference() {
 		if (this.session) return { teamId: this.session.teamId };
 
-		const teamSetting = Configs.ofPackage("team");
+		const teamSetting = this.configManager.get("team");
 		if (teamSetting.length > 0) return { team: teamSetting };
 	}
 

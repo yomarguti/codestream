@@ -24,6 +24,7 @@ import {
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
 	WebviewDidChangeContextNotificationType,
+	HostDidChangeConfigNotificationType,
 } from "../protocols/webview/webview.protocol";
 import { asAbsolutePath } from "../utils";
 import { getStyles } from "./styles-getter";
@@ -173,7 +174,10 @@ export class CodestreamView {
 				if (status === SessionStatus.SignedOut) {
 					this.sendEvent(HostDidLogoutNotificationType, {});
 				}
-			})
+			}),
+			this.session.configManager.onDidChangeWebviewConfig(changes =>
+				this.sendEvent(HostDidChangeConfigNotificationType, changes)
+			)
 		);
 
 		this.webviewReady = new Promise(resolve =>
