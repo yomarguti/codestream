@@ -234,7 +234,10 @@ export class SimpleInlineCodemarks extends Component {
 				<br />
 				<br />
 				Discuss code with your team by selecting a range and clicking an icon (
-				<a href="foo">show me how</a>).
+				<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
+					show me how
+				</a>
+				).
 			</div>
 		);
 	};
