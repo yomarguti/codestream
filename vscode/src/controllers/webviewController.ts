@@ -73,7 +73,7 @@ import {
 	SessionStatusChangedEvent,
 	StreamThread
 } from "../api/session";
-import { WorkspaceState } from "../common";
+import { selectionsToEditorSelections, WorkspaceState } from "../common";
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -319,6 +319,7 @@ export class WebviewController implements Disposable {
 				uri: uri.toString(),
 				fileName: fileName,
 				languageId: editor.document.languageId,
+				selections: selectionsToEditorSelections(editor.selections),
 				visibleRanges: editor.visibleRanges
 			}
 		});
@@ -389,7 +390,8 @@ export class WebviewController implements Disposable {
 	) {
 		webview.notify(HostDidChangeEditorSelectionNotificationType, {
 			uri: e.textEditor.document.uri.toString(),
-			selections: e.selections.map(s => ({ caret: s.active, start: s.start, end: s.end }))
+			selections: selectionsToEditorSelections(e.selections),
+			visibleRanges: e.textEditor.visibleRanges
 		});
 
 		// if (e.selections.length === 0) return;
@@ -421,6 +423,7 @@ export class WebviewController implements Disposable {
 
 		webview.notify(HostDidChangeEditorVisibleRangesNotificationType, {
 			uri: uri.toString(),
+			selections: selectionsToEditorSelections(e.textEditor.selections),
 			visibleRanges: e.visibleRanges
 		});
 	}

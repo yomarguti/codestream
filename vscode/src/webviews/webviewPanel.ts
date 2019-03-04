@@ -1,9 +1,9 @@
 "use strict";
 import {
-	DidSelectStreamThreadNotificationType,
 	HostDidChangeFocusNotificationType,
 	isIpcRequestMessage,
 	isIpcResponseMessage,
+	ShowStreamNotificationType,
 	WebviewIpcMessage,
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
@@ -246,7 +246,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 		}
 
 		// TODO: Convert this to a request vs a notification
-		this.notify(DidSelectStreamThreadNotificationType, {
+		this.notify(ShowStreamNotificationType, {
 			streamId: streamThread.stream.id,
 			threadId: streamThread.id
 		});

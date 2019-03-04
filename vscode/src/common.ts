@@ -1,8 +1,10 @@
 "user strict";
+import { EditorSelection } from "@codestream/protocols/webview";
 import {
 	commands,
 	DecorationRangeBehavior,
 	Range,
+	Selection,
 	TextDocumentShowOptions,
 	Uri,
 	ViewColumn,
@@ -58,6 +60,10 @@ export async function openEditor(
 		Logger.error(ex, "openEditor");
 		return undefined;
 	}
+}
+
+export function selectionsToEditorSelections(selections: Selection[]): EditorSelection[] {
+	return selections.map(s => ({ cursor: s.active, start: s.start, end: s.end }));
 }
 
 export enum ContextKeys {
