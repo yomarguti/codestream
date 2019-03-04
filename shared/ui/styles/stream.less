@@ -257,11 +257,11 @@
 		}
 		.thread-panel {
 			position: fixed;
-			width: calc(100vw - 40px);
-			height: calc(100vh - 50px);
+			width: calc(~"100vw - 40px");
+			height: calc(~"100vh - 50px");
 			top: 25px;
 			&.inline {
-				height: calc(100vh - 75px);
+				height: calc(~"100vh - 75px");
 				top: 50px;
 			}
 			left: 20px;
@@ -280,7 +280,7 @@
 		.content.inline .panel:not(.full-height) {
 			position: fixed;
 			width: 100%;
-			height: ~"calc(100vh - 50px)";
+			height: calc(~"100vh - 50px");
 			top: 50px;
 			.panel-header {
 				background: @app-background-color;
@@ -687,7 +687,7 @@
 			position: absolute;
 			height: auto;
 			left: 20px;
-			width: calc(100vw - 40px) !important;
+			width: calc(~"100vw - 40px") !important;
 			.input-text {
 				margin-bottom: 5px;
 			}
@@ -704,7 +704,7 @@
 			padding: 0 10px 10px 10px !important;
 			.message-input {
 				min-height: 100px;
-				max-width: calc(100vw - 82px) !important;
+				max-width: calc(~"100vw - 82px") !important;
 			}
 			.plus {
 				display: none;
@@ -716,7 +716,7 @@
 			z-index: 1000;
 			// top: 100px;
 			left: 20px;
-			width: calc(100vw - 40px) !important;
+			width: calc(~"100vw - 40px") !important;
 			.input-text {
 				margin-bottom: 5px;
 			}
@@ -754,7 +754,7 @@
 			resize: none;
 			// height: 20px;
 			max-height: 300px;
-			max-width: calc(100vw - 10px) !important;
+			max-width: calc(~"100vw - 10px") !important;
 			overflow: auto;
 		}
 		.message-input:empty {
@@ -2919,7 +2919,7 @@
 }
 @media only screen and (max-width: 430px) {
 	#code-comment-form .tab-group label {
-		max-width: calc(25% - 10);
+		max-width: calc(~"25% - 10");
 	}
 }
 
