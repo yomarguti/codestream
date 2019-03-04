@@ -31,6 +31,13 @@ module.exports = function(env, argv) {
 		env
 	);
 
+	console.log("Ensuring extension symlink to the webview styles folder...");
+	createFolderSymlinkSync(
+		path.resolve(__dirname, "../codestream-components/styles"),
+		path.resolve(path.resolve(__dirname, "dist/styles"), "webview"),
+		env
+	);
+
 	console.log("Ensuring webview symlink to the agent protocol folder...");
 	const protocolPathForWebview = path.resolve(__dirname, "../codestream-components/protocols");
 	if (!fs.existsSync(protocolPathForWebview)) {
@@ -131,9 +138,22 @@ function getExtensionConfig(env) {
 function getWebviewConfig(env) {
 	const plugins = [
 		new CleanPlugin(["dist/webview"]),
-		// new MiniCssExtractPlugin({
-		// 	filename: "webview.css",
-		// }),
+		new FileManagerPlugin({
+			onStart: [
+				{
+					copy: [
+						{
+							source: path.resolve(__dirname, "../codestream-components/styles/*.less"),
+							destination: "dist/styles",
+						},
+						{
+							source: path.resolve(__dirname, "../codestream-components/assets/icons"),
+							destination: "dist/icons",
+						},
+					],
+				},
+			],
+		}),
 		new HtmlPlugin({
 			template: "index.html",
 			filename: path.resolve(__dirname, "dist/webview/index.html"),
