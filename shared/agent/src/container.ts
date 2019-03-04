@@ -9,6 +9,7 @@ import { MarkerLocationManager } from "./managers/markerLocationManager";
 import { MarkersManager } from "./managers/markersManager";
 import { PostsManager } from "./managers/postsManager";
 import { ReposManager } from "./managers/reposManager";
+import { ScmManager } from "./managers/scmManager";
 import { StreamsManager } from "./managers/streamsManager";
 import { TeamsManager } from "./managers/teamsManager";
 import { TelemetryManager } from "./managers/telemetryManager";
@@ -31,8 +32,9 @@ class ServiceContainer {
 		this._teams = new TeamsManager(session);
 		this._users = new UsersManager(session);
 
-		this._git = new GitService(session);
 		this._errorReporter = new ErrorReporter(session);
+		this._git = new GitService(session);
+		this._scm = new ScmManager();
 		this._telemetry = new TelemetryManager(session);
 		this._urls = new UrlManager();
 
@@ -87,6 +89,11 @@ class ServiceContainer {
 	private readonly _repos: ReposManager;
 	get repos(): ReposManager {
 		return this._repos;
+	}
+
+	private readonly _scm: ScmManager;
+	get scm() {
+		return this._scm;
 	}
 
 	private readonly _streams: StreamsManager;
