@@ -6,12 +6,12 @@ import { asAbsolutePath, accessSafely } from "utils";
 import { ViewController } from "views/controller";
 
 export class MarkerDecorationProvider implements Disposable {
+	private resourceSubscriptions = new CompositeDisposable();
 	private subscriptions = new CompositeDisposable();
 	private observedEditors: Map<number, TextEditor> = new Map();
 	private gutters: Map<number, Gutter> = new Map();
 	private markers: Map<number, DisplayMarker[]> = new Map();
 	private sessionStatus: SessionStatus;
-	private sessionStatusSubscription: Disposable;
 	private session: WorkspaceSession;
 	private viewController: ViewController;
 
@@ -19,22 +19,37 @@ export class MarkerDecorationProvider implements Disposable {
 		this.session = session;
 		this.viewController = viewController;
 		this.sessionStatus = session.status;
-		this.sessionStatusSubscription = this.session.onDidChangeSessionStatus(status => {
-			switch (status) {
-				case SessionStatus.SignedOut: {
-					if (this.sessionStatus !== SessionStatus.SignedOut) {
-						this.sessionStatus = status;
-						this.reset();
-						this.subscriptions = new CompositeDisposable();
+
+		if (session.configManager.get("showMarkers")) this.initialize();
+		this.subscriptions.add(
+			session.configManager.onDidChange("showMarkers", ({ newValue }) =>
+				newValue ? this.initialize() : this.reset()
+			)
+		);
+	}
+
+	initialize() {
+		this.subscriptions.add(
+			this.session.onDidChangeSessionStatus(status => {
+				switch (status) {
+					case SessionStatus.SignedOut: {
+						if (this.sessionStatus !== SessionStatus.SignedOut) {
+							this.sessionStatus = status;
+							this.reset();
+							this.initialize();
+							this.resourceSubscriptions = new CompositeDisposable();
+						}
+						break;
 					}
-					break;
+					case SessionStatus.SignedIn: {
+						this.sessionStatus = status;
+						this.resourceSubscriptions.add(
+							atom.workspace.observeActiveTextEditor(this.onActiveEditor)
+						);
+					}
 				}
-				case SessionStatus.SignedIn: {
-					this.sessionStatus = status;
-					this.subscriptions.add(atom.workspace.observeActiveTextEditor(this.onActiveEditor));
-				}
-			}
-		});
+			})
+		);
 	}
 
 	private onActiveEditor = (editor?: TextEditor) => {
@@ -42,7 +57,7 @@ export class MarkerDecorationProvider implements Disposable {
 			const id = editor.id;
 			this.observedEditors.set(id, editor);
 			this.provideFor(editor);
-			this.subscriptions.add(editor.onDidDestroy(() => this.observedEditors.delete(id)));
+			this.resourceSubscriptions.add(editor.onDidDestroy(() => this.observedEditors.delete(id)));
 		}
 	};
 
@@ -52,7 +67,7 @@ export class MarkerDecorationProvider implements Disposable {
 			gutter = editor.addGutter({
 				name: `codestream-${editor.id}`,
 			});
-			this.subscriptions.add(
+			this.resourceSubscriptions.add(
 				gutter.onDidDestroy(() => {
 					this.gutters.delete(editor.id);
 				})
@@ -92,7 +107,7 @@ export class MarkerDecorationProvider implements Disposable {
 						title: `${docMarker.creatorName}: ${docMarker.summary}`,
 						placement: "right",
 					});
-					this.subscriptions.add(
+					this.resourceSubscriptions.add(
 						tooltip,
 						new Disposable(() => {
 							marker.destroy();
@@ -113,11 +128,11 @@ export class MarkerDecorationProvider implements Disposable {
 			markers.forEach(marker => accessSafely(() => marker.destroy()))
 		);
 		this.markers.clear();
-		this.subscriptions.dispose();
+		this.resourceSubscriptions.dispose();
 	}
 
 	dispose() {
 		this.reset();
-		this.sessionStatusSubscription.dispose();
+		this.subscriptions.dispose();
 	}
 }

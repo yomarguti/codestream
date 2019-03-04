@@ -47,5 +47,12 @@ export class ConfigManager implements Disposable {
 		});
 	}
 
+	onDidChange<T extends keyof ConfigSchema>(
+		key: T,
+		cb: (value: { oldValue: ConfigSchema[T]; newValue: ConfigSchema[T] }) => void
+	) {
+		return atom.config.onDidChange(`codestream.${key}` as any, cb as any);
+	}
+
 	dispose() {}
 }
