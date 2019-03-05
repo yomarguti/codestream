@@ -11,7 +11,6 @@ import { RequestType } from "vscode-jsonrpc";
 import { IpcRoutes, WebviewContext } from "./webview.protocol.common";
 
 export interface BootstrapRequest {}
-
 export interface SignedOutBootstrapResponse {
 	capabilities: Capabilities;
 	configs: {
@@ -20,7 +19,6 @@ export interface SignedOutBootstrapResponse {
 	env: CodeStreamEnvironment | string;
 	version: string;
 }
-
 export interface SignedInBootstrapResponse extends SignedOutBootstrapResponse {
 	context: WebviewContext;
 	// TODO: Remove? or move into context?
@@ -36,13 +34,7 @@ export interface SignedInBootstrapResponse extends SignedOutBootstrapResponse {
 	users: CSUser[];
 	unreads: Unreads;
 }
-
 export type BootstrapResponse = SignedInBootstrapResponse | SignedOutBootstrapResponse;
-
-export function isSignedInBootstrap(data: BootstrapResponse): data is SignedInBootstrapResponse {
-	return (data as any).session != null;
-}
-
 export const BootstrapRequestType = new RequestType<
 	BootstrapRequest,
 	BootstrapResponse,
@@ -50,26 +42,27 @@ export const BootstrapRequestType = new RequestType<
 	void
 >(`${IpcRoutes.Host}/bootstrap`);
 
+export function isSignedInBootstrap(data: BootstrapResponse): data is SignedInBootstrapResponse {
+	return (data as any).session != null;
+}
+
 export interface LoginRequest {
 	email: string;
 	password: string;
 }
 export interface LoginResponse extends SignedInBootstrapResponse {}
-
 export const LoginRequestType = new RequestType<LoginRequest, LoginResponse, void, void>(
 	`${IpcRoutes.Host}/login`
 );
 
 export interface LogoutRequest {}
 export interface LogoutResponse {}
-
 export const LogoutRequestType = new RequestType<LogoutRequest, LogoutResponse, void, void>(
 	`${IpcRoutes.Host}/logout`
 );
 
 export interface SlackLoginRequest {}
 export interface SlackLoginResponse {}
-
 export const SlackLoginRequestType = new RequestType<
 	SlackLoginRequest,
 	SlackLoginResponse,
@@ -79,7 +72,6 @@ export const SlackLoginRequestType = new RequestType<
 
 export interface SignupRequest {}
 export interface SignupResponse {}
-
 export const SignupRequestType = new RequestType<SignupRequest, SignupResponse, void, void>(
 	`${IpcRoutes.Host}/signup`
 );
@@ -88,7 +80,6 @@ export interface CompleteSignupRequest {
 	token?: string;
 }
 export interface CompleteSignupResponse extends SignedInBootstrapResponse {}
-
 export const CompleteSignupRequestType = new RequestType<
 	CompleteSignupRequest,
 	CompleteSignupResponse,
@@ -96,18 +87,16 @@ export const CompleteSignupRequestType = new RequestType<
 	void
 >(`${IpcRoutes.Host}/signup/complete`);
 
+export const ReloadWebviewRequestType = new RequestType<void, void, void, void>(
+	`${IpcRoutes.Host}/webview/reload`
+);
+
 export interface StartCommentOnLineRequest {
 	line: number;
 	uri: any;
 	type: any;
 }
-
-export const ReloadWebviewRequestType = new RequestType<void, void, void, void>(
-	`${IpcRoutes.Host}/webview/reload`
-);
-
 export interface StartCommentOnLineResponse {}
-
 export const StartCommentOnLineRequestType = new RequestType<
 	StartCommentOnLineRequest,
 	StartCommentOnLineResponse,

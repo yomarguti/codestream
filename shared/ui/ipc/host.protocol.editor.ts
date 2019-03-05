@@ -52,12 +52,21 @@ export const EditorHighlightMarkerRequestType = new RequestType<
 	void
 >(`${IpcRoutes.Host}/editor/highlight/marker`);
 
+export enum EditorRevealRangeResult {
+	Success = "SUCCESS",
+	FileNotFound = "FILE_NOT_FOUND",
+	// TODO: Remove?
+	RepoNotInWorkspace = "REPO_NOT_IN_WORKSPACE"
+}
+
 export interface EditorRevealRangeRequest {
 	uri: string;
 	range: Range;
 	preserveFocus: boolean;
 }
-export interface EditorRevealRangeResponse {}
+export interface EditorRevealRangeResponse {
+	result: EditorRevealRangeResult;
+}
 export const EditorRevealRangeRequestType = new RequestType<
 	EditorRevealRangeRequest,
 	EditorRevealRangeResponse,
