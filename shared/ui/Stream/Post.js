@@ -223,19 +223,19 @@ class Post extends React.Component {
 		}
 		// menuItems.push({ label: "Add Reaction", action: "add-reaction" });
 
-		if (codemark) {
-			if (codemark.pinned) menuItems.push({ label: "Hide this Codemark", action: "toggle-pinned" });
-			else menuItems.push({ label: "Un-hide this Codemark", action: "toggle-pinned" });
-		}
-
 		menuItems.push({ label: "Mark Unread", action: "mark-unread" });
 		menuItems.push({ label: "Quote", action: "quote" });
 		// { label: "Add Reaction", action: "add-reaction" },
 		// { label: "Pin to Stream", action: "pin-to-stream" }
 
+		if (codemark || mine) menuItems.push({ label: "-" });
+		
+		if (codemark) {
+			if (codemark.pinned) menuItems.push({ label: `Archive ${typeString}`, action: "toggle-pinned" });
+			else menuItems.push({ label: `Unarchive ${typeString}`, action: "toggle-pinned" });
+		}
 		if (mine) {
 			menuItems.push(
-				{ label: "-" },
 				{ label: `Edit ${typeString}`, action: "edit-post" },
 				{ label: `Delete ${typeString}`, action: "delete-post" }
 			);

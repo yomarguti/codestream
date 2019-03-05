@@ -1287,6 +1287,8 @@ export class SimpleStream extends Component {
 			codemarkId: codemark.id,
 			value: !codemark.pinned
 		});
+
+		this.handleDismissThread();
 	};
 
 	// this tells the composebox to insert quoted text
