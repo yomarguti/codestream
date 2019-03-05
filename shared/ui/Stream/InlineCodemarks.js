@@ -301,7 +301,7 @@ export class SimpleInlineCodemarks extends Component {
 							const marksInRange = range(realFirstLine, realLastLine + 1).map(lineNum => {
 								let top =
 									(100 * (rangeStartOffset + lineNum - realFirstLine)) / numLinesVisible + "vh";
-								if (docMarkersByStartLine[lineNum] && lineNum !== openPlusOnLine) {
+								if (docMarkersByStartLine[lineNum] && lineNum !== this.state.openPlusOnLine) {
 									const docMarker = docMarkersByStartLine[lineNum];
 									return (
 										<Codemark
@@ -333,7 +333,7 @@ export class SimpleInlineCodemarks extends Component {
 							return marksInRange;
 						})}
 					</div>
-					{this.renderHoverIcons(numLinesVisible, openPlusOnLine)}
+					{this.renderHoverIcons(numLinesVisible)}
 				</div>
 			);
 		}

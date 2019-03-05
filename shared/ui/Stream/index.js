@@ -178,16 +178,14 @@ export class SimpleStream extends Component {
 		if (body.selections.length > 0) {
 			const selection = body.selections[0];
 			if (this.props.activePanel === "inline")
-				return this.setState({ openPlusOnLine: selection.start.line });
-			else {
-				if (this.state.multiCompose) {
-					const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
-						uri: body.uri,
-						range: selection,
-						dirty: true // should this be determined here? using true to be safe
-					});
-					this.setState({ quote: scmInfo });
-				}
+				this.setState({ openPlusOnLine: selection.start.line });
+			else if (this.state.multiCompose) {
+				const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
+					uri: body.uri,
+					range: selection,
+					dirty: true // should this be determined here? using true to be safe
+				});
+				this.setState({ quote: scmInfo });
 			}
 		}
 	};
