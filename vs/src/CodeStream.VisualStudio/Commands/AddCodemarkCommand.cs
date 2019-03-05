@@ -8,6 +8,7 @@ using System;
 using System.ComponentModel.Design;
 using System.Threading;
 using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Models;
 
 namespace CodeStream.VisualStudio.Commands
 {
@@ -73,8 +74,7 @@ namespace CodeStream.VisualStudio.Commands
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                await codeStreamService.PrepareCodeAsync(new Uri(textDocument.FilePath), selectedText,
-                    textDocument.IsDirty, false, CancellationToken.None);
+                await codeStreamService.PrepareCodeAsync(new Uri(textDocument.FilePath), selectedText, CodemarkType.Comment.ToString(), textDocument.IsDirty, false, CancellationToken.None);
             });
         }
     }

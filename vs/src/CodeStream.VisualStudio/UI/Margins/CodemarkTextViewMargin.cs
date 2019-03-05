@@ -18,6 +18,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using CodeStream.VisualStudio.Models;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
@@ -172,7 +173,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                                 Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
                             if (codeStreamService == null) return;
 
-                            codeStreamService.PrepareCodeAsync(new Uri(_textDocument.FilePath), selectedTextResult,
+                            codeStreamService.PrepareCodeAsync(new Uri(_textDocument.FilePath), selectedTextResult, CodemarkType.Comment.ToString(),
                                 _textDocument.IsDirty, true, CancellationToken.None);
 
                             var textSelection = eventPattern?.Sender as ITextSelection;

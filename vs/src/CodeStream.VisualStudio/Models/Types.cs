@@ -36,7 +36,8 @@ namespace CodeStream.VisualStudio.Models
         Issue,
         Bookmark,
         Question,
-        Trap
+        Trap,
+        Link
     }
 
     public enum ConnectionStatus

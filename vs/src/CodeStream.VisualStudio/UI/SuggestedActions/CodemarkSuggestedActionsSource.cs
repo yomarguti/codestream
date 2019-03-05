@@ -64,7 +64,10 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
                     new SuggestedActionSet(
                         actions: new ISuggestedAction[]
                         {
-                            new CodemarkSuggestedAction(_textDocument, _textSelection)
+                            new CodemarkCommentSuggestedAction(_textDocument, _textSelection),
+                            new CodemarkIssueSuggestedAction(_textDocument, _textSelection),
+                            new CodemarkBookmarkSuggestedAction(_textDocument, _textSelection),
+                            new CodemarkPermalinkSuggestedAction(_textDocument, _textSelection)
                         },
                         categoryName: null,
                         title: null,
@@ -110,12 +113,41 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
         }
     }
 
-    internal class CodemarkSuggestedAction : ISuggestedAction
+    internal class CodemarkCommentSuggestedAction : CodemarkSuggestedActionBase
+    {
+        public CodemarkCommentSuggestedAction(ITextDocument textDocument, TextSelection textSelection): base(textDocument, textSelection) { }
+        protected override CodemarkType CodemarkType => CodemarkType.Comment;
+        public override string DisplayText { get; } = $"Add Comment";
+    }
+
+    internal class CodemarkIssueSuggestedAction : CodemarkSuggestedActionBase
+    {
+        public CodemarkIssueSuggestedAction(ITextDocument textDocument, TextSelection textSelection) : base(textDocument, textSelection) { }
+        protected override CodemarkType CodemarkType => CodemarkType.Issue;
+        public override string DisplayText { get; } = $"Create Issue";
+    }
+
+    internal class CodemarkBookmarkSuggestedAction : CodemarkSuggestedActionBase
+    {
+        public CodemarkBookmarkSuggestedAction(ITextDocument textDocument, TextSelection textSelection) : base(textDocument, textSelection) { }
+        protected override CodemarkType CodemarkType => CodemarkType.Bookmark;
+        public override string DisplayText { get; } = $"Create Bookmark";
+    }
+
+    internal class CodemarkPermalinkSuggestedAction : CodemarkSuggestedActionBase
+    {
+        public CodemarkPermalinkSuggestedAction(ITextDocument textDocument, TextSelection textSelection) : base(textDocument, textSelection) { }
+        protected override CodemarkType CodemarkType => CodemarkType.Link;
+        public override string DisplayText { get; } = $"Get Permalink";
+    }
+
+    internal abstract class CodemarkSuggestedActionBase : ISuggestedAction
     {
         private readonly TextSelection _textSelection;
         private readonly ITextDocument _textDocument;
+        protected abstract CodemarkType CodemarkType { get; }
 
-        public CodemarkSuggestedAction(ITextDocument textDocument, TextSelection textSelection)
+        protected CodemarkSuggestedActionBase(ITextDocument textDocument, TextSelection textSelection)
         {
             _textDocument = textDocument;
             _textSelection = textSelection;
@@ -141,7 +173,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
                 return;
             }
 
-            codeStreamService.PrepareCodeAsync(new Uri(_textDocument.FilePath), _textSelection, _textDocument.IsDirty, false, cancellationToken);
+            codeStreamService.PrepareCodeAsync(new Uri(_textDocument.FilePath), _textSelection, CodemarkType.ToString(), _textDocument.IsDirty, false, cancellationToken);
         }
 
         public Task<object> GetPreviewAsync(CancellationToken cancellationToken)
@@ -166,7 +198,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 
         public bool HasActionSets => false;
 
-        public string DisplayText { get; } = $"Add {Application.Name} Comment";
+        public abstract string DisplayText { get; }
 
         public ImageMoniker IconMoniker => default(ImageMoniker);
 

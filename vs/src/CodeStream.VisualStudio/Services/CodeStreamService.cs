@@ -18,7 +18,7 @@ namespace CodeStream.VisualStudio.Services
     public interface ICodeStreamService
     {
         Task ChangeActiveWindowAsync(string fileName, Uri uri);
-        Task<object> PrepareCodeAsync(Uri uri, TextSelection textSelection, bool isDirty, bool isHighlight = false, CancellationToken? cancellationToken = null);
+        Task<object> PrepareCodeAsync(Uri uri, TextSelection textSelection, string codemarkType, bool isDirty, bool isHighlight = false, CancellationToken? cancellationToken = null);
         Task OpenCommentByThreadAsync(string streamId, string threadId);
         /// <summary>
         /// logs the user out from the CodeStream agent and the session
@@ -117,7 +117,7 @@ namespace CodeStream.VisualStudio.Services
             return Task.CompletedTask;
         }
 
-        public async Task<object> PrepareCodeAsync(Uri uri, TextSelection textSelection, bool isDirty, bool isHighlight = false,
+        public async Task<object> PrepareCodeAsync(Uri uri, TextSelection textSelection, string codemarkType, bool isDirty,  bool isHighlight = false,
             CancellationToken? cancellationToken = null)
         {
             if (!IsReady) return Task.CompletedTask;
@@ -142,7 +142,7 @@ namespace CodeStream.VisualStudio.Services
                         Source = source,
                         GitError = response?.GitError,
                         IsHighlight = isHighlight,
-                       // Type = //TODO
+                        Type = codemarkType.ToLowerInvariant()
                     }
                 });
             }
