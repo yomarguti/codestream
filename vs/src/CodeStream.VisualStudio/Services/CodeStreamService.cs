@@ -124,9 +124,14 @@ namespace CodeStream.VisualStudio.Services
 
             try
             {
-                // switch to main thread to show the ToolWindow
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken ?? CancellationToken.None);
-                _toolWindowProvider.Value?.ShowToolWindow(Guids.WebViewToolWindowGuid);
+                // if it's not a highlight (aka light bulb or right-click menu) then don't try to focus the window
+                if (!isHighlight)
+                {
+                    // switch to main thread to show the ToolWindow
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(
+                        cancellationToken ?? CancellationToken.None);
+                    _toolWindowProvider.Value?.ShowToolWindow(Guids.WebViewToolWindowGuid);
+                }
 
                 var response = await _agentService.PrepareCodeAsync(uri, textSelection.Range, isDirty, cancellationToken);
 
