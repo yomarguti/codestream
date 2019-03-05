@@ -80,6 +80,7 @@ export class ScmManager {
 		return {
 			uri: documentUri,
 			range: range,
+			contents: contents!, // should/would content ever be undefined at this point?
 			scm:
 				repoPath !== undefined
 					? {

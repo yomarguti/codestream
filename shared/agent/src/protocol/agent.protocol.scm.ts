@@ -11,6 +11,7 @@ export interface GetRangeScmInfoRequest {
 export interface GetRangeScmInfoResponse {
 	uri: string;
 	range: Range;
+	contents: string;
 	scm?: {
 		file: string;
 		repoPath: string;

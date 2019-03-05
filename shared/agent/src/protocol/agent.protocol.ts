@@ -35,6 +35,7 @@ export * from "./agent.protocol.teams";
 export * from "./agent.protocol.trello";
 export * from "./agent.protocol.jira";
 export * from "./agent.protocol.users";
+export * from "./agent.protocol.scm";
 
 export interface Capabilities {
 	channelMute?: boolean;

@@ -672,9 +672,15 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		entryPoint,
 		status = "open"
 	}: CreatePostWithMarkerRequest): Promise<CreatePostResponse | undefined> {
-		const { git } = Container.instance();
+		const { documents, git } = Container.instance();
+
+		const document = documents.get(documentId.uri);
+		if (document === undefined) {
+			throw new Error(`No document could be found for Uri(${documentId.uri})`);
+		}
+
 		const filePath = URI.parse(documentId.uri).fsPath;
-		const fileContents = this.lastFullCode;
+		const fileContents = document.getText();
 
 		const codemarkRequest = {
 			title,
