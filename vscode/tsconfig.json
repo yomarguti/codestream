@@ -4,6 +4,7 @@
 		"esModuleInterop": true,
 		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
+		"lib": ["es2017"],
 		"module": "esnext",
 		"moduleResolution": "node",
 		"noFallthroughCasesInSwitch": true,
