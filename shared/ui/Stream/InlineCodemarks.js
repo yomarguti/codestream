@@ -416,11 +416,13 @@ export class SimpleInlineCodemarks extends Component {
 		event.preventDefault();
 		this.props.setNewPostEntry("Spatial View");
 
+		const mappedLineNum = this.mapLineToVisibleRange(lineNum);
+
 		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
 			uri: this.props.textEditorUri,
 			range: {
-				start: { line: lineNum, character: 0 },
-				end: { line: lineNum + 1, character: 0 }
+				start: { line: mappedLineNum, character: 0 },
+				end: { line: mappedLineNum + 1, character: 0 }
 			},
 			dirty: true // should this be determined here? using true to be safe
 		});
