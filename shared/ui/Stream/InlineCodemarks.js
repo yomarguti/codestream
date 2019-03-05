@@ -12,7 +12,6 @@ import { HostApi } from "../webview-api";
 import {
 	EditorRevealMarkerRequestType,
 	EditorHighlightMarkerRequestType,
-	EditorHighlightRangeRequestType,
 	EditorHighlightLineRequestType,
 	EditorRevealLineRequestType,
 	UpdateConfigurationRequestType
@@ -36,6 +35,13 @@ export class SimpleInlineCodemarks extends Component {
 			openPost: null,
 			documentMarkers: []
 		};
+	}
+
+	static getDerivedStateFromProps(props, state) {
+		const { openPlusOnLine } = props;
+		if (openPlusOnLine !== state.lastSelectedLine)
+			return { openPlusOnLine, lastSelectedLine: openPlusOnLine };
+		return null;
 	}
 
 	componentDidMount() {
@@ -171,17 +177,27 @@ export class SimpleInlineCodemarks extends Component {
 		}
 	};
 
-	renderHoverIcons = (numLinesVisible, openPlusOnLine) => {
+	onMouseEnterHoverIcon = lineNum => {
+		/* lineNum is 0 based and highlight methods expect 1 based */
+		this.handleHighlightLine(lineNum + 1);
+	};
+
+	onMouseLeaveHoverIcon = lineNum => {
+		this.handleUnhighlightLine(lineNum + 1);
+		this.setState({ openPlusOnLine: undefined });
+	};
+
+	renderHoverIcons = numLinesVisible => {
 		return (
 			<div>
 				{range(0, numLinesVisible + 1).map(lineNum => {
 					const top = (100 * lineNum) / numLinesVisible + "vh";
 					return (
 						<div
-							onMouseEnter={() => this.handleHighlightLine(lineNum)}
-							onMouseLeave={() => this.handleUnhighlightLine(lineNum)}
+							onMouseEnter={() => this.onMouseEnterHoverIcon(lineNum)}
+							onMouseLeave={() => this.onMouseLeaveHoverIcon(lineNum)}
 							className={createClassString("hover-plus", {
-								open: lineNum === openPlusOnLine
+								open: lineNum === this.state.openPlusOnLine
 							})}
 							key={lineNum}
 							style={{ top }}
@@ -249,7 +265,7 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	renderInline() {
-		const { textEditorVisibleRanges = [], openPlusOnLine } = this.props;
+		const { textEditorVisibleRanges = [] } = this.props;
 		const { documentMarkers } = this.state;
 
 		// create a map from start-lines to the codemarks that start on that line
@@ -266,7 +282,7 @@ export class SimpleInlineCodemarks extends Component {
 
 		// console.log("TEVR: ", textEditorVisibleRanges);
 		if (documentMarkers.length === 0) {
-			return [this.renderHoverIcons(numLinesVisible, openPlusOnLine), this.renderNoCodemarks()];
+			return [this.renderHoverIcons(numLinesVisible), this.renderNoCodemarks()];
 		} else {
 			const numVisibleRanges = textEditorVisibleRanges.length;
 
@@ -399,12 +415,11 @@ export class SimpleInlineCodemarks extends Component {
 		event.preventDefault();
 		this.props.setNewPostEntry("Spatial View");
 
-		const mappedLineNum = this.mapLineToVisibleRange(lineNum);
 		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
 			uri: this.props.textEditorUri,
 			range: {
-				start: { line: mappedLineNum, character: 0 },
-				end: { line: mappedLineNum + 1, character: 0 }
+				start: { line: lineNum, character: 0 },
+				end: { line: lineNum + 1, character: 0 }
 			},
 			dirty: true // should this be determined here? using true to be safe
 		});

@@ -42,16 +42,15 @@ import {
 	LiveShareStartSessionRequestType,
 	WebviewDidCloseThreadNotificationType,
 	WebviewDidOpenThreadNotificationType,
-	HostDidChangeEditorSelectionNotificationType,
 	ShowStreamNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
-	UpdateConfigurationRequestType
+	UpdateConfigurationRequestType,
+	HostDidChangeEditorSelectionNotificationType
 } from "../ipc/webview.protocol";
 import {
 	OpenUrlRequestType,
 	SetCodemarkPinnedRequestType,
-	TelemetryRequestType,
-	GetRangeScmInfoRequestType
+	TelemetryRequestType
 } from "@codestream/protocols/agent";
 import { setCurrentStream } from "../store/context/actions";
 import {
@@ -82,6 +81,10 @@ export class SimpleStream extends Component {
 		this.setUmiInfo();
 		this.disposables.push(
 			HostApi.instance.on(ShowStreamNotificationType, this.handleShowStream),
+			HostApi.instance.on(
+				HostDidChangeEditorSelectionNotificationType,
+				this.handleCodeSelectedEvent
+			),
 			HostApi.instance.on(
 				HostDidChangeEditorVisibleRangesNotificationType,
 				this.handleTextEditorScrolledEvent
@@ -166,6 +169,14 @@ export class SimpleStream extends Component {
 	componentWillUnmount = () => {
 		this.disposables.forEach(d => d.dispose());
 		this.disposables = [];
+	};
+
+	handleCodeSelectedEvent = async body => {
+		if (body.selections.length > 0) {
+			const selection = body.selections[0];
+			if (this.props.activePanel === "inline")
+				this.setState({ openPlusOnLine: selection.start.line });
+		}
 	};
 
 	// DEPRECATED
