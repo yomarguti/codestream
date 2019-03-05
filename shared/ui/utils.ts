@@ -16,7 +16,7 @@ export function isInVscode() {
 	return !!document.querySelector("body.codestream");
 }
 
-export function capitalize([first, ...rest]) {
+export function capitalize([first, ...rest]: string[]) {
 	return first.toUpperCase() + rest.join("");
 }
 
