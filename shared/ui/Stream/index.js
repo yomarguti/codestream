@@ -236,6 +236,9 @@ export class SimpleStream extends Component {
 	componentDidUpdate(prevProps, prevState) {
 		const { postStreamId } = this.props;
 
+		if (this.props.textEditorUri !== prevProps.textEditorUri) {
+			this.setState({ openPlusOnLine: undefined });
+		}
 		if (this.props.activePanel === "main" && prevProps.activePanel !== "main") {
 			// if we are switching from a non-main panel
 			this.focusInput();
@@ -2123,9 +2126,7 @@ const mapStateToProps = state => {
 		pluginVersion,
 		posts,
 		preferences,
-		messaging,
 		teams,
-		onboarding,
 		services,
 		umis
 	} = state;
