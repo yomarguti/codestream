@@ -610,7 +610,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			placeholder,
 			multiCompose: !collapsed,
 			onChange: this.handleChange,
-			onSubmit: collapsed ? this.handleClickSubmit : undefined,
+			onSubmit: this.handleClickSubmit,
 			__onDidRender
 		});
 	};

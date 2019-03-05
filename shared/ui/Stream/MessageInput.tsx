@@ -549,6 +549,11 @@ export class MessageInput extends React.Component<Props, State> {
 				this.props.onEmptyUpArrow(event);
 			} else if (event.key == "Escape" && multiCompose) {
 				this.props.onDismiss();
+			} else if (event.key === "Enter" && event.metaKey && multiCompose) {
+				// command-enter should submit for multiCompose
+				event.preventDefault();
+				const { onSubmit } = this.props;
+				onSubmit && onSubmit();
 			}
 		}
 	};
