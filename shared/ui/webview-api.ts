@@ -84,7 +84,7 @@ export class HostApi extends EventEmitter {
 					`received response from host for ${data.id}; found pending request: ${pending.method}`,
 					data
 				);
-				data.params ? pending.resolve(data.params) : pending.reject(data.error);
+				data.error != null ? pending.reject(data.error) : pending.resolve(data.params);
 				this._pendingRequests.delete(data.id);
 
 				return;
