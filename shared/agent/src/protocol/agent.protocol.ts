@@ -276,10 +276,9 @@ export const DidChangeVersionCompatibilityNotificationType = new NotificationTyp
 >("codestream/didChangeVersionCompatibility");
 
 export interface DocumentFromMarkerRequest {
-	file: string;
-	repoId: string;
+	file?: string;
+	repoId?: string;
 	markerId: string;
-	source?: string;
 }
 
 export interface DocumentFromMarkerResponse {

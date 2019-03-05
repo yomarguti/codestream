@@ -186,6 +186,7 @@ export const MarkPostUnreadRequestType = new RequestType<
 	void
 >("codestream/post/markUnread");
 
+// DEPRECATED:
 export interface PreparePostWithCodeRequest {
 	textDocument: TextDocumentIdentifier;
 	range: Range;

@@ -136,6 +136,12 @@ export namespace MarkerHandler {
 	}: DocumentFromMarkerRequest): Promise<DocumentFromMarkerResponse | undefined> {
 		const { git, markers, markerLocations } = Container.instance();
 
+		if (repoId == null || file == null) {
+			const marker = await markers.getById(markerId);
+			file = marker.file;
+			repoId = marker.repoId;
+		}
+
 		const repo = await git.getRepositoryById(repoId);
 		if (repo === undefined) return undefined;
 
