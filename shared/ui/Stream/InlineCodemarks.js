@@ -188,6 +188,7 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	renderHoverIcons = numLinesVisible => {
+		const iconsOnLine = this.mapVisibleRangeToLine(this.state.openPlusOnLine);
 		return (
 			<div>
 				{range(0, numLinesVisible + 1).map(lineNum => {
@@ -197,7 +198,7 @@ export class SimpleInlineCodemarks extends Component {
 							onMouseEnter={() => this.onMouseEnterHoverIcon(lineNum)}
 							onMouseLeave={() => this.onMouseLeaveHoverIcon(lineNum)}
 							className={createClassString("hover-plus", {
-								open: lineNum === this.state.openPlusOnLine
+								open: lineNum === iconsOnLine
 							})}
 							key={lineNum}
 							style={{ top }}
@@ -480,6 +481,22 @@ export class SimpleInlineCodemarks extends Component {
 		});
 		return toLineNum;
 	};
+
+	// the opposite of mapLineToVisibleRange
+	mapVisibleRangeToLine = fromLineNum => {
+		const { textEditorVisibleRanges = [] } = this.props;
+
+		let lineCounter = 0;
+		let toLineNum = 0;
+		textEditorVisibleRanges.forEach(lineRange => {
+			range(lineRange[0].line, lineRange[1].line + 1).forEach(thisLine => {
+				lineCounter++;
+				if (thisLine === fromLineNum) toLineNum = lineCounter;
+			});
+		});
+		return toLineNum;
+	};
+
 
 	highlightLine(line, highlight) {
 		HostApi.instance.send(EditorHighlightLineRequestType, {
