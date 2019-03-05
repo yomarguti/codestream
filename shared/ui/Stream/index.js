@@ -50,7 +50,8 @@ import {
 import {
 	OpenUrlRequestType,
 	SetCodemarkPinnedRequestType,
-	TelemetryRequestType
+	TelemetryRequestType,
+	GetRangeScmInfoRequestType
 } from "@codestream/protocols/agent";
 import { setCurrentStream } from "../store/context/actions";
 import {
@@ -168,50 +169,27 @@ export class SimpleStream extends Component {
 
 	componentWillUnmount = () => {
 		this.disposables.forEach(d => d.dispose());
-		this.disposables = [];
 	};
 
 	handleCodeSelectedEvent = async body => {
+		const { composeBoxProps } = this.state;
+		if (composeBoxProps && composeBoxProps.editingCodemark) return;
+
 		if (body.selections.length > 0) {
 			const selection = body.selections[0];
 			if (this.props.activePanel === "inline")
-				this.setState({ openPlusOnLine: selection.start.line });
+				return this.setState({ openPlusOnLine: selection.start.line });
+			else {
+				if (this.state.multiCompose) {
+					const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
+						uri: body.uri,
+						range: selection,
+						dirty: true // should this be determined here? using true to be safe
+					});
+					this.setState({ quote: scmInfo });
+				}
+			}
 		}
-	};
-
-	// DEPRECATED
-	handleCodeHighlightEvent = body => {
-		const { composeBoxProps } = this.state;
-		const { activePanel } = this.props;
-		if (composeBoxProps && composeBoxProps.editingCodemark) return;
-		// make sure we have a compose box to type into
-		// if it's not a highlight event (i.e. someone clicked
-		// "Add CodeStream Comment"), then we definitely want to
-		// open multi-compose. if it is a highlight event, only
-		// open it if it's not open and the user has the preference
-		// to auto-open on selection
-
-		console.log("IN HCHE: ", body);
-		// if (!body.isHighlight || (!this.state.multiCompose && this.props.configs.openCommentOnSelect)) {
-		// 	this.setMultiCompose(true, { quote: body });
-		// }
-		if (!body.isHighlight) {
-			this.setMultiCompose(true, { quote: body });
-		}
-
-		if (body.isHighlight && activePanel === "inline" && !this.state.multiCompose) {
-			// fixme unlighlight case
-			this.setState({ openPlusOnLine: body.range.start.line });
-		}
-		if (
-			body.isHighlight &&
-			(this.newPostEntry === undefined || !this.newPostEntry.startsWith("Spatial"))
-		) {
-			this.setNewPostEntry("Highlighted Code");
-		}
-		// if multi-compose is already open, regardless of settings,
-		// update this.state.quote just in case the selection changed
-		if (this.state.multiCompose) this.setState({ quote: body });
 	};
 
 	handleTextEditorScrolledEvent = body => {

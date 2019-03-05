@@ -16,7 +16,6 @@ import * as paths from "path-browserify";
 import React from "react";
 import { connect } from "react-redux";
 import Select from "react-select";
-import { Range } from "vscode-languageserver-types";
 import { getStreamForId, getStreamForTeam } from "../store/streams/reducer";
 import { Stream } from "../store/streams/types";
 import { mapFilter } from "../utils";
@@ -57,17 +56,7 @@ interface Props {
 	renderMessageInput(props: { [key: string]: any }): JSX.Element;
 	openCodemarkForm(type: string): any;
 	slackInfo?: {};
-	codeBlock?:
-		| GetRangeScmInfoResponse
-		| {
-				file?: string;
-				range: Range;
-				source?: {
-					authors: { id: string; username: string }[];
-					repoPath: string;
-				};
-				type?: string;
-		  };
+	codeBlock?: GetRangeScmInfoResponse;
 	commentType?: string;
 	collapsed: boolean;
 	isEditing?: boolean;
@@ -272,32 +261,32 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	handleCodeHighlightEvent = () => {
-		// const { codeBlock } = this.props;
-		//
-		// this.setState({ codeBlockInvalid: false });
-		//
-		// if (!codeBlock) return;
-		//
-		// let mentions: Record<"id" | "username", string>[] = [];
-		// if (codeBlock.source && codeBlock.source.authors) {
-		// 	mentions = codeBlock.source.authors.filter(author => author.id !== this.props.currentUserId);
-		// }
-		//
-		// if (mentions.length > 0) {
-		// 	// TODO handle users with no username
-		// 	const usernames: string[] = mentions.map(u => `@${u.username}`);
-		// 	// if there's text in the compose area, return without
-		// 	// adding the suggestion
-		// 	if (this.state.text.length > 0) return;
-		// 	// the reason for this unicode space is that chrome will
-		// 	// not render a space at the end of a contenteditable div
-		// 	// unless it is a &nbsp;, which is difficult to insert
-		// 	// so we insert this unicode character instead
-		// 	this.focusOnMessageInput &&
-		// 		this.focusOnMessageInput(() => {
-		// 			this.insertTextAtCursor && this.insertTextAtCursor(usernames.join(", ") + ":\u00A0");
-		// 		});
-		// }
+		const { codeBlock } = this.props;
+
+		this.setState({ codeBlockInvalid: false });
+
+		if (!codeBlock) return;
+
+		let mentions: Record<"id" | "username", string>[] = [];
+		if (codeBlock.scm && codeBlock.scm.authors) {
+			mentions = codeBlock.scm.authors.filter(author => author.id !== this.props.currentUserId);
+		}
+
+		if (mentions.length > 0) {
+			// TODO handle users with no username
+			const usernames: string[] = mentions.map(u => `@${u.username}`);
+			// if there's text in the compose area, return without
+			// adding the suggestion
+			if (this.state.text.length > 0) return;
+			// the reason for this unicode space is that chrome will
+			// not render a space at the end of a contenteditable div
+			// unless it is a &nbsp;, which is difficult to insert
+			// so we insert this unicode character instead
+			this.focusOnMessageInput &&
+				this.focusOnMessageInput(() => {
+					this.insertTextAtCursor && this.insertTextAtCursor(usernames.join(", ") + ":\u00A0");
+				});
+		}
 	};
 
 	tabIndex = () => {
