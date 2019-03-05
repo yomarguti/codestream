@@ -6,7 +6,7 @@ import { IpcRoutes } from "./webview.protocol.common";
 export interface EditorHighlightRangeRequest {
 	uri: string;
 	// NOTE: A single-line range with start & end char of 0 indicates a full-line highlight
-	Range: Range;
+	range: Range;
 	highlight: boolean;
 	source: string;
 }

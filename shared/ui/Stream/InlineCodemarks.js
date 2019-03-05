@@ -12,12 +12,13 @@ import { HostApi } from "../webview-api";
 import {
 	EditorRevealMarkerRequestType,
 	EditorHighlightMarkerRequestType,
+	EditorHighlightRangeRequestType,
 	EditorHighlightLineRequestType,
 	EditorRevealLineRequestType,
-	StartCommentOnLineRequestType,
 	UpdateConfigurationRequestType
 } from "../ipc/webview.protocol";
 import {
+	GetRangeScmInfoRequestType,
 	TelemetryRequestType,
 	DocumentMarkersRequestType,
 	DidChangeDocumentMarkersNotificationType
@@ -394,15 +395,23 @@ export class SimpleInlineCodemarks extends Component {
 		});
 	};
 
-	handleClickPlus = (event, type, lineNum) => {
+	handleClickPlus = async (event, type, lineNum) => {
 		event.preventDefault();
 		this.props.setNewPostEntry("Spatial View");
 
-		const mappedLineNum = this.mapLineToVisibleRange(lineNum + 1);
-		HostApi.instance.send(StartCommentOnLineRequestType, {
-			line: mappedLineNum,
+		const mappedLineNum = this.mapLineToVisibleRange(lineNum);
+		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
 			uri: this.props.textEditorUri,
-			type: type
+			range: {
+				start: { line: mappedLineNum, character: 0 },
+				end: { line: mappedLineNum + 1, character: 0 }
+			},
+			dirty: true // should this be determined here? using true to be safe
+		});
+
+		this.props.setMultiCompose(true, {
+			quote: scmInfo,
+			composeBoxProps: { commentType: type }
 		});
 		setTimeout(() => this.props.focusInput(), 500);
 	};

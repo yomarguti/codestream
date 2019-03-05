@@ -1,4 +1,3 @@
-import { CodemarkType } from "@codestream/protocols/api";
 import { NotificationType } from "vscode-jsonrpc";
 import { Position, Range } from "vscode-languageserver-types";
 import { IpcRoutes } from "./webview.protocol.common";

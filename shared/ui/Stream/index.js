@@ -45,13 +45,13 @@ import {
 	HostDidChangeEditorSelectionNotificationType,
 	ShowStreamNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
-	UpdateConfigurationRequestType,
-	HostDidSelectCodeNotificationType
+	UpdateConfigurationRequestType
 } from "../ipc/webview.protocol";
 import {
 	OpenUrlRequestType,
 	SetCodemarkPinnedRequestType,
-	TelemetryRequestType
+	TelemetryRequestType,
+	GetRangeScmInfoRequestType
 } from "@codestream/protocols/agent";
 import { setCurrentStream } from "../store/context/actions";
 import {
@@ -82,7 +82,6 @@ export class SimpleStream extends Component {
 		this.setUmiInfo();
 		this.disposables.push(
 			HostApi.instance.on(ShowStreamNotificationType, this.handleShowStream),
-			HostApi.instance.on(HostDidSelectCodeNotificationType, this.handleCodeHighlightEvent),
 			HostApi.instance.on(
 				HostDidChangeEditorVisibleRangesNotificationType,
 				this.handleTextEditorScrolledEvent
@@ -169,6 +168,7 @@ export class SimpleStream extends Component {
 		this.disposables = [];
 	};
 
+	// DEPRECATED
 	handleCodeHighlightEvent = body => {
 		const { composeBoxProps } = this.state;
 		const { activePanel } = this.props;
@@ -1968,31 +1968,30 @@ export class SimpleStream extends Component {
 			const { quote } = this.state;
 			if (!quote) return submit([]);
 
-			const fileUri = quote.fileUri;
+			const fileUri = quote.uri;
 
 			let marker = {
-				code: quote.code,
-				range: quote.range,
-				file: quote.file
+				code: quote.contents,
+				range: quote.range
 			};
 
-			if (quote.source) {
-				marker.file = quote.source.file;
-				marker.source = quote.source;
+			if (quote.scm) {
+				marker.file = quote.scm.file;
+				marker.source = quote.scm;
 			}
 
 			const markers = [marker];
 
 			let warning;
-			if (quote.source) {
-				if (!quote.source.remotes || quote.source.remotes.length === 0) {
+			if (quote.scm) {
+				if (!quote.scm.remotes || quote.scm.remotes.length === 0) {
 					warning = {
 						title: "No Remote URL",
 						message:
 							"This repo doesn’t have a remote URL configured. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE."
 					};
 				}
-			} else if (quote.gitError) {
+			} else if (quote.error) {
 				warning = {
 					title: "Missing Git Info",
 					message:

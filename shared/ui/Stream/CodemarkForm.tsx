@@ -1,4 +1,7 @@
-import { FetchAssignableUsersRequestType } from "@codestream/protocols/agent";
+import {
+	FetchAssignableUsersRequestType,
+	GetRangeScmInfoResponse
+} from "@codestream/protocols/agent";
 import {
 	CodemarkType,
 	CSChannelStream,
@@ -27,6 +30,7 @@ import Menu from "./Menu";
 import { PostCompose } from "./PostCompose";
 import Tooltip from "./Tooltip";
 import { sortBy as _sortBy } from "lodash-es";
+import { EditorHighlightRangeRequestType } from "@codestream/protocols/webview";
 
 const noop = () => {};
 
@@ -53,15 +57,17 @@ interface Props {
 	renderMessageInput(props: { [key: string]: any }): JSX.Element;
 	openCodemarkForm(type: string): any;
 	slackInfo?: {};
-	codeBlock?: {
-		file?: string;
-		range: Range;
-		source?: {
-			authors: { id: string; username: string }[];
-			repoPath: string;
-		};
-		type?: string;
-	};
+	codeBlock?:
+		| GetRangeScmInfoResponse
+		| {
+				file?: string;
+				range: Range;
+				source?: {
+					authors: { id: string; username: string }[];
+					repoPath: string;
+				};
+				type?: string;
+		  };
 	commentType?: string;
 	collapsed: boolean;
 	isEditing?: boolean;
@@ -117,7 +123,8 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	constructor(props: Props) {
 		super(props);
-		const defaultType = (props.codeBlock ? props.codeBlock.type : null) || props.commentType;
+		const defaultType =
+			(props.codeBlock ? (props.codeBlock as any).type : null) || props.commentType;
 		const defaultState: Partial<State> = {
 			title: "",
 			text: "",
@@ -156,6 +163,15 @@ class CodemarkForm extends React.Component<Props, State> {
 	}
 
 	componentDidMount() {
+		if (this.props.codeBlock) {
+			const codeBlock = this.props.codeBlock as GetRangeScmInfoResponse;
+			HostApi.instance.send(EditorHighlightRangeRequestType, {
+				uri: codeBlock.uri,
+				range: codeBlock.range,
+				highlight: true,
+				source: "stream" // ?
+			});
+		}
 		this.focus();
 		this.handleCodeHighlightEvent();
 	}
@@ -174,14 +190,26 @@ class CodemarkForm extends React.Component<Props, State> {
 			});
 			this.crossPostIssueValues = undefined;
 		}
-		if (
-			prevProps.codeBlock &&
-			this.props.codeBlock &&
-			this.props.codeBlock.type &&
-			this.props.codeBlock.type !== prevProps.codeBlock.type
-		) {
-			// FIXME this should call ComposeBox.repositionIfNecessary()
-			this.setState({ type: this.props.codeBlock.type! });
+		// if (
+		// 	prevProps.codeBlock &&
+		// 	this.props.codeBlock &&
+		// 	this.props.codeBlock.type &&
+		// 	this.props.codeBlock.type !== prevProps.codeBlock.type
+		// ) {
+		// 	// FIXME this should call ComposeBox.repositionIfNecessary()
+		// 	this.setState({ type: this.props.codeBlock.type! });
+		// }
+	}
+
+	componentWillUnmount() {
+		if (this.props.codeBlock) {
+			const codeBlock = this.props.codeBlock as GetRangeScmInfoResponse;
+			HostApi.instance.send(EditorHighlightRangeRequestType, {
+				uri: codeBlock.uri,
+				range: codeBlock.range,
+				highlight: false,
+				source: "stream" // ?
+			});
 		}
 	}
 
@@ -244,32 +272,32 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	handleCodeHighlightEvent = () => {
-		const { codeBlock } = this.props;
-
-		this.setState({ codeBlockInvalid: false });
-
-		if (!codeBlock) return;
-
-		let mentions: Record<"id" | "username", string>[] = [];
-		if (codeBlock.source && codeBlock.source.authors) {
-			mentions = codeBlock.source.authors.filter(author => author.id !== this.props.currentUserId);
-		}
-
-		if (mentions.length > 0) {
-			// TODO handle users with no username
-			const usernames: string[] = mentions.map(u => `@${u.username}`);
-			// if there's text in the compose area, return without
-			// adding the suggestion
-			if (this.state.text.length > 0) return;
-			// the reason for this unicode space is that chrome will
-			// not render a space at the end of a contenteditable div
-			// unless it is a &nbsp;, which is difficult to insert
-			// so we insert this unicode character instead
-			this.focusOnMessageInput &&
-				this.focusOnMessageInput(() => {
-					this.insertTextAtCursor && this.insertTextAtCursor(usernames.join(", ") + ":\u00A0");
-				});
-		}
+		// const { codeBlock } = this.props;
+		//
+		// this.setState({ codeBlockInvalid: false });
+		//
+		// if (!codeBlock) return;
+		//
+		// let mentions: Record<"id" | "username", string>[] = [];
+		// if (codeBlock.source && codeBlock.source.authors) {
+		// 	mentions = codeBlock.source.authors.filter(author => author.id !== this.props.currentUserId);
+		// }
+		//
+		// if (mentions.length > 0) {
+		// 	// TODO handle users with no username
+		// 	const usernames: string[] = mentions.map(u => `@${u.username}`);
+		// 	// if there's text in the compose area, return without
+		// 	// adding the suggestion
+		// 	if (this.state.text.length > 0) return;
+		// 	// the reason for this unicode space is that chrome will
+		// 	// not render a space at the end of a contenteditable div
+		// 	// unless it is a &nbsp;, which is difficult to insert
+		// 	// so we insert this unicode character instead
+		// 	this.focusOnMessageInput &&
+		// 		this.focusOnMessageInput(() => {
+		// 			this.insertTextAtCursor && this.insertTextAtCursor(usernames.join(", ") + ":\u00A0");
+		// 		});
+		// }
 	};
 
 	tabIndex = () => {
@@ -343,6 +371,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				const user = a.value;
 				const codestreamUser = this.props.teammates.find(t => t.email === user.email);
 				if (codestreamUser) return codestreamUser.id;
+				return undefined;
 			});
 			this.crossPostIssueValues!.assignees = assignees.map(a => a.value);
 		} else csAssignees = (this.state.assignees as any[]).map(a => a.value);
@@ -535,7 +564,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		const { codeBlock, editingCodemark } = this.props;
 		if (!codeBlock || !codeBlock.range) return "Select a range to comment on a block of code.";
 
-		let lines;
+		let lines: string;
 		if (codeBlock.range.start.line === codeBlock.range.end.line) {
 			lines = `(Line ${codeBlock.range.start.line + 1})`;
 		} else {
@@ -554,7 +583,8 @@ class CodemarkForm extends React.Component<Props, State> {
 				? "Permalink for "
 				: "";
 
-		const file = codeBlock.file ? paths.basename(codeBlock.file) : "";
+		const scm = (codeBlock as GetRangeScmInfoResponse).scm!;
+		const file = scm.file ? paths.basename(scm.file) : "";
 		return titleLabel + file + " " + lines;
 	}
 
@@ -844,7 +874,7 @@ class CodemarkForm extends React.Component<Props, State> {
 						<CrossPostIssueControls
 							provider={this.props.issueProvider}
 							onValues={this.handleCrossPostIssueValues}
-							codeBlock={this.props.codeBlock}
+							codeBlock={this.props.codeBlock as any}
 						/>
 					)}
 					{commentType !== "link" && (

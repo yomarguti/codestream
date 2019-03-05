@@ -150,9 +150,7 @@ export const createPost = (
 			response.streams.forEach(stream => dispatch(streamActions.updateStream(stream)));
 		return dispatch(postsActions.resolvePendingPost(pendingId, response.post));
 	} catch (error) {
-		logError(`Error creating a post: ${error}`, {
-			stackTrace: error.stack
-		});
+		logError(`Error creating a post: ${error}`);
 		return dispatch(postsActions.failPendingPost(pendingId));
 	}
 };
