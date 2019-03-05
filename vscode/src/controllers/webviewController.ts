@@ -17,6 +17,7 @@ import {
 	CompleteSignupRequestType,
 	EditorHighlightLineRequestType,
 	EditorHighlightMarkerRequestType,
+	EditorHighlightRangeRequestType,
 	EditorRevealLineRequestType,
 	EditorRevealMarkerRequestType,
 	HostDidChangeActiveEditorNotificationType,
@@ -614,10 +615,25 @@ export class WebviewController implements Disposable {
 
 				break;
 			}
+			// DEPRECATED
 			case EditorHighlightLineRequestType.method: {
 				webview.onIpcRequest(EditorHighlightLineRequestType, e, async (type, params) => {
 					const result = await Container.commands.highlightLine(
 						params.line,
+						Uri.parse(params.uri),
+						{
+							onOff: params.highlight
+						}
+					);
+					return { result: result };
+				});
+
+				break;
+			}
+			case EditorHighlightRangeRequestType.method: {
+				webview.onIpcRequest(EditorHighlightRangeRequestType, e, async (type, params) => {
+					const result = await Container.commands.highlightLine(
+						params.range.start.line,
 						Uri.parse(params.uri),
 						{
 							onOff: params.highlight
