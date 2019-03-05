@@ -75,11 +75,11 @@ namespace CodeStream.VisualStudio.Services
             {
                 var streamResponse = await _agentService.GetFileStreamAsync(uri);
 
-                WebviewIpc.Notify(new DidChangeActiveEditorNotificationType
+                WebviewIpc.Notify(new HostDidChangeActiveEditorNotificationType
                 {
-                    Params = new DidChangeActiveEditorNotificationParams
+                    Params = new HostDidChangeActiveEditorNotification
                     {
-                        Editor = new DidChangeActiveEditorNotificationTypeParamsEditor
+                        Editor = new HostDidChangeActiveEditorNotificationEditor
                         {
                             FileStreamId = streamResponse?.Stream?.Id,
                             Uri = uri.ToString(),
@@ -100,9 +100,9 @@ namespace CodeStream.VisualStudio.Services
 
             try
             {
-                WebviewIpc.Notify(new DidSelectStreamThreadNotificationType
+                WebviewIpc.Notify(new ShowStreamNotificationType
                 {
-                    Params = new DidSelectStreamThreadNotificationTypeParams
+                    Params = new ShowStreamNotification
                     {
                         StreamId = streamId,
                         ThreadId = threadId
@@ -117,7 +117,28 @@ namespace CodeStream.VisualStudio.Services
             return Task.CompletedTask;
         }
 
-        public async Task<object> PrepareCodeAsync(Uri uri, TextSelection textSelection, string codemarkType, bool isDirty,  bool isHighlight = false,
+        public async Task<object> EditorSelectionChangedNotificationAsync(Uri uri, TextSelection textSelection, string codemarkType, bool isDirty,  bool isHighlight = false,
+            CancellationToken? cancellationToken = null)
+        {
+            if (!IsReady) return Task.CompletedTask;
+
+            try
+            {
+                //WebviewIpc.Notify(new HostDidChangeEditorSelectionNotificationType()
+                //{
+				// TODO
+                //});
+                
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(EditorSelectionChangedNotificationAsync)} Uri={uri}");
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public async Task<object> PrepareCodeAsync(Uri uri, TextSelection textSelection, string codemarkType, bool isDirty, bool isHighlight = false,
             CancellationToken? cancellationToken = null)
         {
             if (!IsReady) return Task.CompletedTask;

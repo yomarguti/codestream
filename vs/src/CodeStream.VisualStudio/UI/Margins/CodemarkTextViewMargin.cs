@@ -172,7 +172,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                             var codeStreamService =
                                 Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
                             if (codeStreamService == null) return;
-
+                            
                             codeStreamService.PrepareCodeAsync(new Uri(_textDocument.FilePath), selectedTextResult, CodemarkType.Comment.ToString(),
                                 _textDocument.IsDirty, true, CancellationToken.None);
 

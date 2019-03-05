@@ -12,13 +12,14 @@ namespace CodeStream.VisualStudio.Models
     public class TextSelection
     {
         public Range Range { get; set; }
+        public Position Caret { get; set; }
         public string Text { get; set; }
         public bool HasText => !Text.IsNullOrWhiteSpace();
     }
 
     public class EditorSelection : Range
     {
-        public Position Caret { get; set; }
+        public Position Cursor { get; set; }
     }
 
     public class CsEntity

@@ -22,9 +22,9 @@ namespace CodeStream.VisualStudio.Controllers
 
         public async Task UpdateOpenCommentOnSelectAsync(bool value)
         {
-            _ipc.Notify(new DidChangeConfigsNotificationType
+            _ipc.Notify(new HostDidChangeConfigNotificationType
             {
-                Params = new DidChangeConfigsNotificationTypeParams
+                Params = new HostDidChangeConfigNotification
                 {
                     OpenCommentOnSelect = value
                 }
@@ -38,9 +38,9 @@ namespace CodeStream.VisualStudio.Controllers
         public async Task ToggleShowMarkersAsync(bool value)
         {
             _eventAggregator.Publish(new CodemarkVisibilityEvent { IsVisible = value });
-            _ipc.Notify(new DidChangeConfigsNotificationType
+            _ipc.Notify(new HostDidChangeConfigNotificationType
             {
-                Params = new DidChangeConfigsNotificationTypeParams
+                Params = new HostDidChangeConfigNotification
                 {
                     ShowMarkers = value
                 }
@@ -53,9 +53,9 @@ namespace CodeStream.VisualStudio.Controllers
 
         public async Task ToggleMuteAllAsync(bool value)
         {
-            _ipc.Notify(new DidChangeConfigsNotificationType
+            _ipc.Notify(new HostDidChangeConfigNotificationType
             {
-                Params = new DidChangeConfigsNotificationTypeParams
+                Params = new HostDidChangeConfigNotification
                 {
                     MuteAll = value
                 }
@@ -68,9 +68,9 @@ namespace CodeStream.VisualStudio.Controllers
 
         public async Task ToggleViewCodemarksInlineAsync(bool value)
         {
-            _ipc.Notify(new DidChangeConfigsNotificationType
+            _ipc.Notify(new HostDidChangeConfigNotificationType
             {
-                Params = new DidChangeConfigsNotificationTypeParams
+                Params = new HostDidChangeConfigNotification
                 {
                     ViewCodemarksInline = value
                 }

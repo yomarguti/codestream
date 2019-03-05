@@ -77,14 +77,4 @@ namespace CodeStream.VisualStudio.Events
 	{
 		public Uri Uri { get; set; }
 	}
-
-	public class DataChangedEvent : EventBase
-	{
-		public JToken Data { get; }
-
-		public DataChangedEvent(JToken data)
-		{
-			this.Data = data;
-		}
-	}
 }

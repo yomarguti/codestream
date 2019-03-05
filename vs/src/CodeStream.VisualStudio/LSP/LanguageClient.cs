@@ -61,9 +61,10 @@ namespace CodeStream.VisualStudio.LSP
             _settingsService = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
             _codeStreamAgentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
             _sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+            var ipc = Package.GetGlobalService(typeof(SWebviewIpc)) as IWebviewIpc;
 
             _languageServerProcess = new LanguageServerProcess();
-            CustomMessageTarget = new CustomMessageHandler(_eventAggregator);
+            CustomMessageTarget = new CustomMessageHandler(_eventAggregator, ipc);
         }
 
         internal static LanguageClient Instance { get; private set; }

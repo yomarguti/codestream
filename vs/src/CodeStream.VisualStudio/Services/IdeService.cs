@@ -143,6 +143,7 @@ namespace CodeStream.VisualStudio.Services
             // view can be null...
             if (view == null) return null;
 
+            view.GetCaretPos(out int piLine, out int piColumn);
             view.GetSelection(out int startLine, out int startColumn, out int endLine, out int endColumn);
             view.GetSelectedText(out string selectedText);
 
@@ -154,7 +155,8 @@ namespace CodeStream.VisualStudio.Services
                     Start = new Position(startLine, startColumn),
                     End = new Position(endLine, endColumn)
                 },
-                Text = selectedText
+                Text = selectedText,
+                Caret = new Position(piLine, piColumn)
             };
         }
 

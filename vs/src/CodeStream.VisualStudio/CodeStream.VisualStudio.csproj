@@ -124,6 +124,7 @@
     <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Extensions\PackageExtensions.cs" />
+    <Compile Include="Models\Agent.Protocol.cs" />
     <Compile Include="Models\Host.Protocol.Editor.cs" />
     <Compile Include="Models\Host.Protocol.Notifications.cs" />
     <Compile Include="Models\Host.Protocol.Vsls.cs" />
@@ -149,7 +150,6 @@
     <Compile Include="Models\Types.cs" />
     <Compile Include="Models\Webview.Protocol.Common.cs" />
     <Compile Include="Models\Webview.Protocol.Notifications.cs" />
-    <Compile Include="Models\Webview.Protocol.Extension.cs" />
     <Compile Include="Models\WebviewIpcMessage.cs" />
     <Compile Include="Packages\AsyncPackageHelper.cs" />
     <Compile Include="Packages\CodeStreamPackage.cs" />

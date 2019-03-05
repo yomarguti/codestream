@@ -121,29 +121,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 
 					_disposables = new List<IDisposable>
 					{
-						_eventAggregator.GetEvent<DataChangedEvent>().Subscribe(_ => OnSessionDataChanged(_.Data)),
-						_eventAggregator.GetEvent<ConnectionStatusChangedEvent>()
-							.Subscribe(_ =>
-							{
-								switch (_.Status)
-								{
-									case ConnectionStatus.Disconnected:
-                                        // TODO: Handle this
-                                        break;
-									case ConnectionStatus.Reconnecting:
-										OnDidDisconnect();
-										break;
-									case ConnectionStatus.Reconnected:
-										if (_.Reset == true)
-										{
-                                            _ipc.BrowserService.ReloadWebView();
-											return;
-										}
-
-										OnDidConnect();
-										break;
-								}
-							}),
+						 
 						_eventAggregator.GetEvent<AuthenticationChangedEvent>()
 							.Subscribe(_ =>
 							{
@@ -170,21 +148,6 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 					_isInitialized = true;
 				}
 			}
-		}
-
-		private void OnDidDisconnect()
-		{
-            _ipc.Notify(new DidLoseConnectivityNotificationType());
-		}
-
-		private void OnDidConnect()
-		{
-            _ipc.Notify(new DidEstablishConnectivityNotificationType());
-		}
-
-		private void OnSessionDataChanged(JToken data)
-		{
-            _ipc.Notify(new DidChangeDataNotificationType(data));
 		}
 
 		public void Dispose()

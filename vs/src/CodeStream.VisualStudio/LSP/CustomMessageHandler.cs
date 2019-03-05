@@ -1,67 +1,92 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
+﻿using System;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
+using CodeStream.VisualStudio.Extensions;
+using CodeStream.VisualStudio.Models;
+using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using StreamJsonRpc;
-using CodeStream.VisualStudio.Core;
-using CodeStream.VisualStudio.Extensions;
 
 // ReSharper disable UnusedMember.Global
 
 namespace CodeStream.VisualStudio.LSP
 {
-	internal class CustomMessageHandler
-	{
-		private static readonly ILogger Log = LogManager.ForContext<CustomMessageHandler>();
+    internal class CustomMessageHandler
+    {
+        private static readonly ILogger Log = LogManager.ForContext<CustomMessageHandler>();
 
-		private readonly IEventAggregator _eventAggregator;
-		public CustomMessageHandler(IEventAggregator eventAggregator)
-		{
-			_eventAggregator = eventAggregator;
-		}
+        private readonly IEventAggregator _eventAggregator;
+        private readonly IWebviewIpc _ipc;
 
-		[JsonRpcMethod("codestream/didChangeData")]
-		public void OnDidChangeData(JToken e)
-		{
-			_eventAggregator.Publish(new DataChangedEvent(e));
-		}
+        public CustomMessageHandler(IEventAggregator eventAggregator, IWebviewIpc ipc)
+        {
+            _eventAggregator = eventAggregator;
+            _ipc = ipc;
+        }
 
-		[JsonRpcMethod("codestream/didChangeConnectionStatus")]
-		public void OnDidChangeConnectionStatus(JToken e)
-		{
-			var message = e.ToObject<ConnectionStatusNotification>();
-			_eventAggregator.Publish(new ConnectionStatusChangedEvent
-			{
-				Reset = message.Reset,
-				Status = message.Status
-			});
-		}
+        [JsonRpcMethod("codestream/didChangeData")]
+        public void OnDidChangeData(JToken e)
+        {
+            _ipc.Notify(new DidChangeDataNotificationType(e));
+        }
 
-		[JsonRpcMethod("codestream/didChangeDocumentMarkers")]
-		public void OnDidChangeDocumentMarkers(JToken e)
-		{
-			ThreadHelper.JoinableTaskFactory.Run(async delegate
-			{
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+        [JsonRpcMethod("codestream/didChangeConnectionStatus")]
+        public void OnDidChangeConnectionStatus(JToken e)
+        {
+            var @params = e.ToObject<DidChangeConnectionStatusNotification>();
 
-				var message = e.ToObject<DocumentMarkersNotification>();
-				_eventAggregator.Publish(new DocumentMarkerChangedEvent { Uri = message.TextDocument.Uri.ToUri() });
-			});
-		}
+            switch (@params.Status)
+            {
+                case ConnectionStatus.Disconnected:
+                    // TODO: Handle this
+                    break;
+                case ConnectionStatus.Reconnecting:
+                    _ipc.Notify(new DidChangeConnectionStatusNotificationType(@params));
+                    break;
+                case ConnectionStatus.Reconnected:
+                {
+                    if (@params.Reset == true)
+                    {
+                        _ipc.BrowserService.ReloadWebView();
+                        return;
+                    }
 
-		[JsonRpcMethod("codestream/didChangeVersionCompatibility")]
-		public void OnDidChangeVersionCompatibility(JToken e)
-		{
-			// TODO implement this
-			//  System.Diagnostics.Debugger.Break();
-		}
+                    _ipc.Notify(new DidChangeConnectionStatusNotificationType(@params));
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
+        }
 
-		[JsonRpcMethod("codestream/didLogout")]
-		public void OnDidLogout(JToken e)
-		{
-			var message = e.ToObject<AuthenticationNotification>();
-			_eventAggregator.Publish(new AuthenticationChangedEvent { Reason = message.Reason });
-		}
-	}
+        [JsonRpcMethod("codestream/didChangeDocumentMarkers")]
+        public void OnDidChangeDocumentMarkers(JToken e)
+        {
+            ThreadHelper.JoinableTaskFactory.Run(async delegate
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                var message = e.ToObject<DocumentMarkersNotification>();
+                _eventAggregator.Publish(new DocumentMarkerChangedEvent { Uri = message.TextDocument.Uri.ToUri() });
+            });
+        }
+
+        [JsonRpcMethod("codestream/didChangeVersionCompatibility")]
+        public void OnDidChangeVersionCompatibility(JToken e)
+        {
+            // TODO implement this
+            //  System.Diagnostics.Debugger.Break();
+        }
+
+        [JsonRpcMethod("codestream/didLogout")]
+        public void OnDidLogout(JToken e)
+        {
+            var message = e.ToObject<AuthenticationNotification>();
+            _eventAggregator.Publish(new AuthenticationChangedEvent { Reason = message.Reason });
+        }
+    }
 }

@@ -19,7 +19,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
-using CodeStream.VisualStudio.Models;
 
 namespace CodeStream.VisualStudio.UI
 {
@@ -167,32 +166,37 @@ namespace CodeStream.VisualStudio.UI
         public void OnSessionReady(IWpfTextView textView)
         {
             var state = textView.TextBuffer.Properties.GetProperty<TextViewState>(PropertyNames.TextViewState);
-            if (state.Initialized) return;
-
-            lock (InitializedLock)
+            // ReSharper disable InvertIf
+            if (!state.Initialized)
             {
-                if (state.Initialized) return;
-
-                textView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewLocalEvents, new List<IDisposable>()
+                lock (InitializedLock)
                 {
-                    _eventAggregator.GetEvent<DocumentMarkerChangedEvent>()
-                        .ObserveOnDispatcher()
-                        .Throttle(TimeSpan.FromMilliseconds(100))
-                        .Subscribe((_) => ThreadHelper.JoinableTaskFactory.Run(async delegate
-                        {
-                            await OnDocumentMarkerChangedAsync(textView, _);
-                        }))
-                });
+                    if (!state.Initialized)
+                    {
+                        textView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewLocalEvents,
+                            new List<IDisposable>()
+                            {
+                                _eventAggregator.GetEvent<DocumentMarkerChangedEvent>()
+                                    .ObserveOnDispatcher()
+                                    .Throttle(TimeSpan.FromMilliseconds(100))
+                                    .Subscribe((_) => ThreadHelper.JoinableTaskFactory.Run(async delegate
+                                    {
+                                        await OnDocumentMarkerChangedAsync(textView, _);
+                                    }))
+                            });
 
-                textView.TextBuffer
-                     .Properties
-                     .GetProperty<List<ICodeStreamWpfTextViewMargin>>(PropertyNames.TextViewMarginProviders)
-                     .OnSessionReady();
+                        textView.TextBuffer
+                            .Properties
+                            .GetProperty<List<ICodeStreamWpfTextViewMargin>>(PropertyNames.TextViewMarginProviders)
+                            .OnSessionReady();
 
-                // keep this at the end -- we want this to be the first handler
-                textView.LayoutChanged += OnTextViewLayoutChanged;
-                state.Initialized = true;
+                        // keep this at the end -- we want this to be the first handler
+                        textView.LayoutChanged += OnTextViewLayoutChanged;
+                        state.Initialized = true;
+                    }
+                }
             }
+            // ReSharper restore InvertIf
         }
 
         private async System.Threading.Tasks.Task OnDocumentMarkerChangedAsync(IWpfTextView textView, DocumentMarkerChangedEvent e)
@@ -263,14 +267,13 @@ namespace CodeStream.VisualStudio.UI
             {
                 documentMarkerManager.GetOrCreateMarkers();
             }
-
-            //var ipc = ServiceLocator.Get<SWebviewIpc, IWebviewIpc>();
-            //ipc.SendResponse(new DidScrollEditorNotificationType
+            
+            //ServiceLocator.Get<SWebviewIpc, IWebviewIpc>()?.Notify(new HostDidChangeEditorSelectionNotificationType
             //{
-            //    Params = new DidScrollEditorNotificationTypeParams
+            //    Params = new HostDidChangeEditorSelectionNotification
             //    {
             //        Uri = textDocument.FilePath.ToUri().ToString(),
-            //        VisibleRanges = wpfTextView.TextViewLines.ToVisibleRanges()
+            //        VisibleRanges = wpfTextView.TextViewLines.ToRanges().Collapsed()
             //    }
             //});
 
