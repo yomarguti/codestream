@@ -416,7 +416,7 @@ export class SimpleInlineCodemarks extends Component {
 		event.preventDefault();
 		this.props.setNewPostEntry("Spatial View");
 
-		const mappedLineNum = this.mapLineToVisibleRange(lineNum);
+		const mappedLineNum = this.mapLineToVisibleRange(lineNum) + 1;
 
 		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
 			uri: this.props.textEditorUri,
