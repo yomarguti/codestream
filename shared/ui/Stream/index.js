@@ -764,6 +764,7 @@ export class SimpleStream extends Component {
 							searchBarOpen={this.state.searchBarOpen}
 							setNewPostEntry={this.setNewPostEntry}
 							setMultiCompose={this.setMultiCompose}
+							multiCompose={this.state.multiCompose}
 							typeFilter="all"
 							textEditorUri={textEditorUri}
 							textEditorVisibleRanges={textEditorVisibleRanges}

@@ -153,7 +153,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	componentDidMount() {
 		if (this.props.codeBlock) {
-			const codeBlock = this.props.codeBlock as GetRangeScmInfoResponse;
+			const codeBlock = this.props.codeBlock;
 			HostApi.instance.send(EditorHighlightRangeRequestType, {
 				uri: codeBlock.uri,
 				range: codeBlock.range,

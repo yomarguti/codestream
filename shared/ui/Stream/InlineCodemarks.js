@@ -496,6 +496,8 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	handleUnhighlightLine = lineNum => {
+		if (this.props.multiCompose) return; // don't remove highlight if the codemark form is open
+
 		const mappedLineNum = this.mapLineToVisibleRange(lineNum);
 		this.highlightLine(mappedLineNum, false);
 	};
