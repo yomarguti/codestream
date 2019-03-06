@@ -40,13 +40,6 @@ module.exports = function(env, argv) {
 		env
 	);
 
-	// console.log("Ensuring extension symlink to the webview folder...");
-	// createFolderSymlinkSync(
-	// 	path.resolve(__dirname, "../codestream-components"),
-	// 	path.resolve(__dirname, "src/webviews/app/components"),
-	// 	env
-	// );
-
 	protocolPath = path.resolve(__dirname, "../codestream-components/protocols");
 	if (!fs.existsSync(protocolPath)) {
 		fs.mkdirSync(protocolPath);
@@ -235,7 +228,8 @@ function getWebviewConfig(env) {
 				: false
 		}),
 		new ForkTsCheckerPlugin({
-			async: false
+			async: false,
+			useTypescriptIncrementalApi: false
 		})
 	];
 
