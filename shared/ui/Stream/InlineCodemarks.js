@@ -23,6 +23,7 @@ import {
 } from "@codestream/protocols/agent";
 import { Range } from "vscode-languageserver-types";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
+import { setThread } from "../store/context/actions";
 
 /**
  * @augments {Component<{ textEditorVisibleRanges?: Range[], documentMarkers: DocumentMarker[],[key: string]: any }, {  [key: string]: any }>}
@@ -595,5 +596,5 @@ const mapStateToProps = state => {
 
 export default connect(
 	mapStateToProps,
-	{ fetchDocumentMarkers }
+	{ fetchDocumentMarkers, setThread }
 )(SimpleInlineCodemarks);
