@@ -19,7 +19,12 @@ export class ScmManager {
 		range,
 		uri: documentUri
 	}: GetRangeScmInfoRequest): Promise<GetRangeScmInfoResponse> {
-		const { git } = Container.instance();
+		const { documents, git } = Container.instance();
+
+		const document = documents.get(documentUri);
+		if (document === undefined) {
+			throw new Error(`No document could be found for Uri(${documentUri})`);
+		}
 
 		// Ensure range end is >= start
 		if (
@@ -52,11 +57,6 @@ export class ScmManager {
 					remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
 
 					if (dirty && contents == null) {
-						const document = Container.instance().documents.get(documentUri);
-						if (document === undefined) {
-							throw new Error(`No document could be found for Uri(${documentUri})`);
-						}
-
 						contents = document.getText();
 					}
 
@@ -80,7 +80,7 @@ export class ScmManager {
 		return {
 			uri: documentUri,
 			range: range,
-			contents: contents!, // should/would content ever be undefined at this point?
+			contents: document.getText(range),
 			scm:
 				repoPath !== undefined
 					? {
