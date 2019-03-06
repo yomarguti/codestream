@@ -7,7 +7,6 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using System.ComponentModel.Design;
 using System.Threading;
-using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Models;
 
 namespace CodeStream.VisualStudio.Commands
@@ -72,9 +71,9 @@ namespace CodeStream.VisualStudio.Commands
 
             ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                //await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                await codeStreamService.PrepareCodeAsync(new Uri(textDocument.FilePath), selectedText, CodemarkType.Comment.ToString(), textDocument.IsDirty, false, CancellationToken.None);
+                await codeStreamService.NewCodemarkAsync(new Uri(textDocument.FilePath), selectedText, CodemarkType.Comment, CancellationToken.None);
             });
         }
     }

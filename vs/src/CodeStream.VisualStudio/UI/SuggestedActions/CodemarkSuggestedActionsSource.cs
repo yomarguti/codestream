@@ -173,7 +173,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
                 return;
             }
 
-            codeStreamService.PrepareCodeAsync(new Uri(_textDocument.FilePath), _textSelection, CodemarkType.ToString(), _textDocument.IsDirty, false, cancellationToken);
+            codeStreamService.NewCodemarkAsync(new Uri(_textDocument.FilePath), _textSelection, CodemarkType, cancellationToken);
         }
 
         public Task<object> GetPreviewAsync(CancellationToken cancellationToken)

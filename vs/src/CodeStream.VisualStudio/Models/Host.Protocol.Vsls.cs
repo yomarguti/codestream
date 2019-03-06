@@ -3,7 +3,6 @@
     public class LiveShareInviteToSessionRequest
     {
         public string UserId { get; set; }
-        public bool CreateNewStream { get; set; }
     }
 
     public class LiveShareInviteToSessionRequestType : RequestType<LiveShareInviteToSessionRequest>
@@ -27,7 +26,6 @@
     {
         public string StreamId { get; set; }
         public string ThreadId { get; set; }
-        public bool CreateNewStream { get; set; }
     }
 
     public class LiveShareStartSessionRequestType : RequestType<LiveShareStartSessionRequest>

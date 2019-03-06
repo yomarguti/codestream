@@ -173,8 +173,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                                 Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
                             if (codeStreamService == null) return;
                             
-                            codeStreamService.PrepareCodeAsync(new Uri(_textDocument.FilePath), selectedTextResult, CodemarkType.Comment.ToString(),
-                                _textDocument.IsDirty, true, CancellationToken.None);
+                            codeStreamService.EditorSelectionChangedNotificationAsync(new Uri(_textDocument.FilePath), selectedTextResult, CodemarkType.Comment, CancellationToken.None);
 
                             var textSelection = eventPattern?.Sender as ITextSelection;
                             Log.Verbose(

@@ -52,12 +52,6 @@
         public override string Method => MethodName;
     }
 
-    public class StartCommentOnLineRequestType : RequestType<EmptyRequestTypeParams>
-    {
-        public const string MethodName = "host/start-comment-on-line";
-        public override string Method => MethodName;
-    }
-
     public class CompareMarkerRequestType : RequestType<EmptyRequestTypeParams>
     {
         public const string MethodName = "host/marker/compare";

@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
+﻿using Microsoft.VisualStudio.LanguageServer.Protocol;
 using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio.Models
@@ -7,8 +6,6 @@ namespace CodeStream.VisualStudio.Models
     public class HostDidChangeActiveEditorNotificationEditor
     {
         public string FileName { get; set; }
-        // TODO: Remove this
-        public string FileStreamId { get; set; }
         public string LanguageId { get; set; }
         public string Uri { get; set; }
         public List<EditorSelection> Selections { get; set; }
@@ -44,7 +41,7 @@ namespace CodeStream.VisualStudio.Models
     {
         public string Uri { get; set; }
         public List<EditorSelection> Selections { get; set; }
-        public  List<Range> VisibleRanges { get; set; }
+        public List<Range> VisibleRanges { get; set; }
     }
 
     public class HostDidChangeEditorSelectionNotificationType : NotificationType<HostDidChangeEditorSelectionNotification>
@@ -56,6 +53,7 @@ namespace CodeStream.VisualStudio.Models
     public class HostDidChangeEditorVisibleRangesNotification
     {
         public string Uri { get; set; }
+        public List<EditorSelection> Selections { get; set; }
         public List<Range> VisibleRanges { get; set; }
     }
 
@@ -65,7 +63,13 @@ namespace CodeStream.VisualStudio.Models
         public override string Method => MethodName;
     }
 
-    public class HostDidChangeFocusNotification { }
+    public class HostDidChangeFocusNotification
+    {
+        /// <summary>
+        /// Is the IDE focused?
+        /// </summary>
+        public bool Focused { get; set; }
+    }
     public class HostDidChangeFocusNotificationType : NotificationType<HostDidChangeFocusNotification>
     {
         public const string MethodName = "webview/focus/didChange";
@@ -76,26 +80,6 @@ namespace CodeStream.VisualStudio.Models
     public class HostDidLogoutNotificationType : NotificationType<HostDidLogoutNotification>
     {
         public const string MethodName = "webview/didLogout";
-        public override string Method => MethodName;
-    }
-
-    [Obsolete]
-    public class HostDidSelectCodeNotification
-    {
-        public string Code { get; set; }
-        public string File { get; set; }
-        public string FileUri { get; set; }
-        public Range Range { get; set; }
-        public Source Source { get; set; }
-        public string GitError { get; set; }
-        public bool? IsHighlight { get; set; }
-        public string Type { get; set; }
-    }
-
-    [Obsolete]
-    public class HostDidSelectCodeNotificationType : NotificationType<HostDidSelectCodeNotification>
-    {
-        public const string MethodName = "webview/editor/didSelectCode";
         public override string Method => MethodName;
     }
 }

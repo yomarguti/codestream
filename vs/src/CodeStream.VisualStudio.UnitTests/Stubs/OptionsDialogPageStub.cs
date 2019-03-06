@@ -16,6 +16,7 @@ namespace CodeStream.VisualStudio.UnitTests.Stubs
         public string WebAppUrl { get; set; }
         public string Team { get; set; }
         public bool OpenCommentOnSelect { get; set; }
+        public bool ViewCodemarksInline { get; set; }
         public void SaveSettingsToStorage() { }
         public void LoadSettingsFromStorage() { }
         public TraceLevel TraceLevel { get; set; }

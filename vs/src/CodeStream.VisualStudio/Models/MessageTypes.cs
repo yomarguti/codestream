@@ -1,4 +1,5 @@
-﻿using CodeStream.VisualStudio.Extensions;
+﻿using System.Diagnostics;
+using CodeStream.VisualStudio.Extensions;
 using Newtonsoft.Json.Linq;
 
 namespace CodeStream.VisualStudio.Models
@@ -11,21 +12,16 @@ namespace CodeStream.VisualStudio.Models
         string AsJson();
     }
 
-    public interface INotificationType : IAbstractMessageType
-    {
-  
-    }
+    public interface INotificationType : IAbstractMessageType { }
 
-    public interface IRequestType : IAbstractMessageType
-    {
-
-    }
+    public interface IRequestType : IAbstractMessageType { }
 
     public interface IAbstractMessageType<T> : IAbstractMessageType
     {
         T Params { get; set; }
     }
 
+    [DebuggerDisplay("Method={Method}")]
     public abstract class AbstractMessageType<T> : IAbstractMessageType<T>
     {
         /// <summary>
@@ -69,7 +65,9 @@ namespace CodeStream.VisualStudio.Models
         }
     }
 
+    [DebuggerDisplay("Method={Method}")]
     public abstract class RequestType<T> : AbstractMessageType<T>, IRequestType { }
 
+    [DebuggerDisplay("Method={Method}")]
     public abstract class NotificationType<T> : AbstractMessageType<T>, INotificationType { }
 }

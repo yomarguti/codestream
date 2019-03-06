@@ -156,7 +156,7 @@ namespace CodeStream.VisualStudio.Services
                     End = new Position(endLine, endColumn)
                 },
                 Text = selectedText,
-                Caret = new Position(piLine, piColumn)
+                Cursor = new Position(piLine, piColumn)
             };
         }
 

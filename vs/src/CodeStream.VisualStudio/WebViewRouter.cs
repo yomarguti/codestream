@@ -102,17 +102,31 @@ namespace CodeStream.VisualStudio
                                             // ready -- nothing to do!
                                             break;
                                         }
+                                    case WebviewDidChangeActiveStreamNotificationType.MethodName:
+                                        {
+                                            _sessionService.CurrentStreamId = message.Params.ToObject<WebviewDidChangeActiveStreamNotification>()?.StreamId;
+                                            break;
+                                        }
                                     case WebviewDidChangeContextNotificationType.MethodName:
                                         {
+                                            // save this context in session -- then have bootstrap look in session for it later
                                             // noop for now -- track this in session?!
                                             break;
                                         }
+                                    case WebviewDidOpenThreadNotificationType.MethodName:
+                                        {
+                                            var @params = message.Params.ToObject<WebviewDidOpenThreadNotification>();
+                                            _sessionService.CurrentStreamId = @params?.StreamId;
+                                            _sessionService.CurrentThreadId = @params?.ThreadId;
+                                            break;
+                                        }
                                     case WebviewDidCloseThreadNotificationType.MethodName:
+                                        {
+                                            _sessionService.CurrentThreadId = null;
+                                            break;
+                                        }
                                     case CompareMarkerRequestType.MethodName:
                                     case ApplyMarkerRequestType.MethodName:
-                                    case StartCommentOnLineRequestType.MethodName:
-                                    case EditorRevealLineRequestType.MethodName:
-                                    case EditorHighlightLineRequestType.MethodName:
                                         {
                                             break;
                                         }
@@ -171,25 +185,23 @@ namespace CodeStream.VisualStudio
                                             }
                                             break;
                                         }
-                                    case EditorRevealMarkerRequestType.MethodName:
+                                    case EditorHighlightRangeRequestType.MethodName:
+                                        {
+                                            // search for highlightDecorationType in vscode
+                                            // TODO implement this
+                                            // highlight the active editor's background based on this range and whether range is on or off
+                                            break;
+                                        }
+                                    case EditorRevealRangeRequestType.MethodName:
                                         {
                                             using (var scope = _ipc.CreateScope(message))
                                             {
-                                                var @params = message.Params.ToObject<EditorRevealMarkerRequest>();
-                                                var fromMarkerResponse = await _codeStreamAgent.GetDocumentFromMarkerAsync(new DocumentFromMarkerRequest(@params.Marker));
-                                                if (fromMarkerResponse?.TextDocument?.Uri == null)
-                                                {
-                                                    Log.Verbose($"{nameof(_codeStreamAgent.GetDocumentFromMarkerAsync)} Uri is null File={@params?.Marker?.File}");
-                                                    scope.FulfillRequest();
-                                                }
-                                                else
-                                                {
-                                                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(
-                                                        CancellationToken.None);
-                                                    var editorResponse = _ideService.OpenEditor(fromMarkerResponse.TextDocument.Uri, fromMarkerResponse.Range?.Start?.Line + 1);
+                                                var @params = message.Params.ToObject<EditorRevealRangeRequest>();
+                                                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 
-                                                    scope.FulfillRequest(new JValue(editorResponse.ToString()));
-                                                }
+                                                var editorResponse = _ideService.OpenEditor(@params.Uri, @params.Range?.Start?.Line + 1);
+
+                                                scope.FulfillRequest(new JValue(editorResponse.ToString()));
                                             }
                                             break;
                                         }
@@ -228,7 +240,7 @@ namespace CodeStream.VisualStudio
                                                                 }
                                                                 else if (@params.Name == "viewCodemarksInline")
                                                                 {
-                                                                    //scope.SettingsService.ViewCodemarksInline = @params.Value.AsBool();
+                                                                    scope.SettingsService.ViewCodemarksInline = @params.Value.AsBool();
                                                                 }
                                                             }
 
@@ -245,8 +257,6 @@ namespace CodeStream.VisualStudio
                                     case LiveShareInviteToSessionRequestType.MethodName:
                                     case LiveShareJoinSessionRequestType.MethodName:
                                         {
-                                            var liveShareAction = message.Params.ToObject<LiveShareAction>();
-
                                             var liveShareController = new LiveShareController(
                                                 _sessionService,
                                                 _codeStreamAgent,
@@ -260,17 +270,18 @@ namespace CodeStream.VisualStudio
                                                 {
                                                     case LiveShareStartSessionRequestType.MethodName:
                                                         {
-                                                            await liveShareController.StartAsync(liveShareAction.StreamId, liveShareAction.ThreadId);
+                                                            var @params = message.Params.ToObject<LiveShareStartSessionRequest>();
+                                                            await liveShareController.StartAsync(@params.StreamId, @params.ThreadId);
                                                             break;
                                                         }
                                                     case LiveShareInviteToSessionRequestType.MethodName:
                                                         {
-                                                            await liveShareController.InviteAsync(liveShareAction.UserId);
+                                                            await liveShareController.InviteAsync(message.Params.ToObject<LiveShareInviteToSessionRequest>()?.UserId);
                                                             break;
                                                         }
                                                     case LiveShareJoinSessionRequestType.MethodName:
                                                         {
-                                                            await liveShareController.JoinAsync(liveShareAction?.Url);
+                                                            await liveShareController.JoinAsync(message.Params.ToObject<LiveShareJoinSessionRequest>()?.Url);
                                                             break;
                                                         }
                                                     default:
@@ -280,19 +291,6 @@ namespace CodeStream.VisualStudio
                                                         }
                                                 }
                                             }
-                                            break;
-                                        }
-
-                                    case WebviewDidOpenThreadNotificationType.MethodName:
-                                        {
-                                            var @params = message.Params.ToObject<WebviewDidOpenThreadNotification>();
-                                            _sessionService.CurrentStreamId = @params?.StreamId;
-                                            _sessionService.CurrentThreadId = @params?.ThreadId;
-                                            break;
-                                        }
-                                    case WebviewDidChangeActiveStreamNotificationType.MethodName:
-                                        {
-                                            _sessionService.CurrentStreamId = message.Params.ToObject<WebviewDidChangeActiveStreamNotification>()?.StreamId;
                                             break;
                                         }
                                     default:

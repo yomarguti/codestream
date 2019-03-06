@@ -28,9 +28,6 @@ namespace CodeStream.VisualStudio.Services
     {
         Task SetRpcAsync(JsonRpc rpc);
         Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null);
-        Task<PrepareCodeResponse> PrepareCodeAsync(Uri uri, Microsoft.VisualStudio.LanguageServer.Protocol.Range range, bool isDirty,
-           CancellationToken? cancellationToken = null
-        );
 
         Task<CreatePostResponse> CreatePostAsync(string streamId, string threadId, string text);
         Task<GetFileStreamResponse> GetFileStreamAsync(Uri uri);
@@ -222,17 +219,6 @@ namespace CodeStream.VisualStudio.Services
             }
         }
 
-        public Task<PrepareCodeResponse> PrepareCodeAsync(Uri uri, Microsoft.VisualStudio.LanguageServer.Protocol.Range range, bool isDirty, CancellationToken? cancellationToken = null)
-        {
-            return SendAsync<PrepareCodeResponse>("codestream/post/prepareWithCode",
-                new PrepareCodeRequest
-                {
-                    TextDocument = new TextDocumentIdentifier { Uri = uri.ToString() },
-                    Range = range,
-                    Dirty = isDirty
-                }, cancellationToken);
-        }
-
         public Task<JToken> LoginViaTokenAsync(string email, string token, string serverUrl)
         {
             return SendCoreAsync<JToken>("codestream/login", new LoginViaAccessTokenRequest
@@ -309,7 +295,7 @@ namespace CodeStream.VisualStudio.Services
             {
                 codemarkApply = false,
                 codemarkCompare = false,
-                editorTrackVisibleRange = false,
+                editorTrackVisibleRange = true,
                 services = new
                 {
                     vsls = vslsEnabled
@@ -333,7 +319,7 @@ namespace CodeStream.VisualStudio.Services
                         showMarkers = _settingsService.ShowMarkers,
                         muteAll = _settingsService.MuteAll,
                         team = _settingsService.Team,
-                        viewCodemarksInline = false,// _settingsService.ViewCodemarksInline
+                        viewCodemarksInline = _settingsService.ViewCodemarksInline
                     },
                     env = _settingsService.GetEnvironmentName(),
                     version = _settingsService.GetEnvironmentVersionFormatted()
@@ -343,7 +329,6 @@ namespace CodeStream.VisualStudio.Services
             if (state == null) throw new ArgumentNullException(nameof(state));
 
             var results = await _rpc.InvokeWithParameterObjectAsync<JToken>("codestream/bootstrap").ConfigureAwait(false);
-
 
             results["capabilities"] = capabilities;
             results["configs"] = JObject.FromObject(new
@@ -357,12 +342,15 @@ namespace CodeStream.VisualStudio.Services
                 showHeadshots = settings.ShowHeadshots,
                 muteAll = settings.MuteAll,
                 openCommentOnSelect = settings.OpenCommentOnSelect,
-                viewCodemarksInline = false, // settings.ViewCodemarksInline,
+                viewCodemarksInline = settings.ViewCodemarksInline,
                 team = settings.Team
             });
             results["context"] = JObject.FromObject(new
             {
+                // TODO add other parts
                 currentTeamId = state["teamId"].ToString(),
+                //textEditorVisibleRanges
+                //textEditorUri
                 hasFocus = true
             });
             results["session"] = JObject.FromObject(new

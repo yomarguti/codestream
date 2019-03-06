@@ -3,10 +3,8 @@ using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Packages;
-using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
@@ -18,7 +16,10 @@ namespace CodeStream.VisualStudio.Services
     public interface ICodeStreamService
     {
         Task ChangeActiveWindowAsync(string fileName, Uri uri);
-        Task<object> PrepareCodeAsync(Uri uri, TextSelection textSelection, string codemarkType, bool isDirty, bool isHighlight = false, CancellationToken? cancellationToken = null);
+
+        Task NewCodemarkAsync(Uri uri, TextSelection textSelection, CodemarkType codemarkType, CancellationToken? cancellationToken = null);
+
+        Task EditorSelectionChangedNotificationAsync(Uri uri, TextSelection textSelection, CodemarkType codemarkType, CancellationToken? cancellationToken = null);
         Task OpenCommentByThreadAsync(string streamId, string threadId);
         /// <summary>
         /// logs the user out from the CodeStream agent and the session
@@ -67,21 +68,18 @@ namespace CodeStream.VisualStudio.Services
             get { return _sessionService?.IsReady == true; }
         }
 
-        public async Task ChangeActiveWindowAsync(string fileName, Uri uri)
+        public Task ChangeActiveWindowAsync(string fileName, Uri uri)
         {
-            if (!IsReady) return;
+            if (!IsReady) return Task.CompletedTask;
 
             try
             {
-                var streamResponse = await _agentService.GetFileStreamAsync(uri);
-
                 WebviewIpc.Notify(new HostDidChangeActiveEditorNotificationType
                 {
                     Params = new HostDidChangeActiveEditorNotification
                     {
                         Editor = new HostDidChangeActiveEditorNotificationEditor
                         {
-                            FileStreamId = streamResponse?.Stream?.Id,
                             Uri = uri.ToString(),
                             FileName = fileName,
                         }
@@ -92,6 +90,7 @@ namespace CodeStream.VisualStudio.Services
             {
                 Log.Error(ex, $"{nameof(ChangeActiveWindowAsync)} FileName={fileName} Uri={uri}");
             }
+            return Task.CompletedTask;
         }
 
         public Task OpenCommentByThreadAsync(string streamId, string threadId)
@@ -117,18 +116,25 @@ namespace CodeStream.VisualStudio.Services
             return Task.CompletedTask;
         }
 
-        public async Task<object> EditorSelectionChangedNotificationAsync(Uri uri, TextSelection textSelection, string codemarkType, bool isDirty,  bool isHighlight = false,
-            CancellationToken? cancellationToken = null)
+        public Task EditorSelectionChangedNotificationAsync(Uri uri, TextSelection textSelection, CodemarkType codemarkType, CancellationToken? cancellationToken = null)
         {
             if (!IsReady) return Task.CompletedTask;
 
             try
             {
-                //WebviewIpc.Notify(new HostDidChangeEditorSelectionNotificationType()
-                //{
-				// TODO
-                //});
-                
+                WebviewIpc.Notify(new HostDidChangeEditorSelectionNotificationType
+                {
+                    Params = new HostDidChangeEditorSelectionNotification
+                    {
+                        Uri = uri.ToString(),
+
+                        //TODO
+                        VisibleRanges = null,
+                        //TODO
+                        Selections = null
+                    }
+                });
+
             }
             catch (Exception ex)
             {
@@ -138,46 +144,28 @@ namespace CodeStream.VisualStudio.Services
             return Task.CompletedTask;
         }
 
-        public async Task<object> PrepareCodeAsync(Uri uri, TextSelection textSelection, string codemarkType, bool isDirty, bool isHighlight = false,
-            CancellationToken? cancellationToken = null)
+        public Task NewCodemarkAsync(Uri uri, TextSelection textSelection, CodemarkType codemarkType, CancellationToken? cancellationToken = null)
         {
             if (!IsReady) return Task.CompletedTask;
 
             try
             {
-                // if it's not a highlight (aka light bulb or right-click menu) then don't try to focus the window
-                if (!isHighlight)
+                WebviewIpc.Notify(new NewCodemarkNotificationType
                 {
-                    // switch to main thread to show the ToolWindow
-                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(
-                        cancellationToken ?? CancellationToken.None);
-                    _toolWindowProvider.Value?.ShowToolWindow(Guids.WebViewToolWindowGuid);
-                }
-
-                var response = await _agentService.PrepareCodeAsync(uri, textSelection.Range, isDirty, cancellationToken);
-
-                var source = response?.Source;
-                WebviewIpc.Notify(new HostDidSelectCodeNotificationType
-                {
-                    Params = new HostDidSelectCodeNotification
+                    Params = new NewCodemarkNotification
                     {
-                        Code = response?.Code,
-                        File = source?.File,
-                        FileUri = uri.ToString(),
-                        Range = response?.Range,
-                        Source = source,
-                        GitError = response?.GitError,
-                        IsHighlight = isHighlight,
-                        Type = codemarkType.ToLowerInvariant()
+                        Uri = uri.ToString(),
+                        Type = codemarkType,
+                        Range = textSelection.Range
                     }
                 });
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"{nameof(PrepareCodeAsync)} Uri={uri}");
+                Log.Error(ex, $"{nameof(NewCodemarkAsync)} Uri={uri}");
             }
 
-            return new { };
+            return Task.CompletedTask;
         }
 
         public async Task TrackAsync(string eventName, TelemetryProperties properties = null)
@@ -222,6 +210,8 @@ namespace CodeStream.VisualStudio.Services
             }
 
             _eventAggregator.Value.Publish(new SessionLogoutEvent());
+
+            WebviewIpc.Notify(new HostDidLogoutNotificationType());
 
             WebviewIpc.BrowserService.LoadWebView();
         }

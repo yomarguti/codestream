@@ -29,7 +29,6 @@
         public string ThreadId { get; set; }
     }
 
-
     public class WebviewDidOpenThreadNotificationType : NotificationType<WebviewDidOpenThreadNotification>
     {
         public const string MethodName = "host/thread/didOpen";

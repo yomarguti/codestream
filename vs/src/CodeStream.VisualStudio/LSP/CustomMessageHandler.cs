@@ -87,6 +87,7 @@ namespace CodeStream.VisualStudio.LSP
         {
             var message = e.ToObject<AuthenticationNotification>();
             _eventAggregator.Publish(new AuthenticationChangedEvent { Reason = message.Reason });
+            _ipc.Notify(new HostDidLogoutNotificationType());
         }
     }
 }

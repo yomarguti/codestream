@@ -12,7 +12,7 @@ namespace CodeStream.VisualStudio.Models
     public class TextSelection
     {
         public Range Range { get; set; }
-        public Position Caret { get; set; }
+        public Position Cursor { get; set; }
         public string Text { get; set; }
         public bool HasText => !Text.IsNullOrWhiteSpace();
     }
@@ -331,17 +331,6 @@ namespace CodeStream.VisualStudio.Models
         public List<SourceAuthor> Authors { get; set; }
         public List<SourceRemote> Remotes { get; set; }
     }
-     
-
-    public class LiveShareAction
-    {
-        public string Url { get; set; }
-        public string StreamId { get; set; }
-        public string ThreadId { get; set; }
-        public bool CreateNewStream { get; set; }
-
-        public object UserId { get; set; } //string | string[]
-    }
 
     public class StreamThread
     {
@@ -367,20 +356,20 @@ namespace CodeStream.VisualStudio.Models
         public TelemetryProperties Properties { get; set; }
     }
 
-    public class PrepareCodeRequest
-    {
-        public TextDocumentIdentifier TextDocument { get; set; }
-        public Range Range { get; set; }
-        public bool Dirty { get; set; }
-    }
+    //public class PrepareCodeRequest
+    //{
+    //    public TextDocumentIdentifier TextDocument { get; set; }
+    //    public Range Range { get; set; }
+    //    public bool Dirty { get; set; }
+    //}
 
-    public class PrepareCodeResponse
-    {
-        public string Code { get; set; }
-        public Range Range { get; set; }
-        public string GitError { get; set; }
-        public Source Source { get; set; }
-    }
+    //public class PrepareCodeResponse
+    //{
+    //    public string Code { get; set; }
+    //    public Range Range { get; set; }
+    //    public string GitError { get; set; }
+    //    public Source Source { get; set; }
+    //}
 
     public class FetchCodemarksRequest
     {
