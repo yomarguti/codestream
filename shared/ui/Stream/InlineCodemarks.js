@@ -218,7 +218,7 @@ export class SimpleInlineCodemarks extends Component {
 			<div>
 				{range(0, numLinesVisible + 1).map(lineNum => {
 					const top = (100 * lineNum) / numLinesVisible + "vh";
-					const hover = (lineNum === highlightedLine || lineNum === iconsOnLine);
+					const hover = lineNum === highlightedLine || lineNum === iconsOnLine;
 					return (
 						<div
 							onMouseEnter={() => this.onMouseEnterHoverIcon(lineNum)}
@@ -317,59 +317,59 @@ export class SimpleInlineCodemarks extends Component {
 			return [this.renderHoverIcons(numLinesVisible), this.renderNoCodemarks()];
 		}
 
-		const numVisibleRanges = textEditorVisibleRanges === undefined ? 0 : textEditorVisibleRanges.length;
+		const numVisibleRanges =
+			textEditorVisibleRanges === undefined ? 0 : textEditorVisibleRanges.length;
 
-
-			let rangeStartOffset = 0;
-			return (
-				<div
-					className="inline-codemarks vscroll"
-					// TODO: Get scroll to work
-					// onScroll={this.onScroll}
-					ref={ref => (this._scrollDiv = ref)}
-				>
-					<div>
-						{(textEditorVisibleRanges || []).map((lineRange, rangeIndex) => {
-							const realFirstLine = lineRange.start.line; // == 0 ? 1 : lineRange[0].line;
-							const realLastLine = lineRange.end.line;
-							const linesInRange = realLastLine - realFirstLine + 1;
-							const marksInRange = range(realFirstLine, realLastLine + 1).map(lineNum => {
-								let top =
-									(100 * (rangeStartOffset + lineNum - realFirstLine)) / numLinesVisible + "vh";
-								if (docMarkersByStartLine[lineNum] && lineNum !== (this.state.openPlusOnLine + 1)) {
-									const docMarker = docMarkersByStartLine[lineNum];
-									return (
-										<Codemark
-											key={docMarker.id}
-											codemark={docMarker.codemark}
-											marker={docMarker}
-											collapsed={this.state.openPost !== docMarker.id}
-											inline={true}
-											currentUserName={this.props.currentUserName}
-											usernames={this.props.usernames}
-											onClick={this.handleClickCodemark}
-											onMouseEnter={this.handleHighlightCodemark}
-											onMouseLeave={this.handleUnhighlightCodemark}
-											action={this.props.postAction}
-											query={this.state.q}
-											lineNum={lineNum}
-											style={{ top }}
-										/>
-									);
-								} else {
-									return null;
-								}
-							});
-							rangeStartOffset += linesInRange;
-							if (rangeIndex + 1 < numVisibleRanges) {
-								let top = (100 * rangeStartOffset) / numLinesVisible + "vh";
-								marksInRange.push(<div style={{ top }} className="folded-code-indicator" />);
+		let rangeStartOffset = 0;
+		return (
+			<div
+				className="inline-codemarks vscroll"
+				// TODO: Get scroll to work
+				// onScroll={this.onScroll}
+				ref={ref => (this._scrollDiv = ref)}
+			>
+				<div>
+					{(textEditorVisibleRanges || []).map((lineRange, rangeIndex) => {
+						const realFirstLine = lineRange.start.line; // == 0 ? 1 : lineRange[0].line;
+						const realLastLine = lineRange.end.line;
+						const linesInRange = realLastLine - realFirstLine + 1;
+						const marksInRange = range(realFirstLine, realLastLine + 1).map(lineNum => {
+							let top =
+								(100 * (rangeStartOffset + lineNum - realFirstLine)) / numLinesVisible + "vh";
+							if (docMarkersByStartLine[lineNum] && lineNum !== this.state.openPlusOnLine + 1) {
+								const docMarker = docMarkersByStartLine[lineNum];
+								return (
+									<Codemark
+										key={docMarker.id}
+										codemark={docMarker.codemark}
+										marker={docMarker}
+										collapsed={this.state.openPost !== docMarker.id}
+										inline={true}
+										currentUserName={this.props.currentUserName}
+										usernames={this.props.usernames}
+										onClick={this.handleClickCodemark}
+										onMouseEnter={this.handleHighlightCodemark}
+										onMouseLeave={this.handleUnhighlightCodemark}
+										action={this.props.postAction}
+										query={this.state.q}
+										lineNum={lineNum}
+										style={{ top }}
+									/>
+								);
+							} else {
+								return null;
 							}
-							return marksInRange;
-						})}
-					</div>
-					{this.renderHoverIcons(numLinesVisible)}
+						});
+						rangeStartOffset += linesInRange;
+						if (rangeIndex + 1 < numVisibleRanges) {
+							let top = (100 * rangeStartOffset) / numLinesVisible + "vh";
+							marksInRange.push(<div style={{ top }} className="folded-code-indicator" />);
+						}
+						return marksInRange;
+					})}
 				</div>
+				{this.renderHoverIcons(numLinesVisible)}
+			</div>
 		);
 	}
 
@@ -385,24 +385,11 @@ export class SimpleInlineCodemarks extends Component {
 		const line = Math.round((top - 27) / 18);
 		if (line < 0) return;
 
-		HostApi.instance.send(EditorRevealRangeRequestType, { uri: this.props.textEditorUri, range: Range.create(line, 0, line, 0), preserveFocus: true });
-	};
-
-	toggleShowMarkers = () => {
-		HostApi.instance.send(TelemetryRequestType, {
-			eventName: "Codemarks View Toggled",
-			properties: {
-				Direction: "List"
-			}
+		HostApi.instance.send(EditorRevealRangeRequestType, {
+			uri: this.props.textEditorUri,
+			range: Range.create(line, 0, line, 0),
+			preserveFocus: true
 		});
-
-		// TODO: test this when it spatial view is enabled
-		this.editorMarkersEnabled = !this.editorMarkersEnabled;
-		HostApi.instance.send(UpdateConfigurationRequestType, {
-			name: "showMarkers",
-			value: this.editorMarkersEnabled
-		});
-		this.props.setActivePanel("knowledge");
 	};
 
 	render() {
@@ -458,8 +445,7 @@ export class SimpleInlineCodemarks extends Component {
 		let range;
 		if (mappedLineNum === openPlusOnLine) {
 			range = Range.create(selection.start, selection.end);
-		}
-		else {
+		} else {
 			range = Range.create(mappedLineNum, 0, mappedLineNum, Number.MAX_SAFE_INTEGER); // TODO: Revisit this to allow 0 to mean select the whole line
 		}
 
@@ -487,13 +473,14 @@ export class SimpleInlineCodemarks extends Component {
 		let markerId;
 		if (codemark.markers) {
 			markerId = codemark.markers[0].id;
-		}
-		else if (codemark.markerIds) {
+		} else if (codemark.markerIds) {
 			markerId = codemark.markerIds[0];
 		}
 
 		if (markerId) {
-			const response = await HostApi.instance.send(DocumentFromMarkerRequestType, { markerId: markerId });
+			const response = await HostApi.instance.send(DocumentFromMarkerRequestType, {
+				markerId: markerId
+			});
 			// TODO: What should we do if we don't find the marker?
 			if (response === undefined) return;
 
@@ -514,9 +501,11 @@ export class SimpleInlineCodemarks extends Component {
 	async highlightCode(marker, highlight) {
 		let range = marker.range;
 		if (!range) {
-		const response = await HostApi.instance.send(DocumentFromMarkerRequestType, { markerId: marker.id });
-		// TODO: What should we do if we don't find the marker?
-		if (response === undefined) return;
+			const response = await HostApi.instance.send(DocumentFromMarkerRequestType, {
+				markerId: marker.id
+			});
+			// TODO: What should we do if we don't find the marker?
+			if (response === undefined) return;
 
 			range = response.range;
 		}
@@ -558,16 +547,15 @@ export class SimpleInlineCodemarks extends Component {
 		let lineCounter = 0;
 		let toLineNum = 0;
 		if (textEditorVisibleRanges != null) {
-		textEditorVisibleRanges.forEach(lineRange => {
+			textEditorVisibleRanges.forEach(lineRange => {
 				range(lineRange.start.line, lineRange.end.line + 1).forEach(thisLine => {
-				lineCounter++;
-				if (thisLine === fromLineNum) toLineNum = lineCounter;
+					lineCounter++;
+					if (thisLine === fromLineNum) toLineNum = lineCounter;
+				});
 			});
-		});
 		}
 		return toLineNum;
 	};
-
 
 	highlightLine(line, highlight) {
 		const { openPlusOnLine } = this.state;
@@ -578,8 +566,7 @@ export class SimpleInlineCodemarks extends Component {
 		let range;
 		if (mappedLineNum === openPlusOnLine) {
 			range = Range.create(selection.start, selection.end);
-		}
-		else {
+		} else {
 			range = Range.create(mappedLineNum, 0, mappedLineNum, 0);
 		}
 
@@ -588,7 +575,7 @@ export class SimpleInlineCodemarks extends Component {
 			range: range,
 			highlight: highlight
 		});
-		this.setState({highlightedLine: highlight ? line : null});
+		this.setState({ highlightedLine: highlight ? line : null });
 	}
 
 	handleHighlightLine = line => {
