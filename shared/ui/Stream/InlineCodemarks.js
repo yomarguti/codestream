@@ -205,10 +205,12 @@ export class SimpleInlineCodemarks extends Component {
 
 	renderHoverIcons = numLinesVisible => {
 		const iconsOnLine = this.mapVisibleRangeToLine(this.state.openPlusOnLine);
+		const highlightedLine = this.state.highlightedLine;
 		return (
 			<div>
 				{range(0, numLinesVisible + 1).map(lineNum => {
 					const top = (100 * lineNum) / numLinesVisible + "vh";
+					const hover = lineNum === highlightedLine;
 					return (
 						<div
 							onMouseEnter={() => this.onMouseEnterHoverIcon(lineNum)}
@@ -222,14 +224,14 @@ export class SimpleInlineCodemarks extends Component {
 							<Icon
 								onClick={e => this.handleClickPlus(e, "comment", lineNum)}
 								name="comment"
-								// title="Add Comment"
+								title={hover ? "Add Comment" : undefined}
 								placement="bottomLeft"
 								delay={1}
 							/>
 							<Icon
 								onClick={e => this.handleClickPlus(e, "issue", lineNum)}
 								name="issue"
-								// title="Create Issue"
+								title={hover ? "Create Issue" : undefined}
 								placement="bottomLeft"
 								delay={1}
 							/>
@@ -322,7 +324,7 @@ export class SimpleInlineCodemarks extends Component {
 							const marksInRange = range(realFirstLine, realLastLine + 1).map(lineNum => {
 								let top =
 									(100 * (rangeStartOffset + lineNum - realFirstLine)) / numLinesVisible + "vh";
-								if (docMarkersByStartLine[lineNum] && lineNum !== this.state.openPlusOnLine) {
+								if (docMarkersByStartLine[lineNum] && lineNum !== (this.state.openPlusOnLine + 1)) {
 									const docMarker = docMarkersByStartLine[lineNum];
 									return (
 										<Codemark
@@ -451,7 +453,7 @@ export class SimpleInlineCodemarks extends Component {
 			quote: scmInfo,
 			composeBoxProps: { commentType: type }
 		});
-		setTimeout(() => this.props.focusInput(), 500);
+		// setTimeout(() => this.props.focusInput(), 500);
 	};
 
 	handleClickCodemark = async codemark => {
@@ -534,23 +536,23 @@ export class SimpleInlineCodemarks extends Component {
 
 
 	highlightLine(line, highlight) {
+		const mappedLineNum = this.mapLineToVisibleRange(line);
 		HostApi.instance.send(EditorHighlightRangeRequestType, {
 			uri: this.props.textEditorUri,
-			range: Range.create(line, 0, line, 0),
+			range: Range.create(mappedLineNum, 0, mappedLineNum, 0),
 			highlight: highlight
 		});
+		this.setState({highlightedLine: highlight ? line : null});
 	}
 
-	handleHighlightLine = lineNum => {
-		const mappedLineNum = this.mapLineToVisibleRange(lineNum);
-		this.highlightLine(mappedLineNum, true);
+	handleHighlightLine = line => {
+		this.highlightLine(line, true);
 	};
 
-	handleUnhighlightLine = lineNum => {
+	handleUnhighlightLine = line => {
 		if (this.props.multiCompose) return; // don't remove highlight if the codemark form is open
 
-		const mappedLineNum = this.mapLineToVisibleRange(lineNum);
-		this.highlightLine(mappedLineNum, false);
+		this.highlightLine(line, false);
 	};
 
 	toggleStatus = id => {
