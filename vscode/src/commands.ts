@@ -1,4 +1,4 @@
-import { CSMarker, CSMarkerIdentifier } from "@codestream/protocols/api";
+import { CSMarkerIdentifier } from "@codestream/protocols/api";
 import * as paths from "path";
 import {
 	commands,
@@ -15,7 +15,7 @@ import {
 } from "vscode";
 import { CodeStreamSession, Stream, StreamThread, StreamType } from "./api/session";
 import { TokenManager } from "./api/tokenManager";
-import { openEditor, ShowCodeResult, WorkspaceState } from "./common";
+import { WorkspaceState } from "./common";
 import { BuiltInCommands } from "./constants";
 import { Container } from "./container";
 import { StreamThreadId } from "./controllers/webviewController";
@@ -44,18 +44,6 @@ export function isStreamThreadId(
 	streamOrThreadOrLocator: Stream | StreamThread | StreamThreadId | StreamLocator
 ): streamOrThreadOrLocator is StreamThreadId {
 	return (streamOrThreadOrLocator as StreamThreadId).streamId !== undefined;
-}
-
-export interface OpenPostWorkingFileArgs {
-	preserveFocus: boolean;
-}
-
-export interface HighlightCodeArgs {
-	onOff: boolean;
-}
-
-export interface HighlightLineArgs {
-	onOff: boolean;
 }
 
 export interface StartCommentOnLineArgs {
@@ -107,111 +95,6 @@ export class Commands implements Disposable {
 	@command("goOffline")
 	goOffline() {
 		return Container.session.goOffline();
-	}
-
-	@command("openPostWorkingFile", { showErrorMessage: "Unable to open post" })
-	async openPostWorkingFile(
-		marker?: CSMarker,
-		args: OpenPostWorkingFileArgs = { preserveFocus: false }
-	) {
-		if (marker == null) return;
-
-		const resp = await Container.agent.getDocumentFromMarker(marker);
-		if (resp === undefined || resp === null) return ShowCodeResult.RepoNotInWorkspace; // ?: what exactly does no response mean?
-
-		const block = {
-			code: resp.marker.code,
-			range: new Range(
-				resp.range.start.line,
-				resp.range.start.character,
-				resp.range.end.line,
-				resp.range.end.character
-			),
-			revision: resp.revision,
-			uri: Uri.parse(resp.textDocument.uri)
-		};
-
-		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
-		let column = Container.webview.viewColumn as number | undefined;
-		if (column !== undefined) {
-			column--;
-			if (column <= 0) {
-				column = undefined;
-			}
-		}
-
-		const pos = new Position(block.range.start.line, 0);
-		const range = new Range(pos, pos);
-
-		// TODO: Need to follow marker to current sha
-		return openEditor(block.uri, {
-			preview: true,
-			viewColumn: column || ViewColumn.Beside,
-			selection: range,
-			preserveFocus: args.preserveFocus
-		});
-	}
-
-	async highlightCode(marker?: CSMarker, args: HighlightCodeArgs = { onOff: true }) {
-		if (marker == null) return;
-
-		const resp = await Container.agent.getDocumentFromMarker(marker);
-		if (resp === undefined || resp === null) return ShowCodeResult.RepoNotInWorkspace; // ?: what exactly does no response mean?
-
-		const block = {
-			code: resp.marker.code,
-			range: new Range(
-				resp.range.start.line,
-				resp.range.start.character,
-				resp.range.end.line,
-				resp.range.end.character
-			),
-			revision: resp.revision,
-			uri: Uri.parse(resp.textDocument.uri)
-		};
-
-		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
-		let column = Container.webview.viewColumn as number | undefined;
-		if (column !== undefined) {
-			column--;
-			if (column <= 0) {
-				column = undefined;
-			}
-		}
-
-		const range = args.onOff ? block.range : undefined;
-
-		// TODO: Need to follow marker to current sha
-		return openEditor(block.uri, {
-			preview: true,
-			viewColumn: column || ViewColumn.Beside,
-			highlight: range
-		});
-	}
-
-	async highlightLine(lineNum: number, uri: Uri, args: HighlightLineArgs = { onOff: true }) {
-		// const resp = null; // await Container.agent.getDocumentFromMarker(null); // FIXME
-		// if (resp === undefined || resp === null) return ShowCodeResult.RepoNotInWorkspace; // ?: what exactly does no response mean?
-
-		const range = args.onOff ? new Range(lineNum, 0, lineNum, 1000) : undefined;
-
-		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
-		let column = Container.webview.viewColumn as number | undefined;
-		if (column !== undefined) {
-			column--;
-			if (column <= 0) {
-				column = undefined;
-			}
-		}
-
-		// const uriWithScheme;
-		// console.log("URI: ", uri);
-		const uri2 = Uri.parse(Uri.file(uri.path).toString());
-		return openEditor(uri2, {
-			preview: true,
-			viewColumn: column || ViewColumn.Beside,
-			highlight: range
-		});
 	}
 
 	@command("startCommentOneLine", { showErrorMessage: "Unable to start comment" })

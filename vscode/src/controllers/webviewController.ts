@@ -15,11 +15,7 @@ import {
 	BootstrapRequestType,
 	CompareMarkerRequestType,
 	CompleteSignupRequestType,
-	EditorHighlightLineRequestType,
-	EditorHighlightMarkerRequestType,
 	EditorHighlightRangeRequestType,
-	EditorRevealLineRequestType,
-	EditorRevealMarkerRequestType,
 	EditorRevealRangeRequestType,
 	EditorRevealRangeResult,
 	HostDidChangeActiveEditorNotificationType,
@@ -619,31 +615,6 @@ export class WebviewController implements Disposable {
 
 				break;
 			}
-			case EditorHighlightLineRequestType.method: {
-				webview.onIpcRequest(EditorHighlightLineRequestType, e, async (type, params) => {
-					const result = await Container.commands.highlightLine(
-						params.line,
-						Uri.parse(params.uri),
-						{
-							onOff: params.highlight
-						}
-					);
-					return { result: result };
-				});
-
-				break;
-			}
-			// DEPRECATED
-			case EditorHighlightMarkerRequestType.method: {
-				webview.onIpcRequest(EditorHighlightMarkerRequestType, e, async (type, params) => {
-					const result = await Container.commands.highlightCode(params.marker, {
-						onOff: params.highlight
-					});
-					return { result: result! };
-				});
-
-				break;
-			}
 			case EditorHighlightRangeRequestType.method: {
 				webview.onIpcRequest(EditorHighlightRangeRequestType, e, async (type, params) => {
 					await Editor.highlightRange(
@@ -652,27 +623,6 @@ export class WebviewController implements Disposable {
 						!params.highlight
 					);
 					return {};
-				});
-
-				break;
-			}
-
-			// DEPRECATED
-			case EditorRevealLineRequestType.method: {
-				webview.onIpcRequest(EditorRevealLineRequestType, e, async (type, params) => {
-					commands.executeCommand("revealLine", { lineNumber: params.line, at: "top" });
-					return empty;
-				});
-
-				break;
-			}
-			// DEPRECATED
-			case EditorRevealMarkerRequestType.method: {
-				webview.onIpcRequest(EditorRevealMarkerRequestType, e, async (type, params) => {
-					const result = await Container.commands.openPostWorkingFile(params.marker, {
-						preserveFocus: params.preserveFocus
-					});
-					return { result: result! };
 				});
 
 				break;
