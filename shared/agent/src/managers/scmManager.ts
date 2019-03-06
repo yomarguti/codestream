@@ -57,7 +57,7 @@ export class ScmManager {
 							throw new Error(`No document could be found for Uri(${documentUri})`);
 						}
 
-						contents = document.getText(range);
+						contents = document.getText();
 					}
 
 					const gitAuthors = await git.getFileAuthors(uri.fsPath, {
