@@ -570,8 +570,8 @@ class CodemarkForm extends React.Component<Props, State> {
 				? "Permalink for "
 				: "";
 
-		const scm = (codeBlock as GetRangeScmInfoResponse).scm!;
-		const file = scm.file ? paths.basename(scm.file) : "";
+		const scm = codeBlock.scm;
+		const file = scm && scm.file ? paths.basename(scm.file) : "";
 		return titleLabel + file + " " + lines;
 	}
 

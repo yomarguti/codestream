@@ -69,7 +69,9 @@ class Post extends React.Component {
 		const marker = hasMarkers && codemark.markers[0];
 		if (marker) {
 			if (marker.repoId) {
-				const response = await HostApi.instance.send(DocumentFromMarkerRequestType, { markerId: marker.id });
+				const response = await HostApi.instance.send(DocumentFromMarkerRequestType, {
+					markerId: marker.id
+				});
 				// TODO: What should we do if we don't find the marker?
 				if (response === undefined) return;
 
@@ -145,7 +147,7 @@ class Post extends React.Component {
 	}
 
 	renderCode(marker) {
-		const path = marker.file;
+		const path = marker.file || "";
 		let extension = Path.extname(path).toLowerCase();
 		if (extension.startsWith(".")) {
 			extension = extension.substring(1);
@@ -237,7 +239,8 @@ class Post extends React.Component {
 		if (codemark || mine) menuItems.push({ label: "-" });
 
 		if (codemark) {
-			if (codemark.pinned) menuItems.push({ label: `Archive ${typeString}`, action: "toggle-pinned" });
+			if (codemark.pinned)
+				menuItems.push({ label: `Archive ${typeString}`, action: "toggle-pinned" });
 			else menuItems.push({ label: `Unarchive ${typeString}`, action: "toggle-pinned" });
 		}
 		if (mine) {
