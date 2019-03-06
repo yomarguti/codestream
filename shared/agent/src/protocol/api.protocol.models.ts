@@ -18,7 +18,8 @@ export enum CodemarkType {
 	Issue = "issue",
 	Bookmark = "bookmark",
 	Question = "question",
-	Trap = "trap"
+	Trap = "trap",
+	Link = "link"
 }
 
 export interface CSCodemark extends CSEntity {
