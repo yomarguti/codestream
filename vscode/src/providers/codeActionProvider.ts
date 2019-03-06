@@ -59,10 +59,6 @@ export class CodeStreamCodeActionProvider implements CodeActionProvider, Disposa
 
 		const commands: Command[] = [
 			{
-				title: `Get Permalink`,
-				command: "codestream.newLink"
-			},
-			{
 				title: `Add Comment`,
 				command: "codestream.newComment"
 			},
@@ -73,6 +69,10 @@ export class CodeStreamCodeActionProvider implements CodeActionProvider, Disposa
 			{
 				title: `Create Bookmark`,
 				command: "codestream.newBookmark"
+			},
+			{
+				title: `Get Permalink`,
+				command: "codestream.newLink"
 			}
 		];
 		return commands;

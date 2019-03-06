@@ -186,8 +186,8 @@
         "keybindings": [
             {
                 "command": "codestream.newComment",
-                "key": "cmd+/ cmd+/",
-                "mac": "ctrl+/ ctrl+/",
+                "key": "ctrl+shift+/",
+                "mac": "ctrl+/",
                 "when": "editorTextFocus && codestream:status == signedIn"
             }
         ],
@@ -228,22 +228,22 @@
             ],
             "editor/context": [
                 {
-                    "command": "codestream.newLink",
+                    "command": "codestream.newComment",
                     "when": "codestream:status == signedIn",
                     "group": "9_zcodestream@1"
                 },
                 {
-                    "command": "codestream.newComment",
+                    "command": "codestream.newIssue",
                     "when": "codestream:status == signedIn",
                     "group": "9_zcodestream@2"
                 },
                 {
-                    "command": "codestream.newIssue",
+                    "command": "codestream.newBookmark",
                     "when": "codestream:status == signedIn",
                     "group": "9_zcodestream@3"
                 },
                 {
-                    "command": "codestream.newBookmark",
+                    "command": "codestream.newLink",
                     "when": "codestream:status == signedIn",
                     "group": "9_zcodestream@4"
                 }

@@ -7,7 +7,6 @@ import {
 	Range,
 	Selection,
 	TextDocumentShowOptions,
-	TextEdit,
 	TextEditor,
 	TextEditorRevealType,
 	Uri,
