@@ -38,6 +38,7 @@ import {
 	EditorSelection
 } from "@codestream/protocols/webview";
 import { Range } from "vscode-languageserver-types";
+import { getCurrentSelection } from "../store/context/reducer";
 
 const noop = () => {};
 
@@ -123,8 +124,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	constructor(props: Props) {
 		super(props);
-		const defaultType =
-			(props.codeBlock ? (props.codeBlock as any).type : null) || props.commentType;
+		const defaultType = props.commentType;
 		const defaultState: Partial<State> = {
 			title: "",
 			text: "",
@@ -223,6 +223,17 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 	}
 
+	componentWillUnmount() {
+		if (this.props.codeBlock) {
+			// TODO: remove selection
+			// HostApi.instance.send(EditorHighlightRangeRequestType, {
+			// 	uri: codeBlock.uri,
+			// 	range: codeBlock.range,
+			// 	highlight: false
+			// });
+		}
+	}
+
 	getAssignableCSUsers() {
 		return mapFilter(this.props.teammates, user => {
 			if (!user.isRegistered) return;
@@ -283,7 +294,9 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	handleSelectionChange = () => {
 		const { textEditorSelection, textEditorUri } = this.props;
-		if (textEditorSelection) this.props.getScmInfoForSelection(textEditorUri!, textEditorSelection);
+		if (textEditorSelection) {
+			this.props.getScmInfoForSelection(textEditorUri!, textEditorSelection);
+		}
 	};
 
 	handleScmChange = () => {
@@ -1025,7 +1038,7 @@ const mapStateToProps = state => {
 		selectedStreams: preferences.selectedStreams || EMPTY_OBJECT,
 		showChannels: context.channelFilter,
 		textEditorUri: context.textEditorUri,
-		textEditorSelection: context.textEditorSelections && context.textEditorSelections[0],
+		textEditorSelection: getCurrentSelection(state.context),
 		codeBlock: context.scm
 		// slackInfo,
 	};

@@ -10,7 +10,8 @@ import {
 	WebviewDidInitializeNotificationType,
 	isSignedInBootstrap,
 	HostDidChangeEditorSelectionNotificationType,
-	HostDidChangeEditorSelectionNotification
+	HostDidChangeEditorSelectionNotification,
+	HostDidChangeEditorVisibleRangesNotificationType
 } from "./ipc/webview.protocol";
 import { actions, createCodeStreamStore } from "./store";
 import { HostApi } from "./webview-api";
@@ -144,16 +145,23 @@ export function listenForEvents(store) {
 		store.dispatch(actions.reset());
 	});
 
-	api.on(
-		HostDidChangeEditorSelectionNotificationType,
-		async (params: HostDidChangeEditorSelectionNotification) => {
-			store.dispatch(
-				actions.setContext({
-					textEditorUri: params.uri,
-					textEditorVisibleRanges: params.visibleRanges,
-					textEditorSelections: params.selections
-				})
-			);
-		}
-	);
+	api.on(HostDidChangeEditorSelectionNotificationType, params => {
+		store.dispatch(
+			actions.setContext({
+				textEditorUri: params.uri,
+				textEditorVisibleRanges: params.visibleRanges,
+				textEditorSelections: params.selections
+			})
+		);
+	});
+
+	api.on(HostDidChangeEditorVisibleRangesNotificationType, params => {
+		store.dispatch(
+			actions.setContext({
+				textEditorUri: params.uri,
+				textEditorVisibleRanges: params.visibleRanges,
+				textEditorSelections: params.selections
+			})
+		);
+	});
 }

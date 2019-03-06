@@ -3,6 +3,7 @@ import * as preferencesActions from "../preferences/actions";
 import { PreferencesActionsType } from "../preferences/types";
 import * as actions from "./actions";
 import { ContextActionsType, State } from "./types";
+import { createSelector } from "reselect";
 
 type ContextActions = ActionType<typeof actions>;
 type PreferencesActions = ActionType<typeof preferencesActions>;
@@ -82,3 +83,9 @@ export function reduceContext(
 			return { ...initialState, ...state };
 	}
 }
+
+const emptyArray = [];
+export const getCurrentSelection = createSelector(
+	(state: State) => state.textEditorSelections || emptyArray,
+	selections => selections[0]
+);

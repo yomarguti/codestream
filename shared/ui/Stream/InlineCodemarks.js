@@ -17,7 +17,6 @@ import {
 } from "../ipc/webview.protocol";
 import {
 	DocumentMarker,
-	GetRangeScmInfoRequestType,
 	TelemetryRequestType,
 	DidChangeDocumentMarkersNotificationType,
 	DocumentFromMarkerRequestType
@@ -25,6 +24,7 @@ import {
 import { Range } from "vscode-languageserver-types";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { setThread } from "../store/context/actions";
+import { getCurrentSelection } from "../store/context/reducer";
 
 /**
  * @augments {Component<{ textEditorVisibleRanges?: Range[], documentMarkers: DocumentMarker[],[key: string]: any }, {  [key: string]: any }>}
@@ -43,14 +43,17 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	static getDerivedStateFromProps(props, state) {
-		let { selection } = props;
+		let { textEditorSelection } = props;
 
-		if (!selection) {
+		if (!textEditorSelection) {
 			return { openPlusOnLine: 0, lastSelectedLine: 0 };
 		}
 
-		if (selection.cursor.line !== state.lastSelectedLine) {
-			return { openPlusOnLine: selection.cursor.line, lastSelectedLine: selection.cursor.line };
+		if (textEditorSelection.cursor.line !== state.lastSelectedLine) {
+			return {
+				openPlusOnLine: textEditorSelection.cursor.line,
+				lastSelectedLine: textEditorSelection.cursor.line
+			};
 		}
 
 		return null;
@@ -76,15 +79,13 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	componentDidUpdate(prevProps, prevState) {
-		const { textEditorVisibleRanges } = this.props;
-
 		const { textEditorUri } = this.props;
 		if (String(textEditorUri).length > 0 && prevProps.textEditorUri !== textEditorUri) {
 			this.onFileChanged();
 		}
 
 		const didStartLineChange = this.compareStart(
-			textEditorVisibleRanges,
+			this.props.textEditorVisibleRanges,
 			prevProps.textEditorVisibleRanges
 		);
 
@@ -426,30 +427,27 @@ export class SimpleInlineCodemarks extends Component {
 		event.preventDefault();
 		this.props.setNewPostEntry("Spatial View");
 
-		const { openPlusOnLine } = this.state;
-		const { selection } = this.props;
+		const { openPlusOnLine, lastSelectedLine } = this.state;
+		const { textEditorSelection } = this.props;
 
 		const mappedLineNum = this.mapLineToVisibleRange(lineNum);
 
 		let range;
 		if (
 			mappedLineNum === openPlusOnLine &&
-			(selection.start.line !== selection.end.line ||
-				selection.start.character !== selection.end.character)
+			(textEditorSelection.start.line !== textEditorSelection.end.line ||
+				textEditorSelection.start.character !== textEditorSelection.end.character)
 		) {
-			range = Range.create(selection.start, selection.end);
+			range = Range.create(textEditorSelection.start, textEditorSelection.end);
 		} else {
 			range = Range.create(mappedLineNum, 0, mappedLineNum, MaxRangeValue);
 		}
 
-		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
-			uri: this.props.textEditorUri,
-			range: range,
-			dirty: true // should this be determined here? using true to be safe
-		});
+		if (lastSelectedLine !== mappedLineNum) {
+			// TODO: select the range
+		}
 
 		this.props.setMultiCompose(true, {
-			quote: scmInfo,
 			composeBoxProps: { commentType: type }
 		});
 		// setTimeout(() => this.props.focusInput(), 500);
@@ -552,13 +550,13 @@ export class SimpleInlineCodemarks extends Component {
 
 	highlightLine(line, highlight) {
 		const { openPlusOnLine } = this.state;
-		const { selection } = this.props;
+		const { textEditorSelection } = this.props;
 
 		const mappedLineNum = this.mapLineToVisibleRange(line);
 		if (
 			mappedLineNum === openPlusOnLine &&
-			(selection.start.line !== selection.end.line ||
-				selection.start.character !== selection.end.character)
+			(textEditorSelection.start.line !== textEditorSelection.end.line ||
+				textEditorSelection.start.character !== textEditorSelection.end.character)
 		) {
 			return;
 		}
@@ -577,8 +575,6 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	handleUnhighlightLine = line => {
-		if (this.props.multiCompose) return; // don't remove highlight if the codemark form is open
-
 		this.highlightLine(line, false);
 	};
 }
@@ -595,6 +591,8 @@ const mapStateToProps = state => {
 		viewInline: configs.viewCodemarksInline,
 		fileNameToFilterFor: context.activeFile || context.lastActiveFile,
 		textEditorUri: context.textEditorUri,
+		textEditorVisibleRanges: context.textEditorVisibleRanges || EMPTY_ARRAY,
+		textEditorSelection: getCurrentSelection(context),
 		documentMarkers: documentMarkers[context.textEditorUri] || EMPTY_ARRAY,
 		capabilities
 	};

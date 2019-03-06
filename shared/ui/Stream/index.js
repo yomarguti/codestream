@@ -1026,7 +1026,6 @@ export class SimpleStream extends Component {
 				multiCompose={this.state.multiCompose}
 				floatCompose={this.state.floatCompose}
 				setMultiCompose={this.setMultiCompose}
-				quote={this.state.quote}
 				quotePost={this.state.quotePost}
 				inThread={Boolean(this.props.threadId)}
 				providerInfo={this.props.providerInfo}
