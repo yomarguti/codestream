@@ -21,8 +21,6 @@ export interface SignedOutBootstrapResponse {
 }
 export interface SignedInBootstrapResponse extends SignedOutBootstrapResponse {
 	context: WebviewContext;
-	// TODO: Remove? or move into context?
-	panelStack?: string[];
 	session: {
 		userId: string;
 	};

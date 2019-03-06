@@ -37,13 +37,8 @@ export async function initialize(selector: string, options: { prerender?: () => 
 				capabilities: data.capabilities,
 				...(data.configs.email ? { route: { route: "login" } } : {}),
 				context: {
-					...data.context,
-					hasFocus: true
-					// currentTeamId: data.currentTeamId,
-					// currentStreamId: data.currentStreamId,
-					// threadId: data.currentThreadId,
-					// textEditorVisibleRanges: data.visibleRanges,
-					// textEditorUri: data.textEditorUri
+					hasFocus: true,
+					...data.context
 				},
 				pluginVersion: data.version,
 				preferences: data.preferences,
@@ -135,7 +130,6 @@ export function listenForEvents(store) {
 			store.dispatch(
 				actions.setCurrentFile(
 					editor.fileName,
-					editor.fileStreamId,
 					editor.visibleRanges,
 					editor.uri
 				)

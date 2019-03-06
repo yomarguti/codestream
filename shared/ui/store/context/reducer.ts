@@ -11,12 +11,9 @@ const initialState: State = {
 	activeFile: "",
 	lastActiveFile: "",
 	currentTeamId: "",
-	currentCommit: "", // maybe delete
 	currentStreamId: "",
 	issueProvider: undefined,
-	fileStreamId: undefined,
-	lastFileStreamId: undefined,
-	threadId: null,
+	threadId: undefined,
 	panelStack: ["channels"],
 	hasFocus: true, // we assume we start with the focus when codestream initializes
 	codemarkFileFilter: "all",
@@ -35,23 +32,19 @@ export function reduceContext(
 		case ContextActionsType.SetContext:
 			return { ...state, ...action.payload };
 		case ContextActionsType.SetCurrentFile: {
-			const { file, fileStreamId, visibleRanges, uri } = action.payload;
+			const { file, visibleRanges, uri } = action.payload;
 			const nextState: Partial<State> = {
 				activeFile: file,
-				fileStreamId,
 				textEditorVisibleRanges: visibleRanges,
 				textEditorUri: uri
 			};
 			if (file) {
 				nextState.lastActiveFile = file;
 			}
-			if (fileStreamId) {
-				nextState.lastFileStreamId = fileStreamId;
-			}
 			return { ...state, ...nextState };
 		}
 		case ContextActionsType.SetCurrentStream:
-			return { ...state, currentStreamId: action.payload, threadId: null };
+			return { ...state, currentStreamId: action.payload, threadId: undefined };
 		case ContextActionsType.SetThread: {
 			return { ...state, ...action.payload };
 		}

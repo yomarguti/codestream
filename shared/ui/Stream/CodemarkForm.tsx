@@ -157,8 +157,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			HostApi.instance.send(EditorHighlightRangeRequestType, {
 				uri: codeBlock.uri,
 				range: codeBlock.range,
-				highlight: true,
-				source: "stream" // ?
+				highlight: true
 			});
 		}
 		this.focus();
@@ -196,8 +195,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			HostApi.instance.send(EditorHighlightRangeRequestType, {
 				uri: codeBlock.uri,
 				range: codeBlock.range,
-				highlight: false,
-				source: "stream" // ?
+				highlight: false
 			});
 		}
 	}

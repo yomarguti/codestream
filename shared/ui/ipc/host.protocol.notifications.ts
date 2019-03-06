@@ -9,10 +9,10 @@ type ConfigState = any;
 export interface HostDidChangeActiveEditorNotification {
 	editor?: {
 		fileName: string;
-		// TODO: Remove this
 		fileStreamId?: string;
 		languageId?: string;
 		uri: string;
+		margins?: { top?: number; right?: number; bottom?: number; left?: number; };
 		selections: EditorSelection[];
 		visibleRanges: Range[];
 	};

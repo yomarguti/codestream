@@ -1,3 +1,15 @@
+import { Range } from "vscode-languageserver-types";
+
+export interface WebviewContext {
+	currentTeamId: string;
+	currentStreamId?: string;
+	threadId?: string;
+	hasFocus: boolean;
+
+	textEditorVisibleRanges?: Range[];
+	textEditorUri?: string;
+}
+
 export interface IpcHost {
 	postMessage<R>(message: WebviewIpcMessage, targetOrgigin: string, transferable?: any): Promise<R>;
 	postMessage<R>(message: WebviewIpcMessage): Promise<R>;
@@ -16,16 +28,6 @@ export const findHost = (): IpcHost => {
 	}
 	return host;
 };
-
-export interface WebviewContext {
-	currentTeamId: string;
-	hasFocus: boolean;
-
-	currentStreamId?: string;
-	threadId?: string;
-
-	[key: string]: any;
-}
 
 export enum IpcRoutes {
 	Agent = "codestream",

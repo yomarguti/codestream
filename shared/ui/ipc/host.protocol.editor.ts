@@ -8,7 +8,6 @@ export interface EditorHighlightRangeRequest {
 	// NOTE: A single-line range with start & end char of 0 indicates a full-line highlight
 	range: Range;
 	highlight: boolean;
-	source: string;
 }
 export interface EditorHighlightRangeResponse {}
 export const EditorHighlightRangeRequestType = new RequestType<
@@ -62,7 +61,7 @@ export enum EditorRevealRangeResult {
 export interface EditorRevealRangeRequest {
 	uri: string;
 	range: Range;
-	preserveFocus: boolean;
+	preserveFocus?: boolean;
 }
 export interface EditorRevealRangeResponse {
 	result: EditorRevealRangeResult;

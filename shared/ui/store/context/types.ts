@@ -1,4 +1,4 @@
-import { Range } from "vscode-languageserver-types";
+import { WebviewContext } from "@codestream/protocols/webview";
 
 export enum ContextActionsType {
 	SetThread = "SET_CURRENT_THREAD",
@@ -15,22 +15,13 @@ export enum ContextActionsType {
 	SetIssueProvider = "SET_ISSUE_PROVIDER"
 }
 
-export interface State {
+export interface State extends WebviewContext {
 	activeFile?: string;
 	lastActiveFile?: string;
-	currentTeamId: string;
-	currentCommit: string; // maybe delete
-	currentStreamId?: string;
-	issueProvider?: string;
-	fileStreamId?: string;
-	lastFileStreamId?: string;
-	threadId: string | null;
-	panelStack: string[];
-	hasFocus: boolean;
 	codemarkFileFilter: string; // TODO: specify types
 	codemarkTypeFilter: string;
 	codemarkColorFilter: string;
 	channelFilter: string;
-	textEditorVisibleRanges: Range[];
-	textEditorUri: string;
+	issueProvider?: string;
+	panelStack: string[];
 }

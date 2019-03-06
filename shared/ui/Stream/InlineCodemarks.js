@@ -1,3 +1,4 @@
+// @ts-check
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import * as actions from "./actions";
@@ -10,19 +11,23 @@ import createClassString from "classnames";
 import { range } from "../utils";
 import { HostApi } from "../webview-api";
 import {
-	EditorRevealMarkerRequestType,
-	EditorHighlightMarkerRequestType,
-	EditorHighlightLineRequestType,
-	EditorRevealLineRequestType,
+	EditorHighlightRangeRequestType,
+	EditorRevealRangeRequestType,
 	UpdateConfigurationRequestType
 } from "../ipc/webview.protocol";
 import {
+	DocumentMarker,
 	GetRangeScmInfoRequestType,
 	TelemetryRequestType,
 	DocumentMarkersRequestType,
-	DidChangeDocumentMarkersNotificationType
+	DidChangeDocumentMarkersNotificationType,
+	DocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
+import { Range } from "vscode-languageserver-types";
 
+/**
+ * @augments {Component<{ textEditorVisibleRanges?: Range[], [key: string]: any }, { documentMarkers: DocumentMarker[], [key: string]: any }>}
+ */
 export class SimpleInlineCodemarks extends Component {
 	disposables = [];
 	editorMarkersEnabled = false;
@@ -33,6 +38,7 @@ export class SimpleInlineCodemarks extends Component {
 		this.state = {
 			isLoading: true,
 			openPost: null,
+			/** @type {DocumentMarker[]} */
 			documentMarkers: []
 		};
 	}
@@ -107,12 +113,14 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	setVisibleLinesCount = () => {
-		const { textEditorVisibleRanges = [] } = this.props;
+		const { textEditorVisibleRanges } = this.props;
 
 		let numLinesVisible = 0;
-		textEditorVisibleRanges.forEach(range => {
-			numLinesVisible += range[1].line - range[0].line + 1;
-		});
+		if (textEditorVisibleRanges != null) {
+			textEditorVisibleRanges.forEach(range => {
+				numLinesVisible += range.end.line - range.start.line + 1;
+			});
+		}
 		numLinesVisible += 1; // vscode mis-reports the last line as being 2 bigger than it is
 
 		// only set this if it changes by more than 1. we expect it to vary by 1 as
@@ -123,58 +131,66 @@ export class SimpleInlineCodemarks extends Component {
 		}
 	};
 
+	/**
+	 * @param {Range[] | undefined} range1
+	 * @param {Range[] | undefined} range2
+	 */
 	compareStart(range1 = [], range2 = []) {
 		if (range1.length === 0 || range2.length === 0) return true;
-		const start1 = range1[0].line;
-		const start2 = range2[0].line;
+		const start1 = range1[0].start.line;
+		const start2 = range2[0].start.line;
 		return start1 === start2;
 	}
 
 	renderList = () => {
 		const { documentMarkers } = this.state;
 
-		if (documentMarkers.length === 0) this.renderNoCodemarks();
-		else {
-			return (
-				<ScrollBox>
-					<div className="inline-codemarks channel-list vscroll">
-						<div
-							className={createClassString("section", "has-children", {
-								expanded: true
-							})}
-						>
-							<div className="header top" onClick={e => this.toggleSection(e, "unreadChannels")}>
-								<Icon name="triangle-right" className="triangle-right" />
-								<span>
-									In This File: <span className="filename">{this.props.fileNameToFilterFor}</span>
-								</span>
-							</div>
-							{documentMarkers
-								.sort((a, b) => b.createdAt - a.createdAt)
-								.map(docMarker => {
-									const { codemark } = docMarker;
-									if (!codemark.pinned) return null;
-									return (
-										<Codemark
-											key={codemark.id}
-											codemark={codemark}
-											collapsed={this.state.openPost !== codemark.id}
-											inline={false}
-											currentUserName={this.props.currentUserName}
-											usernames={this.props.usernames}
-											onClick={this.handleClickCodemark}
-											onMouseEnter={this.handleHighlightCodemark}
-											onMouseLeave={this.handleUnhighlightCodemark}
-											action={this.props.postAction}
-											query={this.state.q}
-										/>
-									);
-								})}
-						</div>
-					</div>
-				</ScrollBox>
-			);
+		if (documentMarkers.length === 0) {
+			return this.renderNoCodemarks();
 		}
+
+		return (
+			<ScrollBox>
+				<div className="inline-codemarks channel-list vscroll">
+					<div
+						className={createClassString("section", "has-children", {
+							expanded: true
+						})}
+					>
+						<div className="header top">
+							<Icon name="triangle-right" className="triangle-right" />
+							<span>
+								In This File: <span className="filename">{this.props.fileNameToFilterFor}</span>
+							</span>
+						</div>
+
+						{documentMarkers
+							.sort((a, b) => b.createdAt - a.createdAt)
+							.map(docMarker => {
+								const { codemark } = docMarker;
+								// @ts-ignore
+								if (!codemark.pinned) return null;
+								return (
+									<Codemark
+										key={codemark.id}
+										// @ts-ignore
+										codemark={codemark}
+										collapsed={this.state.openPost !== codemark.id}
+										inline={false}
+										currentUserName={this.props.currentUserName}
+										usernames={this.props.usernames}
+										onClick={this.handleClickCodemark}
+										onMouseEnter={this.handleHighlightCodemark}
+										onMouseLeave={this.handleUnhighlightCodemark}
+										action={this.props.postAction}
+										query={this.state.q}
+									/>
+								);
+							})}
+					</div>
+				</div>
+			</ScrollBox>
+		);
 	};
 
 	onMouseEnterHoverIcon = lineNum => {
@@ -206,30 +222,30 @@ export class SimpleInlineCodemarks extends Component {
 							<Icon
 								onClick={e => this.handleClickPlus(e, "comment", lineNum)}
 								name="comment"
-								xtitle="Add Comment"
+								// title="Add Comment"
 								placement="bottomLeft"
-								delay="1"
+								delay={1}
 							/>
 							<Icon
 								onClick={e => this.handleClickPlus(e, "issue", lineNum)}
 								name="issue"
-								xtitle="Create Issue"
+								// title="Create Issue"
 								placement="bottomLeft"
-								delay="1"
+								delay={1}
 							/>
 							<Icon
 								onClick={e => this.handleClickPlus(e, "bookmark", lineNum)}
 								name="bookmark"
-								xtitle="Create Bookmark"
+								// title="Create Bookmark"
 								placement="bottomLeft"
-								delay="1"
+								delay={1}
 							/>
 							<Icon
 								onClick={e => this.handleClickPlus(e, "link", lineNum)}
 								name="link"
-								xtitle="Get Permalink"
+								// title="Get Permalink"
 								placement="bottomLeft"
-								delay="1"
+								delay={1}
 							/>
 						</div>
 					);
@@ -266,12 +282,13 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	renderInline() {
-		const { textEditorVisibleRanges = [] } = this.props;
+		const { textEditorVisibleRanges } = this.props;
 		const { documentMarkers } = this.state;
 
 		// create a map from start-lines to the codemarks that start on that line
 		let docMarkersByStartLine = {};
 		documentMarkers.forEach(docMarker => {
+			// @ts-ignore
 			if (!docMarker.codemark.pinned) return;
 			let startLine = Number(this.getMarkerStartLine(docMarker)) - 1;
 			// if there is already a codemark on this line, keep skipping to the next one
@@ -284,20 +301,23 @@ export class SimpleInlineCodemarks extends Component {
 		// console.log("TEVR: ", textEditorVisibleRanges);
 		if (documentMarkers.length === 0) {
 			return [this.renderHoverIcons(numLinesVisible), this.renderNoCodemarks()];
-		} else {
-			const numVisibleRanges = textEditorVisibleRanges.length;
+		}
+
+		const numVisibleRanges = textEditorVisibleRanges === undefined ? 0 : textEditorVisibleRanges.length;
+
 
 			let rangeStartOffset = 0;
 			return (
 				<div
 					className="inline-codemarks vscroll"
-					onScroll={this.onScroll}
+					// TODO: Get scroll to work
+					// onScroll={this.onScroll}
 					ref={ref => (this._scrollDiv = ref)}
 				>
 					<div>
-						{textEditorVisibleRanges.map((lineRange, rangeIndex) => {
-							const realFirstLine = lineRange[0].line; // == 0 ? 1 : lineRange[0].line;
-							const realLastLine = lineRange[1].line;
+						{(textEditorVisibleRanges || []).map((lineRange, rangeIndex) => {
+							const realFirstLine = lineRange.start.line; // == 0 ? 1 : lineRange[0].line;
+							const realLastLine = lineRange.end.line;
 							const linesInRange = realLastLine - realFirstLine + 1;
 							const marksInRange = range(realFirstLine, realLastLine + 1).map(lineNum => {
 								let top =
@@ -336,8 +356,7 @@ export class SimpleInlineCodemarks extends Component {
 					</div>
 					{this.renderHoverIcons(numLinesVisible)}
 				</div>
-			);
-		}
+		);
 	}
 
 	onScroll = event => {
@@ -351,7 +370,8 @@ export class SimpleInlineCodemarks extends Component {
 		// 2) 9 is half a line, because we want it to scroll halfway through the line
 		const line = Math.round((top - 27) / 18);
 		if (line < 0) return;
-		HostApi.instance.send(EditorRevealLineRequestType, { line });
+
+		HostApi.instance.send(EditorRevealRangeRequestType, { uri: this.props.textEditorUri, range: Range.create(line, 0, line, 0), preserveFocus: true });
 	};
 
 	toggleShowMarkers = () => {
@@ -434,18 +454,24 @@ export class SimpleInlineCodemarks extends Component {
 		setTimeout(() => this.props.focusInput(), 500);
 	};
 
-	handleClickCodemark = codemark => {
+	handleClickCodemark = async codemark => {
 		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Codemark Clicked",
 			properties: {
 				"Codemark Location": "Spatial View"
 			}
 		});
-		if (codemark.markers)
-			HostApi.instance.send(EditorRevealMarkerRequestType, {
-				marker: codemark.markers[0],
+		if (codemark.markers) {
+			const response = await HostApi.instance.send(DocumentFromMarkerRequestType, { markerId: codemark.markers[0].id });
+			// TODO: What should we do if we don't find the marker?
+			if (response === undefined) return;
+
+			HostApi.instance.send(EditorRevealRangeRequestType, {
+				uri: response.textDocument.uri,
+				range: response.range,
 				preserveFocus: true
 			});
+		}
 		this.props.setThread(codemark.streamId, codemark.parentPostId || codemark.postId);
 		// const isOpen = this.state.openPost === id;
 		// if (isOpen) this.setState({ openPost: null });
@@ -454,12 +480,15 @@ export class SimpleInlineCodemarks extends Component {
 		// }
 	};
 
-	highlightCode(marker, highlight) {
-		HostApi.instance.send(EditorHighlightMarkerRequestType, {
+	async highlightCode(marker, highlight) {
+		const response = await HostApi.instance.send(DocumentFromMarkerRequestType, { markerId: marker.id });
+		// TODO: What should we do if we don't find the marker?
+		if (response === undefined) return;
+
+		HostApi.instance.send(EditorHighlightRangeRequestType, {
 			uri: this.props.textEditorUri,
-			marker: marker,
-			highlight: highlight,
-			source: "stream"
+			range: response.range,
+			highlight: highlight
 		});
 	}
 
@@ -472,15 +501,17 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	mapLineToVisibleRange = fromLineNum => {
-		const { textEditorVisibleRanges = [] } = this.props;
+		const { textEditorVisibleRanges } = this.props;
 
 		let lineCounter = 0;
 		let toLineNum = 0;
-		textEditorVisibleRanges.forEach(lineRange => {
-			range(lineRange[0].line, lineRange[1].line + 1).forEach(thisLine => {
-				if (++lineCounter === fromLineNum) toLineNum = thisLine;
+		if (textEditorVisibleRanges != null) {
+			textEditorVisibleRanges.forEach(lineRange => {
+				range(lineRange.start.line, lineRange.end.line + 1).forEach(thisLine => {
+					if (++lineCounter === fromLineNum) toLineNum = thisLine;
+				});
 			});
-		});
+		}
 		return toLineNum;
 	};
 
@@ -501,11 +532,10 @@ export class SimpleInlineCodemarks extends Component {
 
 
 	highlightLine(line, highlight) {
-		HostApi.instance.send(EditorHighlightLineRequestType, {
+		HostApi.instance.send(EditorHighlightRangeRequestType, {
 			uri: this.props.textEditorUri,
-			line: line,
-			highlight: highlight,
-			source: "stream"
+			range: Range.create(line, 0, line, 0),
+			highlight: highlight
 		});
 	}
 

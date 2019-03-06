@@ -7,19 +7,13 @@ import Icon from "./Icon";
 import { markdownify } from "./Markdowner";
 import Timestamp from "./Timestamp";
 import { DocumentMarker } from "@codestream/protocols/agent";
+import { CodemarkType } from "@codestream/protocols/api";
 
-enum Type {
-	Comment = "comment",
-	Issue = "issue",
-	Question = "question",
-	Bookmark = "bookmark",
-	Trap = "trap"
-}
-
+// TODO: Why not use CSCodemark here? or CodemarkPlus?
 interface CodemarkEntity {
 	id: string;
 	color: string;
-	type: Type;
+	type: CodemarkType;
 	createdAt: number;
 	streamId: string;
 	version: number;
@@ -132,7 +126,7 @@ export class Codemark extends React.Component<Props, State> {
 
 	renderStatus(codemark) {
 		const { type, status = "open" } = codemark;
-		if (type === Type.Issue) {
+		if (type === CodemarkType.Issue) {
 			return (
 				<div className="align-far-left">
 					<div

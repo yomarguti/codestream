@@ -29,7 +29,7 @@ export const focus = () => action(ContextActionsType.SetFocusState, true);
 
 export const blur = () => action(ContextActionsType.SetFocusState, false);
 
-export function setThread(streamId: string, threadId: string | null = null) {
+export function setThread(streamId: string, threadId?: string) {
 	return action(ContextActionsType.SetThread, { streamId, threadId });
 }
 
@@ -55,14 +55,13 @@ export const setChannelFilter = (value: string) => async dispatch => {
 };
 
 export const fileChanged = editor =>
-	setCurrentFile(editor.fileName, editor.fileStreamId, editor.visibleRanges, editor.uri);
+	setCurrentFile(editor.fileName, editor.visibleRanges, editor.uri);
 
 export const setCurrentFile = (
 	file = "",
-	fileStreamId?: string,
 	visibleRanges?: Range[],
 	uri?: string
-) => action(ContextActionsType.SetCurrentFile, { file, fileStreamId, visibleRanges, uri });
+) => action(ContextActionsType.SetCurrentFile, { file, visibleRanges, uri });
 
 export const _setCurrentStream = (streamId?: string) =>
 	action(ContextActionsType.SetCurrentStream, streamId);
