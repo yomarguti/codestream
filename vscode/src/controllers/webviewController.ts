@@ -389,28 +389,13 @@ export class WebviewController implements Disposable {
 		webview: CodeStreamWebviewPanel,
 		e: TextEditorSelectionChangeEvent
 	) {
+		if (e.textEditor !== this._lastEditor) return;
+
 		webview.notify(HostDidChangeEditorSelectionNotificationType, {
 			uri: e.textEditor.document.uri.toString(),
 			selections: Editor.toEditorSelections(e.selections),
 			visibleRanges: Editor.toSerializableRange(e.textEditor.visibleRanges)
 		});
-
-		// if (e.selections.length === 0) return;
-
-		// const selection = e.selections[0];
-		// if (selection.start.isEqual(selection.end)) return;
-
-		// const uri = e.textEditor.document.uri;
-
-		// const response = await Container.agent.posts.prepareCode(e.textEditor.document, selection);
-		// await Container.webview.postCode(
-		// 	response.code,
-		// 	uri,
-		// 	response.range,
-		// 	response.source,
-		// 	response.gitError,
-		// 	true
-		// );
 	}
 
 	private onEditorVisibleRangesChanged(
