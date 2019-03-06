@@ -26,7 +26,11 @@ import {
 	SessionStatusChangedEvent,
 	TextDocumentMarkersChangedEvent
 } from "../api/session";
-import { OpenStreamCommandArgs, ShowMarkerDiffCommandArgs } from "../commands";
+import {
+	OpenCodemarkCommandArgs,
+	OpenStreamCommandArgs,
+	ShowMarkerDiffCommandArgs
+} from "../commands";
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -316,7 +320,8 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 				try {
 					if (token.isCancellationRequested) return undefined;
 
-					const viewCommandArgs: OpenStreamCommandArgs = {
+					const viewCommandArgs: OpenCodemarkCommandArgs = {
+						codemarkId: m.id,
 						streamThread: {
 							id: m.postId,
 							streamId: m.postStreamId
@@ -338,7 +343,7 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 					const typeString = Strings.toTitleCase(m.type);
 					message += `__${m.creatorName}__, ${m.fromNow()} &nbsp; _(${m.formatDate()})_ ${
 						m.summaryMarkdown
-					}\n\n[__View ${typeString} \u2197__](command:codestream.openComment?${encodeURIComponent(
+					}\n\n[__View ${typeString} \u2197__](command:codestream.openCodemark?${encodeURIComponent(
 						JSON.stringify(viewCommandArgs)
 					)} "View ${typeString}") &nbsp; | &nbsp; [__Compare__](command:codestream.showMarkerDiff?${encodeURIComponent(
 						JSON.stringify(compareCommandArgs)
@@ -365,7 +370,7 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 
 			if (firstMarkerArgs !== undefined && Container.webview.visible) {
 				const args = firstMarkerArgs;
-				setImmediate(() => void Container.commands.openComment(args));
+				setImmediate(() => void Container.commands.openCodemark(args));
 			}
 
 			return new Hover(markdown, range);

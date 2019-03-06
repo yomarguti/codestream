@@ -9,7 +9,7 @@ import {
 	DidChangeDocumentMarkersNotificationType,
 	ReportingMessageType
 } from "@codestream/protocols/agent";
-import { LoginResult } from "@codestream/protocols/api";
+import { CodemarkType, LoginResult } from "@codestream/protocols/api";
 import {
 	ApplyMarkerRequestType,
 	BootstrapRequestType,
@@ -23,7 +23,6 @@ import {
 	HostDidChangeEditorSelectionNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
 	HostDidLogoutNotificationType,
-	HostDidSelectCodeNotificationType,
 	IpcRoutes,
 	isIpcRequestMessage,
 	isIpcResponseMessage,
@@ -32,12 +31,13 @@ import {
 	LiveShareStartSessionRequestType,
 	LoginRequestType,
 	LogoutRequestType,
+	NewCodemarkNotificationType,
 	ReloadWebviewRequestType,
+	ShowCodemarkNotificationType,
 	SignedInBootstrapResponse,
 	SignedOutBootstrapResponse,
 	SignupRequestType,
 	SlackLoginRequestType,
-	StartCommentOnLineRequestType,
 	UpdateConfigurationRequestType,
 	WebviewContext,
 	WebviewDidChangeActiveStreamNotificationType,
@@ -66,7 +66,7 @@ import {
 	window,
 	workspace
 } from "vscode";
-import { NotificationType, Range, RequestType } from "vscode-languageclient";
+import { NotificationType, RequestType } from "vscode-languageclient";
 import {
 	CodeStreamSession,
 	SessionSignedOutReason,
@@ -81,14 +81,9 @@ import { Logger } from "../logger";
 import { Functions, log } from "../system";
 import { CodeStreamWebviewPanel, toLoggableIpcMessage } from "../webviews/webviewPanel";
 
-export interface StreamThreadId {
-	id: string | undefined;
-	streamId: string;
-}
-
 export interface WebviewState {
 	hidden: boolean;
-	streamThread?: StreamThreadId;
+	streamThread?: StreamThread;
 }
 
 const empty = {};
@@ -170,12 +165,7 @@ export class WebviewController implements Disposable {
 						empty)
 				} as WebviewState;
 
-				if (state.streamThread !== undefined) {
-					const stream = await this.session.getStream(state.streamThread.streamId);
-					this._lastStreamThread =
-						stream !== undefined ? { id: state.streamThread.id, stream: stream } : undefined;
-				}
-
+				this._lastStreamThread = state.streamThread;
 				if (!state.hidden) {
 					this.show(this._lastStreamThread);
 				}
@@ -210,45 +200,36 @@ export class WebviewController implements Disposable {
 		this._webview.dispose();
 	}
 
-	async postCode(
-		code: string,
-		uri: Uri,
-		range: Range,
-		source?: {
-			file: string;
-			repoPath: string;
-			revision: string;
-			authors: { id: string; username: string }[];
-			remotes: { name: string; url: string }[];
-		},
-		gitError?: string,
-		isHighlight?: boolean,
-		type?: string
-	) {
-		await this.show();
-
-		let file;
-		if (source === undefined) {
-			const folder = workspace.getWorkspaceFolder(uri);
-			if (folder !== undefined) {
-				file = path.relative(folder.uri.fsPath, uri.fsPath);
-			}
-		} else {
-			file = source.file;
+	@log()
+	async newCodemarkRequest(type: CodemarkType, editor: TextEditor): Promise<void> {
+		if (!this.visible) {
+			await this.show();
 		}
 
-		this._webview!.notify(HostDidSelectCodeNotificationType, {
-			code: code,
-			file: file,
-			fileUri: uri.toString(),
-			range: range,
-			source: source,
-			gitError: gitError,
-			isHighlight: isHighlight,
+		// TODO: Change this to be a request vs a notification
+		this._webview!.notify(NewCodemarkNotificationType, {
+			uri: editor.document.uri.toString(false),
+			range: Editor.toSerializableRange(editor.selection),
 			type: type
 		});
+	}
 
-		return this._lastStreamThread;
+	@log()
+	async openCodemark(codemarkId: string, streamThread?: StreamThread): Promise<void> {
+		if (streamThread !== undefined) {
+			await this.show(streamThread);
+			return;
+		}
+
+		if (!this.visible) {
+			await this.show();
+		}
+
+		// TODO: Hook this up in the webview
+		// TODO: Change this to be a request vs a notification
+		this._webview!.notify(ShowCodemarkNotificationType, {
+			codemarkId: codemarkId
+		});
 	}
 
 	@log()
@@ -265,10 +246,6 @@ export class WebviewController implements Disposable {
 		if (this._webview === undefined) {
 			if (streamThread === undefined) {
 				streamThread = this._lastStreamThread;
-				// streamThread = this._lastStreamThread || {
-				// 	id: undefined,
-				// 	stream: await this.session.getDefaultTeamChannel()
-				// };
 			}
 
 			// // Kick off the bootstrap compute to be ready for later
@@ -480,9 +457,9 @@ export class WebviewController implements Disposable {
 
 							return;
 						}
-						const stream = await this.session.getStream(params.streamId);
-						if (stream !== undefined) {
-							this._lastStreamThread = { id: undefined, stream: stream };
+
+						if (params.streamId !== undefined) {
+							this._lastStreamThread = { id: undefined, streamId: params.streamId };
 							this.updateState(this._lastStreamThread);
 						}
 					}
@@ -501,7 +478,7 @@ export class WebviewController implements Disposable {
 				webview.onIpcNotification(WebviewDidOpenThreadNotificationType, e, (type, params) => {
 					if (
 						this._lastStreamThread !== undefined &&
-						this._lastStreamThread.stream.id === params.streamId
+						this._lastStreamThread.streamId === params.streamId
 					) {
 						this._lastStreamThread.id = params.threadId;
 						this.updateState(this._lastStreamThread);
@@ -657,17 +634,6 @@ export class WebviewController implements Disposable {
 
 				break;
 			}
-			case StartCommentOnLineRequestType.method: {
-				webview.onIpcRequest(StartCommentOnLineRequestType, e, async (type, params) => {
-					await Container.commands.startCommentOnLine({
-						line: params.line,
-						uri: params.uri,
-						type: params.type
-					});
-					return empty;
-				});
-				break;
-			}
 			case LiveShareInviteToSessionRequestType.method: {
 				webview.onIpcRequest(LiveShareInviteToSessionRequestType, e, async (type, params) => {
 					await Container.vsls.processRequest({
@@ -762,7 +728,7 @@ export class WebviewController implements Disposable {
 		};
 
 		if (this._lastStreamThread !== undefined) {
-			state.context.currentStreamId = this._lastStreamThread.stream.id;
+			state.context.currentStreamId = this._lastStreamThread.streamId;
 			state.context.threadId = this._lastStreamThread.id;
 		}
 
@@ -841,13 +807,10 @@ export class WebviewController implements Disposable {
 	private updateState(streamThread: StreamThread | undefined, hidden: boolean = false) {
 		this._lastStreamThread = streamThread;
 
-		let streamThreadId: StreamThreadId | undefined;
-		if (streamThread !== undefined) {
-			streamThreadId = { id: streamThread.id, streamId: streamThread.stream.id };
-		}
-		Container.context.workspaceState.update(WorkspaceState.webviewState, {
+		const state: WebviewState = {
 			hidden: hidden,
-			streamThread: streamThreadId
-		} as WebviewState);
+			streamThread: streamThread
+		};
+		Container.context.workspaceState.update(WorkspaceState.webviewState, state);
 	}
 }

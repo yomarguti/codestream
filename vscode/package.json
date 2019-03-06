@@ -158,22 +158,22 @@
                 "category": "CodeStream"
             },
             {
-                "command": "codestream.postCode",
+                "command": "codestream.newComment",
                 "title": "Add Comment",
                 "category": "CodeStream"
             },
             {
-                "command": "codestream.postIssue",
+                "command": "codestream.newIssue",
                 "title": "Create Issue",
                 "category": "CodeStream"
             },
             {
-                "command": "codestream.postBookmark",
+                "command": "codestream.newBookmark",
                 "title": "Create Bookmark",
                 "category": "CodeStream"
             },
             {
-                "command": "codestream.postPermalink",
+                "command": "codestream.newLink",
                 "title": "Get Permalink",
                 "category": "CodeStream"
             },
@@ -185,7 +185,7 @@
         ],
         "keybindings": [
             {
-                "command": "codestream.postCode",
+                "command": "codestream.newComment",
                 "key": "cmd+/ cmd+/",
                 "mac": "ctrl+/ ctrl+/",
                 "when": "editorTextFocus && codestream:status == signedIn"
@@ -206,19 +206,19 @@
                     "when": "codestream:status == signedIn"
                 },
                 {
-                    "command": "codestream.postCode",
+                    "command": "codestream.newComment",
                     "when": "codestream:status == signedIn"
                 },
                 {
-                    "command": "codestream.postIssue",
+                    "command": "codestream.newIssue",
                     "when": "codestream:status == signedIn"
                 },
                 {
-                    "command": "codestream.postBookmark",
+                    "command": "codestream.newBookmark",
                     "when": "codestream:status == signedIn"
                 },
                 {
-                    "command": "codestream.postPermalink",
+                    "command": "codestream.newLink",
                     "when": "codestream:status == signedIn"
                 },
                 {
@@ -228,24 +228,24 @@
             ],
             "editor/context": [
                 {
-                    "command": "codestream.postCode",
+                    "command": "codestream.newLink",
                     "when": "codestream:status == signedIn",
-                    "group": "1_codestream@1"
+                    "group": "9_zcodestream@1"
                 },
                 {
-                    "command": "codestream.postIssue",
+                    "command": "codestream.newComment",
                     "when": "codestream:status == signedIn",
-                    "group": "1_codestream@2"
+                    "group": "9_zcodestream@2"
                 },
                 {
-                    "command": "codestream.postBookmark",
+                    "command": "codestream.newIssue",
                     "when": "codestream:status == signedIn",
-                    "group": "1_codestream@3"
+                    "group": "9_zcodestream@3"
                 },
                 {
-                    "command": "codestream.postPermalink",
+                    "command": "codestream.newBookmark",
                     "when": "codestream:status == signedIn",
-                    "group": "1_codestream@4"
+                    "group": "9_zcodestream@4"
                 }
             ]
         },

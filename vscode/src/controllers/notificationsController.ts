@@ -42,7 +42,7 @@ export class NotificationsController implements Disposable {
 			if (currentUser.hasMutedChannel(post.streamId) && !mentioned) continue;
 
 			const isPostStreamVisible =
-				streamVisible && !(activeStream === undefined || activeStream.stream.id !== post.streamId);
+				streamVisible && !(activeStream === undefined || activeStream.streamId !== post.streamId);
 
 			switch (Container.config.notifications) {
 				case Notifications.All:

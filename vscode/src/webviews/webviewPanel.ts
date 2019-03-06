@@ -231,7 +231,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 			streamThread === undefined ||
 			(this._streamThread &&
 				this._streamThread.id === streamThread.id &&
-				this._streamThread.stream.id === streamThread.stream.id)
+				this._streamThread.streamId === streamThread.streamId)
 		) {
 			this._panel.reveal(this._panel.viewColumn, false);
 
@@ -247,7 +247,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 
 		// TODO: Convert this to a request vs a notification
 		this.notify(ShowStreamNotificationType, {
-			streamId: streamThread.stream.id,
+			streamId: streamThread.streamId,
 			threadId: streamThread.id
 		});
 

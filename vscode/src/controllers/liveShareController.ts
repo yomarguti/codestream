@@ -120,7 +120,7 @@ export class LiveShareController implements Disposable {
 		if (vslsChannel === undefined) return;
 
 		Container.commands.openStream({
-			streamThread: { id: undefined, stream: vslsChannel }
+			streamThread: { id: undefined, streamId: vslsChannel.id }
 		});
 	}
 
@@ -134,7 +134,7 @@ export class LiveShareController implements Disposable {
 		if (vslsChannel === undefined) return;
 
 		Container.commands.openStream({
-			streamThread: { id: undefined, stream: vslsChannel }
+			streamThread: { id: undefined, streamId: vslsChannel.id }
 		});
 	}
 
@@ -197,7 +197,7 @@ export class LiveShareController implements Disposable {
 
 		await direct.post(`Join my Live Share session: ${uri.toString()}`);
 		return Container.commands.openStream({
-			streamThread: { id: undefined, stream: vslsChannel }
+			streamThread: { id: undefined, streamId: vslsChannel.id }
 		});
 	}
 
@@ -224,7 +224,7 @@ export class LiveShareController implements Disposable {
 			case "start":
 				const stream = await Container.session.getStream(action.streamId);
 				const streamThread =
-					stream !== undefined ? { id: action.threadId, stream: stream } : undefined;
+					stream !== undefined ? { id: action.threadId, streamId: stream.id } : undefined;
 
 				await this.start({
 					streamThread: streamThread,
@@ -251,7 +251,8 @@ export class LiveShareController implements Disposable {
 
 		this.setVslsId(vsls.session.id);
 
-		const currentChannel = streamThread.stream;
+		const currentChannel = await Container.session.getStream(streamThread.streamId);
+		if (currentChannel === undefined) return;
 
 		await currentChannel.post(`Join my Live Share session: ${uri.toString()}`, streamThread.id);
 
@@ -283,7 +284,7 @@ export class LiveShareController implements Disposable {
 		);
 
 		return Container.commands.openStream({
-			streamThread: { id: undefined, stream: vslsChannel }
+			streamThread: { id: undefined, streamId: vslsChannel.id }
 		});
 	}
 

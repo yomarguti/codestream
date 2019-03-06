@@ -85,11 +85,6 @@ export class DirectStream extends StreamBase<CSDirectStream> {
 
 export type Stream = ChannelStream | DirectStream;
 
-export interface StreamThread {
-	id: string | undefined;
-	stream: Stream;
-}
-
 export interface ChannelStreamCreationOptions {
 	membership?: "auto" | string[];
 	privacy?: "public" | "private";

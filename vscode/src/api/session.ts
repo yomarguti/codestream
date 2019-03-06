@@ -40,7 +40,6 @@ import {
 	DirectStream,
 	ServiceChannelStreamCreationOptions,
 	Stream,
-	StreamThread,
 	StreamType
 } from "./models/stream";
 import { Team } from "./models/team";
@@ -69,7 +68,6 @@ export {
 	SessionChangedEventType,
 	SessionStatusChangedEvent,
 	Stream,
-	StreamThread,
 	StreamType,
 	Team,
 	TextDocumentMarkersChangedEvent,
@@ -80,6 +78,11 @@ export {
 // FIXME: Must keep this in sync with codestream-lsp-agent/src/session.ts
 const envRegex = /https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(?::\d+$)?/i;
 const instanceId = Functions.shortUuid();
+
+export interface StreamThread {
+	id: string | undefined;
+	streamId: string;
+}
 
 export enum SessionSignedOutReason {
 	NetworkIssue = "networkIssue",

@@ -11,7 +11,6 @@ import {
 	TextDocument
 } from "vscode";
 import { SessionStatus, SessionStatusChangedEvent } from "../api/session";
-import { PostCodeCommandArgs } from "../commands";
 import { Container } from "../container";
 
 export class CodeStreamCodeActionProvider implements CodeActionProvider, Disposable {
@@ -58,48 +57,24 @@ export class CodeStreamCodeActionProvider implements CodeActionProvider, Disposa
 	): Command[] | Thenable<Command[]> {
 		if (!Container.session.signedIn || range.start.compareTo(range.end) === 0) return [];
 
-		return [
-			{
-				title: `Add Comment`,
-				command: "codestream.postCode",
-				arguments: [
-					{
-						document: document,
-						type: "comment"
-						// range: range // Since the range is untrustworthy, don't sent it -- the command will try to get this from the active editor
-					} as PostCodeCommandArgs
-				]
-			} as Command,
-			{
-				title: `Create Issue`,
-				command: "codestream.postCode",
-				arguments: [
-					{
-						document: document,
-						type: "issue"
-					}
-				]
-			} as Command,
-			{
-				title: `Create Bookmark`,
-				command: "codestream.postCode",
-				arguments: [
-					{
-						document: document,
-						type: "bookmark"
-					}
-				]
-			} as Command,
+		const commands: Command[] = [
 			{
 				title: `Get Permalink`,
-				command: "codestream.postCode",
-				arguments: [
-					{
-						document: document,
-						type: "link"
-					}
-				]
-			} as Command
+				command: "codestream.newLink"
+			},
+			{
+				title: `Add Comment`,
+				command: "codestream.newComment"
+			},
+			{
+				title: `Create Issue`,
+				command: "codestream.newIssue"
+			},
+			{
+				title: `Create Bookmark`,
+				command: "codestream.newBookmark"
+			}
 		];
+		return commands;
 	}
 }
