@@ -17,10 +17,11 @@ class EventEmitter {
 
 	on<NT extends NotificationType<any, any>>(
 		eventType: NT,
-		listener: (event: NotificationParamsOf<NT>) => void
+		listener: (event: NotificationParamsOf<NT>) => void,
+		thisArgs?: any
 	) {
 		const listeners = this.listenersByEvent.get(eventType.method) || [];
-		listeners.push(listener);
+		listeners.push(thisArgs !== undefined ? listener.bind(thisArgs) : listener);
 		this.listenersByEvent.set(eventType.method, listeners);
 		return {
 			dispose: () => {

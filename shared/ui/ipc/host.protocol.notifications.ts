@@ -64,33 +64,3 @@ export interface HostDidLogoutNotification {}
 export const HostDidLogoutNotificationType = new NotificationType<HostDidLogoutNotification, void>(
 	`${IpcRoutes.Webview}/didLogout`
 );
-
-// DEPRECATED:
-export interface HostDidSelectCodeNotification {
-	code: string;
-	file: string | undefined;
-	fileUri: string;
-	range: Range;
-	source:
-		| {
-				file: string;
-				repoPath: string;
-				revision: string;
-				authors: {
-					id: string;
-					username: string;
-				}[];
-				remotes: {
-					name: string;
-					url: string;
-				}[];
-		  }
-		| undefined;
-	gitError: string | undefined;
-	isHighlight?: boolean;
-	type?: string;
-}
-export const HostDidSelectCodeNotificationType = new NotificationType<
-	HostDidSelectCodeNotification,
-	void
->(`${IpcRoutes.Webview}/editor/didSelectCode`);

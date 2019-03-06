@@ -45,7 +45,8 @@ import {
 	ShowStreamNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
 	UpdateConfigurationRequestType,
-	HostDidChangeEditorSelectionNotificationType
+	HostDidChangeEditorSelectionNotificationType,
+	NewCodemarkNotificationType
 } from "../ipc/webview.protocol";
 import {
 	OpenUrlRequestType,
@@ -81,15 +82,23 @@ export class SimpleStream extends Component {
 	componentDidMount() {
 		this.setUmiInfo();
 		this.disposables.push(
-			HostApi.instance.on(ShowStreamNotificationType, this.handleShowStream),
+			HostApi.instance.on(ShowStreamNotificationType, this.handleShowStream, this),
 			HostApi.instance.on(
 				HostDidChangeEditorSelectionNotificationType,
-				this.handleCodeSelectedEvent
+				this.handleCodeSelectedEvent,
+				this
 			),
 			HostApi.instance.on(
 				HostDidChangeEditorVisibleRangesNotificationType,
-				this.handleTextEditorScrolledEvent
+				this.handleTextEditorScrolledEvent,
+				this
+			),
+			HostApi.instance.on(
+				NewCodemarkNotificationType,
+				this.handleNewCodemarkRequest,
+				this
 			)
+
 		);
 
 		this.props.fetchCodemarks();
@@ -171,21 +180,34 @@ export class SimpleStream extends Component {
 		this.disposables.forEach(d => d.dispose());
 	};
 
+	async handleNewCodemarkRequest(e) {
+		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
+			uri: e.uri,
+			range: e.range,
+			dirty: true // should this be determined here? using true to be safe
+		});
+
+		this.setMultiCompose(true, {
+			quote: scmInfo,
+			composeBoxProps: { commentType: e.type }
+		});
+	}
+
 	handleCodeSelectedEvent = async body => {
 		const { composeBoxProps } = this.state;
 		if (composeBoxProps && composeBoxProps.editingCodemark) return;
 
 		if (body.selections.length > 0) {
 			const selection = body.selections[0];
-			if (this.props.activePanel === "inline")
-				this.setState({ selection: selection });
-			else if (this.state.multiCompose) {
+			if (this.state.multiCompose) {
 				const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
 					uri: body.uri,
 					range: selection,
 					dirty: true // should this be determined here? using true to be safe
 				});
 				this.setState({ quote: scmInfo });
+			} else if (this.props.activePanel === "inline") {
+				this.setState({ selection: selection });
 			}
 		}
 	};
@@ -552,6 +574,7 @@ export class SimpleStream extends Component {
 	handleClickCreateCodemark = e => {
 		e.preventDefault();
 		this.setMultiCompose(true);
+
 		this.setNewPostEntry("Global Nav");
 	};
 
@@ -1186,6 +1209,7 @@ export class SimpleStream extends Component {
 
 				this.setMultiCompose(true, {
 					quote: marker
+						// TODO: Dig into getting the updated location for this marker -- marker.location isn't likely valid
 						? { ...marker, range: arrayToRange(marker.location || marker.locationWhenCreated) }
 						: null,
 					composeBoxProps: {

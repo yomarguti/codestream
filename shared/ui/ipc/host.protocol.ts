@@ -89,19 +89,6 @@ export const ReloadWebviewRequestType = new RequestType<void, void, void, void>(
 	`${IpcRoutes.Host}/webview/reload`
 );
 
-export interface StartCommentOnLineRequest {
-	line: number;
-	uri: any;
-	type: any;
-}
-export interface StartCommentOnLineResponse {}
-export const StartCommentOnLineRequestType = new RequestType<
-	StartCommentOnLineRequest,
-	StartCommentOnLineResponse,
-	void,
-	void
->(`${IpcRoutes.Host}/start-comment-on-line`);
-
 export interface CompareMarkerRequest {
 	marker: CSMarker;
 }
