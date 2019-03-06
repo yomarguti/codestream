@@ -9,9 +9,9 @@ import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
 import Codemark from "./Codemark";
 import { HostApi } from "../webview-api";
-import { TelemetryRequestType } from "@codestream/protocols/agent";
+import { DocumentFromMarkerRequestType, TelemetryRequestType } from "@codestream/protocols/agent";
 import {
-	EditorRevealMarkerRequestType,
+	EditorRevealRangeRequestType,
 	UpdateConfigurationRequestType
 } from "../ipc/webview.protocol";
 import { includes as _includes, sortBy as _sortBy } from "lodash-es";
@@ -441,7 +441,7 @@ export class SimpleKnowledgePanel extends Component {
 		// this.props.setActivePanel("inline");
 	};
 
-	handleClickCodemark = codemark => {
+	handleClickCodemark = async codemark => {
 		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Codemark Clicked",
 			properties: {
@@ -449,11 +449,17 @@ export class SimpleKnowledgePanel extends Component {
 			}
 		});
 
-		if (codemark.markers)
-			HostApi.instance.send(EditorRevealMarkerRequestType, {
-				marker: codemark.markers[0],
+		if (codemark.markers) {
+			const response = await HostApi.instance.send(DocumentFromMarkerRequestType, { markerId: codemark.markers[0].id });
+			// TODO: What should we do if we don't find the marker?
+			if (response === undefined) return;
+
+			HostApi.instance.send(EditorRevealRangeRequestType, {
+				uri: response.textDocument.uri,
+				range: response.range,
 				preserveFocus: true
 			});
+		}
 		this.props.setThread(codemark.streamId, codemark.parentPostId || codemark.postId);
 		// const isOpen = this.state.openPost === id;
 		// if (isOpen) this.setState({ openPost: null });

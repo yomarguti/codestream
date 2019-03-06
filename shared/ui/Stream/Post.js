@@ -24,7 +24,8 @@ import { reactToPost } from "./actions";
 import { safe } from "../utils";
 import { getUsernamesById, getNormalizedUsernames } from "../store/users/reducer";
 import { getProviderInfo } from "./CrossPostIssueControls/types";
-import { EditorRevealMarkerRequestType } from "../ipc/webview.protocol";
+import { DocumentFromMarkerRequestType } from "@codestream/protocols/agent";
+import { EditorRevealRangeRequestType, EditorRevealRangeResult } from "../ipc/webview.protocol";
 import { HostApi } from "../webview-api";
 import { includes as _includes } from "lodash-es";
 
@@ -68,14 +69,19 @@ class Post extends React.Component {
 		const marker = hasMarkers && codemark.markers[0];
 		if (marker) {
 			if (marker.repoId) {
-				const response = await HostApi.instance.send(EditorRevealMarkerRequestType, {
-					marker,
+				const response = await HostApi.instance.send(DocumentFromMarkerRequestType, { markerId: marker.id });
+				// TODO: What should we do if we don't find the marker?
+				if (response === undefined) return;
+
+				const { result } = await HostApi.instance.send(EditorRevealRangeRequestType, {
+					uri: response.textDocument.uri,
+					range: response.range,
 					preserveFocus: preserveFocus
 				});
-				if (response.result === "SUCCESS") {
+				if (result === EditorRevealRangeResult.Success) {
 					this.setState({ warning: null });
 				} else {
-					this.setState({ warning: response.result });
+					this.setState({ warning: result });
 				}
 			} else this.setState({ warning: "NO_REMOTE" });
 		}
@@ -229,7 +235,7 @@ class Post extends React.Component {
 		// { label: "Pin to Stream", action: "pin-to-stream" }
 
 		if (codemark || mine) menuItems.push({ label: "-" });
-		
+
 		if (codemark) {
 			if (codemark.pinned) menuItems.push({ label: `Archive ${typeString}`, action: "toggle-pinned" });
 			else menuItems.push({ label: `Unarchive ${typeString}`, action: "toggle-pinned" });
