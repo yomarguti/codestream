@@ -21,7 +21,9 @@ const initialState: State = {
 	codemarkColorFilter: "all",
 	channelFilter: "all",
 	textEditorVisibleRanges: [],
-	textEditorUri: ""
+	textEditorUri: "",
+	textEditorSelections: [],
+	scm: undefined
 };
 
 export function reduceContext(

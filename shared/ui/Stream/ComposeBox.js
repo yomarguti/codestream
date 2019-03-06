@@ -1,4 +1,5 @@
 import React from "react";
+import { connect } from "react-redux";
 import createClassString from "classnames";
 import { PostCompose } from "./PostCompose";
 import { CodemarkForm } from "./CodemarkForm";
@@ -18,7 +19,7 @@ class ComposeBox extends React.Component {
 	}
 
 	repositionIfNecessary() {
-		const { forwardedRef, quote, textEditorVisibleRanges = [] } = this.props;
+		const { forwardedRef, quote, textEditorVisibleRanges } = this.props;
 
 		const root = forwardedRef.current;
 		if (!root) return;
@@ -234,7 +235,6 @@ class ComposeBox extends React.Component {
 							onClickClose={this.handleClickDismissMultiCompose}
 							streamId={this.props.streamId}
 							onSubmit={this.submitCodemarkPost}
-							codeBlock={quote}
 							renderMessageInput={this.renderMessageInput}
 							teammates={this.props.teammates}
 							collapsed={false}
@@ -260,4 +260,14 @@ class ComposeBox extends React.Component {
 	}
 }
 
-export default React.forwardRef((props, ref) => <ComposeBox {...props} forwardedRef={ref} />);
+const emptyArray = [];
+
+const mapStateToProps = state => {
+	return { textEditorVisibleRanges: state.context.textEditorVisibleRanges || emptyArray };
+};
+
+const ConnectedComposeBox = connect(mapStateToProps)(ComposeBox);
+
+export default React.forwardRef((props, ref) => (
+	<ConnectedComposeBox {...props} forwardedRef={ref} />
+));

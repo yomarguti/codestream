@@ -8,7 +8,9 @@ import {
 	HostDidLogoutNotificationType,
 	BootstrapRequestType,
 	WebviewDidInitializeNotificationType,
-	isSignedInBootstrap
+	isSignedInBootstrap,
+	HostDidChangeEditorSelectionNotificationType,
+	HostDidChangeEditorSelectionNotification
 } from "./ipc/webview.protocol";
 import { actions, createCodeStreamStore } from "./store";
 import { HostApi } from "./webview-api";
@@ -127,13 +129,7 @@ export function listenForEvents(store) {
 		HostDidChangeActiveEditorNotificationType,
 		({ editor }) =>
 			editor &&
-			store.dispatch(
-				actions.setCurrentFile(
-					editor.fileName,
-					editor.visibleRanges,
-					editor.uri
-				)
-			)
+			store.dispatch(actions.setCurrentFile(editor.fileName, editor.visibleRanges, editor.uri))
 	);
 
 	api.on(HostDidChangeFocusNotificationType, ({ focused }) => {
@@ -147,4 +143,17 @@ export function listenForEvents(store) {
 	api.on(HostDidLogoutNotificationType, () => {
 		store.dispatch(actions.reset());
 	});
+
+	api.on(
+		HostDidChangeEditorSelectionNotificationType,
+		async (params: HostDidChangeEditorSelectionNotification) => {
+			store.dispatch(
+				actions.setContext({
+					textEditorUri: params.uri,
+					textEditorVisibleRanges: params.visibleRanges,
+					textEditorSelections: params.selections
+				})
+			);
+		}
+	);
 }

@@ -1,6 +1,7 @@
 import {
 	FetchAssignableUsersRequestType,
-	GetRangeScmInfoResponse
+	GetRangeScmInfoResponse,
+	CodemarkPlus
 } from "@codestream/protocols/agent";
 import {
 	CodemarkType,
@@ -18,7 +19,8 @@ import { connect } from "react-redux";
 import Select from "react-select";
 import { getStreamForId, getStreamForTeam } from "../store/streams/reducer";
 import { Stream } from "../store/streams/types";
-import { mapFilter } from "../utils";
+import { getScmInfoForSelection } from "../store/context/actions";
+import { mapFilter, arrayToRange } from "../utils";
 import { HostApi } from "../webview-api";
 import Button from "./Button";
 import CancelButton from "./CancelButton";
@@ -32,7 +34,8 @@ import { sortBy as _sortBy } from "lodash-es";
 import {
 	EditorHighlightRangeRequestType,
 	EditorSelectRangeRequestType,
-	MaxRangeValue
+	MaxRangeValue,
+	EditorSelection
 } from "@codestream/protocols/webview";
 import { Range } from "vscode-languageserver-types";
 
@@ -60,15 +63,18 @@ interface Props {
 	onClickClose(): any;
 	renderMessageInput(props: { [key: string]: any }): JSX.Element;
 	openCodemarkForm(type: string): any;
+	getScmInfoForSelection(uri: string, range: any): Promise<void>;
 	slackInfo?: {};
 	codeBlock?: GetRangeScmInfoResponse;
 	commentType?: string;
 	collapsed: boolean;
 	isEditing?: boolean;
-	editingCodemark?: CSCodemark;
+	editingCodemark?: CodemarkPlus;
 	placeholder?: string;
 	selectedStreams: {};
 	showChannels: string;
+	textEditorUri?: string;
+	textEditorSelection?: EditorSelection;
 }
 
 interface State {
@@ -188,14 +194,23 @@ class CodemarkForm extends React.Component<Props, State> {
 				preserveFocus: true
 			});
 		}
+		const { textEditorSelection, textEditorUri } = this.props;
+		if (textEditorSelection && textEditorUri)
+			this.props.getScmInfoForSelection(textEditorUri, textEditorSelection);
 		this.focus();
-		this.handleCodeHighlightEvent();
+		this.handleScmChange();
 	}
 
 	componentDidUpdate(prevProps: Props) {
-		if (prevProps.codeBlock !== this.props.codeBlock && !prevProps.isEditing) {
-			this.handleCodeHighlightEvent();
+		const { isEditing, textEditorSelection, codeBlock } = this.props;
+		if (prevProps.textEditorSelection !== textEditorSelection && !isEditing) {
+			this.handleSelectionChange();
 		}
+
+		if (!isEditing && codeBlock !== prevProps.codeBlock) {
+			this.handleScmChange();
+		}
+
 		if (prevProps.issueProvider !== this.props.issueProvider) {
 			this.setState({
 				assignableUsers: this.getAssignableCSUsers(),
@@ -266,7 +281,12 @@ class CodemarkForm extends React.Component<Props, State> {
 		this.crossPostIssueValues = values;
 	};
 
-	handleCodeHighlightEvent = () => {
+	handleSelectionChange = () => {
+		const { textEditorSelection, textEditorUri } = this.props;
+		if (textEditorSelection) this.props.getScmInfoForSelection(textEditorUri!, textEditorSelection);
+	};
+
+	handleScmChange = () => {
 		const { codeBlock } = this.props;
 
 		this.setState({ codeBlockInvalid: false });
@@ -559,11 +579,29 @@ class CodemarkForm extends React.Component<Props, State> {
 		const { codeBlock, editingCodemark } = this.props;
 		if (!codeBlock || !codeBlock.range) return "Select a range to comment on a block of code.";
 
+		const scm = codeBlock.scm;
+		let file = scm && scm.file ? paths.basename(scm.file) : "";
+
+		let range: any = codeBlock.range;
+		if (editingCodemark) {
+			if (editingCodemark.markers) {
+				const marker = editingCodemark.markers[0];
+				if (marker.locationWhenCreated) {
+					// TODO: location is likely invalid
+					range = arrayToRange(marker.locationWhenCreated as any);
+				} else {
+					range = undefined;
+				}
+				file = marker.file || "";
+			}
+		}
+
 		let lines: string;
-		if (codeBlock.range.start.line === codeBlock.range.end.line) {
-			lines = `(Line ${codeBlock.range.start.line + 1})`;
+		if (range === undefined) lines = "";
+		else if (range.start.line === range.end.line) {
+			lines = `(Line ${range.start.line + 1})`;
 		} else {
-			lines = `(Lines ${codeBlock.range.start.line + 1}-${codeBlock.range.end.line + 1})`;
+			lines = `(Lines ${range.start.line + 1}-${range.end.line + 1})`;
 		}
 
 		const commentType = editingCodemark ? editingCodemark.type : this.state.type;
@@ -578,8 +616,6 @@ class CodemarkForm extends React.Component<Props, State> {
 				? "Permalink for "
 				: "";
 
-		const scm = codeBlock.scm;
-		const file = scm && scm.file ? paths.basename(scm.file) : "";
 		return titleLabel + file + " " + lines;
 	}
 
@@ -987,11 +1023,17 @@ const mapStateToProps = state => {
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
 		isSlackTeam,
 		selectedStreams: preferences.selectedStreams || EMPTY_OBJECT,
-		showChannels: context.channelFilter
+		showChannels: context.channelFilter,
+		textEditorUri: context.textEditorUri,
+		textEditorSelection: context.textEditorSelections && context.textEditorSelections[0],
+		codeBlock: context.scm
 		// slackInfo,
 	};
 };
 
-const ConnectedCodemarkForm = connect(mapStateToProps)(CodemarkForm);
+const ConnectedCodemarkForm = connect(
+	mapStateToProps,
+	{ getScmInfoForSelection }
+)(CodemarkForm);
 
 export { ConnectedCodemarkForm as CodemarkForm };

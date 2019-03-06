@@ -189,19 +189,9 @@ export class SimpleStream extends Component {
 	}
 
 	handleCodeSelectedEvent = async body => {
-		const { composeBoxProps } = this.state;
-		if (composeBoxProps && composeBoxProps.editingCodemark) return;
-
 		if (body.selections.length > 0) {
 			const selection = body.selections[0];
-			if (this.state.multiCompose) {
-				const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
-					uri: body.uri,
-					range: selection,
-					dirty: true // should this be determined here? using true to be safe
-				});
-				this.setState({ quote: scmInfo });
-			} else if (this.props.activePanel === "inline") {
+			if (this.props.activePanel === "inline") {
 				this.setState({ selection: selection });
 			}
 		}
@@ -1012,9 +1002,6 @@ export class SimpleStream extends Component {
 	}
 
 	renderComposeBox = (placeholderText, channelName) => {
-		const textEditorVisibleRanges =
-			this.state.textEditorVisibleRanges || this.props.textEditorVisibleRanges;
-
 		return (
 			<ComposeBox
 				placeholder={placeholderText}
@@ -1045,7 +1032,6 @@ export class SimpleStream extends Component {
 				providerInfo={this.props.providerInfo}
 				fetchIssueBoards={this.props.fetchIssueBoards}
 				createTrelloCard={this.props.createTrelloCard}
-				textEditorVisibleRanges={textEditorVisibleRanges}
 				setNewPostEntry={this.setNewPostEntry}
 				{...this.state.composeBoxProps}
 			/>
@@ -1191,13 +1177,8 @@ export class SimpleStream extends Component {
 
 			if (post.codemarkId) {
 				const codemark = getCodemark(codemarks, post.codemarkId);
-				const marker = codemark.markers[0];
 
 				this.setMultiCompose(true, {
-					quote: marker
-						? // TODO: Dig into getting the updated location for this marker -- marker.location isn't likely valid
-						  { ...marker, range: arrayToRange(marker.location || marker.locationWhenCreated) }
-						: null,
 					composeBoxProps: {
 						...this.state.composeBoxProps,
 						key: Math.random().toString(),

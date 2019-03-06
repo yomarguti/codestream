@@ -1,18 +1,19 @@
 import { WebviewContext } from "@codestream/protocols/webview";
+import { GetRangeScmInfoResponse } from "@codestream/protocols/agent";
 
 export enum ContextActionsType {
-	SetThread = "SET_CURRENT_THREAD",
-	SetCodemarkFileFilter = "SET_CODEMARK_FILE_FILTER",
-	SetCodemarkTypeFilter = "SET_CODEMARK_TYPE_FILTER",
-	SetCodemarkColorFilter = "SET_CODEMARK_COLOR_FILTER",
-	SetChannelFilter = "SET_CHANNEL_FILTER",
-	SetContext = "SET_CONTEXT",
-	OpenPanel = "SET_PANEL",
-	ClosePanel = "CLOSE_PANEL",
-	SetFocusState = "SET_HAS_FOCUS",
-	SetCurrentFile = "SET_CURRENT_FILE",
-	SetCurrentStream = "SET_CURRENT_STREAM",
-	SetIssueProvider = "SET_ISSUE_PROVIDER"
+	SetThread = "@context/SetThread",
+	SetCodemarkFileFilter = "@context/SetCodemarkFileFilter",
+	SetCodemarkTypeFilter = "@context/SetCodemarkTypeFilter",
+	SetCodemarkColorFilter = "@context/SetCodemarkColorFilter",
+	SetChannelFilter = "@context/SetChannelFilter",
+	SetContext = "@context/Set",
+	OpenPanel = "@context/OpenPanel",
+	ClosePanel = "@context/ClosePanel",
+	SetFocusState = "@context/SetFocusState",
+	SetCurrentFile = "@context/SetCurrentFile",
+	SetCurrentStream = "@context/SetCurrentStream",
+	SetIssueProvider = "@context/SetIssueProvider"
 }
 
 export interface State extends WebviewContext {
@@ -22,4 +23,6 @@ export interface State extends WebviewContext {
 	channelFilter: string;
 	issueProvider?: string;
 	panelStack: string[];
+
+	scm?: GetRangeScmInfoResponse;
 }

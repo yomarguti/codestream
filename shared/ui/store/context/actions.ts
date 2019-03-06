@@ -1,7 +1,8 @@
 import {
 	ConnectThirdParyProviderRequestType,
 	DisconnectThirdPartyProviderRequestType,
-	TelemetryRequestType
+	TelemetryRequestType,
+	GetRangeScmInfoRequestType
 } from "@codestream/protocols/agent";
 import { WebviewDidChangeActiveStreamNotificationType } from "../../ipc/webview.protocol";
 import { logError } from "../../logger";
@@ -57,11 +58,8 @@ export const setChannelFilter = (value: string) => async dispatch => {
 export const fileChanged = editor =>
 	setCurrentFile(editor.fileName, editor.visibleRanges, editor.uri);
 
-export const setCurrentFile = (
-	file = "",
-	visibleRanges?: Range[],
-	uri?: string
-) => action(ContextActionsType.SetCurrentFile, { file, visibleRanges, uri });
+export const setCurrentFile = (file = "", visibleRanges?: Range[], uri?: string) =>
+	action(ContextActionsType.SetCurrentFile, { file, visibleRanges, uri });
 
 export const _setCurrentStream = (streamId?: string) =>
 	action(ContextActionsType.SetCurrentStream, streamId);
@@ -121,3 +119,14 @@ export const disconnectService = (name: string, fromMenu = false) => async (disp
 
 export const setIssueProvider = (name: string | undefined) =>
 	action(ContextActionsType.SetIssueProvider, name);
+
+// Text editor context
+export const getScmInfoForSelection = (uri: string, range: Range) => async dispatch => {
+	const scm = await HostApi.instance.send(GetRangeScmInfoRequestType, {
+		dirty: true, // should this be determined here? using true to be safe
+		uri,
+		range
+	});
+
+	dispatch(setContext({ scm }));
+};

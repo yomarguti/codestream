@@ -1,4 +1,5 @@
 import { Position, Range } from "vscode-languageserver-types";
+import { EditorSelection } from "./webview.protocol";
 
 export const MaxRangeValue = 2147483647;
 
@@ -31,6 +32,7 @@ export interface WebviewContext {
 	textEditorSelections?: EditorSelection[];
 	textEditorVisibleRanges?: Range[];
 	textEditorUri?: string;
+	textEditorSelections?: EditorSelection[];
 }
 
 export interface IpcHost {
