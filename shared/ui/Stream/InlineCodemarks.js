@@ -44,9 +44,16 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	static getDerivedStateFromProps(props, state) {
-		const { openPlusOnLine } = props;
-		if (openPlusOnLine !== state.lastSelectedLine)
-			return { openPlusOnLine, lastSelectedLine: openPlusOnLine };
+		let { selection } = props;
+
+		if (!selection) {
+			return { openPlusOnLine: 0, lastSelectedLine: 0 };
+		}
+
+		if (selection.cursor.line !== state.lastSelectedLine) {
+			return { openPlusOnLine: selection.cursor.line, lastSelectedLine: selection.cursor.line };
+		}
+
 		return null;
 	}
 
@@ -194,13 +201,14 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	onMouseEnterHoverIcon = lineNum => {
-		/* lineNum is 0 based and highlight methods expect 1 based */
-		this.handleHighlightLine(lineNum + 1);
+		// lineNum is 0 based
+		this.handleHighlightLine(lineNum);
 	};
 
 	onMouseLeaveHoverIcon = lineNum => {
-		this.handleUnhighlightLine(lineNum + 1);
-		this.setState({ openPlusOnLine: undefined });
+		// lineNum is 0 based
+		this.handleUnhighlightLine(lineNum);
+		// this.setState({ openPlusOnLine: undefined });
 	};
 
 	renderHoverIcons = numLinesVisible => {
@@ -280,8 +288,11 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	getMarkerStartLine = marker => {
-		const location = marker.location || marker.locationWhenCreated;
-		return location[0];
+		if (marker.range) {
+			return marker.range.start.line;
+		}
+
+		return marker.locationWhenCreated[0];
 	};
 
 	renderInline() {
@@ -439,14 +450,22 @@ export class SimpleInlineCodemarks extends Component {
 		event.preventDefault();
 		this.props.setNewPostEntry("Spatial View");
 
-		const mappedLineNum = this.mapLineToVisibleRange(lineNum) + 1;
+		const { openPlusOnLine } = this.state;
+		const { selection } = this.props;
+
+		const mappedLineNum = this.mapLineToVisibleRange(lineNum);
+
+		let range;
+		if (mappedLineNum === openPlusOnLine) {
+			range = Range.create(selection.start, selection.end);
+		}
+		else {
+			range = Range.create(mappedLineNum, 0, mappedLineNum, Number.MAX_SAFE_INTEGER); // TODO: Revisit this to allow 0 to mean select the whole line
+		}
 
 		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
 			uri: this.props.textEditorUri,
-			range: {
-				start: { line: mappedLineNum, character: 0 },
-				end: { line: mappedLineNum, character: 900 }
-			},
+			range: range,
 			dirty: true // should this be determined here? using true to be safe
 		});
 
@@ -464,8 +483,17 @@ export class SimpleInlineCodemarks extends Component {
 				"Codemark Location": "Spatial View"
 			}
 		});
+
+		let markerId;
 		if (codemark.markers) {
-			const response = await HostApi.instance.send(DocumentFromMarkerRequestType, { markerId: codemark.markers[0].id });
+			markerId = codemark.markers[0].id;
+		}
+		else if (codemark.markerIds) {
+			markerId = codemark.markerIds[0];
+		}
+
+		if (markerId) {
+			const response = await HostApi.instance.send(DocumentFromMarkerRequestType, { markerId: markerId });
 			// TODO: What should we do if we don't find the marker?
 			if (response === undefined) return;
 
@@ -484,13 +512,18 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	async highlightCode(marker, highlight) {
+		let range = marker.range;
+		if (!range) {
 		const response = await HostApi.instance.send(DocumentFromMarkerRequestType, { markerId: marker.id });
 		// TODO: What should we do if we don't find the marker?
 		if (response === undefined) return;
 
+			range = response.range;
+		}
+
 		HostApi.instance.send(EditorHighlightRangeRequestType, {
 			uri: this.props.textEditorUri,
-			range: response.range,
+			range: range,
 			highlight: highlight
 		});
 	}
@@ -537,10 +570,22 @@ export class SimpleInlineCodemarks extends Component {
 
 
 	highlightLine(line, highlight) {
+		const { openPlusOnLine } = this.state;
+		const { selection } = this.props;
+
 		const mappedLineNum = this.mapLineToVisibleRange(line);
+
+		let range;
+		if (mappedLineNum === openPlusOnLine) {
+			range = Range.create(selection.start, selection.end);
+		}
+		else {
+			range = Range.create(mappedLineNum, 0, mappedLineNum, 0);
+		}
+
 		HostApi.instance.send(EditorHighlightRangeRequestType, {
 			uri: this.props.textEditorUri,
-			range: Range.create(mappedLineNum, 0, mappedLineNum, 0),
+			range: range,
 			highlight: highlight
 		});
 		this.setState({highlightedLine: highlight ? line : null});
