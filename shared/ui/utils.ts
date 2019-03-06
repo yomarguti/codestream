@@ -195,17 +195,14 @@ export const createRange = (node: any, chars: any, range?: any) => {
 	return range;
 };
 
-export function componentDidUpateMixin<Props, State>(context, fn: (p: Props, s: State) => any) {
-	return prevProps => {
-		const name = context.constructor.displayName || context.constructor.name || "Component";
-		console.group(name);
-		console.debug("props", { prevProps, currProps: context.props });
-		Object.keys(prevProps).forEach(key => {
-			if (prevProps[key] !== context.props[key]) {
-				console.log(`prop ${key} changed from ${prevProps[key]} to ${context.props[key]}`);
-			}
-		});
-		console.groupEnd();
-		(fn as any).call(context, ...arguments);
-	};
+export function logDiff<Props, State>(context, prevProps: Props) {
+	const name = context.constructor.displayName || context.constructor.name || "Component";
+	console.group(name);
+	console.debug("props", { prevProps, currProps: context.props });
+	Object.keys(prevProps).forEach(key => {
+		if (prevProps[key] !== context.props[key]) {
+			console.warn(`prop ${key} changed from ${prevProps[key]} to ${context.props[key]}`);
+		}
+	});
+	console.groupEnd();
 }
