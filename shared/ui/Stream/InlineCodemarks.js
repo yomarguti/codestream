@@ -442,7 +442,7 @@ export class SimpleInlineCodemarks extends Component {
 			uri: this.props.textEditorUri,
 			range: {
 				start: { line: mappedLineNum, character: 0 },
-				end: { line: mappedLineNum + 1, character: 0 }
+				end: { line: mappedLineNum, character: 900 }
 			},
 			dirty: true // should this be determined here? using true to be safe
 		});
