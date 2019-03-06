@@ -20,6 +20,8 @@ import {
 	EditorHighlightRangeRequestType,
 	EditorRevealLineRequestType,
 	EditorRevealMarkerRequestType,
+	EditorRevealRangeRequestType,
+	EditorRevealRangeResult,
 	HostDidChangeActiveEditorNotificationType,
 	HostDidChangeConfigNotificationType,
 	HostDidChangeEditorSelectionNotificationType,
@@ -51,6 +53,7 @@ import {
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage
 } from "@codestream/protocols/webview";
+import { Editor } from "extensions";
 import * as fs from "fs";
 import * as path from "path";
 import {
@@ -58,6 +61,7 @@ import {
 	ConfigurationChangeEvent,
 	ConfigurationTarget,
 	Disposable,
+	TextDocument,
 	TextEditor,
 	TextEditorSelectionChangeEvent,
 	TextEditorVisibleRangesChangeEvent,
@@ -74,7 +78,7 @@ import {
 	SessionStatusChangedEvent,
 	StreamThread
 } from "../api/session";
-import { selectionsToEditorSelections, WorkspaceState } from "../common";
+import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -101,15 +105,45 @@ export class WebviewController implements Disposable {
 	private _lastStreamThread: StreamThread | undefined;
 	private _webview: CodeStreamWebviewPanel | undefined;
 
+	private readonly _notifyActiveEditorChangedDebounced: (e: TextEditor | undefined) => void;
+
 	constructor(public readonly session: CodeStreamSession) {
 		this._disposable = Disposable.from(
-			this.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this)
+			this.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
+			window.onDidChangeActiveTextEditor(this.onActiveEditorChanged, this),
+			window.onDidChangeVisibleTextEditors(this.onVisibleEditorsChanged, this),
+			workspace.onDidCloseTextDocument(this.onDocumentClosed, this)
+		);
+
+		this._lastEditor = window.activeTextEditor;
+		this._notifyActiveEditorChangedDebounced = Functions.debounce(
+			this.notifyActiveEditorChanged,
+			100
 		);
 	}
 
 	dispose() {
 		this._disposable && this._disposable.dispose();
 		this.closeWebview();
+	}
+
+	private _lastEditor: TextEditor | undefined;
+	private setLastEditor(editor: TextEditor | undefined) {
+		this._lastEditor = editor;
+		this._notifyActiveEditorChangedDebounced(editor);
+	}
+
+	private onActiveEditorChanged(e: TextEditor | undefined) {
+		if (this._lastEditor !== undefined && e === undefined) return;
+		if (this._lastEditor === e || (e !== undefined && !Editor.isTextEditor(e))) return;
+
+		this.setLastEditor(e);
+	}
+
+	private onDocumentClosed(e: TextDocument) {
+		if (this._lastEditor === undefined || e !== this._lastEditor.document) return;
+
+		this.setLastEditor(undefined);
 	}
 
 	private async onSessionStatusChanged(e: SessionStatusChangedEvent) {
@@ -151,6 +185,12 @@ export class WebviewController implements Disposable {
 				}
 				break;
 		}
+	}
+
+	private onVisibleEditorsChanged(e: TextEditor[]) {
+		if (this._lastEditor === undefined || e.includes(this._lastEditor)) return;
+
+		this.setLastEditor(undefined);
 	}
 
 	get activeStreamThread() {
@@ -256,13 +296,6 @@ export class WebviewController implements Disposable {
 					(...args) => this.onDocumentMarkersChanged(webview, ...args),
 					this
 				),
-				window.onDidChangeActiveTextEditor(
-					Functions.debounce<(e: TextEditor | undefined) => any>(
-						(...args) => this.onActiveEditorChanged(webview, ...args),
-						100
-					),
-					this
-				),
 				window.onDidChangeTextEditorSelection(
 					Functions.debounce<(e: TextEditorSelectionChangeEvent) => any>(
 						(...args) => this.onEditorSelectionChanged(webview, ...args),
@@ -295,35 +328,6 @@ export class WebviewController implements Disposable {
 	@log()
 	toggle() {
 		return this.visible ? this.hide() : this.show();
-	}
-
-	private async onActiveEditorChanged(
-		webview: CodeStreamWebviewPanel,
-		editor: TextEditor | undefined
-	) {
-		if (editor == null || editor.document.uri.scheme !== "file") {
-			return webview.notify(HostDidChangeActiveEditorNotificationType, {});
-		}
-
-		const uri = editor.document.uri;
-		const { stream } = await Container.agent.streams.getFileStream(uri.toString());
-
-		const folder = workspace.getWorkspaceFolder(uri);
-		const fileName =
-			folder !== undefined
-				? path.relative(folder.uri.fsPath, uri.fsPath)
-				: editor.document.fileName;
-
-		webview.notify(HostDidChangeActiveEditorNotificationType, {
-			editor: {
-				fileStreamId: stream && stream.id,
-				uri: uri.toString(),
-				fileName: fileName,
-				languageId: editor.document.languageId,
-				selections: selectionsToEditorSelections(editor.selections),
-				visibleRanges: editor.visibleRanges
-			}
-		});
 	}
 
 	private async onConnectionStatusChanged(
@@ -391,8 +395,8 @@ export class WebviewController implements Disposable {
 	) {
 		webview.notify(HostDidChangeEditorSelectionNotificationType, {
 			uri: e.textEditor.document.uri.toString(),
-			selections: selectionsToEditorSelections(e.selections),
-			visibleRanges: e.textEditor.visibleRanges
+			selections: Editor.toEditorSelections(e.selections),
+			visibleRanges: Editor.toSerializableRange(e.textEditor.visibleRanges)
 		});
 
 		// if (e.selections.length === 0) return;
@@ -417,15 +421,15 @@ export class WebviewController implements Disposable {
 		webview: CodeStreamWebviewPanel,
 		e: TextEditorVisibleRangesChangeEvent
 	) {
-		if (e.textEditor !== window.activeTextEditor) return;
+		if (e.textEditor !== this._lastEditor) return;
 
 		const uri = e.textEditor.document.uri;
 		if (uri.scheme !== "file") return;
 
 		webview.notify(HostDidChangeEditorVisibleRangesNotificationType, {
 			uri: uri.toString(),
-			selections: selectionsToEditorSelections(e.textEditor.selections),
-			visibleRanges: e.visibleRanges
+			selections: Editor.toEditorSelections(e.textEditor.selections),
+			visibleRanges: Editor.toSerializableRange(e.visibleRanges)
 		});
 	}
 
@@ -615,7 +619,6 @@ export class WebviewController implements Disposable {
 
 				break;
 			}
-			// DEPRECATED
 			case EditorHighlightLineRequestType.method: {
 				webview.onIpcRequest(EditorHighlightLineRequestType, e, async (type, params) => {
 					const result = await Container.commands.highlightLine(
@@ -630,20 +633,7 @@ export class WebviewController implements Disposable {
 
 				break;
 			}
-			case EditorHighlightRangeRequestType.method: {
-				webview.onIpcRequest(EditorHighlightRangeRequestType, e, async (type, params) => {
-					const result = await Container.commands.highlightLine(
-						params.range.start.line,
-						Uri.parse(params.uri),
-						{
-							onOff: params.highlight
-						}
-					);
-					return { result: result };
-				});
-
-				break;
-			}
+			// DEPRECATED
 			case EditorHighlightMarkerRequestType.method: {
 				webview.onIpcRequest(EditorHighlightMarkerRequestType, e, async (type, params) => {
 					const result = await Container.commands.highlightCode(params.marker, {
@@ -654,6 +644,20 @@ export class WebviewController implements Disposable {
 
 				break;
 			}
+			case EditorHighlightRangeRequestType.method: {
+				webview.onIpcRequest(EditorHighlightRangeRequestType, e, async (type, params) => {
+					await Editor.highlightRange(
+						Uri.parse(params.uri),
+						Editor.fromSerializableRange(params.range),
+						!params.highlight
+					);
+					return {};
+				});
+
+				break;
+			}
+
+			// DEPRECATED
 			case EditorRevealLineRequestType.method: {
 				webview.onIpcRequest(EditorRevealLineRequestType, e, async (type, params) => {
 					commands.executeCommand("revealLine", { lineNumber: params.line, at: "top" });
@@ -662,12 +666,29 @@ export class WebviewController implements Disposable {
 
 				break;
 			}
+			// DEPRECATED
 			case EditorRevealMarkerRequestType.method: {
 				webview.onIpcRequest(EditorRevealMarkerRequestType, e, async (type, params) => {
 					const result = await Container.commands.openPostWorkingFile(params.marker, {
 						preserveFocus: params.preserveFocus
 					});
 					return { result: result! };
+				});
+
+				break;
+			}
+			case EditorRevealRangeRequestType.method: {
+				webview.onIpcRequest(EditorRevealRangeRequestType, e, async (type, params) => {
+					const result = await Editor.revealRange(
+						Uri.parse(params.uri),
+						Editor.fromSerializableRange(params.range),
+						{
+							preserveFocus: params.preserveFocus
+						}
+					);
+					return {
+						result: result ? EditorRevealRangeResult.Success : EditorRevealRangeResult.FileNotFound
+					};
 				});
 
 				break;
@@ -769,6 +790,19 @@ export class WebviewController implements Disposable {
 			return state as T;
 		}
 
+		let context: WebviewContext = {
+			...(this._context || empty),
+			currentTeamId: this.session.team.id,
+			hasFocus: true
+		};
+		if (this._lastEditor !== undefined) {
+			context = {
+				...context,
+				textEditorUri: this._lastEditor.document.uri.toString(false),
+				textEditorVisibleRanges: Editor.toSerializableRange(this._lastEditor.visibleRanges)
+			};
+		}
+
 		const bootstrapData = await Container.agent.bootstrap();
 
 		const state: SignedInBootstrapResponse = {
@@ -783,11 +817,7 @@ export class WebviewController implements Disposable {
 				showMarkers: Container.config.showMarkers,
 				openCommentOnSelect: Container.config.openCommentOnSelect
 			},
-			context: {
-				...(this._context || empty),
-				currentTeamId: this.session.team.id,
-				hasFocus: true
-			},
+			context: context,
 			env: this.session.environment,
 			session: {
 				userId: this.session.userId
@@ -846,6 +876,31 @@ export class WebviewController implements Disposable {
 			this._disposableWebview = undefined;
 		}
 		this._webview = undefined;
+	}
+
+	private notifyActiveEditorChanged(e: TextEditor | undefined) {
+		if (this._webview === undefined) return;
+
+		if (e == null || e.document.uri.scheme !== "file") {
+			this._webview.notify(HostDidChangeActiveEditorNotificationType, {});
+			return;
+		}
+
+		const uri = e.document.uri;
+
+		const folder = workspace.getWorkspaceFolder(uri);
+		const fileName =
+			folder !== undefined ? path.relative(folder.uri.fsPath, uri.fsPath) : e.document.fileName;
+
+		this._webview.notify(HostDidChangeActiveEditorNotificationType, {
+			editor: {
+				uri: uri.toString(),
+				fileName: fileName,
+				languageId: e.document.languageId,
+				selections: Editor.toEditorSelections(e.selections),
+				visibleRanges: Editor.toSerializableRange(e.visibleRanges)
+			}
+		});
 	}
 
 	private updateState(streamThread: StreamThread | undefined, hidden: boolean = false) {

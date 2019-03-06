@@ -1,10 +1,8 @@
 "user strict";
-import { EditorSelection } from "@codestream/protocols/webview";
 import {
 	commands,
 	DecorationRangeBehavior,
 	Range,
-	Selection,
 	TextDocumentShowOptions,
 	Uri,
 	ViewColumn,
@@ -14,6 +12,7 @@ import {
 import { BuiltInCommands } from "./constants";
 import { Logger } from "./logger";
 
+// DEPRECATED:
 export enum ShowCodeResult {
 	Success = "SUCCESS",
 	FileNotFound = "FILE_NOT_FOUND",
@@ -25,6 +24,7 @@ const highlightDecorationType = window.createTextEditorDecorationType({
 	backgroundColor: "rgba(127, 127, 127, 0.4)"
 });
 
+// DEPRECATED:
 export async function openEditor(
 	uri: Uri,
 	options: TextDocumentShowOptions & { rethrow?: boolean; highlight?: Range } = {}
@@ -60,10 +60,6 @@ export async function openEditor(
 		Logger.error(ex, "openEditor");
 		return undefined;
 	}
-}
-
-export function selectionsToEditorSelections(selections: Selection[]): EditorSelection[] {
-	return selections.map(s => ({ cursor: s.active, start: s.start, end: s.end }));
 }
 
 export enum ContextKeys {
