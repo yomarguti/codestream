@@ -1,4 +1,4 @@
-import { applyMiddleware, compose, createStore } from "redux";
+import { applyMiddleware, createStore } from "redux";
 import { combineReducers } from "redux";
 import { batchedSubscribe } from "redux-batched-subscribe";
 import { composeWithDevTools } from "redux-devtools-extension";
@@ -18,6 +18,7 @@ import { reduceStreams } from "../store/streams/reducer";
 import { reduceTeams } from "../store/teams/reducer";
 import { reduceUnreads } from "../store/unreads/reducer";
 import { reduceUsers } from "../store/users/reducer";
+import { reduceDocumentMarkers } from "../store/documentMarkers/reducer";
 import { debounceToAnimationFrame } from "../utils";
 import middleware from "./middleware";
 
@@ -38,6 +39,7 @@ const reducer = combineReducers({
 	configs: reduceConfigs,
 	connectivity: reduceConnectivity,
 	context: reduceContext,
+	documentMarkers: reduceDocumentMarkers,
 	pluginVersion,
 	posts: reducePosts,
 	preferences: reducePreferences,

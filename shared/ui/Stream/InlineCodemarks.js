@@ -1,7 +1,6 @@
 // @ts-check
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import * as actions from "./actions";
 import * as userSelectors from "../store/users/reducer";
 import Icon from "./Icon";
 import Codemark from "./Codemark";
@@ -19,14 +18,14 @@ import {
 	DocumentMarker,
 	GetRangeScmInfoRequestType,
 	TelemetryRequestType,
-	DocumentMarkersRequestType,
 	DidChangeDocumentMarkersNotificationType,
 	DocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
 import { Range } from "vscode-languageserver-types";
+import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 
 /**
- * @augments {Component<{ textEditorVisibleRanges?: Range[], [key: string]: any }, { documentMarkers: DocumentMarker[], [key: string]: any }>}
+ * @augments {Component<{ textEditorVisibleRanges?: Range[], documentMarkers: DocumentMarker[],[key: string]: any }, {  [key: string]: any }>}
  */
 export class SimpleInlineCodemarks extends Component {
 	disposables = [];
@@ -36,10 +35,8 @@ export class SimpleInlineCodemarks extends Component {
 		super(props);
 
 		this.state = {
-			isLoading: true,
-			openPost: null,
-			/** @type {DocumentMarker[]} */
-			documentMarkers: []
+			isLoading: props.documentMarkers.length === 0,
+			openPost: null
 		};
 	}
 
@@ -64,15 +61,15 @@ export class SimpleInlineCodemarks extends Component {
 		});
 		this.disposables.push(
 			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
-				if (this.props.textEditorUri === textDocument.uri) this.fetchDocumentMarkers();
+				if (this.props.textEditorUri === textDocument.uri)
+					this.props.fetchDocumentMarkers(textDocument.uri);
 			})
 		);
-		this.fetchDocumentMarkers().then(() => {
-			this.setState({ isLoading: false });
+
+		this.props.fetchDocumentMarkers(this.props.textEditorUri).then(() => {
+			this.setState(state => (state.isLoading ? { isLoading: false } : null));
 		});
-		// this.disposables.push(
-		// 	EventEmitter.subscribe("interaction:active-editor-changed", this.handleFileChangedEvent)
-		// );
+
 		this.setVisibleLinesCount();
 	}
 
@@ -81,7 +78,7 @@ export class SimpleInlineCodemarks extends Component {
 
 		const { textEditorUri } = this.props;
 		if (String(textEditorUri).length > 0 && prevProps.textEditorUri !== textEditorUri) {
-			this.fetchDocumentMarkers();
+			this.onFileChanged();
 		}
 
 		const didStartLineChange = this.compareStart(
@@ -103,21 +100,12 @@ export class SimpleInlineCodemarks extends Component {
 		this.disposables.forEach(d => d.dispose());
 	}
 
-	async fetchDocumentMarkers() {
-		const response = await HostApi.instance.send(DocumentMarkersRequestType, {
-			textDocument: { uri: this.props.textEditorUri }
-		});
-
-		if (response && response.markers) {
-			this.setState({ documentMarkers: response.markers });
-		}
+	async onFileChanged() {
+		const { textEditorUri, documentMarkers } = this.props;
+		if (documentMarkers.length === 0) this.setState({ isLoading: true });
+		await this.props.fetchDocumentMarkers(textEditorUri);
+		this.setState(state => (state.isLoading ? { isLoading: false } : null));
 	}
-
-	handleFileChangedEvent = body => {
-		// if (body && body.editor && body.editor.fileName)
-		// 	this.setState({ thisFile: body.editor.fileName, thisRepo: body.editor.repoId });
-		// else this.setState({ thisFile: null });
-	};
 
 	setVisibleLinesCount = () => {
 		const { textEditorVisibleRanges } = this.props;
@@ -150,7 +138,7 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	renderList = () => {
-		const { documentMarkers } = this.state;
+		const { documentMarkers } = this.props;
 
 		if (documentMarkers.length === 0) {
 			return this.renderNoCodemarks();
@@ -296,8 +284,7 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	renderInline() {
-		const { textEditorVisibleRanges } = this.props;
-		const { documentMarkers } = this.state;
+		const { textEditorVisibleRanges, documentMarkers } = this.props;
 
 		// create a map from start-lines to the codemarks that start on that line
 		let docMarkersByStartLine = {};
@@ -587,39 +574,12 @@ export class SimpleInlineCodemarks extends Component {
 
 		this.highlightLine(line, false);
 	};
-
-	toggleStatus = id => {
-		this.setState({
-			statusPosts: { ...this.state.statusPosts, [id]: !this.state.statusPosts[id] }
-		});
-	};
-
-	handleClickCreateKnowledge = e => {
-		e.stopPropagation();
-		this.props.setActivePanel("main");
-		setTimeout(() => {
-			this.props.runSlashCommand("multi-compose");
-		}, 500);
-		return;
-	};
-
-	handleClickSelectItem = event => {
-		event.preventDefault();
-		var liDiv = event.target.closest("li");
-		if (!liDiv) return; // FIXME throw error
-		if (liDiv.id) {
-			this.props.setActivePanel("main");
-			this.props.setCurrentStream(liDiv.id);
-		} else if (liDiv.getAttribute("teammate")) {
-			this.props.createStream({ type: "direct", memberIds: [liDiv.getAttribute("teammate")] });
-		} else {
-			console.log("Unknown LI in handleClickSelectStream: ", event);
-		}
-	};
 }
 
+const EMPTY_ARRAY = [];
+
 const mapStateToProps = state => {
-	const { capabilities, context, teams, configs } = state;
+	const { capabilities, context, teams, configs, documentMarkers } = state;
 
 	return {
 		usernames: userSelectors.getUsernames(state),
@@ -628,11 +588,12 @@ const mapStateToProps = state => {
 		viewInline: configs.viewCodemarksInline,
 		fileNameToFilterFor: context.activeFile || context.lastActiveFile,
 		textEditorUri: context.textEditorUri,
+		documentMarkers: documentMarkers[context.textEditorUri] || EMPTY_ARRAY,
 		capabilities
 	};
 };
 
 export default connect(
 	mapStateToProps,
-	actions
+	{ fetchDocumentMarkers }
 )(SimpleInlineCodemarks);
