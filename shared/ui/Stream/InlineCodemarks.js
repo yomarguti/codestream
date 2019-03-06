@@ -210,13 +210,14 @@ export class SimpleInlineCodemarks extends Component {
 			<div>
 				{range(0, numLinesVisible + 1).map(lineNum => {
 					const top = (100 * lineNum) / numLinesVisible + "vh";
-					const hover = lineNum === highlightedLine;
+					const hover = (lineNum === highlightedLine || lineNum === iconsOnLine);
 					return (
 						<div
 							onMouseEnter={() => this.onMouseEnterHoverIcon(lineNum)}
 							onMouseLeave={() => this.onMouseLeaveHoverIcon(lineNum)}
 							className={createClassString("hover-plus", {
-								open: lineNum === iconsOnLine
+								open: lineNum === iconsOnLine,
+								hover
 							})}
 							key={lineNum}
 							style={{ top }}
@@ -238,14 +239,14 @@ export class SimpleInlineCodemarks extends Component {
 							<Icon
 								onClick={e => this.handleClickPlus(e, "bookmark", lineNum)}
 								name="bookmark"
-								// title="Create Bookmark"
+								title={hover ? "Create Bookmark" : undefined}
 								placement="bottomLeft"
 								delay={1}
 							/>
 							<Icon
 								onClick={e => this.handleClickPlus(e, "link", lineNum)}
 								name="link"
-								// title="Get Permalink"
+								title={hover ? "Get Permalink" : undefined}
 								placement="bottomLeft"
 								delay={1}
 							/>
