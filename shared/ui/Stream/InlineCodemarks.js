@@ -131,8 +131,8 @@ export class SimpleInlineCodemarks extends Component {
 	 * @param {Range[] | undefined} range1
 	 * @param {Range[] | undefined} range2
 	 */
-	compareStart(range1 = [], range2 = []) {
-		if (range1.length === 0 || range2.length === 0) return true;
+	compareStart(range1, range2) {
+		if (range1 == null || range1.length === 0 || range2 == null || range2.length === 0) return true;
 		const start1 = range1[0].start.line;
 		const start2 = range2[0].start.line;
 		return start1 === start2;
