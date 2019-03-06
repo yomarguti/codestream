@@ -416,7 +416,7 @@ export class SimpleStream extends Component {
 		const totalUMICount = umis.totalMentions ? (
 			<div className="mentions-badge">{umis.totalMentions > 99 ? "99+" : umis.totalMentions}</div>
 		) : umis.totalUnread ? (
-			<div className="unread-badge" />
+			<div className="unread-badge">.</div>
 		) : (
 			// <Icon name="chevron-left" className="show-channels-icon" />
 			""
