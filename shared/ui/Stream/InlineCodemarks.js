@@ -517,16 +517,18 @@ export class SimpleInlineCodemarks extends Component {
 
 	// the opposite of mapLineToVisibleRange
 	mapVisibleRangeToLine = fromLineNum => {
-		const { textEditorVisibleRanges = [] } = this.props;
+		const { textEditorVisibleRanges } = this.props;
 
 		let lineCounter = 0;
 		let toLineNum = 0;
+		if (textEditorVisibleRanges != null) {
 		textEditorVisibleRanges.forEach(lineRange => {
-			range(lineRange[0].line, lineRange[1].line + 1).forEach(thisLine => {
+				range(lineRange.start.line, lineRange.end.line + 1).forEach(thisLine => {
 				lineCounter++;
 				if (thisLine === fromLineNum) toLineNum = lineCounter;
 			});
 		});
+		}
 		return toLineNum;
 	};
 
