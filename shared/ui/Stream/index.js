@@ -93,12 +93,7 @@ export class SimpleStream extends Component {
 				this.handleTextEditorScrolledEvent,
 				this
 			),
-			HostApi.instance.on(
-				NewCodemarkNotificationType,
-				this.handleNewCodemarkRequest,
-				this
-			)
-
+			HostApi.instance.on(NewCodemarkNotificationType, this.handleNewCodemarkRequest, this)
 		);
 
 		this.props.fetchCodemarks();
@@ -1209,8 +1204,8 @@ export class SimpleStream extends Component {
 
 				this.setMultiCompose(true, {
 					quote: marker
-						// TODO: Dig into getting the updated location for this marker -- marker.location isn't likely valid
-						? { ...marker, range: arrayToRange(marker.location || marker.locationWhenCreated) }
+						? // TODO: Dig into getting the updated location for this marker -- marker.location isn't likely valid
+						  { ...marker, range: arrayToRange(marker.location || marker.locationWhenCreated) }
 						: null,
 					composeBoxProps: {
 						...this.state.composeBoxProps,

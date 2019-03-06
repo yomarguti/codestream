@@ -151,6 +151,15 @@ class CodemarkForm extends React.Component<Props, State> {
 		};
 	}
 
+	static getDerivedStateFromProps(props: Props, state: State) {
+		// revisit this if the ability to change the type is added back to the form
+		// TODO: this should call ComposeBox.repositionIfNecessary()
+		if (props.commentType !== state.type) {
+			return { type: props.commentType };
+		}
+		return null;
+	}
+
 	componentDidMount() {
 		if (this.props.codeBlock) {
 			const codeBlock = this.props.codeBlock;
@@ -178,15 +187,6 @@ class CodemarkForm extends React.Component<Props, State> {
 			});
 			this.crossPostIssueValues = undefined;
 		}
-		// if (
-		// 	prevProps.codeBlock &&
-		// 	this.props.codeBlock &&
-		// 	this.props.codeBlock.type &&
-		// 	this.props.codeBlock.type !== prevProps.codeBlock.type
-		// ) {
-		// 	// FIXME this should call ComposeBox.repositionIfNecessary()
-		// 	this.setState({ type: this.props.codeBlock.type! });
-		// }
 	}
 
 	componentWillUnmount() {
