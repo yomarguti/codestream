@@ -21,7 +21,7 @@ import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
 import * as actions from "./actions";
-import { isInVscode, safe, toMapBy, arrayToRange } from "../utils";
+import { isInVscode, safe, toMapBy } from "../utils";
 import { getSlashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
 import { getPostsForStream, getPost } from "../store/posts/reducer";
@@ -44,7 +44,6 @@ import {
 	WebviewDidOpenThreadNotificationType,
 	ShowStreamNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
-	UpdateConfigurationRequestType,
 	HostDidChangeEditorSelectionNotificationType,
 	NewCodemarkNotificationType
 } from "../ipc/webview.protocol";
@@ -1940,7 +1939,6 @@ export class SimpleStream extends Component {
 					{ ...attributes, markers },
 					this.findMentionedUserIds(attributes.text || "", this.props.teammates),
 					{
-						fileUri,
 						crossPostIssueValues,
 						entryPoint: this.newPostEntry
 					}
@@ -1953,8 +1951,6 @@ export class SimpleStream extends Component {
 			};
 			const { quote } = this.state;
 			if (!quote) return submit([]);
-
-			const fileUri = quote.uri;
 
 			let marker = {
 				code: quote.contents,
@@ -2112,6 +2108,7 @@ const mapStateToProps = state => {
 		connectivity,
 		session,
 		context,
+		editorContext,
 		streams,
 		users,
 		pluginVersion,
@@ -2207,10 +2204,7 @@ const mapStateToProps = state => {
 		teamName: team.name || "",
 		repoId: context.currentRepoId,
 		hasFocus: context.hasFocus,
-		currentFile: context.currentFile,
-		currentCommit: context.currentCommit,
-		textEditorVisibleRanges: context.textEditorVisibleRanges,
-		textEditorUri: context.textEditorUri,
+		scmInfo: editorContext.scm,
 		usernamesRegexp: usernamesRegexp,
 		currentUserId: user.id,
 		currentUserName: user.username,

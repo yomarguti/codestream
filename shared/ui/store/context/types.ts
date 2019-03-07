@@ -1,5 +1,4 @@
 import { WebviewContext } from "@codestream/protocols/webview";
-import { GetRangeScmInfoResponse } from "@codestream/protocols/agent";
 
 export enum ContextActionsType {
 	SetThread = "@context/SetThread",
@@ -11,7 +10,6 @@ export enum ContextActionsType {
 	OpenPanel = "@context/OpenPanel",
 	ClosePanel = "@context/ClosePanel",
 	SetFocusState = "@context/SetFocusState",
-	SetCurrentFile = "@context/SetCurrentFile",
 	SetCurrentStream = "@context/SetCurrentStream",
 	SetIssueProvider = "@context/SetIssueProvider"
 }
@@ -23,6 +21,4 @@ export interface State extends WebviewContext {
 	channelFilter: string;
 	issueProvider?: string;
 	panelStack: string[];
-
-	scm?: GetRangeScmInfoResponse;
 }

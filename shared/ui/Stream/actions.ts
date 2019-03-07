@@ -88,7 +88,7 @@ export const createPost = (
 	mentions: string[],
 	extra: any
 ) => async (dispatch, getState) => {
-	const { session } = getState();
+	const { session, editorContext } = getState();
 	const pendingId = uuid();
 	dispatch(
 		postsActions.addPendingPost({
@@ -120,7 +120,7 @@ export const createPost = (
 			responsePromise = HostApi.instance.send(CreatePostWithMarkerRequestType, {
 				streamId,
 				text: codemark.text,
-				textDocument: { uri: extra.fileUri },
+				textDocument: { uri: editorContext.textEditorUri },
 				code: block.code,
 				range: block.range,
 				source: block.source,

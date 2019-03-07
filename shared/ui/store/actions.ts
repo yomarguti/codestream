@@ -3,6 +3,7 @@ import { action } from "./common";
 import * as configsActions from "./configs/actions";
 import * as connectivityActions from "./connectivity/actions";
 import * as contextActions from "./context/actions";
+import * as editorContextActions from "./editorContext/actions";
 import * as preferencesActions from "./preferences/actions";
 import { bootstrapRepos } from "./repos/actions";
 import { bootstrapServices } from "./services/actions";
@@ -37,5 +38,6 @@ export const actions = {
 	...unreadsActions,
 	...connectivityActions,
 	...configsActions,
-	...contextActions
+	...contextActions,
+	...editorContextActions
 };

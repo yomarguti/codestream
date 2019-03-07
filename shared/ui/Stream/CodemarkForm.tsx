@@ -19,7 +19,6 @@ import { connect } from "react-redux";
 import Select from "react-select";
 import { getStreamForId, getStreamForTeam } from "../store/streams/reducer";
 import { Stream } from "../store/streams/types";
-import { getScmInfoForSelection } from "../store/context/actions";
 import { mapFilter, arrayToRange } from "../utils";
 import { HostApi } from "../webview-api";
 import Button from "./Button";
@@ -38,7 +37,8 @@ import {
 	EditorSelection
 } from "@codestream/protocols/webview";
 import { Range } from "vscode-languageserver-types";
-import { getCurrentSelection } from "../store/context/reducer";
+import { getScmInfoForSelection } from "../store/editorContext/actions";
+import { getCurrentSelection } from "../store/editorContext/reducer";
 
 const noop = () => {};
 
@@ -1019,7 +1019,7 @@ class CodemarkForm extends React.Component<Props, State> {
 const EMPTY_OBJECT = {};
 
 const mapStateToProps = state => {
-	const { context, users, session, teams, preferences } = state;
+	const { context, editorContext, users, session, teams, preferences } = state;
 	const user = users[session.userId];
 	const channel = context.currentStreamId
 		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId)!
@@ -1037,9 +1037,9 @@ const mapStateToProps = state => {
 		isSlackTeam,
 		selectedStreams: preferences.selectedStreams || EMPTY_OBJECT,
 		showChannels: context.channelFilter,
-		textEditorUri: context.textEditorUri,
-		textEditorSelection: getCurrentSelection(state.context),
-		codeBlock: context.scm
+		textEditorUri: editorContext.textEditorUri,
+		textEditorSelection: getCurrentSelection(editorContext),
+		codeBlock: editorContext.scm
 		// slackInfo,
 	};
 };

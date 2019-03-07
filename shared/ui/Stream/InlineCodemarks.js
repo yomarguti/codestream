@@ -24,7 +24,7 @@ import {
 import { Range } from "vscode-languageserver-types";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { setThread } from "../store/context/actions";
-import { getCurrentSelection } from "../store/context/reducer";
+import { getCurrentSelection } from "../store/editorContext/reducer";
 
 /**
  * @augments {Component<{ textEditorVisibleRanges?: Range[], documentMarkers: DocumentMarker[],[key: string]: any }, {  [key: string]: any }>}
@@ -582,18 +582,18 @@ export class SimpleInlineCodemarks extends Component {
 const EMPTY_ARRAY = [];
 
 const mapStateToProps = state => {
-	const { capabilities, context, teams, configs, documentMarkers } = state;
+	const { capabilities, context, editorContext, teams, configs, documentMarkers } = state;
 
 	return {
 		usernames: userSelectors.getUsernames(state),
 		showMarkers: configs.showMarkers,
 		team: teams[context.currentTeamId],
 		viewInline: configs.viewCodemarksInline,
-		fileNameToFilterFor: context.activeFile || context.lastActiveFile,
-		textEditorUri: context.textEditorUri,
-		textEditorVisibleRanges: context.textEditorVisibleRanges || EMPTY_ARRAY,
-		textEditorSelection: getCurrentSelection(context),
-		documentMarkers: documentMarkers[context.textEditorUri] || EMPTY_ARRAY,
+		fileNameToFilterFor: editorContext.activeFile || editorContext.lastActiveFile,
+		textEditorUri: editorContext.textEditorUri,
+		textEditorVisibleRanges: editorContext.textEditorVisibleRanges || EMPTY_ARRAY,
+		textEditorSelection: getCurrentSelection(editorContext),
+		documentMarkers: documentMarkers[editorContext.textEditorUri] || EMPTY_ARRAY,
 		capabilities
 	};
 };

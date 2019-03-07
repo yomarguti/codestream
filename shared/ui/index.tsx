@@ -10,7 +10,6 @@ import {
 	WebviewDidInitializeNotificationType,
 	isSignedInBootstrap,
 	HostDidChangeEditorSelectionNotificationType,
-	HostDidChangeEditorSelectionNotification,
 	HostDidChangeEditorVisibleRangesNotificationType
 } from "./ipc/webview.protocol";
 import { actions, createCodeStreamStore } from "./store";
@@ -43,6 +42,7 @@ export async function initialize(selector: string, options: { prerender?: () => 
 					hasFocus: true,
 					...data.context
 				},
+				editorContext: data.editorContext || {},
 				pluginVersion: data.version,
 				preferences: data.preferences,
 				session: {
@@ -126,12 +126,19 @@ export function listenForEvents(store) {
 		store.dispatch(actions.updateConfigs(configs))
 	);
 
-	api.on(
-		HostDidChangeActiveEditorNotificationType,
-		({ editor }) =>
-			editor &&
-			store.dispatch(actions.setCurrentFile(editor.fileName, editor.visibleRanges, editor.uri))
-	);
+	api.on(HostDidChangeActiveEditorNotificationType, params => {
+		if (params.editor) {
+			store.dispatch(
+				actions.setEditorContext({
+					textEditorUri: params.editor.uri,
+					textEditorVisibleRanges: params.editor.visibleRanges,
+					textEditorSelections: params.editor.selections,
+					metrics: params.editor.metrics
+				})
+			);
+			store.dispatch(actions.setCurrentFile(params.editor.fileName));
+		}
+	});
 
 	api.on(HostDidChangeFocusNotificationType, ({ focused }) => {
 		if (focused) {
@@ -147,7 +154,7 @@ export function listenForEvents(store) {
 
 	api.on(HostDidChangeEditorSelectionNotificationType, params => {
 		store.dispatch(
-			actions.setContext({
+			actions.setEditorContext({
 				textEditorUri: params.uri,
 				textEditorVisibleRanges: params.visibleRanges,
 				textEditorSelections: params.selections
@@ -157,7 +164,7 @@ export function listenForEvents(store) {
 
 	api.on(HostDidChangeEditorVisibleRangesNotificationType, params => {
 		store.dispatch(
-			actions.setContext({
+			actions.setEditorContext({
 				textEditorUri: params.uri,
 				textEditorVisibleRanges: params.visibleRanges,
 				textEditorSelections: params.selections

@@ -1,3 +1,4 @@
+import { GetRangeScmInfoResponse } from "@codestream/protocols/agent";
 import { Position, Range } from "vscode-languageserver-types";
 import { EditorSelection } from "./webview.protocol";
 
@@ -25,14 +26,16 @@ export interface WebviewContext {
 	currentStreamId?: string;
 	threadId?: string;
 	hasFocus: boolean;
+}
 
+export interface EditorContext {
+	scm?: GetRangeScmInfoResponse;
 	activeFile?: string;
 	lastActiveFile?: string;
-	textEditorMetrics?: EditorMetrics;
-	textEditorSelections?: EditorSelection[];
 	textEditorVisibleRanges?: Range[];
 	textEditorUri?: string;
 	textEditorSelections?: EditorSelection[];
+	metrics?: EditorMetrics;
 }
 
 export interface IpcHost {

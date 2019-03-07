@@ -3,14 +3,11 @@ import * as preferencesActions from "../preferences/actions";
 import { PreferencesActionsType } from "../preferences/types";
 import * as actions from "./actions";
 import { ContextActionsType, State } from "./types";
-import { createSelector } from "reselect";
 
 type ContextActions = ActionType<typeof actions>;
 type PreferencesActions = ActionType<typeof preferencesActions>;
 
 const initialState: State = {
-	activeFile: "",
-	lastActiveFile: "",
 	currentTeamId: "",
 	currentStreamId: "",
 	issueProvider: undefined,
@@ -20,11 +17,7 @@ const initialState: State = {
 	codemarkFileFilter: "all",
 	codemarkTypeFilter: "all",
 	codemarkColorFilter: "all",
-	channelFilter: "all",
-	textEditorVisibleRanges: [],
-	textEditorUri: "",
-	textEditorSelections: [],
-	scm: undefined
+	channelFilter: "all"
 };
 
 export function reduceContext(
@@ -34,18 +27,6 @@ export function reduceContext(
 	switch (action.type) {
 		case ContextActionsType.SetContext:
 			return { ...state, ...action.payload };
-		case ContextActionsType.SetCurrentFile: {
-			const { file, visibleRanges, uri } = action.payload;
-			const nextState: Partial<State> = {
-				activeFile: file,
-				textEditorVisibleRanges: visibleRanges,
-				textEditorUri: uri
-			};
-			if (file) {
-				nextState.lastActiveFile = file;
-			}
-			return { ...state, ...nextState };
-		}
 		case ContextActionsType.SetCurrentStream:
 			return { ...state, currentStreamId: action.payload, threadId: undefined };
 		case ContextActionsType.SetThread: {
@@ -83,9 +64,3 @@ export function reduceContext(
 			return { ...initialState, ...state };
 	}
 }
-
-const emptyArray = [];
-export const getCurrentSelection = createSelector(
-	(state: State) => state.textEditorSelections || emptyArray,
-	selections => selections[0]
-);

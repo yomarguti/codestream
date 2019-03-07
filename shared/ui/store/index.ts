@@ -21,6 +21,7 @@ import { reduceUsers } from "../store/users/reducer";
 import { reduceDocumentMarkers } from "../store/documentMarkers/reducer";
 import { debounceToAnimationFrame } from "../utils";
 import middleware from "./middleware";
+import { reduceEditorContext } from "./editorContext/reducer";
 
 export { actions } from "./actions";
 
@@ -40,6 +41,7 @@ const reducer = combineReducers({
 	connectivity: reduceConnectivity,
 	context: reduceContext,
 	documentMarkers: reduceDocumentMarkers,
+	editorContext: reduceEditorContext,
 	pluginVersion,
 	posts: reducePosts,
 	preferences: reducePreferences,
