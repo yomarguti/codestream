@@ -39,13 +39,13 @@ CodeStream integrates with Jira, Trello, GitHub, Asana, Bitbucket, and GitLab, m
 
 ## Add comments to ongoing discussions
 
-Click on a codemark in the stream to participate in the discussion. If you have the repo open, you’ll automatically be taken to the appropriate source file and scrolled to the code block.
+Click on a codemark to participate in the discussion. If you have the repo open, you’ll automatically be taken to the appropriate source file and scrolled to the code block.
 
 ![Thread View](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/ThreadView1.png)
 
 ## Leverage your team's knowledge base
 
-A codemark displayed to the right of a block of code means that a discussion took place about that code. Click on the codemark to view the discussion and get a little context for the work at hand.
+A codemark displayed to the right of a block of code means that a discussion took place about that code. Click on the codemark to view the discussion and get some context for the work at hand.
 
 ![Codemark in Source File](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/SpatialSingleMarker.png)
 
