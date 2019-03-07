@@ -608,5 +608,5 @@ const mapStateToProps = state => {
 
 export default connect(
 	mapStateToProps,
-	{ fetchDocumentMarkers, setThread, getScmInfoForSelection }
+	{ fetchDocumentMarkers, getScmInfoForSelection }
 )(SimpleInlineCodemarks);

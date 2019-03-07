@@ -57,7 +57,6 @@ export { connectProvider as connectService, disconnectService } from "../store/c
 export {
 	openPanel,
 	closePanel,
-	setThread,
 	setCodemarkTypeFilter,
 	setCodemarkFileFilter,
 	setCodemarkColorFilter,
