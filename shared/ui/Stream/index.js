@@ -182,7 +182,6 @@ export class SimpleStream extends Component {
 		});
 
 		this.setMultiCompose(true, {
-			quote: scmInfo,
 			composeBoxProps: { commentType: e.type }
 		});
 	}
@@ -1129,7 +1128,6 @@ export class SimpleStream extends Component {
 			if (!value) {
 				this.setNewPostEntry(undefined);
 				this.setState({
-					quote: null,
 					floatCompose: false,
 					composeBoxProps: {}
 				});
@@ -1949,31 +1947,31 @@ export class SimpleStream extends Component {
 				// this.setActivePanel("main");
 				safe(() => this.scrollPostsListToBottom());
 			};
-			const { quote } = this.state;
-			if (!quote) return submit([]);
+			const { scmInfo } = this.props;
+			if (!scmInfo) return submit([]);
 
 			let marker = {
-				code: quote.contents,
-				range: quote.range
+				code: scmInfo.contents,
+				range: scmInfo.range
 			};
 
-			if (quote.scm) {
-				marker.file = quote.scm.file;
-				marker.source = quote.scm;
+			if (scmInfo.scm) {
+				marker.file = scmInfo.scm.file;
+				marker.source = scmInfo.scm;
 			}
 
 			const markers = [marker];
 
 			let warning;
-			if (quote.scm) {
-				if (!quote.scm.remotes || quote.scm.remotes.length === 0) {
+			if (scmInfo.scm) {
+				if (!scmInfo.scm.remotes || scmInfo.scm.remotes.length === 0) {
 					warning = {
 						title: "No Remote URL",
 						message:
 							"This repo doesn’t have a remote URL configured. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE."
 					};
 				}
-			} else if (quote.error) {
+			} else if (scmInfo.error) {
 				warning = {
 					title: "Missing Git Info",
 					message:

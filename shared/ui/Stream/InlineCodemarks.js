@@ -13,7 +13,8 @@ import {
 	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequestType,
 	UpdateConfigurationRequestType,
-	MaxRangeValue
+	MaxRangeValue,
+	EditorSelectRangeRequestType
 } from "../ipc/webview.protocol";
 import {
 	DocumentMarker,
@@ -25,6 +26,7 @@ import { Range } from "vscode-languageserver-types";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { setThread } from "../store/context/actions";
 import { getCurrentSelection } from "../store/editorContext/reducer";
+import { getScmInfoForSelection } from "../store/editorContext/actions";
 
 /**
  * @augments {Component<{ textEditorVisibleRanges?: Range[], documentMarkers: DocumentMarker[],[key: string]: any }, {  [key: string]: any }>}
@@ -427,7 +429,7 @@ export class SimpleInlineCodemarks extends Component {
 		event.preventDefault();
 		this.props.setNewPostEntry("Spatial View");
 
-		const { openPlusOnLine, lastSelectedLine } = this.state;
+		const { openPlusOnLine } = this.state;
 		const { textEditorSelection } = this.props;
 
 		const mappedLineNum = this.mapLineToVisibleRange(lineNum);
@@ -443,9 +445,14 @@ export class SimpleInlineCodemarks extends Component {
 			range = Range.create(mappedLineNum, 0, mappedLineNum, MaxRangeValue);
 		}
 
-		if (lastSelectedLine !== mappedLineNum) {
-			// TODO: select the range
-		}
+		// select line because that's what the user is explicitly doing
+		HostApi.instance.send(EditorSelectRangeRequestType, {
+			uri: this.props.textEditorUri,
+			range: range,
+			preserveFocus: true
+		});
+		// setup git context for codemark form
+		await this.props.getScmInfoForSelection(this.props.textEditorUri, range);
 
 		this.props.setMultiCompose(true, {
 			composeBoxProps: { commentType: type }
@@ -600,5 +607,5 @@ const mapStateToProps = state => {
 
 export default connect(
 	mapStateToProps,
-	{ fetchDocumentMarkers, setThread }
+	{ fetchDocumentMarkers, setThread, getScmInfoForSelection }
 )(SimpleInlineCodemarks);

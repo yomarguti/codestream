@@ -1,5 +1,14 @@
 import uuidv4 from "uuid/v4";
 import { Range } from "vscode-languageserver-types";
+import { MaxRangeValue } from "./ipc/webview.protocol";
+
+export function forceAsLine(range: Range): Range {
+	// If we don't have a selection assume a full line
+	if (range.start.line === range.end.line && range.start.character === range.end.character) {
+		return Range.create(range.start.line, 0, range.start.line, MaxRangeValue);
+	}
+	return range;
+}
 
 export function arrayToRange([startLine, startCharacter, endLine, endCharacter]: number[]): Range {
 	return Range.create(startLine, startCharacter, endLine, endCharacter);

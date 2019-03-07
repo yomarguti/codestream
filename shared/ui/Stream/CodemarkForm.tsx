@@ -19,7 +19,7 @@ import { connect } from "react-redux";
 import Select from "react-select";
 import { getStreamForId, getStreamForTeam } from "../store/streams/reducer";
 import { Stream } from "../store/streams/types";
-import { mapFilter, arrayToRange } from "../utils";
+import { mapFilter, arrayToRange, forceAsLine } from "../utils";
 import { HostApi } from "../webview-api";
 import Button from "./Button";
 import CancelButton from "./CancelButton";
@@ -174,31 +174,26 @@ class CodemarkForm extends React.Component<Props, State> {
 	componentDidMount() {
 		if (this.props.codeBlock) {
 			let { uri, range } = this.props.codeBlock;
-
 			// Clear any previous highlight
 			HostApi.instance.send(EditorHighlightRangeRequestType, {
 				uri: uri,
 				range: range,
 				highlight: false
 			});
+		}
 
-			// If we don't have a selection assume a full line
-			if (range.start.line === range.end.line && range.start.character === range.end.character) {
-				range = Range.create(range.start.line, 0, range.start.line, MaxRangeValue);
-			}
-
-			// Change the selection to be our commenting range
+		const { textEditorSelection, textEditorUri } = this.props;
+		if (textEditorSelection && textEditorUri) {
+			// In case there isn't already a range selection by user, change the selection to be the line the cursor is on
+			const range = forceAsLine(textEditorSelection);
 			HostApi.instance.send(EditorSelectRangeRequestType, {
-				uri: uri,
+				uri: textEditorUri,
 				range: range,
 				preserveFocus: true
 			});
+			this.props.getScmInfoForSelection(textEditorUri, range);
 		}
-		const { textEditorSelection, textEditorUri } = this.props;
-		if (textEditorSelection && textEditorUri)
-			this.props.getScmInfoForSelection(textEditorUri, textEditorSelection);
 		this.focus();
-		this.handleScmChange();
 	}
 
 	componentDidUpdate(prevProps: Props) {
@@ -220,17 +215,6 @@ class CodemarkForm extends React.Component<Props, State> {
 				singleAssignee: false
 			});
 			this.crossPostIssueValues = undefined;
-		}
-	}
-
-	componentWillUnmount() {
-		if (this.props.codeBlock) {
-			// TODO: remove selection
-			// HostApi.instance.send(EditorHighlightRangeRequestType, {
-			// 	uri: codeBlock.uri,
-			// 	range: codeBlock.range,
-			// 	highlight: false
-			// });
 		}
 	}
 
@@ -295,7 +279,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	handleSelectionChange = () => {
 		const { textEditorSelection, textEditorUri } = this.props;
 		if (textEditorSelection) {
-			this.props.getScmInfoForSelection(textEditorUri!, textEditorSelection);
+			this.props.getScmInfoForSelection(textEditorUri!, forceAsLine(textEditorSelection));
 		}
 	};
 
