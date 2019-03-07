@@ -27,4 +27,7 @@
     <actions>
         <!-- Add your actions here -->
     </actions>
+
+    <depends>com.intellij.modules.platform</depends>
+    <idea-version since-build="183" />
 </idea-plugin>

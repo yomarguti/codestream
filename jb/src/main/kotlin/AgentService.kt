@@ -3,21 +3,18 @@ package com.codestream
 import com.github.salomonbrys.kotson.*
 import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
+import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.future.await
+import org.apache.commons.io.FileUtils
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.RemoteEndpoint
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.launch.LSPLauncher
 import java.io.File
-import kotlin.collections.Map
-import kotlin.collections.MutableMap
-import kotlin.collections.mapOf
-import kotlin.collections.mutableMapOf
 import kotlin.collections.set
 
 
@@ -55,14 +52,26 @@ class AgentService(private val project: Project) {
 
     init {
         try {
-            val process = ProcessBuilder(
+            logger.info("Initializing CodeStream LSP agent")
+            val temp = createTempDir("codestream")
+            temp.deleteOnExit()
+            val agentJs = File(temp, "agent.js")
+            val agentLog = File(temp, "agent.log")
+            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent.js"), agentJs)
+            logger.info("CodeStream LSP agent extracted to ${agentJs.absolutePath}")
+
+            val process = GeneralCommandLine(
                 "node",
                 "--nolazy",
-                "--inspect=6010",
-                "/Users/mfarias/Code/codestream-lsp-agent/dist/agent-vs.js",
-                "--stdio",
-                "--log=/Users/mfarias/Code/jetbrains-codestream/build/idea-sandbox/system/log/agent.log"
-            ).start()
+//                "--inspect=6010",
+//                "/Users/mfarias/Code/codestream-lsp-agent/dist/agent-vs.js",
+                agentJs.absolutePath,
+                "--stdio"
+//                ,
+//                "--log=/Users/mfarias/Code/jetbrains-codestream/build/idea-sandbox/system/log/agent.log"
+//                "--log=${agentLog.absolutePath}"
+            ).createProcess()
+
             val client = CodeStreamLanguageClient(project)
             val launcher = LSPLauncher.Builder<CodeStreamLanguageServer>()
                 .setLocalService(client)
@@ -76,6 +85,7 @@ class AgentService(private val project: Project) {
             launcher.startListening()
             initializeResult = server.initialize(getInitializeParams()).get()
         } catch (e: Exception) {
+            logger.error(e)
             e.printStackTrace()
         }
     }
@@ -193,7 +203,10 @@ class AgentService(private val project: Project) {
         return server.documentFromMarker(params).await()
     }
 
-    suspend fun documentMarkers(file: String): DocumentMarkersResult {
+    suspend fun documentMarkers(file: String): DocumentMarkersResult? {
+        if (sessionService.userLoggedIn == null) {
+            return null
+        }
         val params = DocumentMarkersParams(TextDocument(file))
         return server.documentMarkers(params).await()
     }

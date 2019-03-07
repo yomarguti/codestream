@@ -26,14 +26,16 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.*
-import java.lang.IllegalArgumentException
-import java.lang.IllegalStateException
 import javax.swing.Icon
 
 class EditorManagerService(val project: Project) {
 
     private val agentService: AgentService by lazy {
         ServiceManager.getService(project, AgentService::class.java)
+    }
+
+    private val sessionService: SessionService by lazy {
+        ServiceManager.getService(project, SessionService::class.java)
     }
 
     private val webViewService: WebViewService by lazy {
@@ -47,6 +49,7 @@ class EditorManagerService(val project: Project) {
         managedEditors.add(editor)
         updateMarkers(editor)
         editor.selectionModel.addSelectionListener(PostCodeblockSynchronizer())
+//        editor.component.addPropertyChangeListener("isShowing", { e -> })
 
         val document = editor.document
         synchronized(managedDocuments) {
@@ -82,13 +85,19 @@ class EditorManagerService(val project: Project) {
         }
     }
 
+    fun updateMarkers(uri: String) {
+        val document =  managedDocuments.keys.find { it.uri == uri }
+        document?.let {
+            updateMarkers(it)
+        }
+    }
+
     private fun updateMarkers(document: Document) {
         val uri = document.uri ?: return
         GlobalScope.launch {
-            val result = agentService.documentMarkers(uri)
+            val result = agentService.documentMarkers(uri) ?: return@launch
             val editors = EditorFactory.getInstance().getEditors(document, project)
             for (editor in editors) {
-                // TODO check if editor is visible
                 editor.renderMarkers(result.markers)
             }
         }
@@ -98,16 +107,22 @@ class EditorManagerService(val project: Project) {
     private fun updateMarkers(editor: Editor) {
         val uri = editor.document.uri ?: return
         GlobalScope.launch {
-            val result = agentService.documentMarkers(uri)
+            val result = agentService.documentMarkers(uri) ?: return@launch
             editor.renderMarkers(result.markers)
         }
     }
 
     private fun postCodeblock(document: Document, lspRange: Range) = GlobalScope.launch {
+        if (sessionService.userLoggedIn == null) {
+            return@launch
+        }
+
         val identifier = document.textDocumentIdentifier ?: return@launch
-        val result = agentService.server.preparePostWithCode(PreparePostWithCodeParams(
-            identifier, lspRange, true
-        )).await()
+        val result = agentService.server.preparePostWithCode(
+            PreparePostWithCodeParams(
+                identifier, lspRange, true
+            )
+        ).await()
 
 
         val file = if (result.source == null) {
@@ -116,19 +131,23 @@ class EditorManagerService(val project: Project) {
             result.source.file
         }
 
-        webViewService.postMessage(jsonObject(
-            "type" to "codestream:interaction:code-highlighted",
-            "body" to gson.toJsonTree(mapOf(
-                "code" to result.code,
-                "file" to file,
-                "fileUri" to document.uri,
-                "range" to result.range,
-                "source" to result.source,
-                "gitError" to result.gitError,
-                "isHighlight" to true
+        webViewService.postMessage(
+            jsonObject(
+                "type" to "codestream:interaction:code-highlighted",
+                "body" to gson.toJsonTree(
+                    mapOf(
+                        "code" to result.code,
+                        "file" to file,
+                        "fileUri" to document.uri,
+                        "range" to result.range,
+                        "source" to result.source,
+                        "gitError" to result.gitError,
+                        "isHighlight" to true
 
-            ))
-        ))
+                    )
+                )
+            )
+        )
     }
 
     inner class DocumentSynchronizer : DocumentListener {
@@ -220,6 +239,11 @@ class EditorManagerService(val project: Project) {
         val column = lineTextBeforeOffset.length
         return Position(line, column)
     }
+
+    private fun Document.hasVisibleEditors(): Boolean =
+        managedEditors.find {
+            it.document == this && it.component.isShowing
+        } != null
 
     private val DocumentEvent.lspPosition: Position
         get() = document.lspPosition(offset)

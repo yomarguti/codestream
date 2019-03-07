@@ -23,9 +23,8 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
     }
 
     @JsonNotification("codeStream/didChangeDocumentMarkers")
-    fun didChangeDocumentMarkers(json: JsonElement) {
-        // TODO pass the uri/document
-        editorManagerService.updateMarkers()
+    fun didChangeDocumentMarkers(notification: DidChangeDocumentMarkersNotification) {
+        editorManagerService.updateMarkers(notification.textDocument.uri)
     }
 
 
@@ -89,3 +88,7 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
     }
 
 }
+
+class DidChangeDocumentMarkersNotification(
+    val textDocument: TextDocumentIdentifier
+)

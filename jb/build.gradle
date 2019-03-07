@@ -31,6 +31,8 @@ dependencies {
     implementation group: "org.eclipse.lsp4j", name: "org.eclipse.lsp4j", version: "0.6.0"
     implementation "com.github.salomonbrys.kotson:kotson:2.5.0"
 
+    implementation group: 'commons-io', name: 'commons-io', version: '2.6'
+
 //    implementation "com.github.gtache.lsp:intellij-lsp:v1.5.0"
 //    implementation "com.github.gtache.lsp:1.5.0"
 //    testImplementation group: "junit", name: "junit", version: "4.12"
@@ -44,6 +46,8 @@ compileTestKotlin {
 }
 intellij {
     version "2018.3.4"
+//    version "IC-2018.2.7"
+    intellij.updateSinceUntilBuild false
 //    plugins "com.github.gtache.lsp:1.5.0"
 }
 patchPluginXml {

@@ -12,14 +12,22 @@ class EditorFactoryListenerImpl(val project: Project) : EditorFactoryListener {
     }
 
     override fun editorCreated(event: EditorFactoryEvent) {
-        if (event.editor.project == project) {
-            editorManagerService.add(event.editor)
+        try {
+            if (event.editor.project == project) {
+                editorManagerService.add(event.editor)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
     override fun editorReleased(event: EditorFactoryEvent) {
-        if (event.editor.project == project) {
-            editorManagerService.remove(event.editor)
+        try {
+            if (event.editor.project == project) {
+                editorManagerService.remove(event.editor)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 }
