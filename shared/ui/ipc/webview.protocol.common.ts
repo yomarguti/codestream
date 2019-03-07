@@ -25,6 +25,8 @@ export interface WebviewContext {
 	threadId?: string;
 	hasFocus: boolean;
 
+	activeFile?: string;
+	lastActiveFile?: string;
 	textEditorMetrics?: EditorMetrics;
 	textEditorSelections?: EditorSelection[];
 	textEditorVisibleRanges?: Range[];

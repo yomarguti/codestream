@@ -16,8 +16,6 @@ export enum ContextActionsType {
 }
 
 export interface State extends WebviewContext {
-	activeFile?: string;
-	lastActiveFile?: string;
 	codemarkFileFilter: string; // TODO: specify types
 	codemarkTypeFilter: string;
 	codemarkColorFilter: string;
