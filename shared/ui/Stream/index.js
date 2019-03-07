@@ -43,8 +43,6 @@ import {
 	WebviewDidCloseThreadNotificationType,
 	WebviewDidOpenThreadNotificationType,
 	ShowStreamNotificationType,
-	HostDidChangeEditorVisibleRangesNotificationType,
-	HostDidChangeEditorSelectionNotificationType,
 	NewCodemarkNotificationType
 } from "../ipc/webview.protocol";
 import {
