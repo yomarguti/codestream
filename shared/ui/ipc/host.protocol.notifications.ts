@@ -1,6 +1,6 @@
 import { NotificationType } from "vscode-jsonrpc";
-import { Position, Range } from "vscode-languageserver-types";
-import { IpcRoutes } from "./webview.protocol.common";
+import { Range } from "vscode-languageserver-types";
+import { EditorMetrics, EditorSelection, IpcRoutes } from "./webview.protocol.common";
 
 type ConfigState = any;
 
@@ -12,7 +12,7 @@ export interface HostDidChangeActiveEditorNotification {
 		fileStreamId?: string;
 		languageId?: string;
 		uri: string;
-		margins?: { top?: number; right?: number; bottom?: number; left?: number; };
+		metrics?: EditorMetrics;
 		selections: EditorSelection[];
 		visibleRanges: Range[];
 	};
@@ -21,10 +21,6 @@ export const HostDidChangeActiveEditorNotificationType = new NotificationType<
 	HostDidChangeActiveEditorNotification,
 	void
 >(`${IpcRoutes.Webview}/editor/didChangeActive`);
-
-export interface EditorSelection extends Range {
-	cursor: Position;
-}
 
 export type HostDidChangeConfigNotification = Partial<ConfigState>;
 export const HostDidChangeConfigNotificationType = new NotificationType<

@@ -4,7 +4,6 @@ import { IpcRoutes } from "./webview.protocol.common";
 
 export interface EditorHighlightRangeRequest {
 	uri: string;
-	// NOTE: A single-line range with start & end char of 0 indicates a full-line highlight
 	range: Range;
 	highlight: boolean;
 }
@@ -14,7 +13,7 @@ export const EditorHighlightRangeRequestType = new RequestType<
 	EditorHighlightRangeResponse,
 	void,
 	void
->(`${IpcRoutes.Host}/editor/highlight/range`);
+>(`${IpcRoutes.Host}/editor/range/highlight`);
 
 export enum EditorRevealRangeResult {
 	Success = "SUCCESS",
@@ -36,4 +35,17 @@ export const EditorRevealRangeRequestType = new RequestType<
 	EditorRevealRangeResponse,
 	void,
 	void
->(`${IpcRoutes.Host}/editor/reveal/range`);
+>(`${IpcRoutes.Host}/editor/range/reveal`);
+
+export interface EditorSelectRangeRequest {
+	uri: string;
+	range: Range;
+	preserveFocus?: boolean;
+}
+export interface EditorSelectRangeResponse {}
+export const EditorSelectRangeRequestType = new RequestType<
+	EditorSelectRangeRequest,
+	EditorSelectRangeResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/editor/range/select`);

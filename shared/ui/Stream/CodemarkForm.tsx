@@ -29,7 +29,12 @@ import Menu from "./Menu";
 import { PostCompose } from "./PostCompose";
 import Tooltip from "./Tooltip";
 import { sortBy as _sortBy } from "lodash-es";
-import { EditorHighlightRangeRequestType } from "@codestream/protocols/webview";
+import {
+	EditorHighlightRangeRequestType,
+	EditorSelectRangeRequestType,
+	MaxRangeValue
+} from "@codestream/protocols/webview";
+import { Range } from "vscode-languageserver-types";
 
 const noop = () => {};
 
@@ -162,11 +167,25 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	componentDidMount() {
 		if (this.props.codeBlock) {
-			const codeBlock = this.props.codeBlock;
+			let { uri, range } = this.props.codeBlock;
+
+			// Clear any previous highlight
 			HostApi.instance.send(EditorHighlightRangeRequestType, {
-				uri: codeBlock.uri,
-				range: codeBlock.range,
-				highlight: true
+				uri: uri,
+				range: range,
+				highlight: false
+			});
+
+			// If we don't have a selection assume a full line
+			if (range.start.line === range.end.line && range.start.character === range.end.character) {
+				range = Range.create(range.start.line, 0, range.start.line, MaxRangeValue);
+			}
+
+			// Change the selection to be our commenting range
+			HostApi.instance.send(EditorSelectRangeRequestType, {
+				uri: uri,
+				range: range,
+				preserveFocus: true
 			});
 		}
 		this.focus();
@@ -186,17 +205,6 @@ class CodemarkForm extends React.Component<Props, State> {
 				singleAssignee: false
 			});
 			this.crossPostIssueValues = undefined;
-		}
-	}
-
-	componentWillUnmount() {
-		if (this.props.codeBlock) {
-			const codeBlock = this.props.codeBlock as GetRangeScmInfoResponse;
-			HostApi.instance.send(EditorHighlightRangeRequestType, {
-				uri: codeBlock.uri,
-				range: codeBlock.range,
-				highlight: false
-			});
 		}
 	}
 

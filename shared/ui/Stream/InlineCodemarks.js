@@ -12,7 +12,8 @@ import { HostApi } from "../webview-api";
 import {
 	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequestType,
-	UpdateConfigurationRequestType
+	UpdateConfigurationRequestType,
+	MaxRangeValue
 } from "../ipc/webview.protocol";
 import {
 	DocumentMarker,
@@ -431,10 +432,14 @@ export class SimpleInlineCodemarks extends Component {
 		const mappedLineNum = this.mapLineToVisibleRange(lineNum);
 
 		let range;
-		if (mappedLineNum === openPlusOnLine) {
+		if (
+			mappedLineNum === openPlusOnLine &&
+			(selection.start.line !== selection.end.line ||
+				selection.start.character !== selection.end.character)
+		) {
 			range = Range.create(selection.start, selection.end);
 		} else {
-			range = Range.create(mappedLineNum, 0, mappedLineNum, 10000); // TODO: Revisit this to allow 0 to mean select the whole line
+			range = Range.create(mappedLineNum, 0, mappedLineNum, MaxRangeValue);
 		}
 
 		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
@@ -550,19 +555,20 @@ export class SimpleInlineCodemarks extends Component {
 		const { selection } = this.props;
 
 		const mappedLineNum = this.mapLineToVisibleRange(line);
-
-		let range;
-		if (mappedLineNum === openPlusOnLine) {
-			range = Range.create(selection.start, selection.end);
-		} else {
-			range = Range.create(mappedLineNum, 0, mappedLineNum, 0);
+		if (
+			mappedLineNum === openPlusOnLine &&
+			(selection.start.line !== selection.end.line ||
+				selection.start.character !== selection.end.character)
+		) {
+			return;
 		}
 
 		HostApi.instance.send(EditorHighlightRangeRequestType, {
 			uri: this.props.textEditorUri,
-			range: range,
+			range: Range.create(mappedLineNum, 0, mappedLineNum, MaxRangeValue),
 			highlight: highlight
 		});
+
 		this.setState({ highlightedLine: highlight ? line : null });
 	}
 

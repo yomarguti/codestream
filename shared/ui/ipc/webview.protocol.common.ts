@@ -1,4 +1,23 @@
-import { Range } from "vscode-languageserver-types";
+import { Position, Range } from "vscode-languageserver-types";
+
+export const MaxRangeValue = 2147483647;
+
+export interface EditorMargins {
+	top?: number;
+	right?: number;
+	bottom?: number;
+	left?: number;
+}
+
+export interface EditorMetrics {
+	fontSize?: number;
+	lineHeight?: number;
+	margins?: EditorMargins;
+}
+
+export interface EditorSelection extends Range {
+	cursor: Position;
+}
 
 export interface WebviewContext {
 	currentTeamId: string;
@@ -6,6 +25,8 @@ export interface WebviewContext {
 	threadId?: string;
 	hasFocus: boolean;
 
+	textEditorMetrics?: EditorMetrics;
+	textEditorSelections?: EditorSelection[];
 	textEditorVisibleRanges?: Range[];
 	textEditorUri?: string;
 }
