@@ -51,7 +51,6 @@ import {
 	WebviewIpcRequestMessage
 } from "@codestream/protocols/webview";
 import * as fs from "fs";
-import * as path from "path";
 import {
 	commands,
 	ConfigurationChangeEvent,
@@ -85,7 +84,12 @@ import { CodeStreamWebviewPanel, toLoggableIpcMessage } from "../webviews/webvie
 
 export interface WebviewState {
 	hidden: boolean;
-	streamThread?: StreamThread;
+	teams: {
+		[teamId: string]: {
+			context?: WebviewContext;
+			streamThread?: StreamThread;
+		};
+	};
 }
 
 export class WebviewController implements Disposable {
@@ -93,7 +97,7 @@ export class WebviewController implements Disposable {
 	private _context: WebviewContext | undefined;
 	private _disposable: Disposable | undefined;
 	private _disposableWebview: Disposable | undefined;
-	private _lastStreamThread: StreamThread | undefined;
+	private _streamThread: StreamThread | undefined;
 	private _webview: CodeStreamWebviewPanel | undefined;
 
 	private readonly _notifyActiveEditorChangedDebounced: (e: TextEditor | undefined) => void;
@@ -106,7 +110,8 @@ export class WebviewController implements Disposable {
 			workspace.onDidCloseTextDocument(this.onDocumentClosed, this)
 		);
 
-		this._lastEditor = window.activeTextEditor;
+		this._lastEditor = Editor.getActiveOrVisible();
+
 		this._notifyActiveEditorChangedDebounced = Functions.debounce(
 			this.notifyActiveEditorChanged,
 			100
@@ -159,16 +164,23 @@ export class WebviewController implements Disposable {
 				break;
 
 			case SessionStatus.SignedIn:
-				const state = {
-					hidden: false,
-					...(Container.context.workspaceState.get<WebviewState>(WorkspaceState.webviewState) ||
-						emptyObj)
-				} as WebviewState;
+				this._lastEditor = Editor.getActiveOrVisible();
 
-				this._lastStreamThread = state.streamThread;
+				const state = Container.context.workspaceState.get<WebviewState>(
+					WorkspaceState.webviewState,
+					{
+						hidden: false,
+						teams: {}
+					}
+				);
+				const { context, streamThread } = state.teams[this.session.team.id];
+				this._context = context;
+				this._streamThread = streamThread;
+
 				if (!state.hidden) {
-					this.show(this._lastStreamThread);
+					this.show(this._streamThread);
 				}
+
 				break;
 		}
 	}
@@ -245,7 +257,7 @@ export class WebviewController implements Disposable {
 	async show(streamThread?: StreamThread) {
 		if (this._webview === undefined) {
 			if (streamThread === undefined) {
-				streamThread = this._lastStreamThread;
+				streamThread = this._streamThread;
 			}
 
 			// // Kick off the bootstrap compute to be ready for later
@@ -292,10 +304,10 @@ export class WebviewController implements Disposable {
 			Container.agent.telemetry.track("Webview Opened");
 		}
 
-		this._lastStreamThread = await this._webview.show(streamThread);
-		this.updateState(this._lastStreamThread);
+		this._streamThread = await this._webview.show(streamThread);
+		this.updateState();
 
-		return this._lastStreamThread;
+		return this._streamThread;
 	}
 
 	@log()
@@ -447,18 +459,18 @@ export class WebviewController implements Disposable {
 					e,
 					async (type, params) => {
 						if (!params.streamId) {
-							if (this._lastStreamThread !== undefined) {
-								this._lastStreamThread = undefined;
+							if (this._streamThread !== undefined) {
+								this._streamThread = undefined;
 
-								this.updateState(this._lastStreamThread);
+								this.updateState();
 							}
 
 							return;
 						}
 
 						if (params.streamId !== undefined) {
-							this._lastStreamThread = { id: undefined, streamId: params.streamId };
-							this.updateState(this._lastStreamThread);
+							this._streamThread = { id: undefined, streamId: params.streamId };
+							this.updateState();
 						}
 					}
 				);
@@ -468,27 +480,25 @@ export class WebviewController implements Disposable {
 			case WebviewDidChangeContextNotificationType.method: {
 				webview.onIpcNotification(WebviewDidChangeContextNotificationType, e, (type, params) => {
 					this._context = params.context;
+					this.updateState();
 				});
 
 				break;
 			}
 			case WebviewDidOpenThreadNotificationType.method: {
 				webview.onIpcNotification(WebviewDidOpenThreadNotificationType, e, (type, params) => {
-					if (
-						this._lastStreamThread !== undefined &&
-						this._lastStreamThread.streamId === params.streamId
-					) {
-						this._lastStreamThread.id = params.threadId;
-						this.updateState(this._lastStreamThread);
+					if (this._streamThread !== undefined && this._streamThread.streamId === params.streamId) {
+						this._streamThread.id = params.threadId;
+						this.updateState();
 					}
 				});
 				break;
 			}
 			case WebviewDidCloseThreadNotificationType.method: {
 				webview.onIpcNotification(WebviewDidCloseThreadNotificationType, e, (type, params) => {
-					if (this._lastStreamThread !== undefined) {
-						this._lastStreamThread.id = undefined;
-						this.updateState(this._lastStreamThread);
+					if (this._streamThread !== undefined) {
+						this._streamThread.id = undefined;
+						this.updateState();
 					}
 				});
 
@@ -689,6 +699,19 @@ export class WebviewController implements Disposable {
 		}
 	}
 
+	private closeWebview(reason?: "user") {
+		if (reason === "user") {
+			Container.agent.telemetry.track("Webview Closed");
+		}
+		this.updateState(reason === "user");
+
+		if (this._disposableWebview !== undefined) {
+			this._disposableWebview.dispose();
+			this._disposableWebview = undefined;
+		}
+		this._webview = undefined;
+	}
+
 	private async getBootstrap<
 		T extends SignedInBootstrapResponse | SignedOutBootstrapResponse
 	>(): Promise<T> {
@@ -706,11 +729,22 @@ export class WebviewController implements Disposable {
 		let context: WebviewContext = {
 			...(this._context || emptyObj),
 			currentTeamId: this.session.team.id,
-			hasFocus: true
+			hasFocus: true,
+			activeFile: undefined,
+			lastActiveFile: undefined,
+			textEditorUri: undefined,
+			textEditorMetrics: undefined,
+			textEditorSelections: undefined,
+			textEditorVisibleRanges: undefined
 		};
+
 		if (this._lastEditor !== undefined) {
+			const fileName = workspace.asRelativePath(this._lastEditor.document.uri);
+
 			context = {
 				...context,
+				activeFile: fileName,
+				lastActiveFile: fileName,
 				textEditorUri: this._lastEditor.document.uri.toString(false),
 				textEditorMetrics: Editor.getMetrics(),
 				textEditorSelections: Editor.toEditorSelections(this._lastEditor.selections),
@@ -740,9 +774,9 @@ export class WebviewController implements Disposable {
 			...bootstrapData
 		};
 
-		if (this._lastStreamThread !== undefined) {
-			state.context.currentStreamId = this._lastStreamThread.streamId;
-			state.context.threadId = this._lastStreamThread.id;
+		if (this._streamThread !== undefined) {
+			state.context.currentStreamId = this._streamThread.streamId;
+			state.context.threadId = this._streamThread.id;
 		}
 
 		return state as T;
@@ -779,18 +813,6 @@ export class WebviewController implements Disposable {
 		);
 		return this._html;
 	}
-	private closeWebview(reason?: "user") {
-		if (reason === "user") {
-			Container.agent.telemetry.track("Webview Closed");
-		}
-		this.updateState(this.activeStreamThread, reason === "user");
-
-		if (this._disposableWebview !== undefined) {
-			this._disposableWebview.dispose();
-			this._disposableWebview = undefined;
-		}
-		this._webview = undefined;
-	}
 
 	private notifyActiveEditorChanged(e: TextEditor | undefined) {
 		if (this._webview === undefined) return;
@@ -801,15 +823,10 @@ export class WebviewController implements Disposable {
 		}
 
 		const uri = e.document.uri;
-
-		const folder = workspace.getWorkspaceFolder(uri);
-		const fileName =
-			folder !== undefined ? path.relative(folder.uri.fsPath, uri.fsPath) : e.document.fileName;
-
 		this._webview.notify(HostDidChangeActiveEditorNotificationType, {
 			editor: {
 				uri: uri.toString(),
-				fileName: fileName,
+				fileName: workspace.asRelativePath(uri),
 				languageId: e.document.languageId,
 				metrics: Editor.getMetrics(),
 				selections: Editor.toEditorSelections(e.selections),
@@ -818,13 +835,24 @@ export class WebviewController implements Disposable {
 		});
 	}
 
-	private updateState(streamThread: StreamThread | undefined, hidden: boolean = false) {
-		this._lastStreamThread = streamThread;
+	private updateState(hidden: boolean = false) {
+		const prevState = Container.context.workspaceState.get<WebviewState>(
+			WorkspaceState.webviewState,
+			{
+				hidden: hidden,
+				teams: {}
+			}
+		);
 
-		const state: WebviewState = {
-			hidden: hidden,
-			streamThread: streamThread
+		const teams = prevState.teams || {};
+		teams[this.session.team.id] = {
+			context: this._context,
+			streamThread: this._streamThread
 		};
-		Container.context.workspaceState.update(WorkspaceState.webviewState, state);
+
+		Container.context.workspaceState.update(WorkspaceState.webviewState, {
+			hidden: hidden,
+			teams: teams
+		});
 	}
 }

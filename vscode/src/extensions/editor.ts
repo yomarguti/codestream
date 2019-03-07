@@ -50,6 +50,23 @@ export namespace Editor {
 		return openEditor(uri, { viewColumn: column, ...options });
 	}
 
+	export function getActiveOrVisible() {
+		const editor = window.activeTextEditor;
+		if (editor !== undefined && Editor.isTextEditor(editor)) {
+			return editor;
+		}
+
+		if (window.visibleTextEditors.length !== 0) {
+			for (const e of window.visibleTextEditors) {
+				if (Editor.isTextEditor(e)) {
+					return e;
+				}
+			}
+		}
+
+		return undefined;
+	}
+
 	export function getMetrics(): EditorMetrics {
 		const metrics: EditorMetrics = {};
 
