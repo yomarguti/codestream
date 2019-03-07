@@ -82,16 +82,6 @@ export class SimpleStream extends Component {
 		this.setUmiInfo();
 		this.disposables.push(
 			HostApi.instance.on(ShowStreamNotificationType, this.handleShowStream, this),
-			HostApi.instance.on(
-				HostDidChangeEditorSelectionNotificationType,
-				this.handleCodeSelectedEvent,
-				this
-			),
-			HostApi.instance.on(
-				HostDidChangeEditorVisibleRangesNotificationType,
-				this.handleTextEditorScrolledEvent,
-				this
-			),
 			HostApi.instance.on(NewCodemarkNotificationType, this.handleNewCodemarkRequest, this)
 		);
 
@@ -185,23 +175,6 @@ export class SimpleStream extends Component {
 			composeBoxProps: { commentType: e.type }
 		});
 	}
-
-	handleCodeSelectedEvent = async body => {
-		if (body.selections.length > 0) {
-			const selection = body.selections[0];
-			if (this.props.activePanel === "inline") {
-				this.setState({ selection: selection });
-			}
-		}
-	};
-
-	handleTextEditorScrolledEvent = body => {
-		console.log(body);
-		this.setState({
-			textEditorUri: body.uri,
-			textEditorVisibleRanges: body.visibleRanges
-		});
-	};
 
 	// TODO: delete this for `setThread` action
 	goToThread = post => {
