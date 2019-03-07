@@ -26,12 +26,10 @@ import {
 	SessionStatusChangedEvent,
 	TextDocumentMarkersChangedEvent
 } from "../api/session";
-import {
-	OpenCodemarkCommandArgs,
-	OpenStreamCommandArgs,
-	ShowMarkerDiffCommandArgs
-} from "../commands";
+import { OpenCodemarkCommandArgs, ShowMarkerDiffCommandArgs } from "../commands";
+import { MarkerStyle } from "../config";
 import { configuration } from "../configuration";
+import { emptyArray } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions, Strings } from "../system";
@@ -75,73 +73,148 @@ const MarkerHighlights: { [key: string]: string } = {
 	aqua: "rgba(0, 186, 220, .25)",
 	gray: "rgba(127, 127, 127, .25)"
 };
+const MarkerOverviewRuler: { [key: string]: string } = {
+	blue: "rgb(0, 110, 183)",
+	green: "rgb(88, 181, 71)",
+	yellow: "rgb(240, 208, 5)",
+	orange: "rgb(255, 147, 25)",
+	red: "rgb(232, 78, 62)",
+	purple: "rgb(187, 108, 220)",
+	aqua: "rgb(0, 186, 220)",
+	gray: "rgb(127, 127, 127)"
+};
 
-export class MarkerDecorationProvider implements HoverProvider, Disposable {
-	private readonly _disposable: Disposable | undefined;
-	private readonly _decorationType: { [key: string]: TextEditorDecorationType };
+export class CodemarkDecorationProvider implements HoverProvider, Disposable {
+	private _decorationTypes: { [key: string]: TextEditorDecorationType } | undefined;
+	private readonly _disposable: Disposable;
+	private _enabledDisposable: Disposable | undefined;
 
 	private readonly _markersCache = new Map<string, Promise<Marker[]>>();
 	private _watchedEditorsMap: Map<string, () => void> | undefined;
 
 	constructor() {
-		this._decorationType = {};
+		this._disposable = Disposable.from(
+			configuration.onDidChange(this.onConfigurationChanged, this),
+			Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this)
+		);
 
-		for (const position of MarkerPositions) {
-			for (const type of MarkerTypes) {
-				for (const color of MarkerColors) {
-					for (const status of MarkerStatuses) {
-						const key = `${position}-${type}-${color}-${status}`;
-						this._decorationType[`${key}-before`] = window.createTextEditorDecorationType({
-							before: buildDecoration(position, type, color, status),
-							overviewRulerColor: "#3193f1",
-							overviewRulerLane: OverviewRulerLane.Center
-						});
-						this._decorationType[`${key}-nobefore`] = window.createTextEditorDecorationType({
-							overviewRulerColor: "#3193f1",
-							overviewRulerLane: OverviewRulerLane.Center
-						});
+		this.onConfigurationChanged(configuration.initializingChangeEvent);
+	}
+
+	dispose() {
+		this.disable();
+		this._disposable && this._disposable.dispose();
+	}
+
+	private onConfigurationChanged(e: ConfigurationChangeEvent) {
+		if (configuration.changed(e, configuration.name("markerStyle").value)) {
+			this.disable();
+			this.ensure();
+
+			return;
+		}
+
+		if (configuration.changed(e, configuration.name("showMarkers").value)) {
+			this.ensure();
+		}
+	}
+
+	private onSessionStatusChanged(e: SessionStatusChangedEvent) {
+		switch (e.getStatus()) {
+			case SessionStatus.SignedOut:
+				this.disable();
+				break;
+
+			case SessionStatus.SignedIn:
+				this.ensure();
+				break;
+		}
+	}
+
+	private ensure() {
+		if (!Container.config.showMarkers || !Container.session.signedIn) {
+			this.disable();
+
+			return;
+		}
+
+		this.enable();
+	}
+
+	private disable() {
+		if (this._enabledDisposable === undefined) return;
+
+		this._markersCache.clear();
+		for (const editor of this.getApplicableVisibleEditors()) {
+			this.clear(editor);
+		}
+
+		this._enabledDisposable.dispose();
+		this._enabledDisposable = undefined;
+	}
+
+	private enable() {
+		if (
+			this._enabledDisposable !== undefined ||
+			Container.session.status !== SessionStatus.SignedIn
+		) {
+			return;
+		}
+
+		const decorationTypes: { [key: string]: TextEditorDecorationType } = Object.create(null);
+
+		if (Container.config.markerStyle === MarkerStyle.Glyphs) {
+			for (const position of MarkerPositions) {
+				for (const type of MarkerTypes) {
+					for (const color of MarkerColors) {
+						for (const status of MarkerStatuses) {
+							const key = `${position}-${type}-${color}-${status}`;
+							decorationTypes[`${key}-before`] = window.createTextEditorDecorationType({
+								before: buildDecoration(position, type, color, status)
+								// overviewRulerColor: "#3193f1",
+								// overviewRulerLane: OverviewRulerLane.Center
+							});
+							decorationTypes[`${key}-nobefore`] = window.createTextEditorDecorationType({
+								// overviewRulerColor: "#3193f1",
+								// overviewRulerLane: OverviewRulerLane.Center
+							});
+						}
 					}
 				}
 			}
 		}
 
 		for (const color of MarkerColors) {
-			this._decorationType[`trap-highlight-${color}`] = window.createTextEditorDecorationType({
+			decorationTypes[`overviewRuler-${color}`] = window.createTextEditorDecorationType({
+				overviewRulerColor: MarkerOverviewRuler[color],
+				overviewRulerLane: OverviewRulerLane.Center
+			});
+
+			decorationTypes[`trap-highlight-${color}`] = window.createTextEditorDecorationType({
 				rangeBehavior: DecorationRangeBehavior.OpenOpen,
 				isWholeLine: true,
 				backgroundColor: MarkerHighlights[color]
 			});
 		}
 
-		this._disposable = Disposable.from(
-			...Object.values(this._decorationType),
-			languages.registerHoverProvider({ scheme: "file" }, this),
+		this._decorationTypes = decorationTypes;
+
+		const subscriptions: Disposable[] = [
+			...Object.values(decorationTypes),
 			Container.session.onDidChangeTextDocumentMarkers(this.onMarkersChanged, this),
 			Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
 			window.onDidChangeVisibleTextEditors(this.onEditorVisibilityChanged, this),
 			workspace.onDidChangeTextDocument(this.onDocumentChanged, this),
-			workspace.onDidCloseTextDocument(this.onDocumentClosed, this),
-			configuration.onDidChange(this.onConfigurationChanged, this)
-		);
+			workspace.onDidCloseTextDocument(this.onDocumentClosed, this)
+		];
 
-		if (Container.session.status === SessionStatus.SignedIn) {
-			this.applyToApplicableVisibleEditors();
+		if (Container.config.markerStyle === MarkerStyle.Glyphs) {
+			subscriptions.push(languages.registerHoverProvider({ scheme: "file" }, this));
 		}
-	}
 
-	private onConfigurationChanged(e: ConfigurationChangeEvent) {
-		if (configuration.changed(e, configuration.name("showMarkers").value)) {
-			const cfg = Container.config;
+		this._enabledDisposable = Disposable.from(...subscriptions);
 
-			window.visibleTextEditors.forEach(editor => {
-				Container.markerDecorations.apply(editor, true);
-			});
-		}
-	}
-
-	dispose() {
-		this.clear();
-		this._disposable && this._disposable.dispose();
+		this.applyToApplicableVisibleEditors();
 	}
 
 	private async onDocumentChanged(e: TextDocumentChangeEvent) {
@@ -174,34 +247,22 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 		this.apply(editor);
 	}
 
-	private onSessionStatusChanged(e: SessionStatusChangedEvent) {
-		switch (e.getStatus()) {
-			case SessionStatus.SignedOut:
-				this.clearAll();
-				break;
-
-			case SessionStatus.SignedIn:
-				this.applyToApplicableVisibleEditors();
-				break;
-		}
-	}
-
-	private clearAll() {
-		this._markersCache.clear();
-		for (const editor of this.getApplicableVisibleEditors()) {
-			this.clear(editor);
-		}
-	}
-
 	async apply(editor: TextEditor | undefined, force: boolean = false) {
-		if (!Container.session.signedIn || !this.isApplicableEditor(editor)) return;
+		if (
+			this._decorationTypes === undefined ||
+			!Container.session.signedIn ||
+			!this.isApplicableEditor(editor)
+		) {
+			return;
+		}
 
 		if (force) this._markersCache.delete(editor!.document.uri.toString());
 
 		const decorations = await this.provideDecorations(editor!);
+		if (Object.keys(decorations).length === 0) return;
 
-		for (const [key, value] of Object.entries(this._decorationType)) {
-			editor!.setDecorations(value, decorations[key] || []);
+		for (const [key, value] of Object.entries(this._decorationTypes)) {
+			editor!.setDecorations(value, (decorations[key] as any) || emptyArray);
 		}
 	}
 
@@ -223,20 +284,22 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 	}
 
 	clear(editor: TextEditor | undefined = window.activeTextEditor) {
-		if (editor === undefined) return;
+		if (editor === undefined || this._decorationTypes === undefined) return;
 
-		Object.values(this._decorationType).forEach(decoration => {
-			editor.setDecorations(decoration, []);
-		});
+		for (const decoration of Object.values(this._decorationTypes)) {
+			editor.setDecorations(decoration, emptyArray);
+		}
 	}
 
 	async provideDecorations(
 		editor: TextEditor /*, token: CancellationToken */
-	): Promise<{ [key: string]: DecorationOptions[] }> {
+	): Promise<{ [key: string]: (DecorationOptions | Range)[] }> {
 		const markers = await this.getMarkers(editor.document.uri);
 		if (markers.length === 0) return {};
 
-		const decorations: { [key: string]: DecorationOptions[] } = {};
+		const decorations: { [key: string]: (DecorationOptions | Range)[] } = {};
+
+		const glyphs = Container.config.markerStyle === MarkerStyle.Glyphs;
 
 		const starts = new Set();
 		for (const marker of markers) {
@@ -244,35 +307,47 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 			if (marker.type === "issue" && marker.status === "closed") continue;
 			if (starts.has(start)) continue;
 
-			// Determine if the marker needs to be inline (i.e. part of the content or overlayed)
-			const position =
-				editor.document.lineAt(start).firstNonWhitespaceCharacterIndex === 0 ? "inline" : "overlay";
-			const before = Container.config.showMarkers !== false ? "before" : "nobefore";
-			const key = `${position}-${marker.type}-${marker.color}-${marker.status}-${before}`;
-
-			if (!decorations[key]) {
-				decorations[key] = [];
-			}
-
 			if (marker.type === "trap") {
-				if (!decorations[`trap-highlight-${marker.color}`]) {
-					decorations[`trap-highlight-${marker.color}`] = [];
+				const trapKey = `trap-highlight-${marker.color}`;
+				if (!decorations[trapKey]) {
+					decorations[trapKey] = [];
 				}
 
-				decorations[`trap-highlight-${marker.color}`].push({
-					range: new Range(
+				decorations[trapKey].push(
+					new Range(
 						marker.range.start.line,
 						marker.range.start.character,
 						marker.range.end.line,
 						1000000
 					)
-				});
+				);
 			}
 
-			decorations[key].push({
-				range: marker.hoverRange, // editor.document.validateRange(marker.hoverRange)
-				renderOptions: {}
-			});
+			const overviewRulerKey = `overviewRuler-${marker.color}`;
+			if (!decorations[overviewRulerKey]) {
+				decorations[overviewRulerKey] = [];
+			}
+
+			decorations[overviewRulerKey].push(marker.range);
+
+			if (glyphs) {
+				// Determine if the marker needs to be inline (i.e. part of the content or overlayed)
+				const position =
+					editor.document.lineAt(start).firstNonWhitespaceCharacterIndex === 0
+						? "inline"
+						: "overlay";
+				const before = Container.config.showMarkers !== false ? "before" : "nobefore";
+
+				const key = `${position}-${marker.type}-${marker.color}-${marker.status}-${before}`;
+				if (!decorations[key]) {
+					decorations[key] = [];
+				}
+
+				decorations[key].push({
+					range: marker.hoverRange, // editor.document.validateRange(marker.hoverRange)
+					renderOptions: {}
+				});
+			}
 
 			starts.add(start);
 		}
@@ -398,10 +473,12 @@ export class MarkerDecorationProvider implements HoverProvider, Disposable {
 	private async getMarkersCore(uri: Uri) {
 		try {
 			const resp = await Container.agent.markers.fetch(uri);
-			return resp !== undefined ? resp.markers.map(m => new Marker(Container.session, m)) : [];
+			return resp !== undefined
+				? resp.markers.map(m => new Marker(Container.session, m))
+				: emptyArray;
 		} catch (ex) {
 			Logger.error(ex);
-			return [];
+			return emptyArray;
 		}
 	}
 

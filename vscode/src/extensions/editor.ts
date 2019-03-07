@@ -16,7 +16,7 @@ import {
 } from "vscode";
 import { Range as LspRange } from "vscode-languageclient";
 import { configuration } from "../configuration";
-import { BuiltInCommands } from "../constants";
+import { BuiltInCommands, emptyArray } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
 
@@ -71,7 +71,7 @@ export namespace Editor {
 		const editor = await findOrOpenEditor(uri, { preserveFocus: true });
 		if (editor === undefined) return false;
 
-		editor.setDecorations(highlightDecorationType, clear ? [] : [range]);
+		editor.setDecorations(highlightDecorationType, clear ? emptyArray : [range]);
 		return true;
 	}
 

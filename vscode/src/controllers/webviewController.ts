@@ -50,7 +50,6 @@ import {
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage
 } from "@codestream/protocols/webview";
-import { Editor } from "extensions";
 import * as fs from "fs";
 import * as path from "path";
 import {
@@ -77,7 +76,9 @@ import {
 } from "../api/session";
 import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
+import { emptyObj } from "../constants";
 import { Container } from "../container";
+import { Editor } from "../extensions";
 import { Logger } from "../logger";
 import { Functions, log } from "../system";
 import { CodeStreamWebviewPanel, toLoggableIpcMessage } from "../webviews/webviewPanel";
@@ -86,8 +87,6 @@ export interface WebviewState {
 	hidden: boolean;
 	streamThread?: StreamThread;
 }
-
-const empty = {};
 
 export class WebviewController implements Disposable {
 	// private _bootstrapPromise: Promise<BootstrapResponse> | undefined;
@@ -163,7 +162,7 @@ export class WebviewController implements Disposable {
 				const state = {
 					hidden: false,
 					...(Container.context.workspaceState.get<WebviewState>(WorkspaceState.webviewState) ||
-						empty)
+						emptyObj)
 				} as WebviewState;
 
 				this._lastStreamThread = state.streamThread;
@@ -531,7 +530,7 @@ export class WebviewController implements Disposable {
 			case LogoutRequestType.method: {
 				webview.onIpcRequest(LogoutRequestType, e, async (type, params) => {
 					await Container.commands.signOut();
-					return empty;
+					return emptyObj;
 				});
 
 				break;
@@ -546,7 +545,7 @@ export class WebviewController implements Disposable {
 							}/service-auth/slack?state=${this.session.getSignupToken()}`
 						)
 					);
-					return empty;
+					return emptyObj;
 				});
 
 				break;
@@ -561,7 +560,7 @@ export class WebviewController implements Disposable {
 							}/signup?force_auth=true&signup_token=${this.session.getSignupToken()}`
 						)
 					);
-					return empty;
+					return emptyObj;
 				});
 
 				break;
@@ -621,7 +620,7 @@ export class WebviewController implements Disposable {
 			case ApplyMarkerRequestType.method: {
 				webview.onIpcRequest(ApplyMarkerRequestType, e, async (type, params) => {
 					void (await Container.commands.applyMarker({ marker: params.marker }));
-					return empty;
+					return emptyObj;
 				});
 
 				break;
@@ -629,7 +628,7 @@ export class WebviewController implements Disposable {
 			case CompareMarkerRequestType.method: {
 				webview.onIpcRequest(CompareMarkerRequestType, e, async (type, params) => {
 					void (await Container.commands.showMarkerDiff({ marker: params.marker }));
-					return empty;
+					return emptyObj;
 				});
 
 				break;
@@ -642,7 +641,7 @@ export class WebviewController implements Disposable {
 			case UpdateConfigurationRequestType.method: {
 				webview.onIpcRequest(UpdateConfigurationRequestType, e, async (type, params) => {
 					await configuration.update(params.name, params.value, ConfigurationTarget.Global);
-					return empty;
+					return emptyObj;
 				});
 
 				break;
@@ -654,7 +653,7 @@ export class WebviewController implements Disposable {
 						userId: params.userId,
 						createNewStream: params.createNewStream
 					});
-					return empty;
+					return emptyObj;
 				});
 
 				break;
@@ -665,7 +664,7 @@ export class WebviewController implements Disposable {
 						type: "join",
 						url: params.url
 					});
-					return empty;
+					return emptyObj;
 				});
 
 				break;
@@ -678,7 +677,7 @@ export class WebviewController implements Disposable {
 						threadId: params.threadId,
 						createNewStream: params.createNewStream
 					});
-					return empty;
+					return emptyObj;
 				});
 
 				break;
@@ -705,7 +704,7 @@ export class WebviewController implements Disposable {
 		}
 
 		let context: WebviewContext = {
-			...(this._context || empty),
+			...(this._context || emptyObj),
 			currentTeamId: this.session.team.id,
 			hasFocus: true
 		};

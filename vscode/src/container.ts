@@ -10,7 +10,9 @@ import { StatusBarController } from "./controllers/statusBarController";
 import { WebviewController } from "./controllers/webviewController";
 import { Logger, TraceLevel } from "./logger";
 import { CodeStreamCodeActionProvider } from "./providers/codeActionProvider";
-import { MarkerDecorationProvider } from "./providers/markerDecorationProvider";
+import { CodemarkCodeLensProvider } from "./providers/markerCodeLensProvider";
+import { CodemarkDecorationProvider } from "./providers/markerDecorationProvider";
+import { SelectionDecorationProvider } from "./providers/selectionDecorationProvider";
 import { WebviewSidebarActivator } from "./views/webviewSidebarActivator";
 
 export class Container {
@@ -34,7 +36,9 @@ export class Container {
 
 		context.subscriptions.push((this._commands = new Commands()));
 		context.subscriptions.push((this._codeActions = new CodeStreamCodeActionProvider()));
-		context.subscriptions.push((this._markerDecorations = new MarkerDecorationProvider()));
+		context.subscriptions.push((this._codeLens = new CodemarkCodeLensProvider()));
+		context.subscriptions.push((this._markerDecorations = new CodemarkDecorationProvider()));
+		context.subscriptions.push((this._selectionDecoration = new SelectionDecorationProvider()));
 		context.subscriptions.push((this._statusBar = new StatusBarController()));
 
 		context.subscriptions.push((this._webview = new WebviewController(this._session)));
@@ -61,6 +65,11 @@ export class Container {
 		return this._codeActions;
 	}
 
+	private static _codeLens: CodemarkCodeLensProvider;
+	static get codeLens() {
+		return this._codeLens;
+	}
+
 	private static _commands: Commands;
 	static get commands() {
 		return this._commands;
@@ -79,7 +88,7 @@ export class Container {
 		return this._context;
 	}
 
-	private static _markerDecorations: MarkerDecorationProvider;
+	private static _markerDecorations: CodemarkDecorationProvider;
 	static get markerDecorations() {
 		return this._markerDecorations;
 	}
@@ -87,6 +96,11 @@ export class Container {
 	private static _notifications: NotificationsController;
 	static get notifications() {
 		return this._notifications;
+	}
+
+	private static _selectionDecoration: SelectionDecorationProvider;
+	static get selectionDecoration() {
+		return this._selectionDecoration;
 	}
 
 	private static _statusBar: StatusBarController;

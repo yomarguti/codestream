@@ -2,10 +2,8 @@
 import { TraceLevel } from "./logger";
 
 export enum MarkerStyle {
-	Bubble = "bubble",
-	Logo = "logo",
-	Squircle = "squircle",
-	Triangle = "triangle"
+	Glyphs = "glyphs",
+	CodeLens = "codelens"
 }
 
 export enum Notifications {
@@ -18,13 +16,15 @@ export interface Config {
 	autoSignIn: boolean;
 	avatars: boolean;
 	email: string;
+	markerStyle: MarkerStyle;
+	muteAll: boolean;
 	notifications: Notifications;
 	serverUrl: string;
 	showInStatusBar: "left" | "right" | false;
 	showMarkers: boolean;
-	muteAll: boolean;
-	viewCodemarksInline: boolean;
+	showShortcutTipOnSelection: boolean;
 	team: string;
 	traceLevel: TraceLevel;
+	viewCodemarksInline: boolean;
 	webAppUrl: string;
 }
