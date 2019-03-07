@@ -10,7 +10,8 @@ import {
 	WebviewDidInitializeNotificationType,
 	isSignedInBootstrap,
 	HostDidChangeEditorSelectionNotificationType,
-	HostDidChangeEditorVisibleRangesNotificationType
+	HostDidChangeEditorVisibleRangesNotificationType,
+	ShowStreamNotificationType
 } from "./ipc/webview.protocol";
 import { actions, createCodeStreamStore } from "./store";
 import { HostApi } from "./webview-api";
@@ -170,5 +171,9 @@ export function listenForEvents(store) {
 				textEditorSelections: params.selections
 			})
 		);
+	});
+
+	api.on(ShowStreamNotificationType, ({ streamId, threadId }) => {
+		store.dispatch(actions.setCurrentStream(streamId, threadId));
 	});
 }

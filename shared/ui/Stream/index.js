@@ -40,9 +40,6 @@ import {
 	LogoutRequestType,
 	LiveShareInviteToSessionRequestType,
 	LiveShareStartSessionRequestType,
-	WebviewDidCloseThreadNotificationType,
-	WebviewDidOpenThreadNotificationType,
-	ShowStreamNotificationType,
 	NewCodemarkNotificationType
 } from "../ipc/webview.protocol";
 import {
@@ -78,7 +75,6 @@ export class SimpleStream extends Component {
 	componentDidMount() {
 		this.setUmiInfo();
 		this.disposables.push(
-			HostApi.instance.on(ShowStreamNotificationType, this.handleShowStream, this),
 			HostApi.instance.on(NewCodemarkNotificationType, this.handleNewCodemarkRequest, this)
 		);
 
@@ -179,17 +175,6 @@ export class SimpleStream extends Component {
 		this.handleShowStream({ streamId: post.streamId, threadId });
 	};
 
-	handleShowStream = async ({ streamId, threadId }) => {
-		if (streamId !== this.props.postStreamId) {
-			console.warn("changing stream");
-			this.props.setCurrentStream(streamId);
-		}
-		if (threadId) {
-			console.warn("opening thread", threadId);
-			this.openThread(threadId);
-		}
-	};
-
 	copy(event) {
 		let selectedText = window.getSelection().toString();
 		atom.clipboard.write(selectedText);
@@ -229,7 +214,7 @@ export class SimpleStream extends Component {
 
 		const switchedStreams = postStreamId && postStreamId !== prevProps.postStreamId;
 		if (switchedStreams) {
-			this.onThreadClosed(prevProps.threadId);
+			if (prevProps.threadId) this.onThreadClosed(prevProps.threadId);
 			safe(() => this._postslist.scrollToBottom());
 		}
 		if (this.props.activePanel !== prevProps.activePanel && this.state.editingPostId)
@@ -1183,14 +1168,11 @@ export class SimpleStream extends Component {
 	};
 
 	// dismiss the thread stream and return to the main stream
-	handleDismissThread = ({ track = true } = {}) => {
-		this.onThreadClosed(this.props.threadId);
+	handleDismissThread = () => {
 		this.props.setThread(this.props.postStreamId);
 		// this.setActivePanel("main");
 		this.focusInput();
 	};
-
-	onThreadClosed = threadId => HostApi.instance.notify(WebviewDidCloseThreadNotificationType);
 
 	handleEditPost = event => {
 		var postDiv = event.target.closest(".post");
@@ -1404,17 +1386,9 @@ export class SimpleStream extends Component {
 		}
 	};
 
-	openThread = (threadId, wasClicked = false) => {
-		this.props.setThread(this.props.postStreamId, threadId);
-		// this.setActivePanel("thread");
-
+	openThread = threadId => {
+		this.props.setCurrentStream(this.props.postStreamId, threadId);
 		this.focusInput();
-		if (wasClicked) {
-			HostApi.instance.notify(WebviewDidOpenThreadNotificationType, {
-				threadId,
-				streamId: this.props.postStreamId
-			});
-		}
 	};
 
 	// not using a gutter for now

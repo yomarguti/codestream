@@ -3,7 +3,6 @@ import {
 	DisconnectThirdPartyProviderRequestType,
 	TelemetryRequestType
 } from "@codestream/protocols/agent";
-import { WebviewDidChangeActiveStreamNotificationType } from "../../ipc/webview.protocol";
 import { logError } from "../../logger";
 import { setUserPreference } from "../../Stream/actions";
 import { HostApi } from "../../webview-api";
@@ -53,14 +52,20 @@ export const setChannelFilter = (value: string) => async dispatch => {
 	return dispatch(_setChannelFilter(value));
 };
 
-export const _setCurrentStream = (streamId?: string) =>
-	action(ContextActionsType.SetCurrentStream, streamId);
-export const setCurrentStream = (streamId?: string) => (dispatch, getState) => {
+export const _setCurrentStream = (streamId?: string, threadId?: string) =>
+	action(ContextActionsType.SetCurrentStream, { streamId, threadId });
+
+export const setCurrentStream = (streamId?: string, threadId?: string) => (dispatch, getState) => {
+	if (streamId === undefined && threadId !== undefined) {
+		const error = new Error("setCurrentStream was called with a threadId but no streamId");
+		logError(error);
+		throw error;
+	}
 	const { context } = getState();
-	// don't set the stream ID unless it actually changed
-	if (context.currentStreamId !== streamId) {
-		HostApi.instance.notify(WebviewDidChangeActiveStreamNotificationType, { streamId });
-		return dispatch(_setCurrentStream(streamId));
+	const streamChanged = context.currentStreamId !== streamId;
+	const threadChanged = context.threadId !== threadId;
+	if (streamChanged || threadChanged) {
+		return dispatch(_setCurrentStream(streamId, threadId));
 	}
 };
 

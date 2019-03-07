@@ -28,9 +28,9 @@ export function reduceContext(
 		case ContextActionsType.SetContext:
 			return { ...state, ...action.payload };
 		case ContextActionsType.SetCurrentStream:
-			return { ...state, currentStreamId: action.payload, threadId: undefined };
 		case ContextActionsType.SetThread: {
-			return { ...state, ...action.payload };
+			const { streamId, threadId } = action.payload;
+			return { ...state, currentStreamId: streamId, threadId };
 		}
 		case ContextActionsType.OpenPanel:
 			return { ...state, panelStack: [action.payload, ...state.panelStack].slice(0, 10) };
