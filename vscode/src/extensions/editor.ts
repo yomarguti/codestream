@@ -176,4 +176,8 @@ export namespace Editor {
 
 		return ranges.map(r => ({ start: r.start, end: r.end }));
 	}
+
+	export function getUriString(editor: TextEditor) {
+		return editor.document.uri.toString(false);
+	}
 }

@@ -15,6 +15,7 @@ import {
 	BootstrapRequestType,
 	CompareMarkerRequestType,
 	CompleteSignupRequestType,
+	EditorContext,
 	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequestType,
 	EditorRevealRangeResult,
@@ -726,29 +727,19 @@ export class WebviewController implements Disposable {
 			return state as T;
 		}
 
-		let context: WebviewContext = {
+		const context: WebviewContext = {
 			...(this._context || emptyObj),
 			currentTeamId: this.session.team.id,
-			hasFocus: true,
-			activeFile: undefined,
-			lastActiveFile: undefined,
-			textEditorUri: undefined,
-			textEditorMetrics: undefined,
-			textEditorSelections: undefined,
-			textEditorVisibleRanges: undefined
+			hasFocus: true
 		};
-
+		let editorContext: EditorContext = {};
 		if (this._lastEditor !== undefined) {
-			const fileName = workspace.asRelativePath(this._lastEditor.document.uri);
-
-			context = {
-				...context,
-				activeFile: fileName,
-				lastActiveFile: fileName,
-				textEditorUri: this._lastEditor.document.uri.toString(false),
-				textEditorMetrics: Editor.getMetrics(),
-				textEditorSelections: Editor.toEditorSelections(this._lastEditor.selections),
-				textEditorVisibleRanges: Editor.toSerializableRange(this._lastEditor.visibleRanges)
+			editorContext = {
+				activeFile: workspace.asRelativePath(this._lastEditor.document.uri),
+				metrics: Editor.getMetrics(),
+				textEditorUri: Editor.getUriString(this._lastEditor),
+				textEditorVisibleRanges: Editor.toSerializableRange(this._lastEditor.visibleRanges),
+				textEditorSelections: Editor.toEditorSelections(this._lastEditor.selections)
 			};
 		}
 
@@ -766,6 +757,7 @@ export class WebviewController implements Disposable {
 				showMarkers: Container.config.showMarkers
 			},
 			context: context,
+			editorContext: editorContext,
 			env: this.session.environment,
 			session: {
 				userId: this.session.userId
