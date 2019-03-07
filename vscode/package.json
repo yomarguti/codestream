@@ -110,11 +110,6 @@
                     "default": false,
                     "description": "Specifies whether to display Codemarks inline next to the code they refer to. The alternative is a list view."
                 },
-                "codestream.openCommentOnSelect": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Specifies whether to automatically open the comment dialog when the CodeStream panel is open and you select code"
-                },
                 "codestream.team": {
                     "type": "string",
                     "default": null,

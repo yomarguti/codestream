@@ -335,10 +335,9 @@ export class WebviewController implements Disposable {
 		if (
 			configuration.changed(e, configuration.name("avatars").value) ||
 			configuration.changed(e, configuration.name("muteAll").value) ||
-			configuration.changed(e, configuration.name("viewCodemarksInline").value) ||
 			configuration.changed(e, configuration.name("showMarkers").value) ||
-			configuration.changed(e, configuration.name("openCommentOnSelect").value) ||
-			configuration.changed(e, configuration.name("traceLevel").value)
+			configuration.changed(e, configuration.name("traceLevel").value) ||
+			configuration.changed(e, configuration.name("viewCodemarksInline").value)
 		) {
 			webview.notify(HostDidChangeConfigNotificationType, {
 				debug: Container.config.traceLevel === "debug",
@@ -346,8 +345,7 @@ export class WebviewController implements Disposable {
 				viewCodemarksInline: Container.config.viewCodemarksInline,
 				serverUrl: this.session.serverUrl,
 				showHeadshots: Container.config.avatars,
-				showMarkers: Container.config.showMarkers,
-				openCommentOnSelect: Container.config.openCommentOnSelect
+				showMarkers: Container.config.showMarkers
 			});
 		}
 	}
@@ -732,8 +730,7 @@ export class WebviewController implements Disposable {
 				viewCodemarksInline: Container.config.viewCodemarksInline,
 				serverUrl: this.session.serverUrl,
 				showHeadshots: Container.config.avatars,
-				showMarkers: Container.config.showMarkers,
-				openCommentOnSelect: Container.config.openCommentOnSelect
+				showMarkers: Container.config.showMarkers
 			},
 			context: context,
 			env: this.session.environment,

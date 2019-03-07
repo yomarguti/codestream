@@ -22,7 +22,6 @@ export interface Config {
 	serverUrl: string;
 	showInStatusBar: "left" | "right" | false;
 	showMarkers: boolean;
-	openCommentOnSelect: boolean;
 	muteAll: boolean;
 	viewCodemarksInline: boolean;
 	team: string;
