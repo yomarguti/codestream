@@ -67,8 +67,7 @@ const EMAIL_MATCH_REGEX = new RegExp(
 export class SimpleStream extends Component {
 	disposables = [];
 	state = {
-		composeBoxProps: {},
-		threadTrigger: null
+		composeBoxProps: {}
 	};
 	_compose = React.createRef();
 
@@ -956,7 +955,6 @@ export class SimpleStream extends Component {
 											streamId={this.props.postStreamId}
 											isThread
 											threadId={threadId}
-											threadTrigger={this.state.threadTrigger}
 											teamId={this.props.teamId}
 										/>
 									</ScrollBox>
@@ -1187,7 +1185,6 @@ export class SimpleStream extends Component {
 	// dismiss the thread stream and return to the main stream
 	handleDismissThread = ({ track = true } = {}) => {
 		this.onThreadClosed(this.props.threadId);
-		this.setState({ threadTrigger: null });
 		this.props.setThread(this.props.postStreamId);
 		// this.setActivePanel("main");
 		this.focusInput();
@@ -1408,7 +1405,6 @@ export class SimpleStream extends Component {
 	};
 
 	openThread = (threadId, wasClicked = false) => {
-		this.setState({ threadTrigger: wasClicked && threadId });
 		this.props.setThread(this.props.postStreamId, threadId);
 		// this.setActivePanel("thread");
 

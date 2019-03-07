@@ -254,7 +254,6 @@ export default infiniteLoadable(
 									action={postAction}
 									showDetails={this.props.isThread}
 									streamId={this.props.streamId}
-									didTriggerThread={this.props.isThread && post.id === this.props.threadTrigger}
 									onDidResize={this.onPostDidResize}
 								/>
 							</React.Fragment>

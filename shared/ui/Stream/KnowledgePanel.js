@@ -450,15 +450,17 @@ export class SimpleKnowledgePanel extends Component {
 		});
 
 		if (codemark.markers) {
-			const response = await HostApi.instance.send(DocumentFromMarkerRequestType, { markerId: codemark.markers[0].id });
-			// TODO: What should we do if we don't find the marker?
-			if (response === undefined) return;
-
-			HostApi.instance.send(EditorRevealRangeRequestType, {
-				uri: response.textDocument.uri,
-				range: response.range,
-				preserveFocus: true
+			const response = await HostApi.instance.send(DocumentFromMarkerRequestType, {
+				markerId: codemark.markers[0].id
 			});
+			// TODO: What should we do if we don't find the marker?
+			if (response) {
+				HostApi.instance.send(EditorRevealRangeRequestType, {
+					uri: response.textDocument.uri,
+					range: response.range,
+					preserveFocus: true
+				});
+			}
 		}
 		this.props.setThread(codemark.streamId, codemark.parentPostId || codemark.postId);
 		// const isOpen = this.state.openPost === id;

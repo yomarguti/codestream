@@ -4,14 +4,6 @@ import { HostApi } from "../webview-api";
 import { CompareMarkerRequestType, ApplyMarkerRequestType } from "../ipc/webview.protocol";
 
 export default class PostDetails extends Component {
-	disposables = [];
-
-	componentDidMount() {}
-
-	componentWillUnmount() {
-		this.disposables.forEach(d => d.dispose());
-	}
-
 	handleClickShowDiff = event => {
 		event.preventDefault();
 		HostApi.instance.send(CompareMarkerRequestType, { marker: this.props.codemark.markers[0] });

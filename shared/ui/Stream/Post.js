@@ -29,7 +29,6 @@ import { EditorRevealRangeRequestType, EditorRevealRangeResult } from "../ipc/we
 import { HostApi } from "../webview-api";
 import { includes as _includes } from "lodash-es";
 
-// let renderCount = 0;
 class Post extends React.Component {
 	state = {
 		emojiOpen: false,
@@ -41,7 +40,10 @@ class Post extends React.Component {
 	};
 
 	componentDidMount() {
-		if (this.props.didTriggerThread) {
+		// this is an assumption that most of the time, a thread will be opened via the parent post
+		// if the thread was invoked on a child post that has code,
+		// the user will have to click on the code block they want to focus on
+		if (this.props.threadId === this.props.id) {
 			this.showCode(true);
 		}
 	}
@@ -52,7 +54,7 @@ class Post extends React.Component {
 			document.getElementById(this.getEditInputId()).focus();
 		}
 
-		if (!prevProps.didTriggerThread && this.props.didTriggerThread) {
+		if (prevProps.threadId !== this.props.threadId && this.props.threadId === this.props.id) {
 			this.showCode(true);
 		}
 
@@ -72,18 +74,21 @@ class Post extends React.Component {
 				const response = await HostApi.instance.send(DocumentFromMarkerRequestType, {
 					markerId: marker.id
 				});
-				// TODO: What should we do if we don't find the marker?
-				if (response === undefined) return;
 
-				const { result } = await HostApi.instance.send(EditorRevealRangeRequestType, {
-					uri: response.textDocument.uri,
-					range: response.range,
-					preserveFocus: preserveFocus
-				});
-				if (result === EditorRevealRangeResult.Success) {
-					this.setState({ warning: null });
+				if (response) {
+					const { result } = await HostApi.instance.send(EditorRevealRangeRequestType, {
+						uri: response.textDocument.uri,
+						range: response.range,
+						preserveFocus: preserveFocus
+					});
+					if (result === EditorRevealRangeResult.Success) {
+						this.setState({ warning: null });
+					} else {
+						this.setState({ warning: result });
+					}
 				} else {
-					this.setState({ warning: result });
+					// assumption based on DocumentFromMarkerRequestType api requiring the workspace to be available
+					this.setState({ warning: "REPO_NOT_IN_WORKSPACE" });
 				}
 			} else this.setState({ warning: "NO_REMOTE" });
 		}
@@ -741,7 +746,7 @@ class Post extends React.Component {
 }
 
 const mapStateToProps = (state, props) => {
-	const { capabilities, users } = state;
+	const { capabilities, context, users } = state;
 
 	// TODO: figure out a way to do this elsewhere
 
@@ -788,6 +793,7 @@ const mapStateToProps = (state, props) => {
 	}
 
 	return {
+		threadId: context.threadId,
 		usernamesById: getUsernamesById(state),
 		userNamesNormalized: getNormalizedUsernames(state),
 		repoName,
