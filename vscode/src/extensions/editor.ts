@@ -1,6 +1,6 @@
 "use strict";
 
-import { EditorSelection } from "@codestream/protocols/webview";
+import { EditorMetrics, EditorSelection } from "@codestream/protocols/webview";
 import {
 	commands,
 	DecorationRangeBehavior,
@@ -15,6 +15,7 @@ import {
 	workspace
 } from "vscode";
 import { Range as LspRange } from "vscode-languageclient";
+import { configuration } from "../configuration";
 import { BuiltInCommands } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -49,20 +50,26 @@ export namespace Editor {
 		return openEditor(uri, { viewColumn: column, ...options });
 	}
 
+	export function getMetrics(): EditorMetrics {
+		const metrics: EditorMetrics = {};
+
+		const lineHeight = configuration.getAny<number | undefined>("editor.lineHeight");
+		metrics.lineHeight = lineHeight;
+
+		const fontSize = configuration.getAny<number | undefined>("editor.fontSize");
+		metrics.fontSize = fontSize;
+
+		const breadcrumbs = configuration.getAny<boolean>("breadcrumbs.enabled", undefined, false);
+		if (breadcrumbs) {
+			metrics.margins = { top: 22 };
+		}
+
+		return metrics;
+	}
+
 	export async function highlightRange(uri: Uri, range: Range, clear?: boolean): Promise<boolean> {
 		const editor = await findOrOpenEditor(uri, { preserveFocus: true });
 		if (editor === undefined) return false;
-
-		// If we have a single line range, starting and ending at char 0, assume a full line highlight
-		if (
-			range.start.line === range.end.line &&
-			range.start.character === 0 &&
-			range.end.character === 0
-		) {
-			range = editor.document.validateRange(
-				new Range(range.start.line, range.start.character, range.end.line, 10000)
-			);
-		}
 
 		editor.setDecorations(highlightDecorationType, clear ? [] : [range]);
 		return true;
@@ -82,6 +89,18 @@ export namespace Editor {
 		if (editor === undefined) return false;
 
 		editor.revealRange(range, TextEditorRevealType.InCenterIfOutsideViewport);
+		return true;
+	}
+
+	export async function selectRange(
+		uri: Uri,
+		range: Range,
+		options: TextDocumentShowOptions
+	): Promise<boolean> {
+		const editor = await findOrOpenEditor(uri, { ...options });
+		if (editor === undefined) return false;
+
+		editor.selection = new Selection(range.end, range.start);
 		return true;
 	}
 

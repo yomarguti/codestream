@@ -18,6 +18,7 @@ import {
 	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequestType,
 	EditorRevealRangeResult,
+	EditorSelectRangeRequestType,
 	HostDidChangeActiveEditorNotificationType,
 	HostDidChangeConfigNotificationType,
 	HostDidChangeEditorSelectionNotificationType,
@@ -579,11 +580,11 @@ export class WebviewController implements Disposable {
 			}
 			case EditorHighlightRangeRequestType.method: {
 				webview.onIpcRequest(EditorHighlightRangeRequestType, e, async (type, params) => {
-					await Editor.highlightRange(
+					void (await Editor.highlightRange(
 						Uri.parse(params.uri),
 						Editor.fromSerializableRange(params.range),
 						!params.highlight
-					);
+					));
 					return {};
 				});
 
@@ -601,6 +602,20 @@ export class WebviewController implements Disposable {
 					return {
 						result: result ? EditorRevealRangeResult.Success : EditorRevealRangeResult.FileNotFound
 					};
+				});
+
+				break;
+			}
+			case EditorSelectRangeRequestType.method: {
+				webview.onIpcRequest(EditorSelectRangeRequestType, e, async (type, params) => {
+					void (await Editor.selectRange(
+						Uri.parse(params.uri),
+						Editor.fromSerializableRange(params.range),
+						{
+							preserveFocus: params.preserveFocus
+						}
+					));
+					return {};
 				});
 
 				break;
@@ -700,6 +715,8 @@ export class WebviewController implements Disposable {
 			context = {
 				...context,
 				textEditorUri: this._lastEditor.document.uri.toString(false),
+				textEditorMetrics: Editor.getMetrics(),
+				textEditorSelections: Editor.toEditorSelections(this._lastEditor.selections),
 				textEditorVisibleRanges: Editor.toSerializableRange(this._lastEditor.visibleRanges)
 			};
 		}
@@ -798,6 +815,7 @@ export class WebviewController implements Disposable {
 				uri: uri.toString(),
 				fileName: fileName,
 				languageId: e.document.languageId,
+				metrics: Editor.getMetrics(),
 				selections: Editor.toEditorSelections(e.selections),
 				visibleRanges: Editor.toSerializableRange(e.visibleRanges)
 			}
