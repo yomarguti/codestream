@@ -30,13 +30,7 @@ import Menu from "./Menu";
 import { PostCompose } from "./PostCompose";
 import Tooltip from "./Tooltip";
 import { sortBy as _sortBy } from "lodash-es";
-import {
-	EditorHighlightRangeRequestType,
-	EditorSelectRangeRequestType,
-	MaxRangeValue,
-	EditorSelection
-} from "@codestream/protocols/webview";
-import { Range } from "vscode-languageserver-types";
+import { EditorSelectRangeRequestType, EditorSelection } from "@codestream/protocols/webview";
 import { getScmInfoForSelection } from "../store/editorContext/actions";
 import { getCurrentSelection } from "../store/editorContext/reducer";
 
@@ -172,16 +166,6 @@ class CodemarkForm extends React.Component<Props, State> {
 	}
 
 	componentDidMount() {
-		if (this.props.codeBlock) {
-			let { uri, range } = this.props.codeBlock;
-			// Clear any previous highlight
-			HostApi.instance.send(EditorHighlightRangeRequestType, {
-				uri: uri,
-				range: range,
-				highlight: false
-			});
-		}
-
 		const { textEditorSelection, textEditorUri } = this.props;
 		if (textEditorSelection && textEditorUri) {
 			// In case there isn't already a range selection by user, change the selection to be the line the cursor is on

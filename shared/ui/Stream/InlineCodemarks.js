@@ -445,7 +445,9 @@ export class SimpleInlineCodemarks extends Component {
 			range = Range.create(mappedLineNum, 0, mappedLineNum, MaxRangeValue);
 		}
 
-		// select line because that's what the user is explicitly doing
+		// Clear the previous highlight
+		this.handleUnhighlightLine(lineNum);
+		// select line
 		HostApi.instance.send(EditorSelectRangeRequestType, {
 			uri: this.props.textEditorUri,
 			range: range,
