@@ -60,7 +60,7 @@ export namespace Editor {
 			range.end.character === 0
 		) {
 			range = editor.document.validateRange(
-				new Range(range.start.line, range.start.character, range.end.line, Number.MAX_SAFE_INTEGER)
+				new Range(range.start.line, range.start.character, range.end.line, 10000)
 			);
 		}
 
