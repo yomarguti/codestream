@@ -29,11 +29,11 @@ Sign up for CodeStream using Slack so that discussions about code can be shared 
 
 Create a codemark by selecting a block of code in your editor and then typing a question or comment. Keep in mind that, unlike with other solutions, you can discuss any line of code in any source file at any time, even if it’s code that you just typed into your editor and haven’t yet saved or committed.
 
-![New Codemark](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/NewCodemark1.png)
+![New Codemark](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/NewCodemark2.png)
 
-In addition to general comments and questions, there are specific types of codemarks for assigning issues, creating code traps (i.e., identifying code that shouldn't be touched without prior discussion), and setting bookmarks.
+In addition to general comments and questions, there are specific types of codemarks for assigning issues, saving bookmarks, or generating a permalink to a specific block of code.
 
-![Issue Codemark](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/CodemarkIssue1.png)
+![Issue Codemark](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/CodemarkIssue2.png)
 
 CodeStream integrates with Jira, Trello, GitHub, Asana, Bitbucket, and GitLab, making it easy to create an issue tied to a specific block of code, and have that issue appear in your existing issue-tracking service.
 
@@ -45,13 +45,13 @@ Click on a codemark in the stream to participate in the discussion. If you have 
 
 ## Leverage your team's knowledge base
 
-A codemark displayed to the left of a block of code in your source file means that a discussion took place about that code. Hover over the codemark and click _Open Comment_ to view the discussion.
+A codemark displayed to the right of a block of code means that a discussion took place about that code. Click on the codemark to view the discussion and get a little context for the work at hand.
 
-![Codemark in Source File](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/CodemarkHover.png)
+![Codemark in Source File](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/SpatialSingleMarker.png)
 
-You can also explore your knowledge base from the Codemarks tab. See all codemarks from the current file, all of your open issues, or filter the list however you see fit.
+Click on the Search icon to explore your team’s entire knowledge base. Filters allow you to look at codemarks of a certain type, or a specific color. 
 
-![Codemarks tab](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/CodemarksTab.png)
+![Codemarks tab](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/CodemarksTab1.png)
 
 ## Visual Studio Live Share integration
 
