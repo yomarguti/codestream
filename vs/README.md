@@ -37,7 +37,7 @@ CodeStream integrates with Jira, Trello, GitHub, Asana, Bitbucket, and GitLab, m
 
 Click on a codemark to participate in the discussion. If you have the repo open, you’ll automatically be taken to the appropriate source file and scrolled to the code block.
 
-![Thread View](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/ThreadView1.png)
+![Thread View](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/ThreadView2.png)
 
 ## Leverage your team's knowledge base
 
