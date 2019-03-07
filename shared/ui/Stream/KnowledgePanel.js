@@ -462,7 +462,7 @@ export class SimpleKnowledgePanel extends Component {
 				});
 			}
 		}
-		this.props.setThread(codemark.streamId, codemark.parentPostId || codemark.postId);
+		this.props.setCurrentStream(codemark.streamId, codemark.parentPostId || codemark.postId);
 		// const isOpen = this.state.openPost === id;
 		// if (isOpen) this.setState({ openPost: null });
 		// else {

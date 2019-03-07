@@ -27,8 +27,7 @@ export function reduceContext(
 	switch (action.type) {
 		case ContextActionsType.SetContext:
 			return { ...state, ...action.payload };
-		case ContextActionsType.SetCurrentStream:
-		case ContextActionsType.SetThread: {
+		case ContextActionsType.SetCurrentStream: {
 			const { streamId, threadId } = action.payload;
 			return { ...state, currentStreamId: streamId, threadId };
 		}

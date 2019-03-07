@@ -90,16 +90,6 @@ export class SimpleStream extends Component {
 		// polyfill for ResizeObserver which won't be triggered automatically
 		this.handleResizeCompose();
 
-		if (
-			this.props.activePanel === "thread" &&
-			this.props.postStreamId &&
-			this.props.posts.length === 0
-		) {
-			const { postStreamId, teamId } = this.props;
-			// TODO: make thread a PostList so it can be intialized properly on its own
-			this.props.fetchPosts({ streamId: postStreamId, teamId, limit: 150 });
-		}
-
 		if (global.atom) {
 			this.disposables.push(
 				atom.keymaps.add("codestream", {
@@ -169,12 +159,6 @@ export class SimpleStream extends Component {
 		});
 	}
 
-	// TODO: delete this for `setThread` action
-	goToThread = post => {
-		const threadId = post.parentPostId || post.id;
-		this.handleShowStream({ streamId: post.streamId, threadId });
-	};
-
 	copy(event) {
 		let selectedText = window.getSelection().toString();
 		atom.clipboard.write(selectedText);
@@ -214,7 +198,6 @@ export class SimpleStream extends Component {
 
 		const switchedStreams = postStreamId && postStreamId !== prevProps.postStreamId;
 		if (switchedStreams) {
-			if (prevProps.threadId) this.onThreadClosed(prevProps.threadId);
 			safe(() => this._postslist.scrollToBottom());
 		}
 		if (this.props.activePanel !== prevProps.activePanel && this.state.editingPostId)
@@ -1169,7 +1152,7 @@ export class SimpleStream extends Component {
 
 	// dismiss the thread stream and return to the main stream
 	handleDismissThread = () => {
-		this.props.setThread(this.props.postStreamId);
+		this.props.setCurrentStream(this.props.postStreamId);
 		// this.setActivePanel("main");
 		this.focusInput();
 	};
@@ -1197,7 +1180,7 @@ export class SimpleStream extends Component {
 					wait: true,
 					action: () => {
 						this.props.deletePost(this.props.postStreamId, postId);
-						this.props.setThread(this.props.postStreamId);
+						this.props.setCurrentStream(this.props.postStreamId);
 					}
 				},
 				{ label: "Cancel" }
@@ -1264,9 +1247,9 @@ export class SimpleStream extends Component {
 	postAction = (action, post, args) => {
 		switch (action) {
 			case "make-thread":
-				return this.selectPost(post.id, true);
+				return this.selectPost(post.id);
 			case "goto-thread":
-				return this.goToThread(post);
+				return this.props.setCurrentStream(post.streamId, post.parentPostId || post.id);
 			case "edit-post":
 				return this.editLastPost(post.id);
 			case "delete-post":
@@ -1363,20 +1346,21 @@ export class SimpleStream extends Component {
 			// by dragging
 			return;
 		}
-		this.selectPost(postDiv.id, true);
+		this.selectPost(postDiv.id);
 	};
 
 	// show the thread related to the given post
-	selectPost = (id, wasClicked) => {
+	selectPost = id => {
 		const post = this.findPostById(id);
 		if (!post) return;
 
 		// if it is a child in the thread, it'll have a parentPostId,
 		// otherwise use the id. any post can become the head of a thread
 		const threadId = post.parentPostId || post.id;
-		this.openThread(threadId, wasClicked);
+		this.props.setCurrentStream(post.streamId, threadId);
+		this.focusInput();
 
-		if (wasClicked && post.codemark && !this.props.threadId) {
+		if (post.codemark && !this.props.threadId) {
 			HostApi.instance.send(TelemetryRequestType, {
 				eventName: "Codemark Clicked",
 				properties: {
@@ -1384,11 +1368,6 @@ export class SimpleStream extends Component {
 				}
 			});
 		}
-	};
-
-	openThread = threadId => {
-		this.props.setCurrentStream(this.props.postStreamId, threadId);
-		this.focusInput();
 	};
 
 	// not using a gutter for now

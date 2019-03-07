@@ -1,7 +1,6 @@
 import { WebviewContext } from "@codestream/protocols/webview";
 
 export enum ContextActionsType {
-	SetThread = "@context/SetThread",
 	SetCodemarkFileFilter = "@context/SetCodemarkFileFilter",
 	SetCodemarkTypeFilter = "@context/SetCodemarkTypeFilter",
 	SetCodemarkColorFilter = "@context/SetCodemarkColorFilter",

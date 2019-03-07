@@ -27,10 +27,6 @@ export const focus = () => action(ContextActionsType.SetFocusState, true);
 
 export const blur = () => action(ContextActionsType.SetFocusState, false);
 
-export function setThread(streamId: string, threadId?: string) {
-	return action(ContextActionsType.SetThread, { streamId, threadId });
-}
-
 export const setCodemarkFileFilter = (value: string) =>
 	action(ContextActionsType.SetCodemarkFileFilter, value);
 
