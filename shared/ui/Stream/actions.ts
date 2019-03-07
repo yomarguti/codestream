@@ -43,8 +43,7 @@ import {
 	setChannelFilter,
 	setCodemarkColorFilter,
 	setCodemarkFileFilter,
-	setCodemarkTypeFilter,
-	setThread
+	setCodemarkTypeFilter
 } from "../store/context/actions";
 import * as contextActions from "../store/context/actions";
 import * as postsActions from "../store/posts/actions";

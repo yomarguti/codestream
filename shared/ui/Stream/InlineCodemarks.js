@@ -24,7 +24,6 @@ import {
 } from "@codestream/protocols/agent";
 import { Range } from "vscode-languageserver-types";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
-import { setThread } from "../store/context/actions";
 import { getCurrentSelection } from "../store/editorContext/reducer";
 import { getScmInfoForSelection } from "../store/editorContext/actions";
 
