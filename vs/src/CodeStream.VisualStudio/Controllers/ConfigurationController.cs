@@ -20,21 +20,6 @@ namespace CodeStream.VisualStudio.Controllers
             _ipc = ipc;
         }
 
-        public async Task UpdateOpenCommentOnSelectAsync(bool value)
-        {
-            _ipc.Notify(new HostDidChangeConfigNotificationType
-            {
-                Params = new HostDidChangeConfigNotification
-                {
-                    OpenCommentOnSelect = value
-                }
-            });
-
-            Log.Verbose($"{nameof(UpdateOpenCommentOnSelectAsync)} Value={value}");
-
-            await Task.CompletedTask;
-        }
-
         public async Task ToggleShowMarkersAsync(bool value)
         {
             _eventAggregator.Publish(new MarkerVisibilityEvent { IsVisible = value });

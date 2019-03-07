@@ -35,7 +35,6 @@ namespace CodeStream.VisualStudio.Models
     public class HostDidChangeConfigNotification
     {
         public bool? MuteAll { get; set; }
-        public bool? OpenCommentOnSelect { get; set; }
         public bool? ShowMarkers { get; set; }
         public bool? ViewCodemarksInline { get; set; }
     }

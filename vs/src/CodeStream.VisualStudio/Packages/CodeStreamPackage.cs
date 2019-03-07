@@ -171,7 +171,6 @@ namespace CodeStream.VisualStudio.Packages
                 LogManager.SetTraceLevel(_settingsService.TraceLevel);
             }
             else if (
-                args.PropertyName == nameof(_settingsService.OpenCommentOnSelect) ||
                 args.PropertyName == nameof(_settingsService.ShowMarkers) ||
                 args.PropertyName == nameof(_settingsService.MuteAll) || 
                 args.PropertyName == nameof(_settingsService.ViewCodemarksInline)
@@ -187,9 +186,6 @@ namespace CodeStream.VisualStudio.Packages
                 {
                     switch (args.PropertyName)
                     {
-                        case nameof(_settingsService.OpenCommentOnSelect):
-                            await configurationController.UpdateOpenCommentOnSelectAsync(odp.OpenCommentOnSelect);
-                            break;
                         case nameof(_settingsService.ShowMarkers):
                             await configurationController.ToggleShowMarkersAsync(odp.ShowMarkers);
                             break;

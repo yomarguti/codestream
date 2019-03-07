@@ -230,10 +230,6 @@ namespace CodeStream.VisualStudio
                                                                 {
                                                                     scope.SettingsService.ShowMarkers = @params.Value.AsBool();
                                                                 }
-                                                                else if (@params.Name == "openCommentOnSelect")
-                                                                {
-                                                                    scope.SettingsService.OpenCommentOnSelect = @params.Value.AsBool();
-                                                                }
                                                                 else if (@params.Name == "muteAll")
                                                                 {
                                                                     scope.SettingsService.MuteAll = @params.Value.AsBool();

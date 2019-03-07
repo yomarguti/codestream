@@ -317,7 +317,6 @@ namespace CodeStream.VisualStudio.Services
                     {
                         serverUrl = _settingsService.ServerUrl,
                         email = _settingsService.Email,
-                        openCommentOnSelect = _settingsService.OpenCommentOnSelect,
                         showHeadshots = _settingsService.ShowHeadshots,
                         showMarkers = _settingsService.ShowMarkers,
                         muteAll = _settingsService.MuteAll,
@@ -348,7 +347,6 @@ namespace CodeStream.VisualStudio.Services
                 showMarkers = settings.ShowMarkers,
                 showHeadshots = settings.ShowHeadshots,
                 muteAll = settings.MuteAll,
-                openCommentOnSelect = settings.OpenCommentOnSelect,
                 viewCodemarksInline = settings.ViewCodemarksInline,
                 team = settings.Team
             });

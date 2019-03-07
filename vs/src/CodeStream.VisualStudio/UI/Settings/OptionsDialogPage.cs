@@ -18,7 +18,6 @@ namespace CodeStream.VisualStudio.UI.Settings
         string ServerUrl { get; set; }
         string WebAppUrl { get; set; }
         string Team { get; set; }
-        bool OpenCommentOnSelect { get; set; }
         bool ViewCodemarksInline { get; set; }
         void SaveSettingsToStorage();
         void LoadSettingsFromStorage();
@@ -37,7 +36,6 @@ namespace CodeStream.VisualStudio.UI.Settings
         private bool _showHeadshots = true;
         private bool _muteAll = false;
         private TraceLevel _traceLevel;
-        private bool _openCommentOnSelect = false;
         private bool _viewCodemarksInline = true;
         private string _team;
         private bool _autoSignIn = true;
@@ -263,23 +261,6 @@ namespace CodeStream.VisualStudio.UI.Settings
                 if (_showHeadshots != value)
                 {
                     _showHeadshots = value;
-                    NotifyPropertyChanged();
-                }
-            }
-        }
-
-        [Category("UI")]
-        [DisplayName("Open Comment On Select")]
-        [Description(
-            "Specifies whether to automatically open the comment dialog when the CodeStream panel is open and you select code")]
-        public bool OpenCommentOnSelect
-        {
-            get => _openCommentOnSelect;
-            set
-            {
-                if (_openCommentOnSelect != value)
-                {
-                    _openCommentOnSelect = value;
                     NotifyPropertyChanged();
                 }
             }
