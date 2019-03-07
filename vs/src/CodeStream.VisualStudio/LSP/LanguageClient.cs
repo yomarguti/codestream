@@ -175,7 +175,7 @@ namespace CodeStream.VisualStudio.LSP
 
                 if (!(Package.GetGlobalService(typeof(DTE)) is DTE2 dte)) return;
 
-                path = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Resources", "codestream.codestream");
+                path = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Resources", Core.Constants.CodeStreamCodeStream);
 
                 var window = dte.OpenFile(Constants.vsViewKindCode, path);
                 window.Visible = true;

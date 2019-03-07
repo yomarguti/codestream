@@ -1,5 +1,7 @@
 ﻿using CodeStream.VisualStudio.Extensions;
+using CodeStream.VisualStudio.Models;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text.Editor;
 using System;
 using System.Collections.Generic;
 using System.Windows.Media;
@@ -127,18 +129,7 @@ namespace CodeStream.VisualStudio.Services
 
             colorInfos.Add(new ColorInfo { Key = "vscode-editor-font-family", Value = fontFamilyString });
             colorInfos.Add(new ColorInfo { Key = "font-family", Value = fontFamilyString });
-
-            var fontSizeInt = 13;
-            var fontSize = System.Windows.Application.Current.FindResource(VsFonts.EnvironmentFontSizeKey);
-            if (fontSize != null)
-            {
-                if (!int.TryParse(fontSize.ToString(), out fontSizeInt))
-                {
-                    fontSizeInt = 13;
-                }
-            }
-
-            colorInfos.Add(new ColorInfo { Key = "font-size", Value = fontSizeInt.ToString() });
+            colorInfos.Add(new ColorInfo { Key = "font-size", Value = CreateEditorMetrics(null).FontSize.ToString() });
 
             return new ThemeInfo
             {
@@ -147,40 +138,53 @@ namespace CodeStream.VisualStudio.Services
             };
         }
 
-        /*
-                /// <summary>
-                /// this is some helper code to generate a theme color palette from the current VS theme
-                /// </summary>
-                /// <returns></returns>
-                private static string GenerateVisualStudioColorTheme()
+        public static EditorMetrics CreateEditorMetrics(IWpfTextView textView)
+        {
+            return new EditorMetrics
+            {
+                LineHeight = textView?.LineHeight.ToInt(),
+                FontSize = System.Windows.Application.Current.FindResource(VsFonts.EnvironmentFontSizeKey).ToIntSafe(13),
+                EditorMargins = new EditorMargins()
                 {
-                    var d = new System.Collections.Generic.Dictionary<string, string>();
-                    Type type = typeof(EnvironmentColors); // MyClass is static class with static properties
-                    foreach (var p in type.GetProperties().Where(_ => _.Name.StartsWith("ToolWindow")))
-                    {
-                        var val = typeof(EnvironmentColors).GetProperty(p.Name, BindingFlags.Public | BindingFlags.Static);
-                        var v = val.GetValue(null);
-                        var trk = v as ThemeResourceKey;
-                        if (trk != null)
-                        {
-                            var color = VSColorTheme.GetThemedColor(trk);
-                            d.Add(p.Name, color.ToHex());
-                        }
-
-                        // d.Add(p.Name, ((System.Drawing.Color)val).ToHex());
-                    }
-
-                    string s = "";
-                    foreach (var kvp in d)
-                    {
-                        s += $@"<div>";
-                        s += $@"<span style='display:inline-block; height:50ps; width: 50px; background:{kvp.Value}; padding-right:5px; margin-right:5px;'>&nbsp;</span>";
-                        s += $@"<span>{kvp.Value} - {kvp.Key}</span>";
-                        s += "</div>";
-                    }
-
-                    return null;
+                    Top = 16
                 }
+            };
+        }
+
+        /*
+            /// <summary>
+            /// this is some helper code to generate a theme color palette from the current VS theme
+            /// </summary>
+            /// <returns></returns>
+            private static string GenerateVisualStudioColorTheme()
+            {
+                var d = new System.Collections.Generic.Dictionary<string, string>();
+                Type type = typeof(EnvironmentColors); // MyClass is static class with static properties
+                foreach (var p in type.GetProperties().Where(_ => _.Name.StartsWith("ToolWindow")))
+                {
+                    var val = typeof(EnvironmentColors).GetProperty(p.Name, BindingFlags.Public | BindingFlags.Static);
+                    var v = val.GetValue(null);
+                    var trk = v as ThemeResourceKey;
+                    if (trk != null)
+                    {
+                        var color = VSColorTheme.GetThemedColor(trk);
+                        d.Add(p.Name, color.ToHex());
+                    }
+
+                    // d.Add(p.Name, ((System.Drawing.Color)val).ToHex());
+                }
+
+                string s = "";
+                foreach (var kvp in d)
+                {
+                    s += $@"<div>";
+                    s += $@"<span style='display:inline-block; height:50ps; width: 50px; background:{kvp.Value}; padding-right:5px; margin-right:5px;'>&nbsp;</span>";
+                    s += $@"<span>{kvp.Value} - {kvp.Key}</span>";
+                    s += "</div>";
+                }
+
+                return null;
+            }
         */
     }
 

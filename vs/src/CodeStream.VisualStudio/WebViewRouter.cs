@@ -185,12 +185,23 @@ namespace CodeStream.VisualStudio
                                             }
                                             break;
                                         }
+                                    case EditorSelectRangeRequestType.MethodName:
+                                        {
+                                            using (_ipc.CreateScope(message))
+                                            {
+                                                // TODO implement this
+                                                break;
+                                            }
+                                        }
                                     case EditorHighlightRangeRequestType.MethodName:
                                         {
-                                            // search for highlightDecorationType in vscode
-                                            // TODO implement this
-                                            // highlight the active editor's background based on this range and whether range is on or off
-                                            break;
+                                            using (_ipc.CreateScope(message))
+                                            {
+                                                // search for highlightDecorationType in vscode
+                                                // TODO implement this
+                                                // highlight the active editor's background based on this range and whether range is on or off
+                                                break;
+                                            }
                                         }
                                     case EditorRevealRangeRequestType.MethodName:
                                         {
@@ -207,7 +218,10 @@ namespace CodeStream.VisualStudio
                                         }
                                     case ReloadWebviewRequestType.MethodName:
                                         {
-                                            _ipc.BrowserService.ReloadWebView();
+                                            using (_ipc.CreateScope(message))
+                                            {
+                                                _ipc.BrowserService.ReloadWebView();
+                                            }
                                             break;
                                         }
                                     case UpdateConfigurationRequestType.MethodName:

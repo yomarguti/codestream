@@ -39,6 +39,11 @@ namespace CodeStream.VisualStudio
         private void OnWindowFocusChanged(object sender, WindowFocusChangedEventArgs e)
         {
             if (e.FileName.IsNullOrWhiteSpace() || e.Uri == null) return;
+            if (e.FileName.EndsWith(Core.Constants.CodeStreamCodeStream))
+            {
+                Log.Verbose($"{nameof(OnWindowFocusChanged)} ignoring {e.FileName}");
+                return;
+            }
 
             ThreadHelper.JoinableTaskFactory.Run(async delegate
             {

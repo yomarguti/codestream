@@ -5,7 +5,9 @@ using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.UI;
 using Microsoft.VisualStudio.Shell;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using Serilog;
 using Serilog.Events;
 using SerilogTimings.Extensions;
@@ -293,78 +295,101 @@ namespace CodeStream.VisualStudio.Services
             var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
             var vslsEnabled = ideService?.QueryExtension(ExtensionKind.LiveShare) == true;
 
-            var capabilities = state?["capabilities"] != null ? state["capabilities"].ToObject<JObject>() : JObject.FromObject(new { });
-            capabilities.Merge(JObject.FromObject(new
+            // this camelCaseSerializer is important because FromObject doesn't
+            // serialize using the global camelCase resolver
+            var camelCaseSerializer = JsonSerializer.Create(new JsonSerializerSettings
             {
-                codemarkApply = false,
-                codemarkCompare = false,
-                editorTrackVisibleRange = true,
-                services = new
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            });
+
+            var capabilities = state?["capabilities"] != null ? state["capabilities"].ToObject<JObject>() : JObject.FromObject(new { });
+            capabilities.Merge(JObject.FromObject(new Capabilities
+            {
+                CodemarkApply = false,
+                CodemarkCompare = false,
+                EditorTrackVisibleRange = true,
+                Services = new Models.Services
                 {
-                    vsls = vslsEnabled
+                    Vsls = vslsEnabled
                 }
-            }), new JsonMergeSettings
+            }, camelCaseSerializer), new JsonMergeSettings
             {
                 MergeArrayHandling = MergeArrayHandling.Union
             });
 
+            var capabilitiesObject = capabilities.ToObject<Capabilities>();
+
             if (!isAuthenticated)
             {
-                return JToken.FromObject(new
+                var bootstrapAnonymous = JToken.FromObject(new BootstrapPartialResponseAnonymous
                 {
-                    capabilities = capabilities,
-                    configs = new
+                    Capabilities = capabilitiesObject,
+                    Configs = new Configs
                     {
-                        serverUrl = _settingsService.ServerUrl,
-                        email = _settingsService.Email,
-                        showHeadshots = _settingsService.ShowHeadshots,
-                        showMarkers = _settingsService.ShowMarkers,
-                        muteAll = _settingsService.MuteAll,
-                        team = _settingsService.Team,
-                        viewCodemarksInline = _settingsService.ViewCodemarksInline
+                        ServerUrl = _settingsService.ServerUrl,
+                        Email = _settingsService.Email,
+                        ShowHeadshots = _settingsService.ShowHeadshots,
+                        ShowMarkers = _settingsService.ShowMarkers,
+                        MuteAll = _settingsService.MuteAll,
+                        Team = _settingsService.Team,
+                        ViewCodemarksInline = _settingsService.ViewCodemarksInline
                     },
-                    env = _settingsService.GetEnvironmentName(),
-                    version = _settingsService.GetEnvironmentVersionFormatted()
-                });
+                    Env = _settingsService.GetEnvironmentName(),
+                    Version = _settingsService.GetEnvironmentVersionFormatted()
+                }, camelCaseSerializer);
+
+                return bootstrapAnonymous;
             }
 
             if (state == null) throw new ArgumentNullException(nameof(state));
 
-            var results = await _rpc.InvokeWithParameterObjectAsync<JToken>("codestream/bootstrap").ConfigureAwait(false);
-
             var activeTextView = _ideService.GetActiveTextView();
+            var editorState = _ideService.GetActiveEditorState();
 
-            results["capabilities"] = capabilities;
-            var visibleRanges = activeTextView?.TextView?.ToVisibleRanges();
+            var bootstrapAuthenticated = await _rpc.InvokeWithParameterObjectAsync<JToken>(BootstrapRequestType.MethodName)
+                .ConfigureAwait(false) as JObject;
 
-            results["configs"] = JObject.FromObject(new
+            var bootstrapResponse = new BootstrapAuthenticatedResponse
             {
-#if DEBUG
-                debug = true,
-#endif
-                serverUrl = settings.ServerUrl,
-                email = state["email"].ToString(),
-                showMarkers = settings.ShowMarkers,
-                showHeadshots = settings.ShowHeadshots,
-                muteAll = settings.MuteAll,
-                viewCodemarksInline = settings.ViewCodemarksInline,
-                team = settings.Team
-            });
-            results["context"] = JObject.FromObject(new
-            {
-                // TODO add other parts
-                currentTeamId = state["teamId"].ToString(),
-                textEditorVisibleRanges = visibleRanges,
-                textEditorUri  = activeTextView?.Uri.ToString(),
-                hasFocus = true
-            });
-            results["session"] = JObject.FromObject(new
-            {
-                userId = state["userId"].ToString(),
-            });
-            results["env"] = settings.Env;
-            results["version"] = settings.Version;
-            return results;
+                Capabilities = capabilitiesObject,
+                Configs = new Configs
+                {
+                    ServerUrl = settings.ServerUrl,
+                    Email = state["email"].ToString(),
+                    ShowMarkers = settings.ShowMarkers,
+                    ShowHeadshots = settings.ShowHeadshots,
+                    MuteAll = settings.MuteAll,
+                    ViewCodemarksInline = settings.ViewCodemarksInline,
+                    Team = settings.Team
+                },
+                Context = new WebviewContext
+                {
+                    CurrentTeamId = state["teamId"].ToString(),
+                    //currentStreamId 
+                    //threadId
+                    HasFocus = true
+                },
+                EditorContext = new EditorContext
+                {
+                    //Scm
+                    ActiveFile = activeTextView?.FilePath,
+                    //LastActiveFile
+                    TextEditorVisibleRanges = activeTextView?.TextView?.ToVisibleRanges(),
+                    TextEditorUri = activeTextView?.Uri.ToString(),
+                    TextEditorSelections = editorState.ToEditorSelections(),
+                    Metrics = ThemeManager.CreateEditorMetrics(activeTextView?.TextView)
+                },
+                Session = new UserSession
+                {
+                    UserId = state["userId"].ToString(),
+                },
+                Env = settings.Env,
+                Version = settings.Version
+            };
+
+            bootstrapAuthenticated?.Merge(JObject.FromObject(bootstrapResponse, camelCaseSerializer));
+
+            return bootstrapAuthenticated;
         }
 
         public void Dispose()

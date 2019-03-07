@@ -1,5 +1,4 @@
-﻿using CodeStream.VisualStudio.Extensions;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
+﻿using Microsoft.VisualStudio.LanguageServer.Protocol;
 using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio.Extensions

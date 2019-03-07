@@ -92,6 +92,7 @@ namespace CodeStream.VisualStudio.Services
                         editorState?.ToEditorSelections(), 
                         activeTextView?.TextView.ToVisibleRanges())
                         {
+                            Metrics = ThemeManager.CreateEditorMetrics(activeTextView?.TextView),
                             LanguageId = null
                         }
                     }

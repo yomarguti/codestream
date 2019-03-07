@@ -96,6 +96,7 @@
     <Compile Include="Controllers\AuthenticationController.cs" />
     <Compile Include="Controllers\ConfigurationController.cs" />
     <Compile Include="Controllers\LiveShareController.cs" />
+    <Compile Include="Core\Constants.cs" />
     <Compile Include="Core\ContentTypes.cs" />
     <Compile Include="Core\Logging\CodeStreamSink.cs" />
     <Compile Include="Core\Logging\LogManager.cs" />
@@ -126,6 +127,7 @@
     <Compile Include="Extensions\PackageExtensions.cs" />
     <Compile Include="Extensions\RangeExtensions.cs" />
     <Compile Include="Models\Agent.Protocol.cs" />
+    <Compile Include="Models\Agent.Protocol.Scm.cs" />
     <Compile Include="Models\Host.Protocol.Editor.cs" />
     <Compile Include="Models\Host.Protocol.Notifications.cs" />
     <Compile Include="Models\Host.Protocol.Vsls.cs" />

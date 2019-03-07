@@ -26,7 +26,7 @@ namespace CodeStream.VisualStudio.UI
                 return false;
             }
 
-            return !textDocument.FilePath.EndsWithIgnoreCase(".codestream");
+            return !textDocument.FilePath.EndsWithIgnoreCase(Core.Constants.CodeStreamCodeStream);
         }
     }
 }

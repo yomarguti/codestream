@@ -19,10 +19,10 @@ using ILogger = Serilog.ILogger;
 
 namespace CodeStream.VisualStudio.Services
 {
-
     public class ActiveTextEditor
     {
         public IWpfTextView TextView { get; set; }
+        public string FilePath { get; set; }
         public Uri Uri { get; set; }
     }
 
@@ -79,20 +79,24 @@ namespace CodeStream.VisualStudio.Services
 
             _iIVsTextManager.GetActiveView(1, null, out IVsTextView textViewCurrent);
             var wpfTextView = editor.GetWpfTextView(textViewCurrent);
+            if (wpfTextView == null)
+            {
+                return null;
+            }
 
             var exports = _componentModel.DefaultExportProvider;
             if (!exports.GetExportedValue<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument))
             {
                 return new ActiveTextEditor
                 {
-                    TextView = wpfTextView,
-                    Uri = null
+                    TextView = wpfTextView
                 };
             }
             return new ActiveTextEditor
             {
                 TextView = wpfTextView,
-                Uri = textDocument.FilePath.ToUri()
+                Uri = textDocument.FilePath.ToUri(),
+                FilePath = textDocument.FilePath
             };
         }
 

@@ -10,13 +10,14 @@ namespace CodeStream.VisualStudio.Models
         {
             FileName = fileName;
             Uri = uri.ToString();
-            Selections = Selections;
+            Selections = selections;
             VisibleRanges = visibleRanges;
         }
 
         public string FileName { get; }
         public string LanguageId { get; set; }
         public string Uri { get; }
+        public EditorMetrics Metrics { get; set; }
         public List<EditorSelection> Selections { get; }
         public List<Range> VisibleRanges { get; }
     }

@@ -71,9 +71,17 @@ namespace CodeStream.VisualStudio.UI
                         Log.Verbose("No Codemarks from agent");
                     }
                 }
+                catch (OverflowException ex)
+                {
+#if DEBUG
+                Log.Warning(ex, fileUri.ToString());
+#else
+                Log.Error(ex, fileUri.ToString());
+#endif
+                }
                 catch (Exception ex)
                 {
-                    Log.Warning(ex, nameof(GetOrCreateMarkers));
+                    Log.Error(ex, nameof(GetOrCreateMarkers));
                 }
             });
         }
