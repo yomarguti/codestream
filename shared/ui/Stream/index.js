@@ -1040,8 +1040,6 @@ export class SimpleStream extends Component {
 				floatCompose={this.state.floatCompose}
 				setMultiCompose={this.setMultiCompose}
 				quote={this.state.quote}
-				openCommentOnSelect={this.props.configs.openCommentOnSelect}
-				toggleOpenCommentOnSelect={this.toggleOpenCommentOnSelect}
 				quotePost={this.state.quotePost}
 				inThread={Boolean(this.props.threadId)}
 				providerInfo={this.props.providerInfo}
@@ -1106,13 +1104,6 @@ export class SimpleStream extends Component {
 	openCodemarkMenu = type => {
 		this.setState({ knowledgeType: type, searchBarOpen: false });
 		this.setActivePanel("knowledge");
-	};
-
-	toggleOpenCommentOnSelect = () => {
-		HostApi.instance.send(UpdateConfigurationRequestType, {
-			name: "openCommentOnSelect",
-			value: !this.props.configs.openCommentOnSelect
-		});
 	};
 
 	starChannel = () => {
