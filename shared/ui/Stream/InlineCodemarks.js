@@ -434,7 +434,7 @@ export class SimpleInlineCodemarks extends Component {
 		if (mappedLineNum === openPlusOnLine) {
 			range = Range.create(selection.start, selection.end);
 		} else {
-			range = Range.create(mappedLineNum, 0, mappedLineNum, Number.MAX_SAFE_INTEGER); // TODO: Revisit this to allow 0 to mean select the whole line
+			range = Range.create(mappedLineNum, 0, mappedLineNum, 10000); // TODO: Revisit this to allow 0 to mean select the whole line
 		}
 
 		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
