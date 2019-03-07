@@ -23,7 +23,7 @@ export class ReposManager extends CachedEntityManagerBase<CSRepository> {
 
 	@lspHandler(FetchReposRequestType)
 	async get(request?: FetchReposRequest): Promise<FetchReposResponse> {
-		let repos = await this.ensureCached();
+		let repos = await this.getAllCached();
 		if (request != null) {
 			if (request.repoIds != null && request.repoIds.length !== 0) {
 				repos = repos.filter(r => request.repoIds!.includes(r.id));

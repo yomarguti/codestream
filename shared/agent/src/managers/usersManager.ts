@@ -29,7 +29,7 @@ import { CachedEntityManagerBase, Id } from "./entityManager";
 export class UsersManager extends CachedEntityManagerBase<CSUser> {
 	@lspHandler(FetchUsersRequestType)
 	async get(request?: FetchUsersRequest): Promise<FetchUsersResponse> {
-		let users = await this.ensureCached();
+		let users = await this.getAllCached();
 		if (request != null) {
 			if (request.userIds != null && request.userIds.length !== 0) {
 				users = users.filter(u => request.userIds!.includes(u.id));

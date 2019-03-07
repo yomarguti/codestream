@@ -386,7 +386,10 @@ export class SlackApiProvider implements ApiProvider {
 		}
 
 		// Only get the data if we already have it cached (otherwise we'll loop infinitely 😀)
-		const prevMe = (await Container.instance().users.getByIdFromCache(this._slackUserId)) as CSMe;
+		const { users } = Container.instance();
+		const prevMe = users.cached
+			? ((await users.getByIdFromCache(this._slackUserId)) as CSMe)
+			: undefined;
 
 		let me = meResponse.user;
 		me.id = this.userId;
@@ -787,7 +790,7 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	async fetchPosts(request: FetchPostsRequest) {
 		let response;
-		const codemarksPromise = Container.instance().codemarks.ensureCached();
+		const codemarksPromise = Container.instance().codemarks.getAllCached();
 
 		// This isn't ideal, but we can always pack some more info into the id to ensure we call the right thing
 		switch (fromSlackChannelIdToType(request.streamId)) {

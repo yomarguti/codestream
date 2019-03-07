@@ -15,7 +15,7 @@ import { CachedEntityManagerBase, Id } from "./entityManager";
 export class TeamsManager extends CachedEntityManagerBase<CSTeam> {
 	@lspHandler(FetchTeamsRequestType)
 	async get(request?: FetchTeamsRequest): Promise<FetchTeamsResponse> {
-		let teams = await this.ensureCached();
+		let teams = await this.getAllCached();
 		if (request != null) {
 			if (request.teamIds != null && request.teamIds.length !== 0) {
 				teams = teams.filter(t => request.teamIds!.includes(t.id));

@@ -61,7 +61,7 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 
 	@lspHandler(FetchCodemarksRequestType)
 	async get(request: FetchCodemarksRequest): Promise<FetchCodemarksResponse> {
-		let csCodemarks = await this.ensureCached();
+		let csCodemarks = await this.getAllCached();
 		csCodemarks = await this.filterLegacyCodemarks(csCodemarks);
 		const fullCodemarks = [];
 

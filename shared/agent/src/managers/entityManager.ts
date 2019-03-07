@@ -44,10 +44,14 @@ export abstract class EntityManagerBase<T extends CSEntity> extends ManagerBase<
 }
 
 export abstract class CachedEntityManagerBase<T extends CSEntity> extends EntityManagerBase<T> {
-	protected _cached = false;
 	protected _caching: Promise<void> | undefined;
 
-	async ensureCached(): Promise<T[]> {
+	protected _cached = false;
+	get cached() {
+		return this._cached;
+	}
+
+	async ensureCached(): Promise<void> {
 		if (!this._cached && this._caching === undefined) {
 			// Don't pass the request, since we want to cache all the data
 			this._caching = this.loadCache();
@@ -58,8 +62,19 @@ export abstract class CachedEntityManagerBase<T extends CSEntity> extends Entity
 			this._cached = true;
 			this._caching = undefined;
 		}
+	}
 
+	async getAllCached(): Promise<T[]> {
+		await this.ensureCached();
 		return this.cache.getAll();
+	}
+
+	async getByIdFromCache(id: Id): Promise<T | undefined> {
+		if (!this._cached) {
+			await this.ensureCached();
+		}
+
+		return super.getByIdFromCache(id);
 	}
 
 	@log()

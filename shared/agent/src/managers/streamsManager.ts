@@ -61,7 +61,7 @@ import { CachedEntityManagerBase, Id } from "./entityManager";
 export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CSDirectStream> {
 	@lspHandler(FetchStreamsRequestType)
 	async get(request?: FetchStreamsRequest): Promise<FetchStreamsResponse> {
-		let streams = await this.ensureCached();
+		let streams = await this.getAllCached();
 		if (request != null) {
 			if (request.streamIds != null && request.streamIds.length !== 0) {
 				streams = streams.filter(s => request.streamIds!.includes(s.id));
