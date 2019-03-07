@@ -251,6 +251,8 @@ export class LiveShareController implements Disposable {
 
 		this.setVslsId(vsls.session.id);
 
+		if (streamThread.streamId === undefined) return;
+
 		const currentChannel = await Container.session.getStream(streamThread.streamId);
 		if (currentChannel === undefined) return;
 

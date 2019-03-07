@@ -42,11 +42,8 @@ import {
 	SlackLoginRequestType,
 	UpdateConfigurationRequestType,
 	WebviewContext,
-	WebviewDidChangeActiveStreamNotificationType,
 	WebviewDidChangeContextNotificationType,
-	WebviewDidCloseThreadNotificationType,
 	WebviewDidInitializeNotificationType,
-	WebviewDidOpenThreadNotificationType,
 	WebviewIpcMessage,
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage
@@ -88,7 +85,6 @@ export interface WebviewState {
 	teams: {
 		[teamId: string]: {
 			context?: WebviewContext;
-			streamThread?: StreamThread;
 		};
 	};
 }
@@ -98,7 +94,6 @@ export class WebviewController implements Disposable {
 	private _context: WebviewContext | undefined;
 	private _disposable: Disposable | undefined;
 	private _disposableWebview: Disposable | undefined;
-	private _streamThread: StreamThread | undefined;
 	private _webview: CodeStreamWebviewPanel | undefined;
 
 	private readonly _notifyActiveEditorChangedDebounced: (e: TextEditor | undefined) => void;
@@ -174,12 +169,11 @@ export class WebviewController implements Disposable {
 						teams: {}
 					}
 				);
-				const { context, streamThread } = state.teams[this.session.team.id];
+				const { context } = state.teams[this.session.team.id];
 				this._context = context;
-				this._streamThread = streamThread;
 
 				if (!state.hidden) {
-					this.show(this._streamThread);
+					this.show();
 				}
 
 				break;
@@ -193,9 +187,13 @@ export class WebviewController implements Disposable {
 	}
 
 	get activeStreamThread() {
-		if (this._webview === undefined) return undefined;
-
-		return this._webview.streamThread;
+		if (this._context === undefined) {
+			return undefined;
+		}
+		return {
+			id: this._context.threadId,
+			streamId: this._context.currentStreamId
+		};
 	}
 
 	get viewColumn(): ViewColumn | undefined {
@@ -258,7 +256,7 @@ export class WebviewController implements Disposable {
 	async show(streamThread?: StreamThread) {
 		if (this._webview === undefined) {
 			if (streamThread === undefined) {
-				streamThread = this._streamThread;
+				streamThread = this.activeStreamThread as any;
 			}
 
 			// // Kick off the bootstrap compute to be ready for later
@@ -305,10 +303,10 @@ export class WebviewController implements Disposable {
 			Container.agent.telemetry.track("Webview Opened");
 		}
 
-		this._streamThread = await this._webview.show(streamThread);
+		await this._webview.show(streamThread);
 		this.updateState();
 
-		return this._streamThread;
+		return this.activeStreamThread as StreamThread | undefined;
 	}
 
 	@log()
@@ -454,53 +452,10 @@ export class WebviewController implements Disposable {
 
 				break;
 			}
-			case WebviewDidChangeActiveStreamNotificationType.method: {
-				webview.onIpcNotification(
-					WebviewDidChangeActiveStreamNotificationType,
-					e,
-					async (type, params) => {
-						if (!params.streamId) {
-							if (this._streamThread !== undefined) {
-								this._streamThread = undefined;
-
-								this.updateState();
-							}
-
-							return;
-						}
-
-						if (params.streamId !== undefined) {
-							this._streamThread = { id: undefined, streamId: params.streamId };
-							this.updateState();
-						}
-					}
-				);
-
-				break;
-			}
 			case WebviewDidChangeContextNotificationType.method: {
 				webview.onIpcNotification(WebviewDidChangeContextNotificationType, e, (type, params) => {
 					this._context = params.context;
 					this.updateState();
-				});
-
-				break;
-			}
-			case WebviewDidOpenThreadNotificationType.method: {
-				webview.onIpcNotification(WebviewDidOpenThreadNotificationType, e, (type, params) => {
-					if (this._streamThread !== undefined && this._streamThread.streamId === params.streamId) {
-						this._streamThread.id = params.threadId;
-						this.updateState();
-					}
-				});
-				break;
-			}
-			case WebviewDidCloseThreadNotificationType.method: {
-				webview.onIpcNotification(WebviewDidCloseThreadNotificationType, e, (type, params) => {
-					if (this._streamThread !== undefined) {
-						this._streamThread.id = undefined;
-						this.updateState();
-					}
 				});
 
 				break;
@@ -766,11 +721,6 @@ export class WebviewController implements Disposable {
 			...bootstrapData
 		};
 
-		if (this._streamThread !== undefined) {
-			state.context.currentStreamId = this._streamThread.streamId;
-			state.context.threadId = this._streamThread.id;
-		}
-
 		return state as T;
 	}
 
@@ -838,8 +788,7 @@ export class WebviewController implements Disposable {
 
 		const teams = prevState.teams || {};
 		teams[this.session.team.id] = {
-			context: this._context,
-			streamThread: this._streamThread
+			context: this._context
 		};
 
 		Container.context.workspaceState.update(WorkspaceState.webviewState, {

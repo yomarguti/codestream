@@ -67,7 +67,6 @@ export class CodeStreamWebviewPanel implements Disposable {
 	private _disposable: Disposable | undefined;
 	private _onIpcReadyResolver: ((cancelled: boolean) => void) | undefined;
 	private readonly _panel: WebviewPanel;
-	private _streamThread: StreamThread | undefined;
 
 	constructor(public readonly session: CodeStreamSession, private readonly _html: string) {
 		this._ipcPending = new Map();
@@ -136,10 +135,6 @@ export class CodeStreamWebviewPanel implements Disposable {
 		if (this._panelState.visible) {
 			this.notify(HostDidChangeFocusNotificationType, { focused: e.focused });
 		}
-	}
-
-	get streamThread() {
-		return this._streamThread;
 	}
 
 	get viewColumn(): ViewColumn | undefined {
@@ -225,34 +220,22 @@ export class CodeStreamWebviewPanel implements Disposable {
 		args: false
 	})
 	async show(streamThread?: StreamThread) {
-		if (
-			!this._ipcReady ||
-			!this.visible ||
-			streamThread === undefined ||
-			(this._streamThread &&
-				this._streamThread.id === streamThread.id &&
-				this._streamThread.streamId === streamThread.streamId)
-		) {
+		if (!this._ipcReady || !this.visible || streamThread === undefined) {
 			this._panel.reveal(this._panel.viewColumn, false);
 
 			if (!this._ipcReady) {
-				this._streamThread = streamThread;
-
 				const cancelled = await this.waitForWebviewIpcReadyNotification();
-				if (cancelled) return undefined;
+				if (cancelled) return;
 			}
-
-			return this._streamThread;
 		}
 
 		// TODO: Convert this to a request vs a notification
-		this.notify(ShowStreamNotificationType, {
-			streamId: streamThread.streamId,
-			threadId: streamThread.id
-		});
-
-		this._streamThread = streamThread;
-		return this._streamThread;
+		if (streamThread) {
+			this.notify(ShowStreamNotificationType, {
+				streamId: streamThread.streamId,
+				threadId: streamThread.id
+			});
+		}
 	}
 
 	private clearIpc() {
