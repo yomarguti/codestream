@@ -47,15 +47,15 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
         public event EventHandler<EventArgs> SuggestedActionsChanged;
 #pragma warning restore 0067
 
-        private TextSelection _textSelection;
+        private EditorState _textSelection;
 
         public IEnumerable<SuggestedActionSet> GetSuggestedActions(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken)
         {
             try
             {
-                if (_textSelection?.HasText == false)
+                if (_textSelection?.HasSelectedText == false)
                 {
-                    Log.Verbose($"{nameof(GetSuggestedActions)} Empty HasText={_textSelection?.HasText}");
+                    Log.Verbose($"{nameof(GetSuggestedActions)} Empty HasText={_textSelection?.HasSelectedText}");
                     return Enumerable.Empty<SuggestedActionSet>();
                 }
 
@@ -96,9 +96,9 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
                 }
 
                 var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
-                _textSelection = ideService?.GetTextSelected();
+                _textSelection = ideService?.GetActiveEditorState();
 
-                return System.Threading.Tasks.Task.FromResult(_textSelection?.HasText == true);
+                return System.Threading.Tasks.Task.FromResult(_textSelection?.HasSelectedText == true);
             }
             catch (Exception ex)
             {
@@ -115,39 +115,39 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
 
     internal class CodemarkCommentSuggestedAction : CodemarkSuggestedActionBase
     {
-        public CodemarkCommentSuggestedAction(ITextDocument textDocument, TextSelection textSelection): base(textDocument, textSelection) { }
+        public CodemarkCommentSuggestedAction(ITextDocument textDocument, EditorState textSelection): base(textDocument, textSelection) { }
         protected override CodemarkType CodemarkType => CodemarkType.Comment;
         public override string DisplayText { get; } = $"Add Comment";
     }
 
     internal class CodemarkIssueSuggestedAction : CodemarkSuggestedActionBase
     {
-        public CodemarkIssueSuggestedAction(ITextDocument textDocument, TextSelection textSelection) : base(textDocument, textSelection) { }
+        public CodemarkIssueSuggestedAction(ITextDocument textDocument, EditorState textSelection) : base(textDocument, textSelection) { }
         protected override CodemarkType CodemarkType => CodemarkType.Issue;
         public override string DisplayText { get; } = $"Create Issue";
     }
 
     internal class CodemarkBookmarkSuggestedAction : CodemarkSuggestedActionBase
     {
-        public CodemarkBookmarkSuggestedAction(ITextDocument textDocument, TextSelection textSelection) : base(textDocument, textSelection) { }
+        public CodemarkBookmarkSuggestedAction(ITextDocument textDocument, EditorState textSelection) : base(textDocument, textSelection) { }
         protected override CodemarkType CodemarkType => CodemarkType.Bookmark;
         public override string DisplayText { get; } = $"Create Bookmark";
     }
 
     internal class CodemarkPermalinkSuggestedAction : CodemarkSuggestedActionBase
     {
-        public CodemarkPermalinkSuggestedAction(ITextDocument textDocument, TextSelection textSelection) : base(textDocument, textSelection) { }
+        public CodemarkPermalinkSuggestedAction(ITextDocument textDocument, EditorState textSelection) : base(textDocument, textSelection) { }
         protected override CodemarkType CodemarkType => CodemarkType.Link;
         public override string DisplayText { get; } = $"Get Permalink";
     }
 
     internal abstract class CodemarkSuggestedActionBase : ISuggestedAction
     {
-        private readonly TextSelection _textSelection;
+        private readonly EditorState _textSelection;
         private readonly ITextDocument _textDocument;
         protected abstract CodemarkType CodemarkType { get; }
 
-        protected CodemarkSuggestedActionBase(ITextDocument textDocument, TextSelection textSelection)
+        protected CodemarkSuggestedActionBase(ITextDocument textDocument, EditorState textSelection)
         {
             _textDocument = textDocument;
             _textSelection = textSelection;

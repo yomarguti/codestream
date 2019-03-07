@@ -3,6 +3,7 @@ using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
+using CodeStream.VisualStudio.UI;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
@@ -54,15 +55,17 @@ namespace CodeStream.VisualStudio.Services
         private readonly ISessionService _sessionService;
         private readonly ISettingsService _settingsService;
         private readonly IEventAggregator _eventAggregator;
+        private readonly IIdeService _ideService;
 
         private JsonRpc _rpc;
         bool _disposed;
 
-        public CodeStreamAgentService(ISessionService sessionService, ISettingsService settingsService, IEventAggregator eventAggregator)
+        public CodeStreamAgentService(ISessionService sessionService, ISettingsService settingsService, IEventAggregator eventAggregator, IIdeService ideService)
         {
             _sessionService = sessionService;
             _settingsService = settingsService;
             _eventAggregator = eventAggregator;
+            _ideService = ideService;
         }
 
         public Task SetRpcAsync(JsonRpc rpc)
@@ -330,7 +333,11 @@ namespace CodeStream.VisualStudio.Services
 
             var results = await _rpc.InvokeWithParameterObjectAsync<JToken>("codestream/bootstrap").ConfigureAwait(false);
 
+            var activeTextView = _ideService.GetActiveTextView();
+
             results["capabilities"] = capabilities;
+            var visibleRanges = activeTextView?.TextView?.ToVisibleRanges();
+
             results["configs"] = JObject.FromObject(new
             {
 #if DEBUG
@@ -349,8 +356,8 @@ namespace CodeStream.VisualStudio.Services
             {
                 // TODO add other parts
                 currentTeamId = state["teamId"].ToString(),
-                //textEditorVisibleRanges
-                //textEditorUri
+                textEditorVisibleRanges = visibleRanges,
+                textEditorUri  = activeTextView?.Uri.ToString(),
                 hasFocus = true
             });
             results["session"] = JObject.FromObject(new

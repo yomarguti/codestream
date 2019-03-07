@@ -146,6 +146,8 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         public bool IsReady() => _sessionService.IsReady;
 
+        public bool CanToggleMargin { get; } = false;
+
         public void OnSessionLogout()
         {
             _initialized = false;

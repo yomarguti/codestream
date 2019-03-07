@@ -59,7 +59,7 @@ namespace CodeStream.VisualStudio.Events
 		public LogoutReason Reason { get; set; }
 	}
 
-	public sealed class CodemarkVisibilityEvent : EventBase
+	public sealed class MarkerVisibilityEvent : EventBase
 	{
 		public bool IsVisible { get; set; }
 	}

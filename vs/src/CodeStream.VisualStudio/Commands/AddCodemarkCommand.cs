@@ -58,7 +58,7 @@ namespace CodeStream.VisualStudio.Commands
             var ideService = Microsoft.VisualStudio.Shell.Package.GetGlobalService((typeof(SIdeService))) as IdeService;
             if (ideService == null) return;
 
-            var selectedText = ideService.GetTextSelected(out IVsTextView view);
+            var selectedText = ideService.GetActiveEditorState(out IVsTextView view);
             if (view == null) return;
 
             var componentModel = (IComponentModel)(Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SComponentModel)));

@@ -15,6 +15,7 @@ namespace CodeStream.VisualStudio.UI.Margins
     public interface ICodeStreamWpfTextViewMargin : IWpfTextViewMargin
     {
         bool IsReady();
+        bool CanToggleMargin { get; }
         void OnSessionLogout();
         void OnSessionReady();
         void OnMarkerChanged();

@@ -1,4 +1,4 @@
-﻿using CodeStream.VisualStudio.UI;
+﻿using CodeStream.VisualStudio.Extensions;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
@@ -21,7 +21,7 @@ namespace CodeStream.VisualStudio.UnitTests.UI
                 new Range {Start = new Position {Line = 14}, End = new Position {Line = 16},}
             };
 
-            var results = positions.Collapsed();
+            var results = positions.ToVisibleRanges();
             Assert.AreEqual(4, results.Count);
             Assert.AreEqual(0, results[0].Start.Line);
             Assert.AreEqual(1, results[0].End.Line);
@@ -44,7 +44,7 @@ namespace CodeStream.VisualStudio.UnitTests.UI
                 new Range {Start = new Position {Line = 0}, End = new Position {Line =100},},
             };
 
-            var results = positions.Collapsed();
+            var results = positions.ToVisibleRanges();
 
             Assert.AreEqual(1, results.Count);
             Assert.AreEqual(0, results[0].Start.Line);
@@ -62,7 +62,7 @@ namespace CodeStream.VisualStudio.UnitTests.UI
                 new Range {Start = new Position {Line = 103}, End = new Position {Line = 103}},
             };
 
-            var results = positions.Collapsed();
+            var results = positions.ToVisibleRanges();
 
             Assert.AreEqual(2, results.Count);
             Assert.AreEqual(0, results[0].Start.Line);
@@ -83,7 +83,7 @@ namespace CodeStream.VisualStudio.UnitTests.UI
                 new Range {Start = new Position {Line = 3}, End = new Position {Line = 3}},
             };
 
-            var results = positions.Collapsed();
+            var results = positions.ToVisibleRanges();
 
             Assert.AreEqual(1, results.Count);
             Assert.AreEqual(0, results[0].Start.Line);

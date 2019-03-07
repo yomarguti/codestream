@@ -2,19 +2,30 @@
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
 using EnvDTE;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
+using EditorState = CodeStream.VisualStudio.Models.EditorState;
 using ILogger = Serilog.ILogger;
-using TextSelection = CodeStream.VisualStudio.Models.TextSelection;
 
 namespace CodeStream.VisualStudio.Services
 {
+
+    public class ActiveTextEditor
+    {
+        public IWpfTextView TextView { get; set; }
+        public Uri Uri { get; set; }
+    }
+
     public enum ExtensionKind
     {
         LiveShare
@@ -25,8 +36,9 @@ namespace CodeStream.VisualStudio.Services
         void Navigate(string url);
         ShowCodeResult OpenEditor(string fileUri, int? scrollTo = null);
         ShowCodeResult OpenEditor(Uri fileUri, int? scrollTo = null);
-        TextSelection GetTextSelected();
-        TextSelection GetTextSelected(out IVsTextView view);
+        EditorState GetActiveEditorState();
+        EditorState GetActiveEditorState(out IVsTextView view);
+        ActiveTextEditor GetActiveTextView();
         //bool QueryExtensions(string author, params string[] names);
         bool QueryExtension(ExtensionKind extensionKind);
         bool TryStartLiveShare();
@@ -50,13 +62,38 @@ namespace CodeStream.VisualStudio.Services
     {
         private static readonly ILogger Log = LogManager.ForContext<IdeService>();
 
-        private readonly IVsTextManager2 _iIVsTextManager;
+        private readonly IComponentModel _componentModel;
+        private readonly IVsTextManager _iIVsTextManager;
         private readonly Dictionary<ExtensionKind, bool> _extensions;
 
-        public IdeService(IVsTextManager2 iIVsTextManager, Dictionary<ExtensionKind, bool> extensions)
+        public IdeService(IComponentModel componentModel, IVsTextManager iIVsTextManager, Dictionary<ExtensionKind, bool> extensions)
         {
+            _componentModel = componentModel;
             _iIVsTextManager = iIVsTextManager;
             _extensions = extensions;
+        }
+
+        public ActiveTextEditor GetActiveTextView()
+        {
+            var editor = _componentModel.GetService<IVsEditorAdaptersFactoryService>();
+
+            _iIVsTextManager.GetActiveView(1, null, out IVsTextView textViewCurrent);
+            var wpfTextView = editor.GetWpfTextView(textViewCurrent);
+
+            var exports = _componentModel.DefaultExportProvider;
+            if (!exports.GetExportedValue<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument))
+            {
+                return new ActiveTextEditor
+                {
+                    TextView = wpfTextView,
+                    Uri = null
+                };
+            }
+            return new ActiveTextEditor
+            {
+                TextView = wpfTextView,
+                Uri = textDocument.FilePath.ToUri()
+            };
         }
 
         /// <summary>
@@ -135,32 +172,42 @@ namespace CodeStream.VisualStudio.Services
         //    return null;
         //}
 
-        public TextSelection GetTextSelected(out IVsTextView view)
+        public EditorState GetActiveEditorState(out IVsTextView view)
         {
-            // ReSharper disable once UnusedVariable
-            var result = _iIVsTextManager.GetActiveView2(1, null, (uint)_VIEWFRAMETYPE.vftCodeWindow, out view);
-
-            // view can be null...
-            if (view == null) return null;
-
-            view.GetCaretPos(out int piLine, out int piColumn);
-            view.GetSelection(out int startLine, out int startColumn, out int endLine, out int endColumn);
-            view.GetSelectedText(out string selectedText);
-
-            // end could be before beginning...
-            return new TextSelection
+            try
             {
-                Range = new Range
-                {
-                    Start = new Position(startLine, startColumn),
-                    End = new Position(endLine, endColumn)
-                },
-                Text = selectedText,
-                Cursor = new Position(piLine, piColumn)
-            };
+                // ReSharper disable once UnusedVariable
+                var result = _iIVsTextManager.GetActiveView(1, null, out view);
+
+                // view can be null...
+                if (view == null) return null;
+
+                view.GetCaretPos(out int piLine, out int piColumn);
+                view.GetSelection(out int startLine, out int startColumn, out int endLine, out int endColumn);
+                view.GetSelectedText(out string selectedText);
+
+                // end could be before beginning...
+                return new EditorState(
+                    new Range
+                    {
+                        Start = new Position(startLine, startColumn),
+                        End = new Position(endLine, endColumn)
+                    }, new Position(piLine, piColumn), selectedText);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, nameof(GetActiveEditorState));
+            }
+            view = null;
+            return null;
         }
 
-		// someday, this can return...
+        public EditorState GetActiveEditorState()
+        {
+            return GetActiveEditorState(out IVsTextView textView);
+        }
+
+        // someday, this can return...
         //public bool QueryExtensions(string author, params string[] names)
         //{
         //    if (_extensionManager == null)
@@ -226,12 +273,6 @@ namespace CodeStream.VisualStudio.Services
             return false;
         }
 
-        public TextSelection GetTextSelected()
-        {
-            // ReSharper disable once NotAccessedVariable
-            IVsTextView view;
-            return GetTextSelected(out view);
-        }
 
         /// <summary>
         /// Uses built in process handler for navigating to an external url

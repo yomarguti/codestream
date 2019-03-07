@@ -4,17 +4,36 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
-
 // ReSharper disable ClassNeverInstantiated.Global
 
 namespace CodeStream.VisualStudio.Models
 {
-    public class TextSelection
+    public class EditorState
     {
-        public Range Range { get; set; }
-        public Position Cursor { get; set; }
-        public string Text { get; set; }
-        public bool HasText => !Text.IsNullOrWhiteSpace();
+        public EditorState(Range range, Position cursor, string selectedText)
+        {
+            Range = range;
+            Cursor = cursor;
+            SelectedText = selectedText;
+        }
+
+        public Range Range { get; }
+        public Position Cursor { get; }
+        public string SelectedText { get; }
+        public bool HasSelectedText => !SelectedText.IsNullOrWhiteSpace();
+
+        public List<EditorSelection> ToEditorSelections()
+        {
+            return new List<EditorSelection>
+            {
+                new EditorSelection
+                {
+                    Cursor = Cursor,
+                    Start = Range?.Start,
+                    End = Range?.End
+                }
+            };
+        }
     }
 
     public class EditorSelection : Range
@@ -67,7 +86,7 @@ namespace CodeStream.VisualStudio.Models
         public string Title { get; set; }
         public string Type { get; set; }
         public string Url { get; set; }
-        //TODO this is some kind string | object
+        //NOTE this is some kind string | object
         public object Preview { get; set; }
     }
 
@@ -124,7 +143,7 @@ namespace CodeStream.VisualStudio.Models
         public string TeamId { get; set; }
         public string StreamId { get; set; }
         public string CommitHash { get; set; }
-        // TODO this is a bizarro shaped object
+        //NOTE this is a bizarro shaped object
         public Dictionary<string, List<object>> Locations { get; set; }
     }
 

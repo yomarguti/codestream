@@ -1,15 +1,23 @@
 ﻿using Microsoft.VisualStudio.LanguageServer.Protocol;
+using System;
 
 namespace CodeStream.VisualStudio.Models
 {
-    public class EditorHighlightRangeRequest  
+    public class EditorHighlightRangeRequest
     {
-        public string Uri { get; set; }
+        public EditorHighlightRangeRequest(Uri uri, Range range, bool highlight)
+        {
+            Uri = uri.ToString();
+            Range = range;
+            Highlight = highlight;
+        }
+
+        public string Uri { get; }
         /// <summary>
         /// A single-line range with start & end char of 0 indicates a full-line highlight
         /// </summary>
-        public Range Range { get; set; }
-        public bool Highlight { get; set; }
+        public Range Range { get; }
+        public bool Highlight { get; }
     }
 
     public class EditorHighlightRangeRequestType : RequestType<EditorHighlightRangeRequest>
@@ -20,15 +28,22 @@ namespace CodeStream.VisualStudio.Models
 
     public class EditorRevealRangeRequest
     {
-        public string Uri { get; set; }
-        public Range Range { get; set; }
-        public bool? PreserveFocus { get; set; }
+        public EditorRevealRangeRequest(Uri uri, Range range, bool? preserveFocus)
+        {
+            Uri = uri.ToString();
+            Range = range;
+            PreserveFocus = preserveFocus;
+        }
+
+        public string Uri { get; }
+        public Range Range { get; }
+        public bool? PreserveFocus { get; }
     }
 
     public class EditorRevealMarkerResponse
     {
         // NOTE: see EditorRevealRangeResult in ts
-        public string Result { get; set; } 
+        public string Result { get; set; }
     }
 
     public class EditorRevealRangeRequestType : RequestType<EditorRevealRangeRequest>
@@ -39,12 +54,19 @@ namespace CodeStream.VisualStudio.Models
 
     public class EditorSelectRangeRequest
     {
-        public string Uri { get; set; }
+        public EditorSelectRangeRequest(Uri uri, Range range, bool highlight)
+        {
+            Uri = uri.ToString();
+            Range = range;
+            Highlight = highlight;
+        }
+
+        public string Uri { get; }
         /// <summary>
         /// A single-line range with start & end char of 0 indicates a full-line highlight
         /// </summary>
-        public Range Range { get; set; }
-        public bool Highlight { get; set; }
+        public Range Range { get; }
+        public bool Highlight { get; }
     }
 
     public class EditorSelectRangeRequestType : RequestType<EditorSelectRangeRequest>

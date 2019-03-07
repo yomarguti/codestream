@@ -3,6 +3,9 @@ using Newtonsoft.Json.Linq;
 
 namespace CodeStream.VisualStudio.Models
 {
+
+    //TODO bootstrapRequestType
+
     public class DidChangeDataNotificationTypeParams { }
     public class DidChangeDataNotificationType : NotificationType<DidChangeDataNotificationTypeParams>
     {

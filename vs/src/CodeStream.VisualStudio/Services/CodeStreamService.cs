@@ -2,11 +2,12 @@
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Models;
-using CodeStream.VisualStudio.Packages;
+using CodeStream.VisualStudio.UI;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Services
@@ -16,10 +17,15 @@ namespace CodeStream.VisualStudio.Services
     public interface ICodeStreamService
     {
         Task ChangeActiveWindowAsync(string fileName, Uri uri);
-
-        Task NewCodemarkAsync(Uri uri, TextSelection textSelection, CodemarkType codemarkType, CancellationToken? cancellationToken = null);
-
-        Task EditorSelectionChangedNotificationAsync(Uri uri, TextSelection textSelection, CodemarkType codemarkType, CancellationToken? cancellationToken = null);
+        Task NewCodemarkAsync(Uri uri,
+            EditorState editorState,
+            CodemarkType codemarkType,
+            CancellationToken? cancellationToken = null);
+        Task EditorSelectionChangedNotificationAsync(Uri uri,
+            EditorState editorState,
+            List<Range> visibleRanges,
+            CodemarkType codemarkType,
+            CancellationToken? cancellationToken = null);
         Task OpenCommentByThreadAsync(string streamId, string threadId);
         /// <summary>
         /// logs the user out from the CodeStream agent and the session
@@ -43,7 +49,7 @@ namespace CodeStream.VisualStudio.Services
         public IWebviewIpc WebviewIpc { get; }
 
         private readonly Lazy<ISettingsService> _settingsService;
-        private readonly Lazy<IToolWindowProvider> _toolWindowProvider;
+        private readonly Lazy<IIdeService> _ideService;
 
         public CodeStreamService(
             Lazy<ICredentialsService> credentialsService,
@@ -52,7 +58,7 @@ namespace CodeStream.VisualStudio.Services
             ICodeStreamAgentService serviceProvider,
             IWebviewIpc ipc,
             Lazy<ISettingsService> settingsService,
-            Lazy<IToolWindowProvider> toolWindowProvider)
+             Lazy<IIdeService> ideService)
         {
             _credentialsService = credentialsService;
             _eventAggregator = eventAggregator;
@@ -60,7 +66,7 @@ namespace CodeStream.VisualStudio.Services
             _agentService = serviceProvider;
             WebviewIpc = ipc;
             _settingsService = settingsService;
-            _toolWindowProvider = toolWindowProvider;
+            _ideService = ideService;
         }
 
         public bool IsReady
@@ -74,14 +80,19 @@ namespace CodeStream.VisualStudio.Services
 
             try
             {
+                var activeTextView = _ideService.Value.GetActiveTextView();
+                var editorState = _ideService.Value.GetActiveEditorState();
+
                 WebviewIpc.Notify(new HostDidChangeActiveEditorNotificationType
                 {
                     Params = new HostDidChangeActiveEditorNotification
                     {
-                        Editor = new HostDidChangeActiveEditorNotificationEditor
+                        Editor = new HostDidChangeActiveEditorNotificationEditor(fileName, 
+                        uri, 
+                        editorState?.ToEditorSelections(), 
+                        activeTextView?.TextView.ToVisibleRanges())
                         {
-                            Uri = uri.ToString(),
-                            FileName = fileName,
+                            LanguageId = null
                         }
                     }
                 });
@@ -116,7 +127,8 @@ namespace CodeStream.VisualStudio.Services
             return Task.CompletedTask;
         }
 
-        public Task EditorSelectionChangedNotificationAsync(Uri uri, TextSelection textSelection, CodemarkType codemarkType, CancellationToken? cancellationToken = null)
+        public Task EditorSelectionChangedNotificationAsync(Uri uri, EditorState editorState,
+            List<Range> visibleRanges, CodemarkType codemarkType, CancellationToken? cancellationToken = null)
         {
             if (!IsReady) return Task.CompletedTask;
 
@@ -124,17 +136,8 @@ namespace CodeStream.VisualStudio.Services
             {
                 WebviewIpc.Notify(new HostDidChangeEditorSelectionNotificationType
                 {
-                    Params = new HostDidChangeEditorSelectionNotification
-                    {
-                        Uri = uri.ToString(),
-
-                        //TODO
-                        VisibleRanges = null,
-                        //TODO
-                        Selections = null
-                    }
+                    Params = new HostDidChangeEditorSelectionNotification(uri, editorState?.ToEditorSelections(), visibleRanges)                     
                 });
-
             }
             catch (Exception ex)
             {
@@ -144,7 +147,7 @@ namespace CodeStream.VisualStudio.Services
             return Task.CompletedTask;
         }
 
-        public Task NewCodemarkAsync(Uri uri, TextSelection textSelection, CodemarkType codemarkType, CancellationToken? cancellationToken = null)
+        public Task NewCodemarkAsync(Uri uri, EditorState textSelection, CodemarkType codemarkType, CancellationToken? cancellationToken = null)
         {
             if (!IsReady) return Task.CompletedTask;
 
@@ -152,12 +155,7 @@ namespace CodeStream.VisualStudio.Services
             {
                 WebviewIpc.Notify(new NewCodemarkNotificationType
                 {
-                    Params = new NewCodemarkNotification
-                    {
-                        Uri = uri.ToString(),
-                        Type = codemarkType,
-                        Range = textSelection.Range
-                    }
+                    Params = new NewCodemarkNotification(uri, textSelection?.Range, codemarkType)
                 });
             }
             catch (Exception ex)

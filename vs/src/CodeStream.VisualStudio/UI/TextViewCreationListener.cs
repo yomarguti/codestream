@@ -1,6 +1,7 @@
 ﻿using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
+using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Margins;
 using Microsoft.VisualStudio.Editor;
@@ -18,7 +19,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
-using CodeStream.VisualStudio.Models;
 
 namespace CodeStream.VisualStudio.UI
 {
@@ -34,14 +34,26 @@ namespace CodeStream.VisualStudio.UI
         private readonly IEventAggregator _eventAggregator;
         private readonly ISessionService _sessionService;
         private readonly ISettingsService _settingsService;
+        private readonly IIdeService _ideService;
 
         private static readonly object InitializedLock = new object();
 
-        public TextViewCreationListener()
+        public TextViewCreationListener() :
+            this(Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator,
+                Package.GetGlobalService(typeof(SSessionService)) as ISessionService,
+                Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService,
+                ServiceLocator.Get<SIdeService, IIdeService>())
+        { }
+
+        public TextViewCreationListener(IEventAggregator eventAggregator,
+            ISessionService sessionService,
+            ISettingsService settingsService,
+            IIdeService ideService)
         {
-            _eventAggregator = Package.GetGlobalService((typeof(SEventAggregator))) as IEventAggregator;
-            _sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
-            _settingsService = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
+            _eventAggregator = eventAggregator;
+            _sessionService = sessionService;
+            _settingsService = settingsService;
+            _ideService = ideService;
         }
 
         [Import]
@@ -112,7 +124,7 @@ namespace CodeStream.VisualStudio.UI
                     .ObserveOnDispatcher()
                     .Subscribe(_ => OnSessionLogout(wpfTextView, textViewMarginProviders)),
 
-                _eventAggregator.GetEvent<CodemarkVisibilityEvent>()
+                _eventAggregator.GetEvent<MarkerVisibilityEvent>()
                     .ObserveOnDispatcher()
                     .Subscribe(_ => textViewMarginProviders.Toggle(_.IsVisible))
             });
@@ -269,18 +281,18 @@ namespace CodeStream.VisualStudio.UI
             {
                 documentMarkerManager.GetOrCreateMarkers();
             }
+
             if (_settingsService.ViewCodemarksInline)
             {
+                var activeEditorState = _ideService.GetActiveEditorState();
+
                 ServiceLocator.Get<SWebviewIpc, IWebviewIpc>()?.Notify(new HostDidChangeEditorVisibleRangesNotificationType
-                {
-                    Params = new HostDidChangeEditorVisibleRangesNotification
                     {
-                        Uri = textDocument.FilePath.ToUri().ToString(),
-                        //TODO
-                        Selections = null,
-                        VisibleRanges = wpfTextView.TextViewLines.ToRanges().Collapsed()
-                    }
-                });
+                        Params = new HostDidChangeEditorVisibleRangesNotification(
+                            textDocument.FilePath.ToUri(), 
+                            activeEditorState?.ToEditorSelections(), 
+                            wpfTextView.ToVisibleRanges())
+                    });
             }
 
             wpfTextView.TextBuffer

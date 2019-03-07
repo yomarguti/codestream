@@ -1,15 +1,24 @@
-﻿using Microsoft.VisualStudio.LanguageServer.Protocol;
+﻿using System;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio.Models
 {
     public class HostDidChangeActiveEditorNotificationEditor
     {
-        public string FileName { get; set; }
+        public HostDidChangeActiveEditorNotificationEditor(string fileName, Uri uri, List<EditorSelection> selections, List<Range> visibleRanges)
+        {
+            FileName = fileName;
+            Uri = uri.ToString();
+            Selections = Selections;
+            VisibleRanges = visibleRanges;
+        }
+
+        public string FileName { get; }
         public string LanguageId { get; set; }
-        public string Uri { get; set; }
-        public List<EditorSelection> Selections { get; set; }
-        public List<Range> VisibleRanges { get; set; }
+        public string Uri { get; }
+        public List<EditorSelection> Selections { get; }
+        public List<Range> VisibleRanges { get; }
     }
 
     public class HostDidChangeActiveEditorNotification
@@ -39,9 +48,16 @@ namespace CodeStream.VisualStudio.Models
 
     public class HostDidChangeEditorSelectionNotification
     {
-        public string Uri { get; set; }
-        public List<EditorSelection> Selections { get; set; }
-        public List<Range> VisibleRanges { get; set; }
+        public HostDidChangeEditorSelectionNotification(Uri uri, List<EditorSelection> selections, List<Range> visibleRanges)
+        {
+            Uri = uri.ToString();
+            Selections = selections;
+            VisibleRanges = visibleRanges;
+        }
+
+        public string Uri { get; }
+        public List<EditorSelection> Selections { get; }
+        public List<Range> VisibleRanges { get; }
     }
 
     public class HostDidChangeEditorSelectionNotificationType : NotificationType<HostDidChangeEditorSelectionNotification>
@@ -52,9 +68,16 @@ namespace CodeStream.VisualStudio.Models
 
     public class HostDidChangeEditorVisibleRangesNotification
     {
-        public string Uri { get; set; }
-        public List<EditorSelection> Selections { get; set; }
-        public List<Range> VisibleRanges { get; set; }
+        public HostDidChangeEditorVisibleRangesNotification(Uri uri, List<EditorSelection> selections, List<Range> visibleRanges)
+        {
+            Uri = uri.ToString();
+            Selections = selections;
+            VisibleRanges = visibleRanges;
+        }
+
+        public string Uri { get; }
+        public List<EditorSelection> Selections { get; }
+        public List<Range> VisibleRanges { get; }
     }
 
     public class HostDidChangeEditorVisibleRangesNotificationType : NotificationType<HostDidChangeEditorVisibleRangesNotification>

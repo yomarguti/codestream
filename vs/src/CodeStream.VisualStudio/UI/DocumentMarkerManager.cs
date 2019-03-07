@@ -52,20 +52,28 @@ namespace CodeStream.VisualStudio.UI
 
             ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
-                _markers = await _agentService.GetMarkersForDocumentAsync(fileUri);
+                try
+                {
+                    _markers = await _agentService.GetMarkersForDocumentAsync(fileUri);
 
-                if (_markers?.Markers.AnySafe() == true || forceUpdate)
-                {
-                    if (_wpfTextView.TextBuffer.Properties.ContainsProperty(PropertyNames.CodemarkMarkers))
+                    if (_markers?.Markers.AnySafe() == true || forceUpdate)
                     {
-                        _wpfTextView.TextBuffer.Properties.RemoveProperty(PropertyNames.CodemarkMarkers);
+                        if (_wpfTextView.TextBuffer.Properties.ContainsProperty(PropertyNames.CodemarkMarkers))
+                        {
+                            _wpfTextView.TextBuffer.Properties.RemoveProperty(PropertyNames.CodemarkMarkers);
+                        }
+
+                        _wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.CodemarkMarkers, _markers.Markers);
+                        Log.Verbose("Setting Codemarks Count={Count}", _markers.Markers.Count);
                     }
-                    _wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.CodemarkMarkers, _markers.Markers);
-                    Log.Verbose("Setting Codemarks Count={Count}", _markers.Markers.Count);
+                    else
+                    {
+                        Log.Verbose("No Codemarks from agent");
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    Log.Verbose("No Codemarks from agent");
+                    Log.Warning(ex, nameof(GetOrCreateMarkers));
                 }
             });
         }

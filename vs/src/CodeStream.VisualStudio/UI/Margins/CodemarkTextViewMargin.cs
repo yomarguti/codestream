@@ -138,6 +138,8 @@ namespace CodeStream.VisualStudio.UI.Margins
             return _sessionService.IsReady;
         }
 
+        public bool CanToggleMargin { get; } = true;
+
         public void OnSessionLogout()
         {
             Children.Clear();
@@ -157,7 +159,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                 {
                     _disposables.Add(Observable.FromEventPattern(ev => _textView.Selection.SelectionChanged += ev,
                             ev => _textView.Selection.SelectionChanged -= ev)
-                        .Sample(TimeSpan.FromMilliseconds(300))
+                        .Sample(TimeSpan.FromMilliseconds(250))
                         .ObserveOnDispatcher()
                         .Subscribe(eventPattern =>
                         {
@@ -166,14 +168,17 @@ namespace CodeStream.VisualStudio.UI.Margins
 
                                 // TODO cant we get the selected text from the sender somehow??
                                 var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
-                            var selectedTextResult = ideService?.GetTextSelected();
-                            if (selectedTextResult?.HasText == false) return;
+                            var selectedTextResult = ideService?.GetActiveEditorState();
+                            if (selectedTextResult?.HasSelectedText == false) return;
 
                             var codeStreamService =
                                 Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
                             if (codeStreamService == null) return;
                             
-                            codeStreamService.EditorSelectionChangedNotificationAsync(new Uri(_textDocument.FilePath), selectedTextResult, CodemarkType.Comment, CancellationToken.None);
+                            codeStreamService.EditorSelectionChangedNotificationAsync(new Uri(_textDocument.FilePath),
+                                selectedTextResult, 
+                                _textView.TextViewLines.ToRanges().Collapsed(),
+                                CodemarkType.Comment, CancellationToken.None);
 
                             var textSelection = eventPattern?.Sender as ITextSelection;
                             Log.Verbose(

@@ -37,7 +37,7 @@ namespace CodeStream.VisualStudio.Controllers
 
         public async Task ToggleShowMarkersAsync(bool value)
         {
-            _eventAggregator.Publish(new CodemarkVisibilityEvent { IsVisible = value });
+            _eventAggregator.Publish(new MarkerVisibilityEvent { IsVisible = value });
             _ipc.Notify(new HostDidChangeConfigNotificationType
             {
                 Params = new HostDidChangeConfigNotification

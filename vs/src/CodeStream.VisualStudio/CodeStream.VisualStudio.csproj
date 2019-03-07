@@ -124,6 +124,7 @@
     <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Extensions\PackageExtensions.cs" />
+    <Compile Include="Extensions\RangeExtensions.cs" />
     <Compile Include="Models\Agent.Protocol.cs" />
     <Compile Include="Models\Host.Protocol.Editor.cs" />
     <Compile Include="Models\Host.Protocol.Notifications.cs" />

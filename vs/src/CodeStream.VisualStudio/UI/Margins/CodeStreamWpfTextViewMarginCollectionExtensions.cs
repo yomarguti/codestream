@@ -16,7 +16,13 @@ namespace CodeStream.VisualStudio.UI.Margins
             });
 
         public static void Toggle(this List<ICodeStreamWpfTextViewMargin> items, bool isVisible)
-            => items.ForEach(_ => _.ToggleMargin(isVisible));
+            => items.ForEach(_ =>
+            {
+                if (_.CanToggleMargin)
+                {
+                    _.ToggleMargin(isVisible);
+                }
+            });
 
         public static void Hide(this List<ICodeStreamWpfTextViewMargin> items) =>
             items.ForEach(_ => _.HideMargin());

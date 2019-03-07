@@ -3,6 +3,7 @@ using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Settings;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -80,7 +81,8 @@ namespace CodeStream.VisualStudio.Packages
                 return new EventAggregator();
             if (typeof(SIdeService) == serviceType)
                 return new IdeService(
-                    GetService(typeof(SVsTextManager)) as IVsTextManager2,
+                    GetService(typeof(SComponentModel)) as IComponentModel,
+                    GetService(typeof(SVsTextManager)) as IVsTextManager,
                     ExtensionManager.Initialize(LogManager.ForContext<ExtensionManagerDummy>()).Value);
             if (typeof(SCredentialsService) == serviceType)
                 return new CredentialsService();
@@ -90,7 +92,8 @@ namespace CodeStream.VisualStudio.Packages
                 return new CodeStreamAgentService(
                     GetService(typeof(SSessionService)) as ISessionService,
                     GetService(typeof(SSettingsService)) as ISettingsService,
-                    GetService(typeof(SEventAggregator)) as IEventAggregator);
+                    GetService(typeof(SEventAggregator)) as IEventAggregator,
+                    GetService(typeof(SIdeService)) as IIdeService);
             if (typeof(SBrowserService) == serviceType)
                 return new DotNetBrowserService(GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService);
             if (typeof(SWebviewIpc) == serviceType)
@@ -101,9 +104,9 @@ namespace CodeStream.VisualStudio.Packages
                     new Lazy<IEventAggregator>(() => GetService(typeof(SEventAggregator)) as IEventAggregator),
                     GetService(typeof(SSessionService)) as ISessionService,
                     GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
-                    GetService(typeof(SWebviewIpc)) as IWebviewIpc, 
+                    GetService(typeof(SWebviewIpc)) as IWebviewIpc,
                     new Lazy<ISettingsService>(() => GetService(typeof(SSettingsService)) as ISettingsService),
-                    new Lazy<IToolWindowProvider>(() => this)
+                    new Lazy<IIdeService>(() => GetService(typeof(SIdeService)) as IIdeService)
                 );
 
             return null;

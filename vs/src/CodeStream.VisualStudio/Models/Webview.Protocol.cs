@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.LanguageServer.Protocol;
+﻿using System;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace CodeStream.VisualStudio.Models
 {
@@ -29,9 +30,16 @@ namespace CodeStream.VisualStudio.Models
 
     public class NewCodemarkNotification
     {
-        public string Uri { get; set; }
-        public Range  Range { get; set; }
-        public CodemarkType Type { get; set; }
+        public NewCodemarkNotification(Uri uri, Range range, CodemarkType type)
+        {
+            Uri = uri.ToString();
+            Range = range;
+            Type = type;
+        }
+
+        public string Uri { get; }
+        public Range  Range { get; }
+        public CodemarkType Type { get; }
     }
 
     public class NewCodemarkNotificationType : NotificationType<NewCodemarkNotification>
