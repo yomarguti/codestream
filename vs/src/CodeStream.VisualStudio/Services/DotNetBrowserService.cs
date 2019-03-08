@@ -88,7 +88,7 @@ namespace CodeStream.VisualStudio.Services
 
 		private void Browser_RenderGoneEvent(object sender, RenderEventArgs e)
 		{
-            Log.Verbose(nameof(Browser_RenderGoneEvent));
+			Log.Verbose(nameof(Browser_RenderGoneEvent));
 
 			ReloadWebView();
 		}
@@ -101,7 +101,7 @@ namespace CodeStream.VisualStudio.Services
 			Log.Verbose($"{nameof(Browser_ScriptContextCreated)} set window object");
 
 			_browserView.Browser.ExecuteJavaScript(@"
-				  window.acquireVsCodeApi = function() {
+				  window.acquireVsApi = function() {
 					  return {
 						  postMessage: function(message) {
 							window.PostMessageInterop.Handle(JSON.stringify(message));
@@ -144,10 +144,10 @@ namespace CodeStream.VisualStudio.Services
 		}
 
 		public override string GetDevToolsUrl()
-        {
-            var url = _browserView.Browser.GetRemoteDebuggingURL();
-            Log.Verbose($"DevTools Url={url}");
-            return url;
+		{
+			var url = _browserView.Browser.GetRemoteDebuggingURL();
+			Log.Verbose($"DevTools Url={url}");
+			return url;
 		}
 
 		/// <summary>
@@ -266,8 +266,8 @@ namespace CodeStream.VisualStudio.Services
 						return;
 					}
 
-                    _browserView.Browser.RenderGoneEvent -= Browser_RenderGoneEvent;
-                    _browserView.Browser.ScriptContextCreated -= Browser_ScriptContextCreated;
+					_browserView.Browser.RenderGoneEvent -= Browser_RenderGoneEvent;
+					_browserView.Browser.ScriptContextCreated -= Browser_ScriptContextCreated;
 
 					_browserView.Dispose();
 					_browserView.Browser.Dispose();

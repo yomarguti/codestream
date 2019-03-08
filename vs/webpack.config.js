@@ -9,13 +9,12 @@ const HtmlPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
-// const CircularDependencyPlugin = require("circular-dependency-plugin");
 const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 
 module.exports = function(env, argv) {
 	env = env || {};
-	env.analyze = Boolean(env.analyze);
-	env.production = env.analyze || Boolean(env.production);
+	env.analyzeBundle = Boolean(env.analyzeBundle);
+	env.production = env.analyzeBundle || Boolean(env.production);
 	env.reset = Boolean(env.reset);
 	env.watch = Boolean(argv.watch || argv.w);
 
@@ -37,13 +36,6 @@ module.exports = function(env, argv) {
 		path.resolve(protocolPath, "webview"),
 		env
 	);
-
-	// console.log("Ensuring extension symlink to the webview folder...");
-	// createFolderSymlinkSync(
-	// 	path.resolve(__dirname, "../codestream-components"),
-	// 	path.resolve(__dirname, "src/webviews/app/components"),
-	// 	env
-	// );
 
 	protocolPath = path.resolve(__dirname, "../codestream-components/protocols");
 	if (!fs.existsSync(protocolPath)) {
@@ -87,11 +79,12 @@ module.exports = function(env, argv) {
 				: false
 		}),
 		new ForkTsCheckerPlugin({
-			reportFiles: ["!index.ts"]
+			async: false,
+			useTypescriptIncrementalApi: false
 		})
 	];
 
-	if (env.analyze) {
+	if (env.analyzeBundle) {
 		plugins.push(new BundleAnalyzerPlugin());
 	}
 
@@ -119,7 +112,17 @@ module.exports = function(env, argv) {
 						ecma: 8
 					}
 				})
-			]
+			],
+			splitChunks: {
+				cacheGroups: {
+					default: false,
+					data: {
+						chunks: "all",
+						filename: "webview-data.js",
+						test: /\.json/
+					}
+				}
+			}
 		},
 		module: {
 			rules: [
@@ -159,6 +162,13 @@ module.exports = function(env, argv) {
 		},
 		resolve: {
 			extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
+			// Dunno why this won't work
+			// plugins: [
+			// 	new TsconfigPathsPlugin({
+			// 		configFile: path.resolve(context, "tsconfig.json"),
+			// 		extensions: [".ts", ".tsx", ".js", ".jsx", ".less"]
+			// 	})
+			// ],
 			alias: {
 				"@codestream/protocols/agent": path.resolve(
 					__dirname,

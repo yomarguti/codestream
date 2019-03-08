@@ -1,5 +1,6 @@
 ﻿{
 	"compilerOptions": {
+		"allowJs": true,
 		"allowSyntheticDefaultImports": true,
 		"baseUrl": ".",
 		"esModuleInterop": true,
@@ -17,16 +18,16 @@
 		"outDir": "../../../dist",
 		"paths": {
 			"@codestream/protocols/agent": [
-				"../../../../codestream-components/protocols/agent/agent.protocol.ts"
+				"../../../../../codestream-components/protocols/agent/agent.protocol.ts"
 			],
 			"@codestream/protocols/api": [
-				"../../../../codestream-components/protocols/agent/api.protocol.ts"
+				"../../../../../codestream-components/protocols/agent/api.protocol.ts"
 			],
 			"@codestream/protocols/webview": [
-				"../../../../codestream-components/ipc/webview.protocol.ts"
+				"../../../../../codestream-components/ipc/webview.protocol.ts"
 			],
-			"@codestream/webview/*": ["../../../../codestream-components/*"],
-			"vscode-jsonrpc": ["../../../../codestream-components/vscode-jsonrpc.shim.ts"]
+			"@codestream/webview/*": ["../../../../../codestream-components/*"],
+			"vscode-jsonrpc": ["../../../../../codestream-components/vscode-jsonrpc.shim.ts"]
 		},
 		"rootDir": ".",
 		"skipLibCheck": true,
