@@ -42,17 +42,10 @@ document.body.addEventListener(
 	true
 );
 
-const start = Date.now();
-initialize("#app", {
-	prerender: () =>
-		setTimeout(() => {
-			document.body.classList.remove("preload");
-		}, 1000) // Wait for animations to complete
-}).then(render => {
-	const duration = Date.now() - start;
-	if (duration < 250) {
-		setTimeout(render, 250 - duration);
-	} else {
-		render();
-	}
+initialize("#app").then(render => {
+	setTimeout(() => {
+		document.body.classList.remove("preload");
+	}, 1000); // Wait for animations to complete
+
+	render();
 });
