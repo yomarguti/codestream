@@ -72,6 +72,8 @@ export class SimpleChannelPanel extends Component {
 	}
 
 	componentDidMount() {
+		document.querySelector("#spinner").classList.add("hidden");
+
 		if (isInVscode()) {
 			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
 				if (event.key === "Escape") {
