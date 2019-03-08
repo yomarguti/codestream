@@ -1,7 +1,8 @@
 import React from "react";
 import Icon from "../Icon";
 import Menu from "../Menu";
-import { Board, CrossPostIssueValuesListener, SUPPORTED_SERVICES } from "./types";
+import { CrossPostIssueValuesListener, PROVIDER_MAPPINGS } from "./types";
+import { ThirdPartyProviderBoard, ThirdPartyProviderInstance } from "@codestream/protocols/agent";
 
 interface List {
 	id: string;
@@ -9,7 +10,7 @@ interface List {
 }
 
 interface State {
-	board?: Board;
+	board?: ThirdPartyProviderBoard;
 	list?: List;
 	isEnabled: boolean;
 	boardMenuOpen: boolean;
@@ -19,8 +20,9 @@ interface State {
 }
 
 interface Props {
-	boards: Board[];
+	boards: ThirdPartyProviderBoard[];
 	onValues: CrossPostIssueValuesListener;
+	provider: ThirdPartyProviderInstance;
 }
 
 export default class AsanaCardControls extends React.Component<Props, State> {
@@ -47,7 +49,7 @@ export default class AsanaCardControls extends React.Component<Props, State> {
 			boardId: board && board.id,
 			listId: list && list.id,
 			isEnabled,
-			provider: SUPPORTED_SERVICES.Asana.name
+			issueProvider: this.props.provider
 		});
 	};
 
@@ -59,7 +61,7 @@ export default class AsanaCardControls extends React.Component<Props, State> {
 		});
 	};
 
-	selectBoard = (board: Board) => {
+	selectBoard = (board: ThirdPartyProviderBoard) => {
 		if (board) {
 			this.setState({ board, list: board.lists[0] }, this.onValuesChanged);
 		}
@@ -87,6 +89,7 @@ export default class AsanaCardControls extends React.Component<Props, State> {
 
 	render() {
 		const { board, list } = this.state;
+		const { provider } = this.props;
 		const boardItems = this.props.boards.map(board => ({
 			label: board.name,
 			action: board
@@ -97,7 +100,11 @@ export default class AsanaCardControls extends React.Component<Props, State> {
 					action: list
 			  }))
 			: [];
-
+		const providerDisplay = PROVIDER_MAPPINGS[provider.name];
+		const displayName = provider.isEnterprise ?
+			`${providerDisplay.displayName} - ${provider.host}` :
+			providerDisplay.displayName;
+	
 		return (
 			<div className="checkbox-row" onClick={this.toggleCrossPostIssue}>
 				<input type="checkbox" checked={this.state.isEnabled} />
@@ -132,7 +139,7 @@ export default class AsanaCardControls extends React.Component<Props, State> {
 					</span>,
 					" "
 				]}
-				{` on ${SUPPORTED_SERVICES.Asana.displayName}`}
+				{` on ${displayName}`}
 			</div>
 		);
 	}

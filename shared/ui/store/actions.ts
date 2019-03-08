@@ -12,6 +12,7 @@ import { bootstrapStreams } from "./streams/actions";
 import { bootstrapTeams } from "./teams/actions";
 import * as unreadsActions from "./unreads/actions";
 import { updateUnreads } from "./unreads/actions";
+import { updateProviders } from "./providers/actions";
 import { bootstrapUsers } from "./users/actions";
 import { isSignedInBootstrap, BootstrapResponse } from "../ipc/host.protocol";
 import { goToLogin } from "./route/actions";
@@ -31,6 +32,7 @@ export const bootstrap = (data: BootstrapResponse) => async dispatch => {
 		// TODO: I think this should be removed and just live with the caps below
 		dispatch(bootstrapServices((data.capabilities && data.capabilities.services) || {}));
 		dispatch(updateUnreads(data.unreads || {}));
+		dispatch(updateProviders({ issueProviders: data.providers || [] }));
 		dispatch(contextActions.setContext({ hasFocus: true, ...data.context }));
 		dispatch(editorContextActions.setEditorContext(data.editorContext));
 		dispatch(sessionActions.setSession(data.session));

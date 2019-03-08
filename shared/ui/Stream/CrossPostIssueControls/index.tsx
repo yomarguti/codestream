@@ -10,43 +10,48 @@ import GitLabCardControls from "./GitLabCardControls";
 import JiraCardControls from "./JiraCardControls";
 import TrelloCardControls from "./TrelloCardControls";
 import {
-	Board,
 	CrossPostIssueValuesListener,
-	getProviderInfo,
-	Service,
-	SUPPORTED_SERVICES
+	ProviderDisplay,
+	PROVIDER_MAPPINGS
 } from "./types";
-import { FetchThirdPartyBoardsRequest } from "@codestream/protocols/agent";
+import { 
+	FetchThirdPartyBoardsRequestType,	
+	ThirdPartyProviderBoard,
+	ThirdPartyProviderInstance
+} from "@codestream/protocols/agent";
 import { RequestType } from "vscode-jsonrpc";
 import { IpcRoutes } from "@codestream/protocols/webview";
 
-export const getFetchIssueBoardsCommand = (service: string) =>
-	new RequestType<FetchThirdPartyBoardsRequest, { boards: any[] }, void, void>(
-		`${IpcRoutes.Agent}/${service}/boards`
-	);
+interface ProviderInfo {
+	provider: ThirdPartyProviderInstance;
+	display: ProviderDisplay;
+}
 
 interface Props {
-	connectProvider(name: string): any;
+	connectProvider(provider: ThirdPartyProviderInstance): any;
 	onValues: CrossPostIssueValuesListener;
-	provider?: string;
+	issueProvider?: ThirdPartyProviderInstance;
 	codeBlock?: {
 		source?: {
 			repoPath: string;
 		};
 	};
+	providers?: ThirdPartyProviderInstance[];
+	currentTeamId: string;
 }
 
 interface State {
-	boards: Board[];
+	boards: ThirdPartyProviderBoard[];
 	isLoading: boolean;
-	loadingProvider?: Service;
+	loadingProvider?: ProviderInfo;
 }
 
 class CrossPostIssueControls extends React.Component<Props, State> {
 	constructor(props: Props) {
 		super(props);
-		const isLoading = props.provider ? true : false;
-		const loadingProvider = isLoading ? getProviderInfo(props.provider!) : undefined;
+		const providerInfo = props.issueProvider ? this.getProviderInfo(props.issueProvider) : undefined;
+		const isLoading = !!providerInfo;
+		const loadingProvider = providerInfo;
 		this.state = {
 			boards: [],
 			isLoading,
@@ -55,30 +60,32 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 	}
 
 	componentDidMount() {
-		if (this.props.provider) {
-			this.loadBoards(this.props.provider);
+		if (this.props.issueProvider) {
+			this.loadBoards(this.props.issueProvider);
 		}
 	}
 
 	componentDidUpdate(prevProps: Props, prevState: State) {
-		const { provider } = this.props;
-		if (provider && !prevProps.provider) {
-			this.loadBoards(provider);
+		const { issueProvider } = this.props;
+		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider) : undefined;
+		if (providerInfo && !prevProps.issueProvider) {
+			this.loadBoards(issueProvider!);
 		}
-		if (!provider && prevProps.provider) {
+		if (!providerInfo && prevProps.issueProvider) {
 			this.setState({ boards: [], isLoading: false, loadingProvider: undefined });
 		}
 	}
 
-	async loadBoards(provider: string) {
-		if (!this.state.isLoading) {
+	async loadBoards(provider: ThirdPartyProviderInstance) {
+		const providerInfo = this.getProviderInfo(provider);
+		if (!this.state.isLoading && providerInfo) {
 			this.setState({
 				isLoading: true,
-				loadingProvider: getProviderInfo(provider)
+				loadingProvider: providerInfo
 			});
 		}
 
-		const response = await HostApi.instance.send(getFetchIssueBoardsCommand(provider), {});
+		const response = await HostApi.instance.send(FetchThirdPartyBoardsRequestType, { provider });
 
 		this.setState({
 			isLoading: false,
@@ -93,7 +100,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		return (
 			<div className="checkbox-row connect-issue">
 				<span>
-					<Icon className="spin" name="sync" /> Syncing with {(loadingProvider as any).displayName}
+					<Icon className="spin" name="sync" /> Syncing with {loadingProvider!.display.displayName}
 					...
 				</span>
 			</div>
@@ -102,39 +109,65 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 
 	renderProviderControls() {
 		const { boards } = this.state;
-		switch (this.props.provider) {
-			case SUPPORTED_SERVICES.Jira.name: {
-				return <JiraCardControls boards={boards} onValues={this.props.onValues} />;
+		const { issueProvider } = this.props;
+		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider) : undefined;
+		if (!providerInfo) {
+			return null;
+		}
+		switch (issueProvider!.name) {
+			case 'jira': {
+				return (
+					<JiraCardControls 
+						boards={boards}
+						onValues={this.props.onValues}
+						provider={providerInfo.provider}
+					/>
+				);
 			}
-			case SUPPORTED_SERVICES.Trello.name: {
-				return <TrelloCardControls boards={boards} onValues={this.props.onValues} />;
+			case 'trello': {
+				return (
+					<TrelloCardControls
+						boards={boards} 
+						onValues={this.props.onValues}
+						provider={providerInfo.provider}
+					/>
+				);
 			}
-			case SUPPORTED_SERVICES.Asana.name: {
-				return <AsanaCardControls boards={boards} onValues={this.props.onValues} />;
+			case 'asana': {
+				return (
+					<AsanaCardControls
+						boards={boards}
+						onValues={this.props.onValues}
+						provider={providerInfo.provider}
+					/>
+				);
 			}
-			case SUPPORTED_SERVICES.GitHub.name: {
+			case 'github': {
 				return (
 					<GitHubCardControls
 						boards={boards}
 						onValues={this.props.onValues}
+						provider={providerInfo.provider}
 						codeBlock={this.props.codeBlock}
 					/>
 				);
 			}
-			case SUPPORTED_SERVICES.GitLab.name: {
+			case 'gitlab': {
 				return (
 					<GitLabCardControls
 						boards={boards}
 						onValues={this.props.onValues}
+						provider={providerInfo.provider}
 						codeBlock={this.props.codeBlock}
 					/>
 				);
 			}
-			case SUPPORTED_SERVICES.Bitbucket.name: {
+			case 'bitbucket': {
 				return (
 					<BitbucketCardControls
 						boards={boards}
 						onValues={this.props.onValues}
+						provider={providerInfo.provider}
 						codeBlock={this.props.codeBlock}
 					/>
 				);
@@ -145,47 +178,83 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 	}
 
 	render() {
-		if (this.state.isLoading) return this.renderLoading();
-		else if (this.props.provider) {
+		if (this.state.isLoading) {
+			return this.renderLoading();
+		}
+		const { issueProvider } = this.props;
+		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider) : undefined;
+		if (providerInfo) {
 			return this.renderProviderControls();
-		} else {
+		} else if (
+			this.props.providers &&
+			Object.keys(this.props.providers).length
+		) {
+			const knownIssueProviders = this.props.providers.filter(provider => {
+				return (
+					(!provider.teamId || provider.teamId === this.props.currentTeamId) && 
+					provider.hasIssues &&
+					!!PROVIDER_MAPPINGS[provider.name]
+				);
+			});
+			if (knownIssueProviders.length === 0) {
+				return "";
+			}
 			return (
 				<div className="checkbox-row connect-issue">
 					Create an issue in{" "}
-					{Object.values(SUPPORTED_SERVICES).map((service: Service) => (
-						<span
-							className="service"
-							onClick={e => this.handleClickConnectIssueService(e, service)}
-						>
-							<Icon className={service.name} name={service.icon || service.name} />
-							{service.displayName}
-						</span>
-					))}
+					{knownIssueProviders.map(issueProvider => {
+						const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
+						const displayName = issueProvider.isEnterprise ?
+							`${providerDisplay.displayName} - ${issueProvider.host}` :
+							providerDisplay.displayName;
+						const icon = providerDisplay.icon || issueProvider.name;
+						return (
+							<span
+								className="service"
+								onClick={e => 
+									this.handleClickConnectIssueProvider(e, { provider: issueProvider, display: providerDisplay})
+								}
+							>
+								<Icon className={issueProvider!.name} name={icon} />
+								{displayName}
+							</span>
+						);
+					})}
 				</div>
 			);
+		} else {
+			return "";
 		}
 	}
 
-	async handleClickConnectIssueService(
+	async handleClickConnectIssueProvider(
 		event: React.SyntheticEvent,
-		service: Service
+		providerInfo: ProviderInfo
 	): Promise<void> {
 		event.preventDefault();
-		this.setState({ isLoading: true, loadingProvider: service });
-		switch (service.name) {
-			case "trello":
-			case "asana":
-			case "jira":
-			case "github":
-			case "gitlab":
-			case "bitbucket":
-				await this.props.connectProvider(service.name);
-				break;
+		this.setState({ isLoading: true, loadingProvider: providerInfo });
+		await this.props.connectProvider(providerInfo.provider);
+	}
+
+	getProviderInfo(wantProvider: ThirdPartyProviderInstance): ProviderInfo | undefined {
+		const provider =
+			this.props.providers &&
+			this.props.providers.find(provider => provider.host === wantProvider.host);
+		const display = provider ? PROVIDER_MAPPINGS[provider.name] : undefined;
+		if (provider && display) {
+			return { provider, display };
+		} else {
+			return undefined;
 		}
 	}
 }
 
+const mapStateToProps = ({ providers, context }) => ({
+	providers,
+	currentTeamId: context.currentTeamId
+});
+
 export default connect(
-	null,
+	mapStateToProps,
 	{ connectProvider }
 )(CrossPostIssueControls);

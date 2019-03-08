@@ -8,6 +8,7 @@ import { reduceCodemarks } from "../store/codemarks/reducer";
 import { reduceConfigs } from "../store/configs/reducer";
 import { reduceConnectivity } from "../store/connectivity/reducer";
 import { reduceContext } from "../store/context/reducer";
+import { reduceProviders } from "../store/providers/reducer";
 import { reducePosts } from "../store/posts/reducer";
 import { reducePreferences } from "../store/preferences/reducer";
 import { reduceRepos } from "../store/repos/reducer";
@@ -55,7 +56,8 @@ const reducer = combineReducers({
 	teams: reduceTeams,
 	umis: reduceUnreads,
 	users: reduceUsers,
-	services: reduceServices
+	services: reduceServices,
+	providers: reduceProviders
 });
 
 export function createCodeStreamStore(

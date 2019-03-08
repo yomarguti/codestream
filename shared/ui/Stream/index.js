@@ -48,8 +48,10 @@ import {
 	OpenUrlRequestType,
 	SetCodemarkPinnedRequestType,
 	TelemetryRequestType,
-	GetRangeScmInfoRequestType
+	GetRangeScmInfoRequestType,
+	ThirdPartyProviderInstance
 } from "@codestream/protocols/agent";
+
 import { setCurrentStream } from "../store/context/actions";
 import {
 	filter as _filter,
@@ -57,6 +59,7 @@ import {
 	last as _last,
 	sortBy as _sortBy
 } from "lodash-es";
+import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 
 const EMAIL_MATCH_REGEX = new RegExp(
 	"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*",
@@ -307,7 +310,6 @@ export class SimpleStream extends Component {
 	}
 
 	renderMenu() {
-		const { providerInfo = {} } = this.props;
 		const { menuOpen, menuTarget } = this.state;
 		const inviteLabel = this.props.isSlackTeam ? "Invite People to CodeStream" : "Invite People";
 
@@ -320,33 +322,67 @@ export class SimpleStream extends Component {
 			{ label: "Help", action: "help" },
 			{ label: "-" }
 		];
-		// if (providerInfo.slack)
-		// 	menuItems.push({ label: "Disconnect Slack", action: "disconnect-slack" });
-		// else menuItems.push({ label: "Connect to Slack", action: "connect-slack" });
-		if (providerInfo.trello)
-			menuItems.push({ label: "Disconnect Trello", action: "disconnect-trello" });
-		else menuItems.push({ label: "Connect to Trello", action: "connect-trello" });
-		if (providerInfo.github)
-			menuItems.push({ label: "Disconnect GitHub", action: "disconnect-github" });
-		else menuItems.push({ label: "Connect to GitHub", action: "connect-github" });
-		if (providerInfo.gitlab)
-			menuItems.push({ label: "Disconnect GitLab", action: "disconnect-gitlab" });
-		else menuItems.push({ label: "Connect to GitLab", action: "connect-gitlab" });
-		if (providerInfo.asana)
-			menuItems.push({ label: "Disconnect Asana", action: "disconnect-asana" });
-		else menuItems.push({ label: "Connect to Asana", action: "connect-asana" });
-		if (providerInfo.jira) menuItems.push({ label: "Disconnect Jira", action: "disconnect-jira" });
-		else menuItems.push({ label: "Connect to Jira", action: "connect-jira" });
-		if (providerInfo.bitbucket)
-			menuItems.push({ label: "Disconnect Bitbucket", action: "disconnect-bitbucket" });
-		else menuItems.push({ label: "Connect to Bitbucket", action: "connect-bitbucket" });
-		menuItems.push({ label: "-" });
+
+		const numProviders = this.addProvidersToMenu(menuItems);
+		if (numProviders > 0) {
+			menuItems.push({ label: "-" });
+		}
+
 		menuItems.push({ label: "Sign Out", action: "signout" });
 
 		const menu = menuOpen ? (
 			<Menu items={menuItems} target={menuTarget} action={this.menuAction} align="right" />
 		) : null;
 		return menu;
+	}
+
+	addProvidersToMenu (menuItems) {
+		let numProviders = 0;
+		const providers = this.props.providers || [];
+		for (let provider of providers) {
+			const { name, isEnterprise, host } = provider;
+			const display = PROVIDER_MAPPINGS[name];
+			if (
+				display && 
+				provider.hasIssues && 
+				(!provider.teamId || provider.teamId === this.props.teamId)
+			) {
+				const displayName = isEnterprise ? 
+					`${display.displayName} - ${host}` :
+					display.displayName;
+				const isConnected = this.isConnectedToProvider(provider);
+				if (isConnected) {
+					menuItems.push({
+						label: `Disconnect ${displayName}`,
+						action: `disconnect-${host}`
+					});
+				} else {
+					menuItems.push({
+						label: `Connect to ${displayName}`,
+						action: `connect-${host}`
+					});
+				}
+				numProviders++;
+			}
+		}
+		return numProviders;
+	}
+
+	isConnectedToProvider (provider) {
+		const { providerInfo = {} } = this.props;
+		const userProviderInfo = providerInfo[provider.name];
+		if (!userProviderInfo) {
+			return false;
+		}
+		if (!provider.isEnterprise && userProviderInfo.accessToken) {
+			return true;
+		}
+		const starredHost = provider.host.replace(/\./g, '*');
+		return !!(
+			userProviderInfo.hosts &&
+			userProviderInfo.hosts[starredHost] &&
+			userProviderInfo.hosts[starredHost].accessToken
+		);
 	}
 
 	renderNavIcons() {
@@ -888,6 +924,21 @@ export class SimpleStream extends Component {
 	menuAction = arg => {
 		this.setState({ menuOpen: false });
 		// if (arg) this.setCommentType(arg);
+		if (arg && arg.startsWith("connect-")) {
+			const host = arg.split("connect-")[1];
+			const providerInstance = this.props.providers.find(p => p.host === host);
+			if (providerInstance) {
+				this.props.connectProvider(providerInstance, true);
+			}
+			return;
+		} else if (arg && arg.startsWith("disconnect-")) {
+			const host = arg.split("disconnect-")[1];
+			const providerInstance = this.props.providers.find(p => p.host === host);
+			if (providerInstance) {
+				this.props.disconnectProvider(providerInstance, true);
+			}
+			return;
+		}
 		switch (arg) {
 			case "invite":
 				return this.setActivePanel("invite");
@@ -895,36 +946,8 @@ export class SimpleStream extends Component {
 				return this.handleClickHelpLink();
 			case "feedback":
 				return this.handleClickFeedbackLink();
-			// case "connect-slack":
-			// 	return this.props.connectSlack();
-			// case "disconnect-slack":
-			case "connect-trello":
-				return this.props.connectService("trello");
-			case "disconnect-trello":
-				return this.props.disconnectService("trello");
-			case "connect-asana":
-				return this.props.connectService("asana");
-			case "disconnect-asana":
-				return this.props.disconnectService("asana");
-			case "connect-github":
-				return this.props.connectService("github");
-			case "disconnect-github":
-				return this.props.disconnectService("github");
-			case "connect-gitlab":
-				return this.props.connectService("gitlab");
-			case "disconnect-gitlab":
-				return this.props.disconnectService("gitlab");
-			case "connect-jira":
-				return this.props.connectService("jira");
-			case "disconnect-jira":
-				return this.props.disconnectService("jira");
-			case "connect-bitbucket":
-				return this.props.connectService("bitbucket");
-			case "disconnect-bitbucket":
-				return this.props.disconnectService("bitbucket");
 			case "signout":
 				return HostApi.instance.send(LogoutRequestType, {});
-
 			default:
 				return;
 		}
@@ -1809,7 +1832,6 @@ export class SimpleStream extends Component {
 				marker.file = scmInfo.scm.file;
 				marker.source = scmInfo.scm;
 			}
-
 			const markers = [marker];
 
 			let warning;
@@ -1964,7 +1986,8 @@ const mapStateToProps = state => {
 		preferences,
 		teams,
 		services,
-		umis
+		umis,
+		providers
 	} = state;
 
 	const team = teams[context.currentTeamId];
@@ -2047,6 +2070,7 @@ const mapStateToProps = state => {
 		postStreamIsTeamStream: postStream.isTeamStream,
 		postStreamMemberIds: postStream.memberIds,
 		providerInfo,
+		providers,
 		isPrivate: postStream.privacy === "private",
 		teamId: context.currentTeamId,
 		teamName: team.name || "",
