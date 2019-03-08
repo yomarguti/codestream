@@ -13,20 +13,18 @@ import {
 	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequestType,
 	UpdateConfigurationRequestType,
-	MaxRangeValue,
-	EditorSelectRangeRequestType
+	MaxRangeValue
 } from "../ipc/webview.protocol";
 import {
 	DocumentMarker,
 	TelemetryRequestType,
 	DidChangeDocumentMarkersNotificationType,
-	DocumentFromMarkerRequestType,
-	GetRangeScmInfoRequestType
+	DocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
 import { Range } from "vscode-languageserver-types";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { getCurrentSelection } from "../store/editorContext/reducer";
-import { getScmInfoForSelection } from "../store/editorContext/actions";
+import { setCurrentStream } from "../store/context/actions";
 
 /**
  * @augments {Component<{ textEditorVisibleRanges?: Range[], documentMarkers: DocumentMarker[],[key: string]: any }, {  [key: string]: any }>}
@@ -594,5 +592,5 @@ const mapStateToProps = state => {
 
 export default connect(
 	mapStateToProps,
-	{ fetchDocumentMarkers, getScmInfoForSelection }
+	{ fetchDocumentMarkers, setCurrentStream }
 )(SimpleInlineCodemarks);
