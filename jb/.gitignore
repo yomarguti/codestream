@@ -1,7 +1,8 @@
 license.jar
 .idea/dictionaries
-src/main/resources/webview/webview.css
-src/main/resources/webview/webview.js
+src/main/resources/webview
+src/main/resources/agent
 src/protocols/
 node_modules
 *.class
+temp.json

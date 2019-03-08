@@ -55,9 +55,11 @@ class AgentService(private val project: Project) {
             logger.info("Initializing CodeStream LSP agent")
             val temp = createTempDir("codestream")
             temp.deleteOnExit()
-            val agentJs = File(temp, "agent.js")
+            val agentJs = File(temp, "agent-vs.js")
+            val agentJsMap = File(temp, "agent-vs.js.map")
             val agentLog = File(temp, "agent.log")
-            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent.js"), agentJs)
+            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent-vs.js"), agentJs)
+            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent-vs.js.map"), agentJsMap)
             logger.info("CodeStream LSP agent extracted to ${agentJs.absolutePath}")
 
             val process = GeneralCommandLine(
@@ -66,10 +68,9 @@ class AgentService(private val project: Project) {
 //                "--inspect=6010",
 //                "/Users/mfarias/Code/codestream-lsp-agent/dist/agent-vs.js",
                 agentJs.absolutePath,
-                "--stdio"
-//                ,
+                "--stdio",
+                "--log=${agentLog.absolutePath}"
 //                "--log=/Users/mfarias/Code/jetbrains-codestream/build/idea-sandbox/system/log/agent.log"
-//                "--log=${agentLog.absolutePath}"
             ).createProcess()
 
             val client = CodeStreamLanguageClient(project)

@@ -57,10 +57,10 @@ module.exports = function(env, argv) {
         env
     );
 
-    const context = path.resolve(__dirname, "src/main/resources/webview");
+    const context = path.resolve(__dirname, "webview");
 
     const plugins = [
-        new CleanPlugin(["build/resources/main/webview"]),
+        new CleanPlugin(["src/main/resources/webview"]),
         new webpack.DefinePlugin(
             Object.assign(
                 { "global.atom": false },
@@ -106,8 +106,8 @@ module.exports = function(env, argv) {
         devtool: !env.production ? "eval-source-map" : undefined,
         output: {
             filename: "[name].js",
-            path: path.resolve(__dirname, "build/resources/main/webview"),
-            publicPath: "file:///{root}/dist/webview/"
+            path: path.resolve(__dirname, "src/main/resources/webview"),
+            publicPath: "./"
         },
         optimization: {
             minimizer: [
