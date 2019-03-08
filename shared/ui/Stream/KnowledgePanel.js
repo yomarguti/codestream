@@ -415,9 +415,7 @@ export class SimpleKnowledgePanel extends Component {
 	onClickCodemarkTypeFor = type => e => {
 		e.preventDefault();
 		this.props.setMultiCompose(true, {
-			composeBoxProps: {
-				codemarkType: type
-			}
+			codemarkType: type
 		});
 	};
 

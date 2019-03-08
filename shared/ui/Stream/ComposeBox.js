@@ -91,7 +91,8 @@ class ComposeBox extends React.Component {
 				assignees,
 				color
 			},
-			crossPostIssueValues
+			crossPostIssueValues,
+			attributes.codeBlock
 		);
 
 		if (event && event.metaKey) this.softReset();
@@ -133,9 +134,7 @@ class ComposeBox extends React.Component {
 
 	openMultiCompose = type => {
 		this.props.setMultiCompose(true, {
-			composeBoxProps: {
-				commentType: type
-			}
+			commentType: type
 		});
 		this.props.setNewPostEntry("Stream");
 		// setTimeout(() => {
@@ -243,6 +242,7 @@ class ComposeBox extends React.Component {
 							currentUserId={this.props.currentUserId}
 							editingCodemark={this.props.editingCodemark}
 							commentType={this.props.commentType}
+							codeBlock={this.props.codeBlock}
 						/>
 					) : (
 						<PostCompose

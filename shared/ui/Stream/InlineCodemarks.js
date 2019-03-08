@@ -20,7 +20,8 @@ import {
 	DocumentMarker,
 	TelemetryRequestType,
 	DidChangeDocumentMarkersNotificationType,
-	DocumentFromMarkerRequestType
+	DocumentFromMarkerRequestType,
+	GetRangeScmInfoRequestType
 } from "@codestream/protocols/agent";
 import { Range } from "vscode-languageserver-types";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
@@ -446,18 +447,13 @@ export class SimpleInlineCodemarks extends Component {
 
 		// Clear the previous highlight
 		this.handleUnhighlightLine(lineNum);
-		// select line
-		HostApi.instance.send(EditorSelectRangeRequestType, {
-			uri: this.props.textEditorUri,
-			range: range,
-			preserveFocus: true
-		});
 		// setup git context for codemark form
-		await this.props.getScmInfoForSelection(this.props.textEditorUri, range);
 
-		this.props.setMultiCompose(true, {
-			composeBoxProps: { commentType: type }
-		});
+		this.props.setMultiCompose(
+			true,
+			{ commentType: type },
+			{ uri: this.props.textEditorUri, range }
+		);
 		// setTimeout(() => this.props.focusInput(), 500);
 	};
 

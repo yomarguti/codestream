@@ -1,7 +1,9 @@
+import { Range } from "vscode-languageserver-types";
 import {
 	FetchAssignableUsersRequestType,
 	GetRangeScmInfoResponse,
-	CodemarkPlus
+	CodemarkPlus,
+	GetRangeScmInfoRequestType
 } from "@codestream/protocols/agent";
 import {
 	CodemarkType,
@@ -31,7 +33,6 @@ import { PostCompose } from "./PostCompose";
 import Tooltip from "./Tooltip";
 import { sortBy as _sortBy } from "lodash-es";
 import { EditorSelectRangeRequestType, EditorSelection } from "@codestream/protocols/webview";
-import { getScmInfoForSelection } from "../store/editorContext/actions";
 import { getCurrentSelection } from "../store/editorContext/reducer";
 
 const noop = () => {};
@@ -76,6 +77,7 @@ interface State {
 	text: string;
 	color: Color;
 	type: string;
+	codeBlock?: GetRangeScmInfoResponse;
 	assignees: { value: any; label: string }[] | { value: any; label: string };
 	assigneesRequired: boolean;
 	assigneesDisabled: boolean;
@@ -124,6 +126,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			text: "",
 			color: "blue",
 			type: defaultType,
+			codeBlock: props.codeBlock,
 			assignees: [],
 			assigneesDisabled: false,
 			assigneesRequired: false,
@@ -166,28 +169,25 @@ class CodemarkForm extends React.Component<Props, State> {
 	}
 
 	componentDidMount() {
-		const { textEditorSelection, textEditorUri } = this.props;
-		if (textEditorSelection && textEditorUri) {
-			// In case there isn't already a range selection by user, change the selection to be the line the cursor is on
-			const range = forceAsLine(textEditorSelection);
-			HostApi.instance.send(EditorSelectRangeRequestType, {
-				uri: textEditorUri,
-				range: range,
-				preserveFocus: true
-			});
-			this.props.getScmInfoForSelection(textEditorUri, range);
+		const { codeBlock } = this.state;
+		if (codeBlock) {
+			this.selectRangeInEditor(codeBlock.uri, forceAsLine(codeBlock.range));
+		} else {
+			const { textEditorSelection, textEditorUri } = this.props;
+			if (textEditorSelection && textEditorUri) {
+				// In case there isn't already a range selection by user, change the selection to be the line the cursor is on
+				const range = forceAsLine(textEditorSelection);
+				this.selectRangeInEditor(textEditorUri, range);
+				this.getScmInfoForSelection(textEditorUri, range);
+			}
 		}
 		this.focus();
 	}
 
 	componentDidUpdate(prevProps: Props) {
-		const { isEditing, textEditorSelection, codeBlock } = this.props;
+		const { isEditing, textEditorSelection, textEditorUri } = this.props;
 		if (prevProps.textEditorSelection !== textEditorSelection && !isEditing) {
-			this.handleSelectionChange();
-		}
-
-		if (!isEditing && codeBlock !== prevProps.codeBlock) {
-			this.handleScmChange();
+			this.getScmInfoForSelection(textEditorUri!, forceAsLine(textEditorSelection!));
 		}
 
 		if (prevProps.issueProvider !== this.props.issueProvider) {
@@ -200,6 +200,25 @@ class CodemarkForm extends React.Component<Props, State> {
 			});
 			this.crossPostIssueValues = undefined;
 		}
+	}
+
+	private selectRangeInEditor(uri: string, range: Range) {
+		HostApi.instance.send(EditorSelectRangeRequestType, {
+			uri: uri,
+			range: range,
+			preserveFocus: true
+		});
+	}
+
+	private async getScmInfoForSelection(uri: string, range: Range) {
+		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
+			uri: uri,
+			range: range,
+			dirty: true // should this be determined here? using true to be safe
+		});
+		this.setState({ codeBlock: scmInfo }, () => {
+			this.handleScmChange();
+		});
 	}
 
 	getAssignableCSUsers() {
@@ -263,7 +282,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	handleSelectionChange = () => {
 		const { textEditorSelection, textEditorUri } = this.props;
 		if (textEditorSelection) {
-			this.props.getScmInfoForSelection(textEditorUri!, forceAsLine(textEditorSelection));
+			this.getScmInfoForSelection(textEditorUri!, forceAsLine(textEditorSelection));
 		}
 	};
 
@@ -374,6 +393,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		this.props.onSubmit(
 			{
+				codeBlock: this.state.codeBlock,
 				streamId: selectedChannelId,
 				text,
 				color,
@@ -390,7 +410,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	isFormInvalid = () => {
-		const { codeBlock } = this.props;
+		const { codeBlock } = this.state;
 		const { text, title, assignees, assigneesRequired, type } = this.state;
 
 		const validationState = {
@@ -557,7 +577,8 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	getCodeBlockHint() {
-		const { codeBlock, editingCodemark } = this.props;
+		const { editingCodemark } = this.props;
+		const { codeBlock } = this.state;
 		if (!codeBlock || !codeBlock.range) return "Select a range to comment on a block of code.";
 
 		const scm = codeBlock.scm;
@@ -601,8 +622,8 @@ class CodemarkForm extends React.Component<Props, State> {
 	}
 
 	renderMessageInput = () => {
-		const { codeBlock, collapsed } = this.props;
-		const { type, text } = this.state;
+		const { collapsed } = this.props;
+		const { codeBlock, type, text } = this.state;
 		let placeholder = this.props.placeholder;
 
 		if (codeBlock) {
@@ -886,7 +907,7 @@ class CodemarkForm extends React.Component<Props, State> {
 						<CrossPostIssueControls
 							provider={this.props.issueProvider}
 							onValues={this.handleCrossPostIssueValues}
-							codeBlock={this.props.codeBlock as any}
+							codeBlock={this.state.codeBlock as any}
 						/>
 					)}
 					{commentType !== "link" && (
@@ -1006,15 +1027,11 @@ const mapStateToProps = state => {
 		selectedStreams: preferences.selectedStreams || EMPTY_OBJECT,
 		showChannels: context.channelFilter,
 		textEditorUri: editorContext.textEditorUri,
-		textEditorSelection: getCurrentSelection(editorContext),
-		codeBlock: editorContext.scm
+		textEditorSelection: getCurrentSelection(editorContext)
 		// slackInfo,
 	};
 };
 
-const ConnectedCodemarkForm = connect(
-	mapStateToProps,
-	{ getScmInfoForSelection }
-)(CodemarkForm);
+const ConnectedCodemarkForm = connect(mapStateToProps)(CodemarkForm);
 
 export { ConnectedCodemarkForm as CodemarkForm };

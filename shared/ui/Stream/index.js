@@ -21,7 +21,7 @@ import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
 import * as actions from "./actions";
-import { isInVscode, safe, toMapBy } from "../utils";
+import { isInVscode, safe, toMapBy, forceAsLine } from "../utils";
 import { getSlashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
 import { getPostsForStream, getPost } from "../store/posts/reducer";
@@ -40,7 +40,8 @@ import {
 	LogoutRequestType,
 	LiveShareInviteToSessionRequestType,
 	LiveShareStartSessionRequestType,
-	NewCodemarkNotificationType
+	NewCodemarkNotificationType,
+	EditorSelectRangeRequestType
 } from "../ipc/webview.protocol";
 import {
 	OpenUrlRequestType,
@@ -148,15 +149,11 @@ export class SimpleStream extends Component {
 	};
 
 	async handleNewCodemarkRequest(e) {
-		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
-			uri: e.uri,
-			range: e.range,
-			dirty: true // should this be determined here? using true to be safe
-		});
-
-		this.setMultiCompose(true, {
-			composeBoxProps: { commentType: e.type }
-		});
+		this.setMultiCompose(
+			true,
+			{ commentType: e.type },
+			{ uri: e.uri, range: forceAsLine(e.range) }
+		);
 	}
 
 	copy(event) {
@@ -1056,12 +1053,30 @@ export class SimpleStream extends Component {
 		return this._contentScrollDiv.scrollTop;
 	};
 
-	setMultiCompose = (value, state = {}) => {
+	setMultiCompose = async (value, state = {}, commentingContext) => {
 		// ugly hack -Pez
 		if (value == "collapse") {
 			this.setState({ multiCompose: false, ...state });
 		} else {
-			this.setState({ multiCompose: value, floatCompose: true, ...state });
+			let scmInfo;
+			if (commentingContext) {
+				const { uri, range } = commentingContext;
+				HostApi.instance.send(EditorSelectRangeRequestType, {
+					uri: uri,
+					range: range,
+					preserveFocus: true
+				});
+				scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
+					uri: uri,
+					range: range,
+					dirty: true // should this be determined here? using true to be safe
+				});
+			}
+			this.setState({
+				multiCompose: value,
+				floatCompose: true,
+				composeBoxProps: { ...state, codeBlock: scmInfo }
+			});
 			if (!value) {
 				this.setNewPostEntry(undefined);
 				this.setState({
@@ -1112,12 +1127,10 @@ export class SimpleStream extends Component {
 				const codemark = getCodemark(codemarks, post.codemarkId);
 
 				this.setMultiCompose(true, {
-					composeBoxProps: {
-						...this.state.composeBoxProps,
-						key: Math.random().toString(),
-						isEditing: true,
-						editingCodemark: codemark
-					}
+					...this.state.composeBoxProps,
+					key: Math.random().toString(),
+					isEditing: true,
+					editingCodemark: codemark
 				});
 			} else
 				this.setState({ editingPostId: post.id }, () => {
@@ -1838,7 +1851,7 @@ export class SimpleStream extends Component {
 		}
 	};
 
-	submitCodemark = async (attributes, crossPostIssueValues) => {
+	submitCodemark = async (attributes, crossPostIssueValues, scmInfo) => {
 		if (this.state.composeBoxProps.isEditing) {
 			this.props.editCodemark(this.state.composeBoxProps.editingCodemark.id, {
 				color: attributes.color,
@@ -1854,7 +1867,7 @@ export class SimpleStream extends Component {
 					attributes.streamId,
 					threadId,
 					null,
-					{ ...attributes, markers },
+					{ ...attributes, markers, textEditorUri: scmInfo.uri },
 					this.findMentionedUserIds(attributes.text || "", this.props.teammates),
 					{
 						crossPostIssueValues,
@@ -1867,7 +1880,6 @@ export class SimpleStream extends Component {
 				// this.setActivePanel("main");
 				safe(() => this.scrollPostsListToBottom());
 			};
-			const { scmInfo } = this.props;
 			if (!scmInfo) return submit([]);
 
 			let marker = {
