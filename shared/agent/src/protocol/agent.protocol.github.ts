@@ -1,5 +1,4 @@
 "use strict";
-import { RequestType } from "vscode-languageserver-protocol";
 
 export interface GitHubCreateCardRequest {
 	repoName: string;
@@ -13,13 +12,6 @@ export interface GitHubCreateCardResponse {
 	html_url: string;
 }
 
-export const GitHubCreateCardRequestType = new RequestType<
-	GitHubCreateCardRequest,
-	GitHubCreateCardResponse,
-	void,
-	void
->("codestream/github/cards/create");
-
 export interface GitHubFetchBoardsRequest {
 	organizationId?: string;
 }
@@ -27,27 +19,11 @@ export interface GitHubFetchBoardsRequest {
 export interface GitHubBoard {
 	id: string;
 	name: string;
-	// desc: string;
-	// descData: string;
-	// closed: boolean;
-	// idOrganization: string;
-	// pinned: boolean;
-	// url: string;
-	// labelNames: { [color: string]: string };
-	// starred: boolean;
-	// lists: GitHubList[];
 }
 
 export interface GitHubFetchBoardsResponse {
 	boards: GitHubBoard[];
 }
-
-export const GitHubFetchBoardsRequestType = new RequestType<
-	GitHubFetchBoardsRequest,
-	GitHubFetchBoardsResponse,
-	void,
-	void
->("codestream/github/boards");
 
 export interface GitHubFetchListsRequest {
 	boardId: string;
@@ -65,13 +41,6 @@ export interface GitHubList {
 export interface GitHubFetchListsResponse {
 	lists: GitHubList[];
 }
-
-export const GitHubFetchListsRequestType = new RequestType<
-	GitHubFetchListsRequest,
-	GitHubFetchListsResponse,
-	void,
-	void
->("codestream/github/lists");
 
 export interface GitHubUser {
 	id: string;

@@ -41,7 +41,8 @@ import {
 	DocumentLatestRevisionRequestType,
 	DocumentMarkersRequestType,
 	FetchMarkerLocationsRequestType,
-	LogoutReason
+	LogoutReason,
+	ThirdPartyProviderInstance
 } from "./protocol/agent.protocol";
 import {
 	ApiErrors,
@@ -57,7 +58,7 @@ import {
 	CSUser,
 	LoginResult
 } from "./protocol/api.protocol";
-import { createDecoratedProviders, log, memoize, registerDecoratedHandlers } from "./system";
+import { log, memoize, registerDecoratedHandlers, registerProviders } from "./system";
 
 // FIXME: Must keep this in sync with vscode-codestream/src/api/session.ts
 const envRegex = /https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(?::\d+$)?/i;
@@ -201,7 +202,6 @@ export class CodeStreamSession {
 
 		// this.connection.onHover(e => MarkerHandler.onHover(e));
 
-		createDecoratedProviders(this);
 		registerDecoratedHandlers(this.agent);
 
 		this.agent.registerHandler(ApiRequestType, (e, cancellationToken: CancellationToken) =>
@@ -235,7 +235,8 @@ export class CodeStreamSession {
 					streams: streamsResponse.streams,
 					teams: teamsResponse.teams,
 					unreads: unreadsResponse.unreads,
-					users: usersResponse.users
+					users: usersResponse.users,
+					providers: Container.instance().session.providers
 				};
 			}
 		);
@@ -409,6 +410,11 @@ export class CodeStreamSession {
 		return this._userId!;
 	}
 
+	private _providers: ThirdPartyProviderInstance[] = [];
+	get providers() {
+		return this._providers!;
+	}
+
 	@memoize
 	get versionInfo(): Readonly<VersionInfo> {
 		return {
@@ -505,6 +511,8 @@ export class CodeStreamSession {
 
 		this._teamId = this._options.teamId = response.teamId;
 		this._codestreamUserId = response.user.id;
+		this._providers = response.providers;
+		registerProviders(this._providers, this);
 
 		const currentTeam = response.teams.find(t => t.id === this._teamId)!;
 

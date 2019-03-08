@@ -4,15 +4,15 @@ import { Container } from "../container";
 import { Logger } from "../logger";
 import {
 	CreateJiraCardRequest,
-	CreateJiraCardRequestType,
+	CreateThirdPartyCardRequest,
+	FetchThirdPartyBoardsRequest,
+	FetchThirdPartyBoardsResponse,
 	JiraBoard,
-	JiraFetchBoardsRequestType,
-	JiraFetchBoardsResponse,
 	JiraUser,
 	ReportingMessageType
 } from "../protocol/agent.protocol";
 import { CSJiraProviderInfo } from "../protocol/api.protocol";
-import { Iterables, log, lspHandler, lspProvider } from "../system";
+import { Iterables, log, lspProvider } from "../system";
 import { ThirdPartyProviderBase } from "./provider";
 
 type AccessibleResourcesResponse = { id: string; name: string }[];
@@ -48,14 +48,9 @@ interface CreateJiraIssueResponse {
 
 @lspProvider("jira")
 export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
-	private readonly jiraApiUrl = "https://api.atlassian.com";
-	private _baseUrl = this.jiraApiUrl;
+	private _urlAddon = "";
 	private boards: JiraBoard[] = [];
 	private domain?: string;
-
-	get baseUrl() {
-		return this._baseUrl;
-	}
 
 	get displayName() {
 		return "Jira";
@@ -63,6 +58,10 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 
 	get name() {
 		return "jira";
+	}
+
+	get baseUrl() {
+		return `${super.baseUrl}${this._urlAddon}`;
 	}
 
 	get headers() {
@@ -74,6 +73,7 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 	}
 
 	async onConnected() {
+		this._urlAddon = "";
 		const response = await this.get<AccessibleResourcesResponse>(
 			"/oauth/token/accessible-resources"
 		);
@@ -89,20 +89,20 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 			throw new Error("Jira access does not include any jira sites");
 		}
 
-		this._baseUrl = `${this.jiraApiUrl}/ex/jira/${response.body[0].id}`;
+		this._urlAddon = `/ex/jira/${response.body[0].id}`;
 		this.domain = response.body[0].name;
 
-		Logger.debug(`Jira: api url for ${this.domain} is ${this._baseUrl}`);
+		Logger.debug(`Jira: api url for ${this.domain} is ${this._urlAddon}`);
 	}
 
 	async onDisconnected() {
-		this._baseUrl = this.jiraApiUrl;
 		this.boards = [];
 	}
 
 	@log()
-	@lspHandler(JiraFetchBoardsRequestType)
-	async getBoards(): Promise<JiraFetchBoardsResponse> {
+	async getBoards(
+		request: FetchThirdPartyBoardsRequest
+	): Promise<FetchThirdPartyBoardsResponse> {
 		if (this.boards.length > 0) return { boards: this.boards };
 		try {
 			Logger.debug("Jira: fetching projects");
@@ -220,24 +220,24 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 	}
 
 	@log()
-	@lspHandler(CreateJiraCardRequestType)
-	async createCard(request: CreateJiraCardRequest) {
+	async createCard(request: CreateThirdPartyCardRequest) {
+		const data = request.data as CreateJiraCardRequest;
 		// using /api/2 because 3 returns nonsense errors for the same request
 		const body: { [k: string]: any } = {
 			fields: {
 				project: {
-					id: request.project
+					id: data.project
 				},
 				issuetype: {
-					name: request.issueType
+					name: data.issueType
 				},
-				summary: request.summary,
-				description: request.description
+				summary: data.summary,
+				description: data.description
 			}
 		};
 
-		if (request.assignees && request.assignees.length > 0) {
-			body.fields.assignee = { name: request.assignees[0].name };
+		if (data.assignees && data.assignees.length > 0) {
+			body.fields.assignee = { name: data.assignees[0].name };
 		}
 		const response = await this.post<typeof body, CreateJiraIssueResponse>(
 			"/rest/api/2/issue",

@@ -1,13 +1,19 @@
 "use strict";
 import {
 	ConnectThirdPartyProviderRequest,
+	ConnectThirdPartyProviderRequestType,
 	ConnectThirdPartyProviderResponse,
-	ConnectThirdParyProviderRequestType,
+	CreateThirdPartyCardRequest,
+	CreateThirdPartyCardRequestType,
+	CreateThirdPartyCardResponse,
 	DisconnectThirdPartyProviderRequest,
 	DisconnectThirdPartyProviderRequestType,
 	DisconnectThirdPartyProviderResponse,
 	FetchAssignableUsersRequest,
-	FetchAssignableUsersRequestType
+	FetchAssignableUsersRequestType,
+	FetchThirdPartyBoardsRequest,
+	FetchThirdPartyBoardsRequestType,
+	FetchThirdPartyBoardsResponse
 } from "../protocol/agent.protocol";
 import { CodeStreamSession } from "../session";
 import { getProvider, log, lsp, lspHandler } from "../system";
@@ -25,13 +31,13 @@ export class ThirdPartyProviderRegistry {
 	constructor(public readonly session: CodeStreamSession) {}
 
 	@log()
-	@lspHandler(ConnectThirdParyProviderRequestType)
+	@lspHandler(ConnectThirdPartyProviderRequestType)
 	async connect(
 		request: ConnectThirdPartyProviderRequest
 	): Promise<ConnectThirdPartyProviderResponse> {
-		const provider = getProvider(request.providerName);
+		const provider = getProvider(request.provider.host);
 		if (provider === undefined) {
-			throw new Error(`No registered provider for '${request.providerName}'`);
+			throw new Error(`No registered provider for '${request.provider}'`);
 		}
 
 		await provider.connect();
@@ -43,7 +49,7 @@ export class ThirdPartyProviderRegistry {
 	async disconnect(
 		request: DisconnectThirdPartyProviderRequest
 	): Promise<DisconnectThirdPartyProviderResponse> {
-		const provider = getProvider(request.providerName);
+		const provider = getProvider(request.provider.host);
 		if (provider === undefined) return {};
 
 		await provider.disconnect();
@@ -53,11 +59,38 @@ export class ThirdPartyProviderRegistry {
 	@log()
 	@lspHandler(FetchAssignableUsersRequestType)
 	fetchAssignableUsers(request: FetchAssignableUsersRequest) {
-		const provider = getProvider(request.providerName);
+		const provider = getProvider(request.provider.host);
 		if (provider === undefined) {
-			throw new Error(`No registered provider for '${request.providerName}'`);
+			throw new Error(`No registered provider for '${request.provider.host}'`);
 		}
 
 		return provider.getAssignableUsers(request);
+	}
+
+	@log()
+	@lspHandler(FetchThirdPartyBoardsRequestType)
+	fetchBoards(
+		request: FetchThirdPartyBoardsRequest
+	): Promise<FetchThirdPartyBoardsResponse> {
+		const provider = getProvider(request.provider.host);
+		if (provider === undefined) {
+			throw new Error(`No registered provider for '${request.provider.host}'`);
+		}
+
+		return provider.getBoards(request);
+	}
+
+	@log()
+	@lspHandler(CreateThirdPartyCardRequestType)
+	createCard(
+		request: CreateThirdPartyCardRequest
+	): Promise<CreateThirdPartyCardResponse> {
+		const provider = getProvider(request.provider.host);
+		if (provider === undefined) {
+			throw new Error(`No registered provider for '${request.provider.host}'`);
+		}
+
+		return provider.createCard(request);
+
 	}
 }

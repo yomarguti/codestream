@@ -6,15 +6,13 @@ import {
 	BitbucketBoard,
 	BitbucketCard,
 	BitbucketCreateCardRequest,
-	BitbucketCreateCardRequestType,
 	BitbucketCreateCardResponse,
-	BitbucketFetchBoardsRequest,
-	BitbucketFetchBoardsRequestType,
-	BitbucketFetchListsRequest,
-	BitbucketFetchListsRequestType
+	CreateThirdPartyCardRequest,
+	FetchThirdPartyBoardsRequest,
+	FetchThirdPartyBoardsResponse
 } from "../protocol/agent.protocol";
 import { CSBitbucketProviderInfo } from "../protocol/api.protocol";
-import { log, lspHandler, lspProvider } from "../system";
+import { log, lspProvider } from "../system";
 import { ThirdPartyProviderBase } from "./provider";
 
 interface BitbucketRepo {
@@ -49,10 +47,6 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 
 	private _knownRepos = new Map<String, BitbucketRepo>();
 
-	get baseUrl() {
-		return "https://api.bitbucket.org/2.0";
-	}
-
 	get displayName() {
 		return "Bitbucket";
 	}
@@ -74,8 +68,9 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 	}
 
 	@log()
-	@lspHandler(BitbucketFetchBoardsRequestType)
-	async boards(request: BitbucketFetchBoardsRequest) {
+	async getBoards(
+		request: FetchThirdPartyBoardsRequest
+	): Promise<FetchThirdPartyBoardsResponse> {
 		const { git } = Container.instance();
 		const gitRepos = await git.getRepositories();
 		const openRepos = new Map<String, BitbucketRepo>();
@@ -153,21 +148,21 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 	}
 
 	@log()
-	@lspHandler(BitbucketCreateCardRequestType)
-	async createCard(request: BitbucketCreateCardRequest) {
-		const data: { [key: string]: any } = {
-			title: request.title,
+	async createCard(request: CreateThirdPartyCardRequest) {
+		const data = request.data as BitbucketCreateCardRequest;
+		const cardData: { [key: string]: any } = {
+			title: data.title,
 			content: {
-				raw: request.description,
+				raw: data.description,
 				markup: "markdown"
 			}
 		};
-		if (request.assignee) {
-			data.assignee = { username: request.assignee.username };
+		if (data.assignee) {
+			cardData.assignee = { username: data.assignee.username };
 		}
 		const response = await this.post<{}, BitbucketCreateCardResponse>(
-			`/repositories/${request.repoName}/issues`,
-			data
+			`/repositories/${data.repoName}/issues`,
+			cardData
 		);
 		let card = response.body;
 		let issueResponse;
@@ -182,10 +177,6 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 		card.url = card.links.html!.href;
 		return card;
 	}
-
-	@log()
-	@lspHandler(BitbucketFetchListsRequestType)
-	async lists(request: BitbucketFetchListsRequest) {}
 
 	private async getMemberId() {
 		const userResponse = await this.get<{ uuid: string; [key: string]: any }>(`/user`);

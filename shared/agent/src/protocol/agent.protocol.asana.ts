@@ -1,5 +1,4 @@
 "use strict";
-import { RequestType } from "vscode-languageserver-protocol";
 
 export interface AsanaCreateCardRequest {
 	name: string;
@@ -46,13 +45,6 @@ export interface AsanaCreateCardResponse {
 	};
 }
 
-export const AsanaCreateCardRequestType = new RequestType<
-	AsanaCreateCardRequest,
-	AsanaCreateCardResponse,
-	void,
-	void
->("codestream/asana/cards/create");
-
 export interface AsanaFetchBoardsRequest {
 	organizationId?: string;
 }
@@ -68,29 +60,7 @@ export interface AsanaFetchBoardsResponse {
 	boards: AsanaBoard[];
 }
 
-export const AsanaFetchBoardsRequestType = new RequestType<
-	AsanaFetchBoardsRequest,
-	AsanaFetchBoardsResponse,
-	void,
-	void
->("codestream/asana/boards");
-
-export interface AsanaFetchListsRequest {
-	boardId: string;
-}
-
 export interface AsanaList {
 	id: number;
 	name: string;
 }
-
-export interface AsanaFetchListsResponse {
-	lists: AsanaList[];
-}
-
-export const AsanaFetchListsRequestType = new RequestType<
-	AsanaFetchListsRequest,
-	AsanaFetchListsResponse,
-	void,
-	void
->("codestream/asana/lists");

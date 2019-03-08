@@ -236,13 +236,26 @@ export namespace User {
 	export function getProviderInfo<T extends CSProviderInfos>(
 		me: CSMe,
 		teamId: string,
-		name: string
+		name: string,
+		host?: string
 	) {
 		if (me.providerInfo == null) return undefined;
 
 		const provider = me.providerInfo[teamId];
 		if (provider == null) return;
 
-		return provider[name] as T;
+		const namedProvider = provider[name];
+		if (!namedProvider) return;
+
+		if (!host) {
+			return namedProvider as T;
+		}
+
+		const starredHost = host.replace(/\./g, "*");
+		if (namedProvider.hosts && namedProvider.hosts[starredHost]) {
+			return namedProvider.hosts[starredHost] as T;
+		}
+
+		return undefined;
 	}
 }

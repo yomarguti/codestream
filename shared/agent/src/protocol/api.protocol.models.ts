@@ -228,6 +228,7 @@ export interface CSAsanaProviderInfo {
 	accessToken: string;
 	expiresAt: number;
 	userId: string;
+	hosts: { [host: string]: CSAsanaProviderInfo };
 }
 
 export interface CSBitbucketProviderInfo {
@@ -235,34 +236,40 @@ export interface CSBitbucketProviderInfo {
 	accessToken: string;
 	expiresAt: number;
 	userId: string;
+	hosts: { [host: string]: CSBitbucketProviderInfo };
 }
 
 export interface CSGitHubProviderInfo {
 	accessToken: string;
 	userId: string;
+	hosts: { [host: string]: CSGitHubProviderInfo };
 }
 
 export interface CSGitLabProviderInfo {
 	accessToken: string;
 	userId: string;
+	hosts: { [host: string]: CSGitLabProviderInfo };
 }
 
 export interface CSJiraProviderInfo {
 	accessToken: string;
 	refreshToken: string;
 	expiresAt: number;
+	hosts: { [hosts: string]: CSJiraProviderInfo };
 }
 
 export interface CSSlackProviderInfo {
 	accessToken: string;
 	teamId: string;
 	userId: string;
+	hosts: { [host: string]: CSSlackProviderInfo };
 }
 
 export interface CSTrelloProviderInfo {
 	accessToken: string;
 	apiKey: string;
 	userId: string;
+	hosts: { [host: string]: CSTrelloProviderInfo };
 }
 
 export type CSProviderInfos =

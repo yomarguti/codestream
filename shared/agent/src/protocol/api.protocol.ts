@@ -23,6 +23,8 @@ import {
 
 export * from "./api.protocol.models";
 
+import { ThirdPartyProviderInstance } from "./agent.protocol";
+
 export enum ApiErrors {
 	InvalidCredentials = "INVALID_CREDENTIALS",
 	InvalidToken = "TOKEN_INVALID",
@@ -58,6 +60,7 @@ export interface CSLoginResponse {
 	accessToken: string;
 	pubnubKey: string;
 	pubnubToken: string;
+	providers: ThirdPartyProviderInstance[];
 	teams: CSTeam[];
 	companies: CSCompany[];
 	repos: CSRepository[];

@@ -1,28 +1,22 @@
 "use strict";
 import * as qs from "querystring";
 import {
+	CreateThirdPartyCardRequest,
+	FetchThirdPartyBoardsRequest,
+	FetchThirdPartyBoardsResponse,
 	TrelloBoard,
 	TrelloCreateCardRequest,
-	TrelloCreateCardRequestType,
 	TrelloCreateCardResponse,
-	TrelloFetchBoardsRequest,
-	TrelloFetchBoardsRequestType,
-	TrelloFetchListsRequest,
-	TrelloFetchListsRequestType,
 	TrelloList,
 	TrelloMember
 } from "../protocol/agent.protocol";
 import { CSTrelloProviderInfo } from "../protocol/api.protocol";
-import { log, lspHandler, lspProvider } from "../system";
+import { log, lspProvider } from "../system";
 import { ThirdPartyProviderBase } from "./provider";
 
 @lspProvider("trello")
 export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo> {
 	private _trelloUserId: string | undefined;
-
-	get baseUrl() {
-		return "https://api.trello.com/1";
-	}
 
 	get displayName() {
 		return "Trello";
@@ -45,8 +39,9 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 	}
 
 	@log()
-	@lspHandler(TrelloFetchBoardsRequestType)
-	async boards(request: TrelloFetchBoardsRequest) {
+	async getBoards(
+		request: FetchThirdPartyBoardsRequest
+	): Promise<FetchThirdPartyBoardsResponse> {
 		// have to force connection here because we need apiKey and accessToken to even create our request
 		await this.ensureConnected();
 		const response = await this.get<TrelloBoard[]>(
@@ -67,32 +62,20 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 	}
 
 	@log()
-	@lspHandler(TrelloCreateCardRequestType)
-	async createCard(request: TrelloCreateCardRequest) {
+	async createCard(request: CreateThirdPartyCardRequest) {
+		const data = request.data as TrelloCreateCardRequest;
 		const response = await this.post<{}, TrelloCreateCardResponse>(
 			`/cards?${qs.stringify({
-				idList: request.listId,
-				name: request.name,
-				desc: request.description,
+				idList: data.listId,
+				name: data.name,
+				desc: data.description,
 				key: this.apiKey,
-				idMembers: (request.assignees! || []).map(a => a.id),
+				idMembers: (data.assignees! || []).map(a => a.id),
 				token: this.accessToken
 			})}`,
 			{}
 		);
 		return response.body;
-	}
-
-	@log()
-	@lspHandler(TrelloFetchListsRequestType)
-	async lists(request: TrelloFetchListsRequest) {
-		const response = await this.get<TrelloList[]>(
-			`/boards/${request.boardId}/lists?${qs.stringify({
-				key: this.apiKey,
-				token: this.accessToken
-			})}`
-		);
-		return { lists: response.body.filter(l => !l.closed) };
 	}
 
 	@log()

@@ -1,5 +1,4 @@
 "use strict";
-import { RequestType } from "vscode-languageserver-protocol";
 
 export interface TrelloCreateCardRequest {
 	listId: string;
@@ -12,13 +11,6 @@ export interface TrelloCreateCardResponse {
 	id: string;
 	url: string;
 }
-
-export const TrelloCreateCardRequestType = new RequestType<
-	TrelloCreateCardRequest,
-	TrelloCreateCardResponse,
-	void,
-	void
->("codestream/trello/cards/create");
 
 export interface TrelloFetchBoardsRequest {
 	organizationId?: string;
@@ -42,13 +34,6 @@ export interface TrelloFetchBoardsResponse {
 	boards: TrelloBoard[];
 }
 
-export const TrelloFetchBoardsRequestType = new RequestType<
-	TrelloFetchBoardsRequest,
-	TrelloFetchBoardsResponse,
-	void,
-	void
->("codestream/trello/boards");
-
 export interface TrelloFetchListsRequest {
 	boardId: string;
 }
@@ -65,13 +50,6 @@ export interface TrelloList {
 export interface TrelloFetchListsResponse {
 	lists: TrelloList[];
 }
-
-export const TrelloFetchListsRequestType = new RequestType<
-	TrelloFetchListsRequest,
-	TrelloFetchListsResponse,
-	void,
-	void
->("codestream/trello/lists");
 
 export interface TrelloMember {
 	id: string;

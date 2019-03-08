@@ -4,19 +4,18 @@ import { Logger } from "../logger";
 import {
 	AsanaBoard,
 	AsanaCreateCardRequest,
-	AsanaCreateCardRequestType,
 	AsanaCreateCardResponse,
-	AsanaFetchBoardsRequest,
-	AsanaFetchBoardsRequestType,
-	AsanaFetchListsRequest,
-	AsanaFetchListsRequestType,
 	AsanaList,
 	AsanaProject,
 	AsanaUser,
-	AsanaWorkspace
+	AsanaWorkspace,
+	CreateThirdPartyCardRequest,
+	FetchThirdPartyBoardsRequest,
+	FetchThirdPartyBoardsResponse,
+	ThirdPartyProviderBoard
 } from "../protocol/agent.protocol";
 import { CSAsanaProviderInfo } from "../protocol/api.protocol";
-import { log, lspHandler, lspProvider } from "../system";
+import { log, lspProvider } from "../system";
 import { ThirdPartyProviderBase } from "./provider";
 
 interface AsanaProjectData {
@@ -30,10 +29,6 @@ interface AsanaUsersData {
 @lspProvider("asana")
 export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 	private _asanaUser: AsanaUser | undefined;
-
-	get baseUrl() {
-		return "https://app.asana.com";
-	}
 
 	get displayName() {
 		return "Asana";
@@ -54,13 +49,14 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 	}
 
 	@log()
-	@lspHandler(AsanaFetchBoardsRequestType)
-	async boards(request: AsanaFetchBoardsRequest) {
+	async getBoards(
+		request: FetchThirdPartyBoardsRequest
+	): Promise<FetchThirdPartyBoardsResponse> {
 		const projects = await this.getProjects();
-		const boards: AsanaBoard[] = [];
+		const boards: ThirdPartyProviderBoard[] = [];
 		for (const project of projects) {
-			const board: AsanaBoard = {
-				id: project.id,
+			const board: ThirdPartyProviderBoard = {
+				id: project.id.toString(),
 				name: project.name,
 				lists: [],
 				singleAssignee: true // asana cards allow only a single assignee
@@ -138,42 +134,26 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 	}
 
 	@log()
-	@lspHandler(AsanaCreateCardRequestType)
-	async createCard(request: AsanaCreateCardRequest) {
-		const data = {
+	async createCard(request: CreateThirdPartyCardRequest) {
+		const data = request.data as AsanaCreateCardRequest;
+		const cardData = {
 			data: {
-				name: request.name,
-				notes: request.description,
-				projects: [request.boardId],
+				name: data.name,
+				notes: data.description,
+				projects: [data.boardId],
 				memberships: [
 					{
-						project: request.boardId,
-						section: request.listId
+						project: data.boardId,
+						section: data.listId
 					}
 				],
-				assignee: request.assignee || undefined
+				assignee: data.assignee || undefined
 			}
 		};
-		const response = await this.post<{}, AsanaCreateCardResponse>(`/api/1.0/tasks`, data);
+		const response = await this.post<{}, AsanaCreateCardResponse>(`/api/1.0/tasks`, cardData);
 		const card = response.body.data;
 		card.url = `${this.baseUrl}/0/${card.projects[0].gid}/${card.gid}`;
 		return card;
-	}
-
-	@log()
-	@lspHandler(AsanaFetchListsRequestType)
-	async lists(request: AsanaFetchListsRequest) {
-		try {
-			const response = await this.get<{ data: AsanaList[] }>(
-				`/api/1.0/projects/${request.boardId}/sections?${qs.stringify({ limit: 100 })}`
-			);
-
-			return response.body.data;
-		} catch (err) {
-			debugger;
-			Logger.log(err);
-			return [];
-		}
 	}
 
 	private async getMe(): Promise<AsanaUser> {

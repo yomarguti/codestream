@@ -1,18 +1,14 @@
 "use strict";
 import { Response } from "node-fetch";
-import * as qs from "querystring";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
+	CreateThirdPartyCardRequest,
+	FetchThirdPartyBoardsRequest,
+	FetchThirdPartyBoardsResponse,
 	GitHubBoard,
 	GitHubCreateCardRequest,
-	GitHubCreateCardRequestType,
 	GitHubCreateCardResponse,
-	GitHubFetchBoardsRequest,
-	GitHubFetchBoardsRequestType,
-	GitHubFetchListsRequest,
-	GitHubFetchListsRequestType,
-	GitHubList,
 	GitHubUser
 } from "../protocol/agent.protocol";
 import { CSGitHubProviderInfo } from "../protocol/api.protocol";
@@ -32,16 +28,16 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 
 	private _knownRepos = new Map<String, GitHubRepo>();
 
-	get baseUrl() {
-		return "https://api.github.com";
-	}
-
 	get displayName() {
 		return "GitHub";
 	}
 
 	get name() {
 		return "github";
+	}
+
+	get apiPath() {
+		return this.providerInstance.isEnterprise ? "/api/v3" : "";
 	}
 
 	get headers() {
@@ -58,11 +54,11 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	}
 
 	@log()
-	@lspHandler(GitHubFetchBoardsRequestType)
-	async boards(request: GitHubFetchBoardsRequest) {
+	async getBoards(
+		request: FetchThirdPartyBoardsRequest
+	): Promise<FetchThirdPartyBoardsResponse> {
 		const { git } = Container.instance();
 		const gitRepos = await git.getRepositories();
-
 		const openRepos = new Map<String, GitHubRepo>();
 
 		for (const gitRepo of gitRepos) {
@@ -135,22 +131,18 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	}
 
 	@log()
-	@lspHandler(GitHubCreateCardRequestType)
-	async createCard(request: GitHubCreateCardRequest) {
+	async createCard(request: CreateThirdPartyCardRequest) {
+		const data = request.data as GitHubCreateCardRequest;
 		const response = await this.post<{}, GitHubCreateCardResponse>(
-			`/repos/${request.repoName}/issues`,
+			`/repos/${data.repoName}/issues`,
 			{
-				title: request.title,
-				body: request.description,
-				assignees: (request.assignees! || []).map(a => a.login)
+				title: data.title,
+				body: data.description,
+				assignees: (data.assignees! || []).map(a => a.login)
 			}
 		);
-		return response.body;
+		return { ...response.body, url: response.body.html_url };
 	}
-
-	@log()
-	@lspHandler(GitHubFetchListsRequestType)
-	async lists(request: GitHubFetchListsRequest) {}
 
 	private async getMemberId() {
 		const userResponse = await this.get<{ id: string; [key: string]: any }>(`/user`);
@@ -166,7 +158,8 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 			const url = rawUrl.trim();
 			const rel = rawRel.trim();
 			if (rel === `rel="next"`) {
-				return url.substring(1, url.length - 1).replace(this.baseUrl, "");
+				const baseUrl = this.baseUrl;
+				return url.substring(1, url.length - 1).replace(baseUrl, "");
 			}
 		}
 		return undefined;

@@ -4,15 +4,12 @@ import * as qs from "querystring";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
+	CreateThirdPartyCardRequest,
+	FetchThirdPartyBoardsRequest,
+	FetchThirdPartyBoardsResponse,
 	GitLabBoard,
 	GitLabCreateCardRequest,
-	GitLabCreateCardRequestType,
-	GitLabCreateCardResponse,
-	GitLabFetchBoardsRequest,
-	GitLabFetchBoardsRequestType,
-	GitLabFetchListsRequest,
-	GitLabFetchListsRequestType,
-	GitLabList
+	GitLabCreateCardResponse
 } from "../protocol/agent.protocol";
 import { CSGitLabProviderInfo } from "../protocol/api.protocol";
 import { log, lspHandler, lspProvider } from "../system";
@@ -36,10 +33,6 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 
 	private _knownProjects = new Map<String, GitLabProject>();
 
-	get baseUrl() {
-		return "https://gitlab.com/api/v4/";
-	}
-
 	get displayName() {
 		return "GitLab";
 	}
@@ -60,8 +53,9 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 	}
 
 	@log()
-	@lspHandler(GitLabFetchBoardsRequestType)
-	async boards(request: GitLabFetchBoardsRequest) {
+	async getBoards(
+		request: FetchThirdPartyBoardsRequest
+	): Promise<FetchThirdPartyBoardsResponse> {
 		const { git } = Container.instance();
 		const gitRepos = await git.getRepositories();
 
@@ -142,26 +136,22 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 	}
 
 	@log()
-	@lspHandler(GitLabCreateCardRequestType)
-	async createCard(request: GitLabCreateCardRequest) {
-		const data: { [key: string]: any } = {
-			title: request.title,
-			description: request.description
+	async createCard(request: CreateThirdPartyCardRequest) {
+		const data = request.data as GitLabCreateCardRequest;
+		const card: { [key: string]: any } = {
+			title: data.title,
+			description: data.description
 		};
-		if (request.assignee) {
+		if (data.assignee) {
 			// GitLab allows for multiple assignees in the API, but only one appears in the UI
-			data.assignee_ids = [request.assignee.id];
+			card.assignee_ids = [data.assignee.id];
 		}
 		const response = await this.post<{}, GitLabCreateCardResponse>(
-			`/projects/${encodeURIComponent(request.repoName)}/issues?${qs.stringify(data)}`,
+			`/projects/${encodeURIComponent(data.repoName)}/issues?${qs.stringify(data)}`,
 			{}
 		);
 		return { ...response.body, url: response.body.web_url };
 	}
-
-	@log()
-	@lspHandler(GitLabFetchListsRequestType)
-	async lists(request: GitLabFetchListsRequest) {}
 
 	private async getMemberId() {
 		const userResponse = await this.get<{ id: string; [key: string]: any }>(`/user`);
@@ -176,7 +166,8 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 			const url = rawUrl.trim();
 			const rel = rawRel.trim();
 			if (rel === `rel="next"`) {
-				return url.substring(1, url.length - 1).replace(this.baseUrl, "");
+				const baseUrl = this.baseUrl;
+				return url.substring(1, url.length - 1).replace(baseUrl, "");
 			}
 		}
 		return undefined;

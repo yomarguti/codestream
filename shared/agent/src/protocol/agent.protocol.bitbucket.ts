@@ -1,5 +1,4 @@
 "use strict";
-import { RequestType } from "vscode-languageserver-protocol";
 
 export interface BitbucketCreateCardRequest {
 	repoName: string;
@@ -23,44 +22,13 @@ export interface BitbucketCard {
 
 export interface BitbucketCreateCardResponse extends BitbucketCard {}
 
-export const BitbucketCreateCardRequestType = new RequestType<
-	BitbucketCreateCardRequest,
-	BitbucketCreateCardResponse,
-	void,
-	void
->("codestream/bitbucket/cards/create");
-
-export interface BitbucketFetchBoardsRequest {
-	organizationId?: string;
-}
-
 export interface BitbucketBoard {
 	id: string;
 	name: string;
-	// desc: string;
-	// descData: string;
-	// closed: boolean;
-	// idOrganization: string;
-	// pinned: boolean;
-	// url: string;
-	// labelNames: { [color: string]: string };
-	// starred: boolean;
-	// lists: BitbucketList[];
 }
 
 export interface BitbucketFetchBoardsResponse {
 	boards: BitbucketBoard[];
-}
-
-export const BitbucketFetchBoardsRequestType = new RequestType<
-	BitbucketFetchBoardsRequest,
-	BitbucketFetchBoardsResponse,
-	void,
-	void
->("codestream/bitbucket/boards");
-
-export interface BitbucketFetchListsRequest {
-	boardId: string;
 }
 
 export interface BitbucketList {
@@ -75,10 +43,3 @@ export interface BitbucketList {
 export interface BitbucketFetchListsResponse {
 	lists: BitbucketList[];
 }
-
-export const BitbucketFetchListsRequestType = new RequestType<
-	BitbucketFetchListsRequest,
-	BitbucketFetchListsResponse,
-	void,
-	void
->("codestream/bitbucket/lists");

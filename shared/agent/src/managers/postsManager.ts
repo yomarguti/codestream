@@ -665,6 +665,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		assignees,
 		color,
 		externalProvider,
+		externalProviderHost,
 		externalAssignees,
 		externalProviderUrl,
 		entryPoint,
@@ -688,6 +689,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			color,
 			status: type === CodemarkType.Issue ? status : undefined,
 			externalProvider,
+			externalProviderHost,
 			externalAssignees:
 				externalAssignees &&
 				externalAssignees.map(a => ({ displayName: a.displayName, email: a.email })),
@@ -702,7 +704,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			// Ensure range end is >= start
 			range = Ranges.ensureStartBeforeEnd(range);
 			location = MarkerLocation.fromRange(range);
-
 			if (source) {
 				if (source.revision) {
 					commitHashWhenPosted = source.revision;
