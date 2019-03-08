@@ -52,39 +52,6 @@ module.exports = function(env, argv) {
 		env
 	);
 
-	// TODO: Total and complete HACK until the following vsls issues are resolved
-	// https://github.com/MicrosoftDocs/live-share/issues/1334 & https://github.com/MicrosoftDocs/live-share/issues/1335
-
-	const vslsPatchRegex = /const liveShareApiVersion = require\(path\.join\(__dirname, 'package\.json'\)\)\.version;/;
-
-	let vslsPath = path.resolve(__dirname, "node_modules/vsls/package.json");
-	if (fs.existsSync(vslsPath)) {
-		const vsls = require(vslsPath);
-		if (vsls.main === undefined) {
-			console.log("Fixing vsls package; Adding missing main to package.json...");
-
-			vsls.main = "vscode.js";
-			fs.writeFileSync(vslsPath, `${JSON.stringify(vsls, undefined, 4)}\n`, "utf8");
-		}
-
-		vslsPath = path.resolve(__dirname, "node_modules/vsls/vscode.js");
-		if (fs.existsSync(vslsPath)) {
-			let code = fs.readFileSync(vslsPath, "utf8");
-			if (vslsPatchRegex.test(code)) {
-				console.log("Fixing vsls package; Removing version lookup...");
-
-				code = code.replace(
-					vslsPatchRegex,
-					`const liveShareApiVersion = '${
-						vsls.version
-					}'; // require(path.join(__dirname, 'package.json')).version;`
-				);
-				console.log(code);
-				fs.writeFileSync(vslsPath, code, "utf8");
-			}
-		}
-	}
-
 	return [getExtensionConfig(env), getWebviewConfig(env)];
 };
 

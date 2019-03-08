@@ -317,7 +317,7 @@
         "lodash-es": "4.17.11",
         "uuid": "3.3.2",
         "vscode-languageclient": "5.2.1",
-        "vsls": "0.3.967"
+        "vsls": "0.3.1291"
     },
     "devDependencies": {
         "@types/keytar": "4.0.1",
