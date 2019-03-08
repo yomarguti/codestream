@@ -109,6 +109,8 @@ export class SimpleKnowledgePanel extends Component {
 	}
 
 	componentDidMount() {
+		document.body.classList.toggle("loading", this.state.isLoading);
+
 		if (this.props.codemarks.length === 0)
 			this.props.fetchCodemarks().then(() => {
 				this.setState({ isLoading: false });
@@ -117,6 +119,10 @@ export class SimpleKnowledgePanel extends Component {
 		// 	EventEmitter.subscribe("interaction:active-editor-changed", this.handleFileChangedEvent)
 		// );
 		if (this._searchInput) this._searchInput.focus();
+	}
+
+	componentDidUpdate() {
+		document.body.classList.toggle("loading", this.state.isLoading);
 	}
 
 	componentWillUnmount() {
@@ -185,7 +191,6 @@ export class SimpleKnowledgePanel extends Component {
 	};
 
 	render() {
-		document.querySelector("#spinner").classList.toggle("hidden", !this.state.isLoading);
 		if (this.state.isLoading) return null;
 
 		if (this.props.noCodemarksAtAll) {

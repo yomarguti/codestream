@@ -33,9 +33,13 @@ export default Child => {
 
 			componentDidMount() {
 				this.initialize();
+
+				document.body.classList.toggle("loading", !this.state.isInitialized);
 			}
 
 			componentDidUpdate(prevProps, _prevState) {
+				document.body.classList.toggle("loading", !this.state.isInitialized);
+
 				if (this.props.isThread && prevProps.isThread) {
 					if (this.props.childProps.threadId !== prevProps.childProps.threadId)
 						return this.initialize();
@@ -149,7 +153,6 @@ export default Child => {
 			};
 
 			render() {
-				document.querySelector("#spinner").classList.toggle("hidden", this.state.isInitialized);
 				if (!this.state.isInitialized) return null;
 
 				const { forwardedRef, childProps } = this.props;

@@ -76,6 +76,10 @@ export default class Container extends React.Component {
 	render() {
 		const { i18n, store } = this.props;
 
+		if (this.state.hasError) {
+			document.body.classList.remove("loading");
+		}
+
 		let content;
 		if (this.state.hasError)
 			content = (

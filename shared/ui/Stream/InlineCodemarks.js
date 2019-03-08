@@ -60,6 +60,8 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	componentDidMount() {
+		document.body.classList.toggle("loading", this.state.isLoading);
+
 		HostApi.instance.send(UpdateConfigurationRequestType, {
 			name: "showMarkers",
 			value: this.editorMarkersEnabled
@@ -79,6 +81,8 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	componentDidUpdate(prevProps, prevState) {
+		document.body.classList.toggle("loading", this.state.isLoading);
+
 		const { textEditorUri } = this.props;
 		if (String(textEditorUri).length > 0 && prevProps.textEditorUri !== textEditorUri) {
 			this.onFileChanged();
@@ -384,9 +388,6 @@ export class SimpleInlineCodemarks extends Component {
 
 	render() {
 		const { viewInline } = this.props;
-
-		// @ts-ignore
-		document.querySelector("#spinner").classList.toggle("hidden", !this.state.isLoading);
 
 		return (
 			<div className={createClassString("panel", { "full-height": viewInline })}>

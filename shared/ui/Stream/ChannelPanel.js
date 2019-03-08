@@ -72,7 +72,7 @@ export class SimpleChannelPanel extends Component {
 	}
 
 	componentDidMount() {
-		document.querySelector("#spinner").classList.add("hidden");
+		document.body.classList.remove("loading");
 
 		if (isInVscode()) {
 			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
@@ -84,8 +84,11 @@ export class SimpleChannelPanel extends Component {
 	}
 
 	componentDidUpdate(prevProps, prevState) {
-		if (this.props.showChannels === "selecting" && prevProps.showChannels !== "selecting")
+		document.body.classList.remove("loading");
+
+		if (this.props.showChannels === "selecting" && prevProps.showChannels !== "selecting") {
 			this.setState({ checkedStreams: this.props.selectedStreams });
+		}
 	}
 
 	render() {
