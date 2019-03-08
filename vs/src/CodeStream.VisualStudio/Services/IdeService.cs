@@ -75,29 +75,52 @@ namespace CodeStream.VisualStudio.Services
 
         public ActiveTextEditor GetActiveTextView()
         {
-            var editor = _componentModel.GetService<IVsEditorAdaptersFactoryService>();
-
-            _iIVsTextManager.GetActiveView(1, null, out IVsTextView textViewCurrent);
-            var wpfTextView = editor.GetWpfTextView(textViewCurrent);
-            if (wpfTextView == null)
+            try
             {
-                return null;
-            }
+                var editor = _componentModel.GetService<IVsEditorAdaptersFactoryService>();
+                if (editor == null)
+                {
+                    Log.Debug($"{nameof(IVsEditorAdaptersFactoryService)} is null");
+                    return null;
+                }
 
-            var exports = _componentModel.DefaultExportProvider;
-            if (!exports.GetExportedValue<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument))
-            {
+                _iIVsTextManager.GetActiveView(1, null, out IVsTextView textViewCurrent);
+                if (textViewCurrent == null)
+                {
+                    Log.Verbose($"{nameof(textViewCurrent)} is null");
+                    return null;
+                }
+
+                var wpfTextView = editor.GetWpfTextView(textViewCurrent);
+                if (wpfTextView == null)
+                {
+                    Log.Verbose($"{nameof(wpfTextView)} is null");
+                    return null;
+                }
+
+                var exports = _componentModel.DefaultExportProvider;
+                if (!exports.GetExportedValue<ITextDocumentFactoryService>()
+                    .TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument))
+                {
+                    return new ActiveTextEditor
+                    {
+                        TextView = wpfTextView
+                    };
+                }
+
                 return new ActiveTextEditor
                 {
-                    TextView = wpfTextView
+                    TextView = wpfTextView,
+                    Uri = textDocument.FilePath.ToUri(),
+                    FilePath = textDocument.FilePath
                 };
             }
-            return new ActiveTextEditor
+            catch (Exception ex)
             {
-                TextView = wpfTextView,
-                Uri = textDocument.FilePath.ToUri(),
-                FilePath = textDocument.FilePath
-            };
+                Log.Warning(ex, nameof(GetActiveTextView));
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -202,6 +225,7 @@ namespace CodeStream.VisualStudio.Services
             {
                 Log.Warning(ex, nameof(GetActiveEditorState));
             }
+
             view = null;
             return null;
         }

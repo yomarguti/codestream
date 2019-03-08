@@ -96,6 +96,7 @@
     <Compile Include="Controllers\AuthenticationController.cs" />
     <Compile Include="Controllers\ConfigurationController.cs" />
     <Compile Include="Controllers\LiveShareController.cs" />
+    <Compile Include="Core\CamelCaseStringEnumConverter.cs" />
     <Compile Include="Core\Constants.cs" />
     <Compile Include="Core\ContentTypes.cs" />
     <Compile Include="Core\Logging\CodeStreamSink.cs" />
@@ -127,6 +128,7 @@
     <Compile Include="Extensions\PackageExtensions.cs" />
     <Compile Include="Extensions\RangeExtensions.cs" />
     <Compile Include="Models\Agent.Protocol.cs" />
+    <Compile Include="Models\Agent.Protocol.Notifications.cs" />
     <Compile Include="Models\Agent.Protocol.Scm.cs" />
     <Compile Include="Models\Host.Protocol.Editor.cs" />
     <Compile Include="Models\Host.Protocol.Notifications.cs" />
@@ -147,7 +149,6 @@
     <Compile Include="LSP\CustomMessageHandler.cs" />
     <Compile Include="LSP\LanguageClient.cs" />
     <Compile Include="LSP\LanguageServerProcess.cs" />
-    <Compile Include="LSP\Notifications.cs" />
     <Compile Include="Models\CodeStreamModels.cs" />
     <Compile Include="Models\MessageTypes.cs" />
     <Compile Include="Models\Types.cs" />
@@ -229,6 +230,10 @@
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="dist\webview\webview-data.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="LSP\ContentDefinitions.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ContentDefinitions.cs</LastGenOutput>
@@ -352,7 +357,6 @@
     </Content>
     <Content Include="UI\WebViews\index.html" />
     <Content Include="UI\WebViews\index.ts" />
-    <Content Include="UI\WebViews\logging-middleware.js" />
     <Content Include="UI\WebViews\theme.css">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>

@@ -6,43 +6,14 @@
         public override string Method => MethodName;
     }
 
-    public class WebviewDidChangeActiveStreamNotification
+    public class WebviewDidChangeContextNotification
     {
-        public string StreamId { get; set; }
+        public WebviewContext Context { get; set; }
     }
 
-    public class WebviewDidChangeActiveStreamNotificationType : NotificationType<WebviewDidChangeActiveStreamNotification>
-    {
-        public const string MethodName = "host/stream/didChangeActive";
-        public override string Method => MethodName;
-    }
-
-    public class WebviewDidChangeContextNotificationType : NotificationType<EmptyRequestTypeParams>
+    public class WebviewDidChangeContextNotificationType : NotificationType<WebviewDidChangeContextNotification>
     {
         public const string MethodName = "host/context/didChange";
-        public override string Method => MethodName;
-    }
-
-    public class WebviewDidOpenThreadNotification
-    {
-        public string StreamId { get; set; }
-        public string ThreadId { get; set; }
-    }
-
-    public class WebviewDidOpenThreadNotificationType : NotificationType<WebviewDidOpenThreadNotification>
-    {
-        public const string MethodName = "host/thread/didOpen";
-        public override string Method => MethodName;
-    }
-
-    public class WebviewDidCloseThreadNotification
-    {
-        public string ThreadId { get; set; }
-    }
-
-    public class WebviewDidCloseThreadNotificationType : NotificationType<WebviewDidCloseThreadNotification>
-    {
-        public const string MethodName = "host/thread/didClose";
         public override string Method => MethodName;
     }
 }

@@ -8,6 +8,22 @@ using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio.Models
 {
+    public static class EditorStateExtensions
+    {
+        public static List<EditorSelection> ToEditorSelections(this EditorState editorState)
+        {
+            if (editorState == null)
+            {
+                return null;
+            }
+
+            return new List<EditorSelection>
+            {
+                new EditorSelection(editorState.Cursor, editorState.Range)
+            };
+        }
+    }
+
     public class EditorState
     {
         public EditorState(Range range, Position cursor, string selectedText)
@@ -21,24 +37,35 @@ namespace CodeStream.VisualStudio.Models
         public Position Cursor { get; }
         public string SelectedText { get; }
         public bool HasSelectedText => !SelectedText.IsNullOrWhiteSpace();
-
-        public List<EditorSelection> ToEditorSelections()
-        {
-            return new List<EditorSelection>
-            {
-                new EditorSelection
-                {
-                    Cursor = Cursor,
-                    Start = Range?.Start,
-                    End = Range?.End
-                }
-            };
-        }
     }
 
-    public class EditorSelection : Range
+    /// <summary>
+    /// While this might extend Range in VSCode, an issue in serialization makes that hard.
+    /// Instead, we add a Start & End to this object
+    /// </summary>
+    public class EditorSelection
     {
-        public Position Cursor { get; set; }
+        [JsonConstructor]
+        public EditorSelection(Position cursor, Position start, Position end) : this(cursor, new Range { Start = start, End = end }) { }
+
+        public EditorSelection(Position cursor, Range range)
+        {
+            Cursor = cursor;
+            if (range == null)
+            {
+                Start = new Position(0, 0);
+                End = new Position(0, 0); ;
+            }
+            else
+            {
+                Start = range.Start;
+                End = range.End;
+            }
+        }
+
+        public Position Start { get; }
+        public Position End { get; }
+        public Position Cursor { get; }
     }
 
     public class CsEntity

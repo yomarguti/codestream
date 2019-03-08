@@ -102,27 +102,16 @@ namespace CodeStream.VisualStudio
                                             // ready -- nothing to do!
                                             break;
                                         }
-                                    case WebviewDidChangeActiveStreamNotificationType.MethodName:
-                                        {
-                                            _sessionService.CurrentStreamId = message.Params.ToObject<WebviewDidChangeActiveStreamNotification>()?.StreamId;
-                                            break;
-                                        }
                                     case WebviewDidChangeContextNotificationType.MethodName:
                                         {
+                                            var @params = message.Params.ToObject<WebviewDidChangeContextNotification>();
+                                            if (@params != null)
+                                            {
+                                                _sessionService.CurrentStreamId = @params.Context.CurrentStreamId;
+                                                _sessionService.CurrentThreadId = @params.Context.ThreadId;
+                                            }
                                             // save this context in session -- then have bootstrap look in session for it later
                                             // noop for now -- track this in session?!
-                                            break;
-                                        }
-                                    case WebviewDidOpenThreadNotificationType.MethodName:
-                                        {
-                                            var @params = message.Params.ToObject<WebviewDidOpenThreadNotification>();
-                                            _sessionService.CurrentStreamId = @params?.StreamId;
-                                            _sessionService.CurrentThreadId = @params?.ThreadId;
-                                            break;
-                                        }
-                                    case WebviewDidCloseThreadNotificationType.MethodName:
-                                        {
-                                            _sessionService.CurrentThreadId = null;
                                             break;
                                         }
                                     case CompareMarkerRequestType.MethodName:
@@ -187,19 +176,21 @@ namespace CodeStream.VisualStudio
                                         }
                                     case EditorSelectRangeRequestType.MethodName:
                                         {
-                                            using (_ipc.CreateScope(message))
+                                            using (var scope = _ipc.CreateScope(message))
                                             {
                                                 // TODO implement this
+                                                scope.FulfillRequest(JToken.Parse("{}"));
                                                 break;
                                             }
                                         }
                                     case EditorHighlightRangeRequestType.MethodName:
                                         {
-                                            using (_ipc.CreateScope(message))
+                                            using (var scope = _ipc.CreateScope(message))
                                             {
                                                 // search for highlightDecorationType in vscode
                                                 // TODO implement this
                                                 // highlight the active editor's background based on this range and whether range is on or off
+                                                scope.FulfillRequest(JToken.Parse("{}"));
                                                 break;
                                             }
                                         }

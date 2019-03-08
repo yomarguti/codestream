@@ -28,6 +28,7 @@ namespace CodeStream.VisualStudio.Services
     public static class ThemeManager
     {
         private static readonly ThemeResourceKey BackgroundThemeResourceKey = EnvironmentColors.ToolWindowBackgroundColorKey;
+        private static int DefaultFontSize = 12;
 
         private static List<ColorInfo> GetColorInfoBase()
         {
@@ -82,6 +83,7 @@ namespace CodeStream.VisualStudio.Services
                 colorInfos.Add(new ColorInfo { Key = "link-color", VisualStudioKey = EnvironmentColors.StartPageTextControlLinkSelectedColorKey });
 
                 colorInfos.Add(new ColorInfo { Key = "text-color", VisualStudioKey = EnvironmentColors.ToolWindowTextColorKey, Modifier = (b) => b.ToArgb(80) });
+                colorInfos.Add(new ColorInfo { Key = "text-color-info", VisualStudioKey = EnvironmentColors.ToolWindowTextColorKey, Modifier = (b) => b.ToArgb(70) });
                 colorInfos.Add(new ColorInfo { Key = "text-color-info-muted", VisualStudioKey = EnvironmentColors.ToolWindowButtonDownColorKey, Modifier = (b) => b.Darken(0.1f).ToHex() });
                 colorInfos.Add(new ColorInfo { Key = "text-color-subtle", VisualStudioKey = EnvironmentColors.ToolWindowButtonInactiveColorKey, Modifier = (b) => b.ToArgb(70) });
                 colorInfos.Add(new ColorInfo { Key = "text-color-subtle-extra", VisualStudioKey = EnvironmentColors.ToolWindowTextColorKey, Modifier = (b) => b.Lighten(0.5f).ToArgb(60) });
@@ -107,6 +109,7 @@ namespace CodeStream.VisualStudio.Services
                 colorInfos.Add(new ColorInfo { Key = "link-color", VisualStudioKey = EnvironmentColors.ToolWindowButtonInactiveColorKey });
 
                 colorInfos.Add(new ColorInfo { Key = "text-color", VisualStudioKey = EnvironmentColors.ToolWindowTextColorKey, Modifier = (b) => b.ToArgb(90) });
+                colorInfos.Add(new ColorInfo { Key = "text-color-info", VisualStudioKey = EnvironmentColors.ToolWindowTextColorKey, Modifier = (b) => b.ToArgb(80) });
                 colorInfos.Add(new ColorInfo { Key = "text-color-info-muted", VisualStudioKey = EnvironmentColors.ToolWindowButtonDownColorKey });
                 colorInfos.Add(new ColorInfo { Key = "text-color-subtle", VisualStudioKey = EnvironmentColors.ToolWindowButtonInactiveColorKey, Modifier = (b) => b.ToArgb(70) });
                 colorInfos.Add(new ColorInfo { Key = "text-color-subtle-extra", VisualStudioKey = EnvironmentColors.ToolWindowTextColorKey, Modifier = (b) => b.Darken(0.5f).ToArgb(60) });
@@ -129,7 +132,13 @@ namespace CodeStream.VisualStudio.Services
 
             colorInfos.Add(new ColorInfo { Key = "vscode-editor-font-family", Value = fontFamilyString });
             colorInfos.Add(new ColorInfo { Key = "font-family", Value = fontFamilyString });
-            colorInfos.Add(new ColorInfo { Key = "font-size", Value = CreateEditorMetrics(null).FontSize.ToString() });
+            string fontSize;
+            var metrics = CreateEditorMetrics(null);
+            fontSize = metrics == null ? 
+                DefaultFontSize.ToString() :
+                metrics.FontSize.ToIntSafe(DefaultFontSize).ToString();
+
+            colorInfos.Add(new ColorInfo { Key = "font-size", Value = fontSize });
 
             return new ThemeInfo
             {
@@ -143,9 +152,10 @@ namespace CodeStream.VisualStudio.Services
             return new EditorMetrics
             {
                 LineHeight = textView?.LineHeight.ToInt(),
-                FontSize = System.Windows.Application.Current.FindResource(VsFonts.EnvironmentFontSizeKey).ToIntSafe(13),
+                FontSize = System.Windows.Application.Current.FindResource(VsFonts.EnvironmentFontSizeKey).ToIntSafe(DefaultFontSize),
                 EditorMargins = new EditorMargins()
                 {
+					//TODO figure out the real value here...
                     Top = 16
                 }
             };

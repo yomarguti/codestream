@@ -3,8 +3,10 @@ import { initializeColorPalette } from "./theme";
 
 declare function acquireVsApi();
 
-const vscodeApi = acquireVsApi();
+const vsApi = acquireVsApi();
 const channel = new MessageChannel();
+
+setupCommunication(channel.port2);
 
 window.addEventListener(
 	"message",
@@ -14,10 +16,9 @@ window.addEventListener(
 	false
 );
 channel.port1.onmessage = message => {
-	vscodeApi.postMessage(message.data);
+    vsApi.postMessage(message.data);
 };
 
-setupCommunication(channel.port2);
 initializeColorPalette();
 
 initialize("#app").then(render => {

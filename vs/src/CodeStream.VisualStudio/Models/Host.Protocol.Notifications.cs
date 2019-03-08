@@ -93,6 +93,7 @@ namespace CodeStream.VisualStudio.Models
         /// </summary>
         public bool Focused { get; set; }
     }
+
     public class HostDidChangeFocusNotificationType : NotificationType<HostDidChangeFocusNotification>
     {
         public const string MethodName = "webview/focus/didChange";

@@ -89,7 +89,7 @@ namespace CodeStream.VisualStudio.Services
                     {
                         Editor = new HostDidChangeActiveEditorNotificationEditor(fileName, 
                         uri, 
-                        editorState?.ToEditorSelections(), 
+                        editorState.ToEditorSelections(), 
                         activeTextView?.TextView.ToVisibleRanges())
                         {
                             Metrics = ThemeManager.CreateEditorMetrics(activeTextView?.TextView),
@@ -137,7 +137,7 @@ namespace CodeStream.VisualStudio.Services
             {
                 WebviewIpc.Notify(new HostDidChangeEditorSelectionNotificationType
                 {
-                    Params = new HostDidChangeEditorSelectionNotification(uri, editorState?.ToEditorSelections(), visibleRanges)                     
+                    Params = new HostDidChangeEditorSelectionNotification(uri, editorState.ToEditorSelections(), visibleRanges)                     
                 });
             }
             catch (Exception ex)

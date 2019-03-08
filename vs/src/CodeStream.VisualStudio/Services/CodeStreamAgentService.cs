@@ -297,7 +297,7 @@ namespace CodeStream.VisualStudio.Services
 
             // this camelCaseSerializer is important because FromObject doesn't
             // serialize using the global camelCase resolver
-            var camelCaseSerializer = JsonSerializer.Create(new JsonSerializerSettings
+            var jsonSerializer = JsonSerializer.Create(new JsonSerializerSettings
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             });
@@ -312,7 +312,7 @@ namespace CodeStream.VisualStudio.Services
                 {
                     Vsls = vslsEnabled
                 }
-            }, camelCaseSerializer), new JsonMergeSettings
+            }, jsonSerializer), new JsonMergeSettings
             {
                 MergeArrayHandling = MergeArrayHandling.Union
             });
@@ -336,8 +336,11 @@ namespace CodeStream.VisualStudio.Services
                     },
                     Env = _settingsService.GetEnvironmentName(),
                     Version = _settingsService.GetEnvironmentVersionFormatted()
-                }, camelCaseSerializer);
+                }, jsonSerializer);
 
+#if DEBUG
+                Log.Verbose(bootstrapAnonymous?.ToString());
+#endif
                 return bootstrapAnonymous;
             }
 
@@ -348,6 +351,21 @@ namespace CodeStream.VisualStudio.Services
 
             var bootstrapAuthenticated = await _rpc.InvokeWithParameterObjectAsync<JToken>(BootstrapRequestType.MethodName)
                 .ConfigureAwait(false) as JObject;
+
+            EditorContext editorContext = null;
+            if (activeTextView != null)
+            {
+                editorContext = new EditorContext
+                {
+                    //Scm
+                    ActiveFile = activeTextView.FilePath,
+                    //LastActiveFile
+                    TextEditorVisibleRanges = activeTextView.TextView?.ToVisibleRanges(),
+                    TextEditorUri = activeTextView.Uri.ToString(),
+                    TextEditorSelections = editorState.ToEditorSelections(),
+                    Metrics = ThemeManager.CreateEditorMetrics(activeTextView.TextView)
+                };
+            }
 
             var bootstrapResponse = new BootstrapAuthenticatedResponse
             {
@@ -369,16 +387,7 @@ namespace CodeStream.VisualStudio.Services
                     //threadId
                     HasFocus = true
                 },
-                EditorContext = new EditorContext
-                {
-                    //Scm
-                    ActiveFile = activeTextView?.FilePath,
-                    //LastActiveFile
-                    TextEditorVisibleRanges = activeTextView?.TextView?.ToVisibleRanges(),
-                    TextEditorUri = activeTextView?.Uri.ToString(),
-                    TextEditorSelections = editorState.ToEditorSelections(),
-                    Metrics = ThemeManager.CreateEditorMetrics(activeTextView?.TextView)
-                },
+                EditorContext = editorContext,
                 Session = new UserSession
                 {
                     UserId = state["userId"].ToString(),
@@ -387,8 +396,16 @@ namespace CodeStream.VisualStudio.Services
                 Version = settings.Version
             };
 
-            bootstrapAuthenticated?.Merge(JObject.FromObject(bootstrapResponse, camelCaseSerializer));
-
+            var bootstrapResponseJson = JObject.FromObject(bootstrapResponse, jsonSerializer);
+            bootstrapAuthenticated?.Merge(bootstrapResponseJson);
+#if DEBUG
+            // only log the non-user bootstrap data -- it's too verbose
+            if (bootstrapAuthenticated == null)
+            {
+                System.Diagnostics.Debugger.Break();
+            }
+            Log.Verbose(bootstrapResponseJson?.ToString());
+#endif
             return bootstrapAuthenticated;
         }
 

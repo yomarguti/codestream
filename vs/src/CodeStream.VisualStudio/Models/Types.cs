@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.Core;
+using Newtonsoft.Json;
 
 namespace CodeStream.VisualStudio.Models
 {
@@ -19,6 +21,7 @@ namespace CodeStream.VisualStudio.Models
         // ReSharper restore InconsistentNaming
     }
 
+    [JsonConverter(typeof(CamelCaseStringEnumConverter))]
     public enum LogoutReason
     {
         Token,
@@ -30,6 +33,7 @@ namespace CodeStream.VisualStudio.Models
         Slack
     }
 
+    [JsonConverter(typeof(CamelCaseStringEnumConverter))]
     public enum CodemarkType
     {
         Comment,
@@ -40,6 +44,7 @@ namespace CodeStream.VisualStudio.Models
         Link
     }
 
+    [JsonConverter(typeof(CamelCaseStringEnumConverter))]
     public enum ConnectionStatus
     {
         Disconnected,

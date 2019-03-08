@@ -70,4 +70,12 @@ namespace CodeStream.VisualStudio.Models
 
     [DebuggerDisplay("Method={Method}")]
     public abstract class NotificationType<T> : AbstractMessageType<T>, INotificationType { }
+
+    public static class CustomNotificationPayload
+    {
+        public static string Create(string method, JToken token)
+        {
+            return @"{""method"":""" + method + @""",""params"":" + token.ToJson() + "}";
+        }
+    }
 }
