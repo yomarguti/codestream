@@ -15,6 +15,7 @@ import {
 	UpdateConfigurationRequestType
 } from "../ipc/webview.protocol";
 import { includes as _includes, sortBy as _sortBy } from "lodash-es";
+import { setCurrentStream } from "../store/context/actions";
 
 export class SimpleKnowledgePanel extends Component {
 	disposables = [];
@@ -518,5 +519,5 @@ const mapStateToProps = state => {
 
 export default connect(
 	mapStateToProps,
-	actions
+	{ ...actions, setCurrentStream }
 )(SimpleKnowledgePanel);
