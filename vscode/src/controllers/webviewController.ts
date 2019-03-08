@@ -656,16 +656,20 @@ export class WebviewController implements Disposable {
 	}
 
 	private closeWebview(reason?: "user") {
-		if (reason === "user") {
-			Container.agent.telemetry.track("Webview Closed");
+		try {
+			if (reason === "user") {
+				Container.agent.telemetry.track("Webview Closed");
+			}
+			this.updateState(reason === "user");
+		} finally {
+			if (this._disposableWebview !== undefined) {
+				try {
+					this._disposableWebview.dispose();
+				} catch {}
+				this._disposableWebview = undefined;
+			}
+			this._webview = undefined;
 		}
-		this.updateState(reason === "user");
-
-		if (this._disposableWebview !== undefined) {
-			this._disposableWebview.dispose();
-			this._disposableWebview = undefined;
-		}
-		this._webview = undefined;
 	}
 
 	private async getBootstrap<
@@ -778,22 +782,26 @@ export class WebviewController implements Disposable {
 	}
 
 	private updateState(hidden: boolean = false) {
-		const prevState = Container.context.workspaceState.get<WebviewState>(
-			WorkspaceState.webviewState,
-			{
+		try {
+			if (!this.session.signedIn) return;
+
+			const prevState = Container.context.workspaceState.get<WebviewState>(
+				WorkspaceState.webviewState,
+				{
+					hidden: hidden,
+					teams: {}
+				}
+			);
+
+			const teams = prevState.teams || {};
+			teams[this.session.team.id] = {
+				context: this._context
+			};
+
+			Container.context.workspaceState.update(WorkspaceState.webviewState, {
 				hidden: hidden,
-				teams: {}
-			}
-		);
-
-		const teams = prevState.teams || {};
-		teams[this.session.team.id] = {
-			context: this._context
-		};
-
-		Container.context.workspaceState.update(WorkspaceState.webviewState, {
-			hidden: hidden,
-			teams: teams
-		});
+				teams: teams
+			});
+		} catch {}
 	}
 }
