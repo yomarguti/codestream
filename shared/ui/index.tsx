@@ -33,7 +33,7 @@ export function setupCommunication(host: { postMessage: (message: any) => void }
 	});
 }
 
-export async function initialize(selector: string, options: { prerender?: () => void }) {
+export async function initialize(selector: string) {
 	const data = await HostApi.instance.send(BootstrapRequestType, {});
 	const state = isSignedInBootstrap(data)
 		? {
@@ -82,10 +82,6 @@ export async function initialize(selector: string, options: { prerender?: () => 
 	listenForEvents(store);
 
 	const doRender = () => {
-		if (options.prerender !== undefined) {
-			options.prerender();
-		}
-
 		render(
 			<Container store={store} i18n={{ locale: "en", messages: translations }} />,
 			document.querySelector(selector),
