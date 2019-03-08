@@ -6,7 +6,7 @@ import {
 	GetRangeScmInfoRequest,
 	GetRangeScmInfoRequestType,
 	GetRangeScmInfoResponse
-} from "../protocol/agent.protocol.scm";
+} from "../protocol/agent.protocol";
 import { Iterables, lsp, lspHandler, Strings } from "../system";
 import { Container } from "./../container";
 

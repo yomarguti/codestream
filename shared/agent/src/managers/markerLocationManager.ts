@@ -10,7 +10,7 @@ import { Container } from "../container";
 import { GitRepository } from "../git/models/repository";
 import { Logger } from "../logger";
 import { calculateLocation, calculateLocations } from "../markerLocation/calculator";
-import { MarkerNotLocatedReason } from "../protocol/agent.protocol.markers";
+import { MarkerNotLocatedReason } from "../protocol/agent.protocol";
 import {
 	CSFileStream,
 	CSLocationArray,

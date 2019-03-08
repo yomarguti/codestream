@@ -14,7 +14,6 @@ import {
 	InitializeResult,
 	NotificationHandler,
 	NotificationType,
-	NotificationType0,
 	RequestHandler,
 	RequestHandler0,
 	RequestType,

@@ -18,8 +18,8 @@ import {
 	UpdateCodemarkRequest,
 	UpdateCodemarkRequestType,
 	UpdateCodemarkResponse
-} from "../protocol/agent.protocol.markers";
-import { CSCodemark } from "../protocol/api.protocol.models";
+} from "../protocol/agent.protocol";
+import { CSCodemark } from "../protocol/api.protocol";
 import { lsp, lspHandler } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 

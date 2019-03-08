@@ -1,10 +1,5 @@
 "use strict";
-import {
-	NotificationType,
-	Range,
-	RequestType,
-	TextDocumentIdentifier
-} from "vscode-languageserver-protocol";
+import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
 import {
 	CodemarkType,
 	CSCodemark,
@@ -19,15 +14,6 @@ import {
 export interface CodemarkPlus extends CSCodemark {
 	markers?: CSMarker[];
 }
-
-export interface DidChangeDocumentMarkersNotification {
-	textDocument: TextDocumentIdentifier;
-}
-
-export const DidChangeDocumentMarkersNotificationType = new NotificationType<
-	DidChangeDocumentMarkersNotification,
-	void
->("codestream/didChangeDocumentMarkers");
 
 export interface FetchCodemarksRequest {
 	streamId?: string;
