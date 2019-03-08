@@ -1,20 +1,15 @@
-const MarkdownIt = require("markdown-it");
-const markdownItSlack = require("markdown-it-slack");
-const markdownItEmoji = require("markdown-it-emoji-mart");
-import hljs from "highlight.js";
+import MarkdownIt from "markdown-it";
+import markdownItSlack from "markdown-it-slack";
+import markdownItEmoji from "markdown-it-emoji-mart";
+import { prettyPrintOne } from "code-prettify";
 import { logError } from "../logger";
 
 const md = new MarkdownIt({
 	breaks: true,
 	linkify: true,
 	highlight: function(str, lang) {
-		if (lang && hljs.getLanguage(lang)) {
-			try {
-				return '<pre class="hljs"><code>' + hljs.highlight(lang, str, true).value + "</code></pre>";
-			} catch (__) {}
-		}
-
-		return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + "</code></pre>";
+		const codeHTML = prettyPrintOne(str, lang, true);
+		return `<pre class="prettyprint">${codeHTML}</pre>`;
 	}
 })
 	.use(markdownItSlack)

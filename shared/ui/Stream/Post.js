@@ -19,7 +19,6 @@ import { getById } from "../store/repos/reducer";
 import { getPost } from "../store/posts/reducer";
 import { getCodemark } from "../store/codemarks/reducer";
 import { markdownify, emojify } from "./Markdowner";
-import hljs from "highlight.js";
 import { reactToPost } from "./actions";
 import { safe } from "../utils";
 import { getUsernamesById, getNormalizedUsernames } from "../store/users/reducer";
@@ -28,6 +27,7 @@ import { DocumentFromMarkerRequestType } from "@codestream/protocols/agent";
 import { EditorRevealRangeRequestType, EditorRevealRangeResult } from "../ipc/webview.protocol";
 import { HostApi } from "../webview-api";
 import { includes as _includes } from "lodash-es";
+import { prettyPrintOne } from "code-prettify";
 
 class Post extends React.Component {
 	state = {
@@ -157,12 +157,8 @@ class Post extends React.Component {
 		if (extension.startsWith(".")) {
 			extension = extension.substring(1);
 		}
-		let codeHTML;
-		if (extension && hljs.getLanguage(extension)) {
-			codeHTML = hljs.highlight(extension, marker.code, true).value;
-		} else codeHTML = hljs.highlightAuto(marker.code).value;
-
-		return <div className="code" dangerouslySetInnerHTML={{ __html: codeHTML }} />;
+		const codeHTML = prettyPrintOne(marker.code, extension, marker.locationWhenCreated[0]);
+		return <pre className="code prettyprint" dangerouslySetInnerHTML={{ __html: codeHTML }} />;
 	}
 
 	render() {

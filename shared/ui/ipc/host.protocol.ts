@@ -8,7 +8,7 @@ import {
 	CSUser
 } from "@codestream/protocols/api";
 import { RequestType } from "vscode-jsonrpc";
-import { IpcRoutes, WebviewContext, EditorContext } from "./webview.protocol.common";
+import { EditorContext, IpcRoutes, WebviewContext } from "./webview.protocol.common";
 
 export interface BootstrapRequest {}
 export interface SignedOutBootstrapResponse {
