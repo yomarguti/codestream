@@ -29,6 +29,10 @@ export class Login extends React.Component {
 		};
 	}
 
+	componentDidMount() {
+		document.body.classList.remove("loading");
+	}
+
 	onBlurPassword = () => this.setState({ passwordTouched: true });
 
 	onBlurEmail = () => this.setState({ emailTouched: true });
