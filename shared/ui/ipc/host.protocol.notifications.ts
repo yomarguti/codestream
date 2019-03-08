@@ -9,7 +9,6 @@ type ConfigState = any;
 export interface HostDidChangeActiveEditorNotification {
 	editor?: {
 		fileName: string;
-		fileStreamId?: string;
 		languageId?: string;
 		uri: string;
 		metrics?: EditorMetrics;
