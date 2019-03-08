@@ -261,7 +261,17 @@ function getWebviewConfig(env) {
 						ecma: 8
 					}
 				})
-			]
+			],
+			splitChunks: {
+				cacheGroups: {
+					default: false,
+					data: {
+						chunks: "all",
+						filename: "webview-data.js",
+						test: /\.json/
+					}
+				}
+			}
 		},
 		module: {
 			rules: [
