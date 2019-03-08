@@ -596,7 +596,7 @@ export class SlackApiProvider implements ApiProvider {
 					text = attachment.author_name;
 					attachment.author_name = undefined;
 
-					if (request.mentionedUserIds) {
+					if (request.mentionedUserIds != null && request.mentionedUserIds.length !== 0) {
 						text += ` /cc ${request.mentionedUserIds
 							.map(u => `@${usernamesById.get(u)}`)
 							.join(", ")}`;
