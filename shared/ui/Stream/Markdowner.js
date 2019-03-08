@@ -3,12 +3,13 @@ import markdownItSlack from "markdown-it-slack";
 import markdownItEmoji from "markdown-it-emoji-mart";
 import { prettyPrintOne } from "code-prettify";
 import { logError } from "../logger";
+import { escapeHtml } from "../utils";
 
 const md = new MarkdownIt({
 	breaks: true,
 	linkify: true,
 	highlight: function(str, lang) {
-		const codeHTML = prettyPrintOne(str, lang, true);
+		const codeHTML = prettyPrintOne(escapeHtml(str), lang, true);
 		return `<pre class="prettyprint">${codeHTML}</pre>`;
 	}
 })

@@ -215,3 +215,17 @@ export function logDiff<Props, State>(context, prevProps: Props) {
 	});
 	console.groupEnd();
 }
+
+const htmlEscapeCharMap = {
+	"&": "&amp;",
+	"<": "&lt;",
+	">": "&gt;",
+	'"': "&quot;",
+	"'": "&#039;"
+};
+
+export function escapeHtml(text: string) {
+	return text.replace(/[&<>"']/g, function(c) {
+		return htmlEscapeCharMap[c];
+	});
+}

@@ -20,7 +20,7 @@ import { getPost } from "../store/posts/reducer";
 import { getCodemark } from "../store/codemarks/reducer";
 import { markdownify, emojify } from "./Markdowner";
 import { reactToPost } from "./actions";
-import { safe } from "../utils";
+import { escapeHtml, safe } from "../utils";
 import { getUsernamesById, getNormalizedUsernames } from "../store/users/reducer";
 import { getProviderInfo } from "./CrossPostIssueControls/types";
 import { DocumentFromMarkerRequestType } from "@codestream/protocols/agent";
@@ -157,7 +157,17 @@ class Post extends React.Component {
 		if (extension.startsWith(".")) {
 			extension = extension.substring(1);
 		}
-		const codeHTML = prettyPrintOne(marker.code, extension, marker.locationWhenCreated[0]);
+
+		let startLine = 1;
+		if (marker.range) {
+			startLine = marker.range.start.line;
+		} else if (marker.location) {
+			startLine = marker.location[0];
+		} else if (marker.locationWhenCreated) {
+			startLine = marker.locationWhenCreated[0];
+		}
+
+		const codeHTML = prettyPrintOne(escapeHtml(marker.code), extension, startLine);
 		return <pre className="code prettyprint" dangerouslySetInnerHTML={{ __html: codeHTML }} />;
 	}
 
