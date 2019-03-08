@@ -18,7 +18,7 @@
 	"dependencies": {
 		"@babel/polyfill": "7.2.5",
 		"classnames": "2.2.5",
-		"code-prettify": "git:github.com/google/code-prettify.git#b5fa4d1bf0ba91cfa7f12a67b75b047a42d2f91f",
+		"code-prettify": "git:github.com/TeamCodeStream/code-prettify.git#62943684566f616b403ac354a1b5a094344c85bc",
 		"emoji-mart": "2.9.2",
 		"lodash-es": "4.17.11",
 		"markdown-it": "8.4.2",
