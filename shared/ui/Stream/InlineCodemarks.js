@@ -387,6 +387,9 @@ export class SimpleInlineCodemarks extends Component {
 	render() {
 		const { viewInline } = this.props;
 
+		// @ts-ignore
+		document.querySelector("#spinner").classList.toggle("hidden", !this.state.isLoading);
+
 		return (
 			<div className={createClassString("panel", { "full-height": viewInline })}>
 				<div className="panel-header">
@@ -400,20 +403,7 @@ export class SimpleInlineCodemarks extends Component {
 					</Tooltip>
 					{!viewInline && "Codemarks"}
 				</div>
-				{this.state.isLoading /* TODO: Create a component for this */ ? (
-					<div className="loading-page">
-						<div className="loader-ring">
-							<div className="loader-ring__segment" />
-							<div className="loader-ring__segment" />
-							<div className="loader-ring__segment" />
-							<div className="loader-ring__segment" />
-						</div>
-					</div>
-				) : viewInline ? (
-					this.renderInline()
-				) : (
-					this.renderList()
-				)}
+				{viewInline ? this.renderInline() : this.renderList()}
 			</div>
 		);
 	}

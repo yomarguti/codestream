@@ -184,9 +184,15 @@ export class SimpleKnowledgePanel extends Component {
 	};
 
 	render() {
+		document.querySelector("#spinner").classList.toggle("hidden", !this.state.isLoading);
+		if (this.state.isLoading) return null;
+
+		if (this.props.noCodemarksAtAll) {
+			return this.renderBlankFiller();
+		}
+
 		const {
 			codemarks,
-			noCodemarksAtAll,
 			currentUserId,
 			fileNameToFilterFor,
 			fileStreamIdToFilterFor,
@@ -195,24 +201,6 @@ export class SimpleKnowledgePanel extends Component {
 			colorFilter
 		} = this.props;
 		const { thisRepo } = this.state;
-
-		if (this.state.isLoading) {
-			/* TODO: Create a component for this */
-			return (
-				<div className="loading-page">
-					<div className="loader-ring">
-						<div className="loader-ring__segment" />
-						<div className="loader-ring__segment" />
-						<div className="loader-ring__segment" />
-						<div className="loader-ring__segment" />
-					</div>
-				</div>
-			);
-		}
-
-		if (noCodemarksAtAll) {
-			return this.renderBlankFiller();
-		}
 
 		const sections = this.sectionsByType[typeFilter];
 

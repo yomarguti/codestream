@@ -149,18 +149,10 @@ export default Child => {
 			};
 
 			render() {
+				document.querySelector("#spinner").classList.toggle("hidden", this.state.isInitialized);
+				if (!this.state.isInitialized) return null;
+
 				const { forwardedRef, childProps } = this.props;
-				if (!this.state.isInitialized)
-					return (
-						<div className="loading-page">
-							<div className="loader-ring">
-								<div className="loader-ring__segment" />
-								<div className="loader-ring__segment" />
-								<div className="loader-ring__segment" />
-								<div className="loader-ring__segment" />
-							</div>
-						</div>
-					);
 
 				return (
 					<Child
