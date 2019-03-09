@@ -31,13 +31,13 @@ import { setCurrentStream } from "../store/context/actions";
  */
 export class SimpleInlineCodemarks extends Component {
 	disposables = [];
-	editorMarkersEnabled = false;
 
 	constructor(props) {
 		super(props);
 
 		this.state = {
 			isLoading: props.documentMarkers.length === 0,
+			resetShowMarkers: false,
 			openPost: null
 		};
 	}
@@ -62,10 +62,14 @@ export class SimpleInlineCodemarks extends Component {
 	componentDidMount() {
 		document.body.classList.toggle("loading", this.state.isLoading);
 
-		HostApi.instance.send(UpdateConfigurationRequestType, {
-			name: "showMarkers",
-			value: this.editorMarkersEnabled
-		});
+		if (this.props.showMarkers && this.props.viewInline) {
+			this.setState({ resetShowMarkers: true });
+			HostApi.instance.send(UpdateConfigurationRequestType, {
+				name: "showMarkers",
+				value: false
+			});
+		}
+
 		this.disposables.push(
 			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
 				if (this.props.textEditorUri === textDocument.uri)
@@ -88,6 +92,18 @@ export class SimpleInlineCodemarks extends Component {
 			this.onFileChanged();
 		}
 
+		if (prevProps.viewInline !== this.props.viewInline) {
+			if (this.props.viewInline) {
+				this.setState({ resetShowMarkers: true });
+				HostApi.instance.send(UpdateConfigurationRequestType, {
+					name: "showMarkers",
+					value: false
+				});
+			} else if (this.state.resetShowMarkers) {
+				HostApi.instance.send(UpdateConfigurationRequestType, { name: "showMarkers", value: true });
+			}
+		}
+
 		const didStartLineChange = this.compareStart(
 			this.props.textEditorVisibleRanges,
 			prevProps.textEditorVisibleRanges
@@ -103,7 +119,10 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	componentWillUnmount() {
-		HostApi.instance.send(UpdateConfigurationRequestType, { name: "showMarkers", value: true });
+		if (this.state.resetShowMarkers) {
+			HostApi.instance.send(UpdateConfigurationRequestType, { name: "showMarkers", value: true });
+		}
+
 		this.disposables.forEach(d => d.dispose());
 	}
 
