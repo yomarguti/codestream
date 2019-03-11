@@ -106,7 +106,8 @@ namespace CodeStream.VisualStudio.Packages
                     GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
                     GetService(typeof(SWebviewIpc)) as IWebviewIpc,
                     new Lazy<ISettingsService>(() => GetService(typeof(SSettingsService)) as ISettingsService),
-                    new Lazy<IIdeService>(() => GetService(typeof(SIdeService)) as IIdeService)
+                    new Lazy<IIdeService>(() => GetService(typeof(SIdeService)) as IIdeService),
+                    new Lazy<IToolWindowProvider>(() => GetService(typeof(SToolWindowProvider)) as IToolWindowProvider)
                 );
 
             return null;

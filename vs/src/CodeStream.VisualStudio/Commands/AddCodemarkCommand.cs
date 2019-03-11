@@ -71,9 +71,7 @@ namespace CodeStream.VisualStudio.Commands
 
             ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
-                //await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                await codeStreamService.NewCodemarkAsync(new Uri(textDocument.FilePath), selectedText, CodemarkType.Comment, CancellationToken.None);
+                await codeStreamService.NewCodemarkAsync(new Uri(textDocument.FilePath), selectedText, CodemarkType.Comment, cancellationToken: CancellationToken.None);
             });
         }
     }

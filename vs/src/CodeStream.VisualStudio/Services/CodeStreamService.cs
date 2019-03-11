@@ -2,8 +2,10 @@
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Models;
+using CodeStream.VisualStudio.Packages;
 using CodeStream.VisualStudio.UI;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
+using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -20,6 +22,7 @@ namespace CodeStream.VisualStudio.Services
         Task NewCodemarkAsync(Uri uri,
             EditorState editorState,
             CodemarkType codemarkType,
+            bool ensureInView = true,
             CancellationToken? cancellationToken = null);
         Task EditorSelectionChangedNotificationAsync(Uri uri,
             EditorState editorState,
@@ -50,6 +53,7 @@ namespace CodeStream.VisualStudio.Services
 
         private readonly Lazy<ISettingsService> _settingsService;
         private readonly Lazy<IIdeService> _ideService;
+        private readonly Lazy<IToolWindowProvider> _toolWindowProvider;
 
         public CodeStreamService(
             Lazy<ICredentialsService> credentialsService,
@@ -58,7 +62,8 @@ namespace CodeStream.VisualStudio.Services
             ICodeStreamAgentService serviceProvider,
             IWebviewIpc ipc,
             Lazy<ISettingsService> settingsService,
-             Lazy<IIdeService> ideService)
+            Lazy<IIdeService> ideService,
+            Lazy<IToolWindowProvider> toolWindowProvider)
         {
             _credentialsService = credentialsService;
             _eventAggregator = eventAggregator;
@@ -67,6 +72,7 @@ namespace CodeStream.VisualStudio.Services
             WebviewIpc = ipc;
             _settingsService = settingsService;
             _ideService = ideService;
+            _toolWindowProvider = toolWindowProvider;
         }
 
         public bool IsReady
@@ -87,9 +93,9 @@ namespace CodeStream.VisualStudio.Services
                 {
                     Params = new HostDidChangeActiveEditorNotification
                     {
-                        Editor = new HostDidChangeActiveEditorNotificationEditor(fileName, 
-                        uri, 
-                        editorState.ToEditorSelections(), 
+                        Editor = new HostDidChangeActiveEditorNotificationEditor(fileName,
+                        uri,
+                        editorState.ToEditorSelections(),
                         activeTextView?.TextView.ToVisibleRanges())
                         {
                             Metrics = ThemeManager.CreateEditorMetrics(activeTextView?.TextView),
@@ -137,7 +143,7 @@ namespace CodeStream.VisualStudio.Services
             {
                 WebviewIpc.Notify(new HostDidChangeEditorSelectionNotificationType
                 {
-                    Params = new HostDidChangeEditorSelectionNotification(uri, editorState.ToEditorSelections(), visibleRanges)                     
+                    Params = new HostDidChangeEditorSelectionNotification(uri, editorState.ToEditorSelections(), visibleRanges)
                 });
             }
             catch (Exception ex)
@@ -148,23 +154,31 @@ namespace CodeStream.VisualStudio.Services
             return Task.CompletedTask;
         }
 
-        public Task NewCodemarkAsync(Uri uri, EditorState textSelection, CodemarkType codemarkType, CancellationToken? cancellationToken = null)
+        public async Task NewCodemarkAsync(Uri uri, EditorState textSelection, CodemarkType codemarkType, bool ensureInView = true, CancellationToken? cancellationToken = null)
         {
-            if (!IsReady) return Task.CompletedTask;
-
-            try
+            if (IsReady)
             {
-                WebviewIpc.Notify(new NewCodemarkNotificationType
+                try
                 {
-                    Params = new NewCodemarkNotification(uri, textSelection?.Range, codemarkType)
-                });
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"{nameof(NewCodemarkAsync)} Uri={uri}");
+                    if (ensureInView)
+                    {
+                        // switch to main thread to show the ToolWindow
+                        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken ?? CancellationToken.None);
+                        _toolWindowProvider.Value?.ShowToolWindow(Guids.WebViewToolWindowGuid);
+                    }
+
+                    WebviewIpc.Notify(new NewCodemarkNotificationType
+                    {
+                        Params = new NewCodemarkNotification(uri, textSelection?.Range, codemarkType)
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, $"{nameof(NewCodemarkAsync)} Uri={uri}");
+                }
             }
 
-            return Task.CompletedTask;
+            await Task.CompletedTask;
         }
 
         public async Task TrackAsync(string eventName, TelemetryProperties properties = null)
