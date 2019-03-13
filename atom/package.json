@@ -51,18 +51,10 @@
 		"webview:watch": "webpack --watch --config-name webview --env.development --info-verbosity verbose"
 	},
 	"dependencies": {
-		"@types/atom": "1.31.0",
-		"@types/electron": "1.6.10",
-		"@types/node-fetch": "^2.1.4",
-		"@types/react": "16.8.1",
-		"@types/react-dom": "16.0.11",
-		"@types/uuid": "3.4.4",
 		"atom-languageclient": "0.9.9",
 		"emoji-mart": "2.9.2",
 		"highlight.js": "9.15.5",
 		"rc-tooltip": "3.7.3",
-		"react": "^16.3.2",
-		"react-dom": "^16.3.2",
 		"uuid": "3.3.2"
 	},
 	"devDependencies": {
@@ -75,6 +67,10 @@
 		"@babel/preset-react": "7.0.0",
 		"@babel/preset-typescript": "7.3.3",
 		"@babel/runtime": "7.3.4",
+		"@types/atom": "1.31.1",
+		"@types/electron": "1.6.10",
+		"@types/node-fetch": "2.1.6",
+		"@types/uuid": "3.4.4",
 		"acorn": "6.0.7",
 		"babel-eslint": "^8.2.3",
 		"babel-loader": "8.0.5",
