@@ -26,12 +26,15 @@ import { reduceEditorContext } from "./editorContext/reducer";
 export { actions } from "./actions";
 
 const bootstrapped = (state = false, { type }) => {
-	if (type === "BOOTSTRAP_COMPLETE") return true;
+	if (type === "@bootstrap/Complete") return true;
 	if (type === "RESET") return true;
 	return state;
 };
 
-const pluginVersion = (state = "") => state;
+const pluginVersion = (state = "", action) => {
+	if (action.type === "@pluginVersion/Set") return action.payload;
+	return state;
+};
 
 const reducer = combineReducers({
 	bootstrapped,

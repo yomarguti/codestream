@@ -72,8 +72,6 @@ export class SimpleChannelPanel extends Component {
 	}
 
 	componentDidMount() {
-		document.body.classList.remove("loading");
-
 		if (isInVscode()) {
 			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
 				if (event.key === "Escape") {
@@ -84,8 +82,6 @@ export class SimpleChannelPanel extends Component {
 	}
 
 	componentDidUpdate(prevProps, prevState) {
-		document.body.classList.remove("loading");
-
 		if (this.props.showChannels === "selecting" && prevProps.showChannels !== "selecting") {
 			this.setState({ checkedStreams: this.props.selectedStreams });
 		}

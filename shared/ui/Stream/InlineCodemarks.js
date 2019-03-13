@@ -60,8 +60,6 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	componentDidMount() {
-		document.body.classList.toggle("loading", this.state.isLoading);
-
 		if (this.props.showMarkers && this.props.viewInline) {
 			this.setState({ resetShowMarkers: true });
 			HostApi.instance.send(UpdateConfigurationRequestType, {
@@ -85,8 +83,6 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	componentDidUpdate(prevProps, prevState) {
-		document.body.classList.toggle("loading", this.state.isLoading);
-
 		const { textEditorUri } = this.props;
 		if (String(textEditorUri).length > 0 && prevProps.textEditorUri !== textEditorUri) {
 			this.onFileChanged();
@@ -128,7 +124,8 @@ export class SimpleInlineCodemarks extends Component {
 
 	async onFileChanged() {
 		const { textEditorUri, documentMarkers } = this.props;
-		if (documentMarkers.length === 0) this.setState({ isLoading: true });
+		if (documentMarkers.length === 0)
+			this.setState(state => (state.isLoading ? null : { isLoading: true }));
 		await this.props.fetchDocumentMarkers(textEditorUri);
 		this.setState(state => (state.isLoading ? { isLoading: false } : null));
 	}
@@ -421,7 +418,7 @@ export class SimpleInlineCodemarks extends Component {
 					</Tooltip>
 					{!viewInline && "Codemarks"}
 				</div>
-				{viewInline ? this.renderInline() : this.renderList()}
+				{this.state.isLoading ? null : viewInline ? this.renderInline() : this.renderList()}
 			</div>
 		);
 	}

@@ -7,8 +7,6 @@ export default connect(
 	null,
 	actions
 )(props => {
-	document.body.classList.remove("loading");
-
 	const handleClickSlackSignup = e => {
 		e.preventDefault();
 		props.goToSlackInfo();

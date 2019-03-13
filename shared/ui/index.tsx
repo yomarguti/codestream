@@ -8,7 +8,6 @@ import {
 	HostDidLogoutNotificationType,
 	BootstrapRequestType,
 	WebviewDidInitializeNotificationType,
-	isSignedInBootstrap,
 	HostDidChangeEditorSelectionNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
 	ShowStreamNotificationType
@@ -34,32 +33,7 @@ export function setupCommunication(host: { postMessage: (message: any) => void }
 }
 
 export async function initialize(selector: string) {
-	const data = await HostApi.instance.send(BootstrapRequestType, {});
-	const state = isSignedInBootstrap(data)
-		? {
-				capabilities: data.capabilities,
-				...(data.configs.email ? { route: { route: "login" } } : {}),
-				context: {
-					hasFocus: true,
-					...data.context
-				},
-				editorContext: data.editorContext || {},
-				pluginVersion: data.version,
-				preferences: data.preferences,
-				session: {
-					userId: data.session.userId
-				},
-				umis: data.unreads
-		  }
-		: {
-				pluginVersion: data.version,
-				capabilities: data.capabilities,
-				...(data.configs.email ? { route: { route: "login" } } : {}),
-				context: {},
-				session: {}
-		  };
-
-	const store = createCodeStreamStore(state, undefined, [
+	const store = createCodeStreamStore(undefined, undefined, [
 		store => {
 			return next => action => {
 				const oldState = store.getState();
@@ -76,22 +50,19 @@ export async function initialize(selector: string) {
 		}
 	]);
 
-	// TODO: should be able to include data.configs in call to createStore
-	store.dispatch(actions.updateConfigs(data.configs || {}));
-
 	listenForEvents(store);
 
-	const doRender = () => {
-		render(
-			<Container store={store} i18n={{ locale: "en", messages: translations }} />,
-			document.querySelector(selector),
-			() => HostApi.instance.notify(WebviewDidInitializeNotificationType, {})
-		);
-	};
+	render(
+		<Container store={store} i18n={{ locale: "en", messages: translations }} />,
+		document.querySelector(selector),
+		() => {
+			HostApi.instance.notify(WebviewDidInitializeNotificationType, {});
+		}
+	);
 
-	await store.dispatch(actions.bootstrap(data) as any);
+	const data = await HostApi.instance.send(BootstrapRequestType, {});
 
-	return doRender;
+	store.dispatch(actions.bootstrap(data) as any);
 }
 
 // TODO: type up the store state

@@ -14,12 +14,56 @@ import { ReloadWebviewRequestType } from "../ipc/webview.protocol";
 
 addLocaleData(englishLocaleData);
 
-const Loading = props => (
-	<div className="loading-page">
-		<span className="loading loading-spinner-large inline-block" />
-		<p>{props.message}</p>
-	</div>
-);
+export class Loading extends React.Component {
+	static defaultProps = {
+		forceAnimation: false,
+		renderDelay: 250,
+		animationDelay: 1500
+	};
+
+	constructor(props) {
+		super(props);
+		this.state = { showRings: props.forceAnimation, shouldRender: !props.delayRender };
+	}
+
+	componentDidMount() {
+		const { forceAnimation, animationDelay, delayRender, renderDelay } = this.props;
+		if (forceAnimation) {
+			this.animationDelayId = setTimeout(() => {
+				this.setState({ showRings: true });
+			}, animationDelay);
+		}
+		if (delayRender) {
+			this.renderDelayId = setTimeout(() => {
+				this.setState({ shouldRender: true });
+			}, renderDelay);
+		}
+	}
+
+	componentWillUnmount() {
+		this.animationDelayId && clearTimeout(this.animationDelayId);
+		this.renderDelayId && clearTimeout(this.renderDelayId);
+	}
+
+	render() {
+		if (this.state.shouldRender === false) return null;
+
+		return (
+			<div id="spinner" style={this.props.style}>
+				<div className="loader-ring">
+					{this.state.showRings ? (
+						<React.Fragment>
+							<div className="loader-ring__segment" />
+							<div className="loader-ring__segment" />
+							<div className="loader-ring__segment" />
+							<div className="loader-ring__segment" />
+						</React.Fragment>
+					) : null}
+				</div>
+			</div>
+		);
+	}
+}
 
 const UnauthenticatedRoutes = connect(state => state.route)(props => {
 	switch (props.route) {
@@ -41,7 +85,7 @@ const mapStateToProps = state => ({
 	loggedIn: Boolean(state.session.userId)
 });
 const Root = connect(mapStateToProps)(props => {
-	if (!props.bootstrapped) return <Loading message="CodeStream engage..." />;
+	if (!props.bootstrapped) return <Loading />;
 	if (!props.loggedIn) return <UnauthenticatedRoutes />;
 	return <Stream />;
 });
@@ -75,10 +119,6 @@ export default class Container extends React.Component {
 
 	render() {
 		const { i18n, store } = this.props;
-
-		if (this.state.hasError) {
-			document.body.classList.remove("loading");
-		}
 
 		let content;
 		if (this.state.hasError)

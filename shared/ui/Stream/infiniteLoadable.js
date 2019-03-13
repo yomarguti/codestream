@@ -4,6 +4,7 @@ import { isEqual as _isEqual } from "lodash-es";
 import { getPostsForStream } from "../store/posts/reducer";
 import { fetchPosts, fetchThread } from "./actions";
 import { safe } from "../utils";
+import { Loading } from "../Container";
 
 const mapStateToProps = (state, props) => {
 	const { streamId, isThread, threadId } = props.childProps;
@@ -26,20 +27,19 @@ export default Child => {
 
 	const DataProvider = connect(
 		mapStateToProps,
-		{ fetchPosts, fetchThread }
+		{
+			fetchPosts,
+			fetchThread
+		}
 	)(
 		class Provider extends React.Component {
 			state = { isFetching: false, isInitialized: false, posts: [], hasMore: true };
 
 			componentDidMount() {
 				this.initialize();
-
-				document.body.classList.toggle("loading", !this.state.isInitialized);
 			}
 
-			componentDidUpdate(prevProps, _prevState) {
-				document.body.classList.toggle("loading", !this.state.isInitialized);
-
+			componentDidUpdate(prevProps, prevState) {
 				if (this.props.isThread && prevProps.isThread) {
 					if (this.props.childProps.threadId !== prevProps.childProps.threadId)
 						return this.initialize();
@@ -153,7 +153,7 @@ export default Child => {
 			};
 
 			render() {
-				if (!this.state.isInitialized) return null;
+				if (!this.state.isInitialized) return <Loading style={{ height: "100%" }} delayRender />;
 
 				const { forwardedRef, childProps } = this.props;
 

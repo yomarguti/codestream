@@ -79,8 +79,6 @@ export class SimpleStream extends Component {
 			HostApi.instance.on(NewCodemarkNotificationType, this.handleNewCodemarkRequest, this)
 		);
 
-		this.props.fetchCodemarks();
-
 		// this listener pays attention to when the input field resizes,
 		// presumably because the user has typed more than one line of text
 		// in it, and calls a function to handle the new size
