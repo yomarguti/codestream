@@ -42,10 +42,4 @@ document.body.addEventListener(
 	true
 );
 
-initialize("#app").then(render => {
-	setTimeout(() => {
-		document.body.classList.remove("preload");
-	}, 1000); // Wait for animations to complete
-
-	render();
-});
+initialize("#app");
