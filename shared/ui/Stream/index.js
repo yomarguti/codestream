@@ -365,12 +365,12 @@ export class SimpleStream extends Component {
 		return (
 			<nav className="inline">
 				<div className="top-tab-group">
-					<div className="fill-tab" onClick={e => this.setActivePanel("inline")} />
+					<div className="fill-tab" onClick={e => this.setActivePanel("codemarks-for-file")} />
 					<label
 						className={createClassString({
-							selected: activePanel === "inline"
+							selected: activePanel === "codemarks-for-file"
 						})}
-						onClick={e => this.setActivePanel("inline")}
+						onClick={e => this.setActivePanel("codemarks-for-file")}
 					>
 						<Tooltip title="Codemarks In Current File" placement="bottom">
 							<span>
@@ -532,7 +532,7 @@ export class SimpleStream extends Component {
 					<div className="top-tab-group">
 						<label
 							className={createClassString({
-								checked: activePanel === "knowledge" || activePanel === "inline"
+								checked: activePanel === "knowledge" || activePanel === "codemarks-for-file"
 								// muted: !this.props.configs.showMarkers
 							})}
 							onClick={e => this.setActivePanel("knowledge")}
@@ -692,7 +692,7 @@ export class SimpleStream extends Component {
 				{renderNav && this.renderNavIcons()}
 				{this.state.floatCompose && this.renderComposeBox(placeholderText, channelName)}
 				<div className="content vscroll inline">
-					{activePanel === "inline" && (
+					{activePanel === "codemarks-for-file" && (
 						<InlineCodemarks
 							activePanel={activePanel}
 							setActivePanel={this.setActivePanel}
