@@ -1,5 +1,6 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
+using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Packages;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Glyphs;
@@ -18,7 +19,6 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using CodeStream.VisualStudio.Models;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
@@ -145,7 +145,7 @@ namespace CodeStream.VisualStudio.UI.Margins
             Children.Clear();
             _lineInfos?.Clear();
             _iconCanvas?.Children.Clear();
-            _disposables?.Dispose();
+            _disposables?.DisposeAll();
             _initialized = false;
         }
 
@@ -163,20 +163,29 @@ namespace CodeStream.VisualStudio.UI.Margins
                         .ObserveOnDispatcher()
                         .Subscribe(eventPattern =>
                         {
-                            if (_textView.Selection.IsEmpty ||
-                                !_toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) return;
+                            if (!_toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid))
+                            {
+                                return;
+                            }
 
-                                // TODO cant we get the selected text from the sender somehow??
-                                var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
-                            var selectedTextResult = ideService?.GetActiveEditorState();
-                            if (selectedTextResult?.HasSelectedText == false) return;
+                            // TODO cant we get the selected text from the sender somehow??
+                            var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;                            
 
-                            var codeStreamService =
-                                Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
+                            var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
                             if (codeStreamService == null) return;
-                            
+
+                            var activeEditorState = ideService?.GetActiveEditorState();
+                            if (activeEditorState?.HasSelectedText == false || _textView.Selection.IsEmpty)
+                            {
+                                codeStreamService.EditorSelectionChangedNotificationAsync(new Uri(_textDocument.FilePath),
+                                    activeEditorState,
+                                    _textView.TextViewLines.ToRanges().Collapsed(),
+                                    CodemarkType.Comment, CancellationToken.None);
+                                return;
+                            }
+
                             codeStreamService.EditorSelectionChangedNotificationAsync(new Uri(_textDocument.FilePath),
-                                selectedTextResult, 
+                                activeEditorState,
                                 _textView.TextViewLines.ToRanges().Collapsed(),
                                 CodemarkType.Comment, CancellationToken.None);
 
@@ -300,7 +309,7 @@ namespace CodeStream.VisualStudio.UI.Margins
             {
                 _wpfTextViewHost.TextView.ZoomLevelChanged -= TextView_ZoomLevelChanged;
                 _tagAggregator?.Dispose();
-                _disposables.Dispose();
+                _disposables.DisposeAll();
 
                 Children.Clear();
                 _lineInfos?.Clear();

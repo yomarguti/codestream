@@ -165,7 +165,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows
 			{
 				_languageServerReadyEvent?.Dispose();
 				_languageServerDisconnectedEvent?.Dispose();
-				_disposables.Dispose();
+				_disposables.DisposeAll();
 			}
 
 			_disposed = true;

@@ -7,25 +7,18 @@ using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
+using CodeStream.VisualStudio.Models;
 using EditorState = CodeStream.VisualStudio.Models.EditorState;
 using ILogger = Serilog.ILogger;
 
 namespace CodeStream.VisualStudio.Services
 {
-    public class ActiveTextEditor
-    {
-        public IWpfTextView TextView { get; set; }
-        public string FilePath { get; set; }
-        public Uri Uri { get; set; }
-    }
-
     public enum ExtensionKind
     {
         LiveShare

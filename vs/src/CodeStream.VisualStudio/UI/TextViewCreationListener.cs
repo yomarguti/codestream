@@ -3,6 +3,7 @@ using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
+using CodeStream.VisualStudio.UI.Adornments;
 using CodeStream.VisualStudio.UI.Margins;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
@@ -38,6 +39,8 @@ namespace CodeStream.VisualStudio.UI
 
         private static readonly object InitializedLock = new object();
 
+        internal const string LayerName = "CodeStreamHighlightColor";
+
         public TextViewCreationListener() :
             this(Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator,
                 Package.GetGlobalService(typeof(SSessionService)) as ISessionService,
@@ -55,6 +58,14 @@ namespace CodeStream.VisualStudio.UI
             _settingsService = settingsService;
             _ideService = ideService;
         }
+
+        [Export(typeof(AdornmentLayerDefinition))]
+        [Name(LayerName)]
+        [Order(Before = PredefinedAdornmentLayers.Selection)]
+        [TextViewRole(PredefinedTextViewRoles.Interactive)]
+        [TextViewRole(PredefinedTextViewRoles.Document)]
+        public AdornmentLayerDefinition AlternatingLineColor = null;
+
 
         [Import]
         public IVsEditorAdaptersFactoryService EditorAdaptersFactoryService { get; set; }
@@ -139,42 +150,24 @@ namespace CodeStream.VisualStudio.UI
             }
         }
 
-        private static void OnSessionLogout(IWpfTextView wpfTextView, List<ICodeStreamWpfTextViewMargin> textViewMarginProviders)
-        {
-            if (wpfTextView.TextBuffer.Properties.TryGetProperty(PropertyNames.TextViewState, out TextViewState state))
-            {
-                state.Initialized = false;
-            }
-
-            wpfTextView.TextBuffer.Properties.TryDisposeProperty(PropertyNames.TextViewLocalEvents);
-
-            if (wpfTextView.TextBuffer
-                .Properties
-                .TryGetProperty<DocumentMarkerManager>(PropertyNames.DocumentMarkerManager,
-                    out DocumentMarkerManager manager))
-            {
-                manager.Reset();
-            }
-
-            textViewMarginProviders.OnSessionLogout();
-        }
-
         public void SubjectBuffersDisconnected(IWpfTextView textView, ConnectionReason reason, Collection<ITextBuffer> subjectBuffers)
         {
             if (textView == null) return;
 
-            textView.TryRemoveProperty(PropertyNames.TextViewMarginProviders);
-            textView.TryRemoveProperty(PropertyNames.CodemarkMarkers);
+            textView.RemovePropertySafe(PropertyNames.TextViewMarginProviders);
+            textView.RemovePropertySafe(PropertyNames.CodemarkMarkers);
 
             if (textView.TextBuffer.Properties.ContainsProperty(PropertyNames.TextViewState))
             {
                 textView.TextBuffer.Properties.GetProperty<TextViewState>(PropertyNames.TextViewState).Initialized = false;
             }
 
-            textView.TextBuffer.Properties.TryDisposeProperty(PropertyNames.TextViewEvents);
-            textView.TextBuffer.Properties.TryDisposeProperty(PropertyNames.TextViewLocalEvents);
+            textView.TextBuffer.Properties.TryDisposeListProperty(PropertyNames.TextViewEvents);
+            textView.TextBuffer.Properties.TryDisposeListProperty(PropertyNames.TextViewLocalEvents);
 
             textView.LayoutChanged -= OnTextViewLayoutChanged;
+
+            textView.TextBuffer.Properties.TryDisposeProperty<HighlightAdornmentManager>(PropertyNames.AdornmentManager);
         }
 
         public void OnSessionReady(IWpfTextView textView)
@@ -187,6 +180,10 @@ namespace CodeStream.VisualStudio.UI
                 {
                     if (!state.Initialized)
                     {
+                        textView.TextBuffer.Properties
+                            .AddProperty(PropertyNames.AdornmentManager, new HighlightAdornmentManager(textView));
+
+
                         textView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewLocalEvents,
                             new List<IDisposable>()
                             {
@@ -211,6 +208,26 @@ namespace CodeStream.VisualStudio.UI
                 }
             }
             // ReSharper restore InvertIf
+        }
+
+        private static void OnSessionLogout(IWpfTextView wpfTextView, List<ICodeStreamWpfTextViewMargin> textViewMarginProviders)
+        {
+            if (wpfTextView.TextBuffer.Properties.TryGetProperty(PropertyNames.TextViewState, out TextViewState state))
+            {
+                state.Initialized = false;
+            }
+
+            wpfTextView.TextBuffer.Properties.TryDisposeListProperty(PropertyNames.TextViewLocalEvents);
+
+            if (wpfTextView.TextBuffer
+                .Properties
+                .TryGetProperty<DocumentMarkerManager>(PropertyNames.DocumentMarkerManager,
+                    out DocumentMarkerManager manager))
+            {
+                manager.Reset();
+            }
+
+            textViewMarginProviders.OnSessionLogout();
         }
 
         private async System.Threading.Tasks.Task OnDocumentMarkerChangedAsync(IWpfTextView textView, DocumentMarkerChangedEvent e)
@@ -287,12 +304,12 @@ namespace CodeStream.VisualStudio.UI
                 var activeEditorState = _ideService.GetActiveEditorState();
 
                 ServiceLocator.Get<SWebviewIpc, IWebviewIpc>()?.Notify(new HostDidChangeEditorVisibleRangesNotificationType
-                    {
-                        Params = new HostDidChangeEditorVisibleRangesNotification(
-                            textDocument.FilePath.ToUri(), 
-                            activeEditorState.ToEditorSelections(), 
+                {
+                    Params = new HostDidChangeEditorVisibleRangesNotification(
+                            textDocument.FilePath.ToUri(),
+                            activeEditorState.ToEditorSelections(),
                             wpfTextView.ToVisibleRanges())
-                    });
+                });
             }
 
             wpfTextView.TextBuffer

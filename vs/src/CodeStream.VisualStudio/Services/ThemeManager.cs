@@ -4,8 +4,12 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using System;
 using System.Collections.Generic;
-using System.Windows.Media;
+using System.Diagnostics;
+using System.Drawing;
+using Microsoft.VisualStudio.Shell.Interop;
+using Color = System.Windows.Media.Color;
 using EnvironmentColors = Microsoft.VisualStudio.PlatformUI.EnvironmentColors;
+using FontFamily = System.Windows.Media.FontFamily;
 using VSColorTheme = Microsoft.VisualStudio.PlatformUI.VSColorTheme;
 // ReSharper disable RedundantArgumentDefaultValue
 
@@ -140,7 +144,9 @@ namespace CodeStream.VisualStudio.Services
 
             colorInfos.Add(new ColorInfo { Key = "font-size", Value = fontSize });
 
-            return new ThemeInfo
+ 
+
+                return new ThemeInfo
             {
                 ColorInfo = colorInfos,
                 IsDark = isDark

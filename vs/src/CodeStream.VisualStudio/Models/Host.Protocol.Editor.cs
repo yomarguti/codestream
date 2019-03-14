@@ -3,7 +3,14 @@ using System;
 
 namespace CodeStream.VisualStudio.Models
 {
-    public class EditorHighlightRangeRequest
+    public interface IHightlight
+    {
+        string Uri { get; }
+        Range Range { get; }
+        bool Highlight { get; }
+    }
+
+    public class EditorHighlightRangeRequest : IHightlight
     {
         public EditorHighlightRangeRequest(Uri uri, Range range, bool highlight)
         {
@@ -52,7 +59,7 @@ namespace CodeStream.VisualStudio.Models
         public override string Method => MethodName;
     }
 
-    public class EditorSelectRangeRequest
+    public class EditorSelectRangeRequest : IHightlight
     {
         public EditorSelectRangeRequest(Uri uri, Range range, bool highlight)
         {

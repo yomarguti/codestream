@@ -102,7 +102,7 @@ namespace CodeStream.VisualStudio.Packages
         {
             if (isDisposing)
             {
-                _disposables.Dispose();
+                _disposables.DisposeAll();
             }
 
             base.Dispose(isDisposing);

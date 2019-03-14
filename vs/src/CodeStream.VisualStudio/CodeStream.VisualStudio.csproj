@@ -119,6 +119,7 @@
     <Compile Include="Events\EventArgs.cs" />
     <Compile Include="Extensions\ColorExtensions.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
+    <Compile Include="Extensions\DictionaryExtensions.cs" />
     <Compile Include="Extensions\DynamicExtensions.cs" />
     <Compile Include="Extensions\FileSystemExtensions.cs" />
     <Compile Include="Extensions\Guard.cs" />
@@ -127,6 +128,7 @@
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Extensions\PackageExtensions.cs" />
     <Compile Include="Extensions\RangeExtensions.cs" />
+    <Compile Include="Models\ActiveTextEditor.cs" />
     <Compile Include="Models\Agent.Protocol.cs" />
     <Compile Include="Models\Agent.Protocol.Notifications.cs" />
     <Compile Include="Models\Agent.Protocol.Scm.cs" />
@@ -177,6 +179,8 @@
     <Compile Include="Services\ThemeManager.cs" />
     <Compile Include="Services\WebviewIpcExtensions.cs" />
     <Compile Include="Services\WebviewIpcScope.cs" />
+    <Compile Include="UI\ActiveTextEditorExtensions.cs" />
+    <Compile Include="UI\Adornments\HighlightAdornmentManager.cs" />
     <Compile Include="UI\DocumentMarkerManager.cs" />
     <Compile Include="UI\Glyphs\CodemarkGlyphFactory.cs" />
     <Compile Include="UI\Glyphs\CodemarkGlyphFactoryProvider.cs" />
@@ -195,6 +199,7 @@
     <Compile Include="UI\Margins\VerticalScrollbarMarkerColorFormat.cs" />
     <Compile Include="UI\Margins\VerticalScrollbarMarkerProvider.cs" />
     <Compile Include="UI\Margins\VerticalScrollbarMarkersEnabledOption.cs" />
+    <Compile Include="UI\Placement.cs" />
     <Compile Include="UI\PredefinedCodestreamNames.cs" />
     <Compile Include="UI\PropertyNames.cs" />
     <Compile Include="UI\Settings\OptionsDialogPage.cs">

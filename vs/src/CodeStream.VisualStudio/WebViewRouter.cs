@@ -175,21 +175,30 @@ namespace CodeStream.VisualStudio
                                             break;
                                         }
                                     case EditorSelectRangeRequestType.MethodName:
-                                        {
-                                            using (var scope = _ipc.CreateScope(message))
-                                            {
-                                                // TODO implement this
-                                                scope.FulfillRequest(JToken.Parse("{}"));
-                                                break;
-                                            }
-                                        }
                                     case EditorHighlightRangeRequestType.MethodName:
                                         {
                                             using (var scope = _ipc.CreateScope(message))
                                             {
-                                                // search for highlightDecorationType in vscode
-                                                // TODO implement this
-                                                // highlight the active editor's background based on this range and whether range is on or off
+                                                var activeTextView = _ideService.GetActiveTextView();
+                                                if (activeTextView != null)
+                                                {
+                                                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+
+                                                    IHightlight @params = null;
+                                                    if (message.Method.Equals(EditorSelectRangeRequestType.MethodName))
+                                                    {
+                                                        @params = message.Params.ToObject<EditorSelectRangeRequest>();
+                                                    }
+                                                    else if (message.Method.Equals(EditorHighlightRangeRequestType.MethodName))
+                                                    {
+                                                        @params = message.Params.ToObject<EditorHighlightRangeRequest>();
+                                                    }
+
+                                                    if (@params != null)
+                                                    {
+                                                        activeTextView.Highlight(@params.Range, @params.Highlight);
+                                                    }
+                                                }
                                                 scope.FulfillRequest(JToken.Parse("{}"));
                                                 break;
                                             }

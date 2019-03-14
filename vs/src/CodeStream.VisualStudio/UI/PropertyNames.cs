@@ -17,5 +17,6 @@ namespace CodeStream.VisualStudio.UI
         public static string TextViewState = "CS:TextViewState";
         public static string TextViewEvents = "CS:TextViewEvents";
         public static string TextViewLocalEvents = "CS:TextViewLocalEvents";
+        public static string AdornmentManager = "CS:AdornmentManager";
     }
 }

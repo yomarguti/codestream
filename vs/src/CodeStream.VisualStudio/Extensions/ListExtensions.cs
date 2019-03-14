@@ -36,7 +36,7 @@ namespace CodeStream.VisualStudio.Extensions
 
         public static bool AnySafe<T>(this List<T> list) => list != null && list.Any();
 
-        public static void Dispose(this List<IDisposable> disposables)
+        public static void DisposeAll(this List<IDisposable> disposables)
         {
             if (!disposables.AnySafe()) return;
 
