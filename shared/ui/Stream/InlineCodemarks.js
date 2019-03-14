@@ -240,7 +240,8 @@ export class SimpleInlineCodemarks extends Component {
 			<div>
 				{range(0, numLinesVisible + 1).map(lineNum0 => {
 					const top = (100 * lineNum0) / numLinesVisible + "vh";
-					const hover = lineNum0 === highlightedLine || lineNum0 === iconsOnLine0;
+					const hover =
+						lineNum0 === highlightedLine || (lineNum0 === iconsOnLine0 && iconsOnLine0 >= 0);
 					return (
 						<div
 							onMouseEnter={() => this.onMouseEnterHoverIcon(lineNum0)}
@@ -557,7 +558,7 @@ export class SimpleInlineCodemarks extends Component {
 		const { textEditorVisibleRanges } = this.props;
 
 		let lineCounter = 0;
-		let toLineNum0 = 0;
+		let toLineNum0 = -1; // -1 indicates we didn't find it
 		if (textEditorVisibleRanges != null) {
 			textEditorVisibleRanges.forEach(lineRange => {
 				range(lineRange.start.line, lineRange.end.line + 1).forEach(thisLine => {
