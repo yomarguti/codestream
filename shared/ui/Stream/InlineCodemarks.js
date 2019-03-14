@@ -26,6 +26,16 @@ import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { getCurrentSelection } from "../store/editorContext/reducer";
 import { setCurrentStream } from "../store/context/actions";
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//   Note that there is a big potential for off-by-one errors in this file, because the webview line numbers are
+//   0-based, and the linenumbers in the editor are 1-based. I've tried to make it more clear which is which by
+//   naming the 0-based line number variables with a "0" at the end, for example line0 or lineNum0. Hopefully
+//   this helps avoid some confusion... please stick with this paradigm unless you really hate it, in which case
+//   please talk to me first. Thanks. -Pez
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
  * @augments {Component<{ textEditorVisibleRanges?: Range[], documentMarkers: DocumentMarker[],[key: string]: any }, {  [key: string]: any }>}
  */
@@ -211,59 +221,60 @@ export class SimpleInlineCodemarks extends Component {
 		);
 	};
 
-	onMouseEnterHoverIcon = lineNum => {
+	onMouseEnterHoverIcon = lineNum0 => {
 		// lineNum is 0 based
-		this.handleHighlightLine(lineNum);
+		this.handleHighlightLine(lineNum0);
 	};
 
-	onMouseLeaveHoverIcon = lineNum => {
+	onMouseLeaveHoverIcon = lineNum0 => {
 		// lineNum is 0 based
-		this.handleUnhighlightLine(lineNum);
+		this.handleUnhighlightLine(lineNum0);
 		// this.setState({ openPlusOnLine: undefined });
 	};
 
 	renderHoverIcons = numLinesVisible => {
-		const iconsOnLine = this.mapVisibleRangeToLine(this.state.openPlusOnLine);
+		const iconsOnLine0 = this.mapVisibleRangeToLine0(this.state.openPlusOnLine);
+		// console.log("IOL IS: ", iconsOnLine0, " FROM: ", this.state.openPlusOnLine);
 		const highlightedLine = this.state.highlightedLine;
 		return (
 			<div>
-				{range(0, numLinesVisible + 1).map(lineNum => {
-					const top = (100 * lineNum) / numLinesVisible + "vh";
-					const hover = lineNum === highlightedLine || lineNum === iconsOnLine;
+				{range(0, numLinesVisible + 1).map(lineNum0 => {
+					const top = (100 * lineNum0) / numLinesVisible + "vh";
+					const hover = lineNum0 === highlightedLine || lineNum0 === iconsOnLine0;
 					return (
 						<div
-							onMouseEnter={() => this.onMouseEnterHoverIcon(lineNum)}
-							onMouseLeave={() => this.onMouseLeaveHoverIcon(lineNum)}
+							onMouseEnter={() => this.onMouseEnterHoverIcon(lineNum0)}
+							onMouseLeave={() => this.onMouseLeaveHoverIcon(lineNum0)}
 							className={createClassString("hover-plus", {
-								open: lineNum === iconsOnLine,
+								open: lineNum0 === iconsOnLine0,
 								hover
 							})}
-							key={lineNum}
+							key={lineNum0}
 							style={{ top }}
 						>
 							<Icon
-								onClick={e => this.handleClickPlus(e, "comment", lineNum)}
+								onClick={e => this.handleClickPlus(e, "comment", lineNum0)}
 								name="comment"
 								title={hover ? "Add Comment" : undefined}
 								placement="bottomLeft"
 								delay={1}
 							/>
 							<Icon
-								onClick={e => this.handleClickPlus(e, "issue", lineNum)}
+								onClick={e => this.handleClickPlus(e, "issue", lineNum0)}
 								name="issue"
 								title={hover ? "Create Issue" : undefined}
 								placement="bottomLeft"
 								delay={1}
 							/>
 							<Icon
-								onClick={e => this.handleClickPlus(e, "bookmark", lineNum)}
+								onClick={e => this.handleClickPlus(e, "bookmark", lineNum0)}
 								name="bookmark"
 								title={hover ? "Create Bookmark" : undefined}
 								placement="bottomLeft"
 								delay={1}
 							/>
 							<Icon
-								onClick={e => this.handleClickPlus(e, "link", lineNum)}
+								onClick={e => this.handleClickPlus(e, "link", lineNum0)}
 								name="link"
 								title={hover ? "Get Permalink" : undefined}
 								placement="bottomLeft"
@@ -314,7 +325,7 @@ export class SimpleInlineCodemarks extends Component {
 		documentMarkers.forEach(docMarker => {
 			// @ts-ignore
 			if (!docMarker.codemark.pinned) return;
-			let startLine = Number(this.getMarkerStartLine(docMarker)) - 1;
+			let startLine = Number(this.getMarkerStartLine(docMarker));
 			// if there is already a codemark on this line, keep skipping to the next one
 			while (docMarkersByStartLine[startLine]) startLine++;
 			docMarkersByStartLine[startLine] = docMarker;
@@ -346,7 +357,7 @@ export class SimpleInlineCodemarks extends Component {
 						const marksInRange = range(realFirstLine, realLastLine + 1).map(lineNum => {
 							let top =
 								(100 * (rangeStartOffset + lineNum - realFirstLine)) / numLinesVisible + "vh";
-							if (docMarkersByStartLine[lineNum] && lineNum !== this.state.openPlusOnLine + 1) {
+							if (docMarkersByStartLine[lineNum] && lineNum !== this.state.openPlusOnLine) {
 								const docMarker = docMarkersByStartLine[lineNum];
 								return (
 									<Codemark
@@ -430,14 +441,14 @@ export class SimpleInlineCodemarks extends Component {
 		});
 	};
 
-	handleClickPlus = async (event, type, lineNum) => {
+	handleClickPlus = async (event, type, lineNum0) => {
 		event.preventDefault();
 		this.props.setNewPostEntry("Spatial View");
 
 		const { openPlusOnLine } = this.state;
 		const { textEditorSelection } = this.props;
 
-		const mappedLineNum = this.mapLineToVisibleRange(lineNum);
+		const mappedLineNum = this.mapLine0ToVisibleRange(lineNum0);
 
 		let range;
 		if (
@@ -451,7 +462,7 @@ export class SimpleInlineCodemarks extends Component {
 		}
 
 		// Clear the previous highlight
-		this.handleUnhighlightLine(lineNum);
+		this.handleUnhighlightLine(lineNum0);
 		// setup git context for codemark form
 
 		this.props.setMultiCompose(
@@ -525,7 +536,7 @@ export class SimpleInlineCodemarks extends Component {
 		this.highlightCode(marker, false);
 	};
 
-	mapLineToVisibleRange = fromLineNum => {
+	mapLine0ToVisibleRange = fromLineNum0 => {
 		const { textEditorVisibleRanges } = this.props;
 
 		let lineCounter = 0;
@@ -533,35 +544,36 @@ export class SimpleInlineCodemarks extends Component {
 		if (textEditorVisibleRanges != null) {
 			textEditorVisibleRanges.forEach(lineRange => {
 				range(lineRange.start.line, lineRange.end.line + 1).forEach(thisLine => {
-					if (++lineCounter === fromLineNum) toLineNum = thisLine;
-				});
-			});
-		}
-		return toLineNum;
-	};
-
-	// the opposite of mapLineToVisibleRange
-	mapVisibleRangeToLine = fromLineNum => {
-		const { textEditorVisibleRanges } = this.props;
-
-		let lineCounter = 0;
-		let toLineNum = 0;
-		if (textEditorVisibleRanges != null) {
-			textEditorVisibleRanges.forEach(lineRange => {
-				range(lineRange.start.line, lineRange.end.line + 1).forEach(thisLine => {
+					if (lineCounter === fromLineNum0) toLineNum = thisLine;
 					lineCounter++;
-					if (thisLine === fromLineNum) toLineNum = lineCounter;
 				});
 			});
 		}
 		return toLineNum;
 	};
 
-	highlightLine(line, highlight) {
+	// the opposite of mapLine0ToVisibleRange
+	mapVisibleRangeToLine0 = fromLineNum => {
+		const { textEditorVisibleRanges } = this.props;
+
+		let lineCounter = 0;
+		let toLineNum0 = 0;
+		if (textEditorVisibleRanges != null) {
+			textEditorVisibleRanges.forEach(lineRange => {
+				range(lineRange.start.line, lineRange.end.line + 1).forEach(thisLine => {
+					if (thisLine === fromLineNum) toLineNum0 = lineCounter;
+					lineCounter++;
+				});
+			});
+		}
+		return toLineNum0;
+	};
+
+	highlightLine(line0, highlight) {
 		const { openPlusOnLine } = this.state;
 		const { textEditorSelection } = this.props;
 
-		const mappedLineNum = this.mapLineToVisibleRange(line);
+		const mappedLineNum = this.mapLine0ToVisibleRange(line0);
 		if (
 			mappedLineNum === openPlusOnLine &&
 			(textEditorSelection.start.line !== textEditorSelection.end.line ||
@@ -576,15 +588,15 @@ export class SimpleInlineCodemarks extends Component {
 			highlight: highlight
 		});
 
-		this.setState({ highlightedLine: highlight ? line : null });
+		this.setState({ highlightedLine: highlight ? line0 : null });
 	}
 
-	handleHighlightLine = line => {
-		this.highlightLine(line, true);
+	handleHighlightLine = line0 => {
+		this.highlightLine(line0, true);
 	};
 
-	handleUnhighlightLine = line => {
-		this.highlightLine(line, false);
+	handleUnhighlightLine = line0 => {
+		this.highlightLine(line0, false);
 	};
 }
 
