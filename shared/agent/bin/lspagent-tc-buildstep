@@ -35,7 +35,7 @@ if args.action == 'build':
 if args.action == 'citest':
 	print("Running tests against API service at", os.environ['LSPAGENT_API_ORIGIN'])
 	buildstepGeneric(args, cmd = "npm run test-unit-ci")
-	buildstepGeneric(args, cmd = "npm run test-acceptance-ci")
+	# buildstepGeneric(args, cmd = "npm run test-acceptance-ci")
 	# buildstepGeneric(args, cmd = "npm run test-integration-ci")
 
 if args.action == 'publish':
