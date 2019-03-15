@@ -163,35 +163,23 @@ namespace CodeStream.VisualStudio.UI.Margins
                         .ObserveOnDispatcher()
                         .Subscribe(eventPattern =>
                         {
-                            if (!_toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid))
-                            {
-                                return;
-                            }
+                            if (!_toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) return;
+
+                            var textSelection = eventPattern?.Sender as ITextSelection;
+                            Log.Verbose($"SelectionChanged Start={textSelection?.Start.Position.Position} End={textSelection?.End.Position.Position}");
 
                             // TODO cant we get the selected text from the sender somehow??
-                            var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;                            
+                            var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
 
                             var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
                             if (codeStreamService == null) return;
 
                             var activeEditorState = ideService?.GetActiveEditorState();
-                            if (activeEditorState?.HasSelectedText == false || _textView.Selection.IsEmpty)
-                            {
-                                codeStreamService.EditorSelectionChangedNotificationAsync(new Uri(_textDocument.FilePath),
-                                    activeEditorState,
-                                    _textView.TextViewLines.ToRanges().Collapsed(),
-                                    CodemarkType.Comment, CancellationToken.None);
-                                return;
-                            }
-
-                            codeStreamService.EditorSelectionChangedNotificationAsync(new Uri(_textDocument.FilePath),
+                            codeStreamService.EditorSelectionChangedNotificationAsync(
+                                new Uri(_textDocument.FilePath),
                                 activeEditorState,
-                                _textView.TextViewLines.ToRanges().Collapsed(),
+                                _textView.ToVisibleRanges(),
                                 CodemarkType.Comment, CancellationToken.None);
-
-                            var textSelection = eventPattern?.Sender as ITextSelection;
-                            Log.Verbose(
-                                $"Selection_SelectionChanged Start={textSelection?.Start.Position.Position} End={textSelection?.End.Position.Position}");
                         }));
 
                     _initialized = true;
