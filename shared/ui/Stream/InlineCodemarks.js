@@ -233,13 +233,16 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	renderHoverIcons = numLinesVisible => {
+		const { metrics } = this.props;
 		const iconsOnLine0 = this.mapVisibleRangeToLine0(this.state.openPlusOnLine);
 		// console.log("IOL IS: ", iconsOnLine0, " FROM: ", this.state.openPlusOnLine);
 		const highlightedLine = this.state.highlightedLine;
+		const paddingTop = metrics.margins ? metrics.margins.top : 0;
 		return (
 			<div>
 				{range(0, numLinesVisible + 1).map(lineNum0 => {
-					const top = (100 * lineNum0) / numLinesVisible + "vh";
+					const topPct = (100 * lineNum0) / numLinesVisible + "vh";
+					const top = paddingTop ? "calc(" + topPct + " + " + paddingTop + "px)" : topPct;
 					const hover =
 						lineNum0 === highlightedLine || (lineNum0 === iconsOnLine0 && iconsOnLine0 >= 0);
 					return (
@@ -319,7 +322,7 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	renderInline() {
-		const { textEditorVisibleRanges, documentMarkers } = this.props;
+		const { textEditorVisibleRanges, documentMarkers, metrics } = this.props;
 
 		// create a map from start-lines to the codemarks that start on that line
 		let docMarkersByStartLine = {};
@@ -343,6 +346,8 @@ export class SimpleInlineCodemarks extends Component {
 			textEditorVisibleRanges === undefined ? 0 : textEditorVisibleRanges.length;
 
 		let rangeStartOffset = 0;
+
+		const paddingTop = metrics.margins ? metrics.margins.top : 0;
 		return (
 			<div
 				className="inline-codemarks vscroll"
@@ -356,8 +361,9 @@ export class SimpleInlineCodemarks extends Component {
 						const realLastLine = lineRange.end.line;
 						const linesInRange = realLastLine - realFirstLine + 1;
 						const marksInRange = range(realFirstLine, realLastLine + 1).map(lineNum => {
-							let top =
+							const topPct =
 								(100 * (rangeStartOffset + lineNum - realFirstLine)) / numLinesVisible + "vh";
+							const top = paddingTop ? "calc(" + topPct + " + " + paddingTop + "px)" : topPct;
 							if (docMarkersByStartLine[lineNum] && lineNum !== this.state.openPlusOnLine) {
 								const docMarker = docMarkersByStartLine[lineNum];
 								return (
@@ -615,6 +621,7 @@ const mapStateToProps = state => {
 		textEditorUri: editorContext.textEditorUri,
 		textEditorVisibleRanges: editorContext.textEditorVisibleRanges || EMPTY_ARRAY,
 		textEditorSelection: getCurrentSelection(editorContext),
+		metrics: editorContext.metrics || EMPTY_ARRAY,
 		documentMarkers: documentMarkers[editorContext.textEditorUri] || EMPTY_ARRAY,
 		capabilities
 	};
