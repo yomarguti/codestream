@@ -6,9 +6,9 @@ import { CSChannelStream, CSPost, CSUser } from "@codestream/protocols/api";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import {
 	createRange,
-	debounceToAnimationFrame,
 	getCurrentCursorPosition,
-	isInVscode
+	isInVscode,
+	debounceAndCollectToAnimationFrame
 } from "../utils";
 import AtMentionsPopup from "./AtMentionsPopup";
 import EmojiPicker from "./EmojiPicker";
@@ -454,9 +454,9 @@ export class MessageInput extends React.Component<Props, State> {
 	}
 
 	// this is asynchronous so callers should provide a callback for code that depends on the completion of this
-	focus = debounceToAnimationFrame((cb?: Function) => {
+	focus = debounceAndCollectToAnimationFrame((...cbs: Function[]) => {
 		if (this._contentEditable) this._contentEditable.htmlEl.focus();
-		cb && cb.apply(undefined);
+		cbs.forEach(cb => cb.apply(undefined));
 	});
 
 	handleKeyPress = (event: React.KeyboardEvent) => {

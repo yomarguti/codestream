@@ -89,6 +89,26 @@ export const debounceToAnimationFrame = (fn: Function) => {
 	};
 };
 
+// if the callers of fn expect their arguments to be used anytime fn is
+// actually invoked, then those arguments should be collected and passed to fn.
+export function debounceAndCollectToAnimationFrame(fn: Function): Function {
+	let requestId: number | undefined;
+	let argsToUse: any[] = [];
+
+	return (...args: any[]) => {
+		argsToUse.push(...args);
+
+		if (requestId) {
+			cancelAnimationFrame(requestId);
+		}
+		requestId = requestAnimationFrame(() => {
+			requestId = undefined;
+			fn(...argsToUse);
+			argsToUse = [];
+		});
+	};
+}
+
 export const rAFThrottle = (fn: Function): Function => {
 	let requestId: number | undefined;
 	let lastArgs: any[] = [];

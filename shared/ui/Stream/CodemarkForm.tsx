@@ -172,6 +172,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		const { codeBlock } = this.state;
 		if (codeBlock) {
 			this.selectRangeInEditor(codeBlock.uri, forceAsLine(codeBlock.range));
+			this.handleScmChange();
 		} else {
 			const { textEditorSelection, textEditorUri } = this.props;
 			if (textEditorSelection && textEditorUri) {
