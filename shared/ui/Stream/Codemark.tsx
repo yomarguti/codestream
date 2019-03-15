@@ -171,6 +171,8 @@ export class Codemark extends React.Component<Props, State> {
 			fullName: "Peter Pezaris"
 		};
 
+		if (!codemark) return null;
+
 		// console.log(codemark);
 		// const style = inline ?
 		return (
@@ -187,34 +189,6 @@ export class Codemark extends React.Component<Props, State> {
 					{this.renderTypeIcon()}
 					{this.renderTextLinkified(codemark.title || codemark.text)}
 					{file && !inline && <span className="file-name">{file}</span>}
-					{codemark.text && codemark.text.startsWith("does this") && (
-						<div>
-							<div className="angle-arrow" />
-							{<Headshot size={18} person={user} />}
-							<span style={{ opacity: 0.5 }}>
-								no; the javascript byte compiler optimizes it away
-							</span>
-						</div>
-					)}
-					{codemark.title && codemark.title.startsWith("let's avoid") && (
-						<div>
-							<div className="angle-arrow" />
-							{<Headshot size={18} person={user} />}
-							<span style={{ opacity: 0.5 }}>i'll grab this in the next sprint</span>
-						</div>
-					)}
-					{codemark.text && codemark.text.startsWith("how does") && (
-						<div>
-							<div className="angle-arrow" />
-							{<Headshot size={18} person={user} />}
-							<div style={{ opacity: 0.5, paddingLeft: "47px", marginTop: "-19px" }}>
-								Sample <code>n</code> random values from a collection using the modern version of
-								the <b>Fisher-Yates</b> shuffle. If <code>n</code> is not specified, returns a
-								single random element. The internal <code>guard</code> argument allows it to work
-								with <code>map</code>.
-							</div>
-						</div>
-					)}
 					{inline && (
 						<div className="show-on-hover" style={{ display: "none" }}>
 							<div className="angle-arrow" />
@@ -230,6 +204,37 @@ export class Codemark extends React.Component<Props, State> {
 		);
 	}
 }
+
+// please do not remove this commented-out code, as i occasionally put it back in
+// to do demos & screen grabs -Pez
+// {codemark.text && codemark.text.startsWith("does this") && (
+// 	<div>
+// 		<div className="angle-arrow" />
+// 		{<Headshot size={18} person={user} />}
+// 		<span style={{ opacity: 0.5 }}>
+// 			no; the javascript byte compiler optimizes it away
+// 		</span>
+// 	</div>
+// )}
+// {codemark.title && codemark.title.startsWith("let's avoid") && (
+// 	<div>
+// 		<div className="angle-arrow" />
+// 		{<Headshot size={18} person={user} />}
+// 		<span style={{ opacity: 0.5 }}>i'll grab this in the next sprint</span>
+// 	</div>
+// )}
+// {codemark.text && codemark.text.startsWith("how does") && (
+// 	<div>
+// 		<div className="angle-arrow" />
+// 		{<Headshot size={18} person={user} />}
+// 		<div style={{ opacity: 0.5, paddingLeft: "47px", marginTop: "-19px" }}>
+// 			Sample <code>n</code> random values from a collection using the modern version of
+// 			the <b>Fisher-Yates</b> shuffle. If <code>n</code> is not specified, returns a
+// 			single random element. The internal <code>guard</code> argument allows it to work
+// 			with <code>map</code>.
+// 		</div>
+// 	</div>
+// )}
 
 export default connect(
 	null,
