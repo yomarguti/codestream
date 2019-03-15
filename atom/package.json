@@ -75,7 +75,6 @@
 		"@types/node-fetch": "2.1.6",
 		"@types/uuid": "3.4.4",
 		"acorn": "6.0.7",
-		"babel-eslint": "^8.2.3",
 		"babel-loader": "8.0.5",
 		"clean-webpack-plugin": "1.0.1",
 		"filemanager-webpack-plugin": "2.0.5",
