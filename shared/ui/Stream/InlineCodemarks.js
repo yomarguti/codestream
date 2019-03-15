@@ -311,25 +311,38 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	renderNoCodemarks = () => {
-		return (
-			<div key="no-codemarks" className="no-codemarks">
-				There are no codemarks
-				<Icon
-					title="A codemark is a link between a block of code and a conversation, an issue, or a bookmark. Codemarks work across branches, and stay pinned to the block of code even as your codebase changes."
-					placement="top"
-					className="superscript"
-					name="info"
-				/>{" "}
-				in {this.props.fileNameToFilterFor}
-				<br />
-				<br />
-				Discuss code with your team by selecting a range and clicking an icon (
-				<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
-					show me how
-				</a>
-				).
-			</div>
-		);
+		const { fileNameToFilterFor } = this.props;
+
+		if (fileNameToFilterFor && fileNameToFilterFor.length) {
+			return (
+				<div key="no-codemarks" className="no-codemarks">
+					There are no codemarks
+					<Icon
+						title="A codemark is a link between a block of code and a conversation, an issue, or a bookmark. Codemarks work across branches, and stay pinned to the block of code even as your codebase changes."
+						placement="top"
+						className="superscript"
+						name="info"
+					/>{" "}
+					in {this.props.fileNameToFilterFor}
+					<br />
+					<br />
+					Discuss code with your team by selecting a range and clicking an icon (
+					<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
+						show me how
+					</a>
+					).
+				</div>
+			);
+		} else {
+			return (
+				<div key="no-codemarks" className="no-codemarks">
+					No file selected.{" "}
+					<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
+						View guide.
+					</a>
+				</div>
+			);
+		}
 	};
 
 	getMarkerStartLine = marker => {
