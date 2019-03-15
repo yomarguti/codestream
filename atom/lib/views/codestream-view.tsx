@@ -17,7 +17,6 @@ import {
 	HostDidLogoutNotificationType,
 	LoginRequestType,
 	LoginRequest,
-	DidSelectStreamThreadNotificationType,
 	isIpcRequestMessage,
 	HostDidChangeActiveEditorNotificationType,
 	HostDidChangeActiveEditorNotification,
@@ -28,7 +27,8 @@ import {
 	HostDidChangeConfigNotificationType,
 	UpdateConfigurationRequest,
 	UpdateConfigurationResponse,
-} from "../protocols/webview/webview.protocol";
+	ShowStreamNotificationType,
+} from "@codestream/protocols/webview";
 import { asAbsolutePath } from "../utils";
 import { getStyles } from "./styles-getter";
 import { NotificationType } from "vscode-languageserver-protocol";
@@ -118,7 +118,7 @@ export class CodestreamView {
 		await atom.workspace.open(this, { activatePane: true });
 		if (streamId) {
 			await this.webviewReady;
-			this.sendEvent(DidSelectStreamThreadNotificationType, { streamId, threadId });
+			this.sendEvent(ShowStreamNotificationType, { streamId, threadId });
 		}
 	}
 
@@ -196,20 +196,19 @@ export class CodestreamView {
 							});
 
 							// TODO: check range for folds and send ALL visible ranges
-							const [startPoint, endPoint] = editor
+							const [startPoint, endPoint] = (editor as any)
 								.getVisibleRowRange()
 								.map(line => new Point(line));
 
 							const { start, end } = Convert.atomRangeToLSRange(new Range(startPoint, endPoint));
-							const event: HostDidChangeActiveEditorNotification = {
-								editor: {
-									fileName: atom.project.relativize(filePath)!,
-									fileStreamId: stream && stream.id,
-									visibleRanges: [[start, end]] as any,
-									uri,
-								},
-							};
-							this.sendEvent(HostDidChangeActiveEditorNotificationType, event);
+							// const event: HostDidChangeActiveEditorNotification = {
+							// 	editor: {
+							// 		fileName: atom.project.relativize(filePath)!,
+							// 		visibleRanges: [[start, end]] as any,
+							// 		uri,
+							// 	},
+							// };
+							// this.sendEvent(HostDidChangeActiveEditorNotificationType, event);
 						}
 					});
 				})

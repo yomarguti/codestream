@@ -1,5 +1,5 @@
 import { Emitter } from "atom";
-import * as uuid from "uuid/v4";
+import uuidv4 from "uuid/v4";
 import { getPluginVersion } from "../utils";
 import { CodeStreamAgent } from "./agent";
 import { CSMe, LoginResult } from "../protocols/agent/api.protocol";
@@ -178,7 +178,7 @@ export class WorkspaceSession {
 
 	getSignupToken() {
 		if (!this.signupToken) {
-			this.signupToken = uuid();
+			this.signupToken = uuidv4();
 		}
 		return this.signupToken;
 	}

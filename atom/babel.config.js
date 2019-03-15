@@ -9,8 +9,9 @@ module.exports = function(api) {
 					useESModules: true,
 				},
 			],
-			"@babel/plugin-proposal-class-properties",
-			"@babel/plugin-proposal-object-rest-spread",
+			"@babel/plugin-syntax-dynamic-import",
+			"@babel/proposal-class-properties",
+			"@babel/proposal-object-rest-spread",
 		],
 		presets: [
 			[
@@ -21,7 +22,7 @@ module.exports = function(api) {
 						esmodules: true,
 					},
 					modules: false,
-					useBuiltIns: "usage",
+					useBuiltIns: "entry",
 				},
 			],
 			"@babel/preset-typescript",

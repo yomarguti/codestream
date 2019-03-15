@@ -1,16 +1,23 @@
 "use strict";
+const webpack = require("webpack");
 const fs = require("fs");
 const path = require("path");
 const CleanPlugin = require("clean-webpack-plugin");
+const ForkTsCheckerPlugin = require("fork-ts-checker-webpack-plugin");
 const FileManagerPlugin = require("filemanager-webpack-plugin");
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const HtmlPlugin = require("html-webpack-plugin");
+const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
+const TerserPlugin = require("terser-webpack-plugin");
 
 module.exports = function(env, argv) {
 	env = env || {};
-	env.production = !!env.production;
-	env.watch = !!(argv.watch || argv.w);
-	env.reset = true; // Boolean(env.reset);
+	env.analyzeBundle = Boolean(env.analyzeBundle);
+	env.analyzeBundleWebview = Boolean(env.analyzeBundleWebview);
+
+	env.production = env.analyzeBundle || env.analyzeBundleWebview || Boolean(env.production);
+	env.reset = Boolean(env.reset);
+	env.watch = Boolean(argv.watch || argv.w);
 
 	let protocolPath = path.resolve(__dirname, "lib/protocols");
 	if (!fs.existsSync(protocolPath)) {
@@ -84,6 +91,10 @@ function getExtensionConfig(env) {
 		}),
 	];
 
+	if (env.analyzeBundle) {
+		plugins.push(new BundleAnalyzerPlugin());
+	}
+
 	return {
 		name: "extension",
 		entry: "./lib/codestream.ts",
@@ -95,6 +106,21 @@ function getExtensionConfig(env) {
 			libraryExport: "default",
 			filename: "codestream.js",
 			devtoolModuleFilenameTemplate: "file:///[absolute-resource-path]",
+		},
+		optimization: {
+			minimizer: [
+				new TerserPlugin({
+					cache: true,
+					parallel: true,
+					sourceMap: true,
+					terserOptions: {
+						ecma: 8,
+						// Keep the class names otherwise @log won't provide a useful name
+						keep_classnames: true,
+						module: true,
+					},
+				}),
+			],
 		},
 		resolve: {
 			extensions: [".ts", ".tsx", ".js", ".jsx"],
@@ -116,10 +142,6 @@ function getExtensionConfig(env) {
 					use: "ts-loader",
 					exclude: /node_modules|\.d\.ts$/,
 				},
-				{
-					test: /\.d\.ts$/,
-					loader: "ignore-loader",
-				},
 			],
 		},
 		plugins: plugins,
@@ -136,8 +158,13 @@ function getExtensionConfig(env) {
 }
 
 function getWebviewConfig(env) {
+	const context = path.resolve(__dirname, "webview-lib");
+
 	const plugins = [
 		new CleanPlugin(["dist/webview"]),
+		new webpack.DefinePlugin(
+			Object.assign(env.production ? { "process.env.NODE_ENV": JSON.stringify("production") } : {})
+		),
 		new FileManagerPlugin({
 			onStart: [
 				{
@@ -170,13 +197,21 @@ function getWebviewConfig(env) {
 				  }
 				: false,
 		}),
+		new ForkTsCheckerPlugin({
+			async: false,
+			useTypescriptIncrementalApi: false,
+		}),
 	];
+
+	if (env.analyzeBundleWebview) {
+		plugins.push(new BundleAnalyzerPlugin());
+	}
 
 	return {
 		name: "webview",
-		context: path.resolve(__dirname, "webview-lib"),
+		context: context,
 		entry: {
-			webview: "./index.tsx",
+			webview: "./index.ts",
 		},
 		node: false,
 		mode: env.production ? "production" : "development",
@@ -186,54 +221,52 @@ function getWebviewConfig(env) {
 			path: path.resolve(__dirname, "dist/webview"),
 			publicPath: path.resolve(__dirname, "dist/webview/"),
 		},
+		optimization: {
+			minimizer: [
+				new TerserPlugin({
+					cache: true,
+					parallel: true,
+					sourceMap: true,
+					terserOptions: {
+						ecma: 8,
+					},
+				}),
+			],
+			splitChunks: {
+				cacheGroups: {
+					default: false,
+					data: {
+						chunks: "all",
+						filename: "webview-data.js",
+						test: /\.json/,
+					},
+				},
+			},
+		},
 		module: {
 			rules: [
 				{
 					test: /\.html$/,
 					use: "html-loader",
+					exclude: /node_modules/,
 				},
 				{
 					test: /\.(js|ts)x?$/,
 					use: "babel-loader",
 					exclude: /node_modules/,
 				},
-				// {
-				// 	test: /\.less$/,
-				// 	use: [
-				// 		{
-				// 			loader: MiniCssExtractPlugin.loader,
-				// 		},
-				// 		{
-				// 			loader: "css-loader",
-				// 			options: {
-				// 				sourceMap: !env.production,
-				// 				url: false,
-				// 			},
-				// 		},
-				// 		{
-				// 			loader: "less-loader",
-				// 			options: {
-				// 				sourceMap: !env.production,
-				// 			},
-				// 		},
-				// 	],
-				// 	exclude: /node_modules/,
-				// },
 			],
 		},
 		resolve: {
-			extensions: [".ts", ".tsx", ".js", ".jsx"],
-			modules: [path.resolve(__dirname, "webview-lib"), "node_modules"],
+			extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
+			modules: [context, "node_modules"],
 			plugins: [
 				new TsconfigPathsPlugin({
-					configFile: path.resolve(__dirname, "webview-lib/tsconfig.json"),
+					configFile: path.resolve(context, "tsconfig.json"),
 				}),
 			],
 			// Treats symlinks as real files -- using their "current" path
 			symlinks: false,
-		},
-		node: {
-			net: "mock",
 		},
 		plugins: plugins,
 		stats: {
