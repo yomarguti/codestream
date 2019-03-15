@@ -139,7 +139,7 @@ export class SimpleKnowledgePanel extends Component {
 	renderPosts = codemarks => {
 		const { typeFilter } = this.props;
 		if (codemarks.length === 0)
-			return <div className="no-matches">No {typeFilter}s in file foo/bar/baz.js</div>;
+			return <div className="no-matches">No {typeFilter}s in this file.</div>;
 		else {
 			return codemarks.map(codemark => {
 				return (
