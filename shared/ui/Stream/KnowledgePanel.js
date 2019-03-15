@@ -347,8 +347,7 @@ export class SimpleKnowledgePanel extends Component {
 				<div className="getting-started">
 					<div>
 						<p>
-							Codemarks are the building blocks of your team’s knowledge base. Click the "+" button
-							above to create one.{" "}
+							Codemarks are the building blocks of your team’s knowledge base.{" "}
 							<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
 								Learn more about how to use codemarks.
 							</a>
