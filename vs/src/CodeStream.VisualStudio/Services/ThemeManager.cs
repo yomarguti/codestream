@@ -4,10 +4,6 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using Microsoft.VisualStudio.Shell.Interop;
-using Color = System.Windows.Media.Color;
 using EnvironmentColors = Microsoft.VisualStudio.PlatformUI.EnvironmentColors;
 using FontFamily = System.Windows.Media.FontFamily;
 using VSColorTheme = Microsoft.VisualStudio.PlatformUI.VSColorTheme;
@@ -136,17 +132,15 @@ namespace CodeStream.VisualStudio.Services
 
             colorInfos.Add(new ColorInfo { Key = "vscode-editor-font-family", Value = fontFamilyString });
             colorInfos.Add(new ColorInfo { Key = "font-family", Value = fontFamilyString });
-            string fontSize;
+            
             var metrics = CreateEditorMetrics(null);
-            fontSize = metrics == null ? 
+            var fontSize = metrics == null ?
                 DefaultFontSize.ToString() :
                 metrics.FontSize.ToIntSafe(DefaultFontSize).ToString();
 
             colorInfos.Add(new ColorInfo { Key = "font-size", Value = fontSize });
 
- 
-
-                return new ThemeInfo
+            return new ThemeInfo
             {
                 ColorInfo = colorInfos,
                 IsDark = isDark
@@ -159,10 +153,10 @@ namespace CodeStream.VisualStudio.Services
             {
                 LineHeight = textView?.LineHeight.ToInt(),
                 FontSize = System.Windows.Application.Current.FindResource(VsFonts.EnvironmentFontSizeKey).ToIntSafe(DefaultFontSize),
-                EditorMargins = new EditorMargins()
+                EditorMargins = new EditorMargins
                 {
-					//TODO figure out the real value here...
-                    Top = 16
+                    //TODO figure out the real value here...
+                    Top = 21
                 }
             };
         }
