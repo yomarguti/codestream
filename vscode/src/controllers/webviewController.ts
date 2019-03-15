@@ -212,7 +212,7 @@ export class WebviewController implements Disposable {
 	}
 
 	@log()
-	async newCodemarkRequest(type: CodemarkType, editor: TextEditor): Promise<void> {
+	async newCodemarkRequest(type: CodemarkType, editor: TextEditor, source: string): Promise<void> {
 		if (!this.visible) {
 			await this.show();
 		}
@@ -221,7 +221,8 @@ export class WebviewController implements Disposable {
 		this._webview!.notify(NewCodemarkNotificationType, {
 			uri: editor.document.uri.toString(false),
 			range: Editor.toSerializableRange(editor.selection),
-			type: type
+			type: type,
+			source: source
 		});
 	}
 

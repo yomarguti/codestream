@@ -1,4 +1,5 @@
 "use strict";
+import { NewCodemarkCommandArgs } from "commands";
 import {
 	CancellationToken,
 	CodeActionContext,
@@ -57,22 +58,27 @@ export class CodeStreamCodeActionProvider implements CodeActionProvider, Disposa
 	): Command[] | Thenable<Command[]> {
 		if (!Container.session.signedIn || range.start.compareTo(range.end) === 0) return [];
 
+		const args: NewCodemarkCommandArgs = { source: "Lightbulb Menu" };
 		const commands: Command[] = [
 			{
 				title: `Add Comment`,
-				command: "codestream.newComment"
+				command: "codestream.newComment",
+				arguments: [args]
 			},
 			{
 				title: `Create Issue`,
-				command: "codestream.newIssue"
+				command: "codestream.newIssue",
+				arguments: [args]
 			},
 			{
 				title: `Create Bookmark`,
-				command: "codestream.newBookmark"
+				command: "codestream.newBookmark",
+				arguments: [args]
 			},
 			{
 				title: `Get Permalink`,
-				command: "codestream.newLink"
+				command: "codestream.newLink",
+				arguments: [args]
 			}
 		];
 		return commands;

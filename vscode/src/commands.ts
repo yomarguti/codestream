@@ -29,6 +29,10 @@ export interface ShowMarkerDiffCommandArgs {
 	marker: CSMarkerIdentifier;
 }
 
+export interface NewCodemarkCommandArgs {
+	source?: string;
+}
+
 export interface OpenCodemarkCommandArgs {
 	codemarkId: string;
 	streamThread?: StreamThread;
@@ -135,23 +139,23 @@ export class Commands implements Disposable {
 	}
 
 	@command("newComment", { showErrorMessage: "Unable to add comment" })
-	newComment() {
-		return this.newCodemarkRequest(CodemarkType.Comment);
+	newComment(args?: NewCodemarkCommandArgs) {
+		return this.newCodemarkRequest(CodemarkType.Comment, args);
 	}
 
 	@command("newIssue", { showErrorMessage: "Unable to add issue" })
-	newIssue() {
-		return this.newCodemarkRequest(CodemarkType.Issue);
+	newIssue(args?: NewCodemarkCommandArgs) {
+		return this.newCodemarkRequest(CodemarkType.Issue, args);
 	}
 
 	@command("newBookmark", { showErrorMessage: "Unable to add bookmark" })
-	newBookmark() {
-		return this.newCodemarkRequest(CodemarkType.Bookmark);
+	newBookmark(args?: NewCodemarkCommandArgs) {
+		return this.newCodemarkRequest(CodemarkType.Bookmark, args);
 	}
 
 	@command("newLink", { showErrorMessage: "Unable to get permalink" })
-	newLink() {
-		return this.newCodemarkRequest(CodemarkType.Link);
+	newLink(args?: NewCodemarkCommandArgs) {
+		return this.newCodemarkRequest(CodemarkType.Link, args);
 	}
 
 	@command("openCodemark", { showErrorMessage: "Unable to open comment" })
@@ -200,11 +204,11 @@ export class Commands implements Disposable {
 		}
 	}
 
-	private async newCodemarkRequest(type: CodemarkType) {
+	private async newCodemarkRequest(type: CodemarkType, args: NewCodemarkCommandArgs = {}) {
 		const editor = window.activeTextEditor;
 		if (editor === undefined) return;
 
-		await Container.webview.newCodemarkRequest(type, editor);
+		await Container.webview.newCodemarkRequest(type, editor, args.source || "Context Menu");
 	}
 
 	private async openWorkingFileForMarkerCore(marker: CSMarkerIdentifier) {
