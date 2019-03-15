@@ -63,6 +63,7 @@ export class SimpleInlineCodemarks extends Component {
 			textEditorSelection.start.line !== textEditorSelection.end.line ||
 			textEditorSelection.start.character !== textEditorSelection.end.character
 		) {
+			// see comment in handleClickPlus which refers to the code below
 			if (textEditorSelection.cursor.line !== state.lastSelectedLine) {
 				return {
 					openIconsOnLine: textEditorSelection.cursor.line,
@@ -502,8 +503,15 @@ export class SimpleInlineCodemarks extends Component {
 
 		// Clear the previous highlight
 		this.handleUnhighlightLine(lineNum0);
-		// setup git context for codemark form
 
+		// Clear the open icons
+		// this works subtly... we tell state to not open icons on any line,
+		// but normally getDerivedStateFromProps would override that. By
+		// resetting openIconsOnLine but *not* lastSelectedLine,
+		// getDerivedStateFromProps won't fire.
+		this.setState({ openIconsOnLine: -1 });
+
+		// setup git context for codemark form
 		this.props.setMultiCompose(
 			true,
 			{ commentType: type },
