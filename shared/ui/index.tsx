@@ -54,15 +54,13 @@ export async function initialize(selector: string) {
 
 	render(
 		<Container store={store} i18n={{ locale: "en", messages: translations }} />,
-		document.querySelector(selector),
-		() => {
-			HostApi.instance.notify(WebviewDidInitializeNotificationType, {});
-		}
+		document.querySelector(selector)
 	);
 
 	const data = await HostApi.instance.send(BootstrapRequestType, {});
+	await store.dispatch(actions.bootstrap(data) as any);
 
-	store.dispatch(actions.bootstrap(data) as any);
+	HostApi.instance.notify(WebviewDidInitializeNotificationType, {});
 }
 
 // TODO: type up the store state
