@@ -56,14 +56,21 @@ export class SimpleInlineCodemarks extends Component {
 		let { textEditorSelection } = props;
 
 		if (!textEditorSelection) {
-			return { openPlusOnLine: 0, lastSelectedLine: 0 };
+			return { openIconsOnLine: 0, lastSelectedLine: 0 };
 		}
 
-		if (textEditorSelection.cursor.line !== state.lastSelectedLine) {
-			return {
-				openPlusOnLine: textEditorSelection.cursor.line,
-				lastSelectedLine: textEditorSelection.cursor.line
-			};
+		if (
+			textEditorSelection.start.line !== textEditorSelection.end.line ||
+			textEditorSelection.start.character !== textEditorSelection.end.character
+		) {
+			if (textEditorSelection.cursor.line !== state.lastSelectedLine) {
+				return {
+					openIconsOnLine: textEditorSelection.cursor.line,
+					lastSelectedLine: textEditorSelection.cursor.line
+				};
+			}
+		} else {
+			return { openIconsOnLine: -1, lastSelectedLine: -1 };
 		}
 
 		return null;
@@ -229,66 +236,73 @@ export class SimpleInlineCodemarks extends Component {
 	onMouseLeaveHoverIcon = lineNum0 => {
 		// lineNum is 0 based
 		this.handleUnhighlightLine(lineNum0);
-		// this.setState({ openPlusOnLine: undefined });
+		// this.setState({ openIconsOnLine: undefined });
 	};
 
-	renderHoverIcons = numLinesVisible => {
-		const { metrics } = this.props;
-		const iconsOnLine0 = this.mapVisibleRangeToLine0(this.state.openPlusOnLine);
-		// console.log("IOL IS: ", iconsOnLine0, " FROM: ", this.state.openPlusOnLine);
-		const highlightedLine = this.state.highlightedLine;
-		const paddingTop = metrics.margins ? metrics.margins.top : 0;
+	renderIconRow(lineNum0, top, hover, open) {
 		return (
-			<div>
-				{range(0, numLinesVisible + 1).map(lineNum0 => {
-					const topPct = (100 * lineNum0) / numLinesVisible + "vh";
-					const top = paddingTop ? "calc(" + topPct + " + " + paddingTop + "px)" : topPct;
-					const hover =
-						lineNum0 === highlightedLine || (lineNum0 === iconsOnLine0 && iconsOnLine0 >= 0);
-					return (
-						<div
-							onMouseEnter={() => this.onMouseEnterHoverIcon(lineNum0)}
-							onMouseLeave={() => this.onMouseLeaveHoverIcon(lineNum0)}
-							className={createClassString("hover-plus", {
-								open: lineNum0 === iconsOnLine0,
-								hover
-							})}
-							key={lineNum0}
-							style={{ top }}
-						>
-							<Icon
-								onClick={e => this.handleClickPlus(e, "comment", lineNum0)}
-								name="comment"
-								title={hover ? "Add Comment" : undefined}
-								placement="bottomLeft"
-								delay={1}
-							/>
-							<Icon
-								onClick={e => this.handleClickPlus(e, "issue", lineNum0)}
-								name="issue"
-								title={hover ? "Create Issue" : undefined}
-								placement="bottomLeft"
-								delay={1}
-							/>
-							<Icon
-								onClick={e => this.handleClickPlus(e, "bookmark", lineNum0)}
-								name="bookmark"
-								title={hover ? "Create Bookmark" : undefined}
-								placement="bottomLeft"
-								delay={1}
-							/>
-							<Icon
-								onClick={e => this.handleClickPlus(e, "link", lineNum0)}
-								name="link"
-								title={hover ? "Get Permalink" : undefined}
-								placement="bottomLeft"
-								delay={1}
-							/>
-						</div>
-					);
-				})}
+			<div
+				onMouseEnter={() => this.onMouseEnterHoverIcon(lineNum0)}
+				onMouseLeave={() => this.onMouseLeaveHoverIcon(lineNum0)}
+				className={createClassString("hover-plus", { open, hover })}
+				key={lineNum0}
+				style={{ top }}
+			>
+				<Icon
+					onClick={e => this.handleClickPlus(e, "comment", lineNum0)}
+					name="comment"
+					title={hover ? "Add Comment" : undefined}
+					placement="bottomLeft"
+					delay={1}
+				/>
+				<Icon
+					onClick={e => this.handleClickPlus(e, "issue", lineNum0)}
+					name="issue"
+					title={hover ? "Create Issue" : undefined}
+					placement="bottomLeft"
+					delay={1}
+				/>
+				<Icon
+					onClick={e => this.handleClickPlus(e, "bookmark", lineNum0)}
+					name="bookmark"
+					title={hover ? "Create Bookmark" : undefined}
+					placement="bottomLeft"
+					delay={1}
+				/>
+				<Icon
+					onClick={e => this.handleClickPlus(e, "link", lineNum0)}
+					name="link"
+					title={hover ? "Get Permalink" : undefined}
+					placement="bottomLeft"
+					delay={1}
+				/>
 			</div>
 		);
+	}
+
+	renderHoverIcons = numLinesVisible => {
+		const { textEditorSelection, metrics } = this.props;
+		const iconsOnLine0 = this.mapVisibleRangeToLine0(this.state.openIconsOnLine);
+		// console.log("IOL IS: ", iconsOnLine0, " FROM: ", this.state.openIconsOnLine);
+		const highlightedLine = this.state.highlightedLine;
+		const paddingTop = metrics.margins ? metrics.margins.top : 0;
+
+		if (iconsOnLine0 >= 0) {
+			const topPct = (100 * iconsOnLine0) / numLinesVisible + "vh";
+			const top = paddingTop ? "calc(" + topPct + " + " + paddingTop + "px)" : topPct;
+			return this.renderIconRow(iconsOnLine0, top, false, true);
+		} else {
+			return (
+				<div>
+					{range(0, numLinesVisible + 1).map(lineNum0 => {
+						const topPct = (100 * lineNum0) / numLinesVisible + "vh";
+						const top = paddingTop ? "calc(" + topPct + " + " + paddingTop + "px)" : topPct;
+						const hover = lineNum0 === highlightedLine;
+						return this.renderIconRow(lineNum0, top, hover, false);
+					})}
+				</div>
+			);
+		}
 	};
 
 	renderNoCodemarks = () => {
@@ -364,7 +378,7 @@ export class SimpleInlineCodemarks extends Component {
 							const topPct =
 								(100 * (rangeStartOffset + lineNum - realFirstLine)) / numLinesVisible + "vh";
 							const top = paddingTop ? "calc(" + topPct + " + " + paddingTop + "px)" : topPct;
-							if (docMarkersByStartLine[lineNum] && lineNum !== this.state.openPlusOnLine) {
+							if (docMarkersByStartLine[lineNum] && lineNum !== this.state.openIconsOnLine) {
 								const docMarker = docMarkersByStartLine[lineNum];
 								return (
 									<Codemark
@@ -452,14 +466,14 @@ export class SimpleInlineCodemarks extends Component {
 		event.preventDefault();
 		this.props.setNewPostEntry("Spatial View");
 
-		const { openPlusOnLine } = this.state;
+		const { openIconsOnLine } = this.state;
 		const { textEditorSelection } = this.props;
 
 		const mappedLineNum = this.mapLine0ToVisibleRange(lineNum0);
 
 		let range;
 		if (
-			mappedLineNum === openPlusOnLine &&
+			mappedLineNum === openIconsOnLine &&
 			(textEditorSelection.start.line !== textEditorSelection.end.line ||
 				textEditorSelection.start.character !== textEditorSelection.end.character)
 		) {
@@ -577,12 +591,12 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	highlightLine(line0, highlight) {
-		const { openPlusOnLine } = this.state;
+		const { openIconsOnLine } = this.state;
 		const { textEditorSelection } = this.props;
 
 		const mappedLineNum = this.mapLine0ToVisibleRange(line0);
 		if (
-			mappedLineNum === openPlusOnLine &&
+			mappedLineNum === openIconsOnLine &&
 			(textEditorSelection.start.line !== textEditorSelection.end.line ||
 				textEditorSelection.start.character !== textEditorSelection.end.character)
 		) {
