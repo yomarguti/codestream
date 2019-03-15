@@ -332,7 +332,7 @@ export class SimpleInlineCodemarks extends Component {
 			return marker.range.start.line;
 		}
 
-		return marker.locationWhenCreated[0];
+		return marker.locationWhenCreated[0] - 1;
 	};
 
 	renderInline() {
