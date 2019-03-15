@@ -93,7 +93,7 @@ namespace CodeStream.VisualStudio.UI.Adornments
                         if (i == lineStart)
                         {
                             var startPosition = range.Start.Character + lineInfo.Snapshot.Start;
-                            var endLength = lineInfo.Snapshot.End.Position - startPosition;
+                            var endLength = lineInfo.Snapshot.End.Position - Math.Max(startPosition, 0);
                             placement = _textView
                                 .GetGeometryPlacement(new SnapshotSpan(lineInfo.Snapshot.Snapshot, new Span(startPosition, endLength)));
                         }
