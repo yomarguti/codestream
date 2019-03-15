@@ -1,5 +1,4 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 
 namespace CodeStream.VisualStudio.Extensions
 {
@@ -12,7 +11,7 @@ namespace CodeStream.VisualStudio.Extensions
 
         public static string ToArgb(this Color color, double percentage = 100)
         {
-            return $"rgba({color.R}, {color.G}, {color.B}, {Math.Round(color.A * (percentage / 100))})";
+            return $"rgba({color.R}, {color.G}, {color.B}, {(percentage / 100)})";
         }       
 
         public static float Lerp(this float start, float end, float amount)
