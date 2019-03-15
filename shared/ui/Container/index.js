@@ -18,7 +18,7 @@ export class Loading extends React.Component {
 	static defaultProps = {
 		forceAnimation: false,
 		renderDelay: 250,
-		animationDelay: 1500
+		animationDelay: 1000
 	};
 
 	constructor(props) {
@@ -28,7 +28,7 @@ export class Loading extends React.Component {
 
 	componentDidMount() {
 		const { forceAnimation, animationDelay, delayRender, renderDelay } = this.props;
-		if (forceAnimation) {
+		if (forceAnimation === false) {
 			this.animationDelayId = setTimeout(() => {
 				this.setState({ showRings: true });
 			}, animationDelay);
