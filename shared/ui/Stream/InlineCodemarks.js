@@ -213,7 +213,8 @@ export class SimpleInlineCodemarks extends Component {
 									<Codemark
 										key={codemark.id}
 										// @ts-ignore
-										codemark={codemark}
+										codemark={docMarker.codemark}
+										marker={docMarker}
 										collapsed={this.state.openPost !== codemark.id}
 										inline={false}
 										currentUserName={this.props.currentUserName}
