@@ -242,7 +242,7 @@ namespace CodeStream.VisualStudio
                                                                 var @params = message.Params.ToObject<UpdateConfigurationRequest>();
                                                                 if (@params.Name == "showMarkers")
                                                                 {
-                                                                    scope.SettingsService.ShowMarkers = @params.Value.AsBool();
+                                                                   // scope.SettingsService.ShowMarkers = @params.Value.AsBool();
                                                                 }
                                                                 else if (@params.Name == "muteAll")
                                                                 {
