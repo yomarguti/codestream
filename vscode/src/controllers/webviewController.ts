@@ -255,10 +255,6 @@ export class WebviewController implements Disposable {
 	})
 	async show(streamThread?: StreamThread) {
 		if (this._webview === undefined) {
-			if (streamThread === undefined) {
-				streamThread = this.activeStreamThread as any;
-			}
-
 			// // Kick off the bootstrap compute to be ready for later
 			// this._bootstrapPromise = this.getBootstrap();
 
