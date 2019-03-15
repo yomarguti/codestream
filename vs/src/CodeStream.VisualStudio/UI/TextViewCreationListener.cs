@@ -275,6 +275,9 @@ namespace CodeStream.VisualStudio.UI
 
         private void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
         {
+            // don't trigger for changes that don't result in lines being added or removed
+           // if (!e.TranslatedLines.Any() && !e.TranslatedSpans.Any()) return;
+
             var wpfTextView = sender as IWpfTextView;
             if (wpfTextView == null || !_sessionService.IsReady) return;
 
@@ -299,7 +302,7 @@ namespace CodeStream.VisualStudio.UI
                 documentMarkerManager.GetOrCreateMarkers();
             }
 
-            if (_settingsService.ViewCodemarksInline)
+            if (_settingsService.ViewCodemarksInline && (e.TranslatedLines.Any() || e.TranslatedSpans.Any()))
             {
                 var activeEditorState = _ideService.GetActiveEditorState();
 
