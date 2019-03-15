@@ -287,7 +287,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	handleScmChange = () => {
-		const { codeBlock } = this.props;
+		const { codeBlock } = this.state;
 
 		this.setState({ codeBlockInvalid: false });
 
