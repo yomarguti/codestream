@@ -36,6 +36,7 @@ export interface NewCodemarkNotification {
 	uri: string;
 	range: Range;
 	type: CodemarkType;
+	source?: string;
 }
 export const NewCodemarkNotificationType = new NotificationType<NewCodemarkNotification, void>(
 	`${IpcRoutes.Webview}/codemark/new`
