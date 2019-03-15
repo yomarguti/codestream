@@ -1059,12 +1059,14 @@ export class SimpleStream extends Component {
 		} else {
 			let scmInfo;
 			if (commentingContext) {
-				const { uri, range } = commentingContext;
-				HostApi.instance.send(EditorSelectRangeRequestType, {
-					uri: uri,
-					range: range,
-					preserveFocus: true
-				});
+				const { uri, range, setSelection } = commentingContext;
+				if (setSelection) {
+					HostApi.instance.send(EditorSelectRangeRequestType, {
+						uri: uri,
+						range: range,
+						preserveFocus: true
+					});
+				}
 				scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
 					uri: uri,
 					range: range,

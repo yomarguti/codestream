@@ -63,7 +63,9 @@ export class SimpleInlineCodemarks extends Component {
 			textEditorSelection.start.line !== textEditorSelection.end.line ||
 			textEditorSelection.start.character !== textEditorSelection.end.character
 		) {
-			// see comment in handleClickPlus which refers to the code below
+			if (state.clickedPlus) {
+				return { openIconsOnLine: -1, clickedPlus: false };
+			}
 			if (textEditorSelection.cursor.line !== state.lastSelectedLine) {
 				return {
 					openIconsOnLine: textEditorSelection.cursor.line,
@@ -490,15 +492,18 @@ export class SimpleInlineCodemarks extends Component {
 
 		const mappedLineNum = this.mapLine0ToVisibleRange(lineNum0);
 
-		let range;
+		let range,
+			setSelection = false;
 		if (
 			mappedLineNum === openIconsOnLine &&
+			// if these aren't equal, we have an active selection
 			(textEditorSelection.start.line !== textEditorSelection.end.line ||
 				textEditorSelection.start.character !== textEditorSelection.end.character)
 		) {
 			range = Range.create(textEditorSelection.start, textEditorSelection.end);
 		} else {
 			range = Range.create(mappedLineNum, 0, mappedLineNum, MaxRangeValue);
+			setSelection = true;
 		}
 
 		// Clear the previous highlight
@@ -509,13 +514,13 @@ export class SimpleInlineCodemarks extends Component {
 		// but normally getDerivedStateFromProps would override that. By
 		// resetting openIconsOnLine but *not* lastSelectedLine,
 		// getDerivedStateFromProps won't fire.
-		this.setState({ openIconsOnLine: -1 });
+		this.setState({ clickedPlus: true });
 
 		// setup git context for codemark form
 		this.props.setMultiCompose(
 			true,
 			{ commentType: type },
-			{ uri: this.props.textEditorUri, range }
+			{ uri: this.props.textEditorUri, range: range, setSelection: setSelection }
 		);
 		// setTimeout(() => this.props.focusInput(), 500);
 	};

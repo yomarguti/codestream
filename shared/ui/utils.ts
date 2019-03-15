@@ -10,6 +10,10 @@ export function forceAsLine(range: Range): Range {
 	return range;
 }
 
+export function isRangeEmpty(range: Range): boolean {
+	return range.start.line === range.end.line && range.start.character === range.end.character;
+}
+
 export function arrayToRange([startLine, startCharacter, endLine, endCharacter]: number[]): Range {
 	return Range.create(startLine, startCharacter, endLine, endCharacter);
 }

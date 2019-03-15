@@ -21,7 +21,7 @@ import { connect } from "react-redux";
 import Select from "react-select";
 import { getStreamForId, getStreamForTeam } from "../store/streams/reducer";
 import { Stream } from "../store/streams/types";
-import { mapFilter, arrayToRange, forceAsLine } from "../utils";
+import { mapFilter, arrayToRange, forceAsLine, isRangeEmpty } from "../utils";
 import { HostApi } from "../webview-api";
 import Button from "./Button";
 import CancelButton from "./CancelButton";
@@ -171,14 +171,17 @@ class CodemarkForm extends React.Component<Props, State> {
 	componentDidMount() {
 		const { codeBlock } = this.state;
 		if (codeBlock) {
-			this.selectRangeInEditor(codeBlock.uri, forceAsLine(codeBlock.range));
+			if (isRangeEmpty(codeBlock.range)) {
+				this.selectRangeInEditor(codeBlock.uri, forceAsLine(codeBlock.range));
+			}
 			this.handleScmChange();
 		} else {
 			const { textEditorSelection, textEditorUri } = this.props;
 			if (textEditorSelection && textEditorUri) {
 				// In case there isn't already a range selection by user, change the selection to be the line the cursor is on
-				const range = forceAsLine(textEditorSelection);
-				this.selectRangeInEditor(textEditorUri, range);
+				const isEmpty = isRangeEmpty(textEditorSelection);
+				const range = isEmpty ? forceAsLine(textEditorSelection) : textEditorSelection;
+				if (isEmpty) this.selectRangeInEditor(textEditorUri, range);
 				this.getScmInfoForSelection(textEditorUri, range);
 			}
 		}
