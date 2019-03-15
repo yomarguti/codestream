@@ -437,6 +437,9 @@ function trackPostCreation(request: CreatePostRequest) {
 							case CodemarkType.Issue:
 								markerType = "Issue";
 								break;
+							case CodemarkType.Link:
+								markerType = "Permalink";
+								break;
 						}
 					}
 
