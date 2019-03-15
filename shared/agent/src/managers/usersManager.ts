@@ -41,7 +41,7 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 
 	protected async loadCache() {
 		const response = await this.session.api.fetchUsers({});
-		this.cache.set(response.users);
+		this.cache.reset(response.users);
 	}
 
 	async getByEmails(

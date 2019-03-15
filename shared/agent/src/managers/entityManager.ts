@@ -22,8 +22,8 @@ export abstract class EntityManagerBase<T extends CSEntity> extends ManagerBase<
 		super(session);
 	}
 
-	getById(id: Id): Promise<T> {
-		return this.cache.getById(id);
+	getById(id: Id, options?: { avoidCachingOnFetch?: boolean }): Promise<T> {
+		return this.cache.getById(id, options);
 	}
 
 	getByIdFromCache(id: Id): Promise<T | undefined> {

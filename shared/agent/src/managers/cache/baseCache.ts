@@ -63,6 +63,11 @@ export class BaseCache<T> {
 		}
 	}
 
+	reset(entities: T[]) {
+		this.invalidate();
+		this.set(entities);
+	}
+
 	/**
 	 * Get an entity by field. Requires an unique index.
 	 *
@@ -79,7 +84,7 @@ export class BaseCache<T> {
 	})
 	async get(
 		criteria: KeyValue<T>[],
-		options: { fromCacheOnly?: boolean } = {}
+		options: { fromCacheOnly?: boolean; avoidCachingOnFetch?: boolean } = {}
 	): Promise<T | undefined> {
 		const cc = Logger.getCorrelationContext();
 
@@ -99,7 +104,9 @@ export class BaseCache<T> {
 			if (options.fromCacheOnly !== true) {
 				const fetch = index.fetchFn as UniqueFetchFn<T>;
 				entity = await fetch(criteria);
-				this.set(entity);
+				if (!options.avoidCachingOnFetch) {
+					this.set(entity);
+				}
 			}
 		}
 
@@ -121,10 +128,12 @@ export class BaseCache<T> {
 		}
 
 		if (Array.isArray(entitiesOrEntity)) {
-			for (const entity of entitiesOrEntity) {
-				if (!entity) continue;
+			if (entitiesOrEntity.length === 0) return;
 
-				for (const index of this.indexes.values()) {
+			for (const index of this.indexes.values()) {
+				for (const entity of entitiesOrEntity) {
+					if (!entity) continue;
+
 					index.set(entity);
 				}
 			}

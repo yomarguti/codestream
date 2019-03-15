@@ -35,7 +35,7 @@ export class ReposManager extends CachedEntityManagerBase<CSRepository> {
 
 	protected async loadCache() {
 		const response = await this.session.api.fetchRepos({});
-		this.cache.set(response.repos);
+		this.cache.reset(response.repos);
 	}
 
 	protected async fetchById(repoId: Id): Promise<CSRepository> {

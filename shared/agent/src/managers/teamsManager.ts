@@ -27,7 +27,7 @@ export class TeamsManager extends CachedEntityManagerBase<CSTeam> {
 
 	protected async loadCache() {
 		const response = await this.session.api.fetchTeams({ mine: true });
-		this.cache.set(response.teams);
+		this.cache.reset(response.teams);
 	}
 
 	protected async fetchById(teamId: Id): Promise<CSTeam> {

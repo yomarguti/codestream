@@ -108,7 +108,7 @@ export class UniqueIndex<T> extends BaseIndex<T> {
 	}
 
 	getAll(): T[] {
-		return Array.from(this._data.values());
+		return [...this._data.values()];
 	}
 
 	has(value: any[]): boolean {

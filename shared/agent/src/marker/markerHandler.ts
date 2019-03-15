@@ -68,7 +68,8 @@ export namespace MarkerHandler {
 					const range = MarkerLocation.toRange(location);
 					const [codemark, creator] = await Promise.all([
 						codemarks.getById(marker.codemarkId),
-						users.getById(marker.creatorId)
+						// HACK: This is a total hack for slack to avoid getting codestream users mixed with slack users in the cache
+						users.getById(marker.creatorId, { avoidCachingOnFetch: true })
 					]);
 
 					const summary = (codemark.title || codemark.text).replace(

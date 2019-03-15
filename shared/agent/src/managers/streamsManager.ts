@@ -88,7 +88,7 @@ export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CS
 
 	protected async loadCache() {
 		const response = await this.session.api.fetchStreams({});
-		this.cache.set(response.streams);
+		this.cache.reset(response.streams);
 	}
 
 	async getSubscribable() {
