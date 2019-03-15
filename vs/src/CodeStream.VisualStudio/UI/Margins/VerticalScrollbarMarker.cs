@@ -1,8 +1,10 @@
-﻿using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,8 +12,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
-using CodeStream.VisualStudio.Core.Logging;
-using Serilog;
+using CodeStream.VisualStudio.Extensions;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
@@ -37,8 +38,7 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         private bool _isDisposed;
         private bool _isMarginEnabled;
-
-        private Brush _marginMatchBrush;
+        
         private bool _optionsChanging;
 
         private BackgroundMarkerPlacement _search;
@@ -219,10 +219,6 @@ namespace CodeStream.VisualStudio.UI.Margins
             }
         }
 
-        private void OnFormatMappingChanged(object sender, FormatItemsEventArgs e)
-        {
-            _marginMatchBrush = GetBrush(VerticalScrollbarMarkerColorFormat.Name, EditorFormatDefinition.ForegroundBrushId);
-        }
 
         private bool MarginActive => _isMarginEnabled && IsVisible;
 
@@ -237,15 +233,10 @@ namespace CodeStream.VisualStudio.UI.Margins
                 _hasEvents = needEvents;
                 if (needEvents)
                 {
-                    _editorFormatMap.FormatMappingChanged += OnFormatMappingChanged;
                     _verticalScrollBar.Map.MappingChanged += OnMappingChanged;
-
-                    OnFormatMappingChanged(null, null);
 
                     return UpdateMatches();
                 }
-
-                _editorFormatMap.FormatMappingChanged -= OnFormatMappingChanged;
 
                 _verticalScrollBar.Map.MappingChanged -= OnMappingChanged;
 
@@ -257,18 +248,6 @@ namespace CodeStream.VisualStudio.UI.Margins
             }
 
             return false;
-        }
-
-        private Brush GetBrush(string name, string resource)
-        {
-            var rd = _editorFormatMap.GetProperties(name);
-
-            if (rd.Contains(resource))
-            {
-                return rd[resource] as Brush;
-            }
-
-            return null;
         }
 
         /// <summary>
@@ -366,8 +345,9 @@ namespace CodeStream.VisualStudio.UI.Margins
                 {
                     //Get (for small lists) the index of every match or, for long lists, the index of every
                     //(count / 1000)th entry. Use longs to avoid any possible integer overflow problems.
-                    var index = (int) (i * (long) matches.Count / markerCount);
-                    var match = matches[index].Start;
+                    var index = (int)(i * (long)matches.Count / markerCount);
+                    var snapshotSpanMarker = matches[index];
+                    var match = snapshotSpanMarker.SnapshotSpan.Start;
 
                     //Translate the match from its snapshot to the view's current snapshot (the versions should be the same,
                     //but this will handle it if -- for some reason -- they are not).
@@ -382,7 +362,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                         var rectWidth = Width - MarkPadding * 2.0;
                         var rectHeight = MarkHeight;
 
-                        drawingContext.DrawRectangle(_marginMatchBrush, null,
+                        drawingContext.DrawRectangle(new SolidColorBrush(snapshotSpanMarker.Color.ConvertToMediaColor()), null,
                             new Rect(
                                 x: rectX,
                                 y: rectY,
@@ -428,7 +408,7 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         private class BackgroundMarkerPlacement
         {
-            private static readonly List<SnapshotSpan> EmptyList = new List<SnapshotSpan>(0);
+            private static readonly List<SnapshotSpanMarker> EmptyList = new List<SnapshotSpanMarker>(0);
             public ITextSnapshot Snapshot { get; }
             private bool _abort;
             private List<DocumentMarker> _markers;
@@ -450,11 +430,12 @@ namespace CodeStream.VisualStudio.UI.Margins
                     Thread.CurrentThread.Priority = ThreadPriority.Lowest;
                     Thread.CurrentThread.IsBackground = true;
 
-                    var newMatches = new List<SnapshotSpan>();
+                    var newMatches = new List<SnapshotSpanMarker>();
 
                     if (textDocument.TextBuffer.Properties.ContainsProperty(PropertyNames.CodemarkMarkers))
-                        _markers = textDocument.TextBuffer.Properties.GetProperty<List<DocumentMarker>>(PropertyNames
-                            .CodemarkMarkers);
+                    {
+                        _markers = textDocument.TextBuffer.Properties.GetProperty<List<DocumentMarker>>(PropertyNames.CodemarkMarkers);
+                    }
 
                     if (_markers == null) return;
 
@@ -465,7 +446,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                         if (marker == null) continue;
 
                         var start = span.Start == 0 ? span.Start : span.Start - 1;
-                        newMatches.Add(new SnapshotSpan(start, 1));
+                        newMatches.Add(new SnapshotSpanMarker(new SnapshotSpan(start, 1), ThemeManager.GetColorSafe(marker.Codemark?.Color)));
                     }
 
                     //This should be a thread safe operation since it is atomic
@@ -475,12 +456,24 @@ namespace CodeStream.VisualStudio.UI.Margins
                 });
             }
 
-            public IList<SnapshotSpan> Matches { get; private set; } = EmptyList;
+            public IList<SnapshotSpanMarker> Matches { get; private set; } = EmptyList;
 
             public void Abort()
             {
                 _abort = true;
             }
+        }
+
+        private class SnapshotSpanMarker
+        {
+            public SnapshotSpanMarker(SnapshotSpan snapshotSpan, System.Drawing.Color color)
+            {
+                SnapshotSpan = snapshotSpan;
+                Color = color;
+            }
+
+            public SnapshotSpan SnapshotSpan { get; }
+            public System.Drawing.Color Color { get; }
         }
     }
 }

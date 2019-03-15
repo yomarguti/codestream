@@ -4,6 +4,8 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+ 
 using EnvironmentColors = Microsoft.VisualStudio.PlatformUI.EnvironmentColors;
 using FontFamily = System.Windows.Media.FontFamily;
 using VSColorTheme = Microsoft.VisualStudio.PlatformUI.VSColorTheme;
@@ -132,7 +134,7 @@ namespace CodeStream.VisualStudio.Services
 
             colorInfos.Add(new ColorInfo { Key = "vscode-editor-font-family", Value = fontFamilyString });
             colorInfos.Add(new ColorInfo { Key = "font-family", Value = fontFamilyString });
-            
+
             var metrics = CreateEditorMetrics(null);
             var fontSize = metrics == null ?
                 DefaultFontSize.ToString() :
@@ -160,6 +162,32 @@ namespace CodeStream.VisualStudio.Services
                 }
             };
         }
+
+        private static Color DefaultColor = Color.FromArgb(0, 110, 183);
+
+        public static System.Drawing.Color GetColorSafe(string colorName)
+        {
+            if (colorName.IsNullOrWhiteSpace()) return DefaultColor;
+
+            if (ColorMap.TryGetValue(colorName, out Color value))
+            {
+                return value;
+            }
+
+            return DefaultColor;
+        }
+		
+        public static Dictionary<string, System.Drawing.Color> ColorMap = new Dictionary<string, System.Drawing.Color>
+        {
+            { "blue", DefaultColor},
+            { "green", Color.FromArgb(88, 181, 71)},
+            { "yellow", Color.FromArgb(240, 208, 5)},
+            { "orange", Color.FromArgb(255, 147, 25)},
+            { "red",  Color.FromArgb(232, 78, 62)},
+            { "purple", Color.FromArgb(187, 108, 220)},
+            { "aqua", Color.FromArgb(0, 186, 220)},
+            { "gray", Color.FromArgb(127, 127, 127)}
+        };
 
         /*
             /// <summary>

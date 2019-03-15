@@ -4,6 +4,11 @@ namespace CodeStream.VisualStudio.Extensions
 {
     public static class ColorExtensions
     {
+        public static System.Windows.Media.Color ConvertToMediaColor(this System.Drawing.Color color)
+        {
+           return System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B);
+        }
+
         public static string ToHex(this Color color)
         {
             return "#"+ color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2");
@@ -24,14 +29,14 @@ namespace CodeStream.VisualStudio.Extensions
         /// <summary>
         /// https://stackoverflow.com/questions/97646/how-do-i-determine-darker-or-lighter-color-variant-of-a-given-color/2690026#2690026
         /// </summary>
-        /// <param name="colour"></param>
+        /// <param name="color"></param>
         /// <param name="to"></param>
         /// <param name="amount"></param>
         /// <returns></returns>
-        public static Color Lerp(this Color colour, Color to, float amount)
+        public static Color Lerp(this Color color, Color to, float amount)
         {
             // start colours as lerp-able floats
-            float sr = colour.R, sg = colour.G, sb = colour.B;
+            float sr = color.R, sg = color.G, sb = color.B;
 
             // end colours as lerp-able floats
             float er = to.R, eg = to.G, eb = to.B;
