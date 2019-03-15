@@ -147,6 +147,7 @@ export class SimpleStream extends Component {
 	};
 
 	async handleNewCodemarkRequest(e) {
+		this.setNewPostEntry(e.source);
 		this.setMultiCompose(
 			true,
 			{ commentType: e.type },
