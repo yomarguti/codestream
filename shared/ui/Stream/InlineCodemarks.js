@@ -314,9 +314,10 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	renderNoCodemarks = () => {
-		const { fileNameToFilterFor } = this.props;
+		const { fileNameToFilterFor, viewInline } = this.props;
 
 		if (fileNameToFilterFor && fileNameToFilterFor.length) {
+			const target = viewInline ? "an icon" : "the lightbulb";
 			return (
 				<div key="no-codemarks" className="no-codemarks">
 					There are no codemarks
@@ -329,7 +330,7 @@ export class SimpleInlineCodemarks extends Component {
 					in {this.props.fileNameToFilterFor}
 					<br />
 					<br />
-					Discuss code with your team by selecting a range and clicking an icon (
+					Discuss code with your team by selecting a range and clicking {target} (
 					<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
 						show me how
 					</a>
