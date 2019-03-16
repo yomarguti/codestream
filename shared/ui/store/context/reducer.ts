@@ -12,7 +12,7 @@ const initialState: State = {
 	currentStreamId: "",
 	issueProvider: undefined,
 	threadId: undefined,
-	panelStack: ["channels"],
+	panelStack: ["codemarks-for-file"], // default view is the "in this file" view
 	hasFocus: true, // we assume we start with the focus when codestream initializes
 	codemarkFileFilter: "all",
 	codemarkTypeFilter: "all",
