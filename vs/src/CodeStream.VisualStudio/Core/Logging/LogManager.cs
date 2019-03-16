@@ -35,11 +35,16 @@ namespace CodeStream.VisualStudio.Core.Logging
                 _defaultLoggingLevel = FromTraceLevel(packageSettings.TraceLevel);
             }
 #endif
-
             var logPath = Path.Combine(Application.LogPath, "vs-extension.log");
 
-            var formatter = new MessageTemplateTextFormatter("{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{ProcessId:00000}] {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}{NewLine}{Exception}",
+            var formatter  = new MessageTemplateTextFormatter("{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{ProcessId:00000}] {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}{NewLine}{Exception}",
                 new CultureInfo("en-US"));
+#if DEBUG
+            // day/month/year and processId just aren't that important when developing -- they take up space
+            formatter = new MessageTemplateTextFormatter("{Timestamp:HH:mm:ss.fff} {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}{NewLine}{Exception}",
+                new CultureInfo("en-US"));
+#endif
+
 
             return new LoggerConfiguration()
                  .Enrich.WithProcessId()

@@ -111,7 +111,7 @@ namespace CodeStream.VisualStudio.LSP
 
             var process = _languageServerProcess.Create(_settingsService.TraceLevel);
 
-            using (Log.TimeOperation($"Starting server process. FileName={{FileNameAttribute}} Arguments={{Arguments}}", process.StartInfo.FileName, process.StartInfo.Arguments))
+            using (Log.CriticalOperation($"Starting server process. FileName={process.StartInfo.FileName} Arguments={process.StartInfo.Arguments}"))
             {
                 if (process.Start())
                 {
@@ -133,7 +133,7 @@ namespace CodeStream.VisualStudio.LSP
 
         public async Task OnLoadedAsync()
         {
-            using (Log.TimeOperation($"{nameof(OnLoadedAsync)}"))
+            using (Log.CriticalOperation($"{nameof(OnLoadedAsync)}"))
             {
                 // ReSharper disable once PossibleNullReferenceException
                 await StartAsync?.InvokeAsync(this, EventArgs.Empty);
@@ -144,7 +144,7 @@ namespace CodeStream.VisualStudio.LSP
         {
             try
             {
-                using (Log.TimeOperation($"{nameof(OnServerInitializedAsync)}"))
+                using (Log.CriticalOperation($"{nameof(OnServerInitializedAsync)}"))
                 {
                     await _codeStreamAgentService.SetRpcAsync(_rpc);
                     _sessionService.SetAgentReady();

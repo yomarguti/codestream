@@ -8,7 +8,6 @@ using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using Serilog.Events;
-using SerilogTimings.Extensions;
 using System;
 using System.Threading;
 
@@ -64,9 +63,7 @@ namespace CodeStream.VisualStudio
                 var message = WebviewIpcMessage.Parse(e.Message);
                 Log.Verbose(e.Message);
 
-                using (Log.IsEnabled(LogEventLevel.Verbose)
-                    ? Log.TimeOperation($"{nameof(HandleAsync)} Method={{Method}}", message.Method)
-                    : null)
+                using (IpcLogger.CriticalOperation(Log, "REC", message))
                 {
                     var target = message.Target();
                     switch (target)
@@ -242,7 +239,7 @@ namespace CodeStream.VisualStudio
                                                                 var @params = message.Params.ToObject<UpdateConfigurationRequest>();
                                                                 if (@params.Name == "showMarkers")
                                                                 {
-                                                                   // scope.SettingsService.ShowMarkers = @params.Value.AsBool();
+                                                                    // scope.SettingsService.ShowMarkers = @params.Value.AsBool();
                                                                 }
                                                                 else if (@params.Name == "muteAll")
                                                                 {

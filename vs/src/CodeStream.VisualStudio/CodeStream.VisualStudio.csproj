@@ -100,6 +100,7 @@
     <Compile Include="Core\Constants.cs" />
     <Compile Include="Core\ContentTypes.cs" />
     <Compile Include="Core\Logging\CodeStreamSink.cs" />
+    <Compile Include="Core\Logging\LogExtensions.cs" />
     <Compile Include="Core\Logging\LogManager.cs" />
     <Compile Include="Core\Logging\Sanitizer\IProcessor.cs" />
     <Compile Include="Core\Logging\Sanitizer\ISanitizingFormatRule.cs" />
@@ -171,6 +172,7 @@
     <Compile Include="Services\CredentialsService.cs" />
     <Compile Include="Services\DotNetBrowserService.cs" />
     <Compile Include="Services\IdeService.cs" />
+    <Compile Include="IpcLogger.cs" />
     <Compile Include="Services\WebviewIpc.cs" />
     <Compile Include="Services\LiveShare\CollaborationHostService.cs" />
     <Compile Include="Services\LiveShare\CollaborationHostServiceFactory.cs" />

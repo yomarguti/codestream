@@ -127,7 +127,7 @@ namespace CodeStream.VisualStudio.Services
 
 		public override void LoadHtml(string html)
 		{
-			using (Log.TimeOperation($"Starting {nameof(LoadHtml)}"))
+			using (Log.CriticalOperation($"{nameof(LoadHtml)}"))
 			{
 				_browserView.Browser.LoadHTML(html);
 			}

@@ -2,16 +2,19 @@
 using CodeStream.VisualStudio.Models;
 using Serilog;
 using Serilog.Events;
-using SerilogTimings.Extensions;
+using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio.Services
 {
-    public interface SWebviewIpc { }
+    public interface SWebviewIpc
+    {
+    }
 
     public interface IWebviewIpc
     {
         void Send(IAbstractMessageType message);
         void Notify(INotificationType message);
+        Task NotifyInBackground(INotificationType message);
         void SendResponse(IRequestType message);
         IBrowserService BrowserService { get; }
     }
@@ -29,7 +32,7 @@ namespace CodeStream.VisualStudio.Services
 
         private void SendInternal(IAbstractMessageType message)
         {
-            using (Log.IsEnabled(LogEventLevel.Verbose) ? Log.TimeOperation($"{nameof(SendResponse)} Id={{Id}}", message.Id) : null)
+            using (IpcLogger.CriticalOperation(Log, "RES", message))
             {
                 BrowserService.PostMessage(message);
             }
@@ -37,8 +40,23 @@ namespace CodeStream.VisualStudio.Services
 
         public void Send(IAbstractMessageType message) => SendInternal(message);
 
-        public void SendResponse(IRequestType message) =>  SendInternal(message);
+        public void SendResponse(IRequestType message) => SendInternal(message);
 
         public void Notify(INotificationType message) => SendInternal(message);
+
+        /// <summary>
+        /// Sends the notification on a background thread
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public Task NotifyInBackground(INotificationType message)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                SendInternal(message);
+            });
+        }
     }
 }
+
+

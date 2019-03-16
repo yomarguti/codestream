@@ -210,6 +210,7 @@ namespace CodeStream.VisualStudio.UI
             // ReSharper restore InvertIf
         }
 
+        private DateTime _lastThemeChange = DateTime.MinValue;
         private static void OnSessionLogout(IWpfTextView wpfTextView, List<ICodeStreamWpfTextViewMargin> textViewMarginProviders)
         {
             if (wpfTextView.TextBuffer.Properties.TryGetProperty(PropertyNames.TextViewState, out TextViewState state))
@@ -289,7 +290,7 @@ namespace CodeStream.VisualStudio.UI
 
             if (documentMarkerManager == null)
             {
-                Log.Debug($"{nameof(documentMarkerManager)} is null");
+                Log.Warning($"{nameof(documentMarkerManager)} is null");
                 return;
             }
 
@@ -302,14 +303,19 @@ namespace CodeStream.VisualStudio.UI
             // don't trigger for changes that don't result in lines being added or removed
             if (_settingsService.ViewCodemarksInline && (e.VerticalTranslation || e.TranslatedLines.Any()))
             {
-                var activeEditorState = _ideService.GetActiveEditorState();
-                ServiceLocator.Get<SWebviewIpc, IWebviewIpc>()?.Notify(new HostDidChangeEditorVisibleRangesNotificationType
+                var now = DateTime.Now;
+                if (_lastThemeChange == DateTime.MinValue || (now - _lastThemeChange).Milliseconds > 150)
                 {
-                    Params = new HostDidChangeEditorVisibleRangesNotification(
-                            textDocument.FilePath.ToUri(),
-                            activeEditorState.ToEditorSelections(),
-                            wpfTextView.ToVisibleRanges())
-                });
+                    ServiceLocator.Get<SWebviewIpc, IWebviewIpc>()?.NotifyInBackground(
+                        new HostDidChangeEditorVisibleRangesNotificationType
+                        {
+                            Params = new HostDidChangeEditorVisibleRangesNotification(
+                                textDocument.FilePath.ToUri(),
+                                _ideService.GetActiveEditorState()?.ToEditorSelections(),
+                                wpfTextView.ToVisibleRanges())
+                        });
+                    _lastThemeChange = now;
+                }
             }
 
             wpfTextView.TextBuffer

@@ -10,7 +10,6 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Serilog;
 using Serilog.Events;
-using SerilogTimings.Extensions;
 using StreamJsonRpc;
 using System;
 using System.Collections.Generic;
@@ -90,15 +89,8 @@ namespace CodeStream.VisualStudio.Services
             cancellationToken = cancellationToken ?? CancellationToken.None;
             try
             {
-                if (Log.IsEnabled(LogEventLevel.Verbose))
-                {
-                    // the args might have sensitive data in it -- don't include args here
-                    using (Log.TimeOperation("SendCoreAsync. Name={Name}", name))
-                    {
-                        return _rpc.InvokeWithParameterObjectAsync<T>(name, arguments, cancellationToken.Value);
-                    }
-                }
-                else
+                // the arguments might have sensitive data in it -- don't include arguments here
+                using (Log.CriticalOperation($"name=REQ,Method={name}"))
                 {
                     return _rpc.InvokeWithParameterObjectAsync<T>(name, arguments, cancellationToken.Value);
                 }
