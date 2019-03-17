@@ -304,8 +304,9 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 		const starts = new Set();
 		for (const marker of markers) {
 			const start = marker.range.start.line;
-			if (marker.type === "issue" && marker.status === "closed") continue;
 			if (starts.has(start)) continue;
+			if (marker.type === "issue" && marker.status === "closed") continue;
+			if (!marker.pinned) continue;
 
 			if (marker.type === "trap") {
 				const trapKey = `trap-highlight-${marker.color}`;

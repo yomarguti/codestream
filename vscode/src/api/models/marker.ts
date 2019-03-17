@@ -80,6 +80,10 @@ export class Marker {
 		return this._entity.summaryMarkdown;
 	}
 
+	get pinned() {
+		return this._entity.codemark.pinned;
+	}
+
 	get type(): string {
 		return this._entity.codemark.type || "comment";
 	}
