@@ -815,7 +815,7 @@ export class SimpleStream extends Component {
 											/>
 										</span>
 									</Tooltip>
-									{memberCount > 2 && [
+									{memberCount > 0 && [
 										<div className="sep" key="one" />,
 										<Tooltip title="View member list" placement="bottomLeft" key="two">
 											<span
@@ -839,6 +839,12 @@ export class SimpleStream extends Component {
 										<div className="sep" />,
 										<span onClick={() => this.setPurpose()} className="purpose-header">
 											{postStreamPurpose}
+										</span>
+									]}
+									{!postStreamPurpose && [
+										<div className="sep" />,
+										<span onClick={() => this.setPurpose()} className="purpose-header">
+											Add a purpose
 										</span>
 									]}
 								</div>
