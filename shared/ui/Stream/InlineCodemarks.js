@@ -64,7 +64,11 @@ export class SimpleInlineCodemarks extends Component {
 			textEditorSelection.start.character !== textEditorSelection.end.character
 		) {
 			if (state.clickedPlus) {
-				return { openIconsOnLine: -1, clickedPlus: false };
+				return {
+					openIconsOnLine: -1,
+					clickedPlus: false,
+					lastSelectedLine: textEditorSelection.cursor.line
+				};
 			}
 			if (textEditorSelection.cursor.line !== state.lastSelectedLine) {
 				return {
