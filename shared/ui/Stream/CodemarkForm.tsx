@@ -523,6 +523,12 @@ class CodemarkForm extends React.Component<Props, State> {
 			}
 		});
 
+		// if there are only 2 items, that's going to be #general and the "-"
+		// separator. in that case, the user hasn't added channels yet, or
+		// invited users, so it's not helpful/useful to give them an option
+		// they can't use.
+		if (items.length === 2) return null;
+
 		if (filterSelected) {
 			items.push({ label: "-" });
 			items.push({ label: "Show All Channels & DMs", action: "show-all" });
