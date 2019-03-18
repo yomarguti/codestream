@@ -3,7 +3,8 @@ import {
 	FetchAssignableUsersRequestType,
 	GetRangeScmInfoResponse,
 	CodemarkPlus,
-	GetRangeScmInfoRequestType
+	GetRangeScmInfoRequestType,
+	CreateDocumentMarkerPermalinkRequestType
 } from "@codestream/protocols/agent";
 import {
 	CodemarkType,
@@ -71,7 +72,6 @@ interface Props {
 	showChannels: string;
 	textEditorUri?: string;
 	textEditorSelection?: EditorSelection;
-	linkURI?: string;
 }
 
 interface State {
@@ -98,6 +98,7 @@ interface State {
 	textInvalid?: boolean;
 	assigneesInvalid?: boolean;
 	showAllChannels?: boolean;
+	linkURI?: string;
 }
 
 function merge(defaults: Partial<State>, codemark: CSCodemark): State {
@@ -372,11 +373,37 @@ class CodemarkForm extends React.Component<Props, State> {
 		this.setState(state => ({ crossPostMessage: !state.crossPostMessage }));
 	};
 
-	handleClickSubmit = (event?: React.SyntheticEvent) => {
+	handleClickSubmit = async (event?: React.SyntheticEvent) => {
 		event && event.preventDefault();
 		if (this.isFormInvalid()) return;
 
-		const { color, type, title, text, selectedChannelId } = this.state;
+		const { codeBlock, color, privacy, type, title, text, selectedChannelId } = this.state;
+
+		if (type === "link") {
+			let request;
+			if (codeBlock) {
+				request = {
+					uri: codeBlock.uri,
+					range: codeBlock.range,
+					privacy: privacy
+				};
+			} else {
+				request = {
+					uri: this.props.textEditorUri,
+					range: this.props.textEditorSelection,
+					privacy: privacy
+				};
+			}
+
+			const response = await HostApi.instance.send(
+				CreateDocumentMarkerPermalinkRequestType,
+				request
+			);
+			this.setState({ linkURI: response.linkUrl });
+
+			return;
+		}
+
 		const crossPostIssueEnabled =
 			type === CodemarkType.Issue &&
 			this.crossPostIssueValues &&
@@ -407,7 +434,6 @@ class CodemarkForm extends React.Component<Props, State> {
 				assignees: csAssignees,
 				title,
 				crossPostIssueValues: crossPostIssueEnabled ? this.crossPostIssueValues : undefined
-				// privacy,
 				// notify,
 				// crossPostMessage,
 			},
@@ -882,12 +908,12 @@ class CodemarkForm extends React.Component<Props, State> {
 							</div>
 						)}
 						{this.renderTextHelp()}
-						{this.props.linkURI && (
+						{this.state.linkURI && (
 							<div className="permalink" key="2">
-								{this.props.linkURI}
+								{this.state.linkURI}
 							</div>
 						)}
-						{commentType === "link" && (
+						{commentType === "link" && !this.state.linkURI && (
 							<div id="privacy-controls" className="control-group" key="1">
 								<div className="public-private-hint">
 									{this.state.privacy === "private"
@@ -973,7 +999,7 @@ class CodemarkForm extends React.Component<Props, State> {
 							onClick={this.handleClickSubmit}
 						>
 							{commentType === "link"
-								? this.props.linkURI
+								? this.state.linkURI
 									? "Copy Link"
 									: "Create Link"
 								: "Submit"}
