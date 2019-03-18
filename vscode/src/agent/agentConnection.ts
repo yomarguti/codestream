@@ -12,6 +12,7 @@ import {
 	CodeStreamEnvironment,
 	CreateChannelStreamRequestType,
 	CreateDirectStreamRequestType,
+	CreateDocumentMarkerPermalinkRequestType,
 	CreatePostRequestType,
 	CreatePostResponse,
 	CreatePostWithMarkerRequestType,
@@ -62,7 +63,6 @@ import {
 	MarkStreamReadRequestType,
 	MuteStreamRequestType,
 	OpenStreamRequestType,
-	PreparePostWithCodeRequestType,
 	ReactToPostRequestType,
 	RenameStreamRequestType,
 	ReportingMessageType,
@@ -93,7 +93,6 @@ import {
 	EventEmitter,
 	ExtensionContext,
 	MessageItem,
-	TextDocument,
 	Uri,
 	window,
 	workspace
@@ -109,7 +108,6 @@ import {
 	NotificationType,
 	Range,
 	RequestType,
-	RequestType0,
 	RevealOutputChannelOn,
 	ServerOptions,
 	TransportKind
@@ -333,6 +331,14 @@ export class CodeStreamAgentConnection implements Disposable {
 	private readonly _codemarks = new class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
+		createPermalink(uri: Uri, range: Range, privacy: "public" | "private") {
+			return this._connection.sendRequest(CreateDocumentMarkerPermalinkRequestType, {
+				uri: uri.toString(),
+				range: range,
+				privacy: privacy
+			});
+		}
+
 		fetch() {
 			return this._connection.sendRequest(FetchCodemarksRequestType, {});
 		}
@@ -488,14 +494,6 @@ export class CodeStreamAgentConnection implements Disposable {
 			return this._connection.sendRequest(MarkPostUnreadRequestType, {
 				postId: postId,
 				streamId: streamId
-			});
-		}
-
-		prepareCode(document: TextDocument, range: Range) {
-			return this._connection.sendRequest(PreparePostWithCodeRequestType, {
-				textDocument: { uri: document.uri.toString() },
-				range: range,
-				dirty: document.isDirty
 			});
 		}
 

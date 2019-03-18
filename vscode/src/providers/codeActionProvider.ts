@@ -77,7 +77,7 @@ export class CodeStreamCodeActionProvider implements CodeActionProvider, Disposa
 			},
 			{
 				title: `Get Permalink`,
-				command: "codestream.newLink",
+				command: "codestream.newPermalink",
 				arguments: [args]
 			}
 		];

@@ -3,6 +3,7 @@ import * as paths from "path";
 import {
 	commands,
 	Disposable,
+	env,
 	Range,
 	Uri,
 	ViewColumn,
@@ -153,9 +154,24 @@ export class Commands implements Disposable {
 		return this.newCodemarkRequest(CodemarkType.Bookmark, args);
 	}
 
-	@command("newLink", { showErrorMessage: "Unable to get permalink" })
-	newLink(args?: NewCodemarkCommandArgs) {
+	@command("newPermalink", { showErrorMessage: "Unable to get permalink" })
+	newPermalink(args?: NewCodemarkCommandArgs) {
 		return this.newCodemarkRequest(CodemarkType.Link, args);
+	}
+
+	@command("copyPermalink", { showErrorMessage: "Unable to copy permalink" })
+	async copyPermalink(args?: NewCodemarkCommandArgs) {
+		const editor = window.activeTextEditor;
+		if (editor === undefined) return;
+
+		const response = await Container.agent.codemarks.createPermalink(
+			editor.document.uri,
+			editor.selection,
+			"private"
+		);
+		if (response === undefined) return;
+
+		return env.clipboard.writeText(response.linkUrl);
 	}
 
 	@command("openCodemark", { showErrorMessage: "Unable to open comment" })
