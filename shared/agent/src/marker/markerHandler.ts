@@ -63,15 +63,17 @@ export namespace MarkerHandler {
 			const documentMarkers: DocumentMarker[] = [];
 			const markersNotLocated: MarkerNotLocated[] = [];
 			for (const marker of markersForDocument) {
+				const [codemark, creator] = await Promise.all([
+					codemarks.getById(marker.codemarkId),
+					// HACK: This is a total hack for slack to avoid getting codestream users mixed with slack users in the cache
+					users.getById(marker.creatorId, { avoidCachingOnFetch: true })
+				]);
+
+				// Only return pinned markers
+				if (!codemark.pinned) continue;
+
 				const location = locations[marker.id];
 				if (location) {
-					const range = MarkerLocation.toRange(location);
-					const [codemark, creator] = await Promise.all([
-						codemarks.getById(marker.codemarkId),
-						// HACK: This is a total hack for slack to avoid getting codestream users mixed with slack users in the cache
-						users.getById(marker.creatorId, { avoidCachingOnFetch: true })
-					]);
-
 					const summary = (codemark.title || codemark.text).replace(
 						emojiRegex,
 						(s, code) => emojiMap[code] || s
@@ -89,7 +91,7 @@ export namespace MarkerHandler {
 							.replace(/\n/g, "\t\n>  ")}`,
 						creatorName: creator.username,
 						codemark: codemark,
-						range
+						range: MarkerLocation.toRange(location)
 					});
 					Logger.log(
 						`MARKERS: ${marker.id}=[${location.lineStart}, ${location.colStart}, ${
