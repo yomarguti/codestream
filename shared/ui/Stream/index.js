@@ -89,24 +89,24 @@ export class SimpleStream extends Component {
 		// polyfill for ResizeObserver which won't be triggered automatically
 		this.handleResizeCompose();
 
-		if (global.atom) {
-			this.disposables.push(
-				atom.keymaps.add("codestream", {
-					"atom-workspace": {
-						escape: "codestream:escape",
-						"cmd-c": "codestream:copy"
-					}
-				}),
-				atom.commands.add("atom-workspace", "codestream:escape", {
-					didDispatch: event => this.handleEscape(event),
-					hiddenInCommandPalette: true
-				}),
-				atom.commands.add("atom-workspace", "codestream:copy", {
-					didDispatch: event => this.copy(event),
-					hiddenInCommandPalette: true
-				})
-			);
-		}
+		// if (global.atom) {
+		// 	this.disposables.push(
+		// 		atom.keymaps.add("codestream", {
+		// 			"atom-workspace": {
+		// 				escape: "codestream:escape",
+		// 				"cmd-c": "codestream:copy"
+		// 			}
+		// 		}),
+		// 		atom.commands.add("atom-workspace", "codestream:escape", {
+		// 			didDispatch: event => this.handleEscape(event),
+		// 			hiddenInCommandPalette: true
+		// 		}),
+		// 		atom.commands.add("atom-workspace", "codestream:copy", {
+		// 			didDispatch: event => this.copy(event),
+		// 			hiddenInCommandPalette: true
+		// 		})
+		// 	);
+		// }
 
 		if (isInVscode()) {
 			this.disposables.push(
