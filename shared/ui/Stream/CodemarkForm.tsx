@@ -71,6 +71,7 @@ interface Props {
 	showChannels: string;
 	textEditorUri?: string;
 	textEditorSelection?: EditorSelection;
+	linkURI?: string;
 }
 
 interface State {
@@ -880,11 +881,12 @@ class CodemarkForm extends React.Component<Props, State> {
 							</div>
 						)}
 						{this.renderTextHelp()}
-						{commentType === "link" && [
+						{this.props.linkURI && (
 							<div className="permalink" key="2">
-								https://codestream.com/{this.state.privacy === "private" ? "r" : "u"}/
-								{this.props.streamId}
-							</div>,
+								{this.props.linkURI}
+							</div>
+						)}
+						{commentType === "link" && (
 							<div id="privacy-controls" className="control-group" key="1">
 								<div className="public-private-hint">
 									{this.state.privacy === "private"
@@ -898,7 +900,7 @@ class CodemarkForm extends React.Component<Props, State> {
 									onClick={this.togglePrivacy}
 								/>
 							</div>
-						]}
+						)}
 						{commentType !== "bookmark" && commentType !== "link" && [this.renderMessageInput()]}
 					</div>
 					{false && (commentType === "comment" || commentType === "question") && (
@@ -969,7 +971,11 @@ class CodemarkForm extends React.Component<Props, State> {
 							loading={this.state.isLoading}
 							onClick={this.handleClickSubmit}
 						>
-							{commentType === "link" ? "Copy Link" : "Submit"}
+							{commentType === "link"
+								? this.props.linkURI
+									? "Copy Link"
+									: "Create Link"
+								: "Submit"}
 						</Button>
 						{/*
 							<span className="hint">Styling with Markdown is supported</span>
