@@ -16,7 +16,7 @@ export interface SignedOutBootstrapResponse {
 	configs: {
 		[key: string]: any;
 	};
-	env: CodeStreamEnvironment | string;
+	env?: CodeStreamEnvironment | string;
 	version: string;
 }
 export interface SignedInBootstrapResponse extends SignedOutBootstrapResponse {
