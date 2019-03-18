@@ -144,7 +144,7 @@
                 },
                 "codestream.viewCodemarksInline": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Specifies whether to display Codemarks inline next to the code they refer to. The alternative is a list view."
                 },
                 "codestream.webAppUrl": {
