@@ -317,30 +317,6 @@ export class CodeStreamAgent extends AgentConnection {
 		return this.connection!.sendCustomRequest(requestType.method, params);
 	}
 
-	fetchUsers(): Promise<FetchUsersResponse> {
-		return this.connection!.sendCustomRequest(FetchUsersRequestType.method, {});
-	}
-
-	fetchStreams(): Promise<FetchStreamsResponse> {
-		return this.connection!.sendCustomRequest(FetchStreamsRequestType.method, {});
-	}
-
-	fetchTeams(): Promise<FetchTeamsResponse> {
-		return this.connection!.sendCustomRequest(FetchTeamsRequestType.method, {});
-	}
-
-	fetchRepos(): Promise<FetchReposResponse> {
-		return this.connection!.sendCustomRequest(FetchReposRequestType.method, {});
-	}
-
-	fetchUnreads(): Promise<GetUnreadsResponse> {
-		return this.connection!.sendCustomRequest(GetUnreadsRequestType.method, {});
-	}
-
-	fetchPreferences(): Promise<GetPreferencesResponse> {
-		return this.connection!.sendCustomRequest(GetPreferencesRequestType.method, undefined);
-	}
-
 	sendRequest<R>(name: string, params?: any): Promise<R> {
 		return this.connection!.sendCustomRequest(name, params);
 	}

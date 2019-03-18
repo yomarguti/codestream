@@ -1,5 +1,6 @@
 import {
-	BootstrapRequestType,
+	BootstrapRequestType as WebviewBootstrapRequestType,
+	BootstrapResponse,
 	CompleteSignupRequestType,
 	HostDidChangeActiveEditorNotification,
 	HostDidChangeActiveEditorNotificationType,
@@ -10,6 +11,7 @@ import {
 	LoginRequestType,
 	ShowStreamNotificationType,
 	SignedInBootstrapResponse,
+	SignedOutBootstrapResponse,
 	SlackLoginRequestType,
 	SlackLoginResponse,
 	UpdateConfigurationRequest,
@@ -26,11 +28,12 @@ import { Convert } from "atom-languageclient";
 import { shell } from "electron";
 import { NotificationType } from "vscode-languageserver-protocol";
 import {
+	BootstrapRequestType as AgentBootstrapRequestType,
 	DidChangeDataNotificationType,
 	GetFileStreamRequestType,
 } from "../protocols/agent/agent.protocol";
 import { LoginResult } from "../protocols/agent/api.protocol";
-import { asAbsolutePath } from "../utils";
+import { asAbsolutePath, Editor } from "../utils";
 import { SessionStatus, WorkspaceSession } from "../workspace/workspace-session";
 import { getStyles } from "./styles-getter";
 
@@ -233,11 +236,25 @@ export class CodestreamView {
 		return this.emitter.on(WILL_DESTROY, cb);
 	}
 
+	private async getSignedInBootstrapState(): Promise<SignedInBootstrapResponse> {
+		const bootstrapData = await this.session.agent.request(AgentBootstrapRequestType, {});
+		return {
+			...this.session.getBootstrapInfo(),
+			...bootstrapData,
+			session: { userId: this.session.user!.id },
+			context: this.webviewContext || { currentTeamId: this.session.teamId },
+			editorContext: {
+				activeFile: Editor.getActiveFile(),
+				textEditorUri: Editor.getActiveFileUri(),
+			},
+		};
+	}
+
 	private setupWebviewListener() {
 		this.channel.host.onmessage = ({ data }: { data: WebviewIpcMessage }) => {
 			if (isIpcRequestMessage(data)) {
 				const target = data.method.split("/")[0];
-				if (target === "codeStream") return this.forwardWebviewRequest(data as any);
+				if (target === "codestream") return this.forwardWebviewRequest(data as any);
 				return this.handleWebviewCommand(data);
 			} else this.onWebviewNotification(data as WebviewIpcNotificationMessage);
 		};
@@ -250,12 +267,15 @@ export class CodestreamView {
 
 	private async handleWebviewCommand(message: WebviewIpcRequestMessage) {
 		switch (message.method) {
-			case BootstrapRequestType.method: {
+			case WebviewBootstrapRequestType.method: {
 				try {
-					const data: SignedInBootstrapResponse = await this.session.getBootstrapData();
-					this.respond<SignedInBootstrapResponse>({
+					const response: BootstrapResponse = this.session.user
+						? await this.getSignedInBootstrapState()
+						: this.session.getBootstrapInfo();
+
+					this.respond<BootstrapResponse>({
 						id: message.id,
-						params: { ...data, context: { ...data.context, ...(this.webviewContext || {}) } },
+						params: response,
 					});
 				} catch (error) {
 					this.respond({ id: message.id, error: error.message });
@@ -281,7 +301,7 @@ export class CodestreamView {
 				const status = await this.session.loginViaSignupToken(message.params);
 				if (status !== LoginResult.Success) this.respond({ id: message.id, error: status });
 				else {
-					const data = await this.session.getBootstrapData();
+					const data = await this.getSignedInBootstrapState();
 					this.respond<SignedInBootstrapResponse>({ id: message.id, params: data });
 				}
 				break;
@@ -291,7 +311,7 @@ export class CodestreamView {
 				const status = await this.session.login(params.email, params.password);
 				if (status !== LoginResult.Success) this.respond({ id: message.id, error: status });
 				else {
-					const data = await this.session.getBootstrapData();
+					const data = await this.getSignedInBootstrapState();
 					this.respond<SignedInBootstrapResponse>({ id: message.id, params: data });
 				}
 				break;

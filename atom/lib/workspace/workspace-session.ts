@@ -1,14 +1,19 @@
 import { Emitter } from "atom";
 import uuidv4 from "uuid/v4";
+import { ConfigManager } from "../configs";
+import { EnvironmentConfig, PRODUCTION_CONFIG } from "../env-utils";
+import {
+	AccessToken,
+	AgentResult,
+	BootstrapRequestType,
+	Capabilities,
+} from "../protocols/agent/agent.protocol";
+import { CSMe, LoginResult } from "../protocols/agent/api.protocol";
+import { PackageState } from "../types/package";
 import { getPluginVersion } from "../utils";
 import { CodeStreamAgent } from "./agent";
-import { CSMe, LoginResult } from "../protocols/agent/api.protocol";
-import { EnvironmentConfig, PRODUCTION_CONFIG } from "../env-utils";
-import { PackageState } from "../types/package";
-import { Capabilities, AgentResult, AccessToken } from "../protocols/agent/agent.protocol";
-import { ConfigManager } from "../configs";
 
-export type Session = {
+export interface Session {
 	user: CSMe;
 	teamId: string;
 	token: {
@@ -16,7 +21,7 @@ export type Session = {
 		email: string;
 		value: string;
 	};
-};
+}
 
 export enum SessionStatus {
 	SignedOut,
@@ -105,68 +110,34 @@ export class WorkspaceSession {
 		return this.session && this.session.user;
 	}
 
+	get teamId() {
+		return this.session && this.session.teamId;
+	}
+
 	get environment() {
 		return this.envConfig;
 	}
 
-	getBootstrapState() {
+	get capabilities() {
+		const editorCapabilities = {
+			codemarkApply: false,
+			codemarkCompare: false,
+			editorTrackVisibleRange: false,
+			services: {},
+		};
+		if (!this.agentCapabilities) {
+			return editorCapabilities;
+		}
+		return { ...editorCapabilities, ...this.agentCapabilities };
+	}
+
+	getBootstrapInfo() {
 		return {
+			capabilities: this.capabilities,
 			configs: this.configManager.getForWebview(this.environment.serverUrl, this.lastUsedEmail),
 			version: getPluginVersion(),
 			...(this.lastUsedEmail !== "" ? { route: { route: "login" } } : {}),
 		};
-	}
-
-	async getBootstrapData() {
-		if (!this.session) return this.getBootstrapState();
-		try {
-			await this.isReady;
-		} catch (error) {
-			return {};
-		}
-
-		const promise = Promise.all([
-			this._agent.fetchUsers(),
-			this._agent.fetchStreams(),
-			this._agent.fetchTeams(),
-			this._agent.fetchRepos(),
-			this._agent.fetchUnreads(),
-			this._agent.fetchPreferences(),
-		]);
-
-		const data: any = {
-			currentTeamId: this.session.teamId,
-			currentUserId: this.session.user.id,
-			context: {
-				currentTeamId: this.session.teamId,
-			},
-			session: {
-				userId: this.session.user.id,
-			},
-			capabilities: this.agentCapabilities,
-			configs: this.configManager.getForWebview(this.environment.serverUrl, this.lastUsedEmail),
-			...this.getBootstrapState(),
-			...(this.lastUsedEmail !== "" ? { route: { route: "login" } } : {}),
-			preferences: {}, // TODO
-			umis: {}, // TODO
-		};
-		const [
-			usersResponse,
-			streamsResponse,
-			teamsResponse,
-			reposResponse,
-			unreadsResponse,
-			preferencesResponse,
-		] = await promise;
-
-		data.users = usersResponse.users;
-		data.streams = streamsResponse.streams;
-		data.teams = teamsResponse.teams;
-		data.repos = reposResponse.repos;
-		data.unreads = unreadsResponse.unreads;
-		data.preferences = preferencesResponse.preferences;
-
-		return data;
 	}
 
 	private getTeamPreference() {

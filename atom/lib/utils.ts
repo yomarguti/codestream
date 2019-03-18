@@ -1,3 +1,4 @@
+import { Convert } from "atom-languageclient";
 import * as path from "path";
 
 export const accessSafely = <T>(f: () => T): T | void => {
@@ -28,3 +29,22 @@ export const getDevPath = () => {
 export const getAgentSource = () => {
 	return path.resolve(getDevPath(), "../codestream-lsp-agent/dist/agent.js");
 };
+
+export namespace Editor {
+	function getActiveFilePath() {
+		const editor = atom.workspace.getActiveTextEditor();
+		return editor && editor.getPath();
+	}
+
+	export function getActiveFile() {
+		const filePath = getActiveFilePath();
+		if (filePath) return atom.project.relativize(filePath);
+		return undefined;
+	}
+
+	export function getActiveFileUri() {
+		const filePath = getActiveFilePath();
+		if (filePath !== undefined) return Convert.pathToUri(filePath);
+		return undefined;
+	}
+}
