@@ -14,6 +14,7 @@ import {
 	MarkerNotLocated,
 	MarkerNotLocatedReason
 } from "../protocol/agent.protocol";
+import { CodemarkStatus, CodemarkType } from "../protocol/api.protocol";
 
 const emojiMap: { [key: string]: string } = require("../../emoji/emojis.json");
 const emojiRegex = /:([-+_a-z0-9]+):/g;
@@ -69,8 +70,13 @@ export namespace MarkerHandler {
 					users.getById(marker.creatorId, { avoidCachingOnFetch: true })
 				]);
 
-				// Only return pinned markers
-				if (!codemark.pinned) continue;
+				// Only return markers that are pinned && issues that are not closed
+				if (
+					!codemark.pinned ||
+					(codemark.type === CodemarkType.Issue && codemark.status === CodemarkStatus.Closed)
+				) {
+					continue;
+				}
 
 				const location = locations[marker.id];
 				if (location) {
