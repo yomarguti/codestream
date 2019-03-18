@@ -10,6 +10,8 @@ import {
 	ConnectionStatus,
 	CreateChannelStreamRequest,
 	CreateChannelStreamResponse,
+	CreateCodemarkPermalinkRequest,
+	CreateCodemarkPermalinkResponse,
 	CreateCodemarkRequest,
 	CreateCodemarkResponse,
 	CreateDirectStreamRequest,
@@ -262,6 +264,10 @@ export interface ApiProvider {
 	setCodemarkPinned(request: SetCodemarkPinnedRequest): Promise<SetCodemarkPinnedResponse>;
 	setCodemarkStatus(request: SetCodemarkStatusRequest): Promise<SetCodemarkStatusResponse>;
 	updateCodemark(request: UpdateCodemarkRequest): Promise<UpdateCodemarkResponse>;
+
+	createCodemarkPermalink(
+		request: CreateCodemarkPermalinkRequest
+	): Promise<CreateCodemarkPermalinkResponse>;
 
 	createMarkerLocation(request: CreateMarkerLocationRequest): Promise<CreateMarkerLocationResponse>;
 	fetchMarkerLocations(request: FetchMarkerLocationsRequest): Promise<FetchMarkerLocationsResponse>;

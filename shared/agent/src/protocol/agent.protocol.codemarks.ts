@@ -55,6 +55,20 @@ export const CreateCodemarkRequestType = new RequestType<
 	void
 >("codestream/codemarks/create");
 
+export interface CreateCodemarkPermalinkRequest {
+	codemarkId: string;
+	isPublic: boolean;
+}
+export interface CreateCodemarkPermalinkResponse {
+	permalink: string;
+}
+export const CreateCodemarkPermalinkRequestType = new RequestType<
+	CreateCodemarkPermalinkRequest,
+	CreateCodemarkPermalinkResponse,
+	void,
+	void
+>("codestream/codemark/permalink");
+
 export interface FetchCodemarksRequest {
 	streamId?: string;
 }

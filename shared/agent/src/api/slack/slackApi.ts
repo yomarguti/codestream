@@ -11,6 +11,7 @@ import {
 	CloseStreamRequest,
 	ConnectionStatus,
 	CreateChannelStreamRequest,
+	CreateCodemarkPermalinkRequest,
 	CreateCodemarkRequest,
 	CreateDirectStreamRequest,
 	CreateMarkerLocationRequest,
@@ -505,6 +506,11 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	updateCodemark(request: UpdateCodemarkRequest) {
 		return this._codestream.updateCodemark(request);
+	}
+
+	@log()
+	createCodemarkPermalink(request: CreateCodemarkPermalinkRequest) {
+		return this._codestream.createCodemarkPermalink(request);
 	}
 
 	@log()

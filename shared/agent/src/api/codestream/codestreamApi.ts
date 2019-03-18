@@ -12,6 +12,7 @@ import {
 	Capabilities,
 	CloseStreamRequest,
 	CreateChannelStreamRequest,
+	CreateCodemarkPermalinkRequest,
 	CreateCodemarkRequest,
 	CreateDirectStreamRequest,
 	CreateMarkerLocationRequest,
@@ -67,6 +68,8 @@ import {
 	CSCompleteSignupRequest,
 	CSCreateChannelStreamRequest,
 	CSCreateChannelStreamResponse,
+	CSCreateCodemarkPermalinkRequest,
+	CSCreateCodemarkPermalinkResponse,
 	CSCreateCodemarkRequest,
 	CSCreateCodemarkResponse,
 	CSCreateDirectStreamRequest,
@@ -573,6 +576,15 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this.put<CSUpdateCodemarkRequest, CSUpdateCodemarkResponse>(
 			`/codemarks/${codemarkId}`,
 			attributes,
+			this._token
+		);
+	}
+
+	@log()
+	createCodemarkPermalink(request: CreateCodemarkPermalinkRequest) {
+		return this.post<CSCreateCodemarkPermalinkRequest, CSCreateCodemarkPermalinkResponse>(
+			`/codemarks/${request.codemarkId}/permalink`,
+			{ isPublic: request.isPublic },
 			this._token
 		);
 	}

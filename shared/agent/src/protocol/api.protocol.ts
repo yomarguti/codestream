@@ -413,6 +413,13 @@ export interface CSUpdateStreamResponse {
 	stream: { [key: string]: any };
 }
 
+export interface CSCreateCodemarkPermalinkRequest {
+	isPublic: boolean;
+}
+export interface CSCreateCodemarkPermalinkResponse {
+	permalink: string;
+}
+
 export interface CSTrackSlackPostRequest {
 	teamId: string;
 	streamId: string;
