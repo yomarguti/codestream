@@ -119,6 +119,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	insertTextAtCursor?: Function;
 	focusOnMessageInput?: Function;
 	crossPostIssueValues?: CardValues;
+	permalinkRef = React.createRef<HTMLDivElement>();
 
 	constructor(props: Props) {
 		super(props);
@@ -697,6 +698,13 @@ class CodemarkForm extends React.Component<Props, State> {
 		});
 	};
 
+	copyPermalink() {
+		if (this.permalinkRef.current) {
+			(this.permalinkRef.current as any).select();
+			document.execCommand("copy");
+		}
+	}
+
 	render() {
 		if (this.props.collapsed) {
 			return (
@@ -909,7 +917,7 @@ class CodemarkForm extends React.Component<Props, State> {
 						)}
 						{this.renderTextHelp()}
 						{this.state.linkURI && (
-							<div className="permalink" key="2">
+							<div ref={this.permalinkRef} className="permalink" key="2">
 								{this.state.linkURI}
 							</div>
 						)}
@@ -996,7 +1004,7 @@ class CodemarkForm extends React.Component<Props, State> {
 							className="control-button"
 							type="submit"
 							loading={this.state.isLoading}
-							onClick={this.handleClickSubmit}
+							onClick={this.state.linkURI ? this.copyPermalink : this.handleClickSubmit}
 						>
 							{commentType === "link"
 								? this.state.linkURI
