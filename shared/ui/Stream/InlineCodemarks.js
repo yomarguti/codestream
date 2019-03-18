@@ -17,6 +17,7 @@ import {
 } from "../ipc/webview.protocol";
 import {
 	DocumentMarker,
+	OpenUrlRequestType,
 	TelemetryRequestType,
 	DidChangeDocumentMarkersNotificationType,
 	DocumentFromMarkerRequestType
@@ -476,9 +477,25 @@ export class SimpleInlineCodemarks extends Component {
 				</div>
 				<div className="panel-header">{!viewInline && "Codemarks"}</div>
 				{this.state.isLoading ? null : viewInline ? this.renderInline() : this.renderList()}
+				<div className="happy-sad-feedback">
+					<Icon name="happy" className="clickable" onClick={this.submitFeedbackHappy} />
+					<Icon name="sad" className="clickable" onClick={this.submitFeedbackSad} />
+				</div>
 			</div>
 		);
 	}
+
+	submitFeedbackHappy = () => {
+		HostApi.instance.send(OpenUrlRequestType, {
+			url: "mailto:team@codestream.com?Subject=CodeStream Feedback"
+		});
+	};
+
+	submitFeedbackSad = () => {
+		HostApi.instance.send(OpenUrlRequestType, {
+			url: "mailto:team@codestream.com?Subject=CodeStream Sad Feedback"
+		});
+	};
 
 	toggleViewCodemarksInline = () => {
 		HostApi.instance.send(UpdateConfigurationRequestType, {
