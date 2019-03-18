@@ -7,7 +7,7 @@ import Codemark from "./Codemark";
 import ScrollBox from "./ScrollBox";
 import Tooltip from "./Tooltip";
 import createClassString from "classnames";
-import { range, rAFThrottle } from "../utils";
+import { range } from "../utils";
 import { HostApi } from "../webview-api";
 import {
 	EditorHighlightRangeRequestType,
@@ -96,10 +96,10 @@ export class SimpleInlineCodemarks extends Component {
 			HostApi.instance.on(
 				DidChangeDocumentMarkersNotificationType,
 				// @ts-ignore
-				rAFThrottle(({ textDocument }) => {
+				({ textDocument }) => {
 					if (this.props.textEditorUri === textDocument.uri)
 						this.props.fetchDocumentMarkers(textDocument.uri);
-				})
+				}
 			)
 		);
 
