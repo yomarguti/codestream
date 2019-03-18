@@ -320,8 +320,9 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 	};
 
+	// TODO: remove this
 	tabIndex = () => {
-		return (global as any).atom ? this.tabIndexCount++ : 0;
+		return 0;
 	};
 
 	// TODO: work on this from initial mount
