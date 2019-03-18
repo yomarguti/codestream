@@ -87,7 +87,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>CodeStreamPackage.vsct</DependentUpon>
     </Compile>
-    <Compile Include="Commands\AddCodemarkCommand.cs" />
+    <Compile Include="Commands\AddCodemarkCommandBase.cs" />
+    <Compile Include="Commands\AddCodemarkCommands.cs" />
     <Compile Include="Commands\CommandBase.cs" />
     <Compile Include="Commands\UserCommand.cs" />
     <Compile Include="Commands\AuthenticationCommand.cs" />

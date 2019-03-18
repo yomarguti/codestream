@@ -100,14 +100,36 @@
         </Strings>
       </Button>
 
-      <Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommandId" type="Button">
+      <Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommentCommandId" type="Button">
         <Icon guid="guidImages" id="logo" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <ButtonText>CodeStream: Add Comment...</ButtonText>
+          <ButtonText>Add Comment</ButtonText>
         </Strings>
       </Button>
+      <Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkIssueCommandId" type="Button">
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>Create Issue</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkBookmarkCommandId" type="Button">
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>Create Bookmark</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkCommandId" type="Button">
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>Get Permalink</ButtonText>
+        </Strings>
+      </Button>
+
     </Buttons>
     <Bitmaps>
       <Bitmap guid="guidImages" href="Resources\Sprites.png" usedList="logo, auth, user, empty4, empty5, empty6" />
@@ -118,8 +140,20 @@
   <KeyBindings>
     <KeyBinding guid="guidWebViewPackageCmdSet" id="WebViewToggleCommandId"
                 editor="guidVSStd97" key1="C" mod1="ALT" key2="S" mod2="ALT" />
-    <KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommandId" 
-                editor="GUID_TextEditorFactory" mod1="Control" key1="VK_OEM_2" mod2="Control" key2="VK_OEM_2" />
+
+    <KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommentCommandId" 
+                editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" mod2="Control Shift" key2="VK_OEM_2" />
+    <KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommentCommandId" 
+                editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="c" />
+    <KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkIssueCommandId" 
+                editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="i" />
+    <KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkBookmarkCommandId" 
+                editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="b" />
+    <KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkCommandId" 
+                editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="p" />
+    <KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkInstantCommandId" 
+                editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" mod2="Shift" key2="p" />
+
     <KeyBinding guid="guidWebViewPackageCmdSet" id="WebViewDevToolsCommandId"
                 editor="guidVSStd97" key1="C" mod1="ALT" key2="D" mod2="ALT" />
   </KeyBindings>
@@ -129,7 +163,16 @@
       <!-- The parent of the group will be the code window context menu -->
       <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN"/>
     </CommandPlacement>
-    <CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommandId" priority="0x0001" >
+    <CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommentCommandId" priority="0x0001" >
+      <Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkIssueCommandId" priority="0x0002" >
+      <Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkBookmarkCommandId" priority="0x0003" >
+      <Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkCommandId" priority="0x0004" >
       <Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
     </CommandPlacement>
   </CommandPlacements>
@@ -164,7 +207,11 @@
 
     <GuidSymbol name="guidWebViewPackageCodeWindowContextMenuCmdSet" value="{0f33235e-3a5c-42bc-b519-d888652f972c}">
       <IDSymbol name="CodeStreamEditorCommands" value="0x1023" />
-      <IDSymbol name="AddCodemarkCommandId" value="0x0400" />
+      <IDSymbol name="AddCodemarkCommentCommandId" value="0x0400" />
+      <IDSymbol name="AddCodemarkIssueCommandId" value="0x0401" />
+      <IDSymbol name="AddCodemarkBookmarkCommandId" value="0x0402" />
+      <IDSymbol name="AddCodemarkPermalinkCommandId" value="0x0403" />
+      <IDSymbol name="AddCodemarkPermalinkInstantCommandId" value="0x0413" />
     </GuidSymbol>
 
     <GuidSymbol name="guidImages" value="{f2c8ef6d-3257-4e0a-8ae0-ef6298dd22c5}" >

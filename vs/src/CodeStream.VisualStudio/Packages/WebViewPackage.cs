@@ -59,8 +59,15 @@ namespace CodeStream.VisualStudio.Packages
             await WebViewToggleCommand.InitializeAsync(this);
             await AuthenticationCommand.InitializeAsync(this);
             await UserCommand.InitializeAsync(this);
-            await AddCodemarkCommand.InitializeAsync(this);
+
+            await AddCodemarkCommentCommand.InitializeAsync(this);
+            await AddCodemarkIssueCommand.InitializeAsync(this);
+            await AddCodemarkBookmarkCommand.InitializeAsync(this);
+            await AddCodemarkPermalinkCommand.InitializeAsync(this);
+            await AddCodemarkPermalinkInstantCommand.InitializeAsync(this);
+
             await WebViewReloadCommand.InitializeAsync(this);
+
 #if DEBUG
             await WebViewDevToolsCommand.InitializeAsync(this);
 #endif
