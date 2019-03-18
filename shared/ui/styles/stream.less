@@ -1949,7 +1949,7 @@
 				float: left;
 			}
 		}
-		.post.has-status {
+		.post {
 			.status-button {
 				// float: right;
 				display: inline-block;
@@ -1961,6 +1961,7 @@
 				border: 2px solid @text-color;
 				opacity: 1;
 				margin-top: 2px;
+				cursor: pointer;
 				.check {
 					opacity: 1;
 					transform: scale(0.01);
@@ -1983,6 +1984,18 @@
 						transform: scale(0.85);
 						color: @app-background-color !important;
 					}
+				}
+			}
+			.status-label {
+				vertical-align: 4px;
+			}
+			.status:hover {
+				cursor: pointer;
+				.status-button:not(.checked) {
+					border: 2px solid @text-color-info;
+				}
+				.status-label {
+					color: @text-color-info;
 				}
 			}
 		}

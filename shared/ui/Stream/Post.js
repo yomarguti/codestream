@@ -19,7 +19,7 @@ import { getById } from "../store/repos/reducer";
 import { getPost } from "../store/posts/reducer";
 import { getCodemark } from "../store/codemarks/reducer";
 import { markdownify, emojify } from "./Markdowner";
-import { reactToPost } from "./actions";
+import { reactToPost, setCodemarkStatus } from "./actions";
 import { escapeHtml, safe } from "../utils";
 import { getUsernamesById, getNormalizedUsernames } from "../store/users/reducer";
 import { getProviderInfo } from "./CrossPostIssueControls/types";
@@ -175,7 +175,7 @@ class Post extends React.Component {
 		if (this.props.deactivated) return null;
 
 		// console.log(renderCount++);
-		const { author, post, showStatus, showAssigneeHeadshots, hasMarkers, codemark } = this.props;
+		const { author, post, showAssigneeHeadshots, hasMarkers, codemark } = this.props;
 		const { menuOpen, authorMenuOpen, menuTarget } = this.state;
 
 		const headshotSize = this.props.headshotSize || 36;
@@ -196,7 +196,6 @@ class Post extends React.Component {
 			hover: menuOpen || authorMenuOpen,
 			editing: this.props.editing,
 			"system-post": systemPost,
-			"has-status": showStatus,
 			unread: this.props.unread,
 			"new-separator": this.props.newMessageIndicator,
 			[`thread-key-${this.props.threadKey}`]: true,
@@ -292,7 +291,6 @@ class Post extends React.Component {
 				thread={post.parentPostId || post.id}
 				ref={ref => (this._div = ref)}
 			>
-				{showStatus && this.renderStatus()}
 				{showAssigneeHeadshots && this.renderAssigneeHeadshots()}
 				{showIcons && this.renderIcons()}
 				{menuOpen && <Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />}
@@ -339,6 +337,7 @@ class Post extends React.Component {
 						{this.renderText(post)}
 						{!this.props.editing && post.hasBeenEdited && <span className="edited">(edited)</span>}
 						{this.renderAssignees(post)}
+						{this.renderStatus()}
 						{this.renderExternalLink()}
 						{this.renderCodeBlockFile()}
 					</div>
@@ -499,24 +498,67 @@ class Post extends React.Component {
 		return <span className="file-name">{marker.file}</span>;
 	};
 
-	renderStatus = () => {
-		// console.log("STATUS IS: ", this.props.status);
+	handleClickStatusToggle = event => {
+		event.stopPropagation();
 		const { codemark } = this.props;
+		if (codemark.status === "closed") this.openIssue();
+		else this.closeIssue();
+	};
+
+	closeIssue = () => {
+		const { codemark, setCodemarkStatus } = this.props;
+		setCodemarkStatus(codemark.id, "closed");
+		this.submitReply("/me closed this issue");
+	};
+
+	openIssue = () => {
+		const { codemark, setCodemarkStatus } = this.props;
+		setCodemarkStatus(codemark.id, "open");
+		this.submitReply("/me reopened this issue");
+	};
+
+	submitReply = text => {
+		const { action, codemark } = this.props;
+		const forceThreadId = codemark.parentPostId || codemark.postId;
+		action("submit-post", null, { forceStreamId: codemark.streamId, forceThreadId, text });
+	};
+
+	renderStatus = () => {
+		const { collapsed, codemark } = this.props;
+
+		if (collapsed || !codemark) return null;
+
 		const status = (codemark && codemark.status) || "open";
 		// const status = this.props.post.status || "open";
+		if (codemark.type !== "issue") return null;
 
 		const statusClass = createClassString({
 			"status-button": true,
 			checked: status === "closed"
 		});
 
-		return (
-			<div className="align-far-left">
-				<div className={statusClass}>
-					<Icon name="check" className="check" />
+		return [
+			<br />,
+			<div className="status">
+				<div>
+					<b>Status</b>
+				</div>
+				<div className="align-far-left" onClick={this.handleClickStatusToggle}>
+					<div className={statusClass}>
+						<Icon name="check" className="check" />
+					</div>{" "}
+					<span className="status-label">{status}</span>
 				</div>
 			</div>
-		);
+		];
+
+		// return (
+		// 	<div className="align-far-left">
+		// 		<div className={statusClass}>
+		// 			<Icon name="check" className="check" />
+		// 		</div>
+		// 	</div>
+		// );
 	};
 
 	renderAssigneeHeadshots = () => {
@@ -815,5 +857,5 @@ const mapStateToProps = (state, props) => {
 
 export default connect(
 	mapStateToProps,
-	{ cancelPost, retryPost, reactToPost }
+	{ cancelPost, retryPost, reactToPost, setCodemarkStatus }
 )(injectIntl(Post));
