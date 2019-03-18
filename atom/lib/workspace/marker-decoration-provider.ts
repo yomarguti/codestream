@@ -1,9 +1,9 @@
-import { Disposable, CompositeDisposable, TextEditor, Gutter, DisplayMarker } from "atom";
-import { WorkspaceSession, SessionStatus } from "./workspace-session";
 import { DocumentMarkersRequestType } from "@codestream/protocols/agent";
+import { CompositeDisposable, DisplayMarker, Disposable, Gutter, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
-import { asAbsolutePath, accessSafely } from "utils";
+import { accessSafely, asAbsolutePath } from "utils";
 import { ViewController } from "views/controller";
+import { SessionStatus, WorkspaceSession } from "./workspace-session";
 
 export class MarkerDecorationProvider implements Disposable {
 	private resourceSubscriptions = new CompositeDisposable();
@@ -59,7 +59,7 @@ export class MarkerDecorationProvider implements Disposable {
 			this.provideFor(editor);
 			this.resourceSubscriptions.add(editor.onDidDestroy(() => this.observedEditors.delete(id)));
 		}
-	};
+	}
 
 	private async provideFor(editor: TextEditor) {
 		let gutter = this.gutters.get(editor.id);

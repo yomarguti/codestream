@@ -1,39 +1,39 @@
-import { Emitter, Disposable } from "atom";
-import { ChildProcess, spawn } from "child_process";
+import { Disposable, Emitter } from "atom";
 import { Convert, LanguageClientConnection } from "atom-languageclient";
 import {
 	createMessageConnection,
 	IPCMessageReader,
 	IPCMessageWriter,
 } from "atom-languageclient/node_modules/vscode-jsonrpc";
-import { asAbsolutePath, getPluginVersion, getAgentSource } from "../utils";
-import {
-	AgentOptions,
-	AgentInitializeResult,
-	AgentResult,
-	FetchUsersRequestType,
-	FetchStreamsRequestType,
-	FetchTeamsRequestType,
-	FetchReposRequestType,
-	GetUnreadsRequestType,
-	GetPreferencesRequestType,
-	FetchUsersResponse,
-	FetchStreamsResponse,
-	FetchTeamsResponse,
-	FetchReposResponse,
-	GetUnreadsResponse,
-	GetPreferencesResponse,
-	TraceLevel,
-	AccessToken,
-	DidChangeDataNotificationType,
-	DidChangeDataNotification,
-} from "../protocols/agent/agent.protocol";
+import { ChildProcess, spawn } from "child_process";
 import {
 	ClientCapabilities,
 	LogMessageParams,
-	RequestType,
 	NotificationType,
+	RequestType,
 } from "vscode-languageserver-protocol";
+import {
+	AccessToken,
+	AgentInitializeResult,
+	AgentOptions,
+	AgentResult,
+	DidChangeDataNotification,
+	DidChangeDataNotificationType,
+	FetchReposRequestType,
+	FetchReposResponse,
+	FetchStreamsRequestType,
+	FetchStreamsResponse,
+	FetchTeamsRequestType,
+	FetchTeamsResponse,
+	FetchUsersRequestType,
+	FetchUsersResponse,
+	GetPreferencesRequestType,
+	GetPreferencesResponse,
+	GetUnreadsRequestType,
+	GetUnreadsResponse,
+	TraceLevel,
+} from "../protocols/agent/agent.protocol";
+import { asAbsolutePath, getAgentSource, getPluginVersion } from "../utils";
 
 type RequestOrNotificationType<P, R> = RequestType<P, R, any, any> | NotificationType<P, R>;
 
@@ -215,12 +215,14 @@ abstract class AgentConnection {
 		agentProcess.on("disconnect", () => {
 			if (this._connection) {
 				console.error("CodeStream agent process connection disconnected prematurely");
+				this.onPrematureExit();
 				// this.stop();
 			}
 		});
 		agentProcess.on("exit", code => {
-			if (Number(code) !== 0)
+			if (Number(code) !== 0) {
 				console.error(`CodeStream agent process exited with non-zero exit code ${code}`);
+			}
 		});
 
 		return agentProcess;
