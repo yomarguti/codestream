@@ -22,6 +22,11 @@ export enum CodemarkType {
 	Link = "link"
 }
 
+export enum CodemarkStatus {
+	Open = "open",
+	Closed = "closed"
+}
+
 export interface CSCodemark extends CSEntity {
 	teamId: string;
 	streamId: string;
@@ -32,7 +37,7 @@ export interface CSCodemark extends CSEntity {
 	providerType?: ProviderType;
 	type: CodemarkType;
 	color: "blue" | "green" | "yellow" | "orange" | "red" | "purple" | "aqua" | "gray" | string;
-	status: string;
+	status: CodemarkStatus;
 	title: string;
 	assignees: string[];
 	text: string;
