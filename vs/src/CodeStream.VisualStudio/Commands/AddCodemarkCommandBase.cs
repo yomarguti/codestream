@@ -23,7 +23,7 @@ namespace CodeStream.VisualStudio.Commands
         /// It will check that the selected object is actually an instance of this class and
         /// increment its click counter.
         /// </summary>
-        protected void InvokeHandler(object sender, EventArgs args)
+        protected virtual void InvokeHandler(object sender, EventArgs args)
         {
             var codeStreamService = Microsoft.VisualStudio.Shell.Package.GetGlobalService((typeof(SCodeStreamService))) as ICodeStreamService;
             if (codeStreamService == null || !codeStreamService.IsReady) return;

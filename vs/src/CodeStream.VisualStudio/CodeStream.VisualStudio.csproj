@@ -132,6 +132,7 @@
     <Compile Include="Extensions\RangeExtensions.cs" />
     <Compile Include="Models\ActiveTextEditor.cs" />
     <Compile Include="Models\Agent.Protocol.cs" />
+    <Compile Include="Models\Agent.Protocol.DocumentMarkers.cs" />
     <Compile Include="Models\Agent.Protocol.Notifications.cs" />
     <Compile Include="Models\Agent.Protocol.Scm.cs" />
     <Compile Include="Models\Host.Protocol.Editor.cs" />

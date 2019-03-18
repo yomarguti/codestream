@@ -129,7 +129,13 @@
           <ButtonText>Get Permalink</ButtonText>
         </Strings>
       </Button>
-
+      <Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkInstantCommandId" type="Button">
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>Copy Permalink to Clipboard</ButtonText>
+        </Strings>
+      </Button>
     </Buttons>
     <Bitmaps>
       <Bitmap guid="guidImages" href="Resources\Sprites.png" usedList="logo, auth, user, empty4, empty5, empty6" />
@@ -173,6 +179,9 @@
       <Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
     </CommandPlacement>
     <CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkCommandId" priority="0x0004" >
+      <Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkInstantCommandId" priority="0x0005" >
       <Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
     </CommandPlacement>
   </CommandPlacements>

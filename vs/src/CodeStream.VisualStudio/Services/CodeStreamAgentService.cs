@@ -4,6 +4,7 @@ using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.UI;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -17,6 +18,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
+using TextDocumentIdentifier = CodeStream.VisualStudio.Models.TextDocumentIdentifier;
 using TraceLevel = CodeStream.VisualStudio.Core.Logging.TraceLevel;
 
 // ReSharper disable ClassNeverInstantiated.Global
@@ -30,7 +32,7 @@ namespace CodeStream.VisualStudio.Services
     {
         Task SetRpcAsync(JsonRpc rpc);
         Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null);
-
+        Task<CreateDocumentMarkerPermalinkResponse> CreatePermalinkAsync(Range range, string uri, string privacy);
         Task<CreatePostResponse> CreatePostAsync(string streamId, string threadId, string text);
         Task<GetFileStreamResponse> GetFileStreamAsync(Uri uri);
         Task<GetPostResponse> GetPostAsync(string streamId, string postId);
@@ -122,6 +124,16 @@ namespace CodeStream.VisualStudio.Services
             }
 
             return SendCoreAsync<T>(name, arguments, cancellationToken);
+        }
+
+        public Task<CreateDocumentMarkerPermalinkResponse> CreatePermalinkAsync(Range range, string uri, string privacy)
+        {
+            return SendAsync<CreateDocumentMarkerPermalinkResponse>(CreateDocumentMarkerPermalinkRequestType.MethodName, new CreateDocumentMarkerPermalinkRequest
+            {
+                Range = range,
+                Uri = uri,
+                Privacy = privacy
+            });
         }
 
         public Task<FetchCodemarksResponse> GetMarkersAsync(string streamId)

@@ -27,6 +27,7 @@ namespace CodeStream.VisualStudio.Services
     public interface IIdeService
     {
         void Navigate(string url);
+        System.Threading.Tasks.Task SetClipboardAsync(string text);
         ShowCodeResult OpenEditor(string fileUri, int? scrollTo = null);
         ShowCodeResult OpenEditor(Uri fileUri, int? scrollTo = null);
         EditorState GetActiveEditorState();
@@ -308,6 +309,16 @@ namespace CodeStream.VisualStudio.Services
             }
 
             System.Diagnostics.Process.Start(url);
+        }
+
+        public System.Threading.Tasks.Task SetClipboardAsync(string text)
+        {
+            var thread = new System.Threading.Thread(() => Clipboard.SetText(text));
+            thread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
+            thread.Start();
+            thread.Join();
+
+            return System.Threading.Tasks.Task.CompletedTask;
         }
 
         public async System.Threading.Tasks.Task GetClipboardTextValueAsync(int millisecondsTimeout, Action<string> callback, Regex clipboardMatcher = null)

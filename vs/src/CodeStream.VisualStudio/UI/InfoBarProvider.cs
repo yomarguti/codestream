@@ -24,7 +24,7 @@ namespace CodeStream.VisualStudio.UI
         public void OnClosed(IVsInfoBarUIElement infoBarUiElement)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
-
+            
             infoBarUiElement.Unadvise(_cookie);
         }
 
@@ -58,7 +58,7 @@ namespace CodeStream.VisualStudio.UI
 
             var factory = _serviceProvider.GetService(typeof(SVsInfoBarUIFactory)) as IVsInfoBarUIFactory;
             if (factory == null) return;
-
+            
             var element = factory.CreateInfoBar(infoBarModel);
             element.Advise(this, out _cookie);
             host.AddInfoBar(element);
