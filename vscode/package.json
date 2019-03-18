@@ -234,8 +234,8 @@
             {
                 "command": "codestream.newPermalink",
                 "args": { "source": "Shortcut" },
-                "key": "ctrl+shift+/ b",
-                "mac": "ctrl+/ b",
+                "key": "ctrl+shift+/ p",
+                "mac": "ctrl+/ p",
                 "when": "editorTextFocus && codestream:status == signedIn"
             },
             {
