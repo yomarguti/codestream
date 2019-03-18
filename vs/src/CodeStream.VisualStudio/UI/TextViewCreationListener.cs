@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
+using CodeStream.VisualStudio.Packages;
 
 namespace CodeStream.VisualStudio.UI
 {
@@ -303,18 +304,23 @@ namespace CodeStream.VisualStudio.UI
             // don't trigger for changes that don't result in lines being added or removed
             if (_settingsService.ViewCodemarksInline && (e.VerticalTranslation || e.TranslatedLines.Any()))
             {
-                var now = DateTime.Now;
-                if (_lastThemeChange == DateTime.MinValue || (now - _lastThemeChange).Milliseconds > 150)
+                var toolWindowIsVisible = ServiceLocator.Get<SToolWindowProvider, IToolWindowProvider>()
+                    ?.IsVisible(Guids.WebViewToolWindowGuid);
+                if (toolWindowIsVisible == true)
                 {
-                    ServiceLocator.Get<SWebviewIpc, IWebviewIpc>()?.NotifyInBackground(
-                        new HostDidChangeEditorVisibleRangesNotificationType
-                        {
-                            Params = new HostDidChangeEditorVisibleRangesNotification(
-                                textDocument.FilePath.ToUri(),
-                                _ideService.GetActiveEditorState()?.ToEditorSelections(),
-                                wpfTextView.ToVisibleRanges())
-                        });
-                    _lastThemeChange = now;
+                    var now = DateTime.Now;
+                    if (_lastThemeChange == DateTime.MinValue || (now - _lastThemeChange).Milliseconds > 150)
+                    {
+                        ServiceLocator.Get<SWebviewIpc, IWebviewIpc>()?.NotifyInBackground(
+                            new HostDidChangeEditorVisibleRangesNotificationType
+                            {
+                                Params = new HostDidChangeEditorVisibleRangesNotification(
+                                    textDocument.FilePath.ToUri(),
+                                    _ideService.GetActiveEditorState()?.ToEditorSelections(),
+                                    wpfTextView.ToVisibleRanges())
+                            });
+                        _lastThemeChange = now;
+                    }
                 }
             }
 
