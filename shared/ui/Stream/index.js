@@ -688,7 +688,6 @@ export class SimpleStream extends Component {
 			<div className={streamClass}>
 				<div id="modal-root" />
 				<div id="confirm-root" />
-				<div id="focus-trap" className={createClassString({ active: !this.props.hasFocus })} />
 				{(threadId || this.state.floatCompose) && <div id="panel-blanket" />}
 				{renderNav && this.renderNavIcons()}
 				{this.state.floatCompose && this.renderComposeBox(placeholderText, channelName)}

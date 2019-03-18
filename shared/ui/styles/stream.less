@@ -2729,11 +2729,15 @@
 		position: fixed;
 		top: -50px;
 	}
-	.full-height .switch,
-	.panel-header .switch {
+	.view-as-switch {
 		top: 55px;
 		position: fixed;
 		right: 20px;
+		z-index: 50;
+		.view-as-label {
+			vertical-align: 3px;
+			padding-right: 4px;
+		}
 	}
 	.channel-name {
 		// text-align: left !important;
@@ -2827,19 +2831,19 @@
 		position: absolute;
 		padding-left: 110px;
 	}
-	.switch.wide {
+	.switch.view-as-inline-switch {
 		width: 56px;
 		font-size: 11px;
 		&::before {
 			position: absolute;
-			content: "inline";
+			content: "list";
 			top: 0px;
-			left: 20px;
+			left: 25px;
 			transition: all 0.1s;
 		}
 		&.checked::before {
-			content: "list";
-			left: 15px;
+			content: "inline";
+			left: 8px;
 		}
 		&.checked::after {
 			transform: translateX(40px);

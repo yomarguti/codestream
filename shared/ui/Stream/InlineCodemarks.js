@@ -465,17 +465,16 @@ export class SimpleInlineCodemarks extends Component {
 
 		return (
 			<div className={createClassString("panel", { "full-height": viewInline })}>
-				<div className="panel-header">
-					<Tooltip title="View As List or Inline" placement="left">
-						<label
-							className={createClassString("switch", {
-								checked: !viewInline
-							})}
-							onClick={this.toggleViewCodemarksInline}
-						/>
-					</Tooltip>
-					{!viewInline && "Codemarks"}
+				<div className="view-as-switch">
+					<span className="view-as-label">View:</span>
+					<label
+						className={createClassString("switch view-as-inline-switch", {
+							checked: viewInline
+						})}
+						onClick={this.toggleViewCodemarksInline}
+					/>
 				</div>
+				<div className="panel-header">{!viewInline && "Codemarks"}</div>
 				{this.state.isLoading ? null : viewInline ? this.renderInline() : this.renderList()}
 			</div>
 		);
