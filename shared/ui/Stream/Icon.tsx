@@ -2,13 +2,13 @@ import React from "react";
 import createClassString from "classnames";
 import Icons8 from "./Icons8";
 import octicons from "octicons";
-import Tooltip from "./Tooltip";
+import Tooltip, { Placement } from "./Tooltip";
 
 interface Props {
 	name: string;
 	className?: string;
 	title?: string;
-	placement?: string;
+	placement?: Placement;
 	delay?: number;
 	onClick?(event: React.SyntheticEvent): any;
 }

@@ -1,13 +1,13 @@
 import React from "react";
 import { connect } from "react-redux";
-import Tooltip from "../Stream/Tooltip";
+import Tooltip, { Placement } from "../Stream/Tooltip";
 
 interface Props {
 	children: any;
 	enabled: boolean;
 	text?: string;
 	object?: { [key: string]: any };
-	placement?: string;
+	placement?: Placement;
 }
 
 const renderObject = (object: object) => {
@@ -35,7 +35,7 @@ function Debug(props: Props) {
 }
 
 Debug.defaultProps = {
-	placement: "right"
+	placement: "right" as Placement
 };
 
 const mapStateToProps = (state: any) => ({ enabled: state.configs.debug });
