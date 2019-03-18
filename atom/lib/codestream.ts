@@ -1,10 +1,11 @@
+import { CodemarkType } from "@codestream/protocols/api";
 import { CompositeDisposable, Disposable } from "atom";
-import { StatusBar, Tile } from "./types/package-services/status-bar";
-import { WorkspaceSession, SessionStatus } from "./workspace/workspace-session";
+import { Environment, PD_CONFIG } from "./env-utils";
 import { PackageState } from "./types/package";
-import { PD_CONFIG, Environment } from "./env-utils";
-import { MarkerDecorationProvider } from "./workspace/marker-decoration-provider";
+import { StatusBar, Tile } from "./types/package-services/status-bar";
 import { ViewController } from "./views/controller";
+import { MarkerDecorationProvider } from "./workspace/marker-decoration-provider";
+import { SessionStatus, WorkspaceSession } from "./workspace/workspace-session";
 
 class CodestreamPackage {
 	subscriptions = new CompositeDisposable();
@@ -12,6 +13,7 @@ class CodestreamPackage {
 	viewController: ViewController;
 	sessionStatusCommand?: Disposable;
 	markerDecorationProvider: MarkerDecorationProvider;
+	loggedInCommandsSubscriptions?: CompositeDisposable;
 
 	constructor(state: PackageState) {
 		if (atom.inDevMode()) {
@@ -39,8 +41,11 @@ class CodestreamPackage {
 							this.workspaceSession.signOut();
 						}
 					);
+
+					this.registerLoggedInCommands();
 				}
 				if (status === SessionStatus.SignedOut) {
+					this.loggedInCommandsSubscriptions && this.loggedInCommandsSubscriptions.dispose();
 					this.sessionStatusCommand = atom.commands.add(
 						"atom-workspace",
 						"codestream:sign-in",
@@ -62,6 +67,38 @@ class CodestreamPackage {
 		);
 	}
 
+	private registerLoggedInCommands() {
+		this.loggedInCommandsSubscriptions = new CompositeDisposable();
+
+		this.loggedInCommandsSubscriptions.add(
+			atom.commands.add("atom-workspace", "codestream:create-comment", () => {
+				const view = this.viewController.getMainView();
+				view.show().then(() => {
+					view.newCodemarkRequest(CodemarkType.Comment, "context-menu");
+				});
+			}),
+			atom.commands.add("atom-workspace", "codestream:create-issue", () => {
+				const view = this.viewController.getMainView();
+				view.show().then(() => {
+					view.newCodemarkRequest(CodemarkType.Issue, "context-menu");
+				});
+			}),
+			atom.commands.add("atom-workspace", "codestream:create-bookmark", () => {
+				const view = this.viewController.getMainView();
+				view.show().then(() => {
+					view.newCodemarkRequest(CodemarkType.Bookmark, "context-menu");
+				});
+			})
+			// TODO
+			// atom.commands.add("atom-workspace", "codestream:get-permalink", () => {
+			// 	const view = this.viewController.getMainView();
+			// 	view.show().then(() => {
+			// 		view.newCodemarkRequest(CodemarkType.Permalink, "context-menu");
+			// 	});
+			// })
+		);
+	}
+
 	// Package lifecyle
 	deserializeCodestreamView() {
 		return this.viewController.getMainView();
@@ -79,8 +116,10 @@ class CodestreamPackage {
 	deactivate() {
 		this.workspaceSession.dispose();
 		this.subscriptions.dispose();
+		this.sessionStatusCommand!.dispose();
 		this.viewController.dispose();
 		this.markerDecorationProvider.dispose();
+		this.loggedInCommandsSubscriptions && this.loggedInCommandsSubscriptions.dispose();
 	}
 
 	async consumeStatusBar(statusBar: StatusBar) {
@@ -88,8 +127,9 @@ class CodestreamPackage {
 			const env = this.workspaceSession.environment.name;
 			const environmentLabel = env !== Environment.Production ? `${env} ` : "";
 
-			if (status === SessionStatus.SignedIn)
+			if (status === SessionStatus.SignedIn) {
 				return `${environmentLabel}${this.workspaceSession.user!.username}`;
+			}
 			if (status === SessionStatus.SigningIn) return `Signing in...${environmentLabel}`;
 			else return `${environmentLabel}Sign in`;
 		};

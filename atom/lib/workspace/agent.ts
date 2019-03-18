@@ -1,4 +1,4 @@
-import { Disposable, Emitter } from "atom";
+import { CompositeDisposable, Disposable, Emitter } from "atom";
 import { Convert, LanguageClientConnection } from "atom-languageclient";
 import {
 	createMessageConnection,
@@ -19,21 +19,9 @@ import {
 	AgentResult,
 	DidChangeDataNotification,
 	DidChangeDataNotificationType,
-	FetchReposRequestType,
-	FetchReposResponse,
-	FetchStreamsRequestType,
-	FetchStreamsResponse,
-	FetchTeamsRequestType,
-	FetchTeamsResponse,
-	FetchUsersRequestType,
-	FetchUsersResponse,
-	GetPreferencesRequestType,
-	GetPreferencesResponse,
-	GetUnreadsRequestType,
-	GetUnreadsResponse,
 	TraceLevel,
 } from "../protocols/agent/agent.protocol";
-import { asAbsolutePath, getAgentSource, getPluginVersion } from "../utils";
+import { asAbsolutePath, Editor, getAgentSource, getPluginVersion } from "../utils";
 
 type RequestOrNotificationType<P, R> = RequestType<P, R, any, any> | NotificationType<P, R>;
 
@@ -47,7 +35,7 @@ const capabilities: ClientCapabilities = {
 		workspaceEdit: {
 			documentChanges: true,
 		},
-		workspaceFolders: false,
+		workspaceFolders: true,
 		didChangeConfiguration: {
 			dynamicRegistration: false,
 		},
@@ -151,12 +139,18 @@ abstract class AgentConnection {
 	}) {
 		this._agentProcess = await this.startServer();
 
-		this._connection = new LanguageClientConnection(
-			createMessageConnection(
-				new IPCMessageReader(this._agentProcess as ChildProcess),
-				new IPCMessageWriter(this._agentProcess as ChildProcess)
-			)
+		const rpc = createMessageConnection(
+			new IPCMessageReader(this._agentProcess as ChildProcess),
+			new IPCMessageWriter(this._agentProcess as ChildProcess)
 		);
+
+		this._connection = new LanguageClientConnection(rpc);
+
+		rpc.onRequest("workspace/workspaceFolders", () => {
+			return atom.project
+				.getDirectories()
+				.map(dir => ({ uri: Convert.pathToUri(dir.getPath()), name: dir.getBaseName() }));
+		});
 
 		this.preInitialization(this._connection);
 
@@ -246,8 +240,9 @@ const INITIALIZED = "initialized";
 const DATA_CHANGED = "data-changed";
 const TERMINATED = "terminated";
 
-export class CodeStreamAgent extends AgentConnection {
+export class CodeStreamAgent extends AgentConnection implements Disposable {
 	private emitter = new Emitter();
+	private subscriptions = new CompositeDisposable();
 
 	async init(
 		email: string,
@@ -284,8 +279,27 @@ export class CodeStreamAgent extends AgentConnection {
 	}
 
 	protected preInitialization(connection: LanguageClientConnection) {
+		this.subscriptions.add(
+			atom.workspace.observeTextEditors(editor => {
+				const filePath = editor.getPath;
+				if (!filePath) return;
+
+				connection.didOpenTextDocument({
+					textDocument: {
+						uri: Editor.getUri(editor),
+						languageId: "",
+						version: editor.getBuffer().createCheckpoint(),
+						text: editor.getText(),
+					},
+				});
+				editor.onDidDestroy(() =>
+					connection.didCloseTextDocument({ textDocument: { uri: Editor.getUri(editor) } })
+				);
+			})
+		);
+
 		connection.onLogMessage((params: LogMessageParams) => {
-			console.debug(`CodeStream Agent: ${params.message}`);
+			// console.debug(`CodeStream Agent: ${params.message}`);
 		});
 		connection.onCustom(DidChangeDataNotificationType.method, event => {
 			this.emitter.emit(DATA_CHANGED, event);
@@ -323,6 +337,7 @@ export class CodeStreamAgent extends AgentConnection {
 
 	dispose() {
 		this.emitter.dispose();
+		this.subscriptions.dispose();
 		this.stop();
 	}
 }

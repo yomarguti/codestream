@@ -9,6 +9,7 @@ import {
 	isIpcRequestMessage,
 	LoginRequest,
 	LoginRequestType,
+	NewCodemarkNotificationType,
 	ShowStreamNotificationType,
 	SignedInBootstrapResponse,
 	SignedOutBootstrapResponse,
@@ -32,7 +33,7 @@ import {
 	DidChangeDataNotificationType,
 	GetFileStreamRequestType,
 } from "../protocols/agent/agent.protocol";
-import { LoginResult } from "../protocols/agent/api.protocol";
+import { CodemarkType, LoginResult } from "../protocols/agent/api.protocol";
 import { asAbsolutePath, Editor } from "../utils";
 import { SessionStatus, WorkspaceSession } from "../workspace/workspace-session";
 import { getStyles } from "./styles-getter";
@@ -358,5 +359,15 @@ export class CodestreamView {
 		params: ET extends NotificationType<infer P, any> ? P : never
 	) {
 		this.channel.host.postMessage({ method: eventType.method, params });
+	}
+
+	newCodemarkRequest(type: CodemarkType, source?: string) {
+		const editor = atom.workspace.getActiveTextEditor();
+		if (editor === undefined) return;
+
+		const uri = Editor.getUri(editor);
+		const range = Editor.getSelection(editor);
+		this.sendEvent(NewCodemarkNotificationType, { type, uri, range, source });
+		editor.setSelectedBufferRange(Convert.lsRangeToAtomRange(range));
 	}
 }

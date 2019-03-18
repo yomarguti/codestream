@@ -1,5 +1,7 @@
+import { TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
 import * as path from "path";
+import { Range } from "vscode-languageserver-types";
 
 export const accessSafely = <T>(f: () => T): T | void => {
 	try {
@@ -46,5 +48,23 @@ export namespace Editor {
 		const filePath = getActiveFilePath();
 		if (filePath !== undefined) return Convert.pathToUri(filePath);
 		return undefined;
+	}
+
+	export function getUri(editor: TextEditor) {
+		return Convert.pathToUri(editor.getPath() || "");
+	}
+
+	export function getSelection(editor: TextEditor) {
+		const selection = editor.getSelectedBufferRange();
+		const range = Convert.atomRangeToLSRange(selection);
+		if (range.start.line === range.end.line && range.start.character === range.end.character) {
+			return Range.create(
+				range.start.line,
+				0,
+				range.start.line,
+				editor.lineTextForBufferRow(selection.end.row).length
+			);
+		}
+		return range;
 	}
 }
