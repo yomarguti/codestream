@@ -1,6 +1,6 @@
 "use strict";
 import { NotificationType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
-import { CodemarkPlus } from "./agent.protocol.markers";
+import { CodemarkPlus } from "./agent.protocol.codemarks";
 import {
 	CSLastReads,
 	CSMarker,

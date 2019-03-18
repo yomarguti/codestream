@@ -11,6 +11,7 @@ import {
 	CreateChannelStreamRequest,
 	CreateChannelStreamResponse,
 	CreateCodemarkRequest,
+	CreateCodemarkResponse,
 	CreateDirectStreamRequest,
 	CreateDirectStreamResponse,
 	CreateMarkerLocationRequest,
@@ -254,6 +255,7 @@ export interface ApiProvider {
 	// createFileStream(request: CreateFileStreamRequest): Promise<CreateFileStreamResponse>;
 	fetchFileStreams(request: FetchFileStreamsRequest): Promise<FetchFileStreamsResponse>;
 
+	createCodemark(request: CreateCodemarkRequest): Promise<CreateCodemarkResponse>;
 	deleteCodemark(request: DeleteCodemarkRequest): Promise<DeleteCodemarkResponse>;
 	fetchCodemarks(request: FetchCodemarksRequest): Promise<FetchCodemarksResponse>;
 	getCodemark(request: GetCodemarkRequest): Promise<GetCodemarkResponse>;

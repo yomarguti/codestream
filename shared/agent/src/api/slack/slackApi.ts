@@ -11,6 +11,7 @@ import {
 	CloseStreamRequest,
 	ConnectionStatus,
 	CreateChannelStreamRequest,
+	CreateCodemarkRequest,
 	CreateDirectStreamRequest,
 	CreateMarkerLocationRequest,
 	CreatePostRequest,
@@ -472,6 +473,11 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
+	createCodemark(request: CreateCodemarkRequest) {
+		return this._codestream.createCodemark(request);
+	}
+
+	@log()
 	deleteCodemark(request: DeleteCodemarkRequest) {
 		return this._codestream.deleteCodemark(request);
 	}
@@ -575,7 +581,7 @@ export class SlackApiProvider implements ApiProvider {
 			let repos: CSRepository[] | undefined;
 
 			if (request.codemark != null) {
-				const codemarkResponse = await this._codestream.createCodemark({
+				const codemarkResponse = await this.createCodemark({
 					...request.codemark,
 					parentPostId: request.parentPostId,
 					providerType: ProviderType.Slack

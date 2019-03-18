@@ -1,5 +1,4 @@
 "use strict";
-import * as path from "path";
 import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
@@ -34,9 +33,6 @@ import {
 	MarkPostUnreadRequestType,
 	MarkPostUnreadResponse,
 	PostPlus,
-	PreparePostWithCodeRequest,
-	PreparePostWithCodeRequestType,
-	PreparePostWithCodeResponse,
 	ReactToPostRequest,
 	ReactToPostRequestType,
 	ReactToPostResponse
@@ -48,7 +44,7 @@ import {
 	CSStream,
 	StreamType
 } from "../protocol/api.protocol";
-import { Arrays, debug, Iterables, lsp, lspHandler, Strings } from "../system";
+import { Arrays, debug, lsp, lspHandler } from "../system";
 import { BaseIndex, IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { EntityCache, EntityCacheCfg } from "./cache/entityCache";
@@ -777,85 +773,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			debugger;
 			return;
 		}
-	}
-
-	private lastFullCode = "";
-	@lspHandler(PreparePostWithCodeRequestType)
-	async documentPreparePost({
-		textDocument: documentId,
-		range,
-		dirty
-	}: PreparePostWithCodeRequest): Promise<PreparePostWithCodeResponse> {
-		const { documents, git } = Container.instance();
-
-		const document = documents.get(documentId.uri);
-		if (document === undefined) {
-			throw new Error(`No document could be found for Uri(${documentId.uri})`);
-		}
-		this.lastFullCode = document.getText();
-
-		// Ensure range end is >= start
-		if (
-			range.start.line > range.end.line ||
-			(range.start.line === range.end.line && range.start.character > range.end.character)
-		) {
-			range = Range.create(range.end, range.start);
-		}
-
-		const uri = URI.parse(document.uri);
-
-		let authors: { id: string; username: string }[] | undefined;
-		let file: string | undefined;
-		let remotes: { name: string; url: string }[] | undefined;
-		let rev: string | undefined;
-
-		let gitError;
-		let repoPath;
-		if (uri.scheme === "file") {
-			try {
-				repoPath = await git.getRepoRoot(uri.fsPath);
-				if (repoPath !== undefined) {
-					file = Strings.normalizePath(path.relative(repoPath, uri.fsPath));
-					if (file[0] === "/") {
-						file = file.substr(1);
-					}
-
-					rev = await git.getFileCurrentRevision(uri.fsPath);
-					const gitRemotes = await git.getRepoRemotes(repoPath);
-					remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
-
-					const gitAuthors = await git.getFileAuthors(uri.fsPath, {
-						startLine: range.start.line,
-						endLine: range.end.line,
-						contents: dirty ? this.lastFullCode : undefined
-					});
-					const authorEmails = gitAuthors.map(a => a.email);
-
-					const users = await Container.instance().users.getByEmails(authorEmails);
-					authors = [...Iterables.map(users, u => ({ id: u.id, username: u.username }))];
-				}
-			} catch (ex) {
-				gitError = ex.toString();
-				Logger.error(ex);
-				debugger;
-			}
-		}
-
-		return {
-			code: document.getText(range),
-			range: range,
-			source:
-				repoPath !== undefined
-					? {
-							file: file!,
-							repoPath: repoPath,
-							revision: rev!,
-							authors: authors || [],
-							remotes: remotes || []
-					  }
-					: undefined,
-			gitError: gitError
-		};
 	}
 
 	@lspHandler(DeletePostRequestType)

@@ -77,11 +77,13 @@ import {
 	CSCreatePostResponse,
 	CSCreateRepoRequest,
 	CSCreateRepoResponse,
+	CSDeleteCodemarkResponse,
 	CSDeletePostResponse,
 	CSDirectStream,
 	CSEditPostRequest,
 	CSEditPostResponse,
 	CSFileStream,
+	CSGetCodemarkResponse,
 	CSGetMarkerLocationsResponse,
 	CSGetMarkerResponse,
 	CSGetMarkersResponse,
@@ -538,7 +540,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	deleteCodemark(request: DeleteCodemarkRequest): Promise<DeleteCodemarkResponse> {
 		const { codemarkId } = request;
-		return this.delete(`/codemarks/${codemarkId}`, this._token);
+		return this.delete<CSDeleteCodemarkResponse>(`/codemarks/${codemarkId}`, this._token);
 	}
 
 	@log()
@@ -548,7 +550,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	getCodemark(request: GetCodemarkRequest): Promise<GetCodemarkResponse> {
-		return this.get<GetCodemarkResponse>(`/codemarks/${request.codemarkId}`, this._token);
+		return this.get<CSGetCodemarkResponse>(`/codemarks/${request.codemarkId}`, this._token);
 	}
 
 	@log()
@@ -561,7 +563,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async setCodemarkStatus(request: SetCodemarkStatusRequest) {
+	setCodemarkStatus(request: SetCodemarkStatusRequest) {
 		return this.updateCodemark(request);
 	}
 

@@ -19,20 +19,25 @@ import {
 } from "./api.protocol";
 
 export * from "./agent.protocol.notifications";
+
+export * from "./agent.protocol.documentMarkers";
+export * from "./agent.protocol.codemarks";
+export * from "./agent.protocol.markers";
+export * from "./agent.protocol.posts";
+export * from "./agent.protocol.repos";
+export * from "./agent.protocol.streams";
+export * from "./agent.protocol.teams";
+export * from "./agent.protocol.users";
+
+export * from "./agent.protocol.scm";
+
+export * from "./agent.protocol.providers";
 export * from "./agent.protocol.asana";
 export * from "./agent.protocol.bitbucket";
 export * from "./agent.protocol.github";
 export * from "./agent.protocol.gitlab";
-export * from "./agent.protocol.markers";
-export * from "./agent.protocol.posts";
-export * from "./agent.protocol.providers";
-export * from "./agent.protocol.repos";
-export * from "./agent.protocol.streams";
-export * from "./agent.protocol.teams";
-export * from "./agent.protocol.trello";
 export * from "./agent.protocol.jira";
-export * from "./agent.protocol.users";
-export * from "./agent.protocol.scm";
+export * from "./agent.protocol.trello";
 
 export interface Capabilities {
 	channelMute?: boolean;

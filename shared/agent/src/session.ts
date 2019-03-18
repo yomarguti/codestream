@@ -32,6 +32,7 @@ import {
 	ChangeDataType,
 	CodeStreamEnvironment,
 	ConnectionStatus,
+	CreateDocumentMarkerPermalinkRequestType,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
@@ -239,6 +240,10 @@ export class CodeStreamSession {
 			}
 		);
 
+		this.agent.registerHandler(
+			CreateDocumentMarkerPermalinkRequestType,
+			MarkerHandler.createPermalink
+		);
 		this.agent.registerHandler(DocumentFromMarkerRequestType, MarkerHandler.documentFromMarker);
 		this.agent.registerHandler(DocumentMarkersRequestType, MarkerHandler.documentMarkers);
 

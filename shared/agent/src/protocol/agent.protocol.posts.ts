@@ -1,12 +1,10 @@
 "use strict";
 import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
-import { CodemarkPlus, CreateCodemarkRequest } from "./agent.protocol.markers";
+import { CodemarkPlus, CreateCodemarkRequest } from "./agent.protocol.codemarks";
 import { ThirdPartyProviderUser } from "./agent.protocol.providers";
 import {
 	CodemarkType,
 	CSCodemark,
-	CSCreatePostRequestCodeBlock,
-	CSCreatePostRequestStream,
 	CSMarker,
 	CSMarkerLocations,
 	CSPost,
@@ -28,16 +26,6 @@ export interface CreatePostRequest {
 	codemark?: CreateCodemarkRequest;
 	entryPoint?: string;
 }
-
-export interface CreatePostInFileStreamRequest {
-	stream: CSCreatePostRequestStream;
-	text: string;
-	mentionedUserIds?: string[];
-	parentPostId?: string;
-	codeBlocks?: CSCreatePostRequestCodeBlock[];
-	commitHashWhenPosted?: string;
-}
-
 export interface CreatePostResponse {
 	post: PostPlus;
 	codemark?: CodemarkPlus;
@@ -46,7 +34,6 @@ export interface CreatePostResponse {
 	streams?: CSStream[];
 	repos?: CSRepository[];
 }
-
 export const CreatePostRequestType = new RequestType<
 	CreatePostRequest,
 	CreatePostResponse,
@@ -61,7 +48,6 @@ export interface CodeBlockSource {
 	authors: { id: string; username: string }[];
 	remotes: { name: string; url: string }[];
 }
-
 export interface CreatePostWithMarkerRequest {
 	textDocument: TextDocumentIdentifier;
 	text: string;
@@ -81,7 +67,6 @@ export interface CreatePostWithMarkerRequest {
 	externalAssignees?: ThirdPartyProviderUser[];
 	entryPoint?: string;
 }
-
 export const CreatePostWithMarkerRequestType = new RequestType<
 	CreatePostWithMarkerRequest,
 	CreatePostResponse,
@@ -93,12 +78,10 @@ export interface FetchPostRepliesRequest {
 	streamId: string;
 	postId: string;
 }
-
 export interface FetchPostRepliesResponse {
 	posts: CSPost[];
 	codemarks?: CSCodemark[];
 }
-
 export const FetchPostRepliesRequestType = new RequestType<
 	FetchPostRepliesRequest,
 	FetchPostRepliesResponse,
@@ -113,14 +96,12 @@ export interface FetchPostsRequest {
 	before?: number | string; // equiv to slack.latest
 	inclusive?: boolean;
 }
-
 export interface FetchPostsResponse {
 	posts: PostPlus[];
 	codemarks?: CSCodemark[];
 	markers?: CSMarker[];
 	more?: boolean;
 }
-
 export const FetchPostsRequestType = new RequestType<
 	FetchPostsRequest,
 	FetchPostsResponse,
@@ -132,11 +113,9 @@ export interface DeletePostRequest {
 	streamId: string;
 	postId: string;
 }
-
 export interface DeletePostResponse {
 	post: CSPost;
 }
-
 export const DeletePostRequestType = new RequestType<
 	DeletePostRequest,
 	DeletePostResponse,
@@ -185,27 +164,6 @@ export const MarkPostUnreadRequestType = new RequestType<
 	void,
 	void
 >("codestream/post/markUnread");
-
-// DEPRECATED:
-export interface PreparePostWithCodeRequest {
-	textDocument: TextDocumentIdentifier;
-	range: Range;
-	dirty: boolean;
-}
-
-export interface PreparePostWithCodeResponse {
-	code: string;
-	range: Range;
-	source?: CodeBlockSource;
-	gitError?: string;
-}
-
-export const PreparePostWithCodeRequestType = new RequestType<
-	PreparePostWithCodeRequest,
-	PreparePostWithCodeResponse,
-	void,
-	void
->("codestream/post/prepareWithCode");
 
 export interface ReactToPostRequest {
 	streamId: string;

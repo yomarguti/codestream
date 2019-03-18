@@ -66,6 +66,16 @@ export namespace MarkerLocation {
 		];
 	}
 
+	export function toArrayFromRange(range: Range): CSLocationArray {
+		return [
+			range.start.line + 1,
+			range.start.character + 1,
+			range.end.line + 1,
+			range.end.character + 1,
+			undefined
+		];
+	}
+
 	export function toArraysById(locations: MarkerLocationsById): MarkerLocationArraysById {
 		return Object.entries(locations).reduce((m, [id, location]) => {
 			m[id] = toArray(location);

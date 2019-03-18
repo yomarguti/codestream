@@ -6,6 +6,8 @@ import { MarkerLocation } from "../api/extensions";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
+	CreateDocumentMarkerPermalinkRequest,
+	CreateDocumentMarkerPermalinkResponse,
 	DocumentFromMarkerRequest,
 	DocumentFromMarkerResponse,
 	DocumentMarker,
@@ -32,6 +34,37 @@ export namespace MarkerHandler {
 	// 	Logger.log("Hover request received");
 	// 	return undefined;
 	// }
+
+	export async function createPermalink({
+		uri,
+		range,
+		privacy
+	}: CreateDocumentMarkerPermalinkRequest): Promise<CreateDocumentMarkerPermalinkResponse> {
+		const { codemarks, scm } = Container.instance();
+
+		const scmResponse = await scm.getRangeInfo({ uri: uri, range: range, dirty: true });
+		const remotes = scmResponse.scm && scmResponse.scm.remotes.map(r => r.url);
+
+		// TODO: add support for public permalinks
+
+		const response = await codemarks.create({
+			type: CodemarkType.Link,
+			markers: [
+				{
+					code: scmResponse.contents,
+					remotes: remotes,
+					commitHash: scmResponse.scm && scmResponse.scm.revision,
+					file: scmResponse.scm && scmResponse.scm.file,
+					location: MarkerLocation.toArrayFromRange(scmResponse.range)
+				}
+			],
+			remotes: remotes,
+
+			createPermalink: true
+		});
+
+		return { linkUrl: response.permalink! };
+	}
 
 	export async function documentMarkers({
 		textDocument: documentId

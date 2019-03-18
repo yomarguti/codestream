@@ -5,6 +5,9 @@ import { SlackApiProvider } from "../api/slack/slackApi";
 import { Container } from "../container";
 import {
 	CodemarkPlus,
+	CreateCodemarkRequest,
+	CreateCodemarkRequestType,
+	CreateCodemarkResponse,
 	DidChangeDocumentMarkersNotificationType,
 	FetchCodemarksRequest,
 	FetchCodemarksRequestType,
@@ -57,6 +60,11 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		} else {
 			return undefined;
 		}
+	}
+
+	@lspHandler(CreateCodemarkRequestType)
+	create(request: CreateCodemarkRequest): Promise<CreateCodemarkResponse> {
+		return this.session.api.createCodemark(request);
 	}
 
 	@lspHandler(FetchCodemarksRequestType)

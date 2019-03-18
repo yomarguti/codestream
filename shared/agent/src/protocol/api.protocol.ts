@@ -338,8 +338,10 @@ export interface CSCreateCodemarkRequest {
 	externalProvider?: string;
 	externalProviderUrl?: string;
 	externalAssignees?: { displayName: string }[];
+	remoteCodeUrl?: string;
+	threadUrl?: string;
+	createPermalink?: boolean;
 }
-
 export interface CSCreateCodemarkRequestMarker {
 	code: string;
 	remotes?: string[];
@@ -347,23 +349,36 @@ export interface CSCreateCodemarkRequestMarker {
 	commitHash?: string;
 	location?: CSLocationArray;
 }
-
 export interface CSCreateCodemarkResponse {
 	codemark: CSCodemark;
 	markers?: CSMarker[];
 	markerLocations?: CSMarkerLocations[];
 	streams?: CSStream[];
 	repos?: CSRepository[];
+	permalink?: string;
+}
+
+export interface CSGetCodemarkRequest {
+	codemarkId: string;
+}
+export interface CSGetCodemarkResponse {
+	codemark: CSCodemark;
+	post: CSPost;
+	markers: CSMarker[];
 }
 
 export interface CSUpdateCodemarkRequest {
 	streamId?: string;
 	postId?: string;
 }
-
 export interface CSUpdateCodemarkResponse {
 	codemark: CSCodemark;
 }
+
+export interface CSDeleteCodemarkRequest {
+	codemarkId: string;
+}
+export interface CSDeleteCodemarkResponse {}
 
 export interface CSUpdateMarkerRequest {
 	commitHashWhenCreated?: string;
