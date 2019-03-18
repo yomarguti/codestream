@@ -121,7 +121,7 @@
                 },
                 "codestream.showShortcutTipOnSelection": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Specifies whether to show a shortcut key tip attached to the selection when you select code"
                 },
                 "codestream.team": {
