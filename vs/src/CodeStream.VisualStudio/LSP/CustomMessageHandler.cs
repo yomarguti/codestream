@@ -72,21 +72,24 @@ namespace CodeStream.VisualStudio.LSP
 
             Log.Verbose($"{nameof(OnDidChangeDocumentMarkers)} {@params?.TextDocument?.Uri}");
 
+            var uriString = @params.TextDocument.Uri;
             _ipc.Notify(new DidChangeDocumentMarkersNotificationType
             {
                 Params = new DidChangeDocumentMarkersNotification
                 {
-                    TextDocument = @params.TextDocument
+                    TextDocument = new TextDocumentIdentifier
+                    {
+                        Uri =  uriString
+                    }
                 }
             });
 
             ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
                 _eventAggregator.Publish(new DocumentMarkerChangedEvent
                 {
-                    Uri = @params.TextDocument.Uri.ToUri()
+                    Uri = uriString.ToUri()
                 });
             });
         }
@@ -103,6 +106,7 @@ namespace CodeStream.VisualStudio.LSP
         public void OnDidLogout(JToken e)
         {
             var @params = e.ToObject<DidLogoutNotification>();
+
             Log.Verbose($"{nameof(OnDidLogout)} {@params.Reason}");
 
             _eventAggregator.Publish(new AuthenticationChangedEvent { Reason = @params.Reason });
