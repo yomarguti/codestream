@@ -186,8 +186,9 @@ class ComposeBox extends React.Component {
 	// 	return <div className="code" dangerouslySetInnerHTML={{ __html: codeHTML }} />;
 	// }
 
+	// TODO: remove this
 	tabIndex = () => {
-		return global.atom ? this.tabIndexCount++ : "0";
+		return "0";
 	};
 
 	renderMessageInput = props => {
