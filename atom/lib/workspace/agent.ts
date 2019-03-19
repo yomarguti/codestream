@@ -19,6 +19,8 @@ import {
 	AgentResult,
 	DidChangeDataNotification,
 	DidChangeDataNotificationType,
+	DidChangeDocumentMarkersNotification,
+	DidChangeDocumentMarkersNotificationType,
 	TraceLevel,
 } from "../protocols/agent/agent.protocol";
 import { asAbsolutePath, Editor, getAgentSource, getPluginVersion } from "../utils";
@@ -304,6 +306,9 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 		connection.onCustom(DidChangeDataNotificationType.method, event => {
 			this.emitter.emit(DATA_CHANGED, event);
 		});
+		connection.onCustom(DidChangeDocumentMarkersNotificationType.method, notification => {
+			this.emitter.emit(DidChangeDocumentMarkersNotificationType.method, notification);
+		});
 	}
 
 	protected onPrematureExit() {
@@ -322,6 +327,10 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 
 	onDidChangeData(cb: (event: DidChangeDataNotification) => void) {
 		return this.emitter.on(DATA_CHANGED, cb);
+	}
+
+	onDidChangeDocumentMarkers(cb: (event: DidChangeDocumentMarkersNotification) => void) {
+		return this.emitter.on(DidChangeDocumentMarkersNotificationType.method, cb);
 	}
 
 	request<RT extends RequestType<any, any, any, any>>(

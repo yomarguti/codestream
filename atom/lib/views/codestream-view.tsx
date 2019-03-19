@@ -5,6 +5,7 @@ import {
 	HostDidChangeActiveEditorNotification,
 	HostDidChangeActiveEditorNotificationType,
 	HostDidChangeConfigNotificationType,
+	HostDidChangeEditorSelectionNotificationType,
 	HostDidLogoutNotificationType,
 	isIpcRequestMessage,
 	LoginRequest,
@@ -12,7 +13,6 @@ import {
 	NewCodemarkNotificationType,
 	ShowStreamNotificationType,
 	SignedInBootstrapResponse,
-	SignedOutBootstrapResponse,
 	SlackLoginRequestType,
 	SlackLoginResponse,
 	UpdateConfigurationRequest,
@@ -28,10 +28,11 @@ import { CompositeDisposable, Emitter, Point, Range, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
 import { shell } from "electron";
 import { NotificationType } from "vscode-languageserver-protocol";
+import { EditorSelectionObserver } from "workspace/editor-selection-observer";
 import {
 	BootstrapRequestType as AgentBootstrapRequestType,
 	DidChangeDataNotificationType,
-	GetFileStreamRequestType,
+	DidChangeDocumentMarkersNotificationType,
 } from "../protocols/agent/agent.protocol";
 import { CodemarkType, LoginResult } from "../protocols/agent/api.protocol";
 import { asAbsolutePath, Editor } from "../utils";
@@ -69,6 +70,7 @@ export class CodestreamView {
 	private emitter: Emitter;
 	private webviewReady?: Promise<void>;
 	private webviewContext?: any;
+	private editorSelectionObserver?: EditorSelectionObserver;
 
 	constructor(session: WorkspaceSession, webviewContext?: any) {
 		this.session = session;
@@ -167,7 +169,17 @@ export class CodestreamView {
 		this.element.append(iframe);
 	}
 
+	private observeWorkspace() {
+		this.editorSelectionObserver = new EditorSelectionObserver();
+		this.editorSelectionObserver.onDidChangeSelection(this.onSelectionChanged);
+		this.editorSelectionObserver.onDidChangeActiveEditor(this.onEditorActiveEditorChanged);
+	}
+
 	private initialize() {
+		if (this.session.status === SessionStatus.SignedIn) {
+			this.observeWorkspace();
+		}
+
 		// TODO?: create a controller to house this stuff so it isn't re-init everytime this view is instantiated
 		this.subscriptions.add(
 			this.session.agent.onInitialized(() => {
@@ -180,8 +192,15 @@ export class CodestreamView {
 			this.session.onDidChangeSessionStatus(status => {
 				if (status === SessionStatus.SignedOut) {
 					this.sendEvent(HostDidLogoutNotificationType, {});
+					this.editorSelectionObserver && this.editorSelectionObserver.dispose();
+				}
+				if (status === SessionStatus.SignedIn) {
+					this.observeWorkspace();
 				}
 			}),
+			this.session.agent.onDidChangeDocumentMarkers(e =>
+				this.sendEvent(DidChangeDocumentMarkersNotificationType, e)
+			),
 			this.session.configManager.onDidChangeWebviewConfig(changes =>
 				this.sendEvent(HostDidChangeConfigNotificationType, changes)
 			)
@@ -231,6 +250,7 @@ export class CodestreamView {
 		this.element.remove();
 		this.alive = false;
 		this.subscriptions.dispose();
+		this.editorSelectionObserver && this.editorSelectionObserver.dispose();
 	}
 
 	onWillDestroy(cb: (data: any) => void) {
@@ -239,15 +259,18 @@ export class CodestreamView {
 
 	private async getSignedInBootstrapState(): Promise<SignedInBootstrapResponse> {
 		const bootstrapData = await this.session.agent.request(AgentBootstrapRequestType, {});
+		const editor = atom.workspace.getActiveTextEditor();
 		return {
 			...this.session.getBootstrapInfo(),
 			...bootstrapData,
 			session: { userId: this.session.user!.id },
 			context: this.webviewContext || { currentTeamId: this.session.teamId },
-			editorContext: {
-				activeFile: Editor.getActiveFile(),
-				textEditorUri: Editor.getActiveFileUri(),
-			},
+			editorContext: editor
+				? {
+						activeFile: Editor.getRelativePath(editor),
+						textEditorUri: Editor.getUri(editor),
+				  }
+				: {},
 		};
 	}
 
@@ -366,8 +389,30 @@ export class CodestreamView {
 		if (editor === undefined) return;
 
 		const uri = Editor.getUri(editor);
-		const range = Editor.getSelection(editor);
+		const range = Editor.getCurrentSelectionRange(editor);
 		this.sendEvent(NewCodemarkNotificationType, { type, uri, range, source });
 		editor.setSelectedBufferRange(Convert.lsRangeToAtomRange(range));
+	}
+
+	private onSelectionChanged = (event: { editor: TextEditor; range: Range; cursor: Point }) => {
+		this.sendEvent(HostDidChangeEditorSelectionNotificationType, {
+			uri: Editor.getUri(event.editor),
+			selections: Editor.getCSSelections(event.editor),
+			visibleRanges: [],
+		});
+	}
+
+	private onEditorActiveEditorChanged = (editor?: TextEditor) => {
+		const notification: HostDidChangeActiveEditorNotification = {};
+		const fileName = editor && Editor.getRelativePath(editor);
+		if (editor) {
+			notification.editor = {
+				fileName: fileName || "",
+				uri: Editor.getUri(editor),
+				visibleRanges: [],
+				selections: Editor.getCSSelections(editor),
+			};
+		}
+		this.sendEvent(HostDidChangeActiveEditorNotificationType, notification);
 	}
 }

@@ -1,3 +1,4 @@
+import { EditorSelection } from "@codestream/protocols/webview";
 import { TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
 import * as path from "path";
@@ -33,28 +34,17 @@ export const getAgentSource = () => {
 };
 
 export namespace Editor {
-	function getActiveFilePath() {
-		const editor = atom.workspace.getActiveTextEditor();
-		return editor && editor.getPath();
-	}
-
-	export function getActiveFile() {
-		const filePath = getActiveFilePath();
-		if (filePath) return atom.project.relativize(filePath);
-		return undefined;
-	}
-
-	export function getActiveFileUri() {
-		const filePath = getActiveFilePath();
-		if (filePath !== undefined) return Convert.pathToUri(filePath);
-		return undefined;
+	export function getRelativePath(editor: TextEditor) {
+		const filePath = editor.getPath();
+		if (filePath === undefined) return filePath;
+		return atom.project.relativize(filePath);
 	}
 
 	export function getUri(editor: TextEditor) {
 		return Convert.pathToUri(editor.getPath() || "");
 	}
 
-	export function getSelection(editor: TextEditor) {
+	export function getCurrentSelectionRange(editor: TextEditor) {
 		const selection = editor.getSelectedBufferRange();
 		const range = Convert.atomRangeToLSRange(selection);
 		if (range.start.line === range.end.line && range.start.character === range.end.character) {
@@ -67,4 +57,44 @@ export namespace Editor {
 		}
 		return range;
 	}
+
+	export function getCSSelections(editor: TextEditor): EditorSelection[] {
+		return editor.getSelections().map(s => {
+			const cursor = editor.getCursorBufferPosition();
+			const { start, end } = Convert.atomRangeToLSRange(s.getBufferRange());
+			return {
+				cursor: { line: cursor.row, character: cursor.column },
+				start,
+				end,
+			};
+		});
+	}
+}
+
+interface CancelableFunction {
+	(...args: any[]): any;
+	cancel(): void;
+}
+
+export function throttle<F extends (...args: any[]) => any>(fn: F, time = 500): CancelableFunction {
+	let requestId: any | undefined;
+	let lastArgs: any[] = [];
+
+	const throttledFn = function(...args: any[]) {
+		lastArgs = args;
+		if (requestId) {
+			// console.warn(`throttling a call to ${fn}. new args are`, args);
+			return;
+		}
+		requestId = setTimeout(() => {
+			requestId = undefined;
+			fn(...lastArgs);
+		}, time);
+	};
+
+	throttledFn.cancel = () => {
+		if (requestId) clearTimeout(requestId);
+	};
+
+	return throttledFn;
 }

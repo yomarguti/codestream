@@ -1,7 +1,7 @@
-import { DocumentMarkersRequestType } from "@codestream/protocols/agent";
+import { ChangeDataType, DocumentMarkersRequestType } from "@codestream/protocols/agent";
 import { CompositeDisposable, DisplayMarker, Disposable, Gutter, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
-import { accessSafely, asAbsolutePath } from "utils";
+import { accessSafely, asAbsolutePath, Editor } from "utils";
 import { ViewController } from "views/controller";
 import { SessionStatus, WorkspaceSession } from "./workspace-session";
 
@@ -48,6 +48,14 @@ export class MarkerDecorationProvider implements Disposable {
 						);
 					}
 				}
+			}),
+			this.session.agent.onDidChangeDocumentMarkers(({ textDocument }) => {
+				for (const editor of this.observedEditors.values()) {
+					if (Editor.getUri(editor) === textDocument.uri) {
+						this.provideFor(editor);
+						break;
+					}
+				}
 			})
 		);
 	}
@@ -73,50 +81,50 @@ export class MarkerDecorationProvider implements Disposable {
 				})
 			);
 			this.gutters.set(editor.id, gutter);
+		}
 
-			const response = await this.session.agent.request(DocumentMarkersRequestType, {
-				textDocument: { uri: Convert.pathToUri(editor.getPath()!) },
-			});
+		const response = await this.session.agent.request(DocumentMarkersRequestType, {
+			textDocument: { uri: Convert.pathToUri(editor.getPath()!) },
+		});
 
-			if (response && response.markers) {
-				response.markers.forEach(docMarker => {
-					const marker = editor.markBufferRange(Convert.lsRangeToAtomRange(docMarker.range), {
-						invalidate: "never",
-					});
-
-					let color = docMarker.codemark.color;
-					color = color === "none" ? "" : `-${color}`;
-
-					const iconPath = Convert.pathToUri(
-						asAbsolutePath(`dist/icons/marker-${docMarker.codemark.type}${color}.svg`)
-					);
-
-					const img = document.createElement("img");
-					img.src = iconPath;
-
-					const item = document.createElement("div");
-					item.onclick = event => {
-						event.preventDefault();
-						this.viewController.getMainView().show(docMarker.postStreamId, docMarker.postId);
-					};
-					item.classList.add("codemark");
-					item.appendChild(img);
-					gutter!.decorateMarker(marker, { item });
-
-					const tooltip = atom.tooltips.add(img, {
-						title: `${docMarker.creatorName}: ${docMarker.summary}`,
-						placement: "right",
-					});
-					this.resourceSubscriptions.add(
-						tooltip,
-						new Disposable(() => {
-							marker.destroy();
-							item.remove();
-						}),
-						marker.onDidDestroy(() => this.markers.delete(editor.id))
-					);
+		if (response && response.markers) {
+			response.markers.forEach(docMarker => {
+				const marker = editor.markBufferRange(Convert.lsRangeToAtomRange(docMarker.range), {
+					invalidate: "never",
 				});
-			}
+
+				let color = docMarker.codemark.color;
+				color = color === "none" ? "" : `-${color}`;
+
+				const iconPath = Convert.pathToUri(
+					asAbsolutePath(`dist/icons/marker-${docMarker.codemark.type}${color}.svg`)
+				);
+
+				const img = document.createElement("img");
+				img.src = iconPath;
+
+				const item = document.createElement("div");
+				item.onclick = event => {
+					event.preventDefault();
+					this.viewController.getMainView().show(docMarker.postStreamId, docMarker.postId);
+				};
+				item.classList.add("codemark");
+				item.appendChild(img);
+				gutter!.decorateMarker(marker, { item });
+
+				const tooltip = atom.tooltips.add(img, {
+					title: `${docMarker.creatorName}: ${docMarker.summary}`,
+					placement: "right",
+				});
+				this.resourceSubscriptions.add(
+					tooltip,
+					new Disposable(() => {
+						marker.destroy();
+						item.remove();
+					}),
+					marker.onDidDestroy(() => this.markers.delete(editor.id))
+				);
+			});
 		}
 	}
 
