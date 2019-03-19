@@ -7,7 +7,6 @@ type ConfigsActions = ActionType<typeof actions>;
 const initialState: State = {
 	showHeadshots: true,
 	debug: false,
-	showMarkers: true,
 	serverUrl: ""
 };
 

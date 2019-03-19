@@ -41,7 +41,8 @@ import {
 	LiveShareInviteToSessionRequestType,
 	LiveShareStartSessionRequestType,
 	NewCodemarkNotificationType,
-	EditorSelectRangeRequestType
+	EditorSelectRangeRequestType,
+	WebviewPanels
 } from "../ipc/webview.protocol";
 import {
 	OpenUrlRequestType,
@@ -346,8 +347,8 @@ export class SimpleStream extends Component {
 		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
 		let { activePanel } = this.props;
 		const { searchBarOpen, q } = this.state;
-		if (searchBarOpen) activePanel = "knowledge";
-		// if (searchBarOpen && q) activePanel = "knowledge";
+		if (searchBarOpen) activePanel = WebviewPanels.Codemarks;
+		// if (searchBarOpen && q) activePanel = WebviewPanels.Codemarks;
 		const umisClass = createClassString("umis", {
 			mentions: umis.totalMentions > 0,
 			unread: umis.totalMentions == 0 && umis.totalUnread > 0
@@ -366,12 +367,15 @@ export class SimpleStream extends Component {
 		return (
 			<nav className="inline">
 				<div className="top-tab-group">
-					<div className="fill-tab" onClick={e => this.setActivePanel("codemarks-for-file")} />
+					<div
+						className="fill-tab"
+						onClick={e => this.setActivePanel(WebviewPanels.CodemarksForFile)}
+					/>
 					<label
 						className={createClassString({
-							selected: activePanel === "codemarks-for-file"
+							selected: activePanel === WebviewPanels.CodemarksForFile
 						})}
-						onClick={e => this.setActivePanel("codemarks-for-file")}
+						onClick={e => this.setActivePanel(WebviewPanels.CodemarksForFile)}
 					>
 						<Tooltip title="Codemarks In Current File" placement="bottom">
 							<span>
@@ -396,7 +400,7 @@ export class SimpleStream extends Component {
 					{
 						// <label
 						// 	className={createClassString({
-						// 		selected: activePanel === "knowledge" && this.state.knowledgeType === "question"
+						// 		selected: activePanel === WebviewPanels.Codemarks && this.state.knowledgeType === "question"
 						// 	})}
 						// 	onClick={e => this.openCodemarkMenu("question")}
 						// >
@@ -410,7 +414,7 @@ export class SimpleStream extends Component {
 					{
 						// <label
 						// 	className={createClassString({
-						// 		selected: activePanel === "knowledge" && this.state.knowledgeType === "issue"
+						// 		selected: activePanel === WebviewPanels.Codemarks && this.state.knowledgeType === "issue"
 						// 	})}
 						// 	onClick={e => this.openCodemarkMenu("issue")}
 						// >
@@ -422,7 +426,7 @@ export class SimpleStream extends Component {
 						// </label>
 						// <label
 						// 	className={createClassString({
-						// 		selected: activePanel === "knowledge" && this.state.knowledgeType === "trap"
+						// 		selected: activePanel === WebviewPanels.Codemarks && this.state.knowledgeType === "trap"
 						// 	})}
 						// 	onClick={e => this.openCodemarkMenu("trap")}
 						// >
@@ -434,7 +438,7 @@ export class SimpleStream extends Component {
 						// </label>
 						// <label
 						// 	className={createClassString({
-						// 		selected: activePanel === "knowledge" && this.state.knowledgeType === "bookmark"
+						// 		selected: activePanel === WebviewPanels.Codemarks && this.state.knowledgeType === "bookmark"
 						// 	})}
 						// 	onClick={e => this.openCodemarkMenu("bookmark")}
 						// >
@@ -465,7 +469,7 @@ export class SimpleStream extends Component {
 					</label>
 					<label
 						className={createClassString({
-							selected: activePanel === "knowledge"
+							selected: activePanel === WebviewPanels.Codemarks
 						})}
 						onClick={this.handleClickSearch}
 					>
@@ -495,105 +499,6 @@ export class SimpleStream extends Component {
 		this.setNewPostEntry("Global Nav");
 	};
 
-	renderNavText() {
-		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
-		let { activePanel } = this.props;
-		const { searchBarOpen, q } = this.state;
-		const { menuOpen, menuTarget } = this.state;
-		if (searchBarOpen && q) activePanel = "knowledge";
-		// const umisClass = createClassString("umis", {
-		// 	// mentions: umis.totalMentions > 0,
-		// 	unread: umis.totalMentions == 0 && umis.totalUnread > 0
-		// });
-		const totalUMICount = umis.totalMentions ? (
-			<div className="mentions-badge">{umis.totalMentions > 99 ? "99+" : umis.totalMentions}</div>
-		) : umis.totalUnread ? (
-			<div className="unread-badge">.</div>
-		) : (
-			// <Icon name="chevron-left" className="show-channels-icon" />
-			""
-		);
-
-		return (
-			<nav className="nav">
-				{this.state.searchBarOpen && (
-					<div className="search-bar">
-						<input
-							name="q"
-							className="native-key-bindings input-text control"
-							type="text"
-							ref={ref => (this._searchInput = ref)}
-							onChange={e => this.setState({ q: e.target.value })}
-							placeholder="Search Codemarks"
-						/>
-						<CancelButton onClick={this.handleClickSearch} />
-					</div>
-				)}
-				{!this.state.searchBarOpen && (
-					<div className="top-tab-group">
-						<label
-							className={createClassString({
-								checked: activePanel === "knowledge" || activePanel === "codemarks-for-file"
-								// muted: !this.props.configs.showMarkers
-							})}
-							onClick={e => this.setActivePanel("knowledge")}
-						>
-							<span>
-								{!this.props.configs.showMarkers && <Icon name="mute" className="mute" />}
-								Codemarks
-							</span>
-						</label>
-						<label
-							className={createClassString({
-								checked: activePanel === "channels",
-								muted: this.props.configs.muteAll
-							})}
-							onClick={e => this.setActivePanel("channels")}
-						>
-							<span>
-								{this.props.configs.muteAll && <Icon name="mute" className="mute" />}
-								Channels
-								{!this.props.configs.muteAll && totalUMICount}
-							</span>
-						</label>
-						<label
-							className={createClassString("channel-name", { checked: activePanel === "main" })}
-							onClick={e => this.setActivePanel("main")}
-						>
-							<span className="channel-name">
-								{this.channelIcon()} {this.props.postStreamName}
-							</span>
-						</label>
-						<div className="fill-tab">
-							<span className="align-right-button" onClick={this.handleClickSearch}>
-								<Tooltip title="Search Codemarks" placement="bottomRight">
-									<span>
-										<Icon name="search" className="search-icon button" />
-									</span>
-								</Tooltip>
-							</span>
-							<span className="align-right-button" onClick={this.handleClickCreateCodemark}>
-								<Tooltip title="Create Codemark" placement="bottomRight">
-									<span>
-										<Icon name="plus" className="button" />
-									</span>
-								</Tooltip>
-							</span>
-							<span className="align-right-button" onClick={this.handleClickNavMenu}>
-								<Tooltip title="More..." placement="bottomRight">
-									<span>
-										<Icon onClick={this.toggleMenu} name="kebab-horizontal" className="button" />
-										{this.renderMenu()}
-									</span>
-								</Tooltip>
-							</span>
-						</div>
-					</div>
-				)}
-			</nav>
-		);
-	}
-
 	// we render both a main stream (postslist) plus also a postslist related
 	// to the currently selected thread (if it exists). the reason for this is
 	// to be able to animate between the two streams, since they will both be
@@ -602,8 +507,8 @@ export class SimpleStream extends Component {
 		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
 		let { activePanel } = this.props;
 		const { searchBarOpen, q } = this.state;
-		// if (searchBarOpen && q) activePanel = "knowledge";
-		if (searchBarOpen) activePanel = "knowledge";
+		// if (searchBarOpen && q) activePanel = WebviewPanels.Codemarks;
+		if (searchBarOpen) activePanel = WebviewPanels.Codemarks;
 
 		let threadId = this.props.threadId;
 		let threadPost = this.findPostById(threadId);
@@ -692,7 +597,7 @@ export class SimpleStream extends Component {
 				{renderNav && this.renderNavIcons()}
 				{this.state.floatCompose && this.renderComposeBox(placeholderText, channelName)}
 				<div className="content vscroll inline">
-					{activePanel === "codemarks-for-file" && (
+					{activePanel === WebviewPanels.CodemarksForFile && (
 						<InlineCodemarks
 							activePanel={activePanel}
 							setActivePanel={this.setActivePanel}
@@ -712,7 +617,7 @@ export class SimpleStream extends Component {
 							scrollDiv={this._contentScrollDiv}
 						/>
 					)}
-					{activePanel === "knowledge" && (
+					{activePanel === WebviewPanels.Codemarks && (
 						<KnowledgePanel
 							activePanel={activePanel}
 							setActivePanel={this.setActivePanel}
@@ -1024,7 +929,7 @@ export class SimpleStream extends Component {
 
 	openCodemarkMenu = type => {
 		this.setState({ knowledgeType: type, searchBarOpen: false });
-		this.setActivePanel("knowledge");
+		this.setActivePanel(WebviewPanels.Codemarks);
 	};
 
 	starChannel = () => {
@@ -1045,7 +950,7 @@ export class SimpleStream extends Component {
 		if (searchBarOpen) {
 			this.setState({ q: null });
 		}
-		this.setActivePanel("knowledge");
+		this.setActivePanel(WebviewPanels.Codemarks);
 		// this.setState({ searchBarOpen: !searchBarOpen, knowledgeType: "all" });
 	};
 

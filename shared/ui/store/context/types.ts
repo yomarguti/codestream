@@ -1,4 +1,4 @@
-import { WebviewContext } from "@codestream/protocols/webview";
+import { WebviewContext, WebviewPanels } from "@codestream/protocols/webview";
 
 export enum ContextActionsType {
 	SetCodemarkFileFilter = "@context/SetCodemarkFileFilter",
@@ -19,5 +19,5 @@ export interface State extends WebviewContext {
 	codemarkColorFilter: string;
 	channelFilter: string;
 	issueProvider?: string;
-	panelStack: string[];
+	panelStack: (WebviewPanels | string)[];
 }

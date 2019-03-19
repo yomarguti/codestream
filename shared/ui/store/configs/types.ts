@@ -1,7 +1,6 @@
 export interface State {
 	showHeadshots: boolean;
 	debug: boolean;
-	showMarkers: boolean;
 	email?: string;
 	serverUrl: string;
 }

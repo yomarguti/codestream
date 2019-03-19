@@ -406,26 +406,6 @@ export class SimpleKnowledgePanel extends Component {
 		});
 	};
 
-	toggleShowMarkers = async () => {
-		const showMarkers = !this.props.showMarkers;
-		try {
-			await HostApi.instance.send(UpdateConfigurationRequestType, {
-				name: "showMarkers",
-				value: showMarkers
-			});
-			this.setState({ showMarkers });
-		} catch (error) {
-			logError(`Error toggling marker visibility: ${error}`);
-		}
-		// this.props.telemetry({
-		// 	eventName: "Codemarks View Toggled",
-		// 	properties: {
-		// 		Direction: "Inline"
-		// 	}
-		// });
-		// this.props.setActivePanel("inline");
-	};
-
 	handleClickCodemark = async codemark => {
 		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Codemark Clicked",
@@ -504,7 +484,6 @@ const mapStateToProps = state => {
 		usernames: userSelectors.getUsernames(state),
 		noCodemarksAtAll: !codemarkSelectors.teamHasCodemarks(state),
 		codemarks: codemarkSelectors.getTypeFilteredCodemarks(state),
-		showMarkers: configs.showMarkers,
 		team: teams[context.currentTeamId],
 		fileFilter: context.codemarkFileFilter,
 		typeFilter: context.codemarkTypeFilter,

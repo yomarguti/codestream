@@ -3,6 +3,7 @@ import * as preferencesActions from "../preferences/actions";
 import { PreferencesActionsType } from "../preferences/types";
 import * as actions from "./actions";
 import { ContextActionsType, State } from "./types";
+import { WebviewPanels } from "@codestream/protocols/webview";
 
 type ContextActions = ActionType<typeof actions>;
 type PreferencesActions = ActionType<typeof preferencesActions>;
@@ -12,7 +13,7 @@ const initialState: State = {
 	currentStreamId: "",
 	issueProvider: undefined,
 	threadId: undefined,
-	panelStack: ["codemarks-for-file"], // default view is the "in this file" view
+	panelStack: [WebviewPanels.CodemarksForFile], // default view is the "in this file" view
 	hasFocus: true, // we assume we start with the focus when codestream initializes
 	codemarkFileFilter: "all",
 	codemarkTypeFilter: "all",

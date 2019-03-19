@@ -6,7 +6,6 @@ import Icon from "./Icon";
 import Codemark from "./Codemark";
 import ScrollBox from "./ScrollBox";
 import Feedback from "./Feedback";
-import Tooltip from "./Tooltip";
 import createClassString from "classnames";
 import { range } from "../utils";
 import { HostApi } from "../webview-api";
@@ -48,7 +47,6 @@ export class SimpleInlineCodemarks extends Component {
 
 		this.state = {
 			isLoading: props.documentMarkers.length === 0,
-			resetShowMarkers: false,
 			openPost: null
 		};
 	}
@@ -85,23 +83,11 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	componentDidMount() {
-		if (this.props.showMarkers && this.props.viewInline) {
-			this.setState({ resetShowMarkers: true });
-			HostApi.instance.send(UpdateConfigurationRequestType, {
-				name: "showMarkers",
-				value: false
-			});
-		}
-
 		this.disposables.push(
-			HostApi.instance.on(
-				DidChangeDocumentMarkersNotificationType,
-				// @ts-ignore
-				({ textDocument }) => {
-					if (this.props.textEditorUri === textDocument.uri)
-						this.props.fetchDocumentMarkers(textDocument.uri);
-				}
-			)
+			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
+				if (this.props.textEditorUri === textDocument.uri)
+					this.props.fetchDocumentMarkers(textDocument.uri);
+			})
 		);
 
 		this.props.fetchDocumentMarkers(this.props.textEditorUri).then(() => {
@@ -115,18 +101,6 @@ export class SimpleInlineCodemarks extends Component {
 		const { textEditorUri } = this.props;
 		if (String(textEditorUri).length > 0 && prevProps.textEditorUri !== textEditorUri) {
 			this.onFileChanged();
-		}
-
-		if (prevProps.viewInline !== this.props.viewInline) {
-			if (this.props.viewInline) {
-				this.setState({ resetShowMarkers: true });
-				HostApi.instance.send(UpdateConfigurationRequestType, {
-					name: "showMarkers",
-					value: false
-				});
-			} else if (this.state.resetShowMarkers) {
-				HostApi.instance.send(UpdateConfigurationRequestType, { name: "showMarkers", value: true });
-			}
 		}
 
 		const didStartLineChange = this.compareStart(
@@ -144,10 +118,6 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	componentWillUnmount() {
-		if (this.state.resetShowMarkers) {
-			HostApi.instance.send(UpdateConfigurationRequestType, { name: "showMarkers", value: true });
-		}
-
 		this.disposables.forEach(d => d.dispose());
 	}
 
@@ -665,7 +635,6 @@ const mapStateToProps = state => {
 
 	return {
 		usernames: userSelectors.getUsernames(state),
-		showMarkers: configs.showMarkers,
 		team: teams[context.currentTeamId],
 		viewInline: configs.viewCodemarksInline,
 		fileNameToFilterFor: editorContext.activeFile || editorContext.lastActiveFile,

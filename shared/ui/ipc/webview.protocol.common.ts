@@ -21,11 +21,17 @@ export interface EditorSelection extends Range {
 	cursor: Position;
 }
 
+export enum WebviewPanels {
+	Codemarks = "knowledge",
+	CodemarksForFile = "codemarks-for-file"
+}
+
 export interface WebviewContext {
 	currentTeamId: string;
 	currentStreamId?: string;
 	threadId?: string;
 	hasFocus: boolean;
+	panelStack?: (WebviewPanels | string)[];
 }
 
 export interface EditorContext {
