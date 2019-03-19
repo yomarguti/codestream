@@ -340,7 +340,7 @@ export interface CSCreateCodemarkRequest {
 	externalAssignees?: { displayName: string }[];
 	remoteCodeUrl?: string;
 	threadUrl?: string;
-	createPermalink?: boolean;
+	createPermalink?: false | "public" | "private";
 }
 export interface CSCreateCodemarkRequestMarker {
 	code: string;

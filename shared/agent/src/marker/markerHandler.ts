@@ -45,6 +45,8 @@ export namespace MarkerHandler {
 		const scmResponse = await scm.getRangeInfo({ uri: uri, range: range, dirty: true });
 		const remotes = scmResponse.scm && scmResponse.scm.remotes.map(r => r.url);
 
+		// TODO: Hook remoteCodeUrl up
+
 		const response = await codemarks.create({
 			type: CodemarkType.Link,
 			markers: [
@@ -57,17 +59,8 @@ export namespace MarkerHandler {
 				}
 			],
 			remotes: remotes,
-
-			createPermalink: privacy === "private" ? true : false
+			createPermalink: privacy
 		});
-
-		if (privacy === "public") {
-			const permalinkResponse = await codemarks.createPermalink({
-				codemarkId: response.codemark.id,
-				isPublic: true
-			});
-			return { linkUrl: permalinkResponse.permalink! };
-		}
 
 		return { linkUrl: response.permalink! };
 	}
