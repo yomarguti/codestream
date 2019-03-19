@@ -102,20 +102,6 @@ npm run bundle
 npm run pack
 ```
 
-### Configuration
-
-| Name                       | Description                                                                      |
-| -------------------------- | -------------------------------------------------------------------------------- |
-| `codestream.autoSignIn`    | Specifies whether to automatically sign in to CodeStream                         |
-| `codestream.avatars`       | Specifies whether to show avatars                                                |
-| `codestream.email`         | Specifies the email to use to connect to the CodeStream service                  |
-| `codestream.notifications` | Specifies when to show notifications for incoming messages                       |
-| `codestream.password`      | Specifies the password to use to connect to the CodeStream service               |
-| `codestream.serverUrl`     | Specifies the url to use to connect to the CodeStream service                    |
-| `codestream.team`          | Specifies an optional team to use to connect to the CodeStream service           |
-| `codestream.traceLevel`    | Specifies how much (if any) output will be sent to the CodeStream output channel |
-| `codestream.webAppUrl`     | Specifies the url to use to connect to the CodeStream web app                    |
-
 ### Debugging
 
 #### Using VS Code

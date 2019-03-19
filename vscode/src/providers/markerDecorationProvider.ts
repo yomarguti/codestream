@@ -27,7 +27,6 @@ import {
 	TextDocumentMarkersChangedEvent
 } from "../api/session";
 import { OpenCodemarkCommandArgs, ShowMarkerDiffCommandArgs } from "../commands";
-import { MarkerStyle } from "../config";
 import { configuration } from "../configuration";
 import { emptyArray } from "../constants";
 import { Container } from "../container";
@@ -92,6 +91,8 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 	private readonly _markersCache = new Map<string, Promise<Marker[]>>();
 	private _watchedEditorsMap: Map<string, () => void> | undefined;
 
+	private _suspended = false;
+
 	constructor() {
 		this._disposable = Disposable.from(
 			configuration.onDidChange(this.onConfigurationChanged, this),
@@ -106,16 +107,23 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 		this._disposable && this._disposable.dispose();
 	}
 
+	suspend() {
+		if (this._suspended || !Container.config.autoHideMarkers) return;
+
+		this._suspended = true;
+		this.ensure(true);
+	}
+
+	resume() {
+		if (!this._suspended) return;
+
+		this._suspended = false;
+		this.ensure(true);
+	}
+
 	private onConfigurationChanged(e: ConfigurationChangeEvent) {
-		if (configuration.changed(e, configuration.name("markerStyle").value)) {
-			this.disable();
-			this.ensure();
-
-			return;
-		}
-
-		if (configuration.changed(e, configuration.name("showMarkers").value)) {
-			this.ensure();
+		if (configuration.changed(e, configuration.name("showMarkerGlyphs").value)) {
+			this.ensure(true);
 		}
 	}
 
@@ -131,13 +139,16 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 		}
 	}
 
-	private ensure() {
-		if (!Container.config.showMarkers || !Container.session.signedIn) {
+	private ensure(reset: boolean = false) {
+		if (!Container.config.showMarkerGlyphs || !Container.session.signedIn) {
 			this.disable();
 
 			return;
 		}
 
+		if (reset) {
+			this.disable();
+		}
 		this.enable();
 	}
 
@@ -163,20 +174,14 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 
 		const decorationTypes: { [key: string]: TextEditorDecorationType } = Object.create(null);
 
-		if (Container.config.markerStyle === MarkerStyle.Glyphs) {
+		if (!this._suspended) {
 			for (const position of MarkerPositions) {
 				for (const type of MarkerTypes) {
 					for (const color of MarkerColors) {
 						for (const status of MarkerStatuses) {
 							const key = `${position}-${type}-${color}-${status}`;
-							decorationTypes[`${key}-before`] = window.createTextEditorDecorationType({
+							decorationTypes[key] = window.createTextEditorDecorationType({
 								before: buildDecoration(position, type, color, status)
-								// overviewRulerColor: "#3193f1",
-								// overviewRulerLane: OverviewRulerLane.Center
-							});
-							decorationTypes[`${key}-nobefore`] = window.createTextEditorDecorationType({
-								// overviewRulerColor: "#3193f1",
-								// overviewRulerLane: OverviewRulerLane.Center
 							});
 						}
 					}
@@ -208,7 +213,7 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 			workspace.onDidCloseTextDocument(this.onDocumentClosed, this)
 		];
 
-		if (Container.config.markerStyle === MarkerStyle.Glyphs) {
+		if (!this._suspended) {
 			subscriptions.push(languages.registerHoverProvider({ scheme: "file" }, this));
 		}
 
@@ -299,8 +304,6 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 
 		const decorations: { [key: string]: (DecorationOptions | Range)[] } = {};
 
-		const glyphs = Container.config.markerStyle === MarkerStyle.Glyphs;
-
 		const starts = new Set();
 		for (const marker of markers) {
 			const start = marker.range.start.line;
@@ -331,15 +334,13 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 
 			decorations[overviewRulerKey].push(marker.range);
 
-			if (glyphs) {
+			if (!this._suspended) {
 				// Determine if the marker needs to be inline (i.e. part of the content or overlayed)
 				const position =
 					editor.document.lineAt(start).firstNonWhitespaceCharacterIndex === 0
 						? "inline"
 						: "overlay";
-				const before = Container.config.showMarkers !== false ? "before" : "nobefore";
-
-				const key = `${position}-${marker.type}-${marker.color}-${marker.status}-${before}`;
+				const key = `${position}-${marker.type}-${marker.color}-${marker.status}`;
 				if (!decorations[key]) {
 					decorations[key] = [];
 				}

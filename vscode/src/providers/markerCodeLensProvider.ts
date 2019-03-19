@@ -19,7 +19,6 @@ import {
 	TextDocumentMarkersChangedEvent
 } from "../api/session";
 import { OpenCodemarkCommandArgs } from "../commands";
-import { MarkerStyle } from "../config";
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -51,10 +50,7 @@ export class CodemarkCodeLensProvider implements CodeLensProvider, Disposable {
 	}
 
 	private onConfigurationChanged(e: ConfigurationChangeEvent) {
-		if (
-			!configuration.changed(e, configuration.name("showMarkers").value) &&
-			!configuration.changed(e, configuration.name("markerStyle").value)
-		) {
+		if (!configuration.changed(e, configuration.name("showMarkerCodeLens").value)) {
 			return;
 		}
 
@@ -74,7 +70,7 @@ export class CodemarkCodeLensProvider implements CodeLensProvider, Disposable {
 	}
 
 	private ensure() {
-		if (!Container.config.showMarkers || Container.config.markerStyle !== MarkerStyle.CodeLens) {
+		if (!Container.config.showMarkerCodeLens) {
 			this.disable();
 
 			return;
@@ -108,8 +104,7 @@ export class CodemarkCodeLensProvider implements CodeLensProvider, Disposable {
 		token: CancellationToken
 	): Promise<CodeLens[] | null | undefined> {
 		if (
-			!Container.config.showMarkers ||
-			Container.config.markerStyle !== MarkerStyle.CodeLens ||
+			!Container.config.showMarkerCodeLens ||
 			Container.session.status !== SessionStatus.SignedIn
 		) {
 			return [];

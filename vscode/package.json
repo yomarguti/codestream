@@ -39,16 +39,16 @@
             "type": "object",
             "title": "CodeStream",
             "properties": {
+                "codestream.autoHideMarkers": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Specifies whether to automatically hide editor marker glyphs when the CodeStream panel is showing codemarks in the current file",
+                    "scope": "window"
+                },
                 "codestream.autoSignIn": {
                     "type": "boolean",
                     "default": true,
                     "description": "Specifies whether to automatically sign in to CodeStream",
-                    "scope": "window"
-                },
-                "codestream.avatars": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Specifies whether to show avatars",
                     "scope": "window"
                 },
                 "codestream.email": {
@@ -57,24 +57,11 @@
                     "description": "Specifies the email address to use to connect to the CodeStream service",
                     "scope": "window"
                 },
-                "codestream.markerStyle": {
-                    "type": "string",
-                    "default": "glyphs",
-                    "enum": [
-                        "glyphs",
-                        "codelens"
-                    ],
-                    "enumDescriptions": [
-                        "Adds glyph indicators at the start of lines with associate codemarks",
-                        "Adds code lens above lines with associate codemarks"
-                    ],
-                    "description": "Specifies the style of CodeStream codemarks shown in the editor",
-                    "scope": "window"
-                },
                 "codestream.muteAll": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Specifies whether to show indicators when new messages arrive"
+                    "description": "Specifies whether to show indicators when new messages arrive",
+                    "scope": "window"
                 },
                 "codestream.notifications": {
                     "type": "string",
@@ -98,6 +85,18 @@
                     "description": "Specifies the url to use to connect to the CodeStream service",
                     "scope": "window"
                 },
+                "codestream.showAvatars": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Specifies whether to show avatars",
+                    "scope": "window"
+                },
+                "codestream.showFeedbackSmiley": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Specifies whether to show a feedback button in the CodeStream panel",
+                    "scope": "window"
+                },
                 "codestream.showInStatusBar": {
                     "type": "string",
                     "enum": [
@@ -114,20 +113,23 @@
                     "description": "Specifies whether to show CodeStream in the status bar",
                     "scope": "window"
                 },
-                "codestream.showMarkers": {
+                "codestream.showMarkerCodeLens": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Specifies whether to show CodeStream codemarks in the editor"
+                    "description": "Specifies whether to show code lens above lines with associated codemarks in the editor",
+                    "scope": "window"
                 },
-                "codestream.showFeedbackSmiley": {
+                "codestream.showMarkerGlyphs": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Specifies whether to show a feedback button in the CodeStream panel"
+                    "description": "Specifies whether to show glyph indicators at the start of lines with associated codemarks in the editor",
+                    "scope": "window"
                 },
                 "codestream.showShortcutTipOnSelection": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Specifies whether to show a shortcut key tip attached to the selection when you select code"
+                    "description": "Specifies whether to show a shortcut key tip attached to the selection when you select code",
+                    "scope": "window"
                 },
                 "codestream.team": {
                     "type": "string",
@@ -150,7 +152,8 @@
                 "codestream.viewCodemarksInline": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Specifies whether to display Codemarks inline next to the code they refer to. The alternative is a list view."
+                    "description": "Specifies whether to display Codemarks inline next to the code they refer to. The alternative is a list view.",
+                    "scope": "window"
                 },
                 "codestream.webAppUrl": {
                     "type": "string",

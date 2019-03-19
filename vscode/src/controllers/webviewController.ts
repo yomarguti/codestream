@@ -46,7 +46,8 @@ import {
 	WebviewDidInitializeNotificationType,
 	WebviewIpcMessage,
 	WebviewIpcNotificationMessage,
-	WebviewIpcRequestMessage
+	WebviewIpcRequestMessage,
+	WebviewPanels
 } from "@codestream/protocols/webview";
 import * as fs from "fs";
 import {
@@ -300,8 +301,8 @@ export class WebviewController implements Disposable {
 			Container.agent.telemetry.track("Webview Opened");
 		}
 
-		await this._webview.show(streamThread);
 		this.updateState();
+		await this._webview.show(streamThread);
 
 		return this.activeStreamThread as StreamThread | undefined;
 	}
@@ -340,21 +341,22 @@ export class WebviewController implements Disposable {
 
 	private onConfigurationChanged(webview: CodeStreamWebviewPanel, e: ConfigurationChangeEvent) {
 		if (
-			configuration.changed(e, configuration.name("avatars").value) ||
-			configuration.changed(e, configuration.name("muteAll").value) ||
-			configuration.changed(e, configuration.name("showMarkers").value) ||
-			configuration.changed(e, configuration.name("showFeedbackSmiley").value) ||
 			configuration.changed(e, configuration.name("traceLevel").value) ||
+			configuration.changed(e, configuration.name("muteAll").value) ||
+			configuration.changed(e, configuration.name("showAvatars").value) ||
+			configuration.changed(e, configuration.name("showFeedbackSmiley").value) ||
+			configuration.changed(e, configuration.name("showMarkerCodeLens").value) ||
+			configuration.changed(e, configuration.name("showMarkerGlyphs").value) ||
 			configuration.changed(e, configuration.name("viewCodemarksInline").value)
 		) {
 			webview.notify(HostDidChangeConfigNotificationType, {
 				debug: Container.config.traceLevel === "debug",
 				muteAll: Container.config.muteAll,
-				viewCodemarksInline: Container.config.viewCodemarksInline,
-				serverUrl: this.session.serverUrl,
-				showHeadshots: Container.config.avatars,
-				showMarkers: Container.config.showMarkers,
-				showFeedbackSmiley: Container.config.showFeedbackSmiley
+				showFeedbackSmiley: Container.config.showFeedbackSmiley,
+				showHeadshots: Container.config.showAvatars,
+				showMarkerCodeLens: Container.config.showMarkerCodeLens,
+				showMarkerGlyphs: Container.config.showMarkerGlyphs,
+				viewCodemarksInline: Container.config.viewCodemarksInline
 			});
 		}
 	}
@@ -709,11 +711,12 @@ export class WebviewController implements Disposable {
 				debug: Container.config.traceLevel === "debug",
 				email: Container.config.email,
 				muteAll: Container.config.muteAll,
-				viewCodemarksInline: Container.config.viewCodemarksInline,
 				serverUrl: this.session.serverUrl,
-				showHeadshots: Container.config.avatars,
-				showMarkers: Container.config.showMarkers,
-				showFeedbackSmiley: Container.config.showFeedbackSmiley
+				showFeedbackSmiley: Container.config.showFeedbackSmiley,
+				showHeadshots: Container.config.showAvatars,
+				showMarkerCodeLens: Container.config.showMarkerCodeLens,
+				showMarkerGlyphs: Container.config.showMarkerGlyphs,
+				viewCodemarksInline: Container.config.viewCodemarksInline
 			},
 			context: context,
 			editorContext: editorContext,
@@ -802,6 +805,17 @@ export class WebviewController implements Disposable {
 				hidden: hidden,
 				teams: teams
 			});
+
+			if (
+				!hidden &&
+				this._context &&
+				this._context.panelStack &&
+				this._context.panelStack[0] === WebviewPanels.CodemarksForFile
+			) {
+				Container.markerDecorations.suspend();
+			} else {
+				Container.markerDecorations.resume();
+			}
 		} catch {}
 	}
 }
