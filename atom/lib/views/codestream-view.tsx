@@ -28,7 +28,6 @@ import { CompositeDisposable, Emitter, Point, Range, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
 import { shell } from "electron";
 import { NotificationType } from "vscode-languageserver-protocol";
-import { EditorSelectionObserver } from "workspace/editor-selection-observer";
 import {
 	BootstrapRequestType as AgentBootstrapRequestType,
 	DidChangeDataNotificationType,
@@ -36,6 +35,7 @@ import {
 } from "../protocols/agent/agent.protocol";
 import { CodemarkType, LoginResult } from "../protocols/agent/api.protocol";
 import { asAbsolutePath, Editor } from "../utils";
+import { WorkspaceEditorObserver } from "../workspace/editor-observer";
 import { SessionStatus, WorkspaceSession } from "../workspace/workspace-session";
 import { getStyles } from "./styles-getter";
 
@@ -70,7 +70,7 @@ export class CodestreamView {
 	private emitter: Emitter;
 	private webviewReady?: Promise<void>;
 	private webviewContext?: any;
-	private editorSelectionObserver?: EditorSelectionObserver;
+	private editorSelectionObserver?: WorkspaceEditorObserver;
 
 	constructor(session: WorkspaceSession, webviewContext?: any) {
 		this.session = session;
@@ -170,7 +170,7 @@ export class CodestreamView {
 	}
 
 	private observeWorkspace() {
-		this.editorSelectionObserver = new EditorSelectionObserver();
+		this.editorSelectionObserver = new WorkspaceEditorObserver();
 		this.editorSelectionObserver.onDidChangeSelection(this.onSelectionChanged);
 		this.editorSelectionObserver.onDidChangeActiveEditor(this.onEditorActiveEditorChanged);
 	}

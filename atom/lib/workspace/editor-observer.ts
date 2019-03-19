@@ -4,7 +4,7 @@ import { throttle } from "utils";
 const DID_CHANGE_SELECTION = "did-change-selection";
 const DID_CHANGE_EDITOR = "did-change-editor";
 
-export class EditorSelectionObserver implements Disposable {
+export class WorkspaceEditorObserver implements Disposable {
 	private subscriptions: CompositeDisposable;
 	private emitter = new Emitter();
 	private _disposed = false;
