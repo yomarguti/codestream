@@ -210,42 +210,99 @@
         "keybindings": [
             {
                 "command": "codestream.newComment",
-                "args": { "source": "Shortcut" },
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "ctrl+shift+/ /",
+                "mac": "ctrl+/ /",
+                "when": "editorTextFocus && codestream:status == signedIn"
+            },
+            {
+                "command": "codestream.newComment",
+                "args": {
+                    "source": "Shortcut"
+                },
                 "key": "ctrl+shift+/ ctrl+shift+/",
                 "mac": "ctrl+/ ctrl+/",
                 "when": "editorTextFocus && codestream:status == signedIn"
             },
             {
                 "command": "codestream.newComment",
-                "args": { "source": "Shortcut" },
+                "args": {
+                    "source": "Shortcut"
+                },
                 "key": "ctrl+shift+/ c",
                 "mac": "ctrl+/ c",
                 "when": "editorTextFocus && codestream:status == signedIn"
             },
             {
+                "command": "codestream.newComment",
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "ctrl+shift+/ ctrl+shift+c",
+                "mac": "ctrl+/ ctrl+c",
+                "when": "editorTextFocus && codestream:status == signedIn"
+            },
+            {
                 "command": "codestream.newIssue",
-                "args": { "source": "Shortcut" },
+                "args": {
+                    "source": "Shortcut"
+                },
                 "key": "ctrl+shift+/ i",
                 "mac": "ctrl+/ i",
                 "when": "editorTextFocus && codestream:status == signedIn"
             },
             {
+                "command": "codestream.newIssue",
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "ctrl+shift+/ ctrl+shift+i",
+                "mac": "ctrl+/ ctrl+i",
+                "when": "editorTextFocus && codestream:status == signedIn"
+            },
+            {
                 "command": "codestream.newBookmark",
-                "args": { "source": "Shortcut" },
+                "args": {
+                    "source": "Shortcut"
+                },
                 "key": "ctrl+shift+/ b",
                 "mac": "ctrl+/ b",
                 "when": "editorTextFocus && codestream:status == signedIn"
             },
             {
+                "command": "codestream.newBookmark",
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "ctrl+shift+/ ctrl+shift+b",
+                "mac": "ctrl+/ ctrl+b",
+                "when": "editorTextFocus && codestream:status == signedIn"
+            },
+            {
                 "command": "codestream.newPermalink",
-                "args": { "source": "Shortcut" },
+                "args": {
+                    "source": "Shortcut"
+                },
                 "key": "ctrl+shift+/ p",
                 "mac": "ctrl+/ p",
                 "when": "editorTextFocus && codestream:status == signedIn"
             },
             {
+                "command": "codestream.newPermalink",
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "ctrl+shift+/ ctrl+shift+p",
+                "mac": "ctrl+/ ctrl+p",
+                "when": "editorTextFocus && codestream:status == signedIn"
+            },
+            {
                 "command": "codestream.copyPermalink",
-                "args": { "source": "Shortcut" },
+                "args": {
+                    "source": "Shortcut"
+                },
                 "key": "ctrl+shift+/ shift+p",
                 "mac": "ctrl+/ shift+p",
                 "when": "editorTextFocus && codestream:status == signedIn"
