@@ -194,7 +194,11 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	componentDidUpdate(prevProps: Props) {
 		const { isEditing, textEditorSelection, textEditorUri } = this.props;
-		if (prevProps.textEditorSelection !== textEditorSelection && !isEditing) {
+		if (
+			prevProps.textEditorSelection !== textEditorSelection &&
+			!isEditing &&
+			!this.state.linkURI
+		) {
 			this.getScmInfoForSelection(textEditorUri!, forceAsLine(textEditorSelection!));
 		}
 
