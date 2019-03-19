@@ -149,9 +149,15 @@ export class SimpleStream extends Component {
 
 	async handleNewCodemarkRequest(e) {
 		this.setNewPostEntry(e.source);
+		const extra =
+			this.state.multiCompose &&
+			this.state.composeBoxProps &&
+			this.state.composeBoxProps.commentType === e.type
+				? { key: Math.random().toString() } // in case the codemark type already selected is the same as the new one requested, force a re-computation of the compose box
+				: {};
 		this.setMultiCompose(
 			true,
-			{ commentType: e.type },
+			{ commentType: e.type, ...extra },
 			{ uri: e.uri, range: forceAsLine(e.range) }
 		);
 	}
