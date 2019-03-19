@@ -119,6 +119,11 @@
                     "default": true,
                     "description": "Specifies whether to show CodeStream codemarks in the editor"
                 },
+                "codestream.showFeedbackSmiley": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Specifies whether to show a feedback button in the CodeStream panel"
+                },
                 "codestream.showShortcutTipOnSelection": {
                     "type": "boolean",
                     "default": false,
@@ -205,28 +210,36 @@
         "keybindings": [
             {
                 "command": "codestream.newComment",
-                "args": { "source": "Shortcut" },
+                "args": {
+                    "source": "Shortcut"
+                },
                 "key": "ctrl+shift+/ ctrl+shift+/",
                 "mac": "ctrl+/ ctrl+/",
                 "when": "editorTextFocus && codestream:status == signedIn"
             },
             {
                 "command": "codestream.newComment",
-                "args": { "source": "Shortcut" },
+                "args": {
+                    "source": "Shortcut"
+                },
                 "key": "ctrl+shift+/ c",
                 "mac": "ctrl+/ c",
                 "when": "editorTextFocus && codestream:status == signedIn"
             },
             {
                 "command": "codestream.newIssue",
-                "args": { "source": "Shortcut" },
+                "args": {
+                    "source": "Shortcut"
+                },
                 "key": "ctrl+shift+/ i",
                 "mac": "ctrl+/ i",
                 "when": "editorTextFocus && codestream:status == signedIn"
             },
             {
                 "command": "codestream.newBookmark",
-                "args": { "source": "Shortcut" },
+                "args": {
+                    "source": "Shortcut"
+                },
                 "key": "ctrl+shift+/ b",
                 "mac": "ctrl+/ b",
                 "when": "editorTextFocus && codestream:status == signedIn"
@@ -240,7 +253,9 @@
             },
             {
                 "command": "codestream.copyPermalink",
-                "args": { "source": "Shortcut" },
+                "args": {
+                    "source": "Shortcut"
+                },
                 "key": "ctrl+shift+/ shift+p",
                 "mac": "ctrl+/ shift+p",
                 "when": "editorTextFocus && codestream:status == signedIn"

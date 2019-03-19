@@ -22,6 +22,7 @@ export interface Config {
 	serverUrl: string;
 	showInStatusBar: "left" | "right" | false;
 	showMarkers: boolean;
+	showFeedbackSmiley: boolean;
 	showShortcutTipOnSelection: boolean;
 	team: string;
 	traceLevel: TraceLevel;

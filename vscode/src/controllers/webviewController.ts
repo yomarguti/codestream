@@ -343,6 +343,7 @@ export class WebviewController implements Disposable {
 			configuration.changed(e, configuration.name("avatars").value) ||
 			configuration.changed(e, configuration.name("muteAll").value) ||
 			configuration.changed(e, configuration.name("showMarkers").value) ||
+			configuration.changed(e, configuration.name("showFeedbackSmiley").value) ||
 			configuration.changed(e, configuration.name("traceLevel").value) ||
 			configuration.changed(e, configuration.name("viewCodemarksInline").value)
 		) {
@@ -352,7 +353,8 @@ export class WebviewController implements Disposable {
 				viewCodemarksInline: Container.config.viewCodemarksInline,
 				serverUrl: this.session.serverUrl,
 				showHeadshots: Container.config.avatars,
-				showMarkers: Container.config.showMarkers
+				showMarkers: Container.config.showMarkers,
+				showFeedbackSmiley: Container.config.showFeedbackSmiley
 			});
 		}
 	}
@@ -710,7 +712,8 @@ export class WebviewController implements Disposable {
 				viewCodemarksInline: Container.config.viewCodemarksInline,
 				serverUrl: this.session.serverUrl,
 				showHeadshots: Container.config.avatars,
-				showMarkers: Container.config.showMarkers
+				showMarkers: Container.config.showMarkers,
+				showFeedbackSmiley: Container.config.showFeedbackSmiley
 			},
 			context: context,
 			editorContext: editorContext,
