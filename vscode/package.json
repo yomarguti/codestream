@@ -115,7 +115,7 @@
                 },
                 "codestream.showMarkerCodeLens": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Specifies whether to show code lens above lines with associated codemarks in the editor",
                     "scope": "window"
                 },
