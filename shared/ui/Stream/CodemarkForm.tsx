@@ -99,6 +99,7 @@ interface State {
 	assigneesInvalid?: boolean;
 	showAllChannels?: boolean;
 	linkURI?: string;
+	copied: boolean;
 }
 
 function merge(defaults: Partial<State>, codemark: CSCodemark): State {
@@ -396,11 +397,13 @@ class CodemarkForm extends React.Component<Props, State> {
 				};
 			}
 
+			this.setState({ isLoading: true });
+
 			const response = await HostApi.instance.send(
 				CreateDocumentMarkerPermalinkRequestType,
 				request
 			);
-			this.setState({ linkURI: response.linkUrl });
+			this.setState({ linkURI: response.linkUrl, isLoading: false });
 
 			return;
 		}
@@ -703,6 +706,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (this.permalinkRef.current) {
 			this.permalinkRef.current.select();
 			document.execCommand("copy");
+			this.setState({ copied: true });
 		}
 	};
 
@@ -917,15 +921,21 @@ class CodemarkForm extends React.Component<Props, State> {
 							</div>
 						)}
 						{this.renderTextHelp()}
+						{this.state.linkURI &&
+							this.state.privacy === "public" && [
+								<div className="permalink-warning">
+									<Icon name="alert" />
+									Note that this is a public URL. Anyone with the link will be able to see the
+									quoted code snippet.
+								</div>
+							]}
 						{this.state.linkURI && [
 							<textarea
 								ref={this.permalinkRef}
 								value={this.state.linkURI}
 								style={{ position: "absolute", left: "-9999px" }}
 							/>,
-							<div className="permalink" key="2">
-								{this.state.linkURI}
-							</div>
+							<input type="text" className="permalink" value={this.state.linkURI} />
 						]}
 						{commentType === "link" && !this.state.linkURI && (
 							<div id="privacy-controls" className="control-group" key="1">
@@ -995,16 +1005,16 @@ class CodemarkForm extends React.Component<Props, State> {
 							}}
 							className="control-button cancel"
 							type="submit"
-							loading={this.state.isLoading}
 							onClick={this.props.onClickClose}
 						>
-							Cancel
+							{this.state.copied ? "Close" : "Cancel"}
 						</Button>
 						<Button
 							style={{
 								paddingLeft: "10px",
 								paddingRight: "10px",
-								width: "auto",
+								// fixed width to handle the isLoading case
+								width: "80px",
 								marginRight: 0
 							}}
 							className="control-button"
@@ -1013,7 +1023,9 @@ class CodemarkForm extends React.Component<Props, State> {
 							onClick={this.state.linkURI ? this.copyPermalink : this.handleClickSubmit}
 						>
 							{commentType === "link"
-								? this.state.linkURI
+								? this.state.copied
+									? "Copied!"
+									: this.state.linkURI
 									? "Copy Link"
 									: "Create Link"
 								: "Submit"}
