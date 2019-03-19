@@ -16,6 +16,10 @@ import { bootstrapUsers } from "./users/actions";
 import { isSignedInBootstrap, BootstrapResponse } from "../ipc/host.protocol";
 import { goToLogin } from "./route/actions";
 
+export enum BootstrapActionType {
+	Complete = "@bootstrap/Complete"
+}
+
 export const reset = () => action("RESET");
 
 export const bootstrap = (data: BootstrapResponse) => async dispatch => {
@@ -38,7 +42,7 @@ export const bootstrap = (data: BootstrapResponse) => async dispatch => {
 	dispatch(updateCapabilities(data.capabilities || {}));
 	dispatch(actions.updateConfigs(data.configs));
 	dispatch({ type: "@pluginVersion/Set", payload: data.version });
-	dispatch({ type: "@bootstrap/Complete" });
+	dispatch({ type: BootstrapActionType.Complete });
 };
 
 export const actions = {

@@ -22,12 +22,12 @@ import { reduceDocumentMarkers } from "../store/documentMarkers/reducer";
 import { debounceToAnimationFrame } from "../utils";
 import middleware from "./middleware";
 import { reduceEditorContext } from "./editorContext/reducer";
+import { BootstrapActionType } from "./actions";
 
 export { actions } from "./actions";
 
 const bootstrapped = (state = false, { type }) => {
-	if (type === "@bootstrap/Complete") return true;
-	if (type === "RESET") return true;
+	if (type === BootstrapActionType.Complete) return true;
 	return state;
 };
 

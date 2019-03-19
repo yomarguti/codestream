@@ -1,3 +1,4 @@
+/// <reference path="../../@types/window.d.ts"/>
 import { WebviewDidChangeContextNotificationType } from "../../ipc/webview.protocol";
 import { HostApi } from "../../webview-api";
 import { ContextActionsType, State as Context } from "../context/types";
@@ -29,23 +30,4 @@ function notEqual<K extends keyof Context>(
 	return Object.entries(oldContext).some(
 		([key, value]) => !(blackList as string[]).includes(key) && value !== newContext[key]
 	);
-}
-
-type RequestIdleCallbackHandle = any;
-interface RequestIdleCallbackOptions {
-	timeout: number;
-}
-interface RequestIdleCallbackDeadline {
-	readonly didTimeout: boolean;
-	timeRemaining(): number;
-}
-
-declare global {
-	interface Window {
-		requestIdleCallback(
-			callback: (deadline: RequestIdleCallbackDeadline) => void,
-			opts?: RequestIdleCallbackOptions
-		): RequestIdleCallbackHandle;
-		cancelIdleCallback(handle: RequestIdleCallbackHandle): void;
-	}
 }
