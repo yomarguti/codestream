@@ -1,15 +1,15 @@
 ﻿using Microsoft.VisualStudio.Shell;
 using System;
 using System.ComponentModel.Design;
-using System.Threading;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.UI;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Serilog;
 
 namespace CodeStream.VisualStudio.Commands
 {
@@ -127,6 +127,7 @@ namespace CodeStream.VisualStudio.Commands
 
     internal class AddCodemarkPermalinkInstantCommand : AddCodemarkCommandBase
     {
+        private static readonly ILogger Log = LogManager.ForContext<AddCodemarkPermalinkInstantCommand>();
         public static AddCodemarkPermalinkInstantCommand Instance { get; private set; }
 
         public static async System.Threading.Tasks.Task InitializeAsync(AsyncPackage package)
@@ -185,7 +186,7 @@ namespace CodeStream.VisualStudio.Commands
                 }
                 catch(Exception ex)
                 {
-
+                    Log.Warning(ex, nameof(InvokeHandler));
                 }
             });
         }

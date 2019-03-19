@@ -1,6 +1,4 @@
-﻿using CodeStream.VisualStudio.Extensions;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
-using Newtonsoft.Json.Linq;
+﻿using Microsoft.VisualStudio.LanguageServer.Protocol;
 using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio.Models
@@ -21,12 +19,19 @@ namespace CodeStream.VisualStudio.Models
         public EditorMargins EditorMargins { get; set; }
     }
 
+    public static class WebviewPanels
+    {
+        public static string Codemarks = "knowledge";
+        public static string CodemarksForFile = "codemarks-for-file";
+    }
+
     public class WebviewContext
     {
         public string CurrentTeamId { get; set; }
         public string CurrentStreamId { get; set; }
         public string ThreadId { get; set; }
         public bool HasFocus { get; set; }
+        public List<string> PanelStack { get; set; }
     }
 
     public class EditorContext
@@ -67,13 +72,17 @@ namespace CodeStream.VisualStudio.Models
             Debug = true;
 #endif
         }
+
         public bool Debug { get; set; }
         public string ServerUrl { get; set; }
         public string Email { get; set; }
-        public bool ShowHeadshots { get; set; }
-        public bool ShowMarkers { get; set; }
+        public bool ShowAvatars { get; set; }
         public bool MuteAll { get; set; }
         public string Team { get; set; }
+        public bool AutoHideMarkers { get; set; }
+        //public bool ShowMarkerCodeLens { get; set; }
+        public bool ShowMarkerGlyphs { get; set; }
+        public bool ShowFeedbackSmiley { get; set; }
         public bool ViewCodemarksInline { get; set; }
     }
 

@@ -163,9 +163,9 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         public void ShowMargin() => Visibility = Visibility.Visible;
 
-        public void ToggleMargin(bool isVisible)
+        public void ToggleMargin(bool requestingVisibility)
         {
-            if (isVisible)
+            if (requestingVisibility)
             {
                 ShowMargin();
             }

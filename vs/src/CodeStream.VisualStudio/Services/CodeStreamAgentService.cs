@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.UI.Settings;
 using Task = System.Threading.Tasks.Task;
 using TextDocumentIdentifier = CodeStream.VisualStudio.Models.TextDocumentIdentifier;
 using TraceLevel = CodeStream.VisualStudio.Core.Logging.TraceLevel;
@@ -330,13 +331,17 @@ namespace CodeStream.VisualStudio.Services
                     Capabilities = capabilitiesObject,
                     Configs = new Configs
                     {
-                        ServerUrl = _settingsService.ServerUrl,
                         Email = _settingsService.Email,
-                        ShowHeadshots = _settingsService.ShowHeadshots,
-                        ShowMarkers = _settingsService.ShowMarkers,
-                        MuteAll = _settingsService.MuteAll,
                         Team = _settingsService.Team,
-                        ViewCodemarksInline = _settingsService.ViewCodemarksInline
+                        ShowAvatars = _settingsService.ShowAvatars,
+                        MuteAll = _settingsService.MuteAll,
+                        
+                        AutoHideMarkers = _settingsService.AutoHideMarkers,
+                        ShowMarkerGlyphs = _settingsService.ShowMarkerGlyphs,
+                        ShowFeedbackSmiley = _settingsService.ShowFeedbackSmiley,
+                        ViewCodemarksInline = _settingsService.ViewCodemarksInline,
+
+                        ServerUrl = _settingsService.ServerUrl,
                     },
                     Env = _settingsService.GetEnvironmentName(),
                     Version = _settingsService.GetEnvironmentVersionFormatted()
@@ -376,20 +381,25 @@ namespace CodeStream.VisualStudio.Services
                 Capabilities = capabilitiesObject,
                 Configs = new Configs
                 {
-                    ServerUrl = settings.ServerUrl,
                     Email = state["email"].ToString(),
-                    ShowMarkers = settings.ShowMarkers,
-                    ShowHeadshots = settings.ShowHeadshots,
-                    MuteAll = settings.MuteAll,
-                    ViewCodemarksInline = settings.ViewCodemarksInline,
-                    Team = settings.Team
+                    Team = settings.Options.Team,
+                    ShowAvatars = settings.Options.ShowAvatars,
+                    MuteAll = settings.Options.MuteAll,
+                    
+                    AutoHideMarkers = settings.Options.AutoHideMarkers,
+                    ShowMarkerGlyphs = settings.Options.ShowMarkerGlyphs,
+                    ShowFeedbackSmiley = settings.Options.ShowFeedbackSmiley,
+                    ViewCodemarksInline = settings.Options.ViewCodemarksInline,
+
+                    ServerUrl = settings.Options.ServerUrl,
                 },
                 Context = new WebviewContext
                 {
                     CurrentTeamId = state["teamId"].ToString(),
                     //currentStreamId 
                     //threadId
-                    HasFocus = true
+                    HasFocus = true,
+                    PanelStack = Enumerable.Empty<string>().ToList()
                 },
                 EditorContext = editorContext,
                 Session = new UserSession

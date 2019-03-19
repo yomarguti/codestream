@@ -1,5 +1,5 @@
-﻿using System;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
+﻿using Microsoft.VisualStudio.LanguageServer.Protocol;
+using System;
 using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio.Models
@@ -36,8 +36,11 @@ namespace CodeStream.VisualStudio.Models
     public class HostDidChangeConfigNotification
     {
         public bool? MuteAll { get; set; }
-        public bool? ShowMarkers { get; set; }
+        public bool? ShowFeedbackSmiley { get; set; }
+        public bool? ShowHeadshots { get; set; }
         public bool? ViewCodemarksInline { get; set; }
+        public bool? ShowMarkerCodeLens { get; set; }
+        public bool? ShowMarkerGlyphs { get; set; }
     }
 
     public class HostDidChangeConfigNotificationType : NotificationType<HostDidChangeConfigNotification>

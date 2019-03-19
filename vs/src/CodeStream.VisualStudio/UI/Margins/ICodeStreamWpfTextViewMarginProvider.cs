@@ -21,7 +21,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         void OnMarkerChanged();
         void HideMargin();
         void ShowMargin();
-        void ToggleMargin(bool isVisible);
+        void ToggleMargin(bool requestingVisibility);
         void RefreshMargin();
         void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e);
     }

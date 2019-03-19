@@ -20,18 +20,34 @@ namespace CodeStream.VisualStudio.Controllers
             _ipc = ipc;
         }
 
-        public async Task ToggleShowMarkersAsync(bool value)
+        public async Task ToggleShowMarkerGlyphsAsync(bool value)
         {
-            _eventAggregator.Publish(new MarkerVisibilityEvent { IsVisible = value });
+            _eventAggregator.Publish(new MarkerGlyphVisibilityEvent { IsVisible = value });
+
             _ipc.Notify(new HostDidChangeConfigNotificationType
             {
                 Params = new HostDidChangeConfigNotification
                 {
-                    ShowMarkers = value
+                    ShowMarkerGlyphs = value
                 }
             });
 
-            Log.Verbose($"{nameof(ToggleShowMarkersAsync)} Value={value}");
+            Log.Verbose($"{nameof(ToggleShowMarkerGlyphsAsync)} Value={value}");
+
+            await Task.CompletedTask;
+        }
+
+        public async Task ToggleShowAvatarsAsync(bool value)
+        {
+            _ipc.Notify(new HostDidChangeConfigNotificationType
+            {
+                Params = new HostDidChangeConfigNotification
+                {
+                    ShowHeadshots = value
+                }
+            });
+
+            Log.Verbose($"{nameof(ToggleShowAvatarsAsync)} Value={value}");
 
             await Task.CompletedTask;
         }

@@ -7,8 +7,8 @@ using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
-using Serilog.Events;
 using System;
+using System.Linq;
 using System.Threading;
 
 namespace CodeStream.VisualStudio
@@ -106,9 +106,17 @@ namespace CodeStream.VisualStudio
                                             {
                                                 _sessionService.CurrentStreamId = @params.Context.CurrentStreamId;
                                                 _sessionService.CurrentThreadId = @params.Context.ThreadId;
+
+                                                var panelStack = @params.Context?.PanelStack;
+                                                _sessionService.PanelStack = panelStack;
+                                                if (panelStack != null)
+                                                {
+                                                    _eventAggregator.Publish(
+                                                        panelStack.FirstOrDefault() == WebviewPanels.CodemarksForFile
+                                                            ? new MarkerGlyphVisibilityEvent {IsVisible = false}
+                                                            : new MarkerGlyphVisibilityEvent {IsVisible = true});
+                                                }
                                             }
-                                            // save this context in session -- then have bootstrap look in session for it later
-                                            // noop for now -- track this in session?!
                                             break;
                                         }
                                     case CompareMarkerRequestType.MethodName:
@@ -230,32 +238,26 @@ namespace CodeStream.VisualStudio
                                                 // NOTE: we're not using the controller here. changing these properties
                                                 // triggers the OnPropertyChanged, which then uses the ConfigurationController
                                                 // for added handling
-                                                switch (message.Method)
-                                                {
-                                                    case UpdateConfigurationRequestType.MethodName:
-                                                        {
-                                                            using (var scope = SettingsScope.Create(_settingsService))
-                                                            {
-                                                                var @params = message.Params.ToObject<UpdateConfigurationRequest>();
-                                                                if (@params.Name == "showMarkers")
-                                                                {
-                                                                    // scope.SettingsService.ShowMarkers = @params.Value.AsBool();
-                                                                }
-                                                                else if (@params.Name == "muteAll")
-                                                                {
-                                                                    scope.SettingsService.MuteAll = @params.Value.AsBool();
-                                                                }
-                                                                else if (@params.Name == "viewCodemarksInline")
-                                                                {
-                                                                    scope.SettingsService.ViewCodemarksInline = @params.Value.AsBool();
-                                                                }
-                                                            }
 
-                                                            break;
-                                                        }
-                                                    default:
-                                                        Log.Warning($"Shouldn't hit this Method={message.Method}");
-                                                        break;
+                                                using (var scope = SettingsScope.Create(_settingsService))
+                                                {
+                                                    var @params = message.Params.ToObject<UpdateConfigurationRequest>();
+                                                    if (@params.Name == "showMarkerGlyphs")
+                                                    {
+                                                        scope.SettingsService.ShowMarkerGlyphs = @params.Value.AsBool();
+                                                    }
+                                                    else if (@params.Name == "muteAll")
+                                                    {
+                                                        scope.SettingsService.MuteAll = @params.Value.AsBool();
+                                                    }
+                                                    else if (@params.Name == "viewCodemarksInline")
+                                                    {
+                                                        scope.SettingsService.ViewCodemarksInline = @params.Value.AsBool();
+                                                    }
+                                                    else if (@params.Name == "showAvatars")
+                                                    {
+                                                        scope.SettingsService.ShowAvatars = @params.Value.AsBool();
+                                                    }
                                                 }
                                             }
                                             break;

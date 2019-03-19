@@ -9,31 +9,47 @@ using CodeStream.VisualStudio.Models;
 
 namespace CodeStream.VisualStudio.UI.Settings
 {
-    public interface IOptionsDialogPage : INotifyPropertyChanged
+    public interface IOptions
     {
         string Email { get; set; }
-        bool ShowMarkers { get; set; }
-        bool ShowHeadshots { get; set; }
+        string Team { get; set; }
+        bool ShowAvatars { get; set; }
         bool MuteAll { get; set; }
+        bool AutoSignIn { get; set; }
+
+        bool AutoHideMarkers { get; set; }
+        //bool ShowMarkerCodeLens { get; set; }
+        bool ShowMarkerGlyphs { get; set; }
+        bool ShowFeedbackSmiley { get; set; }
+        bool ViewCodemarksInline { get; set; }
+
         string ServerUrl { get; set; }
         string WebAppUrl { get; set; }
-        string Team { get; set; }
-        bool ViewCodemarksInline { get; set; }
-        void SaveSettingsToStorage();
-        void LoadSettingsFromStorage();
-        TraceLevel TraceLevel { get; set; }
-        bool AutoSignIn { get; set; }
         string ProxyUrl { get; set; }
         bool ProxyStrictSsl { get; set; }
         ProxySupport ProxySupport { get; set; }
+    }
+
+    public interface IOptionsDialogPage : IOptions, INotifyPropertyChanged
+    {
         Proxy Proxy { get; }
+
+        void SaveSettingsToStorage();
+        void LoadSettingsFromStorage();
+        TraceLevel TraceLevel { get; set; }
     }
 
     public class OptionsDialogPage : DialogPage, IOptionsDialogPage
     {
         private string _email;
-        private bool _showMarkers = true;
-        private bool _showHeadshots = true;
+        private bool _autoHideMarkers = true;
+        private bool _showFeedbackSmiley = true;
+        
+        //// not supported yet
+        //private bool _showMarkerCodeLens = false;
+        private bool _showMarkerGlyphs = true;
+         
+        private bool _showAvatars = true;
         private bool _muteAll = false;
         private TraceLevel _traceLevel;
         private bool _viewCodemarksInline = true;
@@ -232,35 +248,69 @@ namespace CodeStream.VisualStudio.UI.Settings
                 }
             }
         }
-
         [Category("UI")]
-        [DisplayName("Show Markers")]
-        [Description("Specifies whether to show CodeStream markers in editor margins")]
-        public bool ShowMarkers
+        [DisplayName()]
+        [Description("Specifies whether to automatically hide editor marker glyphs when the CodeStream panel is showing codemarks in the current file")]
+        public bool AutoHideMarkers
         {
-            get => _showMarkers;
+            get => _autoHideMarkers;
             set
             {
-                // NOTE: something off here -- state not working right in the webview...
-                //if (_showMarkers != value)
-                // {
-                _showMarkers = value;
-                    NotifyPropertyChanged();
-               // }
+                _autoHideMarkers = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        //[Category("UI")]
+        //[DisplayName("Show Marker CodeLens")]
+        //[Description("Specifies whether to show code lens above lines with associated codemarks in the editor")]
+        //public bool ShowMarkerCodeLens
+        //{
+        //    get => _showMarkerCodeLens;
+        //    set
+        //    {
+        //        _showMarkerCodeLens = value;
+        //        NotifyPropertyChanged();
+        //    }
+        //}
+
+        [Category("UI")]
+        [DisplayName("Show Marker Glyphs")]
+        [Description("Specifies whether to show glyph indicators at the start of lines with associated codemarks in the editor")]
+        public bool ShowMarkerGlyphs
+        {
+            get => _showMarkerGlyphs;
+            set
+            {
+                _showMarkerGlyphs = value;
+                NotifyPropertyChanged();
             }
         }
 
         [Category("UI")]
-        [DisplayName("Avatars")]
-        [Description("Specifies whether to show avatars")]
-        public bool ShowHeadshots
+        [DisplayName("Show Feedback Smiley")]
+        [Description("Specifies whether to show a feedback button in the CodeStream panel")]
+        public bool ShowFeedbackSmiley
         {
-            get => _showHeadshots;
+            get => _showFeedbackSmiley;
             set
             {
-                if (_showHeadshots != value)
+                _showFeedbackSmiley = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        [Category("UI")]
+        [DisplayName("Show Avatars")]
+        [Description("Specifies whether to show avatars")]
+        public bool ShowAvatars
+        {
+            get => _showAvatars;
+            set
+            {
+                if (_showAvatars != value)
                 {
-                    _showHeadshots = value;
+                    _showAvatars = value;
                     NotifyPropertyChanged();
                 }
             }

@@ -8,46 +8,24 @@ using System.Text.RegularExpressions;
 
 namespace CodeStream.VisualStudio.Services
 {
-    public interface ISettingsService
+    public interface ISettingsService : IOptions
     {
         void LoadSettingsFromStorage();
         void SaveSettingsToStorage();
         Settings GetSettings();
-        string Email { get; set; }
-        bool ShowMarkers { get; set; }
-        bool ShowHeadshots { get; set; }
-        bool MuteAll { get; set; }
-        string ServerUrl { get; set; }
-        string WebAppUrl { get; set; }
-        string Team { get; set; }
-        bool ViewCodemarksInline { get; set; }
         TraceLevel TraceLevel { get; set; }
         IOptionsDialogPage DialogPage { get; }
-        bool AutoSignIn { get; set; }
         string GetEnvironmentName();
         string GetUsefulEnvironmentName();
         string GetEnvironmentVersionFormatted();
         Ide GetIdeInfo();
         Extension GetExtensionInfo();
-        string ProxyUrl { get; set; }
-        bool ProxyStrictSsl { get; set; }
-        ProxySupport ProxySupport { get; set; }
         Proxy Proxy { get; }
     }
 
     public class Settings
     {
-        public string Email { get; set; }
-        public bool ShowMarkers { get; set; }
-        public bool ShowHeadshots { get; set; }
-        public bool MuteAll { get; set; }
-        public string ServerUrl { get; set; }
-        public string WebAppUrl { get; set; }
-        public string Team { get; set; }
-        public bool ViewCodemarksInline { get; set; }
-        public string LogLevel { get; set; }
-        public bool AutoSignIn { get; set; }
-
+        public IOptions Options { get; set; }
         /// <summary>
         /// this is solely the environment name (prod, pd, foo)
         /// </summary>
@@ -56,15 +34,12 @@ namespace CodeStream.VisualStudio.Services
         /// this is the full formatted version
         /// </summary>
         public string Version { get; set; }
-        public string ProxyUrl { get; set; }
-        public bool ProxyStrictSsl { get; set; }
-        public ProxySupport ProxySupport { get; set; }
     }
 
     public interface SSettingsService { }
 
     [Injected]
-    public class SettingsService : ISettingsService, SSettingsService
+    public class SettingsService : ISettingsService, IOptions, SSettingsService
     {
         private static readonly Regex EnvironmentRegex = new Regex(@"https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(?::\d+$)?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public IOptionsDialogPage DialogPage { get; }
@@ -89,15 +64,7 @@ namespace CodeStream.VisualStudio.Services
         {
             return new Settings
             {
-                Email = Email,
-                ShowMarkers = ShowMarkers,
-                ShowHeadshots = ShowHeadshots,
-                MuteAll =  MuteAll,
-                ServerUrl = ServerUrl,
-                WebAppUrl = WebAppUrl,
-                Team = Team,
-                ViewCodemarksInline = ViewCodemarksInline,
-                AutoSignIn = AutoSignIn,
+                Options = this,
                 Env = GetEnvironmentName(),
                 Version = GetEnvironmentVersionFormatted()
             };
@@ -109,22 +76,22 @@ namespace CodeStream.VisualStudio.Services
             set => DialogPage.Email = value;
         }
 
-        public bool ShowMarkers
+        public bool ShowAvatars
         {
-            get => DialogPage.ShowMarkers;
-            set => DialogPage.ShowMarkers = value;
-        }
-
-        public bool ShowHeadshots
-        {
-            get => DialogPage.ShowHeadshots;
-            set => DialogPage.ShowHeadshots = value;
+            get => DialogPage.ShowAvatars;
+            set => DialogPage.ShowAvatars = value;
         }
 
         public bool MuteAll
         {
             get => DialogPage.MuteAll;
             set => DialogPage.MuteAll = value;
+        }
+
+        public bool ShowFeedbackSmiley
+        {
+            get => DialogPage.ShowFeedbackSmiley;
+            set => DialogPage.ShowFeedbackSmiley = value;
         }
 
         public string ServerUrl
@@ -145,6 +112,12 @@ namespace CodeStream.VisualStudio.Services
             set => DialogPage.Team = value;
         }
 
+        public bool ShowMarkerGlyphs
+        {
+            get => DialogPage.ShowMarkerGlyphs;
+            set => DialogPage.ShowMarkerGlyphs = value;
+        }
+
         public bool ViewCodemarksInline
         {
             get => DialogPage.ViewCodemarksInline;
@@ -162,6 +135,18 @@ namespace CodeStream.VisualStudio.Services
             get => DialogPage.AutoSignIn;
             set => DialogPage.AutoSignIn = value;
         }
+
+        public bool AutoHideMarkers
+        {
+            get => DialogPage.AutoHideMarkers;
+            set => DialogPage.AutoHideMarkers = value;
+        }
+
+        //public bool ShowMarkerCodeLens
+        //{
+        //    get => DialogPage.ShowMarkerCodeLens;
+        //    set => DialogPage.ShowMarkerCodeLens = value;
+        //}
 
         public string ProxyUrl
         {

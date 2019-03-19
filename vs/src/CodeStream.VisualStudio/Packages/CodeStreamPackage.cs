@@ -171,7 +171,8 @@ namespace CodeStream.VisualStudio.Packages
                 LogManager.SetTraceLevel(_settingsService.TraceLevel);
             }
             else if (
-                args.PropertyName == nameof(_settingsService.ShowMarkers) ||
+                args.PropertyName == nameof(_settingsService.ShowAvatars) ||
+                args.PropertyName == nameof(_settingsService.ShowMarkerGlyphs) ||
                 args.PropertyName == nameof(_settingsService.MuteAll) || 
                 args.PropertyName == nameof(_settingsService.ViewCodemarksInline)
                 )
@@ -186,8 +187,11 @@ namespace CodeStream.VisualStudio.Packages
                 {
                     switch (args.PropertyName)
                     {
-                        case nameof(_settingsService.ShowMarkers):
-                            await configurationController.ToggleShowMarkersAsync(odp.ShowMarkers);
+                        case nameof(_settingsService.ShowAvatars):
+                            await configurationController.ToggleShowAvatarsAsync(odp.ShowAvatars);
+                            break;
+                        case nameof(_settingsService.ShowMarkerGlyphs):
+                            await configurationController.ToggleShowMarkerGlyphsAsync(odp.ShowMarkerGlyphs);
                             break;
                         case nameof(_settingsService.MuteAll):
                             await configurationController.ToggleMuteAllAsync(odp.MuteAll);

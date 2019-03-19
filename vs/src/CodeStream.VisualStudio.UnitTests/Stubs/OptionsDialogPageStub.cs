@@ -10,16 +10,19 @@ namespace CodeStream.VisualStudio.UnitTests.Stubs
         public event PropertyChangedEventHandler PropertyChanged;
         public string Email { get; set; }
         public bool ShowMarkers { get; set; }
-        public bool ShowHeadshots { get; set; }
+        public bool ShowAvatars { get; set; }
         public bool MuteAll { get; set; }
         public string ServerUrl { get; set; }
         public string WebAppUrl { get; set; }
         public string Team { get; set; }
+        public bool ShowFeedbackSmiley { get; set; }
         public bool ViewCodemarksInline { get; set; }
         public void SaveSettingsToStorage() { }
         public void LoadSettingsFromStorage() { }
         public TraceLevel TraceLevel { get; set; }
-        public bool AutoSignIn { get; set; } 
+        public bool AutoSignIn { get; set; }
+        public bool AutoHideMarkers { get; set; }
+        public bool ShowMarkerGlyphs { get; set; }
         public bool ProxyStrictSsl { get; set; }
         public string ProxyUrl { get; set; }
         public ProxySupport ProxySupport { get; set; }

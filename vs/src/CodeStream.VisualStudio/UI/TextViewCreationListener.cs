@@ -136,7 +136,7 @@ namespace CodeStream.VisualStudio.UI
                     .ObserveOnDispatcher()
                     .Subscribe(_ => OnSessionLogout(wpfTextView, textViewMarginProviders)),
 
-                _eventAggregator.GetEvent<MarkerVisibilityEvent>()
+                _eventAggregator.GetEvent<MarkerGlyphVisibilityEvent>()
                     .ObserveOnDispatcher()
                     .Subscribe(_ => textViewMarginProviders.Toggle(_.IsVisible))
             });

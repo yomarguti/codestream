@@ -1,5 +1,6 @@
 ﻿using CodeStream.VisualStudio.Annotations;
 using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace CodeStream.VisualStudio.Services
@@ -15,6 +16,7 @@ namespace CodeStream.VisualStudio.Services
         void SetAgentDisconnected();
         string CurrentStreamId { get; set; }
         string CurrentThreadId { get; set; }
+        List<string> PanelStack { get; set; }
         /// <summary>
         /// Session is ready when the agent has loaded and the user has logged in
         /// </summary>
@@ -30,6 +32,7 @@ namespace CodeStream.VisualStudio.Services
         private SessionState _sessionState;
         private Guid _signupToken = Guid.Empty;
         public User User { get; private set; }
+        public List<string> PanelStack { get; set; }
 
         bool _disposed = false;
 
