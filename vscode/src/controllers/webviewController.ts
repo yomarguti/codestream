@@ -220,7 +220,7 @@ export class WebviewController implements Disposable {
 
 		// TODO: Change this to be a request vs a notification
 		this._webview!.notify(NewCodemarkNotificationType, {
-			uri: editor.document.uri.toString(false),
+			uri: editor.document.uri.toString(),
 			range: Editor.toSerializableRange(editor.selection),
 			type: type,
 			source: source
@@ -697,7 +697,7 @@ export class WebviewController implements Disposable {
 			editorContext = {
 				activeFile: workspace.asRelativePath(this._lastEditor.document.uri),
 				metrics: Editor.getMetrics(),
-				textEditorUri: Editor.getUriString(this._lastEditor),
+				textEditorUri: this._lastEditor.document.uri.toString(),
 				textEditorVisibleRanges: Editor.toSerializableRange(this._lastEditor.visibleRanges),
 				textEditorSelections: Editor.toEditorSelections(this._lastEditor.selections)
 			};
