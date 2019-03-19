@@ -119,7 +119,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	insertTextAtCursor?: Function;
 	focusOnMessageInput?: Function;
 	crossPostIssueValues?: CardValues;
-	permalinkRef = React.createRef<HTMLDivElement>();
+	permalinkRef = React.createRef<HTMLTextAreaElement>();
 
 	constructor(props: Props) {
 		super(props);
@@ -698,12 +698,13 @@ class CodemarkForm extends React.Component<Props, State> {
 		});
 	};
 
-	copyPermalink() {
+	copyPermalink = (event: React.SyntheticEvent) => {
+		event.preventDefault();
 		if (this.permalinkRef.current) {
-			(this.permalinkRef.current as any).select();
+			this.permalinkRef.current.select();
 			document.execCommand("copy");
 		}
-	}
+	};
 
 	render() {
 		if (this.props.collapsed) {
@@ -916,11 +917,16 @@ class CodemarkForm extends React.Component<Props, State> {
 							</div>
 						)}
 						{this.renderTextHelp()}
-						{this.state.linkURI && (
-							<div ref={this.permalinkRef} className="permalink" key="2">
+						{this.state.linkURI && [
+							<textarea
+								ref={this.permalinkRef}
+								value={this.state.linkURI}
+								style={{ position: "absolute", left: "-9999px" }}
+							/>,
+							<div className="permalink" key="2">
 								{this.state.linkURI}
 							</div>
-						)}
+						]}
 						{commentType === "link" && !this.state.linkURI && (
 							<div id="privacy-controls" className="control-group" key="1">
 								<div className="public-private-hint">
