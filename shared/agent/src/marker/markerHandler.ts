@@ -102,9 +102,10 @@ export namespace MarkerHandler {
 					users.getById(marker.creatorId, { avoidCachingOnFetch: true })
 				]);
 
-				// Only return markers that are pinned && issues that are not closed
+				// Only return markers that are not links, are pinned, and issues that are not closed
 				if (
 					!codemark.pinned ||
+					codemark.type === CodemarkType.Link ||
 					(codemark.type === CodemarkType.Issue && codemark.status === CodemarkStatus.Closed)
 				) {
 					continue;
@@ -112,10 +113,13 @@ export namespace MarkerHandler {
 
 				const location = locations[marker.id];
 				if (location) {
-					const summary = (codemark.title || codemark.text).replace(
-						emojiRegex,
-						(s, code) => emojiMap[code] || s
-					);
+					let summary = codemark.title || codemark.text || "";
+					if (summary.length !== 0) {
+						summary = (codemark.title || codemark.text).replace(
+							emojiRegex,
+							(s, code) => emojiMap[code] || s
+						);
+					}
 
 					documentMarkers.push({
 						...marker,
@@ -195,7 +199,7 @@ export namespace MarkerHandler {
 		const range = location ? MarkerLocation.toRange(location) : Range.create(0, 0, 0, 0);
 
 		return {
-			textDocument: { uri: documentUri.toString() },
+			textDocument: { uri: documentUri },
 			marker: marker,
 			range: range,
 			revision: undefined
