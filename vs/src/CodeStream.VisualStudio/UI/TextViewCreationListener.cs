@@ -2,6 +2,7 @@
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
+using CodeStream.VisualStudio.Packages;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Adornments;
 using CodeStream.VisualStudio.UI.Margins;
@@ -20,7 +21,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
-using CodeStream.VisualStudio.Packages;
 
 namespace CodeStream.VisualStudio.UI
 {
@@ -211,7 +211,6 @@ namespace CodeStream.VisualStudio.UI
             // ReSharper restore InvertIf
         }
 
-        private DateTime _lastThemeChange = DateTime.MinValue;
         private static void OnSessionLogout(IWpfTextView wpfTextView, List<ICodeStreamWpfTextViewMargin> textViewMarginProviders)
         {
             if (wpfTextView.TextBuffer.Properties.TryGetProperty(PropertyNames.TextViewState, out TextViewState state))
@@ -308,19 +307,14 @@ namespace CodeStream.VisualStudio.UI
                     ?.IsVisible(Guids.WebViewToolWindowGuid);
                 if (toolWindowIsVisible == true)
                 {
-                    var now = DateTime.Now;
-                    if (_lastThemeChange == DateTime.MinValue || (now - _lastThemeChange).Milliseconds > 150)
-                    {
-                        ServiceLocator.Get<SWebviewIpc, IWebviewIpc>()?.NotifyInBackground(
-                            new HostDidChangeEditorVisibleRangesNotificationType
-                            {
-                                Params = new HostDidChangeEditorVisibleRangesNotification(
-                                    textDocument.FilePath.ToUri(),
-                                    _ideService.GetActiveEditorState()?.ToEditorSelections(),
-                                    wpfTextView.ToVisibleRanges())
-                            });
-                        _lastThemeChange = now;
-                    }
+                    ServiceLocator.Get<SWebviewIpc, IWebviewIpc>()?.NotifyInBackground(
+                        new HostDidChangeEditorVisibleRangesNotificationType
+                        {
+                            Params = new HostDidChangeEditorVisibleRangesNotification(
+                                textDocument.FilePath.ToUri(),
+                                _ideService.GetActiveEditorState()?.ToEditorSelections(),
+                                wpfTextView.ToVisibleRanges())
+                        });
                 }
             }
 
