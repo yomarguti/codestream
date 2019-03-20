@@ -126,13 +126,13 @@ export class Feedback extends React.Component<Props, State> {
 								Tweet
 							</Button>
 							<div className="show-smiley">
-								<input
-									type="checkbox"
-									onClick={this.toggleShowSmiley}
-									id="show-smiley"
-									checked={this.props.showFeedbackSmiley}
-								/>
-								<label className="hint" htmlFor="show-smiley">
+								<label className="hint" htmlFor="show-smiley-checkbox">
+									<input
+										type="checkbox"
+										onClick={this.toggleShowSmiley}
+										id="show-smiley-checkbox"
+										checked={this.props.showFeedbackSmiley}
+									/>{" "}
 									Show Feedback Smiley in CodeStream Panel
 								</label>
 							</div>
