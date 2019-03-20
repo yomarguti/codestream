@@ -90,6 +90,10 @@ export namespace MarkerHandler {
 			createPermalink: privacy
 		});
 
+		const telemetry = Container.instance().telemetry;
+		const payload = { Access: privacy === "public" ? "Public" : "Private" };
+		telemetry.track({ eventName: "Permalink Created", properties: payload });
+
 		return { linkUrl: response.permalink! };
 	}
 
