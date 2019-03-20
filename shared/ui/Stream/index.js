@@ -595,6 +595,7 @@ export class SimpleStream extends Component {
 		);
 		if (this.state.floatCompose) renderNav = false;
 
+		const contentClass = activePanel === WebviewPanels.CodemarksForFile ? "content inline" : "content vscroll inline";
 		return (
 			<div className={streamClass}>
 				<div id="modal-root" />
@@ -602,7 +603,7 @@ export class SimpleStream extends Component {
 				{(threadId || this.state.floatCompose) && <div id="panel-blanket" />}
 				{renderNav && this.renderNavIcons()}
 				{this.state.floatCompose && this.renderComposeBox(placeholderText, channelName)}
-				<div className="content vscroll inline">
+				<div className={contentClass}>
 					{activePanel === WebviewPanels.CodemarksForFile && (
 						<InlineCodemarks
 							activePanel={activePanel}
