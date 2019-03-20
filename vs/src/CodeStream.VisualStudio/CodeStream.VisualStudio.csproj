@@ -239,6 +239,10 @@
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="CHANGELOG.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="dist\webview\webview-data.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -267,10 +271,6 @@
     </None>
     <None Include="UI\WebViews\styles\ui-variables.less" />
     <None Include="UI\WebViews\styles\webview.less" />
-    <Content Include="..\..\CHANGELOG.md">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <None Include="UI\WebViews\tsconfig.json" />
   </ItemGroup>
   <ItemGroup>

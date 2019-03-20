@@ -1,4 +1,4 @@
-# Change Log
+﻿# Change Log
 
 ## [0.5.0] - 2019-3-21
 
@@ -8,7 +8,7 @@
 - Adds a permalink codemark type for sharing a link to a specific block of code
 - Adds the ability to close or re-open an issue from the codemark's thread view
 - Adds an Archive option to a codemark’s gear menu to hide it when the Current File tab is selected (but it will still be shown on the Search tab)
-- Adds [keyboard shortcuts](https://github.com/TeamCodeStream/CodeStream/wiki/Keyboard-Shortcuts) for creating a codemark after selecting some code
+- Adds  keyboard shortcuts (https://github.com/TeamCodeStream/CodeStream/wiki/Keyboard-Shortcuts) for creating a codemark after selecting some code
 - Adds annotations to the editor scroll bar to indicate where codemarks exist in the source file
 
 ### Changed
@@ -19,7 +19,7 @@
 
 ### Fixed
 
-- Fixes [#37](https://github.com/TeamCodeStream/CodeStream/issues/37) &mdash; Need to log in CodeStream on VS each time the computer is shutdown
+- Fixes https://github.com/TeamCodeStream/CodeStream/issues/37 -- Need to log in CodeStream on VS each time the computer is shutdown
 - Fixes an issue with the wrong channel name being displayed at the top of the page when viewing a codemark
 - Fixes an issue with links to join a Live Share session not being clickable
 - Fixes an issue with “/cc” being include in codemarks shared on Slack when no one was mentioned
