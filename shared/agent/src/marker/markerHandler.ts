@@ -40,13 +40,13 @@ export namespace MarkerHandler {
 		range,
 		privacy
 	}: CreateDocumentMarkerPermalinkRequest): Promise<CreateDocumentMarkerPermalinkResponse> {
-		const { codemarks, scm } = Container.instance();
+		const { codemarks, scm, git } = Container.instance();
 
 		const scmResponse = await scm.getRangeInfo({ uri: uri, range: range, dirty: true });
 		const remotes = scmResponse.scm && scmResponse.scm.remotes.map(r => r.url);
 
 		let remoteCodeUrl;
-		if (remotes !== undefined && scmResponse.scm !== undefined) {
+		if (remotes !== undefined && scmResponse.scm !== undefined && scmResponse.scm.revision) {
 			for (const remote of remotes) {
 				remoteCodeUrl = Marker.getRemoteCodeUrl(
 					remote,
@@ -62,15 +62,27 @@ export namespace MarkerHandler {
 			}
 		}
 
+		let commitHash;
+		let location;
+		if (scmResponse.scm) {
+			if (!scmResponse.scm.revision) {
+				commitHash = (await git.getRepoHeadRevision(scmResponse.scm.repoPath))!;
+				location = MarkerLocation.toArray(MarkerLocation.empty());
+			} else {
+				commitHash = scmResponse.scm.revision;
+				location = MarkerLocation.toArrayFromRange(scmResponse.range);
+			}
+		}
+
 		const response = await codemarks.create({
 			type: CodemarkType.Link,
 			markers: [
 				{
 					code: scmResponse.contents,
 					remotes: remotes,
-					commitHash: scmResponse.scm && scmResponse.scm.revision,
+					commitHash: commitHash,
 					file: scmResponse.scm && scmResponse.scm.file,
-					location: MarkerLocation.toArrayFromRange(scmResponse.range)
+					location: location
 				}
 			],
 			remotes: remotes,
