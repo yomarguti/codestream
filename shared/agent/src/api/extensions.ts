@@ -108,7 +108,58 @@ export namespace MarkerLocation {
 	}
 }
 
+const remoteProviders: [
+	RegExp,
+	(remote: string, ref: string, file: string, start: number, end: number) => string
+][] = [
+	[
+		/(?:^|\.)github\.com/i,
+		(remote: string, ref: string, file: string, start: number, end: number) =>
+			`https://${remote}/blob/${ref}/${file}#L${start}${start !== end ? `-L${end}` : ""}`
+	],
+	[
+		/(?:^|\.)gitlab\.com/i,
+		(remote: string, ref: string, file: string, start: number, end: number) =>
+			`https://${remote}/blob/${ref}/${file}#L${start}${start !== end ? `-${end}` : ""}`
+	],
+	[
+		/(?:^|\.)bitbucket\./i,
+		(remote: string, ref: string, file: string, start: number, end: number) =>
+			`https://${remote}/src/${ref}/${file}#${file}-${start}${start !== end ? `:${end}` : ""}`
+	],
+	[
+		/(?:^|\.)dev\.azure\.com/i,
+		(remote: string, ref: string, file: string, start: number, end: number) =>
+			`https://${remote}/commit/${ref}/?_a=contents&path=%2F${file}&line=${start}${
+				start !== end ? `&lineEnd=${end}` : ""
+			}`
+	],
+	[
+		/(?:^|\.)?visualstudio\.com$/i,
+		(remote: string, ref: string, file: string, start: number, end: number) =>
+			`https://${remote}/commit/${ref}/?_a=contents&path=%2F${file}&line=${start}${
+				start !== end ? `&lineEnd=${end}` : ""
+			}`
+	]
+];
+
 export namespace Marker {
+	export function getRemoteCodeUrl(
+		remote: string,
+		ref: string,
+		file: string,
+		startLine: number,
+		endLine: number
+	) {
+		for (const [regex, fn] of remoteProviders) {
+			if (!regex.test(remote)) continue;
+
+			return fn(remote, ref, file, startLine, endLine);
+		}
+
+		return undefined;
+	}
+
 	export function getMissingMarkerIds(
 		markers: CSMarker[],
 		locations: MarkerLocationsById

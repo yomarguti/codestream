@@ -14,6 +14,7 @@ import {
 	CSUser,
 	StreamType
 } from "../../protocol/api.protocol";
+import { Marker } from "../extensions";
 
 const defaultCreatedAt = 181886400000;
 const multiPartyNamesRegEx = /^mpdm-([^-]+)(--.*)-1$/;
@@ -473,41 +474,6 @@ export function toSlackPostText(
 	return text;
 }
 
-const providers: [
-	RegExp,
-	(remote: string, ref: string, file: string, start: number, end: number) => string
-][] = [
-	[
-		/(?:^|\.)github\.com/i,
-		(remote: string, ref: string, file: string, start: number, end: number) =>
-			`https://${remote}/blob/${ref}/${file}#L${start}${start !== end ? `-L${end}` : ""}`
-	],
-	[
-		/(?:^|\.)gitlab\.com/i,
-		(remote: string, ref: string, file: string, start: number, end: number) =>
-			`https://${remote}/blob/${ref}/${file}#L${start}${start !== end ? `-${end}` : ""}`
-	],
-	[
-		/(?:^|\.)bitbucket\./i,
-		(remote: string, ref: string, file: string, start: number, end: number) =>
-			`https://${remote}/src/${ref}/${file}#${file}-${start}${start !== end ? `:${end}` : ""}`
-	],
-	[
-		/(?:^|\.)dev\.azure\.com/i,
-		(remote: string, ref: string, file: string, start: number, end: number) =>
-			`https://${remote}/commit/${ref}/?_a=contents&path=%2F${file}&line=${start}${
-				start !== end ? `&lineEnd=${end}` : ""
-			}`
-	],
-	[
-		/(?:^|\.)?visualstudio\.com$/i,
-		(remote: string, ref: string, file: string, start: number, end: number) =>
-			`https://${remote}/commit/${ref}/?_a=contents&path=%2F${file}&line=${start}${
-				start !== end ? `&lineEnd=${end}` : ""
-			}`
-	]
-];
-
 export function toSlackPostAttachment(
 	codemark: CSCodemark,
 	remotes: string[] | undefined,
@@ -661,10 +627,15 @@ export function toSlackPostAttachment(
 			) {
 				let url;
 				for (const remote of remotes) {
-					for (const [regex, fn] of providers) {
-						if (!regex.test(remote)) continue;
+					url = Marker.getRemoteCodeUrl(
+						remote,
+						marker.commitHashWhenCreated,
+						marker.file,
+						start,
+						end
+					);
 
-						url = fn(remote, marker.commitHashWhenCreated, marker.file, start, end);
+					if (url !== undefined) {
 						break;
 					}
 				}

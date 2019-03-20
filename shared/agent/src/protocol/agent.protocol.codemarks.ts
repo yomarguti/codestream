@@ -31,6 +31,7 @@ export interface CreateCodemarkRequest {
 	externalProvider?: string;
 	externalProviderUrl?: string;
 	externalAssignees?: { displayName: string }[];
+	remoteCodeUrl?: string;
 	createPermalink?: false | "public" | "private";
 }
 export interface CreateCodemarkRequestMarker {

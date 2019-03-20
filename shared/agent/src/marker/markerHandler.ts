@@ -2,7 +2,7 @@
 import * as path from "path";
 import { Range } from "vscode-languageserver";
 import URI from "vscode-uri";
-import { MarkerLocation } from "../api/extensions";
+import { Marker, MarkerLocation } from "../api/extensions";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
@@ -45,7 +45,22 @@ export namespace MarkerHandler {
 		const scmResponse = await scm.getRangeInfo({ uri: uri, range: range, dirty: true });
 		const remotes = scmResponse.scm && scmResponse.scm.remotes.map(r => r.url);
 
-		// TODO: Hook remoteCodeUrl up
+		let remoteCodeUrl;
+		if (remotes !== undefined && scmResponse.scm !== undefined) {
+			for (const remote of remotes) {
+				remoteCodeUrl = Marker.getRemoteCodeUrl(
+					remote,
+					scmResponse.scm.revision,
+					scmResponse.scm.file,
+					scmResponse.range.start.line,
+					scmResponse.range.end.line
+				);
+
+				if (remoteCodeUrl !== undefined) {
+					break;
+				}
+			}
+		}
 
 		const response = await codemarks.create({
 			type: CodemarkType.Link,
@@ -59,6 +74,7 @@ export namespace MarkerHandler {
 				}
 			],
 			remotes: remotes,
+			remoteCodeUrl: remoteCodeUrl,
 			createPermalink: privacy
 		});
 
