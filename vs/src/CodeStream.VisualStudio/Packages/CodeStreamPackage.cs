@@ -47,6 +47,7 @@ namespace CodeStream.VisualStudio.Packages
             {
                Log.Warning(ex, nameof(OnSolutionLoadedAlwaysAsync));
             }
+            Log.Verbose($"{nameof(hasActiveEditor)}={hasActiveEditor}");
 
             if (!hasActiveEditor)
             {
