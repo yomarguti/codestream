@@ -1,14 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
+using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Glyphs;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using Serilog;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CodeStream.VisualStudio.UI.Taggers
 {
@@ -18,15 +19,17 @@ namespace CodeStream.VisualStudio.UI.Taggers
     internal class CodemarkTagger : ITagger<CodemarkGlyphTag>
     {
         private static readonly ILogger Log = LogManager.ForContext<CodemarkTaggerProvider>();
-        
+
+        private readonly ISessionService _sessionService;
         private readonly ITextView _textView;
         private readonly ITextDocument _textDocument;
         private readonly ITextBuffer _buffer;
 
-        public CodemarkTagger(ITextView textView, ITextDocument textDocument, ITextBuffer buffer)
+        public CodemarkTagger(ISessionService sessionService, ITextView textView, ITextDocument textDocument, ITextBuffer buffer)
         {
             Log.Verbose("ctor");
 
+            _sessionService = sessionService;
             _textView = textView;
             _textDocument = textDocument;
             _buffer = buffer;
@@ -39,6 +42,8 @@ namespace CodeStream.VisualStudio.UI.Taggers
         IEnumerable<ITagSpan<CodemarkGlyphTag>> ITagger<CodemarkGlyphTag>.GetTags(
             NormalizedSnapshotSpanCollection spans)
         {
+            if (_sessionService == null || !_sessionService.IsReady) yield break;
+
             List<DocumentMarker> markers = null;
             if (_textDocument.TextBuffer.Properties.ContainsProperty(PropertyNames.CodemarkMarkers))
                 markers = _textDocument.TextBuffer.Properties.GetProperty<List<DocumentMarker>>(PropertyNames.CodemarkMarkers);

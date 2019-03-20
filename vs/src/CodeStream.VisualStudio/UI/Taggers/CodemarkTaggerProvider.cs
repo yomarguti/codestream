@@ -1,5 +1,7 @@
 ﻿using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Glyphs;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
@@ -41,8 +43,9 @@ namespace CodeStream.VisualStudio.UI.Taggers
                 return null;
             }
 
+            var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
             return textView.TextBuffer.Properties.GetOrCreateSingletonProperty(typeof(CodemarkTagger),
-                () => new CodemarkTagger(textView, textDocument, buffer)) as ITagger<T>;
+                () => new CodemarkTagger(sessionService, textView, textDocument, buffer)) as ITagger<T>;
         }
     }
 }
