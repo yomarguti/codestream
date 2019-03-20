@@ -52,8 +52,8 @@ export namespace MarkerHandler {
 					remote,
 					scmResponse.scm.revision,
 					scmResponse.scm.file,
-					scmResponse.range.start.line,
-					scmResponse.range.end.line
+					scmResponse.range.start.line + 1,
+					scmResponse.range.end.line + 1
 				);
 
 				if (remoteCodeUrl !== undefined) {
