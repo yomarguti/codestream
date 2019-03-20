@@ -183,7 +183,7 @@ export class SelectionDecorationProvider implements Disposable {
 			renderOptions: {
 				before: {
 					contentText: `Use ${
-						process.platform === "darwin" ? "^+/" : "Ctrl+Shift+/"
+						process.platform === "darwin" ? "^/ ^/" : "Ctrl+Shift+/ Ctrl+Shift+/"
 					} to comment on line${
 						editor.selection.isSingleLine
 							? ` ${editor.selection.start.line + 1}`
