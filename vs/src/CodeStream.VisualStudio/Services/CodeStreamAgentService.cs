@@ -399,7 +399,7 @@ namespace CodeStream.VisualStudio.Services
                     //currentStreamId 
                     //threadId
                     HasFocus = true,
-                    PanelStack = Enumerable.Empty<string>().ToList()
+                    PanelStack = new List<string> { WebviewPanels.CodemarksForFile }
                 },
                 EditorContext = editorContext,
                 Session = new UserSession
