@@ -2,12 +2,7 @@ import { Emitter } from "atom";
 import uuidv4 from "uuid/v4";
 import { ConfigManager } from "../configs";
 import { EnvironmentConfig, PRODUCTION_CONFIG } from "../env-utils";
-import {
-	AccessToken,
-	AgentResult,
-	BootstrapRequestType,
-	Capabilities,
-} from "../protocols/agent/agent.protocol";
+import { AccessToken, AgentResult, Capabilities } from "../protocols/agent/agent.protocol";
 import { CSMe, LoginResult } from "../protocols/agent/api.protocol";
 import { PackageState } from "../types/package";
 import { getPluginVersion } from "../utils";
