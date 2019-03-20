@@ -3,7 +3,6 @@ using CodeStream.VisualStudio.Controllers;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.LSP;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Settings;
 using CodeStream.VisualStudio.UI.ToolWindows;
@@ -38,6 +37,7 @@ namespace CodeStream.VisualStudio.Packages
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     public sealed class WebViewPackage : AsyncPackage
     {
+
         private Lazy<ICodeStreamService> _codeStreamService;
         private ISettingsService _settingsService;
         private IDisposable _languageServerReadyEvent;
@@ -281,7 +281,7 @@ namespace CodeStream.VisualStudio.Packages
 
         private async System.Threading.Tasks.Task OnSolutionLoadedAlwaysAsync()
         {
-            await LanguageClient.TriggerLspInitializeAsync();
+            await System.Threading.Tasks.Task.CompletedTask;
         }
 
         protected override void Dispose(bool isDisposing)
