@@ -99,7 +99,7 @@ if ($NewVersion -eq $null) {
 Write-Output "Setting Version=$NewVersion, Environment=$($Environment)"
 Write-Version $NewVersion $Environment
 # This will reset the BUILD_NUMBER in TeamCity to reflect the full string
-Write-Output "##teamcity[buildNumber 'codestream-vs-$(NewVersion)']"
+Write-Output "##teamcity[buildNumber 'codestream-vs-$NewVersion']"
 Write-Output ""
 
  if ($commit) {
