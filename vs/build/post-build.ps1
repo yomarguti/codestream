@@ -19,7 +19,8 @@ Import-Module -Name $buildDir\Modules\Versioning.ps1
 
 $codeVer = Read-Version
 Write-Host '***** codeVer: ' $codeVer
-$assetVer = $codeVer.ToString() + '+' + $buildNumber
+#$assetVer = $codeVer.ToString() + '+' + $buildNumber
+$assetVer = $codeVer.ToString()
 Write-Host '***** asset version: ' $assetVer
 $assetsBaseName = 'codestream-vs-' + $assetVer
 
