@@ -49,6 +49,34 @@ export class SimpleInlineCodemarks extends Component {
 			isLoading: props.documentMarkers.length === 0,
 			openPost: null
 		};
+
+		const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
+		this.titles = {
+			comment: (
+				<span>
+					Add Comment <span className="keybinding extra-pad">{modifier}</span>
+					<span className="keybinding">c</span>
+				</span>
+			),
+			bookmark: (
+				<span>
+					Create Bookmark <span className="keybinding extra-pad">{modifier}</span>
+					<span className="keybinding">b</span>
+				</span>
+			),
+			link: (
+				<span>
+					Get Permalink <span className="keybinding extra-pad">{modifier}</span>
+					<span className="keybinding">p</span>
+				</span>
+			),
+			issue: (
+				<span>
+					Create Issue <span className="keybinding extra-pad">{modifier}</span>
+					<span className="keybinding">i</span>
+				</span>
+			)
+		};
 	}
 
 	static getDerivedStateFromProps(props, state) {
@@ -223,6 +251,8 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	renderIconRow(lineNum0, top, hover, open) {
+		// we only add the title properties (which add tooltips)
+		// when you mouse over
 		return (
 			<div
 				onMouseEnter={() => this.onMouseEnterHoverIcon(lineNum0)}
@@ -234,28 +264,28 @@ export class SimpleInlineCodemarks extends Component {
 				<Icon
 					onClick={e => this.handleClickPlus(e, "comment", lineNum0)}
 					name="comment"
-					title={hover ? "Add Comment" : undefined}
+					title={hover ? this.titles.comment : undefined}
 					placement="bottomLeft"
 					delay={1}
 				/>
 				<Icon
 					onClick={e => this.handleClickPlus(e, "issue", lineNum0)}
 					name="issue"
-					title={hover ? "Create Issue" : undefined}
+					title={hover ? this.titles.issue : undefined}
 					placement="bottomLeft"
 					delay={1}
 				/>
 				<Icon
 					onClick={e => this.handleClickPlus(e, "bookmark", lineNum0)}
 					name="bookmark"
-					title={hover ? "Create Bookmark" : undefined}
+					title={hover ? this.titles.bookmark : undefined}
 					placement="bottomLeft"
 					delay={1}
 				/>
 				<Icon
 					onClick={e => this.handleClickPlus(e, "link", lineNum0)}
 					name="link"
-					title={hover ? "Get Permalink" : undefined}
+					title={hover ? this.titles.link : undefined}
 					placement="bottomLeft"
 					delay={1}
 				/>
