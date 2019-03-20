@@ -109,25 +109,30 @@ export namespace MarkerLocation {
 }
 
 const remoteProviders: [
+	string,
 	RegExp,
 	(remote: string, ref: string, file: string, start: number, end: number) => string
 ][] = [
 	[
+		"github",
 		/(?:^|\.)github\.com/i,
 		(remote: string, ref: string, file: string, start: number, end: number) =>
 			`https://${remote}/blob/${ref}/${file}#L${start}${start !== end ? `-L${end}` : ""}`
 	],
 	[
+		"gitlab",
 		/(?:^|\.)gitlab\.com/i,
 		(remote: string, ref: string, file: string, start: number, end: number) =>
 			`https://${remote}/blob/${ref}/${file}#L${start}${start !== end ? `-${end}` : ""}`
 	],
 	[
+		"bitBucket",
 		/(?:^|\.)bitbucket\./i,
 		(remote: string, ref: string, file: string, start: number, end: number) =>
 			`https://${remote}/src/${ref}/${file}#${file}-${start}${start !== end ? `:${end}` : ""}`
 	],
 	[
+		"azure-devops",
 		/(?:^|\.)dev\.azure\.com/i,
 		(remote: string, ref: string, file: string, start: number, end: number) =>
 			`https://${remote}/commit/${ref}/?_a=contents&path=%2F${file}&line=${start}${
@@ -135,6 +140,7 @@ const remoteProviders: [
 			}`
 	],
 	[
+		"vsts",
 		/(?:^|\.)?visualstudio\.com$/i,
 		(remote: string, ref: string, file: string, start: number, end: number) =>
 			`https://${remote}/commit/${ref}/?_a=contents&path=%2F${file}&line=${start}${
@@ -150,11 +156,15 @@ export namespace Marker {
 		file: string,
 		startLine: number,
 		endLine: number
-	) {
-		for (const [regex, fn] of remoteProviders) {
+	): { name: string; url: string } | undefined {
+		let url;
+		for (const [name, regex, fn] of remoteProviders) {
 			if (!regex.test(remote)) continue;
 
-			return fn(remote, ref, file, startLine, endLine);
+			url = fn(remote, ref, file, startLine, endLine);
+			if (url !== undefined) {
+				return { name: name, url: url };
+			}
 		}
 
 		return undefined;

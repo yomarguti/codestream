@@ -641,7 +641,7 @@ export function toSlackPostAttachment(
 				}
 
 				if (url !== undefined) {
-					title = `<${url}|${title}>`;
+					title = `<${url.url}|${title}>`;
 				}
 			}
 
