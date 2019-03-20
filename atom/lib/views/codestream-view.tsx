@@ -260,7 +260,7 @@ export class CodestreamView {
 			...this.session.getBootstrapInfo(),
 			...bootstrapData,
 			session: { userId: this.session.user!.id },
-			context: this.webviewContext || { currentTeamId: this.session.teamId },
+			context: { ...(this.webviewContext || {}), currentTeamId: this.session.teamId },
 			editorContext: editor
 				? {
 						activeFile: Editor.getRelativePath(editor),

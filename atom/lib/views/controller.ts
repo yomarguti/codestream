@@ -1,6 +1,6 @@
+import { CompositeDisposable, Disposable } from "atom";
 import { WorkspaceSession } from "workspace/workspace-session";
-import { CodestreamView, CODESTREAM_VIEW_URI } from "./codestream-view";
-import { Disposable, CompositeDisposable } from "atom";
+import { CODESTREAM_VIEW_URI, CodestreamView } from "./codestream-view";
 
 export class ViewController implements Disposable {
 	private subscriptions = new CompositeDisposable();
