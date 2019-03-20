@@ -111,10 +111,10 @@ namespace CodeStream.VisualStudio
                                                 _sessionService.PanelStack = panelStack;
                                                 if (panelStack != null)
                                                 {
-                                                    _eventAggregator.Publish(
-                                                        panelStack.FirstOrDefault() == WebviewPanels.CodemarksForFile
-                                                            ? new MarkerGlyphVisibilityEvent {IsVisible = false}
-                                                            : new MarkerGlyphVisibilityEvent {IsVisible = true});
+                                                    var visible = panelStack.FirstOrDefault() == WebviewPanels.CodemarksForFile;
+                                                    _sessionService.AreMarkerGlyphsVisible = !visible;
+
+                                                    _eventAggregator.Publish(new MarkerGlyphVisibilityEvent {IsVisible = !visible });
                                                 }
                                             }
                                             break;

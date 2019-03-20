@@ -151,45 +151,50 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         public void OnSessionReady()
         {
-            if (_initialized) return;
-
-            lock (InitializeLock)
+            if (!_initialized)
             {
-                if (!_initialized)
+                lock (InitializeLock)
                 {
-                    _disposables.Add(Observable.FromEventPattern(ev => _textView.Selection.SelectionChanged += ev,
-                            ev => _textView.Selection.SelectionChanged -= ev)
-                        .Sample(TimeSpan.FromMilliseconds(250))
-                        .ObserveOnDispatcher()
-                        .Subscribe(eventPattern =>
+                    if (!_initialized)
+                    {
+                        _disposables.Add(Observable.FromEventPattern(ev => _textView.Selection.SelectionChanged += ev,
+                                ev => _textView.Selection.SelectionChanged -= ev)
+                            .Sample(TimeSpan.FromMilliseconds(250))
+                            .ObserveOnDispatcher()
+                            .Subscribe(eventPattern =>
+                            {
+                                if (!_toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) return;
+
+                                var textSelection = eventPattern?.Sender as ITextSelection;
+                                Log.Verbose(
+                                    $"SelectionChanged Start={textSelection?.Start.Position.Position} End={textSelection?.End.Position.Position}");
+
+                                // TODO cant we get the selected text from the sender somehow??
+                                var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
+
+                                var codeStreamService =
+                                    Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
+                                if (codeStreamService == null) return;
+
+                                var activeEditorState = ideService?.GetActiveEditorState();
+                                codeStreamService.EditorSelectionChangedNotificationAsync(
+                                    new Uri(_textDocument.FilePath),
+                                    activeEditorState,
+                                    _textView.ToVisibleRanges(),
+                                    CodemarkType.Comment, CancellationToken.None);
+                            }));
+
+                        _initialized = true;
+
+                        _wpfTextViewHost.TextView.ZoomLevelChanged += TextView_ZoomLevelChanged;
+                        
+                        InitializeMargin();
+                        if (TryShowMargin())
                         {
-                            if (!_toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) return;
-
-                            var textSelection = eventPattern?.Sender as ITextSelection;
-                            Log.Verbose($"SelectionChanged Start={textSelection?.Start.Position.Position} End={textSelection?.End.Position.Position}");
-
-                            // TODO cant we get the selected text from the sender somehow??
-                            var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
-
-                            var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
-                            if (codeStreamService == null) return;
-
-                            var activeEditorState = ideService?.GetActiveEditorState();
-                            codeStreamService.EditorSelectionChangedNotificationAsync(
-                                new Uri(_textDocument.FilePath),
-                                activeEditorState,
-                                _textView.ToVisibleRanges(),
-                                CodemarkType.Comment, CancellationToken.None);
-                        }));
-
-                    _initialized = true;
-
-                    ShowMargin();
-                    _wpfTextViewHost.TextView.ZoomLevelChanged += TextView_ZoomLevelChanged;
-
-                    InitializeMargin();
-                    _documentMarkerManager.GetOrCreateMarkers(true);
-                    RefreshMargin();
+                            _documentMarkerManager.GetOrCreateMarkers(true);
+                            RefreshMargin();
+                        }
+                    }
                 }
             }
         }
@@ -218,6 +223,18 @@ namespace CodeStream.VisualStudio.UI.Margins
                 SetTop(_iconCanvas, -_wpfTextViewHost.TextView.ViewportTop);
 
             OnNewLayout(e.NewOrReformattedLines, e.TranslatedLines);
+        }
+
+        private bool TryShowMargin()
+        {
+            if (_sessionService.AreMarkerGlyphsVisible)
+            {
+                ShowMargin();
+                return true;
+            }
+
+            HideMargin();
+            return false;
         }
 
         public void ShowMargin()

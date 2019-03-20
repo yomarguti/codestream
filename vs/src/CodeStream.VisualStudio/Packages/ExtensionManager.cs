@@ -6,7 +6,7 @@ using Serilog;
 
 namespace CodeStream.VisualStudio.Packages
 {
-    public  class ExtensionManagerDummy { }
+    public class ExtensionManagerDummy { }
 
     /// <summary>
     /// Dynamically loads the correct extension manager to check if certain extensions are installed.

@@ -5,13 +5,19 @@ using Microsoft.VisualStudio.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CodeStream.VisualStudio.Core.Logging;
 using Microsoft.VisualStudio.Text;
+using Serilog;
 using Range = Microsoft.VisualStudio.LanguageServer.Protocol.Range;
 
 namespace CodeStream.VisualStudio.UI
 {
-    public static partial class TextViewExtensions
+    public class TextViewExtensionsDummy { }
+
+    public static class TextViewExtensions
     {
+        private static readonly ILogger Log = LogManager.ForContext<TextViewExtensionsDummy>();
+
         public static void RemovePropertySafe(this IWpfTextView textView, string key)
         {
             textView.TextBuffer.Properties.RemovePropertySafe(key);
@@ -58,7 +64,18 @@ namespace CodeStream.VisualStudio.UI
             return lines.Select(line => new Range { Start = new Position(line.Start.GetContainingLine().LineNumber, 0), End = new Position(line.End.GetContainingLine().LineNumber, 0) }).ToList();
         }
 
-        public static List<Range> ToVisibleRanges(this IWpfTextView textView) => textView.TextViewLines.ToRanges().Collapsed();
+        public static List<Range> ToVisibleRanges(this IWpfTextView textView)
+        {
+            try
+            {
+                return textView.TextViewLines.ToRanges().Collapsed();
+            }
+            catch(Exception ex)
+            {
+                Log.Warning(ex, nameof(ToVisibleRanges));
+                return Enumerable.Empty<Range>().ToList();
+            }
+        }
 
         public static Placement GetGeometryPlacement(this IWpfTextView textView, SnapshotSpan span)
         {

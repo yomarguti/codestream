@@ -17,6 +17,8 @@ namespace CodeStream.VisualStudio.Services
         string CurrentStreamId { get; set; }
         string CurrentThreadId { get; set; }
         List<string> PanelStack { get; set; }
+        bool AreMarkerGlyphsVisible { get; set; }
+
         /// <summary>
         /// Session is ready when the agent has loaded and the user has logged in
         /// </summary>
@@ -33,7 +35,7 @@ namespace CodeStream.VisualStudio.Services
         private Guid _signupToken = Guid.Empty;
         public User User { get; private set; }
         public List<string> PanelStack { get; set; }
-
+        public bool AreMarkerGlyphsVisible { get; set; } = true;
         bool _disposed = false;
 
         public Guid GetOrCreateSignupToken()
