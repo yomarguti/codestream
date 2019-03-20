@@ -30,11 +30,8 @@ class CodestreamPackage {
 
 	// Package lifecyle 1
 	async initialize() {
-		if (this.workspaceSession.status === SessionStatus.SignedIn) {
-			this.registerLoggedInCommands();
-		}
 		this.subscriptions.add(
-			this.workspaceSession.onDidChangeSessionStatus(status => {
+			this.workspaceSession.observeSessionStatus(status => {
 				this.sessionStatusCommand && this.sessionStatusCommand.dispose();
 				if (status === SessionStatus.SignedIn) {
 					this.registerLoggedInCommands();
@@ -116,7 +113,7 @@ class CodestreamPackage {
 	}
 
 	async consumeStatusBar(statusBar: StatusBar) {
-		const getStatusBarTitle = (status: SessionStatus) => {
+		const createStatusBarTitle = (status: SessionStatus) => {
 			const env = this.workspaceSession.environment.name;
 			const environmentLabel = env !== Environment.Production ? `${env} ` : "";
 
@@ -141,8 +138,8 @@ class CodestreamPackage {
 		tileRoot.appendChild(text);
 
 		let statusBarTile: Tile | undefined;
-		const sessionStatusSubscription = this.workspaceSession!.onDidChangeSessionStatus(status => {
-			text.innerText = getStatusBarTitle(status);
+		const sessionStatusSubscription = this.workspaceSession!.observeSessionStatus(status => {
+			text.innerText = createStatusBarTitle(status);
 
 			statusBarTile = statusBar.addRightTile({ item: tileRoot, priority: 400 });
 		});

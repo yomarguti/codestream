@@ -176,10 +176,6 @@ export class CodestreamView {
 	}
 
 	private initialize() {
-		if (this.session.status === SessionStatus.SignedIn) {
-			this.observeWorkspace();
-		}
-
 		// TODO?: create a controller to house this stuff so it isn't re-init everytime this view is instantiated
 		this.subscriptions.add(
 			this.session.agent.onInitialized(() => {
@@ -189,7 +185,7 @@ export class CodestreamView {
 					)
 				);
 			}),
-			this.session.onDidChangeSessionStatus(status => {
+			this.session.observeSessionStatus(status => {
 				if (status === SessionStatus.SignedOut) {
 					this.sendEvent(HostDidLogoutNotificationType, {});
 					this.editorSelectionObserver && this.editorSelectionObserver.dispose();

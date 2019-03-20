@@ -11,44 +11,36 @@ export class MarkerDecorationProvider implements Disposable {
 	private observedEditors: Map<number, TextEditor> = new Map();
 	private gutters: Map<number, Gutter> = new Map();
 	private markers: Map<number, DisplayMarker[]> = new Map();
-	private sessionStatus: SessionStatus;
 	private session: WorkspaceSession;
 	private viewController: ViewController;
 
 	constructor(session: WorkspaceSession, viewController: ViewController) {
 		this.session = session;
 		this.viewController = viewController;
-		this.sessionStatus = session.status;
+		this.resourcesPerEditor = new MapWithDefaults(() => new CompositeDisposable());
 
-		if (session.configManager.get("showMarkers")) this.initialize();
-		this.subscriptions.add(
+		this.subscriptions = new CompositeDisposable(
+			session.observeSessionStatus(status => {
+				switch (status) {
+					case SessionStatus.SignedOut: {
+						this.reset();
+						break;
+					}
+					case SessionStatus.SignedIn: {
+						if (session.configManager.get("showMarkers")) this.initialize();
+						break;
+					}
+				}
+			}),
 			session.configManager.onDidChange("showMarkers", ({ newValue }) =>
-				newValue ? this.initialize() : this.reset()
+				newValue === true ? this.initialize() : this.reset()
 			)
 		);
 	}
 
 	initialize() {
-		this.subscriptions.add(
-			this.session.onDidChangeSessionStatus(status => {
-				switch (status) {
-					case SessionStatus.SignedOut: {
-						if (this.sessionStatus !== SessionStatus.SignedOut) {
-							this.sessionStatus = status;
-							this.reset();
-							this.initialize();
-							this.resourceSubscriptions = new CompositeDisposable();
-						}
-						break;
-					}
-					case SessionStatus.SignedIn: {
-						this.sessionStatus = status;
-						this.resourceSubscriptions.add(
-							atom.workspace.observeActiveTextEditor(this.onActiveEditor)
-						);
-					}
-				}
-			}),
+		this.sessionSubscriptions.add(
+			atom.workspace.observeActiveTextEditor(this.onActiveEditor),
 			this.session.agent.onDidChangeDocumentMarkers(({ textDocument }) => {
 				for (const editor of this.observedEditors.values()) {
 					if (Editor.getUri(editor) === textDocument.uri) {
@@ -136,7 +128,10 @@ export class MarkerDecorationProvider implements Disposable {
 			markers.forEach(marker => accessSafely(() => marker.destroy()))
 		);
 		this.markers.clear();
-		this.resourceSubscriptions.dispose();
+		this.resourcesPerEditor.forEach(r => r.dispose());
+		this.resourcesPerEditor.clear();
+		this.sessionSubscriptions.dispose();
+		this.sessionSubscriptions = new CompositeDisposable();
 	}
 
 	dispose() {

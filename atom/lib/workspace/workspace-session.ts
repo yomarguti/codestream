@@ -89,10 +89,13 @@ export class WorkspaceSession {
 		this.configManager.dispose();
 	}
 
+	observeSessionStatus(callback: (status: SessionStatus) => any) {
+		callback(this.status);
+		return this.onDidChangeSessionStatus(callback);
+	}
+
 	onDidChangeSessionStatus(callback: (status: SessionStatus) => any) {
-		const disposable = this.emitter.on(SESSION_STATUS_CHANGED, callback);
-		callback(this._sessionStatus);
-		return disposable;
+		return this.emitter.on(SESSION_STATUS_CHANGED, callback);
 	}
 
 	private set sessionStatus(status: SessionStatus) {
