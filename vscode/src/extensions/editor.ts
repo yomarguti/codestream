@@ -50,8 +50,8 @@ export namespace Editor {
 		return openEditor(uri, { viewColumn: column, ...options });
 	}
 
-	export function getActiveOrVisible() {
-		const editor = window.activeTextEditor;
+	export function getActiveOrVisible(active?: TextEditor) {
+		const editor = active || window.activeTextEditor;
 		if (editor !== undefined && Editor.isTextEditor(editor)) {
 			return editor;
 		}

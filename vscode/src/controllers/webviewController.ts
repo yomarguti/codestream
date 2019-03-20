@@ -103,8 +103,7 @@ export class WebviewController implements Disposable {
 		this._disposable = Disposable.from(
 			this.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
 			window.onDidChangeActiveTextEditor(this.onActiveEditorChanged, this),
-			window.onDidChangeVisibleTextEditors(this.onVisibleEditorsChanged, this),
-			workspace.onDidCloseTextDocument(this.onDocumentClosed, this)
+			window.onDidChangeVisibleTextEditors(this.onVisibleEditorsChanged, this)
 		);
 
 		this._lastEditor = Editor.getActiveOrVisible();
@@ -122,21 +121,16 @@ export class WebviewController implements Disposable {
 
 	private _lastEditor: TextEditor | undefined;
 	private setLastEditor(editor: TextEditor | undefined) {
+		if (this._lastEditor === editor) return;
+		// If the new editor is not a real editor ignore it
+		if (editor !== undefined && !Editor.isTextEditor(editor)) return;
+
 		this._lastEditor = editor;
 		this._notifyActiveEditorChangedDebounced(editor);
 	}
 
 	private onActiveEditorChanged(e: TextEditor | undefined) {
-		if (this._lastEditor !== undefined && e === undefined) return;
-		if (this._lastEditor === e || (e !== undefined && !Editor.isTextEditor(e))) return;
-
-		this.setLastEditor(e);
-	}
-
-	private onDocumentClosed(e: TextDocument) {
-		if (this._lastEditor === undefined || e !== this._lastEditor.document) return;
-
-		this.setLastEditor(undefined);
+		this.setLastEditor(Editor.getActiveOrVisible(e));
 	}
 
 	private async onSessionStatusChanged(e: SessionStatusChangedEvent) {
@@ -182,9 +176,10 @@ export class WebviewController implements Disposable {
 	}
 
 	private onVisibleEditorsChanged(e: TextEditor[]) {
-		if (this._lastEditor === undefined || e.includes(this._lastEditor)) return;
+		// If the last editor is still in the visible list do nothing
+		if (this._lastEditor !== undefined && e.includes(this._lastEditor)) return;
 
-		this.setLastEditor(undefined);
+		this.setLastEditor(Editor.getActiveOrVisible());
 	}
 
 	get activeStreamThread() {
