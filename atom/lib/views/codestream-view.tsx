@@ -274,8 +274,8 @@ export class CodestreamView {
 		this.channel.host.onmessage = ({ data }: { data: WebviewIpcMessage }) => {
 			if (isIpcRequestMessage(data)) {
 				const target = data.method.split("/")[0];
-				if (target === "codestream") return this.forwardWebviewRequest(data as any);
-				return this.handleWebviewCommand(data);
+				if (target === "host") return this.handleWebviewCommand(data);
+				return this.forwardWebviewRequest(data as any);
 			} else this.onWebviewNotification(data as WebviewIpcNotificationMessage);
 		};
 	}
