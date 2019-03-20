@@ -294,8 +294,19 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 						text: editor.getText(),
 					},
 				});
-				editor.onDidDestroy(() =>
-					connection.didCloseTextDocument({ textDocument: { uri: Editor.getUri(editor) } })
+				this.subscriptions.add(
+					editor.onDidDestroy(() =>
+						connection.didCloseTextDocument({ textDocument: { uri: Editor.getUri(editor) } })
+					),
+					editor.onDidChange(() => {
+						connection.didChangeTextDocument({
+							textDocument: {
+								uri: Editor.getUri(editor),
+								version: editor.createCheckpoint(),
+							},
+							contentChanges: [{ text: editor.getText() }],
+						});
+					})
 				);
 			})
 		);
