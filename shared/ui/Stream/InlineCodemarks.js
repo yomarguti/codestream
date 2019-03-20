@@ -252,7 +252,8 @@ export class SimpleInlineCodemarks extends Component {
 
 	renderIconRow(lineNum0, top, hover, open) {
 		// we only add the title properties (which add tooltips)
-		// when you mouse over
+		// when you mouse over them for performance reasons. adding
+		// tool tips on each one slowed things down a lot. -Pez
 		return (
 			<div
 				onMouseEnter={() => this.onMouseEnterHoverIcon(lineNum0)}
