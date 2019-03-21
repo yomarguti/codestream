@@ -7,7 +7,7 @@ import Tooltip, { Placement } from "./Tooltip";
 interface Props {
 	name: string;
 	className?: string;
-	title?: string | JSX.Element;
+	title?: string | JSX.Element | undefined;
 	placement?: Placement;
 	delay?: number;
 	onClick?(event: React.SyntheticEvent): any;
