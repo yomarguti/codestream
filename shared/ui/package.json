@@ -43,6 +43,7 @@
 		"redux-thunk": "2.3.0",
 		"reselect": "4.0.0",
 		"uuid": "3.3.2",
+		"vscode-uri": "1.0.6",
 		"vscode-languageserver-protocol": "3.14.1"
 	},
 	"peerDependencies": {

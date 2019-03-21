@@ -1,10 +1,19 @@
 import { NotificationType, RequestType } from "vscode-jsonrpc";
+import URI from "vscode-uri";
 import {
 	findHost,
 	IpcHost,
 	WebviewIpcMessage,
 	isIpcResponseMessage,
-	isIpcRequestMessage
+	isIpcRequestMessage,
+	HostDidChangeActiveEditorNotificationType,
+	HostDidChangeActiveEditorNotification,
+	HostDidChangeEditorSelectionNotificationType,
+	HostDidChangeEditorVisibleRangesNotificationType,
+	NewCodemarkNotificationType,
+	HostDidChangeEditorSelectionNotification,
+	HostDidChangeEditorVisibleRangesNotification,
+	NewCodemarkNotification
 } from "./ipc/webview.protocol";
 import { shortUuid } from "./utils";
 
@@ -12,14 +21,61 @@ type NotificationParamsOf<NT> = NT extends NotificationType<infer N, any> ? N : 
 type RequestParamsOf<RT> = RT extends RequestType<infer R, any, any, any> ? R : never;
 type RequestResponseOf<RT> = RT extends RequestType<any, infer R, any, any> ? R : never;
 
-class EventEmitter {
-	private listenersByEvent = new Map<string, Function[]>();
+type Listener<NT extends NotificationType<any, any> = NotificationType<any, any>> = (
+	event: NotificationParamsOf<NT>
+) => void;
 
-	on<NT extends NotificationType<any, any>>(
-		eventType: NT,
-		listener: (event: NotificationParamsOf<NT>) => void,
-		thisArgs?: any
-	) {
+const normalizeNotificationsMap = new Map<
+	NotificationType<any, any>,
+	(listener: Listener) => Listener
+>([
+	[
+		HostDidChangeActiveEditorNotificationType,
+		listener => (e: HostDidChangeActiveEditorNotification) => {
+			if (e.editor) {
+				e.editor.uri = URI.parse(e.editor.uri).toString();
+			}
+			return listener(e);
+		}
+	],
+	[
+		HostDidChangeEditorSelectionNotificationType,
+		listener => (e: HostDidChangeEditorSelectionNotification) => {
+			e.uri = URI.parse(e.uri).toString();
+			return listener(e);
+		}
+	],
+	[
+		HostDidChangeEditorVisibleRangesNotificationType,
+		listener => (e: HostDidChangeEditorVisibleRangesNotification) => {
+			e.uri = URI.parse(e.uri).toString();
+			return listener(e);
+		}
+	],
+	[
+		NewCodemarkNotificationType,
+		listener => (e: NewCodemarkNotification) => {
+			e.uri = URI.parse(e.uri).toString();
+			return listener(e);
+		}
+	]
+]);
+
+function normalizeListener<NT extends NotificationType<any, any>>(
+	type: NT,
+	listener: (event: NotificationParamsOf<NT>) => void
+): (event: NotificationParamsOf<NT>) => void {
+	const normalize = normalizeNotificationsMap.get(type);
+	return normalize ? normalize(listener) : listener;
+}
+
+class EventEmitter {
+	private listenersByEvent = new Map<string, Listener[]>();
+
+	on<NT extends NotificationType<any, any>>(eventType: NT, listener: Listener<NT>, thisArgs?: any) {
+		// Because we can't trust the uri format from the host, we need to normalize the uris in all notifications originating from the host
+		listener = normalizeListener(eventType, listener);
+
 		const listeners = this.listenersByEvent.get(eventType.method) || [];
 		listeners.push(thisArgs !== undefined ? listener.bind(thisArgs) : listener);
 		this.listenersByEvent.set(eventType.method, listeners);
@@ -36,8 +92,12 @@ class EventEmitter {
 		if (listeners == null || listeners.length === 0) return;
 
 		setTimeout(() => {
-			for (const l of listeners) {
-				l(body);
+			for (const listener of listeners) {
+				try {
+					listener(body);
+				} catch {
+					// Don't let unhandle errors in a listener break others
+				}
 			}
 		}, 0);
 	}
