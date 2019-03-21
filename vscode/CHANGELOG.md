@@ -16,6 +16,7 @@
 
 ### Changed
 
+- Opening the CodeStream pane is now much faster
 - New icon-based global navigation
 - When selecting a channel/DM to share a codemark, the list now honors the “selected conversations” filter from the Channels tab
 - Context/lightbulb menus in the editor now have separate entries for creating a comment, issue, bookmark or permalink
