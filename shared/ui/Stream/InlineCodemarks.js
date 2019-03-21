@@ -289,7 +289,6 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	renderHoverIcons = numLinesVisible => {
-		const { textEditorSelection, metrics } = this.props;
 		const iconsOnLine0 = this.mapVisibleRangeToLine0(this.state.openIconsOnLine);
 		// console.log("IOL IS: ", iconsOnLine0, " FROM: ", this.state.openIconsOnLine);
 		const highlightedLine = this.state.highlightedLine;
@@ -299,7 +298,7 @@ export class SimpleInlineCodemarks extends Component {
 			// const top = paddingTop ? "calc(" + topPct + " + " + paddingTop + "px)" : topPct;
 			return this.renderIconRow(iconsOnLine0, top, false, true);
 		} else {
-			const heightPerLine = (window.innerHeight - 22) / (numLinesVisible + 2);
+			// const heightPerLine = (window.innerHeight - 22) / (numLinesVisible + 2);
 			return (
 				<div>
 					{range(0, numLinesVisible).map(lineNum0 => {
@@ -308,9 +307,11 @@ export class SimpleInlineCodemarks extends Component {
 						const hover = lineNum0 === highlightedLine;
 						return this.renderIconRow(lineNum0, top, hover, false);
 					})}
-					<div style={{ position: "fixed", bottom: "30px", right: "20px", whiteSpace: "pre" }}>
-						{JSON.stringify(metrics)} height: {heightPerLine} numVisible: {numLinesVisible}
-					</div>
+					{
+						// <div style={{ position: "fixed", bottom: "30px", right: "20px", whiteSpace: "pre" }}>
+						// {JSON.stringify(metrics)} height: {heightPerLine} numVisible: {numLinesVisible}
+						// </div>
+					}
 				</div>
 			);
 		}
@@ -412,7 +413,7 @@ export class SimpleInlineCodemarks extends Component {
 			: "calc(100vh - " + paddingTop + "px)";
 		const divStyle = {
 			top: paddingTop,
-			background: "#333366",
+			// background: "#333366",
 			position: "relative",
 			fontSize: fontSize,
 			height: height
@@ -423,7 +424,7 @@ export class SimpleInlineCodemarks extends Component {
 				<div
 					style={{
 						top: paddingTop,
-						background: "#333366",
+						// background: "#333366",
 						position: "relative",
 						fontSize: fontSize,
 						height: height
@@ -439,7 +440,7 @@ export class SimpleInlineCodemarks extends Component {
 			<div
 				style={{
 					top: paddingTop,
-					background: "#333366",
+					// background: "#333366",
 					position: "relative",
 					fontSize: fontSize,
 					height: height
