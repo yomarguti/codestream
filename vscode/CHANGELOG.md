@@ -8,14 +8,19 @@
 - Adds a permalink codemark type for sharing a link to a specific block of code
 - Adds the ability to close or re-open an issue from the codemark's thread view
 - Adds an Archive option to a codemark’s gear menu to hide it when the Current File tab is selected (but it will still be shown on the Search tab)
-- Adds [keyboard shortcuts](https://github.com/TeamCodeStream/CodeStream/wiki/Keyboard-Shortcuts) for creating a codemark after selecting some code
-- Adds a Marker Style user setting in VS Code to allow for codemarks to be displayed either as glyphs or as a codelens
+- Adds new [keyboard shortcuts](https://github.com/TeamCodeStream/CodeStream/wiki/Keyboard-Shortcuts) for creating a codemark after selecting code
+- Adds a `codestream.autoHideMarkers` setting (on by default) to specify whether to automatically hide editor marker glyphs when the CodeStream panel is showing codemarks in the current file
+- Adds a `codestream.showMarkerCodeLens` setting (off by default) to specify whether to show code lens above lines with associated codemarks in the editor
+- Adds a `codestream.showFeedbackSmiley` setting (on by default) to specify whether to show a feedback button in the CodeStream panel
+- Adds an experimental `codestream.showShortcutTipOnSelection` setting (off by default) to specify whether to show a shortcut key tip attached to the selection when you select code (still a work in progress)
 
 ### Changed
 
 - New icon-based global navigation
 - When selecting a channel/DM to share a codemark, the list now honors the “selected conversations” filter from the Channels tab
 - Context/lightbulb menus in the editor now have separate entries for creating a comment, issue, bookmark or permalink
+- Renames `codestream.showMarkers` setting to `codestream.showMarkerGlyphs` as it is now specifically about glyph indicators
+- Renames `codestream.avatars` setting to `codestream.showAvatars` for consistency with other settings
 
 ### Fixed
 
