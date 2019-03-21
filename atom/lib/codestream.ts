@@ -1,3 +1,4 @@
+import { ChangeDataType } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
 import { CompositeDisposable, Disposable } from "atom";
 import { Environment, PD_CONFIG } from "./env-utils";
@@ -113,39 +114,79 @@ class CodestreamPackage {
 	}
 
 	async consumeStatusBar(statusBar: StatusBar) {
-		const createStatusBarTitle = (status: SessionStatus) => {
-			const env = this.workspaceSession.environment.name;
-			const environmentLabel = env !== Environment.Production ? `${env} ` : "";
+		const createStatusBarTitle = (
+			status: SessionStatus,
+			unreads?: { totalMentions: number; totalUnreads: number }
+		) => {
+			const environmentLabel = (() => {
+				const env = this.workspaceSession.environment.name;
+				switch (env) {
+					case Environment.PD:
+						return `${env}:`;
+					default:
+						return "";
+				}
+			})();
+			const unreadsLabel = (() => {
+				if (unreads) {
+					if (unreads.totalMentions > 0) return `(${unreads.totalMentions})`;
+					if (unreads.totalUnreads > 0) return "\u00a0\u2022";
+				}
+				return "";
+			})();
 
-			if (status === SessionStatus.SignedIn) {
-				return `${environmentLabel}${this.workspaceSession.user!.username}`;
+			switch (status) {
+				case SessionStatus.SignedIn:
+					return `${environmentLabel} ${
+						this.workspaceSession.user!.username
+					} ${unreadsLabel}`.trim();
+				case SessionStatus.SigningIn:
+					return `Signing into...${environmentLabel}`.replace(":", "");
+				default:
+					return `${environmentLabel} Sign in`.trim();
 			}
-			if (status === SessionStatus.SigningIn) return `Signing in...${environmentLabel}`;
-			else return `${environmentLabel}Sign in`;
+		};
+
+		const getStatusBarIconClasses = (
+			status: SessionStatus,
+			unreads?: { totalMentions: number }
+		) => {
+			if (status === SessionStatus.SigningIn) {
+				return "icon loading loading-spinner-tiny inline-block".split(" ");
+			}
+			return "icon icon-comment-discussion".split(" ");
 		};
 
 		const tileRoot = document.createElement("div");
-		tileRoot.classList.add("inline-block");
+		tileRoot.classList.add("inline-block", "codestream-session-status");
 		tileRoot.onclick = event => {
 			event.stopPropagation();
 			atom.commands.dispatch(document.querySelector("atom-workspace")!, "codestream:toggle");
 		};
 		const icon = document.createElement("span");
-		icon.classList.add("icon", "icon-comment-discussion");
+		icon.classList.add(...getStatusBarIconClasses(this.workspaceSession.status));
 		tileRoot.appendChild(icon);
 		atom.tooltips.add(tileRoot, { title: "Toggle CodeStream" });
 		const text = document.createElement("span");
 		tileRoot.appendChild(text);
 
-		let statusBarTile: Tile | undefined;
+		const statusBarTile = statusBar.addRightTile({ item: tileRoot, priority: 400 });
+
 		const sessionStatusSubscription = this.workspaceSession!.observeSessionStatus(status => {
 			text.innerText = createStatusBarTitle(status);
+			icon.classList.remove(...icon.classList.values());
+			icon.classList.add(...getStatusBarIconClasses(this.workspaceSession.status));
+		});
 
-			statusBarTile = statusBar.addRightTile({ item: tileRoot, priority: 400 });
+		const dataChangeSubscription = this.workspaceSession.agent.onDidChangeData(event => {
+			if (event.type === ChangeDataType.Unreads) {
+				text.innerText = createStatusBarTitle(this.workspaceSession.status, event.data);
+			}
 		});
 
 		return new Disposable(() => {
 			sessionStatusSubscription.dispose();
+			dataChangeSubscription.dispose();
 			if (statusBarTile) {
 				statusBarTile.destroy();
 			}
