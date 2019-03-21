@@ -360,7 +360,12 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	renderInline() {
-		const { textEditorVisibleRanges, documentMarkers, metrics } = this.props;
+		const {
+			textEditorVisibleRanges = [],
+			textEditorLineCount,
+			documentMarkers,
+			metrics
+		} = this.props;
 
 		// create a map from start-lines to the codemarks that start on that line
 		let docMarkersByStartLine = {};
@@ -377,8 +382,7 @@ export class SimpleInlineCodemarks extends Component {
 
 		// console.log("TEVR: ", textEditorVisibleRanges);
 
-		const numVisibleRanges =
-			textEditorVisibleRanges === undefined ? 0 : textEditorVisibleRanges.length;
+		const numVisibleRanges = textEditorVisibleRanges.length;
 
 		const fontSize = metrics && metrics.fontSize ? metrics.fontSize : "12px";
 		let rangeStartOffset = 0;
@@ -389,10 +393,22 @@ export class SimpleInlineCodemarks extends Component {
 		// and also one line that is 99% visible at the bottom, both at the same time.
 		const heightPerLine = (window.innerHeight - paddingTop) / (numLinesVisible + 2);
 		const expectedLineHeight = (metrics.fontSize || 12) * 1.5;
-		const height =
-			heightPerLine > expectedLineHeight
-				? expectedLineHeight * numLinesVisible + paddingTop + "px"
-				: "calc(100vh - " + paddingTop + "px)";
+
+		// here we have to decide whether we think the editor window is "full of code"
+		// in which case we want the height of inlinecodemarks to be 100% minus any
+		// padding, or whether the editor window is not full of code, in which case
+		// we want to approximate the height of inlinecodemarks to be less than 100%,
+		// and instead based on the number of lines visible. this latter case happens
+		// when you are editing a small file with not enough lines to fill up the
+		// editor, or in the case of vscode when, like a fucking idiot, it lets you
+		// scroll the end of the file up to the top of the pane for some brain-dead
+		// stupid asenine ridiculous totally useless reason.
+		const lastLineVisible =
+			textEditorLineCount <= textEditorVisibleRanges[numVisibleRanges - 1].end.line + 1;
+		const lessThanFull = heightPerLine > expectedLineHeight && lastLineVisible;
+		const height = lessThanFull
+			? expectedLineHeight * numLinesVisible + paddingTop + "px"
+			: "calc(100vh - " + paddingTop + "px)";
 		const divStyle = {
 			top: paddingTop,
 			background: "#333366",
@@ -400,7 +416,6 @@ export class SimpleInlineCodemarks extends Component {
 			fontSize: fontSize,
 			height: height
 		};
-		console.log("HEIGHT IS: ", height);
 
 		if (documentMarkers.length === 0) {
 			return (
@@ -708,6 +723,7 @@ const mapStateToProps = state => {
 		viewInline: configs.viewCodemarksInline,
 		fileNameToFilterFor: editorContext.activeFile || editorContext.lastActiveFile,
 		textEditorUri: editorContext.textEditorUri,
+		textEditorLineCount: editorContext.textEditorLineCount,
 		textEditorVisibleRanges: editorContext.textEditorVisibleRanges || EMPTY_ARRAY,
 		textEditorSelection: getCurrentSelection(editorContext),
 		metrics: editorContext.metrics || EMPTY_ARRAY,
