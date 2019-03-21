@@ -6,6 +6,7 @@ export interface CreateDocumentMarkerPermalinkRequest {
 	range: Range;
 	uri: string;
 	privacy: "public" | "private";
+	contents?: string;
 }
 
 export interface CreateDocumentMarkerPermalinkResponse {

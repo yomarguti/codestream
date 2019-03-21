@@ -1,8 +1,10 @@
 import * as paths from "path";
-import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
+import { Ranges } from "../api/extensions";
 import { Logger } from "../logger";
 import {
+	GetFileScmInfoRequest,
+	GetFileScmInfoRequestType,
 	GetRangeScmInfoRequest,
 	GetRangeScmInfoRequestType,
 	GetRangeScmInfoResponse
@@ -12,27 +14,63 @@ import { Container } from "./../container";
 
 @lsp
 export class ScmManager {
+	@lspHandler(GetFileScmInfoRequestType)
+	async getFileInfo({ uri: documentUri }: GetFileScmInfoRequest) {
+		const uri = URI.parse(documentUri);
+
+		let file: string | undefined;
+		let remotes: { name: string; url: string }[] | undefined;
+		let rev: string | undefined;
+
+		let gitError;
+		let repoPath;
+		if (uri.scheme === "file") {
+			const { git } = Container.instance();
+
+			try {
+				repoPath = await git.getRepoRoot(uri.fsPath);
+				if (repoPath !== undefined) {
+					file = Strings.normalizePath(paths.relative(repoPath, uri.fsPath));
+					if (file[0] === "/") {
+						file = file.substr(1);
+					}
+
+					rev = await git.getFileCurrentRevision(uri.fsPath);
+					const gitRemotes = await git.getRepoRemotes(repoPath);
+					remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
+				}
+			} catch (ex) {
+				gitError = ex.toString();
+				Logger.error(ex);
+				debugger;
+			}
+		}
+
+		return {
+			uri: uri.toString(),
+			scm:
+				repoPath !== undefined
+					? {
+							file: file!,
+							repoPath: repoPath,
+							revision: rev!,
+							remotes: remotes || []
+					  }
+					: undefined,
+			error: gitError
+		};
+	}
+
 	@lspHandler(GetRangeScmInfoRequestType)
 	async getRangeInfo({
-		contents,
-		dirty,
+		uri: documentUri,
 		range,
-		uri: documentUri
+		dirty,
+		contents,
+		skipBlame
 	}: GetRangeScmInfoRequest): Promise<GetRangeScmInfoResponse> {
-		const { documents, git } = Container.instance();
-
-		const document = documents.get(documentUri);
-		if (document === undefined) {
-			throw new Error(`No document could be found for Uri(${documentUri})`);
-		}
-
 		// Ensure range end is >= start
-		if (
-			range.start.line > range.end.line ||
-			(range.start.line === range.end.line && range.start.character > range.end.character)
-		) {
-			range = Range.create(range.end, range.start);
-		}
+		range = Ranges.ensureStartBeforeEnd(range);
 
 		const uri = URI.parse(documentUri);
 
@@ -41,9 +79,21 @@ export class ScmManager {
 		let remotes: { name: string; url: string }[] | undefined;
 		let rev: string | undefined;
 
+		let document;
+		if (contents == null) {
+			document = Container.instance().documents.get(documentUri);
+			if (document === undefined) {
+				throw new Error(`No document could be found for Uri(${documentUri})`);
+			}
+
+			contents = document.getText(range);
+		}
+
 		let gitError;
 		let repoPath;
 		if (uri.scheme === "file") {
+			const { git } = Container.instance();
+
 			try {
 				repoPath = await git.getRepoRoot(uri.fsPath);
 				if (repoPath !== undefined) {
@@ -56,19 +106,30 @@ export class ScmManager {
 					const gitRemotes = await git.getRepoRemotes(repoPath);
 					remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
 
-					if (dirty && contents == null) {
-						contents = document.getText();
+					if (!skipBlame) {
+						let blameContents;
+						// Only fill out the blame contents if the file is dirty (so we can blame the dirty version)
+						if (dirty) {
+							if (document === undefined) {
+								document = Container.instance().documents.get(documentUri);
+								if (document === undefined) {
+									throw new Error(`No document could be found for Uri(${documentUri})`);
+								}
+							}
+
+							blameContents = document.getText();
+						}
+
+						const gitAuthors = await git.getFileAuthors(uri.fsPath, {
+							startLine: range.start.line,
+							endLine: range.end.line,
+							contents: blameContents
+						});
+						const authorEmails = gitAuthors.map(a => a.email);
+
+						const users = await Container.instance().users.getByEmails(authorEmails);
+						authors = [...Iterables.map(users, u => ({ id: u.id, username: u.username }))];
 					}
-
-					const gitAuthors = await git.getFileAuthors(uri.fsPath, {
-						startLine: range.start.line,
-						endLine: range.end.line,
-						contents: dirty ? contents : undefined
-					});
-					const authorEmails = gitAuthors.map(a => a.email);
-
-					const users = await Container.instance().users.getByEmails(authorEmails);
-					authors = [...Iterables.map(users, u => ({ id: u.id, username: u.username }))];
 				}
 			} catch (ex) {
 				gitError = ex.toString();
@@ -78,9 +139,9 @@ export class ScmManager {
 		}
 
 		return {
-			uri: documentUri,
+			uri: uri.toString(),
 			range: range,
-			contents: document.getText(range),
+			contents: contents,
 			scm:
 				repoPath !== undefined
 					? {

@@ -2,7 +2,7 @@
 import * as path from "path";
 import { Range } from "vscode-languageserver";
 import URI from "vscode-uri";
-import { Marker, MarkerLocation } from "../api/extensions";
+import { Marker, MarkerLocation, Ranges } from "../api/extensions";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
@@ -38,15 +38,24 @@ export namespace MarkerHandler {
 	export async function createPermalink({
 		uri,
 		range,
-		privacy
+		privacy,
+		contents
 	}: CreateDocumentMarkerPermalinkRequest): Promise<CreateDocumentMarkerPermalinkResponse> {
 		const { codemarks, scm, git } = Container.instance();
 
-		const scmResponse = await scm.getRangeInfo({ uri: uri, range: range, dirty: true });
+		const scmResponse = await scm.getRangeInfo({
+			uri: uri,
+			range: range,
+			contents: contents,
+			skipBlame: true
+		});
 		const remotes = scmResponse.scm && scmResponse.scm.remotes.map(r => r.url);
 
 		let remoteCodeUrl;
 		if (remotes !== undefined && scmResponse.scm !== undefined && scmResponse.scm.revision) {
+			// Ensure range end is >= start
+			range = Ranges.ensureStartBeforeEnd(range);
+
 			for (const remote of remotes) {
 				remoteCodeUrl = Marker.getRemoteCodeUrl(
 					remote,
@@ -70,7 +79,7 @@ export namespace MarkerHandler {
 				location = MarkerLocation.toArray(MarkerLocation.empty());
 			} else {
 				commitHash = scmResponse.scm.revision;
-				location = MarkerLocation.toArrayFromRange(scmResponse.range);
+				location = MarkerLocation.toArrayFromRange(range);
 			}
 		}
 

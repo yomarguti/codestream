@@ -1,8 +1,7 @@
 "use strict";
-import { Range } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
-import { MarkerLocation } from "../api/extensions";
+import { MarkerLocation, Ranges } from "../api/extensions";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
@@ -701,13 +700,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		let remotes: string[] | undefined;
 		if (range) {
 			// Ensure range end is >= start
-			if (
-				range.start.line > range.end.line ||
-				(range.start.line === range.end.line && range.start.character > range.end.character)
-			) {
-				range = Range.create(range.end, range.start);
-			}
-
+			range = Ranges.ensureStartBeforeEnd(range);
 			location = MarkerLocation.fromRange(range);
 
 			if (source) {

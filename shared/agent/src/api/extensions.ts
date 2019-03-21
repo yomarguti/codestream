@@ -204,6 +204,18 @@ export namespace Marker {
 	}
 }
 
+export namespace Ranges {
+	export function ensureStartBeforeEnd(range: Range) {
+		if (
+			range.start.line > range.end.line ||
+			(range.start.line === range.end.line && range.start.character > range.end.character)
+		) {
+			return Range.create(range.end, range.start);
+		}
+
+		return range;
+	}
+}
 export namespace Team {
 	export function isSlack(
 		team: CSTeam
