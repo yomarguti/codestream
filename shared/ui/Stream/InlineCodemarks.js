@@ -404,9 +404,9 @@ export class SimpleInlineCodemarks extends Component {
 		// editor, or in the case of vscode when, like a fucking idiot, it lets you
 		// scroll the end of the file up to the top of the pane for some brain-dead
 		// stupid asenine ridiculous totally useless reason.
-		const lastLineVisible =
-			textEditorLineCount <= textEditorVisibleRanges[numVisibleRanges - 1].end.line + 1;
-		const lessThanFull = heightPerLine > expectedLineHeight && lastLineVisible;
+		const lastRange = textEditorVisibleRanges[numVisibleRanges - 1];
+		const isLastLineVisible = lastRange ? textEditorLineCount <= lastRange.end.line + 1 : false;
+		const lessThanFull = heightPerLine > expectedLineHeight && isLastLineVisible;
 		const height = lessThanFull
 			? expectedLineHeight * numLinesVisible + paddingTop + "px"
 			: "calc(100vh - " + paddingTop + "px)";
