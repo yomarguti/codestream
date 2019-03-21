@@ -25,7 +25,7 @@ Sign up for CodeStream using Slack so that discussions about code can be shared 
 
 Create a codemark by selecting a block of code in your editor and then typing a question or comment. Keep in mind that, unlike with other solutions, you can discuss any line of code in any source file at any time, even if it’s code that you just typed into your editor and haven’t yet saved or committed.
 
-![New Codemark](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/NewCodemark1.png)
+![New Codemark](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/NewCodemark2.png)
 
 In addition to general comments and questions, there are specific types of codemarks for assigning issues, saving bookmarks, or generating a permalink to a specific block of code.
 
