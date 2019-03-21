@@ -13,7 +13,8 @@ export function setContext(key: ContextKeys | string, value: any) {
 }
 
 export enum GlobalState {
-	AccessTokens = "codestream:accessTokens"
+	AccessTokens = "codestream:accessTokens",
+	Version = "codestream:version"
 }
 
 export enum WorkspaceState {

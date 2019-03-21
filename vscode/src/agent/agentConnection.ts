@@ -89,6 +89,7 @@ import {
 import { RequestInit } from "node-fetch";
 import {
 	commands,
+	env,
 	Event,
 	EventEmitter,
 	ExtensionContext,
@@ -112,7 +113,7 @@ import {
 	ServerOptions,
 	TransportKind
 } from "vscode-languageclient";
-import { BuiltInCommands, extensionQualifiedId } from "../constants";
+import { extensionQualifiedId } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { log } from "../system";
@@ -837,7 +838,7 @@ export class CodeStreamAgentConnection implements Disposable {
 					...actions
 				);
 				if (result !== undefined && result.title === "Download") {
-					await commands.executeCommand(BuiltInCommands.Open, Uri.parse(e.downloadUrl));
+					await env.openExternal(Uri.parse(e.downloadUrl));
 				}
 				break;
 			}
@@ -850,7 +851,7 @@ export class CodeStreamAgentConnection implements Disposable {
 					...actions
 				);
 				if (result !== undefined && result.title === "Download") {
-					await commands.executeCommand(BuiltInCommands.Open, Uri.parse(e.downloadUrl));
+					await env.openExternal(Uri.parse(e.downloadUrl));
 				}
 				break;
 			}
@@ -878,7 +879,7 @@ export class CodeStreamAgentConnection implements Disposable {
 					);
 
 					if (result !== undefined) {
-						await commands.executeCommand(BuiltInCommands.Open, Uri.parse(e.downloadUrl));
+						await env.openExternal(Uri.parse(e.downloadUrl));
 					}
 				}
 				break;

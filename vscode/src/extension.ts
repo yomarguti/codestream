@@ -1,6 +1,6 @@
 "use strict";
 import {
-	commands,
+	env,
 	ExtensionContext,
 	extensions,
 	MessageItem,
@@ -11,9 +11,8 @@ import {
 } from "vscode";
 import { GitExtension } from "./@types/git";
 import { SessionStatusChangedEvent } from "./api/session";
-import { ContextKeys, setContext } from "./common";
+import { ContextKeys, GlobalState, setContext } from "./common";
 import { Config, configuration, Configuration } from "./configuration";
-import { BuiltInCommands } from "./constants";
 import { extensionQualifiedId } from "./constants";
 import { Container } from "./container";
 import { Logger, TraceLevel } from "./logger";
@@ -71,7 +70,9 @@ export async function activate(context: ExtensionContext) {
 
 	context.subscriptions.push(Container.session.onDidChangeSessionStatus(onSessionStatusChanged));
 
-	showStartupMessage(context);
+	showStartupMessage(context, extensionVersion);
+
+	context.globalState.update(GlobalState.Version, extensionVersion);
 
 	if (cfg.autoSignIn) {
 		Container.commands.signIn();
@@ -109,28 +110,49 @@ export async function gitPath(): Promise<string> {
 	return _gitPath;
 }
 
-async function showStartupMessage(context: ExtensionContext) {
-	if (
-		context.globalState.get<boolean>("2019-01-giveaway", false) ||
-		new Date() > new Date("2019-2-2 12:00 GMT-0500")
-	) {
-		return;
+async function showStartupMessage(context: ExtensionContext, version: string) {
+	const previousVersion = context.globalState.get<string>(GlobalState.Version);
+
+	if (previousVersion !== version) {
+		Logger.log(
+			`CodeStream upgraded ${
+				previousVersion === undefined ? "" : `from v${previousVersion} `
+			}to v${version}`
+		);
 	}
 
-	await context.globalState.update("2019-01-giveaway", true);
+	const [major, minor] = version.split(".");
 
-	const actions: MessageItem[] = [{ title: "See Details" }];
+	if (previousVersion !== undefined) {
+		const [prevMajor, prevMinor] = previousVersion.split(".");
+		if (
+			(major === prevMajor && minor === prevMinor) ||
+			// Don't notify on downgrades
+			(major < prevMajor || (major === prevMajor && minor < prevMinor))
+		) {
+			return;
+		}
+	}
+
+	const actions: MessageItem[] = [{ title: "What's New" } /*, { title: "Release Notes" } */];
+
 	const result = await window.showInformationMessage(
-		`Don't miss your chance to win up to $250 in CodeStream's Codemarks Giveaway — simply by creating Codemarks`,
+		`CodeStream has been updated to v${version} — check out what's new!`,
 		...actions
 	);
 
-	if (result === actions[0]) {
-		commands.executeCommand(
-			BuiltInCommands.Open,
-			Uri.parse(
-				"https://blog.codestream.com/index.php/2019/01/24/codestreams-codemarks-giveaway?utm_source=ext_vsc&utm_medium=popup&utm_campaign=giveaway_codemarks"
-			)
-		);
+	if (result != null) {
+		if (result === actions[0]) {
+			await env.openExternal(
+				Uri.parse(
+					`https://codestream.com/codesteam-v${major}-${minor}-vscode?utm_source=ext_vsc&utm_medium=popup&utm_campaign=v${major}-${minor}`
+				)
+			);
+		}
+		// else if (result === actions[1]) {
+		// 	await env.openExternal(
+		// 		Uri.parse("https://marketplace.visualstudio.com/items/CodeStream.codestream/changelog")
+		// 	);
+		// }
 	}
 }
