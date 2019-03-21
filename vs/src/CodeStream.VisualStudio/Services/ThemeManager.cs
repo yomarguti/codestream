@@ -5,7 +5,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
- 
+
 using EnvironmentColors = Microsoft.VisualStudio.PlatformUI.EnvironmentColors;
 using FontFamily = System.Windows.Media.FontFamily;
 using VSColorTheme = Microsoft.VisualStudio.PlatformUI.VSColorTheme;
@@ -85,7 +85,7 @@ namespace CodeStream.VisualStudio.Services
                 colorInfos.Add(new ColorInfo { Key = "link-color", VisualStudioKey = EnvironmentColors.StartPageTextControlLinkSelectedColorKey });
 
                 colorInfos.Add(new ColorInfo { Key = "text-color", VisualStudioKey = EnvironmentColors.ToolWindowTextColorKey, Modifier = (b) => b.ToArgb(80) });
-                colorInfos.Add(new ColorInfo { Key = "text-color-info", VisualStudioKey = EnvironmentColors.ToolWindowTextColorKey, Modifier = (b) => b.ToArgb(70) });
+                colorInfos.Add(new ColorInfo { Key = "text-color-info", VisualStudioKey = EnvironmentColors.StartPageTextControlLinkSelectedColorKey });
                 colorInfos.Add(new ColorInfo { Key = "text-color-info-muted", VisualStudioKey = EnvironmentColors.ToolWindowButtonDownBorderColorKey, Modifier = (b) => b.Darken(0.1f).ToHex() });
                 colorInfos.Add(new ColorInfo { Key = "text-color-subtle", VisualStudioKey = EnvironmentColors.ToolWindowTextColorKey, Modifier = (b) => b.ToArgb(70) });
                 colorInfos.Add(new ColorInfo { Key = "text-color-subtle-extra", VisualStudioKey = EnvironmentColors.ToolWindowTextColorKey, Modifier = (b) => b.Lighten(0.5f).ToArgb(60) });
@@ -111,7 +111,7 @@ namespace CodeStream.VisualStudio.Services
                 colorInfos.Add(new ColorInfo { Key = "link-color", VisualStudioKey = EnvironmentColors.ToolWindowButtonInactiveColorKey });
 
                 colorInfos.Add(new ColorInfo { Key = "text-color", VisualStudioKey = EnvironmentColors.ToolWindowTextColorKey, Modifier = (b) => b.ToArgb(90) });
-                colorInfos.Add(new ColorInfo { Key = "text-color-info", VisualStudioKey = EnvironmentColors.ToolWindowTextColorKey, Modifier = (b) => b.ToArgb(80) });
+                colorInfos.Add(new ColorInfo { Key = "text-color-info", VisualStudioKey = EnvironmentColors.StartPageTextControlLinkSelectedColorKey });
                 colorInfos.Add(new ColorInfo { Key = "text-color-info-muted", VisualStudioKey = EnvironmentColors.ToolWindowButtonDownBorderColorKey });
                 colorInfos.Add(new ColorInfo { Key = "text-color-subtle", VisualStudioKey = EnvironmentColors.ToolWindowTextColorKey, Modifier = (b) => b.ToArgb(70) });
                 colorInfos.Add(new ColorInfo { Key = "text-color-subtle-extra", VisualStudioKey = EnvironmentColors.ToolWindowTextColorKey, Modifier = (b) => b.Darken(0.5f).ToArgb(60) });
@@ -176,7 +176,7 @@ namespace CodeStream.VisualStudio.Services
 
             return DefaultColor;
         }
-		
+
         public static Dictionary<string, System.Drawing.Color> ColorMap = new Dictionary<string, System.Drawing.Color>
         {
             { "blue", DefaultColor},
