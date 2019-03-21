@@ -74,10 +74,13 @@ class EventEmitter {
 
 	on<NT extends NotificationType<any, any>>(eventType: NT, listener: Listener<NT>, thisArgs?: any) {
 		// Because we can't trust the uri format from the host, we need to normalize the uris in all notifications originating from the host
-		listener = normalizeListener(eventType, listener);
+		listener = normalizeListener(
+			eventType,
+			thisArgs !== undefined ? listener.bind(thisArgs) : listener
+		);
 
 		const listeners = this.listenersByEvent.get(eventType.method) || [];
-		listeners.push(thisArgs !== undefined ? listener.bind(thisArgs) : listener);
+		listeners.push(listener);
 		this.listenersByEvent.set(eventType.method, listeners);
 		return {
 			dispose: () => {
