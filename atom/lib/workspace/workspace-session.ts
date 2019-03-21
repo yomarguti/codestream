@@ -38,7 +38,10 @@ export class WorkspaceSession {
 	}
 	private agentCapabilities?: Capabilities;
 	private _sessionStatus = SessionStatus.SignedOut;
-	private isReady?: Promise<void>;
+	private _isReady?: Promise<void>;
+	get ready() {
+		return this._isReady;
+	}
 	readonly configManager: ConfigManager;
 
 	static create(state: PackageState) {
@@ -58,13 +61,13 @@ export class WorkspaceSession {
 		this.configManager = new ConfigManager();
 
 		if (session) {
-			this.isReady = new Promise(async (resolve, reject) => {
+			this._isReady = new Promise(async (resolve, reject) => {
 				const result = await this.login(session.user.email, session.token);
 				if (result === LoginResult.Success) {
 					resolve();
 				} else {
 					this.session = undefined;
-					this.isReady = undefined;
+					this._isReady = undefined;
 					reject();
 				}
 			});

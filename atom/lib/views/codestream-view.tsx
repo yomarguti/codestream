@@ -255,6 +255,7 @@ export class CodestreamView {
 	}
 
 	private async getSignedInBootstrapState(): Promise<SignedInBootstrapResponse> {
+		await this.session.ready;
 		const bootstrapData = await this.session.agent.request(AgentBootstrapRequestType, {});
 		const editor = atom.workspace.getActiveTextEditor();
 		return {
