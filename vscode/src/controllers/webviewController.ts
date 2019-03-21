@@ -695,7 +695,8 @@ export class WebviewController implements Disposable {
 				metrics: Editor.getMetrics(),
 				textEditorUri: this._lastEditor.document.uri.toString(),
 				textEditorVisibleRanges: Editor.toSerializableRange(this._lastEditor.visibleRanges),
-				textEditorSelections: Editor.toEditorSelections(this._lastEditor.selections)
+				textEditorSelections: Editor.toEditorSelections(this._lastEditor.selections),
+				textEditorLineCount: this._lastEditor.document.lineCount
 			};
 		}
 
