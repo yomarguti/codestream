@@ -9,6 +9,7 @@ interface Props {
 	className?: string;
 	title?: string | JSX.Element | undefined;
 	placement?: Placement;
+	align?: any;
 	delay?: number;
 	onClick?(event: React.SyntheticEvent): any;
 }
@@ -29,7 +30,12 @@ const Icon = React.forwardRef<any, Props>((props, ref) => {
 
 	if (props.title) {
 		return (
-			<Tooltip title={props.title} placement={props.placement} delay={props.delay}>
+			<Tooltip
+				title={props.title}
+				placement={props.placement}
+				align={props.align}
+				delay={props.delay}
+			>
 				<span>{iconImage}</span>
 			</Tooltip>
 		);

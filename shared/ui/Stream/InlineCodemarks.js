@@ -260,6 +260,7 @@ export class SimpleInlineCodemarks extends Component {
 					name="comment"
 					title={hover ? this.titles.comment : undefined}
 					placement="bottomLeft"
+					align={{ offset: [-15, 10] }}
 					delay={1}
 				/>
 				<Icon
@@ -267,13 +268,16 @@ export class SimpleInlineCodemarks extends Component {
 					name="issue"
 					title={hover ? this.titles.issue : undefined}
 					placement="bottomLeft"
+					align={{ offset: [-15, 10] }}
 					delay={1}
 				/>
+				{ /* bookmark is a skinnier icon so it's offset a little more */ }
 				<Icon
 					onClick={e => this.handleClickPlus(e, "bookmark", lineNum0)}
 					name="bookmark"
 					title={hover ? this.titles.bookmark : undefined}
 					placement="bottomLeft"
+					align={{ offset: [-18, 10] }}
 					delay={1}
 				/>
 				<Icon
@@ -281,6 +285,7 @@ export class SimpleInlineCodemarks extends Component {
 					name="link"
 					title={hover ? this.titles.link : undefined}
 					placement="bottomLeft"
+					align={{ offset: [-15, 10] }}
 					delay={1}
 				/>
 			</div>
@@ -330,7 +335,7 @@ export class SimpleInlineCodemarks extends Component {
 						className="superscript"
 						name="info"
 					/>{" "}
-					in {this.props.fileNameToFilterFor}
+					in <b>{this.props.fileNameToFilterFor}</b>
 					<br />
 					<br />
 					Discuss code with your team by selecting a range and clicking {target} (
