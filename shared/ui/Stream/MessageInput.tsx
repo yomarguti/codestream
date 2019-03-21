@@ -482,7 +482,11 @@ export class MessageInput extends React.Component<Props, State> {
 			this.showPopupSelectors("", "slash-commands");
 		} else if (event.key === "#") {
 			this.showPopupSelectors("", "channels");
-		} else if (event.key === "Enter" && !event.shiftKey && !multiCompose) {
+		} else if (
+			event.charCode === 13 &&
+			!event.shiftKey &&
+			(event.ctrlKey || event.metaKey || !multiCompose)
+		) {
 			event.preventDefault();
 			const { onSubmit } = this.props;
 			onSubmit && onSubmit();
