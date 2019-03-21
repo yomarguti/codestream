@@ -18,7 +18,7 @@ export default connect(
 
 	return (
 		<div className="onboarding-page">
-			<h2>Chat in Your IDE!</h2>
+			<h2>Better Teamwork. Better Code.</h2>
 			<form className="standard-form">
 				<fieldset className="form-body">
 					<p>
