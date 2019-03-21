@@ -1,7 +1,6 @@
 package com.codestream
 
 import com.google.gson.JsonElement
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.eclipse.lsp4j.*
@@ -10,37 +9,28 @@ import org.eclipse.lsp4j.services.LanguageClient
 import java.io.File
 import java.util.concurrent.CompletableFuture
 
-class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
+class CodeStreamLanguageClient(private val project: Project) : LanguageClient, ServiceConsumer(project) {
 
     private val logger = Logger.getInstance(CodeStreamLanguageClient::class.java)
 
-    private val webViewService: WebViewService by lazy {
-        ServiceManager.getService(project, WebViewService::class.java)
-    }
-
-    private val editorManagerService: EditorManagerService by lazy {
-        ServiceManager.getService(project, EditorManagerService ::class.java)
-    }
-
-    @JsonNotification("codeStream/didChangeDocumentMarkers")
+    @JsonNotification("codestream/didChangeDocumentMarkers")
     fun didChangeDocumentMarkers(notification: DidChangeDocumentMarkersNotification) {
-        editorManagerService.updateMarkers(notification.textDocument.uri)
+        editorService.updateMarkers(notification.textDocument.uri)
     }
 
-
-    @JsonNotification("codeStream/didChangeData")
+    @JsonNotification("codestream/didChangeData")
     fun didChangeData(json: JsonElement) {
-        webViewService.postData(json)
+        webViewService.postNotification("codestream/didChangeData", json)
     }
 
-    @JsonNotification("codeStream/didChangeConnectionStatus")
+    @JsonNotification("codestream/didChangeConnectionStatus")
     fun didChangeConnectionStatus(json: JsonElement) {
-        webViewService.postData(json)
+        webViewService.postNotification("codestream/didChangeConnectionStatus", json)
     }
 
-    @JsonNotification("codeStream/didLogout")
+    @JsonNotification("codestream/didLogout")
     fun didLogout(json: JsonElement) {
-        webViewService.postData(json)
+        webViewService.postNotification("codestream/didLogout", json)
     }
 
     override fun workspaceFolders(): CompletableFuture<MutableList<WorkspaceFolder>> {
@@ -55,14 +45,14 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
 
     override fun registerCapability(params: RegistrationParams): CompletableFuture<Void> {
         params.registrations.forEach {
-            println("LSP server wants to register ${it.method}")
+            println("LSP agent wants to register ${it.method}")
         }
         return CompletableFuture.completedFuture(null)
     }
 
     override fun unregisterCapability(params: UnregistrationParams?): CompletableFuture<Void> {
         params?.unregisterations?.forEach {
-            println("LSP server wants to unregister ${it.method}")
+            println("LSP agent wants to unregister ${it.method}")
         }
         return CompletableFuture.completedFuture(null)
     }

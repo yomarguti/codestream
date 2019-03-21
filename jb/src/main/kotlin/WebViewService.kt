@@ -1,5 +1,6 @@
 package com.codestream
 
+import com.codestream.protocols.webview.WebViewNotification
 import com.github.salomonbrys.kotson.jsonObject
 import com.google.gson.JsonElement
 import com.intellij.openapi.Disposable
@@ -60,15 +61,27 @@ class WebViewService(val project: Project) : Disposable {
         FileUtils.write(htmlFile, htmlContent, Charset.forName("UTF-8"))
     }
 
-
-    fun postResponse(id: String, payload: Any?, error: String? = null) {
+    fun postResponse(id: String, params: Any?, error: String? = null) {
         val message = jsonObject(
-            "type" to "codestream:response",
-            "body" to jsonObject(
-                "id" to id,
-                "payload" to gson.toJsonTree(payload),
-                "error" to error
-            )
+            "id" to id,
+            "params" to gson.toJsonTree(params),
+            "error" to error
+        )
+        postMessage(message)
+    }
+
+    fun postNotification(notification: WebViewNotification) {
+        val message = jsonObject(
+            "method" to notification.getMethod(),
+            "params" to gson.toJsonTree(notification)
+        )
+        postMessage(message)
+    }
+
+    fun postNotification(method: String, params: Any?) {
+        val message = jsonObject(
+            "method" to method,
+            "params" to gson.toJsonTree(params)
         )
         postMessage(message)
     }
@@ -81,7 +94,7 @@ class WebViewService(val project: Project) : Disposable {
         postMessage(message)
     }
 
-    fun postMessage(message: JsonElement) {
+    private fun postMessage(message: JsonElement) {
         browser.executeJavaScript("window.postMessage($message,'*');")
     }
 

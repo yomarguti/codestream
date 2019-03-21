@@ -1,6 +1,8 @@
 package com.codestream
 
 import com.intellij.openapi.project.Project
+import protocols.agent.LoginResult
+import protocols.agent.UserLoggedIn
 import java.util.*
 
 class SessionService(project: Project) {
@@ -15,3 +17,4 @@ class SessionService(project: Project) {
     }
 
 }
+

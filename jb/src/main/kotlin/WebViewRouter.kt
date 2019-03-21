@@ -3,76 +3,276 @@ package com.codestream
 import com.github.salomonbrys.kotson.*
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
+import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.VirtualFile
-import kotlinx.coroutines.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.future.await
+import kotlinx.coroutines.launch
+import protocols.agent.*
+import protocols.webview.*
 import java.io.File
 import java.net.URI
 
-class WebViewRouter(val project: Project) {
+class WebViewRouter(val project: Project) : ServiceConsumer(project) {
     private val logger = Logger.getInstance(WebViewRouter::class.java)
 
-    private val agentService: AgentService
-        get() = ServiceManager.getService(project, AgentService::class.java)
+    fun handle(rawMessage: String, origin: String?) = GlobalScope.launch {
+        val message = parse(rawMessage)
 
-    private val authenticationService: AuthenticationService
-        get() = ServiceManager.getService(project, AuthenticationService::class.java)
-
-    private val webViewService: WebViewService
-        get() = ServiceManager.getService(project, WebViewService::class.java)
-
-    fun handle(rawMessage: String, origin: String) = GlobalScope.launch {
         try {
-            val message = parse(rawMessage)
-            when (message?.type) {
-                "codestream:view-ready" -> Unit
-                "codestream:request" -> processRequest(message.body)
-                "codestream:interaction:active-panel-changed" -> Unit
-                "codestream:interaction:context-state-changed" -> Unit
-                "codestream:interaction:changed-active-stream" -> Unit
-                "codestream:interaction:thread-selected" -> Unit
-                "codestream:interaction:thread-closed" -> Unit
-                "codestream:subscription:file-changed" -> Unit
-                "codestream:unsubscribe:file-changed" -> Unit
+            when (message.target) {
+                "host" -> processHostMessage(message)
+                "codestream" -> processAgentMessage(message)
+                else -> throw IllegalArgumentException("Invalid webview message target: ${message.target}")
             }
         } catch (e: Exception) {
             logger.error(e)
             e.printStackTrace()
+            if (message.id != null) {
+                webViewService.postResponse(message.id, null, e.message)
+            }
         }
     }
 
-    private suspend fun processRequest(bodyElement: JsonElement?) {
-        if (bodyElement == null || bodyElement.isJsonNull) {
-            return
+    private suspend fun processAgentMessage(message: WebViewMessage) {
+        val response = agentService.remoteEndpoint.request(message.method, message.params).await()
+        if (message.id != null) {
+            webViewService.postResponse(message.id, response)
+        }
+    }
+
+    private suspend fun processHostMessage(message: WebViewMessage) {
+        val response = when (message.method) {
+            "host/bootstrap" -> bootstrap()
+            "host/login" -> login(message)
+            "host/didInitialize" -> Unit
+            "host/logout" -> logout()
+            "host/slack/login" -> slackLogin(message)
+//            "host/signup" -> Unit
+            "host/signup/complete" -> signupComplete(message)
+            "host/context/didChange" -> contextDidChange(message)
+//            "host/webview/reload" -> Unit
+//            "host/marker/compare" -> Unit
+//            "host/marker/apply" -> Unit
+            "host/configuration/update" -> configurationUpdate(message)
+            "host/editor/range/highlight" -> editorRangeHighlight(message)
+            "host/editor/range/reveal" -> editorRangeReveal(message)
+            else -> logger.warn("Unhandled host message ${message.method}")
+        }
+        if (message.id != null) {
+            webViewService.postResponse(message.id, response, null)
+        }
+    }
+
+    private suspend fun bootstrap(): Any {
+        if (!sessionService.isSignedIn) {
+            return SignedOutBootstrapResponse(
+                Capabilities(false, false, false, false, Services(false)),
+                mapOf("email" to settingsService.email),
+                settingsService.environment,
+                "6.6.6"
+            )
+        } else {
+//            agentService.agent.login(L)
+//            authenticationService
+//            val foo = jsonObject()
+//            foo.
+        }
+        TODO("not implemented")
+
+    }
+
+    private suspend fun login(message: WebViewMessage): JsonElement {
+        val params = gson.fromJson<LoginRequest>(message.params!!)
+        val loginResponse = agentService.agent.login(
+            LoginWithPasswordParams(
+            params.email,
+            params.password,
+            settingsService.serverUrl,
+            settingsService.extensionInfo,
+            settingsService.ideInfo,
+            settingsService.traceLevel,
+            settingsService.isDebugging
+        )
+        ).await()
+
+        val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())
+
+        sessionService.userLoggedIn = loginResponse.result.userLoggedIn
+        editorService.updateMarkers()
+
+        val webViewResponse = SignedInBootstrapResponse(
+            Capabilities(
+                false,
+                false,
+                false,
+                true,
+                Services(false)
+            ),
+            Configs(
+                settingsService.serverUrl,
+                settingsService.email,
+                settingsService.openCommentOnSelect,
+                settingsService.showHeadshots,
+                settingsService.showMarkers,
+                settingsService.viewCodemarksInline,
+                settingsService.muteAll,
+                settingsService.team,
+                settingsService.isDebugging
+            ),
+            settingsService.environment,
+            settingsService.environmentVersion,
+            WebViewContext(
+                sessionService.userLoggedIn!!.team.id,
+                settingsService.currentStreamId,
+                settingsService.threadId,
+                true
+            ),
+            EditorContext(
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            ),
+            UserSession(
+                sessionService.userLoggedIn!!.state.userId
+            )
+        )
+
+        val webViewResponseJson = gson.toJsonTree(webViewResponse)
+        val bootstrapResponse = bootstrapFuture.await()
+
+        for ((key, value) in bootstrapResponse.obj.entrySet()) {
+            webViewResponseJson[key] = value
         }
 
-        val body = bodyElement.asJsonObject
-        val action = body.get("action").asString
-        val id = body.get("id").asString
-        val params = body.get("params")
+        return webViewResponseJson
+    }
 
-        when (action) {
-            "bootstrap" -> authenticationService.bootstrap(id)
-            "authenticate" -> authenticationService.authenticate(
-                id,
-                params["email"].nullString,
-                params["password"].nullString
+    private fun slackLogin(message: WebViewMessage) {
+        BrowserUtil.browse("${settingsService.webAppUrl}/service-auth/slack?state=${sessionService.signupToken}")
+    }
+
+    private fun logout() {
+        // TODO credentialService - delete credentials
+        sessionService.userLoggedIn = null
+        agentService.agent.logout(LogoutParams())
+        webViewService.reload()
+    }
+
+    private suspend fun signupComplete(message: WebViewMessage): JsonElement {
+//        val token = if (!signupToken.isNullOrBlank())
+//            signupToken
+//        else
+//            sessionService.signupToken
+        val token = sessionService.signupToken
+        val loginResponse = agentService.agent.login(LoginWithSignupTokenParams(
+            token,
+            settingsService.serverUrl,
+            settingsService.extensionInfo,
+            settingsService.ideInfo,
+            settingsService.traceLevel,
+            settingsService.isDebugging
+        )).await()
+
+        loginResponse.result.error?.let {
+            throw Exception(it)
+        }
+
+        val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())
+
+        sessionService.userLoggedIn = loginResponse.result.userLoggedIn
+        editorService.updateMarkers()
+
+        val webViewResponse = SignedInBootstrapResponse(
+            Capabilities(
+                false,
+                false,
+                false,
+                true,
+                Services(false)
+            ),
+            Configs(
+                settingsService.serverUrl,
+                settingsService.email,
+                settingsService.openCommentOnSelect,
+                settingsService.showHeadshots,
+                settingsService.showMarkers,
+                settingsService.viewCodemarksInline,
+                settingsService.muteAll,
+                settingsService.team,
+                settingsService.isDebugging
+            ),
+            settingsService.environment,
+            settingsService.environmentVersion,
+            WebViewContext(
+                sessionService.userLoggedIn!!.team.id,
+                settingsService.currentStreamId,
+                settingsService.threadId,
+                true
+            ),
+            EditorContext(
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            ),
+            UserSession(
+                sessionService.userLoggedIn!!.state.userId
             )
-            "go-to-signup" -> authenticationService.goToSignup(id)
-            "go-to-slack-signin" -> authenticationService.goToSlackSignin(id)
-            "validate-signup" -> authenticationService.validateSignup(id, params?.asString)
-            "show-markers" -> Unit
-            "open-comment-on-select" -> Unit
-            "mute-all" -> Unit
-            "show-code" -> showCode(id, params)
-            "sign-out" -> authenticationService.signout()
-            else -> agentService.sendRequest(id, action, params)
+        )
+
+        val webViewResponseJson = gson.toJsonTree(webViewResponse)
+        val bootstrapResponse = bootstrapFuture.await()
+
+        for ((key, value) in bootstrapResponse.obj.entrySet()) {
+            webViewResponseJson[key] = value
+        }
+
+        return webViewResponseJson
+    }
+
+    private fun contextDidChange(message: WebViewMessage) {
+        val notification = gson.fromJson<ContextDidChangeNotification>(message.params!!)
+        settingsService.apply {
+            currentStreamId = notification.context.currentStreamId
+            threadId = notification.context.threadId
+        }
+    }
+
+    private fun configurationUpdate(message: WebViewMessage): Any {
+        val notification = gson.fromJson<UpdateConfigurationRequest>(message.params!!)
+        println("${notification.name} -> ${notification.value}")
+        webViewService.postNotification(
+            "webview/config/didChange",
+            jsonObject(notification.name to (notification.value == "true"))
+        )
+        return emptyMap<String, String>()
+    }
+
+    fun editorRangeHighlight(message: WebViewMessage) {
+        val request = gson.fromJson<EditorRangeHighlightRequest>(message.params!!)
+        editorService.toggleRangeHighlight(request.range, request.highlight)
+    }
+
+    fun editorRangeReveal(message: WebViewMessage) {
+        val request = gson.fromJson<EditorRangeRevealRequest>(message.params!!)
+        val virtualFile = LocalFileSystem.getInstance().findFileByIoFile(File(URI(request.uri))) ?: return
+        ApplicationManager.getApplication().invokeLater {
+            val editorManager = FileEditorManager.getInstance(project)
+            val line = request.range?.start?.line ?: 0
+            editorManager.openTextEditor(OpenFileDescriptor(project, virtualFile, line, 0), true)
         }
     }
 
@@ -80,72 +280,22 @@ class WebViewRouter(val project: Project) {
         val parser = JsonParser()
         val jsonObject = parser.parse(json).asJsonObject
 
-        val type = jsonObject.get("type").asString
-        val body = jsonObject.get("body")
+        val id = jsonObject.get("id").nullString
+        val method = jsonObject.get("method").string
+        val params = jsonObject.get("params")
+        val error = jsonObject.get("error").nullString
 
-        return WebViewMessage(type, body)
+        return WebViewMessage(id, method, params, error)
     }
 
-    private suspend fun showCode(id: String, params: JsonElement) {
-        val marker = params["marker"]
-        val file = marker["file"].string
-        val repoId = marker["repoId"].string
-        val id = marker["id"].string
-//        val source = params.obj.get("source").nullString
-
-
-        val result = agentService.getDocumentFromMarker(file, repoId, id)
-        // TODO sanitize uri
-        val virtualFile = LocalFileSystem.getInstance().findFileByIoFile(File(URI(result.textDocument?.uri)))
-        if (virtualFile != null) {
-            ApplicationManager.getApplication().invokeLater {
-                val editorManager = FileEditorManager.getInstance(project)
-                val line = result.range?.start?.line ?: 0
-                editorManager.openTextEditor(OpenFileDescriptor(project, virtualFile, line, 0), true)
-//                val editor = editorManager.openFile(virtualFile, true, true)[0]
-//                editor.
-                webViewService.postResponse(id, "SUCCESS")
-//                SUCCESS,
-//                FILE_NOT_FOUND,
-//                REPO_NOT_IN_WORKSPACE
-            }
-        } else {
-            webViewService.postResponse(id, "FILE_NOT_FOUND")
-        }
-
-
-//        println(result.textDocument?.uri)
-//        println(result.range)
-
-
-//        var showCodeResponse = message.Params.ToObject<ShowCodeResponse>();
-//
-//        var fromMarkerResponse = await _codeStreamAgent.GetDocumentFromMarkerAsync(
-//                new DocumentFromMarkerRequest
-//                        {
-//                            File = showCodeResponse.Marker.File,
-//                            RepoId = showCodeResponse.Marker.RepoId,
-//                            MarkerId = showCodeResponse.Marker.Id,
-//                            Source = showCodeResponse.Source
-//                        });
-//
-//        if (fromMarkerResponse?.TextDocument?.Uri != null)
-//        {
-//            var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
-//            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-//            if (ideService != null)
-//            {
-//                var editorResponse = ideService.OpenEditor(
-//                    fromMarkerResponse.TextDocument.Uri.ToUri(),
-//                    fromMarkerResponse.Range?.Start?.Line + 1);
-//
-//                _browserService.PostMessage(Ipc.ToResponseMessage(message.Id, editorResponse.ToString()));
-//            }
-//        }
+    class WebViewMessage(
+        val id: String?,
+        val method: String,
+        val params: JsonElement?,
+        val error: String?
+    ) {
+        val target: String = method.split("/")[0]
     }
-
-
-    class WebViewMessage(val type: String, val body: JsonElement?)
 
 }
 

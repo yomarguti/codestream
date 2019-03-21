@@ -1,4 +1,4 @@
-package com.codestream
+package com.codestream.editor
 
 import com.intellij.openapi.vfs.VirtualFile
 import java.net.URL

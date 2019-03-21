@@ -1,10 +1,8 @@
 package com.codestream
 
-import com.github.salomonbrys.kotson.*
-import com.google.gson.JsonElement
-import com.google.gson.annotations.SerializedName
+import com.github.salomonbrys.kotson.fromJson
+import com.google.gson.JsonObject
 import com.intellij.execution.configurations.GeneralCommandLine
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
@@ -14,28 +12,18 @@ import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.RemoteEndpoint
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.launch.LSPLauncher
+import protocols.agent.DocumentMarkersParams
+import protocols.agent.DocumentMarkersResult
 import java.io.File
-import kotlin.collections.set
 
 
-class AgentService(private val project: Project) {
+class AgentService(private val project: Project) : ServiceConsumer(project) {
 
     private val logger = Logger.getInstance(AgentService::class.java)
-    private val connectedEditors = mutableMapOf<String, Editor>()
 
     lateinit var initializeResult: InitializeResult
-    lateinit var server: CodeStreamLanguageServer
+    lateinit var agent: CodeStreamLanguageServer
     lateinit var remoteEndpoint: RemoteEndpoint
-
-    val settingsService: SettingsService by lazy {
-        ServiceManager.getService(project, SettingsService::class.java)
-    }
-    val sessionService: SessionService by lazy {
-        ServiceManager.getService(project, SessionService::class.java)
-    }
-    val webViewService: WebViewService by lazy {
-        ServiceManager.getService(project, WebViewService::class.java)
-    }
 
     val capabilities: ServerCapabilities by lazy {
         initializeResult.capabilities
@@ -81,10 +69,10 @@ class AgentService(private val project: Project) {
                 .setOutput(process.outputStream)
                 .create()
 
-            server = launcher.remoteProxy
+            agent = launcher.remoteProxy
             remoteEndpoint = launcher.remoteEndpoint
             launcher.startListening()
-            initializeResult = server.initialize(getInitializeParams()).get()
+            initializeResult = agent.initialize(getInitializeParams()).get()
         } catch (e: Exception) {
             logger.error(e)
             e.printStackTrace()
@@ -122,173 +110,158 @@ class AgentService(private val project: Project) {
         )
     }
 
-    suspend fun sendRequest(id: String, action: String, params: JsonElement?) {
-        val result = remoteEndpoint.request(action, params).await()
-        webViewService.postResponse(id, result, null)
+
+//    suspend fun sendRequest(id: String, action: String, params: JsonElement?) {
+//        val result = remoteEndpoint.request(action, params).await()
+//        webViewService.postResponse(id, result, null)
+//    }
+
+//    suspend fun getBootstrapState(): BootstrapState {
+//        val state = BootstrapState()
+
+//        if (!sessionService.isSignedIn) {
+//            return state.apply {
+//                capabilities = Capabilities(false, false, false, Services(false)) // state?[]
+//                configs = Configs().apply {
+//                    email = settingsService.email
+//                }
+//                env = settingsService.environmentName
+//                version = settingsService.environmentVersion
+//            }
+//        }
+
+//        val reposFuture = agent.fetchRepos(FetchReposParams())
+//        val streamsFuture = agent.fetchStreams(FetchStreamsParams())
+//        val teamsFuture = agent.fetchTeams(FetchTeamsParams())
+//        val usersFuture = agent.fetchUsers(FetchUsersParams())
+//        val unreadsFuture = agent.getUnreads(GetUnreadsParams())
+//        val preferencesFuture = agent.getPreferences(GetPreferencesParams())
+//
+//        state.apply {
+//            capabilities = Capabilities(false, false, false, Services(false)) // state?[]
+//
+//            configs = Configs().apply {
+//                debug = true
+//                email = settingsService.email
+//                muteAll = false
+//                serverUrl = settingsService.serverUrl
+//                showHeadshots = settingsService.showHeadshots
+//                showMarkers = settingsService.showMarkers
+//                openCommentOnSelect = settingsService.openCommentOnSelect
+//            }
+//
+//            currentUserId = sessionService.userLoggedIn!!.state.userId
+//            currentTeamId = sessionService.userLoggedIn!!.state.teamId
+//            env = settingsService.environmentName
+//            version = settingsService.environmentVersion
+//
+//            repos = reposFuture.await().repos
+//            streams = streamsFuture.await().streams
+//            teams = teamsFuture.await().teams
+//            unreads = unreadsFuture.await().unreads
+//            users = usersFuture.await().users
+//            preferences = preferencesFuture.await().preferences
+//        }
+//
+//        return state
+//    }
+
+//    suspend fun login(email: String?, password: String?): LoginResult {
+//        val params = initializationOptions()
+//        params["email"] = email
+//        params["passwordOrToken"] = password
+//        return login(params)
+//    }
+//
+//    suspend fun loginViaOneTimeCode(token: String): LoginResult {
+//        val params = initializationOptions()
+//        params["signupToken"] = token
+//        return login(params)
+//    }
+//
+//    private suspend fun login(params: Map<String, Any?>): LoginResult {
+//        val jsonElement = agent.login(params).await()
+//        return LoginResult(jsonElement)
+//    }
+//
+//    suspend fun logout() {
+//        agent.logout(LogoutParams()).await()
+//    }
+//
+//    suspend fun getDocumentFromMarker(file: String, repoId: String, markerId: String): DocumentFromMarkerResult {
+//        val params = DocumentFromMarkerParams(file, repoId, markerId)
+//        return agent.documentFromMarker(params).await()
+//    }
+
+    //    @JsonRequest("codestream/textDocument/markers")
+    suspend fun documentMarkers(params: DocumentMarkersParams): DocumentMarkersResult {
+        val json = remoteEndpoint
+            .request("codestream/textDocument/markers", params)
+            .await() as JsonObject
+        return gson.fromJson(json)
     }
-
-    suspend fun getBootstrapState(): BootstrapState {
-        val state = BootstrapState()
-
-        if (!sessionService.isSignedIn) {
-            return state.apply {
-                capabilities = Capabilities(false, false, false, Services(false)) // state?[]
-                configs = Configs().apply {
-                    email = settingsService.email
-                }
-                env = settingsService.environmentName
-                version = settingsService.environmentVersion
-            }
-        }
-
-        val reposFuture = server.fetchRepos(FetchReposParams())
-        val streamsFuture = server.fetchStreams(FetchStreamsParams())
-        val teamsFuture = server.fetchTeams(FetchTeamsParams())
-        val usersFuture = server.fetchUsers(FetchUsersParams())
-        val unreadsFuture = server.getUnreads(GetUnreadsParams())
-        val preferencesFuture = server.getPreferences(GetPreferencesParams())
-
-        state.apply {
-            capabilities = Capabilities(false, false, false, Services(false)) // state?[]
-
-            configs = Configs().apply {
-                debug = true
-                email = settingsService.email
-                muteAll = false
-                serverUrl = settingsService.serverUrl
-                showHeadshots = settingsService.showHeadshots
-                showMarkers = settingsService.showMarkers
-                openCommentOnSelect = settingsService.openCommentOnSelect
-            }
-
-            currentUserId = sessionService.userLoggedIn!!.state.userId
-            currentTeamId = sessionService.userLoggedIn!!.state.teamId
-            env = settingsService.environmentName
-            version = settingsService.environmentVersion
-
-            repos = reposFuture.await().repos
-            streams = streamsFuture.await().streams
-            teams = teamsFuture.await().teams
-            unreads = unreadsFuture.await().unreads
-            users = usersFuture.await().users
-            preferences = preferencesFuture.await().preferences
-        }
-
-        return state
-    }
-
-    suspend fun login(email: String?, password: String?): LoginResult {
-        val params = initializationOptions()
-        params["email"] = email
-        params["passwordOrToken"] = password
-        return login(params)
-    }
-
-    suspend fun loginViaOneTimeCode(token: String): LoginResult {
-        val params = initializationOptions()
-        params["signupToken"] = token
-        return login(params)
-    }
-
-    private suspend fun login(params: Map<String, Any?>): LoginResult {
-        val jsonElement = server.login(params).await()
-        return LoginResult(jsonElement)
-    }
-
-    suspend fun logout() {
-        server.logout(LogoutParams()).await()
-    }
-
-    suspend fun getDocumentFromMarker(file: String, repoId: String, markerId: String): DocumentFromMarkerResult {
-        val params = DocumentFromMarkerParams(file, repoId, markerId)
-        return server.documentFromMarker(params).await()
-    }
-
-    suspend fun documentMarkers(file: String): DocumentMarkersResult? {
-        if (sessionService.userLoggedIn == null) {
-            return null
-        }
-        val params = DocumentMarkersParams(TextDocument(file))
-        return server.documentMarkers(params).await()
-    }
+//
+//    suspend fun documentMarkers(file: String): DocumentMarkersResult? {
+//        if (sessionService.userLoggedIn == null) {
+//            return null
+//        }
+//        val params = DocumentMarkersParams(TextDocument(file))
+//        return agent.documentMarkers(params).await()
+//    }
 
 }
 
-class LoginResult(private val jsonElement: JsonElement) {
-    val userLoggedIn: UserLoggedIn
-        get() {
-            val team = teams.find { it.id == teamId }
-            return UserLoggedIn(user, team!!, state, teams.size)
-        }
+//class LoginResult(private val jsonElement: JsonElement) {
+//    val userLoggedIn: UserLoggedIn
+//        get() {
+//            val team = teams.find { it.id == teamId }
+//            return UserLoggedIn(user, team!!, state, teams.size)
+//        }
+//
+//    val error: String?
+//        get() {
+//            return jsonElement["result"].obj.get("error")?.nullString
+//        }
+//
+//    private val state: LoginState by lazy {
+//        var stateJson = jsonElement["result"]["state"]
+//        gson.fromJson<LoginState>(stateJson)
+//    }
+//
+//    private val user: CSUser by lazy {
+//        val userJson = jsonElement["result"]["loginResponse"]["user"]
+//        gson.fromJson<CSUser>(userJson)
+//    }
+//
+//    private val teamId: String by lazy {
+//        jsonElement["result"]["loginResponse"]["teamId"].string
+//    }
+//
+//    private val teams: List<CSTeam> by lazy {
+//        val teamsJson = jsonElement["result"]["loginResponse"]["teams"]
+//        gson.fromJson<List<CSTeam>>(teamsJson)
+//    }
+//}
+//
+//class LoginState {
+//    lateinit var userId: String
+//    lateinit var teamId: String
+//    lateinit var email: String
+//}
 
-    val error: String?
-        get() {
-            return jsonElement["result"].obj.get("error")?.nullString
-        }
 
-    private val state: LoginState by lazy {
-        var stateJson = jsonElement["result"]["state"]
-        gson.fromJson<LoginState>(stateJson)
-    }
-
-    private val user: CSUser by lazy {
-        val userJson = jsonElement["result"]["loginResponse"]["user"]
-        gson.fromJson<CSUser>(userJson)
-    }
-
-    private val teamId: String by lazy {
-        jsonElement["result"]["loginResponse"]["teamId"].string
-    }
-
-    private val teams: List<CSTeam> by lazy {
-        val teamsJson = jsonElement["result"]["loginResponse"]["teams"]
-        gson.fromJson<List<CSTeam>>(teamsJson)
-    }
-}
-
-class LoginState {
-    lateinit var userId: String
-    lateinit var teamId: String
-    lateinit var email: String
-}
-
-class UserLoggedIn(val user: CSUser, val team: CSTeam, val state: LoginState, val teamsCount: Int)
-
-class CSUser {
-    @SerializedName("_id")
-    lateinit var id: String
-    lateinit var username: String
-    lateinit var email: String
-}
-
-class CSTeam {
-    @SerializedName("_id")
-    lateinit var id: String
-    lateinit var name: String
-}
-
-class BootstrapState {
-    var capabilities: Capabilities? = null
-    var configs: Configs? = null
-    var env: String? = null
-    var version: String? = null
-    var currentTeamId: String? = null
-    var currentUserId: String? = null
-    var repos: Array<Any>? = null
-    var streams: Array<Any>? = null
-    var teams: Array<Any>? = null
-    var users: Array<Any>? = null
-    var unreads: Map<String, Any>? = null
-    var preferences: Map<String, Any>? = null
-}
-
-class Configs {
-    var serverUrl: String? = null
-    var email: String? = null
-    var openCommentOnSelect: Boolean? = null
-    var showHeadshots: Boolean? = null
-    var showMarkers: Boolean? = null
-    var muteAll: Boolean? = null
-    var team: String? = null
-    var debug: Boolean? = null
-}
+//class BootstrapState {
+//    var capabilities: Capabilities? = null
+//    var configs: Configs? = null
+//    var env: String? = null
+//    var version: String? = null
+//    var currentTeamId: String? = null
+//    var currentUserId: String? = null
+//    var repos: Array<Any>? = null
+//    var streams: Array<Any>? = null
+//    var teams: Array<Any>? = null
+//    var users: Array<Any>? = null
+//    var unreads: Map<String, Any>? = null
+//    var preferences: Map<String, Any>? = null
+//}
+//

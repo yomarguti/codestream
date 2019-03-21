@@ -12,10 +12,10 @@
         <projectService serviceImplementation="com.codestream.AgentService"/>
         <projectService serviceImplementation="com.codestream.AuthenticationService"/>
         <projectService serviceImplementation="com.codestream.CredentialsService"/>
-        <projectService serviceImplementation="com.codestream.EditorManagerService"/>
         <projectService serviceImplementation="com.codestream.SettingsService"/>
         <projectService serviceImplementation="com.codestream.SessionService"/>
         <projectService serviceImplementation="com.codestream.WebViewService"/>
+        <projectService serviceImplementation="com.codestream.editor.EditorService"/>
     </extensions>
 
     <project-components>
@@ -25,9 +25,35 @@
     </project-components>
 
     <actions>
-        <!-- Add your actions here -->
+        <group id="com.codestream.Actions" popup="true" text="CodeStream" icon="/images/codestream.svg">
+            <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="Git"/>
+            <action id="CodeStream.AddComment" class="com.codestream.actions.AddComment" text="Add _Comment"
+                    description="Add comment" icon="/images/marker-comment.svg">
+                <keyboard-shortcut keymap="$default" first-keystroke="control SLASH" second-keystroke="C"/>
+                <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="C"
+                                   replace-all="true"/>
+            </action>
+            <action id="CodeStream.CreateIssue" class="com.codestream.actions.CreateIssue" text="Create _Issue"
+                    description="Create issue" icon="/images/marker-issue.svg">
+                <keyboard-shortcut keymap="$default" first-keystroke="control SLASH" second-keystroke="I"/>
+                <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="I"
+                                   replace-all="true"/>
+            </action>
+            <action id="CodeStream.CreateBookmark" class="com.codestream.actions.CreateBookmark" text="Create _Bookmark"
+                    description="Add comment" icon="/images/marker-bookmark.svg">
+                <keyboard-shortcut keymap="$default" first-keystroke="control SLASH" second-keystroke="B"/>
+                <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="B"
+                                   replace-all="true"/>
+            </action>
+            <action id="CodeStream.GetPermalink" class="com.codestream.actions.GetPermalink" text="Get _Permalink"
+                    description="Get permalink">
+                <keyboard-shortcut keymap="$default" first-keystroke="control SLASH" second-keystroke="P"/>
+                <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="P"
+                                   replace-all="true"/>
+            </action>
+        </group>
     </actions>
 
     <depends>com.intellij.modules.platform</depends>
-    <idea-version since-build="183" />
+    <idea-version since-build="183"/>
 </idea-plugin>
