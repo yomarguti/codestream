@@ -7,10 +7,7 @@ const DID_CHANGE_EDITOR = "did-change-editor";
 export class WorkspaceEditorObserver implements Disposable {
 	private subscriptions: CompositeDisposable;
 	private emitter = new Emitter();
-	private _disposed = false;
-	get disposed() {
-		return this._disposed;
-	}
+	private highlights = new Map<number, Disposable>();
 
 	constructor() {
 		this.subscriptions = new CompositeDisposable();
@@ -55,9 +52,47 @@ export class WorkspaceEditorObserver implements Disposable {
 		return this.emitter.on(DID_CHANGE_EDITOR, cb);
 	}
 
+	async highlight(enable: boolean, file: string, range: Range) {
+		const editor = (await atom.workspace.open(file)) as TextEditor | undefined;
+		if (editor) {
+			if (enable) {
+				// editor.setCursorBufferPosition(range.start);
+				editor.scrollToBufferPosition(range.start, {
+					center: true,
+				});
+				const marker = editor.markBufferRange(range, {
+					invalidate: "never",
+				});
+				editor.decorateMarker(marker, {
+					type: "highlight",
+					class: "codestream-highlight",
+				});
+
+				this.highlights.set(
+					(marker as any).id,
+					new CompositeDisposable(
+						new Disposable(() => {
+							marker.destroy();
+						}),
+						editor.onDidChangeSelectionRange(() => this.removeHighlight((marker as any).id))
+					)
+				);
+			} else {
+				editor.findMarkers({ containsBufferRange: range }).forEach(marker => {
+					this.removeHighlight((marker as any).id);
+				});
+			}
+		}
+	}
+
+	private removeHighlight(markerId: number) {
+		const disposable = this.highlights.get(markerId);
+		disposable && disposable.dispose();
+	}
+
 	dispose() {
 		this.subscriptions.dispose();
 		this.emitter.dispose();
-		this._disposed = true;
+		this.highlights.forEach(highlight => highlight.dispose());
 	}
 }

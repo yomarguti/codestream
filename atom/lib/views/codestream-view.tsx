@@ -2,6 +2,7 @@ import {
 	BootstrapRequestType as WebviewBootstrapRequestType,
 	BootstrapResponse,
 	CompleteSignupRequestType,
+	EditorHighlightRangeRequestType,
 	HostDidChangeActiveEditorNotification,
 	HostDidChangeActiveEditorNotificationType,
 	HostDidChangeConfigNotificationType,
@@ -340,6 +341,15 @@ export class CodestreamView {
 				const { name, value }: UpdateConfigurationRequest = message.params;
 				this.session.configManager.set(name as any, value);
 				this.respond<UpdateConfigurationResponse>({ id: message.id, params: {} });
+				break;
+			}
+			case EditorHighlightRangeRequestType.method: {
+				const { uri, highlight, range } = message.params;
+				this.editorSelectionObserver!.highlight(
+					highlight,
+					Convert.uriToPath(uri),
+					Convert.lsRangeToAtomRange(range)
+				);
 				break;
 			}
 			// case ReloadWebviewRequestType.method: {
