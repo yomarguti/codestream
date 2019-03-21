@@ -55,7 +55,6 @@ import {
 	ConfigurationChangeEvent,
 	ConfigurationTarget,
 	Disposable,
-	TextDocument,
 	TextEditor,
 	TextEditorSelectionChangeEvent,
 	TextEditorVisibleRangesChangeEvent,
@@ -376,7 +375,8 @@ export class WebviewController implements Disposable {
 		webview.notify(HostDidChangeEditorSelectionNotificationType, {
 			uri: e.textEditor.document.uri.toString(),
 			selections: Editor.toEditorSelections(e.selections),
-			visibleRanges: Editor.toSerializableRange(e.textEditor.visibleRanges)
+			visibleRanges: Editor.toSerializableRange(e.textEditor.visibleRanges),
+			lineCount: e.textEditor.document.lineCount
 		});
 	}
 
@@ -392,7 +392,8 @@ export class WebviewController implements Disposable {
 		webview.notify(HostDidChangeEditorVisibleRangesNotificationType, {
 			uri: uri.toString(),
 			selections: Editor.toEditorSelections(e.textEditor.selections),
-			visibleRanges: Editor.toSerializableRange(e.visibleRanges)
+			visibleRanges: Editor.toSerializableRange(e.visibleRanges),
+			lineCount: e.textEditor.document.lineCount
 		});
 	}
 
@@ -774,7 +775,8 @@ export class WebviewController implements Disposable {
 				languageId: e.document.languageId,
 				metrics: Editor.getMetrics(),
 				selections: Editor.toEditorSelections(e.selections),
-				visibleRanges: Editor.toSerializableRange(e.visibleRanges)
+				visibleRanges: Editor.toSerializableRange(e.visibleRanges),
+				lineCount: e.document.lineCount
 			}
 		});
 	}
