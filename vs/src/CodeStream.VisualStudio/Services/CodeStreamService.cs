@@ -27,6 +27,7 @@ namespace CodeStream.VisualStudio.Services
         Task EditorSelectionChangedNotificationAsync(Uri uri,
             EditorState editorState,
             List<Range> visibleRanges,
+            int? totalLines,
             CodemarkType codemarkType,
             CancellationToken? cancellationToken = null);
         Task OpenCommentByThreadAsync(string streamId, string threadId);
@@ -96,7 +97,8 @@ namespace CodeStream.VisualStudio.Services
                         Editor = new HostDidChangeActiveEditorNotificationEditor(fileName,
                         uri,
                         editorState.ToEditorSelections(),
-                        activeTextView?.TextView.ToVisibleRanges())
+                        activeTextView?.TextView.ToVisibleRanges(),
+                        activeTextView?.TotalLines)
                         {
                             Metrics = ThemeManager.CreateEditorMetrics(activeTextView?.TextView),
                             LanguageId = null
@@ -135,7 +137,7 @@ namespace CodeStream.VisualStudio.Services
         }
 
         public Task EditorSelectionChangedNotificationAsync(Uri uri, EditorState editorState,
-            List<Range> visibleRanges, CodemarkType codemarkType, CancellationToken? cancellationToken = null)
+            List<Range> visibleRanges, int? totalLines, CodemarkType codemarkType, CancellationToken? cancellationToken = null)
         {
             if (!IsReady) return Task.CompletedTask;
 
@@ -143,7 +145,7 @@ namespace CodeStream.VisualStudio.Services
             {
                 WebviewIpc.Notify(new HostDidChangeEditorSelectionNotificationType
                 {
-                    Params = new HostDidChangeEditorSelectionNotification(uri, editorState.ToEditorSelections(), visibleRanges)
+                    Params = new HostDidChangeEditorSelectionNotification(uri, editorState.ToEditorSelections(), visibleRanges, totalLines)
                 });
             }
             catch (Exception ex)

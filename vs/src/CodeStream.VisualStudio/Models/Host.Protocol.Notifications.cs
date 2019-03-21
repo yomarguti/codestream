@@ -6,20 +6,23 @@ namespace CodeStream.VisualStudio.Models
 {
     public class HostDidChangeActiveEditorNotificationEditor
     {
-        public HostDidChangeActiveEditorNotificationEditor(string fileName, Uri uri, List<EditorSelection> selections, List<Range> visibleRanges)
+        public HostDidChangeActiveEditorNotificationEditor(string fileName, Uri uri, List<EditorSelection> selections, List<Range> visibleRanges, int? lineCount)
         {
             FileName = fileName;
             Uri = uri.ToString();
             Selections = selections;
             VisibleRanges = visibleRanges;
+            LineCount = lineCount;
         }
 
         public string FileName { get; }
-        public string LanguageId { get; set; }
         public string Uri { get; }
-        public EditorMetrics Metrics { get; set; }
         public List<EditorSelection> Selections { get; }
         public List<Range> VisibleRanges { get; }
+        public int? LineCount { get;  }
+
+        public string LanguageId { get; set; }
+        public EditorMetrics Metrics { get; set; }
     }
 
     public class HostDidChangeActiveEditorNotification
@@ -51,16 +54,18 @@ namespace CodeStream.VisualStudio.Models
 
     public class HostDidChangeEditorSelectionNotification
     {
-        public HostDidChangeEditorSelectionNotification(Uri uri, List<EditorSelection> selections, List<Range> visibleRanges)
+        public HostDidChangeEditorSelectionNotification(Uri uri, List<EditorSelection> selections, List<Range> visibleRanges, int? lineCount)
         {
             Uri = uri.ToString();
             Selections = selections;
             VisibleRanges = visibleRanges;
+            LineCount = lineCount;
         }
 
         public string Uri { get; }
         public List<EditorSelection> Selections { get; }
         public List<Range> VisibleRanges { get; }
+        public int? LineCount { get; }
     }
 
     public class HostDidChangeEditorSelectionNotificationType : NotificationType<HostDidChangeEditorSelectionNotification>
@@ -71,16 +76,18 @@ namespace CodeStream.VisualStudio.Models
 
     public class HostDidChangeEditorVisibleRangesNotification
     {
-        public HostDidChangeEditorVisibleRangesNotification(Uri uri, List<EditorSelection> selections, List<Range> visibleRanges)
+        public HostDidChangeEditorVisibleRangesNotification(Uri uri, List<EditorSelection> selections, List<Range> visibleRanges, int? lineCount)
         {
             Uri = uri.ToString();
             Selections = selections;
             VisibleRanges = visibleRanges;
+            LineCount = lineCount;
         }
 
         public string Uri { get; }
         public List<EditorSelection> Selections { get; }
         public List<Range> VisibleRanges { get; }
+        public int? LineCount { get;  }
     }
 
     public class HostDidChangeEditorVisibleRangesNotificationType : NotificationType<HostDidChangeEditorVisibleRangesNotification>

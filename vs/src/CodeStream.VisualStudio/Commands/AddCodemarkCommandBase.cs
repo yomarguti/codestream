@@ -41,7 +41,7 @@ namespace CodeStream.VisualStudio.Commands
             if (wpfTextView == null) return;
 
             if (!exports.GetExportedValue<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument)) return;
-
+            
             ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
                 await codeStreamService.NewCodemarkAsync(new Uri(textDocument.FilePath), selectedText, CodemarkType, cancellationToken: CancellationToken.None);

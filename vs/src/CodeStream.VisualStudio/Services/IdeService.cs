@@ -93,21 +93,15 @@ namespace CodeStream.VisualStudio.Services
                 }
 
                 var exports = _componentModel.DefaultExportProvider;
-                if (!exports.GetExportedValue<ITextDocumentFactoryService>()
-                    .TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument))
+                if (!exports.GetExportedValue<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument))
                 {
-                    return new ActiveTextEditor
-                    {
-                        TextView = wpfTextView
-                    };
+                    return null;
                 }
 
-                return new ActiveTextEditor
-                {
-                    TextView = wpfTextView,
-                    Uri = textDocument.FilePath.ToUri(),
-                    FilePath = textDocument.FilePath
-                };
+                return new ActiveTextEditor(wpfTextView, 
+                    textDocument.FilePath, 
+                    textDocument.FilePath.ToUri(), 
+                    wpfTextView.TextSnapshot.LineCount);
             }
             catch (Exception ex)
             {
@@ -206,7 +200,7 @@ namespace CodeStream.VisualStudio.Services
                 view.GetCaretPos(out int piLine, out int piColumn);
                 view.GetSelection(out int startLine, out int startColumn, out int endLine, out int endColumn);
                 view.GetSelectedText(out string selectedText);
-
+                
                 // end could be before beginning...
                 return new EditorState(
                     new Range

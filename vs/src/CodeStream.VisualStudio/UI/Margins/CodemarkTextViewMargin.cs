@@ -181,6 +181,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                                     new Uri(_textDocument.FilePath),
                                     activeEditorState,
                                     _textView.ToVisibleRanges(),
+                                    _textView?.TextSnapshot?.LineCount,
                                     CodemarkType.Comment, CancellationToken.None);
                             }));
 

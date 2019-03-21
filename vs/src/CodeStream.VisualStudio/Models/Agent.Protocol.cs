@@ -43,6 +43,7 @@ namespace CodeStream.VisualStudio.Models
         public string TextEditorUri { get; set; }
         public List<EditorSelection> TextEditorSelections { get; set; }
         public EditorMetrics Metrics { get; set; }
+        public int? TextEditorLineCount { get; set; }
     }
 
     public class UserSession

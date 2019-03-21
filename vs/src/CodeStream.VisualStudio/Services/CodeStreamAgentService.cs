@@ -372,7 +372,8 @@ namespace CodeStream.VisualStudio.Services
                     TextEditorVisibleRanges = activeTextView.TextView?.ToVisibleRanges(),
                     TextEditorUri = activeTextView.Uri.ToString(),
                     TextEditorSelections = editorState.ToEditorSelections(),
-                    Metrics = ThemeManager.CreateEditorMetrics(activeTextView.TextView)
+                    TextEditorLineCount = activeTextView.TotalLines,
+                    Metrics = ThemeManager.CreateEditorMetrics(activeTextView.TextView),
                 };
             }
 

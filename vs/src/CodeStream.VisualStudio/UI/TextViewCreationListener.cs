@@ -313,7 +313,9 @@ namespace CodeStream.VisualStudio.UI
                             Params = new HostDidChangeEditorVisibleRangesNotification(
                                 textDocument.FilePath.ToUri(),
                                 _ideService.GetActiveEditorState()?.ToEditorSelections(),
-                                wpfTextView.ToVisibleRanges())
+                                wpfTextView.ToVisibleRanges(),
+                                wpfTextView.TextSnapshot?.LineCount
+                            )
                         });
                 }
             }
