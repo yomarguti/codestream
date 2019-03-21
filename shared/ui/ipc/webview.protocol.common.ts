@@ -42,6 +42,7 @@ export interface EditorContext {
 	textEditorUri?: string;
 	textEditorSelections?: EditorSelection[];
 	metrics?: EditorMetrics;
+	textEditorLineCount?: number;
 }
 
 export interface IpcHost {

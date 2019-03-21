@@ -99,7 +99,8 @@ export function listenForEvents(store) {
 					textEditorUri: params.editor.uri,
 					textEditorVisibleRanges: params.editor.visibleRanges,
 					textEditorSelections: params.editor.selections,
-					metrics: params.editor.metrics
+					metrics: params.editor.metrics,
+					textEditorLineCount: params.editor.lineCount
 				})
 			);
 			store.dispatch(actions.setCurrentFile(params.editor.fileName));
@@ -123,7 +124,8 @@ export function listenForEvents(store) {
 			actions.setEditorContext({
 				textEditorUri: params.uri,
 				textEditorVisibleRanges: params.visibleRanges,
-				textEditorSelections: params.selections
+				textEditorSelections: params.selections,
+				textEditorLineCount: params.lineCount
 			})
 		);
 	});
@@ -133,7 +135,8 @@ export function listenForEvents(store) {
 			actions.setEditorContext({
 				textEditorUri: params.uri,
 				textEditorVisibleRanges: params.visibleRanges,
-				textEditorSelections: params.selections
+				textEditorSelections: params.selections,
+				textEditorLineCount: params.lineCount
 			})
 		);
 	});

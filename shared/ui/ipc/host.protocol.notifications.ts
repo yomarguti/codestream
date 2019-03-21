@@ -14,6 +14,7 @@ export interface HostDidChangeActiveEditorNotification {
 		metrics?: EditorMetrics;
 		selections: EditorSelection[];
 		visibleRanges: Range[];
+		lineCount?: number;
 	};
 }
 export const HostDidChangeActiveEditorNotificationType = new NotificationType<
@@ -31,6 +32,7 @@ export interface HostDidChangeEditorSelectionNotification {
 	uri: string;
 	selections: EditorSelection[];
 	visibleRanges: Range[];
+	lineCount?: number;
 }
 export const HostDidChangeEditorSelectionNotificationType = new NotificationType<
 	HostDidChangeEditorSelectionNotification,
@@ -41,6 +43,7 @@ export interface HostDidChangeEditorVisibleRangesNotification {
 	uri: string;
 	selections: EditorSelection[];
 	visibleRanges: Range[];
+	lineCount?: number;
 }
 export const HostDidChangeEditorVisibleRangesNotificationType = new NotificationType<
 	HostDidChangeEditorVisibleRangesNotification,
