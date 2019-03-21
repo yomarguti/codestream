@@ -607,16 +607,20 @@ export class SimpleInlineCodemarks extends Component {
 		}
 
 		if (markerId) {
-			const response = await HostApi.instance.send(DocumentFromMarkerRequestType, {
-				markerId: markerId
-			});
-			// TODO: What should we do if we don't find the marker? Is that possible?
-			if (response) {
-				HostApi.instance.send(EditorRevealRangeRequestType, {
-					uri: response.textDocument.uri,
-					range: response.range,
-					preserveFocus: true
+			try {
+				const response = await HostApi.instance.send(DocumentFromMarkerRequestType, {
+					markerId: markerId
 				});
+				// TODO: What should we do if we don't find the marker? Is that possible?
+				if (response) {
+					HostApi.instance.send(EditorRevealRangeRequestType, {
+						uri: response.textDocument.uri,
+						range: response.range,
+						preserveFocus: true
+					});
+				}
+			} catch (error) {
+				// TODO:
 			}
 		}
 		this.props.setCurrentStream(codemark.streamId, codemark.parentPostId || codemark.postId);
