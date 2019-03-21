@@ -25,7 +25,6 @@ import { Range } from "vscode-languageserver-types";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { getCurrentSelection } from "../store/editorContext/reducer";
 import { setCurrentStream } from "../store/context/actions";
-import { debounce } from "lodash-es";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -642,12 +641,11 @@ export class SimpleInlineCodemarks extends Component {
 		});
 	}
 
-	handleHighlightCodemark = debounce(marker => {
+	handleHighlightCodemark = marker => {
 		this.highlightCode(marker, true);
-	}, 250);
+	};
 
 	handleUnhighlightCodemark = marker => {
-		this.handleHighlightCodemark.cancel();
 		this.highlightCode(marker, false);
 	};
 
@@ -706,12 +704,11 @@ export class SimpleInlineCodemarks extends Component {
 		this.setState({ highlightedLine: highlight ? line0 : null });
 	}
 
-	handleHighlightLine = debounce(line0 => {
+	handleHighlightLine = line0 => {
 		this.highlightLine(line0, true);
-	}, 250);
+	};
 
 	handleUnhighlightLine = line0 => {
-		this.handleHighlightLine.cancel();
 		this.highlightLine(line0, false);
 	};
 }
