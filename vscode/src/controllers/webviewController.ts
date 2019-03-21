@@ -344,7 +344,7 @@ export class WebviewController implements Disposable {
 			configuration.changed(e, configuration.name("viewCodemarksInline").value)
 		) {
 			webview.notify(HostDidChangeConfigNotificationType, {
-				debug: Container.config.traceLevel === "debug",
+				debug: Logger.isDebugging,
 				muteAll: Container.config.muteAll,
 				showFeedbackSmiley: Container.config.showFeedbackSmiley,
 				showHeadshots: Container.config.showAvatars,
@@ -704,7 +704,7 @@ export class WebviewController implements Disposable {
 		const state: SignedInBootstrapResponse = {
 			capabilities: this.session.capabilities,
 			configs: {
-				debug: Container.config.traceLevel === "debug",
+				debug: Logger.isDebugging,
 				email: Container.config.email,
 				muteAll: Container.config.muteAll,
 				serverUrl: this.session.serverUrl,
