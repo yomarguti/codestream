@@ -282,11 +282,22 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	async loginViaSignupToken(serverUrl: string, token: string): Promise<AgentResult> {
-		const response = await this.start({
+		const options: Required<AgentOptions> = {
 			...this._clientOptions.initializationOptions,
 			serverUrl: serverUrl,
 			signupToken: token
-		});
+		};
+
+		const httpSettings = workspace.getConfiguration("http");
+		const proxy = httpSettings.get<string | undefined>("proxy", "");
+		if (proxy) {
+			options.proxy = {
+				url: proxy,
+				strictSSL: httpSettings.get<boolean>("proxyStrictSSL", true)
+			};
+		}
+
+		const response = await this.start(options);
 
 		if (response.result!.error) {
 			await this.stop();
