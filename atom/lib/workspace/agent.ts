@@ -6,6 +6,7 @@ import {
 	IPCMessageWriter,
 } from "atom-languageclient/node_modules/vscode-jsonrpc";
 import { ChildProcess, spawn } from "child_process";
+import * as fs from "fs";
 import {
 	ClientCapabilities,
 	LogMessageParams,
@@ -116,8 +117,6 @@ const capabilities: ClientCapabilities = {
 	},
 	experimental: {},
 };
-
-// TODO: build a log view
 
 abstract class AgentConnection {
 	private _connection: LanguageClientConnection | undefined;
@@ -311,9 +310,13 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 			})
 		);
 
-		connection.onLogMessage((params: LogMessageParams) => {
-			// console.debug(`CodeStream Agent: ${params.message}`);
+		fs.unlink(asAbsolutePath("agent.log"), error => {
+			if (error && !error.message.includes("no such file or directory")) {
+				console.error("CodeStream: error removing agent.log", error);
+			}
 		});
+
+		connection.onLogMessage(this.onLogMessage);
 		connection.onCustom(DidChangeDataNotificationType.method, event => {
 			this.emitter.emit(DATA_CHANGED, event);
 		});
@@ -325,6 +328,12 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 	protected onPrematureExit() {
 		this.emitter.emit(TERMINATED);
 		this.dispose();
+	}
+
+	private onLogMessage = (params: LogMessageParams) => {
+		fs.appendFile(asAbsolutePath("agent.log"), `${params.message}\n`, error => {
+			if (error) console.error("CodeStream: failed to write to agent.log", error);
+		});
 	}
 
 	onInitialized(cb: () => void): Disposable {
