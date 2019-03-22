@@ -151,9 +151,6 @@ export class CodestreamView {
 	}
 
 	private initializeWebview(iframe: HTMLIFrameElement) {
-		iframe.height = "100%";
-		iframe.width = "100%";
-		iframe.style.border = "none";
 		iframe.src = asAbsolutePath("dist/webview/index.html");
 
 		iframe.classList.add("webview");
