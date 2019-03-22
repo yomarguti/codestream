@@ -3,7 +3,7 @@ import { CodemarkType } from "@codestream/protocols/api";
 import { CompositeDisposable, Disposable } from "atom";
 import { Environment, PD_CONFIG } from "./env-utils";
 import { PackageState } from "./types/package";
-import { StatusBar, Tile } from "./types/package-services/status-bar";
+import { StatusBar } from "./types/package-services/status-bar";
 import { ViewController } from "./views/controller";
 import { MarkerDecorationProvider } from "./workspace/marker-decoration-provider";
 import { SessionStatus, WorkspaceSession } from "./workspace/workspace-session";
@@ -141,7 +141,7 @@ class CodestreamPackage {
 						this.workspaceSession.user!.username
 					} ${unreadsLabel}`.trim();
 				case SessionStatus.SigningIn:
-					return `Signing into...${environmentLabel}`.replace(":", "");
+					return `Signing in...${environmentLabel}`.replace(":", "");
 				default:
 					return `${environmentLabel} Sign in`.trim();
 			}
