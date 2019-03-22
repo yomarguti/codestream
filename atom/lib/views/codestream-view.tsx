@@ -69,7 +69,6 @@ export class CodestreamView {
 	private subscriptions: CompositeDisposable;
 	private channel: WebviewIpc;
 	private iframe: HTMLIFrameElement;
-	private loadingSpinner: HTMLDivElement;
 	private emitter: Emitter;
 	private webviewReady?: Promise<void>;
 	private webviewContext: any;
@@ -85,7 +84,6 @@ export class CodestreamView {
 		this.element = document.createElement("div");
 		this.element.classList.add("codestream", "preload");
 		this.iframe = document.createElement("iframe");
-		this.loadingSpinner = this.setupLoadingSpinner();
 
 		this.initializeWebview(this.iframe);
 		this.initialize();
@@ -129,25 +127,6 @@ export class CodestreamView {
 			await this.webviewReady;
 			this.sendEvent(ShowStreamNotificationType, { streamId, threadId });
 		}
-	}
-
-	private setupLoadingSpinner() {
-		const loaderRing = document.createElement("div");
-		loaderRing.innerHTML = `
-			<div class="loader-ring">
-				<div class="loader-ring__segment"></div>
-				<div class="loader-ring__segment"></div>
-				<div class="loader-ring__segment"></div>
-				<div class="loader-ring__segment"></div>
-			</div>
-		`;
-		this.element.appendChild(loaderRing);
-
-		return loaderRing;
-	}
-
-	private removeLoadingSpinner() {
-		this.element.removeChild(this.loadingSpinner);
 	}
 
 	private initializeWebview(iframe: HTMLIFrameElement) {
@@ -372,7 +351,6 @@ export class CodestreamView {
 	private onWebviewNotification(event: WebviewIpcNotificationMessage) {
 		switch (event.method) {
 			case WebviewDidInitializeNotificationType.method: {
-				this.removeLoadingSpinner();
 				this.emitter.emit(WEBVIEW_DID_INITIALIZE);
 				break;
 			}
