@@ -34,9 +34,10 @@ interface JiraProjectsMetaResponse {
 	projects: JiraProjectMeta[];
 }
 interface ProjectSearchResponse {
-	values: any[];
+	values: JiraProject[];
 	nextPage?: string;
 	isLast: boolean;
+	total: number;
 }
 
 interface CreateJiraIssueResponse {
@@ -104,39 +105,82 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 	async getBoards(): Promise<JiraFetchBoardsResponse> {
 		if (this.boards.length > 0) return { boards: this.boards };
 		try {
-			const projectIds = [];
-			let hasMore = true;
-			let { body } = await this.get<ProjectSearchResponse>("/rest/api/3/project/search");
+			Logger.debug("Jira: fetching projects");
+			const jiraBoards: JiraBoard[] = [];
+			let nextPage: string | undefined = "/rest/api/2/project/search";
 
-			while (hasMore) {
-				projectIds.push(...body.values.map(v => v.id));
-				if (!body.isLast && body.nextPage) {
-					body = (await this.get<ProjectSearchResponse>(body.nextPage)).body;
-				} else {
-					hasMore = false;
+			while (nextPage !== undefined) {
+				try {
+					const { body }: { body: ProjectSearchResponse } = await this.get<ProjectSearchResponse>(
+						nextPage
+					);
+					Logger.debug(`Jira: got ${body.values.length} projects`);
+
+					jiraBoards.push(...(await this.filterBoards(body.values)));
+
+					Logger.debug(`Jira: is last page? ${body.isLast} - nextPage ${body.nextPage}`);
+					if (body.nextPage) {
+						nextPage = body.nextPage.substring(body.nextPage.indexOf("/rest/api/2"));
+					} else {
+						Logger.debug("Jira: there are no more projects");
+						nextPage = undefined;
+					}
+				} catch (e) {
+					Container.instance().errorReporter.reportMessage({
+						type: ReportingMessageType.Error,
+						message: "Jira: Error fetching jira projects",
+						source: "agent",
+						extra: {
+							message: e.message
+						}
+					});
+					Logger.error(e);
+					Logger.debug("Jira: Stopping project search");
+					nextPage = undefined;
 				}
 			}
 
-			const response = await this.get<JiraProjectsMetaResponse>(
-				`/rest/api/3/issue/createmeta?${qs.stringify({
-					projectIds: projectIds.join(","),
-					expand: "projects.issuetypes.fields"
-				})}`
-			);
+			Logger.debug(`Jira: total compatible projects: ${jiraBoards.length}`);
 
-			this.boards = this.getCompatibleBoards(response.body);
+			this.boards = jiraBoards;
 
-			return { boards: this.boards };
+			return { boards: jiraBoards };
 		} catch (error) {
 			debugger;
 			Container.instance().errorReporter.reportMessage({
 				type: ReportingMessageType.Error,
-				message: "Error fetching jira boards",
-				source: "extension",
+				message: "Jira: Error fetching jira boards",
+				source: "agent",
 				extra: { message: error.message }
 			});
 			Logger.error(error, "Error fetching jira boards");
 			return { boards: [] };
+		}
+	}
+
+	private async filterBoards(projects: JiraProject[]): Promise<JiraBoard[]> {
+		Logger.debug("Jira: Filtering for compatible projects");
+		try {
+			const response = await this.get<JiraProjectsMetaResponse>(
+				`/rest/api/2/issue/createmeta?${qs.stringify({
+					projectIds: projects.map(p => p.id).join(","),
+					expand: "projects.issuetypes.fields"
+				})}`
+			);
+
+			return this.getCompatibleBoards(response.body);
+		} catch (error) {
+			Container.instance().errorReporter.reportMessage({
+				type: ReportingMessageType.Error,
+				message: "Jira: Error fetching issue metadata for projects",
+				source: "agent",
+				extra: { message: error.message }
+			});
+			Logger.error(
+				error,
+				"Jira: Error fetching issue metadata for boards. Couldn't determine compatible projects"
+			);
+			return [];
 		}
 	}
 
@@ -208,7 +252,7 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
 		const { body } = await this.get<JiraUser[]>(
-			`/rest/api/3/user/assignable/search?${qs.stringify({
+			`/rest/api/2/user/assignable/search?${qs.stringify({
 				project: request.boardId
 			})}`
 		);
