@@ -1,4 +1,4 @@
-import { setupCommunication, initialize } from "@codestream/webview/index";
+import { initialize, setupCommunication } from "@codestream/webview/index";
 
 window.addEventListener("message", message => {
 	setupCommunication(message.ports[0]);
