@@ -101,9 +101,12 @@ module.exports = function(env, argv) {
 			]
 		},
 		externals: {
-			bufferutil: "bufferutil",
 			encoding: "encoding",
-			"utf-8-validate": "utf-8-validate"
+			// these are commented out for good reason ... the socketcluster library we use for
+			// pubsub in on-prem will crash if we have these in here ... instead we'll live with
+			// a warning from webpack's agent watch - Colin
+			// bufferutil: "bufferutil", 
+			// "utf-8-validate": "utf-8-validate"
 		},
 		module: {
 			rules: [

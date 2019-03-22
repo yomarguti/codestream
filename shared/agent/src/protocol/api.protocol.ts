@@ -62,6 +62,11 @@ export interface CSLoginResponse {
 	pubnubKey: string;
 	pubnubToken: string;
 	providers: ThirdPartyProviderConfig[];
+	messagerToken: string;
+	socketCluster?: {
+		host: string,
+		port: string
+	};
 	teams: CSTeam[];
 	companies: CSCompany[];
 	repos: CSRepository[];

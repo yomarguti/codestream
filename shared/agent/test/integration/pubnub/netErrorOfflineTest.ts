@@ -1,3 +1,4 @@
+/*
 "use strict";
 
 import { PubnubStatus, StatusChangeEvent } from "../../../src/pubnub/pubnubConnection";
@@ -30,3 +31,4 @@ export class NetErrorOfflineTest extends PubnubTester {
 		return promise;
 	}
 }
+*/

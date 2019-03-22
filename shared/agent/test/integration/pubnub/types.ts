@@ -32,7 +32,11 @@ export interface LoginResponse {
 	user: UserData;
 	accessToken: string;
 	pubnubKey: string;
-	pubnubToken: string;
+	messagerToken: string;
+	socketCluster?: {
+		host: string,
+		port: string
+	};
 }
 
 export interface InviteUserRequest {

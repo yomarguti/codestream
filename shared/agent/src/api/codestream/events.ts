@@ -2,13 +2,13 @@
 import HttpsProxyAgent from "https-proxy-agent";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
 import { Logger } from "../../logger";
-import { ConnectionStatus } from "../../protocol/agent.protocol";
 import {
 	ChannelDescriptor,
-	PubnubConnection,
-	PubnubStatus,
-	StatusChangeEvent
-} from "../../pubnub/pubnubConnection";
+	Messager,
+	MessagerStatus,
+	MessagerStatusType
+} from "../../messager/messager";
+import { ConnectionStatus } from "../../protocol/agent.protocol";
 import { log } from "../../system";
 import { ConnectionRTMessage, MessageType, RawRTMessage } from "../apiProvider";
 import { CodeStreamApiProvider } from "./codestreamApi";
@@ -42,46 +42,52 @@ const messageToType: {
 	users: MessageType.Users
 };
 
-export class PubnubEvents implements Disposable {
+export interface MessagerEventsInitializer {
+	accessToken: string;
+	messagerToken: string;
+	api: CodeStreamApiProvider;
+	pubnubSubscribeKey?: string;
+	socketCluster?: {
+		host: string,
+		port: string
+	};
+	proxyAgent?: HttpsProxyAgent;
+}
+
+export class MessagerEvents implements Disposable {
 	private _onDidReceiveMessage = new Emitter<RawRTMessage>();
 	get onDidReceiveMessage(): Event<RawRTMessage> {
 		return this._onDidReceiveMessage.event;
 	}
 
 	private _disposable: Disposable | undefined;
-	private readonly _pubnubConnection: PubnubConnection;
+	private readonly _messager: Messager;
 	private _subscribedStreamIds = new Set<string>();
 
-	constructor(
-		private readonly _accessToken: string,
-		private readonly _pubnubKey: string,
-		private readonly _pubnubToken: string,
-		private readonly _api: CodeStreamApiProvider,
-		proxyAgent: HttpsProxyAgent | undefined
+	constructor (
+		private readonly _options: MessagerEventsInitializer
 	) {
-		this._pubnubConnection = new PubnubConnection(_api, proxyAgent);
-		this._pubnubConnection.onDidStatusChange(this.onPubnubStatusChanged, this);
-		this._pubnubConnection.onDidReceiveMessages(this.onPubnubMessagesReceived, this);
-	}
-
-	get connected() {
-		return this._pubnubConnection.online;
+		this._messager = new Messager(this._options.api, this._options.proxyAgent);
+		this._messager.onDidStatusChange(this.onMessagerStatusChanged, this);
+		this._messager.onDidReceiveMessages(this.onMessagerMessagesReceived, this);
 	}
 
 	@log()
-	connect(streamIds?: string[]): Disposable {
-		this._disposable = this._pubnubConnection.initialize({
-			accessToken: this._accessToken,
-			subscribeKey: this._pubnubKey,
-			authKey: this._pubnubToken,
-			userId: this._api.userId,
-			online: true,
-			debug: this.debug.bind(this)
+	async connect(streamIds?: string[]): Promise<Disposable> {
+		Logger.log("INITING MESSAGER...");
+		this._disposable = await this._messager.initialize({
+			accessToken: this._options.accessToken,
+			pubnubSubscribeKey: this._options.pubnubSubscribeKey,
+			socketCluster: this._options.socketCluster,
+			authKey: this._options.messagerToken,
+			userId: this._options.api.userId,
+			debug: this.debug.bind(this),
+			proxyAgent: this._options.proxyAgent
 		});
 
 		const channels: ChannelDescriptor[] = [
-			{ name: `user-${this._api.userId}` },
-			{ name: `team-${this._api.teamId}`, withPresence: true }
+			{ name: `user-${this._options.api.userId}` },
+			{ name: `team-${this._options.api.teamId}`, withPresence: true }
 		];
 
 		for (const streamId of streamIds || []) {
@@ -89,7 +95,7 @@ export class PubnubEvents implements Disposable {
 			this._subscribedStreamIds.add(streamId);
 		}
 
-		this._pubnubConnection.subscribe(channels);
+		this._messager.subscribe(channels);
 
 		return this._disposable;
 	}
@@ -104,7 +110,7 @@ export class PubnubEvents implements Disposable {
 	@log()
 	subscribeToStream(streamId: string) {
 		if (!this._subscribedStreamIds.has(streamId)) {
-			this._pubnubConnection.subscribe([`stream-${streamId}`]);
+			this._messager.subscribe([`stream-${streamId}`]);
 			this._subscribedStreamIds.add(streamId);
 		}
 	}
@@ -112,15 +118,15 @@ export class PubnubEvents implements Disposable {
 	@log()
 	unsubscribeFromStream(streamId: string) {
 		if (this._subscribedStreamIds.has(streamId)) {
-			this._pubnubConnection.unsubscribe([`stream-${streamId}`]);
+			this._messager.unsubscribe([`stream-${streamId}`]);
 			this._subscribedStreamIds.delete(streamId);
 		}
 	}
 
-	private onPubnubStatusChanged(e: StatusChangeEvent) {
+	private onMessagerStatusChanged(e: MessagerStatus) {
 		this.debug("Connection status", e);
 		switch (e.status) {
-			case PubnubStatus.Connected:
+			case MessagerStatusType.Connected:
 				if (e.reconnected) {
 					this._onDidReceiveMessage.fire({
 						type: MessageType.Connection,
@@ -129,14 +135,14 @@ export class PubnubEvents implements Disposable {
 				}
 				break;
 
-			case PubnubStatus.Trouble:
+			case MessagerStatusType.Trouble:
 				this._onDidReceiveMessage.fire({
 					type: MessageType.Connection,
 					data: { status: ConnectionStatus.Reconnecting }
 				} as ConnectionRTMessage);
 				break;
 
-			case PubnubStatus.Reset:
+			case MessagerStatusType.Reset:
 				// TODO: must fetch all data fetch from the server
 				this._onDidReceiveMessage.fire({
 					type: MessageType.Connection,
@@ -144,22 +150,22 @@ export class PubnubEvents implements Disposable {
 				} as ConnectionRTMessage);
 				break;
 
-			case PubnubStatus.Offline:
+			case MessagerStatusType.Offline:
 				this._onDidReceiveMessage.fire({
 					type: MessageType.Connection,
 					data: { status: ConnectionStatus.Disconnected }
 				} as ConnectionRTMessage);
 				break;
 
-			case PubnubStatus.Failed:
+			case MessagerStatusType.Failed:
 				// TODO: let the extension know we have trouble?
 				// the indicated channels have not been subscribed to, what do we do?
 				break;
 		}
 	}
 
-	private onPubnubMessagesReceived(messages: { [key: string]: any }[]) {
-		this.debug("PubNub messages", messages);
+	private onMessagerMessagesReceived(messages: { [key: string]: any }[]) {
+		this.debug("Messager messages", messages);
 
 		for (const message of messages) {
 			this.fireMessage(message);
@@ -179,19 +185,19 @@ export class PubnubEvents implements Disposable {
 						data: Array.isArray(data) ? data : [data]
 					});
 				} else {
-					Logger.warn(`Unknown message type received from PubNub: ${dataType}`);
+					Logger.warn(`Unknown message type received from messager: ${dataType}`);
 				}
 			} catch (ex) {
-				Logger.error(ex, `PubNub '${dataType}' FAILED`);
+				Logger.error(ex, `Messager '${dataType}' FAILED`);
 			}
 		}
 	}
 
 	private debug(msg: string, info?: any) {
 		if (arguments.length === 1) {
-			Logger.logWithDebugParams(`PUBNUB: ${msg}`);
+			Logger.logWithDebugParams(`MESSAGER: ${msg}`);
 		} else {
-			Logger.logWithDebugParams(`PUBNUB: ${msg}`, info);
+			Logger.logWithDebugParams(`MESSAGER: ${msg}`, info);
 		}
 	}
 }

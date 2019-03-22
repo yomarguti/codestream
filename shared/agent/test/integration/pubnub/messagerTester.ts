@@ -3,7 +3,7 @@
 import * as Randomstring from "randomstring";
 import { Disposable } from "vscode-languageserver";
 import { CodeStreamApiProvider } from "../../../src/api/codestream/codestreamApi";
-import { PubnubConnection, PubnubInitializer } from "../../../src/pubnub/pubnubConnection";
+import { Messager } from "../../../src/messager/messager";
 import { ApiRequester, ApiRequestOverrides } from "./apiRequester";
 import {
 	CreatePostRequest,
@@ -20,7 +20,7 @@ import {
 } from "./types";
 import { UserCreator } from "./userCreator";
 
-export interface PubnubTesterConfig {
+export interface MessagerTesterConfig {
 	apiOrigin: string;
 }
 
@@ -40,7 +40,7 @@ class CodeStreamApiSimulator {
 
 let TEST_NUM = 0;
 
-export abstract class PubnubTester {
+export abstract class MessagerTester {
 	testNum: number = 0;
 
 	protected _userData: LoginResponse | undefined;
@@ -48,8 +48,8 @@ export abstract class PubnubTester {
 	protected _teamData: TeamData | undefined;
 	protected _streamData: StreamData | undefined;
 	protected _postData: PostData | undefined;
-	protected _pubnubConnection: PubnubConnection | undefined;
-	private _pubnubDisposable: Disposable | undefined;
+	protected _messager: Messager | undefined;
+	private _messagerDisposable: Disposable | undefined;
 	protected _api: CodeStreamApiProvider | undefined;
 	protected _apiRequester: ApiRequester;
 	protected _apiSimulator: CodeStreamApiSimulator | undefined;
@@ -60,9 +60,9 @@ export abstract class PubnubTester {
 	protected _testTimeout: number = 10000;
 	protected _statusListener: Disposable | undefined;
 	protected _messageListener: Disposable | undefined;
-	protected _pubnubToken: string | undefined;
+	protected _messagerToken: string | undefined;
 
-	constructor(config: PubnubTesterConfig) {
+	constructor(config: MessagerTesterConfig) {
 		this._apiRequester = new ApiRequester({ origin: config.apiOrigin });
 		this._api = new CodeStreamApiProvider(
 			"",
@@ -78,7 +78,7 @@ export abstract class PubnubTester {
 			undefined
 		);
 		this._apiSimulator = new CodeStreamApiSimulator(this._apiRequester);
-		this._api.grantPubNubChannelAccess = this._apiSimulator.grant.bind(this._apiSimulator);
+		this._api.grantMessagerChannelAccess = this._apiSimulator.grant.bind(this._apiSimulator);
 		this.testNum = ++TEST_NUM;
 	}
 
@@ -92,8 +92,8 @@ export abstract class PubnubTester {
 	}
 
 	async after() {
-		this._pubnubDisposable!.dispose();
-		delete this._pubnubConnection;
+		this._messagerDisposable!.dispose();
+		delete this._messager;
 		if (this._successTimeout) {
 			clearTimeout(this._successTimeout);
 		}
@@ -125,17 +125,15 @@ export abstract class PubnubTester {
 		this._otherUserData = await new UserCreator(this._apiRequester).createUser();
 	}
 
-	private initializeConnection() {
-		this._pubnubConnection = new PubnubConnection(this._api!, undefined);
-		this._pubnubDisposable = this._pubnubConnection.initialize({
-			subscribeKey: this._userData!.pubnubKey,
-			authKey: this._pubnubToken || this._userData!.pubnubToken,
+	private async initializeConnection() {
+		this._messager = new Messager(this._api!, undefined);
+		this._messagerDisposable = await this._messager!.initialize({
+			pubnubSubscribeKey: this._userData!.pubnubKey,
+			authKey: this._messagerToken || this._userData!.messagerToken,
 			accessToken: this._userData!.accessToken,
 			userId: this._userData!.user._id,
-			online: this._startOffline ? false : true,
 			testMode: true
-			// 			debug: this.debug.bind(this)
-		} as PubnubInitializer);
+		});
 	}
 
 	protected async createTeamAndStream() {
@@ -213,11 +211,11 @@ export abstract class PubnubTester {
 	}
 
 	protected subscribeToUserChannel() {
-		this._pubnubConnection!.subscribe([`user-${this._userData!.user._id}`]);
+		this._messager!.subscribe([`user-${this._userData!.user._id}`]);
 	}
 
 	protected subscribeToStreamChannel() {
-		this._pubnubConnection!.subscribe([`stream-${this._streamData!._id}`]);
+		this._messager!.subscribe([`stream-${this._streamData!._id}`]);
 	}
 
 	private setSuccessTimeout() {

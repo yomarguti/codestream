@@ -143,7 +143,7 @@ import {
 	RTMessage
 } from "../apiProvider";
 import { CodeStreamPreferences } from "../preferences";
-import { PubnubEvents } from "./events";
+import { MessagerEvents } from "./events";
 import { CodeStreamUnreads } from "./unreads";
 
 export class CodeStreamApiProvider implements ApiProvider {
@@ -152,10 +152,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this._onDidReceiveMessage.event;
 	}
 
-	private _events: PubnubEvents | undefined;
+	private _events: MessagerEvents | undefined;
 	private readonly _middleware: CodeStreamApiMiddleware[] = [];
-	private _pubnubKey: string | undefined;
-	private _pubnubToken: string | undefined;
+	private _pubnubSubscribeKey: string | undefined;
+	private _messagerToken: string | undefined;
+	private _socketCluster: { host: string, port: string } | undefined;
 	private _subscribedMessageTypes: Set<MessageType> | undefined;
 	private _teamId: string | undefined;
 	private _token: string | undefined;
@@ -295,9 +296,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 		Logger.log(`Using team '${team.name}' (${team.id})${pickedTeamReason || ""}`);
 
+		Logger.log(`LOGIN COMPLETE, token=${response.accessToken} mToken=${response.messagerToken} skey=${response.pubnubKey}`);
 		this._token = response.accessToken;
-		this._pubnubKey = response.pubnubKey;
-		this._pubnubToken = response.pubnubToken;
+		this._pubnubSubscribeKey = response.pubnubKey;
+		this._messagerToken = response.messagerToken;
+		this._socketCluster = response.socketCluster;
 
 		this._teamId = options.teamId;
 		this._user = response.user;
@@ -322,20 +325,22 @@ export class CodeStreamApiProvider implements ApiProvider {
 			});
 		}
 
-		this._events = new PubnubEvents(
-			this._token!,
-			this._pubnubKey!,
-			this._pubnubToken!,
-			this,
-			this._proxyAgent
-		);
+		Logger.log(`MESSAGER EVENTS, token=${this._token!}`);
+		this._events = new MessagerEvents({
+			accessToken: this._token!,
+			pubnubSubscribeKey: this._pubnubSubscribeKey,
+			messagerToken: this._messagerToken!,
+			api: this,
+			proxyAgent: this._proxyAgent,
+			socketCluster: this._socketCluster
+		});
 		this._events.onDidReceiveMessage(this.onPubnubMessageReceived, this);
 
 		if (types === undefined || types.includes(MessageType.Streams)) {
 			const streams = (await Container.instance().streams.getSubscribable()).streams;
-			this._events.connect(streams.map(s => s.id));
+			await this._events.connect(streams.map(s => s.id));
 		} else {
-			this._events.connect();
+			await this._events.connect();
 		}
 	}
 
@@ -418,7 +423,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		this._onDidReceiveMessage.fire({ type: MessageType.Unreads, data: e });
 	}
 
-	grantPubNubChannelAccess(token: string, channel: string): Promise<{}> {
+	grantMessagerChannelAccess(token: string, channel: string): Promise<{}> {
 		return this.put(`/grant/${channel}`, {}, token);
 	}
 

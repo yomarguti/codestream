@@ -1,3 +1,4 @@
+/*
 "use strict";
 
 import { expect } from "chai";
@@ -31,3 +32,4 @@ export class SubscriptionTimeoutRecoveryTest extends PubnubTester {
 		return promise;
 	}
 }
+*/

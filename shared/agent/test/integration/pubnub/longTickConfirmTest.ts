@@ -1,3 +1,4 @@
+/*
 "use strict";
 
 import { PubnubStatus, StatusChangeEvent } from "../../../src/pubnub/pubnubConnection";
@@ -36,3 +37,4 @@ export class LongTickConfirmTest extends PubnubTester {
 		return promise;
 	}
 }
+*/

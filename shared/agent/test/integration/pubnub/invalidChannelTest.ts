@@ -1,3 +1,4 @@
+/*
 "use strict";
 
 import { expect } from "chai";
@@ -43,3 +44,4 @@ export class InvalidChannelTest extends PubnubTester {
 		return `user-${Randomstring.generate(24)}`;
 	}
 }
+*/

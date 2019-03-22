@@ -1,3 +1,4 @@
+/*
 "use strict";
 
 import { InvalidChannelTest } from "./invalidChannelTest";
@@ -11,3 +12,4 @@ export class MalformedChannelTest extends InvalidChannelTest {
 		return "xyz";
 	}
 }
+*/

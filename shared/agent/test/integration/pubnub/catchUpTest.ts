@@ -1,6 +1,7 @@
+/*
 "use strict";
 
-import { PubnubStatus, StatusChangeEvent } from "../../../src/pubnub/pubnubConnection";
+import { PubnubStatus, StatusChangeEvent } from "../../../src/messager/pubnubConnection";
 import { PubnubTester } from "./pubnubTester";
 
 export class CatchUpTest extends PubnubTester {
@@ -63,3 +64,4 @@ export class CatchUpTest extends PubnubTester {
 		});
 	}
 }
+*/

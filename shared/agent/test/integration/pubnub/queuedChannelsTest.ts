@@ -1,3 +1,4 @@
+/*
 "use strict";
 
 import { expect } from "chai";
@@ -40,3 +41,4 @@ export class QueuedChannelsTest extends PubnubTester {
 		return promise;
 	}
 }
+*/

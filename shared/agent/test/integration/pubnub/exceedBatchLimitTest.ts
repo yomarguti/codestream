@@ -1,3 +1,4 @@
+/*
 "use strict";
 
 import { MultiMessageCatchUpTest } from "./multiMessageCatchUpTest";
@@ -46,3 +47,4 @@ export class ExceedBatchLimitTest extends MultiMessageCatchUpTest {
 		}
 	}
 }
+*/

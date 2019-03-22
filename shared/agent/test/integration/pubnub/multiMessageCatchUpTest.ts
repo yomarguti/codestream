@@ -1,3 +1,4 @@
+/*
 "use strict";
 
 import { expect } from "chai";
@@ -56,7 +57,6 @@ export class MultiMessageCatchUpTest extends PubnubTester {
 			else {
 				this._reject("unexpected connection status: " + event.status);
 			}
-*/
 		});
 		const promise = super.run();
 		this.listenForMessage();
@@ -139,3 +139,4 @@ export class MultiMessageCatchUpTest extends PubnubTester {
 		}
 	}
 }
+*/

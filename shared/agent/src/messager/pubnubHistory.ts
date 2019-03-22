@@ -2,6 +2,7 @@
 
 "use strict";
 import * as Pubnub from "pubnub";
+import { MessagerHistoryOutput } from "./messager";
 
 export interface PubnubHistoryInput {
 	pubnub: Pubnub;
@@ -10,16 +11,9 @@ export interface PubnubHistoryInput {
 	debug?(msg: string, info?: any): void; // for debug messages
 }
 
-export interface PubnubHistoryOutput {
-	timestamp?: number;
-	messages?: object[];
-	reset?: boolean;
-}
-
 export class PubnubHistory {
 	private _pubnub: Pubnub | undefined;
-	private _channels: string[] = [];
-	private _since: number = 0;
+	private _mostRecentMessage: number = 0;
 	private _allMessages: any[] = [];
 	private _debug: (msg: string, info?: any) => void = () => {};
 
@@ -37,15 +31,13 @@ export class PubnubHistory {
 	// The other Reset condition is if we end up with too many messages coming across the wire, current that limit is
 	// set to 1000 messages for a channel
 	//
-	async fetchHistory(options: PubnubHistoryInput): Promise<PubnubHistoryOutput> {
+	async fetchHistory(options: PubnubHistoryInput): Promise<MessagerHistoryOutput> {
 		this._pubnub = options.pubnub;
-		this._channels = options.channels;
-		this._since = options.since;
 		if (options.debug) {
 			this._debug = options.debug;
 		}
 
-		const output: PubnubHistoryOutput = {};
+		const output: MessagerHistoryOutput = {};
 
 		// split into slices of 500 channels, which we may never reach, but it's here if we do
 		let startSlice = 0;
@@ -53,32 +45,33 @@ export class PubnubHistory {
 		let channels = [];
 		const sliceSize = 500; // batch history is limited to 500 channels
 		do {
-			channels = this._channels.slice(startSlice, sliceSize);
-			if (channels.length > 0 && (await this.fetchByChannelSlice(output, channels))) {
-				this.processMessages(output);
-				startSlice += sliceSize;
-			} else {
-				done = true;
+			channels = options.channels.slice(startSlice, sliceSize);
+			if (channels.length > 0) {
+				if (await this.fetchByChannelSlice(channels, options.since)) {
+					this.processMessages();
+					startSlice += sliceSize;
+				}
+				else {
+					output.reset = true;
+					done = true;
+				}
 			}
 		} while (!done && channels.length > 0);
 		if (!output.reset) {
 			output.messages = this._allMessages.map(message => message.message || message.entry);
+			output.timestamp = this._mostRecentMessage;
 		}
 		return output;
 	}
 
 	// fetch historical messages for a slice of 500 channels
-	private async fetchByChannelSlice(
-		output: PubnubHistoryOutput,
-		channels: string[]
-	): Promise<boolean> {
-		const timetoken = this.timestampToTimetokenStringified(this._since);
+	private async fetchByChannelSlice(channels: string[], since: number): Promise<boolean> {
+		const timetoken = this.timestampToTimetokenStringified(since);
 		try {
 			await this.retrieveBatchHistory(channels, timetoken);
 		} catch (error) {
 			// if we reached a "RESET" condition, break out and inform the client, we'll proceed no further
 			if (error === "RESET") {
-				output.reset = true;
 				return false;
 			} else {
 				throw error;
@@ -89,7 +82,7 @@ export class PubnubHistory {
 
 	// process the messages we received ... since the messages are coming from multiple channels, we sort
 	// them by timestamp before returning to the client, giving the client a true chronological "replay"
-	private processMessages(output: PubnubHistoryOutput) {
+	private processMessages() {
 		this._allMessages.forEach(message => {
 			message.timestamp = parseInt(message.timetoken, 10);
 		});
@@ -99,7 +92,7 @@ export class PubnubHistory {
 
 		if (this._allMessages.length > 0) {
 			// store the last message received, so we know where to start from next time
-			output.timestamp = this.timetokenToTimeStamp(
+			this._mostRecentMessage = this.timetokenToTimeStamp(
 				this._allMessages[this._allMessages.length - 1].timestamp
 			);
 		}
@@ -115,13 +108,6 @@ export class PubnubHistory {
 			stringifiedTimeToken: true
 		});
 		this._debug("fetchMessages response", response);
-		/*
-		const response: Pubnub.FetchMessagesResponse = await this._pubnub!.fetchMessages({
-			channels,
-			end: timetoken,
-			stringifiedTimeToken: true
-		} as Pubnub.FetchMessagesParameters);
-*/
 
 		// look for any channels that have 25 messages ... for these, we assume there are more
 		// messages waiting, and we fetch individually for each channel, where we can get
@@ -166,14 +152,6 @@ export class PubnubHistory {
 			stringifiedTimeToken: true
 		});
 		this._debug("history response", response);
-
-		/*
-		const response: Pubnub.HistoryResponse = await this._pubnub!.history({
-			channel,
-			end: since.toString(),
-			stringifiedTimeToken: true
-		} as Pubnub.HistoryParameters);
-*/
 
 		this._allMessages.push(...response.messages);
 		if (response.messages.length >= 100) {

@@ -1,3 +1,4 @@
+/*
 "use strict";
 
 import { PubnubStatus, StatusChangeEvent } from "../../../src/pubnub/pubnubConnection";
@@ -22,3 +23,4 @@ export class ResetAfterTooLongTest extends PubnubTester {
 		return promise;
 	}
 }
+*/
