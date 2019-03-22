@@ -1,4 +1,4 @@
-export function getStyles() {
+export function getStylesheets() {
 	const styles = atom.styles.getStyleElements();
 
 	const [atomStyles, editorStyles, ...rest] = styles;

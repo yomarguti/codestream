@@ -19,6 +19,7 @@ import {
 	UpdateConfigurationRequest,
 	UpdateConfigurationRequestType,
 	UpdateConfigurationResponse,
+	WebviewContext,
 	WebviewDidChangeContextNotificationType,
 	WebviewDidInitializeNotificationType,
 	WebviewIpcMessage,
@@ -38,7 +39,7 @@ import { CodemarkType, LoginResult } from "../protocols/agent/api.protocol";
 import { asAbsolutePath, Editor } from "../utils";
 import { WorkspaceEditorObserver } from "../workspace/editor-observer";
 import { SessionStatus, WorkspaceSession } from "../workspace/workspace-session";
-import { getStyles } from "./styles-getter";
+import { getStylesheets } from "./styles-getter";
 
 export class WebviewIpc {
 	private channel: MessageChannel;
@@ -58,6 +59,7 @@ export class WebviewIpc {
 
 export const CODESTREAM_VIEW_URI = "atom://codestream";
 export const WEBVIEW_DID_INITIALIZE = "webview-ready";
+export const DID_CHANGE_STATE = "state-changed";
 export const WILL_DESTROY = "will-destroy";
 
 export class CodestreamView {
@@ -70,10 +72,10 @@ export class CodestreamView {
 	private loadingSpinner: HTMLDivElement;
 	private emitter: Emitter;
 	private webviewReady?: Promise<void>;
-	private webviewContext?: any;
+	private webviewContext: any;
 	private editorSelectionObserver?: WorkspaceEditorObserver;
 
-	constructor(session: WorkspaceSession, webviewContext?: any) {
+	constructor(session: WorkspaceSession, webviewContext: any) {
 		this.session = session;
 		this.webviewContext = webviewContext;
 		this.channel = new WebviewIpc();
@@ -156,10 +158,10 @@ export class CodestreamView {
 
 		iframe.classList.add("webview");
 		iframe.addEventListener("load", () => {
-			this.iframe.contentWindow!.postMessage(
+			iframe.contentWindow!.postMessage(
 				{
 					label: "codestream-webview-initialize",
-					styles: getStyles(),
+					styles: getStylesheets(),
 				},
 				"*",
 				[this.channel.webview]
@@ -243,15 +245,19 @@ export class CodestreamView {
 	}
 
 	destroy() {
-		this.emitter.emit(WILL_DESTROY, this.webviewContext);
+		this.emitter.emit(WILL_DESTROY);
 		this.element.remove();
 		this.alive = false;
 		this.subscriptions.dispose();
 		this.editorSelectionObserver && this.editorSelectionObserver.dispose();
 	}
 
-	onWillDestroy(cb: (data: any) => void) {
+	onWillDestroy(cb: () => void) {
 		return this.emitter.on(WILL_DESTROY, cb);
+	}
+
+	onDidChangeState(cb: (state: WebviewContext) => void) {
+		return this.emitter.on(DID_CHANGE_STATE, cb);
 	}
 
 	private async getSignedInBootstrapState(): Promise<SignedInBootstrapResponse> {
@@ -262,7 +268,7 @@ export class CodestreamView {
 			...this.session.getBootstrapInfo(),
 			...bootstrapData,
 			session: { userId: this.session.user!.id },
-			context: { ...(this.webviewContext || {}), currentTeamId: this.session.teamId },
+			context: { ...this.webviewContext, currentTeamId: this.session.teamId },
 			editorContext: editor
 				? {
 						activeFile: Editor.getRelativePath(editor),
@@ -374,7 +380,7 @@ export class CodestreamView {
 				break;
 			}
 			case WebviewDidChangeContextNotificationType.method: {
-				this.webviewContext = event.params.context;
+				this.emitter.emit(DID_CHANGE_STATE, event.params.context);
 				break;
 			}
 		}

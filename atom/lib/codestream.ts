@@ -21,7 +21,7 @@ class CodestreamPackage {
 			console.debug("CodeStream package initialized with state:", state);
 		}
 		this.workspaceSession = WorkspaceSession.create(state);
-		this.viewController = new ViewController(this.workspaceSession);
+		this.viewController = new ViewController(this.workspaceSession, state.views);
 		this.markerDecorationProvider = new MarkerDecorationProvider(
 			this.workspaceSession,
 			this.viewController
@@ -77,7 +77,7 @@ class CodestreamPackage {
 
 	// Package lifecyle
 	serialize(): PackageState {
-		return this.workspaceSession.serialize();
+		return { ...this.workspaceSession.serialize(), views: this.viewController.serialize() };
 	}
 
 	// Package lifecyle
