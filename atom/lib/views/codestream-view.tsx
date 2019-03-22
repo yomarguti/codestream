@@ -147,6 +147,15 @@ export class CodestreamView {
 			);
 		});
 
+		this.subscriptions.add(
+			atom.themes.onDidChangeActiveThemes(() => {
+				iframe.contentWindow!.postMessage(
+					{ label: "update-styles", styles: getStylesheets() },
+					"*"
+				);
+			})
+		);
+
 		this.iframe = iframe;
 		this.element.append(iframe);
 	}
