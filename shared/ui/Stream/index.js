@@ -338,8 +338,7 @@ export class SimpleStream extends Component {
 
 	addProvidersToMenu (menuItems) {
 		let numProviders = 0;
-		const providers = this.props.providers || [];
-		for (let provider of providers) {
+		for (let provider of this.props.providers) {
 			const { name, isEnterprise, host } = provider;
 			const display = PROVIDER_MAPPINGS[name];
 			if (
@@ -2070,7 +2069,7 @@ const mapStateToProps = state => {
 		postStreamIsTeamStream: postStream.isTeamStream,
 		postStreamMemberIds: postStream.memberIds,
 		providerInfo,
-		providers,
+		providers: (providers || {}).providers || [],
 		isPrivate: postStream.privacy === "private",
 		teamId: context.currentTeamId,
 		teamName: team.name || "",

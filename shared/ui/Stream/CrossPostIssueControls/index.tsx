@@ -250,7 +250,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 }
 
 const mapStateToProps = ({ providers, context }) => ({
-	providers,
+	providers: (providers || {}).providers || [],
 	currentTeamId: context.currentTeamId
 });
 

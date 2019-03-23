@@ -32,7 +32,7 @@ export const bootstrap = (data: BootstrapResponse) => async dispatch => {
 		// TODO: I think this should be removed and just live with the caps below
 		dispatch(bootstrapServices((data.capabilities && data.capabilities.services) || {}));
 		dispatch(updateUnreads(data.unreads || {}));
-		dispatch(updateProviders({ issueProviders: data.providers || [] }));
+		dispatch(updateProviders({ providers: data.providers || [] }));
 		dispatch(contextActions.setContext({ hasFocus: true, ...data.context }));
 		dispatch(editorContextActions.setEditorContext(data.editorContext));
 		dispatch(sessionActions.setSession(data.session));
