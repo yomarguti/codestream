@@ -16,6 +16,9 @@
         <projectService serviceImplementation="com.codestream.SessionService"/>
         <projectService serviceImplementation="com.codestream.WebViewService"/>
         <projectService serviceImplementation="com.codestream.editor.EditorService"/>
+
+        <projectConfigurable groupId="tools" displayName="CodeStream" id="preferences.CodeStreamConfigurable"
+                             instance="com.codestream.CodeStreamConfigurable"/>
     </extensions>
 
     <project-components>
@@ -32,11 +35,15 @@
                 <keyboard-shortcut keymap="$default" first-keystroke="control SLASH" second-keystroke="C"/>
                 <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="C"
                                    replace-all="true"/>
+                <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="C"
+                                   replace-all="true"/>
             </action>
             <action id="CodeStream.CreateIssue" class="com.codestream.actions.CreateIssue" text="Create _Issue"
                     description="Create issue" icon="/images/marker-issue.svg">
                 <keyboard-shortcut keymap="$default" first-keystroke="control SLASH" second-keystroke="I"/>
                 <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="I"
+                                   replace-all="true"/>
+                <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="I"
                                    replace-all="true"/>
             </action>
             <action id="CodeStream.CreateBookmark" class="com.codestream.actions.CreateBookmark" text="Create _Bookmark"
@@ -44,11 +51,15 @@
                 <keyboard-shortcut keymap="$default" first-keystroke="control SLASH" second-keystroke="B"/>
                 <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="B"
                                    replace-all="true"/>
+                <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="B"
+                                   replace-all="true"/>
             </action>
             <action id="CodeStream.GetPermalink" class="com.codestream.actions.GetPermalink" text="Get _Permalink"
                     description="Get permalink">
                 <keyboard-shortcut keymap="$default" first-keystroke="control SLASH" second-keystroke="P"/>
                 <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="P"
+                                   replace-all="true"/>
+                <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="P"
                                    replace-all="true"/>
             </action>
         </group>

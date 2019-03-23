@@ -39,6 +39,25 @@ class LoginWithPasswordParams(
     isDebugging
 )
 
+class LoginWithTokenParams(
+    email: String?,
+    token: AccessToken,
+    serverUrl: String,
+    extension: Extension,
+    ide: Ide,
+    traceLevel: TraceLevel,
+    isDebugging: Boolean
+) : LoginParams(
+    email,
+    token,
+    null,
+    serverUrl,
+    extension,
+    ide,
+    traceLevel,
+    isDebugging
+)
+
 class LoginWithSignupTokenParams(
     signupToken: String,
     serverUrl: String,
@@ -76,7 +95,8 @@ class LoginResultDetails(
 class LoginResponse(
     val user: CSUser,
     val teamId: String,
-    val teams: List<CSTeam>
+    val teams: List<CSTeam>,
+    val accessToken: String
 ) {
     val team: CSTeam
         get() = teams.find { it.id == teamId }

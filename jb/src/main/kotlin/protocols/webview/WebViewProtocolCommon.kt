@@ -4,8 +4,6 @@ import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
 import protocols.agent.GetRangeScmInfoResponse
 
-//export const MaxRangeValue = 2147483647;
-
 class EditorMargins(
     val top: Int,
     val right: Int,

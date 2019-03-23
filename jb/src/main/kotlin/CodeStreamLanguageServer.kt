@@ -63,6 +63,7 @@ class CodeBlockSource(
 )
 
 class Codemark(
+    val id: String,
     val type: String,
     val color: String
 )

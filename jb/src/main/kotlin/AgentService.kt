@@ -4,7 +4,6 @@ import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.JsonObject
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.future.await
 import org.apache.commons.io.FileUtils
@@ -106,7 +105,7 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
                 "name" to "IntelliJ",
                 "version" to "666"
             ),
-            "serverUrl" to settingsService.serverUrl
+            "serverUrl" to settingsService.state.serverUrl
         )
     }
 

@@ -2,7 +2,10 @@ package com.codestream.editor
 
 import com.codestream.ServiceConsumer
 import com.codestream.TextDocument
+import com.codestream.protocols.webview.CodemarkNotifications
 import com.codestream.protocols.webview.EditorNotifications
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
@@ -18,6 +21,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.text.StringUtil
+import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.DocumentUtil
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -39,6 +43,7 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
     private val managedEditors = mutableSetOf<Editor>()
     //    private val rangeHighlighters = mutableMapOf<Editor, MutableMap<Range, RangeHighlighter>>()
     private val rangeHighlighters = mutableMapOf<Editor, MutableSet<RangeHighlighter>>()
+    private val markerHighlighters = mutableMapOf<Editor, List<RangeHighlighter>>()
 
     fun add(editor: Editor) {
         managedEditors.add(editor)
@@ -253,7 +258,6 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
         }
 
 
-
     private val DocumentEvent.lspPosition: Position
         get() = document.lspPosition(offset)
 
@@ -294,39 +298,61 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
         )
 
     private fun Editor.renderMarkers(markers: List<DocumentMarker>) = ApplicationManager.getApplication().invokeLater {
-        markupModel.removeAllHighlighters()
-        for (marker in markers) {
-            val start = getOffset(marker.range.start)
-            val end = getOffset(marker.range.end)
+        markerHighlighters[this]?.let { highlighters ->
+            highlighters.forEach { highlighter ->
+                markupModel.removeHighlighter(highlighter)
+            }
+        }
+        markerHighlighters[this] = markers.map {
+            val start = getOffset(it.range.start)
+            val end = getOffset(it.range.end)
 
-            val highlighter = markupModel.addRangeHighlighter(
+            markupModel.addRangeHighlighter(
                 start,
                 end,
                 HighlighterLayer.FIRST,
                 null,
                 HighlighterTargetArea.EXACT_RANGE
-            )
+            ).apply {
+                gutterIconRenderer = MarkerGutterIconRenderer(it)
+            }
+        }
+    }
 
-            val renderer = object : GutterIconRenderer() {
-                override fun getTooltipText(): String? {
-                    return marker.summary
-                }
+    inner class MarkerGutterIconRenderer(private val marker: DocumentMarker) : GutterIconRenderer() {
+        val id: String
+            get() = marker.codemark.id
 
-                override fun getIcon(): Icon {
-                    return IconLoader.getIcon("/images/marker-${marker.codemark.type}-${marker.codemark.color}.svg")
-                }
+        override fun isNavigateAction(): Boolean {
+            return true
+        }
 
-                override fun equals(other: Any?): Boolean {
-                    return false
-                }
-
-                override fun hashCode(): Int {
-                    return 0
+        override fun getClickAction(): AnAction? {
+            return object : AnAction() {
+                override fun actionPerformed(e: AnActionEvent) {
+                    ToolWindowManager.getInstance(project).getToolWindow("CodeStream").show(null)
+                    webViewService.postNotification(CodemarkNotifications.Show(id))
                 }
 
             }
+        }
 
-            highlighter.gutterIconRenderer = renderer
+        override fun getTooltipText(): String? {
+            return marker.summary
+        }
+
+        override fun getIcon(): Icon {
+            return IconLoader.getIcon("/images/marker-${marker.codemark.type}-${marker.codemark.color}.svg")
+        }
+
+
+        override fun equals(other: Any?): Boolean {
+            val otherRenderer = other as? MarkerGutterIconRenderer ?: return false
+            return id == otherRenderer.id
+        }
+
+        override fun hashCode(): Int {
+            return id.hashCode()
         }
     }
 
@@ -433,7 +459,7 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
                 newEditor?.file?.path,
                 document.uri,
                 EditorMetrics(
-                    lineHeight - 1,
+                    colorsScheme.editorFontSize,
                     lineHeight,
                     margins
                 ),

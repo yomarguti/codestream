@@ -55,6 +55,14 @@ object EditorNotifications {
 }
 
 object CodemarkNotifications {
+
+    class Show(
+        val codemarkId: String,
+        val simulated: Boolean? = null
+    ) : WebViewNotification {
+        override fun getMethod() = "webview/codemark/show"
+    }
+
     class New(
         val uri: String?,
         val range: Range,

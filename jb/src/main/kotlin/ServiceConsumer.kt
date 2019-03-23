@@ -18,10 +18,10 @@ abstract class ServiceConsumer(private val project: Project) {
     val sessionService: SessionService
         get() = ServiceManager.getService(project, SessionService::class.java)
 
-    val settingsService: SettingsService
-        get() = ServiceManager.getService(project, SettingsService::class.java)
-
     val webViewService: WebViewService
         get() = ServiceManager.getService(project, WebViewService::class.java)
+
+    val settingsService: SettingsService
+        get() = ServiceManager.getService(project, SettingsService::class.java)
 
 }
