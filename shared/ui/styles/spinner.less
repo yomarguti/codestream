@@ -70,3 +70,22 @@
 		transform: rotate(360deg);
 	}
 }
+
+.spin {
+	font-size: 11px;
+	height: 16px;
+	width: 12px;
+	margin: 0;
+	padding: 0;
+	line-height: 10px;
+	display: inline-block;
+	svg {
+		animation: octicon-spin 2s linear infinite;
+	}
+}
+
+@keyframes octicon-spin {
+	100% {
+		transform: rotate(360deg);
+	}
+}
