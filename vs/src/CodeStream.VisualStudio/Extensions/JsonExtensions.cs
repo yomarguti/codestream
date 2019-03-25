@@ -8,14 +8,15 @@ namespace CodeStream.VisualStudio.Extensions
 {
     public static class JsonExtensions
     {
-        public static string ToJson(this object value, bool camelCase = true)
+        public static string ToJson(this object value, bool camelCase = true, bool format = false)
         {
             JsonSerializerSettings settings = null;
             if (camelCase)
             {
                 settings = new JsonSerializerSettings
                 {
-                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                    Formatting = format ? Formatting.Indented : Formatting.None
                 };
             }
 

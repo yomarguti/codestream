@@ -45,7 +45,6 @@ namespace CodeStream.VisualStudio.Core.Logging
                 new CultureInfo("en-US"));
 #endif
 
-
             return new LoggerConfiguration()
                  .Enrich.WithProcessId()
                   .Enrich.WithThreadId()

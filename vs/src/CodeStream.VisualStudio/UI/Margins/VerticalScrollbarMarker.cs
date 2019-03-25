@@ -446,7 +446,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                         if (marker == null) continue;
 
                         var start = span.Start == 0 ? span.Start : span.Start - 1;
-                        newMatches.Add(new SnapshotSpanMarker(new SnapshotSpan(start, 1), ThemeManager.GetColorSafe(marker.Codemark?.Color)));
+                        newMatches.Add(new SnapshotSpanMarker(new SnapshotSpan(start, 1), ThemeManager.GetCodemarkColorSafe(marker.Codemark?.Color)));
                     }
 
                     //This should be a thread safe operation since it is atomic

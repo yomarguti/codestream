@@ -1,14 +1,16 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
-using Microsoft.VisualStudio.PlatformUI;
+using CodeStream.VisualStudio.Models;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Resources;
 using System.Windows;
-using CodeStream.VisualStudio.Models;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Services
@@ -126,17 +128,23 @@ namespace CodeStream.VisualStudio.Services
             var harness = resourceManager.GetString(resourceName);
             Debug.Assert(harness != null, nameof(harness) + " != null");
 
-            harness = harness
-                        .Replace("{root}", dir.Replace(@"\", "/"));
+            harness = harness.Replace("{root}", dir.Replace(@"\", "/"));
             // ReSharper disable once ResourceItemNotResolved
             var styleSheet = resourceManager.GetString("theme");
 
+            var shell = Package.GetGlobalService(typeof(SVsUIShell)) as IVsUIShell5;
+
             var themeGenerator = ThemeManager.Generate();
-            harness = harness.Replace("{bodyClass}", themeGenerator.IsDark ? "vscode-dark" : "vscode-light");
+            var isDebuggingEnabled = Log.IsDebuggingEnabled();
+
+            var outputDebug = new Dictionary<string, Tuple<string, System.Drawing.Color, string>>();
+            harness = harness.Replace("{bodyClass}", themeGenerator.BackgroundColorIsDark ? "vscode-dark" : "vscode-light");
+
             if (styleSheet != null)
             {
-                foreach (var item in themeGenerator.ColorInfo)
+                foreach (var item in themeGenerator.ThemeResourceItems)
                 {
+                    System.Drawing.Color color = System.Drawing.Color.FromArgb(255, 255, 255);
                     string value;
                     if (!item.Value.IsNullOrWhiteSpace())
                     {
@@ -144,18 +152,28 @@ namespace CodeStream.VisualStudio.Services
                     }
                     else
                     {
-                        var color = VSColorTheme.GetThemedColor(item.VisualStudioKey);
+                        color = ThemeManager.GetThemedColor(shell, item.ThemeResourceKey);
                         value = item.Modifier == null ? color.ToHex() : item.Modifier(color);
                     }
 
                     styleSheet = styleSheet.Replace($"--cs--{item.Key}--", value);
+
+                    if (isDebuggingEnabled)
+                    {
+                        outputDebug[item.Key] = Tuple.Create(item?.ThemeResourceKey?.Name, color, value);
+                    }
                 }
             }
 
-           harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{styleSheet}</style>");
-#if RELEASE
+            harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{styleSheet}</style>");
+
+            if (isDebuggingEnabled)
+            {
+                Log.Debug(outputDebug.ToJson(format: true));
+                Log.Debug(styleSheet);
+            }
             Log.Verbose(harness);
-#endif
+
             return harness;
         }
 
@@ -174,8 +192,6 @@ namespace CodeStream.VisualStudio.Services
         protected virtual void Dispose(bool disposing)
         {
         }
-
-
     }
 
     public class NullBrowserService : BrowserServiceBase
