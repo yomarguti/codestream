@@ -73,8 +73,8 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
                 webViewService.postResponse(message.id, response, null)
             }
         } catch (e: Exception) {
-            logger.error(e)
-            e.printStackTrace()
+            logger.warn(e)
+//            e.printStackTrace()
             if (message.id != null) {
                 webViewService.postResponse(message.id, null, e.message)
             }
