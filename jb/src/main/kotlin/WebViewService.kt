@@ -3,13 +3,11 @@ package com.codestream
 import com.codestream.protocols.webview.WebViewNotification
 import com.github.salomonbrys.kotson.jsonObject
 import com.google.gson.JsonElement
+import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.teamdev.jxbrowser.chromium.Browser
-import com.teamdev.jxbrowser.chromium.BrowserContext
-import com.teamdev.jxbrowser.chromium.BrowserContextParams
-import com.teamdev.jxbrowser.chromium.BrowserPreferences
+import com.teamdev.jxbrowser.chromium.*
 import com.teamdev.jxbrowser.chromium.events.ScriptContextEvent
 import com.teamdev.jxbrowser.chromium.events.ScriptContextListener
 import com.teamdev.jxbrowser.chromium.swing.BrowserView
@@ -19,15 +17,14 @@ import java.nio.charset.Charset
 import javax.swing.UIManager
 
 
-class WebViewService(val project: Project) : Disposable {
-
+class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHandler, ResourceHandler {
     private val logger = Logger.getInstance(WebViewService::class.java)
     private val router = WebViewRouter(project)
     private val browser = createBrowser(router)
     val webView = BrowserView(browser)
 
-    lateinit var tempDir: File
-    lateinit var htmlFile: File
+    private lateinit var tempDir: File
+    private lateinit var htmlFile: File
 
     init {
         extractAssets()
@@ -111,12 +108,11 @@ class WebViewService(val project: Project) : Disposable {
     private fun createBrowser(router: WebViewRouter): Browser {
         configureJxBrowser()
         val browser = Browser(createBrowserContext())
+        browser.dialogHandler = this
+        browser.loadHandler = this
+        browser.context.networkService.resourceHandler = this
         browser.configurePreferences()
         browser.connectRouter(router)
-
-        //        browser.dialogHandler = this
-        //        browser.loadHandler
-        //        browser.context.networkService.resourceHandler
 
         return browser
     }
@@ -179,6 +175,29 @@ class WebViewService(val project: Project) : Disposable {
         })
     }
 
+    override fun canLoadResource(params: ResourceParams?): Boolean {
+        params?.let {
+            if (it.resourceType == ResourceType.IMAGE || params.url.startsWith("file://")) {
+                return true
+            }
+            if (params.resourceType == ResourceType.MAIN_FRAME) {
+                BrowserUtil.browse(params.url)
+            }
+        }
+
+        return false
+    }
+
+    override fun onLoad(params: LoadParams?) = false
+    override fun onCertificateError(params: CertificateErrorParams?) = false
+    override fun onBeforeUnload(params: UnloadDialogParams?) = CloseStatus.CANCEL
+    override fun onAlert(params: DialogParams?) = Unit
+    override fun onConfirmation(params: DialogParams?) = CloseStatus.CANCEL
+    override fun onFileChooser(params: FileChooserParams?) = CloseStatus.CANCEL
+    override fun onPrompt(params: PromptDialogParams?) = CloseStatus.CANCEL
+    override fun onReloadPostData(params: ReloadPostDataParams?) = CloseStatus.CANCEL
+    override fun onColorChooser(params: ColorChooserParams?) = CloseStatus.CANCEL
+    override fun onSelectCertificate(params: CertificatesDialogParams?) = CloseStatus.CANCEL
 }
 
 
