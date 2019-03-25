@@ -7,6 +7,7 @@ import {
 	HostDidChangeActiveEditorNotificationType,
 	HostDidChangeConfigNotificationType,
 	HostDidChangeEditorSelectionNotificationType,
+	HostDidChangeFocusNotificationType,
 	HostDidLogoutNotificationType,
 	isIpcRequestMessage,
 	LoginRequest,
@@ -26,7 +27,7 @@ import {
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
 } from "@codestream/protocols/webview";
-import { CompositeDisposable, Emitter, Point, Range, TextEditor } from "atom";
+import { CompositeDisposable, Disposable, Emitter, Point, Range, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
 import { shell } from "electron";
 import { NotificationType } from "vscode-languageserver-protocol";
@@ -167,8 +168,16 @@ export class CodestreamView {
 	}
 
 	private initialize() {
+		const onBlur = () => this.sendEvent(HostDidChangeFocusNotificationType, { focused: false });
+		const onFocus = () => this.sendEvent(HostDidChangeFocusNotificationType, { focused: true });
+		window.addEventListener("focus", onFocus);
+		window.addEventListener("blur", onBlur);
 		// TODO?: create a controller to house this stuff so it isn't re-init everytime this view is instantiated
 		this.subscriptions.add(
+			new Disposable(() => {
+				window.removeEventListener("blur", onBlur, false);
+				window.removeEventListener("focus", onFocus, false);
+			}),
 			this.session.agent.onInitialized(() => {
 				this.subscriptions.add(
 					this.session.agent.onDidChangeData(data =>
