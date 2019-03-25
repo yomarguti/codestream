@@ -3,6 +3,9 @@ license.jar
 src/main/resources/webview
 src/main/resources/agent
 src/protocols/
+build
+out
 node_modules
 *.class
 temp.json
+.gradle
