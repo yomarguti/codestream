@@ -73,3 +73,11 @@ object CodemarkNotifications {
     }
 }
 
+object StreamNotifications {
+    class Show(
+        val streamId: String,
+        val threadId: String? = null
+    ) : WebViewNotification {
+        override fun getMethod(): String = "webview/stream/show"
+    }
+}

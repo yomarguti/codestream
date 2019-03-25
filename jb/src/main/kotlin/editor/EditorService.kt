@@ -4,6 +4,7 @@ import com.codestream.ServiceConsumer
 import com.codestream.TextDocument
 import com.codestream.protocols.webview.CodemarkNotifications
 import com.codestream.protocols.webview.EditorNotifications
+import com.codestream.protocols.webview.StreamNotifications
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
@@ -331,7 +332,12 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
             return object : AnAction() {
                 override fun actionPerformed(e: AnActionEvent) {
                     ToolWindowManager.getInstance(project).getToolWindow("CodeStream").show(null)
-                    webViewService.postNotification(CodemarkNotifications.Show(id))
+                    webViewService.postNotification(
+                        StreamNotifications.Show(
+                            marker.codemark.streamId,
+                            marker.codemark.postId
+                        )
+                    )
                 }
 
             }
@@ -359,7 +365,8 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
     fun Editor.getOffset(position: Position): Int {
         val line = position.line
         val lineText = document.getText(DocumentUtil.getLineTextRange(document, line))
-        val lineTextForPosition = lineText.substring(0, Math.min(lineText.length, position.character))
+        val endIndex = Math.min(lineText.length, position.character)
+        val lineTextForPosition = lineText.substring(0, endIndex)
         val tabs = StringUtil.countChars(lineTextForPosition, '\t')
         val tabSize = settings.getTabSize(project)
         val column = tabs * tabSize + lineTextForPosition.length - tabs
