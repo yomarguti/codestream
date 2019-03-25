@@ -7,11 +7,9 @@
 
 CodeStream helps dev teams discuss, review, and understand code. Discussing code is now as simple as commenting on a Google Doc — select the code and type your question.
 
-![CodeStream](https://uploads-ssl.webflow.com/5c1b064db9734016ca52ab39/5c1d1027ea7f432072c6b762_2018-12-21%2011.08.39.gif)
+![CodeStream](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/Spatial.gif)
 
 CodeStream turns conversation into documentation by capturing all of the discussion about your code, and saving it with your code. Each discussion is represented as a "codemark" that is permanently connected to the lines of code to which it refers.
-
-![CodeStream](https://uploads-ssl.webflow.com/5c1b064db9734016ca52ab39/5c1d63a384735d6abc62db55_2018-12-21%2017.04.59.gif)
 
 ## Does your team use Slack?
 
