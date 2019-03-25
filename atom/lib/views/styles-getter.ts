@@ -1,4 +1,12 @@
-export function getStylesheets() {
+export async function getStylesheets(): Promise<string[]> {
+	if (atom.packages.isPackageActive("codestream") === false) {
+		await new Promise(resolve =>
+			atom.packages.onDidActivatePackage(pkg => {
+				if (pkg.name === "codestream") resolve();
+			})
+		);
+	}
+
 	const styles = atom.styles.getStyleElements();
 
 	const [atomStyles, editorStyles, ...rest] = styles;

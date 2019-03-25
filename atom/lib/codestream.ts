@@ -73,7 +73,7 @@ class CodestreamPackage {
 	}
 
 	// Package lifecyle
-	activate() {}
+	// activate() {}
 
 	// Package lifecyle
 	serialize(): PackageState {

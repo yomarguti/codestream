@@ -137,11 +137,11 @@ export class CodestreamView {
 		iframe.src = asAbsolutePath("dist/webview/index.html");
 
 		iframe.classList.add("webview");
-		iframe.addEventListener("load", () => {
+		iframe.addEventListener("load", async () => {
 			iframe.contentWindow!.postMessage(
 				{
 					label: "codestream-webview-initialize",
-					styles: getStylesheets(),
+					styles: await getStylesheets(),
 				},
 				"*",
 				[this.channel.webview]
@@ -149,9 +149,9 @@ export class CodestreamView {
 		});
 
 		this.subscriptions.add(
-			atom.themes.onDidChangeActiveThemes(() => {
+			atom.themes.onDidChangeActiveThemes(async () => {
 				iframe.contentWindow!.postMessage(
-					{ label: "update-styles", styles: getStylesheets() },
+					{ label: "update-styles", styles: await getStylesheets() },
 					"*"
 				);
 			})
