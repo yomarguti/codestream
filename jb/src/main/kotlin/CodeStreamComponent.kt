@@ -12,6 +12,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.wm.ToolWindowAnchor
 import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.openapi.wm.WindowManager
 
 
 val gson = Gson()
@@ -44,6 +45,10 @@ class CodeStreamComponent(project: Project) : Disposable, ServiceConsumer(projec
                 ModuleListenerImpl(project)
             )
         }
+
+        val statusBar = WindowManager.getInstance().getIdeFrame(null).statusBar
+//        val statusBar = WindowManager.getInstance().getStatusBar(project)
+        statusBar?.addWidget(CodeStreamStatusBarWidget(project))
     }
 
     override fun dispose() {
