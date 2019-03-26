@@ -27,6 +27,9 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable, Ser
             state.autoSignIn = gui.autoSignIn.isSelected
             state.serverUrl = gui.serverUrl.text
             state.webAppUrl = gui.webAppUrl.text
+            state.avatars = gui.showAvatars.isSelected
+            state.muteAll = gui.muteAll.isSelected
+            state.team = gui.team.text
         }
     }
 
@@ -38,6 +41,9 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable, Ser
             autoSignIn.isSelected = state.autoSignIn
             serverUrl.text = state.serverUrl
             webAppUrl.text = state.webAppUrl
+            showAvatars.isSelected = state.avatars
+            muteAll.isSelected = state.muteAll
+            team.text = state.team
         }
 
         _gui = gui

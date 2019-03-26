@@ -61,9 +61,9 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
                 "host/signup" -> signup(message)
                 "host/signup/complete" -> signupComplete(message)
                 "host/context/didChange" -> contextDidChange(message)
-    //            "host/webview/reload" -> Unit
-    //            "host/marker/compare" -> Unit
-    //            "host/marker/apply" -> Unit
+                //            "host/webview/reload" -> Unit
+                //            "host/marker/compare" -> Unit
+                //            "host/marker/apply" -> Unit
                 "host/configuration/update" -> configurationUpdate(message)
                 "host/editor/range/highlight" -> editorRangeHighlight(message)
                 "host/editor/range/reveal" -> editorRangeReveal(message)
@@ -83,7 +83,10 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
 
     private suspend fun bootstrap(): Any {
         if (settingsService.state.autoSignIn) {
-            val attr = CredentialAttributes(generateServiceName("CodeStream", settingsService.state.serverUrl), settingsService.state.email)
+            val attr = CredentialAttributes(
+                generateServiceName("CodeStream", settingsService.state.serverUrl),
+                settingsService.state.email
+            )
             val token = PasswordSafe.instance.getPassword(attr)
 
             if (token != null) {
@@ -99,7 +102,8 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
                         settingsService.extensionInfo,
                         settingsService.ideInfo,
                         settingsService.traceLevel,
-                        settingsService.isDebugging
+                        settingsService.isDebugging,
+                        settingsService.team
                     )
                 ).await()
 
@@ -120,18 +124,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
                         true,
                         Services(false)
                     ),
-                    settingsService.state.webViewConfig,
-//                    Configs(
-//                        settingsService.state.serverUrl,
-//                        settingsService.state.email,
-//                        settingsService.openCommentOnSelect,
-//                        settingsService.showHeadshots,
-//                        settingsService.showMarkers,
-//                        settingsService.viewCodemarksInline,
-//                        settingsService.muteAll,
-//                        settingsService.team,
-//                        settingsService.isDebugging
-//                    ),
+                    settingsService.getWebviewConfigs(),
                     settingsService.environment,
                     settingsService.environmentVersion,
                     WebViewContext(
@@ -181,14 +174,15 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
         val params = gson.fromJson<LoginRequest>(message.params!!)
         val loginResult = agentService.agent.login(
             LoginWithPasswordParams(
-            params.email,
-            params.password,
-            settingsService.state.serverUrl,
-            settingsService.extensionInfo,
-            settingsService.ideInfo,
-            settingsService.traceLevel,
-            settingsService.isDebugging
-        )
+                params.email,
+                params.password,
+                settingsService.state.serverUrl,
+                settingsService.extensionInfo,
+                settingsService.ideInfo,
+                settingsService.traceLevel,
+                settingsService.isDebugging,
+                settingsService.team
+            )
         ).await()
 
         loginResult.result.error?.let {
@@ -199,7 +193,10 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
         sessionService.userLoggedIn = loginResult.result.userLoggedIn
 
         PasswordSafe.instance.set(
-            CredentialAttributes(generateServiceName("CodeStream", settingsService.state.serverUrl), settingsService.state.email),
+            CredentialAttributes(
+                generateServiceName("CodeStream", settingsService.state.serverUrl),
+                settingsService.state.email
+            ),
             Credentials(null, loginResult.result.loginResponse!!.accessToken)
         )
 
@@ -213,18 +210,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
                 true,
                 Services(false)
             ),
-            settingsService.state.webViewConfig,
-//            Configs(
-//                settingsService.state.serverUrl,
-//                settingsService.state.email,
-//                settingsService.openCommentOnSelect,
-//                settingsService.showHeadshots,
-//                settingsService.showMarkers,
-//                settingsService.viewCodemarksInline,
-//                settingsService.muteAll,
-//                settingsService.team,
-//                settingsService.isDebugging
-//            ),
+            settingsService.getWebviewConfigs(),
             settingsService.environment,
             settingsService.environmentVersion,
             WebViewContext(
@@ -269,7 +255,10 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
         sessionService.userLoggedIn = null
         agentService.agent.logout(LogoutParams())
         PasswordSafe.instance.set(
-            CredentialAttributes(generateServiceName("CodeStream", settingsService.state.serverUrl), settingsService.state.email),
+            CredentialAttributes(
+                generateServiceName("CodeStream", settingsService.state.serverUrl),
+                settingsService.state.email
+            ),
             null
         )
         webViewService.reload()
@@ -281,14 +270,17 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
 //        else
 //            sessionService.signupToken
         val token = sessionService.signupToken
-        val loginResult = agentService.agent.login(LoginWithSignupTokenParams(
-            token,
-            settingsService.state.serverUrl,
-            settingsService.extensionInfo,
-            settingsService.ideInfo,
-            settingsService.traceLevel,
-            settingsService.isDebugging
-        )).await()
+        val loginResult = agentService.agent.login(
+            LoginWithSignupTokenParams(
+                token,
+                settingsService.state.serverUrl,
+                settingsService.extensionInfo,
+                settingsService.ideInfo,
+                settingsService.traceLevel,
+                settingsService.isDebugging,
+                settingsService.team
+            )
+        ).await()
 
         loginResult.result.error?.let {
             throw Exception(it)
@@ -298,7 +290,10 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
 
         sessionService.userLoggedIn = loginResult.result.userLoggedIn
         PasswordSafe.instance.set(
-            CredentialAttributes(generateServiceName("CodeStream", settingsService.state.serverUrl), settingsService.state.email),
+            CredentialAttributes(
+                generateServiceName("CodeStream", settingsService.state.serverUrl),
+                settingsService.state.email
+            ),
             Credentials(null, loginResult.result.loginResponse!!.accessToken)
         )
         editorService.updateMarkers()
@@ -311,18 +306,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
                 true,
                 Services(false)
             ),
-            settingsService.state.webViewConfig,
-//            Configs(
-//                settingsService.state.serverUrl,
-//                settingsService.state.email,
-//                settingsService.openCommentOnSelect,
-//                settingsService.showHeadshots,
-//                settingsService.showMarkers,
-//                settingsService.viewCodemarksInline,
-//                settingsService.muteAll,
-//                settingsService.team,
-//                settingsService.isDebugging
-//            ),
+            settingsService.getWebviewConfigs(),
             settingsService.environment,
             settingsService.environmentVersion,
             WebViewContext(
@@ -365,7 +349,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
 
     private fun configurationUpdate(message: WebViewMessage): Any {
         val notification = gson.fromJson<UpdateConfigurationRequest>(message.params!!)
-        settingsService.state.webViewConfig[notification.name] = notification.value
+        settingsService.set(notification.name, notification.value)
         webViewService.postNotification(
             "webview/config/didChange",
             jsonObject(notification.name to (notification.value == "true"))

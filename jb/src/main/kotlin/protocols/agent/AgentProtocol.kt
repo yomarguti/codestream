@@ -15,8 +15,8 @@ abstract class LoginParams(
     val extension: Extension,
     val ide: Ide,
     val traceLevel: TraceLevel,
-    val isDebugging: Boolean
-//    val team: String?,
+    val isDebugging: Boolean,
+    val team: String? = null
 //    val teamId: String,
 )
 
@@ -27,7 +27,8 @@ class LoginWithPasswordParams(
     extension: Extension,
     ide: Ide,
     traceLevel: TraceLevel,
-    isDebugging: Boolean
+    isDebugging: Boolean,
+    team: String?
 ) : LoginParams(
     email,
     password,
@@ -36,7 +37,8 @@ class LoginWithPasswordParams(
     extension,
     ide,
     traceLevel,
-    isDebugging
+    isDebugging,
+    team
 )
 
 class LoginWithTokenParams(
@@ -46,7 +48,8 @@ class LoginWithTokenParams(
     extension: Extension,
     ide: Ide,
     traceLevel: TraceLevel,
-    isDebugging: Boolean
+    isDebugging: Boolean,
+    team: String?
 ) : LoginParams(
     email,
     token,
@@ -55,7 +58,8 @@ class LoginWithTokenParams(
     extension,
     ide,
     traceLevel,
-    isDebugging
+    isDebugging,
+    team
 )
 
 class LoginWithSignupTokenParams(
@@ -64,7 +68,8 @@ class LoginWithSignupTokenParams(
     extension: Extension,
     ide: Ide,
     traceLevel: TraceLevel,
-    isDebugging: Boolean
+    isDebugging: Boolean,
+    team: String?
 ) : LoginParams(
     null,
     null,
@@ -73,7 +78,8 @@ class LoginWithSignupTokenParams(
     extension,
     ide,
     traceLevel,
-    isDebugging
+    isDebugging,
+    team
 )
 
 class LoginResult(

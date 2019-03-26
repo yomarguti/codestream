@@ -17,8 +17,7 @@ class SignedOutBootstrapResponse(
 
 class SignedInBootstrapResponse(
     val capabilities: Capabilities,
-//    val configs: Configs,
-    val configs: Map<String, Any?>,
+    val configs: Configs,
     val env: CodeStreamEnvironment,
     val version: String,
     val context: WebViewContext,
@@ -37,12 +36,9 @@ class Capabilities(
 class Configs(
     val serverUrl: String,
     val email: String?,
-    val openCommentOnSelect: Boolean,
     val showHeadshots: Boolean,
-    val showMarkers: Boolean,
     val viewCodemarksInline: Boolean,
     val muteAll: Boolean,
-    val team: String?,
     val debug: Boolean
 )
 

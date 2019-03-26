@@ -9,32 +9,28 @@ import protocols.agent.Extension
 import protocols.agent.Ide
 import protocols.agent.TraceLevel
 import protocols.webview.CodeStreamEnvironment
+import protocols.webview.Configs
 
-data class Settings(
-    val email: String?,
-    val autoSignIn: Boolean,
-    val muteAll: Boolean
-)
+const val INLINE_CODEMARKS = "viewCodemarksInline"
+
+// PD urls
+// var serverUrl: String = "https://pd-api.codestream.us:9443"
+// var webAppUrl: String = "http://pd-app.codestream.us:1380"
+
+// QA urls
+// var serverUrl: String = "https://qa-api.codestream.us"
+// var webAppUrl: String = "http://qa-app.codestream.us"
 
 data class SettingsServiceState(
     var autoSignIn: Boolean = true,
     var email: String? = null,
-//    var serverUrl: String = "https://pd-api.codestream.us:9443",
-//        var serverUrl: String = "https://qa-api.codestream.us"
-        var serverUrl: String = "https://api.codestream.com",
-//    var webAppUrl: String = "http://pd-app.codestream.us:1380",
-//        var webAppUrl: String = "http://qa-app.codestream.us",
-        var webAppUrl: String = "https://app.codestream.com",
+    var serverUrl: String = "https://api.codestream.com",
+    var webAppUrl: String = "https://app.codestream.com",
+    var avatars: Boolean = true,
+    var muteAll: Boolean = false,
+    var team: String? = null,
     var webViewConfig: MutableMap<String, String?> = mutableMapOf(
-//        "serverUrl" to serverUrl,
-//        "email" to null,
-//        "openCommentOnSelect" to true,
-//        "showHeadshots" to true,
-//        "showMarkers" to true,
-//        "viewCodemarksInline" to true,
-//        "muteAll" to false,
-//        "team" to null,
-//        "debug" to true
+        INLINE_CODEMARKS to "true"
     )
 )
 
@@ -48,13 +44,11 @@ class SettingsService : PersistentStateComponent<SettingsServiceState> {
         _state = state
     }
 
-    val muteAll = false
-    val openCommentOnSelect = true
-    val showHeadshots = true
-    val showMarkers = true
-    val viewCodemarksInline = true
-    val team: String?
-        get() = null
+    private val viewCodemarksInline: Boolean
+        get() {
+            return state.webViewConfig[INLINE_CODEMARKS]?.toBoolean() ?: true
+        }
+
     val environment: CodeStreamEnvironment
         get() = CodeStreamEnvironment.PROD
     val environmentVersion: String
@@ -75,12 +69,31 @@ class SettingsService : PersistentStateComponent<SettingsServiceState> {
         get() {
             return true
         }
-    val debug = true
     var currentStreamId: String? = null
     var threadId: String? = null
 
-    fun getSettings(): Settings {
-        return Settings(state.email, state!!.autoSignIn, false)
-    }
+    val team
+        get() = state.team
 
+    fun getWebviewConfigs(): Configs = Configs(
+        state.serverUrl,
+        state.email,
+        state.avatars,
+        viewCodemarksInline,
+        state.muteAll,
+        isDebugging
+    )
+
+    // 💩: I HATE THIS
+    fun set(name: String, value: String?) {
+        if (state.webViewConfig.containsKey(name)) {
+            state.webViewConfig[name] = value
+        } else {
+            when (name) {
+                "muteAll" -> value?.let {
+                    state.muteAll = it.toBoolean()
+                }
+            }
+        }
+    }
 }
