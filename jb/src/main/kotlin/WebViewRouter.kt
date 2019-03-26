@@ -191,6 +191,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
 
         val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())
         sessionService.userLoggedIn = loginResult.result.userLoggedIn
+        settingsService.state.email = params.email
 
         PasswordSafe.instance.set(
             CredentialAttributes(
@@ -289,6 +290,13 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
         val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())
 
         sessionService.userLoggedIn = loginResult.result.userLoggedIn
+
+        when (loginResult.result.state) {
+            null -> throw Exception("Login result from agent has no error but state is null")
+            else -> settingsService.state.email = loginResult.result.state.email
+        }
+
+
         PasswordSafe.instance.set(
             CredentialAttributes(
                 generateServiceName("CodeStream", settingsService.state.serverUrl),
