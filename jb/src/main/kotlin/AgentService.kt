@@ -1,5 +1,6 @@
 package com.codestream
 
+import com.codestream.editor.baseUri
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.JsonObject
 import com.intellij.execution.configurations.GeneralCommandLine
@@ -93,7 +94,7 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
             "passwordOrToken" to passwordOrToken
         }
 
-        initParams.rootUri = File(project.basePath).toURI().toString()
+        initParams.rootUri = project.baseUri
         return initParams
     }
 
