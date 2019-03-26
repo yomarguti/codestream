@@ -2,7 +2,6 @@ package com.codestream.editor
 
 import com.codestream.ServiceConsumer
 import com.codestream.TextDocument
-import com.codestream.protocols.webview.CodemarkNotifications
 import com.codestream.protocols.webview.EditorNotifications
 import com.codestream.protocols.webview.StreamNotifications
 import com.intellij.openapi.actionSystem.AnAction
@@ -18,10 +17,12 @@ import com.intellij.openapi.editor.markup.*
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.text.StringUtil
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.DocumentUtil
 import kotlinx.coroutines.GlobalScope
@@ -36,6 +37,8 @@ import protocols.webview.EditorMetrics
 import protocols.webview.EditorSelection
 import java.awt.Font
 import java.awt.Point
+import java.io.File
+import java.net.URI
 import javax.swing.Icon
 
 class EditorService(val project: Project) : ServiceConsumer(project) {
@@ -381,37 +384,6 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
         return Math.min(Math.max(offset, 0), docLength)
     }
 
-    private val Editor.visibleRanges: List<Range>
-        get() {
-//        editor.scrollingModel
-//        editor.lineHeight
-//        editor.scrollingModel.verticalScrollOffset
-            val visibleArea = scrollingModel.visibleArea
-
-            val viewportStartPoint = visibleArea.location
-            val startLogicalPos = xyToLogicalPosition(viewportStartPoint)
-            val startOffset = logicalPositionToOffset(startLogicalPos)
-            val startLspPos = document.lspPosition(startOffset)
-
-//            println("\n\n\nstartOffset: ${document.lspPosition(startOffset)}")
-//            println("First line actual y: ${startActualPoint.y}")
-//            println("Visible area min y: ${visibleArea.y}")
-//            println("Margin top: $marginTop")
-
-            val viewportEndPoint = Point(
-                visibleArea.location.x + visibleArea.width,
-                visibleArea.location.y + visibleArea.height
-            )
-            val endLogicalPos = xyToLogicalPosition(viewportEndPoint)
-
-            val range = Range(
-                startLspPos,
-                Position(endLogicalPos.line, endLogicalPos.column)
-            )
-
-            return listOf(range)
-        }
-
     private val Editor.margins: EditorMargins
         get() {
             return EditorMargins(0, 0, 0, 0)
@@ -528,6 +500,20 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
         }
     }
 
+    fun reveal(uri: String, range: Range?) = ApplicationManager.getApplication().invokeLater {
+        val selectedEditor = FileEditorManager.getInstance(project).selectedTextEditor
+        selectedEditor?.let {
+            if (it.document.uri == uri && (range == null || it.isRangeVisible(range))) {
+                return@invokeLater
+            }
+        }
+
+        val line = range?.start?.line ?: 0
+        val virtualFile = LocalFileSystem.getInstance().findFileByIoFile(File(URI(uri))) ?: return@invokeLater
+        val editorManager = FileEditorManager.getInstance(project)
+        editorManager.openTextEditor(OpenFileDescriptor(project, virtualFile, line, 0), true)
+    }
+
     val Range.arrayString: String
         get() = "[${start.line},${start.character},${end.line},${end.character}]"
 
@@ -584,6 +570,14 @@ val Document.uri: String?
         return file.uri
     }
 
+fun Document.lspPosition(offset: Int): Position {
+    val line = getLineNumber(offset)
+    val lineStart = getLineStartOffset(line)
+    val lineTextBeforeOffset = getText(TextRange.create(lineStart, offset))
+    val column = lineTextBeforeOffset.length
+    return Position(line, column)
+}
+
 val Editor.selectionOrCurrentLine: Range
     get() = if (selectionModel.hasSelection()) {
         Range(document.lspPosition(selectionModel.selectionStart), document.lspPosition(selectionModel.selectionEnd))
@@ -594,12 +588,43 @@ val Editor.selectionOrCurrentLine: Range
         Range(document.lspPosition(startOffset), document.lspPosition(endOffset))
     }
 
-fun Document.lspPosition(offset: Int): Position {
-    val line = getLineNumber(offset)
-    val lineStart = getLineStartOffset(line)
-    val lineTextBeforeOffset = getText(TextRange.create(lineStart, offset))
-    val column = lineTextBeforeOffset.length
-    return Position(line, column)
+
+private val Editor.visibleRanges: List<Range>
+    get() {
+//        editor.scrollingModel
+//        editor.lineHeight
+//        editor.scrollingModel.verticalScrollOffset
+        val visibleArea = scrollingModel.visibleArea
+
+        val viewportStartPoint = visibleArea.location
+        val startLogicalPos = xyToLogicalPosition(viewportStartPoint)
+        val startOffset = logicalPositionToOffset(startLogicalPos)
+        val startLspPos = document.lspPosition(startOffset)
+
+//            println("\n\n\nstartOffset: ${document.lspPosition(startOffset)}")
+//            println("First line actual y: ${startActualPoint.y}")
+//            println("Visible area min y: ${visibleArea.y}")
+//            println("Margin top: $marginTop")
+
+        val viewportEndPoint = Point(
+            visibleArea.location.x + visibleArea.width,
+            visibleArea.location.y + visibleArea.height
+        )
+        val endLogicalPos = xyToLogicalPosition(viewportEndPoint)
+
+        val range = Range(
+            startLspPos,
+            Position(endLogicalPos.line, endLogicalPos.column)
+        )
+
+        return listOf(range)
+    }
+
+private fun Editor.isRangeVisible(range: Range): Boolean {
+    val ranges = this.visibleRanges
+    val firstRange = ranges.first()
+    val lastRange = ranges.last()
+    return range.start.line >= firstRange.start.line && range.end.line <= lastRange.end.line
 }
 
 

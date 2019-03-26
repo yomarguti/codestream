@@ -379,12 +379,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
 
     fun editorRangeReveal(message: WebViewMessage) {
         val request = gson.fromJson<EditorRangeRevealRequest>(message.params!!)
-        val virtualFile = LocalFileSystem.getInstance().findFileByIoFile(File(URI(request.uri))) ?: return
-        ApplicationManager.getApplication().invokeLater {
-            val editorManager = FileEditorManager.getInstance(project)
-            val line = request.range?.start?.line ?: 0
-            editorManager.openTextEditor(OpenFileDescriptor(project, virtualFile, line, 0), true)
-        }
+        editorService.reveal(request.uri, request.range)
     }
 
     private fun parse(json: String): WebViewMessage {
