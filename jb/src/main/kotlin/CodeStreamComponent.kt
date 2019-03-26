@@ -3,6 +3,7 @@ package com.codestream
 import com.codestream.editor.EditorFactoryListenerImpl
 import com.codestream.editor.FileEditorManagerListenerImpl
 import com.google.gson.Gson
+import com.intellij.ProjectTopics
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.EditorFactory
@@ -33,12 +34,16 @@ class CodeStreamComponent(project: Project) : Disposable, ServiceConsumer(projec
 
         EditorFactory.getInstance().addEditorFactoryListener(EditorFactoryListenerImpl(project), this)
 
-        project.messageBus
-            .connect()
-            .subscribe(
+        project.messageBus.connect().let {
+            it.subscribe(
                 FileEditorManagerListener.FILE_EDITOR_MANAGER,
                 FileEditorManagerListenerImpl(project)
             )
+            it.subscribe(
+                ProjectTopics.MODULES,
+                ModuleListenerImpl(project)
+            )
+        }
     }
 
     override fun dispose() {

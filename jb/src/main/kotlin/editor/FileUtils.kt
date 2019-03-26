@@ -1,6 +1,8 @@
 package com.codestream.editor
 
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import java.io.File
 import java.net.URL
 
 
@@ -25,6 +27,17 @@ const val URI_VALID_FILE_BEGIN: String = "file:///"
 val VirtualFile.uri: String?
     get() {
         return try {
+            sanitizeURI(URL(url.replace(" ", SPACE_ENCODED)).toURI().toString())
+        } catch (e: Exception) {
+            // LOG.warn(e)
+            null
+        }
+    }
+
+val Project.baseUri: String?
+    get() {
+        return try {
+            val url = "file://" + File(basePath).canonicalPath
             sanitizeURI(URL(url.replace(" ", SPACE_ENCODED)).toURI().toString())
         } catch (e: Exception) {
             // LOG.warn(e)

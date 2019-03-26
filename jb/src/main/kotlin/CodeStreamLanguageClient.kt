@@ -6,7 +6,6 @@ import com.intellij.openapi.project.Project
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification
 import org.eclipse.lsp4j.services.LanguageClient
-import java.io.File
 import java.util.concurrent.CompletableFuture
 
 class CodeStreamLanguageClient(private val project: Project) : LanguageClient, ServiceConsumer(project) {
@@ -37,9 +36,7 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient, S
     }
 
     override fun workspaceFolders(): CompletableFuture<MutableList<WorkspaceFolder>> {
-        val uri = File(project.basePath).toURI().toString()
-        val folder = WorkspaceFolder(uri)
-        return CompletableFuture.completedFuture(mutableListOf(folder))
+        return CompletableFuture.completedFuture(project.workspaceFolders.toMutableList())
     }
 
     override fun configuration(configurationParams: ConfigurationParams): CompletableFuture<List<Any>> {
