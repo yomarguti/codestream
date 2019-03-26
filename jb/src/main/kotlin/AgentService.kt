@@ -198,7 +198,17 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
         val json = remoteEndpoint
             .request("codestream/textDocument/markers", params)
             .await() as JsonObject
-        return gson.fromJson(json)
+        val result = gson.fromJson<DocumentMarkersResult>(json)
+
+        // Numbers greater than Integer.MAX_VALUE are deserialized as -1. It should not happen,
+        // but some versions of the plugin might do that trying to represent a whole line.
+        for (marker in result.markers) {
+            if (marker.range.end.character == -1) {
+                marker.range.end.character = Integer.MAX_VALUE
+            }
+        }
+
+        return result
     }
 //
 //    suspend fun documentMarkers(file: String): DocumentMarkersResult? {

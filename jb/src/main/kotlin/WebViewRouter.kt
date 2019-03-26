@@ -375,6 +375,13 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
 
     fun editorRangeHighlight(message: WebViewMessage) {
         val request = gson.fromJson<EditorRangeHighlightRequest>(message.params!!)
+
+        // Numbers greater than Integer.MAX_VALUE are deserialized as -1. It should not happen,
+        // but some versions of the plugin might do that trying to represent a whole line.
+        if (request.range.end.character == -1) {
+            request.range.end.character = Integer.MAX_VALUE
+        }
+
         editorService.toggleRangeHighlight(request.range, request.highlight)
     }
 
