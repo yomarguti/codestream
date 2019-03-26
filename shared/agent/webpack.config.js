@@ -37,6 +37,22 @@ module.exports = function(env, argv) {
 						__dirname,
 						"../vs-codestream/src/CodeStream.VisualStudio/dist/agent-vs.js.map"
 					)
+				},
+				{
+					source: "dist/agent-vs.js",
+					// TODO: Use environment variable if exists
+					destination: path.resolve(
+						__dirname,
+						"../jetbrains-codestream/src/main/resources/agent/agent-vs.js"
+					)
+				},
+				{
+					source: "dist/agent-vs.js.map",
+					// TODO: Use environment variable if exists
+					destination: path.resolve(
+						__dirname,
+						"../jetbrains-codestream/src/main/resources/agent/agent-vs.js.map"
+					)
 				}
 			]
 		}
