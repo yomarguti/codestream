@@ -170,7 +170,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
                 Capabilities(false, false, false, false, Services(false)),
                 mapOf("email" to settingsService.state.email),
                 settingsService.environment,
-                "6.6.6"
+                settingsService.environmentVersion
             )
         }
         TODO("not implemented")

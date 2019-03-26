@@ -3,6 +3,7 @@ package com.codestream
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.JsonObject
 import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.future.await
@@ -53,7 +54,6 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
                 "node",
                 "--nolazy",
 //                "--inspect=6010",
-//                "/Users/mfarias/Code/codestream-lsp-agent/dist/agent-vs.js",
                 agentJs.absolutePath,
                 "--stdio",
                 "--log=${agentLog.absolutePath}"
@@ -100,10 +100,10 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
     private fun initializationOptions(): MutableMap<String, Any?> {
         return mutableMapOf(
             "traceLevel" to "debug",
-            "extension" to mapOf("versionFormatted" to "6.6.6"),
+            "extension" to mapOf("versionFormatted" to settingsService.environmentVersion),
             "ide" to mapOf(
                 "name" to "IntelliJ",
-                "version" to "666"
+                "version" to ApplicationInfo.getInstance().fullVersion
             ),
             "serverUrl" to settingsService.state.serverUrl
         )
