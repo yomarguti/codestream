@@ -41,17 +41,39 @@ dependencies {
 compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
+
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
+
 intellij {
     version "2018.3.4"
 //    version "IC-2018.2.7"
     intellij.updateSinceUntilBuild false
 //    plugins "com.github.gtache.lsp:1.5.0"
 }
+
 patchPluginXml {
     changeNotes """
       Add change notes here.<br>
       <em>most HTML tags may be used</em>"""
 }
+
+task buildAgent(type: Exec) {
+    println "Building LSP Agent"
+    workingDir "$projectDir/../codestream-lsp-agent"
+    commandLine 'npm', 'run', 'build'
+}
+
+task buildWebView(type: Exec) {
+    println "Building WebView"
+    workingDir "$projectDir"
+    commandLine 'npm', 'run', 'build'
+}
+
+task copyAgent(type: Copy) {
+    from "$projectDir/../codestream-lsp-agent/dist/agent-vs.js", "$projectDir/../codestream-lsp-agent/dist/agent-vs.js.map"
+    into "$projectDir/src/main/resources/agent"
+}
+
+buildPlugin.dependsOn buildWebView, buildAgent, copyAgent
