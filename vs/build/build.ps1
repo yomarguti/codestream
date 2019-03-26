@@ -83,14 +83,25 @@ function Build-AgentAndWebview {
 	if ($LastExitCode -ne 0) {
 		throw "Bundling agent & webview failed"
 	}
-
 	Write-Log "Bundling agent & webview completed"
 
 	Write-Log "Packaging agent..."
 
-	& cmd /c $(Resolve-Path -path "node_modules/.bin/pkg") "src/CodeStream.VisualStudio/dist/agent.js" --targets node8-win-x86 --out-path "src/CodeStream.VisualStudio/dist/"
+	& npm run agent:pkg-vs
 	if ($LastExitCode -ne 0) {
-		throw "Packaging agent failed"
+		throw "Agent packaging failed"
+	}
+	
+	if ((Test-Path -Path "../codestream-lsp-agent/dist/win/x86") -eq $False) {
+		throw "Creating packaged artifacts failed, ensure the agent has been built"
+	}
+	if ((Get-ChildItem "../codestream-lsp-agent/dist/win/x86").Count -eq 0) {
+		throw "Creating packaged artifacts directory is empty, ensure the agent has been built"
+	}
+
+	Copy-Item -Path ..\codestream-lsp-agent\dist\win\x86\agent-vs.exe -Destination src\CodeStream.VisualStudio\dist\agent.exe -Force	
+	if ($LastExitCode -ne 0) {
+		throw "Copying packaged artifacts failed"
 	}
 
 	Write-Log "Packaging agent completed"
