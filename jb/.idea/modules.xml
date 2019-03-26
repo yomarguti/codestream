@@ -4,9 +4,6 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../codestream-components/codestream-components.iml" filepath="$PROJECT_DIR$/../codestream-components/codestream-components.iml" />
       <module fileurl="file://$PROJECT_DIR$/../codestream-lsp-agent/codestream-lsp-agent.iml" filepath="$PROJECT_DIR$/../codestream-lsp-agent/codestream-lsp-agent.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.codestream.jetbrains-codestream.iml" filepath="$PROJECT_DIR$/.idea/modules/com.codestream.jetbrains-codestream.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.codestream.jetbrains-codestream.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.codestream.jetbrains-codestream.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.codestream.jetbrains-codestream.test.iml" filepath="$PROJECT_DIR$/.idea/modules/com.codestream.jetbrains-codestream.test.iml" />
     </modules>
   </component>
 </project>
