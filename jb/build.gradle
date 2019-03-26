@@ -62,12 +62,14 @@ patchPluginXml {
 task buildAgent(type: Exec) {
     println "Building LSP Agent"
     workingDir "$projectDir/../codestream-lsp-agent"
+    commandLine 'npm', 'install', '--no-save'
     commandLine 'npm', 'run', 'build'
 }
 
 task buildWebView(type: Exec) {
     println "Building WebView"
     workingDir "$projectDir"
+    commandLine 'npm', 'install', '--no-save'
     commandLine 'npm', 'run', 'build'
 }
 
