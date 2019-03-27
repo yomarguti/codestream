@@ -23,7 +23,7 @@ module.exports = function(env, argv) {
 					destination: path.resolve(__dirname, "../atom-codestream/dist/")
 				},
 				{
-					source: "dist/agent-vs.js",
+					source: "dist/agent-pkg.js",
 					// TODO: Use environment variable if exists
 					destination: path.resolve(
 						__dirname,
@@ -31,27 +31,27 @@ module.exports = function(env, argv) {
 					)
 				},
 				{
-					source: "dist/agent-vs.js.map",
+					source: "dist/agent-pkg.js.map",
 					// TODO: Use environment variable if exists
 					destination: path.resolve(
 						__dirname,
-						"../vs-codestream/src/CodeStream.VisualStudio/dist/agent-vs.js.map"
+						"../vs-codestream/src/CodeStream.VisualStudio/dist/agent-pkg.js.map"
 					)
 				},
 				{
-					source: "dist/agent-vs.js",
+					source: "dist/agent-pkg.js",
 					// TODO: Use environment variable if exists
 					destination: path.resolve(
 						__dirname,
-						"../jetbrains-codestream/src/main/resources/agent/agent-vs.js"
+						"../jetbrains-codestream/src/main/resources/agent/agent-pkg.js"
 					)
 				},
 				{
-					source: "dist/agent-vs.js.map",
+					source: "dist/agent-pkg.js.map",
 					// TODO: Use environment variable if exists
 					destination: path.resolve(
 						__dirname,
-						"../jetbrains-codestream/src/main/resources/agent/agent-vs.js.map"
+						"../jetbrains-codestream/src/main/resources/agent/agent-pkg.js.map"
 					)
 				}
 			]
@@ -70,7 +70,7 @@ module.exports = function(env, argv) {
 	return {
 		entry: {
 			agent: "./src/main.ts",
-			"agent-vs": "./src/main-vs.ts"
+			"agent-pkg": "./src/main-vs.ts"
 		},
 		mode: env.production ? "production" : "development",
 		target: "node",
