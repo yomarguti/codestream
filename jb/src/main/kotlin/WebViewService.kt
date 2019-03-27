@@ -121,7 +121,7 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
     private fun configureJxBrowser() {
         System.setProperty("jxbrowser.ipc.external", "true")
         BrowserPreferences.setChromiumSwitches(
-//            "--remote-debugging-port=9222",
+            "--remote-debugging-port=9222",
             //        "--disable-gpu",
             //        "--disable-gpu-compositing",
             //        "--enable-begin-frame-scheduling",
