@@ -351,7 +351,7 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
         }
 
         override fun getIcon(): Icon {
-            return IconLoader.getIcon("/images/marker-${marker.codemark.type}-${marker.codemark.color}.svg")
+            return IconLoader.getIcon("/images/marker-${marker.codemark.type ?: "comment"}-${marker.codemark.color ?: "blue"}.svg")
         }
 
 
