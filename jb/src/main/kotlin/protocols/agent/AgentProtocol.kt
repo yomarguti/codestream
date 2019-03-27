@@ -117,12 +117,12 @@ class LoginState {
 
 class UserLoggedIn(val user: CSUser, val team: CSTeam, val state: LoginState, val teamsCount: Int)
 
-class CSUser {
+class CSUser (
     @SerializedName("_id")
-    lateinit var id: String
-    lateinit var username: String
-    lateinit var email: String
-}
+    var id: String,
+    var username: String,
+    var email: String
+)
 
 class CSTeam {
     @SerializedName("_id")
