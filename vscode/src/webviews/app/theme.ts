@@ -122,9 +122,9 @@ export function initializeColorPalette() {
 		}
 
 		color = computedStyle.getPropertyValue("--vscode-editor-background").trim();
+		bodyStyle.setProperty("--app-background-color", color);
 		switch (theme) {
 			case "dark":
-				bodyStyle.setProperty("--app-background-color", color);
 				bodyStyle.setProperty("--app-background-color-darker", darken(color, 4));
 				bodyStyle.setProperty("--app-background-color-hover", lighten(color, 3));
 
@@ -134,7 +134,7 @@ export function initializeColorPalette() {
 				break;
 
 			case "light":
-				bodyStyle.setProperty("--app-background-color", color);
+				bodyStyle.setProperty("--app-background-color-darker", lighten(color, 4));
 				bodyStyle.setProperty("--app-background-color-hover", darken(color, 1.5));
 
 				bodyStyle.setProperty("--base-background-color", darken(color, 3));
@@ -144,13 +144,12 @@ export function initializeColorPalette() {
 		}
 
 		color = computedStyle.getPropertyValue("--vscode-textLink-foreground").trim();
+		bodyStyle.setProperty("--text-color-info", color);
 		switch (theme) {
 			case "dark":
-				bodyStyle.setProperty("--text-color-info", color);
 				bodyStyle.setProperty("--text-color-info-muted", darken(color, 10));
 				break;
 			case "light":
-				bodyStyle.setProperty("--text-color-info", color);
 				bodyStyle.setProperty("--text-color-info-muted", color);
 				break;
 		}
