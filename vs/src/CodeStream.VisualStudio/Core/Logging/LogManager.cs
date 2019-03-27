@@ -21,20 +21,20 @@ namespace CodeStream.VisualStudio.Core.Logging
 #if DEBUG
         private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Verbose;
 #else
-        private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Warning;
+        private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Verbose;
 #endif
 
         private static readonly LoggingLevelSwitch LoggingLevelSwitch = new LoggingLevelSwitch(_defaultLoggingLevel);
 
         static Logger CreateLogger()
         {
-#if !DEBUG
-            var packageSettings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
-            if (packageSettings != null && packageSettings.TraceLevel != TraceLevel.Silent)
-            {
-                _defaultLoggingLevel = FromTraceLevel(packageSettings.TraceLevel);
-            }
-#endif
+//#if !DEBUG
+//            var packageSettings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
+//            if (packageSettings != null && packageSettings.TraceLevel != TraceLevel.Silent)
+//            {
+//                _defaultLoggingLevel = FromTraceLevel(packageSettings.TraceLevel);
+//            }
+//#endif
             var logPath = Path.Combine(Application.LogPath, "vs-extension.log");
 
             var formatter  = new MessageTemplateTextFormatter("{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{ProcessId:00000}] {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}{NewLine}{Exception}",
