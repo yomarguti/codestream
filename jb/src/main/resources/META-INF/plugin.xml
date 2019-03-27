@@ -47,7 +47,7 @@
             <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="VcsGroup"/>
             <action id="CodeStream.AddComment" class="com.codestream.actions.AddCommentAction" text="Add _Comment"
                     description="Add comment" icon="/images/marker-comment.svg">
-                <keyboard-shortcut keymap="$default" first-keystroke="control SLASH" second-keystroke="C"/>
+                <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH" second-keystroke="C"/>
                 <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="C"
                                    replace-all="true"/>
                 <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="C"
@@ -55,7 +55,7 @@
             </action>
             <action id="CodeStream.CreateIssue" class="com.codestream.actions.CreateIssueAction" text="Create _Issue"
                     description="Create issue" icon="/images/marker-issue.svg">
-                <keyboard-shortcut keymap="$default" first-keystroke="control SLASH" second-keystroke="I"/>
+                <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH" second-keystroke="I"/>
                 <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="I"
                                    replace-all="true"/>
                 <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="I"
@@ -64,7 +64,7 @@
             <action id="CodeStream.CreateBookmark" class="com.codestream.actions.CreateBookmarkAction"
                     text="Create _Bookmark"
                     description="Add comment" icon="/images/marker-bookmark.svg">
-                <keyboard-shortcut keymap="$default" first-keystroke="control SLASH" second-keystroke="B"/>
+                <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH" second-keystroke="B"/>
                 <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="B"
                                    replace-all="true"/>
                 <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="B"
@@ -72,7 +72,7 @@
             </action>
             <action id="CodeStream.GetPermalink" class="com.codestream.actions.GetPermalinkAction" text="Get _Permalink"
                     description="Get permalink" icon="/images/marker-permalink.svg">
-                <keyboard-shortcut keymap="$default" first-keystroke="control SLASH" second-keystroke="P"/>
+                <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH" second-keystroke="P"/>
                 <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="P"
                                    replace-all="true"/>
                 <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="P"
