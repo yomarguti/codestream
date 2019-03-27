@@ -114,8 +114,6 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
                 val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())
                 sessionService.userLoggedIn = loginResult.result.userLoggedIn
 
-                editorService.updateMarkers()
-
                 val webViewResponse = SignedInBootstrapResponse(
                     Capabilities(
                         true,
@@ -200,8 +198,6 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
             ),
             Credentials(null, loginResult.result.loginResponse!!.accessToken)
         )
-
-        editorService.updateMarkers()
 
         val webViewResponse = SignedInBootstrapResponse(
             Capabilities(
@@ -303,7 +299,6 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
             ),
             Credentials(null, loginResult.result.loginResponse!!.accessToken)
         )
-        editorService.updateMarkers()
 
         val webViewResponse = SignedInBootstrapResponse(
             Capabilities(

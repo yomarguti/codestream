@@ -43,6 +43,10 @@ import javax.swing.Icon
 
 class EditorService(val project: Project) : ServiceConsumer(project) {
 
+    init {
+        sessionService.onUserLoggedInChanged { updateMarkers() }
+    }
+
     private val managedDocuments = mutableMapOf<Document, DocumentVersion>()
     private val managedEditors = mutableSetOf<Editor>()
     //    private val rangeHighlighters = mutableMapOf<Editor, MutableMap<Range, RangeHighlighter>>()
@@ -86,7 +90,7 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
         }
     }
 
-    fun updateMarkers() {
+    private fun updateMarkers() {
         for ((document, _) in managedDocuments) {
             updateMarkers(document)
         }
@@ -99,19 +103,20 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
         }
     }
 
-    private fun updateMarkers(document: Document) {
-        if (sessionService.userLoggedIn == null) {
-            return
-        }
-        val uri = document.uri ?: return
-        GlobalScope.launch {
+    private fun updateMarkers(document: Document) = GlobalScope.launch {
+        val editors = EditorFactory.getInstance().getEditors(document, project)
+
+        val markers = if (sessionService.userLoggedIn == null) {
+            emptyList()
+        } else {
+            val uri = document.uri ?: return@launch
             val result = agentService.documentMarkers(DocumentMarkersParams(TextDocument(uri)))//.await()
-            val editors = EditorFactory.getInstance().getEditors(document, project)
-            for (editor in editors) {
-                editor.renderMarkers(result.markers)
-            }
+            result.markers
         }
 
+        for (editor in editors) {
+            editor.renderMarkers(markers)
+        }
     }
 
     private fun updateMarkers(editor: Editor) {
@@ -449,7 +454,6 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
             webViewService.postNotification(notification)
         }
     }
-
 
     private val _textAttributes = mutableMapOf<Editor, TextAttributes>()
     private fun getTextAttributes(editor: Editor): TextAttributes = _textAttributes.getOrPut(editor) {
