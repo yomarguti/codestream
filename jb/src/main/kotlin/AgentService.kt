@@ -49,10 +49,10 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
             temp.deleteOnExit()
             val agentLog = File(temp, "agent.log")
             val agentDestFile = getAgentDestFile(temp)
-//            val agentJs = File(temp, "agent-vs.js")
-//            val agentJsMap = File(temp, "agent-vs.js.map")
-//            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent-vs.js"), agentJs)
-//            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent-vs.js.map"), agentJsMap)
+//            val agentJs = File(temp, "agent-pkg.js")
+//            val agentJsMap = File(temp, "agent-pkg.js.map")
+//            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent-pkg.js"), agentJs)
+//            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent-pkg.js.map"), agentJsMap)
 
             FileUtils.copyToFile(javaClass.getResourceAsStream(getAgentResourcePath()), agentDestFile)
             if (platform == Platform.MAC || platform == Platform.LINUX) {
@@ -96,10 +96,10 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
 
     private fun getAgentResourcePath(): String {
         return when (platform) {
-            Platform.LINUX -> "/agent/linux/x64/agent-vs"
-            Platform.MAC -> "/agent/macos/x64/agent-vs"
-            Platform.WIN32 -> "/agent/win/x86/agent-vs.exe"
-            Platform.WIN64 -> "/agent/win/x64/agent-vs.exe"
+            Platform.LINUX -> "/agent/agent-pkg-linux-x64"
+            Platform.MAC -> "/agent/agent-pkg-macos-x64"
+            Platform.WIN32 -> "/agent/agent-pkg-win-x86.exe"
+            Platform.WIN64 -> "/agent/agent-pkg-win-x64.exe"
         }
     }
 

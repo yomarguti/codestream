@@ -45,6 +45,7 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
         htmlFile = File(tempDir, "webview.html")
 
         FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/webview.js"), File(tempDir, "webview.js"))
+        FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/webview-data.js"), File(tempDir, "webview-data.js"))
         FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/webview.css"), File(tempDir, "webview.css"))
         extractHtml()
     }
@@ -162,7 +163,7 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
                 window.asObject().setProperty("csRouter", router)
                 executeJavaScript(
                     """
-                        window.acquireVsCodeApi = function() {
+                        window.acquireHostApi = function() {
                             return {
                                 postMessage: function(message, origin) {
                                     window.csRouter.handle(JSON.stringify(message), origin);

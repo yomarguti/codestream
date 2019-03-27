@@ -59,30 +59,29 @@ patchPluginXml {
       <em>most HTML tags may be used</em>"""
 }
 
-task buildAgent(type: Exec) {
-    println "Building LSP Agent"
-//    workingDir "$projectDir/../codestream-lsp-agent"
-//    commandLine 'npm', 'install', '--no-save'
-    workingDir "$projectDir"
-    commandLine 'npm', 'run', 'agent:pkg-jetbrains'
-}
+import org.gradle.internal.os.OperatingSystem
 
-task buildWebView(type: Exec) {
-    println "Building WebView"
+task buildDeps(type: Exec) {
+    println "Building dependencies"
+
+    String npm = 'npm';
+    if (OperatingSystem.current().isWindows()) {
+        npm = 'npm.cmd'
+    }
+
     workingDir "$projectDir"
-    commandLine 'npm', 'install', '--no-save'
-    commandLine 'npm', 'run', 'build'
+    commandLine npm, 'run', 'bundle'
 }
 
 task copyAgent(type: Copy) {
-//    from "$projectDir/../codestream-lsp-agent/dist/agent-vs.js", "$projectDir/../codestream-lsp-agent/dist/agent-vs.js.map"
+//    from "$projectDir/../codestream-lsp-agent/dist/agent-pkg.js", "$projectDir/../codestream-lsp-agent/dist/agent-pkg.js.map"
     from "$projectDir/../codestream-lsp-agent/dist"
     include "**/*"
     into "$projectDir/src/main/resources/agent"
 }
-copyAgent.dependsOn buildAgent
+copyAgent.dependsOn buildDeps
 
 task buildDependencies {}
-buildDependencies.dependsOn buildWebView, copyAgent
+buildDependencies.dependsOn buildDeps, copyAgent
 
 buildPlugin.dependsOn buildDependencies

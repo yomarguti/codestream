@@ -1,27 +1,13 @@
-import { LiveShareJoinSessionRequestType } from "@codestream/protocols/webview";
-import { HostApi, initialize, setupCommunication } from "@codestream/webview/index";
-import { initializeColorPalette } from "./theme";
+import { initialize, setupCommunication } from "@codestream/webview/index";
 
-const vscodeApi = acquireVsCodeApi();
+declare function acquireHostApi();
+
+const api = acquireHostApi();
 const channel = new MessageChannel();
-Object.defineProperty(window, "acquireCodestreamHost", {
-    value() {
-        return channel.port2;
-    }
-});
-window.addEventListener(
-    "message",
-    message => {
-        channel.port1.postMessage(message.data);
-    },
-    false
-);
-channel.port1.onmessage = message => {
-    vscodeApi.postMessage(message.data);
-};
 
+window.addEventListener("message", message => channel.port1.postMessage(message.data), false);
+channel.port1.onmessage = message => api.postMessage(message.data);
 
-initializeColorPalette();
+setupCommunication(channel.port2);
 
-const start = Date.now();
 initialize("#app");
