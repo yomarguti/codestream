@@ -61,9 +61,10 @@ patchPluginXml {
 
 task buildAgent(type: Exec) {
     println "Building LSP Agent"
-    workingDir "$projectDir/../codestream-lsp-agent"
-    commandLine 'npm', 'install', '--no-save'
-    commandLine 'npm', 'run', 'build'
+//    workingDir "$projectDir/../codestream-lsp-agent"
+//    commandLine 'npm', 'install', '--no-save'
+    workingDir "$projectDir"
+    commandLine 'npm', 'run', 'agent:pkg-jetbrains'
 }
 
 task buildWebView(type: Exec) {
@@ -74,7 +75,9 @@ task buildWebView(type: Exec) {
 }
 
 task copyAgent(type: Copy) {
-    from "$projectDir/../codestream-lsp-agent/dist/agent-vs.js", "$projectDir/../codestream-lsp-agent/dist/agent-vs.js.map"
+//    from "$projectDir/../codestream-lsp-agent/dist/agent-vs.js", "$projectDir/../codestream-lsp-agent/dist/agent-vs.js.map"
+    from "$projectDir/../codestream-lsp-agent/dist"
+    include "**/*"
     into "$projectDir/src/main/resources/agent"
 }
 copyAgent.dependsOn buildAgent

@@ -7,6 +7,7 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.SystemInfo
 import kotlinx.coroutines.future.await
 import org.apache.commons.io.FileUtils
 import org.eclipse.lsp4j.*
@@ -16,6 +17,8 @@ import org.eclipse.lsp4j.launch.LSPLauncher
 import protocols.agent.DocumentMarkersParams
 import protocols.agent.DocumentMarkersResult
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.attribute.PosixFilePermission
 
 
 class AgentService(private val project: Project) : ServiceConsumer(project) {
@@ -44,18 +47,30 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
             logger.info("Initializing CodeStream LSP agent")
             val temp = createTempDir("codestream")
             temp.deleteOnExit()
-            val agentJs = File(temp, "agent-vs.js")
-            val agentJsMap = File(temp, "agent-vs.js.map")
             val agentLog = File(temp, "agent.log")
-            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent-vs.js"), agentJs)
-            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent-vs.js.map"), agentJsMap)
-            logger.info("CodeStream LSP agent extracted to ${agentJs.absolutePath}")
+            val agentDestFile = getAgentDestFile(temp)
+//            val agentJs = File(temp, "agent-vs.js")
+//            val agentJsMap = File(temp, "agent-vs.js.map")
+//            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent-vs.js"), agentJs)
+//            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent-vs.js.map"), agentJsMap)
+
+            FileUtils.copyToFile(javaClass.getResourceAsStream(getAgentResourcePath()), agentDestFile)
+            if (platform == Platform.MAC || platform == Platform.LINUX) {
+                val perms = setOf(
+                    PosixFilePermission.OWNER_READ,
+                    PosixFilePermission.OWNER_WRITE,
+                    PosixFilePermission.OWNER_EXECUTE
+                )
+                Files.setPosixFilePermissions(agentDestFile.toPath(), perms)
+            }
+            logger.info("CodeStream LSP agent extracted to ${agentDestFile.absolutePath}")
 
             val process = GeneralCommandLine(
-                "node",
-                "--nolazy",
+//                "node",
+//                "--nolazy",
 //                "--inspect=6010",
-                agentJs.absolutePath,
+//                agentJs.absolutePath,
+                agentDestFile.absolutePath,
                 "--stdio",
                 "--log=${agentLog.absolutePath}"
 //                "--log=/Users/mfarias/Code/jetbrains-codestream/build/idea-sandbox/system/log/agent.log"
@@ -78,6 +93,28 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
             e.printStackTrace()
         }
     }
+
+    private fun getAgentResourcePath(): String {
+        return when (platform) {
+            Platform.LINUX -> "/agent/linux/x64/agent-vs"
+            Platform.MAC -> "/agent/macos/x64/agent-vs"
+            Platform.WIN32 -> "/agent/win/x86/agent-vs.exe"
+            Platform.WIN64 -> "/agent/win/x64/agent-vs.exe"
+        }
+    }
+
+    private fun getAgentDestFile(tempFolder: File): File {
+        return when (platform) {
+            Platform.LINUX -> File(tempFolder, "codestream-agent")
+            Platform.MAC -> File(tempFolder, "codestream-agent")
+            Platform.WIN32 -> File(tempFolder, "codestream-agent.exe")
+            Platform.WIN64 -> File(tempFolder, "codestream-agent.exe")
+        }.also {
+            it.setExecutable(true)
+        }
+    }
+
+
 
     private fun getInitializeParams(email: String? = null, passwordOrToken: String? = null): InitializeParams {
         val workspaceClientCapabilities = WorkspaceClientCapabilities()
@@ -275,3 +312,20 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
 //    var preferences: Map<String, Any>? = null
 //}
 //
+
+val platform : Platform by lazy {
+    when {
+        SystemInfo.isLinux -> Platform.LINUX
+        SystemInfo.isMac -> Platform.MAC
+        SystemInfo.isWindows && SystemInfo.is32Bit -> Platform.WIN32
+        SystemInfo.isWindows && SystemInfo.is64Bit -> Platform.WIN64
+        else -> throw IllegalStateException("Unable to detect system platform")
+    }
+}
+
+enum class Platform {
+    LINUX,
+    MAC,
+    WIN32,
+    WIN64
+}
