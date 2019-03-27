@@ -87,19 +87,16 @@ function Build-AgentAndWebview {
 
 	Write-Log "Packaging agent..."
 
-	& npm run agent:pkg-vs
+	& npm run agent:pkg
 	if ($LastExitCode -ne 0) {
 		throw "Agent packaging failed"
 	}
-	
-	if ((Test-Path -Path "../codestream-lsp-agent/dist/win/x86") -eq $False) {
+
+	if ((Test-Path -Path "../codestream-lsp-agent/dist/agent-pkg-win-x86.exe") -eq $False) {
 		throw "Creating packaged artifacts failed, ensure the agent has been built"
 	}
-	if ((Get-ChildItem "../codestream-lsp-agent/dist/win/x86").Count -eq 0) {
-		throw "Creating packaged artifacts directory is empty, ensure the agent has been built"
-	}
 
-	Copy-Item -Path ..\codestream-lsp-agent\dist\win\x86\agent-vs.exe -Destination src\CodeStream.VisualStudio\dist\agent.exe -Force	
+	Copy-Item -Path ..\codestream-lsp-agent\dist\agent-pkg-win-x86.exe -Destination src\CodeStream.VisualStudio\dist\agent.exe -Force
 	if ($LastExitCode -ne 0) {
 		throw "Copying packaged artifacts failed"
 	}

@@ -1,7 +1,7 @@
 {
   "name": "codestream.visualstudio",
   "version": "1.0.0",
-  "description": "buildz",
+  "description": "CodeStream for Visual Studio",
   "main": "index.js",
   "author": "",
   "license": "ISC",
@@ -21,7 +21,7 @@
     "agent:build": "pushd \"../codestream-lsp-agent\" && npm run build && popd",
     "agent:bundle": "pushd \"../codestream-lsp-agent\" && npm run bundle && popd",
     "agent:clean:ci": "pushd \"../codestream-lsp-agent\" && npm run clean:ci && popd",
-    "agent:pkg-vs": "pushd \"../codestream-lsp-agent\" && npm run pkg-vs && popd",
+    "agent:pkg": "pushd \"../codestream-lsp-agent\" && npm run pkg-vs && popd",
     "agent:rebuild": "pushd \"../codestream-lsp-agent\" && npm run rebuild && popd",
     "agent:test": "pushd \"../codestream-lsp-agent\" && npm run test && popd",
     "agent:watch": "pushd \"../codestream-lsp-agent\" && npm run watch && popd",

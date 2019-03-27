@@ -283,7 +283,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="dist\agent-vs.js.map" Condition="'$(Configuration)'=='Debug'">
+    <Content Include="dist\agent-pkg.js.map" Condition="'$(Configuration)'=='Debug'">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>

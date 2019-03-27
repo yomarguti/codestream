@@ -101,7 +101,7 @@ namespace CodeStream.VisualStudio.Services
 			Log.Verbose($"{nameof(Browser_ScriptContextCreated)} set window object");
 
 			_browserView.Browser.ExecuteJavaScript(@"
-				  window.acquireVsApi = function() {
+				  window.acquireHostApi = function() {
 					  return {
 						  postMessage: function(message) {
 							window.PostMessageInterop.Handle(JSON.stringify(message));
