@@ -292,7 +292,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
         sessionService.userLoggedIn = loginResult.result.userLoggedIn
 
         when (loginResult.result.loginResponse) {
-            null -> throw Exception("Login result from agent has no error but state is null")
+            null -> throw Exception("Login result from agent has no error but loginResponse is null")
             else -> settingsService.state.email = loginResult.result.loginResponse.user.email
         }
 
