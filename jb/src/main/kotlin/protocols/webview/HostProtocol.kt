@@ -39,7 +39,8 @@ class Configs(
     val showHeadshots: Boolean,
     val viewCodemarksInline: Boolean,
     val muteAll: Boolean,
-    val debug: Boolean
+    val debug: Boolean,
+    val showFeedbackSmiley: Boolean
 )
 
 class Services(

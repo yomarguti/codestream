@@ -29,6 +29,7 @@ data class SettingsServiceState(
     var avatars: Boolean = true,
     var muteAll: Boolean = false,
     var team: String? = null,
+    var showFeedbackSmiley: Boolean = true,
     var webViewConfig: MutableMap<String, String?> = mutableMapOf(
         INLINE_CODEMARKS to "true"
     )
@@ -81,7 +82,8 @@ class SettingsService : PersistentStateComponent<SettingsServiceState> {
         state.avatars,
         viewCodemarksInline,
         state.muteAll,
-        isDebugging
+        isDebugging,
+        state.showFeedbackSmiley
     )
 
     // 💩: I HATE THIS

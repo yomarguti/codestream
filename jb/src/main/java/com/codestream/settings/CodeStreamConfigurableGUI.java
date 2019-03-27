@@ -10,6 +10,7 @@ public class CodeStreamConfigurableGUI {
     private JCheckBox showAvatars;
     private JCheckBox muteAll;
     private JTextField team;
+    private JCheckBox showFeedbackSmiley;
 
     public JPanel getRootPanel() {
         return rootPanel;
@@ -37,5 +38,9 @@ public class CodeStreamConfigurableGUI {
 
     public JTextField getTeam() {
         return team;
+    }
+
+    public JCheckBox getShowFeedbackSmiley() {
+        return showFeedbackSmiley;
     }
 }
