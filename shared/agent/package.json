@@ -27,7 +27,7 @@
         "lint": "tslint --project tsconfig.json",
         "pkg": "npm run pkg-vs & npm run pkg-jetbrains",
         "pkg-jetbrains": "pkg dist/agent-pkg.js --targets node8-linux-x64,node8-macos-x64,node8-win-x86,node8-win-x64 --out-path dist/",
-        "pkg-vs": "pkg dist/agent-pkg.js --targets node8-win-x86 --out-path dist/",
+        "pkg-vs": "pkg dist/agent-pkg.js --targets node8-win-x86 --output dist/agent-pkg-win-x86.exe",
         "pretty": "prettier --config .prettierrc --write \"./src/**/*.ts\" ./package.json ./.prettierrc",
         "rebuild": "npm run clean && npm install --no-save && npm run build",
         "update:emoji": "pushd emoji && node ./shortcodeToEmoji.js && popd",
