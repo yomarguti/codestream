@@ -307,6 +307,8 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
         )
 
     private fun Editor.renderMarkers(markers: List<DocumentMarker>) = ApplicationManager.getApplication().invokeLater {
+        if (isDisposed) return@invokeLater
+
         markerHighlighters[this]?.let { highlighters ->
             highlighters.forEach { highlighter ->
                 markupModel.removeHighlighter(highlighter)
