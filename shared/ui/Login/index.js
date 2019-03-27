@@ -251,7 +251,7 @@ export class Login extends React.Component {
 									Don't have an account? <a onClick={this.handleClickSignup}>Sign Up</a>
 								</p>
 								<p style={{ opacity: 0.5, fontSize: ".9em" }}>
-									CodeStream Version {this.props.pluginVersion} <sup>BETA</sup>
+									CodeStream Version {this.props.pluginVersion}
 								</p>
 							</div>
 						</div>
