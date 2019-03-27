@@ -64,7 +64,7 @@ class CodeBlockSource(
 
 class Codemark(
     val id: String,
-    val type: String,
+    val type: String?,
     val color: String?,
     val streamId: String,
     val postId: String?
