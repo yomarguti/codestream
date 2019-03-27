@@ -17,9 +17,41 @@ body {
 @import "ui-variables";
 @import "~@codestream/webview/styles/main";
 
+a {
+	color: var(--text-color-info);
+
+	&:hover {
+		color: var(--text-color-info);
+	}
+}
+
+::-webkit-scrollbar {
+	width: 12px;
+}
+::-webkit-scrollbar-track {
+	background: var(--app-background-color);
+}
+::-webkit-scrollbar-thumb {
+	background: var(--scrollbar-thumb);
+}
+::-webkit-scrollbar-thumb:hover {
+	background: var(--scrollbar-thumb-hover);
+}
+
+.codestream .standard-form #controls .styled-select select option {
+	background-color: var(--app-background-color-darker) !important;
+}
+
 body {
 	background-color: var(--app-background-color);
 	color: var(--text-color);
+
+	font-family: var(--font-family);
+	font-weight: var(--font-weight);
+	font-size: var(--font-size);
+
+	margin: 0;
+	padding: 0 20px;
 }
 
 body.preload * {
