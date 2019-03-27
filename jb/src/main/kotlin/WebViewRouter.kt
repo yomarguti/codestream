@@ -293,9 +293,8 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
 
         when (loginResult.result.state) {
             null -> throw Exception("Login result from agent has no error but state is null")
-            else -> settingsService.state.email = loginResult.result.state.email
+            else -> try { settingsService.state.email = loginResult.result.state.email } catch (e: Exception) {}
         }
-
 
         PasswordSafe.instance.set(
             CredentialAttributes(
