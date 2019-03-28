@@ -168,10 +168,8 @@
   <!-- https://docs.microsoft.com/en-us/windows/desktop/inputdev/virtual-key-codes -->
   <KeyBindings>
     <KeyBinding guid="guidWebViewPackageCmdSet" id="WebViewToggleCommandId"
-                editor="guidVSStd97" key1="C" mod1="ALT" key2="S" mod2="ALT" />
+                editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" mod2="Control Shift" key2="VK_OEM_2" />
 
-    <KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommentCommandId" 
-                editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" mod2="Control Shift" key2="VK_OEM_2" />
     <KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommentCommandId" 
                 editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="c" />
     <KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkIssueCommandId" 
@@ -182,9 +180,6 @@
                 editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="p" />
     <KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkInstantCommandId" 
                 editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" mod2="Shift" key2="p" />
-
-    <KeyBinding guid="guidWebViewPackageCmdSet" id="WebViewDevToolsCommandId"
-                editor="guidVSStd97" key1="C" mod1="ALT" key2="D" mod2="ALT" />
   </KeyBindings>
 
   <CommandPlacements>
