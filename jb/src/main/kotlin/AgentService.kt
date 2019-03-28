@@ -45,37 +45,7 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
     init {
         try {
             logger.info("Initializing CodeStream LSP agent")
-            val temp = createTempDir("codestream")
-            temp.deleteOnExit()
-            val agentLog = File(temp, "agent.log")
-            val agentDestFile = getAgentDestFile(temp)
-//            val agentJs = File(temp, "agent-pkg.js")
-//            val agentJsMap = File(temp, "agent-pkg.js.map")
-//            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent-pkg.js"), agentJs)
-//            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent-pkg.js.map"), agentJsMap)
-
-            FileUtils.copyToFile(javaClass.getResourceAsStream(getAgentResourcePath()), agentDestFile)
-            if (platform == Platform.MAC || platform == Platform.LINUX) {
-                val perms = setOf(
-                    PosixFilePermission.OWNER_READ,
-                    PosixFilePermission.OWNER_WRITE,
-                    PosixFilePermission.OWNER_EXECUTE
-                )
-                Files.setPosixFilePermissions(agentDestFile.toPath(), perms)
-            }
-            logger.info("CodeStream LSP agent extracted to ${agentDestFile.absolutePath}")
-
-            val process = GeneralCommandLine(
-//                "node",
-//                "--nolazy",
-//                "--inspect=6010",
-//                agentJs.absolutePath,
-                agentDestFile.absolutePath,
-                "--stdio",
-                "--log=${agentLog.absolutePath}"
-//                "--log=/Users/mfarias/Code/jetbrains-codestream/build/idea-sandbox/system/log/agent.log"
-            ).createProcess()
-
+            val process = createProcess()
             val client = CodeStreamLanguageClient(project)
             val launcher = LSPLauncher.Builder<CodeStreamLanguageServer>()
                 .setLocalService(client)
@@ -91,6 +61,44 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
         } catch (e: Exception) {
             logger.error(e)
             e.printStackTrace()
+        }
+    }
+
+    private fun createProcess(): Process {
+        val temp = createTempDir("codestream")
+        temp.deleteOnExit()
+        return if (DEBUG) {
+            val agentJs = File(temp, "agent-pkg.js")
+            val agentJsMap = File(temp, "agent-pkg.js.map")
+            // val agentLog = File(temp, "agent.log")
+            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent-pkg.js"), agentJs)
+            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent-pkg.js.map"), agentJsMap)
+            logger.info("CodeStream LSP agent extracted to ${agentJs.absolutePath}")
+            GeneralCommandLine(
+                "node",
+                "--nolazy",
+                "--inspect=6010",
+                agentJs.absolutePath,
+                "--stdio"
+                // "--log=${agentLog.absolutePath}"
+            ).createProcess()
+        } else {
+            val agentDestFile = getAgentDestFile(temp)
+            FileUtils.copyToFile(javaClass.getResourceAsStream(getAgentResourcePath()), agentDestFile)
+            if (platform == Platform.MAC || platform == Platform.LINUX) {
+                val perms = setOf(
+                    PosixFilePermission.OWNER_READ,
+                    PosixFilePermission.OWNER_WRITE,
+                    PosixFilePermission.OWNER_EXECUTE
+                )
+                Files.setPosixFilePermissions(agentDestFile.toPath(), perms)
+            }
+            logger.info("CodeStream LSP agent extracted to ${agentDestFile.absolutePath}")
+            GeneralCommandLine(
+                agentDestFile.absolutePath,
+                "--stdio"
+            ).createProcess()
+
         }
     }
 
@@ -113,8 +121,6 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
             it.setExecutable(true)
         }
     }
-
-
 
     private fun getInitializeParams(email: String? = null, passwordOrToken: String? = null): InitializeParams {
         val workspaceClientCapabilities = WorkspaceClientCapabilities()
@@ -313,7 +319,7 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
 //}
 //
 
-val platform : Platform by lazy {
+val platform: Platform by lazy {
     when {
         SystemInfo.isLinux -> Platform.LINUX
         SystemInfo.isMac -> Platform.MAC

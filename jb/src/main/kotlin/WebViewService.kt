@@ -45,7 +45,10 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
         htmlFile = File(tempDir, "webview.html")
 
         FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/webview.js"), File(tempDir, "webview.js"))
-        FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/webview-data.js"), File(tempDir, "webview-data.js"))
+        FileUtils.copyToFile(
+            javaClass.getResourceAsStream("/webview/webview-data.js"),
+            File(tempDir, "webview-data.js")
+        )
         FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/webview.css"), File(tempDir, "webview.css"))
         extractHtml()
     }
@@ -121,11 +124,15 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
     private fun configureJxBrowser() {
         System.setProperty("jxbrowser.ipc.external", "true")
         BrowserPreferences.setChromiumSwitches(
-//            "--remote-debugging-port=9222",
-            //        "--disable-gpu",
-            //        "--disable-gpu-compositing",
-            //        "--enable-begin-frame-scheduling",
-            //        "--software-rendering-fps=60",
+            if (DEBUG) {
+                "--remote-debugging-port=9222"
+            } else {
+                ""
+            },
+            // "--disable-gpu",
+            // "--disable-gpu-compositing",
+            // "--enable-begin-frame-scheduling",
+            // "--software-rendering-fps=60",
             "--disable-web-security",
             "--allow-file-access-from-files"
         )
