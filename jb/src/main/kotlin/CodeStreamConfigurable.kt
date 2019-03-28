@@ -31,6 +31,8 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable, Ser
             state.muteAll = gui.muteAll.isSelected
             state.team = gui.team.text
             state.showFeedbackSmiley = gui.showFeedbackSmiley.isSelected
+            state.showMarkers = gui.showMarkers.isSelected
+            state.autoHideMarkers = gui.autoHideMarkers.isSelected
         }
     }
 
@@ -46,6 +48,8 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable, Ser
             muteAll.isSelected = state.muteAll
             team.text = state.team
             showFeedbackSmiley.isSelected = state.showFeedbackSmiley
+            showMarkers.isSelected = state.showMarkers
+            autoHideMarkers.isSelected = state.autoHideMarkers
         }
 
         _gui = gui

@@ -27,7 +27,8 @@ class WebViewContext(
     val currentTeamId: String,
     val currentStreamId: String?,
     val threadId: String?,
-    val hasFocus: Boolean
+    val hasFocus: Boolean,
+    val panelStack: Array<String>? = null
 )
 
 class EditorContext(
