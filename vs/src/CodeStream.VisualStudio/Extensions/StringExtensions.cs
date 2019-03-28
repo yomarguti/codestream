@@ -15,5 +15,5 @@ namespace CodeStream.VisualStudio.Extensions
             str?.EndsWith(value, true, CultureInfo.InvariantCulture) == true;
 
         public static bool AsBool(this string s) => s != null && Convert.ToBoolean(s);
-    }
+	}
 }

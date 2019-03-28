@@ -109,7 +109,8 @@ namespace CodeStream.VisualStudio
                                                 if (panelStack != null)
                                                 {
                                                     var visible = panelStack.FirstOrDefault() == WebviewPanels.CodemarksForFile;
-                                                    _sessionService.AreMarkerGlyphsVisible = !visible;
+                                                    _sessionService.IsCodemarksForFileVisible = visible;
+													_sessionService.AreMarkerGlyphsVisible = !visible;
 
                                                     _eventAggregator.Publish(new MarkerGlyphVisibilityEvent {IsVisible = !visible });
                                                 }

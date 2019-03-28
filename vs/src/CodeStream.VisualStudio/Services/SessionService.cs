@@ -15,7 +15,8 @@ namespace CodeStream.VisualStudio.Services
         void SetUserLoggedIn(User user);
         void SetAgentDisconnected();
         List<string> PanelStack { get; set; }
-        bool AreMarkerGlyphsVisible { get; set; }
+		bool IsCodemarksForFileVisible { get; set; }
+		bool AreMarkerGlyphsVisible { get; set; }
 
         /// <summary>
         /// Session is ready when the agent has loaded and the user has logged in
@@ -34,7 +35,8 @@ namespace CodeStream.VisualStudio.Services
         public User User { get; private set; }
         public List<string> PanelStack { get; set; }
         public bool AreMarkerGlyphsVisible { get; set; } = true;
-        bool _disposed = false;
+        public bool IsCodemarksForFileVisible { get; set; }
+		bool _disposed = false;
 
         public Guid GetOrCreateSignupToken()
         {
