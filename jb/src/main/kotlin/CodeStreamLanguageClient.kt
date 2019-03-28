@@ -1,5 +1,6 @@
 package com.codestream
 
+import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.JsonElement
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -23,6 +24,10 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient, S
     @JsonNotification("codestream/didChangeData")
     fun didChangeData(json: JsonElement) {
         webViewService.postNotification("codestream/didChangeData", json)
+        val notification = gson.fromJson<DidChangeDataNotification>(json)
+        when (notification.type) {
+            "unreads" -> sessionService.didChangeUnreads(gson.fromJson(notification.data))
+        }
     }
 
     @JsonNotification("codestream/didChangeConnectionStatus")
@@ -81,4 +86,14 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient, S
 
 class DidChangeDocumentMarkersNotification(
     val textDocument: TextDocumentIdentifier
+)
+
+class DidChangeDataNotification(
+    val type: String,
+    val data: JsonElement
+)
+
+class DidChangeUnreadsNotification(
+    val totalMentions: Int,
+    val totalUnreads: Int
 )

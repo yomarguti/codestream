@@ -8,19 +8,13 @@ import com.intellij.credentialStore.Credentials
 import com.intellij.credentialStore.generateServiceName
 import com.intellij.ide.BrowserUtil
 import com.intellij.ide.passwordSafe.PasswordSafe
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.fileEditor.FileEditorManager
-import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.LocalFileSystem
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import protocols.agent.*
 import protocols.webview.*
-import java.io.File
-import java.net.URI
 
 class WebViewRouter(val project: Project) : ServiceConsumer(project) {
     private val logger = Logger.getInstance(WebViewRouter::class.java)
@@ -112,7 +106,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
                 }
 
                 val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())
-                sessionService.userLoggedIn = loginResult.result.userLoggedIn
+                sessionService.login(loginResult.result.userLoggedIn)
 
                 val webViewResponse = SignedInBootstrapResponse(
                     Capabilities(
@@ -131,15 +125,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
                         settingsService.threadId,
                         true
                     ),
-                    EditorContext(
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null
-                    ),
+                    editorService.getEditorContext(),
                     UserSession(
                         sessionService.userLoggedIn!!.state.userId
                     )
@@ -188,7 +174,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
         }
 
         val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())
-        sessionService.userLoggedIn = loginResult.result.userLoggedIn
+        sessionService.login(loginResult.result.userLoggedIn)
         settingsService.state.email = params.email
 
         PasswordSafe.instance.set(
@@ -216,15 +202,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
                 settingsService.threadId,
                 true
             ),
-            EditorContext(
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-            ),
+            editorService.getEditorContext(),
             UserSession(
                 sessionService.userLoggedIn!!.state.userId
             )
@@ -249,7 +227,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
     }
 
     private fun logout() {
-        sessionService.userLoggedIn = null
+        sessionService.logout()
         agentService.agent.logout(LogoutParams())
         PasswordSafe.instance.set(
             CredentialAttributes(
@@ -285,7 +263,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
 
         val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())
 
-        sessionService.userLoggedIn = loginResult.result.userLoggedIn
+        sessionService.login(loginResult.result.userLoggedIn)
 
         when (loginResult.result.loginResponse) {
             null -> throw Exception("Login result from agent has no error but loginResponse is null")
@@ -317,15 +295,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
                 settingsService.threadId,
                 true
             ),
-            EditorContext(
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-            ),
+            editorService.getEditorContext(),
             UserSession(
                 sessionService.userLoggedIn!!.state.userId
             )

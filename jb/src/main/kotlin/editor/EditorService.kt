@@ -25,13 +25,11 @@ import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.DocumentUtil
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import org.eclipse.lsp4j.*
 import protocols.agent.DocumentMarker
 import protocols.agent.DocumentMarkersParams
+import protocols.webview.EditorContext
 import protocols.webview.EditorMargins
 import protocols.webview.EditorMetrics
 import protocols.webview.EditorSelection
@@ -455,6 +453,33 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
             )
             webViewService.postNotification(notification)
         }
+    }
+
+    suspend fun getEditorContext(): EditorContext {
+        val future = CompletableDeferred<EditorContext>()
+        ApplicationManager.getApplication().invokeLater {
+            val editor = FileEditorManager.getInstance(project).selectedTextEditor
+            val context = if (editor != null) {
+                val file = FileDocumentManager.getInstance().getFile(editor.document)
+                EditorContext(
+                    null,
+                    file?.name,
+                    null,
+                    editor.visibleRanges,
+                    editor.document.uri,
+                    editor.selections,
+                    EditorMetrics(
+                        editor.colorsScheme.editorFontSize,
+                        editor.lineHeight,
+                        editor.margins
+                    )
+                )
+            } else {
+                EditorContext()
+            }
+            future.complete(context)
+        }
+        return future.await()
     }
 
     private val _textAttributes = mutableMapOf<Editor, TextAttributes>()

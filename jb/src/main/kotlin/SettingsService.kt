@@ -14,18 +14,22 @@ import protocols.webview.Configs
 const val INLINE_CODEMARKS = "viewCodemarksInline"
 
 // PD urls
-// var serverUrl: String = "https://pd-api.codestream.us:9443"
-// var webAppUrl: String = "http://pd-app.codestream.us:1380"
+private const val API_PD = "https://pd-api.codestream.us:9443"
+private const val WEB_PD = "http://pd-app.codestream.us:1380"
 
 // QA urls
-// var serverUrl: String = "https://qa-api.codestream.us"
-// var webAppUrl: String = "http://qa-app.codestream.us"
+private const val API_QA = "https://qa-api.codestream.us"
+private const val WEB_QA = "http://qa-app.codestream.us"
+
+// PROD urls
+private const val API_PROD = "https://api.codestream.com"
+private const val WEB_PROD = "https://app.codestream.com"
 
 data class SettingsServiceState(
     var autoSignIn: Boolean = true,
     var email: String? = null,
-    var serverUrl: String = "https://api.codestream.com",
-    var webAppUrl: String = "https://app.codestream.com",
+    var serverUrl: String = API_PROD,
+    var webAppUrl: String = WEB_PROD,
     var avatars: Boolean = true,
     var muteAll: Boolean = false,
     var team: String? = null,
@@ -85,6 +89,18 @@ class SettingsService : PersistentStateComponent<SettingsServiceState> {
         isDebugging,
         state.showFeedbackSmiley
     )
+
+    fun getEnvironmentDisplayPrefix(): String {
+        return when(state.serverUrl) {
+            API_PD -> "PD:"
+            API_QA -> "QA:"
+            else -> if (state.serverUrl.contains("localhost")) {
+                "Local:"
+            } else {
+                "CodeStream:"
+            }
+        }
+    }
 
     // 💩: I HATE THIS
     fun set(name: String, value: String?) {

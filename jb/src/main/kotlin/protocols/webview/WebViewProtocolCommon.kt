@@ -31,13 +31,13 @@ class WebViewContext(
 )
 
 class EditorContext(
-    val scm: GetRangeScmInfoResponse?,
-    val activeFile: String?,
-    val lastActiveFile: String?,
-    val textEditorVisibleRanges: Array<Range>?,
-    val textEditorUri: String?,
-    val textEditorSelections: Array<EditorSelection>?,
-    val metrics: EditorMetrics?
+    val scm: GetRangeScmInfoResponse? = null,
+    val activeFile: String? = null,
+    val lastActiveFile: String? = null,
+    val textEditorVisibleRanges: List<Range>? = null,
+    val textEditorUri: String? = null,
+    val textEditorSelections: List<EditorSelection>? = null,
+    val metrics: EditorMetrics? = null
 )
 
 class EditorInformation(
