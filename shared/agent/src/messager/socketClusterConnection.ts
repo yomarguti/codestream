@@ -36,12 +36,6 @@ interface SubscriptionMap {
 	};
 }
 
-interface SocketClusterBatchHistoryRequest {
-	requestId: string;
-	channels: string[];
-	since: number;
-}
-
 export class SocketClusterConnection implements MessagerConnection {
 	private _connected: boolean = false;
 	private _subscriptions: SubscriptionMap = {};
@@ -72,7 +66,6 @@ export class SocketClusterConnection implements MessagerConnection {
 				});
 			}
 			catch (ex) {
-console.warn('REJECTING CLIENT DUE TO EXECEPTION');
 				reject(ex);
 			}
 			this._scClient!.on("connect", () => {
@@ -93,7 +86,6 @@ console.warn('REJECTING CLIENT DUE TO EXECEPTION');
 			});
 			this._scClient!.on("error", error => {
 				if (!this._connected) {
-console.warn('REJECTING CONNECTION', error);
 					reject(error);
 				}
 				const message = error instanceof Error ? error.message : JSON.stringify(error);
@@ -103,7 +95,6 @@ console.warn('REJECTING CONNECTION', error);
 	}
 
 	_onConnected(options: SocketClusterInitializer): void {
-console.warn('SOCKET BECAME CONNECTED!');
 		this._connected = true;
 		this._scClient!.emit("auth", {
 			token: options.authKey,
@@ -112,7 +103,6 @@ console.warn('SOCKET BECAME CONNECTED!');
 	}
 
 	_onDisconnect(options: SocketClusterInitializer): void {
-console.warn('SOCKET BECAME DISCONNECTED');
 		if (this._statusCallback) {
 			this._statusCallback({
 				status: MessagerStatusType.NetworkProblem
@@ -134,23 +124,19 @@ console.warn('SOCKET BECAME DISCONNECTED');
 		const unsubscribedChannels: string[] = [];
 		const subscribedChannels: string[] = [];
 		for (const channel of channels) {
-console.warn('channel is subscribed?', channel);
 			const subscription = this._subscriptions[channel] || {
 				subscribed: false,
 				withPresence: !!options.withPresence
 			};
 			this._subscriptions[channel] = subscription;
 			if (subscription.subscribed) {
-console.warn('yah');
 				subscribedChannels.push(channel);
 			} else {
-console.warn('nay');
 				unsubscribedChannels.push(channel);
 			}
 		}
 		if (subscribedChannels.length > 0 && this._statusCallback) {
 			this._debug('SocketCluster already subscribed to ', subscribedChannels);
-console.warn('we are already subscribed to ', subscribedChannels);
 			this._statusCallback({
 				status: MessagerStatusType.Connected,
 				channels: subscribedChannels
@@ -158,7 +144,6 @@ console.warn('we are already subscribed to ', subscribedChannels);
 		}
 		if (unsubscribedChannels.length > 0) {
 			this._debug('SocketCluster not yet subscribed, will subscribe now to', unsubscribedChannels);
-console.warn('we are not subscribed to ', unsubscribedChannels);
 			for (const channel of unsubscribedChannels) {
 				this._subscribeToChannel(channel);
 			}
@@ -177,7 +162,6 @@ console.warn('we are not subscribed to ', unsubscribedChannels);
 				troubleChannels.push(channel);
 			}
 		}
-console.warn('TROUBLE CHANNELS ARE', troubleChannels);
 		return troubleChannels;
 	}
 
@@ -190,16 +174,13 @@ console.warn('TROUBLE CHANNELS ARE', troubleChannels);
 
 	_subscribeToChannel(channel: string) {
 		const subscription = this._subscriptions[channel];
-console.warn('really subscribing to ', channel);
 		const scChannel = subscription.scChannel = this._scClient!.subscribe(channel);
 		scChannel.watch(this._handleMessage.bind(this));
 		scChannel.on("subscribe", () => {
-console.warn('and we are now subscribed to ', channel);
 			this._debug('SocketCluster successfully subscribed to', channel);
 			this._handleSubscribe(channel);
 		});
 		scChannel.on("subscribeFail", (error: any) => {
-console.warn('failed to subscribe to ' + channel);
 			this._debug('SocketCluster failed to subscribe to', channel);
 			this._handleSubscribeFail(error, channel);
 		});
@@ -220,7 +201,6 @@ console.warn('failed to subscribe to ' + channel);
 
 	_handleSubscribe(channel: string) {
 		if (this._statusCallback) {
-console.warn('YAH, WE ARE SUBSCRIBED TO', channel);
 			this._statusCallback({
 				status: MessagerStatusType.Connected,
 				channels: [channel]
