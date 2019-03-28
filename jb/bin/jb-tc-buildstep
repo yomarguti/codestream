@@ -86,7 +86,7 @@ infoFile = None
 if args.action in ['build','info','release']:
 	if args.action == 'build':
 		print("fetching the license")
-		bu.buildstepGeneric(args, cmd = "scp web@tc.codestream.us:.codestream/licenses/teamdev/JxBrowser/licence.jar " + os.environ['JB_TOP'])
+		bu.buildstepGeneric(args, cmd = "scp web@tc.codestream.us:.codestream/licenses/teamdev/JxBrowser/license.jar " + os.environ['JB_TOP'])
 
 		if not su.someValueOrNone(os.environ, 'TCBUILD_COUNTER'):
 			print("TCBUILD_COUNTER is NOT defined")
