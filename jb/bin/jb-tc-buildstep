@@ -60,7 +60,7 @@ if args.update_repos:
 
 if args.action == 'prep':
 	gradleCfg = loadAndChangeGradleConfig(args.build_counter)
-	su.dumpDict(gradleCfg)
+	# su.dumpDict(gradleCfg)
 	print("##teamcity[setParameter name='env.APP_NAME' value='{}']".format(packageName))
 	buildNumber = packageName + "-" + gradleCfg['version'] + "+" + args.build_counter
 	print("##teamcity[buildNumber '{}']".format(buildNumber))
@@ -84,13 +84,13 @@ infoFile = None
 if args.action in ['build','info','release']:
 	if args.action == 'build':
 		print("fetching the license")
-		bu.buildstepGeneric(args, "scp web@tc.codestream.com:.codestream/licenses/teamdev/JxBrowser/licence.jar " + os.environ['JB_TOP'] + "/webview")
+		bu.buildstepGeneric(args, cmd = "scp web@tc.codestream.com:.codestream/licenses/teamdev/JxBrowser/licence.jar " + os.environ['JB_TOP'] + "/webview")
 
 		gradleCfg = loadAndChangeGradleConfig(args.build_counter)
 		modifyGradleCfg(gradleCfg)
 
 		# build the extension
-		bu.buildstepGeneric(args, "./gradlew buildPlugin")
+		bu.buildstepGeneric(args, cmd = "./gradlew buildPlugin")
 
 	# # create asset info file (w/o md5sum)
 	# pkgInfo = bu.getPackageInfo(buildData = buildData, gitRepoCommitDir = buildData['sandboxTop'])
