@@ -212,22 +212,22 @@
         ],
         "keybindings": [
             {
-                "command": "codestream.newComment",
+                "command": "codestream.toggle",
                 "args": {
                     "source": "Shortcut"
                 },
                 "key": "ctrl+shift+/ /",
                 "mac": "ctrl+/ /",
-                "when": "editorTextFocus && codestream:status == signedIn"
+                "when": "codestream:status == signedIn"
             },
             {
-                "command": "codestream.newComment",
+                "command": "codestream.toggle",
                 "args": {
                     "source": "Shortcut"
                 },
                 "key": "ctrl+shift+/ ctrl+shift+/",
                 "mac": "ctrl+/ ctrl+/",
-                "when": "editorTextFocus && codestream:status == signedIn"
+                "when": "codestream:status == signedIn"
             },
             {
                 "command": "codestream.newComment",
