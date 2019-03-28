@@ -3,6 +3,7 @@ package protocols.agent
 import com.codestream.Codemark
 import com.codestream.TextDocument
 import com.google.gson.annotations.SerializedName
+import com.intellij.openapi.application.ApplicationInfo
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.ServerCapabilities
 import java.lang.IllegalStateException
@@ -136,7 +137,10 @@ class LogoutParams
 
 class Extension
 
-class Ide
+class Ide {
+    val name = "JetBrains"
+    val version = ApplicationInfo.getInstance().fullVersion
+}
 
 class AccessToken(
     val email: String?,

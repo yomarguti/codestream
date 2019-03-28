@@ -146,7 +146,7 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
             "traceLevel" to "debug",
             "extension" to mapOf("versionFormatted" to settingsService.environmentVersion),
             "ide" to mapOf(
-                "name" to "IntelliJ",
+                "name" to "JetBrains",
                 "version" to ApplicationInfo.getInstance().fullVersion
             ),
             "serverUrl" to settingsService.state.serverUrl
