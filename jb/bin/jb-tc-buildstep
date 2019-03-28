@@ -88,7 +88,10 @@ if args.action in ['build','info','release']:
 		print("fetching the license")
 		bu.buildstepGeneric(args, cmd = "scp web@tc.codestream.us:.codestream/licenses/teamdev/JxBrowser/licence.jar " + os.environ['JB_TOP'])
 
-		gradleCfg = loadAndChangeGradleConfig(args.build_counter)
+		if not su.someValueOrNone(os.environ, 'TCBUILD_COUNTER'):
+			print("TCBUILD_COUNTER is NOT defined")
+			exit(1)
+		gradleCfg = loadAndChangeGradleConfig(os.environ['TCBUILD_COUNTER'])
 		modifyGradleCfg(gradleCfg)
 
 		# build the extension
