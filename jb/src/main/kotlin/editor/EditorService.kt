@@ -1,9 +1,9 @@
 package com.codestream.editor
 
+import com.codestream.CodeStreamComponent
 import com.codestream.ServiceConsumer
 import com.codestream.TextDocument
 import com.codestream.protocols.webview.EditorNotifications
-import com.codestream.protocols.webview.StreamNotifications
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
@@ -23,7 +23,6 @@ import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.DocumentUtil
 import kotlinx.coroutines.*
 import org.eclipse.lsp4j.*
@@ -356,13 +355,7 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
         override fun getClickAction(): AnAction? {
             return object : AnAction() {
                 override fun actionPerformed(e: AnActionEvent) {
-                    ToolWindowManager.getInstance(project).getToolWindow("CodeStream").show(null)
-                    webViewService.postNotification(
-                        StreamNotifications.Show(
-                            marker.codemark.streamId,
-                            marker.codemark.postId
-                        )
-                    )
+                    CodeStreamComponent.getInstance(project).show()
                 }
 
             }

@@ -6,6 +6,7 @@ import com.intellij.openapi.wm.StatusBarWidget
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.util.Consumer
+import org.eclipse.jdt.internal.compiler.codegen.CodeStream
 import java.awt.Component
 import java.awt.event.MouseEvent
 
@@ -33,13 +34,7 @@ class CodeStreamStatusBarWidget(val project: Project) : StatusBarWidget, StatusB
     override fun getTooltipText() = "Click to open CodeStream"
 
     override fun getClickConsumer() = Consumer<MouseEvent> {
-        val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("CodeStream")
-        with(toolWindow) {
-            when (isVisible) {
-                true -> hide(null)
-                false -> show(null)
-            }
-        }
+        CodeStreamComponent.getInstance(project).toggleVisible()
     }
 
     override fun getText(): String {

@@ -50,14 +50,14 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient, S
 
     override fun registerCapability(params: RegistrationParams): CompletableFuture<Void> {
         params.registrations.forEach {
-            println("LSP agent wants to register ${it.method}")
+            logger.info("Language server wants to register ${it.method}")
         }
         return CompletableFuture.completedFuture(null)
     }
 
     override fun unregisterCapability(params: UnregistrationParams?): CompletableFuture<Void> {
         params?.unregisterations?.forEach {
-            println("LSP agent wants to unregister ${it.method}")
+            logger.info("Language server wants to unregister ${it.method}")
         }
         return CompletableFuture.completedFuture(null)
     }
