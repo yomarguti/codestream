@@ -1,4 +1,9 @@
-﻿using CodeStream.VisualStudio.Annotations;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Windows;
+using System.Windows.Controls;
+using CodeStream.VisualStudio.Annotations;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
 using DotNetBrowser;
@@ -6,12 +11,6 @@ using DotNetBrowser.Events;
 using DotNetBrowser.WPF;
 using Newtonsoft.Json.Linq;
 using Serilog;
-using SerilogTimings.Extensions;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Windows;
-using System.Windows.Controls;
 using static CodeStream.VisualStudio.Extensions.FileSystemExtensions;
 
 namespace CodeStream.VisualStudio.Services
@@ -313,6 +312,11 @@ namespace CodeStream.VisualStudio.Services
 			/// </summary>
 			private static readonly List<string> DefaultSwitches = new List<string>
 			{
+#if DEBUG
+				"--remote-debugging-port=9224",
+#else
+				"--remote-debugging-port=9223",
+#endif
 				"--disable-web-security",
 				"--allow-file-access-from-files"
 			};
@@ -329,12 +333,6 @@ namespace CodeStream.VisualStudio.Services
 				"--software-rendering-fps=60"
 			};
 
-			// ReSharper disable once UnusedMember.Local
-			private static readonly List<string> ChromiumSwitchesDebug = new List<string>
-			{
-				"--remote-debugging-port=9223"
-			};
-
 			public static List<string> Create(BrowserType browserType)
 			{
 				var switches = new List<string>(DefaultSwitches);
@@ -342,9 +340,6 @@ namespace CodeStream.VisualStudio.Services
 				{
 					switches = switches.Combine(LightweightSwitches);
 				}
-#if DEBUG
-				switches = ChromiumSwitchesDebug.Combine(switches);
-#endif
 				return switches;
 			}
 		}
