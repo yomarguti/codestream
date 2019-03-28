@@ -18,7 +18,7 @@ process.argv.forEach(function(val, index, array) {
 		logPath = val.substring(6);
 	}
 });
-const logger = logPath != null ? new FileLspLogger(logPath) : new NullLspLogger();
+const logger = logPath != null ? new FileLspLogger(logPath) : undefined
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -72,7 +72,7 @@ connection.onRequest("codestream/login", async (agentOptions: AgentOptions) => {
 		response = await agent.onInitialize(params);
 
 		if (response.result!.error == null) {
-			logger.log("onInitialized...");
+			Logger.log("onInitialized...");
 			await agent.onInitialized({});
 			Logger.log(`Agent(${agentOptions.ide.name}) logged in`);
 		}
