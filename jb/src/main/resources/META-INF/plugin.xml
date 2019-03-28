@@ -3,10 +3,7 @@
     <name>CodeStream</name>
     <vendor email="support@codestream.com" url="http://www.codestream.com">CodeStream</vendor>
 
-    <description><![CDATA[
-    CodeStream<br>
-    <em>Discuss, review, and share code with your team. Integrates w/ Slack, Jira, Trello, GitHub, and more.</em>
-    ]]></description>
+    <description>Discuss, review, and share code with your team. Integrates w/ Slack, Jira, Trello, GitHub, and more</description>
 
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceImplementation="com.codestream.AgentService"/>
