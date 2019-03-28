@@ -16,6 +16,7 @@ import {
 	CompareMarkerRequestType,
 	CompleteSignupRequestType,
 	EditorContext,
+	EditorGetRangeSha1RequestType,
 	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequestType,
 	EditorRevealRangeResult,
@@ -534,6 +535,17 @@ export class WebviewController implements Disposable {
 					if (status !== LoginResult.Success) throw new Error(status);
 
 					return this.getBootstrap();
+				});
+
+				break;
+			}
+			case EditorGetRangeSha1RequestType.method: {
+				webview.onIpcRequest(EditorGetRangeSha1RequestType, e, async (type, params) => {
+					const sha1 = await Editor.getRangeSha1(
+						Uri.parse(params.uri),
+						Editor.fromSerializableRange(params.range)
+					);
+					return { sha1: sha1 };
 				});
 
 				break;
