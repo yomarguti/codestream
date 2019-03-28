@@ -62,7 +62,8 @@ if args.update_repos:
 if args.action == 'prep':
 	gradleCfg = loadAndChangeGradleConfig(args.build_counter)
 	# su.dumpDict(gradleCfg)
-	print("##teamcity[setParameter name='env.APP_NAME' value='{}']".format(packageName))
+	print("##teamcity[setParameter name='env.TCBUILD_APP_NAME' value='{}']".format(packageName))
+	print("##teamcity[setParameter name='env.TCBUILD_APP_VERSION' value='{}']".format(gradleCfg['version']))
 	buildNumber = packageName + "-" + gradleCfg['version'] + "+" + args.build_counter
 	print("##teamcity[buildNumber '{}']".format(buildNumber))
 	exit(0)
