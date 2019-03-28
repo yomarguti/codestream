@@ -9,6 +9,8 @@
         <Strings>
           <ButtonText>CodeStream</ButtonText>
           <CommandName>CodeStream</CommandName>
+          <CanonicalName>CodeStream</CanonicalName>
+          <LocCanonicalName>CodeStream</LocCanonicalName>
         </Strings>
       </Menu>
       <Menu guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController200" priority="0x0200" type="MenuController">
@@ -19,7 +21,9 @@
         <Strings>
           <ButtonText>CodeStream</ButtonText>
           <CommandName>CodeStream</CommandName>
-          <ToolTipText>Toggle CodeStream</ToolTipText>
+          <ToolTipText>Toggle CodeStream</ToolTipText> 
+          <CanonicalName>CodeStream.ToggleCodeStream</CanonicalName>
+          <LocCanonicalName>CodeStream.ToggleCodeStream</LocCanonicalName>
         </Strings>
       </Menu>
     </Menus>
@@ -51,9 +55,10 @@
         <Strings>
           <ButtonText>CodeStream</ButtonText>
           <ToolTipText>Toggle CodeStream</ToolTipText>
+          <CanonicalName>CodeStream.ToggleCodeStream</CanonicalName>
+          <LocCanonicalName>CodeStream.ToggleCodeStream</LocCanonicalName>
         </Strings>
       </Button>
-
 
       <Button guid="guidWebViewPackageCmdSet" id="UserCommandId" priority="0x0100" type="Button">
         <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
@@ -67,6 +72,8 @@
         <CommandFlag>FixMenuController</CommandFlag>
         <Strings>
           <ButtonText>Sign In...</ButtonText>
+          <CanonicalName>CodeStream.SignIn</CanonicalName>
+          <LocCanonicalName>CodeStream.SignIn</LocCanonicalName>
         </Strings>
       </Button>
       <Button guid="guidWebViewPackageCmdSet" id="WebViewReloadCommandId" priority="0x0101" type="Button">
@@ -76,6 +83,8 @@
         <CommandFlag>DontCache</CommandFlag>
         <Strings>
           <ButtonText>Reload CodeStream</ButtonText>
+          <CanonicalName>CodeStream.ReloadCodeStream</CanonicalName>
+          <LocCanonicalName>CodeStream.ReloadCodeStream</LocCanonicalName>
         </Strings>
       </Button>
       <Button guid="guidWebViewPackageCmdSet" id="WebViewDevToolsCommandId" priority="0x0102" type="Button">
@@ -85,6 +94,8 @@
         <CommandFlag>DontCache</CommandFlag>
         <Strings>
           <ButtonText>Developer: Open Webview Developer Tools</ButtonText>
+          <CanonicalName>CodeStream.DeveloperOpenWebviewDeveloperTools</CanonicalName>
+          <LocCanonicalName>CodeStream.DeveloperOpenWebviewDeveloperTools</LocCanonicalName>
         </Strings>
       </Button>
       <Button guid="guidWebViewPackageCmdSet" id="AuthenticationCommandId" priority="0x0109" type="Button">
@@ -97,6 +108,8 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <ButtonText>Sign Out</ButtonText>
+          <CanonicalName>CodeStream.SignOut</CanonicalName>
+          <LocCanonicalName>CodeStream.SignOut</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -106,6 +119,8 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <ButtonText>Add Comment</ButtonText>
+          <CanonicalName>CodeStream.AddComment</CanonicalName>
+          <LocCanonicalName>CodeStream.AddComment</LocCanonicalName>
         </Strings>
       </Button>
       <Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkIssueCommandId" type="Button">
@@ -113,6 +128,8 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <ButtonText>Create Issue</ButtonText>
+          <CanonicalName>CodeStream.CreateIssue</CanonicalName>
+          <LocCanonicalName>CodeStream.CreateIssue</LocCanonicalName>
         </Strings>
       </Button>
       <Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkBookmarkCommandId" type="Button">
@@ -120,6 +137,8 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <ButtonText>Create Bookmark</ButtonText>
+          <CanonicalName>CodeStream.CreateBookmark</CanonicalName>
+          <LocCanonicalName>CodeStream.CreateBookmark</LocCanonicalName>
         </Strings>
       </Button>
       <Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkCommandId" type="Button">
@@ -127,6 +146,8 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <ButtonText>Get Permalink</ButtonText>
+          <CanonicalName>CodeStream.GetPermalink</CanonicalName>
+          <LocCanonicalName>CodeStream.GetPermalink</LocCanonicalName>
         </Strings>
       </Button>
       <Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkInstantCommandId" type="Button">
@@ -134,6 +155,8 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <ButtonText>Copy Permalink to Clipboard</ButtonText>
+          <CanonicalName>CodeStream.CopyPermalinkToClipboard</CanonicalName>
+          <LocCanonicalName>CodeStream.CopyPermalinkToClipboard</LocCanonicalName>
         </Strings>
       </Button>
     </Buttons>
