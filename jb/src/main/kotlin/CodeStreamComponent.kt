@@ -109,7 +109,6 @@ class CodeStreamComponent(project: Project) : Disposable, ServiceConsumer(projec
 
     private fun updateWebViewFocus() {
         val isFocused = focused && toolWindow.isVisible
-        println("isFocused = $isFocused")
         webViewService.postNotification(FocusNotifications.DidChange(isFocused))
     }
 
