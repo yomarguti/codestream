@@ -21,60 +21,59 @@ class WebViewTheme(val name: String, val stylesheet: String) {
 
             val bg = JBColor.background()
             val fg = JBColor.foreground()
-            // val border = JBColor.border()
-
-            val textColor = opacity(fg, 80)
-            val textColorHighlight = fg
-            val textColorSubtle = opacity(fg, 60)
-            var textColorSubtleExtra: Color
-
-            if (ColorUtil.isDark(bg)) {
-                textColorSubtleExtra = lighten(opacity(fg, 60), 50)
-            } else {
-                textColorSubtleExtra = darken(opacity(fg, 60), 50)
-            }
+            val border = JBColor.border()
+            val link = JBColor.link()
+            val buttonBg = JBUI.CurrentTheme.Focus.defaultButtonColor()
+            val scrollBarBg = UIManager.getColor("ScrollBar.background")
+            val scrollBarFg = UIManager.getColor("ScrollBar.foreground")
 
             val appBgColor = bg
             var appBgColorDarker: Color
             var appBgColorHover: Color
             var baseBgColor: Color
             var baseBorderColor: Color
-            var toolPanelBgColor: Color
+            var panelToolBgColor: Color
+            val panelSectionFgColor = opacity(fg, 80)
+            val panelSectionHeaderBgColor = bg;
+            val panelSectionHeaderFgColor = opacity(fg, 80)
+            val textColor = opacity(fg, 80)
+            val textColorHighlight = fg
+            val textColorSubtle = opacity(fg, 60)
+            var textColorSubtleExtra: Color
+            val textColorInfo = link
+            var textColorInfoMuted: Color
+            val lineNumbersFgColor = opacity(fg, 40)
+            val buttonBgColor = buttonBg
+            var buttonBgColorHover: Color
 
             if (ColorUtil.isDark(bg)) {
                 appBgColorDarker = darken(bg, 4)
                 appBgColorHover = lighten(bg, 3)
 
                 baseBgColor = lighten(bg, 4)
-                baseBorderColor = lighten(bg, 10)
-                toolPanelBgColor = lighten(bg, 10)
+                baseBorderColor = lighten(opacity(border, 50), 20)
+
+                panelToolBgColor = lighten(bg, 10)
+
+                textColorSubtleExtra = lighten(opacity(fg, 60), 50)
+
+                textColorInfoMuted = darken(link, 10)
+
+                buttonBgColorHover = lighten(buttonBg, 10)
             } else {
                 appBgColorDarker = lighten(bg, 4)
                 appBgColorHover = darken(bg, 1.5.toFloat())
 
                 baseBgColor = darken(bg, 3)
-                baseBorderColor = darken(bg, 10)
-                toolPanelBgColor = darken(bg, 10)
-            }
+                baseBorderColor = lighten(opacity(border, 50), 3)
 
-            val link = JBColor.link()
-            val textColorInfo = link
-            var textColorInfoMuted: Color
-            if (ColorUtil.isDark(bg)) {
-                textColorInfoMuted = darken(link, 10)
-            } else {
+                panelToolBgColor = darken(bg, 10)
+
+                textColorSubtleExtra = darken(opacity(fg, 60), 50)
+
                 textColorInfoMuted = link
-            }
 
-            val scrollBarBg = UIManager.getColor("ScrollBar.background")
-            val scrollBarFg = UIManager.getColor("ScrollBar.foreground")
-
-            val buttonFocus = JBUI.CurrentTheme.Focus.defaultButtonColor()
-            var buttonBg = UIManager.getColor("Button.background")
-            buttonBg = if (ColorUtil.isDark(buttonBg)) {
-                buttonBg.brighter()
-            } else {
-                buttonBg.darker()
+                buttonBgColorHover = darken(buttonBg, 10)
             }
 
             val name = if (isDarkTheme()) "vscode-dark" else "vscode-light"
@@ -84,12 +83,7 @@ body {
     --font-size: ${font.size}px;
     --font-weight: normal;
 
-    --app-background-color: ${appBgColor.rgba};
-    --app-background-color-darker: ${appBgColorDarker.rgba};
-    --app-background-color-hover: ${appBgColorHover.rgba};
-    --base-background-color: ${baseBgColor.rgba};
-    --base-border-color: ${baseBorderColor.rgba};
-    --tool-panel-background-color: ${toolPanelBgColor.rgba};
+    --border-color: ${border.rgba};
 
     --text-color: ${textColor.rgba};
     --text-color-highlight: ${textColorHighlight.rgba};
@@ -99,15 +93,25 @@ body {
     --text-color-info: ${textColorInfo.rgba};
     --text-color-info-muted: ${textColorInfoMuted.rgba};
 
+    --app-background-color: ${appBgColor.rgba};
+    --app-background-color-darker: ${appBgColorDarker.rgba};
+    --app-background-color-hover: ${appBgColorHover.rgba};
+
+    --base-background-color: ${baseBgColor.rgba};
+    --base-border-color: ${baseBorderColor.rgba};
+
+    --panel-tool-background-color: ${panelToolBgColor.rgba};
+    --panel-section-foreground-color: ${panelSectionFgColor.rgba};
+    --panel-section-header-background-color: ${panelSectionHeaderBgColor.rgba};
+    --panel-section-header-foreground-color: ${panelSectionHeaderFgColor.rgba};
+
+    --line-numbers-foreground-color: ${lineNumbersFgColor.rgba};
+
+    --button-background-color: ${buttonBgColor.rgba};
+    --button-background-color-hover: ${buttonBgColorHover.rgba};
+
     --scrollbar-thumb: ${scrollBarBg.rgba}
     --scrollbar-thumb-hover: ${scrollBarFg.rgba}
-
-    --vscode-editorLineNumber-foreground: ${fg.rgba};
-    --vscode-button-background: ${buttonBg.rgba};
-    --vscode-button-hoverBackground: ${buttonFocus.rgba};
-    --vscode-sideBar-foreground: ${fg.rgba};
-    --vscode-sideBarSectionHeader-background: ${bg.rgba};
-    --vscode-sideBarSectionHeader-foreground: ${fg.rgba};
 }
         """
 
