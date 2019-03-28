@@ -47,13 +47,12 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
 
     private val managedDocuments = mutableMapOf<Document, DocumentVersion>()
     private val managedEditors = mutableSetOf<Editor>()
-    //    private val rangeHighlighters = mutableMapOf<Editor, MutableMap<Range, RangeHighlighter>>()
     private val rangeHighlighters = mutableMapOf<Editor, MutableSet<RangeHighlighter>>()
     private val markerHighlighters = mutableMapOf<Editor, List<RangeHighlighter>>()
+    private var showMarkers = settingsService.showMarkers
 
     fun add(editor: Editor) {
         managedEditors.add(editor)
-//        rangeHighlighters.set(editor, mutableMapOf())
         rangeHighlighters[editor] = mutableSetOf()
         updateMarkers(editor)
         editor.selectionModel.addSelectionListener(EditorManagerSelectionListener())
@@ -70,6 +69,22 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
                 document.addDocumentListener(MarkerUpdater())
             }
         }
+    }
+
+    fun disableMarkers() = ApplicationManager.getApplication().invokeLater {
+        showMarkers = false
+        markerHighlighters.forEach { editor, hs ->
+            hs.forEach { h ->
+                h.dispose()
+                editor.markupModel.removeHighlighter(h)
+            }
+        }
+        markerHighlighters.clear()
+    }
+
+    fun enableMarkers() {
+        showMarkers = true
+        updateMarkers()
     }
 
     fun remove(editor: Editor) {
@@ -104,7 +119,7 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
     private fun updateMarkers(document: Document) = GlobalScope.launch {
         val editors = EditorFactory.getInstance().getEditors(document, project)
 
-        val markers = if (sessionService.userLoggedIn == null) {
+        val markers = if (sessionService.userLoggedIn == null || !showMarkers) {
             emptyList()
         } else {
             val uri = document.uri ?: return@launch
@@ -118,7 +133,7 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
     }
 
     private fun updateMarkers(editor: Editor) {
-        if (sessionService.userLoggedIn == null) {
+        if (sessionService.userLoggedIn == null || !showMarkers) {
             return
         }
         val uri = editor.document.uri ?: return
@@ -307,23 +322,25 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
     private fun Editor.renderMarkers(markers: List<DocumentMarker>) = ApplicationManager.getApplication().invokeLater {
         if (isDisposed) return@invokeLater
 
-        markerHighlighters[this]?.let { highlighters ->
-            highlighters.forEach { highlighter ->
-                markupModel.removeHighlighter(highlighter)
+        if (showMarkers) {
+            markerHighlighters[this]?.let { highlighters ->
+                highlighters.forEach { highlighter ->
+                    markupModel.removeHighlighter(highlighter)
+                }
             }
-        }
-        markerHighlighters[this] = markers.map {
-            val start = getOffset(it.range.start)
-            val end = getOffset(it.range.end)
+            markerHighlighters[this] = markers.map {
+                val start = getOffset(it.range.start)
+                val end = getOffset(it.range.end)
 
-            markupModel.addRangeHighlighter(
-                start,
-                end,
-                HighlighterLayer.FIRST,
-                null,
-                HighlighterTargetArea.EXACT_RANGE
-            ).apply {
-                gutterIconRenderer = MarkerGutterIconRenderer(it)
+                markupModel.addRangeHighlighter(
+                    start,
+                    end,
+                    HighlighterLayer.FIRST,
+                    null,
+                    HighlighterTargetArea.EXACT_RANGE
+                ).apply {
+                    gutterIconRenderer = MarkerGutterIconRenderer(it)
+                }
             }
         }
     }
@@ -356,7 +373,9 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
         }
 
         override fun getIcon(): Icon {
-            return IconLoader.getIcon("/images/marker-${marker.codemark.type ?: "comment"}-${marker.codemark.color ?: "blue"}.svg")
+            return IconLoader.getIcon(
+                "/images/marker-${marker.codemark.type ?: "comment"}-${marker.codemark.color ?: "blue"}.svg"
+            )
         }
 
 

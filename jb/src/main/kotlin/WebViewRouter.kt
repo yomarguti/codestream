@@ -313,6 +313,15 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
 
     private fun contextDidChange(message: WebViewMessage) {
         val notification = gson.fromJson<ContextDidChangeNotification>(message.params!!)
+        notification.context.panelStack?.get(0)?.let {
+            if (settingsService.autoHideMarkers && settingsService.showMarkers) {
+                if (it == "codemarks-for-file") {
+                    editorService.disableMarkers()
+                } else {
+                    editorService.enableMarkers()
+                }
+            }
+        }
         settingsService.apply {
             currentStreamId = notification.context.currentStreamId
             threadId = notification.context.threadId

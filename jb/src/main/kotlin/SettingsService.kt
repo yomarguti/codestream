@@ -34,6 +34,8 @@ data class SettingsServiceState(
     var muteAll: Boolean = false,
     var team: String? = null,
     var showFeedbackSmiley: Boolean = true,
+    var showMarkers: Boolean = true,
+    var autoHideMarkers: Boolean = true,
     var webViewConfig: MutableMap<String, String?> = mutableMapOf(
         INLINE_CODEMARKS to "true"
     )
@@ -79,6 +81,11 @@ class SettingsService : PersistentStateComponent<SettingsServiceState> {
 
     val team
         get() = state.team
+
+    val autoHideMarkers
+        get() = state.autoHideMarkers
+
+    val showMarkers get() = state.showMarkers
 
     fun getWebviewConfigs(): Configs = Configs(
         state.serverUrl,
