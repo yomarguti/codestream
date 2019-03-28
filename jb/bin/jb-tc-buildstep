@@ -13,7 +13,8 @@ import gitCS
 import sysUtils as su
 import buildUtils as bu
 
-def loadAndChangeGradleConfig(buildCounter = "0"):
+def loadAndChangeGradleConfig(buildCounter):
+	if buildCounter is None: buildCounter = "0"
 	fh = open(os.environ['JB_TOP'] +  "/build.gradle", 'r')
 	fileText = fh.read()
 	fh.close
