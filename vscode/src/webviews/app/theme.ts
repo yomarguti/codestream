@@ -17,10 +17,10 @@ function lighten(color: string, percentage: number) {
 	if (rgba == null) return color;
 
 	const [r, g, b, a] = rgba;
-	percentage = (255 * percentage) / 100;
-	return `rgba(${adjustLight(r, percentage)}, ${adjustLight(g, percentage)}, ${adjustLight(
+	const amount = (255 * percentage) / 100;
+	return `rgba(${adjustLight(r, amount)}, ${adjustLight(g, amount)}, ${adjustLight(
 		b,
-		percentage
+		amount
 	)}, ${a})`;
 }
 
@@ -121,28 +121,6 @@ export function initializeColorPalette() {
 				break;
 		}
 
-		color = computedStyle.getPropertyValue("--vscode-editor-background").trim();
-		bodyStyle.setProperty("--app-background-color", color);
-		switch (theme) {
-			case "dark":
-				bodyStyle.setProperty("--app-background-color-darker", darken(color, 4));
-				bodyStyle.setProperty("--app-background-color-hover", lighten(color, 3));
-
-				bodyStyle.setProperty("--base-background-color", lighten(color, 4));
-				bodyStyle.setProperty("--base-border-color", lighten(color, 10));
-				bodyStyle.setProperty("--tool-panel-background-color", lighten(color, 10));
-				break;
-
-			case "light":
-				bodyStyle.setProperty("--app-background-color-darker", lighten(color, 4));
-				bodyStyle.setProperty("--app-background-color-hover", darken(color, 1.5));
-
-				bodyStyle.setProperty("--base-background-color", darken(color, 3));
-				bodyStyle.setProperty("--base-border-color", darken(color, 10));
-				bodyStyle.setProperty("--tool-panel-background-color", darken(color, 10));
-				break;
-		}
-
 		color = computedStyle.getPropertyValue("--vscode-textLink-foreground").trim();
 		bodyStyle.setProperty("--text-color-info", color);
 		switch (theme) {
@@ -153,6 +131,46 @@ export function initializeColorPalette() {
 				bodyStyle.setProperty("--text-color-info-muted", color);
 				break;
 		}
+
+		color = computedStyle.getPropertyValue("--vscode-editor-background").trim();
+		bodyStyle.setProperty("--app-background-color", color);
+		switch (theme) {
+			case "dark":
+				bodyStyle.setProperty("--app-background-color-darker", darken(color, 4));
+				bodyStyle.setProperty("--app-background-color-hover", lighten(color, 3));
+
+				bodyStyle.setProperty("--base-background-color", lighten(color, 4));
+				bodyStyle.setProperty("--base-border-color", lighten(color, 10));
+				bodyStyle.setProperty("--panel-tool-background-color", lighten(color, 10));
+				break;
+
+			case "light":
+				bodyStyle.setProperty("--app-background-color-darker", lighten(color, 4));
+				bodyStyle.setProperty("--app-background-color-hover", darken(color, 1.5));
+
+				bodyStyle.setProperty("--base-background-color", darken(color, 3));
+				bodyStyle.setProperty("--base-border-color", darken(color, 10));
+				bodyStyle.setProperty("--panel-tool-background-color", darken(color, 10));
+				break;
+		}
+
+		color = computedStyle.getPropertyValue("--vscode-sideBar-foreground").trim();
+		bodyStyle.setProperty("--panel-section-foreground-color", color);
+
+		color = computedStyle.getPropertyValue("--vscode-sideBarSectionHeader-background").trim();
+		bodyStyle.setProperty("--panel-section-header-background-color", color);
+
+		color = computedStyle.getPropertyValue("--vscode-sideBarSectionHeader-foreground").trim();
+		bodyStyle.setProperty("--panel-section-header-foreground-color", color);
+
+		color = computedStyle.getPropertyValue("--vscode-editorLineNumber-foreground").trim();
+		bodyStyle.setProperty("--line-numbers-foreground-color", color);
+
+		color = computedStyle.getPropertyValue("--vscode-button-background").trim();
+		bodyStyle.setProperty("--button-background-color", color);
+
+		color = computedStyle.getPropertyValue("--vscode-button-hoverBackground").trim();
+		bodyStyle.setProperty("--button-background-color-hover", color);
 	};
 
 	const observer = new MutationObserver(onColorThemeChanged);
