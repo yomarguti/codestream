@@ -1,59 +1,33 @@
 ﻿body {
-    --app-background-color: --cs--app-background-color--;
-    --app-background-color-darker: --cs--app-background-color-darker--;
-    --app-background-color-hover: --cs--app-background-color-hover--;
-    --background-color: --cs--background-color--;
-    --base-background-color: --cs--base-background-color--;
-    --base-border-color: --cs--base-border-color--;
-    --color: --cs--color--;
-    --font-family: --cs--font-family--, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", HelveticaNeue-Light, Ubuntu, "Droid Sans", Arial, Consolas, sans-serif;
-    --font-size: --cs--font-size--px;
-    --font-weight: normal;
-    --link-color: --cs--link-color--;
-    --link-active-color: --cs--link-color--;
-    --text-color: --cs--text-color--;
-    --text-color-highlight: --cs--color--;
-    --text-color-info: --cs--text-color-info--;
-    --text-color-info-muted: --cs--text-color-info-muted--;
-    --text-color-subtle: --cs--text-color-subtle--;
-    --text-color-subtle-extra: --cs--text-color-subtle-extra--;
-    --tool-panel-background-color: --cs--tool-panel-background-color--;
-    --vscode-editor-background: --cs--background-color--;
-    --vscode-editor-foreground: --cs--color--;
-    --vscode-editor-font-family: --cs--font-family--;
-    --vscode-editor-font-weight: normal;
-    --vscode-editor-font-size: --cs--font-size--px;
-    --vscode-button-background: --cs--vscode-button-background--;
-    --vscode-button-hoverBackground: --cs--vscode-button-hoverBackground--;
-    --vscode-sideBar-foreground: --cs--color--;
-    --vscode-sideBarSectionHeader-background: --cs--vscode-sideBarSectionHeader-background--;
-    --vscode-sideBarSectionHeader-foreground: --cs--vscode-sideBarSectionHeader-foreground--;
-    --vscode-textLink-activeForeground: --cs--link-color--;
-    --vscode-textLink-foreground: --cs--link-color--;
-    background-color: var(--app-background-color);
-    color: var(--text-color);
-    font-family: var(--font-family);
-    font-weight: var(--font-weight);
-    font-size: var(--font-size);
-    margin: 0;
-    padding: 0 20px;
-}
+	--font-family: --cs--font-family--;
+	--font-size: --cs--font-size--px;
+	--font-weight: normal;
 
-::-webkit-scrollbar {
-    width: 12px;
-}
-::-webkit-scrollbar-track {
-    background: var(--app-background-color);
-}
-::-webkit-scrollbar-thumb {
-    background: --cs--scrollbar-color--;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: --cs--scrollbar-color-hover--;
-}
-.codestream .standard-form #controls .styled-select select option {
-    background-color: var(--app-background-color-darker) !important;
-}
-.codestream a {
-    color: --cs--link-color--;
+	--text-color: --cs--text-color--;
+	--text-color-highlight: --cs--text-color-highlight--;
+	--text-color-subtle: --cs--text-color-subtle--;
+	--text-color-subtle-extra: --cs--text-color-subtle-extra--;
+
+	--text-color-info: --cs--text-color-info--;
+	--text-color-info-muted: --cs--text-color-info-muted--;
+
+	--app-background-color: --cs--app-background-color--;
+	--app-background-color-darker: --cs--app-background-color-darker--;
+	--app-background-color-hover: --cs--app-background-color-hover--;
+
+	--base-background-color: --cs--base-background-color--;
+	--base-border-color: --cs--base-border-color--;
+
+	--panel-tool-background-color: --cs--panel-tool-background-color--;
+	--panel-section-foreground-color: --cs--panel-section-foreground-color--;
+	--panel-section-header-background-color: --cs--panel-section-header-background-color--;
+	--panel-section-header-foreground-color: --cs--panel-section-header-foreground-color--;
+
+	--line-numbers-foreground-color: --cs--line-numbers-foreground-color--;
+
+	--button-background-color: --cs--button-background-color--;
+	--button-background-color-hover: --cs--button-background-color-hover--;
+
+	--scrollbar-thumb: --cs--scrollbar-color--;
+	--scrollbar-thumb-hover: --cs--scrollbar-color-hover--;
 }
