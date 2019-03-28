@@ -1,4 +1,4 @@
-rootProject.name = 'jetbrains-codestream'
+rootProject.name = 'codestream-jb'
 
 //sourceControl {
 //    gitRepository("https://github.com/gradle/native-samples-cpp-library.git") {

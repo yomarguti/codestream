@@ -1,0 +1,134 @@
+#!/usr/bin/env python3
+
+#desc# Standard interface to CodeStream's TeamCity build process for the JetBrains Extension
+
+import os
+import sys
+import re
+from shutil import copyfile
+
+sys.path.append(os.environ['DT_TOP'] + "/lib")
+import devTools
+import gitCS
+import sysUtils as su
+import buildUtils as bu
+
+def loadAndChangeGradleConfig(buildCounter):
+	if buildCounter is None: buildCounter = "0"
+	fh = open(os.environ['JB_TOP'] +  "/build.gradle", 'r')
+	fileText = fh.read()
+	fh.close
+	gradleCfg = {
+		"newFileText": ""
+	}
+	for line in fileText.split('\n'):
+		match = re.search('^version\s+"([^"]+)"', line)
+		if match:
+			gradleCfg['newFileText'] += 'version "' + match.group(1) + '+' + buildCounter + '"\n'
+			gradleCfg['version'] = match.group(1)
+		else:
+			gradleCfg['newFileText'] += line + '\n'
+	return gradleCfg
+
+def modifyGradleCfg(gradleCfg):
+	gradleFileName = os.environ['JB_TOP'] +  "/build.gradle"
+	copyfile(gradleFileName, gradleFileName + ".orig")
+	fh = open(gradleFileName, 'w')
+	fh.write(gradleCfg['newFileText'])
+	fh.close()
+
+packageName = "codestream-jb"
+supplementalRepos = ['codestream-components', 'codestream-lsp-agent']
+allRepos = supplementalRepos + ['jetbrains-codestream']
+assetExtensionList = ['info', 'zip']
+
+args = bu.parseStandardBuildArgs()
+dt = devTools.devTools()
+buildData = bu.buildInit(__file__, dt, args)
+os.chdir(buildData['sandboxTop'])
+if args.verbose: print("current directory is", buildData['sandboxTop'])
+if args.debug: su.dumpDict(buildData, None, "buildData from buildInit:")
+git = {}
+for repo in allRepos:
+	git[repo] = gitCS.gitCS(os.environ['JB_SANDBOX'] + "/" + repo)
+
+if args.update_repos:
+	for repo in supplementalRepos:
+		if not git[repo].pull("origin", rebase = True):
+			print("pull/rebase failed for", repo)
+			exit(1)
+
+
+if args.action == 'prep':
+	gradleCfg = loadAndChangeGradleConfig(args.build_counter)
+	# su.dumpDict(gradleCfg)
+	print("##teamcity[setParameter name='env.TCBUILD_APP_NAME' value='{}']".format(packageName))
+	print("##teamcity[setParameter name='env.TCBUILD_APP_VERSION' value='{}']".format(gradleCfg['version']))
+	buildNumber = packageName + "-" + gradleCfg['version'] + "+" + args.build_counter
+	print("##teamcity[buildNumber '{}']".format(buildNumber))
+	exit(0)
+
+if args.action in ['clean','destroy']:
+	bu.buildstepGeneric(args, cmd = "./gradlew clean", workingDir = buildData['sandboxTop'])
+
+if args.action == 'destroy':
+	bu.buildstepDestroy(args, buildData, repoList = allRepos)
+
+# for a build:
+#   npm run build
+#   create generic info file (no build number)
+#   npm run pack (create the vsix with a generic name - no build number)
+#   create build number specific info file (includes md5sum of vsix)
+#   rename generic vsix to build specific vsix
+pkgInfo = None
+vsixFile = None
+infoFile = None
+if args.action in ['build','info','release']:
+	if args.action == 'build':
+		print("fetching the license")
+		bu.buildstepGeneric(args, cmd = "scp web@tc.codestream.us:.codestream/licenses/teamdev/JxBrowser/license.jar " + os.environ['JB_TOP'])
+
+		if not su.someValueOrNone(os.environ, 'TCBUILD_COUNTER'):
+			print("TCBUILD_COUNTER is NOT defined")
+			exit(1)
+		gradleCfg = loadAndChangeGradleConfig(os.environ['TCBUILD_COUNTER'])
+		modifyGradleCfg(gradleCfg)
+
+		# build the extension
+		bu.buildstepGeneric(args, cmd = "./gradlew buildPlugin")
+
+	# # create asset info file (w/o md5sum)
+	# pkgInfo = bu.getPackageInfo(buildData = buildData, gitRepoCommitDir = buildData['sandboxTop'])
+	# genericName = pkgInfo['name'] + "-" + pkgInfo['version']
+	# genericVsixFile = genericName + ".vsix"
+	# genericInfoFile = genericName + ".info"
+	# vsixFile = pkgInfo['localAssetFilePrefix'] + ".vsix"
+	# infoFile = pkgInfo['localAssetFilePrefix'] + ".info"
+	# for repo in supplementalRepos:
+	# 	git = gitCS.gitCS(os.environ['VSCSB_SANDBOX'] + "/" + repo)
+	# 	pkgInfo['repoCommitId'][repo] = git.getCommitId()
+	# pkgInfo['assetsMD5'][vsixFile] = "0"
+	# su.dumpDict(pkgInfo, genericInfoFile)
+	# if args.verbose: print("created preliminary info file", genericInfoFile)
+	#
+	# if args.action == 'build':
+	# 	# pack the extenstion (uses genericInfoFile, creates genericVsixFile)
+	# 	su.shellExecNoBuffer("npm run pack", abortOnFail = True, printCmd = args.verbose)
+	# 	md5sum = dt.md5Hash(genericVsixFile)
+	# 	pkgInfo['assetsMD5'][vsixFile] = md5sum
+	# 	su.dumpDict(pkgInfo, infoFile)
+	# 	os.unlink(genericInfoFile)
+	# 	os.rename(genericVsixFile, vsixFile)
+	# 	if args.verbose:
+	# 		su.dumpDict(pkgInfo, None, "packageInfo:")
+	# 		su.shellExecNoBuffer("ls -l " + pkgInfo['localAssetFilePrefix'] + ".*", printCmd = True)
+
+if args.action == 'citest':
+	buildstepGeneric(args, cmd = "echo Testing not configured")
+
+if args.action == 'publish':
+	buildstepGeneric(args, cmd = "echo publishing not configured")
+	# publishArtifacts(args, buildData, assetExtensionList)
+
+if args.action == 'release':
+	buildstepGeneric(args, cmd = "echo release not configured")
