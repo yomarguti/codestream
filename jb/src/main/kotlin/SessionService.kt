@@ -30,6 +30,16 @@ class SessionService(val project: Project) {
         unreadsObservers += observer
     }
 
+    val mentions: Int get() = _mentions
+    private var _mentions : Int by Delegates.observable(0) { prop, old, new ->
+        mentionsObservers.forEach { it(new) }
+    }
+    private val mentionsObservers = mutableListOf<IntObserver>()
+    fun onMentionsChanged(observer: IntObserver) {
+        mentionsObservers += observer
+    }
+    
+
     fun login(userLoggedIn: UserLoggedIn) {
         _userLoggedIn = userLoggedIn
     }
@@ -41,6 +51,7 @@ class SessionService(val project: Project) {
 
     fun didChangeUnreads(notification: DidChangeUnreadsNotification) {
         _unreads = notification.totalUnreads
+        _mentions = notification.totalMentions
     }
 
     val isSignedIn: Boolean

@@ -14,7 +14,7 @@ class CodeStreamStatusBarWidget(val project: Project) : StatusBarWidget, StatusB
 
     init {
         sessionService.onUserLoggedInChanged { refresh() }
-        sessionService.onUnreadsChanged { refresh() }
+        sessionService.onMentionsChanged { refresh() }
     }
 
     fun refresh() {
@@ -52,9 +52,9 @@ class CodeStreamStatusBarWidget(val project: Project) : StatusBarWidget, StatusB
             userLoggedIn.user.username + " - " + userLoggedIn.team.name
         }
 
-        val suffix = when (sessionService.unreads) {
+        val suffix = when (sessionService.mentions) {
             0 -> ""
-            in 1..19 -> "(${sessionService.unreads})"
+            in 1..19 -> "(${sessionService.mentions})"
             else -> "(20+)"
         }
 
