@@ -22,11 +22,11 @@
             <category>Other</category>
         </intentionAction>
         <intentionAction>
-            <className>com.codestream.actions.CreateBookmarkAction</className>
+            <className>com.codestream.actions.CreateIssueAction</className>
             <category>Other</category>
         </intentionAction>
         <intentionAction>
-            <className>com.codestream.actions.CreateIssueAction</className>
+            <className>com.codestream.actions.CreateBookmarkAction</className>
             <category>Other</category>
         </intentionAction>
         <intentionAction>
