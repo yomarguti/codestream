@@ -3,7 +3,8 @@
     <name>CodeStream</name>
     <vendor email="support@codestream.com" url="http://www.codestream.com">CodeStream</vendor>
 
-    <description>Discuss, review, and share code with your team. Integrates w/ Slack, Jira, Trello, GitHub, and more</description>
+    <description>Discuss, review, and share code with your team. Integrates w/ Slack, Jira, Trello, GitHub, and more
+    </description>
 
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceImplementation="com.codestream.AgentService"/>
@@ -41,8 +42,6 @@
         </component>
     </project-components>
 
-
-
     <actions>
         <group id="com.codestream.Actions" popup="true" text="CodeStream" icon="/images/codestream.svg">
             <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="VcsGroup"/>
@@ -62,7 +61,8 @@
                 <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="I"
                                    replace-all="true"/>
             </action>
-            <action id="CodeStream.CreateBookmark" class="com.codestream.actions.CreateBookmarkAction" text="Create _Bookmark"
+            <action id="CodeStream.CreateBookmark" class="com.codestream.actions.CreateBookmarkAction"
+                    text="Create _Bookmark"
                     description="Add comment" icon="/images/marker-bookmark.svg">
                 <keyboard-shortcut keymap="$default" first-keystroke="control SLASH" second-keystroke="B"/>
                 <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="B"
