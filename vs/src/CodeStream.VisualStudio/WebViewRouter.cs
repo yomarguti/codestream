@@ -104,9 +104,6 @@ namespace CodeStream.VisualStudio
                                             var @params = message.Params.ToObject<WebviewDidChangeContextNotification>();
                                             if (@params != null)
                                             {
-                                                _sessionService.CurrentStreamId = @params.Context.CurrentStreamId;
-                                                _sessionService.CurrentThreadId = @params.Context.ThreadId;
-
                                                 var panelStack = @params.Context?.PanelStack;
                                                 _sessionService.PanelStack = panelStack;
                                                 if (panelStack != null)

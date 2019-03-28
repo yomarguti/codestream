@@ -14,8 +14,6 @@ namespace CodeStream.VisualStudio.Services
         void SetAgentReady();
         void SetUserLoggedIn(User user);
         void SetAgentDisconnected();
-        string CurrentStreamId { get; set; }
-        string CurrentThreadId { get; set; }
         List<string> PanelStack { get; set; }
         bool AreMarkerGlyphsVisible { get; set; }
 
@@ -85,9 +83,6 @@ namespace CodeStream.VisualStudio.Services
         {
             _sessionState = SessionState.AgentReady;
         }
-
-        public string CurrentStreamId { get; set; }
-        public string CurrentThreadId { get; set; }
 
         public bool IsAgentReady => _sessionState == SessionState.AgentReady || IsReady;
 
