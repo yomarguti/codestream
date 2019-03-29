@@ -45,10 +45,16 @@ export class WorkspaceSession {
 	readonly configManager: ConfigManager;
 
 	static create(state: PackageState) {
-		return new WorkspaceSession(state.session, state.lastUsedEmail, state.environment);
+		return new WorkspaceSession(
+			new ConfigManager(state.inMemorySettings),
+			state.session,
+			state.lastUsedEmail,
+			state.environment
+		);
 	}
 
 	protected constructor(
+		configManager: ConfigManager,
 		session?: Session,
 		lastUsedEmail = "",
 		envConfig: EnvironmentConfig = PRODUCTION_CONFIG
@@ -58,7 +64,7 @@ export class WorkspaceSession {
 		this.session = session;
 		this.lastUsedEmail = lastUsedEmail;
 		this.envConfig = envConfig;
-		this.configManager = new ConfigManager();
+		this.configManager = configManager;
 
 		if (session) {
 			this._isReady = new Promise(async (resolve, reject) => {
@@ -79,6 +85,7 @@ export class WorkspaceSession {
 			session: this.session,
 			lastUsedEmail: this.session ? this.session.user.email : this.lastUsedEmail,
 			environment: this.envConfig,
+			inMemorySettings: this.configManager.serialize(),
 		};
 	}
 
@@ -123,7 +130,7 @@ export class WorkspaceSession {
 		const editorCapabilities = {
 			codemarkApply: false,
 			codemarkCompare: false,
-			editorTrackVisibleRange: false,
+			editorTrackVisibleRange: true,
 			services: {},
 		};
 		if (!this.agentCapabilities) {

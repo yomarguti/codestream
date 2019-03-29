@@ -12,6 +12,8 @@ import {
 	isIpcRequestMessage,
 	LoginRequest,
 	LoginRequestType,
+	LogoutRequestType,
+	LogoutResponse,
 	NewCodemarkNotificationType,
 	ShowStreamNotificationType,
 	SignedInBootstrapResponse,
@@ -29,7 +31,9 @@ import {
 } from "@codestream/protocols/webview";
 import { CompositeDisposable, Disposable, Emitter, Point, Range, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
+import { ConfigSchema } from "configs";
 import { shell } from "electron";
+import { InMemorySettings } from "types/package";
 import { NotificationType } from "vscode-languageserver-protocol";
 import {
 	BootstrapRequestType as AgentBootstrapRequestType,
@@ -270,6 +274,8 @@ export class CodestreamView {
 				? {
 						activeFile: Editor.getRelativePath(editor),
 						textEditorUri: Editor.getUri(editor),
+						textEditorVisibleRanges: Editor.getVisibleRanges(editor),
+						textEditorSelections: Editor.getCSSelections(editor),
 				  }
 				: {},
 		};
@@ -343,8 +349,11 @@ export class CodestreamView {
 			}
 			case UpdateConfigurationRequestType.method: {
 				const { name, value }: UpdateConfigurationRequest = message.params;
-				this.session.configManager.set(name as any, value);
+				const { configManager } = this.session;
+				if (configManager.isUserSetting(name)) configManager.set(name as keyof ConfigSchema, value);
+				else configManager.setInMemory(name as keyof InMemorySettings, value);
 				this.respond<UpdateConfigurationResponse>({ id: message.id, params: {} });
+				this.sendEvent(HostDidChangeConfigNotificationType, { [name]: value });
 				break;
 			}
 			case EditorHighlightRangeRequestType.method: {
@@ -356,6 +365,12 @@ export class CodestreamView {
 				);
 				break;
 			}
+			case LogoutRequestType.method: {
+				this.session.signOut();
+				this.respond<LogoutResponse>({ id: message.id, params: {} });
+				break;
+			}
+			// case Logout
 			// case ReloadWebviewRequestType.method: {
 			// 	new Promise(() => {
 			// 		this.destroy();
@@ -407,7 +422,7 @@ export class CodestreamView {
 		this.sendEvent(HostDidChangeEditorSelectionNotificationType, {
 			uri: Editor.getUri(event.editor),
 			selections: Editor.getCSSelections(event.editor),
-			visibleRanges: [],
+			visibleRanges: Editor.getVisibleRanges(event.editor),
 		});
 	}
 
@@ -418,7 +433,7 @@ export class CodestreamView {
 			notification.editor = {
 				fileName: fileName || "",
 				uri: Editor.getUri(editor),
-				visibleRanges: [],
+				visibleRanges: Editor.getVisibleRanges(editor),
 				selections: Editor.getCSSelections(editor),
 			};
 		}

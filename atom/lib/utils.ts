@@ -69,6 +69,11 @@ export namespace Editor {
 			};
 		});
 	}
+
+	export function getVisibleRanges(editor: TextEditor): Range[] {
+		const [startLine, endLine] = (editor as any).getVisibleRowRange();
+		return [Range.create(startLine, 0, endLine, 0)];
+	}
 }
 
 interface CancelableFunction {
