@@ -4,6 +4,7 @@ import com.codestream.CodeStreamComponent
 import com.codestream.ServiceConsumer
 import com.codestream.TextDocument
 import com.codestream.protocols.webview.EditorNotifications
+import com.codestream.protocols.webview.StreamNotifications
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
@@ -356,6 +357,12 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
             return object : AnAction() {
                 override fun actionPerformed(e: AnActionEvent) {
                     CodeStreamComponent.getInstance(project).show()
+                    webViewService.postNotification(
+                        StreamNotifications.Show(
+                            marker.codemark.streamId,
+                            marker.codemark.postId
+                        )
+                    )
                 }
 
             }
