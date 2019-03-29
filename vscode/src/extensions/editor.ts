@@ -111,12 +111,15 @@ export namespace Editor {
 	export async function revealRange(
 		uri: Uri,
 		range: Range,
-		options: TextDocumentShowOptions
+		{ atTop, ...options }: TextDocumentShowOptions & { atTop?: boolean }
 	): Promise<boolean> {
 		const editor = await findOrOpenEditor(uri, { ...options });
 		if (editor === undefined) return false;
 
-		editor.revealRange(range, TextEditorRevealType.InCenterIfOutsideViewport);
+		const revealType = atTop
+			? TextEditorRevealType.AtTop
+			: TextEditorRevealType.InCenterIfOutsideViewport;
+		editor.revealRange(range, revealType);
 		return true;
 	}
 

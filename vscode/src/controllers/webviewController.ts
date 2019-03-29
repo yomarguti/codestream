@@ -568,7 +568,8 @@ export class WebviewController implements Disposable {
 						Uri.parse(params.uri),
 						Editor.fromSerializableRange(params.range),
 						{
-							preserveFocus: params.preserveFocus
+							preserveFocus: params.preserveFocus,
+							atTop: params.atTop
 						}
 					);
 					return {
