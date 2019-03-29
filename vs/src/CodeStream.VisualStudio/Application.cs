@@ -62,8 +62,7 @@ namespace CodeStream.VisualStudio
 
         static Application()
         {
-            // TODO remove the string.Empty
-            BuildEnv = string.Empty; //SolutionInfo.BuildEnv;
+            BuildEnv = SolutionInfo.BuildEnv;
 
             var versionFull = Version.Parse(SolutionInfo.Version);
             BuildNumber = versionFull.Revision;
