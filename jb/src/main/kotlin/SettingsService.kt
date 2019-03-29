@@ -39,7 +39,7 @@ data class SettingsServiceState(
     var autoHideMarkers: Boolean = true,
     var proxySupport: String = "on",
     var proxyUrl: String = "",
-    var proxyStrictSSL: Boolean = false,
+    var proxyStrictSSL: Boolean = true,
     var webViewConfig: MutableMap<String, String?> = mutableMapOf(
         INLINE_CODEMARKS to "true"
     )
