@@ -40,6 +40,7 @@ export interface EditorRevealRangeRequest {
 	uri: string;
 	range: Range;
 	preserveFocus?: boolean;
+	atTop?: boolean;
 }
 export interface EditorRevealRangeResponse {
 	result: EditorRevealRangeResult;
