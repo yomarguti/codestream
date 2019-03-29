@@ -12,6 +12,7 @@ import { HostApi } from "../webview-api";
 import {
 	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequestType,
+	EditorSelectRangeRequestType,
 	UpdateConfigurationRequestType,
 	MaxRangeValue
 } from "../ipc/webview.protocol";
@@ -21,7 +22,7 @@ import {
 	DidChangeDocumentMarkersNotificationType,
 	DocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
-import { Range } from "vscode-languageserver-types";
+import { Range, Position } from "vscode-languageserver-types";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { getCurrentSelection } from "../store/editorContext/reducer";
 import { setCurrentStream } from "../store/context/actions";
@@ -47,7 +48,7 @@ export class SimpleInlineCodemarks extends Component {
 
 		this.state = {
 			isLoading: props.documentMarkers.length === 0,
-			openPost: null
+			selectedDocMarkerId: null
 		};
 
 		const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
@@ -123,6 +124,7 @@ export class SimpleInlineCodemarks extends Component {
 		});
 
 		this.setVisibleLinesCount();
+		this.scrollTo(18);
 	}
 
 	componentDidUpdate(prevProps, prevState) {
@@ -136,11 +138,88 @@ export class SimpleInlineCodemarks extends Component {
 			this.props.textEditorVisibleRanges,
 			prevProps.textEditorVisibleRanges
 		);
-		if (didStartLineChange) this.setVisibleLinesCount();
+		if (didStartLineChange) {
+			this.setVisibleLinesCount();
+			this.scrollTo(18);
+		}
+
+		// INLINEHACK -- this delay is because the view isn't updating
+		// quickly enough when replies are rendered, so it repositions,
+		// then the replies make the selected codemark taller, and it
+		// fucks up the positioning
+		this.repositionCodemarks();
+		setTimeout(this.repositionCodemarks, 100);
 	}
 
 	componentWillUnmount() {
 		this.disposables.forEach(d => d.dispose());
+	}
+
+	scrollTo(top) {
+		const $div = document.getElementById("inline-codemarks-scroll-container");
+		if ($div) {
+			$div.scrollTop = top;
+		}
+	}
+
+	repositionAbove() {}
+
+	repositionBelow() {}
+
+	repositionCodemarks() {
+		// @ts-ignore
+		let $codemarkDivs = Array.from(
+			document.querySelectorAll(".codemark.inline, .compose.float-compose")
+		);
+		// @ts-ignore
+		$codemarkDivs.sort((a, b) => a.dataset.top - b.dataset.top);
+		const $composeDiv = document.getElementsByClassName("compose float-compose");
+
+		if (false && $composeDiv.length === 1) {
+			let bottomOfLastDiv = -30;
+			let runningYAdjustment = 0;
+			for (let $element of $codemarkDivs) {
+				const domRect = $element.getBoundingClientRect();
+				// @ts-ignore
+				const origTop = parseInt($element.dataset.top, 10);
+				const yDiff = bottomOfLastDiv - origTop + 20;
+				const height = domRect.bottom - domRect.top;
+
+				// @ts-ignore
+				const origMargin = parseInt($element.style.marginTop, 10) || 0;
+				if (yDiff > 0) {
+					// @ts-ignore
+					$element.style.marginTop = yDiff + "px";
+					bottomOfLastDiv = origTop + height + yDiff;
+				} else {
+					// @ts-ignore
+					$element.style.marginTop = "0";
+					bottomOfLastDiv = origTop + height;
+				}
+			}
+		} else {
+			let bottomOfLastDiv = -30;
+			let runningYAdjustment = 0;
+			for (let $element of $codemarkDivs) {
+				const domRect = $element.getBoundingClientRect();
+				// @ts-ignore
+				const origTop = parseInt($element.dataset.top, 10);
+				const yDiff = bottomOfLastDiv - origTop + 20;
+				const height = domRect.bottom - domRect.top;
+
+				// @ts-ignore
+				const origMargin = parseInt($element.style.marginTop, 10) || 0;
+				if (yDiff > 0) {
+					// @ts-ignore
+					$element.style.marginTop = yDiff + "px";
+					bottomOfLastDiv = origTop + height + yDiff;
+				} else {
+					// @ts-ignore
+					$element.style.marginTop = "0";
+					bottomOfLastDiv = origTop + height;
+				}
+			}
+		}
 	}
 
 	async onFileChanged() {
@@ -183,6 +262,8 @@ export class SimpleInlineCodemarks extends Component {
 	renderList = () => {
 		const { documentMarkers } = this.props;
 
+		const { selectedDocMarkerId } = this.state;
+
 		if (documentMarkers.length === 0) {
 			return this.renderNoCodemarks();
 		}
@@ -214,15 +295,20 @@ export class SimpleInlineCodemarks extends Component {
 										// @ts-ignore
 										codemark={docMarker.codemark}
 										marker={docMarker}
-										collapsed={this.state.openPost !== codemark.id}
+										collapsed={true}
 										inline={false}
+										selected={selectedDocMarkerId === docMarker.id}
 										currentUserName={this.props.currentUserName}
+										currentUserId={this.props.currentUserId}
 										usernames={this.props.usernames}
 										onClick={this.handleClickCodemark}
 										onMouseEnter={this.handleHighlightCodemark}
 										onMouseLeave={this.handleUnhighlightCodemark}
 										action={this.props.postAction}
 										query={this.state.q}
+										viewHeadshots={this.props.viewHeadshots}
+										capabilities={this.props.capabilities}
+										threadDivs={this.props.threadDivs}
 									/>
 								);
 							})}
@@ -244,6 +330,9 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	renderIconRow(lineNum0, top, hover, open) {
+		// if the compose box is open, don't show hover icons
+		if (this.props.children) return null;
+
 		// we only add the title properties (which add tooltips)
 		// when you mouse over them for performance reasons. adding
 		// tool tips on each one slowed things down a lot. -Pez
@@ -255,39 +344,40 @@ export class SimpleInlineCodemarks extends Component {
 				key={lineNum0}
 				style={{ top }}
 			>
-				<Icon
-					onClick={e => this.handleClickPlus(e, "comment", lineNum0)}
-					name="comment"
-					title={hover ? this.titles.comment : undefined}
-					placement="bottomLeft"
-					align={{ offset: [-15, 10] }}
-					delay={1}
-				/>
-				<Icon
-					onClick={e => this.handleClickPlus(e, "issue", lineNum0)}
-					name="issue"
-					title={hover ? this.titles.issue : undefined}
-					placement="bottomLeft"
-					align={{ offset: [-15, 10] }}
-					delay={1}
-				/>
-				{ /* bookmark is a skinnier icon so it's offset a little more */ }
-				<Icon
-					onClick={e => this.handleClickPlus(e, "bookmark", lineNum0)}
-					name="bookmark"
-					title={hover ? this.titles.bookmark : undefined}
-					placement="bottomLeft"
-					align={{ offset: [-18, 10] }}
-					delay={1}
-				/>
-				<Icon
-					onClick={e => this.handleClickPlus(e, "link", lineNum0)}
-					name="link"
-					title={hover ? this.titles.link : undefined}
-					placement="bottomLeft"
-					align={{ offset: [-15, 10] }}
-					delay={1}
-				/>
+				{(hover || open) && [
+					<Icon
+						onClick={e => this.handleClickPlus(e, "comment", lineNum0, top)}
+						name="comment"
+						title={this.titles.comment}
+						placement="bottomLeft"
+						align={{ offset: [-3, 10] }}
+						delay={1}
+					/>,
+					<Icon
+						onClick={e => this.handleClickPlus(e, "issue", lineNum0, top)}
+						name="issue"
+						title={this.titles.issue}
+						placement="bottomLeft"
+						align={{ offset: [-3, 10] }}
+						delay={1}
+					/>,
+					<Icon
+						onClick={e => this.handleClickPlus(e, "bookmark", lineNum0, top)}
+						name="bookmark"
+						title={this.titles.bookmark}
+						placement="bottomLeft"
+						align={{ offset: [-3, 10] }}
+						delay={1}
+					/>,
+					<Icon
+						onClick={e => this.handleClickPlus(e, "link", lineNum0, top)}
+						name="link"
+						title={this.titles.link}
+						placement="bottomLeft"
+						align={{ offset: [-3, 10] }}
+						delay={1}
+					/>
+				]}
 			</div>
 		);
 	}
@@ -297,8 +387,9 @@ export class SimpleInlineCodemarks extends Component {
 		// console.log("IOL IS: ", iconsOnLine0, " FROM: ", this.state.openIconsOnLine);
 		const highlightedLine = this.state.highlightedLine;
 
+		const windowHeight = window.innerHeight;
 		if (iconsOnLine0 >= 0) {
-			const top = (100 * iconsOnLine0) / numLinesVisible + "%";
+			const top = (windowHeight * iconsOnLine0) / numLinesVisible;
 			// const top = paddingTop ? "calc(" + topPct + " + " + paddingTop + "px)" : topPct;
 			return this.renderIconRow(iconsOnLine0, top, false, true);
 		} else {
@@ -306,7 +397,7 @@ export class SimpleInlineCodemarks extends Component {
 			return (
 				<div>
 					{range(0, numLinesVisible).map(lineNum0 => {
-						const top = (100 * lineNum0) / numLinesVisible + "%";
+						const top = (windowHeight * lineNum0) / numLinesVisible;
 						// const top = paddingTop ? "calc(" + topPct + " + " + paddingTop + "px)" : topPct;
 						const hover = lineNum0 === highlightedLine;
 						return this.renderIconRow(lineNum0, top, hover, false);
@@ -384,7 +475,7 @@ export class SimpleInlineCodemarks extends Component {
 			docMarkersByStartLine[startLine] = docMarker;
 		});
 
-		const { numLinesVisible } = this.state;
+		const { numLinesVisible, selectedDocMarkerId } = this.state;
 
 		// console.log("TEVR: ", textEditorVisibleRanges);
 
@@ -440,85 +531,115 @@ export class SimpleInlineCodemarks extends Component {
 			);
 		}
 
+		const windowHeight = window.innerHeight;
 		return (
 			<div
 				style={{
-					top: paddingTop,
-					// background: "#333366",
-					position: "relative",
-					fontSize: fontSize,
-					height: height
+					// paddingTop: "100px",
+					// marginTop: "-100px",
+					overflow: "auto",
+					height: "100vh"
 				}}
+				onScroll={this.onScroll}
+				id="inline-codemarks-scroll-container"
+				ref={ref => (this._scrollDiv = ref)}
 			>
 				<div
-					className="inline-codemarks-x vscroll-x"
-					// TODO: Get scroll to work
-					// onScroll={this.onScroll}
-					ref={ref => (this._scrollDiv = ref)}
+					style={{
+						padding: "18px 0",
+						margin: "-18px 0"
+					}}
 				>
-					<div>
-						{(textEditorVisibleRanges || []).map((lineRange, rangeIndex) => {
-							const realFirstLine = lineRange.start.line; // == 0 ? 1 : lineRange[0].line;
-							const realLastLine = lineRange.end.line;
-							const linesInRange = realLastLine - realFirstLine + 1;
-							const marksInRange = range(realFirstLine, realLastLine + 1).map(lineNum => {
-								const top =
-									(100 * (rangeStartOffset + lineNum - realFirstLine)) / numLinesVisible + "%";
-								if (docMarkersByStartLine[lineNum] && lineNum !== this.state.openIconsOnLine) {
-									const docMarker = docMarkersByStartLine[lineNum];
-									return (
-										<Codemark
-											key={docMarker.id}
-											codemark={docMarker.codemark}
-											marker={docMarker}
-											collapsed={this.state.openPost !== docMarker.id}
-											inline={true}
-											currentUserName={this.props.currentUserName}
-											usernames={this.props.usernames}
-											onClick={this.handleClickCodemark}
-											onMouseEnter={this.handleHighlightCodemark}
-											onMouseLeave={this.handleUnhighlightCodemark}
-											action={this.props.postAction}
-											query={this.state.q}
-											lineNum={lineNum}
-											style={{ top }}
-										/>
-									);
-								} else {
-									return null;
-								}
-							});
-							rangeStartOffset += linesInRange;
-							if (rangeIndex + 1 < numVisibleRanges) {
-								let top = (100 * rangeStartOffset) / numLinesVisible + "%";
-								marksInRange.push(<div style={{ top }} className="folded-code-indicator" />);
-							}
-							return marksInRange;
-						})}
+					<div
+						style={{
+							top: paddingTop,
+							// background: "#333366",
+							position: "relative",
+							fontSize: fontSize,
+							height: height
+						}}
+						id="inline-codemarks-field"
+						onClick={this.handleClickField}
+					>
+						<div style={{ position: "absolute", top: "-100px" }} />
+						<div style={{ position: "absolute", bottom: "-100px" }} />
+						<div className="inline-codemarks-x vscroll-x">
+							<div>
+								{this.props.children}
+								{(textEditorVisibleRanges || []).map((lineRange, rangeIndex) => {
+									const realFirstLine = lineRange.start.line; // == 0 ? 1 : lineRange[0].line;
+									const realLastLine = lineRange.end.line;
+									const linesInRange = realLastLine - realFirstLine + 1;
+									const marksInRange = range(realFirstLine, realLastLine + 1).map(lineNum => {
+										const top =
+											(windowHeight * (rangeStartOffset + lineNum - realFirstLine)) /
+											numLinesVisible;
+										if (docMarkersByStartLine[lineNum]) {
+											//} && lineNum !== this.state.openIconsOnLine) {
+											const docMarker = docMarkersByStartLine[lineNum];
+											return (
+												<Codemark
+													key={docMarker.id}
+													codemark={docMarker.codemark}
+													marker={docMarker}
+													collapsed={true}
+													inline={true}
+													selected={selectedDocMarkerId === docMarker.id}
+													currentUserId={this.props.currentUserId}
+													currentUserName={this.props.currentUserName}
+													usernames={this.props.usernames}
+													onClick={this.handleClickCodemark}
+													onMouseEnter={this.handleHighlightCodemark}
+													onMouseLeave={this.handleUnhighlightCodemark}
+													action={this.props.postAction}
+													query={this.state.q}
+													lineNum={lineNum}
+													style={{ top: top + "px" }}
+													top={top}
+													capabilities={this.props.capabilities}
+													threadDivs={this.props.threadDivs}
+												/>
+											);
+										} else {
+											return null;
+										}
+									});
+									rangeStartOffset += linesInRange;
+									if (rangeIndex + 1 < numVisibleRanges) {
+										let top = (100 * rangeStartOffset) / numLinesVisible + "%";
+										marksInRange.push(<div style={{ top }} className="folded-code-indicator" />);
+									}
+									return marksInRange;
+								})}
+							</div>
+							{this.renderHoverIcons(numLinesVisible)}
+						</div>
 					</div>
-					{this.renderHoverIcons(numLinesVisible)}
 				</div>
 			</div>
 		);
 	}
 
 	onScroll = event => {
-		if (this._scrolling) {
-			this._scrolling = false;
-			return;
-		}
+		if (!event || !event.target || event.target.id !== "inline-codemarks-scroll-container") return;
+
 		const top = event.target.scrollTop;
-		// we subtract 27 for two reasons:
-		// 1) 18 (one line height) because line numbers start at 1 (1-indexed array vs 0-indexed)
-		// 2) 9 is half a line, because we want it to scroll halfway through the line
-		const line = Math.round((top - 27) / 18);
-		if (line < 0) return;
+
+		const { textEditorVisibleRanges = [] } = this.props;
+		const topLine = textEditorVisibleRanges[0].start.line;
+		const bottomLine = textEditorVisibleRanges[textEditorVisibleRanges.length - 1].end.line;
+		const revealLine = top <= 5 ? topLine - 1 : top >= 20 ? topLine + 1 : topLine;
+
+		if (revealLine === topLine) return;
 
 		HostApi.instance.send(EditorRevealRangeRequestType, {
 			uri: this.props.textEditorUri,
-			range: Range.create(line, 0, line, 0),
-			preserveFocus: true
+			range: Range.create(revealLine, 0, revealLine, 0),
+			preserveFocus: true,
+			atTop: true
 		});
+
+		// this.scrollTo(18);
 	};
 
 	render() {
@@ -542,6 +663,34 @@ export class SimpleInlineCodemarks extends Component {
 		);
 	}
 
+	clearSelection = () => {
+		const { textEditorSelection } = this.props;
+		if (
+			textEditorSelection.start.line !== textEditorSelection.end.line ||
+			textEditorSelection.start.character !== textEditorSelection.end.character
+		) {
+			const position = Position.create(
+				textEditorSelection.cursor.line,
+				textEditorSelection.cursor.character
+			);
+			const range = Range.create(position, position);
+			HostApi.instance.send(EditorSelectRangeRequestType, {
+				uri: this.props.textEditorUri,
+				range: range,
+				preserveFocus: true
+			});
+			// just short-circuits the round-trip to the editor
+			this.setState({ openIconsOnLine: -1 });
+		}
+	};
+
+	handleClickField = event => {
+		if (event && event.target && event.target.id === "inline-codemarks-field") {
+			this.setState({ selectedDocMarkerId: null });
+			this.clearSelection();
+		}
+	};
+
 	toggleViewCodemarksInline = () => {
 		HostApi.instance.send(UpdateConfigurationRequestType, {
 			name: "viewCodemarksInline",
@@ -549,7 +698,7 @@ export class SimpleInlineCodemarks extends Component {
 		});
 	};
 
-	handleClickPlus = async (event, type, lineNum0) => {
+	handleClickPlus = async (event, type, lineNum0, top) => {
 		event.preventDefault();
 		this.props.setNewPostEntry("Spatial View");
 
@@ -585,13 +734,13 @@ export class SimpleInlineCodemarks extends Component {
 		// setup git context for codemark form
 		this.props.setMultiCompose(
 			true,
-			{ commentType: type },
+			{ commentType: type, top: top },
 			{ uri: this.props.textEditorUri, range: range, setSelection: setSelection }
 		);
 		// setTimeout(() => this.props.focusInput(), 500);
 	};
 
-	handleClickCodemark = async codemark => {
+	handleClickCodemark = async (codemark, docMarker) => {
 		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Codemark Clicked",
 			properties: {
@@ -624,11 +773,9 @@ export class SimpleInlineCodemarks extends Component {
 			}
 		}
 		this.props.setCurrentStream(codemark.streamId, codemark.parentPostId || codemark.postId);
-		// const isOpen = this.state.openPost === id;
-		// if (isOpen) this.setState({ openPost: null });
-		// else {
-		// this.setState({ openPost: id });
-		// }
+		this.highlightCode(docMarker, true);
+		this.setState({ selectedDocMarkerId: docMarker.id });
+		this.clearSelection();
 	};
 
 	async highlightCode(marker, highlight) {
@@ -725,12 +872,15 @@ export class SimpleInlineCodemarks extends Component {
 const EMPTY_ARRAY = [];
 
 const mapStateToProps = state => {
-	const { capabilities, context, editorContext, teams, configs, documentMarkers } = state;
+	const { session, capabilities, context, editorContext, teams, configs, documentMarkers } = state;
 
 	return {
+		currentUserId: session.userId,
 		usernames: userSelectors.getUsernames(state),
 		team: teams[context.currentTeamId],
 		viewInline: configs.viewCodemarksInline,
+		viewHeadshots: configs.viewHeadshots,
+		showLabelText: configs.showLabelText,
 		fileNameToFilterFor: editorContext.activeFile || editorContext.lastActiveFile,
 		textEditorUri: editorContext.textEditorUri,
 		textEditorLineCount: editorContext.textEditorLineCount,
@@ -738,7 +888,8 @@ const mapStateToProps = state => {
 		textEditorSelection: getCurrentSelection(editorContext),
 		metrics: editorContext.metrics || EMPTY_ARRAY,
 		documentMarkers: documentMarkers[editorContext.textEditorUri] || EMPTY_ARRAY,
-		capabilities
+		capabilities,
+		threadId: context.threadId
 	};
 };
 

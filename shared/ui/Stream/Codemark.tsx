@@ -4,10 +4,16 @@ import { connect } from "react-redux";
 import { setCodemarkStatus } from "./actions";
 import Headshot from "./Headshot";
 import Icon from "./Icon";
+import Menu from "./Menu";
 import { markdownify } from "./Markdowner";
 import Timestamp from "./Timestamp";
+import CodemarkDetails from "./CodemarkDetails";
 import { DocumentMarker } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
+import { HostApi } from "../webview-api";
+import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
+import { UpdateConfigurationRequestType } from "@codestream/protocols/webview";
+import { validateSignup } from "../Login/actions";
 
 // TODO: Why not use CSCodemark here? or CodemarkPlus?
 interface CodemarkEntity {
@@ -25,29 +31,50 @@ interface CodemarkEntity {
 		file?: string;
 	};
 	status?: string;
+	creatorId?: string;
+	pinned?: boolean;
 }
-interface State {}
+interface State {
+	menuOpen?: boolean;
+	menuTarget?: any;
+	showLabelText: boolean;
+}
 interface Props {
+	selected?: boolean;
 	collapsed?: boolean;
 	inline?: boolean;
 	codemark: CodemarkEntity;
 	marker: DocumentMarker;
 	currentUserName: string;
+	currentUserId?: string;
 	usernames: string[];
 	setCodemarkStatus: Function;
 	action(action: string, post: any, args: any): any;
-	onClick?(codemark: CodemarkEntity): any;
+	onClick?(codemark: CodemarkEntity, marker: DocumentMarker): any;
 	onMouseEnter?(marker: DocumentMarker): any;
 	onMouseLeave?(marker: DocumentMarker): any;
 	query?: string;
 	style?: object;
 	lineNum?: Number;
+	capabilities: any;
+	top?: Number;
+	showLabelText?: boolean;
+	threadDivs?: any;
 }
 
 export class Codemark extends React.Component<Props, State> {
 	static defaultProps = {
 		style: {}
 	};
+
+	constructor(props: Props) {
+		super(props);
+		this.state = {
+			menuOpen: false,
+			showLabelText: false
+		};
+	}
+
 	render() {
 		if (this.props.collapsed) return this.renderCollapsedCodemark();
 		else return null;
@@ -144,13 +171,14 @@ export class Codemark extends React.Component<Props, State> {
 	handleClickCodemark = (event: React.SyntheticEvent): any => {
 		event.preventDefault();
 		if (event && event.currentTarget && event.currentTarget.tagName === "A") return false;
+		if (this.props.selected) return false;
 
 		if (window.getSelection().toString().length > 0) {
 			// in this case the user has selected a string
 			// by dragging
 			return;
 		}
-		this.props.onClick && this.props.onClick(this.props.codemark);
+		this.props.onClick && this.props.onClick(this.props.codemark, this.props.marker);
 	};
 
 	handleMouseEnterCodemark = (event: React.SyntheticEvent): any => {
@@ -161,8 +189,43 @@ export class Codemark extends React.Component<Props, State> {
 		this.props.onMouseLeave && this.props.onMouseLeave(this.props.marker);
 	};
 
+	handleMenuClick = event => {
+		event.stopPropagation();
+		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
+	};
+
+	handleSelectMenu = action => {
+		this.setState({ menuOpen: false });
+
+		switch (action) {
+			case "toggle-pinned":
+				this.togglePinned();
+				break;
+		}
+	};
+
+	togglePinned = () => {
+		const { codemark } = this.props;
+		if (!codemark) return;
+
+		HostApi.instance.send(SetCodemarkPinnedRequestType, {
+			codemarkId: codemark.id,
+			value: !codemark.pinned
+		});
+	};
+
+	toggleLabelIndicators = event => {
+		event.stopPropagation();
+		HostApi.instance.send(UpdateConfigurationRequestType, {
+			name: "showLabelText",
+			value: !this.props.showLabelText
+		});
+		this.setState({ showLabelText: !this.state.showLabelText });
+	};
+
 	renderCollapsedCodemark() {
-		const { codemark, inline } = this.props;
+		const { codemark, inline, selected } = this.props;
+		const { menuOpen, menuTarget } = this.state;
 		const file = codemark.markers && codemark.markers[0].file;
 
 		const user = {
@@ -173,33 +236,112 @@ export class Codemark extends React.Component<Props, State> {
 
 		if (!codemark) return null;
 
+		const type = codemark && codemark.type;
+
+		const mine = codemark.creatorId === this.props.currentUserId;
+
+		let menuItems: any[] = [
+			// { label: "View Details", action: "open-codemark" },
+			// { label: "Add Reaction", action: "react" },
+			// { label: "Get Permalink", action: "get-permalink" },
+			// { label: "-" }
+		];
+
+		if (codemark.pinned) {
+			menuItems.push({ label: "Archive", action: "toggle-pinned" });
+		} else {
+			menuItems.push({ label: "Unarchive", action: "toggle-pinned" });
+		}
+
+		if (mine) {
+			menuItems.push(
+				{ label: "Edit", action: "edit-post" },
+				{ label: "Delete", action: "delete-post" }
+			);
+		}
+
 		// console.log(codemark);
 		// const style = inline ?
 		return (
 			<div
 				style={{ ...this.props.style }}
-				className={cx("codemark collapsed", codemark.color, { inline })}
+				className={cx("codemark collapsed", { inline: inline, selected: selected })}
 				onClick={this.handleClickCodemark}
 				onMouseEnter={this.handleMouseEnterCodemark}
 				onMouseLeave={this.handleMouseLeaveCodemark}
 				data-linenum={this.props.lineNum}
+				data-top={this.props.top}
 			>
-				{this.renderStatus(codemark)}
-				<div className="body">
-					{this.renderTypeIcon()}
-					{this.renderTextLinkified(codemark.title || codemark.text)}
-					{file && !inline && <span className="file-name">{file}</span>}
-					{inline && (
-						<div className="show-on-hover" style={{ display: "none" }}>
-							<div className="angle-arrow" />
-							{<Headshot size={18} person={user} />}
-							<span className="username">pez</span> posted to{" "}
-							<span className="clickable">#test</span> &middot;{" "}
-							<span className="clickable">2 replies</span> &middot;
-							<Timestamp time={codemark.createdAt} />
-						</div>
-					)}
+				<div className="contents">
+					{this.renderStatus(codemark)}
+					<div className="body">
+						{inline && (
+							<div className="author">
+								<Headshot person={user} /> <span className="author">{user.username}</span>
+								<Timestamp time={codemark.createdAt} />
+								{inline && codemark.color && (
+									<div
+										className={cx(`label-indicator ${codemark.color}-background`, {
+											expanded: this.state.showLabelText
+										})}
+										onClick={this.toggleLabelIndicators}
+									>
+										<span>priority</span>
+									</div>
+								)}
+							</div>
+						)}
+						{!inline && <span className={codemark.color}>{this.renderTypeIcon()}</span>}
+						{this.renderTextLinkified(codemark.title || codemark.text)}
+						{file && !inline && <span className="file-name">{file}</span>}
+						{inline && (
+							<div
+								style={{ position: "absolute", top: "5px", right: "5px" }}
+								onClick={this.handleMenuClick}
+							>
+								{menuOpen && (
+									<Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />
+								)}
+								<Icon name="kebab-vertical" className="kebab-vertical clickable" />
+							</div>
+						)}
+						{this.renderDemoShit(codemark, user)}
+					</div>
+					{selected && <CodemarkDetails codemark={codemark} />}
 				</div>
+			</div>
+		);
+	}
+
+	renderDemoShit(codemark, user) {
+		return (
+			<div>
+				{codemark.text && codemark.text.startsWith("does this") && (
+					<div>
+						<div className="angle-arrow" />
+						{<Headshot size={18} person={user} />}
+						<span style={{ opacity: 0.5 }}>no; the javascript byte compiler optimizes it away</span>
+					</div>
+				)}
+				{codemark.title && codemark.title.startsWith("let's avoid") && (
+					<div>
+						<div className="angle-arrow" />
+						{<Headshot size={18} person={user} />}
+						<span style={{ opacity: 0.5 }}>i'll grab this in the next sprint</span>
+					</div>
+				)}
+				{codemark.text && codemark.text.startsWith("how does") && (
+					<div>
+						<div className="angle-arrow" />
+						{<Headshot size={18} person={user} />}
+						<div style={{ opacity: 0.5, paddingLeft: "47px", marginTop: "-19px" }}>
+							Sample <code>n</code> random values from a collection using the modern version of the{" "}
+							<b>Fisher-Yates</b> shuffle. If <code>n</code> is not specified, returns a single
+							random element. The internal <code>guard</code> argument allows it to work with{" "}
+							<code>map</code>.
+						</div>
+					</div>
+				)}
 			</div>
 		);
 	}

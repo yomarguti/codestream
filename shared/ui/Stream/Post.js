@@ -220,7 +220,7 @@ class Post extends React.Component {
 					onClick={this.props.showDetails && this.handleClickCodeBlock}
 				>
 					<div className={createClassString("header", { "no-repo": noRepo })}>
-						<span className="file">{fileLabel}</span>
+						{/*<span className="file">{fileLabel}</span>*/}
 						{this.state.warning && (
 							<Tooltip placement="left" title={this.getWarningMessage()}>
 								<span className="icon-wrapper">
@@ -304,24 +304,23 @@ class Post extends React.Component {
 						align="left"
 					/>
 				)}
-				<Debug object={post} placement="top">
+
+				<div className="author" ref={ref => (this._authorDiv = ref)}>
 					<Headshot
 						size={headshotSize}
 						person={author}
 						mine={mine}
 						onClick={this.handleHeadshotClick}
 					/>
-				</Debug>
-
-				<span className="author" ref={ref => (this._authorDiv = ref)}>
 					{author.username}
 					{this.renderEmote(post)}
-				</span>
-				{post.error ? (
-					<RetrySpinner callback={this.resubmit} cancel={this.cancel} />
-				) : (
-					<Timestamp time={post.createdAt} />
-				)}
+					{post.error ? (
+						<RetrySpinner callback={this.resubmit} cancel={this.cancel} />
+					) : (
+						<Timestamp time={post.createdAt} />
+					)}
+					{codemark && codemark.color && <div className={`label-indicator ${color}-background`} />}
+				</div>
 				{this.props.parentPostId && !this.props.showDetails && (
 					<div className="replying-to">
 						<span>reply to</span> <b>{this.props.parentPostContent.substr(0, 80)}</b>
@@ -606,6 +605,7 @@ class Post extends React.Component {
 							</span>
 						</Tooltip>
 					)*/}
+					{/*
 					<Tooltip title="Add Reaction" placement="bottomRight">
 						<span>
 							<Icon name="smiley" className="smiley" onClick={this.handleReactionClick} />
@@ -614,11 +614,8 @@ class Post extends React.Component {
 					{this.state.emojiOpen && (
 						<EmojiPicker addEmoji={this.addReaction} target={this.state.emojiTarget} />
 					)}
-					<Tooltip title="More Options..." placement="bottomRight">
-						<span>
-							<Icon name="gear" className="gear" onClick={this.handleMenuClick} />
-						</span>
-					</Tooltip>
+					*/}
+					<Icon name="kebab-vertical" className="gear" onClick={this.handleMenuClick} />
 				</div>
 			);
 	};

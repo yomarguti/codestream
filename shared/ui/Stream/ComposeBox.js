@@ -205,13 +205,14 @@ class ComposeBox extends React.Component {
 				onDismiss={this.handleClickDismissMultiCompose}
 				tabIndex={this.tabIndex()}
 				quotePost={this.props.quotePost}
+				height={this.props.height}
 				{...props}
 			/>
 		);
 	};
 
 	render() {
-		const { forwardedRef, multiCompose } = this.props;
+		const { forwardedRef, multiCompose, top } = this.props;
 
 		this.tabIndexCount = 0;
 
@@ -224,7 +225,8 @@ class ComposeBox extends React.Component {
 					"float-compose": this.props.floatCompose,
 					"multi-compose": multiCompose
 				})}
-				style={{ top: this.state.startPosition }}
+				style={{ top: top || this.state.startPosition }}
+				data-top={top}
 			>
 				<div style={{ position: "relative" }}>
 					{multiCompose ? (

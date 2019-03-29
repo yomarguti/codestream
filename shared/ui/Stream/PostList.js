@@ -220,6 +220,7 @@ export default infiniteLoadable(
 						safe(renderIntro)
 					)}
 					{this.props.posts.map((post, index) => {
+						if (index == 0) return null;
 						// if the parent post isn't yet in local collection because it's further back, use the id
 						const parentPost =
 							post.parentPostId && post.parentPostId !== post.id
@@ -238,10 +239,6 @@ export default infiniteLoadable(
 
 						return (
 							<React.Fragment key={post.id}>
-								<DateSeparator
-									timestamp1={safe(() => posts[index - 1].createdAt)}
-									timestamp2={post.createdAt}
-								/>
 								<Post
 									id={post.id}
 									usernames={this.props.usernamesRegexp}

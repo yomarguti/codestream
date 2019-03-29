@@ -33,18 +33,18 @@ interface Props {
 	text: string;
 	teammates: CSUser[];
 	currentUserId: string;
-	slashCommands: any[];
+	slashCommands?: any[];
 	services: any[];
-	channelStreams: CSChannelStream[];
+	channelStreams?: CSChannelStream[];
 	isSlackTeam: boolean;
-	isDirectMessage: boolean;
-	multiCompose: boolean;
-	submitOnEnter: boolean;
+	isDirectMessage?: boolean;
+	multiCompose?: boolean;
+	submitOnEnter?: boolean;
 	placeholder?: string;
 	quotePost?: QuotePost;
-	onChange(text: string): any;
-	onEmptyUpArrow(event: React.KeyboardEvent): any;
-	onDismiss(): any;
+	onChange?(text: string): any;
+	onEmptyUpArrow?(event: React.KeyboardEvent): any;
+	onDismiss?(): any;
 	onSubmit?(): any;
 	tabIndex?: number;
 	__onDidRender?(stuff: { [key: string]: any }): any; // HACKy: sneaking internals to parent
@@ -131,7 +131,7 @@ export class MessageInput extends React.Component<Props, State> {
 	quotePost() {
 		if (this._contentEditable) {
 			this._contentEditable.htmlEl.innerHTML = "";
-			this.props.onChange("");
+			this.props.onChange && this.props.onChange("");
 		}
 		this.focus(() => {
 			const post = this.props.quotePost!;
@@ -223,19 +223,21 @@ export class MessageInput extends React.Component<Props, State> {
 			});
 		} else if (type === "slash-commands") {
 			// TODO: filtering these commands should happen higher up in the tree
-			this.props.slashCommands.map(command => {
-				if (command.channelOnly && this.props.isDirectMessage) return;
-				if (command.requires && !this.props.services[command.requires]) return;
-				if (command.codeStreamTeam && this.props.isSlackTeam) return;
-				if (command.slackTeam && !this.props.isSlackTeam) return;
-				const toMatch = command.id.toLowerCase();
-				if (toMatch.indexOf(normalizedPrefix) === 0) {
-					command.identifier = command.id;
-					itemsToShow.push(command);
-				}
-			});
+			if (this.props.slashCommands) {
+				this.props.slashCommands.map(command => {
+					if (command.channelOnly && this.props.isDirectMessage) return;
+					if (command.requires && !this.props.services[command.requires]) return;
+					if (command.codeStreamTeam && this.props.isSlackTeam) return;
+					if (command.slackTeam && !this.props.isSlackTeam) return;
+					const toMatch = command.id.toLowerCase();
+					if (toMatch.indexOf(normalizedPrefix) === 0) {
+						command.identifier = command.id;
+						itemsToShow.push(command);
+					}
+				});
+			}
 		} else if (type === "channels") {
-			Object.values(this.props.channelStreams).forEach(channel => {
+			Object.values(this.props.channelStreams || []).forEach(channel => {
 				const toMatch = channel.name.toLowerCase();
 				if (toMatch.indexOf(normalizedPrefix) !== -1) {
 					itemsToShow.push({
@@ -340,7 +342,7 @@ export class MessageInput extends React.Component<Props, State> {
 		}
 
 		// track newPostText as the user types
-		this.props.onChange(this._contentEditable!.htmlEl.innerHTML);
+		this.props.onChange && this.props.onChange(this._contentEditable!.htmlEl.innerHTML);
 		this.setState({
 			// autoMentions: this.state.autoMentions.filter(mention => newPostText.includes(mention)), // TODO
 			cursorPosition: getCurrentCursorPosition("input-div")
@@ -408,7 +410,7 @@ export class MessageInput extends React.Component<Props, State> {
 			// window.getSelection().empty();
 			// this.focus();
 
-			this.props.onChange(this._contentEditable!.htmlEl.innerHTML);
+			this.props.onChange && this.props.onChange(this._contentEditable!.htmlEl.innerHTML);
 			this.setState({
 				cursorPosition: getCurrentCursorPosition("input-div")
 			});
@@ -446,7 +448,7 @@ export class MessageInput extends React.Component<Props, State> {
 			// window.getSelection().empty();
 			// this.focus();
 
-			this.props.onChange(this._contentEditable.htmlEl.innerHTML);
+			this.props.onChange && this.props.onChange(this._contentEditable.htmlEl.innerHTML);
 			this.setState({
 				cursorPosition: getCurrentCursorPosition("input-div")
 			});
@@ -490,7 +492,7 @@ export class MessageInput extends React.Component<Props, State> {
 			event.preventDefault();
 			const { onSubmit } = this.props;
 			onSubmit && onSubmit();
-		} else if (event.key == "Escape" && multiCompose) {
+		} else if (event.key == "Escape" && multiCompose && this.props.onDismiss) {
 			this.props.onDismiss();
 		}
 	};
@@ -547,11 +549,11 @@ export class MessageInput extends React.Component<Props, State> {
 				event.preventDefault();
 			}
 		} else {
-			if (event.key === "ArrowUp" && this.props.text === "") {
+			if (event.key === "ArrowUp" && this.props.text === "" && this.props.onEmptyUpArrow) {
 				event.persist();
 				event.stopPropagation();
 				this.props.onEmptyUpArrow(event);
-			} else if (event.key == "Escape" && multiCompose) {
+			} else if (event.key == "Escape" && multiCompose && this.props.onDismiss) {
 				this.props.onDismiss();
 			} else if (event.key === "Enter" && event.metaKey && multiCompose) {
 				// command-enter should submit for multiCompose
@@ -618,7 +620,7 @@ export class MessageInput extends React.Component<Props, State> {
 				</React.Fragment>
 				<ContentEditable
 					className={cx("native-key-bindings", "message-input", btoa(placeholder || ""), {
-						"has-plus": !this.props.multiCompose
+						// "has-plus": !this.props.multiCompose
 					})}
 					id="input-div"
 					tabIndex={this.props.tabIndex}

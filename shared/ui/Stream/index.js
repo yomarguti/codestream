@@ -197,6 +197,7 @@ export class SimpleStream extends Component {
 		// the right height
 		if (prevProps.threadId !== this.props.threadId) {
 			this.resizeStream();
+			if (this.props.threadId) this.focusInput();
 		}
 
 		this.setUmiInfo(prevProps);
@@ -555,8 +556,11 @@ export class SimpleStream extends Component {
 
 		const streamClass = createClassString({
 			stream: true,
-			"has-overlay": threadId || this.state.multiCompose || this.state.floatCompose,
-			"has-floating-compose": this.state.floatCompose,
+			"has-overlay":
+				(threadId || this.state.multiCompose || this.state.floatCompose) &&
+				activePanel !== WebviewPanels.CodemarksForFile,
+			"has-floating-compose":
+				this.state.floatCompose && activePanel !== WebviewPanels.CodemarksForFile,
 			"no-headshots": !configs.showHeadshots
 		});
 		const threadPostsListClass = createClassString({
@@ -574,9 +578,9 @@ export class SimpleStream extends Component {
 			placeholderText = "Message " + this.props.postStreamName;
 			channelName = "@" + this.props.postStreamName;
 		}
-		if (activePanel === "thread" && threadPost) {
-			placeholderText = "Reply to " + threadPost.author.username;
-			channelName = "Reply to " + threadPost.author.username;
+		if (threadId) {
+			placeholderText = "Reply...";
+			channelName = "Reply...";
 		}
 
 		const streamDivId = "stream-" + this.props.postStreamId;
@@ -628,15 +632,19 @@ export class SimpleStream extends Component {
 			activePanel
 		);
 		if (this.state.floatCompose) renderNav = false;
+		// if (threadId) renderNav = false;
 
-		const contentClass = activePanel === WebviewPanels.CodemarksForFile ? "content inline" : "content vscroll inline";
+		const onInlineCodemarks = activePanel === WebviewPanels.CodemarksForFile;
+		const contentClass = onInlineCodemarks ? "content inline" : "content vscroll inline";
 		return (
 			<div className={streamClass}>
 				<div id="modal-root" />
 				<div id="confirm-root" />
-				{(threadId || this.state.floatCompose) && <div id="panel-blanket" />}
+				{threadId && !onInlineCodemarks && <div id="panel-blanket" />}
 				{renderNav && this.renderNavIcons()}
-				{this.state.floatCompose && this.renderComposeBox(placeholderText, channelName)}
+				{this.state.floatCompose &&
+					activePanel !== WebviewPanels.CodemarksForFile &&
+					this.renderComposeBox(placeholderText, channelName)}
 				<div className={contentClass}>
 					{activePanel === WebviewPanels.CodemarksForFile && (
 						<InlineCodemarks
@@ -656,7 +664,9 @@ export class SimpleStream extends Component {
 							selection={this.state.selection}
 							focusInput={this.focusInput}
 							scrollDiv={this._contentScrollDiv}
-						/>
+						>
+							{this.state.floatCompose && this.renderComposeBox(placeholderText, channelName)}
+						</InlineCodemarks>
 					)}
 					{activePanel === WebviewPanels.Codemarks && (
 						<KnowledgePanel
@@ -839,7 +849,7 @@ export class SimpleStream extends Component {
 								this.renderComposeBox(placeholderText, channelName)}
 						</div>
 					)}
-					{threadId && (
+					{threadId && !onInlineCodemarks && (
 						<div className="thread-panel" ref={ref => (this._threadPanel = ref)}>
 							<div className="panel-header inline">
 								<CancelButton title={closeThreadTooltip} onClick={this.handleDismissThread} />

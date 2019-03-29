@@ -19,51 +19,52 @@ export default class PostDetails extends Component {
 
 		if (!codemark) return null;
 
-		const hasCodeBlock = codemark.markers && codemark.markers.length ? true : null;
+		const hasCodeBlock =
+			(codemark.markers && codemark.markers.length) ||
+			(codemark.markerIds && codemark.markerIds.length)
+				? true
+				: null;
 		let canCompare = hasCodeBlock && this.props.capabilities.codemarkCompare;
 		let canApply = hasCodeBlock && this.props.capabilities.codemarkApply;
-
-		let commitDiv = null;
-		if (hasCodeBlock) {
-			commitDiv = (
-				<div className="posted-to">
-					<label>Posted to:</label> <span>{codemark.markers[0].commitHashWhenCreated}</span>
-				</div>
-			);
-		}
+		let canLoad = hasCodeBlock && this.props.capabilities.loadCommitHash;
 
 		return (
 			<div className="post-details" id={codemark.id} ref={ref => (this._div = ref)}>
-				{alert}
-				{commitDiv}
-				{(canCompare || canApply) && (
-					<div className="button-group">
+				{(canCompare || canApply || hasCodeBlock) && [
+					<div className="a-group" key="a">
 						{canCompare && (
-							<Button
+							<a
 								id="compare-button"
 								className="control-button"
 								tabIndex="2"
-								type="submit"
-								loading={this.props.loading}
 								onClick={this.handleClickShowDiff}
 							>
 								Compare
-							</Button>
+							</a>
 						)}
 						{canApply && (
-							<Button
+							<a
 								id="apply-button"
 								className="control-button"
 								tabIndex="3"
-								type="submit"
-								loading={this.props.loading}
 								onClick={this.handleClickApplyPatch}
 							>
 								Apply
-							</Button>
+							</a>
 						)}
-					</div>
-				)}
+						{canLoad && (
+							<a
+								id="apply-button"
+								className="control-button"
+								tabIndex="4"
+								onClick={this.handleClickApplyPatch}
+							>
+								Load {codemark.markers[0].commitHashWhenCreated.substr(0, 8)}
+							</a>
+						)}
+					</div>,
+					<div key="b" style={{ clear: "both" }} />
+				]}
 			</div>
 		);
 	}

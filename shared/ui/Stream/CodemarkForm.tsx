@@ -37,6 +37,7 @@ import Tooltip from "./Tooltip";
 import { sortBy as _sortBy } from "lodash-es";
 import { EditorSelectRangeRequestType, EditorSelection } from "@codestream/protocols/webview";
 import { getCurrentSelection } from "../store/editorContext/reducer";
+import Headshot from "./Headshot";
 
 const noop = () => {};
 
@@ -92,6 +93,8 @@ interface State {
 	assignableUsers: { value: any; label: string }[];
 	channelMenuOpen: boolean;
 	channelMenuTarget: any;
+	labelMenuOpen: boolean;
+	labelMenuTarget: any;
 	selectedChannelName?: string;
 	selectedChannelId?: string;
 	title?: string;
@@ -130,7 +133,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		const defaultState: Partial<State> = {
 			title: "",
 			text: "",
-			color: "blue",
+			color: "",
 			type: defaultType,
 			codeBlock: props.codeBlock,
 			assignees: [],
@@ -536,6 +539,19 @@ class CodemarkForm extends React.Component<Props, State> {
 		this.setState({ channelMenuOpen: false });
 	};
 
+	switchLabel = (event: React.SyntheticEvent) => {
+		event.stopPropagation();
+		const target = event.target;
+		this.setState(state => ({
+			labelMenuOpen: !state.labelMenuOpen,
+			labelMenuTarget: target
+		}));
+	};
+
+	selectLabel = (color: string) => {
+		this.setState({ color: color, labelMenuOpen: false });
+	};
+
 	// handleClickConnectSlack = async event => {
 	// 	event.preventDefault();
 	// 	this.setState({ isLoading: true });
@@ -543,11 +559,26 @@ class CodemarkForm extends React.Component<Props, State> {
 	// 	this.setState({ isLoading: false });
 	// }
 
-	renderCrossPostMessage = () => {
+	renderCrossPostMessage = commentType => {
 		const { selectedStreams, showChannels } = this.props;
 		const { showAllChannels } = this.state;
 		// if (this.props.slackInfo || this.props.providerInfo.slack) {
 		const items: { label: string; action?: CSStream | "show-all" }[] = [];
+
+		let labelMenuItems: any = COLOR_OPTIONS.map(color => {
+			return {
+				label: (
+					<span className={`${color}-color`}>
+						<Icon name={commentType} /> {color}
+					</span>
+				),
+				action: color
+			};
+		});
+		labelMenuItems.push({ label: "-" });
+		labelMenuItems.push({ label: "None", action: "none" });
+		labelMenuItems.push({ label: "-" });
+		labelMenuItems.push({ label: "Edit Labels", action: "edit" });
 
 		const filterSelected = showChannels === "selected" && !showAllChannels;
 		this.props.channelStreams.forEach(channel => {
@@ -577,7 +608,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		const channelName = this.state.selectedChannelName;
 		return (
-			<div className="checkbox-row">
+			<div className="checkbox-row" style={{ float: "left" }}>
 				{/*<input type="checkbox" checked={this.state.crossPostMessage} /> */} Post to{" "}
 				<span className="channel-label" onClick={this.switchChannel}>
 					{channelName}
@@ -592,13 +623,33 @@ class CodemarkForm extends React.Component<Props, State> {
 						/>
 					)}
 				</span>
-				{this.props.isSlackTeam && [
-					" on",
-					<span className="service">
-						<Icon className="slack" name="slack" />
-						Slack
-					</span>
-				]}
+				{false &&
+					this.props.isSlackTeam && [
+						" on",
+						<span className="service">
+							<Icon className="slack" name="slack" /> Slack
+						</span>
+					]}
+				{commentType !== "link" && (
+					<div className="color-choices" onClick={this.switchLabel}>
+						with <span className="label-label">label</span>
+						{this.state.labelMenuOpen && (
+							<Menu
+								align="center"
+								compact={true}
+								target={this.state.labelMenuTarget}
+								items={labelMenuItems}
+								action={this.selectLabel}
+							/>
+						)}
+						{this.state.color && (
+							<span className={cx("color-choice-box", `${this.state.color}-color`)}>
+								<Icon name={commentType} />
+							</span>
+						)}
+						<Icon name="chevron-down" className="chevron-down" />
+					</div>
+				)}
 			</div>
 		);
 		// }
@@ -660,13 +711,15 @@ class CodemarkForm extends React.Component<Props, State> {
 		const commentType = editingCodemark ? editingCodemark.type : this.state.type;
 		const titleLabel =
 			commentType === "issue"
-				? "Issue in "
+				? "issue in "
 				: commentType === "question"
-				? "Question in "
+				? "question in "
 				: commentType === "bookmark"
-				? "Bookmark in "
+				? "bookmark in "
 				: commentType === "link"
-				? "Permalink for "
+				? "permalink for "
+				: commentType === "comment"
+				? "comment in "
 				: "";
 
 		return titleLabel + file + " " + lines;
@@ -692,7 +745,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			// }
 			if (type === "question") placeholder = "Answer (optional)";
 			else if (type === "issue") placeholder = "Description (optional)";
-			else placeholder = "Add comment";
+			else placeholder = "";
 		}
 
 		const __onDidRender = ({ insertTextAtCursor, focus }) => {
@@ -720,17 +773,21 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	render() {
-		if (this.props.collapsed) {
-			return (
-				<PostCompose
-					onClickClose={this.props.onClickClose}
-					openCodemarkForm={this.props.openCodemarkForm}
-					openDirection={"down"}
-					renderMessageInput={this.renderMessageInput}
-					onSubmit={noop}
-				/>
-			);
-		}
+		const GoogleStyle = true;
+		const showHeadshots = true;
+		// const GoogleStyle = this.props;
+
+		// if (this.props.collapsed) {
+		// 	return (
+		// 		<PostCompose
+		// 			onClickClose={this.props.onClickClose}
+		// 			openCodemarkForm={this.props.openCodemarkForm}
+		// 			openDirection={"down"}
+		// 			renderMessageInput={this.renderMessageInput}
+		// 			onSubmit={noop}
+		// 		/>
+		// 	);
+		// }
 
 		const { editingCodemark } = this.props;
 		const commentType = editingCodemark ? editingCodemark.type : this.state.type || "comment";
@@ -785,20 +842,57 @@ class CodemarkForm extends React.Component<Props, State> {
 		// {isEditing ? "Update" : "New"}{" "}
 		// {commentString.charAt(0).toUpperCase() + commentString.slice(1)}
 		// <div className="range-text">{rangeText}</div>
-		return [
+		const user = {
+			username: "pez",
+			email: "pez@codestream.com",
+			fullName: "Peter Pezaris"
+		};
+
+		const panelHeader = GoogleStyle ? null : (
 			<div className="panel-header" key="one">
 				{/*
-					<span className="align-left-button" onClick={() => this.props.collapseForm()}>
-						<Icon name="chevron-up" />
-					</span>
-				*/}
-				<CancelButton placement="left" onClick={this.props.onClickClose} />
-			</div>,
+			<span className="align-left-button" onClick={() => this.props.collapseForm()}>
+				<Icon name="chevron-up" />
+			</span>
+		*/}
+				{!GoogleStyle && <CancelButton placement="left" onClick={this.props.onClickClose} />}
+			</div>
+		);
 
-			<form id="code-comment-form" className="standard-form" key="two">
+		const modifier = navigator.appVersion.includes("Macintosh") ? "⌘" : "Alt";
+		const submitTip =
+			commentType === "link" ? (
+				undefined
+			) : (
+				<span>
+					Submit Comment <span className="keybinding extra-pad">{modifier} ENTER</span>
+				</span>
+			);
+		const cancelTip = (
+			<span>
+				Discard Comment<span className="keybinding extra-pad">ESC</span>
+			</span>
+		);
+
+		return [
+			panelHeader,
+			<form
+				id="code-comment-form"
+				className={cx("standard-form", { "google-style": GoogleStyle })}
+				key="two"
+			>
 				<fieldset className="form-body">
 					<div id="controls" className="control-group">
-						{<div style={{ marginBottom: "10px" }}>{this.getCodeBlockHint()}</div>}
+						{showHeadshots && (
+							<div style={{ paddingLeft: "25px", height: "25px", marginTop: "10px" }}>
+								<Headshot person={user} />
+								<b>{user.username}</b>
+								<span style={{ opacity: 0.75, paddingLeft: "5px" }}>{this.getCodeBlockHint()}</span>
+							</div>
+						)}
+						{!showHeadshots && (
+							<div style={{ margin: "10px 0 10px 0" }}>{this.getCodeBlockHint()}</div>
+						)}
 						<div className="tab-group" style={{ display: "none" }}>
 							<input
 								id="radio-comment-type-comment"
@@ -974,7 +1068,6 @@ class CodemarkForm extends React.Component<Props, State> {
 							</Tooltip>
 						</div>
 					)}
-					{commentType !== "link" && this.renderCrossPostMessage()}
 					{commentType === "issue" && (
 						<CrossPostIssueControls
 							issueProvider={this.props.issueProvider}
@@ -982,63 +1075,54 @@ class CodemarkForm extends React.Component<Props, State> {
 							codeBlock={this.state.codeBlock as any}
 						/>
 					)}
-					{commentType !== "link" && (
-						<div className="color-choices">
-							{COLOR_OPTIONS.map(color => (
-								<label
-									onClick={e => this.setState({ color })}
-									key={color}
-									className={cx("color-choice-box", `${color}-color`, {
-										selected: this.state.color === color
-									})}
-								>
-									<Icon name={commentType} />
-								</label>
-							))}
-						</div>
-					)}
+					{commentType !== "link" && this.renderCrossPostMessage(commentType)}
 					<div
 						className="button-group"
 						style={{
 							marginLeft: "10px",
+							marginTop: "10px",
 							float: "right",
 							width: "auto",
 							marginRight: 0
 						}}
 					>
-						<Button
-							style={{
-								paddingLeft: "10px",
-								paddingRight: "10px",
-								width: "auto"
-							}}
-							className="control-button cancel"
-							type="submit"
-							onClick={this.props.onClickClose}
-						>
-							{this.state.copied ? "Close" : "Cancel"}
-						</Button>
-						<Button
-							style={{
-								paddingLeft: "10px",
-								paddingRight: "10px",
-								// fixed width to handle the isLoading case
-								width: "80px",
-								marginRight: 0
-							}}
-							className="control-button"
-							type="submit"
-							loading={this.state.isLoading}
-							onClick={this.state.linkURI ? this.copyPermalink : this.handleClickSubmit}
-						>
-							{commentType === "link"
-								? this.state.copied
-									? "Copied!"
-									: this.state.linkURI
-									? "Copy Link"
-									: "Create Link"
-								: "Submit"}
-						</Button>
+						<Tooltip title={cancelTip} placement="bottom" delay={1}>
+							<Button
+								style={{
+									paddingLeft: "10px",
+									paddingRight: "10px",
+									width: "auto"
+								}}
+								className="control-button cancel"
+								type="submit"
+								onClick={this.props.onClickClose}
+							>
+								{this.state.copied ? "Close" : "Cancel"}
+							</Button>
+						</Tooltip>
+						<Tooltip title={submitTip} placement="bottom" delay={1}>
+							<Button
+								style={{
+									paddingLeft: "10px",
+									paddingRight: "10px",
+									// fixed width to handle the isLoading case
+									width: "80px",
+									marginRight: 0
+								}}
+								className="control-button"
+								type="submit"
+								loading={this.state.isLoading}
+								onClick={this.state.linkURI ? this.copyPermalink : this.handleClickSubmit}
+							>
+								{commentType === "link"
+									? this.state.copied
+										? "Copied!"
+										: this.state.linkURI
+										? "Copy Link"
+										: "Create Link"
+									: "Submit"}
+							</Button>
+						</Tooltip>
 						{/*
 							<span className="hint">Styling with Markdown is supported</span>
 						*/}

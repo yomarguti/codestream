@@ -3,10 +3,10 @@ import Icon from "./Icon";
 import Menu from "./Menu";
 
 interface Props {
-	openCodemarkForm: Function;
-	openDirection: "up" | "down";
+	openCodemarkForm?: Function;
+	openDirection?: "up" | "down";
 	renderMessageInput(props: { [key: string]: any }): JSX.Element;
-	onClickClose(): any;
+	onClickClose?(): any;
 	onSubmit(text: string): any;
 	placeholder?: string;
 }
@@ -29,7 +29,7 @@ export class PostCompose extends React.Component<Props, State> {
 
 	handleClickClose = (event: React.SyntheticEvent) => {
 		event.preventDefault();
-		this.props.onClickClose();
+		this.props.onClickClose && this.props.onClickClose();
 	};
 
 	handleMenuClick = (event: React.SyntheticEvent) => {
@@ -39,7 +39,7 @@ export class PostCompose extends React.Component<Props, State> {
 
 	handleSelectMenu = type => {
 		this.setState({ menuOpen: false });
-		if (type) this.props.openCodemarkForm(type);
+		if (type) this.props.openCodemarkForm && this.props.openCodemarkForm(type);
 	};
 
 	handleSubmit = () => {
@@ -65,6 +65,7 @@ export class PostCompose extends React.Component<Props, State> {
 
 		return (
 			<React.Fragment>
+				{/*}
 				<div key="1" className="plus-button" onClick={this.handleMenuClick}>
 					<Icon name="plus" className="plus" />
 					{menuOpen && (
@@ -75,7 +76,7 @@ export class PostCompose extends React.Component<Props, State> {
 							action={this.handleSelectMenu}
 						/>
 					)}
-				</div>
+					</div>*/}
 				{
 					// <div key="2" className="x-button" onClick={this.handleClickClose}>
 					// <Icon name="x" className="plus" />

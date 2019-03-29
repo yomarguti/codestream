@@ -269,12 +269,12 @@ body.preload * {
 			background-color: rgba(0, 0, 0, 0);
 		}
 		.code-reference .header {
-			border: none !important;
+			// border: none !important;
 			// border-bottom: 1px dashed @base-border-color !important;
 			border-radius: 0 !important;
 		}
 		.code {
-			border: none !important;
+			// border: none !important;
 			border-radius: 0 !important;
 		}
 
@@ -322,7 +322,7 @@ body.preload * {
 			.code-reference .code {
 				margin-top: 0;
 				margin-bottom: 5px;
-				border-top: 0;
+				// border-top: 0;
 				border-top-left-radius: 0px;
 				border-top-right-radius: 0px;
 			}
@@ -354,18 +354,22 @@ body.preload * {
 		}
 	}
 	.react-select__control {
-		border-color: @base-border-color;
-		border: none;
-		border: 1px solid transparent;
-		background-color: @background-color-highlight-light;
-		.vscode-dark& {
-			background-color: @background-color-highlight-dark;
-		}
+		border: 1px solid @base-border-color;
+		background-color: rgba(0, 0, 0, 0.1);
 		margin: 0;
 		font-family: inherit;
 		font-size: 13px;
 		min-height: 10px;
 		border-radius: 0;
+		&:hover {
+			border: 1px solid @base-border-color;
+		}
+		&:focus {
+			border: 1px solid #99caeb !important;
+			.vscode-dark& {
+				border: 1px solid #205376 !important;
+			}
+		}
 	}
 	.react-select__control-is-focused {
 		box-shadow: none;
