@@ -15,7 +15,8 @@ window.addEventListener("message", ({ data, ports }) => {
 		setStyles(data.styles);
 		initialize("#app");
 	}
-	if ((data.label = "update-styles")) {
+	if (data.label === "update-styles") {
+		// TODO: clear out the existing ones?
 		setStyles(data.styles);
 	}
 });
