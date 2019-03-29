@@ -54,6 +54,7 @@ import {
 	SetCodemarkPinnedRequest,
 	SetCodemarkStatusRequest,
 	SetStreamPurposeRequest,
+	ThirdPartyProviderConfig,
 	UnarchiveStreamRequest,
 	Unreads,
 	UpdateCodemarkRequest,
@@ -2172,18 +2173,18 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
-	connectThirdPartyProvider(request: { providerName: string; apiKey?: string }) {
+	connectThirdPartyProvider(request: { providerName: string; apiKey?: string, host?: string }) {
 		return this._codestream.connectThirdPartyProvider(request);
 	}
 
 	@log()
-	disconnectThirdPartyProvider(request: { providerName: string }) {
+	disconnectThirdPartyProvider(request: { providerName: string, host?: string }) {
 		return this._codestream.disconnectThirdPartyProvider(request);
 	}
 
 	@log()
 	refreshThirdPartyProvider(request: {
-		providerName: string;
+		provider: ThirdPartyProviderConfig;
 		refreshToken: string;
 	}): Promise<CSMe> {
 		return this._codestream.refreshThirdPartyProvider(request);

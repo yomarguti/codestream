@@ -1,6 +1,14 @@
 "use strict";
 import fetch, { RequestInit, Response } from "node-fetch";
-import { FetchAssignableUsersRequest, FetchAssignableUsersResponse } from "protocol/agent.protocol";
+import {
+	CreateThirdPartyCardRequest,
+	CreateThirdPartyCardResponse,
+	FetchAssignableUsersRequest,
+	FetchAssignableUsersResponse,
+	FetchThirdPartyBoardsRequest,
+	FetchThirdPartyBoardsResponse,
+	ThirdPartyProviderConfig
+} from "protocol/agent.protocol";
 import { MessageType } from "../api/apiProvider";
 import { User } from "../api/extensions";
 import { Container } from "../container";
@@ -13,7 +21,9 @@ export interface ThirdPartyProvider {
 	readonly name: string;
 	connect(): Promise<void>;
 	disconnect(): Promise<void>;
+	getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse>;
 	getAssignableUsers(request: FetchAssignableUsersRequest): Promise<FetchAssignableUsersResponse>;
+	createCard(request: CreateThirdPartyCardRequest): Promise<CreateThirdPartyCardResponse>;
 }
 
 export interface ApiResponse<T> {
@@ -39,12 +49,27 @@ export abstract class ThirdPartyProviderBase<
 	protected _ensuringConnection: Promise<void> | undefined;
 	protected _providerInfo: TProviderInfo | undefined;
 
-	constructor(public readonly session: CodeStreamSession) {}
+	constructor(
+		public readonly session: CodeStreamSession,
+		protected readonly providerInstance: ThirdPartyProviderConfig
+	) {}
 
-	abstract get baseUrl(): string;
 	abstract get displayName(): string;
 	abstract get name(): string;
 	abstract get headers(): { [key: string]: string };
+	abstract async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse>;
+	abstract async getAssignableUsers(request: FetchAssignableUsersRequest): Promise<FetchAssignableUsersResponse>;
+	abstract async createCard(request: CreateThirdPartyCardRequest): Promise<CreateThirdPartyCardResponse>;
+
+	get apiPath () {
+		return "";
+	}
+
+	get baseUrl() {
+		const { host, apiHost, isEnterprise } = this.providerInstance;
+		const returnHost = isEnterprise ? host : apiHost;
+		return `https://${returnHost}${this.apiPath}`;
+	}
 
 	get accessToken() {
 		return this._providerInfo && this._providerInfo.accessToken;
@@ -52,7 +77,8 @@ export abstract class ThirdPartyProviderBase<
 
 	async connect() {
 		void (await this.session.api.connectThirdPartyProvider({
-			providerName: this.name
+			providerName: this.name,
+			host: this.providerInstance.isEnterprise ? this.providerInstance.host : undefined
 		}));
 		this._providerInfo = await new Promise<TProviderInfo>(resolve => {
 			this.session.api.onDidReceiveMessage(e => {
@@ -75,7 +101,10 @@ export abstract class ThirdPartyProviderBase<
 	protected async onConnected() {}
 
 	async disconnect() {
-		void (await this.session.api.disconnectThirdPartyProvider({ providerName: this.name }));
+		void (await this.session.api.disconnectThirdPartyProvider({
+			providerName: this.name,
+			host: this.providerInstance.isEnterprise ? this.providerInstance.host : undefined
+		}));
 		this._readyPromise = this._providerInfo = undefined;
 		await this.onDisconnected();
 	}
@@ -107,7 +136,7 @@ export abstract class ThirdPartyProviderBase<
 			if (oneMinuteBeforeExpiration <= new Date().getTime()) {
 				try {
 					const me = await this.session.api.refreshThirdPartyProvider({
-						providerName: this.name,
+						provider: this.providerInstance,
 						refreshToken: this._providerInfo.refreshToken
 					});
 					this._providerInfo = this.getProviderInfo(me);
@@ -117,13 +146,6 @@ export abstract class ThirdPartyProviderBase<
 				}
 			}
 		}
-	}
-
-	// TODO: make this abstract when other providers implement it
-	async getAssignableUsers(
-		request: FetchAssignableUsersRequest
-	): Promise<FetchAssignableUsersResponse> {
-		return { users: [] };
 	}
 
 	private async ensureConnectedCore() {
@@ -179,7 +201,12 @@ export abstract class ThirdPartyProviderBase<
 	}
 
 	protected getProviderInfo(me: CSMe) {
-		return User.getProviderInfo<TProviderInfo>(me, this.session.teamId, this.name);
+		return User.getProviderInfo<TProviderInfo>(
+			me,
+			this.session.teamId,
+			this.name,
+			this.providerInstance.isEnterprise ? this.providerInstance.host : undefined
+		);
 	}
 
 	private async fetch<R extends object>(url: string, init: RequestInit): Promise<ApiResponse<R>> {
@@ -260,7 +287,6 @@ export abstract class ThirdPartyProviderBase<
 				await Functions.wait(250 * count);
 				return this.fetchCore(count, url, init);
 			}
-
 			throw ex;
 		}
 	}

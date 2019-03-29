@@ -63,6 +63,7 @@ export interface CreatePostWithMarkerRequest {
 	color?: string;
 	status?: string;
 	externalProvider?: string;
+	externalProviderHost?: string;
 	externalProviderUrl?: string;
 	externalAssignees?: ThirdPartyProviderUser[];
 	entryPoint?: string;

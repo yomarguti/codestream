@@ -55,6 +55,7 @@ import {
 	SetCodemarkPinnedResponse,
 	SetCodemarkStatusRequest,
 	SetStreamPurposeRequest,
+	ThirdPartyProviderConfig,
 	UnarchiveStreamRequest,
 	Unreads,
 	UpdateCodemarkRequest,
@@ -982,7 +983,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async connectThirdPartyProvider(request: { providerName: string; apiKey?: string }) {
+	async connectThirdPartyProvider(request: { providerName: string; apiKey?: string, host?: string }) {
 		const cc = Logger.getCorrelationContext();
 
 		try {
@@ -990,10 +991,20 @@ export class CodeStreamApiProvider implements ApiProvider {
 				`/provider-auth-code?teamId=${this.teamId}`,
 				this._token
 			);
+			const params: { [key: string]: string } = {
+				code: response.code
+			};
+			if (request.apiKey) {
+				params.apiKey = request.apiKey;
+			}
+			if (request.host) {
+				params.host = request.host;
+			}
+			const query = Object.keys(params)
+				.map(param => `${param}=${encodeURIComponent(params[param])}`)
+				.join("&");
 			await opn(
-				`${this.baseUrl}/no-auth/provider-auth/${request.providerName}?code=${response.code}&key=${
-					request.apiKey
-				}`,
+				`${this.baseUrl}/no-auth/provider-auth/${request.providerName}?${query}`,
 				{ wait: false }
 			);
 			return response;
@@ -1004,23 +1015,26 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async disconnectThirdPartyProvider(request: { providerName: string }) {
-		void (await this.put<{ teamId: string }, {}>(
+	async disconnectThirdPartyProvider(request: { providerName: string, host?: string }) {
+		void (await this.put<{ teamId: string, host?: string }, {}>(
 			`/provider-deauth/${request.providerName}`,
-			{ teamId: this.teamId },
+			{ teamId: this.teamId, host: request.host },
 			this._token
 		));
 	}
 
 	@log()
 	async refreshThirdPartyProvider(request: {
-		providerName: string;
+		provider: ThirdPartyProviderConfig;
 		refreshToken: string;
 	}): Promise<CSMe> {
-		const provider = request.providerName;
+		const provider = request.provider.name;
 		const team = `teamId=${this.teamId}`;
 		const token = `refreshToken=${request.refreshToken}`;
-		const url = `/provider-refresh/${provider}?${team}&${token}`;
+		const host = request.provider.isEnterprise ?
+			`&host=${encodeURIComponent(request.provider.host)}` :
+			"";
+		const url = `/provider-refresh/${provider}?${team}&${token}${host}`;
 		const response = await this.get<{ user: any }>(url, this._token);
 
 		const [user] = await Container.instance().users.resolve({

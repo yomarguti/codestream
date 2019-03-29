@@ -1,5 +1,4 @@
 "use strict";
-import { RequestType } from "vscode-languageserver-protocol";
 import { ThirdPartyProviderBoard } from "./agent.protocol";
 
 export interface JiraUser {
@@ -17,13 +16,6 @@ export interface JiraFetchBoardsResponse {
 	boards: JiraBoard[];
 }
 
-export const JiraFetchBoardsRequestType = new RequestType<
-	void,
-	JiraFetchBoardsResponse,
-	void,
-	void
->("codestream/jira/boards");
-
 export interface CreateJiraCardRequest {
 	summary: string;
 	description: string;
@@ -36,10 +28,3 @@ export interface CreateJiraCardResponse {
 	id: string;
 	url: string;
 }
-
-export const CreateJiraCardRequestType = new RequestType<
-	CreateJiraCardRequest,
-	CreateJiraCardResponse,
-	void,
-	void
->("codestream/jira/cards/create");

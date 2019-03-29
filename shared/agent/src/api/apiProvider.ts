@@ -92,6 +92,7 @@ import {
 	SetCodemarkStatusResponse,
 	SetStreamPurposeRequest,
 	SetStreamPurposeResponse,
+	ThirdPartyProviderConfig,
 	UnarchiveStreamRequest,
 	UnarchiveStreamResponse,
 	Unreads,
@@ -318,11 +319,15 @@ export interface ApiProvider {
 	connectThirdPartyProvider(request: {
 		providerName: string;
 		apiKey?: string;
+		host?: string;
 	}): Promise<{ code: string }>;
 
-	disconnectThirdPartyProvider(request: { providerName: string }): Promise<void>;
+	disconnectThirdPartyProvider(request: {
+		providerName: string,
+		host?: string
+	}): Promise<void>;
 
-	refreshThirdPartyProvider(request: { providerName: string; refreshToken: string }): Promise<CSMe>;
+	refreshThirdPartyProvider(request: { provider: ThirdPartyProviderConfig; refreshToken: string }): Promise<CSMe>;
 }
 
 export interface CodeStreamApiMiddlewareContext {

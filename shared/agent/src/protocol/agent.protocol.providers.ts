@@ -1,13 +1,22 @@
 "use strict";
 import { RequestType } from "vscode-languageserver-protocol";
 
+export interface ThirdPartyProviderConfig {
+	name: string;
+	host: string;
+	apiHost: string;
+	isEnterprise?: boolean;
+	hasIssues?: boolean;
+	teamId?: string;
+}
+
 export interface ConnectThirdPartyProviderRequest {
-	providerName: string;
+	provider: ThirdPartyProviderConfig;
 }
 
 export interface ConnectThirdPartyProviderResponse {}
 
-export const ConnectThirdParyProviderRequestType = new RequestType<
+export const ConnectThirdPartyProviderRequestType = new RequestType<
 	ConnectThirdPartyProviderRequest,
 	ConnectThirdPartyProviderResponse,
 	void,
@@ -15,7 +24,7 @@ export const ConnectThirdParyProviderRequestType = new RequestType<
 >("codestream/provider/connect");
 
 export interface DisconnectThirdPartyProviderRequest {
-	providerName: string;
+	provider: ThirdPartyProviderConfig;
 }
 
 export interface DisconnectThirdPartyProviderResponse {}
@@ -27,12 +36,40 @@ export const DisconnectThirdPartyProviderRequestType = new RequestType<
 	void
 >("codestream/provider/disconnect");
 
-export interface FetchThirdPartyBoardsRequest {
+export interface ThirdPartyProviderBoard {
+	id: string;
+	name: string;
+	apiIdentifier?: string;
+	assigneesRequired?: boolean;
+	assigneesDisabled?: boolean;
+	singleAssignee?: boolean;
 	[key: string]: any;
 }
 
+export interface FetchThirdPartyBoardsRequest {
+	provider: ThirdPartyProviderConfig;
+	[key: string]: any;
+}
+
+export interface FetchThirdPartyBoardsResponse {
+	boards: ThirdPartyProviderBoard[];
+}
+
+export const FetchThirdPartyBoardsRequestType = new RequestType<
+	FetchThirdPartyBoardsRequest,
+	FetchThirdPartyBoardsResponse,
+	void,
+	void
+>("codestream/provider/boards");
+
+export interface ThirdPartyProviderUser {
+	id: string;
+	displayName: string;
+	email?: string;
+}
+
 export interface FetchAssignableUsersRequest {
-	providerName: string;
+	provider: ThirdPartyProviderConfig;
 	boardId: string;
 }
 
@@ -47,16 +84,20 @@ export const FetchAssignableUsersRequestType = new RequestType<
 	void
 >("codestream/provider/cards/users");
 
-export interface ThirdPartyProviderBoard {
-	id: string;
-	name: string;
-	assigneesRequired: boolean;
-	assigneesDisabled?: boolean;
-	singleAssignee?: boolean;
+export interface CreateThirdPartyCardRequest {
+	provider: ThirdPartyProviderConfig;
+	data: {
+		[key: string]: any;
+	};
 }
 
-export interface ThirdPartyProviderUser {
-	id: string;
-	displayName: string;
-	email?: string;
+export interface CreateThirdPartyCardResponse {
+	[key: string]: any;
 }
+
+export const CreateThirdPartyCardRequestType = new RequestType<
+	CreateThirdPartyCardRequest,
+	CreateThirdPartyCardResponse,
+	void,
+	void
+>("codestream/provider/cards/create");
