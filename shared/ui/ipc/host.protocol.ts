@@ -1,4 +1,9 @@
-import { Capabilities, CodeStreamEnvironment, Unreads, ThirdPartyProviderConfig } from "@codestream/protocols/agent";
+import {
+	Capabilities,
+	CodeStreamEnvironment,
+	ThirdPartyProviderConfig,
+	Unreads
+} from "@codestream/protocols/agent";
 import {
 	CSMarker,
 	CSMePreferences,
