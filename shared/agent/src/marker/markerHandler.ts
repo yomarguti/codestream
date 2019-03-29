@@ -138,7 +138,7 @@ export namespace MarkerHandler {
 			const markersNotLocated: MarkerNotLocated[] = [];
 			for (const marker of markersForDocument) {
 				const [codemark, creator] = await Promise.all([
-					codemarks.getById(marker.codemarkId),
+					codemarks.getById(marker.codemarkId).then(c => codemarks.fullCodemark(c)),
 					// HACK: This is a total hack for slack to avoid getting codestream users mixed with slack users in the cache
 					users.getById(marker.creatorId, { avoidCachingOnFetch: true })
 				]);

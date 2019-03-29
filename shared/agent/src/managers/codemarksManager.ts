@@ -98,6 +98,17 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		return { codemarks: fullCodemarks };
 	}
 
+	async fullCodemark(codemark: CSCodemark): Promise<CodemarkPlus> {
+		const markers = [];
+		if (codemark.markerIds != null && codemark.markerIds.length !== 0) {
+			for (const markerId of codemark.markerIds) {
+				markers.push(await Container.instance().markers.getById(markerId));
+			}
+		}
+
+		return { ...codemark, markers: markers };
+	}
+
 	async fullCodemarks(codemarks: CSCodemark[]): Promise<CodemarkPlus[]> {
 		const fullCodemarks = [];
 		for (const codemark of codemarks) {
@@ -170,18 +181,6 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		}
 
 		this.cache.reset(response.codemarks);
-	}
-
-	private async fullCodemark(codemark: CSCodemark) {
-		let fullCodemark: CodemarkPlus = { ...codemark };
-		if (codemark.markerIds) {
-			fullCodemark = { ...codemark, markers: [] };
-			for (const markerId of codemark.markerIds) {
-				const marker = await Container.instance().markers.getById(markerId);
-				fullCodemark.markers!.push(marker);
-			}
-		}
-		return fullCodemark;
 	}
 
 	// slack only: filter out legacy codemarks with no text that were created by other users

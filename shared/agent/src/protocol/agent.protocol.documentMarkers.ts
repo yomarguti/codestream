@@ -1,6 +1,7 @@
 "use strict";
 import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
-import { CSCodemark, CSMarker } from "./api.protocol";
+import { CodemarkPlus } from "./agent.protocol.codemarks";
+import { CSMarker } from "./api.protocol";
 
 export interface CreateDocumentMarkerPermalinkRequest {
 	range: Range;
@@ -25,7 +26,7 @@ export interface DocumentMarkersRequest {
 }
 
 export interface DocumentMarker extends CSMarker {
-	codemark: CSCodemark;
+	codemark: CodemarkPlus;
 	creatorName: string;
 	range: Range;
 	summary: string;
