@@ -1,12 +1,11 @@
 import { initialize, setupCommunication } from "@codestream/webview/index";
 
 const setStyles = (stylesheets: string[]) => {
-	const stylesDiv = document.querySelector("#styles")!;
-	stylesDiv.innerHTML = "";
+	const stylesContainer = document.querySelector("codestream-styles")!;
 	stylesheets.forEach((stylesheet: string) => {
 		const style = document.createElement("style");
 		style.innerText = stylesheet;
-		stylesDiv.appendChild(style);
+		stylesContainer.appendChild(style);
 	});
 };
 
