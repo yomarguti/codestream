@@ -92,7 +92,7 @@ import {
 	SetCodemarkStatusResponse,
 	SetStreamPurposeRequest,
 	SetStreamPurposeResponse,
-	ThirdPartyProviderInstance,
+	ThirdPartyProviderConfig,
 	UnarchiveStreamRequest,
 	UnarchiveStreamResponse,
 	Unreads,
@@ -327,7 +327,7 @@ export interface ApiProvider {
 		host?: string
 	}): Promise<void>;
 
-	refreshThirdPartyProvider(request: { provider: ThirdPartyProviderInstance; refreshToken: string }): Promise<CSMe>;
+	refreshThirdPartyProvider(request: { provider: ThirdPartyProviderConfig; refreshToken: string }): Promise<CSMe>;
 }
 
 export interface CodeStreamApiMiddlewareContext {

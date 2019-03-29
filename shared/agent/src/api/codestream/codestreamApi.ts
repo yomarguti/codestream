@@ -55,7 +55,7 @@ import {
 	SetCodemarkPinnedResponse,
 	SetCodemarkStatusRequest,
 	SetStreamPurposeRequest,
-	ThirdPartyProviderInstance,
+	ThirdPartyProviderConfig,
 	UnarchiveStreamRequest,
 	Unreads,
 	UpdateCodemarkRequest,
@@ -1025,7 +1025,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	async refreshThirdPartyProvider(request: {
-		provider: ThirdPartyProviderInstance;
+		provider: ThirdPartyProviderConfig;
 		refreshToken: string;
 	}): Promise<CSMe> {
 		const provider = request.provider.name;

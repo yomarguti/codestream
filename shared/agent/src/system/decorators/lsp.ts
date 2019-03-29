@@ -1,7 +1,7 @@
 "use strict";
 import { RequestHandler0, RequestType } from "vscode-languageserver-protocol";
 import { CodeStreamAgent } from "../../agent";
-import { ThirdPartyProviderInstance } from "../../protocol/agent.protocol.providers";
+import { ThirdPartyProviderConfig } from "../../protocol/agent.protocol.providers";
 import { ThirdPartyProvider } from "../../providers/provider";
 import { CodeStreamSession } from "../../session";
 
@@ -71,7 +71,7 @@ export function lspProvider<T extends object>(name: string): Function {
 }
 
 export function registerProviders(
-	providers: ThirdPartyProviderInstance[],
+	providers: ThirdPartyProviderConfig[],
 	session: CodeStreamSession
 ): void {
 	for (const provider of providers) {

@@ -7,7 +7,7 @@ import {
 	TextDocumentIdentifier
 } from "vscode-languageserver-protocol";
 import { Unreads } from "./agent.protocol.notifications";
-import { ThirdPartyProviderInstance } from "./agent.protocol.providers";
+import { ThirdPartyProviderConfig } from "./agent.protocol.providers";
 import {
 	CSLoginResponse,
 	CSMarker,
@@ -135,7 +135,7 @@ export interface BootstrapResponse {
 	teams: CSTeam[];
 	users: CSUser[];
 	unreads: Unreads;
-	providers: ThirdPartyProviderInstance[];
+	providers: ThirdPartyProviderConfig[];
 }
 export const BootstrapRequestType = new RequestType<
 	BootstrapRequest,

@@ -7,7 +7,7 @@ import {
 	FetchAssignableUsersResponse,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
-	ThirdPartyProviderInstance
+	ThirdPartyProviderConfig
 } from "protocol/agent.protocol";
 import { MessageType } from "../api/apiProvider";
 import { User } from "../api/extensions";
@@ -51,7 +51,7 @@ export abstract class ThirdPartyProviderBase<
 
 	constructor(
 		public readonly session: CodeStreamSession,
-		protected readonly providerInstance: ThirdPartyProviderInstance
+		protected readonly providerInstance: ThirdPartyProviderConfig
 	) {}
 
 	abstract get displayName(): string;

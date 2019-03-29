@@ -42,7 +42,7 @@ import {
 	DocumentMarkersRequestType,
 	FetchMarkerLocationsRequestType,
 	LogoutReason,
-	ThirdPartyProviderInstance
+	ThirdPartyProviderConfig
 } from "./protocol/agent.protocol";
 import {
 	ApiErrors,
@@ -236,7 +236,7 @@ export class CodeStreamSession {
 					teams: teamsResponse.teams,
 					unreads: unreadsResponse.unreads,
 					users: usersResponse.users,
-					providers: Container.instance().session.providers
+					providers: this.providers
 				};
 			}
 		);
@@ -410,7 +410,7 @@ export class CodeStreamSession {
 		return this._userId!;
 	}
 
-	private _providers: ThirdPartyProviderInstance[] = [];
+	private _providers: ThirdPartyProviderConfig[] = [];
 	get providers() {
 		return this._providers!;
 	}

@@ -1,7 +1,7 @@
 "use strict";
 import { RequestType } from "vscode-languageserver-protocol";
 
-export interface ThirdPartyProviderInstance {
+export interface ThirdPartyProviderConfig {
 	name: string;
 	host: string;
 	apiHost: string;
@@ -11,7 +11,7 @@ export interface ThirdPartyProviderInstance {
 }
 
 export interface ConnectThirdPartyProviderRequest {
-	provider: ThirdPartyProviderInstance;
+	provider: ThirdPartyProviderConfig;
 }
 
 export interface ConnectThirdPartyProviderResponse {}
@@ -24,7 +24,7 @@ export const ConnectThirdPartyProviderRequestType = new RequestType<
 >("codestream/provider/connect");
 
 export interface DisconnectThirdPartyProviderRequest {
-	provider: ThirdPartyProviderInstance;
+	provider: ThirdPartyProviderConfig;
 }
 
 export interface DisconnectThirdPartyProviderResponse {}
@@ -47,7 +47,7 @@ export interface ThirdPartyProviderBoard {
 }
 
 export interface FetchThirdPartyBoardsRequest {
-	provider: ThirdPartyProviderInstance;
+	provider: ThirdPartyProviderConfig;
 	[key: string]: any;
 }
 
@@ -69,7 +69,7 @@ export interface ThirdPartyProviderUser {
 }
 
 export interface FetchAssignableUsersRequest {
-	provider: ThirdPartyProviderInstance;
+	provider: ThirdPartyProviderConfig;
 	boardId: string;
 }
 
@@ -85,7 +85,7 @@ export const FetchAssignableUsersRequestType = new RequestType<
 >("codestream/provider/cards/users");
 
 export interface CreateThirdPartyCardRequest {
-	provider: ThirdPartyProviderInstance;
+	provider: ThirdPartyProviderConfig;
 	data: {
 		[key: string]: any;
 	};
