@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.51.0] - 2019-3-29
+
+### Changed
+
+- Changes the `Ctrl+/` `Ctrl+/` shortcut to toggle the CodeStream pane
+- Improves the Jira project search to ensure all projects are available for selection
+
 ## [0.50.0] - 2019-3-21
 
 ### Added
