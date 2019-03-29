@@ -79,7 +79,8 @@
                                    replace-all="true"/>
             </action>
             <action id="CodeStream.ToggleView" class="com.codestream.actions.ToggleView" text="Toggle CodeStream">
-                <keyboard-shortcut keymap="$default" first-keystroke="control SLASH" second-keystroke="control SLASH"/>
+                <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH"
+                                   second-keystroke="control shift SLASH"/>
                 <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="control SLASH"
                                    replace-all="true"/>
                 <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="control SLASH"
