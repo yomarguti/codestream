@@ -1,10 +1,12 @@
 import { Range } from "vscode-languageserver-types";
 import {
-	FetchAssignableUsersRequestType,
-	GetRangeScmInfoResponse,
 	CodemarkPlus,
+	FetchAssignableUsersRequestType,
 	GetRangeScmInfoRequestType,
-	CreateDocumentMarkerPermalinkRequestType
+	GetRangeScmInfoResponse,
+	CreateDocumentMarkerPermalinkRequestType,
+	ThirdPartyProviderBoard,
+	ThirdPartyProviderConfig
 } from "@codestream/protocols/agent";
 import {
 	CodemarkType,
@@ -27,7 +29,7 @@ import { HostApi } from "../webview-api";
 import Button from "./Button";
 import CancelButton from "./CancelButton";
 import CrossPostIssueControls from "./CrossPostIssueControls";
-import { Board, CardValues } from "./CrossPostIssueControls/types";
+import { CardValues } from "./CrossPostIssueControls/types";
 import Icon from "./Icon";
 import Menu from "./Menu";
 import { PostCompose } from "./PostCompose";
@@ -44,7 +46,7 @@ const COLOR_OPTIONS = tuple("blue", "green", "yellow", "orange", "red", "purple"
 type Color = typeof COLOR_OPTIONS[number] | string;
 
 interface Props {
-	issueProvider?: string;
+	issueProvider?: ThirdPartyProviderConfig;
 	providerInfo: {
 		[service: string]: {};
 	};
@@ -202,7 +204,9 @@ class CodemarkForm extends React.Component<Props, State> {
 			this.getScmInfoForSelection(textEditorUri!, forceAsLine(textEditorSelection!));
 		}
 
-		if (prevProps.issueProvider !== this.props.issueProvider) {
+		const prevProviderHost = prevProps.issueProvider ? prevProps.issueProvider.host : undefined;
+		const providerHost = this.props.issueProvider ? this.props.issueProvider.host : undefined;
+		if (prevProviderHost !== providerHost) {
 			this.setState({
 				assignableUsers: this.getAssignableCSUsers(),
 				assignees: [],
@@ -243,7 +247,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		});
 	}
 
-	async loadAssignableUsers(service: string, board: Board) {
+	async loadAssignableUsers(provider: ThirdPartyProviderConfig, board: ThirdPartyProviderBoard) {
 		if (board.assigneesDisabled) return this.setState({ assigneesDisabled: true });
 		if (board.assigneesRequired) {
 			this.setState(state => (state.assigneesRequired ? null : { assigneesRequired: true }));
@@ -251,8 +255,9 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (board.singleAssignee) {
 			this.setState(state => (state.singleAssignee ? null : { singleAssignee: true }));
 		}
+
 		const { users } = await HostApi.instance.send(FetchAssignableUsersRequestType, {
-			providerName: service,
+			provider,
 			boardId: board.apiIdentifier || board.id
 		});
 
@@ -280,7 +285,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				this.crossPostIssueValues.board.id !== values.board!.id)
 		) {
 			this.setState({ assignees: [] });
-			this.loadAssignableUsers(values.provider, values.board!);
+			this.loadAssignableUsers(values.issueProvider, values.board!);
 		} else if (
 			!values.isEnabled &&
 			this.crossPostIssueValues &&
@@ -972,7 +977,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					{commentType !== "link" && this.renderCrossPostMessage()}
 					{commentType === "issue" && (
 						<CrossPostIssueControls
-							provider={this.props.issueProvider}
+							issueProvider={this.props.issueProvider}
 							onValues={this.handleCrossPostIssueValues}
 							codeBlock={this.state.codeBlock as any}
 						/>

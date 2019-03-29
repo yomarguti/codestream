@@ -1,13 +1,10 @@
 import {
 	ArchiveStreamRequestType,
-	AsanaCreateCardRequestType,
-	BitbucketCreateCardRequestType,
 	CloseStreamRequestType,
 	CreateChannelStreamRequestType,
 	CreateChannelStreamResponse,
 	CreateDirectStreamRequestType,
 	CreateDirectStreamResponse,
-	CreateJiraCardRequestType,
 	CreatePostRequestType,
 	CreatePostResponse,
 	CreatePostWithMarkerRequestType,
@@ -16,8 +13,6 @@ import {
 	FetchCodemarksRequestType,
 	FetchPostRepliesRequestType,
 	FetchPostsRequestType,
-	GitHubCreateCardRequestType,
-	GitLabCreateCardRequestType,
 	InviteUserRequestType,
 	JoinStreamRequestType,
 	LeaveStreamRequestType,
@@ -28,11 +23,11 @@ import {
 	ReactToPostRequestType,
 	RenameStreamRequestType,
 	SetStreamPurposeRequestType,
-	TrelloCreateCardRequestType,
 	UnarchiveStreamRequestType,
 	UpdateCodemarkRequestType,
 	UpdatePreferencesRequestType,
-	UpdateStreamMembershipRequestType
+	UpdateStreamMembershipRequestType,
+	CreateThirdPartyCardRequestType
 } from "@codestream/protocols/agent";
 import { CSPost, StreamType } from "@codestream/protocols/api";
 import { logError } from "../logger";
@@ -53,7 +48,7 @@ import { addUsers } from "../store/users/actions";
 import { uuid } from "../utils";
 import { HostApi } from "../webview-api";
 
-export { connectProvider as connectService, disconnectService } from "../store/context/actions";
+export { connectProvider, disconnectProvider } from "../store/context/actions";
 export {
 	openPanel,
 	closePanel,
@@ -104,12 +99,14 @@ export const createPost = (
 		if (codemark) {
 			let externalProviderUrl;
 			let externalProvider;
+			let externalProviderHost;
 			let externalAssignees;
 			if (extra.crossPostIssueValues) {
-				const cardResponse = await createServiceCard(extra.crossPostIssueValues, codemark);
+				const cardResponse = await createProviderCard(extra.crossPostIssueValues, codemark);
 				if (cardResponse) {
 					externalProviderUrl = cardResponse.url;
-					externalProvider = extra.crossPostIssueValues.provider;
+					externalProvider = extra.crossPostIssueValues.issueProvider.name;
+					externalProviderHost = extra.crossPostIssueValues.issueProvider.host;
 					externalAssignees = extra.crossPostIssueValues.assignees;
 				}
 			}
@@ -128,6 +125,7 @@ export const createPost = (
 				mentionedUserIds: mentions,
 				entryPoint: extra.entryPoint,
 				externalProvider,
+				externalProviderHost,
 				externalAssignees,
 				externalProviderUrl,
 				parentPostId
@@ -322,6 +320,7 @@ export const createStream = (
 				- users can't join
 		*/
 		logError(`There was an error creating a channel: ${error}`, attributes);
+		return undefined;
 	}
 };
 
@@ -432,6 +431,7 @@ export const fetchPosts = (params: {
 		return response;
 	} catch (error) {
 		logError(`There was an error fetching posts: ${error}`, params);
+		return undefined;
 	}
 };
 
@@ -446,6 +446,7 @@ export const fetchThread = (streamId: string, parentPostId: string) => async dis
 		return posts;
 	} catch (error) {
 		logError(`There was an error fetching a thread: ${error}`, { parentPostId });
+		return undefined;
 	}
 };
 
@@ -514,13 +515,14 @@ export const setCodemarkStatus = (
 			codemarkId,
 			status
 		});
-		dispatch(updateCodemarks([response.codemark]));
+		return dispatch(updateCodemarks([response.codemark]));
 	} catch (error) {
 		logError(`failed to change codemark status: ${error}`, { codemarkId });
+		return undefined;
 	}
 };
 
-export const createServiceCard = async (attributes, codemark) => {
+export const createProviderCard = async (attributes, codemark) => {
 	let description = codemark.text + "\n\n";
 	if (codemark.markers && codemark.markers.length > 0) {
 		const marker = codemark.markers[0];
@@ -528,62 +530,89 @@ export const createServiceCard = async (attributes, codemark) => {
 	}
 	description += "Posted via CodeStream";
 	try {
-		switch (attributes.provider) {
+		let response;
+		switch (attributes.issueProvider.name) {
 			case "jira": {
-				return HostApi.instance.send(CreateJiraCardRequestType, {
-					description,
-					summary: codemark.title,
-					issueType: attributes.issueType,
-					project: attributes.boardId,
-					assignees: attributes.assignees
+				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
+					provider: attributes.issueProvider,
+					data: {
+						description,
+						summary: codemark.title,
+						issueType: attributes.issueType,
+						project: attributes.boardId,
+						assignees: attributes.assignees
+					}
 				});
+				break;
 			}
 			case "trello": {
-				return HostApi.instance.send(TrelloCreateCardRequestType, {
-					listId: attributes.listId,
-					name: codemark.title,
-					assignees: attributes.assignees,
-					description
+				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
+					provider: attributes.issueProvider,
+					data: {
+						listId: attributes.listId,
+						name: codemark.title,
+						assignees: attributes.assignees,
+						description
+					}
 				});
+				break;
 			}
 			case "github": {
-				const response = await HostApi.instance.send(GitHubCreateCardRequestType, {
-					description,
-					title: codemark.title,
-					repoName: attributes.boardName,
-					assignees: attributes.assignees
+				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
+					provider: attributes.issueProvider,
+					data: {
+						description,
+						title: codemark.title,
+						repoName: attributes.boardName,
+						assignees: attributes.assignees
+					}
 				});
-				return { url: response.html_url };
+				break;
 			}
 			case "gitlab": {
-				const response = await HostApi.instance.send(GitLabCreateCardRequestType, {
-					description,
-					title: codemark.title,
-					repoName: attributes.boardName,
-					assignee: attributes.assignees[0]
+				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
+					provider: attributes.issueProvider,
+					data: {
+						description,
+						title: codemark.title,
+						repoName: attributes.boardName,
+						assignee: attributes.assignees[0]
+					}
 				});
-				return { url: response.web_url };
+				break;
 			}
 			case "asana": {
-				const response = await HostApi.instance.send(AsanaCreateCardRequestType, {
-					description,
-					boardId: attributes.boardId,
-					listId: attributes.listId,
-					name: codemark.title,
-					assignee: attributes.assignees[0]
+				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
+					provider: attributes.issueProvider,
+					data: {
+						description,
+						boardId: attributes.boardId,
+						listId: attributes.listId,
+						name: codemark.title,
+						assignee: attributes.assignees[0]
+					}
 				});
-				return { url: response.data.url };
+				break;
 			}
 			case "bitbucket": {
-				return HostApi.instance.send(BitbucketCreateCardRequestType, {
-					description,
-					title: codemark.title,
-					repoName: attributes.boardName,
-					assignee: attributes.assignees[0]
+				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
+					provider: attributes.issueProvider,
+					data: {
+						description,
+						title: codemark.title,
+						repoName: attributes.boardName,
+						assignee: attributes.assignees[0]
+					}
 				});
+				break;
 			}
+
+			default: 
+				return undefined;
 		}
+		return response;
 	} catch (error) {
-		logError(`failed to create a ${attributes.service} card: ${error}`);
+		logError(`failed to create a ${attributes.issueProvider.name} card: ${error}`);
+		return undefined;
 	}
 };

@@ -1,10 +1,11 @@
 import React from "react";
 import Icon from "../Icon";
 import Menu from "../Menu";
-import { Board, CrossPostIssueValuesListener, SUPPORTED_SERVICES } from "./types";
+import { CrossPostIssueValuesListener, PROVIDER_MAPPINGS } from "./types";
+import { ThirdPartyProviderBoard, ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 
 interface State {
-	board?: Board;
+	board?: ThirdPartyProviderBoard;
 	issueType?: string;
 	issueTypeMenuOpen: boolean;
 	issueTypeMenuTarget?: any;
@@ -14,8 +15,9 @@ interface State {
 }
 
 interface Props {
-	boards: Board[];
+	boards: ThirdPartyProviderBoard[];
 	onValues: CrossPostIssueValuesListener;
+	provider: ThirdPartyProviderConfig;
 }
 
 export default class JiraCardControls extends React.Component<Props, State> {
@@ -42,7 +44,7 @@ export default class JiraCardControls extends React.Component<Props, State> {
 			boardId: board && board.id,
 			issueType,
 			isEnabled,
-			provider: SUPPORTED_SERVICES.Jira.name
+			issueProvider: this.props.provider
 		});
 	};
 
@@ -82,12 +84,16 @@ export default class JiraCardControls extends React.Component<Props, State> {
 
 	render() {
 		const { board, issueType } = this.state;
+		const { provider } = this.props;
 		const issueTypeItems = board ? board.issueTypes.map(it => ({ label: it, action: it })) : [];
 		const boardItems = this.props.boards.map(board => ({
 			label: board.name,
 			action: board
 		}));
-
+		const providerDisplay = PROVIDER_MAPPINGS[provider.name];
+		const displayName = provider.isEnterprise ?
+			`${providerDisplay.displayName} - ${provider.host}` :
+			providerDisplay.displayName;
 		return (
 			<div className="checkbox-row" onClick={this.toggleCrossPostIssue}>
 				<input type="checkbox" checked={this.state.isEnabled} />
@@ -119,7 +125,7 @@ export default class JiraCardControls extends React.Component<Props, State> {
 						/>
 					)}
 				</span>
-				{` on ${SUPPORTED_SERVICES.Jira.displayName}`}
+				{` on ${displayName}`}
 			</div>
 		);
 	}

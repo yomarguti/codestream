@@ -22,9 +22,9 @@ import { markdownify, emojify } from "./Markdowner";
 import { reactToPost, setCodemarkStatus } from "./actions";
 import { escapeHtml, safe } from "../utils";
 import { getUsernamesById, getNormalizedUsernames } from "../store/users/reducer";
-import { getProviderInfo } from "./CrossPostIssueControls/types";
 import { DocumentFromMarkerRequestType } from "@codestream/protocols/agent";
 import { EditorRevealRangeRequestType, EditorRevealRangeResult } from "../ipc/webview.protocol";
+import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { HostApi } from "../webview-api";
 import { includes as _includes } from "lodash-es";
 import { prettyPrintOne } from "code-prettify";
@@ -110,7 +110,9 @@ class Post extends React.Component {
 				return (
 					<span>
 						{message}{" "}
-						<a href="https://help.codestream.com/hc/en-us/articles/360013410551">{learnMore}</a>
+						<a href="https://help.codestream.com/hc/en-us/articles/360013410551">
+							{learnMore}
+						</a>
 					</span>
 				);
 			}
@@ -356,8 +358,11 @@ class Post extends React.Component {
 	renderExternalLink = () => {
 		const { codemark } = this.props;
 		if (codemark && codemark.externalProviderUrl) {
-			const provider = getProviderInfo(codemark.externalProvider);
-			return [<br />, <a href={codemark.externalProviderUrl}>Open on {provider.displayName}</a>];
+			const providerDisplay = PROVIDER_MAPPINGS[codemark.externalProvider];
+			if (!providerDisplay) {
+				return null;
+			}
+			return [<br />, <a href={codemark.externalProviderUrl}>Open on {providerDisplay.displayName}</a>];
 		}
 		return null;
 	};

@@ -1,18 +1,20 @@
 import React from "react";
 import Icon from "../Icon";
 import Menu from "../Menu";
-import { Board, CrossPostIssueValuesListener, SUPPORTED_SERVICES } from "./types";
+import { CrossPostIssueValuesListener, PROVIDER_MAPPINGS } from "./types";
+import { ThirdPartyProviderBoard, ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 
 interface State {
-	board?: Board;
+	board?: ThirdPartyProviderBoard;
 	isEnabled: boolean;
 	boardMenuOpen: boolean;
 	boardMenuTarget?: any;
 }
 
 interface Props {
-	boards: Board[];
+	boards: ThirdPartyProviderBoard[];
 	onValues: CrossPostIssueValuesListener;
+	provider: ThirdPartyProviderConfig;
 	codeBlock?: {
 		source?: {
 			repoPath: string;
@@ -58,7 +60,7 @@ export default class GitLabCardControls extends React.Component<Props, State> {
 			board,
 			boardName: board && board.name,
 			isEnabled,
-			provider: SUPPORTED_SERVICES.GitLab.name
+			issueProvider: this.props.provider
 		});
 	};
 
@@ -83,10 +85,15 @@ export default class GitLabCardControls extends React.Component<Props, State> {
 
 	render() {
 		const { board } = this.state;
+		const { provider } = this.props;
 		const boardItems = this.props.boards.map(board => ({
 			label: board.name,
 			action: board
 		}));
+		const providerDisplay = PROVIDER_MAPPINGS[provider.name];
+		const displayName = provider.isEnterprise ?
+			`${providerDisplay.displayName} - ${provider.host}` :
+			providerDisplay.displayName;
 
 		return (
 			<div className="checkbox-row" onClick={this.toggleCrossPostIssue}>
@@ -105,7 +112,7 @@ export default class GitLabCardControls extends React.Component<Props, State> {
 						/>
 					)}
 				</span>
-				{` on ${SUPPORTED_SERVICES.GitLab.displayName}`}
+				{` on ${displayName}`}
 			</div>
 		);
 	}
