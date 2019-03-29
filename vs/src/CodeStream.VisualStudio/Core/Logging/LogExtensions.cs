@@ -5,31 +5,27 @@ using SerilogTimings.Extensions;
 using System;
 using System.Collections.Generic;
 
-namespace CodeStream.VisualStudio.Core.Logging
-{
-    public static class LogExtensions
-    {
-        public static IDisposable CriticalOperation(this ILogger logger, string message, LogEventLevel minimumEventLevel = LogEventLevel.Verbose)
-        {
-            if (logger == null || !logger.IsEnabled(minimumEventLevel)) return null;
+namespace CodeStream.VisualStudio.Core.Logging {
+	public static class LogExtensions {
+		public static IDisposable CriticalOperation(this ILogger logger, string message, LogEventLevel logEventLevel = LogEventLevel.Verbose) {
+			if (logger == null || !logger.IsEnabled(logEventLevel)) return null;
 
-            return logger.TimeOperation(message);
-        }       
+			return logger.TimeOperation(message, logEventLevel);
+		}
 
-        public static IDisposable CriticalOperation(this ILogger logger, Dictionary<string, object> message, LogEventLevel minimumEventLevel = LogEventLevel.Verbose)
-        {
-            if (logger == null || !logger.IsEnabled(minimumEventLevel)) return null;
+		public static IDisposable CriticalOperation(this ILogger logger, Dictionary<string, object> message, LogEventLevel logEventLevel = LogEventLevel.Verbose) {
+			if (logger == null || !logger.IsEnabled(logEventLevel)) return null;
 
-            return logger.TimeOperation(message.ToKeyValueString());
-        }
+			return logger.TimeOperation(message.ToKeyValueString(), logEventLevel);
+		}
 
-        static IDisposable TimeOperation(this ILogger log, string message)
-        {
-            return LoggerOperationExtensions.TimeOperation(log, message);
-        }
+		static IDisposable TimeOperation(this ILogger log, string message, LogEventLevel logEventLevel = LogEventLevel.Verbose) {
 
-        public static bool IsDebuggingEnabled(this ILogger log) => log.IsEnabled(LogEventLevel.Debug);
+			return log.OperationAt(logEventLevel).Time(message);
+		}
 
-        public static bool IsVerboseEnabled(this ILogger log) => log.IsEnabled(LogEventLevel.Verbose);
-    }
+		public static bool IsDebuggingEnabled(this ILogger log) => log.IsEnabled(LogEventLevel.Debug);
+
+		public static bool IsVerboseEnabled(this ILogger log) => log.IsEnabled(LogEventLevel.Verbose);
+	}	
 }

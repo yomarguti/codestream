@@ -9,7 +9,7 @@ namespace CodeStream.VisualStudio.Packages
 
         public static void InitializePackage(string typeName)
         {
-            Log.Verbose($@"
+            Log.Debug($@"
    ___          _      __ _                            
   / __\___   __| | ___/ _\ |_ _ __ ___  __ _ _ __ ___  
  / /  / _ \ / _` |/ _ \ \| __| '__/ _ \/ _` | '_ ` _ \ 
@@ -17,8 +17,8 @@ namespace CodeStream.VisualStudio.Packages
 \____/\___/ \__,_|\___\__/\__|_|  \___|\__,_|_| |_| |_|
                                                          ");
             Log.Information(
-                "Initializing CodeStream Extension v{PackageVersion} in {$VisualStudioName} ({$VisualStudioVersion})",
-                Application.ExtensionVersionShort, Application.VisualStudioName, Application.VisualStudioVersionString);
+                "Initializing CodeStream Extension ({Type}) v{PackageVersion} in {$VisualStudioName} ({$VisualStudioVersion})",
+               typeName, Application.ExtensionVersionShort, Application.VisualStudioName, Application.VisualStudioVersionString);
         }
     }
 }
