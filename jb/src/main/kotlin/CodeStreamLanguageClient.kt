@@ -75,7 +75,7 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient, S
             MessageType.Log -> logger.debug(message.message)
             MessageType.Info -> logger.info(message.message)
             MessageType.Warning -> logger.warn(message.message)
-            MessageType.Error -> logger.error(message.message)
+            MessageType.Error -> logger.warn(message.message)
         }
     }
 
