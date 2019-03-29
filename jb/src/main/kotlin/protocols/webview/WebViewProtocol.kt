@@ -86,6 +86,6 @@ object FocusNotifications {
     class DidChange(
         val focused: Boolean
     ) : WebViewNotification {
-        override fun getMethod(): String = "webview/stream/show"
+        override fun getMethod(): String = "webview/focus/didChange"
     }
 }
