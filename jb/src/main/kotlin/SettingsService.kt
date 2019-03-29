@@ -62,7 +62,9 @@ class SettingsService : PersistentStateComponent<SettingsServiceState> {
         get() = PluginManager.getPlugin(PluginId.findId("com.codestream.jetbrains-codestream"))!!.version
     val extensionInfo: Extension
         get() {
-            return Extension()
+            return Extension(
+                environmentVersion
+            )
         }
     val ideInfo: Ide
         get() {
@@ -74,7 +76,7 @@ class SettingsService : PersistentStateComponent<SettingsServiceState> {
         }
     val isDebugging: Boolean
         get() {
-            return true
+            return DEBUG
         }
     var currentStreamId: String? = null
     var threadId: String? = null
@@ -98,7 +100,7 @@ class SettingsService : PersistentStateComponent<SettingsServiceState> {
     )
 
     fun getEnvironmentDisplayPrefix(): String {
-        return when(state.serverUrl) {
+        return when (state.serverUrl) {
             API_PD -> "PD:"
             API_QA -> "QA:"
             else -> if (state.serverUrl.contains("localhost")) {

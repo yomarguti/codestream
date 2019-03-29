@@ -135,7 +135,7 @@ class BootstrapParams
 
 class LogoutParams
 
-class Extension
+class Extension(val versionFormatted: String)
 
 class Ide {
     val name = "JetBrains"
