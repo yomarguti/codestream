@@ -24,7 +24,7 @@ namespace CodeStream.VisualStudio.Core.Logging {
 			return log.OperationAt(logEventLevel).Time(message);
 		}
 
-		public static bool IsDebuggingEnabled(this ILogger log) => log.IsEnabled(LogEventLevel.Debug);
+		public static bool IsDebugEnabled(this ILogger log) => log.IsEnabled(LogEventLevel.Debug);
 
 		public static bool IsVerboseEnabled(this ILogger log) => log.IsEnabled(LogEventLevel.Verbose);
 	}	

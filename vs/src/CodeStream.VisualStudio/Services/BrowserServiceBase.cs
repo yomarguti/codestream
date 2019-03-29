@@ -131,7 +131,7 @@ namespace CodeStream.VisualStudio.Services
 			var styleSheet = resourceManager.GetString("theme");
 
 			var theme = ThemeManager.Generate();
-			var isDebuggingEnabled = Log.IsDebuggingEnabled();
+			var isDebuggingEnabled = Log.IsDebugEnabled();
 
 			var outputDebug = new Dictionary<string, Tuple<string, string>>();
 			harness = harness.Replace("{bodyClass}", theme.IsDark ? "vscode-dark" : "vscode-light");

@@ -17,8 +17,12 @@ namespace CodeStream.VisualStudio.Packages
 \____/\___/ \__,_|\___\__/\__|_|  \___|\__,_|_| |_| |_|
                                                          ");
             Log.Information(
-                "Initializing CodeStream Extension ({Type}) v{PackageVersion} in {$VisualStudioName} ({$VisualStudioVersion})",
-               typeName, Application.ExtensionVersionShort, Application.VisualStudioName, Application.VisualStudioVersionString);
+				"Initializing CodeStream Extension Package={Type} v{PackageVersion} in {$VisualStudioName} ({$VisualStudioVersion}) CurrentCulture={CurrentCulture}",
+               typeName,
+                Application.ExtensionVersionShort,
+                Application.VisualStudioName,
+                Application.VisualStudioVersionString,
+                System.Threading.Thread.CurrentThread.CurrentCulture);
         }
     }
 }

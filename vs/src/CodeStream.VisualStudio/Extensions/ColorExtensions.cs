@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Globalization;
 
 namespace CodeStream.VisualStudio.Extensions
 {
@@ -12,7 +13,8 @@ namespace CodeStream.VisualStudio.Extensions
 
 		public static string ToRgba(this Color color)
 		{
-			return $"rgba({color.R}, {color.G}, {color.B}, {(double)color.A / 255})";
+			// in a non en-US locale, the division may create a comma instead of a period. guard against that with InvariantCulture.
+			return $"rgba({color.R}, {color.G}, {color.B}, {((double)color.A / 255).ToString(CultureInfo.InvariantCulture)})";
 		}
 
 		public static float Lerp(this float start, float end, float amount)
@@ -31,18 +33,18 @@ namespace CodeStream.VisualStudio.Extensions
 		/// <returns></returns>
 		public static Color Lerp(this Color color, Color to, float amount)
 		{
-			// start colours as lerp-able floats
+			// start colors as lerp-able floats
 			float sr = color.R, sg = color.G, sb = color.B;
 
-			// end colours as lerp-able floats
+			// end colors as lerp-able floats
 			float er = to.R, eg = to.G, eb = to.B;
 
-			// lerp the colours to get the difference
+			// lerp the colors to get the difference
 			byte r = (byte)sr.Lerp(er, amount),
 					g = (byte)sg.Lerp(eg, amount),
 					b = (byte)sb.Lerp(eb, amount);
 
-			// return the new colour
+			// return the new color
 			return Color.FromArgb(r, g, b);
 		}
 

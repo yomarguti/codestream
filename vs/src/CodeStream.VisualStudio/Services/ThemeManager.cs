@@ -76,8 +76,7 @@ namespace CodeStream.VisualStudio.Services
 				var textColor = GetThemedColor(shell, EnvironmentColors.ToolWindowTextColorKey);
 
 				// assume this theme is 'dark' if the ToolWindow background is dark
-				var isDark = backgroundColor.IsDark();
-				Log.Verbose($"IsDark={isDark}");
+				var backgroundIsDark = backgroundColor.IsDark();
 
 				var colors = new List<ThemeColorMetadata>
 				{
@@ -101,8 +100,8 @@ namespace CodeStream.VisualStudio.Services
 					new ThemeColorMetadata { Key = "text-color-info", Color = GetThemedColor(shell, EnvironmentColors.StartPageTextControlLinkSelectedColorKey) },
 					new ThemeColorMetadata { Key = "text-color-info-muted", Color = GetThemedColor(shell, EnvironmentColors.StartPageTextControlLinkSelectedColorKey), DarkModifier = c => c.Darken(0.1f) },
 
-					new ThemeColorMetadata { Key = "button-background-color", Color = GetThemedColor(shell, isDark ? EnvironmentColors.ToolWindowButtonDownColorKey : EnvironmentColors.ToolWindowButtonHoverActiveColorKey) },
-					new ThemeColorMetadata { Key = "button-background-color-hover", Color = GetThemedColor(shell, isDark ? EnvironmentColors.ToolWindowButtonDownColorKey : EnvironmentColors.ToolWindowButtonHoverActiveColorKey), DarkModifier = c => c.Lighten(0.1f), LightModifier = c => c.Darken(0.1f) },
+					new ThemeColorMetadata { Key = "button-background-color", Color = GetThemedColor(shell, backgroundIsDark ? EnvironmentColors.ToolWindowButtonDownColorKey : EnvironmentColors.ToolWindowButtonHoverActiveColorKey) },
+					new ThemeColorMetadata { Key = "button-background-color-hover", Color = GetThemedColor(shell, backgroundIsDark ? EnvironmentColors.ToolWindowButtonDownColorKey : EnvironmentColors.ToolWindowButtonHoverActiveColorKey), DarkModifier = c => c.Lighten(0.1f), LightModifier = c => c.Darken(0.1f) },
 
 					new ThemeColorMetadata { Key = "line-numbers-foreground-color", Color = textColor, DarkModifier = c => c.Opacity(40), LightModifier = c => c.Opacity(40) },
 
@@ -110,9 +109,9 @@ namespace CodeStream.VisualStudio.Services
 					new ThemeColorMetadata { Key = "scrollbar-color-hover", Color = GetThemedColor(shell, EnvironmentColors.ScrollBarThumbMouseOverBackgroundColorKey) }
 				};
 
-				if (Log.IsEnabled(Serilog.Events.LogEventLevel.Debug))
+				if (Log.IsDebugEnabled())
 				{
-					Log.Debug($"IsDark={isDark}, BackgroundColor={backgroundColor.ToRgba()}, TextColor={textColor.ToRgba()}");
+					Log.Debug($"BackgroundIsDark={backgroundIsDark}, BackgroundColor={backgroundColor.ToRgba()}, TextColor={textColor.ToRgba()}");
 				}
 
 				// if (isDark && textColor.IsDark())
@@ -148,7 +147,7 @@ namespace CodeStream.VisualStudio.Services
 				// 	}
 				// }
 
-				String fontFamilyString;
+				string fontFamilyString;
 				var fontFamily = System.Windows.Application.Current.FindResource(VsFonts.EnvironmentFontFamilyKey) as FontFamily;
 				if (fontFamily != null)
 				{
@@ -178,7 +177,7 @@ namespace CodeStream.VisualStudio.Services
 				{
 					ThemeColors = colors,
 					ThemeResources = resources,
-					IsDark = isDark
+					IsDark = backgroundIsDark
 				};
 			}
 			catch (Exception ex)

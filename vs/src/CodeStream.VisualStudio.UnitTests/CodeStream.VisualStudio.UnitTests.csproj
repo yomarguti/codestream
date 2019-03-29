@@ -65,6 +65,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Reactive, Version=4.1.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Reactive.4.1.2\lib\net46\System.Reactive.dll</HintPath>
     </Reference>
@@ -90,6 +91,7 @@
   <ItemGroup>
     <Compile Include="Core\Logging\Sanitizer\SecretsSanitizingFormatRuleTests.cs" />
     <Compile Include="Events\EventAggregatorTests.cs" />
+    <Compile Include="Extensions\ColorExtensionsTest.cs" />
     <Compile Include="Extensions\DynamicExtensionsTests.cs" />
     <Compile Include="LSP\CustomCamelCasePropertyNamesContractResolverTests.cs" />
     <Compile Include="Models\CamelCaseStringEnumConverterTests.cs" />
