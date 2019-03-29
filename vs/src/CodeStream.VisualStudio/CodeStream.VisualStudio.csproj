@@ -100,6 +100,7 @@
     <Compile Include="Core\CamelCaseStringEnumConverter.cs" />
     <Compile Include="Core\Constants.cs" />
     <Compile Include="Core\ContentTypes.cs" />
+    <Compile Include="Core\DebounceDispatcher.cs" />
     <Compile Include="Core\Logging\CodeStreamSink.cs" />
     <Compile Include="Core\Logging\LogExtensions.cs" />
     <Compile Include="Core\Logging\LogManager.cs" />
