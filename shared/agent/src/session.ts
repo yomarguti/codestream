@@ -174,6 +174,12 @@ export class CodeStreamSession {
 		Container.initialize(this);
 
 		if (_options.proxySupport === "override" && _options.proxy != null) {
+			Logger.log(
+				`Proxy support is set to override with url=${_options.proxy.url}, strictSSL=${
+					_options.proxy.strictSSL
+				}`
+			);
+
 			this._proxyAgent = new HttpsProxyAgent({
 				...url.parse(_options.proxy.url),
 				rejectUnauthorized: _options.proxy.strictSSL
@@ -181,6 +187,9 @@ export class CodeStreamSession {
 		} else if (_options.proxySupport === "on") {
 			const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
 			if (proxyUrl) {
+				const strictSSL = _options.proxy ? _options.proxy.strictSSL : true;
+				Logger.log(`Proxy support is on with url=${proxyUrl}, strictSSL=${strictSSL}`);
+
 				let proxyUri;
 				try {
 					proxyUri = url.parse(proxyUrl);
@@ -189,9 +198,11 @@ export class CodeStreamSession {
 				if (proxyUri) {
 					this._proxyAgent = new HttpsProxyAgent({
 						...proxyUri,
-						rejectUnauthorized: _options.proxy ? _options.proxy.strictSSL : true
+						rejectUnauthorized: strictSSL
 					} as any);
 				}
+			} else {
+				Logger.log("Proxy support is on, but no proxy url was found");
 			}
 		}
 
