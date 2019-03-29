@@ -8,6 +8,9 @@ import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.ServerCapabilities
 import java.lang.IllegalStateException
 
+class ProxySettings(val url: String, val strictSSL: Boolean)
+
+
 abstract class LoginParams(
     val email: String?,
     val passwordOrToken: Any?,
@@ -17,7 +20,9 @@ abstract class LoginParams(
     val ide: Ide,
     val traceLevel: TraceLevel,
     val isDebugging: Boolean,
-    val team: String? = null
+    val team: String? = null,
+    val proxySupport: String,
+    val proxy: ProxySettings? = null
 //    val teamId: String,
 )
 
@@ -29,7 +34,9 @@ class LoginWithPasswordParams(
     ide: Ide,
     traceLevel: TraceLevel,
     isDebugging: Boolean,
-    team: String?
+    team: String?,
+    proxySupport: String,
+    proxySettings: ProxySettings? = null
 ) : LoginParams(
     email,
     password,
@@ -39,7 +46,9 @@ class LoginWithPasswordParams(
     ide,
     traceLevel,
     isDebugging,
-    team
+    team,
+    proxySupport,
+    proxySettings
 )
 
 class LoginWithTokenParams(
@@ -50,7 +59,9 @@ class LoginWithTokenParams(
     ide: Ide,
     traceLevel: TraceLevel,
     isDebugging: Boolean,
-    team: String?
+    team: String?,
+    proxySupport: String,
+    proxySettings: ProxySettings? = null
 ) : LoginParams(
     email,
     token,
@@ -60,7 +71,9 @@ class LoginWithTokenParams(
     ide,
     traceLevel,
     isDebugging,
-    team
+    team,
+    proxySupport,
+    proxySettings
 )
 
 class LoginWithSignupTokenParams(
@@ -70,7 +83,9 @@ class LoginWithSignupTokenParams(
     ide: Ide,
     traceLevel: TraceLevel,
     isDebugging: Boolean,
-    team: String?
+    team: String?,
+    proxySupport: String,
+    proxySettings: ProxySettings? = null
 ) : LoginParams(
     null,
     null,
@@ -80,7 +95,9 @@ class LoginWithSignupTokenParams(
     ide,
     traceLevel,
     isDebugging,
-    team
+    team,
+    proxySupport,
+    proxySettings
 )
 
 class LoginResult(
@@ -118,7 +135,7 @@ class LoginState {
 
 class UserLoggedIn(val user: CSUser, val team: CSTeam, val state: LoginState, val teamsCount: Int)
 
-class CSUser (
+class CSUser(
     @SerializedName("_id")
     var id: String,
     var username: String,

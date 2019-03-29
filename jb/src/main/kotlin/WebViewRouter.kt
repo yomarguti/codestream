@@ -97,7 +97,9 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
                         settingsService.ideInfo,
                         settingsService.traceLevel,
                         settingsService.isDebugging,
-                        settingsService.team
+                        settingsService.team,
+                        settingsService.proxySupport,
+                        settingsService.proxySettings
                     )
                 ).await()
 
@@ -165,7 +167,9 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
                 settingsService.ideInfo,
                 settingsService.traceLevel,
                 settingsService.isDebugging,
-                settingsService.team
+                settingsService.team,
+                settingsService.proxySupport,
+                settingsService.proxySettings
             )
         ).await()
 
@@ -253,7 +257,9 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
                 settingsService.ideInfo,
                 settingsService.traceLevel,
                 settingsService.isDebugging,
-                settingsService.team
+                settingsService.team,
+                settingsService.proxySupport,
+                settingsService.proxySettings
             )
         ).await()
 
