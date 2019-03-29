@@ -163,7 +163,7 @@ abstract class AgentConnection {
 				versionFormatted: `${getPluginVersion()} (dev)`,
 			},
 			ide: {
-				name: "atom",
+				name: "Atom",
 				version: atom.getVersion(),
 			},
 			isDebugging: true,
