@@ -17,26 +17,24 @@ import {
 import { 
 	FetchThirdPartyBoardsRequestType,	
 	ThirdPartyProviderBoard,
-	ThirdPartyProviderInstance
+	ThirdPartyProviderConfig
 } from "@codestream/protocols/agent";
-import { RequestType } from "vscode-jsonrpc";
-import { IpcRoutes } from "@codestream/protocols/webview";
 
 interface ProviderInfo {
-	provider: ThirdPartyProviderInstance;
+	provider: ThirdPartyProviderConfig;
 	display: ProviderDisplay;
 }
 
 interface Props {
-	connectProvider(provider: ThirdPartyProviderInstance): any;
+	connectProvider(provider: ThirdPartyProviderConfig): any;
 	onValues: CrossPostIssueValuesListener;
-	issueProvider?: ThirdPartyProviderInstance;
+	issueProvider?: ThirdPartyProviderConfig;
 	codeBlock?: {
 		source?: {
 			repoPath: string;
 		};
 	};
-	providers?: ThirdPartyProviderInstance[];
+	providers?: ThirdPartyProviderConfig[];
 	currentTeamId: string;
 }
 
@@ -76,7 +74,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		}
 	}
 
-	async loadBoards(provider: ThirdPartyProviderInstance) {
+	async loadBoards(provider: ThirdPartyProviderConfig) {
 		const providerInfo = this.getProviderInfo(provider);
 		if (!this.state.isLoading && providerInfo) {
 			this.setState({
@@ -236,7 +234,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		await this.props.connectProvider(providerInfo.provider);
 	}
 
-	getProviderInfo(wantProvider: ThirdPartyProviderInstance): ProviderInfo | undefined {
+	getProviderInfo(wantProvider: ThirdPartyProviderConfig): ProviderInfo | undefined {
 		const provider =
 			this.props.providers &&
 			this.props.providers.find(provider => provider.host === wantProvider.host);

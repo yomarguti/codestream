@@ -1,5 +1,5 @@
 import { WebviewContext, WebviewPanels } from "@codestream/protocols/webview";
-import { ThirdPartyProviderInstance } from "@codestream/protocols/agent";
+import { ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 
 export enum ContextActionsType {
 	SetCodemarkFileFilter = "@context/SetCodemarkFileFilter",
@@ -19,6 +19,6 @@ export interface State extends WebviewContext {
 	codemarkTypeFilter: string;
 	codemarkColorFilter: string;
 	channelFilter: string;
-	issueProvider?: ThirdPartyProviderInstance;
+	issueProvider?: ThirdPartyProviderConfig;
 	panelStack: (WebviewPanels | string)[];
 }

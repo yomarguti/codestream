@@ -2,7 +2,7 @@ import {
 	ConnectThirdPartyProviderRequestType,
 	DisconnectThirdPartyProviderRequestType,
 	TelemetryRequestType,
-	ThirdPartyProviderInstance
+	ThirdPartyProviderConfig
 } from "@codestream/protocols/agent";
 import { logError } from "../../logger";
 import { setUserPreference } from "../../Stream/actions";
@@ -66,7 +66,7 @@ export const setCurrentStream = (streamId?: string, threadId?: string) => (dispa
 	}
 };
 
-export const connectProvider = (provider: ThirdPartyProviderInstance, fromMenu = false) => async (dispatch, getState) => {
+export const connectProvider = (provider: ThirdPartyProviderConfig, fromMenu = false) => async (dispatch, getState) => {
 	const { context, users, session } = getState();
 	const user = users[session.userId];
 	const { name, host, isEnterprise } = provider;
@@ -102,7 +102,7 @@ export const connectProvider = (provider: ThirdPartyProviderInstance, fromMenu =
 	}
 };
 
-export const disconnectProvider = (provider: ThirdPartyProviderInstance, fromMenu = false) => async (dispatch, getState) => {
+export const disconnectProvider = (provider: ThirdPartyProviderConfig, fromMenu = false) => async (dispatch, getState) => {
 	try {
 		const api = HostApi.instance;
 		await api.send(DisconnectThirdPartyProviderRequestType, { provider });
@@ -122,5 +122,5 @@ export const disconnectProvider = (provider: ThirdPartyProviderInstance, fromMen
 	}
 };
 
-export const setIssueProvider = (provider: ThirdPartyProviderInstance | undefined) =>
+export const setIssueProvider = (provider: ThirdPartyProviderConfig | undefined) =>
 	action(ContextActionsType.SetIssueProvider, provider);

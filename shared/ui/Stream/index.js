@@ -48,8 +48,7 @@ import {
 	OpenUrlRequestType,
 	SetCodemarkPinnedRequestType,
 	TelemetryRequestType,
-	GetRangeScmInfoRequestType,
-	ThirdPartyProviderInstance
+	GetRangeScmInfoRequestType
 } from "@codestream/protocols/agent";
 
 import { setCurrentStream } from "../store/context/actions";

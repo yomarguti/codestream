@@ -6,7 +6,7 @@ import {
 	GetRangeScmInfoResponse,
 	CreateDocumentMarkerPermalinkRequestType,
 	ThirdPartyProviderBoard,
-	ThirdPartyProviderInstance
+	ThirdPartyProviderConfig
 } from "@codestream/protocols/agent";
 import {
 	CodemarkType,
@@ -46,7 +46,7 @@ const COLOR_OPTIONS = tuple("blue", "green", "yellow", "orange", "red", "purple"
 type Color = typeof COLOR_OPTIONS[number] | string;
 
 interface Props {
-	issueProvider?: ThirdPartyProviderInstance;
+	issueProvider?: ThirdPartyProviderConfig;
 	providerInfo: {
 		[service: string]: {};
 	};
@@ -247,7 +247,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		});
 	}
 
-	async loadAssignableUsers(provider: ThirdPartyProviderInstance, board: ThirdPartyProviderBoard) {
+	async loadAssignableUsers(provider: ThirdPartyProviderConfig, board: ThirdPartyProviderBoard) {
 		if (board.assigneesDisabled) return this.setState({ assigneesDisabled: true });
 		if (board.assigneesRequired) {
 			this.setState(state => (state.assigneesRequired ? null : { assigneesRequired: true }));

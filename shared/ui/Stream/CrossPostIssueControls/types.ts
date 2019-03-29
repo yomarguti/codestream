@@ -1,8 +1,8 @@
-import { ThirdPartyProviderInstance, ThirdPartyProviderBoard } from "@codestream/protocols/agent";
+import { ThirdPartyProviderConfig, ThirdPartyProviderBoard } from "@codestream/protocols/agent";
 
 export interface CardValues {
 	isEnabled: boolean;
-	issueProvider: ThirdPartyProviderInstance;
+	issueProvider: ThirdPartyProviderConfig;
 	board?: ThirdPartyProviderBoard;
 	[key: string]: any;
 }

@@ -2,7 +2,7 @@ import React from "react";
 import Icon from "../Icon";
 import Menu from "../Menu";
 import { CrossPostIssueValuesListener, PROVIDER_MAPPINGS } from "./types";
-import { ThirdPartyProviderBoard, ThirdPartyProviderInstance } from "@codestream/protocols/agent";
+import { ThirdPartyProviderBoard, ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 
 interface State {
 	board?: ThirdPartyProviderBoard;
@@ -14,7 +14,7 @@ interface State {
 interface Props {
 	boards: ThirdPartyProviderBoard[];
 	onValues: CrossPostIssueValuesListener;
-	provider: ThirdPartyProviderInstance;
+	provider: ThirdPartyProviderConfig;
 	codeBlock?: {
 		source?: {
 			repoPath: string;
