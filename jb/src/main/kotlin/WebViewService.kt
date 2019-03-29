@@ -129,10 +129,10 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
             } else {
                 ""
             },
-            // "--disable-gpu",
-            // "--disable-gpu-compositing",
-            // "--enable-begin-frame-scheduling",
-            // "--software-rendering-fps=60",
+            "--disable-gpu",
+            "--disable-gpu-compositing",
+            "--enable-begin-frame-scheduling",
+            "--software-rendering-fps=60",
             "--disable-web-security",
             "--allow-file-access-from-files"
         )
