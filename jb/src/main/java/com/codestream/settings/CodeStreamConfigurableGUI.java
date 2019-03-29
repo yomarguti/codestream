@@ -13,6 +13,9 @@ public class CodeStreamConfigurableGUI {
     private JCheckBox showFeedbackSmiley;
     private JCheckBox autoHideMarkers;
     private JCheckBox showMarkers;
+    private JTextField proxyUrl;
+    private JComboBox proxySupport;
+    private JCheckBox proxyStrictSSL;
 
     public JPanel getRootPanel() {
         return rootPanel;
@@ -52,5 +55,17 @@ public class CodeStreamConfigurableGUI {
 
     public JCheckBox getShowMarkers() {
         return showMarkers;
+    }
+
+    public JTextField getProxyUrl() {
+        return proxyUrl;
+    }
+
+    public JComboBox<String> getProxySupport() {
+        return proxySupport;
+    }
+
+    public JCheckBox getProxyStrictSSL() {
+        return proxyStrictSSL;
     }
 }

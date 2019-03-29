@@ -7,6 +7,7 @@ import com.intellij.openapi.components.Storage
 import com.intellij.openapi.extensions.PluginId
 import protocols.agent.Extension
 import protocols.agent.Ide
+import protocols.agent.ProxySettings
 import protocols.agent.TraceLevel
 import protocols.webview.CodeStreamEnvironment
 import protocols.webview.Configs
@@ -36,6 +37,9 @@ data class SettingsServiceState(
     var showFeedbackSmiley: Boolean = true,
     var showMarkers: Boolean = true,
     var autoHideMarkers: Boolean = true,
+    var proxySupport: String = "on",
+    var proxyUrl: String = "",
+    var proxyStrictSSL: Boolean = true,
     var webViewConfig: MutableMap<String, String?> = mutableMapOf(
         INLINE_CODEMARKS to "true"
     )
@@ -89,6 +93,13 @@ class SettingsService : PersistentStateComponent<SettingsServiceState> {
 
     val showMarkers get() = state.showMarkers
 
+    val proxyUrl: String?
+        get() {
+            return if (state.proxyUrl.isNotEmpty()) state.proxyUrl else null
+        }
+
+    val proxySupport get() = state.proxySupport
+
     fun getWebviewConfigs(): Configs = Configs(
         state.serverUrl,
         state.email,
@@ -123,4 +134,12 @@ class SettingsService : PersistentStateComponent<SettingsServiceState> {
             }
         }
     }
+
+    val proxySettings
+        get(): ProxySettings? {
+            if (state.proxySupport == "override")
+                return ProxySettings(state.proxyUrl, state.proxyStrictSSL)
+
+            return null
+        }
 }

@@ -33,6 +33,9 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable, Ser
             state.showFeedbackSmiley = gui.showFeedbackSmiley.isSelected
             state.showMarkers = gui.showMarkers.isSelected
             state.autoHideMarkers = gui.autoHideMarkers.isSelected
+            state.proxySupport = gui.proxySupport.selectedItem as String
+            state.proxyStrictSSL = gui.proxyStrictSSL.isSelected
+            state.proxyUrl = gui.proxyUrl.text
         }
     }
 
@@ -50,6 +53,9 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable, Ser
             showFeedbackSmiley.isSelected = state.showFeedbackSmiley
             showMarkers.isSelected = state.showMarkers
             autoHideMarkers.isSelected = state.autoHideMarkers
+            proxySupport.selectedItem = state.proxySupport
+            proxyStrictSSL.isSelected = state.proxyStrictSSL
+            proxyUrl.text = state.proxyUrl
         }
 
         _gui = gui
