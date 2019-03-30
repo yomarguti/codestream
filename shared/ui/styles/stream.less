@@ -258,7 +258,7 @@
 		.thread-panel {
 			position: fixed;
 			width: calc(~"100vw - 40px");
-			// height: calc(~"100vh - 50px");
+			height: calc(~"100vh - 50px");
 			top: 25px;
 			&.inline {
 				height: calc(~"100vh - 75px");
@@ -273,7 +273,6 @@
 				background: @app-background-color;
 				background: @base-background-color;
 				padding-top: 10px;
-				display: none;
 			}
 			z-index: 50;
 			display: flex;
@@ -1864,6 +1863,12 @@
 			}
 			.code-reference {
 				margin: 10px 0 5px 0;
+			}
+			.replying-to {
+				height: 1.4em;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: pre;
 			}
 			.replying-to,
 			.code-reference .file {

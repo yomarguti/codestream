@@ -220,7 +220,7 @@ export default infiniteLoadable(
 						safe(renderIntro)
 					)}
 					{this.props.posts.map((post, index) => {
-						if (index == 0) return null;
+						if (index == 0 && this.props.skipFirstPost) return null;
 						// if the parent post isn't yet in local collection because it's further back, use the id
 						const parentPost =
 							post.parentPostId && post.parentPostId !== post.id

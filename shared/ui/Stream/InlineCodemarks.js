@@ -687,6 +687,7 @@ export class SimpleInlineCodemarks extends Component {
 	handleClickField = event => {
 		if (event && event.target && event.target.id === "inline-codemarks-field") {
 			this.setState({ selectedDocMarkerId: null });
+			this.props.setCurrentStream(null, null);
 			this.clearSelection();
 		}
 	};
