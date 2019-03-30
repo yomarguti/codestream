@@ -145,9 +145,9 @@ export namespace MarkerHandler {
 
 				// Only return markers that are not links, are pinned, and issues that are not closed
 				if (
-					!codemark.pinned ||
-					codemark.type === CodemarkType.Link ||
-					(codemark.type === CodemarkType.Issue && codemark.status === CodemarkStatus.Closed)
+					// !codemark.pinned ||
+					codemark.type === CodemarkType.Link
+					// (codemark.type === CodemarkType.Issue && codemark.status === CodemarkStatus.Closed)
 				) {
 					continue;
 				}
