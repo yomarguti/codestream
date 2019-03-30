@@ -184,18 +184,15 @@ namespace CodeStream.VisualStudio.UI
                         textView.TextBuffer.Properties
                             .AddProperty(PropertyNames.AdornmentManager, new HighlightAdornmentManager(textView));
 
-
-                        textView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewLocalEvents,
-                            new List<IDisposable>()
-                            {
-                                _eventAggregator.GetEvent<DocumentMarkerChangedEvent>()
-                                    .ObserveOnDispatcher()
-                                    .Throttle(TimeSpan.FromMilliseconds(100))
-                                    .Subscribe((_) => ThreadHelper.JoinableTaskFactory.Run(async delegate
-                                    {
-                                        await OnDocumentMarkerChangedAsync(textView, _);
-                                    }))
-                            });
+						textView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewLocalEvents,
+							new List<IDisposable>()
+							{
+								 _eventAggregator.GetEvent<DocumentMarkerChangedEvent>()
+									.Subscribe(_ =>
+									{
+										 OnDocumentMarkerChanged(textView, _);
+									})
+							});
 
                         textView.TextBuffer
                             .Properties
@@ -231,48 +228,38 @@ namespace CodeStream.VisualStudio.UI
             textViewMarginProviders.OnSessionLogout();
         }
 
-        private async System.Threading.Tasks.Task OnDocumentMarkerChangedAsync(IWpfTextView textView, DocumentMarkerChangedEvent e)
-        {
-            if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, textView.TextBuffer, out var textDocument))
-            {
-                return;
-            }
+		private void OnDocumentMarkerChanged(IWpfTextView textView, DocumentMarkerChangedEvent e) {
+			if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, textView.TextBuffer, out var textDocument)) {
+				return;
+			}
 
-            var fileUri = textDocument.FilePath.ToUri();
-            if (fileUri == null)
-            {
-                Log.Verbose($"{nameof(fileUri)} is null");
-                return;
-            }
-            try
-            {
-                if (e.Uri.EqualsIgnoreCase(fileUri))
-                {
-                    Log.Verbose($"{nameof(DocumentMarkerChangedEvent)} for {fileUri}");
-                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+			var fileUri = textDocument.FilePath.ToUri();
+			if (fileUri == null) {
+				Log.Verbose($"{nameof(fileUri)} is null");
+				return;
+			}
+			try {
+				if (e.Uri.EqualsIgnoreCase(fileUri)) {
+					Log.Verbose($"{nameof(DocumentMarkerChangedEvent)} for {fileUri}");
+					
+					textView
+						.Properties
+						.GetProperty<DocumentMarkerManager>(PropertyNames.DocumentMarkerManager)
+						.GetOrCreateMarkers(true);
 
-                    textView
-                        .Properties
-                        .GetProperty<DocumentMarkerManager>(PropertyNames.DocumentMarkerManager)
-                        .GetOrCreateMarkers(true);
-
-                    textView.TextBuffer
-                        .Properties
-                        .GetProperty<List<ICodeStreamWpfTextViewMargin>>(PropertyNames.TextViewMarginProviders)
-                        .OnMarkerChanged();
-                }
-                else
-                {
-                    Log.Verbose($"{nameof(DocumentMarkerChangedEvent)} ignored for {fileUri}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, $"{nameof(DocumentMarkerChangedEvent)} for {fileUri}");
-            }
-
-            await System.Threading.Tasks.Task.CompletedTask;
-        }
+					textView.TextBuffer
+						.Properties
+						.GetProperty<List<ICodeStreamWpfTextViewMargin>>(PropertyNames.TextViewMarginProviders)
+						.OnMarkerChanged();
+				}
+				else {
+					Log.Verbose($"{nameof(DocumentMarkerChangedEvent)} ignored for {fileUri}");
+				}
+			}
+			catch (Exception ex) {
+				Log.Warning(ex, $"{nameof(DocumentMarkerChangedEvent)} for {fileUri}");
+			}			
+		}
 
         private void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
         {
@@ -307,7 +294,7 @@ namespace CodeStream.VisualStudio.UI
                     ?.IsVisible(Guids.WebViewToolWindowGuid);
                 if (toolWindowIsVisible == true)
                 {
-                    ServiceLocator.Get<SWebviewIpc, IWebviewIpc>()?.NotifyInBackground(
+                    ServiceLocator.Get<SWebviewIpc, IWebviewIpc>()?.NotifyAsync(
                         new HostDidChangeEditorVisibleRangesNotificationType
                         {
                             Params = new HostDidChangeEditorVisibleRangesNotification(

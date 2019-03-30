@@ -163,9 +163,11 @@ namespace CodeStream.VisualStudio.UI.Margins
                             .ObserveOnDispatcher()
                             .Subscribe(eventPattern =>
                             {
-                                if (!_toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) return;
+								var textSelection = eventPattern?.Sender as ITextSelection;
+								if (textSelection != null && textSelection.IsEmpty) return;
 
-                                var textSelection = eventPattern?.Sender as ITextSelection;
+								if (!_toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) return;
+                              
                                 Log.Verbose(
                                     $"SelectionChanged Start={textSelection?.Start.Position.Position} End={textSelection?.End.Position.Position}");
 
@@ -202,7 +204,11 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         public void OnMarkerChanged()
         {
-            RefreshMargin();
+			ThreadHelper.JoinableTaskFactory.Run(async delegate {
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+
+				RefreshMargin();
+			});
         }
 
         public void RefreshMargin()

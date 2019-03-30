@@ -3,6 +3,7 @@ using CodeStream.VisualStudio.Controllers;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
+using CodeStream.VisualStudio.LSP;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Settings;
 using CodeStream.VisualStudio.UI.ToolWindows;
@@ -299,6 +300,7 @@ namespace CodeStream.VisualStudio.Packages
                 _languageServerReadyEvent?.Dispose();
                 _codeStreamEventManager?.Dispose();
                 _disposables.DisposeAll();
+				LanguageClient.Instance?.Dispose();
             }
 
             base.Dispose(isDisposing);

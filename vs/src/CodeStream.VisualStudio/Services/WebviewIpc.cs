@@ -14,7 +14,7 @@ namespace CodeStream.VisualStudio.Services
     {
         void Send(IAbstractMessageType message);
         void Notify(INotificationType message);
-        Task NotifyInBackground(INotificationType message);
+        Task NotifyAsync(INotificationType message);
         void SendResponse(IRequestType message);
         IBrowserService BrowserService { get; }
     }
@@ -49,7 +49,7 @@ namespace CodeStream.VisualStudio.Services
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        public Task NotifyInBackground(INotificationType message)
+        public Task NotifyAsync(INotificationType message)
         {
             return Task.Factory.StartNew(() =>
             {

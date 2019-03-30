@@ -9,17 +9,14 @@ using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
 using Serilog;
-using SerilogTimings.Extensions;
 using StreamJsonRpc;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Package = Microsoft.VisualStudio.Shell.Package;
 using ThreadHelper = Microsoft.VisualStudio.Shell.ThreadHelper;
 
@@ -30,12 +27,12 @@ namespace CodeStream.VisualStudio.LSP
     /// </summary>
     [Export(typeof(ILanguageClient))]
     [Guid(Guids.LanguageClientId)]
-    public partial class LanguageClient : ILanguageClient, ILanguageClientCustomMessage
+    public partial class LanguageClient : ILanguageClient, ILanguageClientCustomMessage, IDisposable
     {
         private static readonly ILogger Log = LogManager.ForContext<LanguageClient>();
-
-        private readonly ILanguageServerProcess _languageServerProcess;
-
+		private bool _disposed = false;
+		private readonly ILanguageServerProcess _languageServerProcess;
+	
         public event AsyncEventHandler<EventArgs> StartAsync;
 #pragma warning disable 0067
         public event AsyncEventHandler<EventArgs> StopAsync;
@@ -187,5 +184,21 @@ namespace CodeStream.VisualStudio.LSP
                 Log.Error(ex, $"{nameof(TriggerLspInitializeAsync)} failed for {path}");
             }
         }
-    }
+
+		public void Dispose() {
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		protected virtual void Dispose(bool disposing) {
+			if (_disposed) return;
+
+			if (disposing) {
+				var disposable = CustomMessageTarget as IDisposable;
+				disposable?.Dispose();
+			}
+
+			_disposed = true;
+		}
+	}
 }

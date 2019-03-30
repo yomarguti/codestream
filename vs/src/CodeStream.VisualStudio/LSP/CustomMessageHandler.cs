@@ -7,19 +7,32 @@ using CodeStream.VisualStudio.Services;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using StreamJsonRpc;
+using System;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 // ReSharper disable UnusedMember.Global
 
 namespace CodeStream.VisualStudio.LSP {
-	internal class CustomMessageHandler {
+	internal class CustomMessageHandler : IDisposable {
 		private static readonly ILogger Log = LogManager.ForContext<CustomMessageHandler>();
 
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IWebviewIpc _ipc;
-		private readonly DebounceDispatcher _documentMarkersDispatcher = new DebounceDispatcher();
-
+		private readonly Subject<DocumentMarkerChangedSubjectArgs> _documentMarkerChangedSubject;
+		private readonly IDisposable _documentMarkerChangedSubscription;
+	
 		public CustomMessageHandler(IEventAggregator eventAggregator, IWebviewIpc ipc) {
 			_eventAggregator = eventAggregator;
 			_ipc = ipc;
+			_documentMarkerChangedSubject = new Subject<DocumentMarkerChangedSubjectArgs>();
+
+			_documentMarkerChangedSubscription = _documentMarkerChangedSubject
+				.Throttle(TimeSpan.FromMilliseconds(500))
+				.Subscribe(e => {
+					_eventAggregator.Publish(new DocumentMarkerChangedEvent {
+						Uri = e.Uri.ToUri()
+					});
+				});
 		}
 
 		[JsonRpcMethod(DidChangeDataNotificationType.MethodName)]
@@ -56,31 +69,39 @@ namespace CodeStream.VisualStudio.LSP {
 			}
 		}
 
+		public class DocumentMarkerChangedSubjectArgs {
+			public DocumentMarkerChangedSubjectArgs(string uri) {
+				Uri = uri;
+			}
+			public string Uri { get; private set; }
+			public JToken Token { get; set; }
+		}	
+		
 		[JsonRpcMethod(DidChangeDocumentMarkersNotificationType.MethodName)]
 		public void OnDidChangeDocumentMarkers(JToken e) {
-			_documentMarkersDispatcher.Debounce(100, o => {
-				var @params = e.ToObject<DidChangeDocumentMarkersNotification>();
 
-				if (@params == null) {
-					Log.Warning($"{nameof(@params)} is null");
-					return;
-				}
+			var @params = e.ToObject<DidChangeDocumentMarkersNotification>();
 
-				Log.Verbose($"{nameof(OnDidChangeDocumentMarkers)} {@params?.TextDocument?.Uri}");
+			if (@params == null) {
+				Log.Warning($"{nameof(@params)} is null");
+				return;
+			}
 
-				var uriString = @params.TextDocument.Uri;
-				_ipc.Notify(new DidChangeDocumentMarkersNotificationType {
-					Params = new DidChangeDocumentMarkersNotification {
-						TextDocument = new TextDocumentIdentifier {
-							Uri = uriString
-						}
+			//this is too loud...
+			//Log.Verbose($"{nameof(OnDidChangeDocumentMarkers)} {@params?.TextDocument?.Uri}");
+
+			var uriString = @params.TextDocument.Uri;
+			_ipc.NotifyAsync(new DidChangeDocumentMarkersNotificationType {
+				Params = new DidChangeDocumentMarkersNotification {
+					TextDocument = new TextDocumentIdentifier {
+						Uri = uriString
 					}
-				});
-
-				_eventAggregator.Publish(new DocumentMarkerChangedEvent {
-					Uri = uriString.ToUri()
-				});
+				}
 			});
+
+			//allow the response to the webview to happen immediately, but do not send
+			//this event always -- it will try to re-render margins, which can be cpu heavy
+			_documentMarkerChangedSubject.OnNext(new DocumentMarkerChangedSubjectArgs(uriString));
 		}
 
 		[JsonRpcMethod(DidChangeVersionCompatibilityNotificationType.MethodName)]
@@ -101,6 +122,23 @@ namespace CodeStream.VisualStudio.LSP {
 			_ipc.Notify(new DidLogoutNotificationType {
 				Params = @params
 			});
+		}
+
+		private bool _disposed = false;
+
+		public void Dispose() {
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		protected virtual void Dispose(bool disposing) {
+			if (_disposed) return;
+
+			if (disposing) {
+				_documentMarkerChangedSubscription?.Dispose();
+			}
+
+			_disposed = true;
 		}
 	}
 }
