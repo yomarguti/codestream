@@ -6,7 +6,7 @@ import Icon from "./Icon";
 import Codemark from "./Codemark";
 import ScrollBox from "./ScrollBox";
 import Feedback from "./Feedback";
-import createClassString from "classnames";
+import cx from "classnames";
 import { range } from "../utils";
 import { HostApi } from "../webview-api";
 import {
@@ -272,7 +272,7 @@ export class SimpleInlineCodemarks extends Component {
 			<ScrollBox>
 				<div className="channel-list vscroll">
 					<div
-						className={createClassString("section", "has-children", {
+						className={cx("section", "has-children", {
 							expanded: true
 						})}
 					>
@@ -289,6 +289,8 @@ export class SimpleInlineCodemarks extends Component {
 								const { codemark } = docMarker;
 								// @ts-ignore
 								if (!codemark.pinned && !showUnpinned) return null;
+								if (codemark.type === "issue" && codemark.status === "closed" && !showClosed)
+									return null;
 								return (
 									<Codemark
 										key={codemark.id}
@@ -340,7 +342,7 @@ export class SimpleInlineCodemarks extends Component {
 			<div
 				onMouseEnter={() => this.onMouseEnterHoverIcon(lineNum0)}
 				onMouseLeave={() => this.onMouseLeaveHoverIcon(lineNum0)}
-				className={createClassString("hover-plus", { open, hover })}
+				className={cx("hover-plus", { open, hover })}
 				key={lineNum0}
 				style={{ top }}
 			>
@@ -460,23 +462,13 @@ export class SimpleInlineCodemarks extends Component {
 		const {
 			textEditorVisibleRanges = [],
 			textEditorLineCount,
+			firstVisibleLine,
+			lastVisibleLine,
 			documentMarkers,
 			metrics,
 			showUnpinned,
 			showClosed
 		} = this.props;
-
-		// create a map from start-lines to the codemarks that start on that line
-		let docMarkersByStartLine = {};
-		documentMarkers.forEach(docMarker => {
-			// @ts-ignore
-			if (!docMarker.codemark.pinned && !showUnpinned) return;
-			let startLine = Number(this.getMarkerStartLine(docMarker));
-			// if there is already a codemark on this line, keep skipping to the next one
-			while (docMarkersByStartLine[startLine]) startLine++;
-			docMarkersByStartLine[startLine] = docMarker;
-		});
-
 		const { numLinesVisible, selectedDocMarkerId } = this.state;
 
 		// console.log("TEVR: ", textEditorVisibleRanges);
@@ -503,7 +495,7 @@ export class SimpleInlineCodemarks extends Component {
 		// scroll the end of the file up to the top of the pane for some brain-dead
 		// stupid asenine ridiculous totally useless reason.
 		const lastRange = textEditorVisibleRanges[numVisibleRanges - 1];
-		const isLastLineVisible = lastRange ? textEditorLineCount <= lastRange.end.line + 1 : false;
+		const isLastLineVisible = lastRange ? textEditorLineCount <= lastVisibleLine + 1 : false;
 		const lessThanFull = heightPerLine > expectedLineHeight && isLastLineVisible;
 		const height = lessThanFull
 			? expectedLineHeight * numLinesVisible + paddingTop + "px"
@@ -533,6 +525,26 @@ export class SimpleInlineCodemarks extends Component {
 				</div>
 			);
 		}
+
+		let numAbove = 0,
+			numBelow = 0;
+		// create a map from start-lines to the codemarks that start on that line
+		let docMarkersByStartLine = {};
+		documentMarkers.forEach(docMarker => {
+			const codemark = docMarker.codemark;
+			// @ts-ignore
+			if (!codemark.pinned && !showUnpinned) return;
+			if (codemark.type === "issue" && codemark.status === "closed" && !showClosed) return;
+			let startLine = Number(this.getMarkerStartLine(docMarker));
+			// if there is already a codemark on this line, keep skipping to the next one
+			while (docMarkersByStartLine[startLine]) startLine++;
+			docMarkersByStartLine[startLine] = docMarker;
+			if (startLine < firstVisibleLine) numAbove++;
+			if (startLine > lastVisibleLine) numBelow++;
+		});
+
+		if (numAbove != this.state.numAbove) this.setState({ numAbove });
+		if (numBelow != this.state.numBelow) this.setState({ numBelow });
 
 		const windowHeight = window.innerHeight;
 		return (
@@ -632,11 +644,32 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	printHidden() {
-		const { numClosed, numUnpinned } = this.state;
+		const { numClosed, numUnpinned } = this.props;
+		const { numAbove, numBelow } = this.state;
 		return (
 			<div className="hidden">
-				{numClosed > 0 && <span onClick={this.toggleShowClosed}>3 resolved</span>}
-				{numUnpinned > 0 && <span onClick={this.toggleShowUnpinned}>2 archived</span>}
+				{numAbove > 0 && (
+					<span className="count" onClick={this.showAbove}>
+						{numAbove} <Icon name="arrow-up" />
+					</span>
+				)}
+				{numBelow > 0 && (
+					<span className="count" onClick={this.showBelow}>
+						{numBelow} <Icon name="arrow-down" />
+					</span>
+				)}
+				{numClosed > 0 && (
+					<span className="count" onClick={this.toggleShowClosed}>
+						{numClosed} resolved
+						<label className={cx("switch", { checked: this.props.showClosed })} />
+					</span>
+				)}
+				{numUnpinned > 0 && (
+					<span className="count" onClick={this.toggleShowUnpinned}>
+						{numUnpinned} archived
+						<label className={cx("switch", { checked: this.props.showUnpinned })} />
+					</span>
+				)}
 			</div>
 		);
 	}
@@ -645,11 +678,11 @@ export class SimpleInlineCodemarks extends Component {
 		const { viewInline } = this.props;
 
 		return (
-			<div className={createClassString("panel inline-panel", { "full-height": viewInline })}>
+			<div className={cx("panel inline-panel", { "full-height": viewInline })}>
 				<div className="view-as-switch">
 					<span className="view-as-label">View:</span>
 					<label
-						className={createClassString("switch view-as-inline-switch", {
+						className={cx("switch view-as-inline-switch", {
 							checked: viewInline
 						})}
 						onClick={this.toggleViewCodemarksInline}
@@ -701,17 +734,23 @@ export class SimpleInlineCodemarks extends Component {
 
 	toggleShowUnpinned = () => {
 		HostApi.instance.send(UpdateConfigurationRequestType, {
-			name: "showUnpinnedCodemarks",
+			name: "showArchivedCodemarks",
 			value: !this.props.showUnpinned
 		});
 	};
 
 	toggleShowClosed = () => {
 		HostApi.instance.send(UpdateConfigurationRequestType, {
-			name: "showClosedCodemarks",
+			name: "showResolvedCodemarks",
 			value: !this.props.showClosed
 		});
 	};
+
+	showAbove = () => {
+		const { firstVisibleLine, lastVisibleLine = [] } = this.props;
+	};
+
+	showBelow = () => {};
 
 	handleClickPlus = async (event, type, lineNum0, top) => {
 		event.preventDefault();
@@ -889,6 +928,16 @@ const EMPTY_ARRAY = [];
 const mapStateToProps = state => {
 	const { session, capabilities, context, editorContext, teams, configs, documentMarkers } = state;
 
+	const docMarkers = documentMarkers[editorContext.textEditorUri] || EMPTY_ARRAY;
+	const numUnpinned = docMarkers.filter(d => !d.codemark.pinned).length;
+	const numClosed = docMarkers.filter(d => d.codemark.status === "closed").length;
+
+	const textEditorVisibleRanges = editorContext.textEditorVisibleRanges || EMPTY_ARRAY;
+	const numVisibleRanges = textEditorVisibleRanges.length;
+	const lastVisibleRange = textEditorVisibleRanges[numVisibleRanges - 1];
+	const lastVisibleLine = lastVisibleRange.end.line;
+	const firstVisibleLine = textEditorVisibleRanges[0].start.line;
+
 	return {
 		currentUserId: session.userId,
 		usernames: userSelectors.getUsernames(state),
@@ -896,13 +945,19 @@ const mapStateToProps = state => {
 		viewInline: configs.viewCodemarksInline,
 		viewHeadshots: configs.viewHeadshots,
 		showLabelText: configs.showLabelText,
+		showClosed: configs.showResolvedCodemarks,
+		showUnpinned: configs.showArchivedCodemarks,
 		fileNameToFilterFor: editorContext.activeFile || editorContext.lastActiveFile,
 		textEditorUri: editorContext.textEditorUri,
 		textEditorLineCount: editorContext.textEditorLineCount,
-		textEditorVisibleRanges: editorContext.textEditorVisibleRanges || EMPTY_ARRAY,
+		firstVisibleLine,
+		lastVisibleLine,
+		textEditorVisibleRanges,
 		textEditorSelection: getCurrentSelection(editorContext),
 		metrics: editorContext.metrics || EMPTY_ARRAY,
-		documentMarkers: documentMarkers[editorContext.textEditorUri] || EMPTY_ARRAY,
+		documentMarkers: docMarkers,
+		numUnpinned,
+		numClosed,
 		capabilities,
 		threadId: context.threadId
 	};
