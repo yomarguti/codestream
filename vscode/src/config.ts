@@ -23,5 +23,7 @@ export interface Config {
 	team: string;
 	traceLevel: TraceLevel;
 	viewCodemarksInline: boolean;
+	showArchivedCodemarks: boolean;
+	showResolvedCodemarks: boolean;
 	webAppUrl: string;
 }

@@ -155,6 +155,18 @@
                     "description": "Specifies whether to display Codemarks inline next to the code they refer to. The alternative is a list view.",
                     "scope": "window"
                 },
+                "codestream.showArchivedCodemarks": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Specifies whether to display Codemarks that have been archived.",
+                    "scope": "window"
+                },
+                "codestream.showResolvedCodemarks": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Specifies whether to display Codemarks that have been resolved.",
+                    "scope": "window"
+                },
                 "codestream.webAppUrl": {
                     "type": "string",
                     "default": "https://app.codestream.com",

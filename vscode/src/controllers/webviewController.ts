@@ -342,7 +342,9 @@ export class WebviewController implements Disposable {
 			configuration.changed(e, configuration.name("showFeedbackSmiley").value) ||
 			configuration.changed(e, configuration.name("showMarkerCodeLens").value) ||
 			configuration.changed(e, configuration.name("showMarkerGlyphs").value) ||
-			configuration.changed(e, configuration.name("viewCodemarksInline").value)
+			configuration.changed(e, configuration.name("viewCodemarksInline").value) ||
+			configuration.changed(e, configuration.name("showArchivedCodemarks").value) ||
+			configuration.changed(e, configuration.name("showResolvedCodemarks").value)
 		) {
 			webview.notify(HostDidChangeConfigNotificationType, {
 				debug: Logger.isDebugging,
@@ -351,7 +353,9 @@ export class WebviewController implements Disposable {
 				showHeadshots: Container.config.showAvatars,
 				showMarkerCodeLens: Container.config.showMarkerCodeLens,
 				showMarkerGlyphs: Container.config.showMarkerGlyphs,
-				viewCodemarksInline: Container.config.viewCodemarksInline
+				viewCodemarksInline: Container.config.viewCodemarksInline,
+				showArchivedCodemarks: Container.config.showArchivedCodemarks,
+				showResolvedCodemarks: Container.config.showResolvedCodemarks
 			});
 		}
 	}
@@ -726,7 +730,9 @@ export class WebviewController implements Disposable {
 				showHeadshots: Container.config.showAvatars,
 				showMarkerCodeLens: Container.config.showMarkerCodeLens,
 				showMarkerGlyphs: Container.config.showMarkerGlyphs,
-				viewCodemarksInline: Container.config.viewCodemarksInline
+				viewCodemarksInline: Container.config.viewCodemarksInline,
+				showArchivedCodemarks: Container.config.showArchivedCodemarks,
+				showResolvedCodemarks: Container.config.showResolvedCodemarks
 			},
 			context: context,
 			editorContext: editorContext,
