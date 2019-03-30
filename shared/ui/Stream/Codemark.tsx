@@ -154,16 +154,27 @@ export class Codemark extends React.Component<Props, State> {
 	renderStatus(codemark) {
 		const { type, status = "open" } = codemark;
 		if (type === CodemarkType.Issue) {
-			return (
-				<div className="align-far-left">
+			if (this.props.inline) {
+				return (
 					<div
-						className={cx("status-button", { checked: status === "closed" })}
+						className={cx("resolve-button", { checked: status === "closed" })}
 						onClick={this.handleClickStatusToggle}
 					>
-						<Icon name="check" className="check" />
+						{status === "open" ? "Resolve" : "Reopen"}
 					</div>
-				</div>
-			);
+				);
+			} else {
+				return (
+					<div className="align-far-left">
+						<div
+							className={cx("status-button", { checked: status === "closed" })}
+							onClick={this.handleClickStatusToggle}
+						>
+							<Icon name="check" className="check" />
+						</div>
+					</div>
+				);
+			}
 		}
 		return null;
 	}
@@ -305,7 +316,7 @@ export class Codemark extends React.Component<Props, State> {
 								<Icon name="kebab-vertical" className="kebab-vertical clickable" />
 							</div>
 						)}
-						{this.renderDemoShit(codemark, user)}
+						{inline && this.renderDemoShit(codemark, user)}
 					</div>
 					{selected && <CodemarkDetails codemark={codemark} />}
 				</div>
@@ -321,12 +332,15 @@ export class Codemark extends React.Component<Props, State> {
 						<div className="angle-arrow" />
 						{<Headshot size={18} person={user} />}
 						<span style={{ opacity: 0.5 }}>no; the javascript byte compiler optimizes it away</span>
+						<br />
+						<div className="angle-arrow" />
+						{<Headshot size={18} person={user} />}
+						<span style={{ opacity: 0.5 }}>are you sure?</span>
 					</div>
 				)}
 				{codemark.title && codemark.title.startsWith("let's avoid") && (
 					<div>
-						<div className="angle-arrow" />
-						{<Headshot size={18} person={user} />}
+						<Icon name="star" /> {<Headshot size={18} person={user} />}
 						<span style={{ opacity: 0.5 }}>i'll grab this in the next sprint</span>
 					</div>
 				)}
