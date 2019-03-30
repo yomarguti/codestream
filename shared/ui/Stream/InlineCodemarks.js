@@ -260,7 +260,7 @@ export class SimpleInlineCodemarks extends Component {
 	}
 
 	renderList = () => {
-		const { documentMarkers } = this.props;
+		const { documentMarkers, showUnpinned, showClosed } = this.props;
 
 		const { selectedDocMarkerId } = this.state;
 
@@ -270,7 +270,7 @@ export class SimpleInlineCodemarks extends Component {
 
 		return (
 			<ScrollBox>
-				<div className="inline-codemarks channel-list vscroll">
+				<div className="channel-list vscroll">
 					<div
 						className={createClassString("section", "has-children", {
 							expanded: true
@@ -288,7 +288,7 @@ export class SimpleInlineCodemarks extends Component {
 							.map(docMarker => {
 								const { codemark } = docMarker;
 								// @ts-ignore
-								if (!codemark.pinned) return null;
+								if (!codemark.pinned && !showUnpinned) return null;
 								return (
 									<Codemark
 										key={codemark.id}
@@ -461,14 +461,16 @@ export class SimpleInlineCodemarks extends Component {
 			textEditorVisibleRanges = [],
 			textEditorLineCount,
 			documentMarkers,
-			metrics
+			metrics,
+			showUnpinned,
+			showClosed
 		} = this.props;
 
 		// create a map from start-lines to the codemarks that start on that line
 		let docMarkersByStartLine = {};
 		documentMarkers.forEach(docMarker => {
 			// @ts-ignore
-			if (!docMarker.codemark.pinned) return;
+			if (!docMarker.codemark.pinned && !showUnpinned) return;
 			let startLine = Number(this.getMarkerStartLine(docMarker));
 			// if there is already a codemark on this line, keep skipping to the next one
 			while (docMarkersByStartLine[startLine]) startLine++;
@@ -519,6 +521,7 @@ export class SimpleInlineCodemarks extends Component {
 				<div
 					style={{
 						top: paddingTop,
+						// purple background for debugging purposes
 						// background: "#333366",
 						position: "relative",
 						fontSize: fontSize,
@@ -534,25 +537,16 @@ export class SimpleInlineCodemarks extends Component {
 		const windowHeight = window.innerHeight;
 		return (
 			<div
-				style={{
-					// paddingTop: "100px",
-					// marginTop: "-100px",
-					overflow: "auto",
-					height: "100vh"
-				}}
+				style={{ overflow: "auto", height: "100vh" }}
 				onScroll={this.onScroll}
 				id="inline-codemarks-scroll-container"
 				ref={ref => (this._scrollDiv = ref)}
 			>
-				<div
-					style={{
-						padding: "18px 0",
-						margin: "-18px 0"
-					}}
-				>
+				<div style={{ padding: "18px 0", margin: "-18px 0" }}>
 					<div
 						style={{
 							top: paddingTop,
+							// purple background for debugging purposes
 							// background: "#333366",
 							position: "relative",
 							fontSize: fontSize,
@@ -561,59 +555,54 @@ export class SimpleInlineCodemarks extends Component {
 						id="inline-codemarks-field"
 						onClick={this.handleClickField}
 					>
-						<div style={{ position: "absolute", top: "-100px" }} />
-						<div style={{ position: "absolute", bottom: "-100px" }} />
-						<div className="inline-codemarks-x vscroll-x">
-							<div>
-								{this.props.children}
-								{(textEditorVisibleRanges || []).map((lineRange, rangeIndex) => {
-									const realFirstLine = lineRange.start.line; // == 0 ? 1 : lineRange[0].line;
-									const realLastLine = lineRange.end.line;
-									const linesInRange = realLastLine - realFirstLine + 1;
-									const marksInRange = range(realFirstLine, realLastLine + 1).map(lineNum => {
-										const top =
-											(windowHeight * (rangeStartOffset + lineNum - realFirstLine)) /
-											numLinesVisible;
-										if (docMarkersByStartLine[lineNum]) {
-											//} && lineNum !== this.state.openIconsOnLine) {
-											const docMarker = docMarkersByStartLine[lineNum];
-											return (
-												<Codemark
-													key={docMarker.id}
-													codemark={docMarker.codemark}
-													marker={docMarker}
-													collapsed={true}
-													inline={true}
-													selected={selectedDocMarkerId === docMarker.id}
-													currentUserId={this.props.currentUserId}
-													currentUserName={this.props.currentUserName}
-													usernames={this.props.usernames}
-													onClick={this.handleClickCodemark}
-													onMouseEnter={this.handleHighlightCodemark}
-													onMouseLeave={this.handleUnhighlightCodemark}
-													action={this.props.postAction}
-													query={this.state.q}
-													lineNum={lineNum}
-													style={{ top: top + "px" }}
-													top={top}
-													capabilities={this.props.capabilities}
-													threadDivs={this.props.threadDivs}
-												/>
-											);
-										} else {
-											return null;
-										}
-									});
-									rangeStartOffset += linesInRange;
-									if (rangeIndex + 1 < numVisibleRanges) {
-										let top = (100 * rangeStartOffset) / numLinesVisible + "%";
-										marksInRange.push(<div style={{ top }} className="folded-code-indicator" />);
+						<div className="inline-codemarks vscroll-x">
+							{this.props.children}
+							{(textEditorVisibleRanges || []).map((lineRange, rangeIndex) => {
+								const realFirstLine = lineRange.start.line; // == 0 ? 1 : lineRange[0].line;
+								const realLastLine = lineRange.end.line;
+								const linesInRange = realLastLine - realFirstLine + 1;
+								const marksInRange = range(realFirstLine, realLastLine + 1).map(lineNum => {
+									const top =
+										(windowHeight * (rangeStartOffset + lineNum - realFirstLine)) / numLinesVisible;
+									if (docMarkersByStartLine[lineNum]) {
+										//} && lineNum !== this.state.openIconsOnLine) {
+										const docMarker = docMarkersByStartLine[lineNum];
+										return (
+											<Codemark
+												key={docMarker.id}
+												codemark={docMarker.codemark}
+												marker={docMarker}
+												collapsed={true}
+												inline={true}
+												selected={selectedDocMarkerId === docMarker.id}
+												currentUserId={this.props.currentUserId}
+												currentUserName={this.props.currentUserName}
+												usernames={this.props.usernames}
+												onClick={this.handleClickCodemark}
+												onMouseEnter={this.handleHighlightCodemark}
+												onMouseLeave={this.handleUnhighlightCodemark}
+												action={this.props.postAction}
+												query={this.state.q}
+												lineNum={lineNum}
+												style={{ top: top + "px" }}
+												top={top}
+												capabilities={this.props.capabilities}
+												threadDivs={this.props.threadDivs}
+											/>
+										);
+									} else {
+										return null;
 									}
-									return marksInRange;
-								})}
-							</div>
-							{this.renderHoverIcons(numLinesVisible)}
+								});
+								rangeStartOffset += linesInRange;
+								if (rangeIndex + 1 < numVisibleRanges) {
+									let top = (100 * rangeStartOffset) / numLinesVisible + "%";
+									marksInRange.push(<div style={{ top }} className="folded-code-indicator" />);
+								}
+								return marksInRange;
+							})}
 						</div>
+						{this.renderHoverIcons(numLinesVisible)}
 					</div>
 				</div>
 			</div>
@@ -642,11 +631,21 @@ export class SimpleInlineCodemarks extends Component {
 		// this.scrollTo(18);
 	};
 
+	printHidden() {
+		const { numClosed, numUnpinned } = this.state;
+		return (
+			<div className="hidden">
+				{numClosed > 0 && <span onClick={this.toggleShowClosed}>3 resolved</span>}
+				{numUnpinned > 0 && <span onClick={this.toggleShowUnpinned}>2 archived</span>}
+			</div>
+		);
+	}
+
 	render() {
 		const { viewInline } = this.props;
 
 		return (
-			<div className={createClassString("panel", { "full-height": viewInline })}>
+			<div className={createClassString("panel inline-panel", { "full-height": viewInline })}>
 				<div className="view-as-switch">
 					<span className="view-as-label">View:</span>
 					<label
@@ -658,6 +657,7 @@ export class SimpleInlineCodemarks extends Component {
 				</div>
 				{!viewInline && <div className="panel-header">Codemarks</div>}
 				{this.state.isLoading ? null : viewInline ? this.renderInline() : this.renderList()}
+				{viewInline && this.printHidden()}
 				<Feedback />
 			</div>
 		);
@@ -696,6 +696,20 @@ export class SimpleInlineCodemarks extends Component {
 		HostApi.instance.send(UpdateConfigurationRequestType, {
 			name: "viewCodemarksInline",
 			value: !this.props.viewInline
+		});
+	};
+
+	toggleShowUnpinned = () => {
+		HostApi.instance.send(UpdateConfigurationRequestType, {
+			name: "showUnpinnedCodemarks",
+			value: !this.props.showUnpinned
+		});
+	};
+
+	toggleShowClosed = () => {
+		HostApi.instance.send(UpdateConfigurationRequestType, {
+			name: "showClosedCodemarks",
+			value: !this.props.showClosed
 		});
 	};
 

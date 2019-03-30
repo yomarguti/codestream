@@ -33,6 +33,7 @@ interface CodemarkEntity {
 	status?: string;
 	creatorId?: string;
 	pinned?: boolean;
+	numReplies: number;
 }
 interface State {
 	menuOpen?: boolean;
@@ -76,6 +77,7 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	render() {
+		if (this.props.inline) return this.renderInlineCodemark();
 		if (this.props.collapsed) return this.renderCollapsedCodemark();
 		else return null;
 	}
@@ -236,6 +238,32 @@ export class Codemark extends React.Component<Props, State> {
 
 	renderCollapsedCodemark() {
 		const { codemark, inline, selected } = this.props;
+		const file = codemark.markers && codemark.markers[0].file;
+
+		if (!codemark) return null;
+
+		return (
+			<div
+				style={{ ...this.props.style }}
+				className={cx("codemark collapsed")}
+				onClick={this.handleClickCodemark}
+				onMouseEnter={this.handleMouseEnterCodemark}
+				onMouseLeave={this.handleMouseLeaveCodemark}
+			>
+				<div className="contents">
+					{this.renderStatus(codemark)}
+					<div className="body">
+						<span className={codemark.color}>{this.renderTypeIcon()}</span>
+						{this.renderTextLinkified(codemark.title || codemark.text)}
+						{file && <span className="file-name">{file}</span>}
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	renderInlineCodemark() {
+		const { codemark, inline, selected } = this.props;
 		const { menuOpen, menuTarget } = this.state;
 		const file = codemark.markers && codemark.markers[0].file;
 
@@ -252,7 +280,6 @@ export class Codemark extends React.Component<Props, State> {
 		const mine = codemark.creatorId === this.props.currentUserId;
 
 		let menuItems: any[] = [
-			// { label: "View Details", action: "open-codemark" },
 			// { label: "Add Reaction", action: "react" },
 			// { label: "Get Permalink", action: "get-permalink" },
 			// { label: "-" }
@@ -271,12 +298,10 @@ export class Codemark extends React.Component<Props, State> {
 			);
 		}
 
-		// console.log(codemark);
-		// const style = inline ?
 		return (
 			<div
 				style={{ ...this.props.style }}
-				className={cx("codemark collapsed", { inline: inline, selected: selected })}
+				className={cx("codemark collapsed inline", { selected: selected })}
 				onClick={this.handleClickCodemark}
 				onMouseEnter={this.handleMouseEnterCodemark}
 				onMouseLeave={this.handleMouseLeaveCodemark}
@@ -286,37 +311,31 @@ export class Codemark extends React.Component<Props, State> {
 				<div className="contents">
 					{this.renderStatus(codemark)}
 					<div className="body">
-						{inline && (
-							<div className="author">
-								<Headshot person={user} /> <span className="author">{user.username}</span>
-								<Timestamp time={codemark.createdAt} />
-								{inline && codemark.color && (
-									<div
-										className={cx(`label-indicator ${codemark.color}-background`, {
-											expanded: this.state.showLabelText
-										})}
-										onClick={this.toggleLabelIndicators}
-									>
-										<span>priority</span>
-									</div>
-								)}
-							</div>
-						)}
-						{!inline && <span className={codemark.color}>{this.renderTypeIcon()}</span>}
+						<div className="author">
+							<Headshot person={user} /> <span className="author">{user.username}</span>
+							<Timestamp time={codemark.createdAt} />
+							{inline && codemark.color && (
+								<div
+									className={cx(`label-indicator ${codemark.color}-background`, {
+										expanded: this.state.showLabelText
+									})}
+									onClick={this.toggleLabelIndicators}
+								>
+									<span>priority</span>
+								</div>
+							)}
+						</div>
 						{this.renderTextLinkified(codemark.title || codemark.text)}
-						{file && !inline && <span className="file-name">{file}</span>}
-						{inline && (
-							<div
-								style={{ position: "absolute", top: "5px", right: "5px" }}
-								onClick={this.handleMenuClick}
-							>
-								{menuOpen && (
-									<Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />
-								)}
-								<Icon name="kebab-vertical" className="kebab-vertical clickable" />
-							</div>
-						)}
-						{inline && this.renderDemoShit(codemark, user)}
+						<div
+							style={{ position: "absolute", top: "5px", right: "5px" }}
+							onClick={this.handleMenuClick}
+						>
+							{menuOpen && (
+								<Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />
+							)}
+							<Icon name="kebab-vertical" className="kebab-vertical clickable" />
+						</div>
+						{this.renderDemoShit(codemark, user)}
 					</div>
 					{selected && <CodemarkDetails codemark={codemark} />}
 				</div>
