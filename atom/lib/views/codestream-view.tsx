@@ -7,6 +7,7 @@ import {
 	HostDidChangeActiveEditorNotificationType,
 	HostDidChangeConfigNotificationType,
 	HostDidChangeEditorSelectionNotificationType,
+	HostDidChangeEditorVisibleRangesNotificationType,
 	HostDidChangeFocusNotificationType,
 	HostDidLogoutNotificationType,
 	isIpcRequestMessage,
@@ -169,6 +170,14 @@ export class CodestreamView {
 		this.editorSelectionObserver = new WorkspaceEditorObserver();
 		this.editorSelectionObserver.onDidChangeSelection(this.onSelectionChanged);
 		this.editorSelectionObserver.onDidChangeActiveEditor(this.onEditorActiveEditorChanged);
+		this.editorSelectionObserver.onDidChangeVisibleRanges(editor => {
+			this.sendEvent(HostDidChangeEditorVisibleRangesNotificationType, {
+				uri: Editor.getUri(editor),
+				selections: Editor.getCSSelections(editor),
+				visibleRanges: Editor.getVisibleRanges(editor),
+				lineCount: editor.getLineCount(),
+			});
+		});
 	}
 
 	private initialize() {

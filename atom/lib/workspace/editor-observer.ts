@@ -3,6 +3,7 @@ import { throttle } from "utils";
 
 const DID_CHANGE_SELECTION = "did-change-selection";
 const DID_CHANGE_EDITOR = "did-change-editor";
+const DID_CHANGE_VISIBLE_RANGES = "did-change-visible-ranges";
 
 export class WorkspaceEditorObserver implements Disposable {
 	private subscriptions: CompositeDisposable;
@@ -36,6 +37,14 @@ export class WorkspaceEditorObserver implements Disposable {
 						}),
 						editor.onDidDestroy(() => editorSubscriptions.dispose())
 					);
+					const editorView = atom.views.getView(editor);
+					if (editorView) {
+						editorSubscriptions.add(
+							editorView.onDidChangeScrollTop(() => {
+								this.emitter.emit(DID_CHANGE_VISIBLE_RANGES, editor);
+							})
+						);
+					}
 					this.subscriptions.add(editorSubscriptions);
 				}
 			})
@@ -50,6 +59,10 @@ export class WorkspaceEditorObserver implements Disposable {
 
 	onDidChangeActiveEditor(cb: (editor?: TextEditor) => void): Disposable {
 		return this.emitter.on(DID_CHANGE_EDITOR, cb);
+	}
+
+	onDidChangeVisibleRanges(cb: (editor: TextEditor) => void) {
+		return this.emitter.on(DID_CHANGE_VISIBLE_RANGES, cb);
 	}
 
 	async highlight(enable: boolean, file: string, range: Range) {
