@@ -62,7 +62,7 @@ interface Props {
 	top?: Number;
 	showLabelText?: boolean;
 	threadDivs?: any;
-	bookmarkKeybindings: string[];
+	codemarkKeybindings: string[];
 	setUserPreference: Function;
 }
 
@@ -270,19 +270,19 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	setKeybinding(key) {
-		const { codemark, bookmarkKeybindings } = this.props;
-		Object.keys(bookmarkKeybindings).forEach(key => {
-			if (bookmarkKeybindings[key] === codemark.id) bookmarkKeybindings[key] = "";
+		const { codemark, codemarkKeybindings } = this.props;
+		Object.keys(codemarkKeybindings).forEach(key => {
+			if (codemarkKeybindings[key] === codemark.id) codemarkKeybindings[key] = "";
 		});
-		bookmarkKeybindings[key] = codemark.id;
-		this.props.setUserPreference(["bookmarkKeybindings"], bookmarkKeybindings);
+		codemarkKeybindings[key] = codemark.id;
+		this.props.setUserPreference(["codemarkKeybindings"], codemarkKeybindings);
 	}
 
 	renderKeybinding(codemark) {
-		const { bookmarkKeybindings } = this.props;
+		const { codemarkKeybindings } = this.props;
 
-		const index = Object.keys(bookmarkKeybindings).find(
-			key => bookmarkKeybindings[key] === codemark.id
+		const index = Object.keys(codemarkKeybindings).find(
+			key => codemarkKeybindings[key] === codemark.id
 		);
 		if (parseInt(index || "", 10) > 0) {
 			const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
@@ -425,7 +425,7 @@ const EMPTY_OBJECT = {};
 const mapStateToProps = state => {
 	const { preferences } = state;
 	return {
-		bookmarkKeybindings: preferences.bookmarkKeybindings || EMPTY_OBJECT
+		codemarkKeybindings: preferences.codemarkKeybindings || EMPTY_OBJECT
 	};
 };
 
