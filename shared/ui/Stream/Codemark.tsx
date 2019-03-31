@@ -297,11 +297,12 @@ export class Codemark extends React.Component<Props, State> {
 				{ label: "Delete", action: "delete-post" }
 			);
 		}
+		const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
 
 		return (
 			<div
 				style={{ ...this.props.style }}
-				className={cx("codemark collapsed inline", { selected: selected })}
+				className={cx("codemark collapsed inline type-" + type, { selected: selected })}
 				onClick={this.handleClickCodemark}
 				onMouseEnter={this.handleMouseEnterCodemark}
 				onMouseLeave={this.handleMouseLeaveCodemark}
@@ -325,6 +326,13 @@ export class Codemark extends React.Component<Props, State> {
 								</div>
 							)}
 						</div>
+						{type === "bookmark" && <span className={codemark.color}>{this.renderTypeIcon()}</span>}
+						{type === "bookmark" && (
+							<div style={{ float: "right", marginRight: "5px", opacity: 0.6 }}>
+								<span className="keybinding extra-pad">{modifier}</span>
+								<span className="keybinding extra-pad">1</span>
+							</div>
+						)}
 						{this.renderTextLinkified(codemark.title || codemark.text)}
 						<div
 							style={{ position: "absolute", top: "5px", right: "5px" }}

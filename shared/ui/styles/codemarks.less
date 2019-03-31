@@ -259,6 +259,26 @@
 			background: @base-background-color;
 		}
 	}
+	&.type-bookmark:not(.selected) {
+		border: none;
+		background: none;
+		box-shadow: none;
+		.contents > .body {
+			padding-left: 28px !important;
+			.author,
+			.kebab-vertical {
+				display: none;
+			}
+			.type-icon {
+				margin-left: -23px;
+			}
+			&:hover {
+				.kebab-vertical {
+					display: inline-block;
+				}
+			}
+		}
+	}
 	// background: @app-background-color;
 }
 .no-codemarks {
