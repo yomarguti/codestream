@@ -78,6 +78,7 @@ export class SimpleInlineCodemarks extends Component {
 				</span>
 			)
 		};
+		this.docMarkersByStartLine = {};
 	}
 
 	static getDerivedStateFromProps(props, state) {
@@ -529,7 +530,7 @@ export class SimpleInlineCodemarks extends Component {
 		let numAbove = 0,
 			numBelow = 0;
 		// create a map from start-lines to the codemarks that start on that line
-		let docMarkersByStartLine = {};
+		this.docMarkersByStartLine = {};
 		documentMarkers.forEach(docMarker => {
 			const codemark = docMarker.codemark;
 			// @ts-ignore
@@ -537,8 +538,8 @@ export class SimpleInlineCodemarks extends Component {
 			if (codemark.type === "issue" && codemark.status === "closed" && !showClosed) return;
 			let startLine = Number(this.getMarkerStartLine(docMarker));
 			// if there is already a codemark on this line, keep skipping to the next one
-			while (docMarkersByStartLine[startLine]) startLine++;
-			docMarkersByStartLine[startLine] = docMarker;
+			while (this.docMarkersByStartLine[startLine]) startLine++;
+			this.docMarkersByStartLine[startLine] = docMarker;
 			if (startLine < firstVisibleLine) numAbove++;
 			if (startLine > lastVisibleLine) numBelow++;
 		});
@@ -576,9 +577,9 @@ export class SimpleInlineCodemarks extends Component {
 								const marksInRange = range(realFirstLine, realLastLine + 1).map(lineNum => {
 									const top =
 										(windowHeight * (rangeStartOffset + lineNum - realFirstLine)) / numLinesVisible;
-									if (docMarkersByStartLine[lineNum]) {
+									if (this.docMarkersByStartLine[lineNum]) {
 										//} && lineNum !== this.state.openIconsOnLine) {
-										const docMarker = docMarkersByStartLine[lineNum];
+										const docMarker = this.docMarkersByStartLine[lineNum];
 										return (
 											<Codemark
 												key={docMarker.id}
@@ -748,9 +749,43 @@ export class SimpleInlineCodemarks extends Component {
 
 	showAbove = () => {
 		const { firstVisibleLine, lastVisibleLine = [] } = this.props;
+
+		let done = false;
+		Object.keys(this.docMarkersByStartLine)
+			.sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
+			.reverse()
+			.forEach(line => {
+				const lineNum = parseInt(line, 10) - 1;
+				if (!done && lineNum < firstVisibleLine) {
+					HostApi.instance.send(EditorRevealRangeRequestType, {
+						uri: this.props.textEditorUri,
+						range: Range.create(lineNum, 0, lineNum, 0),
+						preserveFocus: true,
+						atTop: true
+					});
+					done = true;
+				}
+			});
 	};
 
-	showBelow = () => {};
+	showBelow = () => {
+		const { lastVisibleLine = [] } = this.props;
+
+		let done = false;
+		Object.keys(this.docMarkersByStartLine)
+			.sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
+			.forEach(line => {
+				const lineNum = parseInt(line, 10) + 1;
+				if (!done && lineNum > lastVisibleLine) {
+					HostApi.instance.send(EditorRevealRangeRequestType, {
+						uri: this.props.textEditorUri,
+						range: Range.create(lineNum, 0, lineNum, 0),
+						preserveFocus: true
+					});
+					done = true;
+				}
+			});
+	};
 
 	handleClickPlus = async (event, type, lineNum0, top) => {
 		event.preventDefault();
