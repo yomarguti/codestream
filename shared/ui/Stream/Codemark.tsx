@@ -1,7 +1,7 @@
 import cx from "classnames";
 import React from "react";
 import { connect } from "react-redux";
-import { setCodemarkStatus } from "./actions";
+import { setCodemarkStatus, setUserPreference } from "./actions";
 import Headshot from "./Headshot";
 import Icon from "./Icon";
 import Menu from "./Menu";
@@ -14,6 +14,7 @@ import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
 import { UpdateConfigurationRequestType } from "@codestream/protocols/webview";
 import { validateSignup } from "../Login/actions";
+import { range } from "../utils";
 
 // TODO: Why not use CSCodemark here? or CodemarkPlus?
 interface CodemarkEntity {
@@ -61,6 +62,8 @@ interface Props {
 	top?: Number;
 	showLabelText?: boolean;
 	threadDivs?: any;
+	bookmarkKeybindings: string[];
+	setUserPreference: Function;
 }
 
 export class Codemark extends React.Component<Props, State> {
@@ -210,11 +213,15 @@ export class Codemark extends React.Component<Props, State> {
 	handleSelectMenu = action => {
 		this.setState({ menuOpen: false });
 
+		if (!action) return;
+
 		switch (action) {
 			case "toggle-pinned":
 				this.togglePinned();
 				break;
 		}
+		var found = action.match(/set-keybinding-(\d)/);
+		if (found) this.setKeybinding(found[1]);
 	};
 
 	togglePinned = () => {
@@ -262,6 +269,32 @@ export class Codemark extends React.Component<Props, State> {
 		);
 	}
 
+	setKeybinding(key) {
+		const { codemark, bookmarkKeybindings } = this.props;
+		Object.keys(bookmarkKeybindings).forEach(key => {
+			if (bookmarkKeybindings[key] === codemark.id) bookmarkKeybindings[key] = "";
+		});
+		bookmarkKeybindings[key] = codemark.id;
+		this.props.setUserPreference(["bookmarkKeybindings"], bookmarkKeybindings);
+	}
+
+	renderKeybinding(codemark) {
+		const { bookmarkKeybindings } = this.props;
+
+		const index = Object.keys(bookmarkKeybindings).find(
+			key => bookmarkKeybindings[key] === codemark.id
+		);
+		if (parseInt(index || "", 10) > 0) {
+			const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
+			return (
+				<div style={{ float: "right", marginRight: "5px", opacity: 0.6 }}>
+					<span className="keybinding extra-pad">{modifier}</span>
+					<span className="keybinding extra-pad">{index}</span>
+				</div>
+			);
+		} else return null;
+	}
+
 	renderInlineCodemark() {
 		const { codemark, inline, selected } = this.props;
 		const { menuOpen, menuTarget } = this.state;
@@ -297,7 +330,10 @@ export class Codemark extends React.Component<Props, State> {
 				{ label: "Delete", action: "delete-post" }
 			);
 		}
-		const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
+
+		range(1, 10).forEach(index => {
+			menuItems.push({ label: `Set Keybinding ${index}`, action: `set-keybinding-${index}` });
+		});
 
 		return (
 			<div
@@ -310,12 +346,13 @@ export class Codemark extends React.Component<Props, State> {
 				data-top={this.props.top}
 			>
 				<div className="contents">
-					{this.renderStatus(codemark)}
 					<div className="body">
+						{this.renderKeybinding(codemark)}
+						{this.renderStatus(codemark)}
 						<div className="author">
 							<Headshot person={user} /> <span className="author">{user.username}</span>
 							<Timestamp time={codemark.createdAt} />
-							{inline && codemark.color && (
+							{codemark.color && (
 								<div
 									className={cx(`label-indicator ${codemark.color}-background`, {
 										expanded: this.state.showLabelText
@@ -327,12 +364,6 @@ export class Codemark extends React.Component<Props, State> {
 							)}
 						</div>
 						{type === "bookmark" && <span className={codemark.color}>{this.renderTypeIcon()}</span>}
-						{type === "bookmark" && (
-							<div style={{ float: "right", marginRight: "5px", opacity: 0.6 }}>
-								<span className="keybinding extra-pad">{modifier}</span>
-								<span className="keybinding extra-pad">1</span>
-							</div>
-						)}
 						{this.renderTextLinkified(codemark.title || codemark.text)}
 						<div
 							style={{ position: "absolute", top: "5px", right: "5px" }}
@@ -354,28 +385,29 @@ export class Codemark extends React.Component<Props, State> {
 	renderDemoShit(codemark, user) {
 		return (
 			<div>
-				{codemark.text && codemark.text.startsWith("does this") && (
-					<div>
-						<div className="angle-arrow" />
-						{<Headshot size={18} person={user} />}
-						<span style={{ opacity: 0.5 }}>no; the javascript byte compiler optimizes it away</span>
-						<br />
-						<div className="angle-arrow" />
-						{<Headshot size={18} person={user} />}
-						<span style={{ opacity: 0.5 }}>are you sure?</span>
-					</div>
-				)}
+				{codemark.text &&
+					codemark.text.startsWith("does this") && [
+						<div className="pinned-reply">
+							<Icon name="star" /> <Headshot size={18} person={user} />
+							<div className="pinned-reply-body">
+								no; the javascript byte compiler optimizes it away
+							</div>
+						</div>,
+						<div className="pinned-reply">
+							<Icon name="star" /> <Headshot size={18} person={user} />
+							<div className="pinned-reply-body">are you sure?</div>
+						</div>
+					]}
 				{codemark.title && codemark.title.startsWith("let's avoid") && (
-					<div>
-						<Icon name="star" /> {<Headshot size={18} person={user} />}
-						<span style={{ opacity: 0.5 }}>i'll grab this in the next sprint</span>
+					<div className="pinned-reply">
+						<Icon name="star" /> <Headshot size={18} person={user} />
+						<div className="pinned-reply-body">i'll grab this in the next sprint</div>
 					</div>
 				)}
 				{codemark.text && codemark.text.startsWith("how does") && (
-					<div>
-						<div className="angle-arrow" />
-						{<Headshot size={18} person={user} />}
-						<div style={{ opacity: 0.5, paddingLeft: "47px", marginTop: "-19px" }}>
+					<div className="pinned-reply">
+						<Icon name="star" /> <Headshot size={18} person={user} />
+						<div className="pinned-reply-body">
 							Sample <code>n</code> random values from a collection using the modern version of the{" "}
 							<b>Fisher-Yates</b> shuffle. If <code>n</code> is not specified, returns a single
 							random element. The internal <code>guard</code> argument allows it to work with{" "}
@@ -388,38 +420,16 @@ export class Codemark extends React.Component<Props, State> {
 	}
 }
 
-// please do not remove this commented-out code, as i occasionally put it back in
-// to do demos & screen grabs -Pez
-// {codemark.text && codemark.text.startsWith("does this") && (
-// 	<div>
-// 		<div className="angle-arrow" />
-// 		{<Headshot size={18} person={user} />}
-// 		<span style={{ opacity: 0.5 }}>
-// 			no; the javascript byte compiler optimizes it away
-// 		</span>
-// 	</div>
-// )}
-// {codemark.title && codemark.title.startsWith("let's avoid") && (
-// 	<div>
-// 		<div className="angle-arrow" />
-// 		{<Headshot size={18} person={user} />}
-// 		<span style={{ opacity: 0.5 }}>i'll grab this in the next sprint</span>
-// 	</div>
-// )}
-// {codemark.text && codemark.text.startsWith("how does") && (
-// 	<div>
-// 		<div className="angle-arrow" />
-// 		{<Headshot size={18} person={user} />}
-// 		<div style={{ opacity: 0.5, paddingLeft: "47px", marginTop: "-19px" }}>
-// 			Sample <code>n</code> random values from a collection using the modern version of
-// 			the <b>Fisher-Yates</b> shuffle. If <code>n</code> is not specified, returns a
-// 			single random element. The internal <code>guard</code> argument allows it to work
-// 			with <code>map</code>.
-// 		</div>
-// 	</div>
-// )}
+const EMPTY_OBJECT = {};
+
+const mapStateToProps = state => {
+	const { preferences } = state;
+	return {
+		bookmarkKeybindings: preferences.bookmarkKeybindings || EMPTY_OBJECT
+	};
+};
 
 export default connect(
-	null,
-	{ setCodemarkStatus }
+	mapStateToProps,
+	{ setCodemarkStatus, setUserPreference }
 )(Codemark);

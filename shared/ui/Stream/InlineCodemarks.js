@@ -76,6 +76,12 @@ export class SimpleInlineCodemarks extends Component {
 					Create Issue <span className="keybinding extra-pad">{modifier}</span>
 					<span className="keybinding">i</span>
 				</span>
+			),
+			about: (
+				<span>
+					Get Info<span className="keybinding extra-pad">{modifier}</span>
+					<span className="keybinding">a</span>
+				</span>
 			)
 		};
 		this.docMarkersByStartLine = {};
@@ -372,6 +378,14 @@ export class SimpleInlineCodemarks extends Component {
 						align={{ offset: [-3, 10] }}
 						delay={1}
 					/>,
+					// <Icon
+					// 	onClick={e => this.handleClickPlus(e, "about", lineNum0, top)}
+					// 	name="about"
+					// 	title={this.titles.about}
+					// 	placement="bottomLeft"
+					// 	align={{ offset: [-3, 10] }}
+					// 	delay={1}
+					// />,
 					<Icon
 						onClick={e => this.handleClickPlus(e, "link", lineNum0, top)}
 						name="link"
