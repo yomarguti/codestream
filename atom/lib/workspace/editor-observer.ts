@@ -78,7 +78,10 @@ export class WorkspaceEditorObserver implements Disposable {
 					)
 				);
 			} else {
-				editor.findMarkers({ containsBufferRange: range }).forEach(marker => {
+				const markers = editor.findMarkers({
+					startBufferRow: range.start.row,
+				});
+				markers.forEach(marker => {
 					this.removeHighlight((marker as any).id);
 				});
 			}
