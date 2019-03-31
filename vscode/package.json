@@ -220,6 +220,26 @@
                 "command": "codestream.toggle",
                 "title": "Toggle CodeStream",
                 "category": "CodeStream"
+            },
+            {
+                "command": "codestream.gotoCodemark1",
+                "title": "Jump to codemark #1",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.gotoCodemark2",
+                "title": "Jump to codemark #2",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.gotoCodemark3",
+                "title": "Jump to codemark #3",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.gotoCodemark4",
+                "title": "Jump to codemark #4",
+                "category": "CodeStream"
             }
         ],
         "keybindings": [
@@ -320,6 +340,42 @@
                 },
                 "key": "ctrl+shift+/ shift+p",
                 "mac": "ctrl+/ shift+p",
+                "when": "editorTextFocus && codestream:status == signedIn"
+            },
+            {
+                "command": "codestream.gotoCodemark1",
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "ctrl+shift+/ 1",
+                "mac": "ctrl+/ 1",
+                "when": "editorTextFocus && codestream:status == signedIn"
+            },
+            {
+                "command": "codestream.gotoCodemark2",
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "ctrl+shift+/ 2",
+                "mac": "ctrl+/ 2",
+                "when": "editorTextFocus && codestream:status == signedIn"
+            },
+            {
+                "command": "codestream.gotoCodemark3",
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "ctrl+shift+/ 3",
+                "mac": "ctrl+/ 3",
+                "when": "editorTextFocus && codestream:status == signedIn"
+            },
+            {
+                "command": "codestream.gotoCodemark4",
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "ctrl+shift+/ 4",
+                "mac": "ctrl+/ 4",
                 "when": "editorTextFocus && codestream:status == signedIn"
             }
         ],
