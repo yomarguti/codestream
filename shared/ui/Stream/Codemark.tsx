@@ -60,7 +60,6 @@ interface Props {
 	capabilities: any;
 	top?: Number;
 	showLabelText?: boolean;
-	threadDivs?: any;
 	codemarkKeybindings: string[];
 	setUserPreference: Function;
 }

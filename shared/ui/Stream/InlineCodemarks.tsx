@@ -1,4 +1,3 @@
-// @ts-check
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import * as userSelectors from "../store/users/reducer";
@@ -14,7 +13,9 @@ import {
 	EditorRevealRangeRequestType,
 	EditorSelectRangeRequestType,
 	UpdateConfigurationRequestType,
-	MaxRangeValue
+	MaxRangeValue,
+	EditorSelection,
+	EditorMetrics
 } from "../ipc/webview.protocol";
 import {
 	DocumentMarker,
@@ -26,6 +27,7 @@ import { Range, Position } from "vscode-languageserver-types";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { getCurrentSelection } from "../store/editorContext/reducer";
 import { setCurrentStream } from "../store/context/actions";
+import { CSTeam } from "@codestream/protocols/api";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -37,18 +39,72 @@ import { setCurrentStream } from "../store/context/actions";
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/**
- * @augments {Component<{ textEditorVisibleRanges?: Range[], documentMarkers: DocumentMarker[],[key: string]: any }, {  [key: string]: any }>}
- */
-export class SimpleInlineCodemarks extends Component {
-	disposables = [];
+interface Props {
+	usernames: string[];
+	team: CSTeam;
+	viewInline: boolean;
+	viewHeadshots: boolean;
+	showLabelText: boolean;
+	showClosed: boolean;
+	showUnpinned: boolean;
+	fileNameToFilterFor?: string;
+	textEditorUri?: string;
+	textEditorLineCount: number;
+	firstVisibleLine: number;
+	lastVisibleLine: number;
+	textEditorVisibleRanges?: Range[];
+	textEditorSelection?: EditorSelection;
+	metrics: EditorMetrics;
+	documentMarkers: DocumentMarker[];
+	numUnpinned: number;
+	numClosed: number;
+	capabilities: any; // TODO: remove this
+	fetchDocumentMarkers(uri: string): Promise<void>;
+	postAction(): void;
+	setCurrentStream(...args: any[]): void;
+	threadId?: string;
+	setNewPostEntry(a: string): void;
+	setMultiCompose(...args: any[]): void;
+}
 
-	constructor(props) {
+interface State {
+	lastSelectedLine: number;
+	clickedPlus: boolean;
+	isLoading: boolean;
+	selectedDocMarkerId: string | undefined;
+	numLinesVisible: number;
+	openIconsOnLine: number;
+	query: string | undefined;
+	highlightedLine?: number;
+	numAbove: number;
+	numBelow: number;
+}
+
+export class SimpleInlineCodemarks extends Component<Props, State> {
+	disposables: { dispose(): void }[] = [];
+	titles: {
+		comment: JSX.Element;
+		bookmark: JSX.Element;
+		link: JSX.Element;
+		issue: JSX.Element;
+		about: JSX.Element;
+	};
+	docMarkersByStartLine: {};
+	_scrollDiv: HTMLDivElement | null | undefined;
+
+	constructor(props: Props) {
 		super(props);
 
 		this.state = {
 			isLoading: props.documentMarkers.length === 0,
-			selectedDocMarkerId: null
+			lastSelectedLine: 0,
+			numLinesVisible: 0,
+			clickedPlus: false,
+			selectedDocMarkerId: undefined,
+			query: undefined,
+			openIconsOnLine: -1,
+			numAbove: 0,
+			numBelow: 0
 		};
 
 		const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
@@ -87,7 +143,7 @@ export class SimpleInlineCodemarks extends Component {
 		this.docMarkersByStartLine = {};
 	}
 
-	static getDerivedStateFromProps(props, state) {
+	static getDerivedStateFromProps(props: Props, state: State) {
 		let { textEditorSelection } = props;
 
 		if (!textEditorSelection) {
@@ -126,15 +182,17 @@ export class SimpleInlineCodemarks extends Component {
 			})
 		);
 
-		this.props.fetchDocumentMarkers(this.props.textEditorUri).then(() => {
-			this.setState(state => (state.isLoading ? { isLoading: false } : null));
-		});
+		if (this.props.textEditorUri) {
+			this.props.fetchDocumentMarkers(this.props.textEditorUri).then(() => {
+				this.setState(state => (state.isLoading ? { isLoading: false } : null));
+			});
+		}
 
 		this.setVisibleLinesCount();
 		this.scrollTo(18);
 	}
 
-	componentDidUpdate(prevProps, prevState) {
+	componentDidUpdate(prevProps: Props) {
 		const { textEditorUri } = this.props;
 		if (String(textEditorUri).length > 0 && prevProps.textEditorUri !== textEditorUri) {
 			this.onFileChanged();
@@ -174,7 +232,6 @@ export class SimpleInlineCodemarks extends Component {
 	repositionBelow() {}
 
 	repositionCodemarks() {
-		// @ts-ignore
 		let $codemarkDivs = Array.from(
 			document.querySelectorAll(".codemark.inline, .compose.float-compose")
 		);
@@ -183,30 +240,29 @@ export class SimpleInlineCodemarks extends Component {
 		const $composeDiv = document.getElementsByClassName("compose float-compose");
 
 		if (false && $composeDiv.length === 1) {
-			let bottomOfLastDiv = -30;
-			let runningYAdjustment = 0;
-			for (let $element of $codemarkDivs) {
-				const domRect = $element.getBoundingClientRect();
-				// @ts-ignore
-				const origTop = parseInt($element.dataset.top, 10);
-				const yDiff = bottomOfLastDiv - origTop + 20;
-				const height = domRect.bottom - domRect.top;
-
-				// @ts-ignore
-				const origMargin = parseInt($element.style.marginTop, 10) || 0;
-				if (yDiff > 0) {
-					// @ts-ignore
-					$element.style.marginTop = yDiff + "px";
-					bottomOfLastDiv = origTop + height + yDiff;
-				} else {
-					// @ts-ignore
-					$element.style.marginTop = "0";
-					bottomOfLastDiv = origTop + height;
-				}
-			}
+			// let bottomOfLastDiv = -30;
+			// let runningYAdjustment = 0;
+			// for (let $element of $codemarkDivs) {
+			// const domRect = $element.getBoundingClientRect();
+			// @ts-ignore
+			// const origTop = parseInt($element.dataset.top, 10);
+			// const yDiff = bottomOfLastDiv - origTop + 20;
+			// const height = domRect.bottom - domRect.top;
+			// @ts-ignore
+			// const origMargin = parseInt($element.style.marginTop, 10) || 0;
+			// if (yDiff > 0) {
+			// 	// @ts-ignore
+			// 	$element.style.marginTop = yDiff + "px";
+			// 	bottomOfLastDiv = origTop + height + yDiff;
+			// } else {
+			// 	// @ts-ignore
+			// 	$element.style.marginTop = "0";
+			// 	bottomOfLastDiv = origTop + height;
+			// }
+			// }
 		} else {
 			let bottomOfLastDiv = -30;
-			let runningYAdjustment = 0;
+			// let runningYAdjustment = 0;
 			for (let $element of $codemarkDivs) {
 				const domRect = $element.getBoundingClientRect();
 				// @ts-ignore
@@ -214,8 +270,7 @@ export class SimpleInlineCodemarks extends Component {
 				const yDiff = bottomOfLastDiv - origTop + 20;
 				const height = domRect.bottom - domRect.top;
 
-				// @ts-ignore
-				const origMargin = parseInt($element.style.marginTop, 10) || 0;
+				// const origMargin = parseInt($element.style.marginTop, 10) || 0;
 				if (yDiff > 0) {
 					// @ts-ignore
 					$element.style.marginTop = yDiff + "px";
@@ -231,10 +286,12 @@ export class SimpleInlineCodemarks extends Component {
 
 	async onFileChanged() {
 		const { textEditorUri, documentMarkers } = this.props;
-		if (documentMarkers.length === 0)
+		if (textEditorUri && documentMarkers.length === 0) {
 			this.setState(state => (state.isLoading ? null : { isLoading: true }));
-		await this.props.fetchDocumentMarkers(textEditorUri);
-		this.setState(state => (state.isLoading ? { isLoading: false } : null));
+
+			await this.props.fetchDocumentMarkers(textEditorUri!);
+			this.setState(state => (state.isLoading ? { isLoading: false } : null));
+		}
 	}
 
 	setVisibleLinesCount = () => {
@@ -255,11 +312,7 @@ export class SimpleInlineCodemarks extends Component {
 		}
 	};
 
-	/**
-	 * @param {Range[] | undefined} range1
-	 * @param {Range[] | undefined} range2
-	 */
-	compareStart(range1, range2) {
+	compareStart(range1?: Range[], range2?: Range[]) {
 		if (range1 == null || range1.length === 0 || range2 == null || range2.length === 0) return true;
 		const start1 = range1[0].start.line;
 		const start2 = range2[0].start.line;
@@ -312,10 +365,9 @@ export class SimpleInlineCodemarks extends Component {
 										onMouseEnter={this.handleHighlightCodemark}
 										onMouseLeave={this.handleUnhighlightCodemark}
 										action={this.props.postAction}
-										query={this.state.q}
+										query={this.state.query}
 										viewHeadshots={this.props.viewHeadshots}
 										capabilities={this.props.capabilities}
-										threadDivs={this.props.threadDivs}
 									/>
 								);
 							})}
@@ -491,7 +543,7 @@ export class SimpleInlineCodemarks extends Component {
 		const fontSize = metrics && metrics.fontSize ? metrics.fontSize : "12px";
 		let rangeStartOffset = 0;
 
-		const paddingTop = metrics.margins ? metrics.margins.top : 0;
+		const paddingTop = (metrics.margins && metrics.margins.top) || 0;
 		// we add two here because the editor only reports *entirely* visible lines,
 		// so there could theoretically be one line that is 99% visible at the top,
 		// and also one line that is 99% visible at the bottom, both at the same time.
@@ -605,12 +657,11 @@ export class SimpleInlineCodemarks extends Component {
 												onMouseEnter={this.handleHighlightCodemark}
 												onMouseLeave={this.handleUnhighlightCodemark}
 												action={this.props.postAction}
-												query={this.state.q}
+												query={this.state.query}
 												lineNum={lineNum}
 												style={{ top: top + "px" }}
 												top={top}
 												capabilities={this.props.capabilities}
-												threadDivs={this.props.threadDivs}
 											/>
 										);
 									} else {
@@ -639,13 +690,13 @@ export class SimpleInlineCodemarks extends Component {
 
 		const { textEditorVisibleRanges = [] } = this.props;
 		const topLine = textEditorVisibleRanges[0].start.line;
-		const bottomLine = textEditorVisibleRanges[textEditorVisibleRanges.length - 1].end.line;
+		// const bottomLine = textEditorVisibleRanges[textEditorVisibleRanges.length - 1].end.line;
 		const revealLine = top <= 5 ? topLine - 1 : top >= 20 ? topLine + 1 : topLine;
 
 		if (revealLine === topLine) return;
 
 		HostApi.instance.send(EditorRevealRangeRequestType, {
-			uri: this.props.textEditorUri,
+			uri: this.props.textEditorUri!,
 			range: Range.create(revealLine, 0, revealLine, 0),
 			preserveFocus: true,
 			atTop: true
@@ -710,8 +761,9 @@ export class SimpleInlineCodemarks extends Component {
 	clearSelection = () => {
 		const { textEditorSelection } = this.props;
 		if (
-			textEditorSelection.start.line !== textEditorSelection.end.line ||
-			textEditorSelection.start.character !== textEditorSelection.end.character
+			textEditorSelection &&
+			(textEditorSelection.start.line !== textEditorSelection.end.line ||
+				textEditorSelection.start.character !== textEditorSelection.end.character)
 		) {
 			const position = Position.create(
 				textEditorSelection.cursor.line,
@@ -719,7 +771,7 @@ export class SimpleInlineCodemarks extends Component {
 			);
 			const range = Range.create(position, position);
 			HostApi.instance.send(EditorSelectRangeRequestType, {
-				uri: this.props.textEditorUri,
+				uri: this.props.textEditorUri!,
 				range: range,
 				preserveFocus: true
 			});
@@ -730,7 +782,7 @@ export class SimpleInlineCodemarks extends Component {
 
 	handleClickField = event => {
 		if (event && event.target && event.target.id === "inline-codemarks-field") {
-			this.setState({ selectedDocMarkerId: null });
+			this.setState({ selectedDocMarkerId: undefined });
 			this.props.setCurrentStream(null, null);
 			this.clearSelection();
 		}
@@ -768,7 +820,7 @@ export class SimpleInlineCodemarks extends Component {
 				const lineNum = parseInt(line, 10) - 1;
 				if (!done && lineNum < firstVisibleLine) {
 					HostApi.instance.send(EditorRevealRangeRequestType, {
-						uri: this.props.textEditorUri,
+						uri: this.props.textEditorUri!,
 						range: Range.create(lineNum, 0, lineNum, 0),
 						preserveFocus: true,
 						atTop: true
@@ -779,7 +831,7 @@ export class SimpleInlineCodemarks extends Component {
 	};
 
 	showBelow = () => {
-		const { lastVisibleLine = [] } = this.props;
+		const { lastVisibleLine = [], textEditorUri } = this.props;
 
 		let done = false;
 		Object.keys(this.docMarkersByStartLine)
@@ -788,7 +840,7 @@ export class SimpleInlineCodemarks extends Component {
 				const lineNum = parseInt(line, 10) + 1;
 				if (!done && lineNum > lastVisibleLine) {
 					HostApi.instance.send(EditorRevealRangeRequestType, {
-						uri: this.props.textEditorUri,
+						uri: textEditorUri!,
 						range: Range.create(lineNum, 0, lineNum, 0),
 						preserveFocus: true
 					});
@@ -806,10 +858,11 @@ export class SimpleInlineCodemarks extends Component {
 
 		const mappedLineNum = this.mapLine0ToVisibleRange(lineNum0);
 
-		let range,
-			setSelection = false;
+		let range: Range | undefined;
+		let setSelection = false;
 		if (
 			mappedLineNum === openIconsOnLine &&
+			textEditorSelection &&
 			// if these aren't equal, we have an active selection
 			(textEditorSelection.start.line !== textEditorSelection.end.line ||
 				textEditorSelection.start.character !== textEditorSelection.end.character)
@@ -890,7 +943,7 @@ export class SimpleInlineCodemarks extends Component {
 		}
 
 		HostApi.instance.send(EditorHighlightRangeRequestType, {
-			uri: this.props.textEditorUri,
+			uri: this.props.textEditorUri!,
 			range: range,
 			highlight: highlight
 		});
@@ -944,6 +997,7 @@ export class SimpleInlineCodemarks extends Component {
 		const mappedLineNum = this.mapLine0ToVisibleRange(line0);
 		if (
 			mappedLineNum === openIconsOnLine &&
+			textEditorSelection &&
 			(textEditorSelection.start.line !== textEditorSelection.end.line ||
 				textEditorSelection.start.character !== textEditorSelection.end.character)
 		) {
@@ -951,7 +1005,7 @@ export class SimpleInlineCodemarks extends Component {
 		}
 
 		HostApi.instance.send(EditorHighlightRangeRequestType, {
-			uri: this.props.textEditorUri,
+			uri: this.props.textEditorUri!,
 			range: Range.create(mappedLineNum, 0, mappedLineNum, MaxRangeValue),
 			highlight: highlight
 		});
@@ -971,7 +1025,7 @@ export class SimpleInlineCodemarks extends Component {
 const EMPTY_ARRAY = [];
 
 const mapStateToProps = state => {
-	const { session, capabilities, context, editorContext, teams, configs, documentMarkers } = state;
+	const { capabilities, context, editorContext, teams, configs, documentMarkers } = state;
 
 	const docMarkers = documentMarkers[editorContext.textEditorUri] || EMPTY_ARRAY;
 	const numUnpinned = docMarkers.filter(d => !d.codemark.pinned).length;
@@ -979,11 +1033,14 @@ const mapStateToProps = state => {
 
 	const textEditorVisibleRanges = editorContext.textEditorVisibleRanges || EMPTY_ARRAY;
 	const numVisibleRanges = textEditorVisibleRanges.length;
-	const lastVisibleRange = textEditorVisibleRanges[numVisibleRanges - 1];
-	const lastVisibleLine = lastVisibleRange ? lastVisibleRange.end.line : 1;
-	const firstVisibleLine = textEditorVisibleRanges.length
-		? textEditorVisibleRanges[0].start.line
-		: 1;
+
+	let lastVisibleLine = 1;
+	let firstVisibleLine = 1;
+	if (numVisibleRanges > 0) {
+		const lastVisibleRange = textEditorVisibleRanges[numVisibleRanges - 1];
+		lastVisibleLine = lastVisibleRange!.end.line;
+		firstVisibleLine = textEditorVisibleRanges[0].start.line;
+	}
 
 	return {
 		usernames: userSelectors.getUsernames(state),
@@ -995,7 +1052,7 @@ const mapStateToProps = state => {
 		showUnpinned: configs.showArchivedCodemarks,
 		fileNameToFilterFor: editorContext.activeFile || editorContext.lastActiveFile,
 		textEditorUri: editorContext.textEditorUri,
-		textEditorLineCount: editorContext.textEditorLineCount,
+		textEditorLineCount: editorContext.textEditorLineCount || 0,
 		firstVisibleLine,
 		lastVisibleLine,
 		textEditorVisibleRanges,
