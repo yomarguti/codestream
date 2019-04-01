@@ -5,6 +5,7 @@ import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.extensions.PluginId
+import com.intellij.util.net.HttpConfigurable
 import protocols.agent.Extension
 import protocols.agent.Ide
 import protocols.agent.ProxySettings
@@ -137,9 +138,14 @@ class SettingsService : PersistentStateComponent<SettingsServiceState> {
 
     val proxySettings
         get(): ProxySettings? {
-            if (state.proxySupport == "override")
-                return ProxySettings(state.proxyUrl, state.proxyStrictSSL)
-
-            return null
+            return when (state.proxySupport) {
+                "on" -> {
+                    val host = HttpConfigurable.getInstance().PROXY_HOST ?: return null
+                    val port = HttpConfigurable.getInstance().PROXY_PORT
+                    ProxySettings("$host:$port", state.proxyStrictSSL)
+                }
+                "override" -> ProxySettings(state.proxyUrl, state.proxyStrictSSL)
+                else -> null
+            }
         }
 }
