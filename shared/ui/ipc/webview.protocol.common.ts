@@ -45,6 +45,14 @@ export interface EditorContext {
 	textEditorLineCount?: number;
 }
 
+export interface WebviewConfigs {
+	showHeadshots: boolean;
+	debug: boolean;
+	email?: string;
+	serverUrl: string;
+	viewCodemarksInline: boolean;
+}
+
 export interface IpcHost {
 	postMessage<R>(message: WebviewIpcMessage, targetOrgigin: string, transferable?: any): Promise<R>;
 	postMessage<R>(message: WebviewIpcMessage): Promise<R>;
