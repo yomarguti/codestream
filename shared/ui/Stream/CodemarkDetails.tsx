@@ -1,21 +1,14 @@
-import cx from "classnames";
 import React from "react";
 import * as Path from "path-browserify";
 import { connect } from "react-redux";
 import { setCodemarkStatus } from "./actions";
-import Headshot from "./Headshot";
-import Icon from "./Icon";
-import Menu from "./Menu";
 import ScrollBox from "./ScrollBox";
 import PostList from "./PostList";
-import { markdownify } from "./Markdowner";
 import { MessageInput } from "./MessageInput";
 import { getTeamMembers } from "../store/users/reducer";
 import PostDetails from "./PostDetails";
-import { PostCompose } from "./PostCompose";
 import { escapeHtml } from "../utils";
-import { DocumentMarker, CodemarkPlus } from "@codestream/protocols/agent";
-import { CodemarkType } from "@codestream/protocols/api";
+import { CodemarkPlus } from "@codestream/protocols/agent";
 import { prettyPrintOne } from "code-prettify";
 import { createPost } from "./actions";
 

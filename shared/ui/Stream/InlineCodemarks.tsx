@@ -27,7 +27,6 @@ import {
 import { Range, Position } from "vscode-languageserver-types";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { getCurrentSelection } from "../store/editorContext/reducer";
-import { setCurrentStream } from "../store/context/actions";
 import { CSTeam } from "@codestream/protocols/api";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,7 +61,6 @@ interface Props {
 	capabilities: any; // TODO: remove this
 	fetchDocumentMarkers(uri: string): Promise<void>;
 	postAction(): void;
-	setCurrentStream(...args: any[]): void;
 	threadId?: string;
 	setNewPostEntry(a: string): void;
 	setMultiCompose(...args: any[]): void;
@@ -781,10 +779,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		}
 	};
 
-	handleClickField = event => {
-		if (event && event.target && event.target.id === "inline-codemarks-field") {
-			this.setState({ selectedDocMarkerId: undefined });
-			this.props.setCurrentStream(null, null);
+	handleClickField = (event: React.SyntheticEvent<HTMLDivElement>) => {
+		if (event && event.target && (event.target as any).id === "inline-codemarks-field") {
+			this.setState(state =>
+				state.selectedDocMarkerId ? { selectedDocMarkerId: undefined } : null
+			);
 			this.clearSelection();
 		}
 	};
@@ -929,8 +928,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				// TODO:
 			}
 		}
-		this.props.setCurrentStream(codemark.streamId, codemark.parentPostId || codemark.postId);
-		this.highlightCode(docMarker, true);
 		this.setState({ selectedDocMarkerId: docMarker.id });
 		this.clearSelection();
 	};
@@ -1073,5 +1070,5 @@ const mapStateToProps = state => {
 
 export default connect(
 	mapStateToProps,
-	{ fetchDocumentMarkers, setCurrentStream }
+	{ fetchDocumentMarkers }
 )(SimpleInlineCodemarks);
