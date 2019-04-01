@@ -61,7 +61,6 @@ interface Props {
 	capabilities: any; // TODO: remove this
 	fetchDocumentMarkers(uri: string): Promise<void>;
 	postAction(): void;
-	threadId?: string;
 	setNewPostEntry(a: string): void;
 	setMultiCompose(...args: any[]): void;
 }
@@ -1063,8 +1062,7 @@ const mapStateToProps = state => {
 		documentMarkers: docMarkers,
 		numUnpinned,
 		numClosed,
-		capabilities,
-		threadId: context.threadId
+		capabilities
 	};
 };
 
