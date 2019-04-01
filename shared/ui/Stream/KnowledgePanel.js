@@ -10,10 +10,7 @@ import Filter from "./Filter";
 import Codemark from "./Codemark";
 import { HostApi } from "../webview-api";
 import { DocumentFromMarkerRequestType, TelemetryRequestType } from "@codestream/protocols/agent";
-import {
-	EditorRevealRangeRequestType,
-	UpdateConfigurationRequestType
-} from "../ipc/webview.protocol";
+import { EditorRevealRangeRequestType } from "../ipc/webview.protocol";
 import { includes as _includes, sortBy as _sortBy } from "lodash-es";
 import { setCurrentStream } from "../store/context/actions";
 

@@ -221,7 +221,7 @@ export class Codemark extends React.Component<Props, State> {
 	};
 
 	renderCollapsedCodemark() {
-		const { codemark, inline, selected } = this.props;
+		const { codemark } = this.props;
 		const file = codemark.markers && codemark.markers[0].file;
 
 		if (!codemark) return null;
@@ -273,9 +273,8 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	renderInlineCodemark() {
-		const { codemark, inline, selected } = this.props;
+		const { codemark, selected } = this.props;
 		const { menuOpen, menuTarget } = this.state;
-		const file = codemark.markers && codemark.markers[0].file;
 
 		const user = {
 			username: "pez",
