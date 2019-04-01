@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using CodeStream.VisualStudio.Core;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace CodeStream.VisualStudio.Models
 {
@@ -38,10 +40,17 @@ namespace CodeStream.VisualStudio.Models
         }
     }
 
+	[JsonConverter(typeof(CamelCaseStringEnumConverter))]
+	public enum ChangeReason {
+		Document,
+		Codemarks
+	}
+
     public class DidChangeDocumentMarkersNotification
     {
         public TextDocumentIdentifier TextDocument { get; set; }
-    }
+		public ChangeReason? Reason { get; set; }
+	}
 
     public class DidChangeDocumentMarkersNotificationType : NotificationType<DidChangeDocumentMarkersNotification>
     {

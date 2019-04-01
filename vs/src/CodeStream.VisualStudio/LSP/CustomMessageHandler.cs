@@ -99,9 +99,11 @@ namespace CodeStream.VisualStudio.LSP {
 				}
 			});
 
-			//allow the response to the webview to happen immediately, but do not send
-			//this event always -- it will try to re-render margins, which can be cpu heavy
-			_documentMarkerChangedSubject.OnNext(new DocumentMarkerChangedSubjectArgs(uriString));
+			if (@params.Reason == ChangeReason.Codemarks) {
+				//allow the response to the webview to happen immediately, but do not send
+				//this event always -- it will try to re-render margins, which can be cpu heavy
+				_documentMarkerChangedSubject.OnNext(new DocumentMarkerChangedSubjectArgs(uriString));
+			}
 		}
 
 		[JsonRpcMethod(DidChangeVersionCompatibilityNotificationType.MethodName)]
