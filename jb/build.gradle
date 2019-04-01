@@ -53,6 +53,10 @@ intellij {
 //    plugins "com.github.gtache.lsp:1.5.0"
 }
 
+runIde {
+//    jvmArgs '-Dsun.java2d.uiScale.enabled=false'
+}
+
 patchPluginXml {
     changeNotes """
       Add change notes here.<br>

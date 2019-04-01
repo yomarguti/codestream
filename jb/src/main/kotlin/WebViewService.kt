@@ -111,7 +111,7 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
 
     private fun createBrowser(router: WebViewRouter): Browser {
         configureJxBrowser()
-        val browser = Browser(createBrowserContext())
+        val browser = Browser(BrowserType.LIGHTWEIGHT, createBrowserContext())
         browser.dialogHandler = this
         browser.loadHandler = this
         browser.context.networkService.resourceHandler = this
@@ -135,6 +135,7 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
             "--software-rendering-fps=60",
             "--disable-web-security",
             "--allow-file-access-from-files"
+            //, "--force-device-scale-factor=1.75"
         )
     }
 
