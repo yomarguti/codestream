@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.51.0] - 2019-3-29
+## [0.51.0] - 2019-4-1
 
 ### Changed
 
@@ -10,7 +10,7 @@
 ### Fixed
 
 - Fixes [#42](https://github.com/TeamCodeStream/CodeStream/issues/42) &mdash; VS Slack black text
-- Fixes an issue with CodeStream causing laggy typing 
+- Fixes an issue with CodeStream causing laggy typing
 
 ## [0.50.0] - 2019-3-21
 
