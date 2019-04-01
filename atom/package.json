@@ -39,6 +39,10 @@
 		"showMarkers": {
 			"type": "boolean",
 			"default": true
+		},
+		"autoHideMarkers": {
+			"type": "boolean",
+			"default": true
 		}
 	},
 	"scripts": {

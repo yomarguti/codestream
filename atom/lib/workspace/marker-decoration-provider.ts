@@ -38,6 +38,7 @@ export class MarkerDecorationProvider implements Disposable {
 		() => new CompositeDisposable()
 	);
 	private sessionSubscriptions = new CompositeDisposable();
+	private isDisabled = false;
 
 	constructor(session: WorkspaceSession, viewController: ViewController) {
 		this.session = session;
@@ -77,6 +78,7 @@ export class MarkerDecorationProvider implements Disposable {
 	}
 
 	private onActiveEditor = (editor?: TextEditor) => {
+		if (this.isDisabled) return;
 		if (editor && editor.getPath() && !this.observedEditors.has(editor.id)) {
 			const id = editor.id;
 			this.observedEditors.set(id, editor);
@@ -183,6 +185,20 @@ export class MarkerDecorationProvider implements Disposable {
 		this.editorResources.clear();
 		this.sessionSubscriptions.dispose();
 		this.sessionSubscriptions = new CompositeDisposable();
+	}
+
+	disable() {
+		if (this.isDisabled) return;
+
+		this.isDisabled = true;
+		this.reset();
+	}
+
+	enable() {
+		if (this.isDisabled) {
+			this.isDisabled = false;
+			this.initialize();
+		}
 	}
 
 	dispose() {

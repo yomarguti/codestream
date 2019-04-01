@@ -6,6 +6,7 @@ export interface ConfigSchema {
 	team: string;
 	avatars: boolean;
 	showMarkers: boolean;
+	autoHideMarkers: boolean;
 }
 
 const KEYS_FOR_WEBVIEW = ["avatars", "showMarkers"];

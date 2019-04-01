@@ -29,6 +29,7 @@ import {
 	WebviewIpcMessage,
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
+	WebviewPanels,
 } from "@codestream/protocols/webview";
 import { CompositeDisposable, Disposable, Emitter, Point, Range, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
@@ -36,6 +37,7 @@ import { ConfigSchema } from "configs";
 import { shell } from "electron";
 import { InMemorySettings } from "types/package";
 import { NotificationType } from "vscode-languageserver-protocol";
+import { Container } from "workspace/container";
 import {
 	BootstrapRequestType as AgentBootstrapRequestType,
 	DidChangeDataNotificationType,
@@ -401,6 +403,12 @@ export class CodestreamView {
 			}
 			case WebviewDidChangeContextNotificationType.method: {
 				this.emitter.emit(DID_CHANGE_STATE, event.params.context);
+				const configs = this.session.configManager;
+				if (configs.get("showMarkers") === true && configs.get("autoHideMarkers") === true) {
+					if (event.params.context.panelStack[0] === WebviewPanels.CodemarksForFile) {
+						Container.markerDecorationProvider.disable();
+					} else Container.markerDecorationProvider.enable();
+				}
 				break;
 			}
 		}

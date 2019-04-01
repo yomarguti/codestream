@@ -1,6 +1,7 @@
 import { ChangeDataType } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
 import { CompositeDisposable, Disposable } from "atom";
+import { Container } from "workspace/container";
 import { Environment, PD_CONFIG } from "./env-utils";
 import { PackageState } from "./types/package";
 import { StatusBar } from "./types/package-services/status-bar";
@@ -26,6 +27,7 @@ class CodestreamPackage {
 			this.workspaceSession,
 			this.viewController
 		);
+		Container.initialize(this.markerDecorationProvider);
 		this.initialize();
 	}
 
