@@ -25,6 +25,7 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.util.DocumentUtil
+import com.intellij.util.ui.UIUtil
 import kotlinx.coroutines.*
 import org.eclipse.lsp4j.*
 import protocols.agent.DocumentMarker
@@ -34,7 +35,9 @@ import protocols.webview.EditorMargins
 import protocols.webview.EditorMetrics
 import protocols.webview.EditorSelection
 import java.awt.Font
+import java.awt.HeadlessException
 import java.awt.Point
+import java.awt.Toolkit
 import java.io.File
 import java.net.URI
 import javax.swing.Icon
@@ -462,7 +465,7 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
                 newEditor?.file?.path,
                 document.uri,
                 EditorMetrics(
-                    colorsScheme.editorFontSize,
+                    Math.round(colorsScheme.editorFontSize / getFontScale()),
                     lineHeight,
                     margins
                 ),
@@ -488,7 +491,7 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
                     editor.document.uri,
                     editor.selections,
                     EditorMetrics(
-                        editor.colorsScheme.editorFontSize,
+                        Math.round(editor.colorsScheme.editorFontSize / getFontScale()),
                         editor.lineHeight,
                         editor.margins
                     )
@@ -675,6 +678,23 @@ private fun Editor.isRangeVisible(range: Range): Boolean {
     val firstRange = ranges.first()
     val lastRange = ranges.last()
     return range.start.line >= firstRange.start.line && range.end.line <= lastRange.end.line
+}
+
+fun getFontScale(): Float {
+    if (UIUtil.isJreHiDPIEnabled()) {
+        return 1F
+    }
+
+    val dpi = try {
+        Toolkit.getDefaultToolkit().screenResolution
+    } catch (ignored: HeadlessException) {
+        96
+    }
+    return discreteScale((dpi / 96).toFloat())
+}
+
+fun discreteScale(scale: Float): Float {
+    return Math.round(scale / .25F) * .25F
 }
 
 
