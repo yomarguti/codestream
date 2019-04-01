@@ -21,7 +21,8 @@ import {
 	DocumentMarker,
 	TelemetryRequestType,
 	DidChangeDocumentMarkersNotificationType,
-	DocumentFromMarkerRequestType
+	DocumentFromMarkerRequestType,
+	CodemarkPlus
 } from "@codestream/protocols/agent";
 import { Range, Position } from "vscode-languageserver-types";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
@@ -892,7 +893,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		// setTimeout(() => this.props.focusInput(), 500);
 	};
 
-	handleClickCodemark = async (codemark, docMarker) => {
+	handleClickCodemark = async (codemark: CodemarkPlus, docMarker: DocumentMarker) => {
+		if (docMarker.id === this.state.selectedDocMarkerId) {
+			return this.setState({ selectedDocMarkerId: undefined });
+		}
+
 		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Codemark Clicked",
 			properties: {
@@ -900,7 +905,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			}
 		});
 
-		let markerId;
+		let markerId: string | undefined;
 		if (codemark.markers) {
 			markerId = codemark.markers[0].id;
 		} else if (codemark.markerIds) {
