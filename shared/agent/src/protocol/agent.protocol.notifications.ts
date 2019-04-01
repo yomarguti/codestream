@@ -118,6 +118,7 @@ export const DidChangeDataNotificationType = new NotificationType<DidChangeDataN
 
 export interface DidChangeDocumentMarkersNotification {
 	textDocument: TextDocumentIdentifier;
+	reason: "document" | "codemarks";
 }
 
 export const DidChangeDocumentMarkersNotificationType = new NotificationType<

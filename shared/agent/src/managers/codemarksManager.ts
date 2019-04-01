@@ -50,7 +50,8 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 					this.session.agent.sendNotification(DidChangeDocumentMarkersNotificationType, {
 						textDocument: {
 							uri
-						}
+						},
+						reason: "codemarks"
 					});
 				}
 			}

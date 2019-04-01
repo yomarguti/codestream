@@ -29,7 +29,8 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 					this.session.agent.sendNotification(DidChangeDocumentMarkersNotificationType, {
 						textDocument: {
 							uri
-						}
+						},
+						reason: "codemarks"
 					});
 				}
 			}

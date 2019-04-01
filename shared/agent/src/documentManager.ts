@@ -1,11 +1,12 @@
 "use strict";
+import { CodeStreamAgent } from "agent";
 import {
-	Connection,
 	Disposable,
 	TextDocument,
 	TextDocumentChangeEvent,
 	TextDocuments
 } from "vscode-languageserver";
+import URI from "vscode-uri";
 import { DidChangeDocumentMarkersNotificationType } from "./protocol/agent.protocol";
 import { Disposables } from "./system";
 
@@ -18,7 +19,10 @@ export class DocumentManager implements Disposable {
 
 	private readonly _normalizedUriLookup = new Map<string, string>();
 
-	constructor(private readonly _documents: TextDocuments, private _connection: Connection) {
+	constructor(
+		private readonly _documents: TextDocuments,
+		private readonly _agent: CodeStreamAgent
+	) {
 		this._isWindows = process.platform === "win32";
 
 		this._disposable = Disposables.from(
@@ -26,7 +30,7 @@ export class DocumentManager implements Disposable {
 			this._documents.onDidChangeContent(this.onContentChanged)
 		);
 
-		this._documents.listen(_connection);
+		this._documents.listen(_agent.connection);
 	}
 
 	dispose() {
@@ -34,8 +38,9 @@ export class DocumentManager implements Disposable {
 	}
 
 	private onContentChanged = (e: TextDocumentChangeEvent) => {
-		this._connection.sendNotification(DidChangeDocumentMarkersNotificationType, {
-			textDocument: { uri: e.document.uri }
+		this._agent.sendNotification(DidChangeDocumentMarkersNotificationType, {
+			textDocument: { uri: URI.parse(e.document.uri).toString() },
+			reason: "document"
 		});
 	}
 
