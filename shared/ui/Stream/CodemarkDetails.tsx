@@ -69,17 +69,17 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		});
 	};
 
-	handleOnChange = text => {
+	handleOnChange = (text: string) => {
 		this.setState({ text: text });
 	};
 
 	render() {
 		const { codemark, capabilities } = this.props;
 
-		const threadId = codemark ? codemark.postId : "";
+		const threadId = codemark.postId || "";
 		return (
 			<div className="codemark-details">
-				{this.renderCodeblock(codemark)}
+				{this.renderCodeblock()}
 				<PostDetails codemark={codemark} capabilities={capabilities} />
 				<div className="replies">
 					<div className="shadow-overlay">
@@ -98,7 +98,6 @@ export class CodemarkDetails extends React.Component<Props, State> {
 									isThread
 									threadId={threadId}
 									teamId={this.props.teamId}
-									hideParentPost={true}
 									skipFirstPost={true}
 								/>
 							</ScrollBox>
@@ -127,10 +126,13 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		this.props.onSubmitPost(...args);
 	};
 
-	renderCodeblock(codemark) {
+	renderCodeblock() {
+		const { codemark } = this.props;
 		const markers = codemark.markers;
 		if (!markers) return null;
-		const marker = codemark.markers[0];
+		const marker = codemark.markers![0];
+		if (marker === undefined) return;
+
 		const path = marker.file || "";
 		let extension = Path.extname(path).toLowerCase();
 		if (extension.startsWith(".")) {
@@ -138,11 +140,14 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		}
 
 		let startLine = 1;
-		if (marker.range) {
+		// `range` is not a property of CSMarker
+		/* if (marker.range) {
 			startLine = marker.range.start.line;
 		} else if (marker.location) {
 			startLine = marker.location[0];
-		} else if (marker.locationWhenCreated) {
+		} else */ if (
+			marker.locationWhenCreated
+		) {
 			startLine = marker.locationWhenCreated[0];
 		}
 
@@ -161,7 +166,6 @@ const mapStateToProps = state => {
 		editorContext,
 		users,
 		teams,
-		posts,
 		services
 	} = state;
 
