@@ -14,31 +14,12 @@ import { getTeamMembers } from "../store/users/reducer";
 import PostDetails from "./PostDetails";
 import { PostCompose } from "./PostCompose";
 import { escapeHtml } from "../utils";
-import { DocumentMarker } from "@codestream/protocols/agent";
+import { DocumentMarker, CodemarkPlus } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
 import { prettyPrintOne } from "code-prettify";
 import { createPost } from "./actions";
 
 const PostListJs: any = PostList;
-
-interface CodemarkEntity {
-	id: string;
-	color: string;
-	type: CodemarkType;
-	createdAt: number;
-	streamId: string;
-	version: number;
-	postId?: string;
-	parentPostId?: string;
-	text?: string;
-	title?: string;
-	markers?: {
-		file?: string;
-	};
-	status?: string;
-	creatorId?: string;
-	pinned?: boolean;
-}
 
 interface State {
 	editingPostId?: string;
@@ -46,7 +27,7 @@ interface State {
 }
 
 interface Props {
-	codemark?: CodemarkEntity;
+	codemark: CodemarkPlus;
 	teammates?: any;
 	currentUserId?: any;
 	slashCommands?: any;

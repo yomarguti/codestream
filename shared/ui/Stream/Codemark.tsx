@@ -8,34 +8,13 @@ import Menu from "./Menu";
 import { markdownify } from "./Markdowner";
 import Timestamp from "./Timestamp";
 import CodemarkDetails from "./CodemarkDetails";
-import { DocumentMarker } from "@codestream/protocols/agent";
+import { DocumentMarker, CodemarkPlus } from "@codestream/protocols/agent";
 import { CodemarkType, CSUser } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
 import { UpdateConfigurationRequestType } from "@codestream/protocols/webview";
-import { validateSignup } from "../Login/actions";
 import { range } from "../utils";
 
-// TODO: Why not use CSCodemark here? or CodemarkPlus?
-interface CodemarkEntity {
-	id: string;
-	color: string;
-	type: CodemarkType;
-	createdAt: number;
-	streamId: string;
-	version: number;
-	postId?: string;
-	parentPostId?: string;
-	text?: string;
-	title?: string;
-	markers?: {
-		file?: string;
-	};
-	status?: string;
-	creatorId?: string;
-	pinned?: boolean;
-	numReplies: number;
-}
 interface State {
 	menuOpen?: boolean;
 	menuTarget?: any;
@@ -46,12 +25,12 @@ interface Props {
 	selected?: boolean;
 	collapsed?: boolean;
 	inline?: boolean;
-	codemark: CodemarkEntity;
+	codemark: CodemarkPlus;
 	marker: DocumentMarker;
 	usernames: string[];
 	setCodemarkStatus: Function;
 	action(action: string, post: any, args: any): any;
-	onClick?(codemark: CodemarkEntity, marker: DocumentMarker): any;
+	onClick?(codemark: CodemarkPlus, marker: DocumentMarker): any;
 	onMouseEnter?(marker: DocumentMarker): any;
 	onMouseLeave?(marker: DocumentMarker): any;
 	query?: string;
