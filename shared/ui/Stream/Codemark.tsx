@@ -9,7 +9,7 @@ import { markdownify } from "./Markdowner";
 import Timestamp from "./Timestamp";
 import CodemarkDetails from "./CodemarkDetails";
 import { DocumentMarker } from "@codestream/protocols/agent";
-import { CodemarkType } from "@codestream/protocols/api";
+import { CodemarkType, CSUser } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
 import { UpdateConfigurationRequestType } from "@codestream/protocols/webview";
@@ -42,13 +42,12 @@ interface State {
 	showLabelText: boolean;
 }
 interface Props {
+	currentUser: CSUser;
 	selected?: boolean;
 	collapsed?: boolean;
 	inline?: boolean;
 	codemark: CodemarkEntity;
 	marker: DocumentMarker;
-	currentUserName: string;
-	currentUserId?: string;
 	usernames: string[];
 	setCodemarkStatus: Function;
 	action(action: string, post: any, args: any): any;
@@ -90,7 +89,7 @@ export class Codemark extends React.Component<Props, State> {
 		if (text == null || text === "") {
 			html = "";
 		} else {
-			const me = this.props.currentUserName.toLowerCase();
+			const me = this.props.currentUser.username.toLowerCase();
 			html = markdownify(text).replace(/@(\w+)/g, (match, name) => {
 				const nameNormalized = name.toLowerCase();
 				if (this.props.usernames[nameNormalized]) {
@@ -310,7 +309,7 @@ export class Codemark extends React.Component<Props, State> {
 
 		const type = codemark && codemark.type;
 
-		const mine = codemark.creatorId === this.props.currentUserId;
+		const mine = codemark.creatorId === this.props.currentUser.id;
 
 		let menuItems: any[] = [
 			// { label: "Add Reaction", action: "react" },
@@ -422,9 +421,10 @@ export class Codemark extends React.Component<Props, State> {
 
 const EMPTY_OBJECT = {};
 
-const mapStateToProps = state => {
-	const { preferences } = state;
+const mapStateToProps = (state, props) => {
+	const { preferences, users, session } = state;
 	return {
+		currentUser: users[session.userId],
 		codemarkKeybindings: preferences.codemarkKeybindings || EMPTY_OBJECT
 	};
 };

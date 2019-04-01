@@ -307,8 +307,6 @@ export class SimpleInlineCodemarks extends Component {
 										collapsed={true}
 										inline={false}
 										selected={selectedDocMarkerId === docMarker.id}
-										currentUserName={this.props.currentUserName}
-										currentUserId={this.props.currentUserId}
 										usernames={this.props.usernames}
 										onClick={this.handleClickCodemark}
 										onMouseEnter={this.handleHighlightCodemark}
@@ -602,8 +600,6 @@ export class SimpleInlineCodemarks extends Component {
 												collapsed={true}
 												inline={true}
 												selected={selectedDocMarkerId === docMarker.id}
-												currentUserId={this.props.currentUserId}
-												currentUserName={this.props.currentUserName}
 												usernames={this.props.usernames}
 												onClick={this.handleClickCodemark}
 												onMouseEnter={this.handleHighlightCodemark}
@@ -990,7 +986,6 @@ const mapStateToProps = state => {
 		: 1;
 
 	return {
-		currentUserId: session.userId,
 		usernames: userSelectors.getUsernames(state),
 		team: teams[context.currentTeamId],
 		viewInline: configs.viewCodemarksInline,
