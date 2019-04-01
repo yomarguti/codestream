@@ -5,7 +5,7 @@ import { setCodemarkStatus } from "./actions";
 import ScrollBox from "./ScrollBox";
 import PostList from "./PostList";
 import { MessageInput } from "./MessageInput";
-import { getTeamMembers } from "../store/users/reducer";
+import { getTeamMembers, getUsernamesRegexp } from "../store/users/reducer";
 import PostDetails from "./PostDetails";
 import { escapeHtml } from "../utils";
 import { CodemarkPlus } from "@codestream/protocols/agent";
@@ -156,58 +156,31 @@ export class CodemarkDetails extends React.Component<Props, State> {
 	}
 }
 
+const EMPTY_OBJECT = {};
 const mapStateToProps = state => {
-	const {
-		capabilities,
-		configs,
-		connectivity,
-		session,
-		context,
-		editorContext,
-		users,
-		teams,
-		services
-	} = state;
+	const { capabilities, configs, connectivity, session, context, users, teams, services } = state;
 
 	const team = teams[context.currentTeamId];
 	const teamMembers = getTeamMembers(state);
 
-	// this usenames regexp is a pipe-separated list of
-	// either usernames or if no username exists for the
-	// user then his email address. it is sorted by length
-	// so that the longest possible match will be made.
-	const usernamesRegexp = teamMembers
-		.map(user => {
-			return user.username || "";
-		})
-		.sort(function(a, b) {
-			return b.length - a.length;
-		})
-		.join("|")
-		.replace(/\|\|+/g, "|") // remove blank identifiers
-		.replace(/\+/g, "\\+") // replace + and . with escaped versions so
-		.replace(/\./g, "\\."); // that the regexp matches the literal chars
-
-	const isOffline = connectivity.offline;
-
 	const user = users[session.userId];
 
-	const providerInfo = (user.providerInfo && user.providerInfo[context.currentTeamId]) || {};
+	const providerInfo =
+		(user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT;
 
 	return {
 		streamId: context.currentStreamId,
 		threadId: context.threadId,
 		configs,
 		capabilities,
-		isOffline,
+		isOffline: connectivity.offline,
 		teammates: teamMembers,
 		providerInfo,
 		teamId: context.currentTeamId,
 		teamName: team.name || "",
 		repoId: context.currentRepoId,
 		hasFocus: context.hasFocus,
-		scmInfo: editorContext.scm,
-		usernamesRegexp: usernamesRegexp,
+		usernamesRegexp: getUsernamesRegexp(state),
 		currentUserId: user.id,
 		currentUserName: user.username,
 		services,
