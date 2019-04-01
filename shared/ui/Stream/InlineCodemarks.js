@@ -984,8 +984,10 @@ const mapStateToProps = state => {
 	const textEditorVisibleRanges = editorContext.textEditorVisibleRanges || EMPTY_ARRAY;
 	const numVisibleRanges = textEditorVisibleRanges.length;
 	const lastVisibleRange = textEditorVisibleRanges[numVisibleRanges - 1];
-	const lastVisibleLine = lastVisibleRange.end.line;
-	const firstVisibleLine = textEditorVisibleRanges[0].start.line;
+	const lastVisibleLine = lastVisibleRange ? lastVisibleRange.end.line : 1;
+	const firstVisibleLine = textEditorVisibleRanges.length
+		? textEditorVisibleRanges[0].start.line
+		: 1;
 
 	return {
 		currentUserId: session.userId,
