@@ -36,7 +36,6 @@ interface Props {
 	query?: string;
 	style?: object;
 	lineNum?: Number;
-	capabilities: any;
 	top?: Number;
 	showLabelText?: boolean;
 	codemarkKeybindings: string[];

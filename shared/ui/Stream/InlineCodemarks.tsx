@@ -58,7 +58,6 @@ interface Props {
 	documentMarkers: DocumentMarker[];
 	numUnpinned: number;
 	numClosed: number;
-	capabilities: any; // TODO: remove this
 	fetchDocumentMarkers(uri: string): Promise<void>;
 	postAction(): void;
 	setNewPostEntry(a: string): void;
@@ -365,7 +364,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 										action={this.props.postAction}
 										query={this.state.query}
 										viewHeadshots={this.props.viewHeadshots}
-										capabilities={this.props.capabilities}
 									/>
 								);
 							})}
@@ -659,7 +657,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 												lineNum={lineNum}
 												style={{ top: top + "px" }}
 												top={top}
-												capabilities={this.props.capabilities}
 											/>
 										);
 									} else {
@@ -1026,7 +1023,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 const EMPTY_ARRAY = [];
 
 const mapStateToProps = state => {
-	const { capabilities, context, editorContext, teams, configs, documentMarkers } = state;
+	const { context, editorContext, teams, configs, documentMarkers } = state;
 
 	const docMarkers = documentMarkers[editorContext.textEditorUri] || EMPTY_ARRAY;
 	const numUnpinned = docMarkers.filter(d => !d.codemark.pinned).length;
@@ -1061,8 +1058,7 @@ const mapStateToProps = state => {
 		metrics: editorContext.metrics || EMPTY_ARRAY,
 		documentMarkers: docMarkers,
 		numUnpinned,
-		numClosed,
-		capabilities
+		numClosed
 	};
 };
 

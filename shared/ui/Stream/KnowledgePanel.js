@@ -467,7 +467,7 @@ export class SimpleKnowledgePanel extends Component {
 }
 
 const mapStateToProps = state => {
-	const { capabilities, context, teams, configs } = state;
+	const { context, teams } = state;
 
 	let fileNameToFilterFor;
 	let fileStreamIdToFilterFor;
@@ -490,8 +490,7 @@ const mapStateToProps = state => {
 		typeFilter: context.codemarkTypeFilter,
 		colorFilter: context.codemarkColorFilter,
 		fileNameToFilterFor,
-		fileStreamIdToFilterFor,
-		capabilities
+		fileStreamIdToFilterFor
 	};
 };
 
