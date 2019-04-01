@@ -148,7 +148,7 @@ function Build-Extension {
 	}
 
 	Write-Log "Build-Extension completed in {$(Get-ElapsedTime($timer))}"
-	Write-Log "Artifacts: $($OutputDir)"
+	Write-Log "Artifacts: $($OutputDir) at $(Get-Date)"    
 }
 
 Print-Help
