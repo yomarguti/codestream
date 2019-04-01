@@ -3,6 +3,8 @@ import {
 	BootstrapResponse,
 	CompleteSignupRequestType,
 	EditorHighlightRangeRequestType,
+	EditorRevealRangeRequest,
+	EditorRevealRangeRequestType,
 	HostDidChangeActiveEditorNotification,
 	HostDidChangeActiveEditorNotificationType,
 	HostDidChangeConfigNotificationType,
@@ -374,6 +376,18 @@ export class CodestreamView {
 					Convert.uriToPath(uri),
 					Convert.lsRangeToAtomRange(range)
 				);
+				break;
+			}
+			case EditorRevealRangeRequestType.method: {
+				const { uri, range } = message.params as EditorRevealRangeRequest;
+				atom.workspace.getTextEditors().some(editor => {
+					if (editor.getPath() === Convert.uriToPath(uri)) {
+						// TODO: compute the scroll position that will make `range.start.row` the first visible line
+						editor.scrollToBufferPosition(Convert.lsRangeToAtomRange(range).start);
+						return true;
+					}
+					return false;
+				});
 				break;
 			}
 			case LogoutRequestType.method: {
