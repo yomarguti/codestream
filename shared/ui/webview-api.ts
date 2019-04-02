@@ -1,7 +1,3 @@
-import {	
-	DidChangeDocumentMarkersNotification,
-	DidChangeDocumentMarkersNotificationType,
-} from "@codestream/protocols/agent";
 import { NotificationType, RequestType } from "vscode-jsonrpc";
 import URI from "vscode-uri";
 import {
@@ -38,15 +34,6 @@ const normalizeNotificationsMap = new Map<
 		listener => (e: HostDidChangeActiveEditorNotification) => {
 			if (e.editor) {
 				e.editor.uri = URI.parse(e.editor.uri).toString();
-			}
-			return listener(e);
-		}
-	],
-	[
-		DidChangeDocumentMarkersNotificationType,
-		listener => (e: DidChangeDocumentMarkersNotification) => {
-			if (e.textDocument) {
-				e.textDocument.uri = URI.parse(e.textDocument.uri).toString();
 			}
 			return listener(e);
 		}
