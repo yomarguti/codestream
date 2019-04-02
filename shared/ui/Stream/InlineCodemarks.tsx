@@ -25,7 +25,11 @@ import {
 } from "@codestream/protocols/agent";
 import { Range, Position } from "vscode-languageserver-types";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
-import { getCurrentSelection } from "../store/editorContext/reducer";
+import {
+	getCurrentSelection,
+	getVisibleLineCount,
+	getVisibleRanges
+} from "../store/editorContext/reducer";
 import { CSTeam } from "@codestream/protocols/api";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -51,6 +55,7 @@ interface Props {
 	textEditorLineCount: number;
 	firstVisibleLine: number;
 	lastVisibleLine: number;
+	numLinesVisible: number;
 	textEditorVisibleRanges?: Range[];
 	textEditorSelection?: EditorSelection;
 	metrics: EditorMetrics;
@@ -68,7 +73,6 @@ interface State {
 	clickedPlus: boolean;
 	isLoading: boolean;
 	selectedDocMarkerId: string | undefined;
-	numLinesVisible: number; // TODO: use a connected prop
 	openIconsOnLine: number;
 	query: string | undefined;
 	highlightedLine?: number;
@@ -94,7 +98,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		this.state = {
 			isLoading: props.documentMarkers.length === 0,
 			lastSelectedLine: 0,
-			numLinesVisible: 0,
 			clickedPlus: false,
 			selectedDocMarkerId: undefined,
 			query: undefined,
@@ -184,7 +187,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			});
 		}
 
-		this.setVisibleLinesCount();
 		this.scrollTo(18);
 	}
 
@@ -192,7 +194,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const { textEditorUri } = this.props;
 		if (String(textEditorUri).length > 0 && prevProps.textEditorUri !== textEditorUri) {
 			this.onFileChanged();
-			this.setVisibleLinesCount();
 		}
 
 		const didStartLineChange = this.compareStart(
@@ -200,7 +201,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			prevProps.textEditorVisibleRanges
 		);
 		if (didStartLineChange) {
-			this.setVisibleLinesCount();
 			this.scrollTo(18);
 		}
 
@@ -289,24 +289,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			this.setState(state => (state.isLoading ? { isLoading: false } : null));
 		}
 	}
-
-	setVisibleLinesCount = () => {
-		const { textEditorVisibleRanges } = this.props;
-
-		let numLinesVisible = 0;
-		if (textEditorVisibleRanges != null) {
-			textEditorVisibleRanges.forEach(range => {
-				numLinesVisible += range.end.line - range.start.line + 1;
-			});
-		}
-
-		// only set this if it changes by more than 1. we expect it to vary by 1 as
-		// the topmost and bottommost line are revealed and the window is not an integer
-		// number of lines high.
-		if (Math.abs(numLinesVisible - Number(this.state.numLinesVisible || 0)) > 1) {
-			this.setState({ numLinesVisible });
-		}
-	};
 
 	compareStart(range1?: Range[], range2?: Range[]) {
 		if (range1 == null || range1.length === 0 || range2 == null || range2.length === 0) return true;
@@ -524,12 +506,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			textEditorLineCount,
 			firstVisibleLine,
 			lastVisibleLine,
+			numLinesVisible,
 			documentMarkers,
 			metrics,
 			showUnpinned,
 			showClosed
 		} = this.props;
-		const { numLinesVisible, selectedDocMarkerId } = this.state;
+		const { selectedDocMarkerId } = this.state;
 
 		// console.log("TEVR: ", textEditorVisibleRanges);
 
@@ -1025,7 +1008,7 @@ const mapStateToProps = state => {
 	const numUnpinned = docMarkers.filter(d => !d.codemark.pinned).length;
 	const numClosed = docMarkers.filter(d => d.codemark.status === "closed").length;
 
-	const textEditorVisibleRanges = editorContext.textEditorVisibleRanges || EMPTY_ARRAY;
+	const textEditorVisibleRanges = getVisibleRanges(editorContext);
 	const numVisibleRanges = textEditorVisibleRanges.length;
 
 	let lastVisibleLine = 1;
@@ -1053,6 +1036,7 @@ const mapStateToProps = state => {
 		textEditorSelection: getCurrentSelection(editorContext),
 		metrics: editorContext.metrics || EMPTY_ARRAY,
 		documentMarkers: docMarkers,
+		numLinesVisible: getVisibleLineCount(textEditorVisibleRanges),
 		numUnpinned,
 		numClosed
 	};
