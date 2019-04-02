@@ -1,9 +1,8 @@
 import React, { Component } from "react";
-import Button from "./Button";
 import { HostApi } from "../webview-api";
 import { CompareMarkerRequestType, ApplyMarkerRequestType } from "../ipc/webview.protocol";
 
-export default class PostDetails extends Component {
+export default class CodemarkActions extends Component {
 	handleClickShowDiff = event => {
 		event.preventDefault();
 		HostApi.instance.send(CompareMarkerRequestType, { marker: this.props.codemark.markers[0] });

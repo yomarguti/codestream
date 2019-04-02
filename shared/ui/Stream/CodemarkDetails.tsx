@@ -6,7 +6,7 @@ import ScrollBox from "./ScrollBox";
 import PostList from "./PostList";
 import { MessageInput } from "./MessageInput";
 import { getTeamMembers, getUsernamesRegexp } from "../store/users/reducer";
-import PostDetails from "./PostDetails";
+import CodemarkActions from "./CodemarkActions";
 import { escapeHtml } from "../utils";
 import { CodemarkPlus } from "@codestream/protocols/agent";
 import { prettyPrintOne } from "code-prettify";
@@ -80,7 +80,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		return (
 			<div className="codemark-details">
 				{this.renderCodeblock()}
-				<PostDetails codemark={codemark} capabilities={capabilities} />
+				<CodemarkActions codemark={codemark} capabilities={capabilities} />
 				<div className="replies">
 					<div className="shadow-overlay">
 						<div className="postslist threadlist" onClick={this.handleClickPost}>

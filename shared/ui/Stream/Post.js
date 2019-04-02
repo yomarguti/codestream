@@ -6,7 +6,7 @@ import createClassString from "classnames";
 import Headshot from "./Headshot";
 import Icon from "./Icon";
 import Timestamp from "./Timestamp";
-import PostDetails from "./PostDetails";
+import CodemarkActions from "./CodemarkActions";
 import RetrySpinner from "./RetrySpinner";
 import { retryPost, cancelPost } from "./actions";
 import ContentEditable from "react-contenteditable";
@@ -110,9 +110,7 @@ class Post extends React.Component {
 				return (
 					<span>
 						{message}{" "}
-						<a href="https://help.codestream.com/hc/en-us/articles/360013410551">
-							{learnMore}
-						</a>
+						<a href="https://help.codestream.com/hc/en-us/articles/360013410551">{learnMore}</a>
 					</span>
 				);
 			}
@@ -345,7 +343,7 @@ class Post extends React.Component {
 					{codeBlock}
 					{this.renderAttachments(post)}
 					{this.props.showDetails && !this.state.warning && (
-						<PostDetails codemark={codemark} capabilities={this.props.capabilities} />
+						<CodemarkActions codemark={codemark} capabilities={this.props.capabilities} />
 					)}
 				</div>
 				{this.renderReactions(post)}
@@ -361,7 +359,10 @@ class Post extends React.Component {
 			if (!providerDisplay) {
 				return null;
 			}
-			return [<br />, <a href={codemark.externalProviderUrl}>Open on {providerDisplay.displayName}</a>];
+			return [
+				<br />,
+				<a href={codemark.externalProviderUrl}>Open on {providerDisplay.displayName}</a>
+			];
 		}
 		return null;
 	};
