@@ -629,7 +629,7 @@ export class SimpleStream extends Component {
 		let renderNav = !["create-channel", "create-dm", "public-channels", "invite"].includes(
 			activePanel
 		);
-		if (this.state.floatCompose) renderNav = false;
+		// if (this.state.floatCompose) renderNav = false;
 		// if (threadId) renderNav = false;
 
 		const onInlineCodemarks = activePanel === WebviewPanels.CodemarksForFile;
