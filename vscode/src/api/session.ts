@@ -601,10 +601,7 @@ export class CodeStreamSession implements Disposable {
 		this._state = new SessionState(this, teamId, result.loginResponse);
 
 		this._disposable = Disposable.from(
-			Container.agent.onDidChangeDocumentMarkers(
-				Functions.debounce(this.onDocumentMarkersChanged, 500),
-				this
-			),
+			Container.agent.onDidChangeDocumentMarkers(this.onDocumentMarkersChanged, this),
 			Container.agent.onDidChangeData(this.onDataChanged, this)
 		);
 

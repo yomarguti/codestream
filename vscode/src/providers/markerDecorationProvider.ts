@@ -13,7 +13,6 @@ import {
 	Position,
 	Range,
 	TextDocument,
-	TextDocumentChangeEvent,
 	TextEditor,
 	TextEditorDecorationType,
 	Uri,
@@ -209,7 +208,6 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 			Container.session.onDidChangeTextDocumentMarkers(this.onMarkersChanged, this),
 			Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
 			window.onDidChangeVisibleTextEditors(this.onEditorVisibilityChanged, this),
-			workspace.onDidChangeTextDocument(this.onDocumentChanged, this),
 			workspace.onDidCloseTextDocument(this.onDocumentClosed, this)
 		];
 
@@ -220,15 +218,6 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 		this._enabledDisposable = Disposable.from(...subscriptions);
 
 		this.applyToApplicableVisibleEditors();
-	}
-
-	private async onDocumentChanged(e: TextDocumentChangeEvent) {
-		if (this._watchedEditorsMap === undefined) return;
-
-		const fn = this._watchedEditorsMap.get(e.document.uri.toString());
-		if (fn === undefined) return;
-
-		fn();
 	}
 
 	private async onDocumentClosed(e: TextDocument) {
