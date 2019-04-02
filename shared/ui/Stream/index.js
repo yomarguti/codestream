@@ -33,7 +33,7 @@ import {
 	getDMName
 } from "../store/streams/reducer";
 import { getCodemark } from "../store/codemarks/reducer";
-import { getTeamMembers } from "../store/users/reducer";
+import { getTeamMembers, getUsernamesRegexp } from "../store/users/reducer";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { HostApi } from "../webview-api";
 import {
@@ -336,19 +336,17 @@ export class SimpleStream extends Component {
 		return menu;
 	}
 
-	addProvidersToMenu (menuItems) {
+	addProvidersToMenu(menuItems) {
 		let numProviders = 0;
 		for (let provider of this.props.providers) {
 			const { name, isEnterprise, host } = provider;
 			const display = PROVIDER_MAPPINGS[name];
 			if (
-				display && 
-				provider.hasIssues && 
+				display &&
+				provider.hasIssues &&
 				(!provider.teamId || provider.teamId === this.props.teamId)
 			) {
-				const displayName = isEnterprise ? 
-					`${display.displayName} - ${host}` :
-					display.displayName;
+				const displayName = isEnterprise ? `${display.displayName} - ${host}` : display.displayName;
 				const isConnected = this.isConnectedToProvider(provider);
 				if (isConnected) {
 					menuItems.push({
@@ -367,7 +365,7 @@ export class SimpleStream extends Component {
 		return numProviders;
 	}
 
-	isConnectedToProvider (provider) {
+	isConnectedToProvider(provider) {
 		const { providerInfo = {} } = this.props;
 		const userProviderInfo = providerInfo[provider.name];
 		if (!userProviderInfo) {
@@ -376,7 +374,7 @@ export class SimpleStream extends Component {
 		if (!provider.isEnterprise && userProviderInfo.accessToken) {
 			return true;
 		}
-		const starredHost = provider.host.replace(/\./g, '*');
+		const starredHost = provider.host.replace(/\./g, "*");
 		return !!(
 			userProviderInfo.hosts &&
 			userProviderInfo.hosts[starredHost] &&
@@ -2000,23 +1998,6 @@ const mapStateToProps = state => {
 
 	const team = teams[context.currentTeamId];
 	const teamMembers = getTeamMembers(state);
-	// console.log("MEMBER IDS ARE: ", teams[context.currentTeamId].memberIds);
-	// console.log("USERS ARE: ", users);
-	// this usenames regexp is a pipe-separated list of
-	// either usernames or if no username exists for the
-	// user then his email address. it is sorted by length
-	// so that the longest possible match will be made.
-	const usernamesRegexp = teamMembers
-		.map(user => {
-			return user.username || "";
-		})
-		.sort(function(a, b) {
-			return b.length - a.length;
-		})
-		.join("|")
-		.replace(/\|\|+/g, "|") // remove blank identifiers
-		.replace(/\+/g, "\\+") // replace + and . with escaped versions so
-		.replace(/\./g, "\\."); // that the regexp matches the literal chars
 
 	const isOffline = connectivity.offline;
 
@@ -2085,7 +2066,7 @@ const mapStateToProps = state => {
 		repoId: context.currentRepoId,
 		hasFocus: context.hasFocus,
 		scmInfo: editorContext.scm,
-		usernamesRegexp: usernamesRegexp,
+		usernamesRegexp: getUsernamesRegexp(state),
 		currentUserId: user.id,
 		currentUserName: user.username,
 		mutedStreams: preferences.mutedStreams || {},
