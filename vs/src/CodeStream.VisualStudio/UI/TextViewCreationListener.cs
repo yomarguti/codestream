@@ -1,4 +1,5 @@
 ﻿using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
@@ -20,228 +21,240 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Threading;
 
-namespace CodeStream.VisualStudio.UI
-{
-    [Export(typeof(IVsTextViewCreationListener))]
-    [Export(typeof(IWpfTextViewConnectionListener))]
-    [ContentType(ContentTypes.Text)]
-    [TextViewRole(PredefinedTextViewRoles.Interactive)]
-    [TextViewRole(PredefinedTextViewRoles.Document)]
-    public class TextViewCreationListener :
-        IVsTextViewCreationListener,
-        IWpfTextViewConnectionListener
-    {
-        private readonly IEventAggregator _eventAggregator;
-        private readonly ISessionService _sessionService;
-        private readonly ISettingsService _settingsService;
-        private readonly IIdeService _ideService;
+namespace CodeStream.VisualStudio.UI {
+	[Export(typeof(IVsTextViewCreationListener))]
+	[Export(typeof(IWpfTextViewConnectionListener))]
+	[ContentType(ContentTypes.Text)]
+	[TextViewRole(PredefinedTextViewRoles.Interactive)]
+	[TextViewRole(PredefinedTextViewRoles.Document)]
+	public class TextViewCreationListener :
+		IVsTextViewCreationListener,
+		IWpfTextViewConnectionListener {
 
-        private static readonly object InitializedLock = new object();
+		private static readonly ILogger Log = LogManager.ForContext<TextViewCreationListener>();
 
-        internal const string LayerName = "CodeStreamHighlightColor";
+		private readonly IEventAggregator _eventAggregator;
+		private readonly ISessionService _sessionService;
+		private readonly ISettingsService _settingsService;
+		private readonly IIdeService _ideService;
 
-        public TextViewCreationListener() :
-            this(Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator,
-                Package.GetGlobalService(typeof(SSessionService)) as ISessionService,
-                Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService,
-                ServiceLocator.Get<SIdeService, IIdeService>())
-        { }
+		private static readonly object InitializedLock = new object();
 
-        public TextViewCreationListener(IEventAggregator eventAggregator,
-            ISessionService sessionService,
-            ISettingsService settingsService,
-            IIdeService ideService)
-        {
-            _eventAggregator = eventAggregator;
-            _sessionService = sessionService;
-            _settingsService = settingsService;
-            _ideService = ideService;
-        }
+		internal const string LayerName = "CodeStreamHighlightColor";
 
-        [Export(typeof(AdornmentLayerDefinition))]
-        [Name(LayerName)]
-        [Order(Before = PredefinedAdornmentLayers.Selection)]
-        [TextViewRole(PredefinedTextViewRoles.Interactive)]
-        [TextViewRole(PredefinedTextViewRoles.Document)]
-        public AdornmentLayerDefinition AlternatingLineColor = null;
+		public TextViewCreationListener() :
+			this(Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator,
+				Package.GetGlobalService(typeof(SSessionService)) as ISessionService,
+				Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService,
+				ServiceLocator.Get<SIdeService, IIdeService>()) { }
 
+		public TextViewCreationListener(IEventAggregator eventAggregator,
+			ISessionService sessionService,
+			ISettingsService settingsService,
+			IIdeService ideService) {
+			Log.Verbose("ctor");
+			_eventAggregator = eventAggregator;
+			_sessionService = sessionService;
+			_settingsService = settingsService;
+			_ideService = ideService;
+		}
 
-        [Import]
-        public IVsEditorAdaptersFactoryService EditorAdaptersFactoryService { get; set; }
+		[Export(typeof(AdornmentLayerDefinition))]
+		[Name(LayerName)]
+		[Order(Before = PredefinedAdornmentLayers.Selection)]
+		[TextViewRole(PredefinedTextViewRoles.Interactive)]
+		[TextViewRole(PredefinedTextViewRoles.Document)]
+		public AdornmentLayerDefinition AlternatingLineColor = null;
 
-        [Import]
-        public ITextDocumentFactoryService TextDocumentFactoryService { get; set; }
+		[Import]
+		public IVsEditorAdaptersFactoryService EditorAdaptersFactoryService { get; set; }
 
-        [ImportMany]
-        public IEnumerable<IWpfTextViewMarginProvider> TextViewMarginProviders { get; set; }
+		[Import]
+		public ITextDocumentFactoryService TextDocumentFactoryService { get; set; }
 
-        /// <summary>
-        /// SubjectBuffersConnected happens first
-        /// </summary>
-        /// <param name="wpfTextView"></param>
-        /// <param name="reason"></param>
-        /// <param name="subjectBuffers"></param>
-        public void SubjectBuffersConnected(IWpfTextView wpfTextView, ConnectionReason reason, Collection<ITextBuffer> subjectBuffers)
-        {
-            if (wpfTextView == null) return;
+		[ImportMany]
+		public IEnumerable<IWpfTextViewMarginProvider> TextViewMarginProviders { get; set; }
 
-            wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewState, new TextViewState());
+		/// <summary>
+		/// SubjectBuffersConnected happens first
+		/// </summary>
+		/// <param name="wpfTextView"></param>
+		/// <param name="reason"></param>
+		/// <param name="subjectBuffers"></param>
+		public void SubjectBuffersConnected(IWpfTextView wpfTextView, ConnectionReason reason, Collection<ITextBuffer> subjectBuffers) {
+			Log.Verbose($"{nameof(SubjectBuffersConnected)} started");
+			if (wpfTextView == null) {
+				Log.Verbose(@"wpfTextView is null");
+				return;
+			}
 
-            if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextView.TextBuffer, out var textDocument))
-            {
-                return;
-            }
+			wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewState, new TextViewState());
 
-            var agentService = Package.GetGlobalService((typeof(SCodeStreamAgentService))) as ICodeStreamAgentService;
-            wpfTextView.Properties.GetOrCreateSingletonProperty(PropertyNames.DocumentMarkerManager,
-                () => DocumentMarkerManagerFactory.Create(agentService, wpfTextView, textDocument));
-        }
+			if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextView.TextBuffer, out var textDocument)) {
+				Log.Verbose(@"TextDocument not found");
+				return;
+			}
 
-        /// <summary>
-        /// VsTextViewCreated is created after all margins, etc.
-        /// </summary>
-        /// <param name="textViewAdapter"></param>
-        public void VsTextViewCreated(IVsTextView textViewAdapter)
-        {
-            var wpfTextView = EditorAdaptersFactoryService.GetWpfTextView(textViewAdapter);
+			var agentService = Package.GetGlobalService((typeof(SCodeStreamAgentService))) as ICodeStreamAgentService;
+			wpfTextView.Properties.GetOrCreateSingletonProperty(PropertyNames.DocumentMarkerManager,
+				() => DocumentMarkerManagerFactory.Create(agentService, wpfTextView, textDocument));
+			Log.Verbose($"{nameof(SubjectBuffersConnected)} completed for {textDocument.FilePath} Reason={reason}");
+		}
 
-            // find all of our textView margin providers (they should already have been created at this point)
-            var textViewMarginProviders = TextViewMarginProviders
-                 .Where(_ => _ as ICodeStreamWpfTextViewMarginProvider != null)
-                 .Select(_ => (_ as ICodeStreamWpfTextViewMarginProvider)?.TextViewMargin)
-                 .Where(_ => _ != null)
-                 .ToList();
+		/// <summary>
+		/// VsTextViewCreated is created after all margins, etc.
+		/// </summary>
+		/// <param name="textViewAdapter"></param>
+		public void VsTextViewCreated(IVsTextView textViewAdapter) {
+			Log.Verbose($"{nameof(VsTextViewCreated)} started");
+			var wpfTextView = EditorAdaptersFactoryService.GetWpfTextView(textViewAdapter);
 
-            if (!textViewMarginProviders.AnySafe()) return;
+			// find all of our textView margin providers (they should already have been created at this point)
+			var textViewMarginProviders = TextViewMarginProviders
+				 .Where(_ => _ as ICodeStreamWpfTextViewMarginProvider != null)
+				 .Select(_ => (_ as ICodeStreamWpfTextViewMarginProvider)?.TextViewMargin)
+				 .Where(_ => _ != null)
+				 .ToList();
 
-            wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewMarginProviders, textViewMarginProviders);
-            Debug.Assert(_eventAggregator != null, nameof(_eventAggregator) + " != null");
+			if (!textViewMarginProviders.AnySafe()) {
+				Log.Warning($"no {nameof(textViewMarginProviders)}");
+				return;
+			}
 
-            //listening on the main thread since we have to change the UI state
-            wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewEvents, new List<IDisposable>
-            {
-                _eventAggregator.GetEvent<SessionReadyEvent>()
-                    .ObserveOnDispatcher()
-                    .Subscribe(_ =>
-                    {
-                        if (_sessionService.IsReady)
-                        {
-                            OnSessionReady(wpfTextView);
-                        }
-                    }),
+			wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewMarginProviders, textViewMarginProviders);
+			Debug.Assert(_eventAggregator != null, nameof(_eventAggregator) + " != null");
 
-                _eventAggregator.GetEvent<SessionLogoutEvent>()
-                    .ObserveOnDispatcher()
-                    .Subscribe(_ => OnSessionLogout(wpfTextView, textViewMarginProviders)),
+			//listening on the main thread since we have to change the UI state
+			wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewEvents, new List<IDisposable>
+			{
+				_eventAggregator.GetEvent<SessionReadyEvent>()
+					.ObserveOnDispatcher()
+					.Subscribe(_ =>
+					{
+						Log.Verbose($"{nameof(VsTextViewCreated)} SessionReadyEvent Session IsReady={_sessionService.IsReady}");
+						if (_sessionService.IsReady)
+						{
+							OnSessionReady(wpfTextView);
+						}
+					}),
 
-                _eventAggregator.GetEvent<MarkerGlyphVisibilityEvent>()
-                    .ObserveOnDispatcher()
-                    .Subscribe(_ => textViewMarginProviders.Toggle(_.IsVisible))
-            });
+				_eventAggregator.GetEvent<SessionLogoutEvent>()
+					.ObserveOnDispatcher()
+					.Subscribe(_ => OnSessionLogout(wpfTextView, textViewMarginProviders)),
 
-            if (_sessionService.IsReady)
-            {
-                OnSessionReady(wpfTextView);
-            }
-            else
-            {
-                textViewMarginProviders.Hide();
-            }
-        }
+				_eventAggregator.GetEvent<MarkerGlyphVisibilityEvent>()
+					.ObserveOnDispatcher()
+					.Subscribe(_ => textViewMarginProviders.Toggle(_.IsVisible))
+			});
 
-        public void SubjectBuffersDisconnected(IWpfTextView textView, ConnectionReason reason, Collection<ITextBuffer> subjectBuffers)
-        {
-            if (textView == null) return;
+			Log.Verbose($"{nameof(VsTextViewCreated)} Session IsReady={_sessionService.IsReady}");
 
-            textView.RemovePropertySafe(PropertyNames.TextViewMarginProviders);
-            textView.RemovePropertySafe(PropertyNames.CodemarkMarkers);
+			if (_sessionService.IsReady) {
+				OnSessionReady(wpfTextView);
+			}
+			else {
+				textViewMarginProviders.Hide();
+			}
+			Log.Verbose($"{nameof(VsTextViewCreated)} completed");
+		}
 
-            if (textView.TextBuffer.Properties.ContainsProperty(PropertyNames.TextViewState))
-            {
-                textView.TextBuffer.Properties.GetProperty<TextViewState>(PropertyNames.TextViewState).Initialized = false;
-            }
+		public void SubjectBuffersDisconnected(IWpfTextView textView, ConnectionReason reason, Collection<ITextBuffer> subjectBuffers) {
+			Log.Verbose($"{nameof(SubjectBuffersDisconnected)} started");
+			if (textView == null) {
+				Log.Warning($"{nameof(SubjectBuffersDisconnected)} textView is null");
+				return;
+			}
 
-            textView.TextBuffer.Properties.TryDisposeListProperty(PropertyNames.TextViewEvents);
-            textView.TextBuffer.Properties.TryDisposeListProperty(PropertyNames.TextViewLocalEvents);
+			textView.RemovePropertySafe(PropertyNames.TextViewMarginProviders);
+			textView.RemovePropertySafe(PropertyNames.CodemarkMarkers);
 
-            textView.LayoutChanged -= OnTextViewLayoutChanged;
+			if (textView.TextBuffer.Properties.ContainsProperty(PropertyNames.TextViewState)) {
+				textView.TextBuffer.Properties.GetProperty<TextViewState>(PropertyNames.TextViewState).Initialized = false;
+			}
 
-            textView.TextBuffer.Properties.TryDisposeProperty<HighlightAdornmentManager>(PropertyNames.AdornmentManager);
-        }
+			textView.TextBuffer.Properties.TryDisposeListProperty(PropertyNames.TextViewEvents);
+			textView.TextBuffer.Properties.TryDisposeListProperty(PropertyNames.TextViewLocalEvents);
 
-        public void OnSessionReady(IWpfTextView textView)
-        {
-            var state = textView.TextBuffer.Properties.GetProperty<TextViewState>(PropertyNames.TextViewState);
-            // ReSharper disable InvertIf
-            if (!state.Initialized)
-            {
-                lock (InitializedLock)
-                {
-                    if (!state.Initialized)
-                    {
-                        textView.TextBuffer.Properties
-                            .AddProperty(PropertyNames.AdornmentManager, new HighlightAdornmentManager(textView));
+			textView.LayoutChanged -= OnTextViewLayoutChanged;
 
-						textView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewLocalEvents,
-							new List<IDisposable>()
-							{
-								 _eventAggregator.GetEvent<DocumentMarkerChangedEvent>()
-									.Subscribe(_ =>
-									{
-										 OnDocumentMarkerChanged(textView, _);
-									})
-							});
+			textView.TextBuffer.Properties.TryDisposeProperty<HighlightAdornmentManager>(PropertyNames.AdornmentManager);
 
-                        textView.TextBuffer
-                            .Properties
-                            .GetProperty<List<ICodeStreamWpfTextViewMargin>>(PropertyNames.TextViewMarginProviders)
-                            .OnSessionReady();
+			Log.Verbose($"{nameof(SubjectBuffersDisconnected)} completed Reason={reason}");
+		}
 
-                        // keep this at the end -- we want this to be the first handler
-                        textView.LayoutChanged += OnTextViewLayoutChanged;
-                        state.Initialized = true;
-                    }
-                }
-            }
-            // ReSharper restore InvertIf
-        }
+		public void OnSessionReady(IWpfTextView textView) {
+			try {
+				var state = textView.TextBuffer.Properties.GetProperty<TextViewState>(PropertyNames.TextViewState);
+				Log.Verbose($"{nameof(OnSessionReady)} state={state?.Initialized}");
+				// ReSharper disable InvertIf
+				if (state != null && state.Initialized == false) {
+					lock (InitializedLock) {
+						if (!state.Initialized) {
+							Log.Verbose($"{nameof(OnSessionReady)} state=initializing");
+							textView.TextBuffer.Properties
+								.AddProperty(PropertyNames.AdornmentManager, new HighlightAdornmentManager(textView));
 
-        private static void OnSessionLogout(IWpfTextView wpfTextView, List<ICodeStreamWpfTextViewMargin> textViewMarginProviders)
-        {
-            if (wpfTextView.TextBuffer.Properties.TryGetProperty(PropertyNames.TextViewState, out TextViewState state))
-            {
-                state.Initialized = false;
-            }
+							textView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewLocalEvents,
+								new List<IDisposable> {
+									_eventAggregator.GetEvent<DocumentMarkerChangedEvent>()
+										.Subscribe(_ => {
+											Log.Verbose(
+												$"{nameof(DocumentMarkerChangedEvent)} State={state.Initialized}, _={_?.Uri}");
+											OnDocumentMarkerChanged(textView, _);
+										})
+								});
 
-            wpfTextView.TextBuffer.Properties.TryDisposeListProperty(PropertyNames.TextViewLocalEvents);
+							textView.TextBuffer
+								.Properties
+								.GetProperty<List<ICodeStreamWpfTextViewMargin>>(PropertyNames.TextViewMarginProviders)
+								.OnSessionReady();
 
-            if (wpfTextView.TextBuffer
-                .Properties
-                .TryGetProperty<DocumentMarkerManager>(PropertyNames.DocumentMarkerManager,
-                    out DocumentMarkerManager manager))
-            {
-                manager.Reset();
-            }
+							// keep this at the end -- we want this to be the first handler
+							textView.LayoutChanged += OnTextViewLayoutChanged;
+							state.Initialized = true;
+						}
+					}
+				}
+				// ReSharper restore InvertIf
+			}
+			catch (Exception ex) {
+				Log.Error(ex, $"{nameof(OnSessionReady)}");
+			}
+		}
 
-            textViewMarginProviders.OnSessionLogout();
-        }
+		private static void OnSessionLogout(IWpfTextView wpfTextView, List<ICodeStreamWpfTextViewMargin> textViewMarginProviders) {
+			if (wpfTextView.TextBuffer.Properties.TryGetProperty(PropertyNames.TextViewState, out TextViewState state)) {
+				state.Initialized = false;
+			}
+
+			wpfTextView.TextBuffer.Properties.TryDisposeListProperty(PropertyNames.TextViewLocalEvents);
+
+			if (wpfTextView.TextBuffer
+				.Properties
+				.TryGetProperty<DocumentMarkerManager>(PropertyNames.DocumentMarkerManager,
+					out DocumentMarkerManager manager)) {
+				manager.Reset();
+			}
+
+			textViewMarginProviders.OnSessionLogout();
+		}
 
 		private void OnDocumentMarkerChanged(IWpfTextView textView, DocumentMarkerChangedEvent e) {
 			if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, textView.TextBuffer, out var textDocument)) {
+				Log.Verbose(@"TextDocument not found");
 				return;
 			}
 
 			var fileUri = textDocument.FilePath.ToUri();
 			if (fileUri == null) {
-				Log.Verbose($"{nameof(fileUri)} is null");
+				Log.Verbose($"{ nameof(fileUri)} is null");
 				return;
 			}
 			try {
 				if (e.Uri.EqualsIgnoreCase(fileUri)) {
-					Log.Verbose($"{nameof(DocumentMarkerChangedEvent)} for {fileUri}");
-					
+					Log.Debug($"{nameof(DocumentMarkerChangedEvent)} for {fileUri}");
+
 					textView
 						.Properties
 						.GetProperty<DocumentMarkerManager>(PropertyNames.DocumentMarkerManager)
@@ -258,64 +271,57 @@ namespace CodeStream.VisualStudio.UI
 			}
 			catch (Exception ex) {
 				Log.Warning(ex, $"{nameof(DocumentMarkerChangedEvent)} for {fileUri}");
-			}			
+			}
 		}
 
-        private void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
-        {
-            var wpfTextView = sender as IWpfTextView;
-            if (wpfTextView == null || !_sessionService.IsReady) return;
+		private void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
+			var wpfTextView = sender as IWpfTextView;
+			if (wpfTextView == null || !_sessionService.IsReady) return;
 
-            if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextView.TextBuffer, out var textDocument))
-            {
-                return;
-            }
+			if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextView.TextBuffer, out var textDocument)) {
+				Log.Verbose(@"TextDocument not found");
+				return;
+			}
 
-            var documentMarkerManager = wpfTextView
-                .Properties
-                .GetProperty<DocumentMarkerManager>(PropertyNames.DocumentMarkerManager);
+			var documentMarkerManager = wpfTextView
+				.Properties
+				.GetProperty<DocumentMarkerManager>(PropertyNames.DocumentMarkerManager);
 
-            if (documentMarkerManager == null)
-            {
-                Log.Warning($"{nameof(documentMarkerManager)} is null");
-                return;
-            }
+			if (documentMarkerManager == null) {
+				Log.Warning($"{nameof(documentMarkerManager)} is null");
+				return;
+			}
 
-            // get markers if it's null (first time) or we did something that isn't scrolling
-            if (!documentMarkerManager.IsInitialized() || e.TranslatedLines.Any())
-            {
-                documentMarkerManager.GetOrCreateMarkers();
-            }
+			// get markers if it's null (first time) or we did something that isn't scrolling
+			if (!documentMarkerManager.IsInitialized() || e.TranslatedLines.Any()) {
+				documentMarkerManager.GetOrCreateMarkers();
+			}
 
-            // don't trigger for changes that don't result in lines being added or removed
-            if (_settingsService.ViewCodemarksInline && (e.VerticalTranslation || e.TranslatedLines.Any()))
-            {
-                var toolWindowIsVisible = ServiceLocator.Get<SToolWindowProvider, IToolWindowProvider>()
-                    ?.IsVisible(Guids.WebViewToolWindowGuid);
-                if (toolWindowIsVisible == true)
-                {
-                    ServiceLocator.Get<SWebviewIpc, IWebviewIpc>()?.NotifyAsync(
-                        new HostDidChangeEditorVisibleRangesNotificationType
-                        {
-                            Params = new HostDidChangeEditorVisibleRangesNotification(
-                                textDocument.FilePath.ToUri(),
-                                _ideService.GetActiveEditorState()?.ToEditorSelections(),
-                                wpfTextView.ToVisibleRanges(),
-                                wpfTextView.TextSnapshot?.LineCount
-                            )
-                        });
-                }
-            }
+			// don't trigger for changes that don't result in lines being added or removed
+			if (_settingsService.ViewCodemarksInline && (e.VerticalTranslation || e.TranslatedLines.Any())) {
+				var toolWindowIsVisible = ServiceLocator.Get<SToolWindowProvider, IToolWindowProvider>()
+					?.IsVisible(Guids.WebViewToolWindowGuid);
+				if (toolWindowIsVisible == true) {
+					ServiceLocator.Get<SWebviewIpc, IWebviewIpc>()?.NotifyAsync(
+						new HostDidChangeEditorVisibleRangesNotificationType {
+							Params = new HostDidChangeEditorVisibleRangesNotification(
+								textDocument.FilePath.ToUri(),
+								_ideService.GetActiveEditorState()?.ToEditorSelections(),
+								wpfTextView.ToVisibleRanges(),
+								wpfTextView.TextSnapshot?.LineCount
+							)
+						});
+				}
+			}
 
-            wpfTextView.TextBuffer
-                .Properties
-                .GetProperty<List<ICodeStreamWpfTextViewMargin>>(PropertyNames.TextViewMarginProviders)
-                .OnTextViewLayoutChanged(sender, e);
-        }
+			wpfTextView.TextBuffer
+				.Properties
+				.GetProperty<List<ICodeStreamWpfTextViewMargin>>(PropertyNames.TextViewMarginProviders)
+				.OnTextViewLayoutChanged(sender, e);
+		}
 
-        class TextViewState
-        {
-            public bool Initialized { get; set; }
-        }
-    }
+		class TextViewState {
+			public bool Initialized { get; set; }
+		}
+	}
 }
