@@ -39,22 +39,26 @@ namespace CodeStream.VisualStudio.Controllers
 
         private async Task CreatePostAsync(string streamId, string threadId, string url)
         {
-            try
-            {
-                var streamResponse = await _codeStreamAgent.GetStreamAsync(streamId);
-                if (streamResponse != null)
-                {
-                    var streamThread = new StreamThread(threadId, streamResponse.Stream);
-                    await _codeStreamAgent.CreatePostAsync(streamThread.Stream.Id,
-                        streamThread.Id, $"Join my Live Share session: {url}");
+			if (url.IsNullOrWhiteSpace()) {
+				Log.Debug($"{nameof(CreatePostAsync)} url is missing");
+				await Task.CompletedTask;
+			}
+			else {
 
-                    _sessionService.LiveShareUrl = url;
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "Could not post Live Share url");
-            }
+				try {
+					var streamResponse = await _codeStreamAgent.GetStreamAsync(streamId);
+					if (streamResponse != null) {
+						var streamThread = new StreamThread(threadId, streamResponse.Stream);
+						await _codeStreamAgent.CreatePostAsync(streamThread.Stream.Id,
+							streamThread.Id, $"Join my Live Share session: {url}");
+
+						_sessionService.LiveShareUrl = url;
+					}
+				}
+				catch (Exception ex) {
+					Log.Warning(ex, "Could not post Live Share url");
+				}
+			}
         }
 
         public async Task StartAsync(string streamId, string threadId)

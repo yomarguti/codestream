@@ -3,6 +3,7 @@ using CodeStream.VisualStudio.Services;
 using System;
 using System.Collections.Generic;
 using Serilog;
+using CodeStream.VisualStudio.Core.Logging;
 
 namespace CodeStream.VisualStudio.Packages
 {
@@ -18,8 +19,7 @@ namespace CodeStream.VisualStudio.Packages
         /// </summary>
         private static readonly Dictionary<string, ExtensionKind> ExtensionMap = new Dictionary<string, ExtensionKind>()
         {
-            { "VS Live Share - Preview", ExtensionKind.LiveShare},
-            { "VS Live Share", ExtensionKind.LiveShare }
+			{ "Live Share", ExtensionKind.LiveShare }
         };
 
         private static ILogger _log;
@@ -45,19 +45,23 @@ namespace CodeStream.VisualStudio.Packages
                     domain = AppDomain.CreateDomain($"CodeStream-{Guid.NewGuid()}",
                         AppDomain.CurrentDomain.Evidence,
                         appDomainSetup);
-                    _log.Verbose($"AppDomain created");
+                    _log.Debug($"AppDomain created");
 
                     var path =
                         $@"\dlls\{Application.VisualStudioVersionYear}\Microsoft.VisualStudio.ExtensionManager.dll";
                     var assembly = domain.LoadFromDisk(path);
-                    _log.Verbose($"AppDomain loaded assembly. Path={path}");
+                    _log.Debug($"AppDomain loaded assembly. Path={path}");
 
                     var installedExtensionsList = PackageExtensions.Invoke<IEnumerable<dynamic>>(
                         assembly.GetType("Microsoft.VisualStudio.ExtensionManager.SVsExtensionManager"),
                         "GetInstalledExtensions");
 
-                    if (installedExtensionsList == null) return installedExtensions;
-
+					if (installedExtensionsList == null)
+					{
+						_log.Debug($"{installedExtensionsList} is null");
+						return installedExtensions;
+					}
+					
                     foreach (object extension in installedExtensionsList)
                     {
                         // NOTE: you can't cast extension as dynamic, or you're get a BindingException...
@@ -71,10 +75,16 @@ namespace CodeStream.VisualStudio.Packages
                         if (ExtensionMap.TryGetValue(name, out ExtensionKind kind))
                         {
                             installedExtensions[kind] = true;
-                            _log.Verbose($"Found installed extension=`{name}`");
+							_log.Debug($"Found installed extension=`{name}`");							
                         }
                     }
-                }
+
+					if (_log.IsDebugEnabled())
+					{
+						_log.Debug("Extensions found:");
+						_log.Debug(installedExtensions.ToJson(camelCase: true, format: true));
+					}
+				}
                 catch (Exception ex)
                 {
                     _log.Error(ex, "Extension");
