@@ -6,7 +6,7 @@ import Codemark from "./Codemark";
 import ScrollBox from "./ScrollBox";
 import Feedback from "./Feedback";
 import cx from "classnames";
-import { range } from "../utils";
+import { range, debounceToAnimationFrame, diff } from "../utils";
 import { HostApi } from "../webview-api";
 import {
 	EditorHighlightRangeRequestType,
@@ -91,6 +91,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 	docMarkersByStartLine: {};
 	_scrollDiv: HTMLDivElement | null | undefined;
+	private root = React.createRef<HTMLDivElement>();
+	mutationObserver?: MutationObserver;
 
 	constructor(props: Props) {
 		super(props);
@@ -174,6 +176,44 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	componentDidMount() {
+		if (this.props.viewInline && this.root.current) {
+			this.mutationObserver = new MutationObserver(mutations => {
+				mutations.forEach(mutation => {
+					const target = mutation.target as Element;
+					switch (mutation.type) {
+						case "attributes": {
+							if (
+								mutation.attributeName === "class" &&
+								target.classList.contains("codemark") &&
+								diff(Array.from(target.classList), mutation.oldValue!.split(" ")).includes(
+									"selected"
+								)
+							) {
+								this.repositionCodemarks();
+							}
+							break;
+						}
+						case "childList": {
+							if (target.classList.contains("postslist")) {
+								this.repositionCodemarks();
+								if (
+									mutation.addedNodes[0] &&
+									(mutation.addedNodes[0] as Element).classList.contains("post")
+								)
+									this.repositionCodemarks();
+							}
+						}
+					}
+				});
+			});
+			this.mutationObserver.observe(this.root.current, {
+				attributes: true,
+				attributeOldValue: true,
+				childList: true,
+				subtree: true
+			});
+		}
+
 		this.disposables.push(
 			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
 				if (this.props.textEditorUri === textDocument.uri)
@@ -203,17 +243,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (didStartLineChange) {
 			this.scrollTo(18);
 		}
-
-		// INLINEHACK -- this delay is because the view isn't updating
-		// quickly enough when replies are rendered, so it repositions,
-		// then the replies make the selected codemark taller, and it
-		// fucks up the positioning
-		this.repositionCodemarks();
-		setTimeout(this.repositionCodemarks, 100);
 	}
 
 	componentWillUnmount() {
 		this.disposables.forEach(d => d.dispose());
+		this.mutationObserver && this.mutationObserver.disconnect();
 	}
 
 	scrollTo(top) {
@@ -227,7 +261,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	repositionBelow() {}
 
-	repositionCodemarks() {
+	repositionCodemarks = debounceToAnimationFrame(() => {
 		let $codemarkDivs = Array.from(
 			document.querySelectorAll(".codemark.inline, .compose.float-compose")
 		);
@@ -278,7 +312,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				}
 			}
 		}
-	}
+	});
 
 	async onFileChanged() {
 		const { textEditorUri, documentMarkers } = this.props;
@@ -717,7 +751,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const { viewInline } = this.props;
 
 		return (
-			<div className={cx("panel inline-panel", { "full-height": viewInline })}>
+			<div ref={this.root} className={cx("panel inline-panel", { "full-height": viewInline })}>
 				<div className="view-as-switch">
 					<span className="view-as-label">View:</span>
 					<label

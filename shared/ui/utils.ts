@@ -2,6 +2,19 @@ import uuidv4 from "uuid/v4";
 import { Range } from "vscode-languageserver-types";
 import { MaxRangeValue } from "./ipc/webview.protocol";
 
+type Primitive = number | string;
+
+export function diff<T extends Primitive>(arrayA: T[], arrayB: T[]): T[] {
+	const diff: T[] = [];
+	const [longer, shorter] = arrayA.length >= arrayB.length ? [arrayA, arrayB] : [arrayB, arrayA];
+	for (let item of longer) {
+		if (!shorter.includes(item) && !diff.includes(item)) {
+			diff.push(item);
+		}
+	}
+	return diff;
+}
+
 export function forceAsLine(range: Range): Range {
 	// If we don't have a selection assume a full line
 	if (range.start.line === range.end.line && range.start.character === range.end.character) {
