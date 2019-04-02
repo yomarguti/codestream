@@ -5,7 +5,7 @@ plugins {
 }
 
 group "com.codestream"
-version "0.5.0"
+version "0.51.0"
 
 sourceCompatibility = 1.8
 
@@ -32,10 +32,6 @@ dependencies {
     implementation "com.github.salomonbrys.kotson:kotson:2.5.0"
 
     implementation group: 'commons-io', name: 'commons-io', version: '2.6'
-
-//    implementation "com.github.gtache.lsp:intellij-lsp:v1.5.0"
-//    implementation "com.github.gtache.lsp:1.5.0"
-//    testImplementation group: "junit", name: "junit", version: "4.12"
 }
 
 compileKotlin {
@@ -50,17 +46,10 @@ intellij {
     version "2018.3.4"
 //    version "IC-2018.2.7"
     intellij.updateSinceUntilBuild false
-//    plugins "com.github.gtache.lsp:1.5.0"
 }
 
 runIde {
 //    jvmArgs '-Dsun.java2d.uiScale.enabled=false'
-}
-
-patchPluginXml {
-    changeNotes """
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>"""
 }
 
 import org.gradle.internal.os.OperatingSystem
@@ -78,7 +67,6 @@ task buildDeps(type: Exec) {
 }
 
 task copyAgent(type: Copy) {
-//    from "$projectDir/../codestream-lsp-agent/dist/agent-pkg.js", "$projectDir/../codestream-lsp-agent/dist/agent-pkg.js.map"
     from "$projectDir/../codestream-lsp-agent/dist"
     include "**/*"
     into "$projectDir/src/main/resources/agent"
