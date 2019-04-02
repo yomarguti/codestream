@@ -210,13 +210,13 @@ export class Codemark extends React.Component<Props, State> {
 		});
 	};
 
-	toggleLabelIndicators = event => {
-		event.stopPropagation();
-		HostApi.instance.send(UpdateConfigurationRequestType, {
-			name: "showLabelText",
-			value: !this.props.showLabelText
-		});
-		this.setState({ showLabelText: !this.state.showLabelText });
+	toggleLabelIndicators = (_event: React.SyntheticEvent) => {
+		// event.stopPropagation();
+		// HostApi.instance.send(UpdateConfigurationRequestType, {
+		// 	name: "showLabelText",
+		// 	value: !this.props.showLabelText
+		// });
+		// this.setState({ showLabelText: !this.state.showLabelText });
 	};
 
 	renderCollapsedCodemark() {
