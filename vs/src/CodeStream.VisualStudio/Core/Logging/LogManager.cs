@@ -22,7 +22,7 @@ namespace CodeStream.VisualStudio.Core.Logging
         private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Warning;
 #endif
 
-        private static readonly LoggingLevelSwitch LoggingLevelSwitch = new LoggingLevelSwitch(_defaultLoggingLevel);
+		private static LoggingLevelSwitch LoggingLevelSwitch;
 
         static Logger CreateLogger()
         { 
@@ -31,8 +31,9 @@ namespace CodeStream.VisualStudio.Core.Logging
             {
                 _defaultLoggingLevel = FromTraceLevel(packageSettings.TraceLevel);
             }
- 
-            var logPath = Path.Combine(Application.LogPath, "vs-extension.log");
+			LoggingLevelSwitch = new LoggingLevelSwitch(_defaultLoggingLevel);
+
+			var logPath = Path.Combine(Application.LogPath, "vs-extension.log");
 
             var formatter  = new MessageTemplateTextFormatter("{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{ProcessId:00000}] {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}{NewLine}{Exception}",
                 new CultureInfo("en-US"));
