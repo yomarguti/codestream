@@ -126,8 +126,12 @@ namespace CodeStream.VisualStudio.Services
 
         public TraceLevel TraceLevel
         {
-            get => DialogPage.TraceLevel;
-            set => DialogPage.TraceLevel = value;
+			get {
+				return DialogPage.TraceLevel;
+			}
+			set {
+				DialogPage.TraceLevel = value;
+			}
         }
 
         public bool AutoSignIn

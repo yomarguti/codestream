@@ -355,7 +355,7 @@ namespace CodeStream.VisualStudio.UI.Settings
         [Description("Specifies how much (if any) output will be sent to the CodeStream log")]
         public TraceLevel TraceLevel
         {
-            get => _traceLevel;
+	        get { return _traceLevel; }
             set
             {
                 if (_traceLevel != value)
