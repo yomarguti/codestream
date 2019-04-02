@@ -14,40 +14,20 @@ class ComposeBox extends React.Component {
 	state = {
 		crossPostMessage: true,
 		crossPostIssue: true,
-		startPosition: document.body.getBoundingClientRect().height / 3 // TODO: try to avoid `getBoundingClientRect`
+		position: document.body.getBoundingClientRect().height / 3 // TODO: try to avoid `getBoundingClientRect`
 	};
 
-	componentDidMount() {
-		// TODO: do this in `Stream.setMultiCompose` and have it be derived state
-		this.repositionIfNecessary();
-	}
+	static getDerivedStateFromProps(props, state) {
+		const { codeBlock, textEditorVisibleRanges } = props;
+		if (!props.codeBlock) return null;
 
-	repositionIfNecessary() {
-		const { forwardedRef, codeBlock, textEditorVisibleRanges } = this.props;
-
-		const root = forwardedRef.current;
-		if (!root) return;
-
-		let top;
-
-		if (codeBlock) {
-			const line0 = getLine0ForEditorLineFn(textEditorVisibleRanges)(codeBlock.range.start.line);
-			if (line0 >= 0) {
-				top = (window.innerHeight * line0) / getVisibleLineCount(textEditorVisibleRanges);
-			}
-		} else {
-			const bodyDimensions = document.body.getBoundingClientRect();
-			const rootDimensions = root.getBoundingClientRect();
-			top = (bodyDimensions.height - rootDimensions.height) / 2;
+		const line0 = getLine0ForEditorLineFn(textEditorVisibleRanges)(codeBlock.range.start.line);
+		if (line0 >= 0) {
+			const top = (window.innerHeight * line0) / getVisibleLineCount(textEditorVisibleRanges);
+			if (top !== state.position) return { position: top };
 		}
-
-		this.setState(state => {
-			if (top !== state.startPosition) {
-				return { startPosition: top };
-			} else return null;
-		});
-
 		//FIXME -- check to see if it's too low
+		return null;
 	}
 
 	handleSubmitPost = (...args) => {
@@ -215,7 +195,7 @@ class ComposeBox extends React.Component {
 					"float-compose": this.props.floatCompose,
 					"multi-compose": multiCompose
 				})}
-				style={{ top: top || this.state.startPosition }}
+				style={{ top: this.state.position }}
 				data-top={top}
 			>
 				<div style={{ position: "relative" }}>
