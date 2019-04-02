@@ -68,7 +68,7 @@ interface State {
 	clickedPlus: boolean;
 	isLoading: boolean;
 	selectedDocMarkerId: string | undefined;
-	numLinesVisible: number;
+	numLinesVisible: number; // TODO: use a connected prop
 	openIconsOnLine: number;
 	query: string | undefined;
 	highlightedLine?: number;
@@ -966,6 +966,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		return toLineNum;
 	};
 
+	// TODO: replace with getLine0ForEditorLineFn selector
 	// the opposite of mapLine0ToVisibleRange
 	mapVisibleRangeToLine0 = fromLineNum => {
 		const { textEditorVisibleRanges } = this.props;

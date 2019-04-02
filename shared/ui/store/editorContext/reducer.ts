@@ -1,7 +1,10 @@
 import { State, EditorContextActionsType } from "./types";
+import { Range } from "vscode-languageserver-types";
 import * as actions from "./actions";
 import { ActionType } from "../common";
 import { createSelector } from "reselect";
+import { memoize } from "lodash-es";
+import { range } from "@codestream/webview/utils";
 
 type EditorContextActions = ActionType<typeof actions>;
 
@@ -38,7 +41,42 @@ export function reduceEditorContext(state = initialState, action: EditorContextA
 }
 
 const emptyArray = [];
+
 export const getCurrentSelection = createSelector(
 	(state: State) => state.textEditorSelections || emptyArray,
 	selections => selections[0]
+);
+
+export const getVisibleRanges = (state: State) => state.textEditorVisibleRanges || emptyArray;
+
+// alias for mapVisibleRangeToLine0
+export const getLine0ForEditorLineFn = createSelector(
+	(visibleRanges?: Range[]) => visibleRanges || emptyArray,
+	(textEditorVisibleRanges: Range[]) =>
+		memoize((editorLine: number) => {
+			let lineCounter = 0;
+			let toLineNum0 = -1; // -1 indicates we didn't find it
+			if (textEditorVisibleRanges != null) {
+				textEditorVisibleRanges.forEach(lineRange => {
+					range(lineRange.start.line, lineRange.end.line + 1).forEach(thisLine => {
+						if (thisLine === editorLine) toLineNum0 = lineCounter;
+						lineCounter++;
+					});
+				});
+			}
+			return toLineNum0;
+		})
+);
+
+export const getVisibleLineCount = createSelector(
+	(visibleRanges?: Range[]) => visibleRanges || emptyArray,
+	(textEditorVisibleRanges: Range[]) => {
+		let numLinesVisible = 0;
+		if (textEditorVisibleRanges != null) {
+			textEditorVisibleRanges.forEach(range => {
+				numLinesVisible += range.end.line - range.start.line + 1;
+			});
+		}
+		return numLinesVisible;
+	}
 );

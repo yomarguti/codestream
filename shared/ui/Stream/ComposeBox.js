@@ -3,53 +3,43 @@ import { connect } from "react-redux";
 import createClassString from "classnames";
 import { PostCompose } from "./PostCompose";
 import { CodemarkForm } from "./CodemarkForm";
-// import hljs from "highlight.js";
-// const Path = require("path");
 import { MessageInput } from "./MessageInput";
+import {
+	getLine0ForEditorLineFn,
+	getVisibleLineCount,
+	getVisibleRanges
+} from "../store/editorContext/reducer";
 
 class ComposeBox extends React.Component {
 	state = {
 		crossPostMessage: true,
 		crossPostIssue: true,
-		startPosition: document.body.getBoundingClientRect().height / 3
+		startPosition: document.body.getBoundingClientRect().height / 3 // TODO: try to avoid `getBoundingClientRect`
 	};
 
 	componentDidMount() {
+		// TODO: do this in `Stream.setMultiCompose` and have it be derived state
 		this.repositionIfNecessary();
 	}
 
 	repositionIfNecessary() {
-		const { forwardedRef } = this.props;
+		const { forwardedRef, codeBlock, textEditorVisibleRanges } = this.props;
 
 		const root = forwardedRef.current;
 		if (!root) return;
-		const bodyDimensions = document.body.getBoundingClientRect();
-		const rootDimensions = root.getBoundingClientRect();
 
 		let top;
-		// if (false && quote && quote.range && textEditorVisibleRanges.length) {
-		// const quoteLineNum = quote.location[0];
-		// let numLinesVisible = 0;
-		// textEditorVisibleRanges.forEach(range => {
-		// 	numLinesVisible += range[1].line - range[0].line + 1;
-		// });
-		// numLinesVisible += 1; // vscode mis-reports the last line as being 2 bigger than it is
-		//
-		// let rangeStartOffset = 0;
-		// textEditorVisibleRanges.forEach(lineRange => {
-		// 	const rangeFirstLine = lineRange[0].line;
-		// 	const rangeLastLine = lineRange[1].line;
-		// 	const linesInRange = rangeLastLine - rangeFirstLine + 1;
-		// 	if (quoteLineNum >= rangeFirstLine && quoteLineNum < rangeLastLine)
-		// 		top = (100 * (rangeStartOffset + quoteLineNum - rangeFirstLine)) / numLinesVisible;
-		// 	rangeStartOffset += linesInRange;
-		// });
-		// if ((top * bodyDimensions.height) / 100 + rootDimensions.height > bodyDimensions.height - 10)
-		// 	top = bodyDimensions.height - rootDimensions.height - 10;
-		// else top = top + "vh";
-		// } else {
-		top = (bodyDimensions.height - rootDimensions.height) / 2;
-		// }
+
+		if (codeBlock) {
+			const line0 = getLine0ForEditorLineFn(textEditorVisibleRanges)(codeBlock.range.start.line);
+			if (line0 >= 0) {
+				top = (window.innerHeight * line0) / getVisibleLineCount(textEditorVisibleRanges);
+			}
+		} else {
+			const bodyDimensions = document.body.getBoundingClientRect();
+			const rootDimensions = root.getBoundingClientRect();
+			top = (bodyDimensions.height - rootDimensions.height) / 2;
+		}
 
 		this.setState(state => {
 			if (top !== state.startPosition) {
@@ -263,10 +253,8 @@ class ComposeBox extends React.Component {
 	}
 }
 
-const emptyArray = [];
-
 const mapStateToProps = state => {
-	return { textEditorVisibleRanges: state.context.textEditorVisibleRanges || emptyArray };
+	return { textEditorVisibleRanges: getVisibleRanges(state.editorContext) };
 };
 
 const ConnectedComposeBox = connect(mapStateToProps)(ComposeBox);
