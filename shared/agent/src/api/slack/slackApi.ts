@@ -372,12 +372,12 @@ export class SlackApiProvider implements ApiProvider {
 		}
 	}
 
-	grantMessagerChannelAccess(token: string, channel: string): Promise<{}> {
+	grantBroadcasterChannelAccess(token: string, channel: string): Promise<{}> {
 		if (channel === `user-${this.userId}`) {
 			channel = `user-${this.codestreamUserId}`;
 		}
 
-		return this._codestream.grantMessagerChannelAccess(token, channel);
+		return this._codestream.grantBroadcasterChannelAccess(token, channel);
 	}
 
 	@log()

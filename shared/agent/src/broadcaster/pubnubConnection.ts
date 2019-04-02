@@ -8,13 +8,13 @@ import { Disposable } from "vscode-languageserver";
 import {
 	MessageCallback,
 	MessageEvent,
-	MessagerConnection,
-	MessagerConnectionOptions,
-	MessagerHistoryInput,
-	MessagerHistoryOutput,
-	MessagerStatusType,
+	BroadcasterConnection,
+	BroadcasterConnectionOptions,
+	BroadcasterHistoryInput,
+	BroadcasterHistoryOutput,
+	BroadcasterStatusType,
 	StatusCallback
-} from "./messager";
+} from "./broadcaster";
 import { PubnubHistory } from "./pubnubHistory";
 
 interface PubnubMessage {
@@ -51,7 +51,7 @@ interface SubscriptionMap {
 	};
 }
 
-export class PubnubConnection implements MessagerConnection {
+export class PubnubConnection implements BroadcasterConnection {
 
 	private _userId: string | undefined;
 	private _pubnub: Pubnub | undefined;
@@ -94,7 +94,7 @@ export class PubnubConnection implements MessagerConnection {
 	}
 
 	// subscribe to the passed channels
-	subscribe(channels: string[], options: MessagerConnectionOptions = {}) {
+	subscribe(channels: string[], options: BroadcasterConnectionOptions = {}) {
 		const unsubscribedChannels: string[] = [];
 		const subscribedChannels: string[] = [];
 		for (const channel of channels) {
@@ -110,7 +110,7 @@ export class PubnubConnection implements MessagerConnection {
 		}
 		if (subscribedChannels.length > 0) {
 			this.onStatus({
-				status: MessagerStatusType.Connected,
+				status: BroadcasterStatusType.Connected,
 				channels: subscribedChannels
 			});
 		}
@@ -200,7 +200,7 @@ export class PubnubConnection implements MessagerConnection {
 	private setConnected(channels: string[]) {
 		if (this._statusCallback) {
 			this._statusCallback({
-				status: MessagerStatusType.Connected,
+				status: BroadcasterStatusType.Connected,
 				channels
 			});
 		}
@@ -209,7 +209,7 @@ export class PubnubConnection implements MessagerConnection {
 	private reset() {
 		if (this._statusCallback) {
 			this._statusCallback({
-				status: MessagerStatusType.Reset
+				status: BroadcasterStatusType.Reset
 			});
 		}
 	}
@@ -243,7 +243,7 @@ export class PubnubConnection implements MessagerConnection {
 		return troubleChannels;
 	}
 
-	fetchHistory (options: MessagerHistoryInput): Promise<MessagerHistoryOutput> {
+	fetchHistory (options: BroadcasterHistoryInput): Promise<BroadcasterHistoryOutput> {
 		return new PubnubHistory().fetchHistory({
 			pubnub: this._pubnub!,
 			...options
@@ -253,7 +253,7 @@ export class PubnubConnection implements MessagerConnection {
 	private async netHiccup() {
 		if (this._statusCallback) {
 			this._statusCallback({
-				status: MessagerStatusType.NetworkProblem
+				status: BroadcasterStatusType.NetworkProblem
 			});
 		}
 	}
@@ -272,7 +272,7 @@ export class PubnubConnection implements MessagerConnection {
 	private async subscriptionFailure(channels: string[]) {
 		if (this._statusCallback) {
 			this._statusCallback({
-				status: MessagerStatusType.Failed,
+				status: BroadcasterStatusType.Failed,
 				channels
 			});
 		}

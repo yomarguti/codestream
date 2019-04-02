@@ -1,4 +1,4 @@
-// Provide the Messager class, which encapsulates communications with a swappable messager service
+// Provide the Broadcaster class, which encapsulates communications with a swappable broadcaster service
 // (eg. Pubnub, SocketCluster) to receive messages in real-time
 "use strict";
 import HttpsProxyAgent from "https-proxy-agent";
@@ -7,44 +7,44 @@ import { ApiProvider } from "../api/apiProvider";
 import { PubnubConnection } from "./pubnubConnection";
 import { SocketClusterConnection } from "./socketClusterConnection";
 
-export interface MessagerConnectionOptions {
+export interface BroadcasterConnectionOptions {
 	withPresence?: boolean;
 }
 
-export interface MessagerConnection {
+export interface BroadcasterConnection {
 	disconnect():  void;
-	subscribe(channels: string[], options?: MessagerConnectionOptions): void;
+	subscribe(channels: string[], options?: BroadcasterConnectionOptions): void;
 	unsubscribe(channels: string[]): void;
 	reconnect(): void;
 	confirmSubscriptions(channels: string[]): Promise<string[]>;
-	fetchHistory(options: MessagerHistoryInput): Promise<MessagerHistoryOutput>;
+	fetchHistory(options: BroadcasterHistoryInput): Promise<BroadcasterHistoryOutput>;
 }
 
-export interface MessagerHistoryInput {
+export interface BroadcasterHistoryInput {
 	channels: string[];
 	since: number;
 	debug?(msg: string, info?: any): void; // for debug messages
 }
 
-export interface MessagerMessage {
+export interface BroadcasterMessage {
 	message: any;
 	timestamp: number;
 }
 
-export interface MessagerHistoryOutput {
+export interface BroadcasterHistoryOutput {
 	timestamp?: number;
-	messages?: MessagerMessage[];
+	messages?: BroadcasterMessage[];
 	reset?: boolean;
 }
 
 export type MessageCallback = (message: any) => void;
-export type StatusCallback = (status: MessagerStatus) => void;
+export type StatusCallback = (status: BroadcasterStatus) => void;
 
-// use this interface to initialize the Messager class
-export interface MessagerInitializer {
+// use this interface to initialize the Broadcaster class
+export interface BroadcasterInitializer {
 	pubnubSubscribeKey?: string; // identifies our Pubnub account, comes from pubnubKey returned with the login response from the API
 	accessToken: string; // access token for api requests
-	authKey: string; // unique messager token provided in the login response
+	authKey: string; // unique broadcaster token provided in the login response
 	userId: string; // ID of the current user
 	lastMessageReceivedAt?: number; // should persist across sessions, interruptions in service will retrieve messages since this time
 	testMode?: boolean; // whether we emit test-mode statuses, not normally used in production
@@ -64,10 +64,10 @@ export interface ChannelDescriptor {
 	withPresence?: boolean;
 }
 
-// the MessagerConnection instance will emit a status through onStatusChange(), for some
+// the BroadcasterConnection instance will emit a status through onStatusChange(), for some
 // statuses, information on which channels are affected is also provided
-export interface MessagerStatus {
-	status: MessagerStatusType;
+export interface BroadcasterStatus {
+	status: BroadcasterStatusType;
 	channels?: string[];
 	reconnected?: boolean;
 }
@@ -77,15 +77,15 @@ export interface MessageEvent {
 	message: any;
 }
 
-// one of the statuses emitted in MessagerStatus above
-export enum MessagerStatusType {
+// one of the statuses emitted in BroadcasterStatus above
+export enum BroadcasterStatusType {
 	Connected = "Connected", // indicates all channels have been successfully subscribed to as requested
 	Trouble = "Trouble", // indicates trouble with the network or one or more subscriptions, should be a temporary state
 	Failed = "Failed", // indicates some channels could not be subscribed to, and client action is required to correct this
 	Offline = "Offline", // indicates the network is currently offline, so messages won't be received
 	Reset = "Reset", // indicates that during catching up on history, there are too many messages or it's been too long...
 	// the client should retrieve fresh data from the server as if it is a fresh login
-	Aborted = "Aborted", // an aborted state, usually the result of a bad messager token, client must reinitialize
+	Aborted = "Aborted", // an aborted state, usually the result of a bad broadcaster token, client must reinitialize
 
 	// the statuses below are used only for testing, normally these are private and black-boxed
 	Confirmed = "Confirmed", // indicates subscriptions have been confirmed
@@ -108,14 +108,14 @@ const TEN_MINUTES = 10 * 60 * 1000;
 const THRESHOLD_FOR_CATCHUP = ONE_MONTH - TEN_MINUTES;
 const THRESHOLD_BUFFER = 12000;
 
-export class Messager {
-	private _messagerConnection: MessagerConnection | undefined;
+export class Broadcaster {
+	private _broadcasterConnection: BroadcasterConnection | undefined;
 	private _subscriptionsPending: boolean = false;
 	private _lastSuccessfulSubscription: number = 0;
 	private _subscriptions: SubscriptionMap = {};
 	private _lastMessageReceivedAt: number = 0;
 	private _messageEmitter = new Emitter<{ [key: string]: any }[]>();
-	private _statusEmitter = new Emitter<MessagerStatus>();
+	private _statusEmitter = new Emitter<BroadcasterStatus>();
 	private _queuedChannels: ChannelDescriptor[] = [];
 	private _statusTimeout: NodeJS.Timer | undefined;
 	private _lastTick: number = 0;
@@ -134,7 +134,7 @@ export class Messager {
 	private _messagesReceived: { [key: string]: number } = {};
 
 	// call to receive status updates
-	get onDidStatusChange(): Event<MessagerStatus> {
+	get onDidStatusChange(): Event<BroadcasterStatus> {
 		return this._statusEmitter.event;
 	}
 
@@ -148,16 +148,16 @@ export class Messager {
 		private readonly _proxyAgent: HttpsProxyAgent | undefined
 	) {}
 
-	// initialize MessagerConnection
-	async initialize(options: MessagerInitializer): Promise<Disposable> {
-		this._debug(`Messager initializing...`);
+	// initialize BroadcasterConnection
+	async initialize(options: BroadcasterInitializer): Promise<Disposable> {
+		this._debug(`Broadcaster initializing...`);
 		if (options.debug) {
 			this._debug = options.debug;
 		}
 
 		if (options.socketCluster) {
 			const socketClusterConnection = new SocketClusterConnection();
-console.warn('INITING SOCKET CLUSTER CONNECTION...')
+console.warn('INITING SOCKET CLUSTER CONNECTION...');
 			await socketClusterConnection.initialize({
 				host: options.socketCluster.host,
 				port: options.socketCluster.port,
@@ -168,7 +168,7 @@ console.warn('INITING SOCKET CLUSTER CONNECTION...')
 				debug: this._debug
 			});
 console.warn('INITED SOCKET CLUSTER CONNECTION');
-			this._messagerConnection = socketClusterConnection;
+			this._broadcasterConnection = socketClusterConnection;
 		} else {
 			this._debug(`INITING PUBNUB CONNECTION authKey=${options.authKey} userId=${options.userId} skey=${options.pubnubSubscribeKey}`);
 			const pubnubConnection = new PubnubConnection();
@@ -181,7 +181,7 @@ console.warn('INITED SOCKET CLUSTER CONNECTION');
 				onStatus: this.onStatus.bind(this),
 				debug: this._debug
 			});
-			this._messagerConnection = pubnubConnection;
+			this._broadcasterConnection = pubnubConnection;
 		}
 		this._lastMessageReceivedAt = options.lastMessageReceivedAt || 0;
 		this._testMode = options.testMode || false;
@@ -194,8 +194,8 @@ console.warn('INITED SOCKET CLUSTER CONNECTION');
 			dispose: () => {
 console.warn('DISPOSING!!!');
 				this.unsubscribeAll();
-				if (this._messagerConnection) {
-					this._messagerConnection.disconnect();
+				if (this._broadcasterConnection) {
+					this._broadcasterConnection.disconnect();
 				}
 			}
 		};
@@ -206,8 +206,8 @@ console.warn('DISPOSING!!!');
 console.warn('SUBSCRIBING TO', channels);
 		this._debug("Request to subscribe to channels", channels);
 		if (this._aborted) {
-			this._debug("Messager Connection is aborted");
-			return this.emitStatus(MessagerStatusType.Aborted);
+			this._debug("Broadcaster Connection is aborted");
+			return this.emitStatus(BroadcasterStatusType.Aborted);
 		}
 		const channelDescriptors: ChannelDescriptor[] = this.normalizeChannelDescriptors(channels);
 		// while processing subscriptions, we hold off accepting new subscriptions until processing is complete,
@@ -243,7 +243,7 @@ console.warn('SUBSCRIBING TO', channels);
 	// we're not in a position to subscribe to these channels, queue them up for later
 	private queueChannels(channels: ChannelDescriptor[]) {
 		if (this._testMode) {
-			this.emitStatus(MessagerStatusType.Queued, channels.map(channel => channel.name));
+			this.emitStatus(BroadcasterStatusType.Queued, channels.map(channel => channel.name));
 		}
 		this._debug("Queueing " + channels);
 		this._queuedChannels.push(...channels);
@@ -306,7 +306,7 @@ console.warn('SUBSCRIBING TO', channels);
 		}
 		// track the last time a message was received, each time we encounter a disconnected situation,
 		// we'll fetch the message history from this point going forward
-		this._debug("Messager message received at", event.receivedAt);
+		this._debug("Broadcaster message received at", event.receivedAt);
 		if (event.receivedAt > this._lastMessageReceivedAt && !this._subscriptionsPending) {
 			this._lastMessageReceivedAt = event.receivedAt;
 			this._debug("_lastMessageReceivedAt updated");
@@ -336,9 +336,9 @@ console.warn('SUBSCRIBING TO', channels);
 		this._simulateSubscriptionTimeout = true;
 	}
 
-	onStatus(status: MessagerStatus) {
+	onStatus(status: BroadcasterStatus) {
 		switch (status.status) {
-			case MessagerStatusType.Connected:
+			case BroadcasterStatusType.Connected:
 				if (!this._simulateSubscriptionTimeout) {
 					// a successful subscription of certain channels
 					this.setConnected(status.channels!);
@@ -346,13 +346,13 @@ console.warn('SUBSCRIBING TO', channels);
 					this._simulateSubscriptionTimeout = false;
 				}
 				return;
-			case MessagerStatusType.NetworkProblem:
+			case BroadcasterStatusType.NetworkProblem:
 				return this.netHiccup();
 
-			case MessagerStatusType.Failed:
+			case BroadcasterStatusType.Failed:
 				return this.subscriptionFailure(status.channels!);
 
-			case MessagerStatusType.Reset:
+			case BroadcasterStatusType.Reset:
 				return this.reset();
 
 			default:
@@ -364,7 +364,7 @@ console.warn('SUBSCRIBING TO', channels);
 	simulateNetError(delay: number = 0) {
 		setTimeout(() => {
 			this.onStatus({
-				status: MessagerStatusType.NetworkProblem
+				status: BroadcasterStatusType.NetworkProblem
 			});
 		}, delay);
 	}
@@ -408,12 +408,12 @@ console.warn('SUBSCRIBING TO', channels);
 			}
 		});
 		if (channelsWithPresence.length > 0) {
-			this._debug("Messager subscribing (with presence) to", channelsWithPresence);
-			this._messagerConnection!.subscribe(channelsWithPresence, { withPresence: true });
+			this._debug("Broadcaster subscribing (with presence) to", channelsWithPresence);
+			this._broadcasterConnection!.subscribe(channelsWithPresence, { withPresence: true });
 		}
 		if (channelsWithoutPresence.length > 0) {
-			this._debug("Messager subscribing to", channelsWithoutPresence);
-			this._messagerConnection!.subscribe(channelsWithoutPresence);
+			this._debug("Broadcaster subscribing to", channelsWithoutPresence);
+			this._broadcasterConnection!.subscribe(channelsWithoutPresence);
 		}
 
 		// it sucks that we don't get a direct response when we try to
@@ -421,7 +421,7 @@ console.warn('SUBSCRIBING TO', channels);
 		// failed ... so avoid race condition problems by explicitly timing out if we
 		// don't receive a success message
 		if (!this._statusTimeout) {
-			this._debug("Messager subscriptions timing out in 5s...");
+			this._debug("Broadcaster subscriptions timing out in 5s...");
 			this._statusTimeout = setTimeout(this.subscriptionTimeout.bind(this), 5000);
 		}
 	}
@@ -508,10 +508,10 @@ console.warn('SUBSCRIBING TO', channels);
 		}
 
 		// fetch history since the last message received
-		let historyOutput: MessagerHistoryOutput;
+		let historyOutput: BroadcasterHistoryOutput;
 		try {
 			this._debug(`Fetching history since ${since} for`, channels);
-			historyOutput = await this._messagerConnection!.fetchHistory({
+			historyOutput = await this._broadcasterConnection!.fetchHistory({
 				channels,
 				since,
 				debug: this._debug
@@ -555,7 +555,7 @@ console.warn('SUBSCRIBING TO', channels);
 	private async netHiccup() {
 		this._subscriptionsPending = true;
 		if (this._testMode) {
-			this.emitStatus(MessagerStatusType.NetworkProblem);
+			this.emitStatus(BroadcasterStatusType.NetworkProblem);
 		}
 		this._debug("Network hiccup");
 		if (this._activeFailures.length > 0) {
@@ -591,7 +591,7 @@ console.warn('THESE CHANNELS ARE SUPPOSED TO BE SUBSCRIBED', channels);
 		}
 		else {
 console.warn('SOCKET CLUSTER WILL CONFIRM SUBSCRIPTIONS TO', channels);
-			troubleChannels = await this._messagerConnection!.confirmSubscriptions(channels);
+			troubleChannels = await this._broadcasterConnection!.confirmSubscriptions(channels);
 console.warn('SOCKET CLUSTER GAVE US THESE TROUBLE CHANNELS', troubleChannels);
 		}
 		if (troubleChannels.length > 0) {
@@ -602,12 +602,12 @@ console.warn('SOCKET CLUSTER GAVE US THESE TROUBLE CHANNELS', troubleChannels);
 			this.resubscribe(troubleChannels);
 		} else {
 			if (this._testMode) {
-				this.emitStatus(MessagerStatusType.Confirmed);
+				this.emitStatus(BroadcasterStatusType.Confirmed);
 			}
 			// seems like we're good, let's make sure we didn't miss anything by catching up on
 			// message history
 			this._debug("Subscriptions confirmed, reconnect and catch up...");
-			this._messagerConnection!.reconnect();
+			this._broadcasterConnection!.reconnect();
 			this.catchUp(this.getSubscribedChannels());
 		}
 	}
@@ -615,8 +615,8 @@ console.warn('SOCKET CLUSTER GAVE US THESE TROUBLE CHANNELS', troubleChannels);
 	// unsubscribe to all channels and stop listening to messages and status updates (clean up)
 	private unsubscribeAll() {
 		const channels = this.getSubscribedChannels();
-		this._debug("Messager unsubscribing", channels);
-		this._messagerConnection!.unsubscribe(channels);
+		this._debug("Broadcaster unsubscribing", channels);
+		this._broadcasterConnection!.unsubscribe(channels);
 		this._subscriptions = {};
 		// this.removeListener();
 		if (this._tickInterval) {
@@ -652,7 +652,7 @@ console.warn('SOCKET CLUSTER GAVE US THESE TROUBLE CHANNELS', troubleChannels);
 		// if we have been granted access by the API server to all channels, but we haven't
 		// actually subscribed to any channels, we'll retry 10 times ... after that, we
 		// emit a total failure and stop accepting subscription requests ... this is the
-		// only way to abort an infinite loop if the messager token was just plain wrong
+		// only way to abort an infinite loop if the broadcaster token was just plain wrong
 		if (
 			this.getSubscribedChannels().length === 0 &&
 			this._lastSuccessfulSubscription === 0
@@ -663,7 +663,7 @@ console.warn('SOCKET CLUSTER GAVE US THESE TROUBLE CHANNELS', troubleChannels);
 				);
 				this._aborted = true;
 				this.unsubscribeAll();
-				return this.emitStatus(MessagerStatusType.Aborted);
+				return this.emitStatus(BroadcasterStatusType.Aborted);
 			}
 		}
 
@@ -707,7 +707,7 @@ console.warn('SOCKET CLUSTER GAVE US THESE TROUBLE CHANNELS', troubleChannels);
 	}
 
 	// emit a status update to the client, with channels of interest optionally specified
-	private emitStatus(status: MessagerStatusType, channels?: string[], reconnected?: boolean) {
+	private emitStatus(status: BroadcasterStatusType, channels?: string[], reconnected?: boolean) {
 		this._debug(`Emitting status ${status}`, channels);
 		this._statusEmitter.fire({
 			status: status,
@@ -720,7 +720,7 @@ console.warn('SOCKET CLUSTER GAVE US THESE TROUBLE CHANNELS', troubleChannels);
 	// subscribed to
 	private emitConnected() {
 		const channels = this.getAllChannels();
-		this.emitStatus(MessagerStatusType.Connected, channels, this._hadTrouble);
+		this.emitStatus(BroadcasterStatusType.Connected, channels, this._hadTrouble);
 		this._needConnectedMessage = false;
 		this._hadTrouble = false;
 	}
@@ -732,7 +732,7 @@ console.warn('SOCKET CLUSTER GAVE US THESE TROUBLE CHANNELS', troubleChannels);
 		// this says we need to notify the client when we get fully connected (again)
 		this._hadTrouble = true;
 		this._needConnectedMessage = true;
-		this.emitStatus(MessagerStatusType.Trouble, channels);
+		this.emitStatus(BroadcasterStatusType.Trouble, channels);
 	}
 
 	// let the client know we were unable to subscribe to a given set of channels, and
@@ -740,7 +740,7 @@ console.warn('SOCKET CLUSTER GAVE US THESE TROUBLE CHANNELS', troubleChannels);
 	// channels ... something is wrong in this case and we'll no longer attempt to
 	// subscribe to those channels
 	private emitFailures(channels: string[]) {
-		this.emitStatus(MessagerStatusType.Failed, channels);
+		this.emitStatus(BroadcasterStatusType.Failed, channels);
 	}
 
 	// get all known channels to which we are being asked to subscribe
@@ -764,7 +764,7 @@ console.warn('SOCKET CLUSTER GAVE US THESE TROUBLE CHANNELS', troubleChannels);
 
 	// emit an Offline event, indicating we are currently not connected to the network
 	private offline() {
-		this.emitStatus(MessagerStatusType.Offline);
+		this.emitStatus(BroadcasterStatusType.Offline);
 	}
 
 	// resubscribe to all channels
@@ -795,13 +795,13 @@ console.warn(this._subscriptions[channel]);
 	// resetting the session
 	private reset() {
 		this.unsubscribeAll();
-		this.emitStatus(MessagerStatusType.Reset);
+		this.emitStatus(BroadcasterStatusType.Reset);
 	}
 
 	// remove the given set of channels from our list of channels to which we are
 	// trying to subscribe
 	private removeChannels(channels: string[]) {
-		this._messagerConnection!.unsubscribe(channels);
+		this._broadcasterConnection!.unsubscribe(channels);
 		for (const channel of channels) {
 			delete this._subscriptions[channel];
 		}

@@ -21,7 +21,7 @@ import { NetErrorOfflineTest } from "./netErrorOfflineTest";
 import { OfflineTest } from "./offlineTest";
 import { OnlineConfirmTest } from "./onlineConfirmTest";
 */
-import { MessagerTester, MessagerTesterConfig } from "./messagerTester";
+import { BroadcasterTester, BroadcasterTesterConfig } from "./broadcasterTester";
 /*
 import { QueuedChannelsTest } from "./queuedChannelsTest";
 import { ResetAfterTooLongTest } from "./resetAfterTooLongTest";
@@ -35,11 +35,11 @@ import { SubscriptionTimeoutRecoveryTest } from "./subscriptionTimeoutRecoveryTe
 import { SubscriptionTimeoutTest } from "./subscriptionTimeoutTest";
 */
 
-const TesterConfig: MessagerTesterConfig = {
+const TesterConfig: BroadcasterTesterConfig = {
 	apiOrigin: process.env.LSPAGENT_API_ORIGIN || "https://localhost.codestream.us:12079"
 };
 
-const Tests: MessagerTester[] = [
+const Tests: BroadcasterTester[] = [
 /*
 	new SubscriptionTest(TesterConfig),
 	new SecondSubscriptionTest(TesterConfig),
@@ -72,7 +72,7 @@ const Tests: MessagerTester[] = [
 */
 ];
 
-describe("messager tests", function() {
+describe("broadcaster tests", function() {
 	this.timeout(20000);
 	Tests.forEach(async test => {
 		describe(test.describe(), () => {

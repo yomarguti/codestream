@@ -143,7 +143,7 @@ import {
 	RTMessage
 } from "../apiProvider";
 import { CodeStreamPreferences } from "../preferences";
-import { MessagerEvents } from "./events";
+import { BroadcasterEvents } from "./events";
 import { CodeStreamUnreads } from "./unreads";
 
 export class CodeStreamApiProvider implements ApiProvider {
@@ -152,10 +152,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this._onDidReceiveMessage.event;
 	}
 
-	private _events: MessagerEvents | undefined;
+	private _events: BroadcasterEvents | undefined;
 	private readonly _middleware: CodeStreamApiMiddleware[] = [];
 	private _pubnubSubscribeKey: string | undefined;
-	private _messagerToken: string | undefined;
+	private _broadcasterToken: string | undefined;
 	private _socketCluster: { host: string, port: string } | undefined;
 	private _subscribedMessageTypes: Set<MessageType> | undefined;
 	private _teamId: string | undefined;
@@ -296,10 +296,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 		Logger.log(`Using team '${team.name}' (${team.id})${pickedTeamReason || ""}`);
 
-		Logger.log(`LOGIN COMPLETE, token=${response.accessToken} mToken=${response.messagerToken} skey=${response.pubnubKey}`);
+		Logger.log(`LOGIN COMPLETE, token=${response.accessToken} mToken=${response.broadcasterToken} skey=${response.pubnubKey}`);
 		this._token = response.accessToken;
 		this._pubnubSubscribeKey = response.pubnubKey;
-		this._messagerToken = response.messagerToken;
+		this._broadcasterToken = response.broadcasterToken;
 		this._socketCluster = response.socketCluster;
 
 		this._teamId = options.teamId;
@@ -325,11 +325,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 			});
 		}
 
-		Logger.log(`MESSAGER EVENTS, token=${this._token!}`);
-		this._events = new MessagerEvents({
+		Logger.log(`BROADCASTER EVENTS, token=${this._token!}`);
+		this._events = new BroadcasterEvents({
 			accessToken: this._token!,
 			pubnubSubscribeKey: this._pubnubSubscribeKey,
-			messagerToken: this._messagerToken!,
+			broadcasterToken: this._broadcasterToken!,
 			api: this,
 			proxyAgent: this._proxyAgent,
 			socketCluster: this._socketCluster
@@ -423,7 +423,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		this._onDidReceiveMessage.fire({ type: MessageType.Unreads, data: e });
 	}
 
-	grantMessagerChannelAccess(token: string, channel: string): Promise<{}> {
+	grantBroadcasterChannelAccess(token: string, channel: string): Promise<{}> {
 		return this.put(`/grant/${channel}`, {}, token);
 	}
 

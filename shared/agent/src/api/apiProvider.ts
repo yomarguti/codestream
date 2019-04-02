@@ -250,7 +250,7 @@ export interface ApiProvider {
 	login(options: LoginOptions): Promise<CSLoginResponse & { teamId: string }>;
 	subscribe(types?: MessageType[]): Promise<void>;
 
-	grantMessagerChannelAccess(token: string, channel: string): Promise<{}>;
+	grantBroadcasterChannelAccess(token: string, channel: string): Promise<{}>;
 
 	getMe(): Promise<GetMeResponse>;
 	getUnreads(request: GetUnreadsRequest): Promise<GetUnreadsResponse>;

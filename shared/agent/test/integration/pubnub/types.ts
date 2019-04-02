@@ -32,7 +32,7 @@ export interface LoginResponse {
 	user: UserData;
 	accessToken: string;
 	pubnubKey: string;
-	messagerToken: string;
+	broadcasterToken: string;
 	socketCluster?: {
 		host: string,
 		port: string

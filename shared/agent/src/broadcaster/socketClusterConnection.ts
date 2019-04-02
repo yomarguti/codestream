@@ -7,13 +7,13 @@ import { Disposable } from "vscode-languageserver";
 import {
 	MessageCallback,
 	MessageEvent,
-	MessagerConnection,
-	MessagerConnectionOptions,
-	MessagerHistoryInput,
-	MessagerHistoryOutput,
-	MessagerStatusType,
+	BroadcasterConnection,
+	BroadcasterConnectionOptions,
+	BroadcasterHistoryInput,
+	BroadcasterHistoryOutput,
+	BroadcasterStatusType,
 	StatusCallback
-} from "./messager";
+} from "./broadcaster";
 import { SocketClusterHistory } from "./socketClusterHistory";
 
 // use this interface to initialize the SocketClusterConnection class
@@ -36,7 +36,7 @@ interface SubscriptionMap {
 	};
 }
 
-export class SocketClusterConnection implements MessagerConnection {
+export class SocketClusterConnection implements BroadcasterConnection {
 	private _connected: boolean = false;
 	private _subscriptions: SubscriptionMap = {};
 	private _scClient: SCClientSocket | undefined;
@@ -105,7 +105,7 @@ export class SocketClusterConnection implements MessagerConnection {
 	_onDisconnect(options: SocketClusterInitializer): void {
 		if (this._statusCallback) {
 			this._statusCallback({
-				status: MessagerStatusType.NetworkProblem
+				status: BroadcasterStatusType.NetworkProblem
 			});
 		}
 	}
@@ -119,7 +119,7 @@ export class SocketClusterConnection implements MessagerConnection {
 	reconnect(): void {
 	}
 
-	subscribe(channels: string[], options: MessagerConnectionOptions = {}) {
+	subscribe(channels: string[], options: BroadcasterConnectionOptions = {}) {
 		this._debug('SocketCluster request to subscribe:', channels);
 		const unsubscribedChannels: string[] = [];
 		const subscribedChannels: string[] = [];
@@ -138,7 +138,7 @@ export class SocketClusterConnection implements MessagerConnection {
 		if (subscribedChannels.length > 0 && this._statusCallback) {
 			this._debug('SocketCluster already subscribed to ', subscribedChannels);
 			this._statusCallback({
-				status: MessagerStatusType.Connected,
+				status: BroadcasterStatusType.Connected,
 				channels: subscribedChannels
 			});
 		}
@@ -165,7 +165,7 @@ export class SocketClusterConnection implements MessagerConnection {
 		return troubleChannels;
 	}
 
-	fetchHistory (options: MessagerHistoryInput): Promise<MessagerHistoryOutput> {
+	fetchHistory (options: BroadcasterHistoryInput): Promise<BroadcasterHistoryOutput> {
 		return new SocketClusterHistory().fetchHistory({
 			scClient: this._scClient!,
 			...options
@@ -202,7 +202,7 @@ export class SocketClusterConnection implements MessagerConnection {
 	_handleSubscribe(channel: string) {
 		if (this._statusCallback) {
 			this._statusCallback({
-				status: MessagerStatusType.Connected,
+				status: BroadcasterStatusType.Connected,
 				channels: [channel]
 			});
 		}
@@ -211,7 +211,7 @@ export class SocketClusterConnection implements MessagerConnection {
 	_handleSubscribeFail(error: any, channel: string) {
 		if (this._statusCallback) {
 			this._statusCallback({
-				status: MessagerStatusType.Failed,
+				status: BroadcasterStatusType.Failed,
 				channels: [channel]
 			});
 		}

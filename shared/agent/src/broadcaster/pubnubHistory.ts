@@ -2,7 +2,7 @@
 
 "use strict";
 import * as Pubnub from "pubnub";
-import { MessagerHistoryOutput } from "./messager";
+import { BroadcasterHistoryOutput } from "./broadcaster";
 
 export interface PubnubHistoryInput {
 	pubnub: Pubnub;
@@ -31,13 +31,13 @@ export class PubnubHistory {
 	// The other Reset condition is if we end up with too many messages coming across the wire, current that limit is
 	// set to 1000 messages for a channel
 	//
-	async fetchHistory(options: PubnubHistoryInput): Promise<MessagerHistoryOutput> {
+	async fetchHistory(options: PubnubHistoryInput): Promise<BroadcasterHistoryOutput> {
 		this._pubnub = options.pubnub;
 		if (options.debug) {
 			this._debug = options.debug;
 		}
 
-		const output: MessagerHistoryOutput = {};
+		const output: BroadcasterHistoryOutput = {};
 
 		// split into slices of 500 channels, which we may never reach, but it's here if we do
 		let startSlice = 0;

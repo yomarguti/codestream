@@ -4,7 +4,7 @@
 
 import { SCClientSocket } from "socketcluster-client";
 import UUID from "uuid";
-import { MessagerHistoryOutput, MessagerMessage } from "./messager";
+import { BroadcasterHistoryOutput, BroadcasterMessage } from "./broadcaster";
 
 export interface SocketClusterHistoryInput {
 	scClient: SCClientSocket;
@@ -20,20 +20,20 @@ export interface SocketClusterHistoryAPIInput {
 }
 
 export interface SocketClusterHistoryOutput {
-	messages: MessagerMessage[];
+	messages: BroadcasterMessage[];
 	channels: string[];
 }
 
 export interface SocketClusterHistoryAPIOutput {
 	requestId: string;
-	messages: MessagerMessage[];
+	messages: BroadcasterMessage[];
 	channels: string[];
 	error?: string;
 }
 
 export class SocketClusterHistory {
 	private _scClient: SCClientSocket | undefined;
-	private _allMessages: MessagerMessage[] = [];
+	private _allMessages: BroadcasterMessage[] = [];
 	private _debug: (msg: string, info?: any) => void = () => {};
 	private _historyPromise: {
 		resolve(): void,
@@ -43,7 +43,7 @@ export class SocketClusterHistory {
 	private _requestId: string = "";
 	private _historyTimer: NodeJS.Timer | undefined;
 
-	async fetchHistory(options: SocketClusterHistoryInput): Promise<MessagerHistoryOutput> {
+	async fetchHistory(options: SocketClusterHistoryInput): Promise<BroadcasterHistoryOutput> {
 		this._scClient = options.scClient;
 		if (options.debug) {
 			this._debug = options.debug;
@@ -51,7 +51,7 @@ export class SocketClusterHistory {
 
 		this._scClient.on("history", this.handleHistory.bind(this));
 
-		const output: MessagerHistoryOutput = {};
+		const output: BroadcasterHistoryOutput = {};
 
 		// split into slices of 500 channels, which we may never reach, but it's here if we do
 		let startSlice = 0;
