@@ -163,6 +163,7 @@ export class Codemark extends React.Component<Props, State> {
 	handleClickCodemark = (event: React.SyntheticEvent): any => {
 		event.preventDefault();
 		if (event && event.currentTarget && event.currentTarget.tagName === "A") return false;
+		if (this.props.selected) return false;
 
 		if (window.getSelection().toString().length > 0) {
 			// in this case the user has selected a string
