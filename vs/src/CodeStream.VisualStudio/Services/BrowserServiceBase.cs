@@ -111,7 +111,7 @@ namespace CodeStream.VisualStudio.Services
 		public void ReloadWebView()
 		{
 			LoadWebView();
-			Log.Verbose($"{nameof(ReloadWebView)}");
+			Log.Debug($"{nameof(ReloadWebView)}");
 		}
 
 		public virtual string GetDevToolsUrl() => null;

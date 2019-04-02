@@ -33,7 +33,7 @@ namespace CodeStream.VisualStudio
 
         private void BeforeSolutionClosingEventHandler(object sender, EventArgs e)
         {
-            Log.Verbose("Solution is closing");
+            Log.Information("Solution is closing");
         }
 
         private void OnWindowFocusChanged(object sender, WindowFocusChangedEventArgs e)
@@ -55,7 +55,7 @@ namespace CodeStream.VisualStudio
         {
             try
             {
-                Log.Verbose(nameof(OnThemeChanged));
+                Log.Information(nameof(OnThemeChanged));
 
                 _codeStreamService.Value.WebviewIpc?.BrowserService?.ReloadWebView();
             }
@@ -79,7 +79,7 @@ namespace CodeStream.VisualStudio
                     _vsShellEventManager.VisualStudioThemeChangedEventHandler -= OnThemeChanged;
                     _vsShellEventManager.BeforeSolutionClosingEventHandler -= BeforeSolutionClosingEventHandler;
 
-                    Log.Verbose($"Unregistering events");
+                    Log.Debug($"Unregistering events");
                 }
 
                 _disposedValue = true;

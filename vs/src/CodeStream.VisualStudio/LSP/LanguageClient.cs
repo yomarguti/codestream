@@ -88,7 +88,7 @@ namespace CodeStream.VisualStudio.LSP
                     Proxy = _settingsService.Proxy,
                     ProxySupport = _settingsService.ProxySupport.ToJsonValue()
                 };
-                Log.Verbose(nameof(InitializationOptions) + " {@InitializationOptions}", initializationOptions);
+                Log.Debug(nameof(InitializationOptions) + " {@InitializationOptions}", initializationOptions);
 
                 return initializationOptions;
             }
@@ -177,7 +177,7 @@ namespace CodeStream.VisualStudio.LSP
                 var window = dte.OpenFile(Constants.vsViewKindCode, path);
                 window.Visible = true;
                 window.Close(vsSaveChanges.vsSaveChangesNo);
-                Log.Verbose($"{nameof(TriggerLspInitializeAsync)} success for {path}");
+                Log.Information($"{nameof(TriggerLspInitializeAsync)} success for {path}");
             }
             catch (Exception ex)
             {

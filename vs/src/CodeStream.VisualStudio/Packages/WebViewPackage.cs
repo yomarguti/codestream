@@ -213,7 +213,7 @@ namespace CodeStream.VisualStudio.Packages
         {
             if (_settingsService == null)
             {
-                Log.Verbose($"{nameof(DialogPage_PropertyChanged)} SettingsService is null");
+                Log.Warning($"{nameof(DialogPage_PropertyChanged)} SettingsService is null");
                 return;
             }
 
@@ -259,7 +259,7 @@ namespace CodeStream.VisualStudio.Packages
                      args.PropertyName == nameof(_settingsService.ProxyUrl) ||
                      args.PropertyName == nameof(_settingsService.ProxyStrictSsl))
             {
-                Log.Verbose($"Url(s) or Team or Proxy changed");
+                Log.Information($"Url(s) or Team or Proxy changed");
                 var sessionService = GetService(typeof(SSessionService)) as ISessionService;
                 if (sessionService?.IsAgentReady == true || sessionService?.IsReady == true)
                 {

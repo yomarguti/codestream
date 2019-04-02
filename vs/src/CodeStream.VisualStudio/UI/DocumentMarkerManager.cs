@@ -64,7 +64,7 @@ namespace CodeStream.VisualStudio.UI
                         }
 
                         _wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.CodemarkMarkers, _markers.Markers);
-                        Log.Verbose("Setting Codemarks Count={Count}", _markers.Markers.Count);
+                        Log.Debug("Setting Codemarks Count={Count}", _markers.Markers.Count);
                     }
                     else
                     {

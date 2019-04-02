@@ -388,7 +388,7 @@ namespace CodeStream.VisualStudio.Services
             var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
             if (dte == null) throw new ArgumentNullException(nameof(dte));
             dte.ExecuteCommand(commandName, commandArgs);
-            Log.Verbose("ExecuteCommand={CommandName} CommandArgs={commandArgs} Success", commandName, commandArgs);
+            Log.Debug("ExecuteCommand={CommandName} CommandArgs={commandArgs} Success", commandName, commandArgs);
         }
 
         /// <summary>

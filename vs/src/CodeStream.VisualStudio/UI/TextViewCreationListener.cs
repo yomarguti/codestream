@@ -103,7 +103,7 @@ namespace CodeStream.VisualStudio.UI {
 			var agentService = Package.GetGlobalService((typeof(SCodeStreamAgentService))) as ICodeStreamAgentService;
 			wpfTextView.Properties.GetOrCreateSingletonProperty(PropertyNames.DocumentMarkerManager,
 				() => DocumentMarkerManagerFactory.Create(agentService, wpfTextView, textDocument));
-			Log.Verbose($"{nameof(SubjectBuffersConnected)} completed for {textDocument.FilePath} Reason={reason}");
+			Log.Debug($"{nameof(SubjectBuffersConnected)} completed for {textDocument.FilePath} Reason={reason}");
 		}
 
 		/// <summary>
@@ -160,7 +160,7 @@ namespace CodeStream.VisualStudio.UI {
 			else {
 				textViewMarginProviders.Hide();
 			}
-			Log.Verbose($"{nameof(VsTextViewCreated)} completed");
+			Log.Debug($"{nameof(VsTextViewCreated)} completed");
 		}
 
 		public void SubjectBuffersDisconnected(IWpfTextView textView, ConnectionReason reason, Collection<ITextBuffer> subjectBuffers) {
@@ -184,7 +184,7 @@ namespace CodeStream.VisualStudio.UI {
 
 			textView.TextBuffer.Properties.TryDisposeProperty<HighlightAdornmentManager>(PropertyNames.AdornmentManager);
 
-			Log.Verbose($"{nameof(SubjectBuffersDisconnected)} completed Reason={reason}");
+			Log.Debug($"{nameof(SubjectBuffersDisconnected)} completed Reason={reason}");
 		}
 
 		public void OnSessionReady(IWpfTextView textView) {

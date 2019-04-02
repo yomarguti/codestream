@@ -169,7 +169,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
             var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
             if (codeStreamService == null)
             {
-                Log.Verbose($"{nameof(codeStreamService)} is null");
+                Log.Debug($"{nameof(codeStreamService)} is null");
                 return;
             }
 

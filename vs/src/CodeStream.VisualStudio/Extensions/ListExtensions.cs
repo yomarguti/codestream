@@ -42,7 +42,7 @@ namespace CodeStream.VisualStudio.Extensions
 
             foreach (IDisposable disposable in disposables)
             {
-                Log.Verbose($"Disposing Type={disposable?.GetType()}...");
+                Log.Debug($"Disposing Type={disposable?.GetType()}...");
                 disposable?.Dispose();
             }
         }

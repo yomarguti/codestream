@@ -82,7 +82,7 @@ namespace CodeStream.VisualStudio.Services
 
         private void Rpc_Disconnected(object sender, JsonRpcDisconnectedEventArgs e)
         {
-            Log.Verbose(e.Exception, $"RPC Disconnected: {e.LastMessage} {e.Description}");
+            Log.Debug(e.Exception, $"RPC Disconnected: {e.LastMessage} {e.Description}");
             _sessionService.SetAgentDisconnected();
             _eventAggregator?.Publish(new LanguageServerDisconnectedEvent(e?.LastMessage, e?.Description, e?.Reason.ToString(), e?.Exception));
         }
@@ -109,15 +109,19 @@ namespace CodeStream.VisualStudio.Services
         {
             if (!_sessionService.IsReady)
             {
-                if (Log.IsEnabled(LogEventLevel.Verbose))
+                if (Log.IsVerboseEnabled())
                 {
                     try
                     {
-                        Log.Verbose($"Agent not ready. Name={name}, Arguments={arguments?.ToJson()}");
-                    }
-                    catch (Exception ex)
+#if DEBUG
+						Log.Verbose($"Agent not ready. Name={name}, Arguments={arguments?.ToJson()}");
+#else
+						Log.Verbose($"Agent not ready. Name={name}");
+#endif
+					}
+					catch (Exception ex)
                     {
-                        Log.Verbose(ex, nameof(SendAsync));
+                        Log.Warning(ex, nameof(SendAsync));
                     }
                 }
 
@@ -348,7 +352,7 @@ namespace CodeStream.VisualStudio.Services
                 }, jsonSerializer);
 
 #if DEBUG
-                Log.Verbose(bootstrapAnonymous?.ToString());
+                Log.Debug(bootstrapAnonymous?.ToString());
 #endif
                 return bootstrapAnonymous;
             }
@@ -419,7 +423,7 @@ namespace CodeStream.VisualStudio.Services
             {
                 System.Diagnostics.Debugger.Break();
             }
-            Log.Verbose(bootstrapResponseJson?.ToString());
+            Log.Debug(bootstrapResponseJson?.ToString());
 #endif
             return bootstrapAuthenticated;
         }

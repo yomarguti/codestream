@@ -65,7 +65,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 				Log.Warning("BrowserService is null");
 			}
 
-			Log.Verbose($"{nameof(OnInitialized)}");
+			Log.Debug($"{nameof(OnInitialized)}");
 		}
 
 		private void WebViewControl_IsVisibleChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e) {

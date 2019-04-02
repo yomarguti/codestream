@@ -56,7 +56,7 @@ namespace CodeStream.VisualStudio
                 //guard against possibly non JSON-like data
                 if (e?.Message == null || !e.Message.StartsWith("{"))
                 {
-                    Log.Verbose($"{nameof(HandleAsync)} not found => {e?.Message}");
+                    Log.Debug($"{nameof(HandleAsync)} not found => {e?.Message}");
                     await System.Threading.Tasks.Task.CompletedTask;
                 }
 
@@ -293,7 +293,7 @@ namespace CodeStream.VisualStudio
                                                         }
                                                     default:
                                                         {
-                                                            Log.Verbose($"Unknown LiveShare method {message.Method}");
+                                                            Log.Warning($"Unknown LiveShare method {message.Method}");
                                                             break;
                                                         }
                                                 }

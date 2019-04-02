@@ -32,7 +32,7 @@ namespace CodeStream.VisualStudio.Controllers
                 }
             });
 
-            Log.Verbose($"{nameof(ToggleShowMarkerGlyphsAsync)} Value={value}");
+            Log.Debug($"{nameof(ToggleShowMarkerGlyphsAsync)} Value={value}");
 
             await Task.CompletedTask;
         }
@@ -47,7 +47,7 @@ namespace CodeStream.VisualStudio.Controllers
                 }
             });
 
-            Log.Verbose($"{nameof(ToggleShowAvatarsAsync)} Value={value}");
+            Log.Debug($"{nameof(ToggleShowAvatarsAsync)} Value={value}");
 
             await Task.CompletedTask;
         }
@@ -62,7 +62,7 @@ namespace CodeStream.VisualStudio.Controllers
                 }
             });
 
-            Log.Verbose($"{nameof(ToggleMuteAllAsync)} Value={value}");
+            Log.Debug($"{nameof(ToggleMuteAllAsync)} Value={value}");
 
             await Task.CompletedTask;
         }
@@ -77,7 +77,7 @@ namespace CodeStream.VisualStudio.Controllers
                 }
             });
 
-            Log.Verbose($"{nameof(ToggleViewCodemarksInlineAsync)} Value={value}");
+            Log.Debug($"{nameof(ToggleViewCodemarksInlineAsync)} Value={value}");
 
             await Task.CompletedTask;
         }

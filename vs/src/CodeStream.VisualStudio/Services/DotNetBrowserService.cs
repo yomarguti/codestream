@@ -205,11 +205,11 @@ namespace CodeStream.VisualStudio.Services
 			{
 				if (!info.HasLocked)
 				{
-					Log.Verbose($"Reusing {defaultPath} (not locked)");
+					Log.Debug($"Reusing {defaultPath} (not locked)");
 					return defaultPath;
 				}
 
-				Log.Verbose($"Could not reuse ${defaultPath} - ${info.LockFile}");
+				Log.Debug($"Could not reuse ${defaultPath} - ${info.LockFile}");
 			}
 
 			string path = null;
@@ -228,13 +228,13 @@ namespace CodeStream.VisualStudio.Services
 						continue;
 					}
 
-					Log.Verbose($"Using {path} -- (Not locked, use this)");
+					Log.Debug($"Using {path} -- (Not locked, use this)");
 					// not locked... use it!
 					break;
 				}
 				else
 				{
-					Log.Verbose($"Using {path} -- (Doesn't exist)");
+					Log.Debug($"Using {path} -- (Doesn't exist)");
 					// doesn't exist -- use it!
 					break;
 				}

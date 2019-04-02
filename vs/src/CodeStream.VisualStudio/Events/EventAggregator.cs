@@ -26,7 +26,7 @@ namespace CodeStream.VisualStudio.Events
             var subject = (ISubject<TEvent>)_subjects.GetOrAdd(typeof(TEvent),
                             t => new Subject<TEvent>());
 
-            Log.Verbose($"Subscribed: {typeof(TEvent)}");
+            Log.Debug($"Subscribed: {typeof(TEvent)}");
             return subject.AsObservable();
         }
 
@@ -34,13 +34,13 @@ namespace CodeStream.VisualStudio.Events
         {
             if (_subjects.TryGetValue(typeof(TEvent), out var subject))
             {
-                Log.Verbose($"Published: {typeof(TEvent)}");
+                Log.Debug($"Published: {typeof(TEvent)}");
 
                 ((ISubject<TEvent>)subject).OnNext(sampleEvent);
             }
             else
             {
-                Log.Verbose($"Not Found: {typeof(TEvent)}");
+                Log.Debug($"Not Found: {typeof(TEvent)}");
             }
         }
     }

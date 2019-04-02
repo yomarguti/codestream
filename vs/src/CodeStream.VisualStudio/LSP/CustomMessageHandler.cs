@@ -44,7 +44,7 @@ namespace CodeStream.VisualStudio.LSP {
 		public void OnDidChangeConnectionStatus(JToken e) {
 			var @params = e.ToObject<DidChangeConnectionStatusNotification>();
 
-			Log.Verbose($"{nameof(OnDidChangeConnectionStatus)} {@params.Status}");
+			Log.Information($"{nameof(OnDidChangeConnectionStatus)} {@params.Status}");
 
 			switch (@params.Status) {
 				case ConnectionStatus.Disconnected: {
@@ -108,7 +108,7 @@ namespace CodeStream.VisualStudio.LSP {
 
 		[JsonRpcMethod(DidChangeVersionCompatibilityNotificationType.MethodName)]
 		public void OnDidChangeVersionCompatibility(JToken e) {
-			Log.Verbose($"{nameof(OnDidChangeVersionCompatibility)}");
+			Log.Information($"{nameof(OnDidChangeVersionCompatibility)}");
 
 			_ipc.Notify(new DidChangeVersionCompatibilityNotificationType(e));
 		}
@@ -117,7 +117,7 @@ namespace CodeStream.VisualStudio.LSP {
 		public void OnDidLogout(JToken e) {
 			var @params = e.ToObject<DidLogoutNotification>();
 
-			Log.Verbose($"{nameof(OnDidLogout)} {@params.Reason}");
+			Log.Information($"{nameof(OnDidLogout)} {@params.Reason}");
 
 			_eventAggregator.Publish(new AuthenticationChangedEvent { Reason = @params.Reason });
 
