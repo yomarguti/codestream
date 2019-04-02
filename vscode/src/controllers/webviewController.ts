@@ -209,7 +209,9 @@ export class WebviewController implements Disposable {
 
 	@log()
 	async newCodemarkRequest(type: CodemarkType, editor: TextEditor, source: string): Promise<void> {
-		if (!this.visible) {
+		if (this.visible) {
+			await this._webview!.show();
+		} else {
 			await this.show();
 		}
 
