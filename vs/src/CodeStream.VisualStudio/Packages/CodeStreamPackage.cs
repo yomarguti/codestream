@@ -16,7 +16,7 @@ namespace CodeStream.VisualStudio.Packages
     [InstalledProductRegistration("#110", "#112", SolutionInfo.Version, IconResourceID = 400)]
     [ProvideOptionPage(typeof(OptionsDialogPage), "CodeStream", "Settings", 0, 0, true)]
     [Guid(Guids.CodeStreamPackageId)]
-    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExistsAndFullyLoaded_string, PackageAutoLoadFlags.BackgroundLoad)]
+	[ProvideAutoLoad(Guids.LanguageClientId, PackageAutoLoadFlags.BackgroundLoad)]
     public sealed class CodeStreamPackage : AsyncPackage
     {
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamPackage>();

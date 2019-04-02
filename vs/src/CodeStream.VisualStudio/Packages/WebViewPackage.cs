@@ -30,7 +30,8 @@ namespace CodeStream.VisualStudio.Packages
         Window = EnvDTE.Constants.vsWindowKindSolutionExplorer,
         Style = VsDockStyle.Tabbed)]
     [Guid(PackageGuids.guidWebViewPackageString)]
-    [ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.NoSolution)]
+    [ProvideOptionPage(typeof(OptionsDialogPage), "CodeStream", "Settings", 0, 0, true)]
+	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.NoSolution)]
     [ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.EmptySolution)]
     [ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.SolutionExists)]
     [ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.SolutionHasMultipleProjects)]
