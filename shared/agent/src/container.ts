@@ -4,6 +4,7 @@ import { ErrorReporter } from "./errorReporter";
 import { GitService } from "./git/gitService";
 import { Logger } from "./logger";
 import { CodemarksManager } from "./managers/codemarksManager";
+import { DocumentMarkerManager } from "./managers/documentMarkerManager";
 import { FilesManager } from "./managers/filesManager";
 import { MarkerLocationManager } from "./managers/markerLocationManager";
 import { MarkersManager } from "./managers/markersManager";
@@ -32,6 +33,7 @@ class ServiceContainer {
 		this._teams = new TeamsManager(session);
 		this._users = new UsersManager(session);
 
+		this._documentMarkers = new DocumentMarkerManager(session);
 		this._errorReporter = new ErrorReporter(session);
 		this._git = new GitService(session);
 		this._scm = new ScmManager();
@@ -44,6 +46,11 @@ class ServiceContainer {
 	private readonly _errorReporter: ErrorReporter;
 	get errorReporter() {
 		return this._errorReporter;
+	}
+
+	private readonly _documentMarkers: DocumentMarkerManager;
+	get documentMarkers() {
+		return this._documentMarkers;
 	}
 
 	private readonly _documents: DocumentManager;

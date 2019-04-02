@@ -1,5 +1,5 @@
 "use strict";
-import { debounce as _debounce } from "lodash-es";
+import { debounce as _debounce, memoize as _memoize } from "lodash-es";
 
 export interface IDeferrable {
 	cancel(): void;
@@ -29,17 +29,19 @@ export namespace Functions {
 		};
 	}
 
+	interface DebounceOptions {
+		leading?: boolean;
+		maxWait?: number;
+		track?: boolean;
+		trailing?: boolean;
+	}
+
 	export function debounce<T extends (...args: any[]) => any>(
 		fn: T,
 		wait?: number,
-		options?: { leading?: boolean; maxWait?: number; track?: boolean; trailing?: boolean }
+		options?: DebounceOptions
 	): T & IDeferrable {
-		const { track, ...opts } = { track: false, ...(options || {}) } as {
-			leading?: boolean;
-			maxWait?: number;
-			track?: boolean;
-			trailing?: boolean;
-		};
+		const { track, ...opts } = { track: false, ...(options || ({} as DebounceOptions)) };
 
 		if (track !== true) return _debounce(fn, wait, opts);
 
@@ -70,6 +72,22 @@ export namespace Functions {
 		};
 
 		return tracked;
+	}
+
+	export function debounceMemoized<T extends (...args: any[]) => any>(
+		fn: T,
+		wait?: number,
+		options?: DebounceOptions & { resolver?(...args: any[]): any }
+	): T {
+		const { resolver, ...opts } = options || ({} as DebounceOptions & { resolver?: T });
+
+		const memo = _memoize(function() {
+			return debounce(fn, wait, opts);
+		}, resolver);
+
+		return function(this: any, ...args: []) {
+			return memo.apply(this, args).apply(this, args);
+		} as T;
 	}
 
 	export function debounceMerge<T extends (...args: any[]) => any>(

@@ -1,7 +1,6 @@
 "use strict";
 import { Container } from "../container";
 import {
-	DidChangeDocumentMarkersNotificationType,
 	GetMarkerRequest,
 	GetMarkerRequestType,
 	GetMarkerResponse
@@ -14,29 +13,6 @@ import { EntityManagerBase, Id } from "./entityManager";
 
 @lsp
 export class MarkersManager extends EntityManagerBase<CSMarker> {
-	initialize() {
-		this.session.onDidChangeMarkers(async (markers: CSMarker[]) => {
-			const { files } = Container.instance();
-			const fileStreamIds = new Set<Id>();
-
-			for (const marker of markers) {
-				fileStreamIds.add(marker.fileStreamId);
-			}
-
-			for (const fileStreamId of fileStreamIds) {
-				const uri = await files.getDocumentUri(fileStreamId);
-				if (uri) {
-					this.session.agent.sendNotification(DidChangeDocumentMarkersNotificationType, {
-						textDocument: {
-							uri
-						},
-						reason: "codemarks"
-					});
-				}
-			}
-		});
-	}
-
 	async getByStreamId(streamId: Id, visibleOnly?: boolean): Promise<CSMarker[]> {
 		const markers = await this.cache.getGroup([["fileStreamId", streamId]]);
 		return visibleOnly ? await this.filterMarkers(markers) : markers;

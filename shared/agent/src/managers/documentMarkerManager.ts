@@ -1,22 +1,28 @@
 "use strict";
 import * as path from "path";
-import { Range } from "vscode-languageserver";
+import { CodeStreamSession } from "session";
+import { Range, TextDocumentChangeEvent } from "vscode-languageserver";
 import URI from "vscode-uri";
 import { Marker, MarkerLocation, Ranges } from "../api/extensions";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import {
 	CreateDocumentMarkerPermalinkRequest,
+	CreateDocumentMarkerPermalinkRequestType,
 	CreateDocumentMarkerPermalinkResponse,
+	DidChangeDocumentMarkersNotificationType,
 	DocumentFromMarkerRequest,
+	DocumentFromMarkerRequestType,
 	DocumentFromMarkerResponse,
 	DocumentMarker,
 	DocumentMarkersRequest,
+	DocumentMarkersRequestType,
 	DocumentMarkersResponse,
 	MarkerNotLocated,
 	MarkerNotLocatedReason
 } from "../protocol/agent.protocol";
-import { CodemarkStatus, CodemarkType } from "../protocol/api.protocol";
+import { CodemarkType, CSCodemark, CSMarker } from "../protocol/api.protocol";
+import { Functions, lsp, lspHandler } from "../system";
 
 const emojiMap: { [key: string]: string } = require("../../emoji/emojis.json");
 const emojiRegex = /:([-+_a-z0-9]+):/g;
@@ -24,18 +30,96 @@ const escapeMarkdownRegex = /[`\>\#\*\_\-\+\.]/g;
 // const sampleMarkdown = '## message `not code` *not important* _no underline_ \n> don\'t quote me \n- don\'t list me \n+ don\'t list me \n1. don\'t list me \nnot h1 \n=== \nnot h2 \n---\n***\n---\n___';
 const markdownHeaderReplacement = "\u200b===";
 
-export namespace MarkerHandler {
-	const emptyResponse = {
-		markers: [],
-		markersNotLocated: []
-	};
+const emptyResponse = {
+	markers: [],
+	markersNotLocated: []
+};
 
-	// export function onHover(e: TextDocumentPositionParams) {
-	// 	Logger.log("Hover request received");
-	// 	return undefined;
-	// }
+@lsp
+export class DocumentMarkerManager {
+	constructor(readonly session: CodeStreamSession) {
+		this.session.onDidChangeCodemarks(this.onCodemarksChanged, this);
+		this.session.onDidChangeMarkers(this.onMarkersChanged, this);
+		this.session.agent.documents.onDidChangeContent(this.onDocumentContentChanged, this);
+	}
 
-	export async function createPermalink({
+	private onCodemarksChanged(codemarks: CSCodemark[]) {
+		const fileStreamIds = new Set<string>();
+		for (const codemark of codemarks) {
+			if (codemark.fileStreamIds) {
+				for (const fileStreamId of codemark.fileStreamIds) {
+					fileStreamIds.add(fileStreamId);
+				}
+			}
+		}
+
+		this.onFileStreamsChanged(fileStreamIds);
+	}
+
+	private onDocumentContentChanged(e: TextDocumentChangeEvent) {
+		this.fireDidChangeDocumentMarkers(e.document.uri, "document");
+	}
+
+	private onMarkersChanged(markers: CSMarker[]) {
+		const fileStreamIds = new Set<string>();
+		for (const marker of markers) {
+			fileStreamIds.add(marker.fileStreamId);
+		}
+
+		this.onFileStreamsChanged(fileStreamIds);
+	}
+
+	private async onFileStreamsChanged(fileStreamIds: Set<string>) {
+		const { files } = Container.instance();
+
+		for (const fileStreamId of fileStreamIds) {
+			const uri = await files.getDocumentUri(fileStreamId);
+			if (uri) {
+				this.fireDidChangeDocumentMarkers(uri, "codemarks");
+			}
+		}
+	}
+
+	private _debouncedDocumentMarkersChangedByReason = new Map<
+		"document" | "codemarks",
+		(uri: string, reason: "document" | "codemarks") => Promise<void>
+	>();
+
+	private async fireDidChangeDocumentMarkers(uri: string, reason: "document" | "codemarks") {
+		// Normalize the uri to vscode style uri formating
+		uri = URI.parse(uri).toString();
+
+		let fn = this._debouncedDocumentMarkersChangedByReason.get(reason);
+		if (fn === undefined) {
+			// Create a debounced function based on the reason that is uniquely debounced by the uri
+			fn = Functions.debounceMemoized(
+				this.fireDidChangeDocumentMarkersCore.bind(this),
+				// If we are firing because of a codemark/marker change, only wait 100ms, otherwise 1s with a max of 3s
+				reason === "codemarks" ? 100 : 1000,
+				{
+					maxWait: 3000,
+					resolver: function(uri: string, reason: "document" | "codemarks") {
+						return uri;
+					}
+				}
+			);
+			this._debouncedDocumentMarkersChangedByReason.set(reason, fn);
+		}
+
+		fn(uri, reason);
+	}
+
+	private async fireDidChangeDocumentMarkersCore(uri: string, reason: "document" | "codemarks") {
+		this.session.agent.sendNotification(DidChangeDocumentMarkersNotificationType, {
+			textDocument: {
+				uri: uri
+			},
+			reason: reason
+		});
+	}
+
+	@lspHandler(CreateDocumentMarkerPermalinkRequestType)
+	async createPermalink({
 		uri,
 		range,
 		privacy,
@@ -106,7 +190,8 @@ export namespace MarkerHandler {
 		return { linkUrl: response.permalink! };
 	}
 
-	export async function documentMarkers({
+	@lspHandler(DocumentMarkersRequestType)
+	async get({
 		textDocument: documentId
 	}: DocumentMarkersRequest): Promise<DocumentMarkersResponse> {
 		const { codemarks, files, markers, markerLocations, users } = Container.instance();
@@ -215,7 +300,8 @@ export namespace MarkerHandler {
 		}
 	}
 
-	export async function documentFromMarker({
+	@lspHandler(DocumentFromMarkerRequestType)
+	async getDocumentFromMarker({
 		repoId,
 		file,
 		markerId

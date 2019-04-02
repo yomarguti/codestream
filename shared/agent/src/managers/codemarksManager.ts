@@ -11,7 +11,6 @@ import {
 	CreateCodemarkRequest,
 	CreateCodemarkRequestType,
 	CreateCodemarkResponse,
-	DidChangeDocumentMarkersNotificationType,
 	FetchCodemarksRequest,
 	FetchCodemarksRequestType,
 	FetchCodemarksResponse,
@@ -31,33 +30,6 @@ import { CachedEntityManagerBase, Id } from "./entityManager";
 
 @lsp
 export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
-	initialize() {
-		this.session.onDidChangeCodemarks(async (codemarks: CSCodemark[]) => {
-			const { files } = Container.instance();
-			const fileStreamIds = new Set<Id>();
-
-			for (const codemark of codemarks) {
-				if (codemark.fileStreamIds) {
-					for (const fileStreamId of codemark.fileStreamIds) {
-						fileStreamIds.add(fileStreamId);
-					}
-				}
-			}
-
-			for (const fileStreamId of fileStreamIds) {
-				const uri = await files.getDocumentUri(fileStreamId);
-				if (uri) {
-					this.session.agent.sendNotification(DidChangeDocumentMarkersNotificationType, {
-						textDocument: {
-							uri
-						},
-						reason: "codemarks"
-					});
-				}
-			}
-		});
-	}
-
 	async cacheSet(entity: CSCodemark, oldEntity?: CSCodemark): Promise<CSCodemark | undefined> {
 		if (await this.canSeeCodemark(entity)) {
 			return super.cacheSet(entity, oldEntity);

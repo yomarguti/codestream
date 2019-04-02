@@ -66,7 +66,10 @@ export class CodeStreamAgent implements Disposable {
 		this._logger = options.logger || new ConnectionLspLogger(this._connection);
 		Logger.initialize(this);
 
-		this.documents = new DocumentManager(options.documents || new TextDocuments(), this);
+		this.documents = new DocumentManager(
+			options.documents || new TextDocuments(),
+			this._connection
+		);
 	}
 
 	dispose() {
