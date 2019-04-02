@@ -690,7 +690,7 @@ fun getFontScale(): Float {
     } catch (ignored: HeadlessException) {
         96
     }
-    return discreteScale((dpi / 96).toFloat())
+    return discreteScale((dpi.toFloat() / 96))
 }
 
 fun discreteScale(scale: Float): Float {
