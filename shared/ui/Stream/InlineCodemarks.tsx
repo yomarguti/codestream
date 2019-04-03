@@ -645,8 +645,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const windowHeight = window.innerHeight;
 		return (
 			<div
-				style={{ overflowY: "auto", overflowX: "hidden", height: "100vh" }}
+				style={{ /*overflowY: "auto", overflowX: "hidden",*/ height: "100vh" }}
 				onScroll={this.onScroll}
+				onWheel={this.onWheel}
 				id="inline-codemarks-scroll-container"
 				ref={ref => (this._scrollDiv = ref)}
 			>
@@ -717,14 +718,51 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	onScroll = event => {
-		if (!event || !event.target || event.target.id !== "inline-codemarks-scroll-container") return;
+		// if (!event || !event.target || event.target.id !== "inline-codemarks-scroll-container") return;
+		// const top = event.target.scrollTop;
+		// const { textEditorVisibleRanges = [] } = this.props;
+		// const topLine = textEditorVisibleRanges[0].start.line;
+		// // const bottomLine = textEditorVisibleRanges[textEditorVisibleRanges.length - 1].end.line;
+		// const revealLine = top <= 5 ? topLine - 1 : top >= 20 ? topLine + 1 : topLine;
+		// if (revealLine === topLine) return;
+		// HostApi.instance.send(EditorRevealRangeRequestType, {
+		// 	uri: this.props.textEditorUri!,
+		// 	range: Range.create(revealLine, 0, revealLine, 0),
+		// 	preserveFocus: true,
+		// 	atTop: true
+		// });
+		// this.scrollTo(18);
+	};
 
-		const top = event.target.scrollTop;
+	onWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+		if (event.deltaY === 0) return;
 
-		const { textEditorVisibleRanges = [] } = this.props;
+		const { textEditorVisibleRanges } = this.props;
+		if (textEditorVisibleRanges == null) return;
+
 		const topLine = textEditorVisibleRanges[0].start.line;
-		// const bottomLine = textEditorVisibleRanges[textEditorVisibleRanges.length - 1].end.line;
-		const revealLine = top <= 5 ? topLine - 1 : top >= 20 ? topLine + 1 : topLine;
+		const bottomLine = textEditorVisibleRanges[textEditorVisibleRanges.length - 1].end.line;
+
+		let lines;
+		switch (event.deltaMode) {
+			case 0: // pixels
+				lines = event.deltaY / 10;
+				break;
+			case 1: // lines
+				lines = event.deltaY;
+				break;
+			case 2: // pages
+				lines = (bottomLine - topLine) * event.deltaY;
+				debugger;
+				break;
+		}
+
+		let revealLine;
+		if (event.deltaY < 0) {
+			revealLine = Math.max(0, topLine + lines);
+		} else {
+			revealLine = Math.min(bottomLine, topLine + lines);
+		}
 
 		if (revealLine === topLine) return;
 
@@ -734,8 +772,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			preserveFocus: true,
 			atTop: true
 		});
-
-		// this.scrollTo(18);
 	};
 
 	printViewSelectors() {
