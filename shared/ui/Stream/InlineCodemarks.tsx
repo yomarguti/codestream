@@ -651,8 +651,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const codeHeight = this.codeHeight();
 		return (
 			<div
-				style={{ /*overflowY: "auto", overflowX: "hidden",*/ height: "100vh" }}
-				onScroll={this.onScroll}
+				style={{ height: "100vh" }}
 				onWheel={this.onWheel}
 				id="inline-codemarks-scroll-container"
 				ref={ref => (this._scrollDiv = ref)}
@@ -724,58 +723,70 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		);
 	}
 
-	onScroll = event => {
-		// if (!event || !event.target || event.target.id !== "inline-codemarks-scroll-container") return;
-		// const top = event.target.scrollTop;
-		// const { textEditorVisibleRanges = [] } = this.props;
-		// const topLine = textEditorVisibleRanges[0].start.line;
-		// // const bottomLine = textEditorVisibleRanges[textEditorVisibleRanges.length - 1].end.line;
-		// const revealLine = top <= 5 ? topLine - 1 : top >= 20 ? topLine + 1 : topLine;
-		// if (revealLine === topLine) return;
-		// HostApi.instance.send(EditorRevealRangeRequestType, {
-		// 	uri: this.props.textEditorUri!,
-		// 	range: Range.create(revealLine, 0, revealLine, 0),
-		// 	preserveFocus: true,
-		// 	atTop: true
-		// });
-		// this.scrollTo(18);
-	};
+	private _clearWheelingStateTimeout?: any;
+	private _wheelingState: { accumulatedPixels: number; topLine: number } | undefined;
 
 	onWheel = (event: React.WheelEvent<HTMLDivElement>) => {
 		if (event.deltaY === 0) return;
 
-		const { textEditorVisibleRanges } = this.props;
-		if (textEditorVisibleRanges == null) return;
+		if (this._clearWheelingStateTimeout !== undefined) {
+			clearTimeout(this._clearWheelingStateTimeout);
+			this._clearWheelingStateTimeout = undefined;
+		}
 
-		const topLine = textEditorVisibleRanges[0].start.line;
-		const bottomLine = textEditorVisibleRanges[textEditorVisibleRanges.length - 1].end.line;
+		// Keep track of the "editor" top line, since these events will be too fast for the editor and our eventing to keep up
+		if (this._wheelingState === undefined) {
+			const { textEditorVisibleRanges } = this.props;
+			if (textEditorVisibleRanges == null) return;
 
-		let lines;
+			this._wheelingState = {
+				accumulatedPixels: 0,
+				topLine: textEditorVisibleRanges[0].start.line
+			};
+		}
+
+		// We only want to accumulate data while the user is actively scrolling, if they pause reset everything
+		this._clearWheelingStateTimeout = setTimeout(() => (this._wheelingState = undefined), 500);
+
+		let lines = 0;
 		switch (event.deltaMode) {
-			case 0: // pixels
-				lines = event.deltaY / 10;
+			case 0: // deltaY is in pixels
+				// TODO: Needs to be using editor metrics or calculated from the font size
+				const lineHeight = 18;
+
+				const pixels = this._wheelingState.accumulatedPixels + event.deltaY;
+				this._wheelingState.accumulatedPixels = pixels % lineHeight;
+				lines = Math.floor(pixels / lineHeight);
+
 				break;
-			case 1: // lines
+			case 1: // deltaY is in lines
 				lines = event.deltaY;
+
 				break;
-			case 2: // pages
-				lines = (bottomLine - topLine) * event.deltaY;
+			case 2: // deltaY is in pages
+				// Not sure how to handle it, nor is it worth the time
 				debugger;
+
 				break;
 		}
 
-		let revealLine;
+		if (lines === 0) return;
+
+		let topLine;
 		if (event.deltaY < 0) {
-			revealLine = Math.max(0, topLine + lines);
+			topLine = Math.max(0, this._wheelingState.topLine + lines);
 		} else {
-			revealLine = Math.min(bottomLine, topLine + lines);
+			topLine = Math.min(this.props.textEditorLineCount, this._wheelingState.topLine + lines);
 		}
 
-		if (revealLine === topLine) return;
+		if (topLine === this._wheelingState.topLine) return;
+
+		// Update our tracking as the events will be too slow
+		this._wheelingState.topLine = topLine;
 
 		HostApi.instance.send(EditorRevealRangeRequestType, {
 			uri: this.props.textEditorUri!,
-			range: Range.create(revealLine, 0, revealLine, 0),
+			range: Range.create(topLine, 0, topLine, 0),
 			preserveFocus: true,
 			atTop: true
 		});
