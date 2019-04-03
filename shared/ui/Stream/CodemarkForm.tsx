@@ -562,7 +562,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	renderCrossPostMessage = commentType => {
 		const { selectedStreams, showChannels } = this.props;
-		const { showAllChannels } = this.state;
+		const { showAllChannels, selectedChannelId } = this.state;
 		// if (this.props.slackInfo || this.props.providerInfo.slack) {
 		const items: { label: string; action?: CSStream | "show-all" }[] = [];
 
@@ -578,13 +578,18 @@ class CodemarkForm extends React.Component<Props, State> {
 		});
 		labelMenuItems.push({ label: "-" });
 		labelMenuItems.push({ label: "None", action: "none" });
-		labelMenuItems.push({ label: "-" });
-		labelMenuItems.push({ label: "Edit Labels", action: "edit" });
+		// labelMenuItems.push({ label: "-" });
+		// labelMenuItems.push({ label: "Edit Labels", action: "edit" });
 
+		let firstChannel;
+		let selectedChannelName = "";
 		const filterSelected = showChannels === "selected" && !showAllChannels;
 		this.props.channelStreams.forEach(channel => {
 			if (!filterSelected || selectedStreams[channel.id]) {
-				items.push({ label: "#" + channel.name, action: channel });
+				const name = "#" + channel.name;
+				items.push({ label: name, action: channel });
+				if (channel.id === selectedChannelId) selectedChannelName = name;
+				if (!firstChannel) firstChannel = channel;
 			}
 		});
 		items.push({ label: "-" });
@@ -592,27 +597,34 @@ class CodemarkForm extends React.Component<Props, State> {
 			(stream.name || "").toLowerCase()
 		).forEach((channel: CSDirectStream) => {
 			if (!filterSelected || selectedStreams[channel.id]) {
-				items.push({ label: "@" + channel.name, action: channel });
+				const name = "@" + channel.name;
+				items.push({ label: name, action: channel });
+				if (channel.id === selectedChannelId) selectedChannelName = name;
+				if (!firstChannel) firstChannel = channel;
 			}
 		});
+
+		// if we don't have a name set here, that means you've filtered to a set
+		// of streams that doesn't include your currently selected stream. so
+		// we need to select it
+		if (selectedChannelName.length === 0 && firstChannel) this.selectChannel(firstChannel);
 
 		// if there are only 2 items, that's going to be #general and the "-"
 		// separator. in that case, the user hasn't added channels yet, or
 		// invited users, so it's not helpful/useful to give them an option
 		// they can't use.
-		if (items.length === 2) return null;
+		if (items.length === 2 && showChannels !== "selected") return null;
 
 		if (filterSelected) {
 			items.push({ label: "-" });
 			items.push({ label: "Show All Channels & DMs", action: "show-all" });
 		}
 
-		const channelName = this.state.selectedChannelName;
 		return (
 			<div className="checkbox-row" style={{ float: "left" }}>
 				{/*<input type="checkbox" checked={this.state.crossPostMessage} /> */} Post to{" "}
 				<span className="channel-label" onClick={this.switchChannel}>
-					{channelName}
+					{selectedChannelName}
 					<Icon name="chevron-down" />
 					{this.state.channelMenuOpen && (
 						<Menu
