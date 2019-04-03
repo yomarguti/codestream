@@ -693,6 +693,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 												inline={true}
 												hidden={hidden}
 												selected={selectedDocMarkerId === docMarker.id}
+												deselectCodemarks={this.deselectCodemarks}
 												usernames={this.props.usernames}
 												onClick={this.handleClickCodemark}
 												onMouseEnter={this.handleHighlightCodemark}
@@ -854,12 +855,14 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (event && event.target) {
 			const id = (event.target as any).id;
 			if (id === "inline-codemarks-scroll-container" || id === "inline-codemarks-field") {
-				this.setState(state =>
-					state.selectedDocMarkerId ? { selectedDocMarkerId: undefined } : null
-				);
-				this.clearSelection();
+				this.deselectCodemarks();
 			}
 		}
+	};
+
+	deselectCodemarks = () => {
+		this.setState(state => (state.selectedDocMarkerId ? { selectedDocMarkerId: undefined } : null));
+		this.clearSelection();
 	};
 
 	toggleViewCodemarksInline = () => {

@@ -42,6 +42,7 @@ interface Props {
 	codemarkKeybindings: string[];
 	setUserPreference: Function;
 	hidden: boolean;
+	deselectCodemarks?: Function;
 }
 
 export class Codemark extends React.Component<Props, State> {
@@ -205,6 +206,11 @@ export class Codemark extends React.Component<Props, State> {
 	togglePinned = () => {
 		const { codemark } = this.props;
 		if (!codemark) return;
+
+		// if it's pinned, we're hiding/archiving/unpinning it
+		if (codemark.pinned) {
+			if (this.props.deselectCodemarks) this.props.deselectCodemarks();
+		}
 
 		HostApi.instance.send(SetCodemarkPinnedRequestType, {
 			codemarkId: codemark.id,
