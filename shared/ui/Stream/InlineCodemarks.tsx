@@ -587,6 +587,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const height = lessThanFull
 			? expectedLineHeight * numLinesVisible + paddingTop + "px"
 			: "calc(100vh - " + paddingTop + "px)";
+		console.log("HEIGHT IS: ", height, " because ", lessThanFull);
 		const divStyle = {
 			top: paddingTop,
 			// background: "#333366",
@@ -650,6 +651,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				onWheel={this.onWheel}
 				id="inline-codemarks-scroll-container"
 				ref={ref => (this._scrollDiv = ref)}
+				onClick={this.handleClickField}
 			>
 				<div style={{ padding: "18px 0", margin: "-18px 0" }}>
 					<div
@@ -662,7 +664,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 							height: height
 						}}
 						id="inline-codemarks-field"
-						onClick={this.handleClickField}
 					>
 						<div className="inline-codemarks vscroll-x">
 							{this.props.children}
@@ -845,7 +846,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	handleClickField = (event: React.SyntheticEvent<HTMLDivElement>) => {
-		if (event && event.target && (event.target as any).id === "inline-codemarks-field") {
+		if (event && event.target && (event.target as any).id === "inline-codemarks-scroll-container") {
 			this.setState(state =>
 				state.selectedDocMarkerId ? { selectedDocMarkerId: undefined } : null
 			);
