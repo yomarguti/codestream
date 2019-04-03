@@ -36,7 +36,7 @@ namespace CodeStream.VisualStudio.UI {
 		IVsTextViewCreationListener,
 		IWpfTextViewConnectionListener {
 
-		private static readonly ILogger Log = LogManager.ForContext<TextViewCreationListenerDummy>();
+		private readonly ILogger Log = LogManager.ForContext<TextViewCreationListenerDummy>();
 
 		private readonly IEventAggregator _eventAggregator;
 		private readonly ISessionService _sessionService;
@@ -52,6 +52,7 @@ namespace CodeStream.VisualStudio.UI {
 				Package.GetGlobalService(typeof(SSessionService)) as ISessionService,
 				Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService,
 				ServiceLocator.Get<SIdeService, IIdeService>()) { }
+			
 
 		public TextViewCreationListener(IEventAggregator eventAggregator,
 			ISessionService sessionService,

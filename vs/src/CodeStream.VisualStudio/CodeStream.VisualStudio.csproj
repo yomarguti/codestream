@@ -103,6 +103,7 @@
     <Compile Include="Core\Logging\CodeStreamSink.cs" />
     <Compile Include="Core\Logging\LogExtensions.cs" />
     <Compile Include="Core\Logging\LogManager.cs" />
+    <Compile Include="Core\Logging\EmptyLogger.cs" />
     <Compile Include="Core\Logging\Sanitizer\IProcessor.cs" />
     <Compile Include="Core\Logging\Sanitizer\ISanitizingFormatRule.cs" />
     <Compile Include="Core\Logging\Sanitizer\LogSanitizingFormatter.cs" />
