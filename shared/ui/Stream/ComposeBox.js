@@ -5,7 +5,7 @@ import { PostCompose } from "./PostCompose";
 import { CodemarkForm } from "./CodemarkForm";
 import { MessageInput } from "./MessageInput";
 import {
-	getLine0ForEditorLineFn,
+	getLine0ForEditorLine,
 	getVisibleLineCount,
 	getVisibleRanges
 } from "../store/editorContext/reducer";
@@ -21,7 +21,7 @@ class ComposeBox extends React.Component {
 		const { codeBlock, textEditorVisibleRanges } = props;
 		if (!props.codeBlock) return null;
 
-		const line0 = getLine0ForEditorLineFn(textEditorVisibleRanges)(codeBlock.range.start.line);
+		const line0 = getLine0ForEditorLine(textEditorVisibleRanges, codeBlock.range.start.line);
 		if (line0 >= 0) {
 			const top = (window.innerHeight * line0) / getVisibleLineCount(textEditorVisibleRanges);
 			if (top !== state.position) return { position: top };

@@ -28,7 +28,8 @@ import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import {
 	getCurrentSelection,
 	getVisibleLineCount,
-	getVisibleRanges
+	getVisibleRanges,
+	getLine0ForEditorLine
 } from "../store/editorContext/reducer";
 import { CSTeam } from "@codestream/protocols/api";
 
@@ -467,7 +468,10 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	renderHoverIcons = numLinesVisible => {
-		const iconsOnLine0 = this.mapVisibleRangeToLine0(this.state.openIconsOnLine);
+		const iconsOnLine0 = getLine0ForEditorLine(
+			this.props.textEditorVisibleRanges,
+			this.state.openIconsOnLine
+		);
 		// console.log("IOL IS: ", iconsOnLine0, " FROM: ", this.state.openIconsOnLine);
 		const highlightedLine = this.state.highlightedLine;
 
@@ -1002,24 +1006,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			});
 		}
 		return toLineNum;
-	};
-
-	// TODO: replace with getLine0ForEditorLineFn selector
-	// the opposite of mapLine0ToVisibleRange
-	mapVisibleRangeToLine0 = fromLineNum => {
-		const { textEditorVisibleRanges } = this.props;
-
-		let lineCounter = 0;
-		let toLineNum0 = -1; // -1 indicates we didn't find it
-		if (textEditorVisibleRanges != null) {
-			textEditorVisibleRanges.forEach(lineRange => {
-				range(lineRange.start.line, lineRange.end.line + 1).forEach(thisLine => {
-					if (thisLine === fromLineNum) toLineNum0 = lineCounter;
-					lineCounter++;
-				});
-			});
-		}
-		return toLineNum0;
 	};
 
 	highlightLine(line0, highlight) {

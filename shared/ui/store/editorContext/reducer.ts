@@ -50,22 +50,22 @@ export const getCurrentSelection = createSelector(
 export const getVisibleRanges = (state: State) => state.textEditorVisibleRanges || emptyArray;
 
 // alias for mapVisibleRangeToLine0
-export const getLine0ForEditorLineFn = createSelector(
+export const getLine0ForEditorLine = createSelector(
 	(visibleRanges?: Range[]) => visibleRanges || emptyArray,
-	(textEditorVisibleRanges: Range[]) =>
-		memoize((editorLine: number) => {
-			let lineCounter = 0;
-			let toLineNum0 = -1; // -1 indicates we didn't find it
-			if (textEditorVisibleRanges != null) {
-				textEditorVisibleRanges.forEach(lineRange => {
-					range(lineRange.start.line, lineRange.end.line + 1).forEach(thisLine => {
-						if (thisLine === editorLine) toLineNum0 = lineCounter;
-						lineCounter++;
-					});
+	(_: any, editorLine: number) => editorLine,
+	(textEditorVisibleRanges: Range[], editorLine: number) => {
+		let lineCounter = 0;
+		let toLineNum0 = -1; // -1 indicates we didn't find it
+		if (textEditorVisibleRanges != null) {
+			textEditorVisibleRanges.forEach(lineRange => {
+				range(lineRange.start.line, lineRange.end.line + 1).forEach(thisLine => {
+					if (thisLine === editorLine) toLineNum0 = lineCounter;
+					lineCounter++;
 				});
-			}
-			return toLineNum0;
-		})
+			});
+		}
+		return toLineNum0;
+	}
 );
 
 export const getVisibleLineCount = createSelector(
