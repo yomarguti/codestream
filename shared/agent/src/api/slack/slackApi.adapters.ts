@@ -675,7 +675,18 @@ export function toSlackTeam(team: CSTeam, usernamesById: Map<string, string>) {
 	// });
 }
 
-export function fromSlackUser(user: any, teamId: string): CSUser {
+export function fromSlackUser(user: any, teamId: string, csTeamMembers: CSUser[] = []): CSUser {
+	let codestreamId: string | undefined;
+	csTeamMembers.some(m => {
+		if (m.providerIdentities) {
+			if (m.providerIdentities.includes(`slack::${user.id}`)) {
+				codestreamId = m.id;
+				return true;
+			}
+		}
+		return false;
+	});
+
 	return {
 		avatar: {
 			image: user.profile.image_original,
@@ -689,6 +700,7 @@ export function fromSlackUser(user: any, teamId: string): CSUser {
 		firstName: user.profile.first_name,
 		fullName: user.real_name,
 		id: user.id,
+		codestreamId: codestreamId,
 		// TODO: Look this up in the CodeStream user list
 		isRegistered: true,
 		iWorkOn: undefined,

@@ -298,6 +298,8 @@ export interface CSUser extends CSEntity {
 	timeZone: string;
 	totalPosts: number;
 	username: string;
+	providerIdentities?: string[];
+	codestreamId?: string;
 
 	avatar?: {
 		image?: string;

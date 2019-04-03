@@ -395,6 +395,7 @@ export class SlackApiProvider implements ApiProvider {
 			: undefined;
 
 		let me = meResponse.user;
+		me.codestreamId = me.id;
 		me.id = this.userId;
 
 		const response = await this.slackApiCall(
@@ -2127,8 +2128,13 @@ export class SlackApiProvider implements ApiProvider {
 		const { ok, error, members } = response as WebAPICallResult & { members: any[] };
 		if (!ok) throw new Error(error);
 
+		const { team } = await this._codestream.getTeam({ teamId: this._codestreamTeamId });
+		const { users: codestreamMembers } = await this._codestream.fetchUsers({
+			userIds: team.memberIds
+		});
+
 		const users: CSUser[] = members
-			.map((m: any) => fromSlackUser(m, this._codestreamTeamId))
+			.map((m: any) => fromSlackUser(m, this._codestreamTeamId, codestreamMembers))
 			.filter(u => !u.deactivated);
 
 		// Find ourselves and replace it with our model
@@ -2173,12 +2179,12 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
-	connectThirdPartyProvider(request: { providerName: string; apiKey?: string, host?: string }) {
+	connectThirdPartyProvider(request: { providerName: string; apiKey?: string; host?: string }) {
 		return this._codestream.connectThirdPartyProvider(request);
 	}
 
 	@log()
-	disconnectThirdPartyProvider(request: { providerName: string, host?: string }) {
+	disconnectThirdPartyProvider(request: { providerName: string; host?: string }) {
 		return this._codestream.disconnectThirdPartyProvider(request);
 	}
 
