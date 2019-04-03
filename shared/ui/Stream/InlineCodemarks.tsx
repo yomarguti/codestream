@@ -607,6 +607,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				>
 					{this.renderHoverIcons(numLinesVisible)}
 					{this.renderNoCodemarks()}
+					{this.props.children}
 				</div>
 			);
 		}
@@ -627,7 +628,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				(!codemark.pinned && !showUnpinned) ||
 				(codemark.type === "issue" && codemark.status === "closed" && !showClosed)
 			) {
-				console.log("HIDDEN IS TRUE");
 				this.hiddenCodemarks[docMarker.id] = true;
 			} else {
 				if (startLine < firstVisibleLine) numAbove++;
