@@ -67,17 +67,6 @@ export namespace Editor {
 		return undefined;
 	}
 
-	export async function getRangeSha1(uri: Uri, range: Range) {
-		const editor = await findOrOpenEditor(uri, { preserveFocus: true });
-		if (editor === undefined) return undefined;
-
-		const text = editor.document.getText(range);
-		return crypto
-			.createHash("sha1")
-			.update(text)
-			.digest("hex");
-	}
-
 	export function getMetrics(): EditorMetrics {
 		const metrics: EditorMetrics = {};
 
