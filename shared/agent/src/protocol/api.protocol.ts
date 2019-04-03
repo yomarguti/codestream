@@ -361,13 +361,16 @@ export interface CSCreateCodemarkResponse {
 	permalink?: string;
 }
 
-export interface CSGetCodemarkRequest {
-	codemarkId: string;
-}
 export interface CSGetCodemarkResponse {
 	codemark: CSCodemark;
-	post: CSPost;
-	markers: CSMarker[];
+	post?: CSPost;
+	markers?: CSMarker[];
+}
+
+export interface CSGetCodemarksResponse {
+	codemarks: CSCodemark[];
+	posts?: CSPost[];
+	markers?: CSMarker[];
 }
 
 export interface CSUpdateCodemarkRequest {

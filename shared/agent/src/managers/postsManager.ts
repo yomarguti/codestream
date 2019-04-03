@@ -1,4 +1,5 @@
 "use strict";
+import { has } from "lodash-es";
 import URI from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
 import { MarkerLocation, Ranges } from "../api/extensions";
@@ -536,72 +537,36 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	async get(request: FetchPostsRequest): Promise<FetchPostsResponse> {
 		await this.cache.ensureStreamInitialized(request.streamId);
 		const cacheResponse = await this.cache.getPosts(request);
-		const fullPosts = await this.fullPosts(cacheResponse.posts);
+		const posts = await this.enrichPosts(cacheResponse.posts);
 		const { codemarks } = await Container.instance().codemarks.get({ streamId: request.streamId });
 		return {
-			posts: fullPosts,
-			more: cacheResponse.more,
-			codemarks
+			codemarks: codemarks,
+			posts: posts,
+			more: cacheResponse.more
 		};
 	}
 
-	async fullPosts(csPosts: CSPost[]): Promise<PostPlus[]> {
-		const fullPosts = [];
-		for (const csPost of csPosts) {
-			fullPosts.push(await this.fullPost(csPost));
-		}
-		return fullPosts;
-	}
-
-	private async fullCodemarks(codemarkIds: string[]): Promise<CodemarkPlus[]> {
-		const fullCodemarks = [];
-		for (const codemarkId of codemarkIds) {
-			let fullCodemark: CodemarkPlus;
-			const codemark = await Container.instance().codemarks.getById(codemarkId);
-			fullCodemark = {
-				...codemark
-			};
-			if (codemark.markerIds) {
-				fullCodemark.markers = [];
-				for (const markerId of codemark.markerIds) {
-					fullCodemark.markers.push(await Container.instance().markers.getById(markerId));
-				}
-			}
-			fullCodemarks.push(fullCodemark);
-		}
-
-		return fullCodemarks;
-	}
-
-	private async fullPost(csPost: CSPost): Promise<PostPlus> {
-		if (csPost.codemarkId) {
+	private async enrichPost(post: CSPost): Promise<PostPlus> {
+		let codemark;
+		let hasMarkers = false;
+		if (post.codemarkId) {
 			try {
-				const csCodemark = await Container.instance().codemarks.getById(csPost.codemarkId);
-				const fullCodemark: CodemarkPlus = {
-					...csCodemark
-				};
-				let hasMarkers = false;
-				if (csCodemark.markerIds) {
-					fullCodemark.markers = [];
-					for (const markerId of csCodemark.markerIds) {
-						fullCodemark.markers.push(await Container.instance().markers.getById(markerId));
-						hasMarkers = true;
-					}
-				}
-				return {
-					...csPost,
-					codemark: fullCodemark,
-					hasMarkers
-				};
-			} catch (err) {
-				Logger.error(err);
+				codemark = await Container.instance().codemarks.getEnrichedCodemarkById(post.codemarkId);
+				hasMarkers = codemark.markers != null && codemark.markers.length !== 0;
+			} catch (ex) {
+				Logger.error(ex);
 			}
 		}
 
-		return {
-			...csPost,
-			hasMarkers: false
-		};
+		return { ...post, codemark: codemark, hasMarkers: hasMarkers };
+	}
+
+	async enrichPosts(posts: CSPost[]): Promise<PostPlus[]> {
+		const enrichedPosts = [];
+		for (const post of posts) {
+			enrichedPosts.push(await this.enrichPost(post));
+		}
+		return enrichedPosts;
 	}
 
 	@lspHandler(FetchPostRepliesRequestType)
@@ -632,7 +597,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			posts.push(...childPosts);
 		}
 
-		const codemarks: CodemarkPlus[] = await this.fullCodemarks(
+		const codemarks = await Container.instance().codemarks.enrichCodemarksByIds(
 			Arrays.filterMap(posts, post => post.codemarkId)
 		);
 
@@ -646,7 +611,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		await resolveCreatePostResponse(response);
 		return {
 			...response,
-			post: await this.fullPost(response.post)
+			post: await this.enrichPost(response.post)
 		};
 	}
 
@@ -761,7 +726,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				}
 			}
 
-			response.codemark!.markers = response.markers;
+			response.codemark!.markers = response.markers || [];
 			return response;
 		} catch (ex) {
 			debugger;

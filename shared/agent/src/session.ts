@@ -31,14 +31,11 @@ import {
 	ChangeDataType,
 	CodeStreamEnvironment,
 	ConnectionStatus,
-	CreateDocumentMarkerPermalinkRequestType,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
 	DidLogoutNotificationType,
-	DocumentFromMarkerRequestType,
 	DocumentLatestRevisionRequestType,
-	DocumentMarkersRequestType,
 	FetchMarkerLocationsRequestType,
 	LogoutReason,
 	ThirdPartyProviderConfig
@@ -267,7 +264,7 @@ export class CodeStreamSession {
 		switch (e.type) {
 			case MessageType.Codemarks:
 				let codemarks = await Container.instance().codemarks.resolve(e);
-				codemarks = await Container.instance().codemarks.fullCodemarks(codemarks);
+				codemarks = await Container.instance().codemarks.enrichCodemarks(codemarks);
 				this._onDidChangeCodemarks.fire(codemarks);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.Codemarks,
@@ -301,7 +298,7 @@ export class CodeStreamSession {
 				const postManager = Container.instance().posts;
 				const posts = await postManager.resolve(e);
 				this._onDidChangePosts.fire(posts);
-				const fullPosts = await postManager.fullPosts(posts);
+				const fullPosts = await postManager.enrichPosts(posts);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.Posts,
 					data: fullPosts

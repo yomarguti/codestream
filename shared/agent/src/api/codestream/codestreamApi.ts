@@ -19,11 +19,9 @@ import {
 	CreatePostRequest,
 	CreateRepoRequest,
 	DeleteCodemarkRequest,
-	DeleteCodemarkResponse,
 	DeletePostRequest,
 	EditPostRequest,
 	FetchCodemarksRequest,
-	FetchCodemarksResponse,
 	FetchFileStreamsRequest,
 	FetchMarkerLocationsRequest,
 	FetchMarkersRequest,
@@ -34,7 +32,6 @@ import {
 	FetchUnreadStreamsRequest,
 	FetchUsersRequest,
 	GetCodemarkRequest,
-	GetCodemarkResponse,
 	GetMarkerRequest,
 	GetPostRequest,
 	GetRepoRequest,
@@ -52,7 +49,6 @@ import {
 	ReactToPostRequest,
 	RenameStreamRequest,
 	SetCodemarkPinnedRequest,
-	SetCodemarkPinnedResponse,
 	SetCodemarkStatusRequest,
 	SetStreamPurposeRequest,
 	ThirdPartyProviderConfig,
@@ -88,6 +84,7 @@ import {
 	CSEditPostResponse,
 	CSFileStream,
 	CSGetCodemarkResponse,
+	CSGetCodemarksResponse,
 	CSGetMarkerLocationsResponse,
 	CSGetMarkerResponse,
 	CSGetMarkersResponse,
@@ -542,18 +539,18 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	deleteCodemark(request: DeleteCodemarkRequest): Promise<DeleteCodemarkResponse> {
+	deleteCodemark(request: DeleteCodemarkRequest) {
 		const { codemarkId } = request;
 		return this.delete<CSDeleteCodemarkResponse>(`/codemarks/${codemarkId}`, this._token);
 	}
 
 	@log()
-	fetchCodemarks(request: FetchCodemarksRequest): Promise<FetchCodemarksResponse> {
-		return this.get<FetchCodemarksResponse>(`/codemarks?teamId=${this.teamId}`, this._token);
+	fetchCodemarks(request: FetchCodemarksRequest) {
+		return this.get<CSGetCodemarksResponse>(`/codemarks?teamId=${this.teamId}`, this._token);
 	}
 
 	@log()
-	getCodemark(request: GetCodemarkRequest): Promise<GetCodemarkResponse> {
+	getCodemark(request: GetCodemarkRequest) {
 		return this.get<CSGetCodemarkResponse>(`/codemarks/${request.codemarkId}`, this._token);
 	}
 
@@ -983,7 +980,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async connectThirdPartyProvider(request: { providerName: string; apiKey?: string, host?: string }) {
+	async connectThirdPartyProvider(request: {
+		providerName: string;
+		apiKey?: string;
+		host?: string;
+	}) {
 		const cc = Logger.getCorrelationContext();
 
 		try {
@@ -1003,10 +1004,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 			const query = Object.keys(params)
 				.map(param => `${param}=${encodeURIComponent(params[param])}`)
 				.join("&");
-			await opn(
-				`${this.baseUrl}/no-auth/provider-auth/${request.providerName}?${query}`,
-				{ wait: false }
-			);
+			await opn(`${this.baseUrl}/no-auth/provider-auth/${request.providerName}?${query}`, {
+				wait: false
+			});
 			return response;
 		} catch (ex) {
 			Logger.error(ex, cc);
@@ -1015,8 +1015,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async disconnectThirdPartyProvider(request: { providerName: string, host?: string }) {
-		void (await this.put<{ teamId: string, host?: string }, {}>(
+	async disconnectThirdPartyProvider(request: { providerName: string; host?: string }) {
+		void (await this.put<{ teamId: string; host?: string }, {}>(
 			`/provider-deauth/${request.providerName}`,
 			{ teamId: this.teamId, host: request.host },
 			this._token
@@ -1031,9 +1031,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 		const provider = request.provider.name;
 		const team = `teamId=${this.teamId}`;
 		const token = `refreshToken=${request.refreshToken}`;
-		const host = request.provider.isEnterprise ?
-			`&host=${encodeURIComponent(request.provider.host)}` :
-			"";
+		const host = request.provider.isEnterprise
+			? `&host=${encodeURIComponent(request.provider.host)}`
+			: "";
 		const url = `/provider-refresh/${provider}?${team}&${token}${host}`;
 		const response = await this.get<{ user: any }>(url, this._token);
 

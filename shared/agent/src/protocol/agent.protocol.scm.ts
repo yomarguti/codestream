@@ -11,7 +11,6 @@ export interface GetFileScmInfoResponse {
 		file: string;
 		repoPath: string;
 		revision: string;
-		authors: { id: string; username: string }[];
 		remotes: { name: string; url: string }[];
 	};
 	error?: string;
@@ -52,3 +51,17 @@ export const GetRangeScmInfoRequestType = new RequestType<
 	void,
 	void
 >("codestream/scm/range/info");
+
+export interface GetRangeSha1Request {
+	uri: string;
+	range: Range;
+}
+export interface GetRangeSha1Response {
+	sha1: string | undefined;
+}
+export const GetRangeSha1RequestType = new RequestType<
+	GetRangeSha1Request,
+	GetRangeSha1Response,
+	void,
+	void
+>("codestream/scm/range/sha1");

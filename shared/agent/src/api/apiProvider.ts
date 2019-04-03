@@ -322,12 +322,12 @@ export interface ApiProvider {
 		host?: string;
 	}): Promise<{ code: string }>;
 
-	disconnectThirdPartyProvider(request: {
-		providerName: string,
-		host?: string
-	}): Promise<void>;
+	disconnectThirdPartyProvider(request: { providerName: string; host?: string }): Promise<void>;
 
-	refreshThirdPartyProvider(request: { provider: ThirdPartyProviderConfig; refreshToken: string }): Promise<CSMe>;
+	refreshThirdPartyProvider(request: {
+		provider: ThirdPartyProviderConfig;
+		refreshToken: string;
+	}): Promise<CSMe>;
 }
 
 export interface CodeStreamApiMiddlewareContext {

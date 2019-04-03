@@ -44,6 +44,7 @@ export interface Capabilities {
 	channelMute?: boolean;
 	codemarkApply?: boolean;
 	codemarkCompare?: boolean;
+	codemarkOpenRevision?: boolean;
 	editorTrackVisibleRange?: boolean;
 	services?: {
 		vsls?: boolean;

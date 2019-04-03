@@ -156,3 +156,17 @@ export const UpdateCodemarkRequestType = new RequestType<
 	void,
 	void
 >("codestream/codemark/update");
+
+export interface GetCodemarkSha1Request {
+	codemarkId: string;
+}
+export interface GetCodemarkSha1Response {
+	codemarkSha1: string | undefined;
+	documentSha1: string | undefined;
+}
+export const GetCodemarkSha1RequestType = new RequestType<
+	GetCodemarkSha1Request,
+	GetCodemarkSha1Response,
+	void,
+	void
+>("codestream/codemark/sha1");

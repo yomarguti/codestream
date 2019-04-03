@@ -5,9 +5,13 @@ import { Logger } from "../logger";
 import {
 	GetFileScmInfoRequest,
 	GetFileScmInfoRequestType,
+	GetFileScmInfoResponse,
 	GetRangeScmInfoRequest,
 	GetRangeScmInfoRequestType,
-	GetRangeScmInfoResponse
+	GetRangeScmInfoResponse,
+	GetRangeSha1Request,
+	GetRangeSha1RequestType,
+	GetRangeSha1Response
 } from "../protocol/agent.protocol";
 import { Iterables, lsp, lspHandler, Strings } from "../system";
 import { Container } from "./../container";
@@ -15,7 +19,7 @@ import { Container } from "./../container";
 @lsp
 export class ScmManager {
 	@lspHandler(GetFileScmInfoRequestType)
-	async getFileInfo({ uri: documentUri }: GetFileScmInfoRequest) {
+	async getFileInfo({ uri: documentUri }: GetFileScmInfoRequest): Promise<GetFileScmInfoResponse> {
 		const uri = URI.parse(documentUri);
 
 		let file: string | undefined;
@@ -154,5 +158,19 @@ export class ScmManager {
 					: undefined,
 			error: gitError
 		};
+	}
+
+	@lspHandler(GetRangeSha1RequestType)
+	async getRangeSha1({ uri, range }: GetRangeSha1Request): Promise<GetRangeSha1Response> {
+		// Ensure range end is >= start
+		range = Ranges.ensureStartBeforeEnd(range);
+
+		const document = Container.instance().documents.get(uri);
+		if (document === undefined) {
+			throw new Error(`No document could be found for Uri(${uri})`);
+		}
+
+		const content = document.getText(range);
+		return { sha1: Strings.sha1(content) };
 	}
 }

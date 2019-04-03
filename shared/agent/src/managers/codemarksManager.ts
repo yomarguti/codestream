@@ -1,6 +1,7 @@
 "use strict";
 
 import { MessageType } from "../api/apiProvider";
+import { MarkerLocation } from "../api/extensions";
 import { SlackApiProvider } from "../api/slack/slackApi";
 import { Container } from "../container";
 import {
@@ -14,6 +15,9 @@ import {
 	FetchCodemarksRequest,
 	FetchCodemarksRequestType,
 	FetchCodemarksResponse,
+	GetCodemarkSha1Request,
+	GetCodemarkSha1RequestType,
+	GetCodemarkSha1Response,
 	SetCodemarkPinnedRequest,
 	SetCodemarkPinnedRequestType,
 	SetCodemarkPinnedResponse,
@@ -25,7 +29,7 @@ import {
 	UpdateCodemarkResponse
 } from "../protocol/agent.protocol";
 import { CSCodemark } from "../protocol/api.protocol";
-import { lsp, lspHandler } from "../system";
+import { lsp, lspHandler, Strings } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 
 @lsp
@@ -52,52 +56,99 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 
 	@lspHandler(FetchCodemarksRequestType)
 	async get(request: FetchCodemarksRequest): Promise<FetchCodemarksResponse> {
-		let csCodemarks = await this.getAllCached();
-		csCodemarks = await this.filterLegacyCodemarks(csCodemarks);
-		const fullCodemarks = [];
+		const codemarks = this.filterLegacyCodemarks(await this.getAllCached());
 
-		for (const csCodemark of csCodemarks) {
-			if (request.streamId && request.streamId !== csCodemark.streamId) {
+		const enrichedCodemarks = [];
+		for (const codemark of codemarks) {
+			if (request.streamId != null && request.streamId !== codemark.streamId) {
 				continue;
 			}
 
-			if (!(await this.canSeeCodemark(csCodemark))) {
+			if (!(await this.canSeeCodemark(codemark))) {
 				continue;
 			}
-			const [fullCodemark] = await this.fullCodemarks([csCodemark]);
-			fullCodemarks.push(fullCodemark);
+
+			enrichedCodemarks.push(await this.enrichCodemark(codemark));
 		}
 
-		return { codemarks: fullCodemarks };
+		return { codemarks: enrichedCodemarks };
 	}
 
-	async fullCodemark(codemark: CSCodemark): Promise<CodemarkPlus> {
+	@lspHandler(GetCodemarkSha1RequestType)
+	async getCodemarkSha1({ codemarkId }: GetCodemarkSha1Request): Promise<GetCodemarkSha1Response> {
+		const { codemarks, files, markerLocations, scm } = Container.instance();
+
+		const codemark = await codemarks.getEnrichedCodemarkById(codemarkId);
+		if (codemark === undefined) {
+			throw new Error(`No codemark could be found for Id(${codemarkId})`);
+		}
+
+		if (codemark.markers == null || codemark.markers.length === 0) {
+			throw new Error(`No markers could be found for codemark Id(${codemarkId})`);
+		}
+
+		if (codemark.fileStreamIds.length === 0) {
+			throw new Error(`No document could be found for codemark Id(${codemarkId})`);
+		}
+
+		const fileStreamId = codemark.fileStreamIds[0];
+		const uri = await files.getDocumentUri(fileStreamId);
+		if (uri === undefined) {
+			throw new Error(`No document could be found for codemark Id(${codemarkId})`);
+		}
+
+		// Get the most up-to-date location for the codemark
+		const marker = codemark.markers[0];
+		const { locations } = await markerLocations.getCurrentLocations(uri, fileStreamId, [marker]);
+
+		let documentSha1;
+
+		const location = locations[marker.id];
+		if (location != null) {
+			const range = MarkerLocation.toRange(location);
+			const response = await scm.getRangeSha1({ uri: uri, range: range });
+			documentSha1 = response.sha1;
+		}
+
+		return {
+			codemarkSha1: Strings.sha1(marker.code),
+			documentSha1: documentSha1
+		};
+	}
+
+	async getEnrichedCodemarkById(codemarkId: string): Promise<CodemarkPlus> {
+		return this.enrichCodemark(await this.getById(codemarkId));
+	}
+
+	async enrichCodemark(codemark: CSCodemark): Promise<CodemarkPlus> {
+		const { markers: markersManager } = Container.instance();
+
 		const markers = [];
 		if (codemark.markerIds != null && codemark.markerIds.length !== 0) {
 			for (const markerId of codemark.markerIds) {
-				markers.push(await Container.instance().markers.getById(markerId));
+				markers.push(await markersManager.getById(markerId));
 			}
 		}
 
 		return { ...codemark, markers: markers };
 	}
 
-	async fullCodemarks(codemarks: CSCodemark[]): Promise<CodemarkPlus[]> {
-		const fullCodemarks = [];
+	async enrichCodemarks(codemarks: CSCodemark[]): Promise<CodemarkPlus[]> {
+		const enrichedCodemarks = [];
 		for (const codemark of codemarks) {
-			const fullCodemark: CodemarkPlus = {
-				...codemark
-			};
-			if (codemark.markerIds) {
-				fullCodemark.markers = [];
-				for (const markerId of codemark.markerIds) {
-					fullCodemark.markers.push(await Container.instance().markers.getById(markerId));
-				}
-			}
-			fullCodemarks.push(fullCodemark);
+			enrichedCodemarks.push(await this.enrichCodemark(codemark));
 		}
 
-		return fullCodemarks;
+		return enrichedCodemarks;
+	}
+
+	async enrichCodemarksByIds(codemarkIds: string[]): Promise<CodemarkPlus[]> {
+		const enrichedCodemarks = [];
+		for (const codemarkId of codemarkIds) {
+			enrichedCodemarks.push(await this.getEnrichedCodemarkById(codemarkId));
+		}
+
+		return enrichedCodemarks;
 	}
 
 	private async canSeeCodemark(codemark: CSCodemark): Promise<boolean> {
@@ -120,7 +171,7 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 			type: MessageType.Codemarks,
 			data: [updateResponse.codemark]
 		});
-		return { codemark: await this.fullCodemark(codemark) };
+		return { codemark: await this.enrichCodemark(codemark) };
 	}
 
 	@lspHandler(SetCodemarkPinnedRequestType)
@@ -135,7 +186,7 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 			type: MessageType.Codemarks,
 			data: [response.codemark]
 		});
-		return { codemark: await this.fullCodemark(codemark) };
+		return { codemark: await this.enrichCodemark(codemark) };
 	}
 
 	protected async fetchById(id: Id): Promise<CSCodemark> {
@@ -175,6 +226,7 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 			}
 		}
 		this.migrate(legacyCodemarks);
+
 		return result;
 	}
 

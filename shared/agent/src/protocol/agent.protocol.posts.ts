@@ -99,7 +99,7 @@ export interface FetchPostsRequest {
 }
 export interface FetchPostsResponse {
 	posts: PostPlus[];
-	codemarks?: CSCodemark[];
+	codemarks?: CodemarkPlus[];
 	markers?: CSMarker[];
 	more?: boolean;
 }
