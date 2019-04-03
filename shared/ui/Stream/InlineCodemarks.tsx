@@ -93,6 +93,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	_scrollDiv: HTMLDivElement | null | undefined;
 	private root = React.createRef<HTMLDivElement>();
 	mutationObserver?: MutationObserver;
+	hiddenCodemarks = {};
 
 	constructor(props: Props) {
 		super(props);
@@ -225,6 +226,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	observeForRepositioning() {
 		if (this.props.viewInline && this.root.current) {
 			this.mutationObserver = new MutationObserver(mutations => {
+				this.repositionCodemarks();
 				mutations.forEach(mutation => {
 					const target = mutation.target as Element;
 					switch (mutation.type) {
@@ -275,56 +277,39 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	repositionCodemarks = debounceToAnimationFrame(() => {
 		let $codemarkDivs = Array.from(
-			document.querySelectorAll(".codemark.inline, .compose.float-compose")
+			document.querySelectorAll(".codemark.inline:not(.hidden), .compose.float-compose")
 		);
+		this.repositionElements($codemarkDivs);
+		let $hiddenDivs = Array.from(document.querySelectorAll(".codemark.inline.hidden"));
+		this.repositionElements($hiddenDivs);
+	});
+
+	repositionElements = $elements => {
 		// @ts-ignore
-		$codemarkDivs.sort((a, b) => a.dataset.top - b.dataset.top);
-		const $composeDiv = document.getElementsByClassName("compose float-compose");
+		$elements.sort((a, b) => a.dataset.top - b.dataset.top);
+		// const $composeDiv = document.getElementsByClassName("compose float-compose");
 
-		if (false && $composeDiv.length === 1) {
-			// let bottomOfLastDiv = -30;
-			// let runningYAdjustment = 0;
-			// for (let $element of $codemarkDivs) {
-			// const domRect = $element.getBoundingClientRect();
+		let bottomOfLastDiv = -30;
+		// let runningYAdjustment = 0;
+		for (let $element of $elements) {
+			const domRect = $element.getBoundingClientRect();
 			// @ts-ignore
-			// const origTop = parseInt($element.dataset.top, 10);
-			// const yDiff = bottomOfLastDiv - origTop + 20;
-			// const height = domRect.bottom - domRect.top;
-			// @ts-ignore
+			const origTop = parseInt($element.dataset.top, 10);
+			const yDiff = bottomOfLastDiv - origTop + 20;
+			const height = domRect.bottom - domRect.top;
+
 			// const origMargin = parseInt($element.style.marginTop, 10) || 0;
-			// if (yDiff > 0) {
-			// 	// @ts-ignore
-			// 	$element.style.marginTop = yDiff + "px";
-			// 	bottomOfLastDiv = origTop + height + yDiff;
-			// } else {
-			// 	// @ts-ignore
-			// 	$element.style.marginTop = "0";
-			// 	bottomOfLastDiv = origTop + height;
-			// }
-			// }
-		} else {
-			let bottomOfLastDiv = -30;
-			// let runningYAdjustment = 0;
-			for (let $element of $codemarkDivs) {
-				const domRect = $element.getBoundingClientRect();
+			if (yDiff > 0) {
 				// @ts-ignore
-				const origTop = parseInt($element.dataset.top, 10);
-				const yDiff = bottomOfLastDiv - origTop + 20;
-				const height = domRect.bottom - domRect.top;
-
-				// const origMargin = parseInt($element.style.marginTop, 10) || 0;
-				if (yDiff > 0) {
-					// @ts-ignore
-					$element.style.marginTop = yDiff + "px";
-					bottomOfLastDiv = origTop + height + yDiff;
-				} else {
-					// @ts-ignore
-					$element.style.marginTop = "0";
-					bottomOfLastDiv = origTop + height;
-				}
+				$element.style.marginTop = yDiff + "px";
+				bottomOfLastDiv = origTop + height + yDiff;
+			} else {
+				// @ts-ignore
+				$element.style.marginTop = "0";
+				bottomOfLastDiv = origTop + height;
 			}
 		}
-	});
+	};
 
 	async onFileChanged() {
 		const { textEditorUri, documentMarkers } = this.props;
@@ -352,6 +337,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			return this.renderNoCodemarks();
 		}
 
+		this.hiddenCodemarks = {};
 		return (
 			<ScrollBox>
 				<div className="channel-list vscroll">
@@ -378,6 +364,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 								const hidden =
 									(!codemark.pinned && !showUnpinned) ||
 									(codemark.type === "issue" && codemark.status === "closed" && !showClosed);
+								if (hidden) this.hiddenCodemarks[codemark.id] = true;
 								return (
 									<Codemark
 										key={codemark.id}
@@ -626,14 +613,19 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		documentMarkers.forEach(docMarker => {
 			const codemark = docMarker.codemark;
 			// @ts-ignore
-			// if (!codemark.pinned && !showUnpinned) return;
-			// if (codemark.type === "issue" && codemark.status === "closed" && !showClosed) return;
 			let startLine = Number(this.getMarkerStartLine(docMarker));
 			// if there is already a codemark on this line, keep skipping to the next one
 			while (this.docMarkersByStartLine[startLine]) startLine++;
 			this.docMarkersByStartLine[startLine] = docMarker;
-			if (startLine < firstVisibleLine) numAbove++;
-			if (startLine > lastVisibleLine) numBelow++;
+			if (
+				(!codemark.pinned && !showUnpinned) ||
+				(codemark.type === "issue" && codemark.status === "closed" && !showClosed)
+			) {
+				this.hiddenCodemarks[codemark.id] = true;
+			} else {
+				if (startLine < firstVisibleLine) numAbove++;
+				if (startLine > lastVisibleLine) numBelow++;
+			}
 		});
 
 		if (numAbove != this.state.numAbove) this.setState({ numAbove });
@@ -673,9 +665,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 										//} && lineNum !== this.state.openIconsOnLine) {
 										const docMarker = this.docMarkersByStartLine[lineNum];
 										const codemark = docMarker.codemark;
-										const hidden =
-											(!codemark.pinned && !showUnpinned) ||
-											(codemark.type === "issue" && codemark.status === "closed" && !showClosed);
+										const hidden = this.hiddenCodemarks[codemark.id] ? true : false;
 										return (
 											<Codemark
 												key={docMarker.id}
@@ -738,7 +728,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	printViewSelectors() {
-		const { numClosed, numUnpinned } = this.props;
+		const { numClosed, numUnpinned, viewInline } = this.props;
 		const { numAbove, numBelow } = this.state;
 		return (
 			<div className="view-selectors">
@@ -764,6 +754,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						<label className={cx("switch", { checked: this.props.showUnpinned })} />
 					</span>
 				)}
+				<span className="count" onClick={this.toggleViewCodemarksInline}>
+					list
+					<label className={cx("switch ", { checked: !viewInline })} />
+				</span>
+				<Feedback />
 			</div>
 		);
 	}
@@ -773,19 +768,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		return (
 			<div ref={this.root} className={cx("panel inline-panel", { "full-height": viewInline })}>
-				<div className="view-as-switch">
-					<span className="view-as-label">View:</span>
-					<label
-						className={cx("switch view-as-inline-switch", {
-							checked: viewInline
-						})}
-						onClick={this.toggleViewCodemarksInline}
-					/>
-				</div>
 				{!viewInline && <div className="panel-header">Codemarks</div>}
 				{this.state.isLoading ? null : viewInline ? this.renderInline() : this.renderList()}
-				{viewInline && this.printViewSelectors()}
-				<Feedback />
+				{this.printViewSelectors()}
 			</div>
 		);
 	}
