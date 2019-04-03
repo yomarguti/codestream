@@ -467,6 +467,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		);
 	}
 
+	codeHeight = () => {
+		const $field = document.getElementById("inline-codemarks-field") as HTMLDivElement;
+		return $field ? $field.offsetHeight : 100;
+	};
+
 	renderHoverIcons = numLinesVisible => {
 		const iconsOnLine0 = getLine0ForEditorLine(
 			this.props.textEditorVisibleRanges,
@@ -475,9 +480,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		// console.log("IOL IS: ", iconsOnLine0, " FROM: ", this.state.openIconsOnLine);
 		const highlightedLine = this.state.highlightedLine;
 
-		const windowHeight = window.innerHeight;
+		const codeHeight = this.codeHeight();
 		if (iconsOnLine0 >= 0) {
-			const top = (windowHeight * iconsOnLine0) / numLinesVisible;
+			const top = (codeHeight * iconsOnLine0) / numLinesVisible;
 			// const top = paddingTop ? "calc(" + topPct + " + " + paddingTop + "px)" : topPct;
 			return this.renderIconRow(iconsOnLine0, top, false, true);
 		} else {
@@ -485,7 +490,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			return (
 				<div>
 					{range(0, numLinesVisible).map(lineNum0 => {
-						const top = (windowHeight * lineNum0) / numLinesVisible;
+						const top = (codeHeight * lineNum0) / numLinesVisible;
 						// const top = paddingTop ? "calc(" + topPct + " + " + paddingTop + "px)" : topPct;
 						const hover = lineNum0 === highlightedLine;
 						return this.renderIconRow(lineNum0, top, hover, false);
@@ -643,7 +648,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (numAbove != this.state.numAbove) this.setState({ numAbove });
 		if (numBelow != this.state.numBelow) this.setState({ numBelow });
 
-		const windowHeight = window.innerHeight;
+		const codeHeight = this.codeHeight();
 		return (
 			<div
 				style={{ /*overflowY: "auto", overflowX: "hidden",*/ height: "100vh" }}
@@ -658,7 +663,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						style={{
 							top: paddingTop,
 							// purple background for debugging purposes
-							// background: "#333366",
+							background: "#333366",
 							position: "relative",
 							fontSize: fontSize,
 							height: height
@@ -673,7 +678,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 								const linesInRange = realLastLine - realFirstLine + 1;
 								const marksInRange = range(realFirstLine, realLastLine + 1).map(lineNum => {
 									const top =
-										(windowHeight * (rangeStartOffset + lineNum - realFirstLine)) / numLinesVisible;
+										(codeHeight * (rangeStartOffset + lineNum - realFirstLine)) / numLinesVisible;
 									if (this.docMarkersByStartLine[lineNum]) {
 										//} && lineNum !== this.state.openIconsOnLine) {
 										const docMarker = this.docMarkersByStartLine[lineNum];
@@ -846,11 +851,14 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	handleClickField = (event: React.SyntheticEvent<HTMLDivElement>) => {
-		if (event && event.target && (event.target as any).id === "inline-codemarks-scroll-container") {
-			this.setState(state =>
-				state.selectedDocMarkerId ? { selectedDocMarkerId: undefined } : null
-			);
-			this.clearSelection();
+		if (event && event.target) {
+			const id = (event.target as any).id;
+			if (id === "inline-codemarks-scroll-container" || id === "inline-codemarks-field") {
+				this.setState(state =>
+					state.selectedDocMarkerId ? { selectedDocMarkerId: undefined } : null
+				);
+				this.clearSelection();
+			}
 		}
 	};
 

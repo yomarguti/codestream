@@ -274,7 +274,7 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	renderInlineCodemark() {
-		const { codemark, hidden, selected, author } = this.props;
+		const { codemark, codemarkKeybindings, hidden, selected, author } = this.props;
 		const { menuOpen, menuTarget } = this.state;
 
 		if (!codemark) return null;
@@ -303,7 +303,11 @@ export class Codemark extends React.Component<Props, State> {
 		}
 
 		range(1, 10).forEach(index => {
-			menuItems.push({ label: `Set Keybinding ${index}`, action: `set-keybinding-${index}` });
+			const inUse = codemarkKeybindings[index] ? " (in use)" : "";
+			menuItems.push({
+				label: `Set Keybinding ${index}${inUse}`,
+				action: `set-keybinding-${index}`
+			});
 		});
 
 		return (
