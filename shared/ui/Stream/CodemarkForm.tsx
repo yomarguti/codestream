@@ -54,6 +54,7 @@ interface Props {
 	channel: Stream;
 	channelStreams: CSChannelStream[];
 	directMessageStreams: CSDirectStream[];
+	currentUser: CSUser;
 	currentUserId: string;
 	teammates: CSUser[];
 	streamId: string;
@@ -789,7 +790,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		// 	);
 		// }
 
-		const { editingCodemark } = this.props;
+		const { editingCodemark, currentUser } = this.props;
 		const commentType = editingCodemark ? editingCodemark.type : this.state.type || "comment";
 		// const { menuTarget } = this.state;
 
@@ -842,11 +843,6 @@ class CodemarkForm extends React.Component<Props, State> {
 		// {isEditing ? "Update" : "New"}{" "}
 		// {commentString.charAt(0).toUpperCase() + commentString.slice(1)}
 		// <div className="range-text">{rangeText}</div>
-		const user = {
-			username: "pez",
-			email: "pez@codestream.com",
-			fullName: "Peter Pezaris"
-		};
 
 		const panelHeader = GoogleStyle ? null : (
 			<div className="panel-header" key="one">
@@ -885,8 +881,8 @@ class CodemarkForm extends React.Component<Props, State> {
 					<div id="controls" className="control-group">
 						{showHeadshots && (
 							<div style={{ paddingLeft: "25px", height: "25px", marginTop: "10px" }}>
-								<Headshot person={user} />
-								<b>{user.username}</b>
+								<Headshot person={currentUser} />
+								<b>{currentUser.username}</b>
 								<span style={{ opacity: 0.75, paddingLeft: "5px" }}>{this.getCodeBlockHint()}</span>
 							</div>
 						)}
@@ -1186,6 +1182,7 @@ const mapStateToProps = state => {
 		issueProvider: context.issueProvider,
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
 		isSlackTeam,
+		currentUser: user,
 		selectedStreams: preferences.selectedStreams || EMPTY_OBJECT,
 		showChannels: context.channelFilter,
 		textEditorUri: editorContext.textEditorUri,

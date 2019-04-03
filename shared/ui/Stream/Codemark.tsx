@@ -12,8 +12,8 @@ import { DocumentMarker, CodemarkPlus } from "@codestream/protocols/agent";
 import { CodemarkType, CSUser } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
-import { UpdateConfigurationRequestType } from "@codestream/protocols/webview";
 import { range } from "../utils";
+import { getUserByCsId } from "../store/users/reducer";
 
 interface State {
 	menuOpen?: boolean;
@@ -25,6 +25,7 @@ interface Props {
 	selected?: boolean;
 	collapsed?: boolean;
 	inline?: boolean;
+	author: CSUser;
 	codemark: CodemarkPlus;
 	marker: DocumentMarker;
 	usernames: string[];
@@ -273,14 +274,8 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	renderInlineCodemark() {
-		const { codemark, hidden, selected } = this.props;
+		const { codemark, hidden, selected, author } = this.props;
 		const { menuOpen, menuTarget } = this.state;
-
-		const user = {
-			username: "pez",
-			email: "pez@codestream.com",
-			fullName: "Peter Pezaris"
-		};
 
 		if (!codemark) return null;
 
@@ -330,7 +325,7 @@ export class Codemark extends React.Component<Props, State> {
 						{this.renderKeybinding(codemark)}
 						{this.renderStatus(codemark)}
 						<div className="author">
-							<Headshot person={user} /> <span className="author">{user.username}</span>
+							<Headshot person={author} /> <span className="author">{author.username}</span>
 							<Timestamp time={codemark.createdAt} />
 							{codemark.color && (
 								<div
@@ -354,7 +349,7 @@ export class Codemark extends React.Component<Props, State> {
 							)}
 							<Icon name="kebab-vertical" className="kebab-vertical clickable" />
 						</div>
-						{this.renderDemoShit(codemark, user)}
+						{this.renderDemoShit(codemark)}
 					</div>
 					{selected && <CodemarkDetails codemark={codemark} />}
 				</div>
@@ -362,7 +357,13 @@ export class Codemark extends React.Component<Props, State> {
 		);
 	}
 
-	renderDemoShit(codemark, user) {
+	renderDemoShit(codemark) {
+		const user = {
+			username: "pez",
+			email: "pez@codestream.com",
+			fullName: "Peter Pezaris"
+		};
+
 		return (
 			<div>
 				{codemark.text &&
@@ -402,10 +403,16 @@ export class Codemark extends React.Component<Props, State> {
 
 const EMPTY_OBJECT = {};
 
+const unkownAuthor = {
+	username: "CodeStream",
+	fullName: "Uknown User"
+};
+
 const mapStateToProps = (state, props) => {
 	const { preferences, users, session } = state;
 	return {
 		currentUser: users[session.userId],
+		author: getUserByCsId(users, props.codemark.creatorId) || (unkownAuthor as CSUser),
 		codemarkKeybindings: preferences.codemarkKeybindings || EMPTY_OBJECT
 	};
 };

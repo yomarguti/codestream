@@ -103,3 +103,14 @@ export const getUsernamesRegexp = createSelector(
 			.replace(/\./g, "\\."); // that the regexp matches the literal chars
 	}
 );
+
+export const getUserByCsId = createSelector(
+	(state: State) => state,
+	(_: any, codestreamId: string) => codestreamId,
+	(users: State, codestreamId: string) => {
+		for (let user of Object.values(users)) {
+			if (user.codestreamId === codestreamId || user.id === codestreamId) return user;
+		}
+		return undefined;
+	}
+);
