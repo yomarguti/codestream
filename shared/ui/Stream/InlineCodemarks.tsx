@@ -364,7 +364,10 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 								const hidden =
 									(!codemark.pinned && !showUnpinned) ||
 									(codemark.type === "issue" && codemark.status === "closed" && !showClosed);
-								if (hidden) this.hiddenCodemarks[codemark.id] = true;
+								if (hidden) {
+									this.hiddenCodemarks[docMarker.id] = true;
+									return null;
+								}
 								return (
 									<Codemark
 										key={codemark.id}
@@ -610,6 +613,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			numBelow = 0;
 		// create a map from start-lines to the codemarks that start on that line
 		this.docMarkersByStartLine = {};
+		this.hiddenCodemarks = {};
 		documentMarkers.forEach(docMarker => {
 			const codemark = docMarker.codemark;
 			// @ts-ignore
@@ -621,7 +625,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				(!codemark.pinned && !showUnpinned) ||
 				(codemark.type === "issue" && codemark.status === "closed" && !showClosed)
 			) {
-				this.hiddenCodemarks[codemark.id] = true;
+				console.log("HIDDEN IS TRUE");
+				this.hiddenCodemarks[docMarker.id] = true;
 			} else {
 				if (startLine < firstVisibleLine) numAbove++;
 				if (startLine > lastVisibleLine) numBelow++;
@@ -665,7 +670,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 										//} && lineNum !== this.state.openIconsOnLine) {
 										const docMarker = this.docMarkersByStartLine[lineNum];
 										const codemark = docMarker.codemark;
-										const hidden = this.hiddenCodemarks[codemark.id] ? true : false;
+										const hidden = this.hiddenCodemarks[docMarker.id] ? true : false;
 										return (
 											<Codemark
 												key={docMarker.id}
@@ -732,12 +737,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const { numAbove, numBelow } = this.state;
 		return (
 			<div className="view-selectors">
-				{numAbove > 0 && (
+				{viewInline && numAbove > 0 && (
 					<span className="count" onClick={this.showAbove}>
 						{numAbove} <Icon name="arrow-up" />
 					</span>
 				)}
-				{numBelow > 0 && (
+				{viewInline && numBelow > 0 && (
 					<span className="count" onClick={this.showBelow}>
 						{numBelow} <Icon name="arrow-down" />
 					</span>
@@ -828,7 +833,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	showAbove = () => {
-		const { firstVisibleLine, lastVisibleLine = [] } = this.props;
+		const { firstVisibleLine } = this.props;
 
 		let done = false;
 		Object.keys(this.docMarkersByStartLine)
@@ -836,7 +841,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			.reverse()
 			.forEach(line => {
 				const lineNum = parseInt(line, 10) - 1;
-				if (!done && lineNum < firstVisibleLine) {
+				if (
+					!done &&
+					lineNum < firstVisibleLine &&
+					!this.hiddenCodemarks[this.docMarkersByStartLine[line].id]
+				) {
 					HostApi.instance.send(EditorRevealRangeRequestType, {
 						uri: this.props.textEditorUri!,
 						range: Range.create(lineNum, 0, lineNum, 0),
@@ -849,14 +858,18 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	showBelow = () => {
-		const { lastVisibleLine = [], textEditorUri } = this.props;
+		const { lastVisibleLine, textEditorUri } = this.props;
 
 		let done = false;
 		Object.keys(this.docMarkersByStartLine)
 			.sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
 			.forEach(line => {
 				const lineNum = parseInt(line, 10) + 1;
-				if (!done && lineNum > lastVisibleLine) {
+				if (
+					!done &&
+					lineNum > lastVisibleLine &&
+					!this.hiddenCodemarks[this.docMarkersByStartLine[line].id]
+				) {
 					HostApi.instance.send(EditorRevealRangeRequestType, {
 						uri: textEditorUri!,
 						range: Range.create(lineNum, 0, lineNum, 0),
