@@ -372,9 +372,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 							.map(docMarker => {
 								const { codemark } = docMarker;
 								// @ts-ignore
-								if (!codemark.pinned && !showUnpinned) return null;
-								if (codemark.type === "issue" && codemark.status === "closed" && !showClosed)
-									return null;
+								//if (!codemark.pinned && !showUnpinned) return null;
+								// if (codemark.type === "issue" && codemark.status === "closed" && !showClosed)
+								// return null;
+								const hidden =
+									(!codemark.pinned && !showUnpinned) ||
+									(codemark.type === "issue" && codemark.status === "closed" && !showClosed);
 								return (
 									<Codemark
 										key={codemark.id}
@@ -383,6 +386,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 										marker={docMarker}
 										collapsed={true}
 										inline={false}
+										hidden={hidden}
 										selected={selectedDocMarkerId === docMarker.id}
 										usernames={this.props.usernames}
 										onClick={this.handleClickCodemark}
@@ -622,8 +626,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		documentMarkers.forEach(docMarker => {
 			const codemark = docMarker.codemark;
 			// @ts-ignore
-			if (!codemark.pinned && !showUnpinned) return;
-			if (codemark.type === "issue" && codemark.status === "closed" && !showClosed) return;
+			// if (!codemark.pinned && !showUnpinned) return;
+			// if (codemark.type === "issue" && codemark.status === "closed" && !showClosed) return;
 			let startLine = Number(this.getMarkerStartLine(docMarker));
 			// if there is already a codemark on this line, keep skipping to the next one
 			while (this.docMarkersByStartLine[startLine]) startLine++;
@@ -638,7 +642,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const windowHeight = window.innerHeight;
 		return (
 			<div
-				style={{ overflow: "auto", height: "100vh" }}
+				style={{ overflowY: "auto", overflowX: "hidden", height: "100vh" }}
 				onScroll={this.onScroll}
 				id="inline-codemarks-scroll-container"
 				ref={ref => (this._scrollDiv = ref)}
@@ -668,13 +672,18 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 									if (this.docMarkersByStartLine[lineNum]) {
 										//} && lineNum !== this.state.openIconsOnLine) {
 										const docMarker = this.docMarkersByStartLine[lineNum];
+										const codemark = docMarker.codemark;
+										const hidden =
+											(!codemark.pinned && !showUnpinned) ||
+											(codemark.type === "issue" && codemark.status === "closed" && !showClosed);
 										return (
 											<Codemark
 												key={docMarker.id}
-												codemark={docMarker.codemark}
+												codemark={codemark}
 												marker={docMarker}
 												collapsed={true}
 												inline={true}
+												hidden={hidden}
 												selected={selectedDocMarkerId === docMarker.id}
 												usernames={this.props.usernames}
 												onClick={this.handleClickCodemark}
@@ -728,11 +737,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		// this.scrollTo(18);
 	};
 
-	printHidden() {
+	printViewSelectors() {
 		const { numClosed, numUnpinned } = this.props;
 		const { numAbove, numBelow } = this.state;
 		return (
-			<div className="hidden">
+			<div className="view-selectors">
 				{numAbove > 0 && (
 					<span className="count" onClick={this.showAbove}>
 						{numAbove} <Icon name="arrow-up" />
@@ -775,7 +784,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				</div>
 				{!viewInline && <div className="panel-header">Codemarks</div>}
 				{this.state.isLoading ? null : viewInline ? this.renderInline() : this.renderList()}
-				{viewInline && this.printHidden()}
+				{viewInline && this.printViewSelectors()}
 				<Feedback />
 			</div>
 		);

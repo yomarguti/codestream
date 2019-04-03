@@ -40,6 +40,7 @@ interface Props {
 	showLabelText?: boolean;
 	codemarkKeybindings: string[];
 	setUserPreference: Function;
+	hidden: boolean;
 }
 
 export class Codemark extends React.Component<Props, State> {
@@ -272,7 +273,7 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	renderInlineCodemark() {
-		const { codemark, selected } = this.props;
+		const { codemark, hidden, selected } = this.props;
 		const { menuOpen, menuTarget } = this.state;
 
 		const user = {
@@ -313,7 +314,11 @@ export class Codemark extends React.Component<Props, State> {
 		return (
 			<div
 				style={{ ...this.props.style }}
-				className={cx("codemark collapsed inline type-" + type, { selected: selected })}
+				className={cx("codemark inline type-" + type, {
+					// if it's selected, we don't render as hidden
+					hidden: !selected ? hidden : false,
+					selected: selected
+				})}
 				onClick={this.handleClickCodemark}
 				onMouseEnter={this.handleMouseEnterCodemark}
 				onMouseLeave={this.handleMouseLeaveCodemark}
