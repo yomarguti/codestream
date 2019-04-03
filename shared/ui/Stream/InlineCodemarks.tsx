@@ -176,43 +176,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	componentDidMount() {
-		if (this.props.viewInline && this.root.current) {
-			this.mutationObserver = new MutationObserver(mutations => {
-				mutations.forEach(mutation => {
-					const target = mutation.target as Element;
-					switch (mutation.type) {
-						case "attributes": {
-							if (
-								mutation.attributeName === "class" &&
-								target.classList.contains("codemark") &&
-								diff(Array.from(target.classList), mutation.oldValue!.split(" ")).includes(
-									"selected"
-								)
-							) {
-								this.repositionCodemarks();
-							}
-							break;
-						}
-						case "childList": {
-							if (target.classList.contains("postslist")) {
-								this.repositionCodemarks();
-								if (
-									mutation.addedNodes[0] &&
-									(mutation.addedNodes[0] as Element).classList.contains("post")
-								)
-									this.repositionCodemarks();
-							}
-						}
-					}
-				});
-			});
-			this.mutationObserver.observe(this.root.current, {
-				attributes: true,
-				attributeOldValue: true,
-				childList: true,
-				subtree: true
-			});
-		}
+		this.observeForRepositioning();
 
 		this.disposables.push(
 			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
@@ -254,6 +218,54 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const $div = document.getElementById("inline-codemarks-scroll-container");
 		if ($div) {
 			$div.scrollTop = top;
+		}
+	}
+
+	// the downside of this is it's dependent on css selectors
+	observeForRepositioning() {
+		if (this.props.viewInline && this.root.current) {
+			this.mutationObserver = new MutationObserver(mutations => {
+				mutations.forEach(mutation => {
+					const target = mutation.target as Element;
+					switch (mutation.type) {
+						case "attributes": {
+							if (
+								mutation.attributeName === "class" &&
+								target.classList.contains("codemark") &&
+								diff(Array.from(target.classList), mutation.oldValue!.split(" ")).includes(
+									"selected"
+								)
+							) {
+								this.repositionCodemarks();
+							}
+							break;
+						}
+						case "childList": {
+							const addedComposeBox =
+								mutation.addedNodes.length > 0 &&
+								(mutation.addedNodes[0] as Element).classList.contains("compose");
+							const removedComposeBox =
+								mutation.removedNodes.length > 0 &&
+								(mutation.removedNodes[0] as Element).classList.contains("compose");
+							if (target.classList.contains("postslist") || addedComposeBox || removedComposeBox) {
+								this.repositionCodemarks();
+								if (
+									mutation.addedNodes[0] &&
+									(mutation.addedNodes[0] as Element).classList.contains("post")
+								) {
+									this.repositionCodemarks();
+								}
+							}
+						}
+					}
+				});
+			});
+			this.mutationObserver.observe(document.getElementById("stream-root")!, {
+				attributes: true,
+				attributeOldValue: true,
+				childList: true,
+				subtree: true
+			});
 		}
 	}
 

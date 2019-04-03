@@ -635,7 +635,7 @@ export class SimpleStream extends Component {
 		const onInlineCodemarks = activePanel === WebviewPanels.CodemarksForFile;
 		const contentClass = onInlineCodemarks ? "content inline" : "content vscroll inline";
 		return (
-			<div className={streamClass}>
+			<div id="stream-root" className={streamClass}>
 				<div id="modal-root" />
 				<div id="confirm-root" />
 				{threadId && !onInlineCodemarks && <div id="panel-blanket" />}
