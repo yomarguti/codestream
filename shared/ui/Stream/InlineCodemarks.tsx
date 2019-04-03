@@ -663,7 +663,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						style={{
 							top: paddingTop,
 							// purple background for debugging purposes
-							background: "#333366",
+							// background: "#333366",
 							position: "relative",
 							fontSize: fontSize,
 							height: height
