@@ -592,6 +592,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		};
 
 		if (documentMarkers.length === 0) {
+			if (this.state.numAbove) this.setState({ numAbove: 0 });
+			if (this.state.numBelow) this.setState({ numBelow: 0 });
 			return (
 				<div
 					style={{

@@ -161,7 +161,7 @@
 		max-height: 90%;
 		overflow-y: auto;
 
-		transition: transform 0.2s, box-shadow 0.2s, margin-top 0.2s;
+		transition: transform 0.2s, margin-top 0.2s;
 		&.selected {
 			// transform: scale(1.05);
 			transform: translate(-20px, 0);
@@ -170,6 +170,9 @@
 		&.hidden {
 			transform: none;
 			left: calc(~"100% - 10px");
+		}
+		&:not(.selected) {
+			transition: transform 0.2s, margin-top 0.2s, left 0.2s;
 		}
 		.postslist {
 			max-height: 200px;
