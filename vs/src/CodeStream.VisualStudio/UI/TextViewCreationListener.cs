@@ -22,6 +22,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 
+public class TextViewCreationListenerDummy {
+
+}
+
 namespace CodeStream.VisualStudio.UI {
 	[Export(typeof(IVsTextViewCreationListener))]
 	[Export(typeof(IWpfTextViewConnectionListener))]
@@ -32,7 +36,7 @@ namespace CodeStream.VisualStudio.UI {
 		IVsTextViewCreationListener,
 		IWpfTextViewConnectionListener {
 
-		private static readonly ILogger Log = LogManager.ForContext<TextViewCreationListener>();
+		private static readonly ILogger Log = LogManager.ForContext<TextViewCreationListenerDummy>();
 
 		private readonly IEventAggregator _eventAggregator;
 		private readonly ISessionService _sessionService;
@@ -53,7 +57,6 @@ namespace CodeStream.VisualStudio.UI {
 			ISessionService sessionService,
 			ISettingsService settingsService,
 			IIdeService ideService) {
-			Log.Verbose("ctor");
 			_eventAggregator = eventAggregator;
 			_sessionService = sessionService;
 			_settingsService = settingsService;

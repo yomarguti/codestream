@@ -1,12 +1,10 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Extensions;
+﻿using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Glyphs;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
-using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,8 +16,6 @@ namespace CodeStream.VisualStudio.UI.Taggers
     /// </summary>
     internal class CodemarkTagger : ITagger<CodemarkGlyphTag>
     {
-        private static readonly ILogger Log = LogManager.ForContext<CodemarkTaggerProvider>();
-
         private readonly ISessionService _sessionService;
         private readonly ITextView _textView;
         private readonly ITextDocument _textDocument;
@@ -27,8 +23,6 @@ namespace CodeStream.VisualStudio.UI.Taggers
 
         public CodemarkTagger(ISessionService sessionService, ITextView textView, ITextDocument textDocument, ITextBuffer buffer)
         {
-            Log.Verbose("ctor");
-
             _sessionService = sessionService;
             _textView = textView;
             _textDocument = textDocument;
