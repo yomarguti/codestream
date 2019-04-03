@@ -2,20 +2,6 @@ import { RequestType } from "vscode-jsonrpc";
 import { Range } from "vscode-languageserver-types";
 import { IpcRoutes } from "./webview.protocol.common";
 
-export interface EditorGetRangeSha1Request {
-	uri: string;
-	range: Range;
-}
-export interface EditorGetRangeSha1Response {
-	sha1: string | undefined;
-}
-export const EditorGetRangeSha1RequestType = new RequestType<
-	EditorGetRangeSha1Request,
-	EditorGetRangeSha1Response,
-	void,
-	void
->(`${IpcRoutes.Host}/editor/range/sha1`);
-
 export interface EditorHighlightRangeRequest {
 	uri: string;
 	range: Range;
