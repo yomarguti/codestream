@@ -656,9 +656,9 @@ class CodemarkForm extends React.Component<Props, State> {
 							/>
 						)}
 						{this.state.color && (
-							<span className={cx("color-choice-box", `${this.state.color}-color`)}>
-								<Icon name={commentType} />
-							</span>
+							<div className={cx(`label-indicator ${this.state.color}-background`, {})}>
+								<span>priority</span>
+							</div>
 						)}
 						<Icon name="chevron-down" className="chevron-down" />
 					</div>

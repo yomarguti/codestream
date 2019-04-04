@@ -8,6 +8,7 @@ export default class Menu extends Component {
 		super(props);
 		this.state = { selected: props.selected || "" };
 		this.el = document.createElement("div");
+		this.count = 0;
 	}
 
 	componentDidMount() {
@@ -72,7 +73,7 @@ export default class Menu extends Component {
 	}
 
 	renderItem = (item, parentItem) => {
-		if (item.label === "-") return <hr key={count++} />;
+		if (item.label === "-") return <hr key={this.count++} />;
 		if (item.fragment) return item.fragment;
 		const key = parentItem ? `${parentItem.action}/${item.action}` : item.action;
 		const selected = key === this.state.selected || this.state.selected.startsWith(key + "/");
@@ -114,7 +115,7 @@ export default class Menu extends Component {
 	};
 
 	render() {
-		let count = 0;
+		this.count = 0;
 		const className = this.props.compact ? "menu-popup compact" : "menu-popup";
 		return ReactDOM.createPortal(
 			<div className={className} ref={ref => (this._div = ref)}>
