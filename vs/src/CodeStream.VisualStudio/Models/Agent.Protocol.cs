@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.LanguageServer.Protocol;
+﻿using System;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio.Models
@@ -25,6 +26,7 @@ namespace CodeStream.VisualStudio.Models
         public static string CodemarksForFile = "codemarks-for-file";
     }
 
+	[Serializable]
     public class WebviewContext
     {
         public string CurrentTeamId { get; set; }

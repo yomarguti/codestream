@@ -179,6 +179,9 @@
     <Compile Include="Services\DotNetBrowserService.cs" />
     <Compile Include="Services\IdeService.cs" />
     <Compile Include="IpcLogger.cs" />
+    <Compile Include="Services\Providers\ShellSettingsProvider.cs" />
+    <Compile Include="Services\UserSettingsKeys.cs" />
+    <Compile Include="Services\UserSettingsService.cs" />
     <Compile Include="Services\WebviewIpc.cs" />
     <Compile Include="Services\LiveShare\CollaborationHostService.cs" />
     <Compile Include="Services\LiveShare\CollaborationHostServiceFactory.cs" />

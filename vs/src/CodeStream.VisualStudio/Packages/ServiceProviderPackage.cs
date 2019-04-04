@@ -36,7 +36,8 @@ namespace CodeStream.VisualStudio.Packages
     [ProvideService(typeof(SCodeStreamAgentService))]
     [ProvideService(typeof(SCodeStreamService))]
     [ProvideService(typeof(SSettingsService))]
-    [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
+    [ProvideService(typeof(SUserSettingsService))]
+	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [Guid(Guids.ServiceProviderPackageId)]
     // ReSharper disable once RedundantExtendsListEntry
     public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer, IToolWindowProvider, SToolWindowProvider
@@ -69,7 +70,8 @@ namespace CodeStream.VisualStudio.Packages
             ((IServiceContainer)this).AddService(typeof(SCodeStreamAgentService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SCodeStreamService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SSettingsService), callback, true);
-        }
+            ((IServiceContainer)this).AddService(typeof(SUserSettingsService), callback, true);
+		}
 
         private object CreateService(IServiceContainer container, Type serviceType)
         {
@@ -77,7 +79,9 @@ namespace CodeStream.VisualStudio.Packages
                 return this;
             if (typeof(SSettingsService) == serviceType)
                 return new SettingsService(_codeStreamOptions);
-            if (typeof(SEventAggregator) == serviceType)
+            if (typeof(SUserSettingsService) == serviceType)
+	            return new UserSettingsService(this);
+			if (typeof(SEventAggregator) == serviceType)
                 return new EventAggregator();
             if (typeof(SIdeService) == serviceType)
                 return new IdeService(

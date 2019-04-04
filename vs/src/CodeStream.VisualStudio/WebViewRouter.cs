@@ -114,6 +114,8 @@ namespace CodeStream.VisualStudio
 
                                                     _eventAggregator.Publish(new MarkerGlyphVisibilityEvent {IsVisible = !visible });
                                                 }
+
+                                                ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.Save(UserSettingsKeys.WebviewContext, @params.Context);
                                             }
                                             break;
                                         }
