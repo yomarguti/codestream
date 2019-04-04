@@ -32,6 +32,7 @@ interface Props {
 	streamId: string;
 	onSubmitPost?: any;
 	createPost?: any;
+	postAction?: Function;
 }
 
 export class CodemarkDetails extends React.Component<Props, State> {
@@ -50,8 +51,6 @@ export class CodemarkDetails extends React.Component<Props, State> {
 	}
 
 	handleClickPost() {}
-
-	postAction() {}
 
 	submitReply = async () => {
 		const { codemark } = this.props;
@@ -89,7 +88,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 									currentUserId={this.props.currentUserId}
 									currentUserName={this.props.currentUserName}
 									editingPostId={this.state.editingPostId}
-									postAction={this.postAction}
+									postAction={this.props.postAction}
 									streamId={this.props.streamId}
 									isThread
 									threadId={threadId}

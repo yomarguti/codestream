@@ -386,6 +386,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 										action={this.props.postAction}
 										query={this.state.query}
 										viewHeadshots={this.props.viewHeadshots}
+										postAction={this.props.postAction}
 									/>
 								);
 							})}
@@ -701,6 +702,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 												action={this.props.postAction}
 												query={this.state.query}
 												lineNum={lineNum}
+												postAction={this.props.postAction}
 												style={{ top: top + "px" }}
 												top={top}
 											/>

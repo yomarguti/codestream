@@ -30,6 +30,7 @@ interface Props {
 	marker: DocumentMarker;
 	usernames: string[];
 	setCodemarkStatus: Function;
+	postAction?: Function;
 	action(action: string, post: any, args: any): any;
 	onClick?(codemark: CodemarkPlus, marker: DocumentMarker): any;
 	onMouseEnter?(marker: DocumentMarker): any;
@@ -363,7 +364,7 @@ export class Codemark extends React.Component<Props, State> {
 						</div>
 						{this.renderDemoShit(codemark)}
 					</div>
-					{selected && <CodemarkDetails codemark={codemark} />}
+					{selected && <CodemarkDetails codemark={codemark} postAction={this.props.postAction} />}
 				</div>
 			</div>
 		);

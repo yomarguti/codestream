@@ -175,7 +175,14 @@ class Post extends React.Component {
 		if (this.props.deactivated) return null;
 
 		// console.log(renderCount++);
-		const { author, post, showAssigneeHeadshots, hasMarkers, codemark } = this.props;
+		const {
+			author,
+			post,
+			showAssigneeHeadshots,
+			hasMarkers,
+			codemark,
+			parentPostCodemark
+		} = this.props;
 		const { menuOpen, authorMenuOpen, menuTarget } = this.state;
 
 		const headshotSize = this.props.headshotSize || 36;
@@ -241,10 +248,15 @@ class Post extends React.Component {
 		}
 		// menuItems.push({ label: "Add Reaction", action: "add-reaction" });
 
-		menuItems.push({ label: "Mark Unread", action: "mark-unread" });
-		menuItems.push({ label: "Quote", action: "quote" });
+		// menuItems.push({ label: "Quote", action: "quote" });
 		// { label: "Add Reaction", action: "add-reaction" },
-		// { label: "Pin to Stream", action: "pin-to-stream" }
+		if (parentPostCodemark) {
+			if ((parentPostCodemark.pinnedReplies || []).includes(post.id))
+				menuItems.push({ label: "Un-Star Reply", action: "unpin-reply" });
+			else menuItems.push({ label: "Star Reply", action: "pin-reply" });
+		} else {
+			menuItems.push({ label: "Mark Unread", action: "mark-unread" });
+		}
 
 		if (codemark || mine) menuItems.push({ label: "-" });
 
@@ -790,7 +802,8 @@ class Post extends React.Component {
 		this.props.action(action, {
 			...this.props.post,
 			author: this.props.author,
-			codemark: this.props.codemark
+			codemark: this.props.codemark,
+			parentPostCodemark: this.props.parentPostCodemark
 		});
 		this.setState({ menuOpen: false, authorMenuOpen: false });
 	};
@@ -817,8 +830,8 @@ const mapStateToProps = (state, props) => {
 
 	const parentPost = getPost(state.posts, props.streamId, props.parentPostId);
 	let parentPostContent;
+	let parentPostCodemark;
 	if (parentPost) {
-		let parentPostCodemark;
 		if (parentPost.codemarkId) {
 			parentPostCodemark = getCodemark(state.codemarks, parentPost.codemarkId);
 			if (parentPostCodemark) {
@@ -854,6 +867,7 @@ const mapStateToProps = (state, props) => {
 		hasMarkers: codemark && codemark.markers && codemark.markers.length > 0,
 		codemark,
 		parentPostContent,
+		parentPostCodemark,
 		capabilities
 	};
 };

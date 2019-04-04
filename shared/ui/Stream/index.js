@@ -48,7 +48,8 @@ import {
 	OpenUrlRequestType,
 	SetCodemarkPinnedRequestType,
 	TelemetryRequestType,
-	GetRangeScmInfoRequestType
+	GetRangeScmInfoRequestType,
+	PinReplyToCodemarkRequestType
 } from "@codestream/protocols/agent";
 
 import { setCurrentStream } from "../store/context/actions";
@@ -1152,6 +1153,17 @@ export class SimpleStream extends Component {
 		this.props.markPostUnread(this.props.postStreamId, postId);
 	};
 
+	pinReply = (post, value) => {
+		const { parentPostCodemark } = post;
+		if (parentPostCodemark) {
+			HostApi.instance.send(PinReplyToCodemarkRequestType, {
+				codemarkId: parentPostCodemark.id,
+				postId: post.id,
+				value: value
+			});
+		}
+	};
+
 	togglePinned = post => {
 		if (!post) return;
 		const codemark = post.codemark;
@@ -1220,8 +1232,10 @@ export class SimpleStream extends Component {
 				return this.quotePost(post);
 			case "add-reaction":
 				return this.notImplementedYet();
-			case "pin-to-stream":
-				return this.notImplementedYet();
+			case "pin-reply":
+				return this.pinReply(post, true);
+			case "unpin-reply":
+				return this.pinReply(post, false);
 			case "toggle-pinned":
 				return this.togglePinned(post);
 			case "direct-message":
