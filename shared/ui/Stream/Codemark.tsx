@@ -334,6 +334,9 @@ export class Codemark extends React.Component<Props, State> {
 				data-top={this.props.top}
 			>
 				<div className="contents">
+					{selected && !codemark.pinned && (
+						<div className="archived">This codemark is archived</div>
+					)}
 					<div className="body">
 						{this.renderKeybinding(codemark)}
 						{this.renderStatus(codemark)}
