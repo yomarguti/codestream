@@ -443,6 +443,7 @@ const unkownAuthor = {
 
 const mapStateToProps = (state, props) => {
 	const { preferences, users, session } = state;
+	console.log("SP IS: ", state.posts);
 	return {
 		currentUser: users[session.userId],
 		author: getUserByCsId(users, props.codemark.creatorId) || (unkownAuthor as CSUser),

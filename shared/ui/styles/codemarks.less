@@ -266,9 +266,6 @@
 		}
 	}
 	&.type-bookmark:not(.selected) {
-		// border: none;
-		// background: none;
-		// box-shadow: none;
 		.contents > .body {
 			padding-left: 28px !important;
 			.author,
@@ -297,7 +294,11 @@
 			margin-top: -18px;
 		}
 	}
-	// background: @app-background-color;
+	&.type-bookmark:not(.selected) {
+		.pinned-reply {
+			margin-left: -24px; // 49-28
+		}
+	}
 }
 .icon.pinned-reply-star {
 	opacity: 0.6;
