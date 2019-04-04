@@ -76,7 +76,8 @@ export default class Menu extends Component {
 		if (item.label === "-") return <hr key={this.count++} />;
 		if (item.fragment) return item.fragment;
 		const key = parentItem ? `${parentItem.action}/${item.action}` : item.action;
-		const selected = key === this.state.selected || this.state.selected.startsWith(key + "/");
+		const selected =
+			key === this.state.selected || (this.state.selected || "").startsWith(key + "/");
 		return (
 			<li
 				className={createClassString({
