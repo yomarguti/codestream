@@ -1,5 +1,4 @@
 import React from "react";
-import * as Path from "path-browserify";
 import { connect } from "react-redux";
 import { setCodemarkStatus } from "./actions";
 import ScrollBox from "./ScrollBox";
@@ -7,9 +6,7 @@ import PostList from "./PostList";
 import { MessageInput } from "./MessageInput";
 import { getTeamMembers, getUsernamesRegexp } from "../store/users/reducer";
 import CodemarkActions from "./CodemarkActions";
-import { escapeHtml } from "../utils";
 import { CodemarkPlus } from "@codestream/protocols/agent";
-import { prettyPrintOne } from "code-prettify";
 import { createPost } from "./actions";
 
 const PostListJs: any = PostList;
@@ -79,7 +76,6 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		const threadId = codemark.postId || "";
 		return (
 			<div className="codemark-details">
-				{this.renderCodeblock()}
 				<CodemarkActions codemark={codemark} capabilities={capabilities} />
 				<div className="replies">
 					<div className="shadow-overlay">
@@ -125,35 +121,6 @@ export class CodemarkDetails extends React.Component<Props, State> {
 	handleSubmitPost = (...args) => {
 		this.props.onSubmitPost(...args);
 	};
-
-	renderCodeblock() {
-		const { codemark } = this.props;
-		const markers = codemark.markers;
-		if (!markers) return null;
-		const marker = codemark.markers![0];
-		if (marker === undefined) return;
-
-		const path = marker.file || "";
-		let extension = Path.extname(path).toLowerCase();
-		if (extension.startsWith(".")) {
-			extension = extension.substring(1);
-		}
-
-		let startLine = 1;
-		// `range` is not a property of CSMarker
-		/* if (marker.range) {
-			startLine = marker.range.start.line;
-		} else if (marker.location) {
-			startLine = marker.location[0];
-		} else */ if (
-			marker.locationWhenCreated
-		) {
-			startLine = marker.locationWhenCreated[0];
-		}
-
-		const codeHTML = prettyPrintOne(escapeHtml(marker.code), extension, startLine);
-		return <pre className="code prettyprint" dangerouslySetInnerHTML={{ __html: codeHTML }} />;
-	}
 }
 
 const EMPTY_OBJECT = {};
