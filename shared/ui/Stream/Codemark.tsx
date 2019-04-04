@@ -330,7 +330,8 @@ export class Codemark extends React.Component<Props, State> {
 				className={cx("codemark inline collapsed type-" + type, {
 					// if it's selected, we don't render as hidden
 					hidden: !selected ? hidden : false,
-					selected: selected
+					selected: selected,
+					unpinned: !codemark.pinned
 				})}
 				onClick={this.handleClickCodemark}
 				onMouseEnter={this.handleMouseEnterCodemark}

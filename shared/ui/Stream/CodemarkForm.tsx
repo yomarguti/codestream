@@ -564,7 +564,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		const { selectedStreams, showChannels } = this.props;
 		const { showAllChannels, selectedChannelId } = this.state;
 		// if (this.props.slackInfo || this.props.providerInfo.slack) {
-		const items: { label: string; action?: CSStream | "show-all" }[] = [];
+		const items: { label: string; action?: CSStream | "show-all"; key?: string }[] = [];
 
 		let labelMenuItems: any = COLOR_OPTIONS.map(color => {
 			return {
@@ -587,7 +587,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		this.props.channelStreams.forEach(channel => {
 			if (!filterSelected || selectedStreams[channel.id]) {
 				const name = "#" + channel.name;
-				items.push({ label: name, action: channel });
+				items.push({ label: name, action: channel, key: channel.id });
 				if (channel.id === selectedChannelId) selectedChannelName = name;
 				if (!firstChannel) firstChannel = channel;
 			}
@@ -598,7 +598,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		).forEach((channel: CSDirectStream) => {
 			if (!filterSelected || selectedStreams[channel.id]) {
 				const name = "@" + channel.name;
-				items.push({ label: name, action: channel });
+				items.push({ label: name, action: channel, key: channel.id });
 				if (channel.id === selectedChannelId) selectedChannelName = name;
 				if (!firstChannel) firstChannel = channel;
 			}

@@ -75,7 +75,8 @@ export default class Menu extends Component {
 	renderItem = (item, parentItem) => {
 		if (item.label === "-") return <hr key={this.count++} />;
 		if (item.fragment) return item.fragment;
-		const key = parentItem ? `${parentItem.action}/${item.action}` : item.action;
+		const itemKey = item.key || item.action;
+		const key = parentItem ? `${parentItem.key || parentItem.action}/${itemKey}` : itemKey;
 		const selected =
 			key === this.state.selected || (this.state.selected || "").startsWith(key + "/");
 		return (
