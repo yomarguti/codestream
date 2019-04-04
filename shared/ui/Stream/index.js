@@ -503,7 +503,7 @@ export class SimpleStream extends Component {
 								) : (
 									<Icon name="chatroom" />
 								)}
-								{!this.props.configs.muteAll && <span className={umisClass}>{totalUMICount}</span>}
+								{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
 							</span>
 						</Tooltip>
 					</label>
@@ -1991,23 +1991,41 @@ export class SimpleStream extends Component {
 
 const sum = (total, num) => total + Math.round(num);
 
+/**
+ * @param {Object} state
+ * @param {Object} state.capabilities
+ * @param {Object} state.configs
+ * @param {Object} state.connectivity
+ * @param {ContextState} state.context
+ * @param {Object} state.editorContext
+ * @param {Object} state.pluginVersion
+ * @param {Object} state.posts
+ * @param {Object} state.preferences
+ * @param {Object} state.providers
+ * @param {Object} state.services
+ * @param {Object} state.session
+ * @param {Object} state.streams
+ * @param {Object} state.teams
+ * @param {Object} state.umis
+ * @param {Object} state.users
+ **/
 const mapStateToProps = state => {
 	const {
 		capabilities,
 		configs,
 		connectivity,
-		session,
 		context,
 		editorContext,
-		streams,
-		users,
 		pluginVersion,
 		posts,
 		preferences,
-		teams,
+		providers,
 		services,
+		session,
+		streams,
+		teams,
 		umis,
-		providers
+		users
 	} = state;
 
 	const team = teams[context.currentTeamId];
@@ -2065,6 +2083,7 @@ const mapStateToProps = state => {
 		isOffline,
 		teamMembersById,
 		teammates: teamMembers,
+		muteAll: context.channelsMuteAll,
 		postStream,
 		postStreamId: postStream.id,
 		postStreamName,
