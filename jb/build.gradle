@@ -1,6 +1,6 @@
 plugins {
     id "java"
-    id "org.jetbrains.intellij" version "0.4.2"
+    id "org.jetbrains.intellij" version "0.4.7"
     id "org.jetbrains.kotlin.jvm" version "1.3.20"
 }
 
@@ -25,8 +25,12 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.1.1"
 
-    implementation "com.teamdev.jxbrowser:jxbrowser-cross-platform:${jxBrowserVersion}"
     implementation files("$rootDir/license.jar")
+    implementation "com.teamdev.jxbrowser:jxbrowser-win32:${jxBrowserVersion}"
+    implementation "com.teamdev.jxbrowser:jxbrowser-win64:${jxBrowserVersion}"
+    implementation "com.teamdev.jxbrowser:jxbrowser-mac:${jxBrowserVersion}"
+    implementation "com.teamdev.jxbrowser:jxbrowser-linux64:${jxBrowserVersion}"
+    implementation files("$rootDir/jxbrowser-${jxBrowserVersion}.jar")
 
     implementation group: "org.eclipse.lsp4j", name: "org.eclipse.lsp4j", version: "0.6.0"
     implementation "com.github.salomonbrys.kotson:kotson:2.5.0"
@@ -43,12 +47,14 @@ compileTestKotlin {
 }
 
 intellij {
-    version "2018.3.4"
+    version "2019.1"
+//    version "2018.3.4"
 //    version "IC-2018.2.7"
     intellij.updateSinceUntilBuild false
 }
 
 runIde {
+    jbrVersion "11_0_2b159"
 //    jvmArgs '-Dsun.java2d.uiScale.enabled=false'
 }
 
