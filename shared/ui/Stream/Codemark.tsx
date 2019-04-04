@@ -1,7 +1,7 @@
 import cx from "classnames";
 import React from "react";
 import { connect } from "react-redux";
-import { setCodemarkStatus, setUserPreference } from "./actions";
+import { setCodemarkStatus, setUserPreference, deletePost } from "./actions";
 import Headshot from "./Headshot";
 import Icon from "./Icon";
 import Menu from "./Menu";
@@ -35,6 +35,7 @@ interface Props {
 	onClick?(codemark: CodemarkPlus, marker: DocumentMarker): any;
 	onMouseEnter?(marker: DocumentMarker): any;
 	onMouseLeave?(marker: DocumentMarker): any;
+	deletePost(...args: any[]): any;
 	query?: string;
 	style?: object;
 	lineNum?: Number;
@@ -199,6 +200,10 @@ export class Codemark extends React.Component<Props, State> {
 			case "toggle-pinned":
 				this.togglePinned();
 				break;
+			case "delete-post": {
+				this.props.deletePost(this.props.codemark.streamId, this.props.codemark.postId);
+				break;
+			}
 		}
 		var found = action.match(/set-keybinding-(\d)/);
 		if (found) this.setKeybinding(found[1]);
@@ -455,5 +460,5 @@ const mapStateToProps = (state, props) => {
 
 export default connect(
 	mapStateToProps,
-	{ setCodemarkStatus, setUserPreference }
+	{ setCodemarkStatus, setUserPreference, deletePost }
 )(Codemark);
