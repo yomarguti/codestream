@@ -250,10 +250,12 @@ class Post extends React.Component {
 
 		// menuItems.push({ label: "Quote", action: "quote" });
 		// { label: "Add Reaction", action: "add-reaction" },
+		let isPinnedReply = false;
 		if (parentPostCodemark) {
-			if ((parentPostCodemark.pinnedReplies || []).includes(post.id))
+			if ((parentPostCodemark.pinnedReplies || []).includes(post.id)) {
+				isPinnedReply = true;
 				menuItems.push({ label: "Un-Star Reply", action: "unpin-reply" });
-			else menuItems.push({ label: "Star Reply", action: "pin-reply" });
+			} else menuItems.push({ label: "Star Reply", action: "pin-reply" });
 		} else {
 			menuItems.push({ label: "Mark Unread", action: "mark-unread" });
 		}
@@ -345,6 +347,7 @@ class Post extends React.Component {
 					{this.renderTitle(post)}
 					<div className="text">
 						{this.props.collapsed && !title && this.renderTypeIcon(post)}
+						{isPinnedReply && <Icon className="pinned-reply-star" name="star" />}
 						{this.renderText(post)}
 						{!this.props.editing && post.hasBeenEdited && <span className="edited">(edited)</span>}
 						{this.renderAssignees(post)}

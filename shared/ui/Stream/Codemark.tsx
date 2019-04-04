@@ -362,10 +362,31 @@ export class Codemark extends React.Component<Props, State> {
 							)}
 							<Icon name="kebab-vertical" className="kebab-vertical clickable" />
 						</div>
-						{this.renderDemoShit(codemark)}
+						{!selected && this.renderPinnedReplies(codemark)}
 					</div>
 					{selected && <CodemarkDetails codemark={codemark} postAction={this.props.postAction} />}
 				</div>
+			</div>
+		);
+	}
+
+	renderPinnedReplies(codemark) {
+		const user = {
+			username: "pez",
+			email: "pez@codestream.com",
+			fullName: "Peter Pezaris"
+		};
+		return (
+			<div className="pinned-replies">
+				{(codemark.pinnedReplies || []).map(id => {
+					return (
+						<div className="pinned-reply">
+							<Icon className="pinned-reply-star" name="star" />{" "}
+							<Headshot size={18} person={user} />
+							<div className="pinned-reply-body">very carefully</div>
+						</div>
+					);
+				})}
 			</div>
 		);
 	}
@@ -376,7 +397,6 @@ export class Codemark extends React.Component<Props, State> {
 			email: "pez@codestream.com",
 			fullName: "Peter Pezaris"
 		};
-
 		return (
 			<div>
 				{codemark.text &&
