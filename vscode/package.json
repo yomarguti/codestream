@@ -57,12 +57,6 @@
                     "description": "Specifies the email address to use to connect to the CodeStream service",
                     "scope": "window"
                 },
-                "codestream.muteAll": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Specifies whether to show indicators when new messages arrive",
-                    "scope": "window"
-                },
                 "codestream.notifications": {
                     "type": "string",
                     "default": "mentions",
@@ -89,12 +83,6 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Specifies whether to show avatars",
-                    "scope": "window"
-                },
-                "codestream.showFeedbackSmiley": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Specifies whether to show a feedback button in the CodeStream panel",
                     "scope": "window"
                 },
                 "codestream.showInStatusBar": {
@@ -147,24 +135,6 @@
                         "debug"
                     ],
                     "description": "Specifies how much (if any) output will be sent to the CodeStream output channel",
-                    "scope": "window"
-                },
-                "codestream.viewCodemarksInline": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Specifies whether to display Codemarks inline next to the code they refer to. The alternative is a list view.",
-                    "scope": "window"
-                },
-                "codestream.showArchivedCodemarks": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Specifies whether to display Codemarks that have been archived.",
-                    "scope": "window"
-                },
-                "codestream.showResolvedCodemarks": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Specifies whether to display Codemarks that have been resolved.",
                     "scope": "window"
                 },
                 "codestream.webAppUrl": {

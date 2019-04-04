@@ -338,25 +338,11 @@ export class WebviewController implements Disposable {
 	private onConfigurationChanged(webview: CodeStreamWebviewPanel, e: ConfigurationChangeEvent) {
 		if (
 			configuration.changed(e, configuration.name("traceLevel").value) ||
-			configuration.changed(e, configuration.name("muteAll").value) ||
-			configuration.changed(e, configuration.name("showAvatars").value) ||
-			configuration.changed(e, configuration.name("showFeedbackSmiley").value) ||
-			configuration.changed(e, configuration.name("showMarkerCodeLens").value) ||
-			configuration.changed(e, configuration.name("showMarkerGlyphs").value) ||
-			configuration.changed(e, configuration.name("viewCodemarksInline").value) ||
-			configuration.changed(e, configuration.name("showArchivedCodemarks").value) ||
-			configuration.changed(e, configuration.name("showResolvedCodemarks").value)
+			configuration.changed(e, configuration.name("showAvatars").value)
 		) {
 			webview.notify(HostDidChangeConfigNotificationType, {
 				debug: Logger.isDebugging,
-				muteAll: Container.config.muteAll,
-				showFeedbackSmiley: Container.config.showFeedbackSmiley,
-				showHeadshots: Container.config.showAvatars,
-				showMarkerCodeLens: Container.config.showMarkerCodeLens,
-				showMarkerGlyphs: Container.config.showMarkerGlyphs,
-				viewCodemarksInline: Container.config.viewCodemarksInline,
-				showArchivedCodemarks: Container.config.showArchivedCodemarks,
-				showResolvedCodemarks: Container.config.showResolvedCodemarks
+				showHeadshots: Container.config.showAvatars
 			});
 		}
 	}
@@ -714,15 +700,8 @@ export class WebviewController implements Disposable {
 			configs: {
 				debug: Logger.isDebugging,
 				email: Container.config.email,
-				muteAll: Container.config.muteAll,
 				serverUrl: this.session.serverUrl,
-				showFeedbackSmiley: Container.config.showFeedbackSmiley,
-				showHeadshots: Container.config.showAvatars,
-				showMarkerCodeLens: Container.config.showMarkerCodeLens,
-				showMarkerGlyphs: Container.config.showMarkerGlyphs,
-				viewCodemarksInline: Container.config.viewCodemarksInline,
-				showArchivedCodemarks: Container.config.showArchivedCodemarks,
-				showResolvedCodemarks: Container.config.showResolvedCodemarks
+				showHeadshots: Container.config.showAvatars
 			},
 			context: context,
 			editorContext: editorContext,
