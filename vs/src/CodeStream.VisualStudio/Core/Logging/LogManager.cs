@@ -32,14 +32,11 @@ namespace CodeStream.VisualStudio.Core.Logging {
 
 				var logPath = Path.Combine(Application.LogPath, "vs-extension.log");
 
-				var formatter = new MessageTemplateTextFormatter(
-					"{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{ProcessId:00000}] {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}{NewLine}{Exception}",
-					new CultureInfo("en-US"));
+				var template = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{ProcessId:00000}] {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}{NewLine}{Exception}";
 #if DEBUG
 				// day/month/year and processId just aren't that important when developing -- they take up space
-				formatter = new MessageTemplateTextFormatter(
-					"{Timestamp:HH:mm:ss.fff} {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}{NewLine}{Exception}",
-					new CultureInfo("en-US"));
+				template =
+					"{Timestamp:HH:mm:ss.fff} {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}{NewLine}{Exception}";
 #endif
 
 				return new LoggerConfiguration()
@@ -50,10 +47,11 @@ namespace CodeStream.VisualStudio.Core.Logging {
 						new LogSanitizingFormatter(
 							new TextProcessor(),
 							new List<ISanitizingFormatRule> { new SecretsSanitizingFormatRule() },
-							formatter),
+							new MessageTemplateTextFormatter(template, new CultureInfo("en-US"))),
 						logPath,
 						fileSizeLimitBytes: 52428800,
 						shared: true)
+					.WriteTo.CustomOutput(Guids.LoggingOutputPaneGuid, "CodeStream", outputTemplate: template, levelSwitch: _loggingLevelSwitch)
 					.CreateLogger();
 			}
 			catch (Exception ex) {

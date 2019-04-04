@@ -21,9 +21,12 @@ namespace CodeStream.VisualStudio.Core.Logging {
 				if (title.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(title));
 				_textFormatter = textFormatter ?? throw new ArgumentNullException(nameof(textFormatter));				
 
-				var outWindow = Package.GetGlobalService(typeof(SVsOutputWindow)) as IVsOutputWindow;				
+				var outWindow = Package.GetGlobalService(typeof(SVsOutputWindow)) as IVsOutputWindow;
+				if (outWindow == null) return;
+
 				outWindow.CreatePane(ref id, title, 1, 1);
 				outWindow.GetPane(ref id, out _customOutputWindowPane);
+				if (_customOutputWindowPane == null) return;
 #if DEBUG
 				// Brings this pane into view
 				_customOutputWindowPane.Activate();
@@ -35,12 +38,11 @@ namespace CodeStream.VisualStudio.Core.Logging {
 		}
 
 		public void Emit(LogEvent logEvent) {
-			if (logEvent == null) return;
+			if (logEvent == null || _customOutputWindowPane == null) return;
 
 			try {
 				var stringWriter = new StringWriter();
 				_textFormatter.Format(logEvent, stringWriter);
-
 				_customOutputWindowPane.OutputString(stringWriter.ToString().Trim()+Environment.NewLine);
 			}
 			catch (Exception ex) {
