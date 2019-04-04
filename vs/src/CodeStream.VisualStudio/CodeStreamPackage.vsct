@@ -1,253 +1,378 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <Extern href="stdidcmd.h" />
-  <Extern href="vsshlids.h" />
-  <Commands package="guidWebViewPackage">
-    <Menus>
-      <Menu guid="guidWebViewPackageCmdSet" id="Toolbar" type="Toolbar">
-        <CommandFlag>DefaultDocked</CommandFlag>
-        <Strings>
-          <ButtonText>CodeStream</ButtonText>
-          <CommandName>CodeStream</CommandName>
-          <CanonicalName>CodeStream</CanonicalName>
-          <LocCanonicalName>CodeStream</LocCanonicalName>
-        </Strings>
-      </Menu>
-      <Menu guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController200" priority="0x0200" type="MenuController">
-        <Parent guid="guidWebViewPackageCmdSet" id="ToolbarGroup" />
-        <CommandFlag>IconAndText</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <CommandFlag>TextIsAnchorCommand</CommandFlag>
-        <Strings>
-          <ButtonText>CodeStream</ButtonText>
-          <CommandName>CodeStream</CommandName>
-          <ToolTipText>Toggle CodeStream</ToolTipText> 
-          <CanonicalName>CodeStream.ToggleCodeStream</CanonicalName>
-          <LocCanonicalName>CodeStream.ToggleCodeStream</LocCanonicalName>
-        </Strings>
-      </Menu>
-    </Menus>
-    <Groups>
-      <Group guid="guidWebViewPackageCmdSet" id="ToolbarGroup" priority="0x0600">
-        <Parent guid="guidWebViewPackageCmdSet" id="Toolbar" />
-      </Group>
-      <!-- this pseudo group creates a separator between teh buttons -->
-      <Group guid="guidWebViewPackageCmdSet" id="ToolbarGroup100" priority="0x0500">
-        <Parent guid="guidWebViewPackageCmdSet" id="Toolbar" />
-      </Group>
+	<Extern href="stdidcmd.h" />
+	<Extern href="vsshlids.h" />
+	<Commands package="guidWebViewPackage">
+		<Menus>
+			<Menu guid="guidWebViewPackageCmdSet" id="Toolbar" type="Toolbar">
+				<CommandFlag>DefaultDocked</CommandFlag>
+				<Strings>
+					<ButtonText>CodeStream</ButtonText>
+					<CommandName>CodeStream</CommandName>
+					<CanonicalName>CodeStream</CanonicalName>
+					<LocCanonicalName>CodeStream</LocCanonicalName>
+				</Strings>
+			</Menu>
+			<Menu guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController200" priority="0x0200" type="MenuController">
+				<Parent guid="guidWebViewPackageCmdSet" id="ToolbarGroup" />
+				<CommandFlag>IconAndText</CommandFlag>
+				<CommandFlag>TextChanges</CommandFlag>
+				<CommandFlag>TextIsAnchorCommand</CommandFlag>
+				<Strings>
+					<ButtonText>CodeStream</ButtonText>
+					<CommandName>CodeStream</CommandName>
+					<ToolTipText>Toggle CodeStream</ToolTipText>
+					<CanonicalName>CodeStream.ToggleCodeStream</CanonicalName>
+					<LocCanonicalName>CodeStream.ToggleCodeStream</LocCanonicalName>
+				</Strings>
+			</Menu>
+		</Menus>
+		<Groups>
+			<Group guid="guidWebViewPackageCmdSet" id="ToolbarGroup" priority="0x0600">
+				<Parent guid="guidWebViewPackageCmdSet" id="Toolbar" />
+			</Group>
+			<!-- this pseudo group creates a separator between teh buttons -->
+			<Group guid="guidWebViewPackageCmdSet" id="ToolbarGroup100" priority="0x0500">
+				<Parent guid="guidWebViewPackageCmdSet" id="Toolbar" />
+			</Group>
 
-      <Group guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup100" priority="0x009">
-        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController100" />
-      </Group>
-      <Group guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" priority="0x009">
-        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController200" />
-      </Group>
+			<Group guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup100" priority="0x009">
+				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController100" />
+			</Group>
+			<Group guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" priority="0x009">
+				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController200" />
+			</Group>
 
-      <Group guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands" />
-    </Groups>
-    <Buttons>
-      <Button guid="guidWebViewPackageCmdSet" id="WebViewToggleCommandId" priority="0x0101" type="Button">
-        <Parent guid="guidWebViewPackageCmdSet" id="ToolbarGroup100" />
-        <Icon guid="guidImages" id="logo" />
-        <CommandFlag>DontCache</CommandFlag>
-        <CommandFlag>IconAndText</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <Strings>
-          <ButtonText>CodeStream</ButtonText>
-          <ToolTipText>Toggle CodeStream</ToolTipText>
-          <CanonicalName>CodeStream.ToggleCodeStream</CanonicalName>
-          <LocCanonicalName>CodeStream.ToggleCodeStream</LocCanonicalName>
-        </Strings>
-      </Button>
+			<Group guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands" />
+		</Groups>
+		<Buttons>
+			<Button guid="guidWebViewPackageCmdSet" id="WebViewToggleCommandId" priority="0x0101" type="Button">
+				<Parent guid="guidWebViewPackageCmdSet" id="ToolbarGroup100" />
+				<Icon guid="guidImages" id="logo" />
+				<CommandFlag>DontCache</CommandFlag>
+				<CommandFlag>IconAndText</CommandFlag>
+				<CommandFlag>TextChanges</CommandFlag>
+				<Strings>
+					<ButtonText>CodeStream</ButtonText>
+					<ToolTipText>Toggle CodeStream</ToolTipText>
+					<CanonicalName>CodeStream.ToggleCodeStream</CanonicalName>
+					<LocCanonicalName>CodeStream.ToggleCodeStream</LocCanonicalName>
+				</Strings>
+			</Button>
 
-      <Button guid="guidWebViewPackageCmdSet" id="UserCommandId" priority="0x0100" type="Button">
-        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
-        <Icon guid="guidImages" id="user" />
-        <CommandFlag>IconAndText</CommandFlag>
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DontCache</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <CommandFlag>NoShowOnMenuController</CommandFlag>
-        <CommandFlag>FixMenuController</CommandFlag>
-        <Strings>
-          <ButtonText>Sign In...</ButtonText>
-          <CanonicalName>CodeStream.SignIn</CanonicalName>
-          <LocCanonicalName>CodeStream.SignIn</LocCanonicalName>
-        </Strings>
-      </Button>
-      <Button guid="guidWebViewPackageCmdSet" id="WebViewReloadCommandId" priority="0x0101" type="Button">
-        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DontCache</CommandFlag>
-        <Strings>
-          <ButtonText>Reload CodeStream</ButtonText>
-          <CanonicalName>CodeStream.ReloadCodeStream</CanonicalName>
-          <LocCanonicalName>CodeStream.ReloadCodeStream</LocCanonicalName>
-        </Strings>
-      </Button>
-      <Button guid="guidWebViewPackageCmdSet" id="WebViewDevToolsCommandId" priority="0x0102" type="Button">
-        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>DontCache</CommandFlag>
-        <Strings>
-          <ButtonText>Developer: Open Webview Developer Tools</ButtonText>
-          <CanonicalName>CodeStream.DeveloperOpenWebviewDeveloperTools</CanonicalName>
-          <LocCanonicalName>CodeStream.DeveloperOpenWebviewDeveloperTools</LocCanonicalName>
-        </Strings>
-      </Button>
-      <Button guid="guidWebViewPackageCmdSet" id="AuthenticationCommandId" priority="0x0109" type="Button">
-        <Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
-        <Icon guid="guidImages" id="auth" />
-        <CommandFlag>IconAndText</CommandFlag>
-        <CommandFlag>DontCache</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <Strings>
-          <ButtonText>Sign Out</ButtonText>
-          <CanonicalName>CodeStream.SignOut</CanonicalName>
-          <LocCanonicalName>CodeStream.SignOut</LocCanonicalName>
-        </Strings>
-      </Button>
+			<Button guid="guidWebViewPackageCmdSet" id="UserCommandId" priority="0x0100" type="Button">
+				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
+				<Icon guid="guidImages" id="user" />
+				<CommandFlag>IconAndText</CommandFlag>
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<CommandFlag>DontCache</CommandFlag>
+				<CommandFlag>TextChanges</CommandFlag>
+				<CommandFlag>NoShowOnMenuController</CommandFlag>
+				<CommandFlag>FixMenuController</CommandFlag>
+				<Strings>
+					<ButtonText>Sign In...</ButtonText>
+					<CanonicalName>CodeStream.SignIn</CanonicalName>
+					<LocCanonicalName>CodeStream.SignIn</LocCanonicalName>
+				</Strings>
+			</Button>
+			<Button guid="guidWebViewPackageCmdSet" id="WebViewReloadCommandId" priority="0x0101" type="Button">
+				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<CommandFlag>DontCache</CommandFlag>
+				<Strings>
+					<ButtonText>Reload CodeStream</ButtonText>
+					<CanonicalName>CodeStream.ReloadCodeStream</CanonicalName>
+					<LocCanonicalName>CodeStream.ReloadCodeStream</LocCanonicalName>
+				</Strings>
+			</Button>
+			<Button guid="guidWebViewPackageCmdSet" id="WebViewDevToolsCommandId" priority="0x0102" type="Button">
+				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<CommandFlag>DontCache</CommandFlag>
+				<Strings>
+					<ButtonText>Developer: Open Webview Developer Tools</ButtonText>
+					<CanonicalName>CodeStream.DeveloperOpenWebviewDeveloperTools</CanonicalName>
+					<LocCanonicalName>CodeStream.DeveloperOpenWebviewDeveloperTools</LocCanonicalName>
+				</Strings>
+			</Button>
+			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand0CommandId" priority="0x0200" type="Button">
+				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>BookmarkCommand0CommandId</ButtonText>
+					<CanonicalName>CodeStream.BookmarkCommand0CommandId</CanonicalName>
+					<LocCanonicalName>CodeStream.BookmarkCommand0CommandId</LocCanonicalName>
+				</Strings>
+			</Button>
+			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand1CommandId" priority="0x0201" type="Button">
+				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>BookmarkCommand1CommandId</ButtonText>
+					<CanonicalName>CodeStream.BookmarkCommand1CommandId</CanonicalName>
+					<LocCanonicalName>CodeStream.BookmarkCommand1CommandId</LocCanonicalName>
+				</Strings>
+			</Button>
+			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand2CommandId" priority="0x0202" type="Button">
+				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>BookmarkCommand2CommandId</ButtonText>
+					<CanonicalName>CodeStream.BookmarkCommand2CommandId</CanonicalName>
+					<LocCanonicalName>CodeStream.BookmarkCommand2CommandId</LocCanonicalName>
+				</Strings>
+			</Button>
+			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand3CommandId" priority="0x0203" type="Button">
+				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>BookmarkCommand3CommandId</ButtonText>
+					<CanonicalName>CodeStream.BookmarkCommand3CommandId</CanonicalName>
+					<LocCanonicalName>CodeStream.BookmarkCommand3CommandId</LocCanonicalName>
+				</Strings>
+			</Button>
+			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand4CommandId" priority="0x0204" type="Button">
+				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>BookmarkCommand4CommandId</ButtonText>
+					<CanonicalName>CodeStream.BookmarkCommand4CommandId</CanonicalName>
+					<LocCanonicalName>CodeStream.BookmarkCommand4CommandId</LocCanonicalName>
+				</Strings>
+			</Button>
+			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand5CommandId" priority="0x0205" type="Button">
+				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>BookmarkCommand5CommandId</ButtonText>
+					<CanonicalName>CodeStream.BookmarkCommand5CommandId</CanonicalName>
+					<LocCanonicalName>CodeStream.BookmarkCommand5CommandId</LocCanonicalName>
+				</Strings>
+			</Button>
+			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand6CommandId" priority="0x0206" type="Button">
+				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>BookmarkCommand6CommandId</ButtonText>
+					<CanonicalName>CodeStream.BookmarkCommand6CommandId</CanonicalName>
+					<LocCanonicalName>CodeStream.BookmarkCommand6CommandId</LocCanonicalName>
+				</Strings>
+			</Button>
+			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand7CommandId" priority="0x0207" type="Button">
+				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>BookmarkCommand7CommandId</ButtonText>
+					<CanonicalName>CodeStream.BookmarkCommand7CommandId</CanonicalName>
+					<LocCanonicalName>CodeStream.BookmarkCommand7CommandId</LocCanonicalName>
+				</Strings>
+			</Button>
+			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand8CommandId" priority="0x0208" type="Button">
+				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>BookmarkCommand8CommandId</ButtonText>
+					<CanonicalName>CodeStream.BookmarkCommand8CommandId</CanonicalName>
+					<LocCanonicalName>CodeStream.BookmarkCommand8CommandId</LocCanonicalName>
+				</Strings>
+			</Button>
+			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand9CommandId" priority="0x0209" type="Button">
+				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>BookmarkCommand9CommandId</ButtonText>
+					<CanonicalName>CodeStream.BookmarkCommand9CommandId</CanonicalName>
+					<LocCanonicalName>CodeStream.BookmarkCommand9CommandId</LocCanonicalName>
+				</Strings>
+			</Button>
 
-      <Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommentCommandId" type="Button">
-        <Icon guid="guidImages" id="logo" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <Strings>
-          <ButtonText>Add Comment</ButtonText>
-          <CanonicalName>CodeStream.AddComment</CanonicalName>
-          <LocCanonicalName>CodeStream.AddComment</LocCanonicalName>
-        </Strings>
-      </Button>
-      <Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkIssueCommandId" type="Button">
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <Strings>
-          <ButtonText>Create Issue</ButtonText>
-          <CanonicalName>CodeStream.CreateIssue</CanonicalName>
-          <LocCanonicalName>CodeStream.CreateIssue</LocCanonicalName>
-        </Strings>
-      </Button>
-      <Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkBookmarkCommandId" type="Button">
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <Strings>
-          <ButtonText>Create Bookmark</ButtonText>
-          <CanonicalName>CodeStream.CreateBookmark</CanonicalName>
-          <LocCanonicalName>CodeStream.CreateBookmark</LocCanonicalName>
-        </Strings>
-      </Button>
-      <Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkCommandId" type="Button">
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <Strings>
-          <ButtonText>Get Permalink</ButtonText>
-          <CanonicalName>CodeStream.GetPermalink</CanonicalName>
-          <LocCanonicalName>CodeStream.GetPermalink</LocCanonicalName>
-        </Strings>
-      </Button>
-      <Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkInstantCommandId" type="Button">
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <Strings>
-          <ButtonText>Copy Permalink to Clipboard</ButtonText>
-          <CanonicalName>CodeStream.CopyPermalinkToClipboard</CanonicalName>
-          <LocCanonicalName>CodeStream.CopyPermalinkToClipboard</LocCanonicalName>
-        </Strings>
-      </Button>
-    </Buttons>
-    <Bitmaps>
-      <Bitmap guid="guidImages" href="Resources\Sprites.png" usedList="logo, auth, user, empty4, empty5, empty6" />
-    </Bitmaps>
-  </Commands>
 
-  <!-- https://docs.microsoft.com/en-us/windows/desktop/inputdev/virtual-key-codes -->
-  <KeyBindings>
-    <KeyBinding guid="guidWebViewPackageCmdSet" id="WebViewToggleCommandId"
-                editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" mod2="Control Shift" key2="VK_OEM_2" />
+			<Button guid="guidWebViewPackageCmdSet" id="AuthenticationCommandId" priority="0x9999" type="Button">
+				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
+				<Icon guid="guidImages" id="auth" />
+				<CommandFlag>IconAndText</CommandFlag>
+				<CommandFlag>DontCache</CommandFlag>
+				<CommandFlag>TextChanges</CommandFlag>
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>Sign Out</ButtonText>
+					<CanonicalName>CodeStream.SignOut</CanonicalName>
+					<LocCanonicalName>CodeStream.SignOut</LocCanonicalName>
+				</Strings>
+			</Button>
 
-    <KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommentCommandId" 
-                editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="c" />
-    <KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkIssueCommandId" 
-                editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="i" />
-    <KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkBookmarkCommandId" 
-                editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="b" />
-    <KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkCommandId" 
-                editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="p" />
-    <KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkInstantCommandId" 
-                editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" mod2="Shift" key2="p" />
-  </KeyBindings>
+			<Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommentCommandId" type="Button">
+				<Icon guid="guidImages" id="logo" />
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>Add Comment</ButtonText>
+					<CanonicalName>CodeStream.AddComment</CanonicalName>
+					<LocCanonicalName>CodeStream.AddComment</LocCanonicalName>
+				</Strings>
+			</Button>
+			<Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkIssueCommandId" type="Button">
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>Create Issue</ButtonText>
+					<CanonicalName>CodeStream.CreateIssue</CanonicalName>
+					<LocCanonicalName>CodeStream.CreateIssue</LocCanonicalName>
+				</Strings>
+			</Button>
+			<Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkBookmarkCommandId" type="Button">
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>Create Bookmark</ButtonText>
+					<CanonicalName>CodeStream.CreateBookmark</CanonicalName>
+					<LocCanonicalName>CodeStream.CreateBookmark</LocCanonicalName>
+				</Strings>
+			</Button>
+			<Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkCommandId" type="Button">
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>Get Permalink</ButtonText>
+					<CanonicalName>CodeStream.GetPermalink</CanonicalName>
+					<LocCanonicalName>CodeStream.GetPermalink</LocCanonicalName>
+				</Strings>
+			</Button>
+			<Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkInstantCommandId" type="Button">
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>Copy Permalink to Clipboard</ButtonText>
+					<CanonicalName>CodeStream.CopyPermalinkToClipboard</CanonicalName>
+					<LocCanonicalName>CodeStream.CopyPermalinkToClipboard</LocCanonicalName>
+				</Strings>
+			</Button>
+		</Buttons>
+		<Bitmaps>
+			<Bitmap guid="guidImages" href="Resources\Sprites.png" usedList="logo, auth, user, empty4, empty5, empty6" />
+		</Bitmaps>
+	</Commands>
 
-  <CommandPlacements>
-    <CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands" priority="0xFFFF">
-      <!-- The parent of the group will be the code window context menu -->
-      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommentCommandId" priority="0x0001" >
-      <Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkIssueCommandId" priority="0x0002" >
-      <Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkBookmarkCommandId" priority="0x0003" >
-      <Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkCommandId" priority="0x0004" >
-      <Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkInstantCommandId" priority="0x0005" >
-      <Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
-    </CommandPlacement>
-  </CommandPlacements>
+	<!-- https://docs.microsoft.com/en-us/windows/desktop/inputdev/virtual-key-codes -->
+	<KeyBindings>
+		<KeyBinding guid="guidWebViewPackageCmdSet" id="WebViewToggleCommandId"
+					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" mod2="Control Shift" key2="VK_OEM_2" />
 
-  <VisibilityConstraints>
-    <!-- slight hack to show the toolbar all the time -->
-    <VisibilityItem guid="guidWebViewPackageCmdSet" id="Toolbar" context="UICONTEXT_NoSolution" />
-    <VisibilityItem guid="guidWebViewPackageCmdSet" id="Toolbar" context="UICONTEXT_EmptySolution" />
-    <VisibilityItem guid="guidWebViewPackageCmdSet" id="Toolbar" context="UICONTEXT_SolutionHasMultipleProjects" />
-    <VisibilityItem guid="guidWebViewPackageCmdSet" id="Toolbar" context="UICONTEXT_SolutionHasSingleProject" />
-  </VisibilityConstraints>
+		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand0CommandId"
+					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x30" />
+		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand1CommandId"
+					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x31" />
+		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand2CommandId"
+					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x32" />
+		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand3CommandId"
+					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x33" />
+		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand4CommandId"
+					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x34" />
+		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand5CommandId"
+					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x35" />
+		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand6CommandId"
+					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x36" />
+		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand7CommandId"
+					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x37" />
+		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand8CommandId"
+					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x38" />
+		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand9CommandId"
+					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x39" />
 
-  <Symbols>
-    <GuidSymbol name="guidWebViewPackage" value="{5498f07e-2ca1-4d3b-bcfb-5e8a8a082eed}" />
+		<KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommentCommandId"
+					editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="c" />
+		<KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkIssueCommandId"
+					editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="i" />
+		<KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkBookmarkCommandId"
+					editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="b" />
+		<KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkCommandId"
+					editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="p" />
+		<KeyBinding guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkInstantCommandId"
+					editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" mod2="Shift" key2="p" />
+	</KeyBindings>
 
-    <GuidSymbol name="guidWebViewPackageCmdSet" value="{8f66deb0-240b-4137-8550-723344e49722}">
-      <IDSymbol name="Toolbar" value="0x1000" />
-      <IDSymbol name="ToolbarGroup" value="0x1050" />
-      <IDSymbol name="ToolbarGroup100" value="0x1060" />
+	<CommandPlacements>
+		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands" priority="0xFFFF">
+			<!-- The parent of the group will be the code window context menu -->
+			<Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN"/>
+		</CommandPlacement>
+		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommentCommandId" priority="0x0001" >
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
+		</CommandPlacement>
+		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkIssueCommandId" priority="0x0002" >
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
+		</CommandPlacement>
+		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkBookmarkCommandId" priority="0x0003" >
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
+		</CommandPlacement>
+		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkCommandId" priority="0x0004" >
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
+		</CommandPlacement>
+		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkInstantCommandId" priority="0x0005" >
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
+		</CommandPlacement>
+	</CommandPlacements>
 
-      <IDSymbol name="CodeStreamMenuController100" value="0x9001" />
-      <IDSymbol name="CodeStreamMenuController200" value="0x9901" />
-      <IDSymbol name="CodeStreamMenuControllerGroup100" value="0x9003" />
-      <IDSymbol name="CodeStreamMenuControllerGroup200" value="0x9004" />
+	<VisibilityConstraints>
+		<!-- slight hack to show the toolbar all the time -->
+		<VisibilityItem guid="guidWebViewPackageCmdSet" id="Toolbar" context="UICONTEXT_NoSolution" />
+		<VisibilityItem guid="guidWebViewPackageCmdSet" id="Toolbar" context="UICONTEXT_EmptySolution" />
+		<VisibilityItem guid="guidWebViewPackageCmdSet" id="Toolbar" context="UICONTEXT_SolutionHasMultipleProjects" />
+		<VisibilityItem guid="guidWebViewPackageCmdSet" id="Toolbar" context="UICONTEXT_SolutionHasSingleProject" />
+	</VisibilityConstraints>
 
-      <IDSymbol name="WebViewToggleCommandId" value="0x0100" />
-      <IDSymbol name="AuthenticationCommandId" value="0x0200" />
-      <IDSymbol name="UserCommandId" value="0x0300" />
-      <IDSymbol name="WebViewReloadCommandId" value="0x0500" />
-      <IDSymbol name="WebViewDevToolsCommandId" value="0x0600" />
-    </GuidSymbol>
+	<Symbols>
+		<GuidSymbol name="guidWebViewPackage" value="{5498f07e-2ca1-4d3b-bcfb-5e8a8a082eed}" />
 
-    <GuidSymbol name="guidWebViewPackageCodeWindowContextMenuCmdSet" value="{0f33235e-3a5c-42bc-b519-d888652f972c}">
-      <IDSymbol name="CodeStreamEditorCommands" value="0x1023" />
-      <IDSymbol name="AddCodemarkCommentCommandId" value="0x0400" />
-      <IDSymbol name="AddCodemarkIssueCommandId" value="0x0401" />
-      <IDSymbol name="AddCodemarkBookmarkCommandId" value="0x0402" />
-      <IDSymbol name="AddCodemarkPermalinkCommandId" value="0x0403" />
-      <IDSymbol name="AddCodemarkPermalinkInstantCommandId" value="0x0413" />
-    </GuidSymbol>
+		<GuidSymbol name="guidWebViewPackageCmdSet" value="{8f66deb0-240b-4137-8550-723344e49722}">
+			<IDSymbol name="Toolbar" value="0x1000" />
+			<IDSymbol name="ToolbarGroup" value="0x1050" />
+			<IDSymbol name="ToolbarGroup100" value="0x1060" />
 
-    <GuidSymbol name="guidImages" value="{f2c8ef6d-3257-4e0a-8ae0-ef6298dd22c5}" >
-      <IDSymbol name="logo" value="1" />
-      <IDSymbol name="auth" value="2" />
-      <IDSymbol name="user" value="3" />
-      <IDSymbol name="empty4" value="4" />
-      <IDSymbol name="empty5" value="5" />
-      <IDSymbol name="empty6" value="6" />
-    </GuidSymbol>
-  </Symbols>
+			<IDSymbol name="CodeStreamMenuController100" value="0x9001" />
+			<IDSymbol name="CodeStreamMenuController200" value="0x9901" />
+			<IDSymbol name="CodeStreamMenuControllerGroup100" value="0x9003" />
+			<IDSymbol name="CodeStreamMenuControllerGroup200" value="0x9004" />
+
+			<IDSymbol name="WebViewToggleCommandId" value="0x0100" />
+
+			<IDSymbol name="AuthenticationCommandId" value="0x0200" />
+			<IDSymbol name="UserCommandId" value="0x0300" />
+			<IDSymbol name="WebViewReloadCommandId" value="0x0400" />
+			<IDSymbol name="WebViewDevToolsCommandId" value="0x0600" />
+
+			<IDSymbol name="BookmarkCommand0CommandId" value="0x0500" />
+			<IDSymbol name="BookmarkCommand1CommandId" value="0x0501"/>
+			<IDSymbol name="BookmarkCommand2CommandId" value="0x0502"/>
+			<IDSymbol name="BookmarkCommand3CommandId" value="0x0503"/>
+			<IDSymbol name="BookmarkCommand4CommandId" value="0x0504"/>
+			<IDSymbol name="BookmarkCommand5CommandId" value="0x0505"/>
+			<IDSymbol name="BookmarkCommand6CommandId" value="0x0506"/>
+			<IDSymbol name="BookmarkCommand7CommandId" value="0x0507"/>
+			<IDSymbol name="BookmarkCommand8CommandId" value="0x0508"/>
+			<IDSymbol name="BookmarkCommand9CommandId" value="0x0509"/>
+		</GuidSymbol>
+
+		<GuidSymbol name="guidWebViewPackageCodeWindowContextMenuCmdSet" value="{0f33235e-3a5c-42bc-b519-d888652f972c}">
+			<IDSymbol name="CodeStreamEditorCommands" value="0x1023" />
+			<IDSymbol name="AddCodemarkCommentCommandId" value="0x0400" />
+			<IDSymbol name="AddCodemarkIssueCommandId" value="0x0401" />
+			<IDSymbol name="AddCodemarkBookmarkCommandId" value="0x0402" />
+			<IDSymbol name="AddCodemarkPermalinkCommandId" value="0x0403" />
+			<IDSymbol name="AddCodemarkPermalinkInstantCommandId" value="0x0413" />
+		</GuidSymbol>
+
+		<GuidSymbol name="guidImages" value="{f2c8ef6d-3257-4e0a-8ae0-ef6298dd22c5}" >
+			<IDSymbol name="logo" value="1" />
+			<IDSymbol name="auth" value="2" />
+			<IDSymbol name="user" value="3" />
+			<IDSymbol name="empty4" value="4" />
+			<IDSymbol name="empty5" value="5" />
+			<IDSymbol name="empty6" value="6" />
+		</GuidSymbol>
+	</Symbols>
 </CommandTable>

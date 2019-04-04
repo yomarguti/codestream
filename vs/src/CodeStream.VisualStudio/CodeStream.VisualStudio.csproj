@@ -90,6 +90,7 @@
     </Compile>
     <Compile Include="Commands\AddCodemarkCommandBase.cs" />
     <Compile Include="Commands\AddCodemarkCommands.cs" />
+    <Compile Include="Commands\BookmarkShortcutCommands.cs" />
     <Compile Include="Commands\CommandBase.cs" />
     <Compile Include="Commands\UserCommand.cs" />
     <Compile Include="Commands\AuthenticationCommand.cs" />

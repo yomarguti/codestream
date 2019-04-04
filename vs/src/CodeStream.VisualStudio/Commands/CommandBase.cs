@@ -15,12 +15,6 @@ namespace CodeStream.VisualStudio.Commands
         /// <summary>
         /// Gets the service provider from the owner package.
         /// </summary>
-        protected IAsyncServiceProvider ServiceProvider
-        {
-            get
-            {
-                return Package;
-            }
-        }
+        protected IAsyncServiceProvider ServiceProvider => Package;
     }
 }

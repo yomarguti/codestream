@@ -13,7 +13,7 @@ namespace CodeStream.VisualStudio.Commands
     internal sealed class WebViewToggleCommand : CommandBase
     {
         public static WebViewToggleCommand Instance { get; private set; }
-        private ICodeStreamAgentService _codeStreamAgentService;
+        private readonly ICodeStreamAgentService _codeStreamAgentService;
 
         private WebViewToggleCommand(AsyncPackage package, OleMenuCommandService commandService, ICodeStreamAgentService codeStreamAgentService) : base(package)
         {

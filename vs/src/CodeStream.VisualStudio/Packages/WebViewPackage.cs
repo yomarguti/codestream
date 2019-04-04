@@ -103,6 +103,7 @@ namespace CodeStream.VisualStudio.Packages
             // only show this locally
             await WebViewDevToolsCommand.InitializeAsync(this);
 #endif
+	        await BookmarkShortcutCommands.InitializeAllAsync(this);
 
             var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
 
