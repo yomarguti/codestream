@@ -656,6 +656,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				id="inline-codemarks-scroll-container"
 				ref={ref => (this._scrollDiv = ref)}
 				onClick={this.handleClickField}
+				data-scrollable="true"
 			>
 				<div style={{ padding: "18px 0", margin: "-18px 0" }}>
 					<div
@@ -728,6 +729,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	onWheel = (event: React.WheelEvent<HTMLDivElement>) => {
 		if (event.deltaY === 0) return;
+
+		// Find the nearest scrollable element and if its not the container we expect, kick out
+		const scroller = (event.target as HTMLElement).closest("[data-scrollable]");
+		if (scroller != null && scroller.id !== "inline-codemarks-scroll-container") {
+			return;
+		}
 
 		if (this._clearWheelingStateTimeout !== undefined) {
 			clearTimeout(this._clearWheelingStateTimeout);
