@@ -308,13 +308,15 @@ export class Codemark extends React.Component<Props, State> {
 			);
 		}
 
-		range(1, 10).forEach(index => {
+		const submenu = range(1, 10).map(index => {
 			const inUse = codemarkKeybindings[index] ? " (in use)" : "";
-			menuItems.push({
-				label: `Set Keybinding ${index}${inUse}`,
+			return {
+				label: `${index}${inUse}`,
 				action: `set-keybinding-${index}`
-			});
+			};
 		});
+
+		menuItems.push({ label: "Set Keybinding", action: "set-keybinding", submenu: submenu });
 
 		return (
 			<div

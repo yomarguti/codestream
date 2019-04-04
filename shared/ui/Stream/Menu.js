@@ -1,11 +1,12 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import createClassString from "classnames";
+import Icon from "./Icon";
 
 export default class Menu extends Component {
 	constructor(props) {
 		super(props);
-		this.state = { selected: props.selected };
+		this.state = { selected: props.selected || "" };
 		this.el = document.createElement("div");
 	}
 
@@ -70,36 +71,54 @@ export default class Menu extends Component {
 		if (this.props.items.length !== prevProps.items.length) this.repositionIfNecessary();
 	}
 
+	renderItem = (item, parentItem) => {
+		if (item.label === "-") return <hr key={count++} />;
+		if (item.fragment) return item.fragment;
+		const key = parentItem ? `${parentItem.action}/${item.action}` : item.action;
+		const selected = key === this.state.selected || this.state.selected.startsWith(key + "/");
+		return (
+			<li
+				className={createClassString({
+					"menu-item": true,
+					disabled: item.disabled,
+					hover: selected
+				})}
+				key={key}
+				onMouseEnter={() => this.handleMouseEnter(key)}
+				onClick={event => this.handleClickItem(event, item)}
+			>
+				{item.icon && <span className="icon">{item.icon}</span>}
+				{item.label && <span className="label">{item.label}</span>}
+				{item.shortcut && <span className="shortcut">{item.shortcut}</span>}
+				{item.disabled && <span className="disabled">{item.disabled}</span>}
+				{item.submenu && (
+					<span className="submenu">
+						<Icon name="triangle-right" />
+						{selected && this.renderSubmenu(item)}
+					</span>
+				)}
+			</li>
+		);
+	};
+
+	renderSubmenu = item => {
+		return <div className="menu-popup-submenu">{this.renderMenu(item.submenu, item)}</div>;
+	};
+
+	renderMenu = (items, parentItem) => {
+		return (
+			<div className="menu-popup-body">
+				<ul className="compact">{items.map(item => this.renderItem(item, parentItem))}</ul>
+			</div>
+		);
+	};
+
 	render() {
 		let count = 0;
 		const className = this.props.compact ? "menu-popup compact" : "menu-popup";
 		return ReactDOM.createPortal(
 			<div className={className} ref={ref => (this._div = ref)}>
-				<div className="menu-popup-body">
-					<ul className="compact">
-						{this.props.items.map(item => {
-							if (item.label === "-") return <hr key={count++} />;
-							if (item.fragment) return item.fragment;
-							return (
-								<li
-									className={createClassString({
-										"menu-item": true,
-										disabled: item.disabled,
-										hover: item.action === this.state.selected
-									})}
-									key={item.action}
-									onMouseEnter={() => this.handleMouseEnter(item.action)}
-									onClick={event => this.handleClickItem(event, item)}
-								>
-									{item.icon && <span className="icon">{item.icon}</span>}
-									{item.label && <span className="label">{item.label}</span>}
-									{item.shortcut && <span className="shortcut">{item.shortcut}</span>}
-									{item.disabled && <span className="disabled">{item.disabled}</span>}
-								</li>
-							);
-						})}
-					</ul>
-				</div>
+				{this.renderMenu(this.props.items, null)}
 			</div>,
 			this.el
 		);

@@ -1050,6 +1050,12 @@
 				border: 1px solid @base-border-color;
 				background: @base-background-color;
 			}
+			.menu-popup-submenu {
+				position: absolute;
+				right: 0;
+				margin: -10px;
+				padding: 10px;
+			}
 			hr {
 				margin: 5px 0;
 				border: none;
@@ -1080,8 +1086,10 @@
 			}
 			// li:hover,
 			li.menu-item.hover {
-				color: white;
 				background: @background-color-info;
+			}
+			li.menu-item.hover > span.label {
+				color: white;
 			}
 			li.menu-item.disabled {
 				color: @text-color-subtle;
@@ -1098,6 +1106,10 @@
 			.username {
 				font-weight: 700;
 				padding-right: 5px;
+			}
+			.submenu .icon {
+				float: right;
+				margin-left: 10px;
 			}
 		}
 
