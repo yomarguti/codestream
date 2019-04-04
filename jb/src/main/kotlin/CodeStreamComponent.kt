@@ -26,7 +26,7 @@ val gson = Gson()
 val DEBUG =
     java.lang.management.ManagementFactory.getRuntimeMXBean().inputArguments.toString().contains("-agentlib:jdwp")
 
-class CodeStreamComponent(project: Project) : Disposable, ServiceConsumer(project) {
+class CodeStreamComponent(val project: Project) : Disposable, ServiceConsumer(project) {
 
     companion object {
         fun getInstance(project: Project) = project.getComponent(CodeStreamComponent::class.java)
@@ -76,7 +76,7 @@ class CodeStreamComponent(project: Project) : Disposable, ServiceConsumer(projec
                 )
             }
 
-            val statusBar = WindowManager.getInstance().getIdeFrame(null).statusBar
+            val statusBar = WindowManager.getInstance().getIdeFrame(project).statusBar
     //        val statusBar = WindowManager.getInstance().getStatusBar(project)
             statusBar?.addWidget(CodeStreamStatusBarWidget(project))
 
@@ -108,6 +108,8 @@ class CodeStreamComponent(project: Project) : Disposable, ServiceConsumer(projec
     }
 
     private fun updateWebViewFocus() {
+        if (project.isDisposed) return
+
         val isFocused = focused && toolWindow.isVisible
         webViewService.postNotification(FocusNotifications.DidChange(isFocused))
     }
