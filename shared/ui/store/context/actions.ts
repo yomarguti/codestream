@@ -28,15 +28,6 @@ export const focus = () => action(ContextActionsType.SetFocusState, true);
 
 export const blur = () => action(ContextActionsType.SetFocusState, false);
 
-export const setCodemarkFileFilter = (value: string) =>
-	action(ContextActionsType.SetCodemarkFileFilter, value);
-
-export const setCodemarkTypeFilter = (value: string) =>
-	action(ContextActionsType.SetCodemarkTypeFilter, value);
-
-export const setCodemarkColorFilter = (value: string) =>
-	action(ContextActionsType.SetCodemarkColorFilter, value);
-
 export const _setChannelFilter = (value: string) =>
 	action(ContextActionsType.SetChannelFilter, value);
 
@@ -48,6 +39,27 @@ export const setChannelFilter = (value: string) => async dispatch => {
 	}
 	return dispatch(_setChannelFilter(value));
 };
+
+export const setChannelsMuteAll = (enabled: boolean) =>
+	action(ContextActionsType.SetChannelsMuteAll, enabled);
+
+export const setCodemarkColorFilter = (value: string) =>
+	action(ContextActionsType.SetCodemarkColorFilter, value);
+
+export const setCodemarkFileFilter = (value: string) =>
+	action(ContextActionsType.SetCodemarkFileFilter, value);
+
+export const setCodemarkTypeFilter = (value: string) =>
+	action(ContextActionsType.SetCodemarkTypeFilter, value);
+
+export const setCodemarksFileViewStyle = (style: "list" | "inline") =>
+	action(ContextActionsType.SetCodemarksFileViewStyle, style);
+
+export const setCodemarksShowArchived = (enabled: boolean) =>
+	action(ContextActionsType.SetCodemarksShowArchived, enabled);
+
+export const setCodemarksShowResolved = (enabled: boolean) =>
+	action(ContextActionsType.SetCodemarksShowResolved, enabled);
 
 export const _setCurrentStream = (streamId?: string, threadId?: string) =>
 	action(ContextActionsType.SetCurrentStream, { streamId, threadId });
@@ -66,14 +78,20 @@ export const setCurrentStream = (streamId?: string, threadId?: string) => (dispa
 	}
 };
 
-export const connectProvider = (provider: ThirdPartyProviderConfig, fromMenu = false) => async (dispatch, getState) => {
+export const setShowFeedbackSmiley = (enabled: boolean) =>
+	action(ContextActionsType.SetShowFeedbackSmiley, enabled);
+
+export const connectProvider = (provider: ThirdPartyProviderConfig, fromMenu = false) => async (
+	dispatch,
+	getState
+) => {
 	const { context, users, session } = getState();
 	const user = users[session.userId];
 	const { name, host, isEnterprise } = provider;
 	let providerInfo = ((user.providerInfo || {})[context.currentTeamId] || {})[name];
 	if (providerInfo) {
 		if (isEnterprise) {
-			const starredHost = host.replace(/\./g, '*');
+			const starredHost = host.replace(/\./g, "*");
 			providerInfo = (providerInfo.hosts || {})[starredHost];
 		}
 		if (providerInfo && providerInfo.accessToken) {
@@ -102,7 +120,10 @@ export const connectProvider = (provider: ThirdPartyProviderConfig, fromMenu = f
 	}
 };
 
-export const disconnectProvider = (provider: ThirdPartyProviderConfig, fromMenu = false) => async (dispatch, getState) => {
+export const disconnectProvider = (provider: ThirdPartyProviderConfig, fromMenu = false) => async (
+	dispatch,
+	getState
+) => {
 	try {
 		const api = HostApi.instance;
 		await api.send(DisconnectThirdPartyProviderRequestType, { provider });

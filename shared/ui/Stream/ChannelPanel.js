@@ -9,7 +9,7 @@ import {
 	setChannelFilter,
 	openPanel
 } from "./actions";
-import { setCurrentStream } from "../store/context/actions";
+import { setCurrentStream, setChannelsMuteAll } from "../store/context/actions";
 import {
 	getChannelStreamsForTeam,
 	getDirectMessageStreamsForTeam,
@@ -26,9 +26,8 @@ import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
 import { isInVscode, safe } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
-import { HostApi } from "../webview-api";
 import { sortBy as _sortBy } from "lodash-es";
-import { UpdateConfigurationRequestType } from "../ipc/webview.protocol";
+import { State as ContextState } from "../store/context/types";
 
 export class SimpleChannelPanel extends Component {
 	constructor(props) {
@@ -146,10 +145,7 @@ export class SimpleChannelPanel extends Component {
 	};
 
 	toggleMuteAll = () => {
-		HostApi.instance.send(UpdateConfigurationRequestType, {
-			name: "muteAll",
-			value: !this.props.muteAll
-		});
+		this.props.setChannelsMuteAll(!this.props.muteAll);
 	};
 
 	toggleMenu = event => {
@@ -437,7 +433,10 @@ export class SimpleChannelPanel extends Component {
 		);
 	};
 
-	renderStreams = (streams, { unreadsOnly, starredOnly, selectedOnly } = {}) => {
+	renderStreams = (
+		streams,
+		{ unreadsOnly = undefined, starredOnly = undefined, selectedOnly = undefined } = {}
+	) => {
 		const { selectedStreams } = this.props;
 
 		return streams.map(stream => {
@@ -741,16 +740,17 @@ export class SimpleChannelPanel extends Component {
 
 const EMPTY_OBJECT = Object.freeze({});
 
-const mapStateToProps = ({
-	configs,
-	context,
-	preferences,
-	streams,
-	users,
-	teams,
-	umis,
-	session
-}) => {
+/**
+ * @param {Object} state
+ * @param {ContextState} state.context
+ * @param {Object} state.preferences
+ * @param {Object} state.session
+ * @param {Object} state.streams
+ * @param {Object} state.umis
+ * @param {Object} state.users
+ * @param {Object} state.teams
+ **/
+const mapStateToProps = ({ context, preferences, session, streams, teams, umis, users }) => {
 	const team = teams[context.currentTeamId];
 
 	const teamMembers = team.memberIds.map(id => users[id]).filter(Boolean);
@@ -797,7 +797,7 @@ const mapStateToProps = ({
 	);
 
 	const serviceStreams = _sortBy(
-		getServiceStreamsForTeam(streams, context.currentTeamId, session.userId, users) || [],
+		getServiceStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
 		stream => -stream.createdAt
 	);
 
@@ -812,7 +812,7 @@ const mapStateToProps = ({
 		channelStreams,
 		directMessageStreams,
 		serviceStreams,
-		muteAll: configs.muteAll,
+		muteAll: context.channelsMuteAll,
 		mutedStreams: preferences.mutedStreams || EMPTY_OBJECT,
 		starredStreams: starredStreams,
 		selectedStreams: preferences.selectedStreams || EMPTY_OBJECT,
@@ -832,6 +832,7 @@ export default connect(
 		setUserPreference,
 		setCurrentStream,
 		openPanel,
-		setChannelFilter
+		setChannelFilter,
+		setChannelsMuteAll
 	}
 )(SimpleChannelPanel);

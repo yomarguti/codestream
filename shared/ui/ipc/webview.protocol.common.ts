@@ -50,7 +50,6 @@ export interface WebviewConfigs {
 	debug: boolean;
 	email?: string;
 	serverUrl: string;
-	viewCodemarksInline: boolean;
 }
 
 export interface IpcHost {

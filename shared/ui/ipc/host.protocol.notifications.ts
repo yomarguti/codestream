@@ -1,8 +1,11 @@
 import { NotificationType } from "vscode-jsonrpc";
 import { Range } from "vscode-languageserver-types";
-import { EditorMetrics, EditorSelection, IpcRoutes } from "./webview.protocol.common";
-
-type ConfigState = any;
+import {
+	EditorMetrics,
+	EditorSelection,
+	IpcRoutes,
+	WebviewConfigs
+} from "./webview.protocol.common";
 
 /* The following events are expected to be provided from the extension */
 
@@ -22,7 +25,7 @@ export const HostDidChangeActiveEditorNotificationType = new NotificationType<
 	void
 >(`${IpcRoutes.Webview}/editor/didChangeActive`);
 
-export type HostDidChangeConfigNotification = Partial<ConfigState>;
+export type HostDidChangeConfigNotification = Partial<WebviewConfigs>;
 export const HostDidChangeConfigNotificationType = new NotificationType<
 	HostDidChangeConfigNotification,
 	void

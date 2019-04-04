@@ -12,10 +12,11 @@ import {
 	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequestType,
 	EditorSelectRangeRequestType,
-	UpdateConfigurationRequestType,
 	MaxRangeValue,
 	EditorSelection,
-	EditorMetrics
+	EditorMetrics,
+	EditorContext,
+	WebviewConfigs
 } from "../ipc/webview.protocol";
 import {
 	DocumentMarker,
@@ -32,6 +33,12 @@ import {
 	getLine0ForEditorLine
 } from "../store/editorContext/reducer";
 import { CSTeam } from "@codestream/protocols/api";
+import {
+	setCodemarksFileViewStyle,
+	setCodemarksShowArchived,
+	setCodemarksShowResolved
+} from "../store/context/actions";
+import { State as ContextState } from "../store/context/types";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -59,14 +66,26 @@ interface Props {
 	numLinesVisible: number;
 	textEditorVisibleRanges?: Range[];
 	textEditorSelection?: EditorSelection;
-	metrics: EditorMetrics;
+	metrics?: EditorMetrics;
 	documentMarkers: DocumentMarker[];
 	numUnpinned: number;
 	numClosed: number;
-	fetchDocumentMarkers(uri: string): Promise<void>;
+
+	fetchDocumentMarkers: (
+		...args: Parameters<typeof fetchDocumentMarkers>
+	) => ReturnType<ReturnType<typeof fetchDocumentMarkers>>;
 	postAction(): void;
-	setNewPostEntry(a: string): void;
+	setCodemarksFileViewStyle: (
+		...args: Parameters<typeof setCodemarksFileViewStyle>
+	) => ReturnType<typeof setCodemarksFileViewStyle>;
+	setCodemarksShowArchived: (
+		...args: Parameters<typeof setCodemarksShowArchived>
+	) => ReturnType<typeof setCodemarksShowArchived>;
+	setCodemarksShowResolved: (
+		...args: Parameters<typeof setCodemarksShowResolved>
+	) => ReturnType<typeof setCodemarksShowResolved>;
 	setMultiCompose(...args: any[]): void;
+	setNewPostEntry(a: string): void;
 }
 
 interface State {
@@ -182,8 +201,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		this.disposables.push(
 			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
-				if (this.props.textEditorUri === textDocument.uri)
+				if (this.props.textEditorUri === textDocument.uri) {
 					this.props.fetchDocumentMarkers(textDocument.uri);
+				}
 			})
 		);
 
@@ -604,12 +624,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const fontSize = metrics && metrics.fontSize ? metrics.fontSize : "12px";
 		let rangeStartOffset = 0;
 
-		const paddingTop = (metrics.margins && metrics.margins.top) || 0;
+		const paddingTop = (metrics && metrics.margins && metrics.margins.top) || 0;
 		// we add two here because the editor only reports *entirely* visible lines,
 		// so there could theoretically be one line that is 99% visible at the top,
 		// and also one line that is 99% visible at the bottom, both at the same time.
 		const heightPerLine = (window.innerHeight - paddingTop) / (numLinesVisible + 2);
-		const expectedLineHeight = (metrics.fontSize || 12) * 1.5;
+		const expectedLineHeight = ((metrics && metrics.fontSize) || 12) * 1.5;
 
 		// here we have to decide whether we think the editor window is "full of code"
 		// in which case we want the height of inlinecodemarks to be 100% minus any
@@ -921,24 +941,15 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	toggleViewCodemarksInline = () => {
-		HostApi.instance.send(UpdateConfigurationRequestType, {
-			name: "viewCodemarksInline",
-			value: !this.props.viewInline
-		});
+		this.props.setCodemarksFileViewStyle(this.props.viewInline ? "list" : "inline");
 	};
 
 	toggleShowUnpinned = () => {
-		HostApi.instance.send(UpdateConfigurationRequestType, {
-			name: "showArchivedCodemarks",
-			value: !this.props.showUnpinned
-		});
+		this.props.setCodemarksShowArchived(!this.props.showUnpinned);
 	};
 
 	toggleShowClosed = () => {
-		HostApi.instance.send(UpdateConfigurationRequestType, {
-			name: "showResolvedCodemarks",
-			value: !this.props.showClosed
-		});
+		this.props.setCodemarksShowResolved(!this.props.showClosed);
 	};
 
 	showAbove = () => {
@@ -1145,10 +1156,16 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 const EMPTY_ARRAY = [];
 
-const mapStateToProps = state => {
+const mapStateToProps = (state: {
+	configs: WebviewConfigs;
+	context: ContextState;
+	documentMarkers: { [uri: string]: any };
+	editorContext: EditorContext;
+	teams: { [id: string]: any };
+}) => {
 	const { context, editorContext, teams, configs, documentMarkers } = state;
 
-	const docMarkers = documentMarkers[editorContext.textEditorUri] || EMPTY_ARRAY;
+	const docMarkers = documentMarkers[editorContext.textEditorUri || ""] || EMPTY_ARRAY;
 	const numUnpinned = docMarkers.filter(d => !d.codemark.pinned).length;
 	const numClosed = docMarkers.filter(d => d.codemark.status === "closed").length;
 
@@ -1166,11 +1183,11 @@ const mapStateToProps = state => {
 	return {
 		usernames: userSelectors.getUsernames(state),
 		team: teams[context.currentTeamId],
-		viewInline: configs.viewCodemarksInline,
-		viewHeadshots: configs.viewHeadshots,
-		showLabelText: configs.showLabelText,
-		showClosed: configs.showResolvedCodemarks,
-		showUnpinned: configs.showArchivedCodemarks,
+		viewInline: context.codemarksFileViewStyle === "inline",
+		viewHeadshots: configs.showHeadshots,
+		showLabelText: false, //configs.showLabelText,
+		showClosed: context.codemarksShowResolved || false,
+		showUnpinned: context.codemarksShowArchived || false,
 		fileNameToFilterFor: editorContext.activeFile || editorContext.lastActiveFile,
 		textEditorUri: editorContext.textEditorUri,
 		textEditorLineCount: editorContext.textEditorLineCount || 0,
@@ -1178,7 +1195,7 @@ const mapStateToProps = state => {
 		lastVisibleLine,
 		textEditorVisibleRanges,
 		textEditorSelection: getCurrentSelection(editorContext),
-		metrics: editorContext.metrics || EMPTY_ARRAY,
+		metrics: editorContext.metrics,
 		documentMarkers: docMarkers,
 		numLinesVisible: getVisibleLineCount(textEditorVisibleRanges),
 		numUnpinned,
@@ -1188,5 +1205,10 @@ const mapStateToProps = state => {
 
 export default connect(
 	mapStateToProps,
-	{ fetchDocumentMarkers }
+	{
+		fetchDocumentMarkers,
+		setCodemarksFileViewStyle,
+		setCodemarksShowArchived,
+		setCodemarksShowResolved
+	}
 )(SimpleInlineCodemarks);

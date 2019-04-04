@@ -7,7 +7,8 @@ import Button from "./Button";
 import CancelButton from "./CancelButton";
 import { HostApi } from "../webview-api";
 import { OpenUrlRequestType } from "@codestream/protocols/agent";
-import { UpdateConfigurationRequestType } from "../ipc/host.protocol";
+import { State as ContextState } from "../store/context/types";
+import { setShowFeedbackSmiley } from "../store/context/actions";
 
 interface State {
 	emotion: "happy" | "sad";
@@ -18,6 +19,10 @@ interface State {
 }
 interface Props {
 	showFeedbackSmiley?: boolean;
+
+	setShowFeedbackSmiley: (
+		...args: Parameters<typeof setShowFeedbackSmiley>
+	) => ReturnType<typeof setShowFeedbackSmiley>;
 }
 
 const MAX_TWEET_LENGTH = 240;
@@ -163,10 +168,7 @@ export class Feedback extends React.Component<Props, State> {
 	};
 
 	toggleShowSmiley = () => {
-		HostApi.instance.send(UpdateConfigurationRequestType, {
-			name: "showFeedbackSmiley",
-			value: !this.props.showFeedbackSmiley
-		});
+		this.props.setShowFeedbackSmiley(!this.props.showFeedbackSmiley);
 	};
 
 	toggleDialog = () => {
@@ -197,15 +199,15 @@ export class Feedback extends React.Component<Props, State> {
 	};
 }
 
-const mapStateToProps = state => {
-	const { configs } = state;
-
+const mapStateToProps = ({ context }: { context: ContextState }) => {
 	return {
-		showFeedbackSmiley: configs.showFeedbackSmiley
+		showFeedbackSmiley: context.showFeedbackSmiley
 	};
 };
 
 export default connect(
 	mapStateToProps,
-	{}
+	{
+		setShowFeedbackSmiley: setShowFeedbackSmiley
+	}
 )(Feedback);
