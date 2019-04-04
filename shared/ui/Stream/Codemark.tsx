@@ -235,7 +235,7 @@ export class Codemark extends React.Component<Props, State> {
 
 	renderCollapsedCodemark() {
 		const { codemark } = this.props;
-		const file = codemark.markers && codemark.markers[0].file;
+		const file = codemark.markers && codemark.markers[0] && codemark.markers[0].file;
 
 		if (!codemark) return null;
 
