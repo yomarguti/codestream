@@ -83,18 +83,32 @@ export function initializeColorPalette() {
 		const computedStyle = getComputedStyle(body);
 
 		const bodyStyle = body.style;
-		bodyStyle.setProperty(
-			"--font-size",
-			computedStyle.getPropertyValue("--vscode-editor-font-size").trim()
-		);
-		bodyStyle.setProperty(
-			"--font-family",
-			computedStyle.getPropertyValue("--vscode-editor-font-family").trim()
-		);
-		bodyStyle.setProperty(
-			"--font-weight",
-			computedStyle.getPropertyValue("--vscode-editor-font-weight").trim()
-		);
+
+		const font = computedStyle.getPropertyValue("--vscode-font-family").trim();
+		if (font) {
+			bodyStyle.setProperty("--font-family", font);
+			bodyStyle.setProperty(
+				"--font-size",
+				computedStyle.getPropertyValue("--vscode-font-size").trim()
+			);
+			bodyStyle.setProperty(
+				"--font-weight",
+				computedStyle.getPropertyValue("--vscode-font-weight").trim()
+			);
+		} else {
+			bodyStyle.setProperty(
+				"--font-family",
+				computedStyle.getPropertyValue("--vscode-editor-font-family").trim()
+			);
+			bodyStyle.setProperty(
+				"--font-size",
+				computedStyle.getPropertyValue("--vscode-editor-font-size").trim()
+			);
+			bodyStyle.setProperty(
+				"--font-weight",
+				computedStyle.getPropertyValue("--vscode-editor-font-weight").trim()
+			);
+		}
 
 		theme = "dark";
 		if (body.classList.contains("vscode-light")) {
