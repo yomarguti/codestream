@@ -756,7 +756,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 				const pixels = this._wheelingState.accumulatedPixels + event.deltaY;
 				this._wheelingState.accumulatedPixels = pixels % lineHeight;
-				lines = Math.floor(pixels / lineHeight);
+				lines = pixels < 0 ? Math.ceil(pixels / lineHeight) : Math.floor(pixels / lineHeight);
 
 				break;
 			case 1: // deltaY is in lines

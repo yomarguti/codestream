@@ -98,7 +98,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 									isThread
 									threadId={threadId}
 									teamId={this.props.teamId}
-									skipFirstPost={true}
+									skipParentPost={true}
 								/>
 							</ScrollBox>
 						</div>
