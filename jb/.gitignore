@@ -1,5 +1,6 @@
 license.jar
 .idea/dictionaries
+.idea/libraries
 src/main/resources/webview
 src/main/resources/agent
 src/protocols/
