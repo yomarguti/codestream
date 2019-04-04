@@ -123,6 +123,33 @@
 		color: @text-color-highlight;
 		background: rgba(127, 127, 127, 0.4);
 	}
+	&.inline.codemark-congratulations {
+		top: 200px;
+		border-radius: 10px;
+		b {
+			color: @text-color-highlight;
+		}
+		.contents > .body {
+			padding: 10px !important;
+		}
+		h2 {
+			box-sizing: conent-box;
+			text-align: center;
+			margin: -10px -10px 10px -10px;
+			border-bottom: 1px solid @base-border-color;
+			padding: 10px;
+			background: repeating-linear-gradient(
+				-45deg,
+				transparent,
+				transparent 5px,
+				@app-background-color 5px,
+				@app-background-color 10px
+			);
+		}
+		li {
+			margin-bottom: 10px;
+		}
+	}
 	&.inline {
 		position: absolute;
 		padding: 0 !important;
@@ -132,8 +159,8 @@
 			padding: 10px;
 			background: repeating-linear-gradient(
 				-45deg,
-				@base-background-color,
-				@base-background-color 5px,
+				transparent,
+				transparent 5px,
 				@app-background-color 5px,
 				@app-background-color 10px
 			);

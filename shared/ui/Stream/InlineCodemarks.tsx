@@ -407,6 +407,39 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		// this.setState({ openIconsOnLine: undefined });
 	};
 
+	renderCongratulations() {
+		return (
+			<div className="codemark-congratulations codemark inline collapsed">
+				<div className="contents">
+					<div className="body">
+						<h2>Codemark Info</h2>
+						Just like Twitter has Tweets, CodeStream uses Codemarks as a unit of conversation to
+						share with others.
+						<ul>
+							<li>
+								Codemarks are <b>branch-agnostic</b>. That means this codemark will appear "in the
+								right place" even for your teammates who are checked out to a different version of
+								this file. <a href="foo">learn more</a>
+							</li>
+							<li>
+								Codemarks <b>move with the code</b>, so that conversation is connected to codeblocks
+								even as your code changes. <a href="foo">learn about comment drift</a>
+							</li>
+							<li>
+								Codemarks <b>can be managed</b> by archiving or deleting them if they're no longer
+								relevant. <a href="foo">see how</a>
+							</li>
+							<li>
+								<b>Replies can be promoted</b> with a <Icon name="star" /> so the best answer
+								surfaces to the top, like in stack overflow. <a href="foo">see how</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
 	renderIconRow(lineNum0, top, hover, open) {
 		// if the compose box is open, don't show hover icons
 		if (this.props.children) return null;
@@ -618,6 +651,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				>
 					{this.renderHoverIcons(numLinesVisible)}
 					{this.renderNoCodemarks()}
+					{/*this.renderCongratulations() */}
 					{this.props.children}
 				</div>
 			);
