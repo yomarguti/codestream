@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.51.1] - 2019-4-4
+
+### Fixed
+
+- Fixes a race condition in the extension that may result in an alert box when Visual Studio starts
+- Fixes an issue with the Live Share integration not working under VS 2019
+
 ## [0.51.0] - 2019-4-2
 
 ### Changed
