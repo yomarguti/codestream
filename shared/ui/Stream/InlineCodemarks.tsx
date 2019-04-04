@@ -640,6 +640,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			if (this.state.numBelow) this.setState({ numBelow: 0 });
 			return (
 				<div
+					id="inline-codemarks-field"
 					style={{
 						top: paddingTop,
 						// purple background for debugging purposes
