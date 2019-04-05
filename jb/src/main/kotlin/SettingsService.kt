@@ -1,12 +1,14 @@
 package com.codestream
 
 import com.github.salomonbrys.kotson.fromJson
+import com.github.salomonbrys.kotson.set
 import com.google.gson.JsonObject
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.extensions.PluginId
+import com.intellij.openapi.project.Project
 import com.intellij.util.net.HttpConfigurable
 import protocols.agent.Extension
 import protocols.agent.Ide
@@ -50,7 +52,7 @@ data class SettingsServiceState(
 )
 
 @State(name = "CodeStream", storages = [Storage("codestream.xml")])
-class SettingsService : PersistentStateComponent<SettingsServiceState> {
+class SettingsService(val project: Project) : PersistentStateComponent<SettingsServiceState>, ServiceConsumer(project) {
     private var _state = SettingsServiceState()
 
     override fun getState(): SettingsServiceState = _state
@@ -97,7 +99,14 @@ class SettingsService : PersistentStateComponent<SettingsServiceState> {
     val proxySupport get() = state.proxySupport
 
     var webViewContext: JsonObject
-        get() = gson.fromJson(state.webViewContext)
+        get() {
+            var jsonObject = gson.fromJson<JsonObject>(state.webViewContext)
+            sessionService.userLoggedIn?.team?.id.let {
+                jsonObject["currentTeamId"] = it
+            }
+            jsonObject["hasFocus"] = true
+            return jsonObject
+        }
         set(jsonObject: JsonObject) {
             state.webViewContext = jsonObject.toString()
         }
