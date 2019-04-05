@@ -345,7 +345,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		return start1 !== start2;
 	}
 
-	renderList = () => {
+	renderList = (paddingTop, fontSize, height) => {
 		const { documentMarkers, showUnpinned, showClosed } = this.props;
 
 		const { selectedDocMarkerId } = this.state;
@@ -354,8 +354,26 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			return this.renderNoCodemarks();
 		}
 
+		console.log("HEIGHT IS: ", height);
 		this.hiddenCodemarks = {};
-		return (
+		return [
+			<div
+				id="inline-codemarks-field"
+				style={{
+					top: paddingTop,
+					// purple background for debugging purposes
+					// background: "#333366",
+					position: "fixed",
+					left: 0,
+					height: height,
+					width: "45px",
+					zIndex: 5000
+				}}
+			>
+				<div style={{ position: "relative", background: "red" }}>
+					{this.renderHoverIcons(this.props.numLinesVisible)}
+				</div>
+			</div>,
 			<ScrollBox>
 				<div
 					className="channel-list vscroll"
@@ -363,6 +381,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					id="inline-codemarks-scroll-container"
 					style={{ paddingTop: "20px" }}
 				>
+					{this.props.children}
 					{documentMarkers
 						.sort((a, b) => this.getMarkerStartLine(a) - this.getMarkerStartLine(b))
 						.map(docMarker => {
@@ -402,7 +421,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						})}
 				</div>
 			</ScrollBox>
-		);
+		];
 	};
 
 	onMouseEnterHoverIcon = lineNum0 => {
@@ -592,26 +611,20 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		return marker.locationWhenCreated[0] - 1;
 	};
 
-	renderInline() {
+	renderCodemarks() {
+		const { viewInline } = this.props;
 		const {
 			textEditorVisibleRanges = [],
 			textEditorLineCount,
-			firstVisibleLine,
 			lastVisibleLine,
 			numLinesVisible,
 			documentMarkers,
-			metrics,
-			showUnpinned,
-			showClosed
+			metrics
 		} = this.props;
-		const { selectedDocMarkerId } = this.state;
-
-		// console.log("TEVR: ", textEditorVisibleRanges);
 
 		const numVisibleRanges = textEditorVisibleRanges.length;
 
 		const fontSize = metrics && metrics.fontSize ? metrics.fontSize : "12px";
-		let rangeStartOffset = 0;
 
 		const paddingTop = (metrics && metrics.margins && metrics.margins.top) || 0;
 		// we add two here because the editor only reports *entirely* visible lines,
@@ -666,7 +679,24 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				</div>
 			);
 		}
+		return viewInline
+			? this.renderInline(paddingTop, fontSize, height)
+			: this.renderList(paddingTop, fontSize, height);
+	}
 
+	renderInline(paddingTop, fontSize, height) {
+		const {
+			textEditorVisibleRanges = [],
+			firstVisibleLine,
+			lastVisibleLine,
+			numLinesVisible,
+			documentMarkers,
+			showUnpinned,
+			showClosed
+		} = this.props;
+		const { selectedDocMarkerId } = this.state;
+
+		const numVisibleRanges = textEditorVisibleRanges.length;
 		let numAbove = 0,
 			numBelow = 0;
 		// create a map from start-lines to the codemarks that start on that line
@@ -694,6 +724,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (numBelow != this.state.numBelow) this.setState({ numBelow });
 
 		const codeHeight = this.codeHeight();
+		let rangeStartOffset = 0;
 		return (
 			<div
 				style={{ height: "100vh" }}
@@ -888,7 +919,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		return (
 			<div ref={this.root} className={cx("panel inline-panel", { "full-height": viewInline })}>
-				{this.state.isLoading ? null : viewInline ? this.renderInline() : this.renderList()}
+				{this.state.isLoading ? null : this.renderCodemarks()}
 				{this.printViewSelectors()}
 			</div>
 		);
