@@ -17,7 +17,7 @@ export interface Props {
 	isFetchingMore: boolean;
 	isThread: boolean;
 	newMessagesAfterSeqNum?: any;
-	posts: any[];
+	posts: CSPost[];
 	renderIntro?: any;
 	skipParentPost: boolean;
 	streamId: string;
@@ -109,7 +109,7 @@ export default infiniteLoadable(
 
 			const { hasFocus, isActive, posts, streamId } = this.props;
 
-			const lastPost = findLast(posts, post => post.isSystemPost !== "codestream");
+			const lastPost = findLast(posts, post => post.creatorId !== "codestream");
 			if (hasFocus && isActive && lastPost) {
 				if (lastPost.streamId === streamId) this.props.markRead(lastPost.id);
 			}
@@ -252,12 +252,18 @@ export default infiniteLoadable(
 					)}
 					{this.props.posts.map((post, index) => {
 						// if the parent post isn't yet in local collection because it's further back, use the id
-						const parentPost =
-							post.parentPostId && post.parentPostId !== post.id
-								? posts.find(p => p.id === post.parentPostId) || post.parentPostId
-								: null;
+						let parentPostId;
+						if (post.parentPostId && post.parentPostId !== post.id) {
+							const parentPost = posts.find(p => p.id === post.parentPostId);
+							parentPostId = parentPost ? parentPost.id : post.parentPostId;
+						}
 
-						if (this.props.skipParentPost && !post.parentPostId) return null;
+						if (
+							this.props.skipParentPost &&
+							(!post.parentPostId || post.parentPostId === post.id)
+						) {
+							return null;
+						}
 
 						const hasNewMessageLine = safe(() => {
 							if (!newMessagesAfterSeqNum) return false;
@@ -276,7 +282,7 @@ export default infiniteLoadable(
 									teammates={this.props.teammates}
 									currentUserId={this.props.currentUserId}
 									currentUserName={this.props.currentUserName}
-									parentPostId={parentPost && parentPost.id}
+									parentPostId={parentPostId}
 									newMessageIndicator={hasNewMessageLine}
 									editing={isActive && post.id === editingPostId}
 									action={postAction}

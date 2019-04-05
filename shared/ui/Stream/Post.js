@@ -205,8 +205,7 @@ class Post extends React.Component {
 			"system-post": systemPost,
 			unread: this.props.unread,
 			"new-separator": this.props.newMessageIndicator,
-			[`thread-key-${this.props.threadKey}`]: true,
-			[color]: true,
+			[color]: color ? true : false,
 			collapsed: this.props.collapsed,
 			question: type === "question",
 			issue: type === "issue",
@@ -217,7 +216,7 @@ class Post extends React.Component {
 		let codeBlock = null;
 		if (hasMarkers) {
 			const noRepo = !codemark.markers[0].repoId;
-			let fileLabel = codemark.markers[0].file || "-";
+			// let fileLabel = codemark.markers[0].file || "-";
 			// if (codemark.Markers[0].range)
 			codeBlock = (
 				<div
