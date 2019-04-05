@@ -22,9 +22,15 @@ import * as paths from "path-browserify";
 import React from "react";
 import { connect } from "react-redux";
 import Select from "react-select";
-import { getStreamForId, getStreamForTeam } from "../store/streams/reducer";
+import {
+	getStreamForId,
+	getStreamForTeam,
+	getChannelStreamsForTeam,
+	getDirectMessageStreamsForTeam,
+	getDMName
+} from "../store/streams/reducer";
 import { Stream } from "../store/streams/types";
-import { mapFilter, arrayToRange, forceAsLine, isRangeEmpty } from "../utils";
+import { mapFilter, arrayToRange, forceAsLine, isRangeEmpty, toMapBy } from "../utils";
 import { HostApi } from "../webview-api";
 import Button from "./Button";
 import CancelButton from "./CancelButton";
@@ -32,12 +38,14 @@ import CrossPostIssueControls from "./CrossPostIssueControls";
 import { CardValues } from "./CrossPostIssueControls/types";
 import Icon from "./Icon";
 import Menu from "./Menu";
-import { PostCompose } from "./PostCompose";
 import Tooltip from "./Tooltip";
-import { sortBy as _sortBy } from "lodash-es";
+import { sortBy as _sortBy, sortBy } from "lodash-es";
 import { EditorSelectRangeRequestType, EditorSelection } from "@codestream/protocols/webview";
 import { getCurrentSelection } from "../store/editorContext/reducer";
 import Headshot from "./Headshot";
+import { getTeamMembers } from "../store/users/reducer";
+import { MessageInput } from "./MessageInput";
+import { getSlashCommands } from "./SlashCommands";
 
 const noop = () => {};
 
@@ -46,25 +54,12 @@ const tuple = <T extends string[]>(...args: T) => args;
 const COLOR_OPTIONS = tuple("blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray");
 type Color = typeof COLOR_OPTIONS[number] | string;
 
-interface Props {
-	issueProvider?: ThirdPartyProviderConfig;
-	providerInfo: {
-		[service: string]: {};
-	};
-	channel: Stream;
-	channelStreams: CSChannelStream[];
-	directMessageStreams: CSDirectStream[];
-	currentUser: CSUser;
-	currentUserId: string;
-	teammates: CSUser[];
+interface Props extends DispatchProps {
 	streamId: string;
-	isSlackTeam: boolean;
-	collapseForm: Function;
+	collapseForm?: Function;
 	onSubmit: Function;
 	onClickClose(): any;
-	renderMessageInput(props: { [key: string]: any }): JSX.Element;
-	openCodemarkForm(type: string): any;
-	getScmInfoForSelection(uri: string, range: any): Promise<void>;
+	openCodemarkForm?(type: string): any;
 	slackInfo?: {};
 	codeBlock?: GetRangeScmInfoResponse;
 	commentType?: string;
@@ -72,10 +67,25 @@ interface Props {
 	isEditing?: boolean;
 	editingCodemark?: CodemarkPlus;
 	placeholder?: string;
+}
+
+interface DispatchProps {
+	teammates: CSUser[];
+	channelStreams: CSChannelStream[];
+	directMessageStreams: CSDirectStream[];
+	channel: Stream;
+	issueProvider?: ThirdPartyProviderConfig;
+	providerInfo: {
+		[service: string]: {};
+	};
+	isSlackTeam: boolean;
+	currentUser: CSUser;
 	selectedStreams: {};
 	showChannels: string;
 	textEditorUri?: string;
 	textEditorSelection?: EditorSelection;
+	slashCommands: any[];
+	services: {};
 }
 
 interface State {
@@ -316,7 +326,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		let mentions: Record<"id" | "username", string>[] = [];
 		if (codeBlock.scm && codeBlock.scm.authors) {
-			mentions = codeBlock.scm.authors.filter(author => author.id !== this.props.currentUserId);
+			mentions = codeBlock.scm.authors.filter(author => author.id !== this.props.currentUser.id);
 		}
 
 		if (mentions.length > 0) {
@@ -520,6 +530,8 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	switchChannel = (event: React.SyntheticEvent) => {
+		if (this.props.isEditing) return;
+
 		event.stopPropagation();
 		const target = event.target;
 		this.setState(state => ({
@@ -739,7 +751,6 @@ class CodemarkForm extends React.Component<Props, State> {
 	}
 
 	renderMessageInput = () => {
-		const { collapsed } = this.props;
 		const { codeBlock, type, text } = this.state;
 		let placeholder = this.props.placeholder;
 
@@ -766,14 +777,23 @@ class CodemarkForm extends React.Component<Props, State> {
 			this.focusOnMessageInput = focus;
 		};
 
-		return this.props.renderMessageInput({
-			text,
-			placeholder,
-			multiCompose: !collapsed,
-			onChange: this.handleChange,
-			onSubmit: this.handleClickSubmit,
-			__onDidRender
-		});
+		return (
+			<MessageInput
+				teammates={this.props.teammates}
+				currentUserId={this.props.currentUser.id}
+				slashCommands={this.props.slashCommands}
+				services={this.props.services}
+				channelStreams={this.props.channelStreams}
+				isSlackTeam={this.props.isSlackTeam}
+				isDirectMessage={this.props.channel.type === StreamType.Direct}
+				text={text}
+				placeholder={placeholder}
+				multiCompose
+				onChange={this.handleChange}
+				onSubmit={this.handleClickSubmit}
+				__onDidRender={__onDidRender}
+			/>
+		);
 	};
 
 	copyPermalink = (event: React.SyntheticEvent) => {
@@ -1076,7 +1096,7 @@ class CodemarkForm extends React.Component<Props, State> {
 							</Tooltip>
 						</div>
 					)}
-					{commentType === "issue" && (
+					{commentType === "issue" && !this.props.isEditing && (
 						<CrossPostIssueControls
 							issueProvider={this.props.issueProvider}
 							onValues={this.handleCrossPostIssueValues}
@@ -1177,7 +1197,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 const EMPTY_OBJECT = {};
 
-const mapStateToProps = state => {
+const mapStateToProps = (state): DispatchProps => {
 	const { context, editorContext, users, session, teams, preferences } = state;
 	const user = users[session.userId];
 	const channel = context.currentStreamId
@@ -1189,8 +1209,23 @@ const mapStateToProps = state => {
 	const team = teams[context.currentTeamId];
 	const isSlackTeam = !!(team.providerInfo && team.providerInfo.slack);
 
+	const teammates = getTeamMembers(state);
+
+	const directMessageStreams = (
+		getDirectMessageStreamsForTeam(state.streams, context.currentTeamId) || []
+	).map(stream => ({
+		...stream,
+		name: getDMName(stream, toMapBy("id", teammates), session.userId)
+	}));
+
 	return {
 		channel,
+		teammates,
+		channelStreams: sortBy(
+			getChannelStreamsForTeam(state.streams, context.currentTeamId, session.userId) || [],
+			stream => (stream.name || "").toLowerCase()
+		) as CSChannelStream[],
+		directMessageStreams: directMessageStreams as CSDirectStream[],
 		issueProvider: context.issueProvider,
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
 		isSlackTeam,
@@ -1198,7 +1233,9 @@ const mapStateToProps = state => {
 		selectedStreams: preferences.selectedStreams || EMPTY_OBJECT,
 		showChannels: context.channelFilter,
 		textEditorUri: editorContext.textEditorUri,
-		textEditorSelection: getCurrentSelection(editorContext)
+		textEditorSelection: getCurrentSelection(editorContext),
+		slashCommands: getSlashCommands(state.capabilities),
+		services: state.services
 		// slackInfo,
 	};
 };

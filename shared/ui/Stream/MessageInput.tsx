@@ -34,7 +34,7 @@ interface Props {
 	teammates: CSUser[];
 	currentUserId: string;
 	slashCommands?: any[];
-	services: any[];
+	services: any;
 	channelStreams?: CSChannelStream[];
 	isSlackTeam: boolean;
 	isDirectMessage?: boolean;

@@ -188,18 +188,11 @@ class ComposeBox extends React.Component {
 				<div style={{ position: "relative" }}>
 					{multiCompose ? (
 						<CodemarkForm
-							channelStreams={this.props.channelStreams}
-							directMessageStreams={this.props.directMessageStreams}
-							collapseForm={() => this.props.setMultiCompose("collapse")}
 							onClickClose={this.handleClickDismissMultiCompose}
 							streamId={this.props.streamId}
 							onSubmit={this.submitCodemarkPost}
-							renderMessageInput={this.renderMessageInput}
-							teammates={this.props.teammates}
 							collapsed={false}
-							openCodemarkForm={this.openMultiCompose}
 							placeholder={this.props.placeholder}
-							currentUserId={this.props.currentUserId}
 							editingCodemark={this.props.editingCodemark}
 							commentType={this.props.commentType}
 							codeBlock={this.props.codeBlock}

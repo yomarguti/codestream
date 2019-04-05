@@ -485,18 +485,6 @@ export const changeStreamMuteState = (streamId: string, mute: boolean) => async 
 	}
 };
 
-export const editCodemark = (codemarkId: string, attributes: {}) => async dispatch => {
-	try {
-		const response = await HostApi.instance.send(UpdateCodemarkRequestType, {
-			codemarkId,
-			...attributes
-		});
-		dispatch(updateCodemarks([response.codemark]));
-	} catch (error) {
-		logError(`failed to update codemark: ${error}`, { codemarkId });
-	}
-};
-
 export const fetchCodemarks = () => async dispatch => {
 	try {
 		const response = await HostApi.instance.send(FetchCodemarksRequestType, {});
@@ -607,7 +595,7 @@ export const createProviderCard = async (attributes, codemark) => {
 				break;
 			}
 
-			default: 
+			default:
 				return undefined;
 		}
 		return response;
