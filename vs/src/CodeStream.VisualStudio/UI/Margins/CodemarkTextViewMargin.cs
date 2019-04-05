@@ -22,9 +22,11 @@ using System.Windows.Media;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
-    internal sealed class CodemarkTextViewMargin : Canvas, ICodeStreamWpfTextViewMargin
+	internal class CodemarkTextViewMarginDummy { }
+
+	internal sealed class CodemarkTextViewMargin : Canvas, ICodeStreamWpfTextViewMargin
     {
-        private static readonly ILogger Log = LogManager.ForContext<CodemarkTextViewMargin>();
+        private static readonly ILogger Log = LogManager.ForContext<CodemarkTextViewMarginDummy>();
         private static readonly int DefaultMarginWidth = 20;
 
         public static readonly DependencyProperty ZoomProperty =
@@ -73,9 +75,7 @@ namespace CodeStream.VisualStudio.UI.Margins
             ISessionService sessionService,
             IWpfTextView textView,
             ITextDocument textDocument)
-        {
-            Log.Verbose("ctor");
-
+        {          
             _viewTagAggregatorFactoryService = viewTagAggregatorFactoryService;
             _glyphFactoryProviders = glyphFactoryProviders;
             _wpfTextViewHost = wpfTextViewHost;

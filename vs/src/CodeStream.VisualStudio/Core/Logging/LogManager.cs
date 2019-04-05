@@ -1,4 +1,6 @@
 ﻿using CodeStream.VisualStudio.Core.Logging.Sanitizer;
+using CodeStream.VisualStudio.Services;
+using Microsoft.VisualStudio.Shell;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
@@ -8,9 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
-using CodeStream.VisualStudio.Services;
-using Microsoft.VisualStudio.Shell;
-
+using System.Threading;
 
 namespace CodeStream.VisualStudio.Core.Logging {
 	public static class LogManager {
@@ -79,11 +79,41 @@ namespace CodeStream.VisualStudio.Core.Logging {
 			}
 		}
 
-		static Lazy<ILogger> Logger { get; } = new Lazy<ILogger>(CreateLogger, false);
+		static Lazy<ILogger> Logger { get; } = new Lazy<ILogger>(() => {
+			try {
+				return CreateLogger();
+			}
+			catch (Exception ex) {
+#if DEBUG
+				System.Diagnostics.Debugger.Break();
+#endif
+				return new EmptyLogger();
+			}
+		}, LazyThreadSafetyMode.ExecutionAndPublication);
 
 		[SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
-		public static ILogger ForContext<T>() => ForContext(typeof(T));
+		public static ILogger ForContext<T>() {
+			try {
+				return ForContext(typeof(T));
+			}
+			catch (Exception ex) {
+#if DEBUG
+				System.Diagnostics.Debugger.Break();
+#endif
+				return new EmptyLogger();
+			}
+		}
 
-		public static ILogger ForContext(Type type) => Logger.Value.ForContext(type).ForContext("ShortSourceContext", type.Name);
+		public static ILogger ForContext(Type type) {
+			try {
+				return Logger.Value.ForContext(type).ForContext("ShortSourceContext", type.Name);
+			}
+			catch (Exception ex) {
+#if DEBUG
+				System.Diagnostics.Debugger.Break();
+#endif
+				return new EmptyLogger();
+			}
+		}
 	}
 }

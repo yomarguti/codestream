@@ -15,9 +15,11 @@ using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio.UI.SuggestedActions
 {
-    internal class CodemarkSuggestedActionsSource : ISuggestedActionsSource
+	internal class CodemarkSuggestedActionsSourceDummy { }
+
+	internal class CodemarkSuggestedActionsSource : ISuggestedActionsSource
     {
-        private static readonly ILogger Log = LogManager.ForContext<CodemarkSuggestedActionsSource>();
+        private static readonly ILogger Log = LogManager.ForContext<CodemarkSuggestedActionsSourceDummy>();
         
         private readonly CodemarkSuggestedActionsSourceProvider _actionsSourceProvider;
         private readonly ITextBuffer _textBuffer;
@@ -29,8 +31,6 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions
             ITextBuffer textBuffer,
             ITextDocument textDocument)
         {
-            Log.Verbose("ctor");
-
             _actionsSourceProvider = actionsSourceProvider;
             _textBuffer = textBuffer;
             _textView = textView;
