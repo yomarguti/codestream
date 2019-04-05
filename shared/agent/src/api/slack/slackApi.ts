@@ -49,6 +49,7 @@ import {
 	MuteStreamRequest,
 	MuteStreamResponse,
 	OpenStreamRequest,
+	PinReplyToCodemarkRequest,
 	ReactToPostRequest,
 	RenameStreamRequest,
 	SetCodemarkPinnedRequest,
@@ -498,6 +499,11 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	setCodemarkPinned(request: SetCodemarkPinnedRequest) {
 		return this._codestream.setCodemarkPinned(request);
+	}
+
+	@log()
+	pinReplyToCodemark(request: PinReplyToCodemarkRequest) {
+		return this._codestream.pinReplyToCodemark(request);
 	}
 
 	@log()

@@ -43,6 +43,7 @@ export interface CSCodemark extends CSEntity {
 	text: string;
 	numReplies: number;
 	pinned: boolean;
+	pinnnedReplies?: string[];
 }
 
 export interface CSMarkerIdentifier {

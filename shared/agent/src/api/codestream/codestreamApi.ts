@@ -46,6 +46,7 @@ import {
 	MarkStreamReadRequest,
 	MuteStreamRequest,
 	OpenStreamRequest,
+	PinReplyToCodemarkRequest,
 	ReactToPostRequest,
 	RenameStreamRequest,
 	SetCodemarkPinnedRequest,
@@ -110,6 +111,8 @@ import {
 	CSMarkPostUnreadResponse,
 	CSMe,
 	CSMePreferences,
+	CSPinReplyToCodemarkRequest,
+	CSPinReplyToCodemarkResponse,
 	CSPost,
 	CSReactions,
 	CSReactToPostResponse,
@@ -558,6 +561,15 @@ export class CodeStreamApiProvider implements ApiProvider {
 	setCodemarkPinned(request: SetCodemarkPinnedRequest) {
 		return this.put<CSSetCodemarkPinnedRequest, CSSetCodemarkPinnedResponse>(
 			`${request.value ? "/pin" : "/unpin"}/${request.codemarkId}`,
+			request,
+			this._token
+		);
+	}
+
+	@log()
+	pinReplyToCodemark(request: PinReplyToCodemarkRequest) {
+		return this.put<CSPinReplyToCodemarkRequest, CSPinReplyToCodemarkResponse>(
+			request.value ? "/pin-post" : "/unpin-post",
 			request,
 			this._token
 		);

@@ -170,3 +170,18 @@ export const GetCodemarkSha1RequestType = new RequestType<
 	void,
 	void
 >("codestream/codemark/sha1");
+
+export interface PinReplyToCodemarkRequest {
+	codemarkId: string;
+	postId: string;
+	value: boolean;
+}
+export interface PinReplyToCodemarkResponse {
+	codemark: CodemarkPlus;
+}
+export const PinReplyToCodemarkRequestType = new RequestType<
+	PinReplyToCodemarkRequest,
+	PinReplyToCodemarkResponse,
+	void,
+	void
+>("codestream/codemark/pinReply");

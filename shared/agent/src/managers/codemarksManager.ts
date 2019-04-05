@@ -18,6 +18,9 @@ import {
 	GetCodemarkSha1Request,
 	GetCodemarkSha1RequestType,
 	GetCodemarkSha1Response,
+	PinReplyToCodemarkRequest,
+	PinReplyToCodemarkRequestType,
+	PinReplyToCodemarkResponse,
 	SetCodemarkPinnedRequest,
 	SetCodemarkPinnedRequestType,
 	SetCodemarkPinnedResponse,
@@ -177,6 +180,11 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 	@lspHandler(SetCodemarkPinnedRequestType)
 	setPinned(request: SetCodemarkPinnedRequest): Promise<SetCodemarkPinnedResponse> {
 		return this.session.api.setCodemarkPinned(request);
+	}
+
+	@lspHandler(PinReplyToCodemarkRequestType)
+	pinReply(request: PinReplyToCodemarkRequest): Promise<PinReplyToCodemarkResponse> {
+		return this.session.api.pinReplyToCodemark(request);
 	}
 
 	@lspHandler(SetCodemarkStatusRequestType)

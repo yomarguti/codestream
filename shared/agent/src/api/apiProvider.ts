@@ -82,6 +82,8 @@ import {
 	MuteStreamResponse,
 	OpenStreamRequest,
 	OpenStreamResponse,
+	PinReplyToCodemarkRequest,
+	PinReplyToCodemarkResponse,
 	ReactToPostRequest,
 	ReactToPostResponse,
 	RenameStreamRequest,
@@ -263,6 +265,7 @@ export interface ApiProvider {
 	fetchCodemarks(request: FetchCodemarksRequest): Promise<FetchCodemarksResponse>;
 	getCodemark(request: GetCodemarkRequest): Promise<GetCodemarkResponse>;
 	setCodemarkPinned(request: SetCodemarkPinnedRequest): Promise<SetCodemarkPinnedResponse>;
+	pinReplyToCodemark(request: PinReplyToCodemarkRequest): Promise<PinReplyToCodemarkResponse>;
 	setCodemarkStatus(request: SetCodemarkStatusRequest): Promise<SetCodemarkStatusResponse>;
 	updateCodemark(request: UpdateCodemarkRequest): Promise<UpdateCodemarkResponse>;
 

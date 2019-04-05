@@ -24,6 +24,7 @@ import {
 export * from "./api.protocol.models";
 
 import { ThirdPartyProviderConfig } from "./agent.protocol";
+import { CodemarkPlus } from "./agent.protocol.codemarks";
 
 export enum ApiErrors {
 	InvalidCredentials = "INVALID_CREDENTIALS",
@@ -231,6 +232,16 @@ export interface CSMarkPostUnreadResponse {}
 export interface CSSetCodemarkPinnedRequest {}
 
 export interface CSSetCodemarkPinnedResponse {}
+
+export interface CSPinReplyToCodemarkRequest {
+	codemarkId: string;
+	postId: string;
+	value: boolean;
+}
+
+export interface CSPinReplyToCodemarkResponse {
+	codemark: CSCodemark;
+}
 
 export interface CSFindRepoResponse {
 	repo?: CSRepository;
