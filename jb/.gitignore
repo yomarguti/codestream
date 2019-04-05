@@ -3,6 +3,7 @@ license.jar
 .idea/libraries
 .idea/shelf
 .idea/workspace.xml
+.idea/codestream.xml
 src/main/resources/webview
 src/main/resources/agent
 src/protocols/
