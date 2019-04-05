@@ -8,15 +8,11 @@ namespace CodeStream.VisualStudio.UnitTests.Stubs
     public class OptionsDialogPageStub : IOptionsDialogPage
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        public string Email { get; set; }
-        public bool ShowMarkers { get; set; }
-        public bool ShowAvatars { get; set; }
-        public bool MuteAll { get; set; }
+        public string Email { get; set; }        
+        public bool ShowAvatars { get; set; }        
         public string ServerUrl { get; set; }
         public string WebAppUrl { get; set; }
         public string Team { get; set; }
-        public bool ShowFeedbackSmiley { get; set; }
-        public bool ViewCodemarksInline { get; set; }
         public void SaveSettingsToStorage() { }
         public void LoadSettingsFromStorage() { }
         public TraceLevel TraceLevel { get; set; }

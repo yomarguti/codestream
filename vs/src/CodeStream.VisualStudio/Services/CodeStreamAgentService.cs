@@ -10,18 +10,17 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Serilog;
-using Serilog.Events;
 using StreamJsonRpc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using CodeStream.VisualStudio.UI.Settings;
 using Task = System.Threading.Tasks.Task;
 using TextDocumentIdentifier = CodeStream.VisualStudio.Models.TextDocumentIdentifier;
+#if DEBUG
 using TraceLevel = CodeStream.VisualStudio.Core.Logging.TraceLevel;
-
+#endif
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
@@ -284,14 +283,8 @@ namespace CodeStream.VisualStudio.Services {
 						Email = _settingsService.Email,
 						Team = _settingsService.Team,
 						ShowAvatars = _settingsService.ShowAvatars,
-						MuteAll = _settingsService.MuteAll,
-
-						AutoHideMarkers = _settingsService.AutoHideMarkers,
-						ShowMarkerGlyphs = _settingsService.ShowMarkerGlyphs,
-						ShowFeedbackSmiley = _settingsService.ShowFeedbackSmiley,
-						ViewCodemarksInline = _settingsService.ViewCodemarksInline,
-
 						ServerUrl = _settingsService.ServerUrl,
+						TraceLevel= _settingsService.TraceLevel
 					},
 					Env = _settingsService.GetEnvironmentName(),
 					Version = _settingsService.GetEnvironmentVersionFormatted()
@@ -313,10 +306,9 @@ namespace CodeStream.VisualStudio.Services {
 
 			EditorContext editorContext = null;
 			if (activeTextView != null) {
-				editorContext = new EditorContext {
-					//Scm
+				editorContext = new EditorContext {					
 					ActiveFile = activeTextView.FilePath,
-					//LastActiveFile
+					//LastActiveFile?
 					TextEditorVisibleRanges = activeTextView.TextView?.ToVisibleRanges(),
 					TextEditorUri = activeTextView.Uri.ToString(),
 					TextEditorSelections = editorState.ToEditorSelections(),
@@ -346,15 +338,9 @@ namespace CodeStream.VisualStudio.Services {
 				Configs = new Configs {
 					Email = state["email"].ToString(),
 					Team = settings.Options.Team,
-					ShowAvatars = settings.Options.ShowAvatars,
-					MuteAll = settings.Options.MuteAll,
-
-					AutoHideMarkers = settings.Options.AutoHideMarkers,
-					ShowMarkerGlyphs = settings.Options.ShowMarkerGlyphs,
-					ShowFeedbackSmiley = settings.Options.ShowFeedbackSmiley,
-					ViewCodemarksInline = settings.Options.ViewCodemarksInline,
-
+					ShowAvatars = settings.Options.ShowAvatars,					
 					ServerUrl = settings.Options.ServerUrl,
+					TraceLevel = _settingsService.TraceLevel
 				},
 				Context = webviewContext,
 				EditorContext = editorContext,

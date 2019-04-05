@@ -302,7 +302,7 @@ namespace CodeStream.VisualStudio.UI {
 			}
 
 			// don't trigger for changes that don't result in lines being added or removed
-			if (_settingsService.ViewCodemarksInline && (e.VerticalTranslation || e.TranslatedLines.Any())) {
+			if (_sessionService.IsCodemarksForFileVisible && (e.VerticalTranslation || e.TranslatedLines.Any())) {
 				var toolWindowIsVisible = ServiceLocator.Get<SToolWindowProvider, IToolWindowProvider>()
 					?.IsVisible(Guids.WebViewToolWindowGuid);
 				if (toolWindowIsVisible == true) {

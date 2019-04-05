@@ -14,14 +14,11 @@ namespace CodeStream.VisualStudio.UI.Settings
         string Email { get; set; }
         string Team { get; set; }
         bool ShowAvatars { get; set; }
-        bool MuteAll { get; set; }
         bool AutoSignIn { get; set; }
 
         bool AutoHideMarkers { get; set; }
         //bool ShowMarkerCodeLens { get; set; }
-        bool ShowMarkerGlyphs { get; set; }
-        bool ShowFeedbackSmiley { get; set; }
-        bool ViewCodemarksInline { get; set; }
+        bool ShowMarkerGlyphs { get; set; }               
 
         string ServerUrl { get; set; }
         string WebAppUrl { get; set; }
@@ -43,14 +40,12 @@ namespace CodeStream.VisualStudio.UI.Settings
     {
         private string _email;
         private bool _autoHideMarkers = true;
-        private bool _showFeedbackSmiley = true;
-        
         //// not supported yet
         //private bool _showMarkerCodeLens = false;
         private bool _showMarkerGlyphs = true;
          
         private bool _showAvatars = true;
-        private bool _muteAll = false;
+        
         private TraceLevel _traceLevel;
         private bool _viewCodemarksInline = true;
         private string _team;
@@ -288,19 +283,6 @@ namespace CodeStream.VisualStudio.UI.Settings
         }
 
         [Category("UI")]
-        [DisplayName("Show Feedback Smiley")]
-        [Description("Specifies whether to show a feedback button in the CodeStream panel")]
-        public bool ShowFeedbackSmiley
-        {
-            get => _showFeedbackSmiley;
-            set
-            {
-                _showFeedbackSmiley = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        [Category("UI")]
         [DisplayName("Show Avatars")]
         [Description("Specifies whether to show avatars")]
         public bool ShowAvatars
@@ -313,40 +295,6 @@ namespace CodeStream.VisualStudio.UI.Settings
                     _showAvatars = value;
                     NotifyPropertyChanged();
                 }
-            }
-        }
-
-        [Category("UI")]
-        [DisplayName("View Codemarks inline")]
-        [Description("Specifies whether to display Codemarks inline next to the code they refer to. The alternative is a list view.")]
-        public bool ViewCodemarksInline
-        {
-            get => _viewCodemarksInline;
-            set
-            {
-                // NOTE: something off here -- state not working right in the webview...
-                //if (_viewCodemarksInline != value)
-                //{
-                    _viewCodemarksInline = value;
-                    NotifyPropertyChanged();
-                //}
-            }
-        }
-
-        [Category("UI")]
-        [DisplayName("Mute All")]
-        [Description("Specifies whether to indicate when new messages arrive")]
-        public bool MuteAll
-        {
-            get => _muteAll;
-            set
-            {
-                // NOTE: something off here -- state not working right in the webview...
-                //if (_muteAll != value)
-                //{
-                    _muteAll = value;
-                    NotifyPropertyChanged();
-                //}
             }
         }
 

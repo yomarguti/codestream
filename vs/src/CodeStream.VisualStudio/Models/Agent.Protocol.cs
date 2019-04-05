@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using System.Collections.Generic;
+using CodeStream.VisualStudio.Core.Logging;
 
 namespace CodeStream.VisualStudio.Models
 {
@@ -80,14 +81,11 @@ namespace CodeStream.VisualStudio.Models
         public string ServerUrl { get; set; }
         public string Email { get; set; }
         public bool ShowAvatars { get; set; }
-        public bool MuteAll { get; set; }
         public string Team { get; set; }
-        public bool AutoHideMarkers { get; set; }
-        //public bool ShowMarkerCodeLens { get; set; }
+        public bool AutoHideMarkers { get; set; }        
         public bool ShowMarkerGlyphs { get; set; }
-        public bool ShowFeedbackSmiley { get; set; }
-        public bool ViewCodemarksInline { get; set; }
-    }
+		public TraceLevel TraceLevel { get; set; }
+	}
 
     public class BootstrapPartialRequest
     {

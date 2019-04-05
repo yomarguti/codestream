@@ -235,31 +235,23 @@ namespace CodeStream.VisualStudio
 
                                             using (_ipc.CreateScope(message))
                                             {
-                                                // NOTE: we're not using the controller here. changing these properties
-                                                // triggers the OnPropertyChanged, which then uses the ConfigurationController
-                                                // for added handling
+												// NOTE: we're not using the controller here. changing these properties
+												// triggers the OnPropertyChanged, which then uses the ConfigurationController
+												// for added handling
 
-                                                using (var scope = SettingsScope.Create(_settingsService))
-                                                {
-                                                    var @params = message.Params.ToObject<UpdateConfigurationRequest>();
-                                                    if (@params.Name == "showMarkerGlyphs")
-                                                    {
-                                                        scope.SettingsService.ShowMarkerGlyphs = @params.Value.AsBool();
-                                                    }
-                                                    else if (@params.Name == "muteAll")
-                                                    {
-                                                        scope.SettingsService.MuteAll = @params.Value.AsBool();
-                                                    }
-                                                    else if (@params.Name == "viewCodemarksInline")
-                                                    {
-                                                        scope.SettingsService.ViewCodemarksInline = @params.Value.AsBool();
-                                                    }
-                                                    else if (@params.Name == "showAvatars")
-                                                    {
-                                                        scope.SettingsService.ShowAvatars = @params.Value.AsBool();
-                                                    }
-                                                }
-                                            }
+												// Webview no longer sends these updates -- keeping for reference
+#if DEBUG
+												Log.Warning(message.ToJson());
+#endif
+												//using (var scope = SettingsScope.Create(_settingsService))
+												//{
+												//    var @params = message.Params.ToObject<UpdateConfigurationRequest>();
+												//    if (@params.Name == "showMarkerGlyphs")
+												//    {
+												//        scope.SettingsService.ShowMarkerGlyphs = @params.Value.AsBool();
+												//    }													
+												//}
+											}
                                             break;
                                         }
                                     case LiveShareStartSessionRequestType.MethodName:
