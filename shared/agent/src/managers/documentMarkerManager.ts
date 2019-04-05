@@ -11,13 +11,16 @@ import {
 	CreateDocumentMarkerPermalinkRequestType,
 	CreateDocumentMarkerPermalinkResponse,
 	DidChangeDocumentMarkersNotificationType,
-	DocumentFromMarkerRequest,
-	DocumentFromMarkerRequestType,
-	DocumentFromMarkerResponse,
 	DocumentMarker,
-	DocumentMarkersRequest,
-	DocumentMarkersRequestType,
-	DocumentMarkersResponse,
+	FetchDocumentMarkersRequest,
+	FetchDocumentMarkersRequestType,
+	FetchDocumentMarkersResponse,
+	GetDocumentFromKeyBindingRequest,
+	GetDocumentFromKeyBindingRequestType,
+	GetDocumentFromKeyBindingResponse,
+	GetDocumentFromMarkerRequest,
+	GetDocumentFromMarkerRequestType,
+	GetDocumentFromMarkerResponse,
 	MarkerNotLocated,
 	MarkerNotLocatedReason
 } from "../protocol/agent.protocol";
@@ -190,10 +193,10 @@ export class DocumentMarkerManager {
 		return { linkUrl: response.permalink! };
 	}
 
-	@lspHandler(DocumentMarkersRequestType)
+	@lspHandler(FetchDocumentMarkersRequestType)
 	async get({
 		textDocument: documentId
-	}: DocumentMarkersRequest): Promise<DocumentMarkersResponse> {
+	}: FetchDocumentMarkersRequest): Promise<FetchDocumentMarkersResponse> {
 		const { codemarks, files, markers, markerLocations, users } = Container.instance();
 
 		try {
@@ -300,16 +303,42 @@ export class DocumentMarkerManager {
 		}
 	}
 
-	@lspHandler(DocumentFromMarkerRequestType)
+	@lspHandler(GetDocumentFromKeyBindingRequestType)
+	async getDocumentFromKeyBinding({
+		key
+	}: GetDocumentFromKeyBindingRequest): Promise<GetDocumentFromKeyBindingResponse | undefined> {
+		const { codemarks, users } = Container.instance();
+
+		const { preferences } = await users.getPreferences();
+		const codemarkKeybindings: { [key: string]: string } = preferences.codemarkKeybindings || {};
+
+		const codemarkId = codemarkKeybindings[key];
+		if (codemarkId == null || codemarkId.length === 0) return undefined;
+
+		const codemark = await codemarks.getEnrichedCodemarkById(codemarkId);
+		if (codemark == null || codemark.markers == null || codemark.markers.length === 0) {
+			return undefined;
+		}
+
+		const [marker] = codemark.markers;
+
+		return this.getDocumentFromMarker({
+			markerId: marker.id,
+			file: marker.file,
+			repoId: marker.repoId
+		});
+	}
+
+	@lspHandler(GetDocumentFromMarkerRequestType)
 	async getDocumentFromMarker({
+		markerId,
 		repoId,
-		file,
-		markerId
-	}: DocumentFromMarkerRequest): Promise<DocumentFromMarkerResponse | undefined> {
+		file
+	}: GetDocumentFromMarkerRequest): Promise<GetDocumentFromMarkerResponse | undefined> {
 		const { git, markers, markerLocations } = Container.instance();
 
+		const marker = await markers.getById(markerId);
 		if (repoId == null || file == null) {
-			const marker = await markers.getById(markerId);
 			file = marker.file;
 			repoId = marker.repoId;
 		}
@@ -320,7 +349,6 @@ export class DocumentMarkerManager {
 		const filePath = path.join(repo.path, file);
 		const documentUri = URI.file(filePath).toString();
 
-		const marker = await markers.getById(markerId);
 		const result = await markerLocations.getCurrentLocations(documentUri);
 		const location = result.locations[markerId];
 		const range = location ? MarkerLocation.toRange(location) : Range.create(0, 0, 0, 0);
@@ -328,8 +356,7 @@ export class DocumentMarkerManager {
 		return {
 			textDocument: { uri: documentUri },
 			marker: marker,
-			range: range,
-			revision: undefined
+			range: range
 		};
 	}
 }

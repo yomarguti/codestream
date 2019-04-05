@@ -21,10 +21,6 @@ export const CreateDocumentMarkerPermalinkRequestType = new RequestType<
 	void
 >("codestream/textDocument/markers/create/link");
 
-export interface DocumentMarkersRequest {
-	textDocument: TextDocumentIdentifier;
-}
-
 export interface DocumentMarker extends CSMarker {
 	codemark: CodemarkPlus;
 	creatorName: string;
@@ -45,14 +41,48 @@ export interface MarkerNotLocated extends CSMarker {
 	notLocatedDetails?: string;
 }
 
-export interface DocumentMarkersResponse {
+export interface FetchDocumentMarkersRequest {
+	textDocument: TextDocumentIdentifier;
+}
+export interface FetchDocumentMarkersResponse {
 	markers: DocumentMarker[];
 	markersNotLocated: MarkerNotLocated[];
 }
-
-export const DocumentMarkersRequestType = new RequestType<
-	DocumentMarkersRequest,
-	DocumentMarkersResponse | undefined,
+export const FetchDocumentMarkersRequestType = new RequestType<
+	FetchDocumentMarkersRequest,
+	FetchDocumentMarkersResponse | undefined,
 	void,
 	void
 >("codestream/textDocument/markers");
+
+export interface GetDocumentFromKeyBindingRequest {
+	key: number;
+}
+export interface GetDocumentFromKeyBindingResponse {
+	textDocument: TextDocumentIdentifier;
+	range: Range;
+	marker: CSMarker;
+}
+export const GetDocumentFromKeyBindingRequestType = new RequestType<
+	GetDocumentFromKeyBindingRequest,
+	GetDocumentFromKeyBindingResponse | undefined,
+	void,
+	void
+>("codestream/textDocument/fromKey");
+
+export interface GetDocumentFromMarkerRequest {
+	markerId: string;
+	file?: string;
+	repoId?: string;
+}
+export interface GetDocumentFromMarkerResponse {
+	textDocument: TextDocumentIdentifier;
+	range: Range;
+	marker: CSMarker;
+}
+export const GetDocumentFromMarkerRequestType = new RequestType<
+	GetDocumentFromMarkerRequest,
+	GetDocumentFromMarkerResponse | undefined,
+	void,
+	void
+>("codestream/textDocument/fromMarker");

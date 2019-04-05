@@ -35,7 +35,6 @@ import {
 	DidChangeDataNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
 	DidLogoutNotificationType,
-	DocumentLatestRevisionRequestType,
 	FetchMarkerLocationsRequestType,
 	LogoutReason,
 	ThirdPartyProviderConfig
@@ -247,13 +246,6 @@ export class CodeStreamSession {
 				};
 			}
 		);
-
-		this.agent.registerHandler(DocumentLatestRevisionRequestType, async e => {
-			const revision = await Container.instance().git.getFileCurrentRevision(
-				URI.parse(e.textDocument.uri)
-			);
-			return { revision: revision };
-		});
 
 		this.agent.registerHandler(FetchMarkerLocationsRequestType, r =>
 			this.api.fetchMarkerLocations(r)

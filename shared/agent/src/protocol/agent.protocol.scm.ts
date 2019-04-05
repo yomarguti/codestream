@@ -4,7 +4,6 @@ import { Range, RequestType } from "vscode-languageserver-protocol";
 export interface GetFileScmInfoRequest {
 	uri: string;
 }
-
 export interface GetFileScmInfoResponse {
 	uri: string;
 	scm?: {
@@ -15,7 +14,6 @@ export interface GetFileScmInfoResponse {
 	};
 	error?: string;
 }
-
 export const GetFileScmInfoRequestType = new RequestType<
 	GetFileScmInfoRequest,
 	GetFileScmInfoResponse,
@@ -30,7 +28,6 @@ export interface GetRangeScmInfoRequest {
 	contents?: string;
 	skipBlame?: boolean;
 }
-
 export interface GetRangeScmInfoResponse {
 	uri: string;
 	range: Range;
@@ -44,7 +41,6 @@ export interface GetRangeScmInfoResponse {
 	};
 	error?: string;
 }
-
 export const GetRangeScmInfoRequestType = new RequestType<
 	GetRangeScmInfoRequest,
 	GetRangeScmInfoResponse,

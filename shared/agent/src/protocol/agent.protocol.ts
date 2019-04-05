@@ -145,41 +145,6 @@ export const BootstrapRequestType = new RequestType<
 	void
 >("codestream/bootstrap");
 
-export interface DocumentFromMarkerRequest {
-	file?: string;
-	repoId?: string;
-	markerId: string;
-}
-
-export interface DocumentFromMarkerResponse {
-	textDocument: TextDocumentIdentifier;
-	marker: CSMarker;
-	range: Range;
-	revision?: string;
-}
-
-export const DocumentFromMarkerRequestType = new RequestType<
-	DocumentFromMarkerRequest,
-	DocumentFromMarkerResponse | undefined,
-	void,
-	void
->("codestream/textDocument/fromMarker");
-
-export interface DocumentLatestRevisionRequest {
-	textDocument: TextDocumentIdentifier;
-}
-
-export interface DocumentLatestRevisionResponse {
-	revision?: string;
-}
-
-export const DocumentLatestRevisionRequestType = new RequestType<
-	DocumentLatestRevisionRequest,
-	DocumentLatestRevisionResponse,
-	void,
-	void
->("codestream/textDocument/scm/revision");
-
 export enum ReportingMessageType {
 	Error = "error",
 	Warning = "warning",
