@@ -88,12 +88,13 @@ export default class GitHubCardControls extends React.Component<Props, State> {
 		const { provider } = this.props;
 		const boardItems = this.props.boards.map(board => ({
 			label: board.name,
+			key: board.id,
 			action: board
 		}));
 		const providerDisplay = PROVIDER_MAPPINGS[provider.name];
-		const displayName = provider.isEnterprise ?
-			`${providerDisplay.displayName} - ${provider.host}` :
-			providerDisplay.displayName;
+		const displayName = provider.isEnterprise
+			? `${providerDisplay.displayName} - ${provider.host}`
+			: providerDisplay.displayName;
 
 		return (
 			<div className="checkbox-row" onClick={this.toggleCrossPostIssue}>

@@ -92,19 +92,21 @@ export default class AsanaCardControls extends React.Component<Props, State> {
 		const { provider } = this.props;
 		const boardItems = this.props.boards.map(board => ({
 			label: board.name,
+			key: board.id,
 			action: board
 		}));
 		const listItems = board
 			? board.lists.map(list => ({
 					label: list.name,
+					key: list.id,
 					action: list
 			  }))
 			: [];
 		const providerDisplay = PROVIDER_MAPPINGS[provider.name];
-		const displayName = provider.isEnterprise ?
-			`${providerDisplay.displayName} - ${provider.host}` :
-			providerDisplay.displayName;
-	
+		const displayName = provider.isEnterprise
+			? `${providerDisplay.displayName} - ${provider.host}`
+			: providerDisplay.displayName;
+
 		return (
 			<div className="checkbox-row" onClick={this.toggleCrossPostIssue}>
 				<input type="checkbox" checked={this.state.isEnabled} />
