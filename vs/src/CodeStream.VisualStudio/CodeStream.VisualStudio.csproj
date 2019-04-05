@@ -190,6 +190,7 @@
     <Compile Include="Services\ThemeManager.cs" />
     <Compile Include="Services\WebviewIpcExtensions.cs" />
     <Compile Include="Services\WebviewIpcScope.cs" />
+    <Compile Include="Services\WebviewUserSettings.cs" />
     <Compile Include="UI\ActiveTextEditorExtensions.cs" />
     <Compile Include="UI\Adornments\HighlightAdornmentManager.cs" />
     <Compile Include="UI\DocumentMarkerManager.cs" />

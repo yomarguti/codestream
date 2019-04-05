@@ -324,11 +324,11 @@ namespace CodeStream.VisualStudio.Services {
 					Metrics = ThemeManager.CreateEditorMetrics(activeTextView.TextView),
 				};
 			}
-
+			var teamId = state["teamId"].ToString();
 			var userSettings = ServiceLocator.Get<SUserSettingsService, IUserSettingsService>();
 			WebviewContext webviewContext;
 			
-			if (userSettings != null  && userSettings.TryGetValue(UserSettingsKeys.WebviewContext, out WebviewContext context)) {
+			if (userSettings != null  && userSettings.TryGetWebviewContext(teamId, out WebviewContext context)) {
 				webviewContext = context;
 			}
 			else {
@@ -337,7 +337,7 @@ namespace CodeStream.VisualStudio.Services {
 				};
 			}
 
-			webviewContext.CurrentTeamId = state["teamId"].ToString();
+			webviewContext.CurrentTeamId = teamId;
 			if (!webviewContext.PanelStack.AnySafe()) {
 				webviewContext.PanelStack = new List<string> { WebviewPanels.CodemarksForFile };
 			}

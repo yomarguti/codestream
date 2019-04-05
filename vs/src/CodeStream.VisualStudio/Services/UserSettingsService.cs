@@ -12,8 +12,8 @@ namespace CodeStream.VisualStudio.Services {
 	public interface SUserSettingsService { }
 
 	public interface IUserSettingsService {
-		bool TryGetValue<T>(string key, out T val);
-		void Save(string key, object obj);
+		bool TryGetValue<T>(string bucketName, string dataKey, out T val);
+		void Save(string bucketName, string dataKey, object obj);
 	}
 
 	/// <summary>
@@ -31,20 +31,20 @@ namespace CodeStream.VisualStudio.Services {
 		private const string CollectionName = "codestream";
 		private const string PropertyFormat = "codestream.{0}";
 
-		public bool TryGetValue<T>(string key, out T val) {
-			if (key.IsNullOrWhiteSpace()) {
+		public bool TryGetValue<T>(string bucketName, string dataKey, out T val) {
+			if (dataKey.IsNullOrWhiteSpace()) {
 				val = default(T);
 				return false;
 			}
 			try {
 				System.Windows.Threading.Dispatcher.CurrentDispatcher.VerifyAccess();
 
-				var settings = Load();
+				var settings = Load(bucketName);
 				if (settings == null || settings.Data == null) {
 					val = default(T);
 					return false;
 				}
-				if (settings.Data.TryGetValue(key.ToLowerInvariant(), out object value)) {
+				if (settings.Data.TryGetValue(dataKey.ToLowerInvariant(), out object value)) {
 
 					if (value != null) {
 						var jObject = value as JObject;
@@ -61,7 +61,7 @@ namespace CodeStream.VisualStudio.Services {
 				return false;
 			}
 			catch (Exception ex) {
-				Log.Warning($"{nameof(TryGetValue)} Key={key}");
+				Log.Warning($"{nameof(TryGetValue)} Key={dataKey}");
 				val = default(T);
 				return false;
 			}
@@ -69,7 +69,7 @@ namespace CodeStream.VisualStudio.Services {
 			return false;
 		}
 
-		public void Save(string key, object obj) {
+		public void Save(string bucketName, string dataKey, object obj) {
 			string solutionName = null;
 			string propertyName = null;
 			try {
@@ -80,36 +80,39 @@ namespace CodeStream.VisualStudio.Services {
 					Log.Verbose($"{nameof(Save)} No solution name");
 					return;
 				}
+				bucketName = bucketName.Replace("{{solutionName}}", solutionName);
 
-				propertyName = string.Format(PropertyFormat, solutionName).ToLowerInvariant();
-				var loaded = Load();
+				propertyName = string.Format(PropertyFormat, bucketName).ToLowerInvariant();
+				var loaded = Load(bucketName);
 				if (loaded == null) {
 					loaded = new UserSettings { Data = new Dictionary<string, object>() };
 				}
 
-				if (loaded.Data.ContainsKey(key) && obj == null) {
-					loaded.Data.Remove(key);
+				if (loaded.Data.ContainsKey(dataKey) && obj == null) {
+					loaded.Data.Remove(dataKey);
 				}
 				else {
-					loaded.Data[key] = obj;
+					loaded.Data[dataKey] = obj;
 				}
 
 				_settingsProvider.SetString(CollectionName, propertyName, JsonConvert.SerializeObject(loaded));
 				Log.Verbose($"{nameof(Save)} to {CollectionName}:{propertyName}");
 			}
 			catch (Exception ex) {
-				Log.Error(ex, $"{nameof(Save)} Key={key} SolutionName={solutionName} PropertyName={propertyName}");
+				Log.Error(ex, $"{nameof(Save)} Key={dataKey} SolutionName={solutionName} PropertyName={propertyName}");
 			}
 		}
 
-		private UserSettings Load() {
+		private UserSettings Load(string bucketName) {
 			try {
 				System.Windows.Threading.Dispatcher.CurrentDispatcher.VerifyAccess();
 
 				var solutionName = GetSolutionName();
 				if (solutionName.IsNullOrWhiteSpace()) return null;
 
-				if (_settingsProvider.TryGetString(CollectionName, string.Format(PropertyFormat, solutionName),
+				bucketName = bucketName.Replace("{{solutionName}}", solutionName);
+
+				if (_settingsProvider.TryGetString(CollectionName, string.Format(PropertyFormat, bucketName),
 					out string data)) {
 					Log.Verbose($"{nameof(Load)} Loaded={data}");
 					return JsonConvert.DeserializeObject<UserSettings>(data);
