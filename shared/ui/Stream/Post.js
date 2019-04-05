@@ -242,7 +242,9 @@ class Post extends React.Component {
 
 		if (!this.props.showDetails) {
 			const threadLabel =
-				this.props.parentPostId || post.numReplies > 0 ? "View Thread" : "Start a Thread";
+				(post.parentPostId && post.parentPostId !== post.id) || post.numReplies > 0
+					? "View Thread"
+					: "Start a Thread";
 			menuItems.push({ label: threadLabel, action: "make-thread" });
 		}
 		// menuItems.push({ label: "Add Reaction", action: "add-reaction" });
@@ -332,11 +334,18 @@ class Post extends React.Component {
 					)}
 					{codemark && codemark.color && <div className={`label-indicator ${color}-background`} />}
 				</div>
-				{this.props.parentPostId && !this.props.showDetails && (
-					<div className="replying-to">
-						<span>reply to</span> <b>{this.props.parentPostContent.substr(0, 80)}</b>
-					</div>
-				)}
+				{this.props.post.parentPostId &&
+					this.props.post.parentPostId !== this.props.post.id &&
+					!this.props.showDetails && (
+						<div className="replying-to">
+							<span>reply to</span>{" "}
+							<b>
+								{this.props.parentPostContent
+									? this.props.parentPostContent.substr(0, 80)
+									: "a post"}
+							</b>
+						</div>
+					)}
 				{post.creatorId === "codestream" && (
 					<div className="replying-to">
 						<span>only visible to you</span>
@@ -830,7 +839,8 @@ const mapStateToProps = (state, props) => {
 
 	const codemark = (post.pending && post.codemark) || getCodemark(state.codemarks, post.codemarkId);
 
-	const parentPost = getPost(state.posts, props.streamId, props.parentPostId);
+	const parentPost = getPost(state.posts, post.streamId, post.parentPostId);
+
 	let parentPostContent;
 	let parentPostCodemark;
 	if (parentPost) {
