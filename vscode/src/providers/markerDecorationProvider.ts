@@ -459,7 +459,7 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 
 	private async getMarkersCore(uri: Uri) {
 		try {
-			const resp = await Container.agent.markers.fetch(uri);
+			const resp = await Container.agent.documentMarkers.fetch(uri);
 			return resp !== undefined
 				? resp.markers.map(m => new DocMarker(Container.session, m))
 				: emptyArray;

@@ -129,7 +129,7 @@ export class CodemarkCodeLensProvider implements CodeLensProvider, Disposable {
 
 	private async getMarkers(uri: Uri) {
 		try {
-			const response = await Container.agent.markers.fetch(uri);
+			const response = await Container.agent.documentMarkers.fetch(uri);
 			if (response == null) return undefined;
 
 			return response.markers.map(m => new DocMarker(Container.session, m));

@@ -223,25 +223,16 @@ export class WebviewController implements Disposable {
 		});
 	}
 
-	async openCodemark(codemarkIndex: number): Promise<void>;
-	async openCodemark(codemarkId: string): Promise<void>;
 	@log()
-	async openCodemark(codemarkIdOrIndex: string | number): Promise<void> {
+	async openCodemark(codemarkId: string): Promise<void> {
 		if (!this.visible) {
 			await this.show();
 		}
 
 		// TODO: Change this to be a request vs a notification
-		this._webview!.notify(
-			ShowCodemarkNotificationType,
-			typeof codemarkIdOrIndex === "number"
-				? {
-						codemarkIndex: codemarkIdOrIndex
-				  }
-				: {
-						codemarkId: codemarkIdOrIndex
-				  }
-		);
+		this._webview!.notify(ShowCodemarkNotificationType, {
+			codemarkId: codemarkId
+		});
 	}
 
 	@log()

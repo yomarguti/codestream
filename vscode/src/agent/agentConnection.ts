@@ -28,15 +28,12 @@ import {
 	DidChangeVersionCompatibilityNotificationType,
 	DidLogoutNotification,
 	DidLogoutNotificationType,
-	DocumentFromMarkerRequestType,
-	DocumentFromMarkerResponse,
-	DocumentLatestRevisionRequestType,
-	DocumentLatestRevisionResponse,
-	DocumentMarkersRequestType,
 	EditPostRequestType,
 	FetchCodemarksRequestType,
+	FetchDocumentMarkersRequestType,
 	FetchFileStreamsRequestType,
 	FetchMarkerLocationsRequestType,
+	FetchMarkersRequestType,
 	FetchPostRepliesRequestType,
 	FetchPostsRequestType,
 	FetchReposRequestType,
@@ -44,6 +41,11 @@ import {
 	FetchTeamsRequestType,
 	FetchUnreadStreamsRequestType,
 	FetchUsersRequestType,
+	GetDocumentFromKeyBindingRequestType,
+	GetDocumentFromKeyBindingResponse,
+	GetDocumentFromMarkerRequestType,
+	GetDocumentFromMarkerResponse,
+	GetFileScmInfoRequestType,
 	GetFileStreamRequestType,
 	GetFileStreamResponse,
 	GetMarkerRequestType,
@@ -224,25 +226,6 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	@started
-	getDocumentFromMarker(
-		marker: CSMarkerIdentifier
-	): Promise<DocumentFromMarkerResponse | undefined> {
-		Logger.debug(">>>>> getDocumentFromMarker clicked");
-		return this.sendRequest(DocumentFromMarkerRequestType, {
-			repoId: marker.repoId,
-			file: marker.file,
-			markerId: marker.id
-		});
-	}
-
-	@started
-	async getLatestRevision(uri: Uri): Promise<DocumentLatestRevisionResponse> {
-		return this.sendRequest(DocumentLatestRevisionRequestType, {
-			textDocument: { uri: uri.toString() }
-		});
-	}
-
-	@started
 	async reportMessage(type: ReportingMessageType, message: string, extra?: object) {
 		this.sendRequest(ReportMessageRequestType, { source: "extension", type, message, extra });
 	}
@@ -311,45 +294,11 @@ export class CodeStreamAgentConnection implements Disposable {
 		return this.stop();
 	}
 
-	get markers() {
-		return this._markers;
-	}
-
-	private readonly _markers = new class {
-		constructor(private readonly _connection: CodeStreamAgentConnection) {}
-
-		fetch(uri: Uri) {
-			return this._connection.sendRequest(DocumentMarkersRequestType, {
-				textDocument: { uri: uri.toString() }
-			});
-		}
-
-		get(markerId: string) {
-			return this._connection.sendRequest(GetMarkerRequestType, { markerId: markerId });
-		}
-
-		fetchLocations(streamId: string, commitHash: string) {
-			return this._connection.sendRequest(FetchMarkerLocationsRequestType, {
-				streamId: streamId,
-				commitHash: commitHash
-			});
-		}
-	}(this);
-
 	get codemarks() {
 		return this._codemarks;
 	}
-
 	private readonly _codemarks = new class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
-
-		createPermalink(uri: Uri, range: Range, privacy: "public" | "private") {
-			return this._connection.sendRequest(CreateDocumentMarkerPermalinkRequestType, {
-				uri: uri.toString(),
-				range: range,
-				privacy: privacy
-			});
-		}
 
 		fetch() {
 			return this._connection.sendRequest(FetchCodemarksRequestType, {});
@@ -367,10 +316,68 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}(this);
 
+	get documentMarkers() {
+		return this._documentMarkers;
+	}
+	private readonly _documentMarkers = new class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		createPermalink(uri: Uri, range: Range, privacy: "public" | "private") {
+			return this._connection.sendRequest(CreateDocumentMarkerPermalinkRequestType, {
+				uri: uri.toString(),
+				range: range,
+				privacy: privacy
+			});
+		}
+
+		fetch(uri: Uri) {
+			return this._connection.sendRequest(FetchDocumentMarkersRequestType, {
+				textDocument: { uri: uri.toString() }
+			});
+		}
+
+		getDocumentFromKeyBinding(key: number): Promise<GetDocumentFromKeyBindingResponse | undefined> {
+			return this._connection.sendRequest(GetDocumentFromKeyBindingRequestType, {
+				key: key
+			});
+		}
+
+		getDocumentFromMarker(
+			marker: CSMarkerIdentifier
+		): Promise<GetDocumentFromMarkerResponse | undefined> {
+			return this._connection.sendRequest(GetDocumentFromMarkerRequestType, {
+				repoId: marker.repoId,
+				file: marker.file,
+				markerId: marker.id
+			});
+		}
+	}(this);
+
+	get markers() {
+		return this._markers;
+	}
+	private readonly _markers = new class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		fetch(streamId: string) {
+			return this._connection.sendRequest(FetchMarkersRequestType, { streamId: streamId });
+		}
+
+		get(markerId: string) {
+			return this._connection.sendRequest(GetMarkerRequestType, { markerId: markerId });
+		}
+
+		fetchLocations(streamId: string, commitHash: string) {
+			return this._connection.sendRequest(FetchMarkerLocationsRequestType, {
+				streamId: streamId,
+				commitHash: commitHash
+			});
+		}
+	}(this);
+
 	get posts() {
 		return this._posts;
 	}
-
 	private readonly _posts = new class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
@@ -521,7 +528,6 @@ export class CodeStreamAgentConnection implements Disposable {
 	get repos() {
 		return this._repos;
 	}
-
 	private readonly _repos = new class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
@@ -543,10 +549,22 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}(this);
 
+	get scm() {
+		return this._scm;
+	}
+	private readonly _scm = new class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		getFileInfo(uri: Uri) {
+			return this._connection.sendRequest(GetFileScmInfoRequestType, {
+				uri: uri.toString()
+			});
+		}
+	}(this);
+
 	get streams() {
 		return this._streams;
 	}
-
 	private readonly _streams = new class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
@@ -698,7 +716,6 @@ export class CodeStreamAgentConnection implements Disposable {
 	get teams() {
 		return this._teams;
 	}
-
 	private readonly _teams = new class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
@@ -719,7 +736,6 @@ export class CodeStreamAgentConnection implements Disposable {
 	get telemetry() {
 		return this._telemetry;
 	}
-
 	private readonly _telemetry = new class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
@@ -743,7 +759,6 @@ export class CodeStreamAgentConnection implements Disposable {
 	get users() {
 		return this._users;
 	}
-
 	private readonly _users = new class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 

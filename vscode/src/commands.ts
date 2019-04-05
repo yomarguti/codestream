@@ -1,4 +1,5 @@
 import { CodemarkType, CSMarkerIdentifier } from "@codestream/protocols/api";
+import { Editor } from "extensions/editor";
 import * as paths from "path";
 import {
 	commands,
@@ -75,7 +76,7 @@ export class Commands implements Disposable {
 		const editor = await this.openWorkingFileForMarkerCore(args.marker);
 		if (editor === undefined) return false;
 
-		const resp = await Container.agent.getDocumentFromMarker(args.marker);
+		const resp = await Container.agent.documentMarkers.getDocumentFromMarker(args.marker);
 		if (resp === undefined) return false;
 
 		return editor.edit(builder => {
@@ -93,7 +94,7 @@ export class Commands implements Disposable {
 
 	@command("showMarkerDiff", { showErrorMessage: "Unable to open comment" })
 	async showMarkerDiff(args: ShowMarkerDiffCommandArgs): Promise<boolean> {
-		const resp = await Container.agent.getDocumentFromMarker(args.marker);
+		const resp = await Container.agent.documentMarkers.getDocumentFromMarker(args.marker);
 		if (resp === undefined) return false;
 
 		const original = await workspace.openTextDocument(Uri.parse(resp.textDocument.uri));
@@ -168,7 +169,7 @@ export class Commands implements Disposable {
 		const editor = window.activeTextEditor;
 		if (editor === undefined) return;
 
-		const response = await Container.agent.codemarks.createPermalink(
+		const response = await Container.agent.documentMarkers.createPermalink(
 			editor.document.uri,
 			editor.selection,
 			"private"
@@ -221,8 +222,17 @@ export class Commands implements Disposable {
 	async gotoCodemark(args?: GotoCodemarkCommandArgs) {
 		if (args === undefined) return;
 
-		Container.agent.telemetry.track("Codemark Clicked", { "Codemark Location": "Source File" });
-		return Container.webview.openCodemark(args.index);
+		Container.agent.telemetry.track("Codemark Clicked", { "Codemark Location": "Shortcut" });
+		const response = await Container.agent.documentMarkers.getDocumentFromKeyBinding(args.index);
+		if (response == null) return;
+
+		await Editor.revealRange(
+			Uri.parse(response.textDocument.uri),
+			Editor.fromSerializableRange(response.range),
+			{
+				preserveFocus: false
+			}
+		);
 	}
 
 	@command("openCodemark", { showErrorMessage: "Unable to open comment" })
@@ -281,7 +291,7 @@ export class Commands implements Disposable {
 	}
 
 	private async openWorkingFileForMarkerCore(marker: CSMarkerIdentifier) {
-		const resp = await Container.agent.getDocumentFromMarker(marker);
+		const resp = await Container.agent.documentMarkers.getDocumentFromMarker(marker);
 		if (resp === undefined || resp === null) return undefined;
 
 		const uri = Uri.parse(resp.textDocument.uri);
