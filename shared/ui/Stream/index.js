@@ -21,7 +21,6 @@ import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
 import * as actions from "./actions";
-import { editCodemark } from "../store/codemarks/actions";
 import { isInVscode, safe, toMapBy, forceAsLine } from "../utils";
 import { getSlashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
@@ -2144,7 +2143,6 @@ export default connect(
 	mapStateToProps,
 	{
 		...actions,
-		setCurrentStream,
-		editCodemark
+		setCurrentStream
 	}
 )(injectIntl(SimpleStream));
