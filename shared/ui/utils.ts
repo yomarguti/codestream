@@ -23,6 +23,16 @@ export function forceAsLine(range: Range): Range {
 	return range;
 }
 
+export function is<T>(o: any, prop: keyof (T)): o is T;
+export function is<T>(o: any, matcher: (o: any) => boolean): o is T;
+export function is<T>(o: any, matcher: keyof (T) | ((o: any) => boolean)): o is T {
+	if (typeof matcher === "function") {
+		return matcher(o);
+	}
+
+	return o[matcher] !== undefined;
+}
+
 export function isRangeEmpty(range: Range): boolean {
 	return range.start.line === range.end.line && range.start.character === range.end.character;
 }
@@ -72,9 +82,9 @@ export const findLast = <T>(array: T[], fn: (item: T) => boolean): any | undefin
 	}
 };
 
-export function range(start: number, end: number): number[] {
+export function range(start: number, endExclusive: number): number[] {
 	const array: number[] = [];
-	for (let i = start; i < end; i++) {
+	for (let i = start; i < endExclusive; i++) {
 		array.push(i);
 	}
 	return array;

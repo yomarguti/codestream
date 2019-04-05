@@ -10,7 +10,9 @@ import {
 	WebviewDidInitializeNotificationType,
 	HostDidChangeEditorSelectionNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
-	ShowStreamNotificationType
+	ShowCodemarkNotificationType,
+	ShowStreamNotificationType,
+	ShowCodemarkNotificationById
 } from "./ipc/webview.protocol";
 import { actions, createCodeStreamStore } from "./store";
 import { HostApi } from "./webview-api";
@@ -21,6 +23,8 @@ import {
 	ChangeDataType
 } from "@codestream/protocols/agent";
 import translations from "./translations/en";
+import { is } from "./utils";
+import { getCodemark } from "./store/codemarks/reducer";
 
 export { HostApi };
 
@@ -143,5 +147,23 @@ export function listenForEvents(store) {
 
 	api.on(ShowStreamNotificationType, ({ streamId, threadId }) => {
 		store.dispatch(actions.setCurrentStream(streamId, threadId));
+	});
+
+	api.on(ShowCodemarkNotificationType, e => {
+		const { codemarks, preferences } = store.getState();
+
+		let codemarkId;
+		if (is<ShowCodemarkNotificationById>(e, "codemarkId")) {
+			codemarkId = e.codemarkId;
+		} else {
+			const codemarkKeybindings: { [key: string]: string } = preferences.codemarkKeybindings || {};
+			codemarkId = codemarkKeybindings[e.codemarkIndex];
+			if (codemarkId == null) return;
+		}
+
+		const codemark = getCodemark(codemarks, codemarkId);
+		if (codemark == null) return;
+
+		store.dispatch(actions.setCurrentStream(codemark.streamId, codemark.postId));
 	});
 }

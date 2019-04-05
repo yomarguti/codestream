@@ -13,10 +13,14 @@ export * from "./host.protocol.vsls";
 export * from "./webview.protocol.notifications";
 
 // TODO: This should be a request to the webview -- not a notification
-export interface ShowCodemarkNotification {
+export type ShowCodemarkNotification =
+	| ShowCodemarkNotificationById
+	| ShowCodemarkNotificationByIndex;
+export interface ShowCodemarkNotificationById {
 	codemarkId: string;
-	// HACK: This is for vscode -- this will be fired on hover rather than click, since there is no way to click on a marker in vscode
-	simulated?: boolean;
+}
+export interface ShowCodemarkNotificationByIndex {
+	codemarkIndex: number;
 }
 export const ShowCodemarkNotificationType = new NotificationType<ShowCodemarkNotification, void>(
 	`${IpcRoutes.Webview}/codemark/show`

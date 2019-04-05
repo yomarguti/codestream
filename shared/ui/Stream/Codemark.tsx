@@ -41,7 +41,7 @@ interface Props {
 	lineNum?: Number;
 	top?: Number;
 	showLabelText?: boolean;
-	codemarkKeybindings: string[];
+	codemarkKeybindings: { [key: string]: string };
 	setUserPreference: Function;
 	hidden: boolean;
 	deselectCodemarks?: Function;
@@ -258,20 +258,29 @@ export class Codemark extends React.Component<Props, State> {
 
 	setKeybinding(key) {
 		const { codemark, codemarkKeybindings } = this.props;
-		Object.keys(codemarkKeybindings).forEach(key => {
-			if (codemarkKeybindings[key] === codemark.id) codemarkKeybindings[key] = "";
-		});
-		codemarkKeybindings[key] = codemark.id;
-		this.props.setUserPreference(["codemarkKeybindings"], codemarkKeybindings);
+
+		const bindings = { ...codemarkKeybindings };
+
+		for (const [k, codemarkId] of Object.entries(codemarkKeybindings)) {
+			if (codemarkId !== codemark.id) continue;
+
+			bindings[k] = "";
+		}
+		bindings[key] = codemark.id;
+
+		this.props.setUserPreference(["codemarkKeybindings"], bindings);
 	}
 
 	renderKeybinding(codemark) {
 		const { codemarkKeybindings } = this.props;
 
-		const index = Object.keys(codemarkKeybindings).find(
-			key => codemarkKeybindings[key] === codemark.id
+		const found = Object.entries(codemarkKeybindings).find(
+			([, codemarkId]) => codemarkId === codemark.id
 		);
-		if (parseInt(index || "", 10) > 0) {
+		if (found == null) return null;
+
+		const [index] = found;
+		if (parseInt(index, 10) > 0) {
 			const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
 			return (
 				<div style={{ float: "right", marginRight: "5px", opacity: 0.6 }}>
@@ -279,7 +288,9 @@ export class Codemark extends React.Component<Props, State> {
 					<span className="keybinding extra-pad">{index}</span>
 				</div>
 			);
-		} else return null;
+		}
+
+		return null;
 	}
 
 	renderInlineCodemark() {
