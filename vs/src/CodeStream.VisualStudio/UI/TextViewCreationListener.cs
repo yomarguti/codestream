@@ -116,8 +116,8 @@ namespace CodeStream.VisualStudio.UI {
 
 			// find all of our textView margin providers (they should already have been created at this point)
 			var textViewMarginProviders = TextViewMarginProviders
-				 .Where(_ => _ as ICodeStreamWpfTextViewMarginProvider != null)
-				 .Select(_ => (_ as ICodeStreamWpfTextViewMarginProvider)?.TextViewMargin)
+				 .Where(_ => _ as ICodeStreamMarginProvider != null)
+				 .Select(_ => (_ as ICodeStreamMarginProvider)?.TextViewMargin)
 				 .Where(_ => _ != null)
 				 .ToList();
 
@@ -171,7 +171,7 @@ namespace CodeStream.VisualStudio.UI {
 			}
 
 			textView.RemovePropertySafe(PropertyNames.TextViewMarginProviders);
-			textView.RemovePropertySafe(PropertyNames.CodemarkMarkers);
+			textView.RemovePropertySafe(PropertyNames.DocumentMarkers);
 
 			if (textView.TextBuffer.Properties.ContainsProperty(PropertyNames.TextViewState)) {
 				textView.TextBuffer.Properties.GetProperty<TextViewState>(PropertyNames.TextViewState).Initialized = false;

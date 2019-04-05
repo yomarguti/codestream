@@ -12,20 +12,20 @@ namespace CodeStream.VisualStudio.UI.Margins
 {
     [Export(typeof(IWpfTextViewMarginProvider))]
     [MarginContainer(PredefinedMarginNames.VerticalScrollBar)]
-    [Name(PredefinedCodestreamNames.CodemarkTextViewScrollbarMargin)]
+    [Name(PredefinedCodestreamNames.DocumentMarkScrollbar)]
     [Order(After = PredefinedMarginNames.OverviewChangeTracking, Before = PredefinedMarginNames.OverviewMark)]
     [ContentType(ContentTypes.Text)]
     [TextViewRole(PredefinedTextViewRoles.Interactive)]
     [TextViewRole(PredefinedTextViewRoles.Document)]
     // [DeferCreation(OptionName = MatchMarginEnabledOption.OptionName)]
-    internal sealed class VerticalScrollbarMarkerProvider : ICodeStreamWpfTextViewMarginProvider
+    internal sealed class DocumentMarkScrollbarProvider : ICodeStreamMarginProvider
     {
 #pragma warning disable 649
         [Import]
         internal IEditorFormatMapService EditorFormatMapService;
 
         [Export]
-        [Name("VerticalScrollbarMarkerAdornmentLayer")]
+        [Name("DocumentMarkScrollbarAdornmentLayer")]
         [Order(After = PredefinedAdornmentLayers.Outlining, Before = PredefinedAdornmentLayers.Selection)]
         internal AdornmentLayerDefinition MatchLayerDefinition;
 #pragma warning restore 649
@@ -55,7 +55,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                 return null;
             }
 
-            TextViewMargin = new VerticalScrollbarMarker(
+            TextViewMargin = new DocumentMarkScrollbar(
                 wpfTextViewHost,
                 textDocument,
                 containerMarginAsVerticalScrollBar,

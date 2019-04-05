@@ -2,9 +2,9 @@
 {
     public static class PredefinedCodestreamNames
     {
-        public const string CodemarkGlyphFactoryProvider = "CS-CodemarkGlyphFactoryProvider";
-        public const string CodemarkTextViewMargin = "CodeStreamMargin";
-        public const string CodemarkTextViewScrollbarMargin = "VerticalScrollbarMarkerMargin";
-        public const string CodemarkSuggestedActionsSourceProvider = "CS-SuggestedActionsSourceProvider";
+        public const string DocumentMarkGlyphFactoryProvider = "CS-"+ nameof(DocumentMarkGlyphFactoryProvider);
+        public const string DocumentMarkTextViewMargin = "CS-"+nameof(DocumentMarkTextViewMargin);
+        public const string DocumentMarkScrollbar = "CS-"+nameof(DocumentMarkScrollbar);
+        public const string CodemarkSuggestedActionsSourceProvider = "CS-"+nameof(CodemarkSuggestedActionsSourceProvider);
     }
 }

@@ -22,15 +22,15 @@ using System.Windows.Media;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
-	internal class CodemarkTextViewMarginDummy { }
+	internal class DocumentMarkMarginDummy { }
 
-	internal sealed class CodemarkTextViewMargin : Canvas, ICodeStreamWpfTextViewMargin
+	internal sealed class DocumentMarkMargin : Canvas, ICodeStreamWpfTextViewMargin
     {
-        private static readonly ILogger Log = LogManager.ForContext<CodemarkTextViewMarginDummy>();
+        private static readonly ILogger Log = LogManager.ForContext<DocumentMarkMarginDummy>();
         private static readonly int DefaultMarginWidth = 20;
 
         public static readonly DependencyProperty ZoomProperty =
-            DependencyProperty.RegisterAttached("Zoom", typeof(double), typeof(Codemark),
+            DependencyProperty.RegisterAttached("Zoom", typeof(double), typeof(DocumentMark),
                 new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.Inherits));
 
         private static readonly object InitializeLock = new object();
@@ -57,7 +57,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         private ITagAggregator<IGlyphTag> _tagAggregator;
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="CodemarkTextViewMargin" /> class for a given
+        ///     Initializes a new instance of the <see cref="DocumentMarkMargin" /> class for a given
         ///     <paramref name="textView" />.
         /// </summary>
         /// <param name="viewTagAggregatorFactoryService"></param>
@@ -67,7 +67,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         /// <param name="sessionService"></param>
         /// <param name="textView"></param>
         /// <param name="textDocument"></param>
-        public CodemarkTextViewMargin(
+        public DocumentMarkMargin(
             IViewTagAggregatorFactoryService viewTagAggregatorFactoryService,
             IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> glyphFactoryProviders,
             IWpfTextViewHost wpfTextViewHost,
@@ -116,7 +116,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                     if (type == null) break;
 
                     if (_glyphFactories.ContainsKey(type) || !typeof(IGlyphTag).IsAssignableFrom(type)) continue;
-                    if (type == typeof(CodemarkGlyphTag))
+                    if (type == typeof(DocumentMarkGlyphTag))
                     {
                         var glyphFactory = lazy.Value.GetGlyphFactory(_wpfTextViewHost.TextView, this);
                         _glyphFactories.Add(type, new GlyphFactoryInfo(order++, glyphFactory, lazy.Value));
@@ -309,14 +309,14 @@ namespace CodeStream.VisualStudio.UI.Margins
         public ITextViewMargin GetTextViewMargin(string marginName)
         {
             // ReSharper disable once ArrangeStaticMemberQualifier
-            return string.Equals(marginName, PredefinedCodestreamNames.CodemarkTextViewMargin,
+            return string.Equals(marginName, PredefinedCodestreamNames.DocumentMarkTextViewMargin,
                 StringComparison.OrdinalIgnoreCase)
                 ? this
                 : null;
         }
 
         /// <summary>
-        ///     Disposes an instance of <see cref="CodemarkTextViewMargin" /> class.
+        ///     Disposes an instance of <see cref="DocumentMarkMargin" /> class.
         /// </summary>
         public void Dispose()
         {
@@ -464,7 +464,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         {
             if (_isDisposed)
             {
-                throw new ObjectDisposedException(PredefinedCodestreamNames.CodemarkTextViewMargin);
+                throw new ObjectDisposedException(PredefinedCodestreamNames.DocumentMarkTextViewMargin);
             }
         }
 

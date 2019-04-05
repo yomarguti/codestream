@@ -6,7 +6,7 @@ namespace CodeStream.VisualStudio.UI.Margins
     /// <summary>
     /// Marker interface
     /// </summary>
-    public interface ICodeStreamWpfTextViewMarginProvider : IWpfTextViewMarginProvider
+    public interface ICodeStreamMarginProvider : IWpfTextViewMarginProvider
     {
         ITextDocumentFactoryService TextDocumentFactoryService { get; set; }
         ICodeStreamWpfTextViewMargin TextViewMargin { get; }

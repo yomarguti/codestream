@@ -3,7 +3,6 @@ using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Packages;
 using CodeStream.VisualStudio.Services;
 using System;
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -12,12 +11,12 @@ using CodeStream.VisualStudio.Models;
 namespace CodeStream.VisualStudio.UI.Margins
 {
     // ReSharper disable once RedundantExtendsListEntry
-    public partial class Codemark : UserControl
+    public partial class DocumentMark : UserControl
     {
         private static int _defaultHeight = 19;
-        private readonly CodemarkViewModel _viewModel;
+        private readonly DocumentMarkViewModel _viewModel;
 
-        public Codemark(CodemarkViewModel viewModel)
+        public DocumentMark(DocumentMarkViewModel viewModel)
         {
             //Default height used for repositioning in the margin
             Height = _defaultHeight;
@@ -39,10 +38,10 @@ namespace CodeStream.VisualStudio.UI.Margins
         }
 
         public static readonly DependencyProperty ImageUriProperty =
-            DependencyProperty.Register("ImageUri", typeof(string), typeof(Codemark));
+            DependencyProperty.Register("ImageUri", typeof(string), typeof(DocumentMark));
 
         public static readonly DependencyProperty ImageTooltipProperty =
-            DependencyProperty.Register("Tooltip", typeof(string), typeof(Codemark));
+            DependencyProperty.Register("Tooltip", typeof(string), typeof(DocumentMark));
 
         // ReSharper disable once MemberCanBePrivate.Global
         public string ImageUri
@@ -58,7 +57,7 @@ namespace CodeStream.VisualStudio.UI.Margins
             set => SetValue(ImageTooltipProperty, value);
         }
 
-        private void Codemark_MouseDown(object sender, MouseButtonEventArgs e)
+        private void DocumentMark_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (_viewModel?.Marker?.Codemark == null) return;
 

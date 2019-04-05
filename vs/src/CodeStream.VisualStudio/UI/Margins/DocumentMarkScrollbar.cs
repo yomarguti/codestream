@@ -16,9 +16,9 @@ using CodeStream.VisualStudio.Extensions;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
-    internal class VerticalScrollbarMarker : FrameworkElement, ICodeStreamWpfTextViewMargin
+    internal class DocumentMarkScrollbar : FrameworkElement, ICodeStreamWpfTextViewMargin
     {
-        private static readonly ILogger Log = LogManager.ForContext<VerticalScrollbarMarker>();
+        private static readonly ILogger Log = LogManager.ForContext<DocumentMarkScrollbar>();
 
         private double MarkPadding = 3.0;
         private double MarkThickness = 2.0;
@@ -43,14 +43,14 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         private BackgroundMarkerPlacement _search;
 
-        public VerticalScrollbarMarker(
+        public DocumentMarkScrollbar(
             IWpfTextViewHost wpfTextViewHost,
             ITextDocument textDocument,
             IVerticalScrollBar verticalScrollBar,
             IEditorFormatMapService editorFormatMapService,
             ISessionService sessionService)
         {
-            if (wpfTextViewHost == null) throw new ArgumentNullException("wpfTextViewHost");
+            if (wpfTextViewHost == null) throw new ArgumentNullException(nameof(wpfTextViewHost));
 
             _sessionService = sessionService;
 
@@ -112,7 +112,7 @@ namespace CodeStream.VisualStudio.UI.Margins
 
         public ITextViewMargin GetTextViewMargin(string marginName)
         {
-            return string.Compare(marginName, PredefinedCodestreamNames.CodemarkTextViewScrollbarMargin,
+            return string.Compare(marginName, PredefinedCodestreamNames.DocumentMarkScrollbar,
                        StringComparison.OrdinalIgnoreCase) == 0
                 ? this
                 : null;
@@ -180,7 +180,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         private void OnOptionChanged(object sender, EditorOptionChangedEventArgs e)
         {
             var wasMarginEnabled = _isMarginEnabled;
-            _isMarginEnabled = _textView.Options.GetOptionValue(VerticalScrollbarMarkersEnabledOption.OptionKey);
+            _isMarginEnabled = _textView.Options.GetOptionValue(DocumentMarkScrollbarMarkersEnabledOption.OptionKey);
 
             try
             {
@@ -381,7 +381,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         private void ThrowIfDisposed()
         {
             if (_isDisposed)
-                throw new ObjectDisposedException(PredefinedCodestreamNames.CodemarkTextViewScrollbarMargin);
+                throw new ObjectDisposedException(PredefinedCodestreamNames.DocumentMarkScrollbar);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -432,9 +432,9 @@ namespace CodeStream.VisualStudio.UI.Margins
 
                     var newMatches = new List<SnapshotSpanMarker>();
 
-                    if (textDocument.TextBuffer.Properties.ContainsProperty(PropertyNames.CodemarkMarkers))
+                    if (textDocument.TextBuffer.Properties.ContainsProperty(PropertyNames.DocumentMarkers))
                     {
-                        _markers = textDocument.TextBuffer.Properties.GetProperty<List<DocumentMarker>>(PropertyNames.CodemarkMarkers);
+                        _markers = textDocument.TextBuffer.Properties.GetProperty<List<DocumentMarker>>(PropertyNames.DocumentMarkers);
                     }
 
                     if (_markers == null) return;

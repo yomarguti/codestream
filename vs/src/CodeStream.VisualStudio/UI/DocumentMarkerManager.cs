@@ -58,12 +58,12 @@ namespace CodeStream.VisualStudio.UI
 
                     if (_markers?.Markers.AnySafe() == true || forceUpdate)
                     {
-                        if (_wpfTextView.TextBuffer.Properties.ContainsProperty(PropertyNames.CodemarkMarkers))
+                        if (_wpfTextView.TextBuffer.Properties.ContainsProperty(PropertyNames.DocumentMarkers))
                         {
-                            _wpfTextView.TextBuffer.Properties.RemoveProperty(PropertyNames.CodemarkMarkers);
+                            _wpfTextView.TextBuffer.Properties.RemoveProperty(PropertyNames.DocumentMarkers);
                         }
 
-                        _wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.CodemarkMarkers, _markers.Markers);
+                        _wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.DocumentMarkers, _markers.Markers);
                         Log.Debug("Setting Codemarks Count={Count}", _markers.Markers.Count);
                     }
                     else
@@ -106,9 +106,9 @@ namespace CodeStream.VisualStudio.UI
 
             if (disposing)
             {
-                if (_wpfTextView?.TextBuffer?.Properties.ContainsProperty(PropertyNames.CodemarkMarkers) == true)
+                if (_wpfTextView?.TextBuffer?.Properties.ContainsProperty(PropertyNames.DocumentMarkers) == true)
                 {
-                    _wpfTextView.TextBuffer.Properties.RemoveProperty(PropertyNames.CodemarkMarkers);
+                    _wpfTextView.TextBuffer.Properties.RemoveProperty(PropertyNames.DocumentMarkers);
                 }
 
                 _markers = null;

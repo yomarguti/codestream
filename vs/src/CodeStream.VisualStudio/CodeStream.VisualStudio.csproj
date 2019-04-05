@@ -193,23 +193,23 @@
     <Compile Include="UI\ActiveTextEditorExtensions.cs" />
     <Compile Include="UI\Adornments\HighlightAdornmentManager.cs" />
     <Compile Include="UI\DocumentMarkerManager.cs" />
-    <Compile Include="UI\Glyphs\CodemarkGlyphFactory.cs" />
-    <Compile Include="UI\Glyphs\CodemarkGlyphFactoryProvider.cs" />
-    <Compile Include="UI\Glyphs\CodemarkGlyphTag.cs" />
+    <Compile Include="UI\Glyphs\DocumentMarkGlyphFactory.cs" />
+    <Compile Include="UI\Glyphs\DocumentMarkGlyphFactoryProvider.cs" />
+    <Compile Include="UI\Glyphs\DocumentMarkGlyphTag.cs" />
     <Compile Include="UI\InfoBarProvider.cs" />
-    <Compile Include="UI\Margins\Codemark.xaml.cs">
-      <DependentUpon>Codemark.xaml</DependentUpon>
+    <Compile Include="UI\Margins\DocumentMark.xaml.cs">
+      <DependentUpon>DocumentMark.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UI\Margins\CodemarkTextViewMargin.cs" />
-    <Compile Include="UI\Margins\CodemarkViewModel.cs" />
-    <Compile Include="UI\Margins\CodemarkTextViewMarginProvider.cs" />
-    <Compile Include="UI\Margins\CodeStreamWpfTextViewMarginCollectionExtensions.cs" />
-    <Compile Include="UI\Margins\ICodeStreamWpfTextViewMarginProvider.cs" />
+    <Compile Include="UI\Margins\DocumentMarkMargin.cs" />
+    <Compile Include="UI\Margins\DocumentMarkViewModel.cs" />
+    <Compile Include="UI\Margins\DocumentMarkMarginProvider.cs" />
+    <Compile Include="UI\Margins\CodeStreamMarginExtensions.cs" />
+    <Compile Include="UI\Margins\ICodeStreamMarginProvider.cs" />
     <Compile Include="UI\Margins\IGlyphMetadata.cs" />
-    <Compile Include="UI\Margins\VerticalScrollbarMarker.cs" />
-    <Compile Include="UI\Margins\VerticalScrollbarMarkerColorFormat.cs" />
-    <Compile Include="UI\Margins\VerticalScrollbarMarkerProvider.cs" />
-    <Compile Include="UI\Margins\VerticalScrollbarMarkersEnabledOption.cs" />
+    <Compile Include="UI\Margins\DocumentMarkScrollbar.cs" />
+    <Compile Include="UI\Margins\DocumentMarkScrollbarFormat.cs" />
+    <Compile Include="UI\Margins\DocumentMarkScrollbarProvider.cs" />
+    <Compile Include="UI\Margins\DocumentMarkScrollbarMarkersEnabledOption.cs" />
     <Compile Include="UI\Placement.cs" />
     <Compile Include="UI\PredefinedCodestreamNames.cs" />
     <Compile Include="UI\PropertyNames.cs" />
@@ -218,8 +218,8 @@
     </Compile>
     <Compile Include="UI\SuggestedActions\CodemarkSuggestedActionsSource.cs" />
     <Compile Include="UI\SuggestedActions\CodemarkSuggestedActionsSourceProvider.cs" />
-    <Compile Include="UI\Taggers\CodemarkTagger.cs" />
-    <Compile Include="UI\Taggers\CodemarkTaggerProvider.cs" />
+    <Compile Include="UI\Taggers\DocumentMarkTagger.cs" />
+    <Compile Include="UI\Taggers\DocumentMarkTaggerProvider.cs" />
     <Compile Include="UI\TextDocumentExtensions.cs" />
     <Compile Include="UI\TextViewCreationListener.cs" />
     <Compile Include="UI\TextViewExtensions.cs" />
@@ -560,7 +560,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="UI\Margins\Codemark.xaml">
+    <Page Include="UI\Margins\DocumentMark.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

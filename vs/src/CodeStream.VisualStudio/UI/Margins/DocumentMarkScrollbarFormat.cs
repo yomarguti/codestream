@@ -6,14 +6,14 @@ using Microsoft.VisualStudio.Utilities;
 namespace CodeStream.VisualStudio.UI.Margins
 {
     [Export(typeof(EditorFormatDefinition))]
-    [Name(VerticalScrollbarMarkerColorFormat.Name)]
+    [Name(DocumentMarkScrollbarFormat.Name)]
     [UserVisible(true)]
     [Order(Before = Priority.Default)]
-    internal sealed class VerticalScrollbarMarkerColorFormat : EditorFormatDefinition
+    internal sealed class DocumentMarkScrollbarFormat : EditorFormatDefinition
     {
-        public const string Name = "VerticalScrollbarMarkerColor";
+        public const string Name = "DocumentMarkScrollbarColor";
 
-        public VerticalScrollbarMarkerColorFormat()
+        public DocumentMarkScrollbarFormat()
         {
             this.DisplayName = Name;
             this.ForegroundColor = Color.FromRgb(49, 147, 241);

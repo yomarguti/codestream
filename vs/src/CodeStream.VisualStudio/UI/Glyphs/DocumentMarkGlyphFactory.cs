@@ -5,7 +5,7 @@ using Microsoft.VisualStudio.Text.Formatting;
 
 namespace CodeStream.VisualStudio.UI.Glyphs
 {
-    internal class CodemarkGlyphFactory : IGlyphFactory
+    internal class DocumentMarkGlyphFactory : IGlyphFactory
     {
         /// <summary>
         /// Creates a WPF Codemark
@@ -18,11 +18,11 @@ namespace CodeStream.VisualStudio.UI.Glyphs
             if (tag == null) return null;
 
             // Ensure we can draw a glyph for this marker.
-            var codemark = tag as CodemarkGlyphTag;
+            var codemark = tag as DocumentMarkGlyphTag;
 
             if (codemark == null) return null;
             
-            return new Codemark(new CodemarkViewModel(codemark.Codemark));
+            return new DocumentMark(new DocumentMarkViewModel(codemark.DocumentMarker));
         }
     }
 }

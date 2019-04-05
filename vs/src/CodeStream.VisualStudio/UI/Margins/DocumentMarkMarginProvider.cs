@@ -14,26 +14,26 @@ using System.Linq;
 namespace CodeStream.VisualStudio.UI.Margins
 {
     [Export(typeof(IWpfTextViewMarginProvider))]
-    [Name(PredefinedCodestreamNames.CodemarkTextViewMargin)]
+    [Name(PredefinedCodestreamNames.DocumentMarkTextViewMargin)]
     [Order(After = PredefinedMarginNames.Glyph)]
     [MarginContainer(PredefinedMarginNames.Left)]
     [ContentType(ContentTypes.Text)]
     [TextViewRole(PredefinedTextViewRoles.Interactive)]
     [TextViewRole(PredefinedTextViewRoles.Document)]
-    internal sealed class CodemarkTextViewMarginProvider : ICodeStreamWpfTextViewMarginProvider
+    internal sealed class DocumentMarkMarginProvider : ICodeStreamMarginProvider
     {
         private readonly IViewTagAggregatorFactoryService _viewTagAggregatorFactoryService;
         private readonly Lazy<IGlyphFactoryProvider, IGlyphMetadata>[] _glyphFactoryProviders;
 
         [ImportingConstructor]
-        public CodemarkTextViewMarginProvider(IViewTagAggregatorFactoryService viewTagAggregatorFactoryService,
+        public DocumentMarkMarginProvider(IViewTagAggregatorFactoryService viewTagAggregatorFactoryService,
             [ImportMany] IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> glyphFactoryProviders)
         {
             _viewTagAggregatorFactoryService = viewTagAggregatorFactoryService;
 
             // only get _our_ glyph factory
             _glyphFactoryProviders = Orderer.Order(glyphFactoryProviders)
-                .Where(_ => _.Metadata.Name == PredefinedCodestreamNames.CodemarkGlyphFactoryProvider).ToArray();
+                .Where(_ => _.Metadata.Name == PredefinedCodestreamNames.DocumentMarkGlyphFactoryProvider).ToArray();
         }
 
         [Import]
@@ -55,7 +55,7 @@ namespace CodeStream.VisualStudio.UI.Margins
                 return null;
             }
 
-            TextViewMargin = new CodemarkTextViewMargin(
+            TextViewMargin = new DocumentMarkMargin(
                 _viewTagAggregatorFactoryService,
                 _glyphFactoryProviders,
                 wpfTextViewHost,

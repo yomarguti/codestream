@@ -8,17 +8,17 @@ using Microsoft.VisualStudio.Utilities;
 namespace CodeStream.VisualStudio.UI.Glyphs
 {
     [Export(typeof(IGlyphFactoryProvider))]
-    [Name(PredefinedCodestreamNames.CodemarkGlyphFactoryProvider)]
+    [Name(PredefinedCodestreamNames.DocumentMarkGlyphFactoryProvider)]
     [ContentType(ContentTypes.Text)]
-    [TagType(typeof(CodemarkGlyphTag))]
-    internal sealed class CodemarkGlyphFactoryProvider : IGlyphFactoryProvider
+    [TagType(typeof(DocumentMarkGlyphTag))]
+    internal sealed class DocumentMarkGlyphFactoryProvider : IGlyphFactoryProvider
     {
         public IGlyphFactory GetGlyphFactory(IWpfTextView view, IWpfTextViewMargin margin)
         {
             // HACK? only return the factory for our custom margin?
-            if (margin.GetType() != typeof(CodemarkTextViewMargin)) return null;
+            if (margin.GetType() != typeof(DocumentMarkMargin)) return null;
 
-            return new CodemarkGlyphFactory();
+            return new DocumentMarkGlyphFactory();
         }
     }
 }

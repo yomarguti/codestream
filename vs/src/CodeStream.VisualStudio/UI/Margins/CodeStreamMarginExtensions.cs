@@ -3,7 +3,7 @@ using Microsoft.VisualStudio.Text.Editor;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
-    public static class CodeStreamWpfTextViewMarginCollectionExtensions
+    public static class CodeStreamMarginExtensions
     {
         public static void OnSessionReady(this List<ICodeStreamWpfTextViewMargin> items) =>
             items.ForEach(_ => _.OnSessionReady());

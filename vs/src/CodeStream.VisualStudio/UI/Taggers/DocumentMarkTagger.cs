@@ -14,14 +14,14 @@ namespace CodeStream.VisualStudio.UI.Taggers
     /// <summary>
     ///     Responsible for matching Codemarks up to a line
     /// </summary>
-    internal class CodemarkTagger : ITagger<CodemarkGlyphTag>
+    internal class DocumentMarkTagger : ITagger<DocumentMarkGlyphTag>
     {
         private readonly ISessionService _sessionService;
         private readonly ITextView _textView;
         private readonly ITextDocument _textDocument;
         private readonly ITextBuffer _buffer;
 
-        public CodemarkTagger(ISessionService sessionService, ITextView textView, ITextDocument textDocument, ITextBuffer buffer)
+        public DocumentMarkTagger(ISessionService sessionService, ITextView textView, ITextDocument textDocument, ITextBuffer buffer)
         {
             _sessionService = sessionService;
             _textView = textView;
@@ -33,14 +33,14 @@ namespace CodeStream.VisualStudio.UI.Taggers
         public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
 #pragma warning restore 67
 
-        IEnumerable<ITagSpan<CodemarkGlyphTag>> ITagger<CodemarkGlyphTag>.GetTags(
+        IEnumerable<ITagSpan<DocumentMarkGlyphTag>> ITagger<DocumentMarkGlyphTag>.GetTags(
             NormalizedSnapshotSpanCollection spans)
         {
             if (_sessionService == null || !_sessionService.IsReady) yield break;
 
             List<DocumentMarker> markers = null;
-            if (_textDocument.TextBuffer.Properties.ContainsProperty(PropertyNames.CodemarkMarkers))
-                markers = _textDocument.TextBuffer.Properties.GetProperty<List<DocumentMarker>>(PropertyNames.CodemarkMarkers);
+            if (_textDocument.TextBuffer.Properties.ContainsProperty(PropertyNames.DocumentMarkers))
+                markers = _textDocument.TextBuffer.Properties.GetProperty<List<DocumentMarker>>(PropertyNames.DocumentMarkers);
 
             if (markers == null || !markers.AnySafe()) yield break;
 
@@ -51,9 +51,9 @@ namespace CodeStream.VisualStudio.UI.Taggers
                 if (codemark == null) continue;
 
                 SnapshotPoint start = span.Start == 0 ? span.Start : span.Start - 1;
-                yield return new TagSpan<CodemarkGlyphTag>(
+                yield return new TagSpan<DocumentMarkGlyphTag>(
                     new SnapshotSpan(start, 1),
-                    new CodemarkGlyphTag(codemark)
+                    new DocumentMarkGlyphTag(codemark)
                 );
             }
         }

@@ -13,10 +13,10 @@ namespace CodeStream.VisualStudio.UI.Taggers
 {
     [Export(typeof(IViewTaggerProvider))]
     [ContentType(ContentTypes.Text)]
-    [TagType(typeof(CodemarkGlyphTag))]
+    [TagType(typeof(DocumentMarkGlyphTag))]
     [TextViewRole(PredefinedTextViewRoles.Interactive)]
     [TextViewRole(PredefinedTextViewRoles.Document)]
-    internal class CodemarkTaggerProvider : IViewTaggerProvider
+    internal class DocumentMarkTaggerProvider : IViewTaggerProvider
     {
         [Import]
         public ITextDocumentFactoryService TextDocumentFactoryService { get; set; }
@@ -44,8 +44,8 @@ namespace CodeStream.VisualStudio.UI.Taggers
             }
 
             var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
-            return textView.TextBuffer.Properties.GetOrCreateSingletonProperty(typeof(CodemarkTagger),
-                () => new CodemarkTagger(sessionService, textView, textDocument, buffer)) as ITagger<T>;
+            return textView.TextBuffer.Properties.GetOrCreateSingletonProperty(typeof(DocumentMarkTagger),
+                () => new DocumentMarkTagger(sessionService, textView, textDocument, buffer)) as ITagger<T>;
         }
     }
 }
