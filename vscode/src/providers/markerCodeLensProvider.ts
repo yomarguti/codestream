@@ -13,7 +13,7 @@ import {
 	Uri
 } from "vscode";
 import {
-	Marker,
+	DocMarker,
 	SessionStatus,
 	SessionStatusChangedEvent,
 	TextDocumentMarkersChangedEvent
@@ -115,11 +115,7 @@ export class CodemarkCodeLensProvider implements CodeLensProvider, Disposable {
 
 		const lenses = markers.map<CodeLens>(m => {
 			const args: OpenCodemarkCommandArgs = {
-				codemarkId: m.id,
-				streamThread: {
-					id: m.postId,
-					streamId: m.postStreamId
-				}
+				codemarkId: m.codemarkId
 			};
 
 			return new CodeLens(m.range, {
@@ -136,7 +132,7 @@ export class CodemarkCodeLensProvider implements CodeLensProvider, Disposable {
 			const response = await Container.agent.markers.fetch(uri);
 			if (response == null) return undefined;
 
-			return response.markers.map(m => new Marker(Container.session, m));
+			return response.markers.map(m => new DocMarker(Container.session, m));
 		} catch (ex) {
 			Logger.error(ex);
 			return undefined;

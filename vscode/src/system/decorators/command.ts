@@ -10,6 +10,7 @@ export function createCommandDecorator(
 }
 
 export interface CommandOptions {
+	args?(...args: any[]): any[];
 	customErrorHandling?: boolean;
 	showErrorMessage?: string;
 }
@@ -29,7 +30,7 @@ function _command(registry: Command[], command: string, options: CommandOptions 
 		if (!options.customErrorHandling) {
 			method = async function(this: any, ...args: any[]) {
 				try {
-					return await descriptor.value.apply(this, args);
+					return await descriptor.value.apply(this, options.args ? options.args(args) : args);
 				} catch (ex) {
 					Logger.error(ex);
 

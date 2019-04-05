@@ -5,7 +5,7 @@ import { Range } from "vscode";
 import { Dates, memoize } from "../../system";
 import { CodeStreamSession } from "../session";
 
-export class Marker {
+export class DocMarker {
 	private readonly _range: Range;
 
 	constructor(
@@ -22,6 +22,10 @@ export class Marker {
 
 	get code(): string {
 		return this._entity.code;
+	}
+
+	get codemarkId() {
+		return this._entity.codemarkId;
 	}
 
 	get color(): string {

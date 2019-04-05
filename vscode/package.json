@@ -162,6 +162,11 @@
                 "category": "CodeStream"
             },
             {
+                "command": "codestream.toggle",
+                "title": "Toggle CodeStream",
+                "category": "CodeStream"
+            },
+            {
                 "command": "codestream.newComment",
                 "title": "Add Comment",
                 "category": "CodeStream"
@@ -187,28 +192,48 @@
                 "category": "CodeStream"
             },
             {
-                "command": "codestream.toggle",
-                "title": "Toggle CodeStream",
-                "category": "CodeStream"
-            },
-            {
                 "command": "codestream.gotoCodemark1",
-                "title": "Jump to codemark #1",
+                "title": "Jump to Codemark #1",
                 "category": "CodeStream"
             },
             {
                 "command": "codestream.gotoCodemark2",
-                "title": "Jump to codemark #2",
+                "title": "Jump to Codemark #2",
                 "category": "CodeStream"
             },
             {
                 "command": "codestream.gotoCodemark3",
-                "title": "Jump to codemark #3",
+                "title": "Jump to Codemark #3",
                 "category": "CodeStream"
             },
             {
                 "command": "codestream.gotoCodemark4",
-                "title": "Jump to codemark #4",
+                "title": "Jump to Codemark #4",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.gotoCodemark5",
+                "title": "Jump to Codemark #5",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.gotoCodemark6",
+                "title": "Jump to Codemark #6",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.gotoCodemark7",
+                "title": "Jump to Codemark #7",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.gotoCodemark8",
+                "title": "Jump to Codemark #8",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.gotoCodemark9",
+                "title": "Jump to Codemark #9",
                 "category": "CodeStream"
             }
         ],
@@ -319,7 +344,7 @@
                 },
                 "key": "ctrl+shift+/ 1",
                 "mac": "ctrl+/ 1",
-                "when": "editorTextFocus && codestream:status == signedIn"
+                "when": "codestream:status == signedIn"
             },
             {
                 "command": "codestream.gotoCodemark2",
@@ -328,7 +353,7 @@
                 },
                 "key": "ctrl+shift+/ 2",
                 "mac": "ctrl+/ 2",
-                "when": "editorTextFocus && codestream:status == signedIn"
+                "when": "codestream:status == signedIn"
             },
             {
                 "command": "codestream.gotoCodemark3",
@@ -337,7 +362,7 @@
                 },
                 "key": "ctrl+shift+/ 3",
                 "mac": "ctrl+/ 3",
-                "when": "editorTextFocus && codestream:status == signedIn"
+                "when": "codestream:status == signedIn"
             },
             {
                 "command": "codestream.gotoCodemark4",
@@ -346,7 +371,52 @@
                 },
                 "key": "ctrl+shift+/ 4",
                 "mac": "ctrl+/ 4",
-                "when": "editorTextFocus && codestream:status == signedIn"
+                "when": "codestream:status == signedIn"
+            },
+            {
+                "command": "codestream.gotoCodemark5",
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "ctrl+shift+/ 5",
+                "mac": "ctrl+/ 5",
+                "when": "codestream:status == signedIn"
+            },
+            {
+                "command": "codestream.gotoCodemark6",
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "ctrl+shift+/ 6",
+                "mac": "ctrl+/ 6",
+                "when": "codestream:status == signedIn"
+            },
+            {
+                "command": "codestream.gotoCodemark7",
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "ctrl+shift+/ 7",
+                "mac": "ctrl+/ 7",
+                "when": "codestream:status == signedIn"
+            },
+            {
+                "command": "codestream.gotoCodemark8",
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "ctrl+shift+/ 8",
+                "mac": "ctrl+/ 8",
+                "when": "codestream:status == signedIn"
+            },
+            {
+                "command": "codestream.gotoCodemark9",
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "ctrl+shift+/ 9",
+                "mac": "ctrl+/ 9",
+                "when": "codestream:status == signedIn"
             }
         ],
         "menus": {
@@ -361,6 +431,10 @@
                 },
                 {
                     "command": "codestream.signOut",
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.toggle",
                     "when": "codestream:status == signedIn"
                 },
                 {
@@ -384,7 +458,39 @@
                     "when": "codestream:status == signedIn"
                 },
                 {
-                    "command": "codestream.toggle",
+                    "command": "codestream.gotoCodemark1",
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.gotoCodemark2",
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.gotoCodemark3",
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.gotoCodemark4",
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.gotoCodemark5",
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.gotoCodemark6",
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.gotoCodemark7",
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.gotoCodemark8",
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.gotoCodemark9",
                     "when": "codestream:status == signedIn"
                 }
             ],

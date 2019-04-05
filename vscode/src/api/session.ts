@@ -31,7 +31,7 @@ import { extensionQualifiedId } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions, log, Strings } from "../system";
-import { Marker } from "./models/marker";
+import { DocMarker } from "./models/marker";
 import { Post } from "./models/post";
 import { Repository } from "./models/repository";
 import {
@@ -61,7 +61,7 @@ export {
 	ChannelStreamCreationOptions,
 	CodeStreamEnvironment,
 	DirectStream,
-	Marker,
+	DocMarker,
 	Post,
 	PostsChangedEvent,
 	Repository,

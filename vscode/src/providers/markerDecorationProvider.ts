@@ -20,7 +20,7 @@ import {
 	workspace
 } from "vscode";
 import {
-	Marker,
+	DocMarker,
 	SessionStatus,
 	SessionStatusChangedEvent,
 	TextDocumentMarkersChangedEvent
@@ -87,7 +87,7 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 	private readonly _disposable: Disposable;
 	private _enabledDisposable: Disposable | undefined;
 
-	private readonly _markersCache = new Map<string, Promise<Marker[]>>();
+	private readonly _markersCache = new Map<string, Promise<DocMarker[]>>();
 	private _watchedEditorsMap: Map<string, () => void> | undefined;
 
 	private _suspended = false;
@@ -374,7 +374,7 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 
 	async provideHoverCore(
 		document: TextDocument,
-		markers: Marker[],
+		markers: DocMarker[],
 		token: CancellationToken
 	): Promise<Hover | undefined> {
 		try {
@@ -387,11 +387,7 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 					if (token.isCancellationRequested) return undefined;
 
 					const viewCommandArgs: OpenCodemarkCommandArgs = {
-						codemarkId: m.id,
-						streamThread: {
-							id: m.postId,
-							streamId: m.postStreamId
-						}
+						codemarkId: m.codemarkId
 					};
 
 					const compareCommandArgs: ShowMarkerDiffCommandArgs = {
@@ -465,7 +461,7 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 		try {
 			const resp = await Container.agent.markers.fetch(uri);
 			return resp !== undefined
-				? resp.markers.map(m => new Marker(Container.session, m))
+				? resp.markers.map(m => new DocMarker(Container.session, m))
 				: emptyArray;
 		} catch (ex) {
 			Logger.error(ex);
