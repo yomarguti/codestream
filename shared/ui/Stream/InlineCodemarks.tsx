@@ -783,15 +783,17 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	onWheel = (event: React.WheelEvent<HTMLDivElement>) => {
 		if (event.deltaY === 0) return;
 
-		// Find the nearest scrollable element and if its not the container we expect, kick out
-		const scroller = (event.target as HTMLElement).closest("[data-scrollable]");
-		if (scroller != null && scroller.id !== "inline-codemarks-scroll-container") {
-			return;
-		}
-
 		if (this._clearWheelingStateTimeout !== undefined) {
 			clearTimeout(this._clearWheelingStateTimeout);
 			this._clearWheelingStateTimeout = undefined;
+		}
+
+		// Find the nearest scrollable element and if its not the container we expect, kick out
+		const scroller = (event.target as HTMLElement).closest("[data-scrollable]");
+		if (scroller != null && scroller.id !== "inline-codemarks-scroll-container") {
+			this._wheelingState = undefined;
+
+			return;
 		}
 
 		// Keep track of the "editor" top line, since these events will be too fast for the editor and our eventing to keep up
