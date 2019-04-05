@@ -192,6 +192,16 @@ export namespace Functions {
 			: [];
 	}
 
+	export function is<T>(o: any, prop: keyof (T)): o is T;
+	export function is<T>(o: any, matcher: (o: any) => boolean): o is T;
+	export function is<T>(o: any, propOrMatcher: keyof (T) | ((o: any) => boolean)): o is T {
+		if (typeof propOrMatcher === "function") {
+			return propOrMatcher(o);
+		}
+
+		return o[propOrMatcher] !== undefined;
+	}
+
 	export function isPromise(o: any) {
 		return (typeof o === "object" || typeof o === "function") && typeof o.then === "function";
 	}
