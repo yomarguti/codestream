@@ -1593,12 +1593,9 @@
 			}
 		}
 
-		.post + .post {
-			border-top: 1px solid @base-border-color;
-		}
 		.post {
-			// padding: 10px 9px 10px 55px; // 1px left and right for border
-			padding: 10px 9px 10px 9px; // 1px left and right for border
+			padding: 10px 9px 10px 55px; // 1px left and right for border
+			// padding: 10px 9px 10px 9px; // 1px left and right for border
 			cursor: pointer;
 			min-height: 56px;
 			white-space: pre-wrap;
@@ -1619,65 +1616,6 @@
 				// background: @base-background-color;
 				border-top: 1px dashed @base-border-color;
 			}
-			// &.blue .body {
-			// 	// border-left: 3px solid #679ad0;
-			// 	// border-left: 3px solid #3578ba;
-			// 	border-left: 3px solid #006eb7;
-			// 	padding: 0 0 0 10px;
-			// 	margin: 10px 0;
-			// }
-			// &.green .body {
-			// 	// border-left: 3px solid #6fc6b1;
-			// 	// border-left: 3px solid #7aba5d;
-			// 	border-left: 3px solid #58b547;
-			// 	padding: 0 0 0 10px;
-			// 	margin: 10px 0;
-			// }
-			// &.yellow .body {
-			// 	// border-left: 3px solid #dcdcaa;
-			// 	// border-left: 3px solid #edd648;
-			// 	border-left: 3px solid #f0d005;
-			// 	padding: 0 0 0 10px;
-			// 	margin: 10px 0;
-			// }
-			// &.orange .body {
-			// 	// border-left: 3px solid #ce9178;
-			// 	// border-left: 3px solid #f1a340;
-			// 	border-left: 3px solid #ff9319;
-			// 	padding: 0 0 0 10px;
-			// 	margin: 10px 0;
-			// }
-			// &.red .body {
-			// 	// border-left: 3px solid #d16969;
-			// 	// border-left: 3px solid #d9634f;
-			// 	border-left: 3px solid #e84e3e;
-			// 	padding: 0 0 0 10px;
-			// 	margin: 10px 0;
-			// }
-			// &.purple .body {
-			// 	// border-left: 3px solid #c586c0;
-			// 	// border-left: 3px solid #b87cda;
-			// 	border-left: 3px solid #bb6cdc;
-			// 	padding: 0 0 0 10px;
-			// 	margin: 10px 0;
-			// }
-			// &.aqua .body {
-			// 	// border-left: 3px solid #9cdcfe;
-			// 	// border-left: 3px solid #5abfdc;
-			// 	border-left: 3px solid #00badc;
-			// 	padding: 0 0 0 10px;
-			// 	margin: 10px 0;
-			// }
-			// &.gray .body {
-			// 	border-left: 3px solid #7f7f7f;
-			// 	padding: 0 0 0 10px;
-			// 	margin: 10px 0;
-			// }
-			// &.none .body {
-			// 	border-left: 3px solid #7f7f7f;
-			// 	padding: 0 0 0 10px;
-			// 	margin: 10px 0;
-			// }
 			&.collapsed {
 				.body {
 					border-left: none;
@@ -1760,8 +1698,8 @@
 			.headshot-system {
 				display: block;
 				position: absolute;
-				width: 18px;
-				height: 18px;
+				width: 36px;
+				height: 36px;
 				border-radius: 4px;
 				background: none;
 				z-index: 2;
@@ -1770,8 +1708,8 @@
 			.headshot-initials {
 				display: block;
 				position: absolute;
-				width: 18px;
-				height: 18px;
+				width: 36px;
+				height: 36px;
 				font-size: 11px;
 				text-transform: capitalize;
 				text-align: center;
@@ -1784,7 +1722,7 @@
 
 			.author {
 				font-size: 13px;
-				padding: 0px 3px 5px 24px;
+				padding: 0px 3px 3px 0;
 				// margin-left: 46px;
 				font-weight: 700;
 				.emote {

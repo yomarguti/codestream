@@ -359,7 +359,8 @@ export class Codemark extends React.Component<Props, State> {
 						{this.renderKeybinding(codemark)}
 						{this.renderStatus(codemark)}
 						<div className="author">
-							<Headshot person={author} /> <span className="author">{author.username}</span>
+							<Headshot person={author} />
+							{author.username}
 							<Timestamp time={codemark.createdAt} />
 							{codemark.color && (
 								<div
