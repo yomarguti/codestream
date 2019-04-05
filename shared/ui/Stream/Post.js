@@ -22,7 +22,7 @@ import { markdownify, emojify } from "./Markdowner";
 import { reactToPost, setCodemarkStatus } from "./actions";
 import { escapeHtml, safe } from "../utils";
 import { getUsernamesById, getNormalizedUsernames } from "../store/users/reducer";
-import { DocumentFromMarkerRequestType } from "@codestream/protocols/agent";
+import { GetDocumentFromMarkerRequestType } from "@codestream/protocols/agent";
 import { EditorRevealRangeRequestType, EditorRevealRangeResult } from "../ipc/webview.protocol";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { HostApi } from "../webview-api";
@@ -71,7 +71,7 @@ class Post extends React.Component {
 		const marker = hasMarkers && codemark.markers[0];
 		if (marker) {
 			if (marker.repoId) {
-				const response = await HostApi.instance.send(DocumentFromMarkerRequestType, {
+				const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
 					markerId: marker.id
 				});
 
@@ -87,7 +87,7 @@ class Post extends React.Component {
 						this.setState({ warning: result });
 					}
 				} else {
-					// assumption based on DocumentFromMarkerRequestType api requiring the workspace to be available
+					// assumption based on GetDocumentFromMarkerRequestType api requiring the workspace to be available
 					this.setState({ warning: "REPO_NOT_IN_WORKSPACE" });
 				}
 			} else this.setState({ warning: "NO_REMOTE" });

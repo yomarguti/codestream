@@ -9,7 +9,10 @@ import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
 import Codemark from "./Codemark";
 import { HostApi } from "../webview-api";
-import { DocumentFromMarkerRequestType, TelemetryRequestType } from "@codestream/protocols/agent";
+import {
+	GetDocumentFromMarkerRequestType,
+	TelemetryRequestType
+} from "@codestream/protocols/agent";
 import { EditorRevealRangeRequestType } from "../ipc/webview.protocol";
 import { includes as _includes, sortBy as _sortBy } from "lodash-es";
 import { setCurrentStream } from "../store/context/actions";
@@ -413,7 +416,7 @@ export class SimpleKnowledgePanel extends Component {
 
 		if (codemark.markers) {
 			try {
-				const response = await HostApi.instance.send(DocumentFromMarkerRequestType, {
+				const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
 					markerId: codemark.markers[0].id
 				});
 				// TODO: What should we do if we don't find the marker?

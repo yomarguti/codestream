@@ -22,7 +22,7 @@ import {
 	DocumentMarker,
 	TelemetryRequestType,
 	DidChangeDocumentMarkersNotificationType,
-	DocumentFromMarkerRequestType
+	GetDocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
 import { Range, Position } from "vscode-languageserver-types";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
@@ -1081,7 +1081,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		if (markerId) {
 			try {
-				const response = await HostApi.instance.send(DocumentFromMarkerRequestType, {
+				const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
 					markerId: markerId
 				});
 				// TODO: What should we do if we don't find the marker? Is that possible?
@@ -1103,7 +1103,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	async highlightCode(marker, highlight) {
 		let range = marker.range;
 		if (!range) {
-			const response = await HostApi.instance.send(DocumentFromMarkerRequestType, {
+			const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
 				markerId: marker.id
 			});
 			// TODO: What should we do if we don't find the marker?

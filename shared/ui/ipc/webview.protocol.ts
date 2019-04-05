@@ -13,14 +13,8 @@ export * from "./host.protocol.vsls";
 export * from "./webview.protocol.notifications";
 
 // TODO: This should be a request to the webview -- not a notification
-export type ShowCodemarkNotification =
-	| ShowCodemarkNotificationById
-	| ShowCodemarkNotificationByIndex;
-export interface ShowCodemarkNotificationById {
+export interface ShowCodemarkNotification {
 	codemarkId: string;
-}
-export interface ShowCodemarkNotificationByIndex {
-	codemarkIndex: number;
 }
 export const ShowCodemarkNotificationType = new NotificationType<ShowCodemarkNotification, void>(
 	`${IpcRoutes.Webview}/codemark/show`
