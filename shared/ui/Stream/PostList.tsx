@@ -1,18 +1,44 @@
 import React from "react";
 import { debounce as _debounce } from "lodash-es";
-import DateSeparator from "./DateSeparator";
 import Icon from "./Icon";
 import Post from "./Post";
 import infiniteLoadable from "./infiniteLoadable";
 import { findLast, rAFThrottle, safe } from "../utils";
+import { CSUser, CSPost } from "@codestream/protocols/api";
+
+interface State {}
+export interface Props {
+	currentUserId?: string;
+	currentUserName: string;
+	editingPostId?: string;
+	hasFocus: boolean;
+	hasMore: boolean;
+	isActive: boolean;
+	isFetchingMore: boolean;
+	isThread: boolean;
+	newMessagesAfterSeqNum?: any;
+	posts: any[];
+	renderIntro?: any;
+	skipParentPost: boolean;
+	streamId: string;
+	teamId: string;
+	teammates?: CSUser[];
+	threadId: string;
+
+	markRead: any;
+	onDidChangeVisiblePosts: any;
+	onDidScrollToTop: any;
+	onScroll: any;
+	postAction?: Function;
+}
 
 const noop = () => {};
 export default infiniteLoadable(
-	class PostList extends React.Component {
+	class PostList extends React.Component<Props, State> {
 		static defaultProps = {
 			onDidChangeVisiblePosts: noop
 		};
-		list = React.createRef();
+		list = React.createRef<HTMLDivElement>();
 		showUnreadBanner = true;
 		scrolledOffBottom = false;
 		state = {};
@@ -27,13 +53,17 @@ export default infiniteLoadable(
 		getSnapshotBeforeUpdate(prevProps, _prevState) {
 			if (prevProps.isFetchingMore && !this.props.isFetchingMore) {
 				const $list = this.list.current;
+				if ($list == null) return null;
+
 				return $list.scrollHeight - $list.scrollTop;
 			}
 			return null;
 		}
 
 		componentDidUpdate(prevProps, _prevState, snapshot) {
-			if (snapshot) this.list.current.scrollTop = this.list.current.scrollHeight - snapshot;
+			if (snapshot && this.list.current != null) {
+				this.list.current.scrollTop = this.list.current.scrollHeight - snapshot;
+			}
 
 			const prevPosts = prevProps.posts;
 			const { posts } = this.props;
@@ -103,9 +133,8 @@ export default infiniteLoadable(
 		};
 
 		scrollToUnread = () => {
-			const $firstUnreadPost = this.list.current
-				.getElementsByClassName("post new-separator")
-				.item(0);
+			const $firstUnreadPost =
+				this.list.current && this.list.current.getElementsByClassName("post new-separator").item(0);
 			$firstUnreadPost && $firstUnreadPost.scrollIntoView({ behavior: "smooth" });
 		};
 
@@ -120,16 +149,18 @@ export default infiniteLoadable(
 					return post;
 				}
 			}
+
+			return undefined;
 		};
 
 		scrollTo = id => {
 			const { posts } = this.props;
 			if (id === posts[posts.length - 1].id) {
 				this.scrollToBottom();
-			} else {
+			} else if (this.list.current != null) {
 				this.list.current
 					.getElementsByClassName("post")
-					.namedItem(id)
+					.namedItem(id)!
 					.scrollIntoView({ behavior: "smooth" });
 			}
 		};
@@ -242,7 +273,6 @@ export default infiniteLoadable(
 							<React.Fragment key={post.id}>
 								<Post
 									id={post.id}
-									usernames={this.props.usernamesRegexp}
 									teammates={this.props.teammates}
 									currentUserId={this.props.currentUserId}
 									currentUserName={this.props.currentUserName}
@@ -261,4 +291,4 @@ export default infiniteLoadable(
 			);
 		}
 	}
-);
+) as any;

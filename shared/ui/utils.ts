@@ -126,7 +126,7 @@ export function debounceAndCollectToAnimationFrame(fn: Function): Function {
 	};
 }
 
-export const rAFThrottle = (fn: Function): Function => {
+export const rAFThrottle = (fn: Function) => {
 	let requestId: number | undefined;
 	let lastArgs: any[] = [];
 
@@ -185,7 +185,7 @@ export const getCurrentCursorPosition = (parentId: string) => {
 	let node: any;
 
 	// console.log(selection);
-	if (selection.focusNode) {
+	if (selection != null && selection.focusNode) {
 		if (isChildOf(selection.focusNode, parentId)) {
 			node = selection.focusNode;
 			charCount = selection.focusOffset;

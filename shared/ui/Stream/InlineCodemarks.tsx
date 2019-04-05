@@ -306,7 +306,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	});
 
 	repositionElements = $elements => {
-		// @ts-ignore
 		$elements.sort((a, b) => a.dataset.top - b.dataset.top);
 		// const $composeDiv = document.getElementsByClassName("compose float-compose");
 
@@ -314,18 +313,15 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		// let runningYAdjustment = 0;
 		for (let $element of $elements) {
 			const domRect = $element.getBoundingClientRect();
-			// @ts-ignore
 			const origTop = parseInt($element.dataset.top, 10);
 			const yDiff = bottomOfLastDiv - origTop + 20;
 			const height = domRect.bottom - domRect.top;
 
 			// const origMargin = parseInt($element.style.marginTop, 10) || 0;
 			if (yDiff > 0) {
-				// @ts-ignore
 				$element.style.marginTop = yDiff + "px";
 				bottomOfLastDiv = origTop + height + yDiff;
 			} else {
-				// @ts-ignore
 				$element.style.marginTop = "0";
 				bottomOfLastDiv = origTop + height;
 			}

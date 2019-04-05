@@ -9,7 +9,7 @@ import { markdownify } from "./Markdowner";
 import Timestamp from "./Timestamp";
 import CodemarkDetails from "./CodemarkDetails";
 import { DocumentMarker, CodemarkPlus } from "@codestream/protocols/agent";
-import { CodemarkType, CSUser } from "@codestream/protocols/api";
+import { CodemarkType, CSUser, CSMe } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
 import { range } from "../utils";
@@ -21,7 +21,7 @@ interface State {
 	showLabelText: boolean;
 }
 interface Props {
-	currentUser: CSUser;
+	currentUser: CSMe;
 	selected?: boolean;
 	collapsed?: boolean;
 	inline?: boolean;
@@ -165,12 +165,13 @@ export class Codemark extends React.Component<Props, State> {
 		return null;
 	}
 
-	handleClickCodemark = (event: React.SyntheticEvent): any => {
+	handleClickCodemark = (event: React.MouseEvent): any => {
 		event.preventDefault();
 		if (event && event.currentTarget && event.currentTarget.tagName === "A") return false;
 		if (this.props.selected) return false;
 
-		if (window.getSelection().toString().length > 0) {
+		const selection = window.getSelection();
+		if (selection != null && selection.toString().length > 0) {
 			// in this case the user has selected a string
 			// by dragging
 			return;
@@ -178,15 +179,11 @@ export class Codemark extends React.Component<Props, State> {
 		this.props.onClick && this.props.onClick(this.props.codemark, this.props.marker);
 	};
 
-	handleMouseEnterCodemark = (event: React.SyntheticEvent): any => {
-		this.props.onMouseEnter && this.props.onMouseEnter(this.props.marker);
-	};
+	handleMouseEnterCodemark = (event: React.MouseEvent): any => {};
 
-	handleMouseLeaveCodemark = (event: React.SyntheticEvent): any => {
-		this.props.onMouseLeave && this.props.onMouseLeave(this.props.marker);
-	};
+	handleMouseLeaveCodemark = (event: React.MouseEvent): any => {};
 
-	handleMenuClick = event => {
+	handleMenuClick = (event: React.MouseEvent) => {
 		event.stopPropagation();
 		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
 	};
@@ -453,7 +450,7 @@ const unkownAuthor = {
 const mapStateToProps = (state, props) => {
 	const { preferences, users, session } = state;
 	return {
-		currentUser: users[session.userId],
+		currentUser: users[session.userId] as CSMe,
 		author: getUserByCsId(users, props.codemark.creatorId) || (unkownAuthor as CSUser),
 		codemarkKeybindings: preferences.codemarkKeybindings || EMPTY_OBJECT
 	};

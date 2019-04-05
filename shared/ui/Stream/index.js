@@ -33,7 +33,7 @@ import {
 	getDMName
 } from "../store/streams/reducer";
 import { getCodemark } from "../store/codemarks/reducer";
-import { getTeamMembers, getUsernamesRegexp } from "../store/users/reducer";
+import { getTeamMembers } from "../store/users/reducer";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { HostApi } from "../webview-api";
 import {
@@ -649,7 +649,6 @@ export class SimpleStream extends Component {
 						<InlineCodemarks
 							activePanel={activePanel}
 							setActivePanel={this.setActivePanel}
-							usernames={this.props.usernamesRegexp}
 							currentUserId={this.props.currentUserId}
 							currentUserName={this.props.currentUserName}
 							postAction={this.postAction}
@@ -671,7 +670,6 @@ export class SimpleStream extends Component {
 						<KnowledgePanel
 							activePanel={activePanel}
 							setActivePanel={this.setActivePanel}
-							usernames={this.props.usernamesRegexp}
 							currentUserId={this.props.currentUserId}
 							currentUserName={this.props.currentUserName}
 							postAction={this.postAction}
@@ -818,7 +816,6 @@ export class SimpleStream extends Component {
 											isActive={this.props.activePanel === "main"}
 											hasFocus={this.props.hasFocus}
 											newMessagesAfterSeqNum={this.state.newMessagesAfterSeqNum}
-											usernamesRegexp={this.props.usernamesRegexp}
 											teammates={this.props.teammates}
 											currentUserId={this.props.currentUserId}
 											currentUserName={this.props.currentUserName}
@@ -870,7 +867,6 @@ export class SimpleStream extends Component {
 											ref={this.setThreadListRef}
 											isActive={this.props.activePanel === "thread"}
 											hasFocus={this.props.hasFocus}
-											usernamesRegexp={this.props.usernamesRegexp}
 											teammates={this.props.teammates}
 											currentUserId={this.props.currentUserId}
 											currentUserName={this.props.currentUserName}
@@ -2099,7 +2095,6 @@ const mapStateToProps = state => {
 		repoId: context.currentRepoId,
 		hasFocus: context.hasFocus,
 		scmInfo: editorContext.scm,
-		usernamesRegexp: getUsernamesRegexp(state),
 		currentUserId: user.id,
 		currentUserName: user.username,
 		mutedStreams: preferences.mutedStreams || {},

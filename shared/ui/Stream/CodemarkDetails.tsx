@@ -1,15 +1,13 @@
 import React from "react";
 import { connect } from "react-redux";
-import { setCodemarkStatus } from "./actions";
 import ScrollBox from "./ScrollBox";
 import PostList from "./PostList";
 import { MessageInput } from "./MessageInput";
-import { getTeamMembers, getUsernamesRegexp } from "../store/users/reducer";
+import { getTeamMembers } from "../store/users/reducer";
 import CodemarkActions from "./CodemarkActions";
-import { CodemarkPlus } from "@codestream/protocols/agent";
+import { CodemarkPlus, Capabilities } from "@codestream/protocols/agent";
 import { createPost } from "./actions";
-
-const PostListJs: any = PostList;
+import { CSUser, CSMe } from "@codestream/protocols/api";
 
 interface State {
 	editingPostId?: string;
@@ -18,20 +16,20 @@ interface State {
 
 interface Props {
 	codemark: CodemarkPlus;
-	teammates?: any;
-	currentUserId?: any;
+	teammates: CSUser[];
+	currentUserId: string;
 	slashCommands?: any;
 	services?: any;
-	isSlackTeam?: any;
+	isSlackTeam: boolean;
 	height?: Number;
-	capabilities?: any;
+	capabilities: Capabilities;
 	hasFocus: boolean;
-	usernamesRegexp: string;
 	currentUserName: string;
 	teamId: string;
 	streamId: string;
+
 	onSubmitPost?: any;
-	createPost?: any;
+	createPost(...args: Parameters<typeof createPost>): ReturnType<ReturnType<typeof createPost>>;
 	postAction?: Function;
 }
 
@@ -80,10 +78,9 @@ export class CodemarkDetails extends React.Component<Props, State> {
 					<div className="shadow-overlay">
 						<div className="postslist threadlist" onClick={this.handleClickPost}>
 							<ScrollBox>
-								<PostListJs
+								<PostList
 									isActive={true}
 									hasFocus={this.props.hasFocus}
-									usernamesRegexp={this.props.usernamesRegexp}
 									teammates={this.props.teammates}
 									currentUserId={this.props.currentUserId}
 									currentUserName={this.props.currentUserName}
@@ -129,7 +126,7 @@ const mapStateToProps = state => {
 	const team = teams[context.currentTeamId];
 	const teamMembers = getTeamMembers(state);
 
-	const user = users[session.userId];
+	const user: CSMe = users[session.userId];
 
 	const providerInfo =
 		(user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT;
@@ -146,16 +143,16 @@ const mapStateToProps = state => {
 		teamName: team.name || "",
 		repoId: context.currentRepoId,
 		hasFocus: context.hasFocus,
-		usernamesRegexp: getUsernamesRegexp(state),
 		currentUserId: user.id,
 		currentUserName: user.username,
 		services,
-		isSlackTeam:
+		isSlackTeam: Boolean(
 			teams[context.currentTeamId].providerInfo && teams[context.currentTeamId].providerInfo.slack
+		)
 	};
 };
 
 export default connect(
 	mapStateToProps,
-	{ setCodemarkStatus, createPost }
+	{ createPost }
 )(CodemarkDetails);
