@@ -1,5 +1,7 @@
 package com.codestream
 
+import com.github.salomonbrys.kotson.fromJson
+import com.google.gson.JsonObject
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.State
@@ -43,7 +45,8 @@ data class SettingsServiceState(
     var proxyStrictSSL: Boolean = true,
     var webViewConfig: MutableMap<String, String?> = mutableMapOf(
         INLINE_CODEMARKS to "true"
-    )
+    ),
+    var webViewContext: String = "{}"
 )
 
 @State(name = "CodeStream", storages = [Storage("codestream.xml")])
@@ -72,17 +75,11 @@ class SettingsService : PersistentStateComponent<SettingsServiceState> {
             )
         }
     val ideInfo: Ide
-        get() {
-            return Ide()
-        }
+        get() = Ide()
     val traceLevel: TraceLevel
-        get() {
-            return TraceLevel.DEBUG
-        }
+        get() = TraceLevel.DEBUG
     val isDebugging: Boolean
-        get() {
-            return DEBUG
-        }
+        get() = DEBUG
     var currentStreamId: String? = null
     var threadId: String? = null
 
@@ -95,11 +92,15 @@ class SettingsService : PersistentStateComponent<SettingsServiceState> {
     val showMarkers get() = state.showMarkers
 
     val proxyUrl: String?
-        get() {
-            return if (state.proxyUrl.isNotEmpty()) state.proxyUrl else null
-        }
+        get() = if (state.proxyUrl.isNotEmpty()) state.proxyUrl else null
 
     val proxySupport get() = state.proxySupport
+
+    var webViewContext: JsonObject
+        get() = gson.fromJson(state.webViewContext)
+        set(jsonObject: JsonObject) {
+            state.webViewContext = jsonObject.toString()
+        }
 
     fun getWebviewConfigs(): Configs = Configs(
         state.serverUrl,
@@ -148,4 +149,5 @@ class SettingsService : PersistentStateComponent<SettingsServiceState> {
                 else -> null
             }
         }
+
 }

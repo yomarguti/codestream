@@ -121,12 +121,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
                     settingsService.getWebviewConfigs(),
                     settingsService.environment,
                     settingsService.environmentVersion,
-                    WebViewContext(
-                        sessionService.userLoggedIn!!.team.id,
-                        settingsService.currentStreamId,
-                        settingsService.threadId,
-                        true
-                    ),
+                    settingsService.webViewContext,
                     editorService.getEditorContext(),
                     UserSession(
                         sessionService.userLoggedIn!!.state.userId
@@ -200,12 +195,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
             settingsService.getWebviewConfigs(),
             settingsService.environment,
             settingsService.environmentVersion,
-            WebViewContext(
-                sessionService.userLoggedIn!!.team.id,
-                settingsService.currentStreamId,
-                settingsService.threadId,
-                true
-            ),
+            settingsService.webViewContext,
             editorService.getEditorContext(),
             UserSession(
                 sessionService.userLoggedIn!!.state.userId
@@ -295,12 +285,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
             settingsService.getWebviewConfigs(),
             settingsService.environment,
             settingsService.environmentVersion,
-            WebViewContext(
-                sessionService.userLoggedIn!!.team.id,
-                settingsService.currentStreamId,
-                settingsService.threadId,
-                true
-            ),
+            settingsService.webViewContext,
             editorService.getEditorContext(),
             UserSession(
                 sessionService.userLoggedIn!!.state.userId
@@ -318,7 +303,11 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
     }
 
     private fun contextDidChange(message: WebViewMessage) {
-        val notification = gson.fromJson<ContextDidChangeNotification>(message.params!!)
+        if (message.params == null) return
+
+        settingsService.webViewContext = message.params["context"].obj
+
+        val notification = gson.fromJson<ContextDidChangeNotification>(message.params)
         notification.context.panelStack?.get(0)?.let {
             if (settingsService.autoHideMarkers && settingsService.showMarkers) {
                 if (it == "codemarks-for-file") {
