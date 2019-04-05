@@ -18,9 +18,9 @@ Param(
 	[System.String] $Verbosity = "quiet",
 
 	[Parameter(Mandatory = $false)]
-	[ValidateSet("15.0")]
+	[ValidateSet("16.0")]
 	[Alias("t")]
-	[double] $VSVersion = 15.0,
+	[double] $VSVersion = 16.0,
 
 	# TODO: Get this to work -- i.e. auto install into a vs experiemental instance
 	# [Parameter(Mandatory = $false)]
@@ -112,9 +112,9 @@ function Build-Extension {
 	# https://stackoverflow.com/questions/42874400/how-to-build-a-visual-studio-2017-vsix-using-msbuild
 	$msbuild = ""
 	$vstest = ""
-	if ($VSVersion -eq 15.0) {
-		$msbuild = "C:/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/MSBuild/15.0/Bin/MSBuild.exe"
-		$vstest = "C:/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/Common7/IDE/CommonExtensions/Microsoft/TestWindow/vstest.console.exe"
+	if ($VSVersion -eq 16.0) {
+		$msbuild = "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe"
+		$vstest = "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/Common7/IDE/CommonExtensions/Microsoft/TestWindow/vstest.console.exe"
 	}
 
 	$OutputDir = $(Join-Path $root "build/artifacts/$($platform)/$($Mode)")
