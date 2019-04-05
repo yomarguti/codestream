@@ -160,7 +160,7 @@ namespace CodeStream.VisualStudio.Services {
 
 			var lines = view.VisualSnapshot.Lines;
 			var startLine = lines.FirstOrDefault(_ => _.LineNumber == line);
-			if (startLine == null || view.TextSnapshot) return;
+			if (startLine == null || view.TextSnapshot == null) return;
 
 			var span = new SnapshotSpan(view.TextSnapshot, Span.FromBounds(startLine.Start, startLine.Start + 1));
 			view.ViewScroller.EnsureSpanVisible(span, atTop == true ?
