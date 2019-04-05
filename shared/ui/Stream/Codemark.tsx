@@ -213,9 +213,13 @@ export class Codemark extends React.Component<Props, State> {
 		this.props.onClick && this.props.onClick(this.props.codemark, this.props.marker);
 	};
 
-	handleMouseEnterCodemark = (event: React.MouseEvent): any => {};
+	handleMouseEnterCodemark = (event: React.MouseEvent): any => {
+		this.props.onMouseEnter && this.props.onMouseEnter(this.props.marker);
+	};
 
-	handleMouseLeaveCodemark = (event: React.MouseEvent): any => {};
+	handleMouseLeaveCodemark = (event: React.MouseEvent): any => {
+		this.props.onMouseLeave && this.props.onMouseLeave(this.props.marker);
+	};
 
 	handleMenuClick = (event: React.MouseEvent) => {
 		event.stopPropagation();
