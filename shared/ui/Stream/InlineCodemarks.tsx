@@ -357,56 +357,49 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		this.hiddenCodemarks = {};
 		return (
 			<ScrollBox>
-				<div className="channel-list vscroll">
-					<div
-						className={cx("section", "has-children", {
-							expanded: true
+				<div
+					className="channel-list vscroll"
+					onClick={this.handleClickField}
+					id="inline-codemarks-scroll-container"
+					style={{ paddingTop: "20px" }}
+				>
+					{documentMarkers
+						.sort((a, b) => this.getMarkerStartLine(a) - this.getMarkerStartLine(b))
+						.map(docMarker => {
+							const { codemark } = docMarker;
+							// @ts-ignore
+							//if (!codemark.pinned && !showUnpinned) return null;
+							// if (codemark.type === "issue" && codemark.status === "closed" && !showClosed)
+							// return null;
+							const hidden =
+								(!codemark.pinned && !showUnpinned) ||
+								(codemark.type === "issue" && codemark.status === "closed" && !showClosed);
+							if (hidden) {
+								this.hiddenCodemarks[docMarker.id] = true;
+								return null;
+							}
+							return (
+								<Codemark
+									key={codemark.id}
+									// @ts-ignore
+									codemark={docMarker.codemark}
+									marker={docMarker}
+									collapsed={true}
+									inline={true}
+									hidden={hidden}
+									selected={selectedDocMarkerId === docMarker.id}
+									usernames={this.props.usernames}
+									onClick={this.handleClickCodemark}
+									onMouseEnter={this.handleHighlightCodemark}
+									onMouseLeave={this.handleUnhighlightCodemark}
+									action={this.props.postAction}
+									query={this.state.query}
+									viewHeadshots={this.props.viewHeadshots}
+									postAction={this.props.postAction}
+									style={{ position: "relative", marginBottom: "20px" }}
+								/>
+							);
 						})}
-					>
-						<div className="header top">
-							<Icon name="triangle-right" className="triangle-right" />
-							<span>
-								In This File: <span className="filename">{this.props.fileNameToFilterFor}</span>
-							</span>
-						</div>
-
-						{documentMarkers
-							.sort((a, b) => b.createdAt - a.createdAt)
-							.map(docMarker => {
-								const { codemark } = docMarker;
-								// @ts-ignore
-								//if (!codemark.pinned && !showUnpinned) return null;
-								// if (codemark.type === "issue" && codemark.status === "closed" && !showClosed)
-								// return null;
-								const hidden =
-									(!codemark.pinned && !showUnpinned) ||
-									(codemark.type === "issue" && codemark.status === "closed" && !showClosed);
-								if (hidden) {
-									this.hiddenCodemarks[docMarker.id] = true;
-									return null;
-								}
-								return (
-									<Codemark
-										key={codemark.id}
-										// @ts-ignore
-										codemark={docMarker.codemark}
-										marker={docMarker}
-										collapsed={true}
-										inline={false}
-										hidden={hidden}
-										selected={selectedDocMarkerId === docMarker.id}
-										usernames={this.props.usernames}
-										onClick={this.handleClickCodemark}
-										onMouseEnter={this.handleHighlightCodemark}
-										onMouseLeave={this.handleUnhighlightCodemark}
-										action={this.props.postAction}
-										query={this.state.query}
-										viewHeadshots={this.props.viewHeadshots}
-										postAction={this.props.postAction}
-									/>
-								);
-							})}
-					</div>
 				</div>
 			</ScrollBox>
 		);
@@ -642,7 +635,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const height = lessThanFull
 			? expectedLineHeight * numLinesVisible + paddingTop + "px"
 			: "calc(100vh - " + paddingTop + "px)";
-		console.log("HEIGHT IS: ", height, " because ", lessThanFull);
+		// console.log("HEIGHT IS: ", height, " because ", lessThanFull);
 		const divStyle = {
 			top: paddingTop,
 			// background: "#333366",
@@ -668,7 +661,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				>
 					{this.renderHoverIcons(numLinesVisible)}
 					{this.renderNoCodemarks()}
-					{/*this.renderCongratulations() */}
+					{this.renderCongratulations()}
 					{this.props.children}
 				</div>
 			);
@@ -895,7 +888,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		return (
 			<div ref={this.root} className={cx("panel inline-panel", { "full-height": viewInline })}>
-				{!viewInline && <div className="panel-header">Codemarks</div>}
 				{this.state.isLoading ? null : viewInline ? this.renderInline() : this.renderList()}
 				{this.printViewSelectors()}
 			</div>
