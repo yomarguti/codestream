@@ -15,13 +15,24 @@ import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
 import { range } from "../utils";
 import { getUserByCsId } from "../store/users/reducer";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
+import { CodemarkForm } from "./CodemarkForm";
+import { editCodemark } from "../store/codemarks/actions";
 
 interface State {
+	isEditing: boolean;
 	menuOpen?: boolean;
 	menuTarget?: any;
 	showLabelText: boolean;
 }
-interface Props {
+
+interface DispatchProps {
+	editCodemark: typeof editCodemark;
+	setCodemarkStatus: typeof setCodemarkStatus;
+	setUserPreference: typeof setUserPreference;
+	deletePost: typeof deletePost;
+}
+
+interface Props extends DispatchProps {
 	currentUser: CSMe;
 	selected?: boolean;
 	collapsed?: boolean;
@@ -31,20 +42,17 @@ interface Props {
 	codemark: CodemarkPlus;
 	marker: DocumentMarker;
 	usernames: string[];
-	setCodemarkStatus: Function;
 	postAction?: Function;
 	action(action: string, post: any, args: any): any;
 	onClick?(event: React.SyntheticEvent, codemark: CodemarkPlus, marker: DocumentMarker): any;
 	onMouseEnter?(marker: DocumentMarker): any;
 	onMouseLeave?(marker: DocumentMarker): any;
-	deletePost(...args: any[]): any;
 	query?: string;
 	style?: object;
 	lineNum?: Number;
 	top?: Number;
 	showLabelText?: boolean;
 	codemarkKeybindings: { [key: string]: string };
-	setUserPreference: Function;
 	hidden: boolean;
 	deselectCodemarks?: Function;
 }
@@ -57,16 +65,46 @@ export class Codemark extends React.Component<Props, State> {
 	constructor(props: Props) {
 		super(props);
 		this.state = {
+			isEditing: false,
 			menuOpen: false,
 			showLabelText: false
 		};
 	}
 
 	render() {
-		if (this.props.inline) return this.renderInlineCodemark();
-		if (this.props.collapsed) return this.renderCollapsedCodemark();
-		else return null;
+		let content;
+		if (this.state.isEditing)
+			content = (
+				<div
+					className="compose float-compose multi-compose"
+					style={{ top: `${this.props.top}px` }}
+					data-top={this.props.top}
+				>
+					<CodemarkForm
+						isEditing
+						editingCodemark={this.props.codemark}
+						onSubmit={this.editCodemark}
+						onClickClose={() => this.setState({ isEditing: false })}
+						streamId={this.props.codemark.streamId}
+						collapsed={false}
+					/>
+				</div>
+			);
+		else if (this.props.inline) content = this.renderInlineCodemark();
+		else if (this.props.collapsed) content = this.renderCollapsedCodemark();
+
+		return <span>{content}</span>;
 	}
+
+	editCodemark = async ({ text, color, assignees, title }) => {
+		await this.props.editCodemark(this.props.codemark.id, {
+			color,
+			text,
+			title,
+			assignees
+		});
+		this.setState({ isEditing: false });
+	};
 
 	renderTextLinkified = text => {
 		let html;
@@ -205,11 +243,16 @@ export class Codemark extends React.Component<Props, State> {
 		if (!action) return;
 
 		switch (action) {
-			case "toggle-pinned":
+			case "toggle-pinned": {
 				this.togglePinned();
 				break;
+			}
 			case "delete-post": {
 				this.props.deletePost(this.props.codemark.streamId, this.props.codemark.postId);
+				break;
+			}
+			case "edit-post": {
+				this.setState({ isEditing: true });
 				break;
 			}
 		}
@@ -600,7 +643,7 @@ const mapStateToProps = (state, props) => {
 	};
 };
 
-export default connect(
+export default connect<any, DispatchProps, any>(
 	mapStateToProps,
-	{ setCodemarkStatus, setUserPreference, deletePost }
+	{ setCodemarkStatus, setUserPreference, deletePost, editCodemark }
 )(Codemark);
