@@ -23,8 +23,7 @@ namespace CodeStream.VisualStudio.Services {
 			CodemarkType codemarkType,
 			bool ensureInView = true,
 			CancellationToken? cancellationToken = null);
-
-		Task ShowCodemarkAsync(string codemarkId,
+		Task ShowCodemarkAsync(int codemarkIndex,
 			CancellationToken? cancellationToken = null);
 		Task EditorSelectionChangedNotificationAsync(Uri uri,
 			EditorState editorState,
@@ -124,11 +123,11 @@ namespace CodeStream.VisualStudio.Services {
 			return Task.CompletedTask;
 		}
 
-		public async Task ShowCodemarkAsync(string codemarkId, CancellationToken? cancellationToken = null) {
-			if (IsReady && !codemarkId.IsNullOrWhiteSpace()) {
+		public async Task ShowCodemarkAsync(int codemarkIndex, CancellationToken? cancellationToken = null) {
+			if (IsReady && codemarkIndex > 0) {
 				await WebviewIpc.NotifyAsync(new ShowCodemarkNotificationType {
 					Params = new ShowCodemarkNotification {
-						CodemarkId = codemarkId
+						CodemarkIndex = codemarkIndex
 					}
 				});
 			}

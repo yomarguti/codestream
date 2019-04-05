@@ -18,14 +18,13 @@ namespace CodeStream.VisualStudio.Commands {
 			var commandService = await package.GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
 
 			var commands = new List<BookmarkShortcutCommands>();
-			for (var i = 0; i < 10; i++) {
+			for (var i = 1; i < 10; i++) {
 				commands.Add(new BookmarkShortcutCommands(package, commandService, i));
 			}
 			Log.Verbose($"{commands.Count} {nameof(BookmarkShortcutCommands)}s");
 		}
 
-		private static readonly Dictionary<int, int> Map = new Dictionary<int, int> {
-			{0, PackageIds.BookmarkCommand0CommandId },
+		private static readonly Dictionary<int, int> Map = new Dictionary<int, int> {			
 			{1, PackageIds.BookmarkCommand1CommandId },
 			{2, PackageIds.BookmarkCommand2CommandId },
 			{3, PackageIds.BookmarkCommand3CommandId },
@@ -47,12 +46,11 @@ namespace CodeStream.VisualStudio.Commands {
 		}
 
 		void InvokeHandler(object sender, BookmarkShortcutEventArgs args) {
-			var codeStreamService = ServiceLocator.Get<SCodeStreamService, ICodeStreamService>();
-			Log.Debug($"Handle {nameof(BookmarkShortcutCommands)} for {args.Index}");
+			if (args == null || args.Index < 1) return;
 
-			//look up ID from saved settings for this Index
-
-			codeStreamService.ShowCodemarkAsync("", cancellationToken: CancellationToken.None);
+			var codeStreamService = ServiceLocator.Get<SCodeStreamService, ICodeStreamService>();			
+			codeStreamService.ShowCodemarkAsync(args.Index, cancellationToken: CancellationToken.None);
+			Log.Debug($"Handled {nameof(BookmarkShortcutCommands)} for {args.Index}");
 		}
 
 		class BookmarkShortcutEventArgs : EventArgs {
