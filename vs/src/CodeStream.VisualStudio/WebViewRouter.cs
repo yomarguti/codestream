@@ -215,7 +215,7 @@ namespace CodeStream.VisualStudio
                                                 var @params = message.Params.ToObject<EditorRevealRangeRequest>();
                                                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 
-                                                var editorResponse = _ideService.OpenEditor(@params.Uri, @params.Range?.Start?.Line + 1);
+                                                var editorResponse = _ideService.OpenEditor(@params.Uri, @params.Range?.Start?.Line + 1, @params.AtTop);
 
                                                 scope.FulfillRequest(new JValue(editorResponse.ToString()));
                                             }

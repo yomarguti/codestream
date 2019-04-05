@@ -35,16 +35,18 @@ namespace CodeStream.VisualStudio.Models
 
     public class EditorRevealRangeRequest
     {
-        public EditorRevealRangeRequest(Uri uri, Range range, bool? preserveFocus)
+        public EditorRevealRangeRequest(Uri uri, Range range, bool? preserveFocus, bool? atTop)
         {
             Uri = uri.ToString();
             Range = range;
             PreserveFocus = preserveFocus;
+			AtTop = atTop;
         }
 
         public string Uri { get; }
         public Range Range { get; }
         public bool? PreserveFocus { get; }
+		public bool? AtTop { get; }
     }
 
     public class EditorRevealMarkerResponse
