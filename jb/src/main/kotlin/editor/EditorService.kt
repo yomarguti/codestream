@@ -376,9 +376,9 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
         }
 
         override fun getIcon(): Icon {
-            return IconLoader.getIcon(
-                "/images/marker-${marker.codemark.type ?: "comment"}-${marker.codemark.color ?: "blue"}.svg"
-            )
+            val type = marker.codemark.type.ifNullOrBlank { "comment" }
+            val color = marker.codemark.color.ifNullOrBlank { "blue" }
+            return IconLoader.getIcon("/images/marker-$type-$color.svg")
         }
 
 
@@ -616,6 +616,9 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
 //        }
 //    }
 }
+
+private fun String?.ifNullOrBlank(defaultValue: () -> String): String =
+    if (this.isNullOrBlank()) defaultValue() else this
 
 val Document.uri: String?
     get() {
