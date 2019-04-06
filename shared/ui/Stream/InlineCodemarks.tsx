@@ -1034,13 +1034,21 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		// setTimeout(() => this.props.focusInput(), 500);
 	};
 
-	handleClickCodemark = async (codemark, docMarker) => {
+	handleClickCodemark = async (event, codemark, docMarker) => {
 		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Codemark Clicked",
 			properties: {
 				"Codemark Location": "Spatial View"
 			}
 		});
+
+		if (
+			this.state.selectedDocMarkerId === docMarker.id &&
+			event.target &&
+			(event.target.classList.contains("author") || event.target.closest(".author"))
+		) {
+			return this.deselectCodemarks();
+		}
 
 		let markerId;
 		if (codemark.markers) {

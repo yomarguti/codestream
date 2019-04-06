@@ -33,7 +33,7 @@ interface Props {
 	setCodemarkStatus: Function;
 	postAction?: Function;
 	action(action: string, post: any, args: any): any;
-	onClick?(codemark: CodemarkPlus, marker: DocumentMarker): any;
+	onClick?(event: React.SyntheticEvent, codemark: CodemarkPlus, marker: DocumentMarker): any;
 	onMouseEnter?(marker: DocumentMarker): any;
 	onMouseLeave?(marker: DocumentMarker): any;
 	deletePost(...args: any[]): any;
@@ -169,7 +169,7 @@ export class Codemark extends React.Component<Props, State> {
 	handleClickCodemark = (event: React.MouseEvent): any => {
 		event.preventDefault();
 		if (event && event.currentTarget && event.currentTarget.tagName === "A") return false;
-		if (this.props.selected) return false;
+		// if (this.props.selected) return false;
 
 		const selection = window.getSelection();
 		if (selection != null && selection.toString().length > 0) {
@@ -177,7 +177,7 @@ export class Codemark extends React.Component<Props, State> {
 			// by dragging
 			return;
 		}
-		this.props.onClick && this.props.onClick(this.props.codemark, this.props.marker);
+		this.props.onClick && this.props.onClick(event, this.props.codemark, this.props.marker);
 	};
 
 	handleMouseEnterCodemark = (event: React.MouseEvent): any => {
