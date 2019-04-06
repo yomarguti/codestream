@@ -389,7 +389,7 @@ export class Codemark extends React.Component<Props, State> {
 					</div>
 					{selected && <CodemarkDetails codemark={codemark} postAction={this.props.postAction} />}
 				</div>
-				{this.props.hover && (
+				{this.props.hover && !selected && (
 					<div style={{ position: "absolute", right: "5px", bottom: "5px" }}>
 						<Icon
 							className="info"

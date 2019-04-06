@@ -1064,6 +1064,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		});
 
 		if (
+			event.target &&
+			(event.target.classList.contains("info") || event.target.closest(".info"))
+		) {
+			return;
+		}
+
+		if (
 			this.state.selectedDocMarkerId === docMarker.id &&
 			event.target &&
 			(event.target.classList.contains("author") || event.target.closest(".author"))
