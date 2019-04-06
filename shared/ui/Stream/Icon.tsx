@@ -31,7 +31,7 @@ const Icon = React.forwardRef<any, Props>((props, ref) => {
 	if (props.title) {
 		return (
 			<Tooltip
-				title={props.title}
+				content={props.title}
 				placement={props.placement}
 				align={props.align}
 				delay={props.delay}

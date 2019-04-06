@@ -25,6 +25,7 @@ interface Props {
 	selected?: boolean;
 	collapsed?: boolean;
 	inline?: boolean;
+	hover?: boolean;
 	author: CSUser;
 	codemark: CodemarkPlus;
 	marker: DocumentMarker;
@@ -388,6 +389,17 @@ export class Codemark extends React.Component<Props, State> {
 					</div>
 					{selected && <CodemarkDetails codemark={codemark} postAction={this.props.postAction} />}
 				</div>
+				{this.props.hover && (
+					<div style={{ position: "absolute", right: "5px", bottom: "5px" }}>
+						<Icon
+							className="info"
+							title={this.renderCodemarkFAQ()}
+							placement="bottomRight"
+							delay={1}
+							name="info"
+						/>
+					</div>
+				)}
 			</div>
 		);
 	}
@@ -409,6 +421,44 @@ export class Codemark extends React.Component<Props, State> {
 						</div>
 					);
 				})}
+			</div>
+		);
+	}
+
+	renderCodemarkFAQ() {
+		return (
+			<div className="codemark-faq">
+				Just like Twitter has Tweets, CodeStream uses Codemarks as a unit of conversation.
+				<ul style={{ paddingLeft: "20px" }}>
+					<li>
+						Codemarks are <b>branch-agnostic</b>. That means this codemark will appear "in the right
+						place" even for your teammates who are checked out to a different version of this file.{" "}
+						<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
+							learn more
+						</a>
+					</li>
+					<li>
+						Codemarks <b>move with the code</b>, so your conversation remains connected to the right
+						codeblock even as your code changes.{" "}
+						<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
+							learn about comment drift
+						</a>
+					</li>
+					<li>
+						Codemarks <b>can be managed</b> by archiving or deleting them if they're no longer
+						relevant.{" "}
+						<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
+							see how
+						</a>
+					</li>
+					<li>
+						<b>Replies can be promoted</b> with a <Icon name="star" /> so the best answer surfaces
+						to the top, like in stack overflow.{" "}
+						<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
+							see how
+						</a>
+					</li>
+				</ul>
 			</div>
 		);
 	}

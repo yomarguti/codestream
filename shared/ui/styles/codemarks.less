@@ -123,33 +123,6 @@
 		color: @text-color-highlight;
 		background: rgba(127, 127, 127, 0.4);
 	}
-	&.inline.codemark-congratulations {
-		top: 200px;
-		border-radius: 10px;
-		b {
-			color: @text-color-highlight;
-		}
-		.contents > .body {
-			padding: 10px !important;
-		}
-		h2 {
-			box-sizing: conent-box;
-			text-align: center;
-			margin: -10px -10px 10px -10px;
-			border-bottom: 1px solid @base-border-color;
-			padding: 10px;
-			background: repeating-linear-gradient(
-				-45deg,
-				transparent,
-				transparent 5px,
-				@app-background-color 5px,
-				@app-background-color 10px
-			);
-		}
-		li {
-			margin-bottom: 10px;
-		}
-	}
 	&.inline {
 		position: absolute;
 		padding: 0 !important;
@@ -325,6 +298,9 @@
 			background: @base-background-color;
 		}
 	}
+	.icon.info {
+		opacity: 0.5;
+	}
 	&.type-bookmark:not(.selected) {
 		.contents > .body {
 			padding-left: 28px !important;
@@ -376,4 +352,22 @@
 	text-align: center;
 	font-size: 13px;
 	z-index: 0;
+}
+.codemark-faq {
+	width: 70vw;
+	// opacity: 0.75;
+	color: @text-color-subtle;
+	padding: 10px 10px 0 10px; // 0 on the bottom because the li has a margin-bottom of 10
+	a {
+		text-decoration: none;
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+	b {
+		color: @text-color;
+	}
+	li {
+		margin-bottom: 10px;
+	}
 }
