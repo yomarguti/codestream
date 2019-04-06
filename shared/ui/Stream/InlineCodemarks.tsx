@@ -96,6 +96,7 @@ interface State {
 	openIconsOnLine: number;
 	query: string | undefined;
 	highlightedLine?: number;
+	rippledLine?: number;
 	numAbove: number;
 	numBelow: number;
 	highlightedDocmarker: string | undefined;
@@ -349,14 +350,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	renderList = (paddingTop, fontSize, height) => {
 		const { documentMarkers, showUnpinned, showClosed } = this.props;
-
 		const { selectedDocMarkerId } = this.state;
 
-		if (documentMarkers.length === 0) {
-			return this.renderNoCodemarks();
-		}
-
-		console.log("HEIGHT IS: ", height);
 		this.hiddenCodemarks = {};
 		return [
 			<div
@@ -365,6 +360,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					top: paddingTop,
 					// purple background for debugging purposes
 					// background: "#333366",
+					fontSize: fontSize,
 					position: "fixed",
 					left: 0,
 					height: height,
@@ -376,54 +372,60 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					{this.renderHoverIcons(this.props.numLinesVisible)}
 				</div>
 			</div>,
-			<ScrollBox>
-				<div
-					className="channel-list vscroll"
-					onClick={this.handleClickField}
-					id="inline-codemarks-scroll-container"
-					style={{ paddingTop: "20px" }}
-				>
-					{this.props.children}
-					{documentMarkers
-						.sort((a, b) => this.getMarkerStartLine(a) - this.getMarkerStartLine(b))
-						.map(docMarker => {
-							const { codemark } = docMarker;
-							// @ts-ignore
-							//if (!codemark.pinned && !showUnpinned) return null;
-							// if (codemark.type === "issue" && codemark.status === "closed" && !showClosed)
-							// return null;
-							const hidden =
-								(!codemark.pinned && !showUnpinned) ||
-								(codemark.type === "issue" && codemark.status === "closed" && !showClosed);
-							if (hidden) {
-								this.hiddenCodemarks[docMarker.id] = true;
-								return null;
-							}
-							return (
-								<Codemark
-									key={codemark.id}
-									// @ts-ignore
-									codemark={docMarker.codemark}
-									marker={docMarker}
-									collapsed={true}
-									inline={true}
-									hidden={hidden}
-									hover={this.state.highlightedDocmarker === docMarker.id}
-									selected={selectedDocMarkerId === docMarker.id}
-									usernames={this.props.usernames}
-									onClick={this.handleClickCodemark}
-									onMouseEnter={this.handleHighlightCodemark}
-									onMouseLeave={this.handleUnhighlightCodemark}
-									action={this.props.postAction}
-									query={this.state.query}
-									viewHeadshots={this.props.viewHeadshots}
-									postAction={this.props.postAction}
-									style={{ position: "relative", marginBottom: "20px" }}
-								/>
-							);
-						})}
-				</div>
-			</ScrollBox>
+			<div style={{ height: "100%", paddingTop: "55px" }}>
+				<ScrollBox>
+					<div
+						className="channel-list vscroll"
+						onClick={this.handleClickField}
+						id="inline-codemarks-scroll-container"
+						style={{ paddingTop: "20px", fontSize: fontSize }}
+					>
+						{this.props.children}
+						{documentMarkers
+							.sort(
+								(a, b) =>
+									this.getMarkerStartLine(a) - this.getMarkerStartLine(b) ||
+									a.createdAt - b.createdAt
+							)
+							.map(docMarker => {
+								const { codemark } = docMarker;
+								// @ts-ignore
+								//if (!codemark.pinned && !showUnpinned) return null;
+								// if (codemark.type === "issue" && codemark.status === "closed" && !showClosed)
+								// return null;
+								const hidden =
+									(!codemark.pinned && !showUnpinned) ||
+									(codemark.type === "issue" && codemark.status === "closed" && !showClosed);
+								if (hidden) {
+									this.hiddenCodemarks[docMarker.id] = true;
+									return null;
+								}
+								return (
+									<Codemark
+										key={codemark.id}
+										// @ts-ignore
+										codemark={docMarker.codemark}
+										marker={docMarker}
+										collapsed={true}
+										inline={true}
+										hidden={hidden}
+										hover={this.state.highlightedDocmarker === docMarker.id}
+										selected={selectedDocMarkerId === docMarker.id}
+										usernames={this.props.usernames}
+										onClick={this.handleClickCodemark}
+										onMouseEnter={this.handleHighlightCodemark}
+										onMouseLeave={this.handleUnhighlightCodemark}
+										action={this.props.postAction}
+										query={this.state.query}
+										viewHeadshots={this.props.viewHeadshots}
+										postAction={this.props.postAction}
+										style={{ position: "relative", marginBottom: "20px" }}
+									/>
+								);
+							})}
+					</div>
+				</ScrollBox>
+			</div>
 		];
 	};
 
@@ -504,13 +506,32 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		return $field ? $field.offsetHeight : 100;
 	};
 
+	rippleHoverIcons = lineNum => {
+		const { firstVisibleLine, lastVisibleLine } = this.props;
+
+		if (lineNum === undefined) {
+			// start the ripple
+			this.rippleHoverIcons(firstVisibleLine);
+		} else if (lineNum > lastVisibleLine) {
+			// we're done with the ripple
+			this.setState({ rippledLine: undefined });
+		} else {
+			// set the current line active, and set a timeout
+			// to ripple to the next line
+			setTimeout(() => {
+				this.setState({ rippledLine: lineNum });
+				this.rippleHoverIcons(lineNum + 1);
+			}, 5);
+		}
+	};
+
 	renderHoverIcons = numLinesVisible => {
 		const iconsOnLine0 = getLine0ForEditorLine(
 			this.props.textEditorVisibleRanges,
 			this.state.openIconsOnLine
 		);
 		// console.log("IOL IS: ", iconsOnLine0, " FROM: ", this.state.openIconsOnLine);
-		const highlightedLine = this.state.highlightedLine;
+		const { highlightedLine, rippledLine } = this.state;
 
 		const codeHeight = this.codeHeight();
 		if (iconsOnLine0 >= 0) {
@@ -525,7 +546,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						const top = (codeHeight * lineNum0) / numLinesVisible;
 						// const top = paddingTop ? "calc(" + topPct + " + " + paddingTop + "px)" : topPct;
 						const hover = lineNum0 === highlightedLine;
-						return this.renderIconRow(lineNum0, top, hover, false);
+						const open = lineNum0 === rippledLine;
+						return this.renderIconRow(lineNum0, top, hover, open);
 					})}
 					{
 						// <div style={{ position: "fixed", bottom: "30px", right: "20px", whiteSpace: "pre" }}>
@@ -541,7 +563,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const { fileNameToFilterFor, viewInline } = this.props;
 
 		if (fileNameToFilterFor && fileNameToFilterFor.length) {
-			const target = viewInline ? "an icon" : "the lightbulb";
 			return (
 				<div key="no-codemarks" className="no-codemarks">
 					There are no codemarks
@@ -554,7 +575,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					in <b>{this.props.fileNameToFilterFor}</b>
 					<br />
 					<br />
-					Discuss code with your team by selecting a range and clicking {target} (
+					Discuss code with your team by selecting a range and clicking an icon (
 					<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
 						show me how
 					</a>
@@ -888,7 +909,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const { viewInline } = this.props;
 
 		return (
-			<div ref={this.root} className={cx("panel inline-panel", { "full-height": viewInline })}>
+			<div ref={this.root} className={cx("panel inline-panel full-height")}>
 				{this.state.isLoading ? null : this.renderCodemarks()}
 				{this.printViewSelectors()}
 			</div>
