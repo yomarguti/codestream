@@ -52,6 +52,16 @@ export default class Menu extends Component {
 		}
 	}
 
+	repositionSubmenuIfNecessary() {
+		if (!this._div) return;
+		const $submenu = this._div.querySelector("#active-submenu");
+		if ($submenu) {
+			const rect = $submenu.getBoundingClientRect();
+			const tooFar = rect.top + $submenu.offsetHeight + 35 - window.innerHeight;
+			if (tooFar > 0) $submenu.style.bottom = "10px";
+		}
+	}
+
 	componentWillUnmount() {
 		const modalRoot = document.getElementById("modal-root");
 		this.closeMenu();
@@ -70,6 +80,7 @@ export default class Menu extends Component {
 			return null;
 		}
 		if (this.props.items.length !== prevProps.items.length) this.repositionIfNecessary();
+		if (this.state.selected !== prevState.selected) this.repositionSubmenuIfNecessary();
 	}
 
 	renderItem = (item, parentItem) => {
@@ -105,7 +116,11 @@ export default class Menu extends Component {
 	};
 
 	renderSubmenu = item => {
-		return <div className="menu-popup-submenu">{this.renderMenu(item.submenu, item)}</div>;
+		return (
+			<div id="active-submenu" className="menu-popup-submenu">
+				{this.renderMenu(item.submenu, item)}
+			</div>
+		);
 	};
 
 	renderMenu = (items, parentItem) => {
