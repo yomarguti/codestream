@@ -406,7 +406,7 @@ export class SimpleKnowledgePanel extends Component {
 		});
 	};
 
-	handleClickCodemark = async codemark => {
+	handleClickCodemark = async (event, codemark) => {
 		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Codemark Clicked",
 			properties: {

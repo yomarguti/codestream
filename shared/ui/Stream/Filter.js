@@ -17,7 +17,7 @@ export class SimpleFilter extends Component {
 		return (
 			<span className="filter" onClick={this.toggleMenu}>
 				{labels[selected]}
-				<Icon name="triangle-down" className="triangle-down" />
+				<Icon name="chevron-down" className="triangle-down" />
 				{menuOpen && (
 					<Menu items={items} target={menuTarget} action={this.menuAction} align="center" />
 				)}
