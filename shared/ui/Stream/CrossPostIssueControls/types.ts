@@ -14,11 +14,11 @@ export interface ProviderDisplay {
 }
 
 export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
-	asana: { displayName: "Asana" },
-	bitbucket: { displayName: "Bitbucket" },
+	asana: { displayName: "Asana", icon: "asana" },
+	bitbucket: { displayName: "Bitbucket", icon: "bitbucket" },
 	github: { displayName: "GitHub", icon: "mark-github" },
-	gitlab: { displayName: "GitLab" },
-	jira: { displayName: "Jira" },
-	trello: { displayName: "Trello" },
-	slack: { displayName: "Slack" }
+	gitlab: { displayName: "GitLab", icon: "gitlab" },
+	jira: { displayName: "Jira", icon: "jira" },
+	trello: { displayName: "Trello", icon: "trello" },
+	slack: { displayName: "Slack", icon: "slack" }
 };

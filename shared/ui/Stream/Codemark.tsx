@@ -14,6 +14,7 @@ import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
 import { range } from "../utils";
 import { getUserByCsId } from "../store/users/reducer";
+import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 
 interface State {
 	menuOpen?: boolean;
@@ -168,7 +169,12 @@ export class Codemark extends React.Component<Props, State> {
 
 	handleClickCodemark = (event: React.MouseEvent): any => {
 		event.preventDefault();
-		if (event && event.currentTarget && event.currentTarget.tagName === "A") return false;
+		if (
+			event &&
+			event.currentTarget &&
+			(event.currentTarget.tagName === "A" || event.currentTarget.closest(".external-provider"))
+		)
+			return false;
 		// if (this.props.selected) return false;
 
 		const selection = window.getSelection();
@@ -298,6 +304,77 @@ export class Codemark extends React.Component<Props, State> {
 		return null;
 	}
 
+	renderExternalLink = () => {
+		const { codemark } = this.props;
+		//@ts-ignore
+		if (codemark && codemark.externalProviderUrl) {
+			//@ts-ignore
+			const providerDisplay = PROVIDER_MAPPINGS[codemark.externalProvider];
+			if (!providerDisplay) return null;
+			const icon = providerDisplay.icon;
+			if (!icon) return null;
+			return (
+				//@ts-ignore
+				<a href={codemark.externalProviderUrl}>
+					<Icon name={icon} className="external-provider" />
+				</a>
+			);
+		}
+		return null;
+	};
+
+	renderAttachments = post => {
+		if (post.files && post.files.length) {
+			return post.files.map(file => {
+				// console.log(file);
+				//<img src={preview.url} width={preview.width} height={preview.height} />
+				const { type, url, name, title, preview } = file;
+				if (type === "image") {
+					return (
+						<div className="thumbnail">
+							<a href={url}>{title}</a>
+						</div>
+					);
+				} else if (type === "post") {
+					return (
+						<div className="external-post">
+							<a href={url}>{title}</a>
+							<div className="preview" dangerouslySetInnerHTML={{ __html: preview }} />
+						</div>
+					);
+				} else {
+					return (
+						<div className="attachment">
+							<a href={url}>{title}</a>
+							<pre>
+								<code>{preview}</code>
+							</pre>
+						</div>
+					);
+				}
+			});
+		}
+		return null;
+	};
+
+	renderReplyCount = post => {
+		let message = "";
+		const { codemark } = this.props;
+
+		if (!codemark) return null;
+
+		const numReplies = codemark.numReplies || "0";
+		switch (codemark.type) {
+			case "question":
+				message = numReplies === 1 ? "1 Answer" : `${numReplies} Answers`;
+				break;
+			default:
+				message = numReplies === 1 ? "1 Reply" : `${numReplies} Replies`;
+				break;
+		}
+		return <a className="num-replies">{message}</a>;
+	};
+
 	renderInlineCodemark() {
 		const { codemark, codemarkKeybindings, hidden, selected, author } = this.props;
 		const { menuOpen, menuTarget } = this.state;
@@ -373,6 +450,7 @@ export class Codemark extends React.Component<Props, State> {
 									<span>priority</span>
 								</div>
 							)}
+							{this.renderExternalLink()}
 						</div>
 						{type === "bookmark" && <span className={codemark.color}>{this.renderTypeIcon()}</span>}
 						{this.renderTextLinkified(codemark.title || codemark.text)}
