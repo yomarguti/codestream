@@ -32,13 +32,15 @@ import {
 	getVisibleRanges,
 	getLine0ForEditorLine
 } from "../store/editorContext/reducer";
-import { CSTeam } from "@codestream/protocols/api";
+import { CSTeam, CSUser } from "@codestream/protocols/api";
 import {
 	setCodemarksFileViewStyle,
 	setCodemarksShowArchived,
 	setCodemarksShowResolved
 } from "../store/context/actions";
 import { State as ContextState } from "../store/context/types";
+import { sortBy as _sortBy } from "lodash-es";
+import { getTeamMembers } from "../store/users/reducer";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -51,6 +53,7 @@ import { State as ContextState } from "../store/context/types";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 interface Props {
+	teammates?: CSUser[];
 	usernames: string[];
 	team: CSTeam;
 	viewInline: boolean;
@@ -70,6 +73,7 @@ interface Props {
 	documentMarkers: DocumentMarker[];
 	numUnpinned: number;
 	numClosed: number;
+	isSlackTeam: boolean;
 
 	fetchDocumentMarkers: (
 		...args: Parameters<typeof fetchDocumentMarkers>
@@ -363,6 +367,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 										collapsed={true}
 										inline={true}
 										hidden={hidden}
+										teammates={this.props.teammates}
+										isSlackTeam={this.props.isSlackTeam}
 										hover={this.state.highlightedDocmarker === docMarker.id}
 										selected={selectedDocMarkerId === docMarker.id}
 										usernames={this.props.usernames}
@@ -712,6 +718,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 												collapsed={true}
 												inline={true}
 												hidden={hidden}
+												teammates={this.props.teammates}
+												isSlackTeam={this.props.isSlackTeam}
 												hover={this.state.highlightedDocmarker === docMarker.id}
 												selected={selectedDocMarkerId === docMarker.id}
 												deselectCodemarks={this.deselectCodemarks}
@@ -1145,8 +1153,11 @@ const mapStateToProps = (state: {
 	documentMarkers: { [uri: string]: any };
 	editorContext: EditorContext;
 	teams: { [id: string]: any };
+	users: any;
 }) => {
-	const { context, editorContext, teams, configs, documentMarkers } = state;
+	const { context, editorContext, teams, users, configs, documentMarkers } = state;
+
+	const teamMembers = getTeamMembers(state);
 
 	const docMarkers = documentMarkers[editorContext.textEditorUri || ""] || EMPTY_ARRAY;
 	const numUnpinned = docMarkers.filter(d => !d.codemark.pinned).length;
@@ -1163,9 +1174,9 @@ const mapStateToProps = (state: {
 		firstVisibleLine = textEditorVisibleRanges[0].start.line;
 	}
 
-	console.log("UN: ", userSelectors.getUsernames(state));
 	return {
 		usernames: userSelectors.getUsernames(state),
+		teammates: teamMembers,
 		team: teams[context.currentTeamId],
 		viewInline: context.codemarksFileViewStyle === "inline",
 		viewHeadshots: configs.showHeadshots,

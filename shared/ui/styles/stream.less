@@ -889,6 +889,9 @@
 			background: @base-background-color;
 			padding: 10px;
 		}
+		.standard-form .mentions-popup li {
+			padding: 5px 10px !important;
+		}
 		.mentions-popup {
 			width: 100%;
 			// height: 500px;
@@ -949,7 +952,7 @@
 				overflow-y: auto;
 			}
 			li {
-				padding: 5px 10px;
+				padding: 5px 10px !important;
 				.headshot {
 					display: inline-block;
 					position: relative;
@@ -957,6 +960,7 @@
 					height: 18px;
 					margin-right: 6px;
 					vertical-align: -4px;
+					left: 0 !important;
 				}
 				.headshot-image {
 					position: absolute;
@@ -964,6 +968,7 @@
 					height: 18px;
 					border-radius: 3px;
 					z-index: 2;
+					left: 0 !important;
 				}
 				.headshot-gravatar {
 					position: absolute;
@@ -971,6 +976,7 @@
 					height: 18px;
 					border-radius: 3px;
 					z-index: 2;
+					left: 0 !important;
 				}
 				.headshot-initials {
 					position: absolute;
@@ -980,9 +986,10 @@
 					text-align: center;
 					font-size: 11px;
 					text-transform: capitalize;
-					padding-top: 1px;
+					padding-top: 1px !important;
 					z-index: 1;
 					color: @app-background-color;
+					left: 0 !important;
 				}
 			}
 			// li:hover,
@@ -2233,6 +2240,9 @@
 		background-color: #688;
 	}
 	.color-0 {
+		background-color: #666;
+	}
+	.color-undefined {
 		background-color: #666;
 	}
 

@@ -55,6 +55,8 @@ interface Props extends DispatchProps {
 	codemarkKeybindings: { [key: string]: string };
 	hidden: boolean;
 	deselectCodemarks?: Function;
+	teammates?: CSUser[];
+	isSlackTeam?: boolean;
 }
 
 export class Codemark extends React.Component<Props, State> {
@@ -348,25 +350,6 @@ export class Codemark extends React.Component<Props, State> {
 		return null;
 	}
 
-	renderExternalLink = () => {
-		const { codemark } = this.props;
-		//@ts-ignore
-		if (codemark && codemark.externalProviderUrl) {
-			//@ts-ignore
-			const providerDisplay = PROVIDER_MAPPINGS[codemark.externalProvider];
-			if (!providerDisplay) return null;
-			const icon = providerDisplay.icon;
-			if (!icon) return null;
-			return (
-				//@ts-ignore
-				<a href={codemark.externalProviderUrl}>
-					<Icon name={icon} className="external-provider" />
-				</a>
-			);
-		}
-		return null;
-	};
-
 	renderAttachments = post => {
 		if (post.files && post.files.length) {
 			return post.files.map(file => {
@@ -419,8 +402,84 @@ export class Codemark extends React.Component<Props, State> {
 		return <a className="num-replies">{message}</a>;
 	};
 
-	renderDetailIcons = codemark => {
+	renderAssignees = codemark => {
+		let assigneeIcons: any = null;
+		if (this.props.teammates) {
+			const assignees = (codemark.assignees || [])
+				.map(id =>
+					// @ts-ignore
+					this.props.teammates.find(t => t.id === id)
+				)
+				.filter(Boolean);
+			const externalAssignees = (codemark.externalAssignees || [])
+				.filter(user => !assignees.find(a => a.email === user.email))
+				.filter(Boolean);
+
+			const assigneeHeadshots = [...assignees, ...externalAssignees].map(a => (
+				<Headshot size={18} person={a} />
+			));
+
+			if (assigneeHeadshots.length > 0) {
+				assigneeIcons = <span className="assignees">{assigneeHeadshots}</span>;
+			}
+		}
+		return assigneeIcons;
+	};
+
+	renderExternalLink = codemark => {
+		if (codemark.externalProviderUrl) {
+			const providerDisplay = PROVIDER_MAPPINGS[codemark.externalProvider];
+			if (!providerDisplay) {
+				return null;
+			}
+			return [
+				<br />,
+				<a href={codemark.externalProviderUrl}>Open on {providerDisplay.displayName}</a>,
+				<br />,
+				<br />
+			];
+		}
 		return null;
+	};
+
+	renderDetailIcons = codemark => {
+		const hasDescription = codemark.title && codemark.text;
+		const hasReplies = codemark.numReplies > 0;
+
+		let externalLink: any = null;
+		if (codemark.externalProviderUrl) {
+			//@ts-ignore
+			const providerDisplay = PROVIDER_MAPPINGS[codemark.externalProvider];
+			if (!providerDisplay) return null;
+			const icon = providerDisplay.icon;
+			if (!icon) return null;
+			externalLink = (
+				//@ts-ignore
+				<span className="detail-icon">
+					<a href={codemark.externalProviderUrl}>
+						<Icon name={icon} className="external-provider" />
+					</a>
+				</span>
+			);
+		}
+
+		if (externalLink || hasDescription || hasReplies) {
+			return (
+				<div className="detail-icons">
+					{externalLink}
+					{hasDescription && (
+						<span className="detail-icon">
+							<Icon name="description" />
+						</span>
+					)}
+					{hasReplies && (
+						<span className="detail-icon">
+							<Icon name="comment" /> {!this.props.isSlackTeam && codemark.numReplies}
+						</span>
+					)}
+				</div>
+			);
+		} else return name;
 	};
 
 	renderInlineCodemark() {
@@ -485,6 +544,7 @@ export class Codemark extends React.Component<Props, State> {
 					<div className="body">
 						{this.renderKeybinding(codemark)}
 						{this.renderStatus(codemark)}
+						{this.renderAssignees(codemark)}
 						<div className="author">
 							<Headshot person={author} />
 							{author.username}
@@ -499,7 +559,6 @@ export class Codemark extends React.Component<Props, State> {
 									<span>priority</span>
 								</div>
 							)}
-							{this.renderExternalLink()}
 						</div>
 						{type === "bookmark" && <span className={codemark.color}>{this.renderTypeIcon()}</span>}
 						{this.renderTextLinkified(codemark.title || codemark.text)}
@@ -517,12 +576,15 @@ export class Codemark extends React.Component<Props, State> {
 					</div>
 					{selected && (
 						<CodemarkDetails codemark={codemark} postAction={this.props.postAction}>
-							<div className="description">{description}</div>
+							<div className="description">
+								{description}
+								{this.renderExternalLink(codemark)}
+							</div>
 						</CodemarkDetails>
 					)}
 				</div>
 				{this.props.hover && !selected && (
-					<div style={{ position: "absolute", right: "5px", bottom: "5px" }}>
+					<div style={{ opacity: 0.5, position: "absolute", right: "5px", bottom: "5px" }}>
 						<Icon
 							className="info"
 							title={this.renderCodemarkFAQ()}

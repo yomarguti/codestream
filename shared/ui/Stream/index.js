@@ -663,6 +663,7 @@ export class SimpleStream extends Component {
 							selection={this.state.selection}
 							focusInput={this.focusInput}
 							scrollDiv={this._contentScrollDiv}
+							isSlackTeam={this.props.isSlackTeam}
 						>
 							{this.state.floatCompose && this.renderComposeBox(placeholderText, channelName)}
 						</InlineCodemarks>
