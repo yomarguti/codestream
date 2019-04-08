@@ -114,7 +114,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	docMarkersByStartLine: {};
 	_scrollDiv: HTMLDivElement | null | undefined;
 	private root = React.createRef<HTMLDivElement>();
-	mutationObserver?: MutationObserver;
 	hiddenCodemarks = {};
 
 	constructor(props: Props) {
@@ -200,7 +199,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	componentDidMount() {
-		this.observeForRepositioning();
 
 		this.disposables.push(
 			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
@@ -232,65 +230,18 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (didStartLineChange) {
 			this.scrollTo(18);
 		}
+
+		this.repositionCodemarks();
 	}
 
 	componentWillUnmount() {
 		this.disposables.forEach(d => d.dispose());
-		this.mutationObserver && this.mutationObserver.disconnect();
 	}
 
 	scrollTo(top) {
 		const $div = document.getElementById("inline-codemarks-scroll-container");
 		if ($div) {
 			$div.scrollTop = top;
-		}
-	}
-
-	// the downside of this is it's dependent on css selectors
-	observeForRepositioning() {
-		if (this.props.viewInline && this.root.current) {
-			this.mutationObserver = new MutationObserver(mutations => {
-				mutations.forEach(mutation => {
-					const target = mutation.target as Element;
-					switch (mutation.type) {
-						case "attributes": {
-							if (
-								mutation.attributeName === "class" &&
-								target.classList.contains("codemark") &&
-								diff(Array.from(target.classList), mutation.oldValue!.split(" ")).includes(
-									"selected"
-								)
-							) {
-								this.repositionCodemarks();
-							}
-							break;
-						}
-						case "childList": {
-							const causedByComposeBox =
-								safe(() => {
-									const node = (mutation.addedNodes.item(0) ||
-										mutation.removedNodes.item(0)) as Element | null;
-									return node
-										? node.classList.contains("compose") || node.classList.contains("standard-form")
-										: false;
-								}) || false;
-
-							const isComposeBox = safe(() => target.classList.contains("compose"));
-							const isPostList = safe(() => target.classList.contains("postslist"));
-
-							if (isPostList || isComposeBox || causedByComposeBox) {
-								this.repositionCodemarks();
-							}
-						}
-					}
-				});
-			});
-			this.mutationObserver.observe(document.getElementById("stream-root")!, {
-				attributes: true,
-				attributeOldValue: true,
-				childList: true,
-				subtree: true
-			});
 		}
 	}
 
