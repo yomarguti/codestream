@@ -83,6 +83,7 @@ export class Codemark extends React.Component<Props, State> {
 					<CodemarkForm
 						isEditing
 						editingCodemark={this.props.codemark}
+						commentType={this.props.codemark.type}
 						onSubmit={this.editCodemark}
 						onClickClose={() => this.setState({ isEditing: false })}
 						streamId={this.props.codemark.streamId}
