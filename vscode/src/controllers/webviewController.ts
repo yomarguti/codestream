@@ -18,7 +18,7 @@ import {
 	EditorContext,
 	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequestType,
-	EditorRevealRangeResult,
+	EditorRevealRangeResponse,
 	EditorSelectRangeRequestType,
 	HostDidChangeActiveEditorNotificationType,
 	HostDidChangeConfigNotificationType,
