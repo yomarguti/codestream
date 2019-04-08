@@ -597,22 +597,50 @@ class CodemarkForm extends React.Component<Props, State> {
 		let selectedChannelName = "";
 		const filterSelected = showChannels === "selected" && !showAllChannels;
 		this.props.channelStreams.forEach(channel => {
-			if (!filterSelected || selectedStreams[channel.id]) {
-				const name = "#" + channel.name;
-				items.push({ label: name, action: channel, key: channel.id });
-				if (channel.id === selectedChannelId) selectedChannelName = name;
-				if (!firstChannel) firstChannel = channel;
+			if (channel.isArchived || (filterSelected && !selectedStreams[channel.id])) return;
+
+			if (channel.id === selectedChannelId) {
+				selectedChannelName = channel.name!;
 			}
+			if (!firstChannel) {
+				firstChannel = channel;
+			}
+
+			items.push({ label: `#${channel.name}`, action: channel, key: channel.id });
 		});
+
 		items.push({ label: "-" });
+
+		let firstDM = items.length;
+
+		const currentUserId = this.props.currentUser.id;
 		_sortBy(this.props.directMessageStreams, (stream: CSDirectStream) =>
 			(stream.name || "").toLowerCase()
 		).forEach((channel: CSDirectStream) => {
-			if (!filterSelected || selectedStreams[channel.id]) {
-				const name = "@" + channel.name;
-				items.push({ label: name, action: channel, key: channel.id });
-				if (channel.id === selectedChannelId) selectedChannelName = name;
-				if (!firstChannel) firstChannel = channel;
+			if (
+				channel.isArchived ||
+				channel.isClosed ||
+				(filterSelected && !selectedStreams[channel.id])
+			) {
+				return;
+			}
+
+			if (channel.id === selectedChannelId) {
+				selectedChannelName = channel.name!;
+			}
+			if (!firstChannel) {
+				firstChannel = channel;
+			}
+
+			const item = { label: channel.name!, action: channel, key: channel.id };
+			// Ensure Slackbot is first (if there), then your own DM
+			if (channel.memberIds.length === 2 && channel.memberIds.includes("USLACKBOT")) {
+				items.splice(firstDM, 0, item);
+				firstDM++;
+			} else if (channel.memberIds.length === 1 && channel.memberIds[0] === currentUserId) {
+				items.splice(firstDM, 0, item);
+			} else {
+				items.push(item);
 			}
 		});
 
