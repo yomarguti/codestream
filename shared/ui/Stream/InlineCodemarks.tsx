@@ -250,7 +250,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	observeForRepositioning() {
 		if (this.props.viewInline && this.root.current) {
 			this.mutationObserver = new MutationObserver(mutations => {
-				this.repositionCodemarks();
 				mutations.forEach(mutation => {
 					const target = mutation.target as Element;
 					switch (mutation.type) {
@@ -269,11 +268,17 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						case "childList": {
 							const causedByComposeBox =
 								safe(() => {
-									const node = mutation.addedNodes.item(0) || mutation.removedNodes.item(0);
-									return node ? (node as Element).classList.contains("compose") : false;
+									const node = (mutation.addedNodes.item(0) ||
+										mutation.removedNodes.item(0)) as Element | null;
+									return node
+										? node.classList.contains("compose") || node.classList.contains("standard-form")
+										: false;
 								}) || false;
 
-							if (safe(() => target.classList.contains("postslist")) || causedByComposeBox) {
+							const isComposeBox = safe(() => target.classList.contains("compose"));
+							const isPostList = safe(() => target.classList.contains("postslist"));
+
+							if (isPostList || isComposeBox || causedByComposeBox) {
 								this.repositionCodemarks();
 							}
 						}
