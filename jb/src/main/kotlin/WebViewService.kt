@@ -7,6 +7,7 @@ import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.SystemInfo
 import com.intellij.util.ui.UIUtil
 import com.teamdev.jxbrowser.chromium.*
 import com.teamdev.jxbrowser.chromium.events.ScriptContextEvent
@@ -136,7 +137,7 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
             "--software-rendering-fps=60",
             "--disable-web-security",
             "--allow-file-access-from-files",
-            if (UIUtil.isJreHiDPIEnabled()) "--force-device-scale-factor=1" else ""
+            if (UIUtil.isJreHiDPIEnabled() && !SystemInfo.isMac) "--force-device-scale-factor=1" else ""
         )
     }
 

@@ -21,6 +21,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
+import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -684,7 +685,7 @@ private fun Editor.isRangeVisible(range: Range): Boolean {
 }
 
 fun getFontScale(): Float {
-    if (UIUtil.isJreHiDPIEnabled()) {
+    if (UIUtil.isJreHiDPIEnabled() || SystemInfo.isMac) {
         return 1F
     }
 
