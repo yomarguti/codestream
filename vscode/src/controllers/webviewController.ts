@@ -526,19 +526,19 @@ export class WebviewController implements Disposable {
 			}
 			case EditorHighlightRangeRequestType.method: {
 				webview.onIpcRequest(EditorHighlightRangeRequestType, e, async (type, params) => {
-					void (await Editor.highlightRange(
+					const success = await Editor.highlightRange(
 						Uri.parse(params.uri),
 						Editor.fromSerializableRange(params.range),
 						!params.highlight
-					));
-					return {};
+					);
+					return { success: success };
 				});
 
 				break;
 			}
 			case EditorRevealRangeRequestType.method: {
 				webview.onIpcRequest(EditorRevealRangeRequestType, e, async (type, params) => {
-					const result = await Editor.revealRange(
+					const success = await Editor.revealRange(
 						Uri.parse(params.uri),
 						Editor.fromSerializableRange(params.range),
 						{
@@ -546,23 +546,21 @@ export class WebviewController implements Disposable {
 							atTop: params.atTop
 						}
 					);
-					return {
-						result: result ? EditorRevealRangeResult.Success : EditorRevealRangeResult.FileNotFound
-					};
+					return { success: success };
 				});
 
 				break;
 			}
 			case EditorSelectRangeRequestType.method: {
 				webview.onIpcRequest(EditorSelectRangeRequestType, e, async (type, params) => {
-					void (await Editor.selectRange(
+					const success = await Editor.selectRange(
 						Uri.parse(params.uri),
 						Editor.fromSerializableRange(params.range),
 						{
 							preserveFocus: params.preserveFocus
 						}
-					));
-					return {};
+					);
+					return { success: success };
 				});
 
 				break;

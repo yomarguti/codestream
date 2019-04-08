@@ -89,6 +89,7 @@ export namespace Editor {
 		if (editor === undefined) return false;
 
 		editor.setDecorations(highlightDecorationType, clear ? emptyArray : [range]);
+		editor.revealRange(range, TextEditorRevealType.InCenterIfOutsideViewport);
 		return true;
 	}
 
@@ -121,6 +122,7 @@ export namespace Editor {
 		if (editor === undefined) return false;
 
 		editor.selection = new Selection(range.end, range.start);
+		editor.revealRange(range, TextEditorRevealType.InCenterIfOutsideViewport);
 		return true;
 	}
 
