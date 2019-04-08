@@ -26,7 +26,6 @@ interface Props {
 	hasFocus: boolean;
 	currentUserName: string;
 	teamId: string;
-	streamId: string;
 
 	onSubmitPost?: any;
 	createPost(...args: Parameters<typeof createPost>): ReturnType<ReturnType<typeof createPost>>;
@@ -56,9 +55,9 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		// const mentionedUserIds = this.findMentionedUserIds(text, this.props.teammates);
 		const mentionedUserIds = [];
 		const threadId = codemark ? codemark.postId : "";
-		const { createPost, streamId } = this.props;
+		const { createPost } = this.props;
 		this.setState({ text: "" });
-		await createPost(streamId, threadId, text, null, mentionedUserIds, {
+		await createPost(codemark.streamId, threadId, text, null, mentionedUserIds, {
 			entryPoint: "Codemark"
 		});
 	};
@@ -86,7 +85,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 									currentUserName={this.props.currentUserName}
 									editingPostId={this.state.editingPostId}
 									postAction={this.props.postAction}
-									streamId={this.props.streamId}
+									streamId={this.props.codemark.streamId}
 									isThread
 									threadId={threadId}
 									teamId={this.props.teamId}
@@ -132,7 +131,6 @@ const mapStateToProps = state => {
 		(user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT;
 
 	return {
-		streamId: context.currentStreamId,
 		threadId: context.threadId,
 		configs,
 		capabilities,

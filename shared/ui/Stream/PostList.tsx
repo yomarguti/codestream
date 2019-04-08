@@ -266,6 +266,7 @@ export default infiniteLoadable(
 							if (postIsAfterLastRead && post.creatorId !== this.props.currentUserId) {
 								return true;
 							}
+							return false;
 						});
 
 						return (
