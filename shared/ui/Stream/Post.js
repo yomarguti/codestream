@@ -23,11 +23,12 @@ import { reactToPost, setCodemarkStatus } from "./actions";
 import { escapeHtml, safe } from "../utils";
 import { getUsernamesById, getNormalizedUsernames } from "../store/users/reducer";
 import { GetDocumentFromMarkerRequestType } from "@codestream/protocols/agent";
-import { EditorRevealRangeRequestType, EditorRevealRangeResult } from "../ipc/webview.protocol";
+import { EditorSelectRangeRequestType } from "../ipc/webview.protocol";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { HostApi } from "../webview-api";
 import { includes as _includes } from "lodash-es";
 import { prettyPrintOne } from "code-prettify";
+import { Range } from "vscode-languageserver-types";
 
 class Post extends React.Component {
 	state = {
@@ -76,16 +77,18 @@ class Post extends React.Component {
 				});
 
 				if (response) {
-					const { result } = await HostApi.instance.send(EditorRevealRangeRequestType, {
+					const { success } = await HostApi.instance.send(EditorSelectRangeRequestType, {
 						uri: response.textDocument.uri,
-						range: response.range,
+						// Ensure we put the cursor at the right line (don't actually select the whole range)
+						range: Range.create(
+							response.range.start.line,
+							response.range.start.character,
+							response.range.start.line,
+							response.range.start.character
+						),
 						preserveFocus: preserveFocus
 					});
-					if (result === EditorRevealRangeResult.Success) {
-						this.setState({ warning: null });
-					} else {
-						this.setState({ warning: result });
-					}
+					this.setState({ warning: success ? null : "FILE_NOT_FOUND" });
 				} else {
 					// assumption based on GetDocumentFromMarkerRequestType api requiring the workspace to be available
 					this.setState({ warning: "REPO_NOT_IN_WORKSPACE" });
