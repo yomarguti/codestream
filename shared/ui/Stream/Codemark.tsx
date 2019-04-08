@@ -402,18 +402,18 @@ export class Codemark extends React.Component<Props, State> {
 		return <a className="num-replies">{message}</a>;
 	};
 
-	renderAssignees = codemark => {
+	renderAssignees = (codemark: CodemarkPlus) => {
 		let assigneeIcons: any = null;
-		if (this.props.teammates) {
+
+		const { teammates } = this.props;
+		if (teammates) {
 			const assignees = (codemark.assignees || [])
-				.map(id =>
-					// @ts-ignore
-					this.props.teammates.find(t => t.id === id)
-				)
-				.filter(Boolean);
+				.map(id => teammates.find(t => t.id === id))
+				.filter(Boolean) as CSUser[];
 			const externalAssignees = (codemark.externalAssignees || [])
 				.filter(user => !assignees.find(a => a.email === user.email))
-				.filter(Boolean);
+				.filter(Boolean)
+				.map(a => ({ fullName: a.displayName, email: a.email }));
 
 			const assigneeHeadshots = [...assignees, ...externalAssignees].map(a => (
 				<Headshot size={18} person={a} />

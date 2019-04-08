@@ -14,7 +14,6 @@ export default class Headshot extends Component {
 
 	render() {
 		const person = this.props.person;
-
 		if (!person) return null;
 
 		if (person.username === "CodeStream") return this.renderCodeStream();
@@ -22,14 +21,14 @@ export default class Headshot extends Component {
 		let defaultImage = encodeURI(
 			"https://images.codestream.com/misc/nothing_transparent-36x36.gif"
 		);
-		let authorInitials = person.email.charAt(0);
+
+		let authorInitials = (person.email && person.email.charAt(0)) || "";
 		if (person.fullName) {
 			authorInitials = person.fullName.replace(/(\w)\w*/g, "$1").replace(/\s/g, "");
 			if (authorInitials.length > 2) authorInitials = authorInitials.substring(0, 2);
 		} else if (person.username) {
 			authorInitials = person.username.charAt(0);
 		}
-		const classNameInitials = "headshot-initials color-" + person.color;
 
 		if (person.avatar) {
 			const uri = this.props.size > 48 ? person.avatar.image : person.avatar.image48;
@@ -39,19 +38,22 @@ export default class Headshot extends Component {
 					<img className="headshot-image" src={uri} />
 				</div>
 			);
-		} else
-			return (
-				<div className="headshot" ref={this._div} onClick={this.props.onClick}>
-					<Gravatar
-						className="headshot-gravatar"
-						size={this.props.size}
-						default={defaultImage}
-						protocol="http://"
-						email={person.email}
-					/>
-					<div className={classNameInitials}>{authorInitials}</div>
-				</div>
-			);
+		}
+
+		const classNameInitials = `headshot-initials color-${person.color || 1}`;
+
+		return (
+			<div className="headshot" ref={this._div} onClick={this.props.onClick}>
+				<Gravatar
+					className="headshot-gravatar"
+					size={this.props.size}
+					default={defaultImage}
+					protocol="http://"
+					email={person.email}
+				/>
+				<div className={classNameInitials}>{authorInitials}</div>
+			</div>
+		);
 	}
 
 	handleEditHeadshot = event => {
