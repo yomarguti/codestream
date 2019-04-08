@@ -351,7 +351,7 @@ export interface CSCreateCodemarkRequest {
 	remotes?: string[];
 	externalProvider?: string;
 	externalProviderUrl?: string;
-	externalAssignees?: { displayName: string }[];
+	externalAssignees?: { displayName: string; email?: string }[];
 	remoteCodeUrl?: { name: string; url: string };
 	threadUrl?: string;
 	createPermalink?: false | "public" | "private";

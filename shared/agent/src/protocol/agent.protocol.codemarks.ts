@@ -30,7 +30,7 @@ export interface CreateCodemarkRequest {
 	remotes?: string[];
 	externalProvider?: string;
 	externalProviderUrl?: string;
-	externalAssignees?: { displayName: string }[];
+	externalAssignees?: { displayName: string; email?: string }[];
 	remoteCodeUrl?: { name: string; url: string };
 	createPermalink?: false | "public" | "private";
 }

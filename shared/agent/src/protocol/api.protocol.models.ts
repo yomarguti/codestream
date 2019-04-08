@@ -44,6 +44,11 @@ export interface CSCodemark extends CSEntity {
 	numReplies: number;
 	pinned: boolean;
 	pinnnedReplies?: string[];
+
+	externalAssignees?: { displayName: string; email?: string }[];
+	externalProvider?: string;
+	externalProviderHost?: string;
+	externalProviderUrl?: string;
 }
 
 export interface CSMarkerIdentifier {
