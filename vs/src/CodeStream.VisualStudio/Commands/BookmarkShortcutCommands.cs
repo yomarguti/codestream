@@ -47,7 +47,7 @@ namespace CodeStream.VisualStudio.Commands {
 			}, new CommandID(PackageGuids.guidWebViewPackageCmdSet, Map[index])));
 		}
 
-		void InvokeHandler(object sender, BookmarkShortcutEventArgs args) {
+		private void InvokeHandler(object sender, BookmarkShortcutEventArgs args) {
 			if (args == null || args.Index < 1) return;
 
 			var codeStreamService = ServiceLocator.Get<SCodeStreamService, ICodeStreamService>();

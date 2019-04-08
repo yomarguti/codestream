@@ -322,12 +322,13 @@ namespace CodeStream.VisualStudio.Services {
 					Metrics = ThemeManager.CreateEditorMetrics(activeTextView.TextView),
 				};
 			}
-			var teamId = state["teamId"].ToString();
-			var userSettings = ServiceLocator.Get<SUserSettingsService, IUserSettingsService>();
+
 			WebviewContext webviewContext;
-			
-			if (userSettings != null  && userSettings.TryGetWebviewContext(teamId, out WebviewContext context)) {
-				webviewContext = context;
+			var teamId = state["teamId"].ToString();
+			var userSettingsService = ServiceLocator.Get<SUserSettingsService, IUserSettingsService>();			
+			var userSettings = await userSettingsService?.TryGetWebviewContextAsync(teamId);
+			if (userSettings != null) {
+				webviewContext = userSettings;
 			}
 			else {
 				webviewContext = new WebviewContext {

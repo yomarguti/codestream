@@ -13,7 +13,7 @@ using System.Threading;
 
 namespace CodeStream.VisualStudio
 {
-    public class WebViewRouter
+	public class WebViewRouter
     {
         private static readonly ILogger Log = LogManager.ForContext<WebViewRouter>();
 
@@ -115,7 +115,7 @@ namespace CodeStream.VisualStudio
                                                     _eventAggregator.Publish(new MarkerGlyphVisibilityEvent {IsVisible = !visible });
                                                 }
 
-                                                ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.SaveContext(@params.Context);
+                                                await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.SaveContextAsync(@params.Context);
                                             }
                                             break;
                                         }

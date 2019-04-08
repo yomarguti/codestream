@@ -42,12 +42,10 @@ namespace CodeStream.VisualStudio.UI.Settings
         private bool _autoHideMarkers = true;
         //// not supported yet
         //private bool _showMarkerCodeLens = false;
-        private bool _showMarkerGlyphs = true;
-         
-        private bool _showAvatars = true;
-        
+        private bool _showMarkerGlyphs = true;         
+        private bool _showAvatars = true;        
         private TraceLevel _traceLevel;
-        private bool _viewCodemarksInline = true;
+        
         private string _team;
         private bool _autoSignIn = true;
 #if DEBUG

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Services.Providers;
@@ -12,8 +13,8 @@ namespace CodeStream.VisualStudio.Services {
 	public interface SUserSettingsService { }
 
 	public interface IUserSettingsService {
-		bool TryGetValue<T>(string bucketName, string dataKey, out T val);
-		void Save(string bucketName, string dataKey, object obj);
+		Task<T> TryGetValueAsync<T>(string bucketName, string dataKey);
+		Task<bool> SaveAsync(string bucketName, string dataKey, object obj);
 	}
 
 	/// <summary>
@@ -31,57 +32,72 @@ namespace CodeStream.VisualStudio.Services {
 		private const string CollectionName = "codestream";
 		private const string PropertyFormat = "codestream.{0}";
 
-		public bool TryGetValue<T>(string bucketName, string dataKey, out T val) {
-			if (dataKey.IsNullOrWhiteSpace()) {
-				val = default(T);
-				return false;
+		/// <summary>
+		/// Gets data from a bucket within the codestream collection. Requires the UI thread
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="bucketName"></param>
+		/// <param name="dataKey"></param>
+		/// <returns></returns>
+		public async Task<T> TryGetValueAsync<T>(string bucketName, string dataKey) {
+			if (bucketName.IsNullOrWhiteSpace() || dataKey.IsNullOrWhiteSpace()) {
+				return default(T);
 			}
 			try {
-				System.Windows.Threading.Dispatcher.CurrentDispatcher.VerifyAccess();
+				await Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
 				var settings = Load(bucketName);
 				if (settings == null || settings.Data == null) {
-					val = default(T);
-					return false;
+					return default(T);
 				}
 				if (settings.Data.TryGetValue(dataKey.ToLowerInvariant(), out object value)) {
 
 					if (value != null) {
 						var jObject = value as JObject;
 						if (jObject != null) {
-							val = jObject.ToObject<T>();
-							return true;
+							var data = jObject.ToObject<T>();
+#if DEBUG
+							Log.Verbose($"{nameof(TryGetValueAsync)} to {@data}");
+#else
+							Log.Verbose($"{nameof(TryGetValueAsync)} found");
+#endif
+							return data;
 						}
 					}
-
 				}
 			}
 			catch (InvalidCastException ex) {
-				val = default(T);
-				return false;
+				Log.Error(ex, $"{nameof(TryGetValueAsync)} InvalidCastException Key={dataKey}");
+				return default(T);
 			}
 			catch (Exception ex) {
-				Log.Warning($"{nameof(TryGetValue)} Key={dataKey}");
-				val = default(T);
-				return false;
+				Log.Error(ex, $"{nameof(TryGetValueAsync)} Key={dataKey}");
+				return default(T);
 			}
-			val = default(T);
-			return false;
+			return default(T);
 		}
 
-		public void Save(string bucketName, string dataKey, object obj) {
+		/// <summary>
+		/// Saves data to a bucket within the codestream collection. Requires the UI thread
+		/// </summary>
+		/// <param name="bucketName"></param>
+		/// <param name="dataKey"></param>
+		/// <param name="obj"></param>
+		/// <returns></returns>
+		public async Task<bool> SaveAsync(string bucketName, string dataKey, object obj) {
 			string solutionName = null;
 			string propertyName = null;
 			try {
-				System.Windows.Threading.Dispatcher.CurrentDispatcher.VerifyAccess();
+				await Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				solutionName = GetSolutionName();
-				if (solutionName.IsNullOrWhiteSpace()) {
-					Log.Verbose($"{nameof(Save)} No solution name");
-					return;
+				if (bucketName.Contains("{{solutionName}}")) {
+					solutionName = GetSolutionName();
+					if (solutionName.IsNullOrWhiteSpace()) {
+						Log.Verbose($"{nameof(SaveAsync)} No solution name");
+						return false;
+					}
+					bucketName = bucketName.Replace("{{solutionName}}", solutionName);
 				}
-				bucketName = bucketName.Replace("{{solutionName}}", solutionName);
-
 				propertyName = string.Format(PropertyFormat, bucketName).ToLowerInvariant();
 				var loaded = Load(bucketName);
 				if (loaded == null) {
@@ -96,22 +112,29 @@ namespace CodeStream.VisualStudio.Services {
 				}
 
 				_settingsProvider.SetString(CollectionName, propertyName, JsonConvert.SerializeObject(loaded));
-				Log.Verbose($"{nameof(Save)} to {CollectionName}:{propertyName}");
+				Log.Verbose($"{nameof(SaveAsync)} to {CollectionName}:{propertyName}");
+
+				return true;
 			}
 			catch (Exception ex) {
-				Log.Error(ex, $"{nameof(Save)} Key={dataKey} SolutionName={solutionName} PropertyName={propertyName}");
+				Log.Error(ex, $"{nameof(SaveAsync)} Key={dataKey} SolutionName={solutionName} PropertyName={propertyName}");
 			}
+			return false;
 		}
 
 		private UserSettings Load(string bucketName) {
 			try {
 				System.Windows.Threading.Dispatcher.CurrentDispatcher.VerifyAccess();
 
-				var solutionName = GetSolutionName();
-				if (solutionName.IsNullOrWhiteSpace()) return null;
+				if (bucketName.Contains("{{solutionName}}")) {
+					var solutionName = GetSolutionName();
+					if (solutionName.IsNullOrWhiteSpace()) {
+						Log.Verbose($"{nameof(Load)} No solution name");
+						return null;
+					}
 
-				bucketName = bucketName.Replace("{{solutionName}}", solutionName);
-
+					bucketName = bucketName.Replace("{{solutionName}}", solutionName);
+				}
 				if (_settingsProvider.TryGetString(CollectionName, string.Format(PropertyFormat, bucketName),
 					out string data)) {
 					Log.Verbose($"{nameof(Load)} Loaded={data}");
