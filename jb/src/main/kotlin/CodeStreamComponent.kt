@@ -100,7 +100,11 @@ class CodeStreamComponent(val project: Project) : Disposable, ServiceConsumer(pr
     }
 
     fun show() {
-        toolWindow.show(null)
+        show(null)
+    }
+
+    fun show(runnable: Runnable?) {
+        toolWindow.show(runnable)
     }
 
     fun hide() {

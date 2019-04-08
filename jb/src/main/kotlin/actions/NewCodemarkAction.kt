@@ -1,5 +1,6 @@
 package com.codestream.actions
 
+import com.codestream.CodeStreamComponent
 import com.codestream.WebViewService
 import com.codestream.editor.selectionOrCurrentLine
 import com.codestream.editor.uri
@@ -21,16 +22,19 @@ abstract class NewCodemarkAction(val type: CodemarkType) : AnAction(), Intention
 
     private fun execute(project: Project) {
         FileEditorManager.getInstance(project).selectedTextEditor?.run {
-            val webViewService = ServiceManager.getService(project, WebViewService::class.java)
-            webViewService.postNotification(
-                CodemarkNotifications.New(
-                    document.uri,
-                    selectionOrCurrentLine,
-                    type,
-                    null
+            CodeStreamComponent.getInstance(project).show(Runnable {
+                val webViewService = ServiceManager.getService(project, WebViewService::class.java)
+                webViewService.postNotification(
+                    CodemarkNotifications.New(
+                        document.uri,
+                        selectionOrCurrentLine,
+                        type,
+                        null
+                    )
                 )
-            )
-            webViewService.webView.grabFocus()
+                webViewService.webView.grabFocus()
+            })
+
         }
     }
 
