@@ -23,7 +23,7 @@ namespace CodeStream.VisualStudio.Services {
 			CodemarkType codemarkType,
 			bool ensureInView = true,
 			CancellationToken? cancellationToken = null);
-		Task ShowCodemarkAsync(int codemarkIndex,
+		Task ShowCodemarkAsync(string codemarkId,
 			CancellationToken? cancellationToken = null);
 		Task EditorSelectionChangedNotificationAsync(Uri uri,
 			EditorState editorState,
@@ -40,6 +40,7 @@ namespace CodeStream.VisualStudio.Services {
 		IWebviewIpc WebviewIpc { get; }
 		Task TrackAsync(string eventName, TelemetryProperties properties = null);
 		bool IsReady { get; }
+		ICodeStreamAgentService AgentService { get; }
 	}
 
 	[Injected]
@@ -49,7 +50,7 @@ namespace CodeStream.VisualStudio.Services {
 		private readonly Lazy<ICredentialsService> _credentialsService;
 		private readonly Lazy<IEventAggregator> _eventAggregator;
 		private readonly ISessionService _sessionService;
-		private readonly ICodeStreamAgentService _agentService;
+		public ICodeStreamAgentService AgentService { get; private set; }
 		public IWebviewIpc WebviewIpc { get; }
 
 		private readonly Lazy<ISettingsService> _settingsService;
@@ -68,7 +69,7 @@ namespace CodeStream.VisualStudio.Services {
 			_credentialsService = credentialsService;
 			_eventAggregator = eventAggregator;
 			_sessionService = sessionService;
-			_agentService = serviceProvider;
+			AgentService = serviceProvider;
 			WebviewIpc = ipc;
 			_settingsService = settingsService;
 			_ideService = ideService;
@@ -123,11 +124,11 @@ namespace CodeStream.VisualStudio.Services {
 			return Task.CompletedTask;
 		}
 
-		public async Task ShowCodemarkAsync(int codemarkIndex, CancellationToken? cancellationToken = null) {
-			if (IsReady && codemarkIndex > 0) {
+		public async Task ShowCodemarkAsync(string codemarkId, CancellationToken? cancellationToken = null) {
+			if (IsReady && !codemarkId.IsNullOrWhiteSpace()) {
 				await WebviewIpc.NotifyAsync(new ShowCodemarkNotificationType {
 					Params = new ShowCodemarkNotification {
-						CodemarkIndex = codemarkIndex
+						CodemarkId = codemarkId
 					}
 				});
 			}
@@ -173,7 +174,7 @@ namespace CodeStream.VisualStudio.Services {
 
 		public async Task TrackAsync(string eventName, TelemetryProperties properties = null) {
 			if (IsReady) {
-				_agentService.TrackAsync(eventName, properties);
+				AgentService.TrackAsync(eventName, properties);
 			}
 
 			await Task.CompletedTask;
@@ -190,7 +191,7 @@ namespace CodeStream.VisualStudio.Services {
 			}
 
 			try {
-				await _agentService.LogoutAsync();
+				await AgentService.LogoutAsync();
 			}
 			catch (Exception ex) {
 				Log.Warning(ex, $"{nameof(LogoutAsync)} - agent");

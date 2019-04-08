@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Threading;
+using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
@@ -24,7 +26,7 @@ namespace CodeStream.VisualStudio.Commands {
 			Log.Verbose($"{commands.Count} {nameof(BookmarkShortcutCommands)}s");
 		}
 
-		private static readonly Dictionary<int, int> Map = new Dictionary<int, int> {			
+		private static readonly Dictionary<int, int> Map = new Dictionary<int, int> {
 			{1, PackageIds.BookmarkCommand1CommandId },
 			{2, PackageIds.BookmarkCommand2CommandId },
 			{3, PackageIds.BookmarkCommand3CommandId },
@@ -48,9 +50,27 @@ namespace CodeStream.VisualStudio.Commands {
 		void InvokeHandler(object sender, BookmarkShortcutEventArgs args) {
 			if (args == null || args.Index < 1) return;
 
-			var codeStreamService = ServiceLocator.Get<SCodeStreamService, ICodeStreamService>();			
-			codeStreamService.ShowCodemarkAsync(args.Index, cancellationToken: CancellationToken.None);
-			Log.Debug($"Handled {nameof(BookmarkShortcutCommands)} for {args.Index}");
+			var codeStreamService = ServiceLocator.Get<SCodeStreamService, ICodeStreamService>();
+			codeStreamService.TrackAsync(TelemetryEventNames.CodemarkClicked, new TelemetryProperties { { "Codemark Location", "Shortcut" } });
+
+			ThreadHelper.JoinableTaskFactory.Run(async delegate {
+				try {
+					var response = await codeStreamService.AgentService.GetDocumentFromKeyBindingAsync(args.Index);
+					if (response == null) return;
+
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+
+					var ideService = ServiceLocator.Get<SIdeService, IIdeService>();
+					var editorResponse = ideService.OpenEditor(response.TextDocument.Uri, response.Range?.Start?.Line + 1);
+					if (editorResponse != ShowCodeResult.SUCCESS) {
+						Log.Warning($"ShowCodeResult={editorResponse} for {@response} failed to open editor");
+					}
+					Log.Debug($"Handled {nameof(BookmarkShortcutCommands)} for {args.Index}");
+				}
+				catch (Exception ex) {
+					Log.Error(ex, nameof(InvokeHandler));
+				}
+			});
 		}
 
 		class BookmarkShortcutEventArgs : EventArgs {

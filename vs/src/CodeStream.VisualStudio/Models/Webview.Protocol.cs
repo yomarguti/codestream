@@ -6,7 +6,6 @@ namespace CodeStream.VisualStudio.Models
     public class ShowCodemarkNotification
     {
         public string CodemarkId { get; set; }
-		public int CodemarkIndex { get; set; }
         public bool? Simulated { get; set; }
     }
 

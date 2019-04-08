@@ -31,6 +31,7 @@ namespace CodeStream.VisualStudio.Services {
 		Task SetRpcAsync(JsonRpc rpc);
 		Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null);
 		Task<CreateDocumentMarkerPermalinkResponse> CreatePermalinkAsync(Range range, string uri, string privacy);
+		Task<GetDocumentFromKeyBindingResponse> GetDocumentFromKeyBindingAsync(int key);
 		Task<CreatePostResponse> CreatePostAsync(string streamId, string threadId, string text);
 		Task<GetFileStreamResponse> GetFileStreamAsync(Uri uri);
 		Task<GetPostResponse> GetPostAsync(string streamId, string postId);
@@ -96,12 +97,12 @@ namespace CodeStream.VisualStudio.Services {
 
 		public Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null) {
 			if (!_sessionService.IsReady) {
-				if (Log.IsVerboseEnabled()) {
+				if (Log.IsDebugEnabled()) {
 					try {
 #if DEBUG
-						Log.Verbose($"Agent not ready. Name={name}, Arguments={arguments?.ToJson()}");
+						Log.Debug($"Agent not ready. Name={name}, Arguments={arguments?.ToJson()}");
 #else
-						Log.Verbose($"Agent not ready. Name={name}");
+						Log.Debug($"Agent not ready. Name={name}");
 #endif
 					}
 					catch (Exception ex) {
@@ -132,6 +133,11 @@ namespace CodeStream.VisualStudio.Services {
 			return SendAsync<DocumentMarkersResponse>("codestream/textDocument/markers", new DocumentMarkersRequest {
 				TextDocument = new TextDocumentIdentifier { Uri = uri.ToString() }
 			}, cancellationToken);
+		}
+
+		public Task<GetDocumentFromKeyBindingResponse> GetDocumentFromKeyBindingAsync(int key) {
+			return SendAsync<GetDocumentFromKeyBindingResponse>(GetDocumentFromKeyBindingRequestType.MethodName,
+				new GetDocumentFromKeyBindingRequest { Key = key });
 		}
 
 		public Task<GetFileStreamResponse> GetFileStreamAsync(Uri uri) {
