@@ -89,7 +89,7 @@ export default class Menu extends Component {
 		const itemKey = item.key || item.action;
 		const key = parentItem ? `${parentItem.key || parentItem.action}/${itemKey}` : itemKey;
 		const selected =
-			key === this.state.selected || (this.state.selected || "").startsWith(key + "/");
+			key === this.state.selected || (this.state.selected + "").startsWith(key + "/");
 		return (
 			<li
 				className={createClassString({
