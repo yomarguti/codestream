@@ -18,7 +18,7 @@ class ComposeBox extends React.Component {
 	};
 
 	static getDerivedStateFromProps(props, state) {
-		const { codeBlock, textEditorVisibleRanges } = props;
+		const { codeBlock, textEditorVisibleRanges, top } = props;
 		if (!props.codeBlock) return null;
 
 		const line0 = getLine0ForEditorLine(textEditorVisibleRanges, codeBlock.range.start.line);
@@ -183,7 +183,7 @@ class ComposeBox extends React.Component {
 					"multi-compose": multiCompose
 				})}
 				style={{ top: this.state.position }}
-				data-top={top}
+				data-top={top || this.state.position}
 			>
 				<div style={{ position: "relative" }}>
 					{multiCompose ? (
