@@ -1208,6 +1208,7 @@ const mapStateToProps = (state: {
 		firstVisibleLine = textEditorVisibleRanges[0].start.line;
 	}
 
+	console.log("UN: ", userSelectors.getUsernames(state));
 	return {
 		usernames: userSelectors.getUsernames(state),
 		team: teams[context.currentTeamId],

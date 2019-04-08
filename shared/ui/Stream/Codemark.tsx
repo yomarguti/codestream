@@ -114,7 +114,7 @@ export class Codemark extends React.Component<Props, State> {
 			const me = this.props.currentUser.username.toLowerCase();
 			html = markdownify(text).replace(/@(\w+)/g, (match, name) => {
 				const nameNormalized = name.toLowerCase();
-				if (this.props.usernames[nameNormalized]) {
+				if (this.props.usernames.includes(nameNormalized)) {
 					return `<span class="at-mention${nameNormalized === me ? " me" : ""}">${match}</span>`;
 				}
 
@@ -418,6 +418,10 @@ export class Codemark extends React.Component<Props, State> {
 		return <a className="num-replies">{message}</a>;
 	};
 
+	renderDetailIcons = codemark => {
+		return null;
+	};
+
 	renderInlineCodemark() {
 		const { codemark, codemarkKeybindings, hidden, selected, author } = this.props;
 		const { menuOpen, menuTarget } = this.state;
@@ -457,6 +461,7 @@ export class Codemark extends React.Component<Props, State> {
 
 		menuItems.push({ label: "Set Keybinding", action: "set-keybinding", submenu: submenu });
 
+		const description = codemark.title ? this.renderTextLinkified(codemark.text) : null;
 		return (
 			<div
 				style={{ ...this.props.style }}
@@ -507,8 +512,13 @@ export class Codemark extends React.Component<Props, State> {
 							<Icon name="kebab-vertical" className="kebab-vertical clickable" />
 						</div>
 						{!selected && this.renderPinnedReplies(codemark)}
+						{!selected && this.renderDetailIcons(codemark)}
 					</div>
-					{selected && <CodemarkDetails codemark={codemark} postAction={this.props.postAction} />}
+					{selected && (
+						<CodemarkDetails codemark={codemark} postAction={this.props.postAction}>
+							<div className="description">{description}</div>
+						</CodemarkDetails>
+					)}
 				</div>
 				{this.props.hover && !selected && (
 					<div style={{ position: "absolute", right: "5px", bottom: "5px" }}>

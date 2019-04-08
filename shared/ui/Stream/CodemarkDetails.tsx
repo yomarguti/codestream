@@ -26,6 +26,7 @@ interface Props {
 	hasFocus: boolean;
 	currentUserName: string;
 	teamId: string;
+	showDetails?: boolean;
 
 	onSubmitPost?: any;
 	createPost(...args: Parameters<typeof createPost>): ReturnType<ReturnType<typeof createPost>>;
@@ -72,6 +73,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		const threadId = codemark.postId || "";
 		return (
 			<div className="codemark-details">
+				{this.props.children}
 				<CodemarkActions codemark={codemark} capabilities={capabilities} />
 				<div className="replies">
 					<div className="shadow-overlay">
