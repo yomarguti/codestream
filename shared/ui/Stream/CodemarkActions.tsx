@@ -17,6 +17,7 @@ interface State {
 interface Props {
 	codemark: CodemarkPlus;
 	capabilities: Capabilities;
+	alwaysRenderCode?: boolean;
 }
 
 export default class CodemarkActions extends React.Component<Props, State> {
@@ -84,7 +85,7 @@ export default class CodemarkActions extends React.Component<Props, State> {
 
 		return (
 			<>
-				{this.state.hasDiff && this.renderCodeblock()}
+				{(this.props.alwaysRenderCode || this.state.hasDiff) && this.renderCodeblock()}
 				{(canCompare || canApply || canOpenRevision) && (
 					<div className="post-details" id={codemark.id}>
 						<div className="a-group" key="a">
@@ -130,6 +131,7 @@ export default class CodemarkActions extends React.Component<Props, State> {
 		const { codemark } = this.props;
 		const markers = codemark.markers;
 		if (!markers) return null;
+
 		const marker = codemark.markers![0];
 		if (marker === undefined) return;
 

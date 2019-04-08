@@ -233,7 +233,15 @@ class Post extends React.Component {
 							</Tooltip>
 						)}
 					</div>
-					{this.renderCode(codemark.markers[0])}
+					{this.props.showDetails && !this.state.warning ? (
+						<CodemarkActions
+							codemark={codemark}
+							capabilities={this.props.capabilities}
+							alwaysRenderCode={true}
+						/>
+					) : (
+						this.renderCode(codemark.markers[0])
+					)}
 				</div>
 			);
 		}
@@ -363,11 +371,8 @@ class Post extends React.Component {
 						{this.renderExternalLink()}
 						{this.renderCodeBlockFile()}
 					</div>
-					{codeBlock}
+					{/*!this.props.showDetails &&*/ codeBlock}
 					{this.renderAttachments(post)}
-					{this.props.showDetails && !this.state.warning && (
-						<CodemarkActions codemark={codemark} capabilities={this.props.capabilities} />
-					)}
 				</div>
 				{this.renderReactions(post)}
 				{/*this.renderReplyCount(post)*/}
