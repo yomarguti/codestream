@@ -199,7 +199,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	componentDidMount() {
-
 		this.disposables.push(
 			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
 				if (this.props.textEditorUri === textDocument.uri) {
@@ -232,10 +231,15 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		}
 
 		this.repositionCodemarks();
+		if (this.repositionTimeout) clearTimeout(this.repositionTimeout);
+		this.repositionTimeout = setTimeout(() => this.repositionCodemarks(), 100);
 	}
+
+	private repositionTimeout: any | undefined;
 
 	componentWillUnmount() {
 		this.disposables.forEach(d => d.dispose());
+		if (this.repositionTimeout) clearTimeout(this.repositionTimeout);
 	}
 
 	scrollTo(top) {
@@ -249,14 +253,14 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	repositionBelow() {}
 
-	repositionCodemarks = debounceToAnimationFrame(() => {
+	repositionCodemarks = () => {
 		let $codemarkDivs = Array.from(
 			document.querySelectorAll(".codemark.inline:not(.hidden), .compose.float-compose")
 		);
 		this.repositionElements($codemarkDivs);
 		let $hiddenDivs = Array.from(document.querySelectorAll(".codemark.inline.hidden"));
 		this.repositionElements($hiddenDivs);
-	});
+	};
 
 	repositionElements = $elements => {
 		$elements.sort((a, b) => a.dataset.top - b.dataset.top);
