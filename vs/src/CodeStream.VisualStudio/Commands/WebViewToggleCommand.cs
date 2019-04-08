@@ -21,38 +21,17 @@ namespace CodeStream.VisualStudio.Commands
             _codeStreamAgentService = codeStreamAgentService;
 
             var menuCommandId = new CommandID(PackageGuids.guidWebViewPackageCmdSet, PackageIds.WebViewToggleCommandId);
-            var menuItem = new OleMenuCommand(InvokeHandler, menuCommandId);
-            menuItem.BeforeQueryStatus += DynamicTextCommand_BeforeQueryStatus;
+            var menuItem = new OleMenuCommand(InvokeHandler, menuCommandId);            
 
             commandService.AddCommand(menuItem);
         }
 
-        public void DynamicTextCommand_BeforeQueryStatus(object sender, EventArgs e)
-        {
-            ThreadHelper.ThrowIfNotOnUIThread();
-
-            //var command = sender as OleMenuCommand;
-            //if (command == null) return;
-
-            //var windowFrame = GetWindowFrame();
-            //if (windowFrame == null) return;
-            //if (windowFrame.IsVisible() == VSConstants.S_OK)
-            //{
-            //    command.Text = $"Hide {Application.Name}";
-            //}
-            //else
-            //{
-            //    command.Text = $"Show {Application.Name}";
-            //}
-        }
-
         public static async Task InitializeAsync(AsyncPackage package)
         {
-            // Switch to the main thread - the call to AddCommand in ToolWindow1Command's constructor requires
-            // the UI thread.
+            // Switch to the main thread - the call to AddCommand in ToolWindow1Command's constructor requires the UI thread.
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(package.DisposalToken);
 
-            OleMenuCommandService commandService = await package.GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
+            var commandService = await package.GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
             var codeStreamAgentService = await package.GetServiceAsync(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
 
             Instance = new WebViewToggleCommand(package, commandService, codeStreamAgentService);
