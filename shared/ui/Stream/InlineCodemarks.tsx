@@ -6,7 +6,7 @@ import Codemark from "./Codemark";
 import ScrollBox from "./ScrollBox";
 import Feedback from "./Feedback";
 import cx from "classnames";
-import { range, debounceToAnimationFrame, diff } from "../utils";
+import { range, debounceToAnimationFrame, diff, safe } from "../utils";
 import { HostApi } from "../webview-api";
 import {
 	EditorHighlightRangeRequestType,
@@ -267,20 +267,14 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 							break;
 						}
 						case "childList": {
-							const addedComposeBox =
-								mutation.addedNodes.length > 0 &&
-								(mutation.addedNodes[0] as Element).classList.contains("compose");
-							const removedComposeBox =
-								mutation.removedNodes.length > 0 &&
-								(mutation.removedNodes[0] as Element).classList.contains("compose");
-							if (target.classList.contains("postslist") || addedComposeBox || removedComposeBox) {
+							const causedByComposeBox =
+								safe(() => {
+									const node = mutation.addedNodes.item(0) || mutation.removedNodes.item(0);
+									return node ? (node as Element).classList.contains("compose") : false;
+								}) || false;
+
+							if (safe(() => target.classList.contains("postslist")) || causedByComposeBox) {
 								this.repositionCodemarks();
-								if (
-									mutation.addedNodes[0] &&
-									(mutation.addedNodes[0] as Element).classList.contains("post")
-								) {
-									this.repositionCodemarks();
-								}
 							}
 						}
 					}
