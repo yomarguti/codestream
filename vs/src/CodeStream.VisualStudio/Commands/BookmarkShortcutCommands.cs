@@ -61,8 +61,8 @@ namespace CodeStream.VisualStudio.Commands {
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 
 					var ideService = ServiceLocator.Get<SIdeService, IIdeService>();
-					var editorResponse = ideService.OpenEditor(response.TextDocument.Uri, response.Range?.Start?.Line + 1);
-					if (editorResponse != ShowCodeResult.SUCCESS) {
+					var editorResponse = ideService.OpenEditor(response.TextDocument.Uri, response.Range?.Start?.Line + 1, moveCaret: true);
+					if (!editorResponse) {
 						Log.Warning($"ShowCodeResult={editorResponse} for {@response} failed to open editor");
 					}
 					Log.Debug($"Handled {nameof(BookmarkShortcutCommands)} for {args.Index}");

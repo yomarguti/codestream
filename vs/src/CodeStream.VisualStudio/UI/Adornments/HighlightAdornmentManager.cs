@@ -15,7 +15,11 @@ using System.Windows.Shapes;
 
 namespace CodeStream.VisualStudio.UI.Adornments {
 	public interface ICanHighlightRange {
-		void Highlight(Range range, bool highlight);
+		bool Highlight(Range range, bool highlight);
+	}
+
+	public interface ICanSelectRange {
+		bool SelectRange(Range range);
 	}
 
 	public class HighlightAdornmentManager : ICanHighlightRange, IDisposable {
@@ -35,7 +39,7 @@ namespace CodeStream.VisualStudio.UI.Adornments {
 			textView.ViewportLeftChanged += OnViewportLeftChanged;
 		}
 
-		public void Highlight(Range range, bool highlight) {
+		public bool Highlight(Range range, bool highlight) {
 			ThreadHelper.ThrowIfNotOnUIThread();
 
 			if (!_lineInfos.AnySafe()) {
@@ -44,7 +48,7 @@ namespace CodeStream.VisualStudio.UI.Adornments {
 
 			if (!highlight) {
 				_highlightAdornmentLayer.RemoveAllAdornments();
-				return;
+				return false;
 			}
 
 			try {
@@ -107,11 +111,13 @@ namespace CodeStream.VisualStudio.UI.Adornments {
 					Canvas.SetTop(element, lineInfo.Top);
 
 					_highlightAdornmentLayer.AddAdornment(lineInfo.Snapshot, null, element);
+					return true;
 				}
 			}
 			catch (Exception ex) {
 				Log.Warning(ex, $"{range.ToString()}");
 			}
+			return false;
 		}
 
 		private SolidColorBrush CreateBrush() {

@@ -27,8 +27,8 @@ namespace CodeStream.VisualStudio.Services {
 	public interface IIdeService {
 		void Navigate(string url);
 		System.Threading.Tasks.Task SetClipboardAsync(string text);
-		ShowCodeResult OpenEditor(string fileUri, int? scrollTo = null, bool? atTop = false);
-		ShowCodeResult OpenEditor(Uri fileUri, int? scrollTo = null, bool? atTop = false);
+		bool OpenEditor(string fileUri, int? scrollTo = null, bool? atTop = false, bool? moveCaret = false);
+		bool OpenEditor(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? moveCaret = false);
 		EditorState GetActiveEditorState();
 		EditorState GetActiveEditorState(out IVsTextView view);
 		ActiveTextEditor GetActiveTextView();
@@ -64,7 +64,7 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public ActiveTextEditor GetActiveTextView() {
-			try { 
+			try {
 				var wpfTextView = GetActiveWpfTextView();
 				if (wpfTextView == null) {
 					Log.Verbose($"{nameof(wpfTextView)} is null");
@@ -102,7 +102,7 @@ namespace CodeStream.VisualStudio.Services {
 					return null;
 				}
 
-				return editor.GetWpfTextView(textViewCurrent);				 
+				return editor.GetWpfTextView(textViewCurrent);
 			}
 			catch (Exception ex) {
 				Log.Warning(ex, nameof(GetActiveTextView));
@@ -117,9 +117,9 @@ namespace CodeStream.VisualStudio.Services {
 		/// <param name="fileUri"></param>
 		/// <param name="scrollTo">the 1-based line number</param>
 		/// <returns>ShowCodeResult</returns>
-		public ShowCodeResult OpenEditor(string fileUri, int? scrollTo = null, bool? atTop = false) {
+		public bool OpenEditor(string fileUri, int? scrollTo = null, bool? atTop = false, bool? moveCaret = false) {
 			ThreadHelper.ThrowIfNotOnUIThread();
-			return OpenEditor(fileUri.ToUri(), scrollTo, atTop);
+			return OpenEditor(fileUri.ToUri(), scrollTo, atTop, moveCaret);
 		}
 
 		/// <summary>
@@ -128,34 +128,34 @@ namespace CodeStream.VisualStudio.Services {
 		/// <param name="fileUri"></param>
 		/// <param name="scrollTo">the 1-based line number</param>
 		/// <returns>ShowCodeResult</returns>
-		public ShowCodeResult OpenEditor(Uri fileUri, int? scrollTo = null, bool? atTop = false) {
+		public bool OpenEditor(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? moveCaret = false) {
 			ThreadHelper.ThrowIfNotOnUIThread();
 			var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
 
 			if (dte == null) {
 				Log.Warning($"{nameof(dte)} is null for {fileUri}");
-				return ShowCodeResult.SUCCESS;
+				return false;
 			}
 
 			try {
 				var view = GetActiveTextView();
 				if (view == null || !view.Uri.EqualsIgnoreCase(fileUri)) {
-					var window = dte.ItemOperations.OpenFile(fileUri.ToLocalPath(), EnvDTE.Constants.vsViewKindTextView);					
-					TryScrollToLine(GetActiveWpfTextView(), scrollTo, atTop);
+					var window = dte.ItemOperations.OpenFile(fileUri.ToLocalPath(), EnvDTE.Constants.vsViewKindTextView);
+					TryScrollToLine(GetActiveWpfTextView(), scrollTo, atTop, moveCaret);
 				}
 				else {
-					TryScrollToLine(view?.TextView, scrollTo, atTop);
+					TryScrollToLine(view?.TextView, scrollTo, atTop, moveCaret);
 				}
 
-				return ShowCodeResult.SUCCESS;
+				return  true;
 			}
 			catch (Exception ex) {
 				Log.Error(ex, $"OpenEditor failed for {fileUri}");
-				return ShowCodeResult.FILE_NOT_FOUND;
+				return false;
 			}
 		}
 
-		private void TryScrollToLine(IWpfTextView view, int? line, bool? atTop) {
+		private void TryScrollToLine(IWpfTextView view, int? line, bool? atTop, bool? moveCaret) {
 			if (line == null || line.Value < 0) return;
 
 			var lines = view.VisualSnapshot.Lines;
@@ -165,7 +165,10 @@ namespace CodeStream.VisualStudio.Services {
 			var span = new SnapshotSpan(view.TextSnapshot, Span.FromBounds(startLine.Start, startLine.Start + 1));
 			view.ViewScroller.EnsureSpanVisible(span, atTop == true ?
 					EnsureSpanVisibleOptions.ShowStart :
-					EnsureSpanVisibleOptions.AlwaysCenter);
+					EnsureSpanVisibleOptions.MinimumScroll);
+			if (moveCaret == true) {
+				view.Caret.MoveTo(new SnapshotPoint(view.TextSnapshot, startLine.Start == 0 ? 0 : startLine.Start - 1));
+			}
 		}
 
 		// old implementation
