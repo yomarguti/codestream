@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import * as userSelectors from "../store/users/reducer";
 import Icon from "./Icon";
@@ -6,7 +7,7 @@ import Codemark from "./Codemark";
 import ScrollBox from "./ScrollBox";
 import Feedback from "./Feedback";
 import cx from "classnames";
-import { range, debounceToAnimationFrame, diff, safe } from "../utils";
+import { range } from "../utils";
 import { HostApi } from "../webview-api";
 import {
 	EditorHighlightRangeRequestType,
@@ -16,7 +17,8 @@ import {
 	EditorSelection,
 	EditorMetrics,
 	EditorContext,
-	WebviewConfigs
+	WebviewConfigs,
+	ShowCodemarkNotificationType
 } from "../ipc/webview.protocol";
 import {
 	DocumentMarker,
@@ -41,6 +43,7 @@ import {
 import { State as ContextState } from "../store/context/types";
 import { sortBy as _sortBy } from "lodash-es";
 import { getTeamMembers } from "../store/users/reducer";
+import { getCodemark } from "../store/codemarks/reducer";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -53,6 +56,7 @@ import { getTeamMembers } from "../store/users/reducer";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 interface Props {
+	currentStreamId?: string;
 	teammates?: CSUser[];
 	usernames: string[];
 	team: CSTeam;
@@ -107,6 +111,10 @@ interface State {
 }
 
 export class SimpleInlineCodemarks extends Component<Props, State> {
+	static contextTypes = {
+		store: PropTypes.object
+	};
+
 	disposables: { dispose(): void }[] = [];
 	titles: {
 		comment: JSX.Element;
@@ -207,6 +215,16 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
 				if (this.props.textEditorUri === textDocument.uri) {
 					this.props.fetchDocumentMarkers(textDocument.uri);
+				}
+			}),
+			HostApi.instance.on(ShowCodemarkNotificationType, e => {
+				const { codemarks } = this.context.store.getState();
+
+				const codemark = getCodemark(codemarks, e.codemarkId);
+				if (codemark == null) return;
+
+				if (codemark.markers != null && codemark.markers.length !== 0) {
+					this.setState({ selectedDocMarkerId: codemark.markers[0].id });
 				}
 			})
 		);
@@ -1175,6 +1193,7 @@ const mapStateToProps = (state: {
 	}
 
 	return {
+		currentStreamId: context.currentStreamId,
 		usernames: userSelectors.getUsernames(state),
 		teammates: teamMembers,
 		team: teams[context.currentTeamId],

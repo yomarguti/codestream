@@ -11,7 +11,8 @@ import {
 	HostDidChangeEditorSelectionNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
 	ShowCodemarkNotificationType,
-	ShowStreamNotificationType
+	ShowStreamNotificationType,
+	WebviewPanels
 } from "./ipc/webview.protocol";
 import { actions, createCodeStreamStore } from "./store";
 import { HostApi } from "./webview-api";
@@ -22,8 +23,8 @@ import {
 	ChangeDataType
 } from "@codestream/protocols/agent";
 import translations from "./translations/en";
-import { is } from "./utils";
 import { getCodemark } from "./store/codemarks/reducer";
+import { fetchCodemarks } from "./Stream/actions";
 
 export { HostApi };
 
@@ -145,17 +146,23 @@ export function listenForEvents(store) {
 	});
 
 	api.on(ShowStreamNotificationType, ({ streamId, threadId }) => {
+		store.dispatch(actions.openPanel("channels"));
 		store.dispatch(actions.setCurrentStream(streamId, threadId));
 	});
 
-	api.on(ShowCodemarkNotificationType, e => {
-		const { codemarks } = store.getState();
+	api.on(ShowCodemarkNotificationType, async e => {
+		let { codemarks, context } = store.getState();
+		if (context.panelStack[0] === WebviewPanels.CodemarksForFile) return;
+
+		if (Object.keys(codemarks).length === 0) {
+			await store.dispatch(fetchCodemarks());
+			codemarks = store.getState().codemarks;
+		}
 
 		const codemark = getCodemark(codemarks, e.codemarkId);
 		if (codemark == null) return;
 
-		// TODO:
-
+		store.dispatch(actions.openPanel(WebviewPanels.Codemarks));
 		store.dispatch(actions.setCurrentStream(codemark.streamId, codemark.postId));
 	});
 }
