@@ -18,16 +18,46 @@ class ComposeBox extends React.Component {
 	};
 
 	static getDerivedStateFromProps(props, state) {
-		const { codeBlock, textEditorVisibleRanges, top } = props;
+		const { codeBlock, textEditorVisibleRanges, forwardedRef } = props;
 		if (!props.codeBlock) return null;
 
 		const line0 = getLine0ForEditorLine(textEditorVisibleRanges, codeBlock.range.start.line);
 		if (line0 >= 0) {
-			const top = (window.innerHeight * line0) / getVisibleLineCount(textEditorVisibleRanges);
-			if (top !== state.position) return { position: top };
+			let top = (window.innerHeight * line0) / getVisibleLineCount(textEditorVisibleRanges);
+			if (state.adjustedPosition) {
+				if (top <= state.adjustedPosition) return { position: top, adjustedPosition: undefined };
+				if (forwardedRef.current.getBoundingClientRect().bottom < top) {
+					return { position: top, adjustedPosition: undefined };
+				}
+			}
+			if (top !== state.position) {
+				return { position: top };
+			}
+		} else {
+			return { position: 100000 };
 		}
-		//FIXME -- check to see if it's too low
 		return null;
+	}
+
+	componentDidMount() {
+		this.repositionIfNecessary();
+	}
+
+	repositionIfNecessary() {
+		const { forwardedRef } = this.props;
+		if (!forwardedRef) return null;
+
+		const domRect = forwardedRef.current.getBoundingClientRect();
+		const bodyRect = document.body.getBoundingClientRect();
+		// adjust if it's too low
+		if (domRect.bottom >= bodyRect.bottom) {
+			const { position } = this.state;
+			const nextPosition = position - (domRect.bottom - bodyRect.bottom + 120);
+			if (nextPosition !== position)
+				return this.setState({
+					adjustedPosition: nextPosition
+				});
+		}
 	}
 
 	handleSubmitPost = (...args) => {
@@ -169,7 +199,7 @@ class ComposeBox extends React.Component {
 	};
 
 	render() {
-		const { forwardedRef, multiCompose, top } = this.props;
+		const { forwardedRef, multiCompose } = this.props;
 
 		this.tabIndexCount = 0;
 
@@ -182,8 +212,8 @@ class ComposeBox extends React.Component {
 					"float-compose": this.props.floatCompose,
 					"multi-compose": multiCompose
 				})}
-				style={{ top: this.state.position }}
-				data-top={top || this.state.position}
+				style={{ top: this.state.adjustedPosition || this.state.position }}
+				data-top={this.state.adjustedPosition || this.state.position}
 			>
 				<div style={{ position: "relative" }}>
 					{multiCompose ? (
