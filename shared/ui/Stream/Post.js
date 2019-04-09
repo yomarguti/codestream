@@ -80,12 +80,11 @@ class Post extends React.Component {
 					const { success } = await HostApi.instance.send(EditorSelectRangeRequestType, {
 						uri: response.textDocument.uri,
 						// Ensure we put the cursor at the right line (don't actually select the whole range)
-						range: Range.create(
-							response.range.start.line,
-							response.range.start.character,
-							response.range.start.line,
-							response.range.start.character
-						),
+						selection: {
+							start: response.range.start,
+							end: response.range.start,
+							cursor: response.range.start
+						},
 						preserveFocus: preserveFocus
 					});
 					this.setState({ warning: success ? null : "FILE_NOT_FOUND" });

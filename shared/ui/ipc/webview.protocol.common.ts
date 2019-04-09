@@ -18,6 +18,7 @@ export interface EditorMetrics {
 }
 
 export interface EditorSelection extends Range {
+	// MUST be identical to Range.end
 	cursor: Position;
 }
 

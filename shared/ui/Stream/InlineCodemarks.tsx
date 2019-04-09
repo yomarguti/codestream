@@ -910,7 +910,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			const range = Range.create(position, position);
 			HostApi.instance.send(EditorSelectRangeRequestType, {
 				uri: this.props.textEditorUri!,
-				range: range,
+				selection: { ...range, cursor: range.end },
 				preserveFocus: true
 			});
 			// just short-circuits the round-trip to the editor

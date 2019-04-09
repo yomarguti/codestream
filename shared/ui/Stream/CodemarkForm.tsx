@@ -235,7 +235,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	private selectRangeInEditor(uri: string, range: Range) {
 		HostApi.instance.send(EditorSelectRangeRequestType, {
 			uri: uri,
-			range: range,
+			selection: { ...range, cursor: range.end },
 			preserveFocus: true
 		});
 	}

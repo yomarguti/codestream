@@ -1,6 +1,6 @@
 import { RequestType } from "vscode-jsonrpc";
 import { Range } from "vscode-languageserver-types";
-import { IpcRoutes } from "./webview.protocol.common";
+import { EditorSelection, IpcRoutes } from "./webview.protocol.common";
 
 export interface EditorHighlightRangeRequest {
 	uri: string;
@@ -36,7 +36,7 @@ export const EditorRevealRangeRequestType = new RequestType<
 
 export interface EditorSelectRangeRequest {
 	uri: string;
-	range: Range;
+	selection: EditorSelection;
 	preserveFocus?: boolean;
 }
 export interface EditorSelectRangeResponse {

@@ -1008,7 +1008,7 @@ export class SimpleStream extends Component {
 				if (setSelection) {
 					HostApi.instance.send(EditorSelectRangeRequestType, {
 						uri: uri,
-						range: range,
+						selection: { ...range, cursor: range.end },
 						preserveFocus: true
 					});
 				}
