@@ -121,7 +121,7 @@ export namespace Editor {
 		const editor = await findOrOpenEditor(uri, { ...options });
 		if (editor === undefined) return false;
 
-		editor.selection = new Selection(range.end, range.start);
+		editor.selection = new Selection(range.start, range.end);
 		editor.revealRange(range, TextEditorRevealType.InCenterIfOutsideViewport);
 		return true;
 	}

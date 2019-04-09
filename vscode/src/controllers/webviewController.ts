@@ -554,7 +554,7 @@ export class WebviewController implements Disposable {
 				webview.onIpcRequest(EditorSelectRangeRequestType, e, async (type, params) => {
 					const success = await Editor.selectRange(
 						Uri.parse(params.uri),
-						Editor.fromSerializableRange(params.range),
+						Editor.fromSerializableRange(params.selection),
 						{
 							preserveFocus: params.preserveFocus
 						}
