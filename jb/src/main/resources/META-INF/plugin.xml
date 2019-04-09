@@ -150,6 +150,7 @@
                 <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="P"
                                    replace-all="true"/>
             </action>
+
             <action id="CodeStream.ToggleView" class="com.codestream.actions.ToggleView" text="Toggle CodeStream">
                 <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH"
                                    second-keystroke="control shift SLASH"/>
@@ -158,7 +159,81 @@
                 <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="control SLASH"
                                    replace-all="true"/>
             </action>
+
         </group>
+
+        <action id="CodeStream.Bookmark1" class="com.codestream.actions.Bookmark1">
+            <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH"
+                               second-keystroke="1"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="1"
+                               replace-all="true"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="1"
+                               replace-all="true"/>
+        </action>
+        <action id="CodeStream.Bookmark2" class="com.codestream.actions.Bookmark2">
+            <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH"
+                               second-keystroke="2"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="2"
+                               replace-all="true"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="2"
+                               replace-all="true"/>
+        </action>
+        <action id="CodeStream.Bookmark3" class="com.codestream.actions.Bookmark3">
+            <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH"
+                               second-keystroke="3"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="3"
+                               replace-all="true"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="3"
+                               replace-all="true"/>
+        </action>
+        <action id="CodeStream.Bookmark4" class="com.codestream.actions.Bookmark4">
+            <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH"
+                               second-keystroke="4"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="4"
+                               replace-all="true"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="4"
+                               replace-all="true"/>
+        </action>
+        <action id="CodeStream.Bookmark5" class="com.codestream.actions.Bookmark5">
+            <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH"
+                               second-keystroke="5"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="5"
+                               replace-all="true"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="5"
+                               replace-all="true"/>
+        </action>
+        <action id="CodeStream.Bookmark6" class="com.codestream.actions.Bookmark6">
+            <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH"
+                               second-keystroke="6"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="6"
+                               replace-all="true"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="6"
+                               replace-all="true"/>
+        </action>
+        <action id="CodeStream.Bookmark7" class="com.codestream.actions.Bookmark7">
+            <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH"
+                               second-keystroke="7"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="7"
+                               replace-all="true"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="7"
+                               replace-all="true"/>
+        </action>
+        <action id="CodeStream.Bookmark8" class="com.codestream.actions.Bookmark8">
+            <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH"
+                               second-keystroke="8"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="8"
+                               replace-all="true"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="8"
+                               replace-all="true"/>
+        </action>
+        <action id="CodeStream.Bookmark9" class="com.codestream.actions.Bookmark9">
+            <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH"
+                               second-keystroke="9"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="9"
+                               replace-all="true"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="9"
+                               replace-all="true"/>
+        </action>
     </actions>
 
     <depends>com.intellij.modules.platform</depends>

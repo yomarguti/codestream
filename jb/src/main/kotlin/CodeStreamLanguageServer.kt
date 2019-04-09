@@ -1,6 +1,7 @@
 package com.codestream
 
 import com.google.gson.JsonElement
+import com.google.gson.JsonObject
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.TextDocumentIdentifier
 import org.eclipse.lsp4j.jsonrpc.services.JsonRequest
@@ -18,48 +19,18 @@ interface CodeStreamLanguageServer : LanguageServer {
 
     @JsonRequest("codestream/logout")
     fun logout(params: LogoutParams): CompletableFuture<JsonElement>
-//
-//    @JsonRequest("codeStream/textDocument/fromMarker")
-//    fun documentFromMarker(params: DocumentFromMarkerParams): CompletableFuture<DocumentFromMarkerResult>
-//
-//    @JsonRequest("codestream/textDocument/markers")
-//    fun documentMarkers(params: DocumentMarkersParams): CompletableFuture<DocumentMarkersResult>
-//
-//    @JsonRequest("codeStream/post/prepareWithCode")
-//    fun preparePostWithCode(params: PreparePostWithCodeParams): CompletableFuture<PreparePostWithCodeResult>
+
+    @JsonRequest("codestream/textDocument/fromKey")
+    fun textDocumentFromKey(params: TextDocumentFromKeyParams): CompletableFuture<TextDocumentFromKeyResult>
 
 }
 
-class DocumentFromMarkerParams(
-    val file: String,
-    val repoId: String,
-    val markerId: String
-)
+class TextDocumentFromKeyParams(val key: Int)
 
-class DocumentFromMarkerResult(
-    val textDocument: TextDocument?,
-    val range: Range?
-)
-
-class PreparePostWithCodeParams(
+class TextDocumentFromKeyResult(
     val textDocument: TextDocumentIdentifier,
     val range: Range,
-    val dirty: Boolean
-)
-
-class PreparePostWithCodeResult(
-    val code: String,
-    val range: Range,
-    val source: CodeBlockSource?,
-    val gitError: String?
-)
-
-class CodeBlockSource(
-    val file: String,
-    val repoPath: String,
-    val revision: String,
-    val authors: JsonElement,
-    val remotes: JsonElement
+    val marker: JsonObject
 )
 
 class Codemark(

@@ -53,8 +53,13 @@ class CodeStreamComponent(val project: Project) : Disposable, ServiceConsumer(pr
             val frame = WindowManager.getInstance().getFrame(project)
             val window = UIUtil.getWindow(frame)
             window?.addWindowFocusListener(object : WindowFocusListener {
-                override fun windowLostFocus(e: WindowEvent?) { focused = false }
-                override fun windowGainedFocus(e: WindowEvent?) { focused = true }
+                override fun windowLostFocus(e: WindowEvent?) {
+                    focused = false
+                }
+
+                override fun windowGainedFocus(e: WindowEvent?) {
+                    focused = true
+                }
             })
 
             EditorFactory.getInstance().addEditorFactoryListener(EditorFactoryListenerImpl(project), this)
@@ -71,13 +76,15 @@ class CodeStreamComponent(val project: Project) : Disposable, ServiceConsumer(pr
                 it.subscribe(
                     ToolWindowManagerListener.TOPIC,
                     object : ToolWindowManagerListener {
-                        override fun stateChanged() { updateWebViewFocus() }
+                        override fun stateChanged() {
+                            updateWebViewFocus()
+                        }
                     }
                 )
             }
 
             val statusBar = WindowManager.getInstance().getIdeFrame(project).statusBar
-    //        val statusBar = WindowManager.getInstance().getStatusBar(project)
+            //        val statusBar = WindowManager.getInstance().getStatusBar(project)
             statusBar?.addWidget(CodeStreamStatusBarWidget(project))
 
             sessionService.onUnreadsChanged {
@@ -103,8 +110,11 @@ class CodeStreamComponent(val project: Project) : Disposable, ServiceConsumer(pr
         show(null)
     }
 
-    fun show(runnable: Runnable?) {
-        toolWindow.show(runnable)
+    fun show(afterShow: (() -> Unit)?) {
+        toolWindow.show {
+            toolWindow.component.grabFocus()
+            afterShow?.invoke()
+        }
     }
 
     fun hide() {

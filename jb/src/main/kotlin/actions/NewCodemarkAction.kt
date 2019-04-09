@@ -22,7 +22,7 @@ abstract class NewCodemarkAction(val type: CodemarkType) : AnAction(), Intention
 
     private fun execute(project: Project) {
         FileEditorManager.getInstance(project).selectedTextEditor?.run {
-            CodeStreamComponent.getInstance(project).show(Runnable {
+            CodeStreamComponent.getInstance(project).show {
                 val webViewService = ServiceManager.getService(project, WebViewService::class.java)
                 webViewService.postNotification(
                     CodemarkNotifications.New(
@@ -32,8 +32,7 @@ abstract class NewCodemarkAction(val type: CodemarkType) : AnAction(), Intention
                         null
                     )
                 )
-                webViewService.webView.grabFocus()
-            })
+            }
 
         }
     }
