@@ -227,7 +227,15 @@
 			.author {
 				font-size: 13px;
 				font-weight: 700;
-				padding-bottom: 5px;
+				// padding-bottom: 5px;
+				// this negative margin and offsetting padding
+				// is to make the author div go edge-to-edge
+				// within the codemark card, and all the way to
+				// the top pixel, to support the clicking on
+				// the title to de-select the codemark (which
+				// i don't really love... but that's the spec)
+				margin: -10px -10px 0 -10px;
+				padding: 10px 10px 5px 10px;
 			}
 			time {
 				opacity: 0.4;
