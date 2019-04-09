@@ -602,7 +602,7 @@ export class Codemark extends React.Component<Props, State> {
 						</CodemarkDetails>
 					)}
 				</div>
-				{this.props.hover && !selected && (
+				{this.props.hover && !selected && type !== "bookmark" && (
 					<div style={{ opacity: 0.5, position: "absolute", right: "5px", bottom: "5px" }}>
 						<Icon
 							className="info"
