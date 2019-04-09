@@ -17,6 +17,7 @@ import { getUserByCsId } from "../store/users/reducer";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { CodemarkForm } from "./CodemarkForm";
 import { editCodemark } from "../store/codemarks/actions";
+import { confirmPopup } from "./Confirm";
 
 interface State {
 	isEditing: boolean;
@@ -251,7 +252,7 @@ export class Codemark extends React.Component<Props, State> {
 				break;
 			}
 			case "delete-post": {
-				this.props.deletePost(this.props.codemark.streamId, this.props.codemark.postId);
+				this.deleteCodemark();
 				break;
 			}
 			case "edit-post": {
@@ -262,6 +263,24 @@ export class Codemark extends React.Component<Props, State> {
 		var found = action.match(/set-keybinding-(\d)/);
 		if (found) this.setKeybinding(found[1]);
 	};
+
+	deleteCodemark() {
+		confirmPopup({
+			title: "Are you sure?",
+			message: "Deleting a codemark cannot be undone.",
+			centered: true,
+			buttons: [
+				{
+					label: "Delete Codemark",
+					wait: true,
+					action: () => {
+						this.props.deletePost(this.props.codemark.streamId, this.props.codemark.postId);
+					}
+				},
+				{ label: "Cancel" }
+			]
+		});
+	}
 
 	togglePinned = () => {
 		const { codemark } = this.props;
