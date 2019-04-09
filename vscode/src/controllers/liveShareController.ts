@@ -52,7 +52,7 @@ interface StartCommandArgs {
 	createNewStream?: Boolean;
 }
 
-export const vslsUrlRegex = /https:\/\/insiders\.liveshare\.vsengsaas\.visualstudio\.com\/join\?(.+?)\b/;
+export const vslsUrlRegex = /https:\/\/(?:.*?\.)?liveshare\.vsengsaas\.visualstudio\.com\/join\?(.+?)\b/;
 
 export class LiveShareController implements Disposable {
 	private _apiPromise: Promise<LiveShare | null> | undefined;

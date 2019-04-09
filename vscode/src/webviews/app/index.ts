@@ -14,7 +14,7 @@ channel.port1.onmessage = message => api.postMessage(message.data);
 setupCommunication(channel.port2);
 initializeColorPalette();
 
-const vslsUrlRegex = /https:\/\/insiders\.liveshare\.vsengsaas\.visualstudio\.com\/join\?/;
+const vslsUrlRegex = /https:\/\/(?:.*?\.)?liveshare\.vsengsaas\.visualstudio\.com\/join\?/;
 
 document.body.addEventListener(
 	"click",
