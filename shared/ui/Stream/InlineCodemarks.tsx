@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import * as userSelectors from "../store/users/reducer";
 import Icon from "./Icon";

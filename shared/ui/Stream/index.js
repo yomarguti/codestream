@@ -53,7 +53,7 @@ import {
 	PinReplyToCodemarkRequestType
 } from "@codestream/protocols/agent";
 
-import { setCurrentStream } from "../store/context/actions";
+import { setCurrentStream, setCurrentDocumentMarker } from "../store/context/actions";
 import {
 	filter as _filter,
 	includes as _includes,
@@ -1002,6 +1002,8 @@ export class SimpleStream extends Component {
 		if (value == "collapse") {
 			this.setState({ multiCompose: false, ...state });
 		} else {
+			this.props.setCurrentDocumentMarker(undefined);
+
 			let scmInfo;
 			if (commentingContext) {
 				const { uri, range, setSelection } = commentingContext;
@@ -2146,6 +2148,7 @@ export default connect(
 	{
 		...actions,
 		setCurrentStream,
+		setCurrentDocumentMarker,
 		editCodemark
 	}
 )(injectIntl(SimpleStream));
