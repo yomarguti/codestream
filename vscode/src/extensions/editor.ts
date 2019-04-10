@@ -3,6 +3,7 @@ import { EditorMetrics, EditorSelection } from "@codestream/protocols/webview";
 import {
 	commands,
 	DecorationRangeBehavior,
+	Position,
 	Range,
 	Selection,
 	TextDocumentShowOptions,
@@ -13,7 +14,7 @@ import {
 	window,
 	workspace
 } from "vscode";
-import { Range as LspRange } from "vscode-languageclient";
+import { Position as LspPosition, Range as LspRange } from "vscode-languageclient";
 import { configuration } from "../configuration";
 import { BuiltInCommands, emptyArray } from "../constants";
 import { Container } from "../container";
@@ -129,6 +130,29 @@ export namespace Editor {
 		return true;
 	}
 
+	export async function scrollTo(
+		uri: Uri,
+		position: Position,
+		options: { atTop?: boolean } = {}
+	): Promise<void> {
+		const normalizedUri = uri.toString(false);
+
+		let editor;
+		for (const e of window.visibleTextEditors) {
+			if (e.document.uri.toString(false) === normalizedUri) {
+				editor = e;
+				break;
+			}
+		}
+
+		if (editor === undefined) return;
+
+		const revealType = options.atTop
+			? TextEditorRevealType.AtTop
+			: TextEditorRevealType.InCenterIfOutsideViewport;
+		editor.revealRange(new Range(position, position), revealType);
+	}
+
 	export async function openEditor(
 		uri: Uri,
 		options: TextDocumentShowOptions & { rethrow?: boolean } = {}
@@ -158,6 +182,10 @@ export namespace Editor {
 
 	export function toEditorSelections(selections: Selection[]): EditorSelection[] {
 		return selections.map(s => ({ cursor: s.active, start: s.start, end: s.end }));
+	}
+
+	export function fromSerializablePosition(position: LspPosition): Position {
+		return new Position(position.line, position.character);
 	}
 
 	export function fromSerializableRange(range: LspRange, reverse?: boolean): Range;

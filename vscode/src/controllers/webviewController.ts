@@ -18,6 +18,7 @@ import {
 	EditorContext,
 	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequestType,
+	EditorScrollToNotificationType,
 	EditorSelectRangeRequestType,
 	HostDidChangeActiveEditorNotificationType,
 	HostDidChangeConfigNotificationType,
@@ -445,6 +446,17 @@ export class WebviewController implements Disposable {
 					this._context = params.context;
 					this.updateState();
 				});
+
+				break;
+			}
+			case EditorScrollToNotificationType.method: {
+				webview.onIpcNotification(
+					EditorScrollToNotificationType,
+					e,
+					(type, { uri, position, ...options }) => {
+						Editor.scrollTo(Uri.parse(uri), Editor.fromSerializablePosition(position), options);
+					}
+				);
 
 				break;
 			}
