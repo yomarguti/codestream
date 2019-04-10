@@ -7,7 +7,7 @@ import Codemark from "./Codemark";
 import ScrollBox from "./ScrollBox";
 import Feedback from "./Feedback";
 import cx from "classnames";
-import { range } from "../utils";
+import { range, debounceToAnimationFrame } from "../utils";
 import { HostApi } from "../webview-api";
 import {
 	EditorHighlightRangeRequestType,
@@ -211,6 +211,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	componentDidMount() {
+		const mutationObserver = new MutationObserver(() => this.repositionCodemarks());
+		mutationObserver.observe(document.getElementById("stream-root")!, {
+			childList: true,
+			subtree: true
+		});
+
 		this.disposables.push(
 			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
 				if (this.props.textEditorUri === textDocument.uri) {
@@ -226,7 +232,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				if (codemark.markers != null && codemark.markers.length !== 0) {
 					this.setState({ selectedDocMarkerId: codemark.markers[0].id });
 				}
-			})
+			}),
+			{
+				dispose() {
+					mutationObserver.disconnect();
+				}
+			}
 		);
 
 		if (this.props.textEditorUri) {
@@ -253,8 +264,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		}
 
 		this.repositionCodemarks();
-		if (this.repositionTimeout) clearTimeout(this.repositionTimeout);
-		this.repositionTimeout = setTimeout(() => this.repositionCodemarks(), 100);
 	}
 
 	private repositionTimeout: any | undefined;
@@ -275,14 +284,14 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	repositionBelow() {}
 
-	repositionCodemarks = () => {
+	repositionCodemarks = debounceToAnimationFrame(() => {
 		let $codemarkDivs = Array.from(
 			document.querySelectorAll(".codemark.inline:not(.hidden), .compose.float-compose")
 		);
 		this.repositionElements($codemarkDivs);
 		let $hiddenDivs = Array.from(document.querySelectorAll(".codemark.inline.hidden"));
 		this.repositionElements($hiddenDivs);
-	};
+	});
 
 	repositionElements = $elements => {
 		$elements.sort((a, b) => a.dataset.top - b.dataset.top);
