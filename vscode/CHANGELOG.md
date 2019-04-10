@@ -1,6 +1,31 @@
 # Change Log
 
-## [0.51.0] - 2019-3-29
+## [0.52.0] - 2019-4-10
+
+### Added
+
+- Adds a completely new view of codemarks that makes information much more accessible, with the ability to view and edit in-place. [Read more on our blog.](https://blog.codestream.com/index.php/2019/04/10/codestream-v0-52…w-codemarks-view)
+- Adds the ability to "star" a reply so that it's surfaced in the codemarks view
+- Adds the ability to assign shortcuts to individual codemarks, allowing you to quickly jump around the codebase
+- Adds a toolbar to the bottom of the Current File tab with filters to control whether or not you see completed issues or archived codemarks
+- Adds clickable indicators to the toolbar to let you know when there are codemarks above/below your current view
+- Archived codemarks and resolved issues are now displayed in a collapsed format in a new gutter at the right side of the CodeStream pane, with the ability to click to expand the display
+- Adds a new header treatment for archived codemarks
+- Scrolling the view of codemarks in the CodeStream pane will now scroll the source file as well
+- Adds a quick overview of codemarks accessible via an info icon at the bottom-right of each codemark
+
+### Changed
+
+- The display of an expanded codemark only includes the code block, as well as the Compare and Apply links, if there’s a diff from what you have locally
+
+### Fixed
+
+- Fixes an issue where using the “selected conversations” filter on the Channels tab, with only a single channel selected, would cause codemarks to get shared to the wrong conversation
+- Fixes an issue where a codemark would no longer render on CodeStream if the post was deleted via the Slack client
+- Fixes an issue where archived and closed Slack conversations were appearing in the conversation selector when creating a codemark
+- Fixes an issue that prevented an edited bookmark from being saved
+
+## [0.51.0] - 2019-4-2
 
 ### Changed
 
