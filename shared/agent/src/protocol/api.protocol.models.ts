@@ -43,7 +43,7 @@ export interface CSCodemark extends CSEntity {
 	text: string;
 	numReplies: number;
 	pinned: boolean;
-	pinnnedReplies?: string[];
+	pinnedReplies?: string[];
 
 	externalAssignees?: { displayName: string; email?: string }[];
 	externalProvider?: string;

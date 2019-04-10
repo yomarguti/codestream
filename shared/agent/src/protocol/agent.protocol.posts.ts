@@ -152,6 +152,19 @@ export const GetPostRequestType = new RequestType<GetPostRequest, GetPostRespons
 	"codestream/post"
 );
 
+export interface GetPostsRequest {
+	streamId: string;
+	postIds: string[];
+}
+
+export interface GetPostsResponse {
+	posts: CSPost[];
+}
+
+export const GetPostsRequestType = new RequestType<GetPostsRequest, GetPostsResponse, void, void>(
+	"codestream/posts"
+);
+
 export interface MarkPostUnreadRequest {
 	streamId: string;
 	postId: string;

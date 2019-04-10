@@ -57,6 +57,8 @@ import {
 	GetMeResponse,
 	GetPostRequest,
 	GetPostResponse,
+	GetPostsRequest,
+	GetPostsResponse,
 	GetPreferencesResponse,
 	GetRepoRequest,
 	GetRepoResponse,
@@ -286,6 +288,7 @@ export interface ApiProvider {
 	fetchPostReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse>;
 	fetchPosts(request: FetchPostsRequest): Promise<FetchPostsResponse>;
 	getPost(request: GetPostRequest): Promise<GetPostResponse>;
+	getPosts(request: GetPostsRequest): Promise<GetPostsResponse>;
 	markPostUnread(request: MarkPostUnreadRequest): Promise<MarkPostUnreadResponse>;
 	reactToPost(request: ReactToPostRequest): Promise<ReactToPostResponse>;
 

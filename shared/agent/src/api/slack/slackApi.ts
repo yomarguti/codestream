@@ -35,6 +35,7 @@ import {
 	GetCodemarkRequest,
 	GetMarkerRequest,
 	GetPostRequest,
+	GetPostsRequest,
 	GetPreferencesResponse,
 	GetRepoRequest,
 	GetStreamRequest,
@@ -959,6 +960,16 @@ export class SlackApiProvider implements ApiProvider {
 		const post = await fromSlackPost(message, streamId, usernamesById, this._codestreamTeamId);
 
 		return { post: post };
+	}
+
+	@log()
+	async getPosts(request: GetPostsRequest) {
+		const responses = await Promise.all(
+			request.postIds.map(id => this.getPost({ streamId: request.streamId, postId: id }))
+		);
+		const posts: CSPost[] = [];
+		responses.forEach(p => posts.push(p.post));
+		return { posts };
 	}
 
 	@log()

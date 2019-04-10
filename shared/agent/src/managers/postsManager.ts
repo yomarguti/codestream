@@ -29,6 +29,8 @@ import {
 	GetPostRequest,
 	GetPostRequestType,
 	GetPostResponse,
+	GetPostsRequest,
+	GetPostsRequestType,
 	MarkPostUnreadRequest,
 	MarkPostUnreadRequestType,
 	MarkPostUnreadResponse,
@@ -544,6 +546,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			posts: posts,
 			more: cacheResponse.more
 		};
+	}
+
+	@lspHandler(GetPostsRequestType)
+	async getPostsByIds(request: GetPostsRequest) {
+		return this.session.api.getPosts(request);
 	}
 
 	private async enrichPost(post: CSPost): Promise<PostPlus> {

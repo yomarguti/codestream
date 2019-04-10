@@ -34,6 +34,7 @@ import {
 	GetCodemarkRequest,
 	GetMarkerRequest,
 	GetPostRequest,
+	GetPostsRequest,
 	GetRepoRequest,
 	GetStreamRequest,
 	GetTeamRequest,
@@ -685,6 +686,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 	getPost(request: GetPostRequest) {
 		return this.get<CSGetPostResponse>(
 			`/posts/${request.postId}?teamId=${this.teamId}`,
+			this._token
+		);
+	}
+
+	@log()
+	getPosts(request: GetPostsRequest) {
+		return this.get<CSGetPostsResponse>(
+			`/posts?teamId=${this.teamId}&streamId=${request.streamId}&postIds=${request.postIds.join(
+				","
+			)}`,
 			this._token
 		);
 	}
