@@ -34,6 +34,9 @@ export namespace Editor {
 
 		for (const e of window.visibleTextEditors) {
 			if (e.document.uri.toString(false) === normalizedUri) {
+				if (!options.preserveFocus) {
+					await window.showTextDocument(e.document, { ...options, viewColumn: e.viewColumn });
+				}
 				return e;
 			}
 		}
