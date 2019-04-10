@@ -17,8 +17,7 @@ import {
 	EditorSelection,
 	EditorMetrics,
 	EditorContext,
-	WebviewConfigs,
-	ShowCodemarkNotificationType
+	WebviewConfigs
 } from "../ipc/webview.protocol";
 import {
 	DocumentMarker,
@@ -38,12 +37,12 @@ import { CSTeam, CSUser } from "@codestream/protocols/api";
 import {
 	setCodemarksFileViewStyle,
 	setCodemarksShowArchived,
-	setCodemarksShowResolved
+	setCodemarksShowResolved,
+	setCurrentDocumentMarker
 } from "../store/context/actions";
 import { State as ContextState } from "../store/context/types";
 import { sortBy as _sortBy } from "lodash-es";
 import { getTeamMembers } from "../store/users/reducer";
-import { getCodemark } from "../store/codemarks/reducer";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -56,6 +55,7 @@ import { getCodemark } from "../store/codemarks/reducer";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 interface Props {
+	currentDocumentMarkerId: string | undefined;
 	currentStreamId?: string;
 	teammates?: CSUser[];
 	usernames: string[];
@@ -92,6 +92,9 @@ interface Props {
 	setCodemarksShowResolved: (
 		...args: Parameters<typeof setCodemarksShowResolved>
 	) => ReturnType<typeof setCodemarksShowResolved>;
+	setCurrentDocumentMarker: (
+		...args: Parameters<typeof setCurrentDocumentMarker>
+	) => ReturnType<typeof setCurrentDocumentMarker>;
 	setMultiCompose(...args: any[]): void;
 	setNewPostEntry(a: string): void;
 }
@@ -100,7 +103,6 @@ interface State {
 	lastSelectedLine: number;
 	clickedPlus: boolean;
 	isLoading: boolean;
-	selectedDocMarkerId: string | undefined;
 	openIconsOnLine: number;
 	query: string | undefined;
 	highlightedLine?: number;
@@ -111,10 +113,6 @@ interface State {
 }
 
 export class SimpleInlineCodemarks extends Component<Props, State> {
-	static contextTypes = {
-		store: PropTypes.object
-	};
-
 	disposables: { dispose(): void }[] = [];
 	titles: {
 		comment: JSX.Element;
@@ -135,7 +133,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			isLoading: props.documentMarkers.length === 0,
 			lastSelectedLine: 0,
 			clickedPlus: false,
-			selectedDocMarkerId: undefined,
 			query: undefined,
 			openIconsOnLine: -1,
 			numAbove: 0,
@@ -221,16 +218,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
 				if (this.props.textEditorUri === textDocument.uri) {
 					this.props.fetchDocumentMarkers(textDocument.uri);
-				}
-			}),
-			HostApi.instance.on(ShowCodemarkNotificationType, e => {
-				const { codemarks } = this.context.store.getState();
-
-				const codemark = getCodemark(codemarks, e.codemarkId);
-				if (codemark == null) return;
-
-				if (codemark.markers != null && codemark.markers.length !== 0) {
-					this.setState({ selectedDocMarkerId: codemark.markers[0].id });
 				}
 			}),
 			{
@@ -335,7 +322,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	renderList = (paddingTop, fontSize, height) => {
 		const { documentMarkers, showUnpinned, showClosed } = this.props;
-		const { selectedDocMarkerId } = this.state;
+		const { currentDocumentMarkerId } = this.props;
 
 		this.hiddenCodemarks = {};
 		return [
@@ -397,7 +384,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 										teammates={this.props.teammates}
 										isSlackTeam={this.props.isSlackTeam}
 										hover={this.state.highlightedDocmarker === docMarker.id}
-										selected={selectedDocMarkerId === docMarker.id}
+										selected={currentDocumentMarkerId === docMarker.id}
 										usernames={this.props.usernames}
 										onClick={this.handleClickCodemark}
 										onMouseEnter={this.handleHighlightCodemark}
@@ -671,7 +658,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			showUnpinned,
 			showClosed
 		} = this.props;
-		const { selectedDocMarkerId } = this.state;
+		const { currentDocumentMarkerId } = this.props;
 
 		const numVisibleRanges = textEditorVisibleRanges.length;
 		let numAbove = 0,
@@ -748,7 +735,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 												teammates={this.props.teammates}
 												isSlackTeam={this.props.isSlackTeam}
 												hover={this.state.highlightedDocmarker === docMarker.id}
-												selected={selectedDocMarkerId === docMarker.id}
+												selected={currentDocumentMarkerId === docMarker.id}
 												deselectCodemarks={this.deselectCodemarks}
 												usernames={this.props.usernames}
 												onClick={this.handleClickCodemark}
@@ -941,7 +928,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	deselectCodemarks = () => {
-		this.setState(state => (state.selectedDocMarkerId ? { selectedDocMarkerId: undefined } : null));
+		this.props.setCurrentDocumentMarker(undefined);
 		this.clearSelection();
 	};
 
@@ -1064,7 +1051,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		}
 
 		if (
-			this.state.selectedDocMarkerId === docMarker.id &&
+			this.props.currentDocumentMarkerId === docMarker.id &&
 			event.target &&
 			(event.target.classList.contains("author") || event.target.closest(".author"))
 		) {
@@ -1100,7 +1087,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				// TODO:
 			}
 		}
-		this.setState({ selectedDocMarkerId: docMarker.id });
+
+		this.props.setCurrentDocumentMarker(docMarker.id);
 		this.clearSelection();
 	};
 
@@ -1211,6 +1199,7 @@ const mapStateToProps = (state: {
 	}
 
 	return {
+		currentDocumentMarkerId: context.currentDocumentMarkerId,
 		currentStreamId: context.currentStreamId,
 		usernames: userSelectors.getUsernames(state),
 		teammates: teamMembers,
@@ -1241,6 +1230,7 @@ export default connect(
 		fetchDocumentMarkers,
 		setCodemarksFileViewStyle,
 		setCodemarksShowArchived,
-		setCodemarksShowResolved
+		setCodemarksShowResolved,
+		setCurrentDocumentMarker
 	}
 )(SimpleInlineCodemarks);

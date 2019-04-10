@@ -11,6 +11,7 @@ export enum ContextActionsType {
 	ClosePanel = "@context/ClosePanel",
 	SetFocusState = "@context/SetFocusState",
 	SetCurrentStream = "@context/SetCurrentStream",
+	SetCurrentDocumentMarker = "@context/SetCurrentDocumentMarker",
 	SetIssueProvider = "@context/SetIssueProvider",
 	SetCodemarksFileViewStyle = "@context/SetCodemarksFileViewStyle",
 	SetCodemarksShowArchived = "@context/SetCodemarksShowArchived",

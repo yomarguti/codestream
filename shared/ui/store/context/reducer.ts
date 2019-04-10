@@ -11,6 +11,7 @@ type PreferencesActions = ActionType<typeof preferencesActions>;
 const initialState: State = {
 	currentTeamId: "",
 	currentStreamId: "",
+	currentDocumentMarkerId: "",
 	issueProvider: undefined,
 	threadId: undefined,
 	panelStack: [WebviewPanels.CodemarksForFile], // default view is the "in this file" view
@@ -37,6 +38,9 @@ export function reduceContext(
 			const { streamId, threadId } = action.payload;
 			return { ...state, currentStreamId: streamId, threadId };
 		}
+		case ContextActionsType.SetCurrentDocumentMarker:
+			return { ...state, currentDocumentMarkerId: action.payload };
+
 		case ContextActionsType.OpenPanel:
 			return { ...state, panelStack: [action.payload, ...state.panelStack].slice(0, 10) };
 		case ContextActionsType.ClosePanel: {

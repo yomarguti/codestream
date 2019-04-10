@@ -2,14 +2,10 @@ import { createSelector } from "reselect";
 import { toMapBy } from "../../utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { CodemarksActionsTypes } from "./types";
+import { CodemarksActionsTypes, State } from "./types";
 import { CodemarkPlus } from "@codestream/protocols/agent";
 
 type CodemarksActions = ActionType<typeof actions>;
-
-interface State {
-	[codemarkId: string]: CodemarkPlus;
-}
 
 const initialState: State = {};
 

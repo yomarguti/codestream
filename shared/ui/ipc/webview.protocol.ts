@@ -15,6 +15,7 @@ export * from "./webview.protocol.notifications";
 // TODO: This should be a request to the webview -- not a notification
 export interface ShowCodemarkNotification {
 	codemarkId: string;
+	sourceUri?: string;
 }
 export const ShowCodemarkNotificationType = new NotificationType<ShowCodemarkNotification, void>(
 	`${IpcRoutes.Webview}/codemark/show`

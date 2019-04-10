@@ -25,6 +25,9 @@ import {
 import translations from "./translations/en";
 import { getCodemark } from "./store/codemarks/reducer";
 import { fetchCodemarks } from "./Stream/actions";
+import { State as ContextState } from "./store/context/types";
+import { State as CodemarksState } from "./store/codemarks/types";
+import { State as EditorContextState } from "./store/editorContext/types";
 
 export { HostApi };
 
@@ -151,8 +154,15 @@ export function listenForEvents(store) {
 	});
 
 	api.on(ShowCodemarkNotificationType, async e => {
-		let { codemarks, context } = store.getState();
-		if (context.panelStack[0] === WebviewPanels.CodemarksForFile) return;
+		let {
+			codemarks,
+			context,
+			editorContext
+		}: {
+			codemarks: CodemarksState;
+			context: ContextState;
+			editorContext: EditorContextState;
+		} = store.getState();
 
 		if (Object.keys(codemarks).length === 0) {
 			await store.dispatch(fetchCodemarks());
@@ -161,6 +171,15 @@ export function listenForEvents(store) {
 
 		const codemark = getCodemark(codemarks, e.codemarkId);
 		if (codemark == null) return;
+
+		if (
+			context.panelStack[0] === WebviewPanels.CodemarksForFile ||
+			(e.sourceUri != null && editorContext.textEditorUri === e.sourceUri)
+		) {
+			store.dispatch(actions.openPanel(WebviewPanels.CodemarksForFile));
+			store.dispatch(actions.setCurrentDocumentMarker(codemark.markerIds && codemark.markerIds[0]));
+			return;
+		}
 
 		store.dispatch(actions.openPanel(WebviewPanels.Codemarks));
 		store.dispatch(actions.setCurrentStream(codemark.streamId, codemark.postId));
