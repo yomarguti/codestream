@@ -2,17 +2,11 @@
 using System;
 
 namespace CodeStream.VisualStudio.Models {
-	public interface IHightlight {
-		string Uri { get; }
-		Range Range { get; }
-		bool Highlight { get; }
-	}
-
 	public class EditorHighlightRangeResponse {
 		public bool Success { get; set; }
 	}
 
-	public class EditorHighlightRangeRequest : IHightlight {
+	public class EditorHighlightRangeRequest {
 		public EditorHighlightRangeRequest(Uri uri, Range range, bool highlight) {
 			Uri = uri.ToString();
 			Range = range;
@@ -24,7 +18,7 @@ namespace CodeStream.VisualStudio.Models {
 		/// A single-line range with start & end char of 0 indicates a full-line highlight
 		/// </summary>
 		public Range Range { get; }
-		public bool Highlight { get; }
+		public bool Highlight { get; }		
 	}
 
 	public class EditorHighlightRangeRequestType : RequestType<EditorHighlightRangeRequest> {
@@ -42,6 +36,9 @@ namespace CodeStream.VisualStudio.Models {
 
 		public string Uri { get; }
 		public Range Range { get; }
+		/// <summary>
+		/// True, if the focus of the webview should remain
+		/// </summary>
 		public bool? PreserveFocus { get; }
 		public bool? AtTop { get; }
 	}
@@ -59,20 +56,22 @@ namespace CodeStream.VisualStudio.Models {
 		public bool Success { get; set; }
 	}
 
-
-	public class EditorSelectRangeRequest : IHightlight {
-		public EditorSelectRangeRequest(Uri uri, Range range, bool highlight) {
+	public class EditorSelectRangeRequest {
+		public EditorSelectRangeRequest(Uri uri, EditorSelection selection, bool? preserveFocus) {
 			Uri = uri.ToString();
-			Range = range;
-			Highlight = highlight;
+			Selection = selection;
+			PreserveFocus = preserveFocus;
 		}
 
 		public string Uri { get; }
 		/// <summary>
 		/// A single-line range with start & end char of 0 indicates a full-line highlight
 		/// </summary>
-		public Range Range { get; }
-		public bool Highlight { get; }
+		public EditorSelection Selection { get; }
+		/// <summary>
+		/// True, if the focus of the webview should remain
+		/// </summary>
+		public bool? PreserveFocus { get; }
 	}
 
 	public class EditorSelectRangeRequestType : RequestType<EditorSelectRangeRequest> {

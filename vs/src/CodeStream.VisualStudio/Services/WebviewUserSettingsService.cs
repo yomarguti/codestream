@@ -8,9 +8,9 @@ namespace CodeStream.VisualStudio.Services {
 	/// Webview settings are saved to something resembling a 'workspace' -- currently, this is
 	/// based off of a solution
 	/// </summary>
-	public class WebviewUserSettings {
+	public class WebviewUserSettingsService {
 		private IUserSettingsService _userSettingsService;
-		public WebviewUserSettings(IUserSettingsService userSettingsService) {
+		public WebviewUserSettingsService(IUserSettingsService userSettingsService) {
 			_userSettingsService = userSettingsService;
 		}
 		/// <summary>
@@ -37,11 +37,11 @@ namespace CodeStream.VisualStudio.Services {
 
 	public static class IUserSettingsServiceExtensions {
 		public static Task<bool> SaveContextAsync(this IUserSettingsService userSettingsService, WebviewContext webviewContext) {
-			return new WebviewUserSettings(userSettingsService).SaveContextAsync(webviewContext);
+			return new WebviewUserSettingsService(userSettingsService).SaveContextAsync(webviewContext);
 		}
 
 		public static Task<WebviewContext> TryGetWebviewContextAsync(this IUserSettingsService userSettingsService, string teamId) {
-			return new WebviewUserSettings(userSettingsService).TryGetWebviewContextAsync(teamId);
+			return new WebviewUserSettingsService(userSettingsService).TryGetWebviewContextAsync(teamId);
 		}
 	}
 }

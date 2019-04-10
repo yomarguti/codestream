@@ -7,10 +7,10 @@ namespace CodeStream.VisualStudio.UI
     {
         public static HighlightAdornmentManager GetHighlightAdornmentManager(this ActiveTextEditor editor)
         {
-            if (editor?.TextView?.TextBuffer == null) return null;
+            if (editor?.WpfTextView?.TextBuffer == null) return null;
 
             HighlightAdornmentManager ham = null;
-            if (editor.TextView?.TextBuffer?.Properties.TryGetProperty(PropertyNames.AdornmentManager, out ham) ==
+            if (editor.WpfTextView?.TextBuffer?.Properties.TryGetProperty(PropertyNames.AdornmentManager, out ham) ==
                 true)
             {
                 return ham;

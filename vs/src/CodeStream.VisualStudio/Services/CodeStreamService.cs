@@ -92,9 +92,9 @@ namespace CodeStream.VisualStudio.Services {
 						Editor = new HostDidChangeActiveEditorNotificationEditor(fileName,
 						uri,
 						editorState.ToEditorSelections(),
-						activeTextView?.TextView.ToVisibleRanges(),
+						activeTextView?.WpfTextView.ToVisibleRanges(),
 						activeTextView?.TotalLines) {
-							Metrics = ThemeManager.CreateEditorMetrics(activeTextView?.TextView),
+							Metrics = ThemeManager.CreateEditorMetrics(activeTextView?.WpfTextView),
 							LanguageId = null
 						}
 					}

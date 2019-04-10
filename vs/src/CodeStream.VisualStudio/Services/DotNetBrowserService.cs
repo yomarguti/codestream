@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
+using System.Windows.Input;
 using CodeStream.VisualStudio.Annotations;
+using CodeStream.VisualStudio.Commands;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
+using CodeStream.VisualStudio.UI.Wpf;
 using DotNetBrowser;
 using DotNetBrowser.Events;
 using DotNetBrowser.WPF;
@@ -13,15 +17,12 @@ using Newtonsoft.Json.Linq;
 using Serilog;
 using static CodeStream.VisualStudio.Extensions.FileSystemExtensions;
 
-namespace CodeStream.VisualStudio.Services
-{
+namespace CodeStream.VisualStudio.Services {
 	/// <summary>
 	/// This class handles communication between javascript and .NET
 	/// </summary>
-	public class PostMessageInterop
-	{
-		public void Handle(string message)
-		{
+	public class PostMessageInterop {
+		public void Handle(string message) {
 			if (MessageHandler == null) return;
 
 			MessageHandler(this, new WindowEventArgs(message));
@@ -48,13 +49,11 @@ namespace CodeStream.VisualStudio.Services
 		/// </summary>
 		public BrowserType BrowserType => BrowserType.HEAVYWEIGHT;
 
-		public DotNetBrowserService(ICodeStreamAgentService agentService)
-		{
+		public DotNetBrowserService(ICodeStreamAgentService agentService) {
 			_agent = agentService;
 		}
 
-		protected override void OnInitialized()
-		{
+		protected override void OnInitialized() {
 			var switches = DotNetBrowserSwitches.Create(BrowserType);
 
 			BrowserPreferences.SetChromiumSwitches(switches.ToArray());
@@ -83,17 +82,25 @@ namespace CodeStream.VisualStudio.Services
 			browser.ScriptContextCreated += Browser_ScriptContextCreated;
 
 			_browserView = new WPFBrowserView(browser);
-		}
+			
+			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut1Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D1)));
+			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut2Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D2)));
+			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut3Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D3)));
+			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut4Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D4)));
+			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut5Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D5)));
+			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut6Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D6)));
+			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut7Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D7)));
+			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut8Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D8)));
+			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut9Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D9)));			
+		}	 
 
-		private void Browser_RenderGoneEvent(object sender, RenderEventArgs e)
-		{
+		private void Browser_RenderGoneEvent(object sender, RenderEventArgs e) {
 			Log.Verbose(nameof(Browser_RenderGoneEvent));
 
 			ReloadWebView();
 		}
 
-		private void Browser_ScriptContextCreated(object sender, DotNetBrowser.Events.ScriptContextEventArgs e)
-		{
+		private void Browser_ScriptContextCreated(object sender, DotNetBrowser.Events.ScriptContextEventArgs e) {
 			var jsValue = _browserView.Browser.ExecuteJavaScriptAndReturnValue("window");
 			jsValue.AsObject().SetProperty("PostMessageInterop", new PostMessageInterop());
 
@@ -112,28 +119,31 @@ namespace CodeStream.VisualStudio.Services
 			Log.Verbose($"{nameof(Browser_ScriptContextCreated)} ExecuteJavaScript");
 		}
 
-		public override void AddWindowMessageEvent(WindowMessageHandler messageHandler)
-		{
+		//public void OnBrowserKeyDown(object sender, KeyEventArgs e) {
+
+		//	if(e.Modifiers.HasFlag(Keys.Control) && e.Modifiers.HasFlag(Keys.Shift) && e.KeyCode == System.Windows.Forms.Keys.OemQuestion) {
+		//		var x = 1;
+		//	}
+
+		//}
+
+		public override void AddWindowMessageEvent(WindowMessageHandler messageHandler) {
 			PostMessageInterop.MessageHandler = messageHandler;
 
 			Log.Verbose($"{nameof(AddWindowMessageEvent)}");
 		}
 
-		public override void PostMessage(string message)
-		{
+		public override void PostMessage(string message) {
 			_browserView.Browser.ExecuteJavaScript(@"window.postMessage(" + message + @",""*"");");
 		}
 
-		public override void LoadHtml(string html)
-		{
-			using (Log.CriticalOperation($"{nameof(LoadHtml)}"))
-			{
+		public override void LoadHtml(string html) {
+			using (Log.CriticalOperation($"{nameof(LoadHtml)}")) {
 				_browserView.Browser.LoadHTML(html);
 			}
 		}
 
-		public override void AttachControl(FrameworkElement frameworkElement)
-		{
+		public override void AttachControl(FrameworkElement frameworkElement) {
 			var grid = frameworkElement as Grid;
 			if (grid == null)
 				throw new InvalidOperationException("Grid");
@@ -142,8 +152,7 @@ namespace CodeStream.VisualStudio.Services
 			grid.Children.Add(_browserView);
 		}
 
-		public override string GetDevToolsUrl()
-		{
+		public override string GetDevToolsUrl() {
 			var url = _browserView.Browser.GetRemoteDebuggingURL();
 			Log.Verbose($"DevTools Url={url}");
 			return url;
@@ -156,35 +165,28 @@ namespace CodeStream.VisualStudio.Services
 		/// <param name="lockInfo"></param>
 		/// <param name="fileKnownToBeLocked">this is a known file name that lives in the DotNetBrowserDir that is known to hold a file lock</param>
 		/// <returns></returns>
-		private bool TryCheckUsage(string directoryPath, out DirectoryLockInfo lockInfo, string fileKnownToBeLocked = "History")
-		{
+		private bool TryCheckUsage(string directoryPath, out DirectoryLockInfo lockInfo, string fileKnownToBeLocked = "History") {
 			lockInfo = new DirectoryLockInfo(directoryPath);
 
-			try
-			{
+			try {
 				// this dir, doesn't exist... good to go!
 				if (!Directory.Exists(directoryPath)) return false;
 
 				var di = new DirectoryInfo(directoryPath);
-				foreach (var file in di.GetFiles())
-				{
-					if (file.Extension.EqualsIgnoreCase(".lock"))
-					{
+				foreach (var file in di.GetFiles()) {
+					if (file.Extension.EqualsIgnoreCase(".lock")) {
 						lockInfo.LockFile = file.FullName;
 						return true;
 					}
-					if (file.Name.EqualsIgnoreCase(fileKnownToBeLocked))
-					{
-						if (IsFileLocked(file.FullName))
-						{
+					if (file.Name.EqualsIgnoreCase(fileKnownToBeLocked)) {
+						if (IsFileLocked(file.FullName)) {
 							lockInfo.LockFile = file.FullName;
 							return true;
 						}
 					}
 				}
 			}
-			catch (Exception ex)
-			{
+			catch (Exception ex) {
 				Log.Warning(ex, "IsInUse?");
 				return true;
 			}
@@ -192,8 +194,7 @@ namespace CodeStream.VisualStudio.Services
 			return false;
 		}
 
-		private string GetOrCreateContextParamsPath()
-		{
+		private string GetOrCreateContextParamsPath() {
 			// the default directory from DotNetBrowser looks something like this:
 			// C:\Users\<UserName>\AppData\Local\Temp\dotnetbrowser-chromium\64.0.3282.24.1.19.0.0.642\32bit\data
 			// get it with BrowserPreferences.GetDefaultDataDir();
@@ -201,10 +202,8 @@ namespace CodeStream.VisualStudio.Services
 			var defaultPath = Application.TempDataPath + "Browser-0";
 			Log.Verbose($"DefaultPath={defaultPath}");
 
-			if (!TryCheckUsage(defaultPath, out DirectoryLockInfo info))
-			{
-				if (!info.HasLocked)
-				{
+			if (!TryCheckUsage(defaultPath, out DirectoryLockInfo info)) {
+				if (!info.HasLocked) {
 					Log.Debug($"Reusing {defaultPath} (not locked)");
 					return defaultPath;
 				}
@@ -215,14 +214,11 @@ namespace CodeStream.VisualStudio.Services
 			string path = null;
 
 			// this is mainly for dev / DEBUG -- users should never get this high
-			for (var i = 1; i < 2000; i++)
-			{
+			for (var i = 1; i < 2000; i++) {
 				path = Path.Combine(Application.TempDataPath, $"Browser-{i}");
-				if (Directory.Exists(path))
-				{
+				if (Directory.Exists(path)) {
 					var isLocked = TryCheckUsage(path, out DirectoryLockInfo lockInfo);
-					if (lockInfo.HasLocked)
-					{
+					if (lockInfo.HasLocked) {
 						// this path/file exists, but it is locked, try another
 						Log.Verbose($"{path}|{lockInfo.LockFile} IsLocked={isLocked}");
 						continue;
@@ -232,8 +228,7 @@ namespace CodeStream.VisualStudio.Services
 					// not locked... use it!
 					break;
 				}
-				else
-				{
+				else {
 					Log.Debug($"Using {path} -- (Doesn't exist)");
 					// doesn't exist -- use it!
 					break;
@@ -244,26 +239,25 @@ namespace CodeStream.VisualStudio.Services
 		}
 
 		private bool _disposed;
-		protected override void Dispose(bool disposing)
-		{
+		protected override void Dispose(bool disposing) {
 			if (_disposed) return;
 
 			var success = true;
-			if (disposing)
-			{
-				try
-				{
-					if (_browserView == null)
-					{
+			if (disposing) {
+				try {
+					if (_browserView == null) {
 						Log.Verbose("DotNetBrowser is null");
 						return;
 					}
 
-					if (_browserView?.IsDisposed == true)
-					{
+					if (_browserView?.IsDisposed == true) {
 						Log.Verbose("DotNetBrowser already disposed");
 						return;
 					}
+					try {
+						_browserView.InputBindings.Clear();
+					}
+					catch { }
 
 					_browserView.Browser.RenderGoneEvent -= Browser_RenderGoneEvent;
 					_browserView.Browser.ScriptContextCreated -= Browser_ScriptContextCreated;
@@ -274,30 +268,25 @@ namespace CodeStream.VisualStudio.Services
 					_browserView = null;
 
 					var deleted = false;
-					for (var i = 0; i < 5; i++)
-					{
+					for (var i = 0; i < 5; i++) {
 						if (deleted) break;
 
-						try
-						{
+						try {
 							Directory.Delete(_path, true);
 							deleted = true;
 							Log.Verbose($"Cleaned up {_path} on {i + 1} attempt");
 						}
-						catch (Exception ex)
-						{
+						catch (Exception ex) {
 							Log.Warning(ex, $"Could not delete attempt ({i + 1}) {_path}");
 						}
 					}
 				}
-				catch (Exception ex)
-				{
+				catch (Exception ex) {
 					Log.Warning(ex, "DotNetBrowser dispose failure");
 					success = false;
 				}
 
-				if (success)
-				{
+				if (success) {
 					Log.Verbose("DotNetBrowser Disposed");
 				}
 
@@ -305,8 +294,7 @@ namespace CodeStream.VisualStudio.Services
 			}
 		}
 
-		private class DotNetBrowserSwitches
-		{
+		private class DotNetBrowserSwitches {
 			/// <summary>
 			/// These switches must be used in either rendering
 			/// </summary>
@@ -333,83 +321,67 @@ namespace CodeStream.VisualStudio.Services
 				"--software-rendering-fps=60"
 			};
 
-			public static List<string> Create(BrowserType browserType)
-			{
+			public static List<string> Create(BrowserType browserType) {
 				var switches = new List<string>(DefaultSwitches);
-				if (browserType == BrowserType.LIGHTWEIGHT)
-				{
+				if (browserType == BrowserType.LIGHTWEIGHT) {
 					switches = switches.Combine(LightweightSwitches);
 				}
 				return switches;
 			}
 		}
 
-		bool LoadHandler.OnLoad(LoadParams loadParams)
-		{
+		bool LoadHandler.OnLoad(LoadParams loadParams) {
 			return false;
 		}
 
-		bool LoadHandler.CanNavigateOnBackspace()
-		{
+		bool LoadHandler.CanNavigateOnBackspace() {
 			return false;
 		}
 
-		bool LoadHandler.OnCertificateError(CertificateErrorParams errorParams)
-		{
+		bool LoadHandler.OnCertificateError(CertificateErrorParams errorParams) {
 			return false;
 		}
 
-		bool ResourceHandler.CanLoadResource(ResourceParams parameters)
-		{
-			if (parameters.ResourceType == ResourceType.IMAGE || parameters.URL.StartsWith("file://"))
-			{
+		bool ResourceHandler.CanLoadResource(ResourceParams parameters) {
+			if (parameters.ResourceType == ResourceType.IMAGE || parameters.URL.StartsWith("file://")) {
 				return true;
 			}
 
-			if (parameters.ResourceType == ResourceType.MAIN_FRAME)
-			{
+			if (parameters.ResourceType == ResourceType.MAIN_FRAME) {
 				_agent.SendAsync<JToken>("codestream/url/open", new { url = parameters.URL });
 			}
 
 			return false;
 		}
 
-		CloseStatus DialogHandler.OnBeforeUnload(UnloadDialogParams parameters)
-		{
+		CloseStatus DialogHandler.OnBeforeUnload(UnloadDialogParams parameters) {
 			return CloseStatus.CANCEL;
 		}
 
-		void DialogHandler.OnAlert(DialogParams parameters)
-		{
+		void DialogHandler.OnAlert(DialogParams parameters) {
 		}
 
-		CloseStatus DialogHandler.OnConfirmation(DialogParams parameters)
-		{
+		CloseStatus DialogHandler.OnConfirmation(DialogParams parameters) {
 			return CloseStatus.CANCEL;
 		}
 
-		CloseStatus DialogHandler.OnFileChooser(FileChooserParams parameters)
-		{
+		CloseStatus DialogHandler.OnFileChooser(FileChooserParams parameters) {
 			return CloseStatus.CANCEL;
 		}
 
-		CloseStatus DialogHandler.OnPrompt(PromptDialogParams parameters)
-		{
+		CloseStatus DialogHandler.OnPrompt(PromptDialogParams parameters) {
 			return CloseStatus.CANCEL;
 		}
 
-		CloseStatus DialogHandler.OnReloadPostData(ReloadPostDataParams parameters)
-		{
+		CloseStatus DialogHandler.OnReloadPostData(ReloadPostDataParams parameters) {
 			return CloseStatus.CANCEL;
 		}
 
-		CloseStatus DialogHandler.OnColorChooser(ColorChooserParams parameters)
-		{
+		CloseStatus DialogHandler.OnColorChooser(ColorChooserParams parameters) {
 			return CloseStatus.CANCEL;
 		}
 
-		CloseStatus DialogHandler.OnSelectCertificate(CertificatesDialogParams parameters)
-		{
+		CloseStatus DialogHandler.OnSelectCertificate(CertificatesDialogParams parameters) {
 			return CloseStatus.CANCEL;
 		}
 	}

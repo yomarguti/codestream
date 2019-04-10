@@ -1,5 +1,6 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
+using CodeStream.VisualStudio.Models;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
@@ -15,11 +16,12 @@ using System.Windows.Shapes;
 
 namespace CodeStream.VisualStudio.UI.Adornments {
 	public interface ICanHighlightRange {
+		void RemoveAllHighlights();
 		bool Highlight(Range range, bool highlight);
 	}
 
 	public interface ICanSelectRange {
-		bool SelectRange(Range range);
+		bool SelectRange(EditorSelection selection, bool? focus);
 	}
 
 	public class HighlightAdornmentManager : ICanHighlightRange, IDisposable {
@@ -39,6 +41,10 @@ namespace CodeStream.VisualStudio.UI.Adornments {
 			textView.ViewportLeftChanged += OnViewportLeftChanged;
 		}
 
+		public void RemoveAllHighlights() {
+			_highlightAdornmentLayer.RemoveAllAdornments();	
+		}
+
 		public bool Highlight(Range range, bool highlight) {
 			ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -54,7 +60,7 @@ namespace CodeStream.VisualStudio.UI.Adornments {
 			try {
 				var brush = CreateBrush();
 
-				range = Normalize(range);
+				range = range.Normalize();
 				var lineStart = range.Start.Line;
 				var lineEnd = range.End.Line;
 
@@ -110,9 +116,9 @@ namespace CodeStream.VisualStudio.UI.Adornments {
 					Canvas.SetLeft(element, range.Start.Character == 0 ? (int)_textView.ViewportLeft : placement.Left);
 					Canvas.SetTop(element, lineInfo.Top);
 
-					_highlightAdornmentLayer.AddAdornment(lineInfo.Snapshot, null, element);
-					return true;
+					_highlightAdornmentLayer.AddAdornment(lineInfo.Snapshot, null, element);					
 				}
+				return true;
 			}
 			catch (Exception ex) {
 				Log.Warning(ex, $"{range.ToString()}");
@@ -128,26 +134,7 @@ namespace CodeStream.VisualStudio.UI.Adornments {
 			}
 
 			return brush;
-		}
-
-		/// <summary>
-		/// Changes a 1,0,2,0 to 1,0,1,int.Max where that equals startLine, startChar, endLine, endChar
-		/// </summary>
-		/// <param name="range"></param>
-		/// <returns></returns>
-		private static Range Normalize(Range range) {
-			if (range.Start.Line == range.End.Line - 1 && range.End.Character == 0) {
-				return new Range {
-					Start = new Position(range.Start.Line, range.Start.Character),
-					End = new Position(range.Start.Line, int.MaxValue)
-				};
-			}
-
-			return new Range {
-				Start = new Position(range.Start.Line, range.Start.Character),
-				End = new Position(range.End.Line, range.End.Character)
-			};
-		}
+		}		
 
 		/// <summary>
 		/// Populates (or refreshes) the cache that stores all the lineInfo data.

@@ -315,11 +315,11 @@ namespace CodeStream.VisualStudio.Services {
 				editorContext = new EditorContext {					
 					ActiveFile = activeTextView.FilePath,
 					//LastActiveFile?
-					TextEditorVisibleRanges = activeTextView.TextView?.ToVisibleRanges(),
+					TextEditorVisibleRanges = activeTextView.WpfTextView?.ToVisibleRanges(),
 					TextEditorUri = activeTextView.Uri.ToString(),
 					TextEditorSelections = editorState.ToEditorSelections(),
 					TextEditorLineCount = activeTextView.TotalLines,
-					Metrics = ThemeManager.CreateEditorMetrics(activeTextView.TextView),
+					Metrics = ThemeManager.CreateEditorMetrics(activeTextView.WpfTextView),
 				};
 			}
 

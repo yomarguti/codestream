@@ -13,8 +13,10 @@ namespace CodeStream.VisualStudio
         public static IDisposable CriticalOperation(ILogger log, string name, IAbstractMessageType message)
         {
             if (log == null || !log.IsEnabled(LogEventLevel.Verbose)) return null;
-
-            var result = new Dictionary<string, object> {{nameof(name), name}};
+#if DEBUG
+			if (Application.DeveloperOptions.MuteIpcLogs) return null;
+#endif
+			var result = new Dictionary<string, object> {{nameof(name), name}};
             if (!message.Id.IsNullOrWhiteSpace())
             {
                 result.Add(nameof(message.Id), message.Id);

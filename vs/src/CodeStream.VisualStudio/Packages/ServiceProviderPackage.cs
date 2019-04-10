@@ -85,6 +85,7 @@ namespace CodeStream.VisualStudio.Packages
                 return new EventAggregator();
             if (typeof(SIdeService) == serviceType)
                 return new IdeService(
+					this,
                     GetService(typeof(SComponentModel)) as IComponentModel,
                     GetService(typeof(SVsTextManager)) as IVsTextManager,
                     ExtensionManager.Initialize(LogManager.ForContext<ExtensionManagerDummy>()).Value);

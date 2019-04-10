@@ -1,5 +1,4 @@
-﻿using CodeStream.VisualStudio.Core;
-using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;

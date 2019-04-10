@@ -10,6 +10,7 @@ using Serilog;
 using System;
 using System.Linq;
 using System.Threading;
+using System.Windows.Threading;
 
 namespace CodeStream.VisualStudio {
 	public class WebViewRouter {
@@ -162,10 +163,10 @@ namespace CodeStream.VisualStudio {
 													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 													var @params = message.Params.ToObject<EditorSelectRangeRequest>();
 													if (@params != null) {
-														result = activeTextView.SelectRange(@params.Range);
+														result = activeTextView.SelectRange(@params.Selection, @params.PreserveFocus == false);
 													}
 												}
-												scope.FulfillRequest(new EditorSelectRangeResponse() { Success = result }.ToJson());
+												scope.FulfillRequest(JToken.FromObject(new EditorSelectRangeResponse { Success = result }));
 												break;
 											}
 										}
@@ -177,21 +178,27 @@ namespace CodeStream.VisualStudio {
 													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 													var @params = message.Params.ToObject<EditorHighlightRangeRequest>();
 													if (@params != null) {
+														//don't reveal on highlight -- for big ranges it will cause bad behavior with the scrolling
 														result = activeTextView.Highlight(@params.Range, @params.Highlight);
 													}
 												}
-												scope.FulfillRequest(new EditorHighlightRangeResponse() { Success = result }.ToJson());
+												scope.FulfillRequest(JToken.FromObject(new EditorHighlightRangeResponse { Success = result }));
 												break;
 											}
 										}
 									case EditorRevealRangeRequestType.MethodName: {
 											using (var scope = _ipc.CreateScope(message)) {
 												var @params = message.Params.ToObject<EditorRevealRangeRequest>();
-												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-
-												var editorResponse = _ideService.OpenEditor(@params.Uri, @params.Range?.Start?.Line + 1, atTop: @params.AtTop);
-
-												scope.FulfillRequest(new EditorRevealRangeResponse() { Success = editorResponse }.ToJson());
+												System.Windows.Application.Current.Dispatcher.BeginInvoke((Action)(async () => {
+													try {
+														var result = await _ideService.OpenEditorAsync(@params.Uri, @params.Range?.Start?.Line + 1, atTop: @params.AtTop, moveCaret: @params.PreserveFocus == false);
+													}
+													catch(Exception ex) {
+														Log.Warning(ex, nameof(EditorRevealRangeRequestType));
+													}
+												}), DispatcherPriority.Input);
+												
+												scope.FulfillRequest(JToken.FromObject(new EditorRevealRangeResponse { Success = true }));
 											}
 											break;
 										}

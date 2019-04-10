@@ -5,8 +5,8 @@ namespace CodeStream.VisualStudio.Models
 {
     public class ShowCodemarkNotification
     {
-        public string CodemarkId { get; set; }
-        public bool? Simulated { get; set; }
+        public string CodemarkId { get; set; }        
+		public string SourceUri { get; set; }
     }
 
     // TODO -- not implemented yet

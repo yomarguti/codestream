@@ -41,7 +41,7 @@ namespace CodeStream.VisualStudio.Core.Logging {
 
 				return new LoggerConfiguration()
 					.Enrich.WithProcessId()
-					.Enrich.WithThreadId()
+					.Enrich.WithThreadId()					
 					.MinimumLevel.ControlledBy(_loggingLevelSwitch)
 					.WriteTo.File(
 						new LogSanitizingFormatter(

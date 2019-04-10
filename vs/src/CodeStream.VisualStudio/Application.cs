@@ -60,6 +60,8 @@ namespace CodeStream.VisualStudio
         /// </summary>
         public static string TempDataPath { get; }
 
+		public static DeveloperSettings DeveloperOptions = new DeveloperSettings();
+
         static Application()
         {
             BuildEnv = SolutionInfo.BuildEnv;
@@ -101,5 +103,12 @@ namespace CodeStream.VisualStudio
                 VisualStudioVersionYear = "2019";
             }
         }
-    }
+
+		public class DeveloperSettings {
+			/// <summary>
+			/// Run in the immediate window to enable or disable this
+			/// </summary>
+			public bool MuteIpcLogs { get; set; }
+		}
+	}
 }
