@@ -1,6 +1,8 @@
 import { CSPost } from "@codestream/protocols/api";
 import { action } from "../common";
 import { PendingPost, Post, PostsActionsType } from "./types";
+import { HostApi } from "@codestream/webview/webview-api";
+import { GetPostsRequestType } from "@codestream/protocols/agent";
 
 export const reset = () => action("RESET");
 
@@ -25,3 +27,8 @@ export const addPostsForStream = (streamId: string, posts: CSPost[]) =>
 export const updatePost = (post: CSPost) => action(PostsActionsType.Update, post);
 
 export const deletePost = (post: CSPost) => action(PostsActionsType.Delete, post);
+
+export const getPosts = (streamId: string, postIds: string[]) => async dispatch => {
+	const { posts } = await HostApi.instance.send(GetPostsRequestType, { streamId, postIds });
+	dispatch(addPosts(posts));
+};

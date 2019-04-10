@@ -9,7 +9,7 @@ import { markdownify } from "./Markdowner";
 import Timestamp from "./Timestamp";
 import CodemarkDetails from "./CodemarkDetails";
 import { DocumentMarker, CodemarkPlus } from "@codestream/protocols/agent";
-import { CodemarkType, CSUser, CSMe } from "@codestream/protocols/api";
+import { CodemarkType, CSUser, CSMe, CSPost } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
 import { range } from "../utils";
@@ -18,6 +18,8 @@ import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { CodemarkForm } from "./CodemarkForm";
 import { editCodemark } from "../store/codemarks/actions";
 import { confirmPopup } from "./Confirm";
+import { getPost } from "../store/posts/reducer";
+import { getPosts } from "../store/posts/actions";
 
 interface State {
 	isEditing: boolean;
@@ -31,6 +33,7 @@ interface DispatchProps {
 	setCodemarkStatus: typeof setCodemarkStatus;
 	setUserPreference: typeof setUserPreference;
 	deletePost: typeof deletePost;
+	getPosts: typeof getPosts;
 }
 
 interface Props extends DispatchProps {
@@ -42,6 +45,8 @@ interface Props extends DispatchProps {
 	author: CSUser;
 	codemark: CodemarkPlus;
 	marker: DocumentMarker;
+	pinnedReplies: CSPost[];
+	pinnedAuthors: CSUser[];
 	usernames: string[];
 	postAction?: Function;
 	action(action: string, post: any, args: any): any;
@@ -72,6 +77,13 @@ export class Codemark extends React.Component<Props, State> {
 			menuOpen: false,
 			showLabelText: false
 		};
+	}
+
+	componentDidMount() {
+		const { codemark, pinnedReplies, getPosts } = this.props;
+		if (codemark.pinnedReplies && codemark.pinnedReplies.length > 0 && pinnedReplies.length === 0) {
+			getPosts(codemark.streamId, codemark.pinnedReplies!);
+		}
 	}
 
 	render() {
@@ -590,7 +602,7 @@ export class Codemark extends React.Component<Props, State> {
 							)}
 							<Icon name="kebab-vertical" className="kebab-vertical clickable" />
 						</div>
-						{!selected && this.renderPinnedReplies(codemark)}
+						{!selected && this.renderPinnedReplies()}
 						{!selected && this.renderDetailIcons(codemark)}
 					</div>
 					{selected && (
@@ -617,20 +629,15 @@ export class Codemark extends React.Component<Props, State> {
 		);
 	}
 
-	renderPinnedReplies(codemark) {
-		const user = {
-			username: "pez",
-			email: "pez@codestream.com",
-			fullName: "Peter Pezaris"
-		};
+	renderPinnedReplies() {
 		return (
 			<div className="pinned-replies">
-				{(codemark.pinnedReplies || []).map(id => {
+				{this.props.pinnedReplies.map((post, i) => {
 					return (
 						<div className="pinned-reply">
 							<Icon className="pinned-reply-star" name="star" />{" "}
-							<Headshot size={18} person={user} />
-							<div className="pinned-reply-body">very carefully</div>
+							<Headshot size={18} person={this.props.pinnedAuthors[i]} />
+							<div className="pinned-reply-body">{post.text}</div>
 						</div>
 					);
 				})}
@@ -720,6 +727,7 @@ export class Codemark extends React.Component<Props, State> {
 }
 
 const EMPTY_OBJECT = {};
+const EMPTY_ARRAY = [];
 
 const unkownAuthor = {
 	username: "CodeStream",
@@ -727,8 +735,18 @@ const unkownAuthor = {
 };
 
 const mapStateToProps = (state, props) => {
-	const { preferences, users, session } = state;
+	const { preferences, users, session, posts } = state;
+	const { codemark } = props;
+
+	const pinnedReplies = (codemark.pinnedReplies || EMPTY_ARRAY)
+		.map(id => getPost(state.posts, codemark.streamId, id))
+		.filter(Boolean);
+
+	const pinnedAuthors = pinnedReplies.map(post => users[post.creatorId]);
+
 	return {
+		pinnedReplies,
+		pinnedAuthors,
 		currentUser: users[session.userId] as CSMe,
 		author: getUserByCsId(users, props.codemark.creatorId) || (unkownAuthor as CSUser),
 		codemarkKeybindings: preferences.codemarkKeybindings || EMPTY_OBJECT
@@ -737,5 +755,5 @@ const mapStateToProps = (state, props) => {
 
 export default connect<any, DispatchProps, any>(
 	mapStateToProps,
-	{ setCodemarkStatus, setUserPreference, deletePost, editCodemark }
+	{ setCodemarkStatus, setUserPreference, deletePost, editCodemark, getPosts }
 )(Codemark);
