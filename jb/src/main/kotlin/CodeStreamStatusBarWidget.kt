@@ -33,6 +33,8 @@ class CodeStreamStatusBarWidget(val project: Project) : StatusBarWidget, StatusB
 
     override fun getTooltipText() = "Click to open CodeStream"
 
+    override fun getMaxPossibleText() = tooltipText
+
     override fun getClickConsumer() = Consumer<MouseEvent> {
         CodeStreamComponent.getInstance(project).toggleVisible()
     }

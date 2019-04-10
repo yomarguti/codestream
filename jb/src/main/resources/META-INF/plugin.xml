@@ -246,5 +246,5 @@
     </actions>
 
     <depends>com.intellij.modules.platform</depends>
-    <idea-version since-build="183"/>
+    <idea-version since-build="182"/>
 </idea-plugin>

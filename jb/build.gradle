@@ -47,14 +47,14 @@ compileTestKotlin {
 }
 
 intellij {
-    version "2019.1"
+    version "2018.2"
 //    version "2018.3.4"
 //    version "IC-2018.2.7"
     intellij.updateSinceUntilBuild false
 }
 
 runIde {
-    jbrVersion "11_0_2b159"
+//    jbrVersion "11_0_2b159"
 //    jvmArgs '-Dsun.java2d.uiScale.enabled=false'
 }
 
