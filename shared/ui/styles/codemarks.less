@@ -335,21 +335,25 @@
 			}
 		}
 	}
+	.pinned-replies {
+		margin-bottom: 10px;
+	}
 	.pinned-reply {
 		// padding: 10px 10px 3px 10px;
 		// margin: 10px -10px 0 -10px;
 		// width: calc(100% + 30px);
 		// border-top: 1px solid @base-border-color;
-		padding-top: 5px;
+		padding-top: 10px;
 		.pinned-reply-body {
 			opacity: 0.5;
+			// see COMPUTATION below
 			padding-left: 49px;
 			margin-top: -18px;
 		}
 	}
 	&.type-bookmark:not(.selected) {
 		.pinned-reply {
-			margin-left: -24px; // 49-28
+			margin-left: -24px; // COMPUTATION = 49-28
 		}
 	}
 	.post + .post {
