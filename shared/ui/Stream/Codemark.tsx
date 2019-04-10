@@ -630,9 +630,12 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	renderPinnedReplies() {
+		const { pinnedReplies = [] } = this.props;
+
+		if (pinnedReplies.length === 0) return null;
 		return (
 			<div className="pinned-replies">
-				{this.props.pinnedReplies.map((post, i) => {
+				{pinnedReplies.map((post, i) => {
 					return (
 						<div className="pinned-reply">
 							<Icon className="pinned-reply-star" name="star" />{" "}
