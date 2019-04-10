@@ -1081,6 +1081,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
 					markerId: markerId
 				});
+
 				// TODO: What should we do if we don't find the marker? Is that possible?
 				if (response) {
 					// Ensure we put the cursor at the right line (don't actually select the whole range)
@@ -1091,7 +1092,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 							end: response.range.start,
 							cursor: response.range.start
 						},
-						preserveFocus: this.props.currentDocumentMarkerId !== docMarker.id
+						preserveFocus: true
 					});
 				}
 			} catch (error) {
