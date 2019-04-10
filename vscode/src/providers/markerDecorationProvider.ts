@@ -381,13 +381,16 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 			let message = "";
 			let range = undefined;
 
+			const { uri } = document;
+
 			let firstMarkerArgs;
 			for (const m of markers) {
 				try {
 					if (token.isCancellationRequested) return undefined;
 
 					const viewCommandArgs: OpenCodemarkCommandArgs = {
-						codemarkId: m.codemarkId
+						codemarkId: m.codemarkId,
+						sourceUri: uri
 					};
 
 					const compareCommandArgs: ShowMarkerDiffCommandArgs = {
@@ -430,8 +433,8 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 			const markdown = new MarkdownString(message);
 			markdown.isTrusted = true;
 
-			if (firstMarkerArgs !== undefined && Container.webview.visible) {
-				const args = firstMarkerArgs;
+			if (firstMarkerArgs !== undefined) {
+				const args: OpenCodemarkCommandArgs = { ...firstMarkerArgs, onlyWhenVisible: true };
 				setImmediate(() => void Container.commands.openCodemark(args));
 			}
 

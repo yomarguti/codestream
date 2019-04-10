@@ -110,12 +110,15 @@ export class CodemarkCodeLensProvider implements CodeLensProvider, Disposable {
 			return [];
 		}
 
-		const markers = await this.getMarkers(document.uri);
+		const { uri } = document;
+
+		const markers = await this.getMarkers(uri);
 		if (markers == null || markers.length === 0) return [];
 
 		const lenses = markers.map<CodeLens>(m => {
 			const args: OpenCodemarkCommandArgs = {
-				codemarkId: m.codemarkId
+				codemarkId: m.codemarkId,
+				sourceUri: uri
 			};
 
 			return new CodeLens(m.range, {

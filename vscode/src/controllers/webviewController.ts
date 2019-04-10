@@ -223,14 +223,20 @@ export class WebviewController implements Disposable {
 	}
 
 	@log()
-	async openCodemark(codemarkId: string): Promise<void> {
+	async openCodemark(
+		codemarkId: string,
+		options: { onlyWhenVisible?: boolean; sourceUri?: Uri } = {}
+	): Promise<void> {
 		if (!this.visible) {
+			if (options.onlyWhenVisible) return;
+
 			await this.show();
 		}
 
 		// TODO: Change this to be a request vs a notification
 		this._webview!.notify(ShowCodemarkNotificationType, {
-			codemarkId: codemarkId
+			codemarkId: codemarkId,
+			sourceUri: options.sourceUri && options.sourceUri.toString()
 		});
 	}
 

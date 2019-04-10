@@ -42,6 +42,8 @@ export interface NewCodemarkCommandArgs {
 
 export interface OpenCodemarkCommandArgs {
 	codemarkId: string;
+	onlyWhenVisible?: boolean;
+	sourceUri?: Uri;
 }
 
 export interface OpenStreamCommandArgs {
@@ -226,13 +228,25 @@ export class Commands implements Disposable {
 		const response = await Container.agent.documentMarkers.getDocumentFromKeyBinding(args.index);
 		if (response == null) return;
 
-		await Editor.revealRange(
-			Uri.parse(response.textDocument.uri),
-			Editor.fromSerializableRange(response.range),
+		const uri = Uri.parse(response.textDocument.uri);
+
+		await Editor.selectRange(
+			uri,
+			new Range(
+				response.range.start.line,
+				response.range.start.character,
+				response.range.start.line,
+				response.range.start.character
+			),
 			{
 				preserveFocus: false
 			}
 		);
+
+		await Container.webview.openCodemark(response.marker.codemarkId, {
+			onlyWhenVisible: true,
+			sourceUri: uri
+		});
 	}
 
 	@command("openCodemark", { showErrorMessage: "Unable to open comment" })
@@ -240,7 +254,9 @@ export class Commands implements Disposable {
 		if (args === undefined) return;
 
 		Container.agent.telemetry.track("Codemark Clicked", { "Codemark Location": "Source File" });
-		return Container.webview.openCodemark(args.codemarkId);
+
+		const { codemarkId, ...options } = args;
+		return Container.webview.openCodemark(args.codemarkId, options);
 	}
 
 	@command("openStream", { showErrorMessage: "Unable to open stream" })
