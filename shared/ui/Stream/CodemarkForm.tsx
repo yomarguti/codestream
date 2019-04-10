@@ -578,18 +578,20 @@ class CodemarkForm extends React.Component<Props, State> {
 		// if (this.props.slackInfo || this.props.providerInfo.slack) {
 		const items: { label: string; action?: CSStream | "show-all"; key?: string }[] = [];
 
-		let labelMenuItems: any = COLOR_OPTIONS.map(color => {
-			return {
-				label: (
-					<span className={`${color}-color`}>
-						<Icon name={commentType} /> {color}
-					</span>
-				),
-				action: color
-			};
-		});
-		labelMenuItems.push({ label: "-" });
-		labelMenuItems.push({ label: "None", action: "none" });
+		let labelMenuItems: any = [{ label: "None", action: "" }, { label: "-" }];
+
+		labelMenuItems = labelMenuItems.concat(
+			COLOR_OPTIONS.map(color => {
+				return {
+					label: (
+						<span className={`${color}-color`}>
+							<Icon name={commentType} /> {color}
+						</span>
+					),
+					action: color
+				};
+			})
+		);
 		// labelMenuItems.push({ label: "-" });
 		// labelMenuItems.push({ label: "Edit Labels", action: "edit" });
 
