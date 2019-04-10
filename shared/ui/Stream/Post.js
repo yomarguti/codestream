@@ -283,10 +283,10 @@ class Post extends React.Component {
 			else menuItems.push({ label: `Unarchive ${typeString}`, action: "toggle-pinned" });
 		}
 		if (mine) {
-			menuItems.push(
-				{ label: `Edit ${typeString}`, action: "edit-post" },
-				{ label: `Delete ${typeString}`, action: "delete-post" }
-			);
+			if (!this.props.disableEdits) {
+				menuItems.push({ label: `Edit ${typeString}`, action: "edit-post" });
+			}
+			menuItems.push({ label: `Delete ${typeString}`, action: "delete-post" });
 		}
 
 		let authorMenuItems = [];

@@ -24,6 +24,7 @@ export interface Props {
 	teamId: string;
 	teammates?: CSUser[];
 	threadId: string;
+	disableEdits: boolean;
 
 	markRead: any;
 	onDidChangeVisiblePosts: any;
@@ -36,6 +37,7 @@ const noop = () => {};
 export default infiniteLoadable(
 	class PostList extends React.Component<Props, State> {
 		static defaultProps = {
+			disableEdits: false,
 			onDidChangeVisiblePosts: noop
 		};
 		list = React.createRef<HTMLDivElement>();
@@ -282,6 +284,7 @@ export default infiniteLoadable(
 									showDetails={this.props.isThread}
 									streamId={this.props.streamId}
 									onDidResize={this.onPostDidResize}
+									disableEdits={this.props.disableEdits}
 								/>
 							</React.Fragment>
 						);
