@@ -162,7 +162,7 @@ export interface GetPostsResponse {
 }
 
 export const GetPostsRequestType = new RequestType<GetPostsRequest, GetPostsResponse, void, void>(
-	"codestream/posts"
+	"codestream/posts/byIds"
 );
 
 export interface MarkPostUnreadRequest {
