@@ -228,7 +228,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const mutationObserver = new MutationObserver(() => this.repositionCodemarks());
 		mutationObserver.observe(document.getElementById("stream-root")!, {
 			childList: true,
-			subtree: true
+			subtree: true,
+			attributes: true,
+			attributeFilter: ["data-top"]
 		});
 
 		this.disposables.push(
@@ -284,9 +286,47 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		}
 	}
 
-	repositionAbove() {}
+	shiftUp(previousTop: number, $elements: HTMLElement[]) {
+		let topOfLastDiv = previousTop;
+		for (let $element of $elements) {
+			const domRect = $element.getBoundingClientRect();
 
-	repositionBelow() {}
+			const marginTop = parseInt($element.style.marginTop || "0", 10);
+			// if this has been shifted down, account for that shift when calculating intersection?
+			const overlap = topOfLastDiv - (domRect.bottom - marginTop);
+			const minimumDistance = 20;
+			const yDiff = overlap - minimumDistance;
+
+			if (yDiff < 0) {
+				$element.style.marginTop = `${yDiff}px`;
+				// if this has been shifted down, account for that shift
+				topOfLastDiv = domRect.top - marginTop + yDiff;
+			} else {
+				$element.style.marginTop = `${marginTop}px`;
+				topOfLastDiv = domRect.top;
+			}
+		}
+	}
+
+	shiftDown(previousBottom: number, $elements: HTMLElement[]) {
+		let bottomOfLastDiv = previousBottom;
+		for (let $element of $elements) {
+			const domRect = $element.getBoundingClientRect();
+			const origTop = parseInt($element.dataset.top || "", 10);
+			const minimumDistance = 20;
+			const overlap = bottomOfLastDiv - origTop;
+			const yDiff = overlap + minimumDistance;
+			const height = domRect.bottom - domRect.top;
+
+			if (yDiff > 0) {
+				$element.style.marginTop = yDiff + "px";
+				bottomOfLastDiv = origTop + height + yDiff;
+			} else {
+				$element.style.marginTop = "0";
+				bottomOfLastDiv = origTop + height;
+			}
+		}
+	}
 
 	repositionCodemarks = debounceToAnimationFrame(() => {
 		let $codemarkDivs = Array.from(
@@ -299,24 +339,15 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	repositionElements = $elements => {
 		$elements.sort((a, b) => a.dataset.top - b.dataset.top);
-		// const $composeDiv = document.getElementsByClassName("compose float-compose");
 
-		let bottomOfLastDiv = -30;
-		// let runningYAdjustment = 0;
-		for (let $element of $elements) {
-			const domRect = $element.getBoundingClientRect();
-			const origTop = parseInt($element.dataset.top, 10);
-			const yDiff = bottomOfLastDiv - origTop + 20;
-			const height = domRect.bottom - domRect.top;
+		const composeIndex = $elements.findIndex($e => $e.classList.contains("compose"));
 
-			// const origMargin = parseInt($element.style.marginTop, 10) || 0;
-			if (yDiff > 0) {
-				$element.style.marginTop = yDiff + "px";
-				bottomOfLastDiv = origTop + height + yDiff;
-			} else {
-				$element.style.marginTop = "0";
-				bottomOfLastDiv = origTop + height;
-			}
+		if (composeIndex > -1) {
+			const composeDimensions = $elements[composeIndex].getBoundingClientRect();
+			this.shiftUp(composeDimensions.top, $elements.slice(0, composeIndex).reverse());
+			this.shiftDown(composeDimensions.bottom, $elements.slice(composeIndex + 1));
+		} else {
+			this.shiftDown(-30, $elements);
 		}
 	};
 
