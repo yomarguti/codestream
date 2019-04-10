@@ -5,6 +5,7 @@ import * as userSelectors from "../store/users/reducer";
 import Icon from "./Icon";
 import Codemark from "./Codemark";
 import ScrollBox from "./ScrollBox";
+import Tooltip from "./Tooltip"; // careful with tooltips on codemarks; they are not performant
 import Feedback from "./Feedback";
 import cx from "classnames";
 import { range, debounceToAnimationFrame } from "../utils";
@@ -876,21 +877,31 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					</span>
 				)}
 				{numClosed > 0 && (
-					<span className="count" onClick={this.toggleShowClosed}>
-						{numClosed} resolved
-						<label className={cx("switch", { checked: this.props.showClosed })} />
-					</span>
+					<Tooltip title="Show/hide resolved issues" placement="top" delay={1}>
+						<span className="count" onClick={this.toggleShowClosed}>
+							{numClosed} resolved
+							<label className={cx("switch", { checked: this.props.showClosed })} />
+						</span>
+					</Tooltip>
 				)}
 				{numUnpinned > 0 && (
-					<span className="count" onClick={this.toggleShowUnpinned}>
-						{numUnpinned} archived
-						<label className={cx("switch", { checked: this.props.showUnpinned })} />
-					</span>
+					<Tooltip title="Show/hide archived codemarks" placement="top" delay={1}>
+						<span className="count" onClick={this.toggleShowUnpinned}>
+							{numUnpinned} archived
+							<label className={cx("switch", { checked: this.props.showUnpinned })} />
+						</span>
+					</Tooltip>
 				)}
-				<span className="count" onClick={this.toggleViewCodemarksInline}>
-					list
-					<label className={cx("switch ", { checked: !viewInline })} />
-				</span>
+				<Tooltip
+					title="Display codemarks as a list, or next to the code they reference"
+					placement="topRight"
+					delay={1}
+				>
+					<span className="count" onClick={this.toggleViewCodemarksInline}>
+						list
+						<label className={cx("switch ", { checked: !viewInline })} />
+					</span>
+				</Tooltip>
 				<Feedback />
 			</div>
 		);

@@ -4,6 +4,7 @@ import ReactDOM from "react-dom";
 import { connect } from "react-redux";
 import Icon from "./Icon";
 import Button from "./Button";
+import Tooltip from "./Tooltip";
 import CancelButton from "./CancelButton";
 import { HostApi } from "../webview-api";
 import { OpenUrlRequestType } from "@codestream/protocols/agent";
@@ -156,7 +157,14 @@ export class Feedback extends React.Component<Props, State> {
 		return (
 			<div className="feedback">
 				{this.renderDialogIfOpen()}
-				<Icon name="happy" className="clickable happy-icon" onClick={this.toggleDialog} />
+				<Icon
+					title="Tweet us your feedback"
+					placement="topRight"
+					delay={1}
+					name="happy"
+					className="clickable happy-icon"
+					onClick={this.toggleDialog}
+				/>
 			</div>
 		);
 	}
