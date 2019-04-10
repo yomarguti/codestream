@@ -70,7 +70,7 @@ export default class CodemarkActions extends React.Component<Props, State> {
 		const marker =
 			codemark.markers != null && codemark.markers.length !== 0 ? codemark.markers[0] : undefined;
 		let ref;
-		if (marker != null) {
+		if (marker != null && marker.commitHashWhenCreated) {
 			ref = marker.commitHashWhenCreated.substr(0, 8);
 			if ((canCompare || canApply) && !this.state.hasDiff) {
 				canCompare = false;
