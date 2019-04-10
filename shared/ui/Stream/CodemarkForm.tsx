@@ -918,14 +918,26 @@ class CodemarkForm extends React.Component<Props, State> {
 		);
 
 		const modifier = navigator.appVersion.includes("Macintosh") ? "⌘" : "Alt";
+
 		const submitTip =
 			commentType === "link" ? (
-				undefined
+				this.state.copied ? (
+					"Copied!"
+				) : this.state.linkURI ? (
+					"Copy Link"
+				) : (
+					"Create Link"
+				)
+			) : commentType === "issue" ? (
+				"Create Issue"
+			) : commentType === "bookmark" ? (
+				"Create Bookmark"
 			) : (
 				<span>
-					Submit Comment <span className="keybinding extra-pad">{modifier} ENTER</span>
+					Submit Comment<span className="keybinding extra-pad">{modifier} ENTER</span>
 				</span>
 			);
+
 		const cancelTip = (
 			<span>
 				Discard Comment<span className="keybinding extra-pad">ESC</span>
