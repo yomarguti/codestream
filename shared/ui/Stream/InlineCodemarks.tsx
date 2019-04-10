@@ -1085,10 +1085,15 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				});
 				// TODO: What should we do if we don't find the marker? Is that possible?
 				if (response) {
-					HostApi.instance.send(EditorRevealRangeRequestType, {
+					// Ensure we put the cursor at the right line (don't actually select the whole range)
+					HostApi.instance.send(EditorSelectRangeRequestType, {
 						uri: response.textDocument.uri,
-						range: response.range,
-						preserveFocus: true
+						selection: {
+							start: response.range.start,
+							end: response.range.start,
+							cursor: response.range.start
+						},
+						preserveFocus: this.props.currentDocumentMarkerId !== docMarker.id
 					});
 				}
 			} catch (error) {
