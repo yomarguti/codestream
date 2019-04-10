@@ -1,6 +1,5 @@
 "use strict";
 import { EditorMetrics, EditorSelection } from "@codestream/protocols/webview";
-import * as crypto from "crypto";
 import {
 	commands,
 	DecorationRangeBehavior,
@@ -92,7 +91,8 @@ export namespace Editor {
 		if (editor === undefined) return false;
 
 		editor.setDecorations(highlightDecorationType, clear ? emptyArray : [range]);
-		editor.revealRange(range, TextEditorRevealType.InCenterIfOutsideViewport);
+		// Don't reveal on highlight right now -- webview probably needs a flag to control this
+		// editor.revealRange(range, TextEditorRevealType.Default);
 		return true;
 	}
 
