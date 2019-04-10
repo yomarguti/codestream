@@ -234,11 +234,9 @@ class Post extends React.Component {
 					<div className={createClassString("header", { "no-repo": noRepo })}>
 						{/*<span className="file">{fileLabel}</span>*/}
 						{this.state.warning && (
-							<Tooltip placement="left" title={this.getWarningMessage()}>
-								<span className="icon-wrapper">
-									<Icon name="info" />
-								</span>
-							</Tooltip>
+							<div className="repo-warning">
+								<Icon name="alert" /> {this.getWarningMessage()}
+							</div>
 						)}
 					</div>
 					{this.props.showDetails && !this.state.warning ? (
