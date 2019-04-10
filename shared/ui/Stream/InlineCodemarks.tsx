@@ -17,7 +17,8 @@ import {
 	EditorSelection,
 	EditorMetrics,
 	EditorContext,
-	WebviewConfigs
+	WebviewConfigs,
+	EditorScrollToNotificationType
 } from "../ipc/webview.protocol";
 import {
 	DocumentMarker,
@@ -852,10 +853,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		// Update our tracking as the events will be too slow
 		this._wheelingState.topLine = topLine;
 
-		HostApi.instance.send(EditorRevealRangeRequestType, {
+		HostApi.instance.notify(EditorScrollToNotificationType, {
 			uri: this.props.textEditorUri!,
-			range: Range.create(topLine, 0, topLine, 0),
-			preserveFocus: true,
+			position: Position.create(topLine, 0),
 			atTop: true
 		});
 	};
