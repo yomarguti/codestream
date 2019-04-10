@@ -340,6 +340,19 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	repositionElements = $elements => {
 		$elements.sort((a, b) => a.dataset.top - b.dataset.top);
 
+		const selectedIndex = $elements.findIndex($e => $e.classList.contains("selected"));
+		if (selectedIndex > -1) {
+			const $selected = $elements[selectedIndex];
+			const dimensions = $selected.getBoundingClientRect();
+			const bodyDimensions = document.body.getBoundingClientRect();
+			if (dimensions.bottom >= bodyDimensions.bottom - 20) {
+				return this.shiftUp(
+					bodyDimensions.bottom - 20,
+					$elements.slice(0, selectedIndex + 1).reverse()
+				);
+			}
+		}
+
 		const composeIndex = $elements.findIndex($e => $e.classList.contains("compose"));
 
 		if (composeIndex > -1) {
