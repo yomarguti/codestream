@@ -2,12 +2,6 @@ package protocols.agent
 
 import org.eclipse.lsp4j.Range
 
-interface GetRangeScmInfoRequest {
-    val uri: String
-    val range: Range
-    val dirty: Boolean
-    val contents: String?
-}
 
 interface Author {
     val id: String

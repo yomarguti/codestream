@@ -79,7 +79,7 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
     val ideInfo: Ide
         get() = Ide()
     val traceLevel: TraceLevel
-        get() = TraceLevel.DEBUG
+        get() = TraceLevel.VERBOSE
     val isDebugging: Boolean
         get() = DEBUG
     var currentStreamId: String? = null

@@ -162,6 +162,15 @@
 
         </group>
 
+        <action id="CodeStream.CopyPermalink" class="com.codestream.actions.CopyPermalink" text="Copy Permalink"
+                description="Copy Permalink">
+            <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH" second-keystroke="shift P"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="shift P"
+                               replace-all="true"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="shift P"
+                               replace-all="true"/>
+        </action>
+
         <action id="CodeStream.Bookmark1" class="com.codestream.actions.Bookmark1">
             <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH"
                                second-keystroke="1"/>

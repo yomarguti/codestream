@@ -449,7 +449,7 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
             )
         }
 
-    private val Editor.selections: List<EditorSelection>
+    val Editor.selections: List<EditorSelection>
         get() {
             return listOf(
                 EditorSelection(

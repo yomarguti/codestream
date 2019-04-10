@@ -18,12 +18,13 @@ abstract class LoginParams(
     val serverUrl: String,
     val extension: Extension,
     val ide: Ide,
-    val traceLevel: TraceLevel,
+    val traceLevel: String,
     val isDebugging: Boolean,
     val team: String? = null,
     val proxySupport: String,
-    val proxy: ProxySettings? = null
-//    val teamId: String,
+    val proxy: ProxySettings? = null,
+    val recordRequests: Boolean = false
+    // val teamId: String,
 )
 
 class LoginWithPasswordParams(
@@ -32,7 +33,7 @@ class LoginWithPasswordParams(
     serverUrl: String,
     extension: Extension,
     ide: Ide,
-    traceLevel: TraceLevel,
+    traceLevel: String,
     isDebugging: Boolean,
     team: String?,
     proxySupport: String,
@@ -57,7 +58,7 @@ class LoginWithTokenParams(
     serverUrl: String,
     extension: Extension,
     ide: Ide,
-    traceLevel: TraceLevel,
+    traceLevel: String,
     isDebugging: Boolean,
     team: String?,
     proxySupport: String,
@@ -81,7 +82,7 @@ class LoginWithSignupTokenParams(
     serverUrl: String,
     extension: Extension,
     ide: Ide,
-    traceLevel: TraceLevel,
+    traceLevel: String,
     isDebugging: Boolean,
     team: String?,
     proxySupport: String,
@@ -165,15 +166,11 @@ class AccessToken(
     val value: String
 )
 
-enum class TraceLevel {
-    @SerializedName("silent")
-    SILENT,
-    @SerializedName("errors")
-    ERRORS,
-    @SerializedName("verbose")
-    VERBOSE,
-    @SerializedName("debug")
-    DEBUG
+enum class TraceLevel(val value: String) {
+    SILENT("silent"),
+    ERRORS("errors"),
+    VERBOSE("verbose"),
+    DEBUG("debug")
 }
 
 class DocumentMarkersParams(val textDocument: TextDocument)
@@ -187,3 +184,18 @@ class DocumentMarker(
     val summary: String
 //    summaryMarkdown: string;
 )
+
+class CreatePermalinkParams(
+    val uri: String?,
+    val range: Range,
+    val privacy: String
+)
+
+class CreatePermalinkResult(
+    val linkUrl: String
+)
+
+enum class PermalinkPrivacy(val value: String) {
+    PUBLIC("public"),
+    PRIVATE("private")
+}
