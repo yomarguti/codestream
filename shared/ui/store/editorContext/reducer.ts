@@ -3,7 +3,6 @@ import { Range } from "vscode-languageserver-types";
 import * as actions from "./actions";
 import { ActionType } from "../common";
 import { createSelector } from "reselect";
-import { memoize } from "lodash-es";
 import { range } from "@codestream/webview/utils";
 
 type EditorContextActions = ActionType<typeof actions>;

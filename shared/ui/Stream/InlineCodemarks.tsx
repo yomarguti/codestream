@@ -110,6 +110,7 @@ interface State {
 	numAbove: number;
 	numBelow: number;
 	highlightedDocmarker: string | undefined;
+	numLinesVisible: number;
 }
 
 export class SimpleInlineCodemarks extends Component<Props, State> {
@@ -137,7 +138,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			openIconsOnLine: -1,
 			numAbove: 0,
 			numBelow: 0,
-			highlightedDocmarker: undefined
+			highlightedDocmarker: undefined,
+			numLinesVisible: props.numLinesVisible
 		};
 
 		const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
@@ -178,6 +180,15 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	static getDerivedStateFromProps(props: Props, state: State) {
 		let { textEditorSelection } = props;
+
+		// only set this if it changes by more than 1. we expect it to vary by 1 as
+		// the topmost and bottommost line are revealed and the window is not an integer
+		// number of lines high.
+		if (Math.abs(props.numLinesVisible - Number(state.numLinesVisible)) > 1) {
+			return {
+				numLinesVisible: props.numLinesVisible
+			};
+		}
 
 		if (!textEditorSelection) {
 			return { openIconsOnLine: 0, lastSelectedLine: 0 };
@@ -341,7 +352,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				}}
 			>
 				<div style={{ position: "relative", background: "red" }}>
-					{this.renderHoverIcons(this.props.numLinesVisible)}
+					{this.renderHoverIcons(this.state.numLinesVisible)}
 				</div>
 			</div>,
 			<div style={{ height: "100%", paddingTop: "55px" }}>
@@ -582,10 +593,10 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			textEditorVisibleRanges = [],
 			textEditorLineCount,
 			lastVisibleLine,
-			numLinesVisible,
 			documentMarkers,
 			metrics
 		} = this.props;
+		const { numLinesVisible } = this.state;
 
 		const numVisibleRanges = textEditorVisibleRanges.length;
 
@@ -653,12 +664,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			textEditorVisibleRanges = [],
 			firstVisibleLine,
 			lastVisibleLine,
-			numLinesVisible,
 			documentMarkers,
 			showUnpinned,
-			showClosed
+			showClosed,
+			currentDocumentMarkerId
 		} = this.props;
-		const { currentDocumentMarkerId } = this.props;
+		const { numLinesVisible } = this.state;
 
 		const numVisibleRanges = textEditorVisibleRanges.length;
 		let numAbove = 0,
