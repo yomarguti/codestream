@@ -4,7 +4,7 @@
 
 ### Added
 
-- Adds a completely new view of codemarks that makes information much more accessible, with the ability to view and edit in-place. [Read more on our blog.](https://blog.codestream.com/index.php/YYYY/MM/DD/codestream-v0-52-new-codemarks-view)
+- Adds a completely new view of codemarks that makes information much more accessible, with the ability to view and edit in-place. [Read more on our blog.](https://blog.codestream.com/index.php/2019/04/10/codestream-v0-52…w-codemarks-view)
 - Adds the ability to "star" a reply so that it's surfaced in the codemarks view
 - Adds the ability to assign shortcuts to individual codemarks, allowing you to quickly jump around the codebase
 - Adds a toolbar to the bottom of the Current File tab with filters to control whether or not you see completed issues or archived codemarks
