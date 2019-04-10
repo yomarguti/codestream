@@ -794,7 +794,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		// Find the nearest scrollable element and if its not the container we expect, kick out
 		const scroller = (event.target as HTMLElement).closest("[data-scrollable]");
-		if (scroller == null || scroller.id !== "inline-codemarks-scroll-container") {
+		if (
+			scroller == null ||
+			(scroller.id !== "inline-codemarks-scroll-container" &&
+				scroller.scrollHeight > scroller.clientHeight)
+		) {
 			this._wheelingState = undefined;
 
 			return;

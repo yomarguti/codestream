@@ -242,7 +242,7 @@ export default infiniteLoadable(
 			} = this.props;
 
 			return (
-				<div className="postslist" ref={this.list} onScroll={this.onScroll}>
+				<div className="postslist" data-scrollable="true" ref={this.list} onScroll={this.onScroll}>
 					{hasMore || isFetchingMore ? (
 						<div className="loading-message">
 							<Icon name="sync" className="spin" /> Loading more posts...

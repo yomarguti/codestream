@@ -10,7 +10,7 @@ const md = new MarkdownIt({
 	linkify: true,
 	highlight: function(str, lang) {
 		const codeHTML = prettyPrintOne(escapeHtml(str), lang, true);
-		return `<pre class="prettyprint">${codeHTML}</pre>`;
+		return `<pre class="prettyprint" data-scrollable="true">${codeHTML}</pre>`;
 	}
 })
 	.use(markdownItSlack)

@@ -27,7 +27,6 @@ export default class ScrollBox extends Component {
 				className={createClassString("scrollbox", { "off-top": offTop, "off-bottom": offBottom })}
 				style={{ overflow: "hidden", height: "100%" }}
 				onScroll={this.handleScroll}
-				data-scrollable="true"
 			>
 				{this.props.children}
 			</div>

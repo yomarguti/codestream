@@ -170,7 +170,13 @@ class Post extends React.Component {
 		}
 
 		const codeHTML = prettyPrintOne(escapeHtml(marker.code), extension, startLine);
-		return <pre className="code prettyprint" dangerouslySetInnerHTML={{ __html: codeHTML }} />;
+		return (
+			<pre
+				className="code prettyprint"
+				data-scrollable="true"
+				dangerouslySetInnerHTML={{ __html: codeHTML }}
+			/>
+		);
 	}
 
 	render() {
