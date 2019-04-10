@@ -160,28 +160,49 @@ export namespace Editor {
 		return selections.map(s => ({ cursor: s.active, start: s.start, end: s.end }));
 	}
 
-	export function fromSerializableRange(range: LspRange): Range;
-	export function fromSerializableRange(ranges: LspRange[]): Range[];
-	export function fromSerializableRange(ranges: LspRange | LspRange[]): Range | Range[] {
+	export function fromSerializableRange(range: LspRange, reverse?: boolean): Range;
+	export function fromSerializableRange(ranges: LspRange[], reverse?: boolean): Range[];
+	export function fromSerializableRange(
+		ranges: LspRange | LspRange[],
+		reverse?: boolean
+	): Range | Range[] {
 		if (!Array.isArray(ranges)) {
-			return new Range(
-				ranges.start.line,
-				ranges.start.character,
-				ranges.end.line,
-				ranges.end.character
-			);
+			return reverse
+				? new Range(
+						ranges.end.line,
+						ranges.end.character,
+						ranges.start.line,
+						ranges.start.character
+				  )
+				: new Range(
+						ranges.start.line,
+						ranges.start.character,
+						ranges.end.line,
+						ranges.end.character
+				  );
 		}
 
-		return ranges.map(r => new Range(r.start.line, r.start.character, r.end.line, r.end.character));
+		return ranges.map(r =>
+			reverse
+				? new Range(r.end.line, r.end.character, r.start.line, r.start.character)
+				: new Range(r.start.line, r.start.character, r.end.line, r.end.character)
+		);
 	}
 
-	export function toSerializableRange(range: Range): LspRange;
-	export function toSerializableRange(ranges: Range[]): LspRange[];
-	export function toSerializableRange(ranges: Range | Range[]): LspRange | LspRange[] {
+	export function toSerializableRange(range: Range, reverse?: boolean): LspRange;
+	export function toSerializableRange(ranges: Range[], reverse?: boolean): LspRange[];
+	export function toSerializableRange(
+		ranges: Range | Range[],
+		reverse?: boolean
+	): LspRange | LspRange[] {
 		if (!Array.isArray(ranges)) {
-			return { start: ranges.start, end: ranges.end };
+			return reverse
+				? { start: ranges.end, end: ranges.start }
+				: { start: ranges.start, end: ranges.end };
 		}
 
-		return ranges.map(r => ({ start: r.start, end: r.end }));
+		return ranges.map(r =>
+			reverse ? { start: r.end, end: r.start } : { start: r.start, end: r.end }
+		);
 	}
 }
