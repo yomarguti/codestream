@@ -973,12 +973,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			.sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
 			.reverse()
 			.forEach(line => {
-				const lineNum = parseInt(line, 10) - 1;
+				let lineNum = parseInt(line, 10) - 1;
 				if (
 					!done &&
 					lineNum < firstVisibleLine &&
 					!this.hiddenCodemarks[this.docMarkersByStartLine[line].id]
 				) {
+					lineNum = Math.max(0, lineNum);
 					HostApi.instance.send(EditorRevealRangeRequestType, {
 						uri: this.props.textEditorUri!,
 						range: Range.create(lineNum, 0, lineNum, 0),
@@ -997,12 +998,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		Object.keys(this.docMarkersByStartLine)
 			.sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
 			.forEach(line => {
-				const lineNum = parseInt(line, 10) + 1;
+				let lineNum = parseInt(line, 10) + 1;
 				if (
 					!done &&
 					lineNum > lastVisibleLine &&
 					!this.hiddenCodemarks[this.docMarkersByStartLine[line].id]
 				) {
+					lineNum = Math.max(0, lineNum);
 					HostApi.instance.send(EditorRevealRangeRequestType, {
 						uri: textEditorUri!,
 						range: Range.create(lineNum, 0, lineNum, 0),
