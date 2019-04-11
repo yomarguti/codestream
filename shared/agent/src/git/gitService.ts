@@ -6,6 +6,7 @@ import { Disposable, Event } from "vscode-languageserver";
 import URI from "vscode-uri";
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
+import { log } from "../system";
 import { Strings } from "../system";
 import { git, GitErrors, GitWarnings } from "./git";
 import { GitAuthor, GitRemote, GitRepository } from "./models/models";
@@ -300,6 +301,10 @@ export class GitService implements IGitService, Disposable {
 
 	async getRepoRemotes(repoUri: URI): Promise<GitRemote[]>;
 	async getRepoRemotes(repoPath: string): Promise<GitRemote[]>;
+	@log({
+		exit: (result: GitRemote[]) =>
+			`returned [${result.length !== 0 ? result.map(r => r.uri.toString(true)).join(", ") : ""}]`
+	})
 	async getRepoRemotes(repoUriOrPath: URI | string): Promise<GitRemote[]> {
 		const repoPath = typeof repoUriOrPath === "string" ? repoUriOrPath : repoUriOrPath.fsPath;
 
