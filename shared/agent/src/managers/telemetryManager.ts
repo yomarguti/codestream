@@ -25,6 +25,10 @@ export class TelemetryManager {
 		this._telemetry.setSuperProps(props);
 	}
 
+	setFirstSessionProps(firstSessionStartedAt: number, firstSessionTimesOutAfter: number) {
+		this._telemetry.setFirstSessionProps(firstSessionStartedAt, firstSessionTimesOutAfter);
+	}
+
 	ready(): Promise<void> {
 		return this._telemetry.ready();
 	}

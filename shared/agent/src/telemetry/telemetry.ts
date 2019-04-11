@@ -8,11 +8,14 @@ const Analytics = require("analytics-node");
 
 export class TelemetryService {
 	private _segmentInstance: any;
-	private _superProps: object;
+	private _superProps: { [key: string]: any };
 	private _distinctId?: string;
 	private _hasOptedOut: boolean;
 	private _session: CodeStreamSession;
 	private _readyPromise: Promise<void>;
+	private _firstSessionStartedAt?: number;
+	private _firstSessionTimesOutAfter?: number;
+
 	private _onReady: () => void = () => {};
 
 	/**
@@ -117,12 +120,26 @@ export class TelemetryService {
 		this._superProps = props;
 	}
 
+	setFirstSessionProps(firstSessionStartedAt: number, firstSessionTimesOutAfter: number) {
+		this._firstSessionStartedAt = firstSessionStartedAt;
+		this._firstSessionTimesOutAfter = firstSessionTimesOutAfter;
+	}
+
 	track(event: string, data?: { [key: string]: string | number | boolean }) {
 		Logger.debug(`Tracking event :: ${event}`);
 
 		if (this._hasOptedOut || this._segmentInstance == null) {
 			return;
 		}
+
+		if (
+			this._firstSessionStartedAt &&
+			this._firstSessionTimesOutAfter &&
+			Date.now() > this._firstSessionStartedAt + this._firstSessionTimesOutAfter
+		) {
+			this._superProps["First Session"] = false;
+		}
+
 		const payload: { [key: string]: any } = { ...data, ...this._superProps };
 
 		if (this._distinctId != null) {

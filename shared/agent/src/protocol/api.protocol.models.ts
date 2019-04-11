@@ -314,6 +314,7 @@ export interface CSUser extends CSEntity {
 	dnd?: boolean;
 	presence?: string;
 	preferences?: CSMePreferences;
+	firstSessionStartedAt?: number;
 }
 
 export interface CSLastReads {

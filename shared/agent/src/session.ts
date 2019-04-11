@@ -58,6 +58,8 @@ import { log, memoize, registerDecoratedHandlers, registerProviders } from "./sy
 // FIXME: Must keep this in sync with vscode-codestream/src/api/session.ts
 const envRegex = /https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(?::\d+$)?/i;
 
+const FIRST_SESSION_TIMEOUT = 12 * 60 * 60 * 1000;	// first session "times out" after 12 hours
+
 const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 	"USRC-1001": ApiErrors.InvalidCredentials,
 	"USRC-1010": ApiErrors.NotConfirmed,
@@ -658,10 +660,18 @@ export class CodeStreamSession {
 			props["Date of Last Post"] = new Date(user.lastPostCreatedAt).toISOString();
 		}
 
+		props["First Session"] = (
+			!!user.firstSessionStartedAt &&
+			user.firstSessionStartedAt <= Date.now() + FIRST_SESSION_TIMEOUT
+		);
+
 		const { telemetry } = Container.instance();
 		await telemetry.ready();
 		telemetry.identify(this._codestreamUserId!, props);
 		telemetry.setSuperProps(props);
+		if (user.firstSessionStartedAt !== undefined) {
+			telemetry.setFirstSessionProps(user.firstSessionStartedAt, FIRST_SESSION_TIMEOUT);
+		}
 		telemetry.track({ eventName: "Agent Started" });
 	}
 }
