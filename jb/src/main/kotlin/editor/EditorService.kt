@@ -341,8 +341,8 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
                 val end = getOffset(it.range.end)
 
                 markupModel.addRangeHighlighter(
-                    start,
-                    end,
+                    Math.min(start, end),
+                    Math.max(start, end),
                     HighlighterLayer.FIRST,
                     null,
                     HighlighterTargetArea.EXACT_RANGE
@@ -545,9 +545,12 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
                         range.start.line, HighlighterLayer.LAST, getTextAttributes(editor)
                     )
                 } else {
+                    val start = editor.getOffset(range.start)
+                    val end = editor.getOffset(range.end)
+
                     editor.markupModel.addRangeHighlighter(
-                        editor.getOffset(range.start),
-                        editor.getOffset(range.end),
+                        Math.min(start, end),
+                        Math.max(start, end),
                         HighlighterLayer.LAST,
                         getTextAttributes(editor),
                         HighlighterTargetArea.EXACT_RANGE
