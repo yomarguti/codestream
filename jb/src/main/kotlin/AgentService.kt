@@ -8,7 +8,9 @@ import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.launch
 import org.apache.commons.io.FileUtils
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.RemoteEndpoint
@@ -19,8 +21,11 @@ import protocols.agent.CreatePermalinkResult
 import protocols.agent.DocumentMarkersParams
 import protocols.agent.DocumentMarkersResult
 import java.io.File
+import java.io.InputStream
+import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
+import java.util.*
 
 
 class AgentService(private val project: Project) : ServiceConsumer(project) {
@@ -69,7 +74,7 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
     private fun createProcess(): Process {
         val temp = createTempDir("codestream")
         temp.deleteOnExit()
-        return if (DEBUG) {
+        val process = if (DEBUG) {
             val agentJs = File(temp, "agent-pkg.js")
             val agentJsMap = File(temp, "agent-pkg.js.map")
             // val agentLog = File(temp, "agent.log")
@@ -100,8 +105,25 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
                 agentDestFile.absolutePath,
                 "--stdio"
             ).createProcess()
-
         }
+
+        captureErrorStream(process)
+        GlobalScope.launch {
+            val code = process.waitFor()
+            logger.info("LSP agent terminated with exit code $code")
+        }
+
+        return process
+    }
+
+    private fun captureErrorStream(process: Process) {
+        Thread(Runnable {
+            val sc = Scanner(process.errorStream)
+            while (sc.hasNextLine()) {
+                val nextLine = sc.nextLine()
+                logger.error(nextLine)
+            }
+        }).start()
     }
 
     private fun getAgentResourcePath(): String {
