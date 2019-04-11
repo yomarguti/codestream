@@ -13,13 +13,16 @@ import {
 	GetRangeSha1RequestType,
 	GetRangeSha1Response
 } from "../protocol/agent.protocol";
-import { FileSystem, Iterables, lsp, lspHandler, Strings } from "../system";
+import { FileSystem, Iterables, log, lsp, lspHandler, Strings } from "../system";
 import { Container } from "./../container";
 
 @lsp
 export class ScmManager {
 	@lspHandler(GetFileScmInfoRequestType)
+	@log()
 	async getFileInfo({ uri: documentUri }: GetFileScmInfoRequest): Promise<GetFileScmInfoResponse> {
+		const cc = Logger.getCorrelationContext();
+
 		const uri = URI.parse(documentUri);
 
 		let file: string | undefined;
@@ -45,7 +48,7 @@ export class ScmManager {
 				}
 			} catch (ex) {
 				gitError = ex.toString();
-				Logger.error(ex);
+				Logger.error(ex, cc);
 				debugger;
 			}
 		}
@@ -66,6 +69,7 @@ export class ScmManager {
 	}
 
 	@lspHandler(GetRangeScmInfoRequestType)
+	@log()
 	async getRangeInfo({
 		uri: documentUri,
 		range,
@@ -73,6 +77,8 @@ export class ScmManager {
 		contents,
 		skipBlame
 	}: GetRangeScmInfoRequest): Promise<GetRangeScmInfoResponse> {
+		const cc = Logger.getCorrelationContext();
+
 		// Ensure range end is >= start
 		range = Ranges.ensureStartBeforeEnd(range);
 
@@ -87,7 +93,9 @@ export class ScmManager {
 		if (contents == null) {
 			document = Container.instance().documents.get(documentUri);
 			if (document === undefined) {
-				throw new Error(`No document could be found for Uri(${documentUri})`);
+				const ex = new Error(`No document could be found for Uri(${documentUri})`);
+				Logger.error(ex, cc);
+				throw ex;
 			}
 
 			contents = document.getText(range);
@@ -117,7 +125,9 @@ export class ScmManager {
 							if (document === undefined) {
 								document = Container.instance().documents.get(documentUri);
 								if (document === undefined) {
-									throw new Error(`No document could be found for Uri(${documentUri})`);
+									const ex = new Error(`No document could be found for Uri(${documentUri})`);
+									Logger.error(ex, cc);
+									throw ex;
 								}
 							}
 
@@ -137,7 +147,7 @@ export class ScmManager {
 				}
 			} catch (ex) {
 				gitError = ex.toString();
-				Logger.error(ex);
+				Logger.error(ex, cc);
 				debugger;
 			}
 		}
@@ -168,8 +178,8 @@ export class ScmManager {
 		const document = Container.instance().documents.get(uri);
 		if (document === undefined) {
 			try {
-			const sha1 = await FileSystem.sha1(URI.parse(uri).fsPath, range);
-			return { sha1: sha1 };
+				const sha1 = await FileSystem.sha1(URI.parse(uri).fsPath, range);
+				return { sha1: sha1 };
 			} catch (ex) {
 				Logger.error(ex);
 				return { sha1: undefined };
