@@ -11,17 +11,17 @@ class EditorMargins(
     val left: Int
 )
 
-class EditorMetrics (
+class EditorMetrics(
     val fontSize: Int,
     val lineHeight: Int,
     val margins: EditorMargins?
 )
 
 class EditorSelection(
-    val start: Position,
-    val end: Position,
+    start: Position,
+    end: Position,
     val cursor: Position
-)
+) : Range(start, end)
 
 class WebViewContext(
     val currentTeamId: String,

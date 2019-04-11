@@ -29,8 +29,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
                 else -> throw IllegalArgumentException("Invalid webview message target: ${message.target}")
             }
         } catch (e: Exception) {
-            logger.error(e)
-            e.printStackTrace()
+            logger.warn(e)
             if (message.id != null) {
                 webViewService.postResponse(message.id, null, e.message)
             }
@@ -55,12 +54,14 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
                 "host/signup" -> signup(message)
                 "host/signup/complete" -> signupComplete(message)
                 "host/context/didChange" -> contextDidChange(message)
-                //            "host/webview/reload" -> Unit
+                "host/webview/reload" -> webViewService.reload()
                 //            "host/marker/compare" -> Unit
                 //            "host/marker/apply" -> Unit
                 "host/configuration/update" -> configurationUpdate(message)
                 "host/editor/range/highlight" -> editorRangeHighlight(message)
                 "host/editor/range/reveal" -> editorRangeReveal(message)
+                "host/editor/range/select" -> editorRangeSelect(message)
+                "host/editor/scrollTo" -> editorScrollTo(message)
                 else -> logger.warn("Unhandled host message ${message.method}")
             }
             if (message.id != null) {
@@ -68,7 +69,6 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
             }
         } catch (e: Exception) {
             logger.warn(e)
-//            e.printStackTrace()
             if (message.id != null) {
                 webViewService.postResponse(message.id, null, e.message)
             }
@@ -230,6 +230,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
             ),
             null
         )
+        settingsService.webViewContext = jsonObject()
         webViewService.reload()
     }
 
@@ -345,9 +346,21 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
         editorService.toggleRangeHighlight(request.range, request.highlight)
     }
 
-    fun editorRangeReveal(message: WebViewMessage) {
+    suspend fun editorRangeReveal(message: WebViewMessage) : EditorRangeRevealResponse {
         val request = gson.fromJson<EditorRangeRevealRequest>(message.params!!)
-        editorService.reveal(request.uri, request.range)
+        val success = editorService.reveal(request.uri, request.range)
+        return EditorRangeRevealResponse(success)
+    }
+
+    suspend fun editorRangeSelect(message: WebViewMessage) : EditorRangeSelectResponse {
+        val request = gson.fromJson<EditorRangeSelectRequest>(message.params!!)
+        val success = editorService.select(request.uri, request.selection, request.preserveFocus ?: false)
+        return EditorRangeSelectResponse(success)
+    }
+
+    fun editorScrollTo(message: WebViewMessage) {
+        val request = gson.fromJson<EditorScrollToRequest>(message.params!!)
+        editorService.scroll(request.uri, request.position, request.atTop)
     }
 
     private fun parse(json: String): WebViewMessage {

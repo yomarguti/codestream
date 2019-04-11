@@ -3,11 +3,12 @@ package com.codestream.editor
 import com.codestream.CodeStreamComponent
 import com.codestream.ServiceConsumer
 import com.codestream.TextDocument
+import com.codestream.protocols.webview.CodemarkNotifications
 import com.codestream.protocols.webview.EditorNotifications
-import com.codestream.protocols.webview.StreamNotifications
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
@@ -48,6 +49,8 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
     init {
         sessionService.onUserLoggedInChanged { updateMarkers() }
     }
+
+    private val logger = Logger.getInstance(EditorService::class.java)
 
     private val managedDocuments = mutableMapOf<Document, DocumentVersion>()
     private val managedEditors = mutableSetOf<Editor>()
@@ -247,6 +250,7 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
 
     inner class EditorManagerVisibleAreaListener : VisibleAreaListener {
         override fun visibleAreaChanged(e: VisibleAreaEvent) {
+            if (isScrollingFromWebView) return
             webViewService.postNotification(
                 EditorNotifications.DidChangeVisibleRanges(
                     e.editor.document.uri,
@@ -360,15 +364,14 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
         override fun getClickAction(): AnAction? {
             return object : AnAction() {
                 override fun actionPerformed(e: AnActionEvent) {
-                    CodeStreamComponent.getInstance(project).show()
-                    webViewService.postNotification(
-                        StreamNotifications.Show(
-                            marker.codemark.streamId,
-                            marker.codemark.postId
+                    CodeStreamComponent.getInstance(project).show {
+                        webViewService.postNotification(
+                            CodemarkNotifications.Show(
+                                marker.codemark.id
+                            )
                         )
-                    )
+                    }
                 }
-
             }
         }
 
@@ -554,18 +557,84 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
         }
     }
 
-    fun reveal(uri: String, range: Range?) = ApplicationManager.getApplication().invokeLater {
-        val selectedEditor = FileEditorManager.getInstance(project).selectedTextEditor
-        selectedEditor?.let {
-            if (it.document.uri == uri && (range == null || it.isRangeVisible(range))) {
+    suspend fun reveal(uri: String, range: Range?) : Boolean {
+        val future = CompletableDeferred<Boolean>()
+        ApplicationManager.getApplication().invokeLater {
+            val selectedEditor = FileEditorManager.getInstance(project).selectedTextEditor
+            selectedEditor?.let {
+                if (it.document.uri == uri && (range == null || it.isRangeVisible(range))) {
+                    future.complete(true)
+                    return@invokeLater
+                }
+            }
+
+            val line = range?.start?.line ?: 0
+            val virtualFile = LocalFileSystem.getInstance().findFileByIoFile(File(URI(uri)))
+            if (virtualFile == null) {
+                future.complete(false)
                 return@invokeLater
             }
+
+            val editorManager = FileEditorManager.getInstance(project)
+            editorManager.openTextEditor(OpenFileDescriptor(project, virtualFile, line, 0), true)
+
+            future.complete(true)
+        }
+        return future.await()
+    }
+
+    suspend fun select(uri: String, selection: EditorSelection, preserveFocus: Boolean) : Boolean {
+        val future = CompletableDeferred<Boolean>()
+        ApplicationManager.getApplication().invokeLater {
+            var editor = FileEditorManager.getInstance(project).selectedTextEditor
+            if (editor?.document?.uri != uri || !editor.isRangeVisible(selection)) {
+                val virtualFile = LocalFileSystem.getInstance().findFileByIoFile(File(URI(uri)))
+                if (virtualFile == null) {
+                    future.complete(false)
+                    return@invokeLater
+                }
+
+                val editorManager = FileEditorManager.getInstance(project)
+                val line = selection.start.line
+                editor = editorManager.openTextEditor(OpenFileDescriptor(project, virtualFile, line, 0), true)
+            }
+
+            if (editor == null) {
+                future.complete(false)
+                return@invokeLater
+            }
+
+            editor.apply {
+                val start = getOffset(selection.start)
+                val end = getOffset(selection.end)
+                val caret = getOffset(selection.cursor)
+                selectionModel.setSelection(start, end)
+                caretModel.moveToOffset(caret)
+                if (!preserveFocus) component.grabFocus()
+            }
+
+            future.complete(true)
+        }
+        return future.await()
+    }
+
+    var isScrollingFromWebView = false
+
+    fun scroll(uri: String, position: Position, atTop: Boolean) = ApplicationManager.getApplication().invokeLater {
+        var editor = FileEditorManager.getInstance(project).selectedTextEditor
+        if (editor?.document?.uri != uri) {
+            return@invokeLater
         }
 
-        val line = range?.start?.line ?: 0
-        val virtualFile = LocalFileSystem.getInstance().findFileByIoFile(File(URI(uri))) ?: return@invokeLater
-        val editorManager = FileEditorManager.getInstance(project)
-        editorManager.openTextEditor(OpenFileDescriptor(project, virtualFile, line, 0), true)
+        val logicalPosition = LogicalPosition(position.line, position.character)
+        val point = editor.logicalPositionToXY(logicalPosition)
+
+        isScrollingFromWebView = true
+        editor.scrollingModel.runActionOnScrollingFinished {
+            isScrollingFromWebView = false
+        }
+        // logger.info("Scrolling to ${position.line} - atTop: $atTop")
+        editor.scrollingModel.scrollVertically(point.y)
     }
 
     val Range.arrayString: String

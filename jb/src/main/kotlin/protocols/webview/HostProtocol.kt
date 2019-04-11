@@ -2,6 +2,7 @@ package protocols.webview
 
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
+import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
 
 class LoginRequest(
@@ -80,4 +81,24 @@ class EditorRangeRevealRequest(
     val uri: String,
     val range: Range,
     val preserveFocus: Boolean?
+)
+
+class EditorRangeRevealResponse(
+    val success: Boolean
+)
+
+class EditorRangeSelectRequest(
+    val uri: String,
+    val selection: EditorSelection,
+    val preserveFocus: Boolean?
+)
+
+class EditorRangeSelectResponse(
+    val success: Boolean
+)
+
+class EditorScrollToRequest(
+    val uri: String,
+    val position: Position,
+    val atTop: Boolean
 )
