@@ -187,8 +187,8 @@ namespace CodeStream.VisualStudio {
 										}
 									case EditorRevealRangeRequestType.MethodName: {
 											using (var scope = _ipc.CreateScope(message)) {
+												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 												var @params = message.Params.ToObject<EditorRevealRangeRequest>();
-
 												var result = await _ideService.OpenEditorAsync(@params.Uri, @params.Range?.Start?.Line + 1, atTop: @params.AtTop, focus: @params.PreserveFocus == false);
 												scope.FulfillRequest(JToken.FromObject(new EditorRevealRangeResponse { Success = result }));
 											}
