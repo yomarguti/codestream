@@ -4,6 +4,7 @@ export * from "./system/array";
 export * from "./system/crypto";
 export * from "./system/date";
 export * from "./system/disposable";
+export * from "./system/fs";
 export * from "./system/function";
 export * from "./system/iterable";
 export * from "./system/object";

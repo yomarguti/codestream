@@ -13,7 +13,7 @@ import {
 	GetRangeSha1RequestType,
 	GetRangeSha1Response
 } from "../protocol/agent.protocol";
-import { Iterables, lsp, lspHandler, Strings } from "../system";
+import { FileSystem, Iterables, lsp, lspHandler, Strings } from "../system";
 import { Container } from "./../container";
 
 @lsp
@@ -167,10 +167,17 @@ export class ScmManager {
 
 		const document = Container.instance().documents.get(uri);
 		if (document === undefined) {
-			throw new Error(`No document could be found for Uri(${uri})`);
+			try {
+			const sha1 = await FileSystem.sha1(URI.parse(uri).fsPath, range);
+			return { sha1: sha1 };
+			} catch (ex) {
+				Logger.error(ex);
+				return { sha1: undefined };
+			}
 		}
 
-		const content = document.getText(range);
+		// Normalize to /n line endings
+		const content = document.getText(range).replace(/\r\n/g, "\n");
 		return { sha1: Strings.sha1(content) };
 	}
 }

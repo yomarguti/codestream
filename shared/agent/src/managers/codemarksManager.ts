@@ -114,7 +114,8 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		}
 
 		return {
-			codemarkSha1: Strings.sha1(marker.code),
+			// Normalize to /n line endings
+			codemarkSha1: Strings.sha1(marker.code.replace(/\r\n/g, "\n")),
 			documentSha1: documentSha1
 		};
 	}
