@@ -11,7 +11,7 @@
 
 <p>CodeStream helps dev teams discuss, review, and understand code. Discussing code is now as simple as commenting on a Google Doc — select the code and type your question.</p>
 
-<p><img src="https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/animated/Spatial%20JB.gif" alt="CodeStream" /></p>
+<p><iframe width="560" height="315" src="https://www.youtube.com/embed/F6y4nrIy4es" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></p>
 
 <p>CodeStream turns conversation into documentation by capturing all of the discussion about your code, and saving it with your code. Each discussion is represented as a "codemark" that is permanently connected to the lines of code to which it refers.</p>
 
@@ -77,6 +77,34 @@
 
 <p>Check out our <a href="https://github.com/TeamCodeStream/CodeStream/wiki">wiki</a> for more information on getting started with CodeStream. Please follow <a href="http://twitter.com/teamcodestream">@teamcodestream</a> for product updates and to share feedback and questions. You can also email us at support@codestream.com.</p>
 ]]></description>
+
+    <change-notes><![CDATA[
+<h4 id="0_52_0">0.52.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds a completely new view of codemarks that makes information much more accessible, with the ability to view and edit in-place. Read more on our blog.</li>
+    <li>Adds the ability to "star" a reply so that it's surfaced in the codemarks view</li>
+    <li>Adds the ability to assign shortcuts to individual codemarks, allowing you to quickly jump around the codebase</li>
+    <li>Adds a toolbar to the bottom of the Current File tab with filters to control whether or not you see completed issues or archived codemarks</li>
+    <li>Adds clickable indicators to the toolbar to let you know when there are codemarks above/below your current view</li>
+    <li>Archived codemarks and resolved issues are now displayed in a collapsed format in a new gutter at the right side of the CodeStream pane, with the ability to click to expand the display</li>
+    <li>Adds a new header treatment for archived codemarks</li>
+    <li>Scrolling the view of codemarks in the CodeStream pane will now scroll the source file as well</li>
+    <li>Adds a quick overview of codemarks accessible via an info icon at the bottom-right of each codemark</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>The display of an expanded codemark only includes the code block, as well as the Compare and Apply links, if there’s a diff from what you have locally</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue where using the “selected conversations” filter on the Channels tab, with only a single channel selected, would cause codemarks to get shared to the wrong conversation</li>
+    <li>Fixes an issue where a codemark would no longer render on CodeStream if the post was deleted via the Slack client</li>
+    <li>Fixes an issue where archived and closed Slack conversations were appearing in the conversation selector when creating a codemark</li>
+    <li>Fixes an issue that prevented an edited bookmark from being saved</li>
+</ul>
+]]>
+    </change-notes>
 
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceImplementation="com.codestream.AgentService"/>
