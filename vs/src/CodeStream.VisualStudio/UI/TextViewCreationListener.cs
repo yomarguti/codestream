@@ -160,7 +160,7 @@ namespace CodeStream.VisualStudio.UI {
 					.ObserveOnDispatcher()
 					.Subscribe(_ => textViewMarginProviders.Toggle(_.IsVisible)),
 
-				visibleRangesSubject.Throttle(TimeSpan.FromMilliseconds(200), new SynchronizationContextScheduler(SynchronizationContext.Current))
+				visibleRangesSubject.Throttle(TimeSpan.FromMilliseconds(50), new SynchronizationContextScheduler(SynchronizationContext.Current))
 						.Subscribe(e => {
 							 System.Windows.Application.Current.Dispatcher.Invoke(() => {
 							var toolWindowIsVisible = ServiceLocator.Get<SToolWindowProvider, IToolWindowProvider>()?.IsVisible(Guids.WebViewToolWindowGuid);
