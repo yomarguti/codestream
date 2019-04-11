@@ -560,11 +560,11 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
         }
     }
 
-    suspend fun reveal(uri: String, range: Range?) : Boolean {
+    suspend fun reveal(uri: String, range: Range?, atTop: Boolean? = null) : Boolean {
         val future = CompletableDeferred<Boolean>()
         ApplicationManager.getApplication().invokeLater {
-            val selectedEditor = FileEditorManager.getInstance(project).selectedTextEditor
-            selectedEditor?.let {
+            val editor = FileEditorManager.getInstance(project).selectedTextEditor
+            editor?.let {
                 if (it.document.uri == uri && (range == null || it.isRangeVisible(range))) {
                     future.complete(true)
                     return@invokeLater
@@ -578,8 +578,14 @@ class EditorService(val project: Project) : ServiceConsumer(project) {
                 return@invokeLater
             }
 
-            val editorManager = FileEditorManager.getInstance(project)
-            editorManager.openTextEditor(OpenFileDescriptor(project, virtualFile, line, 0), true)
+            if (editor?.document?.uri == uri && range != null && atTop == true) {
+                val logicalPosition = LogicalPosition(range.start.line, range.start.character)
+                val point = editor.logicalPositionToXY(logicalPosition)
+                editor.scrollingModel.scrollVertically(point.y)
+            } else {
+                val editorManager = FileEditorManager.getInstance(project)
+                editorManager.openTextEditor(OpenFileDescriptor(project, virtualFile, line, 0), true)
+            }
 
             future.complete(true)
         }
