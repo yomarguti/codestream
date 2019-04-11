@@ -1,6 +1,7 @@
 ﻿using CodeStream.VisualStudio.Annotations;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
+using CodeStream.VisualStudio.Core.Logging.Instrumentation;
 using EnvDTE;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
@@ -22,9 +23,6 @@ using Microsoft.VisualStudio.Shell.Interop;
 using CodeStream.VisualStudio.Core;
 using System.Reactive.Subjects;
 using System.Reactive.Linq;
-using System.Windows.Threading;
-using System.Reactive.Concurrency;
-using System.Collections.Concurrent;
 
 namespace CodeStream.VisualStudio.Services {
 	public enum ExtensionKind {
@@ -34,8 +32,11 @@ namespace CodeStream.VisualStudio.Services {
 	public interface IIdeService {
 		void Navigate(string url);
 		System.Threading.Tasks.Task SetClipboardAsync(string text);
-		System.Threading.Tasks.Task<bool> OpenEditorAsync(string fileUri, int? scrollTo = null, bool? atTop = false, bool? moveCaret = false);
-		System.Threading.Tasks.Task<bool> OpenEditorAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? moveCaret = false);
+		void ScrollEditorThrottled(Uri fileUri, Range range, Position position, bool? atTop);
+		void ScrollEditor(Uri fileUri, int? scrollTo = null, bool? atTop = false);
+		System.Threading.Tasks.Task<bool> OpenEditorAtLineAsync(Uri fileUri, Range range, bool forceOpen = false);
+		System.Threading.Tasks.Task<bool> OpenEditorAsync(string fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false, bool forceOpen = false);
+		System.Threading.Tasks.Task<bool> OpenEditorAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false, bool forceOpen = false);
 		EditorState GetActiveEditorState();
 		EditorState GetActiveEditorState(out IVsTextView view);
 		ActiveTextEditor GetActiveTextView();
@@ -57,8 +58,8 @@ namespace CodeStream.VisualStudio.Services {
 		private readonly IVsTextManager _iIVsTextManager;
 		private readonly Dictionary<ExtensionKind, bool> _extensions;
 
-		//private readonly Subject<FooSubjectArgs> _fooSubjectArgs;
-		//private readonly List<IDisposable> _disposables;
+		private readonly Subject<ScrollSubjectArgs> _scrollSubjectArgs;
+		private readonly List<IDisposable> _disposables;
 
 		private bool _disposed = false;
 
@@ -68,16 +69,125 @@ namespace CodeStream.VisualStudio.Services {
 			_iIVsTextManager = iIVsTextManager;
 			_extensions = extensions;
 
-//			_fooSubjectArgs = new Subject<FooSubjectArgs>();
+			_scrollSubjectArgs = new Subject<ScrollSubjectArgs>();
 
-//			_disposables = new List<IDisposable>() {_fooSubjectArgs
-//				.Throttle(TimeSpan.FromMilliseconds(150), new SynchronizationContextScheduler(SynchronizationContext.Current))
-//				.Subscribe(e => {
-////					Dispatcher.CurrentDispatcher.Invoke(()=> {
-//						TryScrollToLine(e.WpfTextView, e.ScrollToLineFoo, e.AtTop, true, e.WasEditorOpen);
-//	//				},DispatcherPriority.Input);
-//				})
-//			};
+			_disposables = new List<IDisposable>() {
+				// there are a few options here... dispatcher inside the subscription or
+				// ObserveOnDispatcher() or new SynchronizationContextScheduler(SynchronizationContext.Current))
+
+				// on my machine, ScrollEditor is usually 15-20ms, sometimes longer
+				_scrollSubjectArgs
+						.Throttle(TimeSpan.FromMilliseconds(15))
+						.Subscribe(e => {
+							System.Windows.Application.Current.Dispatcher.Invoke(() => {
+								ScrollEditor(e.FileUri, e.ScrollToLine, e.AtTop);
+							}, System.Windows.Threading.DispatcherPriority.Send);
+						})
+			};
+		}
+
+		/// <summary>
+		/// Open editor using an absolute file path
+		/// </summary>
+		/// <param name="fileUri"></param>
+		/// <param name="scrollTo">the 1-based line number</param>
+		/// <returns>ShowCodeResult</returns>
+		public async System.Threading.Tasks.Task<bool> OpenEditorAsync(string fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false, bool forceOpen = false) {
+			return await OpenEditorAsync(fileUri.ToUri(), scrollTo, atTop, focus, forceOpen);
+		}
+
+		/// <summary>
+		/// Open editor using an absolute file path
+		/// </summary>
+		/// <param name="fileUri"></param>
+		/// <param name="scrollTo">the 1-based line number</param>
+		/// <returns>ShowCodeResult</returns>
+		public async System.Threading.Tasks.Task<bool> OpenEditorAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false, bool forceOpen = false) {
+			using (Log.CriticalOperation($"{nameof(OpenEditorAsync)} {fileUri} scrollTo={scrollTo}")) {
+				IWpfTextView wpfTextView = null;
+				try {
+					var localPath = fileUri.ToLocalPath();
+					wpfTextView = await AssertWpfTextViewAsync(fileUri, forceOpen);
+
+					if (wpfTextView != null) {
+						TryScrollToLine(wpfTextView, scrollTo, atTop);
+					}
+					return true;
+				}
+				catch (Exception ex) {
+					Log.Error(ex, $"{nameof(OpenEditorAsync)} failed for {fileUri}");
+					return false;
+				}
+			}
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="fileUri"></param>
+		/// <param name="range"></param>
+		/// <param name="forceOpen"></param>
+		/// <returns></returns>
+		public async System.Threading.Tasks.Task<bool> OpenEditorAtLineAsync(Uri fileUri, Range range, bool forceOpen = false) {
+			using (Log.CriticalOperation($"{nameof(OpenEditorAtLineAsync)} {fileUri} range={range?.Start?.Line}, {range?.End?.Line}")) {
+				IWpfTextView wpfTextView = null;
+				try {
+					wpfTextView = await AssertWpfTextViewAsync(fileUri, forceOpen);
+					if (wpfTextView != null) {
+						var span = EnsureSpanVisible(wpfTextView, range);
+						if (span != null) {
+							wpfTextView.Caret.MoveTo(new SnapshotPoint(wpfTextView.TextSnapshot, span.Value.Start + range.Start.Character));
+							wpfTextView.Caret.EnsureVisible();
+						}
+						return true;
+					}
+					return false;
+				}
+				catch (Exception ex) {
+					Log.Error(ex, $"{nameof(OpenEditorAtLineAsync)} failed for {fileUri}");
+					return false;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Scrolls an editor, only if it is already open
+		/// </summary>
+		/// <param name="fileUri"></param>
+		/// <param name="scrollTo"></param>
+		/// <param name="atTop"></param>
+		public void ScrollEditor(Uri fileUri, int? scrollTo = null, bool? atTop = false) {
+			if (scrollTo == null || scrollTo.Value < 0) return;
+			using (var metrics = Log.WithMetrics($"{nameof(OpenEditorAsync)} {fileUri} scrollTo={scrollTo} atTop={atTop}")) {
+				IWpfTextView wpfTextView = null;
+				try {
+					var localPath = fileUri.ToLocalPath();
+					if (!WpfTextViewCache.TryGetValue(localPath, out wpfTextView) || wpfTextView == null) {
+						return;
+					}
+					var scrollToLine = scrollTo.Value;
+
+					if (atTop == true) {
+						var firstTextViewLine = wpfTextView.TextViewLines.FirstOrDefault();
+						int startingVisibleLineNumber = wpfTextView.TextSnapshot.GetLineNumberFromPosition(firstTextViewLine.Extent.Start.Position);
+						using (metrics.Measure("ScrollViewportVerticallyByPixels")) {
+							wpfTextView.ViewScroller.ScrollViewportVerticallyByPixels((startingVisibleLineNumber - scrollToLine + 1) * wpfTextView.LineHeight);
+						}
+						// this is abysmally slow...
+						//wpfTextView.ViewScroller.ScrollViewportVerticallyByLines(direction, Math.Abs(666));						
+					}
+					else {
+						EnsureSpanVisible(wpfTextView, scrollToLine);
+					}
+				}
+				catch (Exception ex) {
+					Log.Error(ex, $"{nameof(ScrollEditor)} failed for {fileUri}");
+				}
+			}
+		}
+
+		public void ScrollEditorThrottled(Uri fileUri, Range range, Position position, bool? atTop) {
+			_scrollSubjectArgs.OnNext(new ScrollSubjectArgs(fileUri, position.Line, atTop, false));
 		}
 
 		public ActiveTextEditor GetActiveTextView() {
@@ -128,106 +238,86 @@ namespace CodeStream.VisualStudio.Services {
 			return null;
 		}
 
-		/// <summary>
-		/// Open editor using an absolute file path
-		/// </summary>
-		/// <param name="fileUri"></param>
-		/// <param name="scrollTo">the 1-based line number</param>
-		/// <returns>ShowCodeResult</returns>
-		public async System.Threading.Tasks.Task<bool> OpenEditorAsync(string fileUri, int? scrollTo = null, bool? atTop = false, bool? moveCaret = false) {
-			//await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-
-			return await OpenEditorAsync(fileUri.ToUri(), scrollTo, atTop, moveCaret);
-		}
-
-		//private ConcurrentDictionary<string, IWpfTextView> OpenDocuments = new ConcurrentDictionary<string, IWpfTextView>();
-
-		/// <summary>
-		/// Open editor using an absolute file path
-		/// </summary>
-		/// <param name="fileUri"></param>
-		/// <param name="scrollTo">the 1-based line number</param>
-		/// <returns>ShowCodeResult</returns>
-		public async System.Threading.Tasks.Task<bool> OpenEditorAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? moveCaret = false) {
-
-			bool wasEditorOpen = true;
-			try {
-				var localPath = fileUri.ToLocalPath();
-				//if (OpenDocuments.TryGetValue(localPath, out IWpfTextView wpf)) {
-				//	TryScrollToLine(wpf, scrollTo, atTop, true, wasEditorOpen);
-				//	Log.Verbose($"ScrollTo={scrollTo}, AtTop={atTop}");
-				//	//_fooSubjectArgs.OnNext(new FooSubjectArgs(wpf, scrollTo, atTop, wasEditorOpen));
-				//}
-				//else {
+		private async System.Threading.Tasks.Task<IWpfTextView> AssertWpfTextViewAsync(Uri fileUri, bool forceOpen = false) {
+			IWpfTextView wpfTextView;
+			var localPath = fileUri.ToLocalPath();
+			if (forceOpen == true || !WpfTextViewCache.TryGetValue(localPath, out wpfTextView)) {
 				var view = GetActiveTextView();
-				IWpfTextView wpfTextView;
+
 				if (view == null || !view.Uri.EqualsIgnoreCase(fileUri)) {
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 
 					var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
 					if (dte == null) {
 						Log.Warning($"{nameof(dte)} is null for {fileUri}");
-						return false;
+						return null;
 					}
 
 					EnvDTE.Window window = dte.ItemOperations.OpenFile(localPath, EnvDTE.Constants.vsViewKindCode);
 					// the TextView/WpfTextView may not be immediately available -- try to get it.
 					wpfTextView = TryGetPendingWpfTextView(localPath);
-					wasEditorOpen = false;
 				}
 				else {
 					wpfTextView = view?.WpfTextView;
 				}
-
-				if (wpfTextView != null) {
-
-					//	OpenDocuments.TryAdd(localPath, wpfTextView);
-					//_fooSubjectArgs.OnNext(new FooSubjectArgs(wpfTextView, scrollTo, atTop, wasEditorOpen));
-					TryScrollToLine(wpfTextView, scrollTo, atTop, moveCaret, wasEditorOpen);
-					System.Diagnostics.Debug.WriteLine($"     FOO - {scrollTo} => {DateTime.Now}");
-				}
-				//}
-
-				return true;
 			}
-			catch (Exception ex) {
-				Log.Error(ex, $"OpenEditor failed for {fileUri}");
-				return false;
-			}
+			return wpfTextView;
 		}
 
-		private void TryScrollToLine(IWpfTextView view, int? scrollToLineFoo, bool? atTop, bool? moveCaret, bool wasEditorOpen) {
+		private void EnsureSpanVisible(IWpfTextView wpfTextView, int scrollToLine) {
+			if (scrollToLine < 0) return;
+
+			var lines = wpfTextView.VisualSnapshot.Lines;
+			var startLine = lines.FirstOrDefault(_ => _.LineNumber == scrollToLine);
+			var span = new SnapshotSpan(wpfTextView.TextSnapshot, Span.FromBounds(startLine.Start, startLine.Start + 1));
+			wpfTextView.ViewScroller.EnsureSpanVisible(span, EnsureSpanVisibleOptions.MinimumScroll);
+		}
+
+		private SnapshotSpan? EnsureSpanVisible(IWpfTextView wpfTextView, Range range) {
+			if (range == null) return null;
+
+			var lines = GetStartAndEndLines(wpfTextView, range.Start.Line, range.End.Line);
+			if (lines == null) return null;
+
+			var span = new SnapshotSpan(wpfTextView.TextSnapshot, Span.FromBounds(lines.Item1.Start, lines.Item2.End));
+			wpfTextView.ViewScroller.EnsureSpanVisible(span, EnsureSpanVisibleOptions.AlwaysCenter);
+			return span;
+		}
+
+		private Tuple<ITextSnapshotLine, ITextSnapshotLine> GetStartAndEndLines(IWpfTextView wpfTextView, int startLine, int endLine) {
+			ITextSnapshotLine start = null;
+			ITextSnapshotLine end = null;
+			foreach (var line in wpfTextView.VisualSnapshot.Lines) {
+				if (line.LineNumber == startLine) {
+					start = line;
+				}
+				if (line.LineNumber == endLine) {
+					end = line;
+				}
+			}
+			if (start != null && end != null) {
+				return Tuple.Create(start, end);
+			}
+			return null;
+		}
+
+		private void TryScrollToLine(IWpfTextView wpfTextView, int? scrollToLineFoo, bool? atTop) {
 			if (scrollToLineFoo == null || scrollToLineFoo.Value < 0) return;
 			var scrollToLine = scrollToLineFoo.Value;
 
-			var lines = view.VisualSnapshot.Lines;
-			var startLine = lines.FirstOrDefault(_ => _.LineNumber == scrollToLine);
-
-			if (startLine == null || view.TextSnapshot == null) {
-				Log.Warning("Missing startLine or textSnapshot");
-				return;
-			}
-
 			if (atTop == true) {
-				int startingVisibleLineNumber = 0;
-				foreach (var l in view.TextViewLines) {
-					startingVisibleLineNumber = view.TextSnapshot.GetLineNumberFromPosition(l.Extent.Start.Position);
-					break;
-				}
-
+				var firstTextViewLine = wpfTextView.TextViewLines.FirstOrDefault();
+				var startingVisibleLineNumber = wpfTextView.TextSnapshot.GetLineNumberFromPosition(firstTextViewLine.Extent.Start.Position);
 				var lineCount = startingVisibleLineNumber - scrollToLine;
-				var direction = lineCount < 0 ? ScrollDirection.Down : ScrollDirection.Up;
-				view.ViewScroller.ScrollViewportVerticallyByLines(direction, Math.Abs(lineCount));
+				wpfTextView.ViewScroller.ScrollViewportVerticallyByLines(lineCount < 0 ? ScrollDirection.Down : ScrollDirection.Up, Math.Abs(lineCount));
 			}
 			else {
-				var span = new SnapshotSpan(view.TextSnapshot, Span.FromBounds(startLine.Start, startLine.Start + 1));
-				view.ViewScroller.EnsureSpanVisible(span, wasEditorOpen ?
-					EnsureSpanVisibleOptions.MinimumScroll : EnsureSpanVisibleOptions.AlwaysCenter);
+				EnsureSpanVisible(wpfTextView, scrollToLine);
 			}
-			if (moveCaret == true) {
-				view.Caret.MoveTo(new SnapshotPoint(view.TextSnapshot, startLine.Start == 0 ? 0 : startLine.Start - 1));
-				view.Caret.EnsureVisible();
-			}
+			//if (moveCaret == true) {
+			//	view.Caret.MoveTo(new SnapshotPoint(view.TextSnapshot, startLine.Start == 0 ? 0 : startLine.Start - 1));
+			//	view.Caret.EnsureVisible();
+			//}
 		}
 
 		public EditorState GetActiveEditorState(out IVsTextView view) {
@@ -280,39 +370,7 @@ namespace CodeStream.VisualStudio.Services {
 		//        }
 		//    }
 		//    return false;
-		//}
-
-		/// <summary>
-		/// GetBufferAt
-		/// </summary>
-		/// <param name="filePath"></param>
-		/// <returns></returns>
-		/// <remarks>https://stackoverflow.com/a/7373385/208022</remarks>
-		internal ITextBuffer GetBufferAt(IServiceProvider serviceProvider, string filePath) {
-			var componentModel = ServiceLocator.Get<SComponentModel, IComponentModel>();
-			var editorAdapterFactoryService = componentModel.GetService<IVsEditorAdaptersFactoryService>();
-
-			IVsUIHierarchy uiHierarchy;
-			uint itemID;
-			IVsWindowFrame windowFrame;
-			if (VsShellUtilities.IsDocumentOpen(
-			  serviceProvider,
-			  filePath,
-			  Guid.Empty,
-			  out uiHierarchy,
-			  out itemID,
-			  out windowFrame)) {
-				IVsTextView view = VsShellUtilities.GetTextView(windowFrame);
-				IVsTextLines lines;
-				if (view.GetBuffer(out lines) == 0) {
-					var buffer = lines as IVsTextBuffer;
-					if (buffer != null)
-						return editorAdapterFactoryService.GetDataBuffer(buffer);
-				}
-			}
-
-			return null;
-		}
+		//}		
 
 		/// <summary>
 		/// Tries to get an active text view for a file that may have just opened.
@@ -320,6 +378,7 @@ namespace CodeStream.VisualStudio.Services {
 		/// </summary>
 		/// <param name="filePath"></param>
 		/// <returns></returns>
+		/// <remarks>https://stackoverflow.com/a/7373385/208022</remarks>
 		internal IWpfTextView TryGetPendingWpfTextView(string filePath) {
 			var editorAdapterFactoryService = _componentModel.GetService<IVsEditorAdaptersFactoryService>();
 			IVsUIHierarchy uiHierarchy;
@@ -508,23 +567,25 @@ namespace CodeStream.VisualStudio.Services {
 			if (_disposed) return;
 
 			if (disposing) {
-				//_disposables?.DisposeAll();
+				_disposables?.DisposeAll();
 			}
 
 			_disposed = true;
 		}
 	}
-
-	public class FooSubjectArgs {
+	public class ScrollSubjectArgs {
+		public Uri FileUri { get; set; }
 		public IWpfTextView WpfTextView { get; }
-		public int? ScrollToLineFoo { get; }
+		public int? ScrollToLine { get; }
 		public bool? AtTop { get; }
+		public bool? Focus { get; }
 		public bool WasEditorOpen { get; }
-		public FooSubjectArgs(IWpfTextView view, int? scrollToLineFoo, bool? atTop, bool wasEditorOpen) {
-			WpfTextView = view;
-			ScrollToLineFoo = scrollToLineFoo;
+
+		public ScrollSubjectArgs(Uri fileUri, int? scrollToLineFoo, bool? atTop, bool? focus) {
+			FileUri = fileUri;
+			ScrollToLine = scrollToLineFoo;
 			AtTop = atTop;
-			WasEditorOpen = wasEditorOpen;
+			Focus = focus;
 		}
 	}
 }

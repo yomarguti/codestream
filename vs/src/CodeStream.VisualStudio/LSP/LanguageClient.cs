@@ -20,170 +20,150 @@ using System.Threading.Tasks;
 using Package = Microsoft.VisualStudio.Shell.Package;
 using ThreadHelper = Microsoft.VisualStudio.Shell.ThreadHelper;
 
-namespace CodeStream.VisualStudio.LSP
-{
-    /// <summary>
-    /// NOTE: See ContentDefinitions.cs for the LanguageClient partial class attributes
-    /// </summary>
-    [Export(typeof(ILanguageClient))]
-    [Guid(Guids.LanguageClientId)]
-    public partial class LanguageClient : ILanguageClient, ILanguageClientCustomMessage, IDisposable
-    {
-        private static readonly ILogger Log = LogManager.ForContext<LanguageClient>();
+namespace CodeStream.VisualStudio.LSP {
+	/// <summary>
+	/// NOTE: See ContentDefinitions.cs for the LanguageClient partial class attributes
+	/// </summary>
+	[Export(typeof(ILanguageClient))]
+	[Guid(Guids.LanguageClientId)]
+	public partial class LanguageClient : ILanguageClient, ILanguageClientCustomMessage, IDisposable {
+		private static readonly ILogger Log = LogManager.ForContext<LanguageClient>();
 		private bool _disposed = false;
 		private readonly ILanguageServerProcess _languageServerProcess;
-	
-        public event AsyncEventHandler<EventArgs> StartAsync;
+
+		public event AsyncEventHandler<EventArgs> StartAsync;
 #pragma warning disable 0067
-        public event AsyncEventHandler<EventArgs> StopAsync;
+		public event AsyncEventHandler<EventArgs> StopAsync;
 #pragma warning restore 0067
 
 #if DEBUG
-        /// <summary>
-        /// This is how we can see a list of contentTypes (used to generate the attrs for this class)
-        /// </summary>
-        [Import]
-        internal IContentTypeRegistryService ContentTypeRegistryService { get; set; }
+		/// <summary>
+		/// This is how we can see a list of contentTypes (used to generate the attrs for this class)
+		/// </summary>
+		[Import]
+		internal IContentTypeRegistryService ContentTypeRegistryService { get; set; }
 #endif
-        private readonly IEventAggregator _eventAggregator;
-        private readonly ISettingsService _settingsService;
-        private readonly ICodeStreamAgentService _codeStreamAgentService;
-        private readonly ISessionService _sessionService;
+		private readonly IEventAggregator _eventAggregator;
+		private readonly ISettingsService _settingsService;
+		private readonly ICodeStreamAgentService _codeStreamAgentService;
+		private readonly ISessionService _sessionService;
 
-        [ImportingConstructor]
-        public LanguageClient()
-        {
-            Instance = this;
-            _eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
-            _settingsService = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
-            _codeStreamAgentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
-            _sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
-            var ipc = Package.GetGlobalService(typeof(SWebviewIpc)) as IWebviewIpc;
+		[ImportingConstructor]
+		public LanguageClient() {
+			Instance = this;
+			_eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
+			_settingsService = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
+			_codeStreamAgentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
+			_sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+			var ipc = Package.GetGlobalService(typeof(SWebviewIpc)) as IWebviewIpc;
 
-            _languageServerProcess = new LanguageServerProcess();
-            CustomMessageTarget = new CustomMessageHandler(_eventAggregator, ipc);
-        }
+			_languageServerProcess = new LanguageServerProcess();
+			CustomMessageTarget = new CustomMessageHandler(_eventAggregator, ipc);
+		}
 
-        internal static LanguageClient Instance { get; private set; }
-        private JsonRpc _rpc;
+		internal static LanguageClient Instance { get; private set; }
+		private JsonRpc _rpc;
 
-        public string Name => Application.Name;
+		public string Name => Application.Name;
 
-        public IEnumerable<string> ConfigurationSections => null;
+		public IEnumerable<string> ConfigurationSections => null;
 
-        public object InitializationOptions
-        {
-            get
-            {
-                var initializationOptions = new InitializationOptions
-                {
-                    Extension = _settingsService.GetExtensionInfo(),
-                    Ide = _settingsService.GetIdeInfo(),
+		public object InitializationOptions {
+			get {
+				var initializationOptions = new InitializationOptions {
+					Extension = _settingsService.GetExtensionInfo(),
+					Ide = _settingsService.GetIdeInfo(),
 #if DEBUG
-                    TraceLevel = TraceLevel.Verbose.ToJsonValue(),
-                    IsDebugging = true,
+					TraceLevel = TraceLevel.Verbose.ToJsonValue(),
+					IsDebugging = true,
 #else
                     TraceLevel = _settingsService.TraceLevel.ToJsonValue(),
 #endif
-                    Proxy = _settingsService.Proxy,
-                    ProxySupport = _settingsService.ProxySupport.ToJsonValue()
-                };
-                Log.Debug(nameof(InitializationOptions) + " {@InitializationOptions}", initializationOptions);
+					Proxy = _settingsService.Proxy,
+					ProxySupport = _settingsService.ProxySupport.ToJsonValue()
+				};
+				Log.Debug(nameof(InitializationOptions) + " {@InitializationOptions}", initializationOptions);
 
-                return initializationOptions;
-            }
-        }
+				return initializationOptions;
+			}
+		}
 
-        public IEnumerable<string> FilesToWatch => null;
+		public IEnumerable<string> FilesToWatch => null;
 
-        public object MiddleLayer => null;
+		public object MiddleLayer => null;
 
-        public object CustomMessageTarget { get; }
+		public object CustomMessageTarget { get; }
 
-        public async Task<Connection> ActivateAsync(CancellationToken token)
-        {
-            await Task.Yield();
+		public async Task<Connection> ActivateAsync(CancellationToken token) {
+			await Task.Yield();
 
-            Connection connection = null;
+			Connection connection = null;
 
-            var process = _languageServerProcess.Create(_settingsService.TraceLevel);
+			var process = _languageServerProcess.Create(_settingsService.TraceLevel);
 
-            using (Log.CriticalOperation($"Starting server process. FileName={process.StartInfo.FileName} Arguments={process.StartInfo.Arguments}"))
-            {
-                if (process.Start())
-                {
-                    connection = new Connection(process.StandardOutput.BaseStream, process.StandardInput.BaseStream);
-                }
-            }
+			using (Log.CriticalOperation($"Starting server process. FileName={process.StartInfo.FileName} Arguments={process.StartInfo.Arguments}", Serilog.Events.LogEventLevel.Information)) {
+				if (process.Start()) {
+					connection = new Connection(process.StandardOutput.BaseStream, process.StandardInput.BaseStream);
+				}
+			}
 
-            return connection;
-        }
+			return connection;
+		}
 
-        public async Task AttachForCustomMessageAsync(JsonRpc rpc)
-        {
-            await Task.Yield();
-            _rpc = rpc;
+		public async Task AttachForCustomMessageAsync(JsonRpc rpc) {
+			await Task.Yield();
+			_rpc = rpc;
 
-            // Slight hack to use camelCased properties when serializing requests
-            _rpc.JsonSerializer.ContractResolver = new CustomCamelCasePropertyNamesContractResolver(new HashSet<Type> { typeof(TelemetryProperties)});
-        }
+			// Slight hack to use camelCased properties when serializing requests
+			_rpc.JsonSerializer.ContractResolver = new CustomCamelCasePropertyNamesContractResolver(new HashSet<Type> { typeof(TelemetryProperties) });
+		}
 
-        public async Task OnLoadedAsync()
-        {
-            using (Log.CriticalOperation($"{nameof(OnLoadedAsync)}"))
-            {
-                // ReSharper disable once PossibleNullReferenceException
-                await StartAsync?.InvokeAsync(this, EventArgs.Empty);
-            }
-        }
+		public async Task OnLoadedAsync() {
+			using (Log.CriticalOperation($"{nameof(OnLoadedAsync)}")) {
+				// ReSharper disable once PossibleNullReferenceException
+				await StartAsync?.InvokeAsync(this, EventArgs.Empty);
+			}
+		}
 
-        public async Task OnServerInitializedAsync()
-        {
-            try
-            {
-                using (Log.CriticalOperation($"{nameof(OnServerInitializedAsync)}"))
-                {
-                    await _codeStreamAgentService.SetRpcAsync(_rpc);
-                    _sessionService.SetAgentReady();
-                    _eventAggregator.Publish(new LanguageServerReadyEvent { IsReady = true });
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, nameof(OnServerInitializedAsync));
-                throw;
-            }
-            await Task.CompletedTask;
-        }
+		public async Task OnServerInitializedAsync() {
+			try {
+				using (Log.CriticalOperation($"{nameof(OnServerInitializedAsync)}")) {
+					await _codeStreamAgentService.SetRpcAsync(_rpc);
+					_sessionService.SetAgentReady();
+					_eventAggregator.Publish(new LanguageServerReadyEvent { IsReady = true });
+				}
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(OnServerInitializedAsync));
+				throw;
+			}
+			await Task.CompletedTask;
+		}
 
-        public Task OnServerInitializeFailedAsync(Exception ex)
-        {
-            Log.Error(ex, nameof(OnServerInitializeFailedAsync));
-            throw ex;
-        }
+		public Task OnServerInitializeFailedAsync(Exception ex) {
+			Log.Error(ex, nameof(OnServerInitializeFailedAsync));
+			throw ex;
+		}
 
-        public static async Task TriggerLspInitializeAsync()
-        {
-            string path = null;
+		public static async Task TriggerLspInitializeAsync() {
+			string path = null;
 
-            try
-            {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+			try {
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                if (!(Package.GetGlobalService(typeof(DTE)) is DTE2 dte)) return;
+				if (!(Package.GetGlobalService(typeof(DTE)) is DTE2 dte)) return;
 
-                path = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Resources", Core.Constants.CodeStreamCodeStream);
+				path = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Resources", Core.Constants.CodeStreamCodeStream);
 
-                var window = dte.OpenFile(Constants.vsViewKindCode, path);
-                window.Visible = true;
-                window.Close(vsSaveChanges.vsSaveChangesNo);
-                Log.Information($"{nameof(TriggerLspInitializeAsync)} success for {path}");
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"{nameof(TriggerLspInitializeAsync)} failed for {path}");
-            }
-        }
+				var window = dte.OpenFile(Constants.vsViewKindCode, path);
+				window.Visible = true;
+				window.Close(vsSaveChanges.vsSaveChangesNo);
+				Log.Information($"{nameof(TriggerLspInitializeAsync)} success for {path}");
+			}
+			catch (Exception ex) {
+				Log.Error(ex, $"{nameof(TriggerLspInitializeAsync)} failed for {path}");
+			}
+		}
 
 		public void Dispose() {
 			Dispose(true);

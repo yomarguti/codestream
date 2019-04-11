@@ -106,9 +106,11 @@
     <Compile Include="Core\ContentTypes.cs" />
     <Compile Include="Core\Logging\CodeStreamSink.cs" />
     <Compile Include="Core\Logging\CustomOutputPaneSink.cs" />
+    <Compile Include="Core\Logging\Instrumentation\Metrics.cs" />
     <Compile Include="Core\Logging\LogExtensions.cs" />
     <Compile Include="Core\Logging\LogManager.cs" />
     <Compile Include="Core\Logging\EmptyLogger.cs" />
+    <Compile Include="Core\Logging\Instrumentation\MetricsExtensions.cs" />
     <Compile Include="Core\Logging\Sanitizer\IProcessor.cs" />
     <Compile Include="Core\Logging\Sanitizer\ISanitizingFormatRule.cs" />
     <Compile Include="Core\Logging\Sanitizer\LogSanitizingFormatter.cs" />
@@ -180,6 +182,7 @@
     <Compile Include="Services\CodeStreamAgentService.cs" />
     <Compile Include="Services\CodeStreamService.cs" />
     <Compile Include="Services\CredentialsService.cs" />
+    <Compile Include="Services\WpfTextViewCache.cs" />
     <Compile Include="Services\DotNetBrowserService.cs" />
     <Compile Include="Services\IdeService.cs" />
     <Compile Include="IpcLogger.cs" />

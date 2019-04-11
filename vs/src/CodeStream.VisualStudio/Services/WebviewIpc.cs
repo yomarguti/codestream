@@ -1,7 +1,6 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Models;
 using Serilog;
-using Serilog.Events;
 using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio.Services

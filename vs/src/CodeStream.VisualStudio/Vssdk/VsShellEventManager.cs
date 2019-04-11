@@ -8,146 +8,124 @@ using CodeStream.VisualStudio.Core.Logging;
 using EnvDTE;
 using Serilog;
 
-namespace CodeStream.VisualStudio.Vssdk
-{
-    public sealed class VsShellEventManager : IVsSelectionEvents, IDisposable
-    {
-        private static readonly ILogger Log = LogManager.ForContext<VsShellEventManager>();
+namespace CodeStream.VisualStudio.Vssdk {
+	public sealed class VsShellEventManager : IVsSelectionEvents, IDisposable {
+		private static readonly ILogger Log = LogManager.ForContext<VsShellEventManager>();
+		
+		private readonly IVsMonitorSelection _iVsMonitorSelection;
+		private readonly uint _monitorSelectionCookie;
+		private readonly DTE _dte;
 
-        private readonly IVsMonitorSelection _iVsMonitorSelection;
-        private readonly uint _monitorSelectionCookie;
-        private DTE _dte;
+		public VsShellEventManager(IVsMonitorSelection iVsMonitorSelection) {
+			ThreadHelper.ThrowIfNotOnUIThread();
+			
+			_dte = Package.GetGlobalService(typeof(DTE)) as DTE;
+			_iVsMonitorSelection = iVsMonitorSelection;
 
-        public VsShellEventManager(IVsMonitorSelection iVsMonitorSelection)
-        {
-            ThreadHelper.ThrowIfNotOnUIThread();
-            _dte = Package.GetGlobalService(typeof(DTE)) as DTE;
-            _iVsMonitorSelection = iVsMonitorSelection;
+			_iVsMonitorSelection.AdviseSelectionEvents(this, out uint pdwCookie);
+			_monitorSelectionCookie = pdwCookie;
 
-            _iVsMonitorSelection.AdviseSelectionEvents(this, out uint pdwCookie);
-            _monitorSelectionCookie = pdwCookie;
+			VSColorTheme.ThemeChanged += VSColorTheme_ThemeChanged;
 
-            VSColorTheme.ThemeChanged += VSColorTheme_ThemeChanged;
+			//_dte.Events.DTEEvents.OnStartupComplete += DTEEvents_OnStartupComplete;
+			if (_dte != null) {
+				_dte.Events.SolutionEvents.BeforeClosing += SolutionEvents_BeforeClosing;
+			}
 
-            //_dte.Events.DTEEvents.OnStartupComplete += DTEEvents_OnStartupComplete;
-            if (_dte != null)
-            {
-                _dte.Events.SolutionEvents.BeforeClosing += SolutionEvents_BeforeClosing;
-            }
+			//_dte.Events.DTEEvents.OnBeginShutdown += DTEEvents_OnBeginShutdown;
+		}
+		
+		private void SolutionEvents_BeforeClosing() {
+			BeforeSolutionClosingEventHandler?.Invoke(this, null);
+		}
 
-            //_dte.Events.DTEEvents.OnBeginShutdown += DTEEvents_OnBeginShutdown;
-        }
+		private DateTime _lastThemeChange = DateTime.MinValue;
+		private void VSColorTheme_ThemeChanged(ThemeChangedEventArgs e) {
+			// VS triggers this like 5 times for ever _1_ change -- try to limit it
+			var now = DateTime.Now;
+			if (_lastThemeChange == DateTime.MinValue || (now - _lastThemeChange).Seconds > 2) {
+				VisualStudioThemeChangedEventHandler?.Invoke(this, e);
+				_lastThemeChange = now;
+			}
+		}
 
-        private void SolutionEvents_BeforeClosing()
-        {
-            BeforeSolutionClosingEventHandler?.Invoke(this, null);
-        }
+		public event EventHandler<WindowFocusChangedEventArgs> WindowFocusedEventHandler;
+		public event EventHandler<ThemeChangedEventArgs> VisualStudioThemeChangedEventHandler;
+		public event EventHandler BeforeSolutionClosingEventHandler;
 
-        private DateTime _lastThemeChange = DateTime.MinValue;
-        private void VSColorTheme_ThemeChanged(ThemeChangedEventArgs e)
-        {
-            // VS triggers this like 5 times for ever _1_ change -- try to limit it
-            var now = DateTime.Now;
-            if (_lastThemeChange == DateTime.MinValue || (now - _lastThemeChange).Seconds > 2)
-            {
-                VisualStudioThemeChangedEventHandler?.Invoke(this, e);
-                _lastThemeChange = now;
-            }
-        }
+		public int OnSelectionChanged(IVsHierarchy pHierarchyOld, uint itemIdOld, IVsMultiItemSelect pMisOld, ISelectionContainer pScOld, IVsHierarchy pHierNew, uint itemidNew, IVsMultiItemSelect pMisNew, ISelectionContainer pScNew) {
+			return VSConstants.S_OK;
+		}
 
-        public event EventHandler<WindowFocusChangedEventArgs> WindowFocusedEventHandler;
-        public event EventHandler<ThemeChangedEventArgs> VisualStudioThemeChangedEventHandler;
-        public event EventHandler BeforeSolutionClosingEventHandler;
+		public int OnElementValueChanged(uint elementid, object varValueOld, object varValueNew) {
+			ThreadHelper.ThrowIfNotOnUIThread();
 
-        public int OnSelectionChanged(IVsHierarchy pHierarchyOld, uint itemIdOld, IVsMultiItemSelect pMisOld, ISelectionContainer pScOld, IVsHierarchy pHierNew, uint itemidNew, IVsMultiItemSelect pMisNew, ISelectionContainer pScNew)
-        {
-            return VSConstants.S_OK;
-        }
+			if (elementid == (uint)VSConstants.VSSELELEMID.SEID_WindowFrame) {
+				if (varValueNew is IVsWindowFrame windowFrame) {
+					var fileInfo = GetFileInfo(windowFrame);
+					if (fileInfo != null) {
+						WindowFocusedEventHandler?.Invoke(this, new WindowFocusChangedEventArgs(fileInfo.FileName, fileInfo.Uri));
+					}
+				}
+			}
 
-        public int OnElementValueChanged(uint elementid, object varValueOld, object varValueNew)
-        {
-            ThreadHelper.ThrowIfNotOnUIThread();
+			return VSConstants.S_OK;
+		}
 
-            if (elementid == (uint)VSConstants.VSSELELEMID.SEID_WindowFrame)
-            {
-                if (varValueNew is IVsWindowFrame windowFrame)
-                {
-                    var fileInfo = GetFileInfo(windowFrame);
-                    if (fileInfo != null)
-                    {
-                        WindowFocusedEventHandler?.Invoke(this, new WindowFocusChangedEventArgs(fileInfo.FileName, fileInfo.Uri));
-                    }
-                }
-            }
+		private FileInfo GetFileInfo(IVsWindowFrame windowFrame) {
+			if (windowFrame == null) return null;
 
-            return VSConstants.S_OK;
-        }
+			ThreadHelper.ThrowIfNotOnUIThread();
 
-        private FileInfo GetFileInfo(IVsWindowFrame windowFrame)
-        {
-            if (windowFrame == null) return null;
+			if (windowFrame.GetProperty((int)__VSFPROPID.VSFPROPID_pszMkDocument, out object value) != VSConstants.S_OK) return null;
 
-            ThreadHelper.ThrowIfNotOnUIThread();
+			var filename = value as string;
+			if (filename == null) return null;
 
-            if (windowFrame.GetProperty((int)__VSFPROPID.VSFPROPID_pszMkDocument, out object value) != VSConstants.S_OK) return null;
+			var fileInfo = new FileInfo { FileName = filename };
+			try {
+				fileInfo.Uri = new Uri(filename);
+			}
+			catch (Exception) {
+				// numerous exceptions could occur here since the moniker property of the frame doesn't have
+				// to be in the URI format. There could also be security exceptions, FNF exceptions, etc.
+			}
 
-            var filename = value as string;
-            if (filename == null) return null;
+			return fileInfo;
+		}
 
-            var fileInfo = new FileInfo { FileName = filename };
-            try
-            {
-                fileInfo.Uri = new Uri(filename);
-            }
-            catch (Exception)
-            {
-                // numerous exceptions could occur here since the moniker property of the frame doesn't have
-                // to be in the URI format. There could also be security exceptions, FNF exceptions, etc.
-            }
+		public int OnCmdUIContextChanged(uint dwCmdUiCookie, int fActive) {
+			return VSConstants.S_OK;
+		}
 
-            return fileInfo;
+		private bool _disposedValue;
 
-        }
+		private void Dispose(bool disposing) {
+			System.Windows.Threading.Dispatcher.CurrentDispatcher.VerifyAccess();
 
-        public int OnCmdUIContextChanged(uint dwCmdUiCookie, int fActive)
-        {
-            return VSConstants.S_OK;
-        }
+			if (!_disposedValue) {
+				if (disposing) {
+					_iVsMonitorSelection?.UnadviseSelectionEvents(_monitorSelectionCookie);
+					VSColorTheme.ThemeChanged -= VSColorTheme_ThemeChanged;
+					if (_dte != null) {
+						_dte.Events.SolutionEvents.BeforeClosing -= SolutionEvents_BeforeClosing;
+					}
 
-        private bool _disposedValue;
+					Log.Verbose($"Unregistering events");
+				}
 
-        private void Dispose(bool disposing)
-        {
-            System.Windows.Threading.Dispatcher.CurrentDispatcher.VerifyAccess();
+				_disposedValue = true;
+			}
+		}
 
-            if (!_disposedValue)
-            {
-                if (disposing)
-                {
-                    _iVsMonitorSelection?.UnadviseSelectionEvents(_monitorSelectionCookie);
-                    VSColorTheme.ThemeChanged -= VSColorTheme_ThemeChanged;
-                    if (_dte != null)
-                    {
-                        _dte.Events.SolutionEvents.BeforeClosing -= SolutionEvents_BeforeClosing;
-                    }
+		public void Dispose() {
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
 
-                    Log.Verbose($"Unregistering events");
-                }
-
-                _disposedValue = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        private class FileInfo
-        {
-            public Uri Uri { get; set; }
-            public string FileName { get; set; }
-        }
-    }
+		private class FileInfo {
+			public Uri Uri { get; set; }
+			public string FileName { get; set; }
+		}
+	}
 }

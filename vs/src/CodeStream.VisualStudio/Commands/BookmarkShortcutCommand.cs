@@ -3,6 +3,7 @@ using System.ComponentModel.Design;
 using System.Threading;
 using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
@@ -53,7 +54,7 @@ namespace CodeStream.VisualStudio.Commands {
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 
 					var ideService = ServiceLocator.Get<SIdeService, IIdeService>();
-					var editorResponse = await ideService.OpenEditorAsync(response.TextDocument.Uri, response.Range?.Start?.Line + 1, moveCaret: true);
+					var editorResponse = await ideService.OpenEditorAtLineAsync(response.TextDocument.Uri.ToUri(), response.Range, forceOpen: true);
 					if (!editorResponse) {
 						Log.Warning($"ShowCodeResult={editorResponse} for {@response} failed to open editor");
 					}

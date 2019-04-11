@@ -1,4 +1,5 @@
-﻿using CodeStream.VisualStudio.Extensions;
+﻿using CodeStream.VisualStudio.Core.Logging.Instrumentation;
+using CodeStream.VisualStudio.Extensions;
 using Serilog;
 using Serilog.Events;
 using SerilogTimings.Extensions;
@@ -20,12 +21,21 @@ namespace CodeStream.VisualStudio.Core.Logging {
 		}
 
 		static IDisposable TimeOperation(this ILogger log, string message, LogEventLevel logEventLevel = LogEventLevel.Verbose) {
-
 			return log.OperationAt(logEventLevel).Time(message);
 		}
 
 		public static bool IsDebugEnabled(this ILogger log) => log.IsEnabled(LogEventLevel.Debug);
 
 		public static bool IsVerboseEnabled(this ILogger log) => log.IsEnabled(LogEventLevel.Verbose);
-	}	
+
+		public static Metrics WithMetrics(this ILogger log, string message) {
+#if DEBUG
+			if (!log.IsVerboseEnabled()) return null;
+
+			return new Metrics(log, message);
+#else
+			return null;
+#endif
+		}
+	}
 }

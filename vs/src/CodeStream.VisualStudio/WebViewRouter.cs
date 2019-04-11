@@ -56,7 +56,6 @@ namespace CodeStream.VisualStudio {
 				}
 
 				var message = WebviewIpcMessage.Parse(e.Message);
-				Log.Verbose(e.Message);
 
 				using (IpcLogger.CriticalOperation(Log, "REC", message)) {
 					var target = message.Target();
@@ -189,17 +188,26 @@ namespace CodeStream.VisualStudio {
 									case EditorRevealRangeRequestType.MethodName: {
 											using (var scope = _ipc.CreateScope(message)) {
 												var @params = message.Params.ToObject<EditorRevealRangeRequest>();
-												System.Windows.Application.Current.Dispatcher.BeginInvoke((Action)(async () => {
-													try {
-														var result = await _ideService.OpenEditorAsync(@params.Uri, @params.Range?.Start?.Line + 1, atTop: @params.AtTop, moveCaret: @params.PreserveFocus == false);
-													}
-													catch(Exception ex) {
-														Log.Warning(ex, nameof(EditorRevealRangeRequestType));
-													}
-												}), DispatcherPriority.Input);
-												
-												scope.FulfillRequest(JToken.FromObject(new EditorRevealRangeResponse { Success = true }));
+
+												var result = await _ideService.OpenEditorAsync(@params.Uri, @params.Range?.Start?.Line + 1, atTop: @params.AtTop, focus: @params.PreserveFocus == false);
+												scope.FulfillRequest(JToken.FromObject(new EditorRevealRangeResponse { Success = result }));
 											}
+											break;
+										}
+									case EditorScrollToNotificationType.MethodName: {
+											var @params = message.Params.ToObject<EditorScrollToNotification>();
+											_ideService.ScrollEditorThrottled(@params.Uri.ToUri(), @params.Range, @params.Position, @params.AtTop);
+											
+											// this alternate version, using the dispatcher here instead of inside the throttle works
+
+											//System.Windows.Application.Current.Dispatcher.Invoke(() => {
+											//	try {
+											//_ideService.ScrollEditor(@params.Uri.ToUri(), @params.Position.Line, @params.AtTop);											 
+											//	}
+											//	catch (Exception ex) {
+											//		Log.Warning(ex, nameof(EditorRevealRangeRequestType));
+											//	}
+											//}, DispatcherPriority.Input);
 											break;
 										}
 									case ReloadWebviewRequestType.MethodName: {

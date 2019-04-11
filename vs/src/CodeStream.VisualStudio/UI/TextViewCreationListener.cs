@@ -20,11 +20,13 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using System.Threading;
+using System.Windows.Threading;
 
-public class TextViewCreationListenerDummy {
-
-}
+public class TextViewCreationListenerDummy {}
 
 namespace CodeStream.VisualStudio.UI {
 	[Export(typeof(IVsTextViewCreationListener))]
@@ -42,7 +44,7 @@ namespace CodeStream.VisualStudio.UI {
 		private readonly ISessionService _sessionService;
 		private readonly ISettingsService _settingsService;
 		private readonly IIdeService _ideService;
-
+		private static int DocumentCounter = 0;
 		private static readonly object InitializedLock = new object();
 
 		internal const string LayerName = "CodeStreamHighlightColor";
@@ -52,7 +54,7 @@ namespace CodeStream.VisualStudio.UI {
 				Package.GetGlobalService(typeof(SSessionService)) as ISessionService,
 				Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService,
 				ServiceLocator.Get<SIdeService, IIdeService>()) { }
-			
+
 
 		public TextViewCreationListener(IEventAggregator eventAggregator,
 			ISessionService sessionService,
@@ -93,16 +95,19 @@ namespace CodeStream.VisualStudio.UI {
 				return;
 			}
 
-			wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewState, new TextViewState());
-
 			if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextView.TextBuffer, out var textDocument)) {
 				Log.Verbose(@"TextDocument not found");
 				return;
 			}
-
+			wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewState, new TextViewState(textDocument.FilePath));
 			var agentService = Package.GetGlobalService((typeof(SCodeStreamAgentService))) as ICodeStreamAgentService;
 			wpfTextView.Properties.GetOrCreateSingletonProperty(PropertyNames.DocumentMarkerManager,
 				() => DocumentMarkerManagerFactory.Create(agentService, wpfTextView, textDocument));
+
+			if (WpfTextViewCache.TryAdd(textDocument.FilePath, wpfTextView)) {
+				Interlocked.Increment(ref DocumentCounter);
+			}
+
 			Log.Debug($"{nameof(SubjectBuffersConnected)} completed for {textDocument.FilePath} Reason={reason}");
 		}
 
@@ -129,6 +134,7 @@ namespace CodeStream.VisualStudio.UI {
 			wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewMarginProviders, textViewMarginProviders);
 			Debug.Assert(_eventAggregator != null, nameof(_eventAggregator) + " != null");
 
+			var visibleRangesSubject = new Subject<HostDidChangeEditorVisibleRangesNotificationSubject>();
 			//listening on the main thread since we have to change the UI state
 			wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewEvents, new List<IDisposable>
 			{
@@ -149,8 +155,28 @@ namespace CodeStream.VisualStudio.UI {
 
 				_eventAggregator.GetEvent<MarkerGlyphVisibilityEvent>()
 					.ObserveOnDispatcher()
-					.Subscribe(_ => textViewMarginProviders.Toggle(_.IsVisible))
+					.Subscribe(_ => textViewMarginProviders.Toggle(_.IsVisible)),
+
+				visibleRangesSubject.Throttle(TimeSpan.FromMilliseconds(200), new SynchronizationContextScheduler(SynchronizationContext.Current))
+						.Subscribe(e => {
+							 System.Windows.Application.Current.Dispatcher.Invoke(() => {
+							var toolWindowIsVisible = ServiceLocator.Get<SToolWindowProvider, IToolWindowProvider>()?.IsVisible(Guids.WebViewToolWindowGuid);
+							if (toolWindowIsVisible == true) {
+								ServiceLocator.Get<SWebviewIpc, IWebviewIpc>()?.NotifyAsync(
+									new HostDidChangeEditorVisibleRangesNotificationType {
+										Params = new HostDidChangeEditorVisibleRangesNotification(
+											e.Uri,
+											_ideService.GetActiveEditorState()?.ToEditorSelections(),
+											e.WpfTextView.ToVisibleRanges(),
+											e.WpfTextView.TextSnapshot?.LineCount
+										)
+									});
+							}}, DispatcherPriority.Input);
+						})
+
 			});
+
+			wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.HostDidChangeEditorVisibleRangesNotificationSubject, visibleRangesSubject);
 
 			Log.Verbose($"{nameof(VsTextViewCreated)} Session IsReady={_sessionService.IsReady}");
 
@@ -169,20 +195,27 @@ namespace CodeStream.VisualStudio.UI {
 				Log.Warning($"{nameof(SubjectBuffersDisconnected)} textView is null");
 				return;
 			}
-
 			textView.RemovePropertySafe(PropertyNames.TextViewMarginProviders);
 			textView.RemovePropertySafe(PropertyNames.DocumentMarkers);
-
-			if (textView.TextBuffer.Properties.ContainsProperty(PropertyNames.TextViewState)) {
-				textView.TextBuffer.Properties.GetProperty<TextViewState>(PropertyNames.TextViewState).Initialized = false;
-			}
-
 			textView.TextBuffer.Properties.TryDisposeListProperty(PropertyNames.TextViewEvents);
 			textView.TextBuffer.Properties.TryDisposeListProperty(PropertyNames.TextViewLocalEvents);
-
 			textView.LayoutChanged -= OnTextViewLayoutChanged;
-
 			textView.TextBuffer.Properties.TryDisposeProperty<HighlightAdornmentManager>(PropertyNames.AdornmentManager);
+			textView.TextBuffer.Properties.TryDisposeProperty<Subject<HostDidChangeEditorVisibleRangesNotificationSubject>>(PropertyNames.HostDidChangeEditorVisibleRangesNotificationSubject);
+
+			TextViewState state;
+			if (textView.TextBuffer.Properties.ContainsProperty(PropertyNames.TextViewState)) {
+				state = textView.TextBuffer.Properties.GetProperty<TextViewState>(PropertyNames.TextViewState);
+				if (state != null) {
+					state.Initialized = false;
+					if (WpfTextViewCache.TryRemove(state.FilePath)) {
+						if (Interlocked.Decrement(ref DocumentCounter) == 0) {
+							// notify that all have closed?
+						}
+						Log.Verbose($"{nameof(DocumentCounter)} ({DocumentCounter})");
+					}
+				}
+			}
 
 			Log.Debug($"{nameof(SubjectBuffersDisconnected)} completed Reason={reason}");
 		}
@@ -303,19 +336,9 @@ namespace CodeStream.VisualStudio.UI {
 
 			// don't trigger for changes that don't result in lines being added or removed
 			if (_sessionService.IsCodemarksForFileVisible && (e.VerticalTranslation || e.TranslatedLines.Any())) {
-				var toolWindowIsVisible = ServiceLocator.Get<SToolWindowProvider, IToolWindowProvider>()
-					?.IsVisible(Guids.WebViewToolWindowGuid);
-				if (toolWindowIsVisible == true) {
-					ServiceLocator.Get<SWebviewIpc, IWebviewIpc>()?.NotifyAsync(
-						new HostDidChangeEditorVisibleRangesNotificationType {
-							Params = new HostDidChangeEditorVisibleRangesNotification(
-								textDocument.FilePath.ToUri(),
-								_ideService.GetActiveEditorState()?.ToEditorSelections(),
-								wpfTextView.ToVisibleRanges(),
-								wpfTextView.TextSnapshot?.LineCount
-							)
-						});
-				}
+				var visibleRangeSubject = wpfTextView.TextBuffer.Properties
+					.GetProperty<Subject<HostDidChangeEditorVisibleRangesNotificationSubject>>(PropertyNames.HostDidChangeEditorVisibleRangesNotificationSubject);
+				visibleRangeSubject?.OnNext(new HostDidChangeEditorVisibleRangesNotificationSubject(wpfTextView, textDocument.FilePath.ToUri()));
 			}
 
 			wpfTextView.TextBuffer
@@ -325,7 +348,20 @@ namespace CodeStream.VisualStudio.UI {
 		}
 
 		class TextViewState {
+			public string FilePath { get; }
+			public TextViewState(string filePath) {
+				FilePath = filePath;
+			}
 			public bool Initialized { get; set; }
+		}
+
+		internal class HostDidChangeEditorVisibleRangesNotificationSubject {
+			public IWpfTextView WpfTextView { get; }
+			public Uri Uri { get; }
+			public HostDidChangeEditorVisibleRangesNotificationSubject(IWpfTextView wpfTextView, Uri uri) {
+				WpfTextView = wpfTextView;
+				Uri = uri;
+			}
 		}
 	}
 }
