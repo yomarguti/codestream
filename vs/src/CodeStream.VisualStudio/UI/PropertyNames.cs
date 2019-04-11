@@ -9,7 +9,8 @@
         public static string DocumentMarkerManager = "CS:DocumentMarkerManager";
         public static string TextViewMarginProviders = "CS:TextViewMarginProviders";
         public static string TextViewState = "CS:TextViewState";
-        public static string TextViewEvents = "CS:TextViewEvents";
+		public static string TextViewFilePath = "CS:TextViewFilePath";
+		public static string TextViewEvents = "CS:TextViewEvents";
         public static string TextViewLocalEvents = "CS:TextViewLocalEvents";
         public static string AdornmentManager = "CS:AdornmentManager";
 		public static string HostDidChangeEditorVisibleRangesNotificationSubject = "CS:HostDidChangeEditorVisibleRangesNotificationSubject";

@@ -20,7 +20,7 @@ namespace CodeStream.VisualStudio.UI {
 			if (textDocument == null) {
 				return false;
 			}
-			if (textDocument.FilePath.EqualsIgnoreCase("temp.txt")) return false;
+			//	if (textDocument.FilePath.EqualsIgnoreCase("temp.txt")) return false;
 			return !textDocument.FilePath.EndsWithIgnoreCase(Core.Constants.CodeStreamCodeStream);
 		}
 	}

@@ -95,11 +95,14 @@ namespace CodeStream.VisualStudio.UI {
 				return;
 			}
 
+			wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewState, new TextViewState());			
 			if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextView.TextBuffer, out var textDocument)) {
 				Log.Verbose(@"TextDocument not found");
 				return;
 			}
-			wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewState, new TextViewState(textDocument.FilePath));
+
+			wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewFilePath, textDocument.FilePath);
+
 			var agentService = Package.GetGlobalService((typeof(SCodeStreamAgentService))) as ICodeStreamAgentService;
 			wpfTextView.Properties.GetOrCreateSingletonProperty(PropertyNames.DocumentMarkerManager,
 				() => DocumentMarkerManagerFactory.Create(agentService, wpfTextView, textDocument));
@@ -202,19 +205,18 @@ namespace CodeStream.VisualStudio.UI {
 			textView.LayoutChanged -= OnTextViewLayoutChanged;
 			textView.TextBuffer.Properties.TryDisposeProperty<HighlightAdornmentManager>(PropertyNames.AdornmentManager);
 			textView.TextBuffer.Properties.TryDisposeProperty<Subject<HostDidChangeEditorVisibleRangesNotificationSubject>>(PropertyNames.HostDidChangeEditorVisibleRangesNotificationSubject);
-
-			TextViewState state;
-			if (textView.TextBuffer.Properties.ContainsProperty(PropertyNames.TextViewState)) {
-				state = textView.TextBuffer.Properties.GetProperty<TextViewState>(PropertyNames.TextViewState);
-				if (state != null) {
-					state.Initialized = false;
-					if (WpfTextViewCache.TryRemove(state.FilePath)) {
+ 
+			if (textView.TextBuffer.Properties.ContainsProperty(PropertyNames.TextViewFilePath)) {
+				var filePath = textView.TextBuffer.Properties.GetProperty<string>(PropertyNames.TextViewFilePath);
+				if (filePath != null) {				 
+					if (WpfTextViewCache.TryRemove(filePath)) {
 						if (Interlocked.Decrement(ref DocumentCounter) == 0) {
 							// notify that all have closed?
 						}
 						Log.Verbose($"{nameof(DocumentCounter)} ({DocumentCounter})");
 					}
 				}
+				textView.RemovePropertySafe(PropertyNames.TextViewFilePath);
 			}
 
 			Log.Debug($"{nameof(SubjectBuffersDisconnected)} completed Reason={reason}");
@@ -348,10 +350,6 @@ namespace CodeStream.VisualStudio.UI {
 		}
 
 		class TextViewState {
-			public string FilePath { get; }
-			public TextViewState(string filePath) {
-				FilePath = filePath;
-			}
 			public bool Initialized { get; set; }
 		}
 
