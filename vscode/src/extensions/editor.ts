@@ -74,7 +74,7 @@ export namespace Editor {
 		const metrics: EditorMetrics = {};
 
 		const lineHeight = configuration.getAny<number | undefined>("editor.lineHeight");
-		metrics.lineHeight = lineHeight;
+		metrics.lineHeight = lineHeight === 0 ? undefined : lineHeight;
 
 		const fontSize = configuration.getAny<number | undefined>("editor.fontSize");
 		metrics.fontSize = fontSize;
