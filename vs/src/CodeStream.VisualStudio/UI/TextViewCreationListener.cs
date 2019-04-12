@@ -26,7 +26,7 @@ using System.Reactive.Subjects;
 using System.Threading;
 using System.Windows.Threading;
 
-public class TextViewCreationListenerDummy {}
+public class TextViewCreationListenerDummy { }
 
 namespace CodeStream.VisualStudio.UI {
 	[Export(typeof(IVsTextViewCreationListener))]
@@ -95,7 +95,7 @@ namespace CodeStream.VisualStudio.UI {
 				return;
 			}
 
-			wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewState, new TextViewState());			
+			wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.TextViewState, new TextViewState());
 			if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextView.TextBuffer, out var textDocument)) {
 				Log.Verbose(@"TextDocument not found");
 				return;
@@ -189,6 +189,7 @@ namespace CodeStream.VisualStudio.UI {
 			else {
 				textViewMarginProviders.Hide();
 			}
+
 			Log.Debug($"{nameof(VsTextViewCreated)} completed");
 		}
 
@@ -205,10 +206,10 @@ namespace CodeStream.VisualStudio.UI {
 			textView.LayoutChanged -= OnTextViewLayoutChanged;
 			textView.TextBuffer.Properties.TryDisposeProperty<HighlightAdornmentManager>(PropertyNames.AdornmentManager);
 			textView.TextBuffer.Properties.TryDisposeProperty<Subject<HostDidChangeEditorVisibleRangesNotificationSubject>>(PropertyNames.HostDidChangeEditorVisibleRangesNotificationSubject);
- 
+
 			if (textView.TextBuffer.Properties.ContainsProperty(PropertyNames.TextViewFilePath)) {
 				var filePath = textView.TextBuffer.Properties.GetProperty<string>(PropertyNames.TextViewFilePath);
-				if (filePath != null) {				 
+				if (filePath != null) {
 					if (WpfTextViewCache.TryRemove(filePath)) {
 						if (Interlocked.Decrement(ref DocumentCounter) == 0) {
 							// notify that all have closed?
@@ -252,6 +253,19 @@ namespace CodeStream.VisualStudio.UI {
 							// keep this at the end -- we want this to be the first handler
 							textView.LayoutChanged += OnTextViewLayoutChanged;
 							state.Initialized = true;
+
+							if (textView.TextBuffer.Properties.TryGetProperty<string>(PropertyNames.TextViewFilePath, out string filePath)) {
+								if (!filePath.IsNullOrWhiteSpace()) {
+									var activeTextEditor = _ideService.GetActiveTextEditor();
+									if (activeTextEditor != null && activeTextEditor.Uri != null &&
+										activeTextEditor.Uri.EqualsIgnoreCase(new Uri(filePath))) {
+										var codeStreamService = ServiceLocator.Get<SCodeStreamService, ICodeStreamService>();
+										ThreadHelper.JoinableTaskFactory.Run(async delegate {
+											await codeStreamService.ChangeActiveWindowAsync(filePath, new Uri(filePath), activeTextEditor);
+										});
+									}
+								}
+							}
 						}
 					}
 				}

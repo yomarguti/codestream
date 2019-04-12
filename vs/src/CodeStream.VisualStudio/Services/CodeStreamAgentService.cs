@@ -304,22 +304,22 @@ namespace CodeStream.VisualStudio.Services {
 
 			if (state == null) throw new ArgumentNullException(nameof(state));
 
-			var activeTextView = _ideService.GetActiveTextView();
+			var activeTextEditor = _ideService.GetActiveTextEditor();
 			var editorState = _ideService.GetActiveEditorState();
 
 			var bootstrapAuthenticated = await _rpc.InvokeWithParameterObjectAsync<JToken>(BootstrapRequestType.MethodName)
 				.ConfigureAwait(false) as JObject;
 
 			EditorContext editorContext = null;
-			if (activeTextView != null) {
+			if (activeTextEditor != null) {
 				editorContext = new EditorContext {					
-					ActiveFile = activeTextView.FilePath,
+					ActiveFile = activeTextEditor.FilePath,
 					//LastActiveFile?
-					TextEditorVisibleRanges = activeTextView.WpfTextView?.ToVisibleRanges(),
-					TextEditorUri = activeTextView.Uri.ToString(),
+					TextEditorVisibleRanges = activeTextEditor.WpfTextView?.ToVisibleRanges(),
+					TextEditorUri = activeTextEditor.Uri.ToString(),
 					TextEditorSelections = editorState.ToEditorSelections(),
-					TextEditorLineCount = activeTextView.TotalLines,
-					Metrics = ThemeManager.CreateEditorMetrics(activeTextView.WpfTextView),
+					TextEditorLineCount = activeTextEditor.TotalLines,
+					Metrics = ThemeManager.CreateEditorMetrics(activeTextEditor.WpfTextView),
 				};
 			}
 

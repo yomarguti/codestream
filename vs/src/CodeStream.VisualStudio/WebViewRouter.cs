@@ -158,7 +158,7 @@ namespace CodeStream.VisualStudio {
 												bool result = false;
 												var @params = message.Params.ToObject<EditorSelectRangeRequest>();
 												if (@params != null) {
-													var activeTextView = _ideService.GetActiveTextView(@params.Uri.ToUri());
+													var activeTextView = _ideService.GetActiveTextEditor(@params.Uri.ToUri());
 													if (activeTextView != null) {
 														await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 														result = activeTextView.SelectRange(@params.Selection, @params.PreserveFocus == false);
@@ -176,7 +176,7 @@ namespace CodeStream.VisualStudio {
 												bool result = false;
 												var @params = message.Params.ToObject<EditorHighlightRangeRequest>();
 												if (@params != null) {
-													var activeTextView = _ideService.GetActiveTextView(@params.Uri.ToUri());													
+													var activeTextView = _ideService.GetActiveTextEditor(@params.Uri.ToUri());													
 													if (activeTextView != null) {
 														await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 														//don't reveal on highlight -- for big ranges it will cause bad behavior with the scrolling

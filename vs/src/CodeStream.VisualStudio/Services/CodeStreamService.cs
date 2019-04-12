@@ -17,7 +17,7 @@ namespace CodeStream.VisualStudio.Services {
 	public interface SCodeStreamService { }
 
 	public interface ICodeStreamService {
-		Task ChangeActiveWindowAsync(string fileName, Uri uri);
+		Task ChangeActiveWindowAsync(string fileName, Uri uri, ActiveTextEditor activeTextEditor = null);
 		Task NewCodemarkAsync(Uri uri,
 			EditorState editorState,
 			CodemarkType codemarkType,
@@ -80,21 +80,20 @@ namespace CodeStream.VisualStudio.Services {
 			get { return _sessionService?.IsReady == true; }
 		}
 
-		public Task ChangeActiveWindowAsync(string fileName, Uri uri) {
+		public Task ChangeActiveWindowAsync(string fileName, Uri uri, ActiveTextEditor activeTextEditor = null) {
 			if (!IsReady) return Task.CompletedTask;
 
 			try {
-				var activeTextView = _ideService.Value.GetActiveTextView(uri);
+				activeTextEditor = activeTextEditor ?? _ideService.Value.GetActiveTextEditor(uri);
 				var editorState = _ideService.Value.GetActiveEditorState();
-
 				WebviewIpc.Notify(new HostDidChangeActiveEditorNotificationType {
 					Params = new HostDidChangeActiveEditorNotification {
 						Editor = new HostDidChangeActiveEditorNotificationEditor(fileName,
 						uri,
 						editorState.ToEditorSelections(),
-						activeTextView?.WpfTextView.ToVisibleRanges(),
-						activeTextView?.TotalLines) {
-							Metrics = ThemeManager.CreateEditorMetrics(activeTextView?.WpfTextView),
+						activeTextEditor?.WpfTextView.ToVisibleRanges(),
+						activeTextEditor?.TotalLines) {
+							Metrics = ThemeManager.CreateEditorMetrics(activeTextEditor?.WpfTextView),
 							LanguageId = null
 						}
 					}

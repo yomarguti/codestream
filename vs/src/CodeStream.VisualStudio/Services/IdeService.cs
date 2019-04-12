@@ -38,7 +38,7 @@ namespace CodeStream.VisualStudio.Services {
 		System.Threading.Tasks.Task<bool> OpenEditorAtLineAsync(Uri fileUri, Range range, bool forceOpen = false);
 		EditorState GetActiveEditorState();
 		EditorState GetActiveEditorState(out IVsTextView view);
-		ActiveTextEditor GetActiveTextView(Uri uri = null);
+		ActiveTextEditor GetActiveTextEditor(Uri uri = null);
 		//bool QueryExtensions(string author, params string[] names);
 		bool QueryExtension(ExtensionKind extensionKind);
 		bool TryStartLiveShare();
@@ -181,7 +181,7 @@ namespace CodeStream.VisualStudio.Services {
 			_scrollSubjectArgs.OnNext(new ScrollSubjectArgs(fileUri, position.Line, atTop, false));
 		}
 
-		public ActiveTextEditor GetActiveTextView(Uri uri = null) {
+		public ActiveTextEditor GetActiveTextEditor(Uri uri = null) {
 			IWpfTextView wpfTextView = null;
 			try {
 				if (uri != null) {
@@ -189,6 +189,8 @@ namespace CodeStream.VisualStudio.Services {
 						// wasn't in cache... try to get it?
 						wpfTextView = GetActiveWpfTextView();
 					}
+				}else {
+					wpfTextView = GetActiveWpfTextView();
 				}
 
 				if (wpfTextView == null) {
@@ -207,7 +209,7 @@ namespace CodeStream.VisualStudio.Services {
 					wpfTextView.TextSnapshot.LineCount);
 			}
 			catch (Exception ex) {
-				Log.Warning(ex, nameof(GetActiveTextView));
+				Log.Warning(ex, nameof(GetActiveTextEditor));
 			}
 
 			return null;
@@ -230,7 +232,7 @@ namespace CodeStream.VisualStudio.Services {
 				return editor.GetWpfTextView(textViewCurrent);
 			}
 			catch (Exception ex) {
-				Log.Warning(ex, nameof(GetActiveTextView));
+				Log.Warning(ex, nameof(GetActiveTextEditor));
 			}
 
 			return null;
@@ -240,7 +242,7 @@ namespace CodeStream.VisualStudio.Services {
 			IWpfTextView wpfTextView;
 			var localPath = fileUri.ToLocalPath();
 			if (forceOpen == true || !WpfTextViewCache.TryGetValue(localPath, out wpfTextView)) {
-				var view = GetActiveTextView();
+				var view = GetActiveTextEditor();
 
 				if (view == null || !view.Uri.EqualsIgnoreCase(fileUri)) {
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
