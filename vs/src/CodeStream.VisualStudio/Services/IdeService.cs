@@ -36,6 +36,7 @@ namespace CodeStream.VisualStudio.Services {
 		System.Threading.Tasks.Task<bool> OpenEditorAtLineAsync(Uri fileUri, Range range, bool forceOpen = false);
 		EditorState GetActiveEditorState();
 		EditorState GetActiveEditorState(out IVsTextView view);
+		ActiveTextEditor GetActiveTextEditor(IWpfTextView wpfTextView);
 		ActiveTextEditor GetActiveTextEditor(Uri uri = null);
 		//bool QueryExtensions(string author, params string[] names);
 		bool QueryExtension(ExtensionKind extensionKind);
@@ -159,6 +160,30 @@ namespace CodeStream.VisualStudio.Services {
 					Log.Error(ex, $"{nameof(ScrollEditor)} failed for {fileUri}");
 				}
 			}
+		}
+
+		public ActiveTextEditor GetActiveTextEditor(IWpfTextView wpfTextView) {
+			try {
+				if (wpfTextView == null) {
+					Log.Verbose($"{nameof(wpfTextView)} is null");
+					return null;
+				}
+
+				var exports = _componentModel.DefaultExportProvider;
+				if (!exports.GetExportedValue<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument)) {
+					return null;
+				}
+
+				return new ActiveTextEditor(wpfTextView,
+					textDocument.FilePath,
+					textDocument.FilePath.ToUri(),
+					wpfTextView.TextSnapshot.LineCount);
+			}
+			catch (Exception ex) {
+				Log.Warning(ex, nameof(GetActiveTextEditor));
+			}
+
+			return null;
 		}
 
 		public ActiveTextEditor GetActiveTextEditor(Uri uri = null) {

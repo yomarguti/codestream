@@ -16,6 +16,7 @@ namespace CodeStream.VisualStudio.Services
         void SetAgentDisconnected();
         List<string> PanelStack { get; set; }
 		bool IsCodemarksForFileVisible { get; set; }
+		bool IsWebViewVisible { get; set; }
 		bool AreMarkerGlyphsVisible { get; set; }
 
         /// <summary>
@@ -34,7 +35,8 @@ namespace CodeStream.VisualStudio.Services
         private Guid _signupToken = Guid.Empty;
         public User User { get; private set; }
         public List<string> PanelStack { get; set; }
-        public bool AreMarkerGlyphsVisible { get; set; } = true;
+		public bool IsWebViewVisible { get; set; }
+		public bool AreMarkerGlyphsVisible { get; set; } = true;
         public bool IsCodemarksForFileVisible { get; set; }
 		bool _disposed = false;
 

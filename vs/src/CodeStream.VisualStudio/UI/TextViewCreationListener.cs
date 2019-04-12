@@ -41,9 +41,9 @@ namespace CodeStream.VisualStudio.UI {
 		private readonly ILogger Log = LogManager.ForContext<TextViewCreationListenerDummy>();
 
 		private readonly IEventAggregator _eventAggregator;
-		private readonly ISessionService _sessionService;
-		private readonly ISettingsService _settingsService;
+		private readonly ISessionService _sessionService;		
 		private readonly IIdeService _ideService;
+
 		private static int DocumentCounter = 0;
 		private static readonly object InitializedLock = new object();
 
@@ -52,17 +52,13 @@ namespace CodeStream.VisualStudio.UI {
 		public TextViewCreationListener() :
 			this(Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator,
 				Package.GetGlobalService(typeof(SSessionService)) as ISessionService,
-				Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService,
 				ServiceLocator.Get<SIdeService, IIdeService>()) { }
 
-
 		public TextViewCreationListener(IEventAggregator eventAggregator,
-			ISessionService sessionService,
-			ISettingsService settingsService,
+			ISessionService sessionService,			
 			IIdeService ideService) {
 			_eventAggregator = eventAggregator;
-			_sessionService = sessionService;
-			_settingsService = settingsService;
+			_sessionService = sessionService;			
 			_ideService = ideService;
 		}
 
@@ -200,6 +196,7 @@ namespace CodeStream.VisualStudio.UI {
 			textView.TextBuffer.Properties.TryDisposeListProperty(PropertyNames.TextViewEvents);
 			textView.TextBuffer.Properties.TryDisposeListProperty(PropertyNames.TextViewLocalEvents);
 			textView.LayoutChanged -= OnTextViewLayoutChanged;
+			textView.Caret.PositionChanged -= Caret_PositionChanged;
 			textView.TextBuffer.Properties.TryDisposeProperty<HighlightAdornmentManager>(PropertyNames.AdornmentManager);
 			textView.TextBuffer.Properties.TryDisposeProperty<Subject<HostDidChangeEditorVisibleRangesNotificationSubject>>(PropertyNames.HostDidChangeEditorVisibleRangesNotificationSubject);
 
@@ -248,20 +245,10 @@ namespace CodeStream.VisualStudio.UI {
 
 							// keep this at the end -- we want this to be the first handler
 							textView.LayoutChanged += OnTextViewLayoutChanged;
+							textView.Caret.PositionChanged += Caret_PositionChanged;
 							state.Initialized = true;
 
-							if (textView.TextBuffer.Properties.TryGetProperty<string>(PropertyNames.TextViewFilePath, out string filePath)) {
-								if (!filePath.IsNullOrWhiteSpace()) {
-									var activeTextEditor = _ideService.GetActiveTextEditor();
-									if (activeTextEditor != null && activeTextEditor.Uri != null &&
-										activeTextEditor.Uri.EqualsIgnoreCase(new Uri(filePath))) {
-										var codeStreamService = ServiceLocator.Get<SCodeStreamService, ICodeStreamService>();
-										ThreadHelper.JoinableTaskFactory.Run(async delegate {
-											await codeStreamService.ChangeActiveWindowAsync(filePath, new Uri(filePath), activeTextEditor);
-										});
-									}
-								}
-							}
+							ChangeActiveWindow(textView);
 						}
 					}
 				}
@@ -272,6 +259,20 @@ namespace CodeStream.VisualStudio.UI {
 			}
 		}
 
+		private void ChangeActiveWindow(IWpfTextView wpfTextView) {
+			if (wpfTextView == null) return;
+			if (!wpfTextView.TextBuffer.Properties.TryGetProperty<string>(PropertyNames.TextViewFilePath, out string filePath)) return;
+			if (filePath.IsNullOrWhiteSpace() || !_sessionService.IsWebViewVisible) return;
+
+			var activeTextEditor = _ideService.GetActiveTextEditor(wpfTextView);
+			if (activeTextEditor != null && activeTextEditor.Uri != null &&
+				activeTextEditor.Uri.EqualsIgnoreCase(new Uri(filePath))) {
+				var codeStreamService = ServiceLocator.Get<SCodeStreamService, ICodeStreamService>();
+				codeStreamService.ChangeActiveWindowAsync(filePath, new Uri(filePath), activeTextEditor);
+				Log.Verbose($"{nameof(ChangeActiveWindow)} filePath={filePath}");
+			}
+		}
+		
 		private static void OnSessionLogout(IWpfTextView wpfTextView, List<ICodeStreamWpfTextViewMargin> textViewMarginProviders) {
 			if (wpfTextView.TextBuffer.Properties.TryGetProperty(PropertyNames.TextViewState, out TextViewState state)) {
 				state.Initialized = false;
@@ -323,6 +324,10 @@ namespace CodeStream.VisualStudio.UI {
 			}
 		}
 
+		private void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e) {
+			ChangeActiveWindow(e?.TextView as IWpfTextView);
+		}
+
 		private void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
 			var wpfTextView = sender as IWpfTextView;
 			if (wpfTextView == null || !_sessionService.IsReady) return;
@@ -347,7 +352,8 @@ namespace CodeStream.VisualStudio.UI {
 			}
 
 			// don't trigger for changes that don't result in lines being added or removed
-			if (_sessionService.IsCodemarksForFileVisible && (e.VerticalTranslation || e.TranslatedLines.Any())) {
+			if (_sessionService.IsWebViewVisible && _sessionService.IsCodemarksForFileVisible &&
+				(e.VerticalTranslation || e.TranslatedLines.Any())) {
 				var visibleRangeSubject = wpfTextView.TextBuffer.Properties
 					.GetProperty<Subject<HostDidChangeEditorVisibleRangesNotificationSubject>>(PropertyNames.HostDidChangeEditorVisibleRangesNotificationSubject);
 				visibleRangeSubject?.OnNext(new HostDidChangeEditorVisibleRangesNotificationSubject(wpfTextView, textDocument.FilePath.ToUri()));

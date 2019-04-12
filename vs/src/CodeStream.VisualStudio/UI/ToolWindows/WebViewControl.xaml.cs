@@ -69,21 +69,24 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 		}
 
 		private void WebViewControl_IsVisibleChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e) {
+			var newValue = e.NewValue.AsBool();
+			_sessionService.IsWebViewVisible = newValue;
+
 			if (!_sessionService.IsReady) return;
 
-			if (!e.NewValue.AsBool() && e.OldValue.AsBool()) {
+			if (!newValue && e.OldValue.AsBool()) {
 				//if is going to hide and the last view IS codemarks for file -- enable it
 				if (!_sessionService.AreMarkerGlyphsVisible) {
 					_sessionService.AreMarkerGlyphsVisible = true;
-					_eventAggregator.Publish(new MarkerGlyphVisibilityEvent {IsVisible = true});
+					_eventAggregator.Publish(new MarkerGlyphVisibilityEvent { IsVisible = true });
 				}
 			}
-			else if (e.NewValue.AsBool() && !e.OldValue.AsBool()) {
+			else if (newValue && !e.OldValue.AsBool()) {
 				//if is going to show and the last view is NOT codemarks for file
 				var areMarkerGlyphsVisible = !_sessionService.IsCodemarksForFileVisible;
 				if (areMarkerGlyphsVisible != _sessionService.AreMarkerGlyphsVisible) {
 					_sessionService.AreMarkerGlyphsVisible = areMarkerGlyphsVisible;
-					_eventAggregator.Publish(new MarkerGlyphVisibilityEvent {IsVisible = areMarkerGlyphsVisible});
+					_eventAggregator.Publish(new MarkerGlyphVisibilityEvent { IsVisible = areMarkerGlyphsVisible });
 				}
 			}
 		}
@@ -119,7 +122,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 							_ipc,
 							Package.GetGlobalService(typeof(SIdeService)) as IIdeService);
 
-						_ipc.BrowserService.AddWindowMessageEvent(async delegate(object sender, WindowEventArgs ea) {
+						_ipc.BrowserService.AddWindowMessageEvent(async delegate (object sender, WindowEventArgs ea) {
 							await router.HandleAsync(ea);
 						});
 
