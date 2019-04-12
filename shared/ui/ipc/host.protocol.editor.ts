@@ -53,6 +53,7 @@ export const EditorSelectRangeRequestType = new RequestType<
 export interface EditorScrollToNotification {
 	uri: string;
 	position: Position;
+	deltaPixels?: number;
 	atTop?: boolean;
 }
 export const EditorScrollToNotificationType = new NotificationType<

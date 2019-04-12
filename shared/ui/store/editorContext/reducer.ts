@@ -4,6 +4,7 @@ import * as actions from "./actions";
 import { ActionType } from "../common";
 import { createSelector } from "reselect";
 import { range } from "@codestream/webview/utils";
+import { EditorMetrics, EditorScrollMode } from "@codestream/protocols/webview";
 
 type EditorContextActions = ActionType<typeof actions>;
 
@@ -13,7 +14,12 @@ const initialState: State = {
 	textEditorVisibleRanges: [],
 	textEditorUri: "",
 	textEditorSelections: [],
-	metrics: undefined,
+	metrics: {
+		fontSize: 12,
+		lineHeight: 18,
+		scrollMode: EditorScrollMode.Lines,
+		scrollRatio: 1
+	},
 	scm: undefined
 };
 
@@ -30,6 +36,26 @@ export function reduceEditorContext(state = initialState, action: EditorContextA
 			return { ...state, ...nextState };
 		}
 		case EditorContextActionsType.SetEditorContext: {
+			const { metrics }: { metrics?: EditorMetrics } = action.payload;
+			if (metrics != null) {
+				if (metrics.lineHeight === undefined) {
+					if (metrics.fontSize === undefined) {
+						metrics.fontSize = 12;
+						metrics.lineHeight = 18;
+					} else {
+						metrics.lineHeight = metrics.fontSize * 1.5;
+					}
+				}
+
+				if (metrics.scrollMode === undefined) {
+					metrics.scrollMode = EditorScrollMode.Lines;
+				}
+
+				if (metrics.scrollRatio === undefined) {
+					metrics.scrollRatio = 1;
+				}
+			}
+
 			return { ...state, ...action.payload };
 		}
 		case "RESET":

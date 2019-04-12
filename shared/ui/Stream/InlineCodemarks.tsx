@@ -18,7 +18,8 @@ import {
 	EditorMetrics,
 	EditorContext,
 	WebviewConfigs,
-	EditorScrollToNotificationType
+	EditorScrollToNotificationType,
+	EditorScrollMode
 } from "../ipc/webview.protocol";
 import {
 	DocumentMarker,
@@ -74,7 +75,7 @@ interface Props {
 	numLinesVisible: number;
 	textEditorVisibleRanges?: Range[];
 	textEditorSelection?: EditorSelection;
-	metrics?: EditorMetrics;
+	metrics: EditorMetrics;
 	documentMarkers: DocumentMarker[];
 	numUnpinned: number;
 	numClosed: number;
@@ -245,7 +246,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			});
 		}
 
-		this.scrollTo(18);
+		this.scrollTo(this.props.metrics.lineHeight!);
 	}
 
 	componentDidUpdate(prevProps: Props) {
@@ -259,7 +260,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			prevProps.textEditorVisibleRanges
 		);
 		if (didStartLineChange) {
-			this.scrollTo(18);
+			this.scrollTo(this.props.metrics.lineHeight!);
 		}
 
 		this.repositionCodemarks();
@@ -710,7 +711,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				onClick={this.handleClickField}
 				data-scrollable="true"
 			>
-				<div style={{ padding: "18px 0", margin: "-18px 0" }}>
+				<div
+					style={{
+						padding: `${this.props.metrics.lineHeight!}px 0`,
+						margin: `-${this.props.metrics.lineHeight!}px 0`
+					}}
+				>
 					<div
 						style={{
 							top: paddingTop,
@@ -817,19 +823,25 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		// We only want to accumulate data while the user is actively scrolling, if they pause reset everything
 		this._clearWheelingStateTimeout = setTimeout(() => (this._wheelingState = undefined), 500);
 
+		const { metrics } = this.props;
+
+		let deltaY = event.deltaY * metrics.scrollRatio!;
+
+		let deltaPixels;
 		let lines = 0;
 		switch (event.deltaMode) {
 			case 0: // deltaY is in pixels
-				// TODO: Needs to be using editor metrics or calculated from the font size
-				const lineHeight = 18;
+				const lineHeight = metrics.lineHeight!;
 
-				const pixels = this._wheelingState.accumulatedPixels + event.deltaY;
+				deltaPixels = deltaY;
+
+				const pixels = this._wheelingState.accumulatedPixels + deltaY;
 				this._wheelingState.accumulatedPixels = pixels % lineHeight;
 				lines = pixels < 0 ? Math.ceil(pixels / lineHeight) : Math.floor(pixels / lineHeight);
 
 				break;
 			case 1: // deltaY is in lines
-				lines = event.deltaY;
+				lines = deltaY;
 
 				break;
 			case 2: // deltaY is in pages
@@ -839,16 +851,17 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				break;
 		}
 
-		if (lines === 0) return;
+		if (metrics.scrollMode !== EditorScrollMode.Pixels && lines === 0) return;
 
 		let topLine;
-		if (event.deltaY < 0) {
+		if (deltaY < 0) {
 			topLine = Math.max(0, this._wheelingState.topLine + lines);
 		} else {
 			topLine = Math.min(this.props.textEditorLineCount, this._wheelingState.topLine + lines);
 		}
 
-		if (topLine === this._wheelingState.topLine) return;
+		if (metrics.scrollMode !== EditorScrollMode.Pixels && topLine === this._wheelingState.topLine)
+			return;
 
 		// Update our tracking as the events will be too slow
 		this._wheelingState.topLine = topLine;
@@ -856,6 +869,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		HostApi.instance.notify(EditorScrollToNotificationType, {
 			uri: this.props.textEditorUri!,
 			position: Position.create(topLine, 0),
+			deltaPixels: deltaPixels,
 			atTop: true
 		});
 	};
@@ -1240,7 +1254,7 @@ const mapStateToProps = (state: {
 		lastVisibleLine,
 		textEditorVisibleRanges,
 		textEditorSelection: getCurrentSelection(editorContext),
-		metrics: editorContext.metrics,
+		metrics: editorContext.metrics!,
 		documentMarkers: docMarkers,
 		numLinesVisible: getVisibleLineCount(textEditorVisibleRanges),
 		numUnpinned,

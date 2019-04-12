@@ -11,10 +11,17 @@ export interface EditorMargins {
 	left?: number;
 }
 
+export enum EditorScrollMode {
+	Pixels = "pixels",
+	Lines = "lines"
+}
+
 export interface EditorMetrics {
 	fontSize?: number;
 	lineHeight?: number;
 	margins?: EditorMargins;
+	scrollMode?: EditorScrollMode;
+	scrollRatio?: number;
 }
 
 export interface EditorSelection extends Range {
