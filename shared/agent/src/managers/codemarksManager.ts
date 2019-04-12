@@ -1,5 +1,5 @@
 "use strict";
-
+import { Logger } from "logger";
 import { MessageType } from "../api/apiProvider";
 import { MarkerLocation } from "../api/extensions";
 import { SlackApiProvider } from "../api/slack/slackApi";
@@ -32,7 +32,7 @@ import {
 	UpdateCodemarkResponse
 } from "../protocol/agent.protocol";
 import { CSCodemark } from "../protocol/api.protocol";
-import { lsp, lspHandler, Strings } from "../system";
+import { log, lsp, lspHandler, Strings } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 
 @lsp
@@ -78,7 +78,10 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 	}
 
 	@lspHandler(GetCodemarkSha1RequestType)
+	@log()
 	async getCodemarkSha1({ codemarkId }: GetCodemarkSha1Request): Promise<GetCodemarkSha1Response> {
+		const cc = Logger.getCorrelationContext();
+
 		const { codemarks, files, markerLocations, scm } = Container.instance();
 
 		const codemark = await codemarks.getEnrichedCodemarkById(codemarkId);
@@ -87,17 +90,20 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		}
 
 		if (codemark.markers == null || codemark.markers.length === 0) {
-			throw new Error(`No markers could be found for codemark Id(${codemarkId})`);
+			Logger.warn(cc, `No markers are associated with codemark Id(${codemarkId})`);
+			return { codemarkSha1: undefined, documentSha1: undefined };
 		}
 
 		if (codemark.fileStreamIds.length === 0) {
-			throw new Error(`No document could be found for codemark Id(${codemarkId})`);
+			Logger.warn(cc, `No documents are associated with codemark Id(${codemarkId})`);
+			return { codemarkSha1: undefined, documentSha1: undefined };
 		}
 
 		const fileStreamId = codemark.fileStreamIds[0];
 		const uri = await files.getDocumentUri(fileStreamId);
 		if (uri === undefined) {
-			throw new Error(`No document could be found for codemark Id(${codemarkId})`);
+			Logger.warn(cc, `No document could be loaded for codemark Id(${codemarkId})`);
+			return { codemarkSha1: undefined, documentSha1: undefined };
 		}
 
 		// Get the most up-to-date location for the codemark
