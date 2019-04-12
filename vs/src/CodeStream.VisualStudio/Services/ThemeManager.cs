@@ -198,7 +198,9 @@ namespace CodeStream.VisualStudio.Services
 				{
 					//TODO figure out the real value here...
 					Top = 21
-				}
+				},
+				ScrollMode = EditorScrollMode.Pixels,
+				ScrollRatio = 0.25
 			};
 		}
 

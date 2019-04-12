@@ -2,6 +2,8 @@
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using System.Collections.Generic;
 using CodeStream.VisualStudio.Core.Logging;
+using Newtonsoft.Json;
+using CodeStream.VisualStudio.Core;
 
 namespace CodeStream.VisualStudio.Models
 {
@@ -14,12 +16,20 @@ namespace CodeStream.VisualStudio.Models
         public int? Left { get; set; }
     }
 
-    public class EditorMetrics
+	[JsonConverter(typeof(CamelCaseStringEnumConverter))]
+	public enum EditorScrollMode {
+		Pixels,
+		Lines
+	}
+
+	public class EditorMetrics
     {
         public int? FontSize { get; set; }
         public int? LineHeight { get; set; }
         public EditorMargins EditorMargins { get; set; }
-    }
+		public EditorScrollMode? ScrollMode { get; set; }
+		public double? ScrollRatio { get; set; }
+	}
 
     public static class WebviewPanels
     {

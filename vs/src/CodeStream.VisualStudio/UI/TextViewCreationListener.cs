@@ -160,11 +160,8 @@ namespace CodeStream.VisualStudio.UI {
 					.ObserveOnDispatcher()
 					.Subscribe(_ => textViewMarginProviders.Toggle(_.IsVisible)),
 
-				visibleRangesSubject.Throttle(TimeSpan.FromMilliseconds(50), new SynchronizationContextScheduler(SynchronizationContext.Current))
+				visibleRangesSubject.Throttle(TimeSpan.FromMilliseconds(10))
 						.Subscribe(e => {
-							 System.Windows.Application.Current.Dispatcher.Invoke(() => {
-							var toolWindowIsVisible = ServiceLocator.Get<SToolWindowProvider, IToolWindowProvider>()?.IsVisible(Guids.WebViewToolWindowGuid);
-							if (toolWindowIsVisible == true) {
 								ServiceLocator.Get<SWebviewIpc, IWebviewIpc>()?.NotifyAsync(
 									new HostDidChangeEditorVisibleRangesNotificationType {
 										Params = new HostDidChangeEditorVisibleRangesNotification(
@@ -174,7 +171,6 @@ namespace CodeStream.VisualStudio.UI {
 											e.WpfTextView.TextSnapshot?.LineCount
 										)
 									});
-							}}, DispatcherPriority.Input);
 						})
 
 			});

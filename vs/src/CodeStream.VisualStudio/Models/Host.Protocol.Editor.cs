@@ -78,16 +78,16 @@ namespace CodeStream.VisualStudio.Models {
 	}
 
 	public class EditorScrollToNotification {
-		public EditorScrollToNotification(string uri, Range range, Position position, bool? atTop) {
+		public EditorScrollToNotification(string uri, Position position, int? deltaPixels, bool? atTop) {
 			Uri = uri;
-			Range = range;
 			Position = position;
+			DeltaPixels = deltaPixels;
 			AtTop = atTop;
 		}
 
 		public string Uri { get; }
-		public Range Range { get; }
 		public Position Position { get; }
+		public int? DeltaPixels { get; }
 		public bool? AtTop { get; }
 	}
 

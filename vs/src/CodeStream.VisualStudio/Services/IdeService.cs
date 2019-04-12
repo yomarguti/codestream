@@ -21,7 +21,6 @@ using System.Linq;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Shell.Interop;
 using CodeStream.VisualStudio.Core;
-using System.Reactive.Subjects;
 using System.Reactive.Linq;
 
 namespace CodeStream.VisualStudio.Services {
@@ -32,8 +31,7 @@ namespace CodeStream.VisualStudio.Services {
 	public interface IIdeService {
 		void Navigate(string url);
 		System.Threading.Tasks.Task SetClipboardAsync(string text);
-		void ScrollEditorThrottled(Uri fileUri, Range range, Position position, bool? atTop);
-		void ScrollEditor(Uri fileUri, int? scrollTo = null, bool? atTop = false);
+		void ScrollEditor(Uri fileUri, int? scrollTo = null, int? deltaPixels = null, bool? atTop = false);
 		System.Threading.Tasks.Task<bool> OpenEditorAndRevealAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false);
 		System.Threading.Tasks.Task<bool> OpenEditorAtLineAsync(Uri fileUri, Range range, bool forceOpen = false);
 		EditorState GetActiveEditorState();
@@ -49,7 +47,7 @@ namespace CodeStream.VisualStudio.Services {
 	public interface SIdeService { }
 
 	[Injected]
-	public class IdeService : IIdeService, SIdeService, IDisposable {
+	public class IdeService : IIdeService, SIdeService {
 		private static readonly ILogger Log = LogManager.ForContext<IdeService>();
 
 		private readonly IServiceProvider _serviceProvider;
@@ -57,32 +55,11 @@ namespace CodeStream.VisualStudio.Services {
 		private readonly IVsTextManager _iIVsTextManager;
 		private readonly Dictionary<ExtensionKind, bool> _extensions;
 
-		private readonly Subject<ScrollSubjectArgs> _scrollSubjectArgs;
-		private readonly List<IDisposable> _disposables;
-
-		private bool _disposed = false;
-
 		public IdeService(IServiceProvider serviceProvider, IComponentModel componentModel, IVsTextManager iIVsTextManager, Dictionary<ExtensionKind, bool> extensions) {
 			_serviceProvider = serviceProvider;
 			_componentModel = componentModel;
 			_iIVsTextManager = iIVsTextManager;
 			_extensions = extensions;
-
-			_scrollSubjectArgs = new Subject<ScrollSubjectArgs>();
-
-			_disposables = new List<IDisposable>() {
-				// there are a few options here... dispatcher inside the subscription or
-				// ObserveOnDispatcher() or new SynchronizationContextScheduler(SynchronizationContext.Current))
-
-				// on my machine, ScrollEditor is usually 15-20ms, sometimes longer
-				_scrollSubjectArgs
-						.Throttle(TimeSpan.FromMilliseconds(15))
-						.Subscribe(e => {
-							System.Windows.Application.Current.Dispatcher.Invoke(() => {
-								ScrollEditor(e.FileUri, e.ScrollToLine, e.AtTop);
-							}, System.Windows.Threading.DispatcherPriority.Send);
-						})
-			};
 		}
 
 		public async System.Threading.Tasks.Task<bool> OpenEditorAndRevealAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false) {
@@ -117,7 +94,7 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		/// <param name="fileUri"></param>
 		/// <param name="range"></param>
@@ -151,8 +128,9 @@ namespace CodeStream.VisualStudio.Services {
 		/// <param name="fileUri"></param>
 		/// <param name="scrollTo"></param>
 		/// <param name="atTop"></param>
-		public void ScrollEditor(Uri fileUri, int? scrollTo = null, bool? atTop = false) {
+		public void ScrollEditor(Uri fileUri, int? scrollTo = null, int? deltaPixels = null, bool? atTop = false) {
 			if (scrollTo == null || scrollTo.Value < 0) return;
+
 			using (var metrics = Log.WithMetrics($"{nameof(ScrollEditor)} {fileUri} scrollTo={scrollTo} atTop={atTop}")) {
 				IWpfTextView wpfTextView = null;
 				try {
@@ -160,6 +138,12 @@ namespace CodeStream.VisualStudio.Services {
 					if (!WpfTextViewCache.TryGetValue(localPath, out wpfTextView) || wpfTextView == null) {
 						return;
 					}
+
+					if (deltaPixels != null) {
+						wpfTextView.ViewScroller.ScrollViewportVerticallyByPixels(-deltaPixels.Value);
+						return;
+					}
+
 					var scrollToLine = scrollTo.Value;
 
 					if (atTop == true) {
@@ -177,10 +161,6 @@ namespace CodeStream.VisualStudio.Services {
 			}
 		}
 
-		public void ScrollEditorThrottled(Uri fileUri, Range range, Position position, bool? atTop) {
-			_scrollSubjectArgs.OnNext(new ScrollSubjectArgs(fileUri, position.Line, atTop, false));
-		}
-
 		public ActiveTextEditor GetActiveTextEditor(Uri uri = null) {
 			IWpfTextView wpfTextView = null;
 			try {
@@ -189,7 +169,8 @@ namespace CodeStream.VisualStudio.Services {
 						// wasn't in cache... try to get it?
 						wpfTextView = GetActiveWpfTextView();
 					}
-				}else {
+				}
+				else {
 					wpfTextView = GetActiveWpfTextView();
 				}
 
@@ -331,7 +312,7 @@ namespace CodeStream.VisualStudio.Services {
 		//	var scrollToLine = scrollToLineFoo.Value;
 
 		//	if (atTop == true) {
-		//		ScrollViewportVerticallyByLines(wpfTextView, scrollToLine);				
+		//		ScrollViewportVerticallyByLines(wpfTextView, scrollToLine);
 		//	}
 		//	else {
 		//		EnsureTargetSpanVisible(wpfTextView, scrollToLine);
@@ -392,7 +373,7 @@ namespace CodeStream.VisualStudio.Services {
 		//        }
 		//    }
 		//    return false;
-		//}		
+		//}
 
 		/// <summary>
 		/// Tries to get an active text view for a file that may have just opened.
@@ -579,22 +560,8 @@ namespace CodeStream.VisualStudio.Services {
 
 			return text as string;
 		}
-
-		public void Dispose() {
-			Dispose(true);
-			GC.SuppressFinalize(this);
-		}
-
-		protected virtual void Dispose(bool disposing) {
-			if (_disposed) return;
-
-			if (disposing) {
-				_disposables?.DisposeAll();
-			}
-
-			_disposed = true;
-		}
 	}
+
 	public class ScrollSubjectArgs {
 		public Uri FileUri { get; set; }
 		public IWpfTextView WpfTextView { get; }
