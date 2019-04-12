@@ -265,11 +265,14 @@ namespace CodeStream.VisualStudio.UI {
 			if (filePath.IsNullOrWhiteSpace() || !_sessionService.IsWebViewVisible) return;
 
 			var activeTextEditor = _ideService.GetActiveTextEditor(wpfTextView);
-			if (activeTextEditor != null && activeTextEditor.Uri != null &&
-				activeTextEditor.Uri.EqualsIgnoreCase(new Uri(filePath))) {
-				var codeStreamService = ServiceLocator.Get<SCodeStreamService, ICodeStreamService>();
-				codeStreamService.ChangeActiveWindowAsync(filePath, new Uri(filePath), activeTextEditor);
-				Log.Verbose($"{nameof(ChangeActiveWindow)} filePath={filePath}");
+			if (activeTextEditor != null && activeTextEditor.Uri != null) {
+				if (Uri.TryCreate(filePath, UriKind.RelativeOrAbsolute, out Uri result)) {
+					if (activeTextEditor.Uri.EqualsIgnoreCase(result)) {
+						var codeStreamService = ServiceLocator.Get<SCodeStreamService, ICodeStreamService>();
+						codeStreamService.ChangeActiveWindowAsync(filePath, new Uri(filePath), activeTextEditor);
+						Log.Verbose($"{nameof(ChangeActiveWindow)} filePath={filePath}");
+					}
+				}
 			}
 		}
 		
