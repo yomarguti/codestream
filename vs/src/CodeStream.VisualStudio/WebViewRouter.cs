@@ -10,7 +10,6 @@ using Serilog;
 using System;
 using System.Linq;
 using System.Threading;
-using System.Windows.Threading;
 
 namespace CodeStream.VisualStudio {
 	public class WebViewRouter {
@@ -157,15 +156,15 @@ namespace CodeStream.VisualStudio {
 									case EditorSelectRangeRequestType.MethodName: {
 											using (var scope = _ipc.CreateScope(message)) {
 												bool result = false;
-												var activeTextView = _ideService.GetActiveTextView();
-												if (activeTextView != null) {
-													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-													var @params = message.Params.ToObject<EditorSelectRangeRequest>();
-													if (@params != null) {
+												var @params = message.Params.ToObject<EditorSelectRangeRequest>();
+												if (@params != null) {
+													var activeTextView = _ideService.GetActiveTextView(@params.Uri.ToUri());
+													if (activeTextView != null) {
+														await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 														result = activeTextView.SelectRange(@params.Selection, @params.PreserveFocus == false);
-													}
-													if (!result) {
-														Log.Verbose($"{nameof(EditorSelectRangeRequestType)} result is false");
+														if (!result) {
+															Log.Verbose($"{nameof(EditorSelectRangeRequestType)} result is false");
+														}
 													}
 												}
 												scope.FulfillRequest(new EditorSelectRangeResponse { Success = result }.ToJToken());
@@ -174,12 +173,12 @@ namespace CodeStream.VisualStudio {
 										}
 									case EditorHighlightRangeRequestType.MethodName: {
 											using (var scope = _ipc.CreateScope(message)) {
-												var activeTextView = _ideService.GetActiveTextView();
 												bool result = false;
-												if (activeTextView != null) {
-													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-													var @params = message.Params.ToObject<EditorHighlightRangeRequest>();
-													if (@params != null) {
+												var @params = message.Params.ToObject<EditorHighlightRangeRequest>();
+												if (@params != null) {
+													var activeTextView = _ideService.GetActiveTextView(@params.Uri.ToUri());													
+													if (activeTextView != null) {
+														await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 														//don't reveal on highlight -- for big ranges it will cause bad behavior with the scrolling
 														result = activeTextView.Highlight(@params.Range, @params.Highlight);
 														if (!result) {
@@ -193,11 +192,14 @@ namespace CodeStream.VisualStudio {
 										}
 									case EditorRevealRangeRequestType.MethodName: {
 											using (var scope = _ipc.CreateScope(message)) {
+												bool result = false;
 												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 												var @params = message.Params.ToObject<EditorRevealRangeRequest>();
-												var result = await _ideService.OpenEditorAndRevealAsync(@params.Uri.ToUri(), @params.Range?.Start?.Line, atTop: @params.AtTop, focus: @params.PreserveFocus == false);
-												if (!result) {
-													Log.Verbose($"{nameof(EditorRevealRangeRequestType)} result is false");
+												if (@params != null) {
+													result = await _ideService.OpenEditorAndRevealAsync(@params.Uri.ToUri(), @params.Range?.Start?.Line, atTop: @params.AtTop, focus: @params.PreserveFocus == false);
+													if (!result) {
+														Log.Verbose($"{nameof(EditorRevealRangeRequestType)} result is false");
+													}
 												}
 												scope.FulfillRequest(new EditorRevealRangeResponse { Success = result }.ToJToken());
 											}
@@ -206,7 +208,7 @@ namespace CodeStream.VisualStudio {
 									case EditorScrollToNotificationType.MethodName: {
 											var @params = message.Params.ToObject<EditorScrollToNotification>();
 											_ideService.ScrollEditorThrottled(@params.Uri.ToUri(), @params.Range, @params.Position, @params.AtTop);
-											
+
 											// this alternate version, using the dispatcher here instead of inside the throttle works
 
 											//System.Windows.Application.Current.Dispatcher.Invoke(() => {

@@ -84,7 +84,7 @@ namespace CodeStream.VisualStudio.Services {
 			if (!IsReady) return Task.CompletedTask;
 
 			try {
-				var activeTextView = _ideService.Value.GetActiveTextView();
+				var activeTextView = _ideService.Value.GetActiveTextView(uri);
 				var editorState = _ideService.Value.GetActiveEditorState();
 
 				WebviewIpc.Notify(new HostDidChangeActiveEditorNotificationType {

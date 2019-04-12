@@ -38,7 +38,7 @@ namespace CodeStream.VisualStudio.Services {
 		System.Threading.Tasks.Task<bool> OpenEditorAtLineAsync(Uri fileUri, Range range, bool forceOpen = false);
 		EditorState GetActiveEditorState();
 		EditorState GetActiveEditorState(out IVsTextView view);
-		ActiveTextEditor GetActiveTextView();
+		ActiveTextEditor GetActiveTextView(Uri uri = null);
 		//bool QueryExtensions(string author, params string[] names);
 		bool QueryExtension(ExtensionKind extensionKind);
 		bool TryStartLiveShare();
@@ -181,9 +181,16 @@ namespace CodeStream.VisualStudio.Services {
 			_scrollSubjectArgs.OnNext(new ScrollSubjectArgs(fileUri, position.Line, atTop, false));
 		}
 
-		public ActiveTextEditor GetActiveTextView() {
+		public ActiveTextEditor GetActiveTextView(Uri uri = null) {
+			IWpfTextView wpfTextView = null;
 			try {
-				var wpfTextView = GetActiveWpfTextView();
+				if (uri != null) {
+					if (!WpfTextViewCache.TryGetValue(uri.ToLocalPath(), out wpfTextView)) {
+						// wasn't in cache... try to get it?
+						wpfTextView = GetActiveWpfTextView();
+					}
+				}
+
 				if (wpfTextView == null) {
 					Log.Verbose($"{nameof(wpfTextView)} is null");
 					return null;
