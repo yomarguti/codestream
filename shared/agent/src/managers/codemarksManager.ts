@@ -1,9 +1,9 @@
 "use strict";
-import { Logger } from "logger";
 import { MessageType } from "../api/apiProvider";
 import { MarkerLocation } from "../api/extensions";
 import { SlackApiProvider } from "../api/slack/slackApi";
 import { Container } from "../container";
+import { Logger } from "../logger";
 import {
 	CodemarkPlus,
 	CreateCodemarkPermalinkRequest,
