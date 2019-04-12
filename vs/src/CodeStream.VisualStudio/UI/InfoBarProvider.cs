@@ -14,14 +14,14 @@ namespace CodeStream.VisualStudio.UI
             _serviceProvider = serviceProvider;
         }
 
-        public static InfoBarProvider Instance { get; private set; }
+        public static InfoBarProvider Instance { get; private set; }        
 
-        public static void Initialize(IServiceProvider serviceProvider)
-        {
-            Instance = new InfoBarProvider(serviceProvider);
-        }
+		public static async System.Threading.Tasks.Task InitializeAsync(AsyncPackage package) {
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(package.DisposalToken);
+			Instance = new InfoBarProvider(package);
+		}
 
-        public void OnClosed(IVsInfoBarUIElement infoBarUiElement)
+		public void OnClosed(IVsInfoBarUIElement infoBarUiElement)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             

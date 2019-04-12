@@ -5,6 +5,7 @@ using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.LSP;
 using CodeStream.VisualStudio.Services;
+using CodeStream.VisualStudio.UI;
 using CodeStream.VisualStudio.UI.Settings;
 using CodeStream.VisualStudio.UI.ToolWindows;
 using CodeStream.VisualStudio.Vssdk;
@@ -82,38 +83,35 @@ namespace CodeStream.VisualStudio.Packages {
 
 			AsyncPackageHelper.InitializePackage(GetType().Name);
 
+#if DEBUG
+			// only show this command locally
+			await WebViewDevToolsCommand.InitializeAsync(this);
+#endif
 			await WebViewToggleCommand.InitializeAsync(this);
 			await AuthenticationCommand.InitializeAsync(this);
 			await UserCommand.InitializeAsync(this);
-
 			await AddCodemarkCommentCommand.InitializeAsync(this);
 			await AddCodemarkIssueCommand.InitializeAsync(this);
 			await AddCodemarkBookmarkCommand.InitializeAsync(this);
 			await AddCodemarkPermalinkCommand.InitializeAsync(this);
 			await AddCodemarkPermalinkInstantCommand.InitializeAsync(this);
-
 			await WebViewReloadCommand.InitializeAsync(this);
 
-#if DEBUG
-			// only show this locally
-			await WebViewDevToolsCommand.InitializeAsync(this);
-#endif
 			await BookmarkShortcutRegistration.InitializeAllAsync(this);
+			await InfoBarProvider.InitializeAsync(this);
 
 			var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
 
 			_disposables = new List<IDisposable>
 			{
+				//when a user has logged in/out we alter the text of some of the commands
 				eventAggregator?.GetEvent<SessionReadyEvent>().Subscribe(_ =>
 				{
 					ThreadHelper.JoinableTaskFactory.Run(async delegate
 					{
 						await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-
 						var commandService = await GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
-						var command = commandService?.FindCommand(new CommandID(PackageGuids.guidWebViewPackageCmdSet,
-							PackageIds.UserCommandId));
-
+						var command = commandService?.FindCommand(new CommandID(PackageGuids.guidWebViewPackageCmdSet,	PackageIds.UserCommandId));
 						UserCommand.Instance.DynamicTextCommand_BeforeQueryStatus(command, null);
 					});
 				}),
@@ -122,18 +120,19 @@ namespace CodeStream.VisualStudio.Packages {
 					ThreadHelper.JoinableTaskFactory.Run(async delegate
 					{
 						await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-
-						var commandService =
-							await GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
-						var command = commandService?.FindCommand(new CommandID(PackageGuids.guidWebViewPackageCmdSet,
-							PackageIds.UserCommandId));
-
+						var commandService = await GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
+						var command = commandService?.FindCommand(new CommandID(PackageGuids.guidWebViewPackageCmdSet, PackageIds.UserCommandId));
 						UserCommand.Instance.DynamicTextCommand_BeforeQueryStatus(command, null);
 					});
 				})
 			};
 		}
 
+		/// <summary>
+		/// Checks if a solution is open
+		/// </summary>
+		/// <returns></returns>
+		/// <remarks>https://github.com/Microsoft/VSSDK-Extensibility-Samples/blob/master/SolutionLoadEvents/src/VSPackage.cs</remarks>
 		private async Task<bool> IsSolutionLoadedAsync() {
 			await JoinableTaskFactory.SwitchToMainThreadAsync();
 			var solService = await GetServiceAsync(typeof(SVsSolution)) as IVsSolution;
@@ -144,7 +143,9 @@ namespace CodeStream.VisualStudio.Packages {
 		}
 
 		private void OnAfterOpenSolution(object sender = null, EventArgs e = null) {
-			if (_hasOpenedSolutionOnce) {
+			// there is work that needs to be done only after the first time a solution as opened.
+			// if it's opened once before, run OnSolutionLoadedAlwaysAsync
+			if (_hasOpenedSolutionOnce) {				
 				ThreadHelper.JoinableTaskFactory.Run(async delegate {
 					await OnSolutionLoadedAlwaysAsync();
 				});
@@ -152,6 +153,7 @@ namespace CodeStream.VisualStudio.Packages {
 			else {
 				ThreadHelper.JoinableTaskFactory.Run(async delegate {
 					await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+					await TryTriggerLspActivationAsync();
 
 					var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
 					var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
@@ -165,7 +167,6 @@ namespace CodeStream.VisualStudio.Packages {
 						// ReSharper disable once PossibleNullReferenceException
 						_languageServerReadyEvent = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ => {
 							ThreadHelper.ThrowIfNotOnUIThread();
-
 							InitializeEvents();
 						});
 					}
@@ -176,6 +177,28 @@ namespace CodeStream.VisualStudio.Packages {
 					_hasOpenedSolutionOnce = true;
 				});
 			}
+		}
+
+		/// <summary>
+		/// Checks if there are any active documents open -- if not tries to open/close a magic document to trigger LSP activation
+		/// </summary>
+		/// <returns></returns>
+		private async Task TryTriggerLspActivationAsync() {
+			var hasActiveEditor = false;
+			try {
+				var dte = Package.GetGlobalService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+				hasActiveEditor = dte?.Documents?.Count > 0;
+			}
+			catch (Exception ex) {
+				Log.Warning(ex, nameof(TryTriggerLspActivationAsync));
+			}			
+
+			if (!hasActiveEditor) {				
+				await LanguageClient.TriggerLspInitializeAsync();
+			}
+			Log.Debug($"{nameof(TryTriggerLspActivationAsync)} hasActiveEditor={hasActiveEditor}");
+
+			await System.Threading.Tasks.Task.CompletedTask;
 		}
 
 		private void InitializeEvents() {
