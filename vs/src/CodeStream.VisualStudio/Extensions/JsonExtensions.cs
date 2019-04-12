@@ -4,53 +4,55 @@ using Newtonsoft.Json.Serialization;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CodeStream.VisualStudio.Extensions
-{
-    public static class JsonExtensions
-    {
-        public static string ToJson(this object value, bool camelCase = true, bool format = false)
-        {
-            JsonSerializerSettings settings = null;
-            if (camelCase)
-            {
-                settings = new JsonSerializerSettings
-                {
-                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                    Formatting = format ? Formatting.Indented : Formatting.None
-                };
-            }
+namespace CodeStream.VisualStudio.Extensions {
+	public static class JsonExtensions {
+		static JsonExtensions() {
+			jsonSerializer = JsonSerializer.Create(new JsonSerializerSettings {
+				ContractResolver = new CamelCasePropertyNamesContractResolver()
+			});
+		}
 
-            return JsonConvert.SerializeObject(value, settings);
-        }
+		private static JsonSerializer jsonSerializer;
 
-        public static T FromJson<T>(this string value)
-        {
-            return JsonConvert.DeserializeObject<T>(value);
-        }
+		public static string ToJson(this object value, bool camelCase = true, bool format = false) {
+			JsonSerializerSettings settings = null;
+			if (camelCase) {
+				settings = new JsonSerializerSettings {
+					ContractResolver = new CamelCasePropertyNamesContractResolver(),
+					Formatting = format ? Formatting.Indented : Formatting.None
+				};
+			}
 
-        public static JToken RemoveFields(this JToken token, params string[] fields)
-        {
-            var container = token as JContainer;
-            if (container == null) return token;
+			return JsonConvert.SerializeObject(value, settings);
+		}
 
-            List<JToken> removeList = new List<JToken>();
-            foreach (JToken el in container.Children())
-            {
-                var p = el as JProperty;
-                if (p != null && fields.Contains(p.Name))
-                {
-                    removeList.Add(el);
-                }
+		public static T FromJson<T>(this string value) {
+			return JsonConvert.DeserializeObject<T>(value);
+		}
 
-                el.RemoveFields(fields);
-            }
+		public static JToken RemoveFields(this JToken token, params string[] fields) {
+			var container = token as JContainer;
+			if (container == null) return token;
 
-            foreach (JToken el in removeList)
-            {
-                el.Remove();
-            }
+			List<JToken> removeList = new List<JToken>();
+			foreach (JToken el in container.Children()) {
+				var p = el as JProperty;
+				if (p != null && fields.Contains(p.Name)) {
+					removeList.Add(el);
+				}
 
-            return token;
-        }
-    }
+				el.RemoveFields(fields);
+			}
+
+			foreach (JToken el in removeList) {
+				el.Remove();
+			}
+
+			return token;
+		}
+
+		public static JToken ToJToken(this object obj) {
+			return JToken.FromObject(obj, jsonSerializer);
+		}
+	}
 }

@@ -66,19 +66,22 @@ namespace CodeStream.VisualStudio.Models {
 					VirtualSnapshotPoint anchorPoint;
 					VirtualSnapshotPoint activePoint;
 					var startPoint = rangeLines.Item1.Extent.Start + range.Start.Character;
+					
 					if (range.IsPoint()) {
 						anchorPoint = new VirtualSnapshotPoint(new SnapshotPoint(WpfTextView.TextSnapshot, startPoint));
 						activePoint = new VirtualSnapshotPoint(new SnapshotPoint(WpfTextView.TextSnapshot, startPoint));
 					}
 					else {
-						anchorPoint = new VirtualSnapshotPoint(
-							new SnapshotPoint(WpfTextView.TextSnapshot, startPoint));
+						anchorPoint = new VirtualSnapshotPoint(new SnapshotPoint(WpfTextView.TextSnapshot, startPoint));
 						activePoint = new VirtualSnapshotPoint(
 							new SnapshotPoint(WpfTextView.TextSnapshot, rangeLines.Item2.Extent.End + range.End.Character));
 					}
 					WpfTextView.Selection.Select(anchorPoint, activePoint);
 					log += $"Selecting {nameof(FilePath)}={FilePath} From {anchorPoint} to {activePoint}";
 
+					var span = new SnapshotSpan(WpfTextView.TextSnapshot, Span.FromBounds(rangeLines.Item1.Start, rangeLines.Item2.End));
+					WpfTextView.ViewScroller.EnsureSpanVisible(span, EnsureSpanVisibleOptions.MinimumScroll);
+					log += $", ensuring Visible";
 					if (selection.Cursor != null) {
 						var caretLine = WpfTextView.GetLine(selection.Cursor);
 						if (caretLine != null) {

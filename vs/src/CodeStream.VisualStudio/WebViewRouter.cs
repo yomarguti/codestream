@@ -164,8 +164,11 @@ namespace CodeStream.VisualStudio {
 													if (@params != null) {
 														result = activeTextView.SelectRange(@params.Selection, @params.PreserveFocus == false);
 													}
+													if (!result) {
+														Log.Verbose($"{nameof(EditorSelectRangeRequestType)} result is false");
+													}
 												}
-												scope.FulfillRequest(JToken.FromObject(new EditorSelectRangeResponse { Success = result }));
+												scope.FulfillRequest(new EditorSelectRangeResponse { Success = result }.ToJToken());
 												break;
 											}
 										}
@@ -179,9 +182,12 @@ namespace CodeStream.VisualStudio {
 													if (@params != null) {
 														//don't reveal on highlight -- for big ranges it will cause bad behavior with the scrolling
 														result = activeTextView.Highlight(@params.Range, @params.Highlight);
+														if (!result) {
+															Log.Verbose($"{nameof(EditorHighlightRangeRequestType)} result is false");
+														}
 													}
 												}
-												scope.FulfillRequest(JToken.FromObject(new EditorHighlightRangeResponse { Success = result }));
+												scope.FulfillRequest(new EditorHighlightRangeResponse { Success = result }.ToJToken());
 												break;
 											}
 										}
@@ -189,8 +195,11 @@ namespace CodeStream.VisualStudio {
 											using (var scope = _ipc.CreateScope(message)) {
 												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 												var @params = message.Params.ToObject<EditorRevealRangeRequest>();
-												var result = await _ideService.OpenEditorAsync(@params.Uri, @params.Range?.Start?.Line + 1, atTop: @params.AtTop, focus: @params.PreserveFocus == false);
-												scope.FulfillRequest(JToken.FromObject(new EditorRevealRangeResponse { Success = result }));
+												var result = await _ideService.OpenEditorAndRevealAsync(@params.Uri.ToUri(), @params.Range?.Start?.Line, atTop: @params.AtTop, focus: @params.PreserveFocus == false);
+												if (!result) {
+													Log.Verbose($"{nameof(EditorRevealRangeRequestType)} result is false");
+												}
+												scope.FulfillRequest(new EditorRevealRangeResponse { Success = result }.ToJToken());
 											}
 											break;
 										}

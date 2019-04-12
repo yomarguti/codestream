@@ -34,9 +34,8 @@ namespace CodeStream.VisualStudio.Services {
 		System.Threading.Tasks.Task SetClipboardAsync(string text);
 		void ScrollEditorThrottled(Uri fileUri, Range range, Position position, bool? atTop);
 		void ScrollEditor(Uri fileUri, int? scrollTo = null, bool? atTop = false);
+		System.Threading.Tasks.Task<bool> OpenEditorAndRevealAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false);
 		System.Threading.Tasks.Task<bool> OpenEditorAtLineAsync(Uri fileUri, Range range, bool forceOpen = false);
-		System.Threading.Tasks.Task<bool> OpenEditorAsync(string fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false, bool forceOpen = false);
-		System.Threading.Tasks.Task<bool> OpenEditorAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false, bool forceOpen = false);
 		EditorState GetActiveEditorState();
 		EditorState GetActiveEditorState(out IVsTextView view);
 		ActiveTextEditor GetActiveTextView();
@@ -86,36 +85,32 @@ namespace CodeStream.VisualStudio.Services {
 			};
 		}
 
-		/// <summary>
-		/// Open editor using an absolute file path
-		/// </summary>
-		/// <param name="fileUri"></param>
-		/// <param name="scrollTo">the 1-based line number</param>
-		/// <returns>ShowCodeResult</returns>
-		public async System.Threading.Tasks.Task<bool> OpenEditorAsync(string fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false, bool forceOpen = false) {
-			return await OpenEditorAsync(fileUri.ToUri(), scrollTo, atTop, focus, forceOpen);
-		}
+		public async System.Threading.Tasks.Task<bool> OpenEditorAndRevealAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false) {
+			using (Log.CriticalOperation($"{nameof(OpenEditorAndRevealAsync)} {fileUri} scrollTo={scrollTo}")) {
+				if (scrollTo == null) await System.Threading.Tasks.Task.CompletedTask;
 
-		/// <summary>
-		/// Open editor using an absolute file path
-		/// </summary>
-		/// <param name="fileUri"></param>
-		/// <param name="scrollTo">the 1-based line number</param>
-		/// <returns>ShowCodeResult</returns>
-		public async System.Threading.Tasks.Task<bool> OpenEditorAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false, bool forceOpen = false) {
-			using (Log.CriticalOperation($"{nameof(OpenEditorAsync)} {fileUri} scrollTo={scrollTo}")) {
 				IWpfTextView wpfTextView = null;
+				var scrollToLine = scrollTo.Value;
 				try {
 					var localPath = fileUri.ToLocalPath();
-					wpfTextView = await AssertWpfTextViewAsync(fileUri, forceOpen);
+					wpfTextView = await AssertWpfTextViewAsync(fileUri);
 
 					if (wpfTextView != null) {
-						TryScrollToLine(wpfTextView, scrollTo, atTop);
+						if (atTop == true) {
+							ScrollViewportVerticallyByPixels(wpfTextView, scrollToLine);
+						}
+						else {
+							EnsureTargetSpanVisible(wpfTextView, scrollToLine);
+						}
+
+						if (focus == true) {
+							wpfTextView.VisualElement.Focus();
+						}
 					}
 					return true;
 				}
 				catch (Exception ex) {
-					Log.Error(ex, $"{nameof(OpenEditorAsync)} failed for {fileUri}");
+					Log.Error(ex, $"{nameof(OpenEditorAndRevealAsync)} failed for {fileUri}");
 					return false;
 				}
 			}
@@ -134,7 +129,7 @@ namespace CodeStream.VisualStudio.Services {
 				try {
 					wpfTextView = await AssertWpfTextViewAsync(fileUri, forceOpen);
 					if (wpfTextView != null) {
-						var span = EnsureSpanVisible(wpfTextView, range);
+						var span = EnsureSnapshotSpanVisible(wpfTextView, range);
 						if (span != null) {
 							wpfTextView.Caret.MoveTo(new SnapshotPoint(wpfTextView.TextSnapshot, span.Value.Start + range.Start.Character));
 							wpfTextView.Caret.EnsureVisible();
@@ -158,7 +153,7 @@ namespace CodeStream.VisualStudio.Services {
 		/// <param name="atTop"></param>
 		public void ScrollEditor(Uri fileUri, int? scrollTo = null, bool? atTop = false) {
 			if (scrollTo == null || scrollTo.Value < 0) return;
-			using (var metrics = Log.WithMetrics($"{nameof(OpenEditorAsync)} {fileUri} scrollTo={scrollTo} atTop={atTop}")) {
+			using (var metrics = Log.WithMetrics($"{nameof(ScrollEditor)} {fileUri} scrollTo={scrollTo} atTop={atTop}")) {
 				IWpfTextView wpfTextView = null;
 				try {
 					var localPath = fileUri.ToLocalPath();
@@ -168,16 +163,12 @@ namespace CodeStream.VisualStudio.Services {
 					var scrollToLine = scrollTo.Value;
 
 					if (atTop == true) {
-						var firstTextViewLine = wpfTextView.TextViewLines.FirstOrDefault();
-						int startingVisibleLineNumber = wpfTextView.TextSnapshot.GetLineNumberFromPosition(firstTextViewLine.Extent.Start.Position);
 						using (metrics.Measure("ScrollViewportVerticallyByPixels")) {
-							wpfTextView.ViewScroller.ScrollViewportVerticallyByPixels((startingVisibleLineNumber - scrollToLine + 1) * wpfTextView.LineHeight);
+							ScrollViewportVerticallyByPixels(wpfTextView, scrollToLine);
 						}
-						// this is abysmally slow...
-						//wpfTextView.ViewScroller.ScrollViewportVerticallyByLines(direction, Math.Abs(666));						
 					}
 					else {
-						EnsureSpanVisible(wpfTextView, scrollToLine);
+						EnsureTargetSpanVisible(wpfTextView, scrollToLine);
 					}
 				}
 				catch (Exception ex) {
@@ -264,16 +255,18 @@ namespace CodeStream.VisualStudio.Services {
 			return wpfTextView;
 		}
 
-		private void EnsureSpanVisible(IWpfTextView wpfTextView, int scrollToLine) {
-			if (scrollToLine < 0) return;
-
+		private void EnsureTargetSpanVisible(IWpfTextView wpfTextView, int scrollToLine) {
 			var lines = wpfTextView.VisualSnapshot.Lines;
 			var startLine = lines.FirstOrDefault(_ => _.LineNumber == scrollToLine);
-			var span = new SnapshotSpan(wpfTextView.TextSnapshot, Span.FromBounds(startLine.Start, startLine.Start + 1));
+			if (startLine == null) {
+				Log.Warning($"{nameof(EnsureTargetSpanVisible)} failed for line={scrollToLine}");
+				return;
+			}
+			var span = new SnapshotSpan(wpfTextView.TextSnapshot, Span.FromBounds(startLine.Start, Math.Min(startLine.Start + 1, wpfTextView.VisualSnapshot.Length)));
 			wpfTextView.ViewScroller.EnsureSpanVisible(span, EnsureSpanVisibleOptions.MinimumScroll);
 		}
 
-		private SnapshotSpan? EnsureSpanVisible(IWpfTextView wpfTextView, Range range) {
+		private SnapshotSpan? EnsureSnapshotSpanVisible(IWpfTextView wpfTextView, Range range) {
 			if (range == null) return null;
 
 			var lines = GetStartAndEndLines(wpfTextView, range.Start.Line, range.End.Line);
@@ -301,24 +294,44 @@ namespace CodeStream.VisualStudio.Services {
 			return null;
 		}
 
-		private void TryScrollToLine(IWpfTextView wpfTextView, int? scrollToLineFoo, bool? atTop) {
-			if (scrollToLineFoo == null || scrollToLineFoo.Value < 0) return;
-			var scrollToLine = scrollToLineFoo.Value;
-
-			if (atTop == true) {
-				var firstTextViewLine = wpfTextView.TextViewLines.FirstOrDefault();
-				var startingVisibleLineNumber = wpfTextView.TextSnapshot.GetLineNumberFromPosition(firstTextViewLine.Extent.Start.Position);
-				var lineCount = startingVisibleLineNumber - scrollToLine;
-				wpfTextView.ViewScroller.ScrollViewportVerticallyByLines(lineCount < 0 ? ScrollDirection.Down : ScrollDirection.Up, Math.Abs(lineCount));
-			}
-			else {
-				EnsureSpanVisible(wpfTextView, scrollToLine);
-			}
-			//if (moveCaret == true) {
-			//	view.Caret.MoveTo(new SnapshotPoint(view.TextSnapshot, startLine.Start == 0 ? 0 : startLine.Start - 1));
-			//	view.Caret.EnsureVisible();
-			//}
+		/// <summary>
+		/// This can be abysmally slow. Moves the target scrollToLine to the top of the editor
+		/// </summary>
+		/// <param name="wpfTextView"></param>
+		/// <param name="scrollToLine"></param>
+		private void ScrollViewportVerticallyByLines(IWpfTextView wpfTextView, int scrollToLine) {
+			var firstTextViewLine = wpfTextView.TextViewLines.FirstOrDefault();
+			var startingVisibleLineNumber = wpfTextView.TextSnapshot.GetLineNumberFromPosition(firstTextViewLine.Extent.Start.Position);
+			var lineCount = startingVisibleLineNumber - scrollToLine;
+			wpfTextView.ViewScroller.ScrollViewportVerticallyByLines(lineCount < 0 ? ScrollDirection.Down : ScrollDirection.Up, Math.Abs(lineCount));
 		}
+
+		/// <summary>
+		/// Moves the target scrollToLine to the top of the editor
+		/// </summary>
+		/// <param name="wpfTextView"></param>
+		/// <param name="scrollToLine"></param>
+		private void ScrollViewportVerticallyByPixels(IWpfTextView wpfTextView, int scrollToLine) {
+			var firstTextViewLine = wpfTextView.TextViewLines.FirstOrDefault();
+			int startingVisibleLineNumber = wpfTextView.TextSnapshot.GetLineNumberFromPosition(firstTextViewLine.Extent.Start.Position);
+			wpfTextView.ViewScroller.ScrollViewportVerticallyByPixels((startingVisibleLineNumber - scrollToLine + 1) * wpfTextView.LineHeight);
+		}
+
+		//private void TryScrollToLine(IWpfTextView wpfTextView, int? scrollToLineFoo, bool? atTop) {
+		//	if (scrollToLineFoo == null || scrollToLineFoo.Value < 0) return;
+		//	var scrollToLine = scrollToLineFoo.Value;
+
+		//	if (atTop == true) {
+		//		ScrollViewportVerticallyByLines(wpfTextView, scrollToLine);				
+		//	}
+		//	else {
+		//		EnsureTargetSpanVisible(wpfTextView, scrollToLine);
+		//	}
+		//	//if (moveCaret == true) {
+		//	//	view.Caret.MoveTo(new SnapshotPoint(view.TextSnapshot, startLine.Start == 0 ? 0 : startLine.Start - 1));
+		//	//	view.Caret.EnsureVisible();
+		//	//}
+		//}
 
 		public EditorState GetActiveEditorState(out IVsTextView view) {
 			try {
