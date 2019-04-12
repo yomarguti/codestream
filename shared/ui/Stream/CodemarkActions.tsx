@@ -39,7 +39,10 @@ export default class CodemarkActions extends React.Component<Props, State> {
 		const response = await HostApi.instance.send(GetCodemarkSha1RequestType, {
 			codemarkId: codemark.id
 		});
-		this.setState({ hasDiff: response.codemarkSha1 !== response.documentSha1 });
+		this.setState({
+			hasDiff:
+				response.codemarkSha1 === undefined || response.codemarkSha1 !== response.documentSha1
+		});
 	}
 
 	handleClickApplyPatch = event => {
