@@ -225,15 +225,15 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	handleClickCodemark = (event: React.MouseEvent): any => {
-		event.preventDefault();
+		const target = event && (event.target as HTMLElement);
 		if (
-			event &&
-			event.currentTarget &&
-			(event.currentTarget.tagName === "A" || event.currentTarget.closest(".external-provider"))
+			target &&
+			(target.tagName === "A" || target.closest(".external-provider"))
 		)
 			return false;
 		// if (this.props.selected) return false;
 
+		event.preventDefault();
 		const selection = window.getSelection();
 		if (selection != null && selection.toString().length > 0) {
 			// in this case the user has selected a string
