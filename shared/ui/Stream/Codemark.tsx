@@ -20,6 +20,7 @@ import { editCodemark } from "../store/codemarks/actions";
 import { confirmPopup } from "./Confirm";
 import { getPost } from "../store/posts/reducer";
 import { getPosts } from "../store/posts/actions";
+import Tooltip from "./Tooltip";
 
 interface State {
 	isEditing: boolean;
@@ -198,12 +199,14 @@ export class Codemark extends React.Component<Props, State> {
 		if (type === CodemarkType.Issue) {
 			if (this.props.inline) {
 				return (
-					<div
-						className={cx("resolve-button", { checked: status === "closed" })}
-						onClick={this.handleClickStatusToggle}
-					>
-						{status === "open" ? "Resolve" : "Reopen"}
-					</div>
+					<Tooltip title="Mark as resolved and hide discussion" placement="topRight">
+						<div
+							className={cx("resolve-button", { checked: status === "closed" })}
+							onClick={this.handleClickStatusToggle}
+						>
+							{status === "open" ? "Resolve" : "Reopen"}
+						</div>
+					</Tooltip>
 				);
 			} else {
 				return (
