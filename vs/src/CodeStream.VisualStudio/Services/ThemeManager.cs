@@ -188,11 +188,10 @@ namespace CodeStream.VisualStudio.Services
 			}
 		}
 
-		public static EditorMetrics CreateEditorMetrics(IWpfTextView textView)
+		public static EditorMetrics CreateEditorMetrics(IWpfTextView wpfTextView = null)
 		{
-			return new EditorMetrics
-			{
-				LineHeight = textView?.LineHeight.ToInt(),
+			return new EditorMetrics {
+				LineHeight = wpfTextView == null ? 16 : wpfTextView?.LineHeight.ToInt(),
 				FontSize = System.Windows.Application.Current.FindResource(VsFonts.EnvironmentFontSizeKey).ToIntSafe(DefaultFontSize),
 				EditorMargins = new EditorMargins
 				{

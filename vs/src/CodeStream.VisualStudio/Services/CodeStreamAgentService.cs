@@ -290,7 +290,7 @@ namespace CodeStream.VisualStudio.Services {
 						Team = _settingsService.Team,
 						ShowAvatars = _settingsService.ShowAvatars,
 						ServerUrl = _settingsService.ServerUrl,
-						TraceLevel= _settingsService.TraceLevel
+						TraceLevel = _settingsService.TraceLevel
 					},
 					Env = _settingsService.GetEnvironmentName(),
 					Version = _settingsService.GetEnvironmentVersionFormatted()
@@ -312,7 +312,7 @@ namespace CodeStream.VisualStudio.Services {
 
 			EditorContext editorContext = null;
 			if (activeTextEditor != null) {
-				editorContext = new EditorContext {					
+				editorContext = new EditorContext {
 					ActiveFile = activeTextEditor.FilePath,
 					//LastActiveFile?
 					TextEditorVisibleRanges = activeTextEditor.WpfTextView?.ToVisibleRanges(),
@@ -322,10 +322,15 @@ namespace CodeStream.VisualStudio.Services {
 					Metrics = ThemeManager.CreateEditorMetrics(activeTextEditor.WpfTextView),
 				};
 			}
+			else {
+				editorContext = new EditorContext {
+					Metrics = ThemeManager.CreateEditorMetrics()
+				};
+			}
 
 			WebviewContext webviewContext;
 			var teamId = state["teamId"].ToString();
-			var userSettingsService = ServiceLocator.Get<SUserSettingsService, IUserSettingsService>();			
+			var userSettingsService = ServiceLocator.Get<SUserSettingsService, IUserSettingsService>();
 			var userSettings = await userSettingsService?.TryGetWebviewContextAsync(teamId);
 			if (userSettings != null) {
 				webviewContext = userSettings;
@@ -345,7 +350,7 @@ namespace CodeStream.VisualStudio.Services {
 				Configs = new Configs {
 					Email = state["email"].ToString(),
 					Team = settings.Options.Team,
-					ShowAvatars = settings.Options.ShowAvatars,					
+					ShowAvatars = settings.Options.ShowAvatars,
 					ServerUrl = settings.Options.ServerUrl,
 					TraceLevel = _settingsService.TraceLevel
 				},
