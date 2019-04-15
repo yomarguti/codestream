@@ -231,6 +231,7 @@
     <Compile Include="UI\TextDocumentExtensions.cs" />
     <Compile Include="UI\TextViewCreationListener.cs" />
     <Compile Include="UI\TextViewExtensions.cs" />
+    <Compile Include="UI\TextViewRoles.cs" />
     <Compile Include="UI\Wpf\KeyChordGesture.cs" />
     <Compile Include="Vssdk\Commands\IVsCommand.cs" />
     <Compile Include="Vssdk\Commands\IVsCommandBase.cs" />

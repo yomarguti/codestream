@@ -134,14 +134,14 @@ namespace CodeStream.VisualStudio.LSP {
 				}
 			}
 			catch (Exception ex) {
-				Log.Error(ex, nameof(OnServerInitializedAsync));
+				Log.Fatal(ex, nameof(OnServerInitializedAsync));
 				throw;
 			}
 			await Task.CompletedTask;
 		}
 
 		public Task OnServerInitializeFailedAsync(Exception ex) {
-			Log.Error(ex, nameof(OnServerInitializeFailedAsync));
+			Log.Fatal(ex, nameof(OnServerInitializeFailedAsync));
 			throw ex;
 		}
 
