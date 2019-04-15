@@ -444,7 +444,9 @@ class CodemarkForm extends React.Component<Props, State> {
 
 			csAssignees = mapFilter(assignees, a => {
 				const user = a.value;
-				const codestreamUser = this.props.teammates.find(t => t.email === user.email);
+				const codestreamUser = this.props.teammates.find(
+					t => Boolean(user.email) && t.email === user.email
+				);
 				if (codestreamUser) return codestreamUser.id;
 				return undefined;
 			});
