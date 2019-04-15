@@ -100,9 +100,7 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 	}
 
 	@log()
-	async getBoards(
-		request: FetchThirdPartyBoardsRequest
-	): Promise<FetchThirdPartyBoardsResponse> {
+	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
 		if (this.boards.length > 0) return { boards: this.boards };
 		try {
 			Logger.debug("Jira: fetching projects");
@@ -256,6 +254,6 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 				project: request.boardId
 			})}`
 		);
-		return { users: body.map(u => ({ ...u, id: u.accountId, email: u.emailAddress })) };
+		return { users: body.map(u => ({ ...u, id: u.accountId })) };
 	}
 }
