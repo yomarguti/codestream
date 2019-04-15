@@ -38,6 +38,8 @@ namespace CodeStream.VisualStudio.Packages {
 	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.SolutionHasSingleProject)]
 	[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
 	public sealed class WebViewPackage : AsyncPackage {
+		private static readonly ILogger Log = LogManager.ForContext<WebViewPackage>();
+
 		private Lazy<ICodeStreamService> _codeStreamService;
 		private ISettingsService _settingsService;
 		private IDisposable _languageServerReadyEvent;
@@ -72,10 +74,10 @@ namespace CodeStream.VisualStudio.Packages {
 			var isSolutionLoaded = await IsSolutionLoadedAsync();
 
 			if (isSolutionLoaded) {
-				OnAfterOpenSolution();
+				OnAfterBackgroundSolutionLoadComplete();
 			}
-
-			SolutionEvents.OnAfterOpenSolution += OnAfterOpenSolution;
+			
+			SolutionEvents.OnAfterBackgroundSolutionLoadComplete += OnAfterBackgroundSolutionLoadComplete;
 
 			// When initialized asynchronously, the current thread may be a background thread at this point.
 			// Do any initialization that requires the UI thread after switching to the UI thread.
@@ -111,7 +113,7 @@ namespace CodeStream.VisualStudio.Packages {
 					{
 						await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 						var commandService = await GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
-						var command = commandService?.FindCommand(new CommandID(PackageGuids.guidWebViewPackageCmdSet,	PackageIds.UserCommandId));
+						var command = commandService?.FindCommand(new CommandID(PackageGuids.guidWebViewPackageCmdSet,  PackageIds.UserCommandId));
 						UserCommand.Instance.DynamicTextCommand_BeforeQueryStatus(command, null);
 					});
 				}),
@@ -142,10 +144,10 @@ namespace CodeStream.VisualStudio.Packages {
 			return value is bool isSolOpen && isSolOpen;
 		}
 
-		private void OnAfterOpenSolution(object sender = null, EventArgs e = null) {
+		private void OnAfterBackgroundSolutionLoadComplete(object sender = null, EventArgs e = null) {
 			// there is work that needs to be done only after the first time a solution as opened.
 			// if it's opened once before, run OnSolutionLoadedAlwaysAsync
-			if (_hasOpenedSolutionOnce) {				
+			if (_hasOpenedSolutionOnce) {
 				ThreadHelper.JoinableTaskFactory.Run(async delegate {
 					await OnSolutionLoadedAlwaysAsync();
 				});
@@ -191,12 +193,12 @@ namespace CodeStream.VisualStudio.Packages {
 			}
 			catch (Exception ex) {
 				Log.Warning(ex, nameof(TryTriggerLspActivationAsync));
-			}			
-
-			if (!hasActiveEditor) {				
-				await LanguageClient.TriggerLspInitializeAsync();
 			}
-			Log.Debug($"{nameof(TryTriggerLspActivationAsync)} hasActiveEditor={hasActiveEditor}");
+			bool? languageClientActivatorResult = null;
+			if (!hasActiveEditor) {
+				languageClientActivatorResult = await LanguageClientActivator.InitializeAsync();
+			}
+			Log.Debug($"{nameof(TryTriggerLspActivationAsync)} HasActiveEditor={hasActiveEditor} LanguageClientActivatorResult={languageClientActivatorResult}");
 
 			await System.Threading.Tasks.Task.CompletedTask;
 		}
@@ -274,17 +276,22 @@ namespace CodeStream.VisualStudio.Packages {
 
 		protected override void Dispose(bool isDisposing) {
 			if (isDisposing) {
-				SolutionEvents.OnAfterOpenSolution -= OnAfterOpenSolution;
+				try {
+					SolutionEvents.OnAfterBackgroundSolutionLoadComplete -= OnAfterBackgroundSolutionLoadComplete;
 
-				if (_settingsService != null && _settingsService.DialogPage != null) {
-					_settingsService.DialogPage.PropertyChanged -= DialogPage_PropertyChanged;
+					if (_settingsService != null && _settingsService.DialogPage != null) {
+						_settingsService.DialogPage.PropertyChanged -= DialogPage_PropertyChanged;
+					}
+
+					_vsShellEventManager?.Dispose();
+					_languageServerReadyEvent?.Dispose();
+					_codeStreamEventManager?.Dispose();
+					_disposables.DisposeAll();
+					LanguageClient.Instance?.Dispose();
 				}
-
-				_vsShellEventManager?.Dispose();
-				_languageServerReadyEvent?.Dispose();
-				_codeStreamEventManager?.Dispose();
-				_disposables.DisposeAll();
-				LanguageClient.Instance?.Dispose();
+				catch (Exception ex) {
+					Log.Error(ex, nameof(Dispose));
+				}
 			}
 
 			base.Dispose(isDisposing);

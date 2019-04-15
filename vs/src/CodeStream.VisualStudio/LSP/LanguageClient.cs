@@ -145,26 +145,6 @@ namespace CodeStream.VisualStudio.LSP {
 			throw ex;
 		}
 
-		public static async Task TriggerLspInitializeAsync() {
-			string path = null;
-
-			try {
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				if (!(Package.GetGlobalService(typeof(DTE)) is DTE2 dte)) return;
-
-				path = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Resources", Core.Constants.CodeStreamCodeStream);
-
-				var window = dte.OpenFile(Constants.vsViewKindCode, path);
-				window.Visible = true;
-				window.Close(vsSaveChanges.vsSaveChangesNo);
-				Log.Information($"{nameof(TriggerLspInitializeAsync)} success for {path}");
-			}
-			catch (Exception ex) {
-				Log.Error(ex, $"{nameof(TriggerLspInitializeAsync)} failed for {path}");
-			}
-		}
-
 		public void Dispose() {
 			Dispose(true);
 			GC.SuppressFinalize(this);

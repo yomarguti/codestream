@@ -165,13 +165,14 @@ namespace CodeStream.VisualStudio.Services
 
 			harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{styleSheet}</style>");
 
+#if !DEBUG
 			if (isDebuggingEnabled)
 			{
 				Log.Debug(outputDebug.ToJson(format: true));
 				Log.Debug(styleSheet);
 			}
 			Log.Verbose(harness);
-
+#endif
 			return harness;
 		}
 

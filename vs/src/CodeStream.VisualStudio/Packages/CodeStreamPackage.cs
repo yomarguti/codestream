@@ -1,13 +1,10 @@
 ﻿using CodeStream.VisualStudio.Properties;
 using CodeStream.VisualStudio.UI.Settings;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
 using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.LSP;
-using CodeStream.VisualStudio.UI;
 using Serilog;
 
 namespace CodeStream.VisualStudio.Packages
