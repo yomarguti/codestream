@@ -148,25 +148,29 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		this.titles = {
 			comment: (
 				<span>
-					Add Comment <span className="keybinding extra-pad">{modifier}</span>
+					<span className="function">Add Comment</span>{" "}
+					<span className="keybinding extra-pad">{modifier}</span>
 					<span className="keybinding">c</span>
 				</span>
 			),
 			bookmark: (
 				<span>
-					Create Bookmark <span className="keybinding extra-pad">{modifier}</span>
+					<span className="function">Create Bookmark</span>{" "}
+					<span className="keybinding extra-pad">{modifier}</span>
 					<span className="keybinding">b</span>
 				</span>
 			),
 			link: (
 				<span>
-					Get Permalink <span className="keybinding extra-pad">{modifier}</span>
+					<span className="function">Get Permalink</span>{" "}
+					<span className="keybinding extra-pad">{modifier}</span>
 					<span className="keybinding">p</span>
 				</span>
 			),
 			issue: (
 				<span>
-					Create Issue <span className="keybinding extra-pad">{modifier}</span>
+					<span className="function">Create Issue</span>{" "}
+					<span className="keybinding extra-pad">{modifier}</span>
 					<span className="keybinding">i</span>
 				</span>
 			),
@@ -550,6 +554,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const { fileNameToFilterFor, viewInline } = this.props;
 
 		if (fileNameToFilterFor && fileNameToFilterFor.length) {
+			const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
 			return (
 				<div key="no-codemarks" className="no-codemarks">
 					There are no codemarks
@@ -567,6 +572,24 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						show me how
 					</a>
 					).
+					<br />
+					<br />
+					<div className="keybindings">
+						<div className="function-row">{this.titles.comment}</div>
+						<div className="function-row">{this.titles.issue}</div>
+						<div className="function-row">{this.titles.bookmark}</div>
+						<div className="function-row">{this.titles.link}</div>
+						<div className="function-row">
+							<span className="function">Copy Private Permalink</span>
+							<span className="keybinding extra-pad">{modifier}</span>
+							<span className="keybinding extra-pad">⇧ p</span>
+						</div>
+						<div className="function-row">
+							<span className="function">Toggle CodeStream Panel</span>
+							<span className="keybinding extra-pad">{modifier}</span>
+							<span className="keybinding extra-pad">{modifier}</span>
+						</div>
+					</div>
 				</div>
 			);
 		} else {

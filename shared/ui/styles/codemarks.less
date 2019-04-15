@@ -382,12 +382,29 @@
 .no-codemarks {
 	width: 100%;
 	position: fixed;
-	top: 30vh;
-	padding: 0 30px 0 30px;
+	padding: 0 40px 0 40px;
 	color: @text-color-subtle;
 	text-align: center;
 	font-size: 13px;
 	z-index: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	.keybindings {
+		background-color: @base-background-color;
+		padding: 10px;
+		width: 20em;
+		margin: 10px auto;
+		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+		.function-row {
+			padding: 5px 0;
+			text-align: right;
+			.function {
+				float: left;
+			}
+			.keybinding {
+			}
+		}
+	}
 }
 
 .codemark-faq {
