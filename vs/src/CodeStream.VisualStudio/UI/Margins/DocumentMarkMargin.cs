@@ -22,7 +22,6 @@ using System.Windows.Media;
 
 namespace CodeStream.VisualStudio.UI.Margins {
 	internal class DocumentMarkMarginDummy { }
-
 	internal sealed class DocumentMarkMargin : Canvas, ICodeStreamWpfTextViewMargin {
 		private static readonly ILogger Log = LogManager.ForContext<DocumentMarkMarginDummy>();
 		private static readonly int DefaultMarginWidth = 20;
@@ -40,19 +39,16 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		private readonly ISessionService _sessionService;
 		private readonly ITextDocument _textDocument;
 		private readonly IWpfTextView _textView;
-
 		private readonly IToolWindowProvider _toolWindowProvider;
-
 		private readonly IViewTagAggregatorFactoryService _viewTagAggregatorFactoryService;
-
+		private readonly ITagAggregator<IGlyphTag> _tagAggregator;
 		private readonly IWpfTextViewHost _wpfTextViewHost;
+
 		private Canvas[] _childCanvases;
 		private Canvas _iconCanvas;
-
 		private bool _initialized;
 		private bool _isDisposed;
-		private Dictionary<object, LineInfo> _lineInfos;
-		private ITagAggregator<IGlyphTag> _tagAggregator;
+		private Dictionary<object, LineInfo> _lineInfos;		
 
 		/// <summary>
 		///     Initializes a new instance of the <see cref="DocumentMarkMargin" /> class for a given
@@ -81,6 +77,8 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			_textView = textView;
 			_textDocument = textDocument;
 
+			_tagAggregator = _viewTagAggregatorFactoryService.CreateTagAggregator<IGlyphTag>(_wpfTextViewHost.TextView);
+
 			Width = DefaultMarginWidth;
 			ClipToBounds = true;
 
@@ -102,7 +100,6 @@ namespace CodeStream.VisualStudio.UI.Margins {
 
 			Children.Add(_iconCanvas);
 			_lineInfos = new Dictionary<object, LineInfo>();
-			_tagAggregator = _viewTagAggregatorFactoryService.CreateTagAggregator<IGlyphTag>(_wpfTextViewHost.TextView);
 
 			var order = 0;
 			foreach (var lazy in _glyphFactoryProviders) {
