@@ -1,21 +1,23 @@
-package com.codestream
+package com.codestream.widgets
 
+import com.codestream.codeStream
+import com.codestream.sessionService
+import com.codestream.settingsService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.StatusBar
 import com.intellij.openapi.wm.StatusBarWidget
-import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.util.Consumer
-import org.eclipse.jdt.internal.compiler.codegen.CodeStream
 import java.awt.Component
 import java.awt.event.MouseEvent
 
-class CodeStreamStatusBarWidget(val project: Project) : StatusBarWidget, StatusBarWidget.TextPresentation,
-    ServiceConsumer(project) {
+class CodeStreamStatusBarWidget(val project: Project) : StatusBarWidget, StatusBarWidget.TextPresentation {
 
     init {
-        sessionService.onUserLoggedInChanged { refresh() }
-        sessionService.onMentionsChanged { refresh() }
+        project.sessionService?.let {
+            it.onUserLoggedInChanged { refresh() }
+            it.onMentionsChanged { refresh() }
+        }
     }
 
     fun refresh() {
@@ -36,10 +38,13 @@ class CodeStreamStatusBarWidget(val project: Project) : StatusBarWidget, StatusB
     override fun getMaxPossibleText() = tooltipText
 
     override fun getClickConsumer() = Consumer<MouseEvent> {
-        CodeStreamComponent.getInstance(project).toggleVisible()
+        project.codeStream?.toggleVisible()
     }
 
     override fun getText(): String {
+        val settingsService = project.settingsService ?: return ""
+        val sessionService = project.sessionService ?: return ""
+
         val prefix = settingsService.getEnvironmentDisplayPrefix()
 
         val userLoggedIn = sessionService.userLoggedIn ?: return "$prefix Sign in..."
@@ -61,5 +66,4 @@ class CodeStreamStatusBarWidget(val project: Project) : StatusBarWidget, StatusB
     override fun getAlignment(): Float {
         return Component.RIGHT_ALIGNMENT
     }
-
 }

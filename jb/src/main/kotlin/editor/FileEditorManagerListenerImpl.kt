@@ -1,14 +1,14 @@
 package com.codestream.editor
 
-import com.codestream.ServiceConsumer
+import com.codestream.editorService
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
 
-class FileEditorManagerListenerImpl(project: Project) : FileEditorManagerListener, ServiceConsumer(project) {
+class FileEditorManagerListenerImpl(val project: Project) : FileEditorManagerListener {
 
     override fun selectionChanged(event: FileEditorManagerEvent) {
-        editorService.setActiveEditor(event.newEditor)
+        project.editorService?.setActiveEditor(event.newEditor)
     }
 
 }

@@ -1,22 +1,15 @@
-package com.codestream.editor
+package com.codestream.system
 
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VirtualFile
-import java.io.File
-import java.net.URL
-
-
-enum class OS {
+private enum class OS {
     WINDOWS, UNIX
 }
 
-val os: OS by lazy {
+private val os: OS by lazy {
     if (System.getProperty("os.name").toLowerCase().contains("win"))
         OS.WINDOWS
     else
         OS.UNIX
 }
-
 
 const val SPACE_ENCODED: String = "%20"
 const val COLON_ENCODED: String = "%3A"
@@ -24,34 +17,13 @@ const val URI_FILE_BEGIN = "file:"
 const val URI_PATH_SEP: Char = '/'
 const val URI_VALID_FILE_BEGIN: String = "file:///"
 
-val VirtualFile.uri: String?
-    get() {
-        return try {
-            sanitizeURI(URL(url.replace(" ", SPACE_ENCODED)).toURI().toString())
-        } catch (e: Exception) {
-            // LOG.warn(e)
-            null
-        }
-    }
-
-val Project.baseUri: String?
-    get() {
-        return try {
-            val url = "file://" + File(basePath).canonicalPath
-            sanitizeURI(URL(url.replace(" ", SPACE_ENCODED)).toURI().toString())
-        } catch (e: Exception) {
-            // LOG.warn(e)
-            null
-        }
-    }
-
 fun sanitizeURI(uri: String?): String? {
     if (uri == null) {
         return null
     }
 
     if (!uri.startsWith(URI_FILE_BEGIN)) {
-//        LOG.warn("Malformed uri : " + uri)
+        // LOG.warn("Malformed uri : " + uri)
         return uri // Probably not an uri
     } else {
         val reconstructed = StringBuilder()
@@ -77,4 +49,3 @@ fun sanitizeURI(uri: String?): String? {
         }
     }
 }
-

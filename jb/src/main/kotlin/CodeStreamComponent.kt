@@ -1,9 +1,10 @@
 package com.codestream
 
+import com.codestream.agent.ModuleListenerImpl
 import com.codestream.editor.EditorFactoryListenerImpl
 import com.codestream.editor.FileEditorManagerListenerImpl
 import com.codestream.protocols.webview.FocusNotifications
-import com.google.gson.Gson
+import com.codestream.widgets.CodeStreamStatusBarWidget
 import com.intellij.ProjectTopics
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
@@ -21,16 +22,7 @@ import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
 import kotlin.properties.Delegates
 
-
-val gson = Gson()
-val DEBUG =
-    java.lang.management.ManagementFactory.getRuntimeMXBean().inputArguments.toString().contains("-agentlib:jdwp")
-
-class CodeStreamComponent(val project: Project) : Disposable, ServiceConsumer(project) {
-
-    companion object {
-        fun getInstance(project: Project) = project.getComponent(CodeStreamComponent::class.java)
-    }
+class CodeStreamComponent(val project: Project) : Disposable {
 
     private lateinit var toolWindow: ToolWindow
     private var focused by Delegates.observable(true) { _, _, _ ->
@@ -39,7 +31,9 @@ class CodeStreamComponent(val project: Project) : Disposable, ServiceConsumer(pr
 
     init {
         ApplicationManager.getApplication().invokeLater {
-            val toolWindowManager = ToolWindowManager.getInstance(project)
+            val toolWindowManager = ToolWindowManager.getInstance(project) ?: return@invokeLater
+            val webViewService = project.webViewService ?: return@invokeLater
+
             toolWindow = toolWindowManager.registerToolWindow(
                 "CodeStream",
                 false,
@@ -84,13 +78,12 @@ class CodeStreamComponent(val project: Project) : Disposable, ServiceConsumer(pr
             }
 
             val statusBar = WindowManager.getInstance().getIdeFrame(project).statusBar
-            //        val statusBar = WindowManager.getInstance().getStatusBar(project)
             statusBar?.addWidget(CodeStreamStatusBarWidget(project))
 
-            sessionService.onUnreadsChanged {
+            project.sessionService?.onUnreadsChanged {
                 ApplicationManager.getApplication().invokeLater {
                     toolWindow.icon = if (it > 0) {
-                        IconLoader.getIcon("/images/marker-codestream.svg")
+                        IconLoader.getIcon("/images/codestream-unread.svg")
                     } else {
                         IconLoader.getIcon("/images/codestream.svg")
                     }
@@ -125,10 +118,9 @@ class CodeStreamComponent(val project: Project) : Disposable, ServiceConsumer(pr
         if (project.isDisposed) return
 
         val isFocused = focused && toolWindow.isVisible
-        webViewService.postNotification(FocusNotifications.DidChange(isFocused))
+        project.webViewService?.postNotification(FocusNotifications.DidChange(isFocused))
     }
 
     override fun dispose() {
     }
-
 }

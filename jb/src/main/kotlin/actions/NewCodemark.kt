@@ -1,16 +1,15 @@
 package com.codestream.actions
 
-import com.codestream.CodeStreamComponent
-import com.codestream.WebViewService
-import com.codestream.editor.selectionOrCurrentLine
-import com.codestream.editor.uri
+import com.codestream.codeStream
+import com.codestream.extensions.selectionOrCurrentLine
+import com.codestream.extensions.uri
 import com.codestream.models.CodemarkType
 import com.codestream.protocols.webview.CodemarkNotifications
+import com.codestream.webViewService
 import com.intellij.codeInsight.intention.IntentionAction
 import com.intellij.codeInsight.intention.LowPriorityAction
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
@@ -18,13 +17,11 @@ import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.util.Iconable
 import com.intellij.psi.PsiFile
 
-abstract class NewCodemarkAction(val type: CodemarkType) : AnAction(), IntentionAction, LowPriorityAction, Iconable {
-
+abstract class NewCodemark(val type: CodemarkType) : AnAction(), IntentionAction, LowPriorityAction, Iconable {
     private fun execute(project: Project) {
         FileEditorManager.getInstance(project).selectedTextEditor?.run {
-            CodeStreamComponent.getInstance(project).show {
-                val webViewService = ServiceManager.getService(project, WebViewService::class.java)
-                webViewService.postNotification(
+            project.codeStream?.show {
+                project.webViewService?.postNotification(
                     CodemarkNotifications.New(
                         document.uri,
                         selectionOrCurrentLine,
@@ -33,7 +30,6 @@ abstract class NewCodemarkAction(val type: CodemarkType) : AnAction(), Intention
                     )
                 )
             }
-
         }
     }
 
@@ -50,26 +46,24 @@ abstract class NewCodemarkAction(val type: CodemarkType) : AnAction(), Intention
     override fun getFamilyName() = "CodeStream"
 
     override fun isAvailable(project: Project, editor: Editor?, file: PsiFile?) = true
-
-
 }
 
-class AddCommentAction : NewCodemarkAction(CodemarkType.COMMENT) {
+class AddComment : NewCodemark(CodemarkType.COMMENT) {
     override fun getText() = "Add comment"
     override fun getIcon(flags: Int) = IconLoader.getIcon("/images/marker-comment.svg")
 }
 
-class CreateIssueAction : NewCodemarkAction(CodemarkType.ISSUE) {
+class CreateIssue : NewCodemark(CodemarkType.ISSUE) {
     override fun getText() = "Create issue"
     override fun getIcon(flags: Int) = IconLoader.getIcon("/images/marker-issue.svg")
 }
 
-class CreateBookmarkAction : NewCodemarkAction(CodemarkType.BOOKMARK) {
+class CreateBookmark : NewCodemark(CodemarkType.BOOKMARK) {
     override fun getText() = "Create bookmark"
     override fun getIcon(flags: Int) = IconLoader.getIcon("/images/marker-bookmark.svg")
 }
 
-class GetPermalinkAction : NewCodemarkAction(CodemarkType.LINK) {
+class GetPermalink : NewCodemark(CodemarkType.LINK) {
     override fun getText() = "Get permalink"
     override fun getIcon(flags: Int) = IconLoader.getIcon("/images/marker-permalink.svg")
 }

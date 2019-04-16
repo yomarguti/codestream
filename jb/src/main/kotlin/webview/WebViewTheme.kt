@@ -1,4 +1,4 @@
-package com.codestream
+package com.codestream.webview
 
 import com.codestream.editor.getFontScale
 import com.intellij.ui.ColorUtil
@@ -144,11 +144,21 @@ private fun lighten(color: Color, percentage: Int): Color {
 
 private fun lighten(color: Color, percentage: Float): Color {
     val amount = (255 * percentage) / 100
-    return Color(adjustLight(color.red, amount), adjustLight(color.green, amount), adjustLight(color.blue, amount), color.alpha)
+    return Color(
+        adjustLight(color.red, amount),
+        adjustLight(color.green, amount),
+        adjustLight(color.blue, amount),
+        color.alpha
+    )
 }
 
 private fun opacity(color: Color, percentage: Int): Color {
-    return Color(color.red, color.green, color.blue, Math.round(255 * ((color.alpha / 255) * percentage.toFloat() / 100)))
+    return Color(
+        color.red,
+        color.green,
+        color.blue,
+        Math.round(255 * ((color.alpha / 255) * percentage.toFloat() / 100))
+    )
 }
 
 private val Color.rgba: String

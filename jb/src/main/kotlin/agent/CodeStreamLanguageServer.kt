@@ -1,4 +1,4 @@
-package com.codestream
+package com.codestream.agent
 
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
@@ -24,21 +24,3 @@ interface CodeStreamLanguageServer : LanguageServer {
     fun textDocumentFromKey(params: TextDocumentFromKeyParams): CompletableFuture<TextDocumentFromKeyResult>
 
 }
-
-class TextDocumentFromKeyParams(val key: Int)
-
-class TextDocumentFromKeyResult(
-    val textDocument: TextDocumentIdentifier,
-    val range: Range,
-    val marker: JsonObject
-)
-
-class Codemark(
-    val id: String,
-    val type: String?,
-    val color: String?,
-    val streamId: String,
-    val postId: String?
-)
-
-class TextDocument(val uri: String)

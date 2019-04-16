@@ -1,16 +1,16 @@
 package com.codestream.editor
 
-import com.codestream.ServiceConsumer
+import com.codestream.editorService
 import com.intellij.openapi.editor.event.EditorFactoryEvent
 import com.intellij.openapi.editor.event.EditorFactoryListener
 import com.intellij.openapi.project.Project
 
-class EditorFactoryListenerImpl(val project: Project) : EditorFactoryListener, ServiceConsumer(project) {
+class EditorFactoryListenerImpl(val project: Project) : EditorFactoryListener {
 
     override fun editorCreated(event: EditorFactoryEvent) {
         try {
             if (event.editor.project == project) {
-                editorService.add(event.editor)
+                project.editorService?.add(event.editor)
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -20,7 +20,7 @@ class EditorFactoryListenerImpl(val project: Project) : EditorFactoryListener, S
     override fun editorReleased(event: EditorFactoryEvent) {
         try {
             if (event.editor.project == project) {
-                editorService.remove(event.editor)
+                project.editorService?.remove(event.editor)
             }
         } catch (e: Exception) {
             e.printStackTrace()

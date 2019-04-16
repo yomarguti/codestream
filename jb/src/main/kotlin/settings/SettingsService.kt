@@ -52,7 +52,7 @@ data class SettingsServiceState(
 )
 
 @State(name = "CodeStream", storages = [Storage("codestream.xml")])
-class SettingsService(val project: Project) : PersistentStateComponent<SettingsServiceState>, ServiceConsumer(project) {
+class SettingsService(val project: Project) : PersistentStateComponent<SettingsServiceState> {
     private var _state = SettingsServiceState()
 
     override fun getState(): SettingsServiceState = _state
@@ -101,7 +101,7 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
     var webViewContext: JsonObject
         get() {
             var jsonObject = gson.fromJson<JsonObject>(state.webViewContext)
-            sessionService.userLoggedIn?.team?.id.let {
+            project.sessionService?.userLoggedIn?.team?.id.let {
                 jsonObject["currentTeamId"] = it
             }
             jsonObject["hasFocus"] = true

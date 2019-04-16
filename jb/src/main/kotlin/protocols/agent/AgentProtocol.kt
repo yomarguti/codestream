@@ -1,12 +1,11 @@
 package protocols.agent
 
-import com.codestream.Codemark
-import com.codestream.TextDocument
+import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import com.intellij.openapi.application.ApplicationInfo
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.ServerCapabilities
-import java.lang.IllegalStateException
+import org.eclipse.lsp4j.TextDocumentIdentifier
 
 class ProxySettings(val url: String, val strictSSL: Boolean)
 
@@ -199,3 +198,21 @@ enum class PermalinkPrivacy(val value: String) {
     PUBLIC("public"),
     PRIVATE("private")
 }
+
+class TextDocumentFromKeyParams(val key: Int)
+
+class TextDocumentFromKeyResult(
+    val textDocument: TextDocumentIdentifier,
+    val range: Range,
+    val marker: JsonObject
+)
+
+class Codemark(
+    val id: String,
+    val type: String?,
+    val color: String?,
+    val streamId: String,
+    val postId: String?
+)
+
+class TextDocument(val uri: String)

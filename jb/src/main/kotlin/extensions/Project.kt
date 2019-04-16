@@ -1,12 +1,13 @@
-package com.codestream
+package com.codestream.extensions
 
-import com.codestream.editor.baseUri
-import com.codestream.editor.uri
+import com.codestream.system.SPACE_ENCODED
+import com.codestream.system.sanitizeURI
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.module.impl.scopes.ModuleWithDependenciesScope
 import com.intellij.openapi.project.Project
 import org.eclipse.lsp4j.WorkspaceFolder
-
+import java.io.File
+import java.net.URL
 
 val Project.workspaceFolders: Set<WorkspaceFolder>
     get() {
@@ -25,4 +26,15 @@ val Project.workspaceFolders: Set<WorkspaceFolder>
 val Project.baseWorkspaceFolder: WorkspaceFolder
     get() {
         return WorkspaceFolder(baseUri)
+    }
+
+val Project.baseUri: String?
+    get() {
+        return try {
+            val url = "file://" + File(basePath).canonicalPath
+            sanitizeURI(URL(url.replace(" ", SPACE_ENCODED)).toURI().toString())
+        } catch (e: Exception) {
+            // LOG.warn(e)
+            null
+        }
     }

@@ -1,5 +1,10 @@
-package com.codestream
+package com.codestream.agent
 
+import com.codestream.editorService
+import com.codestream.extensions.workspaceFolders
+import com.codestream.gson
+import com.codestream.sessionService
+import com.codestream.webViewService
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.JsonElement
 import com.intellij.openapi.diagnostic.Logger
@@ -9,35 +14,35 @@ import org.eclipse.lsp4j.jsonrpc.services.JsonNotification
 import org.eclipse.lsp4j.services.LanguageClient
 import java.util.concurrent.CompletableFuture
 
-class CodeStreamLanguageClient(private val project: Project) : LanguageClient, ServiceConsumer(project) {
+class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
 
     private val logger = Logger.getInstance(CodeStreamLanguageClient::class.java)
 
     @JsonNotification("codestream/didChangeDocumentMarkers")
     fun didChangeDocumentMarkers(notification: DidChangeDocumentMarkersNotification) {
         notification.textDocument.uri?.let {
-            editorService.updateMarkers(it)
+            project.editorService?.updateMarkers(it)
         }
-        webViewService.postNotification("codestream/didChangeDocumentMarkers", notification)
+        project.webViewService?.postNotification("codestream/didChangeDocumentMarkers", notification)
     }
 
     @JsonNotification("codestream/didChangeData")
     fun didChangeData(json: JsonElement) {
-        webViewService.postNotification("codestream/didChangeData", json)
+        project.webViewService?.postNotification("codestream/didChangeData", json)
         val notification = gson.fromJson<DidChangeDataNotification>(json)
         when (notification.type) {
-            "unreads" -> sessionService.didChangeUnreads(gson.fromJson(notification.data))
+            "unreads" -> project.sessionService?.didChangeUnreads(gson.fromJson(notification.data))
         }
     }
 
     @JsonNotification("codestream/didChangeConnectionStatus")
     fun didChangeConnectionStatus(json: JsonElement) {
-        webViewService.postNotification("codestream/didChangeConnectionStatus", json)
+        project.webViewService?.postNotification("codestream/didChangeConnectionStatus", json)
     }
 
     @JsonNotification("codestream/didLogout")
     fun didLogout(json: JsonElement) {
-        webViewService.postNotification("codestream/didLogout", json)
+        project.webViewService?.postNotification("codestream/didLogout", json)
     }
 
     override fun workspaceFolders(): CompletableFuture<MutableList<WorkspaceFolder>> {

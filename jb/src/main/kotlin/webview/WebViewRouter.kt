@@ -1,5 +1,6 @@
-package com.codestream
+package com.codestream.webview
 
+import com.codestream.*
 import com.github.salomonbrys.kotson.*
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
@@ -16,7 +17,7 @@ import kotlinx.coroutines.launch
 import protocols.agent.*
 import protocols.webview.*
 
-class WebViewRouter(val project: Project) : ServiceConsumer(project) {
+class WebViewRouter(val project: Project) {
     private val logger = Logger.getInstance(WebViewRouter::class.java)
 
     fun handle(rawMessage: String, origin: String?) = GlobalScope.launch {
@@ -31,12 +32,14 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
         } catch (e: Exception) {
             logger.warn(e)
             if (message.id != null) {
-                webViewService.postResponse(message.id, null, e.message)
+                project.webViewService?.postResponse(message.id, null, e.message)
             }
         }
     }
 
     private suspend fun processAgentMessage(message: WebViewMessage) {
+        val agentService = project.agentService ?: return
+        val webViewService = project.webViewService ?: return
         val response = agentService.remoteEndpoint.request(message.method, message.params).await()
         if (message.id != null) {
             webViewService.postResponse(message.id, response)
@@ -53,7 +56,7 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
             "host/signup" -> signup(message)
             "host/signup/complete" -> signupComplete(message)
             "host/context/didChange" -> contextDidChange(message)
-            "host/webview/reload" -> webViewService.reload()
+            "host/webview/reload" -> project.webViewService?.reload()
             // "host/marker/compare" -> Unit
             // "host/marker/apply" -> Unit
             "host/configuration/update" -> configurationUpdate(message)
@@ -64,11 +67,16 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
             else -> logger.warn("Unhandled host message ${message.method}")
         }
         if (message.id != null) {
-            webViewService.postResponse(message.id, response)
+            project.webViewService?.postResponse(message.id, response)
         }
     }
 
     private suspend fun bootstrap(): Any {
+        val settingsService = project.settingsService ?: return Unit
+        val agentService = project.agentService ?: return Unit
+        val sessionService = project.sessionService ?: return Unit
+        val editorService = project.editorService ?: return Unit
+
         if (settingsService.state.autoSignIn) {
             val attr = CredentialAttributes(
                 generateServiceName("CodeStream", settingsService.state.serverUrl),
@@ -141,10 +149,14 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
             )
         }
         TODO("not implemented")
-
     }
 
     private suspend fun login(message: WebViewMessage): JsonElement {
+        val settingsService = project.settingsService ?: return jsonObject()
+        val agentService = project.agentService ?: return jsonObject()
+        val sessionService = project.sessionService ?: return jsonObject()
+        val editorService = project.editorService ?: return jsonObject()
+
         val params = gson.fromJson<LoginRequest>(message.params!!)
         val loginResult = agentService.agent.login(
             LoginWithPasswordParams(
@@ -206,14 +218,23 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
     }
 
     private fun slackLogin(message: WebViewMessage) {
+        val sessionService = project.sessionService ?: return
+        val settingsService = project.settingsService ?: return
         BrowserUtil.browse("${settingsService.state.webAppUrl}/service-auth/slack?state=${sessionService.signupToken}")
     }
 
     private fun signup(message: WebViewMessage) {
+        val sessionService = project.sessionService ?: return
+        val settingsService = project.settingsService ?: return
         BrowserUtil.browse("${settingsService.state.webAppUrl}/signup?force_auth=true&signup_token=${sessionService.signupToken}")
     }
 
     private fun logout() {
+        val agentService = project.agentService ?: return
+        val sessionService = project.sessionService ?: return
+        val settingsService = project.settingsService ?: return
+        val webViewService = project.webViewService ?: return
+
         sessionService.logout()
         agentService.agent.logout(LogoutParams())
         PasswordSafe.instance.set(
@@ -228,10 +249,11 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
     }
 
     private suspend fun signupComplete(message: WebViewMessage): JsonElement {
-//        val token = if (!signupToken.isNullOrBlank())
-//            signupToken
-//        else
-//            sessionService.signupToken
+        val agentService = project.agentService ?: return jsonObject()
+        val editorService = project.editorService ?: return jsonObject()
+        val sessionService = project.sessionService ?: return jsonObject()
+        val settingsService = project.settingsService ?: return jsonObject()
+
         val token = sessionService.signupToken
         val loginResult = agentService.agent.login(
             LoginWithSignupTokenParams(
@@ -298,6 +320,8 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
 
     private fun contextDidChange(message: WebViewMessage) {
         if (message.params == null) return
+        val editorService = project.editorService ?: return
+        val settingsService = project.settingsService ?: return
 
         settingsService.webViewContext = message.params["context"].obj
 
@@ -319,8 +343,8 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
 
     private fun configurationUpdate(message: WebViewMessage): Any {
         val notification = gson.fromJson<UpdateConfigurationRequest>(message.params!!)
-        settingsService.set(notification.name, notification.value)
-        webViewService.postNotification(
+        project.settingsService?.set(notification.name, notification.value)
+        project.webViewService?.postNotification(
             "webview/config/didChange",
             jsonObject(notification.name to (notification.value == "true"))
         )
@@ -336,24 +360,26 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
             request.range.end.character = Integer.MAX_VALUE
         }
 
-        editorService.toggleRangeHighlight(request.range, request.highlight)
+        project.editorService?.toggleRangeHighlight(request.range, request.highlight)
     }
 
-    suspend fun editorRangeReveal(message: WebViewMessage) : EditorRangeRevealResponse {
+    suspend fun editorRangeReveal(message: WebViewMessage): EditorRangeRevealResponse {
         val request = gson.fromJson<EditorRangeRevealRequest>(message.params!!)
-        val success = editorService.reveal(request.uri, request.range, request.atTop)
+        val success = project.editorService?.reveal(request.uri, request.range, request.atTop)
+            ?: false
         return EditorRangeRevealResponse(success)
     }
 
-    suspend fun editorRangeSelect(message: WebViewMessage) : EditorRangeSelectResponse {
+    suspend fun editorRangeSelect(message: WebViewMessage): EditorRangeSelectResponse {
         val request = gson.fromJson<EditorRangeSelectRequest>(message.params!!)
-        val success = editorService.select(request.uri, request.selection, request.preserveFocus ?: false)
+        val success = project.editorService?.select(request.uri, request.selection, request.preserveFocus ?: false)
+            ?: false
         return EditorRangeSelectResponse(success)
     }
 
     fun editorScrollTo(message: WebViewMessage) {
         val request = gson.fromJson<EditorScrollToRequest>(message.params!!)
-        editorService.scroll(request.uri, request.position, request.atTop)
+        project.editorService?.scroll(request.uri, request.position, request.atTop)
     }
 
     private fun parse(json: String): WebViewMessage {
@@ -376,6 +402,5 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
     ) {
         val target: String = method.split("/")[0]
     }
-
 }
 

@@ -1,6 +1,9 @@
-package com.codestream
+package com.codestream.agent
 
-import com.codestream.editor.baseUri
+import com.codestream.DEBUG
+import com.codestream.extensions.baseUri
+import com.codestream.gson
+import com.codestream.settingsService
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.JsonObject
 import com.intellij.execution.configurations.GeneralCommandLine
@@ -12,7 +15,15 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import org.apache.commons.io.FileUtils
-import org.eclipse.lsp4j.*
+import org.eclipse.lsp4j.ClientCapabilities
+import org.eclipse.lsp4j.DidChangeConfigurationCapabilities
+import org.eclipse.lsp4j.InitializeParams
+import org.eclipse.lsp4j.InitializeResult
+import org.eclipse.lsp4j.ServerCapabilities
+import org.eclipse.lsp4j.TextDocumentClientCapabilities
+import org.eclipse.lsp4j.TextDocumentSyncKind
+import org.eclipse.lsp4j.TextDocumentSyncOptions
+import org.eclipse.lsp4j.WorkspaceClientCapabilities
 import org.eclipse.lsp4j.jsonrpc.RemoteEndpoint
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.launch.LSPLauncher
@@ -21,14 +32,11 @@ import protocols.agent.CreatePermalinkResult
 import protocols.agent.DocumentMarkersParams
 import protocols.agent.DocumentMarkersResult
 import java.io.File
-import java.io.InputStream
-import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
-import java.util.*
+import java.util.Scanner
 
-
-class AgentService(private val project: Project) : ServiceConsumer(project) {
+class AgentService(private val project: Project) {
 
     private val logger = Logger.getInstance(AgentService::class.java)
 
@@ -174,15 +182,16 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
     }
 
     private fun initializationOptions(): MutableMap<String, Any?> {
+        val settings = project.settingsService ?: return mutableMapOf()
         return mutableMapOf(
             "recordRequests" to false,
             "traceLevel" to "debug",
-            "extension" to mapOf("versionFormatted" to settingsService.environmentVersion),
+            "extension" to mapOf("versionFormatted" to settings.environmentVersion),
             "ide" to mapOf(
                 "name" to "JetBrains",
                 "version" to ApplicationInfo.getInstance().fullVersion
             ),
-            "serverUrl" to settingsService.state.serverUrl
+            "serverUrl" to settings.state.serverUrl
         )
     }
 
@@ -210,9 +219,6 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
         return gson.fromJson(json)
     }
 }
-
-
-
 
 val platform: Platform by lazy {
     when {

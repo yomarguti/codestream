@@ -1,5 +1,7 @@
-package com.codestream
+package com.codestream.webview
 
+import com.codestream.DEBUG
+import com.codestream.gson
 import com.codestream.protocols.webview.WebViewNotification
 import com.github.salomonbrys.kotson.jsonObject
 import com.google.gson.JsonElement
@@ -9,7 +11,26 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.util.ui.UIUtil
-import com.teamdev.jxbrowser.chromium.*
+import com.teamdev.jxbrowser.chromium.Browser
+import com.teamdev.jxbrowser.chromium.BrowserContext
+import com.teamdev.jxbrowser.chromium.BrowserContextParams
+import com.teamdev.jxbrowser.chromium.BrowserPreferences
+import com.teamdev.jxbrowser.chromium.BrowserType
+import com.teamdev.jxbrowser.chromium.CertificateErrorParams
+import com.teamdev.jxbrowser.chromium.CertificatesDialogParams
+import com.teamdev.jxbrowser.chromium.CloseStatus
+import com.teamdev.jxbrowser.chromium.ColorChooserParams
+import com.teamdev.jxbrowser.chromium.DialogHandler
+import com.teamdev.jxbrowser.chromium.DialogParams
+import com.teamdev.jxbrowser.chromium.FileChooserParams
+import com.teamdev.jxbrowser.chromium.LoadHandler
+import com.teamdev.jxbrowser.chromium.LoadParams
+import com.teamdev.jxbrowser.chromium.PromptDialogParams
+import com.teamdev.jxbrowser.chromium.ReloadPostDataParams
+import com.teamdev.jxbrowser.chromium.ResourceHandler
+import com.teamdev.jxbrowser.chromium.ResourceParams
+import com.teamdev.jxbrowser.chromium.ResourceType
+import com.teamdev.jxbrowser.chromium.UnloadDialogParams
 import com.teamdev.jxbrowser.chromium.events.ScriptContextEvent
 import com.teamdev.jxbrowser.chromium.events.ScriptContextListener
 import com.teamdev.jxbrowser.chromium.swing.BrowserView
@@ -17,7 +38,6 @@ import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.Charset
 import javax.swing.UIManager
-
 
 class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHandler, ResourceHandler {
     private val logger = Logger.getInstance(WebViewService::class.java)

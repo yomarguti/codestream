@@ -1,14 +1,13 @@
 package com.codestream.actions
 
-import com.codestream.AgentService
-import com.codestream.editor.selectionOrCurrentLine
-import com.codestream.editor.uri
+import com.codestream.agentService
+import com.codestream.extensions.selectionOrCurrentLine
+import com.codestream.extensions.uri
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
 import com.intellij.notification.Notifications
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.ide.CopyPasteManager
 import kotlinx.coroutines.GlobalScope
@@ -28,7 +27,7 @@ class CopyPermalink : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
         val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return
-        val agentService = ServiceManager.getService(project, AgentService::class.java)
+        val agentService = project.agentService ?: return
 
         val uri = editor.document.uri
         val selection = editor.selectionOrCurrentLine

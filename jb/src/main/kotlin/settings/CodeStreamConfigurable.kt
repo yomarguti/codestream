@@ -1,11 +1,11 @@
-package com.codestream
+package com.codestream.settings
 
-import com.codestream.settings.CodeStreamConfigurableGUI
+import com.codestream.settingsService
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.project.Project
 import javax.swing.JComponent
 
-class CodeStreamConfigurable(val project: Project) : SearchableConfigurable, ServiceConsumer(project) {
+class CodeStreamConfigurable(val project: Project) : SearchableConfigurable {
     private var _gui: CodeStreamConfigurableGUI? = null
 
     override fun isModified(): Boolean {
@@ -21,7 +21,7 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable, Ser
     }
 
     override fun apply() {
-        val state = settingsService.state
+        val state = project.settingsService?.state ?: return
         val gui = _gui
         gui?.let {
             state.autoSignIn = gui.autoSignIn.isSelected
@@ -41,23 +41,24 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable, Ser
 
     override fun createComponent(): JComponent? {
         val gui = CodeStreamConfigurableGUI()
-        val state = settingsService.state
 
-        gui.apply {
-            autoSignIn.isSelected = state.autoSignIn
-            serverUrl.text = state.serverUrl
-            webAppUrl.text = state.webAppUrl
-            showAvatars.isSelected = state.avatars
-            muteAll.isSelected = state.muteAll
-            team.text = state.team
-            showFeedbackSmiley.isSelected = state.showFeedbackSmiley
-            showMarkers.isSelected = state.showMarkers
-            autoHideMarkers.isSelected = state.autoHideMarkers
-            proxySupport.selectedItem = state.proxySupport
-            proxyStrictSSL.isSelected = state.proxyStrictSSL
-            proxyUrl.text = state.proxyUrl
+        project.settingsService?.state?.let {
+            gui.apply {
+                autoSignIn.isSelected = it.autoSignIn
+                serverUrl.text = it.serverUrl
+                webAppUrl.text = it.webAppUrl
+                showAvatars.isSelected = it.avatars
+                muteAll.isSelected = it.muteAll
+                team.text = it.team
+                showFeedbackSmiley.isSelected = it.showFeedbackSmiley
+                showMarkers.isSelected = it.showMarkers
+                autoHideMarkers.isSelected = it.autoHideMarkers
+                proxySupport.selectedItem = it.proxySupport
+                proxyStrictSSL.isSelected = it.proxyStrictSSL
+                proxyUrl.text = it.proxyUrl
+            }
         }
-
+        
         _gui = gui
         return gui.rootPanel
     }

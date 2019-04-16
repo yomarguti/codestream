@@ -1,5 +1,6 @@
 package com.codestream
 
+import com.codestream.agent.DidChangeUnreadsNotification
 import com.intellij.openapi.project.Project
 import protocols.agent.UserLoggedIn
 import java.util.*
