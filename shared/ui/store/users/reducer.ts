@@ -91,3 +91,14 @@ export const getUserByCsId = createSelector(
 		return undefined;
 	}
 );
+
+export const findMentionedUserIds = (members: CSUser[], text: string) => {
+	const mentionedUserIds: string[] = [];
+	members.forEach(user => {
+		const matcher = user.username.replace(/\+/g, "\\+").replace(/\./g, "\\.");
+		if (text.match("@" + matcher + "\\b")) {
+			mentionedUserIds.push(user.id);
+		}
+	});
+	return mentionedUserIds;
+};

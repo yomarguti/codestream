@@ -8,7 +8,7 @@ import Icon from "./Icon";
 import Timestamp from "./Timestamp";
 import CodemarkActions from "./CodemarkActions";
 import RetrySpinner from "./RetrySpinner";
-import { retryPost, cancelPost } from "./actions";
+import { retryPost, cancelPost, editPost } from "./actions";
 import ContentEditable from "react-contenteditable";
 import Button from "./Button";
 import Menu from "./Menu";
@@ -20,15 +20,19 @@ import { getPost } from "../store/posts/reducer";
 import { getCodemark } from "../store/codemarks/reducer";
 import { markdownify, emojify } from "./Markdowner";
 import { reactToPost, setCodemarkStatus } from "./actions";
-import { escapeHtml, safe } from "../utils";
-import { getUsernamesById, getNormalizedUsernames } from "../store/users/reducer";
+import { escapeHtml, safe, replaceHtml } from "../utils";
+import {
+	getUsernamesById,
+	getNormalizedUsernames,
+	getTeamMembers,
+	findMentionedUserIds
+} from "../store/users/reducer";
 import { GetDocumentFromMarkerRequestType } from "@codestream/protocols/agent";
 import { EditorSelectRangeRequestType } from "../ipc/webview.protocol";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { HostApi } from "../webview-api";
 import { includes as _includes } from "lodash-es";
 import { prettyPrintOne } from "code-prettify";
-import { Range } from "vscode-languageserver-types";
 
 class Post extends React.Component {
 	state = {
@@ -704,6 +708,23 @@ class Post extends React.Component {
 		return id;
 	};
 
+	onSaveEdit = async event => {
+		if (this.props.onDidSaveEdit) {
+			event.preventDefault();
+			const { post, id, teamMembers } = this.props;
+
+			const text = replaceHtml(this._contentEditable.htmlEl.innerText);
+			await this.props.editPost(post.streamId, id, text, findMentionedUserIds(teamMembers, text));
+			this.props.onDidSaveEdit();
+		}
+	};
+	onCancelEdit = event => {
+		if (this.props.onCancelEdit) {
+			event.preventDefault();
+			this.props.onCancelEdit();
+		}
+	};
+
 	renderTextEditing = post => {
 		const id = this.getEditInputId();
 
@@ -714,7 +735,6 @@ class Post extends React.Component {
 					id={id}
 					rows="1"
 					tabIndex="-1"
-					onChange={this.handleOnChange}
 					onBlur={this.handleOnBlur}
 					html={post.text}
 					ref={ref => (this._contentEditable = ref)}
@@ -726,7 +746,7 @@ class Post extends React.Component {
 						tabIndex="2"
 						type="submit"
 						loading={this.props.loading}
-						onClick={this.handleClickSave}
+						onClick={this.onSaveEdit}
 					>
 						Save
 					</Button>
@@ -735,6 +755,7 @@ class Post extends React.Component {
 						className="control-button cancel"
 						tabIndex="2"
 						type="submit"
+						onClick={this.props.onCancelEdit}
 						loading={this.props.loading}
 					>
 						Cancel
@@ -881,6 +902,7 @@ const mapStateToProps = (state, props) => {
 
 	return {
 		threadId: context.threadId,
+		teamMembers: getTeamMembers(state),
 		usernamesById: getUsernamesById(state),
 		userNamesNormalized: getNormalizedUsernames(state),
 		repoName,
@@ -897,5 +919,5 @@ const mapStateToProps = (state, props) => {
 
 export default connect(
 	mapStateToProps,
-	{ cancelPost, retryPost, reactToPost, setCodemarkStatus }
+	{ cancelPost, retryPost, editPost, reactToPost, setCodemarkStatus }
 )(injectIntl(Post));

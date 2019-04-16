@@ -276,3 +276,10 @@ export function escapeHtml(text: string) {
 		return htmlEscapeCharMap[c];
 	});
 }
+
+export function replaceHtml(text: string) {
+	const domParser = new DOMParser();
+	const replaceRegex = /<br>|<div>/g;
+	return domParser.parseFromString(text.replace(replaceRegex, "\n"), "text/html").documentElement
+		.textContent;
+}

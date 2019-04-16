@@ -49,7 +49,7 @@ interface Props extends DispatchProps {
 	pinnedReplies: CSPost[];
 	pinnedAuthors: CSUser[];
 	usernames: string[];
-	postAction?: Function;
+	postAction?(...args: any[]): any;
 	action(action: string, post: any, args: any): any;
 	onClick?(event: React.SyntheticEvent, codemark: CodemarkPlus, marker: DocumentMarker): any;
 	onMouseEnter?(marker: DocumentMarker): any;

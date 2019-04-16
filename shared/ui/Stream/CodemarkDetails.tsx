@@ -7,7 +7,7 @@ import { getTeamMembers } from "../store/users/reducer";
 import CodemarkActions from "./CodemarkActions";
 import { CodemarkPlus, Capabilities } from "@codestream/protocols/agent";
 import { createPost } from "./actions";
-import { CSUser, CSMe } from "@codestream/protocols/api";
+import { CSUser, CSMe, CSPost } from "@codestream/protocols/api";
 
 interface State {
 	editingPostId?: string;
@@ -30,7 +30,7 @@ interface Props {
 
 	onSubmitPost?: any;
 	createPost(...args: Parameters<typeof createPost>): ReturnType<ReturnType<typeof createPost>>;
-	postAction?: Function;
+	postAction?(...args: any[]): any;
 }
 
 export class CodemarkDetails extends React.Component<Props, State> {
@@ -67,6 +67,18 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		this.setState({ text: text });
 	};
 
+	postAction = (name: string, post: CSPost) => {
+		if (name === "edit-post") {
+			this.setState({ editingPostId: post.id });
+		} else {
+			this.props.postAction && this.props.postAction(name, post);
+		}
+	};
+
+	cancelEdit = () => {
+		this.setState({ editingPostId: undefined });
+	};
+
 	render() {
 		const { codemark, capabilities } = this.props;
 
@@ -86,12 +98,14 @@ export class CodemarkDetails extends React.Component<Props, State> {
 									currentUserId={this.props.currentUserId}
 									currentUserName={this.props.currentUserName}
 									editingPostId={this.state.editingPostId}
-									postAction={this.props.postAction}
+									postAction={this.postAction}
 									streamId={this.props.codemark.streamId}
 									isThread
 									threadId={threadId}
 									teamId={this.props.teamId}
 									skipParentPost={true}
+									onCancelEdit={this.cancelEdit}
+									onDidSaveEdit={this.cancelEdit}
 									disableEdits
 								/>
 							</ScrollBox>

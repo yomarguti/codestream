@@ -25,6 +25,8 @@ export interface Props {
 	teammates?: CSUser[];
 	threadId: string;
 	disableEdits: boolean;
+	onCancelEdit?: Function;
+	onDidSaveEdit?: Function;
 
 	markRead: any;
 	onDidChangeVisiblePosts: any;
@@ -237,7 +239,6 @@ export default infiniteLoadable(
 				isActive,
 				newMessagesAfterSeqNum,
 				postAction,
-				posts,
 				renderIntro,
 				isFetchingMore,
 				hasMore
@@ -284,7 +285,9 @@ export default infiniteLoadable(
 									showDetails={this.props.isThread}
 									streamId={this.props.streamId}
 									onDidResize={this.onPostDidResize}
-									disableEdits={this.props.disableEdits}
+									disableEdits={this.props.isThread && post.parentPostId && post.codemarkId}
+									onCancelEdit={this.props.onCancelEdit}
+									onDidSaveEdit={this.props.onDidSaveEdit}
 								/>
 							</React.Fragment>
 						);
