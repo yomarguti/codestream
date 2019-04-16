@@ -1877,7 +1877,7 @@ export class SimpleStream extends Component {
 					message: () => (
 						<span>
 							{warning.message + " "}
-							<a href="https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues">
+							<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Git-Issues">
 								Learn more
 							</a>
 						</span>
@@ -1969,7 +1969,7 @@ export class SimpleStream extends Component {
 					message: () => (
 						<span>
 							{warning.message + " "}
-							<a href="https://help.codestream.com/hc/en-us/articles/360001530571-Git-Issues">
+							<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Git-Issues">
 								Learn more
 							</a>
 						</span>
