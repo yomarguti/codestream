@@ -21,6 +21,7 @@ import { confirmPopup } from "./Confirm";
 import { getPost } from "../store/posts/reducer";
 import { getPosts } from "../store/posts/actions";
 import Tooltip from "./Tooltip";
+import { Link } from "./Link";
 
 interface State {
 	isEditing: boolean;
@@ -226,11 +227,7 @@ export class Codemark extends React.Component<Props, State> {
 
 	handleClickCodemark = (event: React.MouseEvent): any => {
 		const target = event && (event.target as HTMLElement);
-		if (
-			target &&
-			(target.tagName === "A" || target.closest(".external-provider"))
-		)
-			return false;
+		if (target && (target.tagName === "A" || target.closest(".external-provider"))) return false;
 		// if (this.props.selected) return false;
 
 		event.preventDefault();
@@ -240,6 +237,7 @@ export class Codemark extends React.Component<Props, State> {
 			// by dragging
 			return;
 		}
+
 		this.props.onClick && this.props.onClick(event, this.props.codemark, this.props.marker);
 	};
 
@@ -488,12 +486,11 @@ export class Codemark extends React.Component<Props, State> {
 			const icon = providerDisplay.icon;
 			if (!icon) return null;
 			externalLink = (
-				//@ts-ignore
-				<span className="detail-icon">
-					<a href={codemark.externalProviderUrl}>
+				<Link href={codemark.externalProviderUrl}>
+					<span className="detail-icon">
 						<Icon name={icon} className="external-provider" />
-					</a>
-				</span>
+					</span>
+				</Link>
 			);
 		}
 
