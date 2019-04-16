@@ -44,34 +44,27 @@ class WebViewRouter(val project: Project) : ServiceConsumer(project) {
     }
 
     private suspend fun processHostMessage(message: WebViewMessage) {
-        try {
-            val response = when (message.method) {
-                "host/bootstrap" -> bootstrap()
-                "host/login" -> login(message)
-                "host/didInitialize" -> Unit
-                "host/logout" -> logout()
-                "host/slack/login" -> slackLogin(message)
-                "host/signup" -> signup(message)
-                "host/signup/complete" -> signupComplete(message)
-                "host/context/didChange" -> contextDidChange(message)
-                "host/webview/reload" -> webViewService.reload()
-                //            "host/marker/compare" -> Unit
-                //            "host/marker/apply" -> Unit
-                "host/configuration/update" -> configurationUpdate(message)
-                "host/editor/range/highlight" -> editorRangeHighlight(message)
-                "host/editor/range/reveal" -> editorRangeReveal(message)
-                "host/editor/range/select" -> editorRangeSelect(message)
-                "host/editor/scrollTo" -> editorScrollTo(message)
-                else -> logger.warn("Unhandled host message ${message.method}")
-            }
-            if (message.id != null) {
-                webViewService.postResponse(message.id, response, null)
-            }
-        } catch (e: Exception) {
-            logger.warn(e)
-            if (message.id != null) {
-                webViewService.postResponse(message.id, null, e.message)
-            }
+        val response = when (message.method) {
+            "host/bootstrap" -> bootstrap()
+            "host/login" -> login(message)
+            "host/didInitialize" -> Unit
+            "host/logout" -> logout()
+            "host/slack/login" -> slackLogin(message)
+            "host/signup" -> signup(message)
+            "host/signup/complete" -> signupComplete(message)
+            "host/context/didChange" -> contextDidChange(message)
+            "host/webview/reload" -> webViewService.reload()
+            // "host/marker/compare" -> Unit
+            // "host/marker/apply" -> Unit
+            "host/configuration/update" -> configurationUpdate(message)
+            "host/editor/range/highlight" -> editorRangeHighlight(message)
+            "host/editor/range/reveal" -> editorRangeReveal(message)
+            "host/editor/range/select" -> editorRangeSelect(message)
+            "host/editor/scrollTo" -> editorScrollTo(message)
+            else -> logger.warn("Unhandled host message ${message.method}")
+        }
+        if (message.id != null) {
+            webViewService.postResponse(message.id, response)
         }
     }
 

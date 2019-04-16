@@ -90,17 +90,25 @@ class AgentService(private val project: Project) : ServiceConsumer(project) {
                 // "--log=${agentLog.absolutePath}"
             ).createProcess()
         } else {
+            val perms = setOf(
+                PosixFilePermission.OWNER_READ,
+                PosixFilePermission.OWNER_WRITE,
+                PosixFilePermission.OWNER_EXECUTE
+            )
             val agentDestFile = getAgentDestFile(temp)
             FileUtils.copyToFile(javaClass.getResourceAsStream(getAgentResourcePath()), agentDestFile)
             if (platform == Platform.MAC || platform == Platform.LINUX) {
-                val perms = setOf(
-                    PosixFilePermission.OWNER_READ,
-                    PosixFilePermission.OWNER_WRITE,
-                    PosixFilePermission.OWNER_EXECUTE
-                )
                 Files.setPosixFilePermissions(agentDestFile.toPath(), perms)
             }
             logger.info("CodeStream LSP agent extracted to ${agentDestFile.absolutePath}")
+
+            if (platform == Platform.LINUX) {
+                val xdgOpen = File(temp, "xdg-open")
+                FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/xdg-open"), xdgOpen)
+                Files.setPosixFilePermissions(xdgOpen.toPath(), perms)
+                logger.info("xdg-open extracted to ${xdgOpen.absolutePath}")
+            }
+
             GeneralCommandLine(
                 agentDestFile.absolutePath,
                 "--stdio"
