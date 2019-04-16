@@ -1,7 +1,7 @@
 "use strict";
 import HttpsProxyAgent from "https-proxy-agent";
 import fetch, { Headers, RequestInit, Response } from "node-fetch";
-import opn from "opn";
+import { openUrl } from "../../system/openUrl";
 import { URLSearchParams } from "url";
 import { Emitter, Event } from "vscode-languageserver";
 import { ServerError } from "../../agentError";
@@ -1027,9 +1027,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			const query = Object.keys(params)
 				.map(param => `${param}=${encodeURIComponent(params[param])}`)
 				.join("&");
-			await opn(`${this.baseUrl}/no-auth/provider-auth/${request.providerName}?${query}`, {
-				wait: false
-			});
+			await openUrl(`${this.baseUrl}/no-auth/provider-auth/${request.providerName}?${query}`);
 			return response;
 		} catch (ex) {
 			Logger.error(ex, cc);

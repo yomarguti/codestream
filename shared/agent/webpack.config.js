@@ -13,6 +13,10 @@ module.exports = function(env, argv) {
 		{
 			copy: [
 				{
+					source: "node_modules/opn/**/xdg-open",
+					destination: "dist/"
+				},
+				{
 					source: "dist/agent.*",
 					// TODO: Use environment variable if exists
 					destination: path.resolve(__dirname, "../vscode-codestream/dist/")
