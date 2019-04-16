@@ -52,12 +52,14 @@ namespace CodeStream.VisualStudio.Services {
 		private static readonly ILogger Log = LogManager.ForContext<IdeService>();
 
 		private readonly IServiceProvider _serviceProvider;
+		private readonly IWpfTextViewCache _textViewCache;
 		private readonly IComponentModel _componentModel;
 		private readonly IVsTextManager _iIVsTextManager;
 		private readonly Dictionary<ExtensionKind, bool> _extensions;
 
-		public IdeService(IServiceProvider serviceProvider, IComponentModel componentModel, IVsTextManager iIVsTextManager, Dictionary<ExtensionKind, bool> extensions) {
+		public IdeService(IServiceProvider serviceProvider, IWpfTextViewCache textViewCache, IComponentModel componentModel, IVsTextManager iIVsTextManager, Dictionary<ExtensionKind, bool> extensions) {
 			_serviceProvider = serviceProvider;
+			_textViewCache = textViewCache;
 			_componentModel = componentModel;
 			_iIVsTextManager = iIVsTextManager;
 			_extensions = extensions;
@@ -136,7 +138,7 @@ namespace CodeStream.VisualStudio.Services {
 				IWpfTextView wpfTextView = null;
 				try {
 					var localPath = fileUri.ToLocalPath();
-					if (!WpfTextViewCache.TryGetValue(localPath, out wpfTextView) || wpfTextView == null) {
+					if (!_textViewCache.TryGetValue(localPath, out wpfTextView) || wpfTextView == null) {
 						return;
 					}
 
@@ -190,7 +192,7 @@ namespace CodeStream.VisualStudio.Services {
 			IWpfTextView wpfTextView = null;
 			try {
 				if (uri != null) {
-					if (!WpfTextViewCache.TryGetValue(uri.ToLocalPath(), out wpfTextView)) {
+					if (!_textViewCache.TryGetValue(uri.ToLocalPath(), out wpfTextView)) {
 						// wasn't in cache... try to get it?
 						wpfTextView = GetActiveWpfTextView();
 					}
@@ -230,10 +232,7 @@ namespace CodeStream.VisualStudio.Services {
 				}
 
 				_iIVsTextManager.GetActiveView(1, null, out IVsTextView textViewCurrent);
-				if (textViewCurrent == null) {
-					Log.Verbose($"{nameof(textViewCurrent)} is null");
-					return null;
-				}
+				if (textViewCurrent == null) return null;				
 
 				return editor.GetWpfTextView(textViewCurrent);
 			}
@@ -247,7 +246,7 @@ namespace CodeStream.VisualStudio.Services {
 		private async System.Threading.Tasks.Task<IWpfTextView> AssertWpfTextViewAsync(Uri fileUri, bool forceOpen = false) {
 			IWpfTextView wpfTextView;
 			var localPath = fileUri.ToLocalPath();
-			if (forceOpen == true || !WpfTextViewCache.TryGetValue(localPath, out wpfTextView)) {
+			if (forceOpen == true || !_textViewCache.TryGetValue(localPath, out wpfTextView)) {
 				var view = GetActiveTextEditor();
 
 				if (view == null || !view.Uri.EqualsIgnoreCase(fileUri)) {

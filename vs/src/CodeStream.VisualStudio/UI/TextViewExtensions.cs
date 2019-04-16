@@ -18,11 +18,6 @@ namespace CodeStream.VisualStudio.UI
     {
         private static readonly ILogger Log = LogManager.ForContext<TextViewExtensionsDummy>();
 
-        public static void RemovePropertySafe(this IWpfTextView textView, string key)
-        {
-            textView.TextBuffer.Properties.RemovePropertySafe(key);
-        }
-
         public static void RemovePropertySafe(this PropertyCollection collection, string key)
         {
             if (key.IsNullOrWhiteSpace() || !collection.ContainsProperty(key)) return;

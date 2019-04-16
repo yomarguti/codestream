@@ -48,7 +48,8 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		private Canvas _iconCanvas;
 		private bool _initialized;
 		private bool _isDisposed;
-		private Dictionary<object, LineInfo> _lineInfos;		
+		private Dictionary<object, LineInfo> _lineInfos;
+		
 
 		/// <summary>
 		///     Initializes a new instance of the <see cref="DocumentMarkMargin" /> class for a given

@@ -23,12 +23,11 @@ namespace CodeStream.VisualStudio.UI.Taggers {
 			var wpfTextView = textView as IWpfTextView;
 			if (wpfTextView == null || textView.TextBuffer != buffer) return null;
 			if (!wpfTextView.Roles.ContainsAll(TextViewRoles.DefaultRoles)) return null;
-
 			if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, textView.TextBuffer, out var textDocument)) return null;
 
 			var sessionService = ServiceLocator.Get<SSessionService, ISessionService>();
-			return textView.TextBuffer.Properties.GetOrCreateSingletonProperty(typeof(DocumentMarkTagger),
-				() => new DocumentMarkTagger(sessionService, textView, textDocument, buffer)) as ITagger<T>;
+			return textView.Properties.GetOrCreateSingletonProperty(typeof(DocumentMarkTagger),
+				() => new DocumentMarkTagger(sessionService, textView, buffer)) as ITagger<T>;
 		}
 	}
 }

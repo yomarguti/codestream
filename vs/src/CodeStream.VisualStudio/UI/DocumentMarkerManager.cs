@@ -8,113 +8,90 @@ using Microsoft.VisualStudio.Text.Editor;
 using Serilog;
 using System;
 
-namespace CodeStream.VisualStudio.UI
-{
-    public class DocumentMarkerManagerFactory
-    {
-        public static DocumentMarkerManager Create(ICodeStreamAgentService agentService, IWpfTextView wpfTextView, ITextDocument textDocument)
-        {
-            return new DocumentMarkerManager(agentService, wpfTextView, textDocument);
-        }
-    }
+namespace CodeStream.VisualStudio.UI {
+	public class DocumentMarkerManagerFactory {
+		public static DocumentMarkerManager Create(ICodeStreamAgentService agentService, IWpfTextView wpfTextView, ITextDocument textDocument) {
+			return new DocumentMarkerManager(agentService, wpfTextView, textDocument);
+		}
+	}
 
-    public class DocumentMarkerManager: IDisposable
-    {
-        private readonly ICodeStreamAgentService _agentService;
-        private readonly IWpfTextView _wpfTextView;
-        private readonly ITextDocument _textDocument;
-        bool _disposed = false;
-        private DocumentMarkersResponse _markers;
+	public class DocumentMarkerManager : IDisposable {
+		private readonly ICodeStreamAgentService _agentService;
+		private readonly IWpfTextView _wpfTextView;
+		private readonly ITextDocument _textDocument;
+		bool _disposed = false;
+		private DocumentMarkersResponse _markers;
 
-        private static readonly ILogger Log = LogManager.ForContext<DocumentMarkerManager>();
+		private static readonly ILogger Log = LogManager.ForContext<DocumentMarkerManager>();
 
-        public DocumentMarkerManager(ICodeStreamAgentService agentService, IWpfTextView wpfTextView, ITextDocument textDocument)
-        {
-            _agentService = agentService;
-            _wpfTextView = wpfTextView;
-            _textDocument = textDocument;
-        }
+		public DocumentMarkerManager(ICodeStreamAgentService agentService, IWpfTextView wpfTextView, ITextDocument textDocument) {
+			_agentService = agentService;
+			_wpfTextView = wpfTextView;
+			_textDocument = textDocument;
+		}
 
-        public void GetOrCreateMarkers(bool forceUpdate = false)
-        {
-            if (_markers != null && _markers.Markers.AnySafe() == false && !forceUpdate)
-            {
-                Log.Verbose("Codemarks are empty and force={force}", forceUpdate);
-                return;
-            }
+		public void GetOrCreateMarkers(bool forceUpdate = false) {
+			if (_markers != null && _markers.Markers.AnySafe() == false && !forceUpdate) {
+				Log.Verbose("Codemarks are empty and force={force}", forceUpdate);
+				return;
+			}
 
-            var filePath = _textDocument.FilePath;
-            if (!Uri.TryCreate(filePath, UriKind.Absolute, out Uri fileUri))
-            {
-                Log.Verbose($"Could not parse file path as uri={filePath}");
-                return;
-            }
+			var filePath = _textDocument.FilePath;
+			if (!Uri.TryCreate(filePath, UriKind.Absolute, out Uri fileUri)) {
+				Log.Verbose($"Could not parse file path as uri={filePath}");
+				return;
+			}
 
-            ThreadHelper.JoinableTaskFactory.Run(async delegate
-            {
-                try
-                {
-                    _markers = await _agentService.GetMarkersForDocumentAsync(fileUri);
+			ThreadHelper.JoinableTaskFactory.Run(async delegate {
+				try {
+					_markers = await _agentService.GetMarkersForDocumentAsync(fileUri);
 
-                    if (_markers?.Markers.AnySafe() == true || forceUpdate)
-                    {
-                        if (_wpfTextView.TextBuffer.Properties.ContainsProperty(PropertyNames.DocumentMarkers))
-                        {
-                            _wpfTextView.TextBuffer.Properties.RemoveProperty(PropertyNames.DocumentMarkers);
-                        }
-
-                        _wpfTextView.TextBuffer.Properties.AddProperty(PropertyNames.DocumentMarkers, _markers.Markers);
-                        Log.Debug("Setting Codemarks Count={Count}", _markers.Markers.Count);
-                    }
-                    else
-                    {
-                        Log.Verbose("No Codemarks from agent");
-                    }
-                }
-                catch (OverflowException ex)
-                {
+					if (_markers?.Markers.AnySafe() == true || forceUpdate) {
+						_wpfTextView.Properties.RemovePropertySafe(PropertyNames.DocumentMarkers);
+						_wpfTextView.Properties.AddProperty(PropertyNames.DocumentMarkers, _markers.Markers);
+						Log.Debug("Setting Codemarks Count={Count}", _markers.Markers.Count);
+					}
+					else {
+						Log.Verbose("No Codemarks from agent");
+					}
+				}
+				catch (OverflowException ex) {
 #if DEBUG
-                Log.Warning(ex, fileUri.ToString());
+					Log.Warning(ex, fileUri.ToString());
 #else
-                Log.Error(ex, fileUri.ToString());
+					Log.Error(ex, fileUri.ToString());
 #endif
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, nameof(GetOrCreateMarkers));
-                }
-            });
-        }
+				}
+				catch (Exception ex) {
+					Log.Error(ex, nameof(GetOrCreateMarkers));
+				}
+			});
+		}
 
-        public void Reset()
-        {
-            _markers = null;
-        }
+		public void Reset() {
+			_markers = null;
+		}
 
-        public bool IsInitialized() => _markers != null;
+		public bool IsInitialized() => _markers != null;
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+		public void Dispose() {
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (_disposed)
-                return;
+		protected virtual void Dispose(bool disposing) {
+			if (_disposed)
+				return;
 
-            if (disposing)
-            {
-                if (_wpfTextView?.TextBuffer?.Properties.ContainsProperty(PropertyNames.DocumentMarkers) == true)
-                {
-                    _wpfTextView.TextBuffer.Properties.RemoveProperty(PropertyNames.DocumentMarkers);
-                }
+			if (disposing) {
+				if (_wpfTextView?.Properties.ContainsProperty(PropertyNames.DocumentMarkers) == true) {
+					_wpfTextView.Properties.RemoveProperty(PropertyNames.DocumentMarkers);
+				}
 
-                _markers = null;
-            }
+				_markers = null;
+			}
 
-            _disposed = true;
-        }
-    }
+			_disposed = true;
+		}
+	}
 }

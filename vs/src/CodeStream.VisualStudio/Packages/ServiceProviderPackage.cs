@@ -28,7 +28,8 @@ namespace CodeStream.VisualStudio.Packages
     /// </summary>
     [ProvideService(typeof(SToolWindowProvider))]
     [ProvideService(typeof(SEventAggregator))]
-    [ProvideService(typeof(SIdeService))]
+	[ProvideService(typeof(SWpfTextViewCache))]
+	[ProvideService(typeof(SIdeService))]
     [ProvideService(typeof(SCredentialsService))]
     [ProvideService(typeof(SSessionService))]
     [ProvideService(typeof(SBrowserService))]
@@ -62,7 +63,8 @@ namespace CodeStream.VisualStudio.Packages
 
             ((IServiceContainer)this).AddService(typeof(SToolWindowProvider), callback, true);
             ((IServiceContainer)this).AddService(typeof(SEventAggregator), callback, true);
-            ((IServiceContainer)this).AddService(typeof(SIdeService), callback, true);
+			((IServiceContainer)this).AddService(typeof(SWpfTextViewCache), callback, true);
+			((IServiceContainer)this).AddService(typeof(SIdeService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SCredentialsService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SSessionService), callback, true);
             ((IServiceContainer)this).AddService(typeof(SBrowserService), callback, true);
@@ -81,12 +83,15 @@ namespace CodeStream.VisualStudio.Packages
                 return new SettingsService(_codeStreamOptions);
             if (typeof(SUserSettingsService) == serviceType)
 	            return new UserSettingsService(this);
+			if (typeof(SWpfTextViewCache) == serviceType)
+				return new WpfTextViewCache();
 			if (typeof(SEventAggregator) == serviceType)
                 return new EventAggregator();
             if (typeof(SIdeService) == serviceType)
                 return new IdeService(
 					this,
-                    GetService(typeof(SComponentModel)) as IComponentModel,
+					GetService(typeof(SWpfTextViewCache)) as IWpfTextViewCache,
+					GetService(typeof(SComponentModel)) as IComponentModel,
                     GetService(typeof(SVsTextManager)) as IVsTextManager,
                     ExtensionManager.Initialize(LogManager.ForContext<ExtensionManagerDummy>()).Value);
             if (typeof(SCredentialsService) == serviceType)

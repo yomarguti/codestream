@@ -6,7 +6,6 @@ using System;
 
 namespace CodeStream.VisualStudio.Extensions {
 	public static class TextViewExtensions {
-
 		public static Tuple<ITextSnapshotLine, ITextSnapshotLine> GetLinesFromRange(this IWpfTextView wpfTextView, int start, int end) {
 			ITextSnapshotLine startLine = null;
 			ITextSnapshotLine endLine = null;

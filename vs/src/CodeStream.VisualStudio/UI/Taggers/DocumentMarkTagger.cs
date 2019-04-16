@@ -9,53 +9,40 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CodeStream.VisualStudio.UI.Taggers
-{
-    /// <summary>
-    ///     Responsible for matching Codemarks up to a line
-    /// </summary>
-    internal class DocumentMarkTagger : ITagger<DocumentMarkGlyphTag>
-    {
-        private readonly ISessionService _sessionService;
-        private readonly ITextView _textView;
-        private readonly ITextDocument _textDocument;
-        private readonly ITextBuffer _buffer;
+namespace CodeStream.VisualStudio.UI.Taggers {
+	/// <summary>
+	///     Responsible for matching Codemarks up to a line
+	/// </summary>
+	internal class DocumentMarkTagger : ITagger<DocumentMarkGlyphTag> {
+		private readonly ISessionService _sessionService;
+		private readonly ITextView _textView;
+		private readonly ITextBuffer _buffer;
 
-        public DocumentMarkTagger(ISessionService sessionService, ITextView textView, ITextDocument textDocument, ITextBuffer buffer)
-        {
-            _sessionService = sessionService;
-            _textView = textView;
-            _textDocument = textDocument;
-            _buffer = buffer;
-        }
+		public DocumentMarkTagger(ISessionService sessionService, ITextView textView, ITextBuffer buffer) {
+			_sessionService = sessionService;
+			_textView = textView;
+			_buffer = buffer;
+		}
 
 #pragma warning disable 67
-        public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
+		public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
 #pragma warning restore 67
 
-        IEnumerable<ITagSpan<DocumentMarkGlyphTag>> ITagger<DocumentMarkGlyphTag>.GetTags(
-            NormalizedSnapshotSpanCollection spans)
-        {
-            if (_sessionService == null || !_sessionService.IsReady) yield break;
+		IEnumerable<ITagSpan<DocumentMarkGlyphTag>> ITagger<DocumentMarkGlyphTag>.GetTags(NormalizedSnapshotSpanCollection spans) {
+			if (_sessionService == null || !_sessionService.IsReady) yield break;
 
-            List<DocumentMarker> markers = null;
-            if (_textDocument.TextBuffer.Properties.ContainsProperty(PropertyNames.DocumentMarkers))
-                markers = _textDocument.TextBuffer.Properties.GetProperty<List<DocumentMarker>>(PropertyNames.DocumentMarkers);
+			_textView.Properties.TryGetProperty(PropertyNames.DocumentMarkers, out List<DocumentMarker> markers);
+			if (markers == null || markers?.AnySafe() == false) yield break;
 
-            if (markers == null || !markers.AnySafe()) yield break;
-
-            foreach (var span in spans)
-            {
-                var lineNumber = span.Start.GetContainingLine().LineNumber;
-                var codemark = markers.FirstOrDefault(_ => _?.Range?.Start.Line == lineNumber);
-                if (codemark == null) continue;
-
-                SnapshotPoint start = span.Start == 0 ? span.Start : span.Start - 1;
-                yield return new TagSpan<DocumentMarkGlyphTag>(
-                    new SnapshotSpan(start, 1),
-                    new DocumentMarkGlyphTag(codemark)
-                );
-            }
-        }
-    }
+			foreach (var span in spans) {
+				var marker = markers.FirstOrDefault(_ => _?.Range?.Start.Line == span.Start.GetContainingLine().LineNumber);
+				if (marker == null) continue;
+				
+				yield return new TagSpan<DocumentMarkGlyphTag>(
+					new SnapshotSpan(span.Start == 0 ? span.Start : span.Start - 1, 1),
+					new DocumentMarkGlyphTag(marker)
+				);
+			}
+		}
+	}
 }
