@@ -34,7 +34,7 @@ interface Props {
 }
 
 export class CodemarkDetails extends React.Component<Props, State> {
-	static defaultProps = {};
+	private postList = React.createRef();
 
 	constructor(props: Props) {
 		super(props);
@@ -69,7 +69,9 @@ export class CodemarkDetails extends React.Component<Props, State> {
 
 	postAction = (name: string, post: CSPost) => {
 		if (name === "edit-post") {
-			this.setState({ editingPostId: post.id });
+			this.setState({ editingPostId: post.id }, () => {
+				if (this.postList.current) (this.postList.current as any).scrollTo(post.id);
+			});
 		} else {
 			this.props.postAction && this.props.postAction(name, post);
 		}
@@ -92,6 +94,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 						<div className="postslist threadlist" onClick={this.handleClickPost}>
 							<ScrollBox>
 								<PostList
+									ref={this.postList}
 									isActive={true}
 									hasFocus={this.props.hasFocus}
 									teammates={this.props.teammates}
