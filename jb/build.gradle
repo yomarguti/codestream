@@ -5,7 +5,7 @@ plugins {
 }
 
 group "com.codestream"
-version "0.52.0"
+version "0.52.1"
 
 sourceCompatibility = 1.8
 
@@ -61,8 +61,6 @@ runIde {
 import org.gradle.internal.os.OperatingSystem
 
 task buildDeps(type: Exec) {
-    println "Building dependencies"
-
     String npm = 'npm';
     if (OperatingSystem.current().isWindows()) {
         npm = 'npm.cmd'
