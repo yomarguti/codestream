@@ -335,16 +335,18 @@ namespace CodeStream.VisualStudio.UI {
 			}
 		}
 
-		private static void OnSessionLogout(IWpfTextView wpfTextView, List<ICodeStreamWpfTextViewMargin> textViewMarginProviders) {
+		private void OnSessionLogout(IWpfTextView wpfTextView, List<ICodeStreamWpfTextViewMargin> textViewMarginProviders) {
 			if (wpfTextView.Properties.TryGetProperty(PropertyNames.TextViewState, out TextViewState state)) {
 				state.Initialized = false;
 			}
 
 			wpfTextView.Properties.TryDisposeListProperty(PropertyNames.TextViewLocalEvents);
+			wpfTextView.Properties.TryDisposeProperty<HighlightAdornmentManager>(PropertyNames.AdornmentManager);			
+			wpfTextView.LayoutChanged -= OnTextViewLayoutChanged;
+			wpfTextView.Caret.PositionChanged -= Caret_PositionChanged;
+			wpfTextView.GotAggregateFocus -= TextView_GotAggregateFocus;
 
-			if (wpfTextView
-				.Properties
-				.TryGetProperty(PropertyNames.DocumentMarkerManager,
+			if (wpfTextView.Properties.TryGetProperty(PropertyNames.DocumentMarkerManager,
 					out DocumentMarkerManager manager)) {
 				manager.Reset();
 			}
