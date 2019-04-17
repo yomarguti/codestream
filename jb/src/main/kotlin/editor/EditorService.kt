@@ -139,10 +139,21 @@ class EditorService(val project: Project) {
 
     fun updateMarkers(document: Document) = GlobalScope.launch {
         val editors = EditorFactory.getInstance().getEditors(document, project)
+        val markers = getDocumentMarkers(document.uri)
+        for (editor in editors) {
+            editor.renderMarkers(markers)
+        }
+    }
 
+    private fun updateMarkers(editor: Editor) {
+        GlobalScope.launch {
+            editor.renderMarkers(getDocumentMarkers(editor.document.uri))
+        }
+    }
+
+    private suspend fun getDocumentMarkers(uri: String?): List<DocumentMarker> {
         val agentService = project.agentService
         val sessionService = project.sessionService
-        val uri = document.uri
 
         val markers = if (uri == null || agentService == null || sessionService?.userLoggedIn == null || !showMarkers) {
             emptyList()
@@ -151,20 +162,8 @@ class EditorService(val project: Project) {
             result.markers
         }
 
-        for (editor in editors) {
-            editor.renderMarkers(markers)
-        }
-    }
-
-    private fun updateMarkers(editor: Editor) {
-        if (project.sessionService?.userLoggedIn == null || !showMarkers) {
-            return
-        }
-        val uri = editor.document.uri ?: return
-        val agentService = project.agentService ?: return
-        GlobalScope.launch {
-            val result = agentService.documentMarkers(DocumentMarkersParams(TextDocument(uri)))
-            editor.renderMarkers(result.markers)
+        return markers.filter {
+            it.codemark.status != "closed" && it.codemark.pinned == true
         }
     }
 

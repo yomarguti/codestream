@@ -212,7 +212,9 @@ class Codemark(
     val type: String?,
     val color: String?,
     val streamId: String,
-    val postId: String?
+    val postId: String?,
+    val status: String?,
+    val pinned: Boolean?
 )
 
 class TextDocument(val uri: String)
