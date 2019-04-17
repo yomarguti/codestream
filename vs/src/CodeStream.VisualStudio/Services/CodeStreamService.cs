@@ -17,7 +17,8 @@ namespace CodeStream.VisualStudio.Services {
 	public interface SCodeStreamService { }
 
 	public interface ICodeStreamService {
-		Task ChangeActiveWindowAsync(string fileName, Uri uri, ActiveTextEditor activeTextEditor = null);
+		Task ResetActiveEditorAsync();
+		Task ChangeActiveEditorAsync(string fileName, Uri uri, ActiveTextEditor activeTextEditor = null);
 		Task NewCodemarkAsync(Uri uri,
 			EditorState editorState,
 			CodemarkType codemarkType,
@@ -80,7 +81,7 @@ namespace CodeStream.VisualStudio.Services {
 			get { return _sessionService?.IsReady == true; }
 		}
 
-		public Task ChangeActiveWindowAsync(string fileName, Uri uri, ActiveTextEditor activeTextEditor = null) {
+		public Task ChangeActiveEditorAsync(string fileName, Uri uri, ActiveTextEditor activeTextEditor = null) {
 			if (!IsReady) return Task.CompletedTask;
 
 			try {
@@ -100,7 +101,21 @@ namespace CodeStream.VisualStudio.Services {
 				});
 			}
 			catch (Exception ex) {
-				Log.Error(ex, $"{nameof(ChangeActiveWindowAsync)} FileName={fileName} Uri={uri}");
+				Log.Error(ex, $"{nameof(ChangeActiveEditorAsync)} FileName={fileName} Uri={uri}");
+			}
+			return Task.CompletedTask;
+		}
+
+		public Task ResetActiveEditorAsync() {
+			if (!IsReady) return Task.CompletedTask;
+
+			try {
+				WebviewIpc.Notify(new HostDidChangeActiveEditorNotificationType {
+					Params = new HostDidChangeActiveEditorNotificationBase()
+				});
+			}
+			catch (Exception ex) {
+				Log.Error(ex, $"{nameof(ChangeActiveEditorAsync)}");
 			}
 			return Task.CompletedTask;
 		}

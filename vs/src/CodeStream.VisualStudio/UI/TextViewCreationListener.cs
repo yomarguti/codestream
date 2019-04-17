@@ -43,7 +43,8 @@ namespace CodeStream.VisualStudio.UI {
 		private readonly ICodeStreamAgentService _codeStreamAgentService;
 		private readonly IIdeService _ideService;
 		private readonly IWpfTextViewCache _textViewCache;
-
+		private readonly ICodeStreamService _codeStreamService;
+		private IWpfTextView _focusedWpfTextView;
 		private static readonly object InitializedLock = new object();
 
 		internal const string LayerName = "CodeStreamHighlightColor";
@@ -57,18 +58,22 @@ namespace CodeStream.VisualStudio.UI {
 				ServiceLocator.Get<SSessionService, ISessionService>(),
 				ServiceLocator.Get<SCodeStreamAgentService, ICodeStreamAgentService>(),
 				ServiceLocator.Get<SIdeService, IIdeService>(),
-				ServiceLocator.Get<SWpfTextViewCache, IWpfTextViewCache>()) { }
+				ServiceLocator.Get<SWpfTextViewCache, IWpfTextViewCache>(),
+				ServiceLocator.Get<SCodeStreamService, ICodeStreamService>()) { }
 
 		public TextViewCreationListener(IEventAggregator eventAggregator,
 			ISessionService sessionService,
 			ICodeStreamAgentService codeStreamAgentService,
 			IIdeService ideService,
-			IWpfTextViewCache textViewCache) {
+			IWpfTextViewCache textViewCache,
+			ICodeStreamService codeStreamService) {
 			_eventAggregator = eventAggregator;
 			_sessionService = sessionService;
 			_codeStreamAgentService = codeStreamAgentService;
 			_ideService = ideService;
 			_textViewCache = textViewCache;
+			_codeStreamService = codeStreamService;
+
 		}
 
 		/// <summary>
@@ -99,7 +104,7 @@ namespace CodeStream.VisualStudio.UI {
 		/// <param name="reason"></param>
 		/// <param name="subjectBuffers"></param>
 		public void SubjectBuffersConnected(IWpfTextView wpfTextView, ConnectionReason reason, Collection<ITextBuffer> subjectBuffers) {
-			if (wpfTextView?.Roles.ContainsAll(TextViewRoles.DefaultRoles) == false) return;
+			if (wpfTextView == null || !wpfTextView.Roles.ContainsAll(TextViewRoles.DefaultRoles)) return;
 			if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextView.TextBuffer, out var textDocument)) {
 				return;
 			}
@@ -172,7 +177,7 @@ namespace CodeStream.VisualStudio.UI {
 								if (e.WpfTextView.InLayout || e.WpfTextView.IsClosed) {
 									return;
 								}
-								ServiceLocator.Get<SWebviewIpc, IWebviewIpc>()?.NotifyAsync(
+								_codeStreamService.WebviewIpc?.NotifyAsync(
 									new HostDidChangeEditorVisibleRangesNotificationType {
 										Params = new HostDidChangeEditorVisibleRangesNotification(
 											e.Uri,
@@ -219,6 +224,7 @@ namespace CodeStream.VisualStudio.UI {
 
 							wpfTextView.LayoutChanged -= OnTextViewLayoutChanged;
 							wpfTextView.Caret.PositionChanged -= Caret_PositionChanged;
+							wpfTextView.GotAggregateFocus -= TextView_GotAggregateFocus;
 							wpfTextView.Properties.RemovePropertySafe(PropertyNames.TextViewFilePath);
 							wpfTextView.Properties.RemovePropertySafe(PropertyNames.TextViewState);
 							wpfTextView.Properties.RemovePropertySafe(PropertyNames.DocumentMarkers);
@@ -230,6 +236,9 @@ namespace CodeStream.VisualStudio.UI {
 							wpfTextView.Properties.TryDisposeListProperty(PropertyNames.TextViewLocalEvents);
 						}
 					}
+				}
+				if (_textViewCache.Count() == 0) {
+					ResetActiveEditor();
 				}
 			}
 		}
@@ -267,9 +276,10 @@ namespace CodeStream.VisualStudio.UI {
 							// keep this at the end -- we want this to be the first handler
 							textView.LayoutChanged += OnTextViewLayoutChanged;
 							textView.Caret.PositionChanged += Caret_PositionChanged;
+							textView.GotAggregateFocus += TextView_GotAggregateFocus;
 							state.Initialized = true;
 
-							ChangeActiveWindow(textView);
+							ChangeActiveEditor(textView);
 						}
 					}
 				}
@@ -280,25 +290,42 @@ namespace CodeStream.VisualStudio.UI {
 			}
 		}
 
-		private void ChangeActiveWindow(IWpfTextView wpfTextView) {
+		private void TextView_GotAggregateFocus(object sender, EventArgs e) {
+			if (!(sender is IWpfTextView wpfTextView)) return;
+			if (_focusedWpfTextView == null || _focusedWpfTextView != wpfTextView) {
+				ChangeActiveEditor(wpfTextView);
+				_focusedWpfTextView = wpfTextView;
+			}
+		}
+
+		private void ResetActiveEditor() {
+			try {
+				_codeStreamService.ResetActiveEditorAsync();
+				_focusedWpfTextView = null;
+			}
+			catch (Exception ex) {
+				Log.Warning(ex, nameof(ChangeActiveEditor));
+			}
+		}
+
+		private void ChangeActiveEditor(IWpfTextView wpfTextView) {
 			try {
 				if (wpfTextView == null) return;
-				if (!wpfTextView.Properties.TryGetProperty<string>(PropertyNames.TextViewFilePath, out string filePath)) return;
+				if (!wpfTextView.Properties.TryGetProperty(PropertyNames.TextViewFilePath, out string filePath)) return;
 				if (filePath.IsNullOrWhiteSpace() || !_sessionService.IsWebViewVisible) return;
 
 				var activeTextEditor = _ideService.GetActiveTextEditor(wpfTextView);
 				if (activeTextEditor != null && activeTextEditor.Uri != null) {
 					if (Uri.TryCreate(filePath, UriKind.RelativeOrAbsolute, out Uri result)) {
 						if (activeTextEditor.Uri.EqualsIgnoreCase(result)) {
-							var codeStreamService = ServiceLocator.Get<SCodeStreamService, ICodeStreamService>();
-							codeStreamService.ChangeActiveWindowAsync(filePath, new Uri(filePath), activeTextEditor);
-							Log.Verbose($"{nameof(ChangeActiveWindow)} filePath={filePath}");
+							_codeStreamService.ChangeActiveEditorAsync(filePath, new Uri(filePath), activeTextEditor);
+							Log.Verbose($"{nameof(ChangeActiveEditor)} filePath={filePath}");
 						}
 					}
 				}
 			}
 			catch (Exception ex) {
-				Log.Warning(ex, nameof(ChangeActiveWindow));
+				Log.Warning(ex, nameof(ChangeActiveEditor));
 			}
 		}
 
@@ -311,7 +338,7 @@ namespace CodeStream.VisualStudio.UI {
 
 			if (wpfTextView
 				.Properties
-				.TryGetProperty<DocumentMarkerManager>(PropertyNames.DocumentMarkerManager,
+				.TryGetProperty(PropertyNames.DocumentMarkerManager,
 					out DocumentMarkerManager manager)) {
 				manager.Reset();
 			}
@@ -353,7 +380,7 @@ namespace CodeStream.VisualStudio.UI {
 		}
 
 		private void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e) {
-			ChangeActiveWindow(e?.TextView as IWpfTextView);
+			ChangeActiveEditor(e?.TextView as IWpfTextView);
 		}
 		private void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
 			var wpfTextView = sender as IWpfTextView;

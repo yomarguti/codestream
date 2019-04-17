@@ -58,7 +58,8 @@ namespace CodeStream.VisualStudio.UnitTests.UI {
 			   new Mock<ISessionService>().Object,
 			   new Mock<ICodeStreamAgentService>().Object,
 			   new Mock<IIdeService>().Object,
-			   textViewCache
+			   textViewCache,
+			   new Mock<ICodeStreamService>().Object
 		   ) {
 				EditorAdaptersFactoryService = editorAdaptersFactoryServiceMock.Object,
 				TextDocumentFactoryService = textDocumentFactoryServiceMock.Object,

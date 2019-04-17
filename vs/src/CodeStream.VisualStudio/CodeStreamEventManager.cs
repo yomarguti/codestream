@@ -1,10 +1,7 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.Vssdk;
-using CodeStream.VisualStudio.Vssdk.Events;
 using Microsoft.VisualStudio.PlatformUI;
-using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
 
@@ -25,8 +22,7 @@ namespace CodeStream.VisualStudio
         {
             _vsShellEventManager = vsShellEventManager;
             _codeStreamService = codeStreamService;
-
-            _vsShellEventManager.WindowFocusedEventHandler += OnWindowFocusChanged;
+            
             _vsShellEventManager.VisualStudioThemeChangedEventHandler += OnThemeChanged;
             _vsShellEventManager.BeforeSolutionClosingEventHandler += BeforeSolutionClosingEventHandler;
         }
@@ -34,21 +30,6 @@ namespace CodeStream.VisualStudio
         private void BeforeSolutionClosingEventHandler(object sender, EventArgs e)
         {
             Log.Information("Solution is closing");
-        }
-
-        private void OnWindowFocusChanged(object sender, WindowFocusChangedEventArgs e)
-        {
-            if (e.FileName.IsNullOrWhiteSpace() || e.Uri == null) return;
-            if (e.FileName.EndsWith(Core.Constants.CodeStreamCodeStream))
-            {
-                Log.Verbose($"{nameof(OnWindowFocusChanged)} ignoring {e.FileName}");
-                return;
-            }
-
-            ThreadHelper.JoinableTaskFactory.Run(async delegate
-            {
-                await _codeStreamService.Value.ChangeActiveWindowAsync(e.FileName, e.Uri);
-            });
         }
 
         private void OnThemeChanged(object sender, ThemeChangedEventArgs e)
@@ -75,7 +56,6 @@ namespace CodeStream.VisualStudio
             {
                 if (disposing)
                 {
-                    _vsShellEventManager.WindowFocusedEventHandler -= OnWindowFocusChanged;
                     _vsShellEventManager.VisualStudioThemeChangedEventHandler -= OnThemeChanged;
                     _vsShellEventManager.BeforeSolutionClosingEventHandler -= BeforeSolutionClosingEventHandler;
 

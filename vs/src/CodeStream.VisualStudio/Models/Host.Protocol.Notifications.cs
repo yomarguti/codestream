@@ -21,12 +21,14 @@ namespace CodeStream.VisualStudio.Models {
 		public string LanguageId { get; set; }
 		public EditorMetrics Metrics { get; set; }
 	}
+	
+	public class HostDidChangeActiveEditorNotificationBase {}
 
-	public class HostDidChangeActiveEditorNotification {
+	public class HostDidChangeActiveEditorNotification : HostDidChangeActiveEditorNotificationBase {
 		public HostDidChangeActiveEditorNotificationEditor Editor { get; set; }
 	}
 
-	public class HostDidChangeActiveEditorNotificationType : NotificationType<HostDidChangeActiveEditorNotification> {
+	public class HostDidChangeActiveEditorNotificationType : NotificationType<HostDidChangeActiveEditorNotificationBase> {
 		public const string MethodName = "webview/editor/didChangeActive";
 		public override string Method => MethodName;
 	}
