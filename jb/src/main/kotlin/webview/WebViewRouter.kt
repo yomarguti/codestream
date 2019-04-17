@@ -16,9 +16,23 @@ import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import protocols.agent.*
 import protocols.webview.*
+import kotlin.properties.Delegates
+
+typealias ReadyObserver = () -> Unit
 
 class WebViewRouter(val project: Project) {
     private val logger = Logger.getInstance(WebViewRouter::class.java)
+    private val readyObservers = mutableListOf<ReadyObserver>()
+    private var _isReady: Boolean by Delegates.observable(false) { _, _, isReady -> readyObservers.forEach { if (isReady) it() } }
+    val isReady get() = _isReady
+
+    fun onWebviewReady(observer: ReadyObserver) {
+        readyObservers.add(observer)
+    }
+
+    fun reload() {
+        _isReady = false
+    }
 
     fun handle(rawMessage: String, origin: String?) = GlobalScope.launch {
         val message = parse(rawMessage)
@@ -50,7 +64,7 @@ class WebViewRouter(val project: Project) {
         val response = when (message.method) {
             "host/bootstrap" -> bootstrap()
             "host/login" -> login(message)
-            "host/didInitialize" -> Unit
+            "host/didInitialize" -> _isReady = true
             "host/logout" -> logout()
             "host/slack/login" -> slackLogin(message)
             "host/signup" -> signup(message)

@@ -44,11 +44,14 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
     private val router = WebViewRouter(project)
     private val browser = createBrowser(router)
     val webView = BrowserView(browser)
+    private val messageQueue = ArrayList<JsonElement>()
 
     private lateinit var tempDir: File
     private lateinit var htmlFile: File
 
     init {
+        router.onWebviewReady { flushMessageQueue() }
+
         extractAssets()
         browser.loadURL(htmlFile.url)
 
@@ -90,7 +93,7 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
             "params" to gson.toJsonTree(params),
             "error" to error
         )
-        postMessage(message)
+        postMessage(message, true)
     }
 
     fun postNotification(notification: WebViewNotification) {
@@ -117,8 +120,30 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
         postMessage(message)
     }
 
-    private fun postMessage(message: JsonElement) {
-        browser.executeJavaScript("window.postMessage($message,'*');")
+    private fun postMessage(message: JsonElement, force: Boolean? = false) {
+        if (router.isReady || force == true) browser.executeJavaScript("window.postMessage($message,'*');")
+        else queueMessage(message)
+    }
+
+    private fun queueMessage(message: JsonElement) {
+        if (messageQueue.count() > 100) return
+
+        messageQueue.add(message)
+    }
+
+    private fun flushMessageQueue() {
+        if (messageQueue.count() > 100) {
+            messageQueue.clear()
+            router.reload()
+            reload()
+        }
+        else {
+            while (messageQueue.count() > 0) {
+                val message = messageQueue.first()
+                browser.executeJavaScript("window.postMessage($message,'*');")
+                messageQueue.remove(message)
+            }
+        }
     }
 
     override fun dispose() {
@@ -230,7 +255,6 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
     override fun onColorChooser(params: ColorChooserParams?) = CloseStatus.CANCEL
     override fun onSelectCertificate(params: CertificatesDialogParams?) = CloseStatus.CANCEL
 }
-
 
 private val File.url: String
     get() = toURI().toURL().toString()
