@@ -186,7 +186,7 @@ class AgentService(private val project: Project) {
         return mutableMapOf(
             "recordRequests" to false,
             "traceLevel" to "debug",
-            "extension" to mapOf("versionFormatted" to settings.environmentVersion),
+            "extension" to settings.extensionInfo,
             "ide" to mapOf(
                 "name" to "JetBrains",
                 "version" to ApplicationInfo.getInstance().fullVersion

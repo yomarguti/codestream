@@ -152,7 +152,16 @@ class BootstrapParams
 
 class LogoutParams
 
-class Extension(val versionFormatted: String)
+class Extension(val versionFormatted: String) {
+    val version: String
+    val build: String
+
+    init {
+        val parts = versionFormatted.split("+")
+        version = parts[0]
+        build = parts.getOrElse(1) { "SNAPSHOT" }
+    }
+}
 
 class Ide {
     val name = "JetBrains"
