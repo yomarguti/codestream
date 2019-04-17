@@ -79,6 +79,14 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="0_52_1">0.52.1</h4>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an error that was triggered by switching branches</li>
+    <li>Fixes an issue that prevented CodeStream from running on certain flavors of Linux</li>
+    <li>Fixes an issue with archived codemarks and resolved issues being displayed in the gutter</li>
+    <li>Fixes an issue with the logos of issue-tracking services not being clickable in issue codemarks</li>
+</ul>
 <h4 id="0_52_0">0.52.0</h4>
 <h5>Added</h5>
 <ul>
