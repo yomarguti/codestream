@@ -32,8 +32,10 @@ namespace CodeStream.VisualStudio.Models {
 		/// <returns></returns>
 		public bool Highlight(Range range, bool highlight) {
 			var adornmentManager = this.GetHighlightAdornmentManager();
-
-			if (adornmentManager == null) return false;
+			if (adornmentManager == null) {
+				Log.Warning($"{nameof(adornmentManager)} not found");
+				return false;
+			}
 
 			return adornmentManager.Highlight(range, highlight);
 		}
@@ -43,7 +45,6 @@ namespace CodeStream.VisualStudio.Models {
 		/// </summary>
 		public void RemoveAllHighlights() {
 			var adornmentManager = this.GetHighlightAdornmentManager();
-
 			if (adornmentManager == null) return;
 
 			adornmentManager.RemoveAllHighlights();
@@ -66,7 +67,7 @@ namespace CodeStream.VisualStudio.Models {
 					VirtualSnapshotPoint anchorPoint;
 					VirtualSnapshotPoint activePoint;
 					var startPoint = rangeLines.Item1.Extent.Start + range.Start.Character;
-					
+
 					if (range.IsPoint()) {
 						anchorPoint = new VirtualSnapshotPoint(new SnapshotPoint(WpfTextView.TextSnapshot, startPoint));
 						activePoint = new VirtualSnapshotPoint(new SnapshotPoint(WpfTextView.TextSnapshot, startPoint));
