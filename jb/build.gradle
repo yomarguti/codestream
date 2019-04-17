@@ -47,9 +47,10 @@ compileTestKotlin {
 }
 
 intellij {
-    version "2018.2"
-//    version "2018.3.4"
-//    version "IC-2018.2.7"
+    type "IC"
+//    version "2018.2" // earliest version we support
+//    version "2018.3.4" // you can also specify dot dot releases
+//    version "IC-2018.2.7" //
     intellij.updateSinceUntilBuild false
 }
 
