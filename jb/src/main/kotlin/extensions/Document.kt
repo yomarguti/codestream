@@ -20,5 +20,11 @@ val Document.uri: String?
         return file.uri
     }
 
+val Document.path: String?
+    get() {
+        val file = FileDocumentManager.getInstance().getFile(this) ?: return null
+        return file.path
+    }
+
 val Document.textDocumentIdentifier: TextDocumentIdentifier?
     get() = TextDocumentIdentifier(uri)

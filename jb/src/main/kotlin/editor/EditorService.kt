@@ -5,6 +5,7 @@ import com.codestream.extensions.getOffset
 import com.codestream.extensions.isRangeVisible
 import com.codestream.extensions.lspPosition
 import com.codestream.extensions.margins
+import com.codestream.extensions.path
 import com.codestream.extensions.selections
 import com.codestream.extensions.textAttributes
 import com.codestream.extensions.textDocumentIdentifier
@@ -51,6 +52,7 @@ import protocols.agent.DocumentMarker
 import protocols.agent.DocumentMarkersParams
 import protocols.agent.TextDocument
 import protocols.webview.EditorContext
+import protocols.webview.EditorInformation
 import protocols.webview.EditorMetrics
 import protocols.webview.EditorSelection
 import java.awt.HeadlessException
@@ -261,24 +263,29 @@ class EditorService(val project: Project) {
         }
     }
 
-    fun setActiveEditor(newEditor: FileEditor?) {
-        // FIXME these might not be the same
-        FileEditorManager.getInstance(project).selectedTextEditor?.run {
-            val notification = EditorNotifications.DidChangeActive(
-                newEditor?.file?.path,
-                document.uri,
-                EditorMetrics(
-                    Math.round(colorsScheme.editorFontSize / getFontScale()),
-                    lineHeight,
-                    margins
-                ),
-                selections,
-                visibleRanges,
-                document.lineCount
-            )
+    private var _activeEditor: Editor? = null
+    var activeEditor: Editor?
+        get() = _activeEditor
+        set(editor) {
+            _activeEditor = editor
+
+            val editorInfo = editor?.run {
+                EditorInformation(
+                    document.path,
+                    document.uri,
+                    EditorMetrics(
+                        Math.round(colorsScheme.editorFontSize / getFontScale()),
+                        lineHeight,
+                        margins
+                    ),
+                    selections,
+                    visibleRanges,
+                    document.lineCount
+                )
+            }
+            val notification = EditorNotifications.DidChangeActive(editorInfo)
             project?.webViewService?.postNotification(notification)
         }
-    }
 
     suspend fun getEditorContext(): EditorContext {
         val future = CompletableDeferred<EditorContext>()

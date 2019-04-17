@@ -112,14 +112,6 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
         postMessage(message)
     }
 
-    fun postData(payload: JsonElement) {
-        val message = jsonObject(
-            "type" to "codestream:data",
-            "body" to payload
-        )
-        postMessage(message)
-    }
-
     private fun postMessage(message: JsonElement, force: Boolean? = false) {
         if (router.isReady || force == true) browser.executeJavaScript("window.postMessage($message,'*');")
         else queueMessage(message)

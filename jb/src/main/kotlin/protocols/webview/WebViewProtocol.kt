@@ -30,25 +30,7 @@ object EditorNotifications {
         override fun getMethod() = "webview/editor/didChangeSelection"
     }
 
-    class DidChangeActive(
-        fileName: String?,
-        uri: String?,
-        metrics: EditorMetrics,
-        selections: List<EditorSelection>,
-        visibleRanges: List<Range>,
-        lineCount: Number,
-        languageId: String? = null
-    ) : WebViewNotification {
-        val editor: EditorInformation = EditorInformation(
-            fileName,
-            uri,
-            metrics,
-            selections,
-            visibleRanges,
-            lineCount,
-            languageId
-        )
-
+    class DidChangeActive(val editor: EditorInformation?) : WebViewNotification {
         override fun getMethod() = "webview/editor/didChangeActive"
     }
 

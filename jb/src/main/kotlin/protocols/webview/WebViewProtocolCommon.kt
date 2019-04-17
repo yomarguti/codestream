@@ -44,9 +44,9 @@ class EditorContext(
 class EditorInformation(
     val fileName: String?,
     val uri: String?,
-    val metrics: EditorMetrics,
-    val selections: List<EditorSelection>,
-    val visibleRanges: List<Range>,
-    val lineCount: Number,
+    val metrics: EditorMetrics?,
+    val selections: List<EditorSelection>?,
+    val visibleRanges: List<Range>?,
+    val lineCount: Number?,
     val languageId: String? = null
 )

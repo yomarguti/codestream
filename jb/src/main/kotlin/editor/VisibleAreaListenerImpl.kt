@@ -12,7 +12,8 @@ import com.intellij.openapi.project.Project
 
 class VisibleAreaListenerImpl(val project: Project) : VisibleAreaListener {
     override fun visibleAreaChanged(e: VisibleAreaEvent) {
-        if (project.editorService?.isScrollingFromWebView == true) return
+        val editorService = project.editorService ?: return
+        if (editorService.isScrollingFromWebView || e.editor != editorService.activeEditor) return
 
         project.webViewService?.postNotification(
             EditorNotifications.DidChangeVisibleRanges(
