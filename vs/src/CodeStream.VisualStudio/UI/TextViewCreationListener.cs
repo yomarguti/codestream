@@ -204,6 +204,8 @@ namespace CodeStream.VisualStudio.UI {
 				else {
 					textViewMarginProviders.Hide();
 				}
+
+				ChangeActiveEditor(wpfTextView);
 			}
 		}
 
@@ -295,6 +297,9 @@ namespace CodeStream.VisualStudio.UI {
 			if (_focusedWpfTextView == null || _focusedWpfTextView != wpfTextView) {
 				ChangeActiveEditor(wpfTextView);
 				_focusedWpfTextView = wpfTextView;
+				if (wpfTextView.Properties.TryGetProperty(PropertyNames.TextViewFilePath, out string filePath)) {
+					_sessionService.LastActiveFileUrl = filePath;
+				}
 			}
 		}
 
@@ -302,6 +307,7 @@ namespace CodeStream.VisualStudio.UI {
 			try {
 				_codeStreamService.ResetActiveEditorAsync();
 				_focusedWpfTextView = null;
+				_sessionService.LastActiveFileUrl = null;
 			}
 			catch (Exception ex) {
 				Log.Warning(ex, nameof(ChangeActiveEditor));

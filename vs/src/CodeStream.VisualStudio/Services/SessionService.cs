@@ -18,6 +18,7 @@ namespace CodeStream.VisualStudio.Services
 		bool IsCodemarksForFileVisible { get; set; }
 		bool IsWebViewVisible { get; set; }
 		bool AreMarkerGlyphsVisible { get; set; }
+		string LastActiveFileUrl { get; set; }
 
         /// <summary>
         /// Session is ready when the agent has loaded and the user has logged in
@@ -38,6 +39,7 @@ namespace CodeStream.VisualStudio.Services
 		public bool IsWebViewVisible { get; set; }
 		public bool AreMarkerGlyphsVisible { get; set; } = true;
         public bool IsCodemarksForFileVisible { get; set; }
+        public string LastActiveFileUrl { get; set; }
 		bool _disposed = false;
 
         public Guid GetOrCreateSignupToken()
