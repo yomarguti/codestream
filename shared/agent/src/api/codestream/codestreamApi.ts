@@ -1,7 +1,6 @@
 "use strict";
 import HttpsProxyAgent from "https-proxy-agent";
 import fetch, { Headers, RequestInit, Response } from "node-fetch";
-import { openUrl } from "../../system/openUrl";
 import { URLSearchParams } from "url";
 import { Emitter, Event } from "vscode-languageserver";
 import { ServerError } from "../../agentError";
@@ -133,6 +132,7 @@ import {
 } from "../../protocol/api.protocol";
 import { VersionInfo } from "../../session";
 import { Functions, log, Objects, Strings } from "../../system";
+import { openUrl } from "../../system/openUrl";
 import {
 	ApiProvider,
 	CodeStreamApiMiddleware,

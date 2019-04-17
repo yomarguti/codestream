@@ -1,7 +1,7 @@
-import { openUrl } from "../system/openUrl";
 import { Logger } from "../logger";
 import { OpenUrlRequest, OpenUrlRequestType } from "../protocol/agent.protocol";
 import { lsp, lspHandler } from "../system";
+import { openUrl } from "../system/openUrl";
 
 @lsp
 export class UrlManager {
