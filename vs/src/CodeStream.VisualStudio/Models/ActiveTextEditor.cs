@@ -73,9 +73,12 @@ namespace CodeStream.VisualStudio.Models {
 						activePoint = new VirtualSnapshotPoint(new SnapshotPoint(WpfTextView.TextSnapshot, startPoint));
 					}
 					else {
+						int endPosition = rangeLines.Item2.Extent.End;
+						if (range.End.Character != int.MaxValue && rangeLines.Item2.Extent.Start + range.End.Character < endPosition) {
+							endPosition = rangeLines.Item2.Extent.Start + range.End.Character;
+						}
 						anchorPoint = new VirtualSnapshotPoint(new SnapshotPoint(WpfTextView.TextSnapshot, startPoint));
-						activePoint = new VirtualSnapshotPoint(
-							new SnapshotPoint(WpfTextView.TextSnapshot, rangeLines.Item2.Extent.End + range.End.Character));
+						activePoint = new VirtualSnapshotPoint(new SnapshotPoint(WpfTextView.TextSnapshot, endPosition));
 					}
 					WpfTextView.Selection.Select(anchorPoint, activePoint);
 					log += $"Selecting {nameof(FilePath)}={FilePath} From {anchorPoint} to {activePoint}";
@@ -86,9 +89,11 @@ namespace CodeStream.VisualStudio.Models {
 					if (selection.Cursor != null) {
 						var caretLine = WpfTextView.GetLine(selection.Cursor);
 						if (caretLine != null) {
-							WpfTextView.Caret.MoveTo(
-								new VirtualSnapshotPoint(
-									new SnapshotPoint(WpfTextView.TextSnapshot, caretLine.Extent.Start + selection.Cursor.Character)));
+							int startPosition = caretLine.Extent.Start;
+							if (selection.Cursor.Character != int.MaxValue && caretLine.Extent.Start + selection.Cursor.Character < caretLine.Extent.End) {
+								startPosition = caretLine.Extent.Start + selection.Cursor.Character;
+							}							
+							WpfTextView.Caret.MoveTo(new VirtualSnapshotPoint(new SnapshotPoint(WpfTextView.TextSnapshot, startPosition)));
 							WpfTextView.Caret.EnsureVisible();
 							log += $", caret to ActivePoint={activePoint.Position}";
 						}
