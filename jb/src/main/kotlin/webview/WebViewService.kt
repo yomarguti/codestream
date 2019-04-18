@@ -114,10 +114,10 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
 
     private fun postMessage(message: JsonElement, force: Boolean? = false) {
         if (router.isReady || force == true) browser.executeJavaScript("window.postMessage($message,'*');")
-        else queueMessage(message)
+        else enqueueMessage(message)
     }
 
-    private fun queueMessage(message: JsonElement) {
+    private fun enqueueMessage(message: JsonElement) {
         if (messageQueue.count() > 100) return
 
         messageQueue.add(message)

@@ -61,9 +61,14 @@ class WebViewRouter(val project: Project) {
     }
 
     private suspend fun processHostMessage(message: WebViewMessage) {
+        var resumeReady = false
         val response = when (message.method) {
             "host/bootstrap" -> bootstrap()
-            "host/login" -> login(message)
+            "host/login" -> {
+                _isReady = false
+                resumeReady = true
+                login(message)
+            }
             "host/didInitialize" -> _isReady = true
             "host/logout" -> logout()
             "host/slack/login" -> slackLogin(message)
@@ -82,6 +87,7 @@ class WebViewRouter(val project: Project) {
         }
         if (message.id != null) {
             project.webViewService?.postResponse(message.id, response)
+            if (resumeReady) _isReady = true
         }
     }
 
