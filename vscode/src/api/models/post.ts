@@ -89,6 +89,10 @@ export class Post extends CodeStreamItem<PostPlus> {
 			: this.entity.mentionedUserIds.includes(userId);
 	}
 
+	isNew() {
+		return this.entity.version === 1;
+	}
+
 	@memoize
 	async sender(): Promise<User | undefined> {
 		// TODO: Bake this into the post model to avoid this lookup??

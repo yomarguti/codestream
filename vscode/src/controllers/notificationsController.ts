@@ -27,13 +27,7 @@ export class NotificationsController implements Disposable {
 
 		for (const post of e.items()) {
 			// Don't show notifications for deleted, edited (if edited it isn't the first time its been seen), has replies (same as edited), has reactions, or was posted by the current user
-			if (
-				post.deleted ||
-				post.edited ||
-				post.hasReplies ||
-				post.hasReactions ||
-				post.senderId === currentUser.id
-			) {
+			if (!post.isNew() || post.senderId === currentUser.id) {
 				continue;
 			}
 
