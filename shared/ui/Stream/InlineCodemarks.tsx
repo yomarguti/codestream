@@ -1262,6 +1262,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 }
 
 const EMPTY_ARRAY = [];
+const EMPTY_OBJECT = {};
 
 const mapStateToProps = (state: {
 	configs: WebviewConfigs;
@@ -1308,7 +1309,7 @@ const mapStateToProps = (state: {
 		lastVisibleLine,
 		textEditorVisibleRanges,
 		textEditorSelection: getCurrentSelection(editorContext),
-		metrics: editorContext.metrics!,
+		metrics: editorContext.metrics || EMPTY_OBJECT,
 		documentMarkers: docMarkers,
 		numLinesVisible: getVisibleLineCount(textEditorVisibleRanges),
 		numUnpinned,
