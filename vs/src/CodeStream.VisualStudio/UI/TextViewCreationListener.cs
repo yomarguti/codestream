@@ -324,8 +324,7 @@ namespace CodeStream.VisualStudio.UI {
 				if (activeTextEditor != null && activeTextEditor.Uri != null) {
 					if (Uri.TryCreate(filePath, UriKind.RelativeOrAbsolute, out Uri result)) {
 						if (activeTextEditor.Uri.EqualsIgnoreCase(result)) {
-							_codeStreamService.ChangeActiveEditorAsync(filePath, new Uri(filePath), activeTextEditor);
-							Log.Verbose($"{nameof(ChangeActiveEditor)} filePath={filePath}");
+							_codeStreamService.ChangeActiveEditorAsync(filePath, new Uri(filePath), activeTextEditor);							
 						}
 					}
 				}

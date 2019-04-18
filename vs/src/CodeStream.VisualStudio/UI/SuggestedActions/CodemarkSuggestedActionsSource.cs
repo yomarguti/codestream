@@ -13,203 +13,176 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CodeStream.VisualStudio.UI.SuggestedActions
-{
+namespace CodeStream.VisualStudio.UI.SuggestedActions {
 	internal class CodemarkSuggestedActionsSourceDummy { }
 
-	internal class CodemarkSuggestedActionsSource : ISuggestedActionsSource
-    {
-        private static readonly ILogger Log = LogManager.ForContext<CodemarkSuggestedActionsSourceDummy>();
-        
-        private readonly CodemarkSuggestedActionsSourceProvider _actionsSourceProvider;
-        private readonly ITextBuffer _textBuffer;
-        private readonly ITextView _textView;
-        private readonly ITextDocument _textDocument;
+	internal class CodemarkSuggestedActionsSource : ISuggestedActionsSource {
+		private static readonly ILogger Log = LogManager.ForContext<CodemarkSuggestedActionsSourceDummy>();
 
-        public CodemarkSuggestedActionsSource(CodemarkSuggestedActionsSourceProvider actionsSourceProvider,
-            ITextView textView,
-            ITextBuffer textBuffer,
-            ITextDocument textDocument)
-        {
-            _actionsSourceProvider = actionsSourceProvider;
-            _textBuffer = textBuffer;
-            _textView = textView;
-            _textDocument = textDocument;
-        }
+		private readonly CodemarkSuggestedActionsSourceProvider _actionsSourceProvider;
+		private readonly ITextBuffer _textBuffer;
+		private readonly ITextView _textView;
+		private readonly ITextDocument _textDocument;
 
-        public bool TryGetTelemetryId(out Guid telemetryId)
-        {
-            telemetryId = Guid.Empty;
-            return false;
-        }
+		public CodemarkSuggestedActionsSource(CodemarkSuggestedActionsSourceProvider actionsSourceProvider,
+			ITextView textView,
+			ITextBuffer textBuffer,
+			ITextDocument textDocument) {
+			_actionsSourceProvider = actionsSourceProvider;
+			_textBuffer = textBuffer;
+			_textView = textView;
+			_textDocument = textDocument;
+		}
+
+		public bool TryGetTelemetryId(out Guid telemetryId) {
+			telemetryId = Guid.Empty;
+			return false;
+		}
 
 #pragma warning disable 0067
-        public event EventHandler<EventArgs> SuggestedActionsChanged;
+		public event EventHandler<EventArgs> SuggestedActionsChanged;
 #pragma warning restore 0067
 
-        private EditorState _textSelection;
+		private EditorState _textSelection;
 
-        public IEnumerable<SuggestedActionSet> GetSuggestedActions(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken)
-        {
-            try
-            {
-                if (_textSelection?.HasSelectedText == false)
-                {
-                    Log.Verbose($"{nameof(GetSuggestedActions)} Empty HasText={_textSelection?.HasSelectedText}");
-                    return Enumerable.Empty<SuggestedActionSet>();
-                }
+		public IEnumerable<SuggestedActionSet> GetSuggestedActions(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
+			try {
+				if (_textSelection?.HasSelectedText == false) {
+					Log.Verbose($"{nameof(GetSuggestedActions)} Empty HasText={_textSelection?.HasSelectedText}");
+					return Enumerable.Empty<SuggestedActionSet>();
+				}
 
-                return new[]
-                {
-                    new SuggestedActionSet(
-                        actions: new ISuggestedAction[]
-                        {
-                            new CodemarkCommentSuggestedAction(_textDocument, _textSelection),
-                            new CodemarkIssueSuggestedAction(_textDocument, _textSelection),
-                            new CodemarkBookmarkSuggestedAction(_textDocument, _textSelection),
-                            new CodemarkPermalinkSuggestedAction(_textDocument, _textSelection)
-                        },
-                        categoryName: null,
-                        title: null,
-                        priority: SuggestedActionSetPriority.None,
-                        applicableToSpan: null
-                    )
-                };
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, nameof(GetSuggestedActions));
-            }
+				return new[]
+				{
+					new SuggestedActionSet(
+						actions: new ISuggestedAction[]
+						{
+							new CodemarkCommentSuggestedAction(_textDocument, _textSelection),
+							new CodemarkIssueSuggestedAction(_textDocument, _textSelection),
+							new CodemarkBookmarkSuggestedAction(_textDocument, _textSelection),
+							new CodemarkPermalinkSuggestedAction(_textDocument, _textSelection)
+						},
+						categoryName: null,
+						title: null,
+						priority: SuggestedActionSetPriority.None,
+						applicableToSpan: null
+					)
+				};
+			}
+			catch (Exception ex) {
+				Log.Warning(ex, nameof(GetSuggestedActions));
+			}
 
-            return Enumerable.Empty<SuggestedActionSet>();
-        }
+			return Enumerable.Empty<SuggestedActionSet>();
+		}
 
-        public Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
-                if (sessionService == null || sessionService.IsReady == false)
-                {
-                    Log.Verbose($"{nameof(HasSuggestedActionsAsync)} is null or sessionService.IsReady == false");
-                    return System.Threading.Tasks.Task.FromResult(false);
-                }
+		public Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
+			try {
+				var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+				if (sessionService == null || sessionService.IsReady == false) {
+					return System.Threading.Tasks.Task.FromResult(false);
+				}
 
-                var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
-                _textSelection = ideService?.GetActiveEditorState();
+				var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
+				_textSelection = ideService?.GetActiveEditorState();
 
-                return System.Threading.Tasks.Task.FromResult(_textSelection?.HasSelectedText == true);
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, nameof(HasSuggestedActionsAsync));
-                return System.Threading.Tasks.Task.FromResult(false);
-            }
-        }
+				return System.Threading.Tasks.Task.FromResult(_textSelection?.HasSelectedText == true);
+			}
+			catch (Exception ex) {
+				Log.Warning(ex, nameof(HasSuggestedActionsAsync));
+				return System.Threading.Tasks.Task.FromResult(false);
+			}
+		}
 
-        public void Dispose()
-        {
-            Log.Verbose($"{nameof(CodemarkSuggestedActionsSource)} disposed");
-        }
-    }
+		public void Dispose() {
+			Log.Verbose($"{nameof(CodemarkSuggestedActionsSource)} disposed");
+		}
+	}
 
-    internal class CodemarkCommentSuggestedAction : CodemarkSuggestedActionBase
-    {
-        public CodemarkCommentSuggestedAction(ITextDocument textDocument, EditorState textSelection): base(textDocument, textSelection) { }
-        protected override CodemarkType CodemarkType => CodemarkType.Comment;
-        public override string DisplayText { get; } = $"Add Comment";
-    }
+	internal class CodemarkCommentSuggestedAction : CodemarkSuggestedActionBase {
+		public CodemarkCommentSuggestedAction(ITextDocument textDocument, EditorState textSelection) : base(textDocument, textSelection) { }
+		protected override CodemarkType CodemarkType => CodemarkType.Comment;
+		public override string DisplayText { get; } = $"Add Comment";
+	}
 
-    internal class CodemarkIssueSuggestedAction : CodemarkSuggestedActionBase
-    {
-        public CodemarkIssueSuggestedAction(ITextDocument textDocument, EditorState textSelection) : base(textDocument, textSelection) { }
-        protected override CodemarkType CodemarkType => CodemarkType.Issue;
-        public override string DisplayText { get; } = $"Create Issue";
-    }
+	internal class CodemarkIssueSuggestedAction : CodemarkSuggestedActionBase {
+		public CodemarkIssueSuggestedAction(ITextDocument textDocument, EditorState textSelection) : base(textDocument, textSelection) { }
+		protected override CodemarkType CodemarkType => CodemarkType.Issue;
+		public override string DisplayText { get; } = $"Create Issue";
+	}
 
-    internal class CodemarkBookmarkSuggestedAction : CodemarkSuggestedActionBase
-    {
-        public CodemarkBookmarkSuggestedAction(ITextDocument textDocument, EditorState textSelection) : base(textDocument, textSelection) { }
-        protected override CodemarkType CodemarkType => CodemarkType.Bookmark;
-        public override string DisplayText { get; } = $"Create Bookmark";
-    }
+	internal class CodemarkBookmarkSuggestedAction : CodemarkSuggestedActionBase {
+		public CodemarkBookmarkSuggestedAction(ITextDocument textDocument, EditorState textSelection) : base(textDocument, textSelection) { }
+		protected override CodemarkType CodemarkType => CodemarkType.Bookmark;
+		public override string DisplayText { get; } = $"Create Bookmark";
+	}
 
-    internal class CodemarkPermalinkSuggestedAction : CodemarkSuggestedActionBase
-    {
-        public CodemarkPermalinkSuggestedAction(ITextDocument textDocument, EditorState textSelection) : base(textDocument, textSelection) { }
-        protected override CodemarkType CodemarkType => CodemarkType.Link;
-        public override string DisplayText { get; } = $"Get Permalink";
-    }
+	internal class CodemarkPermalinkSuggestedAction : CodemarkSuggestedActionBase {
+		public CodemarkPermalinkSuggestedAction(ITextDocument textDocument, EditorState textSelection) : base(textDocument, textSelection) { }
+		protected override CodemarkType CodemarkType => CodemarkType.Link;
+		public override string DisplayText { get; } = $"Get Permalink";
+	}
 
-    internal abstract class CodemarkSuggestedActionBase : ISuggestedAction
-    {
-        private readonly EditorState _textSelection;
-        private readonly ITextDocument _textDocument;
-        protected abstract CodemarkType CodemarkType { get; }
+	internal abstract class CodemarkSuggestedActionBase : ISuggestedAction {
+		private readonly EditorState _textSelection;
+		private readonly ITextDocument _textDocument;
+		protected abstract CodemarkType CodemarkType { get; }
 
-        protected CodemarkSuggestedActionBase(ITextDocument textDocument, EditorState textSelection)
-        {
-            _textDocument = textDocument;
-            _textSelection = textSelection;
-        }
+		protected CodemarkSuggestedActionBase(ITextDocument textDocument, EditorState textSelection) {
+			_textDocument = textDocument;
+			_textSelection = textSelection;
+		}
 
-        public Task<IEnumerable<SuggestedActionSet>> GetActionSetsAsync(CancellationToken cancellationToken)
-        {
-            return System.Threading.Tasks.Task.FromResult<IEnumerable<SuggestedActionSet>>(null);
-        }
+		public Task<IEnumerable<SuggestedActionSet>> GetActionSetsAsync(CancellationToken cancellationToken) {
+			return System.Threading.Tasks.Task.FromResult<IEnumerable<SuggestedActionSet>>(null);
+		}
 
-        public void Invoke(CancellationToken cancellationToken)
-        {
-            if (_textDocument == null)
-            {
-                Log.Verbose($"{nameof(_textDocument)} is null");
-                return;
-            }
+		public void Invoke(CancellationToken cancellationToken) {
+			if (_textDocument == null) {
+				Log.Verbose($"{nameof(_textDocument)} is null");
+				return;
+			}
 
-            var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
-            if (codeStreamService == null)
-            {
-                Log.Debug($"{nameof(codeStreamService)} is null");
-                return;
-            }
+			var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
+			if (codeStreamService == null) {
+				Log.Debug($"{nameof(codeStreamService)} is null");
+				return;
+			}
 
-            codeStreamService.NewCodemarkAsync(new Uri(_textDocument.FilePath), _textSelection, CodemarkType, cancellationToken: cancellationToken);
-        }
+			codeStreamService.NewCodemarkAsync(new Uri(_textDocument.FilePath), _textSelection, CodemarkType, cancellationToken: cancellationToken);
+		}
 
-        public Task<object> GetPreviewAsync(CancellationToken cancellationToken)
-        {
-            // nothing here, but here is an example:
+		public Task<object> GetPreviewAsync(CancellationToken cancellationToken) {
+			// nothing here, but here is an example:
 
-            //var textBlock = new TextBlock
-            //{
-            //    Padding = new Thickness(5)
-            //};
-            //textBlock.Inlines.Add(new Run() { Text = _selectedText.Text });
+			//var textBlock = new TextBlock
+			//{
+			//    Padding = new Thickness(5)
+			//};
+			//textBlock.Inlines.Add(new Run() { Text = _selectedText.Text });
 
-            return System.Threading.Tasks.Task.FromResult<object>(null);
-        }
+			return System.Threading.Tasks.Task.FromResult<object>(null);
+		}
 
-        public bool TryGetTelemetryId(out Guid telemetryId)
-        {
-            // This is a sample action and doesn't participate in LightBulb telemetry  
-            telemetryId = Guid.Empty;
-            return false;
-        }
+		public bool TryGetTelemetryId(out Guid telemetryId) {
+			// This is a sample action and doesn't participate in LightBulb telemetry  
+			telemetryId = Guid.Empty;
+			return false;
+		}
 
-        public bool HasActionSets => false;
+		public bool HasActionSets => false;
 
-        public abstract string DisplayText { get; }
+		public abstract string DisplayText { get; }
 
-        public ImageMoniker IconMoniker => default(ImageMoniker);
+		public ImageMoniker IconMoniker => default(ImageMoniker);
 
-        public string IconAutomationText => null;
+		public string IconAutomationText => null;
 
-        public string InputGestureText => null;
+		public string InputGestureText => null;
 
-        public bool HasPreview => false;
+		public bool HasPreview => false;
 
-        public void Dispose()
-        {
-        }
-    }
+		public void Dispose() {
+		}
+	}
 }
