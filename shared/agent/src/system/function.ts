@@ -101,15 +101,15 @@ export namespace Functions {
 
 		const debounced = debounce<T>(
 			function() {
-				if (!Array.isArray(merged)) {
-					return fn.apply(context, [merged]);
-				}
-
-				const args = merged;
+				const data = merged;
 				merged = undefined;
 
-				for (const arg of args) {
-					fn.apply(context, [arg]);
+				if (Array.isArray(data)) {
+					for (const datum of data) {
+						fn.apply(context, [datum]);
+					}
+				} else {
+					return fn.apply(context, [data]);
 				}
 			} as any,
 			wait,
