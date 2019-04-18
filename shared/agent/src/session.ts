@@ -58,7 +58,7 @@ import { log, memoize, registerDecoratedHandlers, registerProviders } from "./sy
 // FIXME: Must keep this in sync with vscode-codestream/src/api/session.ts
 const envRegex = /https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(?::\d+$)?/i;
 
-const FIRST_SESSION_TIMEOUT = 12 * 60 * 60 * 1000;	// first session "times out" after 12 hours
+const FIRST_SESSION_TIMEOUT = 12 * 60 * 60 * 1000; // first session "times out" after 12 hours
 
 const loginApiErrorMappings: { [k: string]: ApiErrors } = {
 	"USRC-1001": ApiErrors.InvalidCredentials,
@@ -170,17 +170,24 @@ export class CodeStreamSession {
 
 		Container.initialize(this);
 
-		if (_options.proxySupport === "override" && _options.proxy != null) {
-			Logger.log(
-				`Proxy support is set to override with url=${_options.proxy.url}, strictSSL=${
-					_options.proxy.strictSSL
-				}`
-			);
+		if (
+			_options.proxySupport === "override" ||
+			(_options.proxySupport == null && _options.proxy != null)
+		) {
+			if (_options.proxy != null) {
+				Logger.log(
+					`Proxy support is in override with url=${_options.proxy.url}, strictSSL=${
+						_options.proxy.strictSSL
+					}`
+				);
 
-			this._proxyAgent = new HttpsProxyAgent({
-				...url.parse(_options.proxy.url),
-				rejectUnauthorized: _options.proxy.strictSSL
-			} as any);
+				this._proxyAgent = new HttpsProxyAgent({
+					...url.parse(_options.proxy.url),
+					rejectUnauthorized: _options.proxy.strictSSL
+				} as any);
+			} else {
+				Logger.log("Proxy support is in override, but no proxy settings were provided");
+			}
 		} else if (_options.proxySupport === "on") {
 			const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
 			if (proxyUrl) {
@@ -201,6 +208,8 @@ export class CodeStreamSession {
 			} else {
 				Logger.log("Proxy support is on, but no proxy url was found");
 			}
+		} else {
+			Logger.log("Proxy support is off");
 		}
 
 		this._api = new CodeStreamApiProvider(_options.serverUrl, this.versionInfo, this._proxyAgent);
@@ -660,10 +669,9 @@ export class CodeStreamSession {
 			props["Date of Last Post"] = new Date(user.lastPostCreatedAt).toISOString();
 		}
 
-		props["First Session"] = (
+		props["First Session"] =
 			!!user.firstSessionStartedAt &&
-			user.firstSessionStartedAt <= Date.now() + FIRST_SESSION_TIMEOUT
-		);
+			user.firstSessionStartedAt <= Date.now() + FIRST_SESSION_TIMEOUT;
 
 		const { telemetry } = Container.instance();
 		await telemetry.ready();
