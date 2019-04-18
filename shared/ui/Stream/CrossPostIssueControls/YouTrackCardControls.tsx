@@ -4,19 +4,14 @@ import Menu from "../Menu";
 import { CrossPostIssueValuesListener, PROVIDER_MAPPINGS } from "./types";
 import { ThirdPartyProviderBoard, ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 
-interface List {
-	id: string;
-	name: string;
-}
-
 interface State {
 	board?: ThirdPartyProviderBoard;
-	list?: List;
-	isEnabled: boolean;
+	//issueType?: string;
+	//issueTypeMenuOpen: boolean;
+	//issueTypeMenuTarget?: any;
 	boardMenuOpen: boolean;
 	boardMenuTarget?: any;
-	listMenuOpen: boolean;
-	listMenuTarget?: any;
+	isEnabled: boolean;
 }
 
 interface Props {
@@ -28,13 +23,13 @@ interface Props {
 export default class YouTrackCardControls extends React.Component<Props, State> {
 	constructor(props) {
 		super(props);
-		const firstBoard = props.boards[0];
+		const hasBoards = props.boards.length > 0;
 		this.state = {
-			board: firstBoard,
-			list: firstBoard && firstBoard.lists[0],
-			isEnabled: true,
+			board: hasBoards && props.boards[0],
+			//issueType: hasBoards && props.boards[0].issueTypes[0],
+			//issueTypeMenuOpen: false,
 			boardMenuOpen: false,
-			listMenuOpen: false
+			isEnabled: true
 		};
 	}
 
@@ -43,15 +38,32 @@ export default class YouTrackCardControls extends React.Component<Props, State> 
 	}
 
 	onValuesChanged = () => {
-		const { isEnabled, list, board } = this.state;
+		const { board, /*issueType,*/ isEnabled } = this.state;
 		this.props.onValues({
 			board,
 			boardId: board && board.id,
-			listId: list && list.id,
+			//issueType,
 			isEnabled,
 			issueProvider: this.props.provider
 		});
 	};
+
+	/*
+	switchIssueType = event => {
+		event.stopPropagation();
+		this.setState({
+			issueTypeMenuOpen: !this.state.issueTypeMenuOpen,
+			issueTypeMenuTarget: event.target
+		});
+	};
+
+	selectIssueType = issueType => {
+		if (issueType) {
+			this.setState({ issueType }, this.onValuesChanged);
+		}
+		this.setState({ issueTypeMenuOpen: false });
+	};
+	*/
 
 	switchBoard = event => {
 		event.stopPropagation();
@@ -61,26 +73,11 @@ export default class YouTrackCardControls extends React.Component<Props, State> 
 		});
 	};
 
-	selectBoard = (board: ThirdPartyProviderBoard) => {
+	selectBoard = board => {
 		if (board) {
-			this.setState({ board, list: board.lists[0] }, this.onValuesChanged);
+			this.setState({ board }, this.onValuesChanged);
 		}
 		this.setState({ boardMenuOpen: false });
-	};
-
-	switchList = event => {
-		event.stopPropagation();
-		this.setState({
-			listMenuOpen: !this.state.listMenuOpen,
-			listMenuTarget: event.target
-		});
-	};
-
-	selectList = (list: List) => {
-		this.setState({ listMenuOpen: false });
-		if (list && list.id) {
-			this.setState({ list }, this.onValuesChanged);
-		}
 	};
 
 	toggleCrossPostIssue = () => {
@@ -88,29 +85,22 @@ export default class YouTrackCardControls extends React.Component<Props, State> 
 	};
 
 	render() {
-		const { board, list } = this.state;
+		const { board/*, issueType*/ } = this.state;
 		const { provider } = this.props;
+		//const issueTypeItems = board ? board.issueTypes.map(it => ({ label: it, action: it })) : [];
 		const boardItems = this.props.boards.map(board => ({
 			label: board.name,
 			key: board.id,
 			action: board
 		}));
-		const listItems = board
-			? board.lists.map(list => ({
-					label: list.name,
-					key: list.id,
-					action: list
-			  }))
-			: [];
 		const providerDisplay = PROVIDER_MAPPINGS[provider.name];
 		const displayName = provider.isEnterprise
 			? `${providerDisplay.displayName} - ${provider.host}`
 			: providerDisplay.displayName;
-
 		return (
 			<div className="checkbox-row" onClick={this.toggleCrossPostIssue}>
 				<input type="checkbox" checked={this.state.isEnabled} />
-				{"Create a card on "}
+				{"Create an issue in "}
 				<span className="channel-label" onClick={this.switchBoard}>
 					{board && board.name}
 					<Icon name="chevron-down" />
@@ -124,23 +114,6 @@ export default class YouTrackCardControls extends React.Component<Props, State> 
 						/>
 					)}
 				</span>
-				{listItems.length > 0 && [
-					" in ",
-					<span className="channel-label" onClick={this.switchList}>
-						{list ? list.name : ""}
-						<Icon name="chevron-down" />
-						{this.state.listMenuOpen && (
-							<Menu
-								align="center"
-								compact={true}
-								target={this.state.listMenuTarget}
-								items={listItems}
-								action={this.selectList}
-							/>
-						)}
-					</span>,
-					" "
-				]}
 				{` on ${displayName}`}
 			</div>
 		);
