@@ -83,7 +83,7 @@ connection.onRequest("codestream/login", async (agentOptions: AgentOptions) => {
 			result: {
 				error: ex.message
 			}
-		}
+		};
 	}
 
 	return response;
