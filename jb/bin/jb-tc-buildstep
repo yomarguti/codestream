@@ -97,6 +97,8 @@ if args.action in ['build','info','release']:
 		# build the extension
 		bu.buildstepGeneric(args, cmd = "./gradlew buildPlugin")
 
+		bu.buildstepGeneric(args, cmd = "./gradlew --stop")
+
 	# # create asset info file (w/o md5sum)
 	# pkgInfo = bu.getPackageInfo(buildData = buildData, gitRepoCommitDir = buildData['sandboxTop'])
 	# genericName = pkgInfo['name'] + "-" + pkgInfo['version']
