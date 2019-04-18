@@ -106,7 +106,11 @@ function gitPath(): string {
 }
 
 export async function setGitPath(path: string): Promise<void> {
-	_gitPath = await setOrFindGitPath(path);
+	try {
+		_gitPath = await setOrFindGitPath(path);
+	} catch (ex) {
+		Logger.error(ex);
+	}
 }
 
 async function setOrFindGitPath(gitPath?: string): Promise<string> {

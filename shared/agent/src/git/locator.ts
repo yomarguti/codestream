@@ -70,7 +70,7 @@ export async function findGitPath(path?: string): Promise<GitLocation> {
 				case "win32":
 					return await findGitWin32();
 				default:
-					return Promise.reject("Unable to find git");
+					return Promise.reject(new Error("Unable to find git"));
 			}
 		} catch (ex) {
 			return Promise.reject(new Error("Unable to find git"));
