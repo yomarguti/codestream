@@ -569,6 +569,18 @@ export const createProviderCard = async (attributes, codemark) => {
 				});
 				break;
 			}
+			case "youtrack": {
+				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
+					provider: attributes.issueProvider,
+					data: {
+						description,
+						title: codemark.title,
+						repoName: attributes.boardName,
+						assignee: attributes.assignees[0]
+					}
+				});
+				break;
+			}
 			case "asana": {
 				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
 					provider: attributes.issueProvider,

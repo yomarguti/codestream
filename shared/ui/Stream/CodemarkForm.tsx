@@ -706,22 +706,25 @@ class CodemarkForm extends React.Component<Props, State> {
 					]}
 				{commentType !== "link" && (
 					<div className="color-choices" onClick={this.switchLabel}>
-						with <span className="label-label">label</span>
-						{this.state.labelMenuOpen && (
-							<Menu
-								align="center"
-								compact={true}
-								target={this.state.labelMenuTarget}
-								items={labelMenuItems}
-								action={this.selectLabel}
-							/>
-						)}
-						{this.state.color && (
-							<div className={cx(`label-indicator ${this.state.color}-background`, {})}>
-								<span>priority</span>
-							</div>
-						)}
-						<Icon name="chevron-down" className="chevron-down" />
+						with{" "}
+						<span className="label-label">
+							label
+							{this.state.labelMenuOpen && (
+								<Menu
+									align="center"
+									compact={true}
+									target={this.state.labelMenuTarget}
+									items={labelMenuItems}
+									action={this.selectLabel}
+								/>
+							)}
+							{this.state.color && (
+								<div className={cx(`label-indicator ${this.state.color}-background`, {})}>
+									<span>priority</span>
+								</div>
+							)}
+							<Icon name="chevron-down" className="chevron-down" />
+						</span>{" "}
 					</div>
 				)}
 			</div>

@@ -675,11 +675,19 @@
 				font-weight: normal;
 				color: @text-color-highlight;
 				white-space: nowrap;
+				cursor: pointer;
 				.icon {
 					display: inline-block;
 					transform: scale(0.7);
 					margin-left: 2px;
 				}
+			}
+			.connect-issue {
+				display: flex;
+			}
+			.connect-issue-label {
+				white-space: nowrap;
+				padding-right: 5px;
 			}
 		}
 		.compose {
@@ -2463,11 +2471,11 @@
 		}
 		.checkbox-row {
 			margin-top: 10px;
-			cursor: pointer;
 			user-select: none;
 			color: @text-color-subtle;
 			.service {
 				display: inline-block;
+				cursor: pointer;
 				margin: 0 5px;
 				&:hover {
 					color: @text-color-highlight;

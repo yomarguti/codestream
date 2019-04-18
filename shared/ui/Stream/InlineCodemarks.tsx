@@ -585,6 +585,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		if (fileNameToFilterFor && fileNameToFilterFor.length) {
 			const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
+			if (this.props.children) return null;
 			return (
 				<div key="no-codemarks" className="no-codemarks">
 					There are no codemarks

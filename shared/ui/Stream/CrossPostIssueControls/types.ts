@@ -20,5 +20,6 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 	gitlab: { displayName: "GitLab", icon: "gitlab" },
 	jira: { displayName: "Jira", icon: "jira" },
 	trello: { displayName: "Trello", icon: "trello" },
+	youtrack: { displayName: "YouTrack", icon: "youtrack" },
 	slack: { displayName: "Slack", icon: "slack" }
 };

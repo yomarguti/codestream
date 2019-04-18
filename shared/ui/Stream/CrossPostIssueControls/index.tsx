@@ -9,13 +9,10 @@ import GitHubCardControls from "./GitHubCardControls";
 import GitLabCardControls from "./GitLabCardControls";
 import JiraCardControls from "./JiraCardControls";
 import TrelloCardControls from "./TrelloCardControls";
+import YouTrackCardControls from "./YouTrackCardControls";
+import { CrossPostIssueValuesListener, ProviderDisplay, PROVIDER_MAPPINGS } from "./types";
 import {
-	CrossPostIssueValuesListener,
-	ProviderDisplay,
-	PROVIDER_MAPPINGS
-} from "./types";
-import { 
-	FetchThirdPartyBoardsRequestType,	
+	FetchThirdPartyBoardsRequestType,
 	ThirdPartyProviderBoard,
 	ThirdPartyProviderConfig
 } from "@codestream/protocols/agent";
@@ -47,7 +44,9 @@ interface State {
 class CrossPostIssueControls extends React.Component<Props, State> {
 	constructor(props: Props) {
 		super(props);
-		const providerInfo = props.issueProvider ? this.getProviderInfo(props.issueProvider) : undefined;
+		const providerInfo = props.issueProvider
+			? this.getProviderInfo(props.issueProvider)
+			: undefined;
 		const isLoading = !!providerInfo;
 		const loadingProvider = providerInfo;
 		this.state = {
@@ -96,7 +95,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		const { loadingProvider } = this.state;
 
 		return (
-			<div className="checkbox-row connect-issue">
+			<div className="checkbox-row">
 				<span>
 					<Icon className="spin" name="sync" /> Syncing with {loadingProvider!.display.displayName}
 					...
@@ -113,25 +112,25 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			return null;
 		}
 		switch (issueProvider!.name) {
-			case 'jira': {
+			case "jira": {
 				return (
-					<JiraCardControls 
+					<JiraCardControls
 						boards={boards}
 						onValues={this.props.onValues}
 						provider={providerInfo.provider}
 					/>
 				);
 			}
-			case 'trello': {
+			case "trello": {
 				return (
 					<TrelloCardControls
-						boards={boards} 
+						boards={boards}
 						onValues={this.props.onValues}
 						provider={providerInfo.provider}
 					/>
 				);
 			}
-			case 'asana': {
+			case "asana": {
 				return (
 					<AsanaCardControls
 						boards={boards}
@@ -140,7 +139,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 					/>
 				);
 			}
-			case 'github': {
+			case "github": {
 				return (
 					<GitHubCardControls
 						boards={boards}
@@ -150,7 +149,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 					/>
 				);
 			}
-			case 'gitlab': {
+			case "gitlab": {
 				return (
 					<GitLabCardControls
 						boards={boards}
@@ -160,7 +159,16 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 					/>
 				);
 			}
-			case 'bitbucket': {
+			case "youtrack": {
+				return (
+					<YouTrackCardControls
+						boards={boards}
+						onValues={this.props.onValues}
+						provider={providerInfo.provider}
+					/>
+				);
+			}
+			case "bitbucket": {
 				return (
 					<BitbucketCardControls
 						boards={boards}
@@ -183,13 +191,10 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider) : undefined;
 		if (providerInfo) {
 			return this.renderProviderControls();
-		} else if (
-			this.props.providers &&
-			Object.keys(this.props.providers).length
-		) {
+		} else if (this.props.providers && Object.keys(this.props.providers).length) {
 			const knownIssueProviders = this.props.providers.filter(provider => {
 				return (
-					(!provider.teamId || provider.teamId === this.props.currentTeamId) && 
+					(!provider.teamId || provider.teamId === this.props.currentTeamId) &&
 					provider.hasIssues &&
 					!!PROVIDER_MAPPINGS[provider.name]
 				);
@@ -199,25 +204,30 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			}
 			return (
 				<div className="checkbox-row connect-issue">
-					Create an issue in{" "}
-					{knownIssueProviders.map(issueProvider => {
-						const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
-						const displayName = issueProvider.isEnterprise ?
-							`${providerDisplay.displayName} - ${issueProvider.host}` :
-							providerDisplay.displayName;
-						const icon = providerDisplay.icon || issueProvider.name;
-						return (
-							<span
-								className="service"
-								onClick={e => 
-									this.handleClickConnectIssueProvider(e, { provider: issueProvider, display: providerDisplay})
-								}
-							>
-								<Icon className={issueProvider!.name} name={icon} />
-								{displayName}
-							</span>
-						);
-					})}
+					<div className="connect-issue-label">Create an issue in </div>
+					<div className="connect-issue-providers">
+						{knownIssueProviders.map(issueProvider => {
+							const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
+							const displayName = issueProvider.isEnterprise
+								? `${providerDisplay.displayName} - ${issueProvider.host}`
+								: providerDisplay.displayName;
+							const icon = providerDisplay.icon || issueProvider.name;
+							return (
+								<span
+									className="service"
+									onClick={e =>
+										this.handleClickConnectIssueProvider(e, {
+											provider: issueProvider,
+											display: providerDisplay
+										})
+									}
+								>
+									<Icon className={issueProvider!.name} name={icon} />
+									{displayName}
+								</span>
+							);
+						})}
+					</div>
 				</div>
 			);
 		} else {
