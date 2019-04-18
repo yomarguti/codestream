@@ -78,6 +78,12 @@ connection.onRequest("codestream/login", async (agentOptions: AgentOptions) => {
 		}
 	} catch (ex) {
 		Logger.error(ex);
+
+		response = {
+			result: {
+				error: ex.message
+			}
+		}
 	}
 
 	return response;
