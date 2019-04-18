@@ -12,6 +12,7 @@ export interface Config {
 	autoSignIn: boolean;
 	email: string;
 	notifications: Notifications;
+	proxySupport: "override" | "on" | "off" | null;
 	serverUrl: string;
 	showAvatars: boolean;
 	showInStatusBar: "left" | "right" | false;

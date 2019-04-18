@@ -73,6 +73,17 @@
                     "description": "Specifies when to show notifications for incoming messages",
                     "scope": "window"
                 },
+                "codestream.proxySupport": {
+                    "type": "string",
+                    "default": null,
+                    "enum": [
+                        "override",
+                        "on",
+                        "off"
+                    ],
+                    "description": "Specifies whether to support proxy servers",
+                    "scope": "window"
+                },
                 "codestream.serverUrl": {
                     "type": "string",
                     "default": "https://api.codestream.com",

@@ -247,13 +247,20 @@ export class CodeStreamAgentConnection implements Disposable {
 			teamId
 		};
 
-		const httpSettings = workspace.getConfiguration("http");
-		const proxy = httpSettings.get<string | undefined>("proxy", "");
-		if (proxy) {
-			options.proxy = {
-				url: proxy,
-				strictSSL: httpSettings.get<boolean>("proxyStrictSSL", true)
-			};
+		if (Container.config.proxySupport !== "off") {
+			const httpSettings = workspace.getConfiguration("http");
+			const proxy = httpSettings.get<string | undefined>("proxy", "");
+			if (proxy) {
+				options.proxy = {
+					url: proxy,
+					strictSSL: httpSettings.get<boolean>("proxyStrictSSL", true)
+				};
+				options.proxySupport = "override";
+			} else {
+				options.proxySupport = "on";
+			}
+		} else {
+			options.proxySupport = "off";
 		}
 
 		const response = await this.start(options);
