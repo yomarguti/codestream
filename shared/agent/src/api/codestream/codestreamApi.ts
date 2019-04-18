@@ -232,6 +232,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 			} team(s)\n${response.teams.map(t => `\t${t.name} (${t.id})`).join("\n")}`
 		);
 
+		Logger.log(`Providers:\n${response.providers.map(p => `\t${p.name} (${p.host})`).join("\n")}`);
+
 		// If there is only 1 team, use it regardless of config
 		if (response.teams.length === 1) {
 			options.teamId = response.teams[0].id;

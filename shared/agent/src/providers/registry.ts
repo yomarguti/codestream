@@ -25,6 +25,7 @@ export * from "./github";
 export * from "./gitlab";
 export * from "./asana";
 export * from "./bitbucket";
+export * from "./youtrack";
 
 @lsp
 export class ThirdPartyProviderRegistry {
@@ -69,9 +70,7 @@ export class ThirdPartyProviderRegistry {
 
 	@log()
 	@lspHandler(FetchThirdPartyBoardsRequestType)
-	fetchBoards(
-		request: FetchThirdPartyBoardsRequest
-	): Promise<FetchThirdPartyBoardsResponse> {
+	fetchBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
 		const provider = getProvider(request.provider.host);
 		if (provider === undefined) {
 			throw new Error(`No registered provider for '${request.provider.host}'`);
@@ -82,15 +81,12 @@ export class ThirdPartyProviderRegistry {
 
 	@log()
 	@lspHandler(CreateThirdPartyCardRequestType)
-	createCard(
-		request: CreateThirdPartyCardRequest
-	): Promise<CreateThirdPartyCardResponse> {
+	createCard(request: CreateThirdPartyCardRequest): Promise<CreateThirdPartyCardResponse> {
 		const provider = getProvider(request.provider.host);
 		if (provider === undefined) {
 			throw new Error(`No registered provider for '${request.provider.host}'`);
 		}
 
 		return provider.createCard(request);
-
 	}
 }
