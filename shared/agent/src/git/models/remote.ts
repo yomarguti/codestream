@@ -36,9 +36,6 @@ export class GitRemote {
 		if (gitMatch) {
 			info.pathname = gitMatch[1];
 		}
-		if (info.pathname.indexOf("/:") === 0) {
-			info.pathname = info.pathname.replace("/:", "/");
-		}
 		this.normalizedUrl = `${info.resource}${info.pathname}`;
 	}
 }
