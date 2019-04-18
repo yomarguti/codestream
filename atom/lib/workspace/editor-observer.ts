@@ -106,6 +106,18 @@ export class WorkspaceEditorObserver implements Disposable {
 		disposable && disposable.dispose();
 	}
 
+	async select(file: string, range: Range) {
+		const editor = (await atom.workspace.open(file)) as TextEditor | undefined;
+
+		if (editor) {
+			if (range.isEmpty()) {
+				editor.scrollToBufferPosition(range.start);
+			} else {
+				editor.setSelectedScreenRange(range);
+			}
+		}
+	}
+
 	dispose() {
 		this.subscriptions.dispose();
 		this.emitter.dispose();

@@ -5,6 +5,8 @@ import {
 	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequest,
 	EditorRevealRangeRequestType,
+	EditorSelectRangeRequest,
+	EditorSelectRangeRequestType,
 	HostDidChangeActiveEditorNotification,
 	HostDidChangeActiveEditorNotificationType,
 	HostDidChangeConfigNotificationType,
@@ -376,6 +378,21 @@ export class CodestreamView {
 				);
 				break;
 			}
+			case EditorSelectRangeRequestType.method: {
+				const { selection, uri, preserveFocus }: EditorSelectRangeRequest = message.params;
+
+				await this.editorSelectionObserver!.select(
+					Convert.uriToPath(uri),
+					Convert.lsRangeToAtomRange(selection)
+				);
+
+				// TODO: revisit this because it doesn't actually work
+				if (preserveFocus) {
+					const pane = atom.workspace.paneContainerForURI(CODESTREAM_VIEW_URI);
+					if (pane) (pane.getActivePaneItem() as any).focus();
+				}
+				break;
+			}
 			case EditorRevealRangeRequestType.method: {
 				const { uri, range } = message.params as EditorRevealRangeRequest;
 				atom.workspace.getTextEditors().some(editor => {
@@ -402,6 +419,7 @@ export class CodestreamView {
 			// 	break;
 			// }
 			default: {
+				atom.notifications.addWarning(`Unhandled webview message: ${message.method}`);
 				console.warn("unhandled webview message", message);
 			}
 		}
