@@ -46,7 +46,7 @@ export class WorkspaceSession {
 
 	static create(state: PackageState) {
 		return new WorkspaceSession(
-			new ConfigManager(state.inMemorySettings),
+			new ConfigManager(),
 			state.session,
 			state.lastUsedEmail,
 			state.environment
@@ -85,7 +85,6 @@ export class WorkspaceSession {
 			session: this.session,
 			lastUsedEmail: this.session ? this.session.user.email : this.lastUsedEmail,
 			environment: this.envConfig,
-			inMemorySettings: this.configManager.serialize(),
 		};
 	}
 

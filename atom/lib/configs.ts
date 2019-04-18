@@ -1,6 +1,5 @@
 import { WebviewConfigs } from "@codestream/protocols/webview";
 import { Disposable, Emitter } from "atom";
-import { InMemorySettings } from "types/package";
 
 export interface ConfigSchema {
 	team: string;
@@ -13,14 +12,10 @@ const KEYS_FOR_WEBVIEW = ["avatars", "showMarkers"];
 
 const keyForWebview = (key: string) => (key === "avatars" ? "showHeadshots" : key);
 
-const DID_CHANGE_IN_MEMORY_SETTING = "in-memory-setting-changed";
-
 export class ConfigManager implements Disposable {
-	private inMemorySettings: InMemorySettings;
 	private emitter: Emitter;
 
-	constructor(initialConfigs = { viewCodemarksInline: true }) {
-		this.inMemorySettings = initialConfigs;
+	constructor() {
 		this.emitter = new Emitter();
 	}
 
@@ -34,7 +29,6 @@ export class ConfigManager implements Disposable {
 			debug: atom.inDevMode(),
 			serverUrl,
 			email,
-			viewCodemarksInline: this.inMemorySettings.viewCodemarksInline,
 		};
 	}
 
@@ -67,17 +61,6 @@ export class ConfigManager implements Disposable {
 
 	set<K extends keyof ConfigSchema>(key: K, value: ConfigSchema[K]) {
 		atom.config.set(`codestream.${key}` as any, value);
-	}
-
-	setInMemory<K extends keyof InMemorySettings>(key: K, value: InMemorySettings[K]) {
-		if (key in this.inMemorySettings) {
-			this.inMemorySettings[key] = value;
-			this.emitter.emit(DID_CHANGE_IN_MEMORY_SETTING);
-		}
-	}
-
-	serialize() {
-		return this.inMemorySettings;
 	}
 
 	dispose() {}

@@ -37,7 +37,6 @@ import { CompositeDisposable, Disposable, Emitter, Point, Range, TextEditor } fr
 import { Convert } from "atom-languageclient";
 import { ConfigSchema } from "configs";
 import { shell } from "electron";
-import { InMemorySettings } from "types/package";
 import { NotificationType } from "vscode-languageserver-protocol";
 import { Container } from "workspace/container";
 import {
@@ -364,7 +363,6 @@ export class CodestreamView {
 				const { name, value }: UpdateConfigurationRequest = message.params;
 				const { configManager } = this.session;
 				if (configManager.isUserSetting(name)) configManager.set(name as keyof ConfigSchema, value);
-				else configManager.setInMemory(name as keyof InMemorySettings, value);
 				this.respond<UpdateConfigurationResponse>({ id: message.id, params: {} });
 				this.sendEvent(HostDidChangeConfigNotificationType, { [name]: value });
 				break;

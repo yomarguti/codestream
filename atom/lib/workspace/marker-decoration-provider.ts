@@ -1,4 +1,4 @@
-import { DocumentMarker, DocumentMarkersRequestType } from "@codestream/protocols/agent";
+import { DocumentMarker, FetchDocumentMarkersRequestType } from "@codestream/protocols/agent";
 import { CompositeDisposable, DisplayMarker, Disposable, Gutter, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
 import { accessSafely, asAbsolutePath, Editor } from "utils";
@@ -94,7 +94,7 @@ export class MarkerDecorationProvider implements Disposable {
 	}
 
 	private async provideFor(editor: TextEditor) {
-		const response = await this.session.agent.request(DocumentMarkersRequestType, {
+		const response = await this.session.agent.request(FetchDocumentMarkersRequestType, {
 			textDocument: { uri: Convert.pathToUri(editor.getPath()!) },
 		});
 
