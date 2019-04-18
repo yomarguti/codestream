@@ -6,7 +6,7 @@ import { Container } from "../../container";
 import { Logger } from "../../logger";
 import { ConnectionStatus, LogoutReason } from "../../protocol/agent.protocol";
 import { StreamType } from "../../protocol/api.protocol";
-import { debug, Disposable, log } from "../../system";
+import { debug, Disposable, Functions, log } from "../../system";
 import {
 	MessageType,
 	PreferencesRTMessage,
@@ -704,7 +704,7 @@ export class SlackEvents implements Disposable {
 					} as UsersRTMessage;
 
 					message.data = await Container.instance().users.resolve(message);
-					this._onDidReceiveMessage.fire(message);
+					this.fireUsersRTMessage(message);
 					break;
 				}
 				case SlackRtmEventTypes.UserDndChanged: {
@@ -722,7 +722,7 @@ export class SlackEvents implements Disposable {
 					} as UsersRTMessage;
 
 					message.data = await Container.instance().users.resolve(message);
-					this._onDidReceiveMessage.fire(message);
+					this.fireUsersRTMessage(message);
 					break;
 				}
 				case SlackRtmEventTypes.PreferenceChanged: {
@@ -780,7 +780,7 @@ export class SlackEvents implements Disposable {
 					} as UsersRTMessage;
 
 					message.data = await Container.instance().users.resolve(message);
-					this._onDidReceiveMessage.fire(message);
+					this.fireUsersRTMessage(message);
 					break;
 				}
 				case SlackRtmEventTypes.UserPresenceChanged: {
@@ -811,39 +811,68 @@ export class SlackEvents implements Disposable {
 					} as UsersRTMessage;
 
 					message.data = await Container.instance().users.resolve(message);
-					this._onDidReceiveMessage.fire(message);
+					this.fireUsersRTMessage(message);
 					break;
 				}
 				case SlackRtmEventTypes.UserAdded: {
-					// Don't trust the payload, since it might not be a full channel
+					// Don't trust the payload, since it won't have our full user data
 					const response = await this._api.getUser({ userId: e.user.id });
+
 					const message = {
 						type: MessageType.Users,
 						data: [response.user]
 					} as UsersRTMessage;
-					message.data = await Container.instance().users.resolve(message);
 
-					this._onDidReceiveMessage.fire(message);
+					message.data = await Container.instance().users.resolve(message);
+					this.fireUsersRTMessage(message);
 					break;
 				}
 				case SlackRtmEventTypes.UserChanged: {
 					const user = Container.instance().users.getById(e.user.id);
 
-					// Don't trust the payload, since it might not be a full channel
+					// Don't trust the payload, since it won't have our full user data
 					const response = await this._api.getUser({ userId: e.user.id });
+
 					const message = {
 						type: MessageType.Users,
 						// Make sure to take our existing props (because of last reads, presence, dnd, etc)
 						data: [user != null ? { ...user, ...response.user } : response.user]
 					} as UsersRTMessage;
-					message.data = await Container.instance().users.resolve(message);
 
-					this._onDidReceiveMessage.fire(message);
+					message.data = await Container.instance().users.resolve(message);
+					this.fireUsersRTMessage(message);
 					break;
 				}
 			}
 		} catch (ex) {
 			Logger.error(ex, cc);
 		}
+	}
+
+	private _fireUsersRTMessageDebounced: any;
+	private fireUsersRTMessage(message: UsersRTMessage) {
+		if (this._fireUsersRTMessageDebounced === undefined) {
+			this._fireUsersRTMessageDebounced = Functions.debounceMerge(
+				(e: UsersRTMessage) => this._onDidReceiveMessage.fire(e),
+				(merged: UsersRTMessage | undefined, current: UsersRTMessage) => {
+					if (merged === undefined) return current;
+
+					for (const user of current.data) {
+						const index = merged.data.findIndex(u => u.id === user.id);
+						if (index !== -1) {
+							merged.data.splice(index, 1, user);
+						} else {
+							merged.data.push(user);
+						}
+					}
+
+					return merged;
+				},
+				250,
+				{ maxWait: 1000 }
+			);
+		}
+
+		this._fireUsersRTMessageDebounced(message);
 	}
 }

@@ -92,19 +92,21 @@ export namespace Functions {
 
 	export function debounceMerge<T extends (...args: any[]) => any>(
 		fn: T,
-		merger: (combined: any[] | undefined, current: any) => any[],
+		merger: (merged: any | undefined, current: any) => any,
 		wait?: number,
 		options?: { leading?: boolean; maxWait?: number; trailing?: boolean }
 	): T {
-		let combined: any[] | undefined;
+		let merged: any | undefined;
 		let context: any;
 
 		const debounced = debounce<T>(
 			function() {
-				if (combined === undefined) return fn.apply(context, [undefined]);
+				if (!Array.isArray(merged)) {
+					return fn.apply(context, [merged]);
+				}
 
-				const args = combined;
-				combined = undefined;
+				const args = merged;
+				merged = undefined;
 
 				for (const arg of args) {
 					fn.apply(context, [arg]);
@@ -116,7 +118,7 @@ export namespace Functions {
 
 		return function(this: any, current: any) {
 			context = this;
-			combined = merger.apply(context, [combined, current]);
+			merged = merger.apply(context, [merged, current]);
 			return debounced();
 		} as any;
 	}
