@@ -1,5 +1,22 @@
 # Change Log
 
+## [0.52.1] - 2019-4-19
+
+### Added
+
+- Adds a guide to keyboard shortcuts in the default view of the Current File tab when there are no codemarks
+
+### Changed
+
+- Updated the Jira integration to accommodate the GDPR-related changes to the Jira Cloud REST APIs, which means that Jira assignees can no longer be mapped to a CodeStream user
+
+### Fixed
+
+- Fixes an issue that prevented desktop notifications from being displayed
+- Fixes an issue that prevented users with proxies from being able to sign in
+- Fixes an issue that prevented users without Git installed from being able to sign in
+- Fixes an issue that prevented the editing of replies
+
 ## [0.52.0] - 2019-4-10
 
 ### Added
