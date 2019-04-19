@@ -38,7 +38,7 @@ import {
 import { CompositeDisposable, Disposable, Emitter, Point, Range, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
 import { ConfigSchema } from "configs";
-import { shell } from "electron";
+import { remote, shell } from "electron";
 import { NotificationType } from "vscode-languageserver-protocol";
 import { Container } from "workspace/container";
 import {
@@ -188,13 +188,14 @@ export class CodestreamView {
 	private initialize() {
 		const onBlur = () => this.sendEvent(HostDidChangeFocusNotificationType, { focused: false });
 		const onFocus = () => this.sendEvent(HostDidChangeFocusNotificationType, { focused: true });
-		window.addEventListener("focus", onFocus);
-		window.addEventListener("blur", onBlur);
+		const window = remote.getCurrentWindow();
+		window.on("focus", onFocus);
+		window.on("blur", onBlur);
 		// TODO?: create a controller to house this stuff so it isn't re-init everytime this view is instantiated
 		this.subscriptions.add(
 			new Disposable(() => {
-				window.removeEventListener("blur", onBlur, false);
-				window.removeEventListener("focus", onFocus, false);
+				window.removeListener("blur", onBlur);
+				window.removeListener("focus", onFocus);
 			}),
 			this.session.agent.onInitialized(() => {
 				this.subscriptions.add(
