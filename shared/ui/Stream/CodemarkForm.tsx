@@ -166,7 +166,19 @@ class CodemarkForm extends React.Component<Props, State> {
 			  } as State);
 
 		let assignees: any;
-		if (state.assignees === undefined) {
+		if (props.isEditing) {
+			const externalAssignees = this.props.editingCodemark!.externalAssignees || [];
+			assignees = externalAssignees
+				.map(a => ({
+					value: a.displayName,
+					label: a.displayName
+				}))
+				.concat(
+					mapFilter(this.props.editingCodemark!.assignees, a =>
+						state.assignableUsers.find((au: any) => au.value === a)
+					)
+				);
+		} else if (state.assignees === undefined) {
 			assignees = undefined;
 		} else if (Array.isArray(state.assignees)) {
 			assignees = state.assignees.map(a => state.assignableUsers.find((au: any) => au.value === a));
@@ -1078,7 +1090,7 @@ class CodemarkForm extends React.Component<Props, State> {
 						)}
 						{commentType === "issue" && (
 							<div id="members-controls" className="control-group" style={{ marginBottom: "10px" }}>
-								{!this.state.assigneesDisabled && (
+								{!this.state.assigneesDisabled && !this.props.isEditing && (
 									<Select
 										id="input-assignees"
 										name="assignees"
@@ -1091,6 +1103,16 @@ class CodemarkForm extends React.Component<Props, State> {
 										placeholder={assigneesPlaceholder}
 										onChange={value => this.setState({ assignees: value! })}
 										tabIndex={this.tabIndex().toString()}
+									/>
+								)}
+								{this.props.isEditing && (
+									<Select
+										id="input-assignees"
+										name="assignees"
+										classNamePrefix="native-key-bindings react-select"
+										isMulti
+										isDisabled
+										value={this.state.assignees}
 									/>
 								)}
 							</div>
