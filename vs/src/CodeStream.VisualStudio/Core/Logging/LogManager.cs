@@ -1,4 +1,7 @@
-﻿using CodeStream.VisualStudio.Core.Logging.Sanitizer;
+﻿#if DEBUG
+using CodeStream.VisualStudio.Core.Logging.Enrichers;
+#endif
+using CodeStream.VisualStudio.Core.Logging.Sanitizer;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
@@ -36,12 +39,15 @@ namespace CodeStream.VisualStudio.Core.Logging {
 #if DEBUG
 				// day/month/year and processId just aren't that important when developing -- they take up space
 				template =
-					"{Timestamp:HH:mm:ss.fff} {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}{NewLine}{Exception}";
+					"{Timestamp:HH:mm:ss.fff} {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}(at {Caller}){NewLine}{Exception}";
 #endif
 
 				return new LoggerConfiguration()
 					.Enrich.WithProcessId()
-					.Enrich.WithThreadId()					
+					.Enrich.WithThreadId()
+#if DEBUG
+					.Enrich.WithCaller()
+#endif
 					.MinimumLevel.ControlledBy(_loggingLevelSwitch)
 					.WriteTo.File(
 						new LogSanitizingFormatter(
