@@ -6,31 +6,28 @@ using CodeStream.VisualStudio.Models;
 using Serilog;
 using Serilog.Events;
 
-namespace CodeStream.VisualStudio
-{
-    internal class IpcLogger
-    {        
-        public static IDisposable CriticalOperation(ILogger log, string name, IAbstractMessageType message)
-        {
+namespace CodeStream.VisualStudio {
+	internal class IpcLogger {
+		public static IDisposable CriticalOperation(ILogger log, string name, IAbstractMessageType message, bool canEnqueue = false) {
 			if (log == null || !log.IsEnabled(LogEventLevel.Verbose)) return null;
 #if DEBUG
 			if (Application.DeveloperOptions.MuteIpcLogs) return null;
 #endif
-			var result = new Dictionary<string, object> {{nameof(name), name}};
-            if (!message.Id.IsNullOrWhiteSpace())
-            {
-                result.Add(nameof(message.Id), message.Id);
-            }
-            if (!message.Method.IsNullOrWhiteSpace())
-            {
-                result.Add(nameof(message.Method), message.Method);
-            }
-            if (!message.Error.IsNullOrWhiteSpace())
-            {
-                result.Add(nameof(message.Error), message.Error);
-            }
+			var result = new Dictionary<string, object> { { nameof(name), name } };
+			if (!message.Id.IsNullOrWhiteSpace()) {
+				result.Add(nameof(message.Id), message.Id);
+			}
+			if (!message.Method.IsNullOrWhiteSpace()) {
+				result.Add(nameof(message.Method), message.Method);
+			}
+			if (!message.Error.IsNullOrWhiteSpace()) {
+				result.Add(nameof(message.Error), message.Error);
+			}
+			if (canEnqueue) {
+				result.Add(nameof(canEnqueue), "true");
+			}
 
-            return log.CriticalOperation(result);
-        }
-    }
+			return log.CriticalOperation(result);
+		}
+	}
 }

@@ -166,12 +166,14 @@
     <Compile Include="Models\WebviewIpcMessageTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\CredentialsServiceTests.cs" />
+    <Compile Include="Services\DotNetBrowserServiceTests.cs" />
     <Compile Include="Services\SettingsServiceTests.cs" />
     <Compile Include="Stubs\OptionsDialogPageStub.cs" />
     <Compile Include="Stubs\CredentialsServiceStub.cs" />
     <Compile Include="UI\TextViewCreationListenerTests.cs" />
     <Compile Include="UI\TextViewExtensionsTests.cs" />
     <Compile Include="Stubs\TextViewRoleSet.cs" />
+    <Compile Include="WebViewRouterTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

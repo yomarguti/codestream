@@ -105,7 +105,9 @@ namespace CodeStream.VisualStudio.Packages
                     GetService(typeof(SEventAggregator)) as IEventAggregator,
                     GetService(typeof(SIdeService)) as IIdeService);
             if (typeof(SBrowserService) == serviceType)
-                return new DotNetBrowserService(GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService);
+                return new DotNetBrowserService(
+	                GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
+	                GetService(typeof(SEventAggregator)) as IEventAggregator);
             if (typeof(SWebviewIpc) == serviceType)
                 return new WebviewIpc(GetService(typeof(SBrowserService)) as IBrowserService);
             if (typeof(SCodeStreamService) == serviceType)

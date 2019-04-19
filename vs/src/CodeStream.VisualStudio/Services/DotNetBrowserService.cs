@@ -1,13 +1,16 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
 using System.Windows.Input;
 using CodeStream.VisualStudio.Annotations;
 using CodeStream.VisualStudio.Commands;
 using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.UI.Wpf;
 using DotNetBrowser;
@@ -38,19 +41,87 @@ namespace CodeStream.VisualStudio.Services {
 	public class DotNetBrowserService : BrowserServiceBase, DialogHandler, LoadHandler, ResourceHandler //, IProtocolHandler
 	{
 		private static readonly ILogger Log = LogManager.ForContext<DotNetBrowserService>();
+		private readonly ICodeStreamAgentService _agentService;
+		private readonly BlockingCollection<string> _messageQueue;
 
-		private readonly ICodeStreamAgentService _agent;
+		/// <summary>
+		/// 99, not 100, because we are checking inside the processor which was already dequeued one
+		/// </summary>
+		private const int QueueLimit = 99;
+
 		private WPFBrowserView _browserView;
 		private BrowserContext _browserContext;
 		private string _path;
+
+		private readonly IDisposable _sessionReadyEvent;
+		private readonly IDisposable _sessionLogoutEvent;
+
+		private readonly ManualResetEvent _manualResetEvent;
+		private readonly CancellationTokenSource _processorTokenSource;
+		private CancellationTokenSource _queueTokenSource;
+		private static Task _processor;
 
 		/// <summary>
 		/// This handles what is passed into DotNetBrowser as well as which Chromium switches get created
 		/// </summary>
 		public BrowserType BrowserType => BrowserType.HEAVYWEIGHT;
 
-		public DotNetBrowserService(ICodeStreamAgentService agentService) {
-			_agent = agentService;
+		public override int QueueCount => _messageQueue.Count;
+
+		public DotNetBrowserService(ICodeStreamAgentService agentService, IEventAggregator eventAggregator) {
+			_agentService = agentService;
+			_messageQueue = new BlockingCollection<string>(new ConcurrentQueue<string>());
+			_manualResetEvent = new ManualResetEvent(false);
+			_sessionReadyEvent = eventAggregator.GetEvent<SessionReadyEvent>().Subscribe(_ => {
+				Log.Debug($"{nameof(SessionReadyEvent)} Message QueueCount={QueueCount}");
+				_manualResetEvent.Set();
+			});
+			_sessionLogoutEvent = eventAggregator.GetEvent<SessionLogoutEvent>().Subscribe(_ => {
+				Log.Debug($"{nameof(SessionLogoutEvent)} Message QueueCount={QueueCount}");
+				_queueTokenSource?.Cancel();
+				_messageQueue.Clear();
+				_manualResetEvent.Reset();
+			});
+			//https://stackoverflow.com/questions/9106419/how-to-cancel-getconsumingenumerable-on-blockingcollection
+			_processorTokenSource = new CancellationTokenSource();
+			var processorToken = _processorTokenSource.Token;
+
+			_processor = Task.Factory.StartNew(() => {
+				try {
+					while (_manualResetEvent.WaitOne()) {
+						if (processorToken.IsCancellationRequested) {
+							break;
+						}
+						_queueTokenSource = new CancellationTokenSource();
+						var queueToken = _queueTokenSource.Token;
+						try {
+							foreach (var value in _messageQueue.GetConsumingEnumerable(_queueTokenSource.Token)) {
+								if (queueToken.IsCancellationRequested) {
+									break;
+								}
+
+								if (_messageQueue.Count > QueueLimit) {
+									_messageQueue.Clear();
+									_manualResetEvent.Reset();
+									ReloadWebView();
+									break;
+								}
+								Send(value);
+							}
+						}
+						catch (OperationCanceledException ex) {
+							//no need to pass the error, this exception is expected
+							Log.Verbose(ex.Message);
+						}
+						catch (Exception ex) {
+							Log.Error(ex, ex.Message);
+						}
+					}
+				}
+				catch (Exception ex) {
+					Log.Warning(ex.Message);
+				}
+			}, processorToken, TaskCreationOptions.None, TaskScheduler.Default);
 		}
 
 		protected override void OnInitialized() {
@@ -82,7 +153,7 @@ namespace CodeStream.VisualStudio.Services {
 			browser.ScriptContextCreated += Browser_ScriptContextCreated;
 
 			_browserView = new WPFBrowserView(browser);
-			
+
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut1Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D1)));
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut2Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D2)));
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut3Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D3)));
@@ -91,8 +162,8 @@ namespace CodeStream.VisualStudio.Services {
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut6Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D6)));
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut7Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D7)));
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut8Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D8)));
-			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut9Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D9)));			
-		}	 
+			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut9Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D9)));
+		}
 
 		private void Browser_RenderGoneEvent(object sender, RenderEventArgs e) {
 			Log.Verbose(nameof(Browser_RenderGoneEvent));
@@ -119,21 +190,30 @@ namespace CodeStream.VisualStudio.Services {
 			Log.Verbose($"{nameof(Browser_ScriptContextCreated)} ExecuteJavaScript");
 		}
 
-		//public void OnBrowserKeyDown(object sender, KeyEventArgs e) {
-
-		//	if(e.Modifiers.HasFlag(Keys.Control) && e.Modifiers.HasFlag(Keys.Shift) && e.KeyCode == System.Windows.Forms.Keys.OemQuestion) {
-		//		var x = 1;
-		//	}
-
-		//}
-
 		public override void AddWindowMessageEvent(WindowMessageHandler messageHandler) {
 			PostMessageInterop.MessageHandler = messageHandler;
-
 			Log.Verbose($"{nameof(AddWindowMessageEvent)}");
 		}
 
-		public override void PostMessage(string message) {
+		/// <summary>
+		/// Sends message to the browser, also contains logic for queuing messages
+		/// before the agent is ready
+		/// </summary>
+		/// <param name="message"></param>
+		/// <param name="canEnqueue"></param>
+		public override void PostMessage(string message, bool canEnqueue = false) {
+			if (canEnqueue) {
+				if (!_messageQueue.TryAdd(message)) {
+					Log.Verbose($"failed to add: {message}");
+				}
+			}
+			else {
+				//not a deferred and not triggered -- work as normal
+				Send(message);
+			}
+		}
+
+		protected virtual void Send(string message) {
 			_browserView.Browser.ExecuteJavaScript(@"window.postMessage(" + message + @",""*"");");
 		}
 
@@ -245,6 +325,15 @@ namespace CodeStream.VisualStudio.Services {
 			var success = true;
 			if (disposing) {
 				try {
+					try {
+						_queueTokenSource?.Cancel();
+						_processorTokenSource?.Cancel();
+						_manualResetEvent.Set();
+					}
+					catch (Exception ex) {
+						Log.Warning(ex, "aux component failed to dispose");
+					}
+
 					if (_browserView == null) {
 						Log.Verbose("DotNetBrowser is null");
 						return;
@@ -256,11 +345,15 @@ namespace CodeStream.VisualStudio.Services {
 					}
 					try {
 						_browserView.InputBindings.Clear();
-					}
-					catch { }
+						_sessionReadyEvent?.Dispose();
+						_sessionLogoutEvent?.Dispose();
 
-					_browserView.Browser.RenderGoneEvent -= Browser_RenderGoneEvent;
-					_browserView.Browser.ScriptContextCreated -= Browser_ScriptContextCreated;
+						_browserView.Browser.RenderGoneEvent -= Browser_RenderGoneEvent;
+						_browserView.Browser.ScriptContextCreated -= Browser_ScriptContextCreated;
+					}
+					catch (Exception ex) {
+						Log.Warning(ex, "aux component failed to dispose");
+					}
 
 					_browserView.Dispose();
 					_browserView.Browser.Dispose();
@@ -293,6 +386,65 @@ namespace CodeStream.VisualStudio.Services {
 				_disposed = true;
 			}
 		}
+
+		#region DialogHandlers
+
+		bool LoadHandler.OnLoad(LoadParams loadParams) {
+			return false;
+		}
+
+		bool LoadHandler.CanNavigateOnBackspace() {
+			return false;
+		}
+
+		bool LoadHandler.OnCertificateError(CertificateErrorParams errorParams) {
+			return false;
+		}
+
+		bool ResourceHandler.CanLoadResource(ResourceParams parameters) {
+			if (parameters.ResourceType == ResourceType.IMAGE || parameters.URL.StartsWith("file://")) {
+				return true;
+			}
+
+			if (parameters.ResourceType == ResourceType.MAIN_FRAME) {
+				_agentService.SendAsync<JToken>("codestream/url/open", new { url = parameters.URL });
+			}
+
+			return false;
+		}
+
+		CloseStatus DialogHandler.OnBeforeUnload(UnloadDialogParams parameters) {
+			return CloseStatus.CANCEL;
+		}
+
+		void DialogHandler.OnAlert(DialogParams parameters) {
+		}
+
+		CloseStatus DialogHandler.OnConfirmation(DialogParams parameters) {
+			return CloseStatus.CANCEL;
+		}
+
+		CloseStatus DialogHandler.OnFileChooser(FileChooserParams parameters) {
+			return CloseStatus.CANCEL;
+		}
+
+		CloseStatus DialogHandler.OnPrompt(PromptDialogParams parameters) {
+			return CloseStatus.CANCEL;
+		}
+
+		CloseStatus DialogHandler.OnReloadPostData(ReloadPostDataParams parameters) {
+			return CloseStatus.CANCEL;
+		}
+
+		CloseStatus DialogHandler.OnColorChooser(ColorChooserParams parameters) {
+			return CloseStatus.CANCEL;
+		}
+
+		CloseStatus DialogHandler.OnSelectCertificate(CertificatesDialogParams parameters) {
+			return CloseStatus.CANCEL;
+		}
+
+		#endregion
 
 		private class DotNetBrowserSwitches {
 			/// <summary>
@@ -328,61 +480,6 @@ namespace CodeStream.VisualStudio.Services {
 				}
 				return switches;
 			}
-		}
-
-		bool LoadHandler.OnLoad(LoadParams loadParams) {
-			return false;
-		}
-
-		bool LoadHandler.CanNavigateOnBackspace() {
-			return false;
-		}
-
-		bool LoadHandler.OnCertificateError(CertificateErrorParams errorParams) {
-			return false;
-		}
-
-		bool ResourceHandler.CanLoadResource(ResourceParams parameters) {
-			if (parameters.ResourceType == ResourceType.IMAGE || parameters.URL.StartsWith("file://")) {
-				return true;
-			}
-
-			if (parameters.ResourceType == ResourceType.MAIN_FRAME) {
-				_agent.SendAsync<JToken>("codestream/url/open", new { url = parameters.URL });
-			}
-
-			return false;
-		}
-
-		CloseStatus DialogHandler.OnBeforeUnload(UnloadDialogParams parameters) {
-			return CloseStatus.CANCEL;
-		}
-
-		void DialogHandler.OnAlert(DialogParams parameters) {
-		}
-
-		CloseStatus DialogHandler.OnConfirmation(DialogParams parameters) {
-			return CloseStatus.CANCEL;
-		}
-
-		CloseStatus DialogHandler.OnFileChooser(FileChooserParams parameters) {
-			return CloseStatus.CANCEL;
-		}
-
-		CloseStatus DialogHandler.OnPrompt(PromptDialogParams parameters) {
-			return CloseStatus.CANCEL;
-		}
-
-		CloseStatus DialogHandler.OnReloadPostData(ReloadPostDataParams parameters) {
-			return CloseStatus.CANCEL;
-		}
-
-		CloseStatus DialogHandler.OnColorChooser(ColorChooserParams parameters) {
-			return CloseStatus.CANCEL;
-		}
-
-		CloseStatus DialogHandler.OnSelectCertificate(CertificatesDialogParams parameters) {
-			return CloseStatus.CANCEL;
 		}
 	}
 }
