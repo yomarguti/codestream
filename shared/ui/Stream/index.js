@@ -87,8 +87,8 @@ export class SimpleStream extends Component {
 		// this listener pays attention to when the input field resizes,
 		// presumably because the user has typed more than one line of text
 		// in it, and calls a function to handle the new size
-		if (this._compose.current)
-			new ResizeObserver(this.handleResizeCompose).observe(this._compose.current);
+		// if (this._compose.current)
+		// 	new ResizeObserver(this.handleResizeCompose).observe(this._compose.current);
 
 		// go ahead and do resizing because some environments (VS Code) have a
 		// polyfill for ResizeObserver which won't be triggered automatically
@@ -1877,9 +1877,7 @@ export class SimpleStream extends Component {
 					message: () => (
 						<span>
 							{warning.message + " "}
-							<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Git-Issues">
-								Learn more
-							</a>
+							<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Git-Issues">Learn more</a>
 						</span>
 					),
 					centered: true,
@@ -1969,9 +1967,7 @@ export class SimpleStream extends Component {
 					message: () => (
 						<span>
 							{warning.message + " "}
-							<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Git-Issues">
-								Learn more
-							</a>
+							<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Git-Issues">Learn more</a>
 						</span>
 					),
 					centered: true,
