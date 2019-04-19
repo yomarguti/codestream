@@ -121,6 +121,7 @@
     <Compile Include="Extensions\DynamicExtensions.cs" />
     <Compile Include="Extensions\FileSystemExtensions.cs" />
     <Compile Include="Extensions\Guard.cs" />
+    <Compile Include="Extensions\ITextSelectionExtensions.cs" />
     <Compile Include="Extensions\JsonExtensions.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />

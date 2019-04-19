@@ -1,6 +1,4 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Packages;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Glyphs;
@@ -14,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -31,8 +28,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 				new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.Inherits));
 
 		private static readonly object InitializeLock = new object();
-
-		private readonly List<IDisposable> _disposables;
+		
 		private readonly DocumentMarkerManager _documentMarkerManager;
 		private readonly Dictionary<Type, GlyphFactoryInfo> _glyphFactories;
 		private readonly IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> _glyphFactoryProviders;
@@ -83,7 +79,6 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			Width = DefaultMarginWidth;
 			ClipToBounds = true;
 
-			_disposables = new List<IDisposable>();
 			_glyphFactories = new Dictionary<Type, GlyphFactoryInfo>();
 			_childCanvases = Array.Empty<Canvas>();
 			Background = new SolidColorBrush(Colors.Transparent);
@@ -133,7 +128,6 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			Children.Clear();
 			_lineInfos?.Clear();
 			_iconCanvas?.Children.Clear();
-			_disposables?.DisposeAll();
 			_initialized = false;
 		}
 
@@ -141,35 +135,6 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			if (!_initialized) {
 				lock (InitializeLock) {
 					if (!_initialized) {
-						_disposables.Add(Observable.FromEventPattern(ev => _textView.Selection.SelectionChanged += ev,
-								ev => _textView.Selection.SelectionChanged -= ev)
-							.Sample(TimeSpan.FromMilliseconds(250))
-							.ObserveOnDispatcher()
-							.Subscribe(eventPattern => {
-								var textSelection = eventPattern?.Sender as ITextSelection;
-								if (textSelection != null && textSelection.IsEmpty) return;
-
-								if (!_toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) return;
-
-								Log.Verbose(
-									$"SelectionChanged Start={textSelection?.Start.Position.Position} End={textSelection?.End.Position.Position}");
-
-								// TODO cant we get the selected text from the sender somehow??
-								var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
-
-								var codeStreamService =
-									Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
-								if (codeStreamService == null) return;
-
-								var activeEditorState = ideService?.GetActiveEditorState();
-								codeStreamService.EditorSelectionChangedNotificationAsync(
-									new Uri(_textDocument.FilePath),
-									activeEditorState,
-									_textView.ToVisibleRanges(),
-									_textView?.TextSnapshot?.LineCount,
-									CodemarkType.Comment, CancellationToken.None);
-							}));
-
 						_initialized = true;
 
 						_wpfTextViewHost.TextView.ZoomLevelChanged += TextView_ZoomLevelChanged;
@@ -285,7 +250,6 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			if (!_isDisposed) {
 				_wpfTextViewHost.TextView.ZoomLevelChanged -= TextView_ZoomLevelChanged;
 				_tagAggregator?.Dispose();
-				_disposables.DisposeAll();
 
 				Children.Clear();
 				_lineInfos?.Clear();

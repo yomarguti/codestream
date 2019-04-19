@@ -21,6 +21,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 public class TextViewCreationListenerDummy { }
 
@@ -261,6 +262,26 @@ namespace CodeStream.VisualStudio.UI {
 										.Subscribe(_ => {
 											Log.Verbose($"{nameof(DocumentMarkerChangedEvent)} State={state.Initialized}, _={_?.Uri}");
 											OnDocumentMarkerChanged(wpfTextView, _);
+										}),
+									Observable.FromEventPattern(ev => wpfTextView.Selection.SelectionChanged += ev,
+											ev => wpfTextView.Selection.SelectionChanged -= ev)
+										.Sample(TimeSpan.FromMilliseconds(250))
+										.ObserveOnDispatcher()
+										.Subscribe(eventPattern => {
+											var textSelection = eventPattern?.Sender as ITextSelection;
+											if (textSelection != null && textSelection.IsEmpty) return;
+											if (!_sessionService.IsWebViewVisible) return;
+
+											Log.Verbose($"SelectionChanged {textSelection.ToPositionString()}");
+
+											var activeEditorState = _ideService?.GetActiveEditorState();
+											_codeStreamService.EditorSelectionChangedNotificationAsync(
+												wpfTextView.Properties
+													.GetProperty<string>(PropertyNames.TextViewFilePath).ToUri(),
+												activeEditorState,
+												wpfTextView.ToVisibleRanges(),
+												wpfTextView?.TextSnapshot?.LineCount,
+												CodemarkType.Comment, CancellationToken.None);
 										})
 								});
 
