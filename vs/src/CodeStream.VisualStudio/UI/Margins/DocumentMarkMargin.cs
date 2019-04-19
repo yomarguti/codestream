@@ -176,7 +176,6 @@ namespace CodeStream.VisualStudio.UI.Margins {
 
 						InitializeMargin();
 						if (TryShowMargin()) {
-							_documentMarkerManager.GetOrCreateMarkers(true);
 							RefreshMargin();
 						}
 					}

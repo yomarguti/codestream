@@ -30,15 +30,15 @@ namespace CodeStream.VisualStudio.UI {
 			_textDocument = textDocument;
 		}
 
-		public void GetOrCreateMarkers(bool forceUpdate = false) {
+		public void GetMarkers(bool forceUpdate = false) {
 			if (_markers != null && _markers.Markers.AnySafe() == false && !forceUpdate) {
-				Log.Verbose("Codemarks are empty and force={force}", forceUpdate);
+				Log.Verbose($"Codemarks are empty and forceUpdate={forceUpdate}", forceUpdate);
 				return;
 			}
 
-			var filePath = _textDocument.FilePath;
-			if (!Uri.TryCreate(filePath, UriKind.Absolute, out Uri fileUri)) {
-				Log.Verbose($"Could not parse file path as uri={filePath}");
+			var fileUri = _textDocument.FilePath.ToUri();
+			if (fileUri == null) {
+				Log.Verbose($"Could not parse file path as uri={_textDocument.FilePath}");
 				return;
 			}
 
@@ -63,7 +63,7 @@ namespace CodeStream.VisualStudio.UI {
 #endif
 				}
 				catch (Exception ex) {
-					Log.Error(ex, nameof(GetOrCreateMarkers));
+					Log.Error(ex, nameof(GetMarkers));
 				}
 			});
 		}

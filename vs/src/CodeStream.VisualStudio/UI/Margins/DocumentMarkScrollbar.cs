@@ -116,11 +116,14 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		}
 
 		public void OnSessionReady() {
-			if (_initialized) return;
+			if (_initialized) {
+				return;
+			}
 
 			lock (InitializeLock) {
 				if (!_initialized) {
 					ShowMargin();
+					UpdateMatches(true);
 					_initialized = true;
 				}
 			}
@@ -188,7 +191,6 @@ namespace CodeStream.VisualStudio.UI.Margins {
 				UpdateEventHandlers(true);
 			}
 		}
-
 
 		private bool MarginActive => _isMarginEnabled && IsVisible;
 
@@ -358,13 +360,13 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			public ITextSnapshot Snapshot { get; }
 			private bool _abort;
 			private List<DocumentMarker> _markers;
-			private ITextView _textView;
+			private readonly ITextView _textView;
 
 			/// <summary>
 			/// Call <paramref name="completionCallback" /> once the search has completed.
 			/// </summary>
 			/// <param name="snapshot">Text snapshot in which to search.</param>
-			/// <param name="textDocument"></param>
+			/// <param name="textView"></param>
 			/// <param name="completionCallback">Delegate to call if the search is completed (will be called on the UI thread).</param>
 			/// <remarks>The constructor must be called from the UI thread.</remarks>
 			public BackgroundMarkerPlacement(ITextSnapshot snapshot, ITextView textView, Action completionCallback) {

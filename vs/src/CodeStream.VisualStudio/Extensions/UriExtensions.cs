@@ -21,7 +21,7 @@ namespace CodeStream.VisualStudio.Extensions {
 		/// <param name="uriString"></param>
 		/// <param name="uriKind"></param>
 		/// <returns></returns>
-		public static Uri ToUri(this string uriString, UriKind uriKind = UriKind.RelativeOrAbsolute) {
+		public static Uri ToUri(this string uriString, UriKind uriKind = UriKind.Absolute) {
 			if (uriString.IsNullOrWhiteSpace()) return null;
 
 			return Uri.TryCreate(Uri.UnescapeDataString(uriString), uriKind, out Uri result) ? result : null;
