@@ -1,5 +1,24 @@
 # Change Log
 
+## [0.52.1] - 2019-4-19
+
+### Added
+
+- Adds a guide to keyboard shortcuts in the default view of the Current File tab when there are no codemarks
+
+### Changed
+
+- Updated the Jira integration to accommodate the GDPR-related changes to the Jira Cloud REST APIs, which means that Jira assignees can no longer be mapped to a CodeStream user
+
+### Fixed
+
+- Fixes an issue that prevented users without Git installed from being able to sign in
+- Fixes an issue that prevented the editing of replies
+- Fixes an issue where the "Open in..." link in issue codemarks wouldn't work
+- Fixes an issue where the Current File tab would not immediately recognize a newly opened source file
+- Fixes an issue with the Current File tab not behaving properly with split windows or peek windows
+- Fixes an issue with VS tool windows being recognized as source files
+
 ## [0.52.0] - 2019-4-11
 
 ### Added
