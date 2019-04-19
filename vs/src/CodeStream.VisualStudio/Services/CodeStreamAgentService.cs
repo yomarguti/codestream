@@ -262,28 +262,25 @@ namespace CodeStream.VisualStudio.Services {
 			var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
 			var vslsEnabled = ideService?.QueryExtension(ExtensionKind.LiveShare) == true;
 
-			// this camelCaseSerializer is important because FromObject doesn't
+			// NOTE: this camelCaseSerializer is important because FromObject doesn't
 			// serialize using the global camelCase resolver
-			var jsonSerializer = JsonSerializer.Create(new JsonSerializerSettings {
-				ContractResolver = new CamelCasePropertyNamesContractResolver()
-			});
 
 			var capabilities = state?["capabilities"] != null ? state["capabilities"].ToObject<JObject>() : JObject.FromObject(new { });
-			capabilities.Merge(JObject.FromObject(new Capabilities {
+			capabilities.Merge(new Capabilities {
 				CodemarkApply = false,
 				CodemarkCompare = false,
 				EditorTrackVisibleRange = true,
 				Services = new Models.Services {
 					Vsls = vslsEnabled
 				}
-			}, jsonSerializer), new JsonMergeSettings {
+			}.ToJToken(), new JsonMergeSettings {
 				MergeArrayHandling = MergeArrayHandling.Union
 			});
 
 			var capabilitiesObject = capabilities.ToObject<Capabilities>();
 
 			if (!isAuthenticated) {
-				var bootstrapAnonymous = JToken.FromObject(new BootstrapPartialResponseAnonymous {
+				var bootstrapAnonymous = new BootstrapPartialResponseAnonymous {
 					Capabilities = capabilitiesObject,
 					Configs = new Configs {
 						Email = _settingsService.Email,
@@ -294,8 +291,7 @@ namespace CodeStream.VisualStudio.Services {
 					},
 					Env = _settingsService.GetEnvironmentName(),
 					Version = _settingsService.GetEnvironmentVersionFormatted()
-				}, jsonSerializer);
-
+				}.ToJToken();
 #if DEBUG
 				Log.Debug(bootstrapAnonymous?.ToString());
 #endif
@@ -314,7 +310,6 @@ namespace CodeStream.VisualStudio.Services {
 			if (activeTextEditor != null) {
 				editorContext = new EditorContext {
 					ActiveFile = activeTextEditor.FilePath,
-					//LastActiveFile?
 					TextEditorVisibleRanges = activeTextEditor.WpfTextView?.ToVisibleRanges(),
 					TextEditorUri = activeTextEditor.Uri.ToString(),
 					TextEditorSelections = editorState.ToEditorSelections(),
@@ -363,7 +358,7 @@ namespace CodeStream.VisualStudio.Services {
 				Version = settings.Version
 			};
 
-			var bootstrapResponseJson = JObject.FromObject(bootstrapResponse, jsonSerializer);
+			var bootstrapResponseJson = bootstrapResponse.ToJToken();
 			bootstrapAuthenticated?.Merge(bootstrapResponseJson);
 #if DEBUG
 			// only log the non-user bootstrap data -- it's too verbose

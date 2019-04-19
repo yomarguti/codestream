@@ -17,6 +17,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Package = Microsoft.VisualStudio.Shell.Package;
 using ThreadHelper = Microsoft.VisualStudio.Shell.ThreadHelper;
 
@@ -116,6 +117,7 @@ namespace CodeStream.VisualStudio.LSP {
 
 			// Slight hack to use camelCased properties when serializing requests
 			_rpc.JsonSerializer.ContractResolver = new CustomCamelCasePropertyNamesContractResolver(new HashSet<Type> { typeof(TelemetryProperties) });
+			_rpc.JsonSerializer.NullValueHandling = NullValueHandling.Ignore;
 		}
 
 		public async Task OnLoadedAsync() {

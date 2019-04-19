@@ -6,29 +6,36 @@ using System.Linq;
 
 namespace CodeStream.VisualStudio.Extensions {
 	public static class JsonExtensions {
+		private static JsonSerializer DefaultJsonSerializer { get; }
+		private static readonly JsonSerializerSettings DefaultSerializerSettings;
+		private static readonly JsonSerializerSettings DefaultFormattedSerializerSettings;
 		static JsonExtensions() {
-			jsonSerializer = JsonSerializer.Create(new JsonSerializerSettings {
-				ContractResolver = new CamelCasePropertyNamesContractResolver()
-			});
+			DefaultSerializerSettings = new JsonSerializerSettings {
+				ContractResolver = new CamelCasePropertyNamesContractResolver(),
+				NullValueHandling = NullValueHandling.Ignore,
+				Formatting = Formatting.None
+			};
+
+			DefaultJsonSerializer = JsonSerializer.Create(DefaultSerializerSettings);
+
+			DefaultFormattedSerializerSettings = new JsonSerializerSettings {
+				ContractResolver = new CamelCasePropertyNamesContractResolver(),
+				NullValueHandling = NullValueHandling.Ignore,
+				Formatting = Formatting.Indented
+			};
 		}
+	 
+		public static string ToJson(this object value) =>
+			JsonConvert.SerializeObject(value, DefaultSerializerSettings);
 
-		private static JsonSerializer jsonSerializer;
+		public static string ToJson(this object value, bool format) =>
+			JsonConvert.SerializeObject(value, DefaultFormattedSerializerSettings);
 
-		public static string ToJson(this object value, bool camelCase = true, bool format = false) {
-			JsonSerializerSettings settings = null;
-			if (camelCase) {
-				settings = new JsonSerializerSettings {
-					ContractResolver = new CamelCasePropertyNamesContractResolver(),
-					Formatting = format ? Formatting.Indented : Formatting.None
-				};
-			}
+		public static T FromJson<T>(this string value) =>
+			JsonConvert.DeserializeObject<T>(value);
 
-			return JsonConvert.SerializeObject(value, settings);
-		}
-
-		public static T FromJson<T>(this string value) {
-			return JsonConvert.DeserializeObject<T>(value);
-		}
+		public static JToken ToJToken(this object obj) =>
+			JToken.FromObject(obj, DefaultJsonSerializer);
 
 		public static JToken RemoveFields(this JToken token, params string[] fields) {
 			var container = token as JContainer;
@@ -49,10 +56,6 @@ namespace CodeStream.VisualStudio.Extensions {
 			}
 
 			return token;
-		}
-
-		public static JToken ToJToken(this object obj) {
-			return JToken.FromObject(obj, jsonSerializer);
 		}
 	}
 }

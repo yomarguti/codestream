@@ -82,7 +82,7 @@ namespace CodeStream.VisualStudio.Packages
 					if (_log.IsDebugEnabled())
 					{
 						_log.Debug("Extensions found:");
-						_log.Debug(installedExtensions.ToJson(camelCase: true, format: true));
+						_log.Debug(installedExtensions.ToJson(format: true));
 					}
 				}
                 catch (Exception ex)

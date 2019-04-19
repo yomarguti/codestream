@@ -47,8 +47,9 @@ namespace CodeStream.VisualStudio.UnitTests.LSP
         {
             return new JsonSerializerSettings
             {
-                ContractResolver = contractResolver
-            };
+                ContractResolver = contractResolver,
+                NullValueHandling = NullValueHandling.Ignore
+			};
         }
     }
 }

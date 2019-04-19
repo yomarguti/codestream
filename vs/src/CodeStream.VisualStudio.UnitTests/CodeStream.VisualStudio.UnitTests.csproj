@@ -158,6 +158,7 @@
     <Compile Include="Events\EventAggregatorTests.cs" />
     <Compile Include="Extensions\ColorExtensionsTest.cs" />
     <Compile Include="Extensions\DynamicExtensionsTests.cs" />
+    <Compile Include="Extensions\JsonExtensionsTests.cs" />
     <Compile Include="Extensions\UriExtensionsTests.cs" />
     <Compile Include="LSP\CustomCamelCasePropertyNamesContractResolverTests.cs" />
     <Compile Include="Models\CamelCaseStringEnumConverterTests.cs" />
