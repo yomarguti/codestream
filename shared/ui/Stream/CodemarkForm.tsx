@@ -463,7 +463,10 @@ class CodemarkForm extends React.Component<Props, State> {
 				return undefined;
 			});
 			this.crossPostIssueValues!.assignees = assignees.map(a => a.value);
-		} else csAssignees = (this.state.assignees as any[]).map(a => a.value);
+		} else
+			csAssignees = this.props.isEditing
+				? this.props.editingCodemark!.assignees
+				: (this.state.assignees as any[]).map(a => a.value);
 
 		this.props.onSubmit(
 			{
