@@ -280,7 +280,6 @@ export interface CSTrelloProviderInfo {
 
 export interface CSYouTrackProviderInfo {
 	accessToken: string;
-	apiKey: string;
 	userId: string;
 	hosts: { [host: string]: CSYouTrackProviderInfo };
 }

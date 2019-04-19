@@ -7,8 +7,7 @@ import {
 	YouTrackBoard,
 	YouTrackCreateCardRequest,
 	YouTrackCreateCardResponse,
-	YouTrackList,
-	YouTrackMember
+	YouTrackUser
 } from "../protocol/agent.protocol";
 import { CSYouTrackProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
@@ -16,7 +15,6 @@ import { ThirdPartyProviderBase } from "./provider";
 
 @lspProvider("youtrack")
 export class YouTrackProvider extends ThirdPartyProviderBase<CSYouTrackProviderInfo> {
-	private _youtrackUserId: string | undefined;
 
 	get displayName() {
 		return "YouTrack";
@@ -27,35 +25,39 @@ export class YouTrackProvider extends ThirdPartyProviderBase<CSYouTrackProviderI
 	}
 
 	get headers() {
-		return {};
+		return {
+			Authorization: `Bearer ${this.accessToken}`,
+			Accept: "application/json",
+			"Content-Type": "application/json"
+		};
 	}
 
-	private get apiKey() {
-		return this._providerInfo && this._providerInfo.apiKey;
+	get apiPath () {
+		return "/youtrack/api";
 	}
 
 	async onConnected() {
-		this._youtrackUserId = await this.getMemberId();
 	}
 
 	@log()
-	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
-		// have to force connection here because we need apiKey and accessToken to even create our request
+	async getBoards(
+		request: FetchThirdPartyBoardsRequest
+	): Promise<FetchThirdPartyBoardsResponse> {
+		// have to force connection here because we need accessToken to even create our request
 		await this.ensureConnected();
 		const response = await this.get<YouTrackBoard[]>(
-			`/members/${this._youtrackUserId}/boards?${qs.stringify({
-				filter: "open",
-				fields: "id,name,desc,descData,closed,idOrganization,pinned,url,labelNames,starred",
-				lists: "open",
-				key: this.apiKey,
-				token: this.accessToken
+			`/admin/projects?${qs.stringify({
+				fields: "id,name,shortName"
 			})}`
 		);
-
 		return {
-			boards: request.organizationId
-				? response.body.filter(b => b.idOrganization === request.organizationId)
-				: response.body
+			boards: response.body.map(board => { 
+				return { 
+					id: board.id,
+					name: board.name,
+					singleAssignee: true
+				 };
+			})
 		};
 	}
 
@@ -63,36 +65,31 @@ export class YouTrackProvider extends ThirdPartyProviderBase<CSYouTrackProviderI
 	async createCard(request: CreateThirdPartyCardRequest) {
 		const data = request.data as YouTrackCreateCardRequest;
 		const response = await this.post<{}, YouTrackCreateCardResponse>(
-			`/cards?${qs.stringify({
-				idList: data.listId,
-				name: data.name,
-				desc: data.description,
-				key: this.apiKey,
-				idMembers: (data.assignees! || []).map(a => a.id),
-				token: this.accessToken
+			`/issues?${qs.stringify({
+				fields: "id,idReadable"
 			})}`,
-			{}
+			{
+				summary: data.name,
+				description: data.description,
+				project: {
+					id: data.boardId
+				}
+			}
 		);
-		return response.body;
+		const card = response.body;
+		const { host, apiHost, isEnterprise } = this.providerInstance;
+		const returnHost = isEnterprise ? host : apiHost;
+		card.url = `https://${returnHost}/youtrack/issue/${card.idReadable}`;
+		return card;
 	}
 
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
-		const { body } = await this.get<YouTrackMember[]>(
-			`/boards/${request.boardId}/members?${qs.stringify({
-				key: this.apiKey,
-				token: this.accessToken,
-				fields: "id,email,username,fullName"
+		const { body } = await this.get<YouTrackUser[]>(
+			`/admin/users/?${qs.stringify({
+				fields: "id,name,fullName"
 			})}`
 		);
 		return { users: body.map(u => ({ ...u, displayName: u.fullName })) };
-	}
-
-	private async getMemberId() {
-		const tokenResponse = await this.get<{ idMember: string; [key: string]: any }>(
-			`/token/${this.accessToken}?${qs.stringify({ key: this.apiKey, token: this.accessToken })}`
-		);
-
-		return tokenResponse.body.idMember;
 	}
 }
