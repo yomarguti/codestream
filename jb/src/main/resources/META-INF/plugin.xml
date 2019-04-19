@@ -79,6 +79,20 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="0_52_2">0.52.2</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds a guide to keyboard shortcuts in the default view of the Current File tab when there are no codemarks</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>Updated the Jira integration to accommodate the GDPR-related changes to the Jira Cloud REST APIs, which means that Jira assignees can no longer be mapped to a CodeStream user</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue that prevented users without Git installed from being able to sign in</li>
+    <li>Fixes an issue with Slack presence not being reflected on the Channels tab</li>
+</ul>
 <h4 id="0_52_1">0.52.1</h4>
 <h5>Fixed</h5>
 <ul>
