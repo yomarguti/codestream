@@ -53,6 +53,7 @@ namespace CodeStream.VisualStudio {
 				if (e?.Message == null || !e.Message.StartsWith("{")) {
 					Log.Debug($"{nameof(HandleAsync)} not found => {e?.Message}");
 					await System.Threading.Tasks.Task.CompletedTask;
+					return;
 				}
 
 				var message = WebviewIpcMessage.Parse(e.Message);
