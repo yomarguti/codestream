@@ -1,4 +1,5 @@
 import { DocumentMarker, FetchDocumentMarkersRequestType } from "@codestream/protocols/agent";
+import { CodemarkStatus } from "@codestream/protocols/api";
 import { CompositeDisposable, DisplayMarker, Disposable, Gutter, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
 import { accessSafely, asAbsolutePath, Editor } from "utils";
@@ -99,6 +100,7 @@ export class MarkerDecorationProvider implements Disposable {
 		});
 
 		if (response && response.markers) {
+			response.markers = response.markers.filter(m => m.codemark.status === CodemarkStatus.Open);
 			if (this.editorResources.has(editor.id)) {
 				this.editorResources.get(editor.id).dispose();
 			}
