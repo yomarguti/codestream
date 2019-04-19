@@ -574,8 +574,8 @@ export const createProviderCard = async (attributes, codemark) => {
 					provider: attributes.issueProvider,
 					data: {
 						description,
-						title: codemark.title,
-						repoName: attributes.boardName,
+						name: codemark.title,
+						boardId: attributes.board.id,
 						assignee: attributes.assignees[0]
 					}
 				});
