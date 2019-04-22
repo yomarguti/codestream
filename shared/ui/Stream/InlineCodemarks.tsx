@@ -272,11 +272,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		this.repositionCodemarks();
 	}
 
-	private repositionTimeout: any | undefined;
-
 	componentWillUnmount() {
 		this.disposables.forEach(d => d.dispose());
-		if (this.repositionTimeout) clearTimeout(this.repositionTimeout);
 	}
 
 	scrollTo(top) {
