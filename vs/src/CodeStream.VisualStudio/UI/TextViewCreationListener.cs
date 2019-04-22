@@ -285,7 +285,8 @@ namespace CodeStream.VisualStudio.UI {
 										})
 								});
 
-							if (wpfTextView.Properties.TryGetProperty(PropertyNames.DocumentMarkerManager, out DocumentMarkerManager documentMarkerManager)) {
+							if (wpfTextView.Properties.TryGetProperty(PropertyNames.DocumentMarkerManager, out DocumentMarkerManager documentMarkerManager)
+								&& documentMarkerManager != null) {
 								if (!documentMarkerManager.IsInitialized()) {
 									documentMarkerManager.GetMarkers(true);
 								}
