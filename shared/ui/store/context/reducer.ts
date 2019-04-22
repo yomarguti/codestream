@@ -73,7 +73,7 @@ export function reduceContext(
 			return { ...state, showFeedbackSmiley: action.payload };
 
 		case ContextActionsType.SetIssueProvider:
-			return { ...state, issueProvider: action.payload };
+			 return { ...state, issueProvider: action.payload };
 
 		case PreferencesActionsType.Set:
 		case PreferencesActionsType.Update: {

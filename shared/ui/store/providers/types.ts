@@ -1,7 +1,7 @@
-import { ThirdPartyProviderConfig } from "@codestream/protocols/agent";
+import { ThirdPartyProviders } from "@codestream/protocols/agent";
 
 export interface State {
-	providers?: ThirdPartyProviderConfig[];
+	providers?: ThirdPartyProviders;
 }
 
 export enum ProvidersActionsType {

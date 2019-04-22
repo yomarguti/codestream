@@ -275,7 +275,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		});
 	}
 
-	async loadAssignableUsers(provider: ThirdPartyProviderConfig, board: ThirdPartyProviderBoard) {
+	async loadAssignableUsers(providerId: string, board: ThirdPartyProviderBoard) {
 		if (board.assigneesDisabled) return this.setState({ assigneesDisabled: true });
 		if (board.assigneesRequired) {
 			this.setState(state => (state.assigneesRequired ? null : { assigneesRequired: true }));
@@ -285,7 +285,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 
 		const { users } = await HostApi.instance.send(FetchAssignableUsersRequestType, {
-			provider,
+			providerId,
 			boardId: board.apiIdentifier || board.id
 		});
 
@@ -313,7 +313,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				this.crossPostIssueValues.board.id !== values.board!.id)
 		) {
 			this.setState({ assignees: [] });
-			this.loadAssignableUsers(values.issueProvider, values.board!);
+			this.loadAssignableUsers(values.issueProvider.id, values.board!);
 		} else if (
 			!values.isEnabled &&
 			this.crossPostIssueValues &&
@@ -1172,7 +1172,6 @@ class CodemarkForm extends React.Component<Props, State> {
 					)}
 					{commentType === "issue" && !this.props.isEditing && (
 						<CrossPostIssueControls
-							issueProvider={this.props.issueProvider}
 							onValues={this.handleCrossPostIssueValues}
 							codeBlock={this.state.codeBlock as any}
 						/>
@@ -1272,7 +1271,7 @@ class CodemarkForm extends React.Component<Props, State> {
 const EMPTY_OBJECT = {};
 
 const mapStateToProps = (state): DispatchProps => {
-	const { context, editorContext, users, session, teams, preferences } = state;
+	const { context, editorContext, users, session, teams, preferences, providers } = state;
 	const user = users[session.userId];
 	const channel = context.currentStreamId
 		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId)!
@@ -1300,7 +1299,7 @@ const mapStateToProps = (state): DispatchProps => {
 			stream => (stream.name || "").toLowerCase()
 		) as CSChannelStream[],
 		directMessageStreams: directMessageStreams as CSDirectStream[],
-		issueProvider: context.issueProvider,
+		issueProvider: providers[context.issueProvider],
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
 		isSlackTeam,
 		currentUser: user,

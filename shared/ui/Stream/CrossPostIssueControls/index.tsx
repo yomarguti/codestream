@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { connectProvider } from "../../store/context/actions";
+import { connectProvider, setIssueProvider } from "../../store/context/actions";
 import { HostApi } from "../../webview-api";
 import Icon from "../Icon";
 import AsanaCardControls from "./AsanaCardControls";
@@ -14,8 +14,10 @@ import { CrossPostIssueValuesListener, ProviderDisplay, PROVIDER_MAPPINGS } from
 import {
 	FetchThirdPartyBoardsRequestType,
 	ThirdPartyProviderBoard,
-	ThirdPartyProviderConfig
+	ThirdPartyProviderConfig,
+	ThirdPartyProviders
 } from "@codestream/protocols/agent";
+import { CSMe } from "@codestream/protocols/api";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
@@ -23,7 +25,8 @@ interface ProviderInfo {
 }
 
 interface Props {
-	connectProvider(provider: ThirdPartyProviderConfig): any;
+	connectProvider(providerId: string): any;
+	setIssueProvider(providerId?: string): void;
 	onValues: CrossPostIssueValuesListener;
 	issueProvider?: ThirdPartyProviderConfig;
 	codeBlock?: {
@@ -31,7 +34,8 @@ interface Props {
 			repoPath: string;
 		};
 	};
-	providers?: ThirdPartyProviderConfig[];
+	providers?: ThirdPartyProviders;
+	currentUser: CSMe;
 	currentTeamId: string;
 }
 
@@ -45,7 +49,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 	constructor(props: Props) {
 		super(props);
 		const providerInfo = props.issueProvider
-			? this.getProviderInfo(props.issueProvider)
+			? this.getProviderInfo(props.issueProvider.id)
 			: undefined;
 		const isLoading = !!providerInfo;
 		const loadingProvider = providerInfo;
@@ -57,24 +61,35 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 	}
 
 	componentDidMount() {
-		if (this.props.issueProvider) {
+		const { issueProvider } = this.props;
+		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider.id) : undefined;
+		if (this.props.issueProvider && providerInfo) {
 			this.loadBoards(this.props.issueProvider);
+		}
+		else {
+			this.props.setIssueProvider(undefined);
 		}
 	}
 
 	componentDidUpdate(prevProps: Props, prevState: State) {
 		const { issueProvider } = this.props;
-		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider) : undefined;
-		if (providerInfo && !prevProps.issueProvider) {
+		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider.id) : undefined;
+		if (
+			providerInfo && 
+			issueProvider && 
+			(!prevProps.issueProvider || prevProps.issueProvider.id !== issueProvider.id)
+		) {
 			this.loadBoards(issueProvider!);
 		}
-		if (!providerInfo && prevProps.issueProvider) {
-			this.setState({ boards: [], isLoading: false, loadingProvider: undefined });
+		else if (!providerInfo && prevProps.issueProvider) {
+			if (this.state.isLoading) {
+				this.setState({ boards: [], isLoading: false, loadingProvider: undefined });
+			}
 		}
 	}
 
 	async loadBoards(provider: ThirdPartyProviderConfig) {
-		const providerInfo = this.getProviderInfo(provider);
+		const providerInfo = this.getProviderInfo(provider.id);
 		if (!this.state.isLoading && providerInfo) {
 			this.setState({
 				isLoading: true,
@@ -82,7 +97,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			});
 		}
 
-		const response = await HostApi.instance.send(FetchThirdPartyBoardsRequestType, { provider });
+		const response = await HostApi.instance.send(FetchThirdPartyBoardsRequestType, { providerId: provider.id });
 
 		this.setState({
 			isLoading: false,
@@ -107,11 +122,11 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 	renderProviderControls() {
 		const { boards } = this.state;
 		const { issueProvider } = this.props;
-		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider) : undefined;
+		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider.id) : undefined;
 		if (!providerInfo) {
 			return null;
 		}
-		switch (issueProvider!.name) {
+		switch (providerInfo.provider.name) {
 			case "jira": {
 				return (
 					<JiraCardControls
@@ -188,13 +203,13 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			return this.renderLoading();
 		}
 		const { issueProvider } = this.props;
-		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider) : undefined;
+		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider.id) : undefined;
 		if (providerInfo) {
 			return this.renderProviderControls();
 		} else if (this.props.providers && Object.keys(this.props.providers).length) {
-			const knownIssueProviders = this.props.providers.filter(provider => {
+			const knownIssueProviders = Object.keys(this.props.providers).filter(providerId => {
+				const provider = this.props.providers![providerId];
 				return (
-					(!provider.teamId || provider.teamId === this.props.currentTeamId) &&
 					provider.hasIssues &&
 					!!PROVIDER_MAPPINGS[provider.name]
 				);
@@ -206,7 +221,8 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 				<div className="checkbox-row connect-issue">
 					<div className="connect-issue-label">Create an issue in </div>
 					<div className="connect-issue-providers">
-						{knownIssueProviders.map(issueProvider => {
+						{knownIssueProviders.map(providerId => {
+							const issueProvider = this.props.providers![providerId];
 							const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
 							const displayName = issueProvider.isEnterprise
 								? `${providerDisplay.displayName} - ${issueProvider.host}`
@@ -241,28 +257,39 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 	): Promise<void> {
 		event.preventDefault();
 		this.setState({ isLoading: true, loadingProvider: providerInfo });
-		await this.props.connectProvider(providerInfo.provider);
+		await this.props.connectProvider(providerInfo.provider.id);
 	}
 
-	getProviderInfo(wantProvider: ThirdPartyProviderConfig): ProviderInfo | undefined {
-		const provider =
-			this.props.providers &&
-			this.props.providers.find(provider => provider.host === wantProvider.host);
+	getProviderInfo(providerId: string): ProviderInfo | undefined {
+		const provider = this.props.providers ? this.props.providers[providerId] : undefined;
+		if (!provider) return undefined;
 		const display = provider ? PROVIDER_MAPPINGS[provider.name] : undefined;
-		if (provider && display) {
-			return { provider, display };
-		} else {
-			return undefined;
+		if (!display) return undefined;
+		if (
+			!this.props.currentUser.providerInfo ||
+			!this.props.currentUser.providerInfo[this.props.currentTeamId] ||
+			!this.props.currentUser.providerInfo[this.props.currentTeamId][provider.name]
+		) {
+			return;
 		}
+		let providerInfo = this.props.currentUser.providerInfo[this.props.currentTeamId][provider.name];
+		if (provider.isEnterprise) {
+			if (!providerInfo!.hosts) return undefined;
+			providerInfo = providerInfo!.hosts[provider.id];
+			if (!providerInfo || !providerInfo.accessToken) return undefined;
+		}
+		return { provider, display };
 	}
 }
 
-const mapStateToProps = ({ providers, context }) => ({
-	providers: (providers || {}).providers || [],
-	currentTeamId: context.currentTeamId
+const mapStateToProps = ({ providers, context, session, users }) => ({
+	currentUser: users[session.userId],
+	currentTeamId: context.currentTeamId,
+	providers,
+	issueProvider: providers[context.issueProvider]
 });
 
 export default connect(
 	mapStateToProps,
-	{ connectProvider }
+	{ connectProvider, setIssueProvider }
 )(CrossPostIssueControls);

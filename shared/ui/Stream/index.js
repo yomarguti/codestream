@@ -340,25 +340,25 @@ export class SimpleStream extends Component {
 
 	addProvidersToMenu(menuItems) {
 		let numProviders = 0;
-		for (let provider of this.props.providers) {
+		for (let providerId of Object.keys(this.props.providers)) {
+			const provider = this.props.providers[providerId];
 			const { name, isEnterprise, host } = provider;
 			const display = PROVIDER_MAPPINGS[name];
 			if (
 				display &&
-				provider.hasIssues &&
-				(!provider.teamId || provider.teamId === this.props.teamId)
+				provider.hasIssues
 			) {
 				const displayName = isEnterprise ? `${display.displayName} - ${host}` : display.displayName;
 				const isConnected = this.isConnectedToProvider(provider);
 				if (isConnected) {
 					menuItems.push({
 						label: `Disconnect ${displayName}`,
-						action: `disconnect-${host}`
+						action: `disconnect-${providerId}`
 					});
 				} else {
 					menuItems.push({
 						label: `Connect to ${displayName}`,
-						action: `connect-${host}`
+						action: `connect-${providerId}`
 					});
 				}
 				numProviders++;
@@ -376,11 +376,10 @@ export class SimpleStream extends Component {
 		if (!provider.isEnterprise && userProviderInfo.accessToken) {
 			return true;
 		}
-		const starredHost = provider.host.replace(/\./g, "*");
 		return !!(
 			userProviderInfo.hosts &&
-			userProviderInfo.hosts[starredHost] &&
-			userProviderInfo.hosts[starredHost].accessToken
+			userProviderInfo.hosts[provider.id] &&
+			userProviderInfo.hosts[provider.id].accessToken
 		);
 	}
 
@@ -930,19 +929,11 @@ export class SimpleStream extends Component {
 		this.setState({ menuOpen: false });
 		// if (arg) this.setCommentType(arg);
 		if (arg && arg.startsWith("connect-")) {
-			const host = arg.split("connect-")[1];
-			const providerInstance = this.props.providers.find(p => p.host === host);
-			if (providerInstance) {
-				this.props.connectProvider(providerInstance, true);
-			}
-			return;
+			const providerId = arg.split("connect-")[1];
+			return this.props.connectProvider(providerId, true);
 		} else if (arg && arg.startsWith("disconnect-")) {
-			const host = arg.split("disconnect-")[1];
-			const providerInstance = this.props.providers.find(p => p.host === host);
-			if (providerInstance) {
-				this.props.disconnectProvider(providerInstance, true);
-			}
-			return;
+			const providerId = arg.split("disconnect-")[1];
+			return this.props.disconnectProvider(providerId, true);
 		}
 		switch (arg) {
 			case "invite":
@@ -2088,7 +2079,7 @@ const mapStateToProps = state => {
 		postStreamIsTeamStream: postStream.isTeamStream,
 		postStreamMemberIds: postStream.memberIds,
 		providerInfo,
-		providers: (providers || {}).providers || [],
+		providers,
 		isPrivate: postStream.privacy === "private",
 		teamId: context.currentTeamId,
 		teamName: team.name || "",

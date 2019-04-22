@@ -522,7 +522,7 @@ export const createProviderCard = async (attributes, codemark) => {
 		switch (attributes.issueProvider.name) {
 			case "jira": {
 				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
-					provider: attributes.issueProvider,
+					providerId: attributes.issueProvider.id,
 					data: {
 						description,
 						summary: codemark.title,
@@ -535,7 +535,7 @@ export const createProviderCard = async (attributes, codemark) => {
 			}
 			case "trello": {
 				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
-					provider: attributes.issueProvider,
+					providerId: attributes.issueProvider.id,
 					data: {
 						listId: attributes.listId,
 						name: codemark.title,
@@ -547,7 +547,7 @@ export const createProviderCard = async (attributes, codemark) => {
 			}
 			case "github": {
 				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
-					provider: attributes.issueProvider,
+					providerId: attributes.issueProvider.id,
 					data: {
 						description,
 						title: codemark.title,
@@ -559,7 +559,7 @@ export const createProviderCard = async (attributes, codemark) => {
 			}
 			case "gitlab": {
 				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
-					provider: attributes.issueProvider,
+					providerId: attributes.issueProvider.id,
 					data: {
 						description,
 						title: codemark.title,
@@ -571,7 +571,7 @@ export const createProviderCard = async (attributes, codemark) => {
 			}
 			case "youtrack": {
 				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
-					provider: attributes.issueProvider,
+					providerId: attributes.issueProvider.id,
 					data: {
 						description,
 						name: codemark.title,
@@ -583,7 +583,7 @@ export const createProviderCard = async (attributes, codemark) => {
 			}
 			case "asana": {
 				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
-					provider: attributes.issueProvider,
+					providerId: attributes.issueProvider.id,
 					data: {
 						description,
 						boardId: attributes.boardId,
@@ -596,7 +596,7 @@ export const createProviderCard = async (attributes, codemark) => {
 			}
 			case "bitbucket": {
 				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
-					provider: attributes.issueProvider,
+					providerId: attributes.issueProvider.id,
 					data: {
 						description,
 						title: codemark.title,

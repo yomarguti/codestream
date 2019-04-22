@@ -32,7 +32,7 @@ export interface State extends WebviewContext {
 	codemarksShowArchived: boolean;
 	codemarksShowResolved: boolean;
 
-	issueProvider?: ThirdPartyProviderConfig;
+	issueProvider?: string;
 	panelStack: (WebviewPanels | string)[];
 
 	showFeedbackSmiley: boolean;

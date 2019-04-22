@@ -16,9 +16,10 @@ export const sideEffects: Middleware = ({ dispatch, getState }) => next => actio
 				fetchCodemarks()(dispatch);
 			});
 
-			// This can be deleted in the future. It's purpose is to invalidate `context.issueProvider`
-			// as a string because the data structure has changed
-			if (typeof getState().context.issueProvider === "string") {
+			// Ensure the current issue provider is actually a valid issue provider
+			const providers = getState().providers;
+			const currentIssueProvider = getState().context.issueProvider;
+			if (typeof currentIssueProvider !== 'string' || !providers[currentIssueProvider]) {
 				dispatch(setIssueProvider(undefined));
 			}
 		}

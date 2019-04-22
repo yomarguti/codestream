@@ -1,7 +1,7 @@
 import {
 	Capabilities,
 	CodeStreamEnvironment,
-	ThirdPartyProviderConfig,
+	ThirdPartyProviders,
 	Unreads
 } from "@codestream/protocols/agent";
 import {
@@ -37,7 +37,7 @@ export interface SignedInBootstrapResponse extends SignedOutBootstrapResponse {
 	teams: CSTeam[];
 	users: CSUser[];
 	unreads: Unreads;
-	providers: ThirdPartyProviderConfig[];
+	providers: ThirdPartyProviders;
 }
 export type BootstrapResponse = SignedInBootstrapResponse | SignedOutBootstrapResponse;
 export const BootstrapRequestType = new RequestType<
