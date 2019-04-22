@@ -74,7 +74,6 @@ export const DID_CHANGE_STATE = "state-changed";
 export const WILL_DESTROY = "will-destroy";
 
 export class CodestreamView {
-	alive = false;
 	element: HTMLElement;
 	private session: WorkspaceSession;
 	private subscriptions: CompositeDisposable;
@@ -90,7 +89,6 @@ export class CodestreamView {
 		this.webviewContext = webviewContext;
 		this.channel = new WebviewIpc();
 		this.emitter = new Emitter();
-		this.alive = true;
 		this.subscriptions = new CompositeDisposable();
 		this.element = document.createElement("div");
 		this.element.classList.add("codestream", "preload");
@@ -124,7 +122,6 @@ export class CodestreamView {
 	}
 
 	getPreferredWidth() {
-		// save this as a preference?
 		return 300;
 	}
 
@@ -191,7 +188,6 @@ export class CodestreamView {
 		const window = remote.getCurrentWindow();
 		window.on("focus", onFocus);
 		window.on("blur", onBlur);
-		// TODO?: create a controller to house this stuff so it isn't re-init everytime this view is instantiated
 		this.subscriptions.add(
 			new Disposable(() => {
 				window.removeListener("blur", onBlur);
@@ -225,30 +221,6 @@ export class CodestreamView {
 			this.subscriptions.add(
 				this.emitter.on(WEBVIEW_DID_INITIALIZE, () => {
 					resolve();
-					// atom.workspace.observeActiveTextEditor(async (editor?: TextEditor) => {
-					// 	if (editor && editor.getPath()) {
-					// 		const filePath = editor.getPath()!;
-					// 		const uri = Convert.pathToUri(filePath);
-					// 		const { stream } = await this.session.agent.request(GetFileStreamRequestType, {
-					// 			textDocument: { uri }
-					// 		});
-					//
-					// 		// TODO: check range for folds and send ALL visible ranges
-					// 		const [startPoint, endPoint] = (editor as any)
-					// 			.getVisibleRowRange()
-					// 			.map(line => new Point(line));
-					//
-					// 		const { start, end } = Convert.atomRangeToLSRange(new Range(startPoint, endPoint));
-					// 		// const event: HostDidChangeActiveEditorNotification = {
-					// 		// 	editor: {
-					// 		// 		fileName: atom.project.relativize(filePath)!,
-					// 		// 		visibleRanges: [[start, end]] as any,
-					// 		// 		uri,
-					// 		// 	},
-					// 		// };
-					// 		// this.sendEvent(HostDidChangeActiveEditorNotificationType, event);
-					// 	}
-					// });
 				})
 			)
 		);
@@ -263,7 +235,6 @@ export class CodestreamView {
 	destroy() {
 		this.emitter.emit(WILL_DESTROY);
 		this.element.remove();
-		this.alive = false;
 		this.subscriptions.dispose();
 		this.editorSelectionObserver && this.editorSelectionObserver.dispose();
 	}
