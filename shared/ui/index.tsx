@@ -149,7 +149,7 @@ export function listenForEvents(store) {
 	});
 
 	api.on(ShowStreamNotificationType, ({ streamId, threadId }) => {
-		store.dispatch(actions.openPanel("channels"));
+		store.dispatch(actions.openPanel("main"));
 		store.dispatch(actions.setCurrentStream(streamId, threadId));
 	});
 
