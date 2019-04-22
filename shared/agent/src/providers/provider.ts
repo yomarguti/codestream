@@ -21,6 +21,7 @@ export interface ThirdPartyProvider {
 	readonly name: string;
 	connect(): Promise<void>;
 	disconnect(): Promise<void>;
+	getConfig(): ThirdPartyProviderConfig;
 	getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse>;
 	getAssignableUsers(request: FetchAssignableUsersRequest): Promise<FetchAssignableUsersResponse>;
 	createCard(request: CreateThirdPartyCardRequest): Promise<CreateThirdPartyCardResponse>;
@@ -51,8 +52,9 @@ export abstract class ThirdPartyProviderBase<
 
 	constructor(
 		public readonly session: CodeStreamSession,
-		protected readonly providerInstance: ThirdPartyProviderConfig
-	) {}
+		protected readonly providerConfig: ThirdPartyProviderConfig
+	) {
+	}
 
 	abstract get displayName(): string;
 	abstract get name(): string;
@@ -66,7 +68,7 @@ export abstract class ThirdPartyProviderBase<
 	}
 
 	get baseUrl() {
-		const { host, apiHost, isEnterprise } = this.providerInstance;
+		const { host, apiHost, isEnterprise } = this.providerConfig;
 		const returnHost = isEnterprise ? host : apiHost;
 		return `https://${returnHost}${this.apiPath}`;
 	}
@@ -75,10 +77,13 @@ export abstract class ThirdPartyProviderBase<
 		return this._providerInfo && this._providerInfo.accessToken;
 	}
 
+	getConfig() {
+		return this.providerConfig;
+	}
+
 	async connect() {
 		void (await this.session.api.connectThirdPartyProvider({
-			providerName: this.name,
-			host: this.providerInstance.isEnterprise ? this.providerInstance.host : undefined
+			providerId: this.providerConfig.id
 		}));
 		this._providerInfo = await new Promise<TProviderInfo>(resolve => {
 			this.session.api.onDidReceiveMessage(e => {
@@ -102,8 +107,7 @@ export abstract class ThirdPartyProviderBase<
 
 	async disconnect() {
 		void (await this.session.api.disconnectThirdPartyProvider({
-			providerName: this.name,
-			host: this.providerInstance.isEnterprise ? this.providerInstance.host : undefined
+			providerId: this.providerConfig.id
 		}));
 		this._readyPromise = this._providerInfo = undefined;
 		await this.onDisconnected();
@@ -136,7 +140,7 @@ export abstract class ThirdPartyProviderBase<
 			if (oneMinuteBeforeExpiration <= new Date().getTime()) {
 				try {
 					const me = await this.session.api.refreshThirdPartyProvider({
-						provider: this.providerInstance,
+						providerId: this.providerConfig.id,
 						refreshToken: this._providerInfo.refreshToken
 					});
 					this._providerInfo = this.getProviderInfo(me);
@@ -205,7 +209,7 @@ export abstract class ThirdPartyProviderBase<
 			me,
 			this.session.teamId,
 			this.name,
-			this.providerInstance.isEnterprise ? this.providerInstance.host : undefined
+			this.providerConfig.isEnterprise ? this.providerConfig.host : undefined
 		);
 	}
 

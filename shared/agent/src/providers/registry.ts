@@ -36,9 +36,9 @@ export class ThirdPartyProviderRegistry {
 	async connect(
 		request: ConnectThirdPartyProviderRequest
 	): Promise<ConnectThirdPartyProviderResponse> {
-		const provider = getProvider(request.provider.host);
+		const provider = getProvider(request.providerId);
 		if (provider === undefined) {
-			throw new Error(`No registered provider for '${request.provider}'`);
+			throw new Error(`No registered provider for '${request.providerId}'`);
 		}
 
 		await provider.connect();
@@ -50,7 +50,7 @@ export class ThirdPartyProviderRegistry {
 	async disconnect(
 		request: DisconnectThirdPartyProviderRequest
 	): Promise<DisconnectThirdPartyProviderResponse> {
-		const provider = getProvider(request.provider.host);
+		const provider = getProvider(request.providerId);
 		if (provider === undefined) return {};
 
 		await provider.disconnect();
@@ -60,9 +60,9 @@ export class ThirdPartyProviderRegistry {
 	@log()
 	@lspHandler(FetchAssignableUsersRequestType)
 	fetchAssignableUsers(request: FetchAssignableUsersRequest) {
-		const provider = getProvider(request.provider.host);
+		const provider = getProvider(request.providerId);
 		if (provider === undefined) {
-			throw new Error(`No registered provider for '${request.provider.host}'`);
+			throw new Error(`No registered provider for '${request.providerId}'`);
 		}
 
 		return provider.getAssignableUsers(request);
@@ -71,9 +71,9 @@ export class ThirdPartyProviderRegistry {
 	@log()
 	@lspHandler(FetchThirdPartyBoardsRequestType)
 	fetchBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
-		const provider = getProvider(request.provider.host);
+		const provider = getProvider(request.providerId);
 		if (provider === undefined) {
-			throw new Error(`No registered provider for '${request.provider.host}'`);
+			throw new Error(`No registered provider for '${request.providerId}'`);
 		}
 
 		return provider.getBoards(request);
@@ -82,9 +82,9 @@ export class ThirdPartyProviderRegistry {
 	@log()
 	@lspHandler(CreateThirdPartyCardRequestType)
 	createCard(request: CreateThirdPartyCardRequest): Promise<CreateThirdPartyCardResponse> {
-		const provider = getProvider(request.provider.host);
+		const provider = getProvider(request.providerId);
 		if (provider === undefined) {
-			throw new Error(`No registered provider for '${request.provider.host}'`);
+			throw new Error(`No registered provider for '${request.providerId}'`);
 		}
 
 		return provider.createCard(request);

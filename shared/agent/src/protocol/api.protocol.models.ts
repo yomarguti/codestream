@@ -1,5 +1,7 @@
 "use strict";
 
+import { ThirdPartyProviders } from "./agent.protocol";
+
 export interface CSEntity {
 	deactivated?: boolean;
 	createdAt: number;
@@ -227,6 +229,7 @@ export interface CSTeam extends CSEntity {
 	providerInfo?: {
 		slack?: CSTeamSlackProviderInfo;
 	};
+	providerHosts?: ThirdPartyProviders;
 }
 
 export interface CSAsanaProviderInfo {

@@ -37,7 +37,7 @@ import {
 	DidLogoutNotificationType,
 	FetchMarkerLocationsRequestType,
 	LogoutReason,
-	ThirdPartyProviderConfig
+	ThirdPartyProviders
 } from "./protocol/agent.protocol";
 import {
 	ApiErrors,
@@ -413,7 +413,7 @@ export class CodeStreamSession {
 		return this._userId!;
 	}
 
-	private _providers: ThirdPartyProviderConfig[] = [];
+	private _providers: ThirdPartyProviders = {};
 	get providers() {
 		return this._providers!;
 	}
@@ -514,10 +514,9 @@ export class CodeStreamSession {
 
 		this._teamId = this._options.teamId = response.teamId;
 		this._codestreamUserId = response.user.id;
-		this._providers = response.providers;
-		registerProviders(this._providers, this);
-
 		const currentTeam = response.teams.find(t => t.id === this._teamId)!;
+		this._providers = currentTeam.providerHosts || {};
+		registerProviders(this._providers, this);
 
 		if (User.isSlack(response.user) && Team.isSlack(currentTeam)) {
 			Logger.log(

@@ -2,16 +2,20 @@
 import { RequestType } from "vscode-languageserver-protocol";
 
 export interface ThirdPartyProviderConfig {
+	id: string;
 	name: string;
 	host: string;
-	apiHost: string;
+	apiHost?: string;
 	isEnterprise?: boolean;
 	hasIssues?: boolean;
-	teamId?: string;
+}
+
+export interface ThirdPartyProviders {
+	[providerId: string]: ThirdPartyProviderConfig;
 }
 
 export interface ConnectThirdPartyProviderRequest {
-	provider: ThirdPartyProviderConfig;
+	providerId: string;
 }
 
 export interface ConnectThirdPartyProviderResponse {}
@@ -24,7 +28,7 @@ export const ConnectThirdPartyProviderRequestType = new RequestType<
 >("codestream/provider/connect");
 
 export interface DisconnectThirdPartyProviderRequest {
-	provider: ThirdPartyProviderConfig;
+	providerId: string;
 }
 
 export interface DisconnectThirdPartyProviderResponse {}
@@ -47,7 +51,7 @@ export interface ThirdPartyProviderBoard {
 }
 
 export interface FetchThirdPartyBoardsRequest {
-	provider: ThirdPartyProviderConfig;
+	providerId: string;
 	[key: string]: any;
 }
 
@@ -69,7 +73,7 @@ export interface ThirdPartyProviderUser {
 }
 
 export interface FetchAssignableUsersRequest {
-	provider: ThirdPartyProviderConfig;
+	providerId: string;
 	boardId: string;
 }
 
@@ -85,7 +89,7 @@ export const FetchAssignableUsersRequestType = new RequestType<
 >("codestream/provider/cards/users");
 
 export interface CreateThirdPartyCardRequest {
-	provider: ThirdPartyProviderConfig;
+	providerId: string;
 	data: {
 		[key: string]: any;
 	};

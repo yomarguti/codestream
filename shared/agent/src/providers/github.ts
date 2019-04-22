@@ -37,7 +37,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	}
 
 	get apiPath() {
-		return this.providerInstance.isEnterprise ? "/api/v3" : "";
+		return this.providerConfig.isEnterprise ? "/api/v3" : "";
 	}
 
 	get headers() {

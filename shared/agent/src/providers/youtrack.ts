@@ -60,8 +60,8 @@ export class YouTrackProvider extends ThirdPartyProviderBase<CSYouTrackProviderI
 			})}`
 		);
 		return {
-			boards: response.body.map(board => { 
-				return { 
+			boards: response.body.map(board => {
+				return {
 					id: board.id,
 					name: board.name,
 					singleAssignee: true
@@ -86,7 +86,7 @@ export class YouTrackProvider extends ThirdPartyProviderBase<CSYouTrackProviderI
 			}
 		);
 		const card = response.body;
-		const { host, apiHost, isEnterprise } = this.providerInstance;
+		const { host, apiHost, isEnterprise } = this.providerConfig;
 		const returnHost = isEnterprise ? host : apiHost;
 		card.url = `https://${returnHost}/youtrack/issue/${card.idReadable}`;
 		return card;

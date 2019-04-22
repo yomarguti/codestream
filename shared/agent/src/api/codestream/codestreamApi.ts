@@ -52,7 +52,6 @@ import {
 	SetCodemarkPinnedRequest,
 	SetCodemarkStatusRequest,
 	SetStreamPurposeRequest,
-	ThirdPartyProviderConfig,
 	UnarchiveStreamRequest,
 	Unreads,
 	UpdateCodemarkRequest,
@@ -132,6 +131,7 @@ import {
 } from "../../protocol/api.protocol";
 import { VersionInfo } from "../../session";
 import { Functions, log, Objects, Strings } from "../../system";
+import { getProvider } from "../../system/decorators/lsp";
 import { openUrl } from "../../system/openUrl";
 import {
 	ApiProvider,
@@ -231,8 +231,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 				response.teams.length
 			} team(s)\n${response.teams.map(t => `\t${t.name} (${t.id})`).join("\n")}`
 		);
-
-		Logger.log(`Providers:\n${response.providers.map(p => `\t${p.name} (${p.host})`).join("\n")}`);
 
 		// If there is only 1 team, use it regardless of config
 		if (response.teams.length === 1) {
@@ -1009,13 +1007,14 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	async connectThirdPartyProvider(request: {
-		providerName: string;
-		apiKey?: string;
-		host?: string;
+		providerId: string;
 	}) {
 		const cc = Logger.getCorrelationContext();
-
 		try {
+			const provider = getProvider(request.providerId);
+			if (!provider) throw new Error(`provider ${request.providerId} not found`);
+			const providerConfig = provider.getConfig();
+
 			const response = await this.get<{ code: string }>(
 				`/provider-auth-code?teamId=${this.teamId}`,
 				this._token
@@ -1023,16 +1022,13 @@ export class CodeStreamApiProvider implements ApiProvider {
 			const params: { [key: string]: string } = {
 				code: response.code
 			};
-			if (request.apiKey) {
-				params.apiKey = request.apiKey;
-			}
-			if (request.host) {
-				params.host = request.host;
+			if (providerConfig.isEnterprise) {
+				params.host = providerConfig.host;
 			}
 			const query = Object.keys(params)
 				.map(param => `${param}=${encodeURIComponent(params[param])}`)
 				.join("&");
-			await openUrl(`${this.baseUrl}/no-auth/provider-auth/${request.providerName}?${query}`);
+			await openUrl(`${this.baseUrl}/no-auth/provider-auth/${providerConfig.name}?${query}`);
 			return response;
 		} catch (ex) {
 			Logger.error(ex, cc);
@@ -1041,34 +1037,71 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async disconnectThirdPartyProvider(request: { providerName: string; host?: string }) {
-		void (await this.put<{ teamId: string; host?: string }, {}>(
-			`/provider-deauth/${request.providerName}`,
-			{ teamId: this.teamId, host: request.host },
-			this._token
-		));
+	async disconnectThirdPartyProvider(request: {
+		providerId: string
+	}) {
+		const cc = Logger.getCorrelationContext();
+		try {
+			const provider = getProvider(request.providerId);
+			if (!provider) throw new Error(`provider ${request.providerId} not found`);
+			const providerConfig = provider.getConfig();
+
+			const params: { teamId: string, host?: string } = {
+				teamId: this.teamId
+			};
+			if (providerConfig.isEnterprise) {
+				params.host = providerConfig.host;
+			}
+
+			void (await this.put<{ teamId: string; host?: string }, {}>(
+				`/provider-deauth/${providerConfig.name}`,
+				params,
+				this._token
+			));
+		}
+		catch (ex) {
+			Logger.error(ex, cc);
+			throw ex;
+		}
 	}
 
 	@log()
 	async refreshThirdPartyProvider(request: {
-		provider: ThirdPartyProviderConfig;
+		providerId: string;
 		refreshToken: string;
 	}): Promise<CSMe> {
-		const provider = request.provider.name;
-		const team = `teamId=${this.teamId}`;
-		const token = `refreshToken=${request.refreshToken}`;
-		const host = request.provider.isEnterprise
-			? `&host=${encodeURIComponent(request.provider.host)}`
-			: "";
-		const url = `/provider-refresh/${provider}?${team}&${token}${host}`;
-		const response = await this.get<{ user: any }>(url, this._token);
+		const cc = Logger.getCorrelationContext();
+		try {
+			const provider = getProvider(request.providerId);
+			if (!provider) throw new Error(`provider ${request.providerId} not found`);
+			const providerConfig = provider.getConfig();
 
-		const [user] = await Container.instance().users.resolve({
-			type: MessageType.Users,
-			data: [response.user]
-		});
+			const params: { [key: string]: string } = {
+				teamId: this.teamId,
+				token: request.refreshToken
+			};
+			if (providerConfig.isEnterprise) {
+				params.host = providerConfig.host;
+			}
 
-		return user as CSMe;
+			const team = `teamId=${this.teamId}`;
+			const token = `refreshToken=${request.refreshToken}`;
+			const host = providerConfig.isEnterprise
+				? `&host=${encodeURIComponent(providerConfig.host!)}`
+				: "";
+			const url = `/provider-refresh/${providerConfig.name}?${team}&${token}${host}`;
+			const response = await this.get<{ user: any }>(url, this._token);
+
+			const [user] = await Container.instance().users.resolve({
+				type: MessageType.Users,
+				data: [response.user]
+			});
+
+			return user as CSMe;
+		} catch (ex) {
+			Logger.error(ex, cc);
+			throw ex;
+		}
 	}
 
 	private delete<R extends object>(url: string, token?: string): Promise<R> {
