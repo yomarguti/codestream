@@ -8,6 +8,7 @@ export interface ThirdPartyProviderConfig {
 	apiHost?: string;
 	isEnterprise?: boolean;
 	hasIssues?: boolean;
+	enterpriseOnly?: boolean;
 }
 
 export interface ThirdPartyProviders {

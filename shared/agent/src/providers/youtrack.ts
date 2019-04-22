@@ -7,12 +7,7 @@ import {
 	YouTrackBoard,
 	YouTrackCreateCardRequest,
 	YouTrackCreateCardResponse,
-<<<<<<< HEAD
 	YouTrackUser
-=======
-	YouTrackList,
-	YouTrackMember
->>>>>>> fuck multi repo
 } from "../protocol/agent.protocol";
 import { CSYouTrackProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
@@ -20,10 +15,6 @@ import { ThirdPartyProviderBase } from "./provider";
 
 @lspProvider("youtrack")
 export class YouTrackProvider extends ThirdPartyProviderBase<CSYouTrackProviderInfo> {
-<<<<<<< HEAD
-=======
-	private _youtrackUserId: string | undefined;
->>>>>>> fuck multi repo
 
 	get displayName() {
 		return "YouTrack";
