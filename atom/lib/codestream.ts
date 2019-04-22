@@ -1,8 +1,9 @@
 import { ChangeDataType } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
 import { CompositeDisposable, Disposable } from "atom";
+import { Echo, Listener } from "utils";
 import { Container } from "workspace/container";
-import { Environment, PD_CONFIG } from "./env-utils";
+import { Environment, EnvironmentConfig, PD_CONFIG, PRODUCTION_CONFIG } from "./env-utils";
 import { PackageState } from "./types/package";
 import { StatusBar } from "./types/package-services/status-bar";
 import { ViewController } from "./views/controller";
@@ -16,6 +17,7 @@ class CodestreamPackage {
 	sessionStatusCommand?: Disposable;
 	markerDecorationProvider: MarkerDecorationProvider;
 	loggedInCommandsSubscription?: CompositeDisposable;
+	private environmentChangeEmitter: Echo<EnvironmentConfig>;
 
 	constructor(state: PackageState) {
 		if (atom.inDevMode()) {
@@ -27,6 +29,7 @@ class CodestreamPackage {
 			this.workspaceSession,
 			this.viewController
 		);
+		this.environmentChangeEmitter = new Echo();
 		Container.initialize(this.markerDecorationProvider);
 		this.initialize();
 	}
@@ -63,6 +66,14 @@ class CodestreamPackage {
 			atom.commands.add("atom-workspace", "codestream:point-to-dev", {
 				didDispatch: () => {
 					this.workspaceSession.changeEnvironment(PD_CONFIG);
+					this.environmentChangeEmitter.push(PD_CONFIG);
+				},
+				hiddenInCommandPalette,
+			}),
+			atom.commands.add("atom-workspace", "codestream:point-to-production", {
+				didDispatch: () => {
+					this.workspaceSession.changeEnvironment(PRODUCTION_CONFIG);
+					this.environmentChangeEmitter.push(PRODUCTION_CONFIG);
 				},
 				hiddenInCommandPalette,
 			})
@@ -84,12 +95,20 @@ class CodestreamPackage {
 
 	// Package lifecyle
 	deactivate() {
+		this.environmentChangeEmitter.dispose();
 		this.workspaceSession.dispose();
 		this.subscriptions.dispose();
 		this.sessionStatusCommand!.dispose();
 		this.viewController.dispose();
 		this.markerDecorationProvider.dispose();
 		this.loggedInCommandsSubscription && this.loggedInCommandsSubscription.dispose();
+	}
+
+	provideEnvironmentConfig() {
+		return {
+			get: () => this.workspaceSession.environment,
+			onDidChange: (cb: Listener<EnvironmentConfig>) => this.environmentChangeEmitter.listen(cb),
+		};
 	}
 
 	private registerLoggedInCommands() {

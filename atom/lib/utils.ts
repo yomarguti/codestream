@@ -1,5 +1,5 @@
 import { EditorSelection } from "@codestream/protocols/webview";
-import { TextEditor } from "atom";
+import { Disposable, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
 import * as path from "path";
 import { Range } from "vscode-languageserver-types";
@@ -102,4 +102,27 @@ export function throttle<F extends (...args: any[]) => any>(fn: F, time = 500): 
 	};
 
 	return throttledFn;
+}
+
+export interface Listener<T> {
+	(value: T): void;
+}
+
+export class Echo<T> implements Disposable {
+	private listeners = new Set<Listener<T>>();
+
+	listen(listener: (value: T) => void) {
+		this.listeners.add(listener);
+		return new Disposable(() => {
+			this.listeners.delete(listener);
+		});
+	}
+
+	push(value: T) {
+		this.listeners.forEach(listener => listener(value));
+	}
+
+	dispose() {
+		this.listeners.clear();
+	}
 }

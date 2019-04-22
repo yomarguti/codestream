@@ -19,6 +19,14 @@
 	"deserializers": {
 		"codestream/CodestreamView": "deserializeCodestreamView"
 	},
+	"providedServices": {
+		"codestream-info": {
+			"description": "Provides environment config info",
+			"versions": {
+				"1.0.0": "provideEnvironmentConfig"
+			}
+		}
+	},
 	"consumedServices": {
 		"status-bar": {
 			"versions": {
