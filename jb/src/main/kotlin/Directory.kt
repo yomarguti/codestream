@@ -2,6 +2,7 @@ package com.codestream
 
 import com.codestream.agent.AgentService
 import com.codestream.editor.EditorService
+import com.codestream.notification.NotificationComponent
 import com.codestream.webview.WebViewService
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.Project
@@ -9,6 +10,11 @@ import com.intellij.openapi.project.Project
 val Project.codeStream: CodeStreamComponent?
     get() =
         if (!isDisposed) getComponent(CodeStreamComponent::class.java)
+        else null
+
+val Project.notificationComponent: NotificationComponent?
+    get() =
+        if (!isDisposed) getComponent(NotificationComponent::class.java)
         else null
 
 val Project.agentService: AgentService?

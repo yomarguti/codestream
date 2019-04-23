@@ -125,7 +125,13 @@ class WebViewRouter(val project: Project) {
                 ).await()
 
                 loginResult.result.error?.let {
-                    throw Exception(it)
+                    project.notificationComponent?.showError("Login error", it)
+                    return SignedOutBootstrapResponse(
+                        Capabilities(false, false, false, false, Services(false)),
+                        mapOf("email" to settingsService.state.email),
+                        settingsService.environment,
+                        settingsService.environmentVersion
+                    )
                 }
 
                 val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())

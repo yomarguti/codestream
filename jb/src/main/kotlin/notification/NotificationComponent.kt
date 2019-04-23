@@ -66,6 +66,19 @@ class NotificationComponent(val project: Project) {
         }
     }
 
+    fun showError(title: String, content: String) {
+        val notification = Notification(
+            "CodeStream",
+            icon,
+            title,
+            null,
+            content,
+            NotificationType.ERROR,
+            null
+        )
+        Notifications.Bus.notify(notification, project)
+    }
+
     private suspend fun showNotification(post: Post) {
         val session = project.sessionService ?: return
         val sender = session.getUser(post.creatorId)
