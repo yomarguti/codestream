@@ -296,7 +296,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 		Logger.log(`Using team '${team.name}' (${team.id})${pickedTeamReason || ""}`);
 
-		Logger.log(`LOGIN COMPLETE, token=${response.accessToken} mToken=${response.broadcasterToken} skey=${response.pubnubKey}`);
 		this._token = response.accessToken;
 		this._pubnubSubscribeKey = response.pubnubKey;
 		this._broadcasterToken = response.broadcasterToken;
@@ -325,7 +324,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 			});
 		}
 
-		Logger.log(`BROADCASTER EVENTS, token=${this._token!}`);
 		this._events = new BroadcasterEvents({
 			accessToken: this._token!,
 			pubnubSubscribeKey: this._pubnubSubscribeKey,

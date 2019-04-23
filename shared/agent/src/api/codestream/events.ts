@@ -74,7 +74,6 @@ export class BroadcasterEvents implements Disposable {
 
 	@log()
 	async connect(streamIds?: string[]): Promise<Disposable> {
-		Logger.log("INITING BROADCASTER...");
 		this._disposable = await this._broadcaster.initialize({
 			accessToken: this._options.accessToken,
 			pubnubSubscribeKey: this._options.pubnubSubscribeKey,

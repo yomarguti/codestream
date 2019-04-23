@@ -112,7 +112,6 @@ export class SocketClusterHistory {
 			return new Promise((resolve, reject) => {
 				this._historyPromise = { resolve, reject };
 				this._historyTimer = setTimeout(() => {
-console.warn('REJECTING HISTORY DUE TO TIMEOUT');
 					reject("SocketCluster history request timed out");
 				}, 5000);
 			});
@@ -122,16 +121,13 @@ console.warn('REJECTING HISTORY DUE TO TIMEOUT');
 	}
 
 	private handleHistory (output: SocketClusterHistoryAPIOutput) {
-console.warn('GOT HISTORY', output);
 		if (output.requestId !== this._requestId || !this._historyPromise) {
 			return;
 		}
 		if (this._historyTimer) {
-console.warn('clearing timeout...');
 			clearTimeout(this._historyTimer);
 		}
 		if (output.error) {
-console.warn('GOT AN ERROR!', output.error);
 			this._historyPromise!.reject(output.error);
 			return;
 		}
@@ -139,7 +135,6 @@ console.warn('GOT AN ERROR!', output.error);
 		if (output.messages.length >= 100) {
 			this._numRequests++;
 			if (this._numRequests === 10) {
-console.warn('REJECTING BY WAY OF RESET');
 				this._historyPromise!.reject("RESET");
 			}
 			const since = output.messages[output.messages.length - 1].timestamp;

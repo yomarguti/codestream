@@ -157,7 +157,6 @@ export class Broadcaster {
 
 		if (options.socketCluster) {
 			const socketClusterConnection = new SocketClusterConnection();
-console.warn('INITING SOCKET CLUSTER CONNECTION...');
 			await socketClusterConnection.initialize({
 				host: options.socketCluster.host,
 				port: options.socketCluster.port,
@@ -167,10 +166,8 @@ console.warn('INITING SOCKET CLUSTER CONNECTION...');
 				onStatus: this.onStatus.bind(this),
 				debug: this._debug
 			});
-console.warn('INITED SOCKET CLUSTER CONNECTION');
 			this._broadcasterConnection = socketClusterConnection;
 		} else {
-			this._debug(`INITING PUBNUB CONNECTION authKey=${options.authKey} userId=${options.userId} skey=${options.pubnubSubscribeKey}`);
 			const pubnubConnection = new PubnubConnection();
 			await pubnubConnection.initialize({
 				authKey: options.authKey,
@@ -192,7 +189,6 @@ console.warn('INITED SOCKET CLUSTER CONNECTION');
 
 		return {
 			dispose: () => {
-console.warn('DISPOSING!!!');
 				this.unsubscribeAll();
 				if (this._broadcasterConnection) {
 					this._broadcasterConnection.disconnect();
@@ -203,7 +199,6 @@ console.warn('DISPOSING!!!');
 
 	// subscribe to the passed channels
 	subscribe(channels: (ChannelDescriptor | string)[]) {
-console.warn('SUBSCRIBING TO', channels);
 		this._debug("Request to subscribe to channels", channels);
 		if (this._aborted) {
 			this._debug("Broadcaster Connection is aborted");
@@ -285,15 +280,6 @@ console.warn('SUBSCRIBING TO', channels);
 		setTimeout(this.startTicking.bind(this), 11000);
 	}
 
-	/*
-	// remove listeners we set up earlier
-	private removeListener() {
-		if (this._pubnub && this._listener) {
-			this._pubnub.removeListener(this._listener);
-		}
-	}
-	*/
-
 	simulateOffline(doSimulate?: boolean) {
 		this._simulateOffline = doSimulate || typeof doSimulate === "undefined";
 	}
@@ -323,13 +309,6 @@ console.warn('SUBSCRIBING TO', channels);
 		}
 		this.cleanUpMessagesReceived();
 	}
-
-	/*
-	// presence event from Pubnub
-	private onPresence(event: Pubnub.PresenceEvent) {
-		// TODO
-	}
-	*/
 
 	// simulate a subscription timeout on the next subscription event, for testing
 	simulateSubscriptionTimeout() {
@@ -517,7 +496,6 @@ console.warn('SUBSCRIBING TO', channels);
 				debug: this._debug
 			});
 		} catch (error) {
-			console.error('ERROR CATCHING UP', error);
 			// this is bad ... if we can't catch up on history, we'll start
 			// with a clean slate and try to resubscribe all over again
 			error = error instanceof Error ? error.message : error;
@@ -576,7 +554,6 @@ console.warn('SUBSCRIBING TO', channels);
 	// we're in all the expected channels, and if we aren't, resubscribe to them
 	private async confirmSubscriptions() {
 		const channels = this.getSubscribedChannels();
-console.warn('THESE CHANNELS ARE SUPPOSED TO BE SUBSCRIBED', channels);
 		if (channels.length === 0) {
 			// no subscribed channels to worry about, proceed through the state machine
 			// to a subscribed state again
@@ -590,9 +567,7 @@ console.warn('THESE CHANNELS ARE SUPPOSED TO BE SUBSCRIBED', channels);
 			troubleChannels = [...channels];
 		}
 		else {
-console.warn('SOCKET CLUSTER WILL CONFIRM SUBSCRIPTIONS TO', channels);
 			troubleChannels = await this._broadcasterConnection!.confirmSubscriptions(channels);
-console.warn('SOCKET CLUSTER GAVE US THESE TROUBLE CHANNELS', troubleChannels);
 		}
 		if (troubleChannels.length > 0) {
 			// let the client know we're experiencing difficulty, and attempt to resubscribe to
@@ -618,7 +593,6 @@ console.warn('SOCKET CLUSTER GAVE US THESE TROUBLE CHANNELS', troubleChannels);
 		this._debug("Broadcaster unsubscribing", channels);
 		this._broadcasterConnection!.unsubscribe(channels);
 		this._subscriptions = {};
-		// this.removeListener();
 		if (this._tickInterval) {
 			clearInterval(this._tickInterval);
 		}
@@ -772,12 +746,9 @@ console.warn('SOCKET CLUSTER GAVE US THESE TROUBLE CHANNELS', troubleChannels);
 		if (!channels) {
 			channels = Object.keys(this._subscriptions);
 		}
-console.warn('ATTEMPTING TO RESUBSCRIBE TO', channels);
 		this._numResubscribes++;
 		this._debug("Set numResubscribes to " + this._numResubscribes);
 		channels.forEach(channel => {
-console.warn('have a subscr struct for ', channel);
-console.warn(this._subscriptions[channel]);
 			this._subscriptions[channel].subscribed = false;
 		});
 		this._debug("Resubscribing to", channels);
