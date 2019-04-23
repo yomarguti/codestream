@@ -5,6 +5,7 @@ import com.codestream.extensions.baseUri
 import com.codestream.gson
 import com.codestream.settingsService
 import com.github.salomonbrys.kotson.fromJson
+import com.github.salomonbrys.kotson.nullObj
 import com.google.gson.JsonObject
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.application.ApplicationInfo
@@ -27,10 +28,14 @@ import org.eclipse.lsp4j.WorkspaceClientCapabilities
 import org.eclipse.lsp4j.jsonrpc.RemoteEndpoint
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.launch.LSPLauncher
+import protocols.agent.CSUser
 import protocols.agent.CreatePermalinkParams
 import protocols.agent.CreatePermalinkResult
 import protocols.agent.DocumentMarkersParams
 import protocols.agent.DocumentMarkersResult
+import protocols.agent.GetStreamParams
+import protocols.agent.GetUserParams
+import protocols.agent.Stream
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
@@ -210,6 +215,20 @@ class AgentService(private val project: Project) {
         }
 
         return result
+    }
+
+    suspend fun getStream(id: String): Stream {
+        val json = remoteEndpoint
+            .request("codestream/stream", GetStreamParams(id))
+            .await() as JsonObject
+        return gson.fromJson(json.get("stream"))
+    }
+
+    suspend fun getUser(id: String): CSUser {
+        val json = remoteEndpoint
+            .request("codestream/user", GetUserParams(id))
+            .await() as JsonObject
+        return gson.fromJson(json.get("user"))
     }
 
     suspend fun createPermalink(params: CreatePermalinkParams): CreatePermalinkResult {

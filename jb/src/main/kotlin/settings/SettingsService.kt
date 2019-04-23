@@ -37,6 +37,7 @@ data class SettingsServiceState(
     var serverUrl: String = API_PROD,
     var webAppUrl: String = WEB_PROD,
     var avatars: Boolean = true,
+    var notifications: String = "mentions",
     var muteAll: Boolean = false,
     var team: String? = null,
     var showFeedbackSmiley: Boolean = true,
@@ -97,6 +98,7 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
         get() = if (state.proxyUrl.isNotEmpty()) state.proxyUrl else null
 
     val proxySupport get() = state.proxySupport
+    val notifications get() = state.notifications
 
     var webViewContext: JsonObject
         get() {

@@ -2,44 +2,66 @@ package com.codestream
 
 import com.codestream.agent.DidChangeUnreadsNotification
 import com.intellij.openapi.project.Project
+import protocols.agent.CSUser
+import protocols.agent.Post
+import protocols.agent.Stream
 import protocols.agent.UserLoggedIn
-import java.util.*
+import java.util.UUID
 import kotlin.properties.Delegates
-
 
 typealias UserLoggedInObserver = (UserLoggedIn?) -> Unit
 typealias IntObserver = (Int) -> Unit
-
+typealias PostsObserver = (List<Post>) -> Unit
 
 class SessionService(val project: Project) {
 
     val userLoggedIn: UserLoggedIn? get() = _userLoggedIn
-    private var _userLoggedIn : UserLoggedIn? by Delegates.observable<UserLoggedIn?>(null) { prop, old, new ->
+    val unreads: Int get() = _unreads
+    val mentions: Int get() = _mentions
+
+    private val _streams = mutableMapOf<String, Stream>()
+    private val _users = mutableMapOf<String, CSUser>()
+
+    suspend fun getStream(id: String): Stream? = _streams.getOrPut(id) {
+        return project.agentService?.getStream(id)
+    }
+
+    suspend fun getUser(id: String): CSUser? = _users.getOrPut(id) {
+        return project.agentService?.getUser(id)
+    }
+
+    private val userLoggedInObservers = mutableListOf<UserLoggedInObserver>()
+    private val unreadsObservers = mutableListOf<IntObserver>()
+    private val mentionsObservers = mutableListOf<IntObserver>()
+    private val postsObservers = mutableListOf<PostsObserver>()
+
+    private var _userLoggedIn: UserLoggedIn? by Delegates.observable<UserLoggedIn?>(null) { _, _, new ->
         userLoggedInObservers.forEach { it(new) }
     }
-    private val userLoggedInObservers = mutableListOf<UserLoggedInObserver>()
+
+    private var _unreads: Int by Delegates.observable(0) { _, _, new ->
+        unreadsObservers.forEach { it(new) }
+    }
+
+    private var _mentions: Int by Delegates.observable(0) { _, _, new ->
+        mentionsObservers.forEach { it(new) }
+    }
+
     fun onUserLoggedInChanged(observer: UserLoggedInObserver) {
         userLoggedInObservers += observer
     }
 
-    val unreads: Int get() = _unreads
-    private var _unreads : Int by Delegates.observable(0) { prop, old, new ->
-        unreadsObservers.forEach { it(new) }
-    }
-    private val unreadsObservers = mutableListOf<IntObserver>()
     fun onUnreadsChanged(observer: IntObserver) {
         unreadsObservers += observer
     }
 
-    val mentions: Int get() = _mentions
-    private var _mentions : Int by Delegates.observable(0) { prop, old, new ->
-        mentionsObservers.forEach { it(new) }
-    }
-    private val mentionsObservers = mutableListOf<IntObserver>()
     fun onMentionsChanged(observer: IntObserver) {
         mentionsObservers += observer
     }
-    
+
+    fun onPostsChanged(observer: PostsObserver) {
+        postsObservers += observer
+    }
 
     fun login(userLoggedIn: UserLoggedIn) {
         _userLoggedIn = userLoggedIn
@@ -55,12 +77,15 @@ class SessionService(val project: Project) {
         _mentions = notification.totalMentions
     }
 
+    fun didChangePosts(posts: List<Post>) {
+        postsObservers.forEach { it(posts) }
+    }
+
     val isSignedIn: Boolean
         get() = userLoggedIn != null
 
     val signupToken: String by lazy {
         UUID.randomUUID().toString()
     }
-
 }
 

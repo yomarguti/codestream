@@ -9,7 +9,16 @@ import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.JsonElement
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import org.eclipse.lsp4j.*
+import org.eclipse.lsp4j.ConfigurationParams
+import org.eclipse.lsp4j.MessageActionItem
+import org.eclipse.lsp4j.MessageParams
+import org.eclipse.lsp4j.MessageType
+import org.eclipse.lsp4j.PublishDiagnosticsParams
+import org.eclipse.lsp4j.RegistrationParams
+import org.eclipse.lsp4j.ShowMessageRequestParams
+import org.eclipse.lsp4j.TextDocumentIdentifier
+import org.eclipse.lsp4j.UnregistrationParams
+import org.eclipse.lsp4j.WorkspaceFolder
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification
 import org.eclipse.lsp4j.services.LanguageClient
 import java.util.concurrent.CompletableFuture
@@ -29,9 +38,13 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
     @JsonNotification("codestream/didChangeData")
     fun didChangeData(json: JsonElement) {
         project.webViewService?.postNotification("codestream/didChangeData", json)
+
+        val session = project.sessionService ?: return
         val notification = gson.fromJson<DidChangeDataNotification>(json)
+
         when (notification.type) {
-            "unreads" -> project.sessionService?.didChangeUnreads(gson.fromJson(notification.data))
+            "unreads" -> session.didChangeUnreads(gson.fromJson(notification.data))
+            "posts" -> session.didChangePosts(gson.fromJson(notification.data))
         }
     }
 

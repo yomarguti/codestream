@@ -16,6 +16,7 @@ public class CodeStreamConfigurableGUI {
     private JTextField proxyUrl;
     private JComboBox proxySupport;
     private JCheckBox proxyStrictSSL;
+    private JComboBox showNotifications;
 
     public JPanel getRootPanel() {
         return rootPanel;
@@ -64,6 +65,8 @@ public class CodeStreamConfigurableGUI {
     public JComboBox<String> getProxySupport() {
         return proxySupport;
     }
+
+    public JComboBox<String> getShowNotifications() { return showNotifications; }
 
     public JCheckBox getProxyStrictSSL() {
         return proxyStrictSSL;

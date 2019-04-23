@@ -123,4 +123,6 @@ class CodeStreamComponent(val project: Project) : Disposable {
 
     override fun dispose() {
     }
+
+    val isVisible get() = toolWindow.isVisible
 }

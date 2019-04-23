@@ -139,7 +139,12 @@ class CSUser(
     @SerializedName("_id")
     var id: String,
     var username: String,
-    var email: String
+    var email: String,
+    val preferences: CSPreferences
+)
+
+class CSPreferences(
+    val mutedStreams: Map<String, Boolean>
 )
 
 class CSTeam {
@@ -227,3 +232,36 @@ class Codemark(
 )
 
 class TextDocument(val uri: String)
+
+class Post(
+    val version: Int,
+    val streamId: String,
+    val creatorId: String,
+    val mentionedUserIds: List<String>?,
+    val text: String
+) {
+    val isNew get() = version == 1
+}
+
+class Stream(
+    val id: String,
+    val type: StreamType,
+    val name: String?
+)
+
+enum class StreamType {
+    @SerializedName("channel")
+    CHANNEL,
+    @SerializedName("direct")
+    DIRECT,
+    @SerializedName("file")
+    FILE
+}
+
+class GetStreamParams(
+    val streamId: String
+)
+
+class GetUserParams(
+    val userId: String
+)

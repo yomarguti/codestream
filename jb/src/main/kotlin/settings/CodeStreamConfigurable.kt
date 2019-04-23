@@ -28,6 +28,7 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable {
             state.serverUrl = gui.serverUrl.text
             state.webAppUrl = gui.webAppUrl.text
             state.avatars = gui.showAvatars.isSelected
+            state.notifications = gui.showNotifications.selectedItem as String
             state.muteAll = gui.muteAll.isSelected
             state.team = gui.team.text
             state.showFeedbackSmiley = gui.showFeedbackSmiley.isSelected
@@ -48,6 +49,7 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable {
                 serverUrl.text = it.serverUrl
                 webAppUrl.text = it.webAppUrl
                 showAvatars.isSelected = it.avatars
+                showNotifications.selectedItem = it.notifications
                 muteAll.isSelected = it.muteAll
                 team.text = it.team
                 showFeedbackSmiley.isSelected = it.showFeedbackSmiley
