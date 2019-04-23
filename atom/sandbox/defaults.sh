@@ -39,8 +39,8 @@ fi
 # Uncomment and setup if node is required. Available versions can be seen
 # with the command:
 #   ssh $DT_CLOUD_SERVER ls /home/web/SandboxRepos/software/node-$DT_OS_TYPE-*
-# export ATOM_NODE_VER=latest
-# export PATH=$ATOM_SANDBOX/node/bin:$ATOM_TOP/node_modules/.bin:$PATH
+export ATOM_NODE_VER=8.11.3
+export PATH=$ATOM_SANDBOX/node/bin:$ATOM_TOP/node_modules/.bin:$PATH
 #
 #
 # Set this variable if you require additional options when doing npm installs
