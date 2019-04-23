@@ -6,13 +6,13 @@ import Pubnub from "pubnub";
 import { Disposable } from "vscode-languageserver";
 // import { PubnubHistory, PubnubHistoryInput, PubnubHistoryOutput } from "./pubnubHistory";
 import {
-	MessageCallback,
-	MessageEvent,
 	BroadcasterConnection,
 	BroadcasterConnectionOptions,
 	BroadcasterHistoryInput,
 	BroadcasterHistoryOutput,
 	BroadcasterStatusType,
+	MessageCallback,
+	MessageEvent,
 	StatusCallback
 } from "./broadcaster";
 import { PubnubHistory } from "./pubnubHistory";
