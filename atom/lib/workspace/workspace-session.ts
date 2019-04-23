@@ -130,6 +130,7 @@ export class WorkspaceSession {
 			codemarkApply: false,
 			codemarkCompare: false,
 			editorTrackVisibleRange: true,
+			openLink: true,
 			services: {},
 		};
 		if (!this.agentCapabilities) {

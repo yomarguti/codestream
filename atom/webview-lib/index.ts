@@ -20,3 +20,19 @@ window.addEventListener("message", ({ data, ports }) => {
 		setStyles(data.styles);
 	}
 });
+
+document.addEventListener(
+	"click",
+	(e: MouseEvent) => {
+		if (e == null || e.target == null || (e.target as Element).tagName !== "A") return;
+
+		const target = e.target as HTMLAnchorElement;
+		if (target.href) {
+			window.postMessage({ label: "open-link", link: target.href }, "*");
+			e.preventDefault();
+			e.stopPropagation();
+			e.stopImmediatePropagation();
+		}
+	},
+	true
+);

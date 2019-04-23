@@ -153,6 +153,12 @@ export class CodestreamView {
 				"*",
 				[this.channel.webview]
 			);
+
+			iframe.contentWindow!.addEventListener("message", ({ data }: any) => {
+				if (data.label === "open-link") {
+					shell.openExternal(data.link);
+				}
+			});
 		});
 
 		this.subscriptions.add(
