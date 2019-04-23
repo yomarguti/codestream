@@ -6,9 +6,7 @@ using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.UI;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using Serilog;
 using StreamJsonRpc;
 using System;
@@ -343,7 +341,7 @@ namespace CodeStream.VisualStudio.Services {
 			var bootstrapResponse = new BootstrapAuthenticatedResponse {
 				Capabilities = capabilitiesObject,
 				Configs = new Configs {
-					Email = state["email"].ToString(),
+					Email = (string)state["email"],
 					Team = settings.Options.Team,
 					ShowAvatars = settings.Options.ShowAvatars,
 					ServerUrl = settings.Options.ServerUrl,
