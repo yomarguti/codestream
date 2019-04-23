@@ -342,10 +342,11 @@ export class SimpleStream extends Component {
 		let numProviders = 0;
 		for (let providerId of Object.keys(this.props.providers)) {
 			const provider = this.props.providers[providerId];
-			const { name, isEnterprise, host } = provider;
+			const { name, isEnterprise, host, enterpriseOnly } = provider;
 			const display = PROVIDER_MAPPINGS[name];
 			if (
 				display &&
+				!enterpriseOnly && 
 				provider.hasIssues
 			) {
 				const displayName = isEnterprise ? `${display.displayName} - ${host}` : display.displayName;

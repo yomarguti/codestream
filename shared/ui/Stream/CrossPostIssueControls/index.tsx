@@ -210,6 +210,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			const knownIssueProviders = Object.keys(this.props.providers).filter(providerId => {
 				const provider = this.props.providers![providerId];
 				return (
+					!provider.enterpriseOnly && 
 					provider.hasIssues &&
 					!!PROVIDER_MAPPINGS[provider.name]
 				);
