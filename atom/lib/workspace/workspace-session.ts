@@ -29,7 +29,7 @@ const SESSION_STATUS_CHANGED = "session-status-changed";
 export class WorkspaceSession {
 	private emitter: Emitter;
 	private session?: Session;
-	private lastUsedEmail: string;
+	private lastUsedEmail?: string;
 	private envConfig: EnvironmentConfig;
 	private signupToken?: string;
 	private _agent: CodeStreamAgent;
@@ -56,7 +56,7 @@ export class WorkspaceSession {
 	protected constructor(
 		configManager: ConfigManager,
 		session?: Session,
-		lastUsedEmail = "",
+		lastUsedEmail?: string,
 		envConfig: EnvironmentConfig = PRODUCTION_CONFIG
 	) {
 		this.emitter = new Emitter();
@@ -143,7 +143,6 @@ export class WorkspaceSession {
 			capabilities: this.capabilities,
 			configs: this.configManager.getForWebview(this.environment.serverUrl, this.lastUsedEmail),
 			version: getPluginVersion(),
-			...(this.lastUsedEmail !== "" ? { route: { route: "login" } } : {}),
 		};
 	}
 

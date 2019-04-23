@@ -188,6 +188,9 @@ export class CodestreamView {
 		const window = remote.getCurrentWindow();
 		window.on("focus", onFocus);
 		window.on("blur", onBlur);
+
+		if (this.session.status === SessionStatus.SignedIn) this.observeWorkspace();
+
 		this.subscriptions.add(
 			new Disposable(() => {
 				window.removeListener("blur", onBlur);
@@ -200,7 +203,7 @@ export class CodestreamView {
 					)
 				);
 			}),
-			this.session.observeSessionStatus(status => {
+			this.session.onDidChangeSessionStatus(status => {
 				if (status === SessionStatus.SignedOut) {
 					this.sendEvent(HostDidLogoutNotificationType, {});
 					this.editorSelectionObserver && this.editorSelectionObserver.dispose();
