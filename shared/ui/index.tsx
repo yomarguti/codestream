@@ -43,22 +43,7 @@ export function setupCommunication(host: { postMessage: (message: any) => void }
 }
 
 export async function initialize(selector: string) {
-	const store = createCodeStreamStore(undefined, undefined, [
-		store => {
-			return next => action => {
-				const oldState = store.getState();
-				const result = next(action);
-
-				console.groupCollapsed(action.type);
-				console.debug(action);
-				console.debug("old state", oldState);
-				console.debug("new state", store.getState());
-				console.groupEnd();
-
-				return result;
-			};
-		}
-	]);
+	const store = createCodeStreamStore(undefined, undefined);
 
 	listenForEvents(store);
 
