@@ -74,6 +74,7 @@ export function registerProviders(
 	providers: ThirdPartyProviders,
 	session: CodeStreamSession
 ): void {
+	providerRegistry.clear();
 	for (const providerId in providers) {
 		const provider = providers[providerId];
 		const type = providerTypeRegistry.get(provider.name);

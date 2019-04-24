@@ -1,6 +1,7 @@
 "use strict";
 import { NotificationType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
+import { ThirdPartyProviders } from "./agent.protocol.providers";
 import {
 	CSLastReads,
 	CSMarker,
@@ -156,4 +157,12 @@ export interface DidLogoutNotification {
 
 export const DidLogoutNotificationType = new NotificationType<DidLogoutNotification, void>(
 	"codestream/didLogout"
+);
+
+export interface DidUpdateProviders {
+	providers: ThirdPartyProviders;
+}
+
+export const DidUpdateProvidersType = new NotificationType<DidUpdateProviders, void>(
+	"codestream/didUpdateProviders"
 );

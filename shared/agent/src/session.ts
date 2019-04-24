@@ -35,6 +35,7 @@ import {
 	DidChangeDataNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
 	DidLogoutNotificationType,
+	DidUpdateProvidersType,
 	FetchMarkerLocationsRequestType,
 	LogoutReason,
 	ThirdPartyProviders
@@ -515,6 +516,7 @@ export class CodeStreamSession {
 		this._teamId = this._options.teamId = response.teamId;
 		this._codestreamUserId = response.user.id;
 		const currentTeam = response.teams.find(t => t.id === this._teamId)!;
+
 		this._providers = currentTeam.providerHosts || {};
 		registerProviders(this._providers, this);
 
@@ -680,5 +682,15 @@ export class CodeStreamSession {
 			telemetry.setFirstSessionProps(user.firstSessionStartedAt, FIRST_SESSION_TIMEOUT);
 		}
 		telemetry.track({ eventName: "Agent Started" });
+	}
+
+	@log()
+	async updateProviders () {
+		const currentTeam = await Container.instance().teams.getByIdFromCache(this.teamId);
+		if (currentTeam) {
+			this._providers = currentTeam.providerHosts || {};
+			registerProviders(this._providers, this);
+			this.agent.sendNotification(DidUpdateProvidersType, { providers: this._providers });
+		}
 	}
 }

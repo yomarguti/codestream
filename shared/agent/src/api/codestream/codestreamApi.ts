@@ -118,6 +118,7 @@ import {
 	CSSetCodemarkPinnedRequest,
 	CSSetCodemarkPinnedResponse,
 	CSStream,
+	CSTeam,
 	CSTrackSlackPostRequest,
 	CSUpdateCodemarkRequest,
 	CSUpdateCodemarkResponse,
@@ -384,6 +385,15 @@ export class CodeStreamApiProvider implements ApiProvider {
 				break;
 			case MessageType.Teams:
 				e.data = await Container.instance().teams.resolve(e);
+
+				if (this._events !== undefined) {
+					const currentTeamId = Container.instance().session.teamId;
+					for (const team of e.data as CSTeam[]) {
+						if (team.id === currentTeamId) {
+							Container.instance().session.updateProviders();
+						}
+					}
+				}
 				break;
 			case MessageType.Users:
 				const lastReads = {
