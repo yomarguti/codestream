@@ -92,7 +92,7 @@ export class Post extends CodeStreamItem<PostPlus> {
 	isNew() {
 		return this.entity.version != null
 			? this.entity.version === 1
-			: this.deleted || this.edited || this.hasReplies || this.hasReactions;
+			: !this.deleted && !this.edited && !this.hasReplies && !this.hasReactions;
 	}
 
 	@memoize
