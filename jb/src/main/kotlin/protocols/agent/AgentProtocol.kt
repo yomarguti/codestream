@@ -9,7 +9,6 @@ import org.eclipse.lsp4j.TextDocumentIdentifier
 
 class ProxySettings(val url: String, val strictSSL: Boolean)
 
-
 abstract class LoginParams(
     val email: String?,
     val passwordOrToken: Any?,
@@ -133,7 +132,10 @@ class LoginState {
     lateinit var email: String
 }
 
-class UserLoggedIn(val user: CSUser, val team: CSTeam, val state: LoginState, val teamsCount: Int)
+class UserLoggedIn(val user: CSUser, val team: CSTeam, val state: LoginState, val teamsCount: Int) {
+    val userId get() = state.userId
+    val teamId get() = state.teamId
+}
 
 class CSUser(
     @SerializedName("_id")
@@ -240,7 +242,7 @@ class Post(
     val mentionedUserIds: List<String>?,
     val text: String
 ) {
-    val isNew get() = version == 1
+    val isNew get() = version <= 1
 }
 
 class Stream(

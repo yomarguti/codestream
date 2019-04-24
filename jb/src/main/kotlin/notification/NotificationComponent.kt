@@ -38,14 +38,14 @@ class NotificationComponent(val project: Project) {
         val codeStream = project.codeStream ?: return
         val session = project.sessionService ?: return
         val settings = project.settingsService ?: return
-        val user = session.userLoggedIn?.user ?: return
+        val userLoggedIn = session.userLoggedIn ?: return
 
-        if (!post.isNew || post.creatorId == user.id) {
+        if (!post.isNew || post.creatorId == userLoggedIn.userId) {
             return
         }
 
-        val isMentioned = post.mentionedUserIds?.contains(user.id) ?: false
-        val isMutedStream = user.preferences?.mutedStreams?.get(post.streamId) == true
+        val isMentioned = post.mentionedUserIds?.contains(userLoggedIn.userId) ?: false
+        val isMutedStream = userLoggedIn.user.preferences.mutedStreams[post.streamId] == true
         if (isMutedStream && !isMentioned) {
             return
         }
