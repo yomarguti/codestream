@@ -397,7 +397,7 @@ export class CodestreamView {
 				const ok = shell.openExternal(
 					`${
 						this.session.environment.webAppUrl
-					}/service-auth/slack?state=${this.session.getSignupToken()}`
+					}/service-auth/slack?state=${this.session.getLoginToken()}`
 				);
 				if (ok) this.respond<SlackLoginResponse>({ id: message.id, params: true });
 				else {

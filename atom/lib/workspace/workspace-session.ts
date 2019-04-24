@@ -1,3 +1,4 @@
+import { SignedOutBootstrapResponse } from "@codestream/protocols/webview";
 import { Emitter } from "atom";
 import uuidv4 from "uuid/v4";
 import { EnvironmentConfig, PRODUCTION_CONFIG } from "../env-utils";
@@ -40,7 +41,7 @@ export class WorkspaceSession {
 	private session?: Session;
 	private lastUsedEmail?: string;
 	private envConfig: EnvironmentConfig;
-	private signupToken?: string;
+	private loginToken?: string;
 	private _agent: CodeStreamAgent;
 	get agent() {
 		return this._agent;
@@ -150,11 +151,12 @@ export class WorkspaceSession {
 		return { ...editorCapabilities, ...this.agentCapabilities };
 	}
 
-	getBootstrapInfo() {
+	getBootstrapInfo(): SignedOutBootstrapResponse {
 		return {
 			capabilities: this.capabilities,
 			configs: Container.configs.getForWebview(this.environment.serverUrl, this.lastUsedEmail),
 			version: getPluginVersion(),
+			loginToken: this.getLoginToken(),
 		};
 	}
 
@@ -165,11 +167,11 @@ export class WorkspaceSession {
 		if (teamSetting.length > 0) return { team: teamSetting };
 	}
 
-	getSignupToken() {
-		if (!this.signupToken) {
-			this.signupToken = uuidv4();
+	getLoginToken() {
+		if (!this.loginToken) {
+			this.loginToken = uuidv4();
 		}
-		return this.signupToken;
+		return this.loginToken;
 	}
 
 	async login(email: string, passwordOrToken: string | AccessToken) {
@@ -197,13 +199,13 @@ export class WorkspaceSession {
 	}
 
 	async loginViaSignupToken(token?: string): Promise<LoginResult> {
-		if (this.signupToken === undefined && token === undefined) {
+		if (this.loginToken === undefined && token === undefined) {
 			throw new Error("A signup token hasn't been generated");
 		}
 		this.sessionStatus = SessionStatus.SigningIn;
 		try {
 			const result = await this._agent.initWithSignupToken(
-				this.signupToken || token!,
+				this.loginToken || token!,
 				this.environment.serverUrl,
 				this.getTeamPreference()
 			);
@@ -212,9 +214,6 @@ export class WorkspaceSession {
 		} catch (error) {
 			this.sessionStatus = SessionStatus.SignedOut;
 			if (typeof error === "string") {
-				if (error !== LoginResult.NotOnTeam && error !== LoginResult.NotConfirmed) {
-					this.signupToken = undefined;
-				}
 				return error as LoginResult;
 			} else {
 				atom.notifications.addError("Unexpected error intializing agent with signup token");
