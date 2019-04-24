@@ -20,6 +20,9 @@ val Project.notificationComponent: NotificationComponent?
 val Project.agentService: AgentService?
     get() = getService(AgentService::class.java)
 
+val Project.authenticationService: AuthenticationService?
+    get() = getService(AuthenticationService::class.java)
+
 val Project.editorService: EditorService?
     get() = getService(EditorService::class.java)
 

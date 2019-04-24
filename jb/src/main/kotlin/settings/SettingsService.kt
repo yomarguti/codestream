@@ -3,6 +3,8 @@ package com.codestream
 import com.github.salomonbrys.kotson.fromJson
 import com.github.salomonbrys.kotson.set
 import com.google.gson.JsonObject
+import com.intellij.credentialStore.CredentialAttributes
+import com.intellij.credentialStore.generateServiceName
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.State
@@ -109,7 +111,7 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
             jsonObject["hasFocus"] = true
             return jsonObject
         }
-        set(jsonObject: JsonObject) {
+        set(jsonObject) {
             state.webViewContext = jsonObject.toString()
         }
 
@@ -160,5 +162,11 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
                 else -> null
             }
         }
+
+    val credentialAttributes: CredentialAttributes
+        get() = CredentialAttributes(
+            generateServiceName("CodeStream", state.serverUrl),
+            state.email
+        )
 
 }

@@ -1,21 +1,32 @@
 package com.codestream.webview
 
-import com.codestream.*
-import com.github.salomonbrys.kotson.*
+import com.codestream.agentService
+import com.codestream.authenticationService
+import com.codestream.editorService
+import com.codestream.gson
+import com.codestream.settingsService
+import com.codestream.webViewService
+import com.github.salomonbrys.kotson.fromJson
+import com.github.salomonbrys.kotson.get
+import com.github.salomonbrys.kotson.jsonObject
+import com.github.salomonbrys.kotson.nullString
+import com.github.salomonbrys.kotson.obj
+import com.github.salomonbrys.kotson.string
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
-import com.intellij.credentialStore.CredentialAttributes
-import com.intellij.credentialStore.Credentials
-import com.intellij.credentialStore.generateServiceName
-import com.intellij.ide.BrowserUtil
-import com.intellij.ide.passwordSafe.PasswordSafe
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import protocols.agent.*
-import protocols.webview.*
+import protocols.webview.ContextDidChangeNotification
+import protocols.webview.EditorRangeHighlightRequest
+import protocols.webview.EditorRangeRevealRequest
+import protocols.webview.EditorRangeRevealResponse
+import protocols.webview.EditorRangeSelectRequest
+import protocols.webview.EditorRangeSelectResponse
+import protocols.webview.EditorScrollToRequest
+import protocols.webview.UpdateConfigurationRequest
 import kotlin.properties.Delegates
 
 typealias ReadyObserver = () -> Unit
@@ -62,18 +73,20 @@ class WebViewRouter(val project: Project) {
 
     private suspend fun processHostMessage(message: WebViewMessage) {
         var resumeReady = false
+        val authentication = project.authenticationService ?: return
+
         val response = when (message.method) {
-            "host/bootstrap" -> bootstrap()
+            "host/bootstrap" -> authentication?.bootstrap()
             "host/login" -> {
                 _isReady = false
                 resumeReady = true
-                login(message)
+                authentication.login(message)
             }
             "host/didInitialize" -> _isReady = true
-            "host/logout" -> logout()
-            "host/slack/login" -> slackLogin(message)
-            "host/signup" -> signup(message)
-            "host/signup/complete" -> signupComplete(message)
+            "host/logout" -> authentication.logout()
+            "host/slack/login" -> authentication.slackLogin()
+            "host/signup" -> authentication.signup()
+            "host/signup/complete" -> authentication.signupComplete()
             "host/context/didChange" -> contextDidChange(message)
             "host/webview/reload" -> project.webViewService?.reload()
             // "host/marker/compare" -> Unit
@@ -89,259 +102,6 @@ class WebViewRouter(val project: Project) {
             project.webViewService?.postResponse(message.id, response)
             if (resumeReady) _isReady = true
         }
-    }
-
-    private suspend fun bootstrap(): Any {
-        val settingsService = project.settingsService ?: return Unit
-        val agentService = project.agentService ?: return Unit
-        val sessionService = project.sessionService ?: return Unit
-        val editorService = project.editorService ?: return Unit
-
-        if (settingsService.state.autoSignIn) {
-            val attr = CredentialAttributes(
-                generateServiceName("CodeStream", settingsService.state.serverUrl),
-                settingsService.state.email
-            )
-            val token = PasswordSafe.instance.getPassword(attr)
-
-            if (token != null) {
-                val loginResult = agentService.agent.login(
-                    LoginWithTokenParams(
-                        settingsService.state.email,
-                        AccessToken(
-                            settingsService.state.email,
-                            settingsService.state.serverUrl,
-                            token
-                        ),
-                        settingsService.state.serverUrl,
-                        settingsService.extensionInfo,
-                        settingsService.ideInfo,
-                        settingsService.traceLevel.value,
-                        settingsService.isDebugging,
-                        settingsService.team,
-                        settingsService.proxySupport,
-                        settingsService.proxySettings
-                    )
-                ).await()
-
-                loginResult.result.error?.let {
-                    project.notificationComponent?.showError("Login error", it)
-                    return SignedOutBootstrapResponse(
-                        Capabilities(false, false, false, false, Services(false)),
-                        mapOf("email" to settingsService.state.email),
-                        settingsService.environment,
-                        settingsService.environmentVersion
-                    )
-                }
-
-                val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())
-                sessionService.login(loginResult.result.userLoggedIn)
-
-                val webViewResponse = SignedInBootstrapResponse(
-                    Capabilities(
-                        true,
-                        false,
-                        false,
-                        true,
-                        Services(false)
-                    ),
-                    settingsService.getWebviewConfigs(),
-                    settingsService.environment,
-                    settingsService.environmentVersion,
-                    settingsService.webViewContext,
-                    editorService.getEditorContext(),
-                    UserSession(
-                        sessionService.userLoggedIn!!.state.userId
-                    )
-                )
-
-                val webViewResponseJson = gson.toJsonTree(webViewResponse)
-                val bootstrapResponse = bootstrapFuture.await()
-
-                for ((key, value) in bootstrapResponse.obj.entrySet()) {
-                    webViewResponseJson[key] = value
-                }
-
-                return webViewResponseJson
-            }
-        }
-
-        if (!sessionService.isSignedIn) {
-            return SignedOutBootstrapResponse(
-                Capabilities(false, false, false, false, Services(false)),
-                mapOf("email" to settingsService.state.email),
-                settingsService.environment,
-                settingsService.environmentVersion
-            )
-        }
-        TODO("not implemented")
-    }
-
-    private suspend fun login(message: WebViewMessage): JsonElement {
-        val settingsService = project.settingsService ?: return jsonObject()
-        val agentService = project.agentService ?: return jsonObject()
-        val sessionService = project.sessionService ?: return jsonObject()
-        val editorService = project.editorService ?: return jsonObject()
-
-        val params = gson.fromJson<LoginRequest>(message.params!!)
-        val loginResult = agentService.agent.login(
-            LoginWithPasswordParams(
-                params.email,
-                params.password,
-                settingsService.state.serverUrl,
-                settingsService.extensionInfo,
-                settingsService.ideInfo,
-                settingsService.traceLevel.value,
-                settingsService.isDebugging,
-                settingsService.team,
-                settingsService.proxySupport,
-                settingsService.proxySettings
-            )
-        ).await()
-
-        loginResult.result.error?.let {
-            throw Exception(it)
-        }
-
-        val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())
-        sessionService.login(loginResult.result.userLoggedIn)
-        settingsService.state.email = params.email
-
-        PasswordSafe.instance.set(
-            CredentialAttributes(
-                generateServiceName("CodeStream", settingsService.state.serverUrl),
-                settingsService.state.email
-            ),
-            Credentials(null, loginResult.result.loginResponse!!.accessToken)
-        )
-
-        val webViewResponse = SignedInBootstrapResponse(
-            Capabilities(
-                false,
-                false,
-                false,
-                true,
-                Services(false)
-            ),
-            settingsService.getWebviewConfigs(),
-            settingsService.environment,
-            settingsService.environmentVersion,
-            settingsService.webViewContext,
-            editorService.getEditorContext(),
-            UserSession(
-                sessionService.userLoggedIn!!.state.userId
-            )
-        )
-
-        val webViewResponseJson = gson.toJsonTree(webViewResponse)
-        val bootstrapResponse = bootstrapFuture.await()
-
-        for ((key, value) in bootstrapResponse.obj.entrySet()) {
-            webViewResponseJson[key] = value
-        }
-
-        return webViewResponseJson
-    }
-
-    private fun slackLogin(message: WebViewMessage) {
-        val sessionService = project.sessionService ?: return
-        val settingsService = project.settingsService ?: return
-        BrowserUtil.browse("${settingsService.state.webAppUrl}/service-auth/slack?state=${sessionService.signupToken}")
-    }
-
-    private fun signup(message: WebViewMessage) {
-        val sessionService = project.sessionService ?: return
-        val settingsService = project.settingsService ?: return
-        BrowserUtil.browse("${settingsService.state.webAppUrl}/signup?force_auth=true&signup_token=${sessionService.signupToken}")
-    }
-
-    private fun logout() {
-        val agentService = project.agentService ?: return
-        val sessionService = project.sessionService ?: return
-        val settingsService = project.settingsService ?: return
-        val webViewService = project.webViewService ?: return
-
-        sessionService.logout()
-        agentService.agent.logout(LogoutParams())
-        PasswordSafe.instance.set(
-            CredentialAttributes(
-                generateServiceName("CodeStream", settingsService.state.serverUrl),
-                settingsService.state.email
-            ),
-            null
-        )
-        settingsService.webViewContext = jsonObject()
-        webViewService.reload()
-    }
-
-    private suspend fun signupComplete(message: WebViewMessage): JsonElement {
-        val agentService = project.agentService ?: return jsonObject()
-        val editorService = project.editorService ?: return jsonObject()
-        val sessionService = project.sessionService ?: return jsonObject()
-        val settingsService = project.settingsService ?: return jsonObject()
-
-        val token = sessionService.signupToken
-        val loginResult = agentService.agent.login(
-            LoginWithSignupTokenParams(
-                token,
-                settingsService.state.serverUrl,
-                settingsService.extensionInfo,
-                settingsService.ideInfo,
-                settingsService.traceLevel.value,
-                settingsService.isDebugging,
-                settingsService.team,
-                settingsService.proxySupport,
-                settingsService.proxySettings
-            )
-        ).await()
-
-        loginResult.result.error?.let {
-            throw Exception(it)
-        }
-
-        val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())
-
-        sessionService.login(loginResult.result.userLoggedIn)
-
-        when (loginResult.result.loginResponse) {
-            null -> throw Exception("Login result from agent has no error but loginResponse is null")
-            else -> settingsService.state.email = loginResult.result.loginResponse.user.email
-        }
-
-        PasswordSafe.instance.set(
-            CredentialAttributes(
-                generateServiceName("CodeStream", settingsService.state.serverUrl),
-                settingsService.state.email
-            ),
-            Credentials(null, loginResult.result.loginResponse!!.accessToken)
-        )
-
-        val webViewResponse = SignedInBootstrapResponse(
-            Capabilities(
-                false,
-                false,
-                false,
-                true,
-                Services(false)
-            ),
-            settingsService.getWebviewConfigs(),
-            settingsService.environment,
-            settingsService.environmentVersion,
-            settingsService.webViewContext,
-            editorService.getEditorContext(),
-            UserSession(
-                sessionService.userLoggedIn!!.state.userId
-            )
-        )
-
-        val webViewResponseJson = gson.toJsonTree(webViewResponse)
-        val bootstrapResponse = bootstrapFuture.await()
-
-        for ((key, value) in bootstrapResponse.obj.entrySet()) {
-            webViewResponseJson[key] = value
-        }
-
-        return webViewResponseJson
     }
 
     private fun contextDidChange(message: WebViewMessage) {
@@ -377,7 +137,7 @@ class WebViewRouter(val project: Project) {
         return emptyMap<String, String>()
     }
 
-    fun editorRangeHighlight(message: WebViewMessage) {
+    private fun editorRangeHighlight(message: WebViewMessage) {
         val request = gson.fromJson<EditorRangeHighlightRequest>(message.params!!)
 
         // Numbers greater than Integer.MAX_VALUE are deserialized as -1. It should not happen,
@@ -389,21 +149,21 @@ class WebViewRouter(val project: Project) {
         project.editorService?.toggleRangeHighlight(request.range, request.highlight)
     }
 
-    suspend fun editorRangeReveal(message: WebViewMessage): EditorRangeRevealResponse {
+    private suspend fun editorRangeReveal(message: WebViewMessage): EditorRangeRevealResponse {
         val request = gson.fromJson<EditorRangeRevealRequest>(message.params!!)
         val success = project.editorService?.reveal(request.uri, request.range, request.atTop)
             ?: false
         return EditorRangeRevealResponse(success)
     }
 
-    suspend fun editorRangeSelect(message: WebViewMessage): EditorRangeSelectResponse {
+    private suspend fun editorRangeSelect(message: WebViewMessage): EditorRangeSelectResponse {
         val request = gson.fromJson<EditorRangeSelectRequest>(message.params!!)
         val success = project.editorService?.select(request.uri, request.selection, request.preserveFocus ?: false)
             ?: false
         return EditorRangeSelectResponse(success)
     }
 
-    fun editorScrollTo(message: WebViewMessage) {
+    private fun editorScrollTo(message: WebViewMessage) {
         val request = gson.fromJson<EditorScrollToRequest>(message.params!!)
         project.editorService?.scroll(request.uri, request.position, request.atTop)
     }
