@@ -20,7 +20,8 @@ import {
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
 	ConnectionStatus,
-	ChangeDataType
+	ChangeDataType,
+	DidUpdateProvidersType
 } from "@codestream/protocols/agent";
 import translations from "./translations/en";
 import { getCodemark } from "./store/codemarks/reducer";
@@ -28,6 +29,7 @@ import { fetchCodemarks } from "./Stream/actions";
 import { State as ContextState } from "./store/context/types";
 import { State as CodemarksState } from "./store/codemarks/types";
 import { State as EditorContextState } from "./store/editorContext/types";
+import { updateProviders } from "./store/providers/actions";
 
 export { HostApi };
 
@@ -93,6 +95,11 @@ export function listenForEvents(store) {
 			default:
 				store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload: data });
 		}
+	});
+
+	api.on(DidUpdateProvidersType, ({ providers }) => {
+		console.warn('UPDATING PROVIDERS', providers);
+		store.dispatch(updateProviders(providers));
 	});
 
 	api.on(HostDidChangeConfigNotificationType, configs =>

@@ -853,6 +853,7 @@ class Post extends React.Component {
 }
 
 const mapStateToProps = (state, props) => {
+
 	const { capabilities, context, users } = state;
 
 	// TODO: figure out a way to do this elsewhere
