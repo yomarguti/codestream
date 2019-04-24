@@ -1,6 +1,8 @@
 "use strict";
 import fetch, { RequestInit, Response } from "node-fetch";
 import {
+	ConfigureThirdPartyProviderRequest,
+	ConnectThirdPartyProviderRequest,
 	CreateThirdPartyCardRequest,
 	CreateThirdPartyCardResponse,
 	FetchAssignableUsersRequest,
@@ -20,6 +22,7 @@ import { Functions, Strings } from "../system";
 export interface ThirdPartyProvider {
 	readonly name: string;
 	connect(): Promise<void>;
+	configure(request: ConnectThirdPartyProviderRequest): Promise<void>;
 	disconnect(): Promise<void>;
 	getConfig(): ThirdPartyProviderConfig;
 	getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse>;
@@ -53,17 +56,22 @@ export abstract class ThirdPartyProviderBase<
 	constructor(
 		public readonly session: CodeStreamSession,
 		protected readonly providerConfig: ThirdPartyProviderConfig
-	) {
-	}
+	) {}
 
 	abstract get displayName(): string;
 	abstract get name(): string;
 	abstract get headers(): { [key: string]: string };
-	abstract async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse>;
-	abstract async getAssignableUsers(request: FetchAssignableUsersRequest): Promise<FetchAssignableUsersResponse>;
-	abstract async createCard(request: CreateThirdPartyCardRequest): Promise<CreateThirdPartyCardResponse>;
+	abstract async getBoards(
+		request: FetchThirdPartyBoardsRequest
+	): Promise<FetchThirdPartyBoardsResponse>;
+	abstract async getAssignableUsers(
+		request: FetchAssignableUsersRequest
+	): Promise<FetchAssignableUsersResponse>;
+	abstract async createCard(
+		request: CreateThirdPartyCardRequest
+	): Promise<CreateThirdPartyCardResponse>;
 
-	get apiPath () {
+	get apiPath() {
 		return "";
 	}
 
@@ -104,6 +112,32 @@ export abstract class ThirdPartyProviderBase<
 	}
 
 	protected async onConnected() {}
+
+	async configure(request: ConfigureThirdPartyProviderRequest) {
+		void (await this.session.api.configureThirdPartyProvider({
+			providerId: this.providerConfig.id,
+			host: request.host,
+			token: request.token
+		}));
+		this._providerInfo = await new Promise<TProviderInfo>(resolve => {
+			this.session.api.onDidReceiveMessage(e => {
+				if (e.type !== MessageType.Users) return;
+
+				const me = e.data.find(u => u.id === this.session.userId) as CSMe | null | undefined;
+				if (me == null) return;
+
+				const providerInfo = this.getProviderInfo(me);
+				if (providerInfo == null) return;
+
+				resolve(providerInfo);
+			});
+		});
+
+		this._readyPromise = this.onConnected();
+		await this._readyPromise;
+	}
+
+	protected async onConfigured() {}
 
 	async disconnect() {
 		void (await this.session.api.disconnectThirdPartyProvider({

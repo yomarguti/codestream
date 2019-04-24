@@ -28,6 +28,21 @@ export const ConnectThirdPartyProviderRequestType = new RequestType<
 	void
 >("codestream/provider/connect");
 
+export interface ConfigureThirdPartyProviderRequest {
+	providerId: string;
+	host: string;
+	token: string;
+}
+
+export interface ConfigureThirdPartyProviderResponse {}
+
+export const ConfigureThirdPartyProviderRequestType = new RequestType<
+	ConfigureThirdPartyProviderRequest,
+	ConfigureThirdPartyProviderResponse,
+	void,
+	void
+>("codestream/provider/configure");
+
 export interface DisconnectThirdPartyProviderRequest {
 	providerId: string;
 }

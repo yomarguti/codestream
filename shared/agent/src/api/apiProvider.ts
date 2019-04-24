@@ -7,6 +7,7 @@ import {
 	Capabilities,
 	CloseStreamRequest,
 	CloseStreamResponse,
+	ConfigureThirdPartyProviderResponse,
 	ConnectionStatus,
 	CreateChannelStreamRequest,
 	CreateChannelStreamResponse,
@@ -321,16 +322,14 @@ export interface ApiProvider {
 	getUser(request: GetUserRequest): Promise<GetUserResponse>;
 	inviteUser(request: InviteUserRequest): Promise<InviteUserResponse>;
 
-	connectThirdPartyProvider(request: {
+	connectThirdPartyProvider(request: { providerId: string }): Promise<{ code: string }>;
+	configureThirdPartyProvider(request: {
 		providerId: string;
-	}): Promise<{ code: string }>;
-	disconnectThirdPartyProvider(request: {
-		providerId: string;
+		host: string;
+		token: string;
 	}): Promise<void>;
-	refreshThirdPartyProvider(request: {
-		providerId: string;
-		refreshToken: string;
-	}): Promise<CSMe>;
+	disconnectThirdPartyProvider(request: { providerId: string }): Promise<void>;
+	refreshThirdPartyProvider(request: { providerId: string; refreshToken: string }): Promise<CSMe>;
 }
 
 export interface CodeStreamApiMiddlewareContext {

@@ -2200,15 +2200,17 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
-	disconnectThirdPartyProvider(request: { providerId: string; }) {
+	configureThirdPartyProvider(request: { providerId: string; host: string; token: string }) {
+		return this._codestream.configureThirdPartyProvider(request);
+	}
+
+	@log()
+	disconnectThirdPartyProvider(request: { providerId: string }) {
 		return this._codestream.disconnectThirdPartyProvider(request);
 	}
 
 	@log()
-	refreshThirdPartyProvider(request: {
-		providerId: string;
-		refreshToken: string;
-	}): Promise<CSMe> {
+	refreshThirdPartyProvider(request: { providerId: string; refreshToken: string }): Promise<CSMe> {
 		return this._codestream.refreshThirdPartyProvider(request);
 	}
 

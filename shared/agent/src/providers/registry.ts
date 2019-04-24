@@ -1,5 +1,8 @@
 "use strict";
 import {
+	ConfigureThirdPartyProviderRequest,
+	ConfigureThirdPartyProviderRequestType,
+	ConfigureThirdPartyProviderResponse,
 	ConnectThirdPartyProviderRequest,
 	ConnectThirdPartyProviderRequestType,
 	ConnectThirdPartyProviderResponse,
@@ -42,6 +45,20 @@ export class ThirdPartyProviderRegistry {
 		}
 
 		await provider.connect();
+		return {};
+	}
+
+	@log()
+	@lspHandler(ConfigureThirdPartyProviderRequestType)
+	async configure(
+		request: ConfigureThirdPartyProviderRequest
+	): Promise<ConfigureThirdPartyProviderResponse> {
+		const provider = getProvider(request.providerId);
+		if (provider === undefined) {
+			throw new Error(`No registered provider for '${request.providerId}'`);
+		}
+
+		await provider.configure(request);
 		return {};
 	}
 

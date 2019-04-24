@@ -1,6 +1,7 @@
 "use strict";
 import HttpsProxyAgent from "https-proxy-agent";
 import fetch, { Headers, RequestInit, Response } from "node-fetch";
+import { hostname } from "os";
 import { URLSearchParams } from "url";
 import { Emitter, Event } from "vscode-languageserver";
 import { ServerError } from "../../agentError";
@@ -1016,9 +1017,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async connectThirdPartyProvider(request: {
-		providerId: string;
-	}) {
+	async connectThirdPartyProvider(request: { providerId: string }) {
 		const cc = Logger.getCorrelationContext();
 		try {
 			const provider = getProvider(request.providerId);
@@ -1047,16 +1046,39 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async disconnectThirdPartyProvider(request: {
-		providerId: string
-	}) {
+	async configureThirdPartyProvider(request: { providerId: string; host: string; token: string }) {
 		const cc = Logger.getCorrelationContext();
 		try {
 			const provider = getProvider(request.providerId);
 			if (!provider) throw new Error(`provider ${request.providerId} not found`);
 			const providerConfig = provider.getConfig();
 
-			const params: { teamId: string, host?: string } = {
+			const params: { teamId: string; host: string; token: string } = {
+				teamId: this.teamId,
+				host: request.host,
+				token: request.token
+			};
+
+			void (await this.put<{ teamId: string; host: string; token: string }, {}>(
+				`/provider-set-token/${providerConfig.name}`,
+				params,
+				this._token
+			));
+		} catch (ex) {
+			Logger.error(ex, cc);
+			throw ex;
+		}
+	}
+
+	@log()
+	async disconnectThirdPartyProvider(request: { providerId: string }) {
+		const cc = Logger.getCorrelationContext();
+		try {
+			const provider = getProvider(request.providerId);
+			if (!provider) throw new Error(`provider ${request.providerId} not found`);
+			const providerConfig = provider.getConfig();
+
+			const params: { teamId: string; host?: string } = {
 				teamId: this.teamId
 			};
 			if (providerConfig.isEnterprise) {
@@ -1068,8 +1090,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 				params,
 				this._token
 			));
-		}
-		catch (ex) {
+		} catch (ex) {
 			Logger.error(ex, cc);
 			throw ex;
 		}
