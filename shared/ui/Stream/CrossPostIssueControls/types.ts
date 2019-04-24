@@ -11,6 +11,8 @@ export type CrossPostIssueValuesListener = (values: CardValues) => any;
 export interface ProviderDisplay {
 	displayName: string;
 	icon?: string;
+	hostPlaceholder?: string;
+	getUrl?: string;
 }
 
 export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
@@ -20,6 +22,11 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 	gitlab: { displayName: "GitLab", icon: "gitlab" },
 	jira: { displayName: "Jira", icon: "jira" },
 	trello: { displayName: "Trello", icon: "trello" },
-	youtrack: { displayName: "YouTrack", icon: "youtrack" },
+	youtrack: {
+		displayName: "YouTrack",
+		icon: "youtrack",
+		hostPlaceholder: "https://acme.youtrack.com",
+		getUrl: "https://www.jetbrains.com/youtrack/download/get_youtrack.html"
+	},
 	slack: { displayName: "Slack", icon: "slack" }
 };

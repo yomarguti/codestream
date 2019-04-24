@@ -100,7 +100,7 @@ export class SimpleCreateChannelPanel extends Component {
 							</div>
 							<div id="name-controls" className="control-group">
 								<label>Channel Name</label>
-								<Tooltip title={tooltipTitle} placement="bottom" delay=".5">
+								<Tooltip title={tooltipTitle} placement="bottom" delay={0.5}>
 									<input
 										className="native-key-bindings input-text control"
 										type="text"

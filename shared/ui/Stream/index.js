@@ -20,6 +20,7 @@ import Menu from "./Menu";
 import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
+import ConfigureProviderPanel from "./ConfigureProviderPanel";
 import * as actions from "./actions";
 import { editCodemark } from "../store/codemarks/actions";
 import { isInVscode, safe, toMapBy, forceAsLine } from "../utils";
@@ -346,17 +347,31 @@ export class SimpleStream extends Component {
 			const display = PROVIDER_MAPPINGS[name];
 			if (
 				display &&
-				!enterpriseOnly && 
+				// !enterpriseOnly &&
 				provider.hasIssues
 			) {
 				const displayName = isEnterprise ? `${display.displayName} - ${host}` : display.displayName;
 				const isConnected = this.isConnectedToProvider(provider);
+
+				console.log("ADDING: ", providerId, " as enterprise? ", enterpriseOnly);
+
 				if (isConnected) {
+					// if you have a token and are connected to the provider,
+					// offer to disconnect
 					menuItems.push({
 						label: `Disconnect ${displayName}`,
 						action: `disconnect-${providerId}`
 					});
+				} else if (enterpriseOnly) {
+					// otherwise, if it's an enterprise provider such as on-prem
+					// then we need to configure it with a host, and possibly
+					// a permanent token (in the case of youtrack)
+					menuItems.push({
+						label: `Connect to ${displayName}`,
+						action: `configure-${providerId}`
+					});
 				} else {
+					// otherwise it's just a simple oauth redirect
 					menuItems.push({
 						label: `Connect to ${displayName}`,
 						action: `connect-${providerId}`
@@ -628,9 +643,13 @@ export class SimpleStream extends Component {
 		const textEditorUri = this.state.textEditorUri || this.props.textEditorUri;
 
 		// these panels do not have global nav
-		let renderNav = !["create-channel", "create-dm", "public-channels", "invite"].includes(
-			activePanel
-		);
+		let renderNav = ![
+			"create-channel",
+			"create-dm",
+			"public-channels",
+			"invite",
+			"configure-provider"
+		].includes(activePanel);
 		// if (this.state.floatCompose) renderNav = false;
 		// if (threadId) renderNav = false;
 
@@ -722,6 +741,9 @@ export class SimpleStream extends Component {
 							setActivePanel={this.setActivePanel}
 							isSlackTeam={this.props.isSlackTeam}
 						/>
+					)}
+					{activePanel === "configure-provider" && (
+						<ConfigureProviderPanel providerId={this.state.configureProviderId} />
 					)}
 					{activePanel === "main" && (
 						<div className={mainPanelClass}>
@@ -928,11 +950,17 @@ export class SimpleStream extends Component {
 
 	menuAction = arg => {
 		this.setState({ menuOpen: false });
-		// if (arg) this.setCommentType(arg);
-		if (arg && arg.startsWith("connect-")) {
+
+		if (!arg) return;
+
+		if (arg.startsWith("connect-")) {
 			const providerId = arg.split("connect-")[1];
 			return this.props.connectProvider(providerId, true);
-		} else if (arg && arg.startsWith("disconnect-")) {
+		} else if (arg.startsWith("configure-")) {
+			const providerId = arg.split("configure-")[1];
+			this.setState({ configureProviderId: providerId });
+			return this.setActivePanel("configure-provider");
+		} else if (arg.startsWith("disconnect-")) {
 			const providerId = arg.split("disconnect-")[1];
 			return this.props.disconnectProvider(providerId, true);
 		}

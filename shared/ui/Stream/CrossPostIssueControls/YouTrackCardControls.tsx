@@ -85,7 +85,7 @@ export default class YouTrackCardControls extends React.Component<Props, State> 
 	};
 
 	render() {
-		const { board/*, issueType*/ } = this.state;
+		const { board /*, issueType*/ } = this.state;
 		const { provider } = this.props;
 		//const issueTypeItems = board ? board.issueTypes.map(it => ({ label: it, action: it })) : [];
 		const boardItems = this.props.boards.map(board => ({
@@ -94,9 +94,10 @@ export default class YouTrackCardControls extends React.Component<Props, State> 
 			action: board
 		}));
 		const providerDisplay = PROVIDER_MAPPINGS[provider.name];
-		const displayName = provider.isEnterprise
-			? `${providerDisplay.displayName} - ${provider.host}`
-			: providerDisplay.displayName;
+		const displayName =
+			false && provider.isEnterprise
+				? `${providerDisplay.displayName} - ${provider.host}`
+				: providerDisplay.displayName;
 		return (
 			<div className="checkbox-row" onClick={this.toggleCrossPostIssue}>
 				<input type="checkbox" checked={this.state.isEnabled} />

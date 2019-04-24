@@ -1,5 +1,6 @@
 import {
 	ConnectThirdPartyProviderRequestType,
+	ConfigureThirdPartyProviderRequestType,
 	DisconnectThirdPartyProviderRequestType,
 	TelemetryRequestType,
 	ThirdPartyProviderConfig
@@ -112,9 +113,35 @@ export const connectProvider = (providerId: string, fromMenu = false) => async (
 			eventName: "Issue Service Connected",
 			properties: {
 				Service: provider.name,
-				Host: isEnterprise ? provider.host : null,  
+				Host: isEnterprise ? provider.host : null,
 				Connection: "On",
 				"Connection Location": fromMenu ? "Global Nav" : "Compose Modal"
+			}
+		});
+		if (provider.hasIssues) {
+			return dispatch(setIssueProvider(providerId));
+		}
+	} catch (error) {
+		logError(`Failed to connect ${provider.name}: ${error}`);
+	}
+};
+
+export const configureProvider = (providerId: string, host: string, token: string) => async (
+	dispatch,
+	getState
+) => {
+	const { providers } = getState();
+	const provider = providers[providerId];
+	if (!provider) return;
+	try {
+		const api = HostApi.instance;
+		await api.send(ConfigureThirdPartyProviderRequestType, { providerId, host, token });
+		api.send(TelemetryRequestType, {
+			eventName: "Issue Service Configured",
+			properties: {
+				Service: provider.name,
+				Host: host,
+				Connection: "On"
 			}
 		});
 		if (provider.hasIssues) {
@@ -132,7 +159,7 @@ export const disconnectProvider = (providerId: string, fromMenu = false) => asyn
 	try {
 		const { providers } = getState();
 		const provider = providers[providerId];
-		if (!provider) return; 
+		if (!provider) return;
 		const api = HostApi.instance;
 		await api.send(DisconnectThirdPartyProviderRequestType, { providerId });
 		api.send(TelemetryRequestType, {
@@ -152,5 +179,5 @@ export const disconnectProvider = (providerId: string, fromMenu = false) => asyn
 	}
 };
 
-export const setIssueProvider = (providerId: string | undefined) => 
+export const setIssueProvider = (providerId: string | undefined) =>
 	action(ContextActionsType.SetIssueProvider, providerId);
