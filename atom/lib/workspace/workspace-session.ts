@@ -24,10 +24,19 @@ export enum SessionStatus {
 	SignedIn,
 }
 
+export interface SessionStatusChange {
+	current: SessionStatus;
+	previous: SessionStatus;
+}
+
 const SESSION_STATUS_CHANGED = "session-status-changed";
 
+interface EventEmissions {
+	[SESSION_STATUS_CHANGED]: SessionStatusChange;
+}
+
 export class WorkspaceSession {
-	private emitter: Emitter;
+	private emitter: Emitter<{}, EventEmissions>;
 	private session?: Session;
 	private lastUsedEmail?: string;
 	private envConfig: EnvironmentConfig;
@@ -93,19 +102,20 @@ export class WorkspaceSession {
 		this.configManager.dispose();
 	}
 
-	observeSessionStatus(callback: (status: SessionStatus) => any) {
+	observeSessionStatus(callback: (status: SessionStatus) => void) {
 		callback(this.status);
-		return this.onDidChangeSessionStatus(callback);
+		return this.onDidChangeSessionStatus(change => callback(change.current));
 	}
 
-	onDidChangeSessionStatus(callback: (status: SessionStatus) => any) {
+	onDidChangeSessionStatus(callback: (change: SessionStatusChange) => void) {
 		return this.emitter.on(SESSION_STATUS_CHANGED, callback);
 	}
 
 	private set sessionStatus(status: SessionStatus) {
 		if (this._sessionStatus !== status) {
+			const previous = this._sessionStatus;
 			this._sessionStatus = status;
-			this.emitter.emit(SESSION_STATUS_CHANGED, status);
+			this.emitter.emit(SESSION_STATUS_CHANGED, { current: status, previous });
 		}
 	}
 

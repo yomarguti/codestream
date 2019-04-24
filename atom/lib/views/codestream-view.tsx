@@ -209,12 +209,15 @@ export class CodestreamView {
 					)
 				);
 			}),
-			this.session.onDidChangeSessionStatus(status => {
-				if (status === SessionStatus.SignedOut) {
+			this.session.onDidChangeSessionStatus(change => {
+				if (
+					change.current === SessionStatus.SignedOut &&
+					change.previous !== SessionStatus.SigningIn
+				) {
 					this.sendEvent(HostDidLogoutNotificationType, {});
 					this.editorSelectionObserver && this.editorSelectionObserver.dispose();
 				}
-				if (status === SessionStatus.SignedIn) {
+				if (change.current === SessionStatus.SignedIn) {
 					this.observeWorkspace();
 				}
 			}),
