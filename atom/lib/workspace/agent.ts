@@ -128,8 +128,6 @@ abstract class AgentConnection {
 
 	protected abstract preInitialization(connection: LanguageClientConnection);
 
-	protected abstract onPrematureExit();
-
 	protected async start(initOptions: {
 		serverUrl: string;
 		email?: string;
@@ -182,10 +180,8 @@ abstract class AgentConnection {
 		});
 
 		if (response.result.error) {
-			this.stop();
-		}
-
-		this._connection.initialized();
+			await this.stop();
+		} else this._connection.initialized();
 
 		return (response as AgentInitializeResult).result;
 	}
@@ -209,10 +205,9 @@ abstract class AgentConnection {
 		});
 		agentProcess.on("disconnect", () => {
 			if (this._connection) {
-				console.error("CodeStream agent process connection disconnected prematurely");
-				this.onPrematureExit();
-				// this.stop();
+				console.warn("CodeStream agent process disconnected prematurely");
 			}
+			this.reset();
 		});
 		agentProcess.on("exit", code => {
 			if (Number(code) !== 0) {
@@ -225,21 +220,27 @@ abstract class AgentConnection {
 
 	protected async stop() {
 		if (this._connection) {
-			await this._connection.shutdown();
-			this._connection.exit();
-			this._connection.dispose();
-			this._connection = undefined;
+			try {
+				this._connection.shutdown();
+				this._connection.exit();
+			} catch (error) {}
 		}
 		if (this._agentProcess) {
-			this._agentProcess.kill();
-			this._agentProcess = undefined;
+			try {
+				this._agentProcess.kill();
+			} catch (error) {}
 		}
+		this.reset();
+	}
+
+	private reset() {
+		this._agentProcess = undefined;
+		this._connection = undefined;
 	}
 }
 
 const INITIALIZED = "initialized";
 const DATA_CHANGED = "data-changed";
-const TERMINATED = "terminated";
 
 export class CodeStreamAgent extends AgentConnection implements Disposable {
 	private emitter = new Emitter();
@@ -325,11 +326,6 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 		});
 	}
 
-	protected onPrematureExit() {
-		this.emitter.emit(TERMINATED);
-		this.dispose();
-	}
-
 	private onLogMessage = (params: LogMessageParams) => {
 		fs.appendFile(asAbsolutePath("agent.log"), `${params.message}\n`, error => {
 			if (error) console.error("CodeStream: failed to write to agent.log", error);
@@ -338,11 +334,6 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 
 	onInitialized(cb: () => void): Disposable {
 		return this.emitter.on(INITIALIZED, cb);
-	}
-
-	// TODO: reset workspace-session
-	onTerminated(cb: () => void): Disposable {
-		return this.emitter.on(TERMINATED, cb);
 	}
 
 	onDidChangeData(cb: (event: DidChangeDataNotification) => void) {
