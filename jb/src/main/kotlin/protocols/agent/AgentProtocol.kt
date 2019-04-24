@@ -1,5 +1,6 @@
 package protocols.agent
 
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import com.intellij.openapi.application.ApplicationInfo
@@ -236,13 +237,23 @@ class Codemark(
 class TextDocument(val uri: String)
 
 class Post(
-    val version: Int,
+    val version: Int?,
     val streamId: String,
     val creatorId: String,
     val mentionedUserIds: List<String>?,
-    val text: String
+    val text: String,
+    val deactivated: Boolean,
+    val hasBeenEdited: Boolean,
+    val numReplies: Int,
+    val reactions: JsonElement?
 ) {
-    val isNew get() = version <= 1
+    val isNew: Boolean get() {
+        return if (version != null) {
+            version == 1
+        } else {
+            !deactivated && !hasBeenEdited && numReplies == 0 && reactions == null
+        }
+    }
 }
 
 class Stream(

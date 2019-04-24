@@ -81,14 +81,25 @@ class NotificationComponent(val project: Project) {
 
     private suspend fun showNotification(post: Post) {
         val session = project.sessionService ?: return
-        val sender = session.getUser(post.creatorId)
-        val stream = session.getStream(post.streamId)
+        val sender = session.getUser(post.creatorId)?.username ?: "Someone"
+        val stream = session.getStream(post.streamId) ?: return
+
+        var title: String?
+        var subtitle: String?
+
+        if (stream.type != StreamType.DIRECT) {
+            title = stream.name
+            subtitle = sender
+        } else {
+            title = sender
+            subtitle = null
+        }
 
         val notification = Notification(
             "CodeStream",
             icon,
-            stream?.name,
-            sender?.username,
+            title,
+            subtitle,
             post.text,
             NotificationType.INFORMATION,
             null
