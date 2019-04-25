@@ -43,6 +43,8 @@ import { NotificationType } from "vscode-languageserver-protocol";
 import { Container } from "workspace/container";
 import {
 	BootstrapRequestType as AgentBootstrapRequestType,
+	ConnectionStatus,
+	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
 	DidChangeDocumentMarkersNotificationType,
 } from "../protocols/agent/agent.protocol";
@@ -226,7 +228,28 @@ export class CodestreamView {
 			),
 			this.session.configManager.onDidChangeWebviewConfig(changes =>
 				this.sendEvent(HostDidChangeConfigNotificationType, changes)
-			)
+			),
+			this.session.agent.onDidChangeConnectionStatus(e => {
+				switch (e.status) {
+					case ConnectionStatus.Disconnected: {
+						break;
+					}
+					case ConnectionStatus.Reconnecting: {
+						this.sendEvent(DidChangeConnectionStatusNotificationType, e);
+						break;
+					}
+					case ConnectionStatus.Reconnected: {
+						if (e.reset) {
+							this.destroy();
+							// atom.workspace.paneForURI(CODESTREAM_VIEW_URI)!.destroy();
+							atom.workspace.open(CODESTREAM_VIEW_URI);
+							break;
+						}
+						this.sendEvent(DidChangeConnectionStatusNotificationType, e);
+						break;
+					}
+				}
+			})
 		);
 
 		this.webviewReady = new Promise(resolve =>
