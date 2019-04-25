@@ -20,9 +20,9 @@ New-Module -ScriptBlock {
         }
 
         if ($BumpMajor) {
-            New-Object -TypeName System.Version -ArgumentList ($currentVersion.Major + 1), $currentVersion.Minor, $currentVersion.Build, 0
+            New-Object -TypeName System.Version -ArgumentList ($currentVersion.Major + 1), 0, 0, 0
         } elseif ($BumpMinor) {
-            New-Object -TypeName System.Version -ArgumentList $currentVersion.Major, ($currentVersion.Minor + 1), $currentVersion.Build, 0
+            New-Object -TypeName System.Version -ArgumentList $currentVersion.Major, ($currentVersion.Minor + 1), 0, 0
         } elseif ($BumpPatch) {
             New-Object -TypeName System.Version -ArgumentList $currentVersion.Major, $currentVersion.Minor, ($currentVersion.Build + 1), 0
         } elseif ($BumpBuild) {
