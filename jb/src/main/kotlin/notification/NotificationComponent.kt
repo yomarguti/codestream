@@ -86,22 +86,16 @@ class NotificationComponent(val project: Project) {
                 session.getUser(post.creatorId)?.username ?: "Someone"
             else "Someone"
         val stream = session.getStream(post.streamId) ?: return
-
-        var title: String?
-        var subtitle: String?
-
-        if (stream.type != StreamType.DIRECT) {
-            title = stream.name
-            subtitle = sender
+        val subtitle = if (stream.type != StreamType.DIRECT) {
+            "${stream.name}: $sender"
         } else {
-            title = sender
-            subtitle = null
+            sender
         }
 
         val notification = Notification(
             "CodeStream",
             icon,
-            title,
+            null,
             subtitle,
             post.text,
             NotificationType.INFORMATION,
