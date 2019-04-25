@@ -70,8 +70,8 @@ function getExtensionConfig(env) {
 					copy: [
 						{
 							// TODO: Use environment variable if exists
-							source: path.resolve(__dirname, "../codestream-lsp-agent/dist/agent.*"),
-							destination: "dist/",
+							source: path.resolve(__dirname, "../codestream-lsp-agent/dist"),
+							destination: "dist/agent",
 						},
 						// {
 						// 	source: path.resolve(__dirname, "codestream-*.info"),
