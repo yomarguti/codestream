@@ -166,6 +166,9 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		}
 
 		public void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
+			// no need to update when we're in 'spatial' view since it's not shown
+			if (_sessionService.IsCodemarksForFileVisible && _sessionService.IsWebViewVisible) return;
+
 			if (Visibility == Visibility.Hidden || Visibility == Visibility.Collapsed) return;
 
 			if (e.OldViewState.ViewportTop != e.NewViewState.ViewportTop)

@@ -22,6 +22,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Windows.Threading;
 
 public class TextViewCreationListenerDummy { }
 
@@ -276,8 +277,7 @@ namespace CodeStream.VisualStudio.UI {
 
 											var activeEditorState = _ideService?.GetActiveEditorState();
 											_codeStreamService.EditorSelectionChangedNotificationAsync(
-												wpfTextView.Properties
-													.GetProperty<string>(PropertyNames.TextViewFilePath).ToUri(),
+												wpfTextView.Properties.GetProperty<string>(PropertyNames.TextViewFilePath).ToUri(),
 												activeEditorState,
 												wpfTextView.ToVisibleRanges(),
 												wpfTextView?.TextSnapshot?.LineCount,
@@ -431,9 +431,13 @@ namespace CodeStream.VisualStudio.UI {
 				return;
 			}
 
+			var onTextViewLayoutChanged = false;
 			// get markers if it's null (first time) or we did something that isn't scrolling
 			if (!documentMarkerManager.IsInitialized() || e.TranslatedLines.Any()) {
-				documentMarkerManager.GetMarkers();
+				onTextViewLayoutChanged = documentMarkerManager.GetMarkers();
+			}
+			else if (documentMarkerManager.HasMarkers()) {
+				onTextViewLayoutChanged = true;
 			}
 
 			// don't trigger for changes that don't result in lines being added or removed
@@ -455,10 +459,13 @@ namespace CodeStream.VisualStudio.UI {
 				}
 			}
 
-			wpfTextView
-				.Properties
-				.GetProperty<List<ICodeStreamWpfTextViewMargin>>(PropertyNames.TextViewMarginProviders)
-				.OnTextViewLayoutChanged(sender, e);
+			if (onTextViewLayoutChanged) {
+				//only send this if we have markers
+				wpfTextView
+					.Properties
+					.GetProperty<List<ICodeStreamWpfTextViewMargin>>(PropertyNames.TextViewMarginProviders)
+					.OnTextViewLayoutChanged(sender, e);
+			}
 		}
 
 		class TextViewState {
