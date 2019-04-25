@@ -172,6 +172,7 @@ class EditorService(val project: Project) {
     inner class DocumentSynchronizer : DocumentListener {
         override fun documentChanged(event: DocumentEvent) {
             val agentService = project.agentService ?: return
+            if (!managedDocuments.contains(event.document)) return
             when (agentService.syncKind) {
                 TextDocumentSyncKind.Incremental -> {
                     val changesParams = DidChangeTextDocumentParams(
