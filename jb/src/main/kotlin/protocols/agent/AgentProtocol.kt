@@ -239,7 +239,7 @@ class TextDocument(val uri: String)
 class Post(
     val version: Int?,
     val streamId: String,
-    val creatorId: String,
+    val creatorId: String?,
     val mentionedUserIds: List<String>?,
     val text: String,
     val deactivated: Boolean,
