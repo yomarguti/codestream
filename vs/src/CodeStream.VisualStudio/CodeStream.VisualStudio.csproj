@@ -78,7 +78,6 @@
     <Compile Include="Commands\BookmarkShortcutRegistration.cs" />
     <Compile Include="Commands\BookmarkShortcutICommands.cs" />
     <Compile Include="Commands\BookmarkShortcutCommand.cs" />
-    <Compile Include="Commands\CommandBase.cs" />
     <Compile Include="Commands\UserCommand.cs" />
     <Compile Include="Commands\AuthenticationCommand.cs" />
     <Compile Include="Commands\WebViewDevToolsCommand.cs" />

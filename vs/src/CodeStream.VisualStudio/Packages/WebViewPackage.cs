@@ -9,6 +9,7 @@ using CodeStream.VisualStudio.UI;
 using CodeStream.VisualStudio.UI.Settings;
 using CodeStream.VisualStudio.UI.ToolWindows;
 using CodeStream.VisualStudio.Vssdk;
+using CodeStream.VisualStudio.Vssdk.Commands;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Events;
@@ -39,7 +40,6 @@ namespace CodeStream.VisualStudio.Packages {
 	[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
 	public sealed class WebViewPackage : AsyncPackage {
 		private static readonly ILogger Log = LogManager.ForContext<WebViewPackage>();
-
 		private Lazy<ICodeStreamService> _codeStreamService;
 		private ISettingsService _settingsService;
 		private IDisposable _languageServerReadyEvent;
@@ -48,8 +48,8 @@ namespace CodeStream.VisualStudio.Packages {
 		private bool _hasOpenedSolutionOnce = false;
 		private readonly object _eventLocker = new object();
 		private bool _initializedEvents;
-
 		private List<IDisposable> _disposables;
+		private List<VsCommandBase> _commands;
 
 		//protected override int QueryClose(out bool pfCanClose)
 		//{
@@ -70,64 +70,65 @@ namespace CodeStream.VisualStudio.Packages {
 		/// <returns>A task representing the async work of package initialization, or an already completed task if there is none. Do not return null from this method.</returns>
 		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
 			await base.InitializeAsync(cancellationToken, progress);
-
 			var isSolutionLoaded = await IsSolutionLoadedAsync();
-
 			if (isSolutionLoaded) {
 				OnAfterBackgroundSolutionLoadComplete();
 			}
-			
 			SolutionEvents.OnAfterBackgroundSolutionLoadComplete += OnAfterBackgroundSolutionLoadComplete;
-
-			// When initialized asynchronously, the current thread may be a background thread at this point.
-			// Do any initialization that requires the UI thread after switching to the UI thread.
-			await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-
+			_settingsService = await GetServiceAsync(typeof(SSettingsService)) as ISettingsService;
+			InitializeLogging();
 			AsyncPackageHelper.InitializePackage(GetType().Name);
 
+			await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeCommandsAsync);
+		}
+
+		private async System.Threading.Tasks.Task InitializeCommandsAsync() {
+			var userCommand = new UserCommand();
+			_commands = new List<VsCommandBase> {
 #if DEBUG
-			// only show this command locally
-			await WebViewDevToolsCommand.InitializeAsync(this);
+				new WebViewDevToolsCommand(),
 #endif
-			await WebViewToggleCommand.InitializeAsync(this);
-			await AuthenticationCommand.InitializeAsync(this);
-			await UserCommand.InitializeAsync(this);
-			await AddCodemarkCommentCommand.InitializeAsync(this);
-			await AddCodemarkIssueCommand.InitializeAsync(this);
-			await AddCodemarkBookmarkCommand.InitializeAsync(this);
-			await AddCodemarkPermalinkCommand.InitializeAsync(this);
-			await AddCodemarkPermalinkInstantCommand.InitializeAsync(this);
-			await WebViewReloadCommand.InitializeAsync(this);
+				new AddCodemarkCommentCommand(),
+				new AddCodemarkIssueCommand(),
+				new AddCodemarkBookmarkCommand(),
+				new AddCodemarkPermalinkCommand(),
+				new AddCodemarkPermalinkInstantCommand(),
+				new WebViewReloadCommand(),
+				new WebViewToggleCommand(this),
+				new AuthenticationCommand(this),
+				userCommand
+			};
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			await BookmarkShortcutRegistration.InitializeAllAsync(this);
 			await InfoBarProvider.InitializeAsync(this);
+			var menuCommandService = (IMenuCommandService)(await GetServiceAsync(typeof(IMenuCommandService)));
+			foreach (var command in _commands) {
+				menuCommandService.AddCommand(command);
+			}
+			await BookmarkShortcutRegistration.InitializeAllAsync(this);
 
-			var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
-
-			_disposables = new List<IDisposable>
-			{
+			var eventAggregator = await GetServiceAsync(typeof(SEventAggregator)) as IEventAggregator;
+			_disposables = new List<IDisposable> {
 				//when a user has logged in/out we alter the text of some of the commands
-				eventAggregator?.GetEvent<SessionReadyEvent>().Subscribe(_ =>
-				{
-					ThreadHelper.JoinableTaskFactory.Run(async delegate
-					{
+				eventAggregator?.GetEvent<SessionReadyEvent>().Subscribe(_ => {
+					ThreadHelper.JoinableTaskFactory.Run(async delegate {
 						await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-						var commandService = await GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
-						var command = commandService?.FindCommand(new CommandID(PackageGuids.guidWebViewPackageCmdSet,  PackageIds.UserCommandId));
-						UserCommand.Instance.DynamicTextCommand_BeforeQueryStatus(command, null);
+						userCommand.TriggerChange();
 					});
 				}),
-				eventAggregator?.GetEvent<SessionLogoutEvent>().Subscribe(_ =>
-				{
-					ThreadHelper.JoinableTaskFactory.Run(async delegate
-					{
+				eventAggregator?.GetEvent<SessionLogoutEvent>().Subscribe(_ => {
+					ThreadHelper.JoinableTaskFactory.Run(async delegate {
 						await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-						var commandService = await GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
-						var command = commandService?.FindCommand(new CommandID(PackageGuids.guidWebViewPackageCmdSet, PackageIds.UserCommandId));
-						UserCommand.Instance.DynamicTextCommand_BeforeQueryStatus(command, null);
+						userCommand.TriggerChange();
 					});
 				})
 			};
+		}
+
+		void InitializeLogging() {
+			if (_settingsService != null && _settingsService.TraceLevel != TraceLevel.Silent) {
+				LogManager.SetTraceLevel(_settingsService.TraceLevel);
+			}
 		}
 
 		/// <summary>
@@ -138,9 +139,8 @@ namespace CodeStream.VisualStudio.Packages {
 		private async Task<bool> IsSolutionLoadedAsync() {
 			await JoinableTaskFactory.SwitchToMainThreadAsync();
 			var solService = await GetServiceAsync(typeof(SVsSolution)) as IVsSolution;
-
+			if (solService == null) return false;
 			ErrorHandler.ThrowOnFailure(solService.GetProperty((int)__VSPROPID.VSPROPID_IsSolutionOpen, out object value));
-
 			return value is bool isSolOpen && isSolOpen;
 		}
 
@@ -226,10 +226,8 @@ namespace CodeStream.VisualStudio.Packages {
 			if (args.PropertyName == nameof(_settingsService.TraceLevel)) {
 				LogManager.SetTraceLevel(_settingsService.TraceLevel);
 			}
-			else if (
-				args.PropertyName == nameof(_settingsService.ShowAvatars) ||
-				args.PropertyName == nameof(_settingsService.ShowMarkerGlyphs)
-				) {
+			else if (args.PropertyName == nameof(_settingsService.ShowAvatars) ||
+				args.PropertyName == nameof(_settingsService.ShowMarkerGlyphs)) {
 				var odp = sender as OptionsDialogPage;
 				if (odp == null) return;
 
@@ -262,7 +260,6 @@ namespace CodeStream.VisualStudio.Packages {
 
 		private async System.Threading.Tasks.Task OnSolutionLoadedInitialAsync() {
 			await OnSolutionLoadedAlwaysAsync();
-			_settingsService = await GetServiceAsync(typeof(SSettingsService)) as ISettingsService;
 			if (_settingsService != null) {
 				_settingsService.DialogPage.PropertyChanged += DialogPage_PropertyChanged;
 			}

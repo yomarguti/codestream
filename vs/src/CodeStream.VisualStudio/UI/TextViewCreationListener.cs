@@ -133,49 +133,49 @@ namespace CodeStream.VisualStudio.UI {
 		/// </summary>
 		/// <param name="textViewAdapter"></param>
 		public void VsTextViewCreated(IVsTextView textViewAdapter) {
-			var wpfTextView = EditorAdaptersFactoryService.GetWpfTextView(textViewAdapter);
-			if (wpfTextView == null || !wpfTextView.Roles.ContainsAll(TextViewRoles.DefaultRoles)) return;
+			try {
+				var wpfTextView = EditorAdaptersFactoryService.GetWpfTextView(textViewAdapter);
+				if (wpfTextView == null || !wpfTextView.Roles.ContainsAll(TextViewRoles.DefaultRoles)) return;
 
-			// find all of our textView margin providers (they should already have been created at this point)
-			var textViewMarginProviders = TextViewMarginProviders
-				 .Where(_ => _ as ICodeStreamMarginProvider != null)
-				 .Select(_ => (_ as ICodeStreamMarginProvider)?.TextViewMargin)
-				 .Where(_ => _ != null)
-				 .ToList();
+				// find all of our textView margin providers (they should already have been created at this point)
+				var textViewMarginProviders = TextViewMarginProviders
+					.Where(_ => _ as ICodeStreamMarginProvider != null)
+					.Select(_ => (_ as ICodeStreamMarginProvider)?.TextViewMargin)
+					.Where(_ => _ != null)
+					.ToList();
 
-			if (!textViewMarginProviders.AnySafe()) {
-				Log.Warning($"No {nameof(textViewMarginProviders)}");
-				return;
-			}
+				if (!textViewMarginProviders.AnySafe()) {
+					Log.Warning($"No {nameof(textViewMarginProviders)}");
+					return;
+				}
 
-			using (Log.CriticalOperation($"{nameof(VsTextViewCreated)}")) {
-				wpfTextView.Properties.AddProperty(PropertyNames.TextViewMarginProviders, textViewMarginProviders);
-				Debug.Assert(_eventAggregator != null, nameof(_eventAggregator) + " != null");
+				using (Log.CriticalOperation($"{nameof(VsTextViewCreated)}")) {
+					wpfTextView.Properties.AddProperty(PropertyNames.TextViewMarginProviders, textViewMarginProviders);
+					Debug.Assert(_eventAggregator != null, nameof(_eventAggregator) + " != null");
 
-				var visibleRangesSubject = new Subject<HostDidChangeEditorVisibleRangesNotificationSubject>();
-				//listening on the main thread since we have to change the UI state
-				wpfTextView.Properties.AddProperty(PropertyNames.TextViewEvents, new List<IDisposable> {
-					_eventAggregator.GetEvent<SessionReadyEvent>()
+					var visibleRangesSubject = new Subject<HostDidChangeEditorVisibleRangesNotificationSubject>();
+					//listening on the main thread since we have to change the UI state
+					var disposables = new List<IDisposable>();
+					disposables.Add(_eventAggregator.GetEvent<SessionReadyEvent>()
+							.ObserveOnDispatcher()
+							.Subscribe(_ => {
+								Log.Verbose(
+									$"{nameof(VsTextViewCreated)} SessionReadyEvent Session IsReady={_sessionService.IsReady}");
+								if (_sessionService.IsReady) {
+									OnSessionReady(wpfTextView);
+								}
+							}));
+
+					disposables.Add(_eventAggregator.GetEvent<SessionLogoutEvent>()
 						.ObserveOnDispatcher()
-						.Subscribe(_ => {
-							Log.Verbose(
-								$"{nameof(VsTextViewCreated)} SessionReadyEvent Session IsReady={_sessionService.IsReady}");
-							if (_sessionService.IsReady) {
-								OnSessionReady(wpfTextView);
-							}
-						}),
-					_eventAggregator.GetEvent<SessionLogoutEvent>()
+						.Subscribe(_ => OnSessionLogout(wpfTextView, textViewMarginProviders)));
+					disposables.Add(_eventAggregator.GetEvent<MarkerGlyphVisibilityEvent>()
 						.ObserveOnDispatcher()
-						.Subscribe(_ => OnSessionLogout(wpfTextView, textViewMarginProviders)),
-					_eventAggregator.GetEvent<MarkerGlyphVisibilityEvent>()
-						.ObserveOnDispatcher()
-						.Subscribe(_ => textViewMarginProviders.Toggle(_.IsVisible)),
-					visibleRangesSubject.Throttle(TimeSpan.FromMilliseconds(10))
+						.Subscribe(_ => textViewMarginProviders.Toggle(_.IsVisible)));
+					disposables.Add(visibleRangesSubject.Throttle(TimeSpan.FromMilliseconds(10))
 						.Subscribe(e => {
 							try {
-								if (e.WpfTextView.InLayout || e.WpfTextView.IsClosed) {
-									return;
-								}
+								if (e.WpfTextView.InLayout || e.WpfTextView.IsClosed) return;
 
 								_codeStreamService.WebviewIpc?.NotifyAsync(
 									new HostDidChangeEditorVisibleRangesNotificationType {
@@ -190,21 +190,27 @@ namespace CodeStream.VisualStudio.UI {
 							catch (Exception ex) {
 								Log.Error(ex, "visibleRangeSubject");
 							}
-						})
-				});
+						}));
 
-				wpfTextView.Properties.AddProperty(PropertyNames.HostDidChangeEditorVisibleRangesNotificationSubject, visibleRangesSubject);
+					wpfTextView.Properties.AddProperty(PropertyNames.TextViewEvents, disposables);
+					wpfTextView.Properties.AddProperty(
+						PropertyNames.HostDidChangeEditorVisibleRangesNotificationSubject,
+						visibleRangesSubject);
 
-				Log.Verbose($"{nameof(VsTextViewCreated)} Session IsReady={_sessionService.IsReady}");
+					Log.Verbose($"{nameof(VsTextViewCreated)} Session IsReady={_sessionService.IsReady}");
 
-				if (_sessionService.IsReady) {
-					OnSessionReady(wpfTextView);
+					if (_sessionService.IsReady) {
+						OnSessionReady(wpfTextView);
+					}
+					else {
+						textViewMarginProviders.Hide();
+					}
+
+					ChangeActiveEditor(wpfTextView);
 				}
-				else {
-					textViewMarginProviders.Hide();
-				}
-
-				ChangeActiveEditor(wpfTextView);
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(VsTextViewCreated));
 			}
 		}
 

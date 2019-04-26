@@ -2,8 +2,6 @@
 using CodeStream.VisualStudio.Core.Logging.Enrichers;
 #endif
 using CodeStream.VisualStudio.Core.Logging.Sanitizer;
-using CodeStream.VisualStudio.Services;
-using Microsoft.VisualStudio.Shell;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
@@ -20,17 +18,12 @@ namespace CodeStream.VisualStudio.Core.Logging {
 #if DEBUG
 		private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Verbose;
 #else
-        private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Warning;
+        private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Verbose;
 #endif
 
 		private static LoggingLevelSwitch _loggingLevelSwitch;
 		private static ILogger CreateLogger() {
 			try {
-				var packageSettings = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
-				if (packageSettings != null && packageSettings.TraceLevel != TraceLevel.Silent) {
-					_defaultLoggingLevel = FromTraceLevel(packageSettings.TraceLevel);
-				}
-
 				_loggingLevelSwitch = new LoggingLevelSwitch(_defaultLoggingLevel);
 
 				var logPath = Path.Combine(Application.LogPath, "vs-extension.log");

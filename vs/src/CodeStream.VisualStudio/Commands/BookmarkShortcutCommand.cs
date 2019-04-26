@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.Shell;
 using Serilog;
 
 namespace CodeStream.VisualStudio.Commands {
-	public class BookmarkShortcutCommand : CommandBase {
+	public class BookmarkShortcutCommand {
 		private static readonly ILogger Log = LogManager.ForContext<BookmarkShortcutCommand>();
 
 		/// <summary>
@@ -23,7 +23,7 @@ namespace CodeStream.VisualStudio.Commands {
 		/// </summary>
 		public int CommandId { get; set; }		 
 
-		internal BookmarkShortcutCommand(AsyncPackage package, OleMenuCommandService commandService, int index, int commandId) : base(package) {
+		internal BookmarkShortcutCommand(OleMenuCommandService commandService, int index, int commandId) {
 			commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
 			
 			Index = index;
