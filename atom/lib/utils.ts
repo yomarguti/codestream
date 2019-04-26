@@ -71,8 +71,36 @@ export namespace Editor {
 	}
 
 	export function getVisibleRanges(editor: TextEditor): Range[] {
-		const [startLine, endLine] = (editor as any).getVisibleRowRange();
-		return [Range.create(startLine, 0, endLine, 0)];
+		const visibleRanges: Range[] = [];
+		const lastVisibleRow = editor.getLastVisibleScreenRow();
+		let currentRangeStart = editor.getFirstVisibleScreenRow();
+
+		for (let line = currentRangeStart; line <= lastVisibleRow; line++) {
+			if (line === lastVisibleRow) {
+				visibleRanges.push(
+					Range.create(
+						editor.bufferRowForScreenRow(currentRangeStart),
+						0,
+						editor.bufferRowForScreenRow(line),
+						editor.getApproximateLongestScreenRow()
+					)
+				);
+				break;
+			}
+
+			if (editor.isFoldedAtScreenRow(line)) {
+				visibleRanges.push(
+					Range.create(
+						editor.bufferRowForScreenRow(currentRangeStart),
+						0,
+						editor.bufferRowForScreenRow(line),
+						editor.getApproximateLongestScreenRow()
+					)
+				);
+				currentRangeStart = line + 1;
+			}
+		}
+		return visibleRanges;
 	}
 }
 

@@ -489,6 +489,10 @@ export class CodestreamView {
 				uri: Editor.getUri(editor),
 				visibleRanges: Editor.getVisibleRanges(editor),
 				selections: Editor.getCSSelections(editor),
+				metrics: {
+					lineHeight: editor.getLineHeightInPixels(),
+					fontSize: atom.config.get("editor.fontSize"),
+				},
 			};
 		}
 		this.sendEvent(HostDidChangeActiveEditorNotificationType, notification);
