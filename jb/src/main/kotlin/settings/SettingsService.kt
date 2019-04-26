@@ -2,6 +2,7 @@ package com.codestream
 
 import com.github.salomonbrys.kotson.fromJson
 import com.github.salomonbrys.kotson.set
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.generateServiceName
@@ -18,6 +19,8 @@ import protocols.agent.ProxySettings
 import protocols.agent.TraceLevel
 import protocols.webview.CodeStreamEnvironment
 import protocols.webview.Configs
+import protocols.webview.WebViewContext
+import kotlin.properties.Delegates
 
 const val INLINE_CODEMARKS = "viewCodemarksInline"
 
@@ -64,69 +67,41 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
         _state = state
     }
 
-    private val viewCodemarksInline: Boolean
-        get() {
-            return state.webViewConfig[INLINE_CODEMARKS]?.toBoolean() ?: true
-        }
-
-    val environment: CodeStreamEnvironment
-        get() = CodeStreamEnvironment.PROD
+    private val viewCodemarksInline get() = state.webViewConfig[INLINE_CODEMARKS]?.toBoolean() ?: true
+    val environment get() = CodeStreamEnvironment.PROD
     val environmentVersion: String
-        get() = PluginManager.getPlugin(PluginId.findId("com.codestream.jetbrains-codestream"))!!.version
-    val extensionInfo: Extension
-        get() {
-            return Extension(
-                environmentVersion
-            )
-        }
-    val ideInfo: Ide
-        get() = Ide()
-    val traceLevel: TraceLevel
-        get() = TraceLevel.VERBOSE
-    val isDebugging: Boolean
-        get() = DEBUG
-    var currentStreamId: String? = null
-    var threadId: String? = null
-
-    val team
-        get() = state.team
-
-    val autoHideMarkers
-        get() = state.autoHideMarkers
-
+        get() = PluginManager.getPlugin(
+            PluginId.findId("com.codestream.jetbrains-codestream")
+        )!!.version
+    val extensionInfo get() = Extension(environmentVersion)
+    val ideInfo get() = Ide()
+    val traceLevel get() = TraceLevel.VERBOSE
+    val isDebugging get() = DEBUG
+    val currentStreamId get() = webViewContext?.currentStreamId
+    val threadId get() = webViewContext?.threadId
+    val team get() = state.team
+    val autoHideMarkers get() = state.autoHideMarkers
     val showMarkers get() = state.showMarkers
-
-    val proxyUrl: String?
-        get() = if (state.proxyUrl.isNotEmpty()) state.proxyUrl else null
-
     val proxySupport get() = state.proxySupport
     val notifications get() = state.notifications
 
-    var webViewContext: JsonObject
-        get() {
-            var jsonObject = gson.fromJson<JsonObject>(state.webViewContext)
-            project.sessionService?.userLoggedIn?.team?.id.let {
-                jsonObject["currentTeamId"] = it
-            }
-            jsonObject["hasFocus"] = true
-            return jsonObject
-        }
-        set(jsonObject) {
-            state.webViewContext = jsonObject.toString()
-        }
+    var webViewContext by Delegates.observable<WebViewContext?>(null) { _, _, new ->
+        _webViewContextObservers.forEach { it(new) }
+    }
 
-    fun getWebviewConfigs(): Configs = Configs(
-        state.serverUrl,
-        state.email,
-        state.avatars,
-        viewCodemarksInline,
-        state.muteAll,
-        isDebugging,
-        state.showFeedbackSmiley
-    )
+    val webViewConfigs
+        get() = Configs(
+            state.serverUrl,
+            state.email,
+            state.avatars,
+            viewCodemarksInline,
+            state.muteAll,
+            isDebugging,
+            state.showFeedbackSmiley
+        )
 
-    fun getEnvironmentDisplayPrefix(): String {
-        return when (state.serverUrl) {
+    val environmentDisplayPrefix
+        get() = when (state.serverUrl) {
             API_PD -> "PD:"
             API_QA -> "QA:"
             else -> if (state.serverUrl.contains("localhost")) {
@@ -135,7 +110,6 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
                 "CodeStream:"
             }
         }
-    }
 
     // 💩: I HATE THIS
     fun set(name: String, value: String?) {
@@ -169,4 +143,22 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
             state.email
         )
 
+    fun getWebViewContextJson(): JsonElement {
+        var jsonObject = gson.fromJson<JsonObject>(state.webViewContext)
+        project.sessionService?.userLoggedIn?.team?.id.let {
+            jsonObject["currentTeamId"] = it
+        }
+        jsonObject["hasFocus"] = true
+        return jsonObject
+    }
+
+    fun setWebViewContextJson(json: JsonElement) {
+        state.webViewContext = json.toString()
+        webViewContext = gson.fromJson(json)
+    }
+
+    private val _webViewContextObservers = mutableListOf<(WebViewContext?) -> Unit>()
+    fun onWebViewContextChanged(observer: (WebViewContext?) -> Unit) {
+        _webViewContextObservers += observer
+    }
 }

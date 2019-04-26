@@ -35,6 +35,7 @@ import protocols.agent.DocumentMarkersParams
 import protocols.agent.DocumentMarkersResult
 import protocols.agent.GetStreamParams
 import protocols.agent.GetUserParams
+import protocols.agent.LogoutParams
 import protocols.agent.Stream
 import java.io.File
 import java.nio.file.Files
@@ -63,6 +64,10 @@ class AgentService(private val project: Project) {
     }
 
     init {
+        initAgent()
+    }
+
+    private fun initAgent() {
         try {
             logger.info("Initializing CodeStream LSP agent")
             val process = createProcess()
@@ -82,6 +87,13 @@ class AgentService(private val project: Project) {
             logger.error(e)
             e.printStackTrace()
         }
+    }
+
+    suspend fun logout() {
+        agent.logout(LogoutParams()).await()
+        agent.shutdown().await()
+        agent.exit()
+        initAgent()
     }
 
     private fun createProcess(): Process {

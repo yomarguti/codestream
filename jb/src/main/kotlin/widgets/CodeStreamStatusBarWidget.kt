@@ -45,7 +45,7 @@ class CodeStreamStatusBarWidget(val project: Project) : StatusBarWidget, StatusB
         val settingsService = project.settingsService ?: return ""
         val sessionService = project.sessionService ?: return ""
 
-        val prefix = settingsService.getEnvironmentDisplayPrefix()
+        val prefix = settingsService.environmentDisplayPrefix
 
         val userLoggedIn = sessionService.userLoggedIn ?: return "$prefix Sign in..."
         val username = if (userLoggedIn.teamsCount == 1) {

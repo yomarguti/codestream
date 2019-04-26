@@ -1,6 +1,6 @@
 package protocols.webview
 
-import com.google.gson.JsonObject
+import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
@@ -22,7 +22,7 @@ class SignedInBootstrapResponse(
     val configs: Configs,
     val env: CodeStreamEnvironment,
     val version: String,
-    val context: JsonObject,
+    val context: JsonElement,
     val editorContext: EditorContext,
     val session: UserSession
 )

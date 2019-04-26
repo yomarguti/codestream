@@ -56,7 +56,7 @@ class AuthenticationService(val project: Project) {
                 ).await()
 
                 loginResult.result.error?.let {
-                    return buildLoginErrorResponse(it)
+                    throw Exception(it)
                 }
 
                 val bootstrapFuture = agent.agent.bootstrap(BootstrapParams())
@@ -91,7 +91,7 @@ class AuthenticationService(val project: Project) {
         ).await()
 
         loginResult.result.error?.let {
-            return buildLoginErrorResponse(it)
+            throw Exception(it)
         }
 
         val bootstrapFuture = agent.agent.bootstrap(BootstrapParams())
@@ -122,7 +122,7 @@ class AuthenticationService(val project: Project) {
         ).await()
 
         loginResult.result.error?.let {
-            return buildLoginErrorResponse(it)
+            throw Exception(it)
         }
 
         if (loginResult.result.loginResponse == null) {
@@ -148,16 +148,16 @@ class AuthenticationService(val project: Project) {
         BrowserUtil.browse("${settings.state.webAppUrl}/signup?force_auth=true&signup_token=${session.signupToken}")
     }
 
-    fun logout() {
+    suspend fun logout() {
         val agent = project.agentService ?: return
         val session = project.sessionService ?: return
         val settings = project.settingsService ?: return
         val webView = project.webViewService ?: return
 
         session.logout()
-        agent.agent.logout(LogoutParams())
+        agent.logout()
         saveAccessToken(null)
-        settings.webViewContext = jsonObject()
+        settings.setWebViewContextJson(jsonObject())
         webView.reload()
     }
 
@@ -186,10 +186,10 @@ class AuthenticationService(val project: Project) {
                 true,
                 Services(false)
             ),
-            settingsService.getWebviewConfigs(),
+            settingsService.webViewConfigs,
             settingsService.environment,
             settingsService.environmentVersion,
-            settingsService.webViewContext,
+            settingsService.getWebViewContextJson(),
             editorService.getEditorContext(),
             UserSession(
                 sessionService.userLoggedIn!!.userId
@@ -216,9 +216,5 @@ class AuthenticationService(val project: Project) {
         )
     }
 
-    private fun buildLoginErrorResponse(errorMessage: String): SignedOutBootstrapResponse? {
-        project.notificationComponent?.showError("Login error", errorMessage)
-        return buildSignedOutResponse()
-    }
 }
 

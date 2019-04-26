@@ -127,11 +127,11 @@ class LoginResponse(
             ?: throw IllegalStateException("User's teams does not contains their own team")
 }
 
-class LoginState {
-    lateinit var userId: String
-    lateinit var teamId: String
-    lateinit var email: String
-}
+class LoginState(
+    val userId: String,
+    val teamId: String,
+    val email: String
+)
 
 class UserLoggedIn(val user: CSUser, val team: CSTeam, val state: LoginState, val teamsCount: Int) {
     val userId get() = state.userId
@@ -139,22 +139,20 @@ class UserLoggedIn(val user: CSUser, val team: CSTeam, val state: LoginState, va
 }
 
 class CSUser(
-    @SerializedName("_id")
-    var id: String,
-    var username: String,
-    var email: String,
+    val id: String,
+    val username: String,
+    val email: String,
     val preferences: CSPreferences
 )
 
 class CSPreferences(
-    val mutedStreams: Map<String, Boolean>
+    val mutedStreams: Map<String, Boolean>?
 )
 
-class CSTeam {
-    @SerializedName("_id")
-    lateinit var id: String
-    lateinit var name: String
-}
+class CSTeam(
+    val id: String,
+    val name: String
+)
 
 class BootstrapParams
 
@@ -247,13 +245,14 @@ class Post(
     val numReplies: Int,
     val reactions: JsonElement?
 ) {
-    val isNew: Boolean get() {
-        return if (version != null) {
-            version == 1
-        } else {
-            !deactivated && !hasBeenEdited && numReplies == 0 && reactions == null
+    val isNew: Boolean
+        get() {
+            return if (version != null) {
+                version == 1
+            } else {
+                !deactivated && !hasBeenEdited && numReplies == 0 && reactions == null
+            }
         }
-    }
 }
 
 class Stream(

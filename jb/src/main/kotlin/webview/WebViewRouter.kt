@@ -10,7 +10,6 @@ import com.github.salomonbrys.kotson.fromJson
 import com.github.salomonbrys.kotson.get
 import com.github.salomonbrys.kotson.jsonObject
 import com.github.salomonbrys.kotson.nullString
-import com.github.salomonbrys.kotson.obj
 import com.github.salomonbrys.kotson.string
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
@@ -19,7 +18,6 @@ import com.intellij.openapi.project.Project
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import protocols.webview.ContextDidChangeNotification
 import protocols.webview.EditorRangeHighlightRequest
 import protocols.webview.EditorRangeRevealRequest
 import protocols.webview.EditorRangeRevealResponse
@@ -76,7 +74,7 @@ class WebViewRouter(val project: Project) {
         val authentication = project.authenticationService ?: return
 
         val response = when (message.method) {
-            "host/bootstrap" -> authentication?.bootstrap()
+            "host/bootstrap" -> authentication.bootstrap()
             "host/login" -> {
                 _isReady = false
                 resumeReady = true
@@ -106,25 +104,8 @@ class WebViewRouter(val project: Project) {
 
     private fun contextDidChange(message: WebViewMessage) {
         if (message.params == null) return
-        val editorService = project.editorService ?: return
         val settingsService = project.settingsService ?: return
-
-        settingsService.webViewContext = message.params["context"].obj
-
-        val notification = gson.fromJson<ContextDidChangeNotification>(message.params)
-        notification.context.panelStack?.get(0)?.let {
-            if (settingsService.autoHideMarkers && settingsService.showMarkers) {
-                if (it == "codemarks-for-file") {
-                    editorService.disableMarkers()
-                } else {
-                    editorService.enableMarkers()
-                }
-            }
-        }
-        settingsService.apply {
-            currentStreamId = notification.context.currentStreamId
-            threadId = notification.context.threadId
-        }
+        settingsService.setWebViewContextJson(message.params["context"])
     }
 
     private fun configurationUpdate(message: WebViewMessage): Any {

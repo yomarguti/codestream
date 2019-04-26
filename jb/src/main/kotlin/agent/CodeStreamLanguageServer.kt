@@ -1,12 +1,14 @@
 package com.codestream.agent
 
 import com.google.gson.JsonElement
-import com.google.gson.JsonObject
-import org.eclipse.lsp4j.Range
-import org.eclipse.lsp4j.TextDocumentIdentifier
 import org.eclipse.lsp4j.jsonrpc.services.JsonRequest
 import org.eclipse.lsp4j.services.LanguageServer
-import protocols.agent.*
+import protocols.agent.BootstrapParams
+import protocols.agent.LoginParams
+import protocols.agent.LoginResult
+import protocols.agent.LogoutParams
+import protocols.agent.TextDocumentFromKeyParams
+import protocols.agent.TextDocumentFromKeyResult
 import java.util.concurrent.CompletableFuture
 
 interface CodeStreamLanguageServer : LanguageServer {

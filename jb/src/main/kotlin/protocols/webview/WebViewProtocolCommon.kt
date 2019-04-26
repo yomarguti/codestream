@@ -1,8 +1,8 @@
 package protocols.webview
 
+import com.google.gson.JsonElement
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
-import protocols.agent.GetRangeScmInfoResponse
 
 class EditorMargins(
     val top: Int,
@@ -29,10 +29,12 @@ class WebViewContext(
     val threadId: String?,
     val hasFocus: Boolean,
     val panelStack: Array<String>? = null
-)
+) {
+    val spatialViewVisible get() = panelStack?.first() == "codemarks-for-file"
+}
 
 class EditorContext(
-    val scm: GetRangeScmInfoResponse? = null,
+    val scm: JsonElement? = null,
     val activeFile: String? = null,
     val lastActiveFile: String? = null,
     val textEditorVisibleRanges: List<Range>? = null,

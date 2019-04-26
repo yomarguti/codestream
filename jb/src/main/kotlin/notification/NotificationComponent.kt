@@ -45,7 +45,7 @@ class NotificationComponent(val project: Project) {
         }
 
         val isMentioned = post.mentionedUserIds?.contains(userLoggedIn.userId) ?: false
-        val isMutedStream = userLoggedIn.user.preferences.mutedStreams[post.streamId] == true
+        val isMutedStream = userLoggedIn.user.preferences.mutedStreams?.get(post.streamId) == true
         if (isMutedStream && !isMentioned) {
             return
         }

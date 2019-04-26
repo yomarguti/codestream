@@ -16,7 +16,6 @@ typealias PostsObserver = (List<Post>) -> Unit
 class SessionService(val project: Project) {
 
     val userLoggedIn: UserLoggedIn? get() = _userLoggedIn
-    val unreads: Int get() = _unreads
     val mentions: Int get() = _mentions
 
     private val _streams = mutableMapOf<String, Stream>()
@@ -80,9 +79,6 @@ class SessionService(val project: Project) {
     fun didChangePosts(posts: List<Post>) {
         postsObservers.forEach { it(posts) }
     }
-
-    val isSignedIn: Boolean
-        get() = userLoggedIn != null
 
     val signupToken: String by lazy {
         UUID.randomUUID().toString()

@@ -1,6 +1,7 @@
 package com.codestream.editor
 
 import com.codestream.agentService
+import com.codestream.codeStream
 import com.codestream.extensions.getOffset
 import com.codestream.extensions.isRangeVisible
 import com.codestream.extensions.lspPosition
@@ -28,7 +29,6 @@ import com.intellij.openapi.editor.markup.HighlighterTargetArea
 import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
@@ -55,6 +55,7 @@ import protocols.webview.EditorContext
 import protocols.webview.EditorInformation
 import protocols.webview.EditorMetrics
 import protocols.webview.EditorSelection
+import protocols.webview.WebViewContext
 import java.awt.HeadlessException
 import java.awt.Toolkit
 import java.io.File
@@ -64,6 +65,8 @@ class EditorService(val project: Project) {
 
     init {
         project.sessionService?.onUserLoggedInChanged { updateMarkers() }
+        project.settingsService?.onWebViewContextChanged(this::onWebViewContextChanged)
+        project.codeStream?.onIsVisibleChanged(this::onCodeStreamIsVisibleChanged)
     }
 
     private val logger = Logger.getInstance(EditorService::class.java)
@@ -72,7 +75,10 @@ class EditorService(val project: Project) {
     private val managedEditors = mutableSetOf<Editor>()
     private val rangeHighlighters = mutableMapOf<Editor, MutableSet<RangeHighlighter>>()
     private val markerHighlighters = mutableMapOf<Editor, List<RangeHighlighter>>()
-    private var showMarkers = project.settingsService?.showMarkers ?: false
+    private var spatialViewActive = project.settingsService?.webViewContext?.spatialViewVisible ?: false
+    private var codeStreamVisible = project.codeStream?.isVisible ?: false
+
+
 
     fun add(editor: Editor) {
         managedEditors.add(editor)
@@ -83,7 +89,7 @@ class EditorService(val project: Project) {
 
         val document = editor.document
         synchronized(managedDocuments) {
-            if (!managedDocuments.contains(document)) {
+            if (!managedDocuments.contains(document) && document.uri != null) {
                 managedDocuments[document] = DocumentVersion()
                 project.agentService?.agent?.textDocumentService?.didOpen(
                     DidOpenTextDocumentParams(document.textDocumentItem)
@@ -92,22 +98,6 @@ class EditorService(val project: Project) {
                 document.addDocumentListener(DocumentListenerImpl(project))
             }
         }
-    }
-
-    fun disableMarkers() = ApplicationManager.getApplication().invokeLater {
-        showMarkers = false
-        markerHighlighters.forEach { editor, hs ->
-            hs.forEach { h ->
-                h.dispose()
-                editor.markupModel.removeHighlighter(h)
-            }
-        }
-        markerHighlighters.clear()
-    }
-
-    fun enableMarkers() {
-        showMarkers = true
-        updateMarkers()
     }
 
     fun remove(editor: Editor) {
@@ -121,6 +111,41 @@ class EditorService(val project: Project) {
                 managedDocuments.remove(document)
                 project.agentService?.agent?.textDocumentService?.didClose(
                     DidCloseTextDocumentParams(document.textDocumentIdentifier)
+                )
+            }
+        }
+    }
+
+    private val showMarkers: Boolean get() {
+        val settings = project.settingsService ?: return false
+        if (!settings.showMarkers) return false
+        if (codeStreamVisible && spatialViewActive && settings.autoHideMarkers) return false
+        return true
+    }
+
+    private fun onWebViewContextChanged(context: WebViewContext?) {
+        context?.let {
+            if (spatialViewActive != it.spatialViewVisible) {
+                spatialViewActive = it.spatialViewVisible
+                updateMarkers()
+            }
+        }
+    }
+
+    private fun onCodeStreamIsVisibleChanged(isVisible: Boolean) {
+        if (isVisible != codeStreamVisible) {
+            codeStreamVisible = isVisible
+            updateMarkers()
+
+            val editor = activeEditor
+            if (isVisible && editor != null) {
+                project.webViewService?.postNotification(
+                    EditorNotifications.DidChangeVisibleRanges(
+                        editor.document.uri,
+                        editor.selections,
+                        editor.visibleRanges,
+                        editor.document.lineCount
+                    )
                 )
             }
         }
@@ -241,12 +266,13 @@ class EditorService(val project: Project) {
     private fun Editor.renderMarkers(markers: List<DocumentMarker>) = ApplicationManager.getApplication().invokeLater {
         if (isDisposed) return@invokeLater
 
-        if (showMarkers) {
-            markerHighlighters[this]?.let { highlighters ->
-                highlighters.forEach { highlighter ->
-                    markupModel.removeHighlighter(highlighter)
-                }
+        markerHighlighters[this]?.let { highlighters ->
+            highlighters.forEach { highlighter ->
+                markupModel.removeHighlighter(highlighter)
             }
+        }
+
+        if (showMarkers) {
             markerHighlighters[this] = markers.map {
                 val start = getOffset(it.range.start)
                 val end = getOffset(it.range.end)
@@ -285,7 +311,7 @@ class EditorService(val project: Project) {
                 )
             }
             val notification = EditorNotifications.DidChangeActive(editorInfo)
-            project?.webViewService?.postNotification(notification)
+            project.webViewService?.postNotification(notification)
         }
 
     suspend fun getEditorContext(): EditorContext {
