@@ -181,8 +181,8 @@ namespace CodeStream.VisualStudio.UI {
 									new HostDidChangeEditorVisibleRangesNotificationType {
 										Params = new HostDidChangeEditorVisibleRangesNotification(
 											e.Uri,
-											_ideService.GetActiveEditorState()?.ToEditorSelections(),
-											e.WpfTextView.ToVisibleRanges(),
+											_ideService.GetActiveEditorState()?.ToEditorSelectionsSafe(),
+											e.WpfTextView.ToVisibleRangesSafe(),
 											e.WpfTextView.TextSnapshot?.LineCount
 										)
 									});
@@ -280,7 +280,7 @@ namespace CodeStream.VisualStudio.UI {
 											_codeStreamService.EditorSelectionChangedNotificationAsync(
 												wpfTextView.Properties.GetProperty<string>(PropertyNames.TextViewFilePath).ToUri(),
 												activeEditorState,
-												wpfTextView.ToVisibleRanges(),
+												wpfTextView.ToVisibleRangesSafe(),
 												wpfTextView?.TextSnapshot?.LineCount,
 												CodemarkType.Comment, CancellationToken.None);
 										})

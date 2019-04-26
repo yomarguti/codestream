@@ -91,8 +91,8 @@ namespace CodeStream.VisualStudio.Services {
 					Params = new HostDidChangeActiveEditorNotification {
 						Editor = new HostDidChangeActiveEditorNotificationEditor(fileName,
 						uri,
-						editorState.ToEditorSelections(),
-						activeTextEditor?.WpfTextView.ToVisibleRanges(),
+						editorState.ToEditorSelectionsSafe(),
+						activeTextEditor?.WpfTextView.ToVisibleRangesSafe(),
 						activeTextEditor?.TotalLines) {
 							Metrics = ThemeManager.CreateEditorMetrics(activeTextEditor?.WpfTextView),
 							LanguageId = null
@@ -155,7 +155,7 @@ namespace CodeStream.VisualStudio.Services {
 
 			try {
 				WebviewIpc.Notify(new HostDidChangeEditorSelectionNotificationType {
-					Params = new HostDidChangeEditorSelectionNotification(uri, editorState.ToEditorSelections(), visibleRanges, totalLines)
+					Params = new HostDidChangeEditorSelectionNotification(uri, editorState.ToEditorSelectionsSafe(), visibleRanges, totalLines)
 				});
 			}
 			catch (Exception ex) {

@@ -306,14 +306,23 @@ namespace CodeStream.VisualStudio.Services {
 
 			EditorContext editorContext = null;
 			if (activeTextEditor != null) {
-				editorContext = new EditorContext {
-					ActiveFile = activeTextEditor.FilePath,
-					TextEditorVisibleRanges = activeTextEditor.WpfTextView?.ToVisibleRanges(),
-					TextEditorUri = activeTextEditor.Uri.ToString(),
-					TextEditorSelections = editorState.ToEditorSelections(),
-					TextEditorLineCount = activeTextEditor.TotalLines,
-					Metrics = ThemeManager.CreateEditorMetrics(activeTextEditor.WpfTextView),
-				};
+
+				try {
+					editorContext = new EditorContext {
+						ActiveFile = activeTextEditor.FilePath,
+						TextEditorVisibleRanges = activeTextEditor.WpfTextView?.ToVisibleRangesSafe(),
+						TextEditorUri = activeTextEditor.Uri?.ToString(),
+						TextEditorSelections = editorState.ToEditorSelectionsSafe(),
+						TextEditorLineCount = activeTextEditor.TotalLines,
+						Metrics = ThemeManager.CreateEditorMetrics(activeTextEditor.WpfTextView),
+					};
+				}
+				catch (Exception ex) {
+					Log.Warning(ex, nameof(editorContext));
+					editorContext = new EditorContext {
+						Metrics = ThemeManager.CreateEditorMetrics()
+					};
+				}
 			}
 			else {
 				editorContext = new EditorContext {

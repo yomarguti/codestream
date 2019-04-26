@@ -8,13 +8,10 @@ using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio.Models {
 	public static class EditorStateExtensions {
-		public static List<EditorSelection> ToEditorSelections(this EditorState editorState) {
-			if (editorState == null) {
-				return null;
-			}
+		public static List<EditorSelection> ToEditorSelectionsSafe(this EditorState editorState) {
+			if (editorState == null) return null;
 
-			return new List<EditorSelection>
-			{
+			return new List<EditorSelection> {
 				new EditorSelection(editorState.Cursor, editorState.Range)
 			};
 		}

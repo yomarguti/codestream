@@ -1,87 +1,69 @@
 ﻿using CodeStream.VisualStudio.Extensions;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using CodeStream.VisualStudio.Core.Logging;
-using Microsoft.VisualStudio.Text;
-using Serilog;
 using Range = Microsoft.VisualStudio.LanguageServer.Protocol.Range;
 
-namespace CodeStream.VisualStudio.UI
-{
-    public class TextViewExtensionsDummy { }
+namespace CodeStream.VisualStudio.UI {
+	public static class TextViewExtensions {
+		public static void RemovePropertySafe(this PropertyCollection collection, string key) {
+			if (key.IsNullOrWhiteSpace() || !collection.ContainsProperty(key)) return;
 
-    public static class TextViewExtensions
-    {
-        private static readonly ILogger Log = LogManager.ForContext<TextViewExtensionsDummy>();
+			collection.RemoveProperty(key);
+		}
 
-        public static void RemovePropertySafe(this PropertyCollection collection, string key)
-        {
-            if (key.IsNullOrWhiteSpace() || !collection.ContainsProperty(key)) return;
+		public static bool TryDisposeProperty<T>(this PropertyCollection collection, string key, bool removeProperty = true)
+		where T : IDisposable {
+			if (!collection.ContainsProperty(key)) return false;
 
-            collection.RemoveProperty(key);
-        }
+			var property = collection.GetProperty<T>(key);
+			property?.Dispose();
+			;
+			if (removeProperty) {
+				collection.RemoveProperty(key);
+			}
 
-        public static bool TryDisposeProperty<T>(this PropertyCollection collection, string key, bool removeProperty = true)
-        where T : IDisposable
-        {
-            if (!collection.ContainsProperty(key)) return false;
+			return true;
+		}
 
-            var property = collection.GetProperty<T>(key);
-            property?.Dispose();
-            ;
-            if (removeProperty)
-            {
-                collection.RemoveProperty(key);
-            }
+		public static bool TryDisposeListProperty(this PropertyCollection collection, string key, bool removeProperty = true) {
+			if (!collection.ContainsProperty(key)) return false;
 
-            return true;
-        }
+			collection.GetProperty<List<IDisposable>>(key)?.DisposeAll();
+			if (removeProperty) {
+				collection.RemoveProperty(key);
+			}
 
-        public static bool TryDisposeListProperty(this PropertyCollection collection, string key, bool removeProperty = true)          
-        {
-            if (!collection.ContainsProperty(key)) return false;
+			return true;
+		}
 
-            collection.GetProperty<List<IDisposable>>(key)?.DisposeAll();
-            if (removeProperty)
-            {
-                collection.RemoveProperty(key);
-            }
+		public static List<Range> ToRanges(this IWpfTextViewLineCollection lines) {
+			return lines.Select(line => new Range { Start = new Position(line.Start.GetContainingLine().LineNumber, 0), End = new Position(line.End.GetContainingLine().LineNumber, 0) }).ToList();
+		}
 
-            return true;
-        }
+		public static List<Range> ToVisibleRangesSafe(this IWpfTextView textView) {
+			if (textView == null) return Enumerable.Empty<Range>().ToList();
+			try {
+				return textView.TextViewLines.ToRanges().Collapsed();
+			}
+			catch (Exception ex) {
+				return Enumerable.Empty<Range>().ToList();
+			}
+		}
 
-        public static List<Range> ToRanges(this IWpfTextViewLineCollection lines)
-        {
-            return lines.Select(line => new Range { Start = new Position(line.Start.GetContainingLine().LineNumber, 0), End = new Position(line.End.GetContainingLine().LineNumber, 0) }).ToList();
-        }
+		public static Placement GetGeometryPlacement(this IWpfTextView textView, SnapshotSpan span) {
+			var viewportWidth = textView.ViewportWidth;
+			var g = textView.TextViewLines.GetMarkerGeometry(span);
+			if (g == null) return new Placement(0, viewportWidth);
 
-        public static List<Range> ToVisibleRanges(this IWpfTextView textView)
-        {
-            try
-            {
-                return textView.TextViewLines.ToRanges().Collapsed();
-            }
-            catch(Exception ex)
-            {
-                Log.Warning(ex, nameof(ToVisibleRanges));
-                return Enumerable.Empty<Range>().ToList();
-            }
-        }
+			var width = g.Bounds.Width > viewportWidth || Math.Abs(g.Bounds.Width) < 0.0001
+				? viewportWidth : g.Bounds.Width;
 
-        public static Placement GetGeometryPlacement(this IWpfTextView textView, SnapshotSpan span)
-        {
-            var viewportWidth = textView.ViewportWidth;
-            var g = textView.TextViewLines.GetMarkerGeometry(span);
-            if (g == null) return new Placement(0, viewportWidth);
-
-            var width = g.Bounds.Width > viewportWidth || Math.Abs(g.Bounds.Width) < 0.0001 
-                ? viewportWidth : g.Bounds.Width;
-
-            return new Placement(g.Bounds.Left, width);
-        }
-    }
+			return new Placement(g.Bounds.Left, width);
+		}
+	}
 }
