@@ -41,5 +41,4 @@ class CopyPermalink : AnAction() {
             Notifications.Bus.notify(PERMALINK_COPIED, project)
         }
     }
-
 }

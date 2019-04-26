@@ -22,7 +22,6 @@ abstract class Bookmark(val key: Int) : AnAction() {
             }
         }
     }
-
 }
 
 class Bookmark1 : Bookmark(1)

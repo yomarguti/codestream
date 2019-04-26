@@ -12,5 +12,4 @@ class FileEditorManagerListenerImpl(val project: Project) : FileEditorManagerLis
         val textEditor = (event.newEditor as? TextEditor)
         project.editorService?.activeEditor = textEditor?.editor
     }
-
 }

@@ -78,8 +78,6 @@ class EditorService(val project: Project) {
     private var spatialViewActive = project.settingsService?.webViewContext?.spatialViewVisible ?: false
     private var codeStreamVisible = project.codeStream?.isVisible ?: false
 
-
-
     fun add(editor: Editor) {
         managedEditors.add(editor)
         rangeHighlighters[editor] = mutableSetOf()
@@ -116,12 +114,13 @@ class EditorService(val project: Project) {
         }
     }
 
-    private val showMarkers: Boolean get() {
-        val settings = project.settingsService ?: return false
-        if (!settings.showMarkers) return false
-        if (codeStreamVisible && spatialViewActive && settings.autoHideMarkers) return false
-        return true
-    }
+    private val showMarkers: Boolean
+        get() {
+            val settings = project.settingsService ?: return false
+            if (!settings.showMarkers) return false
+            if (codeStreamVisible && spatialViewActive && settings.autoHideMarkers) return false
+            return true
+        }
 
     private fun onWebViewContextChanged(context: WebViewContext?) {
         context?.let {

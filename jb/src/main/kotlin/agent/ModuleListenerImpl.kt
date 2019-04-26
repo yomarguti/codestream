@@ -41,5 +41,4 @@ class ModuleListenerImpl(project: Project) : ModuleListener {
             )
         }
     }
-
 }

@@ -60,9 +60,8 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable {
                 proxyUrl.text = it.proxyUrl
             }
         }
-        
+
         _gui = gui
         return gui.rootPanel
     }
-
 }

@@ -215,6 +215,4 @@ class AuthenticationService(val project: Project) {
             settings.environmentVersion
         )
     }
-
 }
-

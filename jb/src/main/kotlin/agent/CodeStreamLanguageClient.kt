@@ -104,7 +104,6 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
     override fun publishDiagnostics(diagnostics: PublishDiagnosticsParams?) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
-
 }
 
 class DidChangeDocumentMarkersNotification(

@@ -33,7 +33,6 @@ object EditorNotifications {
     class DidChangeActive(val editor: EditorInformation?) : WebViewNotification {
         override fun getMethod() = "webview/editor/didChangeActive"
     }
-
 }
 
 object CodemarkNotifications {

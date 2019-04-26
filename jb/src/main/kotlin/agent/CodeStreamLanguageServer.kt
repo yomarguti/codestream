@@ -24,5 +24,4 @@ interface CodeStreamLanguageServer : LanguageServer {
 
     @JsonRequest("codestream/textDocument/fromKey")
     fun textDocumentFromKey(params: TextDocumentFromKeyParams): CompletableFuture<TextDocumentFromKeyResult>
-
 }

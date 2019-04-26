@@ -128,8 +128,7 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
             messageQueue.clear()
             router.reload()
             reload()
-        }
-        else {
+        } else {
             while (messageQueue.count() > 0) {
                 val message = messageQueue.first()
                 browser.executeJavaScript("window.postMessage($message,'*');")

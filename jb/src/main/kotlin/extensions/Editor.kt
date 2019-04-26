@@ -13,7 +13,6 @@ import protocols.webview.EditorSelection
 import java.awt.Font
 import java.awt.Point
 
-
 fun Editor.getOffset(position: Position): Int {
     val line = position.line
     val lineText = document.getText(DocumentUtil.getLineTextRange(document, line))

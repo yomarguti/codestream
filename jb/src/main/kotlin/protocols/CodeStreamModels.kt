@@ -2,7 +2,6 @@ package com.codestream.models
 
 import com.google.gson.annotations.SerializedName
 
-
 enum class CodemarkType {
     @SerializedName("comment")
     COMMENT,
