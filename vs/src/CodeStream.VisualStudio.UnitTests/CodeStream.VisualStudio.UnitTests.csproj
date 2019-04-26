@@ -170,6 +170,7 @@
     <Compile Include="Services\SettingsServiceTests.cs" />
     <Compile Include="Stubs\OptionsDialogPageStub.cs" />
     <Compile Include="Stubs\CredentialsServiceStub.cs" />
+    <Compile Include="UI\Adornments\HighlightAdornmentManagerTests.cs" />
     <Compile Include="UI\TextViewCreationListenerTests.cs" />
     <Compile Include="UI\TextViewExtensionsTests.cs" />
     <Compile Include="Stubs\TextViewRoleSet.cs" />

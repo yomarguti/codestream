@@ -22,7 +22,6 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Windows.Threading;
 
 public class TextViewCreationListenerDummy { }
 
@@ -125,6 +124,7 @@ namespace CodeStream.VisualStudio.UI {
 				wpfTextView.Properties.AddProperty(PropertyNames.TextViewState, new TextViewState());
 
 				_textViewCache.Add(textDocument.FilePath, wpfTextView);
+				Log.Verbose($"{nameof(SubjectBuffersConnected)} FilePath={textDocument.FilePath}");
 			}
 		}
 
@@ -235,6 +235,7 @@ namespace CodeStream.VisualStudio.UI {
 							wpfTextView.Properties.TryDisposeProperty<Subject<HostDidChangeEditorVisibleRangesNotificationSubject>>(PropertyNames.HostDidChangeEditorVisibleRangesNotificationSubject);
 							wpfTextView.Properties.TryDisposeListProperty(PropertyNames.TextViewEvents);
 							wpfTextView.Properties.TryDisposeListProperty(PropertyNames.TextViewLocalEvents);
+							Log.Verbose($"{nameof(SubjectBuffersDisconnected)} FilePath={filePath}");
 						}
 					}
 				}

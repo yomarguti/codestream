@@ -29,33 +29,32 @@ namespace CodeStream.VisualStudio.UI.Adornments {
 
 		private readonly IAdornmentLayer _highlightAdornmentLayer;
 		private readonly IWpfTextView _textView;
-		private readonly Dictionary<int, LineInfo> _lineInfos;
+		private readonly Dictionary<int, ITextViewLine> _lineInfos;
 
 		public HighlightAdornmentManager(IWpfTextView textView) {
 			_textView = textView;
-			_lineInfos = new Dictionary<int, LineInfo>();
+			_lineInfos = new Dictionary<int, ITextViewLine>();
 			_highlightAdornmentLayer = textView.GetAdornmentLayer(TextViewCreationListener.LayerName);
 
 			textView.LayoutChanged += OnLayoutChanged;
 			//textView.ViewportWidthChanged += OnViewportWidthChanged;
 			textView.ViewportLeftChanged += OnViewportLeftChanged;
+			CreateLineInfos(_textView, _textView.TextViewLines);
 		}
 
 		public void RemoveAllHighlights() {
-			_highlightAdornmentLayer.RemoveAllAdornments();	
+			_highlightAdornmentLayer.RemoveAllAdornments();
 		}
 
 		public bool Highlight(Range range, bool highlight) {
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			if (!_lineInfos.AnySafe()) {
-				Populate(_textView, _textView.TextViewLines);
-			}
-
 			if (!highlight) {
 				_highlightAdornmentLayer.RemoveAllAdornments();
 				return false;
 			}
+
+			CreateLineInfos(_textView, _textView.TextViewLines);
 
 			try {
 				var brush = CreateBrush();
@@ -65,10 +64,9 @@ namespace CodeStream.VisualStudio.UI.Adornments {
 				var lineEnd = range.End.Line;
 
 				for (var i = range.Start.Line; i <= range.End.Line; i++) {
-					if (!_lineInfos.TryGetValue(i, out LineInfo lineInfo)) {
-#if DEBUG
+					var isInnerOrLastLine = i > range.Start.Line && i <= range.End.Line;
+					if (!_lineInfos.TryGetValue(i, out ITextViewLine lineInfo)) {
 						Log.Warning($"Could not find lineInfo for line={i}");
-#endif
 						continue;
 					}
 
@@ -76,7 +74,7 @@ namespace CodeStream.VisualStudio.UI.Adornments {
 					if (lineStart == lineEnd) {
 						//single line
 						var length = range.End.Character == int.MaxValue
-							? lineInfo.Snapshot.End.Position - lineInfo.Snapshot.Start.Position
+							? lineInfo.Extent.End.Position - lineInfo.Extent.Start.Position
 							: range.End.Character - range.Start.Character;
 						if (length == 0) {
 							//highlight whole line
@@ -84,44 +82,54 @@ namespace CodeStream.VisualStudio.UI.Adornments {
 						}
 						else {
 							placement = _textView
-								.GetGeometryPlacement(new SnapshotSpan(lineInfo.Snapshot.Snapshot, new Span(lineInfo.Snapshot.Start + range.Start.Character, length)));
+								.GetGeometryPlacement(new SnapshotSpan(lineInfo.Extent.Snapshot, new Span(lineInfo.Extent.Start + range.Start.Character, length)));
 						}
 					}
 					else {
 						if (i == lineStart) {
-							var startPosition = range.Start.Character + lineInfo.Snapshot.Start;
-							var endLength = lineInfo.Snapshot.End.Position - Math.Max(startPosition, 0);
+							var startPosition = range.Start.Character + lineInfo.Extent.Start;
+							var endLength = startPosition >= lineInfo.Extent.End.Position ?
+								1 :
+								lineInfo.Extent.End.Position - Math.Max(startPosition, 0);
 							placement = _textView
-								.GetGeometryPlacement(new SnapshotSpan(lineInfo.Snapshot.Snapshot, new Span(startPosition, endLength)));
+								.GetGeometryPlacement(new SnapshotSpan(lineInfo.Extent.Snapshot, new Span(startPosition, endLength)));
 						}
 						else if (i == lineEnd) {
 							var endLength = range.End.Character == int.MaxValue
-								? lineInfo.Snapshot.End.Position - lineInfo.Snapshot.Start.Position
+								? lineInfo.Extent.End.Position - lineInfo.Extent.Start.Position
 								: range.End.Character;
 							placement = _textView
-								.GetGeometryPlacement(new SnapshotSpan(lineInfo.Snapshot.Snapshot, new Span(lineInfo.Snapshot.Start, endLength)));
+								.GetGeometryPlacement(new SnapshotSpan(lineInfo.Extent.Snapshot, new Span(lineInfo.Extent.Start, endLength)));
 						}
 						else {
 							// some middle line
-							placement = _textView.GetGeometryPlacement(lineInfo.Snapshot);
+							placement = _textView.GetGeometryPlacement(lineInfo.Extent);
+						}
+					}
+
+					var rectangleHeight = lineInfo.TextHeight + 1.35; //buffer ;)
+					if (lineInfo.Height > rectangleHeight) {
+						// height _might_ be taller than line height because of codelenses
+						if (isInnerOrLastLine) {
+							rectangleHeight = lineInfo.Height + 0.5; //buffer :)
 						}
 					}
 
 					var element = new Rectangle {
-						Height = lineInfo.Height,
+						Height = rectangleHeight,
 						Width = placement.Width,
 						Fill = brush
 					};
 
 					Canvas.SetLeft(element, range.Start.Character == 0 ? (int)_textView.ViewportLeft : placement.Left);
-					Canvas.SetTop(element, lineInfo.Top);
+					Canvas.SetTop(element, isInnerOrLastLine ? lineInfo.Top : lineInfo.TextTop);
 
-					_highlightAdornmentLayer.AddAdornment(lineInfo.Snapshot, null, element);					
+					_highlightAdornmentLayer.AddAdornment(lineInfo.Extent, null, element);
 				}
 				return true;
 			}
 			catch (Exception ex) {
-				Log.Warning(ex, $"{range.ToString()}");
+				Log.Warning(ex, $"{range}");
 			}
 			return false;
 		}
@@ -134,30 +142,33 @@ namespace CodeStream.VisualStudio.UI.Adornments {
 			}
 
 			return brush;
-		}		
+		}
 
 		/// <summary>
 		/// Populates (or refreshes) the cache that stores all the lineInfo data.
 		/// It's stored in a dictionary for easy lookup later when highlighting
-		/// based on start/end lines is required.
+		/// based on start/end lines.
 		/// </summary>
 		/// <param name="textView"></param>
 		/// <param name="textViewLines"></param>
-		private void Populate(ITextView textView, IEnumerable<ITextViewLine> textViewLines) {
-			foreach (var line in textViewLines) {
-				// GetLineNumberFromPosition is 0-based
-				var lineNumber = textView.TextSnapshot.GetLineNumberFromPosition(line.Extent.Start.Position);
-				if (_lineInfos.ContainsKey(lineNumber)) {
-					_lineInfos.Remove(lineNumber);
-				}
+		private void CreateLineInfos(ITextView textView, IEnumerable<ITextViewLine> textViewLines) {
+			_lineInfos.Clear();
+			try {
+				if (textView.IsClosed || textViewLines == null) return;
 
-				_lineInfos.Add(lineNumber, new LineInfo(line.Height, line.Top, line.Extent));
+				foreach (var line in textViewLines) {
+					// GetLineNumberFromPosition is 0-based
+					var lineNumber = textView.TextSnapshot.GetLineNumberFromPosition(line.Extent.Start.Position);
+					_lineInfos.Add(lineNumber, line);
+				}
+			}
+			catch (Exception ex) {
+				Log.Warning(ex, nameof(CreateLineInfos));
 			}
 		}
 
 		private void OnViewportLeftChanged(object sender, EventArgs e) {
-			var textView = sender as IWpfTextView;
-			if (textView == null) return;
+			if (!(sender is IWpfTextView textView)) return;
 
 			foreach (var element in _highlightAdornmentLayer.Elements) {
 				Canvas.SetLeft((Rectangle)element.Adornment, textView.ViewportLeft);
@@ -174,14 +185,13 @@ namespace CodeStream.VisualStudio.UI.Adornments {
 		//}
 
 		private void OnLayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
-			var textView = sender as IWpfTextView;
-			if (textView == null) return;
+			if (!(sender is IWpfTextView textView)) return;
 
 			// the ITextView disposes its ITextViewLineCollection and all the ITextViewLines it
 			// contains every time it generates a new layout
 			//...so we can't cache them.
-			this._highlightAdornmentLayer.RemoveAllAdornments();
-			Populate(textView, textView.TextViewLines);
+			_highlightAdornmentLayer.RemoveAllAdornments();
+			CreateLineInfos(textView, textView.TextViewLines);
 		}
 
 		private bool _disposed = false;
@@ -195,24 +205,13 @@ namespace CodeStream.VisualStudio.UI.Adornments {
 			if (_disposed) return;
 
 			if (disposing) {
-				_textView.LayoutChanged += OnLayoutChanged;
-				// _textView.ViewportWidthChanged += OnViewportWidthChanged;
-				_textView.ViewportLeftChanged += OnViewportLeftChanged;
+				_textView.LayoutChanged -= OnLayoutChanged;
+				// _textView.ViewportWidthChanged -= OnViewportWidthChanged;
+				_textView.ViewportLeftChanged -= OnViewportLeftChanged;
+				_lineInfos.Clear();
 			}
 
 			_disposed = true;
-		}
-
-		private class LineInfo {
-			public LineInfo(double height, double top, SnapshotSpan snapshot) {
-				Height = height;
-				Top = top;
-				Snapshot = snapshot;
-			}
-
-			public double Height { get; }
-			public double Top { get; }
-			public SnapshotSpan Snapshot { get; }
 		}
 	}
 }
