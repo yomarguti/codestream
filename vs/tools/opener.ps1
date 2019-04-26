@@ -1,13 +1,21 @@
-﻿Get-Process devenv -ErrorAction SilentlyContinue | Stop-Process
+﻿[CmdletBinding(PositionalBinding=$false)]
+Param( 
+    [Parameter(Mandatory=$true)]
+    [ValidateSet("2017", "2019")]
+    [Alias("v")]
+    [System.String] $Version
+)
+
+Get-Process devenv -ErrorAction SilentlyContinue | Stop-Process
 Write-Host "Starting at $(Get-Date)"
 
 $counter = 0;
 while($true) { 
-    start "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe" "..\src\CodeStream.VisualStudio.sln"
+    start "C:\Program Files (x86)\Microsoft Visual Studio\$($Version)\Community\Common7\IDE\devenv.exe" "..\src\CodeStream.VisualStudio.sln"
     Start-Sleep -Seconds 10
-    start "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe" "..\src\CodeStream.VisualStudio.sln"
+    start "C:\Program Files (x86)\Microsoft Visual Studio\$($Version)\Community\Common7\IDE\devenv.exe" "..\src\CodeStream.VisualStudio.sln"
     Start-Sleep -Seconds 10
-    start "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe" "..\src\CodeStream.VisualStudio.sln"
+    start "C:\Program Files (x86)\Microsoft Visual Studio\$($Version)\Community\Common7\IDE\devenv.exe" "..\src\CodeStream.VisualStudio.sln"
     Start-Sleep -Seconds 10
 
     Start-Sleep -Seconds 20
