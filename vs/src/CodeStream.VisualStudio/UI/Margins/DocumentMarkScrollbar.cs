@@ -26,9 +26,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		private static readonly object InitializeLock = new object();
 
 		private readonly IWpfTextView _textView;
-		private readonly ITextDocument _textDocument;
 		private readonly IVerticalScrollBar _verticalScrollBar;
-		private readonly IEditorFormatMap _editorFormatMap;
 		private readonly ISessionService _sessionService;
 
 		private bool _hasEvents;
@@ -43,19 +41,15 @@ namespace CodeStream.VisualStudio.UI.Margins {
 
 		public DocumentMarkScrollbar(
 			IWpfTextViewHost wpfTextViewHost,
-			ITextDocument textDocument,
 			IVerticalScrollBar verticalScrollBar,
-			IEditorFormatMapService editorFormatMapService,
 			ISessionService sessionService) {
 			if (wpfTextViewHost == null) throw new ArgumentNullException(nameof(wpfTextViewHost));
 
 			_sessionService = sessionService;
 
 			_textView = wpfTextViewHost.TextView;
-			_textDocument = textDocument;
 			_verticalScrollBar = verticalScrollBar;
-			_editorFormatMap = editorFormatMapService.GetEditorFormatMap(_textView);
-
+			
 			IsHitTestVisible = false;
 			Width = DefaultMarginWidth;
 

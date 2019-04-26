@@ -2,7 +2,6 @@
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
@@ -20,9 +19,6 @@ namespace CodeStream.VisualStudio.UI.Margins {
 	// [DeferCreation(OptionName = MatchMarginEnabledOption.OptionName)]
 	internal sealed class DocumentMarkScrollbarProvider : ICodeStreamMarginProvider {
 #pragma warning disable 649
-		[Import]
-		internal IEditorFormatMapService EditorFormatMapService;
-
 		[Export]
 		[Name("DocumentMarkScrollbarAdornmentLayer")]
 		[Order(After = PredefinedAdornmentLayers.Outlining, Before = PredefinedAdornmentLayers.Selection)]
@@ -41,9 +37,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 
 			TextViewMargin = new DocumentMarkScrollbar(
 				wpfTextViewHost,
-				textDocument,
 				containerMarginAsVerticalScrollBar,
-				EditorFormatMapService,
 				Package.GetGlobalService(typeof(SSessionService)) as ISessionService
 			);
 
