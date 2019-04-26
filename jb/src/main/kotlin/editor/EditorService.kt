@@ -114,14 +114,6 @@ class EditorService(val project: Project) {
         }
     }
 
-    private val showMarkers: Boolean
-        get() {
-            val settings = project.settingsService ?: return false
-            if (!settings.showMarkers) return false
-            if (codeStreamVisible && spatialViewActive && settings.autoHideMarkers) return false
-            return true
-        }
-
     private fun onWebViewContextChanged(context: WebViewContext?) {
         context?.let {
             if (spatialViewActive != it.spatialViewVisible) {
@@ -178,13 +170,14 @@ class EditorService(val project: Project) {
     }
 
     private suspend fun getDocumentMarkers(uri: String?): List<DocumentMarker> {
-        val agentService = project.agentService
-        val sessionService = project.sessionService
+        val agent = project.agentService ?: return emptyList()
+        val session = project.sessionService ?: return emptyList()
+        val settings = project.settingsService ?: return emptyList()
 
-        val markers = if (uri == null || agentService == null || sessionService?.userLoggedIn == null || !showMarkers) {
+        val markers = if (uri == null || session.userLoggedIn == null || !settings.showMarkers) {
             emptyList()
         } else {
-            val result = agentService.documentMarkers(DocumentMarkersParams(TextDocument(uri)))
+            val result = agent.documentMarkers(DocumentMarkersParams(TextDocument(uri)))
             result.markers
         }
 
@@ -192,6 +185,12 @@ class EditorService(val project: Project) {
             it.codemark.status != "closed" && it.codemark.pinned == true
         }
     }
+
+    private val showGutterIcons: Boolean
+        get() {
+            val settings = project.settingsService ?: return false
+            return !codeStreamVisible || !spatialViewActive || !settings.autoHideMarkers
+        }
 
     inner class DocumentSynchronizer : DocumentListener {
         override fun documentChanged(event: DocumentEvent) {
@@ -271,20 +270,23 @@ class EditorService(val project: Project) {
             }
         }
 
-        if (showMarkers) {
-            markerHighlighters[this] = markers.map {
-                val start = getOffset(it.range.start)
-                val end = getOffset(it.range.end)
+        markerHighlighters[this] = markers.map {
+            val start = getOffset(it.range.start)
+            val end = getOffset(it.range.end)
 
-                markupModel.addRangeHighlighter(
-                    Math.min(start, end),
-                    Math.max(start, end),
-                    HighlighterLayer.FIRST,
-                    null,
-                    HighlighterTargetArea.EXACT_RANGE
-                ).apply {
+            markupModel.addRangeHighlighter(
+                Math.min(start, end),
+                Math.max(start, end),
+                HighlighterLayer.LAST,
+                null,
+                HighlighterTargetArea.EXACT_RANGE
+            ).apply {
+                if (showGutterIcons) {
                     gutterIconRenderer = GutterIconRendererImpl(project, it)
                 }
+                isThinErrorStripeMark = true
+                errorStripeMarkColor = it.codemark.color()
+                errorStripeTooltip = it.summary
             }
         }
     }
