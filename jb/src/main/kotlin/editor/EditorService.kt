@@ -67,6 +67,7 @@ class EditorService(val project: Project) {
         project.sessionService?.onUserLoggedInChanged { updateMarkers() }
         project.settingsService?.onWebViewContextChanged(this::onWebViewContextChanged)
         project.codeStream?.onIsVisibleChanged(this::onCodeStreamIsVisibleChanged)
+        project.agentService?.onRestart(this::refresh)
     }
 
     private val logger = Logger.getInstance(EditorService::class.java)
@@ -110,6 +111,18 @@ class EditorService(val project: Project) {
                 project.agentService?.agent?.textDocumentService?.didClose(
                     DidCloseTextDocumentParams(document.textDocumentIdentifier)
                 )
+            }
+        }
+    }
+
+    private fun refresh() {
+        synchronized(managedDocuments) {
+            val textDocumentService = project.agentService?.agent?.textDocumentService ?: return
+            managedDocuments.keys.forEach {
+                textDocumentService.didOpen(
+                    DidOpenTextDocumentParams(it.textDocumentItem)
+                )
+                managedDocuments[it] = DocumentVersion()
             }
         }
     }

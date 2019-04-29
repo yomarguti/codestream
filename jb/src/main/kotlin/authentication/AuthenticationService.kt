@@ -16,7 +16,6 @@ import protocols.agent.BootstrapParams
 import protocols.agent.LoginWithPasswordParams
 import protocols.agent.LoginWithSignupTokenParams
 import protocols.agent.LoginWithTokenParams
-import protocols.agent.LogoutParams
 import protocols.webview.Capabilities
 import protocols.webview.LoginRequest
 import protocols.webview.Services
@@ -155,7 +154,7 @@ class AuthenticationService(val project: Project) {
         val webView = project.webViewService ?: return
 
         session.logout()
-        agent.logout()
+        agent.restart()
         saveAccessToken(null)
         settings.setWebViewContextJson(jsonObject())
         webView.reload()

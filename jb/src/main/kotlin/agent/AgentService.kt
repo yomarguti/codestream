@@ -5,7 +5,6 @@ import com.codestream.extensions.baseUri
 import com.codestream.gson
 import com.codestream.settingsService
 import com.github.salomonbrys.kotson.fromJson
-import com.github.salomonbrys.kotson.nullObj
 import com.google.gson.JsonObject
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.application.ApplicationInfo
@@ -89,11 +88,12 @@ class AgentService(private val project: Project) {
         }
     }
 
-    suspend fun logout() {
+    suspend fun restart() {
         agent.logout(LogoutParams()).await()
         agent.shutdown().await()
         agent.exit()
         initAgent()
+        _restartObservers.forEach { it() }
     }
 
     private fun createProcess(): Process {
@@ -249,6 +249,12 @@ class AgentService(private val project: Project) {
             .await() as JsonObject
         return gson.fromJson(json)
     }
+
+    private val _restartObservers = mutableListOf<() -> Unit>()
+    fun onRestart(observer: () -> Unit) {
+        _restartObservers += observer
+    }
+
 }
 
 val platform: Platform by lazy {
