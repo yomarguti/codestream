@@ -172,7 +172,8 @@ namespace CodeStream.VisualStudio.UI {
 					disposables.Add(_eventAggregator.GetEvent<MarkerGlyphVisibilityEvent>()
 						.ObserveOnDispatcher()
 						.Subscribe(_ => textViewMarginProviders.Toggle(_.IsVisible)));
-					disposables.Add(visibleRangesSubject.Throttle(TimeSpan.FromMilliseconds(10))
+					disposables.Add(visibleRangesSubject.Throttle(TimeSpan.FromMilliseconds(15))
+						.ObserveOnDispatcher()
 						.Subscribe(e => {
 							try {
 								if (e.WpfTextView.InLayout || e.WpfTextView.IsClosed) return;
