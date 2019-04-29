@@ -57,6 +57,18 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="0_52_3">0.52.3</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds desktop notifications for when you're mentioned (or, optionally, all messages)</li>
+    <li>Adds markers to the editor scrollbar to indicate where codemarks exist in the file</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/51">#51</a> - JetBrains plugin causes exception if open file is not under VCS</li>
+    <li>Fixes an issue where CodeMarks would not display in the gutter when the CodeStream pane was closed</li>
+
+</ul>
 <h4 id="0_52_2">0.52.2</h4>
 <h5>Added</h5>
 <ul>
