@@ -165,7 +165,8 @@ export class CodestreamView {
 
 		this.subscriptions.add(
 			atom.themes.onDidChangeActiveThemes(async () => {
-				iframe.contentWindow!.postMessage(
+				if (!iframe.contentWindow) return;
+				iframe.contentWindow.postMessage(
 					{ label: "update-styles", styles: await getStylesheets() },
 					"*"
 				);
