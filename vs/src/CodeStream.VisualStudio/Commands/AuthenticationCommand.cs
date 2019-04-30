@@ -9,27 +9,28 @@ using System;
 namespace CodeStream.VisualStudio.Commands {
 	internal class AuthenticationCommand : VsCommandBase {
 		private readonly AsyncPackage _package;
-		public AuthenticationCommand(AsyncPackage package) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.AuthenticationCommandId) {
+		private readonly IServiceProvider _serviceProvider;
+		public AuthenticationCommand(AsyncPackage package, IServiceProvider serviceProvider) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.AuthenticationCommandId) {
 			_package = package;
+			_serviceProvider = serviceProvider;
 		}
 
 		protected override void ExecuteUntyped(object parameter) {
 			ThreadHelper.ThrowIfNotOnUIThread();
-
-			var session = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+			var session = _serviceProvider.GetService(typeof(SSessionService)) as ISessionService;
 			if (session?.IsReady == true) {
 				ThreadHelper.JoinableTaskFactory.Run(async delegate {
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-					var codeStreamService = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
-					if (codeStreamService != null) {
-						await codeStreamService.LogoutAsync();
+					var authenticationService = _serviceProvider.GetService(typeof(SAuthenticationService)) as IAuthenticationService;
+					if (authenticationService != null) {
+						await authenticationService.LogoutAsync();
 					}
 				});
 			}
 			else {
 				var window = _package.FindToolWindow(typeof(WebViewToolWindowPane), 0, true);
-				if ((null == window) || (null == window.Frame)) {
-					throw new NotSupportedException("Cannot create tool window");
+				if (null == window || (null == window.Frame)) {
+					return;
 				}
 				var windowFrame = (IVsWindowFrame)window.Frame;
 				if (windowFrame.IsVisible() == VSConstants.S_OK) {
@@ -42,7 +43,7 @@ namespace CodeStream.VisualStudio.Commands {
 		}
 
 		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e) {
-			var sessionService = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+			var sessionService = _serviceProvider.GetService(typeof(SSessionService)) as ISessionService;
 			var isReady = sessionService?.IsReady == true;
 			if (isReady) {
 				sender.Visible = true;

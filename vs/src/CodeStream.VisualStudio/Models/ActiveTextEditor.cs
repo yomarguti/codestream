@@ -9,6 +9,16 @@ using Serilog;
 using System;
 
 namespace CodeStream.VisualStudio.Models {
+
+	public class ActiveTextEditorSelection {
+		public ActiveTextEditorSelection(Uri uri, Range range) {
+			Uri = uri;
+			Range = range;
+		}
+		public Uri Uri { get; }
+		public Range Range { get; }
+	}
+
 	public class ActiveTextEditor : ICanHighlightRange, ICanSelectRange {
 		private static readonly ILogger Log = LogManager.ForContext<ActiveTextEditor>();
 
@@ -56,7 +66,7 @@ namespace CodeStream.VisualStudio.Models {
 		/// <summary>
 		/// Will use the Wpf apis to select a range of code (can handle single points as well)
 		/// </summary>
-		/// <param name="range">the range to be selected</param>
+		/// <param name="selection"></param>
 		/// <param name="focus">if True, focus the editor</param>
 		/// <returns></returns>
 		public bool SelectRange(EditorSelection selection, bool? focus) {

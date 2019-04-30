@@ -1,6 +1,8 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Models;
+using CodeStream.VisualStudio.Packages;
 using CodeStream.VisualStudio.Services;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;
@@ -12,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.Extensions;
 
 namespace CodeStream.VisualStudio.UI.SuggestedActions {
 	internal class CodemarkSuggestedActionsSourceDummy { }
@@ -19,16 +22,16 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 	internal class CodemarkSuggestedActionsSource : ISuggestedActionsSource {
 		private static readonly ILogger Log = LogManager.ForContext<CodemarkSuggestedActionsSourceDummy>();
 
-		private readonly CodemarkSuggestedActionsSourceProvider _actionsSourceProvider;
+		private readonly IComponentModel _componentModel;
 		private readonly ITextBuffer _textBuffer;
 		private readonly ITextView _textView;
 		private readonly ITextDocument _textDocument;
 
-		public CodemarkSuggestedActionsSource(CodemarkSuggestedActionsSourceProvider actionsSourceProvider,
+		public CodemarkSuggestedActionsSource(IComponentModel componentModel,
 			ITextView textView,
 			ITextBuffer textBuffer,
 			ITextDocument textDocument) {
-			_actionsSourceProvider = actionsSourceProvider;
+			_componentModel = componentModel;
 			_textBuffer = textBuffer;
 			_textView = textView;
 			_textDocument = textDocument;
@@ -83,8 +86,8 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 					return System.Threading.Tasks.Task.FromResult(false);
 				}
 
-				var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
-				_textSelection = ideService?.GetActiveEditorState();
+				var editorService = _componentModel.GetService<IEditorService>();
+				_textSelection = editorService?.GetActiveEditorState();
 
 				return System.Threading.Tasks.Task.FromResult(_textSelection?.HasSelectedText == true);
 			}
@@ -124,6 +127,8 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 	}
 
 	internal abstract class CodemarkSuggestedActionBase : ISuggestedAction {
+		private static readonly ILogger Log = LogManager.ForContext<CodemarkSuggestedActionBase>();
+
 		private readonly EditorState _textSelection;
 		private readonly ITextDocument _textDocument;
 		protected abstract CodemarkType CodemarkType { get; }
@@ -138,18 +143,24 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 		}
 
 		public void Invoke(CancellationToken cancellationToken) {
-			if (_textDocument == null) {
-				Log.Verbose($"{nameof(_textDocument)} is null");
-				return;
-			}
-
+			if (_textDocument == null) return;
 			var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
 			if (codeStreamService == null) {
-				Log.Debug($"{nameof(codeStreamService)} is null");
 				return;
 			}
 
-			codeStreamService.NewCodemarkAsync(new Uri(_textDocument.FilePath), _textSelection, CodemarkType, cancellationToken: cancellationToken);
+			ThreadHelper.JoinableTaskFactory.Run(async delegate {
+				try {
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+					var toolWindowProvider = Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
+					toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
+
+					codeStreamService.NewCodemarkAsync(_textDocument.FilePath.ToUri(), _textSelection.Range, CodemarkType, cancellationToken: cancellationToken);
+				}
+				catch (Exception ex) {
+					Log.Error(ex, nameof(CodemarkSuggestedActionBase));
+				}
+			});
 		}
 
 		public Task<object> GetPreviewAsync(CancellationToken cancellationToken) {

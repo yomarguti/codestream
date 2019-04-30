@@ -1,14 +1,11 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.TextManager.Interop;
 using Serilog;
 using System;
+using System.Threading;
 
 namespace CodeStream.VisualStudio.Commands {
 	internal class AddCodemarkCommentCommand : AddCodemarkCommandBase {
@@ -38,37 +35,37 @@ namespace CodeStream.VisualStudio.Commands {
 		protected override CodemarkType CodemarkType => CodemarkType.Link;
 
 		protected override void ExecuteUntyped(object parameter) {
-			var agentService = Microsoft.VisualStudio.Shell.Package.GetGlobalService((typeof(SCodeStreamAgentService))) as ICodeStreamAgentService;
-			if (agentService == null) return;
+			try {
+				var agentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
+				if (agentService == null) return;
 
-			var ideService = Microsoft.VisualStudio.Shell.Package.GetGlobalService((typeof(SIdeService))) as IdeService;
-			if (ideService == null) return;
+				var componentModel = (IComponentModel) Package.GetGlobalService(typeof(SComponentModel));
+				var editorService = componentModel.GetService<IEditorService>();
+				var activeTextEditor = editorService.GetActiveTextEditorSelection();
+				if (activeTextEditor == null) return;
 
-			var selectedText = ideService.GetActiveEditorState(out IVsTextView view);
-			if (view == null) return;
-
-			var componentModel = (IComponentModel)(Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SComponentModel)));
-			var exports = componentModel.DefaultExportProvider;
-
-			var wpfTextView = exports.GetExportedValue<IVsEditorAdaptersFactoryService>()?.GetWpfTextView(view);
-			if (wpfTextView == null) return;
-
-			if (!exports.GetExportedValue<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument)) return;
-
-			ThreadHelper.JoinableTaskFactory.Run(async delegate {
-				try {
-					var response = await agentService.CreatePermalinkAsync(selectedText.Range, textDocument.FilePath.ToUri().ToString(),
-						"private");
-					if (response != null) {
-						await ideService.SetClipboardAsync(response.LinkUrl);
-						//InfoBarProvider.Instance.ShowInfoBar($"Copied {foo.LinkUrl} to your clipboard");
+				ThreadHelper.JoinableTaskFactory.Run(async delegate {
+					try {
+						var response = await agentService.CreatePermalinkAsync(activeTextEditor.Range, activeTextEditor.Uri.ToString(),
+							"private");
+						
+						if (response != null) {
+							var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
+							if (ideService != null) {
+								await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+								await ideService.SetClipboardAsync(response.LinkUrl);
+							}
+							//InfoBarProvider.Instance.ShowInfoBar($"Copied {foo.LinkUrl} to your clipboard");
+						}
 					}
-				}
-				catch (Exception ex) {
-					Log.Warning(ex, nameof(ExecuteUntyped));
-				}
-			});
+					catch (Exception ex) {
+						Log.Warning(ex, nameof(ExecuteUntyped));
+					}
+				});
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(AddCodemarkPermalinkInstantCommand));
+			}
 		}
-		 
 	}
 }

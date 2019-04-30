@@ -48,10 +48,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 				_viewTagAggregatorFactoryService,
 				_glyphFactoryProviders,
 				wpfTextViewHost,
-				Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider,
-				Package.GetGlobalService(typeof(SSessionService)) as ISessionService,
-				wpfTextViewHost.TextView,
-				textDocument
+				Package.GetGlobalService(typeof(SSessionService)) as ISessionService
 			);
 
 			return TextViewMargin;

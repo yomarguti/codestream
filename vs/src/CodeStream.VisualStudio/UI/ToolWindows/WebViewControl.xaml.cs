@@ -8,6 +8,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Windows.Controls;
+using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace CodeStream.VisualStudio.UI.ToolWindows {
 	// ReSharper disable once RedundantExtendsListEntry
@@ -21,10 +22,8 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 		private readonly IDisposable _languageServerDisconnectedEvent;
 		private readonly ICodeStreamService _codeStreamService;
 		private IDisposable _languageServerReadyEvent;
-
 		private List<IDisposable> _disposables;
-
-		bool _disposed = false;
+		private bool _disposed = false;
 		private bool _isInitialized;
 		private static readonly object InitializeLock = new object();
 
@@ -125,44 +124,49 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 			if (!_isInitialized) {
 				lock (InitializeLock) {
 					if (!_isInitialized) {
-						var router = new WebViewRouter(
-							new Lazy<ICredentialsService>(() =>
-								Package.GetGlobalService(typeof(SCredentialsService)) as ICredentialsService),
-							Package.GetGlobalService(typeof(SSessionService)) as ISessionService,
-							Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
-							Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService,
-							_eventAggregator,
-							_ipc,
-							Package.GetGlobalService(typeof(SIdeService)) as IIdeService);
+						try {
+							var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
+							var router = new WebViewRouter(
+								Package.GetGlobalService(typeof(SCredentialsService)) as ICredentialsService,
+								Package.GetGlobalService(typeof(SSessionService)) as ISessionService,
+								Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
+								Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService,
+								_eventAggregator,
+								_ipc,
+								Package.GetGlobalService(typeof(SIdeService)) as IIdeService,
+								componentModel.GetService<IEditorService>());
 
-						_ipc.BrowserService.AddWindowMessageEvent(async delegate (object sender, WindowEventArgs ea) {
-							await router.HandleAsync(ea);
-						});
+							_ipc.BrowserService.AddWindowMessageEvent(
+								async delegate(object sender, WindowEventArgs ea) { await router.HandleAsync(ea); });
 
-						_ipc.BrowserService.LoadWebView();
+							_ipc.BrowserService.LoadWebView();
 
-						_disposables = new List<IDisposable> {
+							_disposables = new List<IDisposable> {
 
-							_eventAggregator.GetEvent<AuthenticationChangedEvent>()
-								.Subscribe(_ => {
-									if (_.Reason == LogoutReason.Token) {
-										var codeStreamService =
-											Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
-										if (codeStreamService != null) {
-											ThreadHelper.JoinableTaskFactory.Run(async delegate {
-												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-												await codeStreamService.LogoutAsync();
-											});
+								_eventAggregator.GetEvent<AuthenticationChangedEvent>()
+									.Subscribe(_ => {
+										if (_.Reason == LogoutReason.Token) {
+											var authenticationService =
+												Package.GetGlobalService(typeof(SAuthenticationService)) as
+													IAuthenticationService;
+											if (authenticationService != null) {
+												ThreadHelper.JoinableTaskFactory.Run(async delegate {
+													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+													await authenticationService.LogoutAsync();
+												});
+											}
 										}
-									}
-									else {
-										// TODO: Handle this
-									}
-								})
-						};
+										else {
+											// TODO: Handle this
+										}
+									})
+							};
 
-						_isInitialized = true;
+							_isInitialized = true;
+						}
+						catch (Exception ex) {
+							Log.Fatal(ex, nameof(InitializeCore));
+						}
 					}
 				}
 			}

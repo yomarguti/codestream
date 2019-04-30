@@ -16,22 +16,24 @@ namespace CodeStream.VisualStudio {
 	public class WebViewRouter {
 		private static readonly ILogger Log = LogManager.ForContext<WebViewRouter>();
 
-		private readonly Lazy<ICredentialsService> _credentialsService;
+		private readonly ICredentialsService _credentialsService;
 		private readonly ISessionService _sessionService;
 		private readonly ICodeStreamAgentService _codeStreamAgent;
 		private readonly ISettingsService _settingsService;
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IWebviewIpc _ipc;
 		private readonly IIdeService _ideService;
+		private readonly IEditorService _editorService;
 
 		public WebViewRouter(
-			Lazy<ICredentialsService> credentialsService,
+			ICredentialsService credentialsService,
 			ISessionService sessionService,
 			ICodeStreamAgentService codeStreamAgent,
 			ISettingsService settingsService,
 			IEventAggregator eventAggregator,
 			IWebviewIpc ipc,
-			IIdeService ideService) {
+			IIdeService ideService,
+			IEditorService editorService) {
 			_credentialsService = credentialsService;
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
@@ -39,6 +41,7 @@ namespace CodeStream.VisualStudio {
 			_eventAggregator = eventAggregator;
 			_ipc = ipc;
 			_ideService = ideService;
+			_editorService = editorService;
 		}
 
 		//
@@ -148,9 +151,9 @@ namespace CodeStream.VisualStudio {
 								case SignOutRequestType.MethodName: {
 									await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 									using (_ipc.CreateScope(message)) {
-										var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
-										if (codeStreamService != null) {
-											await codeStreamService.LogoutAsync();
+										var authenticationService = Package.GetGlobalService(typeof(SAuthenticationService)) as IAuthenticationService;
+										if (authenticationService != null) {
+											await authenticationService.LogoutAsync();
 										}
 									}
 									break;
@@ -160,7 +163,7 @@ namespace CodeStream.VisualStudio {
 										bool result = false;
 										var @params = message.Params.ToObject<EditorSelectRangeRequest>();
 										if (@params != null) {
-											var activeTextView = _ideService.GetActiveTextEditor(@params.Uri.ToUri());
+											var activeTextView = _editorService.GetActiveTextEditor(@params.Uri.ToUri());
 											if (activeTextView != null) {
 												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 												result = activeTextView.SelectRange(@params.Selection, @params.PreserveFocus == false);
@@ -178,7 +181,7 @@ namespace CodeStream.VisualStudio {
 										bool result = false;
 										var @params = message.Params.ToObject<EditorHighlightRangeRequest>();
 										if (@params != null) {
-											var activeTextView = _ideService.GetActiveTextEditor(@params.Uri.ToUri());
+											var activeTextView = _editorService.GetActiveTextEditor(@params.Uri.ToUri());
 											if (activeTextView != null) {
 												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 												//don't reveal on highlight -- for big ranges it will cause bad behavior with the scrolling

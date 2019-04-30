@@ -1,9 +1,7 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Packages;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Glyphs;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Formatting;
 using Microsoft.VisualStudio.Text.Tagging;
@@ -29,14 +27,10 @@ namespace CodeStream.VisualStudio.UI.Margins {
 
 		private static readonly object InitializeLock = new object();
 		
-		private readonly DocumentMarkerManager _documentMarkerManager;
 		private readonly Dictionary<Type, GlyphFactoryInfo> _glyphFactories;
 		private readonly IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> _glyphFactoryProviders;
 		private readonly ISessionService _sessionService;
-		private readonly ITextDocument _textDocument;
-		private readonly IWpfTextView _textView;
-		private readonly IToolWindowProvider _toolWindowProvider;
-		private readonly IViewTagAggregatorFactoryService _viewTagAggregatorFactoryService;
+		
 		private readonly ITagAggregator<IGlyphTag> _tagAggregator;
 		private readonly IWpfTextViewHost _wpfTextViewHost;
 
@@ -48,33 +42,21 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		
 
 		/// <summary>
-		///     Initializes a new instance of the <see cref="DocumentMarkMargin" /> class for a given
-		///     <paramref name="textView" />.
+		///     Initializes a new instance of the <see cref="DocumentMarkMargin" /> class for a given textView
 		/// </summary>
 		/// <param name="viewTagAggregatorFactoryService"></param>
 		/// <param name="glyphFactoryProviders"></param>
 		/// <param name="wpfTextViewHost"></param>
-		/// <param name="toolWindowProvider"></param>
 		/// <param name="sessionService"></param>
-		/// <param name="textView"></param>
-		/// <param name="textDocument"></param>
 		public DocumentMarkMargin(
 			IViewTagAggregatorFactoryService viewTagAggregatorFactoryService,
 			IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> glyphFactoryProviders,
 			IWpfTextViewHost wpfTextViewHost,
-			IToolWindowProvider toolWindowProvider,
-			ISessionService sessionService,
-			IWpfTextView textView,
-			ITextDocument textDocument) {
-			_viewTagAggregatorFactoryService = viewTagAggregatorFactoryService;
+			ISessionService sessionService) {
 			_glyphFactoryProviders = glyphFactoryProviders;
 			_wpfTextViewHost = wpfTextViewHost;
-			_toolWindowProvider = toolWindowProvider;
 			_sessionService = sessionService;
-			_textView = textView;
-			_textDocument = textDocument;
-
-			_tagAggregator = _viewTagAggregatorFactoryService.CreateTagAggregator<IGlyphTag>(_wpfTextViewHost.TextView);
+			_tagAggregator = viewTagAggregatorFactoryService.CreateTagAggregator<IGlyphTag>(_wpfTextViewHost.TextView);
 
 			Width = DefaultMarginWidth;
 			ClipToBounds = true;
@@ -83,11 +65,6 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			_childCanvases = Array.Empty<Canvas>();
 			Background = new SolidColorBrush(Colors.Transparent);
 
-			_documentMarkerManager = _textView
-				.Properties
-				.GetProperty<DocumentMarkerManager>(PropertyNames.DocumentMarkerManager);
-
-			Debug.Assert(_documentMarkerManager != null, $"{nameof(_documentMarkerManager)} is null");
 			TryInitialize();
 		}
 

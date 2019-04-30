@@ -1,5 +1,4 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using System.Threading.Tasks;
 using CodeStream.VisualStudio.Services;
 using Moq;
@@ -19,13 +18,14 @@ namespace CodeStream.VisualStudio.UnitTests {
 
 			var codeStreamAgentServiceMock = new Mock<ICodeStreamAgentService>();
 			var router = new WebViewRouter(
-				new Mock<Lazy<ICredentialsService>>().Object,
+				new Mock<ICredentialsService>().Object,
 				new Mock<ISessionService>().Object,
 				codeStreamAgentServiceMock.Object,
 				new Mock<ISettingsService>().Object,
 				new Mock<IEventAggregator>().Object,
 				ipcMock.Object,
-				new Mock<IIdeService>().Object
+				new Mock<IIdeService>().Object,
+				new Mock<IEditorService>().Object
 			);
 
 			await router.HandleAsync(new WindowEventArgs("BOGUS"));

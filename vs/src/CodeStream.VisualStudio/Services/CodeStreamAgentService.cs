@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Task = System.Threading.Tasks.Task;
 using TextDocumentIdentifier = CodeStream.VisualStudio.Models.TextDocumentIdentifier;
 #if DEBUG
@@ -26,6 +27,7 @@ namespace CodeStream.VisualStudio.Services {
 	public interface SCodeStreamAgentService { }
 
 	public interface ICodeStreamAgentService {
+		ISessionService SessionService { get; }
 		Task SetRpcAsync(JsonRpc rpc);
 		Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null);
 		Task<CreateDocumentMarkerPermalinkResponse> CreatePermalinkAsync(Range range, string uri, string privacy);
@@ -51,19 +53,22 @@ namespace CodeStream.VisualStudio.Services {
 	[Injected]
 	public class CodeStreamAgentService : ICodeStreamAgentService, SCodeStreamAgentService, IDisposable {
 		private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
-		private readonly ISessionService _sessionService;
+		private readonly IComponentModel _componentModel;
+		public ISessionService SessionService { get; }
 		private readonly ISettingsService _settingsService;
 		private readonly IEventAggregator _eventAggregator;
-		private readonly IIdeService _ideService;
 
 		private JsonRpc _rpc;
 		bool _disposed;
 
-		public CodeStreamAgentService(ISessionService sessionService, ISettingsService settingsService, IEventAggregator eventAggregator, IIdeService ideService) {
-			_sessionService = sessionService;
+		public CodeStreamAgentService(IComponentModel componentModel,
+			ISessionService sessionService,
+			ISettingsService settingsService,
+			IEventAggregator eventAggregator) {
+			_componentModel = componentModel;
+			SessionService = sessionService;
 			_settingsService = settingsService;
 			_eventAggregator = eventAggregator;
-			_ideService = ideService;
 		}
 
 		public Task SetRpcAsync(JsonRpc rpc) {
@@ -75,7 +80,7 @@ namespace CodeStream.VisualStudio.Services {
 
 		private void Rpc_Disconnected(object sender, JsonRpcDisconnectedEventArgs e) {
 			Log.Debug(e.Exception, $"RPC Disconnected: {e.LastMessage} {e.Description}");
-			_sessionService.SetAgentDisconnected();
+			SessionService.SetAgentDisconnected();
 			_eventAggregator?.Publish(new LanguageServerDisconnectedEvent(e?.LastMessage, e?.Description, e?.Reason.ToString(), e?.Exception));
 		}
 
@@ -94,7 +99,7 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null) {
-			if (!_sessionService.IsReady) {
+			if (!SessionService.IsReady) {
 				if (Log.IsDebugEnabled()) {
 					try {
 #if DEBUG
@@ -297,38 +302,11 @@ namespace CodeStream.VisualStudio.Services {
 			}
 
 			if (state == null) throw new ArgumentNullException(nameof(state));
-
-			var activeTextEditor = _ideService.GetActiveTextEditor();
-			var editorState = _ideService.GetActiveEditorState();
-
 			var bootstrapAuthenticated = await _rpc.InvokeWithParameterObjectAsync<JToken>(BootstrapRequestType.MethodName)
 				.ConfigureAwait(false) as JObject;
 
-			EditorContext editorContext = null;
-			if (activeTextEditor != null) {
-
-				try {
-					editorContext = new EditorContext {
-						ActiveFile = activeTextEditor.FilePath,
-						TextEditorVisibleRanges = activeTextEditor.WpfTextView?.ToVisibleRangesSafe(),
-						TextEditorUri = activeTextEditor.Uri?.ToString(),
-						TextEditorSelections = editorState.ToEditorSelectionsSafe(),
-						TextEditorLineCount = activeTextEditor.TotalLines,
-						Metrics = ThemeManager.CreateEditorMetrics(activeTextEditor.WpfTextView),
-					};
-				}
-				catch (Exception ex) {
-					Log.Warning(ex, nameof(editorContext));
-					editorContext = new EditorContext {
-						Metrics = ThemeManager.CreateEditorMetrics()
-					};
-				}
-			}
-			else {
-				editorContext = new EditorContext {
-					Metrics = ThemeManager.CreateEditorMetrics()
-				};
-			}
+			var editorService = _componentModel.GetService<IEditorService>();
+			var editorContext = editorService.GetEditorContext();
 
 			WebviewContext webviewContext;
 			var teamId = state["teamId"].ToString();

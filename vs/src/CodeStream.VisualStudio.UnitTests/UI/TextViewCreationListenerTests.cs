@@ -53,24 +53,29 @@ namespace CodeStream.VisualStudio.UnitTests.UI {
 			eventAggregator.Setup(_ => _.GetEvent<SessionLogoutEvent>()).Returns(new Subject<SessionLogoutEvent>());
 			eventAggregator.Setup(_ => _.GetEvent<MarkerGlyphVisibilityEvent>()).Returns(new Subject<MarkerGlyphVisibilityEvent>());
 
+			var serviceProvider = new Mock<System.IServiceProvider>();
+			serviceProvider.Setup(_ => _.GetService(typeof(SEventAggregator))).Returns(eventAggregator.Object);
+
+			var codeStreamServiceMock = new Mock<ICodeStreamService>();
+			codeStreamServiceMock.Setup(_ => _.AgentService).Returns(new Mock<ICodeStreamAgentService>().Object);
+			codeStreamServiceMock.Setup(_ => _.SessionService).Returns(new Mock<ISessionService>().Object);
+
 			var listener = new TextViewCreationListener(
-			   eventAggregator.Object,
-			   new Mock<ISessionService>().Object,
-			   new Mock<ICodeStreamAgentService>().Object,
-			   new Mock<IIdeService>().Object,
-			   textViewCache,
-			   new Mock<ICodeStreamService>().Object
+				serviceProvider.Object,
+				codeStreamServiceMock.Object
 		   ) {
 				EditorAdaptersFactoryService = editorAdaptersFactoryServiceMock.Object,
 				TextDocumentFactoryService = textDocumentFactoryServiceMock.Object,
-				TextViewMarginProviders = textViewMarginProviders
+				TextViewMarginProviders = textViewMarginProviders,
+				EditorService = new Mock<IEditorService>().Object,
+				TextViewCache = new WpfTextViewCache()
 			};
 
 			((IWpfTextViewConnectionListener)listener).SubjectBuffersConnected(wpfTextViewMock.Object, reason, bufferCollection);
 			var propertyCount = wpfTextViewMock.Object.Properties.PropertyList.Count;
 			Assert.AreEqual(1, textViewCache.Count());
 			Assert.AreEqual(true, propertyCount > 0);
-			
+
 			listener.VsTextViewCreated(textView.Object);
 			listener.OnSessionReady(wpfTextViewMock.Object);
 			Assert.AreEqual(true, wpfTextViewMock.Object.Properties.PropertyList.Count > propertyCount);

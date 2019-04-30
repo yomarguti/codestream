@@ -70,10 +70,8 @@ namespace CodeStream.VisualStudio.UI.Margins {
 
 			if (toolWindowProvider == null || codeStreamService == null) return;
 
-			toolWindowProvider.ShowToolWindow(Guids.WebViewToolWindowGuid);
-
+			toolWindowProvider.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
 			codeStreamService.ShowCodemarkAsync(_viewModel.Marker.Codemark.Id);
-
 			codeStreamService.TrackAsync(TelemetryEventNames.CodemarkClicked, new TelemetryProperties { { "Codemark Location", "Source File" } });
 		}
 	}

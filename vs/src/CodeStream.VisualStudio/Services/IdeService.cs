@@ -1,27 +1,24 @@
 ﻿using CodeStream.VisualStudio.Annotations;
+using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Core.Logging.Instrumentation;
+using CodeStream.VisualStudio.Extensions;
 using EnvDTE;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
-using CodeStream.VisualStudio.Models;
-using EditorState = CodeStream.VisualStudio.Models.EditorState;
 using ILogger = Serilog.ILogger;
-using System.Linq;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Shell.Interop;
-using CodeStream.VisualStudio.Core;
-using System.Reactive.Linq;
 
 namespace CodeStream.VisualStudio.Services {
 	public enum ExtensionKind {
@@ -34,10 +31,6 @@ namespace CodeStream.VisualStudio.Services {
 		void ScrollEditor(Uri fileUri, int? scrollTo = null, int? deltaPixels = null, bool? atTop = false);
 		System.Threading.Tasks.Task<bool> OpenEditorAndRevealAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false);
 		System.Threading.Tasks.Task<bool> OpenEditorAtLineAsync(Uri fileUri, Range range, bool forceOpen = false);
-		EditorState GetActiveEditorState();
-		EditorState GetActiveEditorState(out IVsTextView view);
-		ActiveTextEditor GetActiveTextEditor(IWpfTextView wpfTextView);
-		ActiveTextEditor GetActiveTextEditor(Uri uri = null);
 		//bool QueryExtensions(string author, params string[] names);
 		bool QueryExtension(ExtensionKind extensionKind);
 		bool TryStartLiveShare();
@@ -52,16 +45,16 @@ namespace CodeStream.VisualStudio.Services {
 		private static readonly ILogger Log = LogManager.ForContext<IdeService>();
 
 		private readonly IServiceProvider _serviceProvider;
-		private readonly IWpfTextViewCache _textViewCache;
 		private readonly IComponentModel _componentModel;
-		private readonly IVsTextManager _iIVsTextManager;
+
 		private readonly Dictionary<ExtensionKind, bool> _extensions;
 
-		public IdeService(IServiceProvider serviceProvider, IWpfTextViewCache textViewCache, IComponentModel componentModel, IVsTextManager iIVsTextManager, Dictionary<ExtensionKind, bool> extensions) {
+		public IdeService(
+			IServiceProvider serviceProvider,
+			IComponentModel componentModel,
+			Dictionary<ExtensionKind, bool> extensions) {
 			_serviceProvider = serviceProvider;
-			_textViewCache = textViewCache;
 			_componentModel = componentModel;
-			_iIVsTextManager = iIVsTextManager;
 			_extensions = extensions;
 		}
 
@@ -69,12 +62,9 @@ namespace CodeStream.VisualStudio.Services {
 			using (Log.CriticalOperation($"{nameof(OpenEditorAndRevealAsync)} {fileUri} scrollTo={scrollTo}")) {
 				if (scrollTo == null) await System.Threading.Tasks.Task.CompletedTask;
 
-				IWpfTextView wpfTextView = null;
 				var scrollToLine = scrollTo.Value;
 				try {
-					var localPath = fileUri.ToLocalPath();
-					wpfTextView = await AssertWpfTextViewAsync(fileUri);
-
+					var wpfTextView = await AssertWpfTextViewAsync(fileUri);
 					if (wpfTextView != null) {
 						if (atTop == true) {
 							ScrollViewportVerticallyByPixels(wpfTextView, scrollToLine);
@@ -105,9 +95,8 @@ namespace CodeStream.VisualStudio.Services {
 		/// <returns></returns>
 		public async System.Threading.Tasks.Task<bool> OpenEditorAtLineAsync(Uri fileUri, Range range, bool forceOpen = false) {
 			using (Log.CriticalOperation($"{nameof(OpenEditorAtLineAsync)} {fileUri} range={range?.Start?.Line}, {range?.End?.Line}")) {
-				IWpfTextView wpfTextView = null;
 				try {
-					wpfTextView = await AssertWpfTextViewAsync(fileUri, forceOpen);
+					var wpfTextView = await AssertWpfTextViewAsync(fileUri, forceOpen);
 					if (wpfTextView != null) {
 						var span = EnsureSnapshotSpanVisible(wpfTextView, range);
 						if (span != null) {
@@ -135,12 +124,10 @@ namespace CodeStream.VisualStudio.Services {
 			if (scrollTo == null || scrollTo.Value < 0) return;
 
 			using (var metrics = Log.WithMetrics($"{nameof(ScrollEditor)} {fileUri} scrollTo={scrollTo} atTop={atTop}")) {
-				IWpfTextView wpfTextView = null;
 				try {
 					var localPath = fileUri.ToLocalPath();
-					if (!_textViewCache.TryGetValue(localPath, out wpfTextView) || wpfTextView == null) {
-						return;
-					}
+					var textViewCache = _componentModel.GetService<IWpfTextViewCache>();
+					if (!textViewCache.TryGetValue(localPath, out var wpfTextView) || wpfTextView == null) return;
 
 					if (deltaPixels != null) {
 						wpfTextView.ViewScroller.ScrollViewportVerticallyByPixels(-deltaPixels.Value);
@@ -164,95 +151,15 @@ namespace CodeStream.VisualStudio.Services {
 			}
 		}
 
-		public ActiveTextEditor GetActiveTextEditor(IWpfTextView wpfTextView) {
-			try {
-				if (wpfTextView == null) {
-					Log.Verbose($"{nameof(wpfTextView)} is null");
-					return null;
-				}
-
-				var exports = _componentModel.DefaultExportProvider;
-				if (!exports.GetExportedValue<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument)) {
-					return null;
-				}
-
-				return new ActiveTextEditor(wpfTextView,
-					textDocument.FilePath,
-					textDocument.FilePath.ToUri(),
-					wpfTextView.TextSnapshot.LineCount);
-			}
-			catch (Exception ex) {
-				Log.Warning(ex, nameof(GetActiveTextEditor));
-			}
-
-			return null;
-		}
-
-		public ActiveTextEditor GetActiveTextEditor(Uri uri = null) {
-			IWpfTextView wpfTextView = null;
-			try {
-				if (uri != null) {
-					if (!_textViewCache.TryGetValue(uri.ToLocalPath(), out wpfTextView)) {
-						// wasn't in cache... try to get it?
-						wpfTextView = GetActiveWpfTextView();
-					}
-				}
-				else {
-					wpfTextView = GetActiveWpfTextView();
-				}
-
-				if (wpfTextView == null) {
-					Log.Verbose($"{nameof(wpfTextView)} is null");
-					return null;
-				}
-
-				var exports = _componentModel.DefaultExportProvider;
-				if (!exports.GetExportedValue<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument)) {
-					return null;
-				}
-
-				return new ActiveTextEditor(wpfTextView,
-					textDocument.FilePath,
-					textDocument.FilePath.ToUri(),
-					wpfTextView.TextSnapshot.LineCount);
-			}
-			catch (Exception ex) {
-				Log.Warning(ex, nameof(GetActiveTextEditor));
-			}
-
-			return null;
-		}
-
-		public IWpfTextView GetActiveWpfTextView() {
-			try {
-				var editor = _componentModel.GetService<IVsEditorAdaptersFactoryService>();
-				if (editor == null) {
-					Log.Debug($"{nameof(IVsEditorAdaptersFactoryService)} is null");
-					return null;
-				}
-
-				_iIVsTextManager.GetActiveView(1, null, out IVsTextView textViewCurrent);
-				if (textViewCurrent == null) return null;				
-
-				return editor.GetWpfTextView(textViewCurrent);
-			}
-			catch (Exception ex) {
-				Log.Warning(ex, nameof(GetActiveTextEditor));
-			}
-
-			return null;
-		}
-
 		private async System.Threading.Tasks.Task<IWpfTextView> AssertWpfTextViewAsync(Uri fileUri, bool forceOpen = false) {
-			IWpfTextView wpfTextView;
 			var localPath = fileUri.ToLocalPath();
-			if (forceOpen == true || !_textViewCache.TryGetValue(localPath, out wpfTextView)) {
-				var view = GetActiveTextEditor();
 
+			var textViewCache = _componentModel.GetService<IWpfTextViewCache>();
+			if (forceOpen == true || !textViewCache.TryGetValue(localPath, out var wpfTextView)) {
+				var view = _componentModel.GetService<IEditorService>().GetActiveTextEditor();
 				if (view == null || !view.Uri.EqualsIgnoreCase(fileUri)) {
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-
-					var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
+					var dte = _serviceProvider.GetService(typeof(DTE)) as DTE;
 					if (dte == null) {
 						Log.Warning($"{nameof(dte)} is null for {fileUri}");
 						return null;
@@ -331,52 +238,9 @@ namespace CodeStream.VisualStudio.Services {
 			wpfTextView.ViewScroller.ScrollViewportVerticallyByPixels((startingVisibleLineNumber - scrollToLine + 1) * wpfTextView.LineHeight);
 		}
 
-		//private void TryScrollToLine(IWpfTextView wpfTextView, int? scrollToLineFoo, bool? atTop) {
-		//	if (scrollToLineFoo == null || scrollToLineFoo.Value < 0) return;
-		//	var scrollToLine = scrollToLineFoo.Value;
-
-		//	if (atTop == true) {
-		//		ScrollViewportVerticallyByLines(wpfTextView, scrollToLine);
-		//	}
-		//	else {
-		//		EnsureTargetSpanVisible(wpfTextView, scrollToLine);
-		//	}
-		//	//if (moveCaret == true) {
-		//	//	view.Caret.MoveTo(new SnapshotPoint(view.TextSnapshot, startLine.Start == 0 ? 0 : startLine.Start - 1));
-		//	//	view.Caret.EnsureVisible();
-		//	//}
+		//public EditorState GetActiveEditorState() {
+		//	return GetActiveEditorState(out IVsTextView textView);
 		//}
-
-		public EditorState GetActiveEditorState(out IVsTextView view) {
-			try {
-				// ReSharper disable once UnusedVariable
-				var result = _iIVsTextManager.GetActiveView(1, null, out view);
-
-				// view can be null...
-				if (view == null) return null;
-
-				view.GetCaretPos(out int piLine, out int piColumn);
-				view.GetSelection(out int startLine, out int startColumn, out int endLine, out int endColumn);
-				view.GetSelectedText(out string selectedText);
-
-				// end could be before beginning...
-				return new EditorState(
-					new Range {
-						Start = new Position(startLine, startColumn),
-						End = new Position(endLine, endColumn)
-					}, new Position(piLine, piColumn), selectedText);
-			}
-			catch (Exception ex) {
-				Log.Warning(ex, nameof(GetActiveEditorState));
-			}
-
-			view = null;
-			return null;
-		}
-
-		public EditorState GetActiveEditorState() {
-			return GetActiveEditorState(out IVsTextView textView);
-		}
 
 		// someday, this can return...
 		//public bool QueryExtensions(string author, params string[] names)
@@ -547,12 +411,11 @@ namespace CodeStream.VisualStudio.Services {
 			}
 		}
 
-		private void ExecuteCommand(string commandName, string commandArgs = "") //must me " not null...
-		{
+		////must be "" rather than null...
+		private void ExecuteCommand(string commandName, string commandArgs = "") {
 			ThreadHelper.ThrowIfNotOnUIThread();
-
 			Log.Verbose("ExecuteCommand={CommandName} CommandArgs={commandArgs}", commandName, commandArgs);
-			var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
+			var dte = _serviceProvider.GetService(typeof(DTE)) as DTE;
 			if (dte == null) throw new ArgumentNullException(nameof(dte));
 			dte.ExecuteCommand(commandName, commandArgs);
 			Log.Debug("ExecuteCommand={CommandName} CommandArgs={commandArgs} Success", commandName, commandArgs);
@@ -583,22 +446,6 @@ namespace CodeStream.VisualStudio.Services {
 			staThread.Join();
 
 			return text as string;
-		}
-	}
-
-	public class ScrollSubjectArgs {
-		public Uri FileUri { get; set; }
-		public IWpfTextView WpfTextView { get; }
-		public int? ScrollToLine { get; }
-		public bool? AtTop { get; }
-		public bool? Focus { get; }
-		public bool WasEditorOpen { get; }
-
-		public ScrollSubjectArgs(Uri fileUri, int? scrollToLineFoo, bool? atTop, bool? focus) {
-			FileUri = fileUri;
-			ScrollToLine = scrollToLineFoo;
-			AtTop = atTop;
-			Focus = focus;
 		}
 	}
 }

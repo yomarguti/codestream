@@ -1,45 +1,54 @@
 ﻿using System;
 using System.Threading;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Models;
+using CodeStream.VisualStudio.Packages;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.Vssdk.Commands;
 using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.TextManager.Interop;
+using Serilog;
 
 namespace CodeStream.VisualStudio.Commands
 {
     internal abstract class AddCodemarkCommandBase : VsCommandBase {
+	    private static readonly ILogger Log = LogManager.ForContext<AddCodemarkCommandBase>();
+
 		protected AddCodemarkCommandBase(Guid commandSet, int commandId) : base(commandSet, commandId) { }
 		protected abstract CodemarkType CodemarkType { get; }
 
         protected override void ExecuteUntyped(object parameter) {
-			var codeStreamService = Microsoft.VisualStudio.Shell.Package.GetGlobalService((typeof(SCodeStreamService))) as ICodeStreamService;
-			if (codeStreamService == null || !codeStreamService.IsReady) return;
+	        try {
+		        var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
+		        if (codeStreamService == null || !codeStreamService.IsReady) return;
 
-			var ideService = Package.GetGlobalService((typeof(SIdeService))) as IdeService;
-			if (ideService == null) return;
+		        var componentModel = (IComponentModel) Package.GetGlobalService(typeof(SComponentModel));
+		        var editorService = componentModel.GetService<IEditorService>();
+		        var activeTextEditor = editorService.GetActiveTextEditorSelection();
+		        if (activeTextEditor == null) return;
 
-			var selectedText = ideService.GetActiveEditorState(out IVsTextView view);
-			if (view == null) return;
+				ThreadHelper.JoinableTaskFactory.Run(async delegate {
+			        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+			        try {
+				        var toolWindowProvider = Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
+				        toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
 
-			var componentModel = (IComponentModel)(Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SComponentModel)));
-			var exports = componentModel.DefaultExportProvider;
-
-			var wpfTextView = exports.GetExportedValue<IVsEditorAdaptersFactoryService>()?.GetWpfTextView(view);
-			if (wpfTextView == null) return;
-
-			if (!exports.GetExportedValue<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument)) return;
-
-			ThreadHelper.JoinableTaskFactory.Run(async delegate {
-				await codeStreamService.NewCodemarkAsync(new Uri(textDocument.FilePath), selectedText, CodemarkType, cancellationToken: CancellationToken.None);
-			});
-		}
+				        await codeStreamService.NewCodemarkAsync(activeTextEditor.Uri, activeTextEditor.Range,
+					        CodemarkType,
+					        cancellationToken: CancellationToken.None);
+			        }
+			        catch (Exception ex) {
+				        Log.Error(ex, "NewCodemarkAsync");
+					}
+				});
+	        }
+	        catch (Exception ex) {
+				Log.Error(ex, nameof(AddCodemarkCommandBase));
+	        }
+        }
 
         protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e) {
-	        var session = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+	        var session = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
 	        sender.Visible = session?.IsReady == true;
 		}
     }

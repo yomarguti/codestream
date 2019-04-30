@@ -15,13 +15,13 @@ namespace CodeStream.VisualStudio
         private static readonly ILogger Log = LogManager.ForContext<CodeStreamEventManager>();
 
         private readonly VsShellEventManager _vsShellEventManager;
-        private readonly Lazy<ICodeStreamService> _codeStreamService;
+        private readonly IBrowserService _browserService;
 
         public CodeStreamEventManager(VsShellEventManager vsShellEventManager,
-            Lazy<ICodeStreamService> codeStreamService)
+	        IBrowserService browserService)
         {
             _vsShellEventManager = vsShellEventManager;
-            _codeStreamService = codeStreamService;
+            _browserService = browserService;
             
             _vsShellEventManager.VisualStudioThemeChangedEventHandler += OnThemeChanged;
             _vsShellEventManager.BeforeSolutionClosingEventHandler += BeforeSolutionClosingEventHandler;
@@ -38,7 +38,7 @@ namespace CodeStream.VisualStudio
             {
                 Log.Information(nameof(OnThemeChanged));
 
-                _codeStreamService.Value.WebviewIpc?.BrowserService?.ReloadWebView();
+                _browserService?.ReloadWebView();
             }
             catch (Exception ex)
             {

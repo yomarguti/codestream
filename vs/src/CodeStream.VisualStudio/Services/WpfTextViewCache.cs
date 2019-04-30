@@ -1,10 +1,12 @@
-﻿using CodeStream.VisualStudio.Annotations;
-using Microsoft.VisualStudio.Text.Editor;
+﻿using Microsoft.VisualStudio.Text.Editor;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace CodeStream.VisualStudio.Services {
+	[Guid("56467630-0C95-4CDE-857A-E59AC6FDB852")]
 	public interface IWpfTextViewCache {
 		void Add(string key, IWpfTextView wpfTextView);
 		void Remove(string key, IWpfTextView wpfTextView);
@@ -12,10 +14,9 @@ namespace CodeStream.VisualStudio.Services {
 		int Count();
 	}
 
-	public interface SWpfTextViewCache { }
-
-	[Injected]
-	public class WpfTextViewCache : SWpfTextViewCache, IWpfTextViewCache {
+	[Export(typeof(IWpfTextViewCache))]
+	[PartCreationPolicy(CreationPolicy.Shared)]
+	public class WpfTextViewCache : IWpfTextViewCache {
 		private static readonly Dictionary<string, List<IWpfTextView>> Items =
 			new Dictionary<string, List<IWpfTextView>>(StringComparer.InvariantCultureIgnoreCase);
 		private static readonly object Locker = new object();

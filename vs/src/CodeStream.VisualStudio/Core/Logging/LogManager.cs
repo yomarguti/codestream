@@ -21,13 +21,10 @@ namespace CodeStream.VisualStudio.Core.Logging {
         private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Verbose;
 #endif
 
-		private static LoggingLevelSwitch _loggingLevelSwitch;
+		private static readonly LoggingLevelSwitch _loggingLevelSwitch = new LoggingLevelSwitch(_defaultLoggingLevel);
 		private static ILogger CreateLogger() {
 			try {
-				_loggingLevelSwitch = new LoggingLevelSwitch(_defaultLoggingLevel);
-
 				var logPath = Path.Combine(Application.LogPath, "vs-extension.log");
-
 				var template = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{ProcessId:00000}] {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}{NewLine}{Exception}";
 #if DEBUG
 				// day/month/year and processId just aren't that important when developing -- they take up space
@@ -71,10 +68,15 @@ namespace CodeStream.VisualStudio.Core.Logging {
 		}
 
 		public static void SetTraceLevel(TraceLevel level) {
-			var logEventLevel = FromTraceLevel(level);
-			if (_loggingLevelSwitch.MinimumLevel != logEventLevel) {
-				ForContext(typeof(LogManager)).Information("Set Logging Level: {LogEventLevel}", logEventLevel);
-				_loggingLevelSwitch.MinimumLevel = logEventLevel;
+			try {
+				var logEventLevel = FromTraceLevel(level);
+				if (_loggingLevelSwitch.MinimumLevel != logEventLevel) {
+					ForContext(typeof(LogManager)).Information("Set Logging Level: {LogEventLevel}", logEventLevel);
+					_loggingLevelSwitch.MinimumLevel = logEventLevel;
+				}
+			}
+			catch {
+				//suffer
 			}
 		}
 

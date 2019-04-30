@@ -40,7 +40,6 @@ namespace CodeStream.VisualStudio.Packages {
 	[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
 	public sealed class WebViewPackage : AsyncPackage {
 		private static readonly ILogger Log = LogManager.ForContext<WebViewPackage>();
-		private Lazy<ICodeStreamService> _codeStreamService;
 		private ISettingsService _settingsService;
 		private IDisposable _languageServerReadyEvent;
 		private VsShellEventManager _vsShellEventManager;
@@ -82,47 +81,53 @@ namespace CodeStream.VisualStudio.Packages {
 			await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeCommandsAsync);
 		}
 
-		private async System.Threading.Tasks.Task InitializeCommandsAsync() {
-			var userCommand = new UserCommand();
-			_commands = new List<VsCommandBase> {
+		private async Task InitializeCommandsAsync() {
+			try {
+				var userCommand = new UserCommand();
+
+				_commands = new List<VsCommandBase> {
 #if DEBUG
-				new WebViewDevToolsCommand(),
+					new WebViewDevToolsCommand(),
 #endif
-				new AddCodemarkCommentCommand(),
-				new AddCodemarkIssueCommand(),
-				new AddCodemarkBookmarkCommand(),
-				new AddCodemarkPermalinkCommand(),
-				new AddCodemarkPermalinkInstantCommand(),
-				new WebViewReloadCommand(),
-				new WebViewToggleCommand(this),
-				new AuthenticationCommand(this),
-				userCommand
-			};
-			await JoinableTaskFactory.SwitchToMainThreadAsync();
+					new AddCodemarkCommentCommand(),
+					new AddCodemarkIssueCommand(),
+					new AddCodemarkBookmarkCommand(),
+					new AddCodemarkPermalinkCommand(),
+					new AddCodemarkPermalinkInstantCommand(),
+					new WebViewReloadCommand(),
+					new WebViewToggleCommand(this),
+					new AuthenticationCommand(this, this),
+					userCommand
+				};
+				await JoinableTaskFactory.SwitchToMainThreadAsync();
+				await InfoBarProvider.InitializeAsync(this);
 
-			await InfoBarProvider.InitializeAsync(this);
-			var menuCommandService = (IMenuCommandService)(await GetServiceAsync(typeof(IMenuCommandService)));
-			foreach (var command in _commands) {
-				menuCommandService.AddCommand(command);
+				var menuCommandService = (IMenuCommandService) (await GetServiceAsync(typeof(IMenuCommandService)));
+				foreach (var command in _commands) {
+					menuCommandService.AddCommand(command);
+				}
+				await BookmarkShortcutRegistration.InitializeAllAsync(this);
+
+				var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
+				_disposables = new List<IDisposable> {
+					//when a user has logged in/out we alter the text of some of the commands
+					eventAggregator?.GetEvent<SessionReadyEvent>().Subscribe(_ => {
+						ThreadHelper.JoinableTaskFactory.Run(async delegate {
+							await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+							userCommand.TriggerChange();
+						});
+					}),
+					eventAggregator?.GetEvent<SessionLogoutEvent>().Subscribe(_ => {
+						ThreadHelper.JoinableTaskFactory.Run(async delegate {
+							await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+							userCommand.TriggerChange();
+						});
+					})
+				};
 			}
-			await BookmarkShortcutRegistration.InitializeAllAsync(this);
-
-			var eventAggregator = await GetServiceAsync(typeof(SEventAggregator)) as IEventAggregator;
-			_disposables = new List<IDisposable> {
-				//when a user has logged in/out we alter the text of some of the commands
-				eventAggregator?.GetEvent<SessionReadyEvent>().Subscribe(_ => {
-					ThreadHelper.JoinableTaskFactory.Run(async delegate {
-						await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-						userCommand.TriggerChange();
-					});
-				}),
-				eventAggregator?.GetEvent<SessionLogoutEvent>().Subscribe(_ => {
-					ThreadHelper.JoinableTaskFactory.Run(async delegate {
-						await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-						userCommand.TriggerChange();
-					});
-				})
-			};
+			catch (Exception ex) {
+				Log.Error(ex, nameof(InitializeCommandsAsync));
+			}
 		}
 
 		void InitializeLogging() {
@@ -154,29 +159,33 @@ namespace CodeStream.VisualStudio.Packages {
 			}
 			else {
 				ThreadHelper.JoinableTaskFactory.Run(async delegate {
-					await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-					await TryTriggerLspActivationAsync();
+					try {
+						await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+						await TryTriggerLspActivationAsync();
+						var sessionService = GetGlobalService(typeof(SSessionService)) as ISessionService;
 
-					var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
-					var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
-					_vsShellEventManager = new VsShellEventManager(Package.GetGlobalService(typeof(SVsShellMonitorSelection)) as IVsMonitorSelection);
-					_codeStreamService = new Lazy<ICodeStreamService>(() => GetService(typeof(SCodeStreamService)) as ICodeStreamService);
-
-					if (sessionService?.IsAgentReady == true) {
-						InitializeEvents();
-					}
-					else {
-						// ReSharper disable once PossibleNullReferenceException
-						_languageServerReadyEvent = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ => {
-							ThreadHelper.ThrowIfNotOnUIThread();
+						if (sessionService?.IsAgentReady == true) {
 							InitializeEvents();
-						});
-					}
+						}
+						else {
+							var eventAggregator = GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
+							// ReSharper disable once PossibleNullReferenceException
+							_languageServerReadyEvent = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(
+								_ => {
+									ThreadHelper.ThrowIfNotOnUIThread();
+									InitializeEvents();
+								});
+						}
 
-					// Avoid delays when there is ongoing UI activity.
-					// See: https://github.com/github/VisualStudio/issues/1537
-					await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, OnSolutionLoadedInitialAsync);
-					_hasOpenedSolutionOnce = true;
+						// Avoid delays when there is ongoing UI activity.
+						// See: https://github.com/github/VisualStudio/issues/1537
+						await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, OnSolutionLoadedInitialAsync);
+						_hasOpenedSolutionOnce = true;
+
+					}
+					catch (Exception ex) {
+						Log.Error(ex, nameof(OnAfterBackgroundSolutionLoadComplete));
+					}
 				});
 			}
 		}
@@ -187,8 +196,10 @@ namespace CodeStream.VisualStudio.Packages {
 		/// <returns></returns>
 		private async Task TryTriggerLspActivationAsync() {
 			var hasActiveEditor = false;
+			EnvDTE.DTE dte = null;
 			try {
-				var dte = Package.GetGlobalService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+				await JoinableTaskFactory.SwitchToMainThreadAsync();
+				dte = GetGlobalService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
 				hasActiveEditor = dte?.Documents?.Count > 0;
 			}
 			catch (Exception ex) {
@@ -196,7 +207,7 @@ namespace CodeStream.VisualStudio.Packages {
 			}
 			bool? languageClientActivatorResult = null;
 			if (!hasActiveEditor) {
-				languageClientActivatorResult = await LanguageClientActivator.InitializeAsync();
+				languageClientActivatorResult = await LanguageClientActivator.InitializeAsync(dte);
 			}
 			Log.Debug($"{nameof(TryTriggerLspActivationAsync)} HasActiveEditor={hasActiveEditor} LanguageClientActivatorResult={languageClientActivatorResult}");
 
@@ -209,7 +220,8 @@ namespace CodeStream.VisualStudio.Packages {
 			if (!_initializedEvents) {
 				lock (_eventLocker) {
 					if (!_initializedEvents) {
-						_codeStreamEventManager = new CodeStreamEventManager(_vsShellEventManager, _codeStreamService);
+						_vsShellEventManager = new VsShellEventManager(GetGlobalService(typeof(SVsShellMonitorSelection)) as IVsMonitorSelection);
+						_codeStreamEventManager = new CodeStreamEventManager(_vsShellEventManager, GetGlobalService(typeof(SBrowserService)) as IBrowserService);
 						_initializedEvents = true;
 					}
 				}
@@ -250,25 +262,26 @@ namespace CodeStream.VisualStudio.Packages {
 					 args.PropertyName == nameof(_settingsService.ProxyUrl) ||
 					 args.PropertyName == nameof(_settingsService.ProxyStrictSsl)) {
 				Log.Information($"Url(s) or Team or Proxy changed");
-				var sessionService = GetService(typeof(SSessionService)) as ISessionService;
+				var sessionService = GetGlobalService(typeof(SSessionService)) as ISessionService;
 				if (sessionService?.IsAgentReady == true || sessionService?.IsReady == true) {
-					var browserService = GetService(typeof(SBrowserService)) as IBrowserService;
+					var browserService = GetGlobalService(typeof(SBrowserService)) as IBrowserService;
 					browserService?.ReloadWebView();
 				}
 			}
 		}
 
-		private async System.Threading.Tasks.Task OnSolutionLoadedInitialAsync() {
+		private async Task OnSolutionLoadedInitialAsync() {
 			await OnSolutionLoadedAlwaysAsync();
 			if (_settingsService != null) {
 				_settingsService.DialogPage.PropertyChanged += DialogPage_PropertyChanged;
 			}
 
-			await System.Threading.Tasks.Task.CompletedTask;
+			await Task.CompletedTask;
 		}
 
-		private async System.Threading.Tasks.Task OnSolutionLoadedAlwaysAsync() {
-			await System.Threading.Tasks.Task.CompletedTask;
+		private async Task OnSolutionLoadedAlwaysAsync() {
+			// no-op
+			await Task.CompletedTask;
 		}
 
 		protected override void Dispose(bool isDisposing) {
