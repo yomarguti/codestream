@@ -16,9 +16,10 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.util.Iconable
 import com.intellij.psi.PsiFile
+import java.awt.event.KeyEvent
 
 abstract class NewCodemark(val type: CodemarkType) : AnAction(), IntentionAction, LowPriorityAction, Iconable {
-    private fun execute(project: Project) {
+    private fun execute(project: Project, source: String) {
         FileEditorManager.getInstance(project).selectedTextEditor?.run {
             project.codeStream?.show {
                 project.webViewService?.postNotification(
@@ -26,7 +27,7 @@ abstract class NewCodemark(val type: CodemarkType) : AnAction(), IntentionAction
                         document.uri,
                         selectionOrCurrentLine,
                         type,
-                        null
+                        source
                     )
                 )
             }
@@ -34,11 +35,16 @@ abstract class NewCodemark(val type: CodemarkType) : AnAction(), IntentionAction
     }
 
     override fun actionPerformed(e: AnActionEvent) {
-        e.project?.let { execute(it) }
+        val source = when {
+            e.isFromContextMenu -> "Context Menu"
+            e.inputEvent is KeyEvent -> "Shortcut"
+            else -> "Action List"
+        }
+        e.project?.let { execute(it, source) }
     }
 
     override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
-        execute(project)
+        execute(project, "Lightbulb Menu")
     }
 
     override fun startInWriteAction() = true
