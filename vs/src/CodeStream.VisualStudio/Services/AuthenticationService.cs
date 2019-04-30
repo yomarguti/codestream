@@ -51,14 +51,14 @@ namespace CodeStream.VisualStudio.Services {
 					await _agentService.LogoutAsync();
 				}
 				catch (Exception ex) {
-					Log.Warning(ex, $"{nameof(LogoutAsync)} - agent");
+					Log.Error(ex, $"{nameof(LogoutAsync)} - agent");
 				}
 
 				try {
 					_sessionService.Logout();
 				}
 				catch (Exception ex) {
-					Log.Warning(ex, $"{nameof(LogoutAsync)} - session");
+					Log.Error(ex, $"{nameof(LogoutAsync)} - session");
 				}
 
 				_eventAggregator.Publish(new SessionLogoutEvent());

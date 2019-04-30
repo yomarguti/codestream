@@ -144,7 +144,7 @@ namespace CodeStream.VisualStudio.UI {
 					.ToList();
 
 				if (!textViewMarginProviders.AnySafe()) {
-					Log.Warning($"No {nameof(textViewMarginProviders)}");
+					Log.LocalWarning($"No {nameof(textViewMarginProviders)}");
 					return;
 				}
 
@@ -442,13 +442,13 @@ namespace CodeStream.VisualStudio.UI {
 			}
 
 			if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextView.TextBuffer, out var textDocument)) {
-				Log.Verbose(@"TextDocument not found");
+				Log.LocalWarning(@"TextDocument not found");
 				return;
 			}
 
 			if (!wpfTextView.Properties.TryGetProperty(PropertyNames.DocumentMarkerManager, out DocumentMarkerManager documentMarkerManager)
 				|| documentMarkerManager == null) {
-				Log.Warning($"{nameof(documentMarkerManager)} is null");
+				Log.Error($"{nameof(documentMarkerManager)} is null");
 				return;
 			}
 

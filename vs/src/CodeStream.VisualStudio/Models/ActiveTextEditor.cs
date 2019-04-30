@@ -43,7 +43,7 @@ namespace CodeStream.VisualStudio.Models {
 		public bool Highlight(Range range, bool highlight) {
 			var adornmentManager = this.GetHighlightAdornmentManager();
 			if (adornmentManager == null) {
-				Log.Warning($"{nameof(adornmentManager)}:{nameof(Highlight)} not found for FilePath={FilePath} Uri={Uri}");
+				Log.LocalWarning($"{nameof(adornmentManager)}:{nameof(Highlight)} not found for FilePath={FilePath} Uri={Uri}");
 				return false;
 			}
 
@@ -56,7 +56,7 @@ namespace CodeStream.VisualStudio.Models {
 		public void RemoveAllHighlights() {
 			var adornmentManager = this.GetHighlightAdornmentManager();
 			if (adornmentManager == null) {
-				Log.Warning($"{nameof(adornmentManager)}:{nameof(RemoveAllHighlights)} not found for FilePath={FilePath} Uri={Uri}");
+				Log.LocalWarning($"{nameof(adornmentManager)}:{nameof(RemoveAllHighlights)} not found for FilePath={FilePath} Uri={Uri}");
 				return;
 			}
 

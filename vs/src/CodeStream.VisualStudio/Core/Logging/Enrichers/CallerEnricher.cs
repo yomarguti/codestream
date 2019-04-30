@@ -25,8 +25,11 @@ namespace CodeStream.VisualStudio.Core.Logging.Enrichers {
 				}
 
 				var method = stack.GetMethod();
-				if (method.DeclaringType != null && method.DeclaringType.FullName != "SerilogTimings.Operation"
-				                                 && method.DeclaringType.Assembly != typeof(Log).Assembly) {
+				if (method.DeclaringType != null
+					&& method.DeclaringType.FullName != "SerilogTimings.Operation"
+					&& method.DeclaringType.FullName != "CodeStream.VisualStudio.IpcLogger"
+					&& method.DeclaringType.FullName != "CodeStream.VisualStudio.IpcLogger.CriticalOperation"					
+					&& method.DeclaringType.Assembly != typeof(Log).Assembly) {
 					var caller = $"{method.DeclaringType.FullName}.{method.Name}({string.Join(", ", method.GetParameters().Select(pi => pi.ParameterType.FullName))})";
 					logEvent.AddPropertyIfAbsent(new LogEventProperty("Caller", new ScalarValue(caller)));
 				}

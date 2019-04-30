@@ -239,7 +239,7 @@ namespace CodeStream.VisualStudio {
 
 										// Webview no longer sends these updates -- keeping for reference
 #if DEBUG
-										Log.Warning(message.ToJson());
+										Log.LocalWarning(message.ToJson());
 #endif
 										//using (var scope = SettingsScope.Create(_settingsService))
 										//{

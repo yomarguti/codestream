@@ -161,7 +161,7 @@ namespace CodeStream.VisualStudio.Services {
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 					var dte = _serviceProvider.GetService(typeof(DTE)) as DTE;
 					if (dte == null) {
-						Log.Warning($"{nameof(dte)} is null for {fileUri}");
+						Log.Error($"{nameof(dte)} is null for {fileUri}");
 						return null;
 					}
 

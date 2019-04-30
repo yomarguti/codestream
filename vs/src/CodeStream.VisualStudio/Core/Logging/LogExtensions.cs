@@ -5,6 +5,7 @@ using Serilog.Events;
 using SerilogTimings.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace CodeStream.VisualStudio.Core.Logging {
 	public static class LogExtensions {
@@ -14,6 +15,13 @@ namespace CodeStream.VisualStudio.Core.Logging {
 			return logger.TimeOperation(message, logEventLevel);
 		}
 
+		/// <summary>
+		/// Defaults to add timings only when in Verbose mode
+		/// </summary>
+		/// <param name="logger"></param>
+		/// <param name="message"></param>
+		/// <param name="logEventLevel"></param>
+		/// <returns></returns>
 		public static IDisposable CriticalOperation(this ILogger logger, Dictionary<string, object> message, LogEventLevel logEventLevel = LogEventLevel.Verbose) {
 			if (logger == null || !logger.IsEnabled(logEventLevel)) return null;
 
@@ -36,6 +44,11 @@ namespace CodeStream.VisualStudio.Core.Logging {
 #else
 			return null;
 #endif
+		}
+
+		[Conditional("DEBUG")]
+		public static void LocalWarning(this ILogger logger, string message) {
+			logger.Warning(message);
 		}
 	}
 }

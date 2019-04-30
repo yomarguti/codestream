@@ -59,7 +59,7 @@ namespace CodeStream.VisualStudio.Commands {
 						}
 					}
 					catch (Exception ex) {
-						Log.Warning(ex, nameof(ExecuteUntyped));
+						Log.Error(ex, nameof(ExecuteUntyped));
 					}
 				});
 			}

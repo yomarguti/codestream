@@ -119,7 +119,7 @@ namespace CodeStream.VisualStudio.Services {
 					}
 				}
 				catch (Exception ex) {
-					Log.Warning(ex.Message);
+					Log.Error(ex.Message);
 				}
 			}, processorToken, TaskCreationOptions.None, TaskScheduler.Default);
 		}

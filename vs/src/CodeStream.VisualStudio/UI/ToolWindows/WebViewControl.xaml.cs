@@ -50,7 +50,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 				_sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
 
 				if (_sessionService == null) {
-					Log.Warning("SessionService is null");
+					Log.Error("SessionService is null");
 				}
 				else {
 					_languageServerDisconnectedEvent = _eventAggregator?.GetEvent<LanguageServerDisconnectedEvent>().Subscribe(_ => {
@@ -65,7 +65,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 				}
 			}
 			else {
-				Log.Warning("BrowserService is null");
+				Log.Error("BrowserService is null");
 			}
 
 			Log.Debug($"{nameof(OnInitialized)}");

@@ -26,9 +26,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			string color = _viewModel.Marker.Codemark.Color;
 			if (_viewModel.Marker.Codemark.Color.IsNullOrWhiteSpace()) {
 				color = "blue";
-#if DEBUG
-				Log.Warning($"Color missing for {_viewModel.Marker.Codemark.Id} Defaulting to {color}");
-#endif
+				Log.LocalWarning($"Color missing for {_viewModel.Marker.Codemark.Id} Defaulting to {color}");
 			}
 
 			ImageUri = $"pack://application:,,,/CodeStream.VisualStudio;component/Resources/Assets/marker-{_viewModel.Marker.Codemark.Type}-{color}.png";
