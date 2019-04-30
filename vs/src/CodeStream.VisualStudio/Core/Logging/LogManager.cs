@@ -18,7 +18,7 @@ namespace CodeStream.VisualStudio.Core.Logging {
 #if DEBUG
 		private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Verbose;
 #else
-        private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Verbose;
+        private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Information;
 #endif
 
 		private static readonly LoggingLevelSwitch _loggingLevelSwitch = new LoggingLevelSwitch(_defaultLoggingLevel);
@@ -47,7 +47,8 @@ namespace CodeStream.VisualStudio.Core.Logging {
 						logPath,
 						fileSizeLimitBytes: 52428800,
 						shared: true)
-					.WriteTo.CustomOutput(Guids.LoggingOutputPaneGuid, "CodeStream", outputTemplate: template, levelSwitch: _loggingLevelSwitch)
+						// this can cause performance issues if used at Verbose mode
+					.WriteTo.CustomOutput(Guids.LoggingOutputPaneGuid, "CodeStream", outputTemplate: template, restrictedToMinimumLevel : LogEventLevel.Error)
 					.CreateLogger();
 			}
 			catch (Exception ex) {
