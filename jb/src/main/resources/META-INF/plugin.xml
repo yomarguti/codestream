@@ -157,8 +157,8 @@
     </project-components>
 
     <actions>
-        <group id="com.codestream.Actions" popup="true" text="CodeStream" icon="/images/codestream.svg">
-            <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="VcsGroup"/>
+        <group id="com.codestream.Actions" popup="true" text="CodeStream" icon="/images/codestream-color.svg">
+            <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="EditorPopupMenu2"/>
             <action id="CodeStream.AddComment" class="com.codestream.actions.AddComment" text="Add _Comment"
                     description="Add comment" icon="/images/marker-comment.svg">
                 <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH" second-keystroke="C"/>
