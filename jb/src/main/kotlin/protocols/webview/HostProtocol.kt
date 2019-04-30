@@ -101,6 +101,11 @@ class EditorScrollToRequest(
     val atTop: Boolean
 )
 
+class ShellPromptFolderResponse(
+    val path: String?,
+    val success: Boolean
+)
+
 class MarkerCompareRequest(
     val marker: Marker
 )

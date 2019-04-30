@@ -352,6 +352,8 @@
             <className>com.codestream.actions.GetPermalink</className>
             <category>Other</category>
         </intentionAction>
+
+        <jbProtocolCommand implementation="com.codestream.commands.CodeStreamCommand"/>
     </extensions>
 
     <project-components>

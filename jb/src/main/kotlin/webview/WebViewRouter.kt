@@ -14,6 +14,8 @@ import com.github.salomonbrys.kotson.string
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.fileChooser.FileChooser
+import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.future.await
@@ -27,6 +29,7 @@ import protocols.webview.EditorRangeSelectResponse
 import protocols.webview.EditorScrollToRequest
 import protocols.webview.MarkerApplyRequest
 import protocols.webview.MarkerCompareRequest
+import protocols.webview.ShellPromptFolderResponse
 import protocols.webview.UpdateConfigurationRequest
 
 class WebViewRouter(val project: Project) {
@@ -86,6 +89,7 @@ class WebViewRouter(val project: Project) {
             "host/editor/range/reveal" -> editorRangeReveal(message)
             "host/editor/range/select" -> editorRangeSelect(message)
             "host/editor/scrollTo" -> editorScrollTo(message)
+            "host/shell/prompt/folder" -> shellPromptFolder(message)
             else -> logger.warn("Unhandled host message ${message.method}")
         }
         if (message.id != null) {
@@ -149,6 +153,15 @@ class WebViewRouter(val project: Project) {
     private fun editorScrollTo(message: WebViewMessage) {
         val request = gson.fromJson<EditorScrollToRequest>(message.params!!)
         project.editorService?.scroll(request.uri, request.position, request.atTop)
+    }
+
+    private fun shellPromptFolder(message: WebViewMessage): ShellPromptFolderResponse {
+        val file = FileChooser.chooseFile(
+            FileChooserDescriptor(false, true, false, false, false, false),
+            null, null
+        )
+
+        return ShellPromptFolderResponse(file?.path, file != null)
     }
 
     private fun parse(json: String): WebViewMessage {

@@ -72,6 +72,14 @@ object FocusNotifications {
     }
 }
 
+object HostNotifications {
+    class DidReceiveRequest(
+        url: String?
+    ) : WebViewNotification {
+        override fun getMethod(): String = "webview/request/parse"
+    }
+}
+
 class DidLogout() : WebViewNotification {
     override fun getMethod(): String = "webview/didLogout"
 }
