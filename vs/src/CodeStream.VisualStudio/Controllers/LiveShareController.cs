@@ -11,34 +11,30 @@ using System.Collections.Generic;
 using System.Linq;
 using Task = System.Threading.Tasks.Task;
 
-namespace CodeStream.VisualStudio.Controllers
-{
-    public class LiveShareController
-    {
-        private static readonly ILogger Log = LogManager.ForContext<LiveShareController>();
+namespace CodeStream.VisualStudio.Controllers {
+	public class LiveShareController {
+		private static readonly ILogger Log = LogManager.ForContext<LiveShareController>();
 
-        private readonly ISessionService _sessionService;
-        private readonly ICodeStreamAgentService _codeStreamAgent;
-        private readonly IEventAggregator _eventAggregator;
-        private readonly IWebviewIpc _ipc;
-        private readonly IIdeService _ideService;
+		private readonly ISessionService _sessionService;
+		private readonly ICodeStreamAgentService _codeStreamAgent;
+		private readonly IEventAggregator _eventAggregator;
+		private readonly IWebviewIpc _ipc;
+		private readonly IIdeService _ideService;
 
-        public LiveShareController(
-            ISessionService sessionService,
-            ICodeStreamAgentService codeStreamAgent,
-            IEventAggregator eventAggregator,
-            IWebviewIpc ipc,
-            IIdeService ideService)
-        {
-            _sessionService = sessionService;
-            _codeStreamAgent = codeStreamAgent;
-            _eventAggregator = eventAggregator;
-            _ipc = ipc;
-            _ideService = ideService;
-        }
+		public LiveShareController(
+			ISessionService sessionService,
+			ICodeStreamAgentService codeStreamAgent,
+			IEventAggregator eventAggregator,
+			IWebviewIpc ipc,
+			IIdeService ideService) {
+			_sessionService = sessionService;
+			_codeStreamAgent = codeStreamAgent;
+			_eventAggregator = eventAggregator;
+			_ipc = ipc;
+			_ideService = ideService;
+		}
 
-        private async Task CreatePostAsync(string streamId, string threadId, string url)
-        {
+		private async Task CreatePostAsync(string streamId, string threadId, string url) {
 			if (url.IsNullOrWhiteSpace()) {
 				Log.Debug($"{nameof(CreatePostAsync)} url is missing");
 				await Task.CompletedTask;
@@ -59,122 +55,97 @@ namespace CodeStream.VisualStudio.Controllers
 					Log.Warning(ex, "Could not post Live Share url");
 				}
 			}
-        }
+		}
 
-        public async Task StartAsync(string streamId, string threadId)
-        {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+		public async Task StartAsync(string streamId, string threadId) {
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            var existingUrl = _sessionService.LiveShareUrl;
-            if (!existingUrl.IsNullOrWhiteSpace())
-            {
-                await CreatePostAsync(streamId, threadId, existingUrl);
-            }
-            else
-            {
-                if (!_ideService.TryStartLiveShare())
-                {
-                    await Task.CompletedTask;
-                }
-                else
-                {
-                    IDisposable liveShareReadyEvent = null;
-                    liveShareReadyEvent = _eventAggregator.GetEvent<LiveShareStartedEvent>().Subscribe((_) =>
-                    {
-                        try
-                        {
-                            liveShareReadyEvent?.Dispose();
+			var existingUrl = _sessionService.LiveShareUrl;
+			if (!existingUrl.IsNullOrWhiteSpace()) {
+				await CreatePostAsync(streamId, threadId, existingUrl);
+			}
+			else {
+				if (!_ideService.TryStartLiveShare()) {
+					await Task.CompletedTask;
+				}
+				else {
+					IDisposable liveShareReadyEvent = null;
+					liveShareReadyEvent = _eventAggregator.GetEvent<LiveShareStartedEvent>().Subscribe((_) => {
+						try {
+							liveShareReadyEvent?.Dispose();
 
-                            _ideService.GetClipboardTextValueAsync(10000, async (string url) =>
-                            {
-                                await CreatePostAsync(streamId, threadId, url);
-                            }, RegularExpressions.LiveShareUrl);
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Error(ex, "Could not start Live Share");
-                        }
-                    });
-                }
-            }
+							_ideService.GetClipboardTextValueAsync(10000, async (string url) => {
+								await CreatePostAsync(streamId, threadId, url);
+							}, RegularExpressions.LiveShareUrl);
+						}
+						catch (Exception ex) {
+							Log.Error(ex, "Could not start Live Share");
+						}
+					});
+				}
+			}
 
-            await Task.CompletedTask;
-        }
+			await Task.CompletedTask;
+		}
 
-        public async Task InviteAsync(object userIdObj)
-        {
-            try
-            {
-                var userIds = new List<string>();
-                var userId = userIdObj as string;
-                if (userId != null)
-                {
-                    userIds.Add(userId);
-                }
-                else
-                {
-                    userIds = userIdObj as List<string>;
-                }
+		public async Task InviteAsync(object userIdObj) {
+			try {
+				var userIds = new List<string>();
+				var userId = userIdObj as string;
+				if (userId != null) {
+					userIds.Add(userId);
+				}
+				else {
+					userIds = userIdObj as List<string>;
+				}
 
-                if (userId != null)
-                {
-                    var memberIds = new List<string> { _sessionService.User.Id };
-                    foreach (var id in userIds)
-                    {
-                        var userResponse = await _codeStreamAgent.GetUserAsync(id);
-                        memberIds.Add(userResponse.User.Id);
-                    }
+				if (userId != null) {
+					var memberIds = new List<string> { _sessionService.User.Id };
+					foreach (var id in userIds) {
+						var userResponse = await _codeStreamAgent.GetUserAsync(id);
+						memberIds.Add(userResponse.User.Id);
+					}
 
-                    CsStream stream = null;
-                    var fetchStreamsResponse = await _codeStreamAgent.FetchStreamsAsync(new FetchStreamsRequest
-                    {
-                        Types = new List<StreamType> { StreamType.direct },
-                        MemberIds = memberIds
-                    });
+					CsStream stream = null;
+					var fetchStreamsResponse = await _codeStreamAgent.FetchStreamsAsync(new FetchStreamsRequest {
+						Types = new List<StreamType> { StreamType.direct },
+						MemberIds = memberIds
+					});
 
-                    if (fetchStreamsResponse != null)
-                    {
-                        stream = fetchStreamsResponse.Streams.FirstOrDefault();
-                    }
+					if (fetchStreamsResponse != null) {
+						stream = fetchStreamsResponse.Streams.FirstOrDefault();
+					}
 
-                    if (stream == null)
-                    {
-                        stream = await _codeStreamAgent.CreateDirectStreamAsync(memberIds);
-                    }
+					if (stream == null) {
+						stream = await _codeStreamAgent.CreateDirectStreamAsync(memberIds);
+					}
 
-                    if (_sessionService.LiveShareUrl.IsNullOrWhiteSpace())
-                    {
-                        // user clicked invite before starting a Live Share -- create one now!
-                        await StartAsync(stream.Id, null);
-                    }
-                    else
-                    {
-                        var postResponse = await _codeStreamAgent.CreatePostAsync(stream.Id, null,
-                            $"Join my Live Share session: {_sessionService.LiveShareUrl}");
-                        if (postResponse != null)
-                        {
-                            // view thread
-                            _ipc.Notify(new ShowStreamNotificationType
-                            {
-                                Params = new ShowStreamNotification
-                                {
-                                    StreamId = stream.Id
-                                }
-                            });
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Error inviting to Live Share");
-            }
-        }
+					if (_sessionService.LiveShareUrl.IsNullOrWhiteSpace()) {
+						// user clicked invite before starting a Live Share -- create one now!
+						await StartAsync(stream.Id, null);
+					}
+					else {
+						var postResponse = await _codeStreamAgent.CreatePostAsync(stream.Id, null,
+							$"Join my Live Share session: {_sessionService.LiveShareUrl}");
+						if (postResponse != null) {
+							// view thread
+							_ipc.Notify(new ShowStreamNotificationType {
+								Params = new ShowStreamNotification {
+									StreamId = stream.Id
+								}
+							});
+						}
+					}
+				}
+			}
+			catch (Exception ex) {
+				Log.Error(ex, "Error inviting to Live Share");
+			}
+		}
 
-        public Task JoinAsync(string url)
-        {
-            _ideService.Navigate(url);
-            return Task.CompletedTask;
-        }
-    }
+		public Task JoinAsync(string url) {
+			_ideService.Navigate(url);
+			return Task.CompletedTask;
+		}
+	}
 }

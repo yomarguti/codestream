@@ -6,6 +6,7 @@ using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Adornments;
 using CodeStream.VisualStudio.UI.Margins;
+using Microsoft;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
@@ -148,6 +149,7 @@ namespace CodeStream.VisualStudio.UI {
 				}
 
 				var eventAggregator = _serviceProvider.GetService(typeof(SEventAggregator)) as IEventAggregator;
+				Assumes.Present(eventAggregator);
 				using (Log.CriticalOperation($"{nameof(VsTextViewCreated)}")) {
 					wpfTextView.Properties.AddProperty(PropertyNames.TextViewMarginProviders, textViewMarginProviders);
 					Debug.Assert(eventAggregator != null, nameof(eventAggregator) + " != null");
@@ -274,6 +276,7 @@ namespace CodeStream.VisualStudio.UI {
 						if (!state.Initialized) {
 							Log.Verbose($"{nameof(OnSessionReady)} state=initializing");
 							var eventAggregator = _serviceProvider.GetService(typeof(SEventAggregator)) as IEventAggregator;
+							Assumes.Present(eventAggregator);
 							wpfTextView.Properties.AddProperty(PropertyNames.AdornmentManager, new HighlightAdornmentManager(wpfTextView));
 							wpfTextView.Properties.AddProperty(PropertyNames.TextViewLocalEvents,
 								new List<IDisposable> {

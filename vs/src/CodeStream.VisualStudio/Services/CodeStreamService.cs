@@ -3,6 +3,7 @@ using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.UI;
+using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
@@ -63,11 +64,12 @@ namespace CodeStream.VisualStudio.Services {
 			if (IsReady) {
 				try {
 					var componentModel = await _asyncServiceProvider.GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
+					Assumes.Present(componentModel);
 					var editorService = componentModel.GetService<IEditorService>();
 					activeTextEditor = activeTextEditor ?? editorService.GetActiveTextEditor(uri);
 					var editorState = editorService.GetActiveEditorState();
 
-					WebviewIpc.Notify(new HostDidChangeActiveEditorNotificationType {
+					_ = WebviewIpc.NotifyAsync(new HostDidChangeActiveEditorNotificationType {
 						Params = new HostDidChangeActiveEditorNotification {
 							Editor = new HostDidChangeActiveEditorNotificationEditor(fileName,
 							uri,
@@ -92,7 +94,7 @@ namespace CodeStream.VisualStudio.Services {
 			if (!IsReady) return Task.CompletedTask;
 
 			try {
-				WebviewIpc.Notify(new HostDidChangeActiveEditorNotificationType {
+				_ = WebviewIpc.NotifyAsync(new HostDidChangeActiveEditorNotificationType {
 					Params = new HostDidChangeActiveEditorNotificationBase()
 				});
 			}
@@ -106,7 +108,7 @@ namespace CodeStream.VisualStudio.Services {
 			if (!IsReady) return Task.CompletedTask;
 
 			try {
-				WebviewIpc.Notify(new ShowStreamNotificationType {
+				_ = WebviewIpc.NotifyAsync(new ShowStreamNotificationType {
 					Params = new ShowStreamNotification {
 						StreamId = streamId,
 						ThreadId = threadId
@@ -122,7 +124,7 @@ namespace CodeStream.VisualStudio.Services {
 
 		public async Task ShowCodemarkAsync(string codemarkId, CancellationToken? cancellationToken = null) {
 			if (IsReady && !codemarkId.IsNullOrWhiteSpace()) {
-				await WebviewIpc.NotifyAsync(new ShowCodemarkNotificationType {
+				_ = WebviewIpc.NotifyAsync(new ShowCodemarkNotificationType {
 					Params = new ShowCodemarkNotification {
 						CodemarkId = codemarkId
 					}
@@ -136,7 +138,7 @@ namespace CodeStream.VisualStudio.Services {
 			if (!IsReady) return Task.CompletedTask;
 
 			try {
-				WebviewIpc.Notify(new HostDidChangeEditorSelectionNotificationType {
+				_ = WebviewIpc.NotifyAsync(new HostDidChangeEditorSelectionNotificationType {
 					Params = new HostDidChangeEditorSelectionNotification(uri, editorState.ToEditorSelectionsSafe(), visibleRanges, totalLines)
 				});
 			}
@@ -150,7 +152,7 @@ namespace CodeStream.VisualStudio.Services {
 		public async Task NewCodemarkAsync(Uri uri, Range range, CodemarkType codemarkType, CancellationToken? cancellationToken = null) {
 			if (IsReady) {
 				try {
-					WebviewIpc.Notify(new NewCodemarkNotificationType {
+					_ = WebviewIpc.NotifyAsync(new NewCodemarkNotificationType {
 						Params = new NewCodemarkNotification(uri, range, codemarkType)
 					});
 				}
@@ -164,7 +166,7 @@ namespace CodeStream.VisualStudio.Services {
 
 		public async Task TrackAsync(string eventName, TelemetryProperties properties = null) {
 			if (IsReady) {
-				AgentService.TrackAsync(eventName, properties);
+				_ = AgentService.TrackAsync(eventName, properties);
 			}
 
 			await Task.CompletedTask;
