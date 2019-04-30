@@ -3,23 +3,18 @@ using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
-using EnvDTE;
-using EnvDTE80;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Threading;
-using Microsoft.VisualStudio.Utilities;
 using Serilog;
 using StreamJsonRpc;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Package = Microsoft.VisualStudio.Shell.Package;
-using ThreadHelper = Microsoft.VisualStudio.Shell.ThreadHelper;
 
 namespace CodeStream.VisualStudio.LSP {
 	/// <summary>
@@ -37,13 +32,13 @@ namespace CodeStream.VisualStudio.LSP {
 		public event AsyncEventHandler<EventArgs> StopAsync;
 #pragma warning restore 0067
 
-#if DEBUG
-		/// <summary>
-		/// This is how we can see a list of contentTypes (used to generate the attrs for this class)
-		/// </summary>
-		[Import]
-		internal IContentTypeRegistryService ContentTypeRegistryService { get; set; }
-#endif
+//#if DEBUG
+//		/// <summary>
+//		/// This is how we can see a list of contentTypes (used to generate the attrs for this class)
+//		/// </summary>
+//		[Import]
+//		internal IContentTypeRegistryService ContentTypeRegistryService { get; set; }
+//#endif
 		private readonly IEventAggregator _eventAggregator;
 		private readonly ISettingsService _settingsService;
 		private readonly ICodeStreamAgentService _codeStreamAgentService;
