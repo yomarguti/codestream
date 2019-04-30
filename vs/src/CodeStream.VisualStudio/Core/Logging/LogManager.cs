@@ -16,7 +16,7 @@ using System.Threading;
 namespace CodeStream.VisualStudio.Core.Logging {
 	public static class LogManager {
 #if DEBUG
-		private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Verbose;
+		private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Debug;
 #else
         private static LogEventLevel _defaultLoggingLevel = LogEventLevel.Information;
 #endif
