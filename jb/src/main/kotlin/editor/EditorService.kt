@@ -3,12 +3,12 @@ package com.codestream.editor
 import com.codestream.agentService
 import com.codestream.codeStream
 import com.codestream.extensions.getOffset
+import com.codestream.extensions.highlightTextAttributes
 import com.codestream.extensions.isRangeVisible
 import com.codestream.extensions.lspPosition
 import com.codestream.extensions.margins
 import com.codestream.extensions.path
 import com.codestream.extensions.selections
-import com.codestream.extensions.highlightTextAttributes
 import com.codestream.extensions.textDocumentIdentifier
 import com.codestream.extensions.uri
 import com.codestream.extensions.visibleRanges
@@ -38,6 +38,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.util.ui.UIUtil
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.DidChangeTextDocumentParams
 import org.eclipse.lsp4j.DidCloseTextDocumentParams
@@ -137,12 +138,15 @@ class EditorService(val project: Project) {
     }
 
     private fun onCodeStreamIsVisibleChanged(isVisible: Boolean) {
-        if (isVisible != codeStreamVisible) {
-            codeStreamVisible = isVisible
-            updateMarkers()
+        if (isVisible == codeStreamVisible) return
 
-            val editor = activeEditor
-            if (isVisible && editor != null) {
+        codeStreamVisible = isVisible
+        updateMarkers()
+
+        val editor = activeEditor
+        if (isVisible && editor != null) GlobalScope.launch {
+            delay(250L)
+            ApplicationManager.getApplication().invokeLater {
                 project.webViewService?.postNotification(
                     EditorNotifications.DidChangeVisibleRanges(
                         editor.document.uri,
