@@ -18,10 +18,14 @@ class ComposeBox extends React.Component {
 	};
 
 	static getDerivedStateFromProps(props, state) {
-		const { codeBlock, textEditorVisibleRanges, forwardedRef } = props;
+		const { textEditorVisibleRanges, forwardedRef } = props;
 		if (!props.codeBlock) return null;
 
-		const line0 = getLine0ForEditorLine(textEditorVisibleRanges, codeBlock.range.start.line);
+		const startLine = state.selectionCursor
+			? state.selectionCursor
+			: props.codeBlock.range.start.line;
+
+		const line0 = getLine0ForEditorLine(textEditorVisibleRanges, startLine);
 		if (line0 >= 0) {
 			let top = (window.innerHeight * line0) / getVisibleLineCount(textEditorVisibleRanges);
 			if (state.adjustedPosition) {
@@ -59,6 +63,10 @@ class ComposeBox extends React.Component {
 				});
 		}
 	}
+
+	onSelectionChange = range => {
+		this.setState({ selectionCursor: range.cursor.line });
+	};
 
 	handleSubmitPost = (...args) => {
 		if (this.props.disabled) return;
@@ -173,11 +181,6 @@ class ComposeBox extends React.Component {
 		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
 	};
 
-	// TODO: remove this
-	tabIndex = () => {
-		return "0";
-	};
-
 	renderMessageInput = props => {
 		return (
 			<MessageInput
@@ -190,7 +193,6 @@ class ComposeBox extends React.Component {
 				isDirectMessage={this.props.isDirectMessage}
 				onEmptyUpArrow={this.props.onEmptyUpArrow}
 				onDismiss={this.handleClickDismissMultiCompose}
-				tabIndex={this.tabIndex()}
 				quotePost={this.props.quotePost}
 				height={this.props.height}
 				{...props}
@@ -200,8 +202,6 @@ class ComposeBox extends React.Component {
 
 	render() {
 		const { forwardedRef, multiCompose } = this.props;
-
-		this.tabIndexCount = 0;
 
 		return (
 			<div
@@ -226,6 +226,7 @@ class ComposeBox extends React.Component {
 							editingCodemark={this.props.editingCodemark}
 							commentType={this.props.commentType}
 							codeBlock={this.props.codeBlock}
+							onDidChangeSelection={this.onSelectionChange}
 						/>
 					) : (
 						<PostCompose

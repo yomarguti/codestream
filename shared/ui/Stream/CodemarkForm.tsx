@@ -67,6 +67,7 @@ interface Props extends DispatchProps {
 	isEditing?: boolean;
 	editingCodemark?: CodemarkPlus;
 	placeholder?: string;
+	onDidChangeSelection?(location: EditorSelection): void;
 }
 
 interface DispatchProps {
@@ -228,6 +229,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			!this.state.linkURI
 		) {
 			this.getScmInfoForSelection(textEditorUri!, forceAsLine(textEditorSelection!));
+			this.props.onDidChangeSelection && this.props.onDidChangeSelection(textEditorSelection!);
 		}
 
 		const prevProviderHost = prevProps.issueProvider ? prevProps.issueProvider.host : undefined;
