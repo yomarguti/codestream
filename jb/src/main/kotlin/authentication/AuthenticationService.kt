@@ -30,6 +30,7 @@ class AuthenticationService(val project: Project) {
         val settings = project.settingsService ?: return Unit
         val agent = project.agentService ?: return Unit
         val session = project.sessionService ?: return Unit
+        val notification = project.notificationComponent ?: return Unit
 
         if (settings.state.autoSignIn) {
             val token = PasswordSafe.instance.getPassword(settings.credentialAttributes)
@@ -55,7 +56,8 @@ class AuthenticationService(val project: Project) {
                 ).await()
 
                 loginResult.result.error?.let {
-                    throw Exception(it)
+                    notification.showError("Error", it)
+                    return buildSignedOutResponse()
                 }
 
                 val bootstrapFuture = agent.agent.bootstrap(BootstrapParams())
