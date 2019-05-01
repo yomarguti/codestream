@@ -246,10 +246,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			}
 		);
 
-		if (this.props.textEditorUri) {
+		if (this.props.textEditorUri && this.props.textEditorUri !== "") {
 			this.props.fetchDocumentMarkers(this.props.textEditorUri).then(() => {
 				this.setState(state => (state.isLoading ? { isLoading: false } : null));
 			});
+		} else {
+			this.setState({ isLoading: false });
 		}
 
 		this.scrollTo(this.props.metrics.lineHeight!);
@@ -972,8 +974,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	render() {
-		const { viewInline } = this.props;
-
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
 				{this.state.isLoading ? null : this.renderCodemarks()}
@@ -1299,7 +1299,7 @@ const mapStateToProps = (state: {
 		showLabelText: false, //configs.showLabelText,
 		showClosed: context.codemarksShowResolved || false,
 		showUnpinned: context.codemarksShowArchived || false,
-		fileNameToFilterFor: editorContext.activeFile || editorContext.lastActiveFile,
+		fileNameToFilterFor: editorContext.activeFile,
 		textEditorUri: editorContext.textEditorUri,
 		textEditorLineCount: editorContext.textEditorLineCount || 0,
 		firstVisibleLine,

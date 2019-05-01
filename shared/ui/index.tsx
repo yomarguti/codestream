@@ -100,18 +100,25 @@ export function listenForEvents(store) {
 	);
 
 	api.on(HostDidChangeActiveEditorNotificationType, params => {
+		let context: EditorContextState;
 		if (params.editor) {
-			store.dispatch(
-				actions.setEditorContext({
-					textEditorUri: params.editor.uri,
-					textEditorVisibleRanges: params.editor.visibleRanges,
-					textEditorSelections: params.editor.selections,
-					metrics: params.editor.metrics,
-					textEditorLineCount: params.editor.lineCount
-				})
-			);
-			store.dispatch(actions.setCurrentFile(params.editor.fileName));
+			context = {
+				activeFile: params.editor.fileName,
+				textEditorUri: params.editor.uri,
+				textEditorVisibleRanges: params.editor.visibleRanges,
+				textEditorSelections: params.editor.selections,
+				metrics: params.editor.metrics,
+				textEditorLineCount: params.editor.lineCount
+			};
+		} else {
+			context = {
+				activeFile: undefined,
+				textEditorUri: undefined,
+				textEditorSelections: [],
+				textEditorVisibleRanges: []
+			};
 		}
+		store.dispatch(actions.setEditorContext(context));
 	});
 
 	api.on(HostDidChangeFocusNotificationType, ({ focused }) => {

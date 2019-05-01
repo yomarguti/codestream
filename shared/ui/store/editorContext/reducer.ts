@@ -10,7 +10,6 @@ type EditorContextActions = ActionType<typeof actions>;
 
 const initialState: State = {
 	activeFile: "",
-	lastActiveFile: "", // is this still necessary?
 	textEditorVisibleRanges: [],
 	textEditorUri: "",
 	textEditorSelections: [],
@@ -25,16 +24,6 @@ const initialState: State = {
 
 export function reduceEditorContext(state = initialState, action: EditorContextActions) {
 	switch (action.type) {
-		case EditorContextActionsType.SetCurrentFile: {
-			const file = action.payload;
-			const nextState: Partial<State> = {
-				activeFile: file
-			};
-			if (file) {
-				nextState.lastActiveFile = file;
-			}
-			return { ...state, ...nextState };
-		}
 		case EditorContextActionsType.SetEditorContext: {
 			const { metrics }: { metrics?: EditorMetrics } = action.payload;
 			if (metrics != null) {

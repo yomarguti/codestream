@@ -9,9 +9,6 @@ export const reset = () => action("RESET");
 export const setEditorContext = (payload: Partial<State>) =>
 	action(EditorContextActionsType.SetEditorContext, payload);
 
-export const setCurrentFile = (file: string) =>
-	action(EditorContextActionsType.SetCurrentFile, file);
-
 // Text editor context
 export const getScmInfoForSelection = (uri: string, range: Range) => async dispatch => {
 	const scm = await HostApi.instance.send(GetRangeScmInfoRequestType, {
