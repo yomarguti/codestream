@@ -241,7 +241,6 @@ abstract class AgentConnection {
 	}
 }
 
-const INITIALIZED = "initialized";
 const DATA_CHANGED = "data-changed";
 
 export class CodeStreamAgent extends AgentConnection implements Disposable {
@@ -263,7 +262,6 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 
 		if (result.error) throw result.error;
 
-		this.emitter.emit(INITIALIZED);
 		return result;
 	}
 
@@ -276,8 +274,6 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 		if (result.error) {
 			throw result.error;
 		}
-
-		this.emitter.emit(INITIALIZED);
 
 		return result;
 	}
@@ -335,10 +331,6 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 		fs.appendFile(asAbsolutePath("agent.log"), `${params.message}\n`, error => {
 			if (error) console.error("CodeStream: failed to write to agent.log", error);
 		});
-	}
-
-	onInitialized(cb: () => void): Disposable {
-		return this.emitter.on(INITIALIZED, cb);
 	}
 
 	onDidChangeData(cb: (event: DidChangeDataNotification) => void) {

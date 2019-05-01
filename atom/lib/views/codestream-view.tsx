@@ -205,13 +205,9 @@ export class CodestreamView {
 				window.removeListener("blur", onBlur);
 				window.removeListener("focus", onFocus);
 			}),
-			this.session.agent.onInitialized(() => {
-				this.subscriptions.add(
-					this.session.agent.onDidChangeData(data =>
-						this.sendEvent(DidChangeDataNotificationType, data)
-					)
-				);
-			}),
+			this.session.agent.onDidChangeData(data =>
+				this.sendEvent(DidChangeDataNotificationType, data)
+			),
 			this.session.onDidChangeSessionStatus(change => {
 				if (
 					change.current === SessionStatus.SignedOut &&
