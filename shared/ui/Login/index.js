@@ -105,6 +105,13 @@ export class Login extends React.Component {
 					.
 				</div>
 			);
+		if (this.state.error) {
+			return (
+				<div className="error-message form-error">
+					<FormattedMessage id={this.state.error} defaultMessage={this.state.error} />
+				</div>
+			);
+		}
 	};
 
 	isFormInvalid = () => {
