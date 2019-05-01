@@ -175,7 +175,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					label: a.displayName
 				}))
 				.concat(
-					mapFilter(this.props.editingCodemark!.assignees, a =>
+					mapFilter(this.props.editingCodemark!.assignees || [], a =>
 						state.assignableUsers.find((au: any) => au.value === a)
 					)
 				);
