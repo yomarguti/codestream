@@ -8,7 +8,7 @@ import com.codestream.extensions.lspPosition
 import com.codestream.extensions.margins
 import com.codestream.extensions.path
 import com.codestream.extensions.selections
-import com.codestream.extensions.textAttributes
+import com.codestream.extensions.highlightTextAttributes
 import com.codestream.extensions.textDocumentIdentifier
 import com.codestream.extensions.uri
 import com.codestream.extensions.visibleRanges
@@ -355,9 +355,9 @@ class EditorService(val project: Project) {
         return future.await()
     }
 
-    private val _textAttributes = mutableMapOf<Editor, TextAttributes>()
-    private fun getTextAttributes(editor: Editor): TextAttributes = _textAttributes.getOrPut(editor) {
-        editor.textAttributes
+    private val _highlightTextAttributes = mutableMapOf<Editor, TextAttributes>()
+    private fun getHighlightTextAttributes(editor: Editor): TextAttributes = _highlightTextAttributes.getOrPut(editor) {
+        editor.highlightTextAttributes
     }
 
     fun toggleRangeHighlight(range: Range, highlight: Boolean) = ApplicationManager.getApplication().invokeLater {
@@ -383,7 +383,7 @@ class EditorService(val project: Project) {
             val highlighter =
                 if (range.start.line == range.end.line && range.start.character == 0 && range.end.character > 1000) {
                     editor.markupModel.addLineHighlighter(
-                        range.start.line, HighlighterLayer.LAST, getTextAttributes(editor)
+                        range.start.line, HighlighterLayer.LAST, getHighlightTextAttributes(editor)
                     )
                 } else {
                     val start = editor.getOffset(range.start)
@@ -393,7 +393,7 @@ class EditorService(val project: Project) {
                         Math.min(start, end),
                         Math.max(start, end),
                         HighlighterLayer.LAST,
-                        getTextAttributes(editor),
+                        getHighlightTextAttributes(editor),
                         HighlighterTargetArea.EXACT_RANGE
                     )
                 }
@@ -505,7 +505,7 @@ class EditorService(val project: Project) {
     //         return@invokeLater
     //     }
     //
-    //     val textAttributes = TextAttributes(
+    //     val highlightTextAttributes = TextAttributes(
     //         null, //editor.colorsScheme.getColor(EditorColors.CARET_ROW_COLOR),
     //         editor.colorsScheme.getColor(EditorColors.CARET_ROW_COLOR),
     //         null, //editor.colorsScheme.getColor(EditorColors.CARET_ROW_COLOR),
@@ -518,14 +518,14 @@ class EditorService(val project: Project) {
     //         println(++count)
     //         val highlighter = if (range.start == range.end && range.start.character == 0) {
     //             editor.markupModel.addLineHighlighter(
-    //                 range.start.line, HighlighterLayer.LAST, textAttributes
+    //                 range.start.line, HighlighterLayer.LAST, highlightTextAttributes
     //             )
     //         } else {
     //             editor.markupModel.addRangeHighlighter(
     //                 editor.getOffset(range.start),
     //                 editor.getOffset(range.end),
     //                 HighlighterLayer.LAST,
-    //                 textAttributes,
+    //                 highlightTextAttributes,
     //                 HighlighterTargetArea.EXACT_RANGE
     //             )
     //         }

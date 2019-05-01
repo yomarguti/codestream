@@ -5,6 +5,7 @@ import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.colors.EditorColors
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.util.text.StringUtil
+import com.intellij.ui.ColorUtil
 import com.intellij.util.DocumentUtil
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
@@ -46,14 +47,20 @@ val Editor.selections: List<EditorSelection>
         )
     }
 
-val Editor.textAttributes: TextAttributes
-    get() = TextAttributes(
-        null,
-        colorsScheme.getColor(EditorColors.CARET_ROW_COLOR),
-        null,
-        null,
-        Font.PLAIN
-    )
+val Editor.highlightTextAttributes: TextAttributes
+    get() {
+        val bg = colorsScheme.defaultBackground
+        val highlight =
+            if (ColorUtil.isDark(bg)) bg.lighten(7)
+            else bg.darken(7)
+        return TextAttributes(
+            null,
+            highlight,
+            null,
+            null,
+            Font.PLAIN
+        )
+    }
 
 val Editor.selectionOrCurrentLine: Range
     get() = if (selectionModel.hasSelection()) {

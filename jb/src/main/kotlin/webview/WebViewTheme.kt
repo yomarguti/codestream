@@ -1,6 +1,9 @@
 package com.codestream.webview
 
 import com.codestream.editor.getFontScale
+import com.codestream.extensions.darken
+import com.codestream.extensions.lighten
+import com.codestream.extensions.opacity
 import com.intellij.ui.ColorUtil
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
@@ -34,47 +37,47 @@ class WebViewTheme(val name: String, val stylesheet: String) {
             var baseBgColor: Color
             var baseBorderColor: Color
             var panelToolBgColor: Color
-            val panelSectionFgColor = opacity(fg, 80)
-            val panelSectionHeaderBgColor = bg;
-            val panelSectionHeaderFgColor = opacity(fg, 80)
-            val textColor = opacity(fg, 80)
+            val panelSectionFgColor = fg.opacity(80)
+            val panelSectionHeaderBgColor = bg
+            val panelSectionHeaderFgColor = fg.opacity(80)
+            val textColor = fg.opacity(80)
             val textColorHighlight = fg
-            val textColorSubtle = opacity(fg, 60)
+            val textColorSubtle = fg.opacity(60)
             var textColorSubtleExtra: Color
             val textColorInfo = link
             var textColorInfoMuted: Color
-            val lineNumbersFgColor = opacity(fg, 40)
+            val lineNumbersFgColor = fg.opacity(40)
             val buttonBgColor = buttonBg
             var buttonBgColorHover: Color
 
             if (ColorUtil.isDark(bg)) {
-                appBgColorDarker = darken(bg, 4)
-                appBgColorHover = lighten(bg, 3)
+                appBgColorDarker = bg.darken(4)
+                appBgColorHover = bg.lighten(3)
 
-                baseBgColor = lighten(bg, 4)
-                baseBorderColor = lighten(opacity(border, 50), 20)
+                baseBgColor = bg.lighten(4)
+                baseBorderColor = border.opacity(50).lighten(20)
 
-                panelToolBgColor = lighten(bg, 10)
+                panelToolBgColor = bg.lighten(10)
 
-                textColorSubtleExtra = lighten(opacity(fg, 60), 50)
+                textColorSubtleExtra = fg.opacity(60).lighten(50)
 
-                textColorInfoMuted = darken(link, 10)
+                textColorInfoMuted = link.darken(10)
 
-                buttonBgColorHover = lighten(buttonBg, 10)
+                buttonBgColorHover = buttonBg.lighten(10)
             } else {
-                appBgColorDarker = lighten(bg, 4)
-                appBgColorHover = darken(bg, 1.5.toFloat())
+                appBgColorDarker = bg.lighten(4)
+                appBgColorHover = bg.darken(1.5F)
 
-                baseBgColor = darken(bg, 3)
-                baseBorderColor = lighten(opacity(border, 50), 3)
+                baseBgColor = bg.darken(3)
+                baseBorderColor = border.opacity(50).lighten(.3F)
 
-                panelToolBgColor = darken(bg, 10)
+                panelToolBgColor = bg.darken(10)
 
-                textColorSubtleExtra = darken(opacity(fg, 60), 50)
+                textColorSubtleExtra = fg.opacity(60).darken(50)
 
                 textColorInfoMuted = link
 
-                buttonBgColorHover = darken(buttonBg, 10)
+                buttonBgColorHover = buttonBg.darken(10)
             }
 
             val name = if (isDarkTheme()) "vscode-dark" else "vscode-light"
@@ -122,44 +125,7 @@ body {
     }
 }
 
-private fun isDarkTheme() = ColorUtil.isDark(JBColor.background())
-
-private fun adjustLight(color: Int, amount: Float): Int {
-    val cc = color + amount
-    val c: Float = if (amount < 0) (if (cc < 0) 0.toFloat() else cc) else if (cc > 255) 255.toFloat() else cc
-    return Math.round(c)
-}
-
-private fun darken(color: Color, percentage: Int): Color {
-    return darken(color, percentage.toFloat())
-}
-
-private fun darken(color: Color, percentage: Float): Color {
-    return lighten(color, -percentage)
-}
-
-private fun lighten(color: Color, percentage: Int): Color {
-    return lighten(color, percentage.toFloat())
-}
-
-private fun lighten(color: Color, percentage: Float): Color {
-    val amount = (255 * percentage) / 100
-    return Color(
-        adjustLight(color.red, amount),
-        adjustLight(color.green, amount),
-        adjustLight(color.blue, amount),
-        color.alpha
-    )
-}
-
-private fun opacity(color: Color, percentage: Int): Color {
-    return Color(
-        color.red,
-        color.green,
-        color.blue,
-        Math.round(255 * ((color.alpha / 255) * percentage.toFloat() / 100))
-    )
-}
+fun isDarkTheme() = ColorUtil.isDark(JBColor.background())
 
 private val Color.rgba: String
     get() = "rgba($red, $green, $blue, ${alpha.toFloat() / 255})"
