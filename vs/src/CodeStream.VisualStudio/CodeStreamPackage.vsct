@@ -26,8 +26,17 @@
 					<LocCanonicalName>CodeStream.ToggleCodeStream</LocCanonicalName>
 				</Strings>
 			</Menu>
+			<Menu guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MySubMenu" priority="0x0110" type="Menu">		
+				<Strings>
+					<ButtonText>CodeStream</ButtonText>
+				</Strings>
+			</Menu>
 		</Menus>
 		<Groups>
+
+			<Group guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForSubMenu" />
+			<Group guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForCommands" />			
+			
 			<Group guid="guidWebViewPackageCmdSet" id="ToolbarGroup" priority="0x0600">
 				<Parent guid="guidWebViewPackageCmdSet" id="Toolbar" />
 			</Group>
@@ -42,8 +51,6 @@
 			<Group guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" priority="0x009">
 				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController200" />
 			</Group>
-
-			<Group guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands" />
 			<Group guid="guidWebViewPackageShortcutCmdSet" id="CodeStreamShortcutCommands" />
 		</Groups>
 		<Buttons>
@@ -333,24 +340,31 @@
 	</KeyBindings>
 
 	<CommandPlacements>
-		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands" priority="0xFFFF">
+		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForSubMenu" priority="0x0110">
 			<!-- The parent of the group will be the code window context menu -->
 			<Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN"/>
 		</CommandPlacement>
+		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MySubMenu" priority="0x0110">
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForSubMenu"/>
+		</CommandPlacement>
+		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForCommands" priority="0x0110">
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MySubMenu"/>
+		</CommandPlacement>
+		
 		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommentCommandId" priority="0x0001" >
-			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForCommands"/>
 		</CommandPlacement>
 		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkIssueCommandId" priority="0x0002" >
-			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForCommands"/>
 		</CommandPlacement>
 		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkBookmarkCommandId" priority="0x0003" >
-			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForCommands"/>
 		</CommandPlacement>
 		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkCommandId" priority="0x0004" >
-			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForCommands"/>
 		</CommandPlacement>
 		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkInstantCommandId" priority="0x0005" >
-			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeStreamEditorCommands"/>
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForCommands"/>
 		</CommandPlacement>
 	</CommandPlacements>
 
@@ -394,6 +408,11 @@
 		</GuidSymbol>
 
 		<GuidSymbol name="guidWebViewPackageCodeWindowContextMenuCmdSet" value="{0f33235e-3a5c-42bc-b519-d888652f972c}">
+			<IDSymbol name="MyGroupForSubMenu" value="0x9000" />
+			<IDSymbol name="MyGroupForCommands" value="0x9001" />
+			
+			<IDSymbol name="MySubMenu" value="0x9200" />
+			
 			<IDSymbol name="CodeStreamEditorCommands" value="0x1023" />
 			<IDSymbol name="AddCodemarkCommentCommandId" value="0x0400" />
 			<IDSymbol name="AddCodemarkIssueCommandId" value="0x0401" />
