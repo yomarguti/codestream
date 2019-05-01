@@ -1,5 +1,12 @@
-package com.codestream
+package com.codestream.authentication
 
+import com.codestream.agentService
+import com.codestream.editorService
+import com.codestream.gson
+import com.codestream.notificationComponent
+import com.codestream.sessionService
+import com.codestream.settingsService
+import com.codestream.webViewService
 import com.codestream.webview.WebViewRouter
 import com.github.salomonbrys.kotson.fromJson
 import com.github.salomonbrys.kotson.jsonObject

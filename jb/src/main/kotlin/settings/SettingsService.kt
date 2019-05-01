@@ -1,5 +1,8 @@
-package com.codestream
+package com.codestream.settings
 
+import com.codestream.DEBUG
+import com.codestream.gson
+import com.codestream.sessionService
 import com.github.salomonbrys.kotson.fromJson
 import com.github.salomonbrys.kotson.set
 import com.google.gson.JsonElement

@@ -1,8 +1,11 @@
 package com.codestream
 
 import com.codestream.agent.AgentService
+import com.codestream.authentication.AuthenticationService
 import com.codestream.editor.EditorService
 import com.codestream.notification.NotificationComponent
+import com.codestream.session.SessionService
+import com.codestream.settings.SettingsService
 import com.codestream.webview.WebViewService
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.Project

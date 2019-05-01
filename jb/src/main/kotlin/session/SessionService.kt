@@ -1,6 +1,7 @@
-package com.codestream
+package com.codestream.session
 
 import com.codestream.agent.DidChangeUnreadsNotification
+import com.codestream.agentService
 import com.intellij.openapi.project.Project
 import protocols.agent.CSUser
 import protocols.agent.Post
