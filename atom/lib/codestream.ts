@@ -199,6 +199,10 @@ class CodestreamPackage {
 			icon.classList.add(...getStatusBarIconClasses(this.workspaceSession.status));
 		});
 
+		this.environmentChangeEmitter.listen(() => {
+			text.innerText = createStatusBarTitle(this.workspaceSession.status);
+		});
+
 		const dataChangeSubscription = this.workspaceSession.agent.onDidChangeData(event => {
 			if (event.type === ChangeDataType.Unreads) {
 				text.innerText = createStatusBarTitle(this.workspaceSession.status, event.data);
