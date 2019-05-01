@@ -26,7 +26,7 @@
 					<LocCanonicalName>CodeStream.ToggleCodeStream</LocCanonicalName>
 				</Strings>
 			</Menu>
-			<Menu guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MySubMenu" priority="0x0110" type="Menu">		
+			<Menu guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextSubMenu" priority="0x0110" type="Menu">		
 				<Strings>
 					<ButtonText>CodeStream</ButtonText>
 				</Strings>
@@ -34,8 +34,8 @@
 		</Menus>
 		<Groups>
 
-			<Group guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForSubMenu" />
-			<Group guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForCommands" />			
+			<Group guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextSubMenuGroup" />
+			<Group guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextCommandGroup" />			
 			
 			<Group guid="guidWebViewPackageCmdSet" id="ToolbarGroup" priority="0x0600">
 				<Parent guid="guidWebViewPackageCmdSet" id="Toolbar" />
@@ -340,31 +340,31 @@
 	</KeyBindings>
 
 	<CommandPlacements>
-		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForSubMenu" priority="0x0110">
+		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextSubMenuGroup" priority="0x0110">
 			<!-- The parent of the group will be the code window context menu -->
 			<Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN"/>
 		</CommandPlacement>
-		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MySubMenu" priority="0x0110">
-			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForSubMenu"/>
+		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextSubMenu" priority="0x0110">
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextSubMenuGroup"/>
 		</CommandPlacement>
-		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForCommands" priority="0x0110">
-			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MySubMenu"/>
+		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextCommandGroup" priority="0x0110">
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextSubMenu"/>
 		</CommandPlacement>
 		
 		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommentCommandId" priority="0x0001" >
-			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForCommands"/>
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextCommandGroup"/>
 		</CommandPlacement>
 		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkIssueCommandId" priority="0x0002" >
-			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForCommands"/>
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextCommandGroup"/>
 		</CommandPlacement>
 		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkBookmarkCommandId" priority="0x0003" >
-			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForCommands"/>
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextCommandGroup"/>
 		</CommandPlacement>
 		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkCommandId" priority="0x0004" >
-			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForCommands"/>
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextCommandGroup"/>
 		</CommandPlacement>
 		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkInstantCommandId" priority="0x0005" >
-			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="MyGroupForCommands"/>
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextCommandGroup"/>
 		</CommandPlacement>
 	</CommandPlacements>
 
@@ -408,10 +408,10 @@
 		</GuidSymbol>
 
 		<GuidSymbol name="guidWebViewPackageCodeWindowContextMenuCmdSet" value="{0f33235e-3a5c-42bc-b519-d888652f972c}">
-			<IDSymbol name="MyGroupForSubMenu" value="0x9000" />
-			<IDSymbol name="MyGroupForCommands" value="0x9001" />
+			<IDSymbol name="CodeWindowContextSubMenuGroup" value="0x9000" />
+			<IDSymbol name="CodeWindowContextCommandGroup" value="0x9001" />
 			
-			<IDSymbol name="MySubMenu" value="0x9200" />
+			<IDSymbol name="CodeWindowContextSubMenu" value="0x9200" />
 			
 			<IDSymbol name="CodeStreamEditorCommands" value="0x1023" />
 			<IDSymbol name="AddCodemarkCommentCommandId" value="0x0400" />
