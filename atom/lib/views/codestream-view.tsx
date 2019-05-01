@@ -382,7 +382,7 @@ export class CodestreamView {
 					await this.session.ready;
 					const response: BootstrapResponse = this.session.isSignedIn
 						? await this.getSignedInBootstrapState()
-						: this.session.getBootstrapInfo();
+						: { ...this.session.getBootstrapInfo(), context: this.webviewContext };
 
 					this.respond<BootstrapResponse>({
 						id: message.id,

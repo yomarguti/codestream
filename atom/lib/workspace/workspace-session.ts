@@ -151,7 +151,10 @@ export class WorkspaceSession {
 		return { ...editorCapabilities, ...this.agentCapabilities };
 	}
 
-	getBootstrapInfo(): SignedOutBootstrapResponse {
+	getBootstrapInfo(): Pick<
+		SignedOutBootstrapResponse,
+		"capabilities" | "configs" | "version" | "loginToken"
+	> {
 		return {
 			capabilities: this.capabilities,
 			configs: Container.configs.getForWebview(this.environment.serverUrl, this.lastUsedEmail),
