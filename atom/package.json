@@ -51,6 +51,11 @@
 		"autoHideMarkers": {
 			"type": "boolean",
 			"default": true
+		},
+		"autoSignIn": {
+			"type": "boolean",
+			"default": true,
+			"description": "Automatically sign in when restoring a window with a previous session"
 		}
 	},
 	"scripts": {

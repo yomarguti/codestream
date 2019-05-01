@@ -75,7 +75,7 @@ export class WorkspaceSession {
 		this.envConfig = envConfig;
 		this.configManager = configManager;
 
-		if (session) {
+		if (session && configManager.get("autoSignIn")) {
 			this._isReady = new Promise(async (resolve, reject) => {
 				const result = await this.login(session.user.email, session.token);
 				if (result === LoginResult.Success) {
@@ -87,6 +87,10 @@ export class WorkspaceSession {
 				}
 			});
 		}
+	}
+
+	get isSignedIn() {
+		return this._sessionStatus === SessionStatus.SignedIn;
 	}
 
 	serialize() {

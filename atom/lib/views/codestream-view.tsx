@@ -198,7 +198,7 @@ export class CodestreamView {
 		window.on("focus", onFocus);
 		window.on("blur", onBlur);
 
-		if (this.session.status === SessionStatus.SignedIn) this.observeWorkspace();
+		if (this.session.isSignedIn) this.observeWorkspace();
 
 		this.subscriptions.add(
 			new Disposable(() => {
@@ -318,7 +318,7 @@ export class CodestreamView {
 		switch (message.method) {
 			case WebviewBootstrapRequestType.method: {
 				try {
-					const response: BootstrapResponse = this.session.user
+					const response: BootstrapResponse = this.session.isSignedIn
 						? await this.getSignedInBootstrapState()
 						: this.session.getBootstrapInfo();
 
