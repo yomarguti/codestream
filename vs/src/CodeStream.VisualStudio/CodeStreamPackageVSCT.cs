@@ -14,10 +14,12 @@ namespace CodeStream.VisualStudio {
 		public const string guidWebViewPackageCmdSetString = "8f66deb0-240b-4137-8550-723344e49722";
 		public const string guidWebViewPackageCodeWindowContextMenuCmdSetString = "0f33235e-3a5c-42bc-b519-d888652f972c";
 		public const string guidImagesString = "f2c8ef6d-3257-4e0a-8ae0-ef6298dd22c5";
+		public const string guidWebViewPackageShortcutCmdSetString = "A72BBF5D-23D2-4A8A-939E-12C4651DD341";
 		public static Guid guidWebViewPackage = new Guid(guidWebViewPackageString);
 		public static Guid guidWebViewPackageCmdSet = new Guid(guidWebViewPackageCmdSetString);
 		public static Guid guidWebViewPackageCodeWindowContextMenuCmdSet = new Guid(guidWebViewPackageCodeWindowContextMenuCmdSetString);
 		public static Guid guidImages = new Guid(guidImagesString);
+		public static Guid guidWebViewPackageShortcutCmdSet = new Guid(guidWebViewPackageShortcutCmdSetString);
 	}
 	/// <summary>
 	/// Helper class that encapsulates all CommandIDs uses across VS Package.

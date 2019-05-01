@@ -10,8 +10,8 @@ using System;
 namespace CodeStream.VisualStudio.Commands {
 	internal sealed class WebViewToggleCommand : VsCommandBase {
 		private AsyncPackage _package;
-		public WebViewToggleCommand(AsyncPackage serviceProvider) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.WebViewToggleCommandId) {
-			_package = serviceProvider;
+		public WebViewToggleCommand(AsyncPackage package) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.WebViewToggleCommandId) {
+			_package = package;
 		}
 
 		private IVsWindowFrame GetWindowFrame() {

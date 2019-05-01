@@ -89,11 +89,18 @@ namespace CodeStream.VisualStudio.Packages {
 #if DEBUG
 					new WebViewDevToolsCommand(),
 #endif
-					new AddCodemarkCommentCommand(),
-					new AddCodemarkIssueCommand(),
-					new AddCodemarkBookmarkCommand(),
-					new AddCodemarkPermalinkCommand(),
-					new AddCodemarkPermalinkInstantCommand(),
+					new AddCodemarkCommentCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+					new AddCodemarkIssueCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+					new AddCodemarkBookmarkCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+					new AddCodemarkPermalinkCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+					new AddCodemarkPermalinkInstantCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+
+					new AddCodemarkCommentCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
+					new AddCodemarkIssueCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
+					new AddCodemarkBookmarkCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
+					new AddCodemarkPermalinkCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
+					new AddCodemarkPermalinkInstantCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
+
 					new WebViewReloadCommand(),
 					new WebViewToggleCommand(this),
 					new AuthenticationCommand(this, this),

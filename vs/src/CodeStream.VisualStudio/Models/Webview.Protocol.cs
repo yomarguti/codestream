@@ -30,16 +30,18 @@ namespace CodeStream.VisualStudio.Models
 
     public class NewCodemarkNotification
     {
-        public NewCodemarkNotification(Uri uri, Range range, CodemarkType type)
+        public NewCodemarkNotification(Uri uri, Range range, CodemarkType type, string source)
         {
             Uri = uri.ToString();
             Range = range;
             Type = type;
+			Source = source;
         }
 
         public string Uri { get; }
         public Range  Range { get; }
         public CodemarkType Type { get; }
+		public string Source { get; }
     }
 
     public class NewCodemarkNotificationType : NotificationType<NewCodemarkNotification>

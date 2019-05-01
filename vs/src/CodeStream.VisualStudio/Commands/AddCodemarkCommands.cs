@@ -9,27 +9,27 @@ using System.Threading;
 
 namespace CodeStream.VisualStudio.Commands {
 	internal class AddCodemarkCommentCommand : AddCodemarkCommandBase {
-		public AddCodemarkCommentCommand() : base(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet, PackageIds.AddCodemarkCommentCommandId) { }
+		public AddCodemarkCommentCommand(Guid commandSet) : base(commandSet, PackageIds.AddCodemarkCommentCommandId) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Comment;
 	}
 
 	internal class AddCodemarkIssueCommand : AddCodemarkCommandBase {
-		public AddCodemarkIssueCommand() : base(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet, PackageIds.AddCodemarkIssueCommandId) { }
+		public AddCodemarkIssueCommand(Guid commandSet) : base(commandSet, PackageIds.AddCodemarkIssueCommandId) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Issue;
 	}
 
 	internal class AddCodemarkBookmarkCommand : AddCodemarkCommandBase {
-		public AddCodemarkBookmarkCommand() : base(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet, PackageIds.AddCodemarkBookmarkCommandId) { }
+		public AddCodemarkBookmarkCommand(Guid commandSet) : base(commandSet, PackageIds.AddCodemarkBookmarkCommandId) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Bookmark;
 	}
 
 	internal class AddCodemarkPermalinkCommand : AddCodemarkCommandBase {
-		public AddCodemarkPermalinkCommand() : base(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet, PackageIds.AddCodemarkPermalinkCommandId) { }
+		public AddCodemarkPermalinkCommand(Guid commandSet) : base(commandSet, PackageIds.AddCodemarkPermalinkCommandId) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Link;
 	}
 
 	internal class AddCodemarkPermalinkInstantCommand : AddCodemarkCommandBase {
-		public AddCodemarkPermalinkInstantCommand() : base(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet, PackageIds.AddCodemarkPermalinkInstantCommandId) { }
+		public AddCodemarkPermalinkInstantCommand(Guid commandSet) : base(commandSet, PackageIds.AddCodemarkPermalinkInstantCommandId) { }
 
 		private static readonly ILogger Log = LogManager.ForContext<AddCodemarkPermalinkInstantCommand>();
 		protected override CodemarkType CodemarkType => CodemarkType.Link;

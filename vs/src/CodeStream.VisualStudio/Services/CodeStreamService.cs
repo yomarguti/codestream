@@ -19,7 +19,7 @@ namespace CodeStream.VisualStudio.Services {
 	public interface ICodeStreamService {
 		Task ResetActiveEditorAsync();
 		Task ChangeActiveEditorAsync(string fileName, Uri uri, ActiveTextEditor activeTextEditor = null);
-		Task NewCodemarkAsync(Uri uri, Range range, CodemarkType codemarkType, CancellationToken? cancellationToken = null);
+		Task NewCodemarkAsync(Uri uri, Range range, CodemarkType codemarkType, string source, CancellationToken? cancellationToken = null);
 		Task ShowCodemarkAsync(string codemarkId, CancellationToken? cancellationToken = null);
 		Task EditorSelectionChangedNotificationAsync(Uri uri,
 			EditorState editorState,
@@ -149,11 +149,11 @@ namespace CodeStream.VisualStudio.Services {
 			return Task.CompletedTask;
 		}
 
-		public async Task NewCodemarkAsync(Uri uri, Range range, CodemarkType codemarkType, CancellationToken? cancellationToken = null) {
+		public async Task NewCodemarkAsync(Uri uri, Range range, CodemarkType codemarkType, string source, CancellationToken? cancellationToken = null) {
 			if (IsReady) {
 				try {
 					_ = WebviewIpc.NotifyAsync(new NewCodemarkNotificationType {
-						Params = new NewCodemarkNotification(uri, range, codemarkType)
+						Params = new NewCodemarkNotification(uri, range, codemarkType, source)
 					});
 				}
 				catch (Exception ex) {

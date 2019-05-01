@@ -16,14 +16,15 @@ namespace CodeStream.VisualStudio.Vssdk.Commands {
 		/// <param name="commandId">The numeric identifier of the command.</param>
 		protected VsCommandBase(Guid commandSet, int commandId)
 			: base(ExecHandler, delegate { }, QueryStatusHandler, new CommandID(commandSet, commandId)) {
+			CommandSet = commandSet;
 			BeforeQueryStatus += OnBeforeQueryStatus;
-		}
+		}		
 
 		protected VsCommandBase(EventHandler invokeHandler, CommandID id)
-			: base(invokeHandler, id) {
-			
+			: base(invokeHandler, id) {			
 		}
 
+		protected Guid CommandSet { get; }
 
 		private void OnBeforeQueryStatus(object sender, EventArgs e) {
 			if (sender is OleMenuCommand myCommand) {
