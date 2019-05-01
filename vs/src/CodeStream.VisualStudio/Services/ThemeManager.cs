@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
+using System.Reflection;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
+using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Editor;
@@ -100,8 +103,8 @@ namespace CodeStream.VisualStudio.Services
 					new ThemeColorMetadata { Key = "text-color-info", Color = GetThemedColor(shell, EnvironmentColors.StartPageTextControlLinkSelectedColorKey) },
 					new ThemeColorMetadata { Key = "text-color-info-muted", Color = GetThemedColor(shell, EnvironmentColors.StartPageTextControlLinkSelectedColorKey), DarkModifier = c => c.Darken(0.1f) },
 
-					new ThemeColorMetadata { Key = "button-background-color", Color = GetThemedColor(shell, backgroundIsDark ? EnvironmentColors.ToolWindowButtonDownColorKey : EnvironmentColors.ToolWindowButtonHoverActiveColorKey) },
-					new ThemeColorMetadata { Key = "button-background-color-hover", Color = GetThemedColor(shell, backgroundIsDark ? EnvironmentColors.ToolWindowButtonDownColorKey : EnvironmentColors.ToolWindowButtonHoverActiveColorKey), DarkModifier = c => c.Lighten(0.1f), LightModifier = c => c.Darken(0.1f) },
+					new ThemeColorMetadata { Key = "button-background-color", Color = GetThemedColor(shell, backgroundIsDark ? EnvironmentColors.ToolWindowButtonDownColorKey : EnvironmentColors.ToolWindowBorderColorKey), LightModifier = c => c.Darken(0.3f) },
+					new ThemeColorMetadata { Key = "button-background-color-hover", Color = GetThemedColor(shell, backgroundIsDark ? EnvironmentColors.ToolWindowButtonDownColorKey : EnvironmentColors.ToolWindowBorderColorKey), DarkModifier = c => c.Lighten(0.1f), LightModifier = c => c.Darken(0.2f) },
 
 					new ThemeColorMetadata { Key = "line-numbers-foreground-color", Color = textColor, DarkModifier = c => c.Opacity(40), LightModifier = c => c.Opacity(40) },
 
@@ -112,6 +115,9 @@ namespace CodeStream.VisualStudio.Services
 				if (Log.IsDebugEnabled())
 				{
 					Log.Debug($"BackgroundIsDark={backgroundIsDark}, BackgroundColor={backgroundColor.ToRgba()}, TextColor={textColor.ToRgba()}");
+#if DEBUG
+					//GenerateVisualStudioColorTheme();
+#endif
 				}
 
 				// if (isDark && textColor.IsDark())
@@ -232,7 +238,7 @@ namespace CodeStream.VisualStudio.Services
 			{ "gray", Color.FromArgb(127, 127, 127)}
 		};
 
-		/*
+	 
 		/// <summary>
 		/// this is some helper code to generate a theme color palette from the current VS theme
 		/// </summary>
@@ -249,7 +255,7 @@ namespace CodeStream.VisualStudio.Services
 				if (trk != null)
 				{
 					var color = VSColorTheme.GetThemedColor(trk);
-					d.Add(p.Name, color.ToHex());
+					d.Add(p.Name, color.ToRgba());
 				}
 
 				// d.Add(p.Name, ((System.Drawing.Color)val).ToHex());
@@ -266,7 +272,7 @@ namespace CodeStream.VisualStudio.Services
 
 			return null;
 		}
-		*/
+	 
 	}
 
 }
