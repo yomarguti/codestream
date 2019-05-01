@@ -33,7 +33,6 @@
 			</Menu>
 		</Menus>
 		<Groups>
-
 			<Group guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextSubMenuGroup" />
 			<Group guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextCommandGroup" />			
 			
@@ -205,7 +204,7 @@
 			</Button>
 
 			<Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkCommentCommandId" type="Button">
-				<Icon guid="guidImages" id="logo" />
+				<Icon guid="guidImagesCommands" id="comment" />
 				<CommandFlag>DynamicVisibility</CommandFlag>
 				<CommandFlag>DefaultInvisible</CommandFlag>
 				<Strings>
@@ -215,6 +214,7 @@
 				</Strings>
 			</Button>
 			<Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkIssueCommandId" type="Button">
+				<Icon guid="guidImagesCommands" id="issue" />
 				<CommandFlag>DynamicVisibility</CommandFlag>
 				<CommandFlag>DefaultInvisible</CommandFlag>
 				<Strings>
@@ -224,6 +224,7 @@
 				</Strings>
 			</Button>
 			<Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkBookmarkCommandId" type="Button">
+				<Icon guid="guidImagesCommands" id="bookmark" />
 				<CommandFlag>DynamicVisibility</CommandFlag>
 				<CommandFlag>DefaultInvisible</CommandFlag>
 				<Strings>
@@ -233,6 +234,7 @@
 				</Strings>
 			</Button>
 			<Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkCommandId" type="Button">
+				<Icon guid="guidImagesCommands" id="permalink" />
 				<CommandFlag>DynamicVisibility</CommandFlag>
 				<CommandFlag>DefaultInvisible</CommandFlag>
 				<Strings>
@@ -242,6 +244,7 @@
 				</Strings>
 			</Button>
 			<Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkInstantCommandId" type="Button">
+				<Icon guid="guidImagesCommands" id="instantPermalink" />
 				<CommandFlag>DynamicVisibility</CommandFlag>
 				<CommandFlag>DefaultInvisible</CommandFlag>
 				<Strings>
@@ -300,6 +303,7 @@
 		</Buttons>
 		<Bitmaps>
 			<Bitmap guid="guidImages" href="Resources\Sprites.png" usedList="logo, auth, user, empty4, empty5, empty6" />
+			<Bitmap guid="guidImagesCommands" href="Resources\CommandsSprites.png" usedList="comment, issue, bookmark, permalink, instantPermalink" />
 		</Bitmaps>
 	</Commands>
 
@@ -437,6 +441,13 @@
 			<IDSymbol name="empty4" value="4" />
 			<IDSymbol name="empty5" value="5" />
 			<IDSymbol name="empty6" value="6" />
+		</GuidSymbol>
+		<GuidSymbol name="guidImagesCommands" value="{C438D577-2A1C-4CEE-8B33-E056C2281595}" >
+			<IDSymbol name="comment" value="1" />
+			<IDSymbol name="issue" value="2" />
+			<IDSymbol name="bookmark" value="3" />
+			<IDSymbol name="permalink" value="4" />
+			<IDSymbol name="instantPermalink" value="5" />			
 		</GuidSymbol>
 	</Symbols>
 </CommandTable>

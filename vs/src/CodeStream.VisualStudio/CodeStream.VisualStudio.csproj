@@ -360,6 +360,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Content Include="Resources\CommandsSprites.png" />
     <Content Include="Resources\Sprites.png" />
     <EmbeddedResource Include="teamdev.licenses" />
     <Content Include="dist\webview\webview.css">
