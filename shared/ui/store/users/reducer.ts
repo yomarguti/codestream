@@ -94,6 +94,10 @@ export const getUserByCsId = createSelector(
 
 export const findMentionedUserIds = (members: CSUser[], text: string) => {
 	const mentionedUserIds: string[] = [];
+	if (text == null || text.length === 0) { 
+		return mentionedUserIds;
+	}
+
 	members.forEach(user => {
 		const matcher = user.username.replace(/\+/g, "\\+").replace(/\./g, "\\.");
 		if (text.match("@" + matcher + "\\b")) {

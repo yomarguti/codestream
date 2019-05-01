@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import ScrollBox from "./ScrollBox";
 import PostList from "./PostList";
 import { MessageInput } from "./MessageInput";
-import { getTeamMembers } from "../store/users/reducer";
+import { findMentionedUserIds, getTeamMembers } from "../store/users/reducer";
 import CodemarkActions from "./CodemarkActions";
 import { CodemarkPlus, Capabilities } from "@codestream/protocols/agent";
 import { createPost } from "./actions";
@@ -53,8 +53,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 	submitReply = async () => {
 		const { codemark } = this.props;
 		const { text } = this.state;
-		// const mentionedUserIds = this.findMentionedUserIds(text, this.props.teammates);
-		const mentionedUserIds = [];
+		const mentionedUserIds = findMentionedUserIds(this.props.teammates, text);		
 		const threadId = codemark ? codemark.postId : "";
 		const { createPost } = this.props;
 		this.setState({ text: "" });
