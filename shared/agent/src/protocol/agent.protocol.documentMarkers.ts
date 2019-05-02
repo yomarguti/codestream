@@ -43,6 +43,9 @@ export interface MarkerNotLocated extends CSMarker {
 
 export interface FetchDocumentMarkersRequest {
 	textDocument: TextDocumentIdentifier;
+	filters?: {
+		excludeArchived?: boolean
+	};
 }
 export interface FetchDocumentMarkersResponse {
 	markers: DocumentMarker[];

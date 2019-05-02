@@ -24,7 +24,7 @@ import {
 	MarkerNotLocated,
 	MarkerNotLocatedReason
 } from "../protocol/agent.protocol";
-import { CodemarkType, CSCodemark, CSMarker } from "../protocol/api.protocol";
+import { CodemarkStatus, CodemarkType, CSCodemark, CSMarker } from "../protocol/api.protocol";
 import { Functions, lsp, lspHandler } from "../system";
 
 const emojiMap: { [key: string]: string } = require("../../emoji/emojis.json");
@@ -195,7 +195,8 @@ export class DocumentMarkerManager {
 
 	@lspHandler(FetchDocumentMarkersRequestType)
 	async get({
-		textDocument: documentId
+		textDocument: documentId,
+		filters: filters
 	}: FetchDocumentMarkersRequest): Promise<FetchDocumentMarkersResponse> {
 		const { codemarks, files, markers, markerLocations, users } = Container.instance();
 
@@ -231,15 +232,15 @@ export class DocumentMarkerManager {
 					users.getById(marker.creatorId, { avoidCachingOnFetch: true })
 				]);
 
-				// Only return markers that are not links, are pinned, and issues that are not closed
-				if (
-					// !codemark.pinned ||
-					codemark.type === CodemarkType.Link
-					// (codemark.type === CodemarkType.Issue && codemark.status === CodemarkStatus.Closed)
-				) {
+				// Only return markers that are not links and match the filter[s] (if any)
+				if (codemark.type === CodemarkType.Link) {
 					continue;
 				}
-
+				if (filters && filters.excludeArchived) {
+					if (!codemark.pinned || (codemark.type === CodemarkType.Issue && codemark.status === CodemarkStatus.Closed))  {
+						continue;
+					}
+				}
 				const location = locations[marker.id];
 				if (location) {
 					let summary = codemark.title || codemark.text || "";
