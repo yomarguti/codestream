@@ -20,7 +20,8 @@ import Menu from "./Menu";
 import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
-import ConfigureProviderPanel from "./ConfigureProviderPanel";
+import ConfigureAzureDevOpsPanel from "./ConfigureAzureDevOpsPanel";
+import ConfigureYouTrackPanel from "./ConfigureYouTrackPanel";
 import * as actions from "./actions";
 import { editCodemark } from "../store/codemarks/actions";
 import { isInVscode, safe, toMapBy, forceAsLine } from "../utils";
@@ -343,18 +344,15 @@ export class SimpleStream extends Component {
 		let numProviders = 0;
 		for (let providerId of Object.keys(this.props.providers)) {
 			const provider = this.props.providers[providerId];
-			const { name, isEnterprise, host, enterpriseOnly } = provider;
+			const { name, isEnterprise, host, needsConfigure } = provider;
 			const display = PROVIDER_MAPPINGS[name];
 			if (
 				display &&
-				// !enterpriseOnly &&
 				provider.hasIssues
 			) {
 				const displayName = isEnterprise ? `${display.displayName} - ${host}` : display.displayName;
 				const isConnected = this.isConnectedToProvider(provider);
-
-				console.log("ADDING: ", providerId, " as enterprise? ", enterpriseOnly);
-
+				
 				if (isConnected) {
 					// if you have a token and are connected to the provider,
 					// offer to disconnect
@@ -362,7 +360,7 @@ export class SimpleStream extends Component {
 						label: `Disconnect ${displayName}`,
 						action: `disconnect-${providerId}`
 					});
-				} else if (enterpriseOnly) {
+				} else if (needsConfigure) {
 					// otherwise, if it's an enterprise provider such as on-prem
 					// then we need to configure it with a host, and possibly
 					// a permanent token (in the case of youtrack)
@@ -648,7 +646,8 @@ export class SimpleStream extends Component {
 			"create-dm",
 			"public-channels",
 			"invite",
-			"configure-provider"
+			"configure-youtrack",
+			"configure-azuredevops"
 		].includes(activePanel);
 		// if (this.state.floatCompose) renderNav = false;
 		// if (threadId) renderNav = false;
@@ -742,8 +741,11 @@ export class SimpleStream extends Component {
 							isSlackTeam={this.props.isSlackTeam}
 						/>
 					)}
-					{activePanel === "configure-provider" && (
-						<ConfigureProviderPanel providerId={this.state.configureProviderId} />
+					{activePanel === "configure-youtrack" && (
+						<ConfigureYouTrackPanel providerId={this.state.configureProviderId} />
+					)}
+					{activePanel === "configure-azuredevops" && (
+						<ConfigureAzureDevOpsPanel providerId={this.state.configureProviderId} />
 					)}
 					{activePanel === "main" && (
 						<div className={mainPanelClass}>
@@ -958,8 +960,8 @@ export class SimpleStream extends Component {
 			return this.props.connectProvider(providerId, true);
 		} else if (arg.startsWith("configure-")) {
 			const providerId = arg.split("configure-")[1];
-			this.setState({ configureProviderId: providerId });
-			return this.setActivePanel("configure-provider");
+			const provider = this.props.providers[providerId];
+			return this.setActivePanel(`configure-${provider.name}`);
 		} else if (arg.startsWith("disconnect-")) {
 			const providerId = arg.split("disconnect-")[1];
 			return this.props.disconnectProvider(providerId, true);

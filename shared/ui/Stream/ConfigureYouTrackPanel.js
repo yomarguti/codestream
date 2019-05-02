@@ -11,7 +11,7 @@ import { isInVscode } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 
-export class ConfigureProviderPanel extends Component {
+export class ConfigureYouTrackPanel extends Component {
 	initialState = {};
 
 	state = this.initialState;
@@ -35,7 +35,7 @@ export class ConfigureProviderPanel extends Component {
 		const { providerId } = this.props;
 		const { host, token } = this.state;
 		console.log("Calling with: ", host, " and ", token);
-		return this.props.configureProvider(providerId, host, token);
+		return this.props.configureProvider(providerId, { host, token });
 	};
 
 	renderError = () => {};
@@ -49,10 +49,10 @@ export class ConfigureProviderPanel extends Component {
 		const inactive = false;
 		console.log("PROVIDER ID IS: ", providerId);
 		console.log("PROVIDERS: ", this.props.providers);
-		const { name, isEnterprise, host, enterpriseOnly } = this.props.providers[providerId] || {};
+		const { name } = this.props.providers[providerId] || {};
 		console.log("NAME IS: ", name);
 		const providerName = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].displayName : "";
-		const placeholder = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].hostPlaceholder : "";
+		const placeholder = "https://acme.youtrack.com";
 		const getUrl = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].getUrl : "";
 		return (
 			<div className="panel configure-provider-panel">
@@ -116,7 +116,7 @@ export class ConfigureProviderPanel extends Component {
 									tabIndex={this.tabIndex()}
 									type="submit"
 									loading={this.state.loading}
-									onClick={this.handleClickCreateChannel}
+									onClick={this.props.closePanel}
 								>
 									Submit
 								</Button>
@@ -145,4 +145,4 @@ const mapStateToProps = ({ providers, context, teams }) => {
 export default connect(
 	mapStateToProps,
 	{ closePanel, configureProvider }
-)(injectIntl(ConfigureProviderPanel));
+)(injectIntl(ConfigureYouTrackPanel));

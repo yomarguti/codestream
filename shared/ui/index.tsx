@@ -98,7 +98,6 @@ export function listenForEvents(store) {
 	});
 
 	api.on(DidUpdateProvidersType, ({ providers }) => {
-		console.warn('UPDATING PROVIDERS', providers);
 		store.dispatch(updateProviders(providers));
 	});
 

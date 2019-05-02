@@ -512,12 +512,17 @@ export const setCodemarkStatus = (
 };
 
 export const createProviderCard = async (attributes, codemark) => {
-	let description = codemark.text + "\n\n";
+	const codeStart = attributes.htmlMarkup ? "<pre><div><code>" : "```";
+	const codeEnd = attributes.htmlMarkup ? "</code></div></pre>" : "```";
+	const linefeed = attributes.htmlMarkup ? "<br/>" : "\n";
+	let description = `${codemark.text}${linefeed}${linefeed}`;
 	if (codemark.markers && codemark.markers.length > 0) {
 		const marker = codemark.markers[0];
-		description += "In " + marker.file + "\n\n```\n" + marker.code + "\n```\n\n";
+		description += `In ${marker.file}${linefeed}${linefeed}`;
+		description += `${codeStart}${marker.code}${codeEnd}${linefeed}${linefeed}`;
 	}
-	description += "Posted via CodeStream";
+	description += `Posted via CodeStream${linefeed}`;
+	
 	try {
 		let response;
 		switch (attributes.issueProvider.name) {
@@ -602,6 +607,18 @@ export const createProviderCard = async (attributes, codemark) => {
 						description,
 						title: codemark.title,
 						repoName: attributes.boardName,
+						assignee: attributes.assignees[0]
+					}
+				});
+				break;
+			}
+			case "azuredevops": {
+				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
+					providerId: attributes.issueProvider.id,
+					data: {
+						description,
+						title: codemark.title,
+						boardId: attributes.board.id,
 						assignee: attributes.assignees[0]
 					}
 				});

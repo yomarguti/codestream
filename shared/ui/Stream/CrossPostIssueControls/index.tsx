@@ -10,6 +10,7 @@ import GitLabCardControls from "./GitLabCardControls";
 import JiraCardControls from "./JiraCardControls";
 import TrelloCardControls from "./TrelloCardControls";
 import YouTrackCardControls from "./YouTrackCardControls";
+import AzureDevOpsCardControls from "./AzureDevOpsCardControls";
 import { CrossPostIssueValuesListener, ProviderDisplay, PROVIDER_MAPPINGS } from "./types";
 import {
 	FetchThirdPartyBoardsRequestType,
@@ -193,6 +194,16 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 					/>
 				);
 			}
+			case "azuredevops": {
+				return (
+					<AzureDevOpsCardControls
+						boards={boards}
+						onValues={this.props.onValues}
+						provider={providerInfo.provider}
+					/>
+				);
+			}
+
 			default:
 				return null;
 		}
@@ -210,7 +221,6 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			const knownIssueProviders = Object.keys(this.props.providers).filter(providerId => {
 				const provider = this.props.providers![providerId];
 				return (
-					!provider.enterpriseOnly && 
 					provider.hasIssues &&
 					!!PROVIDER_MAPPINGS[provider.name]
 				);
@@ -258,7 +268,11 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 	): Promise<void> {
 		event.preventDefault();
 		this.setState({ isLoading: true, loadingProvider: providerInfo });
-		await this.props.connectProvider(providerInfo.provider.id);
+		if (providerInfo.provider.needsConfigure) {
+			//this.props.setActivePanel(`configure-${providerInfo.provider.name}`);
+		} else {
+			await this.props.connectProvider(providerInfo.provider.id);
+		}
 	}
 
 	getProviderInfo(providerId: string): ProviderInfo | undefined {

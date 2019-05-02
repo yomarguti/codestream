@@ -126,7 +126,7 @@ export const connectProvider = (providerId: string, fromMenu = false) => async (
 	}
 };
 
-export const configureProvider = (providerId: string, host: string, token: string) => async (
+export const configureProvider = (providerId: string, data: { [key: string]: any }) => async (
 	dispatch,
 	getState
 ) => {
@@ -135,12 +135,11 @@ export const configureProvider = (providerId: string, host: string, token: strin
 	if (!provider) return;
 	try {
 		const api = HostApi.instance;
-		await api.send(ConfigureThirdPartyProviderRequestType, { providerId, host, token });
+		await api.send(ConfigureThirdPartyProviderRequestType, { providerId, data });
 		api.send(TelemetryRequestType, {
 			eventName: "Issue Service Configured",
 			properties: {
 				Service: provider.name,
-				Host: host,
 				Connection: "On"
 			}
 		});
