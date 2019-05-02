@@ -31,7 +31,8 @@ export class ConfigureAzureDevOpsPanel extends Component {
 		this.focusInput();
 	}
 
-	onSubmit = () => {
+	onSubmit = e => {
+		e.preventDefault();
 		const { providerId } = this.props;
 		const { organization } = this.state;
 		this.props.configureProvider(providerId, { organization });
@@ -59,6 +60,11 @@ export class ConfigureAzureDevOpsPanel extends Component {
 						<span className="panel-title">Configure {providerName}</span>
 					</div>
 					<fieldset className="form-body" disabled={inactive}>
+						<p>
+							Name of your Azure DevOps Services organization. For example, if you access Azure
+							DevOps Services at https://dev.azure.com/
+							<strong>myorg</strong>, you would supply "<strong>myorg</strong>" here
+						</p>
 						{this.renderError()}
 						{getUrl && (
 							<p style={{ textAlign: "center" }} className="explainer">
