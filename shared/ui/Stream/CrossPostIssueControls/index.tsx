@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { connectProvider, setIssueProvider } from "../../store/context/actions";
+import { connectProvider, setIssueProvider, openPanel } from "../../store/context/actions";
 import { HostApi } from "../../webview-api";
 import Icon from "../Icon";
 import AsanaCardControls from "./AsanaCardControls";
@@ -28,6 +28,7 @@ interface ProviderInfo {
 interface Props {
 	connectProvider(providerId: string): any;
 	setIssueProvider(providerId?: string): void;
+	openPanel(...args: Parameters<typeof openPanel>): void;
 	onValues: CrossPostIssueValuesListener;
 	issueProvider?: ThirdPartyProviderConfig;
 	codeBlock?: {
@@ -66,8 +67,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider.id) : undefined;
 		if (this.props.issueProvider && providerInfo) {
 			this.loadBoards(this.props.issueProvider);
-		}
-		else {
+		} else {
 			this.props.setIssueProvider(undefined);
 		}
 	}
@@ -76,13 +76,12 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		const { issueProvider } = this.props;
 		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider.id) : undefined;
 		if (
-			providerInfo && 
-			issueProvider && 
+			providerInfo &&
+			issueProvider &&
 			(!prevProps.issueProvider || prevProps.issueProvider.id !== issueProvider.id)
 		) {
 			this.loadBoards(issueProvider!);
-		}
-		else if (!providerInfo && prevProps.issueProvider) {
+		} else if (!providerInfo && prevProps.issueProvider) {
 			if (this.state.isLoading) {
 				this.setState({ boards: [], isLoading: false, loadingProvider: undefined });
 			}
@@ -98,7 +97,9 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			});
 		}
 
-		const response = await HostApi.instance.send(FetchThirdPartyBoardsRequestType, { providerId: provider.id });
+		const response = await HostApi.instance.send(FetchThirdPartyBoardsRequestType, {
+			providerId: provider.id
+		});
 
 		this.setState({
 			isLoading: false,
@@ -220,10 +221,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		} else if (this.props.providers && Object.keys(this.props.providers).length) {
 			const knownIssueProviders = Object.keys(this.props.providers).filter(providerId => {
 				const provider = this.props.providers![providerId];
-				return (
-					provider.hasIssues &&
-					!!PROVIDER_MAPPINGS[provider.name]
-				);
+				return provider.hasIssues && !!PROVIDER_MAPPINGS[provider.name];
 			});
 			if (knownIssueProviders.length === 0) {
 				return "";
@@ -269,7 +267,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		event.preventDefault();
 		this.setState({ isLoading: true, loadingProvider: providerInfo });
 		if (providerInfo.provider.needsConfigure) {
-			//this.props.setActivePanel(`configure-${providerInfo.provider.name}`);
+			this.props.openPanel(`configure-${providerInfo.provider.name}`);
 		} else {
 			await this.props.connectProvider(providerInfo.provider.id);
 		}
@@ -306,5 +304,5 @@ const mapStateToProps = ({ providers, context, session, users }) => ({
 
 export default connect(
 	mapStateToProps,
-	{ connectProvider, setIssueProvider }
+	{ connectProvider, setIssueProvider, openPanel }
 )(CrossPostIssueControls);
