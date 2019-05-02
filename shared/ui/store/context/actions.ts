@@ -99,12 +99,10 @@ export const connectProvider = (providerId: string, fromMenu = false) => async (
 		if (isEnterprise) {
 			providerInfo = (providerInfo.hosts || {})[host];
 		}
-		if (providerInfo && providerInfo.accessToken) {
-			if (provider.hasIssues) {
-				dispatch(setIssueProvider(providerId));
-			}
-			return;
+		if (provider.hasIssues) {
+			dispatch(setIssueProvider(providerId));
 		}
+		return;
 	}
 	try {
 		const api = HostApi.instance;
@@ -143,9 +141,6 @@ export const configureProvider = (providerId: string, data: { [key: string]: any
 				Connection: "On"
 			}
 		});
-		if (provider.hasIssues) {
-			return dispatch(setIssueProvider(providerId));
-		}
 	} catch (error) {
 		logError(`Failed to connect ${provider.name}: ${error}`);
 	}

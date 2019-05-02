@@ -290,8 +290,8 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		if (provider.isEnterprise) {
 			if (!providerInfo!.hosts) return undefined;
 			providerInfo = providerInfo!.hosts[provider.id];
-			if (!providerInfo || !providerInfo.accessToken) return undefined;
 		}
+		if (!providerInfo || !providerInfo.accessToken) return undefined;
 		return { provider, display };
 	}
 }
