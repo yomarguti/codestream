@@ -99,7 +99,7 @@ export abstract class ThirdPartyProviderBase<
 				if (me == null) return;
 
 				const providerInfo = this.getProviderInfo(me);
-				if (providerInfo == null) return;
+				if (providerInfo == null || !providerInfo.accessToken) return;
 
 				resolve(providerInfo);
 			});
