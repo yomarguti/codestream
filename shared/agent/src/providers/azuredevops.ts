@@ -117,18 +117,6 @@ export class AzureDevOpsProvider extends ThirdPartyProviderBase<CSAzureDevOpsPro
 		let users: ThirdPartyProviderUser[] = [];
 
 		try {
-			if (!this._user) {
-				this._user = await this.getMe();
-			}
-			if (this._user) {
-				users = [
-					{
-						id: this._user.emailAddress,
-						displayName: this._user.displayName
-					}
-				];
-			}
-
 			const response = await this.get<{ value: AzureDevOpsTeam[] }>(
 				`/_apis/projects/${request.boardId}/teams?${qs.stringify({
 					"api-version": "5.0"
