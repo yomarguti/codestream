@@ -1,6 +1,5 @@
 "use strict";
 import * as qs from "querystring";
-import { MessageType } from "../api/apiProvider";
 import { Logger } from "../logger";
 import {
 	AzureDevOpsConfigurationData,
@@ -38,7 +37,7 @@ export class AzureDevOpsProvider extends ThirdPartyProviderBase<CSAzureDevOpsPro
 	}
 
 	get apiPath() {
-		const organization = (this._providerInfo && this._providerInfo.organization) || '';
+		const organization = (this._providerInfo && this._providerInfo.organization) || "";
 		return `/${organization}`;
 	}
 
@@ -48,13 +47,10 @@ export class AzureDevOpsProvider extends ThirdPartyProviderBase<CSAzureDevOpsPro
 		};
 	}
 
-	async onConnected() {
-	}
+	async onConnected() {}
 
 	@log()
-	async getBoards(
-		request: FetchThirdPartyBoardsRequest
-	): Promise<FetchThirdPartyBoardsResponse> {
+	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
 		let boards: ThirdPartyProviderBoard[] = [];
 		try {
 			const response = await this.get<{ value: AzureDevOpsProject[] }>(
@@ -121,15 +117,16 @@ export class AzureDevOpsProvider extends ThirdPartyProviderBase<CSAzureDevOpsPro
 		let users: ThirdPartyProviderUser[] = [];
 
 		try {
-
 			if (!this._user) {
 				this._user = await this.getMe();
 			}
 			if (this._user) {
-				users = [{
-					id: this._user.emailAddress,
-					displayName: this._user.displayName
-				}];
+				users = [
+					{
+						id: this._user.emailAddress,
+						displayName: this._user.displayName
+					}
+				];
 			}
 
 			const response = await this.get<{ value: AzureDevOpsTeam[] }>(
@@ -138,24 +135,25 @@ export class AzureDevOpsProvider extends ThirdPartyProviderBase<CSAzureDevOpsPro
 				})}`
 			);
 
-			await Promise.all(response.body.value.map(async team => {
-				const userResponse = await this.get<{ value: AzureDevOpsUser[] }>(
-					`/_apis/projects/${request.boardId}/teams/${team.id}/members?${qs.stringify({
-						"api-version": "5.0"
-					})}`
-				);
-				users = [
-					...users,
-					...userResponse.body.value.map(user => {
-						return {
-							id: user.identity.uniqueName,
-							displayName: user.identity.displayName
-						};
-					})
-				];
-			}));
-		}
-		catch (err) {
+			await Promise.all(
+				response.body.value.map(async team => {
+					const userResponse = await this.get<{ value: AzureDevOpsUser[] }>(
+						`/_apis/projects/${request.boardId}/teams/${team.id}/members?${qs.stringify({
+							"api-version": "5.0"
+						})}`
+					);
+					users = [
+						...users,
+						...userResponse.body.value.map(user => {
+							return {
+								id: user.identity.uniqueName,
+								displayName: user.identity.displayName
+							};
+						})
+					];
+				})
+			);
+		} catch (err) {
 			Logger.error(err);
 			debugger;
 		}
@@ -176,7 +174,7 @@ export class AzureDevOpsProvider extends ThirdPartyProviderBase<CSAzureDevOpsPro
 	private async getMe(): Promise<AzureDevOpsProfile> {
 		const userResponse = await this.get<AzureDevOpsProfile>(
 			"https://app.vssps.visualstudio.com/_apis/profile/profiles/me?api-version=5.0",
-			{ },
+			{},
 			{ absoluteUrl: true }
 		);
 		return userResponse.body;

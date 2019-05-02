@@ -5,21 +5,21 @@ import { SCChannel } from "sc-channel";
 import { create, SCClientSocket } from "socketcluster-client";
 import { Disposable } from "vscode-languageserver";
 import {
-	MessageCallback,
-	MessageEvent,
 	BroadcasterConnection,
 	BroadcasterConnectionOptions,
 	BroadcasterHistoryInput,
 	BroadcasterHistoryOutput,
 	BroadcasterStatusType,
+	MessageCallback,
+	MessageEvent,
 	StatusCallback
 } from "./broadcaster";
 import { SocketClusterHistory } from "./socketClusterHistory";
 
 // use this interface to initialize the SocketClusterConnection class
 export interface SocketClusterInitializer {
-	host: string;	// host of the socketcluster server
-	port: string;	// port of the socketcluster server
+	host: string; // host of the socketcluster server
+	port: string; // port of the socketcluster server
 	authKey: string; // unique token provided in the login response
 	userId: string; // ID of the current user
 	debug?(msg: string, info?: any): void; // for debug messages
@@ -46,7 +46,6 @@ export class SocketClusterConnection implements BroadcasterConnection {
 
 	// initialize SocketCluster connection
 	initialize(options: SocketClusterInitializer): Promise<Disposable> {
-
 		if (options.debug) {
 			this._debug = options.debug;
 		}
@@ -56,7 +55,6 @@ export class SocketClusterConnection implements BroadcasterConnection {
 		this._statusCallback = options.onStatus;
 
 		return new Promise((resolve, reject) => {
-
 			try {
 				this._scClient = create({
 					hostname: options.host,
@@ -64,8 +62,7 @@ export class SocketClusterConnection implements BroadcasterConnection {
 					secure: true,
 					rejectUnauthorized: false
 				});
-			}
-			catch (ex) {
+			} catch (ex) {
 				reject(ex);
 			}
 			this._scClient!.on("connect", () => {
@@ -116,11 +113,10 @@ export class SocketClusterConnection implements BroadcasterConnection {
 		}
 	}
 
-	reconnect(): void {
-	}
+	reconnect(): void {}
 
 	subscribe(channels: string[], options: BroadcasterConnectionOptions = {}) {
-		this._debug('SocketCluster request to subscribe:', channels);
+		this._debug("SocketCluster request to subscribe:", channels);
 		const unsubscribedChannels: string[] = [];
 		const subscribedChannels: string[] = [];
 		for (const channel of channels) {
@@ -136,14 +132,14 @@ export class SocketClusterConnection implements BroadcasterConnection {
 			}
 		}
 		if (subscribedChannels.length > 0 && this._statusCallback) {
-			this._debug('SocketCluster already subscribed to ', subscribedChannels);
+			this._debug("SocketCluster already subscribed to ", subscribedChannels);
 			this._statusCallback({
 				status: BroadcasterStatusType.Connected,
 				channels: subscribedChannels
 			});
 		}
 		if (unsubscribedChannels.length > 0) {
-			this._debug('SocketCluster not yet subscribed, will subscribe now to', unsubscribedChannels);
+			this._debug("SocketCluster not yet subscribed, will subscribe now to", unsubscribedChannels);
 			for (const channel of unsubscribedChannels) {
 				this._subscribeToChannel(channel);
 			}
@@ -154,18 +150,14 @@ export class SocketClusterConnection implements BroadcasterConnection {
 		const troubleChannels = [];
 		for (const channel of channels) {
 			const subscription = this._subscriptions[channel];
-			if (
-				!subscription ||
-				!subscription.scChannel ||
-				!subscription.scChannel.isSubscribed()
-			) {
+			if (!subscription || !subscription.scChannel || !subscription.scChannel.isSubscribed()) {
 				troubleChannels.push(channel);
 			}
 		}
 		return troubleChannels;
 	}
 
-	fetchHistory (options: BroadcasterHistoryInput): Promise<BroadcasterHistoryOutput> {
+	fetchHistory(options: BroadcasterHistoryInput): Promise<BroadcasterHistoryOutput> {
 		return new SocketClusterHistory().fetchHistory({
 			scClient: this._scClient!,
 			...options
@@ -174,20 +166,20 @@ export class SocketClusterConnection implements BroadcasterConnection {
 
 	_subscribeToChannel(channel: string) {
 		const subscription = this._subscriptions[channel];
-		const scChannel = subscription.scChannel = this._scClient!.subscribe(channel);
+		const scChannel = (subscription.scChannel = this._scClient!.subscribe(channel));
 		scChannel.watch(this._handleMessage.bind(this));
 		scChannel.on("subscribe", () => {
-			this._debug('SocketCluster successfully subscribed to', channel);
+			this._debug("SocketCluster successfully subscribed to", channel);
 			this._handleSubscribe(channel);
 		});
 		scChannel.on("subscribeFail", (error: any) => {
-			this._debug('SocketCluster failed to subscribe to', channel);
+			this._debug("SocketCluster failed to subscribe to", channel);
 			this._handleSubscribeFail(error, channel);
 		});
 	}
 
 	// handle a message coming in on any channel
-	_handleMessage (message: any) {
+	_handleMessage(message: any) {
 		const receivedAt = Date.now();
 		this._debug("SocketCluster message received at", receivedAt);
 		const messageEvent: MessageEvent = {
