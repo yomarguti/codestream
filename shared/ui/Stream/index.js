@@ -366,7 +366,7 @@ export class SimpleStream extends Component {
 					// a permanent token (in the case of youtrack)
 					menuItems.push({
 						label: `Connect to ${displayName}`,
-						action: `configure-${providerId}`
+						action: `configure-provider-${name}-${providerId}`
 					});
 				} else {
 					// otherwise it's just a simple oauth redirect
@@ -646,9 +646,9 @@ export class SimpleStream extends Component {
 			"create-dm",
 			"public-channels",
 			"invite",
-			"configure-youtrack",
-			"configure-azuredevops"
-		].includes(activePanel);
+		].includes(activePanel) && 
+			!activePanel.startsWith("configure-provider-");
+
 		// if (this.state.floatCompose) renderNav = false;
 		// if (threadId) renderNav = false;
 
@@ -741,11 +741,11 @@ export class SimpleStream extends Component {
 							isSlackTeam={this.props.isSlackTeam}
 						/>
 					)}
-					{activePanel === "configure-youtrack" && (
-						<ConfigureYouTrackPanel providerId={this.state.configureProviderId} />
+					{activePanel.startsWith("configure-provider-youtrack-") && (
+						<ConfigureYouTrackPanel providerId={activePanel.split("configure-provider-youtrack-")[1]} />
 					)}
-					{activePanel === "configure-azuredevops" && (
-						<ConfigureAzureDevOpsPanel providerId={this.state.configureProviderId} />
+					{activePanel.startsWith("configure-provider-azuredevops-") && (
+						<ConfigureAzureDevOpsPanel providerId={activePanel.split("configure-provider-azuredevops-")[1]} />
 					)}
 					{activePanel === "main" && (
 						<div className={mainPanelClass}>
@@ -958,10 +958,9 @@ export class SimpleStream extends Component {
 		if (arg.startsWith("connect-")) {
 			const providerId = arg.split("connect-")[1];
 			return this.props.connectProvider(providerId, true);
-		} else if (arg.startsWith("configure-")) {
-			const providerId = arg.split("configure-")[1];
-			const provider = this.props.providers[providerId];
-			return this.setActivePanel(`configure-${provider.name}`);
+		} else if (arg.startsWith("configure-provider-")) {
+			const provider = arg.split("configure-provider-")[1];
+			return this.setActivePanel(`configure-provider-${provider}`);
 		} else if (arg.startsWith("disconnect-")) {
 			const providerId = arg.split("disconnect-")[1];
 			return this.props.disconnectProvider(providerId, true);

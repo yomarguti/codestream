@@ -267,7 +267,8 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		event.preventDefault();
 		this.setState({ isLoading: true, loadingProvider: providerInfo });
 		if (providerInfo.provider.needsConfigure) {
-			this.props.openPanel(`configure-${providerInfo.provider.name}`);
+			const { name, id } = providerInfo.provider;
+			this.props.openPanel(`configure-provider-${name}-${id}`);
 		} else {
 			await this.props.connectProvider(providerInfo.provider.id);
 		}

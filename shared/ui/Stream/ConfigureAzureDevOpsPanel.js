@@ -50,7 +50,7 @@ export class ConfigureAzureDevOpsPanel extends Component {
 		const inactive = false;
 		const { name } = this.props.providers[providerId] || {};
 		const providerName = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].displayName : "";
-		const placeholder = "acmecorp";
+		const placeholder = "myorg";
 		const getUrl = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].getUrl : "";
 		return (
 			<div className="panel configure-provider-panel">
@@ -60,17 +60,17 @@ export class ConfigureAzureDevOpsPanel extends Component {
 						<span className="panel-title">Configure {providerName}</span>
 					</div>
 					<fieldset className="form-body" disabled={inactive}>
+						{getUrl && (
+							<p style={{ textAlign: "center" }} className="explainer">
+								Not a {providerName} customer yet? <a href={getUrl}>Get {providerName}</a>
+							</p>
+						)}
 						<p>
 							Name of your Azure DevOps Services organization. For example, if you access Azure
 							DevOps Services at https://dev.azure.com/
 							<strong>myorg</strong>, you would supply "<strong>myorg</strong>" here
 						</p>
 						{this.renderError()}
-						{getUrl && (
-							<p style={{ textAlign: "center" }} className="explainer">
-								Not a {providerName} customer yet? <a href={getUrl}>Get {providerName}</a>
-							</p>
-						)}
 						<div id="controls">
 							<div id="organization-controls" className="control-group">
 								<label>Your {providerName} Organization</label>

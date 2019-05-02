@@ -95,7 +95,7 @@ export const connectProvider = (providerId: string, fromMenu = false) => async (
 	const user = users[session.userId];
 	const { name, host, isEnterprise } = provider;
 	let providerInfo = ((user.providerInfo || {})[context.currentTeamId] || {})[name];
-	if (providerInfo) {
+	if (providerInfo && providerInfo.accessToken) {
 		if (isEnterprise) {
 			providerInfo = (providerInfo.hosts || {})[host];
 		}
