@@ -435,58 +435,63 @@ namespace CodeStream.VisualStudio.UI {
 		}
 
 		private void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
-			var wpfTextView = sender as IWpfTextView;
-			if (wpfTextView == null || !_sessionService.IsReady) return;
-			if (wpfTextView.InLayout || wpfTextView.IsClosed) {
-				return;
-			}
-
-			if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextView.TextBuffer, out var textDocument)) {
-				Log.LocalWarning(@"TextDocument not found");
-				return;
-			}
-
-			if (!wpfTextView.Properties.TryGetProperty(PropertyNames.DocumentMarkerManager, out DocumentMarkerManager documentMarkerManager)
-				|| documentMarkerManager == null) {
-				Log.Error($"{nameof(documentMarkerManager)} is null");
-				return;
-			}
-
-			var onTextViewLayoutChanged = false;
-			// get markers if it's null (first time) or we did something that isn't scrolling
-			if (!documentMarkerManager.IsInitialized() || e.TranslatedLines.Any()) {
-				onTextViewLayoutChanged = documentMarkerManager.GetMarkers();
-			}
-			else if (documentMarkerManager.HasMarkers()) {
-				onTextViewLayoutChanged = true;
-			}
-
-			// don't trigger for changes that don't result in lines being added or removed
-			if (_sessionService.IsWebViewVisible && _sessionService.IsCodemarksForFileVisible &&
-				(e.VerticalTranslation || e.TranslatedLines.Any())) {
-				try {
-					var visibleRangeSubject = wpfTextView.Properties
-						.GetProperty<Subject<HostDidChangeEditorVisibleRangesNotificationSubject>>(PropertyNames
-							.HostDidChangeEditorVisibleRangesNotificationSubject);
-
-					visibleRangeSubject?.OnNext(
-						new HostDidChangeEditorVisibleRangesNotificationSubject(wpfTextView,
-							textDocument.FilePath.ToUri()));
+			try {
+				var wpfTextView = sender as IWpfTextView;
+				if (wpfTextView == null || !_sessionService.IsReady) return;
+				if (wpfTextView.InLayout || wpfTextView.IsClosed) {
+					return;
 				}
-				catch (InvalidOperationException ex) {
-					Log.Warning(ex, nameof(OnTextViewLayoutChanged));
+
+				if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextView.TextBuffer, out var textDocument)) {
+					Log.LocalWarning(@"TextDocument not found");
+					return;
 				}
-				catch (Exception ex) {
-					Log.Error(ex, nameof(OnTextViewLayoutChanged));
+
+				if (!wpfTextView.Properties.TryGetProperty(PropertyNames.DocumentMarkerManager, out DocumentMarkerManager documentMarkerManager)
+					|| documentMarkerManager == null) {
+					Log.Error($"{nameof(documentMarkerManager)} is null");
+					return;
+				}
+
+				var onTextViewLayoutChanged = false;
+				// get markers if it's null (first time) or we did something that isn't scrolling
+				if (!documentMarkerManager.IsInitialized() || e.TranslatedLines.Any()) {
+					onTextViewLayoutChanged = documentMarkerManager.GetMarkers();
+				}
+				else if (documentMarkerManager.HasMarkers()) {
+					onTextViewLayoutChanged = true;
+				}
+
+				// don't trigger for changes that don't result in lines being added or removed
+				if (_sessionService.IsWebViewVisible && _sessionService.IsCodemarksForFileVisible &&
+					(e.VerticalTranslation || e.TranslatedLines.Any())) {
+					try {
+						var visibleRangeSubject = wpfTextView.Properties
+							.GetProperty<Subject<HostDidChangeEditorVisibleRangesNotificationSubject>>(PropertyNames
+								.HostDidChangeEditorVisibleRangesNotificationSubject);
+
+						visibleRangeSubject?.OnNext(
+							new HostDidChangeEditorVisibleRangesNotificationSubject(wpfTextView,
+								textDocument.FilePath.ToUri()));
+					}
+					catch (InvalidOperationException ex) {
+						Log.Warning(ex, nameof(OnTextViewLayoutChanged));
+					}
+					catch (Exception ex) {
+						Log.Error(ex, nameof(OnTextViewLayoutChanged));
+					}
+				}
+
+				if (onTextViewLayoutChanged) {
+					//only send this if we have markers
+					wpfTextView
+						.Properties
+						.GetProperty<List<ICodeStreamWpfTextViewMargin>>(PropertyNames.TextViewMarginProviders)
+						.OnTextViewLayoutChanged(sender, e);
 				}
 			}
-
-			if (onTextViewLayoutChanged) {
-				//only send this if we have markers
-				wpfTextView
-					.Properties
-					.GetProperty<List<ICodeStreamWpfTextViewMargin>>(PropertyNames.TextViewMarginProviders)
-					.OnTextViewLayoutChanged(sender, e);
+			catch (Exception ex) {
+				Log.Warning(ex, nameof(OnTextViewLayoutChanged));
 			}
 		}
 
