@@ -130,9 +130,14 @@ export class AzureDevOpsProvider extends ThirdPartyProviderBase<CSAzureDevOpsPro
 							"api-version": "5.0"
 						})}`
 					);
+
+					const uniqueUsers = userResponse.body.value.filter(user => {
+						return !users.find(u => u.id === user.identity.uniqueName);
+					});
+
 					users = [
 						...users,
-						...userResponse.body.value.map(user => {
+						...uniqueUsers.map(user => {
 							return {
 								id: user.identity.uniqueName,
 								displayName: user.identity.displayName
