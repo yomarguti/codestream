@@ -29,6 +29,7 @@ export * from "./gitlab";
 export * from "./asana";
 export * from "./bitbucket";
 export * from "./youtrack";
+export * from "./azuredevops";
 
 @lsp
 export class ThirdPartyProviderRegistry {
@@ -58,7 +59,7 @@ export class ThirdPartyProviderRegistry {
 			throw new Error(`No registered provider for '${request.providerId}'`);
 		}
 
-		await provider.configure(request);
+		await provider.configure(request.data);
 		return {};
 	}
 

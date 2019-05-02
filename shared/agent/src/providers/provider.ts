@@ -1,8 +1,6 @@
 "use strict";
 import fetch, { RequestInit, Response } from "node-fetch";
 import {
-	ConfigureThirdPartyProviderRequest,
-	ConnectThirdPartyProviderRequest,
 	CreateThirdPartyCardRequest,
 	CreateThirdPartyCardResponse,
 	FetchAssignableUsersRequest,
@@ -22,7 +20,7 @@ import { Functions, Strings } from "../system";
 export interface ThirdPartyProvider {
 	readonly name: string;
 	connect(): Promise<void>;
-	configure(request: ConnectThirdPartyProviderRequest): Promise<void>;
+	configure(data: { [key: string]: any } ): Promise<void>;
 	disconnect(): Promise<void>;
 	getConfig(): ThirdPartyProviderConfig;
 	getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse>;
@@ -113,29 +111,7 @@ export abstract class ThirdPartyProviderBase<
 
 	protected async onConnected() {}
 
-	async configure(request: ConfigureThirdPartyProviderRequest) {
-		void (await this.session.api.configureThirdPartyProvider({
-			providerId: this.providerConfig.id,
-			host: request.host,
-			token: request.token
-		}));
-		this._providerInfo = await new Promise<TProviderInfo>(resolve => {
-			this.session.api.onDidReceiveMessage(e => {
-				if (e.type !== MessageType.Users) return;
-
-				const me = e.data.find(u => u.id === this.session.userId) as CSMe | null | undefined;
-				if (me == null) return;
-
-				const providerInfo = this.getProviderInfo(me);
-				if (providerInfo == null) return;
-
-				resolve(providerInfo);
-			});
-		});
-
-		this._readyPromise = this.onConnected();
-		await this._readyPromise;
-	}
+	async configure(data: { [key: string]: any }) {}
 
 	protected async onConfigured() {}
 
@@ -200,42 +176,60 @@ export abstract class ThirdPartyProviderBase<
 		this._ensuringConnection = undefined;
 	}
 
-	protected async delete<R extends object>(url: string): Promise<ApiResponse<R>> {
+	protected async delete<R extends object>(
+		url: string,
+		headers: { [key: string]: string } = {},
+		options: { [key: string]: any } = {}
+	): Promise<ApiResponse<R>> {
 		let resp = undefined;
 		if (resp === undefined) {
 			await this.ensureConnected();
-			resp = this.fetch<R>(url, { method: "DELETE", headers: this.headers });
+			resp = this.fetch<R>(url, {
+				method: "DELETE",
+				headers: { ...this.headers, ...headers }
+			}, options);
 		}
 		return resp;
 	}
 
-	protected async get<R extends object>(url: string): Promise<ApiResponse<R>> {
+	protected async get<R extends object>(
+		url: string,
+		headers: { [key: string]: string } = {},
+		options: { [key: string]: any } = {}
+	): Promise<ApiResponse<R>> {
 		await this.ensureConnected();
-		return this.fetch<R>(url, { method: "GET", headers: this.headers });
+		return this.fetch<R>(url, {
+			method: "GET",
+			headers: { ...this.headers, ...headers }
+		}, options);
 	}
 
 	protected async post<RQ extends object, R extends object>(
 		url: string,
-		body: RQ
+		body: RQ,
+		headers: { [key: string]: string } = {},
+		options: { [key: string]: any } = {}
 	): Promise<ApiResponse<R>> {
 		await this.ensureConnected();
 		return this.fetch<R>(url, {
 			method: "POST",
 			body: JSON.stringify(body),
-			headers: this.headers
-		});
+			headers: { ...this.headers, ...headers }
+		}, options);
 	}
 
 	protected async put<RQ extends object, R extends object>(
 		url: string,
-		body: RQ
+		body: RQ,
+		headers: { [key: string]: string } = {},
+		options: { [key: string]: any } = {}
 	): Promise<ApiResponse<R>> {
 		await this.ensureConnected();
 		return this.fetch<R>(url, {
 			method: "PUT",
 			body: JSON.stringify(body),
-			headers: this.headers
-		});
+			headers: { ...this.headers, ...headers }
+		}, options);
 	}
 
 	protected getProviderInfo(me: CSMe) {
@@ -247,7 +241,11 @@ export abstract class ThirdPartyProviderBase<
 		);
 	}
 
-	private async fetch<R extends object>(url: string, init: RequestInit): Promise<ApiResponse<R>> {
+	private async fetch<R extends object>(
+		url: string,
+		init: RequestInit,
+		options: { [key: string]: any } = {}
+	): Promise<ApiResponse<R>> {
 		const start = process.hrtime();
 
 		let traceResult;
@@ -268,7 +266,7 @@ export abstract class ThirdPartyProviderBase<
 			// }
 
 			const method = (init && init.method) || "GET";
-			const absoluteUrl = `${this.baseUrl}${url}`;
+			const absoluteUrl = options.absoluteUrl ? url : `${this.baseUrl}${url}`;
 
 			let json: Promise<R> | undefined;
 			let resp: Response | undefined;

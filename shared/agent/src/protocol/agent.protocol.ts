@@ -42,6 +42,7 @@ export * from "./agent.protocol.gitlab";
 export * from "./agent.protocol.jira";
 export * from "./agent.protocol.trello";
 export * from "./agent.protocol.youtrack";
+export * from "./agent.protocol.azuredevops";
 
 export interface Capabilities {
 	channelMute?: boolean;

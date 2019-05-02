@@ -1046,7 +1046,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async configureThirdPartyProvider(request: { providerId: string; host: string; token: string }) {
+	async setThirdPartyProviderToken(request: { providerId: string; host: string; token: string }) {
 		const cc = Logger.getCorrelationContext();
 		try {
 			const provider = getProvider(request.providerId);
@@ -1061,6 +1061,35 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 			void (await this.put<{ teamId: string; host: string; token: string }, {}>(
 				`/provider-set-token/${providerConfig.name}`,
+				params,
+				this._token
+			));
+		} catch (ex) {
+			Logger.error(ex, cc);
+			throw ex;
+		}
+	}
+
+	@log()
+	async setThirdPartyProviderInfo(request: {
+		providerId: string;
+		host: string;
+		data: { [key: string]: any };
+	}) {
+		const cc = Logger.getCorrelationContext();
+		try {
+			const provider = getProvider(request.providerId);
+			if (!provider) throw new Error(`provider ${request.providerId} not found`);
+			const providerConfig = provider.getConfig();
+
+			const params: { teamId: string; host: string; data: { [key: string]: any } } = {
+				teamId: this.teamId,
+				host: request.host,
+				data: request.data
+			};
+
+			void (await this.put<{ teamId: string; host: string; data: { [key: string]: any } }, {}>(
+				`/provider-info/${providerConfig.name}`,
 				params,
 				this._token
 			));

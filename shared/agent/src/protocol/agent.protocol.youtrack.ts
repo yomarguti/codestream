@@ -31,3 +31,9 @@ export interface YouTrackUser {
 	name: string;
 	fullName: string;
 }
+
+export interface YouTrackConfigurationData {
+	appClientId: string;
+	host: string;
+	token: string;
+}

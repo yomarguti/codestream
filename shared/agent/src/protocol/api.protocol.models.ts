@@ -287,6 +287,12 @@ export interface CSYouTrackProviderInfo {
 	hosts: { [host: string]: CSYouTrackProviderInfo };
 }
 
+export interface CSAzureDevOpsProviderInfo {
+	accessToken: string;
+	organization?: string;
+	hosts: { [host: string]: CSAzureDevOpsProviderInfo };
+}
+
 export type CSProviderInfos =
 	| CSAsanaProviderInfo
 	| CSBitbucketProviderInfo
@@ -295,7 +301,8 @@ export type CSProviderInfos =
 	| CSJiraProviderInfo
 	| CSSlackProviderInfo
 	| CSTrelloProviderInfo
-	| CSYouTrackProviderInfo;
+	| CSYouTrackProviderInfo
+	| CSAzureDevOpsProviderInfo;
 
 export interface CSUser extends CSEntity {
 	companyIds: string[];
@@ -349,6 +356,7 @@ export interface CSMe extends CSUser {
 			slack?: CSSlackProviderInfo;
 			trello?: CSTrelloProviderInfo;
 			youtrack?: CSYouTrackProviderInfo;
+			azuredevops?: CSAzureDevOpsProviderInfo;
 			[key: string]: CSProviderInfos | undefined;
 		}
 	};

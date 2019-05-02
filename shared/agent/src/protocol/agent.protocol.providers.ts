@@ -9,6 +9,7 @@ export interface ThirdPartyProviderConfig {
 	isEnterprise?: boolean;
 	hasIssues?: boolean;
 	enterpriseOnly?: boolean;
+	needsConfigure?: boolean;
 }
 
 export interface ThirdPartyProviders {
@@ -30,8 +31,7 @@ export const ConnectThirdPartyProviderRequestType = new RequestType<
 
 export interface ConfigureThirdPartyProviderRequest {
 	providerId: string;
-	host: string;
-	token: string;
+	data: { [key: string]: any };
 }
 
 export interface ConfigureThirdPartyProviderResponse {}

@@ -7,7 +7,6 @@ import {
 	Capabilities,
 	CloseStreamRequest,
 	CloseStreamResponse,
-	ConfigureThirdPartyProviderResponse,
 	ConnectionStatus,
 	CreateChannelStreamRequest,
 	CreateChannelStreamResponse,
@@ -323,10 +322,15 @@ export interface ApiProvider {
 	inviteUser(request: InviteUserRequest): Promise<InviteUserResponse>;
 
 	connectThirdPartyProvider(request: { providerId: string }): Promise<{ code: string }>;
-	configureThirdPartyProvider(request: {
+	setThirdPartyProviderToken(request: {
 		providerId: string;
-		host: string;
+		host?: string;
 		token: string;
+	}): Promise<void>;
+	setThirdPartyProviderInfo(request: {
+		providerId: string;
+		host?: string;
+		data: { [key: string]: any }
 	}): Promise<void>;
 	disconnectThirdPartyProvider(request: { providerId: string }): Promise<void>;
 	refreshThirdPartyProvider(request: { providerId: string; refreshToken: string }): Promise<CSMe>;

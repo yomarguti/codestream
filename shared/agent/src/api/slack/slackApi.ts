@@ -2200,8 +2200,13 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
-	configureThirdPartyProvider(request: { providerId: string; host: string; token: string }) {
-		return this._codestream.configureThirdPartyProvider(request);
+	setThirdPartyProviderToken(request: { providerId: string; host: string; token: string }) {
+		return this._codestream.setThirdPartyProviderToken(request);
+	}
+
+	@log()
+	setThirdPartyProviderInfo(request: { providerId: string; host: string; data: { [key: string]: any } }) {
+		return this._codestream.setThirdPartyProviderInfo(request);
 	}
 
 	@log()

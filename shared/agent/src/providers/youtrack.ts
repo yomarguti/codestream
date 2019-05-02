@@ -5,6 +5,7 @@ import {
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
 	YouTrackBoard,
+	YouTrackConfigurationData,
 	YouTrackCreateCardRequest,
 	YouTrackCreateCardResponse,
 	YouTrackUser
@@ -91,5 +92,14 @@ export class YouTrackProvider extends ThirdPartyProviderBase<CSYouTrackProviderI
 			})}`
 		);
 		return { users: body.map(u => ({ ...u, displayName: u.fullName })) };
+	}
+
+	@log()
+	async configure(request: YouTrackConfigurationData) {
+		await this.session.api.setThirdPartyProviderToken({
+			providerId: this.providerConfig.id,
+			host: request.host,
+			token: request.token
+		});
 	}
 }
