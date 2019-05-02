@@ -52,7 +52,7 @@ namespace CodeStream.VisualStudio.UI {
 			bool result = false;
 			ThreadHelper.JoinableTaskFactory.Run(async delegate {
 				try {
-					_markers = await _agentService.GetMarkersForDocumentAsync(fileUri);
+					_markers = await _agentService.GetMarkersForDocumentAsync(fileUri, true);
 					bool? previousResult = null;
 					if (_markers?.Markers.AnySafe() == true || forceUpdate) {
 						if (_wpfTextView.Properties.TryGetProperty(PropertyNames

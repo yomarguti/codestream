@@ -391,8 +391,12 @@ namespace CodeStream.VisualStudio.Models {
 		public List<CsFullCodemark> Codemarks { get; set; }
 	}
 
+	public class DocumentMarkersFilters {
+		public bool? ExcludeArchived { get; set; }
+	}
 	public class DocumentMarkersRequest {
 		public TextDocumentIdentifier TextDocument { get; set; }
+		public DocumentMarkersFilters Filters { get; set; }
 	}
 
 	public class DocumentMarkersResponse {

@@ -45,7 +45,7 @@ namespace CodeStream.VisualStudio.Services {
 		Task<JToken> GetBootstrapAsync(Settings settings, JToken state = null, bool isAuthenticated = false);
 		Task<FetchCodemarksResponse> GetMarkersAsync(string streamId);
 		Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request);
-		Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(Uri uri, CancellationToken? cancellationToken = null);
+		Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(Uri uri, bool excludeArchived, CancellationToken? cancellationToken = null);
 		Task<FetchStreamsResponse> FetchStreamsAsync(FetchStreamsRequest request);
 		Task TrackAsync(string key, TelemetryProperties properties = null);
 	}
@@ -131,10 +131,15 @@ namespace CodeStream.VisualStudio.Services {
 			return SendAsync<FetchCodemarksResponse>("codestream/fetchCodemarks", new FetchCodemarksRequest { StreamId = streamId });
 		}
 
-		public Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(Uri uri,
+		public Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(Uri uri, bool excludeArchived,
 			CancellationToken? cancellationToken = null) {
+			DocumentMarkersFilters filters = null;
+			if (excludeArchived) {
+				filters = new DocumentMarkersFilters() { ExcludeArchived = true };
+			}
 			return SendAsync<DocumentMarkersResponse>("codestream/textDocument/markers", new DocumentMarkersRequest {
-				TextDocument = new TextDocumentIdentifier { Uri = uri.ToString() }
+				TextDocument = new TextDocumentIdentifier { Uri = uri.ToString() },
+				Filters = filters
 			}, cancellationToken);
 		}
 
