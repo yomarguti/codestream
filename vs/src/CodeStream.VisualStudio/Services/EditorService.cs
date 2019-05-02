@@ -13,6 +13,7 @@ using Serilog;
 using System;
 using System.ComponentModel.Composition;
 using System.Runtime.InteropServices;
+using CodeStream.VisualStudio.UI.Extensions;
 
 namespace CodeStream.VisualStudio.Services {
 	[Guid("278C1E14-E429-4364-8B73-BB643C041274")]

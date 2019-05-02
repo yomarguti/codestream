@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
+using CodeStream.VisualStudio.UI.Extensions;
 
 namespace CodeStream.VisualStudio.UI.Taggers {
 	[Export(typeof(IViewTaggerProvider))]

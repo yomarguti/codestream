@@ -1,14 +1,14 @@
-﻿using CodeStream.VisualStudio.Extensions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using CodeStream.VisualStudio.Extensions;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Range = Microsoft.VisualStudio.LanguageServer.Protocol.Range;
 
-namespace CodeStream.VisualStudio.UI {
+namespace CodeStream.VisualStudio.UI.Extensions {
 	public static class TextViewExtensions {
 		public static void RemovePropertySafe(this PropertyCollection collection, string key) {
 			if (key.IsNullOrWhiteSpace() || !collection.ContainsProperty(key)) return;

@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using CodeStream.VisualStudio.UI.Extensions;
 
 namespace CodeStream.VisualStudio.UI.Adornments {
 	public interface ICanHighlightRange {

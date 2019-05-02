@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using System;
 using System.ComponentModel.Composition;
+using CodeStream.VisualStudio.UI.Extensions;
 
 namespace CodeStream.VisualStudio.UI.SuggestedActions {
 	[Export(typeof(ISuggestedActionsSourceProvider))]

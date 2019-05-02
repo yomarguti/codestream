@@ -189,7 +189,7 @@
     <Compile Include="Services\WebviewIpcExtensions.cs" />
     <Compile Include="Services\WebviewIpcScope.cs" />
     <Compile Include="Services\WebviewUserSettingsService.cs" />
-    <Compile Include="UI\ActiveTextEditorExtensions.cs" />
+    <Compile Include="UI\Adornments\ActiveTextEditorExtensions.cs" />
     <Compile Include="UI\Adornments\HighlightAdornmentManager.cs" />
     <Compile Include="UI\DocumentMarkerManager.cs" />
     <Compile Include="UI\Extensions\FrameworkElementExtensions.cs" />
@@ -220,9 +220,9 @@
     <Compile Include="UI\SuggestedActions\CodemarkSuggestedActionsSourceProvider.cs" />
     <Compile Include="UI\Taggers\DocumentMarkTagger.cs" />
     <Compile Include="UI\Taggers\DocumentMarkTaggerProvider.cs" />
-    <Compile Include="UI\TextDocumentExtensions.cs" />
+    <Compile Include="UI\Extensions\TextDocumentExtensions.cs" />
     <Compile Include="UI\TextViewCreationListener.cs" />
-    <Compile Include="UI\TextViewExtensions.cs" />
+    <Compile Include="UI\Extensions\TextViewExtensions.cs" />
     <Compile Include="UI\TextViewRoles.cs" />
     <Compile Include="UI\Wpf\KeyChordGesture.cs" />
     <Compile Include="Vssdk\Commands\IVsCommand.cs" />

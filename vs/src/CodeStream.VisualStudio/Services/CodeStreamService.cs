@@ -11,6 +11,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using CodeStream.VisualStudio.UI.Extensions;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Services {

@@ -1,7 +1,7 @@
-﻿using Microsoft.VisualStudio.Text;
-using CodeStream.VisualStudio.Extensions;
+﻿using CodeStream.VisualStudio.Extensions;
+using Microsoft.VisualStudio.Text;
 
-namespace CodeStream.VisualStudio.UI {
+namespace CodeStream.VisualStudio.UI.Extensions {
 	public static class TextDocumentExtensions {
 		/// <summary>
 		/// Don't get a textDocument if our secret LSP file is trying to be opened
