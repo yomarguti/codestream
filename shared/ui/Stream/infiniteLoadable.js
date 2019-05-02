@@ -155,13 +155,12 @@ export default Child => {
 			render() {
 				if (!this.state.isInitialized) return <Loading style={{ height: "100%" }} delayRender />;
 
-				const { forwardedRef, childProps } = this.props;
+				const { childProps } = this.props;
 
 				return (
 					<Child
 						{...childProps}
 						{...{
-							ref: forwardedRef,
 							posts: this.state.posts,
 							onDidScrollToTop: this.onDidScrollToTop,
 							onScroll: this.onScroll,
@@ -175,6 +174,6 @@ export default Child => {
 	);
 
 	return React.forwardRef((props, ref) => {
-		return <DataProvider childProps={props} forwardedRef={ref} />;
+		return <DataProvider childProps={{ ...props, ref }} />;
 	});
 };
