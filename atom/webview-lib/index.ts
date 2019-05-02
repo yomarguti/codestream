@@ -1,5 +1,8 @@
 import { initialize, setupCommunication } from "@codestream/webview/index";
 
+const lightClass = "vscode-light";
+const darkClass = "vscode-dark";
+
 const setStyles = (stylesheets: string[]) => {
 	const stylesContainer = document.querySelector("codestream-styles")!;
 	stylesheets.forEach((stylesheet: string) => {
@@ -7,6 +10,15 @@ const setStyles = (stylesheets: string[]) => {
 		style.innerText = stylesheet;
 		stylesContainer.appendChild(style);
 	});
+
+	const computedStyle = getComputedStyle(document.body);
+	const [set, remove] =
+		computedStyle.getPropertyValue("--in-dark-mode").trim() === "true"
+			? [darkClass, lightClass]
+			: [lightClass, darkClass];
+
+	document.body.classList.remove(remove);
+	document.body.classList.add(set);
 };
 
 window.addEventListener("message", ({ data, ports }) => {

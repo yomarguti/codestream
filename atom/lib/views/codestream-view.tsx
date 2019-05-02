@@ -93,7 +93,7 @@ export class CodestreamView {
 		this.emitter = new Emitter();
 		this.subscriptions = new CompositeDisposable();
 		this.element = document.createElement("div");
-		this.element.classList.add("codestream", "preload");
+		this.element.classList.add("codestream");
 		this.iframe = document.createElement("iframe");
 
 		this.initializeWebview(this.iframe);

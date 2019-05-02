@@ -24,6 +24,10 @@
 @import "../dist/styles/main";
 
 body {
+	--in-dark-mode: false;
+	& when (lightness(@app-background-color) < 50) {
+		--in-dark-mode: true;
+	}
 	--font-family: @font-family;
 	--font-weight: var(--editor-font-weight);
 	--font-size: var(--editor-font-size);
