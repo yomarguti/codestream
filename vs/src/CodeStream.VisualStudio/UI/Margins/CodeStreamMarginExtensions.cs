@@ -1,36 +1,36 @@
 ﻿using System.Collections.Generic;
 using Microsoft.VisualStudio.Text.Editor;
 
-namespace CodeStream.VisualStudio.UI.Margins
-{
-    public static class CodeStreamMarginExtensions
-    {
-        public static void OnSessionReady(this List<ICodeStreamWpfTextViewMargin> items) =>
-            items.ForEach(_ => _.OnSessionReady());
+namespace CodeStream.VisualStudio.UI.Margins {
+	public static class CodeStreamMarginExtensions {
+		public static void OnSessionReady(this List<ICodeStreamWpfTextViewMargin> items) =>
+			items.ForEach(_ => _.OnSessionReady());
 
-        public static void OnSessionLogout(this List<ICodeStreamWpfTextViewMargin> items) =>
-            items.ForEach(_ =>
-            {
-                _.HideMargin();
-                _.OnSessionLogout();
-            });
+		public static void OnSessionLogout(this List<ICodeStreamWpfTextViewMargin> items) =>
+			items.ForEach(_ => {
+				_.TryHideMargin();
+				_.OnSessionLogout();
+			});
 
-        public static void Toggle(this List<ICodeStreamWpfTextViewMargin> items, bool isVisible)
-            => items.ForEach(_ =>
-            {
-                if (_.CanToggleMargin)
-                {
-                    _.ToggleMargin(isVisible);
-                }
-            });
+		public static void Toggle(this List<ICodeStreamWpfTextViewMargin> items, bool requestingVisibility)
+			=> items.ForEach(_ => {
+				if (_.CanToggleMargin) {
+					_.ToggleMargin(requestingVisibility);
+				}
+			});
 
-        public static void Hide(this List<ICodeStreamWpfTextViewMargin> items) =>
-            items.ForEach(_ => _.HideMargin());
+		public static void SetAutoHideMarkers(this List<ICodeStreamWpfTextViewMargin> items, bool autoHideMarkers)
+		=> items.ForEach(_ => {
+			_.SetAutoHideMarkers(autoHideMarkers);
+		});
 
-        public static void OnMarkerChanged(this List<ICodeStreamWpfTextViewMargin> items)
-            => items.ForEach(_ => _.OnMarkerChanged());
+		public static void Hide(this List<ICodeStreamWpfTextViewMargin> items) =>
+			items.ForEach(_ => _.TryHideMargin());
 
-        public static void OnTextViewLayoutChanged(this List<ICodeStreamWpfTextViewMargin> items, object sender, TextViewLayoutChangedEventArgs e)
-            => items.ForEach(_ => _.OnTextViewLayoutChanged(sender, e));
-    }
+		public static void OnMarkerChanged(this List<ICodeStreamWpfTextViewMargin> items)
+			=> items.ForEach(_ => _.OnMarkerChanged());
+
+		public static void OnTextViewLayoutChanged(this List<ICodeStreamWpfTextViewMargin> items, object sender, TextViewLayoutChangedEventArgs e)
+			=> items.ForEach(_ => _.OnTextViewLayoutChanged(sender, e));
+	}
 }

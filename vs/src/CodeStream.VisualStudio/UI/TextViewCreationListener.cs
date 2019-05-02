@@ -173,11 +173,13 @@ namespace CodeStream.VisualStudio.UI {
 					disposables.Add(eventAggregator.GetEvent<MarkerGlyphVisibilityEvent>()
 						.ObserveOnDispatcher()
 						.Subscribe(_ => textViewMarginProviders.Toggle(_.IsVisible)));
+					disposables.Add(eventAggregator.GetEvent<AutoHideMarkersEvent>()
+						.ObserveOnDispatcher()
+						.Subscribe(_ => textViewMarginProviders.SetAutoHideMarkers(_.Value)));
 					disposables.Add(visibleRangesSubject.Throttle(TimeSpan.FromMilliseconds(15))
 						.ObserveOnDispatcher()
 						.Subscribe(e => {
 							try {
-
 								if (e.WpfTextView.InLayout || e.WpfTextView.IsClosed) return;
 
 								_codeStreamService.WebviewIpc?.NotifyAsync(

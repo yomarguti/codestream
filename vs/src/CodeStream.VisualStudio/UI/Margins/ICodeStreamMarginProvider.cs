@@ -19,9 +19,10 @@ namespace CodeStream.VisualStudio.UI.Margins
         void OnSessionLogout();
         void OnSessionReady();
         void OnMarkerChanged();
-        void HideMargin();
-        void ShowMargin();
-        void ToggleMargin(bool requestingVisibility);
+        bool TryHideMargin();
+		bool TryShowMargin();
+		void SetAutoHideMarkers(bool autoHideMarkers);
+		void ToggleMargin(bool requestingVisibility);
         void RefreshMargin();
         void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e);
     }

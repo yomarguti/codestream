@@ -12,6 +12,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
 using CodeStream.VisualStudio.Extensions;
+using CodeStream.VisualStudio.UI.Extensions;
 
 namespace CodeStream.VisualStudio.UI.Margins {
 	internal class DocumentMarkScrollbar : FrameworkElement, ICodeStreamWpfTextViewMargin {
@@ -66,7 +67,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 				OnSessionReady();
 			}
 			else {
-				HideMargin();
+				TryHideMargin();
 			}
 		}
 
@@ -115,7 +116,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 
 			lock (InitializeLock) {
 				if (!_initialized) {
-					ShowMargin();
+					TryShowMargin();
 					UpdateMatches(true);
 					_initialized = true;
 				}
@@ -128,24 +129,28 @@ namespace CodeStream.VisualStudio.UI.Margins {
 
 		public void OnSessionLogout() {
 			_initialized = false;
-			HideMargin();
+			TryHideMargin();
 		}
 
 		public void OnMarkerChanged() {
 			UpdateMatches(true);
 		}
 
-		public void HideMargin() => Visibility = Visibility.Collapsed;
+		public bool TryShowMargin() => this.TryShow();
 
-		public void ShowMargin() => Visibility = Visibility.Visible;
+		public bool TryHideMargin() => this.TryHide();
 
 		public void ToggleMargin(bool requestingVisibility) {
 			if (requestingVisibility) {
-				ShowMargin();
+				TryShowMargin();
 			}
 			else {
-				HideMargin();
+				TryHideMargin();
 			}
+		}
+
+		public void SetAutoHideMarkers(bool autoHideMarkers) {
+			// noop
 		}
 
 		public void RefreshMargin() => UpdateMatches();

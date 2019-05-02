@@ -245,6 +245,13 @@ namespace CodeStream.VisualStudio.Packages {
 			if (args.PropertyName == nameof(_settingsService.TraceLevel)) {
 				LogManager.SetTraceLevel(_settingsService.TraceLevel);
 			}
+			else if (args.PropertyName == nameof(_settingsService.AutoHideMarkers)) {
+				var odp = sender as OptionsDialogPage;
+				if (odp == null) return;
+				
+				var eventAggregator = ServiceLocator.Get<SEventAggregator, IEventAggregator>();
+				eventAggregator?.Publish(new AutoHideMarkersEvent { Value = odp.AutoHideMarkers });
+			}
 			else if (args.PropertyName == nameof(_settingsService.ShowAvatars) ||
 				args.PropertyName == nameof(_settingsService.ShowMarkerGlyphs)) {
 				var odp = sender as OptionsDialogPage;

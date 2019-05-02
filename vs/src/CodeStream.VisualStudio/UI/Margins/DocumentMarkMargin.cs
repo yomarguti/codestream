@@ -14,6 +14,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using CodeStream.VisualStudio.UI.Extensions;
 
 namespace CodeStream.VisualStudio.UI.Margins {
 	internal class DocumentMarkMarginDummy { }
@@ -26,11 +27,12 @@ namespace CodeStream.VisualStudio.UI.Margins {
 				new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.Inherits));
 
 		private static readonly object InitializeLock = new object();
-		
+
 		private readonly Dictionary<Type, GlyphFactoryInfo> _glyphFactories;
 		private readonly IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> _glyphFactoryProviders;
 		private readonly ISessionService _sessionService;
-		
+		private readonly ISettingsService _settingsService;
+
 		private readonly ITagAggregator<IGlyphTag> _tagAggregator;
 		private readonly IWpfTextViewHost _wpfTextViewHost;
 
@@ -39,7 +41,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		private bool _initialized;
 		private bool _isDisposed;
 		private Dictionary<object, LineInfo> _lineInfos;
-		
+
 
 		/// <summary>
 		///     Initializes a new instance of the <see cref="DocumentMarkMargin" /> class for a given textView
@@ -52,10 +54,12 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			IViewTagAggregatorFactoryService viewTagAggregatorFactoryService,
 			IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> glyphFactoryProviders,
 			IWpfTextViewHost wpfTextViewHost,
-			ISessionService sessionService) {
+			ISessionService sessionService,
+			ISettingsService settingsService) {
 			_glyphFactoryProviders = glyphFactoryProviders;
 			_wpfTextViewHost = wpfTextViewHost;
 			_sessionService = sessionService;
+			_settingsService = settingsService;
 			_tagAggregator = viewTagAggregatorFactoryService.CreateTagAggregator<IGlyphTag>(_wpfTextViewHost.TextView);
 
 			Width = DefaultMarginWidth;
@@ -99,7 +103,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			return _sessionService.IsReady;
 		}
 
-		public bool CanToggleMargin { get; } = true;
+		public bool CanToggleMargin => true;
 
 		public void OnSessionLogout() {
 			Children.Clear();
@@ -117,8 +121,12 @@ namespace CodeStream.VisualStudio.UI.Margins {
 						_wpfTextViewHost.TextView.ZoomLevelChanged += TextView_ZoomLevelChanged;
 
 						InitializeMargin();
-						if (TryShowMargin()) {
+						if (_sessionService.AreMarkerGlyphsVisible || !_settingsService.AutoHideMarkers) {
+							TryShowMargin();
 							RefreshMargin();
+						}
+						else {
+							TryHideMargin();
 						}
 					}
 				}
@@ -144,7 +152,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 
 		public void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
 			// no need to update when we're in 'spatial' view since it's not shown
-			if (_sessionService.IsCodemarksForFileVisible && _sessionService.IsWebViewVisible) return;
+			if (_sessionService.IsCodemarksForFileVisible && _sessionService.IsWebViewVisible && _settingsService.AutoHideMarkers) return;
 
 			if (Visibility == Visibility.Hidden || Visibility == Visibility.Collapsed) return;
 
@@ -154,35 +162,39 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			OnNewLayout(e.NewOrReformattedLines, e.TranslatedLines);
 		}
 
-		private bool TryShowMargin() {
-			if (_sessionService.AreMarkerGlyphsVisible) {
-				ShowMargin();
-				return true;
+		public bool TryShowMargin() => this.TryShow();
+
+		public bool TryHideMargin() {
+			if (!_settingsService.AutoHideMarkers) return false;
+
+			return this.TryHide();
+		}
+
+		public void SetAutoHideMarkers(bool autoHideMarkers) {
+			if (autoHideMarkers == true) {
+				if (_sessionService.IsCodemarksForFileVisible && _sessionService.IsWebViewVisible) {
+					TryHideMargin();
+				}
 			}
-
-			HideMargin();
-			return false;
-		}
-
-		public void ShowMargin() {
-			Visibility = Visibility.Visible;
-		}
-
-		public void HideMargin() {
-			Visibility = Visibility.Collapsed;
+			else {
+				if (_sessionService.IsCodemarksForFileVisible && _sessionService.IsWebViewVisible) {
+					TryShowMargin();
+				}
+			}
 		}
 
 		public void ToggleMargin(bool requestingVisibility) {
 			if (requestingVisibility) {
-				ShowMargin();
-				//set top, as the buffer might have been scrolled
-				SetTop(_iconCanvas, -_wpfTextViewHost.TextView.ViewportTop);
-				RefreshMargin();
+				if (TryShowMargin()) {
+					//set top, as the buffer might have been scrolled
+					SetTop(_iconCanvas, -_wpfTextViewHost.TextView.ViewportTop);
+					RefreshMargin();
+				}
 			}
 			else {
-				HideMargin();
+				TryHideMargin();
 			}
-		}
+		}		
 
 		public FrameworkElement VisualElement {
 			get {
@@ -242,7 +254,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		private List<IconInfo> CreateIconInfos(IWpfTextViewLine line) {
 			var icons = new List<IconInfo>();
 
-			try {				
+			try {
 				foreach (var mappingSpan in _tagAggregator.GetTags(line.ExtentAsMappingSpan)) {
 					var tag = mappingSpan.Tag;
 					if (tag == null) {
@@ -346,7 +358,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 				OnSessionReady();
 			}
 			else {
-				HideMargin();
+				TryHideMargin();
 			}
 		}
 

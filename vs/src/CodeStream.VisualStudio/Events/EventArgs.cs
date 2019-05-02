@@ -64,7 +64,11 @@ namespace CodeStream.VisualStudio.Events
 		public bool IsVisible { get; set; }
 	}
 
-    public sealed class LiveShareStartedEvent : EventBase
+	public sealed class AutoHideMarkersEvent : EventBase {
+		public bool Value { get; set; }
+	}
+
+	public sealed class LiveShareStartedEvent : EventBase
 	{
 		public CollaborationSession CollaborationSession { get; }
 		public LiveShareStartedEvent(CollaborationSession collaborationSession)
