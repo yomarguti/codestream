@@ -337,9 +337,12 @@ export class CodeStreamAgentConnection implements Disposable {
 			});
 		}
 
-		fetch(uri: Uri) {
+		fetch(uri: Uri, excludeArchived: boolean = false) {
 			return this._connection.sendRequest(FetchDocumentMarkersRequestType, {
-				textDocument: { uri: uri.toString() }
+				textDocument: { uri: uri.toString() },
+				filters: excludeArchived ? {
+					excludeArchived: true
+				} : undefined
 			});
 		}
 

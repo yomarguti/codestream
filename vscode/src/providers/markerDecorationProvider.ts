@@ -297,8 +297,6 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 		for (const marker of markers) {
 			const start = marker.range.start.line;
 			if (starts.has(start)) continue;
-			if (marker.type === "issue" && marker.status === "closed") continue;
-			if (!marker.pinned) continue;
 
 			if (marker.type === "trap") {
 				const trapKey = `trap-highlight-${marker.color}`;
@@ -462,7 +460,7 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 
 	private async getMarkersCore(uri: Uri) {
 		try {
-			const resp = await Container.agent.documentMarkers.fetch(uri);
+			const resp = await Container.agent.documentMarkers.fetch(uri, true);
 			return resp !== undefined
 				? resp.markers.map(m => new DocMarker(Container.session, m))
 				: emptyArray;
