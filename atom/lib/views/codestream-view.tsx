@@ -318,6 +318,7 @@ export class CodestreamView {
 		switch (message.method) {
 			case WebviewBootstrapRequestType.method: {
 				try {
+					await this.session.ready;
 					const response: BootstrapResponse = this.session.isSignedIn
 						? await this.getSignedInBootstrapState()
 						: this.session.getBootstrapInfo();
