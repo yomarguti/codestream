@@ -299,28 +299,18 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	handleCrossPostIssueValues = (values: CardValues) => {
 		const selectedNewBoard = Boolean(values.board);
-		const enablingCrossPostIssue =
-			(!this.crossPostIssueValues || !this.crossPostIssueValues.isEnabled) &&
-			values &&
-			values.isEnabled;
-		if (
-			enablingCrossPostIssue ||
-			(!this.crossPostIssueValues && selectedNewBoard) ||
-			(this.crossPostIssueValues &&
-				values.isEnabled &&
-				this.crossPostIssueValues.board &&
-				selectedNewBoard &&
-				this.crossPostIssueValues.board.id !== values.board!.id)
-		) {
-			this.setState({ assignees: [] });
-			if (values.board) {
-				this.loadAssignableUsers(values.issueProvider.id, values.board);
+		if (values.isEnabled) {
+			// new settings enable cross posting
+			if (
+				(this.crossPostIssueValues && !this.crossPostIssueValues.isEnabled) || // cross posting was disabled before OR...
+				(selectedNewBoard && // there is a new board and...
+					(!this.crossPostIssueValues || values.board !== this.crossPostIssueValues!.board)) // didn't have values before || new board is different
+			) {
+				this.setState({ assignees: [] }); // reset selected assignees because they may not be valid with the new board
+				this.loadAssignableUsers(values.issueProvider.id, values.board!);
 			}
-		} else if (
-			!values.isEnabled &&
-			this.crossPostIssueValues &&
-			this.crossPostIssueValues.isEnabled
-		) {
+		} else if (this.crossPostIssueValues && this.crossPostIssueValues.isEnabled) {
+			// cross posting is now disabled so reset selected assignees and show cs options
 			this.setState({ assignees: [], assignableUsers: this.getAssignableCSUsers() });
 		}
 		this.crossPostIssueValues = values;
