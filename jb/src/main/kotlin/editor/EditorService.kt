@@ -7,7 +7,7 @@ import com.codestream.extensions.highlightTextAttributes
 import com.codestream.extensions.isRangeVisible
 import com.codestream.extensions.lspPosition
 import com.codestream.extensions.margins
-import com.codestream.extensions.path
+import com.codestream.extensions.displayPath
 import com.codestream.extensions.selections
 import com.codestream.extensions.textDocumentIdentifier
 import com.codestream.extensions.uri
@@ -316,7 +316,7 @@ class EditorService(val project: Project) {
 
             val editorInfo = editor?.run {
                 EditorInformation(
-                    document.path,
+                    displayPath,
                     document.uri,
                     EditorMetrics(
                         Math.round(colorsScheme.editorFontSize / getFontScale()),

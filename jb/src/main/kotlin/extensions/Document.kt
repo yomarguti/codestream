@@ -20,16 +20,5 @@ val Document.uri: String?
         return file.uri
     }
 
-/*
-psiFile.getVirtualFile() will give you a VirtualFile (not-null for physical files).
-
-Then, ProjectFileIndex.SERVICE.getInstance().getContentRootForFile(or getSourceRootForFile) will get you a corresponding root. Finally, you can use VfsUtilCore.getRelativePath to get the relative path between two files.
- */
-val Document.path: String?
-    get() {
-        val file = FileDocumentManager.getInstance().getFile(this) ?: return null
-        return file.path
-    }
-
 val Document.textDocumentIdentifier: TextDocumentIdentifier?
     get() = TextDocumentIdentifier(uri)
