@@ -91,7 +91,6 @@ val Editor.selectionOrCurrentLine: Range
 
 val Editor.visibleRanges: List<Range>
     get() {
-        // TODO folding
         val visibleArea = scrollingModel.visibleArea
 
         val viewportStartPoint = visibleArea.location
@@ -105,12 +104,41 @@ val Editor.visibleRanges: List<Range>
         )
         val endLogicalPos = xyToLogicalPosition(viewportEndPoint)
 
-        val range = Range(
+        val fullRange = Range(
             startLspPos,
             Position(endLogicalPos.line, endLogicalPos.column)
         )
 
-        return listOf(range)
+        val ranges = mutableListOf<Range>()
+        var range: Range? = null
+
+        for (region in foldingModel.allFoldRegions) {
+            if (region.end < fullRange.start) {
+                continue
+            }
+            if (region.start > fullRange.end) {
+                break
+            }
+
+            if (region.isExpanded) {
+                if (range == null) {
+                    range = Range()
+                    range.start = if (region.start >= fullRange.start) region.start else fullRange.start
+                }
+                range.end = if (region.end <= fullRange.end) region.end else fullRange.end
+            } else {
+                if (range != null) {
+                    ranges += range
+                    range = null
+                }
+            }
+        }
+
+        if (range != null) {
+            ranges += range
+        }
+
+        return ranges
     }
 
 fun Editor.isRangeVisible(range: Range): Boolean {
