@@ -1,75 +1,76 @@
+<p align="center">
+  <br />
+  <a title="Learn more about CodeStream" href="https://codestream.com?utm_source=vscmarket&utm_medium=banner&utm_campaign=codestream"><img src="https://alt-images.codestream.com/codestream_logo_vscmarketplace.png" alt="CodeStream Logo" /></a>
+</p>
+
 # CodeStream
 
-Build the knowledge base behind your codebase. CodeStream allows your development team to communicate within Atom and conversation threads automatically become annotations that live with your codebase forever.
+CodeStream helps dev teams discuss, review, and understand code. Discussing code is now as simple as commenting on a Google Doc — select the code and type your question.
 
-![FullIDE](https://codestream.zendesk.com/hc/article_attachments/360000712271/CodeStream.png)
+![CodeStream](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/animated/Spatial%20VSC.gif)
 
-# Beta
+CodeStream turns conversation into documentation by capturing all of the discussion about your code, and saving it with your code. Each discussion is represented as a "codemark" that is permanently connected to the lines of code to which it refers.
 
-CodeStream is currently in beta. The core messaging functionality, which is the heart of the service, is there and ready for you to use. Some other components of the service are still in the works.
+## Does your team use Slack?
 
-* Your primary interaction with CodeStream is in the IDE, but there will also be a web component to the service that will include settings, profile and administration. All of that is in the works.
-* Since we don’t have settings yet, you won’t have control over your email notifications. You can read our [guide to CodeStream notifications](https://help.codestream.com/hc/en-us/articles/360000327691-Guide-to-CodeStream-notifications), but the key thing is that if you want to turn emails off, just get in touch with us and we’ll take care of it for you.
-* CodeStream currently uses [Gravatar](https://gravatar.com) for headshots. Upload a headshot there and associate it with the email address you use on CodeStream.
+Sign up for CodeStream using Slack so that discussions about code can be shared in your existing Slack channels and direct messages. Connecting to your Slack workspace allows developers to participate in discussions about code when they're not in their editor, or if they don’t use an editor supported by CodeSteam.
 
 # Requirements
 
-* CodeStream requires a current version of **[Atom](https://atom.io/)**.
-* Your repository must be managed by Git, or a Git hosting service like GitHub.
-* Windows users need to have `git` available in their PATH.
-* Make sure that you have just a single repository open in any one Atom window. Support for multiple repositories is coming soon.
-* Make sure you open an actual repository, and not a directory containing repositories.
-
-# Installation
-
-To install CodeStream, visit Atom settings, click on the "Install" tab in the left rail, and then search for 'codestream'. When you find it in the results, click the 'Install' button.
-
-Once installed, you can toggle the CodeStream view via the Packages menu, or hit Cmd + Opt + O (Mac) / Ctrl + Alt + O (Windows). You can also click on the chat bubbles icon that now appears in the status bar at the bottom of the Atom window.
+- CodeStream requires a current version of [Visual Studio Code](https://code.visualstudio.com/).
+- Your repository must be managed by Git, or a Git hosting service like GitHub.
+- In order to sign up with Slack, make sure your company doesn't require Slack apps to be pre-approved by an admin. CodeStream is not yet available in the Slack app directory.
 
 # Things to Try
 
-* To talk about a specific block of code, just select the code in your buffer and then click on the “+” button that appears.
+## Create a codemark and discuss some code
 
-![PostCodeBlock](https://codestream.zendesk.com/hc/article_attachments/360000889751/PlusButton.png)
+Create a codemark by selecting a block of code in your editor and then typing a question or comment. Keep in mind that, unlike with other solutions, you can discuss any line of code in any source file at any time, even if it’s code that you just typed into your editor and haven’t yet saved or committed.
 
-* Click on any post in the chat stream to add a reply. If the post included a code block, you’ll automatically be scrolled to the appropriate location in the source file. If the code block doesn’t match what you have in your buffer, you’ll have options to view a diff or even apply the changes to your buffer.
+![New Codemark](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/NewCodemark2.png)
 
-![ThreadView](https://codestream.zendesk.com/hc/article_attachments/360000885912/Screen_Shot_2018-02-08_at_4.59.26_PM.png)
+In addition to general comments and questions, there are specific types of codemarks for assigning issues, saving bookmarks, or generating a permalink to a specific block of code.
 
-* If you see a marker on the border of your source file and the chat pane, that means that a discussion took place about that block of code. Click on the marker to view the discussion.
+![Issue Codemark](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/CodemarkIssue2.png)
 
-![Markers](https://codestream.zendesk.com/hc/article_attachments/360000889931/Marker.png)
+CodeStream integrates with Jira, Trello, GitHub, Asana, Bitbucket, and GitLab, making it easy to create an issue tied to a specific block of code, and have that issue appear in your existing issue-tracking service.
 
-* Head off problems before they even happen by looking out for the banners that indicate when another developer is editing the file you're looking at. Or if you both start to edit the file, we'll let you know there's a possibility of a merge conflict.
+## Add comments to ongoing discussions
 
-![MergeConflict](https://help.codestream.com/hc/article_attachments/360001973651/Banner_MergeConflict.png)
+Click on a codemark to participate in the discussion. If you have the repo open, you’ll automatically be taken to the appropriate source file and scrolled to the code block.
 
-* Set up the Slack integration (search for "Codestream: Slack Integration" in Atom's command palette) and all of your team’s messages on CodeStream will flow through to the channel of your choice on Slack. You can even reply to those messages right from Slack, and the replies will get posted to CodeStream.
+![Thread View](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/ThreadView2.png)
 
-![SlackIntegration](https://help.codestream.com/hc/article_attachments/360002212591/SlackCSBot.png)
+## Leverage your team's knowledge base
+
+A codemark displayed to the right of a block of code means that a discussion took place about that code. Click on the codemark to view the discussion and get some context for the work at hand.
+
+![Codemark in Source File](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/SpatialSingleMarker.png)
+
+Click on the Search icon to explore your team’s entire knowledge base. Filters allow you to look at codemarks of a certain type, or a specific color.
+
+![Codemarks tab](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/CodemarksTab1.png)
+
+## Visual Studio Live Share integration
+
+Live Share is an excellent plugin from Microsoft that allows users of VS Code to share a project with teammates so that they can access it right from within their IDE. Start a share session via `/liveshare`, or by clicking on a teammate's headshot, and you can continue to chat while you edit and debug together in real time.
+
+![Message in Stream](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/LiveShareStream.png)
 
 # Frequently Asked Questions
 
 #### Where are messages stored?
 
-Your team’s message history is stored in the cloud on CodeStream’s servers. Note that CodeStream does not store a copy of your source files. When a message includes a code block, a copy of that block is also stored in the cloud, but not the entirety of the source file.
-
-All of your team's messages are also stored locally on your computer, meaning that you'll even have access to the message history when you're offline.
-
-#### Who has access to my repo?
-
-In addition to people that you explicitly add to your team on CodeStream, anyone with access to the codebase may join the team on their own. To do so, they will need to sign into CodeStream with the given repository (as identified by the URL of the origin and the hash of the first commit ID) open in their IDE.
+Your team’s message history is stored in the cloud on CodeStream’s servers. If your team is connected to Slack, however, CodeStream doesn't store your messages at all. The one exception is with codemarks, where the content and code block are stored by CodeStream as part of maintaining your knowledge base.
 
 #### Does it work across branches?
 
-On CodeStream, chat streams are associated with source files, and not with commits. This allows developers to easily leverage past discussions to get a better understanding of how the file evolved over time and why specific changes were made. A new developer inheriting one of your files a year from now will never go back and reference past commits or pull requests, but on CodeStream they’ll see both the entirety of the chat stream associated with the file as well as markers in the code indicating where discussions took place.
-
-CodeStream recognizes that developers on your team may be working on different branches, or may simply have local changes, that result in certain blocks of code being in different locations for each of them. If there are messages associated with those blocks of code, CodeStream ensures that each developer sees them in the correct location despite the variations in each of their local buffers.
+CodeStream recognizes that developers on your team may be working on different branches, or may simply have local changes that result in certain blocks of code being in different locations for each of them. If there are messages associated with those blocks of code, CodeStream ensures that each developer sees the discussion markers in the correct location despite the variations in each of their local buffers.
 
 #### What access to Git does CodeStream require?
 
 You won’t need to provide CodeStream with any Git (or GitHub, Bitbucket, etc.) credentials, as the plugin simply leverages your IDE’s access to Git. CodeStream uses Git to do things like automatically mention the most recent author when you share a block of code in a post, and to maintain the connection between that block of code and where it’s located in the source file as the file evolves over time (and commits).
 
-# Help
+# Help & Feedback
 
-Check out our [help site](https://help.codestream.com) for more information on getting started with CodeStream.
+Check out our [wiki](https://github.com/TeamCodeStream/CodeStream/wiki) for more information on getting started with CodeStream. Please follow [@teamcodestream](http://twitter.com/teamcodestream) for product updates and to share feedback and questions. You can also email us at support@codestream.com.
