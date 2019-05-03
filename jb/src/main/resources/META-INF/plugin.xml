@@ -57,6 +57,25 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="0_53_0">0.53.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>CodeStream now integrates with Azure DevOps issue tracking</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>CodeStream options now appear higher up in the editor context menu</li>
+    <li>When editing an issue codemark linked to an external service, assignees are read-only since they can't be edited from CodeStream</li>
+    <li>Increased the contrast of the code highlighting when hovering over a codemark to make it easier to see the associated code block</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with mentions posted in a reply not being treated as a mention in terms of badges and notifications</li>
+    <li>Fixes an issue where codemarks would initially appear collapsed when the CodeStream pane was reopened</li>
+    <li>Fixes an issue where CodeStream would not recognize when a source file wasn't selected or open</li>
+    <li>Fixes an issue when changing the code selection with the codemark form already open</li>
+    <li>Fixes an issue with editing posts from the conversation stream</li>
+</ul>
 <h4 id="0_52_3">0.52.3</h4>
 <h5>Added</h5>
 <ul>
@@ -66,7 +85,7 @@
 <h5>Fixed</h5>
 <ul>
     <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/51">#51</a> - JetBrains plugin causes exception if open file is not under VCS</li>
-    <li>Fixes an issue where CodeMarks would not display in the gutter when the CodeStream pane was closed</li>
+    <li>Fixes an issue where codemarks would not display in the gutter when the CodeStream pane was closed</li>
 
 </ul>
 <h4 id="0_52_2">0.52.2</h4>
