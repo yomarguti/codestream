@@ -230,28 +230,43 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 				<div className="checkbox-row connect-issue">
 					<div className="connect-issue-label">Create an issue in </div>
 					<div className="connect-issue-providers">
-						{knownIssueProviders.map(providerId => {
-							const issueProvider = this.props.providers![providerId];
-							const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
-							const displayName = issueProvider.isEnterprise
-								? `${providerDisplay.displayName} - ${issueProvider.host}`
-								: providerDisplay.displayName;
-							const icon = providerDisplay.icon || issueProvider.name;
-							return (
-								<span
-									className="service"
-									onClick={e =>
-										this.handleClickConnectIssueProvider(e, {
-											provider: issueProvider,
-											display: providerDisplay
-										})
-									}
-								>
-									<Icon className={issueProvider!.name} name={icon} />
-									{displayName}
-								</span>
-							);
-						})}
+						{knownIssueProviders
+							.map(providerId => {
+								const issueProvider = this.props.providers![providerId];
+								const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
+								const displayName = issueProvider.isEnterprise
+									? `${providerDisplay.displayName} - ${issueProvider.host}`
+									: providerDisplay.displayName;
+								const icon = providerDisplay.icon || issueProvider.name;
+								// this is kind of crazy pedantic but what I'm doing here
+								// is, rather than just return the <span> element, to return
+								// a hash which maps a name to an element, so we can then
+								// sort by displayName (rather than what was happening before which
+								// sorted by providerId), so that things are *actually* in
+								// alphabetical order in the UI. it would be nice if the
+								// provider info didn't come from multiple sources so we
+								// didn't have to jump through hoops like this, but this
+								// works. -Pez
+								return {
+									name: displayName,
+									element: (
+										<span
+											className="service"
+											onClick={e =>
+												this.handleClickConnectIssueProvider(e, {
+													provider: issueProvider,
+													display: providerDisplay
+												})
+											}
+										>
+											<Icon className={issueProvider!.name} name={icon} />
+											{displayName}
+										</span>
+									)
+								};
+							})
+							.sort((a, b) => a.name.localeCompare(b.name))
+							.map(tuple => tuple.element)}
 					</div>
 				</div>
 			);
