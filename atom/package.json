@@ -72,9 +72,6 @@
 	},
 	"dependencies": {
 		"atom-languageclient": "0.9.9",
-		"emoji-mart": "2.9.2",
-		"highlight.js": "9.15.5",
-		"rc-tooltip": "3.7.3",
 		"uuid": "3.3.2"
 	},
 	"devDependencies": {
