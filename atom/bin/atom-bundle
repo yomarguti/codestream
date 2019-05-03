@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#desc# package up a build
+
+echo "==== building agent ===="
+cd ../codestream-lsp-agent
+npm run bundle
+
+echo "==== building atom package ===="
+cd -
+npx webpack --env.production

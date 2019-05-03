@@ -61,7 +61,8 @@
 	"scripts": {
 		"analyze:bundle": "webpack --env.analyzeBundle",
 		"prettify": "prettier --config .prettierrc --write ./{lib,spec}/*.js ./{lib,spec}/**/*.js ./package.json ./.prettierrc",
-		"bundle": "webpack --env.production",
+		"bundle": "./bin/atom-bundle",
+		"publish:dev": "./bin/atom-publish-dev",
 		"build": "webpack --env.development",
 		"watch": "webpack --watch --env.development",
 		"extension:build": "webpack --config-name extension --env.development",
