@@ -284,17 +284,21 @@ class CodemarkForm extends React.Component<Props, State> {
 			this.setState(state => (state.singleAssignee ? null : { singleAssignee: true }));
 		}
 
-		const { users } = await HostApi.instance.send(FetchAssignableUsersRequestType, {
-			providerId,
-			boardId: board.apiIdentifier || board.id
-		});
+		try {
+			const { users } = await HostApi.instance.send(FetchAssignableUsersRequestType, {
+				providerId,
+				boardId: board.apiIdentifier || board.id
+			});
 
-		this.setState({
-			assignableUsers: users.map(u => ({
-				value: u,
-				label: u.displayName
-			}))
-		});
+			this.setState({
+				assignableUsers: users.map(u => ({
+					value: u,
+					label: u.displayName
+				}))
+			});
+		} catch (error) {
+			this.setState({ assignableUsers: [] });
+		}
 	}
 
 	handleCrossPostIssueValues = (values: CardValues) => {
