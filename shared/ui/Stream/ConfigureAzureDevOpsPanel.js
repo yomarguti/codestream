@@ -12,7 +12,11 @@ import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher"
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 
 export class ConfigureAzureDevOpsPanel extends Component {
-	initialState = {};
+	initialState = {
+		organization: "",
+		organizationTouched: false,
+		formTouched: false
+	};
 
 	state = this.initialState;
 
@@ -33,17 +37,31 @@ export class ConfigureAzureDevOpsPanel extends Component {
 
 	onSubmit = e => {
 		e.preventDefault();
+		if (this.isFormInvalid()) return;
 		const { providerId } = this.props;
 		const { organization } = this.state;
 		this.props.configureProvider(providerId, { organization });
 		this.props.connectProvider(providerId, true);
+		this.props.closePanel();
 	};
 
 	renderError = () => {};
 
-	renderOrganizationHelp = () => {};
+	onBlurOrganization = () => {
+		this.setState({ organizationTouched: true });
+	};
+
+	renderOrganizationHelp = () => {
+		const { organization, organizationTouched, formTouched } = this.state;
+		if (organizationTouched || formTouched)
+			if (organization.length === 0) return <small className="error-message">Required</small>;
+	};
 
 	tabIndex = () => {};
+
+	isFormInvalid = () => {
+		return this.state.organization.length === 0;
+	};
 
 	render() {
 		const { providerId } = this.props;
@@ -95,7 +113,6 @@ export class ConfigureAzureDevOpsPanel extends Component {
 									tabIndex={this.tabIndex()}
 									type="submit"
 									loading={this.state.loading}
-									onClick={this.props.closePanel}
 								>
 									Submit
 								</Button>
@@ -103,7 +120,7 @@ export class ConfigureAzureDevOpsPanel extends Component {
 									id="discard-button"
 									className="control-button cancel"
 									tabIndex={this.tabIndex()}
-									type="submit"
+									type="button"
 									onClick={this.props.closePanel}
 								>
 									Cancel

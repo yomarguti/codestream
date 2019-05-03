@@ -81,6 +81,7 @@ export class ConfigureYouTrackPanel extends Component {
 									onBlur={this.onBlurHost}
 									required={this.state.hostTouched || this.state.formTouched}
 									placeholder={placeholder}
+									required={true}
 									id="configure-provider-initial-input"
 								/>
 								{this.renderHostHelp()}
@@ -124,7 +125,7 @@ export class ConfigureYouTrackPanel extends Component {
 									id="discard-button"
 									className="control-button cancel"
 									tabIndex={this.tabIndex()}
-									type="submit"
+									type="button"
 									onClick={this.props.closePanel}
 								>
 									Cancel
