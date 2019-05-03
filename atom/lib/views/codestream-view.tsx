@@ -133,8 +133,8 @@ export class CodestreamView {
 
 	async show(streamId?: string, threadId?: string) {
 		await atom.workspace.open(this, { activatePane: true });
+		await this.webviewReady;
 		if (streamId) {
-			await this.webviewReady;
 			this.sendEvent(ShowStreamNotificationType, { streamId, threadId });
 		}
 	}
