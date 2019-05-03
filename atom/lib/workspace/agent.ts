@@ -195,7 +195,7 @@ abstract class AgentConnection {
 		options.env.ELECTRON_NO_ATTACH_CONSOLE = "1";
 		options.stdio = [null, null, null, "ipc"];
 
-		const agentPath = atom.inDevMode() ? getAgentSource() : asAbsolutePath("dist/agent/agent.js");
+		const agentPath = asAbsolutePath("dist/agent/agent.js");
 		const agentProcess = spawn(
 			process.execPath,
 			["--nolazy", "--inspect=6011", agentPath, "--node-ipc"],
