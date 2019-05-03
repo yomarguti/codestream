@@ -1,5 +1,23 @@
 # Change Log
 
+## [0.53.0] - 2019-5-3
+
+### Added
+
+- CodeStream now integrates with Azure DevOps issue tracking
+
+### Changed
+
+- When editing an issue codemark linked to an external service, assignees are read-only since they can't be edited from CodeStream
+
+### Fixed
+
+- Fixes an issue with mentions posted in a reply not being treated as a mention in terms of badges and notifications
+- Fixes an issue with notifications on Slack teams not working
+- Fixes an issue where CodeStream would not recognize when a source file wasn't selected or open
+- Fixes an issue when changing the code selection with the codemark form already open
+- Fixes an issue with editing posts from the conversation stream
+
 ## [0.52.1] - 2019-4-19
 
 ### Added
