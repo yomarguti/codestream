@@ -1,4 +1,4 @@
-import { TextEditor } from "atom";
+import { TextEditor, ThemeManager } from "atom";
 
 declare module "atom" {
 	interface TextEditor {
@@ -7,5 +7,9 @@ declare module "atom" {
 		getVisibleRowRange(): [number, number];
 		getApproximateLongestScreenRow(): number;
 		bufferRowForScreenRow(screenRow: number): number;
+	}
+
+	interface ThemeManager {
+		loadLessStylesheet(path: string, importFallbackVariables?: boolean): string;
 	}
 }

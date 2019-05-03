@@ -17,7 +17,10 @@ function getPackage() {
 }
 
 export const asAbsolutePath = (relativePath: string) => {
-	return path.resolve(getPackage().path, relativePath);
+	const packagePath = atom.packages.resolvePackagePath("codestream");
+	if (!packagePath) throw new Error("Atom could not find path for CodeStream package");
+
+	return path.join(packagePath, relativePath);
 };
 
 export const getPluginVersion = () => {

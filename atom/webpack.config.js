@@ -38,12 +38,12 @@ module.exports = function(env, argv) {
 		env
 	);
 
-	console.log("Ensuring extension symlink to the webview styles folder...");
-	createFolderSymlinkSync(
-		path.resolve(__dirname, "../codestream-components/styles"),
-		path.resolve(path.resolve(__dirname, "dist/styles"), "webview"),
-		env
-	);
+	// console.log("Ensuring extension symlink to the webview styles folder...");
+	// createFolderSymlinkSync(
+	// 	path.resolve(__dirname, "../codestream-components/styles"),
+	// 	path.resolve(path.resolve(__dirname, "dist/webview"), "styles"),
+	// 	env
+	// );
 
 	console.log("Ensuring webview symlink to the agent protocol folder...");
 	const protocolPathForWebview = path.resolve(__dirname, "../codestream-components/protocols");
@@ -77,10 +77,6 @@ function getExtensionConfig(env) {
 						// 	source: path.resolve(__dirname, "codestream-*.info"),
 						// 	destination: "dist/",
 						// },
-						{
-							source: path.resolve(__dirname, "../codestream-components/styles/*.less"),
-							destination: "dist/styles",
-						},
 						{
 							source: path.resolve(__dirname, "../codestream-components/assets/icons"),
 							destination: "dist/icons",
@@ -161,7 +157,11 @@ function getWebviewConfig(env) {
 	const context = path.resolve(__dirname, "webview-lib");
 
 	const plugins = [
-		new CleanPlugin(["dist/webview"]),
+		new CleanPlugin([
+			"dist/webview/*.{js,html}",
+			"dist/webview/node_modules",
+			"dist/webview/styles",
+		]),
 		new webpack.DefinePlugin(
 			Object.assign(env.production ? { "process.env.NODE_ENV": JSON.stringify("production") } : {})
 		),
@@ -170,8 +170,26 @@ function getWebviewConfig(env) {
 				{
 					copy: [
 						{
-							source: path.resolve(__dirname, "../codestream-components/styles/*.less"),
-							destination: "dist/styles",
+							source: path.resolve(__dirname, "webview-lib/webview.less"),
+							destination: "dist/webview/styles/",
+						},
+						{
+							source: path.resolve(__dirname, "../codestream-components/styles/*"),
+							destination: "dist/webview/styles/",
+						},
+						{
+							source: path.resolve(
+								__dirname,
+								"../codestream-components/node_modules/rc-tooltip/assets/bootstrap.css"
+							),
+							destination: "dist/webview/node_modules/rc-tooltip/assets/bootstrap.css",
+						},
+						{
+							source: path.resolve(
+								__dirname,
+								"../codestream-components/node_modules/emoji-mart/css/emoji-mart.css"
+							),
+							destination: "dist/webview/node_modules/emoji-mart/css/emoji-mart.css",
 						},
 						{
 							source: path.resolve(__dirname, "../codestream-components/assets/icons"),

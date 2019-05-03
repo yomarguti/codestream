@@ -1,13 +1,6 @@
-// The ui-variables file is provided by base themes provided by Atom.
-//
-// See https://github.com/atom/atom-dark-ui/blob/master/styles/ui-variables.less
-// for a full listing of what's available.
+// The ui-variables and syntax-variables files are provided by Atom themes.
 @import "ui-variables";
 @import "syntax-variables";
-@import "../../node_modules/rc-tooltip/assets/bootstrap.css";
-@import "../../node_modules/highlight.js/styles/default.css";
-@import "../../node_modules/emoji-mart/css/emoji-mart.css";
-@import "../../node_modules/highlight.js/styles/hybrid.css";
 
 @app-background-color-darker: darken(@app-background-color, 2%);
 @app-background-color-hover: lighten(@app-background-color, 3%);
@@ -21,7 +14,8 @@
 @pane-item-border-color-dark: @pane-item-border-color;
 @pane-item-border-color-light: @pane-item-border-color;
 
-@import "../dist/styles/main";
+// this file is copied into `../dist` so `main` will be there and copied from the webview
+@import "main";
 
 body {
 	--in-dark-mode: false;

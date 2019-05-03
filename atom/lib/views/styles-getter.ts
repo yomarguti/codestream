@@ -1,3 +1,5 @@
+import { asAbsolutePath } from "utils";
+
 export async function getStylesheets(): Promise<string[]> {
 	if (atom.packages.isPackageActive("codestream") === false) {
 		await new Promise(resolve =>
@@ -12,8 +14,8 @@ export async function getStylesheets(): Promise<string[]> {
 	const [atomStyles, editorStyles, ...rest] = styles;
 	const [uiStyles, syntaxStyles] = rest.reverse();
 
-	const csStyles = rest.find(styles =>
-		styles.attributes.getNamedItem("source-path")!.value.includes("codestream/styles/webview")
+	const csStyles = atom.themes.loadLessStylesheet(
+		asAbsolutePath("/dist/webview/styles/webview.less")
 	);
 	if (!csStyles) {
 		throw new Error("CodeStream stylesheets are unavailable");
@@ -24,6 +26,6 @@ export async function getStylesheets(): Promise<string[]> {
 		editorStyles.innerText,
 		uiStyles.innerText,
 		syntaxStyles.innerText,
-		csStyles.innerText,
+		csStyles,
 	];
 }
