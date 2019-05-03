@@ -9,16 +9,18 @@ import {
 
 /* The following events are expected to be provided from the extension */
 
+export interface ActiveEditorInfo {
+	fileName: string;
+	languageId?: string;
+	uri: string;
+	metrics?: EditorMetrics;
+	selections: EditorSelection[];
+	visibleRanges: Range[];
+	lineCount?: number;
+}
+
 export interface HostDidChangeActiveEditorNotification {
-	editor?: {
-		fileName: string;
-		languageId?: string;
-		uri: string;
-		metrics?: EditorMetrics;
-		selections: EditorSelection[];
-		visibleRanges: Range[];
-		lineCount?: number;
-	};
+	editor?: ActiveEditorInfo;
 }
 export const HostDidChangeActiveEditorNotificationType = new NotificationType<
 	HostDidChangeActiveEditorNotification,
