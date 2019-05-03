@@ -12,6 +12,7 @@ import { Logger, TraceLevel } from "./logger";
 import { CodeStreamCodeActionProvider } from "./providers/codeActionProvider";
 import { CodemarkCodeLensProvider } from "./providers/markerCodeLensProvider";
 import { CodemarkDecorationProvider } from "./providers/markerDecorationProvider";
+import { CodemarkPatchContentProvider } from "./providers/patchContentProvider";
 import { SelectionDecorationProvider } from "./providers/selectionDecorationProvider";
 import { WebviewSidebarActivator } from "./views/webviewSidebarActivator";
 
@@ -38,6 +39,7 @@ export class Container {
 		context.subscriptions.push((this._codeActions = new CodeStreamCodeActionProvider()));
 		context.subscriptions.push((this._codeLens = new CodemarkCodeLensProvider()));
 		context.subscriptions.push((this._markerDecorations = new CodemarkDecorationProvider()));
+		context.subscriptions.push(new CodemarkPatchContentProvider());
 		context.subscriptions.push((this._selectionDecoration = new SelectionDecorationProvider()));
 		context.subscriptions.push((this._statusBar = new StatusBarController()));
 

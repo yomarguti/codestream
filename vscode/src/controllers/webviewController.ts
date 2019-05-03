@@ -11,6 +11,7 @@ import {
 } from "@codestream/protocols/agent";
 import { CodemarkType, LoginResult } from "@codestream/protocols/api";
 import {
+	ActiveEditorInfo,
 	ApplyMarkerRequestType,
 	BootstrapRequestType,
 	CompareMarkerRequestType,
@@ -109,7 +110,7 @@ export class WebviewController implements Disposable {
 
 		this._notifyActiveEditorChangedDebounced = Functions.debounce(
 			this.notifyActiveEditorChanged,
-			100
+			500
 		);
 	}
 
@@ -119,6 +120,7 @@ export class WebviewController implements Disposable {
 	}
 
 	private _lastEditor: TextEditor | undefined;
+	private _lastEditorUrl: string | undefined;
 	private setLastEditor(editor: TextEditor | undefined) {
 		if (this._lastEditor === editor) return;
 		// If the new editor is not a real editor ignore it
@@ -760,23 +762,45 @@ export class WebviewController implements Disposable {
 	private notifyActiveEditorChanged(e: TextEditor | undefined) {
 		if (this._webview === undefined) return;
 
-		if (e == null || e.document.uri.scheme !== "file") {
-			this._webview.notify(HostDidChangeActiveEditorNotificationType, {});
-			return;
+		let editor: ActiveEditorInfo | undefined;
+
+		if (e != null) {
+			const originalUri = e.document.uri;
+			let uri;
+			switch (originalUri.scheme) {
+				case "file":
+				case "untitled":
+					uri = originalUri;
+					break;
+				case "git":
+				case "gitlens":
+				case "codestream-patch":
+					uri = originalUri.with({ scheme: "file", authority: "", query: "" });
+					break;
+			}
+
+			if (uri !== undefined) {
+				// Only tell the webview if the uri really is different
+				const url = uri.toString();
+				if (this._lastEditorUrl === url) {
+					return;
+				}
+
+				this._lastEditorUrl = url;
+
+				editor = {
+					uri: this._lastEditorUrl,
+					fileName: workspace.asRelativePath(uri),
+					languageId: e.document.languageId,
+					metrics: Editor.getMetrics(),
+					selections: Editor.toEditorSelections(e.selections),
+					visibleRanges: Editor.toSerializableRange(e.visibleRanges),
+					lineCount: e.document.lineCount
+				};
+			}
 		}
 
-		const uri = e.document.uri;
-		this._webview.notify(HostDidChangeActiveEditorNotificationType, {
-			editor: {
-				uri: uri.toString(),
-				fileName: workspace.asRelativePath(uri),
-				languageId: e.document.languageId,
-				metrics: Editor.getMetrics(),
-				selections: Editor.toEditorSelections(e.selections),
-				visibleRanges: Editor.toSerializableRange(e.visibleRanges),
-				lineCount: e.document.lineCount
-			}
-		});
+		this._webview.notify(HostDidChangeActiveEditorNotificationType, { editor: editor });
 	}
 
 	private updateState(hidden: boolean = false) {

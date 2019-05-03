@@ -99,28 +99,19 @@ export class Commands implements Disposable {
 		const resp = await Container.agent.documentMarkers.getDocumentFromMarker(args.marker);
 		if (resp === undefined) return false;
 
-		const original = await workspace.openTextDocument(Uri.parse(resp.textDocument.uri));
+		const originalUri = Uri.parse(resp.textDocument.uri);
 
-		const patched = await workspace.openTextDocument({
-			language: original.languageId,
-			content: original.getText()
+		const markerId: CSMarkerIdentifier = {
+			id: args.marker.id,
+			file: args.marker.file,
+			repoId: args.marker.repoId
+		};
+		const patchedUri = originalUri.with({
+			scheme: "codestream-patch",
+			query: encodeURIComponent(JSON.stringify(markerId))
 		});
 
-		const edit = new WorkspaceEdit();
-		edit.replace(
-			patched.uri,
-			new Range(
-				resp.range.start.line,
-				resp.range.start.character,
-				resp.range.end.line,
-				resp.range.end.character
-			),
-			resp.marker.code
-		);
-
-		const result = await workspace.applyEdit(edit);
-		if (!result) return false;
-
+		const fileName = paths.basename(originalUri.fsPath);
 		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
 		let column = Container.webview.viewColumn as number | undefined;
 		if (column !== undefined) {
@@ -130,11 +121,10 @@ export class Commands implements Disposable {
 			}
 		}
 
-		const fileName = paths.basename(original.fileName);
 		await commands.executeCommand(
 			BuiltInCommands.Diff,
-			original.uri,
-			patched.uri,
+			originalUri,
+			patchedUri,
 			`${fileName} \u27f7 ${fileName} (patched)`,
 			{
 				preserveFocus: false,
