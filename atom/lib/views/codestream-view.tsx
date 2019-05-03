@@ -145,7 +145,7 @@ export class CodestreamView {
 		iframe.style.border = "none";
 		iframe.src = asAbsolutePath("dist/webview/index.html");
 
-		iframe.classList.add("webview");
+		iframe.classList.add("webview", "native-key-bindings");
 		iframe.addEventListener("load", async () => {
 			iframe.contentWindow!.postMessage(
 				{
