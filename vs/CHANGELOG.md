@@ -1,5 +1,29 @@
 # Change Log
 
+## [0.53.0] - 2019-5-3
+
+### Added
+
+- CodeStream now integrates with Azure DevOps issue tracking
+
+### Changed
+
+- Improved startup performance and reliability
+- CodeStream options are now grouped under a sub-menu in the editor context menu
+- Improved performance in editor window when the Current File tab in CodeStream is selected
+- When editing an issue codemark linked to an external service, assignees are read-only since they can't be edited from CodeStream
+
+### Fixed
+
+- Fixes an issue where archived codemarks were appearing in the gutter and scrollbar
+- Fixes an issue where a codelens would be included when highlighting code on hover over a codemark
+- Fixes an issue with button backgrounds missing in light mode
+- Fixes an issue where codemarks would not be reflected in the editor scrollbar until the window was re-focused
+- Fixes an issue with mentions posted in a reply not being treated as a mention in terms of badges and notifications
+- Fixes an issue where CodeStream would not recognize when a source file wasn't selected or open
+- Fixes an issue when changing the code selection with the codemark form already open
+- Fixes an issue with editing posts from the conversation stream
+
 ## [0.52.1] - 2019-4-19
 
 ### Added
