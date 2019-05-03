@@ -10,6 +10,7 @@ import {
 	TextDocuments
 } from "vscode-languageserver";
 import { Disposables } from "./system";
+import URI from "vscode-uri";
 
 const escapedRegex = /(^.*?:\/\/\/)([a-z])%3A(\/.*$)/;
 const unescapedRegex = /(^.*?:\/\/\/)([a-zA-Z]):(\/.*$)/;
@@ -40,11 +41,6 @@ export class DocumentManager implements Disposable {
 	}
 
 	get(uri: string): TextDocument | undefined {
-		if (!this._isWindows) {
-			return this._documents.get(uri);
-		}
-
-		// If we are on windows we have to do some drive letter manipulation to support different editor using different uri formatting
 		const key = this._normalizedUriLookup.get(uri);
 		if (key !== undefined) {
 			return this._documents.get(key);
@@ -53,6 +49,17 @@ export class DocumentManager implements Disposable {
 		let doc = this._documents.get(uri);
 		if (doc !== undefined) return doc;
 
+		const decodedUri = URI.parse(uri).toString(true);
+		doc = this._documents.get(decodedUri);
+		if (doc !== undefined) {
+			this._normalizedUriLookup.set(uri, doc.uri);
+		}
+
+		if (doc || !this._isWindows) {
+			return doc
+		}
+
+		// If we are on windows we have to do some drive letter manipulation to support different editor using different uri formatting
 		let match = unescapedRegex.exec(uri);
 		if (match != null) {
 			const escapedUri = uri.replace(unescapedRegex, function(
