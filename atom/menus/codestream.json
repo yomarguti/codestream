@@ -3,19 +3,19 @@
 		"atom-text-editor": [
 			{
 				"label": "Add Comment",
-				"command": "codestream:create-comment"
+				"command": "codestream:context-create-comment"
 			},
 			{
 				"label": "Create Issue",
-				"command": "codestream:create-issue"
+				"command": "codestream:context-create-issue"
 			},
 			{
 				"label": "Create Bookmark",
-				"command": "codestream:create-bookmark"
+				"command": "codestream:context-create-bookmark"
 			},
 			{
 				"label": "Get Permalink",
-				"command": "codestream:get-permalink"
+				"command": "codestream:context-get-permalink"
 			}
 		]
 	},

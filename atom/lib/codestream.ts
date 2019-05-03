@@ -112,24 +112,47 @@ class CodestreamPackage {
 	}
 
 	private registerLoggedInCommands() {
+		const sendNewCodemarkRequest = (type: CodemarkType, entry: "Context Menu" | "Shortcut") => {
+			const view = this.viewController.getMainView();
+			view.show().then(() => {
+				view.newCodemarkRequest(type, entry);
+			});
+		};
+
 		this.loggedInCommandsSubscription = new CompositeDisposable(
-			atom.commands.add("atom-workspace", "codestream:create-comment", () => {
-				const view = this.viewController.getMainView();
-				view.show().then(() => {
-					view.newCodemarkRequest(CodemarkType.Comment, "context-menu");
-				});
+			// context menu options
+			atom.commands.add("atom-workspace", "codestream:context-create-comment", {
+				hiddenInCommandPalette: true,
+				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Comment, "Context Menu"),
 			}),
-			atom.commands.add("atom-workspace", "codestream:create-issue", () => {
-				const view = this.viewController.getMainView();
-				view.show().then(() => {
-					view.newCodemarkRequest(CodemarkType.Issue, "context-menu");
-				});
+			atom.commands.add("atom-workspace", "codestream:context-create-issue", {
+				hiddenInCommandPalette: true,
+				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Issue, "Context Menu"),
 			}),
-			atom.commands.add("atom-workspace", "codestream:create-bookmark", () => {
-				const view = this.viewController.getMainView();
-				view.show().then(() => {
-					view.newCodemarkRequest(CodemarkType.Bookmark, "context-menu");
-				});
+			atom.commands.add("atom-workspace", "codestream:context-create-bookmark", {
+				hiddenInCommandPalette: true,
+				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Bookmark, "Context Menu"),
+			}),
+			atom.commands.add("atom-workspace", "codestream:context-get-permalink", {
+				hiddenInCommandPalette: true,
+				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Link, "Context Menu"),
+			}),
+			// keymappings
+			atom.commands.add("atom-workspace", "codestream:keymap-create-comment", {
+				hiddenInCommandPalette: true,
+				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Comment, "Shortcut"),
+			}),
+			atom.commands.add("atom-workspace", "codestream:keymap-create-issue", {
+				hiddenInCommandPalette: true,
+				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Issue, "Shortcut"),
+			}),
+			atom.commands.add("atom-workspace", "codestream:keymap-create-bookmark", {
+				hiddenInCommandPalette: true,
+				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Bookmark, "Shortcut"),
+			}),
+			atom.commands.add("atom-workspace", "codestream:keymap-get-permalink", {
+				hiddenInCommandPalette: true,
+				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Link, "Shortcut"),
 			})
 		);
 	}

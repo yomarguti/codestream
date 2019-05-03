@@ -3,8 +3,9 @@
 		"ctrl-/ ctrl-/": "codestream:toggle"
 	},
 	"atom-text-editor": {
-		"ctrl-/ ctrl-c": "codestream:create-comment",
-		"ctrl-/ ctrl-i": "codestream:create-issue",
-		"ctrl-/ ctrl-b": "codestream:create-bookmark"
+		"ctrl-/ ctrl-c": "codestream:keymap-create-comment",
+		"ctrl-/ ctrl-i": "codestream:keymap-create-issue",
+		"ctrl-/ ctrl-b": "codestream:keymap-create-bookmark",
+		"ctrl-/ ctrl-p": "codestream:keymap-get-permalink"
 	}
 }
