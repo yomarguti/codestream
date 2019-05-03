@@ -1,22 +1,10 @@
 {
 	"atom-workspace": {
-		"ctrl-alt-o": "codestream:toggle",
-		"ctrl-shift-enter": "codestream:focus-input",
-		"ctrl-cmd-shift-enter": "codestream:comment"
+		"ctrl-/ ctrl-/": "codestream:toggle"
 	},
 	"atom-text-editor": {
-		"ctrl-shift-enter": "codestream:focus-input",
-		"ctrl-cmd-shift-enter": "codestream:comment"
-	},
-	".codestream": {
-		"escape": "codestream:escape"
-	},
-	".codestream .compose.popup-open .native-key-bindings": {
-		"down": "codestream:popup-move-down",
-		"up": "codestream:popup-move-up",
-		"tab": "codestream:popup-tab"
-	},
-	".codestream .native-key-bindings": {
-		"up": "codestream:move-up"
+		"ctrl-/ ctrl-c": "codestream:create-comment",
+		"ctrl-/ ctrl-i": "codestream:create-issue",
+		"ctrl-/ ctrl-b": "codestream:create-bookmark"
 	}
 }
