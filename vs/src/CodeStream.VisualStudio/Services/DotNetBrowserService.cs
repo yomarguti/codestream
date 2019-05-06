@@ -28,7 +28,7 @@ namespace CodeStream.VisualStudio.Services {
 		public void Handle(string message) {
 			if (MessageHandler == null) return;
 
-			MessageHandler(this, new WindowEventArgs(message));
+			_ = MessageHandler(this, new WindowEventArgs(message));
 		}
 
 		public static WindowMessageHandler MessageHandler;
@@ -103,7 +103,9 @@ namespace CodeStream.VisualStudio.Services {
 								if (_messageQueue.Count > QueueLimit) {
 									_messageQueue.Clear();
 									_manualResetEvent.Reset();
+#pragma warning disable VSTHRD010
 									ReloadWebView();
+#pragma warning restore VSTHRD010
 									break;
 								}
 								Send(value);
@@ -167,8 +169,9 @@ namespace CodeStream.VisualStudio.Services {
 
 		private void Browser_RenderGoneEvent(object sender, RenderEventArgs e) {
 			Log.Verbose(nameof(Browser_RenderGoneEvent));
-
+#pragma warning disable VSTHRD010
 			ReloadWebView();
+#pragma warning restore VSTHRD010
 		}
 
 		private void Browser_ScriptContextCreated(object sender, DotNetBrowser.Events.ScriptContextEventArgs e) {
@@ -407,7 +410,7 @@ namespace CodeStream.VisualStudio.Services {
 			}
 
 			if (parameters.ResourceType == ResourceType.MAIN_FRAME) {
-				_agentService.SendAsync<JToken>("codestream/url/open", new { url = parameters.URL });
+				_ =_agentService.SendAsync<JToken>("codestream/url/open", new { url = parameters.URL });
 			}
 
 			return false;

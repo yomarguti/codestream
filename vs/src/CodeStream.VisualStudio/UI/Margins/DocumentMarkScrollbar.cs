@@ -13,14 +13,15 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.UI.Extensions;
+using Microsoft.VisualStudio.Shell;
 
 namespace CodeStream.VisualStudio.UI.Margins {
 	internal class DocumentMarkScrollbar : FrameworkElement, ICodeStreamWpfTextViewMargin {
 		private static readonly ILogger Log = LogManager.ForContext<DocumentMarkScrollbar>();
 
-		private double MarkPadding = 3.0;
-		private double MarkThickness = 2.0;
-		private double MarkHeight = 6;
+		private const double MarkPadding = 3.0;
+		private const double MarkThickness = 2.0;
+		private const double MarkHeight = 6;
 
 		private const int DefaultMarginWidth = 12;
 		private static readonly object InitializeLock = new object();
@@ -49,7 +50,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 
 			_textView = wpfTextViewHost.TextView;
 			_verticalScrollBar = verticalScrollBar;
-			
+
 			IsHitTestVisible = false;
 			Width = DefaultMarginWidth;
 
@@ -264,17 +265,14 @@ namespace CodeStream.VisualStudio.UI.Margins {
 						_textView.TextSnapshot,
 						_textView,
 						delegate {
-							//Force the invalidate to happen on the UI thread to satisfy WPF
-							Dispatcher.Invoke(DispatcherPriority.Normal,
-								new DispatcherOperationCallback(delegate {
-									//Guard against the view closing before dispatcher executes this.
-									if (!_isDisposed) {
-										InvalidateVisual();
-									}
-
-									return null;
-								}),
-								null);
+							ThreadHelper.JoinableTaskFactory.Run(async delegate {
+								//Force the invalidate to happen on the UI thread to satisfy WPF
+								await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+								//Guard against the view closing before dispatcher executes this.
+								if (!_isDisposed) {
+									InvalidateVisual();
+								}
+							});
 						});
 
 					return true;
@@ -363,7 +361,6 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			public ITextSnapshot Snapshot { get; }
 			private bool _abort;
 			private List<DocumentMarker> _markers;
-			private readonly ITextView _textView;
 
 			/// <summary>
 			/// Call <paramref name="completionCallback" /> once the search has completed.
@@ -374,7 +371,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			/// <remarks>The constructor must be called from the UI thread.</remarks>
 			public BackgroundMarkerPlacement(ITextSnapshot snapshot, ITextView textView, Action completionCallback) {
 				Snapshot = snapshot;
-				_textView = textView;
+				var textView1 = textView;
 
 				ThreadPool.QueueUserWorkItem(delegate {
 					//Lower our priority so that we do not compete with the rendering.
@@ -383,13 +380,15 @@ namespace CodeStream.VisualStudio.UI.Margins {
 
 					var newMatches = new List<SnapshotSpanMarker>();
 
-					if (_textView.Properties.ContainsProperty(PropertyNames.DocumentMarkers)) {
-						_markers = _textView.Properties.GetProperty<List<DocumentMarker>>(PropertyNames.DocumentMarkers);
+					if (textView1.Properties.ContainsProperty(PropertyNames.DocumentMarkers)) {
+						_markers = textView1.Properties.GetProperty<List<DocumentMarker>>(PropertyNames.DocumentMarkers);
 					}
 
 					if (_markers == null) return;
 
 					foreach (var span in snapshot.Lines) {
+						if (_abort) break;
+
 						var lineNumber = span.Start.GetContainingLine().LineNumber;
 						var marker = _markers.FirstOrDefault(_ => _?.Range?.Start.Line == lineNumber);
 						if (marker == null) continue;
@@ -397,6 +396,8 @@ namespace CodeStream.VisualStudio.UI.Margins {
 						var start = span.Start == 0 ? span.Start : span.Start - 1;
 						newMatches.Add(new SnapshotSpanMarker(new SnapshotSpan(start, 1), ThemeManager.GetCodemarkColorSafe(marker.Codemark?.Color)));
 					}
+
+					if (_abort) return;
 
 					//This should be a thread safe operation since it is atomic
 					Matches = newMatches;

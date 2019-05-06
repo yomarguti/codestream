@@ -4,71 +4,63 @@ using CodeStream.VisualStudio.Vssdk;
 using Microsoft.VisualStudio.PlatformUI;
 using Serilog;
 using System;
+using Microsoft.VisualStudio.Shell;
 
-namespace CodeStream.VisualStudio
-{
-    /// <summary>
-    /// Attaches CodeStream-specific handlers to VisualStudio events
-    /// </summary>
-    public class CodeStreamEventManager: IDisposable
-    {
-        private static readonly ILogger Log = LogManager.ForContext<CodeStreamEventManager>();
+namespace CodeStream.VisualStudio {
+	/// <summary>
+	/// Attaches CodeStream-specific handlers to VisualStudio events
+	/// </summary>
+	public class CodeStreamEventManager : IDisposable {
+		private static readonly ILogger Log = LogManager.ForContext<CodeStreamEventManager>();
 
-        private readonly VsShellEventManager _vsShellEventManager;
-        private readonly IBrowserService _browserService;
+		private readonly VsShellEventManager _vsShellEventManager;
+		private readonly IBrowserService _browserService;
+		private bool _disposed;
 
-        public CodeStreamEventManager(VsShellEventManager vsShellEventManager,
-	        IBrowserService browserService)
-        {
-            _vsShellEventManager = vsShellEventManager;
-            _browserService = browserService;
-            
-            _vsShellEventManager.VisualStudioThemeChangedEventHandler += OnThemeChanged;
-            _vsShellEventManager.BeforeSolutionClosingEventHandler += BeforeSolutionClosingEventHandler;
-        }
+		public CodeStreamEventManager(VsShellEventManager vsShellEventManager,
+			IBrowserService browserService) {
+			_vsShellEventManager = vsShellEventManager;
+			_browserService = browserService;
 
-        private void BeforeSolutionClosingEventHandler(object sender, EventArgs e)
-        {
-            Log.Information("Solution is closing");
-        }
+			_vsShellEventManager.VisualStudioThemeChangedEventHandler += OnThemeChanged;
+			_vsShellEventManager.BeforeSolutionClosingEventHandler += BeforeSolutionClosingEventHandler;
+		}
 
-        private void OnThemeChanged(object sender, ThemeChangedEventArgs e)
-        {
-            try
-            {
-                Log.Information(nameof(OnThemeChanged));
+		private void BeforeSolutionClosingEventHandler(object sender, EventArgs e) {
+			Log.Information("Solution is closing");
+		}
 
-                _browserService?.ReloadWebView();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, nameof(OnThemeChanged));
-            }
-        }
+		private void OnThemeChanged(object sender, ThemeChangedEventArgs e) {
+			try {
+				Log.Information(nameof(OnThemeChanged));
 
-        private bool _disposedValue;
+				_browserService?.ReloadWebView();
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(OnThemeChanged));
+			}
+		}
 
-        private void Dispose(bool disposing)
-        {
-            System.Windows.Threading.Dispatcher.CurrentDispatcher.VerifyAccess();
+		private void Dispose(bool disposing) {
+			if (_disposed) return;
 
-            if (!_disposedValue)
-            {
-                if (disposing)
-                {
-                    _vsShellEventManager.VisualStudioThemeChangedEventHandler -= OnThemeChanged;
-                    _vsShellEventManager.BeforeSolutionClosingEventHandler -= BeforeSolutionClosingEventHandler;
+			if (disposing) {
+				_vsShellEventManager.VisualStudioThemeChangedEventHandler -= OnThemeChanged;
+				_vsShellEventManager.BeforeSolutionClosingEventHandler -= BeforeSolutionClosingEventHandler;
+				_disposed = true;
+				Log.Debug($"Unregistering events");
+			}
+		}
 
-                    Log.Debug($"Unregistering events");
-                }
-
-                _disposedValue = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-    }
+		public void Dispose() {
+			try {
+				ThreadHelper.ThrowIfNotOnUIThread();
+				Dispose(true);
+				GC.SuppressFinalize(this);
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(Dispose));
+			}
+		}
+	}
 }

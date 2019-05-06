@@ -1,4 +1,5 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
+﻿using System.Threading;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Models;
 using Serilog;
 using System.Threading.Tasks;
@@ -13,7 +14,7 @@ namespace CodeStream.VisualStudio.Services {
 		void Notify(INotificationType message);
 		Task NotifyAsync(INotificationType message);
 		void EnqueueNotification(INotificationType message);
-		
+
 		IBrowserService BrowserService { get; }
 	}
 
@@ -48,7 +49,7 @@ namespace CodeStream.VisualStudio.Services {
 		public Task NotifyAsync(INotificationType message) {
 			return Task.Factory.StartNew(() => {
 				SendInternal(message);
-			});
+			}, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Current);
 		}
 	}
 }

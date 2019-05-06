@@ -155,7 +155,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 					var toolWindowProvider = Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
 					toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
 
-					codeStreamService.NewCodemarkAsync(_textDocument.FilePath.ToUri(), _textSelection.Range, CodemarkType, "Lightbulb Menu", cancellationToken: cancellationToken);
+					_ = codeStreamService.NewCodemarkAsync(_textDocument.FilePath.ToUri(), _textSelection.Range, CodemarkType, "Lightbulb Menu", cancellationToken: cancellationToken);
 				}
 				catch (Exception ex) {
 					Log.Error(ex, nameof(CodemarkSuggestedActionBase));

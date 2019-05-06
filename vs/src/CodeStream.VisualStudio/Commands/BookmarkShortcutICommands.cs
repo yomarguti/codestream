@@ -2,9 +2,11 @@
 using System.Windows.Input;
 
 namespace CodeStream.VisualStudio.Commands {
-
 	public abstract class BookmarkShortcutICommandBase : ICommand {
-		public event EventHandler CanExecuteChanged;
+		public event EventHandler CanExecuteChanged {
+			add { throw new NotSupportedException(); }
+			remove { }
+		}
 
 		public bool CanExecute(object parameter) => true;
 		protected abstract int Index { get; }
@@ -13,7 +15,7 @@ namespace CodeStream.VisualStudio.Commands {
 		/// object parameter is always null, UGH! 
 		/// </summary>
 		/// <param name="parameter"></param>
-		public void Execute(object parameter) => BookmarkShortcutRegistration.GetBookmarkCommand(Index)?.Invoke();		
+		public void Execute(object parameter) => BookmarkShortcutRegistration.GetBookmarkCommand(Index)?.Invoke();
 	}
 
 	public class BookmarkShortcut1Command : BookmarkShortcutICommandBase {

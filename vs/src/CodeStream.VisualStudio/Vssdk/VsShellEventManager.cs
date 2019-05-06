@@ -10,14 +10,14 @@ namespace CodeStream.VisualStudio.Vssdk {
 	public sealed class VsShellEventManager : //IVsSelectionEvents
 		  IDisposable {
 		private static readonly ILogger Log = LogManager.ForContext<VsShellEventManager>();
-		
+		private bool _disposed;
 		//private readonly IVsMonitorSelection _iVsMonitorSelection;
 		//private readonly uint _monitorSelectionCookie;
 		private readonly DTE _dte;
 
 		public VsShellEventManager(IVsMonitorSelection iVsMonitorSelection) {
 			ThreadHelper.ThrowIfNotOnUIThread();
-			
+
 			_dte = Package.GetGlobalService(typeof(DTE)) as DTE;
 			//_iVsMonitorSelection = iVsMonitorSelection;
 
@@ -33,7 +33,7 @@ namespace CodeStream.VisualStudio.Vssdk {
 
 			//_dte.Events.DTEEvents.OnBeginShutdown += DTEEvents_OnBeginShutdown;
 		}
-		
+
 		private void SolutionEvents_BeforeClosing() {
 			BeforeSolutionClosingEventHandler?.Invoke(this, null);
 		}
@@ -97,29 +97,37 @@ namespace CodeStream.VisualStudio.Vssdk {
 		//	return VSConstants.S_OK;
 		//}
 
-		private bool _disposedValue;
-
 		private void Dispose(bool disposing) {
-			System.Windows.Threading.Dispatcher.CurrentDispatcher.VerifyAccess();
+			if (_disposed) return;
 
-			if (!_disposedValue) {
-				if (disposing) {
+			if (disposing) {
+				try {
+#pragma warning disable VSTHRD108
+					ThreadHelper.ThrowIfNotOnUIThread();
+#pragma warning restore VSTHRD108
 					//_iVsMonitorSelection?.UnadviseSelectionEvents(_monitorSelectionCookie);
 					VSColorTheme.ThemeChanged -= VSColorTheme_ThemeChanged;
 					if (_dte != null) {
 						_dte.Events.SolutionEvents.BeforeClosing -= SolutionEvents_BeforeClosing;
 					}
-
+					_disposed = true;
 					Log.Verbose($"Unregistering events");
 				}
-
-				_disposedValue = true;
+				catch (Exception ex) {
+					Log.Error(ex, nameof(Dispose));
+				}
 			}
 		}
 
 		public void Dispose() {
-			Dispose(true);
-			GC.SuppressFinalize(this);
+			try {
+				ThreadHelper.ThrowIfNotOnUIThread();
+				Dispose(true);
+				GC.SuppressFinalize(this);
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(Dispose));
+			}
 		}
 
 		//private class FileInfo {

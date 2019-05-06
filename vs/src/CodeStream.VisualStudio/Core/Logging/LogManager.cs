@@ -53,6 +53,7 @@ namespace CodeStream.VisualStudio.Core.Logging {
 			}
 			catch (Exception ex) {
 #if DEBUG
+				System.Diagnostics.Debug.WriteLine(ex);
 				System.Diagnostics.Debugger.Break();
 #endif
 				return new EmptyLogger();
@@ -87,6 +88,7 @@ namespace CodeStream.VisualStudio.Core.Logging {
 			}
 			catch (Exception ex) {
 #if DEBUG
+				System.Diagnostics.Debug.WriteLine(ex);
 				System.Diagnostics.Debugger.Break();
 #endif
 				return new EmptyLogger();
@@ -100,6 +102,7 @@ namespace CodeStream.VisualStudio.Core.Logging {
 			}
 			catch (Exception ex) {
 #if DEBUG
+				System.Diagnostics.Debug.WriteLine(ex);
 				System.Diagnostics.Debugger.Break();
 #endif
 				return new EmptyLogger();
@@ -112,6 +115,7 @@ namespace CodeStream.VisualStudio.Core.Logging {
 			}
 			catch (Exception ex) {
 #if DEBUG
+				System.Diagnostics.Debug.WriteLine(ex);
 				System.Diagnostics.Debugger.Break();
 #endif
 				return new EmptyLogger();

@@ -212,8 +212,8 @@ namespace CodeStream.VisualStudio {
 								}
 								case EditorScrollToNotificationType.MethodName: {
 									var @params = message.Params.ToObject<EditorScrollToNotification>();
-
-									System.Windows.Application.Current.Dispatcher.Invoke(() => {
+#pragma warning disable VSTHRD001
+											System.Windows.Application.Current.Dispatcher.Invoke(() => {
 										try {
 											_ideService.ScrollEditor(@params.Uri.ToUri(), @params.Position.Line, @params.DeltaPixels, @params.AtTop);
 										}
@@ -221,7 +221,8 @@ namespace CodeStream.VisualStudio {
 											Log.Warning(ex, nameof(EditorRevealRangeRequestType));
 										}
 									}, DispatcherPriority.Input);
-									break;
+#pragma warning restore VSTHRD001
+											break;
 								}
 								case ReloadWebviewRequestType.MethodName: {
 									using (_ipc.CreateScope(message)) {

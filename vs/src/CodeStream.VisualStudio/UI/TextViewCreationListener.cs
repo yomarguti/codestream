@@ -307,7 +307,7 @@ namespace CodeStream.VisualStudio.UI {
 											Log.Verbose($"SelectionChanged {textSelection.ToPositionString()}");
 
 											var activeEditorState = EditorService?.GetActiveEditorState();
-											_codeStreamService.EditorSelectionChangedNotificationAsync(
+											_ = _codeStreamService.EditorSelectionChangedNotificationAsync(
 												wpfTextView.Properties.GetProperty<string>(PropertyNames.TextViewFilePath).ToUri(),
 												activeEditorState,
 												wpfTextView.ToVisibleRangesSafe(),
@@ -360,7 +360,7 @@ namespace CodeStream.VisualStudio.UI {
 
 		private void ResetActiveEditor() {
 			try {
-				_codeStreamService.ResetActiveEditorAsync();
+				_ = _codeStreamService.ResetActiveEditorAsync();
 				_focusedWpfTextView = null;
 				_sessionService.LastActiveFileUrl = null;
 			}
@@ -379,7 +379,7 @@ namespace CodeStream.VisualStudio.UI {
 				if (activeTextEditor != null && activeTextEditor.Uri != null) {
 					if (Uri.TryCreate(filePath, UriKind.RelativeOrAbsolute, out Uri result)) {
 						if (activeTextEditor.Uri.EqualsIgnoreCase(result)) {
-							_codeStreamService.ChangeActiveEditorAsync(filePath, new Uri(filePath), activeTextEditor);
+							_ = _codeStreamService.ChangeActiveEditorAsync(filePath, new Uri(filePath), activeTextEditor);
 						}
 					}
 				}

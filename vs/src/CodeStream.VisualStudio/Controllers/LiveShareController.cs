@@ -70,12 +70,14 @@ namespace CodeStream.VisualStudio.Controllers {
 				}
 				else {
 					IDisposable liveShareReadyEvent = null;
-					liveShareReadyEvent = _eventAggregator.GetEvent<LiveShareStartedEvent>().Subscribe((_) => {
+					liveShareReadyEvent = _eventAggregator.GetEvent<LiveShareStartedEvent>().Subscribe(e => {
 						try {
 							liveShareReadyEvent?.Dispose();
 
-							_ideService.GetClipboardTextValueAsync(10000, async (string url) => {
-								await CreatePostAsync(streamId, threadId, url);
+							_ = _ideService.GetClipboardTextValueAsync(10000, (string url) => {
+								ThreadHelper.JoinableTaskFactory.Run(async delegate {
+									await CreatePostAsync(streamId, threadId, url);
+								});
 							}, RegularExpressions.LiveShareUrl);
 						}
 						catch (Exception ex) {
@@ -129,11 +131,13 @@ namespace CodeStream.VisualStudio.Controllers {
 							$"Join my Live Share session: {_sessionService.LiveShareUrl}");
 						if (postResponse != null) {
 							// view thread
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
 							_ipc.Notify(new ShowStreamNotificationType {
 								Params = new ShowStreamNotification {
 									StreamId = stream.Id
 								}
 							});
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
 						}
 					}
 				}

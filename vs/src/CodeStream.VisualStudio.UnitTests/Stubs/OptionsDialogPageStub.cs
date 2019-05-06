@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.UI.Settings;
@@ -7,8 +8,11 @@ namespace CodeStream.VisualStudio.UnitTests.Stubs
 {
     public class OptionsDialogPageStub : IOptionsDialogPage
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-        public string Email { get; set; }        
+        public event PropertyChangedEventHandler PropertyChanged {
+	        add { throw new NotSupportedException(); }
+	        remove { }
+        }
+		public string Email { get; set; }        
         public bool ShowAvatars { get; set; }        
         public string ServerUrl { get; set; }
         public string WebAppUrl { get; set; }

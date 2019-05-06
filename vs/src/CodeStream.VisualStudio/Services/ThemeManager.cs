@@ -15,10 +15,8 @@ using EnvironmentColors = Microsoft.VisualStudio.PlatformUI.EnvironmentColors;
 using FontFamily = System.Windows.Media.FontFamily;
 // ReSharper disable RedundantArgumentDefaultValue
 
-namespace CodeStream.VisualStudio.Services
-{
-	public class ThemeColorMetadata
-	{
+namespace CodeStream.VisualStudio.Services {
+	public class ThemeColorMetadata {
 		/// <summary>
 		/// Key that will be mapped to a CSS property name
 		/// </summary>
@@ -36,8 +34,7 @@ namespace CodeStream.VisualStudio.Services
 		public Func<System.Drawing.Color, System.Drawing.Color> LightModifier { get; set; }
 	}
 
-	public class ThemeResourceMetadata
-	{
+	public class ThemeResourceMetadata {
 		/// <summary>
 		/// Key that will be mapped to a CSS property name
 		/// </summary>
@@ -49,8 +46,7 @@ namespace CodeStream.VisualStudio.Services
 		public string Value { get; set; }
 	}
 
-	public class ThemeInfo
-	{
+	public class ThemeInfo {
 		public List<ThemeColorMetadata> ThemeColors { get; set; }
 		public List<ThemeResourceMetadata> ThemeResources { get; set; }
 		public bool IsDark { get; set; }
@@ -58,21 +54,22 @@ namespace CodeStream.VisualStudio.Services
 
 	public class ThemeManagerDummy { }
 
-	public static class ThemeManager
-	{
+	public static class ThemeManager {
 		private static readonly ILogger Log = LogManager.ForContext<ThemeManagerDummy>();
 
 		private static int DefaultFontSize = 12;
 
-		public static System.Drawing.Color GetThemedColor(IVsUIShell5 shell, ThemeResourceKey themeResourceKey)
-		{
-			return VsColors.GetThemedGDIColor(shell, themeResourceKey);
+		private static System.Drawing.Color GetThemedColor(IVsUIShell5 shell, ThemeResourceKey themeResourceKey) {
+			return shell.GetThemedGDIColor(themeResourceKey);
 		}
 
-		public static ThemeInfo Generate()
-		{
-			try
-			{
+		/// <summary>
+		/// Requires the UI Thread
+		/// </summary>
+		/// <returns></returns>
+		public static ThemeInfo Generate() {
+			try {
+				ThreadHelper.ThrowIfNotOnUIThread();
 				var shell = Package.GetGlobalService(typeof(SVsUIShell)) as IVsUIShell5;
 
 				var backgroundColor = GetThemedColor(shell, EnvironmentColors.ToolWindowBackgroundColorKey);
@@ -112,8 +109,7 @@ namespace CodeStream.VisualStudio.Services
 					new ThemeColorMetadata { Key = "scrollbar-color-hover", Color = GetThemedColor(shell, EnvironmentColors.ScrollBarThumbMouseOverBackgroundColorKey) }
 				};
 
-				if (Log.IsDebugEnabled())
-				{
+				if (Log.IsDebugEnabled()) {
 					Log.Debug($"BackgroundIsDark={backgroundIsDark}, BackgroundColor={backgroundColor.ToRgba()}, TextColor={textColor.ToRgba()}");
 #if DEBUG
 					//GenerateVisualStudioColorTheme();
@@ -155,16 +151,13 @@ namespace CodeStream.VisualStudio.Services
 
 				string fontFamilyString;
 				var fontFamily = System.Windows.Application.Current.FindResource(VsFonts.EnvironmentFontFamilyKey) as FontFamily;
-				if (fontFamily != null)
-				{
+				if (fontFamily != null) {
 					fontFamilyString = fontFamily.ToString();
-					if (fontFamilyString.Contains(" "))
-					{
+					if (fontFamilyString.Contains(" ")) {
 						fontFamilyString = $"\"{fontFamilyString}\"";
 					}
 				}
-				else
-				{
+				else {
 					fontFamilyString = "\"Segoe WPC\", \"Segoe UI\", HelveticaNeue-Light, Ubuntu, \"Droid Sans\", Arial, Consolas, sans-serif";
 				}
 
@@ -179,28 +172,24 @@ namespace CodeStream.VisualStudio.Services
 					new ThemeResourceMetadata { Key = "font-size", Value = fontSize }
 				};
 
-				return new ThemeInfo
-				{
+				return new ThemeInfo {
 					ThemeColors = colors,
 					ThemeResources = resources,
 					IsDark = backgroundIsDark
 				};
 			}
-			catch (Exception ex)
-			{
+			catch (Exception ex) {
 				Log.Error(ex, nameof(Generate));
 
 				return new ThemeInfo();
 			}
 		}
 
-		public static EditorMetrics CreateEditorMetrics(IWpfTextView wpfTextView = null)
-		{
+		public static EditorMetrics CreateEditorMetrics(IWpfTextView wpfTextView = null) {
 			return new EditorMetrics {
 				LineHeight = wpfTextView == null ? 16 : wpfTextView?.LineHeight.ToInt(),
 				FontSize = System.Windows.Application.Current.FindResource(VsFonts.EnvironmentFontSizeKey).ToIntSafe(DefaultFontSize),
-				EditorMargins = new EditorMargins
-				{
+				EditorMargins = new EditorMargins {
 					//TODO figure out the real value here...
 					Top = 21
 				},
@@ -214,12 +203,10 @@ namespace CodeStream.VisualStudio.Services
 		/// </summary>
 		private static Color DefaultColor = Color.FromArgb(0, 110, 183);
 
-		public static System.Drawing.Color GetCodemarkColorSafe(string colorName)
-		{
+		public static System.Drawing.Color GetCodemarkColorSafe(string colorName) {
 			if (colorName.IsNullOrWhiteSpace()) return DefaultColor;
 
-			if (ColorMap.TryGetValue(colorName, out Color value))
-			{
+			if (ColorMap.TryGetValue(colorName, out Color value)) {
 				return value;
 			}
 
@@ -238,22 +225,19 @@ namespace CodeStream.VisualStudio.Services
 			{ "gray", Color.FromArgb(127, 127, 127)}
 		};
 
-	 
+
 		/// <summary>
 		/// this is some helper code to generate a theme color palette from the current VS theme
 		/// </summary>
 		/// <returns></returns>
-		private static string GenerateVisualStudioColorTheme()
-		{
+		private static string GenerateVisualStudioColorTheme() {
 			var d = new System.Collections.Generic.Dictionary<string, string>();
 			Type type = typeof(EnvironmentColors); // MyClass is static class with static properties
-			foreach (var p in type.GetProperties().Where(_ => _.Name.StartsWith("ToolWindow")))
-			{
+			foreach (var p in type.GetProperties().Where(_ => _.Name.StartsWith("ToolWindow"))) {
 				var val = typeof(EnvironmentColors).GetProperty(p.Name, BindingFlags.Public | BindingFlags.Static);
 				var v = val.GetValue(null);
 				var trk = v as ThemeResourceKey;
-				if (trk != null)
-				{
+				if (trk != null) {
 					var color = VSColorTheme.GetThemedColor(trk);
 					d.Add(p.Name, color.ToRgba());
 				}
@@ -262,8 +246,7 @@ namespace CodeStream.VisualStudio.Services
 			}
 
 			string s = "";
-			foreach (var kvp in d)
-			{
+			foreach (var kvp in d) {
 				s += $@"<div>";
 				s += $@"<span style='display:inline-block; height:50ps; width: 50px; background:{kvp.Value}; padding-right:5px; margin-right:5px;'>&nbsp;</span>";
 				s += $@"<span>{kvp.Value} - {kvp.Key}</span>";
@@ -272,7 +255,7 @@ namespace CodeStream.VisualStudio.Services
 
 			return null;
 		}
-	 
+
 	}
 
 }

@@ -9,6 +9,8 @@ using Serilog.Formatting;
 using Serilog.Formatting.Display;
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
+using Serilog.Formatting.Json;
 
 namespace CodeStream.VisualStudio.Core.Logging {
 	internal class CustomOutputPaneSink : ILogEventSink {
@@ -19,11 +21,12 @@ namespace CodeStream.VisualStudio.Core.Logging {
 			try {
 				if (id == Guid.Empty) throw new ArgumentException(nameof(id));
 				if (title.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(title));
-				_textFormatter = textFormatter ?? throw new ArgumentNullException(nameof(textFormatter));				
+				_textFormatter = textFormatter ?? throw new ArgumentNullException(nameof(textFormatter));
+				ThreadHelper.ThrowIfNotOnUIThread();
 
 				var outWindow = Package.GetGlobalService(typeof(SVsOutputWindow)) as IVsOutputWindow;
 				if (outWindow == null) return;
-
+				
 				outWindow.CreatePane(ref id, title, 1, 1);
 				outWindow.GetPane(ref id, out _customOutputWindowPane);
 				if (_customOutputWindowPane == null) return;
@@ -32,8 +35,16 @@ namespace CodeStream.VisualStudio.Core.Logging {
 				_customOutputWindowPane.Activate();
 #endif
 			}
+			catch (COMException) {
+#if DEBUG
+				System.Diagnostics.Debugger.Break();
+#endif
+			}
 			catch (Exception ex) {
-				System.Diagnostics.Debug.WriteLine(ex.ToString());
+#if DEBUG
+				System.Diagnostics.Debug.WriteLine(ex);
+				System.Diagnostics.Debugger.Break();
+#endif
 			}
 		}
 
@@ -41,12 +52,22 @@ namespace CodeStream.VisualStudio.Core.Logging {
 			if (logEvent == null || _customOutputWindowPane == null) return;
 
 			try {
+				ThreadHelper.ThrowIfNotOnUIThread();
+
 				var stringWriter = new StringWriter();
 				_textFormatter.Format(logEvent, stringWriter);
-				_customOutputWindowPane.OutputString(stringWriter.ToString().Trim()+Environment.NewLine);
+				_customOutputWindowPane.OutputString(stringWriter.ToString().Trim() + Environment.NewLine);
+			}
+			catch (COMException) {
+#if DEBUG
+				System.Diagnostics.Debugger.Break();
+#endif
 			}
 			catch (Exception ex) {
-				System.Diagnostics.Debug.WriteLine(ex.ToString());
+#if DEBUG
+				System.Diagnostics.Debug.WriteLine(ex);
+				System.Diagnostics.Debugger.Break();
+#endif
 			}
 		}
 	}

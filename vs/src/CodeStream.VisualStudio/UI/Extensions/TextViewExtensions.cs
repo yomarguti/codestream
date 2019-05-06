@@ -50,7 +50,7 @@ namespace CodeStream.VisualStudio.UI.Extensions {
 			try {
 				return textView.TextViewLines.ToRanges().Collapsed();
 			}
-			catch (Exception ex) {
+			catch {
 				return Enumerable.Empty<Range>().ToList();
 			}
 		}

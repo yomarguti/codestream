@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Serilog;
 using System;
+using Microsoft.VisualStudio.Shell;
 
 namespace CodeStream.VisualStudio.Models {
 
@@ -35,19 +36,26 @@ namespace CodeStream.VisualStudio.Models {
 		public int? TotalLines { get; }
 
 		/// <summary>
-		/// Highlights code using an adornment layer
+		/// Highlights code using an adornment layer. Requires the UI thread.
 		/// </summary>
 		/// <param name="range"></param>
 		/// <param name="highlight"></param>
 		/// <returns></returns>
 		public bool Highlight(Range range, bool highlight) {
-			var adornmentManager = this.GetHighlightAdornmentManager();
-			if (adornmentManager == null) {
-				Log.LocalWarning($"{nameof(adornmentManager)}:{nameof(Highlight)} not found for FilePath={FilePath} Uri={Uri}");
+			try {
+				ThreadHelper.ThrowIfNotOnUIThread();
+				var adornmentManager = this.GetHighlightAdornmentManager();
+				if (adornmentManager == null) {
+					Log.LocalWarning($"{nameof(adornmentManager)}:{nameof(Highlight)} not found for FilePath={FilePath} Uri={Uri}");
+					return false;
+				}
+
+				return adornmentManager.Highlight(range, highlight);
+			}
+			catch (Exception ex) {
+				Log.LocalWarning(ex.ToString());
 				return false;
 			}
-
-			return adornmentManager.Highlight(range, highlight);
 		}
 
 		/// <summary>
@@ -105,7 +113,7 @@ namespace CodeStream.VisualStudio.Models {
 							int startPosition = caretLine.Extent.Start;
 							if (selection.Cursor.Character != int.MaxValue && caretLine.Extent.Start + selection.Cursor.Character < caretLine.Extent.End) {
 								startPosition = caretLine.Extent.Start + selection.Cursor.Character;
-							}							
+							}
 							WpfTextView.Caret.MoveTo(new VirtualSnapshotPoint(new SnapshotPoint(WpfTextView.TextSnapshot, startPosition)));
 							WpfTextView.Caret.EnsureVisible();
 							log += $", caret to ActivePoint={activePoint.Position}";

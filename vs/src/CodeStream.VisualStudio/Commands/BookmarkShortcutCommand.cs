@@ -41,7 +41,7 @@ namespace CodeStream.VisualStudio.Commands {
 			if (args == null || args.Index < 1) return;
 
 			var codeStreamService = ServiceLocator.Get<SCodeStreamService, ICodeStreamService>();
-			codeStreamService.TrackAsync(TelemetryEventNames.CodemarkClicked, new TelemetryProperties { { "Codemark Location", "Shortcut" } });
+			_ = codeStreamService.TrackAsync(TelemetryEventNames.CodemarkClicked, new TelemetryProperties { { "Codemark Location", "Shortcut" } });
 
 			ThreadHelper.JoinableTaskFactory.Run(async delegate {
 				try {

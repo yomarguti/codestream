@@ -68,12 +68,13 @@ namespace CodeStream.VisualStudio.Packages {
 		/// <param name="progress">A provider for progress updates.</param>
 		/// <returns>A task representing the async work of package initialization, or an already completed task if there is none. Do not return null from this method.</returns>
 		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
-			await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);			
+			await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
 			var isSolutionLoaded = await IsSolutionLoadedAsync();
 			if (isSolutionLoaded) {
 				OnAfterBackgroundSolutionLoadComplete();
 			}
+
 			SolutionEvents.OnAfterBackgroundSolutionLoadComplete += OnAfterBackgroundSolutionLoadComplete;
 			_settingsService = await GetServiceAsync(typeof(SSettingsService)) as ISettingsService;
 			InitializeLogging();
@@ -112,7 +113,7 @@ namespace CodeStream.VisualStudio.Packages {
 				await JoinableTaskFactory.SwitchToMainThreadAsync();
 				await InfoBarProvider.InitializeAsync(this);
 
-				var menuCommandService = (IMenuCommandService) (await GetServiceAsync(typeof(IMenuCommandService)));
+				var menuCommandService = (IMenuCommandService)(await GetServiceAsync(typeof(IMenuCommandService)));
 				foreach (var command in _commands) {
 					menuCommandService.AddCommand(command);
 				}
@@ -225,18 +226,25 @@ namespace CodeStream.VisualStudio.Packages {
 		}
 
 		private void InitializeEvents() {
-			// don't invert if -- this is the double 'null' locking check pattern
-			// ReSharper disable InvertIf
-			if (!_initializedEvents) {
-				lock (_eventLocker) {
-					if (!_initializedEvents) {
-						_vsShellEventManager = new VsShellEventManager(GetGlobalService(typeof(SVsShellMonitorSelection)) as IVsMonitorSelection);
-						_codeStreamEventManager = new CodeStreamEventManager(_vsShellEventManager, GetGlobalService(typeof(SBrowserService)) as IBrowserService);
-						_initializedEvents = true;
+			try {
+				ThreadHelper.ThrowIfNotOnUIThread();
+				// don't invert if -- this is the double 'null' locking check pattern
+				// ReSharper disable InvertIf
+				if (!_initializedEvents) {
+					lock (_eventLocker) {
+						if (!_initializedEvents) {
+							_vsShellEventManager = new VsShellEventManager(GetGlobalService(typeof(SVsShellMonitorSelection)) as IVsMonitorSelection);
+							_codeStreamEventManager = new CodeStreamEventManager(_vsShellEventManager, GetGlobalService(typeof(SBrowserService)) as IBrowserService);
+							_initializedEvents = true;
+
+						}
 					}
 				}
+				// ReSharper restore InvertIf
 			}
-			// ReSharper restore InvertIf
+			catch (Exception ex) {
+				Log.Error(ex, nameof(InitializeEvents));
+			}
 		}
 
 		private void DialogPage_PropertyChanged(object sender, PropertyChangedEventArgs args) {
@@ -251,7 +259,7 @@ namespace CodeStream.VisualStudio.Packages {
 			else if (args.PropertyName == nameof(_settingsService.AutoHideMarkers)) {
 				var odp = sender as OptionsDialogPage;
 				if (odp == null) return;
-				
+
 				var eventAggregator = ServiceLocator.Get<SEventAggregator, IEventAggregator>();
 				eventAggregator?.Publish(new AutoHideMarkersEvent { Value = odp.AutoHideMarkers });
 			}
@@ -304,6 +312,9 @@ namespace CodeStream.VisualStudio.Packages {
 		protected override void Dispose(bool isDisposing) {
 			if (isDisposing) {
 				try {
+#pragma warning disable VSTHRD108
+					ThreadHelper.ThrowIfNotOnUIThread();
+#pragma warning restore VSTHRD108
 					SolutionEvents.OnAfterBackgroundSolutionLoadComplete -= OnAfterBackgroundSolutionLoadComplete;
 
 					if (_settingsService != null && _settingsService.DialogPage != null) {

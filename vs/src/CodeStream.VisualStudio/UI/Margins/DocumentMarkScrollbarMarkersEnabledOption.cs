@@ -5,14 +5,14 @@ using Microsoft.VisualStudio.Utilities;
 namespace CodeStream.VisualStudio.UI.Margins
 {
     [Export(typeof(EditorOptionDefinition))]
-    [Name(DocumentMarkScrollbarMarkersEnabledOption.Name)]
+    [Name(DocumentMarkScrollbarMarkersEnabledOption.MarkersEnabledName)]
     public sealed class DocumentMarkScrollbarMarkersEnabledOption : WpfViewOptionDefinition<bool>
     {
-        public const string Name = "DocumentMarkScrollbarMarkersEnabled";
-        public readonly static EditorOptionKey<bool> OptionKey = new EditorOptionKey<bool>(DocumentMarkScrollbarMarkersEnabledOption.Name);
+        public const string MarkersEnabledName = "DocumentMarkScrollbarMarkersEnabled";
+        public static readonly EditorOptionKey<bool> OptionKey = new EditorOptionKey<bool>(DocumentMarkScrollbarMarkersEnabledOption.MarkersEnabledName);
 
-        public override bool Default { get { return true; } }
+        public override bool Default => true;
 
-        public override EditorOptionKey<bool> Key { get { return DocumentMarkScrollbarMarkersEnabledOption.OptionKey; } }
+        public override EditorOptionKey<bool> Key => DocumentMarkScrollbarMarkersEnabledOption.OptionKey;
     }
 }

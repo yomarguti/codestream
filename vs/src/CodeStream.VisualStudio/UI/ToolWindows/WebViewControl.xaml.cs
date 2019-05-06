@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Reactive.Linq;
 using System.Windows.Controls;
 using Microsoft.VisualStudio.ComponentModelHost;
 
@@ -113,7 +114,9 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 					_languageServerReadyEvent.Dispose();
 				}
 				// ReSharper disable once PossibleNullReferenceException
-				_languageServerReadyEvent = _eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(_ => {
+				_languageServerReadyEvent = _eventAggregator.GetEvent<LanguageServerReadyEvent>()
+					.ObserveOnDispatcher()
+					.Subscribe(_ => {
 					InitializeCore();
 				});
 			}

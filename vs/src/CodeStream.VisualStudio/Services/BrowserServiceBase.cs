@@ -9,6 +9,7 @@ using System.Windows;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
+using Microsoft.VisualStudio.Shell;
 using Serilog;
 using Task = System.Threading.Tasks.Task;
 
@@ -82,7 +83,7 @@ namespace CodeStream.VisualStudio.Services {
 
 		public virtual void LoadHtml(string html) { }
 
-		public virtual int QueueCount {get;}
+		public virtual int QueueCount { get; }
 
 		/// <summary>
 		/// Sends message to the browser, also contains logic for queuing messages
@@ -95,63 +96,91 @@ namespace CodeStream.VisualStudio.Services {
 			PostMessage(message.AsJson(), canEnqueue);
 		}
 
+		/// <summary>
+		/// Loads the Webview. Requires the UI thread
+		/// </summary>
 		public void LoadWebView() {
-			LoadHtml(CreateWebViewHarness(Assembly.GetAssembly(typeof(BrowserServiceBase)), "webview"));
+			ThreadHelper.JoinableTaskFactory.Run(async delegate {
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				LoadHtml(CreateWebViewHarness(Assembly.GetAssembly(typeof(BrowserServiceBase)), "webview"));
+			});
 		}
 
+		/// <summary>
+		/// Loads the Splash view. Requires the UI thread
+		/// </summary>
 		public void LoadSplashView() {
-			LoadHtml(CreateWebViewHarness(Assembly.GetAssembly(typeof(BrowserServiceBase)), "waiting"));
+			ThreadHelper.JoinableTaskFactory.Run(async delegate {
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				LoadHtml(CreateWebViewHarness(Assembly.GetAssembly(typeof(BrowserServiceBase)), "waiting"));
+			});
 		}
 
+		/// <summary>
+		/// Reloads the Webview. Requires the UI thread
+		/// </summary>
 		public virtual void ReloadWebView() {
-			LoadWebView();
-			Log.Debug($"{nameof(ReloadWebView)}");
+			ThreadHelper.JoinableTaskFactory.Run(async delegate {
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				LoadWebView();
+				Log.Debug($"{nameof(ReloadWebView)}");
+			});
 		}
 
 		public virtual string GetDevToolsUrl() => null;
 
+		/// <summary>
+		/// Creates the harness string. Requires the UI thread.
+		/// </summary>
+		/// <param name="assembly"></param>
+		/// <param name="resourceName"></param>
+		/// <returns></returns>
 		private string CreateWebViewHarness(Assembly assembly, string resourceName) {
-			var resourceManager = new ResourceManager("VSPackage", Assembly.GetExecutingAssembly());
-			var dir = Path.GetDirectoryName(assembly.Location);
-			Debug.Assert(dir != null, nameof(dir) + " != null");
+			string harness = null;
+			try {
+				ThreadHelper.ThrowIfNotOnUIThread();
 
-			// ReSharper disable once ResourceItemNotResolved
-			var harness = resourceManager.GetString(resourceName);
-			Debug.Assert(harness != null, nameof(harness) + " != null");
+				var resourceManager = new ResourceManager("VSPackage", Assembly.GetExecutingAssembly());
+				var dir = Path.GetDirectoryName(assembly.Location);
+				Debug.Assert(dir != null, nameof(dir) + " != null");
 
-			harness = harness.Replace("{root}", dir.Replace(@"\", "/"));
-			// ReSharper disable once ResourceItemNotResolved
-			var styleSheet = resourceManager.GetString("theme");
+				// ReSharper disable once ResourceItemNotResolved
+				harness = resourceManager.GetString(resourceName);
+				Debug.Assert(harness != null, nameof(harness) + " != null");
 
-			var theme = ThemeManager.Generate();
-			var isDebuggingEnabled = Log.IsDebugEnabled();
+				harness = harness.Replace("{root}", dir.Replace(@"\", "/"));
+				// ReSharper disable once ResourceItemNotResolved
+				var styleSheet = resourceManager.GetString("theme");
 
-			var outputDebug = new Dictionary<string, Tuple<string, string>>();
-			harness = harness.Replace("{bodyClass}", theme.IsDark ? "vscode-dark" : "vscode-light");
+				var theme = ThemeManager.Generate();
+				var isDebuggingEnabled = Log.IsDebugEnabled();
 
-			if (styleSheet != null) {
-				foreach (var item in theme.ThemeResources) {
-					styleSheet = styleSheet.Replace($"--cs--{item.Key}--", item.Value);
+				var outputDebug = new Dictionary<string, Tuple<string, string>>();
+				harness = harness.Replace("{bodyClass}", theme.IsDark ? "vscode-dark" : "vscode-light");
 
-					if (isDebuggingEnabled) {
-						outputDebug[item.Key] = Tuple.Create(item.Key, item.Value);
+				if (styleSheet != null) {
+					foreach (var item in theme.ThemeResources) {
+						styleSheet = styleSheet.Replace($"--cs--{item.Key}--", item.Value);
+
+						if (isDebuggingEnabled) {
+							outputDebug[item.Key] = Tuple.Create(item.Key, item.Value);
+						}
+					}
+
+					foreach (var item in theme.ThemeColors) {
+						var color = theme.IsDark
+							? item.DarkModifier == null ? item.Color : item.DarkModifier(item.Color)
+							: item.LightModifier == null ? item.Color : item.LightModifier(item.Color);
+
+						styleSheet = styleSheet.Replace($"--cs--{item.Key}--", color.ToRgba());
+
+						if (isDebuggingEnabled) {
+							outputDebug[item.Key] = Tuple.Create(item.Key, color.ToRgba());
+						}
 					}
 				}
 
-				foreach (var item in theme.ThemeColors) {
-					var color = theme.IsDark
-						? item.DarkModifier == null ? item.Color : item.DarkModifier(item.Color)
-						: item.LightModifier == null ? item.Color : item.LightModifier(item.Color);
-
-					styleSheet = styleSheet.Replace($"--cs--{item.Key}--", color.ToRgba());
-
-					if (isDebuggingEnabled) {
-						outputDebug[item.Key] = Tuple.Create(item.Key, color.ToRgba());
-					}
-				}
-			}
-
-			harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{styleSheet}</style>");
+				harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{styleSheet}</style>");
 
 #if !DEBUG
 			if (isDebuggingEnabled)
@@ -161,6 +190,10 @@ namespace CodeStream.VisualStudio.Services {
 			}
 			Log.Verbose(harness);
 #endif
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(CreateWebViewHarness));
+			}
 			return harness;
 		}
 
@@ -174,7 +207,7 @@ namespace CodeStream.VisualStudio.Services {
 			}
 		}
 
-		protected virtual void Dispose(bool disposing) {}
+		protected virtual void Dispose(bool disposing) { }
 	}
 
 	public class NullBrowserService : BrowserServiceBase {
