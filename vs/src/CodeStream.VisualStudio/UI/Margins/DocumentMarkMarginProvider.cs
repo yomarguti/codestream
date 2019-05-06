@@ -1,5 +1,4 @@
 ﻿using CodeStream.VisualStudio.Core;
-using CodeStream.VisualStudio.Packages;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
@@ -39,7 +38,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		[Import]
 		public ITextDocumentFactoryService TextDocumentFactoryService { get; set; }
 
-		public IWpfTextViewMargin CreateMargin(IWpfTextViewHost wpfTextViewHost, IWpfTextViewMargin parent) {			
+		public IWpfTextViewMargin CreateMargin(IWpfTextViewHost wpfTextViewHost, IWpfTextViewMargin parent) {
 			if (wpfTextViewHost == null || !wpfTextViewHost.TextView.Roles.ContainsAll(TextViewRoles.DefaultRoles)) return null;
 			if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextViewHost.TextView.TextBuffer, out var textDocument)) {
 				return null;

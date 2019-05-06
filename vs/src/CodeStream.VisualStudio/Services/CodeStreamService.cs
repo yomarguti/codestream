@@ -2,7 +2,6 @@
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
-using CodeStream.VisualStudio.UI;
 using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
@@ -11,6 +10,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.UI.Extensions;
 using Task = System.Threading.Tasks.Task;
 
@@ -39,23 +39,26 @@ namespace CodeStream.VisualStudio.Services {
 		bool IsReady { get; }
 		ISessionService SessionService { get; }
 		ICodeStreamAgentService AgentService { get; }
+		IEventAggregator EventAggregator { get; }
 	}
 
 	[Injected]
 	public class CodeStreamService : ICodeStreamService, SCodeStreamService {
 		private static readonly ILogger Log = LogManager.ForContext<CodeStreamService>();
-		private readonly IAsyncServiceProvider _asyncServiceProvider;
+		private readonly IAsyncServiceProvider _serviceProvider;
 		public ISessionService SessionService { get; }
 		public ICodeStreamAgentService AgentService { get; }
 		public IWebviewIpc WebviewIpc { get; }
+		public IEventAggregator EventAggregator { get; }
 
 		public CodeStreamService(
 			IAsyncServiceProvider serviceProvider,
 			ICodeStreamAgentService agentService,
 			IWebviewIpc ipc) {
-			_asyncServiceProvider = serviceProvider;
+			_serviceProvider = serviceProvider;
 			AgentService = agentService;
 			SessionService = agentService.SessionService;
+			EventAggregator = agentService.EventAggregator;
 			WebviewIpc = ipc;
 		}
 		
@@ -64,8 +67,9 @@ namespace CodeStream.VisualStudio.Services {
 		public async Task ChangeActiveEditorAsync(string fileName, Uri uri, ActiveTextEditor activeTextEditor = null) {
 			if (IsReady) {
 				try {
-					var componentModel = await _asyncServiceProvider.GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
+					var componentModel = await _serviceProvider.GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
 					Assumes.Present(componentModel);
+
 					var editorService = componentModel.GetService<IEditorService>();
 					activeTextEditor = activeTextEditor ?? editorService.GetActiveTextEditor(uri);
 					var editorState = editorService.GetActiveEditorState();

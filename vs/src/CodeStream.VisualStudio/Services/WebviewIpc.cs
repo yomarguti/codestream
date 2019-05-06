@@ -2,6 +2,7 @@
 using CodeStream.VisualStudio.Models;
 using Serilog;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.Annotations;
 
 namespace CodeStream.VisualStudio.Services {
 	public interface SWebviewIpc { }
@@ -16,6 +17,7 @@ namespace CodeStream.VisualStudio.Services {
 		IBrowserService BrowserService { get; }
 	}
 
+	[Injected]
 	public class WebviewIpc : IWebviewIpc, SWebviewIpc {
 		private static readonly ILogger Log = LogManager.ForContext<WebviewIpc>();
 

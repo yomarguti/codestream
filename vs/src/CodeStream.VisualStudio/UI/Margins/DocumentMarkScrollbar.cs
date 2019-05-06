@@ -62,12 +62,17 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			TryInitialize();
 		}
 
-		public void TryInitialize() {
-			if (IsReady()) {
-				OnSessionReady();
+		private void TryInitialize() {
+			try {
+				if (IsReady()) {
+					OnSessionReady();
+				}
+				else {
+					TryHideMargin();
+				}
 			}
-			else {
-				TryHideMargin();
+			catch (Exception ex) {
+				Log.Error(ex, nameof(TryInitialize));
 			}
 		}
 

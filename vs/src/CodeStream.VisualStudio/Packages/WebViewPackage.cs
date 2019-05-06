@@ -68,7 +68,8 @@ namespace CodeStream.VisualStudio.Packages {
 		/// <param name="progress">A provider for progress updates.</param>
 		/// <returns>A task representing the async work of package initialization, or an already completed task if there is none. Do not return null from this method.</returns>
 		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
-			await base.InitializeAsync(cancellationToken, progress);
+			await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);			
+
 			var isSolutionLoaded = await IsSolutionLoadedAsync();
 			if (isSolutionLoaded) {
 				OnAfterBackgroundSolutionLoadComplete();
@@ -79,6 +80,8 @@ namespace CodeStream.VisualStudio.Packages {
 			AsyncPackageHelper.InitializePackage(GetType().Name);
 
 			await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeCommandsAsync);
+
+			await base.InitializeAsync(cancellationToken, progress);
 		}
 
 		private async Task InitializeCommandsAsync() {

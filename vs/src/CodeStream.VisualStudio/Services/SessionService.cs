@@ -37,7 +37,9 @@ namespace CodeStream.VisualStudio.Services {
 		public bool AreMarkerGlyphsVisible { get; set; } = true;
 		public bool IsCodemarksForFileVisible { get; set; }
 		public string LastActiveFileUrl { get; set; }
-		bool _disposed = false;
+		private bool _disposed = false;
+
+		public SessionService() {}
 
 		public Guid GetOrCreateSignupToken() {
 			if (_signupToken == Guid.Empty) {

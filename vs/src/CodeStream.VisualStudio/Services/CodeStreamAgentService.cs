@@ -28,6 +28,7 @@ namespace CodeStream.VisualStudio.Services {
 
 	public interface ICodeStreamAgentService {
 		ISessionService SessionService { get; }
+		IEventAggregator EventAggregator { get; }
 		Task SetRpcAsync(JsonRpc rpc);
 		Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null);
 		Task<CreateDocumentMarkerPermalinkResponse> CreatePermalinkAsync(Range range, string uri, string privacy);
@@ -55,8 +56,8 @@ namespace CodeStream.VisualStudio.Services {
 		private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
 		private readonly IComponentModel _componentModel;
 		public ISessionService SessionService { get; }
+		public IEventAggregator EventAggregator { get; }
 		private readonly ISettingsService _settingsService;
-		private readonly IEventAggregator _eventAggregator;
 
 		private JsonRpc _rpc;
 		bool _disposed;
@@ -65,10 +66,11 @@ namespace CodeStream.VisualStudio.Services {
 			ISessionService sessionService,
 			ISettingsService settingsService,
 			IEventAggregator eventAggregator) {
+
 			_componentModel = componentModel;
 			SessionService = sessionService;
 			_settingsService = settingsService;
-			_eventAggregator = eventAggregator;
+			EventAggregator = eventAggregator;
 		}
 
 		public Task SetRpcAsync(JsonRpc rpc) {
@@ -81,7 +83,7 @@ namespace CodeStream.VisualStudio.Services {
 		private void Rpc_Disconnected(object sender, JsonRpcDisconnectedEventArgs e) {
 			Log.Debug(e.Exception, $"RPC Disconnected: {e.LastMessage} {e.Description}");
 			SessionService.SetAgentDisconnected();
-			_eventAggregator?.Publish(new LanguageServerDisconnectedEvent(e?.LastMessage, e?.Description, e?.Reason.ToString(), e?.Exception));
+			EventAggregator?.Publish(new LanguageServerDisconnectedEvent(e?.LastMessage, e?.Description, e?.Reason.ToString(), e?.Exception));
 		}
 
 		private Task<T> SendCoreAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null) {

@@ -6,6 +6,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Serilog;
 using System;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
@@ -24,54 +25,60 @@ namespace CodeStream.VisualStudio.Packages {
 	/// Pseudo-package to allow for a custom service provider
 	/// </summary>
 	[ProvideService(typeof(SToolWindowProvider))]
+	[ProvideService(typeof(SSessionService))]
+	[ProvideService(typeof(SSettingsService))]
 	[ProvideService(typeof(SEventAggregator))]
 	[ProvideService(typeof(SIdeService))]
-	[ProvideService(typeof(SCredentialsService))]
-	[ProvideService(typeof(SSessionService))]
+	[ProvideService(typeof(SCredentialsService))]	
 	[ProvideService(typeof(SBrowserService))]
 	[ProvideService(typeof(SWebviewIpc))]
 	[ProvideService(typeof(SCodeStreamAgentService))]
-	[ProvideService(typeof(SCodeStreamService))]
-	[ProvideService(typeof(SSettingsService))]
+	[ProvideService(typeof(SCodeStreamService))]	
 	[ProvideService(typeof(SUserSettingsService))]
 	[ProvideService(typeof(SAuthenticationService))]
 	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 	[Guid(Guids.ServiceProviderPackageId)]
 	// ReSharper disable once RedundantExtendsListEntry
 	public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer, IToolWindowProvider, SToolWindowProvider {
+		private static readonly ILogger Log = LogManager.ForContext<ServiceProviderPackage>();
 		/// <summary>
 		/// Store a reference to this as only a class that inherits from AsyncPackage can call GetDialogPage
 		/// </summary>
 		private OptionsDialogPage _codeStreamOptions;
 
-		protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
-			// NOTE -- do NOT attempt to Log inside of this function, the logger requires the ISettingsService, which has not been loaded yet!
-			// if you do call the `Log`ger here, you will crash the extension
+		protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {		
+			try {
+				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-			await base.InitializeAsync(cancellationToken, progress);
+				AsyncPackageHelper.InitializePackage(GetType().Name);
 
-			await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+				_codeStreamOptions = (OptionsDialogPage)GetDialogPage(typeof(OptionsDialogPage));
 
-			var callback = new ServiceCreatorCallback(CreateService);
-			_codeStreamOptions = (OptionsDialogPage)GetDialogPage(typeof(OptionsDialogPage));
+				((IServiceContainer)this).AddService(typeof(SToolWindowProvider), CreateService, true);
+				((IServiceContainer)this).AddService(typeof(SSessionService), CreateService, true);
+				((IServiceContainer)this).AddService(typeof(SSettingsService), CreateService, true);
+				((IServiceContainer)this).AddService(typeof(SEventAggregator), CreateService, true);
+				((IServiceContainer)this).AddService(typeof(SIdeService), CreateService, true);
+				((IServiceContainer)this).AddService(typeof(SCredentialsService), CreateService, true);
+				((IServiceContainer)this).AddService(typeof(SBrowserService), CreateService, true);
+				((IServiceContainer)this).AddService(typeof(SWebviewIpc), CreateService, true);
+				((IServiceContainer)this).AddService(typeof(SCodeStreamAgentService), CreateService, true);
+				((IServiceContainer)this).AddService(typeof(SCodeStreamService), CreateService, true);
+				((IServiceContainer)this).AddService(typeof(SUserSettingsService), CreateService, true);
+				((IServiceContainer)this).AddService(typeof(SAuthenticationService), CreateService, true);
 
-			((IServiceContainer)this).AddService(typeof(SToolWindowProvider), callback, true);
-			((IServiceContainer)this).AddService(typeof(SEventAggregator), callback, true);
-			((IServiceContainer)this).AddService(typeof(SIdeService), callback, true);
-			((IServiceContainer)this).AddService(typeof(SCredentialsService), callback, true);
-			((IServiceContainer)this).AddService(typeof(SSessionService), callback, true);
-			((IServiceContainer)this).AddService(typeof(SBrowserService), callback, true);
-			((IServiceContainer)this).AddService(typeof(SWebviewIpc), callback, true);
-			((IServiceContainer)this).AddService(typeof(SCodeStreamAgentService), callback, true);
-			((IServiceContainer)this).AddService(typeof(SCodeStreamService), callback, true);
-			((IServiceContainer)this).AddService(typeof(SSettingsService), callback, true);
-			((IServiceContainer)this).AddService(typeof(SUserSettingsService), callback, true);
-			((IServiceContainer)this).AddService(typeof(SAuthenticationService), callback, true);
+				await base.InitializeAsync(cancellationToken, progress);
+			}
+            catch(Exception ex) {
+				Log.Fatal(ex, nameof(InitializeAsync));
+			}
 		}
 
 		private object CreateService(IServiceContainer container, Type serviceType) {
 			if (typeof(SToolWindowProvider) == serviceType)
 				return this;
+			if (typeof(SSessionService) == serviceType)
+				return new SessionService();
 			if (typeof(SSettingsService) == serviceType)
 				return new SettingsService(_codeStreamOptions);
 			if (typeof(SUserSettingsService) == serviceType)
@@ -84,9 +91,7 @@ namespace CodeStream.VisualStudio.Packages {
 					GetService(typeof(SComponentModel)) as IComponentModel,
 					ExtensionManager.Initialize(LogManager.ForContext<ExtensionManagerDummy>()).Value);
 			if (typeof(SCredentialsService) == serviceType)
-				return new CredentialsService();
-			if (typeof(SSessionService) == serviceType)
-				return new SessionService();
+				return new CredentialsService();			
 			if (typeof(SCodeStreamAgentService) == serviceType)
 				return new CodeStreamAgentService(
 					GetService(typeof(SComponentModel)) as IComponentModel,

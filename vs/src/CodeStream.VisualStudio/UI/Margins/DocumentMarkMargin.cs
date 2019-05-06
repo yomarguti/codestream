@@ -15,6 +15,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using CodeStream.VisualStudio.UI.Extensions;
+using Microsoft;
 
 namespace CodeStream.VisualStudio.UI.Margins {
 	internal class DocumentMarkMarginDummy { }
@@ -50,6 +51,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		/// <param name="glyphFactoryProviders"></param>
 		/// <param name="wpfTextViewHost"></param>
 		/// <param name="sessionService"></param>
+		/// <param name="settingsService"></param>
 		public DocumentMarkMargin(
 			IViewTagAggregatorFactoryService viewTagAggregatorFactoryService,
 			IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> glyphFactoryProviders,
@@ -60,6 +62,14 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			_wpfTextViewHost = wpfTextViewHost;
 			_sessionService = sessionService;
 			_settingsService = settingsService;
+			try {
+				Assumes.Present(_sessionService);
+				Assumes.Present(_settingsService);
+			}
+			catch(Exception ex) {
+				Log.Error(ex, nameof(DocumentMarkMargin));
+			}
+
 			_tagAggregator = viewTagAggregatorFactoryService.CreateTagAggregator<IGlyphTag>(_wpfTextViewHost.TextView);
 
 			Width = DefaultMarginWidth;
@@ -100,7 +110,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		}
 
 		public bool IsReady() {
-			return _sessionService.IsReady;
+			return _sessionService?.IsReady == true;
 		}
 
 		public bool CanToggleMargin => true;
@@ -354,11 +364,16 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		}
 
 		public void TryInitialize() {
-			if (IsReady()) {
-				OnSessionReady();
+			try {
+				if (IsReady()) {
+					OnSessionReady();
+				}
+				else {
+					TryHideMargin();
+				}
 			}
-			else {
-				TryHideMargin();
+			catch (Exception ex) {
+				Log.Error(ex, nameof(TryInitialize));
 			}
 		}
 
