@@ -25,7 +25,9 @@ import {
 	DocumentMarker,
 	TelemetryRequestType,
 	DidChangeDocumentMarkersNotificationType,
-	GetDocumentFromMarkerRequestType
+	GetDocumentFromMarkerRequestType,
+	GetFileScmInfoResponse,
+	GetFileScmInfoRequestType
 } from "@codestream/protocols/agent";
 import { Range, Position } from "vscode-languageserver-types";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
@@ -33,7 +35,9 @@ import {
 	getCurrentSelection,
 	getVisibleLineCount,
 	getVisibleRanges,
-	getLine0ForEditorLine
+	getLine0ForEditorLine,
+	ScmError,
+	getFileScmError
 } from "../store/editorContext/reducer";
 import { CSTeam, CSUser } from "@codestream/protocols/api";
 import {
@@ -45,6 +49,7 @@ import {
 import { State as ContextState } from "../store/context/types";
 import { sortBy as _sortBy } from "lodash-es";
 import { getTeamMembers } from "../store/users/reducer";
+import { setEditorContext } from "../store/editorContext/actions";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -68,6 +73,7 @@ interface Props {
 	showClosed: boolean;
 	showUnpinned: boolean;
 	fileNameToFilterFor?: string;
+	scmInfo?: GetFileScmInfoResponse;
 	textEditorUri?: string;
 	textEditorLineCount: number;
 	firstVisibleLine: number;
@@ -81,6 +87,9 @@ interface Props {
 	numClosed: number;
 	isSlackTeam: boolean;
 
+	setEditorContext: (
+		...args: Parameters<typeof setEditorContext>
+	) => ReturnType<typeof setEditorContext>;
 	fetchDocumentMarkers: (
 		...args: Parameters<typeof fetchDocumentMarkers>
 	) => ReturnType<ReturnType<typeof fetchDocumentMarkers>>;
@@ -113,6 +122,7 @@ interface State {
 	numBelow: number;
 	highlightedDocmarker: string | undefined;
 	numLinesVisible: number;
+	problem: ScmError | undefined;
 }
 
 export class SimpleInlineCodemarks extends Component<Props, State> {
@@ -141,7 +151,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			numAbove: 0,
 			numBelow: 0,
 			highlightedDocmarker: undefined,
-			numLinesVisible: props.numLinesVisible
+			numLinesVisible: props.numLinesVisible,
+			problem: props.scmInfo && getFileScmError(props.scmInfo)
 		};
 
 		const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
@@ -246,13 +257,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			}
 		);
 
-		if (this.props.textEditorUri && this.props.textEditorUri !== "") {
-			this.props.fetchDocumentMarkers(this.props.textEditorUri).then(() => {
-				this.setState(state => (state.isLoading ? { isLoading: false } : null));
-			});
-		} else {
-			this.setState({ isLoading: false });
-		}
+		this.onFileChanged();
 
 		this.scrollTo(this.props.metrics.lineHeight!);
 	}
@@ -351,11 +356,29 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	async onFileChanged() {
-		const { textEditorUri, documentMarkers } = this.props;
-		if (textEditorUri && documentMarkers.length === 0) {
+		const { textEditorUri, documentMarkers, setEditorContext } = this.props;
+
+		if (textEditorUri === undefined || textEditorUri === "") {
+			if (this.state.isLoading) {
+				this.setState({ isLoading: false });
+			}
+			return;
+		}
+
+		let scmInfo = this.props.scmInfo;
+		if (!scmInfo) {
+			scmInfo = await HostApi.instance.send(GetFileScmInfoRequestType, {
+				uri: textEditorUri!
+			});
+			setEditorContext({ scmInfo });
+		}
+
+		this.setState({ problem: getFileScmError(scmInfo) });
+
+		if (documentMarkers.length === 0) {
 			this.setState(state => (state.isLoading ? null : { isLoading: true }));
 
-			await this.props.fetchDocumentMarkers(textEditorUri!);
+			await this.props.fetchDocumentMarkers(textEditorUri);
 			this.setState(state => (state.isLoading ? { isLoading: false } : null));
 		}
 	}
@@ -581,11 +604,64 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	renderNoCodemarks = () => {
-		const { fileNameToFilterFor, viewInline } = this.props;
+		const { fileNameToFilterFor, textEditorUri } = this.props;
 
-		if (fileNameToFilterFor && fileNameToFilterFor.length) {
-			const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
+		if (textEditorUri === undefined) {
+			return (
+				<div key="no-codemarks" className="no-codemarks">
+					<h3>No file open.</h3>
+					<p>
+						Open a file to to start discussing code with your teammates!{" "}
+						<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
+							View guide.
+						</a>
+					</p>
+				</div>
+			);
+		} else {
 			if (this.props.children) return null;
+			const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
+			if (fileNameToFilterFor === "") {
+				return (
+					<div className="no-codemarks">
+						<h3>This file hasn't been saved.</h3>
+						<p>
+							Save the file before creating a codemark so that the codemark can be linked to the
+							code.
+						</p>
+					</div>
+				);
+			}
+			if (this.state.problem === ScmError.NoRepo) {
+				return (
+					<div className="no-codemarks">
+						<h3>This file is not part of a git repository.</h3>
+						<p>
+							CodeStream requires files to be managed by git so that codemarks can be linked to the
+							code.
+						</p>
+					</div>
+				);
+			}
+			if (this.state.problem === ScmError.NoRemotes) {
+				return (
+					<div className="no-codemarks">
+						<h3>This repository has no remotes.</h3>
+						<p>Please configure a remote URL for this repository before creating a codemark.</p>
+					</div>
+				);
+			}
+			if (this.state.problem === ScmError.NoGit) {
+				return (
+					<div className="no-codemarks">
+						<h3>Git could not be located.</h3>
+						<p>
+							CodeStream was unable to find the `git` command. Make sure it's installed and
+							configured properly.
+						</p>
+					</div>
+				);
+			}
 			return (
 				<div key="no-codemarks" className="no-codemarks">
 					There are no codemarks
@@ -621,15 +697,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 							<span className="keybinding extra-pad">{modifier}</span>
 						</div>
 					</div>
-				</div>
-			);
-		} else {
-			return (
-				<div key="no-codemarks" className="no-codemarks">
-					No file selected.{" "}
-					<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
-						View guide.
-					</a>
 				</div>
 			);
 		}
@@ -1301,6 +1368,7 @@ const mapStateToProps = (state: {
 		showClosed: context.codemarksShowResolved || false,
 		showUnpinned: context.codemarksShowArchived || false,
 		fileNameToFilterFor: editorContext.activeFile,
+		scmInfo: editorContext.scmInfo,
 		textEditorUri: editorContext.textEditorUri,
 		textEditorLineCount: editorContext.textEditorLineCount || 0,
 		firstVisibleLine,
@@ -1322,6 +1390,7 @@ export default connect(
 		setCodemarksFileViewStyle,
 		setCodemarksShowArchived,
 		setCodemarksShowResolved,
-		setCurrentDocumentMarker
+		setCurrentDocumentMarker,
+		setEditorContext
 	}
 )(SimpleInlineCodemarks);

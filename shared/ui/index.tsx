@@ -21,7 +21,8 @@ import {
 	DidChangeDataNotificationType,
 	ConnectionStatus,
 	ChangeDataType,
-	DidUpdateProvidersType
+	DidUpdateProvidersType,
+	GetFileScmInfoRequestType
 } from "@codestream/protocols/agent";
 import translations from "./translations/en";
 import { getCodemark } from "./store/codemarks/reducer";
@@ -105,7 +106,7 @@ export function listenForEvents(store) {
 		store.dispatch(actions.updateConfigs(configs))
 	);
 
-	api.on(HostDidChangeActiveEditorNotificationType, params => {
+	api.on(HostDidChangeActiveEditorNotificationType, async params => {
 		let context: EditorContextState;
 		if (params.editor) {
 			context = {
@@ -114,14 +115,16 @@ export function listenForEvents(store) {
 				textEditorVisibleRanges: params.editor.visibleRanges,
 				textEditorSelections: params.editor.selections,
 				metrics: params.editor.metrics,
-				textEditorLineCount: params.editor.lineCount
+				textEditorLineCount: params.editor.lineCount,
+				scmInfo: await api.send(GetFileScmInfoRequestType, { uri: params.editor.uri })
 			};
 		} else {
 			context = {
 				activeFile: undefined,
 				textEditorUri: undefined,
 				textEditorSelections: [],
-				textEditorVisibleRanges: []
+				textEditorVisibleRanges: [],
+				scmInfo: undefined
 			};
 		}
 		store.dispatch(actions.setEditorContext(context));

@@ -5,13 +5,14 @@ import { ActionType } from "../common";
 import { createSelector } from "reselect";
 import { range } from "@codestream/webview/utils";
 import { EditorMetrics, EditorScrollMode } from "@codestream/protocols/webview";
+import { GetFileScmInfoResponse, GetRangeScmInfoResponse } from "@codestream/protocols/agent";
 
 type EditorContextActions = ActionType<typeof actions>;
 
 const initialState: State = {
 	activeFile: "",
 	textEditorVisibleRanges: [],
-	textEditorUri: "",
+	textEditorUri: undefined,
 	textEditorSelections: [],
 	metrics: {
 		fontSize: 12,
@@ -19,7 +20,7 @@ const initialState: State = {
 		scrollMode: EditorScrollMode.Lines,
 		scrollRatio: 1
 	},
-	scm: undefined
+	scmInfo: undefined
 };
 
 export function reduceEditorContext(state = initialState, action: EditorContextActions) {
@@ -94,3 +95,22 @@ export const getVisibleLineCount = createSelector(
 		return numLinesVisible;
 	}
 );
+
+export enum ScmError {
+	NoRepo = "NoRepo",
+	NoGit = "NoGit",
+	NoRemotes = "NoRemotes"
+}
+
+export const getFileScmError = (scmInfo: GetFileScmInfoResponse | GetRangeScmInfoResponse) => {
+	if (!scmInfo.scm) {
+		if (!scmInfo.error) {
+			return ScmError.NoRepo;
+		} else {
+			return ScmError.NoGit;
+		}
+	} else if (scmInfo.scm!.remotes.length === 0) {
+		return ScmError.NoRemotes;
+	}
+	return undefined;
+};

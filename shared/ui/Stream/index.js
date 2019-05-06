@@ -54,6 +54,7 @@ import {
 	GetRangeScmInfoRequestType,
 	PinReplyToCodemarkRequestType
 } from "@codestream/protocols/agent";
+import { getFileScmError } from "../store/editorContext/reducer";
 
 import { setCurrentStream, setCurrentDocumentMarker } from "../store/context/actions";
 import {
@@ -346,13 +347,10 @@ export class SimpleStream extends Component {
 			const provider = this.props.providers[providerId];
 			const { name, isEnterprise, host, needsConfigure } = provider;
 			const display = PROVIDER_MAPPINGS[name];
-			if (
-				display &&
-				provider.hasIssues
-			) {
+			if (display && provider.hasIssues) {
 				const displayName = isEnterprise ? `${display.displayName} - ${host}` : display.displayName;
 				const isConnected = this.isConnectedToProvider(provider);
-				
+
 				if (isConnected) {
 					// if you have a token and are connected to the provider,
 					// offer to disconnect
@@ -641,12 +639,8 @@ export class SimpleStream extends Component {
 		const textEditorUri = this.state.textEditorUri || this.props.textEditorUri;
 
 		// these panels do not have global nav
-		let renderNav = ![
-			"create-channel",
-			"create-dm",
-			"public-channels",
-			"invite",
-		].includes(activePanel) && 
+		let renderNav =
+			!["create-channel", "create-dm", "public-channels", "invite"].includes(activePanel) &&
 			!activePanel.startsWith("configure-provider-");
 
 		// if (this.state.floatCompose) renderNav = false;
@@ -742,10 +736,14 @@ export class SimpleStream extends Component {
 						/>
 					)}
 					{activePanel.startsWith("configure-provider-youtrack-") && (
-						<ConfigureYouTrackPanel providerId={activePanel.split("configure-provider-youtrack-")[1]} />
+						<ConfigureYouTrackPanel
+							providerId={activePanel.split("configure-provider-youtrack-")[1]}
+						/>
 					)}
 					{activePanel.startsWith("configure-provider-azuredevops-") && (
-						<ConfigureAzureDevOpsPanel providerId={activePanel.split("configure-provider-azuredevops-")[1]} />
+						<ConfigureAzureDevOpsPanel
+							providerId={activePanel.split("configure-provider-azuredevops-")[1]}
+						/>
 					)}
 					{activePanel === "main" && (
 						<div className={mainPanelClass}>
@@ -1876,20 +1874,41 @@ export class SimpleStream extends Component {
 			const markers = [marker];
 
 			let warning;
-			if (scmInfo.scm) {
-				if (!scmInfo.scm.remotes || scmInfo.scm.remotes.length === 0) {
-					warning = {
-						title: "No Remote URL",
-						message:
-							"This repo doesn’t have a remote URL configured. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE."
-					};
-				}
-			} else {
+			if (scmInfo.uri === "")
 				warning = {
-					title: "Missing Git Info",
+					title: "Unsaved File",
 					message:
-						"This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE."
+						"Your teammates won't be able to see the codemark when viewing this file unless you save the file first."
 				};
+			else {
+				switch (getFileScmError(scmInfo)) {
+					case "NoRepo": {
+						warning = {
+							title: "Missing Git Info",
+							message:
+								"This repo doesn’t appear to be managed by Git. Your teammates won’t be able to see the codemark when viewing this source file."
+						};
+						break;
+					}
+					case "NoRemotes": {
+						warning = {
+							title: "No Remote URL",
+							message:
+								"This repo doesn’t have a remote URL configured. Your teammates won’t be able to see the codemark when viewing this source file."
+						};
+						break;
+					}
+					case "NoGit": {
+						warning = {
+							title: "Git could not be located",
+							message:
+								"CodeStream was unable to find the `git` command. Make sure it's installed and configured properly."
+						};
+						break;
+					}
+					default: {
+					}
+				}
 			}
 
 			if (warning) {
@@ -2032,7 +2051,6 @@ const mapStateToProps = state => {
 		configs,
 		connectivity,
 		context,
-		editorContext,
 		pluginVersion,
 		posts,
 		preferences,
@@ -2115,7 +2133,6 @@ const mapStateToProps = state => {
 		teamName: team.name || "",
 		repoId: context.currentRepoId,
 		hasFocus: context.hasFocus,
-		scmInfo: editorContext.scm,
 		currentUserId: user.id,
 		currentUserName: user.username,
 		mutedStreams: preferences.mutedStreams || {},
