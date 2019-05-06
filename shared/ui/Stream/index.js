@@ -24,7 +24,7 @@ import ConfigureAzureDevOpsPanel from "./ConfigureAzureDevOpsPanel";
 import ConfigureYouTrackPanel from "./ConfigureYouTrackPanel";
 import * as actions from "./actions";
 import { editCodemark } from "../store/codemarks/actions";
-import { isInVscode, safe, toMapBy, forceAsLine } from "../utils";
+import { isInVscode, safe, toMapBy, forceAsLine, isNotOnDisk } from "../utils";
 import { getSlashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
 import { getPostsForStream, getPost } from "../store/posts/reducer";
@@ -1874,7 +1874,7 @@ export class SimpleStream extends Component {
 			const markers = [marker];
 
 			let warning;
-			if (scmInfo.uri === "")
+			if (isNotOnDisk(scmInfo.uri))
 				warning = {
 					title: "Unsaved File",
 					message:

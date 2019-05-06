@@ -7,7 +7,7 @@ import ScrollBox from "./ScrollBox";
 import Tooltip from "./Tooltip"; // careful with tooltips on codemarks; they are not performant
 import Feedback from "./Feedback";
 import cx from "classnames";
-import { range, debounceToAnimationFrame } from "../utils";
+import { range, debounceToAnimationFrame, isNotOnDisk } from "../utils";
 import { HostApi } from "../webview-api";
 import {
 	EditorHighlightRangeRequestType,
@@ -358,7 +358,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	async onFileChanged() {
 		const { textEditorUri, documentMarkers, setEditorContext } = this.props;
 
-		if (textEditorUri === undefined || textEditorUri === "") {
+		if (textEditorUri === undefined || isNotOnDisk(textEditorUri)) {
 			if (this.state.isLoading) {
 				this.setState({ isLoading: false });
 			}
@@ -604,7 +604,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	renderNoCodemarks = () => {
-		const { fileNameToFilterFor, textEditorUri } = this.props;
+		const { textEditorUri } = this.props;
 
 		if (textEditorUri === undefined) {
 			return (
@@ -621,7 +621,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		} else {
 			if (this.props.children) return null;
 			const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
-			if (fileNameToFilterFor === "") {
+			if (isNotOnDisk(textEditorUri)) {
 				return (
 					<div className="no-codemarks">
 						<h3>This file hasn't been saved.</h3>

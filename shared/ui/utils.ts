@@ -2,6 +2,10 @@ import uuidv4 from "uuid/v4";
 import { Range } from "vscode-languageserver-types";
 import { MaxRangeValue } from "./ipc/webview.protocol";
 
+export function isNotOnDisk(uri: string) {
+	return uri === "" || uri.startsWith("untitled:");
+}
+
 type Primitive = number | string;
 
 export function diff<T extends Primitive>(arrayA: T[], arrayB: T[]): T[] {
