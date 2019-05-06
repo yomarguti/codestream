@@ -768,8 +768,10 @@ export class WebviewController implements Disposable {
 			const originalUri = e.document.uri;
 			let uri;
 			switch (originalUri.scheme) {
-				case "file":
 				case "untitled":
+					uri = "";
+					break;
+				case "file":
 					uri = originalUri;
 					break;
 				case "git":
