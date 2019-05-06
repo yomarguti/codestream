@@ -240,6 +240,22 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Vssdk\Internal\2017\Microsoft.VisualStudio.ExtensionEngine.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Vssdk\Internal\2017\Microsoft.VisualStudio.ExtensionManager.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Vssdk\Internal\2019\Microsoft.VisualStudio.ExtensionEngine.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Vssdk\Internal\2019\Microsoft.VisualStudio.ExtensionManager.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
@@ -256,14 +272,6 @@
     <Content Include="LSP\ContentDefinitions.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ContentDefinitions.cs</LastGenOutput>
-    </Content>
-    <Content Include="..\dlls\2017\Microsoft.VisualStudio.ExtensionManager.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\dlls\2019\Microsoft.VisualStudio.ExtensionManager.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="LSP\FileExtensionExclusions.txt" />
     <Content Include="LSP\FileExtensionsGeneric.txt" />

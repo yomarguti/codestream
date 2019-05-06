@@ -48,7 +48,7 @@ namespace CodeStream.VisualStudio.Packages
                     _log.Debug($"AppDomain created");
 
                     var path =
-                        $@"\dlls\{Application.VisualStudioVersionYear}\Microsoft.VisualStudio.ExtensionManager.dll";
+                        $@"\Vssdk\Internal\{Application.VisualStudioVersionYear}\Microsoft.VisualStudio.ExtensionManager.dll";
                     var assembly = domain.LoadFromDisk(path);
                     _log.Debug($"AppDomain loaded assembly. Path={path}");
 
