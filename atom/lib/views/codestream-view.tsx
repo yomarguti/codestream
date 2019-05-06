@@ -2,6 +2,7 @@ import {
 	BootstrapRequestType as WebviewBootstrapRequestType,
 	BootstrapResponse,
 	CompleteSignupRequestType,
+	EditorContext,
 	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequest,
 	EditorRevealRangeRequestType,
@@ -47,6 +48,7 @@ import {
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
 	DidChangeDocumentMarkersNotificationType,
+	GetFileScmInfoRequestType,
 } from "../protocols/agent/agent.protocol";
 import { CodemarkType, LoginResult } from "../protocols/agent/api.protocol";
 import { asAbsolutePath, Editor } from "../utils";
@@ -282,20 +284,26 @@ export class CodestreamView {
 	private async getSignedInBootstrapState(): Promise<SignedInBootstrapResponse> {
 		await this.session.ready;
 		const bootstrapData = await this.session.agent.request(AgentBootstrapRequestType, {});
+
 		const editor = atom.workspace.getActiveTextEditor();
+		let editorContext: EditorContext = {};
+		if (editor) {
+			const uri = Editor.getUri(editor);
+			editorContext = {
+				activeFile: Editor.getRelativePath(editor),
+				textEditorUri: uri,
+				textEditorVisibleRanges: Editor.getVisibleRanges(editor),
+				textEditorSelections: Editor.getCSSelections(editor),
+				scmInfo: await this.session.agent.request(GetFileScmInfoRequestType, { uri }),
+			};
+		}
+
 		return {
 			...this.session.getBootstrapInfo(),
 			...bootstrapData,
 			session: { userId: this.session.user!.id },
 			context: { ...this.webviewContext, currentTeamId: this.session.teamId },
-			editorContext: editor
-				? {
-						activeFile: Editor.getRelativePath(editor),
-						textEditorUri: Editor.getUri(editor),
-						textEditorVisibleRanges: Editor.getVisibleRanges(editor),
-						textEditorSelections: Editor.getCSSelections(editor),
-				  }
-				: {},
+			editorContext,
 		};
 	}
 

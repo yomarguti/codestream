@@ -26,7 +26,7 @@ import {
 	DidChangeDocumentMarkersNotificationType,
 	TraceLevel,
 } from "../protocols/agent/agent.protocol";
-import { asAbsolutePath, Editor, getAgentSource, getPluginVersion } from "../utils";
+import { asAbsolutePath, Editor, getPluginVersion } from "../utils";
 
 type RequestOrNotificationType<P, R> = RequestType<P, R, any, any> | NotificationType<P, R>;
 

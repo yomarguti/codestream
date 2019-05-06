@@ -39,12 +39,16 @@ export const getAgentSource = () => {
 export namespace Editor {
 	export function getRelativePath(editor: TextEditor) {
 		const filePath = editor.getPath();
-		if (filePath === undefined) return filePath;
+		if (filePath === undefined) return "";
 		return atom.project.relativize(filePath);
 	}
 
 	export function getUri(editor: TextEditor) {
-		return Convert.pathToUri(editor.getPath() || "");
+		const path = editor.getPath();
+		if (path) {
+			return Convert.pathToUri(path);
+		}
+		return "";
 	}
 
 	export function getCurrentSelectionRange(editor: TextEditor) {
