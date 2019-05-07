@@ -27,7 +27,8 @@ import {
 	DidChangeDocumentMarkersNotificationType,
 	GetDocumentFromMarkerRequestType,
 	GetFileScmInfoResponse,
-	GetFileScmInfoRequestType
+	GetFileScmInfoRequestType,
+	CodemarkPlus
 } from "@codestream/protocols/agent";
 import { Range, Position } from "vscode-languageserver-types";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
@@ -1191,28 +1192,30 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		// setTimeout(() => this.props.focusInput(), 500);
 	};
 
-	handleClickCodemark = async (event, codemark, docMarker) => {
+	handleClickCodemark = async (
+		event: React.MouseEvent,
+		codemark: CodemarkPlus,
+		docMarker: DocumentMarker
+	) => {
+		const target = event.target as HTMLElement | undefined;
+		if (target && (target.classList.contains("info") || target.closest(".info"))) {
+			return;
+		}
+
+		if (
+			this.props.currentDocumentMarkerId === docMarker.id &&
+			target &&
+			(target.classList.contains("author") || target.closest(".author"))
+		) {
+			return this.deselectCodemarks();
+		}
+
 		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Codemark Clicked",
 			properties: {
 				"Codemark Location": "Spatial View"
 			}
 		});
-
-		if (
-			event.target &&
-			(event.target.classList.contains("info") || event.target.closest(".info"))
-		) {
-			return;
-		}
-
-		if (
-			this.props.currentDocumentMarkerId === docMarker.id &&
-			event.target &&
-			(event.target.classList.contains("author") || event.target.closest(".author"))
-		) {
-			return this.deselectCodemarks();
-		}
 
 		let markerId;
 		if (codemark.markers) {
@@ -1269,6 +1272,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	handleHighlightCodemark = marker => {
+		if (this.props.currentDocumentMarkerId === marker.id) return;
+
 		this.setState({ highlightedDocmarker: marker.id });
 		this.highlightCode(marker, true);
 	};
