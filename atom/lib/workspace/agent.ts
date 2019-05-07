@@ -352,6 +352,7 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 		return this.connection!.sendCustomRequest(requestType.method, params);
 	}
 
+	// for when typing can't be inferred
 	sendRequest<R>(name: string, params?: any): Promise<R> {
 		return this.connection!.sendCustomRequest(name, params);
 	}

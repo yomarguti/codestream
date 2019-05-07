@@ -1,11 +1,22 @@
 {
-	"atom-workspace": {
+	".platform-darwin atom-workspace, .platform-linux atom-text-editor": {
 		"ctrl-/ ctrl-/": "codestream:toggle"
 	},
-	"atom-text-editor": {
+	".platform-win32 atom-workspace": {
+		"ctrl-shift-/ /": "codestream:toggle"
+	},
+	".platform-darwin atom-text-editor, .platform-linux atom-text-editor": {
 		"ctrl-/ ctrl-c": "codestream:keymap-create-comment",
 		"ctrl-/ ctrl-i": "codestream:keymap-create-issue",
 		"ctrl-/ ctrl-b": "codestream:keymap-create-bookmark",
-		"ctrl-/ ctrl-p": "codestream:keymap-get-permalink"
+		"ctrl-/ ctrl-p": "codestream:keymap-get-permalink",
+		"ctrl-/ shift-p": "codestream:keymap-copy-permalink"
+	},
+	".platform-win32 atom-text-editor": {
+		"ctrl-shift-/ /-c": "codestream:keymap-create-comment",
+		"ctrl-shift-/ /-i": "codestream:keymap-create-issue",
+		"ctrl-shift-/ /-b": "codestream:keymap-create-bookmark",
+		"ctrl-shift-/ /-p": "codestream:keymap-get-permalink",
+		"ctrl-shift-/ shift-p": "codestream:keymap-copy-permalink"
 	}
 }

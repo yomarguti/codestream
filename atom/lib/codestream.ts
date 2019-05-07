@@ -1,7 +1,10 @@
-import { ChangeDataType } from "@codestream/protocols/agent";
+import {
+	ChangeDataType,
+	CreateDocumentMarkerPermalinkRequestType,
+} from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
 import { CompositeDisposable, Disposable } from "atom";
-import { Echo, Listener } from "utils";
+import { Echo, Editor, Listener } from "utils";
 import { Container } from "workspace/container";
 import { Environment, EnvironmentConfig, PD_CONFIG, PRODUCTION_CONFIG } from "./env-utils";
 import { PackageState } from "./types/package";
@@ -153,6 +156,25 @@ class CodestreamPackage {
 			atom.commands.add("atom-workspace", "codestream:keymap-get-permalink", {
 				hiddenInCommandPalette: true,
 				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Link, "Shortcut"),
+			}),
+			atom.commands.add("atom-workspace", "codestream:keymap-copy-permalink", {
+				hiddenInCommandPalette: true,
+				didDispatch: async () => {
+					const editor = atom.workspace.getActiveTextEditor();
+					if (!editor) {
+						return;
+					}
+					const response = await this.workspaceSession.agent.request(
+						CreateDocumentMarkerPermalinkRequestType,
+						{
+							uri: Editor.getUri(editor),
+							range: Editor.getCurrentSelectionRange(editor),
+							privacy: "private",
+						}
+					);
+					atom.clipboard.write(response.linkUrl);
+					atom.notifications.addInfo("Permalink copied to clipboard!");
+				},
 			})
 		);
 	}

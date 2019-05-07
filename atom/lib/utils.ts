@@ -54,7 +54,7 @@ export namespace Editor {
 	export function getCurrentSelectionRange(editor: TextEditor) {
 		const selection = editor.getSelectedBufferRange();
 		const range = Convert.atomRangeToLSRange(selection);
-		if (range.start.line === range.end.line && range.start.character === range.end.character) {
+		if (selection.isEmpty()) {
 			return Range.create(
 				range.start.line,
 				0,
