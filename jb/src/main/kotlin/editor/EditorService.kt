@@ -2,12 +2,12 @@ package com.codestream.editor
 
 import com.codestream.agentService
 import com.codestream.codeStream
+import com.codestream.extensions.displayPath
 import com.codestream.extensions.getOffset
 import com.codestream.extensions.highlightTextAttributes
 import com.codestream.extensions.isRangeVisible
 import com.codestream.extensions.lspPosition
 import com.codestream.extensions.margins
-import com.codestream.extensions.displayPath
 import com.codestream.extensions.selections
 import com.codestream.extensions.textDocumentIdentifier
 import com.codestream.extensions.uri
@@ -28,7 +28,6 @@ import com.intellij.openapi.editor.markup.HighlighterLayer
 import com.intellij.openapi.editor.markup.HighlighterTargetArea
 import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.editor.markup.TextAttributes
-import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
