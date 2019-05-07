@@ -54,6 +54,7 @@ import { CodemarkType, LoginResult } from "../protocols/agent/api.protocol";
 import { asAbsolutePath, Editor } from "../utils";
 import { WorkspaceEditorObserver } from "../workspace/editor-observer";
 import { SessionStatus, WorkspaceSession } from "../workspace/workspace-session";
+import { isViewVisible } from "./controller";
 import { getStylesheets } from "./styles-getter";
 
 export class WebviewIpc {
@@ -281,6 +282,17 @@ export class CodestreamView {
 		return this.emitter.on(DID_CHANGE_STATE, cb);
 	}
 
+	checkToToggleMarkers() {
+		const configs = this.session.configManager;
+		if (configs.get("showMarkers") === true && configs.get("autoHideMarkers") === true) {
+			if (this.webviewContext.panelStack[0] === WebviewPanels.CodemarksForFile) {
+				if (isViewVisible(this.getURI())) {
+					Container.markerDecorationProvider.disable();
+				} else Container.markerDecorationProvider.enable();
+			} else Container.markerDecorationProvider.enable();
+		}
+	}
+
 	private async getSignedInBootstrapState(): Promise<SignedInBootstrapResponse> {
 		await this.session.ready;
 		const bootstrapData = await this.session.agent.request(AgentBootstrapRequestType, {});
@@ -445,13 +457,9 @@ export class CodestreamView {
 				break;
 			}
 			case WebviewDidChangeContextNotificationType.method: {
+				this.webviewContext = event.params.context;
 				this.emitter.emit(DID_CHANGE_STATE, event.params.context);
-				const configs = this.session.configManager;
-				if (configs.get("showMarkers") === true && configs.get("autoHideMarkers") === true) {
-					if (event.params.context.panelStack[0] === WebviewPanels.CodemarksForFile) {
-						Container.markerDecorationProvider.disable();
-					} else Container.markerDecorationProvider.enable();
-				}
+				this.checkToToggleMarkers();
 				break;
 			}
 		}

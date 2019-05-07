@@ -1,6 +1,20 @@
-import { CompositeDisposable, Disposable } from "atom";
+import { CompositeDisposable, Disposable, Dock, WorkspaceCenter, WorkspaceItem } from "atom";
 import { WorkspaceSession } from "workspace/workspace-session";
 import { CODESTREAM_VIEW_URI, CodestreamView } from "./codestream-view";
+
+export function isViewVisible(uri: string) {
+	const container = atom.workspace.paneContainerForURI(uri);
+	if (container) {
+		const activeItem = container.getActivePaneItem() as WorkspaceItem | undefined;
+		if (!activeItem) return false;
+		const viewIsActive = activeItem.getURI && activeItem.getURI() === uri;
+		if (isDock(container)) {
+			return container.isVisible() && viewIsActive;
+		}
+		return viewIsActive;
+	}
+	return false;
+}
 
 export interface ViewsState {
 	[CODESTREAM_VIEW_URI]: {
@@ -11,6 +25,17 @@ export interface ViewsState {
 const initialViewState: ViewsState = {
 	[CODESTREAM_VIEW_URI]: { state: {} },
 };
+
+const containers = [
+	atom.workspace.getCenter(),
+	atom.workspace.getLeftDock(),
+	atom.workspace.getRightDock(),
+	atom.workspace.getBottomDock(),
+];
+
+function isDock(container: Dock | WorkspaceCenter): container is Dock {
+	return (container as any).getLocation() !== "center";
+}
 
 export class ViewController implements Disposable {
 	private subscriptions = new CompositeDisposable();
@@ -23,6 +48,20 @@ export class ViewController implements Disposable {
 				atom.workspace.toggle(CODESTREAM_VIEW_URI)
 			)
 		);
+		containers.map(container => {
+			this.subscriptions.add(
+				container.onDidStopChangingActivePaneItem((_item: WorkspaceItem) => {
+					if (this.mainView) this.mainView.checkToToggleMarkers();
+				})
+			);
+			if (isDock(container)) {
+				this.subscriptions.add(
+					container.onDidChangeVisible(_visible => {
+						if (this.mainView) this.mainView.checkToToggleMarkers();
+					})
+				);
+			}
+		});
 	}
 
 	getMainView() {

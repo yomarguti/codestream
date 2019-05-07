@@ -1,5 +1,5 @@
 import { DocumentMarker, FetchDocumentMarkersRequestType } from "@codestream/protocols/agent";
-import { CodemarkStatus } from "@codestream/protocols/api";
+import { CodemarkStatus, CodemarkType } from "@codestream/protocols/api";
 import { CompositeDisposable, DisplayMarker, Disposable, Gutter, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
 import { accessSafely, asAbsolutePath, Editor } from "utils";
@@ -80,7 +80,10 @@ export class MarkerDecorationProvider implements Disposable {
 
 	private onActiveEditor = (editor?: TextEditor) => {
 		if (this.isDisabled) return;
-		if (editor && editor.getPath() && !this.observedEditors.has(editor.id)) {
+		if (!editor || !editor.getPath()) return;
+		if (this.observedEditors.has(editor.id)) {
+			this.provideFor(editor);
+		} else {
 			const id = editor.id;
 			this.observedEditors.set(id, editor);
 			this.provideFor(editor);
@@ -100,7 +103,13 @@ export class MarkerDecorationProvider implements Disposable {
 		});
 
 		if (response && response.markers) {
-			response.markers = response.markers.filter(m => m.codemark.status === CodemarkStatus.Open);
+			response.markers = response.markers.filter(m => {
+				if (m.codemark.color === "none") return false;
+				if (m.codemark.type === CodemarkType.Issue) {
+					return m.codemark.status === CodemarkStatus.Open;
+				}
+				return true;
+			});
 			if (this.editorResources.has(editor.id)) {
 				this.editorResources.get(editor.id).dispose();
 			}
@@ -136,7 +145,7 @@ export class MarkerDecorationProvider implements Disposable {
 		});
 		this.markers.get(editor.id).push(marker);
 
-		let color = docMarker.codemark.color;
+		let color = docMarker.codemark.color || "blue";
 		color = color === "none" ? "" : `-${color}`;
 
 		const iconPath = Convert.pathToUri(
