@@ -337,10 +337,9 @@ class EditorService(val project: Project) {
         ApplicationManager.getApplication().invokeLater {
             val editor = FileEditorManager.getInstance(project).selectedTextEditor
             val context = if (editor != null) {
-                val file = FileDocumentManager.getInstance().getFile(editor.document)
                 EditorContext(
                     null,
-                    file?.name,
+                    editor.displayPath,
                     null,
                     editor.visibleRanges,
                     editor.document.uri,
