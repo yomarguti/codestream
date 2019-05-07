@@ -1,7 +1,6 @@
 import { Dispatch, Middleware } from "redux";
-import { CodeStreamState } from "..";
 
-export const logging: Middleware<any, CodeStreamState, Dispatch> = store => {
+export const logging: Middleware<any, any, Dispatch> = store => {
 	return next => action => {
 		const oldState = store.getState();
 		const result = next(action);
