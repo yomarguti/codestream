@@ -11,39 +11,29 @@ import { Container } from "workspace/container";
 import { Environment, EnvironmentConfig, PD_CONFIG, PRODUCTION_CONFIG } from "./env-utils";
 import { PackageState } from "./types/package";
 import { StatusBar } from "./types/package-services/status-bar";
-import { ViewController } from "./views/controller";
-import { MarkerDecorationProvider } from "./workspace/marker-decoration-provider";
-import { SessionStatus, WorkspaceSession } from "./workspace/workspace-session";
+import { SessionStatus } from "./workspace/workspace-session";
 
 class CodestreamPackage {
 	subscriptions = new CompositeDisposable();
-	workspaceSession: WorkspaceSession;
-	viewController: ViewController;
 	sessionStatusCommand?: Disposable;
-	markerDecorationProvider: MarkerDecorationProvider;
 	loggedInCommandsSubscription?: CompositeDisposable;
 	private environmentChangeEmitter: Echo<EnvironmentConfig>;
 
 	constructor(state: PackageState) {
+		Container.initialize(state);
 		const configs = new ConfigManager();
 		if (configs.get("traceLevel") === TraceLevel.Debug) {
 			console.debug("CodeStream package initialized with state:", state);
 		}
-		this.workspaceSession = WorkspaceSession.create(state);
-		this.viewController = new ViewController(this.workspaceSession, state.views);
-		this.markerDecorationProvider = new MarkerDecorationProvider(
-			this.workspaceSession,
-			this.viewController
-		);
 		this.environmentChangeEmitter = new Echo();
-		Container.initialize(this.markerDecorationProvider, configs);
 		this.initialize();
 	}
 
 	// Package lifecyle 1
 	async initialize() {
+		const session = Container.session;
 		this.subscriptions.add(
-			this.workspaceSession.observeSessionStatus(status => {
+			session.observeSessionStatus(status => {
 				this.sessionStatusCommand && this.sessionStatusCommand.dispose();
 				if (status === SessionStatus.SignedIn) {
 					this.registerLoggedInCommands();
@@ -51,7 +41,7 @@ class CodestreamPackage {
 						"atom-workspace",
 						"codestream:sign-out",
 						() => {
-							this.workspaceSession.signOut();
+							session.signOut();
 						}
 					);
 				}
@@ -71,14 +61,14 @@ class CodestreamPackage {
 			// 		Dev mode goodies
 			atom.commands.add("atom-workspace", "codestream:point-to-dev", {
 				didDispatch: () => {
-					this.workspaceSession.changeEnvironment(PD_CONFIG);
+					session.changeEnvironment(PD_CONFIG);
 					this.environmentChangeEmitter.push(PD_CONFIG);
 				},
 				hiddenInCommandPalette,
 			}),
 			atom.commands.add("atom-workspace", "codestream:point-to-production", {
 				didDispatch: () => {
-					this.workspaceSession.changeEnvironment(PRODUCTION_CONFIG);
+					session.changeEnvironment(PRODUCTION_CONFIG);
 					this.environmentChangeEmitter.push(PRODUCTION_CONFIG);
 				},
 				hiddenInCommandPalette,
@@ -88,7 +78,7 @@ class CodestreamPackage {
 
 	// Package lifecyle
 	deserializeCodestreamView() {
-		return this.viewController.getMainView();
+		return Container.viewController.getMainView();
 	}
 
 	// Package lifecyle
@@ -96,30 +86,30 @@ class CodestreamPackage {
 
 	// Package lifecyle
 	serialize(): PackageState {
-		return { ...this.workspaceSession.serialize(), views: this.viewController.serialize() };
+		return { ...Container.session.serialize(), views: Container.viewController.serialize() };
 	}
 
 	// Package lifecyle
 	deactivate() {
 		this.environmentChangeEmitter.dispose();
-		this.workspaceSession.dispose();
+		Container.session.dispose();
 		this.subscriptions.dispose();
 		this.sessionStatusCommand!.dispose();
-		this.viewController.dispose();
-		this.markerDecorationProvider.dispose();
+		Container.viewController.dispose();
+		Container.markerDecorationProvider.dispose();
 		this.loggedInCommandsSubscription && this.loggedInCommandsSubscription.dispose();
 	}
 
 	provideEnvironmentConfig() {
 		return {
-			get: () => this.workspaceSession.environment,
+			get: () => Container.session.environment,
 			onDidChange: (cb: Listener<EnvironmentConfig>) => this.environmentChangeEmitter.listen(cb),
 		};
 	}
 
 	private registerLoggedInCommands() {
 		const sendNewCodemarkRequest = (type: CodemarkType, entry: "Context Menu" | "Shortcut") => {
-			const view = this.viewController.getMainView();
+			const view = Container.viewController.getMainView();
 			view.show().then(() => {
 				view.newCodemarkRequest(type, entry);
 			});
@@ -167,7 +157,7 @@ class CodestreamPackage {
 					if (!editor) {
 						return;
 					}
-					const response = await this.workspaceSession.agent.request(
+					const response = await Container.session.agent.request(
 						CreateDocumentMarkerPermalinkRequestType,
 						{
 							uri: Editor.getUri(editor),
@@ -188,7 +178,7 @@ class CodestreamPackage {
 			unreads?: { totalMentions: number; totalUnreads: number }
 		) => {
 			const environmentLabel = (() => {
-				const env = this.workspaceSession.environment.name;
+				const env = Container.session.environment.name;
 				switch (env) {
 					case Environment.PD:
 						return `${env}:`;
@@ -206,9 +196,7 @@ class CodestreamPackage {
 
 			switch (status) {
 				case SessionStatus.SignedIn:
-					return `${environmentLabel} ${
-						this.workspaceSession.user!.username
-					} ${unreadsLabel}`.trim();
+					return `${environmentLabel} ${Container.session.user!.username} ${unreadsLabel}`.trim();
 				case SessionStatus.SigningIn:
 					return `Signing in...${environmentLabel}`.replace(":", "");
 				default:
@@ -233,7 +221,7 @@ class CodestreamPackage {
 			atom.commands.dispatch(document.querySelector("atom-workspace")!, "codestream:toggle");
 		};
 		const icon = document.createElement("span");
-		icon.classList.add(...getStatusBarIconClasses(this.workspaceSession.status));
+		icon.classList.add(...getStatusBarIconClasses(Container.session.status));
 		tileRoot.appendChild(icon);
 		atom.tooltips.add(tileRoot, { title: "Toggle CodeStream" });
 		const text = document.createElement("span");
@@ -241,19 +229,19 @@ class CodestreamPackage {
 
 		const statusBarTile = statusBar.addRightTile({ item: tileRoot, priority: 400 });
 
-		const sessionStatusSubscription = this.workspaceSession!.observeSessionStatus(status => {
+		const sessionStatusSubscription = Container.session.observeSessionStatus(status => {
 			text.innerText = createStatusBarTitle(status);
 			icon.classList.remove(...icon.classList.values());
-			icon.classList.add(...getStatusBarIconClasses(this.workspaceSession.status));
+			icon.classList.add(...getStatusBarIconClasses(Container.session.status));
 		});
 
 		this.environmentChangeEmitter.listen(() => {
-			text.innerText = createStatusBarTitle(this.workspaceSession.status);
+			text.innerText = createStatusBarTitle(Container.session.status);
 		});
 
-		const dataChangeSubscription = this.workspaceSession.agent.onDidChangeData(event => {
+		const dataChangeSubscription = Container.session.agent.onDidChangeData(event => {
 			if (event.type === ChangeDataType.Unreads) {
-				text.innerText = createStatusBarTitle(this.workspaceSession.status, event.data);
+				text.innerText = createStatusBarTitle(Container.session.status, event.data);
 			}
 		});
 

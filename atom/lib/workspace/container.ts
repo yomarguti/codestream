@@ -1,5 +1,8 @@
 import { ConfigManager } from "configs";
+import { PackageState } from "types/package";
+import { ViewController } from "views/controller";
 import { MarkerDecorationProvider } from "./marker-decoration-provider";
+import { WorkspaceSession } from "./workspace-session";
 
 export class Container {
 	private static _markerDecorationProvider: MarkerDecorationProvider;
@@ -12,9 +15,23 @@ export class Container {
 		return this._configs;
 	}
 
-	static initialize(markerDecorationProvider: MarkerDecorationProvider, configs: ConfigManager) {
-		this._markerDecorationProvider = markerDecorationProvider;
-		this._configs = configs;
-		return;
+	private static _session: WorkspaceSession;
+	static get session() {
+		return this._session;
+	}
+
+	private static _viewController: ViewController;
+	static get viewController() {
+		return this._viewController;
+	}
+
+	static initialize(state: PackageState) {
+		this._configs = new ConfigManager();
+		this._session = WorkspaceSession.create(state, this.configs.get("autoSignIn"));
+		this._viewController = new ViewController(this._session, state.views);
+		this._markerDecorationProvider = new MarkerDecorationProvider(
+			this.session,
+			this._viewController
+		);
 	}
 }

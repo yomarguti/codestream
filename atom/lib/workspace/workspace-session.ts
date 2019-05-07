@@ -52,8 +52,12 @@ export class WorkspaceSession {
 		return this._isReady;
 	}
 
-	static create(state: PackageState) {
-		return new WorkspaceSession(state.session, state.lastUsedEmail, state.environment);
+	static create(state: PackageState, autoSignIn: boolean) {
+		const session = new WorkspaceSession(state.session, state.lastUsedEmail, state.environment);
+		if (autoSignIn) {
+			session.autoSignIn();
+		}
+		return session;
 	}
 
 	protected constructor(
@@ -66,10 +70,12 @@ export class WorkspaceSession {
 		this.session = session;
 		this.lastUsedEmail = lastUsedEmail;
 		this.envConfig = envConfig;
+	}
 
-		if (session && Container.configs.get("autoSignIn")) {
+	protected autoSignIn() {
+		if (this.session) {
 			this._isReady = new Promise(async (resolve, reject) => {
-				const result = await this.login(session.user.email, session.token);
+				const result = await this.login(this.session!.user.email, this.session!.token);
 				if (result === LoginResult.Success) {
 					resolve();
 				} else {

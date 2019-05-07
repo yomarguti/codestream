@@ -283,6 +283,8 @@ export class CodestreamView {
 	}
 
 	checkToToggleMarkers() {
+		if (!this.webviewContext || !Container.session.isSignedIn) return;
+
 		const configs = Container.configs;
 		if (configs.get("showMarkers") === true && configs.get("autoHideMarkers") === true) {
 			if (this.webviewContext.panelStack[0] === WebviewPanels.CodemarksForFile) {
