@@ -25,6 +25,7 @@ using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeStream.VisualStudio.UI.Extensions;
+using Microsoft.VisualStudio.ComponentModelHost;
 
 public class TextViewCreationListenerDummy { }
 
@@ -50,25 +51,38 @@ namespace CodeStream.VisualStudio.UI {
 			new ConditionalWeakTable<ITextBuffer, HashSet<IWpfTextView>>();
 
 		[ImportingConstructor]
-		public TextViewCreationListener() :
-			this(Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService) {
-		}
-
-		public TextViewCreationListener(ICodeStreamService codeStreamService) {
+		public TextViewCreationListener([Import] ICodeStreamService codeStreamService) {
 			try {
-				_codeStreamService = codeStreamService;
+				_codeStreamService = codeStreamService; //(Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ICodeStreamService>();
+
 				Assumes.Present(_codeStreamService);
-				_sessionService = codeStreamService.SessionService;
+				_sessionService = _codeStreamService.SessionService;
 				Assumes.Present(_sessionService);
-				_eventAggregator = codeStreamService.EventAggregator;
+				_eventAggregator = _codeStreamService.EventAggregator;
 				Assumes.Present(_eventAggregator);
-				_codeStreamAgentService = codeStreamService.AgentService;
+				_codeStreamAgentService = _codeStreamService.AgentService;
 				Assumes.Present(_codeStreamAgentService);
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(TextViewCreationListener));
 			}
 		}
+
+		//public TextViewCreationListener(ICodeStreamService codeStreamService) {
+		//	try {
+		//		_codeStreamService = codeStreamService;
+		//		Assumes.Present(_codeStreamService);
+		//		_sessionService = codeStreamService.SessionService;
+		//		Assumes.Present(_sessionService);
+		//		_eventAggregator = codeStreamService.EventAggregator;
+		//		Assumes.Present(_eventAggregator);
+		//		_codeStreamAgentService = codeStreamService.AgentService;
+		//		Assumes.Present(_codeStreamAgentService);
+		//	}
+		//	catch (Exception ex) {
+		//		Log.Fatal(ex, nameof(TextViewCreationListener));
+		//	}
+		//}
 
 		private readonly ICodeStreamService _codeStreamService;
 		private readonly ISessionService _sessionService;

@@ -22,7 +22,6 @@ namespace CodeStream.VisualStudio.Services {
 		public string Message { get; }
 	}
 
-	public interface SBrowserService { }
 
 	public interface IBrowserService : IDisposable {
 		void Initialize();
@@ -66,7 +65,7 @@ namespace CodeStream.VisualStudio.Services {
 
 	public delegate Task WindowMessageHandler(object sender, WindowEventArgs e);
 
-	public abstract class BrowserServiceBase : IBrowserService, SBrowserService {
+	public abstract class BrowserServiceBase : IBrowserService {
 		private static readonly ILogger Log = LogManager.ForContext<BrowserServiceBase>();
 
 		public virtual void Initialize() {

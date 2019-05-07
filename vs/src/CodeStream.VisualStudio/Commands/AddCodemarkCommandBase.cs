@@ -18,7 +18,7 @@ namespace CodeStream.VisualStudio.Commands {
 
 		protected override void ExecuteUntyped(object parameter) {
 			try {
-				var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
+				var codeStreamService = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ICodeStreamService>();
 				if (codeStreamService == null || !codeStreamService.IsReady) return;
 
 				var componentModel = (IComponentModel)Package.GetGlobalService(typeof(SComponentModel));
@@ -53,7 +53,8 @@ namespace CodeStream.VisualStudio.Commands {
 		}
 
 		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e) {
-			var session = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+			var session = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ISessionService>();
+
 			sender.Visible = session?.IsReady == true;
 		}
 	}

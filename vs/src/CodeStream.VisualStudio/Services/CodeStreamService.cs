@@ -1,5 +1,4 @@
-﻿using CodeStream.VisualStudio.Annotations;
-using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using Microsoft;
@@ -9,14 +8,13 @@ using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Threading;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.UI.Extensions;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Services {
-	public interface SCodeStreamService { }
-
 	public interface ICodeStreamService {
 		Task ResetActiveEditorAsync();
 		Task ChangeActiveEditorAsync(string fileName, Uri uri, ActiveTextEditor activeTextEditor = null);
@@ -42,32 +40,34 @@ namespace CodeStream.VisualStudio.Services {
 		IEventAggregator EventAggregator { get; }
 	}
 
-	[Injected]
-	public class CodeStreamService : ICodeStreamService, SCodeStreamService {
+	[Export(typeof(ICodeStreamService))]
+	[PartCreationPolicy(CreationPolicy.Shared)]
+	public class CodeStreamService : ICodeStreamService {
 		private static readonly ILogger Log = LogManager.ForContext<CodeStreamService>();
-		private readonly IAsyncServiceProvider _serviceProvider;
+		private readonly IServiceProvider _serviceProvider;
 		public ISessionService SessionService { get; }
 		public ICodeStreamAgentService AgentService { get; }
 		public IWebviewIpc WebviewIpc { get; }
 		public IEventAggregator EventAggregator { get; }
 
+		[ImportingConstructor]
 		public CodeStreamService(
-			IAsyncServiceProvider serviceProvider,
-			ICodeStreamAgentService agentService,
-			IWebviewIpc ipc) {
+			[Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider,
+			[Import]ICodeStreamAgentService agentService,
+			[Import]IWebviewIpc ipc) {
 			_serviceProvider = serviceProvider;
 			AgentService = agentService;
 			SessionService = agentService.SessionService;
 			EventAggregator = agentService.EventAggregator;
 			WebviewIpc = ipc;
 		}
-		
+
 		public bool IsReady => SessionService?.IsReady == true;
 
 		public async Task ChangeActiveEditorAsync(string fileName, Uri uri, ActiveTextEditor activeTextEditor = null) {
 			if (IsReady) {
 				try {
-					var componentModel = await _serviceProvider.GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
+					var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
 					Assumes.Present(componentModel);
 
 					var editorService = componentModel.GetService<IEditorService>();

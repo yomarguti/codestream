@@ -1,10 +1,12 @@
-﻿using CodeStream.VisualStudio.Annotations;
-using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.UI.Settings;
 using System;
+using System.ComponentModel.Composition;
 using System.Text.RegularExpressions;
+using Microsoft.VisualStudio.Shell;
+using Serilog;
 
 namespace CodeStream.VisualStudio.Services {
 	public interface ISettingsService : IOptions {
@@ -33,24 +35,34 @@ namespace CodeStream.VisualStudio.Services {
 		public string Version { get; set; }
 	}
 
-	public interface SSettingsService { }
+	[Export(typeof(ISettingsService))]
+	[PartCreationPolicy(CreationPolicy.Shared)]
+	public class SettingsService : ISettingsService, IOptions {
+		private readonly ILogger Log = LogManager.ForContext<SettingsService>();
 
-	[Injected]
-	public class SettingsService : ISettingsService, IOptions, SSettingsService {
 		private static readonly Regex EnvironmentRegex = new Regex(@"https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(?::\d+$)?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-		public IOptionsDialogPage DialogPage { get; }
+		public IOptionsDialogPage DialogPage { get; private set; }
 
-		public SettingsService(IOptionsDialogPage dialogPage) {
-			DialogPage = dialogPage;
-			LoadSettingsFromStorage();
+		[ImportingConstructor]
+		public SettingsService() {
+			ThreadHelper.JoinableTaskFactory.Run(async delegate {
+				try {
+					// Make the call to GetLiveInstanceAsync from a background thread to avoid blocking the UI thread
+					DialogPage = await OptionsDialogPage.GetLiveInstanceAsync();
+					DialogPage.Load();
+				}
+				catch(Exception ex) {
+					Log.Error(ex, nameof(SettingsService));
+				}				
+			});			
 		}
 
-		public void LoadSettingsFromStorage() {
-			DialogPage.LoadSettingsFromStorage();
+		public void LoadSettingsFromStorage() {			
+			DialogPage.Load();
 		}
 
-		public void SaveSettingsToStorage() {
-			DialogPage.SaveSettingsToStorage();
+		public void SaveSettingsToStorage() {			
+			DialogPage.Save();
 		}
 
 		public Settings GetSettings() {

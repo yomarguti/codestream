@@ -1,9 +1,7 @@
-﻿using CodeStream.VisualStudio.Annotations;
-using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
-using CodeStream.VisualStudio.UI;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
@@ -11,6 +9,7 @@ using Serilog;
 using StreamJsonRpc;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,8 +23,6 @@ using TraceLevel = CodeStream.VisualStudio.Core.Logging.TraceLevel;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace CodeStream.VisualStudio.Services {
-	public interface SCodeStreamAgentService { }
-
 	public interface ICodeStreamAgentService {
 		ISessionService SessionService { get; }
 		IEventAggregator EventAggregator { get; }
@@ -51,10 +48,11 @@ namespace CodeStream.VisualStudio.Services {
 		Task TrackAsync(string key, TelemetryProperties properties = null);
 	}
 
-	[Injected]
-	public class CodeStreamAgentService : ICodeStreamAgentService, SCodeStreamAgentService, IDisposable {
+	[Export(typeof(ICodeStreamAgentService))]
+	[PartCreationPolicy(CreationPolicy.Shared)]
+	public class CodeStreamAgentService : ICodeStreamAgentService, IDisposable {
 		private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
-		private readonly IComponentModel _componentModel;
+		private readonly IServiceProvider _serviceProvider;
 		public ISessionService SessionService { get; }
 		public IEventAggregator EventAggregator { get; }
 		private readonly ISettingsService _settingsService;
@@ -62,12 +60,13 @@ namespace CodeStream.VisualStudio.Services {
 		private JsonRpc _rpc;
 		bool _disposed;
 
-		public CodeStreamAgentService(IComponentModel componentModel,
-			ISessionService sessionService,
-			ISettingsService settingsService,
-			IEventAggregator eventAggregator) {
-
-			_componentModel = componentModel;
+		[ImportingConstructor]
+		public CodeStreamAgentService(
+			[Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider,
+			[Import]ISessionService sessionService,
+			[Import]ISettingsService settingsService,
+			[Import]IEventAggregator eventAggregator) {
+			_serviceProvider = serviceProvider;
 			SessionService = sessionService;
 			_settingsService = settingsService;
 			EventAggregator = eventAggregator;
@@ -269,7 +268,9 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public async Task<JToken> GetBootstrapAsync(Settings settings, JToken state = null, bool isAuthenticated = false) {
-			var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
+			var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+			var ideService = componentModel?.GetService<IIdeService>();
+
 			var vslsEnabled = ideService?.QueryExtension(ExtensionKind.LiveShare) == true;
 
 			// NOTE: this camelCaseSerializer is important because FromObject doesn't
@@ -311,9 +312,9 @@ namespace CodeStream.VisualStudio.Services {
 			if (state == null) throw new ArgumentNullException(nameof(state));
 			var bootstrapAuthenticated = await _rpc.InvokeWithParameterObjectAsync<JToken>(BootstrapRequestType.MethodName)
 				.ConfigureAwait(false) as JObject;
-
-			var editorService = _componentModel.GetService<IEditorService>();
-			var editorContext = editorService.GetEditorContext();
+			
+			var editorService = componentModel?.GetService<IEditorService>();
+			var editorContext = editorService?.GetEditorContext();
 
 			WebviewContext webviewContext;
 			var teamId = state["teamId"].ToString();
@@ -367,7 +368,7 @@ namespace CodeStream.VisualStudio.Services {
 			GC.SuppressFinalize(this);
 		}
 
-		protected virtual void Dispose(bool disposing) {
+		private void Dispose(bool disposing) {
 			if (_disposed)
 				return;
 

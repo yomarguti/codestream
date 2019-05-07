@@ -2,22 +2,40 @@
 using CodeStream.VisualStudio.Vssdk.Commands;
 using Microsoft.VisualStudio.Shell;
 using System;
+using CodeStream.VisualStudio.Core.Logging;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Serilog;
 
 namespace CodeStream.VisualStudio.Commands {
 	internal sealed class WebViewReloadCommand : VsCommandBase {
-		public WebViewReloadCommand() : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.WebViewReloadCommandId) {}
+		private static readonly ILogger Log = LogManager.ForContext<UserCommand>();
+
+		public WebViewReloadCommand() : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.WebViewReloadCommandId) { }
 
 		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e) {
-			ThreadHelper.ThrowIfNotOnUIThread();
-			var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
-			sender.Visible = sessionService?.IsReady == true;
+			try {
+				ThreadHelper.ThrowIfNotOnUIThread();
+				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
+				var sessionService = componentModel?.GetService<ISessionService>();
+				sender.Visible = sessionService?.IsReady == true;
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(WebViewReloadCommand));
+			}
 		}
 
 		protected override void ExecuteUntyped(object parameter) {
-			ThreadHelper.ThrowIfNotOnUIThread();
+			try {
+				ThreadHelper.ThrowIfNotOnUIThread();
 
-			var browserService = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SBrowserService)) as IBrowserService;
-			browserService?.ReloadWebView();
+				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
+				var browserService = componentModel?.GetService<IBrowserService>();
+
+				browserService?.ReloadWebView();
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(WebViewReloadCommand));
+			}
 		}
 	}
 }

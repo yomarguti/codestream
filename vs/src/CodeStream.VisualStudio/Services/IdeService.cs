@@ -1,5 +1,4 @@
-﻿using CodeStream.VisualStudio.Annotations;
-using CodeStream.VisualStudio.Core;
+﻿using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Logging.Instrumentation;
 using CodeStream.VisualStudio.Extensions;
@@ -14,10 +13,13 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
+using CodeStream.VisualStudio.Packages;
+using IComponentModel = Microsoft.VisualStudio.ComponentModelHost.IComponentModel;
 using ILogger = Serilog.ILogger;
 
 namespace CodeStream.VisualStudio.Services {
@@ -38,10 +40,9 @@ namespace CodeStream.VisualStudio.Services {
 		System.Threading.Tasks.Task GetClipboardTextValueAsync(int millisecondsTimeout, Action<string> callback, Regex clipboardMatcher = null);
 	}
 
-	public interface SIdeService { }
-
-	[Injected]
-	public class IdeService : IIdeService, SIdeService {
+	[Export(typeof(IIdeService))]
+	[PartCreationPolicy(CreationPolicy.Shared)]
+	public class IdeService : IIdeService {
 		private static readonly ILogger Log = LogManager.ForContext<IdeService>();
 
 		private readonly IServiceProvider _serviceProvider;
@@ -49,18 +50,16 @@ namespace CodeStream.VisualStudio.Services {
 
 		private readonly Dictionary<ExtensionKind, bool> _extensions;
 
-		public IdeService(
-			IServiceProvider serviceProvider,
-			IComponentModel componentModel,
-			Dictionary<ExtensionKind, bool> extensions) {
+		[ImportingConstructor]
+		public IdeService([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
 			_serviceProvider = serviceProvider;
-			_componentModel = componentModel;
-			_extensions = extensions;
+			_componentModel = serviceProvider?.GetService(typeof(SComponentModel)) as IComponentModel;
+			_extensions = ExtensionManager.Initialize(LogManager.ForContext<ExtensionManagerDummy>()).Value;
 		}
 
 		public async System.Threading.Tasks.Task<bool> OpenEditorAndRevealAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false) {
 			using (Log.CriticalOperation($"{nameof(OpenEditorAndRevealAsync)} {fileUri} scrollTo={scrollTo}")) {
-				if (scrollTo == null) await System.Threading.Tasks.Task.CompletedTask;
+				if (scrollTo == null) return false;
 
 				var scrollToLine = scrollTo.Value;
 				try {
@@ -300,6 +299,8 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public bool QueryExtension(ExtensionKind extensionKind) {
+			if (_extensions == null) return false;
+
 			return _extensions.TryGetValue(extensionKind, out bool value) && value;
 		}
 

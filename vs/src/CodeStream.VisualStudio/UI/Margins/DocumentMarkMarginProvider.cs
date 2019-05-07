@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
 using CodeStream.VisualStudio.UI.Extensions;
+using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace CodeStream.VisualStudio.UI.Margins {
 	[Export(typeof(IWpfTextViewMarginProvider))]
@@ -39,20 +40,33 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		public ITextDocumentFactoryService TextDocumentFactoryService { get; set; }
 
 		public IWpfTextViewMargin CreateMargin(IWpfTextViewHost wpfTextViewHost, IWpfTextViewMargin parent) {
-			if (wpfTextViewHost == null || !wpfTextViewHost.TextView.Roles.ContainsAll(TextViewRoles.DefaultRoles)) return null;
-			if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextViewHost.TextView.TextBuffer, out var textDocument)) {
+			try {
+				if (wpfTextViewHost == null ||
+				    !wpfTextViewHost.TextView.Roles.ContainsAll(TextViewRoles.DefaultRoles)) return null;
+				if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService,
+					wpfTextViewHost.TextView.TextBuffer, out var textDocument)) {
+					return null;
+				}
+
+				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
+				var sessionService = componentModel?.GetService<ISessionService>();
+				var settingsService = componentModel?.GetService<ISettingsService>();
+
+				TextViewMargin = new DocumentMarkMargin(
+					_viewTagAggregatorFactoryService,
+					_glyphFactoryProviders,
+					wpfTextViewHost, sessionService, settingsService
+				);
+
+				return TextViewMargin;
+			}
+			catch (Exception ex) {
+#if DEBUG
+				System.Diagnostics.Debug.WriteLine(ex);
+				System.Diagnostics.Debugger.Break();
+#endif
 				return null;
 			}
-
-			TextViewMargin = new DocumentMarkMargin(
-				_viewTagAggregatorFactoryService,
-				_glyphFactoryProviders,
-				wpfTextViewHost,
-				Package.GetGlobalService(typeof(SSessionService)) as ISessionService,
-				Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService
-			);
-
-			return TextViewMargin;
 		}
 
 		public ICodeStreamWpfTextViewMargin TextViewMargin { get; private set; }

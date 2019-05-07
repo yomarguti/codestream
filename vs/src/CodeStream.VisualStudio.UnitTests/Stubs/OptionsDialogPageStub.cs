@@ -17,8 +17,8 @@ namespace CodeStream.VisualStudio.UnitTests.Stubs
         public string ServerUrl { get; set; }
         public string WebAppUrl { get; set; }
         public string Team { get; set; }
-        public void SaveSettingsToStorage() { }
-        public void LoadSettingsFromStorage() { }
+        public void Save() { }
+        public void Load() { }
         public TraceLevel TraceLevel { get; set; }
         public bool AutoSignIn { get; set; }
         public bool AutoHideMarkers { get; set; }

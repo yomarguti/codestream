@@ -23,6 +23,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Packages {
@@ -31,12 +32,12 @@ namespace CodeStream.VisualStudio.Packages {
 		Window = EnvDTE.Constants.vsWindowKindSolutionExplorer,
 		Style = VsDockStyle.Tabbed)]
 	[Guid(PackageGuids.guidWebViewPackageString)]
-	[ProvideOptionPage(typeof(OptionsDialogPage), "CodeStream", "Settings", 0, 0, true)]
 	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.NoSolution)]
 	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.EmptySolution)]
 	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.SolutionExists)]
 	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.SolutionHasMultipleProjects)]
 	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.SolutionHasSingleProject)]
+	[ProvideOptionPage(typeof(DialogPageProvider.General), "CodeStream", "Settings", 0, 0, true)]
 	[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
 	public sealed class WebViewPackage : AsyncPackage {
 		private static readonly ILogger Log = LogManager.ForContext<WebViewPackage>();
@@ -44,11 +45,17 @@ namespace CodeStream.VisualStudio.Packages {
 		private IDisposable _languageServerReadyEvent;
 		private VsShellEventManager _vsShellEventManager;
 		private CodeStreamEventManager _codeStreamEventManager;
+		private IComponentModel _componentModel;
 		private bool _hasOpenedSolutionOnce = false;
 		private readonly object _eventLocker = new object();
 		private bool _initializedEvents;
 		private List<IDisposable> _disposables;
 		private List<VsCommandBase> _commands;
+		internal static OptionsDialogPage OptionsDialogPage { get; private set; }
+
+		//public WebViewPackage() {
+		//	OptionsDialogPage = GetDialogPage(typeof(OptionsDialogPage)) as OptionsDialogPage;
+		//}
 
 		//protected override int QueryClose(out bool pfCanClose)
 		//{
@@ -68,21 +75,28 @@ namespace CodeStream.VisualStudio.Packages {
 		/// <param name="progress">A provider for progress updates.</param>
 		/// <returns>A task representing the async work of package initialization, or an already completed task if there is none. Do not return null from this method.</returns>
 		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
-			await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+			try {
+				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+				_componentModel = GetGlobalService(typeof(SComponentModel)) as IComponentModel;
 
-			var isSolutionLoaded = await IsSolutionLoadedAsync();
-			if (isSolutionLoaded) {
-				OnAfterBackgroundSolutionLoadComplete();
+				var isSolutionLoaded = await IsSolutionLoadedAsync();
+				if (isSolutionLoaded) {
+					OnAfterBackgroundSolutionLoadComplete();
+				}
+
+				SolutionEvents.OnAfterBackgroundSolutionLoadComplete += OnAfterBackgroundSolutionLoadComplete;
+				_settingsService = _componentModel.GetService<ISettingsService>();
+
+				InitializeLogging();
+				AsyncPackageHelper.InitializePackage(GetType().Name);
+
+				await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeCommandsAsync);
+
+				await base.InitializeAsync(cancellationToken, progress);
 			}
-
-			SolutionEvents.OnAfterBackgroundSolutionLoadComplete += OnAfterBackgroundSolutionLoadComplete;
-			_settingsService = await GetServiceAsync(typeof(SSettingsService)) as ISettingsService;
-			InitializeLogging();
-			AsyncPackageHelper.InitializePackage(GetType().Name);
-
-			await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeCommandsAsync);
-
-			await base.InitializeAsync(cancellationToken, progress);
+			catch (Exception ex) {
+				Log.Fatal(ex, nameof(InitializeAsync));
+			}
 		}
 
 		private async Task InitializeCommandsAsync() {
@@ -107,7 +121,7 @@ namespace CodeStream.VisualStudio.Packages {
 
 					new WebViewReloadCommand(),
 					new WebViewToggleCommand(this),
-					new AuthenticationCommand(this, this),
+					new AuthenticationCommand(this, _componentModel),
 					userCommand
 				};
 				await JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -119,7 +133,7 @@ namespace CodeStream.VisualStudio.Packages {
 				}
 				await BookmarkShortcutRegistration.InitializeAllAsync(this);
 
-				var eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
+				var eventAggregator = _componentModel.GetService<IEventAggregator>();
 				_disposables = new List<IDisposable> {
 					//when a user has logged in/out we alter the text of some of the commands
 					eventAggregator?.GetEvent<SessionReadyEvent>().Subscribe(_ => {
@@ -173,13 +187,14 @@ namespace CodeStream.VisualStudio.Packages {
 					try {
 						await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 						await TryTriggerLspActivationAsync();
-						var sessionService = GetGlobalService(typeof(SSessionService)) as ISessionService;
+						var sessionService = _componentModel.GetService<ISessionService>();
+
 
 						if (sessionService?.IsAgentReady == true) {
 							InitializeEvents();
 						}
 						else {
-							var eventAggregator = GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
+							var eventAggregator = _componentModel.GetService<IEventAggregator>();
 							// ReSharper disable once PossibleNullReferenceException
 							_languageServerReadyEvent = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(
 								_ => {
@@ -234,7 +249,7 @@ namespace CodeStream.VisualStudio.Packages {
 					lock (_eventLocker) {
 						if (!_initializedEvents) {
 							_vsShellEventManager = new VsShellEventManager(GetGlobalService(typeof(SVsShellMonitorSelection)) as IVsMonitorSelection);
-							_codeStreamEventManager = new CodeStreamEventManager(_vsShellEventManager, GetGlobalService(typeof(SBrowserService)) as IBrowserService);
+							_codeStreamEventManager = new CodeStreamEventManager(_vsShellEventManager, _componentModel.GetService<IBrowserService>());
 							_initializedEvents = true;
 
 						}
@@ -259,8 +274,7 @@ namespace CodeStream.VisualStudio.Packages {
 			else if (args.PropertyName == nameof(_settingsService.AutoHideMarkers)) {
 				var odp = sender as OptionsDialogPage;
 				if (odp == null) return;
-
-				var eventAggregator = ServiceLocator.Get<SEventAggregator, IEventAggregator>();
+				var eventAggregator = _componentModel.GetService<IEventAggregator>();
 				eventAggregator?.Publish(new AutoHideMarkersEvent { Value = odp.AutoHideMarkers });
 			}
 			else if (args.PropertyName == nameof(_settingsService.ShowAvatars) ||
@@ -269,8 +283,9 @@ namespace CodeStream.VisualStudio.Packages {
 				if (odp == null) return;
 
 				var configurationController = new ConfigurationController(
-					ServiceLocator.Get<SEventAggregator, IEventAggregator>(),
-					ServiceLocator.Get<SWebviewIpc, IWebviewIpc>());
+					_componentModel.GetService<IEventAggregator>(),
+					_componentModel.GetService<IWebviewIpc>()
+				);
 
 				switch (args.PropertyName) {
 					case nameof(_settingsService.ShowAvatars):
@@ -287,9 +302,9 @@ namespace CodeStream.VisualStudio.Packages {
 					 args.PropertyName == nameof(_settingsService.ProxyUrl) ||
 					 args.PropertyName == nameof(_settingsService.ProxyStrictSsl)) {
 				Log.Information($"Url(s) or Team or Proxy changed");
-				var sessionService = GetGlobalService(typeof(SSessionService)) as ISessionService;
+				var sessionService = _componentModel.GetService<ISessionService>();
 				if (sessionService?.IsAgentReady == true || sessionService?.IsReady == true) {
-					var browserService = GetGlobalService(typeof(SBrowserService)) as IBrowserService;
+					var browserService = _componentModel.GetService<IBrowserService>();
 					browserService?.ReloadWebView();
 				}
 			}

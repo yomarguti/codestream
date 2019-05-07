@@ -1,11 +1,9 @@
-﻿using CodeStream.VisualStudio.Annotations;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Runtime.Serialization;
 
 namespace CodeStream.VisualStudio.Services {
-	public interface SSessionService { }
-
 	public interface ISessionService {
 		User User { get; }
 		Guid GetOrCreateSignupToken();
@@ -27,8 +25,9 @@ namespace CodeStream.VisualStudio.Services {
 		string LiveShareUrl { get; set; }
 	}
 
-	[Injected]
-	public class SessionService : SSessionService, ISessionService, IDisposable {
+	[Export(typeof(ISessionService))]
+	[PartCreationPolicy(CreationPolicy.Shared)]
+	public class SessionService : ISessionService, IDisposable {
 		private SessionState _sessionState;
 		private Guid _signupToken = Guid.Empty;
 		public User User { get; private set; }
@@ -39,7 +38,9 @@ namespace CodeStream.VisualStudio.Services {
 		public string LastActiveFileUrl { get; set; }
 		private bool _disposed = false;
 
-		public SessionService() {}
+		public SessionService() {
+			// for breakpointing
+		}
 
 		public Guid GetOrCreateSignupToken() {
 			if (_signupToken == Guid.Empty) {

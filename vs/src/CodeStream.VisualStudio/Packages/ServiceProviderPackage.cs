@@ -1,9 +1,6 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.UI.Settings;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Serilog;
@@ -18,33 +15,19 @@ namespace CodeStream.VisualStudio.Packages {
 		void ShowToolWindowSafe(Guid toolWindowId);
 		bool IsVisible(Guid toolWindowId);
 	}
-
+	
 	public interface SToolWindowProvider { }
 
 	/// <summary>
 	/// Pseudo-package to allow for a custom service provider
 	/// </summary>
 	[ProvideService(typeof(SToolWindowProvider))]
-	[ProvideService(typeof(SSessionService))]
-	[ProvideService(typeof(SSettingsService))]
-	[ProvideService(typeof(SEventAggregator))]
-	[ProvideService(typeof(SIdeService))]
-	[ProvideService(typeof(SCredentialsService))]	
-	[ProvideService(typeof(SBrowserService))]
-	[ProvideService(typeof(SWebviewIpc))]
-	[ProvideService(typeof(SCodeStreamAgentService))]
-	[ProvideService(typeof(SCodeStreamService))]	
 	[ProvideService(typeof(SUserSettingsService))]
-	[ProvideService(typeof(SAuthenticationService))]
 	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 	[Guid(Guids.ServiceProviderPackageId)]
 	// ReSharper disable once RedundantExtendsListEntry
 	public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer, IToolWindowProvider, SToolWindowProvider {
 		private static readonly ILogger Log = LogManager.ForContext<ServiceProviderPackage>();
-		/// <summary>
-		/// Store a reference to this as only a class that inherits from AsyncPackage can call GetDialogPage
-		/// </summary>
-		private OptionsDialogPage _codeStreamOptions;
 
 		protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {		
 			try {
@@ -52,20 +35,8 @@ namespace CodeStream.VisualStudio.Packages {
 
 				AsyncPackageHelper.InitializePackage(GetType().Name);
 
-				_codeStreamOptions = (OptionsDialogPage)GetDialogPage(typeof(OptionsDialogPage));
-
 				((IServiceContainer)this).AddService(typeof(SToolWindowProvider), CreateService, true);
-				((IServiceContainer)this).AddService(typeof(SSessionService), CreateService, true);
-				((IServiceContainer)this).AddService(typeof(SSettingsService), CreateService, true);
-				((IServiceContainer)this).AddService(typeof(SEventAggregator), CreateService, true);
-				((IServiceContainer)this).AddService(typeof(SIdeService), CreateService, true);
-				((IServiceContainer)this).AddService(typeof(SCredentialsService), CreateService, true);
-				((IServiceContainer)this).AddService(typeof(SBrowserService), CreateService, true);
-				((IServiceContainer)this).AddService(typeof(SWebviewIpc), CreateService, true);
-				((IServiceContainer)this).AddService(typeof(SCodeStreamAgentService), CreateService, true);
-				((IServiceContainer)this).AddService(typeof(SCodeStreamService), CreateService, true);
 				((IServiceContainer)this).AddService(typeof(SUserSettingsService), CreateService, true);
-				((IServiceContainer)this).AddService(typeof(SAuthenticationService), CreateService, true);
 
 				await base.InitializeAsync(cancellationToken, progress);
 			}
@@ -77,48 +48,8 @@ namespace CodeStream.VisualStudio.Packages {
 		private object CreateService(IServiceContainer container, Type serviceType) {
 			if (typeof(SToolWindowProvider) == serviceType)
 				return this;
-			if (typeof(SSessionService) == serviceType)
-				return new SessionService();
-			if (typeof(SSettingsService) == serviceType)
-				return new SettingsService(_codeStreamOptions);
 			if (typeof(SUserSettingsService) == serviceType)
 				return new UserSettingsService(this);
-			if (typeof(SEventAggregator) == serviceType)
-				return new EventAggregator();
-			if (typeof(SIdeService) == serviceType)
-				return new IdeService(
-					this,
-					GetService(typeof(SComponentModel)) as IComponentModel,
-					ExtensionManager.Initialize(LogManager.ForContext<ExtensionManagerDummy>()).Value);
-			if (typeof(SCredentialsService) == serviceType)
-				return new CredentialsService();			
-			if (typeof(SCodeStreamAgentService) == serviceType)
-				return new CodeStreamAgentService(
-					GetService(typeof(SComponentModel)) as IComponentModel,
-					GetService(typeof(SSessionService)) as ISessionService,
-					GetService(typeof(SSettingsService)) as ISettingsService,
-					GetService(typeof(SEventAggregator)) as IEventAggregator);
-			if (typeof(SBrowserService) == serviceType)
-				return new DotNetBrowserService(
-					GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
-					GetService(typeof(SEventAggregator)) as IEventAggregator);
-			if (typeof(SWebviewIpc) == serviceType)
-				return new WebviewIpc(GetService(typeof(SBrowserService)) as IBrowserService);
-			if (typeof(SCodeStreamService) == serviceType)
-				return new CodeStreamService(
-					this,
-					GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
-					GetService(typeof(SWebviewIpc)) as IWebviewIpc
-				);
-			if (typeof(SAuthenticationService) == serviceType)
-				return new AuthenticationService(
-					GetService(typeof(SCredentialsService)) as ICredentialsService,
-					GetService(typeof(SEventAggregator)) as IEventAggregator,
-					GetService(typeof(SSessionService)) as ISessionService,
-					GetService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
-					GetService(typeof(SWebviewIpc)) as IWebviewIpc,
-					GetService(typeof(SSettingsService)) as ISettingsService
-				);
 
 			return null;
 		}

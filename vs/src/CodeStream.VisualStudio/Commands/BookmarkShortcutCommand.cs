@@ -6,6 +6,7 @@ using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
 
@@ -40,7 +41,8 @@ namespace CodeStream.VisualStudio.Commands {
 		private void InvokeHandler(object sender, BookmarkShortcutEventArgs args) {
 			if (args == null || args.Index < 1) return;
 
-			var codeStreamService = ServiceLocator.Get<SCodeStreamService, ICodeStreamService>();
+			var codeStreamService = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ICodeStreamService>();
+
 			_ = codeStreamService.TrackAsync(TelemetryEventNames.CodemarkClicked, new TelemetryProperties { { "Codemark Location", "Shortcut" } });
 
 			ThreadHelper.JoinableTaskFactory.Run(async delegate {
@@ -53,7 +55,8 @@ namespace CodeStream.VisualStudio.Commands {
 
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 
-					var ideService = ServiceLocator.Get<SIdeService, IIdeService>();
+					var ideService = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<IIdeService>();
+
 					var editorResponse = await ideService.OpenEditorAtLineAsync(response.TextDocument.Uri.ToUri(), response.Range, forceOpen: true);
 					if (!editorResponse) {
 						Log.Error($"ShowCodeResult={editorResponse} for {@response} failed to open editor");

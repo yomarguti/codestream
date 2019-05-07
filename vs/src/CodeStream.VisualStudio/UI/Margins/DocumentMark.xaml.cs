@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Core.Logging;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Serilog;
 
 namespace CodeStream.VisualStudio.UI.Margins {
@@ -64,9 +65,11 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			if (_viewModel?.Marker?.Codemark == null) return;
 
 			var toolWindowProvider = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
-			var codeStreamService = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
+			if (toolWindowProvider == null) return;
 
-			if (toolWindowProvider == null || codeStreamService == null) return;
+			var componentModel = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
+			var codeStreamService = componentModel?.GetService<ICodeStreamService>();
+			if (codeStreamService == null) return;
 
 			toolWindowProvider.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
 			_ = codeStreamService.ShowCodemarkAsync(_viewModel.Marker.Codemark.Id);

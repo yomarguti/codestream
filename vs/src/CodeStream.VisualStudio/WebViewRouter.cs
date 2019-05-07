@@ -24,6 +24,7 @@ namespace CodeStream.VisualStudio {
 		private readonly IWebviewIpc _ipc;
 		private readonly IIdeService _ideService;
 		private readonly IEditorService _editorService;
+		private readonly IAuthenticationService _authenticationService;
 
 		public WebViewRouter(
 			ICredentialsService credentialsService,
@@ -33,7 +34,8 @@ namespace CodeStream.VisualStudio {
 			IEventAggregator eventAggregator,
 			IWebviewIpc ipc,
 			IIdeService ideService,
-			IEditorService editorService) {
+			IEditorService editorService,
+			IAuthenticationService authenticationService) {
 			_credentialsService = credentialsService;
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
@@ -42,6 +44,7 @@ namespace CodeStream.VisualStudio {
 			_ipc = ipc;
 			_ideService = ideService;
 			_editorService = editorService;
+			_authenticationService = authenticationService;
 		}
 
 		//
@@ -151,9 +154,8 @@ namespace CodeStream.VisualStudio {
 								case SignOutRequestType.MethodName: {
 									await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 									using (_ipc.CreateScope(message)) {
-										var authenticationService = Package.GetGlobalService(typeof(SAuthenticationService)) as IAuthenticationService;
-										if (authenticationService != null) {
-											await authenticationService.LogoutAsync();
+										if (_authenticationService != null) {
+											await _authenticationService.LogoutAsync();
 										}
 									}
 									break;

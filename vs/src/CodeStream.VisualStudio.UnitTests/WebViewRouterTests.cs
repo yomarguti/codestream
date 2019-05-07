@@ -25,7 +25,8 @@ namespace CodeStream.VisualStudio.UnitTests {
 				new Mock<IEventAggregator>().Object,
 				ipcMock.Object,
 				new Mock<IIdeService>().Object,
-				new Mock<IEditorService>().Object
+				new Mock<IEditorService>().Object,
+				new Mock<IAuthenticationService>().Object
 			);
 
 			await router.HandleAsync(new WindowEventArgs("BOGUS"));

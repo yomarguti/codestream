@@ -7,16 +7,22 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace CodeStream.VisualStudio.UnitTests.Services {
+	public static class MockFactory {
+		public static T Create<T>() {
+			return default(T);
+		}
+	}
+
 	[TestClass]
 	public class DotNetBrowserServiceTests {
 		[TestMethod]
 		public void DotNetBrowserServiceTest() {
 			var codeStreamAgentServiceMock = new Mock<ICodeStreamAgentService>();
 			var eventAggregator = new EventAggregator();
+			codeStreamAgentServiceMock.Setup(_ => _.EventAggregator).Returns(eventAggregator);
 
 			var browserService = new DotNetBrowserServiceStub(
-				codeStreamAgentServiceMock.Object,
-				eventAggregator
+				codeStreamAgentServiceMock.Object
 			);
 
 			browserService.PostMessage("lsp1", true);
@@ -43,7 +49,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 			browserService.PostMessage("lsp2", true);
 			browserService.PostMessage("lsp3", true);
 			browserService.PostMessage("bootstrap");
-			
+
 			eventAggregator.Publish(new SessionReadyEvent());
 			Thread.Sleep(1000);
 			Assert.IsTrue(browserService.QueueCount == 0);
@@ -59,10 +65,10 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 		public void DotNetBrowserServiceNormalThenQueuedTest() {
 			var codeStreamAgentServiceMock = new Mock<ICodeStreamAgentService>();
 			var eventAggregator = new EventAggregator();
+			codeStreamAgentServiceMock.Setup(_ => _.EventAggregator).Returns(eventAggregator);
 
 			var browserService = new DotNetBrowserServiceStub(
-				codeStreamAgentServiceMock.Object,
-				eventAggregator
+				codeStreamAgentServiceMock.Object
 			);
 
 			browserService.PostMessage("bootstrap1");
@@ -91,14 +97,14 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 
 		[TestMethod()]
 		public void DotNetBrowserServiceNormalTest() {
-			var codeStreamAgentServiceMock = new Mock<ICodeStreamAgentService>();
 			var eventAggregator = new EventAggregator();
-			 
+			var codeStreamAgentServiceMock = new Mock<ICodeStreamAgentService>();
+			codeStreamAgentServiceMock.Setup(_ => _.EventAggregator).Returns(eventAggregator);
+
 			var browserService = new DotNetBrowserServiceStub(
-				codeStreamAgentServiceMock.Object,
-				eventAggregator
+				codeStreamAgentServiceMock.Object
 			);
-		 
+
 			browserService.PostMessage("bootstrap1");
 			//goes through -- no queue
 			Assert.IsTrue(browserService.QueueCount == 0);
@@ -123,10 +129,10 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 		public void DotNetBrowserServiceReloadTest() {
 			var codeStreamAgentServiceMock = new Mock<ICodeStreamAgentService>();
 			var eventAggregator = new EventAggregator();
+			codeStreamAgentServiceMock.Setup(_ => _.EventAggregator).Returns(eventAggregator);
 
 			var browserService = new DotNetBrowserServiceStub(
-				codeStreamAgentServiceMock.Object,
-				eventAggregator
+				codeStreamAgentServiceMock.Object
 			);
 
 			browserService.PostMessage("bootstrap1");
@@ -145,8 +151,8 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 		public List<string> Items { get; }
 
 		public DotNetBrowserServiceStub(
-			ICodeStreamAgentService agentService, IEventAggregator eventAggregator) :
-			base(agentService, eventAggregator) {
+			ICodeStreamAgentService agentService) :
+			base(agentService) {
 			Items = new List<string>();
 		}
 

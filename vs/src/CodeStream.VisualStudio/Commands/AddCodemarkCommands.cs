@@ -36,10 +36,10 @@ namespace CodeStream.VisualStudio.Commands {
 
 		protected override void ExecuteUntyped(object parameter) {
 			try {
-				var agentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
+				var componentModel = (IComponentModel)Package.GetGlobalService(typeof(SComponentModel));
+				var agentService = componentModel?.GetService<ICodeStreamAgentService>();
 				if (agentService == null) return;
-
-				var componentModel = (IComponentModel) Package.GetGlobalService(typeof(SComponentModel));
+				
 				var editorService = componentModel.GetService<IEditorService>();
 				var activeTextEditor = editorService.GetActiveTextEditorSelection();
 				if (activeTextEditor == null) return;
@@ -48,9 +48,9 @@ namespace CodeStream.VisualStudio.Commands {
 					try {
 						var response = await agentService.CreatePermalinkAsync(activeTextEditor.Range, activeTextEditor.Uri.ToString(),
 							"private");
-						
+
 						if (response != null) {
-							var ideService = Package.GetGlobalService(typeof(SIdeService)) as IIdeService;
+							var ideService = componentModel?.GetService<IIdeService>();
 							if (ideService != null) {
 								await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 								await ideService.SetClipboardAsync(response.LinkUrl);

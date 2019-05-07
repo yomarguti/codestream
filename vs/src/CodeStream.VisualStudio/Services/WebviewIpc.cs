@@ -1,13 +1,11 @@
-﻿using System.Threading;
+﻿using System.ComponentModel.Composition;
+using System.Threading;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Models;
 using Serilog;
 using System.Threading.Tasks;
-using CodeStream.VisualStudio.Annotations;
 
 namespace CodeStream.VisualStudio.Services {
-	public interface SWebviewIpc { }
-
 	public interface IWebviewIpc {
 		void Send(IRequestType message);
 		void Send(IAbstractMessageType message);
@@ -18,11 +16,13 @@ namespace CodeStream.VisualStudio.Services {
 		IBrowserService BrowserService { get; }
 	}
 
-	[Injected]
-	public class WebviewIpc : IWebviewIpc, SWebviewIpc {
+	[Export(typeof(IWebviewIpc))]
+	[PartCreationPolicy(CreationPolicy.Shared)]
+	public class WebviewIpc : IWebviewIpc {
 		private static readonly ILogger Log = LogManager.ForContext<WebviewIpc>();
 
-		public WebviewIpc(IBrowserService browserService) {
+		[ImportingConstructor]
+		public WebviewIpc([Import]IBrowserService browserService) {
 			BrowserService = browserService;
 		}
 

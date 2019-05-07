@@ -3,35 +3,36 @@ using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Models;
 using Serilog;
 using System;
+using System.ComponentModel.Composition;
 using System.Threading.Tasks;
 using CodeStream.VisualStudio.Extensions;
 
 namespace CodeStream.VisualStudio.Services {
-	public interface SAuthenticationService { }
 	public interface IAuthenticationService {
 		Task LogoutAsync();
 	}
-	public class AuthenticationService : SAuthenticationService, IAuthenticationService {
+	[Export(typeof(IAuthenticationService))]
+	[PartCreationPolicy(CreationPolicy.Shared)]
+	public class AuthenticationService : IAuthenticationService {
 		private static readonly ILogger Log = LogManager.ForContext<AuthenticationService>();
 
 		private readonly ICredentialsService _credentialsService;
 		private readonly IEventAggregator _eventAggregator;
 		private readonly ISessionService _sessionService;
 		private readonly ISettingsService _settingsService;
-		private readonly ICodeStreamAgentService _agentService;
+		private readonly ICodeStreamAgentService _codeStreamAgentService;
 		private readonly IWebviewIpc _webviewIpc;
 
+		[ImportingConstructor]
 		public AuthenticationService(
-			ICredentialsService credentialsService,
-			IEventAggregator eventAggregator,
-			ISessionService sessionService,
-			ICodeStreamAgentService serviceProvider,
-			IWebviewIpc webviewIpc,
-			ISettingsService settingsService) {
+			[Import]ICredentialsService credentialsService,
+			[Import]ICodeStreamAgentService codeStreamAgentService,
+			[Import]IWebviewIpc webviewIpc,
+			[Import]ISettingsService settingsService) {
 			_credentialsService = credentialsService;
-			_eventAggregator = eventAggregator;
-			_sessionService = sessionService;
-			_agentService = serviceProvider;
+			_eventAggregator = codeStreamAgentService.EventAggregator;
+			_sessionService = codeStreamAgentService.SessionService;
+			_codeStreamAgentService = codeStreamAgentService;
 			_webviewIpc = webviewIpc;
 			_settingsService = settingsService;
 		}
@@ -48,7 +49,7 @@ namespace CodeStream.VisualStudio.Services {
 				}
 
 				try {
-					await _agentService.LogoutAsync();
+					await _codeStreamAgentService.LogoutAsync();
 				}
 				catch (Exception ex) {
 					Log.Error(ex, $"{nameof(LogoutAsync)} - agent");

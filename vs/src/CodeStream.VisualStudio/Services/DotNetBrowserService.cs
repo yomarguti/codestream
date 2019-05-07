@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using CodeStream.VisualStudio.Annotations;
 using CodeStream.VisualStudio.Commands;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
@@ -37,7 +37,8 @@ namespace CodeStream.VisualStudio.Services {
 	/// <summary>
 	/// Implementation of a browser service using DotNetBrowser
 	/// </summary>
-	[Injected]
+	[Export(typeof(IBrowserService))]
+	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class DotNetBrowserService : BrowserServiceBase, DialogHandler, LoadHandler, ResourceHandler //, IProtocolHandler
 	{
 		private static readonly ILogger Log = LogManager.ForContext<DotNetBrowserService>();
@@ -65,11 +66,12 @@ namespace CodeStream.VisualStudio.Services {
 		/// This handles what is passed into DotNetBrowser as well as which Chromium switches get created
 		/// </summary>
 		public BrowserType BrowserType => BrowserType.HEAVYWEIGHT;
-
 		public override int QueueCount => _messageQueue.Count;
 
-		public DotNetBrowserService(ICodeStreamAgentService agentService, IEventAggregator eventAggregator) {
-			_agentService = agentService;
+		[ImportingConstructor]
+		public DotNetBrowserService([Import]ICodeStreamAgentService codeStreamAgentService) {
+			_agentService = codeStreamAgentService;
+			var eventAggregator = codeStreamAgentService.EventAggregator;
 			_messageQueue = new BlockingCollection<string>(new ConcurrentQueue<string>());
 			_manualResetEvent = new ManualResetEvent(false);
 			_sessionReadyEvent = eventAggregator.GetEvent<SessionReadyEvent>().Subscribe(_ => {
@@ -410,7 +412,7 @@ namespace CodeStream.VisualStudio.Services {
 			}
 
 			if (parameters.ResourceType == ResourceType.MAIN_FRAME) {
-				_ =_agentService.SendAsync<JToken>("codestream/url/open", new { url = parameters.URL });
+				_ = _agentService.SendAsync<JToken>("codestream/url/open", new { url = parameters.URL });
 			}
 
 			return false;

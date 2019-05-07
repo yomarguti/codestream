@@ -17,6 +17,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 	public partial class WebViewControl : UserControl, IDisposable {
 		private static readonly ILogger Log = LogManager.ForContext<WebViewControl>();
 
+		private readonly IComponentModel _componentModel;
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IWebviewIpc _ipc;
 		private readonly ISessionService _sessionService;
@@ -37,18 +38,17 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 			InitializeComponent();
 
 			Log.Verbose($"{nameof(OnInitialized)}...");
-
-			_ipc = ServiceLocator.Get<SWebviewIpc, IWebviewIpc>();
-			_codeStreamService = ServiceLocator.Get<SCodeStreamService, ICodeStreamService>();
+			_componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
+			_ipc = _componentModel?.GetService<IWebviewIpc>();
+			_codeStreamService = _componentModel?.GetService<ICodeStreamService>();
 
 			if (_ipc != null && _ipc.BrowserService != null) {
-
 				_ipc.BrowserService.Initialize();
 				_ipc.BrowserService.AttachControl(Grid);
 				_ipc.BrowserService.LoadSplashView();
 
-				_eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
-				_sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+				_eventAggregator = _codeStreamService.EventAggregator;
+				_sessionService = _codeStreamService.SessionService;
 
 				if (_sessionService == null) {
 					Log.Error("SessionService is null");
@@ -128,16 +128,17 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 				lock (InitializeLock) {
 					if (!_isInitialized) {
 						try {
-							var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
+							var authenticationService = _componentModel.GetService<IAuthenticationService>();
 							var router = new WebViewRouter(
-								Package.GetGlobalService(typeof(SCredentialsService)) as ICredentialsService,
-								Package.GetGlobalService(typeof(SSessionService)) as ISessionService,
-								Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService,
-								Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService,
+								_componentModel.GetService<ICredentialsService>(),
+								_componentModel.GetService<ISessionService>(),
+								_componentModel.GetService<ICodeStreamAgentService>(),
+								_componentModel.GetService<ISettingsService>(),
 								_eventAggregator,
 								_ipc,
-								Package.GetGlobalService(typeof(SIdeService)) as IIdeService,
-								componentModel.GetService<IEditorService>());
+								_componentModel.GetService<IIdeService>(),
+								_componentModel.GetService<IEditorService>(),
+								authenticationService);
 
 							_ipc.BrowserService.AddWindowMessageEvent(
 								async delegate(object sender, WindowEventArgs ea) { await router.HandleAsync(ea); });
@@ -149,9 +150,6 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 								_eventAggregator.GetEvent<AuthenticationChangedEvent>()
 									.Subscribe(_ => {
 										if (_.Reason == LogoutReason.Token) {
-											var authenticationService =
-												Package.GetGlobalService(typeof(SAuthenticationService)) as
-													IAuthenticationService;
 											if (authenticationService != null) {
 												ThreadHelper.JoinableTaskFactory.Run(async delegate {
 													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();

@@ -55,7 +55,7 @@ namespace CodeStream.VisualStudio.UnitTests.UI {
 			eventAggregator.Setup(_ => _.GetEvent<MarkerGlyphVisibilityEvent>()).Returns(new Subject<MarkerGlyphVisibilityEvent>());
 
 			var serviceProvider = new Mock<System.IServiceProvider>();
-			serviceProvider.Setup(_ => _.GetService(typeof(SEventAggregator))).Returns(eventAggregator.Object);
+			//serviceProvider.Setup(_ => _.GetService(typeof(SEventAggregator))).Returns(eventAggregator.Object);
 
 			var codeStreamAgentService = new Mock<ICodeStreamAgentService>();
 

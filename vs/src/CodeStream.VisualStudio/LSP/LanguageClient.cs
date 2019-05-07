@@ -13,6 +13,7 @@ using System.ComponentModel.Composition;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Newtonsoft.Json;
 using Package = Microsoft.VisualStudio.Shell.Package;
 
@@ -32,26 +33,28 @@ namespace CodeStream.VisualStudio.LSP {
 		public event AsyncEventHandler<EventArgs> StopAsync;
 #pragma warning restore 0067
 
-//#if DEBUG
-//		/// <summary>
-//		/// This is how we can see a list of contentTypes (used to generate the attrs for this class)
-//		/// </summary>
-//		[Import]
-//		internal IContentTypeRegistryService ContentTypeRegistryService { get; set; }
-//#endif
+		//#if DEBUG
+		//		/// <summary>
+		//		/// This is how we can see a list of contentTypes (used to generate the attrs for this class)
+		//		/// </summary>
+		//		[Import]
+		//		internal IContentTypeRegistryService ContentTypeRegistryService { get; set; }
+		//#endif
 		private readonly IEventAggregator _eventAggregator;
 		private readonly ISettingsService _settingsService;
 		private readonly ICodeStreamAgentService _codeStreamAgentService;
 		private readonly ISessionService _sessionService;
 
 		[ImportingConstructor]
-		public LanguageClient() {
+		public LanguageClient(
+			[Import] ICodeStreamAgentService codeStreamAgentService,
+			[Import] ISettingsService settingsService,						
+			[Import] IWebviewIpc ipc) {
 			Instance = this;
-			_eventAggregator = Package.GetGlobalService(typeof(SEventAggregator)) as IEventAggregator;
-			_settingsService = Package.GetGlobalService(typeof(SSettingsService)) as ISettingsService;
-			_codeStreamAgentService = Package.GetGlobalService(typeof(SCodeStreamAgentService)) as ICodeStreamAgentService;
-			_sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
-			var ipc = Package.GetGlobalService(typeof(SWebviewIpc)) as IWebviewIpc;
+			_codeStreamAgentService = codeStreamAgentService;
+			_eventAggregator = codeStreamAgentService.EventAggregator;
+			_sessionService = codeStreamAgentService.SessionService;
+			_settingsService = settingsService;			
 
 			_languageServerProcess = new LanguageServerProcess();
 			CustomMessageTarget = new CustomMessageHandler(_eventAggregator, ipc);

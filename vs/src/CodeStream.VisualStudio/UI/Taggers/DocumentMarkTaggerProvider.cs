@@ -7,6 +7,8 @@ using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
 using CodeStream.VisualStudio.UI.Extensions;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell;
 
 namespace CodeStream.VisualStudio.UI.Taggers {
 	[Export(typeof(IViewTaggerProvider))]
@@ -26,7 +28,11 @@ namespace CodeStream.VisualStudio.UI.Taggers {
 			if (!wpfTextView.Roles.ContainsAll(TextViewRoles.DefaultRoles)) return null;
 			if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, textView.TextBuffer, out var textDocument)) return null;
 
-			var sessionService = ServiceLocator.Get<SSessionService, ISessionService>();
+			var sessionService = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ISessionService>();
+			if (sessionService == null) {
+				return null;
+			}
+
 			return textView.Properties.GetOrCreateSingletonProperty(typeof(DocumentMarkTagger),
 				() => new DocumentMarkTagger(sessionService, textView, buffer)) as ITagger<T>;
 		}

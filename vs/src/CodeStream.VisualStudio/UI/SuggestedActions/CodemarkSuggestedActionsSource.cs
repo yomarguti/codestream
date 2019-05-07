@@ -60,10 +60,10 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 					new SuggestedActionSet(
 						actions: new ISuggestedAction[]
 						{
-							new CodemarkCommentSuggestedAction(_textDocument, _textSelection),
-							new CodemarkIssueSuggestedAction(_textDocument, _textSelection),
-							new CodemarkBookmarkSuggestedAction(_textDocument, _textSelection),
-							new CodemarkPermalinkSuggestedAction(_textDocument, _textSelection)
+							new CodemarkCommentSuggestedAction(_componentModel, _textDocument, _textSelection),
+							new CodemarkIssueSuggestedAction(_componentModel, _textDocument, _textSelection),
+							new CodemarkBookmarkSuggestedAction(_componentModel, _textDocument, _textSelection),
+							new CodemarkPermalinkSuggestedAction(_componentModel, _textDocument, _textSelection)
 						},
 						categoryName: null,
 						title: null,
@@ -81,7 +81,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 
 		public Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
 			try {
-				var sessionService = Package.GetGlobalService(typeof(SSessionService)) as ISessionService;
+				var sessionService = _componentModel.GetService<ISessionService>();
 				if (sessionService == null || sessionService.IsReady == false) {
 					return System.Threading.Tasks.Task.FromResult(false);
 				}
@@ -103,25 +103,25 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 	}
 
 	internal class CodemarkCommentSuggestedAction : CodemarkSuggestedActionBase {
-		public CodemarkCommentSuggestedAction(ITextDocument textDocument, EditorState textSelection) : base(textDocument, textSelection) { }
+		public CodemarkCommentSuggestedAction(IComponentModel componentModel, ITextDocument textDocument, EditorState textSelection) : base(componentModel, textDocument, textSelection) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Comment;
 		public override string DisplayText { get; } = $"Add Comment";
 	}
 
 	internal class CodemarkIssueSuggestedAction : CodemarkSuggestedActionBase {
-		public CodemarkIssueSuggestedAction(ITextDocument textDocument, EditorState textSelection) : base(textDocument, textSelection) { }
+		public CodemarkIssueSuggestedAction(IComponentModel componentModel, ITextDocument textDocument, EditorState textSelection) : base(componentModel, textDocument, textSelection) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Issue;
 		public override string DisplayText { get; } = $"Create Issue";
 	}
 
 	internal class CodemarkBookmarkSuggestedAction : CodemarkSuggestedActionBase {
-		public CodemarkBookmarkSuggestedAction(ITextDocument textDocument, EditorState textSelection) : base(textDocument, textSelection) { }
+		public CodemarkBookmarkSuggestedAction(IComponentModel componentModel, ITextDocument textDocument, EditorState textSelection) : base(componentModel, textDocument, textSelection) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Bookmark;
 		public override string DisplayText { get; } = $"Create Bookmark";
 	}
 
 	internal class CodemarkPermalinkSuggestedAction : CodemarkSuggestedActionBase {
-		public CodemarkPermalinkSuggestedAction(ITextDocument textDocument, EditorState textSelection) : base(textDocument, textSelection) { }
+		public CodemarkPermalinkSuggestedAction(IComponentModel componentModel, ITextDocument textDocument, EditorState textSelection) : base(componentModel, textDocument, textSelection) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Link;
 		public override string DisplayText { get; } = $"Get Permalink";
 	}
@@ -131,9 +131,11 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 
 		private readonly EditorState _textSelection;
 		private readonly ITextDocument _textDocument;
+		protected IComponentModel ComponentModel { get; private set; }
 		protected abstract CodemarkType CodemarkType { get; }
 
-		protected CodemarkSuggestedActionBase(ITextDocument textDocument, EditorState textSelection) {
+		protected CodemarkSuggestedActionBase(IComponentModel componentModel, ITextDocument textDocument, EditorState textSelection) {
+			ComponentModel = componentModel;
 			_textDocument = textDocument;
 			_textSelection = textSelection;
 		}
@@ -144,10 +146,9 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 
 		public void Invoke(CancellationToken cancellationToken) {
 			if (_textDocument == null) return;
-			var codeStreamService = Package.GetGlobalService(typeof(SCodeStreamService)) as ICodeStreamService;
-			if (codeStreamService == null) {
-				return;
-			}
+			var codeStreamService = ComponentModel?.GetService<ICodeStreamService>();
+
+			if (codeStreamService == null) return;
 
 			ThreadHelper.JoinableTaskFactory.Run(async delegate {
 				try {

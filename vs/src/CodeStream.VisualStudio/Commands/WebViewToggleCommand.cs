@@ -6,11 +6,15 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
+using CodeStream.VisualStudio.Core.Logging;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Serilog;
 
 namespace CodeStream.VisualStudio.Commands {
 	internal sealed class WebViewToggleCommand : VsCommandBase {
-		private AsyncPackage _package;
-		public WebViewToggleCommand(AsyncPackage package) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.WebViewToggleCommandId) {
+		private static readonly ILogger Log = LogManager.ForContext<WebViewToggleCommand>();
+		private readonly Package _package;
+		public WebViewToggleCommand(Package package) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.WebViewToggleCommandId) {
 			_package = package;
 		}
 
@@ -29,19 +33,27 @@ namespace CodeStream.VisualStudio.Commands {
 		}
 
 		protected override void ExecuteUntyped(object parameter) {
-			ThreadHelper.ThrowIfNotOnUIThread();
-			var isVisible = false;
-			IVsWindowFrame windowFrame = GetWindowFrame();
-			if (windowFrame.IsVisible() == VSConstants.S_OK) {
-				windowFrame.Hide();
+			try {
+				ThreadHelper.ThrowIfNotOnUIThread();
+				var isVisible = false;
+				IVsWindowFrame windowFrame = GetWindowFrame();
+				if (windowFrame.IsVisible() == VSConstants.S_OK) {
+					windowFrame.Hide();
+				}
+				else {
+					windowFrame.Show();
+					isVisible = true;
+				}
+				
+				var codeStreamAgentService = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ICodeStreamService>();
+				
+				codeStreamAgentService?.TrackAsync(isVisible
+					? TelemetryEventNames.WebviewOpened
+					: TelemetryEventNames.WebviewClosed);
 			}
-			else {
-				windowFrame.Show();
-				isVisible = true;
+			catch (Exception ex) {
+				Log.Error(ex, nameof(WebViewToggleCommand));
 			}
-
-			var codeStreamAgentService = ServiceLocator.Get<SCodeStreamAgentService, ICodeStreamAgentService>();
-			codeStreamAgentService?.TrackAsync(isVisible ? TelemetryEventNames.WebviewOpened : TelemetryEventNames.WebviewClosed);
 		}
 	}
 }
