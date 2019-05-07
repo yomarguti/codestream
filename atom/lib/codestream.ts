@@ -1,6 +1,7 @@
 import {
 	ChangeDataType,
 	CreateDocumentMarkerPermalinkRequestType,
+	TraceLevel,
 } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
 import { CompositeDisposable, Disposable } from "atom";
@@ -24,7 +25,8 @@ class CodestreamPackage {
 	private environmentChangeEmitter: Echo<EnvironmentConfig>;
 
 	constructor(state: PackageState) {
-		if (atom.inDevMode()) {
+		const configs = new ConfigManager();
+		if (configs.get("traceLevel") === TraceLevel.Debug) {
 			console.debug("CodeStream package initialized with state:", state);
 		}
 		this.workspaceSession = WorkspaceSession.create(state);
@@ -34,7 +36,7 @@ class CodestreamPackage {
 			this.viewController
 		);
 		this.environmentChangeEmitter = new Echo();
-		Container.initialize(this.markerDecorationProvider, new ConfigManager());
+		Container.initialize(this.markerDecorationProvider, configs);
 		this.initialize();
 	}
 
