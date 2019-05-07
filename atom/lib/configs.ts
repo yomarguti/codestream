@@ -1,5 +1,6 @@
+import { TraceLevel } from "@codestream/protocols/agent";
 import { WebviewConfigs } from "@codestream/protocols/webview";
-import { Disposable, Emitter } from "atom";
+import { Disposable } from "atom";
 
 export interface ConfigSchema {
 	team: string;
@@ -7,6 +8,7 @@ export interface ConfigSchema {
 	showMarkers: boolean;
 	autoHideMarkers: boolean;
 	autoSignIn: boolean;
+	traceLevel: TraceLevel;
 }
 
 const KEYS_FOR_WEBVIEW = ["avatars", "showMarkers"];
@@ -14,11 +16,6 @@ const KEYS_FOR_WEBVIEW = ["avatars", "showMarkers"];
 const keyForWebview = (key: string) => (key === "avatars" ? "showHeadshots" : key);
 
 export class ConfigManager implements Disposable {
-	private emitter: Emitter;
-
-	constructor() {
-		this.emitter = new Emitter();
-	}
 
 	get<K extends keyof ConfigSchema>(name: K): ConfigSchema[K] {
 		return atom.config.get(`codestream.${name}`);

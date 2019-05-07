@@ -38,10 +38,9 @@ import {
 } from "@codestream/protocols/webview";
 import { CompositeDisposable, Disposable, Emitter, Point, Range, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
-import { ConfigSchema } from "configs";
 import { remote, shell } from "electron";
 import { NotificationType } from "vscode-languageserver-protocol";
-import { Container } from "workspace/container";
+import { ConfigSchema } from "../configs";
 import {
 	BootstrapRequestType as AgentBootstrapRequestType,
 	ConnectionStatus,
@@ -52,6 +51,7 @@ import {
 } from "../protocols/agent/agent.protocol";
 import { CodemarkType, LoginResult } from "../protocols/agent/api.protocol";
 import { asAbsolutePath, Editor } from "../utils";
+import { Container } from "../workspace/container";
 import { WorkspaceEditorObserver } from "../workspace/editor-observer";
 import { SessionStatus, WorkspaceSession } from "../workspace/workspace-session";
 import { isViewVisible } from "./controller";
@@ -226,7 +226,7 @@ export class CodestreamView {
 			this.session.agent.onDidChangeDocumentMarkers(e =>
 				this.sendEvent(DidChangeDocumentMarkersNotificationType, e)
 			),
-			this.session.configManager.onDidChangeWebviewConfig(changes =>
+			Container.configs.onDidChangeWebviewConfig(changes =>
 				this.sendEvent(HostDidChangeConfigNotificationType, changes)
 			),
 			this.session.agent.onDidChangeConnectionStatus(e => {
@@ -283,7 +283,7 @@ export class CodestreamView {
 	}
 
 	checkToToggleMarkers() {
-		const configs = this.session.configManager;
+		const configs = Container.configs;
 		if (configs.get("showMarkers") === true && configs.get("autoHideMarkers") === true) {
 			if (this.webviewContext.panelStack[0] === WebviewPanels.CodemarksForFile) {
 				if (isViewVisible(this.getURI())) {
@@ -388,8 +388,9 @@ export class CodestreamView {
 			}
 			case UpdateConfigurationRequestType.method: {
 				const { name, value }: UpdateConfigurationRequest = message.params;
-				const { configManager } = this.session;
-				if (configManager.isUserSetting(name)) configManager.set(name as keyof ConfigSchema, value);
+				if (Container.configs.isUserSetting(name)) {
+					Container.configs.set(name as keyof ConfigSchema, value);
+				}
 				this.respond<UpdateConfigurationResponse>({ id: message.id, params: {} });
 				this.sendEvent(HostDidChangeConfigNotificationType, { [name]: value });
 				break;

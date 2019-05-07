@@ -4,6 +4,7 @@ import { CompositeDisposable, DisplayMarker, Disposable, Gutter, TextEditor } fr
 import { Convert } from "atom-languageclient";
 import { accessSafely, asAbsolutePath, Editor } from "utils";
 import { ViewController } from "views/controller";
+import { Container } from "./container";
 import { SessionStatus, WorkspaceSession } from "./workspace-session";
 
 interface DefaultCreator<K = any, V = any> {
@@ -53,12 +54,12 @@ export class MarkerDecorationProvider implements Disposable {
 						break;
 					}
 					case SessionStatus.SignedIn: {
-						if (session.configManager.get("showMarkers")) this.initialize();
+						if (Container.configs.get("showMarkers")) this.initialize();
 						break;
 					}
 				}
 			}),
-			session.configManager.onDidChange("showMarkers", ({ newValue }) =>
+			Container.configs.onDidChange("showMarkers", ({ newValue }) =>
 				newValue === true ? this.initialize() : this.reset()
 			)
 		);

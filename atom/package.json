@@ -56,6 +56,16 @@
 			"type": "boolean",
 			"default": true,
 			"description": "Automatically sign in when restoring a window with a previous session"
+		},
+		"traceLevel": {
+			"type": "string",
+			"default": "verbose",
+			"enum": [
+				"silent",
+				"errors",
+				"verbose",
+				"debug"
+			]
 		}
 	},
 	"scripts": {

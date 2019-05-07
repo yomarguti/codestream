@@ -1,12 +1,12 @@
 import { Emitter } from "atom";
 import uuidv4 from "uuid/v4";
-import { ConfigManager } from "../configs";
 import { EnvironmentConfig, PRODUCTION_CONFIG } from "../env-utils";
 import { AccessToken, AgentResult, Capabilities } from "../protocols/agent/agent.protocol";
 import { CSMe, LoginResult } from "../protocols/agent/api.protocol";
 import { PackageState } from "../types/package";
 import { getPluginVersion } from "../utils";
 import { CodeStreamAgent } from "./agent";
+import { Container } from "./container";
 
 export interface Session {
 	user: CSMe;
@@ -51,19 +51,12 @@ export class WorkspaceSession {
 	get ready() {
 		return this._isReady;
 	}
-	readonly configManager: ConfigManager;
 
 	static create(state: PackageState) {
-		return new WorkspaceSession(
-			new ConfigManager(),
-			state.session,
-			state.lastUsedEmail,
-			state.environment
-		);
+		return new WorkspaceSession(state.session, state.lastUsedEmail, state.environment);
 	}
 
 	protected constructor(
-		configManager: ConfigManager,
 		session?: Session,
 		lastUsedEmail?: string,
 		envConfig: EnvironmentConfig = PRODUCTION_CONFIG
@@ -73,9 +66,8 @@ export class WorkspaceSession {
 		this.session = session;
 		this.lastUsedEmail = lastUsedEmail;
 		this.envConfig = envConfig;
-		this.configManager = configManager;
 
-		if (session && configManager.get("autoSignIn")) {
+		if (session && Container.configs.get("autoSignIn")) {
 			this._isReady = new Promise(async (resolve, reject) => {
 				const result = await this.login(session.user.email, session.token);
 				if (result === LoginResult.Success) {
@@ -103,7 +95,6 @@ export class WorkspaceSession {
 
 	dispose() {
 		this.signOut();
-		this.configManager.dispose();
 	}
 
 	observeSessionStatus(callback: (status: SessionStatus) => void) {
@@ -156,7 +147,7 @@ export class WorkspaceSession {
 	getBootstrapInfo() {
 		return {
 			capabilities: this.capabilities,
-			configs: this.configManager.getForWebview(this.environment.serverUrl, this.lastUsedEmail),
+			configs: Container.configs.getForWebview(this.environment.serverUrl, this.lastUsedEmail),
 			version: getPluginVersion(),
 		};
 	}
@@ -164,7 +155,7 @@ export class WorkspaceSession {
 	private getTeamPreference() {
 		if (this.session) return { teamId: this.session.teamId };
 
-		const teamSetting = this.configManager.get("team");
+		const teamSetting = Container.configs.get("team");
 		if (teamSetting.length > 0) return { team: teamSetting };
 	}
 

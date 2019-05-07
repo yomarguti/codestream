@@ -24,9 +24,9 @@ import {
 	DidChangeDataNotificationType,
 	DidChangeDocumentMarkersNotification,
 	DidChangeDocumentMarkersNotificationType,
-	TraceLevel,
 } from "../protocols/agent/agent.protocol";
 import { asAbsolutePath, Editor, getPluginVersion } from "../utils";
+import { Container } from "./container";
 
 type RequestOrNotificationType<P, R> = RequestType<P, R, any, any> | NotificationType<P, R>;
 
@@ -167,7 +167,7 @@ abstract class AgentConnection {
 				version: atom.getVersion(),
 			},
 			isDebugging: atom.inDevMode(),
-			traceLevel: TraceLevel.Debug,
+			traceLevel: Container.configs.get("traceLevel"),
 			gitPath: "git",
 			...initOptions,
 		};

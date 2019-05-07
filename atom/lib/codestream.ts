@@ -4,6 +4,7 @@ import {
 } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
 import { CompositeDisposable, Disposable } from "atom";
+import { ConfigManager } from "configs";
 import { Echo, Editor, Listener } from "utils";
 import { Container } from "workspace/container";
 import { Environment, EnvironmentConfig, PD_CONFIG, PRODUCTION_CONFIG } from "./env-utils";
@@ -33,7 +34,7 @@ class CodestreamPackage {
 			this.viewController
 		);
 		this.environmentChangeEmitter = new Echo();
-		Container.initialize(this.markerDecorationProvider);
+		Container.initialize(this.markerDecorationProvider, new ConfigManager());
 		this.initialize();
 	}
 
