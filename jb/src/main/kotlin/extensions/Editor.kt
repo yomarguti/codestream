@@ -110,33 +110,30 @@ val Editor.visibleRanges: List<Range>
         )
 
         val ranges = mutableListOf<Range>()
-        var range: Range? = null
+        var range = Range(fullRange.start, fullRange.end)
 
-        for (region in foldingModel.allFoldRegions) {
-            if (region.end < fullRange.start) {
+        val collapsedRegions = foldingModel.allFoldRegions.filter { !it.isExpanded }
+        for (collapsed in collapsedRegions) {
+            if (collapsed.end < fullRange.start) {
                 continue
             }
-            if (region.start > fullRange.end) {
+            if (collapsed.start > fullRange.end) {
                 break
             }
 
-            if (region.isExpanded) {
-                if (range == null) {
-                    range = Range()
-                    range.start = if (region.start >= fullRange.start) region.start else fullRange.start
-                }
-                range.end = if (region.end <= fullRange.end) region.end else fullRange.end
-            } else {
-                if (range != null) {
-                    ranges += range
-                    range = null
-                }
+            val previousExpandedOffset = getOffset(collapsed.start) - 1
+            range.end = document.lspPosition(previousExpandedOffset)
+            if (range.start < range.end) {
+                ranges += range
             }
+
+            val nextExpandedOffset = getOffset(collapsed.end) + 1
+            range = Range()
+            range.start = document.lspPosition(nextExpandedOffset)
+            range.end = fullRange.end
         }
 
-        if (range != null) {
-            ranges += range
-        }
+        ranges += range
 
         return ranges
     }
