@@ -281,7 +281,7 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 	protected preInitialization(connection: LanguageClientConnection) {
 		this.subscriptions.add(
 			atom.workspace.observeTextEditors(editor => {
-				const filePath = editor.getPath;
+				const filePath = editor.getPath();
 				if (!filePath) return;
 
 				connection.didOpenTextDocument({
@@ -303,6 +303,17 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 								version: editor.createCheckpoint(),
 							},
 							contentChanges: [{ text: editor.getText() }],
+						});
+					}),
+					editor.onDidChangePath(path => {
+						connection.didCloseTextDocument({ textDocument: { uri: Convert.pathToUri(filePath) } });
+						connection.didOpenTextDocument({
+							textDocument: {
+								uri: Convert.pathToUri(path),
+								languageId: "",
+								version: editor.getBuffer().createCheckpoint(),
+								text: editor.getText(),
+							},
 						});
 					})
 				);
