@@ -13,10 +13,10 @@
 		"ctrl-/ shift-p": "codestream:keymap-copy-permalink"
 	},
 	".platform-win32 atom-text-editor": {
-		"ctrl-shift-/ /-c": "codestream:keymap-create-comment",
-		"ctrl-shift-/ /-i": "codestream:keymap-create-issue",
-		"ctrl-shift-/ /-b": "codestream:keymap-create-bookmark",
-		"ctrl-shift-/ /-p": "codestream:keymap-get-permalink",
+		"ctrl-shift-/ c": "codestream:keymap-create-comment",
+		"ctrl-shift-/ i": "codestream:keymap-create-issue",
+		"ctrl-shift-/ b": "codestream:keymap-create-bookmark",
+		"ctrl-shift-/ p": "codestream:keymap-get-permalink",
 		"ctrl-shift-/ shift-p": "codestream:keymap-copy-permalink"
 	}
 }
