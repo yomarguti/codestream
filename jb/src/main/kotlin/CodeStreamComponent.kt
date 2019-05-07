@@ -22,6 +22,8 @@ import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
 import kotlin.properties.Delegates
 
+const val CODESTREAM_TOOL_WINDOW_ID = "CodeStream"
+
 class CodeStreamComponent(val project: Project) : Disposable {
 
     private lateinit var toolWindow: ToolWindow
@@ -47,7 +49,7 @@ class CodeStreamComponent(val project: Project) : Disposable {
         val toolWindowManager = ToolWindowManager.getInstance(project) ?: return
         val webViewService = project.webViewService ?: return
         toolWindow = toolWindowManager.registerToolWindow(
-            "CodeStream",
+            CODESTREAM_TOOL_WINDOW_ID,
             false,
             ToolWindowAnchor.RIGHT,
             webViewService,

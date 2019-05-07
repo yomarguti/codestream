@@ -1,14 +1,15 @@
 package com.codestream.notification
 
+import com.codestream.CODESTREAM_TOOL_WINDOW_ID
 import com.codestream.codeStream
 import com.codestream.protocols.webview.StreamNotifications
 import com.codestream.sessionService
 import com.codestream.settingsService
 import com.codestream.webViewService
-import com.intellij.notification.Notification
 import com.intellij.notification.NotificationAction
+import com.intellij.notification.NotificationDisplayType
+import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
-import com.intellij.notification.Notifications
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import kotlinx.coroutines.GlobalScope
@@ -16,9 +17,19 @@ import kotlinx.coroutines.launch
 import protocols.agent.Post
 import protocols.agent.StreamType
 
+const val CODESTREAM_NOTIFICATION_GROUP_ID = "CodeStream"
+
 class NotificationComponent(val project: Project) {
 
     private val icon = IconLoader.getIcon("/images/codestream-unread.svg")
+    private val notificationGroup =
+        NotificationGroup(
+            CODESTREAM_NOTIFICATION_GROUP_ID,
+            NotificationDisplayType.BALLOON,
+            false,
+            CODESTREAM_TOOL_WINDOW_ID,
+            icon
+        )
 
     init {
         project.sessionService?.onPostsChanged(this::didChangePosts)
@@ -67,16 +78,8 @@ class NotificationComponent(val project: Project) {
     }
 
     fun showError(title: String, content: String) {
-        val notification = Notification(
-            "CodeStream",
-            icon,
-            title,
-            null,
-            content,
-            NotificationType.ERROR,
-            null
-        )
-        Notifications.Bus.notify(notification, project)
+        val notification = notificationGroup.createNotification(title, null, content, NotificationType.ERROR)
+        notification.notify(project)
     }
 
     private suspend fun showNotification(post: Post) {
@@ -92,14 +95,8 @@ class NotificationComponent(val project: Project) {
             sender
         }
 
-        val notification = Notification(
-            "CodeStream",
-            icon,
-            null,
-            subtitle,
-            post.text,
-            NotificationType.INFORMATION,
-            null
+        val notification = notificationGroup.createNotification(
+            null, subtitle, post.text, NotificationType.INFORMATION
         )
         notification.addAction(NotificationAction.createSimple("Open") {
             project.codeStream?.show {
@@ -109,8 +106,7 @@ class NotificationComponent(val project: Project) {
                 }
             }
         })
-
-        Notifications.Bus.notify(notification, project)
+        notification.notify(project)
     }
 }
 
