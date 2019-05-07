@@ -414,10 +414,8 @@ export class CodestreamView {
 					Convert.lsRangeToAtomRange(selection)
 				);
 
-				// TODO: revisit this because it doesn't actually work
 				if (preserveFocus) {
-					const pane = atom.workspace.paneContainerForURI(CODESTREAM_VIEW_URI);
-					if (pane) (pane.getActivePaneItem() as any).focus();
+					atom.views.getView(this).focus();
 				}
 				break;
 			}
@@ -438,7 +436,6 @@ export class CodestreamView {
 				this.respond<LogoutResponse>({ id: message.id, params: {} });
 				break;
 			}
-			// case Logout
 			// case ReloadWebviewRequestType.method: {
 			// 	new Promise(() => {
 			// 		this.destroy();
