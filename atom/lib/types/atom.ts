@@ -7,6 +7,8 @@ declare module "atom" {
 		getVisibleRowRange(): [number, number];
 		getApproximateLongestScreenRow(): number;
 		bufferRowForScreenRow(screenRow: number): number;
+
+		setScrollTopRow(row: number): void;
 	}
 
 	// not an exported type from atom

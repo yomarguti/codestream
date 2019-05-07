@@ -6,6 +6,8 @@ import {
 	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequest,
 	EditorRevealRangeRequestType,
+	EditorScrollToNotification,
+	EditorScrollToNotificationType,
 	EditorSelectRangeRequest,
 	EditorSelectRangeRequestType,
 	HostDidChangeActiveEditorNotification,
@@ -48,6 +50,9 @@ import {
 	DidChangeDataNotificationType,
 	DidChangeDocumentMarkersNotificationType,
 	GetFileScmInfoRequestType,
+	ReportingMessageType,
+	ReportMessageRequestType,
+	TraceLevel,
 } from "../protocols/agent/agent.protocol";
 import { CodemarkType, LoginResult } from "../protocols/agent/api.protocol";
 import { asAbsolutePath, Editor } from "../utils";
@@ -444,8 +449,15 @@ export class CodestreamView {
 			// 	break;
 			// }
 			default: {
+				Container.session.agent.request(ReportMessageRequestType, {
+					type: ReportingMessageType.Warning,
+					message: `Unhandled request from webview: ${message.method}`,
+					source: "extension",
+				});
 				atom.notifications.addWarning(`Unhandled webview message: ${message.method}`);
-				console.warn("unhandled webview message", message);
+				if (atom.inDevMode() && Container.configs.get("traceLevel") === TraceLevel.Debug) {
+					atom.notifications.addWarning(`Unhandled webview request: ${message.method}`);
+				}
 			}
 		}
 	}
@@ -461,6 +473,28 @@ export class CodestreamView {
 				this.emitter.emit(DID_CHANGE_STATE, event.params.context);
 				this.checkToToggleMarkers();
 				break;
+			}
+			case EditorScrollToNotificationType.method: {
+				console.debug("webview wants to scoll", event.params);
+				const { atTop, uri, position }: EditorScrollToNotification = event.params;
+				const editor = atom.workspace.getTextEditors().find(e => Editor.getUri(e) === uri);
+				if (!editor) return;
+				if (atTop) {
+					editor.setScrollTopRow(position.line);
+				} else {
+					editor.scrollToBufferPosition(new Point(position.line, position.character));
+				}
+				break;
+			}
+			default: {
+				Container.session.agent.request(ReportMessageRequestType, {
+					type: ReportingMessageType.Warning,
+					message: `Unhandled notification from webview: ${event.method}`,
+					source: "extension",
+				});
+				if (atom.inDevMode() && Container.configs.get("traceLevel") === TraceLevel.Debug) {
+					atom.notifications.addWarning(`Unhandled webview notification: ${event.method}`);
+				}
 			}
 		}
 	}
