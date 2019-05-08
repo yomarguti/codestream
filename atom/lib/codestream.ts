@@ -20,7 +20,7 @@ class CodestreamPackage {
 
 	constructor(state: PackageState) {
 		Container.initialize(state);
-		if (!Debug.isSilent()) {
+		if (Debug.isDebugging()) {
 			console.debug("CodeStream package initialized with state:", state);
 		}
 		this.environmentChangeEmitter = new Echo();
