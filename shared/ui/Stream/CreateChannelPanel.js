@@ -54,10 +54,6 @@ export class SimpleCreateChannelPanel extends Component {
 		if (input) input.focus();
 	};
 
-	tabIndex = () => {
-		return global.atom ? this.tabIndexCount++ : "0";
-	};
-
 	render() {
 		const inactive = this.props.activePanel !== "create-channel";
 
@@ -70,7 +66,6 @@ export class SimpleCreateChannelPanel extends Component {
 			? "Names must be lowercase, without spaces or periods, and shorter than 22 characters"
 			: "We don't support these characters: .~#%&*{}+/:<>?|'\".";
 
-		this.tabIndexCount = 0;
 		return (
 			<div className={createChannelPanelClass} ref={this._createChannelPanel}>
 				<div className="panel-header">
@@ -105,7 +100,6 @@ export class SimpleCreateChannelPanel extends Component {
 										className="native-key-bindings input-text control"
 										type="text"
 										name="name"
-										tabIndex={this.tabIndex()}
 										id="channel-name-input"
 										value={this.state.name}
 										onChange={e => this.setStateName(e.target.value)}
@@ -123,7 +117,6 @@ export class SimpleCreateChannelPanel extends Component {
 									className="native-key-bindings input-text control"
 									type="text"
 									name="purpose"
-									tabIndex={this.tabIndex()}
 									value={this.state.purpose}
 									onChange={e => this.setState({ purpose: e.target.value })}
 								/>
@@ -135,7 +128,6 @@ export class SimpleCreateChannelPanel extends Component {
 								<Select
 									id="input-members"
 									name="members"
-									tabIndex={this.tabIndex()}
 									classNamePrefix="native-key-bindings react-select"
 									isMulti={true}
 									value={this.state.members || []}
@@ -154,7 +146,6 @@ export class SimpleCreateChannelPanel extends Component {
 								<Button
 									id="save-button"
 									className="control-button"
-									tabIndex={this.tabIndex()}
 									type="submit"
 									loading={this.state.loading}
 									onClick={this.handleClickCreateChannel}
@@ -164,7 +155,6 @@ export class SimpleCreateChannelPanel extends Component {
 								<Button
 									id="discard-button"
 									className="control-button cancel"
-									tabIndex={this.tabIndex()}
 									type="submit"
 									onClick={this.handleClickCancel}
 								>

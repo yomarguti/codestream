@@ -82,35 +82,6 @@ export class MessageInput extends React.Component<Props, State> {
 				})
 			);
 		}
-		// TODO: move this into MessageInput
-		// because atom hijacks most keystroke events
-		// if (global.atom) {
-		// 	this.disposables.push(
-		// 		atom.commands.add("atom-workspace", {
-		// 			"codestream:focus-input": _event => this.focus()
-		// 		}),
-		// 		atom.commands.add(".codestream", "codestream:escape", {
-		// 			didDispatch: event => this.handleAtMentionKeyPress(event, "escape"),
-		// 			hiddenInCommandPalette: true
-		// 		}),
-		// 		atom.commands.add(".codestream .compose.popup-open", "codestream:popup-move-up", {
-		// 			didDispatch: event => this.handleAtMentionKeyPress(event, "up"),
-		// 			hiddenInCommandPalette: true
-		// 		}),
-		// 		atom.commands.add(".codestream .compose.popup-open", "codestream:popup-move-down", {
-		// 			didDispatch: event => this.handleAtMentionKeyPress(event, "down"),
-		// 			hiddenInCommandPalette: true
-		// 		}),
-		// 		atom.commands.add(".codestream .compose.popup-open", "codestream:popup-tab", {
-		// 			didDispatch: event => this.handleAtMentionKeyPress(event, "tab"),
-		// 			hiddenInCommandPalette: true
-		// 		}),
-		// 		atom.commands.add(".codestream .native-key-bindings", "codestream:move-up", {
-		// 			didDispatch: event => this.handleNonCapturedKeyPress(event, "up"),
-		// 			hiddenInCommandPalette: true
-		// 		})
-		// 	);
-		// }
 	}
 
 	componentDidUpdate(prevProps: Props) {
