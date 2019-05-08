@@ -171,7 +171,7 @@ abstract class AgentConnection {
 				build: "",
 				buildEnv: "dev",
 				version: getPluginVersion(),
-				versionFormatted: `${getPluginVersion}${atom.inDevMode() ? "(dev)" : ""}`,
+				versionFormatted: `${getPluginVersion()}${atom.inDevMode() ? "(dev)" : ""}`,
 			},
 			ide: {
 				name: "Atom",
