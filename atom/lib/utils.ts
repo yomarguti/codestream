@@ -1,8 +1,10 @@
+import { TraceLevel } from "@codestream/protocols/agent";
 import { EditorSelection } from "@codestream/protocols/webview";
 import { Disposable, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
 import * as path from "path";
 import { Range } from "vscode-languageserver-types";
+import { Container } from "workspace/container";
 
 export const accessSafely = <T>(f: () => T): T | void => {
 	try {
@@ -35,6 +37,16 @@ export const getDevPath = () => {
 export const getAgentSource = () => {
 	return path.resolve(getDevPath(), "../codestream-lsp-agent/dist/agent.js");
 };
+
+export namespace Debug {
+	export function isDebugging() {
+		return atom.inDevMode() && Container.configs.get("traceLevel") === TraceLevel.Debug;
+	}
+
+	export function isSilent() {
+		return Container.configs.get("traceLevel") === TraceLevel.Silent;
+	}
+}
 
 export namespace Editor {
 	export function getRelativePath(editor: TextEditor) {

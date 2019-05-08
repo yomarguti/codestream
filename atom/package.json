@@ -83,6 +83,7 @@
 	},
 	"dependencies": {
 		"atom-languageclient": "0.9.9",
+		"fs-plus": "3.1.1",
 		"uuid": "3.3.2"
 	},
 	"devDependencies": {
@@ -98,6 +99,7 @@
 		"@babel/runtime": "7.3.4",
 		"@types/atom": "1.31.1",
 		"@types/electron": "1.6.10",
+		"@types/fs-plus": "^3.0.1",
 		"@types/node-fetch": "2.1.6",
 		"@types/uuid": "3.4.4",
 		"acorn": "6.0.7",

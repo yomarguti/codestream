@@ -1,12 +1,11 @@
 import {
 	ChangeDataType,
 	CreateDocumentMarkerPermalinkRequestType,
-	TraceLevel,
 } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
 import { CompositeDisposable, Disposable } from "atom";
-import { ConfigManager } from "configs";
-import { Echo, Editor, Listener } from "utils";
+import { LOG_DIR } from "logger";
+import { Debug, Echo, Editor, Listener } from "utils";
 import { Container } from "workspace/container";
 import { Environment, EnvironmentConfig, PD_CONFIG, PRODUCTION_CONFIG } from "./env-utils";
 import { PackageState } from "./types/package";
@@ -21,8 +20,7 @@ class CodestreamPackage {
 
 	constructor(state: PackageState) {
 		Container.initialize(state);
-		const configs = new ConfigManager();
-		if (configs.get("traceLevel") === TraceLevel.Debug) {
+		if (!Debug.isSilent()) {
 			console.debug("CodeStream package initialized with state:", state);
 		}
 		this.environmentChangeEmitter = new Echo();
@@ -58,6 +56,10 @@ class CodestreamPackage {
 
 		const hiddenInCommandPalette = !atom.inDevMode();
 		this.subscriptions.add(
+			atom.commands.add("atom-workspace", "codestream:open-logs", () => {
+				atom.project.addPath(LOG_DIR);
+				atom.notifications.addInfo("The CodeStream log directory has been added to workspace");
+			}),
 			// 		Dev mode goodies
 			atom.commands.add("atom-workspace", "codestream:point-to-dev", {
 				didDispatch: () => {

@@ -41,6 +41,7 @@ import {
 import { CompositeDisposable, Disposable, Emitter, Point, Range, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
 import { remote, shell } from "electron";
+import { FileLogger } from "logger";
 import { NotificationType } from "vscode-languageserver-protocol";
 import { ConfigSchema } from "../configs";
 import {
@@ -55,7 +56,7 @@ import {
 	TraceLevel,
 } from "../protocols/agent/agent.protocol";
 import { CodemarkType, LoginResult } from "../protocols/agent/api.protocol";
-import { asAbsolutePath, Editor } from "../utils";
+import { asAbsolutePath, Debug, Editor } from "../utils";
 import { Container } from "../workspace/container";
 import { WorkspaceEditorObserver } from "../workspace/editor-observer";
 import { SessionStatus, WorkspaceSession } from "../workspace/workspace-session";
@@ -93,10 +94,12 @@ export class CodestreamView {
 	private webviewReady?: Promise<void>;
 	private webviewContext: any;
 	private editorSelectionObserver?: WorkspaceEditorObserver;
+	private logger: FileLogger;
 
 	constructor(session: WorkspaceSession, webviewContext: any) {
 		this.session = session;
 		this.webviewContext = webviewContext;
+		this.logger = new FileLogger("webview");
 		this.channel = new WebviewIpc();
 		this.emitter = new Emitter();
 		this.subscriptions = new CompositeDisposable();
@@ -159,14 +162,22 @@ export class CodestreamView {
 				{
 					label: "codestream-webview-initialize",
 					styles: await getStylesheets(),
+					isDebugging: Debug.isDebugging(),
 				},
 				"*",
 				[this.channel.webview]
 			);
 
 			iframe.contentWindow!.addEventListener("message", ({ data }: any) => {
-				if (data.label === "open-link") {
-					shell.openExternal(data.link);
+				switch (data.label) {
+					case "open-link": {
+						shell.openExternal(data.link);
+						break;
+					}
+					case "log": {
+						const { type, message, args } = data;
+						this.logger.log(type, message, JSON.stringify(args));
+					}
 				}
 			});
 		});
@@ -277,6 +288,7 @@ export class CodestreamView {
 		this.element.remove();
 		this.subscriptions.dispose();
 		this.editorSelectionObserver && this.editorSelectionObserver.dispose();
+		this.logger.dispose();
 	}
 
 	onWillDestroy(cb: () => void) {

@@ -6,10 +6,11 @@ import {
 	IPCMessageWriter,
 } from "atom-languageclient/node_modules/vscode-jsonrpc";
 import { ChildProcess, spawn } from "child_process";
-import * as fs from "fs";
+import { FileLogger } from "logger";
 import {
 	ClientCapabilities,
 	LogMessageParams,
+	MessageType,
 	NotificationType,
 	RequestType,
 } from "vscode-languageserver-protocol";
@@ -32,6 +33,16 @@ type RequestOrNotificationType<P, R> = RequestType<P, R, any, any> | Notificatio
 
 type RequestOf<RT> = RT extends RequestOrNotificationType<infer RQ, any> ? RQ : never;
 type ResponseOf<RT> = RT extends RequestOrNotificationType<any, infer R> ? R : never;
+
+const reverseMessageType = function() {
+	const result = {};
+	Object.entries(MessageType).forEach(([type, int]) => {
+		result[int] = type.toLowerCase();
+	});
+	return result;
+};
+
+const ReversedMessageType = reverseMessageType();
 
 const capabilities: ClientCapabilities = {
 	workspace: {
@@ -128,7 +139,7 @@ abstract class AgentConnection {
 		return this._connection;
 	}
 
-	protected abstract preInitialization(connection: LanguageClientConnection);
+	protected abstract preInitialization(connection: LanguageClientConnection): void;
 
 	protected async start(initOptions: {
 		serverUrl: string;
@@ -246,6 +257,7 @@ const DATA_CHANGED = "data-changed";
 export class CodeStreamAgent extends AgentConnection implements Disposable {
 	private emitter = new Emitter();
 	private subscriptions = new CompositeDisposable();
+	private logger = new FileLogger("agent");
 
 	async init(
 		email: string,
@@ -320,12 +332,6 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 			})
 		);
 
-		fs.unlink(asAbsolutePath("agent.log"), error => {
-			if (error && !error.message.includes("no such file or directory")) {
-				console.error("CodeStream: error removing agent.log", error);
-			}
-		});
-
 		connection.onLogMessage(this.onLogMessage);
 		connection.onCustom(DidChangeDataNotificationType.method, event => {
 			this.emitter.emit(DATA_CHANGED, event);
@@ -339,9 +345,7 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 	}
 
 	private onLogMessage = (params: LogMessageParams) => {
-		fs.appendFile(asAbsolutePath("agent.log"), `${params.message}\n`, error => {
-			if (error) console.error("CodeStream: failed to write to agent.log", error);
-		});
+		this.logger.log(ReversedMessageType[params.type], params.message);
 	}
 
 	onDidChangeData(cb: (event: DidChangeDataNotification) => void) {
@@ -369,6 +373,7 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 	}
 
 	dispose() {
+		this.logger.dispose();
 		this.emitter.dispose();
 		this.subscriptions.dispose();
 		this.stop();

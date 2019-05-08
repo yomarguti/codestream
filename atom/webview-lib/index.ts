@@ -21,10 +21,47 @@ const setStyles = (stylesheets: string[]) => {
 	document.body.classList.add(set);
 };
 
+const extensionLogMethods = {
+	log(message: any, ...args: any[]) {
+		window.postMessage({ label: "log", type: "log", message, args }, "*");
+	},
+	debug(message: any, ...args: any[]) {
+		window.postMessage({ label: "log", type: "debug", message, args }, "*");
+	},
+	warn(message: any, ...args: any[]) {
+		window.postMessage({ label: "log", type: "warn", message, args }, "*");
+	},
+	error(message: any, ...args: any[]) {
+		window.postMessage({ label: "log", type: "error", message, args }, "*");
+	},
+};
+
+function noop() {}
+
+const logMethods = ["log", "debug", "warn", "error"];
+
+const consoleProxy = new Proxy(window.console, {
+	get(target: any, property: any) {
+		if (property === "groupCollapsed") return noop;
+
+		if (logMethods.includes(property)) {
+			return extensionLogMethods[property];
+		}
+		return target[property];
+	},
+});
+
 window.addEventListener("message", ({ data, ports }) => {
 	if (data.label === "codestream-webview-initialize") {
 		setupCommunication(ports[0]);
 		setStyles(data.styles);
+
+		if (!data.isDebugging) {
+			Object.defineProperty(window, "console", {
+				value: consoleProxy,
+			});
+		}
+
 		initialize("#app");
 	}
 	if (data.label === "update-styles") {
