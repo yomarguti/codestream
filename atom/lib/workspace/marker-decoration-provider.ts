@@ -159,7 +159,7 @@ export class MarkerDecorationProvider implements Disposable {
 		const item = document.createElement("div");
 		item.onclick = event => {
 			event.preventDefault();
-			this.viewController.getMainView().show(docMarker.postStreamId, docMarker.postId);
+			this.viewController.getMainView().showCodemark(docMarker.codemarkId);
 		};
 		item.classList.add("codemark");
 		item.appendChild(img);

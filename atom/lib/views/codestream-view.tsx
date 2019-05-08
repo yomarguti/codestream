@@ -24,6 +24,7 @@ import {
 	LogoutResponse,
 	NewCodemarkNotificationType,
 	ReloadWebviewRequestType,
+	ShowCodemarkNotificationType,
 	ShowStreamNotificationType,
 	SignedInBootstrapResponse,
 	SlackLoginRequestType,
@@ -150,6 +151,11 @@ export class CodestreamView {
 		if (streamId) {
 			this.sendEvent(ShowStreamNotificationType, { streamId, threadId });
 		}
+	}
+
+	async showCodemark(codemarkId: string) {
+		await this.show();
+		this.sendEvent(ShowCodemarkNotificationType, { codemarkId });
 	}
 
 	private initializeWebview(iframe: HTMLIFrameElement) {
