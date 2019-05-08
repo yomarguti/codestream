@@ -95,6 +95,7 @@ export class CodestreamView {
 	private webviewContext: any;
 	private editorSelectionObserver?: WorkspaceEditorObserver;
 	private logger: FileLogger;
+	private timestamp = Date.now();
 
 	constructor(session: WorkspaceSession, webviewContext: any) {
 		this.session = session;
@@ -477,6 +478,11 @@ export class CodestreamView {
 	private onWebviewNotification(event: WebviewIpcNotificationMessage) {
 		switch (event.method) {
 			case WebviewDidInitializeNotificationType.method: {
+				if (Debug.isDebugging()) {
+					console.debug(
+						`CodeStream view created and interactive in ${Date.now() - this.timestamp} `
+					);
+				}
 				this.emitter.emit(WEBVIEW_DID_INITIALIZE);
 				break;
 			}
