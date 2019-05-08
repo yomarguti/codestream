@@ -92,6 +92,9 @@ export class ViewController implements Disposable {
 
 		item.destroy && item.destroy();
 
+		if (this.viewState[uri]) {
+			this.viewState[uri].state = undefined;
+		}
 		const disposable = paneForItem.onDidRemoveItem(e => {
 			if (e.item === item) {
 				atom.workspace.toggle(uri);
