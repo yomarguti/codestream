@@ -23,6 +23,7 @@ import {
 	LogoutRequestType,
 	LogoutResponse,
 	NewCodemarkNotificationType,
+	ReloadWebviewRequestType,
 	ShowStreamNotificationType,
 	SignedInBootstrapResponse,
 	SlackLoginRequestType,
@@ -454,13 +455,11 @@ export class CodestreamView {
 				this.respond<LogoutResponse>({ id: message.id, params: {} });
 				break;
 			}
-			// case ReloadWebviewRequestType.method: {
-			// 	new Promise(() => {
-			// 		this.destroy();
-			// 		atom.commands.dispatch(document.querySelector("atom-workspace")!, "codestream:toggle");
-			// 	});
-			// 	break;
-			// }
+			case ReloadWebviewRequestType.method: {
+				// TODO: technically, just the iframe could be replaced
+				Container.viewController.reload(this.getURI());
+				break;
+			}
 			default: {
 				Container.session.agent.request(ReportMessageRequestType, {
 					type: ReportingMessageType.Warning,

@@ -83,6 +83,24 @@ export class ViewController implements Disposable {
 		}
 	}
 
+	reload(uri: string) {
+		const paneForItem = atom.workspace.paneForURI(uri);
+		if (!paneForItem) return;
+
+		const item = paneForItem.itemForURI(uri) as WorkspaceItem | undefined;
+		if (!item) return;
+
+		item.destroy && item.destroy();
+
+		const disposable = paneForItem.onDidRemoveItem(e => {
+			if (e.item === item) {
+				atom.workspace.toggle(uri);
+				disposable.dispose();
+			}
+		});
+		paneForItem.destroyItem(item);
+	}
+
 	serialize() {
 		return this.viewState;
 	}

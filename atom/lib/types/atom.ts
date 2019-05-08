@@ -14,14 +14,19 @@ declare module "atom" {
 	// not an exported type from atom
 	interface WorkspaceItem {
 		getURI?(): string;
+		destroy?(): void;
 	}
 
 	interface WorkspaceCenter {
 		getActivePaneItem(): WorkspaceItem | undefined;
+
+		getPaneItems(): WorkspaceItem[];
 	}
 
 	interface Dock {
 		getActivePaneItem(): WorkspaceItem | undefined;
+
+		getPaneItems(): WorkspaceItem[];
 	}
 
 	interface ThemeManager {
