@@ -154,6 +154,14 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this._onDidReceiveMessage.event;
 	}
 
+	private _onDidSubscribe = new Emitter<void>();
+	get onDidSubscribe(): Event<void> {
+		return this._onDidSubscribe.event;
+	}
+	private _subscribePromise = new Promise<void>(resolve => {
+		this.onDidSubscribe(resolve);
+	});
+
 	private _events: BroadcasterEvents | undefined;
 	private readonly _middleware: CodeStreamApiMiddleware[] = [];
 	private _pubnubSubscribeKey: string | undefined;
@@ -342,6 +350,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 		} else {
 			await this._events.connect();
 		}
+
+		this._onDidSubscribe.fire();
 	}
 
 	private async onPubnubMessageReceived(e: RawRTMessage) {
@@ -1004,6 +1014,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	async getPreferences() {
+		await this._subscribePromise;
 		return { preferences: this._preferences!.get() };
 	}
 
