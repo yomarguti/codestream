@@ -153,9 +153,9 @@ export class CodestreamView {
 		}
 	}
 
-	async showCodemark(codemarkId: string) {
+	async showCodemark(codemarkId: string, sourceUri?: string) {
 		await this.show();
-		this.sendEvent(ShowCodemarkNotificationType, { codemarkId });
+		this.sendEvent(ShowCodemarkNotificationType, { codemarkId, sourceUri });
 	}
 
 	private initializeWebview(iframe: HTMLIFrameElement) {
