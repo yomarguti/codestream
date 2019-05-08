@@ -8,7 +8,7 @@ import Menu from "./Menu";
 import { markdownify } from "./Markdowner";
 import Timestamp from "./Timestamp";
 import CodemarkDetails from "./CodemarkDetails";
-import { DocumentMarker, CodemarkPlus } from "@codestream/protocols/agent";
+import { DocumentMarker, CodemarkPlus, OpenUrlRequestType } from "@codestream/protocols/agent";
 import { CodemarkType, CSUser, CSMe, CSPost } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
@@ -21,7 +21,6 @@ import { confirmPopup } from "./Confirm";
 import { getPost } from "../store/posts/reducer";
 import { getPosts } from "../store/posts/actions";
 import Tooltip from "./Tooltip";
-import { Link } from "./Link";
 
 interface State {
 	isEditing: boolean;
@@ -486,11 +485,15 @@ export class Codemark extends React.Component<Props, State> {
 			const icon = providerDisplay.icon;
 			if (!icon) return null;
 			externalLink = (
-				<Link href={codemark.externalProviderUrl}>
-					<span className="detail-icon">
-						<Icon name={icon} className="external-provider" />
-					</span>
-				</Link>
+				<span
+					className="detail-icon"
+					onClickCapture={e => {
+						e.preventDefault();
+						HostApi.instance.send(OpenUrlRequestType, { url: codemark.externalProviderUrl });
+					}}
+				>
+					<Icon name={icon} className="external-provider" />
+				</span>
 			);
 		}
 
