@@ -66,6 +66,24 @@
 				"verbose",
 				"debug"
 			]
+		},
+		"proxySupport": {
+			"type": "string",
+			"default": "off",
+			"enum": [
+				"override",
+				"on",
+				"off"
+			],
+			"description": "Specifies whether to support proxy servers. If 'override', a url is required"
+		},
+		"proxyUrl": {
+			"type": "string",
+			"default": ""
+		},
+		"proxyStrictSSL": {
+			"type": "boolean",
+			"default": true
 		}
 	},
 	"scripts": {

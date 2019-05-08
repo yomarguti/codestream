@@ -9,6 +9,9 @@ export interface ConfigSchema {
 	autoHideMarkers: boolean;
 	autoSignIn: boolean;
 	traceLevel: TraceLevel;
+	proxySupport: "off" | "on" | "override";
+	proxyUrl: string;
+	proxyStrictSSL: boolean;
 }
 
 const KEYS_FOR_WEBVIEW = ["avatars", "showMarkers"];
@@ -16,7 +19,6 @@ const KEYS_FOR_WEBVIEW = ["avatars", "showMarkers"];
 const keyForWebview = (key: string) => (key === "avatars" ? "showHeadshots" : key);
 
 export class ConfigManager implements Disposable {
-
 	get<K extends keyof ConfigSchema>(name: K): ConfigSchema[K] {
 		return atom.config.get(`codestream.${name}`);
 	}
