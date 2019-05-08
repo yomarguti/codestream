@@ -4,7 +4,6 @@
 
 echo "==== building agent ===="
 cd ../codestream-lsp-agent
-npm ci
 npm run bundle
 
 echo "==== building atom package ===="
