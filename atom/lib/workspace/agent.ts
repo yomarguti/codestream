@@ -4,14 +4,16 @@ import {
 	createMessageConnection,
 	IPCMessageReader,
 	IPCMessageWriter,
+	MessageConnection,
 } from "atom-languageclient/node_modules/vscode-jsonrpc";
 import { ChildProcess, spawn } from "child_process";
 import { FileLogger } from "logger";
 import {
-	ClientCapabilities,
+	ConfigurationParams,
 	LogMessageParams,
 	MessageType,
 	NotificationType,
+	RegistrationParams,
 	RequestType,
 } from "vscode-languageserver-protocol";
 import {
@@ -26,7 +28,8 @@ import {
 	DidChangeDocumentMarkersNotification,
 	DidChangeDocumentMarkersNotificationType,
 } from "../protocols/agent/agent.protocol";
-import { asAbsolutePath, Editor, getPluginVersion } from "../utils";
+import { asAbsolutePath, Debug, Editor, getAgentSource, getPluginVersion } from "../utils";
+import { capabilities } from "./client-capabilities";
 import { Container } from "./container";
 
 type RequestOrNotificationType<P, R> = RequestType<P, R, any, any> | NotificationType<P, R>;
@@ -44,93 +47,6 @@ const reverseMessageType = function() {
 
 const ReversedMessageType = reverseMessageType();
 
-const capabilities: ClientCapabilities = {
-	workspace: {
-		applyEdit: true,
-		configuration: false,
-		workspaceEdit: {
-			documentChanges: true,
-		},
-		workspaceFolders: true,
-		didChangeConfiguration: {
-			dynamicRegistration: false,
-		},
-		didChangeWatchedFiles: {
-			dynamicRegistration: false,
-		},
-		symbol: {
-			dynamicRegistration: false,
-		},
-		executeCommand: {
-			dynamicRegistration: false,
-		},
-	},
-	textDocument: {
-		synchronization: {
-			dynamicRegistration: false,
-			willSave: true,
-			willSaveWaitUntil: true,
-			didSave: true,
-		},
-		completion: {
-			dynamicRegistration: false,
-			completionItem: {
-				snippetSupport: true,
-				commitCharactersSupport: false,
-			},
-			contextSupport: true,
-		},
-		hover: {
-			dynamicRegistration: false,
-		},
-		signatureHelp: {
-			dynamicRegistration: false,
-		},
-		references: {
-			dynamicRegistration: false,
-		},
-		documentHighlight: {
-			dynamicRegistration: false,
-		},
-		documentSymbol: {
-			dynamicRegistration: false,
-			hierarchicalDocumentSymbolSupport: true,
-		},
-		formatting: {
-			dynamicRegistration: false,
-		},
-		rangeFormatting: {
-			dynamicRegistration: false,
-		},
-		onTypeFormatting: {
-			dynamicRegistration: false,
-		},
-		definition: {
-			dynamicRegistration: false,
-		},
-		codeAction: {
-			dynamicRegistration: false,
-		},
-		codeLens: {
-			dynamicRegistration: false,
-		},
-		documentLink: {
-			dynamicRegistration: false,
-		},
-		rename: {
-			dynamicRegistration: false,
-		},
-
-		// We do not support these features yet.
-		// Need to set to undefined to appease TypeScript weak type detection.
-		implementation: undefined,
-		typeDefinition: undefined,
-		colorProvider: undefined,
-		foldingRange: undefined,
-	},
-	experimental: {},
-};
-
 abstract class AgentConnection {
 	private _connection: LanguageClientConnection | undefined;
 	private _agentProcess: ChildProcess | undefined;
@@ -139,7 +55,10 @@ abstract class AgentConnection {
 		return this._connection;
 	}
 
-	protected abstract preInitialization(connection: LanguageClientConnection): void;
+	protected abstract preInitialization(
+		connection: LanguageClientConnection,
+		rpc: MessageConnection
+	): void;
 
 	protected async start(initOptions: {
 		serverUrl: string;
@@ -158,13 +77,7 @@ abstract class AgentConnection {
 
 		this._connection = new LanguageClientConnection(rpc);
 
-		rpc.onRequest("workspace/workspaceFolders", () => {
-			return atom.project
-				.getDirectories()
-				.map(dir => ({ uri: Convert.pathToUri(dir.getPath()), name: dir.getBaseName() }));
-		});
-
-		this.preInitialization(this._connection);
+		this.preInitialization(this._connection, rpc);
 
 		const initializationOptions: Partial<AgentOptions> = {
 			extension: {
@@ -229,7 +142,9 @@ abstract class AgentConnection {
 		options.env.ELECTRON_NO_ATTACH_CONSOLE = "1";
 		options.stdio = [null, null, null, "ipc"];
 
-		const agentPath = asAbsolutePath("dist/agent/agent.js");
+		const agentPath = Debug.isDebugging()
+			? getAgentSource()
+			: asAbsolutePath("dist/agent/agent.js");
 		const agentProcess = spawn(
 			process.execPath,
 			["--nolazy", "--inspect=6011", agentPath, "--node-ipc"],
@@ -313,7 +228,46 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 		return result;
 	}
 
-	protected preInitialization(connection: LanguageClientConnection) {
+	protected preInitialization(connection: LanguageClientConnection, rpc: MessageConnection) {
+		rpc.onRequest("client/registerCapability", (params: RegistrationParams) => {
+			params.registrations.forEach(registration => {
+				// TODO: register workspace/didChangeConfiguration
+				if (registration.method === "workspace/didChangeWorkspaceFolders") {
+					this.subscriptions.add(
+						atom.project.onDidChangePaths(() => {
+							connection.sendCustomNotification("workspace/didChangeWorkspaceFolders", {
+								event: {
+									added: atom.project.getDirectories().map(dir => ({
+										uri: Convert.pathToUri(dir.getPath()),
+										name: dir.getBaseName(),
+									})),
+								},
+							});
+						})
+					);
+				}
+			});
+		});
+
+		rpc.onRequest("workspace/configuration", (params: ConfigurationParams) => {
+			return params.items.map(({ section }) => {
+				const result = {};
+				if (section === "files.exclude" || section === "search.exclude") {
+					const ignoredPaths = atom.config.get("core.ignoredNames") as string[];
+					for (const path of ignoredPaths) {
+						result[path] = true;
+					}
+					return result;
+				}
+			});
+		});
+
+		rpc.onRequest("workspace/workspaceFolders", () => {
+			return atom.project
+				.getDirectories()
+				.map(dir => ({ uri: Convert.pathToUri(dir.getPath()), name: dir.getBaseName() }));
+		});
+
 		this.subscriptions.add(
 			atom.workspace.observeTextEditors(editor => {
 				const filePath = editor.getPath();
