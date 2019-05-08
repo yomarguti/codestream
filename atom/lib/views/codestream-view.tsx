@@ -27,6 +27,8 @@ import {
 	ShowCodemarkNotificationType,
 	ShowStreamNotificationType,
 	SignedInBootstrapResponse,
+	SignupRequestType,
+	SignupResponse,
 	SlackLoginRequestType,
 	SlackLoginResponse,
 	UpdateConfigurationRequest,
@@ -403,6 +405,15 @@ export class CodestreamView {
 				}
 				break;
 			}
+			case SignupRequestType.method: {
+				shell.openExternal(
+					`${
+						this.session.environment.webAppUrl
+					}/signup?force_auth=true&signup_token=${this.session.getSignupToken()}`
+				);
+				this.respond<SignupResponse>({ id: message.id, params: {} });
+				break;
+			}
 			case LoginRequestType.method: {
 				const params: LoginRequest = message.params;
 				const status = await this.session.login(params.email, params.password);
@@ -467,14 +478,17 @@ export class CodestreamView {
 				break;
 			}
 			default: {
-				Container.session.agent.request(ReportMessageRequestType, {
-					type: ReportingMessageType.Warning,
-					message: `Unhandled request from webview: ${message.method}`,
-					source: "extension",
-				});
-				atom.notifications.addWarning(`Unhandled webview message: ${message.method}`);
-				if (atom.inDevMode() && Container.configs.get("traceLevel") === TraceLevel.Debug) {
-					atom.notifications.addWarning(`Unhandled webview request: ${message.method}`);
+				if (Debug.isDebugging()) {
+					atom.notifications.addWarning(`Unhandled webview message: ${message.method}`);
+					if (atom.inDevMode() && Container.configs.get("traceLevel") === TraceLevel.Debug) {
+						atom.notifications.addWarning(`Unhandled webview request: ${message.method}`);
+					}
+				} else if (Container.session.isSignedIn) {
+					Container.session.agent.request(ReportMessageRequestType, {
+						type: ReportingMessageType.Warning,
+						message: `Unhandled request from webview: ${message.method}`,
+						source: "extension",
+					});
 				}
 			}
 		}
