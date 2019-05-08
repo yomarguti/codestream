@@ -160,6 +160,10 @@ export class MarkerDecorationProvider implements Disposable {
 		item.onclick = event => {
 			event.preventDefault();
 			this.viewController.getMainView().showCodemark(docMarker.codemarkId);
+			Container.session.agent.telemetry({
+				eventName: "Codemark Clicked",
+				properties: { "Codemark Location": "Source File" },
+			});
 		};
 		item.classList.add("codemark");
 		item.appendChild(img);

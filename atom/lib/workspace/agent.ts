@@ -27,6 +27,8 @@ import {
 	DidChangeDataNotificationType,
 	DidChangeDocumentMarkersNotification,
 	DidChangeDocumentMarkersNotificationType,
+	TelemetryRequest,
+	TelemetryRequestType,
 } from "../protocols/agent/agent.protocol";
 import { asAbsolutePath, Debug, Editor, getAgentSource, getPluginVersion } from "../utils";
 import { capabilities } from "./client-capabilities";
@@ -335,6 +337,10 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 
 	onDidChangeConnectionStatus(cb: (event: DidChangeConnectionStatusNotification) => void) {
 		return this.emitter.on(DidChangeConnectionStatusNotificationType.method, cb);
+	}
+
+	telemetry(data: TelemetryRequest) {
+		this.request(TelemetryRequestType, data);
 	}
 
 	request<RT extends RequestType<any, any, any, any>>(
