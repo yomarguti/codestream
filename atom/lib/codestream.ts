@@ -6,6 +6,7 @@ import { CodemarkType } from "@codestream/protocols/api";
 import { CompositeDisposable, Disposable } from "atom";
 import { LOG_DIR } from "logger";
 import { Debug, Echo, Editor, Listener } from "utils";
+import { CODESTREAM_VIEW_URI } from "views/codestream-view";
 import { Container } from "workspace/container";
 import { Environment, EnvironmentConfig, PD_CONFIG, PRODUCTION_CONFIG } from "./env-utils";
 import { PackageState } from "./types/package";
@@ -61,6 +62,12 @@ class CodestreamPackage {
 				atom.notifications.addInfo("The CodeStream log directory has been added to workspace");
 			}),
 			// 		Dev mode goodies
+			atom.commands.add("atom-workspace", "codestream:reload-webview", {
+				didDispatch: () => {
+					Container.viewController.reload(CODESTREAM_VIEW_URI);
+				},
+				hiddenInCommandPalette,
+			}),
 			atom.commands.add("atom-workspace", "codestream:point-to-dev", {
 				didDispatch: () => {
 					session.changeEnvironment(PD_CONFIG);
