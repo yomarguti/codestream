@@ -17,14 +17,9 @@ class CodestreamPackage {
 	subscriptions = new CompositeDisposable();
 	sessionStatusCommand?: Disposable;
 	loggedInCommandsSubscription?: CompositeDisposable;
-	private environmentChangeEmitter: Echo<EnvironmentConfig>;
+	private environmentChangeEmitter = new Echo<EnvironmentConfig>();
 
-	constructor(state: PackageState) {
-		Container.initialize(state);
-		if (Debug.isDebugging()) {
-			console.debug("CodeStream package initialized with state:", state);
-		}
-		this.environmentChangeEmitter = new Echo();
+	constructor() {
 		this.initialize();
 	}
 
@@ -112,7 +107,7 @@ class CodestreamPackage {
 	provideEnvironmentConfig() {
 		return {
 			get: () => Container.session.environment,
-			onDidChange: (cb: Listener<EnvironmentConfig>) => this.environmentChangeEmitter.listen(cb),
+			onDidChange: (cb: Listener<EnvironmentConfig>) => this.environmentChangeEmitter.add(cb),
 		};
 	}
 
@@ -244,7 +239,7 @@ class CodestreamPackage {
 			icon.classList.add(...getStatusBarIconClasses(Container.session.status));
 		});
 
-		this.environmentChangeEmitter.listen(() => {
+		this.environmentChangeEmitter.add(() => {
 			text.innerText = createStatusBarTitle(Container.session.status);
 		});
 
@@ -267,7 +262,11 @@ class CodestreamPackage {
 let codestream;
 const packageWrapper = {
 	initialize(state: PackageState) {
-		codestream = new CodestreamPackage(state);
+		Container.initialize(state);
+		if (Debug.isDebugging()) {
+			console.debug("CodeStream package initialized with state:", state);
+		}
+		codestream = new CodestreamPackage();
 	},
 };
 

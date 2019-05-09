@@ -95,7 +95,7 @@ export class StylesProvider implements Disposable {
 	}
 
 	onDidChange(cb: (stylesheets: string[]) => void) {
-		return this.changeEmitter.listen(cb);
+		return this.changeEmitter.add(cb);
 	}
 
 	private notify(source: string) {

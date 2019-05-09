@@ -158,7 +158,7 @@ export interface Listener<T> {
 export class Echo<T> implements Disposable {
 	private listeners = new Set<Listener<T>>();
 
-	listen(listener: (value: T) => void) {
+	add(listener: (value: T) => void) {
 		this.listeners.add(listener);
 		return new Disposable(() => {
 			this.listeners.delete(listener);
