@@ -1198,12 +1198,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			return;
 		}
 
-		if (
-			this.props.currentDocumentMarkerId === docMarker.id &&
-			target &&
-			(target.classList.contains("author") || target.closest(".author"))
-		) {
-			return this.deselectCodemarks();
+		if (this.props.currentDocumentMarkerId === docMarker.id) {
+			if (target && (target.classList.contains("author") || target.closest(".author"))) {
+				this.deselectCodemarks();
+			}
+			return;
 		}
 
 		HostApi.instance.send(TelemetryRequestType, {
