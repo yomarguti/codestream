@@ -1,13 +1,13 @@
 <p align="center">
   <br />
-  <a title="Learn more about CodeStream" href="https://codestream.com?utm_source=vscmarket&utm_medium=banner&utm_campaign=codestream"><img src="https://alt-images.codestream.com/codestream_logo_vscmarketplace.png" alt="CodeStream Logo" /></a>
+  <a title="Learn more about CodeStream" href="https://codestream.com?utm_source=atommarket&utm_medium=banner&utm_campaign=codestream"><img src="https://alt-images.codestream.com/codestream_logo_atommarketplace.png" alt="CodeStream Logo" /></a>
 </p>
 
 # CodeStream
 
 CodeStream helps dev teams discuss, review, and understand code. Discussing code is now as simple as commenting on a Google Doc — select the code and type your question.
 
-![CodeStream](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/animated/Spatial%20VSC.gif)
+![CodeStream](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/animated/SpatialAtom.gif)
 
 CodeStream turns conversation into documentation by capturing all of the discussion about your code, and saving it with your code. Each discussion is represented as a "codemark" that is permanently connected to the lines of code to which it refers.
 
@@ -17,7 +17,7 @@ Sign up for CodeStream using Slack so that discussions about code can be shared 
 
 # Requirements
 
-- CodeStream requires a current version of [Visual Studio Code](https://code.visualstudio.com/).
+- CodeStream requires version 1.34 or later of [Atom](https://atom.io/).
 - Your repository must be managed by Git, or a Git hosting service like GitHub.
 - In order to sign up with Slack, make sure your company doesn't require Slack apps to be pre-approved by an admin. CodeStream is not yet available in the Slack app directory.
 
@@ -27,11 +27,11 @@ Sign up for CodeStream using Slack so that discussions about code can be shared 
 
 Create a codemark by selecting a block of code in your editor and then typing a question or comment. Keep in mind that, unlike with other solutions, you can discuss any line of code in any source file at any time, even if it’s code that you just typed into your editor and haven’t yet saved or committed.
 
-![New Codemark](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/NewCodemark2.png)
+![New Codemark](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/NewCodemark3.png)
 
 In addition to general comments and questions, there are specific types of codemarks for assigning issues, saving bookmarks, or generating a permalink to a specific block of code.
 
-![Issue Codemark](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/CodemarkIssue2.png)
+![Issue Codemark](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/CodemarkIssue3.png)
 
 CodeStream integrates with Jira, Trello, GitHub, Asana, Bitbucket, and GitLab, making it easy to create an issue tied to a specific block of code, and have that issue appear in your existing issue-tracking service.
 
@@ -39,23 +39,17 @@ CodeStream integrates with Jira, Trello, GitHub, Asana, Bitbucket, and GitLab, m
 
 Click on a codemark to participate in the discussion. If you have the repo open, you’ll automatically be taken to the appropriate source file and scrolled to the code block.
 
-![Thread View](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/ThreadView2.png)
+![Thread View](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/ThreadView3.png)
 
 ## Leverage your team's knowledge base
 
 A codemark displayed to the right of a block of code means that a discussion took place about that code. Click on the codemark to view the discussion and get some context for the work at hand.
 
-![Codemark in Source File](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/SpatialSingleMarker.png)
+![Codemark in Source File](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/SpatialSingleMarker1.png)
 
 Click on the Search icon to explore your team’s entire knowledge base. Filters allow you to look at codemarks of a certain type, or a specific color.
 
 ![Codemarks tab](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/CodemarksTab1.png)
-
-## Visual Studio Live Share integration
-
-Live Share is an excellent plugin from Microsoft that allows users of VS Code to share a project with teammates so that they can access it right from within their IDE. Start a share session via `/liveshare`, or by clicking on a teammate's headshot, and you can continue to chat while you edit and debug together in real time.
-
-![Message in Stream](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/LiveShareStream.png)
 
 # Frequently Asked Questions
 
