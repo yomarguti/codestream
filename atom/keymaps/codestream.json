@@ -6,10 +6,10 @@
 		"ctrl-shift-/ /": "codestream:toggle"
 	},
 	".platform-darwin atom-text-editor, .platform-linux atom-text-editor": {
-		"ctrl-/ ctrl-c": "codestream:keymap-create-comment",
-		"ctrl-/ ctrl-i": "codestream:keymap-create-issue",
-		"ctrl-/ ctrl-b": "codestream:keymap-create-bookmark",
-		"ctrl-/ ctrl-p": "codestream:keymap-get-permalink",
+		"ctrl-/ c": "codestream:keymap-create-comment",
+		"ctrl-/ i": "codestream:keymap-create-issue",
+		"ctrl-/ b": "codestream:keymap-create-bookmark",
+		"ctrl-/ p": "codestream:keymap-get-permalink",
 		"ctrl-/ shift-p": "codestream:keymap-copy-permalink"
 	},
 	".platform-win32 atom-text-editor": {
