@@ -21,6 +21,13 @@ Sign up for CodeStream using Slack so that discussions about code can be shared 
 - Your repository must be managed by Git, or a Git hosting service like GitHub.
 - In order to sign up with Slack, make sure your company doesn't require Slack apps to be pre-approved by an admin. CodeStream is not yet available in the Slack app directory.
 
+# Installation
+
+You have two options for installing CodeStream.
+
+- Search for "CodeStream" in Atom's built-in package manager and install from there.
+- Or, run the command `apm install codestream` in your terminal.
+
 # Things to Try
 
 ## Create a codemark and discuss some code
