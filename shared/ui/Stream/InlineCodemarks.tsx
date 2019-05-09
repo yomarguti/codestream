@@ -258,7 +258,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			}
 		);
 
-		this.onFileChanged();
+		this.onFileChanged(true);
 
 		this.scrollTo(this.props.metrics.lineHeight!);
 	}
@@ -356,11 +356,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		}
 	};
 
-	async onFileChanged() {
-		const { textEditorUri, documentMarkers, setEditorContext } = this.props;
+	async onFileChanged(isInitialRender = false) {
+		const { textEditorUri, setEditorContext } = this.props;
 
 		if (textEditorUri === undefined || isNotOnDisk(textEditorUri)) {
-			if (this.state.isLoading) {
+			if (isInitialRender) {
 				this.setState({ isLoading: false });
 			}
 			return;
@@ -376,12 +376,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		this.setState({ problem: getFileScmError(scmInfo) });
 
-		if (documentMarkers.length === 0) {
-			this.setState(state => (state.isLoading ? null : { isLoading: true }));
-
-			await this.props.fetchDocumentMarkers(textEditorUri);
-			this.setState(state => (state.isLoading ? { isLoading: false } : null));
-		}
+		await this.props.fetchDocumentMarkers(textEditorUri);
+		this.setState(state => (state.isLoading ? { isLoading: false } : null));
 	}
 
 	compareStart(range1?: Range[], range2?: Range[]) {
