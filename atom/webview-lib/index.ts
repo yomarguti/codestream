@@ -5,9 +5,10 @@ const darkClass = "vscode-dark";
 
 const setStyles = (stylesheets: string[]) => {
 	const stylesContainer = document.querySelector("codestream-styles")!;
+	stylesContainer.innerHTML = "";
 	stylesheets.forEach((stylesheet: string) => {
 		const style = document.createElement("style");
-		style.innerText = stylesheet;
+		style.innerHTML = stylesheet;
 		stylesContainer.appendChild(style);
 	});
 

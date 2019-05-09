@@ -65,7 +65,6 @@ import { Container } from "../workspace/container";
 import { WorkspaceEditorObserver } from "../workspace/editor-observer";
 import { SessionStatus, WorkspaceSession } from "../workspace/workspace-session";
 import { isViewVisible } from "./controller";
-import { getStylesheets } from "./styles-getter";
 
 export class WebviewIpc {
 	private channel: MessageChannel;
@@ -171,7 +170,7 @@ export class CodestreamView {
 			iframe.contentWindow!.postMessage(
 				{
 					label: "codestream-webview-initialize",
-					styles: await getStylesheets(),
+					styles: await Container.styles.getStylesheets(),
 					isDebugging: Debug.isDebugging(),
 				},
 				"*",
@@ -193,12 +192,9 @@ export class CodestreamView {
 		});
 
 		this.subscriptions.add(
-			atom.themes.onDidChangeActiveThemes(async () => {
+			Container.styles.onDidChange(styles => {
 				if (!iframe.contentWindow) return;
-				iframe.contentWindow.postMessage(
-					{ label: "update-styles", styles: await getStylesheets() },
-					"*"
-				);
+				iframe.contentWindow.postMessage({ label: "update-styles", styles }, "*");
 			})
 		);
 
