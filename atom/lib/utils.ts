@@ -1,10 +1,17 @@
 import { TraceLevel } from "@codestream/protocols/agent";
 import { EditorSelection } from "@codestream/protocols/webview";
-import { Disposable, TextEditor } from "atom";
+import { Disposable, Point, Range, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
+import * as fs from "fs-plus";
 import * as path from "path";
-import { Range } from "vscode-languageserver-types";
+import { Range as LSRange } from "vscode-languageserver-types";
 import { Container } from "workspace/container";
+
+export function doTimes(count: number, fn: (i: number) => void) {
+	for (let i = 0; i < count; i++) {
+		fn(i + 1);
+	}
+}
 
 export const accessSafely = <T>(f: () => T): T | void => {
 	try {
@@ -49,6 +56,41 @@ export namespace Debug {
 }
 
 export namespace Editor {
+	export async function open(filePath: string, force = false) {
+		return new Promise<TextEditor | undefined>(resolve => {
+			fs.exists(filePath, async exists => {
+				if (exists || force) {
+					resolve(atom.workspace.open(filePath) as Promise<TextEditor | undefined>);
+				} else resolve();
+			});
+		});
+	}
+
+	export interface ScrollOptions {
+		center?: boolean;
+	}
+
+	export function scrollTo(editor: TextEditor, bufferRow: number, options: ScrollOptions = {}) {
+		editor.scrollToBufferPosition(new Point(bufferRow, 0), options);
+
+		const lastVisibleRow = editor.getLastVisibleScreenRow();
+		const firstVisibleRow = editor.getFirstVisibleScreenRow();
+		const middleRow = (lastVisibleRow - firstVisibleRow) / 2;
+		const rangeRow = editor.screenRowForBufferRow(bufferRow);
+
+		// if desired row is below center
+		if (rangeRow > middleRow) {
+			// if there are more enough rows below to make the desired row the middle
+			if (rangeRow - middleRow + lastVisibleRow < editor.getLastScreenRow()) {
+				editor.setFirstVisibleScreenRow(middleRow);
+			}
+		}
+	}
+
+	export async function selectRange(editor: TextEditor, range: Range) {
+		editor.setSelectedBufferRange(range);
+	}
+
 	export function getRelativePath(editor: TextEditor) {
 		const filePath = editor.getPath();
 		if (filePath === undefined) return "";
@@ -67,7 +109,7 @@ export namespace Editor {
 		const selection = editor.getSelectedBufferRange();
 		const range = Convert.atomRangeToLSRange(selection);
 		if (selection.isEmpty()) {
-			return Range.create(
+			return LSRange.create(
 				range.start.line,
 				0,
 				range.start.line,
@@ -89,15 +131,15 @@ export namespace Editor {
 		});
 	}
 
-	export function getVisibleRanges(editor: TextEditor): Range[] {
-		const visibleRanges: Range[] = [];
+	export function getVisibleRanges(editor: TextEditor): LSRange[] {
+		const visibleRanges: LSRange[] = [];
 		const lastVisibleRow = editor.getLastVisibleScreenRow();
 		let currentRangeStart = editor.getFirstVisibleScreenRow();
 
 		for (let line = currentRangeStart; line <= lastVisibleRow; line++) {
 			if (line === lastVisibleRow) {
 				visibleRanges.push(
-					Range.create(
+					LSRange.create(
 						editor.bufferRowForScreenRow(currentRangeStart),
 						0,
 						editor.bufferRowForScreenRow(line),
@@ -109,7 +151,7 @@ export namespace Editor {
 
 			if (editor.isFoldedAtScreenRow(line)) {
 				visibleRanges.push(
-					Range.create(
+					LSRange.create(
 						editor.bufferRowForScreenRow(currentRangeStart),
 						0,
 						editor.bufferRowForScreenRow(line),

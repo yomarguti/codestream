@@ -1,11 +1,13 @@
 import {
 	ChangeDataType,
 	CreateDocumentMarkerPermalinkRequestType,
+	GetDocumentFromKeyBindingRequestType,
 } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
 import { CompositeDisposable, Disposable } from "atom";
+import { Convert } from "atom-languageclient";
 import { LOG_DIR } from "logger";
-import { Debug, Echo, Editor, Listener } from "utils";
+import { Debug, doTimes, Echo, Editor, Listener } from "utils";
 import { CODESTREAM_VIEW_URI } from "views/codestream-view";
 import { Container } from "workspace/container";
 import { Environment, EnvironmentConfig, PD_CONFIG, PRODUCTION_CONFIG } from "./env-utils";
@@ -101,6 +103,7 @@ class CodestreamPackage {
 		this.sessionStatusCommand!.dispose();
 		Container.viewController.dispose();
 		Container.markerDecorationProvider.dispose();
+		Container.styles.dispose();
 		this.loggedInCommandsSubscription && this.loggedInCommandsSubscription.dispose();
 	}
 
@@ -174,6 +177,37 @@ class CodestreamPackage {
 				},
 			})
 		);
+		doTimes(9, i => {
+			this.subscriptions.add(
+				atom.commands.add("atom-workspace", `codestream:go-to-codemark-${i}`, async () => {
+					const response = await Container.session.agent.request(
+						GetDocumentFromKeyBindingRequestType,
+						{
+							key: i,
+						}
+					);
+
+					if (!response) return;
+
+					const { textDocument, range, marker } = response;
+
+					Container.session.agent.telemetry({
+						eventName: "Codemark Clicked",
+						properties: { "Codemark Location": "Shortcut" },
+					});
+
+					const editor = await Editor.open(Convert.uriToPath(textDocument.uri));
+					if (editor) {
+						const atomRange = Convert.lsRangeToAtomRange(range);
+						Editor.scrollTo(editor, atomRange.start.row);
+						editor.setSelectedBufferRange(atomRange);
+						Container.viewController
+							.getMainView()
+							.showCodemark(marker.codemarkId, textDocument.uri);
+					}
+				})
+			);
+		});
 	}
 
 	async consumeStatusBar(statusBar: StatusBar) {

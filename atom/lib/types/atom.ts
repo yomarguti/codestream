@@ -8,7 +8,10 @@ declare module "atom" {
 		getApproximateLongestScreenRow(): number;
 		bufferRowForScreenRow(screenRow: number): number;
 
+		screenRowForBufferRow(bufferRow: number): number;
+
 		setScrollTopRow(row: number): void;
+		setFirstVisibleScreenRow(row: number): void;
 	}
 
 	// not an exported type from atom
