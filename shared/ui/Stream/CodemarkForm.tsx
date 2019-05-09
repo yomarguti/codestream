@@ -972,7 +972,15 @@ class CodemarkForm extends React.Component<Props, State> {
 				<fieldset className="form-body">
 					<div id="controls" className="control-group">
 						{showHeadshots && (
-							<div style={{ paddingLeft: "25px", height: "25px", marginTop: "10px" }}>
+							<div
+								style={{
+									paddingLeft: "25px",
+									height: "25px",
+									marginTop: "10px",
+									marginBottom: "12px",
+									display: "inline-flex"
+								}}
+							>
 								<Headshot person={currentUser} />
 								<b>{currentUser.username}</b>
 								<span style={{ opacity: 0.75, paddingLeft: "5px" }}>{this.getCodeBlockHint()}</span>
