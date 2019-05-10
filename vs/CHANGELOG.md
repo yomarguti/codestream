@@ -1,5 +1,15 @@
 # Change Log
 
+## [1.0.0] - 2019-5-13
+
+### Added
+
+- Adds preemptive warnings about creating codemarks in files that aren't managed by Git, don't have remote URLs, or haven't been saved
+
+### Fixed
+
+- Fixes an issue with the wrapping of filename and line number information in the codemark form
+
 ## [0.53.0] - 2019-5-3
 
 ### Added
