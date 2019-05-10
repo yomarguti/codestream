@@ -34,7 +34,10 @@ export class EditorObserver implements Disposable {
 								callback.cancel();
 							});
 						}),
-						editor.onDidDestroy(() => editorSubscriptions.dispose())
+						editor.onDidDestroy(() => editorSubscriptions.dispose()),
+						editor.displayLayer.onDidChange(() => {
+							this.emitter.emit(DID_CHANGE_VISIBLE_RANGES, editor);
+						})
 					);
 
 					const editorView = atom.views.getView(editor);

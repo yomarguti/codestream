@@ -4,6 +4,9 @@ declare module "atom" {
 	interface TextEditor {
 		readonly rowsPerPage: number;
 		readonly element: TextEditorElement;
+		readonly displayLayer: {
+			onDidChange(cb: () => void): Disposable;
+		};
 
 		getFirstVisibleScreenRow(): number;
 		getLastVisibleScreenRow(): number;
