@@ -1,7 +1,10 @@
-import { Dock, TextEditor, ThemeManager, WorkspaceCenter } from "atom";
+import { Dock, Range, TextEditor, ThemeManager, WorkspaceCenter } from "atom";
 
 declare module "atom" {
 	interface TextEditor {
+		readonly rowsPerPage: number;
+		readonly element: TextEditorElement;
+
 		getFirstVisibleScreenRow(): number;
 		getLastVisibleScreenRow(): number;
 		getVisibleRowRange(): [number, number];
@@ -11,7 +14,8 @@ declare module "atom" {
 		screenRowForBufferRow(bufferRow: number): number;
 
 		setScrollTopRow(row: number): void;
-		setFirstVisibleScreenRow(row: number): void;
+
+		onDidRequestAutoscroll(cb: (event: { options: any; screenRange: Range }) => void): Disposable;
 	}
 
 	// not an exported type from atom

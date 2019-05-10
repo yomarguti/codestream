@@ -508,14 +508,13 @@ export class CodestreamView {
 				break;
 			}
 			case EditorScrollToNotificationType.method: {
-				console.debug("webview wants to scoll", event.params);
-				const { atTop, uri, position }: EditorScrollToNotification = event.params;
+				const { atTop, uri, position, deltaPixels }: EditorScrollToNotification = event.params;
 				const editor = atom.workspace.getTextEditors().find(e => Editor.getUri(e) === uri);
 				if (!editor) return;
 				if (atTop) {
-					editor.setScrollTopRow(position.line);
+					editor.setScrollTopRow(editor.screenRowForBufferRow(position.line));
 				} else {
-					editor.scrollToBufferPosition(new Point(position.line, position.character));
+					editor.element.setScrollTop(editor.element.getScrollTop() + deltaPixels!);
 				}
 				break;
 			}

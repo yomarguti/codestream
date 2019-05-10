@@ -18,38 +18,17 @@ export class EditorManipulator implements Disposable {
 		});
 	}
 
-	scrollTo(editor: TextEditor, bufferRow: number, options = { center: true }) {
+	scrollIntoView(editor: TextEditor, bufferRow: number, options = { center: true }) {
 		editor.scrollToBufferPosition(new Point(bufferRow, 0), options);
-
-		const lastVisibleRow = editor.getLastVisibleScreenRow();
-		const firstVisibleRow = editor.getFirstVisibleScreenRow();
-		const middleRow = (lastVisibleRow - firstVisibleRow) / 2;
-		const rangeRow = editor.screenRowForBufferRow(bufferRow);
-
-		if (options.center) {
-			// if desired row is below center
-			if (rangeRow > middleRow) {
-				// if there are more enough rows below to make the desired row the middle
-				if (rangeRow - middleRow + lastVisibleRow < editor.getLastScreenRow()) {
-					editor.setFirstVisibleScreenRow(middleRow);
-				}
-			}
-			// TODO: if above center. being at the top of the file is tolerable for now
-		}
 	}
 
-	async highlight(
-		enable: boolean,
-		file: string,
-		range: Range,
-		scrollOptions = { center: false }
-	): Promise<boolean> {
+	async highlight(enable: boolean, file: string, range: Range): Promise<boolean> {
 		const editor = await this.open(file);
 
 		if (!editor) return false;
 
 		if (enable) {
-			this.scrollTo(editor, range.start.row, scrollOptions);
+			this.scrollIntoView(editor, range.start.row, { center: false });
 			const marker = editor.markBufferRange(range, {
 				invalidate: "never",
 			});
@@ -88,7 +67,7 @@ export class EditorManipulator implements Disposable {
 
 		if (editor) {
 			if (range.isEmpty()) {
-				this.scrollTo(editor, range.start.row);
+				this.scrollIntoView(editor, range.start.row);
 			} else {
 				editor.setSelectedBufferRange(range);
 			}

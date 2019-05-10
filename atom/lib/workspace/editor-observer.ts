@@ -36,10 +36,22 @@ export class EditorObserver implements Disposable {
 						}),
 						editor.onDidDestroy(() => editorSubscriptions.dispose())
 					);
+
 					const editorView = atom.views.getView(editor);
+
+					/*
+							on scroll, wait for the dom to be updated and then fire the event
+					*/
 					if (editorView) {
 						editorSubscriptions.add(
-							editorView.onDidChangeScrollTop(() => {
+							editor.onDidRequestAutoscroll(async event => {
+								await editorView.getNextUpdatePromise();
+								(window as any).requestIdleCallback(() => {
+									this.emitter.emit(DID_CHANGE_VISIBLE_RANGES, editor);
+								});
+							}),
+							editorView.onDidChangeScrollTop(async () => {
+								await editorView.getNextUpdatePromise();
 								this.emitter.emit(DID_CHANGE_VISIBLE_RANGES, editor);
 							})
 						);

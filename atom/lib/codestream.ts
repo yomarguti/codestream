@@ -197,14 +197,15 @@ class CodestreamPackage {
 						properties: { "Codemark Location": "Shortcut" },
 					});
 
-					if (
-						await Container.editorManipulator.highlight(
-							true,
-							Convert.uriToPath(textDocument.uri),
-							Convert.lsRangeToAtomRange(range),
-							{ center: true }
-						)
-					) {
+					const atomRange = Convert.lsRangeToAtomRange(range);
+					const file = Convert.uriToPath(textDocument.uri);
+
+					const manipulator = Container.editorManipulator;
+					const editor = await manipulator.open(file);
+
+					if (editor) {
+						await manipulator.highlight(true, file, atomRange);
+						manipulator.scrollIntoView(editor, atomRange.start.row);
 						Container.viewController
 							.getMainView()
 							.showCodemark(marker.codemarkId, textDocument.uri);
