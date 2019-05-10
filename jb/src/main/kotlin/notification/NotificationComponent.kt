@@ -18,19 +18,17 @@ import protocols.agent.Post
 import protocols.agent.StreamType
 
 const val CODESTREAM_NOTIFICATION_GROUP_ID = "CodeStream"
+private val icon = IconLoader.getIcon("/images/codestream-unread.svg")
+private val notificationGroup =
+    NotificationGroup(
+        CODESTREAM_NOTIFICATION_GROUP_ID,
+        NotificationDisplayType.BALLOON,
+        false,
+        CODESTREAM_TOOL_WINDOW_ID,
+        icon
+    )
 
 class NotificationComponent(val project: Project) {
-
-    private val icon = IconLoader.getIcon("/images/codestream-unread.svg")
-    private val notificationGroup =
-        NotificationGroup(
-            CODESTREAM_NOTIFICATION_GROUP_ID,
-            NotificationDisplayType.BALLOON,
-            false,
-            CODESTREAM_TOOL_WINDOW_ID,
-            icon
-        )
-
     init {
         project.sessionService?.onPostsChanged(this::didChangePosts)
     }
