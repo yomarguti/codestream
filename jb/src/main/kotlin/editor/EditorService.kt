@@ -286,9 +286,9 @@ class EditorService(val project: Project) {
             }
         }
 
-        markerHighlighters[this] = markers.map {
-            val start = getOffset(it.range.start)
-            val end = getOffset(it.range.end)
+        markerHighlighters[this] = markers.map { marker ->
+            val start = getOffset(marker.range.start)
+            val end = getOffset(marker.range.end)
 
             markupModel.addRangeHighlighter(
                 Math.min(start, end),
@@ -296,13 +296,13 @@ class EditorService(val project: Project) {
                 HighlighterLayer.LAST,
                 null,
                 HighlighterTargetArea.EXACT_RANGE
-            ).apply {
+            ).also {
                 if (showGutterIcons) {
-                    gutterIconRenderer = GutterIconRendererImpl(project, it)
+                    it.gutterIconRenderer = GutterIconRendererImpl(this, marker)
                 }
-                isThinErrorStripeMark = true
-                errorStripeMarkColor = it.codemark.color()
-                errorStripeTooltip = it.summary
+                it.isThinErrorStripeMark = true
+                it.errorStripeMarkColor = marker.codemark.color()
+                it.errorStripeTooltip = marker.summary
             }
         }
     }

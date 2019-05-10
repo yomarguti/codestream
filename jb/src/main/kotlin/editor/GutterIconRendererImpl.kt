@@ -2,17 +2,18 @@ package com.codestream.editor
 
 import com.codestream.codeStream
 import com.codestream.extensions.ifNullOrBlank
+import com.codestream.extensions.uri
 import com.codestream.protocols.webview.CodemarkNotifications
 import com.codestream.webViewService
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.markup.GutterIconRenderer
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import protocols.agent.DocumentMarker
 import javax.swing.Icon
 
-class GutterIconRendererImpl(val project: Project?, val marker: DocumentMarker) : GutterIconRenderer() {
+class GutterIconRendererImpl(val editor: Editor, val marker: DocumentMarker) : GutterIconRenderer() {
     val id: String
         get() = marker.codemark.id
 
@@ -22,10 +23,12 @@ class GutterIconRendererImpl(val project: Project?, val marker: DocumentMarker) 
 
     override fun getClickAction(): AnAction? = object : AnAction() {
         override fun actionPerformed(e: AnActionEvent) {
-            project?.codeStream?.show {
-                project?.webViewService?.postNotification(
+            val project = editor.project ?: return
+            project.codeStream?.show {
+                project.webViewService?.postNotification(
                     CodemarkNotifications.Show(
-                        marker.codemark.id
+                        marker.codemark.id,
+                        editor.document.uri
                     )
                 )
             }
