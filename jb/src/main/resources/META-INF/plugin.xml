@@ -57,6 +57,17 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="1_0_0">1.0.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds preemptive warnings about creating codemarks in files that aren't managed by Git, don't have remote URLs, or haven't been saved</li>
+    <li>Adds support for folded ranges</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/54">#54</a> - Do not show notifications in event log by default</li>
+    <li>Fixes an issue with the wrapping of filename and line number information in the codemark form</li>
+</ul>
 <h4 id="0_53_0">0.53.0</h4>
 <h5>Added</h5>
 <ul>
