@@ -46,6 +46,7 @@ class CodeStreamComponent(val project: Project) : Disposable {
     }
 
     private fun initToolWindow() {
+        if (project.isDisposed) return
         val toolWindowManager = ToolWindowManager.getInstance(project) ?: return
         val webViewService = project.webViewService ?: return
         toolWindow = toolWindowManager.registerToolWindow(
