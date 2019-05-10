@@ -4,7 +4,6 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.ui.ColorUtil
 import com.intellij.util.DocumentUtil
@@ -14,22 +13,9 @@ import protocols.webview.EditorMargins
 import protocols.webview.EditorSelection
 import java.awt.Font
 import java.awt.Point
-import java.io.File
 
 val Editor.displayPath: String?
-    get() {
-        val file = FileDocumentManager.getInstance().getFile(document) ?: return null
-        val canonicalPath = file.canonicalPath ?: return null
-        val module = ProjectFileIndex.SERVICE.getInstance(project).getModuleForFile(file) ?: return canonicalPath
-        val moduleFile = File(module.moduleFilePath)
-        val parent = moduleFile.parentFile.parentFile.parentFile.parentFile ?: return canonicalPath
-        val relativePath = File(canonicalPath).relativeTo(parent).path
-
-        return if (relativePath.length < canonicalPath.length && !relativePath.contains(".."))
-            relativePath
-        else
-            canonicalPath
-    }
+    get() = FileDocumentManager.getInstance().getFile(document)?.name
 
 fun Editor.getOffset(position: Position): Int {
     val line = position.line
