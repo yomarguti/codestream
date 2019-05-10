@@ -15,6 +15,7 @@ interface State {
 }
 
 interface Props {
+	author: CSUser;
 	codemark: CodemarkPlus;
 	teammates: CSUser[];
 	currentUserId: string;
@@ -53,7 +54,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 	submitReply = async () => {
 		const { codemark } = this.props;
 		const { text } = this.state;
-		const mentionedUserIds = findMentionedUserIds(this.props.teammates, text);		
+		const mentionedUserIds = findMentionedUserIds(this.props.teammates, text);
 		const threadId = codemark ? codemark.postId : "";
 		const { createPost } = this.props;
 		this.setState({ text: "" });
@@ -81,13 +82,17 @@ export class CodemarkDetails extends React.Component<Props, State> {
 	};
 
 	render() {
-		const { codemark, capabilities } = this.props;
+		const { codemark, capabilities, author, currentUserId } = this.props;
 
 		const threadId = codemark.postId || "";
 		return (
 			<div className="codemark-details">
 				{this.props.children}
-				<CodemarkActions codemark={codemark} capabilities={capabilities} />
+				<CodemarkActions
+					codemark={codemark}
+					isAuthor={author.id === currentUserId}
+					capabilities={capabilities}
+				/>
 				<div className="replies">
 					<div className="shadow-overlay">
 						<div className="postslist threadlist" onClick={this.handleClickPost}>

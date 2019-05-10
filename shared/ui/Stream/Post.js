@@ -12,11 +12,10 @@ import { retryPost, cancelPost, editPost } from "./actions";
 import ContentEditable from "react-contenteditable";
 import Button from "./Button";
 import Menu from "./Menu";
-import EmojiPicker from "./EmojiPicker";
 import Tooltip from "./Tooltip";
-import Debug from "./Debug";
 import { getById } from "../store/repos/reducer";
 import { getPost } from "../store/posts/reducer";
+import { getUserByCsId } from "../store/users/reducer";
 import { getCodemark } from "../store/codemarks/reducer";
 import { markdownify, emojify } from "./Markdowner";
 import { reactToPost, setCodemarkStatus } from "./actions";
@@ -247,6 +246,7 @@ class Post extends React.Component {
 						<CodemarkActions
 							codemark={codemark}
 							capabilities={this.props.capabilities}
+							isAuthor={this.props.author.id === this.props.codemarkAuthor.id}
 							alwaysRenderCode={true}
 						/>
 					) : (
@@ -853,7 +853,6 @@ class Post extends React.Component {
 }
 
 const mapStateToProps = (state, props) => {
-
 	const { capabilities, context, users } = state;
 
 	// TODO: figure out a way to do this elsewhere
@@ -912,6 +911,7 @@ const mapStateToProps = (state, props) => {
 		author,
 		hasMarkers: codemark && codemark.markers && codemark.markers.length > 0,
 		codemark,
+		codemarkAuthor: codemark && getUserByCsId(state.users, codemark.creatorId),
 		parentPostContent,
 		parentPostCodemark,
 		capabilities

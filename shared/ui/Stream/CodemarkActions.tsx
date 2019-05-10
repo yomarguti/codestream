@@ -7,7 +7,8 @@ import { ApplyMarkerRequestType, CompareMarkerRequestType } from "../ipc/webview
 import {
 	Capabilities,
 	CodemarkPlus,
-	GetCodemarkSha1RequestType
+	GetCodemarkSha1RequestType,
+	TelemetryRequestType
 } from "@codestream/protocols/agent";
 
 interface State {
@@ -17,6 +18,7 @@ interface State {
 interface Props {
 	codemark: CodemarkPlus;
 	capabilities: Capabilities;
+	isAuthor: boolean;
 	alwaysRenderCode?: boolean;
 }
 
@@ -47,11 +49,19 @@ export default class CodemarkActions extends React.Component<Props, State> {
 
 	handleClickApplyPatch = event => {
 		event.preventDefault();
+		HostApi.instance.send(TelemetryRequestType, {
+			eventName: "Apply",
+			properties: { "Author?": this.props.isAuthor }
+		});
 		HostApi.instance.send(ApplyMarkerRequestType, { marker: this.props.codemark.markers![0] });
 	};
 
 	handleClickCompare = event => {
 		event.preventDefault();
+		HostApi.instance.send(TelemetryRequestType, {
+			eventName: "Compare",
+			properties: { "Author?": this.props.isAuthor }
+		});
 		HostApi.instance.send(CompareMarkerRequestType, { marker: this.props.codemark.markers![0] });
 	};
 

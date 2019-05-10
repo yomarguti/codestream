@@ -609,7 +609,11 @@ export class Codemark extends React.Component<Props, State> {
 						{!selected && this.renderDetailIcons(codemark)}
 					</div>
 					{selected && (
-						<CodemarkDetails codemark={codemark} postAction={this.props.postAction}>
+						<CodemarkDetails
+							codemark={codemark}
+							author={this.props.author}
+							postAction={this.props.postAction}
+						>
 							<div className="description">
 								{description}
 								{this.renderExternalLink(codemark)}
