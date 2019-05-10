@@ -62,7 +62,7 @@ import {
 import { CodemarkType, LoginResult } from "../protocols/agent/api.protocol";
 import { asAbsolutePath, Debug, Editor } from "../utils";
 import { Container } from "../workspace/container";
-import { WorkspaceEditorObserver } from "../workspace/editor-observer";
+import { EditorObserver } from "../workspace/editor-observer";
 import { SessionStatus, WorkspaceSession } from "../workspace/workspace-session";
 import { isViewVisible } from "./controller";
 
@@ -96,7 +96,7 @@ export class CodestreamView {
 	private emitter: Emitter;
 	private webviewReady?: Promise<void>;
 	private webviewContext: any;
-	private editorSelectionObserver?: WorkspaceEditorObserver;
+	private editorSelectionObserver?: EditorObserver;
 	private logger: FileLogger;
 	private timestamp = Date.now();
 
@@ -203,7 +203,7 @@ export class CodestreamView {
 	}
 
 	private observeWorkspace() {
-		this.editorSelectionObserver = new WorkspaceEditorObserver();
+		this.editorSelectionObserver = new EditorObserver();
 		this.editorSelectionObserver.onDidChangeSelection(this.onSelectionChanged);
 		this.editorSelectionObserver.onDidChangeActiveEditor(this.onEditorActiveEditorChanged);
 		this.editorSelectionObserver.onDidChangeVisibleRanges(editor => {
@@ -431,7 +431,7 @@ export class CodestreamView {
 			}
 			case EditorHighlightRangeRequestType.method: {
 				const { uri, highlight, range } = message.params;
-				this.editorSelectionObserver!.highlight(
+				Container.editorManipulator.highlight(
 					highlight,
 					Convert.uriToPath(uri),
 					Convert.lsRangeToAtomRange(range)
@@ -441,7 +441,7 @@ export class CodestreamView {
 			case EditorSelectRangeRequestType.method: {
 				const { selection, uri, preserveFocus }: EditorSelectRangeRequest = message.params;
 
-				await this.editorSelectionObserver!.select(
+				await Container.editorManipulator.select(
 					Convert.uriToPath(uri),
 					Convert.lsRangeToAtomRange(selection)
 				);

@@ -5,10 +5,9 @@ const DID_CHANGE_SELECTION = "did-change-selection";
 const DID_CHANGE_EDITOR = "did-change-editor";
 const DID_CHANGE_VISIBLE_RANGES = "did-change-visible-ranges";
 
-export class WorkspaceEditorObserver implements Disposable {
+export class EditorObserver implements Disposable {
 	private subscriptions: CompositeDisposable;
 	private emitter = new Emitter();
-	private highlights = new Map<number, Disposable>();
 
 	constructor() {
 		this.subscriptions = new CompositeDisposable();
@@ -65,62 +64,8 @@ export class WorkspaceEditorObserver implements Disposable {
 		return this.emitter.on(DID_CHANGE_VISIBLE_RANGES, cb);
 	}
 
-	async highlight(enable: boolean, file: string, range: Range) {
-		const editor = (await atom.workspace.open(file)) as TextEditor | undefined;
-		if (editor) {
-			if (enable) {
-				// editor.setCursorBufferPosition(range.start);
-				editor.scrollToBufferPosition(range.start, {
-					center: true,
-				});
-				const marker = editor.markBufferRange(range, {
-					invalidate: "never",
-				});
-				editor.decorateMarker(marker, {
-					type: "highlight",
-					class: "codestream-highlight",
-				});
-
-				this.highlights.set(
-					(marker as any).id,
-					new CompositeDisposable(
-						new Disposable(() => {
-							marker.destroy();
-						}),
-						editor.onDidChangeSelectionRange(() => this.removeHighlight((marker as any).id))
-					)
-				);
-			} else {
-				const markers = editor.findMarkers({
-					startBufferRow: range.start.row,
-				});
-				markers.forEach(marker => {
-					this.removeHighlight((marker as any).id);
-				});
-			}
-		}
-	}
-
-	private removeHighlight(markerId: number) {
-		const disposable = this.highlights.get(markerId);
-		disposable && disposable.dispose();
-	}
-
-	async select(file: string, range: Range) {
-		const editor = (await atom.workspace.open(file)) as TextEditor | undefined;
-
-		if (editor) {
-			if (range.isEmpty()) {
-				editor.scrollToBufferPosition(range.start);
-			} else {
-				editor.setSelectedScreenRange(range);
-			}
-		}
-	}
-
 	dispose() {
 		this.subscriptions.dispose();
 		this.emitter.dispose();
-		this.highlights.forEach(highlight => highlight.dispose());
 	}
 }

@@ -104,6 +104,7 @@ class CodestreamPackage {
 		Container.viewController.dispose();
 		Container.markerDecorationProvider.dispose();
 		Container.styles.dispose();
+		Container.editorManipulator.dispose();
 		this.loggedInCommandsSubscription && this.loggedInCommandsSubscription.dispose();
 	}
 
@@ -196,14 +197,20 @@ class CodestreamPackage {
 						properties: { "Codemark Location": "Shortcut" },
 					});
 
-					const editor = await Editor.open(Convert.uriToPath(textDocument.uri));
-					if (editor) {
-						const atomRange = Convert.lsRangeToAtomRange(range);
-						Editor.scrollTo(editor, atomRange.start.row);
-						editor.setSelectedBufferRange(atomRange);
+					if (
+						await Container.editorManipulator.highlight(
+							true,
+							Convert.uriToPath(textDocument.uri),
+							Convert.lsRangeToAtomRange(range),
+							{ center: true }
+						)
+					) {
 						Container.viewController
 							.getMainView()
 							.showCodemark(marker.codemarkId, textDocument.uri);
+					} else {
+						// if the file couldn't be opened, don't provide the uri to the webview
+						Container.viewController.getMainView().showCodemark(marker.codemarkId);
 					}
 				})
 			);

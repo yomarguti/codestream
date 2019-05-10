@@ -56,37 +56,6 @@ export namespace Debug {
 }
 
 export namespace Editor {
-	export async function open(filePath: string, force = false) {
-		return new Promise<TextEditor | undefined>(resolve => {
-			fs.exists(filePath, async exists => {
-				if (exists || force) {
-					resolve(atom.workspace.open(filePath) as Promise<TextEditor | undefined>);
-				} else resolve();
-			});
-		});
-	}
-
-	export interface ScrollOptions {
-		center?: boolean;
-	}
-
-	export function scrollTo(editor: TextEditor, bufferRow: number, options: ScrollOptions = {}) {
-		editor.scrollToBufferPosition(new Point(bufferRow, 0), options);
-
-		const lastVisibleRow = editor.getLastVisibleScreenRow();
-		const firstVisibleRow = editor.getFirstVisibleScreenRow();
-		const middleRow = (lastVisibleRow - firstVisibleRow) / 2;
-		const rangeRow = editor.screenRowForBufferRow(bufferRow);
-
-		// if desired row is below center
-		if (rangeRow > middleRow) {
-			// if there are more enough rows below to make the desired row the middle
-			if (rangeRow - middleRow + lastVisibleRow < editor.getLastScreenRow()) {
-				editor.setFirstVisibleScreenRow(middleRow);
-			}
-		}
-	}
-
 	export async function selectRange(editor: TextEditor, range: Range) {
 		editor.setSelectedBufferRange(range);
 	}
