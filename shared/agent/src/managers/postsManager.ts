@@ -1,5 +1,7 @@
 "use strict";
+import * as fs from "fs";
 import { has } from "lodash-es";
+import { TextDocumentIdentifier } from "vscode-languageserver";
 import URI from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
 import { MarkerLocation, Ranges } from "../api/extensions";
@@ -390,13 +392,13 @@ class PostsCache extends EntityCache<CSPost> {
 	}
 }
 
-function trackPostCreation(request: CreatePostRequest) {
+function trackPostCreation(request: CreatePostRequest, textDocument?: TextDocumentIdentifier) {
 	process.nextTick(() => {
 		try {
 			// Get stream so we can determine type
 			Container.instance()
 				.streams.getById(request.streamId)
-				.then((stream: CSStream) => {
+				.then(async (stream: CSStream) => {
 					let streamType: String = "Unknown";
 					switch (stream.type) {
 						case StreamType.Channel:
@@ -466,7 +468,8 @@ function trackPostCreation(request: CreatePostRequest) {
 							[key: string]: any;
 						} = {
 							"Codemark Type": request.codemark.type,
-							"Linked Service": request.codemark.externalProvider
+							"Linked Service": request.codemark.externalProvider,
+							"Git Error": await getGitError(textDocument)
 						};
 						telemetry.track({ eventName: "Codemark Created", properties: codemarkProperties });
 					}
@@ -474,6 +477,28 @@ function trackPostCreation(request: CreatePostRequest) {
 				.catch(ex => Logger.error(ex));
 		} catch (ex) {
 			Logger.error(ex);
+		}
+	});
+}
+
+function getGitError(textDocument?: TextDocumentIdentifier) {
+	return new Promise(resolve => {
+		if (textDocument) {
+			fs.access(URI.parse(textDocument.uri).fsPath, async error => {
+				if (error) return resolve("FileNotSaved");
+
+				const scmInfo = await Container.instance().scm.getFileInfo(textDocument);
+				if (!scmInfo.scm) {
+					if (!scmInfo.error) {
+						return resolve("RepoNotManaged");
+					} else {
+						return resolve("GitNotFound");
+					}
+				} else if (scmInfo.scm!.remotes.length === 0) {
+					return resolve("NoRemotes");
+				}
+				resolve();
+			});
 		}
 	});
 }
@@ -612,9 +637,12 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	}
 
 	@lspHandler(CreatePostRequestType)
-	async createPost(request: CreatePostRequest): Promise<CreatePostResponse> {
+	async createPost(
+		request: CreatePostRequest,
+		textDocument?: TextDocumentIdentifier
+	): Promise<CreatePostResponse> {
 		const response = await this.session.api.createPost(request);
-		trackPostCreation(request);
+		trackPostCreation(request, textDocument);
 		await resolveCreatePostResponse(response);
 		return {
 			...response,
@@ -707,14 +735,17 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		}
 
 		try {
-			const response = await this.createPost({
-				streamId,
-				text: "",
-				parentPostId,
-				codemark: codemarkRequest,
-				mentionedUserIds,
-				entryPoint
-			});
+			const response = await this.createPost(
+				{
+					streamId,
+					text: "",
+					parentPostId,
+					codemark: codemarkRequest,
+					mentionedUserIds,
+					entryPoint
+				},
+				documentId
+			);
 
 			const { markers } = response;
 			if (markers && markers.length && backtrackedLocation) {
