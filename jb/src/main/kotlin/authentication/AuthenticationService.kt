@@ -25,7 +25,6 @@ import protocols.agent.LoginWithSignupTokenParams
 import protocols.agent.LoginWithTokenParams
 import protocols.webview.Capabilities
 import protocols.webview.LoginRequest
-import protocols.webview.Services
 import protocols.webview.SignedInBootstrapResponse
 import protocols.webview.SignedOutBootstrapResponse
 import protocols.webview.UserSession
@@ -187,13 +186,7 @@ class AuthenticationService(val project: Project) {
         val editorService = project.editorService ?: return null
 
         val webViewResponse = SignedInBootstrapResponse(
-            Capabilities(
-                true,
-                false,
-                false,
-                true,
-                Services(false)
-            ),
+            Capabilities(),
             settingsService.webViewConfigs,
             settingsService.environment,
             settingsService.environmentVersion,
@@ -217,7 +210,7 @@ class AuthenticationService(val project: Project) {
     private fun buildSignedOutResponse(): SignedOutBootstrapResponse? {
         val settings = project.settingsService ?: return null
         return SignedOutBootstrapResponse(
-            Capabilities(false, false, false, false, Services(false)),
+            Capabilities(),
             mapOf("email" to settings.state.email),
             settings.environment,
             settings.environmentVersion

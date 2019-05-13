@@ -192,6 +192,7 @@ class DocumentMarkersParams(val textDocument: TextDocument)
 class DocumentMarkersResult(val markers: List<DocumentMarker>, val markersNotLocated: Any)
 
 class DocumentMarker(
+    val id: String,
     val codemark: Codemark,
 //    creatorName: string;
     val range: Range,
@@ -276,4 +277,9 @@ class GetStreamParams(
 
 class GetUserParams(
     val userId: String
+)
+
+class Marker(
+    val id: String,
+    val code: String
 )

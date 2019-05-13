@@ -3,6 +3,7 @@ package com.codestream.editor
 import com.codestream.agentService
 import com.codestream.codeStream
 import com.codestream.extensions.displayPath
+import com.codestream.extensions.file
 import com.codestream.extensions.getOffset
 import com.codestream.extensions.highlightTextAttributes
 import com.codestream.extensions.isRangeVisible
@@ -16,6 +17,10 @@ import com.codestream.protocols.webview.EditorNotifications
 import com.codestream.sessionService
 import com.codestream.settingsService
 import com.codestream.webViewService
+import com.intellij.diff.DiffContentFactory
+import com.intellij.diff.DiffManager
+import com.intellij.diff.requests.SimpleDiffRequest
+import com.intellij.diff.util.DiffUserDataKeys
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Document
@@ -31,6 +36,7 @@ import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.DialogBuilder
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -50,6 +56,7 @@ import org.eclipse.lsp4j.TextDocumentSyncKind
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier
 import protocols.agent.DocumentMarker
 import protocols.agent.DocumentMarkersParams
+import protocols.agent.Marker
 import protocols.agent.TextDocument
 import protocols.webview.EditorContext
 import protocols.webview.EditorInformation
@@ -76,6 +83,7 @@ class EditorService(val project: Project) {
     private val managedEditors = mutableSetOf<Editor>()
     private val rangeHighlighters = mutableMapOf<Editor, MutableSet<RangeHighlighter>>()
     private val markerHighlighters = mutableMapOf<Editor, List<RangeHighlighter>>()
+    private val documentMarkers = mutableMapOf<Document, List<DocumentMarker>>()
     private var spatialViewActive = project.settingsService?.webViewContext?.spatialViewVisible ?: false
     private var codeStreamVisible = project.codeStream?.isVisible ?: false
 
@@ -173,7 +181,7 @@ class EditorService(val project: Project) {
 
     fun updateMarkers(document: Document) = GlobalScope.launch {
         val editors = EditorFactory.getInstance().getEditors(document, project)
-        val markers = getDocumentMarkers(document.uri)
+        val markers = getDocumentMarkers(document)
         for (editor in editors) {
             editor.renderMarkers(markers)
         }
@@ -181,14 +189,15 @@ class EditorService(val project: Project) {
 
     private fun updateMarkers(editor: Editor) {
         GlobalScope.launch {
-            editor.renderMarkers(getDocumentMarkers(editor.document.uri))
+            editor.renderMarkers(getDocumentMarkers(editor.document))
         }
     }
 
-    private suspend fun getDocumentMarkers(uri: String?): List<DocumentMarker> {
+    private suspend fun getDocumentMarkers(document: Document): List<DocumentMarker> {
         val agent = project.agentService ?: return emptyList()
         val session = project.sessionService ?: return emptyList()
         val settings = project.settingsService ?: return emptyList()
+        val uri = document.uri
 
         val markers = if (uri == null || session.userLoggedIn == null || !settings.showMarkers) {
             emptyList()
@@ -196,6 +205,8 @@ class EditorService(val project: Project) {
             val result = agent.documentMarkers(DocumentMarkersParams(TextDocument(uri)))
             result.markers
         }
+
+        documentMarkers[document] = markers
 
         return markers.filter {
             it.codemark.status != "closed" && it.codemark.pinned == true
@@ -487,6 +498,51 @@ class EditorService(val project: Project) {
         }
         // logger.info("Scrolling to ${position.line} - atTop: $atTop")
         editor.scrollingModel.scrollVertically(point.y)
+    }
+
+    fun compareMarker(marker: Marker) = ApplicationManager.getApplication().invokeLater {
+        var editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@invokeLater
+        val documentMarkers = documentMarkers[editor.document] ?: return@invokeLater
+        val documentMarker = documentMarkers.find { it.id == marker.id } ?: return@invokeLater
+
+        val project = editor.project
+
+        val start = editor.getOffset(documentMarker.range.start)
+        val end = editor.getOffset(documentMarker.range.end)
+        val text = editor.document.text
+        val pre = text.substring(0, start)
+        val pos = text.substring(end + 1, text.length)
+        val codemarkContent = pre + marker.code + pos
+
+        val fileType = editor.document.file?.fileType
+        val content1 = DiffContentFactory.getInstance().create(project, editor.document, fileType)
+        val content2 = DiffContentFactory.getInstance().create(project, codemarkContent, fileType)
+        val request = SimpleDiffRequest("Codemark", content1, content2, "Your version", "Codemark version")
+        request.putUserData(DiffUserDataKeys.GO_TO_SOURCE_DISABLE, true)
+        val diffBuilder = DialogBuilder(project)
+        val diffPanel = DiffManager.getInstance().createRequestPanel(project, diffBuilder, diffBuilder.window)
+        diffPanel.setRequest(request)
+        diffBuilder.setCenterPanel(diffPanel.component)
+        diffBuilder.addOkAction()
+        diffBuilder.setTitle("Codemark")
+        diffBuilder.show()
+    }
+
+    fun applyMarker(marker: Marker) {
+        val app = ApplicationManager.getApplication()
+        app.invokeLater {
+            var editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@invokeLater
+            val documentMarkers = documentMarkers[editor.document] ?: return@invokeLater
+            val documentMarker = documentMarkers.find { it.id == marker.id } ?: return@invokeLater
+
+            with(editor) {
+                val start = getOffset(documentMarker.range.start)
+                val end = getOffset(documentMarker.range.end)
+                app.runWriteAction {
+                    document.replaceString(start, end, marker.code)
+                }
+            }
+        }
     }
 
     // var count = 0

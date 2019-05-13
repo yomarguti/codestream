@@ -4,6 +4,7 @@ import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
+import protocols.agent.Marker
 
 class LoginRequest(
     val email: String?,
@@ -27,13 +28,13 @@ class SignedInBootstrapResponse(
     val session: UserSession
 )
 
-class Capabilities(
-    val channelMute: Boolean?,
-    val codemarkApply: Boolean?,
-    val codemarkCompare: Boolean?,
-    val editorTrackVisibleRange: Boolean?,
-    val services: Services?
-)
+class Capabilities {
+    val channelMute = true
+    val codemarkApply = true
+    val codemarkCompare = true
+    val editorTrackVisibleRange = true
+    val services = Services()
+}
 
 class Configs(
     val serverUrl: String,
@@ -45,9 +46,9 @@ class Configs(
     val showFeedbackSmiley: Boolean
 )
 
-class Services(
-    val vsls: Boolean?
-)
+class Services {
+    val vsls = false
+}
 
 class UserSession(
     val userId: String
@@ -103,3 +104,13 @@ class EditorScrollToRequest(
     val position: Position,
     val atTop: Boolean
 )
+
+class MarkerCompareRequest(
+    val marker: Marker
+)
+
+class MarkerApplyRequest(
+    val marker: Marker
+)
+
+

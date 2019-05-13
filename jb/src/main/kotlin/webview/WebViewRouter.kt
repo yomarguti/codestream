@@ -24,6 +24,8 @@ import protocols.webview.EditorRangeRevealResponse
 import protocols.webview.EditorRangeSelectRequest
 import protocols.webview.EditorRangeSelectResponse
 import protocols.webview.EditorScrollToRequest
+import protocols.webview.MarkerApplyRequest
+import protocols.webview.MarkerCompareRequest
 import protocols.webview.UpdateConfigurationRequest
 import kotlin.properties.Delegates
 
@@ -87,8 +89,8 @@ class WebViewRouter(val project: Project) {
             "host/signup/complete" -> authentication.signupComplete()
             "host/context/didChange" -> contextDidChange(message)
             "host/webview/reload" -> project.webViewService?.reload()
-            // "host/marker/compare" -> Unit
-            // "host/marker/apply" -> Unit
+            "host/marker/compare" -> hostMarkerCompare(message)
+            "host/marker/apply" -> hostMarkerApply(message)
             "host/configuration/update" -> configurationUpdate(message)
             "host/editor/range/highlight" -> editorRangeHighlight(message)
             "host/editor/range/reveal" -> editorRangeReveal(message)
@@ -116,6 +118,16 @@ class WebViewRouter(val project: Project) {
             jsonObject(notification.name to (notification.value == "true"))
         )
         return emptyMap<String, String>()
+    }
+
+    private fun hostMarkerApply(message: WebViewMessage) {
+        val request = gson.fromJson<MarkerApplyRequest>(message.params!!)
+        project.editorService?.applyMarker(request.marker)
+    }
+
+    private fun hostMarkerCompare(message: WebViewMessage) {
+        val request = gson.fromJson<MarkerCompareRequest>(message.params!!)
+        project.editorService?.compareMarker(request.marker)
     }
 
     private fun editorRangeHighlight(message: WebViewMessage) {

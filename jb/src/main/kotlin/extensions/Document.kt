@@ -3,6 +3,7 @@ package com.codestream.extensions
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.vfs.VirtualFile
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.TextDocumentIdentifier
 
@@ -22,3 +23,6 @@ val Document.uri: String?
 
 val Document.textDocumentIdentifier: TextDocumentIdentifier?
     get() = TextDocumentIdentifier(uri)
+
+val Document.file: VirtualFile?
+    get() = FileDocumentManager.getInstance().getFile(this)
