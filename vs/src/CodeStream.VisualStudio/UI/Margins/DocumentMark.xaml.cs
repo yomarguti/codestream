@@ -72,7 +72,10 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			if (codeStreamService == null) return;
 
 			toolWindowProvider.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
-			_ = codeStreamService.ShowCodemarkAsync(_viewModel.Marker.Codemark.Id);
+			
+			var activeEditor = componentModel.GetService<IEditorService>()?.GetActiveTextEditor();
+
+			_ = codeStreamService.ShowCodemarkAsync(_viewModel.Marker.Codemark.Id, activeEditor?.Uri.ToLocalPath());
 			_ = codeStreamService.TrackAsync(TelemetryEventNames.CodemarkClicked, new TelemetryProperties { { "Codemark Location", "Source File" } });
 		}
 	}
