@@ -13,6 +13,7 @@ cp -rf ../atom-codestream/keymaps .
 cp -rf ../atom-codestream/menus .
 cp ../atom-codestream/package.json .
 cp ../atom-codestream/README.md .
+cp ../atom-codestream/CHANGELOG.md .
 ../atom-codestream/bin/clean-metadata.js package.json
 
 git add .

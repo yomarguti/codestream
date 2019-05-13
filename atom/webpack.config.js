@@ -101,7 +101,7 @@ function getExtensionConfig(env) {
 				new TerserPlugin({
 					cache: true,
 					parallel: true,
-					sourceMap: true,
+					sourceMap: !env.production,
 					terserOptions: {
 						ecma: 8,
 						// Keep the class names otherwise @log won't provide a useful name
@@ -237,7 +237,7 @@ function getWebviewConfig(env) {
 				new TerserPlugin({
 					cache: true,
 					parallel: true,
-					sourceMap: true,
+					sourceMap: !env.production,
 					terserOptions: {
 						ecma: 8,
 					},
