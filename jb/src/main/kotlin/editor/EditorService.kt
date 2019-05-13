@@ -22,6 +22,7 @@ import com.intellij.diff.DiffManager
 import com.intellij.diff.requests.SimpleDiffRequest
 import com.intellij.diff.util.DiffUserDataKeys
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
@@ -528,19 +529,16 @@ class EditorService(val project: Project) {
         diffBuilder.show()
     }
 
-    fun applyMarker(marker: Marker) {
-        val app = ApplicationManager.getApplication()
-        app.invokeLater {
-            var editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@invokeLater
-            val documentMarkers = documentMarkers[editor.document] ?: return@invokeLater
-            val documentMarker = documentMarkers.find { it.id == marker.id } ?: return@invokeLater
+    fun applyMarker(marker: Marker) = ApplicationManager.getApplication().invokeLater {
+        var editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@invokeLater
+        val documentMarkers = documentMarkers[editor.document] ?: return@invokeLater
+        val documentMarker = documentMarkers.find { it.id == marker.id } ?: return@invokeLater
 
-            with(editor) {
-                val start = getOffset(documentMarker.range.start)
-                val end = getOffset(documentMarker.range.end)
-                app.runWriteAction {
-                    document.replaceString(start, end, marker.code)
-                }
+        with(editor) {
+            val start = getOffset(documentMarker.range.start)
+            val end = getOffset(documentMarker.range.end)
+            WriteCommandAction.runWriteCommandAction(project) {
+                document.replaceString(start, end, marker.code)
             }
         }
     }
