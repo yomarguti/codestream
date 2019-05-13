@@ -659,16 +659,18 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					</div>
 				);
 			}
+			const title = (
+				<div style={{ maxWidth: "70vw" }}>
+					A codemark is a link between a block of code and a conversation, an issue, or a bookmark.
+					Codemarks work across branches, and stay pinned to the block of code even as your codebase
+					changes.
+				</div>
+			);
 			return (
 				<div key="no-codemarks" className="no-codemarks">
 					There are no codemarks
-					<Icon
-						title="A codemark is a link between a block of code and a conversation, an issue, or a bookmark. Codemarks work across branches, and stay pinned to the block of code even as your codebase changes."
-						placement="top"
-						className="superscript"
-						name="info"
-					/>{" "}
-					in <b>{this.props.fileNameToFilterFor}</b>
+					<Icon title={title} placement="top" className="superscript" name="info" /> in{" "}
+					<b>{this.props.fileNameToFilterFor}</b>
 					<br />
 					<br />
 					Discuss code with your team by selecting a range and clicking an icon (
