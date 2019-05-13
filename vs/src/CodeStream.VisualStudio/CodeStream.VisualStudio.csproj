@@ -125,6 +125,7 @@
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Extensions\PackageExtensions.cs" />
     <Compile Include="Extensions\RangeExtensions.cs" />
+    <Compile Include="Extensions\ReactiveExtensions.cs" />
     <Compile Include="Extensions\TextViewExtensions.cs" />
     <Compile Include="LSP\LanguageClientActivator.cs" />
     <Compile Include="Models\ActiveTextEditor.cs" />

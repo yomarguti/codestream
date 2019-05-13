@@ -115,7 +115,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 				}
 				// ReSharper disable once PossibleNullReferenceException
 				_languageServerReadyEvent = _eventAggregator.GetEvent<LanguageServerReadyEvent>()
-					.ObserveOnDispatcher()
+					.ObserveOnApplicationDispatcher()
 					.Subscribe(_ => {
 					InitializeCore();
 				});

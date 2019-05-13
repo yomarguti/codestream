@@ -180,7 +180,7 @@ namespace CodeStream.VisualStudio.UI {
 					//listening on the main thread since we have to change the UI state
 					var disposables = new List<IDisposable>();
 					disposables.Add(_eventAggregator.GetEvent<SessionReadyEvent>()
-							.ObserveOnDispatcher()
+							.ObserveOnApplicationDispatcher()
 							.Subscribe(_ => {
 
 								Log.Verbose(
@@ -191,16 +191,16 @@ namespace CodeStream.VisualStudio.UI {
 							}));
 
 					disposables.Add(_eventAggregator.GetEvent<SessionLogoutEvent>()
-						.ObserveOnDispatcher()
+						.ObserveOnApplicationDispatcher()
 						.Subscribe(_ => OnSessionLogout(wpfTextView, textViewMarginProviders)));
 					disposables.Add(_eventAggregator.GetEvent<MarkerGlyphVisibilityEvent>()
-						.ObserveOnDispatcher()
+						.ObserveOnApplicationDispatcher()
 						.Subscribe(_ => textViewMarginProviders.Toggle(_.IsVisible)));
 					disposables.Add(_eventAggregator.GetEvent<AutoHideMarkersEvent>()
-						.ObserveOnDispatcher()
+						.ObserveOnApplicationDispatcher()
 						.Subscribe(_ => textViewMarginProviders.SetAutoHideMarkers(_.Value)));
 					disposables.Add(visibleRangesSubject.Throttle(TimeSpan.FromMilliseconds(15))
-						.ObserveOnDispatcher()
+						.ObserveOnApplicationDispatcher()
 						.Subscribe(e => {
 							try {
 								if (e.WpfTextView.InLayout || e.WpfTextView.IsClosed) return;
@@ -312,7 +312,7 @@ namespace CodeStream.VisualStudio.UI {
 									Observable.FromEventPattern(ev => wpfTextView.Selection.SelectionChanged += ev,
 											ev => wpfTextView.Selection.SelectionChanged -= ev)
 										.Sample(TimeSpan.FromMilliseconds(250))
-										.ObserveOnDispatcher()
+										.ObserveOnApplicationDispatcher()
 										.Subscribe(eventPattern => {
 											var textSelection = eventPattern?.Sender as ITextSelection;
 											if (textSelection != null && textSelection.IsEmpty) return;

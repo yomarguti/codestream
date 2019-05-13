@@ -194,15 +194,20 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		}
 
 		public void ToggleMargin(bool requestingVisibility) {
-			if (requestingVisibility) {
-				if (TryShowMargin()) {
-					//set top, as the buffer might have been scrolled
-					SetTop(_iconCanvas, -_wpfTextViewHost.TextView.ViewportTop);
-					RefreshMargin();
+			try {
+				if (requestingVisibility) {
+					if (TryShowMargin()) {
+						//set top, as the buffer might have been scrolled
+						SetTop(_iconCanvas, -_wpfTextViewHost.TextView.ViewportTop);
+						RefreshMargin();
+					}
+				}
+				else {
+					TryHideMargin();
 				}
 			}
-			else {
-				TryHideMargin();
+			catch (Exception ex) {
+				Log.Warning(ex, nameof(DocumentMarkMargin));
 			}
 		}		
 
