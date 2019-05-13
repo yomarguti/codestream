@@ -644,6 +644,7 @@ export class CodeStreamSession {
 			"Join Method": user.joinMethod,
 			"Plugin Version": this.versionInfo.extension.versionFormatted,
 			Endpoint: this.versionInfo.ide.name,
+			"IDE Version": this.versionInfo.ide.version,
 			Provider: Team.isSlack(team) ? "Slack" : "CodeStream"
 		};
 
@@ -685,7 +686,7 @@ export class CodeStreamSession {
 	}
 
 	@log()
-	async updateProviders () {
+	async updateProviders() {
 		const currentTeam = await Container.instance().teams.getByIdFromCache(this.teamId);
 		if (currentTeam) {
 			this._providers = currentTeam.providerHosts || {};
