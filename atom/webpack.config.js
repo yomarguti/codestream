@@ -230,7 +230,7 @@ function getWebviewConfig(env) {
 		output: {
 			filename: "[name].js",
 			path: path.resolve(__dirname, "dist/webview"),
-			publicPath: path.resolve(__dirname, "dist/webview/"),
+			publicPath: "{{root}}/dist/webview/",
 		},
 		optimization: {
 			minimizer: [

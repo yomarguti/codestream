@@ -45,6 +45,7 @@ import {
 import { CompositeDisposable, Disposable, Emitter, Point, Range, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
 import { remote, shell } from "electron";
+import * as fs from "fs-plus";
 import { FileLogger } from "logger";
 import { NotificationType } from "vscode-languageserver-protocol";
 import { ConfigSchema } from "../configs";
@@ -159,11 +160,26 @@ export class CodestreamView {
 		this.sendEvent(ShowCodemarkNotificationType, { codemarkId, sourceUri });
 	}
 
-	private initializeWebview(iframe: HTMLIFrameElement) {
+	private _html: string | undefined;
+
+	private async getHtml() {
+		if (!Debug.isDebugging() && this._html) return this._html;
+
+		return new Promise<string>((resolve, reject) => {
+			fs.readFile(asAbsolutePath("dist/webview/index.html"), "utf8", (error, data) => {
+				if (error) return reject(error);
+
+				this._html = data.replace(/{{root}}/g, asAbsolutePath("."));
+				resolve(this._html);
+			});
+		});
+	}
+
+	private async initializeWebview(iframe: HTMLIFrameElement) {
 		iframe.height = "100%";
 		iframe.width = "100%";
 		iframe.style.border = "none";
-		iframe.src = asAbsolutePath("dist/webview/index.html");
+		iframe.srcdoc = await this.getHtml();
 
 		iframe.classList.add("webview", "native-key-bindings");
 		iframe.addEventListener("load", async () => {
