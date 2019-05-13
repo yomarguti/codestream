@@ -659,6 +659,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					</div>
 				);
 			}
+			// giving this a 70% max width ensures that the tooltip
+			// doesn't go wall-to-wall in the view. it'd be nice if
+			// rc-tooltips handled this for us, but thereis no margin
+			// to an rc-tooltip, so without this, it would literally
+			// touch the left and right edges of the panel -Pez
 			const title = (
 				<div style={{ maxWidth: "70vw" }}>
 					A codemark is a link between a block of code and a conversation, an issue, or a bookmark.
