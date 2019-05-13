@@ -51,7 +51,6 @@ namespace CodeStream.VisualStudio.Packages {
 		private bool _initializedEvents;
 		private List<IDisposable> _disposables;
 		private List<VsCommandBase> _commands;
-		internal static OptionsDialogPage OptionsDialogPage { get; private set; }
 
 		//public WebViewPackage() {
 		//	OptionsDialogPage = GetDialogPage(typeof(OptionsDialogPage)) as OptionsDialogPage;
@@ -78,6 +77,7 @@ namespace CodeStream.VisualStudio.Packages {
 			try {
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 				_componentModel = GetGlobalService(typeof(SComponentModel)) as IComponentModel;
+				_settingsService = _componentModel?.GetService<ISettingsService>();
 
 				var isSolutionLoaded = await IsSolutionLoadedAsync();
 				if (isSolutionLoaded) {
@@ -85,7 +85,6 @@ namespace CodeStream.VisualStudio.Packages {
 				}
 
 				SolutionEvents.OnAfterBackgroundSolutionLoadComplete += OnAfterBackgroundSolutionLoadComplete;
-				_settingsService = _componentModel.GetService<ISettingsService>();
 
 				InitializeLogging();
 				AsyncPackageHelper.InitializePackage(GetType().Name);
