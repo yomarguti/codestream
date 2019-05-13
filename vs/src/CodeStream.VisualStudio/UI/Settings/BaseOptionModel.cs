@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
 using Microsoft;
@@ -143,6 +144,7 @@ namespace CodeStream.VisualStudio.UI.Settings {
 			try {
 				using (var stream = new MemoryStream()) {
 					var formatter = new BinaryFormatter();
+					formatter.Binder = new VersionDeserializer();
 					formatter.Serialize(stream, value);
 					stream.Flush();
 					return Convert.ToBase64String(stream.ToArray());
@@ -168,10 +170,15 @@ namespace CodeStream.VisualStudio.UI.Settings {
 
 				using (var stream = new MemoryStream(b)) {
 					var formatter = new BinaryFormatter();
+					formatter.Binder = new VersionDeserializer();
 					return formatter.Deserialize(stream);
 				}
 			}
-			catch {
+			catch(Exception ex) {
+#if DEBUG
+				System.Diagnostics.Debug.WriteLine(ex);
+				System.Diagnostics.Debugger.Break();
+#endif
 				return null;
 			}
 		}
@@ -185,6 +192,17 @@ namespace CodeStream.VisualStudio.UI.Settings {
 			Assumes.Present(svc);
 
 			return new ShellSettingsManager(svc);
+		}
+
+		sealed class VersionDeserializer : SerializationBinder {
+			public override Type BindToType(string assemblyName, string typeName) {
+				Type deserializeType = null;
+				String thisAssembly = Assembly.GetExecutingAssembly().FullName;
+				deserializeType = Type.GetType(String.Format("{0}, {1}",
+					typeName, thisAssembly));
+
+				return deserializeType;
+			}
 		}
 
 		private IEnumerable<PropertyInfo> GetOptionProperties() {
