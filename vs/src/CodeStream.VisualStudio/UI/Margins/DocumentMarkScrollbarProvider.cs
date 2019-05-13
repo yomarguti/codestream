@@ -51,8 +51,8 @@ namespace CodeStream.VisualStudio.UI.Margins {
 				return TextViewMargin;
 			}
 			catch (Exception ex) {
-#if DEBUG
 				System.Diagnostics.Debug.WriteLine(ex);
+#if DEBUG
 				System.Diagnostics.Debugger.Break();
 #endif
 			}

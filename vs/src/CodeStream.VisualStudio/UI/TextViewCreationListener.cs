@@ -53,7 +53,7 @@ namespace CodeStream.VisualStudio.UI {
 		[ImportingConstructor]
 		public TextViewCreationListener([Import] ICodeStreamService codeStreamService) {
 			try {
-				_codeStreamService = codeStreamService; //(Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ICodeStreamService>();
+				_codeStreamService = codeStreamService;
 
 				Assumes.Present(_codeStreamService);
 				_sessionService = _codeStreamService.SessionService;
@@ -67,22 +67,6 @@ namespace CodeStream.VisualStudio.UI {
 				Log.Fatal(ex, nameof(TextViewCreationListener));
 			}
 		}
-
-		//public TextViewCreationListener(ICodeStreamService codeStreamService) {
-		//	try {
-		//		_codeStreamService = codeStreamService;
-		//		Assumes.Present(_codeStreamService);
-		//		_sessionService = codeStreamService.SessionService;
-		//		Assumes.Present(_sessionService);
-		//		_eventAggregator = codeStreamService.EventAggregator;
-		//		Assumes.Present(_eventAggregator);
-		//		_codeStreamAgentService = codeStreamService.AgentService;
-		//		Assumes.Present(_codeStreamAgentService);
-		//	}
-		//	catch (Exception ex) {
-		//		Log.Fatal(ex, nameof(TextViewCreationListener));
-		//	}
-		//}
 
 		private readonly ICodeStreamService _codeStreamService;
 		private readonly ISessionService _sessionService;

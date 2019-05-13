@@ -17,7 +17,6 @@ namespace CodeStream.VisualStudio.Commands {
 		public void TriggerChange() {
 			OnBeforeQueryStatus(this, null);
 		}
-
 		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e) {
 			try {
 				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
@@ -41,7 +40,8 @@ namespace CodeStream.VisualStudio.Commands {
 					sender.Enabled = false;
 
 					sender.Text = DefaultText;
-				}}
+				}
+			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(UserCommand));
 			}

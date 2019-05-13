@@ -52,8 +52,8 @@ namespace CodeStream.VisualStudio.Core.Logging {
 					.CreateLogger();
 			}
 			catch (Exception ex) {
-#if DEBUG
 				System.Diagnostics.Debug.WriteLine(ex);
+#if DEBUG
 				System.Diagnostics.Debugger.Break();
 #endif
 				return new EmptyLogger();
@@ -87,8 +87,8 @@ namespace CodeStream.VisualStudio.Core.Logging {
 				return CreateLogger();
 			}
 			catch (Exception ex) {
-#if DEBUG
 				System.Diagnostics.Debug.WriteLine(ex);
+#if DEBUG
 				System.Diagnostics.Debugger.Break();
 #endif
 				return new EmptyLogger();
@@ -101,8 +101,8 @@ namespace CodeStream.VisualStudio.Core.Logging {
 				return ForContext(typeof(T));
 			}
 			catch (Exception ex) {
-#if DEBUG
 				System.Diagnostics.Debug.WriteLine(ex);
+#if DEBUG
 				System.Diagnostics.Debugger.Break();
 #endif
 				return new EmptyLogger();
@@ -114,8 +114,8 @@ namespace CodeStream.VisualStudio.Core.Logging {
 				return Logger.Value.ForContext(type).ForContext("ShortSourceContext", type.Name);
 			}
 			catch (Exception ex) {
-#if DEBUG
 				System.Diagnostics.Debug.WriteLine(ex);
+#if DEBUG
 				System.Diagnostics.Debugger.Break();
 #endif
 				return new EmptyLogger();
