@@ -8,7 +8,7 @@ CodeStream turns conversation into documentation by capturing all of the discuss
 
 # Install CodeStream
 
-Install CodeStream for [VS Code](https://marketplace.visualstudio.com/items?itemName=CodeStream.codestream), [Visual Studio](https://marketplace.visualstudio.com/items?itemName=CodeStream.codestream-vs) or [JetBrains](https://plugins.jetbrains.com/plugin/12206-codestream).
+Install CodeStream for [VS Code](https://marketplace.visualstudio.com/items?itemName=CodeStream.codestream), [Visual Studio](https://marketplace.visualstudio.com/items?itemName=CodeStream.codestream-vs), [JetBrains](https://plugins.jetbrains.com/plugin/12206-codestream) or [Atom](https://atom.io/packages/codestream).
 
 Support for more IDEs is on the way.
 
