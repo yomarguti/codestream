@@ -90,7 +90,7 @@ module.exports = function(env, argv) {
 				new TerserPlugin({
 					cache: true,
 					parallel: true,
-					sourceMap: true,
+					sourceMap: !env.production,
 					terserOptions: {
 						ecma: 8,
 						// Keep the class names otherwise @log won't provide a useful name
@@ -101,11 +101,11 @@ module.exports = function(env, argv) {
 			]
 		},
 		externals: {
-			encoding: "encoding",
+			encoding: "encoding"
 			// these are commented out for good reason ... the socketcluster library we use for
 			// pubsub in on-prem will crash if we have these in here ... instead we'll live with
 			// a warning from webpack's agent watch - Colin
-			// bufferutil: "bufferutil", 
+			// bufferutil: "bufferutil",
 			// "utf-8-validate": "utf-8-validate"
 		},
 		module: {
