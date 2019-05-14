@@ -9,6 +9,7 @@ type ContextActions = ActionType<typeof actions>;
 type PreferencesActions = ActionType<typeof preferencesActions>;
 
 const initialState: State = {
+	newPostEntryPoint: undefined,
 	currentTeamId: "",
 	currentStreamId: "",
 	currentDocumentMarkerId: "",
@@ -73,7 +74,10 @@ export function reduceContext(
 			return { ...state, showFeedbackSmiley: action.payload };
 
 		case ContextActionsType.SetIssueProvider:
-			 return { ...state, issueProvider: action.payload };
+			return { ...state, issueProvider: action.payload };
+
+		case ContextActionsType.SetNewPostEntryPoint:
+			return { ...state, newPostEntryPoint: action.payload };
 
 		case PreferencesActionsType.Set:
 		case PreferencesActionsType.Update: {

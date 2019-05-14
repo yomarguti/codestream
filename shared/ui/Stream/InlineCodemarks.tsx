@@ -45,7 +45,8 @@ import {
 	setCodemarksFileViewStyle,
 	setCodemarksShowArchived,
 	setCodemarksShowResolved,
-	setCurrentDocumentMarker
+	setCurrentDocumentMarker,
+	setNewPostEntry
 } from "../store/context/actions";
 import { State as ContextState } from "../store/context/types";
 import { sortBy as _sortBy } from "lodash-es";
@@ -108,7 +109,7 @@ interface Props {
 		...args: Parameters<typeof setCurrentDocumentMarker>
 	) => ReturnType<typeof setCurrentDocumentMarker>;
 	setMultiCompose(...args: any[]): void;
-	setNewPostEntry(a: string): void;
+	setNewPostEntry(...args: Parameters<typeof setNewPostEntry>): void;
 }
 
 interface State {
@@ -1398,6 +1399,7 @@ export default connect(
 		setCodemarksShowArchived,
 		setCodemarksShowResolved,
 		setCurrentDocumentMarker,
-		setEditorContext
+		setEditorContext,
+		setNewPostEntry
 	}
 )(SimpleInlineCodemarks);

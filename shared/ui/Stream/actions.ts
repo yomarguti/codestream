@@ -81,7 +81,7 @@ export const createPost = (
 	mentions: string[],
 	extra: any
 ) => async (dispatch, getState) => {
-	const { session } = getState();
+	const { session, context } = getState();
 	const pendingId = uuid();
 	dispatch(
 		postsActions.addPendingPost({
@@ -124,7 +124,7 @@ export const createPost = (
 				assignees: codemark.assignees,
 				color: codemark.color,
 				mentionedUserIds: mentions,
-				entryPoint: extra.entryPoint,
+				entryPoint: extra.entryPoint || context.newPostEntryPoint,
 				externalProvider,
 				externalProviderHost,
 				externalAssignees,
@@ -522,7 +522,7 @@ export const createProviderCard = async (attributes, codemark) => {
 		description += `${codeStart}${marker.code}${codeEnd}${linefeed}${linefeed}`;
 	}
 	description += `Posted via CodeStream${linefeed}`;
-	
+
 	try {
 		let response;
 		switch (attributes.issueProvider.name) {

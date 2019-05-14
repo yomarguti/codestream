@@ -9,6 +9,7 @@ import {
 	getVisibleLineCount,
 	getVisibleRanges
 } from "../store/editorContext/reducer";
+import { setNewPostEntry } from "../store/context/actions";
 
 class ComposeBox extends React.Component {
 	state = {
@@ -248,7 +249,10 @@ const mapStateToProps = state => {
 	return { textEditorVisibleRanges: getVisibleRanges(state.editorContext) };
 };
 
-const ConnectedComposeBox = connect(mapStateToProps)(ComposeBox);
+const ConnectedComposeBox = connect(
+	mapStateToProps,
+	{ setNewPostEntry }
+)(ComposeBox);
 
 export default React.forwardRef((props, ref) => (
 	<ConnectedComposeBox {...props} forwardedRef={ref} />

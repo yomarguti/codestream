@@ -9,7 +9,7 @@ import { logError } from "../../logger";
 import { setUserPreference } from "../../Stream/actions";
 import { HostApi } from "../../webview-api";
 import { action } from "../common";
-import { ContextActionsType, State } from "./types";
+import { ContextActionsType, State, PostEntryPoint } from "./types";
 
 export const reset = () => action("RESET");
 
@@ -198,3 +198,6 @@ export const disconnectProvider = (providerId: string, fromMenu = false) => asyn
 
 export const setIssueProvider = (providerId: string | undefined) =>
 	action(ContextActionsType.SetIssueProvider, providerId);
+
+export const setNewPostEntry = (entryPoint: PostEntryPoint) =>
+	action(ContextActionsType.SetNewPostEntryPoint, entryPoint);

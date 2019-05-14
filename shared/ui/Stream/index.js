@@ -56,7 +56,11 @@ import {
 } from "@codestream/protocols/agent";
 import { getFileScmError } from "../store/editorContext/reducer";
 
-import { setCurrentStream, setCurrentDocumentMarker } from "../store/context/actions";
+import {
+	setCurrentStream,
+	setCurrentDocumentMarker,
+	setNewPostEntry
+} from "../store/context/actions";
 import {
 	filter as _filter,
 	includes as _includes,
@@ -136,7 +140,7 @@ export class SimpleStream extends Component {
 	};
 
 	async handleNewCodemarkRequest(e) {
-		this.setNewPostEntry(e.source);
+		this.props.setNewPostEntry(e.source);
 		const extra =
 			this.state.multiCompose &&
 			this.state.composeBoxProps &&
@@ -232,10 +236,6 @@ export class SimpleStream extends Component {
 	};
 
 	resizeStream = () => {};
-
-	setNewPostEntry = entry => {
-		this.newPostEntry = entry;
-	};
 
 	// return the post, if any, with the given ID
 	findPostById(id) {
@@ -525,11 +525,12 @@ export class SimpleStream extends Component {
 		);
 	}
 
+	// dead code
 	handleClickCreateCodemark = e => {
 		e.preventDefault();
 		this.setMultiCompose(true);
 
-		this.setNewPostEntry("Global Nav");
+		this.props.setNewPostEntry("Global Nav");
 	};
 
 	// we render both a main stream (postslist) plus also a postslist related
@@ -649,7 +650,6 @@ export class SimpleStream extends Component {
 							currentUserName={this.props.currentUserName}
 							postAction={this.postAction}
 							searchBarOpen={this.state.searchBarOpen}
-							setNewPostEntry={this.setNewPostEntry}
 							setMultiCompose={this.setMultiCompose}
 							multiCompose={this.state.multiCompose}
 							typeFilter="all"
@@ -927,7 +927,6 @@ export class SimpleStream extends Component {
 				providerInfo={this.props.providerInfo}
 				fetchIssueBoards={this.props.fetchIssueBoards}
 				createTrelloCard={this.props.createTrelloCard}
-				setNewPostEntry={this.setNewPostEntry}
 				{...this.state.composeBoxProps}
 			/>
 		);
@@ -1030,7 +1029,7 @@ export class SimpleStream extends Component {
 				composeBoxProps: { ...state, codeBlock: scmInfo }
 			});
 			if (!value) {
-				this.setNewPostEntry(undefined);
+				this.props.setNewPostEntry(undefined);
 				this.setState({
 					floatCompose: false,
 					composeBoxProps: {}
@@ -1835,8 +1834,7 @@ export class SimpleStream extends Component {
 					{ ...attributes, markers, textEditorUri: scmInfo.uri },
 					this.findMentionedUserIds(attributes.text || "", this.props.teammates),
 					{
-						crossPostIssueValues,
-						entryPoint: this.newPostEntry
+						crossPostIssueValues
 					}
 				);
 				if (attributes.streamId !== this.props.postStreamId) {
@@ -2168,6 +2166,7 @@ export default connect(
 		...actions,
 		setCurrentStream,
 		setCurrentDocumentMarker,
-		editCodemark
+		editCodemark,
+		setNewPostEntry
 	}
 )(injectIntl(SimpleStream));

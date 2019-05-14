@@ -1,5 +1,4 @@
 import { WebviewContext, WebviewPanels } from "@codestream/protocols/webview";
-import { ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 
 export enum ContextActionsType {
 	SetCodemarkFileFilter = "@context/SetCodemarkFileFilter",
@@ -17,8 +16,11 @@ export enum ContextActionsType {
 	SetCodemarksShowArchived = "@context/SetCodemarksShowArchived",
 	SetCodemarksShowResolved = "@context/SetCodemarksShowResolved",
 	SetChannelsMuteAll = "@context/SetChannelsMuteAll",
-	SetShowFeedbackSmiley = "@context/SetShowFeedbackSmiley"
+	SetShowFeedbackSmiley = "@context/SetShowFeedbackSmiley",
+	SetNewPostEntryPoint = "@context/SetNewPostEntryPoint"
 }
+
+export type PostEntryPoint = "Stream" | "Global Nav" | "Spatial View" | undefined;
 
 export interface State extends WebviewContext {
 	channelFilter: string;
@@ -36,4 +38,6 @@ export interface State extends WebviewContext {
 	panelStack: (WebviewPanels | string)[];
 
 	showFeedbackSmiley: boolean;
+
+	newPostEntryPoint: PostEntryPoint;
 }
