@@ -107,15 +107,7 @@ export const connectProvider = (providerId: string, fromMenu = false) => async (
 	try {
 		const api = HostApi.instance;
 		await api.send(ConnectThirdPartyProviderRequestType, { providerId });
-		api.send(TelemetryRequestType, {
-			eventName: "Issue Service Connected",
-			properties: {
-				Service: provider.name,
-				Host: isEnterprise ? provider.host : null,
-				Connection: "On",
-				"Connection Location": fromMenu ? "Global Nav" : "Compose Modal"
-			}
-		});
+		dispatch(sendIssueServiceConnected(providerId, fromMenu));
 		if (provider.hasIssues) {
 			return dispatch(setIssueProvider(providerId));
 		}
@@ -124,7 +116,32 @@ export const connectProvider = (providerId: string, fromMenu = false) => async (
 	}
 };
 
-export const configureProvider = (providerId: string, data: { [key: string]: any }) => async (
+export const sendIssueServiceConnected = (providerId: string, fromMenu = false) => async (
+	dispatch,
+	getState
+) => {
+	const { providers } = getState();
+	const provider = providers[providerId];
+	if (!provider) return;
+	const { name, host, isEnterprise } = provider;
+	const api = HostApi.instance;
+	api.send(TelemetryRequestType, {
+		eventName: "Issue Service Connected",
+		properties: {
+			Service: name,
+			Host: isEnterprise ? host : null,
+			Connection: "On",
+			"Connection Location": fromMenu ? "Global Nav" : "Compose Modal"
+		}
+	});
+};
+
+export const configureProvider = (
+	providerId: string,
+	data: { [key: string]: any },
+	fromMenu = false,
+	setConnectedWhenConfigured = false
+) => async (
 	dispatch,
 	getState
 ) => {
@@ -141,6 +158,13 @@ export const configureProvider = (providerId: string, data: { [key: string]: any
 				Connection: "On"
 			}
 		});
+
+		// for some providers (namely YouTrack), configuring is as good as connecting,
+		// since we allow the user to set their own access token
+		if (setConnectedWhenConfigured && provider.hasIssues) {
+			dispatch(sendIssueServiceConnected(providerId, fromMenu));
+			dispatch(setIssueProvider(providerId));
+		}
 	} catch (error) {
 		logError(`Failed to connect ${provider.name}: ${error}`);
 	}

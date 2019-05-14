@@ -44,7 +44,8 @@ export default class YouTrackCardControls extends React.Component<Props, State> 
 			boardId: board && board.id,
 			//issueType,
 			isEnabled,
-			issueProvider: this.props.provider
+			issueProvider: this.props.provider,
+			singleBackQuoteMarkup: true
 		});
 	};
 

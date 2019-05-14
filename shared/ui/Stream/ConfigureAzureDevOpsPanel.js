@@ -41,7 +41,7 @@ export class ConfigureAzureDevOpsPanel extends Component {
 		const { providerId } = this.props;
 		const { organization } = this.state;
 		this.props.configureProvider(providerId, { organization });
-		this.props.connectProvider(providerId, true);
+		this.props.connectProvider(providerId, this.props.fromMenu);
 		this.props.closePanel();
 	};
 
@@ -90,7 +90,7 @@ export class ConfigureAzureDevOpsPanel extends Component {
 						</p>
 						{this.renderError()}
 						<div id="controls">
-							<div id="organization-controls" className="control-group">
+							<div id="configure-azuredevops-controls" className="control-group">
 								<label>Your {providerName} Organization</label>
 								<input
 									className="native-key-bindings input-text control"

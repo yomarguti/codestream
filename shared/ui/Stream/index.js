@@ -345,7 +345,7 @@ export class SimpleStream extends Component {
 					// a permanent token (in the case of youtrack)
 					menuItems.push({
 						label: `Connect to ${displayName}`,
-						action: `configure-provider-${name}-${providerId}`
+						action: `configure-provider-${name}-${providerId}-true`
 					});
 				} else {
 					// otherwise it's just a simple oauth redirect
@@ -629,6 +629,8 @@ export class SimpleStream extends Component {
 
 		const onInlineCodemarks = activePanel === WebviewPanels.CodemarksForFile;
 		const contentClass = onInlineCodemarks ? "content inline" : "content vscroll inline";
+		const configureProviderInfo = activePanel.startsWith("configure-provider-") ?
+			activePanel.split("-") : null;
 		return (
 			<div id="stream-root" className={streamClass}>
 				<div id="modal-root" />
@@ -718,12 +720,14 @@ export class SimpleStream extends Component {
 					)}
 					{activePanel.startsWith("configure-provider-youtrack-") && (
 						<ConfigureYouTrackPanel
-							providerId={activePanel.split("configure-provider-youtrack-")[1]}
+							providerId={configureProviderInfo[3]}
+							fromMenu={configureProviderInfo[4]}
 						/>
 					)}
 					{activePanel.startsWith("configure-provider-azuredevops-") && (
 						<ConfigureAzureDevOpsPanel
-							providerId={activePanel.split("configure-provider-azuredevops-")[1]}
+							providerId={configureProviderInfo[3]}
+							fromMenu={configureProviderInfo[4]}
 						/>
 					)}
 					{activePanel === "main" && (

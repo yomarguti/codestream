@@ -65,8 +65,8 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 	componentDidMount() {
 		const { issueProvider } = this.props;
 		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider.id) : undefined;
-		if (this.props.issueProvider && providerInfo) {
-			this.loadBoards(this.props.issueProvider);
+		if (issueProvider && providerInfo) {
+			this.loadBoards(issueProvider);
 		} else {
 			this.props.setIssueProvider(undefined);
 		}

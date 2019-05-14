@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { injectIntl } from "react-intl";
 import { connect } from "react-redux";
 import { closePanel } from "./actions";
-import { configureProvider } from "../store/context/actions";
+import { configureProvider, sendIssueServiceConnected, setIssueProvider} from "../store/context/actions";
 import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
 import Button from "./Button";
@@ -12,7 +12,13 @@ import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher"
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 
 export class ConfigureYouTrackPanel extends Component {
-	initialState = {};
+	initialState = {
+		baseUrl: "",
+		baseUrlTouched: false,
+		token: "",
+		tokenTouched: false,
+		formTouched: false
+	};
 
 	state = this.initialState;
 
@@ -31,28 +37,56 @@ export class ConfigureYouTrackPanel extends Component {
 		this.focusInput();
 	}
 
-	onSubmit = () => {
+	onSubmit = e => {
+		e.preventDefault();
+		if (this.isFormInvalid()) return;
 		const { providerId } = this.props;
-		const { host, token } = this.state;
-		console.log("Calling with: ", host, " and ", token);
-		return this.props.configureProvider(providerId, { host, token });
+		const { baseUrl, token } = this.state;
+
+		// for YouTrack, configuring is as good as connecting, since we are letting the user
+		// set the access token ... sending the fourth argument as true here lets the 
+		// configureProvider function know that they can mark YouTrack as connected as soon
+		// as the access token entered by the user has been saved to the server
+		this.props.configureProvider(providerId, { baseUrl, token }, this.props.fromMenu, true);
+		
+		this.props.closePanel();
 	};
 
 	renderError = () => {};
 
-	renderHostHelp = () => {};
+	onBlurBaseUrl = () => {
+		this.setState({ baseUrlTouched: true });
+	};
+
+	renderBaseUrlHelp = () => {
+		const { baseUrl, baseUrlTouched, formTouched } = this.state;
+		if (baseUrlTouched || formTouched) {
+			if (baseUrl.length === 0) return <small className="error-message">Required</small>;
+		}
+	};
+
+	onBlurToken = () => {
+		this.setState({ tokenTouched: true });
+	};
+
+	renderTokenHelp = () => {
+		const { token, tokenTouched, formTouched } = this.state;
+		if (tokenTouched || formTouched)
+			if (token.length === 0) return <small className="error-message">Required</small>;
+	};
 
 	tabIndex = () => {};
+
+	isFormInvalid = () => {
+		return this.state.baseUrl.length === 0 || this.state.token.length === 0;
+	};
 
 	render() {
 		const { providerId } = this.props;
 		const inactive = false;
-		console.log("PROVIDER ID IS: ", providerId);
-		console.log("PROVIDERS: ", this.props.providers);
 		const { name } = this.props.providers[providerId] || {};
-		console.log("NAME IS: ", name);
 		const providerName = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].displayName : "";
-		const placeholder = "https://acme.youtrack.com";
+		const placeholder = "https://myorg.myjetbrains.com";
 		const getUrl = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].getUrl : "";
 		return (
 			<div className="panel configure-provider-panel">
@@ -62,30 +96,32 @@ export class ConfigureYouTrackPanel extends Component {
 						<span className="panel-title">Configure {providerName}</span>
 					</div>
 					<fieldset className="form-body" disabled={inactive}>
-						{this.renderError()}
 						{getUrl && (
 							<p style={{ textAlign: "center" }} className="explainer">
 								Not a {providerName} customer yet? <a href={getUrl}>Get {providerName}</a>
 							</p>
 						)}
+						{this.renderError()}
 						<div id="controls">
-							<div id="host-controls" className="control-group">
-								<label>{providerName} Server URL</label>
+							<div id="configure-youtrack-controls" className="control-group">
+								<label><strong>{providerName} Base URL</strong></label>
+								<label>Please provide the Base URL used by your team to access YouTrack. This can be found under your <a href="https://www.jetbrains.com/help/youtrack/incloud/Domain-Settings.html">Domain Settings</a>.</label>
 								<input
 									className="native-key-bindings input-text control"
 									type="text"
-									name="host"
+									name="baseUrl"
 									tabIndex={this.tabIndex()}
-									value={this.state.host}
-									onChange={e => this.setState({ host: e.target.value })}
-									onBlur={this.onBlurHost}
-									required={this.state.hostTouched || this.state.formTouched}
+									value={this.state.baseUrl}
+									onChange={e => this.setState({ baseUrl: e.target.value })}
+									onBlur={this.onBlurBaseUrl}
+									required={this.state.baseUrlTouched || this.state.formTouched}
 									placeholder={placeholder}
 									required={true}
 									id="configure-provider-initial-input"
 								/>
-								{this.renderHostHelp()}
+								{this.renderBaseUrlHelp()}
 							</div>
+							<br/>
 							{false && (
 								<div id="username-controls" className="control-group">
 									<label>{providerName} Username</label>
@@ -100,7 +136,8 @@ export class ConfigureYouTrackPanel extends Component {
 								</div>
 							)}
 							<div id="token-controls" className="control-group">
-								<label>{providerName} Permanent Token</label>
+								<label><strong>{providerName} Permanent Token</strong></label>
+								<label>Please provide a <a href="https://www.jetbrains.com/help/youtrack/standalone/Manage-Permanent-Token.html">permanent token</a> we can use to access your YouTrack projects and issues.</label>
 								<input
 									className="native-key-bindings input-text control"
 									type="text"
@@ -108,7 +145,10 @@ export class ConfigureYouTrackPanel extends Component {
 									tabIndex={this.tabIndex()}
 									value={this.state.token}
 									onChange={e => this.setState({ token: e.target.value })}
+									onBlur={this.onBlurToken}
+									required={this.state.tokenTouched || this.state.formTouched}
 								/>
+								{this.renderTokenHelp()}
 							</div>
 							<div className="button-group">
 								<Button
@@ -117,7 +157,6 @@ export class ConfigureYouTrackPanel extends Component {
 									tabIndex={this.tabIndex()}
 									type="submit"
 									loading={this.state.loading}
-									onClick={this.props.closePanel}
 								>
 									Submit
 								</Button>
@@ -145,5 +184,5 @@ const mapStateToProps = ({ providers, context, teams }) => {
 
 export default connect(
 	mapStateToProps,
-	{ closePanel, configureProvider }
+	{ closePanel, configureProvider, sendIssueServiceConnected, setIssueProvider }
 )(injectIntl(ConfigureYouTrackPanel));
