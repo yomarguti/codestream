@@ -48,6 +48,7 @@ import * as streamActions from "../store/streams/actions";
 import { addUsers } from "../store/users/actions";
 import { uuid } from "../utils";
 import { HostApi } from "../webview-api";
+import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 
 export { connectProvider, disconnectProvider } from "../store/context/actions";
 export {
@@ -141,7 +142,10 @@ export const createPost = (
 			});
 		}
 		const response = await responsePromise;
-		response.codemark && dispatch(saveCodemarks([response.codemark]));
+		if (response.codemark) {
+			dispatch(saveCodemarks([response.codemark]));
+			dispatch(fetchDocumentMarkers(codemark.textEditorUri));
+		}
 		response.streams &&
 			response.streams.forEach(stream => dispatch(streamActions.updateStream(stream)));
 		return dispatch(postsActions.resolvePendingPost(pendingId, response.post));
@@ -512,8 +516,16 @@ export const setCodemarkStatus = (
 };
 
 export const createProviderCard = async (attributes, codemark) => {
-	const codeStart = attributes.htmlMarkup ? "<pre><div><code>" : (attributes.singleBackQuoteMarkup ? "`" : "```");
-	const codeEnd = attributes.htmlMarkup ? "</code></div></pre>" : (attributes.singleBackQuoteMarkup ? "`" : "```");
+	const codeStart = attributes.htmlMarkup
+		? "<pre><div><code>"
+		: attributes.singleBackQuoteMarkup
+		? "`"
+		: "```";
+	const codeEnd = attributes.htmlMarkup
+		? "</code></div></pre>"
+		: attributes.singleBackQuoteMarkup
+		? "`"
+		: "```";
 	const linefeed = attributes.htmlMarkup ? "<br/>" : "\n";
 	let description = `${codemark.text}${linefeed}${linefeed}`;
 	if (codemark.markers && codemark.markers.length > 0) {
