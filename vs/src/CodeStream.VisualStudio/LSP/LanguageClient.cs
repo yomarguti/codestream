@@ -13,9 +13,7 @@ using System.ComponentModel.Composition;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Newtonsoft.Json;
-using Package = Microsoft.VisualStudio.Shell.Package;
 
 namespace CodeStream.VisualStudio.LSP {
 	/// <summary>

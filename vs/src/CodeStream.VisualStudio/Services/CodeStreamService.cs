@@ -44,7 +44,6 @@ namespace CodeStream.VisualStudio.Services {
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class CodeStreamService : ICodeStreamService {
 		private static readonly ILogger Log = LogManager.ForContext<CodeStreamService>();
-		private readonly IServiceProvider _serviceProvider;
 		public ISessionService SessionService { get; }
 		public ICodeStreamAgentService AgentService { get; }
 		public IWebviewIpc WebviewIpc { get; }
@@ -52,10 +51,8 @@ namespace CodeStream.VisualStudio.Services {
 
 		[ImportingConstructor]
 		public CodeStreamService(
-			[Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider,
 			[Import]ICodeStreamAgentService agentService,
 			[Import]IWebviewIpc ipc) {
-			_serviceProvider = serviceProvider;
 			AgentService = agentService;
 			SessionService = agentService.SessionService;
 			EventAggregator = agentService.EventAggregator;
@@ -67,7 +64,7 @@ namespace CodeStream.VisualStudio.Services {
 		public async Task ChangeActiveEditorAsync(string fileName, Uri uri, ActiveTextEditor activeTextEditor = null) {
 			if (IsReady) {
 				try {
-					var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+					var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
 					Assumes.Present(componentModel);
 
 					var editorService = componentModel.GetService<IEditorService>();

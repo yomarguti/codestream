@@ -7,7 +7,6 @@ using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Reactive.Linq;
 using System.Windows.Controls;
 using Microsoft.VisualStudio.ComponentModelHost;
 
@@ -33,43 +32,49 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 		/// Initializes a new instance of the <see cref="WebViewControl"/> class.
 		/// </summary>
 		public WebViewControl() {
-			this.IsVisibleChanged += WebViewControl_IsVisibleChanged;
+			try {
+				this.IsVisibleChanged += WebViewControl_IsVisibleChanged;
 
-			InitializeComponent();
+				InitializeComponent();
 
-			Log.Verbose($"{nameof(OnInitialized)}...");
-			_componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
-			_ipc = _componentModel?.GetService<IWebviewIpc>();
-			_codeStreamService = _componentModel?.GetService<ICodeStreamService>();
+				Log.Verbose($"{nameof(OnInitialized)}...");
+				_componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
+				_ipc = _componentModel?.GetService<IWebviewIpc>();
+				_codeStreamService = _componentModel?.GetService<ICodeStreamService>();
 
-			if (_ipc != null && _ipc.BrowserService != null) {
-				_ipc.BrowserService.Initialize();
-				_ipc.BrowserService.AttachControl(Grid);
-				_ipc.BrowserService.LoadSplashView();
+				if (_ipc != null && _ipc.BrowserService != null) {
+					_ipc.BrowserService.Initialize();
+					_ipc.BrowserService.AttachControl(Grid);
+					_ipc.BrowserService.LoadSplashView();
 
-				_eventAggregator = _codeStreamService.EventAggregator;
-				_sessionService = _codeStreamService.SessionService;
+					_eventAggregator = _codeStreamService.EventAggregator;
+					_sessionService = _codeStreamService.SessionService;
 
-				if (_sessionService == null) {
-					Log.Error("SessionService is null");
-				}
-				else {
-					_languageServerDisconnectedEvent = _eventAggregator?.GetEvent<LanguageServerDisconnectedEvent>().Subscribe(_ => {
-						_isInitialized = false;
+					if (_sessionService == null) {
+						Log.Error("SessionService is null");
+					}
+					else {
+						_languageServerDisconnectedEvent = _eventAggregator?.GetEvent<LanguageServerDisconnectedEvent>()
+							.Subscribe(_ => {
+								_isInitialized = false;
 
-						_ipc.BrowserService.LoadSplashView();
+								_ipc.BrowserService.LoadSplashView();
+
+								SetupInitialization();
+							});
 
 						SetupInitialization();
-					});
-
-					SetupInitialization();
+					}
 				}
-			}
-			else {
-				Log.Error("BrowserService is null");
-			}
+				else {
+					Log.Error("BrowserService is null");
+				}
 
-			Log.Debug($"{nameof(OnInitialized)}");
+				Log.Debug($"{nameof(OnInitialized)}");
+			}
+			catch (Exception ex) {
+				Log.Fatal(ex, nameof(WebViewControl));
+			}
 		}
 
 		private void WebViewControl_IsVisibleChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e) {
@@ -117,8 +122,8 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 				_languageServerReadyEvent = _eventAggregator.GetEvent<LanguageServerReadyEvent>()
 					.ObserveOnApplicationDispatcher()
 					.Subscribe(_ => {
-					InitializeCore();
-				});
+						InitializeCore();
+					});
 			}
 		}
 
@@ -141,7 +146,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 								authenticationService);
 
 							_ipc.BrowserService.AddWindowMessageEvent(
-								async delegate(object sender, WindowEventArgs ea) { await router.HandleAsync(ea); });
+								async delegate (object sender, WindowEventArgs ea) { await router.HandleAsync(ea); });
 
 							_ipc.BrowserService.LoadWebView();
 

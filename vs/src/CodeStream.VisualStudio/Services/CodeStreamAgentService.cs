@@ -48,11 +48,13 @@ namespace CodeStream.VisualStudio.Services {
 		Task TrackAsync(string key, TelemetryProperties properties = null);
 	}
 
+	public class CodeStreamAgentServiceDummy { }
+
 	[Export(typeof(ICodeStreamAgentService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class CodeStreamAgentService : ICodeStreamAgentService, IDisposable {
-		private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
-		private readonly IServiceProvider _serviceProvider;
+		private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentServiceDummy>();
+		
 		public ISessionService SessionService { get; }
 		public IEventAggregator EventAggregator { get; }
 		private readonly ISettingsService _settingsService;
@@ -62,11 +64,9 @@ namespace CodeStream.VisualStudio.Services {
 
 		[ImportingConstructor]
 		public CodeStreamAgentService(
-			[Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider,
 			[Import]ISessionService sessionService,
 			[Import]ISettingsService settingsService,
 			[Import]IEventAggregator eventAggregator) {
-			_serviceProvider = serviceProvider;
 			SessionService = sessionService;
 			_settingsService = settingsService;
 			EventAggregator = eventAggregator;
@@ -268,7 +268,7 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public async Task<JToken> GetBootstrapAsync(Settings settings, JToken state = null, bool isAuthenticated = false) {
-			var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+			var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
 			var ideService = componentModel?.GetService<IIdeService>();
 
 			var vslsEnabled = ideService?.QueryExtension(ExtensionKind.LiveShare) == true;
