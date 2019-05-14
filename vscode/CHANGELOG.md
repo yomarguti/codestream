@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.0.1] - 2019-5-15
+
+### Added
+
+- Adds an integration with YouTrack issue tracking
+
 ## [1.0.0] - 2019-5-13
 
 ### Added
