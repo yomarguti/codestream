@@ -21,7 +21,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 		private readonly IWebviewIpc _ipc;
 		private readonly ISessionService _sessionService;
 		private readonly IDisposable _languageServerDisconnectedEvent;
-		private readonly ICodeStreamService _codeStreamService;
+		
 		private IDisposable _languageServerReadyEvent;
 		private List<IDisposable> _disposables;
 		private bool _disposed = false;
@@ -40,15 +40,13 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 				Log.Verbose($"{nameof(OnInitialized)}...");
 				_componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
 				_ipc = _componentModel?.GetService<IWebviewIpc>();
-				_codeStreamService = _componentModel?.GetService<ICodeStreamService>();
+				_eventAggregator = _componentModel?.GetService<IEventAggregator>();
+				_sessionService = _componentModel?.GetService<ISessionService>();
 
 				if (_ipc != null && _ipc.BrowserService != null) {
 					_ipc.BrowserService.Initialize();
 					_ipc.BrowserService.AttachControl(Grid);
 					_ipc.BrowserService.LoadSplashView();
-
-					_eventAggregator = _codeStreamService.EventAggregator;
-					_sessionService = _codeStreamService.SessionService;
 
 					if (_sessionService == null) {
 						Log.Error("SessionService is null");
@@ -98,11 +96,12 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 					_eventAggregator.Publish(new MarkerGlyphVisibilityEvent { IsVisible = areMarkerGlyphsVisible });
 					if (!_sessionService.LastActiveFileUrl.IsNullOrWhiteSpace()) {
 						try {
-							_codeStreamService?.ChangeActiveEditorAsync(_sessionService.LastActiveFileUrl,
+							var codeStreamService = _componentModel?.GetService<ICodeStreamService>();
+							codeStreamService?.ChangeActiveEditorAsync(_sessionService.LastActiveFileUrl,
 								new Uri(_sessionService.LastActiveFileUrl));
 						}
-						catch {
-							//suffer silently
+						catch(Exception ex) {
+							Log.Warning(ex, nameof(WebViewControl_IsVisibleChanged));
 						}
 					}
 				}
