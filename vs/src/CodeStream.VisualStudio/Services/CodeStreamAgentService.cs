@@ -25,7 +25,7 @@ using TraceLevel = CodeStream.VisualStudio.Core.Logging.TraceLevel;
 namespace CodeStream.VisualStudio.Services {
 	public interface ICodeStreamAgentService {
 		ISessionService SessionService { get; }
-		IEventAggregator EventAggregator { get; }
+		IEventAggregator EventAggregator { get; set; }
 		Task SetRpcAsync(JsonRpc rpc);
 		Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null);
 		Task<CreateDocumentMarkerPermalinkResponse> CreatePermalinkAsync(Range range, string uri, string privacy);
@@ -54,9 +54,9 @@ namespace CodeStream.VisualStudio.Services {
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class CodeStreamAgentService : ICodeStreamAgentService, IDisposable {
 		private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentServiceDummy>();
-		
+
 		public ISessionService SessionService { get; }
-		public IEventAggregator EventAggregator { get; }
+
 		private readonly ISettingsService _settingsService;
 
 		private JsonRpc _rpc;
@@ -65,12 +65,18 @@ namespace CodeStream.VisualStudio.Services {
 		[ImportingConstructor]
 		public CodeStreamAgentService(
 			[Import]ISessionService sessionService,
-			[Import]ISettingsService settingsService,
-			[Import]IEventAggregator eventAggregator) {
-			SessionService = sessionService;
-			_settingsService = settingsService;
-			EventAggregator = eventAggregator;
+			[Import]ISettingsService settingsService) {
+			try {
+				SessionService = sessionService;
+				_settingsService = settingsService;
+			}
+			catch (Exception ex) {
+				Log.Fatal(ex.UnwrapCompositionException(), nameof(CodeStreamAgentService));
+			}
 		}
+
+		[Import]
+		public IEventAggregator EventAggregator { get; set; }
 
 		public Task SetRpcAsync(JsonRpc rpc) {
 			_rpc = rpc;
@@ -312,7 +318,7 @@ namespace CodeStream.VisualStudio.Services {
 			if (state == null) throw new ArgumentNullException(nameof(state));
 			var bootstrapAuthenticated = await _rpc.InvokeWithParameterObjectAsync<JToken>(BootstrapRequestType.MethodName)
 				.ConfigureAwait(false) as JObject;
-			
+
 			var editorService = componentModel?.GetService<IEditorService>();
 			var editorContext = editorService?.GetEditorContext();
 

@@ -45,23 +45,28 @@ namespace CodeStream.VisualStudio.Services {
 
 		[ImportingConstructor]
 		public SettingsService() {
-			ThreadHelper.JoinableTaskFactory.Run(async delegate {
-				try {
-					// Make the call to GetLiveInstanceAsync from a background thread to avoid blocking the UI thread
-					DialogPage = await OptionsDialogPage.GetLiveInstanceAsync();
-					DialogPage.Load();
-				}
-				catch(Exception ex) {
-					Log.Error(ex, nameof(SettingsService));
-				}				
-			});			
+			try {
+				ThreadHelper.JoinableTaskFactory.Run(async delegate {
+					try {
+						// Make the call to GetLiveInstanceAsync from a background thread to avoid blocking the UI thread
+						DialogPage = await OptionsDialogPage.GetLiveInstanceAsync();
+						DialogPage.Load();
+					}
+					catch (Exception ex) {
+						Log.Error(ex.UnwrapCompositionException(), nameof(SettingsService));
+					}
+				});
+			}
+			catch (Exception ex) {
+				Log.Fatal(ex.UnwrapCompositionException(), nameof(SettingsService));
+			}
 		}
 
-		public void LoadSettingsFromStorage() {			
+		public void LoadSettingsFromStorage() {
 			DialogPage.Load();
 		}
 
-		public void SaveSettingsToStorage() {			
+		public void SaveSettingsToStorage() {
 			DialogPage.Save();
 		}
 

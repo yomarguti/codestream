@@ -12,11 +12,11 @@ Write-Host "Starting at $(Get-Date)"
 $counter = 0;
 while($true) { 
     start "C:\Program Files (x86)\Microsoft Visual Studio\$($Version)\Community\Common7\IDE\devenv.exe" "..\src\CodeStream.VisualStudio.sln"
-    Start-Sleep -Seconds 10
+    Start-Sleep -Seconds 15
     start "C:\Program Files (x86)\Microsoft Visual Studio\$($Version)\Community\Common7\IDE\devenv.exe" "..\src\CodeStream.VisualStudio.sln"
-    Start-Sleep -Seconds 10
+    Start-Sleep -Seconds 15
     start "C:\Program Files (x86)\Microsoft Visual Studio\$($Version)\Community\Common7\IDE\devenv.exe" "..\src\CodeStream.VisualStudio.sln"
-    Start-Sleep -Seconds 10
+    Start-Sleep -Seconds 15
 
     Start-Sleep -Seconds 20
     Get-Process devenv -ErrorAction SilentlyContinue | Stop-Process
