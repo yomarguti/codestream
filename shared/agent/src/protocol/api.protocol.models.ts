@@ -285,6 +285,9 @@ export interface CSYouTrackProviderInfo {
 	accessToken: string;
 	userId: string;
 	hosts: { [host: string]: CSYouTrackProviderInfo };
+	data?: {
+		baseUrl?: string;
+	};
 }
 
 export interface CSAzureDevOpsProviderInfo {

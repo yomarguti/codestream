@@ -1,5 +1,6 @@
 "use strict";
 import * as qs from "querystring";
+import { MessageType } from "../api/apiProvider";
 import {
 	CreateThirdPartyCardRequest,
 	FetchThirdPartyBoardsRequest,
@@ -10,7 +11,7 @@ import {
 	YouTrackCreateCardResponse,
 	YouTrackUser
 } from "../protocol/agent.protocol";
-import { CSYouTrackProviderInfo } from "../protocol/api.protocol";
+import { CSMe, CSYouTrackProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
 import { ThirdPartyProviderBase } from "./provider";
 
@@ -33,8 +34,22 @@ export class YouTrackProvider extends ThirdPartyProviderBase<CSYouTrackProviderI
 		};
 	}
 
+	get myUrl() {
+		let url = (this._providerInfo && this._providerInfo.data && this._providerInfo.data.baseUrl) || "";
+		if (url.endsWith("/hub")) {
+			url = url.split("/hub")[0];
+		} else if (url.endsWith("/youtrack")) {
+			url = url.split("/youtrack")[0];
+		}
+		return url;
+	}
+
 	get apiPath () {
 		return "/youtrack/api";
+	}
+
+	get baseUrl() {
+		return `${this.myUrl}${this.apiPath}`;
 	}
 
 	async onConnected() {
@@ -78,9 +93,7 @@ export class YouTrackProvider extends ThirdPartyProviderBase<CSYouTrackProviderI
 			}
 		);
 		const card = response.body;
-		const { host, apiHost, isEnterprise } = this.providerConfig;
-		const returnHost = isEnterprise ? host : apiHost;
-		card.url = `https://${returnHost}/youtrack/issue/${card.idReadable}`;
+		card.url = `${this.myUrl}/youtrack/issue/${card.idReadable}`;
 		return card;
 	}
 
@@ -99,7 +112,25 @@ export class YouTrackProvider extends ThirdPartyProviderBase<CSYouTrackProviderI
 		await this.session.api.setThirdPartyProviderToken({
 			providerId: this.providerConfig.id,
 			host: request.host,
-			token: request.token
+			token: request.token,
+			data: {
+				baseUrl: request.baseUrl
+			}
+		});
+
+		// FIXME - this rather sucks as a way to ensure we have the access token
+		return new Promise<void>(resolve => {
+			this.session.api.onDidReceiveMessage(e => {
+				if (e.type !== MessageType.Users) return;
+
+				const me = e.data.find(u => u.id === this.session.userId) as CSMe | null | undefined;
+				if (me == null) return;
+
+				const providerInfo = this.getProviderInfo(me);
+				if (providerInfo == null || !providerInfo.accessToken) return;
+
+				resolve();
+			});
 		});
 	}
 }

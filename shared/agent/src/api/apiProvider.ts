@@ -96,6 +96,7 @@ import {
 	SetCodemarkStatusResponse,
 	SetStreamPurposeRequest,
 	SetStreamPurposeResponse,
+	ThirdPartyProviderSetTokenRequest,
 	UnarchiveStreamRequest,
 	UnarchiveStreamResponse,
 	Unreads,
@@ -322,11 +323,7 @@ export interface ApiProvider {
 	inviteUser(request: InviteUserRequest): Promise<InviteUserResponse>;
 
 	connectThirdPartyProvider(request: { providerId: string }): Promise<{ code: string }>;
-	setThirdPartyProviderToken(request: {
-		providerId: string;
-		host?: string;
-		token: string;
-	}): Promise<void>;
+	setThirdPartyProviderToken(request: ThirdPartyProviderSetTokenRequest): Promise<void>;
 	setThirdPartyProviderInfo(request: {
 		providerId: string;
 		host?: string;

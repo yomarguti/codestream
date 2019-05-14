@@ -121,3 +121,17 @@ export const CreateThirdPartyCardRequestType = new RequestType<
 	void,
 	void
 >("codestream/provider/cards/create");
+
+interface ThirdPartyProviderSetTokenData {
+	host?: string;
+	token: string;
+	data?: { [ key: string ]: any };
+}
+
+export interface ThirdPartyProviderSetTokenRequestData extends ThirdPartyProviderSetTokenData {
+	teamId: string;
+}
+
+export interface ThirdPartyProviderSetTokenRequest extends ThirdPartyProviderSetTokenData {
+	providerId: string;
+}

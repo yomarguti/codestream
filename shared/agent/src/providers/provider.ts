@@ -91,6 +91,8 @@ export abstract class ThirdPartyProviderBase<
 		void (await this.session.api.connectThirdPartyProvider({
 			providerId: this.providerConfig.id
 		}));
+
+		// FIXME - this rather sucks as a way to ensure we have the access token
 		this._providerInfo = await new Promise<TProviderInfo>(resolve => {
 			this.session.api.onDidReceiveMessage(e => {
 				if (e.type !== MessageType.Users) return;

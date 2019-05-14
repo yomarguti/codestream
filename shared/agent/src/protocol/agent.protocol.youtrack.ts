@@ -33,7 +33,7 @@ export interface YouTrackUser {
 }
 
 export interface YouTrackConfigurationData {
-	appClientId: string;
-	host: string;
+	baseUrl: string;
 	token: string;
+	host?: string;
 }

@@ -53,6 +53,8 @@ import {
 	SetCodemarkPinnedRequest,
 	SetCodemarkStatusRequest,
 	SetStreamPurposeRequest,
+	ThirdPartyProviderSetTokenRequest,
+	ThirdPartyProviderSetTokenRequestData,
 	UnarchiveStreamRequest,
 	Unreads,
 	UpdateCodemarkRequest,
@@ -1057,20 +1059,21 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async setThirdPartyProviderToken(request: { providerId: string; host: string; token: string }) {
+	async setThirdPartyProviderToken(request: ThirdPartyProviderSetTokenRequest) {
 		const cc = Logger.getCorrelationContext();
 		try {
 			const provider = getProvider(request.providerId);
 			if (!provider) throw new Error(`provider ${request.providerId} not found`);
 			const providerConfig = provider.getConfig();
 
-			const params: { teamId: string; host: string; token: string } = {
+			const params: ThirdPartyProviderSetTokenRequestData = {
 				teamId: this.teamId,
 				host: request.host,
-				token: request.token
+				token: request.token,
+				data: request.data
 			};
 
-			void (await this.put<{ teamId: string; host: string; token: string }, {}>(
+			void (await this.put<ThirdPartyProviderSetTokenRequestData, {}>(
 				`/provider-set-token/${providerConfig.name}`,
 				params,
 				this._token
