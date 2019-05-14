@@ -57,6 +57,12 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="1_0_1">1.0.1</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds compare and apply links to codemarks when code block doesn't match your local buffer</li>
+    <li>Adds an integration with YouTrack issue tracking</li>
+</ul>
 <h4 id="1_0_0">1.0.0</h4>
 <h5>Added</h5>
 <ul>
