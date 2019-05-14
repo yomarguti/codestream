@@ -261,6 +261,7 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="ClassDiagram1.cd" />
     <None Include="CodeStream.VisualStudio.Settings.json" />
     <Compile Include="Models\Host.Protocol.cs" />
     <Content Include="CHANGELOG.txt">
