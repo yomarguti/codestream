@@ -154,8 +154,7 @@ export const configureProvider = (
 		api.send(TelemetryRequestType, {
 			eventName: "Issue Service Configured",
 			properties: {
-				Service: provider.name,
-				Connection: "On"
+				Service: provider.name
 			}
 		});
 
