@@ -1,8 +1,7 @@
 import { TraceLevel } from "@codestream/protocols/agent";
 import { EditorSelection } from "@codestream/protocols/webview";
-import { Disposable, Point, Range, TextEditor } from "atom";
+import { Disposable, Range, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
-import * as fs from "fs-plus";
 import * as path from "path";
 import { Range as LSRange } from "vscode-languageserver-types";
 import { Container } from "workspace/container";
