@@ -48,7 +48,7 @@ namespace CodeStream.VisualStudio.Core.Logging {
 
 		[Conditional("DEBUG")]
 		public static void LocalWarning(this ILogger logger, string message) {
-			logger.Warning(message);
+			logger.Warning($"LOCAL=>{message}");
 		}
 	}
 }
