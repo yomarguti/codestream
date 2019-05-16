@@ -39,24 +39,26 @@ namespace CodeStream.VisualStudio.LSP {
 		//		internal IContentTypeRegistryService ContentTypeRegistryService { get; set; }
 		//#endif
 		private readonly IEventAggregator _eventAggregator;
-		private readonly ISettingsService _settingsService;
-		private readonly ICodeStreamAgentService _codeStreamAgentService;
-		private readonly ISessionService _sessionService;
 
 		[ImportingConstructor]
 		public LanguageClient(
-			[Import] ICodeStreamAgentService codeStreamAgentService,
-			[Import] ISettingsService settingsService,						
+			[Import] IEventAggregator eventAggregator,						
 			[Import] IWebviewIpc ipc) {
 			Instance = this;
-			_codeStreamAgentService = codeStreamAgentService;
-			_eventAggregator = codeStreamAgentService.EventAggregator;
-			_sessionService = codeStreamAgentService.SessionService;
-			_settingsService = settingsService;			
-
+			
+			_eventAggregator = eventAggregator;
 			_languageServerProcess = new LanguageServerProcess();
 			CustomMessageTarget = new CustomMessageHandler(_eventAggregator, ipc);
 		}
+
+		[Import]
+		public ISessionService SessionService { get; set; }
+
+		[Import]
+		public ISettingsService SettingsService { get; set; }
+
+		[Import]
+		public ICodeStreamAgentService CodeStreamAgentService { get; set; }
 
 		internal static LanguageClient Instance { get; private set; }
 		private JsonRpc _rpc;
@@ -68,16 +70,16 @@ namespace CodeStream.VisualStudio.LSP {
 		public object InitializationOptions {
 			get {
 				var initializationOptions = new InitializationOptions {
-					Extension = _settingsService.GetExtensionInfo(),
-					Ide = _settingsService.GetIdeInfo(),
+					Extension = SettingsService.GetExtensionInfo(),
+					Ide = SettingsService.GetIdeInfo(),
 #if DEBUG
 					TraceLevel = TraceLevel.Verbose.ToJsonValue(),
 					IsDebugging = true,
 #else
-                    TraceLevel = _settingsService.TraceLevel.ToJsonValue(),
+                    TraceLevel = SettingsService.TraceLevel.ToJsonValue(),
 #endif
-					Proxy = _settingsService.Proxy,
-					ProxySupport = _settingsService.ProxySupport.ToJsonValue()
+					Proxy = SettingsService.Proxy,
+					ProxySupport = SettingsService.ProxySupport.ToJsonValue()
 				};
 				Log.Debug(nameof(InitializationOptions) + " {@InitializationOptions}", initializationOptions);
 
@@ -96,7 +98,7 @@ namespace CodeStream.VisualStudio.LSP {
 
 			Connection connection = null;
 
-			var process = _languageServerProcess.Create(_settingsService.TraceLevel);
+			var process = _languageServerProcess.Create(SettingsService.TraceLevel);
 
 			using (Log.CriticalOperation($"Starting server process. FileName={process.StartInfo.FileName} Arguments={process.StartInfo.Arguments}", Serilog.Events.LogEventLevel.Information)) {
 				if (process.Start()) {
@@ -126,8 +128,8 @@ namespace CodeStream.VisualStudio.LSP {
 		public async Task OnServerInitializedAsync() {
 			try {
 				using (Log.CriticalOperation($"{nameof(OnServerInitializedAsync)}")) {
-					await _codeStreamAgentService.SetRpcAsync(_rpc);
-					_sessionService.SetAgentReady();
+					await CodeStreamAgentService.SetRpcAsync(_rpc);
+					SessionService.SetAgentReady();
 					_eventAggregator.Publish(new LanguageServerReadyEvent { IsReady = true });
 				}
 			}
