@@ -60,8 +60,8 @@ export interface CSLoginResponse {
 	pubnubToken: string;
 	broadcasterToken?: string;
 	socketCluster?: {
-		host: string,
-		port: string
+		host: string;
+		port: string;
 	};
 	teams: CSTeam[];
 	companies: CSCompany[];

@@ -1,5 +1,4 @@
 "use strict";
-import { CodeStreamAgent } from "agent";
 import {
 	Connection,
 	Disposable,
@@ -9,8 +8,8 @@ import {
 	TextDocumentChangeEvent,
 	TextDocuments
 } from "vscode-languageserver";
-import { Disposables } from "./system";
 import URI from "vscode-uri";
+import { Disposables } from "./system";
 
 const escapedRegex = /(^.*?:\/\/\/)([a-z])%3A(\/.*$)/;
 const unescapedRegex = /(^.*?:\/\/\/)([a-zA-Z]):(\/.*$)/;
@@ -56,7 +55,7 @@ export class DocumentManager implements Disposable {
 		}
 
 		if (doc || !this._isWindows) {
-			return doc
+			return doc;
 		}
 
 		// If we are on windows we have to do some drive letter manipulation to support different editor using different uri formatting
