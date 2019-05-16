@@ -16,4 +16,4 @@ A clear and concise description of what the bug is, as well as detailed steps to
  - IDE + version: [e.g. VS Code 1.33.1]
 
 **Log Files**
-Sending log files along with your report will help us investigate the issue. Instructions can be found here: https://github.com/TeamCodeStream/CodeStream/wiki/Instructions-for-getting-CodeStream-log-files
+Sending log files along with your report will help us investigate the issue. Instructions can be found here: https://github.com/TeamCodeStream/CodeStream/wiki/Instructions-for-finding-CodeStream-log-files
