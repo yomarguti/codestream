@@ -52,9 +52,14 @@ namespace CodeStream.VisualStudio.Services {
 
 		[ImportingConstructor]
 		public IdeService([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
-			_serviceProvider = serviceProvider;
-			_componentModel = serviceProvider?.GetService(typeof(SComponentModel)) as IComponentModel;
-			_extensions = ExtensionManager.Initialize(LogManager.ForContext<ExtensionManagerDummy>()).Value;
+			try {
+				_serviceProvider = serviceProvider;
+				_componentModel = serviceProvider?.GetService(typeof(SComponentModel)) as IComponentModel;
+				_extensions = ExtensionManager.Initialize(LogManager.ForContext<ExtensionManagerDummy>()).Value;
+			}
+			catch (Exception ex) {
+				Log.Fatal(ex, nameof(IdeService));
+			}
 		}
 
 		public async System.Threading.Tasks.Task<bool> OpenEditorAndRevealAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false) {

@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO.Packaging;
 using System.Reactive.Subjects;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Services;
@@ -54,29 +54,24 @@ namespace CodeStream.VisualStudio.UnitTests.UI {
 			eventAggregator.Setup(_ => _.GetEvent<SessionLogoutEvent>()).Returns(new Subject<SessionLogoutEvent>());
 			eventAggregator.Setup(_ => _.GetEvent<MarkerGlyphVisibilityEvent>()).Returns(new Subject<MarkerGlyphVisibilityEvent>());
 
-			var serviceProvider = new Mock<System.IServiceProvider>();
-			//serviceProvider.Setup(_ => _.GetService(typeof(SEventAggregator))).Returns(eventAggregator.Object);
-
 			var codeStreamAgentService = new Mock<ICodeStreamAgentService>();
 
-
 			var codeStreamServiceMock = new Mock<ICodeStreamService>();
-			codeStreamServiceMock.Setup(_ => _.AgentService).Returns(codeStreamAgentService.Object);
+			//codeStreamServiceMock.Setup(_ => _.AgentService).Returns(codeStreamAgentService.Object);
 			codeStreamServiceMock.Setup(_ => _.SessionService).Returns(new Mock<ISessionService>().Object);
-			codeStreamServiceMock.Setup(_ => _.EventAggregator).Returns(eventAggregator.Object);
 
-			 
 			var listener = new TextViewCreationListener(
- 
 				codeStreamServiceMock.Object
 		   ) {
 				EditorAdaptersFactoryService = editorAdaptersFactoryServiceMock.Object,
 				TextDocumentFactoryService = textDocumentFactoryServiceMock.Object,
 				TextViewMarginProviders = textViewMarginProviders,
 				EditorService = new Mock<IEditorService>().Object,
-				TextViewCache = new WpfTextViewCache()
+				TextViewCache = new WpfTextViewCache(),
+				EventAggregator = eventAggregator.Object,
+				CodeStreamAgentService = new Lazy<ICodeStreamAgentService>(() => codeStreamAgentService.Object)
 			};
-		 
+
 
 			((IWpfTextViewConnectionListener)listener).SubjectBuffersConnected(wpfTextViewMock.Object, reason, bufferCollection);
 			var propertyCount = wpfTextViewMock.Object.Properties.PropertyList.Count;

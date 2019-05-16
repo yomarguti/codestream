@@ -70,62 +70,69 @@ namespace CodeStream.VisualStudio.Services {
 
 		[ImportingConstructor]
 		public DotNetBrowserService([Import]ICodeStreamAgentService codeStreamAgentService) {
-			_agentService = codeStreamAgentService;
-			var eventAggregator = codeStreamAgentService.EventAggregator;
-			_messageQueue = new BlockingCollection<string>(new ConcurrentQueue<string>());
-			_manualResetEvent = new ManualResetEvent(false);
-			_sessionReadyEvent = eventAggregator.GetEvent<SessionReadyEvent>().Subscribe(_ => {
-				Log.Debug($"{nameof(SessionReadyEvent)} Message QueueCount={QueueCount}");
-				_manualResetEvent.Set();
-			});
-			_sessionLogoutEvent = eventAggregator.GetEvent<SessionLogoutEvent>().Subscribe(_ => {
-				Log.Debug($"{nameof(SessionLogoutEvent)} Message QueueCount={QueueCount}");
-				_queueTokenSource?.Cancel();
-				_messageQueue.Clear();
-				_manualResetEvent.Reset();
-			});
-			//https://stackoverflow.com/questions/9106419/how-to-cancel-getconsumingenumerable-on-blockingcollection
-			_processorTokenSource = new CancellationTokenSource();
-			var processorToken = _processorTokenSource.Token;
+			try {
+				_agentService = codeStreamAgentService;
+				var eventAggregator = codeStreamAgentService.EventAggregator;
+				_messageQueue = new BlockingCollection<string>(new ConcurrentQueue<string>());
+				_manualResetEvent = new ManualResetEvent(false);
+				_sessionReadyEvent = eventAggregator.GetEvent<SessionReadyEvent>().Subscribe(_ => {
+					Log.Debug($"{nameof(SessionReadyEvent)} Message QueueCount={QueueCount}");
+					_manualResetEvent.Set();
+				});
+				_sessionLogoutEvent = eventAggregator.GetEvent<SessionLogoutEvent>().Subscribe(_ => {
+					Log.Debug($"{nameof(SessionLogoutEvent)} Message QueueCount={QueueCount}");
+					_queueTokenSource?.Cancel();
+					_messageQueue.Clear();
+					_manualResetEvent.Reset();
+				});
+				//https://stackoverflow.com/questions/9106419/how-to-cancel-getconsumingenumerable-on-blockingcollection
+				_processorTokenSource = new CancellationTokenSource();
+				var processorToken = _processorTokenSource.Token;
 
-			_processor = Task.Factory.StartNew(() => {
-				try {
-					while (_manualResetEvent.WaitOne()) {
-						if (processorToken.IsCancellationRequested) {
-							break;
-						}
-						_queueTokenSource = new CancellationTokenSource();
-						var queueToken = _queueTokenSource.Token;
-						try {
-							foreach (var value in _messageQueue.GetConsumingEnumerable(_queueTokenSource.Token)) {
-								if (queueToken.IsCancellationRequested) {
-									break;
-								}
+				_processor = Task.Factory.StartNew(() => {
+					try {
+						while (_manualResetEvent.WaitOne()) {
+							if (processorToken.IsCancellationRequested) {
+								break;
+							}
 
-								if (_messageQueue.Count > QueueLimit) {
-									_messageQueue.Clear();
-									_manualResetEvent.Reset();
+							_queueTokenSource = new CancellationTokenSource();
+							var queueToken = _queueTokenSource.Token;
+							try {
+								foreach (var value in _messageQueue.GetConsumingEnumerable(_queueTokenSource.Token)) {
+									if (queueToken.IsCancellationRequested) {
+										break;
+									}
+
+									if (_messageQueue.Count > QueueLimit) {
+										_messageQueue.Clear();
+										_manualResetEvent.Reset();
 #pragma warning disable VSTHRD010
-									ReloadWebView();
+										ReloadWebView();
 #pragma warning restore VSTHRD010
-									break;
+										break;
+									}
+
+									Send(value);
 								}
-								Send(value);
+							}
+							catch (OperationCanceledException ex) {
+								//no need to pass the error, this exception is expected
+								Log.Verbose(ex.Message);
+							}
+							catch (Exception ex) {
+								Log.Error(ex, ex.Message);
 							}
 						}
-						catch (OperationCanceledException ex) {
-							//no need to pass the error, this exception is expected
-							Log.Verbose(ex.Message);
-						}
-						catch (Exception ex) {
-							Log.Error(ex, ex.Message);
-						}
 					}
-				}
-				catch (Exception ex) {
-					Log.Error(ex.Message);
-				}
-			}, processorToken, TaskCreationOptions.None, TaskScheduler.Default);
+					catch (Exception ex) {
+						Log.Error(ex.Message);
+					}
+				}, processorToken, TaskCreationOptions.None, TaskScheduler.Default);
+			}
+			catch (Exception ex) {
+				Log.Fatal(ex, nameof(DotNetBrowserService));
+			}
 		}
 
 		protected override void OnInitialized() {

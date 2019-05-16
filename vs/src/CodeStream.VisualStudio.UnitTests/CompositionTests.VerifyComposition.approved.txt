@@ -882,9 +882,9 @@
 
 [Part] CodeStream.VisualStudio.Services.CodeStreamService from: AssemblyCatalog (Assembly="CodeStream.VisualStudio, Culture=neutral")
   [Export] CodeStream.VisualStudio.Services.CodeStreamService (ContractName="CodeStream.VisualStudio.Services.ICodeStreamService")
-  [Import] CodeStream.VisualStudio.Services.CodeStreamService..ctor (Parameter="agentService", ContractName="CodeStream.VisualStudio.Services.ICodeStreamAgentService")
-    [SatisfiedBy] CodeStream.VisualStudio.Services.CodeStreamAgentService (ContractName="CodeStream.VisualStudio.Services.ICodeStreamAgentService") from: CodeStream.VisualStudio.Services.CodeStreamAgentService from: AssemblyCatalog (Assembly="CodeStream.VisualStudio, Culture=neutral")
-  [Import] CodeStream.VisualStudio.Services.CodeStreamService..ctor (Parameter="ipc", ContractName="CodeStream.VisualStudio.Services.IWebviewIpc")
+  [Import] CodeStream.VisualStudio.Services.CodeStreamService.SessionService (ContractName="CodeStream.VisualStudio.Services.ISessionService")
+    [SatisfiedBy] CodeStream.VisualStudio.Services.SessionService (ContractName="CodeStream.VisualStudio.Services.ISessionService") from: CodeStream.VisualStudio.Services.SessionService from: AssemblyCatalog (Assembly="CodeStream.VisualStudio, Culture=neutral")
+  [Import] CodeStream.VisualStudio.Services.CodeStreamService.WebviewIpc (ContractName="CodeStream.VisualStudio.Services.IWebviewIpc")
     [SatisfiedBy] CodeStream.VisualStudio.Services.WebviewIpc (ContractName="CodeStream.VisualStudio.Services.IWebviewIpc") from: CodeStream.VisualStudio.Services.WebviewIpc from: AssemblyCatalog (Assembly="CodeStream.VisualStudio, Culture=neutral")
 
 [Part] CodeStream.VisualStudio.Services.CredentialsService from: AssemblyCatalog (Assembly="CodeStream.VisualStudio, Culture=neutral")
@@ -928,7 +928,7 @@
 
 [Part] CodeStream.VisualStudio.Services.WebviewIpc from: AssemblyCatalog (Assembly="CodeStream.VisualStudio, Culture=neutral")
   [Export] CodeStream.VisualStudio.Services.WebviewIpc (ContractName="CodeStream.VisualStudio.Services.IWebviewIpc")
-  [Import] CodeStream.VisualStudio.Services.WebviewIpc..ctor (Parameter="browserService", ContractName="CodeStream.VisualStudio.Services.IBrowserService")
+  [Import] CodeStream.VisualStudio.Services.WebviewIpc.BrowserService (ContractName="CodeStream.VisualStudio.Services.IBrowserService")
     [SatisfiedBy] CodeStream.VisualStudio.Services.DotNetBrowserService (ContractName="CodeStream.VisualStudio.Services.IBrowserService") from: CodeStream.VisualStudio.Services.DotNetBrowserService from: AssemblyCatalog (Assembly="CodeStream.VisualStudio, Culture=neutral")
 
 [Part] CodeStream.VisualStudio.Services.WpfTextViewCache from: AssemblyCatalog (Assembly="CodeStream.VisualStudio, Culture=neutral")
@@ -1009,6 +1009,8 @@
   [Export] CodeStream.VisualStudio.UI.TextViewCreationListener (ContractName="Microsoft.VisualStudio.Editor.IVsTextViewCreationListener")
   [Export] CodeStream.VisualStudio.UI.TextViewCreationListener (ContractName="Microsoft.VisualStudio.Text.Editor.IWpfTextViewConnectionListener")
   [Export] CodeStream.VisualStudio.UI.TextViewCreationListener.AlternatingLineColor (ContractName="Microsoft.VisualStudio.Text.Editor.AdornmentLayerDefinition")
+  [Import] CodeStream.VisualStudio.UI.TextViewCreationListener.EventAggregator (ContractName="CodeStream.VisualStudio.Events.IEventAggregator")
+    [SatisfiedBy] CodeStream.VisualStudio.Events.EventAggregator (ContractName="CodeStream.VisualStudio.Events.IEventAggregator") from: CodeStream.VisualStudio.Events.EventAggregator from: AssemblyCatalog (Assembly="CodeStream.VisualStudio, Culture=neutral")
   [Import] CodeStream.VisualStudio.UI.TextViewCreationListener.EditorService (ContractName="CodeStream.VisualStudio.Services.IEditorService")
     [Exception] System.ComponentModel.Composition.ImportCardinalityMismatchException: No exports were found that match the constraint: 
     ContractName    CodeStream.VisualStudio.Services.IEditorService
@@ -1020,6 +1022,8 @@
       [Because] PartDefinitionIsRejected, The part providing the export is rejected because of other issues.
   [Import] CodeStream.VisualStudio.UI.TextViewCreationListener.TextViewCache (ContractName="CodeStream.VisualStudio.Services.IWpfTextViewCache")
     [SatisfiedBy] CodeStream.VisualStudio.Services.WpfTextViewCache (ContractName="CodeStream.VisualStudio.Services.IWpfTextViewCache") from: CodeStream.VisualStudio.Services.WpfTextViewCache from: AssemblyCatalog (Assembly="CodeStream.VisualStudio, Culture=neutral")
+  [Import] CodeStream.VisualStudio.UI.TextViewCreationListener.CodeStreamAgentService (ContractName="CodeStream.VisualStudio.Services.ICodeStreamAgentService")
+    [SatisfiedBy] CodeStream.VisualStudio.Services.CodeStreamAgentService (ContractName="CodeStream.VisualStudio.Services.ICodeStreamAgentService") from: CodeStream.VisualStudio.Services.CodeStreamAgentService from: AssemblyCatalog (Assembly="CodeStream.VisualStudio, Culture=neutral")
   [Import] CodeStream.VisualStudio.UI.TextViewCreationListener.EditorAdaptersFactoryService (ContractName="Microsoft.VisualStudio.Editor.IVsEditorAdaptersFactoryService")
     [Exception] System.ComponentModel.Composition.ImportCardinalityMismatchException: No exports were found that match the constraint: 
     ContractName    Microsoft.VisualStudio.Editor.IVsEditorAdaptersFactoryService

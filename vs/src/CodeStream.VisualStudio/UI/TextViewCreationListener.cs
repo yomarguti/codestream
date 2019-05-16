@@ -8,7 +8,6 @@ using CodeStream.VisualStudio.UI.Adornments;
 using CodeStream.VisualStudio.UI.Margins;
 using Microsoft;
 using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -25,7 +24,6 @@ using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeStream.VisualStudio.UI.Extensions;
-using Microsoft.VisualStudio.ComponentModelHost;
 
 public class TextViewCreationListenerDummy { }
 
@@ -58,10 +56,6 @@ namespace CodeStream.VisualStudio.UI {
 				Assumes.Present(_codeStreamService);
 				_sessionService = _codeStreamService.SessionService;
 				Assumes.Present(_sessionService);
-				_eventAggregator = _codeStreamService.EventAggregator;
-				Assumes.Present(_eventAggregator);
-				_codeStreamAgentService = _codeStreamService.AgentService;
-				Assumes.Present(_codeStreamAgentService);
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(TextViewCreationListener));
@@ -70,13 +64,15 @@ namespace CodeStream.VisualStudio.UI {
 
 		private readonly ICodeStreamService _codeStreamService;
 		private readonly ISessionService _sessionService;
-		private readonly ICodeStreamAgentService _codeStreamAgentService;
-		private readonly IEventAggregator _eventAggregator;
 
+		[Import]
+		public IEventAggregator EventAggregator { get; set; }
 		[Import]
 		public IEditorService EditorService { get; set; }
 		[Import]
 		public IWpfTextViewCache TextViewCache { get; set; }
+		[Import]
+		public Lazy<ICodeStreamAgentService> CodeStreamAgentService { get; set; }
 
 		[Import] public IVsEditorAdaptersFactoryService EditorAdaptersFactoryService { get; set; }
 		[Import] public ITextDocumentFactoryService TextDocumentFactoryService { get; set; }
@@ -118,7 +114,7 @@ namespace CodeStream.VisualStudio.UI {
 						textViews.Add(wpfTextView);
 					}
 					wpfTextView.Properties.GetOrCreateSingletonProperty(PropertyNames.DocumentMarkerManager,
-						() => DocumentMarkerManagerFactory.Create(_codeStreamAgentService, wpfTextView, textDocument));
+						() => DocumentMarkerManagerFactory.Create(CodeStreamAgentService.Value, wpfTextView, textDocument));
 					wpfTextView.Properties.AddProperty(PropertyNames.TextViewFilePath, textDocument.FilePath);
 					wpfTextView.Properties.AddProperty(PropertyNames.TextViewState, new TextViewState());
 #if DEBUG
@@ -158,12 +154,12 @@ namespace CodeStream.VisualStudio.UI {
 
 				using (Log.CriticalOperation($"{nameof(VsTextViewCreated)}")) {
 					wpfTextView.Properties.AddProperty(PropertyNames.TextViewMarginProviders, textViewMarginProviders);
-					Debug.Assert(_eventAggregator != null, nameof(_eventAggregator) + " != null");
+					Debug.Assert(EventAggregator != null, nameof(EventAggregator) + " != null");
 
 					var visibleRangesSubject = new Subject<HostDidChangeEditorVisibleRangesNotificationSubject>();
 					//listening on the main thread since we have to change the UI state
 					var disposables = new List<IDisposable>();
-					disposables.Add(_eventAggregator.GetEvent<SessionReadyEvent>()
+					disposables.Add(EventAggregator.GetEvent<SessionReadyEvent>()
 							.ObserveOnApplicationDispatcher()
 							.Subscribe(_ => {
 
@@ -174,13 +170,13 @@ namespace CodeStream.VisualStudio.UI {
 								}
 							}));
 
-					disposables.Add(_eventAggregator.GetEvent<SessionLogoutEvent>()
+					disposables.Add(EventAggregator.GetEvent<SessionLogoutEvent>()
 						.ObserveOnApplicationDispatcher()
 						.Subscribe(_ => OnSessionLogout(wpfTextView, textViewMarginProviders)));
-					disposables.Add(_eventAggregator.GetEvent<MarkerGlyphVisibilityEvent>()
+					disposables.Add(EventAggregator.GetEvent<MarkerGlyphVisibilityEvent>()
 						.ObserveOnApplicationDispatcher()
 						.Subscribe(_ => textViewMarginProviders.Toggle(_.IsVisible)));
-					disposables.Add(_eventAggregator.GetEvent<AutoHideMarkersEvent>()
+					disposables.Add(EventAggregator.GetEvent<AutoHideMarkersEvent>()
 						.ObserveOnApplicationDispatcher()
 						.Subscribe(_ => textViewMarginProviders.SetAutoHideMarkers(_.Value)));
 					disposables.Add(visibleRangesSubject.Throttle(TimeSpan.FromMilliseconds(15))
@@ -288,7 +284,7 @@ namespace CodeStream.VisualStudio.UI {
 							wpfTextView.Properties.AddProperty(PropertyNames.AdornmentManager, new HighlightAdornmentManager(wpfTextView));
 							wpfTextView.Properties.AddProperty(PropertyNames.TextViewLocalEvents,
 								new List<IDisposable> {
-									_eventAggregator.GetEvent<DocumentMarkerChangedEvent>()
+									EventAggregator.GetEvent<DocumentMarkerChangedEvent>()
 										.Subscribe(_ => {
 											Log.Verbose($"{nameof(DocumentMarkerChangedEvent)} State={state.Initialized}, _={_?.Uri}");
 											OnDocumentMarkerChanged(wpfTextView, _);

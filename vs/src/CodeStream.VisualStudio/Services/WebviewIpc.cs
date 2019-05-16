@@ -21,12 +21,8 @@ namespace CodeStream.VisualStudio.Services {
 	public class WebviewIpc : IWebviewIpc {
 		private static readonly ILogger Log = LogManager.ForContext<WebviewIpc>();
 
-		[ImportingConstructor]
-		public WebviewIpc([Import]IBrowserService browserService) {
-			BrowserService = browserService;
-		}
-
-		public IBrowserService BrowserService { get; }
+		[Import]
+		public IBrowserService BrowserService { get; set; }
 
 		private void SendInternal(IAbstractMessageType message, bool canEnqueue = false) {
 			using (IpcLogger.CriticalOperation(Log, "RES", message, canEnqueue)) {

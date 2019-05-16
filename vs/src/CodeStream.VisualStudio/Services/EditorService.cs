@@ -13,6 +13,7 @@ using Serilog;
 using System;
 using System.ComponentModel.Composition;
 using System.Runtime.InteropServices;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.UI.Extensions;
 
 namespace CodeStream.VisualStudio.Services {
@@ -29,15 +30,22 @@ namespace CodeStream.VisualStudio.Services {
 	[Export(typeof(IEditorService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class EditorService : IEditorService {
+		private static readonly ILogger Log = LogManager.ForContext<EditorService>();
+
 		private readonly IServiceProvider _serviceProvider;
 		private readonly IComponentModel _componentModel;
 
 		[ImportingConstructor]
 		public EditorService(
 			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
-			_serviceProvider = serviceProvider;
-			_componentModel = serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-			Assumes.Present(_componentModel);
+			try {
+				_serviceProvider = serviceProvider;
+				_componentModel = serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+				Assumes.Present(_componentModel);
+			}
+			catch (Exception ex) {
+				Log.Fatal(ex, nameof(EditorService));
+			}
 		}
 
 		public ActiveTextEditor GetActiveTextEditor(ITextDocumentFactoryService textDocumentFactoryService, IWpfTextView wpfTextView) {

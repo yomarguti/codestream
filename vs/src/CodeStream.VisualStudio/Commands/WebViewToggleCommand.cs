@@ -45,8 +45,7 @@ namespace CodeStream.VisualStudio.Commands {
 					isVisible = true;
 				}
 				
-				var codeStreamAgentService = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ICodeStreamService>();
-				
+				var codeStreamAgentService = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ICodeStreamAgentService>();
 				codeStreamAgentService?.TrackAsync(isVisible
 					? TelemetryEventNames.WebviewOpened
 					: TelemetryEventNames.WebviewClosed);

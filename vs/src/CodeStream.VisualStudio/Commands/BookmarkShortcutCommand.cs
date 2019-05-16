@@ -41,13 +41,13 @@ namespace CodeStream.VisualStudio.Commands {
 		private void InvokeHandler(object sender, BookmarkShortcutEventArgs args) {
 			if (args == null || args.Index < 1) return;
 
-			var codeStreamService = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ICodeStreamService>();
+			var codeStreamAgentService = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ICodeStreamAgentService>();
 
-			_ = codeStreamService.TrackAsync(TelemetryEventNames.CodemarkClicked, new TelemetryProperties { { "Codemark Location", "Shortcut" } });
+			_ = codeStreamAgentService?.TrackAsync(TelemetryEventNames.CodemarkClicked, new TelemetryProperties { { "Codemark Location", "Shortcut" } });
 
 			ThreadHelper.JoinableTaskFactory.Run(async delegate {
 				try {
-					var response = await codeStreamService.AgentService.GetDocumentFromKeyBindingAsync(args.Index);
+					var response = await codeStreamAgentService.GetDocumentFromKeyBindingAsync(args.Index);
 					if (response == null) {
 						Log.Debug($"{nameof(BookmarkShortcutCommand)} No codemark for {args.Index}");
 						return;

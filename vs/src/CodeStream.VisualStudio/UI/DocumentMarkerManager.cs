@@ -12,7 +12,7 @@ using System.Linq;
 using CodeStream.VisualStudio.UI.Extensions;
 
 namespace CodeStream.VisualStudio.UI {
-	public class DocumentMarkerManagerFactory {
+	public static class DocumentMarkerManagerFactory {
 		public static DocumentMarkerManager Create(ICodeStreamAgentService agentService, IWpfTextView wpfTextView, ITextDocument textDocument) {
 			return new DocumentMarkerManager(agentService, wpfTextView, textDocument);
 		}

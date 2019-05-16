@@ -45,10 +45,14 @@ namespace CodeStream.VisualStudio.LSP {
 			[Import] IEventAggregator eventAggregator,						
 			[Import] IWebviewIpc ipc) {
 			Instance = this;
-			
-			_eventAggregator = eventAggregator;
-			_languageServerProcess = new LanguageServerProcess();
-			CustomMessageTarget = new CustomMessageHandler(_eventAggregator, ipc);
+			try {
+				_eventAggregator = eventAggregator;
+				_languageServerProcess = new LanguageServerProcess();
+				CustomMessageTarget = new CustomMessageHandler(_eventAggregator, ipc);
+			}
+			catch (Exception ex) {
+				Log.Fatal(ex, nameof(LanguageClient));
+			}
 		}
 
 		[Import]

@@ -62,21 +62,31 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		}
 
 		private void DocumentMark_MouseDown(object sender, MouseButtonEventArgs e) {
-			if (_viewModel?.Marker?.Codemark == null) return;
+			try {
+				if (_viewModel?.Marker?.Codemark == null) return;
 
-			var toolWindowProvider = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
-			if (toolWindowProvider == null) return;
+				if (!(Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SToolWindowProvider)) is IToolWindowProvider toolWindowProvider)) return;
 
-			var componentModel = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
-			var codeStreamService = componentModel?.GetService<ICodeStreamService>();
-			if (codeStreamService == null) return;
+				if (!(Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SComponentModel)) is IComponentModel componentModel)) {
+					Log.Warning(nameof(componentModel));
+					return;
+				}
+				var codeStreamService = componentModel.GetService<ICodeStreamService>();
+				if (codeStreamService == null) return;
 
-			toolWindowProvider.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
-			
-			var activeEditor = componentModel.GetService<IEditorService>()?.GetActiveTextEditor();
+				toolWindowProvider.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
 
-			_ = codeStreamService.ShowCodemarkAsync(_viewModel.Marker.Codemark.Id, activeEditor?.Uri.ToLocalPath());
-			_ = codeStreamService.TrackAsync(TelemetryEventNames.CodemarkClicked, new TelemetryProperties { { "Codemark Location", "Source File" } });
+				var activeEditor = componentModel.GetService<IEditorService>()?.GetActiveTextEditor();
+				_ = codeStreamService.ShowCodemarkAsync(_viewModel.Marker.Codemark.Id, activeEditor?.Uri.ToLocalPath());
+
+				var codeStreamAgentService = componentModel.GetService<ICodeStreamAgentService>();
+				if (codeStreamAgentService == null) return;
+
+				_ = codeStreamAgentService.TrackAsync(TelemetryEventNames.CodemarkClicked, new TelemetryProperties {{"Codemark Location", "Source File"}});
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(DocumentMark_MouseDown));
+			}
 		}
 	}
 }

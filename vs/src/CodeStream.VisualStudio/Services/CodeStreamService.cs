@@ -10,7 +10,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Threading;
-using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.UI.Extensions;
 using Task = System.Threading.Tasks.Task;
 
@@ -33,31 +32,19 @@ namespace CodeStream.VisualStudio.Services {
 		/// <returns></returns>
 		//Task LogoutAsync();
 		IWebviewIpc WebviewIpc { get; }
-		Task TrackAsync(string eventName, TelemetryProperties properties = null);
 		bool IsReady { get; }
 		ISessionService SessionService { get; }
-		ICodeStreamAgentService AgentService { get; }
-		IEventAggregator EventAggregator { get; }
 	}
 
 	[Export(typeof(ICodeStreamService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class CodeStreamService : ICodeStreamService {
 		private static readonly ILogger Log = LogManager.ForContext<CodeStreamService>();
-		public ISessionService SessionService { get; }
-		public ICodeStreamAgentService AgentService { get; }
-		public IWebviewIpc WebviewIpc { get; }
-		public IEventAggregator EventAggregator { get; }
 
-		[ImportingConstructor]
-		public CodeStreamService(
-			[Import]ICodeStreamAgentService agentService,
-			[Import]IWebviewIpc ipc) {
-			AgentService = agentService;
-			SessionService = agentService.SessionService;
-			EventAggregator = agentService.EventAggregator;
-			WebviewIpc = ipc;
-		}
+		[Import]
+		public ISessionService SessionService { get; set; }
+		[Import]
+		public IWebviewIpc WebviewIpc { get; set; }
 
 		public bool IsReady => SessionService?.IsReady == true;
 
@@ -162,14 +149,6 @@ namespace CodeStream.VisualStudio.Services {
 				catch (Exception ex) {
 					Log.Error(ex, $"{nameof(NewCodemarkAsync)} Uri={uri}");
 				}
-			}
-
-			await Task.CompletedTask;
-		}
-
-		public async Task TrackAsync(string eventName, TelemetryProperties properties = null) {
-			if (IsReady) {
-				_ = AgentService.TrackAsync(eventName, properties);
 			}
 
 			await Task.CompletedTask;

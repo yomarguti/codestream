@@ -29,12 +29,17 @@ namespace CodeStream.VisualStudio.Services {
 			[Import]ICodeStreamAgentService codeStreamAgentService,
 			[Import]IWebviewIpc webviewIpc,
 			[Import]ISettingsService settingsService) {
-			_credentialsService = credentialsService;
-			_eventAggregator = codeStreamAgentService.EventAggregator;
-			_sessionService = codeStreamAgentService.SessionService;
-			_codeStreamAgentService = codeStreamAgentService;
-			_webviewIpc = webviewIpc;
-			_settingsService = settingsService;
+			try {
+				_credentialsService = credentialsService;
+				_eventAggregator = codeStreamAgentService.EventAggregator;
+				_sessionService = codeStreamAgentService.SessionService;
+				_codeStreamAgentService = codeStreamAgentService;
+				_webviewIpc = webviewIpc;
+				_settingsService = settingsService;
+			}
+			catch (Exception ex) {
+				Log.Fatal(ex, nameof(AuthenticationService));
+			}
 		}
 
 		public async Task LogoutAsync() {
