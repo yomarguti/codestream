@@ -83,24 +83,27 @@ namespace CodeStream.VisualStudio.UI.Adornments {
 						}
 						else {
 							placement = _textView
-								.GetGeometryPlacement(new SnapshotSpan(lineInfo.Extent.Snapshot, new Span(lineInfo.Extent.Start + range.Start.Character, length)));
+								.GetGeometryPlacement(new SnapshotSpan(lineInfo.Extent.Snapshot,
+									new Span(lineInfo.Extent.Start + range.Start.Character, length)));
 						}
 					}
 					else {
 						if (i == lineStart) {
 							var startPosition = range.Start.Character + lineInfo.Extent.Start;
-							var endLength = startPosition >= lineInfo.Extent.End.Position ?
-								1 :
-								lineInfo.Extent.End.Position - Math.Max(startPosition, 0);
+							var endLength = startPosition >= lineInfo.Extent.End.Position
+								? 1
+								: lineInfo.Extent.End.Position - Math.Max(startPosition, 0);
 							placement = _textView
-								.GetGeometryPlacement(new SnapshotSpan(lineInfo.Extent.Snapshot, new Span(startPosition, endLength)));
+								.GetGeometryPlacement(new SnapshotSpan(lineInfo.Extent.Snapshot,
+									new Span(startPosition, endLength)));
 						}
 						else if (i == lineEnd) {
 							var endLength = range.End.Character == int.MaxValue
 								? lineInfo.Extent.End.Position - lineInfo.Extent.Start.Position
 								: range.End.Character;
 							placement = _textView
-								.GetGeometryPlacement(new SnapshotSpan(lineInfo.Extent.Snapshot, new Span(lineInfo.Extent.Start, endLength)));
+								.GetGeometryPlacement(new SnapshotSpan(lineInfo.Extent.Snapshot,
+									new Span(lineInfo.Extent.Start, endLength)));
 						}
 						else {
 							// some middle line
@@ -122,15 +125,19 @@ namespace CodeStream.VisualStudio.UI.Adornments {
 						Fill = brush
 					};
 
-					Canvas.SetLeft(element, range.Start.Character == 0 ? (int)_textView.ViewportLeft : placement.Left);
+					Canvas.SetLeft(element, range.Start.Character == 0 ? (int) _textView.ViewportLeft : placement.Left);
 					Canvas.SetTop(element, isInnerOrLastLine ? lineInfo.Top : lineInfo.TextTop);
 
 					_highlightAdornmentLayer.AddAdornment(lineInfo.Extent, null, element);
 				}
+
 				return true;
 			}
+			catch (ArgumentException ex) {
+				Log.Debug(ex, $"{range?.ToJson()}");
+			}
 			catch (Exception ex) {
-				Log.Warning(ex, $"{range}");
+				Log.Warning(ex, $"{range?.ToJson()}");
 			}
 			return false;
 		}
@@ -155,11 +162,14 @@ namespace CodeStream.VisualStudio.UI.Adornments {
 		private void CreateLineInfos(ITextView textView, IEnumerable<ITextViewLine> textViewLines) {
 			_lineInfos.Clear();
 			try {
-				if (textView.IsClosed || textViewLines == null) return;
+				if (textViewLines == null || textView.IsClosed) return;
 
 				foreach (var line in textViewLines) {
 					// GetLineNumberFromPosition is 0-based
 					var lineNumber = textView.TextSnapshot.GetLineNumberFromPosition(line.Extent.Start.Position);
+					if (_lineInfos.ContainsKey(lineNumber)) {
+						_lineInfos.Remove(lineNumber);
+					}
 					_lineInfos.Add(lineNumber, line);
 				}
 			}
