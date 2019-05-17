@@ -30,7 +30,7 @@ import {
 	TelemetryRequest,
 	TelemetryRequestType,
 } from "../protocols/agent/agent.protocol";
-import { asAbsolutePath, Debug, Editor, getAgentSource, getPluginVersion } from "../utils";
+import { asAbsolutePath, Debug, Echo, Editor, getAgentSource, getPluginVersion } from "../utils";
 import { capabilities } from "./client-capabilities";
 import { Container } from "./container";
 
@@ -52,9 +52,24 @@ const ReversedMessageType = reverseMessageType();
 abstract class AgentConnection {
 	private _connection: LanguageClientConnection | undefined;
 	private _agentProcess: ChildProcess | undefined;
+	private _initializedEvent = new Echo();
+	private _terminatedEvent = new Echo();
+	private _initialized = false;
+
+	get initialized() {
+		return this._initialized;
+	}
 
 	get connection() {
 		return this._connection;
+	}
+
+	onDidInitialize(cb: () => void) {
+		return this._initializedEvent.add(cb);
+	}
+
+	onDidTerminate(cb: () => void) {
+		return this._terminatedEvent.add(cb);
 	}
 
 	protected abstract preInitialization(
@@ -137,6 +152,78 @@ abstract class AgentConnection {
 		return (response as AgentInitializeResult).result;
 	}
 
+	async start2(options: { serverUrl: string }) {
+		this._agentProcess = await this.startServer();
+
+		const rpc = createMessageConnection(
+			new IPCMessageReader(this._agentProcess as ChildProcess),
+			new IPCMessageWriter(this._agentProcess as ChildProcess)
+		);
+
+		this._connection = new LanguageClientConnection(rpc);
+
+		this.preInitialization(this._connection, rpc);
+
+		const initializationOptions: Partial<AgentOptions> = {
+			extension: {
+				build: "",
+				buildEnv: "dev",
+				version: getPluginVersion(),
+				versionFormatted: `${getPluginVersion()}${atom.inDevMode() ? "(dev)" : ""}`,
+			},
+			ide: {
+				name: "Atom",
+				version: atom.getVersion(),
+			},
+			isDebugging: atom.inDevMode(),
+			traceLevel: Container.configs.get("traceLevel"),
+			gitPath: "git",
+			serverUrl: options.serverUrl,
+		};
+
+		const configs = Container.configs;
+		const proxySupport = configs.get("proxySupport");
+
+		if (proxySupport === "override") {
+			const proxy = configs.get("proxyUrl");
+			if (proxy !== "") {
+				initializationOptions.proxy = {
+					url: proxy,
+					strictSSL: configs.get("proxyStrictSSL"),
+				};
+				initializationOptions.proxySupport = "override";
+			} else {
+				atom.notifications.addWarning("CodeStream: Invalid Proxy Settings", {
+					dismissable: true,
+					detail: "We'll attempt to detect proxy settings from the shell environment.",
+					description: "Proxy Support set to `override` but a Proxy Url was not provided.",
+				});
+				initializationOptions.proxySupport = "on";
+			}
+		} else {
+			initializationOptions.proxySupport = proxySupport;
+		}
+
+		const firstProject = atom.project.getPaths()[0]; // TODO: what if there are no projects
+		const response = await this._connection.initialize({
+			processId: this._agentProcess.pid,
+			workspaceFolders: [],
+			rootUri: firstProject ? Convert.pathToUri(firstProject) : null,
+			capabilities,
+			initializationOptions,
+		});
+
+		if (response.result.error) {
+			await this.stop();
+		} else {
+			this._connection.initialized();
+			this._initialized = true;
+			this._initializedEvent.push();
+		}
+
+		return (response as AgentInitializeResult).result;
+	}
+
 	private startServer(): ChildProcess {
 		const options: { [k: string]: any } = {};
 		options.env = Object.create(process.env);
@@ -147,9 +234,10 @@ abstract class AgentConnection {
 		const agentPath = Debug.isDebugging()
 			? getAgentSource()
 			: asAbsolutePath("dist/agent/agent.js");
+		const nodePath = Debug.isDebugging() ? "node" : process.execPath;
 		const agentProcess = spawn(
-			process.execPath,
-			["--nolazy", "--inspect=6011", agentPath, "--node-ipc"],
+			nodePath,
+			["--nolazy", "--inspect=6009", agentPath, "--node-ipc"],
 			options
 		);
 
@@ -157,38 +245,27 @@ abstract class AgentConnection {
 			console.error(error);
 		});
 		agentProcess.on("disconnect", () => {
-			if (this._connection) {
-				console.warn("CodeStream agent process disconnected prematurely");
+			if (Debug.isDebugging()) {
+				if (this._connection && this._connection.isConnected) {
+					console.warn("CodeStream agent process disconnected prematurely");
+				}
 			}
-			this.reset();
+			this.stop();
 		});
 		agentProcess.on("exit", code => {
 			if (Number(code) !== 0) {
 				console.error(`CodeStream agent process exited with non-zero exit code ${code}`);
 			}
+			this.stop();
 		});
 
 		return agentProcess;
 	}
 
 	protected async stop() {
-		if (this._connection) {
-			try {
-				this._connection.shutdown();
-				this._connection.exit();
-			} catch (error) {}
-		}
-		if (this._agentProcess) {
-			try {
-				this._agentProcess.kill();
-			} catch (error) {}
-		}
-		this.reset();
-	}
-
-	private reset() {
-		this._agentProcess = undefined;
-		this._connection = undefined;
+		this._connection!.dispose();
+		this._agentProcess!.kill();
+		this._terminatedEvent.push();
 	}
 }
 
@@ -198,24 +275,6 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 	private emitter = new Emitter();
 	private subscriptions = new CompositeDisposable();
 	private logger = new FileLogger("agent");
-
-	async init(
-		email: string,
-		passwordOrToken: string | AccessToken,
-		serverUrl: string,
-		teamOption: { teamId?: string; team?: string } = {}
-	): Promise<AgentResult> {
-		const result = await this.start({
-			email,
-			passwordOrToken,
-			serverUrl,
-			...teamOption,
-		});
-
-		if (result.error) throw result.error;
-
-		return result;
-	}
 
 	async initWithSignupToken(
 		token: string,
@@ -339,10 +398,12 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 		return this.emitter.on(DidChangeConnectionStatusNotificationType.method, cb);
 	}
 
+	@started
 	telemetry(data: TelemetryRequest) {
 		this.request(TelemetryRequestType, data);
 	}
 
+	@started
 	request<RT extends RequestType<any, any, any, any>>(
 		requestType: RT,
 		params: RequestOf<RT>
@@ -351,6 +412,7 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 	}
 
 	// for when typing can't be inferred
+	@started
 	sendRequest<R>(name: string, params?: any): Promise<R> {
 		return this.connection!.sendCustomRequest(name, params);
 	}
@@ -361,4 +423,17 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 		this.subscriptions.dispose();
 		this.stop();
 	}
+}
+
+function started(target: CodeStreamAgent, key: string, descriptor: PropertyDescriptor) {
+	const fn = descriptor.value;
+
+	descriptor.value = function(this: CodeStreamAgent, ...args: any[]) {
+		if (!this.initialized) {
+			throw new Error("CodeStreamAgent hasn't been started");
+		}
+		return fn.apply(this, args);
+	};
+
+	return descriptor;
 }

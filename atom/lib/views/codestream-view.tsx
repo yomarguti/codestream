@@ -421,7 +421,7 @@ export class CodestreamView {
 				shell.openExternal(
 					`${
 						this.session.environment.webAppUrl
-					}/signup?force_auth=true&signup_token=${this.session.getSignupToken()}`
+					}/signup?force_auth=true&signup_token=${this.session.getLoginToken()}`
 				);
 				this.respond<SignupResponse>({ id: message.id, params: {} });
 				break;

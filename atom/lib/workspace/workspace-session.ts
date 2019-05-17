@@ -2,7 +2,14 @@ import { SignedOutBootstrapResponse } from "@codestream/protocols/webview";
 import { Emitter } from "atom";
 import uuidv4 from "uuid/v4";
 import { EnvironmentConfig, PRODUCTION_CONFIG } from "../env-utils";
-import { AccessToken, AgentResult, Capabilities } from "../protocols/agent/agent.protocol";
+import {
+	AccessToken,
+	AgentResult,
+	Capabilities,
+	isLoginFailResponse,
+	PasswordLoginRequestType,
+	TokenLoginRequestType,
+} from "../protocols/agent/agent.protocol";
 import { CSMe, LoginResult } from "../protocols/agent/api.protocol";
 import { PackageState } from "../types/package";
 import { getPluginVersion } from "../utils";
@@ -36,6 +43,19 @@ interface EventEmissions {
 	[SESSION_STATUS_CHANGED]: SessionStatusChange;
 }
 
+function initializesAgent(target: WorkspaceSession, key: string, descriptor: PropertyDescriptor) {
+	const fn = descriptor.value;
+
+	descriptor.value = async function(this: WorkspaceSession, ...args: any[]) {
+		if (!this.agent.initialized) {
+			await this.agent.start2({ serverUrl: this.environment.serverUrl });
+		}
+		return fn.apply(this, args);
+	};
+
+	return descriptor;
+}
+
 export class WorkspaceSession {
 	private emitter: Emitter<{}, EventEmissions>;
 	private session?: Session;
@@ -53,12 +73,8 @@ export class WorkspaceSession {
 		return this._isReady;
 	}
 
-	static create(state: PackageState, autoSignIn: boolean) {
-		const session = new WorkspaceSession(state.session, state.lastUsedEmail, state.environment);
-		if (autoSignIn) {
-			session.autoSignIn();
-		}
-		return session;
+	static create(state: PackageState) {
+		return new WorkspaceSession(state.session, state.lastUsedEmail, state.environment);
 	}
 
 	protected constructor(
@@ -71,21 +87,29 @@ export class WorkspaceSession {
 		this.session = session;
 		this.lastUsedEmail = lastUsedEmail;
 		this.envConfig = envConfig;
+		this.initialize();
 	}
 
-	protected autoSignIn() {
-		if (this.session) {
-			this._isReady = new Promise(async (resolve, reject) => {
-				const result = await this.login(this.session!.user.email, this.session!.token);
-				if (result === LoginResult.Success) {
-					resolve();
-				} else {
+	private initialize() {
+		if (Container.configs.get("autoSignIn") && this.session) {
+			this._isReady = new Promise(async resolve => {
+				try {
+					const result = await this.login(this.session!.user.email, this.session!.token);
+					if (result !== LoginResult.Success) {
+						this.session = undefined;
+					}
+				} catch (error) {
 					this.session = undefined;
-					this._isReady = undefined;
-					reject();
 				}
+				resolve();
 			});
+		} else {
+			this._isReady = Promise.resolve();
 		}
+
+		this.agent.onDidTerminate(() => {
+			this._agent = new CodeStreamAgent();
+		});
 	}
 
 	get isSignedIn() {
@@ -177,16 +201,29 @@ export class WorkspaceSession {
 		return this.loginToken;
 	}
 
+	@initializesAgent
 	async login(email: string, passwordOrToken: string | AccessToken) {
 		this.sessionStatus = SessionStatus.SigningIn;
 		try {
-			const result = await this._agent.init(
-				email,
-				passwordOrToken,
-				this.environment.serverUrl,
-				this.getTeamPreference()
-			);
-			await this.completeLogin(result);
+			let response;
+			if (typeof passwordOrToken === "string") {
+				response = await this._agent.request(PasswordLoginRequestType, {
+					email,
+					password: passwordOrToken as string,
+					...this.getTeamPreference(),
+				});
+			} else {
+				response = await this._agent.request(TokenLoginRequestType, {
+					token: passwordOrToken as AccessToken,
+					...this.getTeamPreference(),
+				});
+			}
+
+			if (isLoginFailResponse(response)) {
+				return response.error;
+			}
+
+			await this.completeLogin(response);
 			this.sessionStatus = SessionStatus.SignedIn;
 			return LoginResult.Success;
 		} catch (error) {
@@ -245,13 +282,12 @@ export class WorkspaceSession {
 		if (this.session) {
 			this.session = undefined;
 			this._agent.dispose();
-			this._agent = new CodeStreamAgent();
 			this.sessionStatus = SessionStatus.SignedOut;
 		}
 	}
 
 	changeEnvironment(env: EnvironmentConfig) {
-		this.signOut();
 		this.envConfig = env;
+		this.signOut();
 	}
 }

@@ -165,7 +165,7 @@ export interface Listener<T> {
 	(value: T): void;
 }
 
-export class Echo<T> implements Disposable {
+export class Echo<T = void> implements Disposable {
 	private listeners = new Set<Listener<T>>();
 
 	add(listener: (value: T) => void) {
