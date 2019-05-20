@@ -108,15 +108,19 @@ val Editor.visibleRanges: List<Range>
             }
 
             val previousExpandedOffset = getOffset(collapsed.start) - 1
-            range.end = document.lspPosition(previousExpandedOffset)
-            if (range.start < range.end) {
-                ranges += range
-            }
-
             val nextExpandedOffset = getOffset(collapsed.end) + 1
-            range = Range()
-            range.start = document.lspPosition(nextExpandedOffset)
-            range.end = fullRange.end
+            if (previousExpandedOffset >= 0) {
+                range.end = document.lspPosition(previousExpandedOffset)
+                if (range.start < range.end) {
+                    ranges += range
+                }
+
+                range = Range()
+                range.start = document.lspPosition(nextExpandedOffset)
+                range.end = fullRange.end
+            } else {
+                range.start = document.lspPosition(nextExpandedOffset)
+            }
         }
 
         ranges += range
