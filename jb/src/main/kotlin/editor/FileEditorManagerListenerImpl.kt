@@ -10,8 +10,9 @@ class FileEditorManagerListenerImpl(val project: Project) : FileEditorManagerLis
 
     override fun selectionChanged(event: FileEditorManagerEvent) {
         val textEditor = (event.newEditor as? TextEditor)
-        if (textEditor?.editor?.isDisposed != false) {
-            project.editorService?.activeEditor = textEditor?.editor
+        val editor = textEditor?.editor
+        if (editor?.isDisposed == false) {
+            project.editorService?.activeEditor = editor
         }
     }
 }
