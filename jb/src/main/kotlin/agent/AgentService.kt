@@ -154,7 +154,7 @@ class AgentService(private val project: Project) {
             val sc = Scanner(process.errorStream)
             while (sc.hasNextLine()) {
                 val nextLine = sc.nextLine()
-                logger.error(nextLine)
+                logger.warn(nextLine)
             }
         }).start()
     }
