@@ -89,7 +89,12 @@ npm install --no-save
 echo "Setting up codestream-lsp-agent"
 cd $ATOM_SANDBOX/codestream-lsp-agent || exit 1
 npm install --no-save
-npm run build
+#npm run build
+cd $ATOM_TOP || exit 1
+npm run bundle
+echo
+echo "***** Remember to run 'apm link' at least once to make your atom installation point to this sandbox ******"
+echo
 
 # You must exit with a status of '0' if the script was successful or '1' otherwise.
 exit 0
