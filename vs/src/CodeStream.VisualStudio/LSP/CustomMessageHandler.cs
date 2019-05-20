@@ -17,13 +17,13 @@ namespace CodeStream.VisualStudio.LSP {
 		private static readonly ILogger Log = LogManager.ForContext<CustomMessageHandler>();
 
 		private readonly IEventAggregator _eventAggregator;
-		private readonly IWebviewIpc _ipc;
+		private readonly IBrowserService _browserService;
 		private readonly Subject<DocumentMarkerChangedSubjectArgs> _documentMarkerChangedSubject;
 		private readonly IDisposable _documentMarkerChangedSubscription;
 	
-		public CustomMessageHandler(IEventAggregator eventAggregator, IWebviewIpc ipc) {
+		public CustomMessageHandler(IEventAggregator eventAggregator, IBrowserService browserService) {
 			_eventAggregator = eventAggregator;
-			_ipc = ipc;
+			_browserService = browserService;
 			_documentMarkerChangedSubject = new Subject<DocumentMarkerChangedSubjectArgs>();
 
 			_documentMarkerChangedSubscription = _documentMarkerChangedSubject
@@ -37,7 +37,7 @@ namespace CodeStream.VisualStudio.LSP {
 
 		[JsonRpcMethod(DidChangeDataNotificationType.MethodName)]
 		public void OnDidChangeData(JToken e) {
-			_ipc.EnqueueNotification(new DidChangeDataNotificationType(e));
+			_browserService.EnqueueNotification(new DidChangeDataNotificationType(e));
 		}
 
 		[JsonRpcMethod(DidChangeConnectionStatusNotificationType.MethodName)]
@@ -51,15 +51,15 @@ namespace CodeStream.VisualStudio.LSP {
 						break;
 					}
 				case ConnectionStatus.Reconnecting:
-					_ipc.EnqueueNotification(new DidChangeConnectionStatusNotificationType(@params));
+					_browserService.EnqueueNotification(new DidChangeConnectionStatusNotificationType(@params));
 					break;
 				case ConnectionStatus.Reconnected: {
 						if (@params.Reset == true) {
-							_ipc.BrowserService.ReloadWebView();
+							_browserService.ReloadWebView();
 							return;
 						}
 
-						_ipc.EnqueueNotification(new DidChangeConnectionStatusNotificationType(@params));
+						_browserService.EnqueueNotification(new DidChangeConnectionStatusNotificationType(@params));
 						break;
 					}
 				default: {
@@ -85,7 +85,7 @@ namespace CodeStream.VisualStudio.LSP {
 			//Log.Verbose($"{nameof(OnDidChangeDocumentMarkers)} {@params?.TextDocument?.Uri}");
 
 			var uriString = @params.TextDocument.Uri;
-			_ipc.EnqueueNotification(new DidChangeDocumentMarkersNotificationType {
+			_browserService.EnqueueNotification(new DidChangeDocumentMarkersNotificationType {
 				Params = new DidChangeDocumentMarkersNotification {
 					TextDocument = new TextDocumentIdentifier {
 						Uri = uriString
@@ -103,7 +103,7 @@ namespace CodeStream.VisualStudio.LSP {
 		[JsonRpcMethod(DidChangeVersionCompatibilityNotificationType.MethodName)]
 		public void OnDidChangeVersionCompatibility(JToken e) {
 			Log.Information($"{nameof(OnDidChangeVersionCompatibility)}");
-			_ipc.EnqueueNotification(new DidChangeVersionCompatibilityNotificationType(e));
+			_browserService.EnqueueNotification(new DidChangeVersionCompatibilityNotificationType(e));
 		}
 
 		[JsonRpcMethod(DidLogoutNotificationType.MethodName)]
@@ -111,7 +111,7 @@ namespace CodeStream.VisualStudio.LSP {
 			var @params = e.ToObject<DidLogoutNotification>();
 			Log.Information($"{nameof(OnDidLogout)} {@params.Reason}");
 
-			_ipc.Notify(new DidLogoutNotificationType {
+			_browserService.Notify(new DidLogoutNotificationType {
 				Params = @params
 			});
 

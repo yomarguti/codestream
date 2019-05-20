@@ -50,5 +50,9 @@ namespace CodeStream.VisualStudio.Core.Logging {
 		public static void LocalWarning(this ILogger logger, string message) {
 			logger.Warning($"LOCAL=>{message}");
 		}
+		
+		public static void Ctor(this ILogger logger, string message = null) {
+			logger.Debug($"ctor {message}");
+		}
 	}
 }

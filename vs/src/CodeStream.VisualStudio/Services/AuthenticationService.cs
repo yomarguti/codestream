@@ -4,75 +4,77 @@ using CodeStream.VisualStudio.Models;
 using Serilog;
 using System;
 using System.ComponentModel.Composition;
-using System.Threading.Tasks;
 using CodeStream.VisualStudio.Extensions;
+using Microsoft.VisualStudio.Shell;
 
 namespace CodeStream.VisualStudio.Services {
-	public interface IAuthenticationService {
-		Task LogoutAsync();
+
+	public interface IAuthenticationServiceFactory {
+		IAuthenticationService Create();
 	}
+
+	[Export(typeof(IAuthenticationServiceFactory))]
+	[PartCreationPolicy(CreationPolicy.Shared)]
+	public class AuthenticationServiceFactory : ServiceFactory<IAuthenticationService>, IAuthenticationServiceFactory {
+		[ImportingConstructor]
+		public AuthenticationServiceFactory([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) :
+			base(serviceProvider) {
+		}
+	}
+
+	public interface IAuthenticationService {
+		System.Threading.Tasks.Task LogoutAsync();
+	}
+
 	[Export(typeof(IAuthenticationService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class AuthenticationService : IAuthenticationService {
 		private static readonly ILogger Log = LogManager.ForContext<AuthenticationService>();
 
-		private readonly ICredentialsService _credentialsService;
-		private readonly IEventAggregator _eventAggregator;
-		private readonly ISessionService _sessionService;
-		private readonly ISettingsService _settingsService;
-		private readonly ICodeStreamAgentService _codeStreamAgentService;
-		private readonly IWebviewIpc _webviewIpc;
+		[Import]
+		public ISessionService SessionService { get; set; }
+		[Import]
+		public IEventAggregator EventAggregator { get; set; }
+		[Import]
+		public ICredentialsService CredentialsService { get; set; }
+		[Import]
+		public ICodeStreamAgentService CodeStreamAgentService { get; set; }
+		[Import]
+		public IBrowserService WebviewIpc { get; set; }
+		[Import]
+		public ISettingsService SettingsService { get; set; }
 
-		[ImportingConstructor]
-		public AuthenticationService(
-			[Import]ICredentialsService credentialsService,
-			[Import]ICodeStreamAgentService codeStreamAgentService,
-			[Import]IWebviewIpc webviewIpc,
-			[Import]ISettingsService settingsService) {
+		public async System.Threading.Tasks.Task LogoutAsync() {
 			try {
-				_credentialsService = credentialsService;
-				_eventAggregator = codeStreamAgentService.EventAggregator;
-				_sessionService = codeStreamAgentService.SessionService;
-				_codeStreamAgentService = codeStreamAgentService;
-				_webviewIpc = webviewIpc;
-				_settingsService = settingsService;
-			}
-			catch (Exception ex) {
-				Log.Fatal(ex, nameof(AuthenticationService));
-			}
-		}
-
-		public async Task LogoutAsync() {
-			try {
-				if (_sessionService.IsReady == false) return;
+				if (SessionService.IsReady == false) return;
 
 				try {
-					await _credentialsService.DeleteAsync(_settingsService.ServerUrl.ToUri(), _settingsService.Email);
+					await CredentialsService.DeleteAsync(SettingsService.ServerUrl.ToUri(), SettingsService.Email);
 				}
 				catch (Exception ex) {
 					Log.Warning(ex, $"{nameof(LogoutAsync)} - credentials");
 				}
 
 				try {
-					await _codeStreamAgentService.LogoutAsync();
+					await CodeStreamAgentService.LogoutAsync();
 				}
 				catch (Exception ex) {
 					Log.Error(ex, $"{nameof(LogoutAsync)} - agent");
 				}
 
 				try {
-					_sessionService.Logout();
+					SessionService.Logout();
 				}
 				catch (Exception ex) {
 					Log.Error(ex, $"{nameof(LogoutAsync)} - session");
 				}
 
-				_eventAggregator.Publish(new SessionLogoutEvent());
+				EventAggregator.Publish(new SessionLogoutEvent());
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
-				_webviewIpc.Notify(new HostDidLogoutNotificationType());
+				WebviewIpc.Notify(new HostDidLogoutNotificationType());
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
 
-				_webviewIpc.BrowserService.LoadWebView();
+				WebviewIpc.LoadWebView();
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(LogoutAsync));

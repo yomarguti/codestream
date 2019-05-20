@@ -283,7 +283,7 @@ namespace CodeStream.VisualStudio.Packages {
 
 				var configurationController = new ConfigurationController(
 					_componentModel.GetService<IEventAggregator>(),
-					_componentModel.GetService<IWebviewIpc>()
+					_componentModel.GetService<IBrowserService>()
 				);
 
 				switch (args.PropertyName) {

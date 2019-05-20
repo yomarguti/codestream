@@ -7,7 +7,7 @@ namespace CodeStream.VisualStudio.LSP
 {
 	public interface ILanguageServerProcess
 	{
-		System.Diagnostics.Process Create(TraceLevel traceLevel);
+		System.Diagnostics.Process Create(TraceLevel? traceLevel);
 	}
 
 	public class LanguageServerProcess : ILanguageServerProcess
@@ -16,7 +16,7 @@ namespace CodeStream.VisualStudio.LSP
 		/// Creates the lsp server process object
 		/// </summary>
 		/// <returns></returns>
-		public System.Diagnostics.Process Create(TraceLevel traceLevel)
+		public System.Diagnostics.Process Create(TraceLevel? traceLevel = TraceLevel.Info)
 		{
 			var assembly = Assembly.GetAssembly(typeof(LanguageServerProcess));
 			string arguments = null;

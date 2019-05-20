@@ -2,7 +2,7 @@
 
 namespace CodeStream.VisualStudio.Services
 {
-    public static class WebviewIpcExtensions
+    public static class BrowserServiceExtensions
     {
         /// <summary>
         /// Creates a scope, that if not completed, sends a generic response message
@@ -10,6 +10,6 @@ namespace CodeStream.VisualStudio.Services
         /// <param name="ipc"></param>
         /// <param name="message"></param>
         /// <returns></returns>
-        public static WebviewIpcScope CreateScope(this IWebviewIpc ipc, WebviewIpcMessage message) => WebviewIpcScope.Create(ipc, message);
+        public static IpcScope CreateScope(this IBrowserService ipc, WebviewIpcMessage message) => IpcScope.Create(ipc, message);
     }
 }

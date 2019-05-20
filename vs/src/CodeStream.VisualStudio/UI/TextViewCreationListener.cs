@@ -6,7 +6,6 @@ using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Adornments;
 using CodeStream.VisualStudio.UI.Margins;
-using Microsoft;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -40,7 +39,7 @@ namespace CodeStream.VisualStudio.UI {
 		IWpfTextViewConnectionListener {
 		private readonly ILogger Log = LogManager.ForContext<TextViewCreationListenerDummy>();
 		private IWpfTextView _focusedWpfTextView;
-		private static readonly object InitializedLock = new object();
+		private static readonly object InitializedLock = new object();		
 
 		internal const string LayerName = "CodeStreamHighlightColor";
 
@@ -48,31 +47,18 @@ namespace CodeStream.VisualStudio.UI {
 		private static readonly ConditionalWeakTable<ITextBuffer, HashSet<IWpfTextView>> TextBufferTable =
 			new ConditionalWeakTable<ITextBuffer, HashSet<IWpfTextView>>();
 
-		[ImportingConstructor]
-		public TextViewCreationListener([Import] ICodeStreamService codeStreamService) {
-			try {
-				_codeStreamService = codeStreamService;
-
-				Assumes.Present(_codeStreamService);
-				_sessionService = _codeStreamService.SessionService;
-				Assumes.Present(_sessionService);
-			}
-			catch (Exception ex) {
-				Log.Fatal(ex, nameof(TextViewCreationListener));
-			}
-		}
-
-		private readonly ICodeStreamService _codeStreamService;
-		private readonly ISessionService _sessionService;
-
+		[Import]
+		public ICodeStreamAgentServiceFactory CodeStreamAgentServiceFactory { get; set; }
+		[Import]
+		public ICodeStreamService CodeStreamService { get; set; }
+		[Import]
+		public ISessionService SessionService { get; set; }
 		[Import]
 		public IEventAggregator EventAggregator { get; set; }
 		[Import]
 		public IEditorService EditorService { get; set; }
 		[Import]
 		public IWpfTextViewCache TextViewCache { get; set; }
-		[Import]
-		public Lazy<ICodeStreamAgentService> CodeStreamAgentService { get; set; }
 
 		[Import] public IVsEditorAdaptersFactoryService EditorAdaptersFactoryService { get; set; }
 		[Import] public ITextDocumentFactoryService TextDocumentFactoryService { get; set; }
@@ -114,7 +100,7 @@ namespace CodeStream.VisualStudio.UI {
 						textViews.Add(wpfTextView);
 					}
 					wpfTextView.Properties.GetOrCreateSingletonProperty(PropertyNames.DocumentMarkerManager,
-						() => DocumentMarkerManagerFactory.Create(CodeStreamAgentService.Value, wpfTextView, textDocument));
+						() => new DocumentMarkerManager(CodeStreamAgentServiceFactory.Create(), wpfTextView, textDocument));
 					wpfTextView.Properties.AddProperty(PropertyNames.TextViewFilePath, textDocument.FilePath);
 					wpfTextView.Properties.AddProperty(PropertyNames.TextViewState, new TextViewState());
 #if DEBUG
@@ -164,8 +150,8 @@ namespace CodeStream.VisualStudio.UI {
 							.Subscribe(_ => {
 
 								Log.Verbose(
-									$"{nameof(VsTextViewCreated)} SessionReadyEvent Session IsReady={_sessionService.IsReady}");
-								if (_sessionService.IsReady) {
+									$"{nameof(VsTextViewCreated)} SessionReadyEvent Session IsReady={SessionService.IsReady}");
+								if (SessionService.IsReady) {
 									OnSessionReady(wpfTextView);
 								}
 							}));
@@ -185,7 +171,7 @@ namespace CodeStream.VisualStudio.UI {
 							try {
 								if (e.WpfTextView.InLayout || e.WpfTextView.IsClosed) return;
 
-								_codeStreamService.WebviewIpc?.NotifyAsync(
+								CodeStreamService.BrowserService?.NotifyAsync(
 									new HostDidChangeEditorVisibleRangesNotificationType {
 										Params = new HostDidChangeEditorVisibleRangesNotification(
 											e.Uri,
@@ -205,9 +191,9 @@ namespace CodeStream.VisualStudio.UI {
 						PropertyNames.HostDidChangeEditorVisibleRangesNotificationSubject,
 						visibleRangesSubject);
 
-					Log.Verbose($"{nameof(VsTextViewCreated)} Session IsReady={_sessionService.IsReady}");
+					Log.Verbose($"{nameof(VsTextViewCreated)} Session IsReady={SessionService.IsReady}");
 
-					if (_sessionService.IsReady) {
+					if (SessionService.IsReady) {
 						OnSessionReady(wpfTextView);
 					}
 					else {
@@ -296,12 +282,12 @@ namespace CodeStream.VisualStudio.UI {
 										.Subscribe(eventPattern => {
 											var textSelection = eventPattern?.Sender as ITextSelection;
 											if (textSelection != null && textSelection.IsEmpty) return;
-											if (!_sessionService.IsWebViewVisible) return;
+											if (!SessionService.IsWebViewVisible) return;
 
 											Log.Verbose($"SelectionChanged {textSelection.ToPositionString()}");
 
 											var activeEditorState = EditorService?.GetActiveEditorState();
-											_ = _codeStreamService.EditorSelectionChangedNotificationAsync(
+											_ = CodeStreamService.EditorSelectionChangedNotificationAsync(
 												wpfTextView.Properties.GetProperty<string>(PropertyNames.TextViewFilePath).ToUri(),
 												activeEditorState,
 												wpfTextView.ToVisibleRangesSafe(),
@@ -347,16 +333,16 @@ namespace CodeStream.VisualStudio.UI {
 
 				if (wpfTextView.Properties.TryGetProperty(PropertyNames.TextViewFilePath, out string filePath)) {
 
-					_sessionService.LastActiveFileUrl = filePath;
+					SessionService.LastActiveFileUrl = filePath;
 				}
 			}
 		}
 
 		private void ResetActiveEditor() {
 			try {
-				_ = _codeStreamService.ResetActiveEditorAsync();
+				_ = CodeStreamService.ResetActiveEditorAsync();
 				_focusedWpfTextView = null;
-				_sessionService.LastActiveFileUrl = null;
+				SessionService.LastActiveFileUrl = null;
 			}
 			catch (Exception ex) {
 				Log.Warning(ex, nameof(ResetActiveEditor));
@@ -367,13 +353,13 @@ namespace CodeStream.VisualStudio.UI {
 			try {
 				if (wpfTextView == null) return;
 				if (!wpfTextView.Properties.TryGetProperty(PropertyNames.TextViewFilePath, out string filePath)) return;
-				if (filePath.IsNullOrWhiteSpace() || !_sessionService.IsWebViewVisible) return;
+				if (filePath.IsNullOrWhiteSpace() || !SessionService.IsWebViewVisible) return;
 
 				var activeTextEditor = EditorService.GetActiveTextEditor(TextDocumentFactoryService, wpfTextView);
 				if (activeTextEditor != null && activeTextEditor.Uri != null) {
 					if (Uri.TryCreate(filePath, UriKind.RelativeOrAbsolute, out Uri result)) {
 						if (activeTextEditor.Uri.EqualsIgnoreCase(result)) {
-							_ = _codeStreamService.ChangeActiveEditorAsync(filePath, new Uri(filePath), activeTextEditor);
+							_ = CodeStreamService.ChangeActiveEditorAsync(filePath, new Uri(filePath), activeTextEditor);
 						}
 					}
 				}
@@ -447,7 +433,7 @@ namespace CodeStream.VisualStudio.UI {
 		private void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
 			try {
 				var wpfTextView = sender as IWpfTextView;
-				if (wpfTextView == null || !_sessionService.IsReady) return;
+				if (wpfTextView == null || !SessionService.IsReady) return;
 				if (wpfTextView.InLayout || wpfTextView.IsClosed) {
 					return;
 				}
@@ -473,7 +459,7 @@ namespace CodeStream.VisualStudio.UI {
 				}
 
 				// don't trigger for changes that don't result in lines being added or removed
-				if (_sessionService.IsWebViewVisible && _sessionService.IsCodemarksForFileVisible &&
+				if (SessionService.IsWebViewVisible && SessionService.IsCodemarksForFileVisible &&
 					(e.VerticalTranslation || e.TranslatedLines.Any())) {
 					try {
 						var visibleRangeSubject = wpfTextView.Properties

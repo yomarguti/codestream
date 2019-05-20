@@ -12,9 +12,7 @@ namespace CodeStream.VisualStudio.UnitTests {
 		[TestMethod]
 		public async Task HandleAsyncTest() {
 
-			var ipcMock = new Mock<IWebviewIpc>();
-			var browserServiceMock = new Mock<IBrowserService>();
-			ipcMock.Setup(_ => _.BrowserService).Returns(browserServiceMock.Object);
+			var browserServiceMock = new Mock<IBrowserService>();		 
 
 			var codeStreamAgentServiceMock = new Mock<ICodeStreamAgentService>();
 			var router = new WebViewRouter(
@@ -23,10 +21,10 @@ namespace CodeStream.VisualStudio.UnitTests {
 				codeStreamAgentServiceMock.Object,
 				new Mock<ISettingsService>().Object,
 				new Mock<IEventAggregator>().Object,
-				ipcMock.Object,
+				browserServiceMock.Object,
 				new Mock<IIdeService>().Object,
 				new Mock<IEditorService>().Object,
-				new Mock<IAuthenticationService>().Object
+				new Mock<IAuthenticationServiceFactory>().Object
 			);
 
 			await router.HandleAsync(new WindowEventArgs("BOGUS"));

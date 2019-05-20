@@ -18,19 +18,19 @@ namespace CodeStream.VisualStudio.Controllers {
 		private readonly ISessionService _sessionService;
 		private readonly ICodeStreamAgentService _codeStreamAgent;
 		private readonly IEventAggregator _eventAggregator;
-		private readonly IWebviewIpc _ipc;
+		private readonly IBrowserService _browserService;
 		private readonly IIdeService _ideService;
 
 		public LiveShareController(
 			ISessionService sessionService,
 			ICodeStreamAgentService codeStreamAgent,
 			IEventAggregator eventAggregator,
-			IWebviewIpc ipc,
+			IBrowserService browserService,
 			IIdeService ideService) {
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
 			_eventAggregator = eventAggregator;
-			_ipc = ipc;
+			_browserService = browserService;
 			_ideService = ideService;
 		}
 
@@ -132,7 +132,7 @@ namespace CodeStream.VisualStudio.Controllers {
 						if (postResponse != null) {
 							// view thread
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
-							_ipc.Notify(new ShowStreamNotificationType {
+							_browserService.Notify(new ShowStreamNotificationType {
 								Params = new ShowStreamNotification {
 									StreamId = stream.Id
 								}

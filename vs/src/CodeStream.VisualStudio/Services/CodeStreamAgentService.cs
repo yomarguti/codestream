@@ -23,9 +23,22 @@ using TraceLevel = CodeStream.VisualStudio.Core.Logging.TraceLevel;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace CodeStream.VisualStudio.Services {
+
+	public interface ICodeStreamAgentServiceFactory {
+		ICodeStreamAgentService Create();
+	}
+
+	[Export(typeof(ICodeStreamAgentServiceFactory))]
+	[PartCreationPolicy(CreationPolicy.Shared)]
+	public class CodeStreamAgentServiceFactory : ServiceFactory<ICodeStreamAgentService>, ICodeStreamAgentServiceFactory {
+		[ImportingConstructor]
+		public CodeStreamAgentServiceFactory([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) :
+			base(serviceProvider) {
+
+		}
+	}
+
 	public interface ICodeStreamAgentService {
-		ISessionService SessionService { get; }
-		IEventAggregator EventAggregator { get; set; }
 		Task SetRpcAsync(JsonRpc rpc);
 		Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null);
 		Task<CreateDocumentMarkerPermalinkResponse> CreatePermalinkAsync(Range range, string uri, string privacy);
@@ -55,28 +68,25 @@ namespace CodeStream.VisualStudio.Services {
 	public class CodeStreamAgentService : ICodeStreamAgentService, IDisposable {
 		private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentServiceDummy>();
 
-		public ISessionService SessionService { get; }
-
+		private readonly ISessionService _sessionService;
+		private readonly IEventAggregator _eventAggregator;
 		private readonly ISettingsService _settingsService;
-
-		private JsonRpc _rpc;
-		bool _disposed;
 
 		[ImportingConstructor]
 		public CodeStreamAgentService(
-			[Import]ISessionService sessionService,
-			[Import]ISettingsService settingsService) {
-			try {
-				SessionService = sessionService;
-				_settingsService = settingsService;
-			}
-			catch (Exception ex) {
-				Log.Fatal(ex.UnwrapCompositionException(), nameof(CodeStreamAgentService));
+			IEventAggregator eventAggregator,
+			ISessionService sessionService,
+			ISettingsService settingsService) {
+			_eventAggregator = eventAggregator;
+			_sessionService = sessionService;
+			_settingsService = settingsService;
+			if (_eventAggregator == null || _sessionService == null || _settingsService == null) {
+				Log.Error($"_eventAggregatorIsNull={_eventAggregator == null},_sessionServiceIsNull={_sessionService == null},_settingsServiceIsNull={_settingsService == null}");
 			}
 		}
 
-		[Import]
-		public IEventAggregator EventAggregator { get; set; }
+		private JsonRpc _rpc;
+		bool _disposed;
 
 		public Task SetRpcAsync(JsonRpc rpc) {
 			_rpc = rpc;
@@ -87,8 +97,14 @@ namespace CodeStream.VisualStudio.Services {
 
 		private void Rpc_Disconnected(object sender, JsonRpcDisconnectedEventArgs e) {
 			Log.Debug(e.Exception, $"RPC Disconnected: {e.LastMessage} {e.Description}");
-			SessionService.SetAgentDisconnected();
-			EventAggregator?.Publish(new LanguageServerDisconnectedEvent(e?.LastMessage, e?.Description, e?.Reason.ToString(), e?.Exception));
+
+			try {
+				_sessionService.SetAgentDisconnected();
+				_eventAggregator?.Publish(new LanguageServerDisconnectedEvent(e.LastMessage, e.Description, e.Reason.ToString(), e.Exception));
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(Rpc_Disconnected));
+			}
 		}
 
 		private Task<T> SendCoreAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null) {
@@ -106,7 +122,7 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null) {
-			if (!SessionService.IsReady) {
+			if (!_sessionService.IsReady) {
 				if (Log.IsDebugEnabled()) {
 					try {
 #if DEBUG

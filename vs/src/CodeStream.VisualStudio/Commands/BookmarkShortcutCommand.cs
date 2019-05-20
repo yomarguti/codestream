@@ -41,32 +41,37 @@ namespace CodeStream.VisualStudio.Commands {
 		private void InvokeHandler(object sender, BookmarkShortcutEventArgs args) {
 			if (args == null || args.Index < 1) return;
 
-			var codeStreamAgentService = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ICodeStreamAgentService>();
+			try {
+				var codeStreamAgentService = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ICodeStreamAgentService>();
+				_ = codeStreamAgentService?.TrackAsync(TelemetryEventNames.CodemarkClicked, new TelemetryProperties { { "Codemark Location", "Shortcut" } });
 
-			_ = codeStreamAgentService?.TrackAsync(TelemetryEventNames.CodemarkClicked, new TelemetryProperties { { "Codemark Location", "Shortcut" } });
+				ThreadHelper.JoinableTaskFactory.Run(async delegate {
+					try {
+						var response = await codeStreamAgentService.GetDocumentFromKeyBindingAsync(args.Index);
+						if (response == null) {
+							Log.Debug($"{nameof(BookmarkShortcutCommand)} No codemark for {args.Index}");
+							return;
+						}
 
-			ThreadHelper.JoinableTaskFactory.Run(async delegate {
-				try {
-					var response = await codeStreamAgentService.GetDocumentFromKeyBindingAsync(args.Index);
-					if (response == null) {
-						Log.Debug($"{nameof(BookmarkShortcutCommand)} No codemark for {args.Index}");
-						return;
+						await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+
+						var ideService = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<IIdeService>();
+
+						var editorResponse = await ideService.OpenEditorAtLineAsync(response.TextDocument.Uri.ToUri(), response.Range, forceOpen: true);
+						if (!editorResponse) {
+							Log.Error($"ShowCodeResult={editorResponse} for {@response} failed to open editor");
+						}
+						Log.Debug($"Handled {nameof(BookmarkShortcutCommand)} for {args.Index}");
+					}
+					catch (Exception ex) {
+						Log.Error(ex, nameof(InvokeHandler));
 					}
 
-					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-
-					var ideService = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<IIdeService>();
-
-					var editorResponse = await ideService.OpenEditorAtLineAsync(response.TextDocument.Uri.ToUri(), response.Range, forceOpen: true);
-					if (!editorResponse) {
-						Log.Error($"ShowCodeResult={editorResponse} for {@response} failed to open editor");
-					}
-					Log.Debug($"Handled {nameof(BookmarkShortcutCommand)} for {args.Index}");
-				}
-				catch (Exception ex) {
-					Log.Error(ex, nameof(InvokeHandler));
-				}
-			});
+				});
+			}
+			catch(Exception ex) {
+				Log.Error(ex, nameof(InvokeHandler));
+			}
 		}
 
 		class BookmarkShortcutEventArgs : EventArgs {

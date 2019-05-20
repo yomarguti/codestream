@@ -19,7 +19,7 @@ namespace CodeStream.VisualStudio.Controllers {
 		private readonly ISessionService _sessionService;
 		private readonly ICodeStreamAgentService _codeStreamAgent;
 		private readonly IEventAggregator _eventAggregator;
-		private readonly IWebviewIpc _ipc;
+		private readonly IBrowserService _browserService;
 		private readonly IIdeService _ideService;
 		private readonly ICredentialsService _credentialsService;
 
@@ -28,14 +28,14 @@ namespace CodeStream.VisualStudio.Controllers {
 			ISessionService sessionService,
 			ICodeStreamAgentService codeStreamAgent,
 			IEventAggregator eventAggregator,
-			IWebviewIpc ipc,
+			IBrowserService browserService,
 			IIdeService ideService,
 			ICredentialsService credentialsService) {
 			_settingsService = settingsService;
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
 			_eventAggregator = eventAggregator;
-			_ipc = ipc;
+			_browserService = browserService;
 			_ideService = ideService;
 			_credentialsService = credentialsService;
 		}
@@ -43,7 +43,7 @@ namespace CodeStream.VisualStudio.Controllers {
 		public async Task GoToSignupAsync(WebviewIpcMessage message) {
 			string error = null;
 			try {
-				using (var scope = _ipc.CreateScope(message)) {
+				using (var scope = _browserService.CreateScope(message)) {
 					try {
 						_ideService.Navigate(
 							$"{_settingsService.WebAppUrl}/signup?force_auth=true&signup_token={_sessionService.GetOrCreateSignupToken()}");
@@ -63,7 +63,7 @@ namespace CodeStream.VisualStudio.Controllers {
 
 		public async Task GoToSlackSigninAsync(WebviewIpcMessage message) {
 			string error = null;
-			using (var scope = _ipc.CreateScope(message)) {
+			using (var scope = _browserService.CreateScope(message)) {
 				try {
 					_ideService.Navigate(
 						$"{_settingsService.WebAppUrl}/service-auth/slack?state={_sessionService.GetOrCreateSignupToken()}");
@@ -84,7 +84,7 @@ namespace CodeStream.VisualStudio.Controllers {
 			string errorResponse = null;
 			JToken loginResponse = null;
 			try {
-				using (var scope = _ipc.CreateScope(message)) {
+				using (var scope = _browserService.CreateScope(message)) {
 					try {
 						loginResponse = await _codeStreamAgent.LoginAsync(email, password, _settingsService.ServerUrl);
 
@@ -138,7 +138,7 @@ namespace CodeStream.VisualStudio.Controllers {
 				string errorResponse = null;
 				JToken @params = null;
 				var success = false;
-				using (var scope = _ipc.CreateScope(message)) {
+				using (var scope = _browserService.CreateScope(message)) {
 					if (_settingsService.AutoSignIn && !_settingsService.Email.IsNullOrWhiteSpace()) {
 						var token = await _credentialsService.LoadAsync(_settingsService.ServerUrl.ToUri(),
 							_settingsService.Email);
@@ -195,7 +195,7 @@ namespace CodeStream.VisualStudio.Controllers {
 			JToken loginResponse = null;
 			JToken @params = null;
 			try {
-				using (var scope = _ipc.CreateScope(message)) {
+				using (var scope = _browserService.CreateScope(message)) {
 					try {
 						var token = request?.Token;
 

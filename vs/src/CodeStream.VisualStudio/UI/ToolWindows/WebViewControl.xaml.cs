@@ -8,6 +8,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Windows.Controls;
+using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace CodeStream.VisualStudio.UI.ToolWindows {
@@ -18,10 +19,10 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 
 		private readonly IComponentModel _componentModel;
 		private readonly IEventAggregator _eventAggregator;
-		private readonly IWebviewIpc _ipc;
+		private readonly IBrowserService _browserService;
 		private readonly ISessionService _sessionService;
 		private readonly IDisposable _languageServerDisconnectedEvent;
-		
+
 		private IDisposable _languageServerReadyEvent;
 		private List<IDisposable> _disposables;
 		private bool _disposed = false;
@@ -39,39 +40,35 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 
 				Log.Verbose($"{nameof(OnInitialized)}...");
 				_componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
-				_ipc = _componentModel?.GetService<IWebviewIpc>();
-				_eventAggregator = _componentModel?.GetService<IEventAggregator>();
-				_sessionService = _componentModel?.GetService<ISessionService>();
+				Assumes.Present(_componentModel);
 
-				if (_ipc != null && _ipc.BrowserService != null) {
-					_ipc.BrowserService.Initialize();
-					_ipc.BrowserService.AttachControl(Grid);
-					_ipc.BrowserService.LoadSplashView();
+				_eventAggregator = _componentModel.GetService<IEventAggregator>();
+				_sessionService = _componentModel.GetService<ISessionService>();
+				_browserService = _componentModel.GetService<IBrowserService>();
 
-					if (_sessionService == null) {
-						Log.Error("SessionService is null");
-					}
-					else {
-						_languageServerDisconnectedEvent = _eventAggregator?.GetEvent<LanguageServerDisconnectedEvent>()
-							.Subscribe(_ => {
-								_isInitialized = false;
+				_browserService.Initialize();
+				_browserService.AttachControl(Grid);
+				_browserService.LoadSplashView();
 
-								_ipc.BrowserService.LoadSplashView();
-
-								SetupInitialization();
-							});
-
-						SetupInitialization();
-					}
+				if (_sessionService == null) {
+					Log.Error("SessionService is null");
 				}
 				else {
-					Log.Error("BrowserService is null");
-				}
+					_languageServerDisconnectedEvent = _eventAggregator?.GetEvent<LanguageServerDisconnectedEvent>()
+						.Subscribe(_ => {
+							_isInitialized = false;
 
+							_browserService.LoadSplashView();
+
+							SetupInitialization();
+						});
+
+					SetupInitialization();
+				}
 				Log.Debug($"{nameof(OnInitialized)}");
 			}
 			catch (Exception ex) {
-				Log.Fatal(ex, nameof(WebViewControl));
+				Log.Fatal(ex.UnwrapCompositionException(), nameof(WebViewControl));
 			}
 		}
 
@@ -100,7 +97,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 							codeStreamService?.ChangeActiveEditorAsync(_sessionService.LastActiveFileUrl,
 								new Uri(_sessionService.LastActiveFileUrl));
 						}
-						catch(Exception ex) {
+						catch (Exception ex) {
 							Log.Warning(ex, nameof(WebViewControl_IsVisibleChanged));
 						}
 					}
@@ -132,34 +129,39 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 				lock (InitializeLock) {
 					if (!_isInitialized) {
 						try {
-							var authenticationService = _componentModel.GetService<IAuthenticationService>();
+
 							var router = new WebViewRouter(
 								_componentModel.GetService<ICredentialsService>(),
 								_componentModel.GetService<ISessionService>(),
 								_componentModel.GetService<ICodeStreamAgentService>(),
 								_componentModel.GetService<ISettingsService>(),
 								_eventAggregator,
-								_ipc,
+								_browserService,
 								_componentModel.GetService<IIdeService>(),
 								_componentModel.GetService<IEditorService>(),
-								authenticationService);
+								_componentModel.GetService<IAuthenticationServiceFactory>());
 
-							_ipc.BrowserService.AddWindowMessageEvent(
+							_browserService.AddWindowMessageEvent(
 								async delegate (object sender, WindowEventArgs ea) { await router.HandleAsync(ea); });
 
-							_ipc.BrowserService.LoadWebView();
+							_browserService.LoadWebView();
 
 							_disposables = new List<IDisposable> {
-
 								_eventAggregator.GetEvent<AuthenticationChangedEvent>()
 									.Subscribe(_ => {
 										if (_.Reason == LogoutReason.Token) {
-											if (authenticationService != null) {
-												ThreadHelper.JoinableTaskFactory.Run(async delegate {
+											ThreadHelper.JoinableTaskFactory.Run(async delegate {
+												try {
 													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-													await authenticationService.LogoutAsync();
-												});
-											}
+													var authenticationServiceFactory = _componentModel.GetService<IAuthenticationServiceFactory>();
+													if (authenticationServiceFactory != null) {
+														await authenticationServiceFactory.Create().LogoutAsync();
+													}	
+												}
+												catch(Exception ex) {
+													Log.Error(ex, nameof(AuthenticationChangedEvent));
+												}
+											});
 										}
 										else {
 											// TODO: Handle this

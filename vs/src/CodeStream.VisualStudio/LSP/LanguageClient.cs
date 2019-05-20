@@ -5,7 +5,6 @@ using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Threading;
-using Serilog;
 using StreamJsonRpc;
 using System;
 using System.Collections.Generic;
@@ -14,15 +13,21 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft;
+using Serilog;
 
 namespace CodeStream.VisualStudio.LSP {
+	public class LanguageClientDummy { }
+
 	/// <summary>
 	/// NOTE: See ContentDefinitions.cs for the LanguageClient partial class attributes
 	/// </summary>
 	[Export(typeof(ILanguageClient))]
 	[Guid(Guids.LanguageClientId)]
 	public partial class LanguageClient : ILanguageClient, ILanguageClientCustomMessage, IDisposable {
-		private static readonly ILogger Log = LogManager.ForContext<LanguageClient>();
+		private static readonly ILogger Log = LogManager.ForContext<LanguageClientDummy>();
 		private bool _disposed = false;
 		private readonly ILanguageServerProcess _languageServerProcess;
 
@@ -39,30 +44,30 @@ namespace CodeStream.VisualStudio.LSP {
 		//		internal IContentTypeRegistryService ContentTypeRegistryService { get; set; }
 		//#endif
 		private readonly IEventAggregator _eventAggregator;
+		private readonly IServiceProvider _serviceProvider;
 
 		[ImportingConstructor]
 		public LanguageClient(
-			[Import] IEventAggregator eventAggregator,						
-			[Import] IWebviewIpc ipc) {
+			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
+			IEventAggregator eventAggregator,
+			IBrowserService ipc,
+			ISettingsService settingsService) {
 			Instance = this;
 			try {
+				_serviceProvider = serviceProvider;
 				_eventAggregator = eventAggregator;
+				_settingsService = settingsService;
+
 				_languageServerProcess = new LanguageServerProcess();
 				CustomMessageTarget = new CustomMessageHandler(_eventAggregator, ipc);
+				Log.Ctor();
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(LanguageClient));
 			}
 		}
 
-		[Import]
-		public ISessionService SessionService { get; set; }
-
-		[Import]
-		public ISettingsService SettingsService { get; set; }
-
-		[Import]
-		public ICodeStreamAgentService CodeStreamAgentService { get; set; }
+		private readonly ISettingsService _settingsService;
 
 		internal static LanguageClient Instance { get; private set; }
 		private JsonRpc _rpc;
@@ -74,16 +79,16 @@ namespace CodeStream.VisualStudio.LSP {
 		public object InitializationOptions {
 			get {
 				var initializationOptions = new InitializationOptions {
-					Extension = SettingsService.GetExtensionInfo(),
-					Ide = SettingsService.GetIdeInfo(),
+					Extension = _settingsService.GetExtensionInfo(),
+					Ide = _settingsService.GetIdeInfo(),
 #if DEBUG
 					TraceLevel = TraceLevel.Verbose.ToJsonValue(),
 					IsDebugging = true,
 #else
-                    TraceLevel = SettingsService.TraceLevel.ToJsonValue(),
+                    TraceLevel = _settingsService.TraceLevel.ToJsonValue(),
 #endif
-					Proxy = SettingsService.Proxy,
-					ProxySupport = SettingsService.ProxySupport.ToJsonValue()
+					Proxy = _settingsService.Proxy,
+					ProxySupport = _settingsService.ProxySupport.ToJsonValue()
 				};
 				Log.Debug(nameof(InitializationOptions) + " {@InitializationOptions}", initializationOptions);
 
@@ -98,23 +103,26 @@ namespace CodeStream.VisualStudio.LSP {
 		public object CustomMessageTarget { get; }
 
 		public async Task<Connection> ActivateAsync(CancellationToken token) {
-			await Task.Yield();
-
+			await System.Threading.Tasks.Task.Yield();
 			Connection connection = null;
+			try {
+				var process = _languageServerProcess.Create(_settingsService?.TraceLevel);
 
-			var process = _languageServerProcess.Create(SettingsService.TraceLevel);
-
-			using (Log.CriticalOperation($"Starting server process. FileName={process.StartInfo.FileName} Arguments={process.StartInfo.Arguments}", Serilog.Events.LogEventLevel.Information)) {
-				if (process.Start()) {
-					connection = new Connection(process.StandardOutput.BaseStream, process.StandardInput.BaseStream);
+				using (Log.CriticalOperation($"Starting server process. FileName={process.StartInfo.FileName} Arguments={process.StartInfo.Arguments}", Serilog.Events.LogEventLevel.Information)) {
+					if (process.Start()) {
+						connection = new Connection(process.StandardOutput.BaseStream, process.StandardInput.BaseStream);
+					}
 				}
+			}
+			catch (Exception ex) {
+				Log.Fatal(ex, nameof(ActivateAsync));
 			}
 
 			return connection;
 		}
 
-		public async Task AttachForCustomMessageAsync(JsonRpc rpc) {
-			await Task.Yield();
+		public async System.Threading.Tasks.Task AttachForCustomMessageAsync(JsonRpc rpc) {
+			await System.Threading.Tasks.Task.Yield();
 			_rpc = rpc;
 
 			// Slight hack to use camelCased properties when serializing requests
@@ -122,18 +130,24 @@ namespace CodeStream.VisualStudio.LSP {
 			_rpc.JsonSerializer.NullValueHandling = NullValueHandling.Ignore;
 		}
 
-		public async Task OnLoadedAsync() {
+		public async System.Threading.Tasks.Task OnLoadedAsync() {
 			using (Log.CriticalOperation($"{nameof(OnLoadedAsync)}")) {
 				// ReSharper disable once PossibleNullReferenceException
 				await StartAsync?.InvokeAsync(this, EventArgs.Empty);
 			}
 		}
 
-		public async Task OnServerInitializedAsync() {
+		public async System.Threading.Tasks.Task OnServerInitializedAsync() {
 			try {
 				using (Log.CriticalOperation($"{nameof(OnServerInitializedAsync)}")) {
-					await CodeStreamAgentService.SetRpcAsync(_rpc);
-					SessionService.SetAgentReady();
+					var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+					Assumes.Present(componentModel);
+
+					var codeStreamAgentService = componentModel.GetService<ICodeStreamAgentService>();
+					await codeStreamAgentService.SetRpcAsync(_rpc);
+					var sessionService = componentModel.GetService<ISessionService>();
+					sessionService.SetAgentReady();
+
 					_eventAggregator.Publish(new LanguageServerReadyEvent { IsReady = true });
 				}
 			}
@@ -141,11 +155,12 @@ namespace CodeStream.VisualStudio.LSP {
 				Log.Fatal(ex, nameof(OnServerInitializedAsync));
 				throw;
 			}
-			await Task.CompletedTask;
+			await System.Threading.Tasks.Task.CompletedTask;
 		}
 
-		public Task OnServerInitializeFailedAsync(Exception ex) {
+		public System.Threading.Tasks.Task OnServerInitializeFailedAsync(Exception ex) {
 			Log.Fatal(ex, nameof(OnServerInitializeFailedAsync));
+			// must throw ex here, because we're not in a try/catch
 			throw ex;
 		}
 

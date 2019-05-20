@@ -11,14 +11,14 @@ Write-Host "Starting at $(Get-Date)"
 
 $counter = 0;
 while($true) { 
-    start "C:\Program Files (x86)\Microsoft Visual Studio\$($Version)\Community\Common7\IDE\devenv.exe" "..\src\CodeStream.VisualStudio.sln"
-    Start-Sleep -Seconds 15
-    start "C:\Program Files (x86)\Microsoft Visual Studio\$($Version)\Community\Common7\IDE\devenv.exe" "..\src\CodeStream.VisualStudio.sln"
-    Start-Sleep -Seconds 15
-    start "C:\Program Files (x86)\Microsoft Visual Studio\$($Version)\Community\Common7\IDE\devenv.exe" "..\src\CodeStream.VisualStudio.sln"
-    Start-Sleep -Seconds 15
+    start "C:\Program Files (x86)\Microsoft Visual Studio\$($Version)\Community\Common7\IDE\devenv.exe" -ArgumentList "..\src\CodeStream.VisualStudio.sln"
+    Start-Sleep -Seconds 25
+    start "C:\Program Files (x86)\Microsoft Visual Studio\$($Version)\Community\Common7\IDE\devenv.exe" -ArgumentList "..\src\CodeStream.VisualStudio.sln"
+    Start-Sleep -Seconds 25
+    start "C:\Program Files (x86)\Microsoft Visual Studio\$($Version)\Community\Common7\IDE\devenv.exe" -ArgumentList "..\src\CodeStream.VisualStudio.sln"
+    Start-Sleep -Seconds 25
 
-    Start-Sleep -Seconds 20
+    Start-Sleep -Seconds 10
     Get-Process devenv -ErrorAction SilentlyContinue | Stop-Process
     Start-Sleep -Seconds 5
     $counter = $counter+3;

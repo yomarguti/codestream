@@ -12,12 +12,6 @@ using System.Linq;
 using CodeStream.VisualStudio.UI.Extensions;
 
 namespace CodeStream.VisualStudio.UI {
-	public static class DocumentMarkerManagerFactory {
-		public static DocumentMarkerManager Create(ICodeStreamAgentService agentService, IWpfTextView wpfTextView, ITextDocument textDocument) {
-			return new DocumentMarkerManager(agentService, wpfTextView, textDocument);
-		}
-	}
-
 	public class DocumentMarkerManager : IDisposable {
 		private readonly ICodeStreamAgentService _agentService;
 		private readonly IWpfTextView _wpfTextView;
