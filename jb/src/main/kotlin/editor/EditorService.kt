@@ -376,8 +376,12 @@ class EditorService(val project: Project) {
 
     fun toggleRangeHighlight(range: Range, highlight: Boolean) = ApplicationManager.getApplication().invokeLater {
         val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@invokeLater
-        val highlighters =
-            rangeHighlighters[editor] ?: throw IllegalStateException("Highlighters not initialized for editor $editor")
+        val highlighters = rangeHighlighters[editor]
+
+        if (highlighters == null) {
+            logger.warn("Highlighters not initialized for editor $editor")
+            return@invokeLater
+        }
 
         if (!highlight) {
             synchronized(highlighters) {
