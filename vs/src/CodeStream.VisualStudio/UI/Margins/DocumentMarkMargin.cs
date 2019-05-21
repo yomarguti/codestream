@@ -69,7 +69,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			catch(Exception ex) {
 				Log.Error(ex, nameof(DocumentMarkMargin));
 			}
-
+			_iconCanvas = new Canvas { Background = Brushes.Transparent };
 			_tagAggregator = viewTagAggregatorFactoryService.CreateTagAggregator<IGlyphTag>(_wpfTextViewHost.TextView);
 
 			Width = DefaultMarginWidth;
@@ -82,9 +82,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			TryInitialize();
 		}
 
-		private void InitializeMargin() {
-			_iconCanvas = new Canvas { Background = Brushes.Transparent };
-
+		private void InitializeMargin() {		
 			Children.Add(_iconCanvas);
 			_lineInfos = new Dictionary<object, LineInfo>();
 
