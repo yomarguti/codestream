@@ -72,6 +72,10 @@ CodeStream recognizes that developers on your team may be working on different b
 
 You won’t need to provide CodeStream with any Git (or GitHub, Bitbucket, etc.) credentials, as the plugin simply leverages your IDE’s access to Git. CodeStream uses Git to do things like automatically mention the most recent author when you share a block of code in a post, and to maintain the connection between that block of code and where it’s located in the source file as the file evolves over time (and commits).
 
+#### What is CodeStream's pricing model?
+
+CodeStream is free for up to 5 users. Larger teams enjoy a 30 day free trial. Contact sales@codestream.com for more details.
+
 # Help & Feedback
 
 Check out our [wiki](https://github.com/TeamCodeStream/CodeStream/wiki) for more information on getting started with CodeStream. Please follow [@teamcodestream](http://twitter.com/teamcodestream) for product updates and to share feedback and questions. You can also email us at support@codestream.com.
