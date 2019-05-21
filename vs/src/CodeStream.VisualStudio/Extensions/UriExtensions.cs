@@ -33,6 +33,20 @@ namespace CodeStream.VisualStudio.Extensions {
 		/// <returns></returns>
 		public static string ToLocalPath(this Uri uri) {
 			return uri.LocalPath.TrimStart('/');
-		}		
+		}
+
+		/// <summary>
+		/// Returns the name of the file from an absolute Uri
+		/// </summary>
+		/// <param name="uri"></param>
+		/// <returns></returns>
+		public static string ToFileName(this Uri uri) {
+			try {
+				return new System.IO.FileInfo(uri.AbsolutePath).Name;
+			}
+			catch {
+				return null;
+			}
+		}
 	}
 }

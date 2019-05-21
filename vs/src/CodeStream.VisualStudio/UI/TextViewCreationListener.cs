@@ -359,7 +359,7 @@ namespace CodeStream.VisualStudio.UI {
 				if (activeTextEditor != null && activeTextEditor.Uri != null) {
 					if (Uri.TryCreate(filePath, UriKind.RelativeOrAbsolute, out Uri result)) {
 						if (activeTextEditor.Uri.EqualsIgnoreCase(result)) {
-							_ = CodeStreamService.ChangeActiveEditorAsync(filePath, new Uri(filePath), activeTextEditor);
+							_ = CodeStreamService.ChangeActiveEditorAsync(new Uri(filePath), activeTextEditor);
 						}
 					}
 				}

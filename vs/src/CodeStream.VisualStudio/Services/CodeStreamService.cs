@@ -16,7 +16,7 @@ using Task = System.Threading.Tasks.Task;
 namespace CodeStream.VisualStudio.Services {
 	public interface ICodeStreamService {
 		Task ResetActiveEditorAsync();
-		Task ChangeActiveEditorAsync(string fileName, Uri uri, ActiveTextEditor activeTextEditor = null);
+		Task ChangeActiveEditorAsync(Uri uri, ActiveTextEditor activeTextEditor = null);
 		Task NewCodemarkAsync(Uri uri, Range range, CodemarkType codemarkType, string source, CancellationToken? cancellationToken = null);
 		Task ShowCodemarkAsync(string codemarkId, string sourceUri, CancellationToken? cancellationToken = null);
 		Task EditorSelectionChangedNotificationAsync(Uri uri,
@@ -47,7 +47,7 @@ namespace CodeStream.VisualStudio.Services {
 
 		public bool IsReady => SessionService?.IsReady == true;
 
-		public async Task ChangeActiveEditorAsync(string fileName, Uri uri, ActiveTextEditor activeTextEditor = null) {
+		public async Task ChangeActiveEditorAsync(Uri uri, ActiveTextEditor activeTextEditor = null) {
 			if (IsReady) {
 				try {
 					var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
@@ -56,7 +56,7 @@ namespace CodeStream.VisualStudio.Services {
 					var editorService = componentModel.GetService<IEditorService>();
 					activeTextEditor = activeTextEditor ?? editorService.GetActiveTextEditor(uri);
 					var editorState = editorService.GetActiveEditorState();
-
+					var fileName = uri.ToFileName() ?? uri.AbsolutePath;
 					_ = BrowserService.NotifyAsync(new HostDidChangeActiveEditorNotificationType {
 						Params = new HostDidChangeActiveEditorNotification {
 							Editor = new HostDidChangeActiveEditorNotificationEditor(fileName,
@@ -71,7 +71,7 @@ namespace CodeStream.VisualStudio.Services {
 					});
 				}
 				catch (Exception ex) {
-					Log.Error(ex, $"{nameof(ChangeActiveEditorAsync)} FileName={fileName} Uri={uri}");
+					Log.Error(ex, $"{nameof(ChangeActiveEditorAsync)} Uri={uri}");
 				}
 			}
 

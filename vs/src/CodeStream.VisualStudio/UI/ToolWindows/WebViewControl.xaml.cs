@@ -94,8 +94,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 					if (!_sessionService.LastActiveFileUrl.IsNullOrWhiteSpace()) {
 						try {
 							var codeStreamService = _componentModel?.GetService<ICodeStreamService>();
-							codeStreamService?.ChangeActiveEditorAsync(_sessionService.LastActiveFileUrl,
-								new Uri(_sessionService.LastActiveFileUrl));
+							codeStreamService?.ChangeActiveEditorAsync(new Uri(_sessionService.LastActiveFileUrl));
 						}
 						catch (Exception ex) {
 							Log.Warning(ex, nameof(WebViewControl_IsVisibleChanged));
