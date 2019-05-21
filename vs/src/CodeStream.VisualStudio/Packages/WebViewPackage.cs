@@ -188,7 +188,6 @@ namespace CodeStream.VisualStudio.Packages {
 						await TryTriggerLspActivationAsync();
 						var sessionService = _componentModel.GetService<ISessionService>();
 
-
 						if (sessionService?.IsAgentReady == true) {
 							InitializeEvents();
 						}

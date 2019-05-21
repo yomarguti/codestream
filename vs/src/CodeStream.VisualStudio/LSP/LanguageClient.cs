@@ -51,12 +51,12 @@ namespace CodeStream.VisualStudio.LSP {
 			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
 			IEventAggregator eventAggregator,
 			IBrowserService ipc,
-			ISettingsService settingsService) {
+			ISettingsServiceFactory settingsServiceFactory) {
 			Instance = this;
 			try {
 				_serviceProvider = serviceProvider;
 				_eventAggregator = eventAggregator;
-				_settingsService = settingsService;
+				_settingsService = settingsServiceFactory.Create();
 
 				_languageServerProcess = new LanguageServerProcess();
 				CustomMessageTarget = new CustomMessageHandler(_eventAggregator, ipc);

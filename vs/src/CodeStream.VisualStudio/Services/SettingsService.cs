@@ -4,13 +4,37 @@ using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.UI.Settings;
 using System;
 using System.ComponentModel.Composition;
-using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
+using CodeStream.VisualStudio.Core;
 
 namespace CodeStream.VisualStudio.Services {
+	public interface ISettingsServiceFactory {
+		ISettingsService Create();
+	}
+
+	[Export(typeof(ISettingsServiceFactory))]
+	[PartCreationPolicy(CreationPolicy.Shared)]
+	public class SettingsServiceFactory : ServiceFactory<ISettingsService>, ISettingsServiceFactory {
+		private static readonly ILogger Log = LogManager.ForContext<SettingsServiceFactory>();
+
+		[ImportingConstructor]
+		public SettingsServiceFactory([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) :
+			base(serviceProvider) {
+		}
+
+		public override ISettingsService Create() {
+			try {
+				return base.Create();
+			}
+			catch (Exception ex) {
+				Log.Fatal(ex, nameof(Create));
+				throw;
+			}
+		}
+	}
+
 	public interface ISettingsService : IOptions {
-		void LoadSettingsFromStorage();
 		void SaveSettingsToStorage();
 		Settings GetSettings();
 		TraceLevel TraceLevel { get; set; }
@@ -38,33 +62,34 @@ namespace CodeStream.VisualStudio.Services {
 	[Export(typeof(ISettingsService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class SettingsService : ISettingsService, IOptions {
-		private readonly ILogger Log = LogManager.ForContext<SettingsService>();
 
-		private static readonly Regex EnvironmentRegex = new Regex(@"https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(?::\d+$)?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-		public IOptionsDialogPage DialogPage { get; private set; }
+		// once we don't support VS 2017, we'll be able to use something like...
+		// the _lazy.GetValue() method only exists on the v16.0 version of MS.VS.Threading assembly
+
+		//private readonly AsyncLazy<IOptionsDialogPage> _lazy = new AsyncLazy<IOptionsDialogPage>(async () => {			
+		//	var dialogPage = await OptionsDialogPage.GetLiveInstanceAsync();			
+		//	return dialogPage;
+		//}, ThreadHelper.JoinableTaskFactory);
+
+		private IOptionsDialogPage _dialogPage;
+		private static readonly object locker = new object();
+
+		public IOptionsDialogPage DialogPage {
+			get {
+				lock (locker) {
+					if (_dialogPage == null) {
+						ThreadHelper.JoinableTaskFactory.Run(async delegate {
+							_dialogPage = await OptionsDialogPage.GetLiveInstanceAsync();
+						});
+					}
+				}
+				return _dialogPage;
+			}
+		}
 
 		[ImportingConstructor]
-		public SettingsService() {
-			try {
-				ThreadHelper.JoinableTaskFactory.Run(async delegate {
-					try {
-						// Make the call to GetLiveInstanceAsync from a background thread to avoid blocking the UI thread
-						DialogPage = await OptionsDialogPage.GetLiveInstanceAsync();
-						DialogPage.Load();
-					}
-					catch (Exception ex) {
-						Log.Error(ex.UnwrapCompositionException(), nameof(SettingsService));
-					}
-				});
-			}
-			catch (Exception ex) {
-				Log.Fatal(ex.UnwrapCompositionException(), nameof(SettingsService));
-			}
-		}
+		public SettingsService() { }
 
-		public void LoadSettingsFromStorage() {
-			DialogPage.Load();
-		}
 
 		public void SaveSettingsToStorage() {
 			DialogPage.Save();
@@ -166,7 +191,7 @@ namespace CodeStream.VisualStudio.Services {
 		public string GetEnvironmentName() {
 			if (ServerUrl == null) return "unknown";
 
-			var match = EnvironmentRegex.Match(ServerUrl);
+			var match = RegularExpressions.EnvironmentRegex.Match(ServerUrl);
 			if (!match.Success) return "unknown";
 
 			if (match.Groups[1].Value.EqualsIgnoreCase("localhost")) {

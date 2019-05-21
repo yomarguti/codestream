@@ -28,6 +28,7 @@ namespace CodeStream.VisualStudio.UI.Settings {
 		Proxy Proxy { get; }
 		void Save();
 		void Load();
+		System.Threading.Tasks.Task LoadAsync();
 		TraceLevel TraceLevel { get; set; }
 	}
 
@@ -213,8 +214,10 @@ namespace CodeStream.VisualStudio.UI.Settings {
 		public bool AutoHideMarkers {
 			get => _autoHideMarkers;
 			set {
-				_autoHideMarkers = value;
-				NotifyPropertyChanged();
+				if (_autoHideMarkers != value) {
+					_autoHideMarkers = value;
+					NotifyPropertyChanged();
+				}
 			}
 		}
 
@@ -237,8 +240,10 @@ namespace CodeStream.VisualStudio.UI.Settings {
 		public bool ShowMarkerGlyphs {
 			get => _showMarkerGlyphs;
 			set {
-				_showMarkerGlyphs = value;
-				NotifyPropertyChanged();
+				if (_showMarkerGlyphs != value) {
+					_showMarkerGlyphs = value;
+					NotifyPropertyChanged();
+				}
 			}
 		}
 

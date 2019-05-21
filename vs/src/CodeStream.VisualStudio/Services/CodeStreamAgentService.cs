@@ -61,12 +61,11 @@ namespace CodeStream.VisualStudio.Services {
 		Task TrackAsync(string key, TelemetryProperties properties = null);
 	}
 
-	public class CodeStreamAgentServiceDummy { }
 
 	[Export(typeof(ICodeStreamAgentService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class CodeStreamAgentService : ICodeStreamAgentService, IDisposable {
-		private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentServiceDummy>();
+		private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
 
 		private readonly ISessionService _sessionService;
 		private readonly IEventAggregator _eventAggregator;
@@ -76,12 +75,17 @@ namespace CodeStream.VisualStudio.Services {
 		public CodeStreamAgentService(
 			IEventAggregator eventAggregator,
 			ISessionService sessionService,
-			ISettingsService settingsService) {
+			ISettingsServiceFactory settingsServiceFactory) {
 			_eventAggregator = eventAggregator;
 			_sessionService = sessionService;
-			_settingsService = settingsService;
-			if (_eventAggregator == null || _sessionService == null || _settingsService == null) {
-				Log.Error($"_eventAggregatorIsNull={_eventAggregator == null},_sessionServiceIsNull={_sessionService == null},_settingsServiceIsNull={_settingsService == null}");
+			try {
+				_settingsService = settingsServiceFactory.Create();
+				if (_eventAggregator == null || _sessionService == null || _settingsService == null) {
+					Log.Error($"_eventAggregatorIsNull={_eventAggregator == null},_sessionServiceIsNull={_sessionService == null},_settingsServiceIsNull={_settingsService == null}");
+				}
+			}
+			catch (Exception ex) {
+				Log.Fatal(ex, nameof(CodeStreamAgentService));
 			}
 		}
 

@@ -1,5 +1,8 @@
-﻿using Microsoft.VisualStudio.ComponentModelHost;
+﻿using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Extensions;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
+using Serilog;
 using System;
 using System.ComponentModel.Composition;
 
@@ -9,16 +12,33 @@ namespace CodeStream.VisualStudio.Services {
 	}
 
 	public abstract class ServiceFactory<T> : IServiceFactory<T> where T : class {
+		private static readonly ILogger Log = LogManager.ForContext<ServiceFactory<T>>();
 		private readonly IServiceProvider _serviceProvider;
 
 		protected ServiceFactory([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
 			_serviceProvider = serviceProvider;
 		}
 
-		public T Create() {
-			var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-			Microsoft.Assumes.Present(componentModel);
-			return componentModel.GetService<T>();
+		public virtual T Create() {
+			try {
+				var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+				if (componentModel == null) {
+					Log.Error($"missing ComponentModel");
+				}
+				Microsoft.Assumes.Present(componentModel);
+
+				var service = componentModel.GetService<T>();
+				Microsoft.Assumes.Present(service);
+				return service;
+			}
+			catch (CompositionException ex) {
+				Log.Fatal(ex.UnwrapCompositionException(), nameof(Create) + " (Composition)");
+				throw;
+			}
+			catch (Exception ex) {
+				Log.Fatal(ex.UnwrapCompositionException(), nameof(Create));
+				throw;
+			}
 		}
 	}
 }

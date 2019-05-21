@@ -18,5 +18,8 @@ namespace CodeStream.VisualStudio.Core
 		public static readonly Regex PasswordOrTokenRegex =
 			new Regex(@"""passwordOrToken"":""(.*?)""(,|(?=\}))", RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace);
 
+		public static readonly Regex EnvironmentRegex =
+			new Regex(@"https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(?::\d+$)?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
 	}
 }

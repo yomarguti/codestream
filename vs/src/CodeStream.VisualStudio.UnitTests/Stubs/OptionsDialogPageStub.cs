@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.UI.Settings;
@@ -19,7 +20,12 @@ namespace CodeStream.VisualStudio.UnitTests.Stubs
         public string Team { get; set; }
         public void Save() { }
         public void Load() { }
-        public TraceLevel TraceLevel { get; set; }
+
+		public Task LoadAsync() {
+			throw new NotImplementedException();
+		}
+
+		public TraceLevel TraceLevel { get; set; }
         public bool AutoSignIn { get; set; }
         public bool AutoHideMarkers { get; set; }
         public bool ShowMarkerGlyphs { get; set; }
