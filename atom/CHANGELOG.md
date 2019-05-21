@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.0.3] - 2019-5-21
+
+### Fixed
+
+- Fixes an issue where a new codemark sometimes wouldn't appear right away
+
 ## [1.0.2] - 2019-5-15
 
 ### Added
