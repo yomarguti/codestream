@@ -74,7 +74,7 @@ You won’t need to provide CodeStream with any Git (or GitHub, Bitbucket, etc.)
 
 #### What is CodeStream's pricing model?
 
-CodeStream is free for up to 5 users. Larger teams enjoy a 30 day free trial. Contact sales@codestream.com for more details.
+Codestream is free to try for 30 days for teams of all sizes. CodeStream is free to use for small teams with 5 or fewer developers, educational organizations, and for open source projects. For all other teams, pricing starts at $10/user/month. To learn more, visit https://www.codestream.com/pricing or contact sales@codestream.com.
 
 # Help & Feedback
 
