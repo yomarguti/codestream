@@ -68,8 +68,8 @@ namespace CodeStream.VisualStudio.Services {
 		private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
 
 		private readonly ISessionService _sessionService;
-		private readonly IEventAggregator _eventAggregator;
-		private readonly ISettingsManager _settingsManager;
+		private readonly IEventAggregator _eventAggregator;		
+		private readonly ISettingsServiceFactory _settingsServiceFactory;
 
 		[ImportingConstructor]
 		public CodeStreamAgentService(
@@ -78,10 +78,10 @@ namespace CodeStream.VisualStudio.Services {
 			ISettingsServiceFactory settingsServiceFactory) {
 			_eventAggregator = eventAggregator;
 			_sessionService = sessionService;
-			try {
-				_settingsManager = settingsServiceFactory.Create();
-				if (_eventAggregator == null || _sessionService == null || _settingsManager == null) {
-					Log.Error($"_eventAggregatorIsNull={_eventAggregator == null},_sessionServiceIsNull={_sessionService == null},_settingsManagerIsNull={_settingsManager == null}");
+			_settingsServiceFactory = settingsServiceFactory;
+			try {				
+				if (_eventAggregator == null || _sessionService == null || settingsServiceFactory == null) {
+					Log.Error($"_eventAggregatorIsNull={_eventAggregator == null},_sessionServiceIsNull={_sessionService == null},settingsServiceFactoryIsNull={settingsServiceFactory == null}");
 				}
 			}
 			catch (Exception ex) {
@@ -236,6 +236,7 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public Task<JToken> LoginViaTokenAsync(string email, string token, string serverUrl) {
+			var _settingsManager = _settingsServiceFactory.Create();
 			return SendCoreAsync<JToken>("codestream/login", new LoginViaAccessTokenRequest {
 				Email = email,
 				PasswordOrToken = new LoginAccessToken(email, serverUrl, token),
@@ -252,6 +253,7 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public Task<JToken> LoginViaOneTimeCodeAsync(string signupToken, string serverUrl) {
+			var _settingsManager = _settingsServiceFactory.Create();
 			return SendCoreAsync<JToken>("codestream/login", new LoginRequest {
 				SignupToken = signupToken,
 				ServerUrl = serverUrl,
@@ -267,6 +269,7 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public Task<JToken> LoginAsync(string email, string password, string serverUrl) {
+			var _settingsManager = _settingsServiceFactory.Create();
 			var extensionInfo = _settingsManager.GetExtensionInfo();
 			var ideInfo = _settingsManager.GetIdeInfo();
 
@@ -296,7 +299,7 @@ namespace CodeStream.VisualStudio.Services {
 		public async Task<JToken> GetBootstrapAsync(Settings settings, JToken state = null, bool isAuthenticated = false) {
 			var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
 			var ideService = componentModel?.GetService<IIdeService>();
-
+			var _settingsManager = _settingsServiceFactory.Create();
 			var vslsEnabled = ideService?.QueryExtension(ExtensionKind.LiveShare) == true;
 
 			// NOTE: this camelCaseSerializer is important because FromObject doesn't

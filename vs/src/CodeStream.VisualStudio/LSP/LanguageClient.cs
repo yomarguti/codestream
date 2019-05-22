@@ -45,6 +45,7 @@ namespace CodeStream.VisualStudio.LSP {
 		//#endif
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IServiceProvider _serviceProvider;
+		private readonly ISettingsServiceFactory _settingsServiceFactory;
 
 		[ImportingConstructor]
 		public LanguageClient(
@@ -56,7 +57,7 @@ namespace CodeStream.VisualStudio.LSP {
 			try {
 				_serviceProvider = serviceProvider;
 				_eventAggregator = eventAggregator;
-				_settingsManager = settingsServiceFactory.Create();
+				_settingsServiceFactory = settingsServiceFactory;
 
 				_languageServerProcess = new LanguageServerProcess();
 				CustomMessageTarget = new CustomMessageHandler(_eventAggregator, ipc);
@@ -65,9 +66,7 @@ namespace CodeStream.VisualStudio.LSP {
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(LanguageClient));
 			}
-		}
-
-		private readonly ISettingsManager _settingsManager;
+		}		
 
 		internal static LanguageClient Instance { get; private set; }
 		private JsonRpc _rpc;
@@ -78,6 +77,7 @@ namespace CodeStream.VisualStudio.LSP {
 
 		public object InitializationOptions {
 			get {
+				var _settingsManager = _settingsServiceFactory.Create();
 				var initializationOptions = new InitializationOptions {
 					Extension = _settingsManager.GetExtensionInfo(),
 					Ide = _settingsManager.GetIdeInfo(),
@@ -106,6 +106,7 @@ namespace CodeStream.VisualStudio.LSP {
 			await System.Threading.Tasks.Task.Yield();
 			Connection connection = null;
 			try {
+				var _settingsManager = _settingsServiceFactory.Create();
 				var process = _languageServerProcess.Create(_settingsManager?.TraceLevel);
 
 				using (Log.CriticalOperation($"Starting server process. FileName={process.StartInfo.FileName} Arguments={process.StartInfo.Arguments}", Serilog.Events.LogEventLevel.Information)) {

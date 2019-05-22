@@ -22,6 +22,11 @@ namespace CodeStream.VisualStudio.Services {
 		private volatile ISettingsManager _settingsManager = null;
 		private static readonly object locker = new object();
 
+
+		/// <summary>
+		/// DO NOT call this in another constructor -- possible that SOptionsDialogPageAccessor has not been registered yet
+		/// </summary>
+		/// <returns></returns>
 		public virtual ISettingsManager Create() {
 			try {
 				if (_settingsManager == null) {
