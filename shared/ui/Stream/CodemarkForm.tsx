@@ -30,7 +30,7 @@ import {
 	getDMName
 } from "../store/streams/reducer";
 import { Stream } from "../store/streams/types";
-import { mapFilter, arrayToRange, forceAsLine, isRangeEmpty, toMapBy } from "../utils";
+import { mapFilter, arrayToRange, forceAsLine, isRangeEmpty, toMapBy, replaceHtml } from "../utils";
 import { HostApi } from "../webview-api";
 import Button from "./Button";
 import CancelButton from "./CancelButton";
@@ -46,8 +46,6 @@ import Headshot from "./Headshot";
 import { getTeamMembers } from "../store/users/reducer";
 import { MessageInput } from "./MessageInput";
 import { getSlashCommands } from "./SlashCommands";
-
-const noop = () => {};
 
 const tuple = <T extends string[]>(...args: T) => args;
 
@@ -470,7 +468,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			{
 				codeBlock: this.state.codeBlock,
 				streamId: selectedChannelId,
-				text,
+				text: replaceHtml(text)!,
 				color,
 				type,
 				assignees: csAssignees,
@@ -834,7 +832,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				channelStreams={this.props.channelStreams}
 				isSlackTeam={this.props.isSlackTeam}
 				isDirectMessage={this.props.channel.type === StreamType.Direct}
-				text={text}
+				text={text.replace(/\n/g, "<br/>")}
 				placeholder={placeholder}
 				multiCompose
 				onChange={this.handleChange}

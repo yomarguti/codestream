@@ -30,7 +30,8 @@ export const markdownify = text => {
 			.render(text, { references: {} })
 			.replace(/blockquote>\n/g, "blockquote>")
 			.replace(/<br>\n/g, "\n")
-			.replace(/<\/p>\n$/, "</p>");
+			.replace(/<\/p>\n$/, "</p>")
+			.replace(/<\/p>\n/g, "</p><br/>");
 		// console.log(replaced);
 		if (text.trim().match(/^(:[\w_+]+:|\s)+$/))
 			return "<span class='only-emoji'>" + replaced + "</span>";
