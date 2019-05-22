@@ -45,7 +45,7 @@ data class SettingsServiceState(
     var serverUrl: String = API_PROD,
     var webAppUrl: String = WEB_PROD,
     var avatars: Boolean = true,
-    var notifications: String = "mentions",
+    var notifications: String? = null,
     var muteAll: Boolean = false,
     var team: String? = null,
     var showFeedbackSmiley: Boolean = true,
@@ -86,7 +86,13 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
     val autoHideMarkers get() = state.autoHideMarkers
     val showMarkers get() = state.showMarkers
     val proxySupport get() = state.proxySupport
-    val notifications get() = state.notifications
+    val notifications: String?
+        get() {
+            if (state.notifications == null) {
+                return if (project.sessionService?.isSlackTeam == true) "none" else "mentions"
+            }
+            return state.notifications
+        }
 
     var webViewContext by Delegates.observable<WebViewContext?>(null) { _, _, new ->
         _webViewContextObservers.forEach { it(new) }

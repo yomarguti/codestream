@@ -151,7 +151,12 @@ class CSPreferences(
 
 class CSTeam(
     val id: String,
-    val name: String
+    val name: String,
+    val providerInfo: ProviderInfo?
+)
+
+class ProviderInfo(
+    val slack: JsonObject?
 )
 
 class BootstrapParams

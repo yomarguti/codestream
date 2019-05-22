@@ -17,6 +17,7 @@ typealias PostsObserver = (List<Post>) -> Unit
 class SessionService(val project: Project) {
 
     val userLoggedIn: UserLoggedIn? get() = _userLoggedIn
+    val isSlackTeam: Boolean get() = userLoggedIn?.team?.providerInfo?.slack != null
     val mentions: Int get() = _mentions
 
     private val _streams = mutableMapOf<String, Stream>()
