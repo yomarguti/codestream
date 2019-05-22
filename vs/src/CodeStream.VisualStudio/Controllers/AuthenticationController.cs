@@ -15,7 +15,7 @@ namespace CodeStream.VisualStudio.Controllers {
 	public class AuthenticationController {
 		private static readonly ILogger Log = LogManager.ForContext<AuthenticationController>();
 
-		private readonly ISettingsService _settingsService;
+		private readonly ISettingsManager _settingsManager;
 		private readonly ISessionService _sessionService;
 		private readonly ICodeStreamAgentService _codeStreamAgent;
 		private readonly IEventAggregator _eventAggregator;
@@ -24,14 +24,14 @@ namespace CodeStream.VisualStudio.Controllers {
 		private readonly ICredentialsService _credentialsService;
 
 		public AuthenticationController(
-			ISettingsService settingsService,
+			ISettingsManager settingManager,
 			ISessionService sessionService,
 			ICodeStreamAgentService codeStreamAgent,
 			IEventAggregator eventAggregator,
 			IBrowserService browserService,
 			IIdeService ideService,
 			ICredentialsService credentialsService) {
-			_settingsService = settingsService;
+			_settingsManager = settingManager;
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
 			_eventAggregator = eventAggregator;
@@ -46,7 +46,7 @@ namespace CodeStream.VisualStudio.Controllers {
 				using (var scope = _browserService.CreateScope(message)) {
 					try {
 						_ideService.Navigate(
-							$"{_settingsService.WebAppUrl}/signup?force_auth=true&signup_token={_sessionService.GetOrCreateSignupToken()}");
+							$"{_settingsManager.WebAppUrl}/signup?force_auth=true&signup_token={_sessionService.GetOrCreateSignupToken()}");
 					}
 					catch (Exception ex) {
 						error = ex.ToString();
@@ -66,7 +66,7 @@ namespace CodeStream.VisualStudio.Controllers {
 			using (var scope = _browserService.CreateScope(message)) {
 				try {
 					_ideService.Navigate(
-						$"{_settingsService.WebAppUrl}/service-auth/slack?state={_sessionService.GetOrCreateSignupToken()}");
+						$"{_settingsManager.WebAppUrl}/service-auth/slack?state={_sessionService.GetOrCreateSignupToken()}");
 
 				}
 				catch (Exception ex) {
@@ -86,7 +86,7 @@ namespace CodeStream.VisualStudio.Controllers {
 			try {
 				using (var scope = _browserService.CreateScope(message)) {
 					try {
-						loginResponse = await _codeStreamAgent.LoginAsync(email, password, _settingsService.ServerUrl);
+						loginResponse = await _codeStreamAgent.LoginAsync(email, password, _settingsManager.ServerUrl);
 
 						var error = GetError(loginResponse);
 						if (error != null) {
@@ -108,7 +108,7 @@ namespace CodeStream.VisualStudio.Controllers {
 						}
 						else if (loginResponse != null) {
 							var state = GetState(loginResponse);
-							@params = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings(), state,
+							@params = await _codeStreamAgent.GetBootstrapAsync(_settingsManager.GetSettings(), state,
 								true);
 							_sessionService.SetUserLoggedIn(CreateUser(loginResponse));
 							success = true;
@@ -139,12 +139,12 @@ namespace CodeStream.VisualStudio.Controllers {
 				JToken @params = null;
 				var success = false;
 				using (var scope = _browserService.CreateScope(message)) {
-					if (_settingsService.AutoSignIn && !_settingsService.Email.IsNullOrWhiteSpace()) {
-						var token = await _credentialsService.LoadAsync(_settingsService.ServerUrl.ToUri(),
-							_settingsService.Email);
+					if (_settingsManager.AutoSignIn && !_settingsManager.Email.IsNullOrWhiteSpace()) {
+						var token = await _credentialsService.LoadAsync(_settingsManager.ServerUrl.ToUri(),
+							_settingsManager.Email);
 						if (token != null) {
-							var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(_settingsService.Email,
-								token.Item2, _settingsService.ServerUrl);
+							var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(_settingsManager.Email,
+								token.Item2, _settingsManager.ServerUrl);
 							try {
 								var error = GetError(loginResponse);
 								if (error != null) {
@@ -152,7 +152,7 @@ namespace CodeStream.VisualStudio.Controllers {
 								}
 								else if (loginResponse != null) {
 									var state = GetState(loginResponse);
-									@params = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings(),
+									@params = await _codeStreamAgent.GetBootstrapAsync(_settingsManager.GetSettings(),
 										state, true);
 									_sessionService.SetUserLoggedIn(CreateUser(loginResponse));
 									success = true;
@@ -164,11 +164,11 @@ namespace CodeStream.VisualStudio.Controllers {
 							}
 						}
 						else {
-							@params = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings());
+							@params = await _codeStreamAgent.GetBootstrapAsync(_settingsManager.GetSettings());
 						}
 					}
 					else {
-						@params = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings());
+						@params = await _codeStreamAgent.GetBootstrapAsync(_settingsManager.GetSettings());
 					}
 
 					scope.FulfillRequest(@params, errorResponse);
@@ -178,7 +178,7 @@ namespace CodeStream.VisualStudio.Controllers {
 					_eventAggregator.Publish(new SessionReadyEvent());
 				}
 				else {
-					await _credentialsService.DeleteAsync(_settingsService.ServerUrl.ToUri(), _settingsService.Email);
+					await _credentialsService.DeleteAsync(_settingsManager.ServerUrl.ToUri(), _settingsManager.Email);
 				}
 			}
 			catch (Exception ex) {
@@ -204,7 +204,7 @@ namespace CodeStream.VisualStudio.Controllers {
 						}
 
 						loginResponse =
-							await _codeStreamAgent.LoginViaOneTimeCodeAsync(token, _settingsService.ServerUrl);
+							await _codeStreamAgent.LoginViaOneTimeCodeAsync(token, _settingsManager.ServerUrl);
 
 						var error = GetError(loginResponse);
 						if (error != null) {
@@ -227,7 +227,7 @@ namespace CodeStream.VisualStudio.Controllers {
 						else if (loginResponse != null) {
 							email = GetEmail(loginResponse).ToString();
 							var state = GetState(loginResponse);
-							@params = await _codeStreamAgent.GetBootstrapAsync(_settingsService.GetSettings(), state,
+							@params = await _codeStreamAgent.GetBootstrapAsync(_settingsManager.GetSettings(), state,
 								true);
 							_sessionService.SetUserLoggedIn(CreateUser(loginResponse));
 							success = true;
@@ -257,11 +257,11 @@ namespace CodeStream.VisualStudio.Controllers {
 
 			if (!email.IsNullOrWhiteSpace()) {
 				await Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-				using (var scope = SettingsScope.Create(_settingsService)) {
-					scope.SettingsService.Email = email;
+				using (var scope = SettingsScope.Create(_settingsManager)) {
+					scope.SettingsManager.Email = email;
 				}
-				if (_settingsService.AutoSignIn) {
-					await _credentialsService.SaveAsync(_settingsService.ServerUrl.ToUri(), email, GetAccessToken(loginResponse).ToString());
+				if (_settingsManager.AutoSignIn) {
+					await _credentialsService.SaveAsync(_settingsManager.ServerUrl.ToUri(), email, GetAccessToken(loginResponse).ToString());
 				}
 			}
 

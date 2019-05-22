@@ -32,7 +32,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		private readonly Dictionary<Type, GlyphFactoryInfo> _glyphFactories;
 		private readonly IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> _glyphFactoryProviders;
 		private readonly ISessionService _sessionService;
-		private readonly ISettingsService _settingsService;
+		private readonly ISettingsManager _settingsManager;
 
 		private readonly ITagAggregator<IGlyphTag> _tagAggregator;
 		private readonly IWpfTextViewHost _wpfTextViewHost;
@@ -51,20 +51,20 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		/// <param name="glyphFactoryProviders"></param>
 		/// <param name="wpfTextViewHost"></param>
 		/// <param name="sessionService"></param>
-		/// <param name="settingsService"></param>
+		/// <param name="settingsManager"></param>
 		public DocumentMarkMargin(
 			IViewTagAggregatorFactoryService viewTagAggregatorFactoryService,
 			IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> glyphFactoryProviders,
 			IWpfTextViewHost wpfTextViewHost,
 			ISessionService sessionService,
-			ISettingsService settingsService) {
+			ISettingsManager settingsManager) {
 			_glyphFactoryProviders = glyphFactoryProviders;
 			_wpfTextViewHost = wpfTextViewHost;
 			_sessionService = sessionService;
-			_settingsService = settingsService;
+			_settingsManager = settingsManager;
 			try {
 				Assumes.Present(_sessionService);
-				Assumes.Present(_settingsService);
+				Assumes.Present(_settingsManager);
 			}
 			catch(Exception ex) {
 				Log.Error(ex, nameof(DocumentMarkMargin));
@@ -129,7 +129,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 						_wpfTextViewHost.TextView.ZoomLevelChanged += TextView_ZoomLevelChanged;
 
 						InitializeMargin();
-						if (_sessionService.AreMarkerGlyphsVisible || !_settingsService.AutoHideMarkers) {
+						if (_sessionService.AreMarkerGlyphsVisible || !_settingsManager.AutoHideMarkers) {
 							TryShowMargin();
 							RefreshMargin();
 						}
@@ -160,7 +160,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 
 		public void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
 			// no need to update when we're in 'spatial' view since it's not shown
-			if (_sessionService.IsCodemarksForFileVisible && _sessionService.IsWebViewVisible && _settingsService.AutoHideMarkers) return;
+			if (_sessionService.IsCodemarksForFileVisible && _sessionService.IsWebViewVisible && _settingsManager.AutoHideMarkers) return;
 
 			if (Visibility == Visibility.Hidden || Visibility == Visibility.Collapsed) return;
 
@@ -173,7 +173,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		public bool TryShowMargin() => this.TryShow();
 
 		public bool TryHideMargin() {
-			if (!_settingsService.AutoHideMarkers) return false;
+			if (!_settingsManager.AutoHideMarkers) return false;
 
 			return this.TryHide();
 		}

@@ -133,7 +133,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 								_componentModel.GetService<ICredentialsService>(),
 								_componentModel.GetService<ISessionService>(),
 								_componentModel.GetService<ICodeStreamAgentService>(),
-								_componentModel.GetService<ISettingsService>(),
+								_componentModel.GetService<ISettingsServiceFactory>(),
 								_eventAggregator,
 								_browserService,
 								_componentModel.GetService<IIdeService>(),

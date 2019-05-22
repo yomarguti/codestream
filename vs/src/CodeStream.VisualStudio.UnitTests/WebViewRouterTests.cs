@@ -19,7 +19,7 @@ namespace CodeStream.VisualStudio.UnitTests {
 				new Mock<ICredentialsService>().Object,
 				new Mock<ISessionService>().Object,
 				codeStreamAgentServiceMock.Object,
-				new Mock<ISettingsService>().Object,
+				new Mock<ISettingsServiceFactory>().Object,
 				new Mock<IEventAggregator>().Object,
 				browserServiceMock.Object,
 				new Mock<IIdeService>().Object,

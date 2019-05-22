@@ -19,7 +19,7 @@ namespace CodeStream.VisualStudio {
 		private readonly ICredentialsService _credentialsService;
 		private readonly ISessionService _sessionService;
 		private readonly ICodeStreamAgentService _codeStreamAgent;
-		private readonly ISettingsService _settingsService;
+		private readonly ISettingsManager _settingsManager;
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IBrowserService _browserService;
 		private readonly IIdeService _ideService;
@@ -30,7 +30,7 @@ namespace CodeStream.VisualStudio {
 			ICredentialsService credentialsService,
 			ISessionService sessionService,
 			ICodeStreamAgentService codeStreamAgent,
-			ISettingsService settingsService,
+			ISettingsServiceFactory settingsServiceFactory,
 			IEventAggregator eventAggregator,
 			IBrowserService browserService,
 			IIdeService ideService,
@@ -39,7 +39,7 @@ namespace CodeStream.VisualStudio {
 			_credentialsService = credentialsService;
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
-			_settingsService = settingsService;
+			_settingsManager = settingsServiceFactory.Create();
 			_eventAggregator = eventAggregator;
 			_browserService = browserService;
 			_ideService = ideService;
@@ -119,7 +119,7 @@ namespace CodeStream.VisualStudio {
 											await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 
 											var authenticationController = new AuthenticationController(
-												_settingsService,
+												_settingsManager,
 												_sessionService,
 												_codeStreamAgent,
 												_eventAggregator,
@@ -247,7 +247,7 @@ namespace CodeStream.VisualStudio {
 #if DEBUG
 												Log.LocalWarning(message.ToJson());
 #endif
-												//using (var scope = SettingsScope.Create(_settingsService))
+												//using (var scope = SettingsScope.Create(_settingsManager))
 												//{
 												//    var @params = message.Params.ToObject<UpdateConfigurationRequest>();
 												//    if (@params.Name == "showMarkerGlyphs")

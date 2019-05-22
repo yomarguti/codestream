@@ -56,7 +56,7 @@ namespace CodeStream.VisualStudio.LSP {
 			try {
 				_serviceProvider = serviceProvider;
 				_eventAggregator = eventAggregator;
-				_settingsService = settingsServiceFactory.Create();
+				_settingsManager = settingsServiceFactory.Create();
 
 				_languageServerProcess = new LanguageServerProcess();
 				CustomMessageTarget = new CustomMessageHandler(_eventAggregator, ipc);
@@ -67,7 +67,7 @@ namespace CodeStream.VisualStudio.LSP {
 			}
 		}
 
-		private readonly ISettingsService _settingsService;
+		private readonly ISettingsManager _settingsManager;
 
 		internal static LanguageClient Instance { get; private set; }
 		private JsonRpc _rpc;
@@ -79,16 +79,16 @@ namespace CodeStream.VisualStudio.LSP {
 		public object InitializationOptions {
 			get {
 				var initializationOptions = new InitializationOptions {
-					Extension = _settingsService.GetExtensionInfo(),
-					Ide = _settingsService.GetIdeInfo(),
+					Extension = _settingsManager.GetExtensionInfo(),
+					Ide = _settingsManager.GetIdeInfo(),
 #if DEBUG
 					TraceLevel = TraceLevel.Verbose.ToJsonValue(),
 					IsDebugging = true,
 #else
-                    TraceLevel = _settingsService.TraceLevel.ToJsonValue(),
+                    TraceLevel = _settingsManager.TraceLevel.ToJsonValue(),
 #endif
-					Proxy = _settingsService.Proxy,
-					ProxySupport = _settingsService.ProxySupport.ToJsonValue()
+					Proxy = _settingsManager.Proxy,
+					ProxySupport = _settingsManager.ProxySupport.ToJsonValue()
 				};
 				Log.Debug(nameof(InitializationOptions) + " {@InitializationOptions}", initializationOptions);
 
@@ -106,7 +106,7 @@ namespace CodeStream.VisualStudio.LSP {
 			await System.Threading.Tasks.Task.Yield();
 			Connection connection = null;
 			try {
-				var process = _languageServerProcess.Create(_settingsService?.TraceLevel);
+				var process = _languageServerProcess.Create(_settingsManager?.TraceLevel);
 
 				using (Log.CriticalOperation($"Starting server process. FileName={process.StartInfo.FileName} Arguments={process.StartInfo.Arguments}", Serilog.Events.LogEventLevel.Information)) {
 					if (process.Start()) {

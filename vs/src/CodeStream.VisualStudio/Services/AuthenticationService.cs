@@ -42,7 +42,7 @@ namespace CodeStream.VisualStudio.Services {
 		[Import]
 		public IBrowserService WebviewIpc { get; set; }
 		[Import]
-		public ISettingsService SettingsService { get; set; }
+		public ISettingsManager SettingsService { get; set; }
 
 		public async System.Threading.Tasks.Task LogoutAsync() {
 			try {

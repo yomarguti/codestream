@@ -41,7 +41,7 @@ namespace CodeStream.VisualStudio.Packages {
 	[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
 	public sealed class WebViewPackage : AsyncPackage {
 		private static readonly ILogger Log = LogManager.ForContext<WebViewPackage>();
-		private ISettingsService _settingsService;
+		private ISettingsManager _settingsManager;
 		private IDisposable _languageServerReadyEvent;
 		private VsShellEventManager _vsShellEventManager;
 		private CodeStreamEventManager _codeStreamEventManager;
@@ -77,7 +77,8 @@ namespace CodeStream.VisualStudio.Packages {
 			try {
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 				_componentModel = GetGlobalService(typeof(SComponentModel)) as IComponentModel;
-				_settingsService = _componentModel?.GetService<ISettingsService>();
+				var settingsServiceFactory = _componentModel?.GetService<ISettingsServiceFactory>();
+				_settingsManager = settingsServiceFactory.Create();
 
 				var isSolutionLoaded = await IsSolutionLoadedAsync();
 				if (isSolutionLoaded) {
@@ -100,7 +101,7 @@ namespace CodeStream.VisualStudio.Packages {
 
 		private async Task InitializeCommandsAsync() {
 			try {
-				var userCommand = new UserCommand();
+				var userCommand = new UserCommand(_settingsManager);
 
 				_commands = new List<VsCommandBase> {
 #if DEBUG
@@ -155,8 +156,8 @@ namespace CodeStream.VisualStudio.Packages {
 		}
 
 		void InitializeLogging() {
-			if (_settingsService != null && _settingsService.TraceLevel != TraceLevel.Silent) {
-				LogManager.SetTraceLevel(_settingsService.TraceLevel);
+			if (_settingsManager != null && _settingsManager.TraceLevel != TraceLevel.Silent) {
+				LogManager.SetTraceLevel(_settingsManager.TraceLevel);
 			}
 		}
 
@@ -261,22 +262,22 @@ namespace CodeStream.VisualStudio.Packages {
 		}
 
 		private void DialogPage_PropertyChanged(object sender, PropertyChangedEventArgs args) {
-			if (_settingsService == null) {
+			if (_settingsManager == null) {
 				Log.Warning($"{nameof(DialogPage_PropertyChanged)} SettingsService is null");
 				return;
 			}
 
-			if (args.PropertyName == nameof(_settingsService.TraceLevel)) {
-				LogManager.SetTraceLevel(_settingsService.TraceLevel);
+			if (args.PropertyName == nameof(_settingsManager.TraceLevel)) {
+				LogManager.SetTraceLevel(_settingsManager.TraceLevel);
 			}
-			else if (args.PropertyName == nameof(_settingsService.AutoHideMarkers)) {
+			else if (args.PropertyName == nameof(_settingsManager.AutoHideMarkers)) {
 				var odp = sender as OptionsDialogPage;
 				if (odp == null) return;
 				var eventAggregator = _componentModel.GetService<IEventAggregator>();
 				eventAggregator?.Publish(new AutoHideMarkersEvent { Value = odp.AutoHideMarkers });
 			}
-			else if (args.PropertyName == nameof(_settingsService.ShowAvatars) ||
-				args.PropertyName == nameof(_settingsService.ShowMarkerGlyphs)) {
+			else if (args.PropertyName == nameof(_settingsManager.ShowAvatars) ||
+				args.PropertyName == nameof(_settingsManager.ShowMarkerGlyphs)) {
 				var odp = sender as OptionsDialogPage;
 				if (odp == null) return;
 
@@ -286,19 +287,19 @@ namespace CodeStream.VisualStudio.Packages {
 				);
 
 				switch (args.PropertyName) {
-					case nameof(_settingsService.ShowAvatars):
+					case nameof(_settingsManager.ShowAvatars):
 						configurationController.ToggleShowAvatars(odp.ShowAvatars);
 						break;
-					case nameof(_settingsService.ShowMarkerGlyphs):
+					case nameof(_settingsManager.ShowMarkerGlyphs):
 						configurationController.ToggleShowMarkerGlyphs(odp.ShowMarkerGlyphs);
 						break;
 				}
 			}
-			else if (args.PropertyName == nameof(_settingsService.WebAppUrl) ||
-					 args.PropertyName == nameof(_settingsService.ServerUrl) ||
-					 args.PropertyName == nameof(_settingsService.Team) ||
-					 args.PropertyName == nameof(_settingsService.ProxyUrl) ||
-					 args.PropertyName == nameof(_settingsService.ProxyStrictSsl)) {
+			else if (args.PropertyName == nameof(_settingsManager.WebAppUrl) ||
+					 args.PropertyName == nameof(_settingsManager.ServerUrl) ||
+					 args.PropertyName == nameof(_settingsManager.Team) ||
+					 args.PropertyName == nameof(_settingsManager.ProxyUrl) ||
+					 args.PropertyName == nameof(_settingsManager.ProxyStrictSsl)) {
 				Log.Information($"Url(s) or Team or Proxy changed");
 				var sessionService = _componentModel.GetService<ISessionService>();
 				if (sessionService?.IsAgentReady == true || sessionService?.IsReady == true) {
@@ -310,8 +311,8 @@ namespace CodeStream.VisualStudio.Packages {
 
 		private async Task OnSolutionLoadedInitialAsync() {
 			await OnSolutionLoadedAlwaysAsync();
-			if (_settingsService != null) {
-				_settingsService.DialogPage.PropertyChanged += DialogPage_PropertyChanged;
+			if (_settingsManager != null) {
+				_settingsManager.DialogPage.PropertyChanged += DialogPage_PropertyChanged;
 			}
 
 			await Task.CompletedTask;
@@ -330,8 +331,8 @@ namespace CodeStream.VisualStudio.Packages {
 #pragma warning restore VSTHRD108
 					SolutionEvents.OnAfterBackgroundSolutionLoadComplete -= OnAfterBackgroundSolutionLoadComplete;
 
-					if (_settingsService != null && _settingsService.DialogPage != null) {
-						_settingsService.DialogPage.PropertyChanged -= DialogPage_PropertyChanged;
+					if (_settingsManager != null && _settingsManager.DialogPage != null) {
+						_settingsManager.DialogPage.PropertyChanged -= DialogPage_PropertyChanged;
 					}
 
 					_vsShellEventManager?.Dispose();

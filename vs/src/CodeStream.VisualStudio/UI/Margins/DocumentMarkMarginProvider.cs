@@ -50,12 +50,12 @@ namespace CodeStream.VisualStudio.UI.Margins {
 
 				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
 				var sessionService = componentModel?.GetService<ISessionService>();
-				var settingsService = componentModel?.GetService<ISettingsService>();
+				var settingsServiceFactory = componentModel?.GetService<ISettingsServiceFactory>();
 
 				TextViewMargin = new DocumentMarkMargin(
 					_viewTagAggregatorFactoryService,
 					_glyphFactoryProviders,
-					wpfTextViewHost, sessionService, settingsService
+					wpfTextViewHost, sessionService, settingsServiceFactory.Create()
 				);
 
 				return TextViewMargin;

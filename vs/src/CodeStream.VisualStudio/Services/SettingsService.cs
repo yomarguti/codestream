@@ -4,28 +4,38 @@ using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.UI.Settings;
 using System;
 using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.Shell;
 using Serilog;
 using CodeStream.VisualStudio.Core;
 
 namespace CodeStream.VisualStudio.Services {
 	public interface ISettingsServiceFactory {
-		ISettingsService Create();
+		ISettingsManager Create();
 	}
 
 	[Export(typeof(ISettingsServiceFactory))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
-	public class SettingsServiceFactory : ServiceFactory<ISettingsService>, ISettingsServiceFactory {
+	public class SettingsServiceFactory : ISettingsServiceFactory {
 		private static readonly ILogger Log = LogManager.ForContext<SettingsServiceFactory>();
 
-		[ImportingConstructor]
-		public SettingsServiceFactory([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) :
-			base(serviceProvider) {
-		}
+		private volatile ISettingsManager _settingsManager = null;
+		private static readonly object locker = new object();
 
-		public override ISettingsService Create() {
+		public virtual ISettingsManager Create() {
 			try {
-				return base.Create();
+				if (_settingsManager == null) {
+					lock (locker) {
+						if (_settingsManager == null) {
+							var result = new SettingsManager();
+							result.Initialize();							
+							
+							Log.Verbose($"{nameof(Create)} Initialized");
+							_settingsManager = result;
+						}
+					}
+				}
+
+				Log.Verbose($"{nameof(Create)}d");
+				return _settingsManager;
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(Create));
@@ -34,7 +44,7 @@ namespace CodeStream.VisualStudio.Services {
 		}
 	}
 
-	public interface ISettingsService : IOptions {
+	public interface ISettingsManager : IOptions {
 		void SaveSettingsToStorage();
 		Settings GetSettings();
 		TraceLevel TraceLevel { get; set; }
@@ -45,6 +55,7 @@ namespace CodeStream.VisualStudio.Services {
 		Ide GetIdeInfo();
 		Extension GetExtensionInfo();
 		Proxy Proxy { get; }
+		System.Threading.Tasks.Task InitializeAsync();
 	}
 
 	public class Settings {
@@ -59,36 +70,29 @@ namespace CodeStream.VisualStudio.Services {
 		public string Version { get; set; }
 	}
 
-	[Export(typeof(ISettingsService))]
-	[PartCreationPolicy(CreationPolicy.Shared)]
-	public class SettingsService : ISettingsService, IOptions {
+	public class SettingsManager : ISettingsManager, IOptions {
 
 		// once we don't support VS 2017, we'll be able to use something like...
 		// the _lazy.GetValue() method only exists on the v16.0 version of MS.VS.Threading assembly
 
-		//private readonly AsyncLazy<IOptionsDialogPage> _lazy = new AsyncLazy<IOptionsDialogPage>(async () => {			
-		//	var dialogPage = await OptionsDialogPage.GetLiveInstanceAsync();			
+		//private readonly AsyncLazy<IOptionsDialogPage> _lazy = new AsyncLazy<IOptionsDialogPage>(async () => {
+		//	var dialogPage = await OptionsDialogPage.GetLiveInstanceAsync();
 		//	return dialogPage;
 		//}, ThreadHelper.JoinableTaskFactory);
 
-		private IOptionsDialogPage _dialogPage;
-		private static readonly object locker = new object();
 
-		public IOptionsDialogPage DialogPage {
-			get {
-				lock (locker) {
-					if (_dialogPage == null) {
-						ThreadHelper.JoinableTaskFactory.Run(async delegate {
-							_dialogPage = await OptionsDialogPage.GetLiveInstanceAsync();
-						});
-					}
-				}
-				return _dialogPage;
-			}
+		//By using this your pain will be legendary, even in hell.
+		public async System.Threading.Tasks.Task InitializeAsync() {
+			DialogPage = await OptionsDialogPage.GetLiveInstanceAsync();
 		}
 
-		[ImportingConstructor]
-		public SettingsService() { }
+		public void Initialize() {
+			DialogPage = OptionsDialogPage.GetLiveInstance();
+		}
+
+		public IOptionsDialogPage DialogPage { get; private set;  }
+ 
+		public SettingsManager() { }
 
 
 		public void SaveSettingsToStorage() {
@@ -149,7 +153,6 @@ namespace CodeStream.VisualStudio.Services {
 			get => DialogPage.AutoHideMarkers;
 			set => DialogPage.AutoHideMarkers = value;
 		}
-
 
 		public string ProxyUrl {
 			get => DialogPage.ProxyUrl;
@@ -224,10 +227,10 @@ namespace CodeStream.VisualStudio.Services {
 	}
 
 	public class SettingsScope : IDisposable {
-		public ISettingsService SettingsService { get; private set; }
+		public ISettingsManager SettingsManager { get; private set; }
 
-		private SettingsScope(ISettingsService settingsService) {
-			SettingsService = settingsService;
+		private SettingsScope(ISettingsManager settingsManager) {
+			SettingsManager = settingsManager;
 		}
 
 		private bool _disposed;
@@ -240,14 +243,14 @@ namespace CodeStream.VisualStudio.Services {
 			if (_disposed) return;
 
 			if (disposing) {
-				SettingsService?.SaveSettingsToStorage();
+				SettingsManager?.SaveSettingsToStorage();
 			}
 
 			_disposed = true;
 		}
 
-		public static SettingsScope Create(ISettingsService settingsService) {
-			return new SettingsScope(settingsService);
+		public static SettingsScope Create(ISettingsManager settingsManager) {
+			return new SettingsScope(settingsManager);
 		}
 	}
 }

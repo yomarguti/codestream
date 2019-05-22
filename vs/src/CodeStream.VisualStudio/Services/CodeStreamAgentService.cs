@@ -69,7 +69,7 @@ namespace CodeStream.VisualStudio.Services {
 
 		private readonly ISessionService _sessionService;
 		private readonly IEventAggregator _eventAggregator;
-		private readonly ISettingsService _settingsService;
+		private readonly ISettingsManager _settingsManager;
 
 		[ImportingConstructor]
 		public CodeStreamAgentService(
@@ -79,9 +79,9 @@ namespace CodeStream.VisualStudio.Services {
 			_eventAggregator = eventAggregator;
 			_sessionService = sessionService;
 			try {
-				_settingsService = settingsServiceFactory.Create();
-				if (_eventAggregator == null || _sessionService == null || _settingsService == null) {
-					Log.Error($"_eventAggregatorIsNull={_eventAggregator == null},_sessionServiceIsNull={_sessionService == null},_settingsServiceIsNull={_settingsService == null}");
+				_settingsManager = settingsServiceFactory.Create();
+				if (_eventAggregator == null || _sessionService == null || _settingsManager == null) {
+					Log.Error($"_eventAggregatorIsNull={_eventAggregator == null},_sessionServiceIsNull={_sessionService == null},_settingsManagerIsNull={_settingsManager == null}");
 				}
 			}
 			catch (Exception ex) {
@@ -240,13 +240,13 @@ namespace CodeStream.VisualStudio.Services {
 				Email = email,
 				PasswordOrToken = new LoginAccessToken(email, serverUrl, token),
 				ServerUrl = serverUrl,
-				Extension = _settingsService.GetExtensionInfo(),
-				Ide = _settingsService.GetIdeInfo(),
+				Extension = _settingsManager.GetExtensionInfo(),
+				Ide = _settingsManager.GetIdeInfo(),
 #if DEBUG
 				TraceLevel = TraceLevel.Verbose.ToJsonValue(),
 				IsDebugging = true
 #else
-                TraceLevel = _settingsService.TraceLevel.ToJsonValue()
+                TraceLevel = _settingsManager.TraceLevel.ToJsonValue()
 #endif
 			});
 		}
@@ -255,20 +255,20 @@ namespace CodeStream.VisualStudio.Services {
 			return SendCoreAsync<JToken>("codestream/login", new LoginRequest {
 				SignupToken = signupToken,
 				ServerUrl = serverUrl,
-				Extension = _settingsService.GetExtensionInfo(),
-				Ide = _settingsService.GetIdeInfo(),
+				Extension = _settingsManager.GetExtensionInfo(),
+				Ide = _settingsManager.GetIdeInfo(),
 #if DEBUG
 				TraceLevel = TraceLevel.Verbose.ToJsonValue(),
 				IsDebugging = true
 #else
-                TraceLevel = _settingsService.TraceLevel.ToJsonValue()
+                TraceLevel = _settingsManager.TraceLevel.ToJsonValue()
 #endif
 			});
 		}
 
 		public Task<JToken> LoginAsync(string email, string password, string serverUrl) {
-			var extensionInfo = _settingsService.GetExtensionInfo();
-			var ideInfo = _settingsService.GetIdeInfo();
+			var extensionInfo = _settingsManager.GetExtensionInfo();
+			var ideInfo = _settingsManager.GetIdeInfo();
 
 			return SendCoreAsync<JToken>("codestream/login", new LoginRequest {
 				Email = email,
@@ -280,7 +280,7 @@ namespace CodeStream.VisualStudio.Services {
 				TraceLevel = TraceLevel.Verbose.ToJsonValue(),
 				IsDebugging = true
 #else
-                TraceLevel = _settingsService.TraceLevel.ToJsonValue()
+                TraceLevel = _settingsManager.TraceLevel.ToJsonValue()
 #endif
 			});
 		}
@@ -320,14 +320,14 @@ namespace CodeStream.VisualStudio.Services {
 				var bootstrapAnonymous = new BootstrapPartialResponseAnonymous {
 					Capabilities = capabilitiesObject,
 					Configs = new Configs {
-						Email = _settingsService.Email,
-						Team = _settingsService.Team,
-						ShowAvatars = _settingsService.ShowAvatars,
-						ServerUrl = _settingsService.ServerUrl,
-						TraceLevel = _settingsService.TraceLevel
+						Email = _settingsManager.Email,
+						Team = _settingsManager.Team,
+						ShowAvatars = _settingsManager.ShowAvatars,
+						ServerUrl = _settingsManager.ServerUrl,
+						TraceLevel = _settingsManager.TraceLevel
 					},
-					Env = _settingsService.GetEnvironmentName(),
-					Version = _settingsService.GetEnvironmentVersionFormatted()
+					Env = _settingsManager.GetEnvironmentName(),
+					Version = _settingsManager.GetEnvironmentVersionFormatted()
 				}.ToJToken();
 #if DEBUG
 				Log.Debug(bootstrapAnonymous?.ToString());
@@ -366,7 +366,7 @@ namespace CodeStream.VisualStudio.Services {
 					Team = settings.Options.Team,
 					ShowAvatars = settings.Options.ShowAvatars,
 					ServerUrl = settings.Options.ServerUrl,
-					TraceLevel = _settingsService.TraceLevel
+					TraceLevel = _settingsManager.TraceLevel
 				},
 				Context = webviewContext,
 				EditorContext = editorContext,

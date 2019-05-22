@@ -42,6 +42,12 @@ namespace CodeStream.VisualStudio.UI.Settings {
 		/// </summary>
 		public static Task<T> GetLiveInstanceAsync() => _liveModel.GetValueAsync();
 
+		public static T GetLiveInstance() {
+			var instance = new T();
+			instance.Load();
+			return instance;
+		}
+
 		/// <summary>
 		/// Creates a new instance of the options class and loads the values from the store. For internal use only
 		/// </summary>
@@ -61,7 +67,30 @@ namespace CodeStream.VisualStudio.UI.Settings {
 		/// Hydrates the properties from the registry.
 		/// </summary>
 		public virtual void Load() {
-			ThreadHelper.JoinableTaskFactory.Run(LoadAsync);
+			var svc = Package.GetGlobalService(typeof(SVsSettingsManager)) as IVsSettingsManager;
+			Assumes.Present(svc);		 
+
+			ShellSettingsManager manager = new ShellSettingsManager(svc);
+			SettingsStore settingsStore = manager.GetReadOnlySettingsStore(SettingsScope.UserSettings);
+
+			if (!settingsStore.CollectionExists(CollectionName)) return;
+
+			foreach (var property in GetOptionProperties()) {
+				try {
+					var serializedProp = settingsStore.GetString(CollectionName, property.Name);
+					object value = DeserializeValue(serializedProp, property.PropertyType);
+					property.SetValue(this, value);
+				}
+				catch (ArgumentException) {
+					//die
+				}
+				catch (Exception ex) {
+#if DEBUG
+					System.Diagnostics.Debug.WriteLine(ex);
+					System.Diagnostics.Debugger.Break();
+#endif
+				}
+			}			
 		}
 
 		/// <summary>

@@ -12,19 +12,23 @@ namespace CodeStream.VisualStudio.Commands {
 		private static readonly ILogger Log = LogManager.ForContext<UserCommand>();
 
 		public const string DefaultText = "Sign In...";
-		public UserCommand() : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.UserCommandId) { }
+		private readonly ISettingsManager _settingsManager;
+
+		public UserCommand(ISettingsManager settingManager) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.UserCommandId) {
+			_settingsManager = settingManager;
+		}
 
 		public void TriggerChange() {
 			OnBeforeQueryStatus(this, null);
 		}
+
 		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e) {
 			try {
 				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
 				var sessionService = componentModel?.GetService<ISessionService>();
 
-				if (sessionService?.IsReady == true) {
-					var settingsService = componentModel.GetService<ISettingsService>();
-					var env = settingsService?.GetUsefulEnvironmentName();
+				if (sessionService?.IsReady == true) {					
+					var env = _settingsManager?.GetUsefulEnvironmentName();
 					var label = env.IsNullOrWhiteSpace()
 						? sessionService.User.UserName
 						: $"{env}: {sessionService.User.UserName}";
