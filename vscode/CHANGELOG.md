@@ -2,9 +2,15 @@
 
 ## [1.0.2] - 2019-5-22
 
+### Changed
+
+- Desktop notifications now default to off for users on Slack teams
+
 ### Fixed
 
 - Fixes an issue where a new codemark sometimes wouldn't appear right away
+- Fixes an issue where git repos with remote URLs containing port numbers would prevent codemarks from being displayed properly
+- Fixes [#61](https://github.com/TeamCodeStream/CodeStream/issues/61) &mdash; Formatting issues with codemarks
 
 ## [1.0.1] - 2019-5-15
 
