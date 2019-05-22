@@ -12,6 +12,7 @@ export interface CSEntity {
 }
 
 export enum ProviderType {
+	MSTeams = "msteams",
 	Slack = "slack"
 }
 
@@ -114,7 +115,7 @@ export interface CSPost extends CSEntity {
 	seqNum: number | string;
 	hasBeenEdited: boolean;
 	mentionedUserIds?: string[];
-	origin?: "email" | "slack" | "teams";
+	origin?: "email" | "slack" | "msteams";
 	reactions?: { [key: string]: string[] };
 	codemarkId?: string;
 	files?: [
@@ -212,6 +213,10 @@ export interface CSFileStream extends CSEntity {
 
 export type CSStream = CSChannelStream | CSDirectStream | CSFileStream;
 
+export interface CSTeamMSTeamsProviderInfo {
+	teamId: string;
+}
+
 export interface CSTeamSlackProviderInfo {
 	teamId: string;
 }
@@ -227,6 +232,7 @@ export interface CSTeam extends CSEntity {
 	primaryReferral: "internal" | "external";
 	integrations?: { [key: string]: { enabled: boolean } };
 	providerInfo?: {
+		msteams?: CSTeamMSTeamsProviderInfo;
 		slack?: CSTeamSlackProviderInfo;
 	};
 	providerHosts?: ThirdPartyProviders;
@@ -267,11 +273,26 @@ export interface CSJiraProviderInfo {
 	hosts: { [hosts: string]: CSJiraProviderInfo };
 }
 
+export interface CSMSTeamsProviderInfo {
+	accessToken: string;
+	data: {
+		expires_in: number;
+		scope: string;
+		token_type: string;
+	};
+	expiresAt: number;
+	refreshToken: string;
+
+	teamId: string;
+	userId: string;
+	hosts?: { [host: string]: CSMSTeamsProviderInfo };
+}
+
 export interface CSSlackProviderInfo {
 	accessToken: string;
 	teamId: string;
 	userId: string;
-	hosts: { [host: string]: CSSlackProviderInfo };
+	hosts?: { [host: string]: CSSlackProviderInfo };
 }
 
 export interface CSTrelloProviderInfo {
@@ -350,12 +371,13 @@ export interface CSMePreferences {
 export interface CSMe extends CSUser {
 	lastReads: CSLastReads;
 	joinMethod: string;
-	preferences: CSMePreferences;
+	preferences?: CSMePreferences;
 	providerInfo?: { slack?: CSSlackProviderInfo } & {
 		[teamId in string]: {
 			asana?: CSAsanaProviderInfo;
 			github?: CSGitHubProviderInfo;
 			jira?: CSJiraProviderInfo;
+			msteams?: CSMSTeamsProviderInfo;
 			slack?: CSSlackProviderInfo;
 			trello?: CSTrelloProviderInfo;
 			youtrack?: CSYouTrackProviderInfo;

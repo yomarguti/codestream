@@ -343,6 +343,11 @@ class PostsCache extends EntityCache<CSPost> {
 		this.fetchPosts = cfg.fetchPosts;
 		this.postIndex = new PostIndex(cfg.fetchPosts);
 		this.indexes.set("streamId", this.postIndex);
+
+		// TODO: REMOVE THIS!
+		setInterval(() => {
+			this.invalidate();
+		}, 5000);
 	}
 
 	@debug({

@@ -40,6 +40,7 @@
         "test-unit-ci": "npm run test-unit -- --reporter mocha-teamcity-reporter"
     },
     "dependencies": {
+        "@microsoft/microsoft-graph-client": "1.7.0",
         "@sentry/node": "4.6.3",
         "@types/analytics-node": "^3.1.1",
         "@types/socketcluster-client": "13.0.2",
@@ -62,6 +63,7 @@
         "write-file-atomic": "2.4.2"
     },
     "devDependencies": {
+        "@microsoft/microsoft-graph-types": "1.9.0",
         "@sentry/types": "4.5.3",
         "@slack/client": "4.9.0",
         "@types/chai": "4.1.7",

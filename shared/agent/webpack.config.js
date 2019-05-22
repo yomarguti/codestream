@@ -101,7 +101,6 @@ module.exports = function(env, argv) {
 			]
 		},
 		externals: {
-			encoding: "encoding"
 			// these are commented out for good reason ... the socketcluster library we use for
 			// pubsub in on-prem will crash if we have these in here ... instead we'll live with
 			// a warning from webpack's agent watch - Colin

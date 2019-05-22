@@ -461,7 +461,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 						) {
 							this._unreads.compute(me.lastReads);
 						}
-						if (this._preferences && me.preferences) {
+						if (this._preferences && me.preferences && this._user.preferences) {
 							this._preferences.update(this._user.preferences);
 						}
 					} catch {
@@ -521,7 +521,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			type: MessageType.Users,
 			data: [update.user]
 		})) as CSMe[];
-		return { preferences: user.preferences };
+		return { preferences: user.preferences || {} };
 	}
 
 	@log()
@@ -1176,6 +1176,28 @@ export class CodeStreamApiProvider implements ApiProvider {
 				params,
 				this._token
 			));
+		} catch (ex) {
+			Logger.error(ex, cc);
+			throw ex;
+		}
+	}
+
+	@log()
+	async refreshAuthProvider(request: { providerId: string; refreshToken: string }): Promise<CSMe> {
+		const cc = Logger.getCorrelationContext();
+
+		try {
+			const url = `/provider-refresh/${request.providerId}?teamId=${this.teamId}&refreshToken=${
+				request.refreshToken
+			}`;
+			const response = await this.get<{ user: any }>(url, this._token);
+
+			// const [user] = await Container.instance().users.resolve({
+			// 	type: MessageType.Users,
+			// 	data: [response.user]
+			// });
+
+			return response.user as CSMe;
 		} catch (ex) {
 			Logger.error(ex, cc);
 			throw ex;

@@ -20,6 +20,7 @@ import {
 	VersionMiddlewareManager
 } from "./api/middleware/versionMiddleware";
 import { SlackApiProvider } from "./api/slack/slackApi";
+import { MSTeamsApiProvider } from "./api/teams/teamsApi";
 import { Container, SessionContainer } from "./container";
 import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
@@ -586,13 +587,30 @@ export class CodeStreamSession {
 				}) is a Slack-based team`
 			);
 
-			this._api = this.newSlackApiProvider(response);
+			this._api = this.newSlackApiProvider(response.user);
 			await (this._api as SlackApiProvider).processLoginResponse(response);
 
 			Logger.log(
 				cc,
 				`Logged into Slack as '${response.user.username}' (${response.user.id}), Slack team ${
 					currentTeam.providerInfo.slack.teamId
+				}`
+			);
+		} else if (User.isMSTeams(response.user) && Team.isMSTeams(currentTeam)) {
+			Logger.log(
+				cc,
+				`Logging into MS Teams because team '${currentTeam.name}' (${
+					currentTeam.id
+				}) is a MS Teams-based team`
+			);
+
+			this._api = this.newMSTeamsApiProvider(response.user);
+			await (this._api as MSTeamsApiProvider).processLoginResponse(response);
+
+			Logger.log(
+				cc,
+				`Logged into MS Teams as '${response.user.username}' (${response.user.id}), MS Teams team ${
+					currentTeam.providerInfo.msteams.teamId
 				}`
 			);
 		}
@@ -736,13 +754,22 @@ export class CodeStreamSession {
 		}
 	}
 
-	protected newSlackApiProvider(response: any) {
+	protected newMSTeamsApiProvider(user: CSMe) {
+		return new MSTeamsApiProvider(
+			this._api! as CodeStreamApiProvider,
+			(user.providerInfo![this._teamId!] && user.providerInfo![this._teamId!].msteams)!,
+			user,
+			this._teamId!,
+			this._proxyAgent
+		);
+	}
+
+	protected newSlackApiProvider(user: CSMe) {
 		return new SlackApiProvider(
 			this._api! as CodeStreamApiProvider,
-			response.user.providerInfo.slack ||
-				(response.user.providerInfo[this._teamId!] &&
-					response.user.providerInfo[this._teamId!].slack),
-			response.user,
+			user.providerInfo!.slack ||
+				(user.providerInfo![this._teamId!] && user.providerInfo![this._teamId!].slack)!,
+			user,
 			this._teamId!,
 			this._proxyAgent
 		);

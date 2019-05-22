@@ -1312,7 +1312,7 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	private async getInitialPreferences() {
 		const { user } = await this.getMe();
-		return user.preferences;
+		return user.preferences || {};
 	}
 
 	@log({
@@ -2273,16 +2273,14 @@ export class SlackApiProvider implements ApiProvider {
 
 		const timeoutMs = 30000;
 		try {
-			const response = await Functions.timeout(
+			const response = await Functions.cancellable(
 				typeof fnOrMethod === "string"
 					? this._slack.apiCall(fnOrMethod, request)
 					: fnOrMethod(request),
 				timeoutMs,
 				{
-					message: cc && cc.prefix,
-					onTimeout: (resolve, reject, message) => {
-						Logger.warn(cc, `TIMEOUT ${timeoutMs / 1000}s exceeded`);
-					}
+					cancelMessage: cc && cc.prefix,
+					onDidCancel: (resolve, reject) => Logger.warn(cc, `TIMEOUT ${timeoutMs / 1000}s exceeded`)
 				}
 			);
 			if (Container.instance().session.recordRequests) {

@@ -7,6 +7,7 @@ import {
 	CSMarkerLocation,
 	CSMarkerLocations,
 	CSMe,
+	CSMSTeamsProviderInfo,
 	CSProviderInfos,
 	CSSlackProviderInfo,
 	CSTeam
@@ -217,6 +218,12 @@ export namespace Ranges {
 	}
 }
 export namespace Team {
+	export function isMSTeams(
+		team: CSTeam
+	): team is CSTeam & { providerInfo: { msteams: CSMSTeamsProviderInfo } } {
+		return team.providerInfo != null && team.providerInfo.msteams != null;
+	}
+
 	export function isSlack(
 		team: CSTeam
 	): team is CSTeam & { providerInfo: { slack: CSSlackProviderInfo } } {
@@ -225,6 +232,16 @@ export namespace Team {
 }
 
 export namespace User {
+	export function isMSTeams(
+		me: CSMe
+	): me is CSMe & { providerInfo: { msteams: CSMSTeamsProviderInfo } } {
+		return (
+			me.providerInfo != null &&
+			(me.providerInfo.msteams != null ||
+				Object.values(me.providerInfo).some(provider => provider.msteams != null))
+		);
+	}
+
 	export function isSlack(me: CSMe): me is CSMe & { providerInfo: { slack: CSSlackProviderInfo } } {
 		return (
 			me.providerInfo != null &&

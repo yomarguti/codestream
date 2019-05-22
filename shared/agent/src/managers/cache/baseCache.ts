@@ -75,7 +75,7 @@ export class BaseCache<T> {
 	 *
 	 * @return Entity or `undefined`
 	 */
-	@debug<BaseCache<T>>({
+	@debug<BaseCache<T>, BaseCache<T>["get"]>({
 		prefix: context =>
 			`[${context.id}] ${context.instance.entityName}${
 				context.instanceName ? `${context.instanceName}.` : ""

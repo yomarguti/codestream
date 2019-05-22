@@ -1,5 +1,6 @@
 "use strict";
 import { debounce as _debounce, memoize as _memoize } from "lodash-es";
+import { CancellationToken } from "vscode-jsonrpc";
 
 export interface IDeferrable {
 	cancel(): void;
@@ -27,6 +28,81 @@ export namespace Functions {
 			}
 			return fn(...args);
 		};
+	}
+
+	export function cancellable<T>(
+		promise: Thenable<T>,
+		timeoutMs: number,
+		options?: {
+			cancelMessage?: string;
+			onDidCancel?(
+				resolve: (value?: T | PromiseLike<T> | undefined) => void,
+				reject: (reason?: any) => void
+			): void;
+		}
+	): Promise<T>;
+	export function cancellable<T>(
+		promise: Thenable<T>,
+		token: CancellationToken,
+		options?: {
+			cancelMessage?: string;
+			onDidCancel?(
+				resolve: (value?: T | PromiseLike<T> | undefined) => void,
+				reject: (reason?: any) => void
+			): void;
+		}
+	): Promise<T>;
+	export function cancellable<T>(
+		promise: Thenable<T>,
+		timeoutOrToken: CancellationToken | number,
+		options: {
+			cancelMessage?: string;
+			onDidCancel?(
+				resolve: (value?: T | PromiseLike<T> | undefined) => void,
+				reject: (reason?: any) => void
+			): void;
+		} = {}
+	): Promise<T> {
+		return new Promise((resolve, reject) => {
+			let fulfilled = false;
+			let timer: NodeJS.Timer | undefined;
+			if (typeof timeoutOrToken === "number") {
+				timer = setTimeout(() => {
+					if (typeof options.onDidCancel === "function") {
+						options.onDidCancel(resolve, reject);
+					} else {
+						reject(new Error(options.cancelMessage || "TIMED OUT"));
+					}
+				}, timeoutOrToken);
+			} else {
+				timeoutOrToken.onCancellationRequested(() => {
+					if (fulfilled) return;
+
+					if (typeof options.onDidCancel === "function") {
+						options.onDidCancel(resolve, reject);
+					} else {
+						reject(new Error(options.cancelMessage || "CANCELLED"));
+					}
+				});
+			}
+
+			promise.then(
+				() => {
+					fulfilled = true;
+					if (timer !== undefined) {
+						clearTimeout(timer);
+					}
+					resolve(promise);
+				},
+				ex => {
+					fulfilled = true;
+					if (timer !== undefined) {
+						clearTimeout(timer);
+					}
+					reject(ex);
+				}
+			);
+		});
 	}
 
 	interface DebounceOptions {
@@ -252,40 +328,6 @@ export namespace Functions {
 						timer = undefined;
 					}
 
-					reject(ex);
-				}
-			);
-		});
-	}
-
-	export function timeout<T>(
-		promise: Promise<T>,
-		timeoutMs: number,
-		options: {
-			message?: string;
-			onTimeout?(
-				resolve: (value?: T | PromiseLike<T> | undefined) => void,
-				reject: (reason?: any) => void,
-				message: string | undefined
-			): void;
-		} = {}
-	): Promise<T> {
-		return new Promise((resolve, reject) => {
-			const timer = setTimeout(() => {
-				if (typeof options.onTimeout === "function") {
-					options.onTimeout(resolve, reject, options.message);
-				} else {
-					reject(new Error(options.message ? `${options.message} TIMED OUT` : "TIMED OUT"));
-				}
-			}, timeoutMs);
-
-			promise.then(
-				() => {
-					clearTimeout(timer);
-					resolve(promise);
-				},
-				ex => {
-					clearTimeout(timer);
 					reject(ex);
 				}
 			);
