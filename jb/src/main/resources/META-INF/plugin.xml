@@ -72,7 +72,7 @@
     <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/59">#59</a> - IndexOutOfBoundsException</li>
     <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/61">#61</a> -  Formatting issues with codemarks</li>
     <li>Prevent error when the first character of a document is in a collapsed region</li>
-    <li>Suppresses unncessary error reporting</li>
+    <li>Suppresses unnecessary error reporting</li>
 </ul>
 <h4 id="1_0_1">1.0.1</h4>
 <h5>Added</h5>
