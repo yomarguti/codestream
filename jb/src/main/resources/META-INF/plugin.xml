@@ -68,6 +68,7 @@
 <h5>Fixed</h5>
 <ul>
     <li>Fixes an issue where a new codemark sometimes wouldn't appear right away</li>
+    <li>Fixes an issue where git repos with remote URLs containing port numbers would prevent codemarks from being displayed properly</li>
     <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/59">#59</a> - IndexOutOfBoundsException</li>
     <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/61">#61</a> -  Formatting issues with codemarks</li>
     <li>Prevent error when the first character of a document is in a collapsed region</li>
