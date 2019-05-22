@@ -10,11 +10,14 @@ import { ChildProcess, spawn } from "child_process";
 import { FileLogger } from "logger";
 import {
 	ConfigurationParams,
+	DidChangeWorkspaceFoldersNotification,
+	DidChangeWorkspaceFoldersParams,
 	LogMessageParams,
 	MessageType,
 	NotificationType,
 	RegistrationParams,
 	RequestType,
+	WorkspaceFoldersChangeEvent,
 } from "vscode-languageserver-protocol";
 import {
 	AccessToken,
@@ -234,17 +237,18 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 		rpc.onRequest("client/registerCapability", (params: RegistrationParams) => {
 			params.registrations.forEach(registration => {
 				// TODO: register workspace/didChangeConfiguration
-				if (registration.method === "workspace/didChangeWorkspaceFolders") {
+				if (registration.method === DidChangeWorkspaceFoldersNotification.type.method) {
 					this.subscriptions.add(
 						atom.project.onDidChangePaths(() => {
-							connection.sendCustomNotification("workspace/didChangeWorkspaceFolders", {
+							connection.sendCustomNotification(DidChangeWorkspaceFoldersNotification.type.method, {
 								event: {
 									added: atom.project.getDirectories().map(dir => ({
 										uri: Convert.pathToUri(dir.getPath()),
 										name: dir.getBaseName(),
 									})),
-								},
-							});
+									removed: [],
+								} as WorkspaceFoldersChangeEvent,
+							} as DidChangeWorkspaceFoldersParams);
 						})
 					);
 				}
