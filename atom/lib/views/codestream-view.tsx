@@ -348,6 +348,7 @@ export class CodestreamView {
 				textEditorVisibleRanges: Editor.getVisibleRanges(editor),
 				textEditorSelections: Editor.getCSSelections(editor),
 				scmInfo: await this.session.agent.request(GetFileScmInfoRequestType, { uri }),
+				textEditorLineCount: editor.getLineCount(),
 			};
 		}
 
@@ -573,6 +574,7 @@ export class CodestreamView {
 			uri: Editor.getUri(event.editor),
 			selections: Editor.getCSSelections(event.editor),
 			visibleRanges: Editor.getVisibleRanges(event.editor),
+			lineCount: event.editor.getLineCount(),
 		});
 	}
 
@@ -589,6 +591,7 @@ export class CodestreamView {
 					lineHeight: editor.getLineHeightInPixels(),
 					fontSize: atom.config.get("editor.fontSize"),
 				},
+				lineCount: editor.getLineCount(),
 			};
 		}
 		this.sendEvent(HostDidChangeActiveEditorNotificationType, notification);
