@@ -11,7 +11,7 @@ export interface Config {
 	autoHideMarkers: boolean;
 	autoSignIn: boolean;
 	email: string;
-	notifications: Notifications;
+	notifications: Notifications | null;
 	proxySupport: "override" | "on" | "off" | null;
 	serverUrl: string;
 	showAvatars: boolean;

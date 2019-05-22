@@ -1,5 +1,5 @@
 "use strict";
-import { Disposable, MessageItem, version, window } from "vscode";
+import { Disposable, MessageItem, window } from "vscode";
 import { Post, PostsChangedEvent, StreamType } from "../api/session";
 import { Notifications } from "../configuration";
 import { Container } from "../container";
@@ -19,26 +19,30 @@ export class NotificationsController implements Disposable {
 	}
 
 	private async onSessionPostsReceived(e: PostsChangedEvent) {
-		const currentUser = Container.session.user;
-		const activeStream = Container.webview.activeStreamThread;
-		const streamVisible = Container.webview.visible;
+		const { team, user } = Container.session;
+		const { activeStreamThread: activeStream, visible: streamVisible } = Container.webview;
 
-		if (Container.config.notifications === Notifications.None) return;
+		let { notifications } = Container.config;
+		if (notifications === null) {
+			notifications = team.isCodeStreamTeam ? Notifications.Mentions : Notifications.None;
+		}
+
+		if (notifications === Notifications.None) return;
 
 		for (const post of e.items()) {
 			// Don't show notifications for deleted, edited (if edited it isn't the first time its been seen), has replies (same as edited), has reactions, or was posted by the current user
-			if (!post.isNew() || post.senderId === currentUser.id) {
+			if (!post.isNew() || post.senderId === user.id) {
 				continue;
 			}
 
-			const mentioned = post.mentioned(currentUser.id);
+			const mentioned = post.mentioned(user.id);
 			// If we are muted and not mentioned, skip it
-			if (currentUser.hasMutedChannel(post.streamId) && !mentioned) continue;
+			if (user.hasMutedChannel(post.streamId) && !mentioned) continue;
 
 			const isPostStreamVisible =
 				streamVisible && !(activeStream === undefined || activeStream.streamId !== post.streamId);
 
-			switch (Container.config.notifications) {
+			switch (notifications) {
 				case Notifications.All:
 					if (!isPostStreamVisible) {
 						this.showNotification(post, false);

@@ -59,7 +59,7 @@
                 },
                 "codestream.notifications": {
                     "type": "string",
-                    "default": "mentions",
+                    "default": null,
                     "enum": [
                         "all",
                         "mentions",

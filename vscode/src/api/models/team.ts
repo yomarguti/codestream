@@ -1,5 +1,6 @@
 "use strict";
 import { CSTeam } from "@codestream/protocols/api";
+import { memoize } from "../../system";
 import { CodeStreamSession } from "../session";
 import { CodeStreamItem } from "./item";
 
@@ -10,5 +11,10 @@ export class Team extends CodeStreamItem<CSTeam> {
 
 	get name() {
 		return this.entity.name;
+	}
+
+	@memoize
+	get isCodeStreamTeam() {
+		return this.entity.providerInfo == null || Object.keys(this.entity.providerInfo).length === 0;
 	}
 }
