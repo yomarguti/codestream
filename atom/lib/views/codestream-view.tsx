@@ -56,6 +56,8 @@ import {
 	DidChangeDataNotificationType,
 	DidChangeDocumentMarkersNotificationType,
 	GetFileScmInfoRequestType,
+	OtcLoginRequestType,
+	PasswordLoginRequestType,
 	ReportingMessageType,
 	ReportMessageRequestType,
 	TraceLevel,
@@ -396,8 +398,8 @@ export class CodestreamView {
 			case SlackLoginRequestType.method: {
 				const ok = shell.openExternal(
 					`${
-						this.session.environment.webAppUrl
-					}/service-auth/slack?state=${this.session.getLoginToken()}`
+						this.session.environment.serverUrl
+					}/web/provider-auth/slack?signupToken=${this.session.getLoginToken()}`
 				);
 				if (ok) this.respond<SlackLoginResponse>({ id: message.id, params: true });
 				else {
@@ -409,7 +411,9 @@ export class CodestreamView {
 				break;
 			}
 			case CompleteSignupRequestType.method: {
-				const status = await this.session.loginViaSignupToken(message.params);
+				const status = await this.session.login(OtcLoginRequestType, {
+					code: this.session.getLoginToken(),
+				});
 				if (status !== LoginResult.Success) this.respond({ id: message.id, error: status });
 				else {
 					const data = await this.getSignedInBootstrapState();
@@ -428,7 +432,7 @@ export class CodestreamView {
 			}
 			case LoginRequestType.method: {
 				const params: LoginRequest = message.params;
-				const status = await this.session.login(params.email, params.password);
+				const status = await this.session.login(PasswordLoginRequestType, params);
 				if (status !== LoginResult.Success) this.respond({ id: message.id, error: status });
 				else {
 					const data = await this.getSignedInBootstrapState();

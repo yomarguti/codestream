@@ -1,19 +1,24 @@
 import { SignedOutBootstrapResponse } from "@codestream/protocols/webview";
-import { Emitter } from "atom";
+import { CompositeDisposable, Emitter } from "atom";
 import uuidv4 from "uuid/v4";
+import { RequestType } from "vscode-languageserver-protocol";
 import { EnvironmentConfig, PRODUCTION_CONFIG } from "../env-utils";
 import {
 	AccessToken,
 	AgentResult,
 	Capabilities,
 	isLoginFailResponse,
+	LoginFailResponse,
+	LoginSuccessResponse,
+	OtcLoginRequestType,
 	PasswordLoginRequestType,
+	TokenLoginRequest,
 	TokenLoginRequestType,
 } from "../protocols/agent/agent.protocol";
 import { CSMe, LoginResult } from "../protocols/agent/api.protocol";
 import { PackageState } from "../types/package";
 import { getPluginVersion } from "../utils";
-import { CodeStreamAgent } from "./agent";
+import { CodeStreamAgent, RequestOf } from "./agent";
 import { Container } from "./container";
 
 export interface Session {
@@ -37,6 +42,11 @@ export interface SessionStatusChange {
 	previous: SessionStatus;
 }
 
+type LoginMethods =
+	| typeof PasswordLoginRequestType
+	| typeof TokenLoginRequestType
+	| typeof OtcLoginRequestType;
+
 const SESSION_STATUS_CHANGED = "session-status-changed";
 
 interface EventEmissions {
@@ -47,9 +57,7 @@ function initializesAgent(target: WorkspaceSession, key: string, descriptor: Pro
 	const fn = descriptor.value;
 
 	descriptor.value = async function(this: WorkspaceSession, ...args: any[]) {
-		if (!this.agent.initialized) {
-			await this.agent.start2({ serverUrl: this.environment.serverUrl });
-		}
+		await this.initializeAgent();
 		return fn.apply(this, args);
 	};
 
@@ -63,6 +71,7 @@ export class WorkspaceSession {
 	private envConfig: EnvironmentConfig;
 	private loginToken?: string;
 	private _agent: CodeStreamAgent;
+	private subscriptions = new CompositeDisposable();
 	get agent() {
 		return this._agent;
 	}
@@ -91,25 +100,33 @@ export class WorkspaceSession {
 	}
 
 	private initialize() {
-		if (Container.configs.get("autoSignIn") && this.session) {
-			this._isReady = new Promise(async resolve => {
-				try {
-					const result = await this.login(this.session!.user.email, this.session!.token);
+		this._isReady = new Promise(async (resolve, reject) => {
+			try {
+				await this.initializeAgent();
+
+				if (Container.configs.get("autoSignIn") && this.session) {
+					const result = await this.login(TokenLoginRequestType, { token: this.session!.token });
 					if (result !== LoginResult.Success) {
 						this.session = undefined;
 					}
-				} catch (error) {
-					this.session = undefined;
 				}
-				resolve();
-			});
-		} else {
-			this._isReady = Promise.resolve();
-		}
 
-		this.agent.onDidTerminate(() => {
-			this._agent = new CodeStreamAgent();
+				resolve();
+			} catch (error) {
+				reject();
+			}
 		});
+	}
+
+	async initializeAgent() {
+		if (this._agent.initialized) return;
+
+		await this.agent.start2({ serverUrl: this.environment.serverUrl });
+		this.subscriptions.add(
+			this.agent.onDidTerminate(() => {
+				this._agent = new CodeStreamAgent();
+			})
+		);
 	}
 
 	get isSignedIn() {
@@ -125,6 +142,10 @@ export class WorkspaceSession {
 	}
 
 	dispose() {
+		// it's important to dispose subscriptions first
+		// because one of them replaces the instance to CodeStreamAgent agent when it's destroyed
+		// and during extension teardown we don't want to start again
+		this.subscriptions.dispose();
 		this.signOut();
 	}
 
@@ -187,39 +208,34 @@ export class WorkspaceSession {
 		};
 	}
 
-	private getTeamPreference() {
+	private getTeamPreference(): { teamId?: string; team?: string } {
 		if (this.session) return { teamId: this.session.teamId };
 
 		const teamSetting = Container.configs.get("team");
 		if (teamSetting.length > 0) return { team: teamSetting };
+
+		return {};
 	}
 
 	getLoginToken() {
-		if (!this.loginToken) {
-			this.loginToken = uuidv4();
-		}
+		this.loginToken = uuidv4();
 		return this.loginToken;
 	}
 
 	@initializesAgent
-	async login(email: string, passwordOrToken: string | AccessToken) {
+	async login<RT extends LoginMethods>(requestType: RT, request: RequestOf<RT>) {
 		this.sessionStatus = SessionStatus.SigningIn;
 		try {
-			let response;
-			if (typeof passwordOrToken === "string") {
-				response = await this._agent.request(PasswordLoginRequestType, {
-					email,
-					password: passwordOrToken as string,
+			const response: LoginSuccessResponse | LoginFailResponse = await this._agent.request(
+				requestType,
+				{
+					...request,
 					...this.getTeamPreference(),
-				});
-			} else {
-				response = await this._agent.request(TokenLoginRequestType, {
-					token: passwordOrToken as AccessToken,
-					...this.getTeamPreference(),
-				});
-			}
+				}
+			);
 
 			if (isLoginFailResponse(response)) {
+				this.sessionStatus = SessionStatus.SignedOut;
 				return response.error;
 			}
 
@@ -233,31 +249,6 @@ export class WorkspaceSession {
 				return error as LoginResult;
 			} else {
 				console.error("Unexpected error signing into CodeStream", error);
-				return LoginResult.Unknown;
-			}
-		}
-	}
-
-	async loginViaSignupToken(token?: string): Promise<LoginResult> {
-		if (this.loginToken === undefined && token === undefined) {
-			throw new Error("A signup token hasn't been generated");
-		}
-		this.sessionStatus = SessionStatus.SigningIn;
-		try {
-			const result = await this._agent.initWithSignupToken(
-				this.loginToken || token!,
-				this.environment.serverUrl,
-				this.getTeamPreference()
-			);
-			await this.completeLogin(result);
-			return LoginResult.Success;
-		} catch (error) {
-			this.sessionStatus = SessionStatus.SignedOut;
-			if (typeof error === "string") {
-				return error as LoginResult;
-			} else {
-				atom.notifications.addError("Unexpected error intializing agent with signup token");
-				console.error("Unexpected error intializing agent with signup token", error);
 				return LoginResult.Unknown;
 			}
 		}
@@ -281,9 +272,9 @@ export class WorkspaceSession {
 	signOut() {
 		if (this.session) {
 			this.session = undefined;
-			this._agent.dispose();
 			this.sessionStatus = SessionStatus.SignedOut;
 		}
+		this._agent.dispose();
 	}
 
 	changeEnvironment(env: EnvironmentConfig) {

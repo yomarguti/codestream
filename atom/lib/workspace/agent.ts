@@ -36,7 +36,7 @@ import { Container } from "./container";
 
 type RequestOrNotificationType<P, R> = RequestType<P, R, any, any> | NotificationType<P, R>;
 
-type RequestOf<RT> = RT extends RequestOrNotificationType<infer RQ, any> ? RQ : never;
+export type RequestOf<RT> = RT extends RequestOrNotificationType<infer RQ, any> ? RQ : never;
 type ResponseOf<RT> = RT extends RequestOrNotificationType<any, infer R> ? R : never;
 
 const reverseMessageType = function() {
@@ -266,6 +266,7 @@ abstract class AgentConnection {
 		this._connection!.dispose();
 		this._agentProcess!.kill();
 		this._terminatedEvent.push();
+		this._terminatedEvent.dispose();
 	}
 }
 
