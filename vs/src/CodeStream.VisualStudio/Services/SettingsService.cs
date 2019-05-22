@@ -6,6 +6,8 @@ using System;
 using System.ComponentModel.Composition;
 using Serilog;
 using CodeStream.VisualStudio.Core;
+using Microsoft.VisualStudio.Shell;
+using CodeStream.VisualStudio.Packages;
 
 namespace CodeStream.VisualStudio.Services {
 	public interface ISettingsServiceFactory {
@@ -25,9 +27,11 @@ namespace CodeStream.VisualStudio.Services {
 				if (_settingsManager == null) {
 					lock (locker) {
 						if (_settingsManager == null) {
-							var result = new SettingsManager();
-							result.Initialize();							
-							
+							ThreadHelper.ThrowIfNotOnUIThread();
+							var accessor = Package.GetGlobalService(typeof(SOptionsDialogPageAccessor)) as IOptionsDialogPageAccessor;
+							Microsoft.Assumes.Present(accessor);
+							var result = new SettingsManager(accessor?.GetOptionsDialogPage());							
+
 							Log.Verbose($"{nameof(Create)} Initialized");
 							_settingsManager = result;
 						}
@@ -54,8 +58,7 @@ namespace CodeStream.VisualStudio.Services {
 		string GetEnvironmentVersionFormatted();
 		Ide GetIdeInfo();
 		Extension GetExtensionInfo();
-		Proxy Proxy { get; }
-		System.Threading.Tasks.Task InitializeAsync();
+		Proxy Proxy { get; }		
 	}
 
 	public class Settings {
@@ -71,32 +74,32 @@ namespace CodeStream.VisualStudio.Services {
 	}
 
 	public class SettingsManager : ISettingsManager, IOptions {
-
 		// once we don't support VS 2017, we'll be able to use something like...
 		// the _lazy.GetValue() method only exists on the v16.0 version of MS.VS.Threading assembly
 
+		//By using this your pain will be legendary, even in hell.
 		//private readonly AsyncLazy<IOptionsDialogPage> _lazy = new AsyncLazy<IOptionsDialogPage>(async () => {
 		//	var dialogPage = await OptionsDialogPage.GetLiveInstanceAsync();
 		//	return dialogPage;
 		//}, ThreadHelper.JoinableTaskFactory);
 
-
 		//By using this your pain will be legendary, even in hell.
-		public async System.Threading.Tasks.Task InitializeAsync() {
-			DialogPage = await OptionsDialogPage.GetLiveInstanceAsync();
+		//public async System.Threading.Tasks.Task InitializeAsync() {
+		//	DialogPage = await OptionsDialogPage.GetLiveInstanceAsync();
+		//}		
+
+		public SettingsManager(IOptionsDialogPage dialogPage) {
+			DialogPage = dialogPage;
+			DialogPage.LoadSettingsFromStorage();
 		}
 
-		public void Initialize() {
-			DialogPage = OptionsDialogPage.GetLiveInstance();
-		}
+		public IOptionsDialogPage DialogPage { get; private set; }
 
-		public IOptionsDialogPage DialogPage { get; private set;  }
- 
 		public SettingsManager() { }
 
 
 		public void SaveSettingsToStorage() {
-			DialogPage.Save();
+			DialogPage.SaveSettingsToStorage();
 		}
 
 		public Settings GetSettings() {
@@ -116,6 +119,7 @@ namespace CodeStream.VisualStudio.Services {
 			get => DialogPage.ShowAvatars;
 			set => DialogPage.ShowAvatars = value;
 		}
+
 		public string ServerUrl {
 			get => DialogPage.ServerUrl;
 			set => DialogPage.ServerUrl = value;
@@ -135,6 +139,7 @@ namespace CodeStream.VisualStudio.Services {
 			get => DialogPage.ShowMarkerGlyphs;
 			set => DialogPage.ShowMarkerGlyphs = value;
 		}
+
 		public TraceLevel TraceLevel {
 			get {
 				return DialogPage.TraceLevel;

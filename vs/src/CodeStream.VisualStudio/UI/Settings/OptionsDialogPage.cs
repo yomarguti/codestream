@@ -26,17 +26,14 @@ namespace CodeStream.VisualStudio.UI.Settings {
 
 	public interface IOptionsDialogPage : IOptions, INotifyPropertyChanged {
 		Proxy Proxy { get; }
-		void Save();
-		void Load();
-		System.Threading.Tasks.Task LoadAsync();
+		void SaveSettingsToStorage();
+		void LoadSettingsFromStorage();
+
 		TraceLevel TraceLevel { get; set; }
 	}
 
-	internal class DialogPageProvider {
-		public class General : BaseOptionPage<OptionsDialogPage> { }
-	}
+	internal class OptionsDialogPage : Microsoft.VisualStudio.Shell.DialogPage, IOptionsDialogPage {	
 
-	internal class OptionsDialogPage : BaseOptionModel<OptionsDialogPage>, IOptionsDialogPage {
 		private string _email;
 		private bool _autoHideMarkers = true;
 		//// not supported yet
@@ -44,9 +41,7 @@ namespace CodeStream.VisualStudio.UI.Settings {
 		private bool _showMarkerGlyphs = true;
 		private bool _showAvatars = true;
 		private TraceLevel _traceLevel = TraceLevel.Info;
-
-		protected override string CollectionName { get; } = new Guid("C9214424-BFF7-41D8-BB92-94CA2136FBB9").ToString();
-
+		 
 		private string _team;
 		private bool _autoSignIn = true;
 #if DEBUG
@@ -60,6 +55,8 @@ namespace CodeStream.VisualStudio.UI.Settings {
 		private string _proxyUrl;
 		private bool _proxyStrictSsl;
 		private ProxySupport _proxySupport;
+
+		public event PropertyChangedEventHandler PropertyChanged;
 
 		public OptionsDialogPage() {
 			ProxySetup();
@@ -272,7 +269,5 @@ namespace CodeStream.VisualStudio.UI.Settings {
 				}
 			}
 		}
-
-		public event PropertyChangedEventHandler PropertyChanged;
 	}
 }

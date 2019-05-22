@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.UI.Settings;
@@ -13,6 +12,7 @@ namespace CodeStream.VisualStudio.UnitTests.Stubs
 	        add { throw new NotSupportedException(); }
 	        remove { }
         }
+
 		public string Email { get; set; }        
         public bool ShowAvatars { get; set; }        
         public string ServerUrl { get; set; }
@@ -21,7 +21,11 @@ namespace CodeStream.VisualStudio.UnitTests.Stubs
         public void Save() { }
         public void Load() { }
 
-		public Task LoadAsync() {
+		public void SaveSettingsToStorage() {
+			throw new NotImplementedException();
+		}
+
+		public void LoadSettingsFromStorage() {
 			throw new NotImplementedException();
 		}
 

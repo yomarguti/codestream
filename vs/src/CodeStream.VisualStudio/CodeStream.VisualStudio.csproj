@@ -214,11 +214,9 @@
     <Compile Include="UI\Placement.cs" />
     <Compile Include="UI\PredefinedCodestreamNames.cs" />
     <Compile Include="UI\PropertyNames.cs" />
-    <Compile Include="UI\Settings\BaseOptionModel.cs" />
-    <Compile Include="UI\Settings\BaseOptionPage.cs">
+    <Compile Include="UI\Settings\OptionsDialogPage.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="UI\Settings\OptionsDialogPage.cs" />
     <Compile Include="UI\SuggestedActions\CodemarkSuggestedActionsSource.cs" />
     <Compile Include="UI\SuggestedActions\CodemarkSuggestedActionsSourceProvider.cs" />
     <Compile Include="UI\Taggers\DocumentMarkTagger.cs" />

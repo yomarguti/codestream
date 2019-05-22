@@ -37,7 +37,7 @@ namespace CodeStream.VisualStudio.Packages {
 	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.SolutionExists)]
 	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.SolutionHasMultipleProjects)]
 	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.SolutionHasSingleProject)]
-	[ProvideOptionPage(typeof(DialogPageProvider.General), "CodeStream", "Settings", 0, 0, true)]
+	[ProvideOptionPage(typeof(OptionsDialogPage), "CodeStream", "Settings", 0, 0, true)]
 	[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
 	public sealed class WebViewPackage : AsyncPackage {
 		private static readonly ILogger Log = LogManager.ForContext<WebViewPackage>();
@@ -79,6 +79,9 @@ namespace CodeStream.VisualStudio.Packages {
 				_componentModel = GetGlobalService(typeof(SComponentModel)) as IComponentModel;
 				var settingsServiceFactory = _componentModel?.GetService<ISettingsServiceFactory>();
 				_settingsManager = settingsServiceFactory.Create();
+				if (_settingsManager != null) {					
+					_settingsManager.DialogPage.PropertyChanged += DialogPage_PropertyChanged;
+				}
 
 				var isSolutionLoaded = await IsSolutionLoadedAsync();
 				if (isSolutionLoaded) {
@@ -311,10 +314,6 @@ namespace CodeStream.VisualStudio.Packages {
 
 		private async Task OnSolutionLoadedInitialAsync() {
 			await OnSolutionLoadedAlwaysAsync();
-			if (_settingsManager != null) {
-				_settingsManager.DialogPage.PropertyChanged += DialogPage_PropertyChanged;
-			}
-
 			await Task.CompletedTask;
 		}
 

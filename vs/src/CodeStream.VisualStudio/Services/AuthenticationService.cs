@@ -42,14 +42,14 @@ namespace CodeStream.VisualStudio.Services {
 		[Import]
 		public IBrowserService WebviewIpc { get; set; }
 		[Import]
-		public ISettingsManager SettingsService { get; set; }
+		public ISettingsServiceFactory SettingsServiceFactory { get; set; }
 
 		public async System.Threading.Tasks.Task LogoutAsync() {
 			try {
 				if (SessionService.IsReady == false) return;
-
+				var settingsService = SettingsServiceFactory.Create();
 				try {
-					await CredentialsService.DeleteAsync(SettingsService.ServerUrl.ToUri(), SettingsService.Email);
+					await CredentialsService.DeleteAsync(settingsService.ServerUrl.ToUri(), settingsService.Email);
 				}
 				catch (Exception ex) {
 					Log.Warning(ex, $"{nameof(LogoutAsync)} - credentials");

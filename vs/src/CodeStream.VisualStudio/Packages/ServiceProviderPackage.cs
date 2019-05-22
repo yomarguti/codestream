@@ -1,5 +1,6 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Services;
+using CodeStream.VisualStudio.UI.Settings;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -15,12 +16,30 @@ namespace CodeStream.VisualStudio.Packages {
 		void ShowToolWindowSafe(Guid toolWindowId);
 		bool IsVisible(Guid toolWindowId);
 	}
-	
+
 	public interface SToolWindowProvider { }
+	 
+
+	public interface SOptionsDialogPageAccessor { }
+	public interface IOptionsDialogPageAccessor {
+		IOptionsDialogPage GetOptionsDialogPage();
+
+	}
+
+	public class OptionsDialogPageAccessor : IOptionsDialogPageAccessor, SOptionsDialogPageAccessor {
+		private IOptionsDialogPage _optionsDialogPage;
+		public OptionsDialogPageAccessor(IOptionsDialogPage optionsDialogPage) {
+			_optionsDialogPage = optionsDialogPage;
+		}
+		public IOptionsDialogPage GetOptionsDialogPage() {
+			return _optionsDialogPage;
+		}
+	}
 
 	/// <summary>
 	/// Pseudo-package to allow for a custom service provider
 	/// </summary>
+	[ProvideService(typeof(SOptionsDialogPageAccessor))]
 	[ProvideService(typeof(SToolWindowProvider))]
 	[ProvideService(typeof(SUserSettingsService))]
 	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
@@ -29,23 +48,31 @@ namespace CodeStream.VisualStudio.Packages {
 	public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer, IToolWindowProvider, SToolWindowProvider {
 		private static readonly ILogger Log = LogManager.ForContext<ServiceProviderPackage>();
 
-		protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {		
+		private IOptionsDialogPage OptionsDialogPage;
+
+		protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
 			try {
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
 				AsyncPackageHelper.InitializePackage(GetType().Name);
 
+				// can only get a dialog page from a package
+				OptionsDialogPage = (IOptionsDialogPage)GetDialogPage(typeof(OptionsDialogPage));
+
+				((IServiceContainer)this).AddService(typeof(SOptionsDialogPageAccessor), CreateService, true);
 				((IServiceContainer)this).AddService(typeof(SToolWindowProvider), CreateService, true);
 				((IServiceContainer)this).AddService(typeof(SUserSettingsService), CreateService, true);
 
 				await base.InitializeAsync(cancellationToken, progress);
 			}
-            catch(Exception ex) {
+			catch (Exception ex) {
 				Log.Fatal(ex, nameof(InitializeAsync));
 			}
 		}
 
 		private object CreateService(IServiceContainer container, Type serviceType) {
+			if (typeof(SOptionsDialogPageAccessor) == serviceType)
+				return new OptionsDialogPageAccessor(OptionsDialogPage);
 			if (typeof(SToolWindowProvider) == serviceType)
 				return this;
 			if (typeof(SUserSettingsService) == serviceType)
