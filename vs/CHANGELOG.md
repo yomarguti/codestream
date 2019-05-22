@@ -4,7 +4,10 @@
 
 ### Fixed
 
+- Fixes an issue that would cause an alert box to appear on Visual Studio load
 - Fixes an issue where a new codemark sometimes wouldn't appear right away
+- Fixes an issue where git repos with remote URLs containing port numbers would prevent codemarks from being displayed properly
+- Fixes [#61](https://github.com/TeamCodeStream/CodeStream/issues/61) &mdash; Formatting issues with codemarks
 
 ## [1.0.1] - 2019-5-15
 
