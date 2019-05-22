@@ -4,7 +4,7 @@ import { GitRemote, GitRemoteType } from "../models/remote";
 const emptyStr = "";
 
 const remoteRegex = /^(.*)\t(.*)\s\((.*)\)$/gm;
-const urlRegex = /^(?:(git:\/\/)(.*?)\/|(https?:\/\/)(?:.*?@)?(.*?)\/|git@(.*):|(ssh:\/\/)(?:.*@)?(.*?)(?::.*?)?(?:\/|(?=~))|(?:.*?@)(.*?):)(.*)$/;
+const urlRegex = /^(?:(git:\/\/)(.*?)(?::.*?)?\/|(https?:\/\/)(?:.*?@)?(.*?)(?::.*?)?\/|git@(.*):|(ssh:\/\/)(?:.*@)?(.*?)(?::.*?)?(?:\/|(?=~))|(?:.*?@)(.*?):)(.*)$/;
 
 export class GitRemoteParser {
 	static parse(data: string, repoPath: string): GitRemote[] {
