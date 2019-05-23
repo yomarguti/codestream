@@ -434,7 +434,7 @@
             "commandPalette": [
                 {
                     "command": "codestream.goOffline",
-                    "when": "codestream:status == signedIn"
+                    "when": "codestream:status != signedOut"
                 },
                 {
                     "command": "codestream.signIn",

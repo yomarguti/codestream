@@ -102,6 +102,7 @@ import {
 } from "vscode";
 import {
 	CancellationToken,
+	CancellationTokenSource,
 	CloseAction,
 	Disposable,
 	ErrorAction,
@@ -115,10 +116,11 @@ import {
 	ServerOptions,
 	TransportKind
 } from "vscode-languageclient";
+import { SessionSignedOutReason } from "../api/session";
 import { extensionQualifiedId } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { log } from "../system";
+import { Functions, log } from "../system";
 
 export { BaseAgentOptions };
 
@@ -144,9 +146,10 @@ export class CodeStreamAgentConnection implements Disposable {
 
 	private _client: LanguageClient | undefined;
 	private _disposable: Disposable | undefined;
-
 	private _clientOptions: LanguageClientOptions;
+	private _clientReadyCancellation: CancellationTokenSource | undefined;
 	private _serverOptions: ServerOptions;
+	private _restartCount = 0;
 
 	constructor(context: ExtensionContext, options: BaseAgentOptions) {
 		const env = process.env;
@@ -180,6 +183,7 @@ export class CodeStreamAgentConnection implements Disposable {
 					return ErrorAction.Continue;
 				},
 				closed: () => {
+					this._restartCount++;
 					Logger.error(undefined!, "AgentConnection.closed");
 
 					if (Container.session.environment !== CodeStreamEnvironment.Production) {
@@ -188,7 +192,21 @@ export class CodeStreamAgentConnection implements Disposable {
 						);
 					}
 
-					return CloseAction.Restart;
+					if (this._restartCount < 3) return CloseAction.Restart;
+
+					// If we are still waiting on ready just cancel it
+					if (this._clientReadyCancellation !== undefined) {
+						this._clientReadyCancellation.cancel();
+						this._clientReadyCancellation.dispose();
+						this._clientReadyCancellation = undefined;
+
+						return CloseAction.DoNotRestart;
+					}
+
+					// If we aren't still waiting on ready, sign out
+					void Container.session.logout(SessionSignedOutReason.NetworkIssue);
+
+					return CloseAction.DoNotRestart;
 				}
 			},
 			outputChannelName: "CodeStream (Agent)",
@@ -205,6 +223,10 @@ export class CodeStreamAgentConnection implements Disposable {
 
 	dispose() {
 		this._disposable && this._disposable.dispose();
+		if (this._clientReadyCancellation !== undefined) {
+			this._clientReadyCancellation.dispose();
+			this._clientReadyCancellation = undefined;
+		}
 	}
 
 	get started() {
@@ -340,9 +362,11 @@ export class CodeStreamAgentConnection implements Disposable {
 		fetch(uri: Uri, excludeArchived: boolean = false) {
 			return this._connection.sendRequest(FetchDocumentMarkersRequestType, {
 				textDocument: { uri: uri.toString() },
-				filters: excludeArchived ? {
-					excludeArchived: true
-				} : undefined
+				filters: excludeArchived
+					? {
+							excludeArchived: true
+					  }
+					: undefined
 			});
 		}
 
@@ -960,6 +984,12 @@ export class CodeStreamAgentConnection implements Disposable {
 			throw new Error("Agent has already been started");
 		}
 
+		this._restartCount = 0;
+		if (this._clientReadyCancellation !== undefined) {
+			this._clientReadyCancellation.dispose();
+		}
+		this._clientReadyCancellation = new CancellationTokenSource();
+
 		const clientOptions = {
 			...this._clientOptions,
 			initializationOptions: options
@@ -973,7 +1003,13 @@ export class CodeStreamAgentConnection implements Disposable {
 		);
 
 		this._disposable = this._client.start();
-		void (await this._client.onReady());
+
+		void (await Functions.cancellable(this._client.onReady(), this._clientReadyCancellation.token, {
+			cancelMessage: "Agent failed to start"
+		}));
+
+		this._clientReadyCancellation.dispose();
+		this._clientReadyCancellation = undefined;
 
 		this._client.onNotification(DidChangeDataNotificationType, this.onDataChanged.bind(this));
 		this._client.onNotification(
@@ -995,10 +1031,18 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	private async stop(): Promise<void> {
+		if (this._clientReadyCancellation !== undefined) {
+			this._clientReadyCancellation.cancel();
+			this._clientReadyCancellation.dispose();
+			this._clientReadyCancellation = undefined;
+
+			return;
+		}
+
 		if (this._client === undefined) return;
 
 		this._disposable && this._disposable.dispose();
-		await this._client.stop();
+		await Functions.cancellable(this._client.stop(), 30000, { onDidCancel: resolve => resolve() });
 
 		this._client = undefined;
 	}

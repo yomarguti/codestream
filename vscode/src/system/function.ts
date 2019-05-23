@@ -1,6 +1,7 @@
 "use strict";
 import { debounce as _debounce } from "lodash-es";
 import uuidv4 from "uuid/v4";
+import { CancellationToken } from "vscode";
 
 export interface IDeferrable {
 	cancel(): void;
@@ -30,17 +31,94 @@ export namespace Functions {
 		};
 	}
 
+	export function cancellable<T>(
+		promise: Thenable<T>,
+		timeoutMs: number,
+		options?: {
+			cancelMessage?: string;
+			onDidCancel?(
+				resolve: (value?: T | PromiseLike<T> | undefined) => void,
+				reject: (reason?: any) => void
+			): void;
+		}
+	): Promise<T>;
+	export function cancellable<T>(
+		promise: Thenable<T>,
+		token: CancellationToken,
+		options?: {
+			cancelMessage?: string;
+			onDidCancel?(
+				resolve: (value?: T | PromiseLike<T> | undefined) => void,
+				reject: (reason?: any) => void
+			): void;
+		}
+	): Promise<T>;
+	export function cancellable<T>(
+		promise: Thenable<T>,
+		timeoutOrToken: CancellationToken | number,
+		options: {
+			cancelMessage?: string;
+			onDidCancel?(
+				resolve: (value?: T | PromiseLike<T> | undefined) => void,
+				reject: (reason?: any) => void
+			): void;
+		} = {}
+	): Promise<T> {
+		return new Promise((resolve, reject) => {
+			let fulfilled = false;
+			let timer: NodeJS.Timer | undefined;
+			if (typeof timeoutOrToken === "number") {
+				timer = setTimeout(() => {
+					if (typeof options.onDidCancel === "function") {
+						options.onDidCancel(resolve, reject);
+					} else {
+						reject(new Error(options.cancelMessage || "TIMED OUT"));
+					}
+				}, timeoutOrToken);
+			} else {
+				timeoutOrToken.onCancellationRequested(() => {
+					if (fulfilled) return;
+
+					if (typeof options.onDidCancel === "function") {
+						options.onDidCancel(resolve, reject);
+					} else {
+						reject(new Error(options.cancelMessage || "CANCELLED"));
+					}
+				});
+			}
+
+			promise.then(
+				() => {
+					fulfilled = true;
+					if (timer !== undefined) {
+						clearTimeout(timer);
+					}
+					resolve(promise);
+				},
+				ex => {
+					fulfilled = true;
+					if (timer !== undefined) {
+						clearTimeout(timer);
+					}
+					reject(ex);
+				}
+			);
+		});
+	}
+
+	interface DebounceOptions {
+		leading?: boolean;
+		maxWait?: number;
+		track?: boolean;
+		trailing?: boolean;
+	}
+
 	export function debounce<T extends (...args: any[]) => any>(
 		fn: T,
 		wait?: number,
-		options?: { leading?: boolean; maxWait?: number; track?: boolean; trailing?: boolean }
+		options?: DebounceOptions
 	): T & IDeferrable {
-		const { track, ...opts } = { track: false, ...(options || {}) } as {
-			leading?: boolean;
-			maxWait?: number;
-			track?: boolean;
-			trailing?: boolean;
-		};
+		const { track, ...opts } = { track: false, ...(options || ({} as DebounceOptions)) };
 
 		if (track !== true) return _debounce(fn, wait, opts);
 
@@ -175,6 +253,16 @@ export namespace Functions {
 					.split(comma)
 					.map(param => param.trim().replace(fnBodyStripParamDefaultValueRegex, empty))
 			: [];
+	}
+
+	export function is<T>(o: any, prop: keyof (T)): o is T;
+	export function is<T>(o: any, matcher: (o: any) => boolean): o is T;
+	export function is<T>(o: any, propOrMatcher: keyof (T) | ((o: any) => boolean)): o is T {
+		if (typeof propOrMatcher === "function") {
+			return propOrMatcher(o);
+		}
+
+		return o[propOrMatcher] !== undefined;
 	}
 
 	export function isPromise(o: any) {
