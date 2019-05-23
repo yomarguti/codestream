@@ -351,10 +351,24 @@ export class GitService implements IGitService, Disposable {
 
 		try {
 			const data = (await git({ cwd: cwd }, "rev-parse", "--show-toplevel")).trim();
-			return data === "" ? undefined : data;
+			return data === "" ? undefined : this.sanitizePath(data);
 		} catch {
 			return undefined;
 		}
+	}
+
+	cygwinRegex = /\/cygdrive\/([a-zA-Z])/;
+
+	sanitizePath(path: string): string {
+		const cygwinMatch = this.cygwinRegex.exec(path);
+		if (cygwinMatch != null) {
+			const [, drive] = cygwinMatch;
+			let sanitized = drive + ":" + path.substr("/cygdrive/c".length);
+			sanitized = sanitized.replace(/\//g, "\\");
+			Logger.debug(`Cygwin git path sanitized: ${path} -> ${sanitized}`);
+			return sanitized;
+		}
+		return path;
 	}
 
 	getRepositories(): Promise<Iterable<GitRepository>> {
