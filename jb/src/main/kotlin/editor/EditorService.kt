@@ -151,18 +151,19 @@ class EditorService(val project: Project) {
         codeStreamVisible = isVisible
         updateMarkers()
 
-        val editor = activeEditor
-        if (isVisible && editor != null) GlobalScope.launch {
+        GlobalScope.launch {
             delay(250L)
             ApplicationManager.getApplication().invokeLater {
-                project.webViewService?.postNotification(
-                    EditorNotifications.DidChangeVisibleRanges(
-                        editor.document.uri,
-                        editor.selections,
-                        editor.visibleRanges,
-                        editor.document.lineCount
+                val editor = activeEditor
+                if (isVisible && editor != null && !editor.isDisposed)
+                    project.webViewService?.postNotification(
+                        EditorNotifications.DidChangeVisibleRanges(
+                            editor.document.uri,
+                            editor.selections,
+                            editor.visibleRanges,
+                            editor.document.lineCount
+                        )
                     )
-                )
             }
         }
     }
