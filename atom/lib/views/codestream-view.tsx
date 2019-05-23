@@ -1,6 +1,7 @@
 import {
 	BootstrapRequestType as WebviewBootstrapRequestType,
 	BootstrapResponse,
+	CompleteSignupRequest,
 	CompleteSignupRequestType,
 	EditorContext,
 	EditorHighlightRangeRequestType,
@@ -27,13 +28,12 @@ import {
 	ShowCodemarkNotificationType,
 	ShowStreamNotificationType,
 	SignedInBootstrapResponse,
-	SignupRequestType,
-	SignupResponse,
 	SlackLoginRequestType,
 	SlackLoginResponse,
 	UpdateConfigurationRequest,
 	UpdateConfigurationRequestType,
 	UpdateConfigurationResponse,
+	ValidateThirdPartyAuthRequestType,
 	WebviewContext,
 	WebviewDidChangeContextNotificationType,
 	WebviewDidInitializeNotificationType,
@@ -60,6 +60,8 @@ import {
 	PasswordLoginRequestType,
 	ReportingMessageType,
 	ReportMessageRequestType,
+	TokenLoginRequest,
+	TokenLoginRequestType,
 	TraceLevel,
 } from "../protocols/agent/agent.protocol";
 import { CodemarkType, LoginResult } from "../protocols/agent/api.protocol";
@@ -410,7 +412,7 @@ export class CodestreamView {
 				}
 				break;
 			}
-			case CompleteSignupRequestType.method: {
+			case ValidateThirdPartyAuthRequestType.method: {
 				const status = await this.session.login(OtcLoginRequestType, {
 					code: this.session.getLoginToken(),
 				});
@@ -421,13 +423,21 @@ export class CodestreamView {
 				}
 				break;
 			}
-			case SignupRequestType.method: {
-				shell.openExternal(
-					`${
-						this.session.environment.webAppUrl
-					}/signup?force_auth=true&signup_token=${this.session.getLoginToken()}`
-				);
-				this.respond<SignupResponse>({ id: message.id, params: {} });
+			case CompleteSignupRequestType.method: {
+				const { teamId, token, email }: CompleteSignupRequest = message.params;
+				const status = await this.session.login(TokenLoginRequestType, {
+					teamId,
+					token: {
+						email,
+						url: this.session.environment.serverUrl,
+						value: token,
+					},
+				});
+				if (status !== LoginResult.Success) this.respond({ id: message.id, error: status });
+				else {
+					const data = await this.getSignedInBootstrapState();
+					this.respond<SignedInBootstrapResponse>({ id: message.id, params: data });
+				}
 				break;
 			}
 			case LoginRequestType.method: {
