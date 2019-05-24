@@ -201,6 +201,7 @@
     <Compile Include="Extensions\JsonExtensionsTests.cs" />
     <Compile Include="Extensions\UriExtensionsTests.cs" />
     <Compile Include="LSP\CustomCamelCasePropertyNamesContractResolverTests.cs" />
+    <Compile Include="LSP\ExtensionsTest.cs" />
     <Compile Include="Models\CamelCaseStringEnumConverterTests.cs" />
     <Compile Include="Models\EditorSelectionTests.cs" />
     <Compile Include="Models\WebviewIpcMessageTest.cs" />

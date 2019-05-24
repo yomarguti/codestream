@@ -18,7 +18,7 @@ namespace CodeStream.VisualStudio.Services {
 		Task ResetActiveEditorAsync();
 		Task ChangeActiveEditorAsync(Uri uri, ActiveTextEditor activeTextEditor = null);
 		Task NewCodemarkAsync(Uri uri, Range range, CodemarkType codemarkType, string source, CancellationToken? cancellationToken = null);
-		Task ShowCodemarkAsync(string codemarkId, string sourceUri, CancellationToken? cancellationToken = null);
+		Task ShowCodemarkAsync(string codemarkId, string filePath, CancellationToken? cancellationToken = null);
 		Task EditorSelectionChangedNotificationAsync(Uri uri,
 			EditorState editorState,
 			List<Range> visibleRanges,
@@ -110,12 +110,12 @@ namespace CodeStream.VisualStudio.Services {
 			return Task.CompletedTask;
 		}
 
-		public async Task ShowCodemarkAsync(string codemarkId, string sourceUri, CancellationToken? cancellationToken = null) {
+		public async Task ShowCodemarkAsync(string codemarkId, string filePath, CancellationToken? cancellationToken = null) {
 			if (IsReady && !codemarkId.IsNullOrWhiteSpace()) {
 				_ = BrowserService.NotifyAsync(new ShowCodemarkNotificationType {
 					Params = new ShowCodemarkNotification {
 						CodemarkId = codemarkId,
-						SourceUri = sourceUri,
+						SourceUri = LSP.Extensions.ToLspUriString(filePath),
 					}
 				});
 			}

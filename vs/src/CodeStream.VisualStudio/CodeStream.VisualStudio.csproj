@@ -130,6 +130,7 @@
     <Compile Include="Extensions\ReactiveExtensions.cs" />
     <Compile Include="Extensions\TextViewExtensions.cs" />
     <Compile Include="LSP\LanguageClientActivator.cs" />
+    <Compile Include="LSP\Extensions.cs" />
     <Compile Include="Models\ActiveTextEditor.cs" />
     <Compile Include="Models\Agent.Protocol.cs" />
     <Compile Include="Models\Agent.Protocol.DocumentMarkers.cs" />
