@@ -28,7 +28,7 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable {
             state.serverUrl = gui.serverUrl.text
             state.webAppUrl = gui.webAppUrl.text
             state.avatars = gui.showAvatars.isSelected
-            state.notifications = gui.showNotifications.selectedItem as String
+            state.notifications = gui.showNotifications.selectedItem as String?
             state.muteAll = gui.muteAll.isSelected
             state.team = gui.team.text
             state.showFeedbackSmiley = gui.showFeedbackSmiley.isSelected
