@@ -1276,7 +1276,8 @@ const mapStateToProps = (state): DispatchProps => {
 	const { context, editorContext, users, session, teams, preferences, providers } = state;
 	const user = users[session.userId];
 	const channel = context.currentStreamId
-		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId)!
+		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId) ||
+		  getStreamForTeam(state.streams, context.currentTeamId)
 		: getStreamForTeam(state.streams, context.currentTeamId);
 
 	// const slackInfo = user.providerInfo && user.providerInfo.slack;
