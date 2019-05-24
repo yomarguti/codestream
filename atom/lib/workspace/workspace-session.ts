@@ -92,7 +92,7 @@ export class WorkspaceSession {
 		envConfig: EnvironmentConfig = PRODUCTION_CONFIG
 	) {
 		this.emitter = new Emitter();
-		this._agent = new CodeStreamAgent();
+		this._agent = new CodeStreamAgent(envConfig);
 		this.session = session;
 		this.lastUsedEmail = lastUsedEmail;
 		this.envConfig = envConfig;
@@ -121,10 +121,11 @@ export class WorkspaceSession {
 	async initializeAgent() {
 		if (this._agent.initialized) return;
 
-		await this.agent.start2({ serverUrl: this.environment.serverUrl });
+		await this.agent.start();
 		this.subscriptions.add(
-			this.agent.onDidTerminate(() => {
-				this._agent = new CodeStreamAgent();
+			this._agent.onDidTerminate(() => {
+				this._agent = new CodeStreamAgent(this.environment);
+				this.initialize();
 			})
 		);
 	}
@@ -218,7 +219,8 @@ export class WorkspaceSession {
 	}
 
 	getLoginToken() {
-		this.loginToken = uuidv4();
+		if (!this.loginToken) this.loginToken = uuidv4();
+
 		return this.loginToken;
 	}
 

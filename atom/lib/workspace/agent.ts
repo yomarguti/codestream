@@ -7,6 +7,7 @@ import {
 	MessageConnection,
 } from "atom-languageclient/node_modules/vscode-jsonrpc";
 import { ChildProcess, spawn } from "child_process";
+import { EnvironmentConfig } from "env-utils";
 import { FileLogger } from "logger";
 import {
 	ConfigurationParams,
@@ -77,82 +78,11 @@ abstract class AgentConnection {
 		rpc: MessageConnection
 	): void;
 
-	protected async start(initOptions: {
-		serverUrl: string;
-		email?: string;
-		teamId?: string;
-		team?: string;
-		passwordOrToken?: string | AccessToken;
-		signupToken?: string;
-	}) {
-		this._agentProcess = await this.startServer();
-
-		const rpc = createMessageConnection(
-			new IPCMessageReader(this._agentProcess as ChildProcess),
-			new IPCMessageWriter(this._agentProcess as ChildProcess)
-		);
-
-		this._connection = new LanguageClientConnection(rpc);
-
-		this.preInitialization(this._connection, rpc);
-
-		const initializationOptions: Partial<AgentOptions> = {
-			extension: {
-				build: "",
-				buildEnv: "dev",
-				version: getPluginVersion(),
-				versionFormatted: `${getPluginVersion()}${atom.inDevMode() ? "(dev)" : ""}`,
-			},
-			ide: {
-				name: "Atom",
-				version: atom.getVersion(),
-			},
-			isDebugging: atom.inDevMode(),
-			traceLevel: Container.configs.get("traceLevel"),
-			gitPath: "git",
-			...initOptions,
-		};
-
-		const configs = Container.configs;
-		const proxySupport = configs.get("proxySupport");
-
-		if (proxySupport === "override") {
-			const proxy = configs.get("proxyUrl");
-			if (proxy !== "") {
-				initializationOptions.proxy = {
-					url: proxy,
-					strictSSL: configs.get("proxyStrictSSL"),
-				};
-				initializationOptions.proxySupport = "override";
-			} else {
-				atom.notifications.addWarning("CodeStream: Invalid Proxy Settings", {
-					dismissable: true,
-					detail: "We'll attempt to detect proxy settings from the shell environment.",
-					description: "Proxy Support set to `override` but a Proxy Url was not provided.",
-				});
-				initializationOptions.proxySupport = "on";
-			}
-		} else {
-			initializationOptions.proxySupport = proxySupport;
-		}
-
-		const firstProject = atom.project.getPaths()[0] || null; // TODO: what if there are no projects
-		const response = await this._connection.initialize({
-			processId: this._agentProcess.pid,
-			workspaceFolders: [],
-			rootUri: firstProject ? Convert.pathToUri(firstProject) : null,
-			capabilities,
-			initializationOptions,
-		});
-
-		if (response.result.error) {
-			await this.stop();
-		} else this._connection.initialized();
-
-		return (response as AgentInitializeResult).result;
+	protected getInitializationOptions() {
+		return {};
 	}
 
-	async start2(options: { serverUrl: string }) {
+	async start() {
 		this._agentProcess = await this.startServer();
 
 		const rpc = createMessageConnection(
@@ -178,7 +108,7 @@ abstract class AgentConnection {
 			isDebugging: atom.inDevMode(),
 			traceLevel: Container.configs.get("traceLevel"),
 			gitPath: "git",
-			serverUrl: options.serverUrl,
+			...this.getInitializationOptions(),
 		};
 
 		const configs = Container.configs;
@@ -277,17 +207,12 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 	private subscriptions = new CompositeDisposable();
 	private logger = new FileLogger("agent");
 
-	async initWithSignupToken(
-		token: string,
-		serverUrl: string,
-		teamOption: { teamId?: string; team?: string } = {}
-	): Promise<AgentResult> {
-		const result = await this.start({ signupToken: token, serverUrl, ...teamOption });
-		if (result.error) {
-			throw result.error;
-		}
+	constructor(private environment: EnvironmentConfig) {
+		super();
+	}
 
-		return result;
+	protected getInitializationOptions() {
+		return { serverUrl: this.environment.serverUrl };
 	}
 
 	protected preInitialization(connection: LanguageClientConnection, rpc: MessageConnection) {
