@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
+using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.UI.Extensions;
 using Microsoft.VisualStudio.ComponentModelHost;
 
@@ -36,7 +37,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 				var containerMarginAsVerticalScrollBar = containerMargin as IVerticalScrollBar;
 				if (containerMarginAsVerticalScrollBar == null) return null;
 
-				if (!wpfTextViewHost.TextView.Roles.ContainsAll(TextViewRoles.DefaultRoles)) return null;
+				if (!wpfTextViewHost.TextView.HasValidRoles()) return null;
 				if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService,
 					wpfTextViewHost.TextView.TextBuffer, out var textDocument)) return null;
 

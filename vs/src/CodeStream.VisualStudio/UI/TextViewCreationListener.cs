@@ -84,7 +84,7 @@ namespace CodeStream.VisualStudio.UI {
 		/// <param name="subjectBuffers"></param>
 		public void SubjectBuffersConnected(IWpfTextView wpfTextView, ConnectionReason reason, Collection<ITextBuffer> subjectBuffers) {
 			try {
-				if (wpfTextView == null || !wpfTextView.Roles.ContainsAll(TextViewRoles.DefaultRoles)) return;
+				if (wpfTextView == null || !wpfTextView.HasValidRoles()) return;
 				if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextView.TextBuffer,
 					out var textDocument)) {
 					return;
@@ -124,7 +124,7 @@ namespace CodeStream.VisualStudio.UI {
 		public void VsTextViewCreated(IVsTextView textViewAdapter) {
 			try {
 				var wpfTextView = EditorAdaptersFactoryService.GetWpfTextView(textViewAdapter);
-				if (wpfTextView == null || !wpfTextView.Roles.ContainsAll(TextViewRoles.DefaultRoles)) return;
+				if (wpfTextView == null || !wpfTextView.HasValidRoles()) return;
 
 				// find all of our textView margin providers (they should already have been created at this point)
 				var textViewMarginProviders = TextViewMarginProviders
@@ -210,7 +210,7 @@ namespace CodeStream.VisualStudio.UI {
 
 		public void SubjectBuffersDisconnected(IWpfTextView wpfTextView, ConnectionReason reason, Collection<ITextBuffer> subjectBuffers) {
 			try {
-				if (wpfTextView == null || wpfTextView?.Roles.ContainsAll(TextViewRoles.DefaultRoles) == false) return;
+				if (wpfTextView == null || !wpfTextView.HasValidRoles()) return;
 				if (!wpfTextView.Properties.TryGetProperty(PropertyNames.TextViewFilePath, out string filePath)) return;
 
 				lock (WeakTableLock) {

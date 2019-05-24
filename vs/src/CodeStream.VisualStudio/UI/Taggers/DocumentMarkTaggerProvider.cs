@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
+using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.UI.Extensions;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
@@ -25,7 +26,7 @@ namespace CodeStream.VisualStudio.UI.Taggers {
 		public ITagger<T> CreateTagger<T>(ITextView textView, ITextBuffer buffer) where T : ITag {
 			var wpfTextView = textView as IWpfTextView;
 			if (wpfTextView == null || textView.TextBuffer != buffer) return null;
-			if (!wpfTextView.Roles.ContainsAll(TextViewRoles.DefaultRoles)) return null;
+			if (!wpfTextView.HasValidRoles()) return null;
 			if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, textView.TextBuffer, out var textDocument)) return null;
 
 			var sessionService = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ISessionService>();

@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
+using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.UI.Extensions;
 using Microsoft.VisualStudio.ComponentModelHost;
 
@@ -42,7 +43,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		public IWpfTextViewMargin CreateMargin(IWpfTextViewHost wpfTextViewHost, IWpfTextViewMargin parent) {
 			try {
 				if (wpfTextViewHost == null ||
-				    !wpfTextViewHost.TextView.Roles.ContainsAll(TextViewRoles.DefaultRoles)) return null;
+				    !wpfTextViewHost.TextView.HasValidRoles()) return null;
 				if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService,
 					wpfTextViewHost.TextView.TextBuffer, out var textDocument)) {
 					return null;
