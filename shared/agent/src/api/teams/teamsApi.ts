@@ -89,6 +89,7 @@ import {
 import {
 	CSCodemark,
 	CSGetMeResponse,
+	CSGetTeamResponse,
 	CSLoginResponse,
 	CSMarker,
 	CSMarkerLocations,
@@ -101,7 +102,7 @@ import {
 	ProviderType,
 	StreamType
 } from "../../protocol/api.protocol";
-import { debug, Functions, log } from "../../system";
+import { debug, Functions, Iterables, log } from "../../system";
 import {
 	ApiProvider,
 	CodeStreamApiMiddleware,
@@ -113,10 +114,13 @@ import { CodeStreamApiProvider } from "../codestream/codestreamApi";
 import { CodeStreamPreferences } from "../preferences";
 // import { TeamsEvents } from "./events";
 import {
+	fromPostId,
+	fromStreamId,
 	fromTeamsChannel,
 	fromTeamsPost,
-	fromTeamsPostId,
 	fromTeamsUser,
+	GraphBatchRequest,
+	GraphBatchResponse,
 	toTeamsPostBody,
 	toTeamsTeam
 } from "./teamsApi.adapters";
@@ -132,10 +136,11 @@ export class MSTeamsApiProvider implements ApiProvider {
 	// private _events: TeamsEvents | undefined;
 	private readonly _codestreamUserId: string;
 	private _providerInfo: CSMSTeamsProviderInfo;
-	private readonly _teamsTeamId: string;
 	private readonly _teamsUserId: string;
 
 	private _preferences: CodeStreamPreferences;
+	private _teamsById: Map<string, string> | undefined;
+
 	private readonly _unreads: TeamsUnreads;
 	// TODO: Convert to index on UserManager?
 	private _usernamesById: Map<string, string> | undefined;
@@ -169,7 +174,6 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 		this._codestreamUserId = user.id;
 		this._teamsUserId = providerInfo.userId;
-		this._teamsTeamId = providerInfo.teamId;
 	}
 
 	private _refreshPromise: Promise<CSMe> | undefined;
@@ -279,6 +283,14 @@ export class MSTeamsApiProvider implements ApiProvider {
 	async processLoginResponse(response: CSLoginResponse): Promise<void> {
 		// Mix in slack user info with ours
 		const meResponse = await this.getMeCore({ user: response.user });
+
+		const teamsResponse = await this.teamsApiCall<{ value: any[] }>("me/joinedTeams", request =>
+			request.get()
+		);
+
+		this._teamsById = new Map(
+			teamsResponse.value.map<[string, string]>(t => [t.id, t.displayName])
+		);
 
 		// TODO: Correlate codestream ids to slack ids once the server returns that info
 		// const users = await this._codestream.fetchUsers({});
@@ -534,44 +546,20 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 	@log()
 	async createPost(request: CreatePostRequest): Promise<CreatePostResponse> {
-		let createdPostId;
+		// let createdPostId;
 		try {
 			const usernamesById = await this.ensureUsernamesById();
 			const userIdsByName = await this.ensureUserIdsByName();
 
 			let text = request.text;
-			// let meMessage = meMessageRegex.test(text);
-			// // If we are trying post a me message as a reply, send it as a normal reply with /me replaced with the username
-			// if (meMessage && request.parentPostId != null) {
-			// 	text = text.replace(meMessageRegex, `${usernamesById.get(this._slackUserId)} `);
-			// 	meMessage = false;
-			// }
-
 			// if (text) {
 			// 	text = toSlackPostText(text, request.mentionedUserIds, userIdsByName);
 			// }
 
-			const { streamId, postId: parentPostId } = fromTeamsPostId(
+			const { teamId, channelId, messageId: parentMessageId } = fromPostId(
 				request.parentPostId,
 				request.streamId!
 			);
-
-			// if (meMessage) {
-			// 	const response = await this.teamsApiCall(
-			// 		this._teams.chat.meMessage,
-			// 		{
-			// 			channel: streamId,
-			// 			text: text
-			// 		},
-			// 		`chat.meMessage`
-			// 	);
-
-			// 	const { ok, error, ts: postId } = response as WebAPICallResult & { ts?: any };
-			// 	if (!ok) throw new Error(error);
-
-			// 	const postResponse = await this.getPost({ streamId: streamId, postId: postId });
-			// 	return postResponse;
-			// }
 
 			// let attachment: MessageAttachment | undefined;
 			let body: { contentType: "text" | "html"; content: string };
@@ -619,8 +607,8 @@ export class MSTeamsApiProvider implements ApiProvider {
 			}
 
 			const response = await this.teamsApiCall<any>(
-				`teams/${this._teamsTeamId}/channels/${streamId}/messages${
-					parentPostId ? `/${parentPostId}/replies` : ""
+				`teams/${teamId}/channels/${channelId}/messages${
+					parentMessageId ? `/${parentMessageId}/replies` : ""
 				}`,
 				request =>
 					request.post({
@@ -628,16 +616,23 @@ export class MSTeamsApiProvider implements ApiProvider {
 					})
 			);
 
-			const post = await fromTeamsPost(response, streamId, usernamesById, this._codestreamTeamId);
-			const { postId } = fromTeamsPostId(post.id, post.streamId);
-			createdPostId = postId;
+			const post = await fromTeamsPost(
+				response,
+				channelId,
+				teamId,
+				usernamesById,
+				this._codestreamTeamId
+			);
+			// const { postId } = fromTeamsPostId(post.id, post.streamId, this._teamsTeamId);
+			// createdPostId = postId;
 
 			if (codemark) {
-				await this._codestream.updateCodemark({
+				void (await this._codestream.updateCodemark({
 					codemarkId: codemark.id,
 					streamId: post.streamId,
 					postId: post.id
-				});
+				}));
+
 				codemark.postId = post.id;
 				codemark.streamId = post.streamId;
 			}
@@ -652,11 +647,12 @@ export class MSTeamsApiProvider implements ApiProvider {
 			};
 		} catch (ex) {
 			throw ex;
-		} finally {
-			// if (createdPostId) {
-			// 	this.updatePostsCount(this.teamId, request.streamId, createdPostId, request.parentPostId);
-			// }
 		}
+		// finally {
+		// 	// if (createdPostId) {
+		// 	// 	this.updatePostsCount(this.teamId, request.streamId, createdPostId, request.parentPostId);
+		// 	// }
+		// }
 	}
 
 	private async updatePostsCount(
@@ -685,10 +681,10 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 	@log()
 	async fetchPostReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse> {
-		const { streamId, postId } = fromTeamsPostId(request.postId, request.streamId);
+		const { teamId, channelId, messageId } = fromPostId(request.postId, request.streamId);
 
 		const response = await this.teamsApiCall<{ value: any[] }>(
-			`teams/${this._teamsTeamId}/channels/${streamId}/messages/${postId}/replies`,
+			`teams/${teamId}/channels/${channelId}/messages/${messageId}/replies`,
 			request => request.get()
 		);
 
@@ -697,7 +693,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 		const usernamesById = await this.ensureUsernamesById();
 		const posts = await Promise.all(response.value.map((m: any) =>
-			fromTeamsPost(m, streamId, usernamesById, this._codestreamTeamId)
+			fromTeamsPost(m, channelId, teamId, usernamesById, this._codestreamTeamId)
 		) as Promise<CSPost>[]);
 
 		return { posts: posts };
@@ -710,15 +706,21 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 	@log()
 	async getPost(request: GetPostRequest): Promise<GetPostResponse> {
-		const { streamId, postId } = fromTeamsPostId(request.postId, request.streamId);
+		const { teamId, channelId, messageId } = fromPostId(request.postId, request.streamId);
 
 		const response = await this.teamsApiCall<any>(
-			`teams/${this._teamsTeamId}/channels/${streamId}/messages/${postId}`,
+			`teams/${teamId}/channels/${channelId}/messages/${messageId}`,
 			request => request.get()
 		);
 
 		const usernamesById = await this.ensureUsernamesById();
-		const post = await fromTeamsPost(response, streamId, usernamesById, this._codestreamTeamId);
+		const post = await fromTeamsPost(
+			response,
+			channelId,
+			teamId,
+			usernamesById,
+			this._codestreamTeamId
+		);
 
 		return { post: post };
 	}
@@ -728,9 +730,9 @@ export class MSTeamsApiProvider implements ApiProvider {
 		const responses = await Promise.all(
 			request.postIds.map(id => this.getPost({ streamId: request.streamId, postId: id }))
 		);
-		const posts: CSPost[] = [];
-		responses.forEach(p => posts.push(p.post));
-		return { posts };
+
+		const posts = responses.map(p => p.post);
+		return { posts: posts };
 	}
 
 	@log()
@@ -782,14 +784,28 @@ export class MSTeamsApiProvider implements ApiProvider {
 		const cc = Logger.getCorrelationContext();
 
 		try {
-			const response = await this.teamsApiCall<{ value: any[] }>(
-				`teams/${this._teamsTeamId}/channels`,
-				request => request.get()
+			const requests: GraphBatchRequest[] = [
+				...Iterables.map(this._teamsById!.keys(), id => ({
+					id: id,
+					method: "GET",
+					url: `teams/${id}/channels`
+				}))
+			];
+			const response = await this.teamsApiCall<{ responses: GraphBatchResponse[] }>(
+				"$batch",
+				request =>
+					request.post({
+						requests: requests
+					})
 			);
 
-			const streams = response.value.map(c =>
-				fromTeamsChannel(c, this._teamsUserId, this._codestreamTeamId)
-			);
+			const streams = [
+				...Iterables.flatMap(response.responses, r =>
+					r.body!.value!.map(c =>
+						fromTeamsChannel(c, r.id, this._teamsUserId, this._codestreamTeamId, this._teamsById!)
+					)
+				)
+			];
 
 			if (
 				request.types != null &&
@@ -835,42 +851,21 @@ export class MSTeamsApiProvider implements ApiProvider {
 			return this._codestream.getStream(request);
 		}
 
-		throw new Error("Not Supported");
+		const { teamId, channelId } = fromStreamId(request.streamId);
 
-		// let stream;
-		// switch (fromSlackChannelIdToType(request.streamId)) {
-		// 	case "channel":
-		// 		stream = await this.fetchChannel(request.streamId);
-		// 		break;
-		// 	case "group":
-		// 		stream = await this.fetchGroup(request.streamId, await this.ensureUsernamesById());
-		// 		break;
-		// 	case "direct":
-		// 		stream = await this.fetchIM(request.streamId, await this.ensureUsernamesById());
-		// 		break;
-		// 	default:
-		// 		throw new Error(`Invalid stream type: ${request.streamId}`);
-		// }
+		const response = await this.teamsApiCall(`teams/${teamId}/channels/${channelId}`, request =>
+			request.get()
+		);
+		const channel = fromTeamsChannel(
+			response,
+			teamId,
+			this._teamsUserId,
+			this._codestreamTeamId,
+			this._teamsById!
+		);
 
-		// return { stream: stream };
+		return { stream: channel };
 	}
-
-	// @log()
-	// private async getStreamMembers(streamId: string) {
-	// 	const response = await this.teamsApiCall(
-	// 		this._teams.conversations.members,
-	// 		{
-	// 			channel: streamId
-	// 			// limit: 1000
-	// 		},
-	// 		`conversations.members`
-	// 	);
-
-	// 	const { ok, error, members } = response as WebAPICallResult & { members: string[] };
-	// 	if (!ok) throw new Error(error);
-
-	// 	return members;
-	// }
 
 	@log()
 	async archiveStream(request: ArchiveStreamRequest): Promise<ArchiveStreamResponse> {
@@ -956,27 +951,53 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 	@log()
 	async fetchUsers(request: FetchUsersRequest): Promise<FetchUsersResponse> {
-		const response = await this.teamsApiCall<{ value: any[] }>(
-			`groups/${this._teamsTeamId}/members`,
-			request => request.get()
-		);
+		const requests: GraphBatchRequest[] = [
+			...Iterables.map(this._teamsById!.keys(), id => ({
+				id: id,
+				method: "GET",
+				url: `groups/${id}/members`
+			}))
+		];
 
-		const { team } = await this._codestream.getTeam({ teamId: this._codestreamTeamId });
+		const promises: [
+			Promise<CSGetTeamResponse>,
+			Promise<{
+				user: CSMe;
+			}>,
+			Promise<{
+				responses: GraphBatchResponse[];
+			}>
+		] = [
+			this._codestream.getTeam({ teamId: this._codestreamTeamId }),
+			this.getMeCore(),
+			this.teamsApiCall<{ responses: GraphBatchResponse[] }>("$batch", request =>
+				request.post({
+					requests: requests
+				})
+			)
+		];
+
+		const [{ team }, { user: me }, response] = await Promise.all(promises);
 		const { users: codestreamMembers } = await this._codestream.fetchUsers({
 			userIds: team.memberIds
 		});
 
-		const users: CSUser[] = response.value
-			.map((m: any) => fromTeamsUser(m, this._codestreamTeamId, codestreamMembers))
-			.filter(u => !u.deactivated);
+		const users = new Map<string, CSUser>();
 
-		// Find ourselves and replace it with our model
-		const index = users.findIndex(u => u.id === this._teamsUserId);
+		for (const r of response.responses) {
+			for (const m of r.body!.value!) {
+				if (users.has(m.id)) continue;
 
-		const meResponse = await this.getMeCore();
-		users.splice(index, 1, meResponse.user);
+				// Find ourselves and replace it with our model
+				if (m.id === this._teamsUserId) {
+					users.set(m.id, me);
+				} else if (m.deletedDateTime == null) {
+					users.set(m.id, fromTeamsUser(m, this._codestreamTeamId, codestreamMembers));
+				}
+			}
+		}
 
-		return { users: users };
+		return { users: [...users.values()] };
 	}
 
 	@log()

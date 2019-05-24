@@ -15,15 +15,59 @@ import {
 const defaultCreatedAt = 181886400000;
 const defaultCreator = "0";
 
+export interface GraphBatchRequest {
+	id: string;
+	method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | string;
+	url: string;
+}
+
+export interface GraphBatchResponse {
+	id: string;
+	status: number;
+	headers?: {
+		location: string;
+	};
+	body?: {
+		"@odata.context": string;
+		error?: {
+			code: string;
+			message: string;
+		};
+		value?: any[];
+	} | null;
+}
+
+export function fromPostId(
+	postId: string | undefined,
+	streamId: string
+): { teamId: string; channelId: string; messageId: string | undefined } {
+	if (postId == null) return { ...fromStreamId(streamId), messageId: postId };
+
+	return JSON.parse(postId);
+}
+
+export function toPostId(messageId: string, channelId: string, teamId: string) {
+	return JSON.stringify({ teamId: teamId, channelId: channelId, messageId: messageId });
+}
+
+export function fromStreamId(streamId: string): { teamId: string; channelId: string } {
+	return JSON.parse(streamId);
+}
+
+export function toStreamId(channelId: string, teamId: string) {
+	return JSON.stringify({ teamId: teamId, channelId: channelId });
+}
+
 export async function fromTeamsPost(
-	post: any,
-	streamId: string,
+	message: any,
+	channelId: string,
+	teamId: string,
 	usernamesById: Map<string, string>,
-	teamId: string
+	codeStreamTeamId: string
 ): Promise<CSPost> {
 	const mentionedUserIds: string[] = [];
 
-	const text = fromTeamsPostText(post, usernamesById, mentionedUserIds);
+	const text = fromTeamsPostText(message, usernamesById, mentionedUserIds);
 
 	// let reactions;
 	// if (post.reactions) {
@@ -62,26 +106,26 @@ export async function fromTeamsPost(
 	// 	files = post.files.map(fromSlackPostFile);
 	// }
 
-	const timestamp = new Date(post.createdDateTime).getTime() / 1000;
+	const timestamp = new Date(message.createdDateTime).getTime() / 1000;
 	const modifiedTimestamp =
-		new Date(post.lastModifiedDateTime || post.createdDateTime).getTime() / 1000;
+		new Date(message.lastModifiedDateTime || message.createdDateTime).getTime() / 1000;
 	return {
 		codemarkId: undefined, // codemark && codemark.id,
 		createdAt: timestamp,
-		creatorId: post.from.user && post.from.user.id,
-		deactivated: post.deleted,
+		creatorId: message.from.user && message.from.user.id,
+		deactivated: message.deleted,
 		// files: files,
 		hasBeenEdited: timestamp !== modifiedTimestamp,
 		numReplies: 0,
-		id: toTeamsPostId(post.id, streamId),
+		id: toPostId(message.id, channelId, teamId),
 		mentionedUserIds: mentionedUserIds,
 		modifiedAt: modifiedTimestamp,
-		parentPostId: post.replyToId ? toTeamsPostId(post.replyToId, streamId) : undefined,
+		parentPostId: message.replyToId ? toPostId(message.replyToId, channelId, teamId) : undefined,
 		// reactions: reactions,
 		text: text,
-		seqNum: post.id,
-		streamId: streamId,
-		teamId: teamId
+		seqNum: message.id,
+		streamId: toStreamId(channelId, teamId),
+		teamId: codeStreamTeamId
 	};
 }
 
@@ -291,24 +335,6 @@ export function toTeamsPostBody(
 	// return attachment;
 }
 
-export function fromTeamsPostId<T extends string | undefined>(
-	postId: T,
-	streamId: string
-): { streamId: string; postId: T } {
-	if (postId == null) {
-		return { streamId: streamId, postId: postId };
-	}
-
-	const index = postId.lastIndexOf("|");
-	if (index === -1) return { streamId: streamId, postId: postId };
-
-	return { streamId: postId.substring(0, index), postId: postId.substr(index + 1) as T };
-}
-
-export function toTeamsPostId(postId: string, streamId: string) {
-	return `${streamId}|${postId}`;
-}
-
 export function fromTeamsPostText(
 	post: any,
 	usernamesById: Map<string, string>,
@@ -322,8 +348,10 @@ export function fromTeamsPostText(
 
 export function fromTeamsChannel(
 	channel: any,
+	teamId: string,
 	teamsUserId: string,
-	codestreamTeamId: string
+	codestreamTeamId: string,
+	teamsById: Map<string, string>
 ): CSChannelStream {
 	let memberIds: string[] | undefined;
 	if (channel.displayName !== "General") {
@@ -332,13 +360,18 @@ export function fromTeamsChannel(
 		memberIds = channel.members == null ? [teamsUserId] : channel.members;
 	}
 
+	const name =
+		teamsById.size === 1
+			? channel.displayName || ""
+			: `${teamsById.get(teamId)}: ${channel.displayName || ""}`;
+
 	return {
 		createdAt: defaultCreatedAt,
 		creatorId: defaultCreator,
-		id: channel.id,
+		id: toStreamId(channel.id, teamId),
 		isArchived: false,
 		isTeamStream: channel.displayName === "General",
-		name: channel.displayName || "",
+		name: name,
 		memberIds: memberIds,
 		modifiedAt: defaultCreatedAt,
 		priority: 0,
@@ -358,7 +391,11 @@ export function toTeamsTeam(team: CSTeam, usernamesById: Map<string, string>) {
 	// });
 }
 
-export function fromTeamsUser(user: any, teamId: string, csTeamMembers: CSUser[] = []): CSUser {
+export function fromTeamsUser(
+	user: any,
+	codestreamTeamId: string,
+	csTeamMembers: CSUser[] = []
+): CSUser {
 	let codestreamId: string | undefined;
 	csTeamMembers.some(m => {
 		if (m.providerIdentities) {
@@ -391,14 +428,10 @@ export function fromTeamsUser(user: any, teamId: string, csTeamMembers: CSUser[]
 		numMentions: 0,
 		registeredAt: defaultCreatedAt,
 		// TODO: Need to hold both codestream and slack teams?
-		teamIds: [teamId],
+		teamIds: [codestreamTeamId],
 		timeZone: "",
 		// TODO: ???
 		totalPosts: 0,
 		username: user.displayName
 	};
-}
-
-function nullToUndefined<T>(value: T | null | undefined): T | undefined {
-	return value == null ? undefined : value;
 }
