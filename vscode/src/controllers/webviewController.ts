@@ -34,6 +34,7 @@ import {
 	LiveShareStartSessionRequestType,
 	LoginRequestType,
 	LogoutRequestType,
+	MSTeamsLoginRequestType,
 	NewCodemarkNotificationType,
 	ReloadWebviewRequestType,
 	ShowCodemarkNotificationType,
@@ -52,10 +53,10 @@ import {
 } from "@codestream/protocols/webview";
 import * as fs from "fs";
 import {
-	commands,
 	ConfigurationChangeEvent,
 	ConfigurationTarget,
 	Disposable,
+	env,
 	TextEditor,
 	TextEditorSelectionChangeEvent,
 	TextEditorVisibleRangesChangeEvent,
@@ -502,10 +503,23 @@ export class WebviewController implements Disposable {
 
 				break;
 			}
+			case MSTeamsLoginRequestType.method: {
+				webview.onIpcRequest(MSTeamsLoginRequestType, e, async (type, params) => {
+					await env.openExternal(
+						Uri.parse(
+							`${
+								Container.config.serverUrl
+							}/web/provider-auth/msteams?signupToken=${this.session.getSignupToken()}`
+						)
+					);
+					return emptyObj;
+				});
+
+				break;
+			}
 			case SlackLoginRequestType.method: {
 				webview.onIpcRequest(SlackLoginRequestType, e, async (type, params) => {
-					await commands.executeCommand(
-						"vscode.open",
+					await env.openExternal(
 						Uri.parse(
 							`${
 								Container.config.serverUrl
