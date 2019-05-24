@@ -32,7 +32,7 @@ namespace CodeStream.VisualStudio.Core.Logging {
 					"{Timestamp:HH:mm:ss.fff} {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}(at {Caller}){NewLine}{Exception}";
 #endif
 
-				return new LoggerConfiguration()
+				var configuration= new LoggerConfiguration()
 					.Enrich.WithProcessId()
 					.Enrich.WithThreadId()
 #if DEBUG
@@ -46,10 +46,16 @@ namespace CodeStream.VisualStudio.Core.Logging {
 							new MessageTemplateTextFormatter(template, new CultureInfo("en-US"))),
 						logPath,
 						fileSizeLimitBytes: 52428800,
-						shared: true)
-						// this can cause performance issues if used at Verbose mode
-					.WriteTo.CustomOutput(Guids.LoggingOutputPaneGuid, "CodeStream", outputTemplate: template, restrictedToMinimumLevel : LogEventLevel.Error)
-					.CreateLogger();
+						shared: true);
+
+				if (Core.Process.IsVisualStudioProcess()) {
+					// this can cause performance issues if used at Verbose mode
+					configuration.WriteTo.CustomOutput(Guids.LoggingOutputPaneGuid, "CodeStream",
+						outputTemplate: template,
+						restrictedToMinimumLevel: LogEventLevel.Error);
+				}
+
+				return configuration.CreateLogger();
 			}
 			catch (Exception ex) {
 				System.Diagnostics.Debug.WriteLine(ex);
