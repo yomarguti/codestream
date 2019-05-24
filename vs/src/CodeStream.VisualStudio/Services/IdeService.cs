@@ -21,6 +21,9 @@ using System.Windows;
 using CodeStream.VisualStudio.Packages;
 using IComponentModel = Microsoft.VisualStudio.ComponentModelHost.IComponentModel;
 using ILogger = Serilog.ILogger;
+using System.IO;
+using System.Text;
+using Microsoft;
 
 namespace CodeStream.VisualStudio.Services {
 	public enum ExtensionKind {
@@ -32,12 +35,16 @@ namespace CodeStream.VisualStudio.Services {
 		System.Threading.Tasks.Task SetClipboardAsync(string text);
 		void ScrollEditor(Uri fileUri, int? scrollTo = null, int? deltaPixels = null, bool? atTop = false);
 		System.Threading.Tasks.Task<bool> OpenEditorAndRevealAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false);
-		System.Threading.Tasks.Task<bool> OpenEditorAtLineAsync(Uri fileUri, Range range, bool forceOpen = false);
+		System.Threading.Tasks.Task<IWpfTextView> OpenEditorAtLineAsync(Uri fileUri, Range range, bool forceOpen = false);
 		//bool QueryExtensions(string author, params string[] names);
 		bool QueryExtension(ExtensionKind extensionKind);
 		bool TryStartLiveShare();
 		bool TryJoinLiveShare(string url);
 		System.Threading.Tasks.Task GetClipboardTextValueAsync(int millisecondsTimeout, Action<string> callback, Regex clipboardMatcher = null);
+
+		void CompareFiles(string filePath1, string filePath2, bool removeFile2 = false);
+		string CreateDiffTempFile(string originalFile, string content, Range range);
+		void RemoveTempFileSafe(string fileName);
 	}
 
 	[Export(typeof(IIdeService))]
@@ -60,6 +67,10 @@ namespace CodeStream.VisualStudio.Services {
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(IdeService));
 			}
+		}
+
+		public IdeService() {
+			//unit testing ctor
 		}
 
 		public async System.Threading.Tasks.Task<bool> OpenEditorAndRevealAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false) {
@@ -97,7 +108,7 @@ namespace CodeStream.VisualStudio.Services {
 		/// <param name="range"></param>
 		/// <param name="forceOpen"></param>
 		/// <returns></returns>
-		public async System.Threading.Tasks.Task<bool> OpenEditorAtLineAsync(Uri fileUri, Range range, bool forceOpen = false) {
+		public async System.Threading.Tasks.Task<IWpfTextView> OpenEditorAtLineAsync(Uri fileUri, Range range, bool forceOpen = false) {
 			using (Log.CriticalOperation($"{nameof(OpenEditorAtLineAsync)} {fileUri} range={range?.Start?.Line}, {range?.End?.Line}")) {
 				try {
 					var wpfTextView = await AssertWpfTextViewAsync(fileUri, forceOpen);
@@ -107,13 +118,13 @@ namespace CodeStream.VisualStudio.Services {
 							wpfTextView.Caret.MoveTo(new SnapshotPoint(wpfTextView.TextSnapshot, span.Value.Start + range.Start.Character));
 							wpfTextView.Caret.EnsureVisible();
 						}
-						return true;
+						return wpfTextView;
 					}
-					return false;
+					return null;
 				}
 				catch (Exception ex) {
 					Log.Error(ex, $"{nameof(OpenEditorAtLineAsync)} failed for {fileUri}");
-					return false;
+					return null;
 				}
 			}
 		}
@@ -177,6 +188,7 @@ namespace CodeStream.VisualStudio.Services {
 					wpfTextView = view?.WpfTextView;
 				}
 			}
+
 			return wpfTextView;
 		}
 
@@ -452,6 +464,166 @@ namespace CodeStream.VisualStudio.Services {
 			staThread.Join();
 
 			return text as string;
+		}
+
+		private static readonly Encoding VsDefaultEncoding = new UTF8Encoding(true);
+
+		private string CreateTempFile(string fileName) {
+			try {
+				var name = Path.GetFileName(fileName);
+				if (name == null) return null;
+				var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+				Directory.CreateDirectory(path); // Ensure temp path exists.
+				var tempFile = Path.Combine(path, name);
+				Log.Verbose($"Created temp file {tempFile}");
+				return tempFile;
+			}
+			catch(Exception ex) {
+				Log.Error(ex, nameof(CreateTempFile));
+			}
+
+			return null;
+		}
+
+		public string CreateDiffTempFile(string originalFilePath, string patchContent, Range range) {
+			try {
+				var tempFile = CreateTempFile(originalFilePath);
+				if (tempFile == null) return null;
+				
+				using (var fs = File.OpenRead(originalFilePath))
+				using (var reader = new StreamReader(fs, Encoding.UTF8, true)) {
+					reader.Peek();
+					// do some magic to get the encoding from the current file
+					var encoding = reader.CurrentEncoding;
+					using (var writer = new StreamWriter(tempFile, false, encoding)) {
+						ProcessContent(reader, writer, range, patchContent);
+					}
+				}
+
+				return tempFile;
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(CreateDiffTempFile));
+			}
+
+			return null;
+		}
+
+		public string ReplaceContent(string originalContent, string newContent, Range range) {
+			var sb = new StringBuilder();
+			using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(originalContent ?? "")))
+			using (var sr = new StreamReader(ms, Encoding.UTF8, true)) {
+				using (TextWriter tw = new StringWriter(sb)) {
+					ProcessContent(sr, tw, range, newContent);
+				}
+			}
+			return sb.ToString();
+		}
+
+		private static string NormalizeLineEndings(string source) {
+			return source.Replace(Environment.NewLine, "\n").Replace("\n", Environment.NewLine);
+		}
+
+		private static void ProcessContent(StreamReader sr, TextWriter tw, Range range, string newContent) {
+			string line;
+			var index = 0;
+			var normalizedNewContent = NormalizeLineEndings(newContent);
+			var endsWithNewLine = normalizedNewContent.EndsWith(Environment.NewLine);
+			while ((line = sr.ReadLine()) != null) {
+				string newLine = null;
+				bool addNewLine = false;
+				if (index == range.Start.Line && index == range.End.Line) {
+					newLine = line.Substring(0, range.Start.Character) + normalizedNewContent + line.Substring(range.End.Character, line.Length - range.End.Character);
+					if (!endsWithNewLine) {
+						addNewLine = true;
+					}
+				}
+				else {
+					if (index == range.Start.Line) {
+						newLine = line.Remove(range.Start.Character) + normalizedNewContent;
+						if (!endsWithNewLine) {
+							addNewLine = true;
+						}
+					}
+					else if (index > range.Start.Line && index < range.End.Line) {
+						// this line is part of the inner range -- skip it!
+					}
+					else if (index == range.End.Line) {
+						if (range.End.Character < line.Length) {
+							var n = line.Remove(range.End.Character);
+							if (n != string.Empty) {
+								newLine = n;
+							}
+						}
+					}
+					else {
+						newLine = line;
+						if (!endsWithNewLine) {
+							addNewLine = true;
+						}
+					}
+				}
+
+				//note: don't use File.AppendAllText, it opens the file every time and could take forever to run. Instead use StreamWriter 
+				if (newLine != null) {
+					tw.Write(newLine);
+					if (addNewLine) {
+						tw.Write(Environment.NewLine);
+					}
+				}
+				
+				index++;
+			}
+		}
+
+		/// <summary>
+		/// Compares the contents of two files. Requires UI thread.
+		/// </summary>
+		/// <param name="filePath1"></param>
+		/// <param name="filePath2"></param>
+		/// <param name="removeFile2OnCompletion"></param>		
+		public void CompareFiles(string filePath1, string filePath2, bool removeFile2OnCompletion = false) {
+			ThreadHelper.ThrowIfNotOnUIThread();
+			if (filePath1.IsNullOrWhiteSpace() || filePath2.IsNullOrWhiteSpace()) {
+				if (filePath1.IsNullOrWhiteSpace()) {
+					Log.Debug($"Missing {nameof(filePath1)}");
+					return;
+				}
+
+				if (filePath2.IsNullOrWhiteSpace()) {
+					Log.Debug($"Missing {nameof(filePath2)}");
+					return;
+				}
+			}
+			
+			try {
+				var diffService = (IVsDifferenceService)_serviceProvider.GetService(typeof(SVsDifferenceService));
+				Assumes.Present(diffService);
+
+				diffService.OpenComparisonWindow2(filePath1, filePath2,
+					$"Your version vs Codemark version",
+					filePath1 + Environment.NewLine + filePath2,
+					filePath1,
+					filePath2, null, null, 0).Show();
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(CompareFiles));
+			}
+			finally {
+				if (removeFile2OnCompletion) {
+					RemoveTempFileSafe(filePath2);
+				}
+			}
+		}
+
+		public void RemoveTempFileSafe(string fileName) {
+			try {
+				Directory.Delete(Path.GetDirectoryName(fileName), true);
+				Log.Verbose($"Removed temp file {fileName}");
+			}
+			catch (Exception ex) {
+				Log.Warning(ex, $"Failed to remove temp file {fileName}");
+			}
 		}
 	}
 }

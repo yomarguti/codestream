@@ -58,8 +58,8 @@ namespace CodeStream.VisualStudio.Commands {
 						var ideService = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<IIdeService>();
 
 						var editorResponse = await ideService.OpenEditorAtLineAsync(response.TextDocument.Uri.ToUri(), response.Range, forceOpen: true);
-						if (!editorResponse) {
-							Log.Error($"ShowCodeResult={editorResponse} for {@response} failed to open editor");
+						if (editorResponse == null) {
+							Log.Error($"failed to open editor {@response}");
 						}
 						Log.Debug($"Handled {nameof(BookmarkShortcutCommand)} for {args.Index}");
 					}

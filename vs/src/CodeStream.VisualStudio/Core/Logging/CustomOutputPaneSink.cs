@@ -35,9 +35,9 @@ namespace CodeStream.VisualStudio.Core.Logging {
 				_customOutputWindowPane.Activate();
 #endif
 			}
-			catch (COMException) {
+			catch (COMException ex) {
 #if DEBUG
-				System.Diagnostics.Debugger.Break();
+				System.Diagnostics.Debug.WriteLine(ex);
 #endif
 			}
 			catch (Exception ex) {

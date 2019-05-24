@@ -107,8 +107,46 @@ namespace CodeStream.VisualStudio {
 											}
 											break;
 										}
-									case CompareMarkerRequestType.MethodName:
+									case CompareMarkerRequestType.MethodName: {
+
+											using (_browserService.CreateScope(message)) {
+												try {
+													var marker = message.Params["marker"].ToObject<CsMarker>();
+													var documentFromMarker = await _codeStreamAgent.GetDocumentFromMarkerAsync(new DocumentFromMarkerRequest(marker));
+													var filePath = documentFromMarker.TextDocument.Uri.ToUri().ToLocalPath();
+													var tempFile = _ideService.CreateDiffTempFile(filePath,
+														documentFromMarker.Marker.Code, documentFromMarker.Range);
+													if (!tempFile.IsNullOrWhiteSpace()) {
+														await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+														_ideService.CompareFiles(filePath, tempFile, true);
+													}
+												}
+												catch (Exception ex) {
+													Log.Error(ex, nameof(CompareMarkerRequestType.MethodName));
+												}
+											}
+											break;
+										}
 									case ApplyMarkerRequestType.MethodName: {
+											using (_browserService.CreateScope(message)) {
+												try {
+													var marker = message.Params["marker"].ToObject<CsMarker>();
+													var documentFromMarker = await _codeStreamAgent.GetDocumentFromMarkerAsync(new DocumentFromMarkerRequest(marker));
+													var fileUri = documentFromMarker.TextDocument.Uri.ToUri();
+
+													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+													var wpfTextView = await _ideService.OpenEditorAtLineAsync(fileUri, documentFromMarker.Range, true);
+													if (wpfTextView != null) {
+														var span = wpfTextView.ToSpan(documentFromMarker.Range);
+														if (span.HasValue) {
+															wpfTextView.TextBuffer.Replace(span.Value, documentFromMarker.Marker.Code);
+														}
+													}
+												}
+												catch (Exception ex) {
+													Log.Error(ex, nameof(ApplyMarkerRequestType.MethodName));
+												}
+											}
 											break;
 										}
 									case GetViewBootstrapDataRequestType.MethodName:

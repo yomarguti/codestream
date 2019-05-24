@@ -307,8 +307,8 @@ namespace CodeStream.VisualStudio.Services {
 
 			var capabilities = state?["capabilities"] != null ? state["capabilities"].ToObject<JObject>() : JObject.FromObject(new { });
 			capabilities.Merge(new Capabilities {
-				CodemarkApply = false,
-				CodemarkCompare = false,
+				CodemarkApply = true,
+				CodemarkCompare = true,
 				EditorTrackVisibleRange = true,
 				Services = new Models.Services {
 					Vsls = vslsEnabled
