@@ -39,7 +39,7 @@ namespace CodeStream.VisualStudio.UI {
 		IWpfTextViewConnectionListener {
 		private readonly ILogger Log = LogManager.ForContext<TextViewCreationListenerDummy>();
 		private IWpfTextView _focusedWpfTextView;
-		private static readonly object InitializedLock = new object();		
+		private static readonly object InitializedLock = new object();
 
 		internal const string LayerName = "CodeStreamHighlightColor";
 
@@ -299,7 +299,7 @@ namespace CodeStream.VisualStudio.UI {
 							if (wpfTextView.Properties.TryGetProperty(PropertyNames.DocumentMarkerManager, out DocumentMarkerManager documentMarkerManager)
 								&& documentMarkerManager != null) {
 								if (!documentMarkerManager.IsInitialized()) {
-									documentMarkerManager.GetMarkers(true);
+									documentMarkerManager.TrySetMarkers(true);
 								}
 							}
 
@@ -410,7 +410,7 @@ namespace CodeStream.VisualStudio.UI {
 					wpfTextView
 						.Properties
 						.GetProperty<DocumentMarkerManager>(PropertyNames.DocumentMarkerManager)
-						.GetMarkers(true);
+						.TrySetMarkers(true);
 
 					wpfTextView
 						.Properties
@@ -449,18 +449,16 @@ namespace CodeStream.VisualStudio.UI {
 					return;
 				}
 
-				var onTextViewLayoutChanged = false;
-				// get markers if it's null (first time) or we did something that isn't scrolling
-				if (!documentMarkerManager.IsInitialized() || e.TranslatedLines.Any()) {
-					onTextViewLayoutChanged = documentMarkerManager.GetMarkers();
-				}
-				else if (documentMarkerManager.HasMarkers()) {
-					onTextViewLayoutChanged = true;
+				var triggerTextViewLayoutChanged = false;
+				var hasVerticalChanges = e.VerticalTranslation || e.TranslatedLines.Any();
+
+				// get markers if it's null (first time) or we did something that isn't scrolling/vertical changes
+				if (!documentMarkerManager.IsInitialized() || hasVerticalChanges) {
+					triggerTextViewLayoutChanged = documentMarkerManager.TrySetMarkers();
 				}
 
 				// don't trigger for changes that don't result in lines being added or removed
-				if (SessionService.IsWebViewVisible && SessionService.IsCodemarksForFileVisible &&
-					(e.VerticalTranslation || e.TranslatedLines.Any())) {
+				if (SessionService.IsWebViewVisible && SessionService.IsCodemarksForFileVisible && hasVerticalChanges) {
 					try {
 						var visibleRangeSubject = wpfTextView.Properties
 							.GetProperty<Subject<HostDidChangeEditorVisibleRangesNotificationSubject>>(PropertyNames
@@ -478,7 +476,7 @@ namespace CodeStream.VisualStudio.UI {
 					}
 				}
 
-				if (onTextViewLayoutChanged) {
+				if (triggerTextViewLayoutChanged) {
 					//only send this if we have markers
 					wpfTextView
 						.Properties

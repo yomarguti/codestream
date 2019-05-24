@@ -28,11 +28,11 @@ namespace CodeStream.VisualStudio.UI {
 		}
 
 		/// <summary>
-		/// tries to populate the marker collection, returns true if requires update
+		/// Tries to populate the marker collection, returns true if there was a change in marker count and the callee should update
 		/// </summary>
-		/// <param name="forceUpdate"></param>
+		/// <param name="forceUpdate">When set to true, ignores if the collection is empty</param>
 		/// <returns></returns>
-		public bool GetMarkers(bool forceUpdate = false) {
+		public bool TrySetMarkers(bool forceUpdate = false) {
 			if (_markers != null && _markers.Markers.AnySafe() == false && !forceUpdate) {
 				Log.Verbose($"Codemarks are empty and forceUpdate={forceUpdate}", forceUpdate);
 				return false;
@@ -77,7 +77,7 @@ namespace CodeStream.VisualStudio.UI {
 #endif
 				}
 				catch (Exception ex) {
-					Log.Error(ex, nameof(GetMarkers));
+					Log.Error(ex, nameof(TrySetMarkers));
 				}
 			});
 			return result;
