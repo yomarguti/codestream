@@ -2,12 +2,10 @@
 
 import { Id } from "../entityManager";
 import { FetchFn, IdFn } from "./baseCache";
-import { SequentialSlice } from "./sequentialSlice";
 
 export enum IndexType {
 	Unique = "unique",
-	Group = "group",
-	GroupSequential = "group-sequential"
+	Group = "group"
 }
 
 export interface IndexParams<T> {
@@ -31,13 +29,6 @@ export function makeIndex<T>(params: IndexParams<T>): Index<T> {
 			return new UniqueIndex(params.fields, params.fetchFn);
 		case IndexType.Group:
 			return new GroupIndex(params.fields, params.fetchFn, params.idFn!);
-		case IndexType.GroupSequential:
-			return new GroupSequentialIndex(
-				params.fields,
-				params.seqField!,
-				params.fetchFn,
-				params.idFn!
-			);
 	}
 }
 
@@ -52,6 +43,8 @@ function defaultIdFn(entity: any): Id {
 
 export abstract class BaseIndex<T> {
 	protected constructor(readonly fields: (keyof T)[], readonly fetchFn: FetchFn<T>) {}
+
+	enabled: boolean = true;
 
 	abstract invalidate(): void;
 
@@ -90,6 +83,8 @@ export class UniqueIndex<T> extends BaseIndex<T> {
 	}
 
 	set(entity: T, oldEntity?: T) {
+		if (!this.enabled) return;
+
 		const value = this.requireIndexValue(entity);
 		if (value === undefined) return;
 
@@ -147,7 +142,7 @@ export class GroupIndex<T> extends BaseIndex<T> {
 	 * Returns a group of entities that share the same group value.
 	 * If the group is not initialized, returns `undefined`.
 	 *
-	 * @param values The group value
+	 * @param value The group value
 	 * @return Array of entities or `undefined`
 	 */
 	getGroup(value: any[]): T[] | undefined {
@@ -168,6 +163,8 @@ export class GroupIndex<T> extends BaseIndex<T> {
 	 * @param oldEntity If specified, removes entity from its old group if different
 	 */
 	set(entity: T, oldEntity?: T) {
+		if (!this.enabled) return;
+
 		const group = this.getGroupForEntity(entity);
 
 		if (oldEntity) {
@@ -189,6 +186,8 @@ export class GroupIndex<T> extends BaseIndex<T> {
 	 * @param {[]} entities The entities
 	 */
 	initGroup(values: any[], entities: T[]) {
+		if (!this.enabled) return;
+
 		const indexValue = encodeArray(values);
 		if (this.groups.has(indexValue)) {
 			return;
@@ -207,126 +206,4 @@ export class GroupIndex<T> extends BaseIndex<T> {
 	}
 }
 
-class SequentialGroup<T> {
-	private readonly data: T[] = [];
-
-	private _maxSeq = 0;
-	get maxSeq() {
-		return this._maxSeq;
-	}
-
-	set(seqValue: number, entity: T) {
-		this.data[seqValue] = entity;
-		if (seqValue > this._maxSeq) {
-			this._maxSeq = seqValue;
-		}
-	}
-
-	dataSlice(startSeq: number, endSeq: number): T[] {
-		return this.data.slice(startSeq, endSeq);
-	}
-
-	dataTail(limit: number): T[] {
-		return this.data.slice(Math.max(this.data.length - limit, 1));
-	}
-}
-
-export class GroupSequentialIndex<T> extends BaseIndex<T> {
-	readonly type = IndexType.GroupSequential;
-	private readonly groups = new Map<string, SequentialGroup<T>>();
-	private readonly seqField: keyof T;
-	private readonly idFn: IdFn<T>;
-
-	constructor(field: (keyof T)[], seqField: keyof T, fetchFn: FetchFn<T>, idFn?: IdFn<T>) {
-		super(field, fetchFn);
-		this.seqField = seqField;
-		this.idFn = idFn || defaultIdFn;
-	}
-
-	invalidate() {
-		this.groups.clear();
-	}
-
-	set(entity: T, oldEntity?: T) {
-		const indexValue = this.requireIndexValue(entity);
-		if (indexValue === undefined) return;
-
-		const group = this.groups.get(indexValue);
-		if (group) {
-			const seqValue = this.requireSeqValue(entity);
-			group.set(seqValue, entity);
-		}
-	}
-
-	initGroup(values: any[], entities: T[]) {
-		const indexValue = encodeArray(values);
-		if (this.groups.has(indexValue)) {
-			return;
-		}
-
-		const group = new SequentialGroup<T>();
-		for (const entity of entities) {
-			const seqValue = (entity as any)[this.seqField];
-			if (typeof seqValue !== "number") {
-				throw this.errSeqNonNumeric(this.idFn(entity), seqValue);
-			}
-			group.set(seqValue, entity);
-		}
-		this.groups.set(indexValue, group);
-	}
-
-	getGroupSlice(values: any[], seqStart: number, seqEnd: number): SequentialSlice<T> | undefined {
-		const indexValue = encodeArray(values);
-		const group = this.groups.get(indexValue);
-		if (group) {
-			const dataSlice = group.dataSlice(seqStart, seqEnd);
-			return new SequentialSlice(dataSlice, this.seqField, seqStart, seqEnd, group.maxSeq);
-		} else {
-			return;
-		}
-	}
-
-	getGroupTail(values: any[], limit: number): SequentialSlice<T> | undefined {
-		const indexValue = encodeArray(values);
-		const group = this.groups.get(indexValue);
-		if (group) {
-			const dataSlice = group.dataTail(limit);
-			const last = dataSlice[dataSlice.length - 1];
-			const lastSeq = last && (last as any)[this.seqField];
-
-			let seqStart;
-			let seqEnd;
-			if (lastSeq) {
-				seqEnd = lastSeq + 1;
-				seqStart = seqEnd - dataSlice.length;
-			} else {
-				seqStart = 0;
-				seqEnd = 1;
-			}
-
-			return new SequentialSlice(dataSlice, this.seqField, seqStart, seqEnd, group.maxSeq);
-		} else {
-			return;
-		}
-	}
-
-	private requireSeqValue(entity: T): number {
-		const seqValue = (entity as any)[this.seqField];
-		if (typeof seqValue !== "number") {
-			throw this.errSeqNonNumeric(this.idFn(entity), seqValue);
-		}
-		return seqValue;
-	}
-
-	private errSeqNonNumeric(id: Id, seqValue: any): Error {
-		return new Error(
-			`Cannot add entity with id=${id} to group sequential index ${
-				this.fields
-			}: value for sequence field ${
-				this.seqField
-			} should be a number, but is ${seqValue}:${typeof seqValue}`
-		);
-	}
-}
-
-export type Index<T> = UniqueIndex<T> | GroupIndex<T> | GroupSequentialIndex<T>;
+export type Index<T> = UniqueIndex<T> | GroupIndex<T>;

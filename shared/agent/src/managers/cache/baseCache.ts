@@ -55,6 +55,19 @@ export class BaseCache<T> {
 		this.indexes = indexes;
 	}
 
+	disable() {
+		for (const index of this.indexes.values()) {
+			index.enabled = false;
+			index.invalidate();
+		}
+	}
+
+	enable() {
+		for (const index of this.indexes.values()) {
+			index.enabled = true;
+		}
+	}
+
 	invalidate() {
 		const cacheName = `${this.entityName} cache`;
 		for (const [field, index] of this.indexes.entries()) {

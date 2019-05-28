@@ -46,6 +46,7 @@ import {
 	CSStream,
 	StreamType
 } from "../protocol/api.protocol";
+import { CodeStreamSession } from "../session";
 import { Arrays, debug, lsp, lspHandler } from "../system";
 import { BaseIndex, IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
@@ -309,6 +310,8 @@ export class PostIndex extends BaseIndex<CSPost> {
 	}
 
 	setPosts(request: FetchPostsRequest, response: FetchPostsResponse) {
+		if (!this.enabled) return;
+
 		const { streamId } = request;
 		let postCollection = this.postsByStream.get(streamId);
 		if (!postCollection) {
@@ -508,12 +511,18 @@ function getGitError(textDocument?: TextDocumentIdentifier) {
 
 @lsp
 export class PostsManager extends EntityManagerBase<CSPost> {
+
 	protected readonly cache: PostsCache = new PostsCache({
 		idxFields: this.getIndexedFields(),
 		fetchFn: this.fetch.bind(this),
 		fetchPosts: this.fetchPosts.bind(this),
 		entityName: this.getEntityName()
 	});
+
+	constructor(public readonly session: CodeStreamSession) {
+		super(session);
+		this.cache.disable();
+	}
 
 	async cacheSet(entity: CSPost, oldEntity?: CSPost): Promise<CSPost | undefined> {
 		if (entity && entity.streamId) {
