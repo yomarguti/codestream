@@ -11,6 +11,8 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Windows.Threading;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace CodeStream.VisualStudio {
 	public class WebViewRouter {
@@ -108,17 +110,24 @@ namespace CodeStream.VisualStudio {
 											break;
 										}
 									case CompareMarkerRequestType.MethodName: {
-
 											using (_browserService.CreateScope(message)) {
 												try {
 													var marker = message.Params["marker"].ToObject<CsMarker>();
-													var documentFromMarker = await _codeStreamAgent.GetDocumentFromMarkerAsync(new DocumentFromMarkerRequest(marker));
-													var filePath = documentFromMarker.TextDocument.Uri.ToUri().ToLocalPath();
-													var tempFile = _ideService.CreateDiffTempFile(filePath,
-														documentFromMarker.Marker.Code, documentFromMarker.Range);
-													if (!tempFile.IsNullOrWhiteSpace()) {
-														await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-														_ideService.CompareFiles(filePath, tempFile, true);
+													var documentFromMarker = await _codeStreamAgent.GetDocumentFromMarkerAsync(
+															new DocumentFromMarkerRequest(marker));
+
+													var fileUri = documentFromMarker.TextDocument.Uri.ToUri();
+													var filePath = fileUri.ToLocalPath();
+
+													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+
+													var wpfTextView = await _ideService.OpenEditorAtLineAsync(fileUri, documentFromMarker.Range, true);
+													if (wpfTextView != null) {
+														var tempFile = _ideService.CreateTempFile(filePath, wpfTextView.TextBuffer.CurrentSnapshot.GetText());
+														var span = wpfTextView.ToSpan(documentFromMarker.Range);
+														if (span.HasValue) {
+															_ideService.CompareFiles(filePath, tempFile, wpfTextView.TextBuffer, span.Value, documentFromMarker.Marker.Code, true);
+														}
 													}
 												}
 												catch (Exception ex) {
@@ -132,7 +141,8 @@ namespace CodeStream.VisualStudio {
 												try {
 													var marker = message.Params["marker"].ToObject<CsMarker>();
 													var documentFromMarker = await _codeStreamAgent.GetDocumentFromMarkerAsync(new DocumentFromMarkerRequest(marker));
-													var fileUri = documentFromMarker.TextDocument.Uri.ToUri();
+													var filePath = documentFromMarker.TextDocument.Uri;
+													var fileUri = filePath.ToUri();
 
 													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 													var wpfTextView = await _ideService.OpenEditorAtLineAsync(fileUri, documentFromMarker.Range, true);

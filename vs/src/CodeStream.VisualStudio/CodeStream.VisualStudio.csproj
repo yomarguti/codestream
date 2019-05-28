@@ -175,6 +175,7 @@
     <Compile Include="Services\CodeStreamService.cs" />
     <Compile Include="Services\CredentialsService.cs" />
     <Compile Include="Services\CredentialsServiceBase.cs" />
+    <Compile Include="Services\DiffViewerService.cs" />
     <Compile Include="Services\EditorService.cs" />
     <Compile Include="Services\ServiceFactory.cs" />
     <Compile Include="Services\WpfTextViewCache.cs" />
