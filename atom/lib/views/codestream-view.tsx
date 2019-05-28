@@ -33,6 +33,7 @@ import {
 	UpdateConfigurationRequest,
 	UpdateConfigurationRequestType,
 	UpdateConfigurationResponse,
+	ValidateThirdPartyAuthRequest,
 	ValidateThirdPartyAuthRequestType,
 	WebviewContext,
 	WebviewDidChangeContextNotificationType,
@@ -413,8 +414,10 @@ export class CodestreamView {
 				break;
 			}
 			case ValidateThirdPartyAuthRequestType.method: {
+				const params: ValidateThirdPartyAuthRequest = message.params;
 				const status = await this.session.login(OtcLoginRequestType, {
 					code: this.session.getLoginToken(),
+					...params,
 				});
 				if (status !== LoginResult.Success) this.respond({ id: message.id, error: status });
 				else {
