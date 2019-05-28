@@ -61,7 +61,6 @@ import {
 	PasswordLoginRequestType,
 	ReportingMessageType,
 	ReportMessageRequestType,
-	TokenLoginRequest,
 	TokenLoginRequestType,
 	TraceLevel,
 } from "../protocols/agent/agent.protocol";

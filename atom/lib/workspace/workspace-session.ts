@@ -1,10 +1,8 @@
 import { SignedOutBootstrapResponse } from "@codestream/protocols/webview";
 import { CompositeDisposable, Emitter } from "atom";
 import uuidv4 from "uuid/v4";
-import { RequestType } from "vscode-languageserver-protocol";
 import { EnvironmentConfig, PRODUCTION_CONFIG } from "../env-utils";
 import {
-	AccessToken,
 	AgentResult,
 	Capabilities,
 	isLoginFailResponse,
@@ -12,7 +10,6 @@ import {
 	LoginSuccessResponse,
 	OtcLoginRequestType,
 	PasswordLoginRequestType,
-	TokenLoginRequest,
 	TokenLoginRequestType,
 } from "../protocols/agent/agent.protocol";
 import { CSMe, LoginResult } from "../protocols/agent/api.protocol";

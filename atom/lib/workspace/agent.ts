@@ -18,10 +18,8 @@ import {
 	RequestType,
 } from "vscode-languageserver-protocol";
 import {
-	AccessToken,
 	AgentInitializeResult,
-	AgentOptions,
-	AgentResult,
+	BaseAgentOptions,
 	DidChangeConnectionStatusNotification,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotification,
@@ -78,7 +76,7 @@ abstract class AgentConnection {
 		rpc: MessageConnection
 	): void;
 
-	protected getInitializationOptions() {
+	protected getInitializationOptions(): Partial<BaseAgentOptions> {
 		return {};
 	}
 
@@ -94,7 +92,7 @@ abstract class AgentConnection {
 
 		this.preInitialization(this._connection, rpc);
 
-		const initializationOptions: Partial<AgentOptions> = {
+		const initializationOptions: Partial<BaseAgentOptions> = {
 			extension: {
 				build: "",
 				buildEnv: "dev",
