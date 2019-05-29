@@ -9,7 +9,7 @@ import {
 	WorkspaceFoldersChangeEvent
 } from "vscode-languageserver";
 import URI from "vscode-uri";
-import { Container } from "../container";
+import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import { CSRepository } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
@@ -188,7 +188,7 @@ export class GitRepositories {
 	}
 
 	private async getKnownRepositories() {
-		const resp = await Container.instance().repos.get();
+		const resp = await SessionContainer.instance().repos.get();
 		const remotesToRepo = Iterables.flatMap(
 			resp.repos,
 			r =>

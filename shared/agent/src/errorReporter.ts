@@ -1,13 +1,13 @@
 import * as Sentry from "@sentry/node";
 import { Severity } from "@sentry/node";
 import * as os from "os";
-import { Container } from "./container";
+import { SessionContainer } from "./container";
 import {
 	CodeStreamEnvironment,
 	ReportMessageRequest,
 	ReportMessageRequestType
 } from "./protocol/agent.protocol";
-import { CodeStreamSession } from "./session";
+import { CodeStreamSession, SessionStatus } from "./session";
 import { lsp, lspHandler } from "./system";
 
 @lsp
@@ -20,10 +20,18 @@ export class ErrorReporter {
 				environment: session.environment
 			});
 
-			session.ready().then(() => {
+			Sentry.configureScope(scope => {
+				scope.setTag("platform", os.platform());
+				scope.setTag("ide", session.versionInfo.ide.name);
+				scope.setExtra("ideVersion", session.versionInfo.ide.version);
+				scope.setTag("source", "agent");
+			});
+
+			session.onDidChangeSessionStatus(event => {
+				if (event.getStatus() === SessionStatus.SignedOut) return;
+
 				Sentry.configureScope(async scope => {
-					scope.setTag("platform", os.platform());
-					const team = await Container.instance().teams.getById(session.teamId);
+					const team = await SessionContainer.instance().teams.getById(session.teamId);
 					const isSlackTeam = !!(team.providerInfo && team.providerInfo.slack);
 					//  TODO: acknowledge telemetryConsent
 					scope.setUser({
@@ -35,9 +43,6 @@ export class ErrorReporter {
 							isSlackTeam
 						}
 					});
-					scope.setTag("ide", session.versionInfo.ide.name);
-					scope.setExtra("ideVersion", session.versionInfo.ide.version);
-					scope.setTag("source", "agent");
 				});
 			});
 		}

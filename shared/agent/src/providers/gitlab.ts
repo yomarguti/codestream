@@ -1,7 +1,7 @@
 "use strict";
 import { Response } from "node-fetch";
 import * as qs from "querystring";
-import { Container } from "../container";
+import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import {
 	CreateThirdPartyCardRequest,
@@ -53,10 +53,8 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 	}
 
 	@log()
-	async getBoards(
-		request: FetchThirdPartyBoardsRequest
-	): Promise<FetchThirdPartyBoardsResponse> {
-		const { git } = Container.instance();
+	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
+		const { git } = SessionContainer.instance();
 		const gitRepos = await git.getRepositories();
 
 		const openProjects = new Map<String, GitLabProject>();

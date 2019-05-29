@@ -1,6 +1,6 @@
 "use strict";
 import * as qs from "querystring";
-import { Container } from "../container";
+import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import {
 	BitbucketBoard,
@@ -68,10 +68,8 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 	}
 
 	@log()
-	async getBoards(
-		request: FetchThirdPartyBoardsRequest
-	): Promise<FetchThirdPartyBoardsResponse> {
-		const { git } = Container.instance();
+	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
+		const { git } = SessionContainer.instance();
 		const gitRepos = await git.getRepositories();
 		const openRepos = new Map<String, BitbucketRepo>();
 

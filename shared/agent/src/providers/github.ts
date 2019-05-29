@@ -1,6 +1,6 @@
 "use strict";
 import { Response } from "node-fetch";
-import { Container } from "../container";
+import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import {
 	CreateThirdPartyCardRequest,
@@ -54,10 +54,8 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	}
 
 	@log()
-	async getBoards(
-		request: FetchThirdPartyBoardsRequest
-	): Promise<FetchThirdPartyBoardsResponse> {
-		const { git } = Container.instance();
+	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
+		const { git } = SessionContainer.instance();
 		const gitRepos = await git.getRepositories();
 		const openRepos = new Map<String, GitHubRepo>();
 

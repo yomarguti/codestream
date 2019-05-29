@@ -40,7 +40,7 @@ async function runAcceptanceTest(dir: string, ctx: any) {
 	api.fetch = csApiFetch;
 
 	// session.login();
-	void (await session.login());
+	void (await session.login((agentOptions as unknown) as any));
 	// await wait(1000);
 	// @ts-ignore
 	ctx.api = session._api!;

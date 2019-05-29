@@ -1,5 +1,5 @@
 "use strict";
-import { Container } from "../container";
+import { SessionContainer } from "../container";
 import {
 	GetMarkerRequest,
 	GetMarkerRequestType,
@@ -38,7 +38,7 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 		const response = await this.session.api.fetchMarkers({ streamId: streamId });
 		if (response.codemarks) {
 			for (const codemark of response.codemarks) {
-				Container.instance().codemarks.cacheSet(codemark);
+				SessionContainer.instance().codemarks.cacheSet(codemark);
 			}
 		}
 		return response.markers;
@@ -46,7 +46,7 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 
 	private async filterMarkers(markers: CSMarker[]): Promise<CSMarker[]> {
 		const includedMarkers = [];
-		const { streams } = Container.instance();
+		const { streams } = SessionContainer.instance();
 
 		for (const marker of markers) {
 			if (!marker.postStreamId || marker.deactivated) {

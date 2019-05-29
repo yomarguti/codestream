@@ -11,7 +11,7 @@ import {
 } from "protocol/agent.protocol";
 import { MessageType } from "../api/apiProvider";
 import { User } from "../api/extensions";
-import { Container } from "../container";
+import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import { CSMe, CSProviderInfos } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
@@ -20,7 +20,7 @@ import { Functions, Strings } from "../system";
 export interface ThirdPartyProvider {
 	readonly name: string;
 	connect(): Promise<void>;
-	configure(data: { [key: string]: any } ): Promise<void>;
+	configure(data: { [key: string]: any }): Promise<void>;
 	disconnect(): Promise<void>;
 	getConfig(): ThirdPartyProviderConfig;
 	getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse>;
@@ -165,7 +165,7 @@ export abstract class ThirdPartyProviderBase<
 	}
 
 	private async ensureConnectedCore() {
-		const response = await Container.instance().users.getMe();
+		const response = await SessionContainer.instance().users.getMe();
 		this._providerInfo = this.getProviderInfo(response.user);
 
 		if (this._providerInfo === undefined) {
@@ -186,10 +186,14 @@ export abstract class ThirdPartyProviderBase<
 		let resp = undefined;
 		if (resp === undefined) {
 			await this.ensureConnected();
-			resp = this.fetch<R>(url, {
-				method: "DELETE",
-				headers: { ...this.headers, ...headers }
-			}, options);
+			resp = this.fetch<R>(
+				url,
+				{
+					method: "DELETE",
+					headers: { ...this.headers, ...headers }
+				},
+				options
+			);
 		}
 		return resp;
 	}
@@ -200,10 +204,14 @@ export abstract class ThirdPartyProviderBase<
 		options: { [key: string]: any } = {}
 	): Promise<ApiResponse<R>> {
 		await this.ensureConnected();
-		return this.fetch<R>(url, {
-			method: "GET",
-			headers: { ...this.headers, ...headers }
-		}, options);
+		return this.fetch<R>(
+			url,
+			{
+				method: "GET",
+				headers: { ...this.headers, ...headers }
+			},
+			options
+		);
 	}
 
 	protected async post<RQ extends object, R extends object>(
@@ -213,11 +221,15 @@ export abstract class ThirdPartyProviderBase<
 		options: { [key: string]: any } = {}
 	): Promise<ApiResponse<R>> {
 		await this.ensureConnected();
-		return this.fetch<R>(url, {
-			method: "POST",
-			body: JSON.stringify(body),
-			headers: { ...this.headers, ...headers }
-		}, options);
+		return this.fetch<R>(
+			url,
+			{
+				method: "POST",
+				body: JSON.stringify(body),
+				headers: { ...this.headers, ...headers }
+			},
+			options
+		);
 	}
 
 	protected async put<RQ extends object, R extends object>(
@@ -227,11 +239,15 @@ export abstract class ThirdPartyProviderBase<
 		options: { [key: string]: any } = {}
 	): Promise<ApiResponse<R>> {
 		await this.ensureConnected();
-		return this.fetch<R>(url, {
-			method: "PUT",
-			body: JSON.stringify(body),
-			headers: { ...this.headers, ...headers }
-		}, options);
+		return this.fetch<R>(
+			url,
+			{
+				method: "PUT",
+				body: JSON.stringify(body),
+				headers: { ...this.headers, ...headers }
+			},
+			options
+		);
 	}
 
 	protected getProviderInfo(me: CSMe) {

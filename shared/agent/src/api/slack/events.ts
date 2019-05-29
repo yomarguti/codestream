@@ -2,7 +2,7 @@
 import { LogLevel, RTMClient } from "@slack/client";
 import HttpsProxyAgent from "https-proxy-agent";
 import { Emitter, Event } from "vscode-languageserver";
-import { Container } from "../../container";
+import { Container, SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import { ConnectionStatus, LogoutReason } from "../../protocol/agent.protocol";
 import { StreamType } from "../../protocol/api.protocol";
@@ -368,7 +368,7 @@ export class SlackEvents implements Disposable {
 							} as unknown
 						]
 					} as StreamsRTMessage;
-					message.data = await Container.instance().streams.resolve(message);
+					message.data = await SessionContainer.instance().streams.resolve(message);
 
 					this._onDidReceiveMessage.fire(message);
 					break;
@@ -385,7 +385,7 @@ export class SlackEvents implements Disposable {
 							} as unknown
 						]
 					} as StreamsRTMessage;
-					message.data = await Container.instance().streams.resolve(message);
+					message.data = await SessionContainer.instance().streams.resolve(message);
 
 					this._onDidReceiveMessage.fire(message);
 					break;
@@ -400,7 +400,7 @@ export class SlackEvents implements Disposable {
 						type: MessageType.Streams,
 						data: [response.stream]
 					} as StreamsRTMessage;
-					message.data = await Container.instance().streams.resolve(message);
+					message.data = await SessionContainer.instance().streams.resolve(message);
 
 					this._onDidReceiveMessage.fire(message);
 					break;
@@ -417,7 +417,7 @@ export class SlackEvents implements Disposable {
 							} as unknown
 						]
 					} as StreamsRTMessage;
-					message.data = await Container.instance().streams.resolve(message);
+					message.data = await SessionContainer.instance().streams.resolve(message);
 
 					this._onDidReceiveMessage.fire(message);
 					break;
@@ -434,7 +434,7 @@ export class SlackEvents implements Disposable {
 							} as unknown
 						]
 					} as StreamsRTMessage;
-					message.data = await Container.instance().streams.resolve(message);
+					message.data = await SessionContainer.instance().streams.resolve(message);
 
 					this._onDidReceiveMessage.fire(message);
 					break;
@@ -456,7 +456,7 @@ export class SlackEvents implements Disposable {
 							} as unknown
 						]
 					} as StreamsRTMessage;
-					message.data = await Container.instance().streams.resolve(message);
+					message.data = await SessionContainer.instance().streams.resolve(message);
 
 					this._onDidReceiveMessage.fire(message);
 					break;
@@ -472,7 +472,7 @@ export class SlackEvents implements Disposable {
 							} as unknown
 						]
 					} as StreamsRTMessage;
-					message.data = await Container.instance().streams.resolve(message);
+					message.data = await SessionContainer.instance().streams.resolve(message);
 
 					this._onDidReceiveMessage.fire(message);
 					break;
@@ -489,7 +489,7 @@ export class SlackEvents implements Disposable {
 							} as unknown
 						]
 					} as StreamsRTMessage;
-					message.data = await Container.instance().streams.resolve(message);
+					message.data = await SessionContainer.instance().streams.resolve(message);
 
 					this._onDidReceiveMessage.fire(message);
 					break;
@@ -517,7 +517,7 @@ export class SlackEvents implements Disposable {
 							} as unknown
 						]
 					} as StreamsRTMessage;
-					message.data = await Container.instance().streams.resolve(message);
+					message.data = await SessionContainer.instance().streams.resolve(message);
 
 					this._onDidReceiveMessage.fire(message);
 					break;
@@ -534,7 +534,7 @@ export class SlackEvents implements Disposable {
 							} as unknown
 						]
 					} as StreamsRTMessage;
-					message.data = await Container.instance().streams.resolve(message);
+					message.data = await SessionContainer.instance().streams.resolve(message);
 
 					this._onDidReceiveMessage.fire(message);
 					break;
@@ -597,7 +597,7 @@ export class SlackEvents implements Disposable {
 								]
 							} as StreamsRTMessage;
 
-							message.data = await Container.instance().streams.resolve(message);
+							message.data = await SessionContainer.instance().streams.resolve(message);
 							this._onDidReceiveMessage.fire(message);
 
 							break;
@@ -627,7 +627,7 @@ export class SlackEvents implements Disposable {
 								mentioned = true;
 							} else {
 								// Need to look this up to see if this channel is a private channel or multi-party dm
-								const stream = await Container.instance().streams.getById(e.channel);
+								const stream = await SessionContainer.instance().streams.getById(e.channel);
 								mentioned = stream.type === StreamType.Direct;
 							}
 							break;
@@ -673,7 +673,7 @@ export class SlackEvents implements Disposable {
 				]
 			} as StreamsRTMessage;
 
-			message.data = await Container.instance().streams.resolve(message);
+			message.data = await SessionContainer.instance().streams.resolve(message);
 			this._onDidReceiveMessage.fire(message);
 		} catch (ex) {
 			Logger.error(ex, cc);
@@ -703,7 +703,7 @@ export class SlackEvents implements Disposable {
 						]
 					} as UsersRTMessage;
 
-					message.data = await Container.instance().users.resolve(message);
+					message.data = await SessionContainer.instance().users.resolve(message);
 					this.fireUsersRTMessage(message);
 					break;
 				}
@@ -721,7 +721,7 @@ export class SlackEvents implements Disposable {
 						]
 					} as UsersRTMessage;
 
-					message.data = await Container.instance().users.resolve(message);
+					message.data = await SessionContainer.instance().users.resolve(message);
 					this.fireUsersRTMessage(message);
 					break;
 				}
@@ -759,7 +759,7 @@ export class SlackEvents implements Disposable {
 							]
 						} as PreferencesRTMessage;
 
-						const resolvedUser = await Container.instance().users.resolve(message);
+						const resolvedUser = await SessionContainer.instance().users.resolve(message);
 						message.data = resolvedUser[0].preferences!;
 						this._onDidReceiveMessage.fire(message);
 					}
@@ -779,7 +779,7 @@ export class SlackEvents implements Disposable {
 						]
 					} as UsersRTMessage;
 
-					message.data = await Container.instance().users.resolve(message);
+					message.data = await SessionContainer.instance().users.resolve(message);
 					this.fireUsersRTMessage(message);
 					break;
 				}
@@ -810,7 +810,7 @@ export class SlackEvents implements Disposable {
 						data: data
 					} as UsersRTMessage;
 
-					message.data = await Container.instance().users.resolve(message);
+					message.data = await SessionContainer.instance().users.resolve(message);
 					this.fireUsersRTMessage(message);
 					break;
 				}
@@ -823,12 +823,12 @@ export class SlackEvents implements Disposable {
 						data: [response.user]
 					} as UsersRTMessage;
 
-					message.data = await Container.instance().users.resolve(message);
+					message.data = await SessionContainer.instance().users.resolve(message);
 					this.fireUsersRTMessage(message);
 					break;
 				}
 				case SlackRtmEventTypes.UserChanged: {
-					const user = Container.instance().users.getById(e.user.id);
+					const user = SessionContainer.instance().users.getById(e.user.id);
 
 					// Don't trust the payload, since it won't have our full user data
 					const response = await this._api.getUser({ userId: e.user.id });
@@ -839,7 +839,7 @@ export class SlackEvents implements Disposable {
 						data: [user != null ? { ...user, ...response.user } : response.user]
 					} as UsersRTMessage;
 
-					message.data = await Container.instance().users.resolve(message);
+					message.data = await SessionContainer.instance().users.resolve(message);
 					this.fireUsersRTMessage(message);
 					break;
 				}

@@ -1,15 +1,16 @@
 "use strict";
-
+import uuid from "uuid/v4";
 import { Logger } from "../logger";
-import { CodeStreamSession } from "../session";
+import { CodeStreamSession, SessionStatus, SessionStatusChangedEvent } from "../session";
 
 // FIXME: sorry, typescript purists: i simply gave up trying to get the type definitions for this module to work
-const Analytics = require("analytics-node");
+import Analytics from "analytics-node";
 
 export class TelemetryService {
-	private _segmentInstance: any;
+	private _segmentInstance: Analytics | undefined;
 	private _superProps: { [key: string]: any };
 	private _distinctId?: string;
+	private _anonymousId: string;
 	private _hasOptedOut: boolean;
 	private _session: CodeStreamSession;
 	private _readyPromise: Promise<void>;
@@ -33,22 +34,14 @@ export class TelemetryService {
 		this._superProps = {};
 		this._hasOptedOut = false;
 
-		session
-			.ready()
-			.then(() => this.initialize())
-			.then(() => session.api.getPreferences())
-			.then(({ preferences }) => {
-				// legacy consent
-				if ("telemetryConsent" in preferences) {
-					this.setConsent(preferences.telemetryConsent!);
-				} else {
-					this.setConsent(!Boolean(preferences.telemetryOptOut));
-				}
-			});
+		session.ready().then(() => this.initialize());
 
 		const props = { ...opts, Endpoint: session.versionInfo.ide.name };
 		this._superProps = props;
 		this._hasOptedOut = hasOptedOut;
+		this._anonymousId = uuid();
+
+		session.onDidChangeSessionStatus(this.onSessionStatusChanged);
 
 		this._readyPromise = new Promise<void>(resolve => {
 			this._onReady = () => {
@@ -58,13 +51,13 @@ export class TelemetryService {
 		});
 	}
 
-	async ready () {
+	async ready() {
 		return this._readyPromise;
 	}
 
-	async initialize () {
+	async initialize() {
 		Logger.debug("Initializing telemetry...");
-		let token;
+		let token = "";
 		try {
 			token = await this._session.api.getTelemetryKey();
 		} catch (ex) {
@@ -80,6 +73,27 @@ export class TelemetryService {
 		this._onReady();
 	}
 
+	private onSessionStatusChanged = async (event: SessionStatusChangedEvent) => {
+		if (event.getStatus() === SessionStatus.SignedOut) return;
+
+		const { preferences } = await this._session.api.getPreferences();
+
+		// legacy consent
+		if ("telemetryConsent" in preferences) {
+			this.setConsent(preferences.telemetryConsent!);
+		} else {
+			this.setConsent(!Boolean(preferences.telemetryOptOut));
+		}
+	}
+
+	alias(id: string) {
+		Logger.debug(`Telemetry alias ${this._anonymousId} with ${id}`);
+		if (!this._segmentInstance) return;
+
+		this._segmentInstance.alias({ previousId: this._anonymousId, userId: id });
+		this._segmentInstance.flush();
+	}
+
 	identify(id: string, props?: { [key: string]: any }) {
 		this._distinctId = id;
 		if (this._hasOptedOut || this._segmentInstance == null) {
@@ -91,21 +105,6 @@ export class TelemetryService {
 			this._segmentInstance.identify({
 				userId: this._distinctId,
 				traits: props
-			});
-		} catch (ex) {
-			Logger.error(ex);
-		}
-	}
-
-	alias(id?: string) {
-		if (this._hasOptedOut || this._distinctId == null || this._segmentInstance == null) {
-			return;
-		}
-
-		try {
-			this._segmentInstance.alias({
-				previousId: this._distinctId,
-				userId: id
 			});
 		} catch (ex) {
 			Logger.error(ex);
@@ -149,6 +148,7 @@ export class TelemetryService {
 		try {
 			this._segmentInstance.track({
 				userId: this._distinctId,
+				anonymousId: this._distinctId ? undefined : this._anonymousId,
 				event,
 				properties: payload
 			});

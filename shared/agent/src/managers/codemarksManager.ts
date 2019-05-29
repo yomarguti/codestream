@@ -2,7 +2,7 @@
 import { MessageType } from "../api/apiProvider";
 import { MarkerLocation } from "../api/extensions";
 import { SlackApiProvider } from "../api/slack/slackApi";
-import { Container } from "../container";
+import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
 import {
 	CodemarkPlus,
@@ -82,7 +82,8 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 	async getCodemarkSha1({ codemarkId }: GetCodemarkSha1Request): Promise<GetCodemarkSha1Response> {
 		const cc = Logger.getCorrelationContext();
 
-		const { codemarks, files, markerLocations, scm } = Container.instance();
+		const { scm } = Container.instance();
+		const { codemarks, files, markerLocations } = SessionContainer.instance();
 
 		const codemark = await codemarks.getEnrichedCodemarkById(codemarkId);
 		if (codemark === undefined) {
@@ -131,7 +132,7 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 	}
 
 	async enrichCodemark(codemark: CSCodemark): Promise<CodemarkPlus> {
-		const { markers: markersManager } = Container.instance();
+		const { markers: markersManager } = SessionContainer.instance();
 
 		const markers = [];
 		if (codemark.markerIds != null && codemark.markerIds.length !== 0) {
@@ -162,7 +163,7 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 	}
 
 	private async canSeeCodemark(codemark: CSCodemark): Promise<boolean> {
-		const stream = await Container.instance().streams.getByIdFromCache(codemark.streamId);
+		const stream = await SessionContainer.instance().streams.getByIdFromCache(codemark.streamId);
 		if (!stream || stream.deactivated || stream.isArchived) {
 			return false;
 		}
@@ -213,7 +214,7 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		const response = await this.session.api.fetchCodemarks({});
 
 		if (response.markers) {
-			const { markers } = Container.instance();
+			const { markers } = SessionContainer.instance();
 			for (const marker of response.markers) {
 				markers.cacheSet(marker);
 			}

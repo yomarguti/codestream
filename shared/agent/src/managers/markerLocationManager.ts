@@ -6,13 +6,12 @@ import { TextDocumentIdentifier } from "vscode-languageserver";
 import URI from "vscode-uri";
 import { Marker, MarkerLocation, MarkerLocationsById } from "../api/extensions";
 import { getCache } from "../cache";
-import { Container } from "../container";
+import { Container, SessionContainer } from "../container";
 import { GitRepository } from "../git/models/repository";
 import { Logger } from "../logger";
 import { calculateLocation, calculateLocations } from "../markerLocation/calculator";
 import { MarkerNotLocatedReason } from "../protocol/agent.protocol";
 import {
-	CSFileStream,
 	CSLocationArray,
 	CSMarker,
 	CSMarkerLocation,
@@ -111,7 +110,8 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		fileStreamId?: string,
 		markers?: CSMarker[]
 	): Promise<GetLocationsResult> {
-		const { documents, git } = Container.instance();
+		const { documents } = Container.instance();
+		const { git } = SessionContainer.instance();
 		const result = newGetLocationsResult();
 
 		const filePath = URI.parse(documentUri).fsPath;
@@ -122,11 +122,11 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		}
 
 		if (fileStreamId === undefined) {
-			const stream = await Container.instance().files.getByPath(filePath);
+			const stream = await SessionContainer.instance().files.getByPath(filePath);
 			fileStreamId = stream!.id;
 		}
 		if (markers === undefined) {
-			markers = await Container.instance().markers.getByStreamId(fileStreamId, true);
+			markers = await SessionContainer.instance().markers.getByStreamId(fileStreamId, true);
 		}
 
 		const currentCommitHash = await git.getFileCurrentRevision(filePath);
@@ -255,7 +255,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		text: string,
 		location: CSMarkerLocation
 	): Promise<CSMarkerLocation> {
-		const { git } = Container.instance();
+		const { git } = SessionContainer.instance();
 		const documentUri = documentId.uri;
 		const filePath = URI.parse(documentUri).fsPath;
 
@@ -295,7 +295,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		Logger.log(`MARKERS: getting locations for ${filePath}@${commitHash}`);
 
 		if (fileStreamId === undefined) {
-			const stream = await Container.instance().files.getByPath(filePath);
+			const stream = await SessionContainer.instance().files.getByPath(filePath);
 			if (!stream) {
 				Logger.log(`MARKERS: cannot find streamId for ${filePath}`);
 				return newGetLocationsResult();
@@ -305,7 +305,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		}
 
 		if (markers === undefined) {
-			markers = await Container.instance().markers.getByStreamId(fileStreamId, true);
+			markers = await SessionContainer.instance().markers.getByStreamId(fileStreamId, true);
 		}
 		Logger.log(`MARKERS: found ${markers.length} markers for stream ${fileStreamId}`);
 
@@ -322,7 +322,8 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			Logger.log(`MARKERS: missing locations detected - will calculate`);
 		}
 
-		const { git, session } = Container.instance();
+		const { session } = Container.instance();
+		const { git } = SessionContainer.instance();
 
 		for (const [commitHashWhenCreated, missingMarkers] of missingMarkersByCommit.entries()) {
 			Logger.log(
@@ -402,7 +403,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		location: CSMarkerLocation
 	) {
 		Logger.log(`MARKERS: saving uncommitted marker location ${location.id} to local cache`);
-		const { git } = Container.instance();
+		const { git } = SessionContainer.instance();
 		const repoRoot = await git.getRepoRoot(filePath);
 
 		if (!repoRoot) {
@@ -422,7 +423,8 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 
 	async flushUncommittedLocations(repo: GitRepository) {
 		Logger.log(`MARKERS: flushing uncommitted locations`);
-		const { files, git, markers, session } = Container.instance();
+		const { session } = Container.instance();
+		const { git, files, markers } = SessionContainer.instance();
 		const cache = await getCache(repo.path);
 		const uncommittedLocations = cache.getCollection("uncommittedLocations");
 

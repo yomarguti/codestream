@@ -19,53 +19,15 @@ import { UsersManager } from "./managers/usersManager";
 import { ThirdPartyProviderRegistry } from "./providers/registry";
 import { CodeStreamSession } from "./session";
 
-class ServiceContainer {
-	constructor(public readonly session: CodeStreamSession) {
-		this._documents = session.agent.documents;
-
-		this._files = new FilesManager(session);
-		this._markerLocations = new MarkerLocationManager(session);
-		this._codemarks = new CodemarksManager(session);
-		this._markers = new MarkersManager(session);
-		this._posts = new PostsManager(session);
-		this._repos = new ReposManager(session);
-		this._streams = new StreamsManager(session);
-		this._teams = new TeamsManager(session);
-		this._users = new UsersManager(session);
-
-		this._documentMarkers = new DocumentMarkerManager(session);
-		this._errorReporter = new ErrorReporter(session);
-		this._git = new GitService(session);
-		this._scm = new ScmManager();
-		this._telemetry = new TelemetryManager(session);
-		this._urls = new UrlManager();
-
-		this._providerRegistry = new ThirdPartyProviderRegistry(session);
-	}
-
-	private readonly _errorReporter: ErrorReporter;
-	get errorReporter() {
-		return this._errorReporter;
-	}
-
-	private readonly _documentMarkers: DocumentMarkerManager;
-	get documentMarkers() {
-		return this._documentMarkers;
-	}
-
-	private readonly _documents: DocumentManager;
-	get documents() {
-		return this._documents;
+class SessionServiceContainer {
+	private readonly _git: GitService;
+	get git() {
+		return this._git;
 	}
 
 	private readonly _files: FilesManager;
 	get files(): FilesManager {
 		return this._files;
-	}
-
-	private readonly _git: GitService;
-	get git() {
-		return this._git;
 	}
 
 	private readonly _codemarks: CodemarksManager;
@@ -88,19 +50,9 @@ class ServiceContainer {
 		return this._posts;
 	}
 
-	private readonly _providerRegistry: ThirdPartyProviderRegistry;
-	get providerRegistry() {
-		return this._providerRegistry;
-	}
-
 	private readonly _repos: ReposManager;
 	get repos(): ReposManager {
 		return this._repos;
-	}
-
-	private readonly _scm: ScmManager;
-	get scm() {
-		return this._scm;
 	}
 
 	private readonly _streams: StreamsManager;
@@ -113,6 +65,62 @@ class ServiceContainer {
 		return this._teams;
 	}
 
+	private readonly _users: UsersManager;
+	get users(): UsersManager {
+		return this._users;
+	}
+
+	private readonly _documentMarkers: DocumentMarkerManager;
+	get documentMarkers() {
+		return this._documentMarkers;
+	}
+
+	private readonly _providerRegistry: ThirdPartyProviderRegistry;
+	get providerRegistry() {
+		return this._providerRegistry;
+	}
+
+	constructor(session: CodeStreamSession) {
+		this._git = new GitService(session);
+		this._files = new FilesManager(session);
+		this._markerLocations = new MarkerLocationManager(session);
+		this._codemarks = new CodemarksManager(session);
+		this._markers = new MarkersManager(session);
+		this._posts = new PostsManager(session);
+		this._repos = new ReposManager(session);
+		this._streams = new StreamsManager(session);
+		this._teams = new TeamsManager(session);
+		this._users = new UsersManager(session);
+		this._documentMarkers = new DocumentMarkerManager(session);
+		this._providerRegistry = new ThirdPartyProviderRegistry(session);
+	}
+}
+
+class ServiceContainer {
+	constructor(public readonly session: CodeStreamSession) {
+		this._documents = session.agent.documents;
+
+		this._errorReporter = new ErrorReporter(session);
+		this._scm = new ScmManager();
+		this._telemetry = new TelemetryManager(session);
+		this._urls = new UrlManager();
+	}
+
+	private readonly _errorReporter: ErrorReporter;
+	get errorReporter() {
+		return this._errorReporter;
+	}
+
+	private readonly _documents: DocumentManager;
+	get documents() {
+		return this._documents;
+	}
+
+	private readonly _scm: ScmManager;
+	get scm() {
+		return this._scm;
+	}
+
 	private readonly _telemetry: TelemetryManager;
 	get telemetry() {
 		return this._telemetry;
@@ -121,11 +129,6 @@ class ServiceContainer {
 	private readonly _urls: UrlManager;
 	get urls() {
 		return this._urls;
-	}
-
-	private readonly _users: UsersManager;
-	get users(): UsersManager {
-		return this._users;
 	}
 }
 
@@ -145,5 +148,24 @@ export namespace Container {
 		}
 
 		return container;
+	}
+}
+
+let sessionContainer: SessionServiceContainer | undefined;
+
+export namespace SessionContainer {
+	export function initialize(session: CodeStreamSession) {
+		sessionContainer = new SessionServiceContainer(session);
+	}
+
+	export function instance(): SessionServiceContainer {
+		if (sessionContainer === undefined) {
+			debugger;
+			const ex = new Error("SessionContainer not yet initialized.");
+			Logger.error(ex);
+			throw ex;
+		}
+
+		return sessionContainer;
 	}
 }

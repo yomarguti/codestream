@@ -17,6 +17,10 @@ export class TelemetryManager {
 		this._telemetry.setConsent(hasConsented);
 	}
 
+	alias(id: string): any {
+		this._telemetry.alias(id);
+	}
+
 	identify(id: string, props: { [key: string]: any }) {
 		this._telemetry.identify(id, props);
 	}

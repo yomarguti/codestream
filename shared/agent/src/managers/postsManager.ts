@@ -1,14 +1,12 @@
 "use strict";
 import * as fs from "fs";
-import { has } from "lodash-es";
 import { TextDocumentIdentifier } from "vscode-languageserver";
 import URI from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
 import { MarkerLocation, Ranges } from "../api/extensions";
-import { Container } from "../container";
+import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
 import {
-	CodemarkPlus,
 	CreateCodemarkRequest,
 	CreateCodemarkRequestMarker,
 	CreatePostRequest,
@@ -396,7 +394,7 @@ function trackPostCreation(request: CreatePostRequest, textDocument?: TextDocume
 	process.nextTick(() => {
 		try {
 			// Get stream so we can determine type
-			Container.instance()
+			SessionContainer.instance()
 				.streams.getById(request.streamId)
 				.then(async (stream: CSStream) => {
 					let streamType: String = "Unknown";
@@ -537,7 +535,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 	private async fetchPosts(request: FetchPostsRequest): Promise<FetchPostsResponse> {
 		const response = await this.session.api.fetchPosts(request);
-		const container = Container.instance();
+		const container = SessionContainer.instance();
 		if (response.codemarks) {
 			for (const codemark of response.codemarks) {
 				container.codemarks.cacheSet(codemark);
@@ -565,7 +563,9 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		await this.cache.ensureStreamInitialized(request.streamId);
 		const cacheResponse = await this.cache.getPosts(request);
 		const posts = await this.enrichPosts(cacheResponse.posts);
-		const { codemarks } = await Container.instance().codemarks.get({ streamId: request.streamId });
+		const { codemarks } = await SessionContainer.instance().codemarks.get({
+			streamId: request.streamId
+		});
 		return {
 			codemarks: codemarks,
 			posts: posts,
@@ -583,7 +583,9 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		let hasMarkers = false;
 		if (post.codemarkId) {
 			try {
-				codemark = await Container.instance().codemarks.getEnrichedCodemarkById(post.codemarkId);
+				codemark = await SessionContainer.instance().codemarks.getEnrichedCodemarkById(
+					post.codemarkId
+				);
 				hasMarkers = codemark.markers != null && codemark.markers.length !== 0;
 			} catch (ex) {
 				Logger.error(ex);
@@ -629,7 +631,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			posts.push(...childPosts);
 		}
 
-		const codemarks = await Container.instance().codemarks.enrichCodemarksByIds(
+		const codemarks = await SessionContainer.instance().codemarks.enrichCodemarksByIds(
 			Arrays.filterMap(posts, post => post.codemarkId)
 		);
 
@@ -671,7 +673,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		entryPoint,
 		status = "open"
 	}: CreatePostWithMarkerRequest): Promise<CreatePostResponse | undefined> {
-		const { documents, git } = Container.instance();
+		const { documents } = Container.instance();
+		const { git } = SessionContainer.instance();
 
 		const document = documents.get(documentId.uri);
 		if (document === undefined) {
@@ -707,7 +710,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			if (source) {
 				if (source.revision) {
 					commitHashWhenPosted = source.revision;
-					backtrackedLocation = await Container.instance().markerLocations.backtrackLocation(
+					backtrackedLocation = await SessionContainer.instance().markerLocations.backtrackLocation(
 						documentId,
 						fileContents,
 						location
@@ -756,7 +759,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						id: markers[0].id
 					};
 
-					await Container.instance().markerLocations.saveUncommittedLocation(
+					await SessionContainer.instance().markerLocations.saveUncommittedLocation(
 						filePath,
 						fileContents,
 						uncommittedLocation
@@ -804,7 +807,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 }
 
 async function resolveCreatePostResponse(response: CreatePostResponse) {
-	const container = Container.instance();
+	const container = SessionContainer.instance();
 	if (response.codemark) {
 		await container.codemarks.resolve({
 			type: MessageType.Codemarks,

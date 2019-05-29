@@ -14,7 +14,7 @@ import {
 	GetRangeSha1Response
 } from "../protocol/agent.protocol";
 import { FileSystem, Iterables, log, lsp, lspHandler, Strings } from "../system";
-import { Container } from "./../container";
+import { Container, SessionContainer } from "./../container";
 
 @lsp
 export class ScmManager {
@@ -32,7 +32,7 @@ export class ScmManager {
 		let gitError;
 		let repoPath;
 		if (uri.scheme === "file") {
-			const { git } = Container.instance();
+			const { git } = SessionContainer.instance();
 
 			try {
 				repoPath = await git.getRepoRoot(uri.fsPath);
@@ -104,7 +104,7 @@ export class ScmManager {
 		let gitError;
 		let repoPath;
 		if (uri.scheme === "file") {
-			const { git } = Container.instance();
+			const { git } = SessionContainer.instance();
 
 			try {
 				repoPath = await git.getRepoRoot(uri.fsPath);
@@ -141,7 +141,7 @@ export class ScmManager {
 						});
 						const authorEmails = gitAuthors.map(a => a.email);
 
-						const users = await Container.instance().users.getByEmails(authorEmails);
+						const users = await SessionContainer.instance().users.getByEmails(authorEmails);
 						authors = [...Iterables.map(users, u => ({ id: u.id, username: u.username }))];
 					}
 				}

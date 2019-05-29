@@ -1,6 +1,6 @@
 "use strict";
 import { Emitter, Event } from "vscode-languageserver";
-import { Container } from "../../container";
+import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import { Unreads } from "../../protocol/agent.protocol";
 import { CSLastReads, CSPost, CSStream, StreamType } from "../../protocol/api.protocol";
@@ -56,7 +56,7 @@ export class CodeStreamUnreads {
 		Logger.debug(`Unreads.update:`, `Updating unreads for ${posts.length} posts...`);
 
 		const grouped = Arrays.groupBy(posts, p => p.streamId);
-		const streams = (await Container.instance().streams.get({
+		const streams = (await SessionContainer.instance().streams.get({
 			streamIds: Object.keys(grouped)
 		})).streams;
 
@@ -104,11 +104,11 @@ export class CodeStreamUnreads {
 
 		Logger.debug(`Unreads.compute:`, "Computing...");
 
-		const unreadStreams = (await Container.instance().streams.getUnread()).streams;
+		const unreadStreams = (await SessionContainer.instance().streams.getUnread()).streams;
 		if (unreadStreams.length !== 0) {
 			const entries = Object.entries(lastReads);
 
-			const { posts } = Container.instance();
+			const { posts } = SessionContainer.instance();
 
 			await Promise.all(
 				entries.map(async ([streamId, lastReadSeqNum]) => {

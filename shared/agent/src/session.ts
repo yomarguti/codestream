@@ -10,7 +10,6 @@ import {
 	MessageActionItem,
 	WorkspaceFolder
 } from "vscode-languageserver";
-import URI from "vscode-uri";
 import { CodeStreamAgent } from "./agent";
 import { AgentError, ServerError } from "./agentError";
 import { ApiProvider, LoginOptions, MessageType, RTMessage } from "./api/apiProvider";
@@ -21,12 +20,12 @@ import {
 	VersionMiddlewareManager
 } from "./api/middleware/versionMiddleware";
 import { SlackApiProvider } from "./api/slack/slackApi";
-import { Container } from "./container";
+import { Container, SessionContainer } from "./container";
 import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
 import {
-	AgentOptions,
 	ApiRequestType,
+	BaseAgentOptions,
 	BootstrapRequestType,
 	ChangeDataType,
 	CodeStreamEnvironment,
@@ -38,16 +37,32 @@ import {
 	DidUpdateProvidersType,
 	FetchMarkerLocationsRequestType,
 	LogoutReason,
+	ReportingMessageType,
 	ThirdPartyProviders
 } from "./protocol/agent.protocol";
 import {
-	ApiErrors,
+	ConfirmRegistrationRequest,
+	ConfirmRegistrationRequestType,
+	GetInviteInfoRequest,
+	GetInviteInfoRequestType,
+	OtcLoginRequest,
+	OtcLoginRequestType,
+	PasswordLoginRequest,
+	PasswordLoginRequestType,
+	RegisterUserRequest,
+	RegisterUserRequestType,
+	TokenLoginRequest,
+	TokenLoginRequestType
+} from "./protocol/agent.protocol.auth";
+import {
 	CSCodemark,
 	CSCompany,
+	CSLoginResponse,
 	CSMarker,
 	CSMarkerLocations,
 	CSMe,
 	CSPost,
+	CSRegisterResponse,
 	CSRepository,
 	CSStream,
 	CSTeam,
@@ -61,16 +76,23 @@ const envRegex = /https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(
 
 const FIRST_SESSION_TIMEOUT = 12 * 60 * 60 * 1000; // first session "times out" after 12 hours
 
-const loginApiErrorMappings: { [k: string]: ApiErrors } = {
-	"USRC-1001": ApiErrors.InvalidCredentials,
-	"USRC-1010": ApiErrors.NotConfirmed,
-	"AUTH-1002": ApiErrors.InvalidToken,
-	"AUTH-1003": ApiErrors.InvalidToken,
-	"AUTH-1005": ApiErrors.InvalidToken,
+export const loginApiErrorMappings: { [k: string]: LoginResult } = {
+	"USRC-1001": LoginResult.InvalidCredentials,
+	"USRC-1010": LoginResult.NotConfirmed,
+	"AUTH-1002": LoginResult.InvalidToken,
+	"AUTH-1003": LoginResult.InvalidToken,
+	"AUTH-1004": LoginResult.ExpiredToken,
+	"AUTH-1005": LoginResult.ExpiredToken,
+	"USRC-1005": LoginResult.InvalidToken,
+	"USRC-1002": LoginResult.InvalidToken,
+	"USRC-1006": LoginResult.AlreadyConfirmed,
 	// "RAPI-1001": "missing parameter" // shouldn't ever happen
-	"RAPI-1003": ApiErrors.NotFound,
-	"USRC-1012": ApiErrors.NotOnTeam,
-	"VERS-1001": ApiErrors.VersionUnsupported
+	"RAPI-1003": LoginResult.InvalidToken,
+	"USRC-1012": LoginResult.NotOnTeam,
+	"VERS-1001": LoginResult.VersionUnsupported,
+	"USRC-1022": LoginResult.ProviderConnectFailed,
+	"USRC-1015": LoginResult.MultipleWorkspaces,
+	"USRC-1020": LoginResult.InviteConflict
 };
 
 export enum SessionStatus {
@@ -158,7 +180,7 @@ export class CodeStreamSession {
 	constructor(
 		public readonly agent: CodeStreamAgent,
 		private readonly _connection: Connection,
-		private readonly _options: AgentOptions
+		private readonly _options: BaseAgentOptions
 	) {
 		this._readyPromise = new Promise<void>(resolve =>
 			this.agent.onReady(() => {
@@ -222,13 +244,19 @@ export class CodeStreamSession {
 
 		registerDecoratedHandlers(this.agent);
 
+		this.agent.registerHandler(PasswordLoginRequestType, e => this.passwordLogin(e));
+		this.agent.registerHandler(TokenLoginRequestType, e => this.tokenLogin(e));
+		this.agent.registerHandler(OtcLoginRequestType, e => this.otcLogin(e));
+		this.agent.registerHandler(RegisterUserRequestType, e => this.register(e));
+		this.agent.registerHandler(ConfirmRegistrationRequestType, e => this.confirmRegistration(e));
+		this.agent.registerHandler(GetInviteInfoRequestType, e => this.getInviteInfo(e));
 		this.agent.registerHandler(ApiRequestType, (e, cancellationToken: CancellationToken) =>
 			this.api.fetch(e.url, e.init, e.token)
 		);
 		this.agent.registerHandler(
 			BootstrapRequestType,
 			async (e, cancellationToken: CancellationToken) => {
-				const { repos, streams, teams, users } = Container.instance();
+				const { repos, streams, teams, users } = SessionContainer.instance();
 				const promise = Promise.all([
 					repos.get(),
 					streams.get(),
@@ -267,8 +295,8 @@ export class CodeStreamSession {
 	private async onRTMessageReceived(e: RTMessage) {
 		switch (e.type) {
 			case MessageType.Codemarks:
-				let codemarks = await Container.instance().codemarks.resolve(e);
-				codemarks = await Container.instance().codemarks.enrichCodemarks(codemarks);
+				let codemarks = await SessionContainer.instance().codemarks.resolve(e);
+				codemarks = await SessionContainer.instance().codemarks.enrichCodemarks(codemarks);
 				this._onDidChangeCodemarks.fire(codemarks);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.Codemarks,
@@ -283,7 +311,7 @@ export class CodeStreamSession {
 				this.agent.sendNotification(DidChangeConnectionStatusNotificationType, e.data);
 				break;
 			case MessageType.MarkerLocations:
-				const markerLocations = await Container.instance().markerLocations.resolve(e);
+				const markerLocations = await SessionContainer.instance().markerLocations.resolve(e);
 				this._onDidChangeMarkerLocations.fire(markerLocations);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.MarkerLocations,
@@ -291,7 +319,7 @@ export class CodeStreamSession {
 				});
 				break;
 			case MessageType.Markers:
-				const markers = await Container.instance().markers.resolve(e);
+				const markers = await SessionContainer.instance().markers.resolve(e);
 				this._onDidChangeMarkers.fire(markers);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.Markers,
@@ -299,7 +327,7 @@ export class CodeStreamSession {
 				});
 				break;
 			case MessageType.Posts:
-				const postManager = Container.instance().posts;
+				const postManager = SessionContainer.instance().posts;
 				const posts = await postManager.resolve(e);
 				this._onDidChangePosts.fire(posts);
 				const fullPosts = await postManager.enrichPosts(posts);
@@ -450,75 +478,95 @@ export class CodeStreamSession {
 		});
 	}
 
+	@log({ singleLine: true })
+	async passwordLogin(request: PasswordLoginRequest) {
+		const cc = Logger.getCorrelationContext();
+		Logger.log(
+			cc,
+			`Logging ${request.email} into CodeStream (@ ${this._options.serverUrl}) via password`
+		);
+
+		return this.login({
+			type: "credentials",
+			...request
+		});
+	}
+
+	@log({ singleLine: true })
+	async tokenLogin(request: TokenLoginRequest) {
+		const { token } = request;
+		const cc = Logger.getCorrelationContext();
+		Logger.log(
+			cc,
+			`Logging ${token.email} into CodeStream (@ ${token.url}) via authentication token...`
+		);
+
+		return this.login({
+			type: "token",
+			...request
+		});
+	}
+
+	@log({ singleLine: true })
+	async otcLogin(request: OtcLoginRequest) {
+		const cc = Logger.getCorrelationContext();
+		Logger.log(cc, `Logging into CodeStream (@ ${this._options.serverUrl}) via otc code...`);
+
+		try {
+			return this.login({
+				type: "otc",
+				...request
+			});
+		} catch (e) {
+			debugger;
+			throw new Error();
+		}
+	}
+
 	@log({
 		singleLine: true
 	})
-	async login() {
-		const { email, passwordOrToken, serverUrl, signupToken, team, teamId } = this._options;
-		if (!signupToken && typeof passwordOrToken !== "string") {
-			if (passwordOrToken.email !== email || passwordOrToken.url !== serverUrl) {
-				throw new AgentError("Invalid credentials.");
-			}
-		}
-
-		const cc = Logger.getCorrelationContext();
-
-		let opts = { team: team, teamId: teamId } as LoginOptions;
-		if (signupToken) {
-			Logger.log(cc, `Logging ${email} into CodeStream (@ ${serverUrl}) via credentials...`);
-
-			opts = { ...opts, type: "otc", code: signupToken };
-		} else if (typeof passwordOrToken === "string") {
-			Logger.log(cc, `Logging ${email} into CodeStream (@ ${serverUrl}) via CodeStream code...`);
-
-			opts = {
-				...opts,
-				type: "credentials",
-				email: email,
-				password: passwordOrToken
-			};
-		} else {
-			Logger.log(
-				cc,
-				`Logging ${email} into CodeStream (@ ${serverUrl}) via authentication token...`
-			);
-
-			opts = {
-				...opts,
-				type: "token",
-				token: passwordOrToken
-			};
-		}
-
+	async login(options: LoginOptions) {
 		let response;
 		try {
-			response = await this.api.login(opts);
+			response = await this.api.login(options);
 		} catch (ex) {
 			if (ex instanceof ServerError) {
 				if (ex.statusCode !== undefined && ex.statusCode >= 400 && ex.statusCode < 500) {
-					// TODO: report Unknown error to sentry
 					return {
 						error: loginApiErrorMappings[ex.info.code] || LoginResult.Unknown
 					};
 				}
 			}
 
-			// TODO: report error in sentry
+			// 💩
+			if (ex.status && ex.token) {
+				return { error: ex };
+			}
+
+			Container.instance().errorReporter.reportMessage({
+				type: ReportingMessageType.Error,
+				message: "Unexpected error logging in",
+				source: "agent",
+				extra: {
+					...ex
+				}
+			});
 			throw AgentError.wrap(ex, `Login failed:\n${ex.message}`);
 		}
 
-		this._options.passwordOrToken = {
-			url: serverUrl,
-			email: email,
-			value: response.accessToken
-		};
-
-		this._teamId = this._options.teamId = response.teamId;
+		this._teamId = (this._options as any).teamId = response.teamId;
 		this._codestreamUserId = response.user.id;
 		const currentTeam = response.teams.find(t => t.id === this._teamId)!;
 
 		this._providers = currentTeam.providerHosts || {};
 		registerProviders(this._providers, this);
+
+		const cc = Logger.getCorrelationContext();
+
+		SessionContainer.initialize(this);
+		// re-register to acknowledge lsp handlers from newly instantiated classes
+		registerDecoratedHandlers(this.agent);
 
 		if (User.isSlack(response.user) && Team.isSlack(currentTeam)) {
 			Logger.log(
@@ -543,6 +591,8 @@ export class CodeStreamSession {
 		this._userId = response.user.id;
 		this._email = response.user.email;
 
+		this.setStatus(SessionStatus.SignedIn);
+
 		await setGitPath(this._options.gitPath);
 
 		this.api.onDidReceiveMessage(e => this.onRTMessageReceived(e), this);
@@ -550,28 +600,130 @@ export class CodeStreamSession {
 		Logger.log(cc, `Subscribing to real-time events...`);
 		await this.api.subscribe();
 
-		Container.instance().git.onRepositoryCommitHashChanged(repo => {
-			Container.instance().markerLocations.flushUncommittedLocations(repo);
+		SessionContainer.instance().git.onRepositoryCommitHashChanged(repo => {
+			SessionContainer.instance().markerLocations.flushUncommittedLocations(repo);
 		});
 
+		// be sure to alias first if necessary
+		if ((options as OtcLoginRequest).alias) {
+			Container.instance().telemetry.alias(this._codestreamUserId);
+		}
 		// Initialize tracking
-		// TODO: Check for opt in
 		this.initializeTelemetry(response.user, currentTeam, response.companies);
-
-		this.setStatus(SessionStatus.SignedIn);
 
 		return {
 			loginResponse: { ...response },
 			state: {
 				apiToken: response.accessToken,
 				capabilities: this.api.capabilities,
-				email: email,
+				email: this._email!,
 				environment: this._environment,
-				serverUrl: serverUrl,
-				teamId: this._teamId,
-				userId: this._userId
+				serverUrl: this._options.serverUrl!,
+				teamId: this._teamId!,
+				userId: response.user.id
 			}
 		};
+	}
+
+	@log({
+		singleLine: true
+	})
+	async register(request: RegisterUserRequest) {
+		function isCSLoginResponse(r: CSRegisterResponse | CSLoginResponse): r is CSLoginResponse {
+			return (r as any).accessToken !== undefined;
+		}
+
+		try {
+			const response = await (this._api as CodeStreamApiProvider).register(request);
+
+			if (isCSLoginResponse(response)) {
+				Container.instance().telemetry.alias(response.user.id);
+
+				if (response.teams.length === 0) {
+					return { status: LoginResult.NotOnTeam, token: response.accessToken };
+				}
+
+				this._teamId = response.teams[0].id;
+				return { status: LoginResult.AlreadyConfirmed, token: response.accessToken };
+			} else {
+				if (response.user) Container.instance().telemetry.alias(response.user.id);
+
+				return { status: LoginResult.Success };
+			}
+		} catch (error) {
+			if (error instanceof ServerError) {
+				if (error.statusCode !== undefined && error.statusCode >= 400 && error.statusCode < 500) {
+					return { status: loginApiErrorMappings[error.info.code] || LoginResult.Unknown };
+				}
+			}
+
+			Container.instance().errorReporter.reportMessage({
+				type: ReportingMessageType.Error,
+				message: "Unexpected error during registration",
+				source: "agent",
+				extra: {
+					...error
+				}
+			});
+			throw AgentError.wrap(error, `Registration failed:\n${error.message}`);
+		}
+	}
+
+	@log({ singleLine: true })
+	async confirmRegistration(request: ConfirmRegistrationRequest) {
+		try {
+			const response = await (this._api as CodeStreamApiProvider).confirmRegistration(request);
+
+			Container.instance().telemetry.alias(response.user.id);
+
+			if (response.teams.length === 0) {
+				return { status: LoginResult.NotOnTeam, token: response.accessToken };
+			}
+
+			this._teamId = response.teams[0].id;
+			return { status: LoginResult.Success, token: response.accessToken };
+		} catch (error) {
+			if (error instanceof ServerError) {
+				if (error.statusCode !== undefined && error.statusCode >= 400 && error.statusCode < 500) {
+					return { status: loginApiErrorMappings[error.info.code] || LoginResult.Unknown };
+				}
+			}
+
+			Container.instance().errorReporter.reportMessage({
+				type: ReportingMessageType.Error,
+				message: "Unexpected error confirming registration",
+				source: "agent",
+				extra: {
+					...error
+				}
+			});
+			throw AgentError.wrap(error, `Registration confirmation failed:\n${error.message}`);
+			// }
+		}
+	}
+
+	@log({ singleLine: true })
+	async getInviteInfo(request: GetInviteInfoRequest) {
+		try {
+			const response = await (this._api as CodeStreamApiProvider).getInviteInfo(request);
+			return { status: LoginResult.Success, info: response };
+		} catch (error) {
+			if (error instanceof ServerError) {
+				if (error.statusCode !== undefined && error.statusCode >= 400 && error.statusCode < 500) {
+					return { status: loginApiErrorMappings[error.info.code] || LoginResult.Unknown };
+				}
+			}
+
+			Container.instance().errorReporter.reportMessage({
+				type: ReportingMessageType.Error,
+				message: "Unexpected error getting invite info",
+				source: "agent",
+				extra: {
+					...error
+				}
+			});
+			throw AgentError.wrap(error, `Get invite info failed:\n${error.message}`);
+		}
 	}
 
 	protected newSlackApiProvider(response: any) {
@@ -682,12 +834,11 @@ export class CodeStreamSession {
 		if (user.firstSessionStartedAt !== undefined) {
 			telemetry.setFirstSessionProps(user.firstSessionStartedAt, FIRST_SESSION_TIMEOUT);
 		}
-		telemetry.track({ eventName: "Agent Started" });
 	}
 
 	@log()
 	async updateProviders() {
-		const currentTeam = await Container.instance().teams.getByIdFromCache(this.teamId);
+		const currentTeam = await SessionContainer.instance().teams.getByIdFromCache(this.teamId);
 		if (currentTeam) {
 			this._providers = currentTeam.providerHosts || {};
 			registerProviders(this._providers, this);

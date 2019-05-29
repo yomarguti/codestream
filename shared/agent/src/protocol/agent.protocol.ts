@@ -1,18 +1,10 @@
 "use strict";
 import { RequestInit } from "node-fetch";
-import {
-	InitializeResult,
-	Range,
-	RequestType,
-	TextDocumentIdentifier
-} from "vscode-languageserver-protocol";
+import { InitializeResult, RequestType } from "vscode-languageserver-protocol";
 import { Unreads } from "./agent.protocol.notifications";
-import {
-	ThirdPartyProviders
-} from "./agent.protocol.providers";
+import { ThirdPartyProviders } from "./agent.protocol.providers";
 import {
 	CSLoginResponse,
-	CSMarker,
 	CSMePreferences,
 	CSRepository,
 	CSStream,
@@ -23,6 +15,7 @@ import {
 
 export * from "./agent.protocol.notifications";
 
+export * from "./agent.protocol.auth";
 export * from "./agent.protocol.documentMarkers";
 export * from "./agent.protocol.codemarks";
 export * from "./agent.protocol.markers";

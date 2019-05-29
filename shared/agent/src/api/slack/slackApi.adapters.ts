@@ -1,6 +1,6 @@
 "use strict";
 import { MessageAttachment } from "@slack/client";
-import { Container } from "../../container";
+import { Container, SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import {
 	CodemarkType,
@@ -245,7 +245,7 @@ export async function fromSlackPost(
 				// legacy markers
 				const marker = await fromSlackPostMarker(attachments);
 				if (marker) {
-					codemark = await Container.instance().codemarks.getById(marker.codemarkId);
+					codemark = await SessionContainer.instance().codemarks.getById(marker.codemarkId);
 				}
 			}
 			if (!codemark) {
@@ -303,7 +303,7 @@ export async function fromSlackPostCodemark(
 	}
 
 	try {
-		return await Container.instance().codemarks.getById(codemarkId);
+		return await SessionContainer.instance().codemarks.getById(codemarkId);
 	} catch (ex) {
 		Logger.error(ex, `Failed to find codemark=${codemarkId}`);
 		return undefined;
@@ -324,7 +324,7 @@ export async function fromSlackPostMarker(
 	const [, markerId] = match;
 
 	try {
-		return await Container.instance().markers.getById(markerId);
+		return await SessionContainer.instance().markers.getById(markerId);
 	} catch (ex) {
 		Logger.error(ex, `Failed to find marker=${markerId}`);
 		return undefined;

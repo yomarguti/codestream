@@ -25,7 +25,7 @@ import { Container } from "./container";
 import { DocumentManager } from "./documentManager";
 import { Logger } from "./logger";
 import {
-	AgentOptions,
+	BaseAgentOptions,
 	DidChangeDataNotificationType,
 	LogoutReason
 } from "./protocol/agent.protocol";
@@ -111,7 +111,7 @@ export class CodeStreamAgent implements Disposable {
 			this._clientCapabilities = capabilities;
 			this.rootUri = e.rootUri == null ? undefined : e.rootUri;
 
-			const agentOptions = e.initializationOptions! as AgentOptions;
+			const agentOptions = e.initializationOptions! as BaseAgentOptions;
 
 			Logger.level = agentOptions.traceLevel;
 			if (agentOptions.isDebugging) {
@@ -141,14 +141,15 @@ export class CodeStreamAgent implements Disposable {
 			}
 
 			this._session = new CodeStreamSession(this, this._connection, agentOptions);
-			const result = await this._session.login();
+
+			this._onReady.fire(undefined);
 
 			return {
 				capabilities: {
 					textDocumentSync: TextDocumentSyncKind.Full
 					// hoverProvider: true
 				},
-				result: result
+				result: {}
 			} as InitializeResult;
 		} catch (ex) {
 			// debugger;
@@ -171,8 +172,8 @@ export class CodeStreamAgent implements Disposable {
 
 			this._disposable = Disposables.from(...subscriptions);
 
-			this._signedIn = true;
-			this._onReady.fire(undefined);
+			// this._signedIn = true;
+			// this._onReady.fire(undefined);
 		} catch (ex) {
 			// debugger;
 			Logger.error(ex);

@@ -1,6 +1,6 @@
 "use strict";
 import { CodeStreamApiProvider } from "../api/codestream/codestreamApi";
-import { Container } from "../container";
+import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import {
 	ArchiveStreamRequest,
@@ -126,7 +126,7 @@ export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CS
 		if (cached) {
 			return cached;
 		} else {
-			return (await Container.instance().files.cacheGet(criteria)) as any;
+			return (await SessionContainer.instance().files.cacheGet(criteria)) as any;
 		}
 	}
 
@@ -139,7 +139,7 @@ export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CS
 			case StreamType.Direct:
 				return super.cacheSet(entity, oldEntity as any);
 			case StreamType.File:
-				return Container.instance().files.cacheSet(entity, oldEntity as any) as any;
+				return SessionContainer.instance().files.cacheSet(entity, oldEntity as any) as any;
 		}
 		return undefined;
 	}

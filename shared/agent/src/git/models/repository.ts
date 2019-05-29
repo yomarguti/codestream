@@ -1,6 +1,6 @@
 "use strict";
 import { WorkspaceFolder } from "vscode-languageserver";
-import { Container } from "../../container";
+import { SessionContainer } from "../../container";
 import { CSFileStream, CSRepository } from "../../protocol/api.protocol";
 
 export class GitRepository {
@@ -29,13 +29,13 @@ export class GitRepository {
 	}
 
 	getRemotes() {
-		return Container.instance().git.getRepoRemotes(this.path);
+		return SessionContainer.instance().git.getRepoRemotes(this.path);
 	}
 
 	async getStreams(): Promise<CSFileStream[]> {
 		if (this.id === undefined) return [];
 
-		return Container.instance().files.getByRepoId(this.id);
+		return SessionContainer.instance().files.getByRepoId(this.id);
 	}
 
 	async searchForKnownRepository(knownRepos: Map<string, CSRepository>) {

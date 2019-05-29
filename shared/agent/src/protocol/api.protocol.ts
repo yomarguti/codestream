@@ -37,10 +37,15 @@ export enum LoginResult {
 	Success = "SUCCESS",
 	InvalidCredentials = "INVALID_CREDENTIALS",
 	InvalidToken = "TOKEN_INVALID",
+	ExpiredToken = "TOKEN_EXPIRED",
 	NotConfirmed = "NOT_CONFIRMED",
 	NotOnTeam = "USER_NOT_ON_TEAM",
 	Unknown = "UNKNOWN",
-	VersionUnsupported = "VERSION_UNSUPPORTED"
+	VersionUnsupported = "VERSION_UNSUPPORTED",
+	ProviderConnectFailed = "PROVIDER_CONNECT_FAILED",
+	MultipleWorkspaces = "MULTIPLE_WORKSPACES",
+	AlreadyConfirmed = "ALREADY_CONFIRMED",
+	InviteConflict = "INVITE_CONFLICT"
 }
 
 export interface CSCompleteSignupRequest {
@@ -66,6 +71,35 @@ export interface CSLoginResponse {
 	teams: CSTeam[];
 	companies: CSCompany[];
 	repos: CSRepository[];
+}
+
+export interface CSRegisterRequest {
+	email: string;
+	username: string;
+	password: string;
+	fullName?: string;
+	companyName?: string;
+	wantLink?: boolean;
+	inviteCode?: string;
+}
+
+export interface CSRegisterResponse {
+	user?: CSUser; // No user means they are already registered. for security, that message is emailed to them rather than displayed in the client
+}
+
+export interface CSConfirmRegistrationRequest {
+	email: string;
+	confirmationCode: string;
+}
+
+export interface CSGetInviteInfoRequest {
+	code: string;
+}
+
+export interface CSGetInviteInfoResponse {
+	email: string;
+	teamId: string;
+	teamName: string;
 }
 
 export interface CSCreateMarkerLocationRequest {
@@ -295,6 +329,14 @@ export interface CSGetStreamResponse<T extends CSStream> {
 
 export interface CSGetStreamsResponse<T extends CSStream> {
 	streams: T[];
+}
+
+export interface CSCreateTeamRequest {
+	name: string;
+}
+
+export interface CSCreateTeamResponse {
+	team: CSUser;
 }
 
 export interface CSGetTeamResponse {

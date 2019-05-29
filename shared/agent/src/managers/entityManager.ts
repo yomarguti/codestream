@@ -58,8 +58,11 @@ export abstract class CachedEntityManagerBase<T extends CSEntity> extends Entity
 		}
 
 		if (this._caching !== undefined) {
-			void (await this._caching);
-			this._cached = true;
+			try {
+				void (await this._caching);
+				this._cached = true;
+			} catch (error) {}
+
 			this._caching = undefined;
 		}
 	}

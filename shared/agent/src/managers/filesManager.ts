@@ -2,7 +2,7 @@
 import * as path from "path";
 import { TextDocumentIdentifier } from "vscode-languageserver-protocol";
 import URI from "vscode-uri";
-import { Container } from "../container";
+import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import {
 	FetchFileStreamsRequest,
@@ -33,7 +33,7 @@ export class FilesManager extends EntityManagerBase<CSFileStream> {
 	}
 
 	async getDocumentUri(fileStreamId: Id): Promise<string | undefined> {
-		const { git } = Container.instance();
+		const { git } = SessionContainer.instance();
 		const fileStream = await this.getById(fileStreamId);
 
 		const repo = await git.getRepositoryById(fileStream.repoId);
@@ -53,7 +53,7 @@ export class FilesManager extends EntityManagerBase<CSFileStream> {
 			return this.cache.getById(id);
 		}
 
-		const container = Container.instance();
+		const container = SessionContainer.instance();
 		const repo = await container.git.getRepositoryByFilePath(filePath);
 		if (repo === undefined || repo.id === undefined) {
 			return undefined;
@@ -77,7 +77,7 @@ export class FilesManager extends EntityManagerBase<CSFileStream> {
 	}
 
 	async getTextDocument(streamId: string): Promise<TextDocumentIdentifier | undefined> {
-		const { git } = Container.instance();
+		const { git } = SessionContainer.instance();
 
 		const stream = await this.cache.getById(streamId);
 		if (!stream || stream.type !== StreamType.File) {

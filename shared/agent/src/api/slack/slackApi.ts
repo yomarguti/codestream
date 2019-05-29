@@ -3,7 +3,7 @@ import { LogLevel, MessageAttachment, WebAPICallResult, WebClient } from "@slack
 import HttpsProxyAgent from "https-proxy-agent";
 import { RequestInit } from "node-fetch";
 import { Emitter, Event } from "vscode-languageserver";
-import { Container } from "../../container";
+import { Container, SessionContainer } from "../../container";
 import { Logger, TraceLevel } from "../../logger";
 import {
 	ArchiveStreamRequest,
@@ -359,7 +359,7 @@ export class SlackApiProvider implements ApiProvider {
 
 	private async ensureUserMaps(): Promise<void> {
 		if (this._usernamesById === undefined || this._userIdsByName === undefined) {
-			const users = (await Container.instance().users.get()).users;
+			const users = (await SessionContainer.instance().users.get()).users;
 
 			this._usernamesById = new Map();
 			this._userIdsByName = new Map();
@@ -390,7 +390,7 @@ export class SlackApiProvider implements ApiProvider {
 		}
 
 		// Only get the data if we already have it cached (otherwise we'll loop infinitely 😀)
-		const { users } = Container.instance();
+		const { users } = SessionContainer.instance();
 		const prevMe = users.cached
 			? ((await users.getByIdFromCache(this._slackUserId)) as CSMe)
 			: undefined;
@@ -451,7 +451,7 @@ export class SlackApiProvider implements ApiProvider {
 			Logger.error(ex);
 		}
 
-		Container.instance().users.resolve({ type: MessageType.Users, data: [me] });
+		SessionContainer.instance().users.resolve({ type: MessageType.Users, data: [me] });
 
 		return { user: me };
 	}
@@ -810,7 +810,7 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	async fetchPosts(request: FetchPostsRequest) {
 		let response;
-		const codemarksPromise = Container.instance().codemarks.getAllCached();
+		const codemarksPromise = SessionContainer.instance().codemarks.getAllCached();
 
 		// This isn't ideal, but we can always pack some more info into the id to ensure we call the right thing
 		switch (fromSlackChannelIdToType(request.streamId)) {
@@ -1114,7 +1114,7 @@ export class SlackApiProvider implements ApiProvider {
 			this._codestreamTeamId
 		)!;
 
-		const streams = await Container.instance().streams.resolve({
+		const streams = await SessionContainer.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [stream]
 		});
@@ -1154,7 +1154,7 @@ export class SlackApiProvider implements ApiProvider {
 			this._codestreamTeamId
 		)!;
 
-		const streams = await Container.instance().streams.resolve({
+		const streams = await SessionContainer.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [stream]
 		});
@@ -1323,7 +1323,7 @@ export class SlackApiProvider implements ApiProvider {
 
 		queue.sort((a, b) => b.grouping - a.grouping || a.order - b.order);
 
-		const { streams } = Container.instance();
+		const { streams } = SessionContainer.instance();
 
 		const notifyThrottle = 4000;
 		let timeSinceLastNotification = new Date().getTime();
@@ -1787,7 +1787,7 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		const streamResponse = await this.getStream({ streamId: request.streamId });
-		const streams = await Container.instance().streams.resolve({
+		const streams = await SessionContainer.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [streamResponse.stream]
 		});
@@ -1809,12 +1809,12 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		if (no_op) {
-			const stream = await Container.instance().streams.getById(request.streamId);
+			const stream = await SessionContainer.instance().streams.getById(request.streamId);
 			return { stream: stream! as CSDirectStream };
 		}
 
 		const streamResponse = await this.getStream({ streamId: request.streamId });
-		const streams = await Container.instance().streams.resolve({
+		const streams = await SessionContainer.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [streamResponse.stream]
 		});
@@ -1836,7 +1836,7 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		const streamResponse = await this.getStream({ streamId: request.streamId });
-		const streams = await Container.instance().streams.resolve({
+		const streams = await SessionContainer.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [streamResponse.stream]
 		});
@@ -1849,7 +1849,9 @@ export class SlackApiProvider implements ApiProvider {
 		const cc = Logger.getCorrelationContext();
 
 		// Get a copy of the original stream & copy its membership array (since it will be mutated)
-		const originalStream = { ...(await Container.instance().streams.getById(request.streamId)) };
+		const originalStream = {
+			...(await SessionContainer.instance().streams.getById(request.streamId))
+		};
 		if (originalStream.memberIds != null) {
 			originalStream.memberIds = originalStream.memberIds.slice(0);
 		}
@@ -1868,12 +1870,12 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		if (not_in_channel) {
-			const stream = await Container.instance().streams.getById(request.streamId);
+			const stream = await SessionContainer.instance().streams.getById(request.streamId);
 			return { stream: stream! as CSChannelStream };
 		}
 
 		try {
-			const [stream] = await Container.instance().streams.resolve({
+			const [stream] = await SessionContainer.instance().streams.resolve({
 				type: MessageType.Streams,
 				data: [
 					{
@@ -1975,7 +1977,7 @@ export class SlackApiProvider implements ApiProvider {
 		} catch (ex) {
 			Logger.error(ex, cc);
 
-			const stream = await Container.instance().streams.getById(request.streamId);
+			const stream = await SessionContainer.instance().streams.getById(request.streamId);
 			channel.members = stream.memberIds;
 		}
 
@@ -1986,7 +1988,7 @@ export class SlackApiProvider implements ApiProvider {
 			this._codestreamTeamId
 		)!;
 
-		const streams = await Container.instance().streams.resolve({
+		const streams = await SessionContainer.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [stream]
 		});
@@ -2009,7 +2011,7 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		const streamResponse = await this.getStream({ streamId: request.streamId });
-		const streams = await Container.instance().streams.resolve({
+		const streams = await SessionContainer.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [streamResponse.stream]
 		});
@@ -2032,7 +2034,7 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		const streamResponse = await this.getStream({ streamId: request.streamId });
-		const streams = await Container.instance().streams.resolve({
+		const streams = await SessionContainer.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [streamResponse.stream]
 		});
@@ -2054,7 +2056,7 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) throw new Error(error);
 
 		const streamResponse = await this.getStream({ streamId: request.streamId });
-		const streams = await Container.instance().streams.resolve({
+		const streams = await SessionContainer.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [streamResponse.stream]
 		});
@@ -2104,7 +2106,7 @@ export class SlackApiProvider implements ApiProvider {
 		if (errors.length !== 0) throw new Error(errors.join(", "));
 
 		const streamResponse = await this.getStream({ streamId: request.streamId });
-		const streams = await Container.instance().streams.resolve({
+		const streams = await SessionContainer.instance().streams.resolve({
 			type: MessageType.Streams,
 			data: [streamResponse.stream]
 		});
@@ -2205,7 +2207,11 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
-	setThirdPartyProviderInfo(request: { providerId: string; host: string; data: { [key: string]: any } }) {
+	setThirdPartyProviderInfo(request: {
+		providerId: string;
+		host: string;
+		data: { [key: string]: any };
+	}) {
 		return this._codestream.setThirdPartyProviderInfo(request);
 	}
 
@@ -2258,13 +2264,6 @@ export class SlackApiProvider implements ApiProvider {
 				{
 					message: cc && cc.prefix,
 					onTimeout: (resolve, reject, message) => {
-						const telemetry = Container.instance().telemetry;
-						telemetry.track({
-							eventName: "Slack Timeout",
-							properties: {
-								Message: message || "N/A"
-							}
-						});
 						Logger.warn(cc, `TIMEOUT ${timeoutMs / 1000}s exceeded`);
 					}
 				}

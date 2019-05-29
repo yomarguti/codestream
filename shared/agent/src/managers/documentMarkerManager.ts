@@ -4,7 +4,7 @@ import { CodeStreamSession } from "session";
 import { Range, TextDocumentChangeEvent } from "vscode-languageserver";
 import URI from "vscode-uri";
 import { Marker, MarkerLocation, Ranges } from "../api/extensions";
-import { Container } from "../container";
+import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
 import {
 	CreateDocumentMarkerPermalinkRequest,
@@ -73,7 +73,7 @@ export class DocumentMarkerManager {
 	}
 
 	private async onFileStreamsChanged(fileStreamIds: Set<string>) {
-		const { files } = Container.instance();
+		const { files } = SessionContainer.instance();
 
 		for (const fileStreamId of fileStreamIds) {
 			const uri = await files.getDocumentUri(fileStreamId);
@@ -128,7 +128,8 @@ export class DocumentMarkerManager {
 		privacy,
 		contents
 	}: CreateDocumentMarkerPermalinkRequest): Promise<CreateDocumentMarkerPermalinkResponse> {
-		const { codemarks, scm, git } = Container.instance();
+		const { scm } = Container.instance();
+		const { git, codemarks } = SessionContainer.instance();
 
 		const scmResponse = await scm.getRangeInfo({
 			uri: uri,
@@ -198,7 +199,7 @@ export class DocumentMarkerManager {
 		textDocument: documentId,
 		filters: filters
 	}: FetchDocumentMarkersRequest): Promise<FetchDocumentMarkersResponse> {
-		const { codemarks, files, markers, markerLocations, users } = Container.instance();
+		const { codemarks, files, markers, markerLocations, users } = SessionContainer.instance();
 
 		try {
 			const documentUri = URI.parse(documentId.uri);
@@ -237,7 +238,10 @@ export class DocumentMarkerManager {
 					continue;
 				}
 				if (filters && filters.excludeArchived) {
-					if (!codemark.pinned || (codemark.type === CodemarkType.Issue && codemark.status === CodemarkStatus.Closed))  {
+					if (
+						!codemark.pinned ||
+						(codemark.type === CodemarkType.Issue && codemark.status === CodemarkStatus.Closed)
+					) {
 						continue;
 					}
 				}
@@ -308,7 +312,7 @@ export class DocumentMarkerManager {
 	async getDocumentFromKeyBinding({
 		key
 	}: GetDocumentFromKeyBindingRequest): Promise<GetDocumentFromKeyBindingResponse | undefined> {
-		const { codemarks, users } = Container.instance();
+		const { codemarks, users } = SessionContainer.instance();
 
 		const { preferences } = await users.getPreferences();
 		const codemarkKeybindings: { [key: string]: string } = preferences.codemarkKeybindings || {};
@@ -336,7 +340,7 @@ export class DocumentMarkerManager {
 		repoId,
 		file
 	}: GetDocumentFromMarkerRequest): Promise<GetDocumentFromMarkerResponse | undefined> {
-		const { git, markers, markerLocations } = Container.instance();
+		const { git, markers, markerLocations } = SessionContainer.instance();
 
 		const marker = await markers.getById(markerId);
 		if (repoId == null || file == null) {
