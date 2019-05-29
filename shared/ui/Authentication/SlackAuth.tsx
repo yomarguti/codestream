@@ -53,19 +53,19 @@ export const SlackAuth = (connect(undefined) as any)((props: Props) => {
 					</p>
 					<br />
 					<div>
-						{isWaiting ? (
-							<p>
-								Waiting for Slack auth <LoadingEllipsis />
-							</p>
-						) : (
-							<p>
-								Login timed out. Please{" "}
-								<Link onClick={onClickTryAgain}>
-									<strong>try again</strong>
-								</Link>
-							</p>
-						)}
+						<strong>
+							{isWaiting ? (
+								<p>
+									Waiting for Slack auth <LoadingEllipsis />
+								</p>
+							) : (
+								<p>
+									Login timed out. Please <Link onClick={onClickTryAgain}>try again</Link>
+								</p>
+							)}
+						</strong>
 					</div>
+					<br />
 					<p>
 						Something went wrong? <Link href="mailto:support@codestream.com">Contact support</Link>{" "}
 						or <Link onClick={onClickTryAgain}>Try again</Link>
