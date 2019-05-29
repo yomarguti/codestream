@@ -65,12 +65,13 @@ export class InvitePage extends Component {
 
 	onClickReinvite = user => {
 		this.props.invite({ email: user.email, teamId: this.props.teamId }).then(() => {
-			atom.notifications.addInfo(
-				this.props.intl.formatMessage({
-					id: "invitation.emailSent",
-					defaultMessage: `Invitation sent to ${user.email}!`
-				})
-			);
+			// TODO: show notification
+			// atom.notifications.addInfo(
+			// 	this.props.intl.formatMessage({
+			// 		id: "invitation.emailSent",
+			// 		defaultMessage: `Invitation sent to ${user.email}!`
+			// 	})
+			// );
 		});
 	};
 

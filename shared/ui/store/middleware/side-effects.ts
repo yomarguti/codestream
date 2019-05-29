@@ -2,7 +2,7 @@
 import { BootstrapActionType } from "../actions";
 import { Middleware } from "redux";
 import { fetchCodemarks } from "@codestream/webview/Stream/actions";
-import { State as SessionState } from "../session/types";
+import { SessionState } from "../session/types";
 import { setIssueProvider } from "../context/actions";
 
 // Do stuff based on data and not UI details

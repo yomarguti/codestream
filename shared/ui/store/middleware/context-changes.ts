@@ -1,9 +1,13 @@
 /// <reference path="../../@types/window.d.ts"/>
 import { WebviewDidChangeContextNotificationType } from "../../ipc/webview.protocol";
 import { HostApi } from "../../webview-api";
-import { ContextActionsType, State as Context } from "../context/types";
+import { ContextActionsType, ContextState } from "../context/types";
+import { CodeStreamState } from "..";
+import { Dispatch, MiddlewareAPI } from "redux";
 
-export const contextChangeObserver = store => next => (action: { type: string }) => {
+export const contextChangeObserver = (store: MiddlewareAPI<any, CodeStreamState>) => (
+	next: Dispatch
+) => (action: { type: string }) => {
 	if (action.type === ContextActionsType.SetFocusState) {
 		return next(action);
 	}
@@ -22,9 +26,9 @@ export const contextChangeObserver = store => next => (action: { type: string })
 	return result;
 };
 
-function notEqual<K extends keyof Context>(
-	oldContext: Context,
-	newContext: Context,
+function notEqual<K extends keyof ContextState>(
+	oldContext: ContextState,
+	newContext: ContextState,
 	blackList: K[] = []
 ) {
 	return Object.entries(oldContext).some(

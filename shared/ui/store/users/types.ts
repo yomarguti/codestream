@@ -1,6 +1,6 @@
 import { CSUser } from "@codestream/protocols/api";
 
-export interface State {
+export interface UsersState {
 	[id: string]: CSUser;
 }
 

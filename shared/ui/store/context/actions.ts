@@ -3,17 +3,18 @@ import {
 	ConfigureThirdPartyProviderRequestType,
 	DisconnectThirdPartyProviderRequestType,
 	TelemetryRequestType,
-	ThirdPartyProviderConfig
+	ThirdPartyProviderConfig,
+	RegisterUserRequest
 } from "@codestream/protocols/agent";
 import { logError } from "../../logger";
 import { setUserPreference } from "../../Stream/actions";
 import { HostApi } from "../../webview-api";
 import { action } from "../common";
-import { ContextActionsType, State, PostEntryPoint } from "./types";
+import { ContextActionsType, ContextState, PostEntryPoint, Route } from "./types";
 
 export const reset = () => action("RESET");
 
-export const setContext = (payload: Partial<State>) =>
+export const setContext = (payload: Partial<ContextState>) =>
 	action(ContextActionsType.SetContext, payload);
 
 export const _openPanel = (panel: string) => action(ContextActionsType.OpenPanel, panel);
@@ -141,10 +142,7 @@ export const configureProvider = (
 	data: { [key: string]: any },
 	fromMenu = false,
 	setConnectedWhenConfigured = false
-) => async (
-	dispatch,
-	getState
-) => {
+) => async (dispatch, getState) => {
 	const { providers } = getState();
 	const provider = providers[providerId];
 	if (!provider) return;
@@ -201,3 +199,30 @@ export const setIssueProvider = (providerId: string | undefined) =>
 
 export const setNewPostEntry = (entryPoint: PostEntryPoint) =>
 	action(ContextActionsType.SetNewPostEntryPoint, entryPoint);
+
+export const goToNewUserEntry = (params = {}) =>
+	action(ContextActionsType.SetRoute, { name: Route.NewUser, params });
+
+export const goToCSOrSlack = (params = {}) =>
+	action(ContextActionsType.SetRoute, { name: Route.CSOrSlack, params });
+
+export const goToSlackAuth = (params = {}) =>
+	action(ContextActionsType.SetRoute, { name: Route.SlackAuth, params });
+
+export const goToSignup = (params = {}) =>
+	action(ContextActionsType.SetRoute, { name: Route.Signup, params });
+
+export const goToLogin = (params = {}) =>
+	action(ContextActionsType.SetRoute, { name: Route.Login, params });
+
+export const goToJoinTeam = (params = {}) =>
+	action(ContextActionsType.SetRoute, { name: Route.JoinTeam, params });
+
+export const goToEmailConfirmation = (params: {
+	email: string;
+	teamId?: string;
+	registrationParams: RegisterUserRequest;
+}) => action(ContextActionsType.SetRoute, { name: Route.EmailConfirmation, params });
+
+export const goToTeamCreation = (params = {}) =>
+	action(ContextActionsType.SetRoute, { name: Route.TeamCreation, params });

@@ -1,6 +1,6 @@
 import { EditorContext } from "@codestream/protocols/webview";
 
-export type State = EditorContext;
+export type EditorContextState = EditorContext;
 
 export enum EditorContextActionsType {
 	SetEditorContext = "@editorContext/Set",

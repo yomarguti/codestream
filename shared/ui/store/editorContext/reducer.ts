@@ -1,4 +1,4 @@
-import { State, EditorContextActionsType } from "./types";
+import { EditorContextState, EditorContextActionsType } from "./types";
 import { Range } from "vscode-languageserver-types";
 import * as actions from "./actions";
 import { ActionType } from "../common";
@@ -9,7 +9,7 @@ import { GetFileScmInfoResponse, GetRangeScmInfoResponse } from "@codestream/pro
 
 type EditorContextActions = ActionType<typeof actions>;
 
-const initialState: State = {
+const initialState: EditorContextState = {
 	activeFile: "",
 	textEditorVisibleRanges: [],
 	textEditorUri: undefined,
@@ -58,11 +58,12 @@ export function reduceEditorContext(state = initialState, action: EditorContextA
 const emptyArray = [];
 
 export const getCurrentSelection = createSelector(
-	(state: State) => state.textEditorSelections || emptyArray,
+	(state: EditorContextState) => state.textEditorSelections || emptyArray,
 	selections => selections[0]
 );
 
-export const getVisibleRanges = (state: State) => state.textEditorVisibleRanges || emptyArray;
+export const getVisibleRanges = (state: EditorContextState) =>
+	state.textEditorVisibleRanges || emptyArray;
 
 // alias for mapVisibleRangeToLine0
 export const getLine0ForEditorLine = createSelector(

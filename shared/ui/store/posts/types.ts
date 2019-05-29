@@ -14,7 +14,7 @@ export function isPending(post: Post): post is PendingPost {
 	return (post as PendingPost).pending;
 }
 
-export interface State {
+export interface PostsState {
 	byStream: {
 		[streamId: string]: Index<CSPost>;
 	};

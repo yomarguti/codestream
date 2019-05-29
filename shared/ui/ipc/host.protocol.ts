@@ -21,11 +21,12 @@ export interface SignedOutBootstrapResponse {
 	configs: {
 		[key: string]: any;
 	};
-	env?: CodeStreamEnvironment | string;
 	version: string;
+	context: Partial<WebviewContext>;
+	env?: CodeStreamEnvironment | string;
+	loginToken?: string;
 }
 export interface SignedInBootstrapResponse extends SignedOutBootstrapResponse {
-	context: WebviewContext;
 	editorContext: EditorContext;
 	session: {
 		userId: string;
@@ -75,19 +76,26 @@ export const SlackLoginRequestType = new RequestType<
 	void
 >(`${IpcRoutes.Host}/slack/login`);
 
-export interface SignupRequest {}
-export interface SignupResponse {}
-export const SignupRequestType = new RequestType<SignupRequest, SignupResponse, void, void>(
-	`${IpcRoutes.Host}/signup`
-);
+export interface ValidateThirdPartyAuthRequest {
+	alias?: boolean;
+}
+export interface ValidateThirdPartyAuthResponse extends SignedInBootstrapResponse {}
+export const ValidateThirdPartyAuthRequestType = new RequestType<
+	ValidateThirdPartyAuthRequest,
+	ValidateThirdPartyAuthResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/validateThirdPartyAuth`);
 
 export interface CompleteSignupRequest {
-	token?: string;
+	email: string;
+	teamId?: string;
+	token: string;
 }
-export interface CompleteSignupResponse extends SignedInBootstrapResponse {}
+
 export const CompleteSignupRequestType = new RequestType<
 	CompleteSignupRequest,
-	CompleteSignupResponse,
+	SignedInBootstrapResponse,
 	void,
 	void
 >(`${IpcRoutes.Host}/signup/complete`);

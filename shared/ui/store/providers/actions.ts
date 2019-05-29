@@ -1,6 +1,6 @@
 import { action } from "../common";
-import { State, ProvidersActionsType } from "./types";
+import { ProvidersState, ProvidersActionsType } from "./types";
 
 export const reset = () => action("RESET");
 
-export const updateProviders = (data: State) => action(ProvidersActionsType.Update, data);
+export const updateProviders = (data: ProvidersState) => action(ProvidersActionsType.Update, data);

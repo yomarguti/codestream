@@ -1,6 +1,6 @@
 import { CSRepository } from "@codestream/protocols/api";
 
-export interface State {
+export interface ReposState {
 	[id: string]: CSRepository;
 }
 

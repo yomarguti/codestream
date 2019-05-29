@@ -1,21 +1,11 @@
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { Stream, StreamActionType } from "./types";
+import { StreamActionType, StreamsState } from "./types";
 import { includes as _includes, sortBy as _sortBy } from "lodash-es";
 
 type StreamsAction = ActionType<typeof actions>;
 
-interface Index {
-	[id: string]: Stream;
-}
-
-interface State {
-	byTeam: {
-		[teamId: string]: Index;
-	};
-}
-
-const initialState = {
+const initialState: StreamsState = {
 	byTeam: {}
 };
 
@@ -34,7 +24,7 @@ const addStream = (state, stream) => {
 	};
 };
 
-export const reduceStreams = (state: State = initialState, action: StreamsAction) => {
+export const reduceStreams = (state: StreamsState = initialState, action: StreamsAction) => {
 	switch (action.type) {
 		case StreamActionType.ADD_STREAMS:
 		case StreamActionType.BOOTSTRAP_STREAMS:
@@ -58,12 +48,12 @@ export const reduceStreams = (state: State = initialState, action: StreamsAction
 
 // Selectors
 // TODO: memoize
-export const getStreamForTeam = (state: State, teamId: string) => {
+export const getStreamForTeam = (state: StreamsState, teamId: string) => {
 	const streams = state.byTeam[teamId] || {};
 	return _sortBy(Object.values(streams).filter(stream => stream.isTeamStream), "createdAt")[0];
 };
 
-export const getChannelStreamsForTeam = (state: State, teamId: string, userId: string) => {
+export const getChannelStreamsForTeam = (state: StreamsState, teamId: string, userId: string) => {
 	const streams = state.byTeam[teamId] || {};
 	return Object.values(streams).filter(
 		stream =>
@@ -76,7 +66,11 @@ export const getChannelStreamsForTeam = (state: State, teamId: string, userId: s
 };
 
 // TODO: memoize
-export const getPublicChannelStreamsForTeam = (state: State, teamId: string, userId: string) => {
+export const getPublicChannelStreamsForTeam = (
+	state: StreamsState,
+	teamId: string,
+	userId: string
+) => {
 	const streams = state.byTeam[teamId] || {};
 	return Object.values(streams).filter(
 		stream =>
@@ -89,7 +83,7 @@ export const getPublicChannelStreamsForTeam = (state: State, teamId: string, use
 	);
 };
 
-export const getArchivedChannelStreamsForTeam = (state: State, teamId: string) => {
+export const getArchivedChannelStreamsForTeam = (state: StreamsState, teamId: string) => {
 	const streams = state.byTeam[teamId] || {};
 	return Object.values(streams).filter(stream => stream.type === "channel" && stream.isArchived);
 };
@@ -130,13 +124,13 @@ export const getDMName = (stream, users, currentUserId) => {
 	}
 };
 
-export const getDirectMessageStreamsForTeam = (state: State, teamId: string) => {
+export const getDirectMessageStreamsForTeam = (state: StreamsState, teamId: string) => {
 	const streams = state.byTeam[teamId] || {};
 	// TODO: filter for only those including the current user
 	return Object.values(streams).filter(stream => stream.type === "direct");
 };
 
-export const getServiceStreamsForTeam = (state: State, teamId: string, userId: string) => {
+export const getServiceStreamsForTeam = (state: StreamsState, teamId: string, userId: string) => {
 	const streams = state.byTeam[teamId] || {};
 	const serviceStreams = Object.values(streams).filter(
 		stream =>
@@ -144,7 +138,7 @@ export const getServiceStreamsForTeam = (state: State, teamId: string, userId: s
 			!stream.deactivated &&
 			!stream.isArchived &&
 			stream.serviceType &&
-			(stream.isTeamStream || stream.memberIds && stream.memberIds!.includes(userId))
+			(stream.isTeamStream || (stream.memberIds && stream.memberIds!.includes(userId)))
 	);
 	serviceStreams.map(stream => {
 		stream.displayName = "Live Share";
@@ -152,7 +146,7 @@ export const getServiceStreamsForTeam = (state: State, teamId: string, userId: s
 	return serviceStreams;
 };
 
-export const getStreamForId = (state: State, teamId: string, streamId: string) => {
+export const getStreamForId = (state: StreamsState, teamId: string, streamId: string) => {
 	const streams = state.byTeam[teamId] || {};
 	return Object.values(streams).find(stream => stream.id === streamId);
 };

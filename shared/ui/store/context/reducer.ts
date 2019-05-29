@@ -1,14 +1,17 @@
 import { ActionType } from "../common";
 import * as preferencesActions from "../preferences/actions";
+import * as sessionActions from "../session/actions";
 import { PreferencesActionsType } from "../preferences/types";
 import * as actions from "./actions";
-import { ContextActionsType, State } from "./types";
+import { ContextActionsType, ContextState, Route } from "./types";
 import { WebviewPanels } from "@codestream/protocols/webview";
+import { SessionActionType } from "../session/types";
 
 type ContextActions = ActionType<typeof actions>;
 type PreferencesActions = ActionType<typeof preferencesActions>;
+type SessionActions = ActionType<typeof sessionActions>;
 
-const initialState: State = {
+const initialState: ContextState = {
 	newPostEntryPoint: undefined,
 	currentTeamId: "",
 	currentStreamId: "",
@@ -25,12 +28,13 @@ const initialState: State = {
 	codemarksFileViewStyle: "inline",
 	codemarksShowArchived: false,
 	codemarksShowResolved: false,
-	showFeedbackSmiley: true
+	showFeedbackSmiley: true,
+	route: { name: Route.NewUser, params: {} }
 };
 
 export function reduceContext(
-	state: State = initialState,
-	action: ContextActions | PreferencesActions
+	state: ContextState = initialState,
+	action: ContextActions | PreferencesActions | SessionActions
 ) {
 	switch (action.type) {
 		case ContextActionsType.SetContext:
@@ -86,8 +90,21 @@ export function reduceContext(
 			}
 			return state;
 		}
+
+		case ContextActionsType.SetRoute: {
+			return { ...state, route: action.payload };
+		}
+
+		case SessionActionType.Set: {
+			// started a real session so next time the starting route should be login
+			if (action.payload.userId) {
+				return { ...state, route: { name: Route.Login, params: {} } };
+			}
+			return state;
+		}
+
 		case "RESET":
-			return initialState;
+			return { ...initialState, route: { name: Route.Login, params: {} } };
 		default:
 			return { ...initialState, ...state };
 	}

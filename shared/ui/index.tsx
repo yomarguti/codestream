@@ -6,7 +6,6 @@ import {
 	HostDidChangeConfigNotificationType,
 	HostDidChangeFocusNotificationType,
 	HostDidLogoutNotificationType,
-	BootstrapRequestType,
 	WebviewDidInitializeNotificationType,
 	HostDidChangeEditorSelectionNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
@@ -14,7 +13,7 @@ import {
 	ShowStreamNotificationType,
 	WebviewPanels
 } from "./ipc/webview.protocol";
-import { actions, createCodeStreamStore } from "./store";
+import { createCodeStreamStore } from "./store";
 import { HostApi } from "./webview-api";
 import {
 	DidChangeConnectionStatusNotificationType,
@@ -26,11 +25,18 @@ import {
 } from "@codestream/protocols/agent";
 import translations from "./translations/en";
 import { getCodemark } from "./store/codemarks/reducer";
-import { fetchCodemarks } from "./Stream/actions";
-import { State as ContextState } from "./store/context/types";
-import { State as CodemarksState } from "./store/codemarks/types";
-import { State as EditorContextState } from "./store/editorContext/types";
+import { fetchCodemarks, openPanel } from "./Stream/actions";
+import { ContextState } from "./store/context/types";
+import { CodemarksState } from "./store/codemarks/types";
+import { EditorContextState } from "./store/editorContext/types";
 import { updateProviders } from "./store/providers/actions";
+import { bootstrap, reset } from "./store/actions";
+import { online, offline } from "./store/connectivity/actions";
+import { updatePreferences } from "./store/preferences/actions";
+import { updateUnreads } from "./store/unreads/actions";
+import { updateConfigs } from "./store/configs/actions";
+import { setEditorContext } from "./store/editorContext/actions";
+import { focus, setCurrentStream, setCurrentDocumentMarker } from "./store/context/actions";
 
 export { HostApi };
 
@@ -52,8 +58,7 @@ export async function initialize(selector: string) {
 		document.querySelector(selector)
 	);
 
-	const data = await HostApi.instance.send(BootstrapRequestType, {});
-	await store.dispatch(actions.bootstrap(data) as any);
+	await store.dispatch(bootstrap() as any);
 
 	HostApi.instance.notify(WebviewDidInitializeNotificationType, {});
 }
@@ -64,19 +69,19 @@ export function listenForEvents(store) {
 
 	api.on(DidChangeConnectionStatusNotificationType, e => {
 		if (e.status === ConnectionStatus.Reconnected) {
-			store.dispatch(actions.online());
+			store.dispatch(online());
 		} else {
-			store.dispatch(actions.offline());
+			store.dispatch(offline());
 		}
 	});
 
 	api.on(DidChangeDataNotificationType, ({ type, data }) => {
 		switch (type) {
 			case ChangeDataType.Preferences:
-				store.dispatch(actions.updatePreferences(data));
+				store.dispatch(updatePreferences(data));
 				break;
 			case ChangeDataType.Unreads:
-				store.dispatch(actions.updateUnreads(data as any)); // TODO: Not sure why we need the any here
+				store.dispatch(updateUnreads(data as any)); // TODO: Not sure why we need the any here
 				break;
 			default:
 				store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload: data });
@@ -87,9 +92,7 @@ export function listenForEvents(store) {
 		store.dispatch(updateProviders(providers));
 	});
 
-	api.on(HostDidChangeConfigNotificationType, configs =>
-		store.dispatch(actions.updateConfigs(configs))
-	);
+	api.on(HostDidChangeConfigNotificationType, configs => store.dispatch(updateConfigs(configs)));
 
 	api.on(HostDidChangeActiveEditorNotificationType, async params => {
 		let context: EditorContextState;
@@ -112,24 +115,24 @@ export function listenForEvents(store) {
 				scmInfo: undefined
 			};
 		}
-		store.dispatch(actions.setEditorContext(context));
+		store.dispatch(setEditorContext(context));
 	});
 
 	api.on(HostDidChangeFocusNotificationType, ({ focused }) => {
 		if (focused) {
-			setTimeout(() => store.dispatch(actions.focus()), 10); // we want the first click to go to the FocusTrap blanket
+			setTimeout(() => store.dispatch(focus()), 10); // we want the first click to go to the FocusTrap blanket
 		} else {
-			store.dispatch(actions.blur());
+			store.dispatch(blur());
 		}
 	});
 
 	api.on(HostDidLogoutNotificationType, () => {
-		store.dispatch(actions.reset());
+		store.dispatch(reset());
 	});
 
 	api.on(HostDidChangeEditorSelectionNotificationType, params => {
 		store.dispatch(
-			actions.setEditorContext({
+			setEditorContext({
 				textEditorUri: params.uri,
 				textEditorVisibleRanges: params.visibleRanges,
 				textEditorSelections: params.selections,
@@ -140,7 +143,7 @@ export function listenForEvents(store) {
 
 	api.on(HostDidChangeEditorVisibleRangesNotificationType, params => {
 		store.dispatch(
-			actions.setEditorContext({
+			setEditorContext({
 				textEditorUri: params.uri,
 				textEditorVisibleRanges: params.visibleRanges,
 				textEditorSelections: params.selections,
@@ -150,8 +153,8 @@ export function listenForEvents(store) {
 	});
 
 	api.on(ShowStreamNotificationType, ({ streamId, threadId }) => {
-		store.dispatch(actions.openPanel("main"));
-		store.dispatch(actions.setCurrentStream(streamId, threadId));
+		store.dispatch(openPanel("main"));
+		store.dispatch(setCurrentStream(streamId, threadId));
 	});
 
 	api.on(ShowCodemarkNotificationType, async e => {
@@ -177,12 +180,12 @@ export function listenForEvents(store) {
 			context.panelStack[0] === WebviewPanels.CodemarksForFile ||
 			(e.sourceUri != null && editorContext.textEditorUri === e.sourceUri)
 		) {
-			store.dispatch(actions.openPanel(WebviewPanels.CodemarksForFile));
-			store.dispatch(actions.setCurrentDocumentMarker(codemark.markerIds && codemark.markerIds[0]));
+			store.dispatch(openPanel(WebviewPanels.CodemarksForFile));
+			store.dispatch(setCurrentDocumentMarker(codemark.markerIds && codemark.markerIds[0]));
 			return;
 		}
 
-		store.dispatch(actions.openPanel(WebviewPanels.Codemarks));
-		store.dispatch(actions.setCurrentStream(codemark.streamId, codemark.postId));
+		store.dispatch(openPanel(WebviewPanels.Codemarks));
+		store.dispatch(setCurrentStream(codemark.streamId, codemark.postId));
 	});
 }

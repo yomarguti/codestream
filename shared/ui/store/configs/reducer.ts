@@ -1,10 +1,10 @@
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { ConfigsActionsType, State } from "./types";
+import { ConfigsActionsType, ConfigsState } from "./types";
 
 type ConfigsActions = ActionType<typeof actions>;
 
-const initialState: State = {
+const initialState: ConfigsState = {
 	showHeadshots: true,
 	debug: false,
 	serverUrl: ""

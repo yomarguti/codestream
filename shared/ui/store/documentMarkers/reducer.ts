@@ -1,10 +1,10 @@
-import { State, DocumentMarkersActionsType } from "./types";
+import { DocumentMarkersState, DocumentMarkersActionsType } from "./types";
 import * as actions from "./actions";
 import { ActionType } from "../common";
 
 type DocumentMarkersAction = ActionType<typeof actions>;
 
-const initialState: State = {};
+const initialState: DocumentMarkersState = {};
 
 export function reduceDocumentMarkers(state = initialState, action: DocumentMarkersAction) {
 	switch (action.type) {

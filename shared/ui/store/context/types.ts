@@ -1,4 +1,5 @@
 import { WebviewContext, WebviewPanels } from "@codestream/protocols/webview";
+import { AnyObject } from "@codestream/webview/utils";
 
 export enum ContextActionsType {
 	SetCodemarkFileFilter = "@context/SetCodemarkFileFilter",
@@ -17,12 +18,13 @@ export enum ContextActionsType {
 	SetCodemarksShowResolved = "@context/SetCodemarksShowResolved",
 	SetChannelsMuteAll = "@context/SetChannelsMuteAll",
 	SetShowFeedbackSmiley = "@context/SetShowFeedbackSmiley",
-	SetNewPostEntryPoint = "@context/SetNewPostEntryPoint"
+	SetNewPostEntryPoint = "@context/SetNewPostEntryPoint",
+	SetRoute = "@context/SetRoute"
 }
 
 export type PostEntryPoint = "Stream" | "Global Nav" | "Spatial View" | undefined;
 
-export interface State extends WebviewContext {
+export interface ContextState extends WebviewContext {
 	channelFilter: string;
 	channelsMuteAll: boolean;
 
@@ -40,4 +42,21 @@ export interface State extends WebviewContext {
 	showFeedbackSmiley: boolean;
 
 	newPostEntryPoint: PostEntryPoint;
+	route: RouteState;
+}
+
+export enum Route {
+	NewUser = "newUserEntry",
+	Signup = "signup",
+	Login = "login",
+	CSOrSlack = "codestreamOrSlack",
+	SlackAuth = "slackAuth",
+	JoinTeam = "joinTeam",
+	EmailConfirmation = "emailConfirmation",
+	TeamCreation = "teamCreation"
+}
+
+export interface RouteState {
+	name: Route;
+	params: AnyObject;
 }

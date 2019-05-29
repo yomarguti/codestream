@@ -3,7 +3,7 @@ import { combineReducers } from "redux";
 import { batchedSubscribe } from "redux-batched-subscribe";
 import { composeWithDevTools } from "redux-devtools-extension";
 import thunk from "redux-thunk";
-import { reduceCapabilities } from "../store/capabilities/reducer";
+import { reduceCapabilities, CapabilitiesState } from "../store/capabilities/reducer";
 import { reduceCodemarks } from "../store/codemarks/reducer";
 import { reduceConfigs } from "../store/configs/reducer";
 import { reduceConnectivity } from "../store/connectivity/reducer";
@@ -12,7 +12,6 @@ import { reduceProviders } from "../store/providers/reducer";
 import { reducePosts } from "../store/posts/reducer";
 import { reducePreferences } from "../store/preferences/reducer";
 import { reduceRepos } from "../store/repos/reducer";
-import { reduceRoute } from "../store/route/reducer";
 import { reduceServices } from "../store/services/reducer";
 import { reduceSession } from "../store/session/reducer";
 import { reduceStreams } from "../store/streams/reducer";
@@ -24,8 +23,22 @@ import { debounceToAnimationFrame } from "../utils";
 import middleware from "./middleware";
 import { reduceEditorContext } from "./editorContext/reducer";
 import { BootstrapActionType } from "./actions";
-
-export { actions } from "./actions";
+import { CodemarksState } from "./codemarks/types";
+import { ConfigsState } from "./configs/types";
+import { ConnectivityState } from "./connectivity/types";
+import { ContextState } from "./context/types";
+import { DocumentMarkersState } from "./documentMarkers/types";
+import { EditorContextState } from "./editorContext/types";
+import { PostsState } from "./posts/types";
+import { PreferencesState } from "./preferences/types";
+import { ReposState } from "./repos/types";
+import { SessionState } from "http2";
+import { StreamsState } from "./streams/types";
+import { TeamsState } from "./teams/types";
+import { UnreadsState } from "./unreads/types";
+import { UsersState } from "./users/types";
+import { ServicesState } from "./services/types";
+import { ProvidersState } from "./providers/types";
 
 const bootstrapped = (state = false, { type }) => {
 	if (type === BootstrapActionType.Complete) return true;
@@ -50,7 +63,6 @@ const reducer = combineReducers({
 	posts: reducePosts,
 	preferences: reducePreferences,
 	repos: reduceRepos,
-	route: reduceRoute,
 	session: reduceSession,
 	streams: reduceStreams,
 	teams: reduceTeams,
@@ -73,4 +85,26 @@ export function createCodeStreamStore(
 			batchedSubscribe(debounceToAnimationFrame((notify: Function) => notify())) as any
 		)
 	);
+}
+
+export interface CodeStreamState {
+	bootstrapped: boolean;
+	capabilities: CapabilitiesState;
+	codemarks: CodemarksState;
+	configs: ConfigsState;
+	connectivity: ConnectivityState;
+	context: ContextState;
+	documentMarkers: DocumentMarkersState;
+	editorContext: EditorContextState;
+	pluginVersion: string;
+	posts: PostsState;
+	preferences: PreferencesState;
+	repos: ReposState;
+	session: SessionState;
+	streams: StreamsState;
+	teams: TeamsState;
+	umis: UnreadsState;
+	users: UsersState;
+	services: ServicesState;
+	providers: ProvidersState;
 }

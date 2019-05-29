@@ -6,6 +6,10 @@ export function isNotOnDisk(uri: string) {
 	return uri === "" || uri.startsWith("untitled:");
 }
 
+export interface AnyObject {
+	[key: string]: any;
+}
+
 type Primitive = number | string;
 
 export function diff<T extends Primitive>(arrayA: T[], arrayB: T[]): T[] {

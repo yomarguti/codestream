@@ -3,7 +3,11 @@ import * as actions from "./actions";
 
 type CapabilitiesActions = ActionType<typeof actions>;
 
-const initialState = {};
+export interface CapabilitiesState {
+	[name: string]: boolean;
+}
+
+const initialState: CapabilitiesState = {};
 
 export function reduceCapabilities(state = initialState, { type, payload }: CapabilitiesActions) {
 	switch (type) {

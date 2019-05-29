@@ -1,11 +1,11 @@
 import { toMapBy } from "../../utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { ReposActionsType, State } from "./types";
+import { ReposActionsType, ReposState } from "./types";
 
 type ReposActions = ActionType<typeof actions>;
 
-const initialState: State = {};
+const initialState: ReposState = {};
 
 export function reduceRepos(state = initialState, action: ReposActions) {
 	switch (action.type) {

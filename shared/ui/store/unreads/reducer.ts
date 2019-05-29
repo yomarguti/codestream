@@ -1,10 +1,10 @@
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { State, UnreadsActionsType } from "./types";
+import { UnreadsState, UnreadsActionsType } from "./types";
 
 type UnreadsActions = ActionType<typeof actions>;
 
-const initialState: State = {
+const initialState: UnreadsState = {
 	lastReads: {},
 	mentions: {},
 	unreads: {},

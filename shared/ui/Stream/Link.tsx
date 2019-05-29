@@ -7,7 +7,7 @@ interface Props {
 	useHref?: boolean;
 	href?: string;
 	onClick?(event: React.SyntheticEvent): any;
-	children: JSX.Element;
+	children: React.ReactNode;
 }
 
 function Link(props: Props) {

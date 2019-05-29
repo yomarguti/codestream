@@ -1,10 +1,10 @@
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { State, ProvidersActionsType } from "./types";
+import { ProvidersState, ProvidersActionsType } from "./types";
 
 type ProviderActions = ActionType<typeof actions>;
 
-const initialState: State = {
+const initialState: ProvidersState = {
 	providers: {}
 };
 

@@ -4,12 +4,11 @@ import ReactDOM from "react-dom";
 import { connect } from "react-redux";
 import Icon from "./Icon";
 import Button from "./Button";
-import Tooltip from "./Tooltip";
 import CancelButton from "./CancelButton";
 import { HostApi } from "../webview-api";
 import { OpenUrlRequestType } from "@codestream/protocols/agent";
-import { State as ContextState } from "../store/context/types";
 import { setShowFeedbackSmiley } from "../store/context/actions";
+import { CodeStreamState } from "../store";
 
 interface State {
 	emotion: "happy" | "sad";
@@ -207,7 +206,7 @@ export class Feedback extends React.Component<Props, State> {
 	};
 }
 
-const mapStateToProps = ({ context }: { context: ContextState }) => {
+const mapStateToProps = ({ context }: CodeStreamState) => {
 	return {
 		showFeedbackSmiley: context.showFeedbackSmiley
 	};

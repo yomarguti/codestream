@@ -1,10 +1,10 @@
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { PreferencesActionsType, State } from "./types";
+import { PreferencesActionsType, PreferencesState } from "./types";
 
 type PreferencesActions = ActionType<typeof actions>;
 
-const initialState: State = {};
+const initialState: PreferencesState = {};
 
 export function reducePreferences(state = initialState, action: PreferencesActions) {
 	switch (action.type) {

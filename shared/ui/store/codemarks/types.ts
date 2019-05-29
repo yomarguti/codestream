@@ -6,6 +6,6 @@ export enum CodemarksActionsTypes {
 	UpdateCodemarks = "UPDATE_CODEMARKS"
 }
 
-export interface State {
+export interface CodemarksState {
 	[codemarkId: string]: CodemarkPlus;
 }

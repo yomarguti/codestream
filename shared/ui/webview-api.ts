@@ -15,7 +15,8 @@ import {
 	HostDidChangeEditorVisibleRangesNotification,
 	NewCodemarkNotification
 } from "./ipc/webview.protocol";
-import { shortUuid } from "./utils";
+import { shortUuid, AnyObject } from "./utils";
+import { TelemetryRequestType } from "@codestream/protocols/agent";
 
 type NotificationParamsOf<NT> = NT extends NotificationType<infer N, any> ? N : never;
 type RequestParamsOf<RT> = RT extends RequestType<infer R, any, any, any> ? R : never;
@@ -189,6 +190,13 @@ export class HostApi extends EventEmitter {
 			};
 			this.port.postMessage(payload);
 			console.debug(`request ${id}:${type.method} sent to host`, payload);
+		});
+	}
+
+	track(eventName: string, properties?: AnyObject) {
+		this.send(TelemetryRequestType, {
+			eventName,
+			properties
 		});
 	}
 

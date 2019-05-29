@@ -1,10 +1,10 @@
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { SessionActionType, State } from "./types";
+import { SessionActionType, SessionState } from "./types";
 
 type SessionActions = ActionType<typeof actions>;
 
-const initialState: State = {};
+const initialState: SessionState = {};
 
 export function reduceSession(state = initialState, action: SessionActions) {
 	switch (action.type) {

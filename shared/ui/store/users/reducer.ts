@@ -3,13 +3,13 @@ import { createSelector } from "reselect";
 import { mapFilter, toMapBy } from "../../utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { State, UsersActionsType } from "./types";
+import { UsersState, UsersActionsType } from "./types";
 
 type UsersActions = ActionType<typeof actions>;
 
-const initialState: State = {};
+const initialState: UsersState = {};
 
-const updateUser = (payload: CSUser, users: State) => {
+const updateUser = (payload: CSUser, users: UsersState) => {
 	const user = users[payload.id] || {};
 	return { ...user, ...payload };
 };
@@ -54,7 +54,7 @@ export const getTeamMembers = createSelector(
 
 export const getAllUsers = createSelector(
 	getUsers,
-	(users: State) => Object.values(users)
+	(users: UsersState) => Object.values(users)
 );
 export const getUsernames = createSelector(
 	getAllUsers,
@@ -82,9 +82,9 @@ export const getNormalizedUsernames = createSelector(
 );
 
 export const getUserByCsId = createSelector(
-	(state: State) => state,
+	(state: UsersState) => state,
 	(_: any, codestreamId: string) => codestreamId,
-	(users: State, codestreamId: string) => {
+	(users: UsersState, codestreamId: string) => {
 		for (let user of Object.values(users)) {
 			if (user.codestreamId === codestreamId || user.id === codestreamId) return user;
 		}

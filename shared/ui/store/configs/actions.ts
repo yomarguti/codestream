@@ -1,5 +1,5 @@
 import { action } from "../common";
-import { ConfigsActionsType, State } from "./types";
+import { ConfigsActionsType, ConfigsState } from "./types";
 
-export const updateConfigs = (configs: Partial<State>) =>
+export const updateConfigs = (configs: Partial<ConfigsState>) =>
 	action(ConfigsActionsType.Update, configs);

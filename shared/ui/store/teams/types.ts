@@ -1,6 +1,6 @@
 import { CSTeam } from "@codestream/protocols/api";
 
-export interface State {
+export interface TeamsState {
 	[id: string]: CSTeam;
 }
 

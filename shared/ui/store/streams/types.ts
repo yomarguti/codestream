@@ -1,4 +1,11 @@
-// TODO: use CSStream
+import { Index } from "../common";
+
+export interface StreamsState {
+	byTeam: {
+		[teamId: string]: Index<Stream>;
+	};
+}
+
 export interface Stream {
 	id: string;
 	teamId: string;

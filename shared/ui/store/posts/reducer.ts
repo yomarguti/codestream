@@ -1,7 +1,7 @@
 import { CSPost } from "@codestream/protocols/api";
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { isPending, PostsActionsType, State } from "./types";
+import { isPending, PostsActionsType, PostsState } from "./types";
 import { sortBy as _sortBy } from "lodash-es";
 
 type PostsActions = ActionType<typeof actions>;
@@ -17,7 +17,7 @@ const addPost = (byStream, post: CSPost) => {
 	return { ...byStream, [streamId]: { ...streamPosts, [post.id]: post } };
 };
 
-export function reducePosts(state: State = initialState, action: PostsActions) {
+export function reducePosts(state: PostsState = initialState, action: PostsActions) {
 	switch (action.type) {
 		case PostsActionsType.Add:
 		case PostsActionsType.Bootstrap: {

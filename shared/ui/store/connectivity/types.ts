@@ -1,4 +1,4 @@
-export interface State {
+export interface ConnectivityState {
 	offline: boolean;
 }
 

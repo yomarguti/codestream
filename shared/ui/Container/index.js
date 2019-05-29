@@ -4,10 +4,7 @@ import { addLocaleData, IntlProvider } from "react-intl";
 import englishLocaleData from "react-intl/locale-data/en";
 import { connect, Provider } from "react-redux";
 import Stream from "../Stream/index";
-import Login from "../Login";
-import Signup from "../Signup";
-import CompleteSignup from "../CompleteSignup";
-import { SlackInfo } from "../SlackInfo";
+import { UnauthenticatedRoutes } from "../Authentication";
 import { logError } from "../logger";
 import { HostApi } from "../webview-api";
 import { ReloadWebviewRequestType } from "../ipc/webview.protocol";
@@ -64,21 +61,6 @@ export class Loading extends React.Component {
 		);
 	}
 }
-
-const UnauthenticatedRoutes = connect(state => state.route)(props => {
-	switch (props.route) {
-		case "signup":
-			return <Signup />;
-		case "login":
-			return <Login />;
-		case "completeSignup":
-			return <CompleteSignup {...props.params} />;
-		case "slackInfo":
-			return <SlackInfo />;
-		default:
-			return <Login />;
-	}
-});
 
 const mapStateToProps = state => ({
 	bootstrapped: state.bootstrapped,

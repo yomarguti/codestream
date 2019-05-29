@@ -16,8 +16,6 @@ import {
 	MaxRangeValue,
 	EditorSelection,
 	EditorMetrics,
-	EditorContext,
-	WebviewConfigs,
 	EditorScrollToNotificationType,
 	EditorScrollMode
 } from "../ipc/webview.protocol";
@@ -48,10 +46,10 @@ import {
 	setCurrentDocumentMarker,
 	setNewPostEntry
 } from "../store/context/actions";
-import { State as ContextState } from "../store/context/types";
 import { sortBy as _sortBy } from "lodash-es";
 import { getTeamMembers } from "../store/users/reducer";
 import { setEditorContext } from "../store/editorContext/actions";
+import { CodeStreamState } from "../store";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -1337,15 +1335,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 const EMPTY_ARRAY = [];
 const EMPTY_OBJECT = {};
 
-const mapStateToProps = (state: {
-	configs: WebviewConfigs;
-	context: ContextState;
-	documentMarkers: { [uri: string]: any };
-	editorContext: EditorContext;
-	teams: { [id: string]: any };
-	users: any;
-}) => {
-	const { context, editorContext, teams, users, configs, documentMarkers } = state;
+const mapStateToProps = (state: CodeStreamState) => {
+	const { context, editorContext, teams, configs, documentMarkers } = state;
 
 	const teamMembers = getTeamMembers(state);
 

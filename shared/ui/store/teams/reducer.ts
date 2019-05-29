@@ -1,11 +1,11 @@
 import { toMapBy } from "../../utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { State, TeamsActionsType } from "./types";
+import { TeamsState, TeamsActionsType } from "./types";
 
 type TeamsActions = ActionType<typeof actions>;
 
-const initialState: State = {};
+const initialState: TeamsState = {};
 
 export function reduceTeams(state = initialState, action: TeamsActions) {
 	switch (action.type) {

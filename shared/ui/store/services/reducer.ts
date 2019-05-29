@@ -1,10 +1,10 @@
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { ServicesActionsType } from "./types";
+import { ServicesActionsType, ServicesState } from "./types";
 
 type ServicesActions = ActionType<typeof actions>;
 
-const initialState = {};
+const initialState: ServicesState = {};
 
 export function reduceServices(state = initialState, action: ServicesActions) {
 	switch (action.type) {

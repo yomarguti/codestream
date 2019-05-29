@@ -1,7 +1,7 @@
 import { action } from "../common";
-import { State, EditorContextActionsType } from "./types";
+import { EditorContextState, EditorContextActionsType } from "./types";
 
 export const reset = () => action("RESET");
 
-export const setEditorContext = (payload: Partial<State>) =>
+export const setEditorContext = (payload: Partial<EditorContextState>) =>
 	action(EditorContextActionsType.SetEditorContext, payload);

@@ -1,10 +1,10 @@
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { ConnectivityActionsType, State } from "./types";
+import { ConnectivityActionsType, ConnectivityState } from "./types";
 
 type ConnectivityActions = ActionType<typeof actions>;
 
-const initialState: State = {
+const initialState: ConnectivityState = {
 	offline: false // !navigator.onLine
 };
 
