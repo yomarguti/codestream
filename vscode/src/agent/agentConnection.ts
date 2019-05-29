@@ -65,6 +65,7 @@ import {
 	MarkStreamReadRequestType,
 	MuteStreamRequestType,
 	OpenStreamRequestType,
+	PasswordLoginRequestType,
 	ReactToPostRequestType,
 	RenameStreamRequestType,
 	ReportingMessageType,
@@ -72,6 +73,7 @@ import {
 	SetCodemarkStatusRequestType,
 	SetStreamPurposeRequestType,
 	TelemetryRequestType,
+	TokenLoginRequestType,
 	UnarchiveStreamRequestType,
 	UpdateCodemarkRequestType,
 	UpdatePreferencesRequestType,
@@ -234,15 +236,6 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	@started
-	async api<R>(url: string, init?: RequestInit, token?: string): Promise<R> {
-		return this.sendRequest(ApiRequestType, {
-			url: url,
-			init: init,
-			token: token
-		});
-	}
-
-	@started
 	bootstrap() {
 		return this.sendRequest(BootstrapRequestType, {});
 	}
@@ -250,48 +243,6 @@ export class CodeStreamAgentConnection implements Disposable {
 	@started
 	async reportMessage(type: ReportingMessageType, message: string, extra?: object) {
 		this.sendRequest(ReportMessageRequestType, { source: "extension", type, message, extra });
-	}
-
-	async login(
-		serverUrl: string,
-		email: string,
-		passwordOrToken: string | AccessToken,
-		teamId?: string,
-		team?: string
-	): Promise<AgentResult> {
-		const options: Required<AgentOptions> = {
-			...this._clientOptions.initializationOptions,
-			serverUrl: serverUrl,
-			traceLevel: Logger.level,
-			email: email,
-			passwordOrToken: passwordOrToken,
-			team,
-			teamId
-		};
-
-		if (Container.config.proxySupport !== "off") {
-			const httpSettings = workspace.getConfiguration("http");
-			const proxy = httpSettings.get<string | undefined>("proxy", "");
-			if (proxy) {
-				options.proxy = {
-					url: proxy,
-					strictSSL: httpSettings.get<boolean>("proxyStrictSSL", true)
-				};
-				options.proxySupport = "override";
-			} else {
-				options.proxySupport = "on";
-			}
-		} else {
-			options.proxySupport = "off";
-		}
-
-		const response = await this.start(options);
-
-		if (response.result!.error) {
-			await this.stop();
-		}
-
-		return response.result;
 	}
 
 	async loginViaSignupToken(serverUrl: string, token: string): Promise<AgentResult> {
@@ -310,13 +261,37 @@ export class CodeStreamAgentConnection implements Disposable {
 			};
 		}
 
-		const response = await this.start(options);
+		const response = await this.start();
 
 		if (response.result!.error) {
 			await this.stop();
 		}
 
 		return response.result as AgentResult;
+	}
+
+	private getInitializationOptions() {
+		const options: Required<BaseAgentOptions> = {
+			...this._clientOptions.initializationOptions
+		};
+
+		if (Container.config.proxySupport !== "off") {
+			const httpSettings = workspace.getConfiguration("http");
+			const proxy = httpSettings.get<string | undefined>("proxy", "");
+			if (proxy) {
+				options.proxy = {
+					url: proxy,
+					strictSSL: httpSettings.get<boolean>("proxyStrictSSL", true)
+				};
+				options.proxySupport = "override";
+			} else {
+				options.proxySupport = "on";
+			}
+		} else {
+			options.proxySupport = "off";
+		}
+
+		return options;
 	}
 
 	logout() {
@@ -979,7 +954,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}
 
-	private async start(options: Required<AgentOptions>): Promise<AgentInitializeResult> {
+	public async start(): Promise<AgentInitializeResult> {
 		if (this._client !== undefined) {
 			throw new Error("Agent has already been started");
 		}
@@ -990,16 +965,11 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 		this._clientReadyCancellation = new CancellationTokenSource();
 
-		const clientOptions = {
-			...this._clientOptions,
-			initializationOptions: options
-		};
-
 		this._client = new LanguageClient(
 			"codestream",
 			"CodeStream",
 			{ ...this._serverOptions } as ServerOptions,
-			clientOptions
+			{ ...this._clientOptions, initializationOptions: this.getInitializationOptions() }
 		);
 
 		this._disposable = this._client.start();

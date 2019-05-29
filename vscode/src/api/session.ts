@@ -7,6 +7,10 @@ import {
 	CodeStreamEnvironment,
 	DidChangeDataNotification,
 	DidChangeDocumentMarkersNotification,
+	isLoginFailResponse,
+	OtcLoginRequestType,
+	PasswordLoginRequestType,
+	TokenLoginRequestType,
 	Unreads
 } from "@codestream/protocols/agent";
 import {
@@ -15,6 +19,7 @@ import {
 	CSDirectStream,
 	LoginResult
 } from "@codestream/protocols/api";
+import { ValidateThirdPartyAuthRequest } from "@codestream/protocols/webview";
 import {
 	commands,
 	ConfigurationTarget,
@@ -27,7 +32,7 @@ import {
 } from "vscode";
 import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
-import { extensionQualifiedId } from "../constants";
+import { emptyObj, extensionQualifiedId } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions, log, Strings } from "../system";
@@ -437,25 +442,16 @@ export class CodeStreamSession implements Disposable {
 		return result;
 	}
 
-	async loginViaSignupToken(token?: string): Promise<LoginResult> {
-		// TODO: reuse this._loginPromise
-		if (this._signupToken === undefined && token === undefined) {
-			throw new Error("A signup token hasn't been generated");
-		}
-
-		this.setServerUrl(Container.config.serverUrl);
+	async loginViaSignupToken(extra: ValidateThirdPartyAuthRequest): Promise<LoginResult> {
+		// this.setServerUrl(Container.config.serverUrl);
 		this.setStatus(SessionStatus.SigningIn);
 
-		const result = await Container.agent.loginViaSignupToken(
-			this._serverUrl,
-			this._signupToken || token!
-		);
+		const result = await Container.agent.sendRequest(OtcLoginRequestType, {
+			code: this.getSignupToken(),
+			...extra
+		});
 
-		if (result.error) {
-			if (result.error !== LoginResult.NotOnTeam && result.error !== LoginResult.NotConfirmed) {
-				this._signupToken = undefined;
-			}
-
+		if (isLoginFailResponse(result)) {
 			if (result.error === LoginResult.VersionUnsupported) {
 				this.showVersionUnsupportedMessage();
 			}
@@ -525,15 +521,23 @@ export class CodeStreamSession implements Disposable {
 					: Container.context.workspaceState.get(WorkspaceState.TeamId);
 			}
 
-			const result = await Container.agent.login(
-				this._serverUrl,
-				email,
-				passwordOrToken,
-				teamId,
-				Container.config.team
-			);
+			let result;
+			if (typeof passwordOrToken === "string") {
+				result = await Container.agent.sendRequest(PasswordLoginRequestType, {
+					email: email,
+					password: passwordOrToken,
+					team: Container.config.team,
+					teamId: teamId
+				});
+			} else {
+				result = await Container.agent.sendRequest(TokenLoginRequestType, {
+					token: passwordOrToken,
+					team: Container.config.team,
+					teamId: teamId
+				});
+			}
 
-			if (result.error) {
+			if (isLoginFailResponse(result)) {
 				if (result.error === LoginResult.VersionUnsupported) {
 					this.showVersionUnsupportedMessage();
 				} else {

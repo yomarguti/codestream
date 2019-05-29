@@ -39,9 +39,9 @@ import {
 	ShowCodemarkNotificationType,
 	SignedInBootstrapResponse,
 	SignedOutBootstrapResponse,
-	SignupRequestType,
 	SlackLoginRequestType,
 	UpdateConfigurationRequestType,
+	ValidateThirdPartyAuthRequestType,
 	WebviewContext,
 	WebviewDidChangeContextNotificationType,
 	WebviewDidInitializeNotificationType,
@@ -509,8 +509,8 @@ export class WebviewController implements Disposable {
 						"vscode.open",
 						Uri.parse(
 							`${
-								Container.config.webAppUrl
-							}/service-auth/slack?state=${this.session.getSignupToken()}`
+								Container.config.serverUrl
+							}/web/provider-auth/slack?signupToken=${this.session.getSignupToken()}`
 						)
 					);
 					return emptyObj;
@@ -518,29 +518,31 @@ export class WebviewController implements Disposable {
 
 				break;
 			}
-			case SignupRequestType.method: {
-				webview.onIpcRequest(SignupRequestType, e, async (type, params) => {
-					await commands.executeCommand(
-						"vscode.open",
-						Uri.parse(
-							`${
-								Container.config.webAppUrl
-							}/signup?force_auth=true&signup_token=${this.session.getSignupToken()}`
-						)
-					);
-					return emptyObj;
+			case ValidateThirdPartyAuthRequestType.method: {
+				webview.onIpcRequest(ValidateThirdPartyAuthRequestType, e, async (type, params) => {
+					const status = await this.session.loginViaSignupToken(params);
+					if (status !== LoginResult.Success) throw new Error(status);
+
+					return this.getBootstrap();
 				});
 
 				break;
 			}
 			case CompleteSignupRequestType.method: {
 				webview.onIpcRequest(CompleteSignupRequestType, e, async (type, params) => {
-					const status = await this.session.loginViaSignupToken(params.token);
+					const status = await this.session.login(
+						params.email,
+						{
+							email: params.email,
+							value: params.token,
+							url: Container.config.serverUrl
+						},
+						params.teamId
+					);
 					if (status !== LoginResult.Success) throw new Error(status);
 
 					return this.getBootstrap();
 				});
-
 				break;
 			}
 			case EditorHighlightRangeRequestType.method: {
@@ -681,6 +683,7 @@ export class WebviewController implements Disposable {
 				capabilities: this.session.capabilities,
 				configs: { email: Container.config.email },
 				env: this.session.environment,
+				context: this._context || {},
 				version: Container.versionFormatted
 			};
 

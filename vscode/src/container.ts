@@ -47,6 +47,8 @@ export class Container {
 		context.subscriptions.push(new WebviewSidebarActivator());
 
 		context.subscriptions.push(configuration.onWillChange(this.onConfigurationChanging, this));
+
+		await this._agent.start();
 	}
 
 	private static onConfigurationChanging(e: ConfigurationWillChangeEvent) {

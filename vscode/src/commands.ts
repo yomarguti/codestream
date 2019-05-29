@@ -274,7 +274,8 @@ export class Commands implements Disposable {
 	@command("signOut")
 	async signOut() {
 		try {
-			return await Container.session.logout();
+			await Container.session.logout();
+			await Container.agent.start();
 		} catch (ex) {
 			Logger.error(ex);
 		}
