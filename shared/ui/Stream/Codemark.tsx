@@ -128,11 +128,16 @@ export class Codemark extends React.Component<Props, State> {
 		if (text == null || text === "") {
 			html = "";
 		} else {
-			const me = this.props.currentUser.username.toLowerCase();
-			html = markdownify(text).replace(/@(\w+)/g, (match, name) => {
-				const nameNormalized = name.toLowerCase();
-				if (this.props.usernames.includes(nameNormalized)) {
-					return `<span class="at-mention${nameNormalized === me ? " me" : ""}">${match}</span>`;
+			const me = this.props.currentUser.username;
+			html = markdownify(text).replace(/@(\w+)/g, (match: string, name: string) => {
+				if (
+					this.props.usernames.some(
+						n => name.localeCompare(n, undefined, { sensitivity: "accent" }) === 0
+					)
+				) {
+					return `<span class="at-mention${
+						me.localeCompare(name, undefined, { sensitivity: "accent" }) === 0 ? " me" : ""
+					}">${match}</span>`;
 				}
 
 				return match;
