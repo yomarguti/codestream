@@ -169,7 +169,7 @@ namespace CodeStream.VisualStudio.Services {
 			var settingsManager = _settingsServiceFactory.Create();
 			var extensionInfo = settingsManager.GetExtensionInfo();
 			var ideInfo = settingsManager.GetIdeInfo();
-			return SendCoreAsync<JToken>("codestream/initialize", new LoginRequest {
+			return SendCoreAsync<JToken>("codestream/onInitialized", new LoginRequest {
 				ServerUrl = settingsManager.ServerUrl,
 				Extension = extensionInfo,
 				Ide = ideInfo,
