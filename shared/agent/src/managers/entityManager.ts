@@ -18,7 +18,7 @@ export abstract class EntityManagerBase<T extends CSEntity> extends ManagerBase<
 		entityName: this.getEntityName()
 	});
 
-	constructor(public readonly session: CodeStreamSession) {
+	constructor(session: CodeStreamSession) {
 		super(session);
 	}
 

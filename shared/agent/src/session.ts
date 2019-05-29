@@ -604,6 +604,8 @@ export class CodeStreamSession {
 				}) is a MS Teams-based team`
 			);
 
+			SessionContainer.instance().posts.disableCache();
+
 			this._api = this.newMSTeamsApiProvider(response.user);
 			await (this._api as MSTeamsApiProvider).processLoginResponse(response);
 

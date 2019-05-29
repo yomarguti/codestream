@@ -346,11 +346,6 @@ class PostsCache extends EntityCache<CSPost> {
 		this.fetchPosts = cfg.fetchPosts;
 		this.postIndex = new PostIndex(cfg.fetchPosts);
 		this.indexes.set("streamId", this.postIndex);
-
-		// TODO: REMOVE THIS!
-		setInterval(() => {
-			this.invalidate();
-		}, 5000);
 	}
 
 	@debug({
@@ -511,7 +506,6 @@ function getGitError(textDocument?: TextDocumentIdentifier) {
 
 @lsp
 export class PostsManager extends EntityManagerBase<CSPost> {
-
 	protected readonly cache: PostsCache = new PostsCache({
 		idxFields: this.getIndexedFields(),
 		fetchFn: this.fetch.bind(this),
@@ -519,9 +513,12 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		entityName: this.getEntityName()
 	});
 
-	constructor(public readonly session: CodeStreamSession) {
-		super(session);
+	disableCache() {
 		this.cache.disable();
+	}
+
+	enableCache() {
+		this.cache.enable();
 	}
 
 	async cacheSet(entity: CSPost, oldEntity?: CSPost): Promise<CSPost | undefined> {
