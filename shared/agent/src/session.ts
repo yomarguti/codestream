@@ -533,8 +533,18 @@ export class CodeStreamSession {
 		} catch (ex) {
 			if (ex instanceof ServerError) {
 				if (ex.statusCode !== undefined && ex.statusCode >= 400 && ex.statusCode < 500) {
+					const error = loginApiErrorMappings[ex.info.code] || LoginResult.Unknown;
+					if (error === LoginResult.ProviderConnectFailed) {
+						Container.instance().telemetry.track({
+							eventName: "Provider Connect Failed",
+							properties: {
+								Error: ex.info.error
+							}
+						});
+					}
 					return {
-						error: loginApiErrorMappings[ex.info.code] || LoginResult.Unknown
+						error: error,
+						extra: ex.info
 					};
 				}
 			}
