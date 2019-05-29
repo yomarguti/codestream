@@ -12,6 +12,9 @@ import {
 	CreateCodemarkRequest,
 	CreateCodemarkRequestType,
 	CreateCodemarkResponse,
+	DeleteCodemarkRequest,
+	DeleteCodemarkRequestType,
+	DeleteCodemarkResponse,
 	FetchCodemarksRequest,
 	FetchCodemarksRequestType,
 	FetchCodemarksResponse,
@@ -173,6 +176,11 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		}
 
 		return stream.memberIds.includes(this.session.userId);
+	}
+
+	@lspHandler(DeleteCodemarkRequestType)
+	delete(request: DeleteCodemarkRequest): Promise<DeleteCodemarkResponse> {
+		return this.session.api.deleteCodemark(request);
 	}
 
 	@lspHandler(UpdateCodemarkRequestType)
