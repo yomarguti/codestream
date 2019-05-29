@@ -1,6 +1,7 @@
 import {
 	BootstrapRequestType as WebviewBootstrapRequestType,
 	BootstrapResponse,
+	CompleteSignupRequest,
 	CompleteSignupRequestType,
 	EditorContext,
 	EditorHighlightRangeRequestType,
@@ -27,13 +28,13 @@ import {
 	ShowCodemarkNotificationType,
 	ShowStreamNotificationType,
 	SignedInBootstrapResponse,
-	SignupRequestType,
-	SignupResponse,
 	SlackLoginRequestType,
 	SlackLoginResponse,
 	UpdateConfigurationRequest,
 	UpdateConfigurationRequestType,
 	UpdateConfigurationResponse,
+	ValidateThirdPartyAuthRequest,
+	ValidateThirdPartyAuthRequestType,
 	WebviewContext,
 	WebviewDidChangeContextNotificationType,
 	WebviewDidInitializeNotificationType,
@@ -56,8 +57,11 @@ import {
 	DidChangeDataNotificationType,
 	DidChangeDocumentMarkersNotificationType,
 	GetFileScmInfoRequestType,
+	OtcLoginRequestType,
+	PasswordLoginRequestType,
 	ReportingMessageType,
 	ReportMessageRequestType,
+	TokenLoginRequestType,
 	TraceLevel,
 } from "../protocols/agent/agent.protocol";
 import { CodemarkType, LoginResult } from "../protocols/agent/api.protocol";
@@ -383,7 +387,7 @@ export class CodestreamView {
 					await this.session.ready;
 					const response: BootstrapResponse = this.session.isSignedIn
 						? await this.getSignedInBootstrapState()
-						: this.session.getBootstrapInfo();
+						: { ...this.session.getBootstrapInfo(), context: this.webviewContext };
 
 					this.respond<BootstrapResponse>({
 						id: message.id,
@@ -397,8 +401,8 @@ export class CodestreamView {
 			case SlackLoginRequestType.method: {
 				const ok = shell.openExternal(
 					`${
-						this.session.environment.webAppUrl
-					}/service-auth/slack?state=${this.session.getSignupToken()}`
+						this.session.environment.serverUrl
+					}/web/provider-auth/slack?signupToken=${this.session.getLoginToken()}`
 				);
 				if (ok) this.respond<SlackLoginResponse>({ id: message.id, params: true });
 				else {
@@ -409,8 +413,12 @@ export class CodestreamView {
 				}
 				break;
 			}
-			case CompleteSignupRequestType.method: {
-				const status = await this.session.loginViaSignupToken(message.params);
+			case ValidateThirdPartyAuthRequestType.method: {
+				const params: ValidateThirdPartyAuthRequest = message.params;
+				const status = await this.session.login(OtcLoginRequestType, {
+					code: this.session.getLoginToken(),
+					...params,
+				});
 				if (status !== LoginResult.Success) this.respond({ id: message.id, error: status });
 				else {
 					const data = await this.getSignedInBootstrapState();
@@ -418,18 +426,26 @@ export class CodestreamView {
 				}
 				break;
 			}
-			case SignupRequestType.method: {
-				shell.openExternal(
-					`${
-						this.session.environment.webAppUrl
-					}/signup?force_auth=true&signup_token=${this.session.getSignupToken()}`
-				);
-				this.respond<SignupResponse>({ id: message.id, params: {} });
+			case CompleteSignupRequestType.method: {
+				const { teamId, token, email }: CompleteSignupRequest = message.params;
+				const status = await this.session.login(TokenLoginRequestType, {
+					teamId,
+					token: {
+						email,
+						url: this.session.environment.serverUrl,
+						value: token,
+					},
+				});
+				if (status !== LoginResult.Success) this.respond({ id: message.id, error: status });
+				else {
+					const data = await this.getSignedInBootstrapState();
+					this.respond<SignedInBootstrapResponse>({ id: message.id, params: data });
+				}
 				break;
 			}
 			case LoginRequestType.method: {
 				const params: LoginRequest = message.params;
-				const status = await this.session.login(params.email, params.password);
+				const status = await this.session.login(PasswordLoginRequestType, params);
 				if (status !== LoginResult.Success) this.respond({ id: message.id, error: status });
 				else {
 					const data = await this.getSignedInBootstrapState();

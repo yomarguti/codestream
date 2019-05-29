@@ -1,11 +1,21 @@
-import { Emitter } from "atom";
+import { SignedOutBootstrapResponse } from "@codestream/protocols/webview";
+import { CompositeDisposable, Emitter } from "atom";
 import uuidv4 from "uuid/v4";
 import { EnvironmentConfig, PRODUCTION_CONFIG } from "../env-utils";
-import { AccessToken, AgentResult, Capabilities } from "../protocols/agent/agent.protocol";
+import {
+	AgentResult,
+	Capabilities,
+	isLoginFailResponse,
+	LoginFailResponse,
+	LoginSuccessResponse,
+	OtcLoginRequestType,
+	PasswordLoginRequestType,
+	TokenLoginRequestType,
+} from "../protocols/agent/agent.protocol";
 import { CSMe, LoginResult } from "../protocols/agent/api.protocol";
 import { PackageState } from "../types/package";
 import { getPluginVersion } from "../utils";
-import { CodeStreamAgent } from "./agent";
+import { CodeStreamAgent, RequestOf } from "./agent";
 import { Container } from "./container";
 
 export interface Session {
@@ -29,10 +39,26 @@ export interface SessionStatusChange {
 	previous: SessionStatus;
 }
 
+type LoginMethods =
+	| typeof PasswordLoginRequestType
+	| typeof TokenLoginRequestType
+	| typeof OtcLoginRequestType;
+
 const SESSION_STATUS_CHANGED = "session-status-changed";
 
 interface EventEmissions {
 	[SESSION_STATUS_CHANGED]: SessionStatusChange;
+}
+
+function initializesAgent(target: WorkspaceSession, key: string, descriptor: PropertyDescriptor) {
+	const fn = descriptor.value;
+
+	descriptor.value = async function(this: WorkspaceSession, ...args: any[]) {
+		await this.initializeAgent();
+		return fn.apply(this, args);
+	};
+
+	return descriptor;
 }
 
 export class WorkspaceSession {
@@ -40,8 +66,9 @@ export class WorkspaceSession {
 	private session?: Session;
 	private lastUsedEmail?: string;
 	private envConfig: EnvironmentConfig;
-	private signupToken?: string;
+	private loginToken?: string;
 	private _agent: CodeStreamAgent;
+	private subscriptions = new CompositeDisposable();
 	get agent() {
 		return this._agent;
 	}
@@ -52,12 +79,8 @@ export class WorkspaceSession {
 		return this._isReady;
 	}
 
-	static create(state: PackageState, autoSignIn: boolean) {
-		const session = new WorkspaceSession(state.session, state.lastUsedEmail, state.environment);
-		if (autoSignIn) {
-			session.autoSignIn();
-		}
-		return session;
+	static create(state: PackageState) {
+		return new WorkspaceSession(state.session, state.lastUsedEmail, state.environment);
 	}
 
 	protected constructor(
@@ -66,25 +89,42 @@ export class WorkspaceSession {
 		envConfig: EnvironmentConfig = PRODUCTION_CONFIG
 	) {
 		this.emitter = new Emitter();
-		this._agent = new CodeStreamAgent();
+		this._agent = new CodeStreamAgent(envConfig);
 		this.session = session;
 		this.lastUsedEmail = lastUsedEmail;
 		this.envConfig = envConfig;
+		this.initialize();
 	}
 
-	protected autoSignIn() {
-		if (this.session) {
-			this._isReady = new Promise(async (resolve, reject) => {
-				const result = await this.login(this.session!.user.email, this.session!.token);
-				if (result === LoginResult.Success) {
-					resolve();
-				} else {
-					this.session = undefined;
-					this._isReady = undefined;
-					reject();
+	private initialize() {
+		this._isReady = new Promise(async (resolve, reject) => {
+			try {
+				await this.initializeAgent();
+
+				if (Container.configs.get("autoSignIn") && this.session) {
+					const result = await this.login(TokenLoginRequestType, { token: this.session!.token });
+					if (result !== LoginResult.Success) {
+						this.session = undefined;
+					}
 				}
-			});
-		}
+
+				resolve();
+			} catch (error) {
+				reject();
+			}
+		});
+	}
+
+	async initializeAgent() {
+		if (this._agent.initialized) return;
+
+		await this.agent.start();
+		this.subscriptions.add(
+			this._agent.onDidTerminate(() => {
+				this._agent = new CodeStreamAgent(this.environment);
+				this.initialize();
+			})
+		);
 	}
 
 	get isSignedIn() {
@@ -100,6 +140,10 @@ export class WorkspaceSession {
 	}
 
 	dispose() {
+		// it's important to dispose subscriptions first
+		// because one of them replaces the instance to CodeStreamAgent agent when it's destroyed
+		// and during extension teardown we don't want to start again
+		this.subscriptions.dispose();
 		this.signOut();
 	}
 
@@ -150,38 +194,51 @@ export class WorkspaceSession {
 		return { ...editorCapabilities, ...this.agentCapabilities };
 	}
 
-	getBootstrapInfo() {
+	getBootstrapInfo(): Pick<
+		SignedOutBootstrapResponse,
+		"capabilities" | "configs" | "version" | "loginToken"
+	> {
 		return {
 			capabilities: this.capabilities,
 			configs: Container.configs.getForWebview(this.environment.serverUrl, this.lastUsedEmail),
 			version: getPluginVersion(),
+			loginToken: this.getLoginToken(),
 		};
 	}
 
-	private getTeamPreference() {
+	private getTeamPreference(): { teamId?: string; team?: string } {
 		if (this.session) return { teamId: this.session.teamId };
 
 		const teamSetting = Container.configs.get("team");
 		if (teamSetting.length > 0) return { team: teamSetting };
+
+		return {};
 	}
 
-	getSignupToken() {
-		if (!this.signupToken) {
-			this.signupToken = uuidv4();
-		}
-		return this.signupToken;
+	getLoginToken() {
+		if (!this.loginToken) this.loginToken = uuidv4();
+
+		return this.loginToken;
 	}
 
-	async login(email: string, passwordOrToken: string | AccessToken) {
+	@initializesAgent
+	async login<RT extends LoginMethods>(requestType: RT, request: RequestOf<RT>) {
 		this.sessionStatus = SessionStatus.SigningIn;
 		try {
-			const result = await this._agent.init(
-				email,
-				passwordOrToken,
-				this.environment.serverUrl,
-				this.getTeamPreference()
+			const response: LoginSuccessResponse | LoginFailResponse = await this._agent.request(
+				requestType,
+				{
+					...request,
+					...this.getTeamPreference(),
+				}
 			);
-			await this.completeLogin(result);
+
+			if (isLoginFailResponse(response)) {
+				this.sessionStatus = SessionStatus.SignedOut;
+				return response.error;
+			}
+
+			await this.completeLogin(response);
 			this.sessionStatus = SessionStatus.SignedIn;
 			return LoginResult.Success;
 		} catch (error) {
@@ -191,34 +248,6 @@ export class WorkspaceSession {
 				return error as LoginResult;
 			} else {
 				console.error("Unexpected error signing into CodeStream", error);
-				return LoginResult.Unknown;
-			}
-		}
-	}
-
-	async loginViaSignupToken(token?: string): Promise<LoginResult> {
-		if (this.signupToken === undefined && token === undefined) {
-			throw new Error("A signup token hasn't been generated");
-		}
-		this.sessionStatus = SessionStatus.SigningIn;
-		try {
-			const result = await this._agent.initWithSignupToken(
-				this.signupToken || token!,
-				this.environment.serverUrl,
-				this.getTeamPreference()
-			);
-			await this.completeLogin(result);
-			return LoginResult.Success;
-		} catch (error) {
-			this.sessionStatus = SessionStatus.SignedOut;
-			if (typeof error === "string") {
-				if (error !== LoginResult.NotOnTeam && error !== LoginResult.NotConfirmed) {
-					this.signupToken = undefined;
-				}
-				return error as LoginResult;
-			} else {
-				atom.notifications.addError("Unexpected error intializing agent with signup token");
-				console.error("Unexpected error intializing agent with signup token", error);
 				return LoginResult.Unknown;
 			}
 		}
@@ -242,14 +271,13 @@ export class WorkspaceSession {
 	signOut() {
 		if (this.session) {
 			this.session = undefined;
-			this._agent.dispose();
-			this._agent = new CodeStreamAgent();
 			this.sessionStatus = SessionStatus.SignedOut;
 		}
+		this._agent.dispose();
 	}
 
 	changeEnvironment(env: EnvironmentConfig) {
-		this.signOut();
 		this.envConfig = env;
+		this.signOut();
 	}
 }

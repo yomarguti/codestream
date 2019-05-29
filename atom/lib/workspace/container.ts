@@ -41,7 +41,7 @@ export class Container {
 		this._configs = new ConfigManager();
 		this._styles = StylesProvider.create();
 		this._editorManipulator = new EditorManipulator();
-		this._session = WorkspaceSession.create(state, this.configs.get("autoSignIn"));
+		this._session = WorkspaceSession.create(state);
 		this._viewController = new ViewController(this._session, state.views);
 		this._markerDecorationProvider = new MarkerDecorationProvider(
 			this.session,

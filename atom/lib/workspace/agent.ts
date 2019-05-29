@@ -7,6 +7,7 @@ import {
 	MessageConnection,
 } from "atom-languageclient/node_modules/vscode-jsonrpc";
 import { ChildProcess, spawn } from "child_process";
+import { EnvironmentConfig } from "env-utils";
 import { FileLogger } from "logger";
 import {
 	ConfigurationParams,
@@ -20,10 +21,8 @@ import {
 	WorkspaceFoldersChangeEvent,
 } from "vscode-languageserver-protocol";
 import {
-	AccessToken,
 	AgentInitializeResult,
-	AgentOptions,
-	AgentResult,
+	BaseAgentOptions,
 	DidChangeConnectionStatusNotification,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotification,
@@ -33,13 +32,13 @@ import {
 	TelemetryRequest,
 	TelemetryRequestType,
 } from "../protocols/agent/agent.protocol";
-import { asAbsolutePath, Debug, Editor, getAgentSource, getPluginVersion } from "../utils";
+import { asAbsolutePath, Debug, Echo, Editor, getAgentSource, getPluginVersion } from "../utils";
 import { capabilities } from "./client-capabilities";
 import { Container } from "./container";
 
 type RequestOrNotificationType<P, R> = RequestType<P, R, any, any> | NotificationType<P, R>;
 
-type RequestOf<RT> = RT extends RequestOrNotificationType<infer RQ, any> ? RQ : never;
+export type RequestOf<RT> = RT extends RequestOrNotificationType<infer RQ, any> ? RQ : never;
 type ResponseOf<RT> = RT extends RequestOrNotificationType<any, infer R> ? R : never;
 
 const reverseMessageType = function() {
@@ -55,9 +54,24 @@ const ReversedMessageType = reverseMessageType();
 abstract class AgentConnection {
 	private _connection: LanguageClientConnection | undefined;
 	private _agentProcess: ChildProcess | undefined;
+	private _initializedEvent = new Echo();
+	private _terminatedEvent = new Echo();
+	private _initialized = false;
+
+	get initialized() {
+		return this._initialized;
+	}
 
 	get connection() {
 		return this._connection;
+	}
+
+	onDidInitialize(cb: () => void) {
+		return this._initializedEvent.add(cb);
+	}
+
+	onDidTerminate(cb: () => void) {
+		return this._terminatedEvent.add(cb);
 	}
 
 	protected abstract preInitialization(
@@ -65,14 +79,11 @@ abstract class AgentConnection {
 		rpc: MessageConnection
 	): void;
 
-	protected async start(initOptions: {
-		serverUrl: string;
-		email?: string;
-		teamId?: string;
-		team?: string;
-		passwordOrToken?: string | AccessToken;
-		signupToken?: string;
-	}) {
+	protected getInitializationOptions(): Partial<BaseAgentOptions> {
+		return {};
+	}
+
+	async start() {
 		this._agentProcess = await this.startServer();
 
 		const rpc = createMessageConnection(
@@ -84,7 +95,7 @@ abstract class AgentConnection {
 
 		this.preInitialization(this._connection, rpc);
 
-		const initializationOptions: Partial<AgentOptions> = {
+		const initializationOptions: Partial<BaseAgentOptions> = {
 			extension: {
 				build: "",
 				buildEnv: "dev",
@@ -98,7 +109,7 @@ abstract class AgentConnection {
 			isDebugging: atom.inDevMode(),
 			traceLevel: Container.configs.get("traceLevel"),
 			gitPath: "git",
-			...initOptions,
+			...this.getInitializationOptions(),
 		};
 
 		const configs = Container.configs;
@@ -124,7 +135,7 @@ abstract class AgentConnection {
 			initializationOptions.proxySupport = proxySupport;
 		}
 
-		const firstProject = atom.project.getPaths()[0] || null; // TODO: what if there are no projects
+		const firstProject = atom.project.getPaths()[0]; // TODO: what if there are no projects
 		const response = await this._connection.initialize({
 			processId: this._agentProcess.pid,
 			workspaceFolders: [],
@@ -135,7 +146,11 @@ abstract class AgentConnection {
 
 		if (response.result.error) {
 			await this.stop();
-		} else this._connection.initialized();
+		} else {
+			this._connection.initialized();
+			this._initialized = true;
+			this._initializedEvent.push();
+		}
 
 		return (response as AgentInitializeResult).result;
 	}
@@ -150,9 +165,10 @@ abstract class AgentConnection {
 		const agentPath = Debug.isDebugging()
 			? getAgentSource()
 			: asAbsolutePath("dist/agent/agent.js");
+		const nodePath = Debug.isDebugging() ? "node" : process.execPath;
 		const agentProcess = spawn(
-			process.execPath,
-			["--nolazy", "--inspect=6011", agentPath, "--node-ipc"],
+			nodePath,
+			["--nolazy", "--inspect=6009", agentPath, "--node-ipc"],
 			options
 		);
 
@@ -160,38 +176,28 @@ abstract class AgentConnection {
 			console.error(error);
 		});
 		agentProcess.on("disconnect", () => {
-			if (this._connection) {
-				console.warn("CodeStream agent process disconnected prematurely");
+			if (Debug.isDebugging()) {
+				if (this._connection && this._connection.isConnected) {
+					console.warn("CodeStream agent process disconnected prematurely");
+				}
 			}
-			this.reset();
+			this.stop();
 		});
 		agentProcess.on("exit", code => {
 			if (Number(code) !== 0) {
 				console.error(`CodeStream agent process exited with non-zero exit code ${code}`);
 			}
+			this.stop();
 		});
 
 		return agentProcess;
 	}
 
 	protected async stop() {
-		if (this._connection) {
-			try {
-				this._connection.shutdown();
-				this._connection.exit();
-			} catch (error) {}
-		}
-		if (this._agentProcess) {
-			try {
-				this._agentProcess.kill();
-			} catch (error) {}
-		}
-		this.reset();
-	}
-
-	private reset() {
-		this._agentProcess = undefined;
-		this._connection = undefined;
+		this._connection!.dispose();
+		this._agentProcess!.kill();
+		this._terminatedEvent.push();
+		this._terminatedEvent.dispose();
 	}
 }
 
@@ -202,35 +208,12 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 	private subscriptions = new CompositeDisposable();
 	private logger = new FileLogger("agent");
 
-	async init(
-		email: string,
-		passwordOrToken: string | AccessToken,
-		serverUrl: string,
-		teamOption: { teamId?: string; team?: string } = {}
-	): Promise<AgentResult> {
-		const result = await this.start({
-			email,
-			passwordOrToken,
-			serverUrl,
-			...teamOption,
-		});
-
-		if (result.error) throw result.error;
-
-		return result;
+	constructor(private environment: EnvironmentConfig) {
+		super();
 	}
 
-	async initWithSignupToken(
-		token: string,
-		serverUrl: string,
-		teamOption: { teamId?: string; team?: string } = {}
-	): Promise<AgentResult> {
-		const result = await this.start({ signupToken: token, serverUrl, ...teamOption });
-		if (result.error) {
-			throw result.error;
-		}
-
-		return result;
+	protected getInitializationOptions() {
+		return { serverUrl: this.environment.serverUrl };
 	}
 
 	protected preInitialization(connection: LanguageClientConnection, rpc: MessageConnection) {
@@ -343,10 +326,12 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 		return this.emitter.on(DidChangeConnectionStatusNotificationType.method, cb);
 	}
 
+	@started
 	telemetry(data: TelemetryRequest) {
 		this.request(TelemetryRequestType, data);
 	}
 
+	@started
 	request<RT extends RequestType<any, any, any, any>>(
 		requestType: RT,
 		params: RequestOf<RT>
@@ -355,6 +340,7 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 	}
 
 	// for when typing can't be inferred
+	@started
 	sendRequest<R>(name: string, params?: any): Promise<R> {
 		return this.connection!.sendCustomRequest(name, params);
 	}
@@ -365,4 +351,17 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 		this.subscriptions.dispose();
 		this.stop();
 	}
+}
+
+function started(target: CodeStreamAgent, key: string, descriptor: PropertyDescriptor) {
+	const fn = descriptor.value;
+
+	descriptor.value = function(this: CodeStreamAgent, ...args: any[]) {
+		if (!this.initialized) {
+			throw new Error("CodeStreamAgent hasn't been started");
+		}
+		return fn.apply(this, args);
+	};
+
+	return descriptor;
 }
