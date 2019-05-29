@@ -15,6 +15,34 @@ import {
 const defaultCreatedAt = 181886400000;
 const defaultCreator = "0";
 
+const mentionsRegex = /(^|\s)@(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
+const pseudoMentionsRegex = /(^|\s)@(everyone|channel|here)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
+
+const teamsMentionsRegex = /<at id=\\?"(\d+)\\?">(.+)<\/at>/g;
+
+export interface UserInfo {
+	username: string;
+	displayName: string;
+	type: string;
+}
+
+export interface TeamsMessageBody {
+	contentType: "text" | "html";
+	content: string;
+}
+
+export interface TeamsMessageMention {
+	id: number;
+	mentionText: string;
+	mentioned: {
+		user: {
+			displayName: string;
+			id: string;
+			userIdentityType: string;
+		};
+	};
+}
+
 export interface GraphBatchRequest {
 	id: string;
 	method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | string;
@@ -58,16 +86,16 @@ export function toStreamId(channelId: string, teamId: string) {
 	return JSON.stringify({ teamId: teamId, channelId: channelId });
 }
 
-export async function fromTeamsPost(
+export async function fromTeamsMessage(
 	message: any,
 	channelId: string,
 	teamId: string,
-	usernamesById: Map<string, string>,
+	userInfosById: Map<string, UserInfo>,
 	codeStreamTeamId: string
 ): Promise<CSPost> {
 	const mentionedUserIds: string[] = [];
 
-	const text = fromTeamsPostText(message, usernamesById, mentionedUserIds);
+	const text = fromTeamsMessageText(message, userInfosById, message.mentions, mentionedUserIds);
 
 	// let reactions;
 	// if (post.reactions) {
@@ -129,13 +157,16 @@ export async function fromTeamsPost(
 	};
 }
 
-export function toTeamsPostBody(
+export function toTeamsMessageBody(
 	codemark: CSCodemark,
 	remotes: string[] | undefined,
 	markers: CSMarker[] | undefined,
 	markerLocations: CSMarkerLocations[] | undefined,
-	usernamesById: Map<string, string>,
-	teamsUserId: string
+	mentionedUserIds: string[] | undefined,
+	userInfosById: Map<string, UserInfo>,
+	userIdsByName: Map<string, string>,
+	teamsUserId: string,
+	mentionsOut: TeamsMessageMention[]
 ): { contentType: "text" | "html"; content: string } {
 	let { color } = codemark;
 	if (color !== undefined) {
@@ -162,59 +193,40 @@ export function toTeamsPostBody(
 				color = "#5abfdc";
 				break;
 			case "gray":
-				color = "#888888";
-				break;
 			default:
-				color = undefined!;
+				color = "#888888";
 				break;
 		}
 	}
 
-	let author;
-	// let authorIcon;
+	let message;
 	let fields:
 		| {
-				title: string;
+				title?: string;
 				value: string;
 				short?: boolean;
 		  }[]
 		| undefined;
 	let text;
 	let title;
-	let fallback;
+
+	const me = userInfosById.get(teamsUserId)!.displayName;
 
 	switch (codemark.type) {
 		case CodemarkType.Comment:
-			author = `${usernamesById.get(teamsUserId)} commented on code`;
-			fallback = `\n${author}`;
-
+			message = `${me} commented on code`;
 			text = codemark.text;
-			if (text) {
-				fallback = `\n${text}`;
-			}
+
 			break;
 		case CodemarkType.Bookmark:
-			author = `${usernamesById.get(teamsUserId)} set a bookmark`;
-			fallback = `\n${author}`;
-
+			message = `${me} set a bookmark`;
 			text = codemark.text;
-			if (text) {
-				fallback = `\n${text}`;
-			}
+
 			break;
 		case CodemarkType.Issue:
-			author = `${usernamesById.get(teamsUserId)} posted an issue`;
-			fallback = `\n${author}`;
-
+			message = `${me} posted an issue`;
 			title = codemark.title;
-			if (title) {
-				fallback = `\n${title}`;
-			}
-
 			text = codemark.text;
-			if (text) {
-				fallback += `\n${text}`;
-			}
 
 			if (codemark.assignees !== undefined && codemark.assignees.length !== 0) {
 				if (fields === undefined) {
@@ -223,32 +235,26 @@ export function toTeamsPostBody(
 
 				fields.push({
 					title: "Assignees",
-					value: codemark.assignees.map(a => usernamesById.get(a)).join(", ")
+					value: codemark.assignees
+						.map(a => {
+							const u = userInfosById.get(a);
+							return (u && u.displayName) || "Someone";
+						})
+						.join(", ")
 				});
 			}
 
 			break;
 		case CodemarkType.Question:
-			author = `${usernamesById.get(teamsUserId)} has a question`;
-			fallback = `\n${author}`;
-
+			message = `${me} has a question`;
 			title = codemark.title;
-			if (title) {
-				fallback = `\n${title}`;
-			}
 			text = codemark.text;
-			if (text) {
-				fallback += `\n${text}`;
-			}
+
 			break;
 		case CodemarkType.Trap:
-			author = `${usernamesById.get(teamsUserId)} created a trap`;
-			fallback = `\n${author}`;
-
+			message = `${me} created a trap`;
 			text = codemark.text;
-			if (text) {
-				fallback = `\n${text}`;
-			}
+
 			break;
 	}
 
@@ -270,10 +276,9 @@ export function toTeamsPostBody(
 				title = `<b>${marker.file}</b>`;
 			}
 
-			// const code = `\n\`\`\`${marker.code}\`\`\``;
-			const code = `<br/ ><code>${marker.code}</code>`;
-
-			fallback += `${fallback ? "\n" : ""}\n${title}${code}`;
+			const code = `<code style="margin: 7px 0;padding:10px;border:1px solid #d9d9d9;white-space:pre;display:block;">${
+				marker.code
+			}</code>`;
 
 			if (
 				remotes !== undefined &&
@@ -298,11 +303,13 @@ export function toTeamsPostBody(
 
 				if (url !== undefined) {
 					title = `<a href="${url.url}">${title}</a>`;
+				} else {
+					title = `<p>${title}</p>`;
 				}
 			}
 
 			fields.push({
-				title: undefined!, // This is because slack has the wrong type def here
+				title: undefined,
 				value: `${title}${code}`
 			});
 		}
@@ -311,38 +318,121 @@ export function toTeamsPostBody(
 	let fieldsHtml = "";
 	if (fields) {
 		fieldsHtml = fields
-			.map(f => `<div>${f.title ? `<h4>${f.title}</h4>` : ""}${f.value}</div>`)
+			.map(
+				f =>
+					`<div style="margin-top:5px;">${
+						f.title ? `<p style="font-weight:600;">${f.title}</p>` : ""
+					}${f.value}</div>`
+			)
 			.join("");
+	}
+
+	if (message) {
+		// Don't bother with the /cc since we can @mention in any content
+		// if (mentionedUserIds != null && mentionedUserIds.length !== 0) {
+		// 	message += ` /cc ${mentionedUserIds
+		// 		.map(u => `@${userInfosById.get(u)!.username}`)
+		// 		.join(", ")}`;
+		// }
+		message = toTeamsMessageText(
+			message,
+			mentionedUserIds,
+			userInfosById,
+			userIdsByName,
+			mentionsOut
+		);
+	}
+
+	if (title) {
+		title = toTeamsMessageText(title, mentionedUserIds, userInfosById, userIdsByName, mentionsOut);
+	}
+
+	if (text) {
+		text = toTeamsMessageText(text, mentionedUserIds, userInfosById, userIdsByName, mentionsOut);
 	}
 
 	return {
 		contentType: "html",
-		content: `<h2>${author}</h2><p>${text}</p>${fieldsHtml}<footer>Posted via CodeStream</footer>`
+		content: `<p>${message}</p>
+<div data-codestream="codestream://codemark/${codemark.id}?teamId=${
+			codemark.teamId
+		}" style="margin-top:0.25em;border-left:4px solid ${color};padding-left:0.75em;">
+	${title ? `<p style="font-weight:600;">${title}</p>` : ""}
+	<p>${text}</p>
+	${fieldsHtml}
+	<p style="font-size:x-small;font-weight:600;opacity:0.6;">Posted via CodeStream</p>
+</div>`
 	};
-
-	// const attachment: MessageAttachment = {
-	// 	fallback: fallback !== undefined ? fallback.substr(1) : undefined,
-	// 	author_name: author,
-	// 	title: title,
-	// 	fields: fields,
-	// 	text: text,
-	// 	footer: "Posted via CodeStream",
-	// 	ts: (new Date().getTime() / 1000) as any,
-	// 	color: color,
-	// 	callback_id: `codestream://codemark/${codemark.id}?teamId=${codemark.teamId}`,
-	// 	mrkdwn_in: ["fields", "pretext", "text"]
-	// };
-	// return attachment;
 }
 
-export function fromTeamsPostText(
-	post: any,
-	usernamesById: Map<string, string>,
+export function fromTeamsMessageText(
+	message: any,
+	userInfosById: Map<string, UserInfo>,
+	mentions: TeamsMessageMention[] | undefined,
 	mentionedUserIds: string[]
 ): string {
-	if (!post.body) return post.summary || post.subject || "";
+	if (!message.body) return message.summary || message.subject || "";
 
-	const text = post.body.content;
+	let text = message.body.content;
+	if (mentions === undefined || mentions.length === 0) return text;
+
+	text = text.replace(teamsMentionsRegex, (match: string, id: string, mentionText: string) => {
+		const mention = mentions.find(m => m.id === Number(id));
+		if (mention !== undefined) {
+			mentionedUserIds.push(mention.mentioned.user.id);
+			const userInfo = userInfosById.get(mention.mentioned.user.id);
+			return `@${(userInfo && userInfo.username) || mentionText}`;
+		}
+
+		return `@${mentionText}`;
+	});
+	return text;
+}
+
+export function toTeamsMessageText(
+	text: string,
+	mentionedUserIds: string[] | undefined,
+	userInfosById: Map<string, UserInfo>,
+	userIdsByName: Map<string, string>,
+	mentionsOut: TeamsMessageMention[]
+) {
+	if (text == null || text.length === 0) return text;
+
+	const hasMentionedUsers = mentionedUserIds != null && mentionedUserIds.length !== 0;
+	if (hasMentionedUsers || pseudoMentionsRegex.test(text)) {
+		text = text.replace(mentionsRegex, (match: string, prefix: string, mentionName: string) => {
+			if (mentionName === "everyone" || mentionName === "channel" || mentionName === "here") {
+				return `${prefix}<!${mentionName}>`;
+			}
+
+			if (hasMentionedUsers) {
+				const userId = userIdsByName.get(mentionName);
+				if (userId !== undefined && mentionedUserIds!.includes(userId)) {
+					const id = mentionsOut.length;
+
+					const userInfo = userInfosById.get(userId);
+					if (userInfo !== undefined) {
+						mentionsOut.push({
+							id: id,
+							mentionText: mentionName,
+							mentioned: {
+								user: {
+									displayName: userInfo.displayName,
+									id: userId,
+									userIdentityType: userInfo.type
+								}
+							}
+						});
+					}
+
+					return `${prefix}<at id="${id}">${mentionName}</at>`;
+				}
+			}
+
+			return match;
+		});
+	}
+
 	return text;
 }
 
@@ -383,10 +473,10 @@ export function fromTeamsChannel(
 	};
 }
 
-export function toTeamsTeam(team: CSTeam, usernamesById: Map<string, string>) {
-	team.memberIds = [...usernamesById.keys()];
+export function toTeamsTeam(team: CSTeam, userInfosById: Map<string, UserInfo>) {
+	team.memberIds = [...userInfosById.keys()];
 	// team.memberIds = team.memberIds.map(m => {
-	// 	const u = usernamesById.get(m);
+	// 	const u = userInfosById.get(m);
 	// 	return u !== undefined ? u.id : m;
 	// });
 }
@@ -427,11 +517,11 @@ export function fromTeamsUser(
 		numInvites: 0,
 		numMentions: 0,
 		registeredAt: defaultCreatedAt,
-		// TODO: Need to hold both codestream and slack teams?
+		// TODO: Need to hold both codestream and teams teams?
 		teamIds: [codestreamTeamId],
 		timeZone: "",
 		// TODO: ???
 		totalPosts: 0,
-		username: user.displayName
+		username: user.displayName.replace(/ /g, "_")
 	};
 }

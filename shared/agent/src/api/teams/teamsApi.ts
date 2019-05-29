@@ -112,17 +112,20 @@ import {
 } from "../apiProvider";
 import { CodeStreamApiProvider } from "../codestream/codestreamApi";
 import { CodeStreamPreferences } from "../preferences";
-// import { TeamsEvents } from "./events";
 import {
 	fromPostId,
 	fromStreamId,
 	fromTeamsChannel,
-	fromTeamsPost,
+	fromTeamsMessage,
 	fromTeamsUser,
 	GraphBatchRequest,
 	GraphBatchResponse,
-	toTeamsPostBody,
-	toTeamsTeam
+	TeamsMessageBody,
+	TeamsMessageMention,
+	toTeamsMessageBody,
+	toTeamsMessageText,
+	toTeamsTeam,
+	UserInfo
 } from "./teamsApi.adapters";
 import { TeamsUnreads } from "./unreads";
 
@@ -133,7 +136,6 @@ export class MSTeamsApiProvider implements ApiProvider {
 	}
 
 	private _teams: Client;
-	// private _events: TeamsEvents | undefined;
 	private readonly _codestreamUserId: string;
 	private _providerInfo: CSMSTeamsProviderInfo;
 	private readonly _teamsUserId: string;
@@ -142,9 +144,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 	private _teamsById: Map<string, string> | undefined;
 
 	private readonly _unreads: TeamsUnreads;
-	// TODO: Convert to index on UserManager?
-	private _usernamesById: Map<string, string> | undefined;
-	// TODO: Convert to index on UserManager?
+	private _userInfosById: Map<string, UserInfo> | undefined;
 	private _userIdsByName: Map<string, string> | undefined;
 
 	readonly capabilities: Capabilities = {
@@ -161,11 +161,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 		this._providerInfo = providerInfo;
 		this._teams = this.newClient();
 
-		// this._teams.on("rate_limited", retryAfter => {
-		// 	Logger.log(
-		// 		`SlackApiProvider request was rate limited and future requests will be paused for ${retryAfter} seconds`
-		// 	);
-		// });
+		// TODO: Figure out how to get the proxy to work
 
 		this._unreads = new TeamsUnreads(this);
 		this._unreads.onDidChange(this.onUnreadsChanged, this);
@@ -255,7 +251,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 					break;
 				}
 				case MessageType.Users:
-					// TODO: Map with slack data
+					// TODO: Map with teams data
 					const user = e.data.find(u => u.id === this._codestreamUserId);
 					if (user === undefined) return;
 
@@ -281,7 +277,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 	}
 
 	async processLoginResponse(response: CSLoginResponse): Promise<void> {
-		// Mix in slack user info with ours
+		// Mix in teams user info with ours
 		const meResponse = await this.getMeCore({ user: response.user });
 
 		const teamsResponse = await this.teamsApiCall<{ value: any[] }>("me/joinedTeams", request =>
@@ -292,13 +288,13 @@ export class MSTeamsApiProvider implements ApiProvider {
 			teamsResponse.value.map<[string, string]>(t => [t.id, t.displayName])
 		);
 
-		// TODO: Correlate codestream ids to slack ids once the server returns that info
+		// TODO: Correlate codestream ids to teams ids once the server returns that info
 		// const users = await this._codestream.fetchUsers({});
 		// users;
 
 		const team = response.teams.find(t => t.id === this._codestreamTeamId);
 		if (team !== undefined) {
-			toTeamsTeam(team, await this.ensureUsernamesById());
+			toTeamsTeam(team, await this.ensureUserInfosById());
 		}
 
 		response.user = meResponse.user;
@@ -335,15 +331,6 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 	@log()
 	async subscribe(types?: MessageType[]) {
-		// this._events = this.newTeamsEvents();
-		// this._events.onDidReceiveMessage(e => {
-		// 	if (e.type === MessageType.Preferences) {
-		// 		this._preferences.update(e.data);
-		// 	} else {
-		// 		this._onDidReceiveMessage.fire(e);
-		// 	}
-		// });
-
 		this._preferences.onDidChange(preferences => {
 			this._onDidReceiveMessage.fire({ type: MessageType.Preferences, data: preferences });
 		});
@@ -351,9 +338,6 @@ export class MSTeamsApiProvider implements ApiProvider {
 		this.getInitialPreferences().then(preferences => {
 			this._preferences.update(preferences);
 		});
-
-		// const usernamesById = await this.ensureUsernamesById();
-		// await this._events.connect([...usernamesById.keys()]);
 
 		this._codestream.onDidReceiveMessage(this.onCodeStreamMessage, this);
 		await this._codestream.subscribe([
@@ -367,15 +351,11 @@ export class MSTeamsApiProvider implements ApiProvider {
 		]);
 	}
 
-	// protected newTeamsEvents() {
-	// 	return new TeamsEvents(this._teamsToken, this, this._proxyAgent);
-	// }
-
-	async ensureUsernamesById(): Promise<Map<string, string>> {
-		if (this._usernamesById === undefined) {
+	async ensureUserInfosById(): Promise<Map<string, UserInfo>> {
+		if (this._userInfosById === undefined) {
 			void (await this.ensureUserMaps());
 		}
-		return this._usernamesById!;
+		return this._userInfosById!;
 	}
 
 	private async ensureUserIdsByName(): Promise<Map<string, string>> {
@@ -387,14 +367,18 @@ export class MSTeamsApiProvider implements ApiProvider {
 	}
 
 	private async ensureUserMaps(): Promise<void> {
-		if (this._usernamesById === undefined || this._userIdsByName === undefined) {
+		if (this._userInfosById === undefined || this._userIdsByName === undefined) {
 			const users = (await SessionContainer.instance().users.get()).users;
 
-			this._usernamesById = new Map();
+			this._userInfosById = new Map();
 			this._userIdsByName = new Map();
 
 			for (const user of users) {
-				this._usernamesById.set(user.id, user.username);
+				this._userInfosById.set(user.id, {
+					username: user.username,
+					displayName: user.fullName,
+					type: "aadUser"
+				});
 				this._userIdsByName.set(user.username, user.id);
 			}
 		}
@@ -548,21 +532,28 @@ export class MSTeamsApiProvider implements ApiProvider {
 	async createPost(request: CreatePostRequest): Promise<CreatePostResponse> {
 		// let createdPostId;
 		try {
-			const usernamesById = await this.ensureUsernamesById();
+			const userInfosById = await this.ensureUserInfosById();
 			const userIdsByName = await this.ensureUserIdsByName();
 
+			const mentions: TeamsMessageMention[] = [];
+
 			let text = request.text;
-			// if (text) {
-			// 	text = toSlackPostText(text, request.mentionedUserIds, userIdsByName);
-			// }
+			if (text) {
+				text = toTeamsMessageText(
+					text,
+					request.mentionedUserIds,
+					userInfosById,
+					userIdsByName,
+					mentions
+				);
+			}
 
 			const { teamId, channelId, messageId: parentMessageId } = fromPostId(
 				request.parentPostId,
 				request.streamId!
 			);
 
-			// let attachment: MessageAttachment | undefined;
-			let body: { contentType: "text" | "html"; content: string };
+			let body: TeamsMessageBody;
 			let codemark: CSCodemark | undefined;
 			let markers: CSMarker[] | undefined;
 			let markerLocations: CSMarkerLocations[] | undefined;
@@ -582,26 +573,17 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 				({ codemark, markers, markerLocations, streams, repos } = codemarkResponse);
 
-				body = toTeamsPostBody(
+				body = toTeamsMessageBody(
 					codemark,
 					request.codemark.remotes,
 					markers,
 					markerLocations,
-					usernamesById,
-					this._teamsUserId
+					request.mentionedUserIds,
+					userInfosById,
+					userIdsByName,
+					this._teamsUserId,
+					mentions
 				);
-
-				// if (attachment.author_name) {
-				// 	text = attachment.author_name;
-				// 	attachment.author_name = undefined;
-
-				// 	if (request.mentionedUserIds != null && request.mentionedUserIds.length !== 0) {
-				// 		text += ` /cc ${request.mentionedUserIds
-				// 			.map(u => `@${usernamesById.get(u)}`)
-				// 			.join(", ")}`;
-				// 	}
-				// 	text = toSlackPostText(text, request.mentionedUserIds, userIdsByName);
-				// }
 			} else {
 				body = { contentType: "text", content: text };
 			}
@@ -612,15 +594,16 @@ export class MSTeamsApiProvider implements ApiProvider {
 				}`,
 				request =>
 					request.post({
-						body: body
+						body: body,
+						mentions: mentions.length === 0 ? undefined : mentions
 					})
 			);
 
-			const post = await fromTeamsPost(
+			const post = await fromTeamsMessage(
 				response,
 				channelId,
 				teamId,
-				usernamesById,
+				userInfosById,
 				this._codestreamTeamId
 			);
 			// const { postId } = fromTeamsPostId(post.id, post.streamId, this._teamsTeamId);
@@ -646,6 +629,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 				repos
 			};
 		} catch (ex) {
+			debugger;
 			throw ex;
 		}
 		// finally {
@@ -691,9 +675,9 @@ export class MSTeamsApiProvider implements ApiProvider {
 		// Ensure the correct ordering
 		// messages.sort((a: any, b: any) => a.ts - b.ts);
 
-		const usernamesById = await this.ensureUsernamesById();
+		const userInfosById = await this.ensureUserInfosById();
 		const posts = await Promise.all(response.value.map((m: any) =>
-			fromTeamsPost(m, channelId, teamId, usernamesById, this._codestreamTeamId)
+			fromTeamsMessage(m, channelId, teamId, userInfosById, this._codestreamTeamId)
 		) as Promise<CSPost>[]);
 
 		return { posts: posts };
@@ -713,12 +697,12 @@ export class MSTeamsApiProvider implements ApiProvider {
 			request => request.get()
 		);
 
-		const usernamesById = await this.ensureUsernamesById();
-		const post = await fromTeamsPost(
+		const userInfosById = await this.ensureUserInfosById();
+		const post = await fromTeamsMessage(
 			response,
 			channelId,
 			teamId,
-			usernamesById,
+			userInfosById,
 			this._codestreamTeamId
 		);
 
@@ -931,7 +915,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 		// Replace the current team's ids with slack ids
 		const team = response.teams.find(t => t.id === this._codestreamTeamId);
 		if (team !== undefined) {
-			toTeamsTeam(team, await this.ensureUsernamesById());
+			toTeamsTeam(team, await this.ensureUserInfosById());
 		}
 
 		return response;
@@ -943,7 +927,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 		// Replace the current team's ids with slack ids
 		if (response.team != null && response.team.id === this._codestreamTeamId) {
-			toTeamsTeam(response.team, await this.ensureUsernamesById());
+			toTeamsTeam(response.team, await this.ensureUserInfosById());
 		}
 
 		return response;
