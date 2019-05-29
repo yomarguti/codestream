@@ -1,6 +1,5 @@
 "use strict";
 import {
-	AccessToken,
 	AgentInitializeResult,
 	AgentOptions,
 	AgentResult,
@@ -144,6 +143,11 @@ export class CodeStreamAgentConnection implements Disposable {
 	private _onDidChangeDocumentMarkers = new EventEmitter<DidChangeDocumentMarkersNotification>();
 	get onDidChangeDocumentMarkers(): Event<DidChangeDocumentMarkersNotification> {
 		return this._onDidChangeDocumentMarkers.event;
+	}
+
+	private _onDidStart = new EventEmitter<void>();
+	get onDidStart(): Event<void> {
+		return this._onDidStart.event;
 	}
 
 	private _client: LanguageClient | undefined;
@@ -997,6 +1001,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._client.onNotification(DidLogoutNotificationType, this.onLogout.bind(this));
 		// this._client.onNotification(DidResetNotificationType, this.onReset.bind(this));
 
+		this._onDidStart.fire();
 		return this._client.initializeResult! as AgentInitializeResult;
 	}
 

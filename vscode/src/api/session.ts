@@ -166,6 +166,18 @@ export class CodeStreamSession implements Disposable {
 
 	constructor(private _serverUrl: string) {
 		this.setServerUrl(_serverUrl);
+		const config = Container.config;
+		if (config.autoSignIn) {
+			this.setStatus(SessionStatus.SigningIn);
+			Container.agent.onDidStart(async () => {
+				const token = await TokenManager.get(_serverUrl, config.email);
+				if (token) {
+					this.login(config.email, token);
+				} else {
+					this.setStatus(SessionStatus.SignedOut);
+				}
+			});
+		}
 	}
 
 	dispose() {
