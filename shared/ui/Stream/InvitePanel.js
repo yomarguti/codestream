@@ -101,17 +101,12 @@ export class InvitePage extends Component {
 	};
 
 	renderInviteSlack = () => {
-		const { teamId } = this.props;
-
 		return (
 			<div style={{ padding: "30px" }}>
 				Invite your teammates to give CodeStream a try by sharing this URL with them:
 				<br />
 				<br />
-				<b>
-					https://app.codestream.com/invite?service=slack&amp;team=
-					{teamId}
-				</b>
+				<b>https://www.codestream.com/slack-invite</b>
 				<br />
 				<br />
 			</div>
