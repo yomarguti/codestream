@@ -1,7 +1,7 @@
 import cx from "classnames";
 import React from "react";
 import { connect } from "react-redux";
-import { setCodemarkStatus, setUserPreference, deletePost } from "./actions";
+import { setCodemarkStatus, setUserPreference } from "./actions";
 import Headshot from "./Headshot";
 import Icon from "./Icon";
 import Menu from "./Menu";
@@ -16,7 +16,7 @@ import { range } from "../utils";
 import { getUserByCsId } from "../store/users/reducer";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { CodemarkForm } from "./CodemarkForm";
-import { editCodemark } from "../store/codemarks/actions";
+import { deleteCodemark, editCodemark } from "../store/codemarks/actions";
 import { confirmPopup } from "./Confirm";
 import { getPost } from "../store/posts/reducer";
 import { getPosts } from "../store/posts/actions";
@@ -30,10 +30,10 @@ interface State {
 }
 
 interface DispatchProps {
+	deleteCodemark: typeof deleteCodemark;
 	editCodemark: typeof editCodemark;
 	setCodemarkStatus: typeof setCodemarkStatus;
 	setUserPreference: typeof setUserPreference;
-	deletePost: typeof deletePost;
 	getPosts: typeof getPosts;
 }
 
@@ -291,7 +291,7 @@ export class Codemark extends React.Component<Props, State> {
 					label: "Delete Codemark",
 					wait: true,
 					action: () => {
-						this.props.deletePost(this.props.codemark.streamId, this.props.codemark.postId);
+						this.props.deleteCodemark(this.props.codemark.id);
 					}
 				},
 				{ label: "Cancel" }
@@ -770,5 +770,5 @@ const mapStateToProps = (state, props) => {
 
 export default connect<any, DispatchProps, any>(
 	mapStateToProps,
-	{ setCodemarkStatus, setUserPreference, deletePost, editCodemark, getPosts }
+	{ setCodemarkStatus, setUserPreference, deleteCodemark, editCodemark, getPosts }
 )(Codemark);

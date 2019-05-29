@@ -16,6 +16,12 @@ export function reduceCodemarks(state = initialState, action: CodemarksActions) 
 		case CodemarksActionsTypes.SaveCodemarks: {
 			return { ...state, ...toMapBy("id", action.payload) };
 		}
+		case CodemarksActionsTypes.Delete: {
+			return {
+				...state,
+				[action.payload]: undefined! // Needs the ! to avoid undefined everywhere
+			};
+		}
 		case "RESET":
 			return initialState;
 		default:
