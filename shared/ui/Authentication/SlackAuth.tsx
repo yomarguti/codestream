@@ -45,7 +45,7 @@ export const SlackAuth = (connect(undefined) as any)((props: Props) => {
 	return (
 		<div className="onboarding-page">
 			<form className="standard-form">
-				<fieldset>
+				<fieldset className="form-body">
 					<h2>Slack Authentication</h2>
 					<p>
 						Your web browser should have opened up to a Slack authentication page. Once you've
