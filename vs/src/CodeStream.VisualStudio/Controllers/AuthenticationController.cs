@@ -40,45 +40,24 @@ namespace CodeStream.VisualStudio.Controllers {
 			_credentialsService = credentialsService;
 		}
 
-		public async Task GoToSignupAsync(WebviewIpcMessage message) {
-			string error = null;
-			try {
-				using (var scope = _browserService.CreateScope(message)) {
-					try {
-						_ideService.Navigate(
-							$"{_settingsManager.WebAppUrl}/signup?force_auth=true&signup_token={_sessionService.GetOrCreateSignupToken()}");
-					}
-					catch (Exception ex) {
-						error = ex.ToString();
-						Log.Error(ex, $"{nameof(GoToSignupAsync)}");
-					}
-					scope.FulfillRequest(error);
-				}
-			}
-			catch (Exception ex) {
-				Log.Error(ex, nameof(GoToSignupAsync));
-			}
-			await Task.CompletedTask;
-		}
-
-		public async Task GoToSlackSigninAsync(WebviewIpcMessage message) {
+		public async Task SlackLoginAsync(WebviewIpcMessage message) {
 			string error = null;
 			using (var scope = _browserService.CreateScope(message)) {
 				try {
-					_ideService.Navigate(
-						$"{_settingsManager.WebAppUrl}/service-auth/slack?state={_sessionService.GetOrCreateSignupToken()}");
-
+					_ideService.Navigate($"{_settingsManager.ServerUrl}/web/provider-auth/slack?signupToken={_sessionService.GetOrCreateSignupToken()}");
 				}
 				catch (Exception ex) {
 					error = ex.ToString();
-					Log.Error(ex, $"{nameof(GoToSlackSigninAsync)}");
+					Log.Error(ex, $"{nameof(SlackLoginAsync)}");
 				}
+
 				scope.FulfillRequest(error);
 			}
+
 			await Task.CompletedTask;
 		}
 
-		public async Task AuthenticateAsync(WebviewIpcMessage message, string email, string password) {
+		public async Task LoginAsync(WebviewIpcMessage message, string email, string password) {
 			var success = false;
 			JToken @params = null;
 			string errorResponse = null;
@@ -116,7 +95,7 @@ namespace CodeStream.VisualStudio.Controllers {
 					}
 					catch (Exception ex) {
 						errorResponse = ex.ToString();
-						Log.Error(ex, $"{nameof(AuthenticateAsync)}");
+						Log.Error(ex, $"{nameof(LoginAsync)}");
 					}
 
 					scope.FulfillRequest(@params, errorResponse);
@@ -127,7 +106,7 @@ namespace CodeStream.VisualStudio.Controllers {
 				}
 			}
 			catch (Exception ex) {
-				Log.Error(ex, nameof(AuthenticateAsync));
+				Log.Error(ex, nameof(LoginAsync));
 			}
 
 			await Task.CompletedTask;
@@ -143,8 +122,7 @@ namespace CodeStream.VisualStudio.Controllers {
 						var token = await _credentialsService.LoadAsync(_settingsManager.ServerUrl.ToUri(),
 							_settingsManager.Email);
 						if (token != null) {
-							var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(_settingsManager.Email,
-								token.Item2, _settingsManager.ServerUrl);
+							var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(new LoginAccessToken(token.Item1, _settingsManager.ServerUrl, token.Item2), _settingsManager.Team);
 							try {
 								var error = GetError(loginResponse);
 								if (error != null) {
@@ -152,8 +130,7 @@ namespace CodeStream.VisualStudio.Controllers {
 								}
 								else if (loginResponse != null) {
 									var state = GetState(loginResponse);
-									@params = await _codeStreamAgent.GetBootstrapAsync(_settingsManager.GetSettings(),
-										state, true);
+									@params = await _codeStreamAgent.GetBootstrapAsync(_settingsManager.GetSettings(), state, true);
 									_sessionService.SetUserLoggedIn(CreateUser(loginResponse));
 									success = true;
 								}
@@ -188,7 +165,7 @@ namespace CodeStream.VisualStudio.Controllers {
 			await Task.CompletedTask;
 		}
 
-		public async Task ValidateSignupAsync(WebviewIpcMessage message, CompleteSignupRequest request) {
+		public async Task CompleteSignupAsync(WebviewIpcMessage message, CompleteSignupRequest request) {
 			var success = false;
 			string email = null;
 			string errorResponse = null;
@@ -197,14 +174,7 @@ namespace CodeStream.VisualStudio.Controllers {
 			try {
 				using (var scope = _browserService.CreateScope(message)) {
 					try {
-						var token = request?.Token;
-
-						if (token.IsNullOrWhiteSpace()) {
-							token = _sessionService.GetOrCreateSignupToken().ToString();
-						}
-
-						loginResponse =
-							await _codeStreamAgent.LoginViaOneTimeCodeAsync(token, _settingsManager.ServerUrl);
+						loginResponse = await _codeStreamAgent.LoginViaTokenAsync(new LoginAccessToken(request.Email, _settingsManager.ServerUrl, request.Token), _settingsManager.Team);
 
 						var error = GetError(loginResponse);
 						if (error != null) {
@@ -235,7 +205,7 @@ namespace CodeStream.VisualStudio.Controllers {
 					}
 					catch (Exception ex) {
 						errorResponse = ex.ToString();
-						Log.Error(ex, $"{nameof(ValidateSignupAsync)}");
+						Log.Error(ex, $"{nameof(CompleteSignupAsync)}");
 					}
 
 					scope.FulfillRequest(@params, errorResponse);
@@ -246,7 +216,67 @@ namespace CodeStream.VisualStudio.Controllers {
 				}
 			}
 			catch (Exception ex) {
-				Log.Error(ex, nameof(ValidateSignupAsync));
+				Log.Error(ex, nameof(CompleteSignupAsync));
+			}
+
+			await Task.CompletedTask;
+		}
+
+		public async Task ValidateThirdPartyAuthAsync(WebviewIpcMessage message, ValidateThirdPartyAuthRequest extras) {
+			var success = false;
+			string email = null;
+			string errorResponse = null;
+			JToken loginResponse = null;
+			JToken @params = null;
+			try {
+				using (var scope = _browserService.CreateScope(message)) {
+					try {
+						loginResponse = await _codeStreamAgent.OtcLoginRequestAsync(new OtcLoginRequest {
+							Code = _sessionService.GetOrCreateSignupToken().ToString(),
+							Alias = extras?.Alias
+						});
+
+						var error = GetError(loginResponse);
+						if (error != null) {
+							if (Enum.TryParse(error.ToString(), out LoginResult loginResult)) {
+								var handleError = await HandleErrorAsync(loginResult);
+								if (!handleError) {
+									errorResponse = loginResult.ToString();
+									await Task.CompletedTask;
+								}
+								else {
+									errorResponse = loginResult.ToString();
+								}
+							}
+							else {
+								errorResponse = error.ToString();
+							}
+
+							Log.Warning(errorResponse);
+						}
+						else if (loginResponse != null) {
+							email = GetEmail(loginResponse).ToString();
+							var state = GetState(loginResponse);
+							@params = await _codeStreamAgent.GetBootstrapAsync(_settingsManager.GetSettings(), state,
+								true);
+							_sessionService.SetUserLoggedIn(CreateUser(loginResponse));
+							success = true;
+						}
+					}
+					catch (Exception ex) {
+						errorResponse = ex.ToString();
+						Log.Error(ex, $"{nameof(ValidateThirdPartyAuthAsync)}");
+					}
+
+					scope.FulfillRequest(@params, errorResponse);
+				}
+
+				if (success) {
+					await OnSuccessAsync(loginResponse, email);
+				}
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(ValidateThirdPartyAuthAsync));
 			}
 
 			await Task.CompletedTask;
@@ -260,8 +290,10 @@ namespace CodeStream.VisualStudio.Controllers {
 				using (var scope = SettingsScope.Create(_settingsManager)) {
 					scope.SettingsManager.Email = email;
 				}
+
 				if (_settingsManager.AutoSignIn) {
-					await _credentialsService.SaveAsync(_settingsManager.ServerUrl.ToUri(), email, GetAccessToken(loginResponse).ToString());
+					await _credentialsService.SaveAsync(_settingsManager.ServerUrl.ToUri(), email,
+						GetAccessToken(loginResponse).ToString());
 				}
 			}
 
@@ -273,7 +305,8 @@ namespace CodeStream.VisualStudio.Controllers {
 
 			if (loginResult == LoginResult.VERSION_UNSUPPORTED) {
 				await Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-				InfoBarProvider.Instance.ShowInfoBar($"This version of {Application.Name} is no longer supported. Please upgrade to the latest version.");
+				InfoBarProvider.Instance.ShowInfoBar(
+					$"This version of {Application.Name} is no longer supported. Please upgrade to the latest version.");
 				return false;
 			}
 			else {
@@ -282,20 +315,28 @@ namespace CodeStream.VisualStudio.Controllers {
 		}
 
 		private User CreateUser(JToken token) {
-			var user = token?["result"]?["loginResponse"]?["user"].ToObject<CsUser>();
-			var teamId = token?["result"]?["loginResponse"]?["teamId"].Value<string>();
+			var user = token?["loginResponse"]?["user"].ToObject<CsUser>();
+			var teamId = token?["loginResponse"]?["teamId"].Value<string>();
 
-			var teams = (token?["result"]?["loginResponse"]?["teams"].ToObject<List<CsTeam>>() ?? Enumerable.Empty<CsTeam>()).ToList();
+			var teams = (token?["loginResponse"]?["teams"].ToObject<List<CsTeam>>() ?? Enumerable.Empty<CsTeam>())
+				.ToList();
 			string teamName = teams.Where(_ => _.Id == teamId)
-					.Select(_ => _.Name)
-					.FirstOrDefault();
+				.Select(_ => _.Name)
+				.FirstOrDefault();
 
 			return new User(user.Id, user.Username, user.Email, teamName, teams.Count);
 		}
 
-		private JToken GetState(JToken token) => token?["result"]?["state"];
-		private JToken GetEmail(JToken token) => token?["result"]?["loginResponse"]?["user"]?["email"];
-		private JToken GetAccessToken(JToken token) => token?["result"]?["loginResponse"]?["accessToken"];
-		private JToken GetError(JToken token) => token != null && token.HasValues && token["result"] != null ? token?["result"]?["error"] : new JValue(LoginResult.UNKNOWN.ToString());
+		private JToken GetState(JToken token) => token?["state"];
+		private JToken GetEmail(JToken token) => token?["loginResponse"]?["user"]?["email"];
+		private JToken GetAccessToken(JToken token) => token?["loginResponse"]?["accessToken"];
+
+		private JToken GetError(JToken token) {
+			if (token != null && token.HasValues && token["error"] != null) {
+				return token["error"] ?? new JValue(LoginResult.UNKNOWN.ToString());
+			}
+
+			return null;
+		}
 	}
 }

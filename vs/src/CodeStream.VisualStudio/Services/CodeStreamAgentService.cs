@@ -38,9 +38,17 @@ namespace CodeStream.VisualStudio.Services {
 		}
 	}
 
+	public class OtcLoginRequest {
+		public string Code { get; set; }
+		public string TeamId { get; set; }
+		public string Team { get; set; }
+		public bool? Alias { get; set; }
+	}
+
 	public interface ICodeStreamAgentService {
 		Task SetRpcAsync(JsonRpc rpc);
 		Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null);
+		Task<JToken> ReinitializeAsync();
 		Task<CreateDocumentMarkerPermalinkResponse> CreatePermalinkAsync(Range range, string uri, string privacy);
 		Task<GetDocumentFromKeyBindingResponse> GetDocumentFromKeyBindingAsync(int key);
 		Task<CreatePostResponse> CreatePostAsync(string streamId, string threadId, string text);
@@ -49,8 +57,8 @@ namespace CodeStream.VisualStudio.Services {
 		Task<GetUserResponse> GetUserAsync(string userId);
 		Task<GetStreamResponse> GetStreamAsync(string streamId);
 		Task<CsDirectStream> CreateDirectStreamAsync(List<string> memberIds);
-		Task<JToken> LoginViaTokenAsync(string email, string token, string serverUrl);
-		Task<JToken> LoginViaOneTimeCodeAsync(string signupToken, string serverUrl);
+		Task<JToken> LoginViaTokenAsync(LoginAccessToken token, string team, string teamId = null);
+		Task<JToken> OtcLoginRequestAsync(OtcLoginRequest request);
 		Task<JToken> LoginAsync(string email, string password, string serverUrl);
 		Task<JToken> LogoutAsync();
 		Task<JToken> GetBootstrapAsync(Settings settings, JToken state = null, bool isAuthenticated = false);
@@ -68,7 +76,7 @@ namespace CodeStream.VisualStudio.Services {
 		private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
 
 		private readonly ISessionService _sessionService;
-		private readonly IEventAggregator _eventAggregator;		
+		private readonly IEventAggregator _eventAggregator;
 		private readonly ISettingsServiceFactory _settingsServiceFactory;
 
 		[ImportingConstructor]
@@ -79,7 +87,7 @@ namespace CodeStream.VisualStudio.Services {
 			_eventAggregator = eventAggregator;
 			_sessionService = sessionService;
 			_settingsServiceFactory = settingsServiceFactory;
-			try {				
+			try {
 				if (_eventAggregator == null || _sessionService == null || settingsServiceFactory == null) {
 					Log.Error($"_eventAggregatorIsNull={_eventAggregator == null},_sessionServiceIsNull={_sessionService == null},settingsServiceFactoryIsNull={settingsServiceFactory == null}");
 				}
@@ -92,11 +100,18 @@ namespace CodeStream.VisualStudio.Services {
 		private JsonRpc _rpc;
 		bool _disposed;
 
-		public Task SetRpcAsync(JsonRpc rpc) {
+		public async Task SetRpcAsync(JsonRpc rpc) {
 			_rpc = rpc;
 			_rpc.Disconnected += Rpc_Disconnected;
 
-			return Task.CompletedTask;
+			try {
+				var initializationResult = await InitializeAsync();
+				Log.Verbose(initializationResult?.ToString());
+			}
+			catch (Exception ex) {
+				Log.Fatal(ex, nameof(SetRpcAsync));
+				throw;
+			}
 		}
 
 		private void Rpc_Disconnected(object sender, JsonRpcDisconnectedEventArgs e) {
@@ -144,6 +159,27 @@ namespace CodeStream.VisualStudio.Services {
 			}
 
 			return SendCoreAsync<T>(name, arguments, cancellationToken);
+		}
+
+		public Task<JToken> ReinitializeAsync() {
+			return InitializeAsync();
+		}
+
+		private Task<JToken> InitializeAsync() {
+			var settingsManager = _settingsServiceFactory.Create();
+			var extensionInfo = settingsManager.GetExtensionInfo();
+			var ideInfo = settingsManager.GetIdeInfo();
+			return SendCoreAsync<JToken>("codestream/initialize", new LoginRequest {
+				ServerUrl = settingsManager.ServerUrl,
+				Extension = extensionInfo,
+				Ide = ideInfo,
+#if DEBUG
+				TraceLevel = TraceLevel.Verbose.ToJsonValue(),
+				IsDebugging = true
+#else
+                TraceLevel = settingsManager.TraceLevel.ToJsonValue()
+#endif
+			});
 		}
 
 		public Task<CreateDocumentMarkerPermalinkResponse> CreatePermalinkAsync(Range range, string uri, string privacy) {
@@ -235,61 +271,35 @@ namespace CodeStream.VisualStudio.Services {
 			}
 		}
 
-		public Task<JToken> LoginViaTokenAsync(string email, string token, string serverUrl) {
-			var _settingsManager = _settingsServiceFactory.Create();
-			return SendCoreAsync<JToken>("codestream/login", new LoginViaAccessTokenRequest {
-				Email = email,
-				PasswordOrToken = new LoginAccessToken(email, serverUrl, token),
-				ServerUrl = serverUrl,
-				Extension = _settingsManager.GetExtensionInfo(),
-				Ide = _settingsManager.GetIdeInfo(),
-#if DEBUG
-				TraceLevel = TraceLevel.Verbose.ToJsonValue(),
-				IsDebugging = true
-#else
-                TraceLevel = _settingsManager.TraceLevel.ToJsonValue()
-#endif
-			});
+		public class TokenLoginRequest {
+			public LoginAccessToken Token { get; set; }
+			public string TeamId { get; set; }
+			public string Team { get; set; }
 		}
-
-		public Task<JToken> LoginViaOneTimeCodeAsync(string signupToken, string serverUrl) {
-			var _settingsManager = _settingsServiceFactory.Create();
-			return SendCoreAsync<JToken>("codestream/login", new LoginRequest {
-				SignupToken = signupToken,
-				ServerUrl = serverUrl,
-				Extension = _settingsManager.GetExtensionInfo(),
-				Ide = _settingsManager.GetIdeInfo(),
-#if DEBUG
-				TraceLevel = TraceLevel.Verbose.ToJsonValue(),
-				IsDebugging = true
-#else
-                TraceLevel = _settingsManager.TraceLevel.ToJsonValue()
-#endif
+		public Task<JToken> LoginViaTokenAsync(LoginAccessToken accessToken, string team, string teamId = null) {
+			return SendCoreAsync<JToken>("codestream/login/token", new TokenLoginRequest {
+				Token = accessToken,
+				Team = team,
+				TeamId = teamId
 			});
 		}
 
 		public Task<JToken> LoginAsync(string email, string password, string serverUrl) {
-			var _settingsManager = _settingsServiceFactory.Create();
-			var extensionInfo = _settingsManager.GetExtensionInfo();
-			var ideInfo = _settingsManager.GetIdeInfo();
-
-			return SendCoreAsync<JToken>("codestream/login", new LoginRequest {
+			var settingsManager = _settingsServiceFactory.Create();
+			return SendCoreAsync<JToken>(PasswordLoginRequestType.MethodName, new PasswordLoginRequest {
 				Email = email,
-				PasswordOrToken = password,
-				ServerUrl = serverUrl,
-				Extension = extensionInfo,
-				Ide = ideInfo,
-#if DEBUG
-				TraceLevel = TraceLevel.Verbose.ToJsonValue(),
-				IsDebugging = true
-#else
-                TraceLevel = _settingsManager.TraceLevel.ToJsonValue()
-#endif
+				Password = password,
+				Team = settingsManager?.Team
 			});
 		}
 
-		public Task<JToken> LogoutAsync() {
-			return SendAsync<JToken>("codestream/logout", new LogoutRequest());
+		public Task<JToken> OtcLoginRequestAsync(OtcLoginRequest request) {
+			return SendCoreAsync<JToken>("codestream/login/otc", request);
+		}
+
+		public async Task<JToken> LogoutAsync() {
+			var initializationResponse = await InitializeAsync();
+			return await SendAsync<JToken>("codestream/logout", new LogoutRequest());
 		}
 
 		public Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request) {
@@ -330,7 +340,10 @@ namespace CodeStream.VisualStudio.Services {
 						TraceLevel = _settingsManager.TraceLevel
 					},
 					Env = _settingsManager.GetEnvironmentName(),
-					Version = _settingsManager.GetEnvironmentVersionFormatted()
+					Version = _settingsManager.GetEnvironmentVersionFormatted(),
+					Context = new WebviewContext {
+						HasFocus = true
+					}
 				}.ToJToken();
 #if DEBUG
 				Log.Debug(bootstrapAnonymous?.ToString());

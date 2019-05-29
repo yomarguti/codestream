@@ -161,9 +161,9 @@ namespace CodeStream.VisualStudio {
 										}
 									case GetViewBootstrapDataRequestType.MethodName:
 									case LoginRequestType.MethodName:
-									case SignupRequestType.MethodName:
 									case SlackLoginRequestType.MethodName:
-									case CompleteSignupRequestType.MethodName: {
+									case CompleteSignupRequestType.MethodName:
+									case ValidateThirdPartyAuthRequestType.MethodName: {
 											await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 
 											var authenticationController = new AuthenticationController(
@@ -180,18 +180,18 @@ namespace CodeStream.VisualStudio {
 													await authenticationController.BootstrapAsync(message);
 													break;
 												case LoginRequestType.MethodName:
-													await authenticationController.AuthenticateAsync(message,
+													await authenticationController.LoginAsync(message,
 														message.Params["email"].ToString(),
 														message.Params["password"].ToString());
 													break;
-												case SignupRequestType.MethodName:
-													await authenticationController.GoToSignupAsync(message);
-													break;
 												case SlackLoginRequestType.MethodName:
-													await authenticationController.GoToSlackSigninAsync(message);
+													await authenticationController.SlackLoginAsync(message);
 													break;
 												case CompleteSignupRequestType.MethodName:
-													await authenticationController.ValidateSignupAsync(message, message?.Params.ToObject<CompleteSignupRequest>());
+													await authenticationController.CompleteSignupAsync(message, message?.Params.ToObject<CompleteSignupRequest>());
+													break;
+												case ValidateThirdPartyAuthRequestType.MethodName:
+													await authenticationController.ValidateThirdPartyAuthAsync(message, message?.Params.ToObject<ValidateThirdPartyAuthRequest>());
 													break;
 												default:
 													Log.Warning($"Shouldn't hit this Method={message.Method}");

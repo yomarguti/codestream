@@ -33,6 +33,10 @@ namespace CodeStream.VisualStudio.Services {
 	}
 
 	public interface IIdeService {
+		/// <summary>
+		/// Uses built in process handler for navigating to an external url
+		/// </summary>
+		/// <param name="url">an absolute url</param>
 		void Navigate(string url);
 		System.Threading.Tasks.Task SetClipboardAsync(string text);
 		void ScrollEditor(Uri fileUri, int? scrollTo = null, int? deltaPixels = null, bool? atTop = false);

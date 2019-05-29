@@ -426,18 +426,22 @@ namespace CodeStream.VisualStudio.Models {
 	}
 
 	public class LoginAccessToken {
-		public LoginAccessToken(string email, string url, string value) {
+		public LoginAccessToken(string email, string url, string token) {
 			Email = email;
 			Url = url;
-			Value = value;
+			Value = token;
 		}
 
 		public string Email { get; }
 		public string Url { get; }
+
+		[JsonProperty("value")]
 		public string Value { get; }
 	}
 
 	public class LoginRequest : LoginRequestBase<string> { }
+
+ 
 
 	public class LoginViaAccessTokenRequest : LoginRequestBase<LoginAccessToken> { }
 

@@ -77,18 +77,18 @@ namespace CodeStream.VisualStudio.LSP {
 
 		public object InitializationOptions {
 			get {
-				var _settingsManager = _settingsServiceFactory.Create();
+				var settingsManager = _settingsServiceFactory.Create();
 				var initializationOptions = new InitializationOptions {
-					Extension = _settingsManager.GetExtensionInfo(),
-					Ide = _settingsManager.GetIdeInfo(),
+					Extension = settingsManager.GetExtensionInfo(),
+					Ide = settingsManager.GetIdeInfo(),
 #if DEBUG
 					TraceLevel = TraceLevel.Verbose.ToJsonValue(),
 					IsDebugging = true,
 #else
-                    TraceLevel = _settingsManager.TraceLevel.ToJsonValue(),
+                    TraceLevel = settingsManager.TraceLevel.ToJsonValue(),
 #endif
-					Proxy = _settingsManager.Proxy,
-					ProxySupport = _settingsManager.ProxySupport.ToJsonValue()
+					Proxy = settingsManager.Proxy,
+					ProxySupport = settingsManager.ProxySupport.ToJsonValue()
 				};
 				Log.Debug(nameof(InitializationOptions) + " {@InitializationOptions}", initializationOptions);
 
@@ -106,8 +106,8 @@ namespace CodeStream.VisualStudio.LSP {
 			await System.Threading.Tasks.Task.Yield();
 			Connection connection = null;
 			try {
-				var _settingsManager = _settingsServiceFactory.Create();
-				var process = _languageServerProcess.Create(_settingsManager?.TraceLevel);
+				var settingsManager = _settingsServiceFactory.Create();
+				var process = _languageServerProcess.Create(settingsManager?.TraceLevel);
 
 				using (Log.CriticalOperation($"Starting server process. FileName={process.StartInfo.FileName} Arguments={process.StartInfo.Arguments}", Serilog.Events.LogEventLevel.Information)) {
 					if (process.Start()) {

@@ -12,7 +12,6 @@ using CodeStream.VisualStudio.Vssdk;
 using CodeStream.VisualStudio.Vssdk.Commands;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Events;
 using Microsoft.VisualStudio.Shell.Interop;
 using Serilog;
 using System;
@@ -24,6 +23,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.ComponentModelHost;
+using SolutionEvents = Microsoft.VisualStudio.Shell.Events.SolutionEvents;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Packages {
@@ -79,7 +79,7 @@ namespace CodeStream.VisualStudio.Packages {
 				_componentModel = GetGlobalService(typeof(SComponentModel)) as IComponentModel;
 				var settingsServiceFactory = _componentModel?.GetService<ISettingsServiceFactory>();
 				_settingsManager = settingsServiceFactory.Create();
-				if (_settingsManager != null) {					
+				if (_settingsManager != null) {
 					_settingsManager.DialogPage.PropertyChanged += DialogPage_PropertyChanged;
 				}
 
@@ -304,10 +304,20 @@ namespace CodeStream.VisualStudio.Packages {
 					 args.PropertyName == nameof(_settingsManager.ProxyUrl) ||
 					 args.PropertyName == nameof(_settingsManager.ProxyStrictSsl)) {
 				Log.Information($"Url(s) or Team or Proxy changed");
-				var sessionService = _componentModel.GetService<ISessionService>();
-				if (sessionService?.IsAgentReady == true || sessionService?.IsReady == true) {
-					var browserService = _componentModel.GetService<IBrowserService>();
-					browserService?.ReloadWebView();
+				try {
+					var codeStreamAgentService = _componentModel.GetService<ICodeStreamAgentService>();
+					ThreadHelper.JoinableTaskFactory.Run(async () => {
+						await codeStreamAgentService.ReinitializeAsync();
+					});
+
+					var sessionService = _componentModel.GetService<ISessionService>();
+					if (sessionService?.IsAgentReady == true || sessionService?.IsReady == true) {
+						var browserService = _componentModel.GetService<IBrowserService>();
+						browserService?.ReloadWebView();
+					}
+				}
+				catch (Exception ex) {
+					Log.Error(ex, nameof(DialogPage_PropertyChanged));
 				}
 			}
 		}
