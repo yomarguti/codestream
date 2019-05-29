@@ -48,7 +48,7 @@ namespace CodeStream.VisualStudio.Services {
 		bool TryJoinLiveShare(string url);
 		System.Threading.Tasks.Task GetClipboardTextValueAsync(int millisecondsTimeout, Action<string> callback, Regex clipboardMatcher = null);
 
-		void CompareFiles(string filePath1, string filePath2, ITextBuffer tb1, Span span, string content, bool removeFile2 = false);
+		void CompareFiles(string filePath1, string filePath2, ITextBuffer file2Replacement, Span location, string content, bool removeFile1 = false, bool removeFile2 = false);
 		string CreateTempFile(string originalFilePath, string content);
 		//	string CreateDiffTempFile(string originalFile, string content, Range range);
 		void RemoveTempFileSafe(string fileName);
@@ -615,10 +615,11 @@ namespace CodeStream.VisualStudio.Services {
 		/// <param name="filePath1"></param>
 		/// <param name="filePath2"></param>
 		/// <param name="content"></param>
+		/// <param name="removeFile1OnCompletion"></param>
 		/// <param name="removeFile2OnCompletion"></param>
 		/// <param name="textBuffer"></param>
 		/// <param name="span"></param>		
-		public void CompareFiles(string filePath1, string filePath2, ITextBuffer textBuffer, Span span, string content, bool removeFile2OnCompletion = false) {
+		public void CompareFiles(string filePath1, string filePath2, ITextBuffer textBuffer, Span span, string content, bool removeFile1OnCompletion = false, bool removeFile2OnCompletion = false) {
 			ThreadHelper.ThrowIfNotOnUIThread();
 			if (filePath1.IsNullOrWhiteSpace() || filePath2.IsNullOrWhiteSpace()) {
 				if (filePath1.IsNullOrWhiteSpace()) {
@@ -636,11 +637,16 @@ namespace CodeStream.VisualStudio.Services {
 				var diffService = (IVsDifferenceService)_serviceProvider.GetService(typeof(SVsDifferenceService));
 				Assumes.Present(diffService);
 
+				uint grfDiffOptions = 0;
+				//don't use these options -- as it might seen like they should be useful, they actually break the diff
+				//grfDiffOptions |= (uint)__VSDIFFSERVICEOPTIONS.VSDIFFOPT_LeftFileIsTemporary;
+				//grfDiffOptions |= (uint)__VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
+				
 				var frame = diffService.OpenComparisonWindow2(filePath1, filePath2,
 					$"Your version vs Codemark version",
 					filePath1 + Environment.NewLine + filePath2,
 					filePath1,
-					filePath2, null, null, 0);
+					filePath2, null, null, grfDiffOptions);
 
 				var diffViewer = GetDiffViewer(frame);
 				var text = textBuffer.CurrentSnapshot.GetText();
@@ -680,6 +686,9 @@ namespace CodeStream.VisualStudio.Services {
 				Log.Error(ex, nameof(CompareFiles));
 			}
 			finally {
+				if (removeFile1OnCompletion) {
+					RemoveTempFileSafe(filePath1);
+				}
 				if (removeFile2OnCompletion) {
 					RemoveTempFileSafe(filePath2);
 				}
@@ -697,13 +706,9 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		static IDifferenceViewer GetDiffViewer(IVsWindowFrame frame) {
-			object docView;
-
-			if (ErrorHandler.Succeeded(frame.GetProperty((int)__VSFPROPID.VSFPROPID_DocView, out docView))) {
-				return (docView as IVsDifferenceCodeWindow)?.DifferenceViewer;
-			}
-
-			return null;
+			ThreadHelper.ThrowIfNotOnUIThread();
+			return ErrorHandler.Succeeded(frame.GetProperty((int)__VSFPROPID.VSFPROPID_DocView, out object docView))
+				? (docView as IVsDifferenceCodeWindow)?.DifferenceViewer : null;
 		}
 
 		public void RemoveTempFileSafe(string fileName) {

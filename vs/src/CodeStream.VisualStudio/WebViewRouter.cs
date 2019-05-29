@@ -123,10 +123,13 @@ namespace CodeStream.VisualStudio {
 
 													var wpfTextView = await _ideService.OpenEditorAtLineAsync(fileUri, documentFromMarker.Range, true);
 													if (wpfTextView != null) {
-														var tempFile = _ideService.CreateTempFile(filePath, wpfTextView.TextBuffer.CurrentSnapshot.GetText());
+														var text = wpfTextView.TextBuffer.CurrentSnapshot.GetText();
+														var tempFile1 = _ideService.CreateTempFile(filePath, text);
+														var tempFile2 = _ideService.CreateTempFile(filePath, text);
 														var span = wpfTextView.ToSpan(documentFromMarker.Range);
 														if (span.HasValue) {
-															_ideService.CompareFiles(filePath, tempFile, wpfTextView.TextBuffer, span.Value, documentFromMarker.Marker.Code, true);
+															_ideService.CompareFiles(tempFile1, tempFile2, wpfTextView.TextBuffer, span.Value, documentFromMarker.Marker.Code,
+																removeFile1: true, removeFile2: true);
 														}
 													}
 												}
