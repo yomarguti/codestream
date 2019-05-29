@@ -298,8 +298,7 @@ namespace CodeStream.VisualStudio.Packages {
 						break;
 				}
 			}
-			else if (args.PropertyName == nameof(_settingsManager.WebAppUrl) ||
-					 args.PropertyName == nameof(_settingsManager.ServerUrl) ||
+			else if (args.PropertyName == nameof(_settingsManager.ServerUrl) ||
 					 args.PropertyName == nameof(_settingsManager.Team) ||
 					 args.PropertyName == nameof(_settingsManager.ProxyUrl) ||
 					 args.PropertyName == nameof(_settingsManager.ProxyStrictSsl)) {

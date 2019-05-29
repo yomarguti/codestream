@@ -16,7 +16,6 @@ namespace CodeStream.VisualStudio.UnitTests.Stubs
 		public string Email { get; set; }        
         public bool ShowAvatars { get; set; }        
         public string ServerUrl { get; set; }
-        public string WebAppUrl { get; set; }
         public string Team { get; set; }
         public void Save() { }
         public void Load() { }

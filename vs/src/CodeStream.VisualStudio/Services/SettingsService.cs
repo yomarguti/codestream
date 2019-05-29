@@ -130,11 +130,6 @@ namespace CodeStream.VisualStudio.Services {
 			set => DialogPage.ServerUrl = value;
 		}
 
-		public string WebAppUrl {
-			get => DialogPage.WebAppUrl;
-			set => DialogPage.WebAppUrl = value;
-		}
-
 		public string Team {
 			get => DialogPage.Team;
 			set => DialogPage.Team = value;

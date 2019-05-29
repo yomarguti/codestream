@@ -18,7 +18,6 @@ namespace CodeStream.VisualStudio.UI.Settings {
 		bool ShowMarkerGlyphs { get; set; }
 
 		string ServerUrl { get; set; }
-		string WebAppUrl { get; set; }
 		string ProxyUrl { get; set; }
 		bool ProxyStrictSsl { get; set; }
 		ProxySupport ProxySupport { get; set; }
@@ -45,10 +44,8 @@ namespace CodeStream.VisualStudio.UI.Settings {
 		private string _team;
 		private bool _autoSignIn = true;
 #if DEBUG
-		private string _webAppUrl = "http://pd-app.codestream.us:1380";
 		private string _serverUrl = "https://pd-api.codestream.us:9443";
 #else
-        private string _webAppUrl = "https://app.codestream.com";
         private string _serverUrl = "https://api.codestream.com";
 #endif
 
@@ -146,19 +143,6 @@ namespace CodeStream.VisualStudio.UI.Settings {
 			set {
 				if (_serverUrl != value) {
 					_serverUrl = value;
-					NotifyPropertyChanged();
-				}
-			}
-		}
-
-		[Category("Connectivity")]
-		[DisplayName("Web App Url")]
-		[Description("Specifies the url for the CodeStream web portal")]
-		public string WebAppUrl {
-			get => _webAppUrl;
-			set {
-				if (_webAppUrl != value) {
-					_webAppUrl = value;
 					NotifyPropertyChanged();
 				}
 			}
