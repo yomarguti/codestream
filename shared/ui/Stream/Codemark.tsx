@@ -1,7 +1,7 @@
 import cx from "classnames";
 import React from "react";
 import { connect } from "react-redux";
-import { setCodemarkStatus, setUserPreference } from "./actions";
+import { fetchThread, setCodemarkStatus, setUserPreference } from "./actions";
 import Headshot from "./Headshot";
 import Icon from "./Icon";
 import Menu from "./Menu";
@@ -32,6 +32,7 @@ interface State {
 interface DispatchProps {
 	deleteCodemark: typeof deleteCodemark;
 	editCodemark: typeof editCodemark;
+	fetchThread: typeof fetchThread;
 	setCodemarkStatus: typeof setCodemarkStatus;
 	setUserPreference: typeof setUserPreference;
 	getPosts: typeof getPosts;
@@ -71,6 +72,8 @@ export class Codemark extends React.Component<Props, State> {
 		style: {}
 	};
 
+	private _pollingTimer?: any;
+
 	constructor(props: Props) {
 		super(props);
 		this.state = {
@@ -81,10 +84,47 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	componentDidMount() {
-		const { codemark, pinnedReplies, getPosts } = this.props;
+		const { codemark, pinnedReplies, getPosts, selected } = this.props;
 		if (codemark.pinnedReplies && codemark.pinnedReplies.length > 0 && pinnedReplies.length === 0) {
 			getPosts(codemark.streamId, codemark.pinnedReplies!);
 		}
+
+		if (selected) {
+			this.startPollingReplies(false);
+		}
+	}
+
+	componentDidUpdate(prevProps, prevState) {
+		if (prevProps.selected && !this.props.selected) {
+			this.stopPollingReplies();
+		} else if (this.props.selected && this._pollingTimer === undefined) {
+			this.startPollingReplies(true);
+		}
+	}
+
+	componentWillUnmount() {
+		this.stopPollingReplies();
+	}
+
+	private startPollingReplies(prefetch: boolean) {
+		if (prefetch) {
+			this.fetchReplies();
+		}
+
+		if (this._pollingTimer !== undefined) return;
+
+		this._pollingTimer = setInterval(() => this.fetchReplies(), 5000);
+	}
+
+	private stopPollingReplies() {
+		if (this._pollingTimer === undefined) return;
+
+		clearInterval(this._pollingTimer);
+		this._pollingTimer = undefined;
+	}
+
+	private async fetchReplies() {
+		return this.props.fetchThread(this.props.codemark.streamId, this.props.codemark.postId);
 	}
 
 	render() {
@@ -778,5 +818,5 @@ const mapStateToProps = (state, props) => {
 
 export default connect<any, DispatchProps, any>(
 	mapStateToProps,
-	{ setCodemarkStatus, setUserPreference, deleteCodemark, editCodemark, getPosts }
+	{ setCodemarkStatus, setUserPreference, deleteCodemark, editCodemark, fetchThread, getPosts }
 )(Codemark);
