@@ -91,7 +91,6 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 		return await dispatch(bootstrap(response));
 	} catch (error) {
 		if (error === LoginResult.ProviderConnectFailed) {
-			HostApi.instance.track("Provider Connect Failed", { Provider: provider });
 			throw error;
 		}
 		if (error === LoginResult.ExpiredToken) {
