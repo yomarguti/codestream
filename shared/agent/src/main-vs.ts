@@ -50,17 +50,19 @@ const agentConfig = {
 		} as InitializeResult;
 	},
 	// This doesn't get called by Visual Studio, so just ignore it
-	onInitialized: (e: InitializedParams) => {}
+	onInitialized: (e: InitializedParams) => {
+		Logger.log("onInitialized");
+	}
 };
 
 let agent = new CodeStreamAgent(connection, agentConfig);
 
-connection.onRequest("codestream/login", async (agentOptions: AgentOptions) => {
+connection.onRequest("codestream/onInitialized", async (agentOptions: AgentOptions) => {
 	if (agent.signedIn) {
 		restartAgent();
 	}
 
-	Logger.log(`Agent(${agentOptions.ide.name}) logging in...`);
+	Logger.log(`Agent(${agentOptions.ide.name}) initializing...`);
 
 	const params = {
 		...initializeParams,
@@ -74,7 +76,7 @@ connection.onRequest("codestream/login", async (agentOptions: AgentOptions) => {
 		if (response.result!.error == null) {
 			Logger.log("onInitialized...");
 			await agent.onInitialized({});
-			Logger.log(`Agent(${agentOptions.ide.name}) logged in`);
+			Logger.log(`Agent(${agentOptions.ide.name}) initialize`);
 		}
 	} catch (ex) {
 		Logger.error(ex);
