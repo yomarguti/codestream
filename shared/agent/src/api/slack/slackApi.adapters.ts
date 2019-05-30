@@ -678,17 +678,17 @@ export function toSlackTeam(team: CSTeam, usernamesById: Map<string, string>) {
 	// });
 }
 
-export function fromSlackUser(user: any, teamId: string, csTeamMembers: CSUser[] = []): CSUser {
+export function fromSlackUser(user: any, teamId: string, codesteamUsers: CSUser[]): CSUser {
 	let codestreamId: string | undefined;
-	csTeamMembers.some(m => {
-		if (m.providerIdentities) {
-			if (m.providerIdentities.includes(`slack::${user.id}`)) {
-				codestreamId = m.id;
-				return true;
-			}
+	if (codesteamUsers.length !== 0) {
+		const identity = `slack::${user.id}`;
+		const u = codesteamUsers.find(m =>
+			m.providerIdentities == null ? false : m.providerIdentities.includes(identity)
+		);
+		if (u !== undefined) {
+			codestreamId = u.id;
 		}
-		return false;
-	});
+	}
 
 	return {
 		avatar: {

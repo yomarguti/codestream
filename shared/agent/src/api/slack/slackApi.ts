@@ -78,6 +78,7 @@ import {
 	CSRepository,
 	CSSlackProviderInfo,
 	CSStream,
+	CSTeam,
 	CSUser,
 	ProviderType,
 	StreamType
@@ -129,6 +130,7 @@ export class SlackApiProvider implements ApiProvider {
 	private _slack: WebClient;
 	private _events: SlackEvents | undefined;
 	private readonly _codestreamUserId: string;
+	private _codestreamTeam: CSTeam | undefined;
 	private readonly _slackToken: string;
 	private readonly _slackUserId: string;
 
@@ -250,6 +252,7 @@ export class SlackApiProvider implements ApiProvider {
 		// users;
 
 		const team = response.teams.find(t => t.id === this._codestreamTeamId);
+		this._codestreamTeam = team;
 		if (team !== undefined) {
 			toSlackTeam(team, await this.ensureUsernamesById());
 		}
@@ -411,7 +414,8 @@ export class SlackApiProvider implements ApiProvider {
 
 		const { ok, user: usr } = response as WebAPICallResult & { user: any };
 		if (ok) {
-			user = fromSlackUser(usr, this._codestreamTeamId);
+			// Don't need to pass the codestream users here, since we set the codestreamId already above
+			user = fromSlackUser(usr, this._codestreamTeamId, []);
 			me = {
 				...me,
 				avatar: user.avatar,
@@ -2141,25 +2145,28 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async fetchUsers(request: FetchUsersRequest) {
-		const response = await this.slackApiCall(this._slack.users.list, undefined, `users.list`);
+		const [response, { user: me }, { users: codestreamUsers }] = await Promise.all([
+			this.slackApiCall(this._slack.users.list, undefined, `users.list`),
+			this.getMeCore(),
+			(this._codestreamTeam !== undefined
+				? Promise.resolve({ team: this._codestreamTeam })
+				: this._codestream.getTeam({ teamId: this._codestreamTeamId })
+			).then(({ team }) =>
+				this._codestream.fetchUsers({
+					userIds: team.memberIds
+				})
+			)
+		]);
 
 		const { ok, error, members } = response as WebAPICallResult & { members: any[] };
 		if (!ok) throw new Error(error);
 
-		const { team } = await this._codestream.getTeam({ teamId: this._codestreamTeamId });
-		const { users: codestreamMembers } = await this._codestream.fetchUsers({
-			userIds: team.memberIds
-		});
-
 		const users: CSUser[] = members
-			.map((m: any) => fromSlackUser(m, this._codestreamTeamId, codestreamMembers))
+			.map((m: any) =>
+				// Find ourselves and replace it with our model
+				m.id === this._slackUserId ? me : fromSlackUser(m, this._codestreamTeamId, codestreamUsers)
+			)
 			.filter(u => !u.deactivated);
-
-		// Find ourselves and replace it with our model
-		const index = users.findIndex(u => u.id === this._slackUserId);
-
-		const meResponse = await this.getMeCore();
-		users.splice(index, 1, meResponse.user);
 
 		return { users: users };
 	}
@@ -2175,18 +2182,28 @@ export class SlackApiProvider implements ApiProvider {
 			return this._codestream.getUser(request);
 		}
 
-		const response = await this.slackApiCall(
-			this._slack.users.info,
-			{
-				user: request.userId
-			},
-			"users.info"
-		);
+		const [response, { users: codestreamUsers }] = await Promise.all([
+			this.slackApiCall(
+				this._slack.users.info,
+				{
+					user: request.userId
+				},
+				"users.info"
+			),
+			(this._codestreamTeam !== undefined
+				? Promise.resolve({ team: this._codestreamTeam })
+				: this._codestream.getTeam({ teamId: this._codestreamTeamId })
+			).then(({ team }) =>
+				this._codestream.fetchUsers({
+					userIds: team.memberIds
+				})
+			)
+		]);
 
 		const { ok, error, user: usr } = response as WebAPICallResult & { user: any };
 		if (!ok) throw new Error(error);
 
-		const user = fromSlackUser(usr, this._codestreamTeamId);
+		const user = fromSlackUser(usr, this._codestreamTeamId, codestreamUsers);
 
 		return { user: user };
 	}
