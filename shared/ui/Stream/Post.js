@@ -221,7 +221,8 @@ class Post extends React.Component {
 			question: type === "question",
 			issue: type === "issue",
 			trap: type === "trap",
-			bookmark: type === "bookmark"
+			bookmark: type === "bookmark",
+			reply: post.parentPostId && post.parentPostId !== post.id
 		});
 
 		let codeBlock = null;
@@ -654,7 +655,7 @@ class Post extends React.Component {
 						<EmojiPicker addEmoji={this.addReaction} target={this.state.emojiTarget} />
 					)}
 					*/}
-					<Icon name="kebab-vertical" className="gear" onClick={this.handleMenuClick} />
+					<Icon name="kebab-vertical" className="gear clickable" onClick={this.handleMenuClick} />
 				</div>
 			);
 	};

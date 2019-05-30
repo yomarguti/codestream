@@ -1,6 +1,5 @@
 .codemark {
 	padding-left: 10px;
-	cursor: pointer;
 	// transition: top 0.1s;
 	&.collapsed {
 		height: 25px;
@@ -225,8 +224,13 @@
 		.codemark-details {
 			.post {
 				padding: 10px;
+
+				&.reply .author {
+					cursor: unset;
+				}
 			}
 			.author {
+				cursor: pointer;
 				font-size: 13px;
 				font-weight: 700;
 				// padding-bottom: 5px;
