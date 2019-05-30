@@ -141,11 +141,11 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null) {
-			if (!_sessionService.IsReady) {
+			if (!_sessionService.IsAgentReady) {
 				if (Log.IsDebugEnabled()) {
 					try {
 #if DEBUG
-						Log.Debug($"Agent not ready. Name={name}, Arguments={arguments?.ToJson()}");
+						Log.Debug($"Agent not ready. Status={_sessionService.State} Name={name}, Arguments={arguments?.ToJson()}");
 #else
 						Log.Debug($"Agent not ready. Name={name}");
 #endif
@@ -298,8 +298,9 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public async Task<JToken> LogoutAsync() {
-			var initializationResponse = await InitializeAsync();
-			return await SendAsync<JToken>("codestream/logout", new LogoutRequest());
+			var response = await SendAsync<JToken>("codestream/logout", new LogoutRequest());
+			await ReinitializeAsync();
+			return response;
 		}
 
 		public Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request) {

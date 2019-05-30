@@ -189,6 +189,11 @@ namespace CodeStream.VisualStudio.Services {
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut7Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D7)));
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut8Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D8)));
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut9Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D9)));
+
+#if DEBUG
+			Log.Debug(GetDevToolsUrl());
+#endif
+
 		}
 
 		private void Browser_RenderGoneEvent(object sender, RenderEventArgs e) {

@@ -23,6 +23,7 @@ namespace CodeStream.VisualStudio.Services {
 		bool IsAgentReady { get; }
 		void Logout();
 		string LiveShareUrl { get; set; }
+		string State { get; }
 	}
 
 	[Export(typeof(ISessionService))]
@@ -49,6 +50,8 @@ namespace CodeStream.VisualStudio.Services {
 
 			return _signupToken;
 		}
+
+		public string State => _sessionState.ToString();
 
 		public void SetAgentReady() {
 			if (_sessionState != SessionState.Unknown)
