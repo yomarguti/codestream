@@ -11,8 +11,6 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Windows.Threading;
-using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Text.Editor;
 
 namespace CodeStream.VisualStudio {
 	public class WebViewRouter {
@@ -123,13 +121,23 @@ namespace CodeStream.VisualStudio {
 
 													var wpfTextView = await _ideService.OpenEditorAtLineAsync(fileUri, documentFromMarker.Range, true);
 													if (wpfTextView != null) {
-														var text = wpfTextView.TextBuffer.CurrentSnapshot.GetText();
-														var tempFile1 = _ideService.CreateTempFile(filePath, text);
-														var tempFile2 = _ideService.CreateTempFile(filePath, text);
-														var span = wpfTextView.ToSpan(documentFromMarker.Range);
-														if (span.HasValue) {
-															_ideService.CompareFiles(tempFile1, tempFile2, wpfTextView.TextBuffer, span.Value, documentFromMarker.Marker.Code,
-																removeFile1: true, removeFile2: true);
+														var document = wpfTextView.GetDocument();
+														if (document != null) {
+															var text = wpfTextView.TextBuffer.CurrentSnapshot.GetText();
+															var span = wpfTextView.ToSpan(documentFromMarker.Range);
+															if (span.HasValue) {
+																if (document?.IsDirty == true) {
+																	var tempFile1 = _ideService.CreateTempFile(filePath, text);
+																	var tempFile2 = _ideService.CreateTempFile(filePath, text);
+																	_ideService.CompareFiles(tempFile1, tempFile2, wpfTextView.TextBuffer, span.Value,
+																		documentFromMarker.Marker.Code, isFile1Temp: true, isFile2Temp: true);
+																}
+																else {
+																	var tempFile2 = _ideService.CreateTempFile(filePath, text);
+																	_ideService.CompareFiles(filePath, tempFile2, wpfTextView.TextBuffer, span.Value,
+																		documentFromMarker.Marker.Code, isFile1Temp: false, isFile2Temp: true);
+																}
+															}
 														}
 													}
 												}
@@ -149,6 +157,7 @@ namespace CodeStream.VisualStudio {
 
 													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 													var wpfTextView = await _ideService.OpenEditorAtLineAsync(fileUri, documentFromMarker.Range, true);
+													 
 													if (wpfTextView != null) {
 														var span = wpfTextView.ToSpan(documentFromMarker.Range);
 														if (span.HasValue) {

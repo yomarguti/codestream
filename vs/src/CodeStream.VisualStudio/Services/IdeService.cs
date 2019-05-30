@@ -32,6 +32,11 @@ namespace CodeStream.VisualStudio.Services {
 		LiveShare
 	}
 
+	public class CurrentTextViews {
+		public object DocumentView { get; set; }
+		public IEnumerable<ITextView> TextViews { get; set; }
+	}
+
 	public interface IIdeService {
 		/// <summary>
 		/// Uses built in process handler for navigating to an external url
@@ -48,10 +53,11 @@ namespace CodeStream.VisualStudio.Services {
 		bool TryJoinLiveShare(string url);
 		System.Threading.Tasks.Task GetClipboardTextValueAsync(int millisecondsTimeout, Action<string> callback, Regex clipboardMatcher = null);
 
-		void CompareFiles(string filePath1, string filePath2, ITextBuffer file2Replacement, Span location, string content, bool removeFile1 = false, bool removeFile2 = false);
+		void CompareFiles(string filePath1, string filePath2, ITextBuffer file2Replacement, Span location, string content, bool isFile1Temp = false, bool isFile2Temp = false);
 		string CreateTempFile(string originalFilePath, string content);
 		//	string CreateDiffTempFile(string originalFile, string content, Range range);
 		void RemoveTempFileSafe(string fileName);
+		CurrentTextViews GetCurrentTextViews();
 	}
 
 	[Export(typeof(IIdeService))]
@@ -615,11 +621,11 @@ namespace CodeStream.VisualStudio.Services {
 		/// <param name="filePath1"></param>
 		/// <param name="filePath2"></param>
 		/// <param name="content"></param>
-		/// <param name="removeFile1OnCompletion"></param>
-		/// <param name="removeFile2OnCompletion"></param>
+		/// <param name="isFile1Temp"></param>
+		/// <param name="isFile2Temp"></param>
 		/// <param name="textBuffer"></param>
 		/// <param name="span"></param>		
-		public void CompareFiles(string filePath1, string filePath2, ITextBuffer textBuffer, Span span, string content, bool removeFile1OnCompletion = false, bool removeFile2OnCompletion = false) {
+		public void CompareFiles(string filePath1, string filePath2, ITextBuffer textBuffer, Span span, string content, bool isFile1Temp = false, bool isFile2Temp = false) {
 			ThreadHelper.ThrowIfNotOnUIThread();
 			if (filePath1.IsNullOrWhiteSpace() || filePath2.IsNullOrWhiteSpace()) {
 				if (filePath1.IsNullOrWhiteSpace()) {
@@ -641,13 +647,13 @@ namespace CodeStream.VisualStudio.Services {
 				//don't use these options -- as it might seen like they should be useful, they actually break the diff
 				//grfDiffOptions |= (uint)__VSDIFFSERVICEOPTIONS.VSDIFFOPT_LeftFileIsTemporary;
 				//grfDiffOptions |= (uint)__VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
-				
+				//grfDiffOptions |= (uint)__VSDIFFSERVICEOPTIONS.VSDIFFOPT_DoNotShow;
+				string roles = null;//"DIFF,RIGHTDIFF,LEFTDIFF";
 				var frame = diffService.OpenComparisonWindow2(filePath1, filePath2,
 					$"Your version vs Codemark version",
 					filePath1 + Environment.NewLine + filePath2,
 					filePath1,
-					filePath2, null, null, grfDiffOptions);
-
+					filePath2, null, roles, grfDiffOptions);
 				var diffViewer = GetDiffViewer(frame);
 				var text = textBuffer.CurrentSnapshot.GetText();
 
@@ -675,7 +681,7 @@ namespace CodeStream.VisualStudio.Services {
 						edit.Apply();
 					}
 				}
-				var documentRight = GetDocument(diffViewer.RightView.TextBuffer);
+				var documentRight = diffViewer.RightView.TextBuffer.GetDocument();
 				if (documentRight.IsDirty) {
 					documentRight.Save();
 				}
@@ -686,23 +692,102 @@ namespace CodeStream.VisualStudio.Services {
 				Log.Error(ex, nameof(CompareFiles));
 			}
 			finally {
-				if (removeFile1OnCompletion) {
+				if (isFile1Temp) {
 					RemoveTempFileSafe(filePath1);
 				}
-				if (removeFile2OnCompletion) {
+				if (isFile2Temp) {
 					RemoveTempFileSafe(filePath2);
 				}
 			}
 		}
 
-		public static ITextDocument GetDocument(ITextBuffer textBuffer) {
+		/// <summary>
+		/// Gets the currently active text view(s) from Visual Studio.
+		/// </summary>
+		/// <returns>
+		/// Zero, one or two active <see cref="ITextView"/> objects.
+		/// </returns>
+		/// <remarks>
+		/// This method will return a single text view for a normal code window, or a pair of text
+		/// views if the currently active text view is a difference view in side by side mode, with
+		/// the first item being the side that currently has focus. If there is no active text view,
+		/// an empty collection will be returned.
+		/// </remarks>
+		public CurrentTextViews GetCurrentTextViews() {
+			ThreadHelper.ThrowIfNotOnUIThread();
+			CurrentTextViews results = null;
 
-			ITextDocument textDoc;
-			var rc = textBuffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out textDoc);
-			if (rc == true)
-				return textDoc;
-			else
-				return null;
+			try {
+				var monitorSelection = (IVsMonitorSelection)_serviceProvider.GetService(typeof(SVsShellMonitorSelection));
+				if (monitorSelection == null) {
+					return results;
+				}
+
+				object curDocument;
+				if (ErrorHandler.Failed(monitorSelection.GetCurrentElementValue((uint)VSConstants.VSSELELEMID.SEID_DocumentFrame, out curDocument))) {
+					return results;
+				}
+
+				IVsWindowFrame frame = curDocument as IVsWindowFrame;
+				if (frame == null) {
+					return results;
+				}
+
+				object docView = null;
+				if (ErrorHandler.Failed(frame.GetProperty((int)__VSFPROPID.VSFPROPID_DocView, out docView))) {
+					return results;
+				}
+
+				results = new CurrentTextViews {
+					DocumentView = docView
+				};
+				var textViews = new List<ITextView>();
+				if (docView is IVsDifferenceCodeWindow) {
+					var diffWindow = (IVsDifferenceCodeWindow)docView;
+
+					switch (diffWindow.DifferenceViewer.ViewMode) {
+						case DifferenceViewMode.Inline:
+							textViews.Add(diffWindow.DifferenceViewer.InlineView);
+							break;
+						case DifferenceViewMode.SideBySide:
+							switch (diffWindow.DifferenceViewer.ActiveViewType) {
+								case DifferenceViewType.LeftView:
+									textViews.Add(diffWindow.DifferenceViewer.LeftView);
+									textViews.Add(diffWindow.DifferenceViewer.RightView);
+									break;
+								case DifferenceViewType.RightView:
+									textViews.Add(diffWindow.DifferenceViewer.RightView);
+									textViews.Add(diffWindow.DifferenceViewer.LeftView);
+									break;
+							}
+							textViews.Add(diffWindow.DifferenceViewer.LeftView);
+							break;
+						case DifferenceViewMode.RightViewOnly:
+							textViews.Add(diffWindow.DifferenceViewer.RightView);
+							break;
+					}
+				}
+				else if (docView is IVsCodeWindow) {
+					if (ErrorHandler.Failed(((IVsCodeWindow)docView).GetPrimaryView(out var textView))) {
+						return results;
+					}
+
+					var model = (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel));
+					Assumes.Present(model);
+
+					var adapterFactory = model.GetService<IVsEditorAdaptersFactoryService>();
+					var wpfTextView = adapterFactory.GetWpfTextView(textView);
+					textViews.Add(wpfTextView);
+				}
+
+				results.TextViews = textViews;
+				return results;
+			}
+			catch (Exception e) {
+				Log.Error(e, nameof(GetCurrentTextViews));
+			}
+
+			return results;
 		}
 
 		static IDifferenceViewer GetDiffViewer(IVsWindowFrame frame) {

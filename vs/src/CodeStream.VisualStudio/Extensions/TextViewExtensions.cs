@@ -103,5 +103,19 @@ namespace CodeStream.VisualStudio.Extensions {
 
 			return null;
 		}
+
+		public static ITextDocument GetDocument(this IWpfTextView wpfTextView) {
+			return GetDocument(wpfTextView?.TextBuffer);
+		}
+
+		public static ITextDocument GetDocument(this ITextBuffer textBuffer) {
+			if (textBuffer == null) return null;
+			ITextDocument textDoc;
+			var rc = textBuffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out textDoc);
+			if (rc == true)
+				return textDoc;
+			else
+				return null;
+		}
 	}
 }

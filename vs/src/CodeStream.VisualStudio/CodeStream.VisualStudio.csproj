@@ -195,6 +195,7 @@
     <Compile Include="Services\WebviewUserSettingsService.cs" />
     <Compile Include="UI\Adornments\ActiveTextEditorExtensions.cs" />
     <Compile Include="UI\Adornments\HighlightAdornmentManager.cs" />
+    <Compile Include="UI\DiffViewCreationListener.cs" />
     <Compile Include="UI\DocumentMarkerManager.cs" />
     <Compile Include="UI\Extensions\FrameworkElementExtensions.cs" />
     <Compile Include="UI\Glyphs\DocumentMarkGlyphFactory.cs" />
