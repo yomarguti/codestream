@@ -147,12 +147,6 @@
                     ],
                     "description": "Specifies how much (if any) output will be sent to the CodeStream output channel",
                     "scope": "window"
-                },
-                "codestream.webAppUrl": {
-                    "type": "string",
-                    "default": "https://app.codestream.com",
-                    "description": "Specifies the url for the CodeStream web portal",
-                    "scope": "window"
                 }
             }
         },

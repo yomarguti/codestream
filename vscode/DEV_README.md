@@ -128,7 +128,6 @@ Use the following settings:
 
 ```json
 "codestream.serverUrl": "https://pd-api.codestream.us:9443",
-"codestream.webAppUrl": "http://pd-app.codestream.us:1380",
 "codestream.email": "<email>",
 "codestream.team": "<team>", // Shouldn't really be needed unless there are issues and you belong to more than 1 team
 ```
@@ -143,8 +142,7 @@ Example workspace file &mdash; save as pd.code-workspace
 		}
 	],
 	"settings": {
-		"codestream.serverUrl": "https://pd-api.codestream.us:9443",
-		"codestream.webAppUrl": "http://pd-app.codestream.us:1380",
+		"codestream.serverUrl": "https://pd-api.codestream.us:9443",		
 		"codestream.email": "<email>",
 		"codestream.team": "<team>" // Shouldn't really be needed unless there are issues and you belong to more than 1 team
 	}
@@ -157,7 +155,6 @@ Use the following settings:
 
 ```json
 "codestream.serverUrl": "https://qa-api.codestream.us",
-"codestream.webAppUrl": "http://qa-app.codestream.us",
 "codestream.email": "<email>",
 "codestream.team": "<team>", // Shouldn't really be needed unless there are issues and you belong to more than 1 team
 ```
@@ -172,8 +169,7 @@ Example workspace file &mdash; save as qa.code-workspace
 		}
 	],
 	"settings": {
-		"codestream.serverUrl": "https://qa-api.codestream.us",
-		"codestream.webAppUrl": "http://qa-app.codestream.us",
+		"codestream.serverUrl": "https://qa-api.codestream.us",		
 		"codestream.email": "<email>",
 		"codestream.team": "<team>" // Shouldn't really be needed unless there are issues and you belong to more than 1 team
 	}
