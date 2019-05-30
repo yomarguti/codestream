@@ -89,7 +89,6 @@ import {
 import {
 	CSCodemark,
 	CSGetMeResponse,
-	CSGetTeamResponse,
 	CSLoginResponse,
 	CSMarker,
 	CSMarkerLocations,
@@ -98,6 +97,7 @@ import {
 	CSPost,
 	CSRepository,
 	CSStream,
+	CSTeam,
 	CSUser,
 	ProviderType,
 	StreamType
@@ -137,6 +137,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 	private _teams: Client;
 	private readonly _codestreamUserId: string;
+	private _codestreamTeam: CSTeam | undefined;
 	private _providerInfo: CSMSTeamsProviderInfo;
 	private readonly _teamsUserId: string;
 
@@ -294,6 +295,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 		// users;
 
 		const team = response.teams.find(t => t.id === this._codestreamTeamId);
+		this._codestreamTeam = team;
 		if (team !== undefined) {
 			toTeamsTeam(team, await this.ensureUserInfosById());
 		}
@@ -415,7 +417,8 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 		const response = await this.teamsApiCall("me", request => request.get());
 
-		const user = fromTeamsUser(response, this._codestreamTeamId);
+		// Don't need to pass the codestream users here, since we set the codestreamId already above
+		const user = fromTeamsUser(response, this._codestreamTeamId, []);
 		me = {
 			...me,
 			avatar: user.avatar,
@@ -944,28 +947,22 @@ export class MSTeamsApiProvider implements ApiProvider {
 			}))
 		];
 
-		const promises: [
-			Promise<CSGetTeamResponse>,
-			Promise<{
-				user: CSMe;
-			}>,
-			Promise<{
-				responses: GraphBatchResponse[];
-			}>
-		] = [
-			this._codestream.getTeam({ teamId: this._codestreamTeamId }),
-			this.getMeCore(),
+		const [response, { user: me }, { users: codestreamUsers }] = await Promise.all([
 			this.teamsApiCall<{ responses: GraphBatchResponse[] }>("$batch", request =>
 				request.post({
 					requests: requests
 				})
+			),
+			this.getMeCore(),
+			(this._codestreamTeam !== undefined
+				? Promise.resolve({ team: this._codestreamTeam })
+				: this._codestream.getTeam({ teamId: this._codestreamTeamId })
+			).then(({ team }) =>
+				this._codestream.fetchUsers({
+					userIds: team.memberIds
+				})
 			)
-		];
-
-		const [{ team }, { user: me }, response] = await Promise.all(promises);
-		const { users: codestreamMembers } = await this._codestream.fetchUsers({
-			userIds: team.memberIds
-		});
+		]);
 
 		const users = new Map<string, CSUser>();
 
@@ -977,7 +974,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 				if (m.id === this._teamsUserId) {
 					users.set(m.id, me);
 				} else if (m.deletedDateTime == null) {
-					users.set(m.id, fromTeamsUser(m, this._codestreamTeamId, codestreamMembers));
+					users.set(m.id, fromTeamsUser(m, this._codestreamTeamId, codestreamUsers));
 				}
 			}
 		}
@@ -996,8 +993,19 @@ export class MSTeamsApiProvider implements ApiProvider {
 			return this._codestream.getUser(request);
 		}
 
-		const response = await this.teamsApiCall(`users/${request.userId}`, request => request.get());
-		const user = fromTeamsUser(response, this._codestreamTeamId);
+		const [response, { users: codestreamUsers }] = await Promise.all([
+			this.teamsApiCall(`users/${request.userId}`, request => request.get()),
+			(this._codestreamTeam !== undefined
+				? Promise.resolve({ team: this._codestreamTeam })
+				: this._codestream.getTeam({ teamId: this._codestreamTeamId })
+			).then(({ team }) =>
+				this._codestream.fetchUsers({
+					userIds: team.memberIds
+				})
+			)
+		]);
+
+		const user = fromTeamsUser(response, this._codestreamTeamId, codestreamUsers);
 
 		return { user: user };
 	}

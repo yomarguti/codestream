@@ -135,8 +135,9 @@ export async function fromTeamsMessage(
 	// }
 
 	const timestamp = new Date(message.createdDateTime).getTime();
-	const modifiedTimestamp =
-		new Date(message.lastModifiedDateTime || message.createdDateTime).getTime();
+	const modifiedTimestamp = new Date(
+		message.lastModifiedDateTime || message.createdDateTime
+	).getTime();
 	return {
 		codemarkId: undefined, // codemark && codemark.id,
 		createdAt: timestamp,
@@ -484,18 +485,18 @@ export function toTeamsTeam(team: CSTeam, userInfosById: Map<string, UserInfo>) 
 export function fromTeamsUser(
 	user: any,
 	codestreamTeamId: string,
-	csTeamMembers: CSUser[] = []
+	codesteamUsers: CSUser[]
 ): CSUser {
 	let codestreamId: string | undefined;
-	csTeamMembers.some(m => {
-		if (m.providerIdentities) {
-			if (m.providerIdentities.includes(`teams::${user.id}`)) {
-				codestreamId = m.id;
-				return true;
-			}
+	if (codesteamUsers.length !== 0) {
+		const identity = `msteams::${user.id}`;
+		const u = codesteamUsers.find(m =>
+			m.providerIdentities == null ? false : m.providerIdentities.includes(identity)
+		);
+		if (u !== undefined) {
+			codestreamId = u.id;
 		}
-		return false;
-	});
+	}
 
 	return {
 		avatar: undefined,
