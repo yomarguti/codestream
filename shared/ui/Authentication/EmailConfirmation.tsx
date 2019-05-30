@@ -184,7 +184,7 @@ export const EmailConfirmation = (connect() as any)((props: Props) => {
 						<div className="footer">
 							<div>
 								<p>
-									Have an account? <Link onClick={onClickGoToLogin}>Sign In</Link>
+									Already have an account? <Link onClick={onClickGoToLogin}>Sign In</Link>
 								</p>
 							</div>
 						</div>

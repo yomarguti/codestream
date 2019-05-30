@@ -142,3 +142,11 @@ export const UpdateConfigurationRequestType = new RequestType<
 	void,
 	void
 >(`${IpcRoutes.Host}/configuration/update`);
+export interface MSTeamsLoginRequest {}
+export interface MSTeamsLoginResponse {}
+export const MSTeamsLoginRequestType = new RequestType<
+	MSTeamsLoginRequest,
+	MSTeamsLoginResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/msteams/login`);

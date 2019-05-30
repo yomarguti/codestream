@@ -3,7 +3,6 @@ import {
 	ConfigureThirdPartyProviderRequestType,
 	DisconnectThirdPartyProviderRequestType,
 	TelemetryRequestType,
-	ThirdPartyProviderConfig,
 	RegisterUserRequest
 } from "@codestream/protocols/agent";
 import { logError } from "../../logger";
@@ -204,10 +203,13 @@ export const goToNewUserEntry = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.NewUser, params });
 
 export const goToCSOrSlack = (params = {}) =>
-	action(ContextActionsType.SetRoute, { name: Route.CSOrSlack, params });
+	action(ContextActionsType.SetRoute, { name: Route.ChatProviderSelection, params });
 
 export const goToSlackAuth = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.SlackAuth, params });
+
+export const goToMSTeamsAuth = (params = {}) =>
+	action(ContextActionsType.SetRoute, { name: Route.MSTeamsAuth, params });
 
 export const goToSignup = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.Signup, params });

@@ -1,7 +1,5 @@
 import { updateCapabilities } from "./capabilities/actions";
 import { action } from "./common";
-import * as configsActions from "./configs/actions";
-import * as connectivityActions from "./connectivity/actions";
 import * as contextActions from "./context/actions";
 import * as editorContextActions from "./editorContext/actions";
 import * as preferencesActions from "./preferences/actions";
@@ -10,7 +8,6 @@ import { bootstrapServices } from "./services/actions";
 import * as sessionActions from "./session/actions";
 import { bootstrapStreams } from "./streams/actions";
 import { bootstrapTeams } from "./teams/actions";
-import * as unreadsActions from "./unreads/actions";
 import { updateUnreads } from "./unreads/actions";
 import { updateProviders } from "./providers/actions";
 import { bootstrapUsers } from "./users/actions";
@@ -19,7 +16,8 @@ import {
 	BootstrapRequestType,
 	BootstrapResponse,
 	SlackLoginRequestType,
-	ValidateThirdPartyAuthRequestType
+	ValidateThirdPartyAuthRequestType,
+	MSTeamsLoginRequestType
 } from "../ipc/host.protocol";
 import { HostApi } from "../webview-api";
 import { logError } from "../logger";
@@ -55,12 +53,20 @@ export const bootstrap = (bootstrapData?: BootstrapResponse) => async dispatch =
 	dispatch({ type: BootstrapActionType.Complete });
 };
 
+export const startMSTeamsSignin = (info?: ValidateSignupInfo) => async dispatch => {
+	try {
+		await HostApi.instance.send(MSTeamsLoginRequestType, {});
+		return dispatch(contextActions.goToMSTeamsAuth(info));
+	} catch (error) {
+		logError(`Unable to start Microsoft Teams sign in: ${error}`);
+	}
+};
 export const startSlackSignin = (info?: ValidateSignupInfo) => async dispatch => {
 	try {
 		await HostApi.instance.send(SlackLoginRequestType, {});
 		return dispatch(contextActions.goToSlackAuth(info));
 	} catch (error) {
-		logError(`Unable to start slack sign in: ${error}`);
+		logError(`Unable to start Slack sign in: ${error}`);
 	}
 };
 

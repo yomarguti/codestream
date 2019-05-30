@@ -33,7 +33,7 @@ export class SimpleChannelMenu extends Component {
 			{ label: "Leave " + streamName, action: "leave-channel", disabled: cantLeave }
 			// { label: "-" },
 			// { label: "Connect to Slack", action: "connect-slack" },
-			// { label: "Connect to MS Teams", action: "connect-ms-teams" }
+			// { label: "Connect to Microsoft Teams", action: "connect-ms-teams" }
 		].filter(Boolean);
 
 		return <Menu items={items} target={target} action={this.menuAction} />;

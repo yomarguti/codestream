@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 import { goToNewUserEntry, goToSignup } from "../store/context/actions";
 import { Link } from "../Stream/Link";
 import { TextInput } from "./TextInput";
-import { startSlackSignin, SignupType } from "../store/actions";
+import { startMSTeamsSignin, startSlackSignin, SignupType } from "../store/actions";
 import { HostApi } from "..";
 import { DispatchProp } from "../store/common";
 import { GetInviteInfoRequestType } from "@codestream/protocols/agent";
@@ -51,13 +51,13 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 
 	return (
 		<div className="onboarding-page">
-			<h2>Join a Team</h2>
+			<h2>Join an Existing Team</h2>
 			<form className="standard-form" onSubmit={onClickJoin}>
 				<fieldset className="form-body">
-					<h3 style={{ textAlign: "left" }}>Does your team use Slack?</h3>
+					<h3 style={{ textAlign: "left" }}>Do you use Slack or Microsoft Teams?</h3>
 					<p>
-						If your company's CodeStream team is connected to your Slack workspace, just sign up
-						with Slack and you'll automatically be added to the team.
+						Use this option if your organization's CodeStream team is connected to a Slack workspace
+						or a Microsoft Teams organization.
 					</p>
 					<div id="controls">
 						<div className="button-group">
@@ -71,6 +71,19 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 								}}
 							>
 								Sign Up with Slack
+							</Button>
+						</div>
+						<div className="button-group">
+							<Button
+								className="control-button"
+								type="button"
+								onClick={e => {
+									e.preventDefault();
+									HostApi.instance.track("Join Path Selected", { "Path Type": "MSTeams" });
+									props.dispatch(startMSTeamsSignin({ type: SignupType.JoinTeam }));
+								}}
+							>
+								Sign Up with Microsoft Teams
 							</Button>
 						</div>
 					</div>

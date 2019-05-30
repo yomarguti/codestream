@@ -3,7 +3,7 @@ import { Link } from "../Stream/Link";
 import { connect } from "react-redux";
 import { goToSignup } from "../store/context/actions";
 import { useInterval, useRetryingCallback, useTimeout } from "../utilities/hooks";
-import { validateSignup, startSlackSignin, SignupType } from "../store/actions";
+import { validateSignup, startMSTeamsSignin, SignupType } from "../store/actions";
 import { DispatchProp } from "../store/common";
 
 const noop = () => Promise.resolve();
@@ -12,7 +12,7 @@ interface Props extends DispatchProp {
 	type?: SignupType;
 }
 
-export const SlackAuth = (connect(undefined) as any)((props: Props) => {
+export const MSTeamsAuth = (connect(undefined) as any)((props: Props) => {
 	const [isWaiting, setIsWaiting] = useState(true);
 
 	const stopWaiting = useCallback(() => {
@@ -28,14 +28,14 @@ export const SlackAuth = (connect(undefined) as any)((props: Props) => {
 
 	const onClickTryAgain = (event: React.SyntheticEvent) => {
 		event.preventDefault();
-		props.dispatch(startSlackSignin(props.type !== undefined ? { type: props.type } : undefined));
+		props.dispatch(startMSTeamsSignin(props.type ? { type: props.type } : undefined));
 		setIsWaiting(true);
 	};
 
 	const validate = useCallback(async () => {
 		try {
 			await props.dispatch(
-				validateSignup("Slack", props.type !== undefined ? { type: props.type } : undefined)
+				validateSignup("MSTeams", props.type ? { type: props.type } : undefined)
 			);
 		} catch (error) {
 			setIsWaiting(false);
@@ -48,17 +48,17 @@ export const SlackAuth = (connect(undefined) as any)((props: Props) => {
 		<div className="onboarding-page">
 			<form className="standard-form">
 				<fieldset className="form-body">
-					<h2>Slack Authentication</h2>
+					<h2>Microsoft Teams Authentication</h2>
 					<p>
-						Your web browser should have opened up to a Slack authentication page. Once you've
-						completed the authentication process, return here to get started with CodeStream.
+						Your web browser should have opened up to a Microsoft Teams authentication page. Once
+						you've completed the authentication process, return here to get started with CodeStream.
 					</p>
 					<br />
 					<div>
 						<strong>
 							{isWaiting ? (
 								<p>
-									Waiting for Slack authentication <LoadingEllipsis />
+									Waiting for Microsoft Teams authentication <LoadingEllipsis />
 								</p>
 							) : (
 								<p>
@@ -73,7 +73,7 @@ export const SlackAuth = (connect(undefined) as any)((props: Props) => {
 						or <Link onClick={onClickTryAgain}>Try again</Link>
 					</p>
 					<p>
-						Don't want to use Slack?{" "}
+						Don't want to use Microsoft Teams?{" "}
 						<Link onClick={onClickGoToSignup}>Sign up with CodeStream</Link> instead.
 					</p>
 				</fieldset>

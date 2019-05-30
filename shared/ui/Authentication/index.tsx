@@ -5,6 +5,7 @@ import { Login } from "./Login";
 import { NewUserEntry } from "./NewUserEntry";
 import { ChatProviderSelection } from "./ChatProviderSelection";
 import { SlackAuth } from "./SlackAuth";
+import { MSTeamsAuth } from "./MSTeamsAuth";
 import { Signup } from "./Signup";
 import { JoinTeam } from "./JoinTeam";
 import { EmailConfirmation } from "./EmailConfirmation";
@@ -17,15 +18,14 @@ export const UnauthenticatedRoutes = connect<ConnectedProps, void, void, CodeStr
 	state => state.context.route
 )((props: ConnectedProps) => {
 	switch (props.name) {
-		case Route.NewUser: {
+		case Route.NewUser:
 			return <NewUserEntry {...props.params} />;
-		}
-		case Route.CSOrSlack: {
+		case Route.ChatProviderSelection:
 			return <ChatProviderSelection {...props.params} />;
-		}
-		case Route.SlackAuth: {
+		case Route.SlackAuth:
 			return <SlackAuth {...props.params} />;
-		}
+		case Route.MSTeamsAuth:
+			return <MSTeamsAuth {...props.params} />;
 		case Route.Signup:
 			return <Signup {...props.params} />;
 		case Route.Login:

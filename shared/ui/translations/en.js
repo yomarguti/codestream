@@ -23,6 +23,8 @@ export default {
 	"signUp.legal.learnMore": "Learn more.",
 	"signUp.footer.alreadySignedUp": "Have an account?",
 	"signUp.footer.signIn": "Sign In",
+	"signup.complete.withMSTeams":
+		"Your web browser should have opened up to a Microsoft Teams authentication page. Once you've completed the authentication process, return here to get started with CodeStream.",
 	"signup.complete.withSlack":
 		"Your web browser should have opened up to a Slack authentication page. Once you've completed the authentication process, return here to get started with CodeStream.",
 	"signup.complete.main":

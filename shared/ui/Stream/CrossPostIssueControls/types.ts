@@ -26,10 +26,11 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		icon: "youtrack",
 		getUrl: "https://www.jetbrains.com/youtrack/download/get_youtrack.html"
 	},
-	azuredevops: { 
+	azuredevops: {
 		displayName: "Azure DevOps",
-		icon: "azuredevops" ,
+		icon: "azuredevops",
 		getUrl: "https://azure.microsoft.com/en-us/services/devops"
 	},
-	slack: { displayName: "Slack", icon: "slack" }
+	slack: { displayName: "Slack", icon: "slack" },
+	msteams: { displayName: "Microsoft Teams", icon: "msteams" }
 };

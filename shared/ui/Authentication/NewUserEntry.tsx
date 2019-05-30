@@ -43,20 +43,20 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 			<form className="standard-form">
 				<fieldset className="form-body">
 					<p>
-						If anyone at your company has already created a team, get invited. Otherwise, create a
-						team to get things started!
+						If anyone at your organization has already created a team, ask to be invited. Otherwise,
+						create a team to get things started!
 					</p>
 					<div id="controls">
 						<div className="button-group">
 							<Button className="control-button" type="button" onClick={onClickCreateTeam}>
-								Create a Team
+								Create a New Team
 							</Button>
 						</div>
 					</div>
 					<div id="controls">
 						<div className="button-group">
 							<Button className="control-button" type="button" onClick={onClickJoinTeam}>
-								Join a Team
+								Join an Existing Team
 							</Button>
 						</div>
 					</div>
@@ -65,7 +65,7 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 						<div className="footer">
 							<div>
 								<p>
-									Have an account? <Link onClick={onClickLogin}>Sign In</Link>
+									Already have an account? <Link onClick={onClickLogin}>Sign In</Link>
 								</p>
 							</div>
 							<div>
