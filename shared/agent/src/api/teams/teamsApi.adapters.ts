@@ -221,7 +221,8 @@ export function toTeamsMessageBody(
 			break;
 		case CodemarkType.Bookmark:
 			message = `${me} set a bookmark`;
-			text = codemark.text;
+			// Bookmarks use the title rather than text
+			text = codemark.title;
 
 			break;
 		case CodemarkType.Issue:
