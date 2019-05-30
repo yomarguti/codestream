@@ -134,9 +134,9 @@ export async function fromTeamsMessage(
 	// 	files = post.files.map(fromSlackPostFile);
 	// }
 
-	const timestamp = new Date(message.createdDateTime).getTime() / 1000;
+	const timestamp = new Date(message.createdDateTime).getTime();
 	const modifiedTimestamp =
-		new Date(message.lastModifiedDateTime || message.createdDateTime).getTime() / 1000;
+		new Date(message.lastModifiedDateTime || message.createdDateTime).getTime();
 	return {
 		codemarkId: undefined, // codemark && codemark.id,
 		createdAt: timestamp,
