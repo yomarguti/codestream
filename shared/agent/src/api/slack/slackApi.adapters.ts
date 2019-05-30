@@ -544,7 +544,8 @@ export function toSlackPostAttachment(
 			author = `${usernamesById.get(slackUserId)} set a bookmark`;
 			fallback = `\n${author}`;
 
-			text = codemark.text;
+			// Bookmarks use the title rather than text
+			text = codemark.title;
 			if (text) {
 				fallback = `\n${text}`;
 			}
