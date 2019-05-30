@@ -21,7 +21,6 @@ import {
 	TextDocuments,
 	TextDocumentSyncKind
 } from "vscode-languageserver";
-import { Container } from "./container";
 import { DocumentManager } from "./documentManager";
 import { Logger } from "./logger";
 import {
@@ -81,6 +80,11 @@ export class CodeStreamAgent implements Disposable {
 		return this._connection;
 	}
 
+	private _recordRequests = false;
+	get recordRequests(): boolean {
+		return this._recordRequests;
+	}
+
 	get signedIn() {
 		return this._signedIn;
 	}
@@ -129,7 +133,8 @@ export class CodeStreamAgent implements Disposable {
 				} (v${agentOptions.ide.version}) initializing...`
 			);
 
-			if (agentOptions.recordRequests) {
+			this._recordRequests = Boolean(agentOptions.recordRequests);
+			if (this._recordRequests) {
 				const now = Date.now();
 				const fs = require("fs");
 				const filename = `/tmp/dump-${now}-agent_options.json`;
@@ -197,7 +202,7 @@ export class CodeStreamAgent implements Disposable {
 		timed: false
 	})
 	registerHandler(type: any, handler: any): void {
-		if (Container.instance().session.recordRequests) {
+		if (this.recordRequests) {
 			this._connection.onRequest(type, async function() {
 				const now = Date.now();
 				const fs = require("fs");

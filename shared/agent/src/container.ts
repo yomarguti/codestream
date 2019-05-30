@@ -1,4 +1,5 @@
 "use strict";
+import { CodeStreamAgent } from "agent";
 import { DocumentManager } from "./documentManager";
 import { ErrorReporter } from "./errorReporter";
 import { GitService } from "./git/gitService";
@@ -80,7 +81,7 @@ class SessionServiceContainer {
 		return this._providerRegistry;
 	}
 
-	constructor(session: CodeStreamSession) {
+	constructor(public readonly session: CodeStreamSession) {
 		this._git = new GitService(session);
 		this._files = new FilesManager(session);
 		this._markerLocations = new MarkerLocationManager(session);
@@ -97,8 +98,9 @@ class SessionServiceContainer {
 }
 
 class ServiceContainer {
-	constructor(public readonly session: CodeStreamSession) {
-		this._documents = session.agent.documents;
+	// TODO: [EA] I think we should try to rework this to avoid the need of the session here
+	constructor(public readonly agent: CodeStreamAgent, session: CodeStreamSession) {
+		this._documents = agent.documents;
 
 		this._errorReporter = new ErrorReporter(session);
 		this._scm = new ScmManager();
@@ -135,8 +137,8 @@ class ServiceContainer {
 let container: ServiceContainer | undefined;
 
 export namespace Container {
-	export function initialize(session: CodeStreamSession) {
-		container = new ServiceContainer(session);
+	export function initialize(agent: CodeStreamAgent, session: CodeStreamSession) {
+		container = new ServiceContainer(agent, session);
 	}
 
 	export function instance(): ServiceContainer {

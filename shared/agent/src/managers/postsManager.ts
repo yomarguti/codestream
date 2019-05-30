@@ -395,10 +395,11 @@ class PostsCache extends EntityCache<CSPost> {
 
 function trackPostCreation(request: CreatePostRequest, textDocument?: TextDocumentIdentifier) {
 	process.nextTick(() => {
+		const { session, streams } = SessionContainer.instance();
 		try {
 			// Get stream so we can determine type
-			SessionContainer.instance()
-				.streams.getById(request.streamId)
+			streams
+				.getById(request.streamId)
 				.then(async (stream: CSStream) => {
 					let streamType: String = "Unknown";
 					switch (stream.type) {
@@ -459,9 +460,9 @@ function trackPostCreation(request: CreatePostRequest, textDocument?: TextDocume
 						payload["Linked Service"] = request.codemark.externalProvider;
 					}
 					// TODO: Add Category
-					if (!Container.instance().session.telemetryData.hasCreatedPost) {
+					if (!session.telemetryData.hasCreatedPost) {
 						payload["First Post?"] = new Date().toISOString();
-						Container.instance().session.telemetryData.hasCreatedPost = true;
+						session.telemetryData.hasCreatedPost = true;
 					}
 					telemetry.track({ eventName: "Post Created", properties: payload });
 					if (request.codemark) {

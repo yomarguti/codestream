@@ -194,7 +194,7 @@ export class SlackApiProvider implements ApiProvider {
 						// 	break;
 						case ConnectionStatus.Reconnected:
 							if (e.data.reset) {
-								void Container.instance().session.reset();
+								void SessionContainer.instance().session.reset();
 								// TODO: Handle reconnect to pubnub?
 							}
 
@@ -204,7 +204,7 @@ export class SlackApiProvider implements ApiProvider {
 							// 			e.type
 							// 		}); Slack RTM lost its connection, reconnecting...`
 							// 	);
-							// 	void Container.instance().session.reset(ResetReason.LostConnection);
+							// 	void SessionContainer.instance().session.reset(ResetReason.LostConnection);
 
 							// 	void (await this._events!.reconnect());
 							// }
@@ -2283,7 +2283,7 @@ export class SlackApiProvider implements ApiProvider {
 					onDidCancel: (resolve, reject) => Logger.warn(cc, `TIMEOUT ${timeoutMs / 1000}s exceeded`)
 				}
 			);
-			if (Container.instance().session.recordRequests) {
+			if (Container.instance().agent.recordRequests) {
 				const method = typeof fnOrMethod === "string" ? fnOrMethod : name;
 				const now = Date.now();
 				// const { method, body } = init;

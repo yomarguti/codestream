@@ -435,10 +435,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 				e.data = await SessionContainer.instance().teams.resolve(e);
 
 				if (this._events !== undefined) {
-					const currentTeamId = Container.instance().session.teamId;
+					const { session } = SessionContainer.instance();
+
+					const currentTeamId = session.teamId;
 					for (const team of e.data as CSTeam[]) {
 						if (team.id === currentTeamId) {
-							Container.instance().session.updateProviders();
+							session.updateProviders();
 						}
 					}
 				}
@@ -1408,7 +1410,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 			const _json = await json!;
 
-			if (Container.instance().session.recordRequests && init) {
+			if (Container.instance().agent.recordRequests && init) {
 				const now = Date.now();
 				const { method, body } = init;
 

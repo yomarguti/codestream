@@ -3,7 +3,7 @@ import { Client, ClientOptions, GraphRequest } from "@microsoft/microsoft-graph-
 import HttpsProxyAgent from "https-proxy-agent";
 import { RequestInit } from "node-fetch";
 import { Emitter, Event } from "vscode-languageserver";
-import { Container, SessionContainer } from "../../container";
+import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import {
 	ArchiveStreamRequest,
@@ -229,7 +229,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 						// 	break;
 						case ConnectionStatus.Reconnected:
 							if (e.data.reset) {
-								void Container.instance().session.reset();
+								void SessionContainer.instance().session.reset();
 								// TODO: Handle reconnect to pubnub?
 							}
 

@@ -192,7 +192,7 @@ export class CodeStreamSession {
 
 		this._environment = this.getEnvironment(this._options.serverUrl);
 
-		Container.initialize(this);
+		Container.initialize(agent, this);
 
 		if (
 			_options.proxySupport === "override" ||
@@ -306,7 +306,7 @@ export class CodeStreamSession {
 				break;
 			case MessageType.Connection:
 				if (e.data.status === ConnectionStatus.Reconnected && e.data.reset) {
-					void Container.instance().session.reset();
+					void SessionContainer.instance().session.reset();
 				}
 
 				this.agent.sendNotification(DidChangeConnectionStatusNotificationType, e.data);
@@ -403,10 +403,6 @@ export class CodeStreamSession {
 	private _environment: CodeStreamEnvironment | string = CodeStreamEnvironment.Unknown;
 	get environment() {
 		return this._environment;
-	}
-
-	get recordRequests(): boolean {
-		return !!this._options.recordRequests;
 	}
 
 	private _status: SessionStatus = SessionStatus.SignedOut;

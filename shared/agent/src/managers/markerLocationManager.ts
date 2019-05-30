@@ -322,8 +322,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			Logger.log(`MARKERS: missing locations detected - will calculate`);
 		}
 
-		const { session } = Container.instance();
-		const { git } = SessionContainer.instance();
+		const { git, session } = SessionContainer.instance();
 
 		for (const [commitHashWhenCreated, missingMarkers] of missingMarkersByCommit.entries()) {
 			Logger.log(
@@ -423,8 +422,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 
 	async flushUncommittedLocations(repo: GitRepository) {
 		Logger.log(`MARKERS: flushing uncommitted locations`);
-		const { session } = Container.instance();
-		const { git, files, markers } = SessionContainer.instance();
+		const { git, files, markers, session } = SessionContainer.instance();
 		const cache = await getCache(repo.path);
 		const uncommittedLocations = cache.getCollection("uncommittedLocations");
 

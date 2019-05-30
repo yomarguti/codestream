@@ -2,7 +2,7 @@
 import { LogLevel, RTMClient } from "@slack/client";
 import HttpsProxyAgent from "https-proxy-agent";
 import { Emitter, Event } from "vscode-languageserver";
-import { Container, SessionContainer } from "../../container";
+import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import { ConnectionStatus, LogoutReason } from "../../protocol/agent.protocol";
 import { StreamType } from "../../protocol/api.protocol";
@@ -119,7 +119,10 @@ export class SlackEvents implements Disposable {
 				Logger.log(`SLACK-RTM[${level}]: ${message}`);
 				if (message.includes("unable to RTM start: An API error occurred: missing_scope")) {
 					// If we are missing the scope, we have a token issue, force a logout -- and we give it a little time to let the initialization unwind
-					setTimeout(() => void Container.instance().session.logout(LogoutReason.Token), 500);
+					setTimeout(
+						() => void SessionContainer.instance().session.logout(LogoutReason.Token),
+						500
+					);
 				}
 			}
 		});
