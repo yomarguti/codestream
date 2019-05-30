@@ -175,7 +175,8 @@ export class MSTeamsApiProvider implements ApiProvider {
 	private _refreshPromise: Promise<CSMe> | undefined;
 	private async getAccessToken() {
 		// TODO: Fix this
-		if (Date.now() >= this._providerInfo.expiresAt) {
+		const oneMinuteBeforeExpiration = this._providerInfo.expiresAt - 1000 * 60;
+		if (oneMinuteBeforeExpiration <= new Date().getTime()) {
 			if (this._refreshPromise === undefined) {
 				this._refreshPromise = this._codestream
 					.refreshAuthProvider({
