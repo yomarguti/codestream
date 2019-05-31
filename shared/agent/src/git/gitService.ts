@@ -363,7 +363,7 @@ export class GitService implements IGitService, Disposable {
 		const cygwinMatch = this.cygwinRegex.exec(path);
 		if (cygwinMatch != null) {
 			const [, drive] = cygwinMatch;
-			let sanitized = drive + ":" + path.substr("/cygdrive/c".length);
+			let sanitized = `${drive}:${path.substr("/cygdrive/c".length)}`;
 			sanitized = sanitized.replace(/\//g, "\\");
 			Logger.debug(`Cygwin git path sanitized: ${path} -> ${sanitized}`);
 			return sanitized;
