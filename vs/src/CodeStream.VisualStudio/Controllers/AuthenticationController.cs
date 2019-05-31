@@ -47,7 +47,7 @@ namespace CodeStream.VisualStudio.Controllers {
 					_ideService.Navigate($"{_settingsManager.ServerUrl}/web/provider-auth/slack?signupToken={_sessionService.GetOrCreateSignupToken()}");
 				}
 				catch (Exception ex) {
-					error = ex.ToString();
+					error = LoginResult.UNKNOWN.ToString();
 					Log.Error(ex, $"{nameof(SlackLoginAsync)}");
 				}
 
@@ -66,9 +66,12 @@ namespace CodeStream.VisualStudio.Controllers {
 					try {
 						loginResponse = await _codeStreamAgent.LoginAsync(email, password, _settingsManager.ServerUrl);
 						processResponse = await ProcessLoginAsync(loginResponse);
+						if (!processResponse.Success) {
+							errorResponse = processResponse.ErrorMessage;
+						}
 					}
 					catch (Exception ex) {
-						errorResponse = ex.ToString();
+						errorResponse = LoginResult.UNKNOWN.ToString();
 						Log.Error(ex, $"{nameof(LoginAsync)}");
 					}
 
@@ -100,10 +103,13 @@ namespace CodeStream.VisualStudio.Controllers {
 								var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(new LoginAccessToken(token.Item1, _settingsManager.ServerUrl, token.Item2), _settingsManager.Team);
 								processResponse = await ProcessLoginAsync(loginResponse);
 								@params = processResponse?.Params;
+								if (!processResponse.Success) {
+									errorResponse = processResponse.ErrorMessage;
+								}
 							}
 							catch (Exception ex) {
-								errorResponse = ex.ToString();
-								Log.Debug(ex, $"{nameof(BootstrapAsync)}");
+								errorResponse = LoginResult.UNKNOWN.ToString();
+								Log.Warning(ex, $"{nameof(BootstrapAsync)}");
 							}
 						}
 						else {
@@ -141,9 +147,12 @@ namespace CodeStream.VisualStudio.Controllers {
 					try {
 						loginResponse = await _codeStreamAgent.LoginViaTokenAsync(new LoginAccessToken(request.Email, _settingsManager.ServerUrl, request.Token), _settingsManager.Team);
 						processResponse = await ProcessLoginAsync(loginResponse);
+						if (!processResponse.Success) {
+							errorResponse = processResponse.ErrorMessage;
+						}
 					}
 					catch (Exception ex) {
-						errorResponse = ex.ToString();
+						errorResponse = LoginResult.UNKNOWN.ToString();
 						Log.Error(ex, $"{nameof(CompleteSignupAsync)}");
 					}
 
@@ -174,9 +183,12 @@ namespace CodeStream.VisualStudio.Controllers {
 						});
 
 						processResponse = await ProcessLoginAsync(loginResponse);
+						if (!processResponse.Success) {
+							errorResponse = processResponse.ErrorMessage;
+						}
 					}
 					catch (Exception ex) {
-						errorResponse = ex.ToString();
+						errorResponse = LoginResult.UNKNOWN.ToString();
 						Log.Error(ex, $"{nameof(ValidateThirdPartyAuthAsync)}");
 					}
 
@@ -218,20 +230,18 @@ namespace CodeStream.VisualStudio.Controllers {
 			if (error != null) {
 				string errorResponse;
 				if (Enum.TryParse(error.ToString(), out LoginResult loginResult)) {
-					var handleError = await HandleErrorAsync(loginResult);
-					if (!handleError) {
-						errorResponse = loginResult.ToString();
-						await Task.CompletedTask;
+					if (loginResult == LoginResult.VERSION_UNSUPPORTED) {
+						await Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+						InfoBarProvider.Instance.ShowInfoBar($"This version of {Application.Name} is no longer supported. Please upgrade to the latest version.");						
 					}
-					else {
-						errorResponse = loginResult.ToString();
-					}
+					errorResponse = loginResult.ToString();
 				}
 				else {
 					errorResponse = error.ToString();
 				}
 
 				Log.Warning(errorResponse);
+				response.ErrorMessage = error?.Value<string>();
 			}
 			else if (loginResponse != null) {
 				response.Email = GetEmail(loginResponse).ToString();
@@ -249,8 +259,7 @@ namespace CodeStream.VisualStudio.Controllers {
 
 			if (loginResult == LoginResult.VERSION_UNSUPPORTED) {
 				await Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-				InfoBarProvider.Instance.ShowInfoBar(
-					$"This version of {Application.Name} is no longer supported. Please upgrade to the latest version.");
+				InfoBarProvider.Instance.ShowInfoBar($"This version of {Application.Name} is no longer supported. Please upgrade to the latest version.");
 				return false;
 			}
 			else {
@@ -284,6 +293,7 @@ namespace CodeStream.VisualStudio.Controllers {
 
 		class ProcessLoginResponse {
 			public bool Success { get; set; }
+			public string ErrorMessage { get; set; }
 			public string Email { get; set; }
 			public JToken Params { get; set; }
 		}
