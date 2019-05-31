@@ -72,9 +72,7 @@ namespace CodeStream.VisualStudio.Services {
 				EventAggregator.Publish(new SessionLogoutEvent());
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
 				WebviewIpc.Notify(new HostDidLogoutNotificationType());
-#pragma warning restore VSTHRD103 // Call async methods when in an async method
-
-				WebviewIpc.LoadWebView();
+#pragma warning restore VSTHRD103 // Call async methods when in an async method				
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(LogoutAsync));
