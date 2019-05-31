@@ -74,7 +74,6 @@ export async function activate(context: ExtensionContext) {
 
 	context.globalState.update(GlobalState.Version, extensionVersion);
 
-
 	Logger.log(
 		`CodeStream v${formattedVersion} started \u2022 ${Strings.getDurationMilliseconds(start)} ms`
 	);
