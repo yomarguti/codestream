@@ -5,7 +5,6 @@ import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import com.intellij.openapi.application.ApplicationInfo
 import org.eclipse.lsp4j.Range
-import org.eclipse.lsp4j.ServerCapabilities
 import org.eclipse.lsp4j.TextDocumentIdentifier
 
 class ProxySettings(val url: String, val strictSSL: Boolean)
