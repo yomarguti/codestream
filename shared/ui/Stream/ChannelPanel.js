@@ -160,7 +160,7 @@ export class SimpleChannelPanel extends Component {
 	};
 
 	renderBrowsePublicIcon = () => {
-		if (this.props.isSlackTeam) return null;
+		if (!this.props.isCodeStreamTeam) return null;
 
 		return (
 			<Tooltip title="Browse Public Channels" placement="bottomRight">
@@ -528,7 +528,7 @@ export class SimpleChannelPanel extends Component {
 			let sortName;
 			let sortPriority;
 			let sortTimestamp;
-			if (this.props.isSlackTeam) {
+			if (this.props.teamProvider === "slack") {
 				sortTimestamp = stream.mostRecentPostCreatedAt;
 				if (sortTimestamp == null) {
 					canUseTimestamp = false;
@@ -644,7 +644,7 @@ export class SimpleChannelPanel extends Component {
 					>
 						<span>
 							<Icon name="plus-small" />
-							{this.props.isSlackTeam ? "Invite People to CodeStream" : "Invite People"}
+							{this.props.isCodeStreamTeam ? "Invite People" : "Invite People to CodeStream"}
 						</span>
 					</li>
 				</ul>

@@ -5,7 +5,7 @@ import { invite } from "./actions";
 import { mapFilter } from "../utils";
 import { sortBy as _sortBy } from "lodash-es";
 
-export class PeoplePage extends Component {
+export class PeoplePanel extends Component {
 	initialState = {};
 
 	state = this.initialState;
@@ -90,4 +90,4 @@ export default connect(
 	{
 		invite
 	}
-)(injectIntl(PeoplePage));
+)(injectIntl(PeoplePanel));

@@ -13,7 +13,7 @@ const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
 );
 
-export class InvitePage extends Component {
+export class InvitePanel extends Component {
 	initialState = {
 		loading: false,
 		newMemberEmail: "",
@@ -100,13 +100,13 @@ export class InvitePage extends Component {
 		} else return null;
 	};
 
-	renderInviteSlack = () => {
+	renderThirdParyInvite = provider => {
 		return (
 			<div style={{ padding: "30px" }}>
 				Invite your teammates to give CodeStream a try by sharing this URL with them:
 				<br />
 				<br />
-				<b>https://www.codestream.com/slack-invite</b>
+				<b>https://www.codestream.com/{provider}-invite</b>
 				<br />
 				<br />
 			</div>
@@ -121,7 +121,7 @@ export class InvitePage extends Component {
 	renderFieldset = inactive => {
 		const { newMemberEmail, newMemberName } = this.state;
 
-		if (this.props.isSlackTeam) return this.renderInviteSlack();
+		if (!this.props.isCodeStreamTeam) return this.renderThirdParyInvite(this.props.teamProvider);
 
 		return (
 			<fieldset className="form-body" disabled={inactive}>
@@ -268,4 +268,4 @@ export default connect(
 		closePanel,
 		invite
 	}
-)(injectIntl(InvitePage));
+)(injectIntl(InvitePanel));

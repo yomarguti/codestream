@@ -61,6 +61,7 @@ import {
 	setCurrentDocumentMarker,
 	setNewPostEntry
 } from "../store/context/actions";
+import { getTeamProvider } from "../store/teams/actions";
 import {
 	filter as _filter,
 	includes as _includes,
@@ -297,7 +298,9 @@ export class SimpleStream extends Component {
 
 	renderMenu() {
 		const { menuOpen, menuTarget } = this.state;
-		const inviteLabel = this.props.isSlackTeam ? "Invite People to CodeStream" : "Invite People";
+		const inviteLabel = this.props.isCodeStreamTeam
+			? "Invite People"
+			: "Invite People to CodeStream";
 
 		const menuItems = [
 			{ label: this.props.teamName, action: "" },
@@ -482,24 +485,26 @@ export class SimpleStream extends Component {
 						// 	</Tooltip>
 						// </label>
 					}
-					<label
-						className={createClassString({
-							selected:
-								activePanel === "channels" || activePanel === "main" || activePanel === "thread"
-						})}
-						onClick={e => this.setActivePanel("channels")}
-					>
-						<Tooltip title="Channels &amp; DMs" placement="bottom">
-							<span>
-								{this.props.isSlackTeam ? (
-									<Icon className="slack" name="slack" />
-								) : (
-									<Icon name="chatroom" />
-								)}
-								{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
-							</span>
-						</Tooltip>
-					</label>
+					{(this.props.teamProvider === "codestream" || this.props.teamProvider === "slack") && (
+						<label
+							className={createClassString({
+								selected:
+									activePanel === "channels" || activePanel === "main" || activePanel === "thread"
+							})}
+							onClick={e => this.setActivePanel("channels")}
+						>
+							<Tooltip title="Channels &amp; DMs" placement="bottom">
+								<span>
+									{this.props.isCodeStreamTeam ? (
+										<Icon name="chatroom" />
+									) : (
+										<Icon className={this.props.teamProvider} name={this.props.teamProvider} />
+									)}
+									{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
+								</span>
+							</Tooltip>
+						</label>
+					)}
 					<label
 						className={createClassString({
 							selected: activePanel === WebviewPanels.Codemarks
@@ -630,8 +635,9 @@ export class SimpleStream extends Component {
 
 		const onInlineCodemarks = activePanel === WebviewPanels.CodemarksForFile;
 		const contentClass = onInlineCodemarks ? "content inline" : "content vscroll inline";
-		const configureProviderInfo = activePanel.startsWith("configure-provider-") ?
-			activePanel.split("-") : null;
+		const configureProviderInfo = activePanel.startsWith("configure-provider-")
+			? activePanel.split("-")
+			: null;
 		return (
 			<div id="stream-root" className={streamClass}>
 				<div id="modal-root" />
@@ -658,7 +664,6 @@ export class SimpleStream extends Component {
 							selection={this.state.selection}
 							focusInput={this.focusInput}
 							scrollDiv={this._contentScrollDiv}
-							isSlackTeam={this.props.isSlackTeam}
 						>
 							{this.state.floatCompose && this.renderComposeBox(placeholderText, channelName)}
 						</InlineCodemarks>
@@ -682,7 +687,8 @@ export class SimpleStream extends Component {
 							setKnowledgeType={this.setKnowledgeType}
 							setMultiCompose={this.setMultiCompose}
 							runSlashCommand={this.runSlashCommand}
-							isSlackTeam={this.props.isSlackTeam}
+							isCodeStreamTeam={this.props.isCodeStreamTeam}
+							teamProvider={this.props.teamProvider}
 							services={this.props.services}
 						/>
 					)}
@@ -691,32 +697,33 @@ export class SimpleStream extends Component {
 						<PublicChannelPanel
 							activePanel={activePanel}
 							setActivePanel={this.setActivePanel}
-							isSlackTeam={this.props.isSlackTeam}
+							isCodeStreamTeam={this.props.isCodeStreamTeam}
 						/>
 					)}
 					{activePanel === "create-channel" && (
 						<CreateChannelPanel
 							activePanel={activePanel}
 							setActivePanel={this.setActivePanel}
-							isSlackTeam={this.props.isSlackTeam}
+							isSlackTeam={this.props.teamProvider === "slack"}
 						/>
 					)}
 					{activePanel === "create-dm" && (
-						<CreateDMPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
+						<CreateDMPanel
+							activePanel={activePanel}
+							setActivePanel={this.setActivePanel}
+							isSlackTeam={this.props.teamProvider === "slack"}
+						/>
 					)}
 					{activePanel === "invite" && (
 						<InvitePanel
 							activePanel={activePanel}
 							setActivePanel={this.setActivePanel}
-							isSlackTeam={this.props.isSlackTeam}
+							isCodeStreamTeam={this.props.isCodeStreamTeam}
+							teamProvider={this.props.teamProvider}
 						/>
 					)}
 					{activePanel === "people" && (
-						<PeoplePanel
-							activePanel={activePanel}
-							setActivePanel={this.setActivePanel}
-							isSlackTeam={this.props.isSlackTeam}
-						/>
+						<PeoplePanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
 					)}
 					{activePanel.startsWith("configure-provider-youtrack-") && (
 						<ConfigureYouTrackPanel
@@ -918,7 +925,7 @@ export class SimpleStream extends Component {
 				onEmptyUpArrow={this.editLastPost}
 				findMentionedUserIds={this.findMentionedUserIds}
 				isDirectMessage={this.props.postStreamType === "direct"}
-				isSlackTeam={this.props.isSlackTeam}
+				teamProvider={this.props.teamProvider}
 				multiCompose={this.state.multiCompose}
 				floatCompose={this.state.floatCompose}
 				setMultiCompose={this.setMultiCompose}
@@ -1192,12 +1199,7 @@ export class SimpleStream extends Component {
 	invitePerson = args => {
 		let email;
 
-		if (this.props.isSlackTeam) {
-			const message = `Invite your teammates to give CodeStream a try by sharing this URL with them:\n\nhttps://app.codestream.com/invite?service=slack&amp;team=${
-				this.props.teamId
-			}`;
-			return this.submitSystemPost(message);
-		} else {
+		if (this.props.isCodeStreamTeam) {
 			let invitedEmails = [];
 			while ((email = EMAIL_MATCH_REGEX.exec(args)) !== null) {
 				this.props.invite({ email: email[0], teamId: this.props.teamId });
@@ -1217,6 +1219,11 @@ export class SimpleStream extends Component {
 			}
 			return this.submitSystemPost("Invited " + invited);
 		}
+
+		const message = `Invite your teammates to give CodeStream a try by sharing this URL with them:\n\nhttps://app.codestream.com/invite?service=slack&amp;team=${
+			this.props.teamId
+		}`;
+		return this.submitSystemPost(message);
 	};
 
 	postAction = (action, post, args) => {
@@ -1489,7 +1496,7 @@ export class SimpleStream extends Component {
 			return this.submitSystemPost("Add members to this channel by typing\n`/add @nickname`");
 		} else {
 			await this.props.addUsersToStream(this.props.postStreamId, users);
-			if (!this.props.isSlackTeam) {
+			if (this.props.isCodeStreamTeam) {
 				return this.submitPost({ text: "/me added " + usernames });
 			}
 		}
@@ -1504,7 +1511,7 @@ export class SimpleStream extends Component {
 			const oldName = this.props.postStreamName;
 			const { payload: newStream } = await this.props.renameStream(this.props.postStreamId, args);
 			if (newStream && newStream.name === args) {
-				if (!this.props.isSlackTeam) {
+				if (this.props.isCodeStreamTeam) {
 					this.submitPost({ text: "/me renamed the channel from #" + oldName + " to #" + args });
 				}
 			} else
@@ -1543,7 +1550,7 @@ export class SimpleStream extends Component {
 		if (args) {
 			const { payload: newStream } = await this.props.setPurpose(this.props.postStreamId, args);
 			if (newStream.purpose === args) {
-				if (!this.props.isSlackTeam) {
+				if (this.props.isCodeStreamTeam) {
 					this.submitPost({ text: "/me set the channel purpose to " + args });
 				}
 			} else this.submitSystemPost("Unable to set channel purpose.");
@@ -1635,7 +1642,7 @@ export class SimpleStream extends Component {
 			this.submitSystemPost("Usage: `/remove @user`");
 		} else {
 			await this.props.removeUsersFromStream(this.props.postStreamId, users);
-			if (!this.props.isSlackTeam) {
+			if (this.props.isCodeStreamTeam) {
 				this.submitPost({ text: "/me removed " + usernames });
 			}
 		}
@@ -2047,6 +2054,7 @@ const mapStateToProps = state => {
 	} = state;
 
 	const team = teams[context.currentTeamId];
+	const teamProvider = getTeamProvider(team);
 	const teamMembers = getTeamMembers(state);
 
 	const isOffline = connectivity.offline;
@@ -2121,11 +2129,11 @@ const mapStateToProps = state => {
 		mutedStreams: preferences.mutedStreams || {},
 		starredStreams: preferences.starredStreams || {},
 		slashCommands: getSlashCommands(capabilities),
-		team: teams[context.currentTeamId],
+		team: team,
+		teamProvider: teamProvider,
+		isCodeStreamTeam: teamProvider === "codstream",
 		channelMembers,
 		services,
-		isSlackTeam:
-			teams[context.currentTeamId].providerInfo && teams[context.currentTeamId].providerInfo.slack,
 		posts: streamPosts.map(post => {
 			let user = users[post.creatorId];
 			if (!user) {

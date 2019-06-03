@@ -21,6 +21,7 @@ import { confirmPopup } from "./Confirm";
 import { getPost } from "../store/posts/reducer";
 import { getPosts } from "../store/posts/actions";
 import Tooltip from "./Tooltip";
+import { getCurrentTeamProvider } from "../store/teams/actions";
 
 interface State {
 	isEditing: boolean;
@@ -30,6 +31,14 @@ interface State {
 }
 
 interface DispatchProps {
+	author: CSUser;
+	codemarkKeybindings: { [key: string]: string };
+	currentUser: CSMe;
+	pinnedReplies: CSPost[];
+	pinnedAuthors: CSUser[];
+	isCodeStreamTeam: boolean;
+	teamProvider: "codestream" | "slack" | "msteams" | string;
+
 	deleteCodemark: typeof deleteCodemark;
 	editCodemark: typeof editCodemark;
 	fetchThread: typeof fetchThread;
@@ -39,16 +48,12 @@ interface DispatchProps {
 }
 
 interface Props extends DispatchProps {
-	currentUser: CSMe;
 	selected?: boolean;
 	collapsed?: boolean;
 	inline?: boolean;
 	hover?: boolean;
-	author: CSUser;
 	codemark: CodemarkPlus;
 	marker: DocumentMarker;
-	pinnedReplies: CSPost[];
-	pinnedAuthors: CSUser[];
 	usernames: string[];
 	postAction?(...args: any[]): any;
 	action(action: string, post: any, args: any): any;
@@ -60,11 +65,9 @@ interface Props extends DispatchProps {
 	lineNum?: Number;
 	top?: Number;
 	showLabelText?: boolean;
-	codemarkKeybindings: { [key: string]: string };
 	hidden: boolean;
 	deselectCodemarks?: Function;
 	teammates?: CSUser[];
-	isSlackTeam?: boolean;
 }
 
 export class Codemark extends React.Component<Props, State> {
@@ -107,6 +110,8 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	private startPollingReplies(prefetch: boolean) {
+		if (this.props.teamProvider !== "msteam") return;
+
 		if (prefetch) {
 			this.fetchReplies();
 		}
@@ -560,7 +565,7 @@ export class Codemark extends React.Component<Props, State> {
 					)}
 					{hasReplies && (
 						<span className="detail-icon">
-							<Icon name="comment" /> {!this.props.isSlackTeam && codemark.numReplies}
+							<Icon name="comment" /> {this.props.isCodeStreamTeam && codemark.numReplies}
 						</span>
 					)}
 				</div>
@@ -797,9 +802,11 @@ const unkownAuthor = {
 	fullName: "Uknown User"
 };
 
-const mapStateToProps = (state, props) => {
+const mapStateToProps = (state, props): Partial<DispatchProps> => {
 	const { preferences, users, session, posts } = state;
 	const { codemark } = props;
+
+	const teamProvider = getCurrentTeamProvider(state);
 
 	const pinnedReplies = (codemark.pinnedReplies || EMPTY_ARRAY)
 		.map(id => getPost(state.posts, codemark.streamId, id))
@@ -812,11 +819,13 @@ const mapStateToProps = (state, props) => {
 		pinnedAuthors,
 		currentUser: users[session.userId] as CSMe,
 		author: getUserByCsId(users, props.codemark.creatorId) || (unkownAuthor as CSUser),
-		codemarkKeybindings: preferences.codemarkKeybindings || EMPTY_OBJECT
+		codemarkKeybindings: preferences.codemarkKeybindings || EMPTY_OBJECT,
+		isCodeStreamTeam: teamProvider === "codestream",
+		teamProvider: teamProvider
 	};
 };
 
-export default connect<any, DispatchProps, any>(
+export default connect<any, Partial<DispatchProps>, any>(
 	mapStateToProps,
 	{ setCodemarkStatus, setUserPreference, deleteCodemark, editCodemark, fetchThread, getPosts }
 )(Codemark);

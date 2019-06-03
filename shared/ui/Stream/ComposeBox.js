@@ -190,7 +190,7 @@ class ComposeBox extends React.Component {
 				slashCommands={this.props.slashCommands}
 				services={this.props.services}
 				channelStreams={this.props.channelStreams}
-				isSlackTeam={this.props.isSlackTeam}
+				teamProvider={this.props.teamProvider}
 				isDirectMessage={this.props.isDirectMessage}
 				onEmptyUpArrow={this.props.onEmptyUpArrow}
 				onDismiss={this.handleClickDismissMultiCompose}

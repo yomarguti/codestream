@@ -72,7 +72,7 @@ export class SimplePublicChannelPanel extends Component {
 							{this.renderChannels(this.props.channelStreams)}
 						</ul>
 					</div>
-					{!this.props.isSlackTeam && (
+					{this.props.isCodeStreamTeam && (
 						<div className="section">
 							<div className="header">Archived Channels</div>
 							<ul onClick={this.handleClickUnArchive}>

@@ -36,7 +36,7 @@ interface Props {
 	slashCommands?: any[];
 	services: any;
 	channelStreams?: CSChannelStream[];
-	isSlackTeam: boolean;
+	teamProvider: "codestream" | "slack" | "msteams" | string;
 	isDirectMessage?: boolean;
 	multiCompose?: boolean;
 	submitOnEnter?: boolean;
@@ -196,10 +196,13 @@ export class MessageInput extends React.Component<Props, State> {
 			// TODO: filtering these commands should happen higher up in the tree
 			if (this.props.slashCommands) {
 				this.props.slashCommands.map(command => {
+					if (command.appliesTo != null && Array.isArray(command.appliesTo)) {
+						if (!command.appliesTo.includes(this.props.teamProvider)) return;
+					}
+
 					if (command.channelOnly && this.props.isDirectMessage) return;
 					if (command.requires && !this.props.services[command.requires]) return;
-					if (command.codeStreamTeam && this.props.isSlackTeam) return;
-					if (command.slackTeam && !this.props.isSlackTeam) return;
+
 					const toMatch = command.id.toLowerCase();
 					if (toMatch.indexOf(normalizedPrefix) === 0) {
 						command.identifier = command.id;

@@ -46,6 +46,7 @@ import Headshot from "./Headshot";
 import { getTeamMembers } from "../store/users/reducer";
 import { MessageInput } from "./MessageInput";
 import { getSlashCommands } from "./SlashCommands";
+import { getCurrentTeamProvider } from "../store/teams/actions";
 
 const tuple = <T extends string[]>(...args: T) => args;
 
@@ -77,7 +78,6 @@ interface DispatchProps {
 	providerInfo: {
 		[service: string]: {};
 	};
-	isSlackTeam: boolean;
 	currentUser: CSUser;
 	selectedStreams: {};
 	showChannels: string;
@@ -85,6 +85,7 @@ interface DispatchProps {
 	textEditorSelection?: EditorSelection;
 	slashCommands: any[];
 	services: {};
+	teamProvider: "codestream" | "slack" | "msteams" | string;
 }
 
 interface State {
@@ -691,13 +692,6 @@ class CodemarkForm extends React.Component<Props, State> {
 						/>
 					)}
 				</span>
-				{false &&
-					this.props.isSlackTeam && [
-						" on",
-						<span className="service">
-							<Icon className="slack" name="slack" /> Slack
-						</span>
-					]}
 				{commentType !== "link" && (
 					<div className="color-choices" onClick={this.switchLabel}>
 						with{" "}
@@ -830,7 +824,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				slashCommands={this.props.slashCommands}
 				services={this.props.services}
 				channelStreams={this.props.channelStreams}
-				isSlackTeam={this.props.isSlackTeam}
+				teamProvider={this.props.teamProvider}
 				isDirectMessage={this.props.channel.type === StreamType.Direct}
 				text={text.replace(/\n/g, "<br/>")}
 				placeholder={placeholder}
@@ -1273,17 +1267,12 @@ class CodemarkForm extends React.Component<Props, State> {
 const EMPTY_OBJECT = {};
 
 const mapStateToProps = (state): DispatchProps => {
-	const { context, editorContext, users, session, teams, preferences, providers } = state;
+	const { context, editorContext, users, session, preferences, providers } = state;
 	const user = users[session.userId];
 	const channel = context.currentStreamId
 		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId) ||
 		  getStreamForTeam(state.streams, context.currentTeamId)
 		: getStreamForTeam(state.streams, context.currentTeamId);
-
-	// const slackInfo = user.providerInfo && user.providerInfo.slack;
-
-	const team = teams[context.currentTeamId];
-	const isSlackTeam = !!(team.providerInfo && team.providerInfo.slack);
 
 	const teammates = getTeamMembers(state);
 
@@ -1304,7 +1293,7 @@ const mapStateToProps = (state): DispatchProps => {
 		directMessageStreams: directMessageStreams as CSDirectStream[],
 		issueProvider: providers[context.issueProvider],
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
-		isSlackTeam,
+		teamProvider: getCurrentTeamProvider(state),
 		currentUser: user,
 		selectedStreams: preferences.selectedStreams || EMPTY_OBJECT,
 		showChannels: context.channelFilter,
@@ -1312,7 +1301,6 @@ const mapStateToProps = (state): DispatchProps => {
 		textEditorSelection: getCurrentSelection(editorContext),
 		slashCommands: getSlashCommands(state.capabilities),
 		services: state.services
-		// slackInfo,
 	};
 };
 

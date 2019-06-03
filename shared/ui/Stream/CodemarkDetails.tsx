@@ -8,6 +8,7 @@ import CodemarkActions from "./CodemarkActions";
 import { CodemarkPlus, Capabilities } from "@codestream/protocols/agent";
 import { createPost } from "./actions";
 import { CSUser, CSMe, CSPost } from "@codestream/protocols/api";
+import { getTeamProvider } from "../store/teams/actions";
 
 interface State {
 	editingPostId?: string;
@@ -21,7 +22,7 @@ interface Props {
 	currentUserId: string;
 	slashCommands?: any;
 	services?: any;
-	isSlackTeam: boolean;
+	teamProvider: "codestream" | "slack" | "msteams" | string;
 	height?: Number;
 	capabilities: Capabilities;
 	hasFocus: boolean;
@@ -126,7 +127,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 						currentUserId={this.props.currentUserId}
 						slashCommands={this.props.slashCommands}
 						services={this.props.services}
-						isSlackTeam={this.props.isSlackTeam}
+						teamProvider={this.props.teamProvider}
 						text={this.state.text}
 						placeholder="Reply..."
 						onChange={this.handleOnChange}
@@ -147,6 +148,7 @@ const mapStateToProps = state => {
 	const { capabilities, configs, connectivity, session, context, users, teams, services } = state;
 
 	const team = teams[context.currentTeamId];
+	const teamProvider = getTeamProvider(team);
 	const teamMembers = getTeamMembers(state);
 
 	const user: CSMe = users[session.userId];
@@ -168,9 +170,7 @@ const mapStateToProps = state => {
 		currentUserId: user.id,
 		currentUserName: user.username,
 		services,
-		isSlackTeam: Boolean(
-			teams[context.currentTeamId].providerInfo && teams[context.currentTeamId].providerInfo.slack
-		)
+		teamProvider: teamProvider
 	};
 };
 

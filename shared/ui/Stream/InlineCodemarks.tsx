@@ -85,7 +85,6 @@ interface Props {
 	documentMarkers: DocumentMarker[];
 	numUnpinned: number;
 	numClosed: number;
-	isSlackTeam: boolean;
 
 	setEditorContext: (
 		...args: Parameters<typeof setEditorContext>
@@ -448,7 +447,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 										inline={true}
 										hidden={hidden}
 										teammates={this.props.teammates}
-										isSlackTeam={this.props.isSlackTeam}
 										hover={this.state.highlightedDocmarker === docMarker.id}
 										selected={currentDocumentMarkerId === docMarker.id}
 										usernames={this.props.usernames}
@@ -875,7 +873,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 												inline={true}
 												hidden={hidden}
 												teammates={this.props.teammates}
-												isSlackTeam={this.props.isSlackTeam}
 												hover={this.state.highlightedDocmarker === docMarker.id}
 												selected={currentDocumentMarkerId === docMarker.id}
 												deselectCodemarks={this.deselectCodemarks}
