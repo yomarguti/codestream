@@ -27,23 +27,14 @@ import kotlin.properties.Delegates
 
 const val INLINE_CODEMARKS = "viewCodemarksInline"
 
-// PD urls
 private const val API_PD = "https://pd-api.codestream.us:9443"
-private const val WEB_PD = "http://pd-app.codestream.us:1380"
-
-// QA urls
 private const val API_QA = "https://qa-api.codestream.us"
-private const val WEB_QA = "http://qa-app.codestream.us"
-
-// PROD urls
 private const val API_PROD = "https://api.codestream.com"
-private const val WEB_PROD = "https://app.codestream.com"
 
 data class SettingsServiceState(
     var autoSignIn: Boolean = true,
     var email: String? = null,
     var serverUrl: String = API_PROD,
-    var webAppUrl: String = WEB_PROD,
     var avatars: Boolean = true,
     var notifications: String? = null,
     var muteAll: Boolean = false,

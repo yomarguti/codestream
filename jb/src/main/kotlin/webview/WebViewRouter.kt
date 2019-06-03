@@ -26,7 +26,9 @@ import protocols.webview.EditorRangeSelectResponse
 import protocols.webview.EditorScrollToRequest
 import protocols.webview.MarkerApplyRequest
 import protocols.webview.MarkerCompareRequest
+import protocols.webview.SignupCompleteRequest
 import protocols.webview.UpdateConfigurationRequest
+import protocols.webview.ValidateThirdPartyAuthRequest
 import kotlin.properties.Delegates
 
 typealias ReadyObserver = () -> Unit
@@ -82,11 +84,11 @@ class WebViewRouter(val project: Project) {
                 resumeReady = true
                 authentication.login(message)
             }
+            "host/validateThirdPartyAuth" -> validateThirdPartyAuth(message)
             "host/didInitialize" -> _isReady = true
             "host/logout" -> authentication.logout()
             "host/slack/login" -> authentication.slackLogin()
-            "host/signup" -> authentication.signup()
-            "host/signup/complete" -> authentication.signupComplete()
+            "host/signup/complete" -> signupComplete(message)
             "host/context/didChange" -> contextDidChange(message)
             "host/webview/reload" -> project.webViewService?.reload()
             "host/marker/compare" -> hostMarkerCompare(message)
@@ -102,6 +104,18 @@ class WebViewRouter(val project: Project) {
             project.webViewService?.postResponse(message.id, response)
             if (resumeReady) _isReady = true
         }
+    }
+
+    private suspend fun validateThirdPartyAuth(message: WebViewMessage): Any? {
+        val request = gson.fromJson<ValidateThirdPartyAuthRequest>(message.params!!)
+        val authenticationService = project.authenticationService ?: return null
+        return authenticationService.validateThirdPartyAuth(request)
+    }
+
+    private suspend fun signupComplete(message: WebViewMessage): Any? {
+        val request = gson.fromJson<SignupCompleteRequest>(message.params!!)
+        val authenticationService = project.authenticationService ?: return null
+        return authenticationService.signupComplete(request)
     }
 
     private fun contextDidChange(message: WebViewMessage) {

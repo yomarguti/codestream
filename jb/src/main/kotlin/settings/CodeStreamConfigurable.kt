@@ -26,7 +26,6 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable {
         gui?.let {
             state.autoSignIn = gui.autoSignIn.isSelected
             state.serverUrl = gui.serverUrl.text
-            state.webAppUrl = gui.webAppUrl.text
             state.avatars = gui.showAvatars.isSelected
             state.notifications = gui.showNotifications.selectedItem as String?
             state.muteAll = gui.muteAll.isSelected
@@ -47,7 +46,6 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable {
             gui.apply {
                 autoSignIn.isSelected = it.autoSignIn
                 serverUrl.text = it.serverUrl
-                webAppUrl.text = it.webAppUrl
                 showAvatars.isSelected = it.avatars
                 showNotifications.selectedItem = it.notifications
                 muteAll.isSelected = it.muteAll

@@ -20,14 +20,16 @@ import com.intellij.openapi.project.Project
 import kotlinx.coroutines.future.await
 import protocols.agent.AccessToken
 import protocols.agent.BootstrapParams
+import protocols.agent.LoginOtcParams
 import protocols.agent.LoginWithPasswordParams
-import protocols.agent.LoginWithSignupTokenParams
 import protocols.agent.LoginWithTokenParams
 import protocols.webview.Capabilities
 import protocols.webview.LoginRequest
 import protocols.webview.SignedInBootstrapResponse
 import protocols.webview.SignedOutBootstrapResponse
+import protocols.webview.SignupCompleteRequest
 import protocols.webview.UserSession
+import protocols.webview.ValidateThirdPartyAuthRequest
 import java.util.concurrent.CompletableFuture
 
 class AuthenticationService(val project: Project) {
@@ -42,32 +44,25 @@ class AuthenticationService(val project: Project) {
             val token = PasswordSafe.instance.getPassword(settings.credentialAttributes)
 
             if (token != null) {
-                val loginResult = agent.agent.login(
+                val loginResult = agent.agent.loginToken(
                     LoginWithTokenParams(
-                        settings.state.email,
                         AccessToken(
                             settings.state.email,
                             settings.state.serverUrl,
                             token
                         ),
-                        settings.state.serverUrl,
-                        settings.extensionInfo,
-                        settings.ideInfo,
-                        settings.traceLevel.value,
-                        settings.isDebugging,
-                        settings.team,
-                        settings.proxySupport,
-                        settings.proxySettings
+                        null,
+                        settings.team
                     )
                 ).await()
 
-                loginResult.result.error?.let {
+                loginResult.error?.let {
                     notification.showError("Error", it)
                     return buildSignedOutResponse()
                 }
 
                 val bootstrapFuture = agent.agent.bootstrap(BootstrapParams())
-                session.login(loginResult.result.userLoggedIn)
+                session.login(loginResult.userLoggedIn)
 
                 return buildSignedInResponse(bootstrapFuture)
             }
@@ -82,77 +77,77 @@ class AuthenticationService(val project: Project) {
         val session = project.sessionService ?: return jsonObject()
 
         val params = gson.fromJson<LoginRequest>(message.params!!)
-        val loginResult = agent.agent.login(
+        val loginResult = agent.agent.loginPassword(
             LoginWithPasswordParams(
                 params.email,
                 params.password,
-                settings.state.serverUrl,
-                settings.extensionInfo,
-                settings.ideInfo,
-                settings.traceLevel.value,
-                settings.isDebugging,
-                settings.team,
-                settings.proxySupport,
-                settings.proxySettings
+                null,
+                settings.team
             )
         ).await()
 
-        loginResult.result.error?.let {
+        loginResult.error?.let {
             throw Exception(it)
         }
 
         val bootstrapFuture = agent.agent.bootstrap(BootstrapParams())
-        session.login(loginResult.result.userLoggedIn)
+        session.login(loginResult.userLoggedIn)
         settings.state.email = params.email
-        saveAccessToken(loginResult.result.loginResponse?.accessToken)
+        saveAccessToken(loginResult.loginResponse?.accessToken)
         return buildSignedInResponse(bootstrapFuture)
     }
 
-    suspend fun signupComplete(): Any? {
-        val agent = project.agentService ?: return jsonObject()
-        val session = project.sessionService ?: return jsonObject()
-        val settings = project.settingsService ?: return jsonObject()
+    suspend fun validateThirdPartyAuth(request: ValidateThirdPartyAuthRequest): Any? {
+        val agentService = project.agentService ?: return jsonObject()
+        val sessionService = project.sessionService ?: return jsonObject()
+        val settingsService = project.settingsService ?: return jsonObject()
 
-        val token = session.signupToken
-        val loginResult = agent.agent.login(
-            LoginWithSignupTokenParams(
-                token,
-                settings.state.serverUrl,
-                settings.extensionInfo,
-                settings.ideInfo,
-                settings.traceLevel.value,
-                settings.isDebugging,
-                settings.team,
-                settings.proxySupport,
-                settings.proxySettings
+        val loginResult = agentService.agent.loginOtc(LoginOtcParams(
+            sessionService.signupToken,
+            request.teamId,
+            request.team,
+            request.alias
+        )).await()
+
+        val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())
+        sessionService.login(loginResult.userLoggedIn)
+        settingsService.state.email = loginResult.loginResponse?.user?.email
+        saveAccessToken(loginResult.loginResponse?.accessToken)
+        return buildSignedInResponse(bootstrapFuture)
+    }
+
+    suspend fun signupComplete(request: SignupCompleteRequest): Any? {
+        val agentService = project.agentService ?: return jsonObject()
+        val sessionService = project.sessionService ?: return jsonObject()
+        val settingsService = project.settingsService ?: return jsonObject()
+
+        val loginResult = agentService.agent.loginToken(
+            LoginWithTokenParams(
+                AccessToken(
+                    request.email,
+                    settingsService.state.serverUrl,
+                    request.token
+                ),
+                request.teamId,
+                null
             )
         ).await()
 
-        loginResult.result.error?.let {
+        loginResult.error?.let {
             throw Exception(it)
         }
 
-        if (loginResult.result.loginResponse == null) {
-            throw Exception("Login result from agent has no error but loginResponse is null")
-        }
-
-        val bootstrapFuture = agent.agent.bootstrap(BootstrapParams())
-        session.login(loginResult.result.userLoggedIn)
-        settings.state.email = loginResult.result.loginResponse.user.email
-        saveAccessToken(loginResult.result.loginResponse.accessToken)
+        val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())
+        sessionService.login(loginResult.userLoggedIn)
+        settingsService.state.email = loginResult.loginResponse?.user?.email
+        saveAccessToken(loginResult.loginResponse?.accessToken)
         return buildSignedInResponse(bootstrapFuture)
     }
 
     fun slackLogin() {
         val session = project.sessionService ?: return
         val settings = project.settingsService ?: return
-        BrowserUtil.browse("${settings.state.webAppUrl}/service-auth/slack?state=${session.signupToken}")
-    }
-
-    fun signup() {
-        val session = project.sessionService ?: return
-        val settings = project.settingsService ?: return
-        BrowserUtil.browse("${settings.state.webAppUrl}/signup?force_auth=true&signup_token=${session.signupToken}")
+        BrowserUtil.browse("${settings.state.serverUrl}/web/provider-auth/slack?signupToken=${session.signupToken}")
     }
 
     suspend fun logout() {

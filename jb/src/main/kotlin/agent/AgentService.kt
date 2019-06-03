@@ -89,7 +89,6 @@ class AgentService(private val project: Project) {
     }
 
     suspend fun restart() {
-        agent.logout(LogoutParams()).await()
         agent.shutdown().await()
         agent.exit()
         initAgent()
@@ -100,11 +99,11 @@ class AgentService(private val project: Project) {
         val temp = createTempDir("codestream")
         temp.deleteOnExit()
         val process = if (DEBUG) {
-            val agentJs = File(temp, "agent-pkg.js")
-            val agentJsMap = File(temp, "agent-pkg.js.map")
+            val agentJs = File(temp, "agent.js")
+            val agentJsMap = File(temp, "agent.js.map")
             // val agentLog = File(temp, "agent.log")
-            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent-pkg.js"), agentJs)
-            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent-pkg.js.map"), agentJsMap)
+            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent.js"), agentJs)
+            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent.js.map"), agentJsMap)
             logger.info("CodeStream LSP agent extracted to ${agentJs.absolutePath}")
             GeneralCommandLine(
                 "node",

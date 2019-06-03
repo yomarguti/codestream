@@ -27,88 +27,30 @@ abstract class LoginParams(
 )
 
 class LoginWithPasswordParams(
-    email: String?,
-    password: String?,
-    serverUrl: String,
-    extension: Extension,
-    ide: Ide,
-    traceLevel: String,
-    isDebugging: Boolean,
-    team: String?,
-    proxySupport: String,
-    proxySettings: ProxySettings? = null
-) : LoginParams(
-    email,
-    password,
-    null,
-    serverUrl,
-    extension,
-    ide,
-    traceLevel,
-    isDebugging,
-    team,
-    proxySupport,
-    proxySettings
+    val email: String?,
+    val password: String?,
+    val teamId: String?,
+    val team: String?
 )
 
 class LoginWithTokenParams(
-    email: String?,
-    token: AccessToken,
-    serverUrl: String,
-    extension: Extension,
-    ide: Ide,
-    traceLevel: String,
-    isDebugging: Boolean,
-    team: String?,
-    proxySupport: String,
-    proxySettings: ProxySettings? = null
-) : LoginParams(
-    email,
-    token,
-    null,
-    serverUrl,
-    extension,
-    ide,
-    traceLevel,
-    isDebugging,
-    team,
-    proxySupport,
-    proxySettings
+    val token: AccessToken,
+    val teamId: String?,
+    val team: String?
 )
 
-class LoginWithSignupTokenParams(
-    signupToken: String,
-    serverUrl: String,
-    extension: Extension,
-    ide: Ide,
-    traceLevel: String,
-    isDebugging: Boolean,
-    team: String?,
-    proxySupport: String,
-    proxySettings: ProxySettings? = null
-) : LoginParams(
-    null,
-    null,
-    signupToken,
-    serverUrl,
-    extension,
-    ide,
-    traceLevel,
-    isDebugging,
-    team,
-    proxySupport,
-    proxySettings
+class LoginOtcParams(
+    val code: String,
+    val teamId: String?,
+    val team: String?,
+    val alias: Boolean?
 )
 
 class LoginResult(
-    val capabilities: ServerCapabilities,
-    val result: LoginResultDetails
-)
-
-class LoginResultDetails(
-    val error: String?,
+    val loginResponse: LoginResponse?,
     val state: LoginState?,
-    val loginResponse: LoginResponse?
+    val error: String?,
+    val extra: String?
 ) {
     val userLoggedIn: UserLoggedIn
         get() = loginResponse?.let {

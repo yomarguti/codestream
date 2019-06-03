@@ -113,4 +113,16 @@ class MarkerApplyRequest(
     val marker: Marker
 )
 
+class SignupCompleteRequest(
+    val email: String,
+    val token: String,
+    val teamId: String
+)
+
+class ValidateThirdPartyAuthRequest(
+    val teamId: String?,
+    val team: String?,
+    val alias: Boolean?
+)
+
 
