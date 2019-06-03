@@ -49,7 +49,7 @@ class LoginResult(
     val loginResponse: LoginResponse?,
     val state: LoginState?,
     val error: String?,
-    val extra: String?
+    val extra: JsonElement?
 ) {
     val userLoggedIn: UserLoggedIn
         get() = loginResponse?.let {
