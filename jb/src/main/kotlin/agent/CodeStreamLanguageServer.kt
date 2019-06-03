@@ -8,7 +8,6 @@ import protocols.agent.LoginOtcParams
 import protocols.agent.LoginResult
 import protocols.agent.LoginWithPasswordParams
 import protocols.agent.LoginWithTokenParams
-import protocols.agent.LogoutParams
 import protocols.agent.TextDocumentFromKeyParams
 import protocols.agent.TextDocumentFromKeyResult
 import java.util.concurrent.CompletableFuture
@@ -26,9 +25,6 @@ interface CodeStreamLanguageServer : LanguageServer {
 
     @JsonRequest("codestream/bootstrap")
     fun bootstrap(params: BootstrapParams): CompletableFuture<JsonElement>
-
-    @JsonRequest("codestream/logout")
-    fun logout(params: LogoutParams): CompletableFuture<JsonElement>
 
     @JsonRequest("codestream/textDocument/fromKey")
     fun textDocumentFromKey(params: TextDocumentFromKeyParams): CompletableFuture<TextDocumentFromKeyResult>

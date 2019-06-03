@@ -103,8 +103,6 @@ class ProviderInfo(
 
 class BootstrapParams
 
-class LogoutParams
-
 class Extension(val versionFormatted: String) {
     val version: String
     val build: String
