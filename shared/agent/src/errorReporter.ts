@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/node";
 import { Severity } from "@sentry/node";
 import * as os from "os";
+import { Team } from "./api/extensions";
 import { SessionContainer } from "./container";
 import {
 	CodeStreamEnvironment,
@@ -32,7 +33,6 @@ export class ErrorReporter {
 
 				Sentry.configureScope(async scope => {
 					const team = await SessionContainer.instance().teams.getById(session.teamId);
-					const isSlackTeam = !!(team.providerInfo && team.providerInfo.slack);
 					//  TODO: acknowledge telemetryConsent
 					scope.setUser({
 						id: session.userId,
@@ -40,7 +40,11 @@ export class ErrorReporter {
 						team: {
 							id: team.id,
 							name: team.name,
-							isSlackTeam
+							provider: Team.isSlack(team)
+								? "Slack"
+								: Team.isMSTeams(team)
+								? "MSTeams"
+								: "CodeStream"
 						}
 					});
 				});

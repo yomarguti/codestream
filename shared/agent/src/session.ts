@@ -832,7 +832,7 @@ export class CodeStreamSession {
 			"Plugin Version": this.versionInfo.extension.versionFormatted,
 			Endpoint: this.versionInfo.ide.name,
 			"IDE Version": this.versionInfo.ide.version,
-			Provider: Team.isSlack(team) ? "Slack" : "CodeStream"
+			Provider: Team.isSlack(team) ? "Slack" : Team.isMSTeams(team) ? "MSTeams" : "CodeStream"
 		};
 
 		if (team != null) {
