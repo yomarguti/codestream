@@ -160,10 +160,10 @@ class AgentService(private val project: Project) {
 
     private fun getAgentResourcePath(): String {
         return when (platform) {
-            Platform.LINUX -> "/agent/agent-pkg-linux-x64"
-            Platform.MAC -> "/agent/agent-pkg-macos-x64"
-            Platform.WIN32 -> "/agent/agent-pkg-win-x86.exe"
-            Platform.WIN64 -> "/agent/agent-pkg-win-x64.exe"
+            Platform.LINUX -> "/agent/agent-linux-x64"
+            Platform.MAC -> "/agent/agent-macos-x64"
+            Platform.WIN32 -> "/agent/agent-win-x86.exe"
+            Platform.WIN64 -> "/agent/agent-win-x64.exe"
         }
     }
 
