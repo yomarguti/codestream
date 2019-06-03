@@ -34,7 +34,6 @@ import protocols.agent.DocumentMarkersParams
 import protocols.agent.DocumentMarkersResult
 import protocols.agent.GetStreamParams
 import protocols.agent.GetUserParams
-import protocols.agent.LogoutParams
 import protocols.agent.Stream
 import java.io.File
 import java.nio.file.Files
