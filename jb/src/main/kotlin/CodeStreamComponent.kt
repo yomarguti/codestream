@@ -61,6 +61,7 @@ class CodeStreamComponent(val project: Project) : Disposable {
     }
 
     private fun initWindowFocusListener() {
+        if (project.isDisposed) return
         val frame = WindowManager.getInstance().getFrame(project)
         val window = UIUtil.getWindow(frame)
         window?.addWindowFocusListener(object : WindowFocusListener {
@@ -75,12 +76,14 @@ class CodeStreamComponent(val project: Project) : Disposable {
     }
 
     private fun initEditorFactoryListener() {
+        if (project.isDisposed) return
         EditorFactory.getInstance().addEditorFactoryListener(
             EditorFactoryListenerImpl(project), this
         )
     }
 
     private fun initMessageBusSubscriptions() {
+        if (project.isDisposed) return
         project.messageBus.connect().let {
             it.subscribe(
                 FileEditorManagerListener.FILE_EDITOR_MANAGER,
@@ -103,11 +106,13 @@ class CodeStreamComponent(val project: Project) : Disposable {
     }
 
     private fun initStatusBarWidget() {
+        if (project.isDisposed) return
         val statusBar = WindowManager.getInstance().getIdeFrame(project).statusBar
         statusBar?.addWidget(CodeStreamStatusBarWidget(project))
     }
 
     private fun initUnreadsListener() {
+        if (project.isDisposed) return
         project.sessionService?.onUnreadsChanged {
             ApplicationManager.getApplication().invokeLater {
                 toolWindow.icon = if (it > 0) {
