@@ -30,7 +30,7 @@ export const CodeStreamOrSlack = (connect(undefined) as any)((props: { dispatch:
 			<h2>Create a Team</h2>
 			<form className="standard-form">
 				<fieldset className="form-body">
-					<h3 style={{ textAlign: "left" }}>Use Slack Channels</h3>
+					<h3 style={{ textAlign: "left" }}>Use Existing Slack Channels</h3>
 					<p>
 						If your team uses Slack, create a CodeStream team connected to your Slack workspace so
 						you can discuss code in your existing channels.

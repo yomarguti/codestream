@@ -211,9 +211,7 @@ export const Signup = (connect() as any)((props: Props) => {
 							</div>
 						)}
 						<div className="control-group">
-							<label>
-								<FormattedMessage id="signUp.email.label" />
-							</label>
+							<label>Work Email</label>
 							<TextInput
 								name="email"
 								value={email}
