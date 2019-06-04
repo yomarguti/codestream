@@ -16,6 +16,7 @@ import com.google.gson.JsonElement
 import com.intellij.credentialStore.Credentials
 import com.intellij.ide.BrowserUtil
 import com.intellij.ide.passwordSafe.PasswordSafe
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.future.await
 import protocols.agent.AccessToken
@@ -34,11 +35,12 @@ import java.util.concurrent.CompletableFuture
 
 class AuthenticationService(val project: Project) {
 
+    private val logger = Logger.getInstance(AuthenticationService::class.java)
+
     suspend fun bootstrap(): Any? {
         val settings = project.settingsService ?: return Unit
         val agent = project.agentService ?: return Unit
         val session = project.sessionService ?: return Unit
-        val notification = project.notificationComponent ?: return Unit
 
         if (settings.state.autoSignIn) {
             val token = PasswordSafe.instance.getPassword(settings.credentialAttributes)
@@ -57,7 +59,7 @@ class AuthenticationService(val project: Project) {
                 ).await()
 
                 loginResult.error?.let {
-                    notification.showError("Error", it)
+                    logger.warn(it)
                     return buildSignedOutResponse()
                 }
 
