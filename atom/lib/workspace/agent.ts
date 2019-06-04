@@ -356,9 +356,9 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 function started(target: CodeStreamAgent, key: string, descriptor: PropertyDescriptor) {
 	const fn = descriptor.value;
 
-	descriptor.value = function(this: CodeStreamAgent, ...args: any[]) {
+	descriptor.value = async function(this: CodeStreamAgent, ...args: any[]) {
 		if (!this.initialized) {
-			throw new Error("CodeStreamAgent hasn't been started");
+			await this.start();
 		}
 		return fn.apply(this, args);
 	};
