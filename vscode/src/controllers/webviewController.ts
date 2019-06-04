@@ -152,7 +152,6 @@ export class WebviewController implements Disposable {
 					break;
 				}
 
-				this.closeWebview();
 				break;
 
 			case SessionStatus.SignedIn:
