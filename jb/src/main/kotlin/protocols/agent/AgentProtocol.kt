@@ -83,7 +83,7 @@ class CSUser(
     val id: String,
     val username: String,
     val email: String,
-    val preferences: CSPreferences
+    val preferences: CSPreferences?
 )
 
 class CSPreferences(
