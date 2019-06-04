@@ -75,6 +75,7 @@
     <li>Fixes an issue with bookmark titles not being displayed on Slack</li>
     <li>Fixes an issue with code snippets added to a codemark via markdown not rendering</li>
     <li>Fixes an issue with saving settings without a Notifications selection would cause an error</li>
+    <li>Fixes an issue with creating codeamarks in a file with spaces in the path</li>
 </ul>
 <h4 id="1_0_2">1.0.2</h4>
 <h5>Changed</h5>
