@@ -1525,6 +1525,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 		return body
 			.replace(/("password":)".*?"/gi, '$1"<hidden>"')
+			.replace(/("secret":)".*?"/gi, '$1"<hidden>"')
 			.replace(/("token":)".*?"/gi, '$1"<hidden>"');
 	}
 }
