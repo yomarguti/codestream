@@ -916,10 +916,12 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	@started
-	sendNotification<NT extends NotificationType<any, any>>(
+	async sendNotification<NT extends NotificationType<any, any>>(
 		type: NT,
 		params: NotificationParamsOf<NT>
-	): void {
+	): Promise<void> {
+		await this.ensureStartingCompleted();
+
 		try {
 			Logger.logWithDebugParams(
 				`AgentConnection.sendNotification(${type.method})${
@@ -940,6 +942,8 @@ export class CodeStreamAgentConnection implements Disposable {
 		params: RequestParamsOf<RT>,
 		token?: CancellationToken
 	): Promise<RequestResponseOf<RT>> {
+		await this.ensureStartingCompleted();
+
 		const traceParams =
 			type.method === ApiRequestType.method ? params.init && params.init.body : params;
 
@@ -958,11 +962,25 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	}
 
+	private async ensureStartingCompleted(): Promise<void> {
+		if (this._starting === undefined) return;
+
+		await this._starting;
+	}
+
+	private _starting: Promise<AgentInitializeResult> | undefined;
 	public async start(): Promise<AgentInitializeResult> {
-		if (this._client !== undefined) {
+		if (this._client !== undefined || this._starting !== undefined) {
 			throw new Error("Agent has already been started");
 		}
 
+		this._starting = this.startCore();
+		const result = await this._starting;
+		this._starting = undefined;
+		return result;
+	}
+
+	private async startCore(): Promise<AgentInitializeResult> {
 		this._restartCount = 0;
 		if (this._clientReadyCancellation !== undefined) {
 			this._clientReadyCancellation.dispose();
@@ -1019,6 +1037,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._disposable && this._disposable.dispose();
 		await Functions.cancellable(this._client.stop(), 30000, { onDidCancel: resolve => resolve() });
 
+		this._starting = undefined;
 		this._client = undefined;
 	}
 }
