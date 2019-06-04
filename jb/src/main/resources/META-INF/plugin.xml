@@ -60,6 +60,22 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="1_1_0">1.1.0</h4>
+<h5>Changed</h5>
+<ul>
+    <li>Signup flow is now based in the IDE instead of on the web</li>
+    <li>For CodeStream teams, invitations are now code-based allowing for quicker signup</li>
+    <li>For Slack teams, invitation URLs have been simplified</li>
+    <li>Clicking on a codemark in the editor gutter opens the codemark in the Current File tab in CodeStream</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/60">#60</a> - can't delete codemark in vscode</li>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/57">#57</a> - Cygwin git support</li>
+    <li>Fixes an issue with bookmark titles not being displayed on Slack</li>
+    <li>Fixes an issue with code snippets added to a codemark via markdown not rendering</li>
+    <li>Fixes an issue with saving settings without a Notifications selection would cause an error</li>
+</ul>
 <h4 id="1_0_2">1.0.2</h4>
 <h5>Changed</h5>
 <ul>
@@ -70,7 +86,7 @@
     <li>Fixes an issue where a new codemark sometimes wouldn't appear right away</li>
     <li>Fixes an issue where git repos with remote URLs containing port numbers would prevent codemarks from being displayed properly</li>
     <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/59">#59</a> - IndexOutOfBoundsException</li>
-    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/61">#61</a> -  Formatting issues with codemarks</li>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/61">#61</a> - Formatting issues with codemarks</li>
     <li>Prevent error when the first character of a document is in a collapsed region</li>
     <li>Suppresses unnecessary error reporting</li>
 </ul>
