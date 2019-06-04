@@ -571,9 +571,10 @@ export class Codemark extends React.Component<Props, State> {
 		return (
 			<div
 				style={{ ...this.props.style }}
-				className={cx("codemark inline collapsed type-" + type, {
+				className={cx("codemark inline type-" + type, {
 					// if it's selected, we don't render as hidden
 					hidden: !selected ? hidden : false,
+					collapsed: !selected,
 					selected: selected,
 					unpinned: !codemark.pinned
 				})}
