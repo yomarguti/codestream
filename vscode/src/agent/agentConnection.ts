@@ -1,8 +1,6 @@
 "use strict";
 import {
 	AgentInitializeResult,
-	AgentOptions,
-	AgentResult,
 	ApiRequestType,
 	ArchiveStreamRequestType,
 	BaseAgentOptions,
@@ -64,7 +62,6 @@ import {
 	MarkStreamReadRequestType,
 	MuteStreamRequestType,
 	OpenStreamRequestType,
-	PasswordLoginRequestType,
 	ReactToPostRequestType,
 	RenameStreamRequestType,
 	ReportingMessageType,
@@ -72,7 +69,6 @@ import {
 	SetCodemarkStatusRequestType,
 	SetStreamPurposeRequestType,
 	TelemetryRequestType,
-	TokenLoginRequestType,
 	UnarchiveStreamRequestType,
 	UpdateCodemarkRequestType,
 	UpdatePreferencesRequestType,
@@ -89,7 +85,6 @@ import {
 	CSPresenceStatus,
 	StreamType
 } from "@codestream/protocols/api";
-import { RequestInit } from "node-fetch";
 import {
 	commands,
 	env,
@@ -249,31 +244,6 @@ export class CodeStreamAgentConnection implements Disposable {
 		this.sendRequest(ReportMessageRequestType, { source: "extension", type, message, extra });
 	}
 
-	async loginViaSignupToken(serverUrl: string, token: string): Promise<AgentResult> {
-		const options: Required<AgentOptions> = {
-			...this._clientOptions.initializationOptions,
-			serverUrl: serverUrl,
-			signupToken: token
-		};
-
-		const httpSettings = workspace.getConfiguration("http");
-		const proxy = httpSettings.get<string | undefined>("proxy", "");
-		if (proxy) {
-			options.proxy = {
-				url: proxy,
-				strictSSL: httpSettings.get<boolean>("proxyStrictSSL", true)
-			};
-		}
-
-		const response = await this.start();
-
-		if (response.result!.error) {
-			await this.stop();
-		}
-
-		return response.result as AgentResult;
-	}
-
 	private getInitializationOptions() {
 		const options: Required<BaseAgentOptions> = {
 			...this._clientOptions.initializationOptions
@@ -298,8 +268,9 @@ export class CodeStreamAgentConnection implements Disposable {
 		return options;
 	}
 
-	logout() {
-		return this.stop();
+	async logout() {
+		await this.stop();
+		await Container.agent.start();
 	}
 
 	get codemarks() {
