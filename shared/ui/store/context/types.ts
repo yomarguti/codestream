@@ -49,7 +49,7 @@ export enum Route {
 	NewUser = "newUserEntry",
 	Signup = "signup",
 	Login = "login",
-	CSOrSlack = "codestreamOrSlack",
+	CSOrSlack = "chatProviderSelection",
 	SlackAuth = "slackAuth",
 	JoinTeam = "joinTeam",
 	EmailConfirmation = "emailConfirmation",

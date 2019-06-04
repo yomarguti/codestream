@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import { CodeStreamState } from "../store";
 import { Login } from "./Login";
 import { NewUserEntry } from "./NewUserEntry";
-import { CodeStreamOrSlack } from "./CodeStreamOrSlack";
+import { ChatProviderSelection } from "./ChatProviderSelection";
 import { SlackAuth } from "./SlackAuth";
 import { Signup } from "./Signup";
 import { JoinTeam } from "./JoinTeam";
@@ -21,7 +21,7 @@ export const UnauthenticatedRoutes = connect<ConnectedProps, void, void, CodeStr
 			return <NewUserEntry {...props.params} />;
 		}
 		case Route.CSOrSlack: {
-			return <CodeStreamOrSlack {...props.params} />;
+			return <ChatProviderSelection {...props.params} />;
 		}
 		case Route.SlackAuth: {
 			return <SlackAuth {...props.params} />;
