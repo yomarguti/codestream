@@ -1,5 +1,20 @@
 # Change Log
 
+## [1.1.0] - 2019-6-4
+
+### Changed
+
+- Signup flow is now based in the IDE instead of on the web
+- For CodeStream teams, invitations are now code-based allowing for quicker signup
+- For Slack teams, invitation URLs have been simplified
+
+### Fixed
+
+- Fixes [#60](]https://github.com/TeamCodeStream/CodeStream/issues/60) &mdash; can't delete codemark in vscode
+- Fixes [#57](https://github.com/TeamCodeStream/CodeStream/issues/57) &mdash; Cygwin git support
+- Fixes an issue with bookmark titles not being displayed on Slack
+- Fixes an issue with code snippets added to a codemark via markdown not rendering
+
 ## [1.0.2] - 2019-5-22
 
 ### Changed
