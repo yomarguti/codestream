@@ -78,17 +78,29 @@ class WebViewRouter(val project: Project) {
         val authentication = project.authenticationService ?: return
 
         val response = when (message.method) {
-            "host/bootstrap" -> authentication.bootstrap()
+            "host/bootstrap" -> {
+                _isReady = false
+                resumeReady = true
+                authentication.bootstrap()
+            }
             "host/login" -> {
                 _isReady = false
                 resumeReady = true
                 authentication.login(message)
             }
-            "host/validateThirdPartyAuth" -> validateThirdPartyAuth(message)
+            "host/validateThirdPartyAuth" -> {
+                _isReady = false
+                resumeReady = true
+                validateThirdPartyAuth(message)
+            }
             "host/didInitialize" -> _isReady = true
             "host/logout" -> authentication.logout()
             "host/slack/login" -> authentication.slackLogin()
-            "host/signup/complete" -> signupComplete(message)
+            "host/signup/complete" -> {
+                _isReady = false
+                resumeReady = true
+                signupComplete(message)
+            }
             "host/context/didChange" -> contextDidChange(message)
             "host/webview/reload" -> project.webViewService?.reload()
             "host/marker/compare" -> hostMarkerCompare(message)
