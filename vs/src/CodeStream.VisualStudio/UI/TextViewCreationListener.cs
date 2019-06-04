@@ -432,6 +432,13 @@ namespace CodeStream.VisualStudio.UI {
 
 		private void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
 			try {
+				var hasTranslatedLines = e.TranslatedLines.Any();
+				var hasNewOrReformattedLines = e.NewOrReformattedLines.Any();
+				if (!e.VerticalTranslation && !e.HorizontalTranslation &&
+					!hasTranslatedLines && !hasNewOrReformattedLines) {
+					return;
+				}
+
 				var wpfTextView = sender as IWpfTextView;
 				if (wpfTextView == null || !SessionService.IsReady) return;
 				if (wpfTextView.InLayout || wpfTextView.IsClosed) {
@@ -443,22 +450,8 @@ namespace CodeStream.VisualStudio.UI {
 					return;
 				}
 
-				if (!wpfTextView.Properties.TryGetProperty(PropertyNames.DocumentMarkerManager, out DocumentMarkerManager documentMarkerManager)
-					|| documentMarkerManager == null) {
-					Log.Error($"{nameof(documentMarkerManager)} is null");
-					return;
-				}
-
-				var triggerTextViewLayoutChanged = false;
-				var hasVerticalChanges = e.VerticalTranslation || e.TranslatedLines.Any();
-
-				// get markers if it's null (first time) or we did something that isn't scrolling/vertical changes
-				if (!documentMarkerManager.IsInitialized() || hasVerticalChanges) {
-					triggerTextViewLayoutChanged = documentMarkerManager.TrySetMarkers();
-				}
-
 				// don't trigger for changes that don't result in lines being added or removed
-				if (SessionService.IsWebViewVisible && SessionService.IsCodemarksForFileVisible && hasVerticalChanges) {
+				if (e.VerticalTranslation && SessionService.IsWebViewVisible && SessionService.IsCodemarksForFileVisible) {
 					try {
 						var visibleRangeSubject = wpfTextView.Properties
 							.GetProperty<Subject<HostDidChangeEditorVisibleRangesNotificationSubject>>(PropertyNames
@@ -474,6 +467,22 @@ namespace CodeStream.VisualStudio.UI {
 					catch (Exception ex) {
 						Log.Error(ex, nameof(OnTextViewLayoutChanged));
 					}
+				}
+
+				if (!wpfTextView.Properties.TryGetProperty(PropertyNames.DocumentMarkerManager, out DocumentMarkerManager documentMarkerManager)
+					|| documentMarkerManager == null) {
+					Log.Error($"{nameof(documentMarkerManager)} is null");
+					return;
+				}
+
+				var triggerTextViewLayoutChanged = false;
+
+				// get markers if it's null (first time) or we did something that isn't scrolling/vertical changes
+				if ((hasTranslatedLines && hasNewOrReformattedLines && e.NewOrReformattedLines.Count() > 1) || !documentMarkerManager.IsInitialized()) {
+					triggerTextViewLayoutChanged = documentMarkerManager.TrySetMarkers();
+				}
+				else if ((e.VerticalTranslation || hasTranslatedLines) && documentMarkerManager.HasMarkers()) {
+					triggerTextViewLayoutChanged = true;
 				}
 
 				if (triggerTextViewLayoutChanged) {
