@@ -52,7 +52,13 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 	async getBoards(
 		request: FetchThirdPartyBoardsRequest
 	): Promise<FetchThirdPartyBoardsResponse> {
-		const projects = await this.getProjects();
+		const workspaces = await this.getWorkspaces();
+		let projects: AsanaProject[] = [];
+		for (const workspace of workspaces) {
+			const workspaceProjects = await this.getWorkspaceProjects(workspace);
+			projects = projects.concat(workspaceProjects);
+		}
+
 		const boards: ThirdPartyProviderBoard[] = [];
 		for (const project of projects) {
 			const board: ThirdPartyProviderBoard = {
@@ -83,37 +89,37 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 		return { boards };
 	}
 
-	async getProjects(): Promise<AsanaProject[]> {
-		let projects: AsanaProject[] = [];
+	async getWorkspaces(): Promise<AsanaWorkspace[]> {
+		let workspaces: AsanaWorkspace[] = [];
 
 		try {
-			let apiResponse = await this.get<{ data: AsanaProject[]; next_page: any }>(
-				`/api/1.0/projects?${qs.stringify({
-					opt_fields: "layout,name,sections,sections.name",
-					archived: false
+			let apiResponse = await this.get<{ data: AsanaWorkspace[]; next_page: any }>(
+				`/api/1.0/workspaces?${qs.stringify({
+					limit: 100
 				})}`
 			);
-			projects = apiResponse.body.data;
+			workspaces = apiResponse.body.data;
 
 			let nextPage: string | undefined;
 			while ((nextPage = this.nextPage(apiResponse.body))) {
-				apiResponse = await this.get<{ data: AsanaProject[]; next_page: any }>(nextPage);
-				projects = projects.concat(apiResponse.body.data);
+				apiResponse = await this.get<{ data: AsanaWorkspace[]; next_page: any }>(nextPage);
+				workspaces = workspaces.concat(apiResponse.body.data);
 			}
 		} catch (err) {
 			Logger.error(err);
 			debugger;
 		}
 
-		return projects;
+		return workspaces;
 	}
 
-	async getWorkspaceProjects(workspace: AsanaWorkspace): Promise<AsanaBoard[]> {
-		let projects: AsanaBoard[] = [];
+	async getWorkspaceProjects(workspace: AsanaWorkspace): Promise<AsanaProject[]> {
+		let projects: AsanaProject[] = [];
 
 		try {
-			let apiResponse = await this.get<{ data: AsanaBoard[]; next_page: any }>(
+			let apiResponse = await this.get<{ data: AsanaProject[]; next_page: any }>(
 				`/api/1.0/workspaces/${workspace.gid}/projects?${qs.stringify({
+					opt_fields: "layout,name,sections,sections.name",
 					archived: false,
 					limit: 100
 				})}`
@@ -122,7 +128,7 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 
 			let nextPage: string | undefined;
 			while ((nextPage = this.nextPage(apiResponse.body))) {
-				apiResponse = await this.get<{ data: AsanaBoard[]; next_page: any }>(nextPage);
+				apiResponse = await this.get<{ data: AsanaProject[]; next_page: any }>(nextPage);
 				projects = projects.concat(apiResponse.body.data);
 			}
 		} catch (err) {
