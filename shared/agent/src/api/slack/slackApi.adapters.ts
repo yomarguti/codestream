@@ -678,11 +678,11 @@ export function toSlackTeam(team: CSTeam, usernamesById: Map<string, string>) {
 	// });
 }
 
-export function fromSlackUser(user: any, teamId: string, codesteamUsers: CSUser[]): CSUser {
+export function fromSlackUser(user: any, teamId: string, codestreamUsers: CSUser[]): CSUser {
 	let codestreamId: string | undefined;
-	if (codesteamUsers.length !== 0) {
+	if (codestreamUsers.length !== 0) {
 		const identity = `slack::${user.id}`;
-		const u = codesteamUsers.find(m =>
+		const u = codestreamUsers.find(m =>
 			m.providerIdentities == null ? false : m.providerIdentities.includes(identity)
 		);
 		if (u !== undefined) {

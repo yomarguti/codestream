@@ -486,12 +486,12 @@ export function toTeamsTeam(team: CSTeam, userInfosById: Map<string, UserInfo>) 
 export function fromTeamsUser(
 	user: any,
 	codestreamTeamId: string,
-	codesteamUsers: CSUser[]
+	codestreamUsers: CSUser[]
 ): CSUser {
 	let codestreamId: string | undefined;
-	if (codesteamUsers.length !== 0) {
+	if (codestreamUsers.length !== 0) {
 		const identity = `msteams::${user.id}`;
-		const u = codesteamUsers.find(m =>
+		const u = codestreamUsers.find(m =>
 			m.providerIdentities == null ? false : m.providerIdentities.includes(identity)
 		);
 		if (u !== undefined) {
