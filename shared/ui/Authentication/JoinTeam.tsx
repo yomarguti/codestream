@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 import { goToNewUserEntry, goToSignup } from "../store/context/actions";
 import { Link } from "../Stream/Link";
 import { TextInput } from "./TextInput";
-import { startMSTeamsSignin, startSlackSignin, SignupType } from "../store/actions";
+import { startSSOSignin, SignupType } from "../store/actions";
 import { HostApi } from "..";
 import { DispatchProp } from "../store/common";
 import { GetInviteInfoRequestType } from "@codestream/protocols/agent";
@@ -67,7 +67,7 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 								onClick={e => {
 									e.preventDefault();
 									HostApi.instance.track("Join Path Selected", { "Path Type": "Slack" });
-									props.dispatch(startSlackSignin({ type: SignupType.JoinTeam }));
+									props.dispatch(startSSOSignin("slack", { type: SignupType.JoinTeam }));
 								}}
 							>
 								Sign Up with Slack
@@ -80,7 +80,7 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 								onClick={e => {
 									e.preventDefault();
 									HostApi.instance.track("Join Path Selected", { "Path Type": "MSTeams" });
-									props.dispatch(startMSTeamsSignin({ type: SignupType.JoinTeam }));
+									props.dispatch(startSSOSignin("msteams", { type: SignupType.JoinTeam }));
 								}}
 							>
 								Sign Up with Microsoft Teams

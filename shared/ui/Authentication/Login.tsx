@@ -5,7 +5,7 @@ import Button from "../Stream/Button";
 import { authenticate } from "./actions";
 import { CodeStreamState } from "../store";
 import { goToNewUserEntry } from "../store/context/actions";
-import { startMSTeamsSignin, startSlackSignin } from "../store/actions";
+import { startSSOSignin } from "../store/actions";
 
 const isPasswordInvalid = password => password.length === 0;
 const isEmailInvalid = email => {
@@ -24,12 +24,9 @@ interface DispatchProps {
 		...args: Parameters<typeof authenticate>
 	) => ReturnType<ReturnType<typeof authenticate>>;
 	goToNewUserEntry: typeof goToNewUserEntry;
-	startMSTeamsSignin: (
-		...args: Parameters<typeof startMSTeamsSignin>
-	) => ReturnType<ReturnType<typeof startMSTeamsSignin>>;
-	startSlackSignin: (
-		...args: Parameters<typeof startSlackSignin>
-	) => ReturnType<ReturnType<typeof startSlackSignin>>;
+	startSSOSignin: (
+		...args: Parameters<typeof startSSOSignin>
+	) => ReturnType<ReturnType<typeof startSSOSignin>>;
 }
 
 interface Props extends ConnectedProps, DispatchProps {}
@@ -162,12 +159,12 @@ class Login extends React.Component<Props, State> {
 
 	handleClickSlackSignup = event => {
 		event.preventDefault();
-		this.props.startSlackSignin();
+		this.props.startSSOSignin("slack");
 	};
 
 	handleClickMSTeamsSignup = event => {
 		event.preventDefault();
-		this.props.startMSTeamsSignin();
+		this.props.startSSOSignin("msteams");
 	};
 
 	render() {
@@ -270,7 +267,7 @@ const ConnectedLogin = connect<ConnectedProps, any, any, CodeStreamState>(
 	state => ({
 		initialEmail: state.configs.email
 	}),
-	{ authenticate, goToNewUserEntry, startMSTeamsSignin, startSlackSignin }
+	{ authenticate, goToNewUserEntry, startSSOSignin }
 )(Login);
 
 export { ConnectedLogin as Login };

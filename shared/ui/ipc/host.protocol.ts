@@ -67,14 +67,13 @@ export const LogoutRequestType = new RequestType<LogoutRequest, LogoutResponse, 
 	`${IpcRoutes.Host}/logout`
 );
 
-export interface SlackLoginRequest {}
-export interface SlackLoginResponse {}
-export const SlackLoginRequestType = new RequestType<
-	SlackLoginRequest,
-	SlackLoginResponse,
-	void,
-	void
->(`${IpcRoutes.Host}/slack/login`);
+export interface LoginSSORequest {
+	provider: string;
+}
+export interface LoginSSOResponse {}
+export const LoginSSORequestType = new RequestType<LoginSSORequest, LoginSSOResponse, void, void>(
+	`${IpcRoutes.Host}/login/sso`
+);
 
 export interface ValidateThirdPartyAuthRequest {
 	alias?: boolean;
@@ -142,11 +141,3 @@ export const UpdateConfigurationRequestType = new RequestType<
 	void,
 	void
 >(`${IpcRoutes.Host}/configuration/update`);
-export interface MSTeamsLoginRequest {}
-export interface MSTeamsLoginResponse {}
-export const MSTeamsLoginRequestType = new RequestType<
-	MSTeamsLoginRequest,
-	MSTeamsLoginResponse,
-	void,
-	void
->(`${IpcRoutes.Host}/msteams/login`);

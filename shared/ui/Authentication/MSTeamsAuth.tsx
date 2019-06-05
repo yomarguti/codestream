@@ -3,7 +3,7 @@ import { Link } from "../Stream/Link";
 import { connect } from "react-redux";
 import { goToSignup } from "../store/context/actions";
 import { useInterval, useRetryingCallback, useTimeout } from "../utilities/hooks";
-import { validateSignup, startMSTeamsSignin, SignupType } from "../store/actions";
+import { validateSignup, startSSOSignin, SignupType } from "../store/actions";
 import { DispatchProp } from "../store/common";
 
 const noop = () => Promise.resolve();
@@ -28,7 +28,7 @@ export const MSTeamsAuth = (connect(undefined) as any)((props: Props) => {
 
 	const onClickTryAgain = (event: React.SyntheticEvent) => {
 		event.preventDefault();
-		props.dispatch(startMSTeamsSignin(props.type ? { type: props.type } : undefined));
+		props.dispatch(startSSOSignin("msteams", props.type ? { type: props.type } : undefined));
 		setIsWaiting(true);
 	};
 

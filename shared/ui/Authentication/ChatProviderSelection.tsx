@@ -3,7 +3,7 @@ import Button from "../Stream/Button";
 import { Link } from "../Stream/Link";
 import { connect } from "react-redux";
 import { goToNewUserEntry, goToSignup } from "../store/context/actions";
-import { startMSTeamsSignin, startSlackSignin, SignupType } from "../store/actions";
+import { startSSOSignin, SignupType } from "../store/actions";
 import { Dispatch } from "../store/common";
 import { HostApi } from "../webview-api";
 
@@ -12,13 +12,13 @@ export const ChatProviderSelection = (connect(undefined) as any)(
 		const onClickSlack = (event: React.SyntheticEvent) => {
 			event.preventDefault();
 			HostApi.instance.track("Team Type Selected", { "Team Type": "Slack" });
-			props.dispatch(startSlackSignin({ type: SignupType.CreateTeam }));
+			props.dispatch(startSSOSignin("slack", { type: SignupType.CreateTeam }));
 		};
 
 		const onClickMSTeams = (event: React.SyntheticEvent) => {
 			event.preventDefault();
 			HostApi.instance.track("Team Type Selected", { "Team Type": "MSTeams" });
-			props.dispatch(startMSTeamsSignin({ type: SignupType.CreateTeam }));
+			props.dispatch(startSSOSignin("msteams", { type: SignupType.CreateTeam }));
 		};
 
 		const onClickCodeStream = (event: React.SyntheticEvent) => {

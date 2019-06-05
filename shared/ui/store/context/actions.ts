@@ -205,11 +205,16 @@ export const goToNewUserEntry = (params = {}) =>
 export const goToCSOrSlack = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.ChatProviderSelection, params });
 
-export const goToSlackAuth = (params = {}) =>
-	action(ContextActionsType.SetRoute, { name: Route.SlackAuth, params });
-
-export const goToMSTeamsAuth = (params = {}) =>
-	action(ContextActionsType.SetRoute, { name: Route.MSTeamsAuth, params });
+export const goToSSOAuth = (provider: string, params = {}) => {
+	switch (provider) {
+		case "slack":
+			return action(ContextActionsType.SetRoute, { name: Route.SlackAuth, params });
+		case "msteams":
+			return action(ContextActionsType.SetRoute, { name: Route.MSTeamsAuth, params });
+		default:
+			return action(ContextActionsType.SetRoute, { name: Route.ChatProviderSelection, params });
+	}
+};
 
 export const goToSignup = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.Signup, params });

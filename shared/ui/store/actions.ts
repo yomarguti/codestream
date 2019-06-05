@@ -15,9 +15,8 @@ import {
 	isSignedInBootstrap,
 	BootstrapRequestType,
 	BootstrapResponse,
-	SlackLoginRequestType,
-	ValidateThirdPartyAuthRequestType,
-	MSTeamsLoginRequestType
+	LoginSSORequestType,
+	ValidateThirdPartyAuthRequestType
 } from "../ipc/host.protocol";
 import { HostApi } from "../webview-api";
 import { logError } from "../logger";
@@ -53,20 +52,12 @@ export const bootstrap = (bootstrapData?: BootstrapResponse) => async dispatch =
 	dispatch({ type: BootstrapActionType.Complete });
 };
 
-export const startMSTeamsSignin = (info?: ValidateSignupInfo) => async dispatch => {
+export const startSSOSignin = (provider: string, info?: ValidateSignupInfo) => async dispatch => {
 	try {
-		await HostApi.instance.send(MSTeamsLoginRequestType, {});
-		return dispatch(contextActions.goToMSTeamsAuth(info));
+		await HostApi.instance.send(LoginSSORequestType, { provider: provider });
+		return dispatch(contextActions.goToSSOAuth(provider, info));
 	} catch (error) {
-		logError(`Unable to start Microsoft Teams sign in: ${error}`);
-	}
-};
-export const startSlackSignin = (info?: ValidateSignupInfo) => async dispatch => {
-	try {
-		await HostApi.instance.send(SlackLoginRequestType, {});
-		return dispatch(contextActions.goToSlackAuth(info));
-	} catch (error) {
-		logError(`Unable to start Slack sign in: ${error}`);
+		logError(`Unable to start ${provider} sign in: ${error}`);
 	}
 };
 
