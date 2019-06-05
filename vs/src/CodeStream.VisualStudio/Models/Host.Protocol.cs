@@ -16,8 +16,12 @@
 		public override string Method => MethodName;
 	}
 
-	public class SlackLoginRequestType : RequestType<EmptyRequestTypeParams> {
-		public const string MethodName = "host/slack/login";
+	public class LoginSSORequest {
+		public string Provider { get; set; }
+	}
+
+	public class LoginSSORequestType : RequestType<LoginSSORequest> {
+		public const string MethodName = "host/login/sso";
 		public override string Method => MethodName;
 	}
 

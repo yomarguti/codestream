@@ -40,23 +40,6 @@ namespace CodeStream.VisualStudio.Controllers {
 			_credentialsService = credentialsService;
 		}
 
-		public async Task SlackLoginAsync(WebviewIpcMessage message) {
-			string error = null;
-			using (var scope = _browserService.CreateScope(message)) {
-				try {
-					_ideService.Navigate($"{_settingsManager.ServerUrl}/web/provider-auth/slack?signupToken={_sessionService.GetOrCreateSignupToken()}");
-				}
-				catch (Exception ex) {
-					error = LoginResult.UNKNOWN.ToString();
-					Log.Error(ex, $"{nameof(SlackLoginAsync)}");
-				}
-
-				scope.FulfillRequest(error);
-			}
-
-			await Task.CompletedTask;
-		}
-
 		public async Task LoginAsync(WebviewIpcMessage message, string email, string password) {
 			string errorResponse = null;
 			JToken loginResponse = null;
@@ -84,6 +67,24 @@ namespace CodeStream.VisualStudio.Controllers {
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(LoginAsync));
+			}
+
+			await Task.CompletedTask;
+		}
+
+		public async Task LoginSSOAsync(WebviewIpcMessage message) {
+			string error = null;
+			using (var scope = _browserService.CreateScope(message)) {
+				try {
+					var provider = message.Params["provider"];
+					_ideService.Navigate($"{_settingsManager.ServerUrl}/web/provider-auth/{provider}?signupToken={_sessionService.GetOrCreateSignupToken()}");
+				}
+				catch (Exception ex) {
+					error = LoginResult.UNKNOWN.ToString();
+					Log.Error(ex, $"{nameof(LoginSSOAsync)}");
+				}
+
+				scope.FulfillRequest(error);
 			}
 
 			await Task.CompletedTask;
@@ -232,7 +233,7 @@ namespace CodeStream.VisualStudio.Controllers {
 				if (Enum.TryParse(error.ToString(), out LoginResult loginResult)) {
 					if (loginResult == LoginResult.VERSION_UNSUPPORTED) {
 						await Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-						InfoBarProvider.Instance.ShowInfoBar($"This version of {Application.Name} is no longer supported. Please upgrade to the latest version.");						
+						InfoBarProvider.Instance.ShowInfoBar($"This version of {Application.Name} is no longer supported. Please upgrade to the latest version.");
 					}
 					errorResponse = loginResult.ToString();
 				}
