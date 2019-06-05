@@ -625,40 +625,42 @@ class CodemarkForm extends React.Component<Props, State> {
 			items.push({ label: `#${channel.name}`, action: channel, key: channel.id });
 		});
 
-		items.push({ label: "-" });
+		if (this.props.directMessageStreams.length > 0) {
+			items.push({ label: "-" });
 
-		let firstDM = items.length;
+			let firstDM = items.length;
 
-		const currentUserId = this.props.currentUser.id;
-		_sortBy(this.props.directMessageStreams, (stream: CSDirectStream) =>
-			(stream.name || "").toLowerCase()
-		).forEach((channel: CSDirectStream) => {
-			if (
-				channel.isArchived ||
-				channel.isClosed ||
-				(filterSelected && !selectedStreams[channel.id])
-			) {
-				return;
-			}
+			const currentUserId = this.props.currentUser.id;
+			_sortBy(this.props.directMessageStreams, (stream: CSDirectStream) =>
+				(stream.name || "").toLowerCase()
+			).forEach((channel: CSDirectStream) => {
+				if (
+					channel.isArchived ||
+					channel.isClosed ||
+					(filterSelected && !selectedStreams[channel.id])
+				) {
+					return;
+				}
 
-			if (channel.id === selectedChannelId) {
-				selectedChannelName = channel.name!;
-			}
-			if (!firstChannel) {
-				firstChannel = channel;
-			}
+				if (channel.id === selectedChannelId) {
+					selectedChannelName = channel.name!;
+				}
+				if (!firstChannel) {
+					firstChannel = channel;
+				}
 
-			const item = { label: channel.name!, action: channel, key: channel.id };
-			// Ensure Slackbot is first (if there), then your own DM
-			if (channel.memberIds.length === 2 && channel.memberIds.includes("USLACKBOT")) {
-				items.splice(firstDM, 0, item);
-				firstDM++;
-			} else if (channel.memberIds.length === 1 && channel.memberIds[0] === currentUserId) {
-				items.splice(firstDM, 0, item);
-			} else {
-				items.push(item);
-			}
-		});
+				const item = { label: channel.name!, action: channel, key: channel.id };
+				// Ensure Slackbot is first (if there), then your own DM
+				if (channel.memberIds.length === 2 && channel.memberIds.includes("USLACKBOT")) {
+					items.splice(firstDM, 0, item);
+					firstDM++;
+				} else if (channel.memberIds.length === 1 && channel.memberIds[0] === currentUserId) {
+					items.splice(firstDM, 0, item);
+				} else {
+					items.push(item);
+				}
+			});
+		}
 
 		// if we don't have a name set here, that means you've filtered to a set
 		// of streams that doesn't include your currently selected stream. so
