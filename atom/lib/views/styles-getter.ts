@@ -1,8 +1,6 @@
 import { CompositeDisposable, Disposable, watchPath } from "atom";
 import * as fs from "fs-plus";
 import { asAbsolutePath, Debug, Echo } from "utils";
-import { Container } from "workspace/container";
-import { CODESTREAM_VIEW_URI } from "./codestream-view";
 
 export class StylesProvider implements Disposable {
 	readonly webviewStylesPath = asAbsolutePath("/dist/webview/styles/webview.less");
@@ -47,7 +45,7 @@ export class StylesProvider implements Disposable {
 		this.subscriptions.add(
 			atom.themes.onDidChangeActiveThemes(async () => {
 				this.buildStyles();
-				this.changeEmitter.push(await this.getStylesheets());
+				this.notifyListeners();
 			})
 		);
 		if (Debug.isDebugging()) {
@@ -58,7 +56,7 @@ export class StylesProvider implements Disposable {
 							try {
 								fs.copySync(this.codestreamComponentsStylesDir, this.distComponentsStylesDir);
 								this.buildCSStyles();
-								this.notify("codestream-components");
+								this.notifyListeners();
 							} catch (error) {
 								atom.notifications.addError(
 									"CodeStream: could not copy codestream-components styles into `dist/`",
@@ -81,7 +79,7 @@ export class StylesProvider implements Disposable {
 									);
 								}
 								this.buildCSStyles();
-								this.notify("atom-codestream/webview-lib");
+								this.notifyListeners();
 							});
 						})
 					);
@@ -98,18 +96,8 @@ export class StylesProvider implements Disposable {
 		return this.changeEmitter.add(cb);
 	}
 
-	private notify(source: string) {
-		const notification = atom.notifications.addInfo(`${source} styles rebuilt`, {
-			buttons: [
-				{
-					text: "Reload webview",
-					onDidClick() {
-						Container.viewController.reload(CODESTREAM_VIEW_URI);
-						notification.dismiss();
-					},
-				},
-			],
-		});
+	private async notifyListeners() {
+		this.changeEmitter.push(await this.getStylesheets());
 	}
 
 	buildStyles() {

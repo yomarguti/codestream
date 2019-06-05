@@ -66,7 +66,6 @@ window.addEventListener("message", ({ data, ports }) => {
 		initialize("#app");
 	}
 	if (data.label === "update-styles") {
-		// TODO: clear out the existing ones?
 		setStyles(data.styles);
 	}
 });
