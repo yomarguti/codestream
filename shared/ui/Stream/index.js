@@ -2131,7 +2131,7 @@ const mapStateToProps = state => {
 		slashCommands: getSlashCommands(capabilities),
 		team: team,
 		teamProvider: teamProvider,
-		isCodeStreamTeam: teamProvider === "codstream",
+		isCodeStreamTeam: teamProvider === "codestream",
 		channelMembers,
 		services,
 		posts: streamPosts.map(post => {
