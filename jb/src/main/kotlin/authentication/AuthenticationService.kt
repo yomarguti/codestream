@@ -26,6 +26,7 @@ import protocols.agent.LoginWithPasswordParams
 import protocols.agent.LoginWithTokenParams
 import protocols.webview.Capabilities
 import protocols.webview.LoginRequest
+import protocols.webview.LoginSSORequest
 import protocols.webview.SignedInBootstrapResponse
 import protocols.webview.SignedOutBootstrapResponse
 import protocols.webview.SignupCompleteRequest
@@ -99,6 +100,13 @@ class AuthenticationService(val project: Project) {
         return buildSignedInResponse(bootstrapFuture)
     }
 
+    fun loginSSO(message: WebViewRouter.WebViewMessage) {
+        val request = gson.fromJson<LoginSSORequest>(message.params!!)
+        val session = project.sessionService ?: return
+        val settings = project.settingsService ?: return
+        BrowserUtil.browse("${settings.state.serverUrl}/web/provider-auth/${request.provider}?signupToken=${session.signupToken}")
+    }
+
     suspend fun validateThirdPartyAuth(request: ValidateThirdPartyAuthRequest): Any? {
         val agentService = project.agentService ?: return jsonObject()
         val sessionService = project.sessionService ?: return jsonObject()
@@ -144,12 +152,6 @@ class AuthenticationService(val project: Project) {
         settingsService.state.email = loginResult.loginResponse?.user?.email
         saveAccessToken(loginResult.loginResponse?.accessToken)
         return buildSignedInResponse(bootstrapFuture)
-    }
-
-    fun slackLogin() {
-        val session = project.sessionService ?: return
-        val settings = project.settingsService ?: return
-        BrowserUtil.browse("${settings.state.serverUrl}/web/provider-auth/slack?signupToken=${session.signupToken}")
     }
 
     suspend fun logout() {

@@ -11,6 +11,10 @@ class LoginRequest(
     val password: String?
 )
 
+class LoginSSORequest(
+    val provider: String
+)
+
 class SignedOutBootstrapResponse(
     val capabilities: Capabilities,
     val configs: Map<String, Any?>,

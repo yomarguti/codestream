@@ -95,7 +95,7 @@ class WebViewRouter(val project: Project) {
             }
             "host/didInitialize" -> _isReady = true
             "host/logout" -> authentication.logout()
-            "host/slack/login" -> authentication.slackLogin()
+            "host/login/sso" -> authentication.loginSSO(message)
             "host/signup/complete" -> {
                 _isReady = false
                 resumeReady = true
