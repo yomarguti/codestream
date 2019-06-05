@@ -21,6 +21,9 @@ import {
 	isIpcRequestMessage,
 	LoginRequest,
 	LoginRequestType,
+	LoginSSORequest,
+	LoginSSORequestType,
+	LoginSSOResponse,
 	LogoutRequestType,
 	LogoutResponse,
 	NewCodemarkNotificationType,
@@ -28,8 +31,6 @@ import {
 	ShowCodemarkNotificationType,
 	ShowStreamNotificationType,
 	SignedInBootstrapResponse,
-	SlackLoginRequestType,
-	SlackLoginResponse,
 	UpdateConfigurationRequest,
 	UpdateConfigurationRequestType,
 	UpdateConfigurationResponse,
@@ -398,13 +399,14 @@ export class CodestreamView {
 				}
 				break;
 			}
-			case SlackLoginRequestType.method: {
+			case LoginSSORequestType.method: {
+				const { provider }: LoginSSORequest = message.params;
 				const ok = shell.openExternal(
 					`${
 						this.session.environment.serverUrl
-					}/web/provider-auth/slack?signupToken=${this.session.getLoginToken()}`
+					}/web/provider-auth/${provider}?signupToken=${this.session.getLoginToken()}`
 				);
-				if (ok) this.respond<SlackLoginResponse>({ id: message.id, params: true });
+				if (ok) this.respond<LoginSSOResponse>({ id: message.id, params: true });
 				else {
 					this.respond({
 						id: message.id,
