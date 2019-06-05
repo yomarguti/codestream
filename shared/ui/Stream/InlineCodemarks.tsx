@@ -1270,8 +1270,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	handleHighlightCodemark = marker => {
-		if (this.props.currentDocumentMarkerId === marker.id) return;
-
 		this.setState({ highlightedDocmarker: marker.id });
 		this.highlightCode(marker, true);
 	};
