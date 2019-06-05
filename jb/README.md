@@ -13,7 +13,7 @@ CodeStream turns conversation into documentation by capturing all of the discuss
 
 ## Does your team use Slack?
 
-Sign up for CodeStream using Slack so that discussions about code can be shared in your existing Slack channels and direct messages. Connecting to your Slack workspace allows developers to participate in discussions about code when they're not in their editor, or if they don’t use an editor supported by CodeSteam.
+Sign up for CodeStream using Slack so that discussions about code can be shared in your existing Slack channels and direct messages. Connecting to your Slack workspace allows developers to participate in discussions about code when they're not in their editor, or if they don’t use an editor supported by CodeStream.
 
 # Requirements
 

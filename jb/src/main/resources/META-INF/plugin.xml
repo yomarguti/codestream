@@ -9,7 +9,7 @@
 <p>CodeStream turns conversation into documentation by capturing all of the discussion about your code, and saving it with your code. Each discussion is represented as a "codemark" that is permanently connected to the lines of code to which it refers.</p>
 
 <h2 id="doesyourteamuseslack">Does your team use Slack?</h2>
-<p>Sign up for CodeStream using Slack so that discussions about code can be shared in your existing Slack channels and direct messages. Connecting to your Slack workspace allows developers to participate in discussions about code when they're not in their editor, or if they don’t use an editor supported by CodeSteam.</p>
+<p>Sign up for CodeStream using Slack so that discussions about code can be shared in your existing Slack channels and direct messages. Connecting to your Slack workspace allows developers to participate in discussions about code when they're not in their editor, or if they don’t use an editor supported by CodeStream.</p>
 
 <h1 id="requirements">Requirements</h1>
 <ul>
