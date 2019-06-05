@@ -109,14 +109,10 @@ export const Signup = (connect() as any)((props: Props) => {
 			const { status, token } = await HostApi.instance.send(RegisterUserRequestType, attributes);
 
 			const sendTelemetry = () => {
-				HostApi.instance.track(
-					"Account Created",
-					wasInvited
-						? {
-								"Changed Invite Email?": email !== props.email
-						  }
-						: undefined
-				);
+				HostApi.instance.track("Account Created", {
+					email: email,
+					"Changed Invite Email?": wasInvited ? email !== props.email : undefined
+				});
 			};
 
 			switch (status) {
