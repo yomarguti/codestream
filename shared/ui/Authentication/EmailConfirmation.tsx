@@ -31,11 +31,12 @@ interface InheritedProps {
 interface Props extends InheritedProps, DispatchProp {}
 
 const array = new Array(6);
+const initialValues = [...array].fill("");
 
 export const EmailConfirmation = (connect() as any)((props: Props) => {
 	const inputs = useRef(array);
 	const [emailSent, setEmailSent] = useState(false);
-	const [digits, setValues] = useState(new Array<string>(6).fill(""));
+	const [digits, setValues] = useState(initialValues);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<LoginResult | undefined>();
 
