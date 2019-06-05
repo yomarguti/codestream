@@ -43,12 +43,11 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(func
 		<input
 			ref={ref}
 			className="input-text"
-			type={props.type || "text"}
+			type={props.type}
 			name={props.name}
 			value={props.value}
 			onChange={onChange}
 			onBlur={onBlur}
-			required={props.required && isTouched}
 			placeholder={props.placeholder}
 			onPaste={props.onPaste}
 			{...props.nativeProps}
@@ -56,4 +55,4 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(func
 	);
 });
 
-TextInput.defaultProps = { nativeProps: {} };
+TextInput.defaultProps = { type: "text", nativeProps: {} };

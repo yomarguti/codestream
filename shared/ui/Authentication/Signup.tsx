@@ -85,6 +85,13 @@ export const Signup = (connect() as any)((props: Props) => {
 		setInviteConflict(false);
 		setUnexpectedError(false);
 		event.preventDefault();
+
+		onValidityChanged("email", isEmailValid(email));
+		onValidityChanged("password", isPasswordValid(password));
+		onValidityChanged("username", isUsernameValid(username));
+		onValidityChanged("fullName", isNotEmpty(fullName));
+		onValidityChanged("companyName", isNotEmpty(companyName));
+
 		if (
 			email === "" ||
 			!emailValidity ||
