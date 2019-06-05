@@ -33,14 +33,13 @@ import {
 	LiveShareJoinSessionRequestType,
 	LiveShareStartSessionRequestType,
 	LoginRequestType,
+	LoginSSORequestType,
 	LogoutRequestType,
-	MSTeamsLoginRequestType,
 	NewCodemarkNotificationType,
 	ReloadWebviewRequestType,
 	ShowCodemarkNotificationType,
 	SignedInBootstrapResponse,
 	SignedOutBootstrapResponse,
-	SlackLoginRequestType,
 	UpdateConfigurationRequestType,
 	ValidateThirdPartyAuthRequestType,
 	WebviewContext,
@@ -503,27 +502,13 @@ export class WebviewController implements Disposable {
 
 				break;
 			}
-			case MSTeamsLoginRequestType.method: {
-				webview.onIpcRequest(MSTeamsLoginRequestType, e, async (type, params) => {
+			case LoginSSORequestType.method: {
+				webview.onIpcRequest(LoginSSORequestType, e, async (type, params) => {
 					await env.openExternal(
 						Uri.parse(
-							`${
-								Container.config.serverUrl
-							}/web/provider-auth/msteams?signupToken=${this.session.getSignupToken()}`
-						)
-					);
-					return emptyObj;
-				});
-
-				break;
-			}
-			case SlackLoginRequestType.method: {
-				webview.onIpcRequest(SlackLoginRequestType, e, async (type, params) => {
-					await env.openExternal(
-						Uri.parse(
-							`${
-								Container.config.serverUrl
-							}/web/provider-auth/slack?signupToken=${this.session.getSignupToken()}`
+							`${Container.config.serverUrl}/web/provider-auth/${
+								params.provider
+							}?signupToken=${this.session.getSignupToken()}`
 						)
 					);
 					return emptyObj;
