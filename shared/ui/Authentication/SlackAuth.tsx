@@ -28,13 +28,15 @@ export const SlackAuth = (connect(undefined) as any)((props: Props) => {
 
 	const onClickTryAgain = (event: React.SyntheticEvent) => {
 		event.preventDefault();
-		props.dispatch(startSlackSignin(props.type ? { type: props.type } : undefined));
+		props.dispatch(startSlackSignin(props.type !== undefined ? { type: props.type } : undefined));
 		setIsWaiting(true);
 	};
 
 	const validate = useCallback(async () => {
 		try {
-			await props.dispatch(validateSignup("Slack", props.type ? { type: props.type } : undefined));
+			await props.dispatch(
+				validateSignup("Slack", props.type !== undefined ? { type: props.type } : undefined)
+			);
 		} catch (error) {
 			setIsWaiting(false);
 		}

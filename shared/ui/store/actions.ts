@@ -65,8 +65,8 @@ export const startSlackSignin = (info?: ValidateSignupInfo) => async dispatch =>
 };
 
 export enum SignupType {
-	JoinTeam,
-	CreateTeam
+	JoinTeam = "joinTeam",
+	CreateTeam = "createTeam"
 }
 
 export interface ValidateSignupInfo {
