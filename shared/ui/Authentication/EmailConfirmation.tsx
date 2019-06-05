@@ -150,7 +150,7 @@ export const EmailConfirmation = (connect() as any)((props: Props) => {
 											const string = event.clipboardData.getData("text");
 											if (string === "" || Number.isNaN(Number(string))) return;
 
-											setValues(string.split(""));
+											setValues(string.split("").filter(Boolean));
 										}}
 										onChange={value => {
 											setError(undefined);
