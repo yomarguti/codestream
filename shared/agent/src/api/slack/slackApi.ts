@@ -671,22 +671,14 @@ export class SlackApiProvider implements ApiProvider {
 			};
 		} finally {
 			if (createdPostId) {
-				this.updatePostsCount(this.teamId, request.streamId, createdPostId, request.parentPostId);
+				this._codestream.trackSharedPost({
+					provider: "slack",
+					teamId: this.teamId,
+					streamId: request.streamId,
+					postId: createdPostId,
+					parentPostId: request.parentPostId
+				});
 			}
-		}
-	}
-
-	private async updatePostsCount(
-		teamId: string,
-		streamId: string,
-		postId: string,
-		parentPostId?: string
-	) {
-		try {
-			void (await this._codestream.trackSlackPost({ teamId, streamId, postId, parentPostId }));
-		} catch (ex) {
-			debugger;
-			Logger.error(ex, "Failed updating post count");
 		}
 	}
 

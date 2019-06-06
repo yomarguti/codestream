@@ -176,7 +176,6 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 	private _refreshPromise: Promise<CSMe> | undefined;
 	private async getAccessToken() {
-		// TODO: Fix this
 		const oneMinuteBeforeExpiration = this._providerInfo.expiresAt - 1000 * 60;
 		if (oneMinuteBeforeExpiration <= new Date().getTime()) {
 			if (this._refreshPromise === undefined) {
@@ -241,17 +240,6 @@ export class MSTeamsApiProvider implements ApiProvider {
 								// TODO: Handle reconnect to pubnub?
 							}
 
-							// if (!this._events!.connected) {
-							// 	Logger.log(
-							// 		`SlackApiProvider.onCodeStreamMessage(${
-							// 			e.type
-							// 		}); Slack RTM lost its connection, reconnecting...`
-							// 	);
-							// 	void Container.instance().session.reset(ResetReason.LostConnection);
-
-							// 	void (await this._events!.reconnect());
-							// }
-
 							break;
 					}
 					break;
@@ -290,8 +278,9 @@ export class MSTeamsApiProvider implements ApiProvider {
 		// Mix in teams user info with ours
 		const meResponse = await this.getMeCore({ user: response.user });
 
-		const teamsResponse = await this.teamsApiCall<{ value: any[] }>("me/joinedTeams", request =>
-			request.get()
+		const teamsResponse = await this.teamsApiCall<{ value: any[] }>(
+			"v1.0/me/joinedTeams",
+			request => request.get()
 		);
 
 		this._teamsById = new Map(
@@ -423,7 +412,10 @@ export class MSTeamsApiProvider implements ApiProvider {
 		me.codestreamId = me.id;
 		me.id = this.userId;
 
-		const response = await this.teamsApiCall("me", request => request.get());
+		const response = await this.teamsApiCall(
+			"v1.0/me?$select=id,createdDateTime,deletedDateTime,mail,givenName,displayName,surname",
+			request => request.get()
+		);
 
 		// Don't need to pass the codestream users here, since we set the codestreamId already above
 		const user = fromTeamsUser(response, this._codestreamTeamId, []);
@@ -542,7 +534,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 	@log()
 	async createPost(request: CreatePostRequest): Promise<CreatePostResponse> {
-		// let createdPostId;
+		let createdPostId;
 		try {
 			const userInfosById = await this.ensureUserInfosById();
 			const userIdsByName = await this.ensureUserIdsByName();
@@ -601,7 +593,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 			}
 
 			const response = await this.teamsApiCall<any>(
-				`teams/${teamId}/channels/${channelId}/messages${
+				`beta/teams/${teamId}/channels/${channelId}/messages${
 					parentMessageId ? `/${parentMessageId}/replies` : ""
 				}`,
 				request =>
@@ -618,8 +610,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 				userInfosById,
 				this._codestreamTeamId
 			);
-			// const { postId } = fromTeamsPostId(post.id, post.streamId, this._teamsTeamId);
-			// createdPostId = postId;
+			createdPostId = post.id;
 
 			if (codemark) {
 				void (await this._codestream.updateCodemark({
@@ -644,25 +635,17 @@ export class MSTeamsApiProvider implements ApiProvider {
 			debugger;
 			throw ex;
 		}
-		// finally {
-		// 	// if (createdPostId) {
-		// 	// 	this.updatePostsCount(this.teamId, request.streamId, createdPostId, request.parentPostId);
-		// 	// }
+		// } finally {
+		// 	if (createdPostId) {
+		// 		this._codestream.trackSharedPost({
+		// 			provider: "msteams",
+		// 			teamId: this.teamId,
+		// 			streamId: request.streamId,
+		// 			postId: createdPostId,
+		// 			parentPostId: request.parentPostId
+		// 		});
+		// 	}
 		// }
-	}
-
-	private async updatePostsCount(
-		teamId: string,
-		streamId: string,
-		postId: string,
-		parentPostId?: string
-	) {
-		try {
-			void (await this._codestream.trackSlackPost({ teamId, streamId, postId, parentPostId }));
-		} catch (ex) {
-			debugger;
-			Logger.error(ex, "Failed updating post count");
-		}
 	}
 
 	@log()
@@ -680,7 +663,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 		const { teamId, channelId, messageId } = fromPostId(request.postId, request.streamId);
 
 		const response = await this.teamsApiCall<{ value: any[] }>(
-			`teams/${teamId}/channels/${channelId}/messages/${messageId}/replies`,
+			`beta/teams/${teamId}/channels/${channelId}/messages/${messageId}/replies`,
 			request => request.get()
 		);
 
@@ -710,7 +693,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 		}
 
 		const response = await this.teamsApiCall<any>(
-			`teams/${teamId}/channels/${channelId}/messages/${
+			`beta/teams/${teamId}/channels/${channelId}/messages/${
 				parentMessageId ? `${parentMessageId}/replies/` : ""
 			}${messageId}`,
 			request => request.get()
@@ -797,7 +780,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 				}))
 			];
 			const response = await this.teamsApiCall<{ responses: GraphBatchResponse[] }>(
-				"$batch",
+				"v1.0/$batch",
 				request =>
 					request.post({
 						requests: requests
@@ -858,8 +841,9 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 		const { teamId, channelId } = fromStreamId(request.streamId);
 
-		const response = await this.teamsApiCall(`teams/${teamId}/channels/${channelId}`, request =>
-			request.get()
+		const response = await this.teamsApiCall(
+			`v1.0/teams/${teamId}/channels/${channelId}`,
+			request => request.get()
 		);
 		const channel = fromTeamsChannel(
 			response,
@@ -960,12 +944,12 @@ export class MSTeamsApiProvider implements ApiProvider {
 			...Iterables.map(this._teamsById!.keys(), id => ({
 				id: id,
 				method: "GET",
-				url: `groups/${id}/members?$select=id,createdDateTime,deletedDateTime,mail,givenName,displayName,surname`
+				url: `groups/${id}/members?$select=id,createdDateTime,deletedDateTime,mail,givenName,displayName,surname,`
 			}))
 		];
 
 		const [response, { user: me }, { users: codestreamUsers }] = await Promise.all([
-			this.teamsApiCall<{ responses: GraphBatchResponse[] }>("$batch", request =>
+			this.teamsApiCall<{ responses: GraphBatchResponse[] }>("v1.0/$batch", request =>
 				request.post({
 					requests: requests
 				})
@@ -1011,7 +995,12 @@ export class MSTeamsApiProvider implements ApiProvider {
 		}
 
 		const [response, { users: codestreamUsers }] = await Promise.all([
-			this.teamsApiCall(`users/${request.userId}`, request => request.get()),
+			this.teamsApiCall(
+				`v1.0/users/${
+					request.userId
+				}?$select=id,createdDateTime,deletedDateTime,mail,givenName,displayName,surname`,
+				request => request.get()
+			),
 			(this._codestreamTeam !== undefined
 				? Promise.resolve({ team: this._codestreamTeam })
 				: this._codestream.getTeam({ teamId: this._codestreamTeamId })
@@ -1074,38 +1063,12 @@ export class MSTeamsApiProvider implements ApiProvider {
 		const timeoutMs = 30000;
 		try {
 			const response = await Functions.cancellable(
-				fn(this._teams.api(`https://graph.microsoft.com/beta/${path}`)),
+				fn(this._teams.api(`https://graph.microsoft.com/${path}`)),
 				timeoutMs,
 				{
 					onDidCancel: (resolve, reject) => Logger.warn(cc, `TIMEOUT ${timeoutMs / 1000}s exceeded`)
 				}
 			);
-
-			// if (Container.instance().session.recordRequests) {
-			// 	const now = Date.now();
-			// 	// const { method, body } = init;
-
-			// 	const fs = require("fs");
-			// 	const sanitize = require("sanitize-filename");
-			// 	const sanitizedMethod = sanitize(
-			// 		path
-			// 		// .split("?")[0]
-			// 		// .replace(/\//g, "_")
-			// 		// .replace("_", "")
-			// 	);
-			// 	const filename = `/tmp/dump-${now}-slack-${sanitizedMethod}.json`;
-
-			// 	const out = {
-			// 		url: path,
-			// 		request: request,
-			// 		response: response
-			// 	};
-			// 	const outString = JSON.stringify(out, null, 2);
-
-			// 	fs.writeFile(filename, outString, "utf8", () => {
-			// 		Logger.log(`Written ${filename}`);
-			// 	});
-			// }
 
 			return response as TResponse;
 		} catch (ex) {
@@ -1123,10 +1086,5 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 	async dispose() {
 		await this._codestream.dispose();
-		// if (this._events) {
-		// 	await this._events.dispose();
-		// }
 	}
 }
-
-// const logFilterKeys = new Set(["text", "attachments"]);

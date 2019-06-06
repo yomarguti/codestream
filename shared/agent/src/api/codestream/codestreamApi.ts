@@ -128,7 +128,7 @@ import {
 	CSSetCodemarkPinnedResponse,
 	CSStream,
 	CSTeam,
-	CSTrackSlackPostRequest,
+	CSTrackSharedPostRequest,
 	CSUpdateCodemarkRequest,
 	CSUpdateCodemarkResponse,
 	CSUpdateMarkerRequest,
@@ -508,8 +508,14 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	trackSlackPost(request: CSTrackSlackPostRequest) {
-		return this.post("/slack-posts", request, this._token);
+	async trackSharedPost(request: CSTrackSharedPostRequest) {
+		try {
+			return await this.post("/slack-posts", request, this._token);
+		} catch (ex) {
+			debugger;
+			Logger.error(ex, "Failed updating shared post count");
+			return undefined;
+		}
 	}
 
 	@log()
