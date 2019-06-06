@@ -960,7 +960,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 			...Iterables.map(this._teamsById!.keys(), id => ({
 				id: id,
 				method: "GET",
-				url: `groups/${id}/members`
+				url: `groups/${id}/members?$select=id,createdDateTime,deletedDateTime,mail,givenName,displayName,surname`
 			}))
 		];
 
