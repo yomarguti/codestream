@@ -323,10 +323,14 @@ export type CSProviderInfos =
 	| CSGitHubProviderInfo
 	| CSGitLabProviderInfo
 	| CSJiraProviderInfo
+	| CSMSTeamsProviderInfo
 	| CSSlackProviderInfo
 	| CSTrelloProviderInfo
 	| CSYouTrackProviderInfo
 	| CSAzureDevOpsProviderInfo;
+
+type Filter<T, U> = T extends U ? T : never;
+export type CSRefreshableProviderInfos = Filter<CSProviderInfos, { refreshToken: string }>;
 
 export interface CSUser extends CSEntity {
 	companyIds: string[];
@@ -368,21 +372,23 @@ export interface CSMePreferences {
 	[key: string]: any;
 }
 
+type CSMeProviderInfo = { slack?: CSSlackProviderInfo } & {
+	[teamId in string]: {
+		asana?: CSAsanaProviderInfo;
+		github?: CSGitHubProviderInfo;
+		jira?: CSJiraProviderInfo;
+		msteams?: CSMSTeamsProviderInfo;
+		slack?: CSSlackProviderInfo;
+		trello?: CSTrelloProviderInfo;
+		youtrack?: CSYouTrackProviderInfo;
+		azuredevops?: CSAzureDevOpsProviderInfo;
+		[key: string]: CSProviderInfos | undefined;
+	}
+};
+
 export interface CSMe extends CSUser {
 	lastReads: CSLastReads;
 	joinMethod: string;
 	preferences?: CSMePreferences;
-	providerInfo?: { slack?: CSSlackProviderInfo } & {
-		[teamId in string]: {
-			asana?: CSAsanaProviderInfo;
-			github?: CSGitHubProviderInfo;
-			jira?: CSJiraProviderInfo;
-			msteams?: CSMSTeamsProviderInfo;
-			slack?: CSSlackProviderInfo;
-			trello?: CSTrelloProviderInfo;
-			youtrack?: CSYouTrackProviderInfo;
-			azuredevops?: CSAzureDevOpsProviderInfo;
-			[key: string]: CSProviderInfos | undefined;
-		}
-	};
+	providerInfo?: CSMeProviderInfo;
 }

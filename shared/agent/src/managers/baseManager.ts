@@ -4,11 +4,7 @@ import { CodeStreamSession } from "../session";
 import { debug, log } from "../system";
 import { IndexParams } from "./cache";
 import { BaseCache, KeyValue } from "./cache/baseCache";
-import * as operations from "./operations";
-
-function isDirective(data: any): boolean {
-	return Boolean(data.$version);
-}
+import { isDirective, resolve } from "./operations";
 
 function isCompatibleVersion(cachedEntity: any, newEntityOrDirective: any): boolean {
 	if (isDirective(newEntityOrDirective)) {
@@ -66,21 +62,24 @@ export abstract class ManagerBase<T> {
 			message.data.map(async (data: any) => {
 				const criteria = this.fetchCriteria(data as T);
 				const cached = await this.cacheGet(criteria);
+
 				if (cached && isCompatibleVersion(cached, data)) {
-					const updatedEntity = operations.resolve(cached as any, data);
+					const updatedEntity = resolve(cached as any, data);
 					return await this.cacheSet(updatedEntity as T, cached);
-				} else {
-					let entity;
-					if (this.forceFetchToResolveOnCacheMiss || isDirective(data)) {
-						entity = await this.fetch(criteria);
-					} else {
-						entity = data as T;
-					}
-					if (entity) {
-						return await this.cacheSet(entity);
-					}
-					return undefined;
 				}
+
+				let entity;
+				if (this.forceFetchToResolveOnCacheMiss || isDirective(data)) {
+					entity = await this.fetch(criteria);
+				} else {
+					entity = data as T;
+				}
+
+				if (entity) {
+					return await this.cacheSet(entity);
+				}
+
+				return undefined;
 			})
 		);
 		return resolved.filter(Boolean) as T[];

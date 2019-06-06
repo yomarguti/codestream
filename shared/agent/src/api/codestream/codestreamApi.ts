@@ -6,6 +6,7 @@ import { Emitter, Event } from "vscode-languageserver";
 import { ServerError } from "../../agentError";
 import { Container, SessionContainer } from "../../container";
 import { Logger } from "../../logger";
+import { isDirective, resolve } from "../../managers/operations";
 import {
 	ArchiveStreamRequest,
 	Capabilities,
@@ -122,6 +123,7 @@ import {
 	CSPost,
 	CSReactions,
 	CSReactToPostResponse,
+	CSRefreshableProviderInfos,
 	CSRegisterRequest,
 	CSRegisterResponse,
 	CSSetCodemarkPinnedRequest,
@@ -1194,22 +1196,34 @@ export class CodeStreamApiProvider implements ApiProvider {
 		}
 	}
 
-	@log()
-	async refreshAuthProvider(request: { providerId: string; refreshToken: string }): Promise<CSMe> {
+	@log({
+		args: { 1: () => false }
+	})
+	async refreshAuthProvider<T extends CSRefreshableProviderInfos>(
+		providerId: string,
+		providerInfo: T
+	): Promise<T> {
 		const cc = Logger.getCorrelationContext();
 
 		try {
-			const url = `/provider-refresh/${request.providerId}?teamId=${this.teamId}&refreshToken=${
-				request.refreshToken
+			const url = `/provider-refresh/${providerId}?teamId=${this.teamId}&refreshToken=${
+				providerInfo.refreshToken
 			}`;
 			const response = await this.get<{ user: any }>(url, this._token);
 
-			// const [user] = await Container.instance().users.resolve({
-			// 	type: MessageType.Users,
-			// 	data: [response.user]
-			// });
-
-			return response.user as CSMe;
+			// Since we are dealing with identity auth don't try to resolve this with the users
+			// The "me" user will get updated via the pubnub message
+			let user: Partial<CSMe>;
+			if (isDirective(response.user)) {
+				user = {
+					id: response.user.id,
+					providerInfo: { [this.teamId]: { [providerId]: { ...providerInfo } } }
+				};
+				user = resolve(user as any, response.user);
+			} else {
+				user = response.user;
+			}
+			return user.providerInfo![this.teamId][providerId] as T;
 		} catch (ex) {
 			Logger.error(ex, cc);
 			throw ex;

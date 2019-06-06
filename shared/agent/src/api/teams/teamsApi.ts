@@ -174,41 +174,43 @@ export class MSTeamsApiProvider implements ApiProvider {
 		this._teamsUserId = providerInfo.userId;
 	}
 
-	private _refreshPromise: Promise<CSMe> | undefined;
+	private _refreshPromise: Promise<string> | undefined;
 	private async getAccessToken() {
 		const oneMinuteBeforeExpiration = this._providerInfo.expiresAt - 1000 * 60;
 		if (oneMinuteBeforeExpiration <= new Date().getTime()) {
 			if (this._refreshPromise === undefined) {
-				this._refreshPromise = this._codestream
-					.refreshAuthProvider({
-						providerId: "msteams",
-						refreshToken: this._providerInfo.refreshToken
-					})
-					.then(me => {
-						this._providerInfo = me.providerInfo![this._codestreamTeamId].msteams!;
-						return me;
-					});
-
 				try {
-					const me = await this._refreshPromise;
+					this._refreshPromise = this.refreshAccessToken();
+					const accessToken = await this._refreshPromise;
 					this._refreshPromise = undefined;
-
-					SessionContainer.instance().users.resolve({
-						type: MessageType.Users,
-						data: [me]
-					});
-				} catch (ex) {
-					this._refreshPromise === undefined;
-					Logger.error(ex);
+					return accessToken;
 				} finally {
 					this._refreshPromise = undefined;
 				}
 			} else {
-				void (await this._refreshPromise);
+				return this._refreshPromise;
 			}
 		}
 
 		return this._providerInfo.accessToken;
+	}
+
+	@debug()
+	private async refreshAccessToken() {
+		const cc = Logger.getCorrelationContext();
+
+		try {
+			const providerInfo = await this._codestream.refreshAuthProvider(
+				"msteams",
+				this._providerInfo
+			);
+			this._providerInfo = providerInfo;
+
+			return this._providerInfo.accessToken;
+		} catch (ex) {
+			Logger.error(ex, cc);
+			throw ex;
+		}
 	}
 
 	protected newClient() {

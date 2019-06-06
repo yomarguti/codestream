@@ -1,5 +1,9 @@
 const NESTED_PROPERTY_REGEX = /^(.+?)\.(.+)$/;
 
+export function isDirective(data: any): boolean {
+	return Boolean(data.$version);
+}
+
 export function isCompleteObject(obj: object): boolean {
 	for (const key of Object.keys(obj)) {
 		if (operations[key]) {
@@ -9,10 +13,10 @@ export function isCompleteObject(obj: object): boolean {
 	return true;
 }
 
-export const resolve = (
+export function resolve(
 	{ id, ...object }: { id: string; object: any[] },
 	changes: { [key: string]: any }
-) => {
+) {
 	const result: { [key: string]: any } = { ...object };
 	Object.keys(changes).forEach(change => {
 		const operation = operations[change];
@@ -24,22 +28,28 @@ export const resolve = (
 			if (nestedPropertyMatch) {
 				const [, topField, subField] = nestedPropertyMatch;
 				result[topField] = resolve(result[topField], { [subField]: changes[change] });
-			} else result[change] = changes[change];
+			} else {
+				result[change] = changes[change];
+			}
 		}
 	});
 	return result;
-};
+}
 
-const handle = (property: any, object: any, data: any, recurse: any, apply: any) => {
+export function handle(property: any, object: any, data: any, recurse: any, apply: any) {
 	const nestedPropertyMatch = property.match(NESTED_PROPERTY_REGEX);
 	if (nestedPropertyMatch) {
 		const [, topField, subField] = nestedPropertyMatch;
-		if (object[topField] === undefined) object[topField] = {};
+		if (object[topField] === undefined) {
+			object[topField] = {};
+		}
 		if (typeof object[topField] === "object") {
 			recurse(object[topField], { [subField]: data[property] });
 		}
-	} else apply();
-};
+	} else {
+		apply();
+	}
+}
 
 const operations = {
 	$set(object: any, data: any) {
