@@ -155,6 +155,7 @@ export const GetPostRequestType = new RequestType<GetPostRequest, GetPostRespons
 export interface GetPostsRequest {
 	streamId: string;
 	postIds: string[];
+	parentPostId?: string;
 }
 
 export interface GetPostsResponse {

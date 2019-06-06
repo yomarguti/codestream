@@ -1,5 +1,6 @@
 "use strict";
 import { Marker } from "../../api/extensions";
+import { SessionContainer } from "../../container";
 import {
 	CodemarkType,
 	CSChannelStream,
@@ -134,19 +135,22 @@ export async function fromTeamsMessage(
 	// 	files = post.files.map(fromSlackPostFile);
 	// }
 
+	const postId = toPostId(message.id, channelId, teamId);
+	const codemarkId = await SessionContainer.instance().codemarks.getIdByPostId(postId);
+
 	const timestamp = new Date(message.createdDateTime).getTime();
 	const modifiedTimestamp = new Date(
 		message.lastModifiedDateTime || message.createdDateTime
 	).getTime();
 	return {
-		codemarkId: undefined, // codemark && codemark.id,
+		codemarkId: codemarkId,
 		createdAt: timestamp,
 		creatorId: message.from.user && message.from.user.id,
 		deactivated: message.deleted,
 		// files: files,
 		hasBeenEdited: timestamp !== modifiedTimestamp,
 		numReplies: 0,
-		id: toPostId(message.id, channelId, teamId),
+		id: postId,
 		mentionedUserIds: mentionedUserIds,
 		modifiedAt: modifiedTimestamp,
 		parentPostId: message.replyToId ? toPostId(message.replyToId, channelId, teamId) : undefined,

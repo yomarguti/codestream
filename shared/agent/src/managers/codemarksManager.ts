@@ -130,6 +130,13 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		};
 	}
 
+	async getIdByPostId(postId: string): Promise<string | undefined> {
+		const codemark = this.filterLegacyCodemarks(await this.getAllCached()).find(
+			c => c.postId === postId
+		);
+		return codemark && codemark.id;
+	}
+
 	async getEnrichedCodemarkById(codemarkId: string): Promise<CodemarkPlus> {
 		return this.enrichCodemark(await this.getById(codemarkId));
 	}

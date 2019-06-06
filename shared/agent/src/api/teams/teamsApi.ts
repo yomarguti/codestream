@@ -1,8 +1,9 @@
 "use strict";
-import { Client, ClientOptions, GraphRequest } from "@microsoft/microsoft-graph-client";
+import { Client, ClientOptions, GraphError, GraphRequest } from "@microsoft/microsoft-graph-client";
 import HttpsProxyAgent from "https-proxy-agent";
 import { RequestInit } from "node-fetch";
 import { Emitter, Event } from "vscode-languageserver";
+import { ServerError } from "../../agentError";
 import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import {
@@ -693,11 +694,18 @@ export class MSTeamsApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async getPost(request: GetPostRequest): Promise<GetPostResponse> {
+	async getPost(request: GetPostRequest, parentPostId?: string): Promise<GetPostResponse> {
 		const { teamId, channelId, messageId } = fromPostId(request.postId, request.streamId);
 
+		let parentMessageId;
+		if (parentPostId) {
+			({ messageId: parentMessageId } = fromPostId(parentPostId, request.streamId));
+		}
+
 		const response = await this.teamsApiCall<any>(
-			`teams/${teamId}/channels/${channelId}/messages/${messageId}`,
+			`teams/${teamId}/channels/${channelId}/messages/${
+				parentMessageId ? `${parentMessageId}/replies/` : ""
+			}${messageId}`,
 			request => request.get()
 		);
 
@@ -716,7 +724,9 @@ export class MSTeamsApiProvider implements ApiProvider {
 	@log()
 	async getPosts(request: GetPostsRequest): Promise<GetPostsResponse> {
 		const responses = await Promise.all(
-			request.postIds.map(id => this.getPost({ streamId: request.streamId, postId: id }))
+			request.postIds.map(id =>
+				this.getPost({ streamId: request.streamId, postId: id }, request.parentPostId)
+			)
 		);
 
 		const posts = responses.map(p => p.post);
@@ -1092,7 +1102,14 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 			return response as TResponse;
 		} catch (ex) {
-			Logger.error(ex, cc, ex.data != null ? JSON.stringify(ex.data) : undefined);
+			if (ex instanceof GraphError) {
+				const data = ex;
+				ex = new ServerError(data.message || "Unknown Error", data, data.statusCode);
+				Logger.error(ex, cc, JSON.stringify(data));
+			} else {
+				Logger.error(ex, cc, ex.data != null ? JSON.stringify(ex.data) : undefined);
+			}
+
 			throw ex;
 		}
 	}
