@@ -32,6 +32,7 @@ import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { HostApi } from "../webview-api";
 import { includes as _includes } from "lodash-es";
 import { prettyPrintOne } from "code-prettify";
+import { getCurrentTeamProvider } from "../store/teams/actions";
 
 class Post extends React.Component {
 	state = {
@@ -282,7 +283,9 @@ class Post extends React.Component {
 			menuItems.push({ label: "Mark Unread", action: "mark-unread" });
 		}
 
-		if (codemark || mine) menuItems.push({ label: "-" });
+		if (codemark || (mine && (!this.props.disableEdits || !this.props.disableDeletes))) {
+			menuItems.push({ label: "-" });
+		}
 
 		if (codemark) {
 			if (codemark.pinned)
@@ -293,7 +296,9 @@ class Post extends React.Component {
 			if (!this.props.disableEdits) {
 				menuItems.push({ label: `Edit ${typeString}`, action: "edit-post" });
 			}
-			menuItems.push({ label: `Delete ${typeString}`, action: "delete-post" });
+			if (!this.props.disableDeletes) {
+				menuItems.push({ label: `Delete ${typeString}`, action: "delete-post" });
+			}
 		}
 
 		let authorMenuItems = [];
@@ -903,6 +908,8 @@ const mapStateToProps = (state, props) => {
 		else author.username = post.creatorId;
 	}
 
+	const teamProvider = getCurrentTeamProvider(state);
+
 	return {
 		threadId: context.threadId,
 		teamMembers: getTeamMembers(state),
@@ -917,7 +924,9 @@ const mapStateToProps = (state, props) => {
 		codemarkAuthor: codemark && getUserByCsId(state.users, codemark.creatorId),
 		parentPostContent,
 		parentPostCodemark,
-		capabilities
+		capabilities,
+		disableEdits: props.disableEdits || teamProvider === "msteams",
+		disableDeletes: teamProvider === "msteams"
 	};
 };
 
