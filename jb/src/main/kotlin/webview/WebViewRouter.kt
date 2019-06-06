@@ -113,7 +113,7 @@ class WebViewRouter(val project: Project) {
             else -> logger.warn("Unhandled host message ${message.method}")
         }
         if (message.id != null) {
-            project.webViewService?.postResponse(message.id, response)
+            project.webViewService?.postResponse(message.id, response.orEmptyObject)
             if (resumeReady) _isReady = true
         }
     }
@@ -208,4 +208,9 @@ class WebViewRouter(val project: Project) {
         val target: String = method.split("/")[0]
     }
 }
+
+private val Any?.orEmptyObject: Any?
+    get() =
+        if (this == null || this is Unit) jsonObject()
+        else this
 

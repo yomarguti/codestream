@@ -11,7 +11,7 @@
   },
   "scripts": {
     "analyze": "webpack --env.analyze",
-    "build": "webpack --env.development",
+    "build": "npm run agent:build && webpack --env.development",
     "bundle": "npm install --no-save && npm run agent:bundle && npm run agent:pkg && webpack --env.production",
     "bundle:ci": "npm run clean:ci && npm run bundle",
     "clean": "git clean -Xdf -e !licenses/**/* !node_modules -e !node_modules/**/* -e !codestream*.info",

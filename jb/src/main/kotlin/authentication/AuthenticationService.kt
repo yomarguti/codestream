@@ -3,7 +3,7 @@ package com.codestream.authentication
 import com.codestream.agentService
 import com.codestream.editorService
 import com.codestream.gson
-import com.codestream.notificationComponent
+import com.codestream.protocols.webview.DidLogout
 import com.codestream.sessionService
 import com.codestream.settingsService
 import com.codestream.webViewService
@@ -157,14 +157,12 @@ class AuthenticationService(val project: Project) {
     suspend fun logout() {
         val agent = project.agentService ?: return
         val session = project.sessionService ?: return
-        val settings = project.settingsService ?: return
         val webView = project.webViewService ?: return
 
         session.logout()
         agent.restart()
         saveAccessToken(null)
-        settings.setWebViewContextJson(jsonObject())
-        webView.reload()
+        webView.postNotification(DidLogout())
     }
 
     private fun saveAccessToken(accessToken: String?) {

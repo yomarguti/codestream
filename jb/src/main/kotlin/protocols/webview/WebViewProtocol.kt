@@ -71,3 +71,7 @@ object FocusNotifications {
         override fun getMethod(): String = "webview/focus/didChange"
     }
 }
+
+class DidLogout() : WebViewNotification {
+    override fun getMethod(): String = "webview/didLogout"
+}
