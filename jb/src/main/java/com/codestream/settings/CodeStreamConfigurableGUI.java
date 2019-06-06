@@ -1,12 +1,12 @@
 package com.codestream.settings;
 
 import javax.swing.*;
+import java.awt.event.ItemEvent;
 
 public class CodeStreamConfigurableGUI {
     private JPanel rootPanel;
     private JCheckBox autoSignIn;
     private JTextField serverUrl;
-    private JTextField webAppUrl;
     private JCheckBox showAvatars;
     private JCheckBox muteAll;
     private JTextField team;
@@ -18,6 +18,15 @@ public class CodeStreamConfigurableGUI {
     private JCheckBox proxyStrictSSL;
     private JComboBox showNotifications;
 
+    public CodeStreamConfigurableGUI() {
+        proxySupport.addItemListener(event -> {
+            if (event.getStateChange() == ItemEvent.SELECTED) {
+                Object item = event.getItem();
+                proxyUrl.setEnabled(item.equals("override"));
+            }
+        });
+    }
+
     public JPanel getRootPanel() {
         return rootPanel;
     }
@@ -28,10 +37,6 @@ public class CodeStreamConfigurableGUI {
 
     public JTextField getServerUrl() {
         return serverUrl;
-    }
-
-    public JTextField getWebAppUrl() {
-        return webAppUrl;
     }
 
     public JCheckBox getShowAvatars() {

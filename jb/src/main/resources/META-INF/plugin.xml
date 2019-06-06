@@ -70,6 +70,7 @@
 </ul>
 <h5>Fixed</h5>
 <ul>
+    <li>Fixes an issue proxy support</li>
     <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/60">#60</a> - can't delete codemark in vscode</li>
     <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/57">#57</a> - Cygwin git support</li>
     <li>Fixes an issue with bookmark titles not being displayed on Slack</li>

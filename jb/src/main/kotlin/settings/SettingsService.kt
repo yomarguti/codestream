@@ -76,7 +76,6 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
     val team get() = state.team
     val autoHideMarkers get() = state.autoHideMarkers
     val showMarkers get() = state.showMarkers
-    val proxySupport get() = state.proxySupport
     val notifications: String?
         get() {
             if (state.notifications == null) {
@@ -126,16 +125,32 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
 
     val proxySettings
         get(): ProxySettings? {
-            return when (state.proxySupport) {
-                "on" -> {
-                    val host = HttpConfigurable.getInstance().PROXY_HOST ?: return null
-                    val port = HttpConfigurable.getInstance().PROXY_PORT
-                    ProxySettings("$host:$port", state.proxyStrictSSL)
+            var url: String? = null
+            if (!state.proxyUrl.isNullOrBlank()) {
+                url = state.proxyUrl
+            } else {
+                val httpConfig = HttpConfigurable.getInstance()
+                if (httpConfig.USE_HTTP_PROXY && !httpConfig.PROXY_HOST.isNullOrBlank()) {
+                    url = httpConfig.PROXY_HOST
+                    if (httpConfig.PROXY_PORT != null) {
+                        url = url + ":" + httpConfig.PROXY_PORT
+                    }
                 }
-                "override" -> ProxySettings(state.proxyUrl, state.proxyStrictSSL)
-                else -> null
+            }
+
+            return if (url != null) {
+                ProxySettings(url, state.proxyStrictSSL)
+            } else {
+                null
             }
         }
+
+    val proxySupport
+        get(): String? =
+            if (state.proxySupport == "on" && proxySettings != null)
+                "override"
+            else
+                state.proxySupport
 
     val credentialAttributes: CredentialAttributes
         get() = CredentialAttributes(

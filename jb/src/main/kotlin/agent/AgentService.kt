@@ -7,7 +7,6 @@ import com.codestream.settingsService
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.JsonObject
 import com.intellij.execution.configurations.GeneralCommandLine
-import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
@@ -34,6 +33,8 @@ import protocols.agent.DocumentMarkersParams
 import protocols.agent.DocumentMarkersResult
 import protocols.agent.GetStreamParams
 import protocols.agent.GetUserParams
+import protocols.agent.Ide
+import protocols.agent.InitializationOptions
 import protocols.agent.Stream
 import java.io.File
 import java.nio.file.Files
@@ -177,7 +178,7 @@ class AgentService(private val project: Project) {
         }
     }
 
-    private fun getInitializeParams(email: String? = null, passwordOrToken: String? = null): InitializeParams {
+    private fun getInitializeParams(): InitializeParams {
         val workspaceClientCapabilities = WorkspaceClientCapabilities()
         workspaceClientCapabilities.configuration = true
         workspaceClientCapabilities.didChangeConfiguration = DidChangeConfigurationCapabilities(false)
@@ -185,28 +186,24 @@ class AgentService(private val project: Project) {
         val textDocumentClientCapabilities = TextDocumentClientCapabilities()
         val clientCapabilities =
             ClientCapabilities(workspaceClientCapabilities, textDocumentClientCapabilities, null)
+
         val initParams = InitializeParams()
         initParams.capabilities = clientCapabilities
-        initParams.initializationOptions = initializationOptions().apply {
-            "email" to email
-            "passwordOrToken" to passwordOrToken
-        }
-
+        initParams.initializationOptions = initializationOptions()
         initParams.rootUri = project.baseUri
         return initParams
     }
 
-    private fun initializationOptions(): MutableMap<String, Any?> {
-        val settings = project.settingsService ?: return mutableMapOf()
-        return mutableMapOf(
-            "recordRequests" to false,
-            "traceLevel" to "debug",
-            "extension" to settings.extensionInfo,
-            "ide" to mapOf(
-                "name" to "JetBrains",
-                "version" to ApplicationInfo.getInstance().fullVersion
-            ),
-            "serverUrl" to settings.state.serverUrl
+    private fun initializationOptions(): InitializationOptions? {
+        val settings = project.settingsService ?: return null
+        return InitializationOptions(
+            settings.extensionInfo,
+            Ide(),
+            DEBUG,
+            settings.proxySettings,
+            settings.proxySupport,
+            settings.state.serverUrl,
+            settings.traceLevel.value
         )
     }
 

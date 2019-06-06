@@ -9,20 +9,15 @@ import org.eclipse.lsp4j.TextDocumentIdentifier
 
 class ProxySettings(val url: String, val strictSSL: Boolean)
 
-abstract class LoginParams(
-    val email: String?,
-    val passwordOrToken: Any?,
-    val signupToken: String?,
-    val serverUrl: String,
+class InitializationOptions(
     val extension: Extension,
     val ide: Ide,
-    val traceLevel: String,
     val isDebugging: Boolean,
-    val team: String? = null,
-    val proxySupport: String,
-    val proxy: ProxySettings? = null,
+    val proxy: ProxySettings?,
+    val proxySupport: String?,
+    val serverUrl: String,
+    val traceLevel: String,
     val recordRequests: Boolean = false
-    // val teamId: String,
 )
 
 class LoginWithPasswordParams(
