@@ -275,7 +275,9 @@ class Post extends React.Component {
 			if ((parentPostCodemark.pinnedReplies || []).includes(post.id)) {
 				isPinnedReply = true;
 				menuItems.push({ label: "Un-Star Reply", action: "unpin-reply" });
-			} else menuItems.push({ label: "Star Reply", action: "pin-reply" });
+			} else {
+				menuItems.push({ label: "Star Reply", action: "pin-reply" });
+			}
 		} else {
 			menuItems.push({ label: "Mark Unread", action: "mark-unread" });
 		}

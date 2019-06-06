@@ -89,7 +89,7 @@ export class Codemark extends React.Component<Props, State> {
 	componentDidMount() {
 		const { codemark, pinnedReplies, getPosts, selected } = this.props;
 		if (codemark.pinnedReplies && codemark.pinnedReplies.length > 0 && pinnedReplies.length === 0) {
-			getPosts(codemark.streamId, codemark.pinnedReplies!);
+			getPosts(codemark.streamId, codemark.pinnedReplies!, codemark.postId);
 		}
 
 		if (selected) {

@@ -28,7 +28,15 @@ export const updatePost = (post: CSPost) => action(PostsActionsType.Update, post
 
 export const deletePost = (post: CSPost) => action(PostsActionsType.Delete, post);
 
-export const getPosts = (streamId: string, postIds: string[]) => async dispatch => {
-	const { posts } = await HostApi.instance.send(GetPostsRequestType, { streamId, postIds });
+export const getPosts = (
+	streamId: string,
+	postIds: string[],
+	parentPostId?: string
+) => async dispatch => {
+	const { posts } = await HostApi.instance.send(GetPostsRequestType, {
+		streamId,
+		postIds,
+		parentPostId
+	});
 	dispatch(addPosts(posts));
 };
