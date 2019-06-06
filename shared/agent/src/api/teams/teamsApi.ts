@@ -190,13 +190,20 @@ export class MSTeamsApiProvider implements ApiProvider {
 						return me;
 					});
 
-				const me = await this._refreshPromise;
-				this._refreshPromise = undefined;
+				try {
+					const me = await this._refreshPromise;
+					this._refreshPromise = undefined;
 
-				SessionContainer.instance().users.resolve({
-					type: MessageType.Users,
-					data: [me]
-				});
+					SessionContainer.instance().users.resolve({
+						type: MessageType.Users,
+						data: [me]
+					});
+				} catch (ex) {
+					this._refreshPromise === undefined;
+					Logger.error(ex);
+				} finally {
+					this._refreshPromise = undefined;
+				}
 			} else {
 				void (await this._refreshPromise);
 			}
