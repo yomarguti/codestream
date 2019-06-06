@@ -56,7 +56,7 @@ export const ChatProviderSelection = (connect(undefined) as any)(
 						</div>
 						<br />
 						<h3 style={{ textAlign: "left" }}>Use CodeStream Channels</h3>
-						<p>Don't use Slack Or Microsoft Teams? We'll provide the channels for you!</p>
+						<p>Don't use Slack or Microsoft Teams? We'll provide the channels for you!</p>
 						<div id="controls">
 							<div className="button-group">
 								<Button className="control-button" type="button" onClick={onClickCodeStream}>
