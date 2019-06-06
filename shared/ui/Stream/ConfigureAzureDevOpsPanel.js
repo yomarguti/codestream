@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { injectIntl } from "react-intl";
 import { connect } from "react-redux";
 import { closePanel } from "./actions";
-import { configureProvider, connectProvider } from "../store/context/actions";
+import { configureProvider, connectProvider } from "../store/providers/actions";
 import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
 import Button from "./Button";

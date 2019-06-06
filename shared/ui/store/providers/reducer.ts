@@ -5,7 +5,6 @@ import { ProvidersState, ProvidersActionsType } from "./types";
 type ProviderActions = ActionType<typeof actions>;
 
 const initialState: ProvidersState = {
-	providers: {}
 };
 
 export function reduceProviders(state = initialState, action: ProviderActions) {

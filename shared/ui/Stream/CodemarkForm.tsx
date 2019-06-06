@@ -1081,6 +1081,12 @@ class CodemarkForm extends React.Component<Props, State> {
 								{bookmarkTip}
 							</div>
 						) */}
+						{commentType === "issue" && !this.props.isEditing && (
+							<CrossPostIssueControls
+								onValues={this.handleCrossPostIssueValues}
+								codeBlock={this.state.codeBlock as any}
+							/>
+						)}
 						{(commentType === "issue" ||
 							commentType === "question" ||
 							commentType === "bookmark" ||
@@ -1172,12 +1178,6 @@ class CodemarkForm extends React.Component<Props, State> {
 								</span>
 							</Tooltip>
 						</div>
-					)}
-					{commentType === "issue" && !this.props.isEditing && (
-						<CrossPostIssueControls
-							onValues={this.handleCrossPostIssueValues}
-							codeBlock={this.state.codeBlock as any}
-						/>
 					)}
 					{commentType !== "link" && this.renderCrossPostMessage(commentType)}
 					<div

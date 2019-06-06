@@ -21,9 +21,9 @@ import {
 	DidChangeVersionCompatibilityNotificationType,
 	ConnectionStatus,
 	ChangeDataType,
-	DidUpdateProvidersType,
+	VersionCompatibility,
 	GetFileScmInfoRequestType,
-	VersionCompatibility
+	ThirdPartyProviders
 } from "@codestream/protocols/agent";
 import translations from "./translations/en";
 import { getCodemark } from "./store/codemarks/reducer";
@@ -95,13 +95,12 @@ export function listenForEvents(store) {
 			case ChangeDataType.Unreads:
 				store.dispatch(updateUnreads(data as any)); // TODO: Not sure why we need the any here
 				break;
+			case ChangeDataType.Providers:
+				store.dispatch(updateProviders(data as ThirdPartyProviders));
+				break;
 			default:
 				store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload: data });
 		}
-	});
-
-	api.on(DidUpdateProvidersType, ({ providers }) => {
-		store.dispatch(updateProviders(providers));
 	});
 
 	api.on(HostDidChangeConfigNotificationType, configs => store.dispatch(updateConfigs(configs)));

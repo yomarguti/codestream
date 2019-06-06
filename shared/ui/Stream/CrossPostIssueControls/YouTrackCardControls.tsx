@@ -1,7 +1,7 @@
 import React from "react";
 import Icon from "../Icon";
 import Menu from "../Menu";
-import { CrossPostIssueValuesListener, PROVIDER_MAPPINGS } from "./types";
+import { CrossPostIssueValuesListener, PROVIDER_MAPPINGS, CodeDelimiterStyles } from "./types";
 import { ThirdPartyProviderBoard, ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 
 interface State {
@@ -45,7 +45,7 @@ export default class YouTrackCardControls extends React.Component<Props, State> 
 			//issueType,
 			isEnabled,
 			issueProvider: this.props.provider,
-			singleBackQuoteMarkup: true
+			codeDelimiterStyle: CodeDelimiterStyles.SINGLE_BACK_QUOTE
 		});
 	};
 

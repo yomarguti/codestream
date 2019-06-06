@@ -1,7 +1,7 @@
 import React from "react";
 import Icon from "../Icon";
 import Menu from "../Menu";
-import { CrossPostIssueValuesListener, PROVIDER_MAPPINGS } from "./types";
+import { CrossPostIssueValuesListener, PROVIDER_MAPPINGS, CodeDelimiterStyles } from "./types";
 import { ThirdPartyProviderBoard, ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 
 interface State {
@@ -61,7 +61,7 @@ export default class AzureDevOpsCardControls extends React.Component<Props, Stat
 			boardName: board && board.name,
 			isEnabled,
 			issueProvider: this.props.provider,
-			htmlMarkup: true
+			codeDelimiterStyle: CodeDelimiterStyles.HTML_MARKUP
 		});
 	};
 

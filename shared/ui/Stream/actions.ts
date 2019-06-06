@@ -47,7 +47,6 @@ import * as streamActions from "../store/streams/actions";
 import { addUsers } from "../store/users/actions";
 import { uuid, isNotOnDisk } from "../utils";
 import { HostApi } from "../webview-api";
-import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { CodeStreamState } from "../store";
 import { pick } from "lodash-es";
 import { getTeamMembers, findMentionedUserIds } from "../store/users/reducer";
@@ -55,8 +54,8 @@ import { confirmPopup } from "./Confirm";
 import React from "react";
 import { getFileScmError } from "../store/editorContext/reducer";
 import { PostEntryPoint } from "../store/context/types";
+import { CodeDelimiterStyles } from "./CrossPostIssueControls/types";
 
-export { connectProvider, disconnectProvider } from "../store/context/actions";
 export {
 	openPanel,
 	closePanel,
@@ -65,6 +64,7 @@ export {
 	setCodemarkColorFilter,
 	setChannelFilter
 };
+export { connectProvider, disconnectProvider } from "../store/providers/actions";
 
 export const markStreamRead = (streamId: string, postId?: string) => () => {
 	HostApi.instance
@@ -635,34 +635,48 @@ export const setCodemarkStatus = (
 	}
 };
 
-export const createProviderCard = async (attributes, codemark) => {
-	let codeStart = attributes.htmlMarkup
-		? "<pre><div><code>"
-		: attributes.singleBackQuoteMarkup
-		? "`"
-		: "```";
-	let codeEnd = attributes.htmlMarkup
-		? "</code></div></pre>"
-		: attributes.singleBackQuoteMarkup
-		? "`"
-		: "```";
+const getCodeDelimiters = (codeDelimiterStyle: CodeDelimiterStyles): { 
+	start: string,
+	end: string,
+	linefeed: string
+} => {
+	switch (codeDelimiterStyle) {
+		case CodeDelimiterStyles.HTML_MARKUP:
+		return {
+			start: "<pre><div><code>",
+			end: "</code></div></pre>",
+			linefeed: "<br/>"
+		};
 
-	const linefeed = attributes.htmlMarkup ? "<br/>" : "\n";
+		default:
+		case CodeDelimiterStyles.TRIPLE_BACK_QUOTE:
+		return {
+			start: "```",
+			end: "```",
+			linefeed: "\n"
+		};
+
+		case CodeDelimiterStyles.SINGLE_BACK_QUOTE:
+		return {
+			start: "`",
+			end: "`",
+			linefeed: "\n"
+		};
+
+		case CodeDelimiterStyles.CODE_BRACE: 
+		return {
+			start: "{code}",
+			end: "{code}",
+			linefeed: "\n"
+		}
+	}
+}
+export const createProviderCard = async (attributes, codemark) => {
+	const delimiters = getCodeDelimiters(attributes.codeDelimiterStyle);
+	const { linefeed, start, end } = delimiters;
 	let description = `${codemark.text}${linefeed}${linefeed}`;
 	if (codemark.markers && codemark.markers.length > 0) {
 		const marker = codemark.markers[0];
-		if (codeStart === "```" || codeEnd === "```") {
-			const split = marker.code.split(/\r?\n/);
-			if (split.length > 1) {
-				if (split[0] !== "") {
-					codeStart += "\n";
-				}
-				if (split[split.length - 1] !== "") {
-					codeEnd = "\n" + codeEnd;
-				}
-			}
-		}
-		description += `In ${marker.file}`;
 		const range = marker.range;
 		if (range) {
 			if (range.start.line === range.end.line) {
@@ -671,15 +685,16 @@ export const createProviderCard = async (attributes, codemark) => {
 				description += ` (Lines ${range.start.line + 1}-${range.end.line + 1})`;
 			}
 		}
-		description += `${linefeed}${linefeed}`;
-		description += `${codeStart}${marker.code}${codeEnd}${linefeed}${linefeed}`;
+		description += `${linefeed}${linefeed}In ${marker.file}${linefeed}${linefeed}`;
+		description += `${start}${marker.code}${end}${linefeed}${linefeed}`;
 	}
 	description += `Posted via CodeStream${linefeed}`;
 
 	try {
 		let response;
 		switch (attributes.issueProvider.name) {
-			case "jira": {
+			case "jira": 
+			case "jiraserver": {
 				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
 					providerId: attributes.issueProvider.id,
 					data: {
@@ -704,7 +719,8 @@ export const createProviderCard = async (attributes, codemark) => {
 				});
 				break;
 			}
-			case "github": {
+			case "github":
+			case "github_enterprise": {
 				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
 					providerId: attributes.issueProvider.id,
 					data: {

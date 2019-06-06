@@ -2,8 +2,7 @@ import React, { Component } from "react";
 import { injectIntl } from "react-intl";
 import { connect } from "react-redux";
 import { closePanel } from "./actions";
-import { configureProvider, sendIssueProviderConnected } from "../store/providers/actions";
-import { setIssueProvider } from "../store/context/actions";
+import { addEnterpriseProvider, connectProvider } from "../store/providers/actions";
 import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
 import Button from "./Button";
@@ -12,16 +11,19 @@ import { isInVscode } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 
-export class ConfigureYouTrackPanel extends Component {
+export class ConfigureJiraServerPanel extends Component {
 	initialState = {
 		baseUrl: "",
 		baseUrlTouched: false,
-		token: "",
-		tokenTouched: false,
+		consumerKey: "",
+		consumerKeyTouched: false,
+		privateKey: "",
+		privateKeyTouched: false,
 		formTouched: false
 	};
 
 	state = this.initialState;
+	wantProviderId = "";
 
 	focusInput() {
 		document.getElementById("configure-provider-initial-input").focus();
@@ -38,24 +40,26 @@ export class ConfigureYouTrackPanel extends Component {
 		this.focusInput();
 	}
 
-	onSubmit = e => {
+	componentDidUpdate() {
+		if (this.wantProviderId && this.props.providers[this.wantProviderId]) {
+			this.props.connectProvider(this.wantProviderId, this.props.fromMenu);
+			this.props.closePanel();
+		}
+	}
+		
+	onSubmit = async e => {
 		e.preventDefault();
 		if (this.isFormInvalid()) return;
 		const { providerId } = this.props;
-		let { baseUrl, token } = this.state;
-
-		baseUrl = baseUrl.trim();
-		if (baseUrl.endsWith('/')) {
-			baseUrl = baseUrl.substring(0, baseUrl.length - 1);
+		let { baseUrl, consumerKey, privateKey } = this.state;
+		baseUrl = baseUrl.toLowerCase();
+		baseUrl = baseUrl.match(/^http/) ? baseUrl : `https://${baseUrl}`;
+		const newProviderId = await this.props.addEnterpriseProvider(
+			providerId, baseUrl, { oauthData: { consumerKey, privateKey } }
+		);
+		if (newProviderId) {
+			this.wantProviderId = newProviderId;
 		}
-
-		// for YouTrack, configuring is as good as connecting, since we are letting the user
-		// set the access token ... sending the fourth argument as true here lets the 
-		// configureProvider function know that they can mark YouTrack as connected as soon
-		// as the access token entered by the user has been saved to the server
-		this.props.configureProvider(providerId, { baseUrl, token }, this.props.fromMenu, true);
-		
-		this.props.closePanel();
 	};
 
 	renderError = () => {};
@@ -71,20 +75,34 @@ export class ConfigureYouTrackPanel extends Component {
 		}
 	};
 
-	onBlurToken = () => {
-		this.setState({ tokenTouched: true });
+	onBlurConsumerKey = () => {
+		this.setState({ consumerKeyTouched: true });
 	};
 
-	renderTokenHelp = () => {
-		const { token, tokenTouched, formTouched } = this.state;
-		if (tokenTouched || formTouched)
-			if (token.length === 0) return <small className="error-message">Required</small>;
+	renderConsumerKeyHelp = () => {
+		const { consumerKey, consumerKeyTouched, formTouched } = this.state;
+		if (consumerKeyTouched || formTouched)
+			if (consumerKey.length === 0) return <small className="error-message">Required</small>;
+	};
+
+	onBlurAppPrivateKey = () => {
+		this.setState({ privateKeyTouched: true });
+	};
+
+	renderPrivateKeyHelp = () => {
+		const { privateKey, privateKeyTouched, formTouched } = this.state;
+		if (privateKeyTouched || formTouched)
+			if (privateKey.length === 0) return <small className="error-message">Required</small>;
 	};
 
 	tabIndex = () => {};
 
 	isFormInvalid = () => {
-		return this.state.baseUrl.length === 0 || this.state.token.length === 0;
+		return (
+			this.state.baseUrl.length === 0 ||
+			this.state.consumerKey.length === 0 ||
+			this.state.privateKey.length === 0
+		);
 	};
 
 	render() {
@@ -92,7 +110,7 @@ export class ConfigureYouTrackPanel extends Component {
 		const inactive = false;
 		const { name } = this.props.providers[providerId] || {};
 		const providerName = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].displayName : "";
-		const placeholder = "https://myorg.myjetbrains.com";
+		const placeholder = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].urlPlaceholder : "";
 		const getUrl = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].getUrl : "";
 		return (
 			<div className="panel configure-provider-panel">
@@ -109,11 +127,11 @@ export class ConfigureYouTrackPanel extends Component {
 						)}
 						{this.renderError()}
 						<div id="controls">
-							<div id="configure-youtrack-controls" className="control-group">
+							<div id="configure-enterprise-controls" className="control-group">
 								<label><strong>{providerName} Base URL</strong></label>
-								<label>Please provide the Base URL used by your team to access YouTrack. This can be found under your <a href="https://www.jetbrains.com/help/youtrack/incloud/Domain-Settings.html">Domain Settings</a>.</label>
+								<label>Please provide the Base URL used by your team to access {providerName}.</label>
 								<input
-									className="input-text control"
+									className="native-key-bindings input-text control"
 									type="text"
 									name="baseUrl"
 									tabIndex={this.tabIndex()}
@@ -128,33 +146,34 @@ export class ConfigureYouTrackPanel extends Component {
 								{this.renderBaseUrlHelp()}
 							</div>
 							<br/>
-							{false && (
-								<div id="username-controls" className="control-group">
-									<label>{providerName} Username</label>
-									<input
-										className="input-text control"
-										type="text"
-										name="username"
-										tabIndex={this.tabIndex()}
-										value={this.state.username}
-										onChange={e => this.setState({ username: e.target.value })}
-									/>
-								</div>
-							)}
-							<div id="token-controls" className="control-group">
-								<label><strong>{providerName} Permanent Token</strong></label>
-								<label>Please provide a <a href="https://www.jetbrains.com/help/youtrack/standalone/Manage-Permanent-Token.html">permanent token</a> we can use to access your YouTrack projects and issues.</label>
+							<label>Please provide the consumer key and private key used to authorize your {providerName} credentials. You can obtain them from your {providerName} administrator.</label>
+							<div id="app-clientid-controls" className="control-group">
+								<label><strong>Consumer Key</strong></label>
 								<input
-									className="input-text control"
+									className="native-key-bindings input-text control"
 									type="text"
-									name="token"
+									name="consumerKey"
 									tabIndex={this.tabIndex()}
-									value={this.state.token}
-									onChange={e => this.setState({ token: e.target.value })}
-									onBlur={this.onBlurToken}
-									required={this.state.tokenTouched || this.state.formTouched}
+									value={this.state.consumerKey}
+									onChange={e => this.setState({ consumerKey: e.target.value })}
+									onBlur={this.onBlurConsumerKey}
+									required={this.state.consumerKeyTouched || this.state.formTouched}
 								/>
-								{this.renderTokenHelp()}
+								{this.renderConsumerKeyHelp()}
+							</div>
+							<div id="app-clientsecret-controls" className="control-group">
+								<label><strong>Private Key</strong></label>
+								<textarea
+									className="native-key-bindings input-text control"
+									type="text"
+									name="privateKey"
+									tabIndex={this.tabIndex()}
+									value={this.state.privateKey}
+									onChange={e => this.setState({ privateKey: e.target.value })}
+									onBlur={this.onBlurPrivateKey}
+									required={this.state.privateKeyTouched || this.state.formTouched}
+								/>
+								{this.renderPrivateKeyHelp()}
 							</div>
 							<div className="button-group">
 								<Button
@@ -184,11 +203,11 @@ export class ConfigureYouTrackPanel extends Component {
 	}
 }
 
-const mapStateToProps = ({ providers, context, teams }) => {
+const mapStateToProps = ({ providers }) => {
 	return { providers };
 };
 
 export default connect(
 	mapStateToProps,
-	{ closePanel, configureProvider, sendIssueProviderConnected, setIssueProvider }
-)(injectIntl(ConfigureYouTrackPanel));
+	{ closePanel, addEnterpriseProvider, connectProvider }
+)(injectIntl(ConfigureJiraServerPanel));

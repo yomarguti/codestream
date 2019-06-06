@@ -22,6 +22,8 @@ import Tooltip from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
 import ConfigureAzureDevOpsPanel from "./ConfigureAzureDevOpsPanel";
 import ConfigureYouTrackPanel from "./ConfigureYouTrackPanel";
+import ConfigureJiraServerPanel from "./ConfigureJiraServerPanel";
+import ConfigureEnterprisePanel from "./ConfigureEnterprisePanel";
 import * as actions from "./actions";
 import { editCodemark } from "../store/codemarks/actions";
 import { ComponentUpdateEmitter, isInVscode, safe, toMapBy, isNotOnDisk } from "../utils";
@@ -344,8 +346,9 @@ export class SimpleStream extends Component {
 			{ label: "-" }
 		];
 
-		const numProviders = this.addProvidersToMenu(menuItems);
-		if (numProviders > 0) {
+		const providerMenuItems = this.addProvidersToMenu();
+		if (providerMenuItems.length > 0) {
+			menuItems.push(...providerMenuItems);
 			menuItems.push({ label: "-" });
 		}
 
@@ -357,42 +360,42 @@ export class SimpleStream extends Component {
 		return menu;
 	}
 
-	addProvidersToMenu(menuItems) {
-		let numProviders = 0;
+	addProvidersToMenu() {
+		const menuItems = [];
 		for (let providerId of Object.keys(this.props.providers)) {
 			const provider = this.props.providers[providerId];
-			const { name, isEnterprise, host, needsConfigure } = provider;
+			const { name, isEnterprise, host, needsConfigure, forEnterprise } = provider;
 			const display = PROVIDER_MAPPINGS[name];
 			if (display && provider.hasIssues) {
-				const displayName = isEnterprise ? `${display.displayName} - ${host}` : display.displayName;
+				const displayHost = host.startsWith('http://') ? host.split('http://')[1] :
+					host.startsWith('https://') ? host.split('https://')[1] : host;
+				const displayName = isEnterprise ? `${display.displayName} - ${displayHost}` : display.displayName;
 				const isConnected = this.isConnectedToProvider(provider);
-
+				let label = `Connect to ${displayName}`;
+				let action;
 				if (isConnected) {
 					// if you have a token and are connected to the provider,
 					// offer to disconnect
-					menuItems.push({
-						label: `Disconnect ${displayName}`,
-						action: `disconnect-${providerId}`
-					});
+					label = `Disconnect ${displayName}`;
+					action = `disconnect-${providerId}`;
 				} else if (needsConfigure) {
-					// otherwise, if it's an enterprise provider such as on-prem
-					// then we need to configure it with a host, and possibly
-					// a permanent token (in the case of youtrack)
-					menuItems.push({
-						label: `Connect to ${displayName}`,
-						action: `configure-provider-${name}-${providerId}-true`
-					});
+					// otherwise, if it's a provider that needs to be pre-configured,
+					// bring up the custom popup for configuring it
+					action = `configure-provider-${name}-${providerId}-true`;
+				} else if (forEnterprise) {
+					// otherwise if it's for an enterprise provider, configure for enterprise
+					action = `configure-enterprise-${name}-${providerId}-true`;
 				} else {
 					// otherwise it's just a simple oauth redirect
-					menuItems.push({
-						label: `Connect to ${displayName}`,
-						action: `connect-${providerId}`
-					});
+					action = `connect-${providerId}`;
 				}
-				numProviders++;
+				menuItems.push({ label, action, displayName });
 			}
 		}
-		return numProviders;
+		menuItems.sort((a, b) => {
+			return a.displayName.localeCompare(b.displayName);
+		});
+		return menuItems;
 	}
 
 	isConnectedToProvider(provider) {
@@ -661,14 +664,15 @@ export class SimpleStream extends Component {
 		// these panels do not have global nav
 		let renderNav =
 			!["create-channel", "create-dm", "public-channels", "invite"].includes(activePanel) &&
-			!activePanel.startsWith("configure-provider-");
+			!activePanel.startsWith("configure-provider-") &&
+			!activePanel.startsWith("configure-enterprise-");
 
 		// if (this.state.floatCompose) renderNav = false;
 		// if (threadId) renderNav = false;
 
 		const onInlineCodemarks = activePanel === WebviewPanels.CodemarksForFile;
 		const contentClass = onInlineCodemarks ? "content inline" : "content vscroll inline";
-		const configureProviderInfo = activePanel.startsWith("configure-provider-")
+		const configureProviderInfo = (activePanel.startsWith("configure-provider-") || activePanel.startsWith("configure-enterprise-")) 
 			? activePanel.split("-")
 			: null;
 		return (
@@ -764,6 +768,18 @@ export class SimpleStream extends Component {
 					)}
 					{activePanel.startsWith("configure-provider-azuredevops-") && (
 						<ConfigureAzureDevOpsPanel
+							providerId={configureProviderInfo[3]}
+							fromMenu={configureProviderInfo[4]}
+						/>
+					)}
+					{activePanel.startsWith("configure-provider-jiraserver-") && (
+						<ConfigureJiraServerPanel
+							providerId={configureProviderInfo[3]}
+							fromMenu={configureProviderInfo[4]}
+						/>
+					)}
+					{activePanel.startsWith("configure-enterprise-") && (
+						<ConfigureEnterprisePanel
 							providerId={configureProviderInfo[3]}
 							fromMenu={configureProviderInfo[4]}
 						/>
@@ -981,12 +997,11 @@ export class SimpleStream extends Component {
 		if (arg.startsWith("connect-")) {
 			const providerId = arg.split("connect-")[1];
 			return this.props.connectProvider(providerId, true);
-		} else if (arg.startsWith("configure-provider-")) {
-			const provider = arg.split("configure-provider-")[1];
-			return this.setActivePanel(`configure-provider-${provider}`);
 		} else if (arg.startsWith("disconnect-")) {
 			const providerId = arg.split("disconnect-")[1];
 			return this.props.disconnectProvider(providerId, true);
+		} else if (arg.startsWith("configure-enterprise-") || arg.startsWith("configure-provider-")) {
+			return this.setActivePanel(arg);
 		}
 		switch (arg) {
 			case "invite":

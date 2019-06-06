@@ -1,7 +1,7 @@
 import React from "react";
 import Icon from "../Icon";
 import Menu from "../Menu";
-import { CrossPostIssueValuesListener, PROVIDER_MAPPINGS } from "./types";
+import { CrossPostIssueValuesListener, PROVIDER_MAPPINGS, CodeDelimiterStyles } from "./types";
 import { ThirdPartyProviderBoard, ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 
 interface State {
@@ -24,9 +24,11 @@ export default class JiraCardControls extends React.Component<Props, State> {
 	constructor(props) {
 		super(props);
 		const hasBoards = props.boards.length > 0;
+		const firstBoard = hasBoards && props.boards[0];
+		const issueType = firstBoard.issueTypes && firstBoard.issueTypes[0];
 		this.state = {
 			board: hasBoards && props.boards[0],
-			issueType: hasBoards && props.boards[0].issueTypes[0],
+			issueType,
 			issueTypeMenuOpen: false,
 			boardMenuOpen: false,
 			isEnabled: true
@@ -44,7 +46,8 @@ export default class JiraCardControls extends React.Component<Props, State> {
 			boardId: board && board.id,
 			issueType,
 			isEnabled,
-			issueProvider: this.props.provider
+			issueProvider: this.props.provider,
+			codeDelimiterStyle: CodeDelimiterStyles.CODE_BRACE
 		});
 	};
 
@@ -85,16 +88,21 @@ export default class JiraCardControls extends React.Component<Props, State> {
 	render() {
 		const { board, issueType } = this.state;
 		const { provider } = this.props;
+		const { host, name } = provider;
 		const issueTypeItems = board ? board.issueTypes.map(it => ({ label: it, action: it })) : [];
 		const boardItems = this.props.boards.map(board => ({
 			label: board.name,
 			key: board.id,
 			action: board
 		}));
-		const providerDisplay = PROVIDER_MAPPINGS[provider.name];
-		const displayName = provider.isEnterprise
-			? `${providerDisplay.displayName} - ${provider.host}`
-			: providerDisplay.displayName;
+		const providerDisplay = PROVIDER_MAPPINGS[name];
+		let displayName = providerDisplay.displayName;
+		if (host && provider.isEnterprise) {
+			const displayHost = host.startsWith('http://') ? host.split('http://')[1] :
+				host.startsWith('https://') ? host.split('https://')[1] : host;
+			displayName += ` - ${displayHost}`;
+		}
+		
 		return (
 			<div className="checkbox-row" onClick={this.toggleCrossPostIssue}>
 				<input type="checkbox" checked={this.state.isEnabled} />

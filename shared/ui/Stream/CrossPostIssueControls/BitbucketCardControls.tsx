@@ -86,15 +86,19 @@ export default class BitbucketCardControls extends React.Component<Props, State>
 	render() {
 		const { board } = this.state;
 		const { provider } = this.props;
+		const { host, name } = provider;
 		const boardItems = this.props.boards.map(board => ({
 			label: board.name,
 			key: board.id,
 			action: board
 		}));
-		const providerDisplay = PROVIDER_MAPPINGS[provider.name];
-		const displayName = provider.isEnterprise
-			? `${providerDisplay.displayName} - ${provider.host}`
-			: providerDisplay.displayName;
+		const providerDisplay = PROVIDER_MAPPINGS[name];
+		let displayName = providerDisplay.displayName;
+		if (host && provider.isEnterprise) {
+			const displayHost = host.startsWith('http://') ? host.split('http://')[1] :
+				host.startsWith('https://') ? host.split('https://')[1] : host;
+			displayName += ` - ${displayHost}`;
+		}
 
 		return (
 			<div className="checkbox-row" onClick={this.toggleCrossPostIssue}>

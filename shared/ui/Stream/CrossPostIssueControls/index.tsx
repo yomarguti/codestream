@@ -1,6 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
-import { connectProvider, setIssueProvider, openPanel } from "../../store/context/actions";
+import { connectProvider } from "../../store/providers/actions";
+import { openPanel, setIssueProvider } from "../../store/context/actions";
 import { HostApi } from "../../webview-api";
 import Icon from "../Icon";
 import AsanaCardControls from "./AsanaCardControls";
@@ -18,7 +19,8 @@ import {
 	ThirdPartyProviderConfig,
 	ThirdPartyProviders
 } from "@codestream/protocols/agent";
-import { CSMe } from "@codestream/protocols/api";
+import { CSMe, ProviderType } from "@codestream/protocols/api";
+import Select from "react-select";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
@@ -129,7 +131,8 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			return null;
 		}
 		switch (providerInfo.provider.name) {
-			case "jira": {
+			case "jira": 
+			case "jiraserver": {
 				return (
 					<JiraCardControls
 						boards={boards}
@@ -156,7 +159,8 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 					/>
 				);
 			}
-			case "github": {
+			case "github":
+			case "github_enterprise": {
 				return (
 					<GitHubCardControls
 						boards={boards}
@@ -211,14 +215,10 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 	}
 
 	render() {
-		if (this.state.isLoading) {
-			return this.renderLoading();
-		}
 		const { issueProvider } = this.props;
 		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider.id) : undefined;
-		if (providerInfo) {
-			return this.renderProviderControls();
-		} else if (this.props.providers && Object.keys(this.props.providers).length) {
+		const providerName = providerInfo && providerInfo.provider.name;
+		if (this.props.providers && Object.keys(this.props.providers).length) {
 			const knownIssueProviders = Object.keys(this.props.providers).filter(providerId => {
 				const provider = this.props.providers![providerId];
 				return provider.hasIssues && !!PROVIDER_MAPPINGS[provider.name];
@@ -226,48 +226,44 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			if (knownIssueProviders.length === 0) {
 				return "";
 			}
+
+			const knownIssueProviderOptions = knownIssueProviders
+				.map(providerId => {
+						const issueProvider = this.props.providers![providerId];
+						const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
+						const displayName = issueProvider.isEnterprise
+							? `${providerDisplay.displayName} - ${issueProvider.host}`
+							: providerDisplay.displayName;
+						return {
+							value: providerId,
+							label: displayName
+						};
+					})
+				.sort((a, b) => a.label.localeCompare(b.label));
+			const selectedProvider = providerInfo && knownIssueProviderOptions.find(provider => provider.value === providerInfo.provider.id);
 			return (
 				<div className="checkbox-row connect-issue">
 					<div className="connect-issue-label">Create an issue in </div>
-					<div className="connect-issue-providers">
-						{knownIssueProviders
-							.map(providerId => {
-								const issueProvider = this.props.providers![providerId];
-								const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
-								const displayName = issueProvider.isEnterprise
-									? `${providerDisplay.displayName} - ${issueProvider.host}`
-									: providerDisplay.displayName;
-								const icon = providerDisplay.icon || issueProvider.name;
-								// this is kind of crazy pedantic but what I'm doing here
-								// is, rather than just return the <span> element, to return
-								// a hash which maps a name to an element, so we can then
-								// sort by displayName (rather than what was happening before which
-								// sorted by providerId), so that things are *actually* in
-								// alphabetical order in the UI. it would be nice if the
-								// provider info didn't come from multiple sources so we
-								// didn't have to jump through hoops like this, but this
-								// works. -Pez
-								return {
-									name: displayName,
-									element: (
-										<span
-											className="service"
-											onClick={e =>
-												this.handleClickConnectIssueProvider(e, {
-													provider: issueProvider,
-													display: providerDisplay
-												})
-											}
-										>
-											<Icon className={issueProvider!.name} name={icon} />
-											{displayName}
-										</span>
-									)
-								};
-							})
-							.sort((a, b) => a.name.localeCompare(b.name))
-							.map(tuple => tuple.element)}
-					</div>
+					<Select
+						id="input-provider"
+						name="providers"
+						classNamePrefix="native-key-bindings react-select"
+						value={selectedProvider}
+						options={knownIssueProviderOptions}
+						closeMenuOnSelect={true}
+						isClearable={false}
+						placeholder="select service"
+						onChange={value => {
+							const providerId = (value as { value: string })!.value;
+							const issueProvider = this.props.providers![providerId];
+							const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
+							this.onChangeProvider({ provider: issueProvider, display: providerDisplay });
+						}}
+						//tabIndex={this.tabIndex().toString()}
+					/>
+					{selectedProvider && <span> {selectedProvider.label}</span>}
+					<div>{this.state.isLoading && this.renderLoading()}</div>
+					<div>{providerName && !this.state.isLoading && this.renderProviderControls()}</div>
 				</div>
 			);
 		} else {
@@ -275,15 +271,14 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		}
 	}
 
-	async handleClickConnectIssueProvider(
-		event: React.SyntheticEvent,
-		providerInfo: ProviderInfo
-	): Promise<void> {
-		event.preventDefault();
+	async onChangeProvider(providerInfo: ProviderInfo) {
 		this.setState({ isLoading: true, loadingProvider: providerInfo });
 		if (providerInfo.provider.needsConfigure) {
 			const { name, id } = providerInfo.provider;
 			this.props.openPanel(`configure-provider-${name}-${id}`);
+		} else if (providerInfo.provider.forEnterprise) {
+			const { name, id } = providerInfo.provider;
+			this.props.openPanel(`configure-enterprise-${name}-${id}`);
 		} else {
 			await this.props.connectProvider(providerInfo.provider.id);
 		}
