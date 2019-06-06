@@ -82,3 +82,23 @@ task buildDependencies {}
 buildDependencies.dependsOn buildDeps, copyAgent
 
 buildPlugin.dependsOn buildDependencies
+
+task buildDebugDeps(type: Exec) {
+    String npm = 'npm';
+    if (OperatingSystem.current().isWindows()) {
+        npm = 'npm.cmd'
+    }
+
+    workingDir "$projectDir"
+    commandLine npm, 'run', 'build'
+}
+
+task copyDebugAgent(type: Copy) {
+    from "$projectDir/../codestream-lsp-agent/dist"
+    include "**/*"
+    into "$projectDir/src/main/resources/agent"
+}
+copyDebugAgent.dependsOn buildDebugDeps
+
+task buildDebugDependencies {}
+buildDebugDependencies.dependsOn buildDebugDeps, copyDebugAgent
