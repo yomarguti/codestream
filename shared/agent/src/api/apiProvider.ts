@@ -2,6 +2,8 @@ import { RequestInit, Response } from "node-fetch";
 import { Disposable, Event } from "vscode-languageserver";
 import {
 	AccessToken,
+	AddEnterpriseProviderHostRequest,
+	AddEnterpriseProviderHostResponse,
 	ArchiveStreamRequest,
 	ArchiveStreamResponse,
 	Capabilities,
@@ -333,6 +335,7 @@ export interface ApiProvider {
 		data: { [key: string]: any };
 	}): Promise<void>;
 	disconnectThirdPartyProvider(request: { providerId: string }): Promise<void>;
+	addEnterpriseProviderHost(request: AddEnterpriseProviderHostRequest): Promise<AddEnterpriseProviderHostResponse>;
 	refreshThirdPartyProvider(request: { providerId: string; refreshToken: string }): Promise<CSMe>;
 }
 

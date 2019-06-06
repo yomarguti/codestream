@@ -495,3 +495,15 @@ export interface CSTrackProviderPostRequest {
 export interface CSGetTelemetryKeyResponse {
 	key: string;
 }
+
+export interface CSAddProviderHostRequest {
+	host: string;
+	appClientId?: string;
+	appClientSecret?: string;
+	[key: string]: any;
+}
+
+export interface CSAddProviderHostResponse {
+	team: any;
+	providerId: string;
+}

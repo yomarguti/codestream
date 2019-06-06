@@ -12,7 +12,7 @@ import {
 	GitHubUser
 } from "../protocol/agent.protocol";
 import { CSGitHubProviderInfo } from "../protocol/api.protocol";
-import { log, lspHandler, lspProvider } from "../system";
+import { log, lspProvider } from "../system";
 import { ThirdPartyProviderBase } from "./provider";
 
 interface GitHubRepo {
@@ -34,10 +34,6 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 
 	get name() {
 		return "github";
-	}
-
-	get apiPath() {
-		return this.providerConfig.isEnterprise ? "/api/v3" : "";
 	}
 
 	get headers() {

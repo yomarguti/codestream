@@ -1,5 +1,8 @@
 "use strict";
 import {
+	AddEnterpriseProviderRequest,
+	AddEnterpriseProviderRequestType,
+	AddEnterpriseProviderResponse,
 	ConfigureThirdPartyProviderRequest,
 	ConfigureThirdPartyProviderRequestType,
 	ConfigureThirdPartyProviderResponse,
@@ -24,7 +27,9 @@ import { getProvider, log, lsp, lspHandler } from "../system";
 // NOTE: You must include all new providers here, otherwise the webpack build will exclude them
 export * from "./trello";
 export * from "./jira";
+export * from "./jiraserver";
 export * from "./github";
+export * from "./githubEnterprise";
 export * from "./gitlab";
 export * from "./asana";
 export * from "./bitbucket";
@@ -44,7 +49,6 @@ export class ThirdPartyProviderRegistry {
 		if (provider === undefined) {
 			throw new Error(`No registered provider for '${request.providerId}'`);
 		}
-
 		await provider.connect();
 		return {};
 	}
@@ -61,6 +65,18 @@ export class ThirdPartyProviderRegistry {
 
 		await provider.configure(request.data);
 		return {};
+	}
+
+	@log()
+	@lspHandler(AddEnterpriseProviderRequestType)
+	async addEnterpriseProvider(
+		request: AddEnterpriseProviderRequest
+	): Promise<AddEnterpriseProviderResponse> {
+		const provider = getProvider(request.providerId);
+		if (provider === undefined) {
+			throw new Error(`No registered provider for '${request.providerId}'`);
+		}
+		return await provider.addEnterpriseHost(request);
 	}
 
 	@log()

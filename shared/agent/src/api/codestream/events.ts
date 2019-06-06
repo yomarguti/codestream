@@ -173,7 +173,6 @@ export class BroadcasterEvents implements Disposable {
 
 	private fireMessage(message: { [key: string]: any }) {
 		const { requestId, messageId, ...messages } = message;
-
 		for (const [dataType, rawData] of Object.entries(messages)) {
 			try {
 				const type = messageToType[dataType];

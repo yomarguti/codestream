@@ -7,9 +7,10 @@ export interface ThirdPartyProviderConfig {
 	host: string;
 	apiHost?: string;
 	isEnterprise?: boolean;
+	forEnterprise?: boolean;
 	hasIssues?: boolean;
-	enterpriseOnly?: boolean;
 	needsConfigure?: boolean;
+	oauthData?: { [key: string]: any };
 }
 
 export interface ThirdPartyProviders {
@@ -42,6 +43,23 @@ export const ConfigureThirdPartyProviderRequestType = new RequestType<
 	void,
 	void
 >("codestream/provider/configure");
+
+export interface AddEnterpriseProviderRequest {
+	providerId: string;
+	host: string;
+	data: { [key: string]: any };
+}
+
+export interface AddEnterpriseProviderResponse {
+	providerId: string;
+}
+
+export const AddEnterpriseProviderRequestType = new RequestType<
+	AddEnterpriseProviderRequest,
+	AddEnterpriseProviderResponse,
+	void,
+	void
+>("codestream/provider/add");
 
 export interface DisconnectThirdPartyProviderRequest {
 	providerId: string;
@@ -133,5 +151,16 @@ export interface ThirdPartyProviderSetTokenRequestData extends ThirdPartyProvide
 }
 
 export interface ThirdPartyProviderSetTokenRequest extends ThirdPartyProviderSetTokenData {
+	providerId: string;
+}
+
+export interface AddEnterpriseProviderHostRequest {
+	provider: string;
+	teamId: string;
+	host: string;
+	data: { [key: string]: any };
+}
+
+export interface AddEnterpriseProviderHostResponse {
 	providerId: string;
 }

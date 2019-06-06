@@ -47,7 +47,6 @@ import {
 	DidLoginNotificationType,
 	DidLogoutNotificationType,
 	DidStartLoginNotificationType,
-	DidUpdateProvidersType,
 	FetchMarkerLocationsRequestType,
 	GetInviteInfoRequest,
 	GetInviteInfoRequestType,
@@ -919,7 +918,11 @@ export class CodeStreamSession {
 		if (currentTeam) {
 			this._providers = currentTeam.providerHosts || {};
 			registerProviders(this._providers, this);
-			this.agent.sendNotification(DidUpdateProvidersType, { providers: this._providers });
+			this.agent.sendNotification(DidChangeDataNotificationType, {
+				type: ChangeDataType.Providers,
+				data: this._providers
+			});
+
 		}
 	}
 }

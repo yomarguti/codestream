@@ -313,6 +313,12 @@ export interface CSMSTeamsProviderInfo {
 	hosts?: { [host: string]: CSMSTeamsProviderInfo };
 }
 
+export interface CSJiraServerProviderInfo {
+	accessToken: string;
+	oauthTokenSecret: string;
+	hosts: { [hosts: string]: CSJiraServerProviderInfo };
+}
+
 export interface CSSlackProviderInfo {
 	accessToken: string;
 	teamId: string;
@@ -349,6 +355,7 @@ export type CSProviderInfos =
 	| CSGitLabProviderInfo
 	| CSJiraProviderInfo
 	| CSMSTeamsProviderInfo
+	| CSJiraServerProviderInfo
 	| CSSlackProviderInfo
 	| CSTrelloProviderInfo
 	| CSYouTrackProviderInfo
@@ -402,6 +409,7 @@ type CSMeProviderInfo = { slack?: CSSlackProviderInfo } & {
 		asana?: CSAsanaProviderInfo;
 		github?: CSGitHubProviderInfo;
 		jira?: CSJiraProviderInfo;
+		jiraserver?: CSJiraServerProviderInfo;
 		msteams?: CSMSTeamsProviderInfo;
 		slack?: CSSlackProviderInfo;
 		trello?: CSTrelloProviderInfo;

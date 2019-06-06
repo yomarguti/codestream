@@ -67,7 +67,10 @@ export function getProvider(providerId: string) {
 }
 
 export function lspProvider<T extends object>(name: string): Function {
-	return (target: T) => providerTypeRegistry.set(name, target);
+	return (target: T) => { 
+		providerTypeRegistry.set(name, target);
+		return target; 
+	};
 }
 
 export function registerProviders(

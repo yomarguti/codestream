@@ -14,6 +14,7 @@ import { Container, SessionContainer } from "../../container";
 import { Logger, TraceLevel } from "../../logger";
 import {
 	AccessToken,
+	AddEnterpriseProviderHostRequest,
 	ArchiveStreamRequest,
 	Capabilities,
 	CloseStreamRequest,
@@ -393,6 +394,7 @@ export class SlackApiProvider implements ApiProvider {
 			MessageType.Markers,
 			MessageType.Preferences,
 			MessageType.Repositories,
+			MessageType.Teams,
 			MessageType.Users
 		]);
 	}
@@ -2297,6 +2299,11 @@ export class SlackApiProvider implements ApiProvider {
 		data: { [key: string]: any };
 	}) {
 		return this._codestream.setThirdPartyProviderInfo(request);
+	}
+
+	@log()
+	addEnterpriseProviderHost(request: AddEnterpriseProviderHostRequest) {
+		return this._codestream.addEnterpriseProviderHost(request);
 	}
 
 	@log()

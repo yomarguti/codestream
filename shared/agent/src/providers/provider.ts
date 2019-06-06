@@ -1,6 +1,8 @@
 "use strict";
 import fetch, { RequestInit, Response } from "node-fetch";
 import {
+	AddEnterpriseProviderRequest,
+	AddEnterpriseProviderResponse,
 	CreateThirdPartyCardRequest,
 	CreateThirdPartyCardResponse,
 	FetchAssignableUsersRequest,
@@ -22,6 +24,7 @@ export interface ThirdPartyProvider {
 	connect(): Promise<void>;
 	configure(data: { [key: string]: any }): Promise<void>;
 	disconnect(): Promise<void>;
+	addEnterpriseHost(request: AddEnterpriseProviderRequest): Promise<AddEnterpriseProviderResponse>;
 	getConfig(): ThirdPartyProviderConfig;
 	getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse>;
 	getAssignableUsers(request: FetchAssignableUsersRequest): Promise<FetchAssignableUsersResponse>;
@@ -54,7 +57,8 @@ export abstract class ThirdPartyProviderBase<
 	constructor(
 		public readonly session: CodeStreamSession,
 		protected readonly providerConfig: ThirdPartyProviderConfig
-	) {}
+	) {
+	}
 
 	abstract get displayName(): string;
 	abstract get name(): string;
@@ -75,8 +79,8 @@ export abstract class ThirdPartyProviderBase<
 
 	get baseUrl() {
 		const { host, apiHost, isEnterprise } = this.providerConfig;
-		const returnHost = isEnterprise ? host : apiHost;
-		return `https://${returnHost}${this.apiPath}`;
+		const returnHost = isEnterprise ? host : `https://${apiHost}`;
+		return `${returnHost}${this.apiPath}`;
 	}
 
 	get accessToken() {
@@ -102,7 +106,6 @@ export abstract class ThirdPartyProviderBase<
 
 				const providerInfo = this.getProviderInfo(me);
 				if (providerInfo == null || !providerInfo.accessToken) return;
-
 				resolve(providerInfo);
 			});
 		});
@@ -123,6 +126,15 @@ export abstract class ThirdPartyProviderBase<
 		}));
 		this._readyPromise = this._providerInfo = undefined;
 		await this.onDisconnected();
+	}
+
+	async addEnterpriseHost(request: AddEnterpriseProviderRequest): Promise<AddEnterpriseProviderResponse> {
+		return await this.session.api.addEnterpriseProviderHost({
+			provider: this.providerConfig.name,
+			teamId: this.session.teamId,
+			host: request.host,
+			data: request.data
+		});
 	}
 
 	protected async onDisconnected() {}

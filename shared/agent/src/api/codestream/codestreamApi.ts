@@ -1,5 +1,6 @@
 "use strict";
 import HttpsProxyAgent from "https-proxy-agent";
+import { cloneDeep, isEqual } from "lodash-es";
 import fetch, { Headers, RequestInit, Response } from "node-fetch";
 import { URLSearchParams } from "url";
 import { Emitter, Event } from "vscode-languageserver";
@@ -10,6 +11,8 @@ import { Logger } from "../../logger";
 import { isDirective, resolve } from "../../managers/operations";
 import {
 	AccessToken,
+	AddEnterpriseProviderHostRequest,
+	AddEnterpriseProviderHostResponse,
 	ArchiveStreamRequest,
 	Capabilities,
 	CloseStreamRequest,
@@ -70,6 +73,8 @@ import {
 	UpdateStreamMembershipRequest
 } from "../../protocol/agent.protocol";
 import {
+	CSAddProviderHostRequest,
+	CSAddProviderHostResponse,
 	CSChannelStream,
 	CSCompleteSignupRequest,
 	CSConfirmRegistrationRequest,
@@ -484,17 +489,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 				break;
 			case MessageType.Teams:
-				e.data = await SessionContainer.instance().teams.resolve(e);
-
-				if (this._events !== undefined) {
-					const { session } = SessionContainer.instance();
-
-					const currentTeamId = session.teamId;
-					for (const team of e.data as CSTeam[]) {
-						if (team.id === currentTeamId) {
-							session.updateProviders();
-						}
-					}
+				const currentTeam = await Container.instance().teams.getByIdFromCache(this.teamId);
+				const providerHostsBefore = cloneDeep((currentTeam ? currentTeam.providerHosts : undefined) || {});
+				e.data = await Container.instance().teams.resolve(e);
+				const providerHostsAfter = (currentTeam ? currentTeam.providerHosts : undefined) || {};
+				if (!isEqual(providerHostsBefore, providerHostsAfter)) {
+					Container.instance().session.updateProviders();
 				}
 				break;
 			case MessageType.Users:
@@ -1320,6 +1320,28 @@ export class CodeStreamApiProvider implements ApiProvider {
 			});
 
 			return user as CSMe;
+		} catch (ex) {
+			Logger.error(ex, cc);
+			throw ex;
+		}
+	}
+
+	@log()
+	async addEnterpriseProviderHost(request: AddEnterpriseProviderHostRequest): Promise<AddEnterpriseProviderHostResponse> {
+		const cc = Logger.getCorrelationContext();
+		try {
+			const response = await this.put<CSAddProviderHostRequest, CSAddProviderHostResponse>(
+				`/provider-host/${request.provider}/${request.teamId}`,
+				{ host: request.host, ...request.data },
+				this._token
+			);
+
+			await Container.instance().teams.resolve({
+				type: MessageType.Teams,
+				data: [response.team]
+			});
+			Container.instance().session.updateProviders();
+			return { providerId: response.providerId };
 		} catch (ex) {
 			Logger.error(ex, cc);
 			throw ex;

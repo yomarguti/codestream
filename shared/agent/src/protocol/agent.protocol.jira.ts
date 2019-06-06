@@ -9,6 +9,8 @@ export interface JiraUser {
 }
 
 export interface JiraBoard extends ThirdPartyProviderBoard {
+	id: string;
+	key: string;
 	issueTypes: string[];
 }
 

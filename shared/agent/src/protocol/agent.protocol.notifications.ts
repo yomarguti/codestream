@@ -41,7 +41,8 @@ export enum ChangeDataType {
 	Streams = "streams",
 	Teams = "teams",
 	Unreads = "unreads",
-	Users = "users"
+	Users = "users",
+	Providers = "providers"
 }
 
 export interface CodemarksChangedNotification {
@@ -102,6 +103,11 @@ export interface UsersChangedNotification {
 	data: CSUser[];
 }
 
+export interface ProvidersChangedNotification {
+	type: ChangeDataType.Providers;
+	data: ThirdPartyProviders;
+}
+
 export type DidChangeDataNotification =
 	| CodemarksChangedNotification
 	| MarkerLocationsChangedNotification
@@ -112,7 +118,8 @@ export type DidChangeDataNotification =
 	| StreamsChangedNotification
 	| TeamsChangedNotification
 	| UnreadsChangedNotification
-	| UsersChangedNotification;
+	| UsersChangedNotification
+	| ProvidersChangedNotification;
 
 export const DidChangeDataNotificationType = new NotificationType<DidChangeDataNotification, void>(
 	"codestream/didChangeData"
@@ -159,14 +166,6 @@ export interface DidLogoutNotification {
 
 export const DidLogoutNotificationType = new NotificationType<DidLogoutNotification, void>(
 	"codestream/didLogout"
-);
-
-export interface DidUpdateProviders {
-	providers: ThirdPartyProviders;
-}
-
-export const DidUpdateProvidersType = new NotificationType<DidUpdateProviders, void>(
-	"codestream/didUpdateProviders"
 );
 
 export interface DidLoginNotification {
