@@ -55,6 +55,7 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable {
                 autoHideMarkers.isSelected = it.autoHideMarkers
                 proxySupport.selectedItem = it.proxySupport
                 proxyStrictSSL.isSelected = it.proxyStrictSSL
+                proxyUrl.isEnabled = it.proxySupport == "override"
                 proxyUrl.text = it.proxyUrl
             }
         }
