@@ -183,7 +183,7 @@ export class WorkspaceSession {
 	get capabilities() {
 		const editorCapabilities = {
 			codemarkApply: false,
-			codemarkCompare: false,
+			codemarkCompare: true,
 			editorTrackVisibleRange: true,
 			openLink: true,
 			services: {},

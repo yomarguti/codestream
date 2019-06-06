@@ -1,6 +1,8 @@
 import {
 	BootstrapRequestType as WebviewBootstrapRequestType,
 	BootstrapResponse,
+	CompareMarkerRequest,
+	CompareMarkerRequestType,
 	CompleteSignupRequest,
 	CompleteSignupRequestType,
 	EditorContext,
@@ -66,7 +68,7 @@ import {
 	TraceLevel,
 } from "../protocols/agent/agent.protocol";
 import { CodemarkType, LoginResult } from "../protocols/agent/api.protocol";
-import { asAbsolutePath, Debug, Editor } from "../utils";
+import { asAbsolutePath, createTempFile, Debug, Editor } from "../utils";
 import { Container } from "../workspace/container";
 import { EditorObserver } from "../workspace/editor-observer";
 import { SessionStatus, WorkspaceSession } from "../workspace/workspace-session";
@@ -496,6 +498,12 @@ export class CodestreamView {
 					}
 					return false;
 				});
+				break;
+			}
+			case CompareMarkerRequestType.method: {
+				const { marker }: CompareMarkerRequest = message.params;
+				await Container.diffController.showDiff(marker);
+				this.respond({ id: message.id, params: {} });
 				break;
 			}
 			case LogoutRequestType.method: {

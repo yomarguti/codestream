@@ -7,6 +7,7 @@ import { CodemarkType } from "@codestream/protocols/api";
 import { CompositeDisposable, Disposable } from "atom";
 import { Convert } from "atom-languageclient";
 import { LOG_DIR } from "logger";
+import { SplitDiffService } from "types/package-services/split-diff";
 import { Debug, doTimes, Echo, Editor, Listener } from "utils";
 import { CODESTREAM_VIEW_URI } from "views/codestream-view";
 import { Container } from "workspace/container";
@@ -297,6 +298,14 @@ class CodestreamPackage {
 			if (statusBarTile) {
 				statusBarTile.destroy();
 			}
+		});
+	}
+
+	consumeSplitDiff(splitDiff: SplitDiffService) {
+		Container.diffController.splitDiffService = splitDiff;
+		return new Disposable(() => {
+			splitDiff.disable();
+			Container.diffController.splitDiffService = undefined;
 		});
 	}
 }

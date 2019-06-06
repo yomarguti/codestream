@@ -33,6 +33,11 @@
 			"versions": {
 				"^1.0.0": "consumeStatusBar"
 			}
+		},
+		"split-diff": {
+			"versions": {
+				"1.0.0": "consumeSplitDiff"
+			}
 		}
 	},
 	"configSchema": {
@@ -100,8 +105,12 @@
 		"webview:build": "webpack --config-name webview --env.development",
 		"webview:watch": "webpack --watch --config-name webview --env.development"
 	},
+	"package-deps": [
+		"split-diff"
+	],
 	"dependencies": {
 		"atom-languageclient": "0.9.9",
+		"atom-package-deps": "5.1.0",
 		"fs-plus": "3.1.1",
 		"uuid": "3.3.2"
 	},

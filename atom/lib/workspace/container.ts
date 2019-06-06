@@ -2,6 +2,7 @@ import { ConfigManager } from "configs";
 import { PackageState } from "types/package";
 import { ViewController } from "views/controller";
 import { StylesProvider } from "views/styles-getter";
+import { DiffController } from "./diff-controller";
 import { EditorManipulator } from "./editor-manipulator";
 import { MarkerDecorationProvider } from "./marker-decoration-provider";
 import { WorkspaceSession } from "./workspace-session";
@@ -37,10 +38,16 @@ export class Container {
 		return this._editorManipulator;
 	}
 
+	private static _diffController: DiffController;
+	static get diffController() {
+		return this._diffController;
+	}
+
 	static initialize(state: PackageState) {
 		this._configs = new ConfigManager();
 		this._styles = StylesProvider.create();
 		this._editorManipulator = new EditorManipulator();
+		this._diffController = new DiffController();
 		this._session = WorkspaceSession.create(state);
 		this._viewController = new ViewController(this._session, state.views);
 		this._markerDecorationProvider = new MarkerDecorationProvider(

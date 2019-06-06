@@ -2,9 +2,21 @@ import { TraceLevel } from "@codestream/protocols/agent";
 import { EditorSelection } from "@codestream/protocols/webview";
 import { Disposable, Range, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
+import * as fs from "fs-plus";
+import * as os from "os";
 import * as path from "path";
 import { Range as LSRange } from "vscode-languageserver-types";
 import { Container } from "workspace/container";
+
+export function createTempFile(name: string, text = "") {
+	const filePath = path.join(os.tmpdir(), name);
+	return new Promise<string>((resolve, reject) => {
+		fs.writeFile(filePath, text, error => {
+			if (error) reject(error);
+			else resolve(filePath);
+		});
+	});
+}
 
 export function doTimes(count: number, fn: (i: number) => void) {
 	for (let i = 0; i < count; i++) {
@@ -22,6 +34,10 @@ export const accessSafely = <T>(f: () => T): T | void => {
 
 function getPackage() {
 	return atom.packages.getLoadedPackage("codestream")!;
+}
+
+export function isPackageInstalled(name: string) {
+	return atom.packages.isPackageLoaded(name) && !atom.packages.isPackageDisabled(name);
 }
 
 export const asAbsolutePath = (relativePath: string) => {
