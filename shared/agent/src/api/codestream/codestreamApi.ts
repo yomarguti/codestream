@@ -1109,7 +1109,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 		}
 	}
 
-	@log()
+	@log({
+		args: {
+			0: (request: ThirdPartyProviderSetTokenRequest) => `${request.providerId}, ${request.host}`
+		}
+	})
 	async setThirdPartyProviderToken(request: ThirdPartyProviderSetTokenRequest) {
 		const cc = Logger.getCorrelationContext();
 		try {
@@ -1212,7 +1216,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 		}
 	}
 
-	@log()
+	@log({
+		args: { 1: () => false }
+	})
 	async refreshThirdPartyProvider(request: {
 		providerId: string;
 		refreshToken: string;
