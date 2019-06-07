@@ -514,8 +514,7 @@ export function fromTeamsUser(
 		fullName: user.displayName,
 		id: user.id,
 		codestreamId: codestreamId,
-		// TODO: Look this up in the CodeStream user list
-		isRegistered: true,
+		isRegistered: codestreamId !== undefined,
 		iWorkOn: undefined,
 		lastPostCreatedAt: defaultCreatedAt,
 		lastName: user.surname,

@@ -704,8 +704,7 @@ export function fromSlackUser(user: any, teamId: string, codestreamUsers: CSUser
 		fullName: user.real_name,
 		id: user.id,
 		codestreamId: codestreamId,
-		// TODO: Look this up in the CodeStream user list
-		isRegistered: true,
+		isRegistered: codestreamId !== undefined,
 		iWorkOn: undefined,
 		lastPostCreatedAt: user.updated,
 		lastName: user.profile.last_name,
