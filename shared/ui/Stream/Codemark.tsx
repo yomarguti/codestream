@@ -110,7 +110,7 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	private startPollingReplies(prefetch: boolean) {
-		if (this.props.teamProvider !== "msteam") return;
+		if (this.props.teamProvider !== "msteams") return;
 
 		if (prefetch) {
 			this.fetchReplies();
