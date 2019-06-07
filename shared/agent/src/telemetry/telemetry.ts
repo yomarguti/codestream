@@ -5,6 +5,7 @@ import { CodeStreamSession, SessionStatus, SessionStatusChangedEvent } from "../
 
 // FIXME: sorry, typescript purists: i simply gave up trying to get the type definitions for this module to work
 import Analytics from "analytics-node";
+import { debug } from "../system";
 
 export class TelemetryService {
 	private _segmentInstance: Analytics | undefined;
@@ -28,7 +29,7 @@ export class TelemetryService {
 		hasOptedOut: boolean,
 		opts?: { [key: string]: string | number | boolean }
 	) {
-		Logger.debug("AnalyticsService created");
+		Logger.debug("Telemetry created");
 
 		this._session = session;
 		this._superProps = {};
@@ -56,7 +57,7 @@ export class TelemetryService {
 	}
 
 	async initialize() {
-		Logger.debug("Initializing telemetry...");
+		Logger.debug("Telemetry initializing...");
 		let token = "";
 		try {
 			token = await this._session.api.getTelemetryKey();
@@ -124,8 +125,9 @@ export class TelemetryService {
 		this._firstSessionTimesOutAfter = firstSessionTimesOutAfter;
 	}
 
+	@debug()
 	track(event: string, data?: { [key: string]: string | number | boolean }) {
-		Logger.debug(`Tracking event :: ${event}`);
+		const cc = Logger.getCorrelationContext();
 
 		if (this._hasOptedOut || this._segmentInstance == null) {
 			return;
@@ -153,8 +155,7 @@ export class TelemetryService {
 				properties: payload
 			});
 		} catch (ex) {
-			Logger.debug("TRACKING ERROR!!!", ex);
-			Logger.error(ex);
+			Logger.error(ex, cc);
 		}
 	}
 }
