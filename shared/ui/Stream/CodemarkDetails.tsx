@@ -9,6 +9,7 @@ import { CodemarkPlus, Capabilities } from "@codestream/protocols/agent";
 import { createPost } from "./actions";
 import { CSUser, CSMe, CSPost } from "@codestream/protocols/api";
 import { getTeamProvider } from "../store/teams/actions";
+import { replaceHtml } from "../utils";
 
 interface State {
 	editingPostId?: string;
@@ -59,7 +60,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		const threadId = codemark ? codemark.postId : "";
 		const { createPost } = this.props;
 		this.setState({ text: "" });
-		await createPost(codemark.streamId, threadId, text, null, mentionedUserIds, {
+		await createPost(codemark.streamId, threadId, replaceHtml(text)!, null, mentionedUserIds, {
 			entryPoint: "Codemark"
 		});
 	};
