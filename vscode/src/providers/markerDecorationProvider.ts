@@ -319,7 +319,7 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 				decorations[overviewRulerKey] = [];
 			}
 
-			decorations[overviewRulerKey].push(marker.range);
+			decorations[overviewRulerKey].push(marker.hoverRange);
 
 			if (!this._suspended) {
 				// Determine if the marker needs to be inline (i.e. part of the content or overlayed)
