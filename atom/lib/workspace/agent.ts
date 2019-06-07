@@ -155,6 +155,16 @@ abstract class AgentConnection {
 		return (response as AgentInitializeResult).result;
 	}
 
+	private buildSpawnArgs(): [string, string[]] {
+		if (Debug.isDebugging()) {
+			return [
+				"node",
+				["--no-lazy", "--inspect=6012", asAbsolutePath("dist/agent/agent.js"), "--node-ipc"],
+			];
+		}
+		return [process.execPath, ["--no-lazy", asAbsolutePath("dist/agent/agent.js"), "--node-ipc"]];
+	}
+
 	private startServer(): ChildProcess {
 		const options: { [k: string]: any } = {};
 		options.env = Object.create(process.env);
@@ -162,15 +172,14 @@ abstract class AgentConnection {
 		options.env.ELECTRON_NO_ATTACH_CONSOLE = "1";
 		options.stdio = [null, null, null, "ipc"];
 
-		const agentPath = Debug.isDebugging()
-			? getAgentSource()
-			: asAbsolutePath("dist/agent/agent.js");
-		const nodePath = Debug.isDebugging() ? "node" : process.execPath;
-		const agentProcess = spawn(
-			nodePath,
-			["--nolazy", "--inspect=6009", agentPath, "--node-ipc"],
-			options
-		);
+		const [nodePath, args] = this.buildSpawnArgs();
+
+		const agentProcess = spawn(nodePath, args, options);
+
+		if (Debug.isDebugging()) {
+			console.debug("CodeStream agent pid", agentProcess.pid);
+			console.debug("spawned with", nodePath, args);
+		}
 
 		agentProcess.on("error", error => {
 			console.error(error);
