@@ -86,6 +86,8 @@ export class SimpleStream extends Component {
 		store: PropTypes.object
 	};
 
+	_pollingTimer;
+
 	componentDidMount() {
 		this.setUmiInfo();
 		this.disposables.push(
@@ -134,11 +136,41 @@ export class SimpleStream extends Component {
 				})
 			);
 		}
+
+		this.startPollingReplies(false);
 	}
 
 	componentWillUnmount = () => {
+		this.stopPollingReplies();
 		this.disposables.forEach(d => d.dispose());
 	};
+
+	startPollingReplies(prefetch) {
+		if (this.props.teamProvider !== "msteams") return;
+
+		if (prefetch) {
+			this.fetchReplies();
+		}
+
+		if (this._pollingTimer !== undefined) return;
+
+		this._pollingTimer = setInterval(() => {
+			if (this.props.threadId !== undefined && this.props.activePanel === WebviewPanels.Codemarks) {
+				this.fetchReplies();
+			}
+		}, 5000);
+	}
+
+	stopPollingReplies() {
+		if (this._pollingTimer === undefined) return;
+
+		clearInterval(this._pollingTimer);
+		this._pollingTimer = undefined;
+	}
+
+	async fetchReplies() {
+		return this.props.fetchThread(this.props.postStreamId, this.props.threadId);
+	}
 
 	async handleNewCodemarkRequest(e) {
 		this.props.setNewPostEntry(e.source);
