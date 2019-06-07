@@ -427,3 +427,36 @@
 		margin-bottom: 10px;
 	}
 }
+
+// currently only used in CodemarkDetails
+.progress-container {
+	width: 100%;
+	display: flex;
+	overflow: hidden;
+
+	.progress-bar {
+		background-color: transparent;
+		height: 4px;
+		width: 100%;
+	}
+
+	.progress-cursor {
+		width: 20%;
+		height: inherit;
+		background-image: linear-gradient(
+			to right,
+			transparent,
+			var(--text-color) 50%,
+			transparent 75%
+		);
+		animation: 2s linear infinite alternate move-cursor;
+	}
+}
+@keyframes move-cursor {
+	from {
+		margin-left: -20%;
+	}
+	to {
+		margin-left: 100%;
+	}
+}

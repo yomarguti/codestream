@@ -14,6 +14,7 @@ import { replaceHtml } from "../utils";
 interface State {
 	editingPostId?: string;
 	text: string;
+	isLoadingReplies: boolean;
 }
 
 interface Props {
@@ -29,7 +30,6 @@ interface Props {
 	hasFocus: boolean;
 	currentUserName: string;
 	teamId: string;
-	showDetails?: boolean;
 
 	onSubmitPost?: any;
 	createPost(...args: Parameters<typeof createPost>): ReturnType<ReturnType<typeof createPost>>;
@@ -42,7 +42,8 @@ export class CodemarkDetails extends React.Component<Props, State> {
 	constructor(props: Props) {
 		super(props);
 		this.state = {
-			text: ""
+			text: "",
+			isLoadingReplies: true
 		};
 	}
 
@@ -83,6 +84,10 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		this.setState({ editingPostId: undefined });
 	};
 
+	onRepliesLoaded = () => {
+		this.setState({ isLoadingReplies: false });
+	};
+
 	render() {
 		const { codemark, capabilities, author, currentUserId } = this.props;
 
@@ -96,10 +101,18 @@ export class CodemarkDetails extends React.Component<Props, State> {
 					capabilities={capabilities}
 				/>
 				<div className="replies">
+					{this.state.isLoadingReplies && (
+						<div className="progress-container">
+							<div className="progress-bar">
+								<div className="progress-cursor" />
+							</div>
+						</div>
+					)}
 					<div className="shadow-overlay">
 						<div className="postslist threadlist" onClick={this.handleClickPost}>
 							<ScrollBox>
 								<PostList
+									onDidInitialize={this.onRepliesLoaded}
 									ref={this.postList}
 									isActive={true}
 									hasFocus={this.props.hasFocus}

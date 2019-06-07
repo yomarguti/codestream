@@ -35,11 +35,17 @@ export default Child => {
 		class Provider extends React.Component {
 			state = { isFetching: false, isInitialized: false, posts: [], hasMore: true };
 
+			static defaultProps = {
+				onDidInitialize() {}
+			};
 			componentDidMount() {
 				this.initialize();
 			}
 
 			componentDidUpdate(prevProps, prevState) {
+				if (!prevState.isInitialized && this.state.isInitialized) {
+					this.props.onDidInitialize();
+				}
 				if (this.props.isThread && prevProps.isThread) {
 					if (this.props.childProps.threadId !== prevProps.childProps.threadId)
 						return this.initialize();
@@ -174,6 +180,7 @@ export default Child => {
 	);
 
 	return React.forwardRef((props, ref) => {
-		return <DataProvider childProps={{ ...props, ref }} />;
+		const { onDidInitialize, ...childProps } = props;
+		return <DataProvider onDidInitialize={onDidInitialize} childProps={{ ...childProps, ref }} />;
 	});
 };
