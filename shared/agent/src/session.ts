@@ -847,7 +847,11 @@ export class CodeStreamSession {
 			}
 			props["company"] = {
 				id: team.id,
-				name: team.name
+				name: team.name,
+				plan: team.plan,
+				trialStart_at: team.trialStartDate,
+				trialEnd_at: team.trialEndDate,
+				created_at: team.createdAt
 			};
 		}
 

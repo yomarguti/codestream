@@ -236,6 +236,9 @@ export interface CSTeam extends CSEntity {
 		slack?: CSTeamSlackProviderInfo;
 	};
 	providerHosts?: ThirdPartyProviders;
+	plan?: string;
+	trialStartDate?: number;
+	trialEndDate?: number;
 }
 
 export interface CSAsanaProviderInfo {
