@@ -535,7 +535,8 @@ export class CodeStreamSession {
 						Container.instance().telemetry.track({
 							eventName: "Provider Connect Failed",
 							properties: {
-								Error: ex.info.error
+								Error: ex.info && ex.info.error,
+								Provider: ex.info && ex.info.error && ex.info.error.provider
 							}
 						});
 					}
