@@ -19,12 +19,30 @@ const defaultCreator = "0";
 const mentionsRegex = /(^|\s)@(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
 const pseudoMentionsRegex = /(^|\s)@(everyone|channel|here)(?:\b(?!@|[\(\{\[\<\-])|$)/g;
 
+const teamsAttachmentsRegex = /<attachment id=\\?"(.+?)\\?"><\/attachment>/g;
 const teamsMentionsRegex = /<at id=\\?"(\d+)\\?">(.+)<\/at>/g;
 
 export interface UserInfo {
 	username: string;
 	displayName: string;
 	type: string;
+}
+
+export interface TeamsMessageAttachmentButton {
+	type: string;
+	title: string;
+	text: string;
+	displayText: string;
+	value: string;
+}
+
+export interface TeamsMessageAttachment {
+	id: string;
+	contentType: "application/vnd.microsoft.card.thumbnail";
+	contentUrl?: string;
+	content?: string;
+	name?: string;
+	thumbnailUrl?: string;
 }
 
 export interface TeamsMessageBody {
@@ -171,7 +189,8 @@ export function toTeamsMessageBody(
 	userInfosById: Map<string, UserInfo>,
 	userIdsByName: Map<string, string>,
 	teamsUserId: string,
-	mentionsOut: TeamsMessageMention[]
+	mentionsOut: TeamsMessageMention[],
+	attachmentsOut: TeamsMessageAttachment[]
 ): { contentType: "text" | "html"; content: string } {
 	let { color } = codemark;
 	if (color !== undefined) {
@@ -282,7 +301,7 @@ export function toTeamsMessageBody(
 				title = `<b>${marker.file}</b>`;
 			}
 
-			const code = `<code style="margin: 7px 0;padding:10px;border:1px solid #d9d9d9;white-space:pre;display:block;">${
+			const code = `<code style="margin:7px 0;padding:10px;border:1px solid #d9d9d9;white-space:pre;display:block;overflow:auto;">${
 				marker.code
 			}</code>`;
 
@@ -334,12 +353,12 @@ export function toTeamsMessageBody(
 	}
 
 	if (message) {
-		// Don't bother with the /cc since we can @mention in any content
-		// if (mentionedUserIds != null && mentionedUserIds.length !== 0) {
-		// 	message += ` /cc ${mentionedUserIds
-		// 		.map(u => `@${userInfosById.get(u)!.username}`)
-		// 		.join(", ")}`;
-		// }
+		if (mentionedUserIds != null && mentionedUserIds.length !== 0) {
+			message += ` /cc ${mentionedUserIds
+				.map(u => `@${userInfosById.get(u)!.username}`)
+				.join(", ")}`;
+		}
+
 		message = toTeamsMessageText(
 			message,
 			mentionedUserIds,
@@ -350,24 +369,48 @@ export function toTeamsMessageBody(
 	}
 
 	if (title) {
-		title = toTeamsMessageText(title, mentionedUserIds, userInfosById, userIdsByName, mentionsOut);
+		// Ensure we skip mention linking, because they aren't supported in attachments
+		title = toTeamsMessageText(
+			title,
+			mentionedUserIds,
+			userInfosById,
+			userIdsByName,
+			mentionsOut,
+			true
+		);
 	}
 
 	if (text) {
-		text = toTeamsMessageText(text, mentionedUserIds, userInfosById, userIdsByName, mentionsOut);
+		// Ensure we skip mention linking, because they aren't supported in attachments
+		text = toTeamsMessageText(
+			text,
+			mentionedUserIds,
+			userInfosById,
+			userIdsByName,
+			mentionsOut,
+			true
+		);
 	}
 
-	return {
-		contentType: "html",
-		content: `<p>${message}</p>
-<div data-codestream="codestream://codemark/${codemark.id}?teamId=${
-			codemark.teamId
-		}" style="margin-top:0.25em;border-left:4px solid ${color};padding-left:0.75em;">
-	${title ? `<p style="font-weight:600;">${title}</p>` : ""}
+	attachmentsOut.push({
+		id: codemark.id,
+		contentType: "application/vnd.microsoft.card.thumbnail",
+		content: JSON.stringify({
+			title: title,
+			text: `<div data-codestream="codestream://codemark/${codemark.id}?teamId=${
+				codemark.teamId
+			}" style="margin-top:0.25em;border-left:4px solid ${color};padding-left:0.75em;">
+	${false && title ? `<p style="font-weight:600;">${title}</p>` : ""}
 	<p>${text}</p>
 	${fieldsHtml}
 	<p style="font-size:x-small;font-weight:600;opacity:0.6;">Posted via CodeStream</p>
 </div>`
+		})
+	});
+
+	return {
+		contentType: "html",
+		content: `${message}<attachment id="${codemark.id}"></attachment>`
 	};
 }
 
@@ -381,6 +424,9 @@ export function fromTeamsMessageText(
 
 	let text = message.body.content;
 	if (mentions === undefined || mentions.length === 0) return text;
+
+	// TODO: Get codemark ids from attachments?
+	text = text.replace(teamsAttachmentsRegex, "");
 
 	text = text.replace(teamsMentionsRegex, (match: string, id: string, mentionText: string) => {
 		const mention = mentions.find(m => m.id === Number(id));
@@ -400,7 +446,8 @@ export function toTeamsMessageText(
 	mentionedUserIds: string[] | undefined,
 	userInfosById: Map<string, UserInfo>,
 	userIdsByName: Map<string, string>,
-	mentionsOut: TeamsMessageMention[]
+	mentionsOut: TeamsMessageMention[],
+	skipMentionLinking: boolean = false
 ) {
 	if (text == null || text.length === 0) return text;
 
@@ -417,7 +464,7 @@ export function toTeamsMessageText(
 					const id = mentionsOut.length;
 
 					const userInfo = userInfosById.get(userId);
-					if (userInfo !== undefined) {
+					if (userInfo !== undefined && !skipMentionLinking) {
 						mentionsOut.push({
 							id: id,
 							mentionText: mentionName,
@@ -431,7 +478,9 @@ export function toTeamsMessageText(
 						});
 					}
 
-					return `${prefix}<at id="${id}">${mentionName}</at>`;
+					return skipMentionLinking
+						? `${prefix}${mentionName}`
+						: `${prefix}<at id="${id}">${mentionName}</at>`;
 				}
 			}
 

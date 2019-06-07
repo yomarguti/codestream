@@ -121,6 +121,7 @@ import {
 	fromTeamsUser,
 	GraphBatchRequest,
 	GraphBatchResponse,
+	TeamsMessageAttachment,
 	TeamsMessageBody,
 	TeamsMessageMention,
 	toTeamsMessageBody,
@@ -559,6 +560,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 				request.streamId!
 			);
 
+			const attachments: TeamsMessageAttachment[] = [];
 			let body: TeamsMessageBody;
 			let codemark: CSCodemark | undefined;
 			let markers: CSMarker[] | undefined;
@@ -588,7 +590,8 @@ export class MSTeamsApiProvider implements ApiProvider {
 					userInfosById,
 					userIdsByName,
 					this._teamsUserId,
-					mentions
+					mentions,
+					attachments
 				);
 			} else {
 				body = { contentType: "text", content: text };
@@ -601,6 +604,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 				request =>
 					request.post({
 						body: body,
+						attachments: attachments.length === 0 ? undefined : attachments,
 						mentions: mentions.length === 0 ? undefined : mentions
 					})
 			);
