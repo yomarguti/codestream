@@ -1,4 +1,6 @@
 import {
+	ApplyMarkerRequest,
+	ApplyMarkerRequestType,
 	BootstrapRequestType as WebviewBootstrapRequestType,
 	BootstrapResponse,
 	CompareMarkerRequest,
@@ -503,6 +505,12 @@ export class CodestreamView {
 			case CompareMarkerRequestType.method: {
 				const { marker }: CompareMarkerRequest = message.params;
 				await Container.diffController.showDiff(marker);
+				this.respond({ id: message.id, params: {} });
+				break;
+			}
+			case ApplyMarkerRequestType.method: {
+				const { marker }: ApplyMarkerRequest = message.params;
+				await Container.diffController.applyPatch(marker);
 				this.respond({ id: message.id, params: {} });
 				break;
 			}

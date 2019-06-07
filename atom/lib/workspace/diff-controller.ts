@@ -29,6 +29,22 @@ export class DiffController implements Disposable {
 		this.splitDiffServiceInitEmitter.dispose();
 	}
 
+	async applyPatch(marker: CSMarker) {
+		const response = await Container.session.agent.request(GetDocumentFromMarkerRequestType, {
+			markerId: marker.id,
+			repoId: marker.repoId,
+		});
+
+		if (response === undefined) return;
+
+		const filePath = Convert.uriToPath(response.textDocument.uri);
+		if (!atom.project.contains(filePath)) return;
+
+		const editor = (await atom.workspace.open(filePath)) as TextEditor;
+
+		editor.setTextInBufferRange(Convert.lsRangeToAtomRange(response.range), response.marker.code);
+	}
+
 	async showDiff(marker: CSMarker) {
 		if (this._splitDiffService === undefined) {
 			if (atom.packages.isPackageDisabled("split-diff")) {
