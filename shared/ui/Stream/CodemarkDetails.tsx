@@ -10,6 +10,7 @@ import { createPost } from "./actions";
 import { CSUser, CSMe, CSPost } from "@codestream/protocols/api";
 import { getTeamProvider } from "../store/teams/actions";
 import { replaceHtml } from "../utils";
+import { DelayedRender } from "../Container/DelayedRender";
 
 interface State {
 	editingPostId?: string;
@@ -102,11 +103,13 @@ export class CodemarkDetails extends React.Component<Props, State> {
 				/>
 				<div className="replies">
 					{this.state.isLoadingReplies && (
-						<div className="progress-container">
-							<div className="progress-bar">
-								<div className="progress-cursor" />
+						<DelayedRender>
+							<div className="progress-container">
+								<div className="progress-bar">
+									<div className="progress-cursor" />
+								</div>
 							</div>
-						</div>
+						</DelayedRender>
 					)}
 					<div className="shadow-overlay">
 						<div className="postslist threadlist" onClick={this.handleClickPost}>

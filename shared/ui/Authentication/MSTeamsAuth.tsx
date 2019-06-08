@@ -5,6 +5,7 @@ import { goToSignup } from "../store/context/actions";
 import { useInterval, useRetryingCallback, useTimeout } from "../utilities/hooks";
 import { validateSignup, startSSOSignin, SignupType } from "../store/actions";
 import { DispatchProp } from "../store/common";
+import { inMillis } from "../utils";
 
 const noop = () => Promise.resolve();
 
@@ -19,7 +20,7 @@ export const MSTeamsAuth = (connect(undefined) as any)((props: Props) => {
 		setIsWaiting(false);
 	}, [isWaiting]);
 
-	useTimeout(stopWaiting, 60000 * 3); // 3 minutes
+	useTimeout(stopWaiting, inMillis(3, "min"));
 
 	const onClickGoToSignup = (event: React.SyntheticEvent) => {
 		event.preventDefault();

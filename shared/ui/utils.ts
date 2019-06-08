@@ -2,6 +2,17 @@ import uuidv4 from "uuid/v4";
 import { Range } from "vscode-languageserver-types";
 import { MaxRangeValue } from "./ipc/webview.protocol";
 
+export function noop() {}
+
+export function inMillis(number: number, unit: "sec" | "min") {
+	switch (unit) {
+		case "sec":
+			return number * 1000;
+		case "min":
+			return number * 60000;
+	}
+}
+
 export function isNotOnDisk(uri: string) {
 	return uri === "" || uri.startsWith("untitled:");
 }

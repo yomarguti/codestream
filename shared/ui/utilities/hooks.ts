@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 
 type Fn = () => void;
 
-export function useInterval(callback: Fn, delaySeconds = 1) {
+export function useInterval(callback: Fn, delay = 1000) {
 	const savedCallback = useRef<Fn>(callback);
 
 	// Remember the latest callback.
@@ -15,19 +15,19 @@ export function useInterval(callback: Fn, delaySeconds = 1) {
 		function tick() {
 			savedCallback.current!();
 		}
-		let id = setInterval(tick, delaySeconds * 1000);
+		let id = setInterval(tick, delay);
 		return () => clearInterval(id);
-	}, [delaySeconds]);
+	}, [delay]);
 }
 
-export function useTimeout(callback: Fn, seconds: number) {
+export function useTimeout(callback: Fn, delay: number) {
 	useEffect(() => {
 		let id = setTimeout(function() {
 			callback();
-		}, seconds);
+		}, delay);
 
 		return () => clearTimeout(id);
-	}, [callback, seconds]);
+	}, [callback, delay]);
 }
 
 export function useRetryingCallback(fn: () => Promise<any>) {
@@ -41,5 +41,5 @@ export function useRetryingCallback(fn: () => Promise<any>) {
 			await fn();
 		} catch (error) {}
 		canRun.current = true;
-	}, 5);
+	}, 5000);
 }

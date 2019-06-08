@@ -4,7 +4,8 @@ import { isEqual as _isEqual } from "lodash-es";
 import { getPostsForStream } from "../store/posts/reducer";
 import { fetchPosts, fetchThread } from "./actions";
 import { safe } from "../utils";
-import { Loading } from "../Container";
+import { Loading } from "../Container/Loading";
+import { DelayedRender } from "../Container/DelayedRender";
 
 const mapStateToProps = (state, props) => {
 	const { streamId, isThread, threadId } = props.childProps;
@@ -159,7 +160,12 @@ export default Child => {
 			};
 
 			render() {
-				if (!this.state.isInitialized) return <Loading style={{ height: "100%" }} delayRender />;
+				if (!this.state.isInitialized)
+					return (
+						<DelayedRender>
+							<Loading style={{ height: "100%" }} />
+						</DelayedRender>
+					);
 
 				const { childProps } = this.props;
 

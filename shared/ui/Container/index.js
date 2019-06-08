@@ -8,59 +8,9 @@ import { UnauthenticatedRoutes } from "../Authentication";
 import { logError } from "../logger";
 import { HostApi } from "../webview-api";
 import { ReloadWebviewRequestType } from "../ipc/webview.protocol";
+import { Loading } from "./Loading";
 
 addLocaleData(englishLocaleData);
-
-export class Loading extends React.Component {
-	static defaultProps = {
-		forceAnimation: false,
-		renderDelay: 250,
-		animationDelay: 1000
-	};
-
-	constructor(props) {
-		super(props);
-		this.state = { showRings: props.forceAnimation, shouldRender: !props.delayRender };
-	}
-
-	componentDidMount() {
-		const { forceAnimation, animationDelay, delayRender, renderDelay } = this.props;
-		if (forceAnimation === false) {
-			this.animationDelayId = setTimeout(() => {
-				this.setState({ showRings: true });
-			}, animationDelay);
-		}
-		if (delayRender) {
-			this.renderDelayId = setTimeout(() => {
-				this.setState({ shouldRender: true });
-			}, renderDelay);
-		}
-	}
-
-	componentWillUnmount() {
-		this.animationDelayId && clearTimeout(this.animationDelayId);
-		this.renderDelayId && clearTimeout(this.renderDelayId);
-	}
-
-	render() {
-		if (this.state.shouldRender === false) return null;
-
-		return (
-			<div id="spinner" style={this.props.style}>
-				<div className="loader-ring">
-					{this.state.showRings ? (
-						<React.Fragment>
-							<div className="loader-ring__segment" />
-							<div className="loader-ring__segment" />
-							<div className="loader-ring__segment" />
-							<div className="loader-ring__segment" />
-						</React.Fragment>
-					) : null}
-				</div>
-			</div>
-		);
-	}
-}
 
 const mapStateToProps = state => ({
 	bootstrapped: state.bootstrapped,
