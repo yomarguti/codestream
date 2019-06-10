@@ -514,7 +514,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	async trackProviderPost(request: CSTrackProviderPostRequest) {
 		try {
-			return await this.post("/provider-posts", request, this._token);
+			return await this.post(`/provider-posts/${request.provider}`, request, this._token);
 		} catch (ex) {
 			debugger;
 			Logger.error(ex, `Failed updating ${request.provider} post count`);
