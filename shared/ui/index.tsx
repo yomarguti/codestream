@@ -36,7 +36,7 @@ import { updatePreferences } from "./store/preferences/actions";
 import { updateUnreads } from "./store/unreads/actions";
 import { updateConfigs } from "./store/configs/actions";
 import { setEditorContext } from "./store/editorContext/actions";
-import { focus, setCurrentStream, setCurrentDocumentMarker } from "./store/context/actions";
+import { blur, focus, setCurrentStream, setCurrentDocumentMarker } from "./store/context/actions";
 
 export { HostApi };
 
