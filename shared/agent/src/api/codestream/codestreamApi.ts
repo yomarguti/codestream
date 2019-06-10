@@ -52,6 +52,8 @@ import {
 	PinReplyToCodemarkRequest,
 	ReactToPostRequest,
 	RenameStreamRequest,
+	SendPasswordResetEmailRequest,
+	SendPasswordResetEmailRequestType,
 	SetCodemarkPinnedRequest,
 	SetCodemarkStatusRequest,
 	SetStreamPurposeRequest,
@@ -1007,6 +1009,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@lspHandler(CreateTeamRequestType)
 	createTeam(request: CreateTeamRequest) {
 		return this.post("/teams", request, this._token);
+	}
+
+	@lspHandler(SendPasswordResetEmailRequestType)
+	async sendPasswordResetEmail(request: SendPasswordResetEmailRequest) {
+		await this.put("/no-auth/forgot-password", request);
 	}
 
 	@log()

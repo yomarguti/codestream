@@ -6,7 +6,6 @@ import {
 	CSGetInviteInfoResponse,
 	CSLoginResponse,
 	CSRegisterRequest,
-	CSRegisterResponse,
 	LoginResult
 } from "./api.protocol";
 
@@ -107,3 +106,14 @@ export const GetInviteInfoRequestType = new RequestType<
 	void,
 	void
 >("codestream/registration/invite-info");
+
+export interface SendPasswordResetEmailRequest {
+	email: string;
+}
+
+export const SendPasswordResetEmailRequestType = new RequestType<
+	SendPasswordResetEmailRequest,
+	void,
+	void,
+	void
+>("codestream/sendPasswordResetEmail");
