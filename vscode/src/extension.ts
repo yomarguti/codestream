@@ -143,7 +143,7 @@ async function showStartupMessage(context: ExtensionContext, version: string) {
 		if (result === actions[0]) {
 			await env.openExternal(
 				Uri.parse(
-					`https://codestream.com/codestream-v${major}-${minor}-vscode?utm_source=ext_vsc&utm_medium=popup&utm_campaign=v${major}-${minor}`
+					`https://www.codestream.com/blog/codestream-v${major}-${minor}?utm_source=ext_vsc&utm_medium=popup&utm_campaign=v${major}-${minor}`
 				)
 			);
 		}
