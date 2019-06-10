@@ -536,7 +536,7 @@ export class CodeStreamSession {
 							eventName: "Provider Connect Failed",
 							properties: {
 								Error: ex.info && ex.info.error,
-								Provider: ex.info && ex.info.error && ex.info.error.provider
+								Provider: ex.info && ex.info.provider
 							}
 						});
 					}
