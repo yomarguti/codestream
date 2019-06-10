@@ -11,6 +11,7 @@ import { JoinTeam } from "./JoinTeam";
 import { EmailConfirmation } from "./EmailConfirmation";
 import { TeamCreation } from "./TeamCreation";
 import { RouteState, Route } from "../store/context/types";
+import { ForgotPassword } from "./ForgotPassword";
 
 interface ConnectedProps extends RouteState {}
 
@@ -36,6 +37,8 @@ export const UnauthenticatedRoutes = connect<ConnectedProps, void, void, CodeStr
 			return <EmailConfirmation {...props.params as any} />;
 		case Route.TeamCreation:
 			return <TeamCreation {...props.params} />;
+		case Route.ForgotPassword:
+			return <ForgotPassword {...props.params} />;
 		default:
 			return <Login {...props.params} />;
 	}

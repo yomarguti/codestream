@@ -18,6 +18,13 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(func
 	props: PropsWithChildren<TextInputProps>,
 	ref: React.Ref<HTMLInputElement>
 ) {
+	if (props.validate !== undefined) {
+		if (props.onValidityChanged === undefined || props.name === undefined)
+			throw new Error(
+				"<TextInput/> validations require `validate`, `onValidityChanged`, and `name` props"
+			);
+	}
+
 	const [isTouched, setIsTouched] = useState(false);
 
 	const onChange = useCallback(
@@ -30,12 +37,8 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(func
 
 	const onBlur = useCallback(() => {
 		if (!isTouched) setIsTouched(true);
-		if (props.validate) {
-			if (!props.onValidityChanged || !props.name)
-				throw new Error(
-					"<TextInput/> validations require `validate`, `onValidityChanged`, and `name` props"
-				);
-			props.onValidityChanged(props.name, props.validate(props.value));
+		if (props.validate !== undefined) {
+			props.onValidityChanged!(props.name!, props.validate(props.value));
 		}
 	}, [props.value, props.validate, props.name]);
 

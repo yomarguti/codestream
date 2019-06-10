@@ -21,7 +21,7 @@ import { completeSignup } from "../store/session/actions";
 import { logError } from "../logger";
 
 const isPasswordValid = (password: string) => password.length >= 6;
-const isEmailValid = (email: string) => {
+export const isEmailValid = (email: string) => {
 	const emailRegex = new RegExp(
 		"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
 	);

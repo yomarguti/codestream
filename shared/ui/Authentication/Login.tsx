@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 import Button from "../Stream/Button";
 import { authenticate } from "./actions";
 import { CodeStreamState } from "../store";
-import { goToNewUserEntry } from "../store/context/actions";
+import { goToNewUserEntry, goToForgotPassword } from "../store/context/actions";
 import { startSSOSignin } from "../store/actions";
 
 const isPasswordInvalid = password => password.length === 0;
@@ -27,6 +27,7 @@ interface DispatchProps {
 	startSSOSignin: (
 		...args: Parameters<typeof startSSOSignin>
 	) => ReturnType<ReturnType<typeof startSSOSignin>>;
+	goToForgotPassword: typeof goToForgotPassword;
 }
 
 interface Props extends ConnectedProps, DispatchProps {}
@@ -167,6 +168,11 @@ class Login extends React.Component<Props, State> {
 		this.props.startSSOSignin("msteams");
 	};
 
+	onClickForgotPassword = (event: React.SyntheticEvent) => {
+		event.preventDefault();
+		this.props.goToForgotPassword({ email: this.state.email });
+	};
+
 	render() {
 		return (
 			<div id="login-page" className="onboarding-page">
@@ -234,11 +240,11 @@ class Login extends React.Component<Props, State> {
 									required={this.state.passwordTouched}
 								/>
 								{this.renderPasswordHelp()}
-								{/* <div className="help-link">
-									<a onClick={() => this.props.transition("forgotPassword")}>
+								<div className="help-link">
+									<a onClick={this.onClickForgotPassword}>
 										<FormattedMessage id="login.forgotPassword" />
 									</a>
-								</div> */}
+								</div>
 							</div>
 							<div className="button-group">
 								<Button
@@ -264,10 +270,10 @@ class Login extends React.Component<Props, State> {
 }
 
 const ConnectedLogin = connect<ConnectedProps, any, any, CodeStreamState>(
-	state => ({
-		initialEmail: state.configs.email
+	(state, props) => ({
+		initialEmail: props.email !== undefined ? props.email : state.configs.email
 	}),
-	{ authenticate, goToNewUserEntry, startSSOSignin }
+	{ authenticate, goToNewUserEntry, startSSOSignin, goToForgotPassword }
 )(Login);
 
 export { ConnectedLogin as Login };

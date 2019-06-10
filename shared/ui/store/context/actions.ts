@@ -202,6 +202,9 @@ export const setNewPostEntry = (entryPoint: PostEntryPoint) =>
 export const goToNewUserEntry = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.NewUser, params });
 
+export const goToForgotPassword = (params = {}) =>
+	action(ContextActionsType.SetRoute, { name: Route.ForgotPassword, params });
+
 export const goToCSOrSlack = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.ChatProviderSelection, params });
 
