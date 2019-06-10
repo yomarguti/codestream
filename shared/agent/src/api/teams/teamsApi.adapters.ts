@@ -110,7 +110,8 @@ export async function fromTeamsMessage(
 	channelId: string,
 	teamId: string,
 	userInfosById: Map<string, UserInfo>,
-	codeStreamTeamId: string
+	codeStreamTeamId: string,
+	replyCount?: number
 ): Promise<CSPost> {
 	const mentionedUserIds: string[] = [];
 
@@ -167,7 +168,7 @@ export async function fromTeamsMessage(
 		deactivated: message.deleted,
 		// files: files,
 		hasBeenEdited: timestamp !== modifiedTimestamp,
-		numReplies: 0,
+		numReplies: replyCount || 0,
 		id: postId,
 		mentionedUserIds: mentionedUserIds,
 		modifiedAt: modifiedTimestamp,

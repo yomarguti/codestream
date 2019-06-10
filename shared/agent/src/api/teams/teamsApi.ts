@@ -697,20 +697,52 @@ export class MSTeamsApiProvider implements ApiProvider {
 			({ messageId: parentMessageId } = fromPostId(parentPostId, request.streamId));
 		}
 
-		const response = await this.teamsApiCall<any>(
-			`beta/teams/${teamId}/channels/${channelId}/messages/${
-				parentMessageId ? `${parentMessageId}/replies/` : ""
-			}${messageId}`,
-			request => request.get()
-		);
+		let postResponse: any;
+		let replyCount;
+		if (parentMessageId) {
+			postResponse = await this.teamsApiCall<any>(
+				`beta/teams/${teamId}/channels/${channelId}/messages/${parentMessageId}/replies/${messageId}`,
+				request => request.get()
+			);
+		} else {
+			// Create a composite query to try to get if there are any replies
+			const requests: GraphBatchRequest[] = [
+				{
+					id: "post",
+					method: "GET",
+					url: `teams/${teamId}/channels/${channelId}/messages/${messageId}`
+				},
+				{
+					id: "replies",
+					method: "GET",
+					// Only get the first reply, since we can't use $count or $select with replies yet
+					url: `teams/${teamId}/channels/${channelId}/messages/${messageId}/replies?$top=1`
+				}
+			];
+
+			const response = await this.teamsApiCall<{ responses: GraphBatchResponse[] }>(
+				"beta/$batch",
+				request =>
+					request.post({
+						requests: requests
+					})
+			);
+
+			postResponse = response.responses.find(r => r.id === "post")!.body!;
+			const repliesResponse = response.responses.find(r => r.id === "replies")!;
+			if (repliesResponse.body && repliesResponse.body.value && repliesResponse.body.value.length) {
+				replyCount = 1;
+			}
+		}
 
 		const userInfosById = await this.ensureUserInfosById();
 		const post = await fromTeamsMessage(
-			response,
+			postResponse,
 			channelId,
 			teamId,
 			userInfosById,
-			this._codestreamTeamId
+			this._codestreamTeamId,
+			replyCount
 		);
 
 		return { post: post };
@@ -718,13 +750,50 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 	@log()
 	async getPosts(request: GetPostsRequest): Promise<GetPostsResponse> {
-		const responses = await Promise.all(
-			request.postIds.map(id =>
-				this.getPost({ streamId: request.streamId, postId: id }, request.parentPostId)
+		if (request.postIds.length === 1) {
+			const response = await this.getPost(
+				{ streamId: request.streamId, postId: request.postIds[0] },
+				request.parentPostId
+			);
+			return { posts: [response.post] };
+		}
+
+		const requests: GraphBatchRequest[] = [
+			...Iterables.map(request.postIds, postId => {
+				const { teamId, channelId, messageId } = fromPostId(postId, request.streamId);
+
+				let parentMessageId;
+				if (request.parentPostId) {
+					({ messageId: parentMessageId } = fromPostId(request.parentPostId, request.streamId));
+				}
+
+				return {
+					id: messageId!,
+					method: "GET",
+					url: `teams/${teamId}/channels/${channelId}/messages/${
+						parentMessageId ? `${parentMessageId}/replies/` : ""
+					}${messageId}`
+				};
+			})
+		];
+
+		const response = await this.teamsApiCall<{ responses: GraphBatchResponse[] }>(
+			"beta/$batch",
+			request =>
+				request.post({
+					requests: requests
+				})
+		);
+
+		const { teamId, channelId } = fromStreamId(request.streamId);
+		const userInfosById = await this.ensureUserInfosById();
+
+		const posts = await Promise.all(
+			response.responses.map(r =>
+				fromTeamsMessage(r.body!, channelId, teamId, userInfosById, this._codestreamTeamId)
 			)
 		);
 
-		const posts = responses.map(p => p.post);
 		return { posts: posts };
 	}
 
