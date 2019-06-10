@@ -115,7 +115,12 @@ export async function fromTeamsMessage(
 ): Promise<CSPost> {
 	const mentionedUserIds: string[] = [];
 
-	const text = fromTeamsMessageText(message, userInfosById, message.mentions, mentionedUserIds);
+	let text;
+	if (message.deletedDateTime == null) {
+		text = fromTeamsMessageText(message, userInfosById, message.mentions, mentionedUserIds);
+	} else {
+		text = `_This ${message.replyToId == null ? "message" : "reply"} has been deleted._`;
+	}
 
 	// let reactions;
 	// if (post.reactions) {
