@@ -25,6 +25,7 @@ declare module "atom" {
 	interface WorkspaceItem {
 		getURI?(): string;
 		destroy?(): void;
+		getPath?(): string | undefined;
 	}
 
 	interface WorkspaceCenter {

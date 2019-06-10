@@ -7,4 +7,5 @@ export interface PackageState {
 	lastUsedEmail?: string;
 	environment?: EnvironmentConfig;
 	views?: ViewsState;
+	debug?: boolean;
 }

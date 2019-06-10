@@ -26,6 +26,12 @@
 			"versions": {
 				"1.0.0": "provideEnvironmentConfig"
 			}
+		},
+		"codestream-debug-config": {
+			"description": "Controls to change the debug mode",
+			"versions": {
+				"1.0.0": "provideDebugConfig"
+			}
 		}
 	},
 	"consumedServices": {

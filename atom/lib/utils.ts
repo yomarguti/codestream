@@ -61,8 +61,12 @@ export const getAgentSource = () => {
 };
 
 export namespace Debug {
+	export function setDebugging(value: boolean) {
+		Container.configs.inMemory.debug = value;
+	}
+
 	export function isDebugging() {
-		return atom.inDevMode() && Container.configs.get("traceLevel") === TraceLevel.Debug;
+		return Container.configs.inMemory.debug;
 	}
 
 	export function isSilent() {

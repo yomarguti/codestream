@@ -44,7 +44,7 @@ export class Container {
 	}
 
 	static initialize(state: PackageState) {
-		this._configs = new ConfigManager();
+		this._configs = new ConfigManager(state);
 		this._styles = StylesProvider.create();
 		this._editorManipulator = new EditorManipulator();
 		this._diffController = new DiffController();

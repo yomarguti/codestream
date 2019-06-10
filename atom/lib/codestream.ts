@@ -11,7 +11,13 @@ import { SplitDiffService } from "types/package-services/split-diff";
 import { Debug, doTimes, Echo, Editor, Listener } from "utils";
 import { CODESTREAM_VIEW_URI } from "views/codestream-view";
 import { Container } from "workspace/container";
-import { Environment, EnvironmentConfig, PD_CONFIG, PRODUCTION_CONFIG } from "./env-utils";
+import {
+	Environment,
+	EnvironmentConfig,
+	PD_CONFIG,
+	PRODUCTION_CONFIG,
+	QA_CONFIG,
+} from "./env-utils";
 import { PackageState } from "./types/package";
 import { StatusBar } from "./types/package-services/status-bar";
 import { SessionStatus } from "./workspace/workspace-session";
@@ -66,6 +72,13 @@ class CodestreamPackage {
 				},
 				hiddenInCommandPalette,
 			}),
+			atom.commands.add("atom-workspace", "codestream:point-to-qa", {
+				didDispatch: () => {
+					session.changeEnvironment(QA_CONFIG);
+					this.environmentChangeEmitter.push(QA_CONFIG);
+				},
+				hiddenInCommandPalette,
+			}),
 			atom.commands.add("atom-workspace", "codestream:point-to-dev", {
 				didDispatch: () => {
 					session.changeEnvironment(PD_CONFIG);
@@ -93,7 +106,11 @@ class CodestreamPackage {
 
 	// Package lifecyle
 	serialize(): PackageState {
-		return { ...Container.session.serialize(), views: Container.viewController.serialize() };
+		return {
+			...Container.session.serialize(),
+			views: Container.viewController.serialize(),
+			debug: Debug.isDebugging(),
+		};
 	}
 
 	// Package lifecyle
@@ -113,6 +130,15 @@ class CodestreamPackage {
 		return {
 			get: () => Container.session.environment,
 			onDidChange: (cb: Listener<EnvironmentConfig>) => this.environmentChangeEmitter.add(cb),
+		};
+	}
+
+	provideDebugConfig() {
+		return {
+			set: (enable: boolean) => {
+				Debug.setDebugging(enable);
+			},
+			get: () => Debug.isDebugging(),
 		};
 	}
 

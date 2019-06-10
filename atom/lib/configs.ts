@@ -1,6 +1,7 @@
 import { TraceLevel } from "@codestream/protocols/agent";
 import { WebviewConfigs } from "@codestream/protocols/webview";
 import { Disposable } from "atom";
+import { PackageState } from "types/package";
 
 export interface ConfigSchema {
 	team: string;
@@ -19,6 +20,14 @@ const KEYS_FOR_WEBVIEW = ["avatars", "showMarkers"];
 const keyForWebview = (key: string) => (key === "avatars" ? "showHeadshots" : key);
 
 export class ConfigManager implements Disposable {
+	readonly inMemory = {
+		debug: false,
+	};
+
+	constructor(state: PackageState) {
+		this.inMemory.debug = state.debug !== undefined ? state.debug : false;
+	}
+
 	get<K extends keyof ConfigSchema>(name: K): ConfigSchema[K] {
 		return atom.config.get(`codestream.${name}`);
 	}
