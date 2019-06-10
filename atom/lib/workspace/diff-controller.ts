@@ -46,6 +46,42 @@ export class DiffController implements Disposable {
 	}
 
 	async showDiff(marker: CSMarker) {
+		await this.ensureSplitDiffEnabled();
+
+		const response = await Container.session.agent.request(GetDocumentFromMarkerRequestType, {
+			markerId: marker.id,
+			repoId: marker.repoId,
+		});
+
+		const currentEditor = atom.workspace.getActiveTextEditor()!;
+
+		if (response === undefined) return;
+
+		const diffPath = await createTempFile(
+			`codestream-diff-${path.basename(marker.file)}`,
+			currentEditor.getText()
+		);
+
+		const markerEditor = (await atom.workspace.createItemForURI(diffPath)) as TextEditor;
+		markerEditor.setTextInBufferRange(
+			Convert.lsRangeToAtomRange(response!.range),
+			response.marker.code
+		);
+		markerEditor.setReadOnly(true);
+
+		atom.workspace
+			.getCenter()
+			.getActivePane()
+			.splitRight({ items: [markerEditor], copyActiveItem: false });
+
+		Container.editorManipulator.scrollIntoView(markerEditor, response.range.start.line, {
+			center: true,
+		});
+
+		this._splitDiffService!.diffEditors(currentEditor, markerEditor, { muteNotifications: true });
+	}
+
+	private async ensureSplitDiffEnabled() {
 		if (this._splitDiffService === undefined) {
 			if (atom.packages.isPackageDisabled("split-diff")) {
 				atom.notifications.addWarning("The split-diff package is disabled", {
@@ -66,41 +102,9 @@ export class DiffController implements Disposable {
 					}
 				});
 			} catch (error) {
-				atom.notifications.addInfo("installation canceled");
+				atom.notifications.addInfo("Installation of split-diff cancelled");
 				return;
 			}
 		}
-
-		const response = await Container.session.agent.request(GetDocumentFromMarkerRequestType, {
-			markerId: marker.id,
-			repoId: marker.repoId,
-		});
-
-		const currentEditor = atom.workspace.getActiveTextEditor()!;
-
-		if (response === undefined) return;
-
-		const diffPath = await createTempFile(
-			`codestream-diff-${path.basename(marker.file)}`,
-			currentEditor.getText()
-		);
-
-		const markerEditor = (await atom.workspace.createItemForURI(diffPath)) as TextEditor;
-
-		markerEditor.setTextInBufferRange(
-			Convert.lsRangeToAtomRange(response!.range),
-			response.marker.code
-		);
-
-		atom.workspace
-			.getCenter()
-			.getActivePane()
-			.splitRight({ items: [markerEditor], copyActiveItem: false });
-
-		Container.editorManipulator.scrollIntoView(markerEditor, response.range.start.line, {
-			center: true,
-		});
-
-		this._splitDiffService!.diffEditors(currentEditor, markerEditor, { muteNotifications: true });
 	}
 }
