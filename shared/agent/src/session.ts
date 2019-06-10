@@ -849,10 +849,12 @@ export class CodeStreamSession {
 				id: team.id,
 				name: team.name,
 				plan: team.plan,
-				trialStart_at: team.trialStartDate,
-				trialEnd_at: team.trialEndDate,
-				created_at: team.createdAt
+				created_at: new Date(team.createdAt!).toISOString()
 			};
+			if (team.trialStartDate && team.trialEndDate) {
+				props["company"]["trialStart_at"] = new Date(team.trialStartDate).toISOString();
+				props["company"]["trialEnd_at"] =  new Date(team.trialEndDate).toISOString();
+			}
 		}
 
 		if (user.registeredAt) {
