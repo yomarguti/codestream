@@ -67,6 +67,7 @@ export class DiffController implements Disposable {
 			Convert.lsRangeToAtomRange(response!.range),
 			response.marker.code
 		);
+		await markerEditor.save();
 		markerEditor.setReadOnly(true);
 
 		atom.workspace
