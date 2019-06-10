@@ -710,7 +710,7 @@ export class Codemark extends React.Component<Props, State> {
 						<div className="pinned-reply">
 							<Icon className="pinned-reply-star" name="star" />{" "}
 							<Headshot size={18} person={this.props.pinnedAuthors[i]} />
-							<div className="pinned-reply-body">{post.text}</div>
+							<div className="pinned-reply-body">{this.renderTextLinkified(post.text)}</div>
 						</div>
 					);
 				})}
