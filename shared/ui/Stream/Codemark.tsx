@@ -34,6 +34,7 @@ interface DispatchProps {
 	author: CSUser;
 	codemarkKeybindings: { [key: string]: string };
 	currentUser: CSMe;
+	editorHasFocus: boolean;
 	pinnedReplies: CSPost[];
 	pinnedAuthors: CSUser[];
 	isCodeStreamTeam: boolean;
@@ -118,7 +119,11 @@ export class Codemark extends React.Component<Props, State> {
 
 		if (this._pollingTimer !== undefined) return;
 
-		this._pollingTimer = setInterval(() => this.fetchReplies(), 5000);
+		this._pollingTimer = setInterval(() => {
+			if (this.props.editorHasFocus) {
+				this.fetchReplies();
+			}
+		}, 5000);
 	}
 
 	private stopPollingReplies() {
@@ -803,18 +808,19 @@ const unkownAuthor = {
 };
 
 const mapStateToProps = (state, props): Partial<DispatchProps> => {
-	const { preferences, users, session, posts } = state;
+	const { context, preferences, users, session, posts } = state;
 	const { codemark } = props;
 
 	const teamProvider = getCurrentTeamProvider(state);
 
 	const pinnedReplies = (codemark.pinnedReplies || EMPTY_ARRAY)
-		.map(id => getPost(state.posts, codemark.streamId, id))
+		.map(id => getPost(posts, codemark.streamId, id))
 		.filter(Boolean);
 
 	const pinnedAuthors = pinnedReplies.map(post => users[post.creatorId]);
 
 	return {
+		editorHasFocus: context.hasFocus,
 		pinnedReplies,
 		pinnedAuthors,
 		currentUser: users[session.userId] as CSMe,

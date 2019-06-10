@@ -155,7 +155,11 @@ export class SimpleStream extends Component {
 		if (this._pollingTimer !== undefined) return;
 
 		this._pollingTimer = setInterval(() => {
-			if (this.props.threadId !== undefined && this.props.activePanel === WebviewPanels.Codemarks) {
+			if (
+				this.props.editorHasFocus &&
+				this.props.threadId !== undefined &&
+				this.props.activePanel === WebviewPanels.Codemarks
+			) {
 				this.fetchReplies();
 			}
 		}, 5000);
@@ -2127,6 +2131,7 @@ const mapStateToProps = state => {
 	}));
 
 	return {
+		editorHasFocus: context.hasFocus,
 		pluginVersion,
 		channelStreams,
 		directMessageStreams,
