@@ -671,7 +671,7 @@ export class SlackApiProvider implements ApiProvider {
 			};
 		} finally {
 			if (createdPostId) {
-				this._codestream.trackSharedPost({
+				this._codestream.trackProviderPost({
 					provider: "slack",
 					teamId: this.teamId,
 					streamId: request.streamId,

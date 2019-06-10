@@ -132,7 +132,7 @@ import {
 	CSSetCodemarkPinnedResponse,
 	CSStream,
 	CSTeam,
-	CSTrackSharedPostRequest,
+	CSTrackProviderPostRequest,
 	CSUpdateCodemarkRequest,
 	CSUpdateCodemarkResponse,
 	CSUpdateMarkerRequest,
@@ -512,12 +512,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async trackSharedPost(request: CSTrackSharedPostRequest) {
+	async trackProviderPost(request: CSTrackProviderPostRequest) {
 		try {
-			return await this.post("/shared-posts", request, this._token);
+			return await this.post("/provider-posts", request, this._token);
 		} catch (ex) {
 			debugger;
-			Logger.error(ex, "Failed updating shared post count");
+			Logger.error(ex, `Failed updating ${request.provider} post count`);
 			return undefined;
 		}
 	}

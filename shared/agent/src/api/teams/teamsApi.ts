@@ -642,7 +642,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 			throw ex;
 		} finally {
 			if (createdPostId) {
-				this._codestream.trackSharedPost({
+				this._codestream.trackProviderPost({
 					provider: "msteams",
 					teamId: this.teamId,
 					streamId: request.streamId,

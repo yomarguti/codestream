@@ -480,7 +480,7 @@ export interface CSCreateCodemarkPermalinkResponse {
 	permalink: string;
 }
 
-export interface CSTrackSharedPostRequest {
+export interface CSTrackProviderPostRequest {
 	provider: string;
 	teamId: string;
 	streamId: string;
