@@ -640,18 +640,17 @@ export class MSTeamsApiProvider implements ApiProvider {
 		} catch (ex) {
 			debugger;
 			throw ex;
+		} finally {
+			if (createdPostId) {
+				this._codestream.trackSharedPost({
+					provider: "msteams",
+					teamId: this.teamId,
+					streamId: request.streamId,
+					postId: createdPostId,
+					parentPostId: request.parentPostId
+				});
+			}
 		}
-		// } finally {
-		// 	if (createdPostId) {
-		// 		this._codestream.trackSharedPost({
-		// 			provider: "msteams",
-		// 			teamId: this.teamId,
-		// 			streamId: request.streamId,
-		// 			postId: createdPostId,
-		// 			parentPostId: request.parentPostId
-		// 		});
-		// 	}
-		// }
 	}
 
 	@log()

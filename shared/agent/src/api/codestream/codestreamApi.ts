@@ -512,7 +512,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	async trackSharedPost(request: CSTrackSharedPostRequest) {
 		try {
-			return await this.post("/slack-posts", request, this._token);
+			return await this.post("/shared-posts", request, this._token);
 		} catch (ex) {
 			debugger;
 			Logger.error(ex, "Failed updating shared post count");
