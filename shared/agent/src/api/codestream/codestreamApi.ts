@@ -489,12 +489,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 				break;
 			case MessageType.Teams:
-				const currentTeam = await Container.instance().teams.getByIdFromCache(this.teamId);
+				const currentTeam = await SessionContainer.instance().teams.getByIdFromCache(this.teamId);
 				const providerHostsBefore = cloneDeep((currentTeam ? currentTeam.providerHosts : undefined) || {});
-				e.data = await Container.instance().teams.resolve(e);
+				e.data = await SessionContainer.instance().teams.resolve(e);
 				const providerHostsAfter = (currentTeam ? currentTeam.providerHosts : undefined) || {};
 				if (!isEqual(providerHostsBefore, providerHostsAfter)) {
-					Container.instance().session.updateProviders();
+					SessionContainer.instance().session.updateProviders();
 				}
 				break;
 			case MessageType.Users:
