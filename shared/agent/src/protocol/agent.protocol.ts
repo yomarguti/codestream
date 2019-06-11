@@ -43,6 +43,11 @@ export interface Capabilities {
 	codemarkCompare?: boolean;
 	codemarkOpenRevision?: boolean;
 	editorTrackVisibleRange?: boolean;
+	postDelete?: boolean;
+	postEdit?: boolean;
+	providerCanSupportRealtimeChat?: boolean;
+	providerSupportsRealtimeChat?: boolean;
+	providerSupportsRealtimeEvents?: boolean;
 	services?: {
 		vsls?: boolean;
 	};

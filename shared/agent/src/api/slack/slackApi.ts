@@ -142,7 +142,12 @@ export class SlackApiProvider implements ApiProvider {
 	private _userIdsByName: Map<string, string> | undefined;
 
 	readonly capabilities: Capabilities = {
-		channelMute: false
+		channelMute: false,
+		postDelete: true,
+		postEdit: true,
+		providerCanSupportRealtimeChat: true,
+		providerSupportsRealtimeChat: true,
+		providerSupportsRealtimeEvents: true
 	};
 
 	constructor(

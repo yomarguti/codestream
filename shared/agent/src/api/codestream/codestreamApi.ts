@@ -190,7 +190,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private _preferences: CodeStreamPreferences | undefined;
 
 	readonly capabilities: Capabilities = {
-		channelMute: true
+		channelMute: true,
+		postDelete: true,
+		postEdit: true,
+		providerCanSupportRealtimeChat: true,
+		providerSupportsRealtimeChat: true,
+		providerSupportsRealtimeEvents: true
 	};
 
 	constructor(

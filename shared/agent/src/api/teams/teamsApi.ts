@@ -151,7 +151,12 @@ export class MSTeamsApiProvider implements ApiProvider {
 	private _userIdsByName: Map<string, string> | undefined;
 
 	readonly capabilities: Capabilities = {
-		channelMute: false
+		channelMute: false,
+		postDelete: false,
+		postEdit: false,
+		providerCanSupportRealtimeChat: false,
+		providerSupportsRealtimeChat: false,
+		providerSupportsRealtimeEvents: false
 	};
 
 	constructor(
