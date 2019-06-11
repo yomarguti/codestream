@@ -524,6 +524,10 @@ export class CodeStreamSession {
 		singleLine: true
 	})
 	async login(options: LoginOptions) {
+		if (this.status === SessionStatus.SignedIn) {
+			throw new AgentError("Session is already signed in");
+		}
+
 		let response;
 		try {
 			response = await this.api.login(options);
@@ -853,7 +857,7 @@ export class CodeStreamSession {
 			};
 			if (team.trialStartDate && team.trialEndDate) {
 				props["company"]["trialStart_at"] = new Date(team.trialStartDate).toISOString();
-				props["company"]["trialEnd_at"] =  new Date(team.trialEndDate).toISOString();
+				props["company"]["trialEnd_at"] = new Date(team.trialEndDate).toISOString();
 			}
 		}
 
