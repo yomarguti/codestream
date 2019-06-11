@@ -9,6 +9,7 @@ import { Logger } from "../../logger";
 import {
 	AddEnterpriseProviderHostRequest,
 	AccessToken,
+	AddEnterpriseProviderHostRequest,
 	ArchiveStreamRequest,
 	ArchiveStreamResponse,
 	Capabilities,
