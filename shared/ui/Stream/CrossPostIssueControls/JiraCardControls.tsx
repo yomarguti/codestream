@@ -90,7 +90,7 @@ export default class JiraCardControls extends React.Component<Props, State> {
 		const { provider } = this.props;
 		const { host, name } = provider;
 		const issueTypeItems = board ? board.issueTypes.map(it => ({ label: it, action: it })) : [];
-		const boardItems = this.props.boards.map(board => ({
+		const boardItems = (this.props.boards || []).map(board => ({
 			label: board.name,
 			key: board.id,
 			action: board
