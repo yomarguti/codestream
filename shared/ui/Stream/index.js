@@ -146,7 +146,7 @@ export class SimpleStream extends Component {
 	};
 
 	startPollingReplies(prefetch) {
-		if (this.props.teamProvider !== "msteams") return;
+		if (this.props.capabilities.providerSupportsRealtimeEvents) return;
 
 		if (prefetch) {
 			this.fetchReplies();
@@ -521,7 +521,8 @@ export class SimpleStream extends Component {
 						// 	</Tooltip>
 						// </label>
 					}
-					{(this.props.teamProvider === "codestream" || this.props.teamProvider === "slack") && (
+					{(this.props.capabilities.providerSupportsRealtimeChat ||
+						this.props.capabilities.providerCanSupportsRealtimeChat) && (
 						<label
 							className={createClassString({
 								selected:
@@ -2131,6 +2132,7 @@ const mapStateToProps = state => {
 	}));
 
 	return {
+		capabilities: capabilities,
 		editorHasFocus: context.hasFocus,
 		pluginVersion,
 		channelStreams,

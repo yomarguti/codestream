@@ -8,7 +8,12 @@ import Menu from "./Menu";
 import { markdownify } from "./Markdowner";
 import Timestamp from "./Timestamp";
 import CodemarkDetails from "./CodemarkDetails";
-import { DocumentMarker, CodemarkPlus, OpenUrlRequestType } from "@codestream/protocols/agent";
+import {
+	DocumentMarker,
+	CodemarkPlus,
+	OpenUrlRequestType,
+	Capabilities
+} from "@codestream/protocols/agent";
 import { CodemarkType, CSUser, CSMe, CSPost } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
@@ -32,13 +37,13 @@ interface State {
 
 interface DispatchProps {
 	author: CSUser;
+	capabilities: Capabilities;
 	codemarkKeybindings: { [key: string]: string };
 	currentUser: CSMe;
 	editorHasFocus: boolean;
 	pinnedReplies: CSPost[];
 	pinnedAuthors: CSUser[];
 	isCodeStreamTeam: boolean;
-	teamProvider: "codestream" | "slack" | "msteams" | string;
 
 	deleteCodemark: typeof deleteCodemark;
 	editCodemark: typeof editCodemark;
@@ -111,7 +116,7 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	private startPollingReplies(prefetch: boolean) {
-		if (this.props.teamProvider !== "msteams") return;
+		if (this.props.capabilities.providerSupportsRealtimeEvents) return;
 
 		if (prefetch) {
 			this.fetchReplies();
@@ -808,7 +813,7 @@ const unkownAuthor = {
 };
 
 const mapStateToProps = (state, props): Partial<DispatchProps> => {
-	const { context, preferences, users, session, posts } = state;
+	const { capabilities, context, preferences, users, session, posts } = state;
 	const { codemark } = props;
 
 	const teamProvider = getCurrentTeamProvider(state);
@@ -820,14 +825,14 @@ const mapStateToProps = (state, props): Partial<DispatchProps> => {
 	const pinnedAuthors = pinnedReplies.map(post => users[post.creatorId]);
 
 	return {
+		capabilities: capabilities,
 		editorHasFocus: context.hasFocus,
 		pinnedReplies,
 		pinnedAuthors,
 		currentUser: users[session.userId] as CSMe,
 		author: getUserByCsId(users, props.codemark.creatorId) || (unkownAuthor as CSUser),
 		codemarkKeybindings: preferences.codemarkKeybindings || EMPTY_OBJECT,
-		isCodeStreamTeam: teamProvider === "codestream",
-		teamProvider: teamProvider
+		isCodeStreamTeam: teamProvider === "codestream"
 	};
 };
 

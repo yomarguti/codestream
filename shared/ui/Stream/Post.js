@@ -908,8 +908,6 @@ const mapStateToProps = (state, props) => {
 		else author.username = post.creatorId;
 	}
 
-	const teamProvider = getCurrentTeamProvider(state);
-
 	return {
 		threadId: context.threadId,
 		teamMembers: getTeamMembers(state),
@@ -925,8 +923,8 @@ const mapStateToProps = (state, props) => {
 		parentPostContent,
 		parentPostCodemark,
 		capabilities,
-		disableEdits: props.disableEdits || teamProvider === "msteams",
-		disableDeletes: teamProvider === "msteams"
+		disableEdits: props.disableEdits || !Boolean(capabilities.postEdit),
+		disableDeletes: !Boolean(capabilities.postDelete)
 	};
 };
 
