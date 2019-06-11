@@ -1,7 +1,7 @@
 import React from "react";
 import Icon from "../Icon";
 import Menu from "../Menu";
-import { CrossPostIssueValuesListener, PROVIDER_MAPPINGS } from "./types";
+import { CrossPostIssueValuesListener, PROVIDER_MAPPINGS, CodeDelimiterStyles } from "./types";
 import { ThirdPartyProviderBoard, ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 
 interface List {
@@ -49,7 +49,8 @@ export default class AsanaCardControls extends React.Component<Props, State> {
 			boardId: board && board.id,
 			listId: list && list.id,
 			isEnabled,
-			issueProvider: this.props.provider
+			issueProvider: this.props.provider,
+			codeDelimiterStyle: CodeDelimiterStyles.NONE
 		});
 	};
 

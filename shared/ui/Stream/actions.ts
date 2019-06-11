@@ -641,6 +641,13 @@ const getCodeDelimiters = (codeDelimiterStyle: CodeDelimiterStyles): {
 	linefeed: string
 } => {
 	switch (codeDelimiterStyle) {
+		case CodeDelimiterStyles.NONE:
+		return {
+			start: "",
+			end: "",
+			linefeed: "\n"
+		};
+		
 		case CodeDelimiterStyles.HTML_MARKUP:
 		return {
 			start: "<pre><div><code>",

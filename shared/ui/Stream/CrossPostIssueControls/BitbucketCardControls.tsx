@@ -1,7 +1,7 @@
 import React from "react";
 import Icon from "../Icon";
 import Menu from "../Menu";
-import { CrossPostIssueValuesListener, PROVIDER_MAPPINGS } from "./types";
+import { CrossPostIssueValuesListener, PROVIDER_MAPPINGS, CodeDelimiterStyles } from "./types";
 import { ThirdPartyProviderBoard, ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 
 interface State {
@@ -60,7 +60,8 @@ export default class BitbucketCardControls extends React.Component<Props, State>
 			board,
 			boardName: board && board.name,
 			isEnabled,
-			issueProvider: this.props.provider
+			issueProvider: this.props.provider,
+			codeDelimiterStyle: CodeDelimiterStyles.SINGLE_BACK_QUOTE
 		});
 	};
 

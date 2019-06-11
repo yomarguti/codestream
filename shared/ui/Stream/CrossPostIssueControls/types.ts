@@ -47,6 +47,7 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 };
 
 export enum CodeDelimiterStyles {
+	NONE = "none",
 	TRIPLE_BACK_QUOTE = "tripleBackQuote",
 	SINGLE_BACK_QUOTE = "singleBackQuote",
 	HTML_MARKUP = "htmlMarkup",
