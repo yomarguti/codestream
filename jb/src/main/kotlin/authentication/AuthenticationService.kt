@@ -43,6 +43,11 @@ class AuthenticationService(val project: Project) {
         val agent = project.agentService ?: return Unit
         val session = project.sessionService ?: return Unit
 
+        if (session.userLoggedIn != null) {
+            val bootstrapFuture = agent.agent.bootstrap(BootstrapParams())
+            return buildSignedInResponse(bootstrapFuture)
+        }
+
         if (settings.state.autoSignIn) {
             val token = PasswordSafe.instance.getPassword(settings.credentialAttributes)
 
@@ -118,6 +123,10 @@ class AuthenticationService(val project: Project) {
             request.team,
             request.alias
         )).await()
+
+        loginResult.error?.let {
+            throw Exception(it)
+        }
 
         val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())
         sessionService.login(loginResult.userLoggedIn)
