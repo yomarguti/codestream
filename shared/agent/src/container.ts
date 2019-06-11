@@ -56,6 +56,11 @@ class SessionServiceContainer {
 		return this._repos;
 	}
 
+	private readonly _scm: ScmManager;
+	get scm() {
+		return this._scm;
+	}
+
 	private readonly _streams: StreamsManager;
 	get streams(): StreamsManager {
 		return this._streams;
@@ -83,6 +88,7 @@ class SessionServiceContainer {
 
 	constructor(public readonly session: CodeStreamSession) {
 		this._git = new GitService(session);
+		this._scm = new ScmManager();
 		this._files = new FilesManager(session);
 		this._markerLocations = new MarkerLocationManager(session);
 		this._codemarks = new CodemarksManager(session);
@@ -103,7 +109,6 @@ class ServiceContainer {
 		this._documents = agent.documents;
 
 		this._errorReporter = new ErrorReporter(session);
-		this._scm = new ScmManager();
 		this._telemetry = new TelemetryManager(session);
 		this._urls = new UrlManager();
 	}
@@ -116,11 +121,6 @@ class ServiceContainer {
 	private readonly _documents: DocumentManager;
 	get documents() {
 		return this._documents;
-	}
-
-	private readonly _scm: ScmManager;
-	get scm() {
-		return this._scm;
 	}
 
 	private readonly _telemetry: TelemetryManager;

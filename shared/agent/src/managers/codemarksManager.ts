@@ -85,8 +85,7 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 	async getCodemarkSha1({ codemarkId }: GetCodemarkSha1Request): Promise<GetCodemarkSha1Response> {
 		const cc = Logger.getCorrelationContext();
 
-		const { scm } = Container.instance();
-		const { codemarks, files, markerLocations } = SessionContainer.instance();
+		const { codemarks, files, markerLocations, scm } = SessionContainer.instance();
 
 		const codemark = await codemarks.getEnrichedCodemarkById(codemarkId);
 		if (codemark === undefined) {

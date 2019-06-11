@@ -128,8 +128,7 @@ export class DocumentMarkerManager {
 		privacy,
 		contents
 	}: CreateDocumentMarkerPermalinkRequest): Promise<CreateDocumentMarkerPermalinkResponse> {
-		const { scm } = Container.instance();
-		const { git, codemarks } = SessionContainer.instance();
+		const { codemarks, git, scm } = SessionContainer.instance();
 
 		const scmResponse = await scm.getRangeInfo({
 			uri: uri,

@@ -489,7 +489,7 @@ function getGitError(textDocument?: TextDocumentIdentifier) {
 			fs.access(URI.parse(textDocument.uri).fsPath, async error => {
 				if (error) return resolve("FileNotSaved");
 
-				const scmInfo = await Container.instance().scm.getFileInfo(textDocument);
+				const scmInfo = await SessionContainer.instance().scm.getFileInfo(textDocument);
 				if (!scmInfo.scm) {
 					if (!scmInfo.error) {
 						return resolve("RepoNotManaged");
