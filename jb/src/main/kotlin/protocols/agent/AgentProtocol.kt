@@ -66,7 +66,8 @@ class LoginResponse(
 class LoginState(
     val userId: String,
     val teamId: String,
-    val email: String
+    val email: String,
+    val capabilities: JsonObject
 )
 
 class UserLoggedIn(val user: CSUser, val team: CSTeam, val state: LoginState, val teamsCount: Int) {

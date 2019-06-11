@@ -9,10 +9,12 @@ import com.codestream.settingsService
 import com.codestream.webViewService
 import com.codestream.webview.WebViewRouter
 import com.github.salomonbrys.kotson.fromJson
+import com.github.salomonbrys.kotson.get
 import com.github.salomonbrys.kotson.jsonObject
 import com.github.salomonbrys.kotson.obj
 import com.github.salomonbrys.kotson.set
 import com.google.gson.JsonElement
+import com.google.gson.JsonObject
 import com.intellij.credentialStore.Credentials
 import com.intellij.ide.BrowserUtil
 import com.intellij.ide.passwordSafe.PasswordSafe
@@ -37,6 +39,7 @@ import java.util.concurrent.CompletableFuture
 class AuthenticationService(val project: Project) {
 
     private val logger = Logger.getInstance(AuthenticationService::class.java)
+    private var agentCapabilities: JsonObject = JsonObject()
 
     suspend fun bootstrap(): Any? {
         val settings = project.settingsService ?: return Unit
@@ -68,6 +71,7 @@ class AuthenticationService(val project: Project) {
                     logger.warn(it)
                     return buildSignedOutResponse()
                 }
+                agentCapabilities = loginResult.state!!.capabilities
 
                 val bootstrapFuture = agent.agent.bootstrap(BootstrapParams())
                 session.login(loginResult.userLoggedIn)
@@ -97,6 +101,7 @@ class AuthenticationService(val project: Project) {
         loginResult.error?.let {
             throw Exception(it)
         }
+        agentCapabilities = loginResult.state!!.capabilities
 
         val bootstrapFuture = agent.agent.bootstrap(BootstrapParams())
         session.login(loginResult.userLoggedIn)
@@ -127,6 +132,7 @@ class AuthenticationService(val project: Project) {
         loginResult.error?.let {
             throw Exception(it)
         }
+        agentCapabilities = loginResult.state!!.capabilities
 
         val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())
         sessionService.login(loginResult.userLoggedIn)
@@ -155,6 +161,7 @@ class AuthenticationService(val project: Project) {
         loginResult.error?.let {
             throw Exception(it)
         }
+        agentCapabilities = loginResult.state!!.capabilities
 
         val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())
         sessionService.login(loginResult.userLoggedIn)
@@ -208,6 +215,11 @@ class AuthenticationService(val project: Project) {
 
         for ((key, value) in bootstrapResponse.obj.entrySet()) {
             webViewResponseJson[key] = value
+        }
+
+        val capabilitiesJson = webViewResponseJson["capabilities"]
+        for ((key, value) in agentCapabilities.entrySet()) {
+            capabilitiesJson[key] = value
         }
 
         return webViewResponseJson
