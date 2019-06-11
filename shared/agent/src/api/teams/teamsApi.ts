@@ -7,7 +7,7 @@ import { ServerError } from "../../agentError";
 import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import {
-	AccessToken,
+	AddEnterpriseProviderHostRequest,
 	ArchiveStreamRequest,
 	ArchiveStreamResponse,
 	Capabilities,
@@ -1143,6 +1143,11 @@ export class MSTeamsApiProvider implements ApiProvider {
 	@log()
 	disconnectThirdPartyProvider(request: { providerId: string }) {
 		return this._codestream.disconnectThirdPartyProvider(request);
+	}
+
+	@log()
+	addEnterpriseProviderHost(request: AddEnterpriseProviderHostRequest) {
+		return this._codestream.addEnterpriseProviderHost(request);
 	}
 
 	@log()
