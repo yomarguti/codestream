@@ -1336,11 +1336,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 				this._token
 			);
 
-			await Container.instance().teams.resolve({
+			await SessionContainer.instance().teams.resolve({
 				type: MessageType.Teams,
 				data: [response.team]
 			});
-			Container.instance().session.updateProviders();
+			SessionContainer.instance().session.updateProviders();
 			return { providerId: response.providerId };
 		} catch (ex) {
 			Logger.error(ex, cc);
