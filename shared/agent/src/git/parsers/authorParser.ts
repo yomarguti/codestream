@@ -19,7 +19,7 @@ export class GitAuthorParser {
 		let author: AuthorEntry | undefined;
 		let index;
 		let line;
-		let sha;
+		let sha: string | undefined;
 		let prevSha;
 		let process = false;
 

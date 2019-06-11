@@ -1,8 +1,8 @@
 "use strict";
 const webpack = require("webpack");
 const path = require("path");
-const CleanWebpackPlugin = require("clean-webpack-plugin");
-const FileManagerWebpackPlugin = require("filemanager-webpack-plugin");
+const { CleanWebpackPlugin: CleanPlugin } = require("clean-webpack-plugin");
+const FileManagerPlugin = require("filemanager-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 
 module.exports = function(env, argv) {
@@ -63,8 +63,8 @@ module.exports = function(env, argv) {
 	];
 
 	const plugins = [
-		new CleanWebpackPlugin(["dist"], { verbose: false }),
-		new FileManagerWebpackPlugin({ onEnd: onEnd }),
+		new CleanPlugin(),
+		new FileManagerPlugin({ onEnd: onEnd }),
 		// Added because of https://github.com/felixge/node-formidable/issues/337
 		new webpack.DefinePlugin({ "global.GENTLY": false }),
 		// Ignores optional worker_threads require by the write-file-atomic package
@@ -110,15 +110,15 @@ module.exports = function(env, argv) {
 		module: {
 			rules: [
 				{
-					test: /\.ts$/,
 					enforce: "pre",
-					use: "tslint-loader",
-					exclude: /node_modules/
+					exclude: /node_modules/,
+					test: /\.ts$/,
+					use: "tslint-loader"
 				},
 				{
+					exclude: /node_modules|\.d\.ts$/,
 					test: /\.tsx?$/,
-					use: "ts-loader",
-					exclude: /node_modules|\.d\.ts$/
+					use: "ts-loader"
 				}
 			],
 			// Removes `Critical dependency: the request of a dependency is an expression` from `./node_modules/vscode-languageserver/lib/files.js`

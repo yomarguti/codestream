@@ -8,7 +8,7 @@ import {
 	TextDocumentChangeEvent,
 	TextDocuments
 } from "vscode-languageserver";
-import URI from "vscode-uri";
+import { URI } from "vscode-uri";
 import { Disposables } from "./system";
 
 const escapedRegex = /(^.*?:\/\/\/)([a-z])%3A(\/.*$)/;

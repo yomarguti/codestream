@@ -8,7 +8,7 @@ import {
 	WorkspaceFolder,
 	WorkspaceFoldersChangeEvent
 } from "vscode-languageserver";
-import URI from "vscode-uri";
+import { URI } from "vscode-uri";
 import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import { CSRepository } from "../protocol/api.protocol";

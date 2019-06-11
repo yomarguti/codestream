@@ -1,7 +1,7 @@
 "use strict";
 import * as path from "path";
 import { TextDocumentIdentifier } from "vscode-languageserver-protocol";
-import URI from "vscode-uri";
+import { URI } from "vscode-uri";
 import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import {

@@ -1,7 +1,7 @@
 "use strict";
 import * as fs from "fs";
 import { TextDocumentIdentifier } from "vscode-languageserver";
-import URI from "vscode-uri";
+import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
 import { MarkerLocation, Ranges } from "../api/extensions";
 import { Container, SessionContainer } from "../container";

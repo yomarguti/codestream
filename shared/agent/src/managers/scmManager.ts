@@ -1,5 +1,5 @@
 import * as paths from "path";
-import URI from "vscode-uri";
+import { URI } from "vscode-uri";
 import { Ranges } from "../api/extensions";
 import { Logger } from "../logger";
 import {

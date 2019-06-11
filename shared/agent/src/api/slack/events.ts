@@ -1,5 +1,5 @@
 "use strict";
-import { LogLevel, RTMClient } from "@slack/client";
+import { LogLevel, RTMClient } from "@slack/rtm-api";
 import HttpsProxyAgent from "https-proxy-agent";
 import { Emitter, Event } from "vscode-languageserver";
 import { SessionContainer } from "../../container";
@@ -115,14 +115,31 @@ export class SlackEvents implements Disposable {
 			agent: proxyAgent,
 			// Only log INFO because otherwise its just too noisy
 			logLevel: LogLevel.INFO, // Logger.level === TraceLevel.Debug ? LogLevel.DEBUG : LogLevel.INFO,
-			logger: (level, message) => {
-				Logger.log(`SLACK-RTM[${level}]: ${message}`);
-				if (message.includes("unable to RTM start: An API error occurred: missing_scope")) {
-					// If we are missing the scope, we have a token issue, force a logout -- and we give it a little time to let the initialization unwind
-					setTimeout(
-						() => void SessionContainer.instance().session.logout(LogoutReason.Token),
-						500
-					);
+			logger: {
+				setLevel() {},
+				setName() {},
+				debug(...msgs) {
+					Logger.debug("SLACK-RTM", ...msgs);
+				},
+				info(...msgs) {
+					Logger.log("SLACK-RTM", ...msgs);
+
+					if (
+						msgs[0] != null &&
+						msgs[0].includes("unable to RTM start: An API error occurred: missing_scope")
+					) {
+						// If we are missing the scope, we have a token issue, force a logout -- and we give it a little time to let the initialization unwind
+						setTimeout(
+							() => void SessionContainer.instance().session.logout(LogoutReason.Token),
+							500
+						);
+					}
+				},
+				warn(...msgs) {
+					Logger.warn("SLACK-RTM", ...msgs);
+				},
+				error(...msgs) {
+					Logger.warn("SLACK-RTM [ERROR]", ...msgs);
 				}
 			}
 		});

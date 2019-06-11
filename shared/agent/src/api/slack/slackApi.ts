@@ -1,5 +1,12 @@
 "use strict";
-import { LogLevel, MessageAttachment, WebAPICallResult, WebClient } from "@slack/client";
+import {
+	LogLevel,
+	MessageAttachment,
+	WebAPICallOptions,
+	WebAPICallResult,
+	WebClient,
+	WebClientEvent
+} from "@slack/web-api";
 import HttpsProxyAgent from "https-proxy-agent";
 import { RequestInit } from "node-fetch";
 import { Emitter, Event } from "vscode-languageserver";
@@ -160,7 +167,7 @@ export class SlackApiProvider implements ApiProvider {
 		this._slackToken = providerInfo.accessToken;
 		this._slack = this.newWebClient();
 
-		this._slack.on("rate_limited", retryAfter => {
+		this._slack.on(WebClientEvent.RATE_LIMITED, retryAfter => {
 			Logger.log(
 				`SlackApiProvider request was rate limited and future requests will be paused for ${retryAfter} seconds`
 			);
@@ -179,7 +186,22 @@ export class SlackApiProvider implements ApiProvider {
 		return new WebClient(this._slackToken, {
 			agent: this._proxyAgent,
 			logLevel: Logger.level === TraceLevel.Debug ? LogLevel.DEBUG : LogLevel.INFO,
-			logger: (level, message) => Logger.log(`SLACK[${level}]: ${message}`)
+			logger: {
+				setLevel() {},
+				setName() {},
+				debug(...msgs) {
+					Logger.debug("SLACK", ...msgs);
+				},
+				info(...msgs) {
+					Logger.log("SLACK", ...msgs);
+				},
+				warn(...msgs) {
+					Logger.warn("SLACK", ...msgs);
+				},
+				error(...msgs) {
+					Logger.warn("SLACK [ERROR]", ...msgs);
+				}
+			}
 		});
 	}
 
@@ -2274,7 +2296,10 @@ export class SlackApiProvider implements ApiProvider {
 					: ""
 			})`
 	})
-	protected async slackApiCall<TRequest, TResponse extends WebAPICallResult>(
+	protected async slackApiCall<
+		TRequest extends WebAPICallOptions,
+		TResponse extends WebAPICallResult
+	>(
 		fnOrMethod: ((request?: TRequest) => Promise<TResponse>) | string,
 		request?: TRequest,
 		name?: string

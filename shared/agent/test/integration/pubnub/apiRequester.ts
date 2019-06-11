@@ -37,7 +37,7 @@ export class ApiRequester {
 	}
 
 	async request(options: ApiRequestOptions) {
-		return new Promise((resolve, reject) => {
+		return new Promise<any>((resolve, reject) => {
 			const callback = (error: any, result?: object) => {
 				if (error) {
 					reject(error);

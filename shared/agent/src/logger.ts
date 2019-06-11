@@ -1,5 +1,5 @@
 "use strict";
-import URI from "vscode-uri";
+import { URI } from "vscode-uri";
 import { CodeStreamAgent } from "./agent";
 import { getCorrelationContext } from "./system";
 // import { Telemetry } from './telemetry';

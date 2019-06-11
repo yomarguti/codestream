@@ -2,7 +2,7 @@
 import * as path from "path";
 import { CodeStreamSession } from "session";
 import { Range, TextDocumentChangeEvent } from "vscode-languageserver";
-import URI from "vscode-uri";
+import { URI } from "vscode-uri";
 import { Marker, MarkerLocation, Ranges } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";

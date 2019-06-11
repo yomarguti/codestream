@@ -1,6 +1,6 @@
 "use strict";
-import { MessageAttachment } from "@slack/client";
-import { Container, SessionContainer } from "../../container";
+import { MessageAttachment } from "@slack/web-api";
+import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import {
 	CodemarkType,

@@ -3,7 +3,7 @@ import { ParsedDiff, parsePatch } from "diff";
 import * as fs from "fs";
 import * as path from "path";
 import { Disposable, Event } from "vscode-languageserver";
-import URI from "vscode-uri";
+import { URI } from "vscode-uri";
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import { log } from "../system";

@@ -3,7 +3,7 @@ import { structuredPatch } from "diff";
 import * as eol from "eol";
 import * as path from "path";
 import { TextDocumentIdentifier } from "vscode-languageserver";
-import URI from "vscode-uri";
+import { URI } from "vscode-uri";
 import { Marker, MarkerLocation, MarkerLocationsById } from "../api/extensions";
 import { getCache } from "../cache";
 import { Container, SessionContainer } from "../container";
