@@ -51,6 +51,7 @@ class WebViewRouter(val project: Project) {
         val message = parse(rawMessage)
 
         try {
+            logger.debug("Handling ${message.method}")
             when (message.target) {
                 "host" -> processHostMessage(message)
                 "codestream" -> processAgentMessage(message)
