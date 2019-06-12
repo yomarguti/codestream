@@ -71,6 +71,7 @@ export interface CSLoginResponse {
 	teams: CSTeam[];
 	companies: CSCompany[];
 	repos: CSRepository[];
+	provider?: "codestream" | "slack" | "msteams" | string;
 }
 
 export interface CSRegisterRequest {

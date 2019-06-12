@@ -10,7 +10,8 @@ import {
 	CSMSTeamsProviderInfo,
 	CSProviderInfos,
 	CSSlackProviderInfo,
-	CSTeam
+	CSTeam,
+	CSTeamProviderInfos
 } from "../protocol/api.protocol";
 
 export interface MarkerLocationArraysById {
@@ -218,6 +219,19 @@ export namespace Ranges {
 	}
 }
 export namespace Team {
+	export function isProvider(team: CSTeam, provider: string) {
+		if (provider === "codestream") return isCodeStream(team);
+
+		return (
+			team.providerInfo != null &&
+			(team.providerInfo as { [key: string]: CSTeamProviderInfos })[provider] != null
+		);
+	}
+
+	export function isCodeStream(team: CSTeam) {
+		return team.providerInfo == null || Object.keys(team.providerInfo).length === 0;
+	}
+
 	export function isMSTeams(
 		team: CSTeam
 	): team is CSTeam & { providerInfo: { msteams: CSMSTeamsProviderInfo } } {

@@ -4,6 +4,7 @@ import fetch, { Headers, RequestInit, Response } from "node-fetch";
 import { URLSearchParams } from "url";
 import { Emitter, Event } from "vscode-languageserver";
 import { ServerError } from "../../agentError";
+import { Team, User } from "../../api/extensions";
 import { Container, SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import { isDirective, resolve } from "../../managers/operations";
@@ -145,8 +146,7 @@ import {
 	StreamType
 } from "../../protocol/api.protocol";
 import { VersionInfo } from "../../session";
-import { Functions, log, Objects, Strings } from "../../system";
-import { getProvider, lsp, lspHandler } from "../../system/decorators/lsp";
+import { Functions, getProvider, log, lsp, lspHandler, Objects, Strings } from "../../system";
 import { openUrl } from "../../system/openUrl";
 import {
 	ApiProvider,
@@ -268,12 +268,18 @@ export class CodeStreamApiProvider implements ApiProvider {
 			throw { status: LoginResult.NotOnTeam, token: response.accessToken };
 		}
 
+		let teams = response.teams;
 		// If there is only 1 team, use it regardless of config
 		if (response.teams.length === 1) {
 			options.teamId = response.teams[0].id;
 		} else {
+			const provider = response.provider;
+			if (provider != null) {
+				teams = response.teams.filter(t => Team.isProvider(t, provider));
+			}
+
 			// Sort the teams from oldest to newest
-			response.teams.sort((a, b) => a.createdAt - b.createdAt);
+			teams.sort((a, b) => a.createdAt - b.createdAt);
 		}
 
 		let pickedTeamReason;
@@ -281,7 +287,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		if (options.teamId == null) {
 			if (options.team) {
 				const normalizedTeamName = options.team.toLocaleUpperCase();
-				const team = response.teams.find(t => t.name.toLocaleUpperCase() === normalizedTeamName);
+				const team = teams.find(t => t.name.toLocaleUpperCase() === normalizedTeamName);
 				if (team != null) {
 					options.teamId = team.id;
 					pickedTeamReason = " because the team was saved in settings (user, workspace, or folder)";
@@ -290,31 +296,26 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 			// If we still can't find a team, then just pick the first one
 			if (options.teamId == null) {
-				// Pick the first slack team if there is one
-				const { providerInfo: providers } = response.user;
-				if (providers) {
-					if (providers.slack) {
-						const team = response.teams.find(t => Boolean(t.providerInfo));
-						if (team) {
-							options.teamId = team.id;
-							pickedTeamReason = " because the team was the oldest Slack team";
-						}
-					} else {
-						for (const [teamId, provider] of Object.entries(providers)) {
-							if (provider.slack) {
-								const team = response.teams.find(t => t.id === teamId);
-								if (team) {
-									options.teamId = team.id;
-									pickedTeamReason = " because the team was the oldest Slack team";
-								}
-								break;
-							}
-						}
+				// Pick the oldest (first) Slack team if there is one
+				if (User.isSlack(response.user)) {
+					const team = teams.find(t => Team.isSlack(t));
+					if (team) {
+						options.teamId = team.id;
+						pickedTeamReason = " because the team was the oldest Slack team";
+					}
+				}
+
+				// Pick the oldest (first) MS Teams team if there is one
+				if (options.teamId == null && User.isMSTeams(response.user)) {
+					const team = teams.find(t => Team.isMSTeams(t));
+					if (team) {
+						options.teamId = team.id;
+						pickedTeamReason = " because the team was the oldest Microsoft Teams team";
 					}
 				}
 
 				if (options.teamId == null) {
-					options.teamId = response.teams[0].id;
+					options.teamId = teams[0].id;
 					pickedTeamReason = " because the team was the oldest team";
 				}
 			}
@@ -322,9 +323,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 			pickedTeamReason = " because the team was the last used team";
 		}
 
-		let team = response.teams.find(t => t.id === options.teamId);
+		let team = teams.find(t => t.id === options.teamId);
 		if (team === undefined) {
-			team = response.teams[0];
+			team = teams[0];
 			options.teamId = team.id;
 			pickedTeamReason =
 				" because the specified team could not be found, defaulting to the oldest team";
