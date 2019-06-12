@@ -32,7 +32,7 @@ import {
 } from "vscode";
 import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
-import { emptyObj, extensionQualifiedId } from "../constants";
+import { extensionQualifiedId } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions, log, Strings } from "../system";
@@ -422,12 +422,12 @@ export class CodeStreamSession implements Disposable {
 
 	goOffline() {
 		Container.webview.hide();
-		return Container.session.logout(SessionSignedOutReason.UserWentOffline);
+		return this.logout(SessionSignedOutReason.UserWentOffline);
 	}
 
 	async reconnect() {
 		Container.webview.hide();
-		await Container.session.logout(SessionSignedOutReason.UserWentOffline);
+		await this.logout(SessionSignedOutReason.UserWentOffline);
 		return Container.commands.signIn();
 	}
 
@@ -480,6 +480,7 @@ export class CodeStreamSession implements Disposable {
 	@log()
 	async logout(reason: SessionSignedOutReason = SessionSignedOutReason.UserSignedOut) {
 		this._id = undefined;
+		this._capabilities = undefined;
 		this._loginPromise = undefined;
 
 		try {
