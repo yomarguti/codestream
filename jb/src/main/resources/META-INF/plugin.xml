@@ -77,6 +77,8 @@
     <li>Fixes an issue with new lines being displayed as html in posts on Slack</li>
     <li>Fixes an issue with new lines in codemark text causing display issues on the Search tab</li>
     <li>Fixes an issue with the Asana integration that was preventing projects from being listed</li>
+    <li>Fixes an issue with invitation codes incorrectly expiring after 10 minutes</li>
+    <li>Fixes an issue with editing a reply from a codemark's thread view</li>
 </ul>
 <h4 id="1_1_1">1.1.1</h4>
 <h5>Fixed</h5>
