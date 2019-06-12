@@ -271,6 +271,11 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	async processLoginResponse(response: CSLoginResponse): Promise<void> {
+		if (!this.capabilities.providerSupportsRealtimeEvents) {
+			// Turn off post caching if the provider doesn't support real-time events
+			SessionContainer.instance().posts.disableCache();
+		}
+
 		// Mix in slack user info with ours
 		const meResponse = await this.getMeCore({ user: response.user });
 
@@ -288,8 +293,13 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	private async getSlackPreferences() {
+		// Use real-time events as a proxy for limited-slack mode (which can't use undocumented apis)
+		if (!this.capabilities.providerSupportsRealtimeEvents) {
+			return { muted_channels: "" };
+		}
+
 		try {
-			// Undocumented: https://github.com/ErikKalkoken/slackApiDoc/blob/master/users.prefs.get.md
+			// Undocumented API: https://github.com/ErikKalkoken/slackApiDoc/blob/master/users.prefs.get.md
 			const response = await this.slackApiCall("users.prefs.get", undefined, "users.prefs.get");
 
 			const { ok, error, prefs } = response as WebAPICallResult & { prefs: any };
@@ -336,14 +346,16 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async subscribe(types?: MessageType[]) {
-		this._events = this.newSlackEvents();
-		this._events.onDidReceiveMessage(e => {
-			if (e.type === MessageType.Preferences) {
-				this._preferences.update(e.data);
-			} else {
-				this._onDidReceiveMessage.fire(e);
-			}
-		});
+		if (this.capabilities.providerSupportsRealtimeEvents) {
+			this._events = this.newSlackEvents();
+			this._events.onDidReceiveMessage(e => {
+				if (e.type === MessageType.Preferences) {
+					this._preferences.update(e.data);
+				} else {
+					this._onDidReceiveMessage.fire(e);
+				}
+			});
+		}
 
 		this._preferences.onDidChange(preferences => {
 			this._onDidReceiveMessage.fire({ type: MessageType.Preferences, data: preferences });
@@ -353,8 +365,10 @@ export class SlackApiProvider implements ApiProvider {
 			this._preferences.update(preferences);
 		});
 
-		const usernamesById = await this.ensureUsernamesById();
-		await this._events.connect([...usernamesById.keys()]);
+		if (this._events !== undefined) {
+			const usernamesById = await this.ensureUsernamesById();
+			await this._events.connect([...usernamesById.keys()]);
+		}
 
 		this._codestream.onDidReceiveMessage(this.onCodeStreamMessage, this);
 		await this._codestream.subscribe([
@@ -1243,7 +1257,7 @@ export class SlackApiProvider implements ApiProvider {
 				this._unreads.updateFromCounts(counts);
 			}
 
-			if (pendingRequestsQueue.length !== 0) {
+			if (this.capabilities.providerSupportsRealtimeEvents && pendingRequestsQueue.length !== 0) {
 				this.processPendingStreamsQueue(pendingRequestsQueue);
 			}
 
@@ -1271,10 +1285,16 @@ export class SlackApiProvider implements ApiProvider {
 		  }
 		| undefined
 	> {
+		// Use real-time events as a proxy for limited-slack mode (which can't use undocumented apis)
+		if (!this.capabilities.providerSupportsRealtimeEvents) {
+			return undefined;
+		}
+
 		const cc = Logger.getCorrelationContext();
 
 		try {
 			const response = await this.slackApiCall(
+				// Undocumented API
 				"users.counts",
 				{
 					include_threads: true,
@@ -2354,7 +2374,7 @@ export class SlackApiProvider implements ApiProvider {
 
 	async dispose() {
 		await this._codestream.dispose();
-		if (this._events) {
+		if (this._events !== undefined) {
 			await this._events.dispose();
 		}
 	}

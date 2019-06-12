@@ -283,6 +283,11 @@ export class MSTeamsApiProvider implements ApiProvider {
 	}
 
 	async processLoginResponse(response: CSLoginResponse): Promise<void> {
+		if (!this.capabilities.providerSupportsRealtimeEvents) {
+			// Turn off post caching if the provider doesn't support real-time events
+			SessionContainer.instance().posts.disableCache();
+		}
+
 		// Mix in teams user info with ours
 		const meResponse = await this.getMeCore({ user: response.user });
 
