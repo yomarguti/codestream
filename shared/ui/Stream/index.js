@@ -522,7 +522,7 @@ export class SimpleStream extends Component {
 						// </label>
 					}
 					{(this.props.capabilities.providerSupportsRealtimeChat ||
-						this.props.capabilities.providerCanSupportsRealtimeChat) && (
+						this.props.capabilities.providerCanSupportRealtimeChat) && (
 						<label
 							className={createClassString({
 								selected:
