@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.2.0] - 2019-6-11
+## [1.2.0] - 2019-6-12
 
 ### Added
 
@@ -18,6 +18,8 @@
 - Fixes an issue with new lines being displayed as html in posts on Slack
 - Fixes an issue with new lines in codemark text causing display issues on the Search tab
 - Fixes an issue with the Asana integration that was preventing projects from being listed
+- Fixes an issue with invitation codes incorrectly expiring after 10 minutes
+- Fixes an issue with editing a reply from a codemark's thread view
 
 ## [1.1.0] - 2019-6-4
 
