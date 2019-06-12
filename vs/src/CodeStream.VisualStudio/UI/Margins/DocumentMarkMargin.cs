@@ -159,15 +159,18 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		}
 
 		public void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			// no need to update when we're in 'spatial' view since it's not shown
 			if (_sessionService.IsCodemarksForFileVisible && _sessionService.IsWebViewVisible && _settingsManager.AutoHideMarkers) return;
 
 			if (Visibility == Visibility.Hidden || Visibility == Visibility.Collapsed) return;
 
 			if (e.OldViewState.ViewportTop != e.NewViewState.ViewportTop)
-				SetTop(_iconCanvas, -e.NewViewState.ViewportTop);
+				SetTop(_iconCanvas, -_wpfTextViewHost.TextView.ViewportTop);
 
-			OnNewLayout(e.NewOrReformattedLines, e.TranslatedLines);
+			//OnNewLayout(e.NewOrReformattedLines, e.TranslatedLines);
+			RefreshMargin();
 		}
 
 		public bool TryShowMargin() => this.TryShow();

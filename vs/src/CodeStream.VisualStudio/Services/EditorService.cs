@@ -15,6 +15,7 @@ using System.ComponentModel.Composition;
 using System.Runtime.InteropServices;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.UI.Extensions;
+using System.Text;
 
 namespace CodeStream.VisualStudio.Services {
 	[Guid("278C1E14-E429-4364-8B73-BB643C041274")]
@@ -178,6 +179,29 @@ namespace CodeStream.VisualStudio.Services {
 
 			view = null;
 			return null;
+		}
+
+		//public EditorState GetActiveEditorState(IWpfTextView wpfTextView) {
+		//	wpfTextView.TextSnapshot
+		//	wpfTextView.TextSnapshot.GetText(wpfTextView.Selection.)
+		//	wpfTextView.Selection.
+
+		//}
+
+		public static string GetText(ITextSelection textSelection) {
+			if (textSelection.Mode == TextSelectionMode.Stream)
+				return textSelection.StreamSelectionSpan.GetText();
+			var sb = new StringBuilder();
+			var snapshot = textSelection.TextView.TextSnapshot;
+			int i = 0;
+			foreach (var s in textSelection.SelectedSpans) {
+				if (i++ > 0)
+					sb.AppendLine();
+				sb.Append(snapshot.GetText(s));
+			}
+			if (i > 1)
+				sb.AppendLine();
+			return sb.ToString();
 		}
 
 		private Range GetActiveEditorSelectedRange(out IVsTextView view) {

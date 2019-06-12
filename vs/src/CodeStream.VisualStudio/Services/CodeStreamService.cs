@@ -9,14 +9,17 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Linq;
 using System.Threading;
 using CodeStream.VisualStudio.UI.Extensions;
+using Microsoft.VisualStudio.Text.Editor;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Services {
 	public interface ICodeStreamService {
 		Task ResetActiveEditorAsync();
 		Task ChangeActiveEditorAsync(Uri uri, ActiveTextEditor activeTextEditor = null);
+		Task ChangeCaretAsync(Uri uri, List<Range> visibleRange, int cursorLine, int lineCount);
 		Task NewCodemarkAsync(Uri uri, Range range, CodemarkType codemarkType, string source, CancellationToken? cancellationToken = null);
 		Task ShowCodemarkAsync(string codemarkId, string filePath, CancellationToken? cancellationToken = null);
 		Task EditorSelectionChangedNotificationAsync(Uri uri,
@@ -68,6 +71,27 @@ namespace CodeStream.VisualStudio.Services {
 								LanguageId = null
 							}
 						}
+					});
+				}
+				catch (Exception ex) {
+					Log.Error(ex, $"{nameof(ChangeActiveEditorAsync)} Uri={uri}");
+				}
+			}
+
+			await Task.CompletedTask;
+		}
+
+		public async Task ChangeCaretAsync(Uri uri, List<Range> visibleRange, int cursorLine, int lineCount) {
+			if (IsReady) {
+				try {
+					// changing the cursor in vscode creates an editorselection with a range that has a start/end line that are equal
+					// to the position of the cursor -- emulate that here.
+					var editorSelection = new List<EditorSelection>() {
+						new EditorSelection(new Position(cursorLine, 0), new Range(){
+							Start =new Position(cursorLine,0), End=new Position(cursorLine,0) })
+					};
+					_ = BrowserService.NotifyAsync(new HostDidChangeEditorSelectionNotificationType {
+						Params = new HostDidChangeEditorSelectionNotification(uri, editorSelection, visibleRange, lineCount)
 					});
 				}
 				catch (Exception ex) {

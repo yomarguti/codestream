@@ -23,6 +23,7 @@ using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeStream.VisualStudio.UI.Extensions;
+using Microsoft.VisualStudio.Shell;
 
 public class TextViewCreationListenerDummy { }
 
@@ -143,19 +144,19 @@ namespace CodeStream.VisualStudio.UI {
 					Debug.Assert(EventAggregator != null, nameof(EventAggregator) + " != null");
 
 					var visibleRangesSubject = new Subject<HostDidChangeEditorVisibleRangesNotificationSubject>();
+					var textViewLayoutChangedSubject = new Subject<TextViewLayoutChangedSubject>();
+					var caretPositionChangedSubject = new Subject<CaretPositionChangedSubject>();
+					var textSelectionChangedSubject = new Subject<TextSelectionChangedSubject>();
 					//listening on the main thread since we have to change the UI state
 					var disposables = new List<IDisposable>();
 					disposables.Add(EventAggregator.GetEvent<SessionReadyEvent>()
 							.ObserveOnApplicationDispatcher()
 							.Subscribe(_ => {
-
-								Log.Verbose(
-									$"{nameof(VsTextViewCreated)} SessionReadyEvent Session IsReady={SessionService.IsReady}");
+								Log.Verbose($"{nameof(VsTextViewCreated)} SessionReadyEvent Session IsReady={SessionService.IsReady}");
 								if (SessionService.IsReady) {
 									OnSessionReady(wpfTextView);
 								}
 							}));
-
 					disposables.Add(EventAggregator.GetEvent<SessionLogoutEvent>()
 						.ObserveOnApplicationDispatcher()
 						.Subscribe(_ => OnSessionLogout(wpfTextView, textViewMarginProviders)));
@@ -165,31 +166,27 @@ namespace CodeStream.VisualStudio.UI {
 					disposables.Add(EventAggregator.GetEvent<AutoHideMarkersEvent>()
 						.ObserveOnApplicationDispatcher()
 						.Subscribe(_ => textViewMarginProviders.SetAutoHideMarkers(_.Value)));
-					disposables.Add(visibleRangesSubject.Throttle(TimeSpan.FromMilliseconds(15))
+					disposables.Add(textViewLayoutChangedSubject.Throttle(TimeSpan.FromMilliseconds(333))
 						.ObserveOnApplicationDispatcher()
-						.Subscribe(e => {
-							try {
-								if (e.WpfTextView.InLayout || e.WpfTextView.IsClosed) return;
-
-								CodeStreamService.BrowserService?.NotifyAsync(
-									new HostDidChangeEditorVisibleRangesNotificationType {
-										Params = new HostDidChangeEditorVisibleRangesNotification(
-											e.Uri,
-											EditorService.GetActiveEditorState()?.ToEditorSelectionsSafe(),
-											e.WpfTextView.ToVisibleRangesSafe(),
-											e.WpfTextView.TextSnapshot?.LineCount
-										)
-									});
-							}
-							catch (Exception ex) {
-								Log.Error(ex, "visibleRangeSubject");
-							}
+						.Subscribe(subject => {
+							_ = OnTextViewLayoutChangedSubjectHandlerAsync(subject);
+						}));
+					disposables.Add(caretPositionChangedSubject.Throttle(TimeSpan.FromMilliseconds(333))
+						.ObserveOnApplicationDispatcher()
+						.Subscribe(subject => {
+							_ = OnCaretPositionChangedSubjectHandlerAsync(subject);
+						}));
+					disposables.Add(textSelectionChangedSubject.Throttle(TimeSpan.FromMilliseconds(333))
+						.ObserveOnApplicationDispatcher()
+						.Subscribe(subject => {
+							_ = OnTextSelectionChangedSubjectHandlerAsync(subject);
 						}));
 
 					wpfTextView.Properties.AddProperty(PropertyNames.TextViewEvents, disposables);
-					wpfTextView.Properties.AddProperty(
-						PropertyNames.HostDidChangeEditorVisibleRangesNotificationSubject,
-						visibleRangesSubject);
+					wpfTextView.Properties.AddProperty(PropertyNames.HostDidChangeEditorVisibleRangesNotificationSubject, visibleRangesSubject);
+					wpfTextView.Properties.AddProperty(PropertyNames.TextViewLayoutChangedSubject, textViewLayoutChangedSubject);
+					wpfTextView.Properties.AddProperty(PropertyNames.CaretPositionChangedSubject, caretPositionChangedSubject);
+					wpfTextView.Properties.AddProperty(PropertyNames.TextSelectionChangedSubject, textSelectionChangedSubject);
 
 					Log.Verbose($"{nameof(VsTextViewCreated)} Session IsReady={SessionService.IsReady}");
 
@@ -224,19 +221,23 @@ namespace CodeStream.VisualStudio.UI {
 							if (textViews.Count == 0) {
 								TextBufferTable.Remove(buffer);
 
-								//wpfTextView.LayoutChanged -= OnTextViewLayoutChanged;
-								//wpfTextView.Caret.PositionChanged -= Caret_PositionChanged;
+								wpfTextView.LayoutChanged -= OnTextViewLayoutChanged;
+								wpfTextView.Caret.PositionChanged -= Caret_PositionChanged;
 								wpfTextView.GotAggregateFocus -= TextView_GotAggregateFocus;
+								wpfTextView.Selection.SelectionChanged += Selection_SelectionChanged;
+
 								wpfTextView.Properties.RemovePropertySafe(PropertyNames.TextViewFilePath);
 								wpfTextView.Properties.RemovePropertySafe(PropertyNames.TextViewState);
 								wpfTextView.Properties.RemovePropertySafe(PropertyNames.DocumentMarkers);
 								wpfTextView.Properties.RemovePropertySafe(PropertyNames.DocumentMarkerManager);
 								wpfTextView.Properties.RemovePropertySafe(PropertyNames.TextViewMarginProviders);
-								wpfTextView.Properties.TryDisposeProperty<HighlightAdornmentManager>(PropertyNames
-									.AdornmentManager);
-								wpfTextView.Properties
-									.TryDisposeProperty<Subject<HostDidChangeEditorVisibleRangesNotificationSubject>>(
-										PropertyNames.HostDidChangeEditorVisibleRangesNotificationSubject);
+								wpfTextView.Properties.TryDisposeProperty<HighlightAdornmentManager>(PropertyNames.AdornmentManager);
+
+								wpfTextView.Properties.TryDisposeProperty<Subject<TextViewLayoutChangedSubject>>(PropertyNames.TextViewLayoutChangedSubject);
+								wpfTextView.Properties.TryDisposeProperty<Subject<CaretPositionChangedSubject>>(PropertyNames.CaretPositionChangedSubject);
+								wpfTextView.Properties.TryDisposeProperty<Subject<HostDidChangeEditorVisibleRangesNotificationSubject>>(PropertyNames.HostDidChangeEditorVisibleRangesNotificationSubject);
+								wpfTextView.Properties.TryDisposeProperty<Subject<TextSelectionChangedSubject>>(PropertyNames.TextSelectionChangedSubject);
+
 								wpfTextView.Properties.TryDisposeListProperty(PropertyNames.TextViewEvents);
 								wpfTextView.Properties.TryDisposeListProperty(PropertyNames.TextViewLocalEvents);
 								Log.Verbose($"{nameof(SubjectBuffersDisconnected)} FilePath={filePath}");
@@ -256,13 +257,11 @@ namespace CodeStream.VisualStudio.UI {
 
 		public void OnSessionReady(IWpfTextView wpfTextView) {
 			try {
-				if (!wpfTextView.Properties.TryGetProperty(PropertyNames.TextViewState, out TextViewState state)) {
-					return;
-				}
+				if (!wpfTextView.Properties.TryGetProperty(PropertyNames.TextViewState, out TextViewState state)) return;
 
 				Log.Verbose($"{nameof(OnSessionReady)} state={state?.Initialized}");
 				// ReSharper disable InvertIf
-				if (state != null && state.Initialized == false) {
+				if (state != null && !state.Initialized) {
 					lock (InitializedLock) {
 						if (!state.Initialized) {
 							Log.Verbose($"{nameof(OnSessionReady)} state=initializing");
@@ -275,29 +274,34 @@ namespace CodeStream.VisualStudio.UI {
 											Log.Verbose($"{nameof(DocumentMarkerChangedEvent)} State={state.Initialized}, _={_?.Uri}");
 											OnDocumentMarkerChanged(wpfTextView, _);
 										}),
-									Observable.FromEventPattern(ev => wpfTextView.Selection.SelectionChanged += ev,
-											ev => wpfTextView.Selection.SelectionChanged -= ev)
-										.Sample(TimeSpan.FromMilliseconds(250))
-										.ObserveOnApplicationDispatcher()
-										.Subscribe(eventPattern => {
-											var textSelection = eventPattern?.Sender as ITextSelection;
-											if (textSelection != null && textSelection.IsEmpty) return;
-											if (!SessionService.IsWebViewVisible) return;
+									//Observable.FromEventPattern(ev => wpfTextView.Selection.SelectionChanged += ev,
+									//		ev => wpfTextView.Selection.SelectionChanged -= ev)
+									//	.Sample(TimeSpan.FromMilliseconds(250))
+									//	.ObserveOnApplicationDispatcher()
+									//	.Subscribe(eventPattern => {
+									//		var textSelection = eventPattern?.Sender as ITextSelection;
+									//		if (textSelection != null && textSelection.IsEmpty) return;
+									//		if (!SessionService.IsWebViewVisible) return;
 
-											Log.Verbose($"SelectionChanged {textSelection.ToPositionString()}");
+									//		Log.Verbose($"SelectionChanged {textSelection.ToPositionString()}");
 
-											var activeEditorState = EditorService?.GetActiveEditorState();
-											_ = CodeStreamService.EditorSelectionChangedNotificationAsync(
-												wpfTextView.Properties.GetProperty<string>(PropertyNames.TextViewFilePath).ToUri(),
-												activeEditorState,
-												wpfTextView.ToVisibleRangesSafe(),
-												wpfTextView?.TextSnapshot?.LineCount,
-												CodemarkType.Comment, CancellationToken.None);
-										}),
-									Observable.FromEventPattern<TextViewLayoutChangedEventArgs>(h => wpfTextView.LayoutChanged += h, h => wpfTextView.LayoutChanged -= h)
-									.Throttle(TimeSpan.FromMilliseconds(30))
-									.Subscribe(e => OnTextViewLayoutChanged(e.Sender, e.EventArgs))
-						});
+									//		var activeEditorState = EditorService?.GetActiveEditorState();
+									//		_ = CodeStreamService.EditorSelectionChangedNotificationAsync(
+									//			wpfTextView.Properties
+									//				.GetProperty<string>(PropertyNames.TextViewFilePath).ToUri(),
+									//			activeEditorState,
+									//			wpfTextView.ToVisibleRangesSafe(),
+									//			wpfTextView?.TextSnapshot?.LineCount,
+									//			CodemarkType.Comment, CancellationToken.None);
+									//	}),
+									//Observable.FromEventPattern<CaretPositionChangedEventArgs>(
+									//		h => wpfTextView.Caret.PositionChanged += h,
+									//		h => wpfTextView.Caret.PositionChanged -= h)
+									//	.Throttle(TimeSpan.FromMilliseconds(100))
+									//	.Subscribe(e => {
+									//		Caret_PositionChanged(e.Sender, e.EventArgs);
+									//	})
+								});
 
 							if (wpfTextView.Properties.TryGetProperty(PropertyNames.DocumentMarkerManager, out DocumentMarkerManager documentMarkerManager)
 								&& documentMarkerManager != null) {
@@ -312,9 +316,11 @@ namespace CodeStream.VisualStudio.UI {
 								.OnSessionReady();
 
 							// keep this at the end -- we want this to be the first handler
-							//wpfTextView.LayoutChanged += OnTextViewLayoutChanged;
-							//wpfTextView.Caret.PositionChanged += Caret_PositionChanged;
+							wpfTextView.LayoutChanged += OnTextViewLayoutChanged;
+							wpfTextView.Caret.PositionChanged += Caret_PositionChanged;
 							wpfTextView.GotAggregateFocus += TextView_GotAggregateFocus;
+							wpfTextView.Selection.SelectionChanged += Selection_SelectionChanged;
+
 							state.Initialized = true;
 
 							ChangeActiveEditor(wpfTextView);
@@ -325,19 +331,6 @@ namespace CodeStream.VisualStudio.UI {
 			}
 			catch (Exception ex) {
 				Log.Error(ex, $"{nameof(OnSessionReady)}");
-			}
-		}
-
-		private void TextView_GotAggregateFocus(object sender, EventArgs e) {
-			if (!(sender is IWpfTextView wpfTextView)) return;
-			if (_focusedWpfTextView == null || _focusedWpfTextView != wpfTextView) {
-				ChangeActiveEditor(wpfTextView);
-				_focusedWpfTextView = wpfTextView;
-
-				if (wpfTextView.Properties.TryGetProperty(PropertyNames.TextViewFilePath, out string filePath)) {
-
-					SessionService.LastActiveFileUrl = filePath;
-				}
 			}
 		}
 
@@ -354,9 +347,9 @@ namespace CodeStream.VisualStudio.UI {
 
 		private void ChangeActiveEditor(IWpfTextView wpfTextView) {
 			try {
-				if (wpfTextView == null) return;
+				if (wpfTextView == null || !SessionService.IsWebViewVisible) return;
 				if (!wpfTextView.Properties.TryGetProperty(PropertyNames.TextViewFilePath, out string filePath)) return;
-				if (filePath.IsNullOrWhiteSpace() || !SessionService.IsWebViewVisible) return;
+				if (filePath.IsNullOrWhiteSpace()) return;
 
 				var activeTextEditor = EditorService.GetActiveTextEditor(TextDocumentFactoryService, wpfTextView);
 				if (activeTextEditor != null && activeTextEditor.Uri != null) {
@@ -380,8 +373,9 @@ namespace CodeStream.VisualStudio.UI {
 
 				wpfTextView.Properties.TryDisposeListProperty(PropertyNames.TextViewLocalEvents);
 				wpfTextView.Properties.TryDisposeProperty<HighlightAdornmentManager>(PropertyNames.AdornmentManager);
-				//wpfTextView.LayoutChanged -= OnTextViewLayoutChanged;
-				//wpfTextView.Caret.PositionChanged -= Caret_PositionChanged;
+				wpfTextView.LayoutChanged -= OnTextViewLayoutChanged;
+				wpfTextView.Caret.PositionChanged -= Caret_PositionChanged;
+				wpfTextView.Selection.SelectionChanged += Selection_SelectionChanged;
 				wpfTextView.GotAggregateFocus -= TextView_GotAggregateFocus;
 
 				if (wpfTextView.Properties.TryGetProperty(PropertyNames.DocumentMarkerManager,
@@ -431,26 +425,60 @@ namespace CodeStream.VisualStudio.UI {
 			}
 		}
 
+		#region EventHandlers
+
 		private void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e) {
-			Debug.WriteLine($"{nameof(Caret_PositionChanged)} v={e.NewPosition} h={e.OldPosition}");
-			//ChangeActiveEditor(e?.TextView as IWpfTextView);
+			if (e.TextView == null || !SessionService.IsReady) return;
+			var wpfTextView = e.TextView as IWpfTextView;
+			if (wpfTextView == null) return;
+
+			wpfTextView
+				.Properties
+				.GetProperty<Subject<CaretPositionChangedSubject>>(PropertyNames.CaretPositionChangedSubject)
+				?.OnNext(new CaretPositionChangedSubject() {
+					WpfTextView = wpfTextView,
+					EventArgs = e,
+					Sender = sender
+				});
+		}
+
+		private void Selection_SelectionChanged(object sender, EventArgs e) {
+			if (!SessionService.IsReady || !SessionService.IsWebViewVisible) return;
+
+			var textSelection = sender as ITextSelection;
+			if (textSelection == null || textSelection.IsEmpty) return;
+
+			var wpfTextView = textSelection.TextView as IWpfTextView;
+
+			wpfTextView
+				.Properties
+				.GetProperty<Subject<TextSelectionChangedSubject>>(PropertyNames.TextSelectionChangedSubject)
+				?.OnNext(new TextSelectionChangedSubject() {
+					WpfTextView = wpfTextView,
+					TextSelection = textSelection
+				});
+		}
+
+		private void TextView_GotAggregateFocus(object sender, EventArgs e) {
+			if (!(sender is IWpfTextView wpfTextView)) return;
+			Debug.WriteLine(nameof(TextView_GotAggregateFocus));
+
+			if (_focusedWpfTextView == null || _focusedWpfTextView != wpfTextView) {
+				ChangeActiveEditor(wpfTextView);
+				_focusedWpfTextView = wpfTextView;
+
+				if (wpfTextView.Properties.TryGetProperty(PropertyNames.TextViewFilePath, out string filePath)) {
+					SessionService.LastActiveFileUrl = filePath;
+				}
+			}
 		}
 
 		private void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
-			Debug.WriteLine($"{nameof(OnTextViewLayoutChanged)} v={e.VerticalTranslation} h={e.HorizontalTranslation} nl={e.NewOrReformattedLines.Count()} tl={e.TranslatedLines.Count()}");
 			try {
 				if (!(sender is IWpfTextView wpfTextView) || !SessionService.IsReady) return;
-				if (wpfTextView.InLayout || wpfTextView.IsClosed) {
-					return;
-				}
-
-				if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextView.TextBuffer, out var textDocument)) {
-					Log.LocalWarning(@"TextDocument not found");
-					return;
-				}
+				if (wpfTextView.InLayout || wpfTextView.IsClosed) return;
 
 				var triggerTextViewLayoutChanged = false;
-
 				// don't trigger for changes that don't result in lines being added or removed
 				if (
 					(e.VerticalTranslation ||
@@ -459,56 +487,156 @@ namespace CodeStream.VisualStudio.UI {
 					SessionService.IsWebViewVisible && SessionService.IsCodemarksForFileVisible
 				) {
 					triggerTextViewLayoutChanged = true;
+				}
+				var requiresMarkerCheck = false;
+				if (wpfTextView.Properties.TryGetProperty(PropertyNames.DocumentMarkerManager, out DocumentMarkerManager documentMarkerManager) && documentMarkerManager != null) {
+					var hasTranslatedLines = e.TranslatedLines.Any();
+					var hasNewOrReformattedLines = e.NewOrReformattedLines.Any();
 
-					try {
-						var visibleRangeSubject = wpfTextView.Properties
-							.GetProperty<Subject<HostDidChangeEditorVisibleRangesNotificationSubject>>(PropertyNames
-								.HostDidChangeEditorVisibleRangesNotificationSubject);
-
-						visibleRangeSubject?.OnNext(
-							new HostDidChangeEditorVisibleRangesNotificationSubject(wpfTextView,
-								textDocument.FilePath.ToUri()));
+					// get markers if it's null (first time) or we did something that isn't scrolling/vertical changes
+					// backspace has a NewOrReformated Count of 1 :)
+					if ((hasTranslatedLines && hasNewOrReformattedLines && e.NewOrReformattedLines.Count() >= 1) || !documentMarkerManager.IsInitialized()) {
+						requiresMarkerCheck = true;
 					}
-					catch (InvalidOperationException ex) {
-						Log.Warning(ex, nameof(OnTextViewLayoutChanged));
-					}
-					catch (Exception ex) {
-						Log.Error(ex, nameof(OnTextViewLayoutChanged));
+					else if ((e.VerticalTranslation || hasTranslatedLines) && documentMarkerManager.HasMarkers()) {
+						triggerTextViewLayoutChanged = true;
 					}
 				}
 
-				//if (wpfTextView.Properties.TryGetProperty(PropertyNames.DocumentMarkerManager, out DocumentMarkerManager documentMarkerManager) && documentMarkerManager != null) {
-				//	var hasTranslatedLines = e.TranslatedLines.Any();
-				//	var hasNewOrReformattedLines = e.NewOrReformattedLines.Any();
+				if (triggerTextViewLayoutChanged || requiresMarkerCheck) {
+					//try {
+					wpfTextView.Properties
+						.GetProperty<Subject<TextViewLayoutChangedSubject>>(PropertyNames.TextViewLayoutChangedSubject)
+						?.OnNext(new TextViewLayoutChangedSubject() {
+							WpfTextView = wpfTextView,
+							RequiresMarkerCheck = requiresMarkerCheck,
+							TriggerTextViewLayoutChanged = triggerTextViewLayoutChanged,
+							EventArgs = e,
+							Sender = sender
+						});
+					//}
+					//catch(InvalidOperationException ex) {
 
-				//	// get markers if it's null (first time) or we did something that isn't scrolling/vertical changes
-				//	if ((hasTranslatedLines && hasNewOrReformattedLines && e.NewOrReformattedLines.Count() > 1) || !documentMarkerManager.IsInitialized()) {
-				//		var updated = documentMarkerManager.TrySetMarkers();
-				//		if (updated) {
-				//			triggerTextViewLayoutChanged = true;
-				//		}
-				//	}
-				//	else if ((e.VerticalTranslation || hasTranslatedLines) && documentMarkerManager.HasMarkers()) {
-				//		triggerTextViewLayoutChanged = true;
-				//	}
-				//}
-				//else {
-				//	Log.Error($"{nameof(documentMarkerManager)} is null");
-				//}
-
-
-				//if (triggerTextViewLayoutChanged) {
-					//only send this if we have markers
-					wpfTextView
-						.Properties
-					.GetProperty<List<ICodeStreamWpfTextViewMargin>>(PropertyNames.TextViewMarginProviders)
-					.OnTextViewLayoutChanged(sender, e);
-				//}
+					//}
+				}
 			}
 			catch (Exception ex) {
 				Log.Warning(ex, nameof(OnTextViewLayoutChanged));
 			}
 		}
+
+		#endregion
+
+		#region SubjectHandlers
+
+		private async System.Threading.Tasks.Task OnTextSelectionChangedSubjectHandlerAsync(TextSelectionChangedSubject subject) {
+			try {
+				Log.Verbose($"SelectionChanged {subject.TextSelection.ToPositionString()}");
+				var wpfTextView = subject.WpfTextView;
+				var activeEditorState = EditorService?.GetActiveEditorState();
+
+				_ = CodeStreamService.EditorSelectionChangedNotificationAsync(
+					wpfTextView.Properties.GetProperty<string>(PropertyNames.TextViewFilePath).ToUri(),
+					activeEditorState,
+					wpfTextView.ToVisibleRangesSafe(),
+					wpfTextView?.TextSnapshot?.LineCount,
+					CodemarkType.Comment, CancellationToken.None);
+			}
+			catch (Exception ex) {
+				Log.Warning(ex, nameof(OnTextSelectionChangedSubjectHandlerAsync));
+			}
+		}
+
+		private async System.Threading.Tasks.Task OnCaretPositionChangedSubjectHandlerAsync(CaretPositionChangedSubject e) {
+			try {
+				Debug.WriteLine($"{nameof(Caret_PositionChanged)} new={e.EventArgs?.NewPosition} old={e.EventArgs?.OldPosition}");
+				var wpfTextView = e.WpfTextView;
+				if (wpfTextView == null || !SessionService.IsReady || !SessionService.IsWebViewVisible) return;
+				if (!wpfTextView.Properties.TryGetProperty(PropertyNames.TextViewFilePath, out string filePath)) return;
+				if (filePath.IsNullOrWhiteSpace()) return;
+				if (!Uri.TryCreate(filePath, UriKind.RelativeOrAbsolute, out Uri result)) return;
+
+				var cursorLine = wpfTextView.TextSnapshot.GetLineFromPosition(e.EventArgs.NewPosition.BufferPosition.Position);
+				_ = CodeStreamService.ChangeCaretAsync(result, wpfTextView.ToVisibleRangesSafe(), cursorLine.LineNumber, wpfTextView.TextSnapshot.LineCount);
+			}
+			catch (Exception ex) {
+				Log.Warning(ex, nameof(Caret_PositionChanged));
+			}
+		}
+
+		private async System.Threading.Tasks.Task OnVisibleRangesSubjectHandlerAsync(Uri uri, IWpfTextView wpfTextView) {
+			try {
+				if (wpfTextView.InLayout || wpfTextView.IsClosed) return;
+
+				_ = CodeStreamService.BrowserService?.NotifyAsync(
+					new HostDidChangeEditorVisibleRangesNotificationType {
+						Params = new HostDidChangeEditorVisibleRangesNotification(
+							uri,
+							EditorService.GetActiveEditorState()?.ToEditorSelectionsSafe(),
+							wpfTextView.ToVisibleRangesSafe(),
+							wpfTextView.TextSnapshot?.LineCount
+						)
+					});
+			}
+			catch (InvalidOperationException ex) {
+				Log.Warning(ex, nameof(OnVisibleRangesSubjectHandlerAsync));
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(OnVisibleRangesSubjectHandlerAsync));
+			}
+			await System.Threading.Tasks.Task.CompletedTask;
+		}
+
+		private async System.Threading.Tasks.Task OnTextViewLayoutChangedSubjectHandlerAsync(TextViewLayoutChangedSubject subject) {
+			try {
+				Debug.WriteLine($"{nameof(OnTextViewLayoutChangedSubjectHandlerAsync)} RequiresMarkerCheck={subject.RequiresMarkerCheck} TriggerTextViewLayoutChanged={subject.TriggerTextViewLayoutChanged}");
+
+				var wpfTextView = subject.WpfTextView;
+				if (TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextView.TextBuffer, out var textDocument)) {
+					// don't trigger for changes that don't result in lines being added or removed
+
+					if (wpfTextView.Properties.TryGetProperty(PropertyNames.DocumentMarkerManager, out DocumentMarkerManager documentMarkerManager) && documentMarkerManager != null) {
+						// get markers if it's null (first time) or we did something that isn't scrolling/vertical changes
+						if (subject.RequiresMarkerCheck) {
+							var updated = await documentMarkerManager.TrySetMarkersAsync();
+							if (updated) {
+								subject.TriggerTextViewLayoutChanged = true;
+							}
+						}
+					}
+					if (subject.TriggerTextViewLayoutChanged) {
+						//only send this if we have an actual change						
+						try {
+							if (wpfTextView.InLayout || wpfTextView.IsClosed) return;
+
+							await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+							_ = OnVisibleRangesSubjectHandlerAsync(textDocument.FilePath.ToUri(), wpfTextView);
+
+							wpfTextView
+								.Properties
+								.GetProperty<List<ICodeStreamWpfTextViewMargin>>(PropertyNames.TextViewMarginProviders)
+								.OnTextViewLayoutChanged(subject.Sender, subject.EventArgs);
+						}
+						catch (InvalidOperationException ex) {
+							Log.Warning(ex, nameof(OnTextViewLayoutChangedSubjectHandlerAsync));
+						}
+						catch (Exception ex) {
+							Log.Error(ex, nameof(OnTextViewLayoutChangedSubjectHandlerAsync));
+						}
+					}
+				}
+			}
+			catch (Exception ex) {
+				Log.Warning(ex, nameof(OnTextViewLayoutChanged));
+			}
+
+			await System.Threading.Tasks.Task.CompletedTask;
+		}
+
+		#endregion
+
+		#region Models
 
 		class TextViewState {
 			public bool Initialized { get; set; }
@@ -522,5 +650,27 @@ namespace CodeStream.VisualStudio.UI {
 				Uri = uri;
 			}
 		}
+
+		internal class TextViewLayoutChangedSubject {
+			public bool RequiresMarkerCheck { get; set; }
+			public bool TriggerTextViewLayoutChanged { get; set; }
+			public object Sender { get; set; }
+			public TextViewLayoutChangedEventArgs EventArgs { get; set; }
+			public IWpfTextView WpfTextView { get; set; }
+		}
+
+		internal class TextSelectionChangedSubject {
+			public ITextSelection TextSelection { get; set; }
+
+			public IWpfTextView WpfTextView { get; set; }
+		}
+
+		internal class CaretPositionChangedSubject {
+			public object Sender { get; set; }
+			public CaretPositionChangedEventArgs EventArgs { get; set; }
+			public IWpfTextView WpfTextView { get; set; }
+		}
+
+		#endregion
 	}
 }
