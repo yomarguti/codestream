@@ -918,7 +918,10 @@ export class SimpleStream extends Component {
 									<ScrollBox>
 										<PostList
 											ref={this.setThreadListRef}
-											isActive={this.props.activePanel === "thread"}
+											isActive={
+												this.props.activePanel === "thread" ||
+												this.props.activePanel === WebviewPanels.Codemarks
+											}
 											hasFocus={this.props.hasFocus}
 											teammates={this.props.teammates}
 											currentUserId={this.props.currentUserId}
@@ -1108,11 +1111,13 @@ export class SimpleStream extends Component {
 	editLastPost = id => {
 		const { activePanel } = this.props;
 		let list;
-		if (activePanel === "thread") list = this._threadpostslist;
-		if (activePanel === "main") {
+		if (activePanel === "thread" || activePanel === WebviewPanels.Codemarks) {
+			list = this._threadpostslist;
+		} else if (activePanel === "main") {
 			list = this._postslist;
 		}
-		id = id || list.getUsersMostRecentPost().id;
+
+		id = id || (list && list.getUsersMostRecentPost().id);
 		if (id) {
 			const { codemarks } = this.context.store.getState();
 
@@ -1129,7 +1134,9 @@ export class SimpleStream extends Component {
 				});
 			} else
 				this.setState({ editingPostId: post.id }, () => {
-					list.scrollTo(post.id);
+					if (list) {
+						list.scrollTo(post.id);
+					}
 				});
 		}
 	};
