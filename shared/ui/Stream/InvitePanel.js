@@ -8,6 +8,7 @@ import { closePanel, invite } from "./actions";
 import { isInVscode, mapFilter } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { sortBy as _sortBy } from "lodash-es";
+import { getTeamProvider } from "../store/teams/actions";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -237,22 +238,29 @@ export class InvitePanel extends Component {
 
 const mapStateToProps = ({ users, context, teams }) => {
 	const team = teams[context.currentTeamId];
+	const teamProvider = getTeamProvider(team);
+
 	const members = mapFilter(team.memberIds, id => {
 		const user = users[id];
 		if (!user || !user.isRegistered || user.deactivated) return;
+
 		if (!user.fullName) {
 			let email = user.email;
 			if (email) user.fullName = email.replace(/@.*/, "");
 		}
 		return user;
 	});
-	const invited = mapFilter(team.memberIds, id => {
-		const user = users[id];
-		if (!user || user.isRegistered || user.deactivated) return;
-		let email = user.email;
-		if (email) user.fullName = email.replace(/@.*/, "");
-		return user;
-	});
+
+	const invited =
+		teamProvider === "codestream"
+			? mapFilter(team.memberIds, id => {
+					const user = users[id];
+					if (!user || user.isRegistered || user.deactivated) return;
+					let email = user.email;
+					if (email) user.fullName = email.replace(/@.*/, "");
+					return user;
+			  })
+			: [];
 
 	return {
 		teamId: team.id,
