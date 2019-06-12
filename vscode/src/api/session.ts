@@ -130,29 +130,24 @@ export class CodeStreamSession implements Disposable {
 	);
 
 	private _agentCapabilities: Capabilities | undefined;
-	private _capabilities: Capabilities | undefined;
 	get capabilities() {
-		if (this._capabilities === undefined) {
-			const ide: Capabilities = {
-				codemarkApply: true,
-				codemarkCompare: true,
-				editorTrackVisibleRange: true,
-				services: {
-					vsls: Container.vsls.installed
-				}
-			};
+		const ide: Capabilities = {
+			codemarkApply: true,
+			codemarkCompare: true,
+			editorTrackVisibleRange: true,
+			services: {
+				vsls: Container.vsls.installed
+			}
+		};
 
-			// If we have no agent caps then just use the ide's
-			if (this._agentCapabilities === undefined) return ide;
+		// If we have no agent caps then just use the ide's
+		if (this._agentCapabilities === undefined) return ide;
 
-			// Mix IDE caps in with the agent caps
-			this._capabilities = {
-				...this._agentCapabilities,
-				...ide
-			};
-		}
-
-		return this._capabilities;
+		// Mix IDE caps in with the agent caps
+		return {
+			...ide,
+			...this._agentCapabilities
+		};
 	}
 
 	private _disposable: Disposable | undefined;
@@ -480,7 +475,6 @@ export class CodeStreamSession implements Disposable {
 	@log()
 	async logout(reason: SessionSignedOutReason = SessionSignedOutReason.UserSignedOut) {
 		this._id = undefined;
-		this._capabilities = undefined;
 		this._loginPromise = undefined;
 
 		try {
