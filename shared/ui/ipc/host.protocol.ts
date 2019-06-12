@@ -69,6 +69,7 @@ export const LogoutRequestType = new RequestType<LogoutRequest, LogoutResponse, 
 
 export interface LoginSSORequest {
 	provider: string;
+	queryString?: string;
 }
 export interface LoginSSOResponse {}
 export const LoginSSORequestType = new RequestType<LoginSSORequest, LoginSSOResponse, void, void>(

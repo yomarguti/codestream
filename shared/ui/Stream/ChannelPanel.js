@@ -91,6 +91,36 @@ export class SimpleChannelPanel extends Component {
 
 		if (showChannels === "selecting") return this.renderSelectingChannels();
 
+		if (
+			this.props.capabilities.providerCanSupportRealtimeChat &&
+			!this.props.capabilities.providerSupportsRealtimeChat
+		) {
+			return (
+				<div>
+					<form className="standard-form">
+						<fieldset className="form-body">
+							<h2>Enable Slack Real-time Chat Support</h2>
+							<p>
+								Real-time chat support is currently not enabled. If you would like to enable
+								real-time chat, please click the button below.
+							</p>
+							<div id="controls">
+								<div className="button-group">
+									<Button
+										className="control-button"
+										type="button"
+										// onClick={this.handleClickEnableRealtimeChat}
+									>
+										Enable Real-time Chat
+									</Button>
+								</div>
+							</div>
+						</fieldset>
+					</form>
+				</div>
+			);
+		}
+
 		return (
 			<div
 				className={createClassString("panel", "channel-panel", {
@@ -742,6 +772,7 @@ const EMPTY_OBJECT = Object.freeze({});
 
 /**
  * @param {Object} state
+ * @param {Object} state.capabilities
  * @param {ContextState} state.context
  * @param {Object} state.preferences
  * @param {Object} state.session
@@ -750,7 +781,16 @@ const EMPTY_OBJECT = Object.freeze({});
  * @param {Object} state.users
  * @param {Object} state.teams
  **/
-const mapStateToProps = ({ context, preferences, session, streams, teams, umis, users }) => {
+const mapStateToProps = ({
+	capabilities,
+	context,
+	preferences,
+	session,
+	streams,
+	teams,
+	umis,
+	users
+}) => {
 	const team = teams[context.currentTeamId];
 
 	const teamMembers = team.memberIds.map(id => users[id]).filter(Boolean);
@@ -807,6 +847,7 @@ const mapStateToProps = ({ context, preferences, session, streams, teams, umis, 
 	});
 
 	return {
+		capabilities,
 		umis,
 		users,
 		channelStreams,
