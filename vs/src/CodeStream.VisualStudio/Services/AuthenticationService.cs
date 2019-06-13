@@ -69,6 +69,13 @@ namespace CodeStream.VisualStudio.Services {
 					Log.Error(ex, $"{nameof(LogoutAsync)} - session");
 				}
 
+				try {
+					await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TryDeleteTeamIdAsync();
+				}
+				catch(Exception ex) {
+					Log.Error(ex, "could not delete teamId");
+				}
+
 				EventAggregator.Publish(new SessionLogoutEvent());
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
 				WebviewIpc.Notify(new HostDidLogoutNotificationType());

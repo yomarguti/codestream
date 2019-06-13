@@ -33,6 +33,25 @@ namespace CodeStream.VisualStudio.Services {
 			}
 			return await _userSettingsService.TryGetValueAsync<WebviewContext>($"{{{{solutionName}}}}.{teamId}", UserSettingsKeys.WebviewContext);
 		}
+
+		public Task<bool> SaveTeamIdAsync(string teamId) {
+			if (_userSettingsService == null || teamId.IsNullOrWhiteSpace()) return Task.FromResult(false);
+
+			return _userSettingsService.SaveAsync($"{{{{solutionName}}}}", UserSettingsKeys.TeamId, teamId);
+		}
+
+		public async Task<string> TryGetTeamIdAsync() {
+			if (_userSettingsService == null) {
+				return null;
+			}
+			return await _userSettingsService.TryGetValueAsync<string>($"{{{{solutionName}}}}", UserSettingsKeys.TeamId);
+		}
+
+		public Task<bool> DeleteTeamIdAsync() {
+			if (_userSettingsService == null) return Task.FromResult(false);
+
+			return _userSettingsService.SaveAsync($"{{{{solutionName}}}}", UserSettingsKeys.TeamId, null);
+		}
 	}
 
 	public static class IUserSettingsServiceExtensions {
@@ -42,6 +61,33 @@ namespace CodeStream.VisualStudio.Services {
 
 		public static Task<WebviewContext> TryGetWebviewContextAsync(this IUserSettingsService userSettingsService, string teamId) {
 			return new WebviewUserSettingsService(userSettingsService).TryGetWebviewContextAsync(teamId);
+		}
+
+		public static Task<bool> TrySaveTeamIdAsync(this IUserSettingsService userSettingsService, string teamId) {
+			try {
+				return new WebviewUserSettingsService(userSettingsService).SaveTeamIdAsync(teamId);
+			}
+			catch {
+				return Task.FromResult(false);
+			}
+		}
+
+		public static Task<string> TryGetTeamIdAsync(this IUserSettingsService userSettingsService) {
+			try {
+				return new WebviewUserSettingsService(userSettingsService).TryGetTeamIdAsync();
+			}
+			catch {
+				return null;
+			}
+		}
+		
+		public static Task<bool> TryDeleteTeamIdAsync(this IUserSettingsService userSettingsService) {
+			try {
+				return new WebviewUserSettingsService(userSettingsService).DeleteTeamIdAsync();
+			}
+			catch {
+				return Task.FromResult(false);
+			}
 		}
 	}
 }

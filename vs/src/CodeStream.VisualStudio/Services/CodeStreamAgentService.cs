@@ -59,7 +59,7 @@ namespace CodeStream.VisualStudio.Services {
 		Task<CsDirectStream> CreateDirectStreamAsync(List<string> memberIds);
 		Task<JToken> LoginViaTokenAsync(LoginAccessToken token, string team, string teamId = null);
 		Task<JToken> OtcLoginRequestAsync(OtcLoginRequest request);
-		Task<JToken> LoginAsync(string email, string password, string serverUrl);
+		Task<JToken> LoginAsync(string email, string password, string serverUrl, string teamId);
 		Task<JToken> LogoutAsync();
 		Task<JToken> GetBootstrapAsync(Settings settings, JToken state = null, bool isAuthenticated = false);
 		Task<FetchCodemarksResponse> GetMarkersAsync(string streamId);
@@ -284,12 +284,13 @@ namespace CodeStream.VisualStudio.Services {
 			});
 		}
 
-		public Task<JToken> LoginAsync(string email, string password, string serverUrl) {
+		public Task<JToken> LoginAsync(string email, string password, string serverUrl, string teamId) {
 			var settingsManager = _settingsServiceFactory.Create();
 			return SendCoreAsync<JToken>(PasswordLoginRequestType.MethodName, new PasswordLoginRequest {
 				Email = email,
 				Password = password,
-				Team = settingsManager?.Team
+				Team = settingsManager?.Team,
+				TeamId = teamId
 			});
 		}
 

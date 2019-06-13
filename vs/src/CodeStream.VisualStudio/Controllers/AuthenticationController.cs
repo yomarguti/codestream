@@ -47,7 +47,9 @@ namespace CodeStream.VisualStudio.Controllers {
 			try {
 				using (var scope = _browserService.CreateScope(message)) {
 					try {
-						loginResponse = await _codeStreamAgent.LoginAsync(email, password, _settingsManager.ServerUrl);
+						var teamId = await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TryGetTeamIdAsync();
+
+						loginResponse = await _codeStreamAgent.LoginAsync(email, password, _settingsManager.ServerUrl, teamId);
 						processResponse = await ProcessLoginAsync(loginResponse);
 						if (!processResponse.Success) {
 							errorResponse = processResponse.ErrorMessage;
@@ -101,7 +103,9 @@ namespace CodeStream.VisualStudio.Controllers {
 							_settingsManager.Email);
 						if (token != null) {
 							try {
-								var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(new LoginAccessToken(token.Item1, _settingsManager.ServerUrl, token.Item2), _settingsManager.Team);
+								var teamId = await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TryGetTeamIdAsync();
+
+								var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(new LoginAccessToken(token.Item1, _settingsManager.ServerUrl, token.Item2), _settingsManager.Team, teamId);
 								processResponse = await ProcessLoginAsync(loginResponse);
 								@params = processResponse?.Params;
 								if (!processResponse.Success) {
@@ -146,7 +150,9 @@ namespace CodeStream.VisualStudio.Controllers {
 			try {
 				using (var scope = _browserService.CreateScope(message)) {
 					try {
-						loginResponse = await _codeStreamAgent.LoginViaTokenAsync(new LoginAccessToken(request.Email, _settingsManager.ServerUrl, request.Token), _settingsManager.Team);
+						var teamId = await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TryGetTeamIdAsync();
+
+						loginResponse = await _codeStreamAgent.LoginViaTokenAsync(new LoginAccessToken(request.Email, _settingsManager.ServerUrl, request.Token), _settingsManager.Team, teamId);
 						processResponse = await ProcessLoginAsync(loginResponse);
 						if (!processResponse.Success) {
 							errorResponse = processResponse.ErrorMessage;
@@ -178,9 +184,12 @@ namespace CodeStream.VisualStudio.Controllers {
 			try {
 				using (var scope = _browserService.CreateScope(message)) {
 					try {
+						var teamId = await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TryGetTeamIdAsync();
+
 						loginResponse = await _codeStreamAgent.OtcLoginRequestAsync(new OtcLoginRequest {
 							Code = _sessionService.GetOrCreateSignupToken().ToString(),
-							Alias = extras?.Alias
+							Alias = extras?.Alias,
+							TeamId = teamId
 						});
 
 						processResponse = await ProcessLoginAsync(loginResponse);
@@ -219,6 +228,8 @@ namespace CodeStream.VisualStudio.Controllers {
 				if (_settingsManager.AutoSignIn) {
 					await _credentialsService.SaveAsync(_settingsManager.ServerUrl.ToUri(), email, GetAccessToken(loginResponse).ToString());
 				}
+
+				await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TrySaveTeamIdAsync(GetTeamId(loginResponse));
 			}
 
 			await Task.CompletedTask;
@@ -280,6 +291,8 @@ namespace CodeStream.VisualStudio.Controllers {
 
 			return new User(user.Id, user.Username, user.Email, teamName, teams.Count);
 		}
+		
+		private string GetTeamId(JToken token) => token?["loginResponse"]?["teamId"].Value<string>();
 
 		private JToken GetState(JToken token) => token?["state"];
 		private JToken GetEmail(JToken token) => token?["loginResponse"]?["user"]?["email"];

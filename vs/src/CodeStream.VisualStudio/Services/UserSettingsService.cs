@@ -53,6 +53,10 @@ namespace CodeStream.VisualStudio.Services {
 				if (settings.Data.TryGetValue(dataKey.ToLowerInvariant(), out object value)) {
 
 					if (value != null) {
+						var str = value as string;
+						if (str != null) {
+							return (T)Convert.ChangeType(value, typeof(T));
+						}
 						var jObject = value as JObject;
 						if (jObject != null) {
 							var data = jObject.ToObject<T>();
