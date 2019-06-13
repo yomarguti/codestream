@@ -21,6 +21,3 @@ export enum BuiltInCommands {
 	ShowCodeStream = "workbench.view.extension.codestream",
 	ShowReferences = "editor.action.showReferences"
 }
-
-export const emptyArray = (Object.freeze([]) as any) as any[];
-export const emptyObj = Object.freeze({});

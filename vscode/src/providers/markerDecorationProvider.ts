@@ -27,10 +27,11 @@ import {
 } from "../api/session";
 import { OpenCodemarkCommandArgs, ShowMarkerDiffCommandArgs } from "../commands";
 import { configuration } from "../configuration";
-import { emptyArray } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions, Strings } from "../system";
+
+const emptyArray = (Object.freeze([]) as any) as any[];
 
 const positionStyleMap: { [key: string]: string } = {
 	inline: "display: inline-block; margin: 0 0.5em 0 0; vertical-align: middle;",

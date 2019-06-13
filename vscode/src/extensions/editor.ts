@@ -16,7 +16,7 @@ import {
 } from "vscode";
 import { Position as LspPosition, Range as LspRange } from "vscode-languageclient";
 import { configuration } from "../configuration";
-import { BuiltInCommands, emptyArray } from "../constants";
+import { BuiltInCommands } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
 
@@ -91,7 +91,7 @@ export namespace Editor {
 		const editor = await findOrOpenEditor(uri, { preserveFocus: true });
 		if (editor === undefined) return false;
 
-		editor.setDecorations(highlightDecorationType, clear ? emptyArray : [range]);
+		editor.setDecorations(highlightDecorationType, clear ? [] : [range]);
 		// Don't reveal on highlight right now -- webview probably needs a flag to control this
 		// editor.revealRange(range, TextEditorRevealType.Default);
 		return true;

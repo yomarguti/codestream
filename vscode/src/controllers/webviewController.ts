@@ -74,12 +74,13 @@ import {
 } from "../api/session";
 import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
-import { emptyObj } from "../constants";
 import { Container } from "../container";
 import { Editor } from "../extensions";
 import { Logger } from "../logger";
 import { Functions, log } from "../system";
 import { CodeStreamWebviewPanel, toLoggableIpcMessage } from "../webviews/webviewPanel";
+
+const emptyObj = {};
 
 export interface WebviewState {
 	hidden: boolean;
