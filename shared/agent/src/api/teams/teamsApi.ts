@@ -606,12 +606,12 @@ export class MSTeamsApiProvider implements ApiProvider {
 				`beta/teams/${teamId}/channels/${channelId}/messages${
 					parentMessageId ? `/${parentMessageId}/replies` : ""
 				}`,
-				request =>
-					request.post({
-						body: body,
-						attachments: attachments.length === 0 ? undefined : attachments,
-						mentions: mentions.length === 0 ? undefined : mentions
-					})
+				(request, content) => request.post(content),
+				{
+					body: body,
+					attachments: attachments.length === 0 ? undefined : attachments,
+					mentions: mentions.length === 0 ? undefined : mentions
+				}
 			);
 
 			const post = await fromTeamsMessage(
@@ -727,10 +727,10 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 			const response = await this.teamsApiCall<{ responses: GraphBatchResponse[] }>(
 				"beta/$batch",
-				request =>
-					request.post({
-						requests: requests
-					})
+				(request, content) => request.post(content),
+				{
+					requests: requests
+				}
 			);
 
 			postResponse = response.responses.find(r => r.id === "post")!.body!;
@@ -784,10 +784,10 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 		const response = await this.teamsApiCall<{ responses: GraphBatchResponse[] }>(
 			"beta/$batch",
-			request =>
-				request.post({
-					requests: requests
-				})
+			(request, content) => request.post(content),
+			{
+				requests: requests
+			}
 		);
 
 		const { teamId, channelId } = fromStreamId(request.streamId);
@@ -860,10 +860,10 @@ export class MSTeamsApiProvider implements ApiProvider {
 			];
 			const response = await this.teamsApiCall<{ responses: GraphBatchResponse[] }>(
 				"v1.0/$batch",
-				request =>
-					request.post({
-						requests: requests
-					})
+				(request, content) => request.post(content),
+				{
+					requests: requests
+				}
 			);
 
 			const streams = [
@@ -1028,10 +1028,12 @@ export class MSTeamsApiProvider implements ApiProvider {
 		];
 
 		const [response, { user: me }, { users: codestreamUsers }] = await Promise.all([
-			this.teamsApiCall<{ responses: GraphBatchResponse[] }>("v1.0/$batch", request =>
-				request.post({
+			this.teamsApiCall<{ responses: GraphBatchResponse[] }>(
+				"v1.0/$batch",
+				(request, content) => request.post(content),
+				{
 					requests: requests
-				})
+				}
 			),
 			this.getMeCore(),
 			(this._codestreamTeam !== undefined
@@ -1130,19 +1132,23 @@ export class MSTeamsApiProvider implements ApiProvider {
 	}
 
 	@debug<MSTeamsApiProvider, MSTeamsApiProvider["teamsApiCall"]>({
-		args: false,
+		args: {
+			0: () => false,
+			1: () => false
+		},
 		prefix: (context, path, fn) => `${context.prefix} ${path}`
 	})
 	protected async teamsApiCall<TResponse>(
 		path: string,
-		fn: (request: GraphRequest) => Promise<TResponse>
+		fn: (request: GraphRequest, content?: any) => Promise<TResponse>,
+		content?: any
 	): Promise<TResponse> {
 		const cc = Logger.getCorrelationContext();
 
 		const timeoutMs = 30000;
 		try {
 			const response = await Functions.cancellable(
-				fn(this._teams.api(`https://graph.microsoft.com/${path}`)),
+				fn(this._teams.api(`https://graph.microsoft.com/${path}`), content),
 				timeoutMs,
 				{
 					onDidCancel: (resolve, reject) => Logger.warn(cc, `TIMEOUT ${timeoutMs / 1000}s exceeded`)
