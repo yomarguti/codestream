@@ -39,6 +39,7 @@ data class SettingsServiceState(
     var notifications: String? = null,
     var muteAll: Boolean = false,
     var team: String? = null,
+    var teamId: String? = null,
     var showFeedbackSmiley: Boolean = true,
     var showMarkers: Boolean = true,
     var autoHideMarkers: Boolean = true,

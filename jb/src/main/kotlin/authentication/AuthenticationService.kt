@@ -62,7 +62,7 @@ class AuthenticationService(val project: Project) {
                             settings.state.serverUrl,
                             token
                         ),
-                        null,
+                        settings.state.teamId,
                         settings.team
                     )
                 ).await()
@@ -71,7 +71,11 @@ class AuthenticationService(val project: Project) {
                     logger.warn(it)
                     return buildSignedOutResponse()
                 }
-                agentCapabilities = loginResult.state!!.capabilities
+
+                loginResult.state?.let {
+                    agentCapabilities = it.capabilities
+                    settings.state.teamId = it.teamId
+                }
 
                 val bootstrapFuture = agent.agent.bootstrap(BootstrapParams())
                 session.login(loginResult.userLoggedIn)
@@ -93,7 +97,7 @@ class AuthenticationService(val project: Project) {
             LoginWithPasswordParams(
                 params.email,
                 params.password,
-                null,
+                settings.state.teamId,
                 settings.team
             )
         ).await()
@@ -101,7 +105,11 @@ class AuthenticationService(val project: Project) {
         loginResult.error?.let {
             throw Exception(it)
         }
-        agentCapabilities = loginResult.state!!.capabilities
+
+        loginResult.state?.let {
+            agentCapabilities = it.capabilities
+            settings.state.teamId = it.teamId
+        }
 
         val bootstrapFuture = agent.agent.bootstrap(BootstrapParams())
         session.login(loginResult.userLoggedIn)
@@ -118,12 +126,12 @@ class AuthenticationService(val project: Project) {
     }
 
     suspend fun validateThirdPartyAuth(request: ValidateThirdPartyAuthRequest): Any? {
-        val agentService = project.agentService ?: return jsonObject()
-        val sessionService = project.sessionService ?: return jsonObject()
-        val settingsService = project.settingsService ?: return jsonObject()
+        val agent = project.agentService ?: return jsonObject()
+        val session = project.sessionService ?: return jsonObject()
+        val settings = project.settingsService ?: return jsonObject()
 
-        val loginResult = agentService.agent.loginOtc(LoginOtcParams(
-            sessionService.signupToken,
+        val loginResult = agent.agent.loginOtc(LoginOtcParams(
+            session.signupToken,
             request.teamId,
             request.team,
             request.alias
@@ -132,25 +140,29 @@ class AuthenticationService(val project: Project) {
         loginResult.error?.let {
             throw Exception(it)
         }
-        agentCapabilities = loginResult.state!!.capabilities
 
-        val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())
-        sessionService.login(loginResult.userLoggedIn)
-        settingsService.state.email = loginResult.loginResponse?.user?.email
+        loginResult.state?.let {
+            agentCapabilities = it.capabilities
+            settings.state.teamId = it.teamId
+        }
+
+        val bootstrapFuture = agent.agent.bootstrap(BootstrapParams())
+        session.login(loginResult.userLoggedIn)
+        settings.state.email = loginResult.loginResponse?.user?.email
         saveAccessToken(loginResult.loginResponse?.accessToken)
         return buildSignedInResponse(bootstrapFuture)
     }
 
     suspend fun signupComplete(request: SignupCompleteRequest): Any? {
-        val agentService = project.agentService ?: return jsonObject()
-        val sessionService = project.sessionService ?: return jsonObject()
-        val settingsService = project.settingsService ?: return jsonObject()
+        val agent = project.agentService ?: return jsonObject()
+        val session = project.sessionService ?: return jsonObject()
+        val settings = project.settingsService ?: return jsonObject()
 
-        val loginResult = agentService.agent.loginToken(
+        val loginResult = agent.agent.loginToken(
             LoginWithTokenParams(
                 AccessToken(
                     request.email,
-                    settingsService.state.serverUrl,
+                    settings.state.serverUrl,
                     request.token
                 ),
                 request.teamId,
@@ -161,11 +173,15 @@ class AuthenticationService(val project: Project) {
         loginResult.error?.let {
             throw Exception(it)
         }
-        agentCapabilities = loginResult.state!!.capabilities
 
-        val bootstrapFuture = agentService.agent.bootstrap(BootstrapParams())
-        sessionService.login(loginResult.userLoggedIn)
-        settingsService.state.email = loginResult.loginResponse?.user?.email
+        loginResult.state?.let {
+            agentCapabilities = it.capabilities
+            settings.state.teamId = it.teamId
+        }
+
+        val bootstrapFuture = agent.agent.bootstrap(BootstrapParams())
+        session.login(loginResult.userLoggedIn)
+        settings.state.email = loginResult.loginResponse?.user?.email
         saveAccessToken(loginResult.loginResponse?.accessToken)
         return buildSignedInResponse(bootstrapFuture)
     }
@@ -174,9 +190,11 @@ class AuthenticationService(val project: Project) {
         val agent = project.agentService ?: return
         val session = project.sessionService ?: return
         val webView = project.webViewService ?: return
+        val settings = project.settingsService ?: return
 
         session.logout()
         agent.restart()
+        settings.state.teamId = null
         saveAccessToken(null)
         webView.postNotification(DidLogout())
     }
