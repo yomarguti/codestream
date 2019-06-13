@@ -65,7 +65,13 @@ namespace CodeStream.VisualStudio.Models {
 		public bool? ChannelMute { get; set; }
 		public bool? CodemarkApply { get; set; }
 		public bool? CodemarkCompare { get; set; }
-		public bool EditorTrackVisibleRange { get; set; }
+		public bool? CodemarkOpenRevision { get; set; }
+		public bool? EditorTrackVisibleRange { get; set; }
+		public bool? PostDelete { get; set; }
+		public bool? PostEdit { get; set; }
+		public bool? ProviderCanSupportRealtimeChat { get; set; }
+		public bool? ProviderSupportsRealtimeChat { get; set; }
+		public bool? ProviderSupportsRealtimeEvents { get; set; }
 		public Services Services { get; set; }
 	}
 

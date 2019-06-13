@@ -329,6 +329,7 @@ namespace CodeStream.VisualStudio.Services {
 				MergeArrayHandling = MergeArrayHandling.Union
 			});
 
+			// TODO: Need to separate the agent caps from the IDE ones, so that we don't need to keep the model up to date (i.e. support agent passthrough)
 			var capabilitiesObject = capabilities.ToObject<Capabilities>();
 
 			if (!isAuthenticated) {
