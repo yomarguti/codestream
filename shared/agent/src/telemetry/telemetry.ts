@@ -107,6 +107,7 @@ export class TelemetryService {
 				userId: this._distinctId,
 				traits: props
 			});
+			this._segmentInstance.flush();
 		} catch (ex) {
 			Logger.error(ex);
 		}
