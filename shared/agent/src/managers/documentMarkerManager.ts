@@ -24,8 +24,14 @@ import {
 	MarkerNotLocated,
 	MarkerNotLocatedReason
 } from "../protocol/agent.protocol";
-import { CodemarkStatus, CodemarkType, CSCodemark, CSMarker } from "../protocol/api.protocol";
-import { Functions, lsp, lspHandler } from "../system";
+import {
+	CodemarkStatus,
+	CodemarkType,
+	CSCodemark,
+	CSMarker,
+	CSUser
+} from "../protocol/api.protocol";
+import { Functions, log, lsp, lspHandler } from "../system";
 
 const emojiMap: { [key: string]: string } = require("../../emoji/emojis.json");
 const emojiRegex = /:([-+_a-z0-9]+):/g;
@@ -121,6 +127,7 @@ export class DocumentMarkerManager {
 		});
 	}
 
+	@log()
 	@lspHandler(CreateDocumentMarkerPermalinkRequestType)
 	async createPermalink({
 		uri,
@@ -193,18 +200,21 @@ export class DocumentMarkerManager {
 		return { linkUrl: response.permalink! };
 	}
 
+	@log()
 	@lspHandler(FetchDocumentMarkersRequestType)
 	async get({
 		textDocument: documentId,
 		filters: filters
 	}: FetchDocumentMarkersRequest): Promise<FetchDocumentMarkersResponse> {
+		const cc = Logger.getCorrelationContext();
+
 		const { codemarks, files, markers, markerLocations, users } = SessionContainer.instance();
 
 		try {
 			const documentUri = URI.parse(documentId.uri);
 
 			const filePath = documentUri.fsPath;
-			Logger.log(`MARKERS: requested markers for ${filePath}`);
+			Logger.log(cc, `MARKERS: requested markers for ${filePath}`);
 			const stream = await files.getByPath(filePath);
 			if (!stream) {
 				Logger.log(`MARKERS: no streamId found for ${filePath} - returning empty response`);
@@ -213,6 +223,7 @@ export class DocumentMarkerManager {
 
 			const markersForDocument = await markers.getByStreamId(stream.id, true);
 			Logger.log(
+				cc,
 				`MARKERS: found ${markersForDocument.length} markers - retrieving current locations`
 			);
 
@@ -222,77 +233,96 @@ export class DocumentMarkerManager {
 				markersForDocument
 			);
 
-			Logger.log(`MARKERS: results:`);
+			const usersById = new Map<string, CSUser>();
 			const documentMarkers: DocumentMarker[] = [];
 			const markersNotLocated: MarkerNotLocated[] = [];
-			for (const marker of markersForDocument) {
-				const [codemark, creator] = await Promise.all([
-					codemarks.getEnrichedCodemarkById(marker.codemarkId),
-					// HACK: This is a total hack for slack to avoid getting codestream users mixed with slack users in the cache
-					users.getById(marker.creatorId, { avoidCachingOnFetch: true })
-				]);
 
-				// Only return markers that are not links and match the filter[s] (if any)
-				if (codemark.type === CodemarkType.Link) {
-					continue;
-				}
-				if (filters && filters.excludeArchived) {
+			Logger.log(cc, `MARKERS: results:`);
+
+			for (const marker of markersForDocument) {
+				try {
+					const codemark = await codemarks.getEnrichedCodemarkById(marker.codemarkId);
+
+					// Only return markers that are not links and match the filter[s] (if any)
 					if (
-						!codemark.pinned ||
-						(codemark.type === CodemarkType.Issue && codemark.status === CodemarkStatus.Closed)
+						codemark.type === CodemarkType.Link ||
+						(filters &&
+							filters.excludeArchived &&
+							(!codemark.pinned ||
+								(codemark.type === CodemarkType.Issue &&
+									codemark.status === CodemarkStatus.Closed)))
 					) {
 						continue;
 					}
-				}
-				const location = locations[marker.id];
-				if (location) {
-					let summary = codemark.title || codemark.text || "";
-					if (summary.length !== 0) {
-						summary = (codemark.title || codemark.text).replace(
-							emojiRegex,
-							(s, code) => emojiMap[code] || s
-						);
-					}
 
-					documentMarkers.push({
-						...marker,
-						summary: summary,
-						summaryMarkdown: `\n\n> ${summary
-							// Escape markdown
-							.replace(escapeMarkdownRegex, "\\$&")
-							// Escape markdown header (since the above regex won't match it)
-							.replace(/^===/gm, markdownHeaderReplacement)
-							// Keep under the same block-quote but with line breaks
-							.replace(/\n/g, "\t\n>  ")}`,
-						creatorName: creator.username,
-						codemark: codemark,
-						range: MarkerLocation.toRange(location)
-					});
-					Logger.log(
-						`MARKERS: ${marker.id}=[${location.lineStart}, ${location.colStart}, ${
-							location.lineEnd
-						}, ${location.colEnd}]`
-					);
-				} else {
-					const missingLocation = missingLocations[marker.id];
-					if (missingLocation) {
-						markersNotLocated.push({
+					const location = locations[marker.id];
+					if (location) {
+						let creator;
+						try {
+							creator = usersById.get(marker.creatorId);
+							if (creator === undefined) {
+								// HACK: This is a total hack for non-CS teams (slack, msteams) to avoid getting codestream users mixed with slack users in the cache
+								creator = await users.getById(marker.creatorId, { avoidCachingOnFetch: true });
+
+								if (creator !== undefined) {
+									usersById.set(marker.creatorId, creator);
+								}
+							}
+						} catch (ex) {
+							debugger;
+						}
+
+						let summary = codemark.title || codemark.text || "";
+						if (summary.length !== 0) {
+							summary = (codemark.title || codemark.text).replace(
+								emojiRegex,
+								(s, code) => emojiMap[code] || s
+							);
+						}
+
+						documentMarkers.push({
 							...marker,
-							notLocatedReason: missingLocation.reason,
-							notLocatedDetails: missingLocation.details
+							summary: summary,
+							summaryMarkdown: `\n\n> ${summary
+								// Escape markdown
+								.replace(escapeMarkdownRegex, "\\$&")
+								// Escape markdown header (since the above regex won't match it)
+								.replace(/^===/gm, markdownHeaderReplacement)
+								// Keep under the same block-quote but with line breaks
+								.replace(/\n/g, "\t\n>  ")}`,
+							creatorName: (creator && creator.username) || "Unknown",
+							codemark: codemark,
+							range: MarkerLocation.toRange(location)
 						});
 						Logger.log(
-							`MARKERS: ${marker.id}=${missingLocation.details || "location not found"}, reason: ${
-								missingLocation.reason
-							}`
+							cc,
+							`MARKERS: ${marker.id}=[${location.lineStart}, ${location.colStart}, ${
+								location.lineEnd
+							}, ${location.colEnd}]`
 						);
 					} else {
-						markersNotLocated.push({
-							...marker,
-							notLocatedReason: MarkerNotLocatedReason.UNKNOWN
-						});
-						Logger.log(`MARKERS: ${marker.id}=location not found, reason: unknown`);
+						const missingLocation = missingLocations[marker.id];
+						if (missingLocation) {
+							markersNotLocated.push({
+								...marker,
+								notLocatedReason: missingLocation.reason,
+								notLocatedDetails: missingLocation.details
+							});
+							Logger.log(
+								cc,
+								`MARKERS: ${marker.id}=${missingLocation.details ||
+									"location not found"}, reason: ${missingLocation.reason}`
+							);
+						} else {
+							markersNotLocated.push({
+								...marker,
+								notLocatedReason: MarkerNotLocatedReason.UNKNOWN
+							});
+							Logger.log(cc, `MARKERS: ${marker.id}=location not found, reason: unknown`);
+						}
 					}
+				} catch (ex) {
+					Logger.error(ex, cc);
 				}
 			}
 
@@ -300,13 +330,14 @@ export class DocumentMarkerManager {
 				markers: documentMarkers,
 				markersNotLocated
 			};
-		} catch (err) {
-			console.error(err);
+		} catch (ex) {
+			Logger.error(ex, cc);
 			debugger;
 			return emptyResponse;
 		}
 	}
 
+	@log()
 	@lspHandler(GetDocumentFromKeyBindingRequestType)
 	async getDocumentFromKeyBinding({
 		key
@@ -333,6 +364,7 @@ export class DocumentMarkerManager {
 		});
 	}
 
+	@log()
 	@lspHandler(GetDocumentFromMarkerRequestType)
 	async getDocumentFromMarker({
 		markerId,

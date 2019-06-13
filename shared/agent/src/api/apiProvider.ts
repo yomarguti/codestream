@@ -318,6 +318,7 @@ export interface ApiProvider {
 	fetchTeams(request: FetchTeamsRequest): Promise<FetchTeamsResponse>;
 	getTeam(request: GetTeamRequest): Promise<GetTeamResponse>;
 
+	convertUserIdToCodeStreamUserId(id: string): string;
 	fetchUsers(request: FetchUsersRequest): Promise<FetchUsersResponse>;
 	getUser(request: GetUserRequest): Promise<GetUserResponse>;
 	inviteUser(request: InviteUserRequest): Promise<InviteUserResponse>;
@@ -327,7 +328,7 @@ export interface ApiProvider {
 	setThirdPartyProviderInfo(request: {
 		providerId: string;
 		host?: string;
-		data: { [key: string]: any }
+		data: { [key: string]: any };
 	}): Promise<void>;
 	disconnectThirdPartyProvider(request: { providerId: string }): Promise<void>;
 	refreshThirdPartyProvider(request: { providerId: string; refreshToken: string }): Promise<CSMe>;

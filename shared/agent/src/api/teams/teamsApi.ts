@@ -1017,6 +1017,13 @@ export class MSTeamsApiProvider implements ApiProvider {
 		return response;
 	}
 
+	private _userIdMap: Map<string, string> | undefined;
+	convertUserIdToCodeStreamUserId(id: string): string {
+		if (this._userIdMap === undefined) return id;
+
+		return this._userIdMap.get(id) || id;
+	}
+
 	@log()
 	async fetchUsers(request: FetchUsersRequest): Promise<FetchUsersResponse> {
 		const requests: GraphBatchRequest[] = [
@@ -1046,22 +1053,29 @@ export class MSTeamsApiProvider implements ApiProvider {
 			)
 		]);
 
-		const users = new Map<string, CSUser>();
+		const usersById = new Map<string, CSUser>();
 
 		for (const r of response.responses) {
 			for (const m of r.body!.value!) {
-				if (users.has(m.id)) continue;
+				if (usersById.has(m.id)) continue;
 
 				// Find ourselves and replace it with our model
 				if (m.id === this._teamsUserId) {
-					users.set(m.id, me);
+					usersById.set(m.id, me);
 				} else if (m.deletedDateTime == null) {
-					users.set(m.id, fromTeamsUser(m, this._codestreamTeamId, codestreamUsers));
+					usersById.set(m.id, fromTeamsUser(m, this._codestreamTeamId, codestreamUsers));
 				}
 			}
 		}
 
-		return { users: [...users.values()] };
+		const users = [...usersById.values()];
+		this._userIdMap = new Map(
+			users
+				.filter(u => u.codestreamId !== undefined)
+				.map<[string, string]>(u => [u.codestreamId!, u.id])
+		);
+
+		return { users: users };
 	}
 
 	@log()

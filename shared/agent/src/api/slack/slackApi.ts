@@ -2140,6 +2140,13 @@ export class SlackApiProvider implements ApiProvider {
 		return response;
 	}
 
+	private _userIdMap: Map<string, string> | undefined;
+	convertUserIdToCodeStreamUserId(id: string): string {
+		if (this._userIdMap === undefined) return id;
+
+		return this._userIdMap.get(id) || id;
+	}
+
 	@log()
 	async fetchUsers(request: FetchUsersRequest) {
 		const [response, { user: me }, { users: codestreamUsers }] = await Promise.all([
@@ -2164,6 +2171,12 @@ export class SlackApiProvider implements ApiProvider {
 				m.id === this._slackUserId ? me : fromSlackUser(m, this._codestreamTeamId, codestreamUsers)
 			)
 			.filter(u => !u.deactivated);
+
+		this._userIdMap = new Map(
+			users
+				.filter(u => u.codestreamId !== undefined)
+				.map<[string, string]>(u => [u.codestreamId!, u.id])
+		);
 
 		return { users: users };
 	}

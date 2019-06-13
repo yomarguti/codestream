@@ -1044,6 +1044,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this.get<CSGetTeamResponse>(`/teams/${request.teamId}`, this._token);
 	}
 
+	convertUserIdToCodeStreamUserId(id: string): string {
+		return id;
+	}
+
 	@log()
 	async fetchUsers(request: FetchUsersRequest) {
 		const response = await this.get<CSGetUsersResponse>(
