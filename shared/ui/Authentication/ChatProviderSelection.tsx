@@ -37,10 +37,10 @@ export const ChatProviderSelection = (connect(undefined) as any)(
 				<h2>Create a New Team</h2>
 				<form className="standard-form">
 					<fieldset className="form-body">
-						<h3 style={{ textAlign: "left" }}>Use Existing Slack or Microsoft Teams Channels</h3>
+						<h3 style={{ textAlign: "left" }}>Use Existing Slack Channels</h3>
 						<p>
-							Create a CodeStream team connected to your Slack workspace or Microsoft Teams
-							organization so you can discuss code in your existing channels.
+							Create a CodeStream team connected to your Slack workspace so you can discuss code in
+							your existing channels.
 						</p>
 						<div id="controls">
 							<div className="button-group">
@@ -58,7 +58,7 @@ export const ChatProviderSelection = (connect(undefined) as any)(
 						</div>
 						<br />
 						<h3 style={{ textAlign: "left" }}>Use CodeStream Channels</h3>
-						<p>Don't use Slack or Microsoft Teams? We'll provide the channels for you!</p>
+						<p>Don't use Slack? We'll provide the channels for you!</p>
 						<div id="controls">
 							<div className="button-group">
 								<Button className="control-button" type="button" onClick={onClickCodeStream}>

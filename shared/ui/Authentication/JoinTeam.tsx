@@ -54,10 +54,10 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 			<h2>Join an Existing Team</h2>
 			<form className="standard-form" onSubmit={onClickJoin}>
 				<fieldset className="form-body">
-					<h3 style={{ textAlign: "left" }}>Do you use Slack or Microsoft Teams?</h3>
+					<h3 style={{ textAlign: "left" }}>Do you use Slack?</h3>
 					<p>
-						Use this option if your organization's CodeStream team is connected to a Slack workspace
-						or a Microsoft Teams organization.
+						Use this option if your organization's CodeStream team is connected to a Slack
+						workspace.
 					</p>
 					<div id="controls">
 						<div className="button-group">
