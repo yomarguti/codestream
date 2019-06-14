@@ -1,10 +1,9 @@
 # Change Log
 
-## [1.2.0] - 2019-6-13
+## [1.1.2] - 2019-6-14
 
 ### Added
 
-- New Microsoft Teams integration allows you to share codemarks in your organization's existing channels. [Learn more.](https://www.codestream.com/blog/codestream-1-2)
 - Adds the ability to compare the code associated with a codemark to your local version of the file, or to apply the change
 
 ### Changed
