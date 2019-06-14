@@ -16,7 +16,7 @@ import { Config, configuration, Configuration } from "./configuration";
 import { extensionQualifiedId } from "./constants";
 import { Container } from "./container";
 import { Logger, TraceLevel } from "./logger";
-import { FileSystem, Strings } from "./system";
+import { FileSystem, Strings, Versions } from "./system";
 
 const extension = extensions.getExtension(extensionQualifiedId)!;
 export const extensionVersion = extension.packageJSON.version;
@@ -108,6 +108,9 @@ export async function gitPath(): Promise<string> {
 	return _gitPath;
 }
 
+// Add any versions here that we want to skip for blog posts
+const skipVersions = [Versions.from(1, 2)];
+
 async function showStartupMessage(context: ExtensionContext, version: string) {
 	const previousVersion = context.globalState.get<string>(GlobalState.Version);
 
@@ -131,6 +134,9 @@ async function showStartupMessage(context: ExtensionContext, version: string) {
 			return;
 		}
 	}
+
+	const compareTo = Versions.from(major, minor);
+	if (skipVersions.some(v => Versions.compare(compareTo, v) === 0)) return;
 
 	const actions: MessageItem[] = [{ title: "What's New" } /*, { title: "Release Notes" } */];
 
