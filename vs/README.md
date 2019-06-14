@@ -9,9 +9,9 @@ CodeStream helps dev teams discuss, review, and understand code. Discussing code
 
 ![CodeStream](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/CSforVS.PNG)
 
-## Does your team use Slack or Microsoft Teams?
+## Does your team use Slack?
 
-Sign up for CodeStream using Slack or Microsoft Teams so that discussions about code can be shared in your workspace's/organization's existing channels. You and your teammates can participate in the discussion, even when you're not in the IDE!
+Sign up for CodeStream using Slack so that discussions about code can be shared in your workspace's existing channels. You and your teammates can participate in the discussion, even when you're not in the IDE!
 
 # Requirements
 
