@@ -60,7 +60,7 @@
 ]]></description>
 
     <change-notes><![CDATA[
-<h4 id="1_1_3">1.1.2</h4>
+<h4 id="1_2_0">1.2.0</h4>
 <h5>Changed</h5>
 <ul>
     <li>The Invite People page now only shows teammates from your Slack workspace that have signed up for CodeStream</li>
