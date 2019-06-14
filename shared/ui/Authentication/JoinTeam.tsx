@@ -73,19 +73,21 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 								Sign Up with Slack
 							</Button>
 						</div>
-						<div className="button-group">
-							<Button
-								className="control-button"
-								type="button"
-								onClick={e => {
-									e.preventDefault();
-									HostApi.instance.track("Join Path Selected", { "Path Type": "MSTeams" });
-									props.dispatch(startSSOSignin("msteams", { type: SignupType.JoinTeam }));
-								}}
-							>
-								Sign Up with Microsoft Teams
-							</Button>
-						</div>
+						{false && (
+							<div className="button-group">
+								<Button
+									className="control-button"
+									type="button"
+									onClick={e => {
+										e.preventDefault();
+										HostApi.instance.track("Join Path Selected", { "Path Type": "MSTeams" });
+										props.dispatch(startSSOSignin("msteams", { type: SignupType.JoinTeam }));
+									}}
+								>
+									Sign Up with Microsoft Teams
+								</Button>
+							</div>
+						)}
 					</div>
 					<br />
 					<h3 style={{ textAlign: "left" }}>Were you invited to CodeStream?</h3>

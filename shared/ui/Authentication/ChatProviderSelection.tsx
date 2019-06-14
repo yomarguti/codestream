@@ -48,11 +48,13 @@ export const ChatProviderSelection = (connect(undefined) as any)(
 									Sign Up with Slack
 								</Button>
 							</div>
-							<div className="button-group">
-								<Button className="control-button" type="button" onClick={onClickMSTeams}>
-									Sign Up with Microsoft Teams
-								</Button>
-							</div>
+							{false && (
+								<div className="button-group">
+									<Button className="control-button" type="button" onClick={onClickMSTeams}>
+										Sign Up with Microsoft Teams
+									</Button>
+								</div>
+							)}
 						</div>
 						<br />
 						<h3 style={{ textAlign: "left" }}>Use CodeStream Channels</h3>
