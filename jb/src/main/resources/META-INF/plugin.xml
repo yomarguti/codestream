@@ -8,8 +8,8 @@
 <p><img src="https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/animated/Spatial%20JB.gif" alt="CodeStream" /></p>
 <p>CodeStream turns conversation into documentation by capturing all of the discussion about your code, and saving it with your code. Each discussion is represented as a "codemark" that is permanently connected to the lines of code to which it refers.</p>
 
-<h2 id="doesyourteamuseslack">Does your team use Slack or Microsoft Teams?</h2>
-<p>Sign up for CodeStream using Slack or Microsoft Teams so that discussions about code can be shared in your workspace's/organization's existing channels. You and your teammates can participate in the discussion, even when you're not in the IDE!</p>
+<h2 id="doesyourteamuseslack">Does your team use Slack?</h2>
+<p>Sign up for CodeStream using Slack so that discussions about code can be shared in your workspace's existing channels. You and your teammates can participate in the discussion, even when you're not in the IDE!</p>
 
 <h1 id="requirements">Requirements</h1>
 <ul>
@@ -60,11 +60,7 @@
 ]]></description>
 
     <change-notes><![CDATA[
-<h4 id="1_2_0">1.2.0</h4>
-<h5>Added</h5>
-<ul>
-    <li>New Microsoft Teams integration allows you to share codemarks in your organization's existing channels. <a href="https://www.codestream.com/blog/codestream-1-2">Learn more.</a></li>
-</ul>
+<h4 id="1_1_3">1.1.2</h4>
 <h5>Changed</h5>
 <ul>
     <li>The Invite People page now only shows teammates from your Slack workspace that have signed up for CodeStream</li>
