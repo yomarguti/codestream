@@ -1,6 +1,7 @@
 import React from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
+import Icon from "../Stream/Icon";
 import Button from "../Stream/Button";
 import { authenticate } from "./actions";
 import { CodeStreamState } from "../store";
@@ -176,84 +177,76 @@ class Login extends React.Component<Props, State> {
 	render() {
 		return (
 			<div id="login-page" className="onboarding-page">
-				<h2>Sign In to CodeStream</h2>
-				<div className="divider" />
 				<form className="standard-form">
 					<fieldset className="form-body">
 						<div id="controls">
-							<div className="button-group">
-								<Button
-									className="control-button"
-									type="button"
-									onClick={this.handleClickSlackSignup}
-								>
-									Sign In with Slack
+							<div className="outline-box">
+								<Button className="row-button" onClick={this.handleClickSlackSignup}>
+									<Icon name="slack" />
+									<div className="copy">Sign In with Slack</div>
+									<Icon name="chevron-right" />
 								</Button>
-							</div>
-							<div className="button-group">
-								<Button
-									className="control-button"
-									type="button"
-									onClick={this.handleClickMSTeamsSignup}
-								>
-									Sign In with Microsoft Teams
+								<Button className="row-button" onClick={this.handleClickMSTeamsSignup}>
+									<Icon name="msteams" />
+									<div className="copy">Sign In with Microsoft Teams</div>
+									<Icon name="chevron-right" />
 								</Button>
 							</div>
 						</div>
 					</fieldset>
 				</form>
-				<div className="divider" />
-				<form className="standard-form" onSubmit={this.submitCredentials}>
+				<form className="standard-form">
 					<fieldset className="form-body">
 						{/* this.renderAccountMessage() */}
 						<div id="controls">
-							<div className="spacer" />
-							{this.renderError()}
-							<div id="email-controls" className="control-group">
-								<label>
-									<FormattedMessage id="login.email.label" />
-								</label>
-								<input
-									id="login-input-email"
-									className="native-key-bindings input-text control"
-									type="text"
-									name="email"
-									value={this.state.email}
-									onChange={e => this.setState({ email: e.target.value })}
-									onBlur={this.onBlurEmail}
-									required={this.state.emailTouched}
-								/>
-								{this.renderEmailError()}
-							</div>
-							<div id="password-controls" className="control-group">
-								<label>
-									<FormattedMessage id="login.password.label" />
-								</label>
-								<input
-									id="login-input-password"
-									className="native-key-bindings input-text"
-									type="password"
-									name="password"
-									value={this.state.password}
-									onChange={e => this.setState({ password: e.target.value })}
-									onBlur={this.onBlurPassword}
-									required={this.state.passwordTouched}
-								/>
-								{this.renderPasswordHelp()}
-								{/* <div className="help-link">
+							<div className="outline-box">
+								<div className="small-spacer" />
+								{this.renderError()}
+								<div id="email-controls" className="control-group">
+									<label>
+										<FormattedMessage id="login.email.label" />
+									</label>
+									<input
+										id="login-input-email"
+										className="native-key-bindings input-text control"
+										type="text"
+										name="email"
+										value={this.state.email}
+										onChange={e => this.setState({ email: e.target.value })}
+										onBlur={this.onBlurEmail}
+										required={this.state.emailTouched}
+									/>
+									{this.renderEmailError()}
+								</div>
+								<div id="password-controls" className="control-group">
+									<label>
+										<FormattedMessage id="login.password.label" />
+									</label>
+									<input
+										id="login-input-password"
+										className="native-key-bindings input-text"
+										type="password"
+										name="password"
+										value={this.state.password}
+										onChange={e => this.setState({ password: e.target.value })}
+										onBlur={this.onBlurPassword}
+										required={this.state.passwordTouched}
+									/>
+									{this.renderPasswordHelp()}
+									{/* <div className="help-link">
 									<a onClick={this.onClickForgotPassword}>
 										<FormattedMessage id="login.forgotPassword" />
 									</a>
 								</div>*/}
-							</div>
-							<div className="button-group">
+								</div>
 								<Button
-									id="login-button"
-									className="control-button"
-									type="submit"
+									className="row-button"
+									onClick={this.submitCredentials}
 									loading={this.state.loading}
 								>
-									<FormattedMessage id="login.submitButton" />
+									<Icon name="codestream" />
+									<div className="copy">Sign In with CodeStream</div>
+									<Icon name="chevron-right" />
 								</Button>
 							</div>
 							<div className="footer">

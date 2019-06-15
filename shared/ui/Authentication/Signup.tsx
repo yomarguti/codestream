@@ -2,6 +2,7 @@ import React, { useCallback, useState } from "react";
 import cx from "classnames";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
+import Icon from "../Stream/Icon";
 import Button from "../Stream/Button";
 import { Link } from "../Stream/Link";
 import {
@@ -185,128 +186,138 @@ export const Signup = (connect() as any)((props: Props) => {
 
 	return (
 		<div className="onboarding-page">
-			<h2>Create an Account</h2>
-			{wasInvited && (
-				<React.Fragment>
-					<br />
-					<p>
-						Create an account to join the <strong>{props.teamName}</strong> team.
-					</p>
-				</React.Fragment>
-			)}
 			<form className="standard-form" onSubmit={onSubmit}>
 				<fieldset className="form-body">
-					<div id="controls">
-						{unexpectedError && (
-							<div className="error-message form-error">
-								<FormattedMessage
-									id="error.unexpected"
-									defaultMessage="Something went wrong! Please try again, or "
-								/>
-								<FormattedMessage id="contactSupport" defaultMessage="contact support">
-									{text => <Link href="https://help.codestream.com">{text}</Link>}
-								</FormattedMessage>
-								.
-							</div>
+					<div className="outline-box">
+						<h2>Create an Account</h2>
+						<div className="spacer" />
+						{wasInvited && (
+							<React.Fragment>
+								<br />
+								<p>
+									Create an account to join the <strong>{props.teamName}</strong> team.
+								</p>
+							</React.Fragment>
 						)}
-						{inviteConflict && (
-							<div className="error-message form-error">
-								Invitation conflict.{" "}
-								<FormattedMessage id="contactSupport" defaultMessage="Contact support">
-									{text => <Link href="mailto:support@codestream.com">{text}</Link>}
-								</FormattedMessage>
-								.
-							</div>
-						)}
-						<div className="control-group">
-							<label>Work Email</label>
-							<TextInput
-								name="email"
-								value={email}
-								onChange={setEmail}
-								onValidityChanged={onValidityChanged}
-								validate={isEmailValid}
-								required
-							/>
-							{!emailValidity && (
-								<small className="explainer error-message">
-									<FormattedMessage id="signUp.email.invalid" />
-								</small>
+						<div id="controls">
+							<div className="small-spacer" />
+							{unexpectedError && (
+								<div className="error-message form-error">
+									<FormattedMessage
+										id="error.unexpected"
+										defaultMessage="Something went wrong! Please try again, or "
+									/>
+									<FormattedMessage id="contactSupport" defaultMessage="contact support">
+										{text => <Link href="https://help.codestream.com">{text}</Link>}
+									</FormattedMessage>
+									.
+								</div>
 							)}
-						</div>
-						<div className="control-group">
-							<label>
-								<FormattedMessage id="signUp.password.label" />
-							</label>
-							<TextInput
-								type="password"
-								name="password"
-								value={password}
-								onChange={setPassword}
-								validate={isPasswordValid}
-								onValidityChanged={onValidityChanged}
-								required
-							/>
-							<small className={cx("explainer", { "error-message": !passwordValidity })}>
-								<FormattedMessage id="signUp.password.help" />
-							</small>
-						</div>
-						<div className="control-group">
-							<label>
-								<FormattedMessage id="signUp.username.label" />
-							</label>
-							<TextInput
-								name="username"
-								value={username}
-								onChange={setUsername}
-								onValidityChanged={onValidityChanged}
-								validate={isUsernameValid}
-							/>
-							<small className={cx("explainer", { "error-message": !usernameValidity })}>
-								<FormattedMessage id="signUp.username.help" />
-							</small>
-						</div>
-						<div className="control-group">
-							<label>
-								<FormattedMessage id="signUp.fullName.label" />
-							</label>
-							<TextInput
-								name="fullName"
-								value={fullName}
-								onChange={setFullName}
-								required
-								validate={isNotEmpty}
-								onValidityChanged={onValidityChanged}
-							/>
-							{!fullNameValidity && <small className="explainer error-message">Required</small>}
-						</div>
-						{!wasInvited && (
+							{inviteConflict && (
+								<div className="error-message form-error">
+									Invitation conflict.{" "}
+									<FormattedMessage id="contactSupport" defaultMessage="Contact support">
+										{text => <Link href="mailto:support@codestream.com">{text}</Link>}
+									</FormattedMessage>
+									.
+								</div>
+							)}
+							<div className="control-group">
+								<label>Work Email</label>
+								<TextInput
+									name="email"
+									value={email}
+									onChange={setEmail}
+									onValidityChanged={onValidityChanged}
+									validate={isEmailValid}
+									required
+								/>
+								{!emailValidity && (
+									<small className="explainer error-message">
+										<FormattedMessage id="signUp.email.invalid" />
+									</small>
+								)}
+							</div>
 							<div className="control-group">
 								<label>
-									<FormattedMessage id="signUp.companyName.label" />
+									<FormattedMessage id="signUp.password.label" />
 								</label>
 								<TextInput
-									name="companyName"
-									value={companyName}
-									onChange={setCompanyName}
+									type="password"
+									name="password"
+									value={password}
+									onChange={setPassword}
+									validate={isPasswordValid}
+									onValidityChanged={onValidityChanged}
+									required
+								/>
+								<small className={cx("explainer", { "error-message": !passwordValidity })}>
+									<FormattedMessage id="signUp.password.help" />
+								</small>
+							</div>
+							<div className="control-group">
+								<label>
+									<FormattedMessage id="signUp.username.label" />
+								</label>
+								<TextInput
+									name="username"
+									value={username}
+									onChange={setUsername}
+									onValidityChanged={onValidityChanged}
+									validate={isUsernameValid}
+								/>
+								<small className={cx("explainer", { "error-message": !usernameValidity })}>
+									<FormattedMessage id="signUp.username.help" />
+								</small>
+							</div>
+							<div className="control-group">
+								<label>
+									<FormattedMessage id="signUp.fullName.label" />
+								</label>
+								<TextInput
+									name="fullName"
+									value={fullName}
+									onChange={setFullName}
 									required
 									validate={isNotEmpty}
 									onValidityChanged={onValidityChanged}
 								/>
-								{!companyNameValidity && (
-									<small className="explainer error-message">Required</small>
-								)}
+								{!fullNameValidity && <small className="explainer error-message">Required</small>}
 							</div>
-						)}
-						<div className="button-group">
-							<Button className="control-button" type="submit" loading={isLoading}>
-								<FormattedMessage id="signUp.submitButton" />
+							{!wasInvited && (
+								<div className="control-group">
+									<label>
+										<FormattedMessage id="signUp.companyName.label" />
+									</label>
+									<TextInput
+										name="companyName"
+										value={companyName}
+										onChange={setCompanyName}
+										required
+										validate={isNotEmpty}
+										onValidityChanged={onValidityChanged}
+									/>
+									{!companyNameValidity && (
+										<small className="explainer error-message">Required</small>
+									)}
+								</div>
+							)}
+
+							<div className="small-spacer" />
+
+							<Button className="row-button" onClick={onSubmit}>
+								<Icon name="codestream" />
+								<div className="copy">
+									<FormattedMessage id="signUp.submitButton" />
+								</div>
+								<Icon name="chevron-right" />
 							</Button>
 						</div>
-						<br />
+					</div>
+					<div style={{ textAlign: "center" }}>
 						<small className="fine-print">
 							<FormattedMessage id="signUp.legal.start" />{" "}
-							<FormattedMessage id="signUp.legal.termsOfService">
+							<FormattedMessage id="signUp.legal.terms">
 								{text => <Link href="https://codestream.com/terms">{text}</Link>}
 							</FormattedMessage>{" "}
 							<FormattedMessage id="and" />{" "}
@@ -315,15 +326,15 @@ export const Signup = (connect() as any)((props: Props) => {
 							</FormattedMessage>
 						</small>
 					</div>
-					<div id="controls">
-						<div className="footer">
-							<Link onClick={onClickGoBack}>
-								<p>{"< Back"}</p>
-							</Link>
-						</div>
-					</div>
 				</fieldset>
 			</form>
+			<div id="controls">
+				<div className="footer">
+					<Link onClick={onClickGoBack}>
+						<p>{"< Back"}</p>
+					</Link>
+				</div>
+			</div>
 		</div>
 	);
 });

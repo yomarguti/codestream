@@ -1,5 +1,6 @@
 import React from "react";
 import Button from "../Stream/Button";
+import Icon from "../Stream/Icon";
 import { connect } from "react-redux";
 import { CodeStreamState } from "../store";
 import { Link } from "../Stream/Link";
@@ -39,28 +40,33 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 
 	return (
 		<div className="onboarding-page">
-			<h2>CodeStream</h2>
 			<form className="standard-form">
 				<fieldset className="form-body">
-					<p>
-						If anyone at your organization has already created a team, ask to be invited. Otherwise,
-						create a team to get things started!
-					</p>
-					<div id="controls">
-						<div className="button-group">
-							<Button className="control-button" type="button" onClick={onClickCreateTeam}>
-								Create a New Team
+					<div className="outline-box">
+						<h2>Start with a team</h2>
+						<p>
+							In CodeStream, everything happens in a team. A team is where you can discuss, review,
+							and understand code with your coworkers.
+						</p>
+						<div id="controls">
+							<Button className="row-button" onClick={onClickJoinTeam}>
+								<Icon name="search" className="extra-pad" />
+								<div className="copy">
+									Find your team
+									<div className="small">Join or sign in to an existing team</div>
+								</div>
+								<Icon name="chevron-right" />
+							</Button>
+							<Button className="row-button" onClick={onClickCreateTeam}>
+								<Icon name="plus" className="extra-pad" />
+								<div className="copy">
+									Create a team
+									<div className="small">Get your dev team on CodeStream</div>
+								</div>
+								<Icon name="chevron-right" />
 							</Button>
 						</div>
 					</div>
-					<div id="controls">
-						<div className="button-group">
-							<Button className="control-button" type="button" onClick={onClickJoinTeam}>
-								Join an Existing Team
-							</Button>
-						</div>
-					</div>
-					<br />
 					<div id="controls">
 						<div className="footer">
 							<div>

@@ -16,7 +16,7 @@ export default {
 	"signUp.companyName.label": "Company Name",
 	"signUp.submitButton": "Create Account",
 	"signUp.legal.start": "By signing up, you agree to the",
-	"signUp.legal.termsOfService": "Terms of Service",
+	"signUp.legal.terms": "Terms",
 	"signUp.legal.privacyPolicy": "Privacy Policy",
 	"signUp.legal.telemetryConsent":
 		"Help CodeStream improve by allowing the use of 3rd-party analytics tools.",
