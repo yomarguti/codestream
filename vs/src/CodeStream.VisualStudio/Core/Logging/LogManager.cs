@@ -36,7 +36,8 @@ namespace CodeStream.VisualStudio.Core.Logging {
 					.Enrich.WithProcessId()
 					.Enrich.WithThreadId()
 #if DEBUG
-					.Enrich.WithCaller()
+					// this can make the logs a big hard to read...
+					//.Enrich.WithCaller()
 #endif
 					.MinimumLevel.ControlledBy(_loggingLevelSwitch)
 					.WriteTo.File(
