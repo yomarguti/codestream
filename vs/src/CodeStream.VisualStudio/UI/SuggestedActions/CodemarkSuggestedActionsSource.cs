@@ -17,10 +17,8 @@ using System.Threading.Tasks;
 using CodeStream.VisualStudio.Extensions;
 
 namespace CodeStream.VisualStudio.UI.SuggestedActions {
-	internal class CodemarkSuggestedActionsSourceDummy { }
-
 	internal class CodemarkSuggestedActionsSource : ISuggestedActionsSource {
-		private static readonly ILogger Log = LogManager.ForContext<CodemarkSuggestedActionsSourceDummy>();
+		private static readonly ILogger Log = LogManager.ForContext<CodemarkSuggestedActionsSource>();
 
 		private readonly IComponentModel _componentModel;
 		private readonly ITextBuffer _textBuffer;
@@ -55,11 +53,9 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 					return Enumerable.Empty<SuggestedActionSet>();
 				}
 
-				return new[]
-				{
+				return new[] {
 					new SuggestedActionSet(
-						actions: new ISuggestedAction[]
-						{
+						actions: new ISuggestedAction[] {
 							new CodemarkCommentSuggestedAction(_componentModel, _textDocument, _textSelection),
 							new CodemarkIssueSuggestedAction(_componentModel, _textDocument, _textSelection),
 							new CodemarkBookmarkSuggestedAction(_componentModel, _textDocument, _textSelection),
@@ -82,13 +78,12 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 		public Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
 			try {
 				var sessionService = _componentModel.GetService<ISessionService>();
-				if (sessionService == null || sessionService.IsReady == false) {
-					return System.Threading.Tasks.Task.FromResult(false);
-				}
-
-				var editorService = _componentModel.GetService<IEditorService>();
-				_textSelection = editorService?.GetActiveEditorState();
-
+				if (sessionService == null || sessionService.IsReady == false) return System.Threading.Tasks.Task.FromResult(false);
+				
+				var wpfTextView = _textView as IWpfTextView;
+				if (wpfTextView == null) return System.Threading.Tasks.Task.FromResult(false);
+				
+				_textSelection = wpfTextView.GetEditorState();
 				return System.Threading.Tasks.Task.FromResult(_textSelection?.HasSelectedText == true);
 			}
 			catch (Exception ex) {
@@ -146,8 +141,8 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 
 		public void Invoke(CancellationToken cancellationToken) {
 			if (_textDocument == null) return;
-			var codeStreamService = ComponentModel?.GetService<ICodeStreamService>();
 
+			var codeStreamService = ComponentModel?.GetService<ICodeStreamService>();
 			if (codeStreamService == null) return;
 
 			ThreadHelper.JoinableTaskFactory.Run(async delegate {

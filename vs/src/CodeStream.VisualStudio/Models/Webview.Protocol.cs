@@ -9,7 +9,6 @@ namespace CodeStream.VisualStudio.Models
 		public string SourceUri { get; set; }
     }
 
-    // TODO -- not implemented yet
     public class ShowCodemarkNotificationType : NotificationType<ShowCodemarkNotification>
     {
         public const string MethodName = "webview/codemark/show";

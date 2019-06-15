@@ -1,6 +1,5 @@
 ﻿using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
-using CodeStream.VisualStudio.UI;
 using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
@@ -21,6 +20,7 @@ namespace CodeStream.VisualStudio.Services {
 	[Guid("278C1E14-E429-4364-8B73-BB643C041274")]
 	public interface IEditorService {
 		EditorState GetActiveEditorState();
+		EditorState GetEditorState(IWpfTextView wpfTextView);
 		EditorContext GetEditorContext();
 		ActiveTextEditorSelection GetActiveTextEditorSelection();
 		ActiveTextEditor GetActiveTextEditor(Uri uri = null);
@@ -68,6 +68,11 @@ namespace CodeStream.VisualStudio.Services {
 			return null;
 		}
 
+		/// <summary>
+		/// Gets the active wpfTextView based on the provided uri (if provided)
+		/// </summary>
+		/// <param name="uri"></param>
+		/// <returns></returns>
 		public ActiveTextEditor GetActiveTextEditor(Uri uri = null) {
 			try {
 				IWpfTextView wpfTextView = null;
@@ -131,7 +136,7 @@ namespace CodeStream.VisualStudio.Services {
 			return null;
 		}
 
-
+		[Obsolete("Old api requires the UI thread")]
 		public EditorState GetActiveEditorState() {
 			try {
 				return GetActiveEditorState(out IVsTextView textView);
@@ -143,6 +148,7 @@ namespace CodeStream.VisualStudio.Services {
 			return null;
 		}
 
+		[Obsolete("Old api requires the UI thread")]
 		private EditorState GetActiveEditorState(out IVsTextView view) {
 			try {
 				// ReSharper disable once UnusedVariable
@@ -157,6 +163,7 @@ namespace CodeStream.VisualStudio.Services {
 			return null;
 		}
 
+		[Obsolete("Old api requires the UI thread")]
 		public EditorState GetActiveEditorState(IVsTextView view) {
 			try {
 				// view can be null...
@@ -181,27 +188,26 @@ namespace CodeStream.VisualStudio.Services {
 			return null;
 		}
 
-		//public EditorState GetActiveEditorState(IWpfTextView wpfTextView) {
-		//	wpfTextView.TextSnapshot
-		//	wpfTextView.TextSnapshot.GetText(wpfTextView.Selection.)
-		//	wpfTextView.Selection.
-
-		//}
-
-		public static string GetText(ITextSelection textSelection) {
-			if (textSelection.Mode == TextSelectionMode.Stream)
-				return textSelection.StreamSelectionSpan.GetText();
-			var sb = new StringBuilder();
-			var snapshot = textSelection.TextView.TextSnapshot;
-			int i = 0;
-			foreach (var s in textSelection.SelectedSpans) {
-				if (i++ > 0)
-					sb.AppendLine();
-				sb.Append(snapshot.GetText(s));
+		public EditorState GetEditorState(IWpfTextView wpfTextView) {
+			try {
+				return wpfTextView.GetEditorState();
 			}
-			if (i > 1)
-				sb.AppendLine();
-			return sb.ToString();
+			catch (Exception ex) {
+				Log.Error(ex, nameof(GetEditorState));
+				return new EditorState(new Range().AsEmpty(), new Position(0, 0), null);
+			}
+		}
+
+		[Flags]
+		public enum EditorStateFlags {
+			SelectedRange = 0,
+			SelectedText = 1 << 0,
+			CursorPosition = 1 << 1,
+			All = SelectedRange | SelectedText | CursorPosition
+		}
+
+		public static string GetText(SnapshotSpan snapshotSpan) {
+			return snapshotSpan.Snapshot.GetText(snapshotSpan);
 		}
 
 		private Range GetActiveEditorSelectedRange(out IVsTextView view) {
@@ -219,7 +225,7 @@ namespace CodeStream.VisualStudio.Services {
 				};
 			}
 			catch (Exception ex) {
-				Log.Warning(ex, nameof(GetActiveEditorState));
+				Log.Warning(ex, nameof(GetActiveEditorSelectedRange));
 			}
 
 			view = null;

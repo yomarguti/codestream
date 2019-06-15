@@ -18,10 +18,10 @@ namespace CodeStream.VisualStudio.Commands {
 			_settingsManager = settingManager;
 		}
 
-		public void TriggerChange(bool isReady) {
+		public void TriggerChange(bool isSessionReady) {
 			ThreadHelper.ThrowIfNotOnUIThread();
 			try {				
-				if (isReady == true) {
+				if (isSessionReady == true) {
 					var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
 					var sessionService = componentModel?.GetService<ISessionService>();
 
