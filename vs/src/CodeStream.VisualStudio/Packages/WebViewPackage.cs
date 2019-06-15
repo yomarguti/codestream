@@ -142,13 +142,13 @@ namespace CodeStream.VisualStudio.Packages {
 					eventAggregator?.GetEvent<SessionReadyEvent>().Subscribe(_ => {
 						ThreadHelper.JoinableTaskFactory.Run(async delegate {
 							await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-							userCommand.TriggerChange();
+							userCommand.TriggerChange(true);
 						});
 					}),
 					eventAggregator?.GetEvent<SessionLogoutEvent>().Subscribe(_ => {
 						ThreadHelper.JoinableTaskFactory.Run(async delegate {
 							await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-							userCommand.TriggerChange();
+							userCommand.TriggerChange(false);
 						});
 					})
 				};

@@ -18,32 +18,29 @@ namespace CodeStream.VisualStudio.Commands {
 			_settingsManager = settingManager;
 		}
 
-		public void TriggerChange() {
-			OnBeforeQueryStatus(this, null);
-		}
+		public void TriggerChange(bool isReady) {
+			ThreadHelper.ThrowIfNotOnUIThread();
+			try {				
+				if (isReady == true) {
+					var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
+					var sessionService = componentModel?.GetService<ISessionService>();
 
-		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e) {
-			try {
-				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
-				var sessionService = componentModel?.GetService<ISessionService>();
-
-				if (sessionService?.IsReady == true) {					
 					var env = _settingsManager?.GetUsefulEnvironmentName();
 					var label = env.IsNullOrWhiteSpace()
 						? sessionService.User.UserName
 						: $"{env}: {sessionService.User.UserName}";
-					sender.Text = sessionService.User.HasSingleTeam()
+					Text = sessionService.User.HasSingleTeam()
 						? label
 						: $"{label} - {sessionService.User.TeamName}";
 
-					sender.Visible = true;
-					sender.Enabled = true;
+					Visible = true;
+					Enabled = true;
 				}
 				else {
-					sender.Visible = false;
-					sender.Enabled = false;
+					Visible = false;
+					Enabled = false;
 
-					sender.Text = DefaultText;
+					Text = DefaultText;
 				}
 			}
 			catch (Exception ex) {
