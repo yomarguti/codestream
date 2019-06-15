@@ -11,8 +11,9 @@ namespace CodeStream.VisualStudio.Core.Logging.Sanitizer
             content = RegularExpressions.PasswordRegex.Replace(content, @"""password"":""<hidden>""$2");
             content = RegularExpressions.TokenRegex.Replace(content, @"""token"":""<hidden>""$2");
             content = RegularExpressions.PasswordOrTokenRegex.Replace(content, @"""passwordOrToken"":""<hidden>""$2");
+            content = RegularExpressions.SecretRegex.Replace(content, @"""secret"":""<hidden>""$2");
 
-            return content.TrimEnd('\r', '\n');
+			return content.TrimEnd('\r', '\n');
         }
     }
 }
