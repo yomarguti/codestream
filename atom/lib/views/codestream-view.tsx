@@ -406,7 +406,7 @@ export class CodestreamView {
 			case LoginSSORequestType.method: {
 				const { provider, queryString }: LoginSSORequest = message.params;
 				const ok = shell.openExternal(
-					`${this.session.environment.serverUrl}/web/provider-auth/${provider}${
+					`${this.session.environment.serverUrl}/web/provider-auth/${provider}?${
 						queryString ? `${queryString}&` : ""
 					}signupToken=${this.session.getLoginToken()}`
 				);
