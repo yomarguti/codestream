@@ -318,7 +318,6 @@ namespace CodeStream.VisualStudio.UI {
 			}
 		}
 
-
 		private void ChangeActiveEditor(IWpfTextView wpfTextView) {
 			try {
 				if (wpfTextView == null || !SessionService.IsWebViewVisible) return;
@@ -402,18 +401,14 @@ namespace CodeStream.VisualStudio.UI {
 		#region EventHandlers
 
 		private void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e) {
-			if (e.TextView == null || !SessionService.IsReady) return;
+			if (e.TextView == null || !SessionService.IsReady || !SessionService.IsWebViewVisible || !SessionService.IsCodemarksForFileVisible) return;
 			var wpfTextView = e.TextView as IWpfTextView;
 			if (wpfTextView == null) return;
 
 			wpfTextView
 				.Properties
 				.GetProperty<Subject<CaretPositionChangedSubject>>(PropertyNames.CaretPositionChangedSubject)
-				?.OnNext(new CaretPositionChangedSubject() {
-					WpfTextView = wpfTextView,
-					EventArgs = e,
-					Sender = sender
-				});
+				?.OnNext(new CaretPositionChangedSubject(wpfTextView, sender, e));
 		}
 
 		private void Selection_SelectionChanged(object sender, EventArgs e) {
@@ -427,10 +422,7 @@ namespace CodeStream.VisualStudio.UI {
 			wpfTextView
 				.Properties
 				.GetProperty<Subject<TextSelectionChangedSubject>>(PropertyNames.TextSelectionChangedSubject)
-				?.OnNext(new TextSelectionChangedSubject() {
-					WpfTextView = wpfTextView,
-					TextSelection = textSelection
-				});
+				?.OnNext(new TextSelectionChangedSubject(wpfTextView, textSelection));
 		}
 
 		private void TextView_GotAggregateFocus(object sender, EventArgs e) {
@@ -518,14 +510,14 @@ namespace CodeStream.VisualStudio.UI {
 		private async System.Threading.Tasks.Task OnCaretPositionChangedSubjectHandlerAsync(CaretPositionChangedSubject e) {
 			try {
 				if (e == null || e.EventArgs == null) return;
-
-				Debug.WriteLine($"{nameof(OnCaretPositionChangedSubjectHandlerAsync)} new={e.EventArgs.NewPosition} old={e.EventArgs.OldPosition}");
+				
 				var wpfTextView = e.WpfTextView;
-				if (wpfTextView == null || !SessionService.IsReady || !SessionService.IsWebViewVisible) return;
+				if (wpfTextView == null || !SessionService.IsReady || !SessionService.IsWebViewVisible || !SessionService.IsCodemarksForFileVisible) return;
 				if (!wpfTextView.Properties.TryGetProperty(PropertyNames.TextViewFilePath, out string filePath)) return;
 				if (filePath.IsNullOrWhiteSpace()) return;
 				if (!Uri.TryCreate(filePath, UriKind.RelativeOrAbsolute, out Uri result)) return;
 
+				Debug.WriteLine($"{nameof(OnCaretPositionChangedSubjectHandlerAsync)} new={e.EventArgs.NewPosition} old={e.EventArgs.OldPosition}");
 				var cursorLine = wpfTextView.TextSnapshot.GetLineFromPosition(e.EventArgs.NewPosition.BufferPosition.Position);
 				_ = CodeStreamService.ChangeCaretAsync(result, wpfTextView.ToVisibleRangesSafe(), cursorLine.LineNumber, wpfTextView.TextSnapshot.LineCount);
 			}
@@ -613,12 +605,12 @@ namespace CodeStream.VisualStudio.UI {
 		}
 
 		internal class HostDidChangeEditorVisibleRangesNotificationSubject {
-			public IWpfTextView WpfTextView { get; }
-			public Uri Uri { get; }
 			public HostDidChangeEditorVisibleRangesNotificationSubject(IWpfTextView wpfTextView, Uri uri) {
 				WpfTextView = wpfTextView;
 				Uri = uri;
 			}
+			public IWpfTextView WpfTextView { get; }
+			public Uri Uri { get; }			
 		}
 
 		internal class TextViewLayoutChangedSubject {
@@ -628,7 +620,7 @@ namespace CodeStream.VisualStudio.UI {
 				Sender = sender;
 				EventArgs = e;
 			}
-			
+
 			public IWpfTextView WpfTextView { get; }
 			public object Sender { get; }
 			public TextViewLayoutChangedEventArgs EventArgs { get; }
@@ -637,15 +629,26 @@ namespace CodeStream.VisualStudio.UI {
 		}
 
 		internal class TextSelectionChangedSubject {
-			public ITextSelection TextSelection { get; set; }
+			public TextSelectionChangedSubject(IWpfTextView wpfTextView, ITextSelection textSelection) {
+				WpfTextView = wpfTextView;
+				TextSelection = textSelection;
+			}
 
-			public IWpfTextView WpfTextView { get; set; }
+			public ITextSelection TextSelection { get; }
+
+			public IWpfTextView WpfTextView { get; }
 		}
 
 		internal class CaretPositionChangedSubject {
-			public object Sender { get; set; }
-			public CaretPositionChangedEventArgs EventArgs { get; set; }
-			public IWpfTextView WpfTextView { get; set; }
+			public CaretPositionChangedSubject(IWpfTextView wpfTextView, object sender, CaretPositionChangedEventArgs e) {
+				WpfTextView = wpfTextView;
+				Sender = sender;
+				EventArgs = e;
+			}
+
+			public IWpfTextView WpfTextView { get; }
+			public object Sender { get; }
+			public CaretPositionChangedEventArgs EventArgs { get; }			
 		}
 
 		#endregion
