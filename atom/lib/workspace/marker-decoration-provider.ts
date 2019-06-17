@@ -1,8 +1,14 @@
 import { DocumentMarker, FetchDocumentMarkersRequestType } from "@codestream/protocols/agent";
 import { CodemarkStatus, CodemarkType } from "@codestream/protocols/api";
-import { CompositeDisposable, DisplayMarker, Disposable, Gutter, TextEditor } from "atom";
+import {
+	CompositeDisposable,
+	DisplayMarker,
+	DisplayMarkerLayer,
+	Disposable,
+	TextEditor,
+} from "atom";
 import { Convert } from "atom-languageclient";
-import { accessSafely, asAbsolutePath, Editor } from "utils";
+import { asAbsolutePath, Editor } from "utils";
 import { ViewController } from "views/controller";
 import { Container } from "./container";
 import { SessionStatus, WorkspaceSession } from "./workspace-session";
@@ -30,17 +36,17 @@ class MapWithDefaults<K, V> extends Map<K, V> {
 }
 
 export class MarkerDecorationProvider implements Disposable {
-	private subscriptions: CompositeDisposable;
-	private observedEditors: Map<number, TextEditor> = new Map();
-	private gutters: Map<number, Gutter> = new Map();
 	private session: WorkspaceSession;
 	private viewController: ViewController;
-	private markers = new MapWithDefaults<number, DisplayMarker[]>(() => []);
+	private subscriptions: CompositeDisposable;
+	private sessionSubscriptions = new CompositeDisposable();
+	private observedEditors = new Map<number, TextEditor>();
+	private markerLayers = new Map<number, DisplayMarkerLayer>();
+	private markers = new Map<string, DisplayMarker>();
 	private editorResources = new MapWithDefaults<number, CompositeDisposable>(
 		() => new CompositeDisposable()
 	);
-	private sessionSubscriptions = new CompositeDisposable();
-	private isDisabled = false;
+	private disabled = false;
 
 	constructor(session: WorkspaceSession, viewController: ViewController) {
 		this.session = session;
@@ -58,20 +64,40 @@ export class MarkerDecorationProvider implements Disposable {
 						break;
 					}
 				}
-			}),
-			Container.configs.onDidChange("showMarkers", ({ newValue }) =>
-				newValue === true ? this.initialize() : this.reset()
-			)
+			})
+		);
+
+		Container.configs.onDidChange("showMarkers", ({ newValue }) =>
+			newValue === true ? this.initialize() : this.reset()
 		);
 	}
 
-	initialize() {
+	dispose() {
+		this.reset();
+		this.subscriptions.dispose();
+	}
+
+	disable() {
+		if (this.disabled) return;
+
+		this.disabled = true;
+		this.reset();
+	}
+
+	enable() {
+		if (!this.disabled) return;
+
+		this.disabled = false;
+		this.initialize();
+	}
+
+	private initialize() {
 		this.sessionSubscriptions.add(
 			atom.workspace.observeActiveTextEditor(this.onActiveEditor),
 			this.session.agent.onDidChangeDocumentMarkers(({ textDocument }) => {
 				for (const editor of this.observedEditors.values()) {
 					if (Editor.getUri(editor) === textDocument.uri) {
-						this.provideFor(editor);
+						this.decorateEditor(editor);
 						break;
 					}
 				}
@@ -80,25 +106,24 @@ export class MarkerDecorationProvider implements Disposable {
 	}
 
 	private onActiveEditor = (editor?: TextEditor) => {
-		if (this.isDisabled) return;
-		if (!editor || !editor.getPath()) return;
-		if (this.observedEditors.has(editor.id)) {
-			this.provideFor(editor);
-		} else {
-			const id = editor.id;
-			this.observedEditors.set(id, editor);
-			this.provideFor(editor);
-			const resources = this.editorResources.get(editor.id);
-			resources.add(
+		if (this.disabled) return;
+		if (editor === undefined || editor.getPath() === undefined) return;
+
+		if (!this.observedEditors.has(editor.id)) {
+			this.observedEditors.set(editor.id, editor);
+			const editorResources = this.editorResources.get(editor.id);
+
+			editorResources.add(
 				editor.onDidDestroy(() => {
-					this.observedEditors.delete(id);
-					resources.dispose();
+					this.observedEditors.delete(editor.id);
 				})
 			);
 		}
+
+		this.decorateEditor(editor);
 	}
 
-	private async provideFor(editor: TextEditor) {
+	private async decorateEditor(editor: TextEditor) {
 		const response = await this.session.agent.request(FetchDocumentMarkersRequestType, {
 			textDocument: { uri: Convert.pathToUri(editor.getPath()!) },
 		});
@@ -111,40 +136,25 @@ export class MarkerDecorationProvider implements Disposable {
 				}
 				return true;
 			});
-			if (this.editorResources.has(editor.id)) {
-				this.editorResources.get(editor.id).dispose();
-			}
-
-			this.editorResources.set(
-				editor.id,
-				new CompositeDisposable(
-					...response.markers.map(docMarker => this.decorate(editor, docMarker))
-				)
-			);
+			response.markers.map(docMarker => this.createMarker(editor, docMarker));
 		}
 	}
 
-	private getGutter(editor: TextEditor): Gutter {
-		let gutter = this.gutters.get(editor.id);
-		if (!gutter) {
-			gutter = editor.addGutter({
-				name: `codestream-${editor.id}`,
-			});
+	private createMarker(editor: TextEditor, docMarker: DocumentMarker) {
+		let markerLayer = this.markerLayers.get(editor.id);
+		if (markerLayer === undefined) {
+			markerLayer = editor.addMarkerLayer();
+			this.markerLayers.set(editor.id, markerLayer);
 			this.editorResources.get(editor.id).add(
-				gutter.onDidDestroy(() => {
-					this.gutters.delete(editor.id);
+				markerLayer.onDidDestroy(() => {
+					this.markerLayers.delete(editor.id);
+					const gutter = editor.gutterWithName(this.getGutterName(editor.id));
+					if (gutter != null) gutter.hide();
 				})
 			);
-			this.gutters.set(editor.id, gutter);
 		}
-		return gutter;
-	}
 
-	private decorate(editor: TextEditor, docMarker: DocumentMarker) {
-		const marker = editor.markBufferRange(Convert.lsRangeToAtomRange(docMarker.range), {
-			invalidate: "never",
-		});
-		this.markers.get(editor.id).push(marker);
+		const marker = this.getOrCreateDisplayMarker(docMarker, markerLayer);
 
 		let color = docMarker.codemark.color || "blue";
 		color = color === "none" ? "" : `-${color}`;
@@ -168,57 +178,61 @@ export class MarkerDecorationProvider implements Disposable {
 		item.classList.add("codemark");
 		item.appendChild(img);
 
-		const gutter = this.getGutter(editor);
-		gutter.decorateMarker(marker, { item });
+		let gutter = editor.gutterWithName(this.getGutterName(editor.id));
+		if (gutter == null) {
+			gutter = editor.addGutter({
+				name: this.getGutterName(editor.id),
+			});
+		}
+		if (!gutter.isVisible()) {
+			gutter.show();
+		}
+
+		const decoration = gutter.decorateMarker(marker, { item });
 
 		const tooltip = atom.tooltips.add(img, {
 			title: `${docMarker.creatorName}: ${docMarker.summary}`,
 			placement: "right",
 		});
 
-		return new CompositeDisposable(
-			tooltip,
-			new Disposable(() => {
-				marker.destroy();
-				item.remove();
-			}),
-			marker.onDidDestroy(() => {
-				const markers = this.markers.get(editor.id);
-				this.markers.set(editor.id, markers.filter(m => m.isDestroyed() === false));
-			})
-		);
+		decoration.onDidDestroy(() => tooltip.dispose());
 	}
 
-	reset() {
-		this.observedEditors.clear();
-		this.gutters.forEach(gutter => accessSafely(() => gutter.destroy()));
-		this.gutters.clear();
-		this.markers.forEach(markers =>
-			markers.forEach(marker => accessSafely(() => marker.destroy()))
-		);
-		this.markers.clear();
-		this.editorResources.forEach(r => r.dispose());
-		this.editorResources.clear();
+	private getOrCreateDisplayMarker(
+		docMarker: DocumentMarker,
+		markerLayer: DisplayMarkerLayer
+	): DisplayMarker {
+		if (this.markers.has(docMarker.id)) {
+			const displayMarker = this.markers.get(docMarker.id)!;
+			if (!displayMarker.isDestroyed()) {
+				displayMarker.setBufferRange(Convert.lsRangeToAtomRange(docMarker.range));
+				return displayMarker;
+			}
+
+			this.markers.delete(docMarker.id);
+		}
+
+		const displayMarker = markerLayer.markBufferRange(Convert.lsRangeToAtomRange(docMarker.range), {
+			invalidate: "never",
+		});
+		displayMarker.onDidDestroy(() => {
+			this.markers.delete(docMarker.id);
+		});
+		this.markers.set(docMarker.id, displayMarker);
+
+		return displayMarker;
+	}
+
+	private getGutterName(editorId: number) {
+		return `codestream-${editorId}`;
+	}
+
+	private reset() {
 		this.sessionSubscriptions.dispose();
 		this.sessionSubscriptions = new CompositeDisposable();
-	}
-
-	disable() {
-		if (this.isDisabled) return;
-
-		this.isDisabled = true;
-		this.reset();
-	}
-
-	enable() {
-		if (this.isDisabled) {
-			this.isDisabled = false;
-			this.initialize();
-		}
-	}
-
-	dispose() {
-		this.reset();
-		this.subscriptions.dispose();
+		this.observedEditors.clear();
+		this.editorResources.forEach(disposable => disposable.dispose());
+		this.markerLayers.forEach(layer => layer.destroy());
+		this.markerLayers.clear();
 	}
 }

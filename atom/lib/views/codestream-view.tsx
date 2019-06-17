@@ -70,7 +70,7 @@ import {
 	TraceLevel,
 } from "../protocols/agent/agent.protocol";
 import { CodemarkType, LoginResult } from "../protocols/agent/api.protocol";
-import { asAbsolutePath, createTempFile, Debug, Editor } from "../utils";
+import { asAbsolutePath, Debug, Editor } from "../utils";
 import { Container } from "../workspace/container";
 import { EditorObserver } from "../workspace/editor-observer";
 import { SessionStatus, WorkspaceSession } from "../workspace/workspace-session";
