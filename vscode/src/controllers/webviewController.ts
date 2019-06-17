@@ -507,9 +507,9 @@ export class WebviewController implements Disposable {
 				webview.onIpcRequest(LoginSSORequestType, e, async (type, params) => {
 					await env.openExternal(
 						Uri.parse(
-							`${Container.config.serverUrl}/web/provider-auth/${
-								params.provider
-							}?signupToken=${this.session.getSignupToken()}`
+							`${Container.config.serverUrl}/web/provider-auth/${params.provider}?${
+								params.queryString ? `${params.queryString}&` : ""
+							}signupToken=${this.session.getSignupToken()}`
 						)
 					);
 					return emptyObj;
