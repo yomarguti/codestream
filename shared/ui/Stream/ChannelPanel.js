@@ -86,6 +86,12 @@ export class SimpleChannelPanel extends Component {
 		}
 	}
 
+	onClickEnableRealtimeChat = e => {
+		e.preventDefault();
+		// TODO: Sign out, then sign in with the "full" mode
+		// this.props.dispatch(startSSOSignin(this.props.teamProvider, undefined, "full"));
+	};
+
 	render() {
 		const { showChannels } = this.props;
 
@@ -109,7 +115,7 @@ export class SimpleChannelPanel extends Component {
 									<Button
 										className="control-button"
 										type="button"
-										// onClick={this.handleClickEnableRealtimeChat}
+										onClick={this.onClickEnableRealtimeChat}
 									>
 										Enable Real-time Chat
 									</Button>

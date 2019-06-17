@@ -52,9 +52,16 @@ export const bootstrap = (bootstrapData?: BootstrapResponse) => async dispatch =
 	dispatch({ type: BootstrapActionType.Complete });
 };
 
-export const startSSOSignin = (provider: string, info?: ValidateSignupInfo) => async dispatch => {
+export const startSSOSignin = (
+	provider: string,
+	info?: ValidateSignupInfo,
+	mode?: "store" | "full"
+) => async dispatch => {
 	try {
-		await HostApi.instance.send(LoginSSORequestType, { provider: provider });
+		await HostApi.instance.send(LoginSSORequestType, {
+			provider: provider,
+			queryString: mode === "store" ? "mode=store" : undefined
+		});
 		return dispatch(contextActions.goToSSOAuth(provider, info));
 	} catch (error) {
 		logError(`Unable to start ${provider} sign in: ${error}`);
