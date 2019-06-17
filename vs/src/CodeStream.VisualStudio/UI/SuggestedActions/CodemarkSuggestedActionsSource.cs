@@ -44,22 +44,22 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 		public event EventHandler<EventArgs> SuggestedActionsChanged;
 #pragma warning restore 0067
 
-		private EditorState _textSelection;
-
 		public IEnumerable<SuggestedActionSet> GetSuggestedActions(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
 			try {
-				if (_textSelection?.HasSelectedText == false) {
-					Log.Verbose($"{nameof(GetSuggestedActions)} Empty HasText={_textSelection?.HasSelectedText}");
-					return Enumerable.Empty<SuggestedActionSet>();
-				}
+				var wpfTextView = _textView as IWpfTextView;
+				if (wpfTextView == null) return Enumerable.Empty<SuggestedActionSet>();
 
+				var editorState = wpfTextView.GetEditorState();
+				if (editorState?.HasSelectedText == false) return Enumerable.Empty<SuggestedActionSet>();
+
+				System.Diagnostics.Debug.WriteLine($"GetSuggestedActions");
 				return new[] {
 					new SuggestedActionSet(
 						actions: new ISuggestedAction[] {
-							new CodemarkCommentSuggestedAction(_componentModel, _textDocument, _textSelection),
-							new CodemarkIssueSuggestedAction(_componentModel, _textDocument, _textSelection),
-							new CodemarkBookmarkSuggestedAction(_componentModel, _textDocument, _textSelection),
-							new CodemarkPermalinkSuggestedAction(_componentModel, _textDocument, _textSelection)
+							new CodemarkCommentSuggestedAction(_componentModel, _textDocument, editorState),
+							new CodemarkIssueSuggestedAction(_componentModel, _textDocument, editorState),
+							new CodemarkBookmarkSuggestedAction(_componentModel, _textDocument, editorState),
+							new CodemarkPermalinkSuggestedAction(_componentModel, _textDocument, editorState)
 						},
 						categoryName: null,
 						title: null,
@@ -79,12 +79,14 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 			try {
 				var sessionService = _componentModel.GetService<ISessionService>();
 				if (sessionService == null || sessionService.IsReady == false) return System.Threading.Tasks.Task.FromResult(false);
-				
+
 				var wpfTextView = _textView as IWpfTextView;
 				if (wpfTextView == null) return System.Threading.Tasks.Task.FromResult(false);
-				
-				_textSelection = wpfTextView.GetEditorState();
-				return System.Threading.Tasks.Task.FromResult(_textSelection?.HasSelectedText == true);
+
+				var hasEditorSelection = wpfTextView.HasEditorSelection();
+				System.Diagnostics.Debug.WriteLine($"HasSuggestedActions HasEditorSelection={hasEditorSelection}");
+
+				return System.Threading.Tasks.Task.FromResult(hasEditorSelection);
 			}
 			catch (Exception ex) {
 				Log.Warning(ex, nameof(HasSuggestedActionsAsync));

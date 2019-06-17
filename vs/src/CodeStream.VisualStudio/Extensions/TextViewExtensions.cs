@@ -181,6 +181,10 @@ namespace CodeStream.VisualStudio.Extensions {
 			return new EditorState(selectionRange, caretPosition, selectedText);
 		}
 
+		public static bool HasEditorSelection(this IWpfTextView wpfTextView) {
+			return wpfTextView.Selection != null && wpfTextView.Selection.IsEmpty == false;
+		}
+
 		/// <summary>
 		/// Gets the text from a Selection
 		/// </summary>

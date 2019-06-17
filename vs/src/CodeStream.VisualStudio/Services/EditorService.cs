@@ -198,14 +198,6 @@ namespace CodeStream.VisualStudio.Services {
 			}
 		}
 
-		[Flags]
-		public enum EditorStateFlags {
-			SelectedRange = 0,
-			SelectedText = 1 << 0,
-			CursorPosition = 1 << 1,
-			All = SelectedRange | SelectedText | CursorPosition
-		}
-
 		public static string GetText(SnapshotSpan snapshotSpan) {
 			return snapshotSpan.Snapshot.GetText(snapshotSpan);
 		}
