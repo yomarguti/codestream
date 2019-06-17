@@ -18,6 +18,7 @@
 
 	public class LoginSSORequest {
 		public string Provider { get; set; }
+		public string QueryString { get; set; }
 	}
 
 	public class LoginSSORequestType : RequestType<LoginSSORequest> {

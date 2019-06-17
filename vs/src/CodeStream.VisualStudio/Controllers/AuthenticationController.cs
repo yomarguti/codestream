@@ -79,7 +79,8 @@ namespace CodeStream.VisualStudio.Controllers {
 			using (var scope = _browserService.CreateScope(message)) {
 				try {
 					var provider = message.Params["provider"];
-					_ideService.Navigate($"{_settingsManager.ServerUrl}/web/provider-auth/{provider}?signupToken={_sessionService.GetOrCreateSignupToken()}");
+					var queryString = message.Params["queryString"].ToString();
+					_ideService.Navigate($"{_settingsManager.ServerUrl}/web/provider-auth/{provider}?{(!string.IsNullOrEmpty(queryString) ? $"{queryString}&" : "")}signupToken={_sessionService.GetOrCreateSignupToken()}");
 				}
 				catch (Exception ex) {
 					error = LoginResult.UNKNOWN.ToString();
@@ -291,7 +292,7 @@ namespace CodeStream.VisualStudio.Controllers {
 
 			return new User(user.Id, user.Username, user.Email, teamName, teams.Count);
 		}
-		
+
 		private string GetTeamId(JToken token) => token?["loginResponse"]?["teamId"].Value<string>();
 
 		private JToken GetState(JToken token) => token?["state"];
