@@ -11,8 +11,7 @@
 		public static string TextViewFilePath = $"{Prefix}{nameof(TextViewFilePath)}";
 		public static string TextViewEvents = $"{Prefix}{nameof(TextViewEvents)}";
 		public static string TextViewLocalEvents = $"{Prefix}{nameof(TextViewLocalEvents)}";
-		public static string AdornmentManager = $"{Prefix}{nameof(AdornmentManager)}";
-		public static string HostDidChangeEditorVisibleRangesNotificationSubject = $"{Prefix}{nameof(HostDidChangeEditorVisibleRangesNotificationSubject)}";
+		public static string AdornmentManager = $"{Prefix}{nameof(AdornmentManager)}";		
 		public static string TextViewLayoutChangedSubject = $"{Prefix}{nameof(TextViewLayoutChangedSubject)}";
 		public static string CaretPositionChangedSubject = $"{Prefix}{nameof(CaretPositionChangedSubject)}";
 		public static string TextSelectionChangedSubject = $"{Prefix}{nameof(TextSelectionChangedSubject)}";

@@ -142,8 +142,7 @@ namespace CodeStream.VisualStudio.UI {
 				using (Log.CriticalOperation($"{nameof(VsTextViewCreated)}")) {
 					wpfTextView.Properties.AddProperty(PropertyNames.TextViewMarginProviders, textViewMarginProviders);
 					Debug.Assert(EventAggregator != null, nameof(EventAggregator) + " != null");
-
-					var visibleRangesSubject = new Subject<HostDidChangeEditorVisibleRangesNotificationSubject>();
+					
 					var textViewLayoutChangedSubject = new Subject<TextViewLayoutChangedSubject>();
 					var caretPositionChangedSubject = new Subject<CaretPositionChangedSubject>();
 					var textSelectionChangedSubject = new Subject<TextSelectionChangedSubject>();
@@ -182,8 +181,7 @@ namespace CodeStream.VisualStudio.UI {
 							_ = OnTextSelectionChangedSubjectHandlerAsync(subject);
 						}));
 
-					wpfTextView.Properties.AddProperty(PropertyNames.TextViewEvents, disposables);
-					wpfTextView.Properties.AddProperty(PropertyNames.HostDidChangeEditorVisibleRangesNotificationSubject, visibleRangesSubject);
+					wpfTextView.Properties.AddProperty(PropertyNames.TextViewEvents, disposables);					
 					wpfTextView.Properties.AddProperty(PropertyNames.TextViewLayoutChangedSubject, textViewLayoutChangedSubject);
 					wpfTextView.Properties.AddProperty(PropertyNames.CaretPositionChangedSubject, caretPositionChangedSubject);
 					wpfTextView.Properties.AddProperty(PropertyNames.TextSelectionChangedSubject, textSelectionChangedSubject);
@@ -234,8 +232,7 @@ namespace CodeStream.VisualStudio.UI {
 								wpfTextView.Properties.TryDisposeProperty<HighlightAdornmentManager>(PropertyNames.AdornmentManager);
 
 								wpfTextView.Properties.TryDisposeProperty<Subject<TextViewLayoutChangedSubject>>(PropertyNames.TextViewLayoutChangedSubject);
-								wpfTextView.Properties.TryDisposeProperty<Subject<CaretPositionChangedSubject>>(PropertyNames.CaretPositionChangedSubject);
-								wpfTextView.Properties.TryDisposeProperty<Subject<HostDidChangeEditorVisibleRangesNotificationSubject>>(PropertyNames.HostDidChangeEditorVisibleRangesNotificationSubject);
+								wpfTextView.Properties.TryDisposeProperty<Subject<CaretPositionChangedSubject>>(PropertyNames.CaretPositionChangedSubject);								
 								wpfTextView.Properties.TryDisposeProperty<Subject<TextSelectionChangedSubject>>(PropertyNames.TextSelectionChangedSubject);
 
 								wpfTextView.Properties.TryDisposeListProperty(PropertyNames.TextViewEvents);
@@ -602,15 +599,6 @@ namespace CodeStream.VisualStudio.UI {
 
 		class TextViewState {
 			public bool Initialized { get; set; }
-		}
-
-		internal class HostDidChangeEditorVisibleRangesNotificationSubject {
-			public HostDidChangeEditorVisibleRangesNotificationSubject(IWpfTextView wpfTextView, Uri uri) {
-				WpfTextView = wpfTextView;
-				Uri = uri;
-			}
-			public IWpfTextView WpfTextView { get; }
-			public Uri Uri { get; }			
 		}
 
 		internal class TextViewLayoutChangedSubject {
