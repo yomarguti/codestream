@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.2.1] - 2019-6-17
+
+### Fixed
+
+- Fixes an issue where the activity bar icon is sized incorrectly
+
 ## [1.2.0] - 2019-6-14
 
 ### Changed
