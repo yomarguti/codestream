@@ -190,17 +190,15 @@ class Login extends React.Component<Props, State> {
 									Sign In with Slack
 								</Button>
 							</div>
-							{false && (
-								<div className="button-group">
-									<Button
-										className="control-button"
-										type="button"
-										onClick={this.handleClickMSTeamsSignup}
-									>
-										Sign In with Microsoft Teams
-									</Button>
-								</div>
-							)}
+							<div className="button-group">
+								<Button
+									className="control-button"
+									type="button"
+									onClick={this.handleClickMSTeamsSignup}
+								>
+									Sign In with Microsoft Teams
+								</Button>
+							</div>
 						</div>
 					</fieldset>
 				</form>

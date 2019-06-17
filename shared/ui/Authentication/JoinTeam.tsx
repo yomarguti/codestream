@@ -54,10 +54,10 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 			<h2>Join an Existing Team</h2>
 			<form className="standard-form" onSubmit={onClickJoin}>
 				<fieldset className="form-body">
-					<h3 style={{ textAlign: "left" }}>Do you use Slack?</h3>
+					<h3 style={{ textAlign: "left" }}>Do you use Slack or Microsoft Teams?</h3>
 					<p>
-						Use this option if your organization's CodeStream team is connected to a Slack
-						workspace.
+						Use this option if your organization's CodeStream team is connected to a Slack workspace
+						or a Microsoft Teams organization.
 					</p>
 					<div id="controls">
 						<div className="button-group">
@@ -73,21 +73,19 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 								Sign Up with Slack
 							</Button>
 						</div>
-						{false && (
-							<div className="button-group">
-								<Button
-									className="control-button"
-									type="button"
-									onClick={e => {
-										e.preventDefault();
-										HostApi.instance.track("Join Path Selected", { "Path Type": "MSTeams" });
-										props.dispatch(startSSOSignin("msteams", { type: SignupType.JoinTeam }));
-									}}
-								>
-									Sign Up with Microsoft Teams
-								</Button>
-							</div>
-						)}
+						<div className="button-group">
+							<Button
+								className="control-button"
+								type="button"
+								onClick={e => {
+									e.preventDefault();
+									HostApi.instance.track("Join Path Selected", { "Path Type": "MSTeams" });
+									props.dispatch(startSSOSignin("msteams", { type: SignupType.JoinTeam }));
+								}}
+							>
+								Sign Up with Microsoft Teams
+							</Button>
+						</div>
 					</div>
 					<br />
 					<h3 style={{ textAlign: "left" }}>Were you invited to CodeStream?</h3>
