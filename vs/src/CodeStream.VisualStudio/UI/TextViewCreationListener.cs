@@ -166,17 +166,17 @@ namespace CodeStream.VisualStudio.UI {
 					disposables.Add(EventAggregator.GetEvent<AutoHideMarkersEvent>()
 						.ObserveOnApplicationDispatcher()
 						.Subscribe(_ => textViewMarginProviders.SetAutoHideMarkers(_.Value)));
-					disposables.Add(textViewLayoutChangedSubject.Throttle(TimeSpan.FromMilliseconds(333))
+					disposables.Add(textViewLayoutChangedSubject.Throttle(TimeSpan.FromMilliseconds(100))
 						.ObserveOnApplicationDispatcher()
 						.Subscribe(subject => {
 							_ = OnTextViewLayoutChangedSubjectHandlerAsync(subject);
 						}));
-					disposables.Add(caretPositionChangedSubject.Throttle(TimeSpan.FromMilliseconds(333))
+					disposables.Add(caretPositionChangedSubject.Throttle(TimeSpan.FromMilliseconds(200))
 						.ObserveOnApplicationDispatcher()
 						.Subscribe(subject => {
 							_ = OnCaretPositionChangedSubjectHandlerAsync(subject);
 						}));
-					disposables.Add(textSelectionChangedSubject.Throttle(TimeSpan.FromMilliseconds(333))
+					disposables.Add(textSelectionChangedSubject.Throttle(TimeSpan.FromMilliseconds(200))
 						.ObserveOnApplicationDispatcher()
 						.Subscribe(subject => {
 							_ = OnTextSelectionChangedSubjectHandlerAsync(subject);
@@ -317,6 +317,7 @@ namespace CodeStream.VisualStudio.UI {
 				Log.Warning(ex, nameof(ResetActiveEditor));
 			}
 		}
+
 
 		private void ChangeActiveEditor(IWpfTextView wpfTextView) {
 			try {
@@ -464,7 +465,8 @@ namespace CodeStream.VisualStudio.UI {
 
 					// get markers if it's null (first time) or we did something that isn't scrolling/vertical changes
 					// backspace has a NewOrReformatted Count of 1 :)
-					if ((hasTranslatedLines && hasNewOrReformattedLines && e.NewOrReformattedLines.Any()) || !documentMarkerManager.IsInitialized()) {
+					// ENTER-ing beyond the viewport results in e.VerticalTranslation && hasNewOrReformattedLines
+					if ((e.VerticalTranslation && hasNewOrReformattedLines) || (hasTranslatedLines && hasNewOrReformattedLines && e.NewOrReformattedLines.Any()) || !documentMarkerManager.IsInitialized()) {
 						requiresMarkerCheck = true;
 					}
 					else if ((e.VerticalTranslation || hasTranslatedLines) && documentMarkerManager.HasMarkers()) {

@@ -166,8 +166,13 @@ namespace CodeStream.VisualStudio.UI.Margins {
 
 			if (Visibility == Visibility.Hidden || Visibility == Visibility.Collapsed) return;
 
-			if (e.OldViewState.ViewportTop != e.NewViewState.ViewportTop)
+			if (e.OldViewState.ViewportTop != e.NewViewState.ViewportTop) {
 				SetTop(_iconCanvas, -_wpfTextViewHost.TextView.ViewportTop);
+				Debug.WriteLine($"SetTop Old={e.OldViewState.ViewportTop} New={e.NewViewState.ViewportTop}");
+			}
+			else {
+				Debug.WriteLine($"Old={e.OldViewState.ViewportTop} New={e.NewViewState.ViewportTop}");
+			}
 
 			//OnNewLayout(e.NewOrReformattedLines, e.TranslatedLines);
 			RefreshMargin();
