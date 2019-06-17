@@ -55,7 +55,7 @@ export const bootstrap = (bootstrapData?: BootstrapResponse) => async dispatch =
 export const startSSOSignin = (
 	provider: string,
 	info?: ValidateSignupInfo,
-	mode?: "store" | "full"
+	mode: "store" | "full" = "store"
 ) => async dispatch => {
 	try {
 		await HostApi.instance.send(LoginSSORequestType, {
