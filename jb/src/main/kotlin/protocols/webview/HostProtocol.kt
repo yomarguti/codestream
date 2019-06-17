@@ -12,7 +12,8 @@ class LoginRequest(
 )
 
 class LoginSSORequest(
-    val provider: String
+    val provider: String,
+    val queryString: String
 )
 
 class SignedOutBootstrapResponse(

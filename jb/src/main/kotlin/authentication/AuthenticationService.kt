@@ -122,7 +122,7 @@ class AuthenticationService(val project: Project) {
         val request = gson.fromJson<LoginSSORequest>(message.params!!)
         val session = project.sessionService ?: return
         val settings = project.settingsService ?: return
-        BrowserUtil.browse("${settings.state.serverUrl}/web/provider-auth/${request.provider}?signupToken=${session.signupToken}")
+        BrowserUtil.browse("${settings.state.serverUrl}/web/provider-auth/${request.provider}?${if (!request.queryString.isNullOrEmpty()) "${request.queryString}&" else ""}signupToken=${session.signupToken}")
     }
 
     suspend fun validateThirdPartyAuth(request: ValidateThirdPartyAuthRequest): Any? {
