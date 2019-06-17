@@ -17,6 +17,9 @@ namespace CodeStream.VisualStudio.Models {
 		}
 	}
 
+	/// <summary>
+	/// Wraps various editor properties that represent its current state
+	/// </summary>
 	public class EditorState {
 		public EditorState(Range range, Position cursor, string selectedText) {
 			Range = range;

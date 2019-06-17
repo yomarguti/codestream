@@ -5,6 +5,8 @@ using Microsoft.VisualStudio.Text.Formatting;
 using System;
 using System.Linq;
 using CodeStream.VisualStudio.UI;
+using CodeStream.VisualStudio.Models;
+using System.Text;
 
 namespace CodeStream.VisualStudio.Extensions {
 	public static class TextViewExtensions {
@@ -13,9 +15,9 @@ namespace CodeStream.VisualStudio.Extensions {
 
 		public static bool HasValidRoles(this ITextViewRoleSet roles) {
 			return roles.ContainsAll(TextViewRoles.DefaultRoles) &&
-			       roles.Intersect(TextViewRoles.InvalidRoles).Any() == false;
+				   roles.Intersect(TextViewRoles.InvalidRoles).Any() == false;
 		}
-		
+
 		public static Tuple<ITextSnapshotLine, ITextSnapshotLine> GetLinesFromRange(this IWpfTextView wpfTextView, int start, int end) {
 			ITextSnapshotLine startLine = null;
 			ITextSnapshotLine endLine = null;
@@ -116,6 +118,93 @@ namespace CodeStream.VisualStudio.Extensions {
 				return textDoc;
 			else
 				return null;
+		}
+
+		/// <summary>
+		/// Creates a Range object from a wpfTextView.Selection
+		/// </summary>
+		/// <param name="wpfTextView"></param>
+		/// <param name="range"></param>
+		/// <returns></returns>
+		public static bool TryCreateSelectionRange(this IWpfTextView wpfTextView, out Range range) {
+			if (!wpfTextView.Selection.IsEmpty) {
+				range = new Range();
+
+				var lineStart = wpfTextView.TextSnapshot.GetLineFromPosition(wpfTextView.Selection.Start.Position);
+				var characterStart = wpfTextView.Selection.Start.Position - lineStart.Extent.Start.Position;
+				range.Start = new Position(lineStart.LineNumber, characterStart);
+
+				var lineEnd = wpfTextView.TextSnapshot.GetLineFromPosition(wpfTextView.Selection.End.Position);
+				var characterEnd = wpfTextView.Selection.End.Position - lineEnd.Extent.Start.Position;
+				range.End = new Position(lineEnd.LineNumber, characterEnd);
+				return true;
+			}
+			else {
+				range = new Range().AsEmpty();
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Creates a Position object from a wpfTextView.Caret
+		/// </summary>
+		/// <param name="wpfTextView"></param>
+		/// <param name="position"></param>
+		/// <returns></returns>
+		public static bool TryCreateCaretPosition(this IWpfTextView wpfTextView, out Position position) {
+			int caretLine = 0;
+			var caretCol = 0;
+			if (wpfTextView.Caret != null) {
+				var line = wpfTextView.TextSnapshot.GetLineFromPosition(wpfTextView.Caret.Position.BufferPosition);
+				if (line != null) {
+					caretLine = line.LineNumber;
+					caretCol = wpfTextView.Caret.Position.BufferPosition.Position - line.Extent.Start.Position;
+				}
+				position = new Position(caretLine, caretCol);
+				return true;
+			}
+			else {
+				position = new Position(caretLine, caretCol);
+				return false;
+			}
+		}
+
+		public static EditorState GetEditorState(this IWpfTextView wpfTextView) {
+			string selectedText = null;
+			if (TryCreateSelectionRange(wpfTextView, out Range selectionRange)) {
+				selectedText = GetText(wpfTextView.Selection);
+			}
+
+			TryCreateCaretPosition(wpfTextView, out Position caretPosition);
+
+			System.Diagnostics.Debug.WriteLine($"Range Start={selectionRange.Start.Line},{selectionRange.Start.Character} End={selectionRange.End.Line},{selectionRange.End.Character} Caret={caretPosition.Line},{caretPosition.Character} HasSelected={!wpfTextView.Selection.IsEmpty}");
+			return new EditorState(selectionRange, caretPosition, selectedText);
+		}
+
+		public static bool HasEditorSelection(this IWpfTextView wpfTextView) {
+			return wpfTextView.Selection != null && wpfTextView.Selection.IsEmpty == false;
+		}
+
+		/// <summary>
+		/// Gets the text from a Selection
+		/// </summary>
+		/// <param name="textSelection"></param>
+		/// <returns></returns>
+		/// <remarks>Thanks dnSpy!</remarks>
+		private static string GetText(ITextSelection textSelection) {
+			if (textSelection.Mode == TextSelectionMode.Stream)
+				return textSelection.StreamSelectionSpan.GetText();
+			var sb = new StringBuilder();
+			var snapshot = textSelection.TextView.TextSnapshot;
+			int i = 0;
+			foreach (var s in textSelection.SelectedSpans) {
+				if (i++ > 0)
+					sb.AppendLine();
+				sb.Append(snapshot.GetText(s));
+			}
+			if (i > 1)
+				sb.AppendLine();
+			return sb.ToString();
 		}
 	}
 }

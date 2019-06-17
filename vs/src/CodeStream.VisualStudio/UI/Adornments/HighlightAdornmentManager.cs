@@ -125,7 +125,7 @@ namespace CodeStream.VisualStudio.UI.Adornments {
 						Fill = brush
 					};
 
-					Canvas.SetLeft(element, range.Start.Character == 0 ? (int) _textView.ViewportLeft : placement.Left);
+					Canvas.SetLeft(element, range.Start.Character == 0 ? (int)_textView.ViewportLeft : placement.Left);
 					Canvas.SetTop(element, isInnerOrLastLine ? lineInfo.Top : lineInfo.TextTop);
 
 					_highlightAdornmentLayer.AddAdornment(lineInfo.Extent, null, element);

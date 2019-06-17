@@ -27,10 +27,18 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		public static void Hide(this List<ICodeStreamWpfTextViewMargin> items) =>
 			items.ForEach(_ => _.TryHideMargin());
 
-		public static void OnMarkerChanged(this List<ICodeStreamWpfTextViewMargin> items)
-			=> items.ForEach(_ => _.OnMarkerChanged());
+		public static void OnMarkerChanged(this List<ICodeStreamWpfTextViewMargin> margins) {
+			// Avoids lambda creation on each iteration as this is a high-frequency event
+			foreach (var margin in margins) {
+				margin.OnMarkerChanged();
+			}
+		}
 
-		public static void OnTextViewLayoutChanged(this List<ICodeStreamWpfTextViewMargin> items, object sender, TextViewLayoutChangedEventArgs e)
-			=> items.ForEach(_ => _.OnTextViewLayoutChanged(sender, e));
+		public static void OnTextViewLayoutChanged(this List<ICodeStreamWpfTextViewMargin> margins, object sender, TextViewLayoutChangedEventArgs e) {
+			// Avoids lambda creation on each iteration as this is a high-frequency event
+			foreach (var margin in margins) {
+				margin.OnTextViewLayoutChanged(sender, e);
+			}
+		}
 	}
 }

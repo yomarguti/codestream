@@ -15,6 +15,9 @@ namespace CodeStream.VisualStudio.Core
 		public static readonly Regex TokenRegex =
 			new Regex(@"""token"":""(.*?)""(,|(?=\}))", RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace);
 
+		public static readonly Regex SecretRegex =
+			new Regex(@"""secret"":""(.*?)""(,|(?=\}))", RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace);
+
 		public static readonly Regex PasswordOrTokenRegex =
 			new Regex(@"""passwordOrToken"":""(.*?)""(,|(?=\}))", RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace);
 

@@ -8,7 +8,7 @@ using Serilog;
 
 namespace CodeStream.VisualStudio.Commands {
 	internal sealed class WebViewReloadCommand : VsCommandBase {
-		private static readonly ILogger Log = LogManager.ForContext<UserCommand>();
+		private static readonly ILogger Log = LogManager.ForContext<WebViewReloadCommand>();
 
 		public WebViewReloadCommand() : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.WebViewReloadCommandId) { }
 

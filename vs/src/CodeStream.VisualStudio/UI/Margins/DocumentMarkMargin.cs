@@ -159,15 +159,23 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		}
 
 		public void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			// no need to update when we're in 'spatial' view since it's not shown
 			if (_sessionService.IsCodemarksForFileVisible && _sessionService.IsWebViewVisible && _settingsManager.AutoHideMarkers) return;
 
 			if (Visibility == Visibility.Hidden || Visibility == Visibility.Collapsed) return;
 
-			if (e.OldViewState.ViewportTop != e.NewViewState.ViewportTop)
+			if (e.OldViewState.ViewportTop != e.NewViewState.ViewportTop) {
 				SetTop(_iconCanvas, -_wpfTextViewHost.TextView.ViewportTop);
+				Debug.WriteLine($"SetTop Old={e.OldViewState.ViewportTop} New={e.NewViewState.ViewportTop}");
+			}
+			else {
+				Debug.WriteLine($"Old={e.OldViewState.ViewportTop} New={e.NewViewState.ViewportTop}");
+			}
 
-			OnNewLayout(e.NewOrReformattedLines, e.TranslatedLines);
+			//OnNewLayout(e.NewOrReformattedLines, e.TranslatedLines);
+			RefreshMargin();
 		}
 
 		public bool TryShowMargin() => this.TryShow();
@@ -313,10 +321,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		}
 
 		void AddLine(Dictionary<object, LineInfo> newInfos, ITextViewLine line) {
-			var wpfLine = line as IWpfTextViewLine;
-			// Debug.Assert(wpfLine != null);
-			if (wpfLine == null)
-				return;
+			if (!(line is IWpfTextViewLine wpfLine)) return;
 
 			var info = new LineInfo(line, CreateIconInfos(wpfLine));
 			newInfos.Add(line.IdentityTag, info);
@@ -328,39 +333,39 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		void OnNewLayout(IList<ITextViewLine> newOrReformattedLines, IList<ITextViewLine> translatedLines) {
 			var newInfos = new Dictionary<object, LineInfo>();
 
-			foreach (var line in newOrReformattedLines)
+			foreach (var line in newOrReformattedLines) {
 				AddLine(newInfos, line);
+			}
 
 			foreach (var line in translatedLines) {
-				var b = _lineInfos.TryGetValue(line.IdentityTag, out var info);
-				if (!b) {
-#if DEBUG
-					// why are we here?
-					Debugger.Break();
-#endif
+				if (!_lineInfos.TryGetValue(line.IdentityTag, out var info)) {
+//#if DEBUG
+//					// why are we here?
+//					Debugger.Break();
+//#endif
 					continue;
 				}
 
 				_lineInfos.Remove(line.IdentityTag);
 				newInfos.Add(line.IdentityTag, info);
-				foreach (var iconInfo in info.Icons)
+				foreach (var iconInfo in info.Icons) {
 					SetTop(iconInfo.Element, iconInfo.BaseTopValue + line.TextTop);
+				}
 			}
 
 			foreach (var line in _wpfTextViewHost.TextView.TextViewLines) {
-				if (newInfos.ContainsKey(line.IdentityTag))
-					continue;
+				if (newInfos.ContainsKey(line.IdentityTag)) continue;
 
-				if (!_lineInfos.TryGetValue(line.IdentityTag, out var info))
-					continue;
+				if (!_lineInfos.TryGetValue(line.IdentityTag, out var info)) continue;
 
 				_lineInfos.Remove(line.IdentityTag);
 				newInfos.Add(line.IdentityTag, info);
 			}
 
 			foreach (var info in _lineInfos.Values) {
-				foreach (var iconInfo in info.Icons)
+				foreach (var iconInfo in info.Icons) {
 					_childCanvases[iconInfo.Order].Children.Remove(iconInfo.Element);
+				}
 			}
 
 			_lineInfos = newInfos;

@@ -1,19 +1,19 @@
-﻿namespace CodeStream.VisualStudio.UI
-{
-    /// <summary>
-    /// Property key names that appear in a TextBuffer property collection
-    /// </summary>
-    public static class PropertyNames
-    {
-        public static string DocumentMarkers = "CS:DocumentMarkers";
-        public static string DocumentMarkerManager = "CS:DocumentMarkerManager";
-        public static string TextViewMarginProviders = "CS:TextViewMarginProviders";
-        public static string TextViewState = "CS:TextViewState";
-		public static string TextViewFilePath = "CS:TextViewFilePath";
-		public static string TextViewEvents = "CS:TextViewEvents";
-        public static string TextViewLocalEvents = "CS:TextViewLocalEvents";
-        public static string AdornmentManager = "CS:AdornmentManager";
-		public static string HostDidChangeEditorVisibleRangesNotificationSubject = "CS:HostDidChangeEditorVisibleRangesNotificationSubject";
-
+﻿namespace CodeStream.VisualStudio.UI {
+	/// <summary>
+	/// Property key names that appear in a TextBuffer property collection
+	/// </summary>
+	public static class PropertyNames {
+		private static string Prefix = "CodeStream:";
+		public static string DocumentMarkers = $"{Prefix}{nameof(DocumentMarkers)}";
+		public static string DocumentMarkerManager = $"{Prefix}{nameof(DocumentMarkerManager)}";
+		public static string TextViewMarginProviders = $"{Prefix}{nameof(TextViewMarginProviders)}";
+		public static string TextViewState = $"{Prefix}{nameof(TextViewState)}";
+		public static string TextViewFilePath = $"{Prefix}{nameof(TextViewFilePath)}";
+		public static string TextViewEvents = $"{Prefix}{nameof(TextViewEvents)}";
+		public static string TextViewLocalEvents = $"{Prefix}{nameof(TextViewLocalEvents)}";
+		public static string AdornmentManager = $"{Prefix}{nameof(AdornmentManager)}";		
+		public static string TextViewLayoutChangedSubject = $"{Prefix}{nameof(TextViewLayoutChangedSubject)}";
+		public static string CaretPositionChangedSubject = $"{Prefix}{nameof(CaretPositionChangedSubject)}";
+		public static string TextSelectionChangedSubject = $"{Prefix}{nameof(TextSelectionChangedSubject)}";
 	}
 }

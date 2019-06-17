@@ -28,60 +28,70 @@ namespace CodeStream.VisualStudio.UI {
 		}
 
 		/// <summary>
-		/// Tries to populate the marker collection, returns true if there was a change in marker count and the callee should update
+		/// Synchronously tries to populate the marker collection, returns true if there was a change in marker count and the callee should update
 		/// </summary>
 		/// <param name="forceUpdate">When set to true, ignores if the collection is empty</param>
 		/// <returns></returns>
 		public bool TrySetMarkers(bool forceUpdate = false) {
-			if (_markers != null && _markers.Markers.AnySafe() == false && !forceUpdate) {
-				Log.Verbose($"Codemarks are empty and forceUpdate={forceUpdate}", forceUpdate);
-				return false;
-			}
-
-			var fileUri = _textDocument.FilePath.ToUri();
-			if (fileUri == null) {
-				Log.Verbose($"Could not parse file path as uri={_textDocument.FilePath}");
-				return false;
-			}
-
 			bool result = false;
 			ThreadHelper.JoinableTaskFactory.Run(async delegate {
-				try {
-					_markers = await _agentService.GetMarkersForDocumentAsync(fileUri, true);
-					bool? previousResult = null;
-					if (_markers?.Markers.AnySafe() == true || forceUpdate) {
-						if (_wpfTextView.Properties.TryGetProperty(PropertyNames
-							.DocumentMarkers, out List<DocumentMarker> previousMarkersResponse)) {
-							previousResult = previousMarkersResponse.AnySafe();
-						}
-						_wpfTextView.Properties.RemovePropertySafe(PropertyNames.DocumentMarkers);
-						_wpfTextView.Properties.AddProperty(PropertyNames.DocumentMarkers, _markers?.Markers);
-						Log.Debug("Setting Markers({Count})", _markers?.Markers.Count);
-						var current = _markers?.Markers.Any() == true;
-						if (previousResult == true && current == false) {
-							result = true;
-						}
-						else if (current) {
-							result = true;
-						}
-					}
-					else {
-						Log.Verbose("No Codemarks from agent");
-					}
-				}
-				catch (OverflowException ex) {
-#if DEBUG
-					Log.Warning(ex, fileUri.ToString());
-#else
-					Log.Error(ex, fileUri.ToString());
-#endif
-				}
-				catch (Exception ex) {
-					Log.Error(ex, nameof(TrySetMarkers));
-				}
+				result = await TrySetMarkersAsync(forceUpdate);
 			});
 			return result;
 		}
+
+		/// <summary>
+		/// Asynchronously tries to populate the marker collection, returns true if there was a change in marker count and the callee should update
+		/// </summary>
+		/// <param name="forceUpdate">When set to true, ignores if the collection is empty</param>
+		/// <returns></returns>
+		public async System.Threading.Tasks.Task<bool> TrySetMarkersAsync(bool forceUpdate = false) {
+			Uri fileUri = null;
+			bool result = false;
+			try {
+				if (_markers != null && _markers.Markers.AnySafe() == false && !forceUpdate) {
+					Log.Verbose($"Codemarks are empty and forceUpdate={forceUpdate}", forceUpdate);
+					return false;
+				}
+
+				fileUri = _textDocument.FilePath.ToUri();
+				if (fileUri == null) {
+					Log.Verbose($"Could not parse file path as uri={_textDocument.FilePath}");
+					return false;
+				}
+
+				_markers = await _agentService.GetMarkersForDocumentAsync(fileUri, true);
+				bool? previousResult = null;
+				if (_markers?.Markers.AnySafe() == true || forceUpdate) {
+					if (_wpfTextView.Properties.TryGetProperty(PropertyNames
+						.DocumentMarkers, out List<DocumentMarker> previousMarkersResponse)) {
+						previousResult = previousMarkersResponse.AnySafe();
+					}
+					_wpfTextView.Properties.RemovePropertySafe(PropertyNames.DocumentMarkers);
+					_wpfTextView.Properties.AddProperty(PropertyNames.DocumentMarkers, _markers?.Markers);
+					Log.Debug("Setting Markers({Count})", _markers?.Markers.Count);
+					var current = _markers?.Markers.Any() == true;
+					if (previousResult == true && current == false) {
+						result = true;
+					}
+					else if (current) {
+						result = true;
+					}
+				}
+				else {
+					Log.Verbose("No Codemarks from agent");
+				}
+			}
+			catch (OverflowException ex) {
+				Log.Error(ex, fileUri?.ToString());
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(TrySetMarkersAsync));
+			}
+
+			return result;
+		}
+
 
 		public void Reset() {
 			_markers = null;

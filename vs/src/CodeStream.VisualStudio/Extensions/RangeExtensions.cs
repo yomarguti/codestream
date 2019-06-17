@@ -75,5 +75,11 @@ namespace CodeStream.VisualStudio.Extensions {
 		private static bool AreEqual(this Position position1, Position position2) {
 			return position1.Line == position2.Line && position1.Character == position2.Character;
 		}
+
+		public static Range AsEmpty(this Range range) {
+			range.Start = new Position(0, 0);
+			range.End = new Position(0, 0);
+			return range;
+		}
 	}
 }
