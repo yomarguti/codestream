@@ -404,11 +404,11 @@ export class CodestreamView {
 				break;
 			}
 			case LoginSSORequestType.method: {
-				const { provider }: LoginSSORequest = message.params;
+				const { provider, queryString }: LoginSSORequest = message.params;
 				const ok = shell.openExternal(
-					`${
-						this.session.environment.serverUrl
-					}/web/provider-auth/${provider}?signupToken=${this.session.getLoginToken()}`
+					`${this.session.environment.serverUrl}/web/provider-auth/${provider}${
+						queryString ? `${queryString}&` : ""
+					}signupToken=${this.session.getLoginToken()}`
 				);
 				if (ok) this.respond<LoginSSOResponse>({ id: message.id, params: true });
 				else {
