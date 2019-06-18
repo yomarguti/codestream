@@ -79,8 +79,8 @@ namespace CodeStream.VisualStudio.Controllers {
 			using (var scope = _browserService.CreateScope(message)) {
 				try {
 					var provider = message.Params["provider"];
-					var queryString = message.Params["queryString"].ToString();
-					_ideService.Navigate($"{_settingsManager.ServerUrl}/web/provider-auth/{provider}?{(!string.IsNullOrEmpty(queryString) ? $"{queryString}&" : "")}signupToken={_sessionService.GetOrCreateSignupToken()}");
+					var queryString = message.Params["queryString"] != null ? message.Params["queryString"].ToString() : null;
+					_ideService.Navigate($"{_settingsManager.ServerUrl}/web/provider-auth/{provider}?{(!string.IsNullOrEmpty(queryString) ? $"{queryString}&" : string.Empty)}signupToken={_sessionService.GetOrCreateSignupToken()}");
 				}
 				catch (Exception ex) {
 					error = LoginResult.UNKNOWN.ToString();
@@ -100,13 +100,13 @@ namespace CodeStream.VisualStudio.Controllers {
 				ProcessLoginResponse processResponse = null;
 				using (var scope = _browserService.CreateScope(message)) {
 					if (_settingsManager.AutoSignIn && !_settingsManager.Email.IsNullOrWhiteSpace()) {
-						var token = await _credentialsService.LoadAsync(_settingsManager.ServerUrl.ToUri(),
+						var token = await _credentialsService.LoadJsonAsync(_settingsManager.ServerUrl.ToUri(),
 							_settingsManager.Email);
 						if (token != null) {
 							try {
 								var teamId = await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TryGetTeamIdAsync();
 
-								var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(new LoginAccessToken(token.Item1, _settingsManager.ServerUrl, token.Item2), _settingsManager.Team, teamId);
+								var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(token, _settingsManager.Team, teamId);
 								processResponse = await ProcessLoginAsync(loginResponse);
 								@params = processResponse?.Params;
 								if (!processResponse.Success) {
@@ -153,7 +153,7 @@ namespace CodeStream.VisualStudio.Controllers {
 					try {
 						var teamId = await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TryGetTeamIdAsync();
 
-						loginResponse = await _codeStreamAgent.LoginViaTokenAsync(new LoginAccessToken(request.Email, _settingsManager.ServerUrl, request.Token), _settingsManager.Team, teamId);
+						loginResponse = await _codeStreamAgent.LoginViaTokenAsync(request.Token, _settingsManager.Team, teamId);
 						processResponse = await ProcessLoginAsync(loginResponse);
 						if (!processResponse.Success) {
 							errorResponse = processResponse.ErrorMessage;
@@ -227,7 +227,7 @@ namespace CodeStream.VisualStudio.Controllers {
 				}
 
 				if (_settingsManager.AutoSignIn) {
-					await _credentialsService.SaveAsync(_settingsManager.ServerUrl.ToUri(), email, GetAccessToken(loginResponse).ToString());
+					await _credentialsService.SaveJsonAsync(_settingsManager.ServerUrl.ToUri(), email, GetAccessToken(loginResponse));
 				}
 
 				await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TrySaveTeamIdAsync(GetTeamId(loginResponse));
@@ -267,22 +267,9 @@ namespace CodeStream.VisualStudio.Controllers {
 			return response;
 		}
 
-		private async Task<bool> HandleErrorAsync(LoginResult loginResult) {
-			await Task.Yield();
-
-			if (loginResult == LoginResult.VERSION_UNSUPPORTED) {
-				await Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-				InfoBarProvider.Instance.ShowInfoBar($"This version of {Application.Name} is no longer supported. Please upgrade to the latest version.");
-				return false;
-			}
-			else {
-				return true;
-			}
-		}
-
 		private User CreateUser(JToken token) {
 			var user = token?["loginResponse"]?["user"].ToObject<CsUser>();
-			var teamId = token?["loginResponse"]?["teamId"].Value<string>();
+			var teamId = GetTeamId(token);
 
 			var teams = (token?["loginResponse"]?["teams"].ToObject<List<CsTeam>>() ?? Enumerable.Empty<CsTeam>())
 				.ToList();
@@ -293,11 +280,11 @@ namespace CodeStream.VisualStudio.Controllers {
 			return new User(user.Id, user.Username, user.Email, teamName, teams.Count);
 		}
 
-		private string GetTeamId(JToken token) => token?["loginResponse"]?["teamId"].Value<string>();
+		private string GetTeamId(JToken token) => token?["state"]["teamId"].Value<string>();
 
 		private JToken GetState(JToken token) => token?["state"];
 		private JToken GetEmail(JToken token) => token?["loginResponse"]?["user"]?["email"];
-		private JToken GetAccessToken(JToken token) => token?["loginResponse"]?["accessToken"];
+		private JToken GetAccessToken(JToken token) => token?["state"]?["token"];
 		private JToken GetError(JToken token) {
 			if (token != null && token.HasValues && token["error"] != null) {
 				return token["error"] ?? new JValue(LoginResult.UNKNOWN.ToString());

@@ -2,6 +2,8 @@
 using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Credentials;
+using CodeStream.VisualStudio.Extensions;
+using Newtonsoft.Json.Linq;
 using Serilog;
 
 namespace CodeStream.VisualStudio.Services {
@@ -41,6 +43,34 @@ namespace CodeStream.VisualStudio.Services {
 			}
 
 			return Task.FromResult(result);
+		}	 
+
+		protected Task<JToken> LoadJsonAsync(params string[] keys) {
+			if (keys == null) throw new ArgumentNullException(nameof(keys));
+
+			Log.Verbose(nameof(LoadAsync));
+			JToken result = null;
+
+			try {
+				using (var credential = Credential.Load(GetKey(FormatKey(keys)))) {
+					if (credential != null) {
+						result = JToken.Parse(credential.Password);						
+						Log.Verbose(nameof(LoadAsync) + ": found");
+					}
+				}
+			}
+			catch(Newtonsoft.Json.JsonReaderException ex) {
+				Log.Warning(ex, "Could not read token");
+			}
+			catch (Exception ex) {
+				Log.Error(ex, "Could not load token");
+			}
+
+			return Task.FromResult(result);
+		}
+
+		protected Task<bool> SaveAsync<T>(string userName, T secret, params string[] keys) {
+			return SaveAsync(userName, secret.ToJson(), keys);
 		}
 
 		protected Task<bool> SaveAsync(string userName, string secret, params string[] keys) {

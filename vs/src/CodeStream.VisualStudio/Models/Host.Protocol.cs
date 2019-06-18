@@ -1,4 +1,6 @@
-﻿namespace CodeStream.VisualStudio.Models {
+﻿using Newtonsoft.Json.Linq;
+
+namespace CodeStream.VisualStudio.Models {
 	public class EmptyRequestTypeParams { }
 
 	public class GetViewBootstrapDataRequestType : RequestType<EmptyRequestTypeParams> {
@@ -37,9 +39,10 @@
 
 	public class CompleteSignupRequest {
 		public string Email { get; set; }
-		public string Token { get; set; }
+		public JToken Token { get; set; }
 		public string TeamId { get; set; }
 	}
+
 	public class CompleteSignupRequestType : RequestType<CompleteSignupRequest> {
 		public const string MethodName = "host/signup/complete";
 		public override string Method => MethodName;

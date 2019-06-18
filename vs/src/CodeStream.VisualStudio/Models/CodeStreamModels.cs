@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 // ReSharper disable ClassNeverInstantiated.Global
@@ -426,27 +427,15 @@ namespace CodeStream.VisualStudio.Models {
 		public Ide Ide { get; set; }
 		public string TraceLevel { get; set; }
 		public bool IsDebugging { get; set; }
-	}
-
-	public class LoginAccessToken {
-		public LoginAccessToken(string email, string url, string token) {
-			Email = email;
-			Url = url;
-			Value = token;
-		}
-
-		public string Email { get; }
-		public string Url { get; }
-
-		[JsonProperty("value")]
-		public string Value { get; }
-	}
+	} 
 
 	public class LoginRequest : LoginRequestBase<string> { }
-
  
-
-	public class LoginViaAccessTokenRequest : LoginRequestBase<LoginAccessToken> { }
+	public class TokenLoginRequest {
+		public JToken Token { get; set; }
+		public string TeamId { get; set; }
+		public string Team { get; set; }
+	}
 
 	public class LogoutRequest { }
 
