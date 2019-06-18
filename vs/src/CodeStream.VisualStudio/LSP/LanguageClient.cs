@@ -19,7 +19,6 @@ using Microsoft;
 using Serilog;
 
 namespace CodeStream.VisualStudio.LSP {
-	public class LanguageClientDummy { }
 
 	/// <summary>
 	/// NOTE: See ContentDefinitions.cs for the LanguageClient partial class attributes
@@ -27,7 +26,7 @@ namespace CodeStream.VisualStudio.LSP {
 	[Export(typeof(ILanguageClient))]
 	[Guid(Guids.LanguageClientId)]
 	public partial class LanguageClient : ILanguageClient, ILanguageClientCustomMessage, IDisposable {
-		private static readonly ILogger Log = LogManager.ForContext<LanguageClientDummy>();
+		private static readonly ILogger Log = LogManager.ForContext<LanguageClient>();
 		private bool _disposed = false;
 		private readonly ILanguageServerProcess _languageServerProcess;
 
@@ -51,7 +50,7 @@ namespace CodeStream.VisualStudio.LSP {
 		public LanguageClient(
 			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
 			IEventAggregator eventAggregator,
-			IBrowserService ipc,
+			IBrowserServiceFactory ipc,
 			ISettingsServiceFactory settingsServiceFactory) {
 			Instance = this;
 			try {
@@ -60,7 +59,7 @@ namespace CodeStream.VisualStudio.LSP {
 				_settingsServiceFactory = settingsServiceFactory;
 
 				_languageServerProcess = new LanguageServerProcess();
-				CustomMessageTarget = new CustomMessageHandler(_eventAggregator, ipc);
+				CustomMessageTarget = new CustomMessageHandler(_eventAggregator, ipc.Create());
 				Log.Ctor();
 			}
 			catch (Exception ex) {

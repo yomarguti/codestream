@@ -39,6 +39,19 @@ namespace CodeStream.VisualStudio.Services {
 		public static WindowMessageHandler MessageHandler;
 	}
 
+	public interface IBrowserServiceFactory {
+		IBrowserService Create();
+	}
+
+	[Export(typeof(IBrowserServiceFactory))]
+	[PartCreationPolicy(CreationPolicy.Shared)]
+	public class BrowserServiceFactory : ServiceFactory<IBrowserService>, IBrowserServiceFactory {
+		[ImportingConstructor]
+		public BrowserServiceFactory([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) :
+			base(serviceProvider) {
+		}
+	}
+
 	/// <summary>
 	/// Implementation of a browser service using DotNetBrowser
 	/// </summary>

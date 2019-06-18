@@ -9,10 +9,8 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Linq;
 using System.Threading;
 using CodeStream.VisualStudio.UI.Extensions;
-using Microsoft.VisualStudio.Text.Editor;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Services {
@@ -46,8 +44,18 @@ namespace CodeStream.VisualStudio.Services {
 
 		[Import]
 		public ISessionService SessionService { get; set; }
-		[Import]
+
 		public IBrowserService BrowserService { get; set; }
+
+		[ImportingConstructor]
+		public CodeStreamService(IBrowserServiceFactory browserServiceFactory) {
+			try {
+				BrowserService = browserServiceFactory.Create();
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(CodeStreamService));
+			}
+		}
 
 		public bool IsReady => SessionService?.IsReady == true;
 
