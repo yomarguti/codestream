@@ -3,7 +3,6 @@ import { CompositeDisposable, Emitter } from "atom";
 import uuidv4 from "uuid/v4";
 import { EnvironmentConfig, PRODUCTION_CONFIG } from "../env-utils";
 import {
-	AgentResult,
 	Capabilities,
 	isLoginFailResponse,
 	LoginFailResponse,
@@ -253,15 +252,11 @@ export class WorkspaceSession {
 		}
 	}
 
-	private completeLogin(agentResult: AgentResult) {
+	private completeLogin(agentResult: LoginSuccessResponse) {
 		this.session = {
 			user: agentResult.loginResponse.user,
 			teamId: agentResult.state.teamId,
-			token: {
-				url: this.environment.serverUrl,
-				email: agentResult.loginResponse.user.email,
-				value: agentResult.loginResponse.accessToken,
-			},
+			token: agentResult.state.token,
 		};
 		this.lastUsedEmail = agentResult.loginResponse.user.email;
 		this.agentCapabilities = agentResult.state.capabilities;
