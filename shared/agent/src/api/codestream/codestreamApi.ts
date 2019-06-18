@@ -267,10 +267,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 				throw new Error("Invalid login options");
 		}
 
+		const provider = response.provider;
+
 		Logger.log(
-			`CodeStream user '${response.user.username}' (${response.user.id}) belongs to ${
-				response.teams.length
-			} team(s)\n${response.teams.map(t => `\t${t.name} (${t.id})`).join("\n")}`
+			`CodeStream user '${response.user.username}' (${
+				response.user.id
+			}) is logging into ${provider || "uknown"}${
+				response.providerAccess ? `:${response.providerAccess}` : ""
+			} and belongs to ${response.teams.length} team(s)\n${response.teams
+				.map(t => `\t${t.name} (${t.id})`)
+				.join("\n")}`
 		);
 
 		if (response.teams.length === 0) {
@@ -284,7 +290,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 		let team: CSTeam | undefined;
 		let teams = response.teams;
 
-		const provider = response.provider;
 		// If we are a slack/msteams team or have no overrides, then use the response teamId directly
 		if (
 			provider != null &&
