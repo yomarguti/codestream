@@ -154,9 +154,12 @@ export class SlackApiProvider implements ApiProvider {
 		channelMute: false,
 		postDelete: true,
 		postEdit: true,
+		// webview uses this to see if the provider can upgrade to realtime.
+		// to hide the channels tab -- make this false
 		providerCanSupportRealtimeChat: true,
-		providerSupportsRealtimeChat: true,
-		providerSupportsRealtimeEvents: true
+		providerSupportsRealtimeChat: false,
+		// agent uses this
+		providerSupportsRealtimeEvents: false
 	};
 
 	constructor(
@@ -286,6 +289,7 @@ export class SlackApiProvider implements ApiProvider {
 			// Turn off post caching if the provider doesn't support real-time events
 			SessionContainer.instance().posts.disableCache();
 		}
+		Logger.log(`providerAccess=${response.token.providerAccess}`);
 
 		// Mix in slack user info with ours
 		const meResponse = await this.getMeCore({ user: response.user });
