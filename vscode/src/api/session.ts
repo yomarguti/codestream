@@ -1,13 +1,13 @@
 "use strict";
 import {
 	AccessToken,
-	AgentResult,
 	Capabilities,
 	ChangeDataType,
 	CodeStreamEnvironment,
 	DidChangeDataNotification,
 	DidChangeDocumentMarkersNotification,
 	isLoginFailResponse,
+	LoginSuccessResponse,
 	OtcLoginRequestType,
 	PasswordLoginRequestType,
 	TokenLoginRequestType,
@@ -453,22 +453,22 @@ export class CodeStreamSession implements Disposable {
 		// this.setServerUrl(Container.config.serverUrl);
 		this.setStatus(SessionStatus.SigningIn);
 
-		const result = await Container.agent.sendRequest(OtcLoginRequestType, {
+		const response = await Container.agent.sendRequest(OtcLoginRequestType, {
 			code: this.getSignupToken(),
 			...extra
 		});
 
-		if (isLoginFailResponse(result)) {
-			if (result.error === LoginResult.VersionUnsupported) {
+		if (isLoginFailResponse(response)) {
+			if (response.error === LoginResult.VersionUnsupported) {
 				this.showVersionUnsupportedMessage();
 			}
 
 			this.setStatus(SessionStatus.SignedOut, SessionSignedOutReason.SignInFailure);
 
-			return result.error;
+			return response.error;
 		}
 
-		await this.completeLogin(result, this._signupToken);
+		await this.completeLogin(response, this._signupToken);
 		return LoginResult.Success;
 	}
 
@@ -528,24 +528,24 @@ export class CodeStreamSession implements Disposable {
 					: Container.context.workspaceState.get(WorkspaceState.TeamId);
 			}
 
-			let result;
+			let response;
 			if (typeof passwordOrToken === "string") {
-				result = await Container.agent.sendRequest(PasswordLoginRequestType, {
+				response = await Container.agent.sendRequest(PasswordLoginRequestType, {
 					email: email,
 					password: passwordOrToken,
 					team: Container.config.team,
 					teamId: teamId
 				});
 			} else {
-				result = await Container.agent.sendRequest(TokenLoginRequestType, {
+				response = await Container.agent.sendRequest(TokenLoginRequestType, {
 					token: passwordOrToken,
 					team: Container.config.team,
 					teamId: teamId
 				});
 			}
 
-			if (isLoginFailResponse(result)) {
-				if (result.error === LoginResult.VersionUnsupported) {
+			if (isLoginFailResponse(response)) {
+				if (response.error === LoginResult.VersionUnsupported) {
 					this.showVersionUnsupportedMessage();
 				} else {
 					// Clear the access token
@@ -554,10 +554,10 @@ export class CodeStreamSession implements Disposable {
 
 				this.setStatus(SessionStatus.SignedOut, SessionSignedOutReason.SignInFailure);
 
-				return result.error;
+				return response.error;
 			}
 
-			await this.completeLogin(result, teamId);
+			await this.completeLogin(response, teamId);
 
 			return LoginResult.Success;
 		} catch (ex) {
@@ -570,17 +570,17 @@ export class CodeStreamSession implements Disposable {
 		}
 	}
 
-	private async completeLogin(result: AgentResult, teamId?: string) {
-		const user = result.loginResponse.user;
+	private async completeLogin(response: LoginSuccessResponse, teamId?: string) {
+		const user = response.loginResponse.user;
 		const email = user.email;
 		this._email = email;
-		this._environment = result.state.environment;
-		this._agentCapabilities = result.state.capabilities;
+		this._environment = response.state.environment;
+		this._agentCapabilities = response.state.capabilities;
 
 		// Create an id for this session
 		this._id = Strings.sha1(`${instanceId}|${this.serverUrl}|${email}|${teamId}`.toLowerCase());
 
-		const token = result.loginResponse.accessToken;
+		const token = response.state.token;
 		await TokenManager.addOrUpdate(this._serverUrl, email, token);
 
 		// Update the saved e-mail on successful login
@@ -604,12 +604,12 @@ export class CodeStreamSession implements Disposable {
 			await configuration.update(configuration.name("email").value, email, target);
 		}
 
-		if (!teamId || teamId !== result.state.teamId) {
-			teamId = result.state.teamId;
+		if (!teamId || teamId !== response.state.teamId) {
+			teamId = response.state.teamId;
 			await Container.context.workspaceState.update(WorkspaceState.TeamId, teamId);
 		}
 
-		this._state = new SessionState(this, teamId, result.loginResponse);
+		this._state = new SessionState(this, teamId, response.loginResponse);
 
 		this._disposable = Disposable.from(
 			Container.agent.onDidChangeDocumentMarkers(this.onDocumentMarkersChanged, this),

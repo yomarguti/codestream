@@ -22,11 +22,10 @@ export namespace TokenManager {
 		);
 	}
 
-	export async function addOrUpdate(url: string, email: string, tokenValue: string) {
+	export async function addOrUpdate(url: string, email: string, token: AccessToken) {
 		if (!url || !email) return;
 
 		const key = toKey(url, email);
-		const token = { url: url, email: email, value: tokenValue };
 
 		if (keychain !== undefined) {
 			try {
