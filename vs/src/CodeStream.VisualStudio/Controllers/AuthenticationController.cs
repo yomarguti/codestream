@@ -93,47 +93,57 @@ namespace CodeStream.VisualStudio.Controllers {
 			await Task.CompletedTask;
 		}
 
+		public async Task<bool> TryAutoSignInAsync() {
+			try {				
+				ProcessLoginResponse processResponse = null;
+
+				if (_settingsManager.AutoSignIn && !_settingsManager.Email.IsNullOrWhiteSpace()) {
+					var token = await _credentialsService.LoadJsonAsync(_settingsManager.ServerUrl.ToUri(), _settingsManager.Email);
+					if (token != null) {
+						try {
+							var teamId = await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TryGetTeamIdAsync();
+
+							var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(token, _settingsManager.Team, teamId);
+							processResponse = await ProcessLoginAsync(loginResponse);
+
+							if (!processResponse.Success) {
+								Log.Error(processResponse.ErrorMessage);
+								await _credentialsService.DeleteAsync(_settingsManager.ServerUrl.ToUri(), _settingsManager.Email);
+								return false;
+							}
+							else {
+								await OnSuccessAsync(loginResponse, processResponse.Email);
+								return true;
+							}
+						}
+						catch (Exception ex) {
+							Log.Warning(ex, $"{nameof(TryAutoSignInAsync)}");
+						}
+					}
+				}
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(TryAutoSignInAsync));
+			}
+
+			return false;
+		}
+
 		public async Task BootstrapAsync(WebviewIpcMessage message) {
 			try {
 				string errorResponse = null;
 				JToken @params = null;
-				ProcessLoginResponse processResponse = null;
+
 				using (var scope = _browserService.CreateScope(message)) {
-					if (_settingsManager.AutoSignIn && !_settingsManager.Email.IsNullOrWhiteSpace()) {
-						var token = await _credentialsService.LoadJsonAsync(_settingsManager.ServerUrl.ToUri(),
-							_settingsManager.Email);
-						if (token != null) {
-							try {
-								var teamId = await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TryGetTeamIdAsync();
-
-								var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(token, _settingsManager.Team, teamId);
-								processResponse = await ProcessLoginAsync(loginResponse);
-								@params = processResponse?.Params;
-								if (!processResponse.Success) {
-									errorResponse = processResponse.ErrorMessage;
-								}
-							}
-							catch (Exception ex) {
-								errorResponse = LoginResult.UNKNOWN.ToString();
-								Log.Warning(ex, $"{nameof(BootstrapAsync)}");
-							}
-						}
-						else {
-							@params = await _codeStreamAgent.GetBootstrapAsync(_settingsManager.GetSettings());
-						}
+					try {
+						@params = await _codeStreamAgent.GetBootstrapAsync(_settingsManager.GetSettings(), _sessionService.State, _sessionService.IsReady);
 					}
-					else {
-						@params = await _codeStreamAgent.GetBootstrapAsync(_settingsManager.GetSettings());
+					catch (Exception ex) {
+						errorResponse = ex.Message;
 					}
-
-					scope.FulfillRequest(@params, errorResponse);
-				}
-
-				if (processResponse?.Success == true) {
-					_eventAggregator.Publish(new SessionReadyEvent());
-				}
-				else {
-					await _credentialsService.DeleteAsync(_settingsManager.ServerUrl.ToUri(), _settingsManager.Email);
+					finally {
+						scope.FulfillRequest(@params, errorResponse);
+					}
 				}
 			}
 			catch (Exception ex) {
@@ -258,9 +268,16 @@ namespace CodeStream.VisualStudio.Controllers {
 			}
 			else if (loginResponse != null) {
 				response.Email = GetEmail(loginResponse).ToString();
+
+				// don't want all the data in state -- some is sensitive
 				var state = GetState(loginResponse);
-				response.Params = await _codeStreamAgent.GetBootstrapAsync(_settingsManager.GetSettings(), state, true);
-				_sessionService.SetUserLoggedIn(CreateUser(loginResponse));
+				var stateLite = JObject.FromObject(new { });
+				stateLite["capabilities"] = state["capabilities"];
+				stateLite["teamId"] = state["teamId"];
+				stateLite["userId"] = state["userId"];
+				stateLite["email"] = state["email"];
+
+				_sessionService.SetUserLoggedIn(CreateUser(loginResponse), stateLite);
 				response.Success = true;
 			}
 

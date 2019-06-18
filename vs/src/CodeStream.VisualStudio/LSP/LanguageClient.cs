@@ -17,6 +17,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft;
 using Serilog;
+using CodeStream.VisualStudio.Controllers;
 
 namespace CodeStream.VisualStudio.LSP {
 
@@ -44,22 +45,24 @@ namespace CodeStream.VisualStudio.LSP {
 		//#endif
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IServiceProvider _serviceProvider;
+		private readonly IBrowserService _browserService;
 		private readonly ISettingsServiceFactory _settingsServiceFactory;
 
 		[ImportingConstructor]
 		public LanguageClient(
 			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
 			IEventAggregator eventAggregator,
-			IBrowserServiceFactory ipc,
+			IBrowserServiceFactory browserServiceFactory,
 			ISettingsServiceFactory settingsServiceFactory) {
 			Instance = this;
 			try {
 				_serviceProvider = serviceProvider;
 				_eventAggregator = eventAggregator;
 				_settingsServiceFactory = settingsServiceFactory;
+				_browserService = browserServiceFactory.Create();
 
 				_languageServerProcess = new LanguageServerProcess();
-				CustomMessageTarget = new CustomMessageHandler(_eventAggregator, ipc.Create());
+				CustomMessageTarget = new CustomMessageHandler(_eventAggregator, _browserService);
 				Log.Ctor();
 			}
 			catch (Exception ex) {
@@ -147,6 +150,16 @@ namespace CodeStream.VisualStudio.LSP {
 					await codeStreamAgentService.SetRpcAsync(_rpc);
 					var sessionService = componentModel.GetService<ISessionService>();
 					sessionService.SetAgentReady();
+
+					var autoSignInResult = await new AuthenticationController(_settingsServiceFactory.Create(),
+						sessionService,
+						codeStreamAgentService,
+						_eventAggregator,
+						_browserService,
+						null,
+						componentModel.GetService<ICredentialsService>()
+						).TryAutoSignInAsync();
+					Log.Information($"AutoSignIn Result={autoSignInResult}");
 
 					_eventAggregator.Publish(new LanguageServerReadyEvent { IsReady = true });
 				}

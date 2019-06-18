@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Runtime.Serialization;
@@ -6,9 +7,10 @@ using System.Runtime.Serialization;
 namespace CodeStream.VisualStudio.Services {
 	public interface ISessionService {
 		User User { get; }
+		JToken State { get; }
 		Guid GetOrCreateSignupToken();
 		void SetAgentReady();
-		void SetUserLoggedIn(User user);
+		void SetUserLoggedIn(User user, JToken state);
 		void SetAgentDisconnected();
 		List<string> PanelStack { get; set; }
 		bool IsCodemarksForFileVisible { get; set; }
@@ -23,7 +25,7 @@ namespace CodeStream.VisualStudio.Services {
 		bool IsAgentReady { get; }
 		void Logout();
 		string LiveShareUrl { get; set; }
-		string State { get; }
+		string StateString { get; }
 	}
 
 	[Export(typeof(ISessionService))]
@@ -32,6 +34,7 @@ namespace CodeStream.VisualStudio.Services {
 		private SessionState _sessionState;
 		private Guid _signupToken = Guid.Empty;
 		public User User { get; private set; }
+		public JToken State { get; private set; }
 		public List<string> PanelStack { get; set; }
 		public bool IsWebViewVisible { get; set; }
 		public bool AreMarkerGlyphsVisible { get; set; } = true;
@@ -51,7 +54,7 @@ namespace CodeStream.VisualStudio.Services {
 			return _signupToken;
 		}
 
-		public string State => _sessionState.ToString();
+		public string StateString => _sessionState.ToString();
 
 		public void SetAgentReady() {
 			if (_sessionState != SessionState.Unknown)
@@ -63,8 +66,8 @@ namespace CodeStream.VisualStudio.Services {
 		public void SetAgentDisconnected() {
 			_sessionState = SessionState.Unknown;
 		}
-
-		public void SetUserLoggedIn(User user) {
+		
+		public void SetUserLoggedIn(User user, JToken state) {
 			if (_sessionState == SessionState.Ready) {
 				// misc. errors after login wont kick the state back in the webview
 				_sessionState = SessionState.AgentReady;
@@ -78,10 +81,12 @@ namespace CodeStream.VisualStudio.Services {
 			}
 
 			User = user;
+			State = state;
 		}
 
 		public void Logout() {
 			_sessionState = SessionState.AgentReady;
+			State = null;
 		}
 
 		public bool IsAgentReady => _sessionState == SessionState.AgentReady || IsReady;

@@ -145,7 +145,7 @@ namespace CodeStream.VisualStudio.Services {
 				if (Log.IsDebugEnabled()) {
 					try {
 #if DEBUG
-						Log.Debug($"Agent not ready. Status={_sessionService.State} Name={name}, Arguments={arguments?.ToJson()}");
+						Log.Debug($"Agent not ready. Status={_sessionService.StateString} Name={name}, Arguments={arguments?.ToJson()}");
 #else
 						Log.Debug($"Agent not ready. Name={name}");
 #endif
