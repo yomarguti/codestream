@@ -13,6 +13,7 @@ import { Emitter, Event } from "vscode-languageserver";
 import { Container, SessionContainer } from "../../container";
 import { Logger, TraceLevel } from "../../logger";
 import {
+	AccessToken,
 	ArchiveStreamRequest,
 	Capabilities,
 	CloseStreamRequest,
@@ -93,6 +94,7 @@ import {
 import { debug, Functions, log } from "../../system";
 import {
 	ApiProvider,
+	ApiProviderLoginResponse,
 	CodeStreamApiMiddleware,
 	LoginOptions,
 	MessageType,
@@ -270,7 +272,16 @@ export class SlackApiProvider implements ApiProvider {
 		}
 	}
 
-	async processLoginResponse(response: CSLoginResponse): Promise<void> {
+	async processLoginResponse(response: ApiProviderLoginResponse): Promise<void> {
+		// Setup the capabilites based on the provider mode
+		if (response.token.providerAccess === "strict") {
+			this.capabilities.providerSupportsRealtimeChat = false;
+			this.capabilities.providerSupportsRealtimeEvents = false;
+		} else {
+			this.capabilities.providerSupportsRealtimeChat = true;
+			this.capabilities.providerSupportsRealtimeEvents = true;
+		}
+
 		if (!this.capabilities.providerSupportsRealtimeEvents) {
 			// Turn off post caching if the provider doesn't support real-time events
 			SessionContainer.instance().posts.disableCache();
@@ -340,7 +351,7 @@ export class SlackApiProvider implements ApiProvider {
 		return this._codestream.useMiddleware(middleware);
 	}
 
-	async login(options: LoginOptions): Promise<CSLoginResponse & { teamId: string }> {
+	async login(options: LoginOptions): Promise<ApiProviderLoginResponse> {
 		throw new Error("Not supported");
 	}
 

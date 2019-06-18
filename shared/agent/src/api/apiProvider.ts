@@ -126,6 +126,8 @@ import {
 	CSUser
 } from "../protocol/api.protocol";
 
+export type ApiProviderLoginResponse = CSLoginResponse & { token: AccessToken };
+
 interface BasicLoginOptions {
 	team?: string;
 	teamId?: string;
@@ -247,7 +249,7 @@ export interface ApiProvider {
 	useMiddleware(middleware: CodeStreamApiMiddleware): Disposable;
 	dispose(): Promise<void>;
 
-	login(options: LoginOptions): Promise<CSLoginResponse & { teamId: string }>;
+	login(options: LoginOptions): Promise<ApiProviderLoginResponse>;
 	subscribe(types?: MessageType[]): Promise<void>;
 
 	grantBroadcasterChannelAccess(token: string, channel: string): Promise<{}>;

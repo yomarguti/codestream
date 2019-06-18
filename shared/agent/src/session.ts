@@ -25,11 +25,14 @@ import { Container, SessionContainer } from "./container";
 import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
 import {
+	AccessToken,
 	ApiRequestType,
 	BaseAgentOptions,
 	BootstrapRequestType,
 	ChangeDataType,
 	CodeStreamEnvironment,
+	ConfirmRegistrationRequest,
+	ConfirmRegistrationRequestType,
 	ConnectionStatus,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
@@ -37,24 +40,21 @@ import {
 	DidLogoutNotificationType,
 	DidUpdateProvidersType,
 	FetchMarkerLocationsRequestType,
-	LogoutReason,
-	ReportingMessageType,
-	ThirdPartyProviders
-} from "./protocol/agent.protocol";
-import {
-	ConfirmRegistrationRequest,
-	ConfirmRegistrationRequestType,
 	GetInviteInfoRequest,
 	GetInviteInfoRequestType,
+	LoginResponse,
+	LogoutReason,
 	OtcLoginRequest,
 	OtcLoginRequestType,
 	PasswordLoginRequest,
 	PasswordLoginRequestType,
 	RegisterUserRequest,
 	RegisterUserRequestType,
+	ReportingMessageType,
+	ThirdPartyProviders,
 	TokenLoginRequest,
 	TokenLoginRequestType
-} from "./protocol/agent.protocol.auth";
+} from "./protocol/agent.protocol";
 import {
 	CSCodemark,
 	CSCompany,
@@ -200,9 +200,7 @@ export class CodeStreamSession {
 		) {
 			if (_options.proxy != null) {
 				Logger.log(
-					`Proxy support is in override with url=${_options.proxy.url}, strictSSL=${
-						_options.proxy.strictSSL
-					}`
+					`Proxy support is in override with url=${_options.proxy.url}, strictSSL=${_options.proxy.strictSSL}`
 				);
 
 				this._proxyAgent = new HttpsProxyAgent({
@@ -523,7 +521,7 @@ export class CodeStreamSession {
 	@log({
 		singleLine: true
 	})
-	async login(options: LoginOptions) {
+	async login(options: LoginOptions): Promise<LoginResponse> {
 		if (this.status === SessionStatus.SignedIn) {
 			throw new AgentError("Session is already signed in");
 		}
@@ -567,7 +565,8 @@ export class CodeStreamSession {
 			throw AgentError.wrap(ex, `Login failed:\n${ex.message}`);
 		}
 
-		this._teamId = (this._options as any).teamId = response.teamId;
+		const token = response.token;
+		this._teamId = (this._options as any).teamId = token.teamId;
 		this._codestreamUserId = response.user.id;
 		const currentTeam = response.teams.find(t => t.id === this._teamId)!;
 
@@ -583,9 +582,7 @@ export class CodeStreamSession {
 		if (User.isSlack(response.user) && Team.isSlack(currentTeam)) {
 			Logger.log(
 				cc,
-				`Logging into Slack because team '${currentTeam.name}' (${
-					currentTeam.id
-				}) is a Slack-based team`
+				`Logging into Slack because team '${currentTeam.name}' (${currentTeam.id}) is a Slack-based team`
 			);
 
 			this._api = this.newSlackApiProvider(response.user);
@@ -593,16 +590,12 @@ export class CodeStreamSession {
 
 			Logger.log(
 				cc,
-				`Logged into Slack as '${response.user.username}' (${response.user.id}), Slack team ${
-					currentTeam.providerInfo.slack.teamId
-				}`
+				`Logged into Slack as '${response.user.username}' (${response.user.id}), Slack team ${currentTeam.providerInfo.slack.teamId}`
 			);
 		} else if (User.isMSTeams(response.user) && Team.isMSTeams(currentTeam)) {
 			Logger.log(
 				cc,
-				`Logging into MS Teams because team '${currentTeam.name}' (${
-					currentTeam.id
-				}) is a MS Teams-based team`
+				`Logging into MS Teams because team '${currentTeam.name}' (${currentTeam.id}) is a MS Teams-based team`
 			);
 
 			this._api = this.newMSTeamsApiProvider(response.user);
@@ -610,13 +603,11 @@ export class CodeStreamSession {
 
 			Logger.log(
 				cc,
-				`Logged into MS Teams as '${response.user.username}' (${response.user.id}), MS Teams team ${
-					currentTeam.providerInfo.msteams.teamId
-				}`
+				`Logged into MS Teams as '${response.user.username}' (${response.user.id}), MS Teams team ${currentTeam.providerInfo.msteams.teamId}`
 			);
 		}
 
-		// Make sure to update this after the slack switch as the userId will change
+		// Make sure to update this after the slack/msteams switch as the userId will change
 		this._userId = response.user.id;
 		this._email = response.user.email;
 
@@ -643,7 +634,7 @@ export class CodeStreamSession {
 		return {
 			loginResponse: { ...response },
 			state: {
-				apiToken: response.accessToken,
+				token: token,
 				capabilities: this.api.capabilities,
 				email: this._email!,
 				environment: this._environment,

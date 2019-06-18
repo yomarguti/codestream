@@ -7,6 +7,7 @@ import { ServerError } from "../../agentError";
 import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import {
+	AccessToken,
 	ArchiveStreamRequest,
 	ArchiveStreamResponse,
 	Capabilities,
@@ -106,6 +107,7 @@ import {
 import { debug, Functions, Iterables, log } from "../../system";
 import {
 	ApiProvider,
+	ApiProviderLoginResponse,
 	CodeStreamApiMiddleware,
 	LoginOptions,
 	MessageType,
@@ -282,7 +284,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 		}
 	}
 
-	async processLoginResponse(response: CSLoginResponse): Promise<void> {
+	async processLoginResponse(response: ApiProviderLoginResponse): Promise<void> {
 		if (!this.capabilities.providerSupportsRealtimeEvents) {
 			// Turn off post caching if the provider doesn't support real-time events
 			SessionContainer.instance().posts.disableCache();
@@ -338,7 +340,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 		return this._codestream.useMiddleware(middleware);
 	}
 
-	async login(options: LoginOptions): Promise<CSLoginResponse & { teamId: string }> {
+	async login(options: LoginOptions): Promise<ApiProviderLoginResponse> {
 		throw new Error("Not supported");
 	}
 
@@ -1096,9 +1098,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 		const [response, { users: codestreamUsers }] = await Promise.all([
 			this.teamsApiCall(
-				`v1.0/users/${
-					request.userId
-				}?$select=id,createdDateTime,deletedDateTime,mail,givenName,displayName,surname`,
+				`v1.0/users/${request.userId}?$select=id,createdDateTime,deletedDateTime,mail,givenName,displayName,surname`,
 				request => request.get()
 			),
 			(this._codestreamTeam !== undefined

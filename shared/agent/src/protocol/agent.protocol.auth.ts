@@ -17,12 +17,15 @@ export function isLoginFailResponse(
 
 export interface LoginFailResponse {
 	error: LoginResult;
+	extra?: any;
 }
 
 export interface LoginSuccessResponse {
 	loginResponse: CSLoginResponse;
 	state: AgentState;
 }
+
+export type LoginResponse = LoginSuccessResponse | LoginFailResponse;
 
 export interface PasswordLoginRequest {
 	email: string;
@@ -33,7 +36,7 @@ export interface PasswordLoginRequest {
 
 export const PasswordLoginRequestType = new RequestType<
 	PasswordLoginRequest,
-	LoginSuccessResponse | LoginFailResponse,
+	LoginResponse,
 	void,
 	void
 >("codestream/login/password");
@@ -44,12 +47,9 @@ export interface TokenLoginRequest {
 	team?: string;
 }
 
-export const TokenLoginRequestType = new RequestType<
-	TokenLoginRequest,
-	LoginSuccessResponse | LoginFailResponse,
-	void,
-	void
->("codestream/login/token");
+export const TokenLoginRequestType = new RequestType<TokenLoginRequest, LoginResponse, void, void>(
+	"codestream/login/token"
+);
 
 export interface OtcLoginRequest {
 	code: string;
@@ -58,12 +58,9 @@ export interface OtcLoginRequest {
 	alias?: boolean;
 }
 
-export const OtcLoginRequestType = new RequestType<
-	OtcLoginRequest,
-	LoginSuccessResponse | LoginFailResponse,
-	void,
-	void
->("codestream/login/otc");
+export const OtcLoginRequestType = new RequestType<OtcLoginRequest, LoginResponse, void, void>(
+	"codestream/login/otc"
+);
 
 export interface RegisterUserRequest extends CSRegisterRequest {}
 

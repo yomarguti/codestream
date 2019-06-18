@@ -9,6 +9,7 @@ import { Container, SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import { isDirective, resolve } from "../../managers/operations";
 import {
+	AccessToken,
 	ArchiveStreamRequest,
 	Capabilities,
 	CloseStreamRequest,
@@ -150,6 +151,7 @@ import { Functions, getProvider, log, lsp, lspHandler, Objects, Strings } from "
 import { openUrl } from "../../system/openUrl";
 import {
 	ApiProvider,
+	ApiProviderLoginResponse,
 	CodeStreamApiMiddleware,
 	CodeStreamApiMiddlewareContext,
 	LoginOptions,
@@ -228,7 +230,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		}
 	}
 
-	async login(options: LoginOptions): Promise<CSLoginResponse & { teamId: string }> {
+	async login(options: LoginOptions): Promise<ApiProviderLoginResponse> {
 		let response;
 		switch (options.type) {
 			case "credentials":
@@ -236,6 +238,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 					email: options.email,
 					password: options.password
 				});
+				// Set the provider to be codestream since that is all that is supported for email/password login
+				response.provider = "codestream";
+
 				break;
 
 			case "otc":
@@ -245,12 +250,19 @@ export class CodeStreamApiProvider implements ApiProvider {
 						token: options.code
 					}
 				);
+
 				break;
 
 			case "token":
-				response = await this.put<{}, CSLoginResponse>("/login", {}, options.token.value);
-				break;
+				if (options.token.url !== this.baseUrl) throw new Error("Invalid token");
 
+				response = await this.put<{}, CSLoginResponse>("/login", {}, options.token.value);
+
+				response.provider = options.token.provider;
+				response.providerAccess = options.token.providerAccess;
+				response.teamId = options.token.teamId;
+
+				break;
 			default:
 				throw new Error("Invalid login options");
 		}
@@ -268,67 +280,83 @@ export class CodeStreamApiProvider implements ApiProvider {
 			throw { status: LoginResult.NotOnTeam, token: response.accessToken };
 		}
 
+		let pickedTeamReason;
+		let team: CSTeam | undefined;
 		let teams = response.teams;
-		// If there is only 1 team, use it regardless of config
-		if (response.teams.length === 1) {
-			options.teamId = response.teams[0].id;
-		} else {
-			const provider = response.provider;
-			if (provider != null) {
+
+		const provider = response.provider;
+		// If we are a slack/msteams team or have no overrides, then use the response teamId directly
+		if (
+			provider != null &&
+			(provider !== "codestream" ||
+				(options.team == null && (options.teamId == null || options.teamId === response.teamId)))
+		) {
+			const teamId = response.teamId;
+			team = teams.find(t => t.id === teamId);
+
+			if (team != null) {
+				pickedTeamReason = " because the team was associated with the authentication token";
+			} else {
+				// If we can't find the team, make sure to filter to only teams that match the current provider
 				teams = response.teams.filter(t => Team.isProvider(t, provider));
 			}
-
-			// Sort the teams from oldest to newest
-			teams.sort((a, b) => a.createdAt - b.createdAt);
 		}
 
-		let pickedTeamReason;
-
-		if (options.teamId == null) {
-			if (options.team) {
-				const normalizedTeamName = options.team.toLocaleUpperCase();
-				const team = teams.find(t => t.name.toLocaleUpperCase() === normalizedTeamName);
-				if (team != null) {
-					options.teamId = team.id;
-					pickedTeamReason = " because the team was saved in settings (user, workspace, or folder)";
-				}
+		if (team == null) {
+			// If there is only 1 team, use it regardless of config
+			if (teams.length === 1) {
+				options.teamId = teams[0].id;
+			} else {
+				// Sort the teams from oldest to newest
+				teams.sort((a, b) => a.createdAt - b.createdAt);
 			}
 
-			// If we still can't find a team, then just pick the first one
 			if (options.teamId == null) {
-				// Pick the oldest (first) Slack team if there is one
-				if (User.isSlack(response.user)) {
-					const team = teams.find(t => Team.isSlack(t));
-					if (team) {
+				if (options.team) {
+					const normalizedTeamName = options.team.toLocaleUpperCase();
+					const team = teams.find(t => t.name.toLocaleUpperCase() === normalizedTeamName);
+					if (team != null) {
 						options.teamId = team.id;
-						pickedTeamReason = " because the team was the oldest Slack team";
+						pickedTeamReason =
+							" because the team was saved in settings (user, workspace, or folder)";
 					}
 				}
 
-				// Pick the oldest (first) MS Teams team if there is one
-				if (options.teamId == null && User.isMSTeams(response.user)) {
-					const team = teams.find(t => Team.isMSTeams(t));
-					if (team) {
-						options.teamId = team.id;
-						pickedTeamReason = " because the team was the oldest Microsoft Teams team";
-					}
-				}
-
+				// If we still can't find a team, then just pick the first one
 				if (options.teamId == null) {
-					options.teamId = teams[0].id;
-					pickedTeamReason = " because the team was the oldest team";
-				}
-			}
-		} else {
-			pickedTeamReason = " because the team was the last used team";
-		}
+					// Pick the oldest (first) Slack team if there is one
+					if (User.isSlack(response.user)) {
+						const team = teams.find(t => Team.isSlack(t));
+						if (team) {
+							options.teamId = team.id;
+							pickedTeamReason = " because the team was the oldest Slack team";
+						}
+					}
 
-		let team = teams.find(t => t.id === options.teamId);
-		if (team === undefined) {
-			team = teams[0];
-			options.teamId = team.id;
-			pickedTeamReason =
-				" because the specified team could not be found, defaulting to the oldest team";
+					// Pick the oldest (first) MS Teams team if there is one
+					if (options.teamId == null && User.isMSTeams(response.user)) {
+						const team = teams.find(t => Team.isMSTeams(t));
+						if (team) {
+							options.teamId = team.id;
+							pickedTeamReason = " because the team was the oldest Microsoft Teams team";
+						}
+					}
+
+					if (options.teamId == null) {
+						options.teamId = teams[0].id;
+						pickedTeamReason = " because the team was the oldest team";
+					}
+				}
+			} else {
+				pickedTeamReason = " because the team was the last used team";
+			}
+
+			team = teams.find(t => t.id === options.teamId);
+			if (team === undefined) {
+				team = teams[0];
+				pickedTeamReason =
+					" because the specified team could not be found, defaulting to the oldest team";
+			}
 		}
 
 		Logger.log(`Using team '${team.name}' (${team.id})${pickedTeamReason || ""}`);
@@ -338,11 +366,20 @@ export class CodeStreamApiProvider implements ApiProvider {
 		this._broadcasterToken = response.broadcasterToken || response.pubnubToken;
 		this._socketCluster = response.socketCluster;
 
-		this._teamId = options.teamId;
+		this._teamId = team.id;
 		this._user = response.user;
 		this._userId = response.user.id;
 
-		return { ...response, teamId: options.teamId };
+		const token: AccessToken = {
+			email: response.user.email,
+			url: this.baseUrl,
+			value: response.accessToken,
+			provider: response.provider,
+			providerAccess: response.providerAccess,
+			teamId: team.id
+		};
+
+		return { ...response, token: token };
 	}
 
 	register(request: CSRegisterRequest) {
@@ -580,9 +617,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	fetchMarkerLocations(request: FetchMarkerLocationsRequest) {
 		return this.get<CSGetMarkerLocationsResponse>(
-			`/marker-locations?teamId=${this.teamId}&streamId=${request.streamId}&commitHash=${
-				request.commitHash
-			}`,
+			`/marker-locations?teamId=${this.teamId}&streamId=${request.streamId}&commitHash=${request.commitHash}`,
 			this._token
 		);
 	}
@@ -1223,9 +1258,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		const cc = Logger.getCorrelationContext();
 
 		try {
-			const url = `/provider-refresh/${providerId}?teamId=${this.teamId}&refreshToken=${
-				providerInfo.refreshToken
-			}`;
+			const url = `/provider-refresh/${providerId}?teamId=${this.teamId}&refreshToken=${providerInfo.refreshToken}`;
 			const response = await this.get<{ user: any }>(url, this._token);
 
 			// Since we are dealing with identity auth don't try to resolve this with the users

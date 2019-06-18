@@ -1,6 +1,7 @@
 "use strict";
 import { RequestInit } from "node-fetch";
 import { InitializeResult, RequestType } from "vscode-languageserver-protocol";
+import { LoginResponse } from "./agent.protocol.auth";
 import { Unreads } from "./agent.protocol.notifications";
 import { ThirdPartyProviders } from "./agent.protocol.providers";
 import {
@@ -57,6 +58,9 @@ export interface AccessToken {
 	email: string;
 	url: string;
 	value: string;
+	teamId?: string;
+	provider?: string;
+	providerAccess?: "strict";
 }
 
 export enum CodeStreamEnvironment {
@@ -104,7 +108,7 @@ export interface AgentOptions extends BaseAgentOptions {
 }
 
 export interface AgentState {
-	apiToken: string;
+	token: AccessToken;
 	capabilities: Capabilities;
 	email: string;
 	environment: CodeStreamEnvironment | string;
@@ -113,14 +117,8 @@ export interface AgentState {
 	userId: string;
 }
 
-export interface AgentResult {
-	loginResponse: CSLoginResponse;
-	state: AgentState;
-	error?: LoginResult;
-}
-
 export interface AgentInitializeResult extends InitializeResult {
-	result: AgentResult;
+	result: LoginResponse;
 }
 
 export interface ApiRequest {
