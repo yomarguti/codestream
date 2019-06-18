@@ -8,6 +8,7 @@ import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import {
 	AddEnterpriseProviderHostRequest,
+	AccessToken,
 	ArchiveStreamRequest,
 	ArchiveStreamResponse,
 	Capabilities,
