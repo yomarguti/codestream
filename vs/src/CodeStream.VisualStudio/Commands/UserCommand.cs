@@ -16,6 +16,11 @@ namespace CodeStream.VisualStudio.Commands {
 
 		public UserCommand(ISettingsManager settingManager) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.UserCommandId) {
 			_settingsManager = settingManager;
+
+			Visible = false;
+			Enabled = false;
+
+			Text = DefaultText;
 		}
 
 		public void TriggerChange(bool isSessionReady) {
