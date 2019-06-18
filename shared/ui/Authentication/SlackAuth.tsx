@@ -11,7 +11,7 @@ const noop = () => Promise.resolve();
 
 interface Props extends DispatchProp {
 	type?: SignupType;
-	mode: "full" | "store";
+	access: "permissive" | "strict";
 }
 
 export const SlackAuth = (connect(undefined) as any)((props: Props) => {
@@ -34,7 +34,7 @@ export const SlackAuth = (connect(undefined) as any)((props: Props) => {
 			startSSOSignin(
 				"slack",
 				props.type !== undefined ? { type: props.type } : undefined,
-				props.mode
+				props.access
 			)
 		);
 		setIsWaiting(true);

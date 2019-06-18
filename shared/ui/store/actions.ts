@@ -57,14 +57,16 @@ export const bootstrap = (bootstrapData?: BootstrapResponse) => async dispatch =
 export const startSSOSignin = (
 	provider: string,
 	info?: ValidateSignupInfo,
-	mode: "store" | "full" = "store"
+	access: "strict" | "permissive" = "strict"
 ) => async dispatch => {
 	try {
 		await HostApi.instance.send(LoginSSORequestType, {
 			provider: provider,
-			queryString: mode === "store" ? "mode=store" : undefined
+			queryString: access === "strict" ? "access=strict" : undefined
 		});
-		return dispatch(contextActions.goToSSOAuth(provider, { ...(info || emptyObject), mode }));
+		return dispatch(
+			contextActions.goToSSOAuth(provider, { ...(info || emptyObject), mode: access })
+		);
 	} catch (error) {
 		logError(`Unable to start ${provider} sign in: ${error}`);
 	}
@@ -77,7 +79,7 @@ export const reAuthForFullChatProvider = (
 	await HostApi.instance.send(LogoutRequestType, {});
 	dispatch(reset());
 
-	dispatch(startSSOSignin(provider, info, "full"));
+	dispatch(startSSOSignin(provider, info, "permissive"));
 };
 
 export enum SignupType {
