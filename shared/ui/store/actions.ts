@@ -16,12 +16,14 @@ import {
 	BootstrapRequestType,
 	BootstrapResponse,
 	LoginSSORequestType,
-	ValidateThirdPartyAuthRequestType
+	ValidateThirdPartyAuthRequestType,
+	LogoutRequestType
 } from "../ipc/host.protocol";
 import { HostApi } from "../webview-api";
 import { logError } from "../logger";
 import { LoginResult } from "@codestream/protocols/api";
 import { updateConfigs } from "./configs/actions";
+import { emptyObject } from "../utils";
 
 export enum BootstrapActionType {
 	Complete = "@bootstrap/Complete"
@@ -62,10 +64,20 @@ export const startSSOSignin = (
 			provider: provider,
 			queryString: mode === "store" ? "mode=store" : undefined
 		});
-		return dispatch(contextActions.goToSSOAuth(provider, info));
+		return dispatch(contextActions.goToSSOAuth(provider, { ...(info || emptyObject), mode }));
 	} catch (error) {
 		logError(`Unable to start ${provider} sign in: ${error}`);
 	}
+};
+
+export const reAuthForFullChatProvider = (
+	provider: string,
+	info?: ValidateSignupInfo
+) => async dispatch => {
+	await HostApi.instance.send(LogoutRequestType, {});
+	dispatch(reset());
+
+	dispatch(startSSOSignin(provider, info, "full"));
 };
 
 export enum SignupType {

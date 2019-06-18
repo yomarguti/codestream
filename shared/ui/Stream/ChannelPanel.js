@@ -27,7 +27,8 @@ import Filter from "./Filter";
 import { isInVscode, safe } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { sortBy as _sortBy } from "lodash-es";
-import { State as ContextState } from "../store/context/types";
+import { ContextState } from "../store/context/types";
+import { reAuthForFullChatProvider } from "../store/actions";
 
 export class SimpleChannelPanel extends Component {
 	constructor(props) {
@@ -88,8 +89,7 @@ export class SimpleChannelPanel extends Component {
 
 	onClickEnableRealtimeChat = e => {
 		e.preventDefault();
-		// TODO: Sign out, then sign in with the "full" mode
-		// this.props.dispatch(startSSOSignin(this.props.teamProvider, undefined, "full"));
+		this.props.reAuthForFullChatProvider(this.props.teamProvider);
 	};
 
 	render() {
@@ -102,7 +102,7 @@ export class SimpleChannelPanel extends Component {
 			!this.props.capabilities.providerSupportsRealtimeChat
 		) {
 			return (
-				<div>
+				<div className="onboarding-page">
 					<form className="standard-form">
 						<fieldset className="form-body">
 							<h2>Enable Slack Real-time Chat Support</h2>
@@ -880,6 +880,7 @@ export default connect(
 		setCurrentStream,
 		openPanel,
 		setChannelFilter,
-		setChannelsMuteAll
+		setChannelsMuteAll,
+		reAuthForFullChatProvider
 	}
 )(SimpleChannelPanel);

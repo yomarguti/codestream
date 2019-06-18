@@ -11,6 +11,7 @@ const noop = () => Promise.resolve();
 
 interface Props extends DispatchProp {
 	type?: SignupType;
+	mode: "full" | "store";
 }
 
 export const SlackAuth = (connect(undefined) as any)((props: Props) => {
@@ -30,7 +31,11 @@ export const SlackAuth = (connect(undefined) as any)((props: Props) => {
 	const onClickTryAgain = (event: React.SyntheticEvent) => {
 		event.preventDefault();
 		props.dispatch(
-			startSSOSignin("slack", props.type !== undefined ? { type: props.type } : undefined)
+			startSSOSignin(
+				"slack",
+				props.type !== undefined ? { type: props.type } : undefined,
+				props.mode
+			)
 		);
 		setIsWaiting(true);
 	};

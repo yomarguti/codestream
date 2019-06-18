@@ -2,6 +2,8 @@ import uuidv4 from "uuid/v4";
 import { Range } from "vscode-languageserver-types";
 import { MaxRangeValue } from "./ipc/webview.protocol";
 
+export const emptyObject = {};
+
 export function noop() {}
 
 export function inMillis(number: number, unit: "sec" | "min") {
