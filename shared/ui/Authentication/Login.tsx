@@ -181,7 +181,7 @@ class Login extends React.Component<Props, State> {
 					<fieldset className="form-body">
 						<div id="controls">
 							<div className="outline-box">
-								<Button className="row-button" onClick={this.handleClickSlackSignup}>
+								<Button className="row-button no-top-margin" onClick={this.handleClickSlackSignup}>
 									<Icon name="slack" />
 									<div className="copy">Sign In with Slack</div>
 									<Icon name="chevron-right" />
