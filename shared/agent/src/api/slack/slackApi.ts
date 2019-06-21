@@ -156,7 +156,7 @@ export class SlackApiProvider implements ApiProvider {
 		postEdit: true,
 		// webview uses this to see if the provider can upgrade to realtime.
 		// to hide the channels tab -- make this false
-		providerCanSupportRealtimeChat: true,
+		providerCanSupportRealtimeChat: false,
 		providerSupportsRealtimeChat: false,
 		// agent uses this
 		providerSupportsRealtimeEvents: false
