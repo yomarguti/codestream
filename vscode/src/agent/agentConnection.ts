@@ -223,6 +223,9 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	dispose() {
+		if (this._outputChannel) {
+			this._outputChannel.dispose();
+		}
 		this._disposable && this._disposable.dispose();
 		if (this._clientReadyCancellation !== undefined) {
 			this._clientReadyCancellation.dispose();
