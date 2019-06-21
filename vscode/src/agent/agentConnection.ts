@@ -92,6 +92,7 @@ import {
 	EventEmitter,
 	ExtensionContext,
 	MessageItem,
+	OutputChannel,
 	Uri,
 	window,
 	workspace
@@ -151,6 +152,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	private _clientReadyCancellation: CancellationTokenSource | undefined;
 	private _serverOptions: ServerOptions;
 	private _restartCount = 0;
+	private _outputChannel: OutputChannel | undefined;
 
 	constructor(context: ExtensionContext, options: BaseAgentOptions) {
 		const env = process.env;
@@ -210,8 +212,6 @@ export class CodeStreamAgentConnection implements Disposable {
 					return CloseAction.DoNotRestart;
 				}
 			},
-			outputChannelName: "CodeStream (Agent)",
-			revealOutputChannelOn: RevealOutputChannelOn.Never,
 			initializationOptions: { ...options },
 			// Register the server for file-based text documents
 			documentSelector: [
@@ -958,6 +958,8 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 		this._clientReadyCancellation = new CancellationTokenSource();
 
+		this._clientOptions.outputChannel = this._outputChannel = window.createOutputChannel("CodeStream (Agent)");
+
 		this._client = new LanguageClient(
 			"codestream",
 			"CodeStream",
@@ -1003,8 +1005,11 @@ export class CodeStreamAgentConnection implements Disposable {
 			return;
 		}
 
-		if (this._client === undefined) return;
+		if (this._outputChannel) {
+		     this._outputChannel.dispose();
+		}
 
+		if (this._client === undefined) return;
 		this._disposable && this._disposable.dispose();
 		await Functions.cancellable(this._client.stop(), 30000, { onDidCancel: resolve => resolve() });
 
