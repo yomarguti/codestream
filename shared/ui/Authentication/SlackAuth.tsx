@@ -56,26 +56,25 @@ export const SlackAuth = (connect(undefined) as any)((props: Props) => {
 		<div className="onboarding-page">
 			<form className="standard-form">
 				<fieldset className="form-body">
-					<h2>Slack Authentication</h2>
-					<p>
-						Your web browser should have opened up to a Slack authentication page. Once you've
-						completed the authentication process, return here to get started with CodeStream.
-					</p>
-					<br />
-					<div>
-						<strong>
+					<div className="outline-box">
+						<h2>Slack Authentication</h2>
+						<p>
+							Your web browser should have opened up to a Slack authentication page. Once you've
+							completed the authentication process, return here to get started with CodeStream.
+						</p>
+						<br />
+						<div>
 							{isWaiting ? (
-								<p>
+								<strong>
 									Waiting for Slack authentication <LoadingEllipsis />
-								</p>
+								</strong>
 							) : (
-								<p>
+								<strong>
 									Login timed out. Please <Link onClick={onClickTryAgain}>try again</Link>
-								</p>
+								</strong>
 							)}
-						</strong>
+						</div>
 					</div>
-					<br />
 					<p>
 						Something went wrong? <Link href="mailto:support@codestream.com">Contact support</Link>{" "}
 						or <Link onClick={onClickTryAgain}>Try again</Link>
@@ -101,7 +100,7 @@ function LoadingEllipsis() {
 			case "...":
 				return setDots(".");
 		}
-	});
+	}, 500);
 
 	return <React.Fragment>{dots}</React.Fragment>;
 }
