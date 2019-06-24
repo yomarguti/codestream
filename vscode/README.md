@@ -51,12 +51,6 @@ Click on the Search icon to explore your team’s entire knowledge base. Filters
 
 ![Codemarks tab](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/CodemarksTab1.png)
 
-## Visual Studio Live Share integration
-
-Live Share is an excellent plugin from Microsoft that allows users of VS Code to share a project with teammates so that they can access it right from within their IDE. Start a share session via `/liveshare`, or by clicking on a teammate's headshot, and you can continue to chat while you edit and debug together in real time.
-
-![Message in Stream](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/LiveShareStream.png)
-
 # Frequently Asked Questions
 
 #### Where are messages stored?
