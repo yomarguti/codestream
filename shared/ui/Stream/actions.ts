@@ -516,20 +516,32 @@ export const setCodemarkStatus = (
 };
 
 export const createProviderCard = async (attributes, codemark) => {
-	const codeStart = attributes.htmlMarkup
+	let codeStart = attributes.htmlMarkup
 		? "<pre><div><code>"
 		: attributes.singleBackQuoteMarkup
 		? "`"
 		: "```";
-	const codeEnd = attributes.htmlMarkup
+	let codeEnd = attributes.htmlMarkup
 		? "</code></div></pre>"
 		: attributes.singleBackQuoteMarkup
 		? "`"
 		: "```";
+
 	const linefeed = attributes.htmlMarkup ? "<br/>" : "\n";
 	let description = `${codemark.text}${linefeed}${linefeed}`;
 	if (codemark.markers && codemark.markers.length > 0) {
-		const marker = codemark.markers[0];
+		const marker = codemark.markers[0];		
+		if (codeStart === "```" || codeEnd === "```") {
+			const split = marker.code.split(/\r?\n/);
+			if (split.length > 1) {
+				if (split[0] !== "") {
+					codeStart += "\n";
+				}
+				if (split[split.length - 1] !== "") {
+					codeEnd = "\n" + codeEnd;
+				}
+			}
+		}
 		description += `In ${marker.file}${linefeed}${linefeed}`;
 		description += `${codeStart}${marker.code}${codeEnd}${linefeed}${linefeed}`;
 	}
