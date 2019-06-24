@@ -46,28 +46,28 @@ class LoginResult(
     val error: String?,
     val extra: JsonElement?
 ) {
+    val team: CSTeam
+        get() = loginResponse?.teams?.find { it.id == state?.teamId }
+            ?: throw IllegalStateException("User's teams does not contain their own team")
+
     val userLoggedIn: UserLoggedIn
         get() = loginResponse?.let {
-            return UserLoggedIn(it.user, it.team, state!!, it.teams.size)
+            return UserLoggedIn(it.user, team, state!!, it.teams.size)
         } ?: throw IllegalStateException("LoginResult has no loginResponse")
 }
 
 class LoginResponse(
     val user: CSUser,
-    val teamId: String,
     val teams: List<CSTeam>,
     val accessToken: String
-) {
-    val team: CSTeam
-        get() = teams.find { it.id == teamId }
-            ?: throw IllegalStateException("User's teams does not contains their own team")
-}
+)
 
 class LoginState(
     val userId: String,
     val teamId: String,
     val email: String,
-    val capabilities: JsonObject
+    val capabilities: JsonObject,
+    val token: JsonObject?
 )
 
 class UserLoggedIn(val user: CSUser, val team: CSTeam, val state: LoginState, val teamsCount: Int) {
@@ -111,13 +111,15 @@ class Extension(val versionFormatted: String) {
 
 class Ide {
     val name = "JetBrains"
-    val version = ApplicationInfo.getInstance().fullVersion
+    val version: String = ApplicationInfo.getInstance().fullVersion
 }
 
 class AccessToken(
     val email: String?,
     val url: String,
-    val value: String
+    val value: String,
+    val provider: String? = null,
+    val teamId: String? = null
 )
 
 enum class TraceLevel(val value: String) {

@@ -52,35 +52,36 @@ class AuthenticationService(val project: Project) {
         }
 
         if (settings.state.autoSignIn) {
-            val token = PasswordSafe.instance.getPassword(settings.credentialAttributes)
+            val tokenStr = PasswordSafe.instance.getPassword(settings.credentialAttributes)
 
-            if (token != null) {
-                val loginResult = agent.agent.loginToken(
-                    LoginWithTokenParams(
-                        AccessToken(
-                            settings.state.email,
-                            settings.state.serverUrl,
-                            token
-                        ),
-                        settings.state.teamId,
-                        settings.team
-                    )
-                ).await()
+            if (tokenStr != null) {
+                try {
+                    val token = gson.fromJson<AccessToken>(tokenStr)
+                    val loginResult = agent.agent.loginToken(
+                        LoginWithTokenParams(
+                            token,
+                            settings.state.teamId,
+                            settings.team
+                        )
+                    ).await()
 
-                loginResult.error?.let {
-                    logger.warn(it)
-                    return buildSignedOutResponse()
+                    loginResult.error?.let {
+                        logger.warn(it)
+                        return buildSignedOutResponse()
+                    }
+
+                    loginResult.state?.let {
+                        agentCapabilities = it.capabilities
+                        settings.state.teamId = it.teamId
+                    }
+
+                    val bootstrapFuture = agent.agent.bootstrap(BootstrapParams())
+                    session.login(loginResult.userLoggedIn)
+
+                    return buildSignedInResponse(bootstrapFuture)
+                } catch (err: Exception) {
+                    logger.warn(err)
                 }
-
-                loginResult.state?.let {
-                    agentCapabilities = it.capabilities
-                    settings.state.teamId = it.teamId
-                }
-
-                val bootstrapFuture = agent.agent.bootstrap(BootstrapParams())
-                session.login(loginResult.userLoggedIn)
-
-                return buildSignedInResponse(bootstrapFuture)
             }
         }
 
@@ -114,7 +115,7 @@ class AuthenticationService(val project: Project) {
         val bootstrapFuture = agent.agent.bootstrap(BootstrapParams())
         session.login(loginResult.userLoggedIn)
         settings.state.email = params.email
-        saveAccessToken(loginResult.loginResponse?.accessToken)
+        saveAccessToken(loginResult.state?.token)
         return buildSignedInResponse(bootstrapFuture)
     }
 
@@ -149,7 +150,7 @@ class AuthenticationService(val project: Project) {
         val bootstrapFuture = agent.agent.bootstrap(BootstrapParams())
         session.login(loginResult.userLoggedIn)
         settings.state.email = loginResult.loginResponse?.user?.email
-        saveAccessToken(loginResult.loginResponse?.accessToken)
+        saveAccessToken(loginResult.state?.token)
         return buildSignedInResponse(bootstrapFuture)
     }
 
@@ -182,7 +183,7 @@ class AuthenticationService(val project: Project) {
         val bootstrapFuture = agent.agent.bootstrap(BootstrapParams())
         session.login(loginResult.userLoggedIn)
         settings.state.email = loginResult.loginResponse?.user?.email
-        saveAccessToken(loginResult.loginResponse?.accessToken)
+        saveAccessToken(loginResult.state?.token)
         return buildSignedInResponse(bootstrapFuture)
     }
 
@@ -199,10 +200,10 @@ class AuthenticationService(val project: Project) {
         webView.postNotification(DidLogout())
     }
 
-    private fun saveAccessToken(accessToken: String?) {
+    private fun saveAccessToken(accessToken: JsonObject?) {
         val settings = project.settingsService ?: return
         val credentials = accessToken?.let {
-            Credentials(null, it)
+            Credentials(null, it.toString())
         }
 
         PasswordSafe.instance.set(
