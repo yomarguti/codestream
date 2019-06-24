@@ -542,7 +542,16 @@ export const createProviderCard = async (attributes, codemark) => {
 				}
 			}
 		}
-		description += `In ${marker.file}${linefeed}${linefeed}`;
+		description += `In ${marker.file}`;
+		const range = marker.range;
+		if (range) {
+			if (range.start.line === range.end.line) {
+				description+=` (Line ${range.start.line + 1})`;
+			} else {
+				description+=` (Lines ${range.start.line + 1}-${range.end.line + 1})`;
+			}			
+		}
+		description +=`${linefeed}${linefeed}`;
 		description += `${codeStart}${marker.code}${codeEnd}${linefeed}${linefeed}`;
 	}
 	description += `Posted via CodeStream${linefeed}`;
