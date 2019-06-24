@@ -6,7 +6,7 @@ import Icon from "../Stream/Icon";
 import Button from "../Stream/Button";
 import { Link } from "../Stream/Link";
 import {
-	goToCSOrSlack,
+	goToChatProviderSelection,
 	goToJoinTeam,
 	goToNewUserEntry,
 	goToEmailConfirmation,
@@ -172,7 +172,7 @@ export const Signup = (connect() as any)((props: Props) => {
 			event.preventDefault();
 			switch (props.type) {
 				case SignupType.CreateTeam: {
-					return props.dispatch(goToCSOrSlack());
+					return props.dispatch(goToChatProviderSelection());
 				}
 				case SignupType.JoinTeam: {
 					return props.dispatch(goToJoinTeam());

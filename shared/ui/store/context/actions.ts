@@ -205,8 +205,11 @@ export const goToNewUserEntry = (params = {}) =>
 export const goToForgotPassword = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.ForgotPassword, params });
 
-export const goToCSOrSlack = (params = {}) =>
+export const goToChatProviderSelection = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.ChatProviderSelection, params });
+
+export const goToMSTeamsAdminApprovalInfo = (params = {}) =>
+	action(ContextActionsType.SetRoute, { name: Route.MSTeamsAdminApprovalInfo, params });
 
 export const goToSSOAuth = (provider: string, params = {}) => {
 	switch (provider) {

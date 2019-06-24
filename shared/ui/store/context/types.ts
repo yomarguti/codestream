@@ -46,16 +46,17 @@ export interface ContextState extends WebviewContext {
 }
 
 export enum Route {
-	NewUser = "newUserEntry",
-	Signup = "signup",
-	Login = "login",
-	ChatProviderSelection = "chatProviderSelection",
-	SlackAuth = "slackAuth",
-	MSTeamsAuth = "msTeamsAuth",
-	JoinTeam = "joinTeam",
-	EmailConfirmation = "emailConfirmation",
-	TeamCreation = "teamCreation",
-	ForgotPassword = "forgotPassword"
+  NewUser = "newUserEntry",
+  Signup = "signup",
+  Login = "login",
+  ChatProviderSelection = "chatProviderSelection",
+  SlackAuth = "slackAuth",
+  MSTeamsAuth = "msTeamsAuth",
+  JoinTeam = "joinTeam",
+  EmailConfirmation = "emailConfirmation",
+  TeamCreation = "teamCreation",
+  ForgotPassword = "forgotPassword",
+  MSTeamsAdminApprovalInfo = "MSTeamsAdminApprovalInfo"
 }
 
 export interface RouteState {

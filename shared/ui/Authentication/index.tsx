@@ -12,6 +12,7 @@ import { EmailConfirmation } from "./EmailConfirmation";
 import { TeamCreation } from "./TeamCreation";
 import { RouteState, Route } from "../store/context/types";
 import { ForgotPassword } from "./ForgotPassword";
+import { MSTeamsAdminApprovalInfo } from "./MSTeamsAdminApprovalInfo";
 
 interface ConnectedProps extends RouteState {}
 
@@ -25,6 +26,8 @@ export const UnauthenticatedRoutes = connect<ConnectedProps, void, void, CodeStr
 			return <ChatProviderSelection {...props.params} />;
 		case Route.SlackAuth:
 			return <SlackAuth {...props.params} />;
+		case Route.MSTeamsAdminApprovalInfo:
+			return <MSTeamsAdminApprovalInfo {...props.params} />;
 		case Route.MSTeamsAuth:
 			return <MSTeamsAuth {...props.params} />;
 		case Route.Signup:

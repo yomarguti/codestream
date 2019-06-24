@@ -4,7 +4,7 @@ import Icon from "../Stream/Icon";
 import { connect } from "react-redux";
 import { CodeStreamState } from "../store";
 import { Link } from "../Stream/Link";
-import { goToLogin, goToCSOrSlack, goToJoinTeam } from "../store/context/actions";
+import { goToLogin, goToChatProviderSelection, goToJoinTeam } from "../store/context/actions";
 import { DispatchProp } from "../store/common";
 import { HostApi } from "../webview-api";
 
@@ -22,7 +22,7 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 		HostApi.instance.track("Reg Path Selected", {
 			"Reg Path": "Create Team"
 		});
-		props.dispatch(goToCSOrSlack());
+		props.dispatch(goToChatProviderSelection());
 	};
 
 	const onClickJoinTeam = (event: React.SyntheticEvent) => {
