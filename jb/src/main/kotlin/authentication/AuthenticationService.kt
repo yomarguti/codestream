@@ -56,7 +56,7 @@ class AuthenticationService(val project: Project) {
 
             if (tokenStr != null) {
                 try {
-                    val token = gson.fromJson<AccessToken>(tokenStr)
+                    val token = gson.fromJson<JsonObject>(tokenStr)
                     val loginResult = agent.agent.loginToken(
                         LoginWithTokenParams(
                             token,

@@ -1,5 +1,6 @@
 package protocols.agent
 
+import com.codestream.gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
@@ -28,10 +29,12 @@ class LoginWithPasswordParams(
 )
 
 class LoginWithTokenParams(
-    val token: AccessToken,
+    val token: JsonElement,
     val teamId: String?,
     val team: String?
-)
+) {
+    constructor(token: AccessToken, teamId: String?, team: String?) : this(gson.toJsonTree(token), teamId, team)
+}
 
 class LoginOtcParams(
     val code: String,
@@ -117,9 +120,7 @@ class Ide {
 class AccessToken(
     val email: String?,
     val url: String,
-    val value: String,
-    val provider: String? = null,
-    val teamId: String? = null
+    val value: String
 )
 
 enum class TraceLevel(val value: String) {
