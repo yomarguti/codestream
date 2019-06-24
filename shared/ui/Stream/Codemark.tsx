@@ -27,6 +27,7 @@ import { getPost } from "../store/posts/reducer";
 import { getPosts } from "../store/posts/actions";
 import Tooltip from "./Tooltip";
 import { getCurrentTeamProvider } from "../store/teams/actions";
+import { isNil } from "lodash-es";
 
 interface State {
 	isEditing: boolean;
@@ -139,6 +140,13 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	private async fetchReplies() {
+		const postId = this.props.codemark.postId;
+		// because the codemark is created before the third party chat post,
+		// `postId` can be undefined for a period. in the case of ms teams at least,
+		// that period can be long enough that if a user attempts to expand the newly created codemark,
+		// postId will still be nil
+		if (isNil(postId) || postId === "") return;
+
 		return this.props.fetchThread(this.props.codemark.streamId, this.props.codemark.postId);
 	}
 
