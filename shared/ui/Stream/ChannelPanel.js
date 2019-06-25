@@ -29,6 +29,8 @@ import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher"
 import { sortBy as _sortBy } from "lodash-es";
 import { ContextState } from "../store/context/types";
 import { reAuthForFullChatProvider } from "../store/actions";
+import { HostApi } from "../webview-api";
+import { localStore } from "../utilities/storage";
 
 export class SimpleChannelPanel extends Component {
 	constructor(props) {
@@ -89,6 +91,8 @@ export class SimpleChannelPanel extends Component {
 
 	onClickEnableRealtimeChat = e => {
 		e.preventDefault();
+		HostApi.instance.track("Slack Chat Selected");
+		localStore.set("enablingRealTime", true);
 		this.props.reAuthForFullChatProvider(this.props.teamProvider);
 	};
 
@@ -105,11 +109,13 @@ export class SimpleChannelPanel extends Component {
 				<div className="onboarding-page">
 					<form className="standard-form">
 						<fieldset className="form-body">
-							<h2>Enable Slack Real-time Chat Support</h2>
+							<h2>Real-Time Chat</h2>
+							<p>Access all of your workspace's channels and DMs, right from within CodeStream.</p>
 							<p>
-								Real-time chat support is currently not enabled. If you would like to enable
-								real-time chat, please click the button below.
+								Adding real-time chat requires that you re-authenticate with Slack to grant
+								CodeStream the following permissions.
 							</p>
+							<img src="https://images.codestream.com/misc/SlackScopes.png" />
 							<div id="controls">
 								<div className="button-group">
 									<Button
@@ -117,7 +123,7 @@ export class SimpleChannelPanel extends Component {
 										type="button"
 										onClick={this.onClickEnableRealtimeChat}
 									>
-										Enable Real-time Chat
+										Authenticate with Slack
 									</Button>
 								</div>
 							</div>

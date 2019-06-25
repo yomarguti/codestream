@@ -12,6 +12,7 @@ type PreferencesActions = ActionType<typeof preferencesActions>;
 type SessionActions = ActionType<typeof sessionActions>;
 
 const initialState: ContextState = {
+	chatProviderAccess: "strict",
 	newPostEntryPoint: undefined,
 	currentTeamId: "",
 	currentStreamId: "",
@@ -104,7 +105,11 @@ export function reduceContext(
 		}
 
 		case "RESET":
-			return { ...initialState, route: { name: Route.Login, params: {} } };
+			return {
+				...initialState,
+				route: { name: Route.Login, params: {} },
+				chatProviderAccess: state.chatProviderAccess
+			};
 		default:
 			return { ...initialState, ...state };
 	}

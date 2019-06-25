@@ -19,7 +19,8 @@ export enum ContextActionsType {
 	SetChannelsMuteAll = "@context/SetChannelsMuteAll",
 	SetShowFeedbackSmiley = "@context/SetShowFeedbackSmiley",
 	SetNewPostEntryPoint = "@context/SetNewPostEntryPoint",
-	SetRoute = "@context/SetRoute"
+	SetRoute = "@context/SetRoute",
+	SetChatProviderAccess = "@context/SetChatProviderAccess"
 }
 
 export type PostEntryPoint = "Stream" | "Global Nav" | "Spatial View" | undefined;
@@ -43,20 +44,24 @@ export interface ContextState extends WebviewContext {
 
 	newPostEntryPoint: PostEntryPoint;
 	route: RouteState;
+
+	chatProviderAccess: ChatProviderAccess;
 }
 
+export type ChatProviderAccess = "strict" | "permissive";
+
 export enum Route {
-  NewUser = "newUserEntry",
-  Signup = "signup",
-  Login = "login",
-  ChatProviderSelection = "chatProviderSelection",
-  SlackAuth = "slackAuth",
-  MSTeamsAuth = "msTeamsAuth",
-  JoinTeam = "joinTeam",
-  EmailConfirmation = "emailConfirmation",
-  TeamCreation = "teamCreation",
-  ForgotPassword = "forgotPassword",
-  MSTeamsAdminApprovalInfo = "MSTeamsAdminApprovalInfo"
+	NewUser = "newUserEntry",
+	Signup = "signup",
+	Login = "login",
+	ChatProviderSelection = "chatProviderSelection",
+	SlackAuth = "slackAuth",
+	MSTeamsAuth = "msTeamsAuth",
+	JoinTeam = "joinTeam",
+	EmailConfirmation = "emailConfirmation",
+	TeamCreation = "teamCreation",
+	ForgotPassword = "forgotPassword",
+	MSTeamsAdminApprovalInfo = "MSTeamsAdminApprovalInfo"
 }
 
 export interface RouteState {

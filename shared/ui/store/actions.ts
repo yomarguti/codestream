@@ -24,6 +24,9 @@ import { logError } from "../logger";
 import { LoginResult } from "@codestream/protocols/api";
 import { updateConfigs } from "./configs/actions";
 import { emptyObject } from "../utils";
+import { ChatProviderAccess } from "./context/types";
+import { CodeStreamState } from ".";
+import { localStore } from "../utilities/storage";
 
 export enum BootstrapActionType {
 	Complete = "@bootstrap/Complete"
@@ -57,8 +60,11 @@ export const bootstrap = (bootstrapData?: BootstrapResponse) => async dispatch =
 export const startSSOSignin = (
 	provider: string,
 	info?: ValidateSignupInfo,
-	access: "strict" | "permissive" = "strict"
-) => async dispatch => {
+	access?: ChatProviderAccess
+) => async (dispatch, getState) => {
+	if (access == undefined) {
+		access = (getState() as CodeStreamState).context.chatProviderAccess;
+	}
 	try {
 		await HostApi.instance.send(LoginSSORequestType, {
 			provider: provider,
@@ -105,7 +111,15 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 			});
 		} else {
 			HostApi.instance.track("Signed In", { "Auth Type": provider });
+			if (localStore.get("enablingRealTime") === true) {
+				localStore.delete("enablingRealTime");
+				HostApi.instance.track("Slack Chat Enabled");
+				const result = await dispatch(bootstrap(response));
+				dispatch(contextActions.setContext({ chatProviderAccess: "permissive" }));
+				return result;
+			}
 		}
+
 		return await dispatch(bootstrap(response));
 	} catch (error) {
 		if (error === LoginResult.ProviderConnectFailed) {
