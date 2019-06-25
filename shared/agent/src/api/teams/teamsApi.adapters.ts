@@ -429,10 +429,10 @@ export function fromTeamsMessageText(
 	if (!message.body) return message.summary || message.subject || "";
 
 	let text = message.body.content;
-	if (mentions === undefined || mentions.length === 0) return text;
-
 	// TODO: Get codemark ids from attachments?
 	text = text.replace(teamsAttachmentsRegex, "");
+
+	if (mentions === undefined || mentions.length === 0) return text;
 
 	text = text.replace(teamsMentionsRegex, (match: string, id: string, mentionText: string) => {
 		const mention = mentions.find(m => m.id === Number(id));
