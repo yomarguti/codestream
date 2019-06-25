@@ -31,21 +31,13 @@ interface InheritedProps {
 interface Props extends InheritedProps, DispatchProp {}
 const defaultArrayLength = 6;
 const array = new Array(defaultArrayLength);
-const initialValues = [...array].fill("");
+const initialValues: string[] = [...array].fill("");
 
 export const EmailConfirmation = (connect() as any)((props: Props) => {
 	const inputs = useRef(array);
 	const [emailSent, setEmailSent] = useState(false);
-	let [digits, setValues] = useState(initialValues);
+	const [digits, setValues] = useState(initialValues);
 
-	if (digits.length > defaultArrayLength) {			
-		digits = digits.filter(_ => !isNaN(parseInt(_, 10)));		
-	} 
-	if (digits.length < defaultArrayLength) {
-		//if filtered is < the default OR digits was < the default
-		digits = [...array].fill("");
-	}
-	
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<LoginResult | undefined>();
 
@@ -157,10 +149,11 @@ export const EmailConfirmation = (connect() as any)((props: Props) => {
 										nativeProps={nativeProps}
 										onPaste={event => {
 											event.preventDefault();
-											const string = event.clipboardData.getData("text");
-											if (string === "" || Number.isNaN(Number(string))) return;
+											const string = event.clipboardData.getData("text").trim();
+											if (string === "" || Number.isNaN(parseInt(string, 10))) return;
+											if (string.length !== defaultArrayLength) return;
 
-											setValues(string.split("").filter(Boolean));
+											setValues(string.split(""));
 										}}
 										onChange={value => {
 											setError(undefined);
