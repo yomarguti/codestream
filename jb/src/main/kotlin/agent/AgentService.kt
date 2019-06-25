@@ -7,6 +7,7 @@ import com.codestream.settingsService
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.JsonObject
 import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
@@ -41,7 +42,7 @@ import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
 import java.util.Scanner
 
-class AgentService(private val project: Project) {
+class AgentService(private val project: Project) : Disposable {
 
     private val logger = Logger.getInstance(AgentService::class.java)
 
@@ -88,7 +89,13 @@ class AgentService(private val project: Project) {
         }
     }
 
+    override fun dispose() {
+        logger.info("Shutting down CodeStream LSP agent")
+        agent.exit()
+    }
+
     suspend fun restart() {
+        logger.info("Restarting CodeStream LSP agent")
         agent.shutdown().await()
         agent.exit()
         initAgent()

@@ -11,6 +11,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.impl.ProjectLifecycleListener
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowAnchor
@@ -53,7 +54,7 @@ class CodeStreamComponent(val project: Project) : Disposable {
             CODESTREAM_TOOL_WINDOW_ID,
             false,
             ToolWindowAnchor.RIGHT,
-            webViewService,
+            this,
             true
         )
         toolWindow.icon = IconLoader.getIcon("/images/codestream.svg")
@@ -108,7 +109,17 @@ class CodeStreamComponent(val project: Project) : Disposable {
     private fun initStatusBarWidget() {
         if (project.isDisposed) return
         val statusBar = WindowManager.getInstance().getIdeFrame(project).statusBar
-        statusBar?.addWidget(CodeStreamStatusBarWidget(project))
+        val widget = CodeStreamStatusBarWidget(project)
+        statusBar?.addWidget(widget)
+        project.messageBus.connect().subscribe(
+            ProjectLifecycleListener.TOPIC,
+            object : ProjectLifecycleListener {
+                override fun afterProjectClosed(someProject: Project) {
+                    if (someProject == project) {
+                        statusBar?.removeWidget(widget.ID())
+                    }
+                }
+            })
     }
 
     private fun initUnreadsListener() {
