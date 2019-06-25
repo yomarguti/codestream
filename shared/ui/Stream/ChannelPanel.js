@@ -93,7 +93,9 @@ export class SimpleChannelPanel extends Component {
 		e.preventDefault();
 		HostApi.instance.track("Slack Chat Selected");
 		localStore.set("enablingRealTime", true);
-		this.props.reAuthForFullChatProvider(this.props.teamProvider);
+		setTimeout(() => {
+			this.props.reAuthForFullChatProvider(this.props.teamProvider);
+		}, 500);
 	};
 
 	render() {
