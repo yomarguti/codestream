@@ -212,7 +212,7 @@ export class Codemark extends React.Component<Props, State> {
 			}
 		}
 
-		return <span dangerouslySetInnerHTML={{ __html: html }} />;
+		return <span className='title' dangerouslySetInnerHTML={{ __html: html }} />;
 	};
 
 	renderTypeIcon() {
