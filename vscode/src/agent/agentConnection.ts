@@ -962,7 +962,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._clientReadyCancellation = new CancellationTokenSource();
 
 		this._clientOptions.outputChannel = this._outputChannel = window.createOutputChannel("CodeStream (Agent)");
-
+		this._clientOptions.revealOutputChannelOn = RevealOutputChannelOn.Never;
 		this._client = new LanguageClient(
 			"codestream",
 			"CodeStream",
