@@ -155,6 +155,7 @@ export class TelemetryService {
 				event,
 				properties: payload
 			});
+			this._segmentInstance.flush();
 		} catch (ex) {
 			Logger.error(ex, cc);
 		}
