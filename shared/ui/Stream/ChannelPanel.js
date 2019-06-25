@@ -117,7 +117,17 @@ export class SimpleChannelPanel extends Component {
 								Adding real-time chat requires that you re-authenticate with Slack to grant
 								CodeStream the following permissions.
 							</p>
-							<img src="https://images.codestream.com/misc/SlackScopes.png" />
+							<div
+								style={{
+									width: "100%",
+									margin: "0 auto",
+									display: "flex",
+									flexDirection: "column",
+									alignItems: "center"
+								}}
+							>
+								<img src="https://images.codestream.com/misc/SlackScopes.png" width="280" />
+							</div>
 							<div id="controls">
 								<div className="button-group">
 									<Button
