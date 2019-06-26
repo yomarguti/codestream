@@ -356,7 +356,10 @@ export class CodestreamView {
 				textEditorUri: uri,
 				textEditorVisibleRanges: Editor.getVisibleRanges(editor),
 				textEditorSelections: Editor.getCSSelections(editor),
-				scmInfo: await this.session.agent.request(GetFileScmInfoRequestType, { uri }),
+				scmInfo:
+					uri === ""
+						? undefined
+						: await this.session.agent.request(GetFileScmInfoRequestType, { uri }),
 				textEditorLineCount: editor.getLineCount(),
 			};
 		}
