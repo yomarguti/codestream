@@ -122,6 +122,9 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 
 		return await dispatch(bootstrap(response));
 	} catch (error) {
+		if (error === LoginResult.AlreadySignedIn) {
+			return dispatch(bootstrap());
+		}
 		if (error === LoginResult.ProviderConnectFailed) {
 			throw error;
 		}
