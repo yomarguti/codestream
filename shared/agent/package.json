@@ -41,7 +41,7 @@
     },
     "dependencies": {
         "@microsoft/microsoft-graph-client": "1.7.0",
-        "@sentry/node": "4.6.3",
+        "@sentry/node": "5.4.3",
         "@slack/rtm-api": "5.0.1",
         "@slack/web-api": "5.0.1",
         "analytics-node": "3.3.0",
