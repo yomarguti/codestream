@@ -524,7 +524,15 @@ export class CodeStreamSession {
 	})
 	async login(options: LoginOptions): Promise<LoginResponse> {
 		if (this.status === SessionStatus.SignedIn) {
-			throw new AgentError("Session is already signed in");
+			Container.instance().errorReporter.reportMessage({
+				type: ReportingMessageType.Warning,
+				source: "agent",
+				message: "There was a redundant attempt to login while already logged in.",
+				extra: {
+					loginType: options.type
+				}
+			});
+			return { error: LoginResult.AlreadySignedIn };
 		}
 
 		let response;

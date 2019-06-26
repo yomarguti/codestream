@@ -45,7 +45,8 @@ export enum LoginResult {
 	ProviderConnectFailed = "PROVIDER_CONNECT_FAILED",
 	MultipleWorkspaces = "MULTIPLE_WORKSPACES",
 	AlreadyConfirmed = "ALREADY_CONFIRMED",
-	InviteConflict = "INVITE_CONFLICT"
+	InviteConflict = "INVITE_CONFLICT",
+	AlreadySignedIn = "ALREADY_SIGNED_IN"
 }
 
 export interface CSCompleteSignupRequest {
