@@ -37,6 +37,7 @@ import { updateUnreads } from "./store/unreads/actions";
 import { updateConfigs } from "./store/configs/actions";
 import { setEditorContext } from "./store/editorContext/actions";
 import { blur, focus, setCurrentStream, setCurrentDocumentMarker } from "./store/context/actions";
+import { isNotOnDisk } from "./utils";
 
 export { HostApi };
 
@@ -104,7 +105,9 @@ export function listenForEvents(store) {
 				textEditorSelections: params.editor.selections,
 				metrics: params.editor.metrics,
 				textEditorLineCount: params.editor.lineCount,
-				scmInfo: await api.send(GetFileScmInfoRequestType, { uri: params.editor.uri })
+				scmInfo: isNotOnDisk(params.editor.uri)
+					? undefined
+					: await api.send(GetFileScmInfoRequestType, { uri: params.editor.uri })
 			};
 		} else {
 			context = {
