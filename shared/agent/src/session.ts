@@ -92,7 +92,8 @@ export const loginApiErrorMappings: { [k: string]: LoginResult } = {
 	"USRC-1012": LoginResult.NotOnTeam,
 	"VERS-1001": LoginResult.VersionUnsupported,
 	"USRC-1022": LoginResult.ProviderConnectFailed,
-	"USRC-1015": LoginResult.MultipleWorkspaces,
+	"USRC-1015": LoginResult.MultipleWorkspaces, // deprecated in favor of below...
+	"PRVD-1002": LoginResult.MultipleWorkspaces,
 	"USRC-1020": LoginResult.InviteConflict
 };
 
