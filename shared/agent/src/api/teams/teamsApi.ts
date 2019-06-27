@@ -7,7 +7,6 @@ import { ServerError } from "../../agentError";
 import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import {
-	AddEnterpriseProviderHostRequest,
 	AccessToken,
 	AddEnterpriseProviderHostRequest,
 	ArchiveStreamRequest,
