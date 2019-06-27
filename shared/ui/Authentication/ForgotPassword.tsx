@@ -23,19 +23,21 @@ export const ForgotPassword = (connect(undefined) as any)((props: Props) => {
 
 	return (
 		<div className="onboarding-page">
-			<h2>Password Reset</h2>
 			{emailSent ? (
 				<form className="standard-form">
 					<fieldset className="form-body">
-						<p>
-							Check your email for a link to reset your password. If you don't receive it within a
-							few minutes, check your spam folder.
-						</p>
-						<div id="controls">
-							<div className="button-group">
-								<Button className="control-button" onClick={onClickGoToLogin}>
-									Return to Sign In
-								</Button>
+						<div className="outline-box">
+							<h3>Password Reset</h3>
+							<p>
+								Check your email for a link to reset your password. If you don't receive it within a
+								few minutes, check your spam folder.
+							</p>
+							<div id="controls">
+								<div className="button-group">
+									<Button className="control-button" onClick={onClickGoToLogin}>
+										Return to Sign In
+									</Button>
+								</div>
 							</div>
 						</div>
 					</fieldset>
@@ -65,26 +67,29 @@ function Form(props: { email?: string; onComplete: Function }) {
 
 	return (
 		<form className="standard-form" onSubmit={submit}>
-			<fieldset className="form-body">
-				<p>Enter your email address and we will send you a link to reset your password.</p>
-				<div id="controls">
-					<div className="control-group">
-						<br />
-						{!emailValidity && (
-							<small className="explainer error-message">
-								<FormattedMessage id="signUp.email.invalid" />
-							</small>
-						)}
-						<TextInput
-							name="email"
-							onChange={setEmail}
-							value={email}
-							validate={isEmailValid}
-							onValidityChanged={onValidityChanged}
-						/>
-					</div>
-					<div className="button-group">
-						<Button className="control-button">Send Email</Button>
+			<fieldset className="form-body">				
+				<div className="outline-box">
+					<h3>Password Reset</h3>
+					<p>Enter your email address and we will send you a link to reset your password.</p>
+					<div id="controls">
+						<div className="control-group">
+							<br />
+							{!emailValidity && (
+								<small className="explainer error-message">
+									<FormattedMessage id="signUp.email.invalid" />
+								</small>
+							)}
+							<TextInput
+								name="email"
+								onChange={setEmail}
+								value={email}
+								validate={isEmailValid}
+								onValidityChanged={onValidityChanged}
+							/>
+						</div>
+						<div className="button-group">
+							<Button className="control-button">Send Email</Button>
+						</div>
 					</div>
 				</div>
 			</fieldset>

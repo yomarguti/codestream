@@ -233,11 +233,11 @@ class Login extends React.Component<Props, State> {
 										required={this.state.passwordTouched}
 									/>
 									{this.renderPasswordHelp()}
-									{/* <div className="help-link">
+									{ <div className="help-link">
 									<a onClick={this.onClickForgotPassword}>
 										<FormattedMessage id="login.forgotPassword" />
 									</a>
-								</div>*/}
+								</div>}
 								</div>
 								<Button
 									className="row-button"
