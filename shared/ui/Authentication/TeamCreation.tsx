@@ -50,30 +50,32 @@ export const TeamCreation = (connect() as any)((props: ConnectedProps & Dispatch
 
 	return (
 		<div className="onboarding-page">
-			<h2>Team Name</h2>
 			<form className="standard-form" onSubmit={onSubmit}>
 				<fieldset className="form-body">
-					{props.loggedIn && (
-						<h4>You don't belong to a team yet. Enter a name to create one now.</h4>
-					)}
-					<div id="controls">
-						<div className="control-group">
-							<div style={{ height: "20px" }} />
-							<TextInput
-								name="team"
-								value={teamName}
-								onChange={setTeamName}
-								validate={isTeamNameValid}
-								onValidityChanged={onValidityChanged}
-								required
-							/>
-							{!teamNameValidity && <small className="explainer error-message">Required</small>}
-						</div>
-						<div className="button-group">
-							<Button className="control-button" type="submit" loading={isLoading}>
-								<FormattedMessage id="createTeam.submitButton" />
-							</Button>
-						</div>
+					<div className="outline-box">
+						<h3>Team Name</h3>
+						{props.loggedIn && (
+							<h4>You don't belong to a team yet. Enter a name to create one now.</h4>
+						)}
+						<div id="controls">
+							<div className="control-group">
+								<div style={{ height: "20px" }} />
+								<TextInput
+									name="team"
+									value={teamName}
+									onChange={setTeamName}
+									validate={isTeamNameValid}
+									onValidityChanged={onValidityChanged}
+									required
+								/>
+								{!teamNameValidity && <small className="explainer error-message">Required</small>}
+							</div>
+							<div className="button-group">
+								<Button className="control-button" type="submit" loading={isLoading}>
+									<FormattedMessage id="createTeam.submitButton" />
+								</Button>
+							</div>
+						</div>						
 					</div>
 					<div id="controls">
 						<div className="footer">
