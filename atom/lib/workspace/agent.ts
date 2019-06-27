@@ -158,8 +158,8 @@ abstract class AgentConnection {
 	private buildSpawnArgs(): [string, string[]] {
 		if (Debug.isDebugging()) {
 			return [
-				"node",
-				["--no-lazy", "--inspect=6012", asAbsolutePath("dist/agent/agent.js"), "--node-ipc"],
+				"/usr/local/bin/node",
+				["--no-lazy", "--inspect=6012", getAgentSource(), "--node-ipc"],
 			];
 		}
 		return [process.execPath, ["--no-lazy", asAbsolutePath("dist/agent/agent.js"), "--node-ipc"]];

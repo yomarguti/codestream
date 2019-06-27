@@ -137,6 +137,7 @@ class CodestreamPackage {
 		return {
 			set: (enable: boolean) => {
 				Debug.setDebugging(enable);
+				atom.reload();
 			},
 			get: () => Debug.isDebugging(),
 		};
