@@ -658,8 +658,8 @@ const getCodeDelimiters = (codeDelimiterStyle: CodeDelimiterStyles): {
 		default:
 		case CodeDelimiterStyles.TRIPLE_BACK_QUOTE:
 		return {
-			start: "```",
-			end: "```",
+			start: "```\n",
+			end: "```\n",
 			linefeed: "\n"
 		};
 
@@ -684,6 +684,7 @@ export const createProviderCard = async (attributes, codemark) => {
 	let description = `${codemark.text}${linefeed}${linefeed}`;
 	if (codemark.markers && codemark.markers.length > 0) {
 		const marker = codemark.markers[0];
+		description += `In ${marker.file}`;
 		const range = marker.range;
 		if (range) {
 			if (range.start.line === range.end.line) {
@@ -692,8 +693,7 @@ export const createProviderCard = async (attributes, codemark) => {
 				description += ` (Lines ${range.start.line + 1}-${range.end.line + 1})`;
 			}
 		}
-		description += `${linefeed}${linefeed}In ${marker.file}${linefeed}${linefeed}`;
-		description += `${start}${marker.code}${end}${linefeed}${linefeed}`;
+		description += `${linefeed}${linefeed}${start}${marker.code}${end}${linefeed}${linefeed}`;
 	}
 	description += `Posted via CodeStream${linefeed}`;
 
