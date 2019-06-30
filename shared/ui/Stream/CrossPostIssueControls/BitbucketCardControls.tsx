@@ -61,7 +61,7 @@ export default class BitbucketCardControls extends React.Component<Props, State>
 			boardName: board && board.name,
 			isEnabled,
 			issueProvider: this.props.provider,
-			codeDelimiterStyle: CodeDelimiterStyles.SINGLE_BACK_QUOTE
+			codeDelimiterStyle: CodeDelimiterStyles.TRIPLE_BACK_QUOTE
 		});
 	};
 
