@@ -20,6 +20,7 @@ interface BitbucketRepo {
 	full_name: string;
 	path: string;
 	owner: {
+		uuid: string;
 		username: string;
 		type: string;
 	};
@@ -32,6 +33,7 @@ interface BitbucketPermission {
 }
 
 interface BitbucketUser {
+	uuid: string;
 	display_name: string;
 	account_id: string;
 }
@@ -156,7 +158,7 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 			}
 		};
 		if (data.assignee) {
-			cardData.assignee = { username: data.assignee.username };
+			cardData.assignee = { uuid: data.assignee.uuid };
 		}
 		const response = await this.post<{}, BitbucketCreateCardResponse>(
 			`/repositories/${data.repoName}/issues`,
@@ -192,7 +194,6 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 					`/users/${repoResponse.body.owner.username}/members`
 				);
 				members = apiResponse.body.values;
-
 				while (apiResponse.body.next) {
 					apiResponse = await this.get<BitbucketValues<BitbucketUser[]>>(apiResponse.body.next);
 					members = members.concat(apiResponse.body.values);

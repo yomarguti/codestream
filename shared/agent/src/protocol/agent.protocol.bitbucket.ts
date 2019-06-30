@@ -4,7 +4,7 @@ export interface BitbucketCreateCardRequest {
 	repoName: string;
 	title: string;
 	description: string;
-	assignee?: { username: string };
+	assignee?: { uuid: string };
 }
 
 export interface BitbucketCard {
