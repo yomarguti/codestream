@@ -11,8 +11,8 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.impl.ProjectLifecycleListener
 import com.intellij.openapi.util.IconLoader
+import com.intellij.openapi.wm.StatusBar
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowAnchor
 import com.intellij.openapi.wm.ToolWindowManager
@@ -28,6 +28,8 @@ const val CODESTREAM_TOOL_WINDOW_ID = "CodeStream"
 class CodeStreamComponent(val project: Project) : Disposable {
 
     private lateinit var toolWindow: ToolWindow
+    private var statusBar: StatusBar? = null
+    private var statusBarWidget: CodeStreamStatusBarWidget? = null
     private var isFocused by Delegates.observable(true) { _, _, _ ->
         updateWebViewFocus()
     }
@@ -108,19 +110,10 @@ class CodeStreamComponent(val project: Project) : Disposable {
 
     private fun initStatusBarWidget() {
         if (project.isDisposed) return
-        val statusBar = WindowManager.getInstance().getIdeFrame(project).statusBar
         val widget = CodeStreamStatusBarWidget(project)
+        statusBar = WindowManager.getInstance().getIdeFrame(project).statusBar
         statusBar?.addWidget(widget)
-        val app = ApplicationManager.getApplication()
-        app.messageBus.connect().subscribe(
-            ProjectLifecycleListener.TOPIC,
-            object : ProjectLifecycleListener {
-                override fun afterProjectClosed(someProject: Project) {
-                    if (someProject == project) {
-                        statusBar?.removeWidget(widget.ID())
-                    }
-                }
-            })
+        statusBarWidget = widget
     }
 
     private fun initUnreadsListener() {
@@ -165,6 +158,8 @@ class CodeStreamComponent(val project: Project) : Disposable {
     }
 
     override fun dispose() {
+        val widget = statusBarWidget?.ID() ?: return
+        statusBar?.removeWidget(widget)
     }
 
     private val _isVisibleObservers = mutableListOf<(Boolean) -> Unit>()

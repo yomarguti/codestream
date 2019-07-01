@@ -13,6 +13,8 @@ import java.awt.event.MouseEvent
 
 class CodeStreamStatusBarWidget(val project: Project) : StatusBarWidget, StatusBarWidget.TextPresentation {
 
+    var myStatusBar: StatusBar? = null
+
     init {
         project.sessionService?.let {
             it.onUserLoggedInChanged { refresh() }
@@ -21,15 +23,16 @@ class CodeStreamStatusBarWidget(val project: Project) : StatusBarWidget, StatusB
     }
 
     fun refresh() {
-        val statusBar = WindowManager.getInstance().getIdeFrame(null).statusBar
-        statusBar?.updateWidget(ID())
+        myStatusBar?.updateWidget(ID())
     }
 
     override fun ID() = "CodeStream.StatusBar"
 
     override fun getPresentation(type: StatusBarWidget.PlatformType) = this
 
-    override fun install(statusBar: StatusBar) = Unit
+    override fun install(statusBar: StatusBar) {
+        myStatusBar = statusBar
+    }
 
     override fun dispose() = Unit
 
