@@ -12,12 +12,10 @@ import { updateUnreads } from "./unreads/actions";
 import { updateProviders } from "./providers/actions";
 import { bootstrapUsers } from "./users/actions";
 import {
-	isSignedInBootstrap,
-	BootstrapRequestType,
-	BootstrapResponse,
 	LoginSSORequestType,
-	ValidateThirdPartyAuthRequestType,
-	LogoutRequestType
+	LogoutRequestType,
+	SignedInBootstrapData,
+	BootstrapInHostResponse
 } from "../ipc/host.protocol";
 import { HostApi } from "../webview-api";
 import { logError } from "../logger";
@@ -27,29 +25,57 @@ import { emptyObject } from "../utils";
 import { ChatProviderAccess } from "./context/types";
 import { CodeStreamState } from ".";
 import { localStore } from "../utilities/storage";
+import {
+	OtcLoginRequestType,
+	isLoginFailResponse,
+	BootstrapRequestType
+} from "@codestream/protocols/agent";
+import {
+	BootstrapInHostRequestType,
+	GetActiveEditorContextRequestType
+} from "@codestream/protocols/webview";
 
 export enum BootstrapActionType {
-	Complete = "@bootstrap/Complete"
+	Complete = "@bootstrap/Complete",
+	Start = "@bootstrap/Start"
 }
 
 export const reset = () => action("RESET");
 
-export const bootstrap = (bootstrapData?: BootstrapResponse) => async dispatch => {
-	const data = bootstrapData || (await HostApi.instance.send(BootstrapRequestType, {}));
+export const bootstrap = (data?: SignedInBootstrapData) => async dispatch => {
+	if (data == undefined) {
+		const api = HostApi.instance;
+		const bootstrapCore = await api.send(BootstrapInHostRequestType, undefined);
 
-	if (isSignedInBootstrap(data)) {
-		dispatch(bootstrapUsers(data.users || []));
-		dispatch(bootstrapTeams(data.teams || []));
-		dispatch(bootstrapStreams(data.streams || []));
-		dispatch(bootstrapRepos(data.repos || []));
-		// TODO: I think this should be removed and just live with the caps below
-		dispatch(bootstrapServices((data.capabilities && data.capabilities.services) || {}));
-		dispatch(updateUnreads(data.unreads || {}));
-		dispatch(updateProviders(data.providers || {}));
-		dispatch(editorContextActions.setEditorContext(data.editorContext));
-		dispatch(sessionActions.setSession(data.session));
-		dispatch(preferencesActions.setPreferences(data.preferences));
+		if (bootstrapCore.session.userId === undefined) {
+			dispatch(bootstrapEssentials(bootstrapCore));
+			return;
+		}
+
+		const [bootstrapData, { editorContext }] = await Promise.all([
+			api.send(BootstrapRequestType, {}),
+			api.send(GetActiveEditorContextRequestType, undefined)
+		]);
+		data = { ...bootstrapData, ...bootstrapCore, editorContext };
 	}
+
+	dispatch(bootstrapUsers(data.users));
+	dispatch(bootstrapTeams(data.teams));
+	dispatch(bootstrapStreams(data.streams));
+	dispatch(bootstrapRepos(data.repos));
+	// TODO: I think this should be removed and just live with the caps below
+	if (data.capabilities && data.capabilities.services)
+		dispatch(bootstrapServices(data.capabilities.services));
+	dispatch(updateUnreads(data.unreads));
+	dispatch(updateProviders(data.providers));
+	dispatch(editorContextActions.setEditorContext(data.editorContext));
+	dispatch(preferencesActions.setPreferences(data.preferences));
+
+	dispatch(bootstrapEssentials(data));
+};
+
+const bootstrapEssentials = (data: BootstrapInHostResponse) => dispatch => {
+	dispatch(sessionActions.setSession(data.session));
 	dispatch(contextActions.setContext({ hasFocus: true, ...data.context }));
 	dispatch(updateCapabilities(data.capabilities || {}));
 	dispatch(updateConfigs(data.configs));
@@ -99,37 +125,41 @@ export interface ValidateSignupInfo {
 
 export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo) => async (
 	dispatch,
-	getState
+	getState: () => CodeStreamState
 ) => {
-	try {
-		const response = await HostApi.instance.send(ValidateThirdPartyAuthRequestType, {
-			alias: signupInfo !== undefined
-		});
-		if (signupInfo) {
-			HostApi.instance.track("Signup Completed", {
-				"Signup Type": signupInfo.type === SignupType.CreateTeam ? "Organic" : "Viral"
-			});
-		} else {
-			HostApi.instance.track("Signed In", { "Auth Type": provider });
-			if (localStore.get("enablingRealTime") === true) {
-				localStore.delete("enablingRealTime");
-				HostApi.instance.track("Slack Chat Enabled");
-				const result = await dispatch(bootstrap(response));
-				dispatch(contextActions.setContext({ chatProviderAccess: "permissive" }));
-				return result;
-			}
-		}
+	const response = await HostApi.instance.send(OtcLoginRequestType, {
+		code: getState().session.otc!,
+		alias: signupInfo !== undefined
+	});
 
-		return await dispatch(bootstrap(response));
-	} catch (error) {
-		if (error === LoginResult.AlreadySignedIn) {
+	if (isLoginFailResponse(response)) {
+		if (response.error === LoginResult.AlreadySignedIn) {
 			return dispatch(bootstrap());
 		}
-		if (error === LoginResult.ProviderConnectFailed) {
-			throw error;
+		if (
+			response.error === LoginResult.ProviderConnectFailed ||
+			response.error === LoginResult.ExpiredToken
+		) {
+			throw response.error;
 		}
-		if (error === LoginResult.ExpiredToken) {
-			throw error;
+
+		return;
+	}
+
+	if (signupInfo) {
+		HostApi.instance.track("Signup Completed", {
+			"Signup Type": signupInfo.type === SignupType.CreateTeam ? "Organic" : "Viral"
+		});
+	} else {
+		HostApi.instance.track("Signed In", { "Auth Type": provider });
+		if (localStore.get("enablingRealTime") === true) {
+			localStore.delete("enablingRealTime");
+			HostApi.instance.track("Slack Chat Enabled");
+			const result = await dispatch(sessionActions.onLogin(response));
+			dispatch(contextActions.setContext({ chatProviderAccess: "permissive" }));
+			return result;
 		}
 	}
+
+	return await dispatch(sessionActions.onLogin(response));
 };

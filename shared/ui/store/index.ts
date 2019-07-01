@@ -14,6 +14,7 @@ import { reducePreferences } from "../store/preferences/reducer";
 import { reduceRepos } from "../store/repos/reducer";
 import { reduceServices } from "../store/services/reducer";
 import { reduceSession } from "../store/session/reducer";
+import { SessionState } from "../store/session/types";
 import { reduceStreams } from "../store/streams/reducer";
 import { reduceTeams } from "../store/teams/reducer";
 import { reduceUnreads } from "../store/unreads/reducer";
@@ -32,7 +33,6 @@ import { EditorContextState } from "./editorContext/types";
 import { PostsState } from "./posts/types";
 import { PreferencesState } from "./preferences/types";
 import { ReposState } from "./repos/types";
-import { SessionState } from "http2";
 import { StreamsState } from "./streams/types";
 import { TeamsState } from "./teams/types";
 import { UnreadsState } from "./unreads/types";
@@ -40,7 +40,8 @@ import { UsersState } from "./users/types";
 import { ServicesState } from "./services/types";
 import { ProvidersState } from "./providers/types";
 
-const bootstrapped = (state = false, { type }) => {
+const reduceBootstrapped = (state = false, { type }) => {
+	if (type === BootstrapActionType.Start) return false;
 	if (type === BootstrapActionType.Complete) return true;
 	return state;
 };
@@ -51,7 +52,7 @@ const pluginVersion = (state = "", action) => {
 };
 
 const reducer = combineReducers({
-	bootstrapped,
+	bootstrapped: reduceBootstrapped,
 	capabilities: reduceCapabilities,
 	codemarks: reduceCodemarks,
 	configs: reduceConfigs,

@@ -1,7 +1,18 @@
 import { RequestType } from "vscode-jsonrpc";
 import { NotificationType } from "vscode-languageserver-protocol";
 import { Position, Range } from "vscode-languageserver-types";
-import { EditorSelection, IpcRoutes } from "./webview.protocol.common";
+import { EditorSelection, IpcRoutes, EditorContext } from "./webview.protocol.common";
+
+export interface GetActiveEditorContextResponse {
+	editorContext: EditorContext;
+}
+
+export const GetActiveEditorContextRequestType = new RequestType<
+	void,
+	GetActiveEditorContextResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/editor/context`);
 
 export interface EditorHighlightRangeRequest {
 	uri: string;

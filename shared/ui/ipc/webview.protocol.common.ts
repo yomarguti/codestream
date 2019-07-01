@@ -59,6 +59,7 @@ export interface WebviewConfigs {
 	debug: boolean;
 	email?: string;
 	serverUrl: string;
+	team?: string;
 }
 
 export interface IpcHost {

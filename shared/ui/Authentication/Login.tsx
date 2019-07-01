@@ -3,7 +3,7 @@ import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import Icon from "../Stream/Icon";
 import Button from "../Stream/Button";
-import { authenticate } from "./actions";
+import { authenticate } from "../store/session/actions";
 import { CodeStreamState } from "../store";
 import { goToNewUserEntry, goToForgotPassword } from "../store/context/actions";
 import { startSSOSignin } from "../store/actions";
@@ -182,7 +182,10 @@ class Login extends React.Component<Props, State> {
 						<fieldset className="form-body">
 							<div id="controls">
 								<div className="outline-box">
-									<Button className="row-button no-top-margin" onClick={this.handleClickSlackSignup}>
+									<Button
+										className="row-button no-top-margin"
+										onClick={this.handleClickSlackSignup}
+									>
 										<Icon name="slack" />
 										<div className="copy">Sign In with Slack</div>
 										<Icon name="chevron-right" />
@@ -234,11 +237,13 @@ class Login extends React.Component<Props, State> {
 											required={this.state.passwordTouched}
 										/>
 										{this.renderPasswordHelp()}
-										{ <div className="help-link">
-										<a onClick={this.onClickForgotPassword}>
-											<FormattedMessage id="login.forgotPassword" />
-										</a>
-									</div>}
+										{
+											<div className="help-link">
+												<a onClick={this.onClickForgotPassword}>
+													<FormattedMessage id="login.forgotPassword" />
+												</a>
+											</div>
+										}
 									</div>
 									<Button
 										className="row-button"
@@ -256,7 +261,7 @@ class Login extends React.Component<Props, State> {
 									</p>
 								</div>
 							</div>
-						</fieldset>				
+						</fieldset>
 					</form>
 				</div>
 			</div>
