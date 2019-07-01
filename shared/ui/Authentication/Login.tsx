@@ -177,86 +177,88 @@ class Login extends React.Component<Props, State> {
 	render() {
 		return (
 			<div id="login-page" className="onboarding-page">
-				<form className="standard-form">
-					<fieldset className="form-body">
-						<div id="controls">
-							<div className="outline-box">
-								<Button className="row-button no-top-margin" onClick={this.handleClickSlackSignup}>
-									<Icon name="slack" />
-									<div className="copy">Sign In with Slack</div>
-									<Icon name="chevron-right" />
-								</Button>
-								<Button className="row-button" onClick={this.handleClickMSTeamsSignup}>
-									<Icon name="msteams" />
-									<div className="copy">Sign In with Microsoft Teams</div>
-									<Icon name="chevron-right" />
-								</Button>
-							</div>
-						</div>
-					</fieldset>
-				</form>
-				<form className="standard-form">
-					<fieldset className="form-body">
-						{/* this.renderAccountMessage() */}
-						<div id="controls">
-							<div className="outline-box">
-								<div className="small-spacer" />
-								{this.renderError()}
-								<div id="email-controls" className="control-group">
-									<label>
-										<FormattedMessage id="login.email.label" />
-									</label>
-									<input
-										id="login-input-email"
-										className="native-key-bindings input-text control"
-										type="text"
-										name="email"
-										value={this.state.email}
-										onChange={e => this.setState({ email: e.target.value })}
-										onBlur={this.onBlurEmail}
-										required={this.state.emailTouched}
-									/>
-									{this.renderEmailError()}
+				<div className="standard-form-wrapper">
+					<form className="standard-form">
+						<fieldset className="form-body">
+							<div id="controls">
+								<div className="outline-box">
+									<Button className="row-button no-top-margin" onClick={this.handleClickSlackSignup}>
+										<Icon name="slack" />
+										<div className="copy">Sign In with Slack</div>
+										<Icon name="chevron-right" />
+									</Button>
+									<Button className="row-button" onClick={this.handleClickMSTeamsSignup}>
+										<Icon name="msteams" />
+										<div className="copy">Sign In with Microsoft Teams</div>
+										<Icon name="chevron-right" />
+									</Button>
 								</div>
-								<div id="password-controls" className="control-group">
-									<label>
-										<FormattedMessage id="login.password.label" />
-									</label>
-									<input
-										id="login-input-password"
-										className="native-key-bindings input-text"
-										type="password"
-										name="password"
-										value={this.state.password}
-										onChange={e => this.setState({ password: e.target.value })}
-										onBlur={this.onBlurPassword}
-										required={this.state.passwordTouched}
-									/>
-									{this.renderPasswordHelp()}
-									{ <div className="help-link">
-									<a onClick={this.onClickForgotPassword}>
-										<FormattedMessage id="login.forgotPassword" />
-									</a>
-								</div>}
+							</div>
+						</fieldset>
+					</form>
+					<form className="standard-form">
+						<fieldset className="form-body">
+							{/* this.renderAccountMessage() */}
+							<div id="controls">
+								<div className="outline-box">
+									<div className="small-spacer" />
+									{this.renderError()}
+									<div id="email-controls" className="control-group">
+										<label>
+											<FormattedMessage id="login.email.label" />
+										</label>
+										<input
+											id="login-input-email"
+											className="native-key-bindings input-text control"
+											type="text"
+											name="email"
+											value={this.state.email}
+											onChange={e => this.setState({ email: e.target.value })}
+											onBlur={this.onBlurEmail}
+											required={this.state.emailTouched}
+										/>
+										{this.renderEmailError()}
+									</div>
+									<div id="password-controls" className="control-group">
+										<label>
+											<FormattedMessage id="login.password.label" />
+										</label>
+										<input
+											id="login-input-password"
+											className="native-key-bindings input-text"
+											type="password"
+											name="password"
+											value={this.state.password}
+											onChange={e => this.setState({ password: e.target.value })}
+											onBlur={this.onBlurPassword}
+											required={this.state.passwordTouched}
+										/>
+										{this.renderPasswordHelp()}
+										{ <div className="help-link">
+										<a onClick={this.onClickForgotPassword}>
+											<FormattedMessage id="login.forgotPassword" />
+										</a>
+									</div>}
+									</div>
+									<Button
+										className="row-button"
+										onClick={this.submitCredentials}
+										loading={this.state.loading}
+									>
+										<Icon name="codestream" />
+										<div className="copy">Sign In with CodeStream</div>
+										<Icon name="chevron-right" />
+									</Button>
 								</div>
-								<Button
-									className="row-button"
-									onClick={this.submitCredentials}
-									loading={this.state.loading}
-								>
-									<Icon name="codestream" />
-									<div className="copy">Sign In with CodeStream</div>
-									<Icon name="chevron-right" />
-								</Button>
+								<div className="footer">
+									<p>
+										Don't have an account? <a onClick={this.handleClickSignup}>Sign Up</a>
+									</p>
+								</div>
 							</div>
-							<div className="footer">
-								<p>
-									Don't have an account? <a onClick={this.handleClickSignup}>Sign Up</a>
-								</p>
-							</div>
-						</div>
-					</fieldset>
-				</form>
+						</fieldset>				
+					</form>
+				</div>
 			</div>
 		);
 	}
