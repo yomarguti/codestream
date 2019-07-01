@@ -8,7 +8,6 @@ import {
 	DidChangeDocumentMarkersNotification,
 	isLoginFailResponse,
 	LoginSuccessResponse,
-	OtcLoginRequestType,
 	PasswordLoginRequestType,
 	TokenLoginRequestType,
 	Unreads
@@ -19,7 +18,6 @@ import {
 	CSDirectStream,
 	LoginResult
 } from "@codestream/protocols/api";
-import { ValidateThirdPartyAuthRequest } from "@codestream/protocols/webview";
 import {
 	commands,
 	ConfigurationTarget,
@@ -162,6 +160,13 @@ export class CodeStreamSession implements Disposable {
 	constructor(private _serverUrl: string) {
 		this.setServerUrl(_serverUrl);
 		const config = Container.config;
+
+		Container.agent.onDidStartLogin(() => this.setStatus(SessionStatus.SigningIn));
+		Container.agent.onDidFailLogin(() => this.setStatus(SessionStatus.SignedOut));
+		Container.agent.onDidLogin(params => {
+			this.completeLogin(params.data);
+		});
+
 		if (config.autoSignIn) {
 			this.setStatus(SessionStatus.SigningIn);
 			Container.agent.onDidStart(async () => {
@@ -449,28 +454,28 @@ export class CodeStreamSession implements Disposable {
 		return result;
 	}
 
-	async loginViaSignupToken(extra: ValidateThirdPartyAuthRequest): Promise<LoginResult> {
-		// this.setServerUrl(Container.config.serverUrl);
-		this.setStatus(SessionStatus.SigningIn);
-
-		const response = await Container.agent.sendRequest(OtcLoginRequestType, {
-			code: this.getSignupToken(),
-			...extra
-		});
-
-		if (isLoginFailResponse(response)) {
-			if (response.error === LoginResult.VersionUnsupported) {
-				this.showVersionUnsupportedMessage();
-			}
-
-			this.setStatus(SessionStatus.SignedOut, SessionSignedOutReason.SignInFailure);
-
-			return response.error;
-		}
-
-		await this.completeLogin(response, this._signupToken);
-		return LoginResult.Success;
-	}
+	// async loginViaSignupToken(extra: ValidateThirdPartyAuthRequest): Promise<LoginResult> {
+	// 	// this.setServerUrl(Container.config.serverUrl);
+	// 	this.setStatus(SessionStatus.SigningIn);
+	//
+	// 	const response = await Container.agent.sendRequest(OtcLoginRequestType, {
+	// 		code: this.getSignupToken(),
+	// 		...extra
+	// 	});
+	//
+	// 	if (isLoginFailResponse(response)) {
+	// 		if (response.error === LoginResult.VersionUnsupported) {
+	// 			this.showVersionUnsupportedMessage();
+	// 		}
+	//
+	// 		this.setStatus(SessionStatus.SignedOut, SessionSignedOutReason.SignInFailure);
+	//
+	// 		return response.error;
+	// 	}
+	//
+	// 	await this.completeLogin(response, this._signupToken);
+	// 	return LoginResult.Success;
+	// }
 
 	@log()
 	async logout(reason: SessionSignedOutReason = SessionSignedOutReason.UserSignedOut) {

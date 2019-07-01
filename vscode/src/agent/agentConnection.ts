@@ -23,8 +23,12 @@ import {
 	DidChangeDocumentMarkersNotificationType,
 	DidChangeVersionCompatibilityNotification,
 	DidChangeVersionCompatibilityNotificationType,
+	DidFailLoginNotificationType,
+	DidLoginNotification,
+	DidLoginNotificationType,
 	DidLogoutNotification,
 	DidLogoutNotificationType,
+	DidStartLoginNotificationType,
 	EditPostRequestType,
 	FetchCodemarksRequestType,
 	FetchDocumentMarkersRequestType,
@@ -126,6 +130,21 @@ type RequestParamsOf<RT> = RT extends RequestType<infer R, any, any, any> ? R : 
 type RequestResponseOf<RT> = RT extends RequestType<any, infer R, any, any> ? R : never;
 
 export class CodeStreamAgentConnection implements Disposable {
+	private _onDidLogin = new EventEmitter<DidLoginNotification>();
+	get onDidLogin(): Event<DidLoginNotification> {
+		return this._onDidLogin.event;
+	}
+
+	private _onDidStartLogin = new EventEmitter<void>();
+	get onDidStartLogin(): Event<void> {
+		return this._onDidStartLogin.event;
+	}
+
+	private _onDidFailLogin = new EventEmitter<void>();
+	get onDidFailLogin(): Event<void> {
+		return this._onDidFailLogin.event;
+	}
+
 	private _onDidChangeConnectionStatus = new EventEmitter<DidChangeConnectionStatusNotification>();
 	get onDidChangeConnectionStatus(): Event<DidChangeConnectionStatusNotification> {
 		return this._onDidChangeConnectionStatus.event;
@@ -961,7 +980,9 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 		this._clientReadyCancellation = new CancellationTokenSource();
 
-		this._clientOptions.outputChannel = this._outputChannel = window.createOutputChannel("CodeStream (Agent)");
+		this._clientOptions.outputChannel = this._outputChannel = window.createOutputChannel(
+			"CodeStream (Agent)"
+		);
 		this._clientOptions.revealOutputChannelOn = RevealOutputChannelOn.Never;
 		this._client = new LanguageClient(
 			"codestream",
@@ -992,6 +1013,9 @@ export class CodeStreamAgentConnection implements Disposable {
 			DidChangeVersionCompatibilityNotificationType,
 			this.onVersionCompatibilityChanged.bind(this)
 		);
+		this._client.onNotification(DidLoginNotificationType, e => this._onDidLogin.fire(e));
+		this._client.onNotification(DidStartLoginNotificationType, () => this._onDidStartLogin.fire());
+		this._client.onNotification(DidFailLoginNotificationType, () => this._onDidFailLogin.fire());
 		this._client.onNotification(DidLogoutNotificationType, this.onLogout.bind(this));
 		// this._client.onNotification(DidResetNotificationType, this.onReset.bind(this));
 
@@ -1009,7 +1033,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 
 		if (this._outputChannel) {
-		     this._outputChannel.dispose();
+			this._outputChannel.dispose();
 		}
 
 		if (this._client === undefined) return;

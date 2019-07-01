@@ -9,18 +9,18 @@ import {
 	DidChangeDocumentMarkersNotificationType,
 	ReportingMessageType
 } from "@codestream/protocols/agent";
-import { CodemarkType, LoginResult } from "@codestream/protocols/api";
+import { CodemarkType } from "@codestream/protocols/api";
 import {
 	ActiveEditorInfo,
 	ApplyMarkerRequestType,
-	BootstrapRequestType,
+	BootstrapInHostRequestType,
 	CompareMarkerRequestType,
-	CompleteSignupRequestType,
 	EditorContext,
 	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequestType,
 	EditorScrollToNotificationType,
 	EditorSelectRangeRequestType,
+	GetActiveEditorContextRequestType,
 	HostDidChangeActiveEditorNotificationType,
 	HostDidChangeConfigNotificationType,
 	HostDidChangeEditorSelectionNotificationType,
@@ -32,16 +32,12 @@ import {
 	LiveShareInviteToSessionRequestType,
 	LiveShareJoinSessionRequestType,
 	LiveShareStartSessionRequestType,
-	LoginRequestType,
 	LoginSSORequestType,
 	LogoutRequestType,
 	NewCodemarkNotificationType,
 	ReloadWebviewRequestType,
 	ShowCodemarkNotificationType,
-	SignedInBootstrapResponse,
-	SignedOutBootstrapResponse,
 	UpdateConfigurationRequestType,
-	ValidateThirdPartyAuthRequestType,
 	WebviewContext,
 	WebviewDidChangeContextNotificationType,
 	WebviewDidInitializeNotificationType,
@@ -471,28 +467,11 @@ export class WebviewController implements Disposable {
 
 	private async onWebviewRequest(webview: CodeStreamWebviewPanel, e: WebviewIpcRequestMessage) {
 		switch (e.method) {
-			case BootstrapRequestType.method: {
+			case BootstrapInHostRequestType.method: {
 				Logger.log(`WebviewPanel: Bootstrapping webview...`, `SignedIn=${this.session.signedIn}`);
-
-				webview.onIpcRequest(BootstrapRequestType, e, async (type, params) => this.getBootstrap());
-
-				break;
-			}
-			case LoginRequestType.method: {
-				webview.onIpcRequest(LoginRequestType, e, async (type, params) => {
-					const { email, password } = params;
-
-					let status: LoginResult;
-					try {
-						status = await this.session.login(email, password);
-					} catch (ex) {
-						throw new Error(LoginResult.Unknown);
-					}
-					if (status !== LoginResult.Success) throw new Error(status);
-
-					return this.getBootstrap();
-				});
-
+				webview.onIpcRequest(BootstrapInHostRequestType, e, async (type, params) =>
+					this.getBootstrap()
+				);
 				break;
 			}
 			case LogoutRequestType.method: {
@@ -517,30 +496,9 @@ export class WebviewController implements Disposable {
 
 				break;
 			}
-			case ValidateThirdPartyAuthRequestType.method: {
-				webview.onIpcRequest(ValidateThirdPartyAuthRequestType, e, async (type, params) => {
-					const status = await this.session.loginViaSignupToken(params);
-					if (status !== LoginResult.Success) throw new Error(status);
-
-					return this.getBootstrap();
-				});
-
-				break;
-			}
-			case CompleteSignupRequestType.method: {
-				webview.onIpcRequest(CompleteSignupRequestType, e, async (type, params) => {
-					const status = await this.session.login(
-						params.email,
-						{
-							email: params.email,
-							value: params.token,
-							url: Container.config.serverUrl
-						},
-						params.teamId
-					);
-					if (status !== LoginResult.Success) throw new Error(status);
-
-					return this.getBootstrap();
+			case GetActiveEditorContextRequestType.method: {
+				webview.onIpcRequest(GetActiveEditorContextRequestType, e, async (type, params) => {
+					return { editorContext: this.getActiveEditorContext() };
 				});
 				break;
 			}
@@ -674,26 +632,30 @@ export class WebviewController implements Disposable {
 		}
 	}
 
-	private async getBootstrap<
-		T extends SignedInBootstrapResponse | SignedOutBootstrapResponse
-	>(): Promise<T> {
-		if (!this.session.signedIn) {
-			const state: SignedOutBootstrapResponse = {
-				capabilities: this.session.capabilities,
-				configs: { email: Container.config.email },
-				env: this.session.environment,
-				context: this._context || {},
-				version: Container.versionFormatted
-			};
+	private getBootstrap() {
+		const sessionState = this.session.signedIn
+			? {
+					userId: this.session.userId
+			  }
+			: { otc: this.session.getSignupToken() };
 
-			return state as T;
-		}
-
-		const context: WebviewContext = {
-			...(this._context || emptyObj),
-			currentTeamId: this.session.team.id,
-			hasFocus: true
+		return {
+			session: sessionState,
+			capabilities: this.session.capabilities,
+			configs: {
+				debug: Logger.isDebugging,
+				email: Container.config.email,
+				serverUrl: this.session.serverUrl,
+				showHeadshots: Container.config.showAvatars,
+				team: Container.config.team
+			},
+			env: this.session.environment,
+			context: this._context || {},
+			version: Container.versionFormatted
 		};
+	}
+
+	private getActiveEditorContext(): EditorContext {
 		let editorContext: EditorContext = {};
 		if (this._lastEditor !== undefined) {
 			editorContext = {
@@ -705,28 +667,7 @@ export class WebviewController implements Disposable {
 				textEditorLineCount: this._lastEditor.document.lineCount
 			};
 		}
-
-		const bootstrapData = await Container.agent.bootstrap();
-
-		const state: SignedInBootstrapResponse = {
-			capabilities: this.session.capabilities,
-			configs: {
-				debug: Logger.isDebugging,
-				email: Container.config.email,
-				serverUrl: this.session.serverUrl,
-				showHeadshots: Container.config.showAvatars
-			},
-			context: context,
-			editorContext: editorContext,
-			env: this.session.environment,
-			session: {
-				userId: this.session.userId
-			},
-			version: Container.versionFormatted,
-			...bootstrapData
-		};
-
-		return state as T;
+		return editorContext;
 	}
 
 	private _html: string | undefined;
