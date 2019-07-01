@@ -111,7 +111,8 @@ class CodeStreamComponent(val project: Project) : Disposable {
         val statusBar = WindowManager.getInstance().getIdeFrame(project).statusBar
         val widget = CodeStreamStatusBarWidget(project)
         statusBar?.addWidget(widget)
-        project.messageBus.connect().subscribe(
+        val app = ApplicationManager.getApplication()
+        app.messageBus.connect().subscribe(
             ProjectLifecycleListener.TOPIC,
             object : ProjectLifecycleListener {
                 override fun afterProjectClosed(someProject: Project) {
