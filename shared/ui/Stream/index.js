@@ -1877,7 +1877,8 @@ export class SimpleStream extends Component {
 			return this.setMultiCompose(false);
 		} else {
 			const submit = async markers => {
-				const { threadId } = this.props;
+				// temporarily prevent codemarks as replies...
+				const threadId = undefined;
 				await this.props.createPost(
 					attributes.streamId,
 					threadId,
