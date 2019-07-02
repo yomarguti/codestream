@@ -48,7 +48,7 @@ export default class Headshot extends Component {
 					className="headshot-gravatar"
 					size={this.props.size}
 					default={defaultImage}
-					protocol="http://"
+					protocol="https://"
 					email={person.email}
 				/>
 				<div className={classNameInitials}>{authorInitials}</div>
