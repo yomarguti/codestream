@@ -20,6 +20,10 @@ export default class Menu extends Component {
 				this.setState({ closed: true });
 			}
 		};
+		if (this.el) {
+			const inputs = this.el.getElementsByTagName("input");
+			if (inputs[0]) inputs[0].focus();
+		}
 		this.repositionIfNecessary();
 	}
 
@@ -88,8 +92,12 @@ export default class Menu extends Component {
 		if (item.fragment) return item.fragment;
 		const itemKey = item.key || item.action;
 		const key = parentItem ? `${parentItem.key || parentItem.action}/${itemKey}` : itemKey;
-		const selected =
-			key === this.state.selected || (this.state.selected + "").startsWith(key + "/");
+		let selected = key === this.state.selected || (this.state.selected + "").startsWith(key + "/");
+		if (item.type === "search" || item.noHover) {
+			selected = false;
+		}
+		if (item.searchLabel && this.state.q && !item.searchLabel.includes(this.state.q)) return null;
+
 		return (
 			<li
 				className={createClassString({
@@ -111,8 +119,15 @@ export default class Menu extends Component {
 						{selected && this.renderSubmenu(item)}
 					</span>
 				)}
+				{item.type === "search" && (
+					<input type="text" placeholder={item.placeholder} onChange={this.changeSearch} />
+				)}
 			</li>
 		);
+	};
+
+	changeSearch = e => {
+		this.setState({ q: e.target.value });
 	};
 
 	renderSubmenu = item => {
@@ -126,6 +141,17 @@ export default class Menu extends Component {
 	renderMenu = (items, parentItem) => {
 		return (
 			<div className="menu-popup-body">
+				{this.props.title && (
+					<h3>
+						{this.props.title}{" "}
+						<Icon
+							onClick={e => {
+								this.props.action();
+							}}
+							name="x"
+						/>
+					</h3>
+				)}
 				<ul className="compact">{items.map(item => this.renderItem(item, parentItem))}</ul>
 			</div>
 		);

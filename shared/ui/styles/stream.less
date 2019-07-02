@@ -589,26 +589,25 @@
 				opacity: 0.5;
 			}
 
-			.smiley,
-			.plus {
+			.icon-in-compose {
 				position: absolute;
 				opacity: 0.4;
 				cursor: pointer;
 				transition: transform 0.1s;
+				&:hover,
+				&.hover {
+					opacity: 1;
+					color: @text-color-info;
+					transform: scale(1.4);
+				}
 			}
 
 			.smiley {
 				right: 10px;
 				bottom: 5px;
 			}
-
-			.smiley:hover,
-			.smiley.hover,
-			.plus:hover,
-			.plus.hover {
-				opacity: 1;
-				color: @text-color-info;
-				transform: scale(1.4);
+			.mention {
+				right: 98px;
 			}
 
 			.plus {
@@ -732,7 +731,7 @@
 				background: rgba(0, 0, 0, 0.1) !important;
 			}
 			.google-style .message-input {
-				min-height: 50px;
+				min-height: 75px;
 			}
 			.plus {
 				display: none;
@@ -1067,6 +1066,23 @@
 				border-radius: 5px;
 				border: 1px solid @base-border-color;
 				background: @base-background-color;
+				h3 {
+					margin: 0;
+					// text-align: center;
+					position: relative;
+					padding: 10px 40px 3px 10px;
+					.icon {
+						position: absolute;
+						right: 5px;
+						top: 8px;
+						padding: 3px 6px 0px 6px;
+						display: block;
+						border-radius: 3px;
+						&:hover {
+							background: rgba(127, 127, 127, 0.4);
+						}
+					}
+				}
 			}
 			.menu-popup-submenu {
 				position: absolute;
@@ -1577,6 +1593,19 @@
 			}
 		}
 
+		.button-row {
+			display: flex;
+			button {
+				flex: 1;
+				margin: 0 5px;
+				&:first-child {
+					margin-left: 0;
+				}
+				&:last-child {
+					margin-right: 0;
+				}
+			}
+		}
 		// .post.unread {
 		// 	border-left: 1px solid @background-color-info;
 		// 	border-right: 1px solid @background-color-info;
@@ -1993,54 +2022,52 @@
 				float: left;
 			}
 		}
-		.post {
-			.status-button {
-				// float: right;
-				display: inline-block;
-				// border: 2px solid green;
-				border-radius: 3px;
-				width: 14px;
-				height: 14px;
-				text-align: center;
-				border: 2px solid @text-color;
+		.status-button {
+			// float: right;
+			display: inline-block;
+			// border: 2px solid green;
+			border-radius: 3px;
+			width: 14px;
+			height: 14px;
+			text-align: center;
+			border: 2px solid @text-color;
+			opacity: 1;
+			margin-top: 2px;
+			cursor: pointer;
+			.check {
 				opacity: 1;
-				margin-top: 2px;
-				cursor: pointer;
+				transform: scale(0.01);
+				transition: transform 0.3s;
+				display: inline-block;
+				top: -2px !important;
+				color: @text-color !important;
+				visibility: hidden;
+			}
+			&.checked {
 				.check {
-					opacity: 1;
-					transform: scale(0.01);
-					transition: transform 0.3s;
-					display: inline-block;
-					top: -2px !important;
-					color: @text-color !important;
-					visibility: hidden;
+					visibility: visible;
 				}
-				&.checked {
-					.check {
-						visibility: visible;
-					}
-					background-color: @text-color;
-					border: none;
-					vertical-align: 2px !important;
-					.check {
-						// opacity: 0.6;
-						transform: scale(1);
-						transform: scale(0.85);
-						color: @app-background-color !important;
-					}
+				background-color: @text-color;
+				border: none;
+				vertical-align: 2px !important;
+				.check {
+					// opacity: 0.6;
+					transform: scale(1);
+					transform: scale(0.85);
+					color: @app-background-color !important;
 				}
+			}
+		}
+		.status-label {
+			vertical-align: 4px;
+		}
+		.status:hover {
+			cursor: pointer;
+			.status-button:not(.checked) {
+				border: 2px solid @text-color-info;
 			}
 			.status-label {
-				vertical-align: 4px;
-			}
-			.status:hover {
-				cursor: pointer;
-				.status-button:not(.checked) {
-					border: 2px solid @text-color-info;
-				}
-				.status-label {
-					color: @text-color-info;
-				}
+				color: @text-color-info;
 			}
 		}
 
@@ -2279,6 +2306,10 @@
 	button.cancel {
 		color: @text-color;
 		background: @background-color-highlight !important;
+	}
+	button.delete {
+		color: @text-color-highlight;
+		background: @background-color-error;
 	}
 	.react-select__control {
 		border: 1px solid @base-border-color;

@@ -53,6 +53,10 @@ const tuple = <T extends string[]>(...args: T) => args;
 const COLOR_OPTIONS = tuple("blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray");
 type Color = typeof COLOR_OPTIONS[number] | string;
 
+let TAGS = COLOR_OPTIONS.map(color => {
+	return { id: "_" + color, label: "", color: color };
+});
+
 interface Props extends DispatchProps {
 	streamId: string;
 	collapseForm?: Function;
@@ -116,6 +120,8 @@ interface State {
 	showAllChannels?: boolean;
 	linkURI?: string;
 	copied: boolean;
+	selectedTags?: any;
+	relatedCodemarkIds?: any;
 }
 
 function merge(defaults: Partial<State>, codemark: CSCodemark): State {
@@ -154,7 +160,8 @@ class CodemarkForm extends React.Component<Props, State> {
 			selectedChannelName: props.channel.name,
 			selectedChannelId: props.channel.id,
 			assignableUsers: this.getAssignableCSUsers(),
-			privacy: "private"
+			privacy: "private",
+			selectedTags: {}
 		};
 
 		const state = props.editingCodemark
@@ -592,6 +599,34 @@ class CodemarkForm extends React.Component<Props, State> {
 	// 	this.setState({ isLoading: false });
 	// }
 
+	renderTags = () => {
+		const { selectedTags } = this.state;
+		const keys = Object.keys(selectedTags);
+		if (keys.length === 0) return null;
+
+		return (
+			<div className="tags" style={{ margin: "10px 0 -10px 0" }}>
+				{TAGS.map(tag => {
+					if (selectedTags[tag.id])
+						if (tag.color.startsWith("#"))
+							return (
+								<div className="compose-tag" style={{ background: tag.color }}>
+									<div>&nbsp;{tag.label}&nbsp;</div>
+								</div>
+							);
+						else
+							return (
+								<div className={`compose-tag ${tag.color}-background`}>
+									<div>&nbsp;{tag.label}&nbsp;</div>
+								</div>
+							);
+					else return null;
+				})}
+				<div style={{ clear: "both" }} />
+			</div>
+		);
+	};
+
 	renderCrossPostMessage = commentType => {
 		const { selectedStreams, showChannels } = this.props;
 		const { showAllChannels, selectedChannelId } = this.state;
@@ -700,7 +735,7 @@ class CodemarkForm extends React.Component<Props, State> {
 						/>
 					)}
 				</span>
-				{commentType !== "link" && (
+				{commentType !== "link" && false && (
 					<div className="color-choices" onClick={this.switchLabel}>
 						with{" "}
 						<span className="label-label">
@@ -749,6 +784,29 @@ class CodemarkForm extends React.Component<Props, State> {
 		this.setState({
 			text
 		});
+	};
+
+	handleChangeTag = newTag => {
+		const newTagCopy = { ...newTag };
+		if (newTag.id) {
+			TAGS.forEach((tag, index) => {
+				if (tag.id === newTag.id) TAGS[index] = newTagCopy;
+			});
+		} else {
+			newTagCopy.id = TAGS.length + 1;
+			TAGS = TAGS.concat(newTagCopy);
+		}
+	};
+
+	handleToggleTag = tagId => {
+		if (!tagId) return;
+		let selectedTags = this.state.selectedTags;
+		selectedTags[tagId] = !selectedTags[tagId];
+		this.setState({ selectedTags });
+	};
+
+	handleChangeRelated = codemarkIds => {
+		this.setState({ relatedCodemarkIds: codemarkIds });
 	};
 
 	getCodeBlockHint() {
@@ -838,7 +896,11 @@ class CodemarkForm extends React.Component<Props, State> {
 				placeholder={placeholder}
 				multiCompose
 				onChange={this.handleChange}
+				onChangeTag={this.handleChangeTag}
+				toggleTag={this.handleToggleTag}
 				onSubmit={this.handleClickSubmit}
+				tags={TAGS}
+				selectedTags={this.state.selectedTags}
 				__onDidRender={__onDidRender}
 			/>
 		);
@@ -1179,6 +1241,13 @@ class CodemarkForm extends React.Component<Props, State> {
 							</Tooltip>
 						</div>
 					)}
+					{commentType === "issue" && !this.props.isEditing && (
+						<CrossPostIssueControls
+							onValues={this.handleCrossPostIssueValues}
+							codeBlock={this.state.codeBlock as any}
+						/>
+					)}
+					{this.renderTags()}
 					{commentType !== "link" && this.renderCrossPostMessage(commentType)}
 					<div
 						className="button-group"

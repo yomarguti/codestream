@@ -12,6 +12,8 @@ import {
 } from "../utils";
 import AtMentionsPopup from "./AtMentionsPopup";
 import EmojiPicker from "./EmojiPicker";
+import Menu from "./Menu";
+import Button from "./Button";
 import Icon from "./Icon";
 
 type PopupType = "at-mentions" | "slash-commands" | "channels" | "emojis";
@@ -20,6 +22,8 @@ type QuotePost = CSPost & { author: { username: string } };
 
 interface State {
 	emojiOpen: boolean;
+	codemarkOpen: boolean;
+	tagsOpen: false | "select" | "edit" | "create";
 	cursorPosition?: any;
 	currentPopup?: PopupType;
 	popupPrefix?: string;
@@ -27,6 +31,10 @@ interface State {
 	popupIndex?: number;
 	selectedPopupItem?: string;
 	emojiMenuTarget?: any;
+	codemarkMenuTarget?: any;
+	tagsMenuTarget?: any;
+	editingTag?: any;
+	customColor?: string;
 }
 
 interface Props {
@@ -43,10 +51,15 @@ interface Props {
 	placeholder?: string;
 	quotePost?: QuotePost;
 	onChange?(text: string): any;
+	onChangeTag?(tag: any): any;
+	onChangeSelectedTags?(tag: any): any;
 	onEmptyUpArrow?(event: React.KeyboardEvent): any;
 	onDismiss?(): any;
 	onSubmit?(): any;
 	tabIndex?: number;
+	tags?: any;
+	selectedTags?: any;
+	toggleTag?: Function;
 	__onDidRender?(stuff: { [key: string]: any }): any; // HACKy: sneaking internals to parent
 }
 
@@ -56,7 +69,12 @@ export class MessageInput extends React.Component<Props, State> {
 
 	constructor(props: Props) {
 		super(props);
-		this.state = { emojiOpen: false };
+		this.state = {
+			emojiOpen: false,
+			codemarkOpen: false,
+			tagsOpen: false,
+			customColor: ""
+		};
 	}
 
 	componentDidMount() {
@@ -135,6 +153,14 @@ export class MessageInput extends React.Component<Props, State> {
 
 	hideEmojiPicker = () => {
 		this.setState({ emojiOpen: false });
+	};
+
+	hideCodemarkPicker = () => {
+		this.setState({ codemarkOpen: false });
+	};
+
+	hideTagsPicker = () => {
+		this.setState({ tagsOpen: false });
 	};
 
 	addEmoji = (emoji: typeof emojiData[string]) => {
@@ -483,6 +509,8 @@ export class MessageInput extends React.Component<Props, State> {
 		if (eventType == "escape") {
 			if (this.state.currentPopup) this.hidePopup();
 			else if (this.state.emojiOpen) this.hideEmojiPicker();
+			else if (this.state.codemarkOpen) this.hideCodemarkPicker();
+			else if (this.state.tagsOpen) this.hideTagsPicker();
 			// else this.handleDismissThread();
 		} else {
 			let newIndex = 0;
@@ -527,6 +555,16 @@ export class MessageInput extends React.Component<Props, State> {
 				this.hideEmojiPicker();
 				event.preventDefault();
 			}
+		} else if (this.state.codemarkOpen) {
+			if (event.key === "Escape") {
+				this.hideCodemarkPicker();
+				event.preventDefault();
+			}
+		} else if (this.state.tagsOpen) {
+			if (event.key === "Escape") {
+				this.hideTagsPicker();
+				event.preventDefault();
+			}
 		} else {
 			if (event.key === "ArrowUp" && this.props.text === "" && this.props.onEmptyUpArrow) {
 				event.persist();
@@ -559,6 +597,272 @@ export class MessageInput extends React.Component<Props, State> {
 		// event.stopPropagation();
 	};
 
+	handleClickCodemarkButton = (event: React.SyntheticEvent) => {
+		event.persist();
+		this.setState(state => ({
+			codemarkOpen: !state.codemarkOpen,
+			codemarkMenuTarget: event.target
+		}));
+	};
+
+	codemarkMenuAction = action => {
+		this.setState({ codemarkOpen: false });
+	};
+
+	buildCodemarkMenuOld = () => {
+		if (!this.state.codemarkOpen) return null;
+
+		const menuItems = [
+			{ label: "Attach Codemark...", action: "attach" },
+			{ label: "Post as reply to Codemark...", action: "reply" }
+		];
+		return (
+			<Menu
+				items={menuItems}
+				action={this.codemarkMenuAction}
+				target={this.state.codemarkMenuTarget}
+			/>
+		);
+	};
+
+	buildCodemarkMenu = () => {
+		if (!this.state.codemarkOpen) return null;
+
+		let menuItems: any = [
+			{ type: "search", placeholder: "Search codemarks...", action: "search" },
+			{ label: "-" }
+		];
+
+		menuItems = menuItems.concat(
+			[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(color => {
+				return {
+					label: "Codemark title goes here",
+					searchLabel: " " + color,
+					action: color
+				};
+			})
+		);
+		menuItems = menuItems.concat({ label: "-" }, { label: "Show More...", action: "more" });
+		return (
+			<Menu
+				title="Add Codemark"
+				items={menuItems}
+				action={this.codemarkMenuAction}
+				target={this.state.codemarkMenuTarget}
+			/>
+		);
+	};
+
+	handleClickTagButton = (event: React.SyntheticEvent) => {
+		event.persist();
+		this.setState(state => ({
+			tagsOpen: "select",
+			tagsMenuTarget: event.target
+		}));
+	};
+
+	tagsMenuAction = action => {
+		switch (action) {
+			case "search":
+			case "noop":
+				return;
+			case "create":
+				this.setState({ tagsOpen: "create", editingTag: { label: "", color: "blue" } });
+				break;
+			default:
+				if (this.props.toggleTag) this.props.toggleTag(action);
+		}
+		if (!action) this.setState({ tagsOpen: false, editingTag: null });
+	};
+
+	buildTagMenu = () => {
+		switch (this.state.tagsOpen) {
+			case "select":
+				return this.buildSelectTagMenu();
+			case "edit":
+				return this.buildEditTagMenu();
+			case "create":
+				// this.setState({ editingTag: null });
+				return this.buildEditTagMenu();
+			default:
+				return null;
+		}
+	};
+
+	saveTag = () => {
+		if (this.props.onChangeTag) this.props.onChangeTag(this.state.editingTag);
+		this.hideTagsPicker();
+		setTimeout(() => {
+			this.setState({ tagsOpen: "select" });
+		}, 1);
+	};
+
+	deleteTag = () => {
+		this.setState({ editingTag: null });
+		this.hideTagsPicker();
+	};
+
+	findTag = tagId => {
+		return this.props.tags.find(tag => {
+			return tag.id === tagId;
+		});
+	};
+
+	getNextTagId = () => {
+		return this.props.tags.length + 1;
+	};
+
+	setEditingTagColor = color => {
+		let { editingTag } = this.state;
+		editingTag.color = color;
+		this.setState({ editingTag });
+	};
+
+	setEditingTagLabel = label => {
+		let { editingTag } = this.state;
+		editingTag.label = label;
+		this.setState({ editingTag });
+	};
+
+	buildEditTagMenu = () => {
+		let { editingTag } = this.state;
+		if (!editingTag) editingTag = { label: "", color: "blue" };
+
+		let body = (
+			<div>
+				<input
+					type="text"
+					value={editingTag.label || ""}
+					placeholder="Tag Name"
+					onChange={e => {
+						this.setEditingTagLabel(e.target.value);
+					}}
+				/>
+
+				<div
+					style={{
+						display: "grid",
+						gridTemplateColumns: "1fr 1fr 1fr",
+						gridColumnGap: "10px",
+						gridRowGap: "10px",
+						margin: "20px 0 10px 0",
+						maxWidth: "160px",
+						whiteSpace: "normal"
+					}}
+				>
+					{this.props.tags.map(tag => {
+						return (
+							<span
+								className={`${tag.color}-background color-edit-block`}
+								onClick={e => this.setEditingTagColor(tag.color)}
+							>
+								{editingTag.color === tag.color && <Icon name="check" className="check" />}
+							</span>
+						);
+					})}
+					<div className="color-edit-block" style={{ backgroundColor: this.state.customColor }}>
+						{editingTag.color === this.state.customColor ? (
+							<Icon name="check" className="check" />
+						) : (
+							<div>custom</div>
+						)}
+						<input
+							style={{
+								// make it transparent because the default styling
+								// is ugly, and we just make the whole block the color
+								// that is selected via the magic of React -Pez
+								opacity: 0,
+								display: "block",
+								width: "100%",
+								height: "100%",
+								position: "absolute",
+								top: 0,
+								left: 0,
+								bottom: 0,
+								right: 0
+							}}
+							type="color"
+							className={`custom-color-edit-block`}
+							value={this.state.customColor}
+							onChange={e => {
+								this.setState({ customColor: e.target.value });
+								this.setEditingTagColor(e.target.value);
+							}}
+						/>
+					</div>
+				</div>
+			</div>
+		);
+		let body2 = (
+			<div className="button-row">
+				<Button className="control-button" onClick={this.saveTag}>
+					Save
+				</Button>
+				<Button className="control-button delete" onClick={this.deleteTag}>
+					Delete
+				</Button>
+			</div>
+		);
+
+		const items = [
+			{ label: body, noHover: true, action: "noop" },
+			{ label: "-" },
+			{ label: body2, noHover: true, action: "noop" }
+		];
+
+		return (
+			<Menu
+				title={editingTag.id ? "Edit Tag" : "Add Tag"}
+				items={items}
+				action={this.tagsMenuAction}
+				target={this.state.tagsMenuTarget}
+			/>
+		);
+	};
+
+	buildSelectTagMenu = () => {
+		let menuItems: any = [
+			{ type: "search", placeholder: "Search tags...", action: "search" },
+			{ label: "-" }
+		];
+
+		menuItems = menuItems.concat(
+			this.props.tags.map(tag => {
+				return {
+					label: (
+						<span className="color-menu-selector">
+							<span className={`${tag.color}-background color-menu-block`}>
+								{tag.label}&nbsp;
+								{this.props.selectedTags[tag.id] && <Icon name="check" className="check" />}
+							</span>
+							<Icon
+								name="pencil"
+								className="edit"
+								onClick={e => {
+									this.setState({ tagsOpen: "edit", editingTag: { ...tag } });
+									e.preventDefault();
+									e.stopPropagation();
+								}}
+							/>
+						</span>
+					),
+					noHover: true,
+					searchLabel: tag.label || tag.color,
+					action: tag.id
+				};
+			})
+		);
+		menuItems = menuItems.concat({ label: "-" }, { label: "Create a New Tag", action: "create" });
+		return (
+			<Menu
+				title="Tags"
+				items={menuItems}
+				action={this.tagsMenuAction}
+				target={this.state.tagsMenuTarget}
+			/>
+		);
+	};
+
 	render() {
 		const { placeholder, text, __onDidRender } = this.props;
 
@@ -583,8 +887,15 @@ export class MessageInput extends React.Component<Props, State> {
 				</div>
 				<React.Fragment>
 					<Icon
+						name="mention"
+						className={cx("icon-in-compose mention", {
+							hover: this.state.emojiOpen
+						})}
+						onClick={e => this.showPopupSelectors("", "at-mentions")}
+					/>
+					<Icon
 						name="smiley"
-						className={cx("smiley", {
+						className={cx("icon-in-compose smiley", {
 							hover: this.state.emojiOpen
 						})}
 						onClick={this.handleClickEmojiButton}
@@ -596,6 +907,22 @@ export class MessageInput extends React.Component<Props, State> {
 							autoFocus={true}
 						/>
 					)}
+					<Icon
+						name="codestream"
+						className={cx("icon-in-compose codestream", {
+							hover: this.state.codemarkOpen
+						})}
+						onClick={this.handleClickCodemarkButton}
+					/>
+					{this.buildCodemarkMenu()}
+					<Icon
+						name="tag"
+						className={cx("icon-in-compose label", {
+							hover: this.state.tagsOpen
+						})}
+						onClick={this.handleClickTagButton}
+					/>
+					{this.buildTagMenu()}
 				</React.Fragment>
 				<ContentEditable
 					className={cx("message-input", btoa(unescape(encodeURIComponent(placeholder || ""))), {
