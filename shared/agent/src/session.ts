@@ -12,7 +12,13 @@ import {
 } from "vscode-languageserver";
 import { CodeStreamAgent } from "./agent";
 import { AgentError, ServerError } from "./agentError";
-import { ApiProvider, LoginOptions, MessageType, RTMessage } from "./api/apiProvider";
+import {
+	ApiProvider,
+	ApiProviderLoginResponse,
+	LoginOptions,
+	MessageType,
+	RTMessage
+} from "./api/apiProvider";
 import { CodeStreamApiProvider } from "./api/codestream/codestreamApi";
 import { Team, User } from "./api/extensions";
 import {
@@ -37,7 +43,10 @@ import {
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
+	DidFailLoginNotificationType,
+	DidLoginNotificationType,
 	DidLogoutNotificationType,
+	DidStartLoginNotificationType,
 	DidUpdateProvidersType,
 	FetchMarkerLocationsRequestType,
 	GetInviteInfoRequest,
@@ -70,7 +79,7 @@ import {
 	CSUser,
 	LoginResult
 } from "./protocol/api.protocol";
-import { log, memoize, registerDecoratedHandlers, registerProviders } from "./system";
+import { Functions, log, memoize, registerDecoratedHandlers, registerProviders } from "./system";
 
 // FIXME: Must keep this in sync with vscode-codestream/src/api/session.ts
 const envRegex = /https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(?::\d+$)?/i;
@@ -535,10 +544,13 @@ export class CodeStreamSession {
 			return { error: LoginResult.AlreadySignedIn };
 		}
 
-		let response;
+		this.agent.sendNotification(DidStartLoginNotificationType, undefined);
+
+		let response: ApiProviderLoginResponse;
 		try {
 			response = await this.api.login(options);
 		} catch (ex) {
+			this.agent.sendNotification(DidFailLoginNotificationType, undefined);
 			if (ex instanceof ServerError) {
 				if (ex.statusCode !== undefined && ex.statusCode >= 400 && ex.statusCode < 500) {
 					const error = loginApiErrorMappings[ex.info.code] || LoginResult.Unknown;
@@ -578,6 +590,16 @@ export class CodeStreamSession {
 		this._teamId = (this._options as any).teamId = token.teamId;
 		this._codestreamUserId = response.user.id;
 		const currentTeam = response.teams.find(t => t.id === this._teamId)!;
+
+		if (response.provider === "codestream") {
+			if (
+				currentTeam.providerInfo !== undefined &&
+				Object.keys(currentTeam.providerInfo).length > 0
+			) {
+				// the user is using email/password for a CS team and being put into another type team
+				return { error: LoginResult.InvalidCredentials };
+			}
+		}
 
 		this._providers = currentTeam.providerHosts || {};
 		registerProviders(this._providers, this);
@@ -640,7 +662,7 @@ export class CodeStreamSession {
 		// Initialize tracking
 		this.initializeTelemetry(response.user, currentTeam, response.companies);
 
-		return {
+		const loginResponse = {
 			loginResponse: { ...response },
 			state: {
 				token: token,
@@ -652,6 +674,12 @@ export class CodeStreamSession {
 				userId: response.user.id
 			}
 		};
+
+		setImmediate(() =>
+			this.agent.sendNotification(DidLoginNotificationType, { data: loginResponse })
+		);
+
+		return loginResponse;
 	}
 
 	@log({

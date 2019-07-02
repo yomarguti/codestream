@@ -1,5 +1,6 @@
 "use strict";
 import { NotificationType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
+import { LoginSuccessResponse } from "./agent.protocol.auth";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
 import { ThirdPartyProviders } from "./agent.protocol.providers";
 import {
@@ -165,4 +166,19 @@ export interface DidUpdateProviders {
 
 export const DidUpdateProvidersType = new NotificationType<DidUpdateProviders, void>(
 	"codestream/didUpdateProviders"
+);
+
+export interface DidLoginNotification {
+	data: LoginSuccessResponse;
+}
+export const DidLoginNotificationType = new NotificationType<DidLoginNotification, void>(
+	"codestream/didLogin"
+);
+
+export const DidStartLoginNotificationType = new NotificationType<void, void>(
+	"codestream/didStartLogin"
+);
+
+export const DidFailLoginNotificationType = new NotificationType<void, void>(
+	"codestream/didFailLogin"
 );
