@@ -11,6 +11,7 @@ import { CSUser, CSMe, CSPost } from "@codestream/protocols/api";
 import { getTeamProvider } from "../store/teams/actions";
 import { replaceHtml } from "../utils";
 import { DelayedRender } from "../Container/DelayedRender";
+import { localStore } from "../utilities/storage";
 
 interface State {
 	editingPostId?: string;
@@ -43,9 +44,30 @@ export class CodemarkDetails extends React.Component<Props, State> {
 	constructor(props: Props) {
 		super(props);
 		this.state = {
-			text: "",
+			text: this.getCachedText(),
 			isLoadingReplies: true
 		};
+	}
+
+	getCachedText() {
+		const replyCache = localStore.get('replyCache');
+		if (!replyCache) return "";
+
+		return replyCache[this.props.codemark.id] || "";
+	}
+
+	cacheText(text: string) {
+		let replyCache = localStore.get('replyCache');
+		if (!replyCache) replyCache = {};
+
+		if (text === "") {
+			delete replyCache[this.props.codemark.id];
+		}
+		else {
+			replyCache[this.props.codemark.id] = text;
+		}
+
+		localStore.set('replyCache', replyCache);
 	}
 
 	componentDidMount() {
@@ -53,7 +75,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		if (input) input.focus();
 	}
 
-	handleClickPost() {}
+	handleClickPost() { }
 
 	submitReply = async () => {
 		const { codemark } = this.props;
@@ -62,12 +84,15 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		const threadId = codemark ? codemark.postId : "";
 		const { createPost } = this.props;
 		this.setState({ text: "" });
+		this.cacheText("");
+
 		await createPost(codemark.streamId, threadId, replaceHtml(text)!, null, mentionedUserIds, {
 			entryPoint: "Codemark"
 		});
 	};
 
 	handleOnChange = (text: string) => {
+		this.cacheText(text);
 		this.setState({ text: text });
 	};
 

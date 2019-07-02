@@ -66,7 +66,7 @@ export class MessageInput extends React.Component<Props, State> {
 		// so that HTML doesn't get pasted into the input field. without this,
 		// HTML would be rendered as HTML when pasted
 		if (this._contentEditable) {
-			this._contentEditable.htmlEl.addEventListener("paste", function(e) {
+			this._contentEditable.htmlEl.addEventListener("paste", function (e) {
 				e.preventDefault();
 				const text = e.clipboardData.getData("text/plain");
 				document.execCommand("insertHTML", false, text.replace(/\n/g, "<br>"));
@@ -81,6 +81,11 @@ export class MessageInput extends React.Component<Props, State> {
 					}
 				})
 			);
+		}
+
+		const text = this.props.text;
+		if (text !== "") {
+			this.setCurrentCursorPosition(text.length);
 		}
 	}
 
