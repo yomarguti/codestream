@@ -77,6 +77,7 @@
 	margin-right: 2px;
 	padding: 1px 2px;
 	cursor: pointer;
+	user-select: none;
 	// opacity: 0.5;
 
 	&.selected {
@@ -101,6 +102,7 @@
 	color: white;
 	// text-shadow: 0 0 1px rgba(0, 0, 0, 1);
 	font-weight: bold;
+	user-select: none;
 	&:hover {
 		border: 2px solid white;
 	}
@@ -117,6 +119,7 @@
 	border-radius: 3px;
 	display: grid;
 	font-size: 10px;
+	user-select: none;
 	position: relative;
 	&:hover {
 		border: 2px solid rgba(255, 255, 255, 0.75);
@@ -136,10 +139,12 @@
 	width: auto;
 	height: 30px;
 	margin: 0;
+	user-select: none;
 }
 .color-menu-selector {
 	display: inline-block;
 	margin: -5px 0 -5px 0;
+	user-select: none;
 	.edit {
 		display: inline-block;
 		transform: scale(0.75);
@@ -156,18 +161,19 @@
 .compose-tag {
 	display: inline-block;
 	margin: 0 5px 5px 0;
-	min-width: 25px;
-	height: 20px;
-	font-size: 11px;
+	min-width: 16px;
+	height: 16px;
+	font-size: 10px;
 	display: grid;
 	border-radius: 3px;
 	width: auto;
 	float: left;
+	user-select: none;
 	div {
 		width: auto;
 		place-self: center;
 		color: white;
-		padding: 0 5px;
+		padding: 0 2px;
 		font-weight: bold;
 		// text-shadow: 0 0 1px rgba(0, 0, 0, 1);
 	}

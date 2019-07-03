@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import createClassString from "classnames";
 import Icon from "./Icon";
+import { filter as _filter } from "lodash-es";
 
 export default class Menu extends Component {
 	constructor(props) {
@@ -96,7 +97,6 @@ export default class Menu extends Component {
 		if (item.type === "search" || item.noHover) {
 			selected = false;
 		}
-		if (item.searchLabel && this.state.q && !item.searchLabel.includes(this.state.q)) return null;
 
 		return (
 			<li
@@ -120,7 +120,12 @@ export default class Menu extends Component {
 					</span>
 				)}
 				{item.type === "search" && (
-					<input type="text" placeholder={item.placeholder} onChange={this.changeSearch} />
+					<input
+						style={{ width: "100%" }}
+						type="text"
+						placeholder={item.placeholder}
+						onChange={this.changeSearch}
+					/>
 				)}
 			</li>
 		);
@@ -128,6 +133,7 @@ export default class Menu extends Component {
 
 	changeSearch = e => {
 		this.setState({ q: e.target.value });
+		if (this.props.onChangeSearch) this.props.onChangeSearch(e.target.value);
 	};
 
 	renderSubmenu = item => {
@@ -138,21 +144,35 @@ export default class Menu extends Component {
 		);
 	};
 
+	filterItems = items => {
+		let count = 0;
+		const q = (this.state.q || "").toLowerCase();
+
+		const filteredItems = _filter(items, item => {
+			if (item.searchLabel !== undefined && !item.searchLabel.toLowerCase().includes(q)) {
+				return false;
+			} else if (count < this.props.startItem || count > this.props.maxItems) {
+				return false;
+			} else {
+				count++;
+				return true;
+			}
+		});
+
+		return filteredItems;
+	};
+
 	renderMenu = (items, parentItem) => {
+		let itemsToRender = this.filterItems(items);
+
 		return (
 			<div className="menu-popup-body">
 				{this.props.title && (
 					<h3>
-						{this.props.title}{" "}
-						<Icon
-							onClick={e => {
-								this.props.action();
-							}}
-							name="x"
-						/>
+						{this.props.title} <Icon onClick={e => this.props.action()} name="x" />
 					</h3>
 				)}
-				<ul className="compact">{items.map(item => this.renderItem(item, parentItem))}</ul>
+				<ul className="compact">{itemsToRender.map(item => this.renderItem(item, parentItem))}</ul>
 			</div>
 		);
 	};

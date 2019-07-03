@@ -44,7 +44,7 @@ import { EditorSelectRangeRequestType, EditorSelection } from "@codestream/proto
 import { getCurrentSelection } from "../store/editorContext/reducer";
 import Headshot from "./Headshot";
 import { getTeamMembers } from "../store/users/reducer";
-import { MessageInput } from "./MessageInput";
+import MessageInput from "./MessageInput";
 import { getSlashCommands } from "./SlashCommands";
 import { getCurrentTeamProvider } from "../store/teams/actions";
 
@@ -161,7 +161,8 @@ class CodemarkForm extends React.Component<Props, State> {
 			selectedChannelId: props.channel.id,
 			assignableUsers: this.getAssignableCSUsers(),
 			privacy: "private",
-			selectedTags: {}
+			selectedTags: {},
+			relatedCodemarkIds: {}
 		};
 
 		const state = props.editingCodemark
@@ -627,6 +628,37 @@ class CodemarkForm extends React.Component<Props, State> {
 		);
 	};
 
+	renderRelatedCodemarks = () => {
+		const { relatedCodemarkIds } = this.state;
+		const keys = Object.keys(relatedCodemarkIds);
+		if (keys.length === 0) return null;
+
+		return (
+			<div className="related-codemarks" style={{ margin: "10px 0 0 0" }}>
+				{keys.map(key => {
+					const codemark = relatedCodemarkIds[key];
+					if (!codemark) return null;
+
+					const title = codemark.title || codemark.text;
+					const icon = (
+						<Icon
+							name={codemark.type || "comment"}
+							className={`${codemark.color}-color type-icon`}
+						/>
+					);
+					const file = codemark.markers && codemark.markers[0] && codemark.markers[0].file;
+
+					return (
+						<div className="related-codemark">
+							{icon}&nbsp;{title}&nbsp;&nbsp;<span className="codemark-file">{file}</span>
+						</div>
+					);
+				})}
+				<div style={{ clear: "both" }} />
+			</div>
+		);
+	};
+
 	renderCrossPostMessage = commentType => {
 		const { selectedStreams, showChannels } = this.props;
 		const { showAllChannels, selectedChannelId } = this.state;
@@ -805,6 +837,14 @@ class CodemarkForm extends React.Component<Props, State> {
 		this.setState({ selectedTags });
 	};
 
+	handleToggleCodemark = codemark => {
+		if (!codemark || !codemark.id) return;
+		let relatedCodemarkIds = this.state.relatedCodemarkIds;
+		if (relatedCodemarkIds[codemark.id]) delete relatedCodemarkIds[codemark.id];
+		else relatedCodemarkIds[codemark.id] = codemark;
+		this.setState({ relatedCodemarkIds });
+	};
+
 	handleChangeRelated = codemarkIds => {
 		this.setState({ relatedCodemarkIds: codemarkIds });
 	};
@@ -898,9 +938,11 @@ class CodemarkForm extends React.Component<Props, State> {
 				onChange={this.handleChange}
 				onChangeTag={this.handleChangeTag}
 				toggleTag={this.handleToggleTag}
+				toggleCodemark={this.handleToggleCodemark}
 				onSubmit={this.handleClickSubmit}
 				tags={TAGS}
 				selectedTags={this.state.selectedTags}
+				relatedCodemarkIds={this.state.relatedCodemarkIds}
 				__onDidRender={__onDidRender}
 			/>
 		);
@@ -1247,6 +1289,7 @@ class CodemarkForm extends React.Component<Props, State> {
 							codeBlock={this.state.codeBlock as any}
 						/>
 					)}
+					{this.renderRelatedCodemarks()}
 					{this.renderTags()}
 					{commentType !== "link" && this.renderCrossPostMessage(commentType)}
 					<div

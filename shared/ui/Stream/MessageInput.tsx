@@ -1,6 +1,9 @@
 import cx from "classnames";
 import React from "react";
+import { connect } from "react-redux";
 import ContentEditable from "react-contenteditable";
+import * as codemarkSelectors from "../store/codemarks/reducer";
+import * as actions from "./actions";
 const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
 import { CSChannelStream, CSPost, CSUser } from "@codestream/protocols/api";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
@@ -20,6 +23,10 @@ type PopupType = "at-mentions" | "slash-commands" | "channels" | "emojis";
 
 type QuotePost = CSPost & { author: { username: string } };
 
+const tuple = <T extends string[]>(...args: T) => args;
+
+const COLOR_OPTIONS = tuple("blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray");
+
 interface State {
 	emojiOpen: boolean;
 	codemarkOpen: boolean;
@@ -35,6 +42,8 @@ interface State {
 	tagsMenuTarget?: any;
 	editingTag?: any;
 	customColor?: string;
+	q?: string;
+	codemarkMenuStart?: number;
 }
 
 interface Props {
@@ -60,6 +69,9 @@ interface Props {
 	tags?: any;
 	selectedTags?: any;
 	toggleTag?: Function;
+	relatedCodemarkIds?: any;
+	toggleCodemark?: Function;
+	codemarks?: any;
 	__onDidRender?(stuff: { [key: string]: any }): any; // HACKy: sneaking internals to parent
 }
 
@@ -73,7 +85,8 @@ export class MessageInput extends React.Component<Props, State> {
 			emojiOpen: false,
 			codemarkOpen: false,
 			tagsOpen: false,
-			customColor: ""
+			customColor: "",
+			codemarkMenuStart: 0
 		};
 	}
 
@@ -160,7 +173,7 @@ export class MessageInput extends React.Component<Props, State> {
 	};
 
 	hideTagsPicker = () => {
-		this.setState({ tagsOpen: false });
+		this.setState({ tagsOpen: false, q: "" });
 	};
 
 	addEmoji = (emoji: typeof emojiData[string]) => {
@@ -606,7 +619,19 @@ export class MessageInput extends React.Component<Props, State> {
 	};
 
 	codemarkMenuAction = action => {
-		this.setState({ codemarkOpen: false });
+		if (!action) this.setState({ codemarkOpen: false });
+
+		switch (action) {
+			case "search":
+				return;
+			case "more":
+				return; // FIXME load more codemarks
+			default:
+				if (action && this.props.toggleCodemark) {
+					const codemark = this.props.codemarks.find(codemark => codemark.id === action);
+					this.props.toggleCodemark(codemark);
+				}
+		}
 	};
 
 	buildCodemarkMenuOld = () => {
@@ -633,16 +658,35 @@ export class MessageInput extends React.Component<Props, State> {
 			{ label: "-" }
 		];
 
+		const { codemarks = [] } = this.props;
 		menuItems = menuItems.concat(
-			[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(color => {
+			codemarks.map(codemark => {
+				const title = codemark.title || codemark.text;
+				const icon = this.props.relatedCodemarkIds[codemark.id] ? (
+					<Icon name="check" />
+				) : (
+					<Icon name={codemark.type || "comment"} className={`${codemark.color}-color type-icon`} />
+				);
+				const file = codemark.markers && codemark.markers[0] && codemark.markers[0].file;
 				return {
-					label: "Codemark title goes here",
-					searchLabel: " " + color,
-					action: color
+					icon: icon,
+					label: (
+						<span className={this.props.relatedCodemarkIds[codemark.id] ? "menu-selected" : ""}>
+							&nbsp;{title}&nbsp;&nbsp;<span className="codemark-file">{file}</span>
+						</span>
+					),
+					searchLabel: title || "",
+					action: codemark.id
 				};
 			})
 		);
-		menuItems = menuItems.concat({ label: "-" }, { label: "Show More...", action: "more" });
+		if (codemarks.length === 0) {
+			menuItems = menuItems.concat(
+				{ label: "-" },
+				{ label: "No Codemarks! FIXME", action: "more" }
+			);
+		}
+		// menuItems = menuItems.concat({ label: "-" }, { label: "Show More...", action: "more" });
 		return (
 			<Menu
 				title="Add Codemark"
@@ -667,7 +711,7 @@ export class MessageInput extends React.Component<Props, State> {
 			case "noop":
 				return;
 			case "create":
-				this.setState({ tagsOpen: "create", editingTag: { label: "", color: "blue" } });
+				this.setState({ tagsOpen: "create", editingTag: { label: this.state.q, color: "blue" } });
 				break;
 			default:
 				if (this.props.toggleTag) this.props.toggleTag(action);
@@ -750,13 +794,13 @@ export class MessageInput extends React.Component<Props, State> {
 						whiteSpace: "normal"
 					}}
 				>
-					{this.props.tags.map(tag => {
+					{COLOR_OPTIONS.map(color => {
 						return (
 							<span
-								className={`${tag.color}-background color-edit-block`}
-								onClick={e => this.setEditingTagColor(tag.color)}
+								className={`${color}-background color-edit-block`}
+								onClick={e => this.setEditingTagColor(color)}
 							>
-								{editingTag.color === tag.color && <Icon name="check" className="check" />}
+								{editingTag.color === color && <Icon name="check" className="check" />}
 							</span>
 						);
 					})}
@@ -828,10 +872,15 @@ export class MessageInput extends React.Component<Props, State> {
 
 		menuItems = menuItems.concat(
 			this.props.tags.map(tag => {
+				let className = "color-menu-block";
+				if (!tag.color.startsWith("#")) className += " " + tag.color + "-background";
 				return {
 					label: (
 						<span className="color-menu-selector">
-							<span className={`${tag.color}-background color-menu-block`}>
+							<span
+								className={className}
+								style={tag.color.startsWith("#") ? { background: tag.color } : {}}
+							>
 								{tag.label}&nbsp;
 								{this.props.selectedTags[tag.id] && <Icon name="check" className="check" />}
 							</span>
@@ -859,6 +908,7 @@ export class MessageInput extends React.Component<Props, State> {
 				items={menuItems}
 				action={this.tagsMenuAction}
 				target={this.state.tagsMenuTarget}
+				onChangeSearch={q => this.setState({ q })}
 			/>
 		);
 	};
@@ -891,7 +941,10 @@ export class MessageInput extends React.Component<Props, State> {
 						className={cx("icon-in-compose mention", {
 							hover: this.state.emojiOpen
 						})}
-						onClick={e => this.showPopupSelectors("", "at-mentions")}
+						onClick={e => {
+							// this.insertTextAtCursor("@");
+							this.showPopupSelectors("", "at-mentions");
+						}}
 					/>
 					<Icon
 						name="smiley"
@@ -941,3 +994,16 @@ export class MessageInput extends React.Component<Props, State> {
 		);
 	}
 }
+
+const mapStateToProps = state => {
+	const { context, teams } = state;
+
+	return {
+		codemarks: codemarkSelectors.getTypeFilteredCodemarks(state) || []
+	};
+};
+
+export default connect(
+	mapStateToProps,
+	{ ...actions }
+)(MessageInput);
