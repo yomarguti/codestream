@@ -102,6 +102,12 @@ export class StatusBarController implements Disposable {
 		}
 
 		switch (status) {
+			case SessionStatus.SigningOut:
+				this._statusBarItem.text = ` $(sync~spin) ${env}Signing out... `;
+				this._statusBarItem.command = undefined;
+				this._statusBarItem.tooltip = "Tearing down CodeStream Agent, please wait";
+				this._statusBarItem.color = undefined;
+				break;
 			case SessionStatus.SignedOut:
 				this._statusBarItem.text = ` $(comment-discussion) ${env}Sign in... `;
 				this._statusBarItem.command = "codestream.signIn";

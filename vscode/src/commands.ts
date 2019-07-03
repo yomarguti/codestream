@@ -12,7 +12,7 @@ import {
 	workspace,
 	WorkspaceEdit
 } from "vscode";
-import { StreamThread } from "./api/session";
+import { SessionSignedOutReason, StreamThread } from "./api/session";
 import { TokenManager } from "./api/tokenManager";
 import { WorkspaceState } from "./common";
 import { BuiltInCommands } from "./constants";
@@ -272,9 +272,12 @@ export class Commands implements Disposable {
 	}
 
 	@command("signOut")
-	async signOut() {
+	async signOut(reason = SessionSignedOutReason.UserSignedOutFromExtension) {
 		try {
-			await Container.session.logout();
+			if (reason === SessionSignedOutReason.UserSignedOutFromExtension) {
+				Container.webview.hide();
+			}
+			await Container.session.logout(reason);
 		} catch (ex) {
 			Logger.error(ex);
 		}

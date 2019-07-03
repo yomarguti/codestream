@@ -142,7 +142,10 @@ export class WebviewController implements Disposable {
 					break;
 				}
 
-				if (this.visible && e.reason === SessionSignedOutReason.UserSignedOut) {
+				if (
+					this._webview !== undefined &&
+					e.reason === SessionSignedOutReason.UserSignedOutFromExtension
+				) {
 					if (this._webview !== undefined) {
 						this._webview.notify(HostDidLogoutNotificationType, {});
 					}
@@ -476,7 +479,7 @@ export class WebviewController implements Disposable {
 			}
 			case LogoutRequestType.method: {
 				webview.onIpcRequest(LogoutRequestType, e, async (type, params) => {
-					await Container.commands.signOut();
+					await Container.commands.signOut(SessionSignedOutReason.UserSignedOutFromWebview);
 					return emptyObj;
 				});
 

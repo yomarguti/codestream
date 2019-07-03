@@ -90,14 +90,16 @@ export interface StreamThread {
 export enum SessionSignedOutReason {
 	NetworkIssue = "networkIssue",
 	SignInFailure = "signInFailure",
-	UserSignedOut = "userSignedOut",
+	UserSignedOutFromWebview = "userSignedOutFromWebview",
+	UserSignedOutFromExtension = "userSignedOutFromExtension",
 	UserWentOffline = "userWentOffline"
 }
 
 export enum SessionStatus {
 	SignedOut = "signedOut",
 	SigningIn = "signingIn",
-	SignedIn = "signedIn"
+	SignedIn = "signedIn",
+	SigningOut = "signingOut"
 }
 
 export class CodeStreamSession implements Disposable {
@@ -481,12 +483,14 @@ export class CodeStreamSession implements Disposable {
 	// }
 
 	@log()
-	async logout(reason: SessionSignedOutReason = SessionSignedOutReason.UserSignedOut) {
+	async logout(reason: SessionSignedOutReason = SessionSignedOutReason.UserSignedOutFromWebview) {
 		this._id = undefined;
 		this._loginPromise = undefined;
 
+		this.setStatus(SessionStatus.SigningOut);
+
 		try {
-			if (reason === SessionSignedOutReason.UserSignedOut) {
+			if (reason === SessionSignedOutReason.UserSignedOutFromWebview) {
 				// Clear the access token
 				await Container.context.workspaceState.update(WorkspaceState.TeamId, undefined);
 				await TokenManager.clear(this._serverUrl, this._email!);
@@ -508,13 +512,7 @@ export class CodeStreamSession implements Disposable {
 			this._state = undefined;
 			this._signupToken = undefined;
 
-			setImmediate(() =>
-				this._onDidChangeSessionStatus.fire({
-					getStatus: () => this._status,
-					session: this,
-					reason: reason
-				})
-			);
+			setImmediate(() => this.setStatus(SessionStatus.SignedOut, reason));
 		}
 	}
 
