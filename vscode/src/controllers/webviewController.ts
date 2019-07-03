@@ -32,7 +32,6 @@ import {
 	LiveShareInviteToSessionRequestType,
 	LiveShareJoinSessionRequestType,
 	LiveShareStartSessionRequestType,
-	LoginSSORequestType,
 	LogoutRequestType,
 	NewCodemarkNotificationType,
 	ReloadWebviewRequestType,
@@ -51,7 +50,6 @@ import {
 	ConfigurationChangeEvent,
 	ConfigurationTarget,
 	Disposable,
-	env,
 	TextEditor,
 	TextEditorSelectionChangeEvent,
 	TextEditorVisibleRangesChangeEvent,
@@ -480,20 +478,6 @@ export class WebviewController implements Disposable {
 			case LogoutRequestType.method: {
 				webview.onIpcRequest(LogoutRequestType, e, async (type, params) => {
 					await Container.commands.signOut(SessionSignedOutReason.UserSignedOutFromWebview);
-					return emptyObj;
-				});
-
-				break;
-			}
-			case LoginSSORequestType.method: {
-				webview.onIpcRequest(LoginSSORequestType, e, async (type, params) => {
-					await env.openExternal(
-						Uri.parse(
-							`${Container.config.serverUrl}/web/provider-auth/${params.provider}?${
-								params.queryString ? `${params.queryString}&` : ""
-							}signupToken=${this.session.getSignupToken()}`
-						)
-					);
 					return emptyObj;
 				});
 
