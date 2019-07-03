@@ -331,7 +331,8 @@ class EditorService(val project: Project) {
                     displayPath,
                     document.uri,
                     EditorMetrics(
-                        Math.round(colorsScheme.editorFontSize / getFontScale()),
+                        // Math.round(colorsScheme.editorFontSize / getFontScale()),
+                        colorsScheme.editorFontSize,
                         lineHeight,
                         margins
                     ),
@@ -357,7 +358,8 @@ class EditorService(val project: Project) {
                     editor.document.uri,
                     editor.selections,
                     EditorMetrics(
-                        Math.round(editor.colorsScheme.editorFontSize / getFontScale()),
+                        // Math.round(editor.colorsScheme.editorFontSize / getFontScale()),
+                        editor.colorsScheme.editorFontSize,
                         editor.lineHeight,
                         editor.margins
                     )
@@ -595,21 +597,21 @@ class EditorService(val project: Project) {
     // }
 }
 
-fun getFontScale(): Float {
-    if (UIUtil.isJreHiDPIEnabled() || SystemInfo.isMac) {
-        return 1F
-    }
-
-    val dpi = try {
-        Toolkit.getDefaultToolkit().screenResolution
-    } catch (ignored: HeadlessException) {
-        96
-    }
-    return discreteScale((dpi.toFloat() / 96))
-}
-
-fun discreteScale(scale: Float): Float {
-    return Math.round(scale / .25F) * .25F
-}
+// fun getFontScale(): Float {
+//     if (UIUtil.isJreHiDPIEnabled() || SystemInfo.isMac) {
+//         return 1F
+//     }
+//
+//     val dpi = try {
+//         Toolkit.getDefaultToolkit().screenResolution
+//     } catch (ignored: HeadlessException) {
+//         96
+//     }
+//     return discreteScale((dpi.toFloat() / 96))
+// }
+//
+// fun discreteScale(scale: Float): Float {
+//     return Math.round(scale / .25F) * .25F
+// }
 
 

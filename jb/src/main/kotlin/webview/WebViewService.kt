@@ -9,41 +9,27 @@ import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.SystemInfo
-import com.intellij.util.ui.UIUtil
-import com.teamdev.jxbrowser.chromium.Browser
-import com.teamdev.jxbrowser.chromium.BrowserContext
-import com.teamdev.jxbrowser.chromium.BrowserContextParams
-import com.teamdev.jxbrowser.chromium.BrowserPreferences
-import com.teamdev.jxbrowser.chromium.BrowserType
-import com.teamdev.jxbrowser.chromium.CertificateErrorParams
-import com.teamdev.jxbrowser.chromium.CertificatesDialogParams
-import com.teamdev.jxbrowser.chromium.CloseStatus
-import com.teamdev.jxbrowser.chromium.ColorChooserParams
-import com.teamdev.jxbrowser.chromium.DialogHandler
-import com.teamdev.jxbrowser.chromium.DialogParams
-import com.teamdev.jxbrowser.chromium.FileChooserParams
-import com.teamdev.jxbrowser.chromium.LoadHandler
-import com.teamdev.jxbrowser.chromium.LoadParams
-import com.teamdev.jxbrowser.chromium.PromptDialogParams
-import com.teamdev.jxbrowser.chromium.ReloadPostDataParams
-import com.teamdev.jxbrowser.chromium.ResourceHandler
-import com.teamdev.jxbrowser.chromium.ResourceParams
-import com.teamdev.jxbrowser.chromium.ResourceType
-import com.teamdev.jxbrowser.chromium.UnloadDialogParams
-import com.teamdev.jxbrowser.chromium.events.ScriptContextEvent
-import com.teamdev.jxbrowser.chromium.events.ScriptContextListener
-import com.teamdev.jxbrowser.chromium.swing.BrowserView
+import com.teamdev.jxbrowser.browser.Browser
+import com.teamdev.jxbrowser.browser.callback.InjectJsCallback
+import com.teamdev.jxbrowser.engine.Engine
+import com.teamdev.jxbrowser.engine.EngineOptions
+import com.teamdev.jxbrowser.engine.RenderingMode
+import com.teamdev.jxbrowser.js.JsObject
+import com.teamdev.jxbrowser.net.ResourceType
+import com.teamdev.jxbrowser.net.callback.LoadResourceCallback
+import com.teamdev.jxbrowser.plugin.callback.AllowPluginCallback
+import com.teamdev.jxbrowser.view.swing.BrowserView
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.Charset
+import java.nio.file.Paths
 import javax.swing.UIManager
 
-class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHandler, ResourceHandler {
+class WebViewService(val project: Project) : Disposable {
     private val logger = Logger.getInstance(WebViewService::class.java)
     private val router = WebViewRouter(project)
     private val browser = createBrowser(router)
-    val webView = BrowserView(browser)
+    val webView: BrowserView = BrowserView.newInstance(browser)
     private val messageQueue = ArrayList<JsonElement>()
 
     private lateinit var tempDir: File
@@ -53,12 +39,12 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
         router.onWebviewReady { flushMessageQueue() }
 
         extractAssets()
-        browser.loadURL(htmlFile.url)
+        browser.navigation().loadUrl(htmlFile.url)
 
         UIManager.addPropertyChangeListener {
             if (it.propertyName == "lookAndFeel") {
                 extractHtml()
-                browser.loadURL(htmlFile.url)
+                browser.navigation().loadUrl(htmlFile.url)
             }
         }
     }
@@ -113,7 +99,9 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
     }
 
     private fun postMessage(message: JsonElement, force: Boolean? = false) {
-        if (router.isReady || force == true) browser.executeJavaScript("window.postMessage($message,'*');")
+        if (router.isReady || force == true) browser.mainFrame().ifPresent {
+            it.executeJavaScript<Unit>("window.postMessage($message,'*');")
+        }
         else enqueueMessage(message)
     }
 
@@ -131,7 +119,9 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
         } else {
             while (messageQueue.count() > 0) {
                 val message = messageQueue.first()
-                browser.executeJavaScript("window.postMessage($message,'*');")
+                browser.mainFrame().ifPresent {
+                    it.executeJavaScript<Unit>("window.postMessage($message,'*');")
+                }
                 messageQueue.remove(message)
             }
         }
@@ -139,112 +129,102 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
 
     override fun dispose() {
         logger.info("Disposing JxBrowser")
-        browser.dispose()
-//        BrowserCore.shutdown()
+        browser.close()
+        browser.engine().close()
     }
 
     fun reload() {
-        browser.loadURL(htmlFile.url)
+        browser.navigation().loadUrl(htmlFile.url)
     }
 
     private fun createBrowser(router: WebViewRouter): Browser {
-        configureJxBrowser()
-        val browser = Browser(BrowserType.LIGHTWEIGHT, createBrowserContext())
-        browser.dialogHandler = this
-        browser.loadHandler = this
-        browser.context.networkService.resourceHandler = this
-        browser.configurePreferences()
+        val dir = createTempDir()
+        logger.info("JxBrowser work dir: $dir")
+        val optionsBuilder = EngineOptions
+            .newBuilder(RenderingMode.OFF_SCREEN)
+            .licenseKey("6P835FT5H9Q596QEMRZTTB0RYSG7H1P664XU2Y2M9QPOA998OY42K6N3OTUO90SSP5BA")
+            .userDataDir(Paths.get(dir.toURI()))
+            // .disableGpu()
+            // .disableWebSecurity()
+            .allowFileAccessFromFiles()
+            // .addSwitch("--disable-gpu-compositing")
+            // .addSwitch("--enable-begin-frame-scheduling")
+            // .addSwitch("--software-rendering-fps=60")
+            //     if (JreHiDpiUtil.isJreHiDPIEnabled() && !SystemInfo.isMac) "--force-device-scale-factor=1" else ""
+
+        if (DEBUG) {
+            optionsBuilder.remoteDebuggingPort(9222)
+        }
+
+        val options = optionsBuilder.build()
+        val engine = Engine.newInstance(options)
+        engine.network()
+        engine.spellChecker().disable()
+        engine.plugins().set(AllowPluginCallback::class.java, AllowPluginCallback { AllowPluginCallback.Response.deny() })
+        engine.network().set(LoadResourceCallback::class.java, LoadResourceCallback {
+            if (it.resourceType() == ResourceType.IMAGE || it.url().startsWith("file://")) {
+                LoadResourceCallback.Response.load()
+            } else {
+                if (it.resourceType() == ResourceType.MAIN_FRAME) {
+                    BrowserUtil.browse(it.url())
+                }
+                LoadResourceCallback.Response.cancel()
+            }
+        })
+
+        val browser = engine.newBrowser()
+        // browser.audio().mute()
+        // browser.set(ConfirmCallback::class.java, ConfirmCallback { _, tell -> tell.cancel() })
+        // browser.set(CertificateErrorCallback::class.java, CertificateErrorCallback { _, action -> action.deny() })
+        // browser.set(BeforeUnloadCallback::class.java, BeforeUnloadCallback { _, action -> action.stay() })
+        // browser.set(AlertCallback::class.java, AlertCallback { _, action -> action.ok() })
+        // browser.set(ConfirmCallback::class.java, ConfirmCallback { _, action -> action.cancel() })
+        // browser.set(OpenFileCallback::class.java, OpenFileCallback { _, action -> action.cancel() })
+        // browser.set(OpenFilesCallback::class.java, OpenFilesCallback { _, action -> action.cancel() })
+        // browser.set(OpenFolderCallback::class.java, OpenFolderCallback { _, action -> action.cancel() })
+        // browser.set(PromptCallback::class.java, PromptCallback { _, action -> action.cancel() })
+        // browser.set(SelectColorCallback::class.java, SelectColorCallback { _, action -> action.cancel() })
+        // browser.set(SelectClientCertificateCallback::class.java, SelectClientCertificateCallback { _, action -> action.cancel() })
         browser.connectRouter(router)
 
         return browser
     }
 
-    private fun configureJxBrowser() {
-        System.setProperty("jxbrowser.ipc.external", "true")
-        BrowserPreferences.setChromiumSwitches(
-            if (DEBUG) {
-                "--remote-debugging-port=9222"
-            } else {
-                ""
-            },
-            "--disable-gpu",
-            "--disable-gpu-compositing",
-            "--enable-begin-frame-scheduling",
-            "--software-rendering-fps=60",
-            "--disable-web-security",
-            "--allow-file-access-from-files",
-            if (UIUtil.isJreHiDPIEnabled() && !SystemInfo.isMac) "--force-device-scale-factor=1" else ""
-        )
-    }
-
-    private fun createBrowserContext(): BrowserContext {
-        val dir = createTempDir()
-        logger.info("JxBrowser work dir: $dir")
-        val params = BrowserContextParams(dir.absolutePath)
-        return BrowserContext(params)
-    }
-
-    private fun Browser.configurePreferences() {
-        preferences.apply {
-            isAllowDisplayingInsecureContent = false
-            isAllowRunningInsecureContent = false
-            isAllowScriptsToCloseWindows = false
-            isApplicationCacheEnabled = false
-            isDatabasesEnabled = false
-            isLocalStorageEnabled = false
-            isPluginsEnabled = false
-            isTransparentBackground = true
-            isUnifiedTextcheckerEnabled = false
-            isWebAudioEnabled = false
-        }
-    }
+    // private fun Browser.configurePreferences() {
+    //     preferences.apply {
+    //         isAllowDisplayingInsecureContent = false
+    //         isAllowRunningInsecureContent = false
+    //         isAllowScriptsToCloseWindows = false
+    //         isApplicationCacheEnabled = false
+    //         isDatabasesEnabled = false
+    //         isLocalStorageEnabled = false
+    //         isTransparentBackground = true
+    //     }
+    // }
 
     private fun Browser.connectRouter(router: WebViewRouter) {
-        addScriptContextListener(object : ScriptContextListener {
-            override fun onScriptContextDestroyed(e: ScriptContextEvent?) {
-            }
 
-            override fun onScriptContextCreated(e: ScriptContextEvent?) {
-                val window = executeJavaScriptAndReturnValue("window")
-                window.asObject().setProperty("csRouter", router)
-                executeJavaScript(
-                    """
-                        window.acquireHostApi = function() {
-                            return {
-                                postMessage: function(message, origin) {
-                                    window.csRouter.handle(JSON.stringify(message), origin);
-                                }
+        set(InjectJsCallback::class.java, InjectJsCallback {
+            val frame = it.frame()
+
+            val window = frame.executeJavaScript<JsObject>("window")!!
+            window.putProperty("csRouter", router)
+
+            frame.executeJavaScript<Unit>(
+                """
+                    window.acquireHostApi = function() {
+                        return {
+                            postMessage: function(message, origin) {
+                                window.csRouter.handle(JSON.stringify(message), origin);
                             }
                         }
-                        """.trimIndent()
-                )
-            }
+                    }
+                    """.trimIndent()
+            )
+
+            InjectJsCallback.Response.proceed()
         })
     }
-
-    override fun canLoadResource(params: ResourceParams?): Boolean {
-        params?.let {
-            if (it.resourceType == ResourceType.IMAGE || params.url.startsWith("file://")) {
-                return true
-            }
-            if (params.resourceType == ResourceType.MAIN_FRAME) {
-                BrowserUtil.browse(params.url)
-            }
-        }
-
-        return false
-    }
-
-    override fun onLoad(params: LoadParams?) = false
-    override fun onCertificateError(params: CertificateErrorParams?) = false
-    override fun onBeforeUnload(params: UnloadDialogParams?) = CloseStatus.CANCEL
-    override fun onAlert(params: DialogParams?) = Unit
-    override fun onConfirmation(params: DialogParams?) = CloseStatus.CANCEL
-    override fun onFileChooser(params: FileChooserParams?) = CloseStatus.CANCEL
-    override fun onPrompt(params: PromptDialogParams?) = CloseStatus.CANCEL
-    override fun onReloadPostData(params: ReloadPostDataParams?) = CloseStatus.CANCEL
-    override fun onColorChooser(params: ColorChooserParams?) = CloseStatus.CANCEL
-    override fun onSelectCertificate(params: CertificatesDialogParams?) = CloseStatus.CANCEL
 }
 
 private val File.url: String

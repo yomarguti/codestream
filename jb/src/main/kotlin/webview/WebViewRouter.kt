@@ -15,6 +15,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.teamdev.jxbrowser.js.JsAccessible
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
@@ -47,6 +48,7 @@ class WebViewRouter(val project: Project) {
         _isReady = false
     }
 
+    @JsAccessible
     fun handle(rawMessage: String, origin: String?) = GlobalScope.launch {
         val message = parse(rawMessage)
 
