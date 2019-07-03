@@ -180,8 +180,8 @@ export class SimpleStream extends Component {
 		this.props.setNewPostEntry(e.source);
 		const extra =
 			this.state.multiCompose &&
-			this.state.composeBoxProps &&
-			this.state.composeBoxProps.commentType === e.type
+				this.state.composeBoxProps &&
+				this.state.composeBoxProps.commentType === e.type
 				? { key: Math.random().toString() } // in case the codemark type already selected is the same as the new one requested, force a re-computation of the compose box
 				: {};
 		this.setMultiCompose(
@@ -300,20 +300,20 @@ export class SimpleStream extends Component {
 			rest.length === 1
 				? `${first} and ${rest[0]}`
 				: rest.reduce(
-						(result, string, index, array) =>
-							index === array.length - 1 ? `${result}, and ${string}` : `${result}, ${string}`,
-						first
-				  );
+					(result, string, index, array) =>
+						index === array.length - 1 ? `${result}, and ${string}` : `${result}, ${string}`,
+					first
+				);
 
 		return (
 			<label key="info">
 				{this.props.postStream.type === "direct" ? (
 					<span>This is the beginning of your direct message with {localizedMembers}.</span>
 				) : (
-					<span>
-						This is the beginning of the <b>{nameElement}</b> channel.
+						<span>
+							This is the beginning of the <b>{nameElement}</b> channel.
 					</span>
-				)}
+					)}
 			</label>
 		);
 	};
@@ -323,13 +323,13 @@ export class SimpleStream extends Component {
 			this.props.postStreamMemberIds.length > 2 ? (
 				<Icon name="organization" className="organization" />
 			) : (
-				<Icon name="person" />
-			)
+					<Icon name="person" />
+				)
 		) : this.props.isPrivate ? (
 			<Icon name="lock" />
 		) : (
-			<span>#</span>
-		);
+					<span>#</span>
+				);
 	}
 
 	renderMenu() {
@@ -430,9 +430,9 @@ export class SimpleStream extends Component {
 		) : umis.totalUnread ? (
 			<div className="unread-badge">.</div>
 		) : (
-			// <Icon name="chevron-left" className="show-channels-icon" />
-			""
-		);
+					// <Icon name="chevron-left" className="show-channels-icon" />
+					""
+				);
 
 		const menu = this.renderMenu();
 
@@ -523,25 +523,25 @@ export class SimpleStream extends Component {
 					}
 					{(this.props.capabilities.providerSupportsRealtimeChat ||
 						this.props.capabilities.providerCanSupportRealtimeChat) && (
-						<label
-							className={createClassString({
-								selected:
-									activePanel === "channels" || activePanel === "main" || activePanel === "thread"
-							})}
-							onClick={e => this.setActivePanel("channels")}
-						>
-							<Tooltip title="Channels &amp; DMs" placement="bottom">
-								<span>
-									{this.props.isCodeStreamTeam ? (
-										<Icon name="chatroom" />
-									) : (
-										<Icon className={this.props.teamProvider} name={this.props.teamProvider} />
-									)}
-									{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
-								</span>
-							</Tooltip>
-						</label>
-					)}
+							<label
+								className={createClassString({
+									selected:
+										activePanel === "channels" || activePanel === "main" || activePanel === "thread"
+								})}
+								onClick={e => this.setActivePanel("channels")}
+							>
+								<Tooltip title="Channels &amp; DMs" placement="bottom">
+									<span>
+										{this.props.isCodeStreamTeam ? (
+											<Icon name="chatroom" />
+										) : (
+												<Icon className={this.props.teamProvider} name={this.props.teamProvider} />
+											)}
+										{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
+									</span>
+								</Tooltip>
+							</label>
+						)}
 					<label
 						className={createClassString({
 							selected: activePanel === WebviewPanels.Codemarks
@@ -635,13 +635,13 @@ export class SimpleStream extends Component {
 				this.props.postStreamMemberIds.length > 2 ? (
 					<Icon name="organization" className="organization" />
 				) : (
-					<Icon name="person" />
-				)
+						<Icon name="person" />
+					)
 			) : this.props.isPrivate ? (
 				<Icon name="lock" />
 			) : (
-				<span>#</span>
-			);
+						<span>#</span>
+					);
 		const menuActive = this.props.postStreamId && this.state.openMenu === this.props.postStreamId;
 
 		// 	<span className="open-menu">
@@ -757,6 +757,8 @@ export class SimpleStream extends Component {
 							setActivePanel={this.setActivePanel}
 							isCodeStreamTeam={this.props.isCodeStreamTeam}
 							teamProvider={this.props.teamProvider}
+							teamPlan={this.props.team.plan}
+							teamCount={this.props.team.memberIds.length}
 						/>
 					)}
 					{activePanel === "people" && (
@@ -1266,7 +1268,7 @@ export class SimpleStream extends Component {
 
 		const message = `Invite your teammates to give CodeStream a try by sharing this URL with them:\n\nhttps://app.codestream.com/invite?service=slack&amp;team=${
 			this.props.teamId
-		}`;
+			}`;
 		return this.submitSystemPost(message);
 	};
 
@@ -1734,7 +1736,7 @@ export class SimpleStream extends Component {
 		return true;
 	};
 
-	multiCompose = () => {};
+	multiCompose = () => { };
 
 	postHelp = () => {
 		const text = "Get more help at help.codestream.com";
@@ -2117,8 +2119,8 @@ const mapStateToProps = state => {
 	const channelMembers = postStream.isTeamStream
 		? teamMembers
 		: postStream.memberIds
-		? postStream.memberIds.map(id => users[id])
-		: [];
+			? postStream.memberIds.map(id => users[id])
+			: [];
 
 	const teamMembersById = toMapBy("id", teamMembers);
 

@@ -103,7 +103,7 @@ export class InvitePanel extends Component {
 
 	renderThirdParyInvite = provider => {
 		return (
-			<div style={{ padding: "30px" }}>
+			<div style={{ padding: "30px", textAlign: "center" }}>
 				Invite your teammates to give CodeStream a try by sharing this URL with them:
 				<br />
 				<br />
@@ -113,6 +113,16 @@ export class InvitePanel extends Component {
 			</div>
 		);
 	};
+
+	renderInviteDisables = () => {
+		return (
+			<div style={{ padding: "30px", textAlign: "center" }}>
+				Contact <a href="mailto:sales@codestream.com">sales@codestream.com</a> to upgrade your plan if you'd like to invite more teammates.
+				<br /><br />
+			</div>
+		)
+	}
+
 	// Post URL to{" "}
 	// <select style={{ width: "auto" }}>
 	// 	<option>#general</option>
@@ -121,6 +131,9 @@ export class InvitePanel extends Component {
 
 	renderFieldset = inactive => {
 		const { newMemberEmail, newMemberName } = this.state;
+
+		if (this.props.teamPlan && this.props.teamPlan === "FREEPLAN" &&
+			this.props.teamCount === 5) return this.renderInviteDisables();
 
 		if (!this.props.isCodeStreamTeam) return this.renderThirdParyInvite(this.props.teamProvider);
 
@@ -254,12 +267,12 @@ const mapStateToProps = ({ users, context, teams }) => {
 	const invited =
 		teamProvider === "codestream"
 			? mapFilter(team.memberIds, id => {
-					const user = users[id];
-					if (!user || user.isRegistered || user.deactivated) return;
-					let email = user.email;
-					if (email) user.fullName = email.replace(/@.*/, "");
-					return user;
-			  })
+				const user = users[id];
+				if (!user || user.isRegistered || user.deactivated) return;
+				let email = user.email;
+				if (email) user.fullName = email.replace(/@.*/, "");
+				return user;
+			})
 			: [];
 
 	return {
