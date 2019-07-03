@@ -23,7 +23,6 @@ import { reduceDocumentMarkers } from "../store/documentMarkers/reducer";
 import { debounceToAnimationFrame } from "../utils";
 import middleware from "./middleware";
 import { reduceEditorContext } from "./editorContext/reducer";
-import { BootstrapActionType } from "./actions";
 import { CodemarksState } from "./codemarks/types";
 import { ConfigsState } from "./configs/types";
 import { ConnectivityState } from "./connectivity/types";
@@ -39,12 +38,7 @@ import { UnreadsState } from "./unreads/types";
 import { UsersState } from "./users/types";
 import { ServicesState } from "./services/types";
 import { ProvidersState } from "./providers/types";
-
-const reduceBootstrapped = (state = false, { type }) => {
-	if (type === BootstrapActionType.Start) return false;
-	if (type === BootstrapActionType.Complete) return true;
-	return state;
-};
+import { reduceBootstrapped } from "./bootstrapped/reducer";
 
 const pluginVersion = (state = "", action) => {
 	if (action.type === "@pluginVersion/Set") return action.payload;

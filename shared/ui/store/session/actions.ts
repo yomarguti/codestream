@@ -1,11 +1,12 @@
 import { action } from "../common";
 import { SessionActionType, SessionState } from "./types";
 import { HostApi } from "../../webview-api";
-import { bootstrap } from "../actions";
+import { bootstrap, reset } from "../actions";
 import { logError } from "@codestream/webview/logger";
 import {
 	GetActiveEditorContextRequestType,
-	BootstrapInHostRequestType
+	BootstrapInHostRequestType,
+	LogoutRequestType
 } from "@codestream/protocols/webview";
 import {
 	LoginSuccessResponse,
@@ -18,8 +19,9 @@ import {
 import { LoginResult } from "@codestream/protocols/api";
 import { goToTeamCreation } from "../context/actions";
 import { CodeStreamState } from "..";
+import { setBootstrapped } from "../bootstrapped/actions";
 
-export const reset = () => action("RESET");
+export { reset };
 
 export const setSession = (session: Partial<SessionState>) =>
 	action(SessionActionType.Set, session);
@@ -95,4 +97,11 @@ export const onLogin = (response: LoginSuccessResponse) => async dispatch => {
 			context: { currentTeamId: response.state.teamId }
 		})
 	);
+};
+
+export const logout = () => async dispatch => {
+	dispatch(setBootstrapped(false));
+	await HostApi.instance.send(LogoutRequestType, {});
+	dispatch(reset());
+	dispatch(setBootstrapped(true));
 };

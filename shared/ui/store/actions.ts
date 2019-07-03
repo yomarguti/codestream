@@ -34,11 +34,7 @@ import {
 	BootstrapInHostRequestType,
 	GetActiveEditorContextRequestType
 } from "@codestream/protocols/webview";
-
-export enum BootstrapActionType {
-	Complete = "@bootstrap/Complete",
-	Start = "@bootstrap/Start"
-}
+import { BootstrapActionType } from "./bootstrapped/types";
 
 export const reset = () => action("RESET");
 

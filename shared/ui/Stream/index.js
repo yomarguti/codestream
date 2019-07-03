@@ -40,7 +40,6 @@ import { getTeamMembers } from "../store/users/reducer";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { HostApi } from "../webview-api";
 import {
-	LogoutRequestType,
 	LiveShareInviteToSessionRequestType,
 	LiveShareStartSessionRequestType,
 	NewCodemarkNotificationType,
@@ -55,6 +54,7 @@ import {
 	PinReplyToCodemarkRequestType
 } from "@codestream/protocols/agent";
 import { getFileScmError } from "../store/editorContext/reducer";
+import { logout } from "../store/session/actions";
 
 import {
 	setCurrentStream,
@@ -1003,7 +1003,7 @@ export class SimpleStream extends Component {
 			case "feedback":
 				return this.handleClickFeedbackLink();
 			case "signout":
-				return HostApi.instance.send(LogoutRequestType, {});
+				return this.props.logout();
 			default:
 				return;
 		}
@@ -2223,6 +2223,7 @@ export default connect(
 		setCurrentStream,
 		setCurrentDocumentMarker,
 		editCodemark,
-		setNewPostEntry
+		setNewPostEntry,
+		logout
 	}
 )(injectIntl(SimpleStream));
