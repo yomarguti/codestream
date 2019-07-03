@@ -15,10 +15,9 @@ import {
 import { TextInput } from "./TextInput";
 import { DispatchProp } from "../store/common";
 import { LoginResult } from "@codestream/protocols/api";
-import { SignupType } from "../store/actions";
 import { RegisterUserRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "../webview-api";
-import { completeSignup } from "../store/session/actions";
+import { completeSignup, SignupType } from "./actions";
 import { logError } from "../logger";
 
 const isPasswordValid = (password: string) => password.length >= 6;

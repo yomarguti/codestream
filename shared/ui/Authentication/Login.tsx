@@ -3,10 +3,9 @@ import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import Icon from "../Stream/Icon";
 import Button from "../Stream/Button";
-import { authenticate } from "../store/session/actions";
+import { authenticate, startSSOSignin } from "./actions";
 import { CodeStreamState } from "../store";
 import { goToNewUserEntry, goToForgotPassword } from "../store/context/actions";
-import { startSSOSignin } from "../store/actions";
 
 const isPasswordInvalid = password => password.length === 0;
 const isEmailInvalid = email => {

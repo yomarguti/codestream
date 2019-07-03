@@ -54,15 +54,6 @@ export const LogoutRequestType = new RequestType<LogoutRequest, LogoutResponse, 
 	`${IpcRoutes.Host}/logout`
 );
 
-export interface LoginSSORequest {
-	provider: string;
-	queryString?: string;
-}
-export interface LoginSSOResponse {}
-export const LoginSSORequestType = new RequestType<LoginSSORequest, LoginSSOResponse, void, void>(
-	`${IpcRoutes.Host}/login/sso`
-);
-
 export const ReloadWebviewRequestType = new RequestType<void, void, void, void>(
 	`${IpcRoutes.Host}/webview/reload`
 );

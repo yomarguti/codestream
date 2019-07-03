@@ -12,29 +12,19 @@ import { updateUnreads } from "./unreads/actions";
 import { updateProviders } from "./providers/actions";
 import { bootstrapUsers } from "./users/actions";
 import {
-	LoginSSORequestType,
 	LogoutRequestType,
 	SignedInBootstrapData,
 	BootstrapInHostResponse
 } from "../ipc/host.protocol";
 import { HostApi } from "../webview-api";
-import { logError } from "../logger";
-import { LoginResult } from "@codestream/protocols/api";
 import { updateConfigs } from "./configs/actions";
-import { emptyObject } from "../utils";
-import { ChatProviderAccess } from "./context/types";
-import { CodeStreamState } from ".";
-import { localStore } from "../utilities/storage";
-import {
-	OtcLoginRequestType,
-	isLoginFailResponse,
-	BootstrapRequestType
-} from "@codestream/protocols/agent";
+import { BootstrapRequestType } from "@codestream/protocols/agent";
 import {
 	BootstrapInHostRequestType,
 	GetActiveEditorContextRequestType
 } from "@codestream/protocols/webview";
 import { BootstrapActionType } from "./bootstrapped/types";
+import { ValidateSignupInfo, startSSOSignin } from "../Authentication/actions";
 
 export const reset = () => action("RESET");
 
@@ -79,27 +69,6 @@ const bootstrapEssentials = (data: BootstrapInHostResponse) => dispatch => {
 	dispatch({ type: BootstrapActionType.Complete });
 };
 
-export const startSSOSignin = (
-	provider: string,
-	info?: ValidateSignupInfo,
-	access?: ChatProviderAccess
-) => async (dispatch, getState) => {
-	if (access == undefined) {
-		access = (getState() as CodeStreamState).context.chatProviderAccess;
-	}
-	try {
-		await HostApi.instance.send(LoginSSORequestType, {
-			provider: provider,
-			queryString: access === "strict" ? "access=strict" : undefined
-		});
-		return dispatch(
-			contextActions.goToSSOAuth(provider, { ...(info || emptyObject), mode: access })
-		);
-	} catch (error) {
-		logError(`Unable to start ${provider} sign in: ${error}`);
-	}
-};
-
 export const reAuthForFullChatProvider = (
 	provider: string,
 	info?: ValidateSignupInfo
@@ -108,54 +77,4 @@ export const reAuthForFullChatProvider = (
 	dispatch(reset());
 
 	dispatch(startSSOSignin(provider, info, "permissive"));
-};
-
-export enum SignupType {
-	JoinTeam = "joinTeam",
-	CreateTeam = "createTeam"
-}
-
-export interface ValidateSignupInfo {
-	type: SignupType;
-}
-
-export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo) => async (
-	dispatch,
-	getState: () => CodeStreamState
-) => {
-	const response = await HostApi.instance.send(OtcLoginRequestType, {
-		code: getState().session.otc!,
-		alias: signupInfo !== undefined
-	});
-
-	if (isLoginFailResponse(response)) {
-		if (response.error === LoginResult.AlreadySignedIn) {
-			return dispatch(bootstrap());
-		}
-		if (
-			response.error === LoginResult.ProviderConnectFailed ||
-			response.error === LoginResult.ExpiredToken
-		) {
-			throw response.error;
-		}
-
-		return;
-	}
-
-	if (signupInfo) {
-		HostApi.instance.track("Signup Completed", {
-			"Signup Type": signupInfo.type === SignupType.CreateTeam ? "Organic" : "Viral"
-		});
-	} else {
-		HostApi.instance.track("Signed In", { "Auth Type": provider });
-		if (localStore.get("enablingRealTime") === true) {
-			localStore.delete("enablingRealTime");
-			HostApi.instance.track("Slack Chat Enabled");
-			const result = await dispatch(sessionActions.onLogin(response));
-			dispatch(contextActions.setContext({ chatProviderAccess: "permissive" }));
-			return result;
-		}
-	}
-
-	return await dispatch(sessionActions.onLogin(response));
 };

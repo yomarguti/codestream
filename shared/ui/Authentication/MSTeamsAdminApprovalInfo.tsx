@@ -4,8 +4,8 @@ import { Link } from "../Stream/Link";
 import Icon from "../Stream/Icon";
 import { HostApi } from "../webview-api";
 import { useDispatch } from "react-redux";
-import { startSSOSignin, SignupType } from "../store/actions";
 import { goToChatProviderSelection } from "../store/context/actions";
+import { startSSOSignin, SignupType } from "./actions";
 
 const azureUrl = "https://www.codestream.com/azure";
 

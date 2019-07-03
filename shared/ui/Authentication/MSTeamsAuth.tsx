@@ -3,7 +3,7 @@ import { Link } from "../Stream/Link";
 import { connect } from "react-redux";
 import { goToSignup } from "../store/context/actions";
 import { useInterval, useRetryingCallback, useTimeout } from "../utilities/hooks";
-import { validateSignup, startSSOSignin, SignupType } from "../store/actions";
+import { validateSignup, SignupType, startSSOSignin } from "./actions";
 import { DispatchProp } from "../store/common";
 import { inMillis } from "../utils";
 

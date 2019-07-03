@@ -5,12 +5,12 @@ import { connect } from "react-redux";
 import { goToNewUserEntry, goToSignup } from "../store/context/actions";
 import { Link } from "../Stream/Link";
 import { TextInput } from "./TextInput";
-import { startSSOSignin, SignupType } from "../store/actions";
 import { HostApi } from "..";
 import { DispatchProp } from "../store/common";
 import { GetInviteInfoRequestType } from "@codestream/protocols/agent";
 import { LoginResult } from "@codestream/protocols/api";
 import { FormattedMessage } from "react-intl";
+import { SignupType, startSSOSignin } from "./actions";
 
 const errorToMessageId = {
 	[LoginResult.InvalidToken]: "confirmation.invalid",

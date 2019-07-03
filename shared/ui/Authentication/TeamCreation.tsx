@@ -8,7 +8,7 @@ import { goToNewUserEntry, goToLogin } from "../store/context/actions";
 import { DispatchProp } from "../store/common";
 import { HostApi } from "../webview-api";
 import { CreateTeamRequestType } from "@codestream/protocols/agent";
-import { completeSignup } from "../store/session/actions";
+import { completeSignup } from "./actions";
 
 const isTeamNameValid = (name: string) => name.length > 0;
 
@@ -75,7 +75,7 @@ export const TeamCreation = (connect() as any)((props: ConnectedProps & Dispatch
 									<FormattedMessage id="createTeam.submitButton" />
 								</Button>
 							</div>
-						</div>						
+						</div>
 					</div>
 					<div id="controls">
 						<div className="footer">

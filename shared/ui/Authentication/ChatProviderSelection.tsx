@@ -8,8 +8,8 @@ import {
 	goToSignup,
 	goToMSTeamsAdminApprovalInfo
 } from "../store/context/actions";
-import { startSSOSignin, SignupType } from "../store/actions";
 import { HostApi } from "../webview-api";
+import { startSSOSignin, SignupType } from "./actions";
 
 export const ChatProviderSelection = () => {
 	const dispatch = useDispatch();
