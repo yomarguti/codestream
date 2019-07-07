@@ -589,25 +589,25 @@
 				opacity: 0.5;
 			}
 
-			.icon-in-compose {
+			.message-attach-icons {
 				position: absolute;
-				opacity: 0.4;
-				cursor: pointer;
-				transition: transform 0.1s;
-				&:hover,
-				&.hover {
-					opacity: 1;
-					color: @text-color-info;
-					transform: scale(1.4);
-				}
-			}
-
-			.smiley {
-				right: 10px;
 				bottom: 5px;
-			}
-			.mention {
-				right: 98px;
+				right: 5px;
+				.icon {
+					// position: absolute;
+					// bottom: 5px;
+					// right: 38px;
+					margin-left: 10px;
+					opacity: 0.4;
+					cursor: pointer;
+					transition: transform 0.1s;
+					&:hover,
+					&.hover {
+						opacity: 1;
+						color: @text-color-info;
+						transform: scale(1.4);
+					}
+				}
 			}
 
 			.plus {

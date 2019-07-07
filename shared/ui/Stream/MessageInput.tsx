@@ -935,10 +935,10 @@ export class MessageInput extends React.Component<Props, State> {
 						handleSelectAtMention={this.handleSelectAtMention}
 					/>
 				</div>
-				<React.Fragment>
+				<div className="message-attach-icons">
 					<Icon
 						name="mention"
-						className={cx("icon-in-compose mention", {
+						className={cx("mention", {
 							hover: this.state.emojiOpen
 						})}
 						onClick={e => {
@@ -948,7 +948,7 @@ export class MessageInput extends React.Component<Props, State> {
 					/>
 					<Icon
 						name="smiley"
-						className={cx("icon-in-compose smiley", {
+						className={cx("smiley", {
 							hover: this.state.emojiOpen
 						})}
 						onClick={this.handleClickEmojiButton}
@@ -962,7 +962,7 @@ export class MessageInput extends React.Component<Props, State> {
 					)}
 					<Icon
 						name="codestream"
-						className={cx("icon-in-compose codestream", {
+						className={cx("codestream", {
 							hover: this.state.codemarkOpen
 						})}
 						onClick={this.handleClickCodemarkButton}
@@ -970,13 +970,13 @@ export class MessageInput extends React.Component<Props, State> {
 					{this.buildCodemarkMenu()}
 					<Icon
 						name="tag"
-						className={cx("icon-in-compose label", {
+						className={cx("tags", {
 							hover: this.state.tagsOpen
 						})}
 						onClick={this.handleClickTagButton}
 					/>
 					{this.buildTagMenu()}
-				</React.Fragment>
+				</div>
 				<ContentEditable
 					className={cx("message-input", btoa(unescape(encodeURIComponent(placeholder || ""))), {
 						// "has-plus": !this.props.multiCompose
