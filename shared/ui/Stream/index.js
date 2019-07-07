@@ -1892,9 +1892,7 @@ export class SimpleStream extends Component {
 					null,
 					{ ...attributes, markers, textEditorUri: scmInfo.uri },
 					this.findMentionedUserIds(attributes.text || "", this.props.teammates),
-					{
-						crossPostIssueValues
-					}
+					{ crossPostIssueValues }
 				);
 				if (attributes.streamId !== this.props.postStreamId) {
 					this.props.setCurrentStream(attributes.streamId);

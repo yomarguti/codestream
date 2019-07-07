@@ -89,18 +89,17 @@ class ComposeBox extends React.Component {
 			domParser.parseFromString(attributes.title.replace(replaceRegex, "\n"), "text/html")
 				.documentElement.textContent;
 
-		const { streamId, assignees, color, type, crossPostIssueValues } = attributes;
-
 		this.props.onSubmitCodemark(
 			{
 				title,
 				text,
-				streamId,
-				type,
-				assignees,
-				color
+				streamId: attributes.streamId,
+				type: attributes.type,
+				assignees: attributes.assignees,
+				tags: attributes.tags,
+				relatedCodemarkIds: attributes.relatedCodemarkIds
 			},
-			crossPostIssueValues,
+			attributes.crossPostIssueValues,
 			attributes.codeBlock
 		);
 

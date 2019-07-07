@@ -557,6 +557,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						delay={1}
 					/>,
 					// <Icon
+					//  key="about"
 					// 	onClick={e => this.handleClickPlus(e, "about", lineNum0, top)}
 					// 	name="about"
 					// 	title={this.titles.about}

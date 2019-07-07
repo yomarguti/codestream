@@ -935,8 +935,9 @@ export class MessageInput extends React.Component<Props, State> {
 						handleSelectAtMention={this.handleSelectAtMention}
 					/>
 				</div>
-				<div className="message-attach-icons">
+				<div key="message-attach=icons" className="message-attach-icons">
 					<Icon
+						key="mention"
 						name="mention"
 						className={cx("mention", {
 							hover: this.state.emojiOpen
@@ -947,6 +948,7 @@ export class MessageInput extends React.Component<Props, State> {
 						}}
 					/>
 					<Icon
+						key="smiley"
 						name="smiley"
 						className={cx("smiley", {
 							hover: this.state.emojiOpen
@@ -961,6 +963,7 @@ export class MessageInput extends React.Component<Props, State> {
 						/>
 					)}
 					<Icon
+						key="codestream"
 						name="codestream"
 						className={cx("codestream", {
 							hover: this.state.codemarkOpen
@@ -969,6 +972,7 @@ export class MessageInput extends React.Component<Props, State> {
 					/>
 					{this.buildCodemarkMenu()}
 					<Icon
+						key="tag"
 						name="tag"
 						className={cx("tags", {
 							hover: this.state.tagsOpen

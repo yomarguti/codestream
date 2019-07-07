@@ -473,6 +473,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				? this.props.editingCodemark!.assignees
 				: (this.state.assignees as any[]).map(a => a.value);
 
+<<<<<<< HEAD
 		this.setState({ isLoading: true });
 		try {
 			await this.props.onSubmit(
@@ -494,6 +495,25 @@ class CodemarkForm extends React.Component<Props, State> {
 		} finally {
 			this.setState({ isLoading: false });
 		}
+=======
+		this.props.onSubmit(
+			{
+				codeBlock: this.state.codeBlock,
+				streamId: selectedChannelId,
+				text: replaceHtml(text)!,
+				color,
+				type,
+				assignees: csAssignees,
+				title,
+				crossPostIssueValues: crossPostIssueEnabled ? this.crossPostIssueValues : undefined,
+				tags: this.state.selectedTags,
+				relatedCodemarkIds: this.state.relatedCodemarkIds
+				// notify,
+				// crossPostMessage,
+			},
+			event
+		);
+>>>>>>> remove react warnings on codemark form
 	};
 
 	isFormInvalid = () => {
@@ -606,18 +626,18 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (keys.length === 0) return null;
 
 		return (
-			<div className="tags" style={{ margin: "10px 0 -10px 0" }}>
+			<div className="tags" key="tags" style={{ margin: "10px 0 -10px 0" }}>
 				{TAGS.map(tag => {
 					if (selectedTags[tag.id])
 						if (tag.color.startsWith("#"))
 							return (
-								<div className="compose-tag" style={{ background: tag.color }}>
+								<div key={tag.id} className="compose-tag" style={{ background: tag.color }}>
 									<div>&nbsp;{tag.label}&nbsp;</div>
 								</div>
 							);
 						else
 							return (
-								<div className={`compose-tag ${tag.color}-background`}>
+								<div key={tag.id} className={`compose-tag ${tag.color}-background`}>
 									<div>&nbsp;{tag.label}&nbsp;</div>
 								</div>
 							);
@@ -634,7 +654,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (keys.length === 0) return null;
 
 		return (
-			<div className="related-codemarks" style={{ margin: "10px 0 0 0" }}>
+			<div className="related-codemarks" key="related-codemarks" style={{ margin: "10px 0 0 0" }}>
 				{keys.map(key => {
 					const codemark = relatedCodemarkIds[key];
 					if (!codemark) return null;
@@ -649,7 +669,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					const file = codemark.markers && codemark.markers[0] && codemark.markers[0].file;
 
 					return (
-						<div className="related-codemark">
+						<div key={key} className="related-codemark">
 							{icon}&nbsp;{title}&nbsp;&nbsp;<span className="codemark-file">{file}</span>
 						</div>
 					);
@@ -752,7 +772,11 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 
 		return (
+<<<<<<< HEAD
 			<div className="checkbox-row" style={{ float: "left", marginTop: "10px" }}>
+=======
+			<div key="crosspost" className="checkbox-row" style={{ float: "left" }}>
+>>>>>>> remove react warnings on codemark form
 				{/*<input type="checkbox" checked={this.state.crossPostMessage} /> */} Post to{" "}
 				<span className="channel-label" onClick={this.switchChannel}>
 					{selectedChannelName}
@@ -767,29 +791,6 @@ class CodemarkForm extends React.Component<Props, State> {
 						/>
 					)}
 				</span>
-				{commentType !== "link" && false && (
-					<div className="color-choices" onClick={this.switchLabel}>
-						with{" "}
-						<span className="label-label">
-							label
-							{this.state.labelMenuOpen && (
-								<Menu
-									align="center"
-									compact={true}
-									target={this.state.labelMenuTarget}
-									items={labelMenuItems}
-									action={this.selectLabel}
-								/>
-							)}
-							{this.state.color && (
-								<div className={cx(`label-indicator ${this.state.color}-background`, {})}>
-									<span>priority</span>
-								</div>
-							)}
-							<Icon name="chevron-down" className="chevron-down" />
-						</span>{" "}
-					</div>
-				)}
 			</div>
 		);
 		// }
@@ -958,30 +959,8 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	render() {
-		const GoogleStyle = true;
-		const showHeadshots = true;
-		// const GoogleStyle = this.props;
-
-		// if (this.props.collapsed) {
-		// 	return (
-		// 		<PostCompose
-		// 			onClickClose={this.props.onClickClose}
-		// 			openCodemarkForm={this.props.openCodemarkForm}
-		// 			openDirection={"down"}
-		// 			renderMessageInput={this.renderMessageInput}
-		// 			onSubmit={noop}
-		// 		/>
-		// 	);
-		// }
-
 		const { editingCodemark, currentUser } = this.props;
 		const commentType = editingCodemark ? editingCodemark.type : this.state.type || "comment";
-		// const { menuTarget } = this.state;
-
-		const trapTip =
-			"Let your teammates know about a critical section of code that should not be changed without discussion or consultation.";
-		// const bookmarkTip =
-		// 	'Save a bookmark either for yourself, or for your team (select the appropriate "Post to" setting above).';
 
 		const titlePlaceholder =
 			commentType === "issue"
@@ -992,52 +971,9 @@ class CodemarkForm extends React.Component<Props, State> {
 				? "Bookmark Name (optional)"
 				: "Title (optional)";
 
-		// const commentString = commentType || "comment";
-		// const submitAnotherLabel = `Command-click to submit another ${commentString} after saving`;
-
-		// const menuItems = [
-		// 	{ label: "New Comment", action: "comment" },
-		// 	{ label: "New Question", action: "question" },
-		// 	{ label: "New Issue", action: "issue" },
-		// 	{ label: "New Trap", action: "trap" },
-		// 	{ label: "New Bookmark", action: "bookmark" }
-		// ];
-		//
-		// const menu = this.state.menuOpen ? (
-		// 	<Menu items={menuItems} target={menuTarget} action={this.onSelectCodemarkType} align="left" />
-		// ) : null;
-		//
-		// if (false && !commentType) {
-		// 	return (
-		// 		<form id="code-comment-form" className="standard-form narrow" key="two">
-		// 			<Icon
-		// 				name="plus"
-		// 				onClick={() => {
-		// 					this.setState({ type: "comment" });
-		// 				}}
-		// 			/>
-		// 			{menu}
-		// 		</form>
-		// 	);
-		// }
-
 		const assigneesPlaceholder = this.props.providerInfo["trello"]
 			? "Members (optional)"
 			: "Assignees (optional)";
-		// {isEditing ? "Update" : "New"}{" "}
-		// {commentString.charAt(0).toUpperCase() + commentString.slice(1)}
-		// <div className="range-text">{rangeText}</div>
-
-		const panelHeader = GoogleStyle ? null : (
-			<div className="panel-header" key="one">
-				{/*
-			<span className="align-left-button" onClick={() => this.props.collapseForm()}>
-				<Icon name="chevron-up" />
-			</span>
-		*/}
-				{!GoogleStyle && <CancelButton placement="left" onClick={this.props.onClickClose} />}
-			</div>
-		);
 
 		const modifier = navigator.appVersion.includes("Macintosh") ? "⌘" : "Alt";
 
@@ -1067,114 +1003,32 @@ class CodemarkForm extends React.Component<Props, State> {
 		);
 
 		return [
-			panelHeader,
 			<form
+<<<<<<< HEAD
 				className={cx("codemark-form", "standard-form", { "google-style": GoogleStyle })}
+=======
+				id="code-comment-form"
+				className={cx("standard-form", { "google-style": true })}
+>>>>>>> remove react warnings on codemark form
 				key="two"
 			>
 				<fieldset className="form-body">
-					<div id="controls" className="control-group">
-						{showHeadshots && (
-							<div
-								style={{
-									paddingLeft: "25px",
-									height: "25px",
-									marginTop: "10px",
-									marginBottom: "12px",
-									display: "inline-flex"
-								}}
-							>
-								<Headshot person={currentUser} />
-								<b>{currentUser.username}</b>
-								<span style={{ opacity: 0.75, paddingLeft: "5px" }}>{this.getCodeBlockHint()}</span>
-							</div>
-						)}
-						{!showHeadshots && (
-							<div style={{ margin: "10px 0 10px 0" }}>{this.getCodeBlockHint()}</div>
-						)}
-						<div className="tab-group" style={{ display: "none" }}>
-							<input
-								id="radio-comment-type-comment"
-								type="radio"
-								name="comment-type"
-								checked={commentType === "comment"}
-							/>
-							<label
-								htmlFor="radio-comment-type-comment"
-								className={cx({
-									checked: commentType === "comment"
-								})}
-								onClick={e => this.setCommentType("comment")}
-							>
-								<Icon name="comment" className="chat-bubble" /> <b>Comment</b>
-							</label>
-							{/*<input
-								id="radio-comment-type-question"
-								type="radio"
-								name="comment-type"
-								checked={commentType === "question"}
-							/>
-							<label
-								htmlFor="radio-comment-type-question"
-								className={cx({
-									checked: commentType === "question"
-								})}
-								onClick={e => this.setCommentType("question")}
-							>
-								<Icon name="question" /> <b>FAQ</b>
-							</label>*/}
-							<input
-								id="radio-comment-type-issue"
-								type="radio"
-								name="comment-type"
-								checked={commentType === "issue"}
-							/>
-							<label
-								htmlFor="radio-comment-type-issue"
-								className={cx({
-									checked: commentType === "issue"
-								})}
-								onClick={e => this.setCommentType("issue")}
-							>
-								<Icon name="issue" /> <b>Issue</b>
-							</label>
-							{
-								// <input
-								// 	id="radio-comment-type-trap"
-								// 	type="radio"
-								// 	name="comment-type"
-								// 	checked={commentType === "trap"}
-								// />
-								// <label
-								// 	htmlFor="radio-comment-type-trap"
-								// 	className={cx({
-								// 		checked: commentType === "trap"
-								// 	})}
-								// 	onClick={e => this.setCommentType("trap")}
-								// >
-								// 	<Icon name="trap" /> <b>Trap</b>
-								// </label>
-							}
-							<label
-								htmlFor="radio-comment-type-bookmark"
-								className={cx({
-									checked: commentType === "bookmark"
-								})}
-								onClick={e => this.setCommentType("bookmark")}
-							>
-								<Icon name="bookmark" /> <b>Bookmark</b>
-							</label>
-
-							<label
-								htmlFor="radio-comment-type-link"
-								className={cx({
-									checked: commentType === "link"
-								})}
-								onClick={e => this.setCommentType("link")}
-							>
-								<Icon name="link" /> <b>Permalink</b>
-							</label>
+					<div id="controls" className="control-group" key="controls1">
+						<div
+							key="headshot"
+							style={{
+								paddingLeft: "25px",
+								height: "25px",
+								marginTop: "10px",
+								marginBottom: "12px",
+								display: "inline-flex"
+							}}
+						>
+							<Headshot person={currentUser} />
+							<b>{currentUser.username}</b>
+							<span style={{ opacity: 0.75, paddingLeft: "5px" }}>{this.getCodeBlockHint()}</span>
 						</div>
+<<<<<<< HEAD
 						{commentType === "trap" && (
 							<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
 								{trapTip}
@@ -1191,13 +1045,16 @@ class CodemarkForm extends React.Component<Props, State> {
 								codeBlock={this.state.codeBlock as any}
 							/>
 						)}
+=======
+>>>>>>> remove react warnings on codemark form
 						{(commentType === "issue" ||
 							commentType === "question" ||
 							commentType === "bookmark" ||
 							commentType === "snippet") && (
-							<div className="control-group">
+							<div key="title" className="control-group">
 								{this.renderTitleHelp()}
 								<input
+									key="title-text"
 									type="text"
 									name="title"
 									className="input-text control"
@@ -1210,9 +1067,15 @@ class CodemarkForm extends React.Component<Props, State> {
 							</div>
 						)}
 						{commentType === "issue" && (
-							<div id="members-controls" className="control-group" style={{ marginBottom: "10px" }}>
+							<div
+								key="members"
+								id="members-controls"
+								className="control-group"
+								style={{ marginBottom: "10px" }}
+							>
 								{!this.state.assigneesDisabled && !this.props.isEditing && (
 									<Select
+										key="input-assignees"
 										id="input-assignees"
 										name="assignees"
 										classNamePrefix="react-select"
@@ -1228,6 +1091,7 @@ class CodemarkForm extends React.Component<Props, State> {
 								)}
 								{this.props.isEditing && (
 									<Select
+										key="input-assignees2"
 										id="input-assignees"
 										name="assignees"
 										classNamePrefix="react-select"
@@ -1241,7 +1105,7 @@ class CodemarkForm extends React.Component<Props, State> {
 						{this.renderTextHelp()}
 						{this.state.linkURI &&
 							this.state.privacy === "public" && [
-								<div className="permalink-warning">
+								<div key="permalink-warning" className="permalink-warning">
 									<Icon name="alert" />
 									Note that this is a public URL. Anyone with the link will be able to see the
 									quoted code snippet.
@@ -1249,6 +1113,7 @@ class CodemarkForm extends React.Component<Props, State> {
 							]}
 						{this.state.linkURI && [
 							<textarea
+								key="link-offscreen"
 								ref={this.permalinkRef}
 								value={this.state.linkURI}
 								style={{ position: "absolute", left: "-9999px" }}
@@ -1257,12 +1122,13 @@ class CodemarkForm extends React.Component<Props, State> {
 						]}
 						{commentType === "link" && !this.state.linkURI && (
 							<div id="privacy-controls" className="control-group" key="1">
-								<div className="public-private-hint">
+								<div className="public-private-hint" key="privacy-hint">
 									{this.state.privacy === "private"
 										? "Only members of your team can access this link."
 										: "Anyone can view this link, including quoted codeblock."}
 								</div>
 								<div
+									key="privacy"
 									className={cx("switch public-private", {
 										checked: this.state.privacy === "private"
 									})}
@@ -1270,10 +1136,10 @@ class CodemarkForm extends React.Component<Props, State> {
 								/>
 							</div>
 						)}
-						{commentType !== "bookmark" && commentType !== "link" && [this.renderMessageInput()]}
+						{commentType !== "bookmark" && commentType !== "link" && this.renderMessageInput()}
 					</div>
 					{false && (commentType === "comment" || commentType === "question") && (
-						<div className="checkbox-row" onClick={this.toggleNotify}>
+						<div key="alert" className="checkbox-row" onClick={this.toggleNotify}>
 							<input type="checkbox" checked={this.state.notify} /> Alert me if someone edits code
 							in this range{"  "}
 							<Tooltip title="Click to learn more">
@@ -1293,6 +1159,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					{this.renderTags()}
 					{commentType !== "link" && this.renderCrossPostMessage(commentType)}
 					<div
+						key="buttons"
 						className="button-group"
 						style={{
 							marginLeft: "10px",
@@ -1304,6 +1171,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					>
 						<Tooltip title={cancelTip} placement="bottom" delay={1}>
 							<Button
+								key="cancel"
 								style={{
 									paddingLeft: "10px",
 									paddingRight: "10px",
@@ -1318,6 +1186,7 @@ class CodemarkForm extends React.Component<Props, State> {
 						</Tooltip>
 						<Tooltip title={submitTip} placement="bottom" delay={1}>
 							<Button
+								key="submit"
 								style={{
 									paddingLeft: "10px",
 									paddingRight: "10px",
@@ -1343,7 +1212,7 @@ class CodemarkForm extends React.Component<Props, State> {
 							<span className="hint">Styling with Markdown is supported</span>
 						*/}
 					</div>
-					<div style={{ clear: "both" }} />
+					<div key="clear" style={{ clear: "both" }} />
 					{/*
 						<div
 							style={{ marginTop: "30px", cursor: "pointer" }}
