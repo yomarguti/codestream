@@ -797,14 +797,14 @@ export class MessageInput extends React.Component<Props, State> {
 					{COLOR_OPTIONS.map(color => {
 						return (
 							<span
-								className={`${color}-background color-edit-block`}
+								className={`${color}-background tag-edit-block`}
 								onClick={e => this.setEditingTagColor(color)}
 							>
 								{editingTag.color === color && <Icon name="check" className="check" />}
 							</span>
 						);
 					})}
-					<div className="color-edit-block" style={{ backgroundColor: this.state.customColor }}>
+					<div className="tag-edit-block" style={{ backgroundColor: this.state.customColor }}>
 						{editingTag.color === this.state.customColor ? (
 							<Icon name="check" className="check" />
 						) : (
@@ -826,7 +826,7 @@ export class MessageInput extends React.Component<Props, State> {
 								right: 0
 							}}
 							type="color"
-							className={`custom-color-edit-block`}
+							className={`custom-tag-edit-block`}
 							value={this.state.customColor}
 							onChange={e => {
 								this.setState({ customColor: e.target.value });
@@ -872,11 +872,11 @@ export class MessageInput extends React.Component<Props, State> {
 
 		menuItems = menuItems.concat(
 			this.props.tags.map(tag => {
-				let className = "color-menu-block";
+				let className = "tag-menu-block";
 				if (!tag.color.startsWith("#")) className += " " + tag.color + "-background";
 				return {
 					label: (
-						<span className="color-menu-selector">
+						<span className="tag-menu-selector">
 							<span
 								className={className}
 								style={tag.color.startsWith("#") ? { background: tag.color } : {}}
