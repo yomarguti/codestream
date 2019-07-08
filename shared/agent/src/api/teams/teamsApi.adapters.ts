@@ -169,7 +169,7 @@ export async function fromTeamsMessage(
 	return {
 		codemarkId: codemarkId,
 		createdAt: timestamp,
-		creatorId: message.from.user && message.from.user.id,
+		creatorId: (message.from.user && message.from.user.id) || "codestream",
 		deactivated: message.deleted,
 		// files: files,
 		hasBeenEdited: timestamp !== modifiedTimestamp,
@@ -307,9 +307,7 @@ export function toTeamsMessageBody(
 				title = `<b>${marker.file}</b>`;
 			}
 
-			const code = `<code style="margin:7px 0;padding:10px;border:1px solid #d9d9d9;white-space:pre;display:block;overflow:auto;">${
-				marker.code
-			}</code>`;
+			const code = `<code style="margin:7px 0;padding:10px;border:1px solid #d9d9d9;white-space:pre;display:block;overflow:auto;">${marker.code}</code>`;
 
 			if (
 				remotes !== undefined &&

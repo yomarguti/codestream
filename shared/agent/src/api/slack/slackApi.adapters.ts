@@ -267,7 +267,7 @@ export async function fromSlackPost(
 	return {
 		codemarkId: codemark && codemark.id,
 		createdAt: timestamp,
-		creatorId: post.user || (post.bot_id && post.username),
+		creatorId: post.user || "codestream",
 		deactivated: false,
 		files: files,
 		hasBeenEdited: post.edited != null,
