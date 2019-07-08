@@ -17,8 +17,9 @@ import { BootstrapInHostRequestType } from "../ipc/host.protocol";
 import { bootstrap } from "../store/actions";
 import { logError } from "../logger";
 import { ChatProviderAccess } from "../store/context/types";
-import { emptyObject } from "../utils";
+import { emptyObject, uuid } from "../utils";
 import { localStore } from "../utilities/storage";
+import { setSession } from "../store/session/actions";
 
 export enum SignupType {
 	JoinTeam = "joinTeam",
@@ -142,6 +143,7 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 			response.error === LoginResult.ProviderConnectFailed ||
 			response.error === LoginResult.ExpiredToken
 		) {
+			dispatch(setSession({ otc: uuid() }));
 			throw response.error;
 		}
 

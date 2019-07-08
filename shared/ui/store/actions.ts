@@ -25,6 +25,7 @@ import {
 } from "@codestream/protocols/webview";
 import { BootstrapActionType } from "./bootstrapped/types";
 import { ValidateSignupInfo, startSSOSignin } from "../Authentication/actions";
+import { uuid } from "../utils";
 
 export const reset = () => action("RESET");
 
@@ -34,7 +35,12 @@ export const bootstrap = (data?: SignedInBootstrapData) => async dispatch => {
 		const bootstrapCore = await api.send(BootstrapInHostRequestType, undefined);
 
 		if (bootstrapCore.session.userId === undefined) {
-			dispatch(bootstrapEssentials(bootstrapCore));
+			dispatch(
+				bootstrapEssentials({
+					...bootstrapCore,
+					session: { ...bootstrapCore.session, otc: uuid() }
+				})
+			);
 			return;
 		}
 
