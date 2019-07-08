@@ -620,14 +620,10 @@ export class WebviewController implements Disposable {
 	}
 
 	private getBootstrap() {
-		const sessionState = this.session.signedIn
-			? {
-					userId: this.session.userId
-			  }
-			: { otc: this.session.getSignupToken() };
-
 		return {
-			session: sessionState,
+			session: {
+				userId: this.session.signedIn ? this.session.userId : undefined
+			},
 			capabilities: this.session.capabilities,
 			configs: {
 				debug: Logger.isDebugging,

@@ -157,7 +157,6 @@ export class CodeStreamSession implements Disposable {
 	private _id: string | undefined;
 	private _loginPromise: Promise<LoginResult> | undefined;
 	private _state: SessionState | undefined;
-	private _signupToken: string | undefined;
 
 	constructor(private _serverUrl: string) {
 		this.setServerUrl(_serverUrl);
@@ -282,12 +281,6 @@ export class CodeStreamSession implements Disposable {
 
 	get userId() {
 		return this._state!.userId;
-	}
-
-	getSignupToken() {
-		if (!this._signupToken) this._signupToken = Functions.uuid();
-
-		return this._signupToken;
 	}
 
 	@signedIn
@@ -459,29 +452,6 @@ export class CodeStreamSession implements Disposable {
 		return result;
 	}
 
-	// async loginViaSignupToken(extra: ValidateThirdPartyAuthRequest): Promise<LoginResult> {
-	// 	// this.setServerUrl(Container.config.serverUrl);
-	// 	this.setStatus(SessionStatus.SigningIn);
-	//
-	// 	const response = await Container.agent.sendRequest(OtcLoginRequestType, {
-	// 		code: this.getSignupToken(),
-	// 		...extra
-	// 	});
-	//
-	// 	if (isLoginFailResponse(response)) {
-	// 		if (response.error === LoginResult.VersionUnsupported) {
-	// 			this.showVersionUnsupportedMessage();
-	// 		}
-	//
-	// 		this.setStatus(SessionStatus.SignedOut, SessionSignedOutReason.SignInFailure);
-	//
-	// 		return response.error;
-	// 	}
-	//
-	// 	await this.completeLogin(response, this._signupToken);
-	// 	return LoginResult.Success;
-	// }
-
 	@log()
 	async logout(reason: SessionSignedOutReason = SessionSignedOutReason.UserSignedOutFromWebview) {
 		this._id = undefined;
@@ -510,7 +480,6 @@ export class CodeStreamSession implements Disposable {
 		} finally {
 			// Clean up saved state
 			this._state = undefined;
-			this._signupToken = undefined;
 
 			setImmediate(() => this.setStatus(SessionStatus.SignedOut, reason));
 		}
