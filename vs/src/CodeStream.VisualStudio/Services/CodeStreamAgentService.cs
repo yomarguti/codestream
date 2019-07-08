@@ -145,9 +145,9 @@ namespace CodeStream.VisualStudio.Services {
 				if (Log.IsDebugEnabled()) {
 					try {
 #if DEBUG
-						Log.Debug($"Agent not ready. Status={_sessionService.StateString} Name={name}, Arguments={arguments?.ToJson()}");
+						Log.Warning($"Agent not ready. Status={_sessionService.StateString} Name={name}, Arguments={arguments?.ToJson()}");
 #else
-						Log.Debug($"Agent not ready. Name={name}");
+						Log.Warning($"Agent not ready. Name={name}");
 #endif
 					}
 					catch (Exception ex) {
@@ -341,7 +341,8 @@ namespace CodeStream.VisualStudio.Services {
 					Version = _settingsManager.GetEnvironmentVersionFormatted(),
 					Context = new WebviewContext {
 						HasFocus = true
-					}
+					},
+					Session = new UserSession() { }
 				}.ToJToken();
 #if DEBUG
 				Log.Debug(bootstrapAnonymous?.ToString());
@@ -385,10 +386,10 @@ namespace CodeStream.VisualStudio.Services {
 				Context = webviewContext,
 				EditorContext = editorContext,
 				Session = new UserSession {
-					UserId = state["userId"].ToString(),
+					UserId = state["userId"].ToString()					
 				},
 				Env = settings.Env,
-				Version = settings.Version
+				Version = settings.Version,
 			};
 
 			var bootstrapResponseJson = bootstrapResponse.ToJToken();

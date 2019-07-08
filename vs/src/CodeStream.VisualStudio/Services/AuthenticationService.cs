@@ -47,6 +47,11 @@ namespace CodeStream.VisualStudio.Services {
 		public async System.Threading.Tasks.Task LogoutAsync() {
 			try {
 				if (SessionService.IsReady == false) return;
+
+				SessionService.SetState(SessionState.UserSigningOut);
+
+				EventAggregator.Publish(new SessionDidStartSignOutEvent());
+
 				var settingsService = SettingsServiceFactory.Create();
 				try {
 					await CredentialsService.DeleteAsync(settingsService.ServerUrl.ToUri(), settingsService.Email);
@@ -63,19 +68,18 @@ namespace CodeStream.VisualStudio.Services {
 				}
 
 				try {
-					SessionService.Logout();
-				}
-				catch (Exception ex) {
-					Log.Error(ex, $"{nameof(LogoutAsync)} - session");
-				}
-
-				try {
 					await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TryDeleteTeamIdAsync();
 				}
 				catch(Exception ex) {
 					Log.Error(ex, "could not delete teamId");
 				}
 
+				try {
+					SessionService.Logout();
+				}
+				catch (Exception ex) {
+					Log.Error(ex, $"{nameof(LogoutAsync)} - session");
+				}
 				EventAggregator.Publish(new SessionLogoutEvent());
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
 				WebviewIpc.Notify(new HostDidLogoutNotificationType());

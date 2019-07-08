@@ -54,7 +54,7 @@ namespace CodeStream.VisualStudio.Models {
 	}
 
 	public class UserSession {
-		public string UserId { get; set; }
+		public string UserId { get; set; }		
 	}
 
 	public class Services {
@@ -92,9 +92,7 @@ namespace CodeStream.VisualStudio.Models {
 		public TraceLevel TraceLevel { get; set; }
 	}
 
-	public class BootstrapPartialRequest {
-
-	}
+	public class BootstrapPartialRequest { }
 
 	public class BootstrapPartialResponseAnonymous {
 		public Capabilities Capabilities { get; set; }
@@ -102,11 +100,11 @@ namespace CodeStream.VisualStudio.Models {
 		public string Env { get; set; }
 		public string Version { get; set; }
 		public WebviewContext Context { get; set; }
+		public UserSession Session { get; set; }
 	}
 
 	public class BootstrapAuthenticatedResponse : BootstrapPartialResponseAnonymous {
-		public EditorContext EditorContext { get; set; }
-		public UserSession Session { get; set; }
+		public EditorContext EditorContext { get; set; }		
 	}
 
 	public class BootstrapRequestType : RequestType<BootstrapAuthenticatedResponse> {

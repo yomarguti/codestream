@@ -1,8 +1,11 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Controllers;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
+using Microsoft;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using StreamJsonRpc;
@@ -16,14 +19,21 @@ namespace CodeStream.VisualStudio.LSP {
 	internal class CustomMessageHandler : IDisposable {
 		private static readonly ILogger Log = LogManager.ForContext<CustomMessageHandler>();
 
+		private readonly IServiceProvider _serviceProvider;
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IBrowserService _browserService;
+		private readonly ISettingsServiceFactory _settingsServiceFactory;
+
 		private readonly Subject<DocumentMarkerChangedSubjectArgs> _documentMarkerChangedSubject;
 		private readonly IDisposable _documentMarkerChangedSubscription;
-	
-		public CustomMessageHandler(IEventAggregator eventAggregator, IBrowserService browserService) {
+
+		public CustomMessageHandler(IServiceProvider serviceProvider, IEventAggregator eventAggregator,
+			IBrowserService browserService, ISettingsServiceFactory settingsServiceFactory) {
+			_serviceProvider = serviceProvider;
 			_eventAggregator = eventAggregator;
 			_browserService = browserService;
+			_settingsServiceFactory = settingsServiceFactory;
+
 			_documentMarkerChangedSubject = new Subject<DocumentMarkerChangedSubjectArgs>();
 
 			_documentMarkerChangedSubscription = _documentMarkerChangedSubject
@@ -74,8 +84,8 @@ namespace CodeStream.VisualStudio.LSP {
 			}
 			public string Uri { get; private set; }
 			public JToken Token { get; set; }
-		}	
-		
+		}
+
 		[JsonRpcMethod(DidChangeDocumentMarkersNotificationType.MethodName)]
 		public void OnDidChangeDocumentMarkers(JToken e) {
 			var @params = e.ToObject<DidChangeDocumentMarkersNotification>();
@@ -116,6 +126,56 @@ namespace CodeStream.VisualStudio.LSP {
 			});
 
 			_eventAggregator.Publish(new AuthenticationChangedEvent { Reason = @params.Reason });
+		}
+
+		[JsonRpcMethod(DidLoginNotificationType.MethodName)]
+		public void OnDidLogin(JToken e) {
+			Log.Debug($"{nameof(OnDidLogin)}");
+			if (e == null) {
+				Log.Warning($"{nameof(OnDidLogin)} e is null");
+				return;
+			}
+			try {
+				var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+				Assumes.Present(componentModel);
+
+				_ = new AuthenticationController(
+					_settingsServiceFactory.Create(),
+					componentModel.GetService<ISessionService>(),
+					_eventAggregator,
+					componentModel.GetService<ICredentialsService>()
+					).CompleteSigninAsync(e["data"]);
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(OnDidLogin));
+			}
+		}
+
+		[JsonRpcMethod(DidStartLoginNotificationType.MethodName)]
+		public void OnDidStartLogin() {
+			Log.Debug($"{nameof(OnDidStartLogin)}");
+			try {
+				var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+				Assumes.Present(componentModel);
+
+				componentModel.GetService<ISessionService>().SetState(SessionState.UserSigningIn);
+
+				_eventAggregator.Publish(new SessionDidStartSignInEvent());
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(OnDidStartLogin));
+			}
+		}
+
+		[JsonRpcMethod(DidFailLoginNotificationType.MethodName)]
+		public void OnFailLogin() {
+			try {
+				Log.Debug($"{nameof(OnFailLogin)}");
+				_eventAggregator.Publish(new SessionDidFailSignInEvent());
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(OnFailLogin));
+			}
 		}
 
 		private bool _disposed = false;

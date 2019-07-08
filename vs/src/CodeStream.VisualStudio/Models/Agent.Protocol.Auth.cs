@@ -18,4 +18,8 @@ namespace CodeStream.VisualStudio.Models
 	    public const string MethodName = "codestream/login/password";
 	    public override string Method => MethodName;
     }
+
+	public class LoginSuccessResponse {
+
+	}
 }

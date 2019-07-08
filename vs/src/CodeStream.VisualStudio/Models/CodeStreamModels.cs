@@ -437,8 +437,6 @@ namespace CodeStream.VisualStudio.Models {
 		public string Team { get; set; }
 	}
 
-	public class LogoutRequest { }
-
 	public class TextDocumentIdentifier {
 		public string Uri { get; set; }
 	}

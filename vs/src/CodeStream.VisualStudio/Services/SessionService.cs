@@ -8,9 +8,10 @@ namespace CodeStream.VisualStudio.Services {
 	public interface ISessionService {
 		User User { get; }
 		JToken State { get; }
-		Guid GetOrCreateSignupToken();
-		void SetAgentReady();
-		void SetUserLoggedIn(User user, JToken state);
+		void SetState(AgentState state);
+		void SetState(SessionState state);
+		SessionState SessionState { get; }
+		void SetUser(User user, JToken state);
 		void SetAgentDisconnected();
 		List<string> PanelStack { get; set; }
 		bool IsCodemarksForFileVisible { get; set; }
@@ -31,11 +32,12 @@ namespace CodeStream.VisualStudio.Services {
 	[Export(typeof(ISessionService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class SessionService : ISessionService, IDisposable {
-		private SessionState _sessionState;
-		private Guid _signupToken = Guid.Empty;
+		private AgentState _agentState;
+
 		public User User { get; private set; }
 		public JToken State { get; private set; }
-		public List<string> PanelStack { get; set; }
+        public SessionState SessionState { get; private set; }
+        public List<string> PanelStack { get; set; }
 		public bool IsWebViewVisible { get; set; }
 		public bool AreMarkerGlyphsVisible { get; set; } = true;
 		public bool IsCodemarksForFileVisible { get; set; }
@@ -46,52 +48,44 @@ namespace CodeStream.VisualStudio.Services {
 			// for breakpointing
 		}
 
-		public Guid GetOrCreateSignupToken() {
-			if (_signupToken == Guid.Empty) {
-				_signupToken = Guid.NewGuid();
-			}
+		public string StateString => SessionState.ToString();
+		private static readonly object locker = new object();
 
-			return _signupToken;
+		public void SetState(AgentState state) {
+			lock (locker) {
+				switch (state) {
+					case AgentState.Ready: {
+							_agentState = AgentState.Ready;
+							break;
+						}
+				}
+			}
 		}
 
-		public string StateString => _sessionState.ToString();
-
-		public void SetAgentReady() {
-			if (_sessionState != SessionState.Unknown)
-				throw new SessionStateException("Origin state is invalid");
-
-			_sessionState = SessionState.AgentReady;
+		public void SetState(SessionState sessionState) {
+			lock (locker) {
+				SessionState = sessionState;
+			}
 		}
 
 		public void SetAgentDisconnected() {
-			_sessionState = SessionState.Unknown;
+			SetState(SessionState.Unknown);
 		}
-		
-		public void SetUserLoggedIn(User user, JToken state) {
-			if (_sessionState == SessionState.Ready) {
-				// misc. errors after login wont kick the state back in the webview
-				_sessionState = SessionState.AgentReady;
-			}
 
-			if (_sessionState == SessionState.AgentReady) {
-				_sessionState = _sessionState | SessionState.UserLoggedIn;
-			}
-			else {
-				throw new SessionStateException("Agent is not ready");
-			}
-
+		public void SetUser(User user, JToken state) {
 			User = user;
 			State = state;
 		}
 
 		public void Logout() {
-			_sessionState = SessionState.AgentReady;
+			User = null;
 			State = null;
+			SetState(SessionState.UserSignedOut);
 		}
 
-		public bool IsAgentReady => _sessionState == SessionState.AgentReady || IsReady;
+		public bool IsAgentReady => _agentState == AgentState.Ready;
 
-		public bool IsReady => _sessionState == SessionState.Ready;
+		public bool IsReady => _agentState == AgentState.Ready && SessionState == SessionState.UserSignedIn;
 
 		public string LiveShareUrl { get; set; }
 
@@ -105,7 +99,7 @@ namespace CodeStream.VisualStudio.Services {
 				return;
 
 			if (disposing) {
-				_sessionState = SessionState.Unknown;
+				SessionState = SessionState.Unknown;
 			}
 
 			_disposed = true;
@@ -131,27 +125,47 @@ namespace CodeStream.VisualStudio.Services {
 	}
 
 	[Serializable]
-	public class SessionStateException : Exception {
-		public SessionStateException() { }
+	public class AgentStateException : Exception {
+		public AgentStateException() { }
 
-		public SessionStateException(string message) : base(message) { }
+		public AgentStateException(string message) : base(message) { }
 
-		public SessionStateException(string message, Exception innerException) : base(message, innerException) { }
+		public AgentStateException(string message, Exception innerException) : base(message, innerException) { }
 
-		protected SessionStateException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+		protected AgentStateException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+	}
+
+	[Flags]
+	public enum AgentState {
+		Unknown = 0,
+		/// <summary>
+		/// The LanguageServerProcess is ready
+		/// </summary>
+		Ready = 1 << 1
 	}
 
 	[Flags]
 	public enum SessionState {
 		Unknown = 0,
 		/// <summary>
-		/// The LanguageServerProcess is ready
+		/// User is in the process of signing in
 		/// </summary>
-		AgentReady = 1 << 0,
+		UserSigningIn = 1 << 1,
 		/// <summary>
 		/// The user has authenticated
 		/// </summary>
-		UserLoggedIn = 1 << 1,
-		Ready = AgentReady | UserLoggedIn
+		UserSignedIn = 1 << 2,
+		/// <summary>
+		/// The user is signing out
+		/// </summary>
+		UserSigningOut = 1 << 3,
+		/// <summary>
+		/// The user has signed out
+		/// </summary>
+		UserSignedOut = 1 << 4,
+		/// <summary>
+		/// The user has failed signing in
+		/// </summary>
+		UserSignInFailed = 1 << 5
 	}
 }

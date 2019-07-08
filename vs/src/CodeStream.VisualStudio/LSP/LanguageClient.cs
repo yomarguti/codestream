@@ -62,7 +62,7 @@ namespace CodeStream.VisualStudio.LSP {
 				_browserService = browserServiceFactory.Create();
 
 				_languageServerProcess = new LanguageServerProcess();
-				CustomMessageTarget = new CustomMessageHandler(_eventAggregator, _browserService);
+				CustomMessageTarget = new CustomMessageHandler(serviceProvider, _eventAggregator, _browserService, _settingsServiceFactory);
 				Log.Ctor();
 			}
 			catch (Exception ex) {
@@ -148,19 +148,18 @@ namespace CodeStream.VisualStudio.LSP {
 
 					var codeStreamAgentService = componentModel.GetService<ICodeStreamAgentService>();
 					await codeStreamAgentService.SetRpcAsync(_rpc);
+
 					var sessionService = componentModel.GetService<ISessionService>();
-					sessionService.SetAgentReady();
+					sessionService.SetState(AgentState.Ready);
 
 					var autoSignInResult = await new AuthenticationController(_settingsServiceFactory.Create(),
 						sessionService,
 						codeStreamAgentService,
-						_eventAggregator,
-						_browserService,
-						null,
+						_eventAggregator,						
 						componentModel.GetService<ICredentialsService>()
 						).TryAutoSignInAsync();
-					Log.Information($"AutoSignIn Result={autoSignInResult}");
 
+					Log.Information($"AutoSignIn Result={autoSignInResult}");
 					_eventAggregator.Publish(new LanguageServerReadyEvent { IsReady = true });
 				}
 			}

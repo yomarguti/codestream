@@ -1,51 +1,71 @@
-﻿using CodeStream.VisualStudio.Extensions;
+﻿using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.Vssdk.Commands;
 using Microsoft.VisualStudio.Shell;
 using System;
-using CodeStream.VisualStudio.Core.Logging;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Serilog;
 
 namespace CodeStream.VisualStudio.Commands {
 	internal class UserCommand : VsCommandBase {
 		private static readonly ILogger Log = LogManager.ForContext<UserCommand>();
 
-		public const string DefaultText = "Sign In...";
+		private const string DefaultText = "Sign In...";
+		private readonly ISessionService _sessionService;
 		private readonly ISettingsManager _settingsManager;
 
-		public UserCommand(ISettingsManager settingManager) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.UserCommandId) {
+		private static bool DefaultVisibility = false;
+
+		public UserCommand(ISessionService sessionService, ISettingsManager settingManager) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.UserCommandId) {
+			_sessionService = sessionService;
 			_settingsManager = settingManager;
 
-			Visible = false;
-			Enabled = false;
-
+#if DEBUG
+			// make this visible in DEUBG so we can see the Developer tools command
+			DefaultVisibility = true;
+#endif
+			Visible = DefaultVisibility;
+			Enabled = DefaultVisibility;
 			Text = DefaultText;
 		}
 
-		public void TriggerChange(bool isSessionReady) {
+		public void Update() {
 			ThreadHelper.ThrowIfNotOnUIThread();
-			try {				
-				if (isSessionReady == true) {
-					var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
-					var sessionService = componentModel?.GetService<ISessionService>();
-
-					var env = _settingsManager?.GetUsefulEnvironmentName();
-					var label = env.IsNullOrWhiteSpace()
-						? sessionService.User.UserName
-						: $"{env}: {sessionService.User.UserName}";
-					Text = sessionService.User.HasSingleTeam()
-						? label
-						: $"{label} - {sessionService.User.TeamName}";
-
-					Visible = true;
-					Enabled = true;
-				}
-				else {
-					Visible = false;
-					Enabled = false;
-
-					Text = DefaultText;
+			try {
+				switch (_sessionService.SessionState) {
+					case SessionState.UserSignInFailed: {
+							// the caching on this sucks and it doesn't always update...
+							//Visible = false;
+							//Enabled = false;
+							//Text = DefaultText;							
+							break;
+						}
+					case SessionState.UserSigningIn:
+					case SessionState.UserSigningOut: {
+							// the caching on this sucks and it doesn't always update...
+							//if (!_sessionService.IsReady) {
+							//	Text = "Loading...";
+							//	Visible = false;
+							//	Enabled = false;
+							//}							
+							break;
+						}
+					case SessionState.UserSignedIn: {
+							var user = _sessionService.User;
+							var env = _settingsManager?.GetUsefulEnvironmentName();
+							var label = env.IsNullOrWhiteSpace() ? user.UserName : $"{env}: {user.UserName}";
+							
+							Visible = true;
+							Enabled = true;
+							Text = user.HasSingleTeam() ? label : $"{label} - {user.TeamName}";
+							break;
+						}
+					default: {
+							Visible = false;
+							Enabled = false;
+							Text = DefaultText;
+							break;
+						}
 				}
 			}
 			catch (Exception ex) {

@@ -2,6 +2,21 @@
 using System;
 
 namespace CodeStream.VisualStudio.Models {
+
+	public class GetActiveEditorContextRequest {}
+
+	public class GetActiveEditorContextResponse {
+		public GetActiveEditorContextResponse(EditorContext editorContext) {
+			EditorContext = editorContext;
+		}
+		public EditorContext EditorContext { get; }
+	}
+
+	public class GetActiveEditorContextRequestType : RequestType<GetActiveEditorContextRequest> {
+		public const string MethodName = "host/editor/context";
+		public override string Method => MethodName;
+	}
+
 	public class EditorHighlightRangeResponse {
 		public bool Success { get; set; }
 	}

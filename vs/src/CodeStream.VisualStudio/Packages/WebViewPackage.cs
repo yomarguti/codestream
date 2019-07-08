@@ -41,6 +41,7 @@ namespace CodeStream.VisualStudio.Packages {
 	[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
 	public sealed class WebViewPackage : AsyncPackage {
 		private static readonly ILogger Log = LogManager.ForContext<WebViewPackage>();
+		private ISessionService _sessionService;
 		private ISettingsManager _settingsManager;
 		private IDisposable _languageServerReadyEvent;
 		private VsShellEventManager _vsShellEventManager;
@@ -77,6 +78,7 @@ namespace CodeStream.VisualStudio.Packages {
 			try {
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 				_componentModel = GetGlobalService(typeof(SComponentModel)) as IComponentModel;
+				_sessionService = _componentModel.GetService<ISessionService>();
 				var settingsServiceFactory = _componentModel?.GetService<ISettingsServiceFactory>();
 				_settingsManager = settingsServiceFactory.Create();
 				if (_settingsManager != null) {
@@ -104,7 +106,7 @@ namespace CodeStream.VisualStudio.Packages {
 
 		private async Task InitializeCommandsAsync() {
 			try {
-				var userCommand = new UserCommand(_settingsManager);
+				var userCommand = new UserCommand(_sessionService, _settingsManager);
 
 				_commands = new List<VsCommandBase> {
 #if DEBUG
@@ -142,13 +144,31 @@ namespace CodeStream.VisualStudio.Packages {
 					eventAggregator?.GetEvent<SessionReadyEvent>().Subscribe(_ => {
 						ThreadHelper.JoinableTaskFactory.Run(async delegate {
 							await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-							userCommand.TriggerChange(true);
+							userCommand.Update();
 						});
 					}),
 					eventAggregator?.GetEvent<SessionLogoutEvent>().Subscribe(_ => {
 						ThreadHelper.JoinableTaskFactory.Run(async delegate {
 							await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-							userCommand.TriggerChange(false);
+							userCommand.Update();
+						});
+					}),
+					eventAggregator?.GetEvent<SessionDidStartSignInEvent>().Subscribe(_ => {
+						ThreadHelper.JoinableTaskFactory.Run(async delegate {
+							await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+						userCommand.Update();
+						});
+					}),
+					eventAggregator?.GetEvent<SessionDidFailSignInEvent>().Subscribe(_ => {
+						ThreadHelper.JoinableTaskFactory.Run(async delegate {
+							await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+						userCommand.Update();
+						});
+					}),
+					eventAggregator?.GetEvent<SessionDidStartSignOutEvent>().Subscribe(_ => {
+						ThreadHelper.JoinableTaskFactory.Run(async delegate {
+							await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+							userCommand.Update();
 						});
 					})
 				};

@@ -18,83 +18,35 @@ namespace CodeStream.VisualStudio.Controllers {
 		private readonly ISettingsManager _settingsManager;
 		private readonly ISessionService _sessionService;
 		private readonly ICodeStreamAgentService _codeStreamAgent;
-		private readonly IEventAggregator _eventAggregator;
-		private readonly IBrowserService _browserService;
-		private readonly IIdeService _ideService;
+		private readonly IEventAggregator _eventAggregator;		
 		private readonly ICredentialsService _credentialsService;
 
 		public AuthenticationController(
 			ISettingsManager settingManager,
 			ISessionService sessionService,
 			ICodeStreamAgentService codeStreamAgent,
-			IEventAggregator eventAggregator,
-			IBrowserService browserService,
-			IIdeService ideService,
+			IEventAggregator eventAggregator,			
 			ICredentialsService credentialsService) {
 			_settingsManager = settingManager;
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
 			_eventAggregator = eventAggregator;
-			_browserService = browserService;
-			_ideService = ideService;
 			_credentialsService = credentialsService;
 		}
 
-		public async Task LoginAsync(WebviewIpcMessage message, string email, string password) {
-			string errorResponse = null;
-			JToken loginResponse = null;
-			ProcessLoginResponse processResponse = null;
-			try {
-				using (var scope = _browserService.CreateScope(message)) {
-					try {
-						var teamId = await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TryGetTeamIdAsync();
-
-						loginResponse = await _codeStreamAgent.LoginAsync(email, password, _settingsManager.ServerUrl, teamId);
-						processResponse = await ProcessLoginAsync(loginResponse);
-						if (!processResponse.Success) {
-							errorResponse = processResponse.ErrorMessage;
-						}
-					}
-					catch (Exception ex) {
-						errorResponse = LoginResult.UNKNOWN.ToString();
-						Log.Error(ex, $"{nameof(LoginAsync)}");
-					}
-
-					scope.FulfillRequest(processResponse?.Params, errorResponse);
-				}
-
-				if (processResponse?.Success == true) {
-					await OnSuccessAsync(loginResponse, email);
-				}
-			}
-			catch (Exception ex) {
-				Log.Error(ex, nameof(LoginAsync));
-			}
-
-			await Task.CompletedTask;
-		}
-
-		public async Task LoginSSOAsync(WebviewIpcMessage message) {
-			string error = null;
-			using (var scope = _browserService.CreateScope(message)) {
-				try {
-					var provider = message.Params["provider"];
-					var queryString = message.Params["queryString"] != null ? message.Params["queryString"].ToString() : null;
-					_ideService.Navigate($"{_settingsManager.ServerUrl}/web/provider-auth/{provider}?{(!string.IsNullOrEmpty(queryString) ? $"{queryString}&" : string.Empty)}signupToken={_sessionService.GetOrCreateSignupToken()}");
-				}
-				catch (Exception ex) {
-					error = LoginResult.UNKNOWN.ToString();
-					Log.Error(ex, $"{nameof(LoginSSOAsync)}");
-				}
-
-				scope.FulfillRequest(error);
-			}
-
-			await Task.CompletedTask;
+		public AuthenticationController(
+			ISettingsManager settingManager,
+			ISessionService sessionService,
+			IEventAggregator eventAggregator,				
+			ICredentialsService credentialsService) {
+			_settingsManager = settingManager;
+			_sessionService = sessionService;
+			_eventAggregator = eventAggregator;				
+			_credentialsService = credentialsService;
 		}
 
 		public async Task<bool> TryAutoSignInAsync() {
-			try {				
+			try {
 				ProcessLoginResponse processResponse = null;
 
 				if (_settingsManager.AutoSignIn && !_settingsManager.Email.IsNullOrWhiteSpace()) {
@@ -127,54 +79,17 @@ namespace CodeStream.VisualStudio.Controllers {
 			}
 
 			return false;
-		}
+		}		
 
-		public async Task BootstrapAsync(WebviewIpcMessage message) {
-			try {
-				string errorResponse = null;
-				JToken @params = null;
-
-				using (var scope = _browserService.CreateScope(message)) {
-					try {
-						@params = await _codeStreamAgent.GetBootstrapAsync(_settingsManager.GetSettings(), _sessionService.State, _sessionService.IsReady);
-					}
-					catch (Exception ex) {
-						errorResponse = ex.Message;
-					}
-					finally {
-						scope.FulfillRequest(@params, errorResponse);
-					}
-				}
-			}
-			catch (Exception ex) {
-				Log.Error(ex, nameof(BootstrapAsync));
-			}
-
-			await Task.CompletedTask;
-		}
-
-		public async Task CompleteSignupAsync(WebviewIpcMessage message, CompleteSignupRequest request) {
-			string errorResponse = null;
-			JToken loginResponse = null;
-
+		public async Task<bool> CompleteSigninAsync(JToken loginResponse) {
 			ProcessLoginResponse processResponse = null;
 			try {
-				using (var scope = _browserService.CreateScope(message)) {
-					try {
-						var teamId = await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TryGetTeamIdAsync();
 
-						loginResponse = await _codeStreamAgent.LoginViaTokenAsync(request.Token, _settingsManager.Team, teamId);
-						processResponse = await ProcessLoginAsync(loginResponse);
-						if (!processResponse.Success) {
-							errorResponse = processResponse.ErrorMessage;
-						}
-					}
-					catch (Exception ex) {
-						errorResponse = LoginResult.UNKNOWN.ToString();
-						Log.Error(ex, $"{nameof(CompleteSignupAsync)}");
-					}
-
-					scope.FulfillRequest(processResponse?.Params, errorResponse);
+				try {
+					processResponse = await ProcessLoginAsync(loginResponse);					
+				}
+				catch (Exception ex) {					
+					Log.Error(ex, $"{nameof(CompleteSigninAsync)}");
 				}
 
 				if (processResponse?.Success == true) {
@@ -182,52 +97,14 @@ namespace CodeStream.VisualStudio.Controllers {
 				}
 			}
 			catch (Exception ex) {
-				Log.Error(ex, nameof(CompleteSignupAsync));
+				Log.Error(ex, nameof(CompleteSigninAsync));
 			}
 
-			await Task.CompletedTask;
+			return processResponse?.Success == true;
 		}
 
-		public async Task ValidateThirdPartyAuthAsync(WebviewIpcMessage message, ValidateThirdPartyAuthRequest extras) {
-			string errorResponse = null;
-			JToken loginResponse = null;
-			ProcessLoginResponse processResponse = null;
-			try {
-				using (var scope = _browserService.CreateScope(message)) {
-					try {
-						var teamId = await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TryGetTeamIdAsync();
-
-						loginResponse = await _codeStreamAgent.OtcLoginRequestAsync(new OtcLoginRequest {
-							Code = _sessionService.GetOrCreateSignupToken().ToString(),
-							Alias = extras?.Alias,
-							TeamId = teamId
-						});
-
-						processResponse = await ProcessLoginAsync(loginResponse);
-						if (!processResponse.Success) {
-							errorResponse = processResponse.ErrorMessage;
-						}
-					}
-					catch (Exception ex) {
-						errorResponse = LoginResult.UNKNOWN.ToString();
-						Log.Error(ex, $"{nameof(ValidateThirdPartyAuthAsync)}");
-					}
-
-					scope.FulfillRequest(processResponse?.Params, errorResponse);
-				}
-
-				if (processResponse?.Success == true) {
-					await OnSuccessAsync(loginResponse, processResponse.Email);
-				}
-			}
-			catch (Exception ex) {
-				Log.Error(ex, nameof(ValidateThirdPartyAuthAsync));
-			}
-
-			await Task.CompletedTask;
-		}
-
-		private async Task OnSuccessAsync(JToken loginResponse, string email) {
+		private async Task OnSuccessAsync(JToken loginResponse, string email) {			
+			_sessionService.SetState(SessionState.UserSignedIn);
 			_eventAggregator.Publish(new SessionReadyEvent());
 
 			if (!email.IsNullOrWhiteSpace()) {
@@ -276,8 +153,8 @@ namespace CodeStream.VisualStudio.Controllers {
 				stateLite["teamId"] = state["teamId"];
 				stateLite["userId"] = state["userId"];
 				stateLite["email"] = state["email"];
-
-				_sessionService.SetUserLoggedIn(CreateUser(loginResponse), stateLite);
+				
+				_sessionService.SetUser(CreateUser(loginResponse), stateLite);			
 				response.Success = true;
 			}
 

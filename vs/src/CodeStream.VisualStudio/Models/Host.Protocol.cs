@@ -1,50 +1,17 @@
-﻿using Newtonsoft.Json.Linq;
-
+﻿
 namespace CodeStream.VisualStudio.Models {
 	public class EmptyRequestTypeParams { }
 
-	public class GetViewBootstrapDataRequestType : RequestType<EmptyRequestTypeParams> {
+	public class BootstrapInHostRequestType : RequestType<EmptyRequestTypeParams> {
 		public const string MethodName = "host/bootstrap";
 		public override string Method => MethodName;
 	}
 
-	public class LoginRequestType : RequestType<EmptyRequestTypeParams> {
-		public const string MethodName = "host/login";
-		public override string Method => MethodName;
-	}
+	public class LogoutRequest { }
+	public class LogoutResponse { }
 
-	public class SignOutRequestType : RequestType<EmptyRequestTypeParams> {
+	public class LogoutRequestType : RequestType<LogoutRequest> {
 		public const string MethodName = "host/logout";
-		public override string Method => MethodName;
-	}
-
-	public class LoginSSORequest {
-		public string Provider { get; set; }
-		public string QueryString { get; set; }
-	}
-
-	public class LoginSSORequestType : RequestType<LoginSSORequest> {
-		public const string MethodName = "host/login/sso";
-		public override string Method => MethodName;
-	}
-
-	public class ValidateThirdPartyAuthRequest {
-		public bool? Alias { get; set; }
-	}
-
-	public class ValidateThirdPartyAuthRequestType : RequestType<ValidateThirdPartyAuthRequest> {
-		public const string MethodName = "host/validateThirdPartyAuth";
-		public override string Method => MethodName;
-	}
-
-	public class CompleteSignupRequest {
-		public string Email { get; set; }
-		public JToken Token { get; set; }
-		public string TeamId { get; set; }
-	}
-
-	public class CompleteSignupRequestType : RequestType<CompleteSignupRequest> {
-		public const string MethodName = "host/signup/complete";
 		public override string Method => MethodName;
 	}
 
