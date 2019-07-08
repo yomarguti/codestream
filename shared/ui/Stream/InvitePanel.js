@@ -133,7 +133,7 @@ export class InvitePanel extends Component {
 		const { newMemberEmail, newMemberName } = this.state;
 
 		if (this.props.teamPlan && this.props.teamPlan === "FREEPLAN" &&
-			this.props.teamCount >= 5) return this.renderInviteDisables();
+			this.props.members && this.props.members.length >= 5) return this.renderInviteDisables();
 
 		if (!this.props.isCodeStreamTeam) return this.renderThirdParyInvite(this.props.teamProvider);
 

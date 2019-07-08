@@ -272,7 +272,7 @@ export class SimpleStream extends Component {
 		this.resizeStream();
 	};
 
-	resizeStream = () => {};
+	resizeStream = () => { };
 
 	// return the post, if any, with the given ID
 	findPostById(id) {
@@ -758,7 +758,6 @@ export class SimpleStream extends Component {
 							isCodeStreamTeam={this.props.isCodeStreamTeam}
 							teamProvider={this.props.teamProvider}
 							teamPlan={this.props.team.plan}
-							teamCount={this.props.team.memberIds.length}
 						/>
 					)}
 					{activePanel === "people" && (
