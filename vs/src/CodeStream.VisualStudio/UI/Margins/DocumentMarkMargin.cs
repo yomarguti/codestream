@@ -78,13 +78,13 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			_glyphFactories = new Dictionary<Type, GlyphFactoryInfo>();
 			_childCanvases = Array.Empty<Canvas>();
 			Background = new SolidColorBrush(Colors.Transparent);
+			_lineInfos = new Dictionary<object, LineInfo>();
 
 			TryInitialize();
 		}
 
 		private void InitializeMargin() {		
 			Children.Add(_iconCanvas);
-			_lineInfos = new Dictionary<object, LineInfo>();
 
 			var order = 0;
 			foreach (var lazy in _glyphFactoryProviders) {
@@ -150,6 +150,8 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		}
 
 		public void RefreshMargin() {
+			if (_lineInfos == null) return;
+
 			_lineInfos.Clear();
 			foreach (var c in _childCanvases) {
 				c.Children.Clear();

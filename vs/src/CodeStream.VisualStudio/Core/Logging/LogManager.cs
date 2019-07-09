@@ -29,10 +29,11 @@ namespace CodeStream.VisualStudio.Core.Logging {
 #if DEBUG
 				// day/month/year and processId just aren't that important when developing -- they take up space
 				template =
-					"{Timestamp:HH:mm:ss.fff} {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}(at {Caller}){NewLine}{Exception}";
+					"{Timestamp:HH:mm:ss.fff} {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}{NewLine}{Exception}";
+				// if you want to see the caller add: `(at {Caller})`
 #endif
 
-				var configuration= new LoggerConfiguration()
+				var configuration = new LoggerConfiguration()
 					.Enrich.WithProcessId()
 					.Enrich.WithThreadId()
 #if DEBUG

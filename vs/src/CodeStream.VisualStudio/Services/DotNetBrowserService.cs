@@ -259,6 +259,11 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		protected virtual void Send(string message) {
+			if (_browserView == null || _browserView.Browser == null) {
+				Log.Warning("Browser is null");
+				return;
+			}
+
 			_browserView.Browser.ExecuteJavaScript(@"window.postMessage(" + message + @",""*"");");
 		}
 
