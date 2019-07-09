@@ -19,6 +19,9 @@ val Editor.displayPath: String?
 
 fun Editor.getOffset(position: Position): Int {
     val line = position.line
+    if (line >= document.lineCount) {
+        return document.getLineEndOffset(document.lineCount - 1)
+    }
     val lineText = document.getText(DocumentUtil.getLineTextRange(document, line))
     val endIndex = Math.min(lineText.length, position.character)
     val lineTextForPosition = lineText.substring(0, endIndex)
