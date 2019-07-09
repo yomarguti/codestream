@@ -94,7 +94,7 @@ class AgentService(private val project: Project) : Disposable {
             remoteEndpoint = launcher.remoteEndpoint
             launcher.startListening()
 
-            agent.initialize(getInitializeParams()).await()
+            this.initializeResult = agent.initialize(getInitializeParams()).await()
             project.authenticationService?.autoSignIn()
             initialization.complete(Unit)
         } catch (e: Exception) {
