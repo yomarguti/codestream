@@ -59,7 +59,7 @@ abstract class AgentConnection {
 	private _connection: LanguageClientConnection | undefined;
 	private _agentProcess: ChildProcess | undefined;
 	private _initializedEvent = new Echo();
-	private _terminatedEvent = new Echo();
+	private _crashEmitter = new Echo();
 	private _initialized = false;
 
 	get initialized() {
@@ -74,8 +74,8 @@ abstract class AgentConnection {
 		return this._initializedEvent.add(cb);
 	}
 
-	onDidTerminate(cb: () => void) {
-		return this._terminatedEvent.add(cb);
+	onDidCrash(cb: () => void) {
+		return this._crashEmitter.add(cb);
 	}
 
 	protected abstract preInitialization(
@@ -189,10 +189,11 @@ abstract class AgentConnection {
 			console.error(error);
 		});
 		agentProcess.on("disconnect", () => {
-			if (Debug.isDebugging()) {
-				if (this._connection && this._connection.isConnected) {
-					console.warn("CodeStream agent process disconnected prematurely");
-				}
+			if (this._connection && this._connection.isConnected) {
+				atom.notifications.addWarning("The CodeStream agent process unexpectedly crashed.", {
+					description: "Please open the dev tools and share the error with us.",
+				});
+				this._crashEmitter.push();
 			}
 			this.stop();
 		});
@@ -209,8 +210,7 @@ abstract class AgentConnection {
 	protected async stop() {
 		this._connection!.dispose();
 		this._agentProcess!.kill();
-		this._terminatedEvent.push();
-		this._terminatedEvent.dispose();
+		this._crashEmitter.dispose();
 	}
 }
 
