@@ -27,6 +27,7 @@ const val CODESTREAM_TOOL_WINDOW_ID = "CodeStream"
 
 class CodeStreamComponent(val project: Project) : Disposable {
 
+    private val messageBusConnection by lazy { project.messageBus.connect() }
     private lateinit var toolWindow: ToolWindow
     private var statusBar: StatusBar? = null
     private var statusBarWidget: CodeStreamStatusBarWidget? = null
@@ -40,7 +41,8 @@ class CodeStreamComponent(val project: Project) : Disposable {
     init {
         ApplicationManager.getApplication().invokeLater {
             initEditorFactoryListener()
-            initMessageBusSubscriptions()
+            initFileEditorManagerListener()
+            initModuleListener()
         }
 
         project.agentService?.onDidStart {
@@ -49,6 +51,7 @@ class CodeStreamComponent(val project: Project) : Disposable {
                 initWindowFocusListener()
                 initStatusBarWidget()
                 initUnreadsListener()
+                initToolWindowManagerSubscription()
             }
         }
     }
@@ -90,31 +93,33 @@ class CodeStreamComponent(val project: Project) : Disposable {
         )
     }
 
-    private fun initMessageBusSubscriptions() {
-        val component = this
-
+    private fun initFileEditorManagerListener() {
         if (project.isDisposed) return
-        project.messageBus.connect().let {
-            it.subscribe(
-                FileEditorManagerListener.FILE_EDITOR_MANAGER,
-                FileEditorManagerListenerImpl(project)
-            )
-            it.subscribe(
-                ProjectTopics.MODULES,
-                ModuleListenerImpl(project)
-            )
-            it.subscribe(
-                ToolWindowManagerListener.TOPIC,
-                object : ToolWindowManagerListener {
-                    override fun stateChanged() {
-                        if (component::toolWindow.isInitialized) {
-                            isVisible = toolWindow.isVisible
-                            updateWebViewFocus()
-                        }
-                    }
+        messageBusConnection.subscribe(
+            FileEditorManagerListener.FILE_EDITOR_MANAGER,
+            FileEditorManagerListenerImpl(project)
+        )
+    }
+
+    private fun initModuleListener() {
+        if (project.isDisposed) return
+        messageBusConnection.subscribe(
+            ProjectTopics.MODULES,
+            ModuleListenerImpl(project)
+        )
+    }
+
+    private fun initToolWindowManagerSubscription() {
+        if (project.isDisposed) return
+        messageBusConnection.subscribe(
+            ToolWindowManagerListener.TOPIC,
+            object : ToolWindowManagerListener {
+                override fun stateChanged() {
+                    isVisible = toolWindow.isVisible
+                    updateWebViewFocus()
                 }
-            )
-        }
+            }
+        )
     }
 
     private fun initStatusBarWidget() {
