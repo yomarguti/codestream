@@ -78,7 +78,7 @@ class AgentService(private val project: Project) : Disposable {
         else initialization.thenRun(cb)
     }
 
-    private suspend fun initAgent() {
+    private suspend fun initAgent(autoSignIn: Boolean = true) {
         try {
             logger.info("Initializing CodeStream LSP agent")
             val process = createProcess()
@@ -95,7 +95,7 @@ class AgentService(private val project: Project) : Disposable {
             launcher.startListening()
 
             this.initializeResult = agent.initialize(getInitializeParams()).await()
-            project.authenticationService?.autoSignIn()
+            if (autoSignIn) { project.authenticationService?.autoSignIn() }
             initialization.complete(Unit)
         } catch (e: Exception) {
             logger.error(e)
@@ -112,7 +112,7 @@ class AgentService(private val project: Project) : Disposable {
         logger.info("Restarting CodeStream LSP agent")
         agent.shutdown().await()
         agent.exit()
-        initAgent()
+        initAgent(false)
         _restartObservers.forEach { it() }
     }
 
