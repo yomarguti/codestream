@@ -24,10 +24,10 @@ class EditorSelection(
 ) : Range(start, end)
 
 class WebViewContext(
-    val currentTeamId: String,
-    val currentStreamId: String?,
-    val threadId: String?,
-    val hasFocus: Boolean,
+    val currentTeamId: String? = null,
+    val currentStreamId: String? = null,
+    val threadId: String? = null,
+    val hasFocus: Boolean? = null,
     val panelStack: Array<String>? = null
 ) {
     val spatialViewVisible get() = panelStack?.first() == "codemarks-for-file"

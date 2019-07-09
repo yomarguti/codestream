@@ -1,5 +1,6 @@
 package com.codestream.agent
 
+import com.codestream.authenticationService
 import com.codestream.editorService
 import com.codestream.extensions.workspaceFolders
 import com.codestream.gson
@@ -21,6 +22,7 @@ import org.eclipse.lsp4j.UnregistrationParams
 import org.eclipse.lsp4j.WorkspaceFolder
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification
 import org.eclipse.lsp4j.services.LanguageClient
+import protocols.agent.LoginResult
 import java.util.concurrent.CompletableFuture
 
 class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
@@ -51,6 +53,12 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
     @JsonNotification("codestream/didChangeConnectionStatus")
     fun didChangeConnectionStatus(json: JsonElement) {
         project.webViewService?.postNotification("codestream/didChangeConnectionStatus", json)
+    }
+
+    @JsonNotification("codestream/didLogin")
+    fun didLogin(json: JsonElement) {
+        val notification = gson.fromJson<DidLoginNotification>(json)
+        project.authenticationService?.completeLogin(notification.data)
     }
 
     @JsonNotification("codestream/didLogout")
@@ -119,3 +127,5 @@ class DidChangeUnreadsNotification(
     val totalMentions: Int,
     val totalUnreads: Int
 )
+
+class DidLoginNotification(val data: LoginResult)

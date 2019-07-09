@@ -30,14 +30,11 @@ class WebViewService(val project: Project) : Disposable {
     private val router = WebViewRouter(project)
     private val browser = createBrowser(router)
     val webView: BrowserView = BrowserView.newInstance(browser)
-    private val messageQueue = ArrayList<JsonElement>()
 
     private lateinit var tempDir: File
     private lateinit var htmlFile: File
 
     init {
-        router.onWebviewReady { flushMessageQueue() }
-
         extractAssets()
         browser.navigation().loadUrl(htmlFile.url)
 
@@ -101,29 +98,6 @@ class WebViewService(val project: Project) : Disposable {
     private fun postMessage(message: JsonElement, force: Boolean? = false) {
         if (router.isReady || force == true) browser.mainFrame().ifPresent {
             it.executeJavaScript<Unit>("window.postMessage($message,'*');")
-        }
-        else enqueueMessage(message)
-    }
-
-    private fun enqueueMessage(message: JsonElement) {
-        if (messageQueue.count() > 100) return
-
-        messageQueue.add(message)
-    }
-
-    private fun flushMessageQueue() {
-        if (messageQueue.count() > 100) {
-            messageQueue.clear()
-            router.reload()
-            reload()
-        } else {
-            while (messageQueue.count() > 0) {
-                val message = messageQueue.first()
-                browser.mainFrame().ifPresent {
-                    it.executeJavaScript<Unit>("window.postMessage($message,'*');")
-                }
-                messageQueue.remove(message)
-            }
         }
     }
 

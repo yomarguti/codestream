@@ -19,6 +19,7 @@ import com.teamdev.jxbrowser.js.JsAccessible
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
+import protocols.webview.ActiveEditorContextResponse
 import protocols.webview.EditorRangeHighlightRequest
 import protocols.webview.EditorRangeRevealRequest
 import protocols.webview.EditorRangeRevealResponse
@@ -27,22 +28,12 @@ import protocols.webview.EditorRangeSelectResponse
 import protocols.webview.EditorScrollToRequest
 import protocols.webview.MarkerApplyRequest
 import protocols.webview.MarkerCompareRequest
-import protocols.webview.SignupCompleteRequest
 import protocols.webview.UpdateConfigurationRequest
-import protocols.webview.ValidateThirdPartyAuthRequest
-import kotlin.properties.Delegates
-
-typealias ReadyObserver = () -> Unit
 
 class WebViewRouter(val project: Project) {
     private val logger = Logger.getInstance(WebViewRouter::class.java)
-    private val readyObservers = mutableListOf<ReadyObserver>()
-    private var _isReady: Boolean by Delegates.observable(false) { _, _, isReady -> readyObservers.forEach { if (isReady) it() } }
+    private var _isReady = false
     val isReady get() = _isReady
-
-    fun onWebviewReady(observer: ReadyObserver) {
-        readyObservers.add(observer)
-    }
 
     fun reload() {
         _isReady = false
@@ -77,38 +68,20 @@ class WebViewRouter(val project: Project) {
     }
 
     private suspend fun processHostMessage(message: WebViewMessage) {
-        var resumeReady = false
         val authentication = project.authenticationService ?: return
 
         val response = when (message.method) {
-            "host/bootstrap" -> {
-                _isReady = false
-                resumeReady = true
-                authentication.bootstrap()
-            }
-            "host/login" -> {
-                _isReady = false
-                resumeReady = true
-                authentication.login(message)
-            }
-            "host/validateThirdPartyAuth" -> {
-                _isReady = false
-                resumeReady = true
-                validateThirdPartyAuth(message)
-            }
+            "host/bootstrap" -> authentication.bootstrap()
             "host/didInitialize" -> _isReady = true
             "host/logout" -> authentication.logout()
-            "host/login/sso" -> authentication.loginSSO(message)
-            "host/signup/complete" -> {
-                _isReady = false
-                resumeReady = true
-                signupComplete(message)
-            }
             "host/context/didChange" -> contextDidChange(message)
             "host/webview/reload" -> project.webViewService?.reload()
             "host/marker/compare" -> hostMarkerCompare(message)
             "host/marker/apply" -> hostMarkerApply(message)
             "host/configuration/update" -> configurationUpdate(message)
+            "host/editor/context" -> {
+                ActiveEditorContextResponse(project.editorService?.getEditorContext())
+            }
             "host/editor/range/highlight" -> editorRangeHighlight(message)
             "host/editor/range/reveal" -> editorRangeReveal(message)
             "host/editor/range/select" -> editorRangeSelect(message)
@@ -117,20 +90,7 @@ class WebViewRouter(val project: Project) {
         }
         if (message.id != null) {
             project.webViewService?.postResponse(message.id, response.orEmptyObject)
-            if (resumeReady) _isReady = true
         }
-    }
-
-    private suspend fun validateThirdPartyAuth(message: WebViewMessage): Any? {
-        val request = gson.fromJson<ValidateThirdPartyAuthRequest>(message.params!!)
-        val authenticationService = project.authenticationService ?: return null
-        return authenticationService.validateThirdPartyAuth(request)
-    }
-
-    private suspend fun signupComplete(message: WebViewMessage): Any? {
-        val request = gson.fromJson<SignupCompleteRequest>(message.params!!)
-        val authenticationService = project.authenticationService ?: return null
-        return authenticationService.signupComplete(request)
     }
 
     private fun contextDidChange(message: WebViewMessage) {

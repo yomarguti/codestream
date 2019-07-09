@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="TypeScriptCompiler">
-    <option name="enableServiceForProjectsWithoutConfig" value="false" />
-    <option name="showAllErrors" value="true" />
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="jetbrains-codestream.main" target="1.8" />
+      <module name="jetbrains-codestream.test" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

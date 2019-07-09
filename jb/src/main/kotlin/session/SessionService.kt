@@ -7,7 +7,6 @@ import protocols.agent.CSUser
 import protocols.agent.Post
 import protocols.agent.Stream
 import protocols.agent.UserLoggedIn
-import java.util.UUID
 import kotlin.properties.Delegates
 
 typealias UserLoggedInObserver = (UserLoggedIn?) -> Unit
@@ -80,10 +79,6 @@ class SessionService(val project: Project) {
 
     fun didChangePosts(posts: List<Post>) {
         postsObservers.forEach { it(posts) }
-    }
-
-    val signupToken: String by lazy {
-        UUID.randomUUID().toString()
     }
 }
 

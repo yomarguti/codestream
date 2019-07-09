@@ -1,6 +1,7 @@
 package com.codestream.agent
 
 import com.codestream.DEBUG
+import com.codestream.authenticationService
 import com.codestream.extensions.baseUri
 import com.codestream.gson
 import com.codestream.settingsService
@@ -41,10 +42,12 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
 import java.util.Scanner
+import java.util.concurrent.CompletableFuture
 
 class AgentService(private val project: Project) : Disposable {
 
     private val logger = Logger.getInstance(AgentService::class.java)
+    private var initialization = CompletableFuture<Unit>()
 
     lateinit var initializeResult: InitializeResult
     lateinit var agent: CodeStreamLanguageServer
@@ -64,10 +67,18 @@ class AgentService(private val project: Project) : Disposable {
     }
 
     init {
-        initAgent()
+        GlobalScope.launch {
+            initAgent()
+        }
     }
 
-    private fun initAgent() {
+    fun onDidStart(cb: () -> Unit) {
+        if (initialization.isDone)
+            cb()
+        else initialization.thenRun(cb)
+    }
+
+    private suspend fun initAgent() {
         try {
             logger.info("Initializing CodeStream LSP agent")
             val process = createProcess()
@@ -82,7 +93,10 @@ class AgentService(private val project: Project) : Disposable {
             agent = launcher.remoteProxy
             remoteEndpoint = launcher.remoteEndpoint
             launcher.startListening()
-            initializeResult = agent.initialize(getInitializeParams()).get()
+
+            agent.initialize(getInitializeParams()).await()
+            project.authenticationService?.autoSignIn()
+            initialization.complete(Unit)
         } catch (e: Exception) {
             logger.error(e)
             e.printStackTrace()
@@ -256,7 +270,6 @@ class AgentService(private val project: Project) : Disposable {
     fun onRestart(observer: () -> Unit) {
         _restartObservers += observer
     }
-
 }
 
 val platform: Platform by lazy {

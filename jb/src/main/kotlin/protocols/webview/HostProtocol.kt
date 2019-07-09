@@ -1,36 +1,16 @@
 package protocols.webview
 
-import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
 import protocols.agent.Marker
 
-class LoginRequest(
-    val email: String?,
-    val password: String?
-)
-
-class LoginSSORequest(
-    val provider: String,
-    val queryString: String?
-)
-
-class SignedOutBootstrapResponse(
-    val capabilities: Capabilities,
-    val configs: Map<String, Any?>,
-    val env: CodeStreamEnvironment,
-    val version: String
-)
-
-class SignedInBootstrapResponse(
+class BootstrapResponse(
+    val session: UserSession,
     val capabilities: Capabilities,
     val configs: Configs,
-    val env: CodeStreamEnvironment,
-    val version: String,
-    val context: JsonElement,
-    val editorContext: EditorContext,
-    val session: UserSession
+    val context: WebViewContext? = WebViewContext(),
+    val version: String
 )
 
 class Capabilities {
@@ -45,10 +25,10 @@ class Configs(
     val serverUrl: String,
     val email: String?,
     val showHeadshots: Boolean,
-    val viewCodemarksInline: Boolean,
     val muteAll: Boolean,
     val debug: Boolean,
-    val showFeedbackSmiley: Boolean
+    val showFeedbackSmiley: Boolean,
+    val team: String?
 )
 
 class Services {
@@ -56,7 +36,7 @@ class Services {
 }
 
 class UserSession(
-    val userId: String
+    val userId: String? = null
 )
 
 enum class CodeStreamEnvironment {
@@ -76,6 +56,8 @@ class UpdateConfigurationRequest(
     val name: String,
     val value: String?
 )
+
+class ActiveEditorContextResponse(val editorContext: EditorContext? = EditorContext())
 
 class EditorRangeHighlightRequest(
     val uri: String,
@@ -116,18 +98,6 @@ class MarkerCompareRequest(
 
 class MarkerApplyRequest(
     val marker: Marker
-)
-
-class SignupCompleteRequest(
-    val email: String,
-    val token: String,
-    val teamId: String
-)
-
-class ValidateThirdPartyAuthRequest(
-    val teamId: String?,
-    val team: String?,
-    val alias: Boolean?
 )
 
 

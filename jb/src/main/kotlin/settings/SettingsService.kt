@@ -94,10 +94,10 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
             state.serverUrl,
             state.email,
             state.avatars,
-            viewCodemarksInline,
             state.muteAll,
             isDebugging,
-            state.showFeedbackSmiley
+            state.showFeedbackSmiley,
+            state.team
         )
 
     val environmentDisplayPrefix

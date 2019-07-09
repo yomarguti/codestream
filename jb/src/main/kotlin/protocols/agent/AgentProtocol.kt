@@ -1,6 +1,5 @@
 package protocols.agent
 
-import com.codestream.gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
@@ -21,26 +20,10 @@ class InitializationOptions(
     val recordRequests: Boolean = false
 )
 
-class LoginWithPasswordParams(
-    val email: String?,
-    val password: String?,
-    val teamId: String?,
-    val team: String?
-)
-
 class LoginWithTokenParams(
     val token: JsonElement,
     val teamId: String?,
     val team: String?
-) {
-    constructor(token: AccessToken, teamId: String?, team: String?) : this(gson.toJsonTree(token), teamId, team)
-}
-
-class LoginOtcParams(
-    val code: String,
-    val teamId: String?,
-    val team: String?,
-    val alias: Boolean?
 )
 
 class LoginResult(
@@ -99,8 +82,6 @@ class ProviderInfo(
     val slack: JsonObject?
 )
 
-class BootstrapParams
-
 class Extension(val versionFormatted: String) {
     val version: String
     val build: String
@@ -116,12 +97,6 @@ class Ide {
     val name = "JetBrains"
     val version: String = ApplicationInfo.getInstance().fullVersion
 }
-
-class AccessToken(
-    val email: String?,
-    val url: String,
-    val value: String
-)
 
 enum class TraceLevel(val value: String) {
     SILENT("silent"),
