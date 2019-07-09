@@ -23,7 +23,11 @@ class WebViewTheme(val name: String, val stylesheet: String) {
             }
 
             val bg = JBColor.background()
-            val fg = JBColor.foreground()
+            val fg = if (ColorUtil.isDark(bg)) {
+                UIUtil.getLabelFontColor(UIUtil.FontColor.NORMAL).lighten(20)
+            } else {
+                UIUtil.getLabelFontColor(UIUtil.FontColor.NORMAL).darken(20)
+            }
             val border = JBColor.border()
             val link = JBColor.link()
             val buttonBg = JBUI.CurrentTheme.Focus.defaultButtonColor()
