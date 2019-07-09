@@ -620,9 +620,11 @@ export class WebviewController implements Disposable {
 	}
 
 	private getBootstrap() {
+		const userId = this.session.signedIn ? this.session.userId : undefined;
+		const currentTeamId = this.session.signedIn ? this.session.team.id : undefined;
 		return {
 			session: {
-				userId: this.session.signedIn ? this.session.userId : undefined
+				userId: userId
 			},
 			capabilities: this.session.capabilities,
 			configs: {
@@ -633,7 +635,9 @@ export class WebviewController implements Disposable {
 				team: Container.config.team
 			},
 			env: this.session.environment,
-			context: this._context || {},
+			context: this._context || {
+				currentTeamId: currentTeamId
+			},
 			version: Container.versionFormatted
 		};
 	}
