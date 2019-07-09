@@ -1,6 +1,5 @@
-import { SignedOutBootstrapResponse } from "@codestream/protocols/webview";
+import { BootstrapInHostResponse } from "@codestream/protocols/webview";
 import { CompositeDisposable, Emitter } from "atom";
-import uuidv4 from "uuid/v4";
 import { EnvironmentConfig, PRODUCTION_CONFIG } from "../env-utils";
 import {
 	Capabilities,
@@ -65,7 +64,6 @@ export class WorkspaceSession {
 	private session?: Session;
 	private lastUsedEmail?: string;
 	private envConfig: EnvironmentConfig;
-	private loginToken?: string;
 	private _agent: CodeStreamAgent;
 	private subscriptions = new CompositeDisposable();
 	get agent() {
@@ -119,6 +117,9 @@ export class WorkspaceSession {
 
 		await this.agent.start();
 		this.subscriptions.add(
+			this._agent.onDidStartLogin(() => (this.sessionStatus = SessionStatus.SigningIn)),
+			this._agent.onDidFailLogin(() => (this.sessionStatus = SessionStatus.SignedOut)),
+			this._agent.onDidLogin(event => this.completeLogin(event.data)),
 			this._agent.onDidTerminate(() => {
 				this._agent = new CodeStreamAgent(this.environment);
 				this.initialize();
@@ -194,14 +195,14 @@ export class WorkspaceSession {
 	}
 
 	getBootstrapInfo(): Pick<
-		SignedOutBootstrapResponse,
-		"capabilities" | "configs" | "version" | "loginToken"
+		BootstrapInHostResponse,
+		"session" | "capabilities" | "configs" | "version"
 	> {
 		return {
+			session: { userId: this.isSignedIn ? this.user!.id : undefined },
 			capabilities: this.capabilities,
 			configs: Container.configs.getForWebview(this.environment.serverUrl, this.lastUsedEmail),
 			version: getPluginVersion(),
-			loginToken: this.getLoginToken(),
 		};
 	}
 
@@ -212,12 +213,6 @@ export class WorkspaceSession {
 		if (teamSetting.length > 0) return { team: teamSetting };
 
 		return {};
-	}
-
-	getLoginToken() {
-		if (!this.loginToken) this.loginToken = uuidv4();
-
-		return this.loginToken;
 	}
 
 	@initializesAgent

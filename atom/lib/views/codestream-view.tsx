@@ -1,12 +1,10 @@
 import {
 	ApplyMarkerRequest,
 	ApplyMarkerRequestType,
-	BootstrapRequestType as WebviewBootstrapRequestType,
-	BootstrapResponse,
+	BootstrapInHostRequestType,
+	BootstrapInHostResponse,
 	CompareMarkerRequest,
 	CompareMarkerRequestType,
-	CompleteSignupRequest,
-	CompleteSignupRequestType,
 	EditorContext,
 	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequest,
@@ -15,6 +13,8 @@ import {
 	EditorScrollToNotificationType,
 	EditorSelectRangeRequest,
 	EditorSelectRangeRequestType,
+	GetActiveEditorContextRequestType,
+	GetActiveEditorContextResponse,
 	HostDidChangeActiveEditorNotification,
 	HostDidChangeActiveEditorNotificationType,
 	HostDidChangeConfigNotificationType,
@@ -23,23 +23,15 @@ import {
 	HostDidChangeFocusNotificationType,
 	HostDidLogoutNotificationType,
 	isIpcRequestMessage,
-	LoginRequest,
-	LoginRequestType,
-	LoginSSORequest,
-	LoginSSORequestType,
-	LoginSSOResponse,
 	LogoutRequestType,
 	LogoutResponse,
 	NewCodemarkNotificationType,
 	ReloadWebviewRequestType,
 	ShowCodemarkNotificationType,
 	ShowStreamNotificationType,
-	SignedInBootstrapResponse,
 	UpdateConfigurationRequest,
 	UpdateConfigurationRequestType,
 	UpdateConfigurationResponse,
-	ValidateThirdPartyAuthRequest,
-	ValidateThirdPartyAuthRequestType,
 	WebviewContext,
 	WebviewDidChangeContextNotificationType,
 	WebviewDidInitializeNotificationType,
@@ -343,34 +335,19 @@ export class CodestreamView {
 		}
 	}
 
-	private async getSignedInBootstrapState(): Promise<SignedInBootstrapResponse> {
-		await this.session.ready;
-		const bootstrapData = await this.session.agent.request(AgentBootstrapRequestType, {});
-
+	private getActiveEditorContext(): EditorContext {
 		const editor = atom.workspace.getActiveTextEditor();
-		let editorContext: EditorContext = {};
 		if (editor) {
 			const uri = Editor.getUri(editor);
-			editorContext = {
+			return {
 				activeFile: Editor.getRelativePath(editor),
 				textEditorUri: uri,
 				textEditorVisibleRanges: Editor.getVisibleRanges(editor),
 				textEditorSelections: Editor.getCSSelections(editor),
-				scmInfo:
-					uri === ""
-						? undefined
-						: await this.session.agent.request(GetFileScmInfoRequestType, { uri }),
 				textEditorLineCount: editor.getLineCount(),
 			};
 		}
-
-		return {
-			...this.session.getBootstrapInfo(),
-			...bootstrapData,
-			session: { userId: this.session.user!.id },
-			context: { ...this.webviewContext, currentTeamId: this.session.teamId },
-			editorContext,
-		};
+		return {};
 	}
 
 	private setupWebviewListener() {
@@ -390,76 +367,30 @@ export class CodestreamView {
 
 	private async handleWebviewCommand(message: WebviewIpcRequestMessage) {
 		switch (message.method) {
-			case WebviewBootstrapRequestType.method: {
+			case BootstrapInHostRequestType.method: {
 				try {
+					// TODO: is this still necessary?
 					await this.session.ready;
-					const response: BootstrapResponse = this.session.isSignedIn
-						? await this.getSignedInBootstrapState()
-						: { ...this.session.getBootstrapInfo(), context: this.webviewContext };
 
-					this.respond<BootstrapResponse>({
+					this.respond<BootstrapInHostResponse>({
 						id: message.id,
-						params: response,
+						params: {
+							...this.session.getBootstrapInfo(),
+							context: this.webviewContext || {
+								currentTeamId: this.session.isSignedIn ? this.session.teamId : undefined,
+							},
+						},
 					});
 				} catch (error) {
 					this.respond({ id: message.id, error: error.message });
 				}
 				break;
 			}
-			case LoginSSORequestType.method: {
-				const { provider, queryString }: LoginSSORequest = message.params;
-				const ok = shell.openExternal(
-					`${this.session.environment.serverUrl}/web/provider-auth/${provider}?${
-						queryString ? `${queryString}&` : ""
-					}signupToken=${this.session.getLoginToken()}`
-				);
-				if (ok) this.respond<LoginSSOResponse>({ id: message.id, params: true });
-				else {
-					this.respond({
-						id: message.id,
-						error: "No app found to open url",
-					});
-				}
-				break;
-			}
-			case ValidateThirdPartyAuthRequestType.method: {
-				const params: ValidateThirdPartyAuthRequest = message.params;
-				const status = await this.session.login(OtcLoginRequestType, {
-					code: this.session.getLoginToken(),
-					...params,
+			case GetActiveEditorContextRequestType.method: {
+				this.respond<GetActiveEditorContextResponse>({
+					id: message.id,
+					params: { editorContext: this.getActiveEditorContext() },
 				});
-				if (status !== LoginResult.Success) this.respond({ id: message.id, error: status });
-				else {
-					const data = await this.getSignedInBootstrapState();
-					this.respond<SignedInBootstrapResponse>({ id: message.id, params: data });
-				}
-				break;
-			}
-			case CompleteSignupRequestType.method: {
-				const { teamId, token, email }: CompleteSignupRequest = message.params;
-				const status = await this.session.login(TokenLoginRequestType, {
-					teamId,
-					token: {
-						email,
-						url: this.session.environment.serverUrl,
-						value: token,
-					},
-				});
-				if (status !== LoginResult.Success) this.respond({ id: message.id, error: status });
-				else {
-					const data = await this.getSignedInBootstrapState();
-					this.respond<SignedInBootstrapResponse>({ id: message.id, params: data });
-				}
-				break;
-			}
-			case LoginRequestType.method: {
-				const params: LoginRequest = message.params;
-				const status = await this.session.login(PasswordLoginRequestType, params);
-				if (status !== LoginResult.Success) this.respond({ id: message.id, error: status });
-				else {
-					const data = await this.getSignedInBootstrapState();
-					this.respond<SignedInBootstrapResponse>({ id: message.id, params: data });
-				}
 				break;
 			}
 			case UpdateConfigurationRequestType.method: {

@@ -29,6 +29,10 @@ import {
 	DidChangeDataNotificationType,
 	DidChangeDocumentMarkersNotification,
 	DidChangeDocumentMarkersNotificationType,
+	DidFailLoginNotificationType,
+	DidLoginNotification,
+	DidLoginNotificationType,
+	DidStartLoginNotificationType,
 	TelemetryRequest,
 	TelemetryRequestType,
 } from "../protocols/agent/agent.protocol";
@@ -317,10 +321,31 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 		connection.onCustom(DidChangeConnectionStatusNotificationType.method, notification =>
 			this.emitter.emit(DidChangeConnectionStatusNotificationType.method, notification)
 		);
+		connection.onCustom(DidStartLoginNotificationType.method, notification =>
+			this.emitter.emit(DidStartLoginNotificationType.method, notification)
+		);
+		connection.onCustom(DidFailLoginNotificationType.method, notification =>
+			this.emitter.emit(DidFailLoginNotificationType.method, notification)
+		);
+		connection.onCustom(DidLoginNotificationType.method, notification =>
+			this.emitter.emit(DidLoginNotificationType.method, notification)
+		);
 	}
 
 	private onLogMessage = (params: LogMessageParams) => {
 		this.logger.log(ReversedMessageType[params.type], params.message);
+	}
+
+	onDidStartLogin(cb: () => void) {
+		return this.emitter.on(DidStartLoginNotificationType.method, cb);
+	}
+
+	onDidFailLogin(cb: () => void) {
+		return this.emitter.on(DidFailLoginNotificationType.method, cb);
+	}
+
+	onDidLogin(cb: (event: DidLoginNotification) => void) {
+		return this.emitter.on(DidLoginNotificationType.method, cb);
 	}
 
 	onDidChangeData(cb: (event: DidChangeDataNotification) => void) {

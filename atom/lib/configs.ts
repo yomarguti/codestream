@@ -36,6 +36,7 @@ export class ConfigManager implements Disposable {
 		return {
 			showHeadshots: this.get("avatars"),
 			debug: atom.inDevMode(),
+			team: this.get("team"),
 			serverUrl,
 			email,
 		};
