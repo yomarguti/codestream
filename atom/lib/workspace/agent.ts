@@ -220,6 +220,10 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 	private emitter = new Emitter();
 	private subscriptions = new CompositeDisposable();
 	private logger = new FileLogger("agent");
+	private disposed = false;
+	get isDisposed() {
+		return this.disposed;
+	}
 
 	constructor(private environment: EnvironmentConfig) {
 		super();
@@ -380,6 +384,7 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 	}
 
 	dispose() {
+		this.disposed = true;
 		this.logger.dispose();
 		this.emitter.dispose();
 		this.subscriptions.dispose();

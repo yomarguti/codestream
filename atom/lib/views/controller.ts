@@ -83,6 +83,15 @@ export class ViewController implements Disposable {
 		}
 	}
 
+	destroyView(uri: string) {
+		if (this.mainView && this.mainView.getURI() === uri) {
+			const pane = atom.workspace.paneForURI(uri);
+			if (pane !== undefined) {
+				pane.destroy();
+			}
+		}
+	}
+
 	reload(uri: string) {
 		const paneForItem = atom.workspace.paneForURI(uri);
 		if (!paneForItem) return;
@@ -110,6 +119,6 @@ export class ViewController implements Disposable {
 
 	dispose() {
 		this.subscriptions.dispose();
-		this.mainView && this.mainView.destroy();
+		this.mainView && this.destroyView(this.mainView.getURI());
 	}
 }

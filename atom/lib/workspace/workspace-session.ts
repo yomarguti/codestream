@@ -65,7 +65,6 @@ export class WorkspaceSession {
 	private lastUsedEmail?: string;
 	private envConfig: EnvironmentConfig;
 	private _agent: CodeStreamAgent;
-	private subscriptions = new CompositeDisposable();
 	get agent() {
 		return this._agent;
 	}
@@ -113,18 +112,17 @@ export class WorkspaceSession {
 	}
 
 	async initializeAgent() {
+		if (this._agent.isDisposed) {
+			this._agent = new CodeStreamAgent(this.envConfig);
+		}
+
 		if (this._agent.initialized) return;
 
+		this._agent.onDidStartLogin(() => (this.sessionStatus = SessionStatus.SigningIn));
+		this._agent.onDidFailLogin(() => (this.sessionStatus = SessionStatus.SignedOut));
+		this._agent.onDidLogin(event => this.completeLogin(event.data));
+
 		await this.agent.start();
-		this.subscriptions.add(
-			this._agent.onDidStartLogin(() => (this.sessionStatus = SessionStatus.SigningIn)),
-			this._agent.onDidFailLogin(() => (this.sessionStatus = SessionStatus.SignedOut)),
-			this._agent.onDidLogin(event => this.completeLogin(event.data)),
-			this._agent.onDidTerminate(() => {
-				this._agent = new CodeStreamAgent(this.environment);
-				this.initialize();
-			})
-		);
 	}
 
 	get isSignedIn() {
@@ -140,10 +138,6 @@ export class WorkspaceSession {
 	}
 
 	dispose() {
-		// it's important to dispose subscriptions first
-		// because one of them replaces the instance to CodeStreamAgent agent when it's destroyed
-		// and during extension teardown we don't want to start again
-		this.subscriptions.dispose();
 		this.signOut();
 	}
 
@@ -264,6 +258,11 @@ export class WorkspaceSession {
 			this.sessionStatus = SessionStatus.SignedOut;
 		}
 		this._agent.dispose();
+	}
+
+	async restart() {
+		this.signOut();
+		await this.initializeAgent();
 	}
 
 	changeEnvironment(env: EnvironmentConfig) {

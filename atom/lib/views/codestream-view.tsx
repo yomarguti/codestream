@@ -251,13 +251,6 @@ export class CodestreamView {
 				this.sendEvent(DidChangeDataNotificationType, data)
 			),
 			this.session.onDidChangeSessionStatus(change => {
-				if (
-					change.current === SessionStatus.SignedOut &&
-					change.previous !== SessionStatus.SigningIn
-				) {
-					this.sendEvent(HostDidLogoutNotificationType, {});
-					this.editorSelectionObserver && this.editorSelectionObserver.dispose();
-				}
 				if (change.current === SessionStatus.SignedIn) {
 					this.observeWorkspace();
 				}
@@ -449,7 +442,7 @@ export class CodestreamView {
 				break;
 			}
 			case LogoutRequestType.method: {
-				this.session.signOut();
+				await this.session.restart();
 				this.respond<LogoutResponse>({ id: message.id, params: {} });
 				break;
 			}

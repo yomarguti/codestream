@@ -43,8 +43,9 @@ class CodestreamPackage {
 					this.sessionStatusCommand = atom.commands.add(
 						"atom-workspace",
 						"codestream:sign-out",
-						() => {
-							session.signOut();
+						async () => {
+							Container.viewController.destroyView(CODESTREAM_VIEW_URI);
+							await session.restart();
 						}
 					);
 				}
