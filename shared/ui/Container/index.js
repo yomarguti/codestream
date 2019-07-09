@@ -9,16 +9,22 @@ import { logError } from "../logger";
 import { HostApi } from "../webview-api";
 import { ReloadWebviewRequestType } from "../ipc/webview.protocol";
 import { Loading } from "./Loading";
+import RoadBlock from "../Stream/RoadBlock";
 
 addLocaleData(englishLocaleData);
 
 const mapStateToProps = state => ({
 	bootstrapped: state.bootstrapped,
-	loggedIn: Boolean(state.session.userId)
+	loggedIn: Boolean(state.session.userId),
+	team: state.teams[state.context.currentTeamId]
 });
+
 const Root = connect(mapStateToProps)(props => {
 	if (!props.bootstrapped) return <Loading />;
 	if (!props.loggedIn) return <UnauthenticatedRoutes />;
+	if (props.team && props.team.plan === "TRIALEXPIRED") return <RoadBlock
+		title="Trial Expired"><p>Your free-trial period is over. If you would like to purchase CodeStream for your team, please contact <a href="mailto:sales@codestream.com">sales@codestream.com</a> to discuss service plans and pricing options.</p></RoadBlock>;
+
 	return <Stream />;
 });
 
