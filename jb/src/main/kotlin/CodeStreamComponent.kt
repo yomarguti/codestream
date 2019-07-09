@@ -38,12 +38,15 @@ class CodeStreamComponent(val project: Project) : Disposable {
     }
 
     init {
+        ApplicationManager.getApplication().invokeLater {
+            initEditorFactoryListener()
+            initMessageBusSubscriptions()
+        }
+
         project.agentService?.onDidStart {
             ApplicationManager.getApplication().invokeLater {
                 initToolWindow()
                 initWindowFocusListener()
-                initEditorFactoryListener()
-                initMessageBusSubscriptions()
                 initStatusBarWidget()
                 initUnreadsListener()
             }
