@@ -91,6 +91,8 @@ class CodeStreamComponent(val project: Project) : Disposable {
     }
 
     private fun initMessageBusSubscriptions() {
+        val component = this
+
         if (project.isDisposed) return
         project.messageBus.connect().let {
             it.subscribe(
@@ -105,8 +107,10 @@ class CodeStreamComponent(val project: Project) : Disposable {
                 ToolWindowManagerListener.TOPIC,
                 object : ToolWindowManagerListener {
                     override fun stateChanged() {
-                        isVisible = toolWindow.isVisible
-                        updateWebViewFocus()
+                        if (component::toolWindow.isInitialized) {
+                            isVisible = toolWindow.isVisible
+                            updateWebViewFocus()
+                        }
                     }
                 }
             )

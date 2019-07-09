@@ -16,14 +16,17 @@ class ModuleListenerImpl(project: Project) : ModuleListener {
         val roots = (module.moduleContentScope as? ModuleWithDependenciesScope)?.roots ?: return
         val folders = roots.map { WorkspaceFolder(it.uri) }
         project.agentService?.let {
-            it.agent.workspaceService.didChangeWorkspaceFolders(
-                DidChangeWorkspaceFoldersParams(
-                    WorkspaceFoldersChangeEvent(
-                        folders.toMutableList(),
-                        mutableListOf()
+            it.onDidStart {
+                it.agent.workspaceService.didChangeWorkspaceFolders(
+                    DidChangeWorkspaceFoldersParams(
+                        WorkspaceFoldersChangeEvent(
+                            folders.toMutableList(),
+                            mutableListOf()
+                        )
                     )
                 )
-            )
+
+            }
         }
     }
 
@@ -31,14 +34,16 @@ class ModuleListenerImpl(project: Project) : ModuleListener {
         val roots = (module.moduleContentScope as? ModuleWithDependenciesScope)?.roots ?: return
         val folders = roots.map { WorkspaceFolder(it.uri) }
         project.agentService?.let {
-            it.agent.workspaceService.didChangeWorkspaceFolders(
-                DidChangeWorkspaceFoldersParams(
-                    WorkspaceFoldersChangeEvent(
-                        mutableListOf(),
-                        folders.toMutableList()
+            it.onDidStart {
+                it.agent.workspaceService.didChangeWorkspaceFolders(
+                    DidChangeWorkspaceFoldersParams(
+                        WorkspaceFoldersChangeEvent(
+                            mutableListOf(),
+                            folders.toMutableList()
+                        )
                     )
                 )
-            )
+            }
         }
     }
 }
