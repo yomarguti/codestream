@@ -320,13 +320,17 @@ class CodestreamPackage {
 			}
 		});
 
-		return new Disposable(() => {
+		const statusBarDisposable = new Disposable(() => {
 			sessionStatusSubscription.dispose();
 			dataChangeSubscription.dispose();
 			if (statusBarTile) {
 				statusBarTile.destroy();
 			}
 		});
+
+		this.subscriptions.add(statusBarDisposable);
+
+		return statusBarDisposable;
 	}
 
 	consumeSplitDiff(splitDiff: SplitDiffService) {
