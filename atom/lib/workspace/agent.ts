@@ -189,7 +189,8 @@ abstract class AgentConnection {
 			console.error(error);
 		});
 		agentProcess.on("disconnect", () => {
-			if (this._connection && this._connection.isConnected) {
+			// this._connection will be unset if this instance was stopped properly
+			if (this._connection) {
 				atom.notifications.addWarning("The CodeStream agent process unexpectedly crashed.", {
 					description: "Please open the dev tools and share the error with us.",
 				});
@@ -209,7 +210,6 @@ abstract class AgentConnection {
 
 	protected async stop() {
 		this._connection!.dispose();
-		this._connection!.exit();
 		this._connection = undefined;
 		this._agentProcess!.kill();
 		this._crashEmitter.dispose();
