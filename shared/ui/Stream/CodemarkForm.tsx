@@ -1003,6 +1003,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		);
 
 		return [
+<<<<<<< HEAD
 			<form
 <<<<<<< HEAD
 				className={cx("codemark-form", "standard-form", { "google-style": GoogleStyle })}
@@ -1012,6 +1013,9 @@ class CodemarkForm extends React.Component<Props, State> {
 >>>>>>> remove react warnings on codemark form
 				key="two"
 			>
+=======
+			<form id="code-comment-form" className="standard-form" key="two">
+>>>>>>> style tweaks and code cleanup
 				<fieldset className="form-body">
 					<div id="controls" className="control-group" key="controls1">
 						<div
@@ -1213,20 +1217,6 @@ class CodemarkForm extends React.Component<Props, State> {
 						*/}
 					</div>
 					<div key="clear" style={{ clear: "both" }} />
-					{/*
-						<div
-							style={{ marginTop: "30px", cursor: "pointer" }}
-							onClick={this.props.toggleOpenCommentOnSelect}
-						>
-							<span
-								style={{ float: "right", marginLeft: "10px" }}
-								className={createClassString("switch", {
-									checked: this.props.openCommentOnSelect
-								})}
-							/>
-							Auto-open when selecting code and CodeStream is visible
-						</div>
-					*/}
 				</fieldset>
 			</form>
 		];

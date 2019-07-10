@@ -1879,7 +1879,9 @@ export class SimpleStream extends Component {
 				color: attributes.color,
 				text: attributes.text,
 				title: attributes.title,
-				assignees: attributes.assignees
+				assignees: attributes.assignees,
+				tags: attributes.tags,
+				relatedCodemarkIds: attributes.relatedCodemarkIds
 			});
 			return this.setMultiCompose(false);
 		} else {

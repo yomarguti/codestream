@@ -298,8 +298,10 @@ export class MessageInput extends React.Component<Props, State> {
 	// when the input field loses focus, one thing we want to do is
 	// to hide the at-mention popup
 	handleBlur = (event: React.SyntheticEvent) => {
-		event.preventDefault();
-		this.hidePopup();
+		// event.preventDefault();
+		// turned off because of bad interaction with trying to control when the popup
+		// opens/closes explicitly, for example with the @ icon in the messageinput
+		// this.hidePopup();
 	};
 
 	handleClick = event => {
@@ -663,7 +665,7 @@ export class MessageInput extends React.Component<Props, State> {
 			codemarks.map(codemark => {
 				const title = codemark.title || codemark.text;
 				const icon = this.props.relatedCodemarkIds[codemark.id] ? (
-					<Icon name="check" />
+					<Icon style={{ margin: "0 2px 0 2px" }} name="check" />
 				) : (
 					<Icon name={codemark.type || "comment"} className={`${codemark.color}-color type-icon`} />
 				);
@@ -865,13 +867,16 @@ export class MessageInput extends React.Component<Props, State> {
 	};
 
 	buildSelectTagMenu = () => {
+		const { tags } = this.props;
+		if (!tags) return null;
+
 		let menuItems: any = [
 			{ type: "search", placeholder: "Search tags...", action: "search" },
 			{ label: "-" }
 		];
 
 		menuItems = menuItems.concat(
-			this.props.tags.map(tag => {
+			tags.map(tag => {
 				let className = "tag-menu-block";
 				if (!tag.color.startsWith("#")) className += " " + tag.color + "-background";
 				return {
@@ -913,6 +918,21 @@ export class MessageInput extends React.Component<Props, State> {
 		);
 	};
 
+	handleClickAtMentions = () => {
+		if (this.state.currentPopup) {
+			this.focus(() => {
+				// this.insertTextAtCursor("", "@");
+				this.hidePopup();
+			});
+		} else
+			this.focus(() => {
+				// this.insertTextAtCursor("@");
+				this.showPopupSelectors("", "at-mentions");
+			});
+
+		// this.insertTextAtCursor("@");
+	};
+
 	render() {
 		const { placeholder, text, __onDidRender } = this.props;
 
@@ -935,17 +955,12 @@ export class MessageInput extends React.Component<Props, State> {
 						handleSelectAtMention={this.handleSelectAtMention}
 					/>
 				</div>
-				<div key="message-attach=icons" className="message-attach-icons">
+				<div key="message-attach-icons" className="message-attach-icons">
 					<Icon
 						key="mention"
 						name="mention"
-						className={cx("mention", {
-							hover: this.state.emojiOpen
-						})}
-						onClick={e => {
-							// this.insertTextAtCursor("@");
-							this.showPopupSelectors("", "at-mentions");
-						}}
+						className={cx("mention", { hover: this.state.currentPopup === "at-mentions" })}
+						onClick={this.handleClickAtMentions}
 					/>
 					<Icon
 						key="smiley"
@@ -965,18 +980,14 @@ export class MessageInput extends React.Component<Props, State> {
 					<Icon
 						key="codestream"
 						name="codestream"
-						className={cx("codestream", {
-							hover: this.state.codemarkOpen
-						})}
+						className={cx("codestream", { hover: this.state.codemarkOpen })}
 						onClick={this.handleClickCodemarkButton}
 					/>
 					{this.buildCodemarkMenu()}
 					<Icon
 						key="tag"
 						name="tag"
-						className={cx("tags", {
-							hover: this.state.tagsOpen
-						})}
+						className={cx("tags", { hover: this.state.tagsOpen })}
 						onClick={this.handleClickTagButton}
 					/>
 					{this.buildTagMenu()}
@@ -1000,8 +1011,6 @@ export class MessageInput extends React.Component<Props, State> {
 }
 
 const mapStateToProps = state => {
-	const { context, teams } = state;
-
 	return {
 		codemarks: codemarkSelectors.getTypeFilteredCodemarks(state) || []
 	};

@@ -10,6 +10,7 @@ interface Props {
 	title?: React.ReactNode;
 	placement?: Placement;
 	align?: any;
+	style?: any;
 	delay?: number;
 	clickable?: boolean;
 	onClick?(event: React.SyntheticEvent): any;
@@ -24,6 +25,7 @@ const Icon = React.forwardRef<any, Props>((props, ref) => {
 		<span
 			className={createClassString("icon", props.className, { clickable: props.clickable })}
 			onClick={props.onClick}
+			style={props.style}
 			dangerouslySetInnerHTML={{ __html: icon.toSVG() }}
 			ref={ref}
 		/>

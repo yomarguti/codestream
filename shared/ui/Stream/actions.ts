@@ -263,6 +263,8 @@ export const createPost = (
 			});
 		}
 		const response = await responsePromise;
+		if (!response) logError("DID NOT GET A RESPONSE FROM: ", responsePromise);
+
 		if (response.codemark) {
 			dispatch(saveCodemarks([response.codemark]));
 		}
