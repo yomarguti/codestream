@@ -243,7 +243,10 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	renderTags = codemark => {
-		const { tags = [] } = codemark;
+		let { tags = [] } = codemark;
+		if (codemark.color) {
+			tags = tags.concat({ id: "_" + codemark.color, label: "", color: codemark.color });
+		}
 		const keys = Object.keys(tags);
 		if (keys.length === 0) return null;
 
