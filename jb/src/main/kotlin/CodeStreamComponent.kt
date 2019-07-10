@@ -47,7 +47,9 @@ class CodeStreamComponent(val project: Project) : Disposable {
             initUnreadsListener()
 
             project.agentService?.onDidStart {
-                project.webViewService?.load()
+                val webViewService = project.webViewService ?: return@onDidStart
+                webViewService.load()
+                toolWindow.component.add(webViewService.webView)
             }
         }
     }
@@ -55,7 +57,6 @@ class CodeStreamComponent(val project: Project) : Disposable {
     private fun initToolWindow() {
         if (project.isDisposed) return
         val toolWindowManager = ToolWindowManager.getInstance(project) ?: return
-        val webViewService = project.webViewService ?: return
         toolWindow = toolWindowManager.registerToolWindow(
             CODESTREAM_TOOL_WINDOW_ID,
             false,
@@ -64,7 +65,6 @@ class CodeStreamComponent(val project: Project) : Disposable {
             true
         )
         toolWindow.icon = IconLoader.getIcon("/images/codestream.svg")
-        toolWindow.component.add(webViewService.webView)
     }
 
     private fun initWindowFocusListener() {
