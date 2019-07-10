@@ -6,7 +6,6 @@ import com.codestream.settingsService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.StatusBar
 import com.intellij.openapi.wm.StatusBarWidget
-import com.intellij.openapi.wm.WindowManager
 import com.intellij.util.Consumer
 import java.awt.Component
 import java.awt.event.MouseEvent
@@ -32,6 +31,7 @@ class CodeStreamStatusBarWidget(val project: Project) : StatusBarWidget, StatusB
 
     override fun install(statusBar: StatusBar) {
         myStatusBar = statusBar
+        refresh()
     }
 
     override fun dispose() = Unit
