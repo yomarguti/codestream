@@ -121,10 +121,6 @@ namespace CodeStream.VisualStudio.LSP {
 			var @params = e.ToObject<DidLogoutNotification>();
 			Log.Information($"{nameof(OnDidLogout)} {@params.Reason}");
 
-			_browserService.Notify(new DidLogoutNotificationType {
-				Params = @params
-			});
-
 			_eventAggregator.Publish(new AuthenticationChangedEvent { Reason = @params.Reason });
 		}
 
