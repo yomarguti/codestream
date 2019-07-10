@@ -60,6 +60,28 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="1_3_1">1.3.1</h4>
+<h5>Added</h5>
+<ul>
+    <li>Password reset. Sorry it took so long!</li>
+    <li>Enforcement of CodeStream's 30-day free trial, and 5-member limit for teams on the free plan</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>JxBrowser upgraded to 7.0</li>
+    <li>Optimizations to ipc between our processes and plugin startup</li>
+    <li>Improves contrast between text and background in CodeStream UI</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes display issues on HiDPi displays</li>
+    <li>Fixes an issue where opening a new project in an existing window would break CodeStream</li>
+    <li>Fixes an issue where scrolling in the CodeStream pane with the compose modal open would lose any information already entered</li>
+    <li>Fixes an issue where a codemark could get posted as a reply to another codemark if you had thread view open</li>
+    <li>Fixes a spacing issue on the Sign In page</li>
+    <li>Fixes an issue with new UI not being applied to email confirmation and Team Name pages</li>
+    <li>Fixes rendering issues with certain Slack bots when using Slack real-time channels</li>
+</ul>
 <h4 id="1_3_0">1.3.0</h4>
 <h5>Added</h5>
 <ul>
@@ -73,7 +95,6 @@
 </ul>
 <h5>Fixed</h5>
 <ul>
-    <li>Fixes an issue where opening a new project in an existing window would break CodeStream</li>
     <li>Fixes an issue with code blocks in Trello cards not rendering properly, and not including the line numbers</li>
 </ul>
 <h4 id="1_2_0">1.2.0</h4>
