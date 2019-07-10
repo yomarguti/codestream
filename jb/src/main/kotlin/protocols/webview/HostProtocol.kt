@@ -19,6 +19,9 @@ class Capabilities {
     val codemarkCompare = true
     val editorTrackVisibleRange = true
     val services = Services()
+    var providerCanSupportRealtimeChat: Boolean? = null
+    val providerSupportsRealtimeChat: Boolean? = null
+    val providerSupportsRealtimeEvents: Boolean? = null
 }
 
 class Configs(

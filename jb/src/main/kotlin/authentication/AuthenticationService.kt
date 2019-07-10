@@ -5,6 +5,7 @@ import com.codestream.gson
 import com.codestream.sessionService
 import com.codestream.settingsService
 import com.github.salomonbrys.kotson.fromJson
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.intellij.credentialStore.Credentials
 import com.intellij.ide.passwordSafe.PasswordSafe
@@ -20,7 +21,7 @@ import protocols.webview.UserSession
 class AuthenticationService(val project: Project) {
 
     private val logger = Logger.getInstance(AuthenticationService::class.java)
-    private var agentCapabilities: JsonObject = JsonObject()
+    private var agentCapabilities: JsonElement = gson.toJsonTree(Capabilities())
 
     fun bootstrap(): Any? {
         val settings = project.settingsService ?: return Unit
@@ -28,7 +29,7 @@ class AuthenticationService(val project: Project) {
 
         return BootstrapResponse(
             UserSession(session.userLoggedIn?.userId),
-            Capabilities(),
+            gson.fromJson(agentCapabilities),
             settings.webViewConfigs,
             settings.webViewContext,
             settings.extensionInfo.versionFormatted

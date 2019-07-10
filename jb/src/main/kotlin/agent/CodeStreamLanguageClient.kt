@@ -1,5 +1,6 @@
 package com.codestream.agent
 
+import com.codestream.agentService
 import com.codestream.authenticationService
 import com.codestream.editorService
 import com.codestream.extensions.workspaceFolders
@@ -58,7 +59,9 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
     @JsonNotification("codestream/didLogin")
     fun didLogin(json: JsonElement) {
         val notification = gson.fromJson<DidLoginNotification>(json)
-        project.authenticationService?.completeLogin(notification.data)
+        project.agentService?.onDidStart {
+            project.authenticationService?.completeLogin(notification.data)
+        }
     }
 
     @JsonNotification("codestream/didLogout")
