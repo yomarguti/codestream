@@ -209,6 +209,8 @@ abstract class AgentConnection {
 
 	protected async stop() {
 		this._connection!.dispose();
+		this._connection!.exit();
+		this._connection = undefined;
 		this._agentProcess!.kill();
 		this._crashEmitter.dispose();
 	}
