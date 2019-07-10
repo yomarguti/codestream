@@ -38,10 +38,8 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogBuilder
-import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.util.ui.UIUtil
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -64,8 +62,6 @@ import protocols.webview.EditorInformation
 import protocols.webview.EditorMetrics
 import protocols.webview.EditorSelection
 import protocols.webview.WebViewContext
-import java.awt.HeadlessException
-import java.awt.Toolkit
 import java.io.File
 import java.net.URI
 
