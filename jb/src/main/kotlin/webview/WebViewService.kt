@@ -36,7 +36,6 @@ class WebViewService(val project: Project) : Disposable {
 
     init {
         extractAssets()
-        browser.navigation().loadUrl(htmlFile.url)
 
         UIManager.addPropertyChangeListener {
             if (it.propertyName == "lookAndFeel") {
@@ -44,6 +43,10 @@ class WebViewService(val project: Project) : Disposable {
                 browser.navigation().loadUrl(htmlFile.url)
             }
         }
+    }
+
+    fun load() {
+        browser.navigation().loadUrl(htmlFile.url)
     }
 
     private fun extractAssets() {
@@ -105,10 +108,6 @@ class WebViewService(val project: Project) : Disposable {
         logger.info("Disposing JxBrowser")
         browser.close()
         browser.engine().close()
-    }
-
-    fun reload() {
-        browser.navigation().loadUrl(htmlFile.url)
     }
 
     private fun createBrowser(router: WebViewRouter): Browser {

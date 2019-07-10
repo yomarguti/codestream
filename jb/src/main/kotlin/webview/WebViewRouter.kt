@@ -75,7 +75,7 @@ class WebViewRouter(val project: Project) {
             "host/didInitialize" -> _isReady = true
             "host/logout" -> authentication.logout()
             "host/context/didChange" -> contextDidChange(message)
-            "host/webview/reload" -> project.webViewService?.reload()
+            "host/webview/reload" -> project.webViewService?.load()
             "host/marker/compare" -> hostMarkerCompare(message)
             "host/marker/apply" -> hostMarkerApply(message)
             "host/configuration/update" -> configurationUpdate(message)
