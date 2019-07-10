@@ -29,6 +29,7 @@ import Tooltip from "./Tooltip";
 import { getCurrentTeamProvider } from "../store/teams/actions";
 import { isNil } from "lodash-es";
 import { CodeStreamState } from "../store";
+import { getCodemark } from "../store/codemarks/reducer";
 
 interface State {
 	hover: boolean;
@@ -57,6 +58,7 @@ interface ConnectedProps {
 	editorHasFocus: boolean;
 	pinnedReplies: CSPost[];
 	pinnedAuthors: CSUser[];
+	relatedCodemarks: CodemarkPlus[];
 	isCodeStreamTeam: boolean;
 }
 
@@ -239,6 +241,55 @@ export class Codemark extends React.Component<Props, State> {
 		}
 		return icon;
 	}
+
+	renderTags = codemark => {
+		const { tags = [] } = codemark;
+		const keys = Object.keys(tags);
+		if (keys.length === 0) return null;
+
+		return tags.map(tag => {
+			if (tag.color.startsWith("#"))
+				return (
+					<div key={tag.id} className="codemark-tag" style={{ background: tag.color }}>
+						<div>&nbsp;{tag.label}&nbsp;</div>
+					</div>
+				);
+			else
+				return (
+					<div key={tag.id} className={`codemark-tag ${tag.color}-background`}>
+						<div>&nbsp;{tag.label}&nbsp;</div>
+					</div>
+				);
+		});
+	};
+
+	renderRelatedCodemarks = codemark => {
+		const { relatedCodemarks } = this.props;
+
+		if (relatedCodemarks.length === 0) return null;
+
+		return (
+			<div className="related-codemarks" key="related-codemarks" style={{ margin: "10px 0 0 0" }}>
+				{relatedCodemarks.map(codemark => {
+					const title = codemark.title || codemark.text;
+					const icon = (
+						<Icon
+							name={codemark.type || "comment"}
+							className={`${codemark.color}-color type-icon`}
+						/>
+					);
+					const file = codemark.markers && codemark.markers[0] && codemark.markers[0].file;
+
+					return (
+						<div key={codemark.id} className="related-codemark">
+							{icon}&nbsp;{title}&nbsp;&nbsp;<span className="codemark-file">{file}</span>
+						</div>
+					);
+				})}
+				<div style={{ clear: "both" }} />
+			</div>
+		);
+	};
 
 	handleClickStatusToggle = (event: React.SyntheticEvent): any => {
 		event.stopPropagation();
@@ -576,9 +627,12 @@ export class Codemark extends React.Component<Props, State> {
 			);
 		}
 
-		if (externalLink || hasDescription || hasReplies) {
+		const renderedTags = this.renderTags(codemark);
+
+		if (renderedTags || externalLink || hasDescription || hasReplies) {
 			return (
 				<div className="detail-icons">
+					{renderedTags}
 					{externalLink}
 					{hasDescription && (
 						<span className="detail-icon">
@@ -673,11 +727,14 @@ export class Codemark extends React.Component<Props, State> {
 								</>
 							) : (
 								<>
+									{this.renderKeybinding(codemark)}
+									{this.renderStatus(codemark)}
+									{this.renderAssignees(codemark)}
 									<div className="author">
 										<Headshot person={author} />
 										{author.username}
 										<Timestamp time={codemark.createdAt} />
-										{codemark.color && (
+										{false && codemark.color && (
 											<div
 												className={cx(`label-indicator ${codemark.color}-background`, {
 													expanded: this.state.showLabelText
@@ -699,18 +756,28 @@ export class Codemark extends React.Component<Props, State> {
 											)}
 											<Icon name="kebab-vertical" className="kebab-vertical clickable" />
 										</span>
-										{this.renderKeybinding(codemark)}
-										{this.renderStatus(codemark)}
-										{this.renderAssignees(codemark)}
 									</div>
 								</>
+							)}
+						</div>
+						{false && type === "bookmark" && (
+							<span className={codemark.color}>{this.renderTypeIcon()}</span>
+						)}
+						{this.renderTextLinkified(codemark.title || codemark.text)}
+						<div
+							style={{ position: "absolute", top: "5px", right: "5px" }}
+							onClick={this.handleMenuClick}
+						>
+							{menuOpen && (
+								<Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />
 							)}
 						</div>
 						{selected || type !== "bookmark"
 							? this.renderTextLinkified(codemark.title || codemark.text)
 							: null}
 						{!selected && this.renderPinnedReplies()}
-						{!selected && this.renderDetailIcons(codemark)}
+						{this.renderDetailIcons(codemark)}
+						{this.renderRelatedCodemarks(codemark)}
 					</div>
 					{selected && (
 						<CodemarkDetails
@@ -849,7 +916,7 @@ const unkownAuthor = {
 };
 
 const mapStateToProps = (state: CodeStreamState, props: InheritedProps): ConnectedProps => {
-	const { capabilities, context, preferences, users, session, posts } = state;
+	const { capabilities, context, preferences, users, session, posts, codemarks } = state;
 	const { codemark } = props;
 
 	const teamProvider = getCurrentTeamProvider(state);
@@ -860,11 +927,16 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 
 	const pinnedAuthors = pinnedReplies.map(post => users[post.creatorId]);
 
+	const relatedCodemarks = (codemark.relatedCodemarkIds || EMPTY_ARRAY)
+		.map(id => getCodemark(codemarks, id))
+		.filter(Boolean);
+
 	return {
 		capabilities: capabilities,
 		editorHasFocus: context.hasFocus,
 		pinnedReplies,
 		pinnedAuthors,
+		relatedCodemarks,
 		currentUser: users[session.userId!] as CSMe,
 		author: getUserByCsId(users, props.codemark.creatorId) || (unkownAuthor as CSUser),
 		codemarkKeybindings: preferences.codemarkKeybindings || EMPTY_OBJECT,
