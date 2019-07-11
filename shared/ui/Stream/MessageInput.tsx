@@ -66,9 +66,9 @@ export class MessageInput extends React.Component<Props, State> {
 		// so that HTML doesn't get pasted into the input field. without this,
 		// HTML would be rendered as HTML when pasted
 		if (this._contentEditable) {
-			this._contentEditable.htmlEl.addEventListener("paste", function (e) {
+			this._contentEditable.htmlEl.addEventListener("paste", function(e) {
 				e.preventDefault();
-				const text = e.clipboardData.getData("text/plain");
+				const text = e.clipboardData!.getData("text/plain");
 				document.execCommand("insertHTML", false, text.replace(/\n/g, "<br>"));
 			});
 		}
@@ -156,7 +156,7 @@ export class MessageInput extends React.Component<Props, State> {
 		}
 		if (chars < 0) chars = 0;
 
-		const selection = window.getSelection();
+		const selection = window.getSelection()!;
 
 		const inputDiv = document.getElementById("input-div");
 		if (inputDiv) {
@@ -274,7 +274,7 @@ export class MessageInput extends React.Component<Props, State> {
 	handleChange = (event: React.SyntheticEvent) => {
 		const newPostText = (event.target as any).value;
 
-		const selection = window.getSelection();
+		const selection = window.getSelection()!;
 		const range = selection.getRangeAt(0);
 		const node = range.commonAncestorContainer;
 		const nodeText = node.textContent || "";

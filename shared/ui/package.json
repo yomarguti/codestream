@@ -53,7 +53,7 @@
 		"@types/emoji-mart": "2.8.4",
 		"@types/lodash-es": "4.17.3",
 		"@types/markdown-it": "0.0.8",
-		"@types/node-fetch": "2.1.6",
+		"@types/node-fetch": "2.3.7",
 		"@types/prop-types": "15.7.1",
 		"@types/punycode": "2.1.0",
 		"@types/rc-tooltip": "3.7.1",
