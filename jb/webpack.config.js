@@ -3,7 +3,6 @@ const webpack = require("webpack");
 const fs = require("fs");
 const path = require("path");
 const CleanPlugin = require("clean-webpack-plugin");
-const FileManagerPlugin = require("filemanager-webpack-plugin");
 const ForkTsCheckerPlugin = require("fork-ts-checker-webpack-plugin");
 const HtmlPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
