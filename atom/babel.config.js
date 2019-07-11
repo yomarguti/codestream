@@ -23,6 +23,7 @@ module.exports = function(api) {
 					},
 					modules: false,
 					useBuiltIns: "entry",
+					corejs: 2,
 				},
 			],
 			"@babel/preset-typescript",
