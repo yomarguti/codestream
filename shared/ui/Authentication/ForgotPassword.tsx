@@ -1,12 +1,13 @@
 import React, { useState, useCallback } from "react";
 import { TextInput } from "./TextInput";
 import Button from "../Stream/Button";
+import { Link } from "../Stream/Link";
 import { HostApi } from "../webview-api";
 import { SendPasswordResetEmailRequestType } from "@codestream/protocols/agent";
 import { isEmailValid } from "./Signup";
 import { FormattedMessage } from "react-intl";
 import { goToLogin } from "../store/context/actions";
-import { connect } from "react-redux";
+import { connect, useDispatch } from "react-redux";
 import { DispatchProp } from "../store/common";
 
 interface Props extends DispatchProp {
@@ -50,11 +51,17 @@ export const ForgotPassword = (connect(undefined) as any)((props: Props) => {
 });
 
 function Form(props: { email?: string; onComplete: Function }) {
+	const dispatch = useDispatch();
 	const [email, setEmail] = useState(props.email || "");
 	const [emailValidity, setEmailValidity] = useState(props.email || "");
 
 	const onValidityChanged = useCallback((_, valid) => {
 		setEmailValidity(valid);
+	}, []);
+
+	const onClickGoBack = useCallback((event: React.FormEvent) => {
+		event.preventDefault();
+		dispatch(goToLogin({ email: props.email }));
 	}, []);
 
 	const submit = async (event: React.FormEvent) => {
@@ -90,6 +97,13 @@ function Form(props: { email?: string; onComplete: Function }) {
 						<div className="button-group">
 							<Button className="control-button">Send Email</Button>
 						</div>
+					</div>
+				</div>
+				<div id="controls">
+					<div className="footer">
+						<Link onClick={onClickGoBack}>
+							<p>{"< Back"}</p>
+						</Link>
 					</div>
 				</div>
 			</fieldset>
