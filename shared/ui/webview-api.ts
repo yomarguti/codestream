@@ -1,5 +1,5 @@
 import { NotificationType, RequestType } from "vscode-jsonrpc";
-import URI from "vscode-uri";
+import { URI } from "vscode-uri";
 import {
 	findHost,
 	IpcHost,
