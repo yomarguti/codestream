@@ -56,6 +56,9 @@ module.exports = function(env, argv) {
 };
 
 function getExtensionConfig(env) {
+	/**
+	 * @type any[]
+	 */
 	const plugins = [
 		new CleanPlugin(["dist/agent*", "dist/extension*"], { verbose: false }),
 		new FileManagerPlugin({
@@ -167,6 +170,9 @@ function getExtensionConfig(env) {
 function getWebviewConfig(env) {
 	const context = path.resolve(__dirname, "src/webviews/app");
 
+	/**
+	 * @type any[]
+	 */
 	const plugins = [
 		new CleanPlugin(["dist/webview", "webview.html"]),
 		new webpack.DefinePlugin(
