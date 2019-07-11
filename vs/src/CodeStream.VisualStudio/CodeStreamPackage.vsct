@@ -2,7 +2,7 @@
 <CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 	<Extern href="stdidcmd.h" />
 	<Extern href="vsshlids.h" />
-	<Commands package="guidWebViewPackage">
+	<Commands package="guidCodeStreamPackage">
 		<Menus>
 			<Menu guid="guidWebViewPackageCmdSet" id="Toolbar" type="Toolbar">
 				<CommandFlag>DefaultDocked</CommandFlag>
@@ -381,7 +381,7 @@
 	</VisibilityConstraints>
 
 	<Symbols>
-		<GuidSymbol name="guidWebViewPackage" value="{5498f07e-2ca1-4d3b-bcfb-5e8a8a082eed}" />
+		<GuidSymbol name="guidCodeStreamPackage" value="{5498f07e-2ca1-4d3b-bcfb-5e8a8a082eed}" />
 
 		<GuidSymbol name="guidWebViewPackageCmdSet" value="{8f66deb0-240b-4137-8550-723344e49722}">
 			<IDSymbol name="Toolbar" value="0x1000" />

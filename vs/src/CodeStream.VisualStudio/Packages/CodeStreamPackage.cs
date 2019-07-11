@@ -7,7 +7,7 @@ using System.Threading;
 namespace CodeStream.VisualStudio.Packages {
 	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 	[InstalledProductRegistration("#110", "#112", SolutionInfo.Version, IconResourceID = 400)]
-	[Guid(Guids.CodeStreamPackageId)]
+	[Guid(Guids.CodeStreamSettingsPackageId)]
 	public sealed class CodeStreamPackage : AsyncPackage {
 		protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
 			await base.InitializeAsync(cancellationToken, progress);

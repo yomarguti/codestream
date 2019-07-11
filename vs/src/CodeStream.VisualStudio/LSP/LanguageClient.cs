@@ -45,7 +45,6 @@ namespace CodeStream.VisualStudio.LSP {
 		//#endif
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IServiceProvider _serviceProvider;
-		private readonly IBrowserService _browserService;
 		private readonly ISettingsServiceFactory _settingsServiceFactory;
 
 		[ImportingConstructor]
@@ -59,16 +58,16 @@ namespace CodeStream.VisualStudio.LSP {
 				_serviceProvider = serviceProvider;
 				_eventAggregator = eventAggregator;
 				_settingsServiceFactory = settingsServiceFactory;
-				_browserService = browserServiceFactory.Create();
+				var browserService = browserServiceFactory.Create();
 
 				_languageServerProcess = new LanguageServerProcess();
-				CustomMessageTarget = new CustomMessageHandler(serviceProvider, _eventAggregator, _browserService, _settingsServiceFactory);
+				CustomMessageTarget = new CustomMessageHandler(serviceProvider, _eventAggregator, browserService, _settingsServiceFactory);
 				Log.Ctor();
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(LanguageClient));
 			}
-		}		
+		}
 
 		internal static LanguageClient Instance { get; private set; }
 		private JsonRpc _rpc;
@@ -80,6 +79,9 @@ namespace CodeStream.VisualStudio.LSP {
 		public object InitializationOptions {
 			get {
 				var settingsManager = _settingsServiceFactory.Create();
+				if (settingsManager == null) {
+					Log.Error($"{nameof(settingsManager)} is null");
+				}
 				var initializationOptions = new InitializationOptions {
 					Extension = settingsManager.GetExtensionInfo(),
 					Ide = settingsManager.GetIdeInfo(),
@@ -92,6 +94,7 @@ namespace CodeStream.VisualStudio.LSP {
 					Proxy = settingsManager.Proxy,
 					ProxySupport = settingsManager.ProxySupport.ToJsonValue()
 				};
+
 				Log.Debug(nameof(InitializationOptions) + " {@InitializationOptions}", initializationOptions);
 
 				return initializationOptions;
@@ -155,7 +158,7 @@ namespace CodeStream.VisualStudio.LSP {
 					var autoSignInResult = await new AuthenticationController(_settingsServiceFactory.Create(),
 						sessionService,
 						codeStreamAgentService,
-						_eventAggregator,						
+						_eventAggregator,
 						componentModel.GetService<ICredentialsService>()
 						).TryAutoSignInAsync();
 

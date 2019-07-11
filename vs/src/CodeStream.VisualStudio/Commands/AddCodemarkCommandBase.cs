@@ -26,26 +26,57 @@ namespace CodeStream.VisualStudio.Commands {
 				var activeTextEditor = editorService.GetActiveTextEditorSelection();
 				if (activeTextEditor == null) return;
 
+				bool requiredActivation = false;
 				ThreadHelper.JoinableTaskFactory.Run(async delegate {
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
 					try {
 						var toolWindowProvider = Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
-						toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
-						string source = null;
-						if (CommandSet == PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet) {
-							source = "Context Menu";
-						}
-						else if (CommandSet == PackageGuids.guidWebViewPackageShortcutCmdSet) {
-							source = "Shortcut";
-						}
-						await codeStreamService.NewCodemarkAsync(activeTextEditor.Uri, activeTextEditor.Range,
-							CodemarkType, source,
-							cancellationToken: CancellationToken.None);
+						if (!toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) {
+							if (toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid) == true) {
+								requiredActivation = true;
+							}
+							else {
+								Log.Warning("Could not activate tool window");
+							}
+						}						
 					}
 					catch (Exception ex) {
 						Log.Error(ex, "NewCodemarkAsync");
 					}
-				});
+				});			
+
+				var sessionService = componentModel.GetService<ISessionService>();
+
+				try {
+					_ = System.Threading.Tasks.Task.Factory.StartNew(async delegate {
+						if (requiredActivation) {
+							await System.Threading.Tasks.Task.Delay(1200);
+						}
+						await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+						try {
+							string source = null;
+							if (CommandSet == PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet) {
+								source = "Context Menu";
+							}
+							else if (CommandSet == PackageGuids.guidWebViewPackageShortcutCmdSet) {
+								source = "Shortcut";
+							}
+
+							await codeStreamService.NewCodemarkAsync(activeTextEditor.Uri, activeTextEditor.Range,
+								CodemarkType, source,
+								cancellationToken: CancellationToken.None);
+						}
+						catch (Exception ex) {
+							Log.Warning(ex, nameof(ExecuteUntyped));
+						}
+						return 42;
+					});
+				}
+				catch (Exception ex) {
+					Log.Error(ex, "NewCodemarkAsync");
+				}
+
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(AddCodemarkCommandBase));
@@ -54,7 +85,6 @@ namespace CodeStream.VisualStudio.Commands {
 
 		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e) {
 			var session = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ISessionService>();
-
 			sender.Visible = session?.IsReady == true;
 		}
 	}

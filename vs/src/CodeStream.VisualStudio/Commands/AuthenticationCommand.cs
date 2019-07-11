@@ -1,23 +1,19 @@
 ﻿using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.UI.ToolWindows;
 using CodeStream.VisualStudio.Vssdk.Commands;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Packages;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Serilog;
 
 namespace CodeStream.VisualStudio.Commands {
 	internal class AuthenticationCommand : VsCommandBase {
 		private static readonly ILogger Log = LogManager.ForContext<AuthenticationCommand>();
-
-		private readonly AsyncPackage _package;
+		
 		private readonly IComponentModel _componentModel;
 
-		public AuthenticationCommand(AsyncPackage package, IComponentModel serviceProvider) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.AuthenticationCommandId) {
-			_package = package;
+		public AuthenticationCommand(IComponentModel serviceProvider) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.AuthenticationCommandId) {
 			_componentModel = serviceProvider;
 		}
 
@@ -35,17 +31,8 @@ namespace CodeStream.VisualStudio.Commands {
 					});
 				}
 				else {
-					var window = _package.FindToolWindow(typeof(WebViewToolWindowPane), 0, true);
-					if (null == window || (null == window.Frame)) {
-						return;
-					}
-					var windowFrame = (IVsWindowFrame)window.Frame;
-					if (windowFrame.IsVisible() == VSConstants.S_OK) {
-						// already visible!
-					}
-					else {
-						ErrorHandler.ThrowOnFailure(windowFrame.Show());
-					}
+					var toolWindowProvider = Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
+					toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
 				}
 			}
 			catch (Exception ex) {

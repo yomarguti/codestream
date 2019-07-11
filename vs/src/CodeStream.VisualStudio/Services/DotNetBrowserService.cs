@@ -86,14 +86,14 @@ namespace CodeStream.VisualStudio.Services {
 		public int QueueCount => _messageQueue.Count;
 
 		private readonly ICodeStreamAgentServiceFactory _codeStreamAgentServiceFactory;
-		private readonly IEventAggregator _eventAggregator;		
+		private readonly IEventAggregator _eventAggregator;
 
 		[ImportingConstructor]
 		public DotNetBrowserService(ICodeStreamAgentServiceFactory codeStreamAgentServiceFactory,
 				IEventAggregator eventAggregator) {
 			_codeStreamAgentServiceFactory = codeStreamAgentServiceFactory;
 			_eventAggregator = eventAggregator;
-			
+
 			try {
 				_messageQueue = new BlockingCollection<string>(new ConcurrentQueue<string>());
 				_manualResetEvent = new ManualResetEvent(false);
@@ -260,7 +260,9 @@ namespace CodeStream.VisualStudio.Services {
 
 		protected virtual void Send(string message) {
 			if (_browserView == null || _browserView.Browser == null) {
-				Log.Warning("Browser is null");
+#if DEBUG
+				Log.Warning($"Browser is null Message={message}");
+#endif
 				return;
 			}
 

@@ -6,19 +6,27 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
+using CodeStream.VisualStudio.Commands;
+using CodeStream.VisualStudio.Events;
+using CodeStream.VisualStudio.Extensions;
+using CodeStream.VisualStudio.UI;
+using CodeStream.VisualStudio.Vssdk.Commands;
+using Microsoft;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Packages {
 	public interface IToolWindowProvider {
-		void ToggleToolWindowVisibility(Guid toolWindowId);
-		void ShowToolWindowSafe(Guid toolWindowId);
+		bool? ToggleToolWindowVisibility(Guid toolWindowId);
+		bool ShowToolWindowSafe(Guid toolWindowId);
 		bool IsVisible(Guid toolWindowId);
 	}
 
-	public interface SToolWindowProvider { }
-	 
+	public interface SToolWindowProvider { }	 
 
 	public interface SOptionsDialogPageAccessor { }
 	public interface IOptionsDialogPageAccessor {
@@ -42,13 +50,19 @@ namespace CodeStream.VisualStudio.Packages {
 	[ProvideService(typeof(SOptionsDialogPageAccessor))]
 	[ProvideService(typeof(SToolWindowProvider))]
 	[ProvideService(typeof(SUserSettingsService))]
+	[ProvideMenuResource("Menus.ctmenu", 1)]
 	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-	[Guid(Guids.ServiceProviderPackageId)]
+	[Guid(PackageGuids.guidCodeStreamPackageString)]
 	// ReSharper disable once RedundantExtendsListEntry
 	public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer, IToolWindowProvider, SToolWindowProvider {
 		private static readonly ILogger Log = LogManager.ForContext<ServiceProviderPackage>();
 
 		private IOptionsDialogPage OptionsDialogPage;
+		private IComponentModel _componentModel;
+		private ISessionService _sessionService;
+		private ISettingsManager _settingsManager;
+		private List<IDisposable> _disposables;
+		private List<VsCommandBase> _commands;
 
 		protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
 			try {
@@ -64,9 +78,93 @@ namespace CodeStream.VisualStudio.Packages {
 				((IServiceContainer)this).AddService(typeof(SUserSettingsService), CreateService, true);
 
 				await base.InitializeAsync(cancellationToken, progress);
+
+				_componentModel = GetGlobalService(typeof(SComponentModel)) as IComponentModel;
+				Assumes.Present(_componentModel);
+				_sessionService = _componentModel.GetService<ISessionService>();
+				var settingsServiceFactory = _componentModel?.GetService<ISettingsServiceFactory>();
+				_settingsManager = settingsServiceFactory.Create();
+				Assumes.Present(_settingsManager);
+
+				await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeCommandsAsync);
+				Log.Debug($"{nameof(InitializeAsync)} completed");
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(InitializeAsync));
+			}
+		}
+
+		private async Task InitializeCommandsAsync() {
+			try {
+				var userCommand = new UserCommand(_sessionService, _settingsManager);
+
+				_commands = new List<VsCommandBase> {
+#if DEBUG
+					new WebViewDevToolsCommand(),
+#endif
+					new AddCodemarkCommentCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+					new AddCodemarkIssueCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+					new AddCodemarkBookmarkCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+					new AddCodemarkPermalinkCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+					new AddCodemarkPermalinkInstantCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+
+					new AddCodemarkCommentCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
+					new AddCodemarkIssueCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
+					new AddCodemarkBookmarkCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
+					new AddCodemarkPermalinkCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
+					new AddCodemarkPermalinkInstantCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
+
+					new WebViewReloadCommand(),
+					new WebViewToggleCommand(),
+					new AuthenticationCommand(_componentModel),
+					userCommand
+				};
+				await JoinableTaskFactory.SwitchToMainThreadAsync();
+				await InfoBarProvider.InitializeAsync(this);
+
+				var menuCommandService = (IMenuCommandService)(await GetServiceAsync(typeof(IMenuCommandService)));
+				foreach (var command in _commands) {
+					menuCommandService.AddCommand(command);
+				}
+				await BookmarkShortcutRegistration.InitializeAllAsync(this);
+
+				var eventAggregator = _componentModel.GetService<IEventAggregator>();
+				_disposables = new List<IDisposable> {
+					//when a user has logged in/out we alter the text of some of the commands
+					eventAggregator?.GetEvent<SessionReadyEvent>().Subscribe(_ => {
+						ThreadHelper.JoinableTaskFactory.Run(async delegate {
+							await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+							userCommand.Update();
+						});
+					}),
+					eventAggregator?.GetEvent<SessionLogoutEvent>().Subscribe(_ => {
+						ThreadHelper.JoinableTaskFactory.Run(async delegate {
+							await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+							userCommand.Update();
+						});
+					}),
+					//eventAggregator?.GetEvent<SessionDidStartSignInEvent>().Subscribe(_ => {
+					//	ThreadHelper.JoinableTaskFactory.Run(async delegate {
+					//		await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+					//	userCommand.Update();
+					//	});
+					//}),
+					//eventAggregator?.GetEvent<SessionDidFailSignInEvent>().Subscribe(_ => {
+					//	ThreadHelper.JoinableTaskFactory.Run(async delegate {
+					//		await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+					//	userCommand.Update();
+					//	});
+					//}),
+					//eventAggregator?.GetEvent<SessionDidStartSignOutEvent>().Subscribe(_ => {
+					//	ThreadHelper.JoinableTaskFactory.Run(async delegate {
+					//		await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+					//		userCommand.Update();
+					//	});
+					//})
+				};
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(InitializeCommandsAsync));
 			}
 		}
 
@@ -122,24 +220,54 @@ namespace CodeStream.VisualStudio.Packages {
 			return false;
 		}
 
-		public void ShowToolWindowSafe(Guid toolWindowId) {
+		public bool ShowToolWindowSafe(Guid toolWindowId) {
 			try {
 				ThreadHelper.ThrowIfNotOnUIThread();
 
-				if (!TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame)) return;
+				if (!TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame)) return false;
+
 				frame.Show();
+				return true;
 			}
 			catch (Exception) {
 				//suffer
 			}
+
+			return false;
 		}
 
-		public void ToggleToolWindowVisibility(Guid toolWindowId) {
+		public bool? ToggleToolWindowVisibility(Guid toolWindowId) {
 			ThreadHelper.ThrowIfNotOnUIThread();
 
 			if (TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame)) {
-				ErrorHandler.ThrowOnFailure(frame.IsVisible() == VSConstants.S_OK ? frame.Hide() : frame.Show());
+				if (frame.IsVisible() == VSConstants.S_OK) {
+					frame.Hide();
+					return false;
+				}
+				else {
+					frame.Show();
+					return true;
+				}
 			}
+
+			return null;
+		}
+
+		protected override void Dispose(bool isDisposing) {
+			if (isDisposing) {
+				try {
+#pragma warning disable VSTHRD108
+					ThreadHelper.ThrowIfNotOnUIThread();
+#pragma warning restore VSTHRD108
+					 
+					_disposables.DisposeAll(); 
+				}
+				catch (Exception ex) {
+					Log.Error(ex, nameof(Dispose));
+				}
+			}
+
+			base.Dispose(isDisposing);
 		}
 	}
 }

@@ -10,12 +10,12 @@ namespace CodeStream.VisualStudio {
 	/// Helper class that exposes all GUIDs used across VS Package.
 	/// </summary>
 	internal sealed partial class PackageGuids {
-		public const string guidWebViewPackageString = "5498f07e-2ca1-4d3b-bcfb-5e8a8a082eed";
+		public const string guidCodeStreamPackageString = "5498f07e-2ca1-4d3b-bcfb-5e8a8a082eed";
 		public const string guidWebViewPackageCmdSetString = "8f66deb0-240b-4137-8550-723344e49722";
 		public const string guidWebViewPackageCodeWindowContextMenuCmdSetString = "0f33235e-3a5c-42bc-b519-d888652f972c";
 		public const string guidImagesString = "f2c8ef6d-3257-4e0a-8ae0-ef6298dd22c5";
 		public const string guidWebViewPackageShortcutCmdSetString = "A72BBF5D-23D2-4A8A-939E-12C4651DD341";
-		public static Guid guidWebViewPackage = new Guid(guidWebViewPackageString);
+		public static Guid guidCodeStreamPackage = new Guid(guidCodeStreamPackageString);
 		public static Guid guidWebViewPackageCmdSet = new Guid(guidWebViewPackageCmdSetString);
 		public static Guid guidWebViewPackageCodeWindowContextMenuCmdSet = new Guid(guidWebViewPackageCodeWindowContextMenuCmdSetString);
 		public static Guid guidImages = new Guid(guidImagesString);

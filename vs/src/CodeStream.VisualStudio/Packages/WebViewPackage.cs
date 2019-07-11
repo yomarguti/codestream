@@ -1,23 +1,17 @@
-﻿using CodeStream.VisualStudio.Commands;
-using CodeStream.VisualStudio.Controllers;
+﻿using CodeStream.VisualStudio.Controllers;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
-using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.LSP;
 using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.UI;
 using CodeStream.VisualStudio.UI.Settings;
 using CodeStream.VisualStudio.UI.ToolWindows;
 using CodeStream.VisualStudio.Vssdk;
-using CodeStream.VisualStudio.Vssdk.Commands;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Serilog;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.ComponentModel.Design;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -27,11 +21,11 @@ using SolutionEvents = Microsoft.VisualStudio.Shell.Events.SolutionEvents;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Packages {
-	[ProvideMenuResource("Menus.ctmenu", 1)]
+	[Guid(Guids.CodeStreamWebViewPackageId)]
+	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 	[ProvideToolWindow(typeof(WebViewToolWindowPane), Orientation = ToolWindowOrientation.Right,
 		Window = EnvDTE.Constants.vsWindowKindSolutionExplorer,
-		Style = VsDockStyle.Tabbed)]
-	[Guid(PackageGuids.guidWebViewPackageString)]
+		Style = VsDockStyle.Tabbed)]	
 	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.NoSolution)]
 	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.EmptySolution)]
 	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.SolutionExists)]
@@ -41,7 +35,7 @@ namespace CodeStream.VisualStudio.Packages {
 	[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
 	public sealed class WebViewPackage : AsyncPackage {
 		private static readonly ILogger Log = LogManager.ForContext<WebViewPackage>();
-		private ISessionService _sessionService;
+		
 		private ISettingsManager _settingsManager;
 		private IDisposable _languageServerReadyEvent;
 		private VsShellEventManager _vsShellEventManager;
@@ -49,9 +43,7 @@ namespace CodeStream.VisualStudio.Packages {
 		private IComponentModel _componentModel;
 		private bool _hasOpenedSolutionOnce = false;
 		private readonly object _eventLocker = new object();
-		private bool _initializedEvents;
-		private List<IDisposable> _disposables;
-		private List<VsCommandBase> _commands;
+		private bool _initializedEvents;		
 
 		//public WebViewPackage() {
 		//	OptionsDialogPage = GetDialogPage(typeof(OptionsDialogPage)) as OptionsDialogPage;
@@ -78,7 +70,7 @@ namespace CodeStream.VisualStudio.Packages {
 			try {
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 				_componentModel = GetGlobalService(typeof(SComponentModel)) as IComponentModel;
-				_sessionService = _componentModel.GetService<ISessionService>();
+				
 				var settingsServiceFactory = _componentModel?.GetService<ISettingsServiceFactory>();
 				_settingsManager = settingsServiceFactory.Create();
 				if (_settingsManager != null) {
@@ -94,90 +86,15 @@ namespace CodeStream.VisualStudio.Packages {
 
 				InitializeLogging();
 				AsyncPackageHelper.InitializePackage(GetType().Name);
-
-				await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeCommandsAsync);
-
+				 
 				await base.InitializeAsync(cancellationToken, progress);
+				Log.Debug($"{nameof(InitializeAsync)} completed");
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(InitializeAsync));
 			}
 		}
-
-		private async Task InitializeCommandsAsync() {
-			try {
-				var userCommand = new UserCommand(_sessionService, _settingsManager);
-
-				_commands = new List<VsCommandBase> {
-#if DEBUG
-					new WebViewDevToolsCommand(),
-#endif
-					new AddCodemarkCommentCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-					new AddCodemarkIssueCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-					new AddCodemarkBookmarkCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-					new AddCodemarkPermalinkCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-					new AddCodemarkPermalinkInstantCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-
-					new AddCodemarkCommentCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
-					new AddCodemarkIssueCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
-					new AddCodemarkBookmarkCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
-					new AddCodemarkPermalinkCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
-					new AddCodemarkPermalinkInstantCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
-
-					new WebViewReloadCommand(),
-					new WebViewToggleCommand(this),
-					new AuthenticationCommand(this, _componentModel),
-					userCommand
-				};
-				await JoinableTaskFactory.SwitchToMainThreadAsync();
-				await InfoBarProvider.InitializeAsync(this);
-
-				var menuCommandService = (IMenuCommandService)(await GetServiceAsync(typeof(IMenuCommandService)));
-				foreach (var command in _commands) {
-					menuCommandService.AddCommand(command);
-				}
-				await BookmarkShortcutRegistration.InitializeAllAsync(this);
-
-				var eventAggregator = _componentModel.GetService<IEventAggregator>();
-				_disposables = new List<IDisposable> {
-					//when a user has logged in/out we alter the text of some of the commands
-					eventAggregator?.GetEvent<SessionReadyEvent>().Subscribe(_ => {
-						ThreadHelper.JoinableTaskFactory.Run(async delegate {
-							await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-							userCommand.Update();
-						});
-					}),
-					eventAggregator?.GetEvent<SessionLogoutEvent>().Subscribe(_ => {
-						ThreadHelper.JoinableTaskFactory.Run(async delegate {
-							await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-							userCommand.Update();
-						});
-					}),
-					eventAggregator?.GetEvent<SessionDidStartSignInEvent>().Subscribe(_ => {
-						ThreadHelper.JoinableTaskFactory.Run(async delegate {
-							await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-						userCommand.Update();
-						});
-					}),
-					eventAggregator?.GetEvent<SessionDidFailSignInEvent>().Subscribe(_ => {
-						ThreadHelper.JoinableTaskFactory.Run(async delegate {
-							await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-						userCommand.Update();
-						});
-					}),
-					eventAggregator?.GetEvent<SessionDidStartSignOutEvent>().Subscribe(_ => {
-						ThreadHelper.JoinableTaskFactory.Run(async delegate {
-							await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-							userCommand.Update();
-						});
-					})
-				};
-			}
-			catch (Exception ex) {
-				Log.Error(ex, nameof(InitializeCommandsAsync));
-			}
-		}
-
+ 
 		void InitializeLogging() {
 			if (_settingsManager != null && _settingsManager.TraceLevel != TraceLevel.Silent) {
 				LogManager.SetTraceLevel(_settingsManager.TraceLevel);
@@ -366,7 +283,7 @@ namespace CodeStream.VisualStudio.Packages {
 					_vsShellEventManager?.Dispose();
 					_languageServerReadyEvent?.Dispose();
 					_codeStreamEventManager?.Dispose();
-					_disposables.DisposeAll();
+					
 					LanguageClient.Instance?.Dispose();
 				}
 				catch (Exception ex) {
