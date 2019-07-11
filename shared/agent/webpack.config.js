@@ -62,6 +62,9 @@ module.exports = function(env, argv) {
 		}
 	];
 
+	/**
+	 * @type any[]
+	 */
 	const plugins = [
 		new CleanPlugin(),
 		new FileManagerPlugin({ onEnd: onEnd }),
