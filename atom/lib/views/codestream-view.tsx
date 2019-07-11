@@ -21,7 +21,6 @@ import {
 	HostDidChangeEditorSelectionNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
 	HostDidChangeFocusNotificationType,
-	HostDidLogoutNotificationType,
 	isIpcRequestMessage,
 	LogoutRequestType,
 	LogoutResponse,
@@ -48,20 +47,15 @@ import { FileLogger } from "logger";
 import { NotificationType } from "vscode-languageserver-protocol";
 import { ConfigSchema } from "../configs";
 import {
-	BootstrapRequestType as AgentBootstrapRequestType,
 	ConnectionStatus,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
 	DidChangeDocumentMarkersNotificationType,
-	GetFileScmInfoRequestType,
-	OtcLoginRequestType,
-	PasswordLoginRequestType,
 	ReportingMessageType,
 	ReportMessageRequestType,
-	TokenLoginRequestType,
 	TraceLevel,
 } from "../protocols/agent/agent.protocol";
-import { CodemarkType, LoginResult } from "../protocols/agent/api.protocol";
+import { CodemarkType } from "../protocols/agent/api.protocol";
 import { asAbsolutePath, Debug, Editor } from "../utils";
 import { Container } from "../workspace/container";
 import { EditorObserver } from "../workspace/editor-observer";
