@@ -635,9 +635,11 @@ export class WebviewController implements Disposable {
 				team: Container.config.team
 			},
 			env: this.session.environment,
-			context: this._context || {
-				currentTeamId: currentTeamId
-			},
+			context: this._context
+				? { ...this._context, currentTeamId: currentTeamId }
+				: {
+						currentTeamId: currentTeamId
+				  },
 			version: Container.versionFormatted
 		};
 	}
