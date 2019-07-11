@@ -22,7 +22,8 @@ module.exports = function(api) {
 						esmodules: true
 					},
 					modules: false,
-					useBuiltIns: "usage"
+					useBuiltIns: "usage",
+					corejs: 2
 				}
 			],
 			"@babel/preset-typescript",
