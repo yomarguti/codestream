@@ -1,7 +1,7 @@
 import React from "react";
 import createClassString from "classnames";
 import Icons8 from "./Icons8";
-import octicons from "octicons";
+import octicons from "@primer/octicons";
 import Tooltip, { Placement } from "./Tooltip";
 
 interface Props {
