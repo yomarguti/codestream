@@ -87,6 +87,7 @@ namespace CodeStream.VisualStudio {
 						case IpcRoutes.Host: {
 								switch (message.Method) {
 									case WebviewDidInitializeNotificationType.MethodName: {
+											_sessionService.WebViewDidInitialize = true;
 											// ready -- nothing to do!
 											break;
 										}

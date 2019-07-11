@@ -27,6 +27,7 @@ namespace CodeStream.VisualStudio.Services {
 		void Logout();
 		string LiveShareUrl { get; set; }
 		string StateString { get; }
+		bool? WebViewDidInitialize { get; set; }
 	}
 
 	[Export(typeof(ISessionService))]
@@ -42,6 +43,7 @@ namespace CodeStream.VisualStudio.Services {
 		public bool AreMarkerGlyphsVisible { get; set; } = true;
 		public bool IsCodemarksForFileVisible { get; set; }
 		public string LastActiveFileUrl { get; set; }
+		public bool? WebViewDidInitialize { get; set; }
 		private bool _disposed = false;
 
 		public SessionService() {
@@ -78,6 +80,7 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public void Logout() {
+			WebViewDidInitialize = false;
 			User = null;
 			State = null;
 			SetState(SessionState.UserSignedOut);

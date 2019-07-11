@@ -525,7 +525,7 @@ namespace CodeStream.VisualStudio.UI {
 
 		private async System.Threading.Tasks.Task OnVisibleRangesSubjectHandlerAsync(Uri uri, IWpfTextView wpfTextView) {
 			try {
-				if (wpfTextView.InLayout || wpfTextView.IsClosed) return;
+				if (wpfTextView.InLayout || wpfTextView.IsClosed || SessionService.WebViewDidInitialize != true) return;
 
 				_ = CodeStreamService.BrowserService?.NotifyAsync(
 					new HostDidChangeEditorVisibleRangesNotificationType {
