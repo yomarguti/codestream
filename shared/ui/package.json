@@ -20,7 +20,7 @@
 		"classnames": "2.2.5",
 		"code-prettify": "git:github.com/TeamCodeStream/code-prettify.git#62943684566f616b403ac354a1b5a094344c85bc",
 		"emoji-mart": "2.9.2",
-		"lodash-es": "4.17.11",
+		"lodash-es": "4.17.14",
 		"markdown-it": "8.4.2",
 		"markdown-it-emoji-mart": "0.1.1",
 		"markdown-it-slack": "1.2.0",
