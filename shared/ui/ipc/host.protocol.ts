@@ -2,7 +2,8 @@ import {
 	Capabilities,
 	CodeStreamEnvironment,
 	ThirdPartyProviders,
-	Unreads
+	Unreads,
+	VersionCompatibility
 } from "@codestream/protocols/agent";
 import {
 	CSMarker,
@@ -23,10 +24,14 @@ export interface BootstrapInHostResponse {
 	version: string;
 	context: Partial<WebviewContext>;
 	env?: CodeStreamEnvironment | string;
+	ide?: {
+		name: string | undefined;
+	};
 	session: {
 		otc?: string;
 		userId?: string;
 	};
+	versionCompatibility?: VersionCompatibility | undefined;
 }
 
 export const BootstrapInHostRequestType = new RequestType<

@@ -9,11 +9,13 @@ import { reduceConfigs } from "../store/configs/reducer";
 import { reduceConnectivity } from "../store/connectivity/reducer";
 import { reduceContext } from "../store/context/reducer";
 import { reduceProviders } from "../store/providers/reducer";
+import { reduceIde } from "./ide/reducer";
 import { reducePosts } from "../store/posts/reducer";
 import { reducePreferences } from "../store/preferences/reducer";
 import { reduceRepos } from "../store/repos/reducer";
 import { reduceServices } from "../store/services/reducer";
 import { reduceSession } from "../store/session/reducer";
+import { reduceVersioning } from "../store/versioning/reducer";
 import { SessionState } from "../store/session/types";
 import { reduceStreams } from "../store/streams/reducer";
 import { reduceTeams } from "../store/teams/reducer";
@@ -29,6 +31,7 @@ import { ConnectivityState } from "./connectivity/types";
 import { ContextState } from "./context/types";
 import { DocumentMarkersState } from "./documentMarkers/types";
 import { EditorContextState } from "./editorContext/types";
+import { IdeState } from "./ide/types";
 import { PostsState } from "./posts/types";
 import { PreferencesState } from "./preferences/types";
 import { ReposState } from "./repos/types";
@@ -39,6 +42,7 @@ import { UsersState } from "./users/types";
 import { ServicesState } from "./services/types";
 import { ProvidersState } from "./providers/types";
 import { reduceBootstrapped } from "./bootstrapped/reducer";
+import { VersioningState } from "./versioning/types";
 
 const pluginVersion = (state = "", action) => {
 	if (action.type === "@pluginVersion/Set") return action.payload;
@@ -54,6 +58,7 @@ const reducer = combineReducers({
 	context: reduceContext,
 	documentMarkers: reduceDocumentMarkers,
 	editorContext: reduceEditorContext,
+	ide: reduceIde,
 	pluginVersion,
 	posts: reducePosts,
 	preferences: reducePreferences,
@@ -64,7 +69,8 @@ const reducer = combineReducers({
 	umis: reduceUnreads,
 	users: reduceUsers,
 	services: reduceServices,
-	providers: reduceProviders
+	providers: reduceProviders,
+	versioning: reduceVersioning
 });
 
 export function createCodeStreamStore(
@@ -91,6 +97,7 @@ export interface CodeStreamState {
 	context: ContextState;
 	documentMarkers: DocumentMarkersState;
 	editorContext: EditorContextState;
+	ide: IdeState;
 	pluginVersion: string;
 	posts: PostsState;
 	preferences: PreferencesState;
@@ -102,4 +109,5 @@ export interface CodeStreamState {
 	users: UsersState;
 	services: ServicesState;
 	providers: ProvidersState;
+	versioning: VersioningState;
 }

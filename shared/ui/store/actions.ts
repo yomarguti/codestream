@@ -2,6 +2,7 @@ import { updateCapabilities } from "./capabilities/actions";
 import { action } from "./common";
 import * as contextActions from "./context/actions";
 import * as editorContextActions from "./editorContext/actions";
+import { setIde } from "./ide/actions";
 import * as preferencesActions from "./preferences/actions";
 import { bootstrapRepos } from "./repos/actions";
 import { bootstrapServices } from "./services/actions";
@@ -18,7 +19,7 @@ import {
 } from "../ipc/host.protocol";
 import { HostApi } from "../webview-api";
 import { updateConfigs } from "./configs/actions";
-import { BootstrapRequestType } from "@codestream/protocols/agent";
+import { BootstrapRequestType, VersionCompatibility } from "@codestream/protocols/agent";
 import {
 	BootstrapInHostRequestType,
 	GetActiveEditorContextRequestType
@@ -26,6 +27,7 @@ import {
 import { BootstrapActionType } from "./bootstrapped/types";
 import { ValidateSignupInfo, startSSOSignin } from "../Authentication/actions";
 import { uuid } from "../utils";
+import { upgradeRequired } from "../store/versioning/actions";
 
 export const reset = () => action("RESET");
 
@@ -41,6 +43,10 @@ export const bootstrap = (data?: SignedInBootstrapData) => async dispatch => {
 					session: { ...bootstrapCore.session, otc: uuid() }
 				})
 			);
+
+			if (bootstrapCore.versionCompatibility === VersionCompatibility.UnsupportedUpgradeRequired) {
+				dispatch(upgradeRequired());
+			}
 			return;
 		}
 
@@ -67,6 +73,7 @@ export const bootstrap = (data?: SignedInBootstrapData) => async dispatch => {
 };
 
 const bootstrapEssentials = (data: BootstrapInHostResponse) => dispatch => {
+	dispatch(setIde(data.ide!));
 	dispatch(sessionActions.setSession(data.session));
 	dispatch(contextActions.setContext({ hasFocus: true, ...data.context }));
 	dispatch(updateCapabilities(data.capabilities || {}));

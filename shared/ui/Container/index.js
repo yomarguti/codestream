@@ -10,20 +10,95 @@ import { HostApi } from "../webview-api";
 import { ReloadWebviewRequestType } from "../ipc/webview.protocol";
 import { Loading } from "./Loading";
 import RoadBlock from "../Stream/RoadBlock";
+import Dismissable from "../Stream/Dismissable";
+import { upgradeRecommendedDismissed } from "../store/versioning/actions";
+import { VersioningActionsType } from "../store/versioning/types";
 
 addLocaleData(englishLocaleData);
 
 const mapStateToProps = state => ({
 	bootstrapped: state.bootstrapped,
 	loggedIn: Boolean(state.session.userId),
-	team: state.teams[state.context.currentTeamId]
+	team: state.teams[state.context.currentTeamId],
+	versioning: state.versioning,
+	ide: state.ide && state.ide.name ? state.ide.name : undefined
 });
 
+const onClick = props => {
+	props.dispatch(upgradeRecommendedDismissed());
+};
+
+const getIdeInstallationInstructions = props => {
+	let specifics;
+	if (props.ide) {
+		if (props.ide === "VSC") {
+			specifics = (
+				<p>
+					Go to the Extensions view via the activity bar and then look for the Update button in the
+					CodeStream entry.
+				</p>
+			);
+		} else if (props.ide === "JETBRAINS") {
+			specifics = (
+				<p>
+					Look for the menu corresponding to your IDE name (e.g., IntelliJ) and select “Check for
+					Updates” (or under the Help menu on Windows/Linux).
+				</p>
+			);
+		} else if (props.ide === "VS") {
+			specifics = (
+				<p>
+					Go to Extensions > Manage Extensions in VS 2019 (or Tools > Extensions and Updates in
+					2017) and then select Updates in the left pane. Select CodeStream in the middle pane, and
+					then click Update.
+				</p>
+			);
+		} else if (props.ide === "ATOM") {
+			specifics = (
+				<p>
+					In the Settings/Preferences page, select Packages and then look for the Update button in
+					the CodeStream entry in the Installed Packages section.
+				</p>
+			);
+		}
+	}
+
+	return specifics;
+};
+
 const Root = connect(mapStateToProps)(props => {
+	if (props.versioning && props.versioning.type === VersioningActionsType.UpgradeRecommended)
+		return (
+			<Dismissable title="Update Suggested" onClick={() => onClick(props)}>
+				<p>
+					Your version of CodeStream is getting a little long in the tooth! We suggest that you
+					update to the latest version.
+				</p>
+				{getIdeInstallationInstructions(props)}
+			</Dismissable>
+		);
+	if (props.versioning && props.versioning.type === VersioningActionsType.UpgradeRequired)
+		return (
+			<RoadBlock title="Update Required">
+				<p>
+					We're all for vintage, but your version of CodeStream is simply too old! Please update to
+					the latest version to continue.
+				</p>
+				{getIdeInstallationInstructions(props)}
+			</RoadBlock>
+		);
 	if (!props.bootstrapped) return <Loading />;
 	if (!props.loggedIn) return <UnauthenticatedRoutes />;
-	if (props.team && props.team.plan === "TRIALEXPIRED") return <RoadBlock
-		title="Trial Expired"><p>Your free-trial period is over. If you would like to purchase CodeStream for your team, please contact <a href="mailto:sales@codestream.com">sales@codestream.com</a> to discuss service plans and pricing options.</p></RoadBlock>;
+	if (props.team && props.team.plan === "TRIALEXPIRED")
+		return (
+			<RoadBlock title="Trial Expired">
+				<p>
+					Your free-trial period is over. If you would like to purchase CodeStream for your team,
+					please contact <a href="mailto:sales@codestream.com">sales@codestream.com</a> to discuss
+					service plans and pricing options.
+				</p>
+			</RoadBlock>
+		);
 
 	return <Stream />;
 });
@@ -62,10 +137,17 @@ export default class Container extends React.Component {
 		if (this.state.hasError)
 			content = (
 				<div id="oops">
-					<p>
-						An unexpected error has occurred. <a onClick={this.handleClickReload}>Click here</a> to
-						reload this tab.
-					</p>
+					<form className="standard-form">
+						<fieldset className="form-body">
+							<div className="outline-box">
+								<p>
+									An unexpected error has occurred. <br />
+									<br />
+									<a onClick={this.handleClickReload}>Click here</a> to reload this tab.
+								</p>
+							</div>
+						</fieldset>
+					</form>
 				</div>
 			);
 		else content = <Root />;

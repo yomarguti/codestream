@@ -18,10 +18,12 @@ import { HostApi } from "./webview-api";
 import {
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
+	DidChangeVersionCompatibilityNotificationType,
 	ConnectionStatus,
 	ChangeDataType,
 	DidUpdateProvidersType,
-	GetFileScmInfoRequestType
+	GetFileScmInfoRequestType,
+	VersionCompatibility
 } from "@codestream/protocols/agent";
 import translations from "./translations/en";
 import { getCodemark } from "./store/codemarks/reducer";
@@ -32,6 +34,7 @@ import { EditorContextState } from "./store/editorContext/types";
 import { updateProviders } from "./store/providers/actions";
 import { bootstrap, reset } from "./store/actions";
 import { online, offline } from "./store/connectivity/actions";
+import { upgradeRequired, upgradeRecommended } from "./store/versioning/actions";
 import { updatePreferences } from "./store/preferences/actions";
 import { updateUnreads } from "./store/unreads/actions";
 import { updateConfigs } from "./store/configs/actions";
@@ -73,6 +76,15 @@ export function listenForEvents(store) {
 			store.dispatch(online());
 		} else {
 			store.dispatch(offline());
+		}
+	});
+
+	api.on(DidChangeVersionCompatibilityNotificationType, e => {
+		if (e.compatibility === VersionCompatibility.CompatibleUpgradeRecommended) {
+			store.dispatch(upgradeRecommended());
+		}
+		else if (e.compatibility === VersionCompatibility.UnsupportedUpgradeRequired) {
+			store.dispatch(upgradeRequired());
 		}
 	});
 
