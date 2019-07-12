@@ -12,7 +12,8 @@ import {
 	DocumentMarker,
 	CodemarkPlus,
 	OpenUrlRequestType,
-	Capabilities
+	Capabilities,
+	GetDocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
 import { CodemarkType, CSUser, CSMe, CSPost } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
@@ -21,6 +22,7 @@ import { range } from "../utils";
 import { getUserByCsId, getTeamMembers, getUsernames } from "../store/users/reducer";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { CodemarkForm } from "./CodemarkForm";
+import { setCurrentStream } from "../store/context/actions";
 import { deleteCodemark, editCodemark } from "../store/codemarks/actions";
 import { confirmPopup } from "./Confirm";
 import { getPost } from "../store/posts/reducer";
@@ -30,6 +32,8 @@ import { getCurrentTeamProvider } from "../store/teams/actions";
 import { isNil } from "lodash-es";
 import { CodeStreamState } from "../store";
 import { getCodemark } from "../store/codemarks/reducer";
+import { TelemetryRequestType } from "../shared/agent.protocol";
+import { EditorRevealRangeRequestType } from "@codestream/protocols/webview";
 
 interface State {
 	hover: boolean;
@@ -60,6 +64,17 @@ interface ConnectedProps {
 	pinnedAuthors: CSUser[];
 	relatedCodemarks: CodemarkPlus[];
 	isCodeStreamTeam: boolean;
+<<<<<<< HEAD
+=======
+
+	deleteCodemark: typeof deleteCodemark;
+	editCodemark: typeof editCodemark;
+	fetchThread: typeof fetchThread;
+	setCodemarkStatus: typeof setCodemarkStatus;
+	setUserPreference: typeof setUserPreference;
+	getPosts: typeof getPosts;
+	setCurrentStream: typeof setCurrentStream;
+>>>>>>> start of ability to click on a codemark
 }
 
 export type DisplayType = "default" | "collapsed";
@@ -272,7 +287,19 @@ export class Codemark extends React.Component<Props, State> {
 		if (relatedCodemarks.length === 0) return null;
 
 		return (
-			<div className="related-codemarks" key="related-codemarks" style={{ margin: "10px 0 0 0" }}>
+			<div className="related-codemarks" key="related-codemarks" style={{ margin: "20px 23px" }}>
+				<div
+					className="related-label"
+					style={{
+						textTransform: "uppercase",
+						fontWeight: 600,
+						opacity: 0.5,
+						marginLeft: "-23px",
+						fontSize: "11px"
+					}}
+				>
+					Related
+				</div>
 				{relatedCodemarks.map(codemark => {
 					const title = codemark.title || codemark.text;
 					const icon = (
@@ -284,7 +311,13 @@ export class Codemark extends React.Component<Props, State> {
 					const file = codemark.markers && codemark.markers[0] && codemark.markers[0].file;
 
 					return (
-						<div key={codemark.id} className="related-codemark">
+						<div
+							key={codemark.id}
+							className="related-codemark"
+							onClick={e => {
+								this.handleClickRelatedCodemark(e, codemark);
+							}}
+						>
 							{icon}&nbsp;{title}&nbsp;&nbsp;<span className="codemark-file">{file}</span>
 						</div>
 					);
@@ -370,6 +403,39 @@ export class Codemark extends React.Component<Props, State> {
 		}
 
 		this.props.onClick && this.props.onClick(event, this.props.codemark, this.props.marker);
+	};
+
+	handleClickRelatedCodemark = async (event, codemark) => {
+		HostApi.instance.send(TelemetryRequestType, {
+			eventName: "Codemark Clicked",
+			properties: {
+				"Codemark Location": "Codemarks Tab"
+			}
+		});
+
+		if (codemark.markers) {
+			try {
+				const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
+					markerId: codemark.markers[0].id
+				});
+				// TODO: What should we do if we don't find the marker?
+				if (response) {
+					HostApi.instance.send(EditorRevealRangeRequestType, {
+						uri: response.textDocument.uri,
+						range: response.range,
+						preserveFocus: true
+					});
+				}
+			} catch (error) {
+				// TODO: likely because the file no longer exists
+			}
+		}
+		this.props.setCurrentStream(codemark.streamId, codemark.parentPostId || codemark.postId);
+		// const isOpen = this.state.openPost === id;
+		// if (isOpen) this.setState({ openPost: null });
+		// else {
+		// this.setState({ openPost: id });
+		// }
 	};
 
 	handleMouseEnterCodemark = (event: React.MouseEvent): any => {
@@ -631,12 +697,18 @@ export class Codemark extends React.Component<Props, State> {
 		}
 
 		const renderedTags = this.renderTags(codemark);
+		const { relatedCodemarks } = this.props;
 
-		if (renderedTags || externalLink || hasDescription || hasReplies) {
+		if (relatedCodemarks.length || renderedTags || externalLink || hasDescription || hasReplies) {
 			return (
 				<div className="detail-icons">
 					{renderedTags}
 					{externalLink}
+					{relatedCodemarks.length && (
+						<span className="detail-icon">
+							<Icon name="codestream" /> {relatedCodemarks.length}
+						</span>
+					)}
 					{hasDescription && (
 						<span className="detail-icon">
 							<Icon name="description" />
@@ -778,9 +850,9 @@ export class Codemark extends React.Component<Props, State> {
 						{selected || type !== "bookmark"
 							? this.renderTextLinkified(codemark.title || codemark.text)
 							: null}
+						{selected && this.renderRelatedCodemarks(codemark)}
 						{!selected && this.renderPinnedReplies()}
-						{this.renderDetailIcons(codemark)}
-						{this.renderRelatedCodemarks(codemark)}
+						{!selected && this.renderDetailIcons(codemark)}
 					</div>
 					{selected && (
 						<CodemarkDetails
@@ -930,7 +1002,10 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 
 	const pinnedAuthors = pinnedReplies.map(post => users[post.creatorId]);
 
-	const relatedCodemarks = (codemark.relatedCodemarkIds || EMPTY_ARRAY)
+	const relatedCodemarks = (
+		codemark.relatedCodemarkIds || ["5ca4247023873e3eba2596f6"] ||
+		EMPTY_ARRAY
+	)
 		.map(id => getCodemark(codemarks, id))
 		.filter(Boolean);
 
@@ -952,6 +1027,18 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 export default connect(
 	// @ts-ignore
 	mapStateToProps,
+<<<<<<< HEAD
 	{ setCodemarkStatus, setUserPreference, deleteCodemark, editCodemark, fetchThread, getPosts }
 	// @ts-ignore
+=======
+	{
+		setCurrentStream,
+		setCodemarkStatus,
+		setUserPreference,
+		deleteCodemark,
+		editCodemark,
+		fetchThread,
+		getPosts
+	}
+>>>>>>> start of ability to click on a codemark
 )(Codemark);
