@@ -69,8 +69,7 @@ export class VersionMiddleware implements CodeStreamApiMiddleware {
 		}
 
 		const url =
-			context.response.headers.get("X-CS-Latest-Asset-Url") ||
-			"https://assets.codestream.com/prod/vscode/codestream-latest.vsix";
+			context.response.headers.get("X-CS-Latest-Asset-Url") || "https://www.codestream.com/";
 		const version = context.response.headers.get("X-CS-Current-Version");
 		void this._manager.notify(compatibility, url, version == null ? undefined : version);
 	}

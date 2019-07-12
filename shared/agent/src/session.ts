@@ -62,7 +62,8 @@ import {
 	ReportingMessageType,
 	ThirdPartyProviders,
 	TokenLoginRequest,
-	TokenLoginRequestType
+	TokenLoginRequestType,
+	VersionCompatibility
 } from "./protocol/agent.protocol";
 import {
 	CSCodemark,
@@ -391,6 +392,10 @@ export class CodeStreamSession {
 	@log()
 	private onVersionCompatibilityChanged(e: VersionCompatibilityChangedEvent) {
 		this.agent.sendNotification(DidChangeVersionCompatibilityNotificationType, e);
+
+		if (e.compatibility === VersionCompatibility.UnsupportedUpgradeRequired) {
+			this.logout(LogoutReason.UnsupportedVersion);
+		}
 	}
 
 	private _api: ApiProvider | undefined;
@@ -797,7 +802,7 @@ export class CodeStreamSession {
 		return new SlackApiProvider(
 			this._api! as CodeStreamApiProvider,
 			user.providerInfo!.slack ||
-				(user.providerInfo![this._teamId!] && user.providerInfo![this._teamId!].slack)!,
+			(user.providerInfo![this._teamId!] && user.providerInfo![this._teamId!].slack)!,
 			user,
 			this._teamId!,
 			this._proxyAgent

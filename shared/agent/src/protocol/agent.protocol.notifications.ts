@@ -149,7 +149,8 @@ export const DidChangeVersionCompatibilityNotificationType = new NotificationTyp
 
 export enum LogoutReason {
 	Token = "token",
-	Unknown = "unknown"
+	Unknown = "unknown",
+	UnsupportedVersion = "unsupportedVersion"
 }
 
 export interface DidLogoutNotification {
