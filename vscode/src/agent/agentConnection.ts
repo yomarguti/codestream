@@ -160,6 +160,11 @@ export class CodeStreamAgentConnection implements Disposable {
 		return this._onDidChangeDocumentMarkers.event;
 	}
 
+	private _onDidChangeVersion = new EventEmitter<DidChangeVersionCompatibilityNotification>();
+	get onDidChangeVersion(): Event<DidChangeVersionCompatibilityNotification> {
+		return this._onDidChangeVersion.event;
+	}
+
 	private _onDidStart = new EventEmitter<void>();
 	get onDidStart(): Event<void> {
 		return this._onDidStart.event;
@@ -842,70 +847,13 @@ export class CodeStreamAgentConnection implements Disposable {
 		if (e.reason === LogoutReason.Token) {
 			void Container.session.logout();
 		} else {
-			void Container.session.goOffline();
+			void Container.session.goOffline(e.reason !== LogoutReason.UnsupportedVersion);
 		}
 	}
 
 	@log()
 	private async onVersionCompatibilityChanged(e: DidChangeVersionCompatibilityNotification) {
-		switch (e.compatibility) {
-			case VersionCompatibility.CompatibleUpgradeAvailable: {
-				if (Container.session.environment === CodeStreamEnvironment.Production) return;
-
-				const actions: MessageItem[] = [{ title: "Download" }, { title: "Later" }];
-
-				const result = await window.showInformationMessage(
-					"A new version of CodeStream is available.",
-					...actions
-				);
-				if (result !== undefined && result.title === "Download") {
-					await env.openExternal(Uri.parse(e.downloadUrl));
-				}
-				break;
-			}
-			case VersionCompatibility.CompatibleUpgradeRecommended: {
-				if (Container.session.environment === CodeStreamEnvironment.Production) return;
-
-				const actions: MessageItem[] = [{ title: "Download" }, { title: "Later" }];
-				const result = await window.showWarningMessage(
-					"A new version of CodeStream is available. We recommend upgrading as soon as possible.",
-					...actions
-				);
-				if (result !== undefined && result.title === "Download") {
-					await env.openExternal(Uri.parse(e.downloadUrl));
-				}
-				break;
-			}
-			case VersionCompatibility.UnsupportedUpgradeRequired: {
-				await Container.session.goOffline();
-
-				if (Container.session.environment === CodeStreamEnvironment.Production) {
-					const actions: MessageItem[] = [{ title: "Upgrade" }];
-					const result = await window.showErrorMessage(
-						"This version of CodeStream is no longer supported. Please upgrade to the latest version.",
-						...actions
-					);
-
-					if (result !== undefined) {
-						await commands.executeCommand("workbench.extensions.action.checkForUpdates");
-						await commands.executeCommand("workbench.extensions.action.showExtensionsWithIds", [
-							extensionQualifiedId
-						]);
-					}
-				} else {
-					const actions: MessageItem[] = [{ title: "Download" }];
-					const result = await window.showErrorMessage(
-						"This version of CodeStream is no longer supported. Please download and install the latest version.",
-						...actions
-					);
-
-					if (result !== undefined) {
-						await env.openExternal(Uri.parse(e.downloadUrl));
-					}
-				}
-				break;
-			}
-		}
+		await Container.webview.onVersionChanged(e);
 	}
 
 	@started

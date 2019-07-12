@@ -421,8 +421,10 @@ export class CodeStreamSession implements Disposable {
 		}
 	}
 
-	goOffline() {
-		Container.webview.hide();
+	goOffline(hideWebview: boolean = true) {
+		if (hideWebview) {
+			Container.webview.hide();
+		}
 		return this.logout(SessionSignedOutReason.UserWentOffline);
 	}
 
@@ -526,9 +528,7 @@ export class CodeStreamSession implements Disposable {
 			}
 
 			if (isLoginFailResponse(response)) {
-				if (response.error === LoginResult.VersionUnsupported) {
-					this.showVersionUnsupportedMessage();
-				} else {
+				if (response.error !== LoginResult.VersionUnsupported) {
 					// Clear the access token
 					await TokenManager.clear(this._serverUrl, email);
 				}
@@ -605,21 +605,6 @@ export class CodeStreamSession implements Disposable {
 		);
 
 		this.setStatus(SessionStatus.SignedIn, undefined, unreads);
-	}
-
-	private async showVersionUnsupportedMessage() {
-		const actions: MessageItem[] = [{ title: "Upgrade" }];
-		const result = await window.showErrorMessage(
-			"This version of CodeStream is no longer supported. Please upgrade to the latest version.",
-			...actions
-		);
-
-		if (result !== undefined) {
-			await commands.executeCommand("workbench.extensions.action.checkForUpdates");
-			await commands.executeCommand("workbench.extensions.action.showExtensionsWithIds", [
-				extensionQualifiedId
-			]);
-		}
 	}
 }
 

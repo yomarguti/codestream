@@ -7,7 +7,10 @@ import {
 	DidChangeDataNotificationType,
 	DidChangeDocumentMarkersNotification,
 	DidChangeDocumentMarkersNotificationType,
-	ReportingMessageType
+	DidChangeVersionCompatibilityNotification,
+	DidChangeVersionCompatibilityNotificationType,
+	ReportingMessageType,
+	VersionCompatibility
 } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
 import {
@@ -91,6 +94,7 @@ export class WebviewController implements Disposable {
 	private _disposable: Disposable | undefined;
 	private _disposableWebview: Disposable | undefined;
 	private _webview: CodeStreamWebviewPanel | undefined;
+	private _versionCompatibility: VersionCompatibility | undefined;
 
 	private readonly _notifyActiveEditorChangedDebounced: (e: TextEditor | undefined) => void;
 
@@ -300,6 +304,15 @@ export class WebviewController implements Disposable {
 		await this._webview.show(streamThread);
 
 		return this.activeStreamThread as StreamThread | undefined;
+	}
+
+	async onVersionChanged(e: DidChangeVersionCompatibilityNotification) {
+		this._versionCompatibility = e.compatibility;
+		if (!this.visible) {
+			await this.show();
+		}
+
+		this._webview!.notify(DidChangeVersionCompatibilityNotificationType, e);
 	}
 
 	@log()
@@ -635,12 +648,16 @@ export class WebviewController implements Disposable {
 				team: Container.config.team
 			},
 			env: this.session.environment,
+			ide: {
+				name: "VSC"
+			},
 			context: this._context
 				? { ...this._context, currentTeamId: currentTeamId }
 				: {
 						currentTeamId: currentTeamId
 				  },
-			version: Container.versionFormatted
+			version: Container.versionFormatted,
+			versionCompatibility: this._versionCompatibility
 		};
 	}
 
