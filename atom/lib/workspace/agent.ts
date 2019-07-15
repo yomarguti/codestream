@@ -1,14 +1,14 @@
 import { CompositeDisposable, Disposable, Emitter } from "atom";
 import { Convert, LanguageClientConnection } from "atom-languageclient";
+import { ChildProcess, spawn } from "child_process";
+import { EnvironmentConfig } from "env-utils";
+import { FileLogger } from "logger";
 import {
 	createMessageConnection,
 	IPCMessageReader,
 	IPCMessageWriter,
 	MessageConnection,
-} from "atom-languageclient/node_modules/vscode-jsonrpc";
-import { ChildProcess, spawn } from "child_process";
-import { EnvironmentConfig } from "env-utils";
-import { FileLogger } from "logger";
+} from "vscode-jsonrpc";
 import {
 	ConfigurationParams,
 	DidChangeWorkspaceFoldersNotification,
