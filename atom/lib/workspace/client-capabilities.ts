@@ -22,6 +22,7 @@ export const capabilities: ClientCapabilities = {
 		},
 	},
 	textDocument: {
+		declaration: {},
 		synchronization: {
 			dynamicRegistration: false,
 			willSave: true,
