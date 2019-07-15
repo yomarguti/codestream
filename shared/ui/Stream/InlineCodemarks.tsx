@@ -912,6 +912,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	onWheel = (event: React.WheelEvent<HTMLDivElement>) => {
 		if (event.deltaY === 0) return;
+		if ((event.target as HTMLElement).closest(".codemark.selected")) {
+			return;
+		}
 
 		if (this._clearWheelingStateTimeout !== undefined) {
 			clearTimeout(this._clearWheelingStateTimeout);
