@@ -52,9 +52,12 @@ import {
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
 	DidChangeDocumentMarkersNotificationType,
+	DidChangeVersionCompatibilityNotification,
+	DidChangeVersionCompatibilityNotificationType,
 	ReportingMessageType,
 	ReportMessageRequestType,
 	TraceLevel,
+	VersionCompatibility,
 } from "../protocols/agent/agent.protocol";
 import { CodemarkType } from "../protocols/agent/api.protocol";
 import { asAbsolutePath, Debug, Editor } from "../utils";
@@ -294,6 +297,11 @@ export class CodestreamView {
 		);
 	}
 
+	changeVersionCompatibility(e: DidChangeVersionCompatibilityNotification) {
+		atom.workspace.open(CODESTREAM_VIEW_URI);
+		this.sendEvent(DidChangeVersionCompatibilityNotificationType, e);
+	}
+
 	serialize() {
 		return {
 			deserializer: "codestream/CodestreamView",
@@ -373,6 +381,7 @@ export class CodestreamView {
 							context: this.webviewContext || {
 								currentTeamId: this.session.isSignedIn ? this.session.teamId : undefined,
 							},
+							versionCompatibility: this.session.versionCompatibility,
 						},
 					});
 				} catch (error) {
@@ -538,7 +547,7 @@ export class CodestreamView {
 			visibleRanges: Editor.getVisibleRanges(event.editor),
 			lineCount: event.editor.getLineCount(),
 		});
-	}
+	};
 
 	private onEditorActiveEditorChanged = (editor?: TextEditor) => {
 		const notification: HostDidChangeActiveEditorNotification = {};
@@ -557,5 +566,5 @@ export class CodestreamView {
 			};
 		}
 		this.sendEvent(HostDidChangeActiveEditorNotificationType, notification);
-	}
+	};
 }

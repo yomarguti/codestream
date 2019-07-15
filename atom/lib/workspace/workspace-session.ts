@@ -9,6 +9,7 @@ import {
 	OtcLoginRequestType,
 	PasswordLoginRequestType,
 	TokenLoginRequestType,
+	VersionCompatibility,
 } from "../protocols/agent/agent.protocol";
 import { CSMe, LoginResult } from "../protocols/agent/api.protocol";
 import { PackageState } from "../types/package";
@@ -77,6 +78,9 @@ export class WorkspaceSession {
 	private agentCapabilities?: Capabilities;
 	private _sessionStatus = SessionStatus.SignedOut;
 	private _isReady?: Promise<void>;
+
+	versionCompatibility: VersionCompatibility | undefined;
+
 	get ready() {
 		return this._isReady;
 	}
@@ -197,13 +201,14 @@ export class WorkspaceSession {
 
 	getBootstrapInfo(): Pick<
 		BootstrapInHostResponse,
-		"session" | "capabilities" | "configs" | "version"
+		"session" | "capabilities" | "configs" | "version" | "ide"
 	> {
 		return {
 			session: { userId: this.isSignedIn ? this.user!.id : undefined },
 			capabilities: this.capabilities,
 			configs: Container.configs.getForWebview(this.environment.serverUrl, this.lastUsedEmail),
 			version: getPluginVersion(),
+			ide: { name: "Atom"}
 		};
 	}
 

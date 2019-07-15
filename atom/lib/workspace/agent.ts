@@ -29,6 +29,8 @@ import {
 	DidChangeDataNotificationType,
 	DidChangeDocumentMarkersNotification,
 	DidChangeDocumentMarkersNotificationType,
+	DidChangeVersionCompatibilityNotification,
+	DidChangeVersionCompatibilityNotificationType,
 	DidFailLoginNotificationType,
 	DidLoginNotification,
 	DidLoginNotificationType,
@@ -343,6 +345,9 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 		connection.onCustom(DidLoginNotificationType.method, notification =>
 			this.emitter.emit(DidLoginNotificationType.method, notification)
 		);
+		connection.onCustom(DidChangeVersionCompatibilityNotificationType.method, notification =>
+			this.emitter.emit(DidChangeVersionCompatibilityNotificationType.method, notification)
+		);
 	}
 
 	private onLogMessage = (params: LogMessageParams) => {
@@ -371,6 +376,10 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 
 	onDidChangeConnectionStatus(cb: (event: DidChangeConnectionStatusNotification) => void) {
 		return this.emitter.on(DidChangeConnectionStatusNotificationType.method, cb);
+	}
+
+	onDidChangeVersionCompatibility(cb: (event: DidChangeVersionCompatibilityNotification) => void) {
+		return this.emitter.on(DidChangeVersionCompatibilityNotificationType.method, cb);
 	}
 
 	@started
