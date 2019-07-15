@@ -256,8 +256,11 @@ export class CodeStreamSession implements Disposable {
 	private setStatus(
 		status: SessionStatus,
 		signedOutReason?: SessionSignedOutReason,
-		unreads?: Unreads
+		unreads?: Unreads,
+		force: boolean = false
 	) {
+		if (!force && this._status === status) return;
+
 		this._status = status;
 		const e: SessionStatusChangedEvent = {
 			getStatus: () => this._status,
@@ -481,7 +484,7 @@ export class CodeStreamSession implements Disposable {
 			// Clean up saved state
 			this._state = undefined;
 
-			setImmediate(() => this.setStatus(SessionStatus.SignedOut, reason));
+			setImmediate(() => this.setStatus(SessionStatus.SignedOut, reason, undefined, true));
 		}
 	}
 
