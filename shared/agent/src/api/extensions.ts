@@ -129,7 +129,7 @@ const remoteProviders: [
 	],
 	[
 		"bitBucket",
-		/(?:^|\.)bitbucket\./i,
+		/(?:^|\.)bitbucket\.org/i,
 		(remote: string, ref: string, file: string, start: number, end: number) =>
 			`https://${remote}/src/${ref}/${file}#${file}-${start}${start !== end ? `:${end}` : ""}`
 	],
