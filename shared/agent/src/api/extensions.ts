@@ -1,5 +1,6 @@
 "use strict";
 import { Range } from "vscode-languageserver";
+import { URI } from "vscode-uri";
 import { Logger } from "../logger";
 import {
 	CSLocationArray,
@@ -117,25 +118,25 @@ const remoteProviders: [
 ][] = [
 	[
 		"github",
-		/(?:^|\.)github\.com/i,
+		/github\.com$/i,
 		(remote: string, ref: string, file: string, start: number, end: number) =>
 			`https://${remote}/blob/${ref}/${file}#L${start}${start !== end ? `-L${end}` : ""}`
 	],
 	[
 		"gitlab",
-		/(?:^|\.)gitlab\.com/i,
+		/gitlab\.com$/i,
 		(remote: string, ref: string, file: string, start: number, end: number) =>
 			`https://${remote}/blob/${ref}/${file}#L${start}${start !== end ? `-${end}` : ""}`
 	],
 	[
 		"bitBucket",
-		/(?:^|\.)bitbucket\./i,
+		/bitbucket\.org$/i,
 		(remote: string, ref: string, file: string, start: number, end: number) =>
 			`https://${remote}/src/${ref}/${file}#${file}-${start}${start !== end ? `:${end}` : ""}`
 	],
 	[
 		"azure-devops",
-		/(?:^|\.)dev\.azure\.com/i,
+		/dev\.azure\.com$/i,
 		(remote: string, ref: string, file: string, start: number, end: number) =>
 			`https://${remote}/commit/${ref}/?_a=contents&path=%2F${file}&line=${start}${
 				start !== end ? `&lineEnd=${end}` : ""
@@ -143,7 +144,7 @@ const remoteProviders: [
 	],
 	[
 		"vsts",
-		/(?:^|\.)?visualstudio\.com$/i,
+		/visualstudio\.com$/i,
 		(remote: string, ref: string, file: string, start: number, end: number) =>
 			`https://${remote}/commit/${ref}/?_a=contents&path=%2F${file}&line=${start}${
 				start !== end ? `&lineEnd=${end}` : ""
@@ -161,7 +162,12 @@ export namespace Marker {
 	): { name: string; url: string } | undefined {
 		let url;
 		for (const [name, regex, fn] of remoteProviders) {
-			if (!regex.test(remote)) continue;
+			try {
+				const uri = URI.parse(remote);
+				if (!regex.test(uri.authority)) continue;
+			} catch {
+				continue;
+			}
 
 			url = fn(remote, ref, file, startLine, endLine);
 			if (url !== undefined) {
