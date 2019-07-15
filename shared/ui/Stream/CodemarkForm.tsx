@@ -667,11 +667,11 @@ class CodemarkForm extends React.Component<Props, State> {
 		// we need to select it
 		if (selectedChannelName.length === 0 && firstChannel) this.selectChannel(firstChannel);
 
-		// if there are only 2 items, that's going to be #general and the "-"
-		// separator. in that case, the user hasn't added channels yet, or
+		// if there is only 1 item, say #general,
+		// in that case, the user hasn't added channels yet, or
 		// invited users, so it's not helpful/useful to give them an option
 		// they can't use.
-		if (items.length === 2 && showChannels !== "selected") return null;
+		if (items.length === 1 && showChannels !== "selected") return null;
 
 		if (filterSelected) {
 			items.push({ label: "-" });
@@ -1278,21 +1278,27 @@ const mapStateToProps = (state): DispatchProps => {
 
 	const teammates = getTeamMembers(state);
 
-	const directMessageStreams = (
+	const channelStreams: CSChannelStream[] = sortBy(
+		(getChannelStreamsForTeam(
+			state.streams,
+			context.currentTeamId,
+			session.userId
+		) as CSChannelStream[]) || [],
+		stream => (stream.name || "").toLowerCase()
+	);
+
+	const directMessageStreams: CSDirectStream[] = (
 		getDirectMessageStreamsForTeam(state.streams, context.currentTeamId) || []
 	).map(stream => ({
-		...stream,
+		...(stream as CSDirectStream),
 		name: getDMName(stream, toMapBy("id", teammates), session.userId)
 	}));
 
 	return {
 		channel,
 		teammates,
-		channelStreams: sortBy(
-			getChannelStreamsForTeam(state.streams, context.currentTeamId, session.userId) || [],
-			stream => (stream.name || "").toLowerCase()
-		) as CSChannelStream[],
-		directMessageStreams: directMessageStreams as CSDirectStream[],
+		channelStreams: channelStreams,
+		directMessageStreams: directMessageStreams,
 		issueProvider: providers[context.issueProvider],
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
 		teamProvider: getCurrentTeamProvider(state),
