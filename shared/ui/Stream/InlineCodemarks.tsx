@@ -912,7 +912,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	onWheel = (event: React.WheelEvent<HTMLDivElement>) => {
 		if (event.deltaY === 0) return;
-		if ((event.target as HTMLElement).closest(".codemark.selected")) {
+
+		const target = event.target as HTMLElement;
+		if (target.closest(".codemark.selected") != null) {
+			return;
+		}
+
+		if (target.classList.contains("message-input") || target.closest(".compose") != null) {
 			return;
 		}
 
