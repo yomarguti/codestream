@@ -115,6 +115,7 @@ body {
 
     --line-numbers-foreground-color: ${lineNumbersFgColor.rgba};
 
+    --button-foreground-color: ${textColor.rgba};
     --button-background-color: ${buttonBgColor.rgba};
     --button-background-color-hover: ${buttonBgColorHover.rgba};
 
