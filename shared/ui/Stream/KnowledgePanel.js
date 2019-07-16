@@ -33,7 +33,8 @@ export class SimpleKnowledgePanel extends Component {
 				open: true,
 				closed: true,
 				unanswered: true
-			}
+			},
+			selectedTags: {}
 		};
 
 		this.typeLabels = {
@@ -58,17 +59,6 @@ export class SimpleKnowledgePanel extends Component {
 			unseparated: "from all files, unseparated",
 			repo: "in the current repo only",
 			all: "from all files"
-		};
-		this.colorFiltersLabelsLower = {
-			all: "with any color",
-			blue: "that are blue",
-			green: "that are green",
-			yellow: "that are yellow",
-			orange: "that are orange",
-			red: "that are red",
-			purple: "that are purple",
-			aqua: "that are aqua",
-			gray: "that are gray"
 		};
 		this.sectionLabel = {
 			inThisFile: "In This File",
@@ -184,6 +174,17 @@ export class SimpleKnowledgePanel extends Component {
 		);
 	};
 
+	codemarkHasTag = (codemark, tagFilter) => {
+		if (tagFilter === "all") return true;
+
+		console.log("Comparing ", tagFilter, "  to  ", this.props.teamTags);
+		let tags = codemark.tags || [];
+		if (codemark.color && "_" + codemark.color === tagFilter) {
+			return true;
+		}
+		return tags.includes(tagFilter);
+	};
+
 	render() {
 		if (this.state.isLoading) return null;
 
@@ -198,7 +199,7 @@ export class SimpleKnowledgePanel extends Component {
 			fileStreamIdToFilterFor,
 			fileFilter,
 			typeFilter,
-			colorFilter
+			tagFilter
 		} = this.props;
 		const { thisRepo } = this.state;
 
@@ -221,7 +222,7 @@ export class SimpleKnowledgePanel extends Component {
 			const codemarkType = codemark.type || "comment";
 			if (codemark.deactivated) return null;
 			if (typeFilter !== "all" && codemarkType !== typeFilter) return null;
-			if (colorFilter !== "all" && codemark.color !== colorFilter) return null;
+			if (!this.codemarkHasTag(codemark, tagFilter)) return null;
 
 			const codeBlock = codemark.markers && codemark.markers.length && codemark.markers[0];
 
@@ -282,24 +283,38 @@ export class SimpleKnowledgePanel extends Component {
 			{ label: "Bookmarks", action: "bookmark" }
 		];
 
-		let fileMenuItems = [
-			{ label: "From All Files", action: "all" },
-			{ label: "From All Files, Unseparated", action: "unseparated" },
-			// { label: "In Current Repo Only", action: "repo" },
-			{ label: "In Current File Only", action: "current" }
-		];
-		let colorMenuItems = [
-			{ label: "Any Color", action: "all" },
-			{ label: "Blue", action: "blue" },
-			{ label: "Green", action: "green" },
-			{ label: "Yellow", action: "yellow" },
-			{ label: "Orange", action: "orange" },
-			{ label: "Red", action: "red" },
-			{ label: "Purple", action: "purple" },
-			{ label: "Aqua", action: "aqua" },
-			{ label: "Gray", action: "gray" }
-		];
+		// let fileMenuItems = [
+		// 	{ label: "From All Files", action: "all" },
+		// 	{ label: "From All Files, Unseparated", action: "unseparated" },
+		// 	// { label: "In Current Repo Only", action: "repo" },
+		// 	{ label: "In Current File Only", action: "current" }
+		// ];
 
+		let tagMenuItems = [{ label: "Any Tag", action: "all" }];
+		tagMenuItems = tagMenuItems.concat(
+			this.props.teamTags.map(tag => {
+				let className = "tag-menu-block";
+				if (!tag.color.startsWith("#")) className += " " + tag.color + "-background";
+				return {
+					label: (
+						<span className="tag-menu-selector">
+							<span
+								className={className}
+								style={tag.color.startsWith("#") ? { background: tag.color } : {}}
+							>
+								{tag.label}&nbsp;
+								{this.state.selectedTags[tag.id] && <Icon name="check" className="check" />}
+							</span>
+						</span>
+					),
+					noHover: true,
+					searchLabel: tag.label || tag.color,
+					action: tag.id
+				};
+			})
+		);
+
+		console.log("SELECTED AG FILTER: ", tagFilter);
 		return (
 			<div className="panel knowledge-panel">
 				<div className="search-bar">
@@ -322,10 +337,10 @@ export class SimpleKnowledgePanel extends Component {
 						items={typeMenuItems}
 					/>
 					<Filter
-						onValue={this.props.setCodemarkColorFilter}
-						selected={colorFilter}
-						labels={this.colorFiltersLabelsLower}
-						items={colorMenuItems}
+						onValue={this.props.setCodemarkTagFilter}
+						selected={tagFilter}
+						labels={this.props.tagFiltersLabelsLower}
+						items={tagMenuItems}
 					/>
 				</div>
 				<ScrollBox>
@@ -484,6 +499,12 @@ const mapStateToProps = state => {
 		fileStreamIdToFilterFor = context.lastFileStreamId;
 	}
 
+	const teamTags = userSelectors.getTeamTags(state);
+	let tagFiltersLabelsLower = { all: "with any tag" };
+	teamTags.map(tag => {
+		tagFiltersLabelsLower[tag.id] = "with tag: " + (tag.label || tag.color);
+	});
+
 	return {
 		usernames: userSelectors.getUsernames(state),
 		noCodemarksAtAll: !codemarkSelectors.teamHasCodemarks(state),
@@ -491,9 +512,11 @@ const mapStateToProps = state => {
 		team: teams[context.currentTeamId],
 		fileFilter: context.codemarkFileFilter,
 		typeFilter: context.codemarkTypeFilter,
-		colorFilter: context.codemarkColorFilter,
+		tagFilter: context.codemarkTagFilter,
 		fileNameToFilterFor,
-		fileStreamIdToFilterFor
+		fileStreamIdToFilterFor,
+		teamTags,
+		tagFiltersLabelsLower
 	};
 };
 

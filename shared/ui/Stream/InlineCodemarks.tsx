@@ -1355,6 +1355,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			if (target && (target.classList.contains("header") || target.closest(".header"))) {
 				this.deselectCodemarks();
 			}
+			if (target && target.closest(".related-codemarks")) {
+				this.deselectCodemarks();
+			}
 			return;
 		}
 

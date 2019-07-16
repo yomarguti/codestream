@@ -3,6 +3,7 @@ import React from "react";
 import { connect } from "react-redux";
 import { fetchThread, setCodemarkStatus, setUserPreference } from "./actions";
 import Headshot from "./Headshot";
+import Tag from "./Tag";
 import Icon from "./Icon";
 import Menu from "./Menu";
 import { markdownify } from "./Markdowner";
@@ -12,8 +13,7 @@ import {
 	DocumentMarker,
 	CodemarkPlus,
 	OpenUrlRequestType,
-	Capabilities,
-	GetDocumentFromMarkerRequestType
+	Capabilities
 } from "@codestream/protocols/agent";
 import { CodemarkType, CSUser, CSMe, CSPost } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
@@ -32,8 +32,6 @@ import { getCurrentTeamProvider } from "../store/teams/actions";
 import { isNil } from "lodash-es";
 import { CodeStreamState } from "../store";
 import { getCodemark } from "../store/codemarks/reducer";
-import { TelemetryRequestType } from "../shared/agent.protocol";
-import { EditorRevealRangeRequestType } from "@codestream/protocols/webview";
 
 interface State {
 	hover: boolean;
@@ -257,49 +255,61 @@ export class Codemark extends React.Component<Props, State> {
 		return icon;
 	}
 
+	renderTagsSelected = codemark => {
+		const renderedTags = this.renderTags(codemark);
+
+		if (!renderedTags) return null;
+
+		return (
+			<div className="related" style={{ marginBottom: "-5px" }}>
+				<div className="related-label">Tags</div>
+				{renderedTags}
+				<div style={{ clear: "both" }} />
+			</div>
+		);
+	};
+
+	renderAssigneesSelected = codemark => {
+		const renderedAssignees = this.renderAssignees(codemark);
+
+		if (!renderedAssignees) return null;
+
+		return (
+			<div className="related">
+				<div className="related-label">Assignees</div>
+				{renderedAssignees}
+				<div style={{ clear: "both" }} />
+			</div>
+		);
+	};
+
 	renderTags = codemark => {
 		let { tags = [] } = codemark;
+		const { hover } = this.props;
+
+		// LEGACY (backward compat) we used to store one "color" property on a codemark
+		// so now we promote it to a tag if it exists. We should remove this code if we
+		// do a data migration that removes ".color" attributes and replaces them with
+		// tags
 		if (codemark.color) {
 			tags = tags.concat({ id: "_" + codemark.color, label: "", color: codemark.color });
 		}
-		const keys = Object.keys(tags);
-		if (keys.length === 0) return null;
 
-		return tags.map(tag => {
-			if (tag.color.startsWith("#"))
-				return (
-					<div key={tag.id} className="codemark-tag" style={{ background: tag.color }}>
-						<div>&nbsp;{tag.label}&nbsp;</div>
-					</div>
-				);
-			else
-				return (
-					<div key={tag.id} className={`codemark-tag ${tag.color}-background`}>
-						<div>&nbsp;{tag.label}&nbsp;</div>
-					</div>
-				);
-		});
+		const title = hover ? "Show matching tags" : "";
+		const keys = Object.keys(tags);
+		return keys.length === 0
+			? null
+			: tags.map(tag => <Tag tag={tag} title={title} placement="bottom" />);
 	};
 
-	renderRelatedCodemarks = codemark => {
+	renderRelatedCodemarks = () => {
 		const { relatedCodemarks } = this.props;
 
 		if (relatedCodemarks.length === 0) return null;
 
 		return (
-			<div className="related-codemarks" key="related-codemarks" style={{ margin: "20px 23px" }}>
-				<div
-					className="related-label"
-					style={{
-						textTransform: "uppercase",
-						fontWeight: 600,
-						opacity: 0.5,
-						marginLeft: "-23px",
-						fontSize: "11px"
-					}}
-				>
-					Related
-				</div>
+			<div className="related" key="related-codemarks">
+				<div className="related-label">Related</div>
 				{relatedCodemarks.map(codemark => {
 					const title = codemark.title || codemark.text;
 					const icon = (
@@ -308,14 +318,15 @@ export class Codemark extends React.Component<Props, State> {
 							className={`${codemark.color}-color type-icon`}
 						/>
 					);
-					const file = codemark.markers && codemark.markers[0] && codemark.markers[0].file;
+					const marker = codemark.markers && codemark.markers[0];
+					const file = marker && marker.file;
 
 					return (
 						<div
 							key={codemark.id}
 							className="related-codemark"
 							onClick={e => {
-								this.handleClickRelatedCodemark(e, codemark);
+								this.handleClickRelatedCodemark(e, codemark, marker);
 							}}
 						>
 							{icon}&nbsp;{title}&nbsp;&nbsp;<span className="codemark-file">{file}</span>
@@ -405,37 +416,38 @@ export class Codemark extends React.Component<Props, State> {
 		this.props.onClick && this.props.onClick(event, this.props.codemark, this.props.marker);
 	};
 
-	handleClickRelatedCodemark = async (event, codemark) => {
-		HostApi.instance.send(TelemetryRequestType, {
-			eventName: "Codemark Clicked",
-			properties: {
-				"Codemark Location": "Codemarks Tab"
-			}
-		});
+	handleClickRelatedCodemark = async (event, codemark, marker) => {
+		this.props.onClick && this.props.onClick(event, codemark, marker);
+		// HostApi.instance.send(TelemetryRequestType, {
+		// 	eventName: "Codemark Clicked",
+		// 	properties: {
+		// 		"Codemark Location": "Codemarks Tab"
+		// 	}
+		// });
 
-		if (codemark.markers) {
-			try {
-				const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
-					markerId: codemark.markers[0].id
-				});
-				// TODO: What should we do if we don't find the marker?
-				if (response) {
-					HostApi.instance.send(EditorRevealRangeRequestType, {
-						uri: response.textDocument.uri,
-						range: response.range,
-						preserveFocus: true
-					});
-				}
-			} catch (error) {
-				// TODO: likely because the file no longer exists
-			}
-		}
-		this.props.setCurrentStream(codemark.streamId, codemark.parentPostId || codemark.postId);
-		// const isOpen = this.state.openPost === id;
-		// if (isOpen) this.setState({ openPost: null });
-		// else {
-		// this.setState({ openPost: id });
+		// if (codemark.markers) {
+		// 	try {
+		// 		const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
+		// 			markerId: codemark.markers[0].id
+		// 		});
+		// 		// TODO: What should we do if we don't find the marker?
+		// 		if (response) {
+		// 			HostApi.instance.send(EditorRevealRangeRequestType, {
+		// 				uri: response.textDocument.uri,
+		// 				range: response.range,
+		// 				preserveFocus: true
+		// 			});
+		// 		}
+		// 	} catch (error) {
+		// 		// TODO: likely because the file no longer exists
+		// 	}
 		// }
+		// this.props.setCurrentStream(codemark.streamId, codemark.parentPostId || codemark.postId);
+		// // const isOpen = this.state.openPost === id;
+		// // if (isOpen) this.setState({ openPost: null });
+		// // else {
+		// // this.setState({ openPost: id });
+		// // }
 	};
 
 	handleMouseEnterCodemark = (event: React.MouseEvent): any => {
@@ -633,6 +645,8 @@ export class Codemark extends React.Component<Props, State> {
 	};
 
 	renderAssignees = (codemark: CodemarkPlus) => {
+		const { hover } = this.props;
+
 		let assigneeIcons: any = null;
 
 		const { teammates } = this.props;
@@ -645,9 +659,17 @@ export class Codemark extends React.Component<Props, State> {
 				.filter(Boolean)
 				.map(a => ({ fullName: a.displayName, email: a.email }));
 
-			const assigneeHeadshots = [...assignees, ...externalAssignees].map(a => (
-				<Headshot size={18} person={a} />
-			));
+			const assigneeHeadshots = [...assignees, ...externalAssignees].map(a => {
+				if (hover) {
+					return (
+						<Tooltip title={"Assigned to " + (a.fullName || a.email)} placement="bottom">
+							<span>
+								<Headshot size={18} person={a} />
+							</span>
+						</Tooltip>
+					);
+				} else return <Headshot size={18} person={a} />;
+			});
 
 			if (assigneeHeadshots.length > 0) {
 				assigneeIcons = <span className="assignees">{assigneeHeadshots}</span>;
@@ -662,17 +684,19 @@ export class Codemark extends React.Component<Props, State> {
 			if (!providerDisplay) {
 				return null;
 			}
-			return [
-				<br />,
-				<a href={codemark.externalProviderUrl}>Open on {providerDisplay.displayName}</a>,
-				<br />,
-				<br />
-			];
+			return (
+				<div className="related">
+					<div className="related-label">Open on</div>
+					<a href={codemark.externalProviderUrl}>{providerDisplay.displayName}</a>
+				</div>
+			);
 		}
 		return null;
 	};
 
 	renderDetailIcons = codemark => {
+		const { hover } = this.props;
+
 		const hasDescription = codemark.title && codemark.text;
 		const hasReplies = codemark.numReplies > 0;
 
@@ -691,7 +715,12 @@ export class Codemark extends React.Component<Props, State> {
 						HostApi.instance.send(OpenUrlRequestType, { url: codemark.externalProviderUrl });
 					}}
 				>
-					<Icon name={icon} className="external-provider" />
+					<Icon
+						title={hover ? "Open on " + providerDisplay.displayName : undefined}
+						placement="bottom"
+						name={icon}
+						className="external-provider"
+					/>
 				</span>
 			);
 		}
@@ -699,24 +728,44 @@ export class Codemark extends React.Component<Props, State> {
 		const renderedTags = this.renderTags(codemark);
 		const { relatedCodemarks } = this.props;
 
-		if (relatedCodemarks.length || renderedTags || externalLink || hasDescription || hasReplies) {
+		const renderedAssignees = this.renderAssignees(codemark);
+
+		if (
+			relatedCodemarks.length ||
+			renderedTags ||
+			externalLink ||
+			hasDescription ||
+			hasReplies ||
+			renderedAssignees
+		) {
 			return (
 				<div className="detail-icons">
+					{renderedAssignees}
 					{renderedTags}
 					{externalLink}
-					{relatedCodemarks.length && (
-						<span className="detail-icon">
-							<Icon name="codestream" /> {relatedCodemarks.length}
-						</span>
-					)}
 					{hasDescription && (
 						<span className="detail-icon">
-							<Icon name="description" />
+							<Icon
+								title={hover ? "Show description" : undefined}
+								placement="bottom"
+								name="description"
+							/>
+						</span>
+					)}
+					{relatedCodemarks.length && (
+						<span className="detail-icon">
+							<Icon
+								title={hover ? "Show related codemarks" : undefined}
+								placement="bottom"
+								name="codestream"
+							/>{" "}
+							{relatedCodemarks.length}
 						</span>
 					)}
 					{hasReplies && (
 						<span className="detail-icon">
-							<Icon name="comment" /> {this.props.isCodeStreamTeam && codemark.numReplies}
+							<Icon title={hover ? "Show replies" : undefined} placement="bottom" name="comment" />{" "}
+							{this.props.isCodeStreamTeam && codemark.numReplies}
 						</span>
 					)}
 				</div>
@@ -861,8 +910,16 @@ export class Codemark extends React.Component<Props, State> {
 							postAction={this.props.postAction}
 						>
 							<div className="description">
-								{description}
+								{this.renderAssigneesSelected(codemark)}
+								{description && (
+									<div className="related">
+										<div className="related-label">Description</div>
+										{description}
+									</div>
+								)}
 								{this.renderExternalLink(codemark)}
+								{this.renderTagsSelected(codemark)}
+								{this.renderRelatedCodemarks()}
 							</div>
 						</CodemarkDetails>
 					)}
@@ -915,7 +972,7 @@ export class Codemark extends React.Component<Props, State> {
 					</li>
 					<li>
 						Codemarks <b>move with the code</b>, so your conversation remains connected to the right
-						codeblock even as your code changes.{" "}
+						code block even as your code changes.{" "}
 						<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
 							learn about comment drift
 						</a>

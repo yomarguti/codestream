@@ -6,5 +6,6 @@ export interface TeamsState {
 
 export enum TeamsActionsType {
 	Bootstrap = "BOOTSTRAP_TEAMS",
-	Add = "ADD_TEAMS"
+	Add = "ADD_TEAMS",
+	Update = "UPDATE_TEAM"
 }

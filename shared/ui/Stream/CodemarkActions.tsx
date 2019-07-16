@@ -3,6 +3,7 @@ import * as paths from "path-browserify";
 import { escapeHtml } from "../utils";
 import { prettyPrintOne } from "code-prettify";
 import { HostApi } from "../webview-api";
+import Tooltip from "./Tooltip";
 import { ApplyMarkerRequestType, CompareMarkerRequestType } from "../ipc/webview.protocol";
 import {
 	Capabilities,
@@ -13,6 +14,7 @@ import {
 
 interface State {
 	hasDiff: boolean;
+	codemarkSha1: string | undefined;
 }
 
 interface Props {
@@ -27,7 +29,7 @@ export default class CodemarkActions extends React.Component<Props, State> {
 
 	constructor(props) {
 		super(props);
-		this.state = { hasDiff: false };
+		this.state = { hasDiff: false, codemarkSha1: "" };
 	}
 
 	async componentDidMount() {
@@ -43,7 +45,8 @@ export default class CodemarkActions extends React.Component<Props, State> {
 		});
 		this.setState({
 			hasDiff:
-				response.codemarkSha1 === undefined || response.codemarkSha1 !== response.documentSha1
+				response.codemarkSha1 === undefined || response.codemarkSha1 !== response.documentSha1,
+			codemarkSha1: response.codemarkSha1
 		});
 	}
 
@@ -103,25 +106,19 @@ export default class CodemarkActions extends React.Component<Props, State> {
 				{(canCompare || canApply || canOpenRevision) && (
 					<div className="post-details" id={codemark.id}>
 						<div className="a-group" key="a">
-							{canCompare && (
-								<a
-									id="compare-button"
-									className="control-button"
-									tabIndex={2}
-									onClick={this.handleClickCompare}
-								>
-									Compare
-								</a>
-							)}
 							{canApply && (
-								<a
-									id="apply-button"
-									className="control-button"
-									tabIndex={3}
-									onClick={this.handleClickApplyPatch}
-								>
-									Apply
-								</a>
+								<Tooltip title="Apply patch to current buffer" placement="bottomRight">
+									<div className="codemark-actions-button" onClick={this.handleClickApplyPatch}>
+										Apply
+									</div>
+								</Tooltip>
+							)}
+							{canCompare && (
+								<Tooltip title="Compare current code to original" placement="bottomRight">
+									<div className="codemark-actions-button" onClick={this.handleClickCompare}>
+										Compare
+									</div>
+								</Tooltip>
 							)}
 							{canOpenRevision && (
 								<a
@@ -168,12 +165,16 @@ export default class CodemarkActions extends React.Component<Props, State> {
 		}
 
 		const codeHTML = prettyPrintOne(escapeHtml(marker.code), extension, startLine);
-		return (
+		return [
+			<div className="related-label" style={{ paddingLeft: "10px" }}>
+				Original Code{" "}
+				{this.state.codemarkSha1 && <span>(from {this.state.codemarkSha1.substring(0, 8)})</span>}
+			</div>,
 			<pre
 				className="code prettyprint"
 				data-scrollable="true"
 				dangerouslySetInnerHTML={{ __html: codeHTML }}
 			/>
-		);
+		];
 	}
 }

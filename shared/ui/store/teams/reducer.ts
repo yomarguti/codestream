@@ -1,3 +1,4 @@
+import { CSTeam } from "@codestream/protocols/api";
 import { toMapBy } from "../../utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
@@ -7,10 +8,17 @@ type TeamsActions = ActionType<typeof actions>;
 
 const initialState: TeamsState = {};
 
+const updateTeam = (payload: CSTeam, teams: TeamsState) => {
+	const team = teams[payload.id] || {};
+	return { ...team, ...payload };
+};
+
 export function reduceTeams(state = initialState, action: TeamsActions) {
 	switch (action.type) {
 		case TeamsActionsType.Bootstrap:
 			return toMapBy("id", action.payload);
+		case TeamsActionsType.Update:
+			return { ...state, [action.payload.id]: updateTeam(action.payload, state) };
 		case TeamsActionsType.Add:
 			return { ...state, ...toMapBy("id", action.payload) };
 		case "RESET":

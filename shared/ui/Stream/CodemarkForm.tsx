@@ -33,9 +33,9 @@ import { Stream } from "../store/streams/types";
 import { mapFilter, arrayToRange, forceAsLine, isRangeEmpty, toMapBy, replaceHtml } from "../utils";
 import { HostApi } from "../webview-api";
 import Button from "./Button";
-import CancelButton from "./CancelButton";
 import CrossPostIssueControls from "./CrossPostIssueControls";
 import { CardValues } from "./CrossPostIssueControls/types";
+import Tag from "./Tag";
 import Icon from "./Icon";
 import Menu from "./Menu";
 import Tooltip from "./Tooltip";
@@ -43,19 +43,10 @@ import { sortBy as _sortBy, sortBy } from "lodash-es";
 import { EditorSelectRangeRequestType, EditorSelection } from "@codestream/protocols/webview";
 import { getCurrentSelection } from "../store/editorContext/reducer";
 import Headshot from "./Headshot";
-import { getTeamMembers } from "../store/users/reducer";
+import { getTeamMembers, getTeamTags } from "../store/users/reducer";
 import MessageInput from "./MessageInput";
 import { getSlashCommands } from "./SlashCommands";
 import { getCurrentTeamProvider } from "../store/teams/actions";
-
-const tuple = <T extends string[]>(...args: T) => args;
-
-const COLOR_OPTIONS = tuple("blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray");
-type Color = typeof COLOR_OPTIONS[number] | string;
-
-let TAGS = COLOR_OPTIONS.map(color => {
-	return { id: "_" + color, label: "", color: color };
-});
 
 interface Props extends DispatchProps {
 	streamId: string;
@@ -90,11 +81,11 @@ interface DispatchProps {
 	slashCommands: any[];
 	services: {};
 	teamProvider: "codestream" | "slack" | "msteams" | string;
+	teamTags: any;
 }
 
 interface State {
 	text: string;
-	color: Color;
 	type: string;
 	codeBlock?: GetRangeScmInfoResponse;
 	assignees: { value: any; label: string }[] | { value: any; label: string };
@@ -150,7 +141,6 @@ class CodemarkForm extends React.Component<Props, State> {
 		const defaultState: Partial<State> = {
 			title: "",
 			text: "",
-			color: "",
 			type: defaultType,
 			codeBlock: props.codeBlock,
 			assignees: [],
@@ -419,7 +409,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		event && event.preventDefault();
 		if (this.isFormInvalid()) return;
 
-		const { codeBlock, color, privacy, type, title, text, selectedChannelId } = this.state;
+		const { codeBlock, privacy, type, title, text, selectedChannelId } = this.state;
 
 		if (type === "link") {
 			let request;
@@ -501,7 +491,6 @@ class CodemarkForm extends React.Component<Props, State> {
 				codeBlock: this.state.codeBlock,
 				streamId: selectedChannelId,
 				text: replaceHtml(text)!,
-				color,
 				type,
 				assignees: csAssignees,
 				title,
@@ -609,9 +598,9 @@ class CodemarkForm extends React.Component<Props, State> {
 		}));
 	};
 
-	selectLabel = (color: string) => {
-		this.setState({ color: color, labelMenuOpen: false });
-	};
+	// selectLabel = (color: string) => {
+	// 	this.setState({ color: color, labelMenuOpen: false });
+	// };
 
 	// handleClickConnectSlack = async event => {
 	// 	event.preventDefault();
@@ -625,23 +614,11 @@ class CodemarkForm extends React.Component<Props, State> {
 		const keys = Object.keys(selectedTags);
 		if (keys.length === 0) return null;
 
+		console.log("TEAM TAGS ARE: ", this.props.teamTags);
 		return (
 			<div className="tags" key="tags" style={{ margin: "10px 0 -10px 0" }}>
-				{TAGS.map(tag => {
-					if (selectedTags[tag.id])
-						if (tag.color.startsWith("#"))
-							return (
-								<div key={tag.id} className="compose-tag" style={{ background: tag.color }}>
-									<div>&nbsp;{tag.label}&nbsp;</div>
-								</div>
-							);
-						else
-							return (
-								<div key={tag.id} className={`compose-tag ${tag.color}-background`}>
-									<div>&nbsp;{tag.label}&nbsp;</div>
-								</div>
-							);
-					else return null;
+				{this.props.teamTags.map(tag => {
+					return selectedTags[tag.id] ? <Tag tag={tag} /> : null;
 				})}
 				<div style={{ clear: "both" }} />
 			</div>
@@ -685,20 +662,20 @@ class CodemarkForm extends React.Component<Props, State> {
 		// if (this.props.slackInfo || this.props.providerInfo.slack) {
 		const items: { label: string; action?: CSStream | "show-all"; key?: string }[] = [];
 
-		let labelMenuItems: any = [{ label: "None", action: "" }, { label: "-" }];
+		// let labelMenuItems: any = [{ label: "None", action: "" }, { label: "-" }];
 
-		labelMenuItems = labelMenuItems.concat(
-			COLOR_OPTIONS.map(color => {
-				return {
-					label: (
-						<span className={`${color}-color`}>
-							<Icon name={commentType} /> {color}
-						</span>
-					),
-					action: color
-				};
-			})
-		);
+		// labelMenuItems = labelMenuItems.concat(
+		// 	COLOR_OPTIONS.map(color => {
+		// 		return {
+		// 			label: (
+		// 				<span className={`${color}-color`}>
+		// 					<Icon name={commentType} /> {color}
+		// 				</span>
+		// 			),
+		// 			action: color
+		// 		};
+		// 	})
+		// );
 		// labelMenuItems.push({ label: "-" });
 		// labelMenuItems.push({ label: "Edit Labels", action: "edit" });
 
@@ -819,15 +796,19 @@ class CodemarkForm extends React.Component<Props, State> {
 		});
 	};
 
+	getNextTagId = () => {
+		return this.props.teamTags.length + 1;
+	};
+
 	handleChangeTag = newTag => {
 		const newTagCopy = { ...newTag };
 		if (newTag.id) {
-			TAGS.forEach((tag, index) => {
-				if (tag.id === newTag.id) TAGS[index] = newTagCopy;
-			});
+			// TAGS.forEach((tag, index) => {
+			// if (tag.id === newTag.id) TAGS[index] = newTagCopy;
+			// });
 		} else {
-			newTagCopy.id = TAGS.length + 1;
-			TAGS = TAGS.concat(newTagCopy);
+			// newTagCopy.id = TAGS.length + 1;
+			// TAGS = TAGS.concat(newTagCopy);
 		}
 	};
 
@@ -937,11 +918,10 @@ class CodemarkForm extends React.Component<Props, State> {
 				placeholder={placeholder}
 				multiCompose
 				onChange={this.handleChange}
-				onChangeTag={this.handleChangeTag}
 				toggleTag={this.handleToggleTag}
 				toggleCodemark={this.handleToggleCodemark}
 				onSubmit={this.handleClickSubmit}
-				tags={TAGS}
+				teamTags={this.props.teamTags}
 				selectedTags={this.state.selectedTags}
 				relatedCodemarkIds={this.state.relatedCodemarkIds}
 				__onDidRender={__onDidRender}
@@ -1253,6 +1233,7 @@ const mapStateToProps = (state): DispatchProps => {
 		: getStreamForTeam(state.streams, context.currentTeamId);
 
 	const teammates = getTeamMembers(state);
+	const teamTags = getTeamTags(state);
 
 	const channelStreams: CSChannelStream[] = sortBy(
 		(getChannelStreamsForTeam(
@@ -1284,7 +1265,8 @@ const mapStateToProps = (state): DispatchProps => {
 		textEditorUri: editorContext.textEditorUri,
 		textEditorSelection: getCurrentSelection(editorContext),
 		slashCommands: getSlashCommands(state.capabilities),
-		services: state.services
+		services: state.services,
+		teamTags
 	};
 };
 

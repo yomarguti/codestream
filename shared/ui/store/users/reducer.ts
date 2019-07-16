@@ -52,6 +52,22 @@ export const getTeamMembers = createSelector(
 	}
 );
 
+const tuple = <T extends string[]>(...args: T) => args;
+const COLOR_OPTIONS = tuple("blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray");
+type Color = typeof COLOR_OPTIONS[number] | string;
+
+export const getTeamTags = createSelector(
+	getTeam,
+	team => {
+		return (
+			team.tags ||
+			COLOR_OPTIONS.map(color => {
+				return { id: "_" + color, label: "", color: color };
+			})
+		);
+	}
+);
+
 export const getAllUsers = createSelector(
 	getUsers,
 	(users: UsersState) => Object.values(users)
@@ -94,7 +110,7 @@ export const getUserByCsId = createSelector(
 
 export const findMentionedUserIds = (members: CSUser[], text: string) => {
 	const mentionedUserIds: string[] = [];
-	if (text == null || text.length === 0) { 
+	if (text == null || text.length === 0) {
 		return mentionedUserIds;
 	}
 

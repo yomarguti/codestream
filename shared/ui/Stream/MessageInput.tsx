@@ -60,18 +60,19 @@ interface Props {
 	placeholder?: string;
 	quotePost?: QuotePost;
 	onChange?(text: string): any;
-	onChangeTag?(tag: any): any;
+	updateTeamTag?(team: any, tag: any): any;
 	onChangeSelectedTags?(tag: any): any;
 	onEmptyUpArrow?(event: React.KeyboardEvent): any;
 	onDismiss?(): any;
 	onSubmit?(): any;
 	tabIndex?: number;
-	tags?: any;
+	teamTags?: any;
 	selectedTags?: any;
 	toggleTag?: Function;
 	relatedCodemarkIds?: any;
 	toggleCodemark?: Function;
 	codemarks?: any;
+	currentTeam?: any;
 	__onDidRender?(stuff: { [key: string]: any }): any; // HACKy: sneaking internals to parent
 }
 
@@ -736,8 +737,12 @@ export class MessageInput extends React.Component<Props, State> {
 	};
 
 	saveTag = () => {
-		if (this.props.onChangeTag) this.props.onChangeTag(this.state.editingTag);
+		if (this.props.updateTeamTag)
+			this.props.updateTeamTag(this.props.currentTeam, this.state.editingTag);
+		// if (this.props.onChangeTag) this.props.onChangeTag(this.state.editingTag);
 		this.hideTagsPicker();
+		// i have no idea why this needs to be done after a delay.
+		// otherwise what ends up happening is you get a double-menu
 		setTimeout(() => {
 			this.setState({ tagsOpen: "select" });
 		}, 1);
@@ -749,13 +754,9 @@ export class MessageInput extends React.Component<Props, State> {
 	};
 
 	findTag = tagId => {
-		return this.props.tags.find(tag => {
+		return this.props.teamTags.find(tag => {
 			return tag.id === tagId;
 		});
-	};
-
-	getNextTagId = () => {
-		return this.props.tags.length + 1;
 	};
 
 	setEditingTagColor = color => {
@@ -867,8 +868,8 @@ export class MessageInput extends React.Component<Props, State> {
 	};
 
 	buildSelectTagMenu = () => {
-		const { tags } = this.props;
-		if (!tags) return null;
+		const { teamTags } = this.props;
+		if (!teamTags) return null;
 
 		let menuItems: any = [
 			{ type: "search", placeholder: "Search tags...", action: "search" },
@@ -876,7 +877,7 @@ export class MessageInput extends React.Component<Props, State> {
 		];
 
 		menuItems = menuItems.concat(
-			tags.map(tag => {
+			teamTags.map(tag => {
 				let className = "tag-menu-block";
 				if (!tag.color.startsWith("#")) className += " " + tag.color + "-background";
 				return {
@@ -1011,7 +1012,10 @@ export class MessageInput extends React.Component<Props, State> {
 }
 
 const mapStateToProps = state => {
+	const currentTeam = state.teams[state.context.currentTeamId];
+
 	return {
+		currentTeam,
 		codemarks: codemarkSelectors.getTypeFilteredCodemarks(state) || []
 	};
 };

@@ -25,7 +25,7 @@ const initialState: ContextState = {
 	channelsMuteAll: false,
 	codemarkFileFilter: "all",
 	codemarkTypeFilter: "all",
-	codemarkColorFilter: "all",
+	codemarkTagFilter: "all",
 	codemarksFileViewStyle: "inline",
 	codemarksShowArchived: false,
 	codemarksShowResolved: false,
@@ -62,8 +62,8 @@ export function reduceContext(
 		case ContextActionsType.SetChannelFilter:
 			return { ...state, channelFilter: action.payload };
 
-		case ContextActionsType.SetCodemarkColorFilter:
-			return { ...state, codemarkColorFilter: action.payload };
+		case ContextActionsType.SetCodemarkTagFilter:
+			return { ...state, codemarkTagFilter: action.payload };
 		case ContextActionsType.SetCodemarkFileFilter:
 			return { ...state, codemarkFileFilter: action.payload };
 		case ContextActionsType.SetCodemarkTypeFilter:

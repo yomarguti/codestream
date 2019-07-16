@@ -36,7 +36,7 @@ import {
 	closePanel,
 	openPanel,
 	setChannelFilter,
-	setCodemarkColorFilter,
+	setCodemarkTagFilter,
 	setCodemarkFileFilter,
 	setCodemarkTypeFilter
 } from "../store/context/actions";
@@ -46,6 +46,7 @@ import { updatePreferences } from "../store/preferences/actions";
 import * as streamActions from "../store/streams/actions";
 import { addUsers } from "../store/users/actions";
 import { uuid, isNotOnDisk } from "../utils";
+import { updateTeam } from "../store/teams/actions";
 import { HostApi } from "../webview-api";
 import { CodeStreamState } from "../store";
 import { pick } from "lodash-es";
@@ -61,7 +62,7 @@ export {
 	closePanel,
 	setCodemarkTypeFilter,
 	setCodemarkFileFilter,
-	setCodemarkColorFilter,
+	setCodemarkTagFilter,
 	setChannelFilter
 };
 export { connectProvider, disconnectProvider } from "../store/providers/actions";
@@ -637,49 +638,51 @@ export const setCodemarkStatus = (
 	}
 };
 
-const getCodeDelimiters = (codeDelimiterStyle: CodeDelimiterStyles): { 
-	start: string,
-	end: string,
-	linefeed: string
+const getCodeDelimiters = (
+	codeDelimiterStyle: CodeDelimiterStyles
+): {
+	start: string;
+	end: string;
+	linefeed: string;
 } => {
 	switch (codeDelimiterStyle) {
 		case CodeDelimiterStyles.NONE:
-		return {
-			start: "",
-			end: "",
-			linefeed: "\n"
-		};
-		
+			return {
+				start: "",
+				end: "",
+				linefeed: "\n"
+			};
+
 		case CodeDelimiterStyles.HTML_MARKUP:
-		return {
-			start: "<pre><div><code>",
-			end: "</code></div></pre>",
-			linefeed: "<br/>"
-		};
+			return {
+				start: "<pre><div><code>",
+				end: "</code></div></pre>",
+				linefeed: "<br/>"
+			};
 
 		default:
 		case CodeDelimiterStyles.TRIPLE_BACK_QUOTE:
-		return {
-			start: "```\n",
-			end: "```\n",
-			linefeed: "\n"
-		};
+			return {
+				start: "```\n",
+				end: "```\n",
+				linefeed: "\n"
+			};
 
 		case CodeDelimiterStyles.SINGLE_BACK_QUOTE:
-		return {
-			start: "`",
-			end: "`",
-			linefeed: "\n"
-		};
+			return {
+				start: "`",
+				end: "`",
+				linefeed: "\n"
+			};
 
-		case CodeDelimiterStyles.CODE_BRACE: 
-		return {
-			start: "{code}",
-			end: "{code}",
-			linefeed: "\n"
-		}
+		case CodeDelimiterStyles.CODE_BRACE:
+			return {
+				start: "{code}",
+				end: "{code}",
+				linefeed: "\n"
+			};
 	}
-}
+};
 export const createProviderCard = async (attributes, codemark) => {
 	const delimiters = getCodeDelimiters(attributes.codeDelimiterStyle);
 	const { linefeed, start, end } = delimiters;
@@ -702,7 +705,7 @@ export const createProviderCard = async (attributes, codemark) => {
 	try {
 		let response;
 		switch (attributes.issueProvider.name) {
-			case "jira": 
+			case "jira":
 			case "jiraserver": {
 				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
 					providerId: attributes.issueProvider.id,
@@ -810,5 +813,36 @@ export const createProviderCard = async (attributes, codemark) => {
 	} catch (error) {
 		logError(`failed to create a ${attributes.issueProvider.name} card: ${error}`);
 		return undefined;
+	}
+};
+
+const tuple = <T extends string[]>(...args: T) => args;
+const COLOR_OPTIONS = tuple("blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray");
+
+export const updateTeamTag = (
+	team,
+	attributes: { id?: string; color: string; label?: string }
+) => async dispatch => {
+	try {
+		let tags =
+			team.tags ||
+			COLOR_OPTIONS.map(color => {
+				return { id: "_" + color, label: "", color: color };
+			});
+		const newTag = { ...attributes };
+		if (newTag.id) {
+			tags.forEach((tag, index) => {
+				if (tag.id === newTag.id) tags[index] = newTag;
+			});
+		} else {
+			newTag.id = tags.length + 1;
+			tags = tags.concat(newTag);
+		}
+		team.tags = [...tags];
+
+		// const response = await HostApi.instance.send(updateTeamRequestType, team);
+		return dispatch(updateTeam(team));
+	} catch (error) {
+		logError(`There was an error updating a tag: ${error}`, attributes);
 	}
 };

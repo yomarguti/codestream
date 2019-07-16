@@ -9,6 +9,8 @@ export const bootstrapTeams = (teams: CSTeam[]) => action(TeamsActionsType.Boots
 
 export const addTeams = (teams: CSTeam[]) => action(TeamsActionsType.Add, teams);
 
+export const updateTeam = (team: CSTeam) => action(TeamsActionsType.Update, team);
+
 export function getCurrentTeamProvider(state: CodeStreamState) {
 	return getTeamProvider(state.teams[state.context.currentTeamId]);
 }

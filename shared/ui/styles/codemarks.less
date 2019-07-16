@@ -137,7 +137,7 @@
 		z-index: 1;
 		background: @app-background-color;
 		.assignees {
-			float: right;
+			// float: right;
 		}
 		.archived {
 			padding: 10px;
@@ -172,6 +172,9 @@
 		}
 		.description {
 			padding: 0 10px 0 10px;
+			p {
+				margin: 0;
+			}
 		}
 		&:hover .contents {
 			background: rgba(127, 127, 127, 0.05);
@@ -329,14 +332,20 @@
 			text-decoration: underline;
 		}
 	}
-	.resolve-button {
+	.resolve-button,
+	.codemark-actions-button {
 		border: 1px solid @base-border-color;
 		padding: 2px 10px;
 		float: right;
 		margin: -3px 5px 0 5px;
+		cursor: pointer;
 		&:hover {
+			color: @text-color-highlight;
 			background: @base-background-color;
 		}
+	}
+	.codemark-actions-button {
+		margin: 0 0 0 10px;
 	}
 	.icon.info {
 		opacity: 0.5;
@@ -364,7 +373,7 @@
 		// margin: 10px -10px 0 -10px;
 		// width: calc(100% + 30px);
 		// border-top: 1px solid @base-border-color;
-		padding-top: 10px;
+		padding: 10px 0 5px 0;
 		.pinned-reply-body {
 			opacity: 0.5;
 			// see COMPUTATION below
@@ -381,25 +390,52 @@
 		border-top: 1px solid @base-border-color;
 	}
 	.detail-icons {
-		margin-top: 8px;
+		margin-top: 10px;
 		color: @text-color;
 		.detail-icon {
-			opacity: 0.25;
+			opacity: 0.4;
 			padding-right: 10px;
 			cursor: pointer;
 			user-select: none;
 			&:hover {
-				opacity: 0.75;
+				opacity: 1;
 			}
 			.icon {
 				color: @text-color;
 			}
 		}
-		.codemark-tag {
-			margin-top: 2px;
+		.tag {
+			// margin-top: 2px;
 			cursor: pointer;
+			margin-bottom: 0;
+			&:last-of-type {
+				margin-right: 10px;
+			}
+			&:hover {
+				box-shadow: 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white;
+			}
+		}
+		.headshot {
+			cursor: pointer;
+			border-radius: 3px;
+			&:hover {
+				box-shadow: 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white;
+			}
+		}
+		.assignees {
+			padding-right: 5px;
 		}
 	}
+}
+.related {
+	margin: 15px 0;
+}
+.related-label {
+	text-transform: uppercase;
+	font-weight: 600;
+	opacity: 0.5;
+	font-size: 11px;
+	margin-bottom: 3px;
 }
 .icon.pinned-reply-star {
 	opacity: 0.6;

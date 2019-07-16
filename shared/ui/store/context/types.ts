@@ -4,7 +4,7 @@ import { AnyObject } from "@codestream/webview/utils";
 export enum ContextActionsType {
 	SetCodemarkFileFilter = "@context/SetCodemarkFileFilter",
 	SetCodemarkTypeFilter = "@context/SetCodemarkTypeFilter",
-	SetCodemarkColorFilter = "@context/SetCodemarkColorFilter",
+	SetCodemarkTagFilter = "@context/SetCodemarkTagFilter",
 	SetChannelFilter = "@context/SetChannelFilter",
 	SetContext = "@context/Set",
 	OpenPanel = "@context/OpenPanel",
@@ -31,7 +31,7 @@ export interface ContextState extends WebviewContext {
 
 	codemarkFileFilter: string; // TODO: specify types
 	codemarkTypeFilter: string;
-	codemarkColorFilter: string;
+	codemarkTagFilter: string;
 
 	codemarksFileViewStyle: "list" | "inline";
 	codemarksShowArchived: boolean;
