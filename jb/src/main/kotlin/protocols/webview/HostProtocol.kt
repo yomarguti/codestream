@@ -10,7 +10,8 @@ class BootstrapResponse(
     val capabilities: Capabilities,
     val configs: Configs,
     val context: WebViewContext? = WebViewContext(),
-    val version: String
+    val version: String,
+    val ide: Ide
 )
 
 class Capabilities {
@@ -32,6 +33,10 @@ class Configs(
     val debug: Boolean,
     val showFeedbackSmiley: Boolean,
     val team: String?
+)
+
+class Ide(
+    val name: String
 )
 
 class Services {

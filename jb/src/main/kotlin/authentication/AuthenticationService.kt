@@ -16,6 +16,7 @@ import protocols.agent.LoginResult
 import protocols.agent.LoginWithTokenParams
 import protocols.webview.BootstrapResponse
 import protocols.webview.Capabilities
+import protocols.webview.Ide
 import protocols.webview.UserSession
 
 class AuthenticationService(val project: Project) {
@@ -32,7 +33,8 @@ class AuthenticationService(val project: Project) {
             gson.fromJson(agentCapabilities),
             settings.webViewConfigs,
             settings.webViewContext,
-            settings.extensionInfo.versionFormatted
+            settings.extensionInfo.versionFormatted,
+            Ide(settings.ideInfo.name)
         )
     }
 

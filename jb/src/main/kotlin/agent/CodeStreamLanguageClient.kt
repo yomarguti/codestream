@@ -2,6 +2,7 @@ package com.codestream.agent
 
 import com.codestream.agentService
 import com.codestream.authenticationService
+import com.codestream.codeStream
 import com.codestream.editorService
 import com.codestream.extensions.workspaceFolders
 import com.codestream.gson
@@ -9,6 +10,7 @@ import com.codestream.sessionService
 import com.codestream.webViewService
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.JsonElement
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.eclipse.lsp4j.ConfigurationParams
@@ -54,6 +56,15 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
     @JsonNotification("codestream/didChangeConnectionStatus")
     fun didChangeConnectionStatus(json: JsonElement) {
         project.webViewService?.postNotification("codestream/didChangeConnectionStatus", json)
+    }
+
+    @JsonNotification("codestream/didChangeVersionCompatibility")
+    fun didChangeVersionCompatibility(json: JsonElement) {
+        ApplicationManager.getApplication().invokeLater {
+            project.codeStream?.show {
+                project.webViewService?.postNotification("codestream/didChangeVersionCompatibility", json)
+            }
+        }
     }
 
     @JsonNotification("codestream/didLogin")
