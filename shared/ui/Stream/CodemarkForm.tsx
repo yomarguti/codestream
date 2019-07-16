@@ -614,6 +614,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		const keys = Object.keys(selectedTags);
 		if (keys.length === 0) return null;
 
+		console.log("TEAM TAGS ARE: ", this.props.teamTags);
 		return (
 			<div className="tags" key="tags" style={{ margin: "10px 0 -10px 0" }}>
 				{this.props.teamTags.map(tag => {
