@@ -18,6 +18,7 @@ import EmojiPicker from "./EmojiPicker";
 import Menu from "./Menu";
 import Button from "./Button";
 import Icon from "./Icon";
+import { confirmPopup } from "./Confirm";
 
 type PopupType = "at-mentions" | "slash-commands" | "channels" | "emojis";
 
@@ -749,8 +750,34 @@ export class MessageInput extends React.Component<Props, State> {
 	};
 
 	deleteTag = () => {
-		this.setState({ editingTag: null });
-		this.hideTagsPicker();
+		if (!this.state.editingTag.id) {
+			this.setState({ editingTag: null });
+			this.hideTagsPicker();
+			return;
+		}
+
+		confirmPopup({
+			title: "Are you sure?",
+			message:
+				"Deleting a tag cannot be undone, and will remove it from any codemarks that contain this tag.",
+			centered: true,
+			buttons: [
+				{
+					label: "Delete Tag",
+					wait: true,
+					action: () => {
+						if (this.props.updateTeamTag)
+							this.props.updateTeamTag(this.props.currentTeam, {
+								...this.state.editingTag,
+								deactivated: true
+							});
+						this.setState({ editingTag: null });
+						this.hideTagsPicker();
+					}
+				},
+				{ label: "Cancel" }
+			]
+		});
 	};
 
 	findTag = tagId => {

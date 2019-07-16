@@ -142,7 +142,6 @@ export class SimpleKnowledgePanel extends Component {
 						onClick={this.handleClickCodemark}
 						action={this.props.postAction}
 						query={this.state.q}
-						style={{ position: "relative", margin: "20px 0" }}
 					/>
 				);
 			});

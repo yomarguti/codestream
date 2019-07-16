@@ -821,7 +821,7 @@ const COLOR_OPTIONS = tuple("blue", "green", "yellow", "orange", "red", "purple"
 
 export const updateTeamTag = (
 	team,
-	attributes: { id?: string; color: string; label?: string }
+	attributes: { id?: string; color: string; label?: string; deactivated?: boolean }
 ) => async dispatch => {
 	try {
 		let tags =

@@ -59,11 +59,12 @@ type Color = typeof COLOR_OPTIONS[number] | string;
 export const getTeamTags = createSelector(
 	getTeam,
 	team => {
-		return (
+		return mapFilter(
 			team.tags ||
-			COLOR_OPTIONS.map(color => {
-				return { id: "_" + color, label: "", color: color };
-			})
+				COLOR_OPTIONS.map(color => {
+					return { id: "_" + color, label: "", color: color };
+				}),
+			tag => (tag.deactivated ? null : tag)
 		);
 	}
 );
