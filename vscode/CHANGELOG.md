@@ -1,5 +1,19 @@
 # Change Log
 
+## [1.3.2] - 2019-7-16
+
+### Changed
+
+- Added a "Back" link below the password-reset form in case you change your mind
+
+### Fixed
+
+- Fixes [#70](]https://github.com/TeamCodeStream/CodeStream/issues/70) &mdash; Once joined more than one channel, I can't choose into which channel a comment should go to anymore
+- Fixes an issue with repos managed by Bitbucket Server incorrectly being identified as being managed by Bitbucket cloud
+- Fixes scrolling issues when creating and viewing longer codemarks
+- Fixes an issue where a reload/restart of VS Code would result in multiple CodeStream panes
+- Fixes an issue with the legibility of button text in light themes
+
 ## [1.3.1] - 2019-7-10
 
 ### Added
