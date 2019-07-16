@@ -17,7 +17,8 @@ namespace CodeStream.VisualStudio.Models {
 	[JsonConverter(typeof(CamelCaseStringEnumConverter))]
 	public enum LogoutReason {
 		Token,
-		Unknown
+		Unknown,
+		UnsupportedVersion
 	}
 
 	public enum ProviderType {

@@ -13,7 +13,6 @@ using System.Threading;
 using CodeStream.VisualStudio.Commands;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.UI;
 using CodeStream.VisualStudio.Vssdk.Commands;
 using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -120,7 +119,7 @@ namespace CodeStream.VisualStudio.Packages {
 					userCommand
 				};
 				await JoinableTaskFactory.SwitchToMainThreadAsync();
-				await InfoBarProvider.InitializeAsync(this);
+				//await InfoBarProvider.InitializeAsync(this);
 
 				var menuCommandService = (IMenuCommandService)(await GetServiceAsync(typeof(IMenuCommandService)));
 				foreach (var command in _commands) {

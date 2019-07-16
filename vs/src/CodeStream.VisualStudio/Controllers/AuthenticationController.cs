@@ -3,7 +3,6 @@ using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.UI;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
@@ -18,14 +17,14 @@ namespace CodeStream.VisualStudio.Controllers {
 		private readonly ISettingsManager _settingsManager;
 		private readonly ISessionService _sessionService;
 		private readonly ICodeStreamAgentService _codeStreamAgent;
-		private readonly IEventAggregator _eventAggregator;		
+		private readonly IEventAggregator _eventAggregator;
 		private readonly ICredentialsService _credentialsService;
 
 		public AuthenticationController(
 			ISettingsManager settingManager,
 			ISessionService sessionService,
 			ICodeStreamAgentService codeStreamAgent,
-			IEventAggregator eventAggregator,			
+			IEventAggregator eventAggregator,
 			ICredentialsService credentialsService) {
 			_settingsManager = settingManager;
 			_sessionService = sessionService;
@@ -37,11 +36,11 @@ namespace CodeStream.VisualStudio.Controllers {
 		public AuthenticationController(
 			ISettingsManager settingManager,
 			ISessionService sessionService,
-			IEventAggregator eventAggregator,				
+			IEventAggregator eventAggregator,
 			ICredentialsService credentialsService) {
 			_settingsManager = settingManager;
 			_sessionService = sessionService;
-			_eventAggregator = eventAggregator;				
+			_eventAggregator = eventAggregator;
 			_credentialsService = credentialsService;
 		}
 
@@ -54,13 +53,14 @@ namespace CodeStream.VisualStudio.Controllers {
 					if (token != null) {
 						try {
 							var teamId = await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TryGetTeamIdAsync();
-
 							var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(token, _settingsManager.Team, teamId);
 							processResponse = await ProcessLoginAsync(loginResponse);
 
 							if (!processResponse.Success) {
-								Log.Error(processResponse.ErrorMessage);
-								await _credentialsService.DeleteAsync(_settingsManager.ServerUrl.ToUri(), _settingsManager.Email);
+								if (!processResponse.ErrorMessage.IsNullOrWhiteSpace() &&
+									Enum.TryParse(processResponse.ErrorMessage, out LoginResult loginResult) && loginResult != LoginResult.VERSION_UNSUPPORTED) {
+									await _credentialsService.DeleteAsync(_settingsManager.ServerUrl.ToUri(), _settingsManager.Email);
+								}
 								return false;
 							}
 							else {
@@ -79,16 +79,16 @@ namespace CodeStream.VisualStudio.Controllers {
 			}
 
 			return false;
-		}		
+		}
 
 		public async Task<bool> CompleteSigninAsync(JToken loginResponse) {
 			ProcessLoginResponse processResponse = null;
 			try {
 
 				try {
-					processResponse = await ProcessLoginAsync(loginResponse);					
+					processResponse = await ProcessLoginAsync(loginResponse);
 				}
-				catch (Exception ex) {					
+				catch (Exception ex) {
 					Log.Error(ex, $"{nameof(CompleteSigninAsync)}");
 				}
 
@@ -103,7 +103,7 @@ namespace CodeStream.VisualStudio.Controllers {
 			return processResponse?.Success == true;
 		}
 
-		private async Task OnSuccessAsync(JToken loginResponse, string email) {			
+		private async Task OnSuccessAsync(JToken loginResponse, string email) {
 			_sessionService.SetState(SessionState.UserSignedIn);
 			_eventAggregator.Publish(new SessionReadyEvent());
 
@@ -128,19 +128,19 @@ namespace CodeStream.VisualStudio.Controllers {
 			var error = GetError(loginResponse);
 
 			if (error != null) {
-				string errorResponse;
-				if (Enum.TryParse(error.ToString(), out LoginResult loginResult)) {
-					if (loginResult == LoginResult.VERSION_UNSUPPORTED) {
-						await Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-						InfoBarProvider.Instance.ShowInfoBar($"This version of {Application.Name} is no longer supported. Please upgrade to the latest version.");
-					}
-					errorResponse = loginResult.ToString();
-				}
-				else {
-					errorResponse = error.ToString();
-				}
-
-				Log.Warning(errorResponse);
+				//string errorResponse;
+				//if (Enum.TryParse(error.ToString(), out LoginResult loginResult)) {
+				//	// this is now handled in the webview
+				//	//if (loginResult == LoginResult.VERSION_UNSUPPORTED) {
+				//	//	await Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				//	//	InfoBarProvider.Instance.ShowInfoBar($"This version of {Application.Name} is no longer supported. Please upgrade to the latest version.");
+				//	//}
+				//	errorResponse = loginResult.ToString();
+				//}
+				//else {
+				//	errorResponse = error.ToString();
+				//}
+				//Log.Warning(errorResponse);
 				response.ErrorMessage = error?.Value<string>();
 			}
 			else if (loginResponse != null) {
@@ -153,8 +153,8 @@ namespace CodeStream.VisualStudio.Controllers {
 				stateLite["teamId"] = state["teamId"];
 				stateLite["userId"] = state["userId"];
 				stateLite["email"] = state["email"];
-				
-				_sessionService.SetUser(CreateUser(loginResponse), stateLite);			
+
+				_sessionService.SetUser(CreateUser(loginResponse), stateLite);
 				response.Success = true;
 			}
 

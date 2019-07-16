@@ -8,7 +8,6 @@ using CodeStream.VisualStudio.Extensions;
 using Microsoft.VisualStudio.Shell;
 
 namespace CodeStream.VisualStudio.Services {
-
 	public interface IAuthenticationServiceFactory {
 		IAuthenticationService Create();
 	}
@@ -80,10 +79,15 @@ namespace CodeStream.VisualStudio.Services {
 				catch (Exception ex) {
 					Log.Error(ex, $"{nameof(LogoutAsync)} - session");
 				}
+
 				EventAggregator.Publish(new SessionLogoutEvent());
+
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
-				WebviewIpc.Notify(new HostDidLogoutNotificationType());
-#pragma warning restore VSTHRD103 // Call async methods when in an async method				
+
+				// it's possible that this Logout method is called before the webview is ready -- enqueue it
+				WebviewIpc.EnqueueNotification(new HostDidLogoutNotificationType());
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
+
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(LogoutAsync));

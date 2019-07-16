@@ -33,6 +33,8 @@ namespace CodeStream.VisualStudio.Events {
 
 	public sealed class SessionDidFailSignInEvent : EventBase { }
 
+	public sealed class WebviewDidInitializeEvent : EventBase { }
+
 	public enum TextDocumentChangedReason {
 		Unknown,
 		Scrolled,

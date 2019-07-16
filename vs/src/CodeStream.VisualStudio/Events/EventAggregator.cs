@@ -34,7 +34,7 @@ namespace CodeStream.VisualStudio.Events {
 				((ISubject<TEvent>)subject).OnNext(sampleEvent);
 			}
 			else {
-				Log.Warning($"Event Not Found={typeof(TEvent)}");
+				Log.LocalWarning($"Event Not Found={typeof(TEvent)}");
 			}
 		}
 	}

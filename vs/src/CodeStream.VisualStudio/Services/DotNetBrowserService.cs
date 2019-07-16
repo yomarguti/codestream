@@ -71,7 +71,7 @@ namespace CodeStream.VisualStudio.Services {
 		private BrowserContext _browserContext;
 		private string _path;
 
-		private readonly IDisposable _sessionReadyEvent;
+		private readonly IDisposable _webViewReadyEvent;
 		private readonly IDisposable _sessionLogoutEvent;
 
 		private readonly ManualResetEvent _manualResetEvent;
@@ -89,7 +89,8 @@ namespace CodeStream.VisualStudio.Services {
 		private readonly IEventAggregator _eventAggregator;
 
 		[ImportingConstructor]
-		public DotNetBrowserService(ICodeStreamAgentServiceFactory codeStreamAgentServiceFactory,
+		public DotNetBrowserService(
+				ICodeStreamAgentServiceFactory codeStreamAgentServiceFactory,
 				IEventAggregator eventAggregator) {
 			_codeStreamAgentServiceFactory = codeStreamAgentServiceFactory;
 			_eventAggregator = eventAggregator;
@@ -97,8 +98,9 @@ namespace CodeStream.VisualStudio.Services {
 			try {
 				_messageQueue = new BlockingCollection<string>(new ConcurrentQueue<string>());
 				_manualResetEvent = new ManualResetEvent(false);
-				_sessionReadyEvent = _eventAggregator.GetEvent<SessionReadyEvent>().Subscribe(_ => {
-					Log.Debug($"{nameof(SessionReadyEvent)} Message QueueCount={QueueCount}");
+
+				_webViewReadyEvent = _eventAggregator.GetEvent<WebviewDidInitializeEvent>().Subscribe(_ => {
+					Log.Debug($"{nameof(WebviewDidInitializeEvent)} Message QueueCount={QueueCount}");
 					_manualResetEvent.Set();
 				});
 				_sessionLogoutEvent = _eventAggregator.GetEvent<SessionLogoutEvent>().Subscribe(_ => {
@@ -107,6 +109,7 @@ namespace CodeStream.VisualStudio.Services {
 					_messageQueue.Clear();
 					_manualResetEvent.Reset();
 				});
+
 				//https://stackoverflow.com/questions/9106419/how-to-cancel-getconsumingenumerable-on-blockingcollection
 				_processorTokenSource = new CancellationTokenSource();
 				var processorToken = _processorTokenSource.Token;
@@ -426,7 +429,7 @@ namespace CodeStream.VisualStudio.Services {
 					try {
 						_queueTokenSource?.Cancel();
 						_processorTokenSource?.Cancel();
-						_manualResetEvent.Set();
+						_manualResetEvent.Set();						
 					}
 					catch (Exception ex) {
 						Log.Warning(ex, "aux component failed to dispose");
@@ -443,7 +446,7 @@ namespace CodeStream.VisualStudio.Services {
 					}
 					try {
 						_browserView.InputBindings.Clear();
-						_sessionReadyEvent?.Dispose();
+						_webViewReadyEvent?.Dispose();
 						_sessionLogoutEvent?.Dispose();
 
 						_browserView.Browser.RenderGoneEvent -= Browser_RenderGoneEvent;

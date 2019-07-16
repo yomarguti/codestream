@@ -3,9 +3,11 @@ using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
+using CodeStream.VisualStudio.Packages;
 using CodeStream.VisualStudio.Services;
 using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using StreamJsonRpc;
@@ -112,7 +114,23 @@ namespace CodeStream.VisualStudio.LSP {
 
 		[JsonRpcMethod(DidChangeVersionCompatibilityNotificationType.MethodName)]
 		public void OnDidChangeVersionCompatibility(JToken e) {
-			Log.Information($"{nameof(OnDidChangeVersionCompatibility)}");
+			Log.Information($"{nameof(OnDidChangeVersionCompatibility)} {e}");
+			
+			ThreadHelper.JoinableTaskFactory.Run(async delegate {
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				try {
+					var toolWindowProvider = _serviceProvider.GetService(typeof(SToolWindowProvider)) as IToolWindowProvider;
+					Assumes.Present(toolWindowProvider);
+					if (!toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) {
+						toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
+					}
+				}
+				catch (Exception ex) {
+					Log.Error(ex, nameof(OnDidChangeVersionCompatibility));
+				}
+			});
+
 			_browserService.EnqueueNotification(new DidChangeVersionCompatibilityNotificationType(e));
 		}
 

@@ -90,7 +90,9 @@ namespace CodeStream.VisualStudio {
 									case WebviewDidInitializeNotificationType.MethodName: {
 											// webview is ready!
 											_sessionService.WebViewDidInitialize = true;
-											Log.Debug(nameof(_sessionService.WebViewDidInitialize));
+											_eventAggregator.Publish(new WebviewDidInitializeEvent());
+
+											Log.Debug(nameof(_sessionService.WebViewDidInitialize));											
 											break;
 										}
 									case WebviewDidChangeContextNotificationType.MethodName: {

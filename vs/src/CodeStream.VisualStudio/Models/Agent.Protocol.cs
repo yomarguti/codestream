@@ -101,6 +101,7 @@ namespace CodeStream.VisualStudio.Models {
 		public string Version { get; set; }
 		public WebviewContext Context { get; set; }
 		public UserSession Session { get; set; }
+		public Ide Ide { get; set; }
 	}
 
 	public class BootstrapAuthenticatedResponse : BootstrapPartialResponseAnonymous {

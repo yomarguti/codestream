@@ -342,7 +342,10 @@ namespace CodeStream.VisualStudio.Services {
 					Context = new WebviewContext {
 						HasFocus = true
 					},
-					Session = new UserSession() { }
+					Session = new UserSession() { },
+					Ide = new Ide() {
+						Name = Application.IdeMoniker
+					}
 				}.ToJToken();
 #if DEBUG
 				Log.Debug(bootstrapAnonymous?.ToString());
@@ -390,6 +393,9 @@ namespace CodeStream.VisualStudio.Services {
 				},
 				Env = settings.Env,
 				Version = settings.Version,
+				Ide = new Ide() {
+					Name = Application.IdeMoniker
+				}
 			};
 
 			var bootstrapResponseJson = bootstrapResponse.ToJToken();
