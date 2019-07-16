@@ -180,6 +180,9 @@ export function initializeColorPalette() {
 		color = computedStyle.getPropertyValue("--vscode-editorLineNumber-foreground").trim();
 		bodyStyle.setProperty("--line-numbers-foreground-color", color);
 
+		color = computedStyle.getPropertyValue("--vscode-button-foreground").trim();
+		bodyStyle.setProperty("--button-foreground-color", color);
+
 		color = computedStyle.getPropertyValue("--vscode-button-background").trim();
 		bodyStyle.setProperty("--button-background-color", color);
 
