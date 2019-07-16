@@ -32,9 +32,15 @@ export enum SessionStatus {
 	SignedIn,
 }
 
+export enum SignoutReason {
+	Extension,
+	User,
+}
+
 export interface SessionStatusChange {
 	current: SessionStatus;
 	previous: SessionStatus;
+	signoutReason?: SignoutReason;
 }
 
 type LoginMethods =
@@ -119,8 +125,8 @@ export class WorkspaceSession {
 		if (this._agent.initialized) return;
 
 		this._agent.onDidCrash(() => this.signOut());
-		this._agent.onDidStartLogin(() => (this.sessionStatus = SessionStatus.SigningIn));
-		this._agent.onDidFailLogin(() => (this.sessionStatus = SessionStatus.SignedOut));
+		this._agent.onDidStartLogin(() => this.setStatus(SessionStatus.SigningIn));
+		this._agent.onDidFailLogin(() => this.setStatus(SessionStatus.SignedOut));
 		this._agent.onDidLogin(event => this.completeLogin(event.data));
 
 		await this.agent.start();
@@ -151,11 +157,11 @@ export class WorkspaceSession {
 		return this.emitter.on(SESSION_STATUS_CHANGED, callback);
 	}
 
-	private set sessionStatus(status: SessionStatus) {
+	private setStatus(status: SessionStatus, signoutReason?: SignoutReason) {
 		if (this._sessionStatus !== status) {
 			const previous = this._sessionStatus;
 			this._sessionStatus = status;
-			this.emitter.emit(SESSION_STATUS_CHANGED, { current: status, previous });
+			this.emitter.emit(SESSION_STATUS_CHANGED, { current: status, previous, signoutReason });
 		}
 	}
 
@@ -212,7 +218,7 @@ export class WorkspaceSession {
 
 	@initializesAgent
 	async login<RT extends LoginMethods>(requestType: RT, request: RequestOf<RT>) {
-		this.sessionStatus = SessionStatus.SigningIn;
+		this.setStatus(SessionStatus.SigningIn);
 		try {
 			const response: LoginSuccessResponse | LoginFailResponse = await this._agent.request(
 				requestType,
@@ -223,15 +229,15 @@ export class WorkspaceSession {
 			);
 
 			if (isLoginFailResponse(response)) {
-				this.sessionStatus = SessionStatus.SignedOut;
+				this.setStatus(SessionStatus.SignedOut);
 				return response.error;
 			}
 
 			await this.completeLogin(response);
-			this.sessionStatus = SessionStatus.SignedIn;
+			this.setStatus(SessionStatus.SignedIn);
 			return LoginResult.Success;
 		} catch (error) {
-			this.sessionStatus = SessionStatus.SignedOut;
+			this.setStatus(SessionStatus.SignedOut);
 			if (typeof error === "string") {
 				atom.notifications.addError("Error logging in: ", { detail: error });
 				return error as LoginResult;
@@ -250,24 +256,24 @@ export class WorkspaceSession {
 		};
 		this.lastUsedEmail = agentResult.loginResponse.user.email;
 		this.agentCapabilities = agentResult.state.capabilities;
-		this.sessionStatus = SessionStatus.SignedIn;
+		this.setStatus(SessionStatus.SignedIn);
 	}
 
-	signOut() {
+	signOut(reason = SignoutReason.Extension) {
 		if (this.session) {
 			this.session = undefined;
-			this.sessionStatus = SessionStatus.SignedOut;
+			this.setStatus(SessionStatus.SignedOut, reason);
 		}
 		this._agent.dispose();
 	}
 
-	async restart() {
-		this.signOut();
+	async restart(reason?: SignoutReason) {
+		this.signOut(reason);
 		await this.initializeAgent();
 	}
 
-	changeEnvironment(env: EnvironmentConfig) {
+	async changeEnvironment(env: EnvironmentConfig) {
 		this.envConfig = env;
-		this.signOut();
+		await this.restart();
 	}
 }

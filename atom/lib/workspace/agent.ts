@@ -61,6 +61,7 @@ abstract class AgentConnection {
 	private _initializedEvent = new Echo();
 	private _crashEmitter = new Echo();
 	private _initialized = false;
+	private stopped = false;
 
 	get initialized() {
 		return this._initialized;
@@ -200,7 +201,9 @@ abstract class AgentConnection {
 		});
 		agentProcess.on("exit", code => {
 			if (Number(code) !== 0) {
-				console.error(`CodeStream agent process exited with non-zero exit code ${code}`);
+				if (code === 12) {
+					atom.notifications.addError("Port 6012 for debugging is already in use");
+				} else console.error(`CodeStream agent process exited with non-zero exit code ${code}`);
 			}
 			this.stop();
 		});
@@ -209,10 +212,14 @@ abstract class AgentConnection {
 	}
 
 	protected async stop() {
+		if (this.stopped) return;
+
 		this._connection!.dispose();
 		this._connection = undefined;
 		this._agentProcess!.kill();
 		this._crashEmitter.dispose();
+
+		this.stopped = true;
 	}
 }
 

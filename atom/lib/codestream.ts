@@ -74,23 +74,26 @@ class CodestreamPackage {
 				hiddenInCommandPalette,
 			}),
 			atom.commands.add("atom-workspace", "codestream:point-to-qa", {
-				didDispatch: () => {
-					session.changeEnvironment(QA_CONFIG);
+				didDispatch: async () => {
+					await session.changeEnvironment(QA_CONFIG);
 					this.environmentChangeEmitter.push(QA_CONFIG);
+					Container.viewController.reload(CODESTREAM_VIEW_URI);
 				},
 				hiddenInCommandPalette,
 			}),
 			atom.commands.add("atom-workspace", "codestream:point-to-dev", {
-				didDispatch: () => {
-					session.changeEnvironment(PD_CONFIG);
+				didDispatch: async () => {
+					await session.changeEnvironment(PD_CONFIG);
 					this.environmentChangeEmitter.push(PD_CONFIG);
+					Container.viewController.reload(CODESTREAM_VIEW_URI);
 				},
 				hiddenInCommandPalette,
 			}),
 			atom.commands.add("atom-workspace", "codestream:point-to-production", {
-				didDispatch: () => {
-					session.changeEnvironment(PRODUCTION_CONFIG);
+				didDispatch: async () => {
+					await session.changeEnvironment(PRODUCTION_CONFIG);
 					this.environmentChangeEmitter.push(PRODUCTION_CONFIG);
+					Container.viewController.reload(CODESTREAM_VIEW_URI);
 				},
 				hiddenInCommandPalette,
 			})

@@ -21,6 +21,7 @@ import {
 	HostDidChangeEditorSelectionNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
 	HostDidChangeFocusNotificationType,
+	HostDidLogoutNotificationType,
 	isIpcRequestMessage,
 	LogoutRequestType,
 	LogoutResponse,
@@ -59,7 +60,7 @@ import { CodemarkType } from "../protocols/agent/api.protocol";
 import { asAbsolutePath, Debug, Editor } from "../utils";
 import { Container } from "../workspace/container";
 import { EditorObserver } from "../workspace/editor-observer";
-import { SessionStatus, WorkspaceSession } from "../workspace/workspace-session";
+import { SessionStatus, SignoutReason, WorkspaceSession } from "../workspace/workspace-session";
 import { isViewVisible } from "./controller";
 
 export class WebviewIpc {
@@ -247,6 +248,12 @@ export class CodestreamView {
 			this.session.onDidChangeSessionStatus(change => {
 				if (change.current === SessionStatus.SignedIn) {
 					this.observeWorkspace();
+				}
+				if (
+					change.current === SessionStatus.SignedOut &&
+					change.signoutReason === SignoutReason.Extension
+				) {
+					this.sendEvent(HostDidLogoutNotificationType, {});
 				}
 			}),
 			this.session.agent.onDidChangeDocumentMarkers(e =>
@@ -436,7 +443,7 @@ export class CodestreamView {
 				break;
 			}
 			case LogoutRequestType.method: {
-				await this.session.restart();
+				await this.session.restart(SignoutReason.User);
 				this.respond<LogoutResponse>({ id: message.id, params: {} });
 				break;
 			}
