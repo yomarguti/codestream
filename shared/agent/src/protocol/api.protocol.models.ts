@@ -39,13 +39,25 @@ export interface CSCodemark extends CSEntity {
 	fileStreamIds: string[];
 	providerType?: ProviderType;
 	type: CodemarkType;
+
+	// color is no longer used; now we use tags
 	color: "blue" | "green" | "yellow" | "orange" | "red" | "purple" | "aqua" | "gray" | string;
+	tags?: { id: string; color: string; label?: string }[];
+
+	// IDs of codemarks that are somehow related to this one.
+	// this should be symmetrical, implying that the related codemark
+	// also has this codemark's ID in its relatedCodemarkIds array
+	relatedCodemarkIds?: string[];
+
 	status: CodemarkStatus;
 	title: string;
 	assignees: string[];
 	text: string;
 	numReplies: number;
+
+	// whether this codemark should appear in spatial view. defaults to true (archived if false)
 	pinned: boolean;
+	// which replies should be promoted to the top-level spatial view (represted in the UI as "starred")
 	pinnedReplies?: string[];
 
 	externalAssignees?: { displayName: string; email?: string }[];
@@ -241,6 +253,14 @@ export interface CSTeam extends CSEntity {
 	plan?: string;
 	trialStartDate?: number;
 	trialEndDate?: number;
+	// array of tags for a given team. note that there is
+	// a default set that can be modified for the entire team
+	tags?: {
+		id: string;
+		color: string;
+		label?: string;
+		deactivated?: boolean;
+	}[];
 }
 
 export interface CSAsanaProviderInfo {
