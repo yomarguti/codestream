@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.3.3] - 2019-7-17
+
+### Fixed
+
+- Fixes an issue where clicking on a codemrk from the Search tab or a stream would not open the corresponding source file
+
 ## [1.3.2] - 2019-7-16
 
 ### Changed
