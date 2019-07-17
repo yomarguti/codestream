@@ -122,6 +122,7 @@ namespace CodeStream.VisualStudio.Services {
 		/// <param name="forceOpen"></param>
 		/// <returns></returns>
 		public async System.Threading.Tasks.Task<IWpfTextView> OpenEditorAtLineAsync(Uri fileUri, Range range, bool forceOpen = false) {
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 			using (Log.CriticalOperation($"{nameof(OpenEditorAtLineAsync)} {fileUri} range={range?.Start?.Line}, {range?.End?.Line}")) {
 				try {
 					var wpfTextView = await AssertWpfTextViewAsync(fileUri, forceOpen);
@@ -223,6 +224,8 @@ namespace CodeStream.VisualStudio.Services {
 			if (lines == null) return null;
 
 			var span = new SnapshotSpan(wpfTextView.TextSnapshot, Span.FromBounds(lines.Item1.Start, lines.Item2.End));
+			if (wpfTextView.InLayout) return null;
+
 			wpfTextView.ViewScroller.EnsureSpanVisible(span, EnsureSpanVisibleOptions.AlwaysCenter);
 			return span;
 		}

@@ -57,6 +57,12 @@ namespace CodeStream.VisualStudio.Models {
 		public Position Start { get; }
 		public Position End { get; }
 		public Position Cursor { get; }
+
+		public Range ToRange() => new Range() { Start = Start, End = End };
+	}
+
+	public static class EditorSelectionExtensions {
+		public static Range ToRange(this EditorSelection selection) => selection != null ? selection.ToRange() : null;
 	}
 
 	public class CsEntity {
@@ -427,10 +433,10 @@ namespace CodeStream.VisualStudio.Models {
 		public Ide Ide { get; set; }
 		public string TraceLevel { get; set; }
 		public bool IsDebugging { get; set; }
-	} 
+	}
 
 	public class LoginRequest : LoginRequestBase<string> { }
- 
+
 	public class TokenLoginRequest {
 		public JToken Token { get; set; }
 		public string TeamId { get; set; }

@@ -4,6 +4,7 @@ using CodeStream.VisualStudio.Events;
 using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
@@ -89,7 +90,7 @@ namespace CodeStream.VisualStudio {
 									case WebviewDidInitializeNotificationType.MethodName: {
 											// webview is ready!
 											_sessionService.WebViewDidInitialize = true;
-											Log.Debug(nameof(_sessionService.WebViewDidInitialize));											
+											Log.Debug(nameof(_sessionService.WebViewDidInitialize));
 											break;
 										}
 									case WebviewDidChangeContextNotificationType.MethodName: {
@@ -120,7 +121,6 @@ namespace CodeStream.VisualStudio {
 													var filePath = fileUri.ToLocalPath();
 
 													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-
 													var wpfTextView = await _ideService.OpenEditorAtLineAsync(fileUri, documentFromMarker.Range, true);
 													if (wpfTextView != null) {
 														var document = wpfTextView.GetDocument();
@@ -218,16 +218,24 @@ namespace CodeStream.VisualStudio {
 									case EditorSelectRangeRequestType.MethodName: {
 											using (var scope = _browserService.CreateScope(message)) {
 												bool result = false;
-												var @params = message.Params.ToObject<EditorSelectRangeRequest>();
-												if (@params != null) {
-													var activeTextView = _editorService.GetActiveTextEditor(@params.Uri.ToUri());
-													if (activeTextView != null) {
+												try {
+													var @params = message.Params.ToObject<EditorSelectRangeRequest>();
+													if (@params != null) {														
+														var uri = @params.Uri.ToUri();
 														await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-														result = activeTextView.SelectRange(@params.Selection, @params.PreserveFocus == false);
-														if (!result) {
-															Log.Verbose($"{nameof(EditorSelectRangeRequestType)} result is false");
+														var editorResponse = await _ideService.OpenEditorAtLineAsync(uri, @params.Selection.ToRange(), true);
+														if (editorResponse != null) {
+															var selectedRangeResponse = new ActiveTextEditor(editorResponse, uri.ToLocalPath(), uri, editorResponse.TextSnapshot?.LineCount)
+																.SelectRange(@params.Selection, @params.PreserveFocus == false);
+															if (!selectedRangeResponse) {
+																Log.Warning($"SelectedRange result is false");
+															}
+															result = true;
 														}
 													}
+												}
+												catch(Exception ex) {
+													Log.Warning(ex, nameof(EditorSelectRangeRequestType.MethodName));
 												}
 												scope.FulfillRequest(new EditorSelectRangeResponse { Success = result }.ToJToken());
 												break;

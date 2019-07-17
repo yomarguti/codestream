@@ -78,6 +78,7 @@ namespace CodeStream.VisualStudio.Models {
 		/// <param name="focus">if True, focus the editor</param>
 		/// <returns></returns>
 		public bool SelectRange(EditorSelection selection, bool? focus) {
+			ThreadHelper.ThrowIfNotOnUIThread();
 			try {
 				if (WpfTextView == null || selection == null) return false;
 				var range = new Range() { Start = selection.Start, End = selection.End };

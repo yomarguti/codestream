@@ -14,6 +14,9 @@ namespace CodeStream.VisualStudio.Services {
 		void SetUser(User user, JToken state);
 		void SetAgentDisconnected();
 		List<string> PanelStack { get; set; }
+		/// <summary>
+		/// Also known as Spatial view
+		/// </summary>
 		bool IsCodemarksForFileVisible { get; set; }
 		bool IsWebViewVisible { get; set; }
 		bool AreMarkerGlyphsVisible { get; set; }
@@ -41,6 +44,9 @@ namespace CodeStream.VisualStudio.Services {
         public List<string> PanelStack { get; set; }
 		public bool IsWebViewVisible { get; set; }
 		public bool AreMarkerGlyphsVisible { get; set; } = true;
+		/// <summary>
+		/// Also known as Spatial view
+		/// </summary>
 		public bool IsCodemarksForFileVisible { get; set; }
 		public string LastActiveFileUrl { get; set; }
 		public bool? WebViewDidInitialize { get; set; }
