@@ -220,6 +220,7 @@ class ComposeBox extends React.Component {
 					{multiCompose ? (
 						<CodemarkForm
 							onClickClose={this.handleClickDismissMultiCompose}
+							isEditing={this.props.isEditing}
 							streamId={this.props.streamId}
 							onSubmit={this.submitCodemarkPost}
 							collapsed={false}
