@@ -53,7 +53,6 @@ export class VersionMiddleware implements CodeStreamApiMiddleware {
 
 	async onResponse<R>(context: Readonly<CodeStreamApiMiddlewareContext>, responseJson: Promise<R>) {
 		if (context.response === undefined) return;
-		if (context.response.ok && !context.url.endsWith("/presence")) return;
 
 		const compatibility = context.response.headers.get(
 			"X-CS-Version-Disposition"
@@ -62,15 +61,22 @@ export class VersionMiddleware implements CodeStreamApiMiddleware {
 		if (
 			compatibility == null ||
 			compatibility === VersionCompatibility.Compatible ||
-			compatibility === VersionCompatibility.Unknown ||
-			(!context.response.ok && compatibility !== VersionCompatibility.UnsupportedUpgradeRequired)
+			compatibility === VersionCompatibility.Unknown
 		) {
 			return;
 		}
 
-		const url =
-			context.response.headers.get("X-CS-Latest-Asset-Url") || "https://www.codestream.com/";
-		const version = context.response.headers.get("X-CS-Current-Version");
-		void this._manager.notify(compatibility, url, version == null ? undefined : version);
+		if (
+			(!context.response.ok && compatibility === VersionCompatibility.UnsupportedUpgradeRequired) ||
+			(context.response.ok &&
+				compatibility === VersionCompatibility.CompatibleUpgradeRecommended &&
+				(!context.url.endsWith("/login") && context.url.indexOf("no-auth") === -1))
+		) {
+			// url checks are for trying not to fire this during the auth process
+			const url =
+				context.response.headers.get("X-CS-Latest-Asset-Url") || "https://www.codestream.com/";
+			const version = context.response.headers.get("X-CS-Current-Version");
+			void this._manager.notify(compatibility, url, version == null ? undefined : version);
+		}
 	}
 }
