@@ -46,6 +46,7 @@ class WebViewService(val project: Project) : Disposable {
     }
 
     fun load() {
+        logger.info("Loading WebView")
         browser.navigation().loadUrl(htmlFile.url)
     }
 
@@ -106,8 +107,16 @@ class WebViewService(val project: Project) : Disposable {
 
     override fun dispose() {
         logger.info("Disposing JxBrowser")
-        browser.close()
-        browser.engine().close()
+        try {
+            browser.close()
+        } catch (ex: Exception) {
+            logger.warn(ex)
+        }
+        try {
+            browser.engine().close()
+        } catch (ex: Exception) {
+            logger.warn(ex)
+        }
     }
 
     private fun createBrowser(router: WebViewRouter): Browser {
