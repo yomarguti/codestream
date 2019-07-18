@@ -95,7 +95,12 @@ class AgentService(private val project: Project) : Disposable {
             launcher.startListening()
 
             this.initializeResult = agent.initialize(getInitializeParams()).await()
-            if (autoSignIn) { project.authenticationService?.autoSignIn() }
+            if (autoSignIn) {
+                project.authenticationService?.let {
+                    val success = it.autoSignIn()
+                    if (!success) restart()
+                }
+            }
             initialization.complete(Unit)
         } catch (e: Exception) {
             logger.error(e)

@@ -38,14 +38,11 @@ class AuthenticationService(val project: Project) {
         )
     }
 
-    suspend fun autoSignIn() {
-        val settings = project.settingsService ?: return
-
-        if (!settings.state.autoSignIn) return
-
-        val tokenStr = PasswordSafe.instance.getPassword(settings.credentialAttributes) ?: return
-
-        val agent = project.agentService?.agent ?: return
+    suspend fun autoSignIn(): Boolean {
+        val settings = project.settingsService ?: return true
+        if (!settings.state.autoSignIn) return true
+        val tokenStr = PasswordSafe.instance.getPassword(settings.credentialAttributes) ?: return true
+        val agent = project.agentService?.agent ?: return true
 
         try {
             val token = gson.fromJson<JsonObject>(tokenStr)
@@ -58,13 +55,18 @@ class AuthenticationService(val project: Project) {
                     )
                 ).await()
 
-            if (loginResult.error != null) {
+            return if (loginResult.error != null) {
                 logger.warn(loginResult.error)
+                settings.state.teamId = null
+                saveAccessToken(null)
+                false
             } else {
                 completeLogin(loginResult)
+                true
             }
         } catch (err: Exception) {
             logger.warn(err)
+            return false
         }
     }
 
