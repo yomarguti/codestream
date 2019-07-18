@@ -67,7 +67,7 @@ class WebViewService(val project: Project) : Disposable {
 
     private fun extractHtml() {
         val theme = WebViewTheme.build()
-        var htmlContent = javaClass.getResource("/webview/webview.html")
+        val htmlContent = javaClass.getResource("/webview/webview.html")
             .readText()
             .replace("{bodyClass}", theme.name)
             .replace("<style id=\"theme\"></style>", "<style id=\"theme\">${theme.stylesheet}</style>")
@@ -129,10 +129,10 @@ class WebViewService(val project: Project) : Disposable {
             // .disableGpu()
             // .disableWebSecurity()
             .allowFileAccessFromFiles()
-            // .addSwitch("--disable-gpu-compositing")
-            // .addSwitch("--enable-begin-frame-scheduling")
-            // .addSwitch("--software-rendering-fps=60")
-            //     if (JreHiDpiUtil.isJreHiDPIEnabled() && !SystemInfo.isMac) "--force-device-scale-factor=1" else ""
+        // .addSwitch("--disable-gpu-compositing")
+        // .addSwitch("--enable-begin-frame-scheduling")
+        // .addSwitch("--software-rendering-fps=60")
+        //     if (JreHiDpiUtil.isJreHiDPIEnabled() && !SystemInfo.isMac) "--force-device-scale-factor=1" else ""
 
         if (DEBUG) {
             optionsBuilder.remoteDebuggingPort(9222)
@@ -142,7 +142,8 @@ class WebViewService(val project: Project) : Disposable {
         val engine = Engine.newInstance(options)
         engine.network()
         engine.spellChecker().disable()
-        engine.plugins().set(AllowPluginCallback::class.java, AllowPluginCallback { AllowPluginCallback.Response.deny() })
+        engine.plugins()
+            .set(AllowPluginCallback::class.java, AllowPluginCallback { AllowPluginCallback.Response.deny() })
         engine.network().set(LoadResourceCallback::class.java, LoadResourceCallback {
             if (it.resourceType() == ResourceType.IMAGE || it.url().startsWith("file://")) {
                 LoadResourceCallback.Response.load()
