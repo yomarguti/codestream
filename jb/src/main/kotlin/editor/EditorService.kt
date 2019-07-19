@@ -16,6 +16,7 @@ import com.codestream.extensions.visibleRanges
 import com.codestream.protocols.webview.EditorNotifications
 import com.codestream.sessionService
 import com.codestream.settingsService
+import com.codestream.system.sanitizeURI
 import com.codestream.webViewService
 import com.intellij.diff.DiffContentFactory
 import com.intellij.diff.DiffManager
@@ -488,8 +489,8 @@ class EditorService(val project: Project) {
     var isScrollingFromWebView = false
 
     fun scroll(uri: String, position: Position, atTop: Boolean) = ApplicationManager.getApplication().invokeLater {
-        var editor = FileEditorManager.getInstance(project).selectedTextEditor
-        if (editor?.document?.uri != uri) {
+        var editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@invokeLater
+        if (editor.document.uri != sanitizeURI(uri)) {
             return@invokeLater
         }
 
