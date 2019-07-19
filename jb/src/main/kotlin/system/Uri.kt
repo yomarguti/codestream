@@ -13,6 +13,7 @@ private val os: OS by lazy {
 
 const val SPACE_ENCODED: String = "%20"
 const val COLON_ENCODED: String = "%3A"
+const val HASH_ENCODED: String = "%23"
 const val URI_FILE_BEGIN = "file:"
 const val URI_PATH_SEP: Char = '/'
 const val URI_VALID_FILE_BEGIN: String = "file:///"
