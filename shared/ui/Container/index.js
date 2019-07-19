@@ -24,10 +24,6 @@ const mapStateToProps = state => ({
 	ide: state.ide && state.ide.name ? state.ide.name : undefined
 });
 
-const onClick = props => {
-	props.dispatch(upgradeRecommendedDismissed());
-};
-
 const getIdeInstallationInstructions = props => {
 	let specifics;
 	if (props.ide) {
@@ -69,7 +65,13 @@ const getIdeInstallationInstructions = props => {
 const Root = connect(mapStateToProps)(props => {
 	if (props.versioning && props.versioning.type === VersioningActionsType.UpgradeRecommended)
 		return (
-			<Dismissable title="Update Suggested" onClick={() => onClick(props)}>
+			<Dismissable
+				title="Update Suggested"
+				onClick={e => {
+					e.preventDefault();
+					props.dispatch(upgradeRecommendedDismissed());
+				}}
+			>
 				<p>
 					Your version of CodeStream is getting a little long in the tooth! We suggest that you
 					update to the latest version.
