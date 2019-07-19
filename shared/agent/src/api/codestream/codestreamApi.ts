@@ -1375,6 +1375,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 	): Promise<R> {
 		const start = process.hrtime();
 
+		const sanitizedUrl = CodeStreamApiProvider.sanitizeUrl(url);
+
 		let traceResult;
 		try {
 			if (init !== undefined || token !== undefined) {
@@ -1430,7 +1432,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 					try {
 						await mw.onRequest(context);
 					} catch (ex) {
-						Logger.error(ex, `API: ${method} ${url}: Middleware(${mw.name}).onRequest FAILED`);
+						Logger.error(
+							ex,
+							`API: ${method} ${sanitizedUrl}: Middleware(${mw.name}).onRequest FAILED`
+						);
 					}
 				}
 			}
@@ -1446,7 +1451,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 					} catch (ex) {
 						Logger.error(
 							ex,
-							`API: ${method} ${url}: Middleware(${mw.name}).onProvideResponse FAILED`
+							`API: ${method} ${sanitizedUrl}: Middleware(${mw.name}).onProvideResponse FAILED`
 						);
 					}
 				}
@@ -1464,7 +1469,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 				id = resp.headers.get("x-request-id");
 
 				if (resp.ok) {
-					traceResult = `API(${id}): Completed ${method} ${url}`;
+					traceResult = `API(${id}): Completed ${method} ${sanitizedUrl}`;
 					json = resp.json() as Promise<R>;
 				}
 			}
@@ -1478,14 +1483,14 @@ export class CodeStreamApiProvider implements ApiProvider {
 					} catch (ex) {
 						Logger.error(
 							ex,
-							`API(${id}): ${method} ${url}: Middleware(${mw.name}).onResponse FAILED`
+							`API(${id}): ${method} ${sanitizedUrl}: Middleware(${mw.name}).onResponse FAILED`
 						);
 					}
 				}
 			}
 
 			if (resp !== undefined && !resp.ok) {
-				traceResult = `API(${id}): FAILED(${retryCount}x) ${method} ${url}`;
+				traceResult = `API(${id}): FAILED(${retryCount}x) ${method} ${sanitizedUrl}`;
 				throw await this.handleErrorResponse(resp);
 			}
 
@@ -1497,13 +1502,13 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 				const fs = require("fs");
 				const sanitize = require("sanitize-filename");
-				const sanitizedURL = sanitize(
-					url
+				const urlForFilename = sanitize(
+					sanitizedUrl
 						.split("?")[0]
 						.replace(/\//g, "_")
 						.replace("_", "")
 				);
-				const filename = `/tmp/dump-${now}-csapi-${method}-${sanitizedURL}.json`;
+				const filename = `/tmp/dump-${now}-csapi-${method}-${urlForFilename}.json`;
 
 				const out = {
 					url: url,
@@ -1628,9 +1633,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 	) {
 		if (body === undefined || typeof body !== "string") return "";
 
-		return body
-			.replace(/("password":)".*?"/gi, '$1"<hidden>"')
-			.replace(/("secret":)".*?"/gi, '$1"<hidden>"')
-			.replace(/("token":)".*?"/gi, '$1"<hidden>"');
+		return body.replace(
+			/("\w*?apikey\w*?":|"\w*?password\w*?":|"\w*?secret\w*?":|"\w*?token\w*?":)".*?"/gi,
+			'$1"<hidden>"'
+		);
+	}
+
+	static sanitizeUrl(url: string) {
+		return url.replace(
+			/(\b\w*?apikey\w*?=|\b\w*?password\w*?=|\b\w*?secret\w*?=|\b\w*?token\w*?=)(?:.+?)(?=&|$)/gi,
+			"$1<hidden>"
+		);
 	}
 }
