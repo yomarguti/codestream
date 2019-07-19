@@ -248,7 +248,11 @@ export class Logger {
 		this.output.show();
 	}
 
-	static toLoggable(p: any, sanitize?: ((key: string, value: any) => any) | undefined) {
+	static sanitize(key: string, value: any) {
+		return /(password|secret|token)/i.test(key) ? `<${key}>` : value;
+	}
+
+	static toLoggable(p: any, sanitize: (key: string, value: any) => any = this.sanitize) {
 		if (typeof p !== "object") return String(p);
 		if (this.customLoggableFn !== undefined) {
 			const loggable = this.customLoggableFn(p);

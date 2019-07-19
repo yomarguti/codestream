@@ -45,31 +45,63 @@ export function logName<T>(fn: (c: T, name: string) => string) {
 	};
 }
 
-export function debug<T>(
+// Can't use the following because keyof T won't allow protected or private members... grr
+// export function debug<T extends { [P in K]: (...args: any[]) => any }, K extends keyof T>(
+// 	options: {
+// 		args?: false | { [arg: string]: (arg: any) => string | false };
+// 		condition?(...args: Parameters<T[K]>): boolean;
+// 		correlate?: boolean;
+// 		enter?(...args: Parameters<T[K]>): string;
+// 		exit?(result: PromiseType<ReturnType<T[K]>>): string;
+// 		prefix?(context: LogContext<T>, ...args: Parameters<T[K]>): string;
+// 		sanitize?(key: string, value: any): any;
+// 		singleLine?: boolean;
+// 		timed?: boolean;
+// 	} = { timed: true }
+// ) {
+export function debug<T, F extends (this: T, ...args: any[]) => any>(
 	options: {
-		args?: false | { [arg: string]: (arg: any) => string | false };
-		condition?(...args: any[]): boolean;
+		args?: false | { [arg: number]: (arg: any) => string | false };
+		condition?(...args: Parameters<F>): boolean;
 		correlate?: boolean;
-		enter?(...args: any[]): string;
-		exit?(result: any): string;
-		prefix?(context: LogContext<T>, ...args: any[]): string;
+		enter?(...args: Parameters<F>): string;
+		exit?(result: PromiseType<ReturnType<F>>): string;
+		prefix?(context: LogContext<T>, ...args: Parameters<F>): string;
 		sanitize?(key: string, value: any): any;
 		singleLine?: boolean;
 		timed?: boolean;
 	} = { timed: true }
 ) {
-	return log<T>({ debug: true, ...options });
+	return log<T, F>({ debug: true, ...options });
 }
 
-export function log<T>(
+type PromiseType<T> = T extends Promise<infer U> ? U : T;
+
+// Can't use the following because keyof T won't allow protected or private members... grr
+// export function log<T extends { [P in K]: (...args: any[]) => any }, K extends keyof T>(
+// 	options: {
+// 		args?: false | { [arg: number]: (arg: any) => string | false };
+// 		condition?(...args: Parameters<T[K]>): boolean;
+// 		correlate?: boolean;
+// 		debug?: boolean;
+// 		enter?(...args: Parameters<T[K]>): string;
+// 		exit?(result: PromiseType<ReturnType<T[K]>>): string;
+// 		prefix?(context: LogContext<T>, ...args: Parameters<T[K]>): string;
+// 		sanitize?(key: string, value: any): any;
+// 		singleLine?: boolean;
+// 		timed?: boolean;
+// 	} = { timed: true }
+// ) {
+
+export function log<T, F extends (this: T, ...args: any[]) => any>(
 	options: {
 		args?: false | { [arg: number]: (arg: any) => string | false };
-		condition?(...args: any[]): boolean;
+		condition?(...args: Parameters<F>): boolean;
 		correlate?: boolean;
 		debug?: boolean;
-		enter?(...args: any[]): string;
-		exit?(result: any): string;
-		prefix?(context: LogContext<T>, ...args: any[]): string;
+		enter?(...args: Parameters<F>): string;
+		exit?(result: PromiseType<ReturnType<F>>): string;
+		prefix?(context: LogContext<T>, ...args: Parameters<F>): string;
 		sanitize?(key: string, value: any): any;
 		singleLine?: boolean;
 		timed?: boolean;
@@ -102,7 +134,7 @@ export function log<T>(
 			if (
 				(Logger.level !== TraceLevel.Debug &&
 					!(Logger.level === TraceLevel.Verbose && !options.debug)) ||
-				(typeof options.condition === "function" && !options.condition(...args))
+				(typeof options.condition === "function" && !options.condition(...(args as Parameters<F>)))
 			) {
 				return fn!.apply(this, args);
 			}
@@ -135,7 +167,7 @@ export function log<T>(
 						name: key,
 						prefix: prefix
 					} as LogContext<T>,
-					...args
+					...(args as Parameters<F>)
 				);
 			}
 
@@ -145,7 +177,7 @@ export function log<T>(
 				setCorrelationContext(correlationId, correlationContext);
 			}
 
-			const enter = options.enter != null ? options.enter(...args) : "";
+			const enter = options.enter != null ? options.enter(...(args as Parameters<F>)) : "";
 
 			let loggableParams: string;
 			if (options.args === false || args.length === 0) {
