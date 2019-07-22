@@ -32,7 +32,7 @@ class AuthenticationService(val project: Project) {
             UserSession(session.userLoggedIn?.userId),
             gson.fromJson(agentCapabilities),
             settings.webViewConfigs,
-            settings.webViewContext,
+            settings.getWebViewContextJson(),
             settings.extensionInfo.versionFormatted,
             Ide(settings.ideInfo.name)
         )
@@ -75,7 +75,6 @@ class AuthenticationService(val project: Project) {
             result.state?.let {
                 agentCapabilities = it.capabilities
                 project.settingsService?.state?.teamId = it.teamId
-                project.settingsService?.setWebViewContextJson(gson.toJsonTree(mapOf("currentTeamId" to it.teamId)))
                 saveAccessToken(it.token)
             }
             project.sessionService?.login(result.userLoggedIn)

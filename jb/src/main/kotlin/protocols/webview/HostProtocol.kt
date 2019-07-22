@@ -1,5 +1,6 @@
 package protocols.webview
 
+import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
@@ -9,7 +10,7 @@ class BootstrapResponse(
     val session: UserSession,
     val capabilities: Capabilities,
     val configs: Configs,
-    val context: WebViewContext? = WebViewContext(),
+    val context: JsonElement,
     val version: String,
     val ide: Ide
 )
