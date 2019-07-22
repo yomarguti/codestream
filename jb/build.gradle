@@ -26,7 +26,7 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.2.1"
 
     implementation "com.teamdev.jxbrowser:jxbrowser-cross-platform:${jxBrowserVersion}"
-    implementation "com.teamdev.jxbrowser:jxbrowser-swing:${jxBrowserVersion}"
+    implementation files("$rootDir/jxbrowser-swing-${jxBrowserVersion}.jar")
 
     implementation group: "org.eclipse.lsp4j", name: "org.eclipse.lsp4j", version: "0.6.0"
     implementation "com.github.salomonbrys.kotson:kotson:2.5.0"
@@ -51,6 +51,7 @@ intellij {
 }
 
 runIde {
+//    jbrVersion "8u202b1483.58"
 //    jbrVersion "11_0_2b159"
 //    jvmArgs '-Dsun.java2d.uiScale.enabled=false'
 }
