@@ -62,7 +62,7 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
     fun didChangeVersionCompatibility(json: JsonElement) {
         ApplicationManager.getApplication().invokeLater {
             project.codeStream?.show {
-                project.webViewService?.postNotification("codestream/didChangeVersionCompatibility", json)
+                project.webViewService?.postNotification("codestream/didChangeVersionCompatibility", json, true)
             }
         }
     }

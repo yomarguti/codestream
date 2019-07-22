@@ -91,12 +91,12 @@ class WebViewService(val project: Project) : Disposable {
         postMessage(message)
     }
 
-    fun postNotification(method: String, params: Any?) {
+    fun postNotification(method: String, params: Any?, force: Boolean? = false) {
         val message = jsonObject(
             "method" to method,
             "params" to gson.toJsonTree(params)
         )
-        postMessage(message)
+        postMessage(message, force)
     }
 
     private fun postMessage(message: JsonElement, force: Boolean? = false) {
