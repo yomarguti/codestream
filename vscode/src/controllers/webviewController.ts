@@ -49,6 +49,7 @@ import {
 	WebviewPanels
 } from "@codestream/protocols/webview";
 import * as fs from "fs";
+import { gate } from "system/decorators/gate";
 import {
 	ConfigurationChangeEvent,
 	ConfigurationTarget,
@@ -251,15 +252,15 @@ export class WebviewController implements Disposable {
 		return this._webview.reload();
 	}
 
-	@log({
-		args: false
-	})
-	async show(streamThread?: StreamThread) {
+	@gate()
+	@log()
+	private async ensureWebView() {
 		if (this._webview === undefined) {
 			// // Kick off the bootstrap compute to be ready for later
 			// this._bootstrapPromise = this.getBootstrap();
 
 			this._webview = new CodeStreamWebviewPanel(this.session, await this.getHtml());
+
 			const webview = this._webview;
 
 			this._disposableWebview = Disposable.from(
@@ -299,15 +300,27 @@ export class WebviewController implements Disposable {
 
 			Container.agent.telemetry.track("Webview Opened");
 		}
+	}
+
+	@log({
+		args: false
+	})
+	async show(streamThread?: StreamThread) {
+		await this.ensureWebView();
 
 		this.updateState();
-		await this._webview.show(streamThread);
+		await this._webview!.show(streamThread);
 
 		return this.activeStreamThread as StreamThread | undefined;
 	}
 
+	@log({
+		args: false
+	})
 	async onVersionChanged(e: DidChangeVersionCompatibilityNotification) {
-		this._versionCompatibility = e.compatibility;
+		if (e.compatibility === VersionCompatibility.UnsupportedUpgradeRequired) {
+			this._versionCompatibility = e.compatibility;
+		}
 		if (!this.visible) {
 			await this.show();
 		}
@@ -479,13 +492,34 @@ export class WebviewController implements Disposable {
 		}
 	}
 
+	@gate()
+	private ensureSignedInOrOut() {
+		if (
+			this.session.status === SessionStatus.SignedIn ||
+			this.session.status === SessionStatus.SignedOut
+		) {
+			return Promise.resolve(this.session.status);
+		}
+
+		return new Promise(resolve => {
+			let disposable: Disposable;
+			disposable = this.session.onDidChangeSessionStatus(e => {
+				const status = e.getStatus();
+				if (status === SessionStatus.SignedIn || status === SessionStatus.SignedOut) {
+					resolve(status);
+					disposable.dispose();
+				}
+			});
+		});
+	}
+
 	private async onWebviewRequest(webview: CodeStreamWebviewPanel, e: WebviewIpcRequestMessage) {
 		switch (e.method) {
 			case BootstrapInHostRequestType.method: {
 				Logger.log(`WebviewPanel: Bootstrapping webview...`, `SignedIn=${this.session.signedIn}`);
-				webview.onIpcRequest(BootstrapInHostRequestType, e, async (type, params) =>
-					this.getBootstrap()
-				);
+				webview.onIpcRequest(BootstrapInHostRequestType, e, async (type, params) => {
+					return await this.getBootstrap();
+				});
 				break;
 			}
 			case LogoutRequestType.method: {
@@ -632,7 +666,9 @@ export class WebviewController implements Disposable {
 		}
 	}
 
-	private getBootstrap() {
+	private async getBootstrap() {
+		await this.ensureSignedInOrOut();
+
 		const userId = this.session.signedIn ? this.session.userId : undefined;
 		const currentTeamId = this.session.signedIn ? this.session.team.id : undefined;
 		return {

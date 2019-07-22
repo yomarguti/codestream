@@ -9,6 +9,7 @@ import {
 	WebviewIpcRequestMessage,
 	WebviewIpcResponseMessage
 } from "@codestream/protocols/webview";
+import { gate } from "system/decorators/gate";
 import {
 	Disposable,
 	Event,
@@ -220,11 +221,14 @@ export class CodeStreamWebviewPanel implements Disposable {
 		args: false
 	})
 	async show(streamThread?: StreamThread) {
+		const cc = Logger.getCorrelationContext();
 		if (!this._ipcReady || !this.visible || streamThread === undefined) {
 			this._panel.reveal(this._panel.viewColumn, false);
 
 			if (!this._ipcReady) {
+				Logger.log(cc, "waiting for WebView ready");
 				const cancelled = await this.waitForWebviewIpcReadyNotification();
+				Logger.log(cc, `waiting for WebView complete. cancelled=${cancelled}`);
 				if (cancelled) return;
 			}
 		}
@@ -383,6 +387,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 		);
 	}
 
+	@gate()
 	private waitForWebviewIpcReadyNotification() {
 		// Wait until the webview is ready
 		return new Promise((resolve, reject) => {

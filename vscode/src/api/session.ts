@@ -162,25 +162,25 @@ export class CodeStreamSession implements Disposable {
 		this.setServerUrl(_serverUrl);
 		const config = Container.config;
 
-		Container.agent.onDidStartLogin(() => this.setStatus(SessionStatus.SigningIn));
-		Container.agent.onDidFailLogin(() => this.setStatus(SessionStatus.SignedOut));
-		Container.agent.onDidLogin(params => {
-			this.completeLogin(params.data);
-		});
+		this._disposable = Disposable.from(
+			Container.agent.onDidStartLogin(() => this.setStatus(SessionStatus.SigningIn)),
+			Container.agent.onDidFailLogin(() => this.setStatus(SessionStatus.SignedOut)),
+			Container.agent.onDidLogin(params => {
+				this.completeLogin(params.data);
+			})
+		);
 
 		if (config.autoSignIn) {
 			this.setStatus(SessionStatus.SigningIn);
-			{
-				const disposable = Container.agent.onDidStart(async () => {
-					const token = await TokenManager.get(_serverUrl, config.email);
-					disposable.dispose();
-					if (token) {
-						this.login(config.email, token);
-					} else {
-						this.setStatus(SessionStatus.SignedOut);
-					}
-				});
-			}
+			const disposable = Container.agent.onDidStart(async () => {
+				const token = await TokenManager.get(_serverUrl, config.email);
+				disposable.dispose();
+				if (token) {
+					this.login(config.email, token);
+				} else {
+					this.setStatus(SessionStatus.SignedOut);
+				}
+			});
 		}
 	}
 
@@ -592,10 +592,16 @@ export class CodeStreamSession implements Disposable {
 
 		this._state = new SessionState(this, teamId, response.loginResponse);
 
-		this._disposable = Disposable.from(
+		const disposable = this._disposable;
+		const disposables = [
 			Container.agent.onDidChangeDocumentMarkers(this.onDocumentMarkersChanged, this),
 			Container.agent.onDidChangeData(this.onDataChanged, this)
-		);
+		];
+		if (disposable) {
+			this._disposable = Disposable.from(disposable, ...disposables);
+		} else {
+			this._disposable = Disposable.from(...disposables);
+		}
 
 		const unreadsResponse = await Container.agent.users.unreads();
 		const unreads = unreadsResponse.unreads;
