@@ -409,7 +409,16 @@ class CodemarkForm extends React.Component<Props, State> {
 		event && event.preventDefault();
 		if (this.isFormInvalid()) return;
 
-		const { codeBlock, privacy, type, title, text, selectedChannelId } = this.state;
+		const {
+			codeBlock,
+			privacy,
+			type,
+			title,
+			text,
+			selectedChannelId,
+			selectedTags,
+			relatedCodemarkIds
+		} = this.state;
 
 		if (type === "link") {
 			let request;
@@ -464,6 +473,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				: (this.state.assignees as any[]).map(a => a.value);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 		this.setState({ isLoading: true });
 		try {
 			await this.props.onSubmit(
@@ -486,6 +496,13 @@ class CodemarkForm extends React.Component<Props, State> {
 			this.setState({ isLoading: false });
 		}
 =======
+=======
+		let tags: string[] = [];
+		for (const [key, value] of Object.entries(selectedTags)) {
+			if (value) tags.push(key);
+		}
+
+>>>>>>> remove confusing (and incorrect) definition of codmark tags attribute
 		this.props.onSubmit(
 			{
 				codeBlock: this.state.codeBlock,
@@ -495,8 +512,8 @@ class CodemarkForm extends React.Component<Props, State> {
 				assignees: csAssignees,
 				title,
 				crossPostIssueValues: crossPostIssueEnabled ? this.crossPostIssueValues : undefined,
-				tags: this.state.selectedTags,
-				relatedCodemarkIds: this.state.relatedCodemarkIds
+				tags,
+				relatedCodemarkIds
 				// notify,
 				// crossPostMessage,
 			},
@@ -749,11 +766,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 
 		return (
-<<<<<<< HEAD
-			<div className="checkbox-row" style={{ float: "left", marginTop: "10px" }}>
-=======
 			<div key="crosspost" className="checkbox-row" style={{ float: "left" }}>
->>>>>>> remove react warnings on codemark form
 				{/*<input type="checkbox" checked={this.state.crossPostMessage} /> */} Post to{" "}
 				<span className="channel-label" onClick={this.switchChannel}>
 					{selectedChannelName}
@@ -983,19 +996,12 @@ class CodemarkForm extends React.Component<Props, State> {
 		);
 
 		return [
-<<<<<<< HEAD
 			<form
-<<<<<<< HEAD
-				className={cx("codemark-form", "standard-form", { "google-style": GoogleStyle })}
-=======
 				id="code-comment-form"
-				className={cx("standard-form", { "google-style": true })}
->>>>>>> remove react warnings on codemark form
+				className={cx("codemark-form", "standard-form", { "google-style": true })}
 				key="two"
 			>
-=======
 			<form id="code-comment-form" className="standard-form" key="two">
->>>>>>> style tweaks and code cleanup
 				<fieldset className="form-body">
 					<div id="controls" className="control-group" key="controls1">
 						<div
@@ -1012,7 +1018,6 @@ class CodemarkForm extends React.Component<Props, State> {
 							<b>{currentUser.username}</b>
 							<span style={{ opacity: 0.75, paddingLeft: "5px" }}>{this.getCodeBlockHint()}</span>
 						</div>
-<<<<<<< HEAD
 						{commentType === "trap" && (
 							<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
 								{trapTip}
@@ -1029,8 +1034,6 @@ class CodemarkForm extends React.Component<Props, State> {
 								codeBlock={this.state.codeBlock as any}
 							/>
 						)}
-=======
->>>>>>> remove react warnings on codemark form
 						{(commentType === "issue" ||
 							commentType === "question" ||
 							commentType === "bookmark" ||
