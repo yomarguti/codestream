@@ -63,22 +63,6 @@ const getIdeInstallationInstructions = props => {
 };
 
 const Root = connect(mapStateToProps)(props => {
-	if (props.versioning && props.versioning.type === VersioningActionsType.UpgradeRecommended)
-		return (
-			<Dismissable
-				title="Update Suggested"
-				onClick={e => {
-					e.preventDefault();
-					props.dispatch(upgradeRecommendedDismissed());
-				}}
-			>
-				<p>
-					Your version of CodeStream is getting a little long in the tooth! We suggest that you
-					update to the latest version.
-				</p>
-				{getIdeInstallationInstructions(props)}
-			</Dismissable>
-		);
 	if (props.versioning && props.versioning.type === VersioningActionsType.UpgradeRequired)
 		return (
 			<RoadBlock title="Update Required">
@@ -101,7 +85,22 @@ const Root = connect(mapStateToProps)(props => {
 				</p>
 			</RoadBlock>
 		);
-
+	if (props.versioning && props.versioning.type === VersioningActionsType.UpgradeRecommended)
+		return (
+			<Dismissable
+				title="Update Suggested"
+				onClick={e => {
+					e.preventDefault();
+					props.dispatch(upgradeRecommendedDismissed());
+				}}
+			>
+				<p>
+					Your version of CodeStream is getting a little long in the tooth! We suggest that you
+					update to the latest version.
+				</p>
+				{getIdeInstallationInstructions(props)}
+			</Dismissable>
+		);
 	return <Stream />;
 });
 

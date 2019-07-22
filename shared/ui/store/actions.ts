@@ -43,10 +43,6 @@ export const bootstrap = (data?: SignedInBootstrapData) => async dispatch => {
 					session: { ...bootstrapCore.session, otc: uuid() }
 				})
 			);
-
-			if (bootstrapCore.versionCompatibility === VersionCompatibility.UnsupportedUpgradeRequired) {
-				dispatch(upgradeRequired());
-			}
 			return;
 		}
 
@@ -80,6 +76,10 @@ const bootstrapEssentials = (data: BootstrapInHostResponse) => dispatch => {
 	dispatch(updateConfigs(data.configs));
 	dispatch({ type: "@pluginVersion/Set", payload: data.version });
 	dispatch({ type: BootstrapActionType.Complete });
+
+	if (data.versionCompatibility === VersionCompatibility.UnsupportedUpgradeRequired) {
+		dispatch(upgradeRequired());
+	}
 };
 
 export const reAuthForFullChatProvider = (
