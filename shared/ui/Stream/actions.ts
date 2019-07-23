@@ -835,6 +835,7 @@ export const updateTeamTag = (
 				if (tag.id === newTag.id) tags[index] = newTag;
 			});
 		} else {
+			// FIXME this should be some random GUId
 			newTag.id = tags.length + 1;
 			tags = tags.concat(newTag);
 		}
