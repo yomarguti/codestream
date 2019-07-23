@@ -38,7 +38,6 @@ import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.DialogBuilder
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import kotlinx.coroutines.CompletableDeferred
@@ -528,13 +527,7 @@ class EditorService(val project: Project) {
         val content2 = DiffContentFactory.getInstance().create(project, codemarkContent, fileType)
         val request = SimpleDiffRequest("Codemark", content1, content2, "Your version", "Codemark version")
         request.putUserData(DiffUserDataKeys.GO_TO_SOURCE_DISABLE, true)
-        val diffBuilder = DialogBuilder(project)
-        val diffPanel = DiffManager.getInstance().createRequestPanel(project, diffBuilder, diffBuilder.window)
-        diffPanel.setRequest(request)
-        diffBuilder.setCenterPanel(diffPanel.component)
-        diffBuilder.addOkAction()
-        diffBuilder.setTitle("Codemark")
-        diffBuilder.show()
+        DiffManager.getInstance().showDiff(project, request)
     }
 
     fun applyMarker(marker: Marker) = ApplicationManager.getApplication().invokeLater {
