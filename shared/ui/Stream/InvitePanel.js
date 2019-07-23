@@ -9,6 +9,7 @@ import { isInVscode, mapFilter } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { sortBy as _sortBy } from "lodash-es";
 import { getTeamProvider } from "../store/teams/actions";
+import { HostApi } from "../webview-api";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -114,14 +115,16 @@ export class InvitePanel extends Component {
 		);
 	};
 
-	renderInviteDisables = () => {
+	renderInviteDisabled = () => {
 		return (
 			<div style={{ padding: "30px", textAlign: "center" }}>
-				Contact <a href="mailto:sales@codestream.com">sales@codestream.com</a> to upgrade your plan if you'd like to invite more teammates.
-				<br /><br />
+				Contact <a href="mailto:sales@codestream.com">sales@codestream.com</a> to upgrade your plan
+				if you'd like to invite more teammates.
+				<br />
+				<br />
 			</div>
-		)
-	}
+		);
+	};
 
 	// Post URL to{" "}
 	// <select style={{ width: "auto" }}>
@@ -132,8 +135,17 @@ export class InvitePanel extends Component {
 	renderFieldset = inactive => {
 		const { newMemberEmail, newMemberName } = this.state;
 
-		if (this.props.teamPlan && this.props.teamPlan === "FREEPLAN" &&
-			this.props.members && this.props.members.length >= 5) return this.renderInviteDisables();
+		if (
+			this.props.teamPlan &&
+			this.props.teamPlan === "FREEPLAN" &&
+			this.props.members &&
+			this.props.members.length >= 5
+		) {
+			HostApi.instance.track("Paywall Hit", {
+				"Pay Wall": "Team Size"
+			});
+			return this.renderInviteDisabled();
+		}
 
 		if (!this.props.isCodeStreamTeam) return this.renderThirdParyInvite(this.props.teamProvider);
 
@@ -267,12 +279,12 @@ const mapStateToProps = ({ users, context, teams }) => {
 	const invited =
 		teamProvider === "codestream"
 			? mapFilter(team.memberIds, id => {
-				const user = users[id];
-				if (!user || user.isRegistered || user.deactivated) return;
-				let email = user.email;
-				if (email) user.fullName = email.replace(/@.*/, "");
-				return user;
-			})
+					const user = users[id];
+					if (!user || user.isRegistered || user.deactivated) return;
+					let email = user.email;
+					if (email) user.fullName = email.replace(/@.*/, "");
+					return user;
+			  })
 			: [];
 
 	return {
