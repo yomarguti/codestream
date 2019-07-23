@@ -1,5 +1,6 @@
 package com.codestream.extensions
 
+import com.codestream.system.HASH_ENCODED
 import com.codestream.system.SPACE_ENCODED
 import com.codestream.system.sanitizeURI
 import com.intellij.openapi.module.ModuleManager
@@ -32,7 +33,13 @@ val Project.baseUri: String?
     get() {
         return try {
             val url = "file://" + File(basePath).canonicalPath
-            sanitizeURI(URL(url.replace(" ", SPACE_ENCODED)).toURI().toString())
+            sanitizeURI(
+                URL(
+                    url
+                        .replace(" ", SPACE_ENCODED)
+                        .replace("#", HASH_ENCODED)
+                ).toURI().toString()
+            )
         } catch (e: Exception) {
             // LOG.warn(e)
             null
