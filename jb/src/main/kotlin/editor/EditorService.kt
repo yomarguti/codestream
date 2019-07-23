@@ -342,9 +342,13 @@ class EditorService(val project: Project) {
             project.webViewService?.postNotification(notification)
         }
 
-    suspend fun getEditorContext(): EditorContext {
-        val future = CompletableDeferred<EditorContext>()
+    suspend fun getEditorContext(): EditorContext? {
+        val future = CompletableDeferred<EditorContext?>()
         ApplicationManager.getApplication().invokeLater {
+            if (project.isDisposed) {
+                future.complete(null)
+                return@invokeLater
+            }
             val editor = FileEditorManager.getInstance(project).selectedTextEditor
             val context = if (editor != null) {
                 EditorContext(
