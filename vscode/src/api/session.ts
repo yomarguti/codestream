@@ -150,7 +150,8 @@ export class CodeStreamSession implements Disposable {
 		};
 	}
 
-	private _disposable: Disposable | undefined;
+	private _disposableUnauthenticated: Disposable | undefined;
+	private _disposableAuthenticated: Disposable | undefined;
 
 	private _email: string | undefined;
 	private _environment: CodeStreamEnvironment | string = CodeStreamEnvironment.Unknown;
@@ -162,7 +163,7 @@ export class CodeStreamSession implements Disposable {
 		this.setServerUrl(_serverUrl);
 		const config = Container.config;
 
-		this._disposable = Disposable.from(
+		this._disposableUnauthenticated = Disposable.from(
 			Container.agent.onDidStartLogin(() => this.setStatus(SessionStatus.SigningIn)),
 			Container.agent.onDidFailLogin(() => this.setStatus(SessionStatus.SignedOut)),
 			Container.agent.onDidLogin(params => {
@@ -185,7 +186,8 @@ export class CodeStreamSession implements Disposable {
 	}
 
 	dispose() {
-		this._disposable && this._disposable.dispose();
+		this._disposableUnauthenticated && this._disposableUnauthenticated.dispose();
+		this._disposableAuthenticated && this._disposableAuthenticated.dispose();
 	}
 
 	private onDocumentMarkersChanged(e: DidChangeDocumentMarkersNotification) {
@@ -480,6 +482,11 @@ export class CodeStreamSession implements Disposable {
 			if (Container.agent !== undefined) {
 				void (await Container.agent.logout());
 			}
+
+			if (this._disposableAuthenticated !== undefined) {
+				this._disposableAuthenticated.dispose();
+				this._disposableAuthenticated = undefined;
+			}
 		} finally {
 			// Clean up saved state
 			this._state = undefined;
@@ -587,16 +594,10 @@ export class CodeStreamSession implements Disposable {
 
 		this._state = new SessionState(this, teamId, response.loginResponse);
 
-		const disposable = this._disposable;
-		const disposables = [
+		this._disposableAuthenticated = Disposable.from(
 			Container.agent.onDidChangeDocumentMarkers(this.onDocumentMarkersChanged, this),
 			Container.agent.onDidChangeData(this.onDataChanged, this)
-		];
-		if (disposable) {
-			this._disposable = Disposable.from(disposable, ...disposables);
-		} else {
-			this._disposable = Disposable.from(...disposables);
-		}
+		);
 
 		const unreadsResponse = await Container.agent.users.unreads();
 		const unreads = unreadsResponse.unreads;
