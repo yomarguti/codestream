@@ -480,11 +480,6 @@ export class CodeStreamSession implements Disposable {
 			if (Container.agent !== undefined) {
 				void (await Container.agent.logout());
 			}
-
-			if (this._disposable !== undefined) {
-				this._disposable.dispose();
-				this._disposable = undefined;
-			}
 		} finally {
 			// Clean up saved state
 			this._state = undefined;
