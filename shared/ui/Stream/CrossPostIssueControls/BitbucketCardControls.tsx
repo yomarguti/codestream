@@ -96,15 +96,18 @@ export default class BitbucketCardControls extends React.Component<Props, State>
 		const providerDisplay = PROVIDER_MAPPINGS[name];
 		let displayName = providerDisplay.displayName;
 		if (host && provider.isEnterprise) {
-			const displayHost = host.startsWith('http://') ? host.split('http://')[1] :
-				host.startsWith('https://') ? host.split('https://')[1] : host;
+			const displayHost = host.startsWith("http://")
+				? host.split("http://")[1]
+				: host.startsWith("https://")
+				? host.split("https://")[1]
+				: host;
 			displayName += ` - ${displayHost}`;
 		}
 
 		return (
 			<div className="checkbox-row" onClick={this.toggleCrossPostIssue}>
 				<input type="checkbox" checked={this.state.isEnabled} />
-				{"Create an issue on "}
+				{"Add an issue on "}
 				<span className="channel-label" onClick={this.switchBoard}>
 					{board && board.name}
 					<Icon name="chevron-down" />
@@ -118,7 +121,8 @@ export default class BitbucketCardControls extends React.Component<Props, State>
 						/>
 					)}
 				</span>
-				{` on ${displayName}`}
+				{` on `}
+				{this.props.children}
 			</div>
 		);
 	}

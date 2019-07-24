@@ -685,7 +685,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 
 		return (
-			<div className="checkbox-row" style={{ float: "left" }}>
+			<div className="checkbox-row" style={{ float: "left", marginTop: "10px" }}>
 				{/*<input type="checkbox" checked={this.state.crossPostMessage} /> */} Post to{" "}
 				<span className="channel-label" onClick={this.switchChannel}>
 					{selectedChannelName}

@@ -102,7 +102,7 @@ export default class YouTrackCardControls extends React.Component<Props, State> 
 		return (
 			<div className="checkbox-row" onClick={this.toggleCrossPostIssue}>
 				<input type="checkbox" checked={this.state.isEnabled} />
-				{"Create an issue in "}
+				{"Add an issue in "}
 				<span className="channel-label" onClick={this.switchBoard}>
 					{board && board.name}
 					<Icon name="chevron-down" />
@@ -116,7 +116,8 @@ export default class YouTrackCardControls extends React.Component<Props, State> 
 						/>
 					)}
 				</span>
-				{` on ${displayName}`}
+				{` on `}
+				{this.props.children}
 			</div>
 		);
 	}

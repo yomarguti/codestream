@@ -71,10 +71,7 @@ export const configureProvider = (
 	data: { [key: string]: any },
 	fromMenu = false,
 	setConnectedWhenConfigured = false
-) => async (
-	dispatch,
-	getState
-) => {
+) => async (dispatch, getState) => {
 	const { providers } = getState();
 	const provider = providers[providerId];
 	if (!provider) return;
@@ -104,10 +101,7 @@ export const addEnterpriseProvider = (
 	host: string,
 	data: { [key: string]: any },
 	fromMenu = false
-) => async (
-	dispatch,
-	getState
-) => {
+) => async (dispatch, getState) => {
 	const { providers } = getState();
 	const provider = providers[providerId];
 	if (!provider) return;
@@ -153,4 +147,3 @@ export const disconnectProvider = (providerId: string, fromMenu = false) => asyn
 		logError(`failed to disconnect service ${providerId}: ${error}`);
 	}
 };
-

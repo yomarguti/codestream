@@ -4,6 +4,7 @@ import { connectProvider } from "../../store/providers/actions";
 import { openPanel, setIssueProvider } from "../../store/context/actions";
 import { HostApi } from "../../webview-api";
 import Icon from "../Icon";
+import Menu from "../Menu";
 import AsanaCardControls from "./AsanaCardControls";
 import BitbucketCardControls from "./BitbucketCardControls";
 import GitHubCardControls from "./GitHubCardControls";
@@ -41,12 +42,15 @@ interface Props {
 	providers?: ThirdPartyProviders;
 	currentUser: CSMe;
 	currentTeamId: string;
+	isEditing?: boolean;
 }
 
 interface State {
 	boards: ThirdPartyProviderBoard[];
 	isLoading: boolean;
 	loadingProvider?: ProviderInfo;
+	issueProviderMenuOpen: boolean;
+	issueProviderMenuTarget: any;
 }
 
 class CrossPostIssueControls extends React.Component<Props, State> {
@@ -60,7 +64,9 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		this.state = {
 			boards: [],
 			isLoading,
-			loadingProvider
+			loadingProvider,
+			issueProviderMenuOpen: false,
+			issueProviderMenuTarget: undefined
 		};
 	}
 
@@ -114,7 +120,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		const { loadingProvider } = this.state;
 
 		return (
-			<div className="checkbox-row">
+			<div className="connect-issue">
 				<span>
 					<Icon className="spin" name="sync" /> Syncing with {loadingProvider!.display.displayName}
 					...
@@ -123,7 +129,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		);
 	}
 
-	renderProviderControls() {
+	renderProviderControls(providerOptions) {
 		const { boards } = this.state;
 		const { issueProvider } = this.props;
 		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider.id) : undefined;
@@ -131,14 +137,16 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			return null;
 		}
 		switch (providerInfo.provider.name) {
-			case "jira": 
+			case "jira":
 			case "jiraserver": {
 				return (
 					<JiraCardControls
 						boards={boards}
 						onValues={this.props.onValues}
 						provider={providerInfo.provider}
-					/>
+					>
+						{providerOptions}
+					</JiraCardControls>
 				);
 			}
 			case "trello": {
@@ -147,7 +155,9 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 						boards={boards}
 						onValues={this.props.onValues}
 						provider={providerInfo.provider}
-					/>
+					>
+						{providerOptions}
+					</TrelloCardControls>
 				);
 			}
 			case "asana": {
@@ -156,7 +166,9 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 						boards={boards}
 						onValues={this.props.onValues}
 						provider={providerInfo.provider}
-					/>
+					>
+						{providerOptions}
+					</AsanaCardControls>
 				);
 			}
 			case "github":
@@ -167,7 +179,9 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 						onValues={this.props.onValues}
 						provider={providerInfo.provider}
 						codeBlock={this.props.codeBlock}
-					/>
+					>
+						{providerOptions}
+					</GitHubCardControls>
 				);
 			}
 			case "gitlab": {
@@ -177,7 +191,9 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 						onValues={this.props.onValues}
 						provider={providerInfo.provider}
 						codeBlock={this.props.codeBlock}
-					/>
+					>
+						{providerOptions}
+					</GitLabCardControls>
 				);
 			}
 			case "youtrack": {
@@ -186,7 +202,9 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 						boards={boards}
 						onValues={this.props.onValues}
 						provider={providerInfo.provider}
-					/>
+					>
+						{providerOptions}
+					</YouTrackCardControls>
 				);
 			}
 			case "bitbucket": {
@@ -196,7 +214,9 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 						onValues={this.props.onValues}
 						provider={providerInfo.provider}
 						codeBlock={this.props.codeBlock}
-					/>
+					>
+						{providerOptions}
+					</BitbucketCardControls>
 				);
 			}
 			case "azuredevops": {
@@ -205,7 +225,9 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 						boards={boards}
 						onValues={this.props.onValues}
 						provider={providerInfo.provider}
-					/>
+					>
+						{providerOptions}
+					</AzureDevOpsCardControls>
 				);
 			}
 
@@ -218,58 +240,95 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		const { issueProvider } = this.props;
 		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider.id) : undefined;
 		const providerName = providerInfo && providerInfo.provider.name;
-		if (this.props.providers && Object.keys(this.props.providers).length) {
-			const knownIssueProviders = Object.keys(this.props.providers).filter(providerId => {
-				const provider = this.props.providers![providerId];
-				return provider.hasIssues && !!PROVIDER_MAPPINGS[provider.name];
-			});
-			if (knownIssueProviders.length === 0) {
-				return "";
-			}
 
-			const knownIssueProviderOptions = knownIssueProviders
-				.map(providerId => {
-						const issueProvider = this.props.providers![providerId];
-						const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
-						const displayName = issueProvider.isEnterprise
-							? `${providerDisplay.displayName} - ${issueProvider.host}`
-							: providerDisplay.displayName;
-						return {
-							value: providerId,
-							label: displayName
-						};
-					})
-				.sort((a, b) => a.label.localeCompare(b.label));
-			const selectedProvider = providerInfo && knownIssueProviderOptions.find(provider => provider.value === providerInfo.provider.id);
+		if (this.state.isLoading) return this.renderLoading();
+
+		if (!this.props.providers || !Object.keys(this.props.providers).length) return null;
+
+		const knownIssueProviders = Object.keys(this.props.providers).filter(providerId => {
+			const provider = this.props.providers![providerId];
+			return provider.hasIssues && !!PROVIDER_MAPPINGS[provider.name];
+		});
+		if (knownIssueProviders.length === 0) {
+			return null;
+		}
+
+		const knownIssueProviderOptions = knownIssueProviders
+			.map(providerId => {
+				const issueProvider = this.props.providers![providerId];
+				const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
+				const displayName = issueProvider.isEnterprise
+					? `${providerDisplay.displayName} - ${issueProvider.host}`
+					: providerDisplay.displayName;
+				return {
+					value: providerId,
+					label: displayName,
+					action: providerId
+				};
+			})
+			.sort((a, b) => a.label.localeCompare(b.label));
+		knownIssueProviderOptions.unshift(
+			{ label: "CodeStream only", value: "codestream", action: "codestream" },
+			{ label: "-", value: "", action: "" }
+		);
+		const selectedProvider =
+			providerInfo &&
+			knownIssueProviderOptions.find(provider => provider.value === providerInfo.provider.id);
+
+		const providerOptions = this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
+
+		if (providerName) {
+			return <div className="connect-issue">{this.renderProviderControls(providerOptions)}</div>;
+		} else {
 			return (
-				<div className="checkbox-row connect-issue">
-					<div className="connect-issue-label">Create an issue in </div>
-					<Select
-						id="input-provider"
-						name="providers"
-						classNamePrefix="native-key-bindings react-select"
-						value={selectedProvider}
-						options={knownIssueProviderOptions}
-						closeMenuOnSelect={true}
-						isClearable={false}
-						placeholder="select service"
-						onChange={value => {
-							const providerId = (value as { value: string })!.value;
-							const issueProvider = this.props.providers![providerId];
-							const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
-							this.onChangeProvider({ provider: issueProvider, display: providerDisplay });
-						}}
-						//tabIndex={this.tabIndex().toString()}
-					/>
-					{selectedProvider && <span> {selectedProvider.label}</span>}
-					<div>{this.state.isLoading && this.renderLoading()}</div>
-					<div>{providerName && !this.state.isLoading && this.renderProviderControls()}</div>
+				<div className="connect-issue">
+					<span className="connect-issue-label">Create an issue on</span>
+					{providerOptions}
 				</div>
 			);
-		} else {
-			return "";
 		}
 	}
+
+	renderProviderOptions = (selectedProvider, knownIssueProviderOptions) => {
+		return (
+			<span className="channel-label" onClick={this.switchIssueProvider}>
+				{selectedProvider ? selectedProvider.label : "CodeStream Only (click for options)"}
+				<Icon name="chevron-down" />
+				{this.state.issueProviderMenuOpen && (
+					<Menu
+						align="center"
+						compact={true}
+						target={this.state.issueProviderMenuTarget}
+						items={knownIssueProviderOptions}
+						action={this.selectIssueProvider}
+					/>
+				)}
+			</span>
+		);
+	};
+
+	switchIssueProvider = (event: React.SyntheticEvent) => {
+		if (this.props.isEditing) return;
+
+		event.stopPropagation();
+		const target = event.target;
+		this.setState(state => ({
+			issueProviderMenuOpen: !state.issueProviderMenuOpen,
+			issueProviderMenuTarget: target
+		}));
+	};
+
+	selectIssueProvider = providerId => {
+		this.setState({ issueProviderMenuOpen: false });
+		if (!providerId) return;
+		if (providerId === "codestream") {
+			this.props.setIssueProvider(undefined);
+			return;
+		}
+		const issueProvider = this.props.providers![providerId];
+		const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
+		this.onChangeProvider({ provider: issueProvider, display: providerDisplay });
+	};
 
 	async onChangeProvider(providerInfo: ProviderInfo) {
 		this.setState({ isLoading: true, loadingProvider: providerInfo });
@@ -317,3 +376,23 @@ export default connect(
 	mapStateToProps,
 	{ connectProvider, setIssueProvider, openPanel }
 )(CrossPostIssueControls);
+
+// {false && (
+// 	<Select
+// 		id="input-provider"
+// 		name="providers"
+// 		classNamePrefix="native-key-bindings react-select"
+// 		value={selectedProvider}
+// 		options={knownIssueProviderOptions}
+// 		closeMenuOnSelect={true}
+// 		isClearable={false}
+// 		placeholder="select service"
+// 		onChange={value => {
+// 			const providerId = (value as { value: string })!.value;
+// 			const issueProvider = this.props.providers![providerId];
+// 			const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
+// 			this.onChangeProvider({ provider: issueProvider, display: providerDisplay });
+// 		}}
+// 		//tabIndex={this.tabIndex().toString()}
+// 	/>
+// )}

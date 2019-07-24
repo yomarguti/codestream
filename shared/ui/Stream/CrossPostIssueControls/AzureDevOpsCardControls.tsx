@@ -100,7 +100,7 @@ export default class AzureDevOpsCardControls extends React.Component<Props, Stat
 		return (
 			<div className="checkbox-row" onClick={this.toggleCrossPostIssue}>
 				<input type="checkbox" checked={this.state.isEnabled} />
-				{"Create an issue on "}
+				{"Add an issue on "}
 				<span className="channel-label" onClick={this.switchBoard}>
 					{board && board.name}
 					<Icon name="chevron-down" />
