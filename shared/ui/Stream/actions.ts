@@ -835,12 +835,17 @@ export const updateTeamTag = (
 				if (tag.id === newTag.id) tags[index] = newTag;
 			});
 		} else {
-			// FIXME this should be some random GUId
-			newTag.id = tags.length + 1;
+			// create a random ID for the new tag
+			// this is a simple and effective way to create a
+			// unique ID. IMO it doesn't really matter that it
+			// isn't super elegant or pretty. -Pez
+			newTag.id = Date.now() + tags.length + newTag.color;
 			tags = tags.concat(newTag);
 		}
 		team.tags = [...tags];
 
+		// FIXME this should make an API call to update the teams
+		// object on the server
 		// const response = await HostApi.instance.send(updateTeamRequestType, team);
 		return dispatch(updateTeam(team));
 	} catch (error) {
