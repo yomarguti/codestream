@@ -58,6 +58,7 @@ export default class CodemarkActions extends React.Component<Props, State> {
 
 	handleClickCompare = event => {
 		event.preventDefault();
+		event.stopPropagation();
 		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Compare",
 			properties: { "Author?": this.props.isAuthor }
