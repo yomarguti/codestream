@@ -3,7 +3,7 @@ import { Range } from "vscode-languageserver-types";
 import { MaxRangeValue } from "./ipc/webview.protocol";
 
 export const emptyObject = {};
-
+export const emptyArray = [];
 export function noop() {}
 
 export function inMillis(number: number, unit: "sec" | "min") {
@@ -56,6 +56,15 @@ export function is<T>(o: any, matcher: keyof (T) | ((o: any) => boolean)): o is 
 
 export function isRangeEmpty(range: Range): boolean {
 	return range.start.line === range.end.line && range.start.character === range.end.character;
+}
+
+export function areRangesEqual(r1: Range, r2: Range) {
+	return (
+		r1.start.character === r2.start.character &&
+		r1.start.line === r2.start.line &&
+		r1.end.line === r2.end.line &&
+		r1.end.character === r2.end.character
+	);
 }
 
 export function arrayToRange([startLine, startCharacter, endLine, endCharacter]: number[]): Range {

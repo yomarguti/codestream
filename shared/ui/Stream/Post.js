@@ -739,7 +739,7 @@ class Post extends React.Component {
 		return (
 			<div className="edit-post">
 				<ContentEditable
-					className="native-key-bindings message-input"
+					className="message-input"
 					id={id}
 					rows="1"
 					tabIndex="-1"

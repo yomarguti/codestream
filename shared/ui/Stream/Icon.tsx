@@ -7,10 +7,11 @@ import Tooltip, { Placement } from "./Tooltip";
 interface Props {
 	name: string;
 	className?: string;
-	title?: string | JSX.Element | undefined;
+	title?: React.ReactNode;
 	placement?: Placement;
 	align?: any;
 	delay?: number;
+	clickable?: boolean;
 	onClick?(event: React.SyntheticEvent): any;
 }
 
@@ -21,7 +22,7 @@ const Icon = React.forwardRef<any, Props>((props, ref) => {
 
 	const iconImage = (
 		<span
-			className={createClassString("icon", props.className)}
+			className={createClassString("icon", props.className, { clickable: props.clickable })}
 			onClick={props.onClick}
 			dangerouslySetInnerHTML={{ __html: icon.toSVG() }}
 			ref={ref}
@@ -43,6 +44,7 @@ const Icon = React.forwardRef<any, Props>((props, ref) => {
 });
 
 Icon.defaultProps = {
+	clickable: false,
 	className: "",
 	onClick: event => event.preventDefault()
 };

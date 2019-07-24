@@ -52,7 +52,7 @@ export class SimpleCreateDMPanel extends Component {
 								<Select
 									id="input-members"
 									name="members"
-									classNamePrefix="native-key-bindings react-select"
+									classNamePrefix="react-select"
 									isMulti={true}
 									value={this.state.members}
 									options={this.props.teammates}

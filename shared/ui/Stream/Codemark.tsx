@@ -68,7 +68,6 @@ interface Props extends DispatchProps {
 	onMouseEnter?(marker: DocumentMarker): any;
 	onMouseLeave?(marker: DocumentMarker): any;
 	query?: string;
-	style?: object;
 	lineNum?: Number;
 	top?: Number;
 	showLabelText?: boolean;
@@ -78,10 +77,6 @@ interface Props extends DispatchProps {
 }
 
 export class Codemark extends React.Component<Props, State> {
-	static defaultProps = {
-		style: {}
-	};
-
 	private _pollingTimer?: any;
 
 	constructor(props: Props) {
@@ -154,11 +149,7 @@ export class Codemark extends React.Component<Props, State> {
 		let content;
 		if (this.state.isEditing)
 			content = (
-				<div
-					className="compose float-compose multi-compose"
-					style={{ top: `${this.props.top}px` }}
-					data-top={this.props.top}
-				>
+				<div className="editing-codemark-container">
 					<CodemarkForm
 						isEditing
 						editingCodemark={this.props.codemark}
@@ -212,7 +203,7 @@ export class Codemark extends React.Component<Props, State> {
 			}
 		}
 
-		return <span className='title' dangerouslySetInnerHTML={{ __html: html }} />;
+		return <span className="title" dangerouslySetInnerHTML={{ __html: html }} />;
 	};
 
 	renderTypeIcon() {
@@ -401,7 +392,6 @@ export class Codemark extends React.Component<Props, State> {
 
 		return (
 			<div
-				style={{ ...this.props.style }}
 				className={cx("codemark collapsed")}
 				onClick={this.handleClickCodemark}
 				onMouseEnter={this.handleMouseEnterCodemark}
@@ -633,10 +623,9 @@ export class Codemark extends React.Component<Props, State> {
 		const description = codemark.title ? this.renderTextLinkified(codemark.text) : null;
 		return (
 			<div
-				style={{ ...this.props.style }}
 				className={cx("codemark inline type-" + type, {
 					// if it's selected, we don't render as hidden
-					hidden: !selected ? hidden : false,
+					"cs-hidden": !selected ? hidden : false,
 					collapsed: !selected,
 					selected: selected,
 					unpinned: !codemark.pinned
@@ -652,35 +641,62 @@ export class Codemark extends React.Component<Props, State> {
 						<div className="archived">This codemark is archived</div>
 					)}
 					<div className="body">
-						{this.renderKeybinding(codemark)}
-						{this.renderStatus(codemark)}
-						{this.renderAssignees(codemark)}
-						<div className="author">
-							<Headshot person={author} />
-							{author.username}
-							<Timestamp time={codemark.createdAt} />
-							{codemark.color && (
-								<div
-									className={cx(`label-indicator ${codemark.color}-background`, {
-										expanded: this.state.showLabelText
-									})}
-									onClick={this.toggleLabelIndicators}
-								>
-									<span>priority</span>
-								</div>
+						<div className="header">
+							{!selected && type === "bookmark" ? (
+								<>
+									<span className={codemark.color}>{this.renderTypeIcon()}</span>
+									{this.renderTextLinkified(codemark.title || codemark.text)}
+									<div className="right">
+										<span onClick={this.handleMenuClick}>
+											{menuOpen && (
+												<Menu
+													items={menuItems}
+													target={menuTarget}
+													action={this.handleSelectMenu}
+												/>
+											)}
+											<Icon name="kebab-vertical" className="kebab-vertical clickable" />
+										</span>
+									</div>
+								</>
+							) : (
+								<>
+									<div className="author">
+										<Headshot person={author} />
+										{author.username}
+										<Timestamp time={codemark.createdAt} />
+										{codemark.color && (
+											<div
+												className={cx(`label-indicator ${codemark.color}-background`, {
+													expanded: this.state.showLabelText
+												})}
+												onClick={this.toggleLabelIndicators}
+											>
+												<span>priority</span>
+											</div>
+										)}
+									</div>
+									<div className="right">
+										<span onClick={this.handleMenuClick}>
+											{menuOpen && (
+												<Menu
+													items={menuItems}
+													target={menuTarget}
+													action={this.handleSelectMenu}
+												/>
+											)}
+											<Icon name="kebab-vertical" className="kebab-vertical clickable" />
+										</span>
+										{this.renderKeybinding(codemark)}
+										{this.renderStatus(codemark)}
+										{this.renderAssignees(codemark)}
+									</div>
+								</>
 							)}
 						</div>
-						{type === "bookmark" && <span className={codemark.color}>{this.renderTypeIcon()}</span>}
-						{this.renderTextLinkified(codemark.title || codemark.text)}
-						<div
-							style={{ position: "absolute", top: "5px", right: "5px" }}
-							onClick={this.handleMenuClick}
-						>
-							{menuOpen && (
-								<Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />
-							)}
-							<Icon name="kebab-vertical" className="kebab-vertical clickable" />
-						</div>
+						{selected || type !== "bookmark"
+							? this.renderTextLinkified(codemark.title || codemark.text)
+							: null}
 						{!selected && this.renderPinnedReplies()}
 						{!selected && this.renderDetailIcons(codemark)}
 					</div>
@@ -698,7 +714,7 @@ export class Codemark extends React.Component<Props, State> {
 					)}
 				</div>
 				{this.props.hover && !selected && type !== "bookmark" && (
-					<div style={{ opacity: 0.5, position: "absolute", right: "5px", bottom: "5px" }}>
+					<div>
 						<Icon
 							className="info"
 							title={this.renderCodemarkFAQ()}
