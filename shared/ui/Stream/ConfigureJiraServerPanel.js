@@ -46,7 +46,7 @@ export class ConfigureJiraServerPanel extends Component {
 			this.props.closePanel();
 		}
 	}
-		
+
 	onSubmit = async e => {
 		e.preventDefault();
 		if (this.isFormInvalid()) return;
@@ -54,9 +54,9 @@ export class ConfigureJiraServerPanel extends Component {
 		let { baseUrl, consumerKey, privateKey } = this.state;
 		baseUrl = baseUrl.toLowerCase();
 		baseUrl = baseUrl.match(/^http/) ? baseUrl : `https://${baseUrl}`;
-		const newProviderId = await this.props.addEnterpriseProvider(
-			providerId, baseUrl, { oauthData: { consumerKey, privateKey } }
-		);
+		const newProviderId = await this.props.addEnterpriseProvider(providerId, baseUrl, {
+			oauthData: { consumerKey, privateKey }
+		});
 		if (newProviderId) {
 			this.wantProviderId = newProviderId;
 		}
@@ -128,8 +128,12 @@ export class ConfigureJiraServerPanel extends Component {
 						{this.renderError()}
 						<div id="controls">
 							<div id="configure-enterprise-controls" className="control-group">
-								<label><strong>{providerName} Base URL</strong></label>
-								<label>Please provide the Base URL used by your team to access {providerName}.</label>
+								<label>
+									<strong>{providerName} Base URL</strong>
+								</label>
+								<label>
+									Please provide the Base URL used by your team to access {providerName}.
+								</label>
 								<input
 									className="native-key-bindings input-text control"
 									type="text"
@@ -145,10 +149,16 @@ export class ConfigureJiraServerPanel extends Component {
 								/>
 								{this.renderBaseUrlHelp()}
 							</div>
-							<br/>
-							<label>Please provide the consumer key and private key used to authorize your {providerName} credentials. You can obtain them from your {providerName} administrator.</label>
+							<br />
+							<label>
+								Please provide the consumer key and private key used to authorize your{" "}
+								{providerName} credentials. You can obtain them from your {providerName}{" "}
+								administrator.
+							</label>
 							<div id="app-clientid-controls" className="control-group">
-								<label><strong>Consumer Key</strong></label>
+								<label>
+									<strong>Consumer Key</strong>
+								</label>
 								<input
 									className="native-key-bindings input-text control"
 									type="text"
@@ -162,10 +172,11 @@ export class ConfigureJiraServerPanel extends Component {
 								{this.renderConsumerKeyHelp()}
 							</div>
 							<div id="app-clientsecret-controls" className="control-group">
-								<label><strong>Private Key</strong></label>
+								<label>
+									<strong>Private Key</strong>
+								</label>
 								<textarea
-									className="native-key-bindings input-text control"
-									type="text"
+									className="input-text"
 									name="privateKey"
 									tabIndex={this.tabIndex()}
 									value={this.state.privateKey}
