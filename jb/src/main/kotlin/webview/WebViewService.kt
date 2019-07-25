@@ -1,36 +1,26 @@
 package com.codestream.webview
 
-import com.codestream.DEBUG
 import com.codestream.gson
 import com.codestream.protocols.webview.WebViewNotification
 import com.github.salomonbrys.kotson.jsonObject
 import com.google.gson.JsonElement
-import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.teamdev.jxbrowser.browser.Browser
 import com.teamdev.jxbrowser.browser.callback.InjectJsCallback
-import com.teamdev.jxbrowser.engine.Engine
-import com.teamdev.jxbrowser.engine.EngineOptions
-import com.teamdev.jxbrowser.engine.RenderingMode
 import com.teamdev.jxbrowser.js.JsObject
-import com.teamdev.jxbrowser.net.ResourceType
-import com.teamdev.jxbrowser.net.callback.LoadResourceCallback
-import com.teamdev.jxbrowser.plugin.callback.AllowPluginCallback
 import com.teamdev.jxbrowser.view.swing.BrowserView
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.Charset
-import java.nio.file.Paths
 import javax.swing.UIManager
 
 class WebViewService(val project: Project) : Disposable {
     private val logger = Logger.getInstance(WebViewService::class.java)
     private val router = WebViewRouter(project)
     private val browser = createBrowser(router)
-    val webView: BrowserView = BrowserView.newInstance(browser)
-
     private lateinit var tempDir: File
     private lateinit var htmlFile: File
 
@@ -43,6 +33,10 @@ class WebViewService(val project: Project) : Disposable {
                 browser.navigation().loadUrl(htmlFile.url)
             }
         }
+    }
+
+    val webView: BrowserView by lazy {
+        BrowserView.newInstance(browser)
     }
 
     fun load() {
@@ -106,84 +100,18 @@ class WebViewService(val project: Project) : Disposable {
     }
 
     override fun dispose() {
-        logger.info("Disposing JxBrowser")
-        try {
-            browser.close()
-        } catch (ex: Exception) {
-            logger.warn(ex)
-        }
-        try {
-            browser.engine().close()
-        } catch (ex: Exception) {
-            logger.warn(ex)
-        }
+        logger.info("Disposing JxBrowser instance")
+        browser.close()
     }
 
     private fun createBrowser(router: WebViewRouter): Browser {
-        val dir = createTempDir()
-        logger.info("JxBrowser work dir: $dir")
-        val optionsBuilder = EngineOptions
-            .newBuilder(RenderingMode.OFF_SCREEN)
-            .licenseKey("6P835FT5H9Q596QEMRZTTB0RYSG7H1P664XU2Y2M9QPOA998OY42K6N3OTUO90SSP5BA")
-            .userDataDir(Paths.get(dir.toURI()))
-            // .disableGpu()
-            // .disableWebSecurity()
-            .allowFileAccessFromFiles()
-        // .addSwitch("--disable-gpu-compositing")
-        // .addSwitch("--enable-begin-frame-scheduling")
-        // .addSwitch("--software-rendering-fps=60")
-        //     if (JreHiDpiUtil.isJreHiDPIEnabled() && !SystemInfo.isMac) "--force-device-scale-factor=1" else ""
-
-        if (DEBUG) {
-            optionsBuilder.remoteDebuggingPort(9222)
-        }
-
-        val options = optionsBuilder.build()
-        val engine = Engine.newInstance(options)
-        engine.network()
-        engine.spellChecker().disable()
-        engine.plugins()
-            .set(AllowPluginCallback::class.java, AllowPluginCallback { AllowPluginCallback.Response.deny() })
-        engine.network().set(LoadResourceCallback::class.java, LoadResourceCallback {
-            if (it.resourceType() == ResourceType.IMAGE || it.url().startsWith("file://")) {
-                LoadResourceCallback.Response.load()
-            } else {
-                if (it.resourceType() == ResourceType.MAIN_FRAME) {
-                    BrowserUtil.browse(it.url())
-                }
-                LoadResourceCallback.Response.cancel()
-            }
-        })
-
+        val engine = ServiceManager.getService(BrowserEngineService::class.java)
         val browser = engine.newBrowser()
-        // browser.audio().mute()
-        // browser.set(ConfirmCallback::class.java, ConfirmCallback { _, tell -> tell.cancel() })
-        // browser.set(CertificateErrorCallback::class.java, CertificateErrorCallback { _, action -> action.deny() })
-        // browser.set(BeforeUnloadCallback::class.java, BeforeUnloadCallback { _, action -> action.stay() })
-        // browser.set(AlertCallback::class.java, AlertCallback { _, action -> action.ok() })
-        // browser.set(ConfirmCallback::class.java, ConfirmCallback { _, action -> action.cancel() })
-        // browser.set(OpenFileCallback::class.java, OpenFileCallback { _, action -> action.cancel() })
-        // browser.set(OpenFilesCallback::class.java, OpenFilesCallback { _, action -> action.cancel() })
-        // browser.set(OpenFolderCallback::class.java, OpenFolderCallback { _, action -> action.cancel() })
-        // browser.set(PromptCallback::class.java, PromptCallback { _, action -> action.cancel() })
-        // browser.set(SelectColorCallback::class.java, SelectColorCallback { _, action -> action.cancel() })
-        // browser.set(SelectClientCertificateCallback::class.java, SelectClientCertificateCallback { _, action -> action.cancel() })
+
         browser.connectRouter(router)
 
         return browser
     }
-
-    // private fun Browser.configurePreferences() {
-    //     preferences.apply {
-    //         isAllowDisplayingInsecureContent = false
-    //         isAllowRunningInsecureContent = false
-    //         isAllowScriptsToCloseWindows = false
-    //         isApplicationCacheEnabled = false
-    //         isDatabasesEnabled = false
-    //         isLocalStorageEnabled = false
-    //         isTransparentBackground = true
-    //     }
-    // }
 
     private fun Browser.connectRouter(router: WebViewRouter) {
 
