@@ -125,9 +125,17 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 					<Icon className="spin" name="sync" /> Syncing with {loadingProvider!.display.displayName}
 					...
 				</span>
+				<a style={{ marginLeft: "5px" }} onClick={this.cancelLoading}>
+					cancel
+				</a>
 			</div>
 		);
 	}
+
+	cancelLoading = () => {
+		this.setState({ isLoading: false });
+		this.props.setIssueProvider(undefined);
+	};
 
 	renderProviderControls(providerOptions) {
 		const { boards } = this.state;
