@@ -113,7 +113,10 @@ function Build-Extension {
 	$msbuild = ""
 	$vstest = ""
 	if ($VSVersion -eq 16.0) {
-		$msbuild = "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe"
+		$msbuild = "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe"		
+	}
+	$vstest = "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/Common7/IDE/CommonExtensions/Microsoft/TestWindow/vstest.console.exe"
+	if (!(Test-Path -Path $vstest)) {
 		$vstest = "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/Common7/IDE/CommonExtensions/Microsoft/TestWindow/vstest.console.exe"
 	}
 
