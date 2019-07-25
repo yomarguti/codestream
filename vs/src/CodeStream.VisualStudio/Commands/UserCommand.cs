@@ -6,6 +6,7 @@ using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
 using CodeStream.VisualStudio.Core.Vssdk.Commands;
 using Serilog;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace CodeStream.VisualStudio.Commands {
 	public class UserCommand : VsCommandBase {
@@ -49,17 +50,43 @@ namespace CodeStream.VisualStudio.Commands {
 							// the caching on this sucks and it doesn't always update...
 							//Visible = false;
 							//Enabled = false;
-							//Text = DefaultText;							
+							//Text = DefaultText;
+
+							var statusBar = (IVsStatusbar)Package.GetGlobalService(typeof(SVsStatusbar));
+							statusBar.IsFrozen(out var frozen);
+							if (frozen != 0) {
+								statusBar.FreezeOutput(0);
+							}
+							statusBar.SetText("Ready");
+							statusBar.FreezeOutput(1);
 							break;
 						}
-					case SessionState.UserSigningIn:
+					case SessionState.UserSigningIn: {
+							var statusBar = (IVsStatusbar)Package.GetGlobalService(typeof(SVsStatusbar));
+							statusBar.IsFrozen(out var frozen);
+
+							if (frozen != 0) {
+								statusBar.FreezeOutput(0);
+							}
+ 
+							statusBar.SetText("CodeStream: Signing In...");
+							statusBar.FreezeOutput(1);
+							break;
+						}
 					case SessionState.UserSigningOut: {
 							// the caching on this sucks and it doesn't always update...
 							//if (!_sessionService.IsReady) {
 							//	Text = "Loading...";
 							//	Visible = false;
 							//	Enabled = false;
-							//}							
+							//}
+							var statusBar = (IVsStatusbar)Package.GetGlobalService(typeof(SVsStatusbar));													
+							statusBar.IsFrozen(out var frozen);
+							if (frozen != 0) {
+								statusBar.FreezeOutput(0);
+							}
+							statusBar.SetText("CodeStream: Signing Out...");
+							statusBar.FreezeOutput(1);
 							break;
 						}
 					case SessionState.UserSignedIn: {
@@ -70,6 +97,15 @@ namespace CodeStream.VisualStudio.Commands {
 							Visible = true;
 							Enabled = true;
 							Text = user.HasSingleTeam() ? label : $"{label} - {user.TeamName}";
+
+							var statusBar = (IVsStatusbar)Package.GetGlobalService(typeof(SVsStatusbar));
+							statusBar.IsFrozen(out var frozen);
+							if (frozen != 0) {
+								statusBar.FreezeOutput(0);
+							}
+							statusBar.SetText("Ready");
+							statusBar.FreezeOutput(1);
+
 							break;
 						}
 					default: {
