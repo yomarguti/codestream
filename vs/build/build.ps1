@@ -135,6 +135,9 @@ function Build-Extension {
 
 	if (!$Quick) {
 		Write-Log "Running UnitTests..."
+		if (!(Test-Path -Path $vstest)) {
+			throw "UnitTest executable not found $($vstest)"
+		}
 		& $vstest "$($OutputDir)/CodeStream.VisualStudio.UnitTests.dll" /Platform:$platform
 
 		if ($LastExitCode -ne 0) {
