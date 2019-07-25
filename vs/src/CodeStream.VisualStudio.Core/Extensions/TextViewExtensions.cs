@@ -63,7 +63,12 @@ namespace CodeStream.VisualStudio.Core.Extensions {
 					if (range.End.Line == lineNumber) {
 						sp2 = new SnapshotPoint(line.Snapshot, line.MaxEndCharacter(range));
 					}
+					if (sp1 != null && sp2 != null) {
+						break;
+					}
 				}
+				if (sp1 == null || sp2 == null) return null;
+
 				var span = new Span(sp1.Position, Math.Abs(sp1.Difference(sp2)));
 				return span;
 			}
@@ -82,6 +87,9 @@ namespace CodeStream.VisualStudio.Core.Extensions {
 		}
 
 		public static int MaxEndCharacter(this ITextSnapshotLine line, Range range) {
+			if (range.End.Character == int.MaxValue) {
+				return line.Extent.End.Position;
+			}
 			var position = line.Start.Position + range.End.Character;
 			if (position > line.Extent.End.Position) {
 				position = line.Extent.End.Position;
