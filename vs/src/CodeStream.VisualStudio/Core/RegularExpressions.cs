@@ -9,6 +9,9 @@ namespace CodeStream.VisualStudio.Core
 
 		public static Regex Number = new Regex(@"^\d+$", RegexOptions.Compiled);
 
+		public static readonly Regex ApiKeyRegex =
+			new Regex(@"""apiKey"":""(.*?)""(,|(?=\}))", RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace);
+
 		public static readonly Regex PasswordRegex =
 			new Regex(@"""password"":""(.*?)""(,|(?=\}))", RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace);
 

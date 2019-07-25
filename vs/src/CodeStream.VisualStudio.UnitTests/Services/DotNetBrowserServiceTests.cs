@@ -26,7 +26,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 
 			Assert.IsTrue(browserService.QueueCount > 0);
 			Assert.IsTrue(browserService.QueueCount < 4);
-			eventAggregator.Publish(new SessionReadyEvent());
+			eventAggregator.Publish(new WebviewDidInitializeEvent());
 			Thread.Sleep(1000);
 			Assert.IsTrue(browserService.QueueCount == 0);
 			Assert.IsTrue(browserService.Items[0] == "bootstrap");
@@ -75,7 +75,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 
 			Assert.IsTrue(browserService.QueueCount > 0);
 			Assert.IsTrue(browserService.QueueCount < 4);
-			eventAggregator.Publish(new SessionReadyEvent());
+			eventAggregator.Publish(new WebviewDidInitializeEvent());
 			Thread.Sleep(1000);
 			Assert.IsTrue(browserService.QueueCount == 0);
 			Assert.IsTrue(browserService.Items[0] == "bootstrap1");
@@ -102,7 +102,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 			browserService.PostMessage("bootstrap1");
 			//goes through -- no queue
 			Assert.IsTrue(browserService.QueueCount == 0);
-			eventAggregator.Publish(new SessionReadyEvent());
+			eventAggregator.Publish(new WebviewDidInitializeEvent());
 			browserService.PostMessage("bootstrap2");
 			//goes through -- no queue
 			Assert.IsTrue(browserService.QueueCount == 0);
@@ -134,7 +134,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 			for (var i = 0; i < 200; i++) {
 				browserService.PostMessage($"data{i}", true);
 			}
-			eventAggregator.Publish(new SessionReadyEvent());
+			eventAggregator.Publish(new WebviewDidInitializeEvent());
 			SpinWait.SpinUntil(() => browserService.WasReloaded, 2000);
 			Assert.AreEqual(true, browserService.WasReloaded);
 			browserService.Dispose();

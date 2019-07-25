@@ -8,7 +8,7 @@ namespace CodeStream.VisualStudio.Core.Logging.Sanitizer
         {
             if (content.IsNullOrWhiteSpace()) return content;
 
-			content = RegularExpressions.PasswordRegex.Replace(content, @"""apiKey"":""<hidden>""$2");
+			content = RegularExpressions.ApiKeyRegex.Replace(content, @"""apiKey"":""<hidden>""$2");
 			content = RegularExpressions.PasswordRegex.Replace(content, @"""password"":""<hidden>""$2");
             content = RegularExpressions.TokenRegex.Replace(content, @"""token"":""<hidden>""$2");
             content = RegularExpressions.PasswordOrTokenRegex.Replace(content, @"""passwordOrToken"":""<hidden>""$2");

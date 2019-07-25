@@ -71,9 +71,6 @@ namespace CodeStream.VisualStudio.Services {
 		private BrowserContext _browserContext;
 		private string _path;
 
-		private readonly IDisposable _webViewReadyEvent;
-		private readonly IDisposable _sessionLogoutEvent;
-
 		private readonly ManualResetEvent _manualResetEvent;
 		private readonly CancellationTokenSource _processorTokenSource;
 		private CancellationTokenSource _queueTokenSource;
@@ -87,6 +84,8 @@ namespace CodeStream.VisualStudio.Services {
 
 		private readonly ICodeStreamAgentServiceFactory _codeStreamAgentServiceFactory;
 		private readonly IEventAggregator _eventAggregator;
+		private readonly List<IDisposable> _disposables;
+		private IDisposable _disposable;
 
 		[ImportingConstructor]
 		public DotNetBrowserService(
@@ -98,17 +97,25 @@ namespace CodeStream.VisualStudio.Services {
 			try {
 				_messageQueue = new BlockingCollection<string>(new ConcurrentQueue<string>());
 				_manualResetEvent = new ManualResetEvent(false);
+				_disposables = new List<IDisposable>() {
+					_eventAggregator.GetEvent<WebviewDidInitializeEvent>().Subscribe(_ => {
+						Log.Debug($"{nameof(WebviewDidInitializeEvent)} Message QueueCount={QueueCount}");
+						_manualResetEvent.Set();
 
-				_webViewReadyEvent = _eventAggregator.GetEvent<WebviewDidInitializeEvent>().Subscribe(_ => {
-					Log.Debug($"{nameof(WebviewDidInitializeEvent)} Message QueueCount={QueueCount}");
-					_manualResetEvent.Set();
-				});
-				_sessionLogoutEvent = _eventAggregator.GetEvent<SessionLogoutEvent>().Subscribe(_ => {
-					Log.Debug($"{nameof(SessionLogoutEvent)} Message QueueCount={QueueCount}");
-					_queueTokenSource?.Cancel();
-					_messageQueue.Clear();
-					_manualResetEvent.Reset();
-				});
+						_disposable = _eventAggregator.GetEvent<SessionReadyEvent>().Subscribe(nested => {
+							Log.Debug($"{nameof(SessionReadyEvent)} Message QueueCount={QueueCount}");
+							if (!_manualResetEvent.WaitOne(0)) {
+								_manualResetEvent.Set();
+							}
+						});
+					}),
+					_eventAggregator.GetEvent<SessionLogoutEvent>().Subscribe(_ => {
+						Log.Debug($"{nameof(SessionLogoutEvent)} Message QueueCount={QueueCount}");
+						_queueTokenSource?.Cancel();
+						_messageQueue.Clear();
+						_manualResetEvent.Reset();
+					})
+				};
 
 				//https://stackoverflow.com/questions/9106419/how-to-cancel-getconsumingenumerable-on-blockingcollection
 				_processorTokenSource = new CancellationTokenSource();
@@ -429,7 +436,7 @@ namespace CodeStream.VisualStudio.Services {
 					try {
 						_queueTokenSource?.Cancel();
 						_processorTokenSource?.Cancel();
-						_manualResetEvent.Set();						
+						_manualResetEvent.Set();
 					}
 					catch (Exception ex) {
 						Log.Warning(ex, "aux component failed to dispose");
@@ -446,8 +453,8 @@ namespace CodeStream.VisualStudio.Services {
 					}
 					try {
 						_browserView.InputBindings.Clear();
-						_webViewReadyEvent?.Dispose();
-						_sessionLogoutEvent?.Dispose();
+						_disposable?.Dispose();
+						_disposables?.DisposeAll();
 
 						_browserView.Browser.RenderGoneEvent -= Browser_RenderGoneEvent;
 						_browserView.Browser.ScriptContextCreated -= Browser_ScriptContextCreated;
