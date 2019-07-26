@@ -519,7 +519,7 @@ class EditorService(val project: Project) {
         val end = editor.getOffset(documentMarker.range.end)
         val text = editor.document.text
         val pre = text.substring(0, start)
-        val pos = text.substring(end + 1, text.length)
+        val pos = if (end < text.length) text.substring(end + 1, text.length) else ""
         val codemarkContent = pre + marker.code + pos
 
         val fileType = editor.document.file?.fileType
