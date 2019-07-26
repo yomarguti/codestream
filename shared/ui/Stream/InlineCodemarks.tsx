@@ -272,29 +272,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		this.scrollTo(this.props.metrics.lineHeight!);
 	}
 
-	/* 	these next 3 declarations are a hack to allow running code after a specific update
-			when we know what the next state and props will be.
-			it's like a replacement for `componentWillReceiveProps`*/
-	private readonly _nextUpdateCallbacks: Function[] = [];
-
-	private _onDidUpdate() {
-		this._nextUpdateCallbacks.forEach(cb => {
-			try {
-				cb();
-			} catch (error) {}
-		});
-	}
-
-	private _onNextUpdate(fn: () => any) {
-		const index =
-			this._nextUpdateCallbacks.push(() => {
-				fn();
-				this._nextUpdateCallbacks.splice(index);
-			}) - 1;
-	}
-
 	componentDidUpdate(prevProps: Props) {
-		this._onDidUpdate();
 		const { textEditorUri } = this.props;
 		if (String(textEditorUri).length > 0 && prevProps.textEditorUri !== textEditorUri) {
 			this.onFileChanged();
@@ -1012,7 +990,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		if (docMarker) {
 			batch(() => {
-				this._onNextUpdate(() => {
+				this._onNextProps(() => {
 					this.setState({ newCodemarkAttributes: undefined });
 				});
 				this.props.saveDocumentMarkers(this.props.textEditorUri!, [docMarker]);
@@ -1022,6 +1000,26 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			this.setState({ newCodemarkAttributes: undefined });
 		}
 	};
+
+	// these next 3 declarations are just a tad bit hacky but i like it
+	private readonly _nextPropsCallbacks: Function[] = [];
+
+	getSnapshotBeforeUpdate() {
+		this._nextPropsCallbacks.forEach(cb => {
+			try {
+				cb();
+			} catch (error) {}
+		});
+		return null;
+	}
+
+	private _onNextProps(fn: () => any) {
+		const index =
+			this._nextPropsCallbacks.push(() => {
+				fn();
+				this._nextPropsCallbacks.splice(index);
+			}) - 1;
+	}
 
 	private _clearWheelingStateTimeout?: any;
 	private _wheelingState: { accumulatedPixels: number; topLine: number } | undefined;
@@ -1275,19 +1273,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	handleClickPlus = async (event, type, lineNum0, top) => {
 		event.preventDefault();
-		if (!this.props.viewInline) {
-			this.props.setCodemarksFileViewStyle("inline");
-			try {
-				await new Promise((resolve, reject) => {
-					this._onNextUpdate(() => {
-						if (this.props.viewInline) resolve();
-						else reject();
-					});
-				});
-			} catch (error) {
-				return;
-			}
-		}
 
 		const { openIconsOnLine } = this.state;
 		const { textEditorSelection } = this.props;
