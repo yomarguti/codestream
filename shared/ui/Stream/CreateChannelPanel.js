@@ -97,7 +97,7 @@ export class SimpleCreateChannelPanel extends Component {
 								<label>Channel Name</label>
 								<Tooltip title={tooltipTitle} placement="bottom" delay={0.5}>
 									<input
-										className="input-text control"
+										className="native-key-bindings input-text control"
 										type="text"
 										name="name"
 										id="channel-name-input"
@@ -114,7 +114,7 @@ export class SimpleCreateChannelPanel extends Component {
 									Purpose <span className="optional">(optional)</span>
 								</label>
 								<input
-									className="input-text control"
+									className="native-key-bindings input-text control"
 									type="text"
 									name="purpose"
 									value={this.state.purpose}
@@ -128,7 +128,7 @@ export class SimpleCreateChannelPanel extends Component {
 								<Select
 									id="input-members"
 									name="members"
-									classNamePrefix="react-select"
+									classNamePrefix="native-key-bindings react-select"
 									isMulti={true}
 									value={this.state.members || []}
 									options={this.props.teammates}

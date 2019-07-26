@@ -155,7 +155,7 @@ export class InvitePanel extends Component {
 					<div className="control-group">
 						<label>Email</label>
 						<input
-							className="input-text"
+							className="native-key-bindings input-text"
 							id="invite-email-input"
 							type="text"
 							value={newMemberEmail}
@@ -170,7 +170,7 @@ export class InvitePanel extends Component {
 							Name <span className="optional">(optional)</span>
 						</label>
 						<input
-							className="input-text"
+							className="native-key-bindings input-text"
 							type="text"
 							value={newMemberName}
 							onChange={this.onNameChange}

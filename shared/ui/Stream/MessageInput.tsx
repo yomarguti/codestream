@@ -571,7 +571,7 @@ export class MessageInput extends React.Component<Props, State> {
 				onKeyPress={this.handleKeyPress}
 				onKeyDown={this.handleKeyDown}
 			>
-				<div className="mentions-popup-container">
+				<div style={{ position: "relative" }}>
 					<AtMentionsPopup
 						on={Boolean(this.state.currentPopup)}
 						items={this.state.popupItems}
@@ -598,9 +598,14 @@ export class MessageInput extends React.Component<Props, State> {
 					)}
 				</React.Fragment>
 				<ContentEditable
-					className={cx("message-input", btoa(unescape(encodeURIComponent(placeholder || ""))), {
-						// "has-plus": !this.props.multiCompose
-					})}
+					className={cx(
+						"native-key-bindings",
+						"message-input",
+						btoa(unescape(encodeURIComponent(placeholder || ""))),
+						{
+							// "has-plus": !this.props.multiCompose
+						}
+					)}
 					id="input-div"
 					tabIndex={this.props.tabIndex}
 					onChange={this.handleChange}

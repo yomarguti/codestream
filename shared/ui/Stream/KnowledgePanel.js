@@ -305,7 +305,7 @@ export class SimpleKnowledgePanel extends Component {
 				<div className="search-bar">
 					<input
 						name="q"
-						className="input-text control"
+						className="native-key-bindings input-text control"
 						type="text"
 						ref={ref => (this._searchInput = ref)}
 						onChange={e => this.setState({ q: e.target.value })}

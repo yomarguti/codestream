@@ -112,7 +112,7 @@ export class ConfigureYouTrackPanel extends Component {
 								<label><strong>{providerName} Base URL</strong></label>
 								<label>Please provide the Base URL used by your team to access YouTrack. This can be found under your <a href="https://www.jetbrains.com/help/youtrack/incloud/Domain-Settings.html">Domain Settings</a>.</label>
 								<input
-									className="input-text control"
+									className="native-key-bindings input-text control"
 									type="text"
 									name="baseUrl"
 									tabIndex={this.tabIndex()}
@@ -131,7 +131,7 @@ export class ConfigureYouTrackPanel extends Component {
 								<div id="username-controls" className="control-group">
 									<label>{providerName} Username</label>
 									<input
-										className="input-text control"
+										className="native-key-bindings input-text control"
 										type="text"
 										name="username"
 										tabIndex={this.tabIndex()}
@@ -144,7 +144,7 @@ export class ConfigureYouTrackPanel extends Component {
 								<label><strong>{providerName} Permanent Token</strong></label>
 								<label>Please provide a <a href="https://www.jetbrains.com/help/youtrack/standalone/Manage-Permanent-Token.html">permanent token</a> we can use to access your YouTrack projects and issues.</label>
 								<input
-									className="input-text control"
+									className="native-key-bindings input-text control"
 									type="text"
 									name="token"
 									tabIndex={this.tabIndex()}

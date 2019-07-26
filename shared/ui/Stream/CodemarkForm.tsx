@@ -465,27 +465,21 @@ class CodemarkForm extends React.Component<Props, State> {
 				? this.props.editingCodemark!.assignees
 				: (this.state.assignees as any[]).map(a => a.value);
 
-		this.setState({ isLoading: true });
-		try {
-			await this.props.onSubmit(
-				{
-					codeBlock: this.state.codeBlock,
-					streamId: selectedChannelId,
-					text: replaceHtml(text)!,
-					color,
-					type,
-					assignees: csAssignees,
-					title,
-					crossPostIssueValues: crossPostIssueEnabled ? this.crossPostIssueValues : undefined
-					// notify,
-					// crossPostMessage,
-				},
-				event
-			);
-		} catch (error) {
-		} finally {
-			this.setState({ isLoading: false });
-		}
+		this.props.onSubmit(
+			{
+				codeBlock: this.state.codeBlock,
+				streamId: selectedChannelId,
+				text: replaceHtml(text)!,
+				color,
+				type,
+				assignees: csAssignees,
+				title,
+				crossPostIssueValues: crossPostIssueEnabled ? this.crossPostIssueValues : undefined
+				// notify,
+				// crossPostMessage,
+			},
+			event
+		);
 	};
 
 	isFormInvalid = () => {
@@ -965,7 +959,8 @@ class CodemarkForm extends React.Component<Props, State> {
 		return [
 			panelHeader,
 			<form
-				className={cx("codemark-form", "standard-form", { "google-style": GoogleStyle })}
+				id="code-comment-form"
+				className={cx("standard-form", { "google-style": GoogleStyle })}
 				key="two"
 			>
 				<fieldset className="form-body">
@@ -1090,7 +1085,7 @@ class CodemarkForm extends React.Component<Props, State> {
 								<input
 									type="text"
 									name="title"
-									className="input-text control"
+									className="native-key-bindings input-text control"
 									tabIndex={this.tabIndex()}
 									value={this.state.title}
 									onChange={e => this.setState({ title: e.target.value })}
@@ -1105,7 +1100,7 @@ class CodemarkForm extends React.Component<Props, State> {
 									<Select
 										id="input-assignees"
 										name="assignees"
-										classNamePrefix="react-select"
+										classNamePrefix="native-key-bindings react-select"
 										isMulti={!this.state.singleAssignee}
 										value={this.state.assignees}
 										options={this.state.assignableUsers}
@@ -1120,7 +1115,7 @@ class CodemarkForm extends React.Component<Props, State> {
 									<Select
 										id="input-assignees"
 										name="assignees"
-										classNamePrefix="react-select"
+										classNamePrefix="native-key-bindings react-select"
 										isMulti
 										isDisabled
 										value={this.state.assignees}

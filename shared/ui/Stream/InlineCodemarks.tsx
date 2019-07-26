@@ -1,13 +1,13 @@
 import React, { Component } from "react";
-import PropTypes from "prop-types";
-import { connect, batch } from "react-redux";
+import { connect } from "react-redux";
 import * as userSelectors from "../store/users/reducer";
 import Icon from "./Icon";
+import Codemark from "./Codemark";
 import ScrollBox from "./ScrollBox";
 import Tooltip from "./Tooltip"; // careful with tooltips on codemarks; they are not performant
 import Feedback from "./Feedback";
 import cx from "classnames";
-import { range, debounceToAnimationFrame, isNotOnDisk, areRangesEqual } from "../utils";
+import { range, debounceToAnimationFrame, isNotOnDisk } from "../utils";
 import { HostApi } from "../webview-api";
 import {
 	EditorHighlightRangeRequestType,
@@ -26,12 +26,10 @@ import {
 	GetDocumentFromMarkerRequestType,
 	GetFileScmInfoResponse,
 	GetFileScmInfoRequestType,
-	CodemarkPlus,
-	GetRangeScmInfoRequestType,
-	GetRangeScmInfoResponse
+	CodemarkPlus
 } from "@codestream/protocols/agent";
 import { Range, Position } from "vscode-languageserver-types";
-import { fetchDocumentMarkers, saveDocumentMarkers } from "../store/documentMarkers/actions";
+import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import {
 	getCurrentSelection,
 	getVisibleLineCount,
@@ -40,24 +38,18 @@ import {
 	ScmError,
 	getFileScmError
 } from "../store/editorContext/reducer";
-import { CSTeam, CSUser, CodemarkType } from "@codestream/protocols/api";
+import { CSTeam, CSUser } from "@codestream/protocols/api";
 import {
 	setCodemarksFileViewStyle,
 	setCodemarksShowArchived,
 	setCodemarksShowResolved,
-	setCurrentDocumentMarker
+	setCurrentDocumentMarker,
+	setNewPostEntry
 } from "../store/context/actions";
 import { sortBy as _sortBy } from "lodash-es";
 import { getTeamMembers } from "../store/users/reducer";
 import { setEditorContext } from "../store/editorContext/actions";
 import { CodeStreamState } from "../store";
-import ContainerAtEditorLine from "./SpatialView/ContainerAtEditorLine";
-import ContainerAtEditorSelection from "./SpatialView/ContainerAtEditorSelection";
-import { CodemarkForm } from "./CodemarkForm";
-import { dataTransformer } from "../store/data-filter";
-import { DocumentMarkersActionsType } from "../store/documentMarkers/types";
-import { createPostAndCodemark } from "./actions";
-import Codemark from "./Codemark";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -113,9 +105,8 @@ interface Props {
 	setCurrentDocumentMarker: (
 		...args: Parameters<typeof setCurrentDocumentMarker>
 	) => ReturnType<typeof setCurrentDocumentMarker>;
-
-	createPostAndCodemark: (...args: Parameters<typeof createPostAndCodemark>) => any;
-	saveDocumentMarkers: Function;
+	setMultiCompose(...args: any[]): void;
+	setNewPostEntry(...args: Parameters<typeof setNewPostEntry>): void;
 }
 
 interface State {
@@ -131,7 +122,6 @@ interface State {
 	highlightedDocmarker: string | undefined;
 	numLinesVisible: number;
 	problem: ScmError | undefined;
-	newCodemarkAttributes: { type: CodemarkType; codeBlock: GetRangeScmInfoResponse } | undefined;
 }
 
 export class SimpleInlineCodemarks extends Component<Props, State> {
@@ -152,7 +142,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		super(props);
 
 		this.state = {
-			newCodemarkAttributes: undefined,
 			isLoading: props.documentMarkers.length === 0,
 			lastSelectedLine: 0,
 			clickedPlus: false,
@@ -343,24 +332,18 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	repositionCodemarks = debounceToAnimationFrame(() => {
-		let $containerDivs: HTMLElement[] = Array.from(
-			document.querySelectorAll(".plane-container:not(.cs-hidden)")
+		let $codemarkDivs = Array.from(
+			document.querySelectorAll(".codemark.inline:not(.hidden), .compose.float-compose")
 		);
-		if ($containerDivs.length > 0) this.repositionElements($containerDivs);
-
-		let $hiddenDivs: HTMLElement[] = Array.from(
-			document.querySelectorAll(".plane-container.cs-hidden")
-		);
-		if ($hiddenDivs.length > 0) this.repositionElements($hiddenDivs);
+		this.repositionElements($codemarkDivs);
+		let $hiddenDivs = Array.from(document.querySelectorAll(".codemark.inline.hidden"));
 		this.repositionElements($hiddenDivs);
 	});
 
-	repositionElements = ($elements: HTMLElement[]) => {
-		$elements.sort((a, b) => Number(a.dataset.top) - Number(b.dataset.top));
+	repositionElements = $elements => {
+		$elements.sort((a, b) => a.dataset.top - b.dataset.top);
 
-		const composeIndex = $elements.findIndex($e => {
-			return $e.children[0].classList.contains("codemark-form-container");
-		});
+		const composeIndex = $elements.findIndex($e => $e.classList.contains("compose"));
 
 		if (composeIndex > -1) {
 			const composeDimensions = $elements[composeIndex].getBoundingClientRect();
@@ -429,7 +412,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			<div style={{ height: "100%", paddingTop: "55px" }}>
 				<ScrollBox>
 					<div
-						className="channel-list vscroll spatial-list"
+						className="channel-list vscroll"
 						onClick={this.handleClickField}
 						id="inline-codemarks-scroll-container"
 						style={{ paddingTop: "20px", fontSize: fontSize }}
@@ -455,28 +438,27 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 									return null;
 								}
 								return (
-									<div className="codemark-container">
-										<Codemark
-											key={codemark.id}
-											// @ts-ignore
-											codemark={docMarker.codemark}
-											marker={docMarker}
-											collapsed={true}
-											inline={true}
-											hidden={hidden}
-											teammates={this.props.teammates}
-											hover={this.state.highlightedDocmarker === docMarker.id}
-											selected={currentDocumentMarkerId === docMarker.id}
-											usernames={this.props.usernames}
-											onClick={this.handleClickCodemark}
-											onMouseEnter={this.handleHighlightCodemark}
-											onMouseLeave={this.handleUnhighlightCodemark}
-											action={this.props.postAction}
-											query={this.state.query}
-											viewHeadshots={this.props.viewHeadshots}
-											postAction={this.props.postAction}
-										/>
-									</div>
+									<Codemark
+										key={codemark.id}
+										// @ts-ignore
+										codemark={docMarker.codemark}
+										marker={docMarker}
+										collapsed={true}
+										inline={true}
+										hidden={hidden}
+										teammates={this.props.teammates}
+										hover={this.state.highlightedDocmarker === docMarker.id}
+										selected={currentDocumentMarkerId === docMarker.id}
+										usernames={this.props.usernames}
+										onClick={this.handleClickCodemark}
+										onMouseEnter={this.handleHighlightCodemark}
+										onMouseLeave={this.handleUnhighlightCodemark}
+										action={this.props.postAction}
+										query={this.state.query}
+										viewHeadshots={this.props.viewHeadshots}
+										postAction={this.props.postAction}
+										style={{ position: "relative", marginBottom: "20px" }}
+									/>
 								);
 							})}
 					</div>
@@ -791,7 +773,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					}}
 				>
 					{this.renderHoverIcons(numLinesVisible)}
-					{this.renderCodemarkForm() || this.renderNoCodemarks()}
+					{this.renderNoCodemarks()}
 					{this.props.children}
 				</div>
 			);
@@ -869,7 +851,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						id="inline-codemarks-field"
 					>
 						<div className="inline-codemarks vscroll-x">
-							{this.renderCodemarkForm()}
+							{this.props.children}
 							{(textEditorVisibleRanges || []).map((lineRange, rangeIndex) => {
 								const realFirstLine = lineRange.start.line; // == 0 ? 1 : lineRange[0].line;
 								const realLastLine = lineRange.end.line;
@@ -883,36 +865,28 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 										const codemark = docMarker.codemark;
 										const hidden = this.hiddenCodemarks[docMarker.id] ? true : false;
 										return (
-											<ContainerAtEditorLine
+											<Codemark
 												key={docMarker.id}
-												lineNumber={lineNum}
-												className={
-													currentDocumentMarkerId !== docMarker.id && hidden ? "cs-hidden" : ""
-												}
-											>
-												<div className="codemark-container">
-													<Codemark
-														codemark={codemark}
-														marker={docMarker}
-														deselectCodemarks={this.deselectCodemarks}
-														collapsed={true}
-														inline={true}
-														hidden={hidden}
-														teammates={this.props.teammates}
-														hover={this.state.highlightedDocmarker === docMarker.id}
-														selected={currentDocumentMarkerId === docMarker.id}
-														usernames={this.props.usernames}
-														onClick={this.handleClickCodemark}
-														onMouseEnter={this.handleHighlightCodemark}
-														onMouseLeave={this.handleUnhighlightCodemark}
-														action={this.props.postAction}
-														query={this.state.query}
-														lineNum={lineNum}
-														postAction={this.props.postAction}
-														top={top}
-													/>
-												</div>
-											</ContainerAtEditorLine>
+												codemark={codemark}
+												marker={docMarker}
+												collapsed={true}
+												inline={true}
+												hidden={hidden}
+												teammates={this.props.teammates}
+												hover={this.state.highlightedDocmarker === docMarker.id}
+												selected={currentDocumentMarkerId === docMarker.id}
+												deselectCodemarks={this.deselectCodemarks}
+												usernames={this.props.usernames}
+												onClick={this.handleClickCodemark}
+												onMouseEnter={this.handleHighlightCodemark}
+												onMouseLeave={this.handleUnhighlightCodemark}
+												action={this.props.postAction}
+												query={this.state.query}
+												lineNum={lineNum}
+												postAction={this.props.postAction}
+												style={{ top: top + "px" }}
+												top={top}
+											/>
 										);
 									} else {
 										return null;
@@ -931,94 +905,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				</div>
 			</div>
 		);
-	}
-
-	renderCodemarkForm() {
-		if (this.state.newCodemarkAttributes == undefined) return null;
-
-		const { type, codeBlock } = this.state.newCodemarkAttributes;
-
-		return (
-			<ContainerAtEditorSelection initialLine={codeBlock.range.start.line}>
-				<div className="codemark-form-container">
-					<CodemarkForm
-						commentType={type}
-						codeBlock={codeBlock}
-						streamId={this.props.currentStreamId!}
-						onSubmit={this.submitCodemark}
-						onClickClose={() => {
-							this.setState({ newCodemarkAttributes: undefined });
-						}}
-						collapsed={false}
-					/>
-				</div>
-			</ContainerAtEditorSelection>
-		);
-	}
-
-	static contextTypes = {
-		store: PropTypes.object
-	};
-
-	submitCodemark = async (attributes, event) => {
-		let docMarker;
-		const removeTransformer = dataTransformer.addTransformer(
-			DocumentMarkersActionsType.SaveForFile,
-			(payload: { uri: string; markers: DocumentMarker[] }) => {
-				return payload.markers.filter(documentMarker => {
-					if (documentMarker.version === 1) {
-						const storeState: CodeStreamState = this.context.store.getState();
-						const author = userSelectors.getUserByCsId(storeState.users, documentMarker.creatorId);
-						if (author != undefined && author.id === storeState.session.userId) {
-							if (
-								documentMarker.commitHashWhenCreated === attributes.codeBlock.scm.revision &&
-								areRangesEqual(documentMarker.range, attributes.codeBlock.range)
-							) {
-								docMarker = documentMarker;
-								return true;
-							}
-						}
-					}
-					return false;
-				});
-			}
-		);
-		await this.props.createPostAndCodemark(attributes, "Spatial View");
-		await this.props.fetchDocumentMarkers(this.props.textEditorUri!);
-
-		removeTransformer();
-
-		if (docMarker) {
-			batch(() => {
-				this._onNextProps(() => {
-					this.setState({ newCodemarkAttributes: undefined });
-				});
-				this.props.saveDocumentMarkers(this.props.textEditorUri!, [docMarker]);
-				this.props.setCurrentDocumentMarker(docMarker.id);
-			});
-		} else {
-			this.setState({ newCodemarkAttributes: undefined });
-		}
-	};
-
-	// these next 3 declarations are just a tad bit hacky but i like it
-	private readonly _nextPropsCallbacks: Function[] = [];
-
-	getSnapshotBeforeUpdate() {
-		this._nextPropsCallbacks.forEach(cb => {
-			try {
-				cb();
-			} catch (error) {}
-		});
-		return null;
-	}
-
-	private _onNextProps(fn: () => any) {
-		const index =
-			this._nextPropsCallbacks.push(() => {
-				fn();
-				this._nextPropsCallbacks.splice(index);
-			}) - 1;
 	}
 
 	private _clearWheelingStateTimeout?: any;
@@ -1273,6 +1159,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	handleClickPlus = async (event, type, lineNum0, top) => {
 		event.preventDefault();
+		this.props.setNewPostEntry("Spatial View");
 
 		const { openIconsOnLine } = this.state;
 		const { textEditorSelection } = this.props;
@@ -1297,32 +1184,19 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		// Clear the previous highlight
 		this.handleUnhighlightLine(lineNum0);
 
-		if (setSelection) {
-			HostApi.instance.send(EditorSelectRangeRequestType, {
-				uri: this.props.textEditorUri!,
-				selection: { ...range, cursor: range.end },
-				preserveFocus: true
-			});
-		}
-		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
-			uri: this.props.textEditorUri!,
-			range: range,
-			dirty: true
-		});
-
 		// Clear the open icons
 		// this works subtly... we tell state to not open icons on any line,
 		// but normally getDerivedStateFromProps would override that. By
 		// resetting openIconsOnLine but *not* lastSelectedLine,
 		// getDerivedStateFromProps won't fire.
-		this.setState({
-			clickedPlus: true,
-			newCodemarkAttributes: { type, codeBlock: scmInfo }
-		});
-
-		this.props.setCurrentDocumentMarker();
+		this.setState({ clickedPlus: true });
 
 		// setup git context for codemark form
+		this.props.setMultiCompose(
+			true,
+			{ commentType: type, top: top },
+			{ uri: this.props.textEditorUri, range: range, setSelection: setSelection }
+		);
 		// setTimeout(() => this.props.focusInput(), 500);
 	};
 
@@ -1521,7 +1395,6 @@ export default connect(
 		setCodemarksShowResolved,
 		setCurrentDocumentMarker,
 		setEditorContext,
-		createPostAndCodemark,
-		saveDocumentMarkers
+		setNewPostEntry
 	}
 )(SimpleInlineCodemarks);
