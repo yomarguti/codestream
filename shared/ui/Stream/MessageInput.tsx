@@ -987,12 +987,18 @@ export class MessageInput extends React.Component<Props, State> {
 					<Icon
 						key="mention"
 						name="mention"
+						title="Mention a teammate"
+						placement="top"
+						align={{ offset: [5, 0] }}
 						className={cx("mention", { hover: this.state.currentPopup === "at-mentions" })}
 						onClick={this.handleClickAtMentions}
 					/>
 					<Icon
 						key="smiley"
 						name="smiley"
+						title="Add a smiley"
+						placement="top"
+						align={{ offset: [5, 0] }}
 						className={cx("smiley", {
 							hover: this.state.emojiOpen
 						})}
@@ -1008,6 +1014,9 @@ export class MessageInput extends React.Component<Props, State> {
 					<Icon
 						key="codestream"
 						name="codestream"
+						title="Add a related codemark"
+						placement="top"
+						align={{ offset: [5, 0] }}
 						className={cx("codestream", { hover: this.state.codemarkOpen })}
 						onClick={this.handleClickCodemarkButton}
 					/>
@@ -1015,6 +1024,9 @@ export class MessageInput extends React.Component<Props, State> {
 					<Icon
 						key="tag"
 						name="tag"
+						title="Add tags"
+						placement="top"
+						align={{ offset: [5, 0] }}
 						className={cx("tags", { hover: this.state.tagsOpen })}
 						onClick={this.handleClickTagButton}
 					/>
