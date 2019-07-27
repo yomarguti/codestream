@@ -289,11 +289,7 @@
         <projectService serviceImplementation="com.codestream.webview.WebViewService"/>
         <projectService serviceImplementation="com.codestream.editor.EditorService"/>
 
-        <applicationConfigurable groupId="tools" displayName="CodeStream" id="preferences.CodeStreamApplicationConfigurable"
-                             instance="com.codestream.settings.CodeStreamApplicationConfigurable"/>
-
-
-        <projectConfigurable parentId="preferences.CodeStreamApplicationConfigurable" displayName="Project Settings" id="preferences.CodeStreamConfigurable"
+        <projectConfigurable groupId="tools" displayName="CodeStream" id="preferences.CodeStreamConfigurable"
                              instance="com.codestream.settings.CodeStreamConfigurable"/>
 
         <intentionAction>
