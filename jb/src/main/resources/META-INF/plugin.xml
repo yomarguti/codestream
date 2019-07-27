@@ -68,6 +68,7 @@
 <h5>Fixed</h5>
 <ul>
     <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/71">#71</a> - You can edit channel selection when editing via thread view</li>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/78">#78</a> - Using keyboard shortcut doesn't set focus correctly</li>
     <li>Fixes an error when switching between projects in your IDE</li>
     <li>Fixes JxBrowser rendering issues on Windows HiDPI displays when running on JetBrains JRE version 8</li>
     <li>Fixes an issue with the default conversation selection not being preserved across IDE sessions</li>
@@ -288,7 +289,11 @@
         <projectService serviceImplementation="com.codestream.webview.WebViewService"/>
         <projectService serviceImplementation="com.codestream.editor.EditorService"/>
 
-        <projectConfigurable groupId="tools" displayName="CodeStream" id="preferences.CodeStreamConfigurable"
+        <applicationConfigurable groupId="tools" displayName="CodeStream" id="preferences.CodeStreamApplicationConfigurable"
+                             instance="com.codestream.settings.CodeStreamApplicationConfigurable"/>
+
+
+        <projectConfigurable parentId="preferences.CodeStreamApplicationConfigurable" displayName="Project Settings" id="preferences.CodeStreamConfigurable"
                              instance="com.codestream.settings.CodeStreamConfigurable"/>
 
         <intentionAction>
