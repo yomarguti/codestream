@@ -25,11 +25,11 @@ class BrowserEngineService : Disposable {
             .newBuilder(RenderingMode.OFF_SCREEN)
             .licenseKey("6P835FT5H9Q596QEMRZTTB0RYSG7H1P664XU2Y2M9QPOA998OY42K6N3OTUO90SSP5BA")
             .userDataDir(Paths.get(dir.toURI()))
-            // .disableGpu()
+            .disableGpu()
             // .disableWebSecurity()
-            // .addSwitch("--disable-gpu-compositing")
-            // .addSwitch("--enable-begin-frame-scheduling")
-            // .addSwitch("--software-rendering-fps=60")
+            .addSwitch("--disable-gpu-compositing")
+            .addSwitch("--enable-begin-frame-scheduling")
+            .addSwitch("--software-rendering-fps=60")
             //     if (JreHiDpiUtil.isJreHiDPIEnabled() && !SystemInfo.isMac) "--force-device-scale-factor=1" else ""
             .allowFileAccessFromFiles()
 
