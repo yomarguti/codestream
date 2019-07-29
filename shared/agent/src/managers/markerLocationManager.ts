@@ -158,7 +158,8 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			currentBufferText = await xfs.readText(filePath);
 		}
 		if (!currentBufferText) {
-			throw new Error(`Could not retrieve contents for ${filePath}`);
+			Logger.log(`MARKERS: Could not retrieve contents for ${filePath} from document manager or file system. File does not exist in current branch.`);
+			return result;
 		}
 
 		if (Object.keys(committedLocations).length) {
