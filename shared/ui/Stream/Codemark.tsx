@@ -18,7 +18,7 @@ import { CodemarkType, CSUser, CSMe, CSPost } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
 import { range } from "../utils";
-import { getUserByCsId, getTeamMembers } from "../store/users/reducer";
+import { getUserByCsId, getTeamMembers, getUsernames } from "../store/users/reducer";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { CodemarkForm } from "./CodemarkForm";
 import { deleteCodemark, editCodemark } from "../store/codemarks/actions";
@@ -31,6 +31,7 @@ import { isNil } from "lodash-es";
 import { CodeStreamState } from "../store";
 
 interface State {
+	hover: boolean;
 	isEditing: boolean;
 	menuOpen?: boolean;
 	menuTarget?: any;
@@ -48,6 +49,7 @@ interface DispatchProps {
 
 interface ConnectedProps {
 	teammates: CSUser[];
+	usernames: string[];
 	author: CSUser;
 	capabilities: Capabilities;
 	codemarkKeybindings: { [key: string]: string };
@@ -63,10 +65,8 @@ export type DisplayType = "default" | "collapsed";
 interface InheritedProps {
 	displayType?: DisplayType;
 	selected?: boolean;
-	hover?: boolean;
 	codemark: CodemarkPlus;
 	marker: DocumentMarker;
-	usernames: string[];
 	postAction?(...args: any[]): any;
 	action(action: string, post: any, args: any): any;
 	onClick?(event: React.SyntheticEvent, codemark: CodemarkPlus, marker: DocumentMarker): any;
@@ -90,6 +90,7 @@ export class Codemark extends React.Component<Props, State> {
 	constructor(props: Props) {
 		super(props);
 		this.state = {
+			hover: false,
 			isEditing: false,
 			menuOpen: false,
 			showLabelText: false
@@ -318,10 +319,12 @@ export class Codemark extends React.Component<Props, State> {
 	};
 
 	handleMouseEnterCodemark = (event: React.MouseEvent): any => {
+		this.setState({ hover: true });
 		this.props.onMouseEnter && this.props.onMouseEnter(this.props.marker);
 	};
 
 	handleMouseLeaveCodemark = (event: React.MouseEvent): any => {
+		this.setState({ hover: false });
 		this.props.onMouseLeave && this.props.onMouseLeave(this.props.marker);
 	};
 
@@ -722,7 +725,7 @@ export class Codemark extends React.Component<Props, State> {
 						</CodemarkDetails>
 					)}
 				</div>
-				{this.props.hover && !selected && type !== "bookmark" && (
+				{this.state.hover && !selected && type !== "bookmark" && (
 					<div>
 						<Icon
 							className="info"
@@ -866,7 +869,8 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		author: getUserByCsId(users, props.codemark.creatorId) || (unkownAuthor as CSUser),
 		codemarkKeybindings: preferences.codemarkKeybindings || EMPTY_OBJECT,
 		isCodeStreamTeam: teamProvider === "codestream",
-		teammates: getTeamMembers(state)
+		teammates: getTeamMembers(state),
+		usernames: getUsernames(state)
 	};
 };
 

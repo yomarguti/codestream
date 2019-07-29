@@ -79,7 +79,6 @@ import { PostEntryPoint } from "../store/context/types";
 interface Props {
 	currentDocumentMarkerId: string | undefined;
 	currentStreamId?: string;
-	usernames: string[];
 	team: CSTeam;
 	viewInline: boolean;
 	viewHeadshots: boolean;
@@ -134,7 +133,6 @@ interface State {
 	rippledLine?: number;
 	numAbove: number;
 	numBelow: number;
-	highlightedDocmarker: string | undefined;
 	numLinesVisible: number;
 	problem: ScmError | undefined;
 	newCodemarkAttributes: { type: CodemarkType; codeBlock: GetRangeScmInfoResponse } | undefined;
@@ -168,7 +166,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			openIconsOnLine: -1,
 			numAbove: 0,
 			numBelow: 0,
-			highlightedDocmarker: undefined,
 			numLinesVisible: props.numLinesVisible,
 			problem: props.scmInfo && getFileScmError(props.scmInfo)
 		};
@@ -479,9 +476,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 											codemark={docMarker.codemark}
 											marker={docMarker}
 											hidden={hidden}
-											hover={this.state.highlightedDocmarker === docMarker.id}
 											selected={currentDocumentMarkerId === docMarker.id}
-											usernames={this.props.usernames}
 											onClick={this.handleClickCodemark}
 											onMouseEnter={this.handleHighlightCodemark}
 											onMouseLeave={this.handleUnhighlightCodemark}
@@ -908,9 +903,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 														marker={docMarker}
 														deselectCodemarks={this.deselectCodemarks}
 														hidden={hidden}
-														hover={this.state.highlightedDocmarker === docMarker.id}
 														selected={currentDocumentMarkerId === docMarker.id}
-														usernames={this.props.usernames}
 														onClick={this.handleClickCodemark}
 														onMouseEnter={this.handleHighlightCodemark}
 														onMouseLeave={this.handleUnhighlightCodemark}
@@ -1414,12 +1407,10 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	handleHighlightCodemark = marker => {
-		this.setState({ highlightedDocmarker: marker.id });
 		this.highlightCode(marker, true);
 	};
 
 	handleUnhighlightCodemark = marker => {
-		this.setState({ highlightedDocmarker: undefined });
 		this.highlightCode(marker, false);
 	};
 
@@ -1495,7 +1486,6 @@ const mapStateToProps = (state: CodeStreamState) => {
 	return {
 		currentDocumentMarkerId: context.currentDocumentMarkerId,
 		currentStreamId: context.currentStreamId,
-		usernames: userSelectors.getUsernames(state),
 		team: teams[context.currentTeamId],
 		viewInline: context.codemarksFileViewStyle === "inline",
 		viewHeadshots: configs.showHeadshots,
