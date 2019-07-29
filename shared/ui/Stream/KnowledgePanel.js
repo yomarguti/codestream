@@ -146,7 +146,7 @@ export class SimpleKnowledgePanel extends Component {
 					<Codemark
 						key={codemark.id}
 						codemark={codemark}
-						collapsed={this.state.openPost !== codemark.id}
+						displayType="collapsed"
 						currentUserName={this.props.currentUserName}
 						usernames={this.props.usernames}
 						onClick={this.handleClickCodemark}

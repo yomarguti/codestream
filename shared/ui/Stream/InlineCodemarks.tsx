@@ -72,7 +72,6 @@ import Codemark from "./Codemark";
 interface Props {
 	currentDocumentMarkerId: string | undefined;
 	currentStreamId?: string;
-	teammates?: CSUser[];
 	usernames: string[];
 	team: CSTeam;
 	viewInline: boolean;
@@ -483,10 +482,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 											// @ts-ignore
 											codemark={docMarker.codemark}
 											marker={docMarker}
-											collapsed={true}
-											inline={true}
 											hidden={hidden}
-											teammates={this.props.teammates}
 											hover={this.state.highlightedDocmarker === docMarker.id}
 											selected={currentDocumentMarkerId === docMarker.id}
 											usernames={this.props.usernames}
@@ -897,8 +893,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 								const realLastLine = lineRange.end.line;
 								const linesInRange = realLastLine - realFirstLine + 1;
 								const marksInRange = range(realFirstLine, realLastLine + 1).map(lineNum => {
-									const top =
-										(codeHeight * (rangeStartOffset + lineNum - realFirstLine)) / numLinesVisible;
 									if (this.docMarkersByStartLine[lineNum]) {
 										//} && lineNum !== this.state.openIconsOnLine) {
 										const docMarker = this.docMarkersByStartLine[lineNum];
@@ -917,10 +911,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 														codemark={codemark}
 														marker={docMarker}
 														deselectCodemarks={this.deselectCodemarks}
-														collapsed={true}
-														inline={true}
 														hidden={hidden}
-														teammates={this.props.teammates}
 														hover={this.state.highlightedDocmarker === docMarker.id}
 														selected={currentDocumentMarkerId === docMarker.id}
 														usernames={this.props.usernames}
@@ -929,9 +920,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 														onMouseLeave={this.handleUnhighlightCodemark}
 														action={this.props.postAction}
 														query={this.state.query}
-														lineNum={lineNum}
 														postAction={this.props.postAction}
-														top={top}
 													/>
 												</div>
 											</ContainerAtEditorLine>
@@ -1504,7 +1493,6 @@ const mapStateToProps = (state: CodeStreamState) => {
 		currentDocumentMarkerId: context.currentDocumentMarkerId,
 		currentStreamId: context.currentStreamId,
 		usernames: userSelectors.getUsernames(state),
-		teammates: teamMembers,
 		team: teams[context.currentTeamId],
 		viewInline: context.codemarksFileViewStyle === "inline",
 		viewHeadshots: configs.showHeadshots,

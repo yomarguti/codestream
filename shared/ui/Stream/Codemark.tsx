@@ -18,7 +18,7 @@ import { CodemarkType, CSUser, CSMe, CSPost } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
 import { range } from "../utils";
-import { getUserByCsId } from "../store/users/reducer";
+import { getUserByCsId, getTeamMembers } from "../store/users/reducer";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { CodemarkForm } from "./CodemarkForm";
 import { deleteCodemark, editCodemark } from "../store/codemarks/actions";
@@ -28,6 +28,7 @@ import { getPosts } from "../store/posts/actions";
 import Tooltip from "./Tooltip";
 import { getCurrentTeamProvider } from "../store/teams/actions";
 import { isNil } from "lodash-es";
+import { CodeStreamState } from "../store";
 
 interface State {
 	isEditing: boolean;
@@ -37,15 +38,6 @@ interface State {
 }
 
 interface DispatchProps {
-	author: CSUser;
-	capabilities: Capabilities;
-	codemarkKeybindings: { [key: string]: string };
-	currentUser: CSMe;
-	editorHasFocus: boolean;
-	pinnedReplies: CSPost[];
-	pinnedAuthors: CSUser[];
-	isCodeStreamTeam: boolean;
-
 	deleteCodemark: typeof deleteCodemark;
 	editCodemark: typeof editCodemark;
 	fetchThread: typeof fetchThread;
@@ -54,10 +46,23 @@ interface DispatchProps {
 	getPosts: typeof getPosts;
 }
 
-interface Props extends DispatchProps {
+interface ConnectedProps {
+	teammates: CSUser[];
+	author: CSUser;
+	capabilities: Capabilities;
+	codemarkKeybindings: { [key: string]: string };
+	currentUser: CSMe;
+	editorHasFocus: boolean;
+	pinnedReplies: CSPost[];
+	pinnedAuthors: CSUser[];
+	isCodeStreamTeam: boolean;
+}
+
+export type DisplayType = "default" | "collapsed";
+
+interface InheritedProps {
+	displayType?: DisplayType;
 	selected?: boolean;
-	collapsed?: boolean;
-	inline?: boolean;
 	hover?: boolean;
 	codemark: CodemarkPlus;
 	marker: DocumentMarker;
@@ -68,15 +73,18 @@ interface Props extends DispatchProps {
 	onMouseEnter?(marker: DocumentMarker): any;
 	onMouseLeave?(marker: DocumentMarker): any;
 	query?: string;
-	lineNum?: Number;
-	top?: Number;
 	showLabelText?: boolean;
-	hidden: boolean;
+	hidden?: boolean;
 	deselectCodemarks?: Function;
-	teammates?: CSUser[];
 }
 
+type Props = InheritedProps & DispatchProps & ConnectedProps;
+
 export class Codemark extends React.Component<Props, State> {
+	static defaultProps: Partial<Props> = {
+		displayType: "default"
+	};
+
 	private _pollingTimer?: any;
 
 	constructor(props: Props) {
@@ -146,9 +154,8 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	render() {
-		let content;
 		if (this.state.isEditing)
-			content = (
+			return (
 				<div className="editing-codemark-container">
 					<CodemarkForm
 						isEditing
@@ -161,10 +168,14 @@ export class Codemark extends React.Component<Props, State> {
 					/>
 				</div>
 			);
-		else if (this.props.inline) content = this.renderInlineCodemark();
-		else if (this.props.collapsed) content = this.renderCollapsedCodemark();
 
-		return <span>{content}</span>;
+		switch (this.props.displayType) {
+			case "collapsed":
+				return this.renderCollapsedCodemark();
+			case "default":
+			default:
+				return this.renderInlineCodemark();
+		}
 	}
 
 	editCodemark = async ({ text, color, assignees, title }) => {
@@ -256,7 +267,7 @@ export class Codemark extends React.Component<Props, State> {
 	renderStatus(codemark) {
 		const { type, status = "open" } = codemark;
 		if (type === CodemarkType.Issue) {
-			if (this.props.inline) {
+			if (this.props.displayType === "default") {
 				return (
 					<Tooltip title="Mark as resolved and hide discussion" placement="topRight">
 						<div
@@ -633,8 +644,6 @@ export class Codemark extends React.Component<Props, State> {
 				onClick={this.handleClickCodemark}
 				onMouseEnter={this.handleMouseEnterCodemark}
 				onMouseLeave={this.handleMouseLeaveCodemark}
-				data-linenum={this.props.lineNum}
-				data-top={this.props.top}
 			>
 				<div className="contents">
 					{(selected || !hidden) && !codemark.pinned && (
@@ -836,7 +845,7 @@ const unkownAuthor = {
 	fullName: "Uknown User"
 };
 
-const mapStateToProps = (state, props): Partial<DispatchProps> => {
+const mapStateToProps = (state: CodeStreamState, props: InheritedProps): ConnectedProps => {
 	const { capabilities, context, preferences, users, session, posts } = state;
 	const { codemark } = props;
 
@@ -853,14 +862,17 @@ const mapStateToProps = (state, props): Partial<DispatchProps> => {
 		editorHasFocus: context.hasFocus,
 		pinnedReplies,
 		pinnedAuthors,
-		currentUser: users[session.userId] as CSMe,
+		currentUser: users[session.userId!] as CSMe,
 		author: getUserByCsId(users, props.codemark.creatorId) || (unkownAuthor as CSUser),
 		codemarkKeybindings: preferences.codemarkKeybindings || EMPTY_OBJECT,
-		isCodeStreamTeam: teamProvider === "codestream"
+		isCodeStreamTeam: teamProvider === "codestream",
+		teammates: getTeamMembers(state)
 	};
 };
 
-export default connect<any, Partial<DispatchProps>, any>(
+export default connect(
+	// @ts-ignore
 	mapStateToProps,
 	{ setCodemarkStatus, setUserPreference, deleteCodemark, editCodemark, fetchThread, getPosts }
+	// @ts-ignore
 )(Codemark);
