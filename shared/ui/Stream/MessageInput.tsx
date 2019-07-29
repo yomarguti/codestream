@@ -990,6 +990,7 @@ export class MessageInput extends React.Component<Props, State> {
 						title="Mention a teammate"
 						placement="top"
 						align={{ offset: [5, 0] }}
+						delay={1}
 						className={cx("mention", { hover: this.state.currentPopup === "at-mentions" })}
 						onClick={this.handleClickAtMentions}
 					/>
@@ -999,6 +1000,7 @@ export class MessageInput extends React.Component<Props, State> {
 						title="Add a smiley"
 						placement="top"
 						align={{ offset: [5, 0] }}
+						delay={1}
 						className={cx("smiley", {
 							hover: this.state.emojiOpen
 						})}
@@ -1017,6 +1019,7 @@ export class MessageInput extends React.Component<Props, State> {
 						title="Add a related codemark"
 						placement="top"
 						align={{ offset: [5, 0] }}
+						delay={1}
 						className={cx("codestream", { hover: this.state.codemarkOpen })}
 						onClick={this.handleClickCodemarkButton}
 					/>
@@ -1027,6 +1030,7 @@ export class MessageInput extends React.Component<Props, State> {
 						title="Add tags"
 						placement="top"
 						align={{ offset: [5, 0] }}
+						delay={1}
 						className={cx("tags", { hover: this.state.tagsOpen })}
 						onClick={this.handleClickTagButton}
 					/>
