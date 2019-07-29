@@ -522,6 +522,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			>
 				{(hover || open) && [
 					<Icon
+						key="comment"
 						onClick={e => this.handleClickPlus(e, CodemarkType.Comment, lineNum0)}
 						name="comment"
 						title={this.titles.comment}
@@ -532,6 +533,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					<Icon
 						onClick={e => this.handleClickPlus(e, CodemarkType.Issue, lineNum0)}
 						name="issue"
+						key="issue"
 						title={this.titles.issue}
 						placement="bottomLeft"
 						align={{ offset: [-3, 10] }}
@@ -540,6 +542,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					<Icon
 						onClick={e => this.handleClickPlus(e, CodemarkType.Bookmark, lineNum0)}
 						name="bookmark"
+						key="bookmark"
 						title={this.titles.bookmark}
 						placement="bottomLeft"
 						align={{ offset: [-3, 10] }}
@@ -556,6 +559,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					<Icon
 						onClick={e => this.handleClickPlus(e, CodemarkType.Link, lineNum0)}
 						name="link"
+						key="link"
 						title={this.titles.link}
 						placement="bottomLeft"
 						align={{ offset: [-3, 10] }}
