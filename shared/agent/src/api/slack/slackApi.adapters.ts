@@ -124,9 +124,9 @@ export function fromSlackDirect(
 	let closed;
 	if (channel.is_open == null) {
 		if (
-			channel.priority > 0 &&
+			channel.priority >= 0 &&
 			// Assume everything below that magic number indicates something you don't care about in slack
-			channel.priority <= 0.017071595754764 &&
+			channel.priority <= 0.019260956929976 &&
 			channel.user !== "USLACKBOT" &&
 			channel.user !== slackUserId
 		) {
