@@ -83,6 +83,9 @@ namespace CodeStream.VisualStudio.UI {
 				else {
 					Log.Verbose("No Codemarks from agent");
 				}
+				if (_markers?.MarkersNotLocated?.AnySafe() == true) {
+					Log.Verbose($"There are {_markers?.MarkersNotLocated.Count()} markers not located");
+				}
 			}
 			catch (OverflowException ex) {
 				Log.Error(ex, fileUri?.ToString());

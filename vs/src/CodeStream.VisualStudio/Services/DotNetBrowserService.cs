@@ -204,6 +204,9 @@ namespace CodeStream.VisualStudio.Services {
 			browser.ScriptContextCreated += Browser_ScriptContextCreated;
 
 			_browserView = new WPFBrowserView(browser);
+#if DEBUG
+			browser.ConsoleMessageEvent += Browser_ConsoleMessageEvent;
+#endif
 
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut1Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D1)));
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut2Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D2)));
@@ -245,6 +248,21 @@ namespace CodeStream.VisualStudio.Services {
 			   ");
 
 			Log.Verbose($"{nameof(Browser_ScriptContextCreated)} ExecuteJavaScript");
+		}
+
+		private void Browser_ConsoleMessageEvent(object sender, ConsoleEventArgs e) {
+			if (e.Level == ConsoleEventArgs.MessageLevel.DEBUG) {
+				Log.Verbose($"Browser:Message={e.Message} Source={e.Source} Line={e.LineNumber}");
+			}
+			else if (e.Level == ConsoleEventArgs.MessageLevel.LOG) {
+				Log.Verbose($"Browser:Message={e.Message} Source={e.Source} Line={e.LineNumber}");
+			}
+			else if (e.Level == ConsoleEventArgs.MessageLevel.WARNING && Log.IsVerboseEnabled()) {
+				Log.Warning($"Browser:Message={e.Message} Source={e.Source} Line={e.LineNumber}");
+			}
+			else if (e.Level == ConsoleEventArgs.MessageLevel.ERROR && Log.IsVerboseEnabled()) {
+				Log.Error($"Browser:Message={e.Message} Source={e.Source} Line={e.LineNumber}");
+			}
 		}
 
 		public void AddWindowMessageEvent(WindowMessageHandler messageHandler) {
@@ -445,6 +463,14 @@ namespace CodeStream.VisualStudio.Services {
 					catch (Exception ex) {
 						Log.Warning(ex, "aux component failed to dispose");
 					}
+#if DEBUG
+					try {
+						_browserView.Browser.ConsoleMessageEvent -= Browser_ConsoleMessageEvent;
+					}
+					catch (Exception ex) {
+						Log.Error(ex, nameof(Browser_ConsoleMessageEvent));
+					}
+#endif
 
 					if (_browserView == null) {
 						Log.Verbose("DotNetBrowser is null");
