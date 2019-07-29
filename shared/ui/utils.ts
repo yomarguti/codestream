@@ -6,6 +6,30 @@ export const emptyObject = {};
 export const emptyArray = [];
 export function noop() {}
 
+/*
+	A hack to allow running a callback once after a specific update
+	when we know what the next state and props will be.
+*/
+export class ComponentUpdateEmitter {
+	private readonly _nextUpdateCallbacks: Function[] = [];
+
+	emit() {
+		this._nextUpdateCallbacks.forEach(cb => {
+			try {
+				cb();
+			} catch (error) {}
+		});
+	}
+
+	enqueue(fn: () => any) {
+		const index =
+			this._nextUpdateCallbacks.push(() => {
+				fn();
+				this._nextUpdateCallbacks.splice(index);
+			}) - 1;
+	}
+}
+
 export function inMillis(number: number, unit: "sec" | "min") {
 	switch (unit) {
 		case "sec":

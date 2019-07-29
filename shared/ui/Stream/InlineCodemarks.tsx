@@ -7,7 +7,13 @@ import ScrollBox from "./ScrollBox";
 import Tooltip from "./Tooltip"; // careful with tooltips on codemarks; they are not performant
 import Feedback from "./Feedback";
 import cx from "classnames";
-import { range, debounceToAnimationFrame, isNotOnDisk, areRangesEqual } from "../utils";
+import {
+	range,
+	debounceToAnimationFrame,
+	isNotOnDisk,
+	areRangesEqual,
+	ComponentUpdateEmitter
+} from "../utils";
 import { HostApi } from "../webview-api";
 import {
 	EditorHighlightRangeRequestType,
@@ -17,7 +23,8 @@ import {
 	EditorSelection,
 	EditorMetrics,
 	EditorScrollToNotificationType,
-	EditorScrollMode
+	EditorScrollMode,
+	NewCodemarkNotificationType
 } from "../ipc/webview.protocol";
 import {
 	DocumentMarker,
@@ -40,7 +47,7 @@ import {
 	ScmError,
 	getFileScmError
 } from "../store/editorContext/reducer";
-import { CSTeam, CSUser, CodemarkType } from "@codestream/protocols/api";
+import { CSTeam, CodemarkType } from "@codestream/protocols/api";
 import {
 	setCodemarksFileViewStyle,
 	setCodemarksShowArchived,
@@ -48,7 +55,6 @@ import {
 	setCurrentDocumentMarker
 } from "../store/context/actions";
 import { sortBy as _sortBy } from "lodash-es";
-import { getTeamMembers } from "../store/users/reducer";
 import { setEditorContext } from "../store/editorContext/actions";
 import { CodeStreamState } from "../store";
 import ContainerAtEditorLine from "./SpatialView/ContainerAtEditorLine";
@@ -58,6 +64,7 @@ import { middlewareInjector } from "../store/middleware-injector";
 import { DocumentMarkersActionsType } from "../store/documentMarkers/types";
 import { createPostAndCodemark } from "./actions";
 import Codemark from "./Codemark";
+import { PostEntryPoint } from "../store/context/types";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -146,6 +153,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	_scrollDiv: HTMLDivElement | null | undefined;
 	private root = React.createRef<HTMLDivElement>();
 	hiddenCodemarks = {};
+	currentPostEntryPoint?: PostEntryPoint;
+	updateEmitter = new ComponentUpdateEmitter();
 
 	constructor(props: Props) {
 		super(props);
@@ -263,7 +272,15 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				dispose() {
 					mutationObserver.disconnect();
 				}
-			}
+			},
+			HostApi.instance.on(NewCodemarkNotificationType, e => {
+				this.currentPostEntryPoint = e.source as PostEntryPoint;
+				this.handleClickPlus(
+					undefined,
+					e.type,
+					getLine0ForEditorLine(this.props.textEditorVisibleRanges, e.range.start.line)
+				);
+			})
 		);
 
 		this.onFileChanged(true);
@@ -271,29 +288,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		this.scrollTo(this.props.metrics.lineHeight!);
 	}
 
-	/* 	these next 3 declarations are a hack to allow running code after a specific update
-			when we know what the next state and props will be.
-			it's like a replacement for `componentWillReceiveProps`*/
-	private readonly _nextUpdateCallbacks: Function[] = [];
-
-	private _onDidUpdate() {
-		this._nextUpdateCallbacks.forEach(cb => {
-			try {
-				cb();
-			} catch (error) {}
-		});
-	}
-
-	private _onNextUpdate(fn: () => any) {
-		const index =
-			this._nextUpdateCallbacks.push(() => {
-				fn();
-				this._nextUpdateCallbacks.splice(index);
-			}) - 1;
-	}
-
 	componentDidUpdate(prevProps: Props) {
-		this._onDidUpdate();
+		this.updateEmitter.emit();
 		const { textEditorUri } = this.props;
 		if (String(textEditorUri).length > 0 && prevProps.textEditorUri !== textEditorUri) {
 			this.onFileChanged();
@@ -531,7 +527,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			>
 				{(hover || open) && [
 					<Icon
-						onClick={e => this.handleClickPlus(e, "comment", lineNum0, top)}
+						onClick={e => this.handleClickPlus(e, CodemarkType.Comment, lineNum0)}
 						name="comment"
 						title={this.titles.comment}
 						placement="bottomLeft"
@@ -539,7 +535,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						delay={1}
 					/>,
 					<Icon
-						onClick={e => this.handleClickPlus(e, "issue", lineNum0, top)}
+						onClick={e => this.handleClickPlus(e, CodemarkType.Issue, lineNum0)}
 						name="issue"
 						title={this.titles.issue}
 						placement="bottomLeft"
@@ -547,7 +543,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						delay={1}
 					/>,
 					<Icon
-						onClick={e => this.handleClickPlus(e, "bookmark", lineNum0, top)}
+						onClick={e => this.handleClickPlus(e, CodemarkType.Bookmark, lineNum0)}
 						name="bookmark"
 						title={this.titles.bookmark}
 						placement="bottomLeft"
@@ -563,7 +559,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					// 	delay={1}
 					// />,
 					<Icon
-						onClick={e => this.handleClickPlus(e, "link", lineNum0, top)}
+						onClick={e => this.handleClickPlus(e, CodemarkType.Link, lineNum0)}
 						name="link"
 						title={this.titles.link}
 						placement="bottomLeft"
@@ -994,14 +990,18 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				});
 			}
 		);
-		await this.props.createPostAndCodemark(attributes, "Spatial View");
+		await this.props.createPostAndCodemark(
+			attributes,
+			this.currentPostEntryPoint || "Spatial View"
+		);
+		this.currentPostEntryPoint = undefined;
 		await this.props.fetchDocumentMarkers(this.props.textEditorUri!);
 
 		removeTransformer();
 
 		if (docMarker) {
 			batch(() => {
-				this._onNextUpdate(() => {
+				this.updateEmitter.enqueue(() => {
 					this.setState({ newCodemarkAttributes: undefined });
 				});
 				this.props.saveDocumentMarkers(this.props.textEditorUri!, [docMarker]);
@@ -1262,13 +1262,18 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			});
 	};
 
-	handleClickPlus = async (event, type, lineNum0, top) => {
-		event.preventDefault();
+	handleClickPlus = async (
+		event: React.SyntheticEvent | undefined,
+		type: CodemarkType,
+		lineNum0: number
+	) => {
+		if (event) event.preventDefault();
+
 		if (!this.props.viewInline) {
 			this.props.setCodemarksFileViewStyle("inline");
 			try {
 				await new Promise((resolve, reject) => {
-					this._onNextUpdate(() => {
+					this.updateEmitter.enqueue(() => {
 						if (this.props.viewInline) resolve();
 						else reject();
 					});
@@ -1471,8 +1476,6 @@ const EMPTY_OBJECT = {};
 
 const mapStateToProps = (state: CodeStreamState) => {
 	const { context, editorContext, teams, configs, documentMarkers } = state;
-
-	const teamMembers = getTeamMembers(state);
 
 	const docMarkers = documentMarkers[editorContext.textEditorUri || ""] || EMPTY_ARRAY;
 	const numUnpinned = docMarkers.filter(d => !d.codemark.pinned).length;

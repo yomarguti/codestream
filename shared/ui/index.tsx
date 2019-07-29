@@ -82,8 +82,7 @@ export function listenForEvents(store) {
 	api.on(DidChangeVersionCompatibilityNotificationType, e => {
 		if (e.compatibility === VersionCompatibility.CompatibleUpgradeRecommended) {
 			store.dispatch(upgradeRecommended());
-		}
-		else if (e.compatibility === VersionCompatibility.UnsupportedUpgradeRequired) {
+		} else if (e.compatibility === VersionCompatibility.UnsupportedUpgradeRequired) {
 			store.dispatch(upgradeRequired());
 		}
 	});

@@ -24,7 +24,7 @@ import ConfigureAzureDevOpsPanel from "./ConfigureAzureDevOpsPanel";
 import ConfigureYouTrackPanel from "./ConfigureYouTrackPanel";
 import * as actions from "./actions";
 import { editCodemark } from "../store/codemarks/actions";
-import { isInVscode, safe, toMapBy, forceAsLine, isNotOnDisk } from "../utils";
+import { ComponentUpdateEmitter, isInVscode, safe, toMapBy, isNotOnDisk } from "../utils";
 import { getSlashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
 import { getPostsForStream, getPost } from "../store/posts/reducer";
@@ -81,6 +81,7 @@ export class SimpleStream extends Component {
 		composeBoxProps: {}
 	};
 	_compose = React.createRef();
+	updateEmitter = new ComponentUpdateEmitter();
 
 	static contextTypes = {
 		store: PropTypes.object
@@ -176,19 +177,13 @@ export class SimpleStream extends Component {
 		return this.props.fetchThread(this.props.postStreamId, this.props.threadId);
 	}
 
-	async handleNewCodemarkRequest(e) {
-		this.props.setNewPostEntry(e.source);
-		const extra =
-			this.state.multiCompose &&
-			this.state.composeBoxProps &&
-			this.state.composeBoxProps.commentType === e.type
-				? { key: Math.random().toString() } // in case the codemark type already selected is the same as the new one requested, force a re-computation of the compose box
-				: {};
-		this.setMultiCompose(
-			true,
-			{ commentType: e.type, ...extra },
-			{ uri: e.uri, range: forceAsLine(e.range) }
-		);
+	handleNewCodemarkRequest(e) {
+		if (this.props.activePanel === "codemarks-for-file") return;
+
+		this.updateEmitter.enqueue(() => {
+			HostApi.instance.emit(NewCodemarkNotificationType.method, e);
+		});
+		this.props.openPanel("codemarks-for-file");
 	}
 
 	copy(event) {
@@ -210,6 +205,7 @@ export class SimpleStream extends Component {
 	};
 
 	componentDidUpdate(prevProps, prevState) {
+		this.updateEmitter.emit();
 		const { postStreamId } = this.props;
 
 		if (this.props.textEditorUri !== prevProps.textEditorUri) {
