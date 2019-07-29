@@ -1341,7 +1341,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		}
 
 		if (this.props.currentDocumentMarkerId === docMarker.id) {
-			if (target && (target.classList.contains("author") || target.closest(".author"))) {
+			if (target && (target.classList.contains("header") || target.closest(".header"))) {
 				this.deselectCodemarks();
 			}
 			return;
