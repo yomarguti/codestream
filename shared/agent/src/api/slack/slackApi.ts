@@ -13,7 +13,6 @@ import { Emitter, Event } from "vscode-languageserver";
 import { Container, SessionContainer } from "../../container";
 import { Logger, TraceLevel } from "../../logger";
 import {
-	AddEnterpriseProviderHostRequest,
 	ArchiveStreamRequest,
 	Capabilities,
 	CloseStreamRequest,
