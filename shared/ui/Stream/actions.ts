@@ -38,17 +38,23 @@ import {
 	setChannelFilter,
 	setCodemarkColorFilter,
 	setCodemarkFileFilter,
-	setCodemarkTypeFilter,
-	configureProvider
+	setCodemarkTypeFilter
 } from "../store/context/actions";
 import * as contextActions from "../store/context/actions";
 import * as postsActions from "../store/posts/actions";
 import { updatePreferences } from "../store/preferences/actions";
 import * as streamActions from "../store/streams/actions";
 import { addUsers } from "../store/users/actions";
-import { uuid } from "../utils";
+import { uuid, isNotOnDisk } from "../utils";
 import { HostApi } from "../webview-api";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
+import { CodeStreamState } from "../store";
+import { pick } from "lodash-es";
+import { getTeamMembers, findMentionedUserIds } from "../store/users/reducer";
+import { confirmPopup } from "./Confirm";
+import React from "react";
+import { getFileScmError } from "../store/editorContext/reducer";
+import { PostEntryPoint } from "../store/context/types";
 
 export { connectProvider, disconnectProvider } from "../store/context/actions";
 export {
@@ -74,14 +80,127 @@ export const markPostUnread = (streamId: string, postId: string) => () => {
 		);
 };
 
+export const createPostAndCodemark = (
+	attributes: {
+		codeBlock?: any;
+		streamId: string;
+		text: string;
+		color: string;
+		type: string;
+		assignees: any[];
+		title?: string;
+		crossPostIssueValues?: any;
+	},
+	entryPoint?: PostEntryPoint
+) => async (dispatch, getState: () => CodeStreamState) => {
+	const { codeBlock } = attributes;
+	let marker: any = {
+		code: codeBlock.contents,
+		range: codeBlock.range
+	};
+
+	if (codeBlock.scm) {
+		marker.file = codeBlock.scm.file;
+		marker.source = codeBlock.scm;
+	}
+	const markers = [marker];
+
+	let warning;
+	if (isNotOnDisk(codeBlock.uri))
+		warning = {
+			title: "Unsaved File",
+			message:
+				"Your teammates won't be able to see the codemark when viewing this file unless you save the file first."
+		};
+	else {
+		switch (getFileScmError(codeBlock)) {
+			case "NoRepo": {
+				warning = {
+					title: "Missing Git Info",
+					message:
+						"This repo doesn’t appear to be managed by Git. Your teammates won’t be able to see the codemark when viewing this source file."
+				};
+				break;
+			}
+			case "NoRemotes": {
+				warning = {
+					title: "No Remote URL",
+					message:
+						"This repo doesn’t have a remote URL configured. Your teammates won’t be able to see the codemark when viewing this source file."
+				};
+				break;
+			}
+			case "NoGit": {
+				warning = {
+					title: "Git could not be located",
+					message:
+						"CodeStream was unable to find the `git` command. Make sure it's installed and configured properly."
+				};
+				break;
+			}
+			default: {
+			}
+		}
+	}
+
+	if (warning) {
+		try {
+			await new Promise((resolve, reject) => {
+				return confirmPopup({
+					title: warning.title,
+					message: () =>
+						React.createElement("span", undefined, [
+							warning.message + " ",
+							React.createElement(
+								"a",
+								{
+									href: "https://github.com/TeamCodeStream/CodeStream/wiki/Git-Issues"
+								},
+								"Learn more"
+							)
+						]),
+					centered: true,
+					buttons: [
+						{
+							label: "Post Anyway",
+							action: resolve
+						},
+						{ label: "Cancel", action: reject }
+					]
+				});
+			});
+		} catch (error) {
+			return;
+		}
+	}
+
+	return dispatch(
+		createPost(
+			attributes.streamId,
+			undefined,
+			attributes.text,
+			{
+				...pick(attributes, "title", "text", "streamId", "type", "assignees", "color"),
+				markers,
+				textEditorUri: attributes.codeBlock.uri
+			},
+			findMentionedUserIds(getTeamMembers(getState()), attributes.text || ""),
+			{
+				crossPostIssueValues: attributes.crossPostIssueValues,
+				entryPoint: entryPoint
+			}
+		)
+	);
+};
+
 export const createPost = (
 	streamId: string,
 	parentPostId: string | undefined,
 	text: string,
-	codemark: any,
-	mentions: string[],
-	extra: any
-) => async (dispatch, getState) => {
+	codemark?: any,
+	mentions?: string[],
+	extra: any = {}
+) => async (dispatch, getState: () => CodeStreamState) => {
 	const { session, context } = getState();
 	const pendingId = uuid();
 	dispatch(
@@ -91,11 +210,12 @@ export const createPost = (
 			parentPostId,
 			text,
 			codemark,
-			creatorId: session.userId,
+			creatorId: session.userId!,
 			createdAt: new Date().getTime(),
 			pending: true
 		})
 	);
+
 	try {
 		let responsePromise: Promise<CreatePostResponse>;
 		if (codemark) {
@@ -113,6 +233,7 @@ export const createPost = (
 				}
 			}
 			const block = codemark.markers[0] || {};
+
 			responsePromise = HostApi.instance.send(CreatePostWithMarkerRequestType, {
 				streamId,
 				text: codemark.text,
@@ -144,7 +265,6 @@ export const createPost = (
 		const response = await responsePromise;
 		if (response.codemark) {
 			dispatch(saveCodemarks([response.codemark]));
-			dispatch(fetchDocumentMarkers(codemark.textEditorUri));
 		}
 		response.streams &&
 			response.streams.forEach(stream => dispatch(streamActions.updateStream(stream)));
@@ -530,7 +650,7 @@ export const createProviderCard = async (attributes, codemark) => {
 	const linefeed = attributes.htmlMarkup ? "<br/>" : "\n";
 	let description = `${codemark.text}${linefeed}${linefeed}`;
 	if (codemark.markers && codemark.markers.length > 0) {
-		const marker = codemark.markers[0];		
+		const marker = codemark.markers[0];
 		if (codeStart === "```" || codeEnd === "```") {
 			const split = marker.code.split(/\r?\n/);
 			if (split.length > 1) {
@@ -546,12 +666,12 @@ export const createProviderCard = async (attributes, codemark) => {
 		const range = marker.range;
 		if (range) {
 			if (range.start.line === range.end.line) {
-				description+=` (Line ${range.start.line + 1})`;
+				description += ` (Line ${range.start.line + 1})`;
 			} else {
-				description+=` (Lines ${range.start.line + 1}-${range.end.line + 1})`;
-			}			
+				description += ` (Lines ${range.start.line + 1}-${range.end.line + 1})`;
+			}
 		}
-		description +=`${linefeed}${linefeed}`;
+		description += `${linefeed}${linefeed}`;
 		description += `${codeStart}${marker.code}${codeEnd}${linefeed}${linefeed}`;
 	}
 	description += `Posted via CodeStream${linefeed}`;

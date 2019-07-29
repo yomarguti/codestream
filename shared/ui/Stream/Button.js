@@ -18,7 +18,7 @@ export default function Button({
 	const { dispatch, ...extraProps } = extras; // remove non-html attributes
 	return (
 		<button
-			className={createClassString("native-key-bindings btn inline-block-tight", className, {
+			className={createClassString("btn inline-block-tight", className, {
 				"btn-primary": true
 			})}
 			disabled={loading || disabled}

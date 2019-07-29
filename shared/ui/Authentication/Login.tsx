@@ -211,7 +211,7 @@ class Login extends React.Component<Props, State> {
 										</label>
 										<input
 											id="login-input-email"
-											className="native-key-bindings input-text control"
+											className="input-text control"
 											type="text"
 											name="email"
 											value={this.state.email}
@@ -227,7 +227,7 @@ class Login extends React.Component<Props, State> {
 										</label>
 										<input
 											id="login-input-password"
-											className="native-key-bindings input-text"
+											className="input-text"
 											type="password"
 											name="password"
 											value={this.state.password}

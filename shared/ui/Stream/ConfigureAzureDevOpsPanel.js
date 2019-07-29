@@ -93,7 +93,7 @@ export class ConfigureAzureDevOpsPanel extends Component {
 							<div id="configure-azuredevops-controls" className="control-group">
 								<label>Your {providerName} Organization</label>
 								<input
-									className="native-key-bindings input-text control"
+									className="input-text control"
 									type="text"
 									name="organization"
 									tabIndex={this.tabIndex()}
