@@ -1,6 +1,6 @@
 import { contextChangeObserver } from "./context-changes";
 import { sideEffects } from "./side-effects";
 import { logging } from "./logging";
-import { dataTransformer } from "../data-filter";
+import { middlewareInjector } from "../middleware-injector";
 
-export default [contextChangeObserver, dataTransformer.createMiddleware(), sideEffects, logging];
+export default [contextChangeObserver, middlewareInjector.createMiddleware(), sideEffects, logging];

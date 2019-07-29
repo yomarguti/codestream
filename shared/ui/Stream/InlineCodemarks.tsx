@@ -54,7 +54,7 @@ import { CodeStreamState } from "../store";
 import ContainerAtEditorLine from "./SpatialView/ContainerAtEditorLine";
 import ContainerAtEditorSelection from "./SpatialView/ContainerAtEditorSelection";
 import { CodemarkForm } from "./CodemarkForm";
-import { dataTransformer } from "../store/data-filter";
+import { middlewareInjector } from "../store/middleware-injector";
 import { DocumentMarkersActionsType } from "../store/documentMarkers/types";
 import { createPostAndCodemark } from "./actions";
 import Codemark from "./Codemark";
@@ -984,7 +984,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	submitCodemark = async (attributes, event) => {
 		let docMarker;
-		const removeTransformer = dataTransformer.addTransformer(
+		const removeTransformer = middlewareInjector.inject(
 			DocumentMarkersActionsType.SaveForFile,
 			(payload: { uri: string; markers: DocumentMarker[] }) => {
 				return payload.markers.filter(documentMarker => {
