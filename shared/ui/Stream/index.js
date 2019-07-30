@@ -337,7 +337,7 @@ export class SimpleStream extends Component {
 			: "Invite People to CodeStream";
 
 		const menuItems = [
-			{ label: this.props.teamName, action: "" },
+			{ label: this.props.teamName, action: "", noHover: true },
 			{ label: "-" },
 			{ label: inviteLabel, action: "invite" },
 			// { label: "Settings", action: "settings" },
