@@ -25,8 +25,10 @@ import {
 	CreateRepoRequest,
 	CreateTeamRequest,
 	CreateTeamRequestType,
+	CreateTeamTagRequestType,
 	DeleteCodemarkRequest,
 	DeletePostRequest,
+	DeleteTeamTagRequestType,
 	EditPostRequest,
 	FetchCodemarksRequest,
 	FetchFileStreamsRequest,
@@ -70,7 +72,8 @@ import {
 	UpdateMarkerRequest,
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
-	UpdateStreamMembershipRequest
+	UpdateStreamMembershipRequest,
+	UpdateTeamTagRequestType
 } from "../../protocol/agent.protocol";
 import {
 	CSAddProviderHostRequest,
@@ -139,6 +142,7 @@ import {
 	CSSetCodemarkPinnedResponse,
 	CSStream,
 	CSTeam,
+	CSTeamTagRequest,
 	CSTrackProviderPostRequest,
 	CSUpdateCodemarkRequest,
 	CSUpdateCodemarkResponse,
@@ -1082,6 +1086,21 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	getTeam(request: GetTeamRequest) {
 		return this.get<CSGetTeamResponse>(`/teams/${request.teamId}`, this._token);
+	}
+
+	@lspHandler(CreateTeamTagRequestType)
+	async createTeamTag(request: CSTeamTagRequest) {
+		await this.post(`/team-tags/${request.team.id}`, { ...request.tag }, this._token);
+	}
+
+	@lspHandler(DeleteTeamTagRequestType)
+	async deleteTeamTag(request: CSTeamTagRequest) {
+		await this.delete(`/team-tags/${request.team.id}/${request.tag.id}`, this._token);
+	}
+
+	@lspHandler(UpdateTeamTagRequestType)
+	async updateTeamTag(request: CSTeamTagRequest) {
+		await this.put(`/team-tags/${request.team.id}/${request.tag.id}`, { ...request.tag }, this._token);
 	}
 
 	convertUserIdToCodeStreamUserId(id: string): string {

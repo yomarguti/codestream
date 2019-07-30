@@ -677,13 +677,15 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		title,
 		type,
 		assignees,
-		color,
+		// color,
 		externalProvider,
 		externalProviderHost,
 		externalAssignees,
 		externalProviderUrl,
 		entryPoint,
-		status = "open"
+		status = "open",
+		tags,
+		relatedCodemarkIds
 	}: CreatePostWithMarkerRequest): Promise<CreatePostResponse | undefined> {
 		const { documents } = Container.instance();
 		const { git } = SessionContainer.instance();
@@ -701,14 +703,16 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			text,
 			type,
 			assignees,
-			color,
+			// color,
 			status: type === CodemarkType.Issue ? status : undefined,
 			externalProvider,
 			externalProviderHost,
 			externalAssignees:
 				externalAssignees &&
 				externalAssignees.map(a => ({ displayName: a.displayName, email: a.email })),
-			externalProviderUrl
+			externalProviderUrl,
+			tags,
+			relatedCodemarkIds
 		} as CreateCodemarkRequest;
 		let marker: CreateCodemarkRequestMarker | undefined;
 		let commitHashWhenPosted: string | undefined;

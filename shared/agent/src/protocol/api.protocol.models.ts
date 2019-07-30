@@ -41,9 +41,8 @@ export interface CSCodemark extends CSEntity {
 	type: CodemarkType;
 
 	// color is no longer used; now we use tags
-	color: "blue" | "green" | "yellow" | "orange" | "red" | "purple" | "aqua" | "gray" | string;
-	// tags?: { id: string; color: string; label?: string }[];
-	tagIds?: string[];
+	color?: "blue" | "green" | "yellow" | "orange" | "red" | "purple" | "aqua" | "gray" | string;
+	tags?: string[];
 
 	// IDs of codemarks that are somehow related to this one.
 	// this should be symmetrical, implying that the related codemark
@@ -257,11 +256,16 @@ export interface CSTeam extends CSEntity {
 	// array of tags for a given team. note that there is
 	// a default set that can be modified for the entire team
 	tags?: {
-		id: string;
-		color: string;
-		label?: string;
-		deactivated?: boolean;
-	}[];
+		[id: string]: CSTag;
+	};
+}
+
+export interface CSTag {
+	id?: string;
+	color: string;
+	label?: string;
+	deactivated?: boolean;
+	sortOrder?: number;
 }
 
 export interface CSAsanaProviderInfo {
@@ -417,7 +421,7 @@ type CSMeProviderInfo = { slack?: CSSlackProviderInfo } & {
 		youtrack?: CSYouTrackProviderInfo;
 		azuredevops?: CSAzureDevOpsProviderInfo;
 		[key: string]: CSProviderInfos | undefined;
-	}
+	};
 };
 
 export interface CSMe extends CSUser {

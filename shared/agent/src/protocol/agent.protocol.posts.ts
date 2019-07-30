@@ -67,6 +67,8 @@ export interface CreatePostWithMarkerRequest {
 	externalProviderUrl?: string;
 	externalAssignees?: ThirdPartyProviderUser[];
 	entryPoint?: string;
+	tags?: string[];
+	relatedCodemarkIds?: string[];
 }
 export const CreatePostWithMarkerRequestType = new RequestType<
 	CreatePostWithMarkerRequest,

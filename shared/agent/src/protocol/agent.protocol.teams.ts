@@ -1,6 +1,12 @@
 "use strict";
 import { RequestType } from "vscode-languageserver-protocol";
-import { CSCreateTeamRequest, CSCreateTeamResponse, CSTeam } from "./api.protocol";
+import {
+	CSCreateTeamRequest,
+	CSCreateTeamResponse,
+	CSTeam,
+	CSTeamTagRequest,
+	CSTeamTagResponse
+} from "./api.protocol";
 
 export interface FetchTeamsRequest {
 	mine?: boolean;
@@ -40,3 +46,24 @@ export const CreateTeamRequestType = new RequestType<
 	void,
 	void
 >("codestream/team/create");
+
+export const CreateTeamTagRequestType = new RequestType<
+	CSTeamTagRequest,
+	CSTeamTagResponse,
+	void,
+	void
+>("codestream/team/tag/create");
+
+export const DeleteTeamTagRequestType = new RequestType<
+	CSTeamTagRequest,
+	CSTeamTagResponse,
+	void,
+	void
+>("codestream/team/tag/deleete");
+
+export const UpdateTeamTagRequestType = new RequestType<
+	CSTeamTagRequest,
+	CSTeamTagResponse,
+	void,
+	void
+>("codestream/team/tag/update");

@@ -15,6 +15,7 @@ import {
 	CSPost,
 	CSRepository,
 	CSStream,
+	CSTag,
 	CSTeam,
 	CSUser,
 	ProviderType,
@@ -506,4 +507,13 @@ export interface CSAddProviderHostRequest {
 export interface CSAddProviderHostResponse {
 	team: any;
 	providerId: string;
+}
+
+export interface CSTeamTagRequest {
+	team: CSTeam;
+	tag: CSTag;
+}
+
+export interface CSTeamTagResponse {
+	// name: string;
 }
