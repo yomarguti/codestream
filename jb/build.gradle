@@ -16,7 +16,7 @@ repositories {
 }
 
 ext {
-    jxBrowserVersion = "7.0"
+    jxBrowserVersion = "7.1"
 }
 
 dependencies {
@@ -26,6 +26,7 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.2.1"
 
     implementation "com.teamdev.jxbrowser:jxbrowser-cross-platform:${jxBrowserVersion}"
+//    implementation "com.teamdev.jxbrowser:jxbrowser-swing:${jxBrowserVersion}"
     implementation files("$rootDir/jxbrowser-swing-${jxBrowserVersion}.jar")
 
     implementation group: "org.eclipse.lsp4j", name: "org.eclipse.lsp4j", version: "0.6.0"
