@@ -129,6 +129,25 @@ export function mapFilter<A, B>(array: A[], fn: (A) => B | undefined): B[] {
 	return result;
 }
 
+/* keyFilter returns all of the keys for whom values are truthy (or)
+  keyFilter({
+	a: 7,
+	b: 0,
+	c: true,
+	d: false
+  });
+
+  will return
+  ["a", "c"]
+*/
+export function keyFilter<A>(hash: A[]): string[] {
+	const result: string[] = [];
+	Object.keys(hash).map(a => {
+		if (hash[a]) result.push(a);
+	});
+	return result;
+}
+
 export const findLast = <T>(array: T[], fn: (item: T) => boolean): any | undefined => {
 	for (let i = array.length - 1; i >= 0; i--) {
 		const item = array[i];

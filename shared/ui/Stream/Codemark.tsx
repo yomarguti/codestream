@@ -15,11 +15,16 @@ import {
 	OpenUrlRequestType,
 	Capabilities
 } from "@codestream/protocols/agent";
-import { CodemarkType, CSUser, CSMe, CSPost } from "@codestream/protocols/api";
+import { CodemarkType, CSUser, CSMe, CSPost, CSTag } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
 import { range } from "../utils";
-import { getUserByCsId, getTeamMembers, getUsernames } from "../store/users/reducer";
+import {
+	getUserByCsId,
+	getTeamMembers,
+	getUsernames,
+	getTeamTagsHash
+} from "../store/users/reducer";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { CodemarkForm } from "./CodemarkForm";
 import { setCurrentStream } from "../store/context/actions";
@@ -60,19 +65,17 @@ interface ConnectedProps {
 	editorHasFocus: boolean;
 	pinnedReplies: CSPost[];
 	pinnedAuthors: CSUser[];
-	relatedCodemarks: CodemarkPlus[];
+	relatedCodemarks: (CodemarkPlus | undefined)[];
 	isCodeStreamTeam: boolean;
-<<<<<<< HEAD
-=======
 
-	deleteCodemark: typeof deleteCodemark;
-	editCodemark: typeof editCodemark;
-	fetchThread: typeof fetchThread;
-	setCodemarkStatus: typeof setCodemarkStatus;
-	setUserPreference: typeof setUserPreference;
-	getPosts: typeof getPosts;
-	setCurrentStream: typeof setCurrentStream;
->>>>>>> start of ability to click on a codemark
+	// deleteCodemark: typeof deleteCodemark;
+	// editCodemark: typeof editCodemark;
+	// fetchThread: typeof fetchThread;
+	// setCodemarkStatus: typeof setCodemarkStatus;
+	// setUserPreference: typeof setUserPreference;
+	// getPosts: typeof getPosts;
+	// setCurrentStream: typeof setCurrentStream;
+	teamTagsHash: any;
 }
 
 export type DisplayType = "default" | "collapsed";
@@ -194,12 +197,13 @@ export class Codemark extends React.Component<Props, State> {
 		}
 	}
 
-	editCodemark = async ({ text, color, assignees, title }) => {
+	editCodemark = async ({ text, assignees, title, relatedCodemarkIds, tags }) => {
 		await this.props.editCodemark(this.props.codemark.id, {
-			color,
 			text,
 			title,
-			assignees
+			assignees,
+			relatedCodemarkIds,
+			tags
 		});
 		this.setState({ isEditing: false });
 	};
@@ -260,8 +264,10 @@ export class Codemark extends React.Component<Props, State> {
 
 		if (!renderedTags) return null;
 
+		// we use a 5px margin bottom instead of the standard 10px of the .related
+		// style because each tag has a 5px bottom margin
 		return (
-			<div className="related" style={{ marginBottom: "-5px" }}>
+			<div className="related">
 				<div className="related-label">Tags</div>
 				{renderedTags}
 				<div style={{ clear: "both" }} />
@@ -285,21 +291,25 @@ export class Codemark extends React.Component<Props, State> {
 
 	renderTags = codemark => {
 		let { tags = [] } = codemark;
-		const { hover } = this.props;
+		const { hover, teamTagsHash } = this.props;
 
 		// LEGACY (backward compat) we used to store one "color" property on a codemark
 		// so now we promote it to a tag if it exists. We should remove this code if we
 		// do a data migration that removes ".color" attributes and replaces them with
 		// tags
 		if (codemark.color) {
-			tags = tags.concat({ id: "_" + codemark.color, label: "", color: codemark.color });
+			const tag = { id: "_" + codemark.color, label: "", color: codemark.color };
+			return <Tag tag={tag} />;
 		}
 
 		const title = hover ? "Show matching tags" : "";
-		const keys = Object.keys(tags);
-		return keys.length === 0
+
+		return tags.length === 0
 			? null
-			: tags.map(tag => <Tag tag={tag} title={title} placement="bottom" />);
+			: tags.map(tagId => {
+					const tag = teamTagsHash[tagId];
+					return tag ? <Tag tag={tag} title={title} placement="bottom" /> : null;
+			  });
 	};
 
 	renderRelatedCodemarks = () => {
@@ -752,7 +762,7 @@ export class Codemark extends React.Component<Props, State> {
 							/>
 						</span>
 					)}
-					{relatedCodemarks.length && (
+					{relatedCodemarks.length > 0 && (
 						<span className="detail-icon">
 							<Icon
 								title={hover ? "Show related codemarks" : undefined}
@@ -1060,11 +1070,14 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 	const pinnedAuthors = pinnedReplies.map(post => users[post.creatorId]);
 
 	const relatedCodemarks = (
-		codemark.relatedCodemarkIds || ["5ca4247023873e3eba2596f6"] ||
+		codemark.relatedCodemarkIds ||
+		/* ["5ca4247023873e3eba2596f6"] || */
 		EMPTY_ARRAY
 	)
 		.map(id => getCodemark(codemarks, id))
 		.filter(Boolean);
+
+	const teamTagsHash = getTeamTagsHash(state);
 
 	return {
 		capabilities: capabilities,
@@ -1077,17 +1090,14 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		codemarkKeybindings: preferences.codemarkKeybindings || EMPTY_OBJECT,
 		isCodeStreamTeam: teamProvider === "codestream",
 		teammates: getTeamMembers(state),
-		usernames: getUsernames(state)
+		usernames: getUsernames(state),
+		teamTagsHash
 	};
 };
 
 export default connect(
 	// @ts-ignore
 	mapStateToProps,
-<<<<<<< HEAD
-	{ setCodemarkStatus, setUserPreference, deleteCodemark, editCodemark, fetchThread, getPosts }
-	// @ts-ignore
-=======
 	{
 		setCurrentStream,
 		setCodemarkStatus,
@@ -1097,5 +1107,4 @@ export default connect(
 		fetchThread,
 		getPosts
 	}
->>>>>>> start of ability to click on a codemark
 )(Codemark);

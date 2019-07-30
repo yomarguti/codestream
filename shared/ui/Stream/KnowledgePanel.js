@@ -177,7 +177,7 @@ export class SimpleKnowledgePanel extends Component {
 	codemarkHasTag = (codemark, tagFilter) => {
 		if (tagFilter === "all") return true;
 
-		console.log("Comparing ", tagFilter, "  to  ", this.props.teamTags);
+		// console.log("Comparing ", tagFilter, "  to  ", this.props.teamTags);
 		let tags = codemark.tags || [];
 		if (codemark.color && "_" + codemark.color === tagFilter) {
 			return true;
@@ -292,7 +292,7 @@ export class SimpleKnowledgePanel extends Component {
 
 		let tagMenuItems = [{ label: "Any Tag", action: "all" }];
 		tagMenuItems = tagMenuItems.concat(
-			this.props.teamTags.map(tag => {
+			this.props.teamTagsArray.map(tag => {
 				let className = "tag-menu-block";
 				if (!tag.color.startsWith("#")) className += " " + tag.color + "-background";
 				return {
@@ -499,9 +499,9 @@ const mapStateToProps = state => {
 		fileStreamIdToFilterFor = context.lastFileStreamId;
 	}
 
-	const teamTags = userSelectors.getTeamTags(state);
+	const teamTagsArray = userSelectors.getTeamTagsArray(state);
 	let tagFiltersLabelsLower = { all: "with any tag" };
-	teamTags.map(tag => {
+	teamTagsArray.map(tag => {
 		tagFiltersLabelsLower[tag.id] = "with tag: " + (tag.label || tag.color);
 	});
 
@@ -515,7 +515,7 @@ const mapStateToProps = state => {
 		tagFilter: context.codemarkTagFilter,
 		fileNameToFilterFor,
 		fileStreamIdToFilterFor,
-		teamTags,
+		teamTagsArray,
 		tagFiltersLabelsLower
 	};
 };

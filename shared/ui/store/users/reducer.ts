@@ -52,20 +52,31 @@ export const getTeamMembers = createSelector(
 	}
 );
 
-const tuple = <T extends string[]>(...args: T) => args;
-const COLOR_OPTIONS = tuple("blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray");
-type Color = typeof COLOR_OPTIONS[number] | string;
-
-export const getTeamTags = createSelector(
+// return the team tags as an array, in sort order
+export const getTeamTagsArray = createSelector(
 	getTeam,
 	team => {
 		return mapFilter(
-			team.tags ||
-				COLOR_OPTIONS.map(color => {
-					return { id: "_" + color, label: "", color: color };
-				}),
+			Object.keys(team.tags)
+				.map(id => {
+					return { id, ...team.tags[id] };
+				})
+				.sort((a, b) => a.sortOrder - b.sortOrder),
 			tag => (tag.deactivated ? null : tag)
 		);
+	}
+);
+
+// return the team tags as an associative array (hash)
+export const getTeamTagsHash = createSelector(
+	getTeam,
+	team => {
+		const keys = Object.keys(team.tags);
+		const tags = {};
+		keys.forEach(id => {
+			if (!team.tags[id].deactivated) tags[id] = { id, ...team.tags[id] };
+		});
+		return tags;
 	}
 );
 

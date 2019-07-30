@@ -664,25 +664,31 @@ export class MessageInput extends React.Component<Props, State> {
 
 		const { codemarks = [] } = this.props;
 		menuItems = menuItems.concat(
-			codemarks.map(codemark => {
-				const title = codemark.title || codemark.text;
-				const icon = this.props.relatedCodemarkIds[codemark.id] ? (
-					<Icon style={{ margin: "0 2px 0 2px" }} name="check" />
-				) : (
-					<Icon name={codemark.type || "comment"} className={`${codemark.color}-color type-icon`} />
-				);
-				const file = codemark.markers && codemark.markers[0] && codemark.markers[0].file;
-				return {
-					icon: icon,
-					label: (
-						<span className={this.props.relatedCodemarkIds[codemark.id] ? "menu-selected" : ""}>
-							&nbsp;{title}&nbsp;&nbsp;<span className="codemark-file">{file}</span>
-						</span>
-					),
-					searchLabel: title || "",
-					action: codemark.id
-				};
-			})
+			codemarks
+				.map(codemark => {
+					if (codemark.deactivated) return null;
+					const title = codemark.title || codemark.text;
+					const icon = this.props.relatedCodemarkIds[codemark.id] ? (
+						<Icon style={{ margin: "0 2px 0 2px" }} name="check" />
+					) : (
+						<Icon
+							name={codemark.type || "comment"}
+							className={`${codemark.color}-color type-icon`}
+						/>
+					);
+					const file = codemark.markers && codemark.markers[0] && codemark.markers[0].file;
+					return {
+						icon: icon,
+						label: (
+							<span className={this.props.relatedCodemarkIds[codemark.id] ? "menu-selected" : ""}>
+								&nbsp;{title}&nbsp;&nbsp;<span className="codemark-file">{file}</span>
+							</span>
+						),
+						searchLabel: title || "",
+						action: codemark.id
+					};
+				})
+				.filter(Boolean)
 		);
 		if (codemarks.length === 0) {
 			menuItems = menuItems.concat(
@@ -738,12 +744,14 @@ export class MessageInput extends React.Component<Props, State> {
 	};
 
 	saveTag = () => {
-		if (this.props.updateTeamTag)
-			this.props.updateTeamTag(this.props.currentTeam, this.state.editingTag);
-		// if (this.props.onChangeTag) this.props.onChangeTag(this.state.editingTag);
+		const { updateTeamTag, currentTeam } = this.props;
+
+		if (updateTeamTag) updateTeamTag(currentTeam, this.state.editingTag);
+
+		// hide the tags picker and re-open the tags selection menu
 		this.hideTagsPicker();
-		// i have no idea why this needs to be done after a delay.
-		// otherwise what ends up happening is you get a double-menu
+		// i have no idea why the following code needs to be done after a delay.
+		// otherwise what ends up happening is you get a double-menu -Pez
 		setTimeout(() => {
 			this.setState({ tagsOpen: "select" });
 		}, 1);
@@ -1013,27 +1021,31 @@ export class MessageInput extends React.Component<Props, State> {
 							autoFocus={true}
 						/>
 					)}
-					<Icon
-						key="codestream"
-						name="codestream"
-						title="Add a related codemark"
-						placement="top"
-						align={{ offset: [5, 0] }}
-						delay={1}
-						className={cx("codestream", { hover: this.state.codemarkOpen })}
-						onClick={this.handleClickCodemarkButton}
-					/>
+					{this.props.relatedCodemarkIds && (
+						<Icon
+							key="codestream"
+							name="codestream"
+							title="Add a related codemark"
+							placement="top"
+							align={{ offset: [5, 0] }}
+							delay={1}
+							className={cx("codestream", { hover: this.state.codemarkOpen })}
+							onClick={this.handleClickCodemarkButton}
+						/>
+					)}
 					{this.buildCodemarkMenu()}
-					<Icon
-						key="tag"
-						name="tag"
-						title="Add tags"
-						placement="top"
-						align={{ offset: [5, 0] }}
-						delay={1}
-						className={cx("tags", { hover: this.state.tagsOpen })}
-						onClick={this.handleClickTagButton}
-					/>
+					{this.props.teamTags && (
+						<Icon
+							key="tag"
+							name="tag"
+							title="Add tags"
+							placement="top"
+							align={{ offset: [5, 0] }}
+							delay={1}
+							className={cx("tags", { hover: this.state.tagsOpen })}
+							onClick={this.handleClickTagButton}
+						/>
+					)}
 					{this.buildTagMenu()}
 				</div>
 				<ContentEditable

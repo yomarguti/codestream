@@ -30,7 +30,15 @@ import {
 	getDMName
 } from "../store/streams/reducer";
 import { Stream } from "../store/streams/types";
-import { mapFilter, arrayToRange, forceAsLine, isRangeEmpty, toMapBy, replaceHtml } from "../utils";
+import {
+	mapFilter,
+	arrayToRange,
+	forceAsLine,
+	isRangeEmpty,
+	toMapBy,
+	replaceHtml,
+	keyFilter
+} from "../utils";
 import { HostApi } from "../webview-api";
 import Button from "./Button";
 import CrossPostIssueControls from "./CrossPostIssueControls";
@@ -43,7 +51,7 @@ import { sortBy as _sortBy, sortBy } from "lodash-es";
 import { EditorSelectRangeRequestType, EditorSelection } from "@codestream/protocols/webview";
 import { getCurrentSelection } from "../store/editorContext/reducer";
 import Headshot from "./Headshot";
-import { getTeamMembers, getTeamTags } from "../store/users/reducer";
+import { getTeamMembers, getTeamTagsArray } from "../store/users/reducer";
 import MessageInput from "./MessageInput";
 import { getSlashCommands } from "./SlashCommands";
 import { getCurrentTeamProvider } from "../store/teams/actions";
@@ -81,7 +89,7 @@ interface DispatchProps {
 	slashCommands: any[];
 	services: {};
 	teamProvider: "codestream" | "slack" | "msteams" | string;
-	teamTags: any;
+	teamTagsArray: any;
 }
 
 interface State {
@@ -472,8 +480,6 @@ class CodemarkForm extends React.Component<Props, State> {
 				? this.props.editingCodemark!.assignees
 				: (this.state.assignees as any[]).map(a => a.value);
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 		this.setState({ isLoading: true });
 		try {
 			await this.props.onSubmit(
@@ -481,11 +487,12 @@ class CodemarkForm extends React.Component<Props, State> {
 					codeBlock: this.state.codeBlock,
 					streamId: selectedChannelId,
 					text: replaceHtml(text)!,
-					color,
 					type,
 					assignees: csAssignees,
 					title,
-					crossPostIssueValues: crossPostIssueEnabled ? this.crossPostIssueValues : undefined
+					crossPostIssueValues: crossPostIssueEnabled ? this.crossPostIssueValues : undefined,
+					tags: keyFilter(selectedTags),
+					relatedCodemarkIds: keyFilter(relatedCodemarkIds)
 					// notify,
 					// crossPostMessage,
 				},
@@ -495,31 +502,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		} finally {
 			this.setState({ isLoading: false });
 		}
-=======
-=======
-		let tags: string[] = [];
-		for (const [key, value] of Object.entries(selectedTags)) {
-			if (value) tags.push(key);
-		}
 
->>>>>>> remove confusing (and incorrect) definition of codmark tags attribute
-		this.props.onSubmit(
-			{
-				codeBlock: this.state.codeBlock,
-				streamId: selectedChannelId,
-				text: replaceHtml(text)!,
-				type,
-				assignees: csAssignees,
-				title,
-				crossPostIssueValues: crossPostIssueEnabled ? this.crossPostIssueValues : undefined,
-				tags,
-				relatedCodemarkIds
-				// notify,
-				// crossPostMessage,
-			},
-			event
-		);
->>>>>>> remove react warnings on codemark form
 	};
 
 	isFormInvalid = () => {
@@ -631,10 +614,9 @@ class CodemarkForm extends React.Component<Props, State> {
 		const keys = Object.keys(selectedTags);
 		if (keys.length === 0) return null;
 
-		console.log("TEAM TAGS ARE: ", this.props.teamTags);
 		return (
 			<div className="tags" key="tags" style={{ margin: "10px 0 -10px 0" }}>
-				{this.props.teamTags.map(tag => {
+				{this.props.teamTagsArray.map(tag => {
 					return selectedTags[tag.id] ? <Tag tag={tag} /> : null;
 				})}
 				<div style={{ clear: "both" }} />
@@ -644,7 +626,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	renderRelatedCodemarks = () => {
 		const { relatedCodemarkIds } = this.state;
-		const keys = Object.keys(relatedCodemarkIds);
+		const keys = keyFilter(relatedCodemarkIds);
 		if (keys.length === 0) return null;
 
 		return (
@@ -809,10 +791,6 @@ class CodemarkForm extends React.Component<Props, State> {
 		});
 	};
 
-	getNextTagId = () => {
-		return this.props.teamTags.length + 1;
-	};
-
 	handleChangeTag = newTag => {
 		const newTagCopy = { ...newTag };
 		if (newTag.id) {
@@ -934,7 +912,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				toggleTag={this.handleToggleTag}
 				toggleCodemark={this.handleToggleCodemark}
 				onSubmit={this.handleClickSubmit}
-				teamTags={this.props.teamTags}
+				teamTags={this.props.teamTagsArray}
 				selectedTags={this.state.selectedTags}
 				relatedCodemarkIds={this.state.relatedCodemarkIds}
 				__onDidRender={__onDidRender}
@@ -1236,7 +1214,7 @@ const mapStateToProps = (state): DispatchProps => {
 		: getStreamForTeam(state.streams, context.currentTeamId);
 
 	const teammates = getTeamMembers(state);
-	const teamTags = getTeamTags(state);
+	const teamTagsArray = getTeamTagsArray(state);
 
 	const channelStreams: CSChannelStream[] = sortBy(
 		(getChannelStreamsForTeam(
@@ -1269,7 +1247,7 @@ const mapStateToProps = (state): DispatchProps => {
 		textEditorSelection: getCurrentSelection(editorContext),
 		slashCommands: getSlashCommands(state.capabilities),
 		services: state.services,
-		teamTags
+		teamTagsArray
 	};
 };
 

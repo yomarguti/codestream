@@ -1876,7 +1876,7 @@ export class SimpleStream extends Component {
 	submitCodemark = async (attributes, crossPostIssueValues, scmInfo) => {
 		if (this.state.composeBoxProps.isEditing) {
 			this.props.editCodemark(this.state.composeBoxProps.editingCodemark.id, {
-				color: attributes.color,
+				// color: attributes.color,
 				text: attributes.text,
 				title: attributes.title,
 				assignees: attributes.assignees,
@@ -1993,7 +1993,9 @@ export class SimpleStream extends Component {
 				color: codemark.color,
 				text: codemark.text,
 				title: codemark.title,
-				assignees: codemark.assignees
+				assignees: codemark.assignees,
+				tags: codemark.tags,
+				relatedCodemarkIds: codemark.relatedCodemarkIds
 			});
 			return this.setMultiCompose(false);
 		}

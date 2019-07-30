@@ -27,7 +27,10 @@ import {
 	UpdateCodemarkRequestType,
 	UpdatePreferencesRequestType,
 	UpdateStreamMembershipRequestType,
-	CreateThirdPartyCardRequestType
+	CreateThirdPartyCardRequestType,
+	CreateTeamTagRequestType,
+	UpdateTeamTagRequestType,
+	DeleteTeamTagRequestType
 } from "@codestream/protocols/agent";
 import { CSPost, StreamType } from "@codestream/protocols/api";
 import { logError } from "../logger";
@@ -252,7 +255,9 @@ export const createPost = (
 				externalProviderHost,
 				externalAssignees,
 				externalProviderUrl,
-				parentPostId
+				parentPostId,
+				tags: codemark.tags,
+				relatedCodemarkIds: codemark.relatedCodemarkIds
 			});
 		} else {
 			responsePromise = HostApi.instance.send(CreatePostRequestType, {
@@ -821,32 +826,33 @@ const COLOR_OPTIONS = tuple("blue", "green", "yellow", "orange", "red", "purple"
 
 export const updateTeamTag = (
 	team,
-	attributes: { id?: string; color: string; label?: string; deactivated?: boolean }
+	attributes: {
+		id?: string;
+		color: string;
+		label?: string;
+		deactivated?: boolean;
+		sortOrder?: number;
+	}
 ) => async dispatch => {
 	try {
-		let tags =
-			team.tags ||
-			COLOR_OPTIONS.map(color => {
-				return { id: "_" + color, label: "", color: color };
-			});
-		const newTag = { ...attributes };
-		if (newTag.id) {
-			tags.forEach((tag, index) => {
-				if (tag.id === newTag.id) tags[index] = newTag;
-			});
-		} else {
+		const tag = { ...attributes };
+		let response;
+		if (!tag.id) {
 			// create a random ID for the new tag
 			// this is a simple and effective way to create a
 			// unique ID. IMO it doesn't really matter that it
 			// isn't super elegant or pretty. -Pez
-			newTag.id = Date.now() + tags.length + newTag.color;
-			tags = tags.concat(newTag);
+			tag.id = Date.now() + Object.keys(team.tags).length + tag.color;
+			tag.sortOrder = Date.now();
+			response = HostApi.instance.send(CreateTeamTagRequestType, { team, tag });
+		} else if (tag.deactivated) {
+			response = HostApi.instance.send(DeleteTeamTagRequestType, { team, tag });
+		} else {
+			response = HostApi.instance.send(UpdateTeamTagRequestType, { team, tag });
 		}
-		team.tags = [...tags];
 
-		// FIXME this should make an API call to update the teams
-		// object on the server
-		// const response = await HostApi.instance.send(updateTeamRequestType, team);
+		// update the team in real-time in the reducer
+		team.tags[tag.id] = tag;
 		return dispatch(updateTeam(team));
 	} catch (error) {
 		logError(`There was an error updating a tag: ${error}`, attributes);

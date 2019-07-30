@@ -30,7 +30,9 @@ export const deleteCodemark = (codemarkId: string) => async dispatch => {
 	}
 };
 
-type EditableAttributes = Partial<Pick<CSCodemark, "color" | "text" | "title" | "assignees">>;
+type EditableAttributes = Partial<
+	Pick<CSCodemark, "tags" | "text" | "title" | "assignees" | "relatedCodemarkIds">
+>;
 
 export const editCodemark = (
 	codemarkId: string,
