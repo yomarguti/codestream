@@ -8,7 +8,7 @@ import protocols.agent.Marker
 
 class BootstrapResponse(
     val session: UserSession,
-    val capabilities: Capabilities,
+    val capabilities: JsonElement,
     val configs: Configs,
     val context: JsonElement,
     val version: String,

@@ -30,7 +30,7 @@ class AuthenticationService(val project: Project) {
 
         return BootstrapResponse(
             UserSession(session.userLoggedIn?.userId),
-            gson.fromJson(agentCapabilities),
+            agentCapabilities,
             settings.webViewConfigs,
             settings.getWebViewContextJson(),
             settings.extensionInfo.versionFormatted,
