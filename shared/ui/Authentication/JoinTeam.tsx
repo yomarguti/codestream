@@ -67,7 +67,6 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 										/>
 										{error && (
 											<small className="explainer error-message ">
-												error here
 												<FormattedMessage
 													id={errorToMessageId[error]}
 													defaultMessage="There is an error with that code"
