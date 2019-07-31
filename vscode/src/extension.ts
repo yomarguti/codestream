@@ -50,7 +50,17 @@ export async function activate(context: ExtensionContext) {
 
 	const git = await gitPath();
 
-	const cfg = configuration.get<Config>();
+	let cfg = configuration.get<Config>();
+
+	if (cfg.serverUrl[cfg.serverUrl.length - 1] === "/") {
+		await configuration.updateEffective(
+			configuration.name("serverUrl").value,
+			cfg.serverUrl.substr(0, cfg.serverUrl.length - 1)
+		);
+
+		cfg = configuration.get<Config>();
+	}
+
 	await Container.initialize(context, cfg, {
 		extension: {
 			build: info.buildNumber,
