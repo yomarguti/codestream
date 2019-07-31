@@ -133,7 +133,8 @@ export class JiraServerProvider extends ThirdPartyProviderBase<CSJiraServerProvi
 	}
 
 	@log()
-	_callWithOauth(path: string, method: string = "GET", body: { [key: string]: any } | undefined = undefined) {
+	async _callWithOauth(path: string, method: string = "GET", body: { [key: string]: any } | undefined = undefined) {
+		await this.ensureConnected();
 		return new Promise<any>((resolve, reject) => {
 			const url = `${this.baseUrl}${path}`;
 			this.oauth!.fetchJson(
