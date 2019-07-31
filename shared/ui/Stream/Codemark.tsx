@@ -27,7 +27,6 @@ import {
 } from "../store/users/reducer";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { CodemarkForm } from "./CodemarkForm";
-import { setCurrentStream } from "../store/context/actions";
 import { deleteCodemark, editCodemark } from "../store/codemarks/actions";
 import { confirmPopup } from "./Confirm";
 import { getPost } from "../store/posts/reducer";
@@ -67,14 +66,6 @@ interface ConnectedProps {
 	pinnedAuthors: CSUser[];
 	relatedCodemarks: (CodemarkPlus | undefined)[];
 	isCodeStreamTeam: boolean;
-
-	// deleteCodemark: typeof deleteCodemark;
-	// editCodemark: typeof editCodemark;
-	// fetchThread: typeof fetchThread;
-	// setCodemarkStatus: typeof setCodemarkStatus;
-	// setUserPreference: typeof setUserPreference;
-	// getPosts: typeof getPosts;
-	// setCurrentStream: typeof setCurrentStream;
 	teamTagsHash: any;
 }
 
@@ -291,7 +282,8 @@ export class Codemark extends React.Component<Props, State> {
 
 	renderTags = codemark => {
 		let { tags = [] } = codemark;
-		const { hover, teamTagsHash } = this.props;
+		const { teamTagsHash } = this.props;
+		const { hover } = this.state;
 
 		// LEGACY (backward compat) we used to store one "color" property on a codemark
 		// so now we promote it to a tag if it exists. We should remove this code if we
@@ -321,6 +313,7 @@ export class Codemark extends React.Component<Props, State> {
 			<div className="related" key="related-codemarks">
 				<div className="related-label">Related</div>
 				{relatedCodemarks.map(codemark => {
+					if (!codemark) return null;
 					const title = codemark.title || codemark.text;
 					const icon = (
 						<Icon
@@ -378,7 +371,7 @@ export class Codemark extends React.Component<Props, State> {
 		if (type === CodemarkType.Issue) {
 			if (this.props.displayType === "default") {
 				return (
-					<Tooltip title="Mark as resolved and hide discussion" placement="topRight">
+					<Tooltip title="Mark as resolved and hide discussion" placement="topRight" delay={1}>
 						<div
 							className={cx("resolve-button", { checked: status === "closed" })}
 							onClick={this.handleClickStatusToggle}
@@ -655,7 +648,7 @@ export class Codemark extends React.Component<Props, State> {
 	};
 
 	renderAssignees = (codemark: CodemarkPlus) => {
-		const { hover } = this.props;
+		const { hover } = this.state;
 
 		let assigneeIcons: any = null;
 
@@ -705,7 +698,7 @@ export class Codemark extends React.Component<Props, State> {
 	};
 
 	renderDetailIcons = codemark => {
-		const { hover } = this.props;
+		const { hover } = this.state;
 
 		const hasDescription = codemark.title && codemark.text;
 		const hasReplies = codemark.numReplies > 0;
@@ -861,43 +854,24 @@ export class Codemark extends React.Component<Props, State> {
 								</>
 							) : (
 								<>
-									{this.renderKeybinding(codemark)}
-									{this.renderStatus(codemark)}
-									{this.renderAssignees(codemark)}
 									<div className="author">
 										<Headshot person={author} />
 										{author.username}
 										<Timestamp time={codemark.createdAt} />
-										{false && codemark.color && (
-											<div
-												className={cx(`label-indicator ${codemark.color}-background`, {
-													expanded: this.state.showLabelText
-												})}
-												onClick={this.toggleLabelIndicators}
-											>
-												<span>priority</span>
-											</div>
-										)}
 									</div>
 									<div className="right">
 										<span onClick={this.handleMenuClick}>
-											{menuOpen && (
-												<Menu
-													items={menuItems}
-													target={menuTarget}
-													action={this.handleSelectMenu}
-												/>
-											)}
 											<Icon name="kebab-vertical" className="kebab-vertical clickable" />
 										</span>
+										{this.renderKeybinding(codemark)}
+										{this.renderStatus(codemark)}
+										{menuOpen && (
+											<Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />
+										)}
 									</div>
 								</>
 							)}
 						</div>
-						{false && type === "bookmark" && (
-							<span className={codemark.color}>{this.renderTypeIcon()}</span>
-						)}
-						{this.renderTextLinkified(codemark.title || codemark.text)}
 						<div
 							style={{ position: "absolute", top: "5px", right: "5px" }}
 							onClick={this.handleMenuClick}
@@ -909,7 +883,7 @@ export class Codemark extends React.Component<Props, State> {
 						{selected || type !== "bookmark"
 							? this.renderTextLinkified(codemark.title || codemark.text)
 							: null}
-						{selected && this.renderRelatedCodemarks(codemark)}
+						{selected && this.renderRelatedCodemarks()}
 						{!selected && this.renderPinnedReplies()}
 						{!selected && this.renderDetailIcons(codemark)}
 					</div>
@@ -1099,7 +1073,6 @@ export default connect(
 	// @ts-ignore
 	mapStateToProps,
 	{
-		setCurrentStream,
 		setCodemarkStatus,
 		setUserPreference,
 		deleteCodemark,
@@ -1107,4 +1080,5 @@ export default connect(
 		fetchThread,
 		getPosts
 	}
+	// @ts-ignore
 )(Codemark);

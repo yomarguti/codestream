@@ -980,6 +980,7 @@ export class MessageInput extends React.Component<Props, State> {
 				className="message-input-wrapper"
 				onKeyPress={this.handleKeyPress}
 				onKeyDown={this.handleKeyDown}
+				style={{ position: "relative" }}
 			>
 				<div className="mentions-popup-container">
 					<AtMentionsPopup

@@ -23,15 +23,6 @@
 		background: rgba(0, 0, 0, 0.1) !important;
 	}
 
-	.message-input-wrapper .smiley {
-		position: absolute;
-		bottom: 8px;
-		right: 8px;
-		opacity: 0.4;
-		cursor: pointer;
-		transition: transform 0.1s;
-	}
-
 	.connect-issue {
 		display: flex;
 		margin-bottom: 10px;
@@ -123,6 +114,27 @@
 		margin: 10px 0 5px 0;
 		.icon {
 			margin-right: 5px;
+		}
+	}
+}
+
+.message-attach-icons {
+	position: absolute;
+	bottom: 5px;
+	right: 5px;
+	.icon {
+		// position: absolute;
+		// bottom: 5px;
+		// right: 38px;
+		margin-left: 10px;
+		opacity: 0.4;
+		cursor: pointer;
+		transition: transform 0.1s;
+		&:hover,
+		&.hover {
+			opacity: 1;
+			color: @text-color-info;
+			transform: scale(1.4);
 		}
 	}
 }

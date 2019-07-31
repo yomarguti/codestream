@@ -502,7 +502,6 @@ class CodemarkForm extends React.Component<Props, State> {
 		} finally {
 			this.setState({ isLoading: false });
 		}
-
 	};
 
 	isFormInvalid = () => {
@@ -979,7 +978,6 @@ class CodemarkForm extends React.Component<Props, State> {
 				className={cx("codemark-form", "standard-form", { "google-style": true })}
 				key="two"
 			>
-			<form id="code-comment-form" className="standard-form" key="two">
 				<fieldset className="form-body">
 					<div id="controls" className="control-group" key="controls1">
 						<div
@@ -996,11 +994,6 @@ class CodemarkForm extends React.Component<Props, State> {
 							<b>{currentUser.username}</b>
 							<span style={{ opacity: 0.75, paddingLeft: "5px" }}>{this.getCodeBlockHint()}</span>
 						</div>
-						{commentType === "trap" && (
-							<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
-								{trapTip}
-							</div>
-						)}
 						{/* false && commentType === "bookmark" && (
 							<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
 								{bookmarkTip}
