@@ -144,7 +144,7 @@ export class ConfigureEnterprisePanel extends Component {
 								{this.renderBaseUrlHelp()}
 							</div>
 							<br/>
-							<label>Please provide the application client ID and secret used to authorize your {providerName} credentials. You can obtain them from your {providerName} administrator.</label>
+							<label>Contact your {providerName} admin to get the client ID and secret required below, and send them a link to <a href="https://github.com/TeamCodeStream/CodeStream/wiki/Configuring-the-GitHub-Enterprise-Integration">these instructions</a>.</label>
 							<div id="app-clientid-controls" className="control-group">
 								<label><strong>Client ID</strong></label>
 								<input

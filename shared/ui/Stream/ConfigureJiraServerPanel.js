@@ -150,11 +150,7 @@ export class ConfigureJiraServerPanel extends Component {
 								{this.renderBaseUrlHelp()}
 							</div>
 							<br />
-							<label>
-								Please provide the consumer key and private key used to authorize your{" "}
-								{providerName} credentials. You can obtain them from your {providerName}{" "}
-								administrator.
-							</label>
+							<label>Contact your {providerName} admin to get the consumer key and private key required below, and send them a link to <a href="https://github.com/TeamCodeStream/CodeStream/wiki/Configuring-the-Jira-Server-Integration">these instructions</a>.</label>
 							<div id="app-clientid-controls" className="control-group">
 								<label>
 									<strong>Consumer Key</strong>
