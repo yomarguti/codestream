@@ -59,6 +59,7 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
     override fun getState(): SettingsServiceState = _state
 
     override fun loadState(state: SettingsServiceState) {
+        state.serverUrl = if (state.serverUrl.isNullOrEmpty()) state.serverUrl else state.serverUrl.trimEnd('/')
         _state = state
     }
 

@@ -25,7 +25,7 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable {
         val gui = _gui
         gui?.let {
             state.autoSignIn = gui.autoSignIn.isSelected
-            state.serverUrl = gui.serverUrl.text
+            state.serverUrl = if (gui.serverUrl.text.isNullOrEmpty()) gui.serverUrl.text else gui.serverUrl.text.trimEnd('/')
             state.avatars = gui.showAvatars.isSelected
             state.notifications = gui.showNotifications.selectedItem as String?
             state.muteAll = gui.muteAll.isSelected
