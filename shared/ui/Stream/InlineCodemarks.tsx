@@ -65,6 +65,7 @@ import { DocumentMarkersActionsType } from "../store/documentMarkers/types";
 import { createPostAndCodemark } from "./actions";
 import Codemark from "./Codemark";
 import { PostEntryPoint } from "../store/context/types";
+import { localStore } from "../utilities/storage";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -138,6 +139,8 @@ interface State {
 	newCodemarkAttributes: { type: CodemarkType; codeBlock: GetRangeScmInfoResponse } | undefined;
 }
 
+const NEW_CODEMARK_ATTRIBUTES_TO_RESTORE = "spatial-view:restore-codemark-form";
+
 export class SimpleInlineCodemarks extends Component<Props, State> {
 	disposables: { dispose(): void }[] = [];
 	titles: {
@@ -158,7 +161,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		super(props);
 
 		this.state = {
-			newCodemarkAttributes: undefined,
+			newCodemarkAttributes: localStore.get(NEW_CODEMARK_ATTRIBUTES_TO_RESTORE),
 			isLoading: props.documentMarkers.length === 0,
 			lastSelectedLine: 0,
 			clickedPlus: false,
@@ -304,6 +307,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	componentWillUnmount() {
+		if (this.state.newCodemarkAttributes != undefined) {
+			localStore.set(NEW_CODEMARK_ATTRIBUTES_TO_RESTORE, this.state.newCodemarkAttributes);
+		} else {
+			localStore.delete(NEW_CODEMARK_ATTRIBUTES_TO_RESTORE);
+		}
 		this.disposables.forEach(d => d.dispose());
 	}
 
