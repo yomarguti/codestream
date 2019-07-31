@@ -35,7 +35,7 @@ namespace CodeStream.VisualStudio.Services {
 							ThreadHelper.ThrowIfNotOnUIThread();
 							var accessor = Package.GetGlobalService(typeof(SOptionsDialogPageAccessor)) as IOptionsDialogPageAccessor;
 							Microsoft.Assumes.Present(accessor);
-							var result = new SettingsManager(accessor?.GetOptionsDialogPage());							
+							var result = new SettingsManager(accessor?.GetOptionsDialogPage());
 
 							Log.Verbose($"{nameof(Create)} Initialized");
 							_settingsManager = result;
@@ -63,7 +63,7 @@ namespace CodeStream.VisualStudio.Services {
 		string GetEnvironmentVersionFormatted();
 		Ide GetIdeInfo();
 		Extension GetExtensionInfo();
-		Proxy Proxy { get; }		
+		Proxy Proxy { get; }
 	}
 
 	public class Settings {
@@ -91,7 +91,7 @@ namespace CodeStream.VisualStudio.Services {
 		//By using this your pain will be legendary, even in hell.
 		//public async System.Threading.Tasks.Task InitializeAsync() {
 		//	DialogPage = await OptionsDialogPage.GetLiveInstanceAsync();
-		//}		
+		//}
 
 		public SettingsManager(IOptionsDialogPage dialogPage) {
 			DialogPage = dialogPage;
@@ -126,8 +126,8 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public string ServerUrl {
-			get => DialogPage.ServerUrl;
-			set => DialogPage.ServerUrl = value;
+			get => DialogPage.ServerUrl.IsNullOrWhiteSpace() ? DialogPage.ServerUrl : DialogPage.ServerUrl.TrimEnd('/');
+			set => DialogPage.ServerUrl = value.IsNullOrWhiteSpace() ? value : value.TrimEnd('/');
 		}
 
 		public string Team {
