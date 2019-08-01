@@ -21,6 +21,8 @@ class BrowserEngineService : Disposable {
     init {
         val dir = createTempDir()
         logger.info("JxBrowser work dir: $dir")
+
+        System.setProperty("jxbrowser.ipc.external", "true")
         val optionsBuilder = EngineOptions
             .newBuilder(RenderingMode.OFF_SCREEN)
             .licenseKey("6P835FT5H9Q596QEMRZTTB0RYSG7H1P664XU2Y2M9QPOA998OY42K6N3OTUO90SSP5BA")
