@@ -14,7 +14,7 @@
 	position: absolute;
 	width: 100%;
 	&:not(.cs-hidden) {
-		transition: transform 0.2s, margin-top 0.2s, left 0.2s;
+		transition: margin-top 0.2s, left 0.2s;
 	}
 }
 
@@ -25,6 +25,10 @@
 		background-color: var(--base-background-color);
 		position: absolute;
 		left: calc(~"100vw - 55px");
+	}
+
+	.codemark {
+		transition: transform 0.2s, margin-top 0.2s;
 	}
 }
 
