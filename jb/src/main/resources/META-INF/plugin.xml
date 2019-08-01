@@ -60,6 +60,25 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="2_0_0">2.0.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds issue-tracking integrations with Jira Server and GitHub Enterprise</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>Updates the UI for creating issues on external issue tracking services to allow you to be connected to multiple services at once and change the selection on an issue by issue basis</li>
+    <li>Codemarks now appear immediately upon submission</li>
+    <li>Trailing slashes are stripped off of the Server URL setting for on-prem installations</li>
+    <li>Reduce energy consumption by avoiding unnecessary use of discrete GPU</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with not all DMs from Slack appearing in the conversation selector when creating a codemark</li>
+    <li>Fixes an issue with a lack of notification when viewing a codemark in a file you don't have</li>
+    <li>Fixes a display issue when doing a Compare in a codemark at the very end of a file</li>
+    <li>Fixes an issue where you couldn't edit a codemark from the Search tab or a stream</li>
+</ul>
 <h4 id="1_3_4">1.3.4</h4>
 <h5>Added</h5>
 <ul>
