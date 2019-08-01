@@ -42,18 +42,17 @@ export class ConfigureYouTrackPanel extends Component {
 		e.preventDefault();
 		if (this.isFormInvalid()) return;
 		const { providerId } = this.props;
-		let { baseUrl, token } = this.state;
+		const { baseUrl, token } = this.state;
 
-		baseUrl = baseUrl.trim();
-		if (baseUrl.endsWith('/')) {
-			baseUrl = baseUrl.substring(0, baseUrl.length - 1);
-		}
+		let url = baseUrl.trim().toLowerCase();
+		url = url.match(/^http/) ? url : `https://${url}`;
+		url = url.replace(/\/*$/g, '');
 
 		// for YouTrack, configuring is as good as connecting, since we are letting the user
 		// set the access token ... sending the fourth argument as true here lets the 
 		// configureProvider function know that they can mark YouTrack as connected as soon
 		// as the access token entered by the user has been saved to the server
-		this.props.configureProvider(providerId, { baseUrl, token }, this.props.fromMenu, true);
+		this.props.configureProvider(providerId, { url, token }, this.props.fromMenu, true);
 		
 		this.props.closePanel();
 	};

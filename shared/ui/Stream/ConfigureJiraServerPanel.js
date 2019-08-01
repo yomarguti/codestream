@@ -51,10 +51,11 @@ export class ConfigureJiraServerPanel extends Component {
 		e.preventDefault();
 		if (this.isFormInvalid()) return;
 		const { providerId } = this.props;
-		let { baseUrl, consumerKey, privateKey } = this.state;
-		baseUrl = baseUrl.toLowerCase();
-		baseUrl = baseUrl.match(/^http/) ? baseUrl : `https://${baseUrl}`;
-		const newProviderId = await this.props.addEnterpriseProvider(providerId, baseUrl, {
+		const { baseUrl, consumerKey, privateKey } = this.state;
+		let url = baseUrl.trim().toLowerCase();
+		url = url.match(/^http/) ? url : `https://${url}`;
+		url = url.replace(/\/*$/g, '');
+		const newProviderId = await this.props.addEnterpriseProvider(providerId, url, {
 			oauthData: { consumerKey, privateKey }
 		});
 		if (newProviderId) {

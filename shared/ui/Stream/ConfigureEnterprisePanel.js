@@ -52,8 +52,9 @@ export class ConfigureEnterprisePanel extends Component {
 		if (this.isFormInvalid()) return;
 		const { providerId } = this.props;
 		const { baseUrl, appClientId, appClientSecret } = this.state;
-		let url = baseUrl.toLowerCase();
+		let url = baseUrl.trim().toLowerCase();
 		url = url.match(/^http/) ? url : `https://${url}`;
+		url = url.replace(/\/*$/g, '');
 		const newProviderId = await this.props.addEnterpriseProvider(providerId, url, { appClientId, appClientSecret });
 		if (newProviderId) {
 			this.wantProviderId = newProviderId;
