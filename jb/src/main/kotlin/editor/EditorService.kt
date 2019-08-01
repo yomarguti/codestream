@@ -390,6 +390,7 @@ class EditorService(val project: Project) {
             synchronized(highlighters) {
                 for (highlighter in highlighters) {
                     editor.markupModel.removeHighlighter(highlighter)
+                    highlighter.dispose()
                 }
                 highlighters.clear()
             }
