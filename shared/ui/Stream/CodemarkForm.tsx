@@ -55,6 +55,8 @@ import { getTeamMembers, getTeamTagsArray } from "../store/users/reducer";
 import MessageInput from "./MessageInput";
 import { getSlashCommands } from "./SlashCommands";
 import { getCurrentTeamProvider } from "../store/teams/actions";
+import { getCodemark } from "../store/codemarks/reducer";
+import { CodemarksState } from "../store/codemarks/types";
 
 interface Props extends DispatchProps {
 	streamId: string;
@@ -90,6 +92,7 @@ interface DispatchProps {
 	services: {};
 	teamProvider: "codestream" | "slack" | "msteams" | string;
 	teamTagsArray: any;
+	codemarkState: CodemarksState;
 }
 
 interface State {
@@ -195,6 +198,22 @@ class CodemarkForm extends React.Component<Props, State> {
 			...state,
 			assignees
 		};
+
+		if (props.isEditing && props.editingCodemark) {
+			const selectedTags = {};
+			(props.editingCodemark.tags || []).forEach(tag => {
+				selectedTags[tag] = true;
+			});
+			const relatedCodemarkIds = {};
+			(props.editingCodemark.relatedCodemarkIds || []).forEach(id => {
+				relatedCodemarkIds[id] = getCodemark(props.codemarkState, id);
+			});
+			this.state = {
+				...state,
+				selectedTags,
+				relatedCodemarkIds
+			};
+		}
 	}
 
 	static getDerivedStateFromProps(props: Props, state: State) {
@@ -986,7 +1005,7 @@ class CodemarkForm extends React.Component<Props, State> {
 								paddingLeft: "25px",
 								height: "25px",
 								marginTop: "10px",
-								marginBottom: "12px",
+								marginBottom: "2px",
 								display: "inline-flex"
 							}}
 						>
@@ -1199,7 +1218,7 @@ class CodemarkForm extends React.Component<Props, State> {
 const EMPTY_OBJECT = {};
 
 const mapStateToProps = (state): DispatchProps => {
-	const { context, editorContext, users, session, preferences, providers } = state;
+	const { context, editorContext, users, session, preferences, providers, codemarks } = state;
 	const user = users[session.userId];
 	const channel = context.currentStreamId
 		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId) ||
@@ -1240,7 +1259,8 @@ const mapStateToProps = (state): DispatchProps => {
 		textEditorSelection: getCurrentSelection(editorContext),
 		slashCommands: getSlashCommands(state.capabilities),
 		services: state.services,
-		teamTagsArray
+		teamTagsArray,
+		codemarkState: codemarks
 	};
 };
 

@@ -92,6 +92,8 @@ export const createPostAndCodemark = (
 		color: string;
 		type: string;
 		assignees: any[];
+		tags: string[];
+		relatedCodemarkIds: string[];
 		title?: string;
 		crossPostIssueValues?: any;
 	},
@@ -184,7 +186,16 @@ export const createPostAndCodemark = (
 			undefined,
 			attributes.text,
 			{
-				...pick(attributes, "title", "text", "streamId", "type", "assignees", "color"),
+				...pick(
+					attributes,
+					"title",
+					"text",
+					"streamId",
+					"type",
+					"assignees",
+					"tags",
+					"relatedCodemarkIds"
+				),
 				markers,
 				textEditorUri: attributes.codeBlock.uri
 			},

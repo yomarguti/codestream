@@ -282,8 +282,10 @@ export class Codemark extends React.Component<Props, State> {
 
 	renderTags = codemark => {
 		let { tags = [] } = codemark;
-		const { teamTagsHash } = this.props;
+		const { teamTagsHash, selected } = this.props;
 		const { hover } = this.state;
+
+		const title = hover && !selected ? "Show matching tags" : "";
 
 		// LEGACY (backward compat) we used to store one "color" property on a codemark
 		// so now we promote it to a tag if it exists. We should remove this code if we
@@ -291,10 +293,8 @@ export class Codemark extends React.Component<Props, State> {
 		// tags
 		if (codemark.color) {
 			const tag = { id: "_" + codemark.color, label: "", color: codemark.color };
-			return <Tag tag={tag} />;
+			return <Tag tag={tag} title={title} placement="bottom" />;
 		}
-
-		const title = hover ? "Show matching tags" : "";
 
 		return tags.length === 0
 			? null
@@ -649,6 +649,7 @@ export class Codemark extends React.Component<Props, State> {
 
 	renderAssignees = (codemark: CodemarkPlus) => {
 		const { hover } = this.state;
+		const { selected } = this.props;
 
 		let assigneeIcons: any = null;
 
@@ -663,7 +664,7 @@ export class Codemark extends React.Component<Props, State> {
 				.map(a => ({ fullName: a.displayName, email: a.email }));
 
 			const assigneeHeadshots = [...assignees, ...externalAssignees].map(a => {
-				if (hover) {
+				if (hover && !selected) {
 					return (
 						<Tooltip title={"Assigned to " + (a.fullName || a.email)} placement="bottom">
 							<span>
@@ -699,6 +700,7 @@ export class Codemark extends React.Component<Props, State> {
 
 	renderDetailIcons = codemark => {
 		const { hover } = this.state;
+		const { selected, relatedCodemarks } = this.props;
 
 		const hasDescription = codemark.title && codemark.text;
 		const hasReplies = codemark.numReplies > 0;
@@ -719,7 +721,7 @@ export class Codemark extends React.Component<Props, State> {
 					}}
 				>
 					<Icon
-						title={hover ? "Open on " + providerDisplay.displayName : undefined}
+						title={hover && !selected ? "Open on " + providerDisplay.displayName : undefined}
 						placement="bottom"
 						name={icon}
 						className="external-provider"
@@ -729,7 +731,6 @@ export class Codemark extends React.Component<Props, State> {
 		}
 
 		const renderedTags = this.renderTags(codemark);
-		const { relatedCodemarks } = this.props;
 
 		const renderedAssignees = this.renderAssignees(codemark);
 
@@ -749,7 +750,7 @@ export class Codemark extends React.Component<Props, State> {
 					{hasDescription && (
 						<span className="detail-icon">
 							<Icon
-								title={hover ? "Show description" : undefined}
+								title={hover && !selected ? "Show description" : undefined}
 								placement="bottom"
 								name="description"
 							/>
@@ -758,7 +759,7 @@ export class Codemark extends React.Component<Props, State> {
 					{relatedCodemarks.length > 0 && (
 						<span className="detail-icon">
 							<Icon
-								title={hover ? "Show related codemarks" : undefined}
+								title={hover && !selected ? "Show related codemarks" : undefined}
 								placement="bottom"
 								name="codestream"
 							/>{" "}
@@ -767,7 +768,11 @@ export class Codemark extends React.Component<Props, State> {
 					)}
 					{hasReplies && (
 						<span className="detail-icon">
-							<Icon title={hover ? "Show replies" : undefined} placement="bottom" name="comment" />{" "}
+							<Icon
+								title={hover && !selected ? "Show replies" : undefined}
+								placement="bottom"
+								name="comment"
+							/>{" "}
 							{this.props.isCodeStreamTeam && codemark.numReplies}
 						</span>
 					)}
@@ -815,7 +820,8 @@ export class Codemark extends React.Component<Props, State> {
 
 		menuItems.push({ label: "Set Keybinding", action: "set-keybinding", submenu: submenu });
 
-		const description = codemark.title ? this.renderTextLinkified(codemark.text) : null;
+		const description =
+			codemark.title && codemark.text ? this.renderTextLinkified(codemark.text) : null;
 		return (
 			<div
 				className={cx("codemark inline type-" + type, {
@@ -883,7 +889,6 @@ export class Codemark extends React.Component<Props, State> {
 						{selected || type !== "bookmark"
 							? this.renderTextLinkified(codemark.title || codemark.text)
 							: null}
-						{selected && this.renderRelatedCodemarks()}
 						{!selected && this.renderPinnedReplies()}
 						{!selected && this.renderDetailIcons(codemark)}
 					</div>
@@ -907,18 +912,18 @@ export class Codemark extends React.Component<Props, State> {
 							</div>
 						</CodemarkDetails>
 					)}
+					{this.state.hover && !selected && type !== "bookmark" && (
+						<div className="info-wrapper">
+							<Icon
+								className="info"
+								title={this.renderCodemarkFAQ()}
+								placement="bottomRight"
+								delay={1}
+								name="info"
+							/>
+						</div>
+					)}
 				</div>
-				{this.state.hover && !selected && type !== "bookmark" && (
-					<div>
-						<Icon
-							className="info"
-							title={this.renderCodemarkFAQ()}
-							placement="bottomRight"
-							delay={1}
-							name="info"
-						/>
-					</div>
-				)}
 			</div>
 		);
 	}
