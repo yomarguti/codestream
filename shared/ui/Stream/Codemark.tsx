@@ -760,8 +760,8 @@ export class Codemark extends React.Component<Props, State> {
 		) {
 			return (
 				<div className="detail-icons">
-					{renderedAssignees}
 					{renderedTags}
+					{renderedAssignees}
 					{externalLink}
 					{hasDescription && (
 						<span className="detail-icon">
