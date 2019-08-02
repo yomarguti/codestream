@@ -1195,7 +1195,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	handleClickField = (event: React.SyntheticEvent<HTMLDivElement>) => {
 		if (event && event.target) {
 			const id = (event.target as any).id;
-			if (id === "inline-codemarks-scroll-container" || id === "inline-codemarks-field") {
+			if (
+				id === "inline-codemarks-scroll-container" ||
+				id === "inline-codemarks-field" ||
+				(event.target as any).classList.contains("plane-container")
+			) {
 				this.deselectCodemarks();
 			}
 		}
