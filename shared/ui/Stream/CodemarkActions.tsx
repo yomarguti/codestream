@@ -3,6 +3,7 @@ import * as paths from "path-browserify";
 import { escapeHtml, safe } from "../utils";
 import { prettyPrintOne } from "code-prettify";
 import { HostApi } from "../webview-api";
+import { LocateRepoButton } from "./LocateRepoButton";
 import Tooltip from "./Tooltip";
 import {
 	ApplyMarkerRequestType,
@@ -149,13 +150,28 @@ class CodemarkActions extends React.Component<Props, State> {
 			case "REPO_NOT_IN_WORKSPACE": {
 				return (
 					<span>
-						{intl.formatMessage(
-							{
-								id: "codeBlock.repoMissing",
-								defaultMessage: "You don’t currently have the {repoName} repo open."
-							},
-							{ repoName: this.props.repoName }
-						)}
+						<span>
+							{intl.formatMessage(
+								{
+									id: "codeBlock.repoMissing",
+									defaultMessage: "You don’t currently have the {repoName} repo open."
+								},
+								{ repoName: this.props.repoName }
+							)}
+							<LocateRepoButton
+								repoId={
+									this.props.codemark &&
+									this.props.codemark.markers &&
+									this.props.codemark.markers[0]
+										? this.props.codemark.markers[0].repoId
+										: undefined
+								}
+								repoName={this.props.repoName}
+								callback={async success => {
+									this.setState({ warning: success ? undefined : "REPO_NOT_IN_WORKSPACE" });
+								}}
+							></LocateRepoButton>
+						</span>
 					</span>
 				);
 			}

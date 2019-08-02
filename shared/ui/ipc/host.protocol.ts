@@ -123,3 +123,17 @@ export const UpdateConfigurationRequestType = new RequestType<
 	void,
 	void
 >(`${IpcRoutes.Host}/configuration/update`);
+
+export interface ShellPromptFolderRequest {
+	message: string;
+}
+export interface ShellPromptFolderResponse {
+	path: string | undefined;	
+}
+
+export const ShellPromptFolderRequestType = new RequestType<
+	ShellPromptFolderRequest,
+	ShellPromptFolderResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/shell/prompt/folder`);

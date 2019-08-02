@@ -67,3 +67,25 @@ export interface HostDidLogoutNotification {}
 export const HostDidLogoutNotificationType = new NotificationType<HostDidLogoutNotification, void>(
 	`${IpcRoutes.Webview}/didLogout`
 );
+
+export interface HostDidDidReceiveRequestNotification {
+	url?: string;
+}
+
+export enum RouteControllerType {
+	Codemark = "codemark"
+}
+export enum RouteActionType {
+	Open = "open"
+}
+export interface Route {
+	controller: RouteControllerType;
+	action?: RouteActionType;
+	id?: string;
+	parameters?: any;
+}
+
+export const HostDidReceiveRequestNotificationType = new NotificationType<
+	HostDidDidReceiveRequestNotification,
+	void
+>(`${IpcRoutes.Webview}/request/parse`);

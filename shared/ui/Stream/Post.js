@@ -10,7 +10,7 @@ import CodemarkActions from "./CodemarkActions";
 import RetrySpinner from "./RetrySpinner";
 import { retryPost, cancelPost, editPost } from "./actions";
 import ContentEditable from "react-contenteditable";
-import Button from "./Button";
+import { LocateRepoButton } from "./LocateRepoButton";
 import Menu from "./Menu";
 import Tooltip from "./Tooltip";
 import { getById } from "../store/repos/reducer";
@@ -133,13 +133,28 @@ class Post extends React.Component {
 			case "REPO_NOT_IN_WORKSPACE": {
 				return (
 					<span>
-						{intl.formatMessage(
-							{
-								id: "codeBlock.repoMissing",
-								defaultMessage: "You don’t currently have the {repoName} repo open."
-							},
-							{ repoName: this.props.repoName }
-						)}
+						<span>
+							{intl.formatMessage(
+								{
+									id: "codeBlock.repoMissing",
+									defaultMessage: "You don’t currently have the {repoName} repo open."
+								},
+								{ repoName: this.props.repoName }
+							)}
+							<LocateRepoButton
+								repoId={
+									this.props.hasMarkers && this.props.codemark.markers[0]
+										? this.props.codemark.markers[0].repoId
+										: undefined
+								}
+								repoName={this.props.repoName}
+								callback={async success => {
+									if (success) {
+										await this.showCode(true);
+									}
+								}}
+							></LocateRepoButton>
+						</span>
 					</span>
 				);
 			}

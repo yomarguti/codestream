@@ -10,7 +10,12 @@ import {
 	HostDidChangeEditorSelectionNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
 	ShowCodemarkNotificationType,
-	ShowStreamNotificationType
+	ShowStreamNotificationType,
+	WebviewPanels,
+	HostDidReceiveRequestNotificationType,
+	RouteControllerType,
+	RouteActionType,
+	Route
 } from "./ipc/webview.protocol";
 import { createCodeStreamStore } from "./store";
 import { HostApi } from "./webview-api";
@@ -40,6 +45,7 @@ import { updateConfigs } from "./store/configs/actions";
 import { setEditorContext } from "./store/editorContext/actions";
 import { blur, focus, setCurrentStream, setCurrentCodemark } from "./store/context/actions";
 import { isNotOnDisk } from "./utils";
+import { URI } from "vscode-uri";
 
 export { HostApi };
 
@@ -164,9 +170,30 @@ export function listenForEvents(store) {
 		);
 	});
 
-	api.on(ShowStreamNotificationType, ({ streamId, threadId }) => {
-		store.dispatch(openPanel("main"));
-		store.dispatch(setCurrentStream(streamId, threadId));
+	const onShowStreamNotificationType = async function(streamId, threadId, codemarkId) {
+		if (codemarkId) {
+			let {
+				codemarks
+			}: {
+				codemarks: CodemarksState;
+			} = store.getState();
+
+			if (Object.keys(codemarks).length === 0) {
+				await store.dispatch(fetchCodemarks());
+				codemarks = store.getState().codemarks;
+			}
+			const codemark = getCodemark(codemarks, codemarkId);
+			if (codemark == null) return;
+
+			store.dispatch(openPanel(WebviewPanels.Codemarks));
+			store.dispatch(setCurrentStream(codemark.streamId, codemark.postId));
+		} else {
+			store.dispatch(openPanel("main"));
+			store.dispatch(setCurrentStream(streamId, threadId));
+		}
+	};
+	api.on(ShowStreamNotificationType, async ({ streamId, threadId, codemarkId }) => {
+		onShowStreamNotificationType(streamId, threadId, codemarkId);
 	});
 
 	api.on(ShowCodemarkNotificationType, async e => {
@@ -189,5 +216,60 @@ export function listenForEvents(store) {
 		if (codemark == null) return;
 
 		store.dispatch(setCurrentCodemark(codemark.id));
+	});
+
+	const parseProtocol = function(uriString): Route | undefined {
+		let uri: URI;
+		try {
+			uri = URI.parse(uriString);
+			uri = URI.parse("codestream:/" + uri.path);
+		} catch (ex) {
+			return undefined;
+		}
+		// removes any empties
+		const paths = uri.path.split("/").filter(function(p) {
+			return p;
+		});
+
+		const controller: RouteControllerType = uri.authority as RouteControllerType;
+		let action: RouteActionType | undefined;
+		let id: string | undefined;
+
+		if (paths.length > 0) {
+			action = paths[1] as RouteActionType;
+			id = paths[0];
+		}
+
+		return {
+			controller,
+			action,
+			id
+		};
+	};
+
+	api.on(HostDidReceiveRequestNotificationType, async e => {
+		if (!e) return;
+
+		const route = parseProtocol(e.url);
+		if (!route || !route.controller) return;
+
+		switch (route.controller) {
+			case "codemark": {
+				if (route.action) {
+					switch (route.action) {
+						case "open": {
+							if (route.id) {
+								onShowStreamNotificationType(undefined, undefined, route.id);
+							}
+							break;
+						}
+					}
+				}
+				break;
+			}
+			default: {
+				break;
+			}
+		}
 	});
 }

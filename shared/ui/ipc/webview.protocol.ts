@@ -25,6 +25,7 @@ export const ShowCodemarkNotificationType = new NotificationType<ShowCodemarkNot
 export interface ShowStreamNotification {
 	streamId: string;
 	threadId?: string;
+	codemarkId?: string;
 }
 export const ShowStreamNotificationType = new NotificationType<ShowStreamNotification, void>(
 	`${IpcRoutes.Webview}/stream/show`
