@@ -1126,12 +1126,6 @@ class CodemarkForm extends React.Component<Props, State> {
 							</Tooltip>
 						</div>
 					)}
-					{commentType === "issue" && !this.props.isEditing && (
-						<CrossPostIssueControls
-							onValues={this.handleCrossPostIssueValues}
-							codeBlock={this.state.codeBlock as any}
-						/>
-					)}
 					{this.renderRelatedCodemarks()}
 					{this.renderTags()}
 					{commentType !== "link" && this.renderCrossPostMessage(commentType)}

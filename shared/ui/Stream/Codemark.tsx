@@ -267,7 +267,7 @@ export class Codemark extends React.Component<Props, State> {
 	};
 
 	renderAssigneesSelected = codemark => {
-		const renderedAssignees = this.renderAssignees(codemark);
+		const renderedAssignees = this.renderAssignees(codemark, true);
 
 		if (!renderedAssignees) return null;
 
@@ -332,7 +332,8 @@ export class Codemark extends React.Component<Props, State> {
 								this.handleClickRelatedCodemark(e, codemark, marker);
 							}}
 						>
-							{icon}&nbsp;{title}&nbsp;&nbsp;<span className="codemark-file">{file}</span>
+							{icon}&nbsp;{title}
+							<span className="codemark-file">{file}</span>
 						</div>
 					);
 				})}
@@ -647,7 +648,7 @@ export class Codemark extends React.Component<Props, State> {
 		return <a className="num-replies">{message}</a>;
 	};
 
-	renderAssignees = (codemark: CodemarkPlus) => {
+	renderAssignees = (codemark: CodemarkPlus, showNames?: boolean) => {
 		const { hover } = this.state;
 		const { selected } = this.props;
 
@@ -672,6 +673,13 @@ export class Codemark extends React.Component<Props, State> {
 							</span>
 						</Tooltip>
 					);
+				} else if (showNames) {
+					return (
+						<div>
+							<Headshot size={18} person={a} />
+							{a.fullName || a.email}
+						</div>
+					);
 				} else return <Headshot size={18} person={a} />;
 			});
 
@@ -691,7 +699,15 @@ export class Codemark extends React.Component<Props, State> {
 			return (
 				<div className="related">
 					<div className="related-label">Open on</div>
-					<a href={codemark.externalProviderUrl}>{providerDisplay.displayName}</a>
+					<a className="external-link" href={codemark.externalProviderUrl}>
+						{providerDisplay.icon && (
+							<span>
+								<Icon name={providerDisplay.icon} />
+							</span>
+						)}
+						{providerDisplay.displayName}
+						<span className="external-url">{codemark.externalProviderUrl}</span>
+					</a>
 				</div>
 			);
 		}
@@ -903,7 +919,12 @@ export class Codemark extends React.Component<Props, State> {
 								{description && (
 									<div className="related">
 										<div className="related-label">Description</div>
-										{description}
+										<div className="description-body" style={{ display: "flex" }}>
+											<Icon name="description" />
+											<div className="description-text" style={{ paddingLeft: "5px" }}>
+												{description}
+											</div>
+										</div>
 									</div>
 								)}
 								{this.renderExternalLink(codemark)}
