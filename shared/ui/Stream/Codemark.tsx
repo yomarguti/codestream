@@ -675,7 +675,7 @@ export class Codemark extends React.Component<Props, State> {
 					);
 				} else if (showNames) {
 					return (
-						<div>
+						<div style={{ marginTop: "3px" }}>
 							<Headshot size={18} person={a} />
 							{a.fullName || a.email}
 						</div>
