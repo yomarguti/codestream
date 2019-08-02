@@ -167,8 +167,7 @@ export default class CodemarkActions extends React.Component<Props, State> {
 		const codeHTML = prettyPrintOne(escapeHtml(marker.code), extension, startLine);
 		return [
 			<div className="related-label" style={{ paddingLeft: "10px" }}>
-				Original Code{" "}
-				{this.state.codemarkSha1 && <span>(from {this.state.codemarkSha1.substring(0, 8)})</span>}
+				Original Code (<span>(from {marker.commitHashWhenCreated.substring(0, 6)})</span>)
 			</div>,
 			<pre
 				className="code prettyprint"
