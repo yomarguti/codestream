@@ -20,7 +20,7 @@ class VisibleAreaListenerImpl(val project: Project) : VisibleAreaListener {
         if (editorService.isScrollingFromWebView || e.editor != editorService.activeEditor) return
 
         val visibleRanges = e.editor.visibleRanges
-        if (visibleRanges == lastVisibleRanges) return
+        if (visibleRanges.hasEqualLines(lastVisibleRanges)) return
 
         lastVisibleRanges = visibleRanges
         project.webViewService?.postNotification(
@@ -31,5 +31,15 @@ class VisibleAreaListenerImpl(val project: Project) : VisibleAreaListener {
                 e.editor.document.lineCount
             )
         )
+    }
+}
+
+private fun List<Range>.hasEqualLines(otherRanges: List<Range>?): Boolean {
+    if (this.size != otherRanges?.size) return false
+
+    val pairList = this.zip(otherRanges)
+    return pairList.all { (range1, range2) ->
+        range1.start.line == range2.start.line
+            && range1.end.line == range2.end.line
     }
 }
