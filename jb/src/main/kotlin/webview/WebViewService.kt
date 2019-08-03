@@ -78,6 +78,7 @@ class WebViewService(val project: Project) : Disposable {
     }
 
     fun postNotification(notification: WebViewNotification) {
+        logger.debug("Posting ${notification.getMethod()}")
         val message = jsonObject(
             "method" to notification.getMethod(),
             "params" to gson.toJsonTree(notification)
@@ -86,6 +87,7 @@ class WebViewService(val project: Project) : Disposable {
     }
 
     fun postNotification(method: String, params: Any?, force: Boolean? = false) {
+        logger.debug("Posting $method")
         val message = jsonObject(
             "method" to method,
             "params" to gson.toJsonTree(params)
