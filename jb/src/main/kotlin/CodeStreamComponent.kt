@@ -19,8 +19,6 @@ import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.openapi.wm.ex.ToolWindowManagerListener
 import com.intellij.util.ui.UIUtil
-import com.teamdev.jxbrowser.view.swing.internal.Graphics2DRenderWidget
-import com.teamdev.jxbrowser.view.swing.internal.Graphics2dBrowserWidget
 import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
 import kotlin.properties.Delegates
@@ -144,13 +142,7 @@ class CodeStreamComponent(val project: Project) : Disposable {
 
     fun show(afterShow: (() -> Unit)?) {
         toolWindow.show {
-            project.webViewService?.webView?.let { browserView ->
-                browserView.grabFocus()
-                browserView.browser.focus()
-                val browserWidget = browserView.components.find { it is Graphics2dBrowserWidget } as? Graphics2dBrowserWidget
-                val renderWidget = browserWidget?.components?.find { it is Graphics2DRenderWidget }
-                renderWidget?.requestFocus()
-            }
+            project.webViewService?.webView?.grabFocus()
             afterShow?.invoke()
         }
     }

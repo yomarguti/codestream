@@ -38,8 +38,10 @@ import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.util.ui.UIUtil
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -62,6 +64,8 @@ import protocols.webview.EditorInformation
 import protocols.webview.EditorMetrics
 import protocols.webview.EditorSelection
 import protocols.webview.WebViewContext
+import java.awt.HeadlessException
+import java.awt.Toolkit
 import java.io.File
 import java.net.URI
 
@@ -327,8 +331,7 @@ class EditorService(val project: Project) {
                     displayPath,
                     document.uri,
                     EditorMetrics(
-                        // Math.round(colorsScheme.editorFontSize / getFontScale()),
-                        colorsScheme.editorFontSize,
+                        Math.round(colorsScheme.editorFontSize / getFontScale()),
                         lineHeight,
                         margins
                     ),
@@ -358,8 +361,7 @@ class EditorService(val project: Project) {
                     editor.document.uri,
                     editor.selections,
                     EditorMetrics(
-                        // Math.round(editor.colorsScheme.editorFontSize / getFontScale()),
-                        editor.colorsScheme.editorFontSize,
+                        Math.round(editor.colorsScheme.editorFontSize / getFontScale()),
                         editor.lineHeight,
                         editor.margins
                     )
@@ -592,21 +594,21 @@ class EditorService(val project: Project) {
     // }
 }
 
-// fun getFontScale(): Float {
-//     if (UIUtil.isJreHiDPIEnabled() || SystemInfo.isMac) {
-//         return 1F
-//     }
-//
-//     val dpi = try {
-//         Toolkit.getDefaultToolkit().screenResolution
-//     } catch (ignored: HeadlessException) {
-//         96
-//     }
-//     return discreteScale((dpi.toFloat() / 96))
-// }
-//
-// fun discreteScale(scale: Float): Float {
-//     return Math.round(scale / .25F) * .25F
-// }
+fun getFontScale(): Float {
+    if (UIUtil.isJreHiDPIEnabled() || SystemInfo.isMac) {
+        return 1F
+    }
+
+    val dpi = try {
+        Toolkit.getDefaultToolkit().screenResolution
+    } catch (ignored: HeadlessException) {
+        96
+    }
+    return discreteScale((dpi.toFloat() / 96))
+}
+
+fun discreteScale(scale: Float): Float {
+    return Math.round(scale / .25F) * .25F
+}
 
 

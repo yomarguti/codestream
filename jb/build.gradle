@@ -16,7 +16,7 @@ repositories {
 }
 
 ext {
-    jxBrowserVersion = "7.1"
+    jxBrowserVersion = "6.23.1"
 }
 
 dependencies {
@@ -25,9 +25,12 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.1"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.2.1"
 
-    implementation "com.teamdev.jxbrowser:jxbrowser-cross-platform:${jxBrowserVersion}"
-//    implementation "com.teamdev.jxbrowser:jxbrowser-swing:${jxBrowserVersion}"
-    implementation files("$rootDir/jxbrowser-swing-${jxBrowserVersion}.jar")
+    implementation files("$rootDir/license.jar")
+    implementation "com.teamdev.jxbrowser:jxbrowser-win32:${jxBrowserVersion}"
+    implementation "com.teamdev.jxbrowser:jxbrowser-win64:${jxBrowserVersion}"
+    implementation "com.teamdev.jxbrowser:jxbrowser-mac:${jxBrowserVersion}"
+    implementation "com.teamdev.jxbrowser:jxbrowser-linux64:${jxBrowserVersion}"
+    implementation files("$rootDir/jxbrowser-${jxBrowserVersion}.jar")
 
     implementation group: "org.eclipse.lsp4j", name: "org.eclipse.lsp4j", version: "0.6.0"
     implementation "com.github.salomonbrys.kotson:kotson:2.5.0"

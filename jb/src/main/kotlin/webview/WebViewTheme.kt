@@ -1,5 +1,6 @@
 package com.codestream.webview
 
+import com.codestream.editor.getFontScale
 import com.codestream.extensions.darken
 import com.codestream.extensions.lighten
 import com.codestream.extensions.opacity
@@ -84,11 +85,11 @@ class WebViewTheme(val name: String, val stylesheet: String) {
             }
 
             val name = if (isDarkTheme()) "vscode-dark" else "vscode-light"
-            // val fontSize = Math.round(font.size / getFontScale())
+            val fontSize = Math.round(font.size / getFontScale())
             val stylesheet = """
 body {
     --font-family: $fontFamily, "Segoe WPC", "Segoe UI", HelveticaNeue-Light, Ubuntu, "Droid Sans", Arial, Consolas, sans-serif;
-    --font-size: ${font.size}px;
+    --font-size: ${fontSize}px;
     --font-weight: normal;
 
     --border-color: ${border.rgba};
