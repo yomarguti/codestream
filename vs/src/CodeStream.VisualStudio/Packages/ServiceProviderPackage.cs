@@ -19,6 +19,7 @@ using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Task = System.Threading.Tasks.Task;
+using CodeStream.VisualStudio.UI;
 
 namespace CodeStream.VisualStudio.Packages {
 
@@ -97,7 +98,7 @@ namespace CodeStream.VisualStudio.Packages {
 					userCommand
 				};
 				await JoinableTaskFactory.SwitchToMainThreadAsync();
-				//await InfoBarProvider.InitializeAsync(this);
+				await InfoBarProvider.InitializeAsync(this);
 
 				var menuCommandService = (IMenuCommandService)(await GetServiceAsync(typeof(IMenuCommandService)));
 				foreach (var command in _commands) {

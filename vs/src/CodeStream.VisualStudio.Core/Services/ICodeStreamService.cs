@@ -18,7 +18,7 @@ namespace CodeStream.VisualStudio.Core.Services {
 			int? totalLines,
 			CodemarkType codemarkType,
 			CancellationToken? cancellationToken = null);
-		Task OpenCommentByThreadAsync(string streamId, string threadId);
+		Task OpenCommentByThreadAsync(string streamId, string threadId, string codemarkId = null);
 		/// <summary>
 		/// logs the user out from the CodeStream agent and the session
 		/// </summary>

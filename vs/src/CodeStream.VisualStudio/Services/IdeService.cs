@@ -26,6 +26,7 @@ using System.Threading;
 using System.Windows;
 using IComponentModel = Microsoft.VisualStudio.ComponentModelHost.IComponentModel;
 using ILogger = Serilog.ILogger;
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace CodeStream.VisualStudio.Services {
 
@@ -148,6 +149,17 @@ namespace CodeStream.VisualStudio.Services {
 					Log.Error(ex, $"{nameof(ScrollEditor)} failed for {fileUri}");
 				}
 			}
+		}
+
+		public CommonFileDialog FolderPrompt(string message, string initialDirectory = null, bool multiSelect = false) {
+			ThreadHelper.ThrowIfNotOnUIThread();
+
+			return new CommonOpenFileDialog() {
+				InitialDirectory = initialDirectory ?? Environment.ExpandEnvironmentVariables("%HOMEDRIVE%%HOMEPATH%"),
+				IsFolderPicker = true,
+				Multiselect = multiSelect,
+				Title = message ?? "Please select a folder"
+			};
 		}
 
 		private async System.Threading.Tasks.Task<IWpfTextView> AssertWpfTextViewAsync(Uri fileUri, bool forceOpen = false) {

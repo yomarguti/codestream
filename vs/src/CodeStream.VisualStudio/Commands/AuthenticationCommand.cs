@@ -13,7 +13,7 @@ using Serilog;
 namespace CodeStream.VisualStudio.Commands {
 	internal class AuthenticationCommand : VsCommandBase {
 		private static readonly ILogger Log = LogManager.ForContext<AuthenticationCommand>();
-		
+
 		private readonly IComponentModel _componentModel;
 
 		public AuthenticationCommand(IComponentModel serviceProvider) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.AuthenticationCommandId) {
@@ -44,6 +44,7 @@ namespace CodeStream.VisualStudio.Commands {
 		}
 
 		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e) {
+
 			try {
 				var sessionService = _componentModel.GetService<ISessionService>();
 				var isReady = sessionService?.IsReady == true;
@@ -52,7 +53,10 @@ namespace CodeStream.VisualStudio.Commands {
 					sender.Text = "Sign Out";
 				}
 				else {
+					//we don't want to hide this for debugging purposes
+#if !DEBUG
 					sender.Visible = false;
+#endif
 				}
 			}
 			catch (Exception ex) {
@@ -60,4 +64,5 @@ namespace CodeStream.VisualStudio.Commands {
 			}
 		}
 	}
+
 }

@@ -100,4 +100,14 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public const string MethodName = "webview/didLogout";
 		public override string Method => MethodName;
 	}
+
+	public class HostDidReceiveRequestNotification {
+		public string Url { get; set; }
+	}
+
+	public class HostDidReceiveRequestNotificationType : NotificationType<HostDidReceiveRequestNotification> {
+		public const string MethodName = "webview/request/parse";
+		public override string Method => MethodName;
+	}
+
 }

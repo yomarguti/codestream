@@ -120,14 +120,15 @@ namespace CodeStream.VisualStudio.Services {
 			return Task.CompletedTask;
 		}
 
-		public Task OpenCommentByThreadAsync(string streamId, string threadId) {
+		public Task OpenCommentByThreadAsync(string streamId, string threadId, string codemarkId = null) {
 			if (!IsReady) return Task.CompletedTask;
 
 			try {
 				_ = BrowserService.NotifyAsync(new ShowStreamNotificationType {
 					Params = new ShowStreamNotification {
 						StreamId = streamId,
-						ThreadId = threadId
+						ThreadId = threadId,
+						CodemarkId = codemarkId
 					}
 				});
 			}
@@ -142,8 +143,8 @@ namespace CodeStream.VisualStudio.Services {
 			if (IsReady && !codemarkId.IsNullOrWhiteSpace()) {
 				_ = BrowserService.NotifyAsync(new ShowCodemarkNotificationType {
 					Params = new ShowCodemarkNotification {
-						CodemarkId = codemarkId,
-						SourceUri = Core.LanguageServer.Extensions.ToLspUriString(filePath),
+						CodemarkId = codemarkId,						
+						SourceUri = filePath != null ? Core.LanguageServer.Extensions.ToLspUriString(filePath) : null,
 					}
 				});
 			}

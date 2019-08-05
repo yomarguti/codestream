@@ -11,6 +11,7 @@ namespace CodeStream.VisualStudio.Core {
 		// Packages
 		public const string CodeStreamSettingsPackageId = "dd6d0f58-10a8-4838-85b2-40b57f9cdf58";
 		public const string CodeStreamWebViewPackageId = "2e5983fb-7dbc-458e-b8f1-8561684049d0";
+		public const string ProtocolPackagePackageId = "70D71868-7765-468B-BC83-CB1E672E223C";
 
 		// Others
 		public const string LanguageClientId = "4d480d5e-ab28-4e9c-b0be-32cd08f3b8ea";

@@ -45,7 +45,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 			browserService.PostMessage("lsp3", true);
 			browserService.PostMessage("bootstrap");
 
-			eventAggregator.Publish(new SessionReadyEvent());
+			eventAggregator.Publish(new WebviewDidInitializeEvent());
 			Thread.Sleep(1000);
 			Assert.IsTrue(browserService.QueueCount == 0);
 			Assert.IsTrue(browserService.Items[0] == "bootstrap");
@@ -110,7 +110,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 			eventAggregator.Publish(new SessionLogoutEvent());
 			browserService.PostMessage("bootstrap3");
 			Thread.Sleep(1);
-			eventAggregator.Publish(new SessionReadyEvent());
+			eventAggregator.Publish(new WebviewDidInitializeEvent());
 			Thread.Sleep(1);
 			Assert.IsTrue(browserService.QueueCount == 0);
 

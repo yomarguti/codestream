@@ -1,0 +1,139 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Threading;
+using CodeStream.VisualStudio.Core.Events;
+using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.UI;
+using Microsoft;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using Serilog;
+using CodeStream.VisualStudio.Core;
+using Task = System.Threading.Tasks.Task;
+using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Packages;
+
+namespace CodeStream.VisualStudio.Packages {
+	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
+	[InstalledProductRegistration("#111", "#112", Core.Properties.SolutionInfo.Version, IconResourceID = 400)]
+	[Guid(Guids.ProtocolPackagePackageId)]
+	[ProvideAppCommandLine(CliSwitch, typeof(ProtocolPackage), Arguments = "1", DemandLoad = 1)] // More info https://docs.microsoft.com/en-us/visualstudio/extensibility/adding-command-line-switches
+	public sealed class ProtocolPackage : AsyncPackage {
+		private static readonly ILogger Log = LogManager.ForContext<ProtocolPackage>();
+		private const string CliSwitch = "codestream";
+		private IComponentModel _componentModel;
+		private bool _processed;
+		private List<IDisposable> _disposables;
+		private ISettingsManager _settingsManager;
+		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
+			try {
+				AsyncPackageHelper.InitializePackage(GetType().Name);
+
+				_componentModel = await GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
+				Assumes.Present(_componentModel);
+				var settingsFactory = _componentModel.GetService<ISettingsServiceFactory>();
+				_settingsManager = settingsFactory.Create();
+				var sessionService = _componentModel.GetService<ISessionService>();
+
+				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+
+				AsyncPackageHelper.InitializeLogging(_settingsManager);
+				await AsyncPackageHelper.TryTriggerLspActivationAsync(Log);
+				await InfoBarProvider.InitializeAsync(this);
+
+				if (_settingsManager?.AutoSignIn != true) {
+					InfoBarProvider.Instance.ShowInfoBar($"Please enable {Application.Name}'s AutoSignin feature (Tools > Options > CodeStream > Settings) to open this file");
+					return;
+				}
+
+				Log.Debug($"{nameof(sessionService.WebViewDidInitialize)}={sessionService.WebViewDidInitialize}");
+				if (sessionService.WebViewDidInitialize == true) {
+					await HandleAsync();
+				}
+				else {
+					var eventAggregator = _componentModel.GetService<IEventAggregator>();
+					_disposables = new List<IDisposable>() {
+					eventAggregator.GetEvent<WebviewDidInitializeEvent>().Subscribe(e => {
+						Log.Debug(nameof(WebviewDidInitializeEvent));
+
+						ThreadHelper.JoinableTaskFactory.Run(async delegate {
+							await HandleAsync();
+						});
+					})
+				};
+
+				}
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(InitializeAsync));
+			}
+		}
+		
+		private async System.Threading.Tasks.Task HandleAsync() {
+			if (_processed) return;
+
+			await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+			_processed = true;
+			try {
+
+				Log.Debug(nameof(InitializeAsync) + "...Starting");				
+				var commandLine = await GetServiceAsync(typeof(SVsAppCommandLine)) as IVsAppCommandLine;
+				Assumes.Present(commandLine);				
+				ErrorHandler.ThrowOnFailure(commandLine.GetOption(CliSwitch, out int isPresent, out string optionValue));
+				
+				if (isPresent != 1) {
+					Log.Warning($"isPresent={isPresent}");
+					return;
+				}
+				
+				if (optionValue.IsNullOrWhiteSpace()) {
+					Log.Warning($"optionValue missing");
+					return;
+				}
+				
+				var toolWindowProvider = GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
+				toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
+				
+				var browserService = _componentModel.GetService<IBrowserService>();
+				if (browserService == null) {
+					Log.IsNull(nameof(browserService));
+					return;
+				}
+				
+				_ = browserService.NotifyAsync(new HostDidReceiveRequestNotificationType() {
+					Params = new HostDidReceiveRequestNotification() {
+						Url = optionValue
+					}
+				});
+				Log.Debug($"Sent optionValue={optionValue}");
+			}
+			catch (Exception ex) {
+				Log.Error(ex, "");
+			}			
+		}
+
+	 
+
+		protected override void Dispose(bool isDisposing) {
+			if (isDisposing) {
+				try {
+#pragma warning disable VSTHRD108
+					ThreadHelper.ThrowIfNotOnUIThread();
+#pragma warning restore VSTHRD108
+
+					_disposables?.DisposeAll();
+				}
+				catch (Exception ex) {
+					Log.Error(ex, nameof(Dispose));
+				}
+			}
+
+			base.Dispose(isDisposing);
+		}
+	}
+}

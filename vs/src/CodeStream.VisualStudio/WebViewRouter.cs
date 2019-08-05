@@ -10,6 +10,7 @@ using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.WindowsAPICodePack.Dialogs;
 using Newtonsoft.Json.Linq;
 using Serilog;
 
@@ -87,6 +88,35 @@ namespace CodeStream.VisualStudio {
 							}
 						case IpcRoutes.Host: {
 								switch (message.Method) {
+									case ShellPromptFolderRequestType.MethodName: {
+											using (var scope = _browserService.CreateScope(message)) {
+												ShellPromptFolderResponse response = null;
+												string error = null;
+												try {
+													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+													var request = message.Params.ToObject<ShellPromptFolderRequest>();
+													var dialog = _ideService.FolderPrompt(request?.Message);
+
+													if (dialog.ShowDialog() == CommonFileDialogResult.Ok) {
+														if (!dialog.FileName.IsNullOrWhiteSpace()) {
+															response = new ShellPromptFolderResponse {
+																Path = dialog.FileName,
+																Success = true
+															};
+														}
+													}
+												}
+												catch (Exception ex) {
+													Log.Warning(ex, $"Method={message.Method}");
+													error = ex.Message;
+												}
+												finally {
+													scope.FulfillRequest((response ?? new ShellPromptFolderResponse()).ToJToken(), error);
+												}
+											}
+
+											break;
+										}
 									case WebviewDidInitializeNotificationType.MethodName: {
 											// webview is ready!
 											_sessionService.WebViewDidInitialize = true;

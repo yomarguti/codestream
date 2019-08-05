@@ -14,6 +14,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 	public class ShowStreamNotification {
 		public string StreamId { get; set; }
 		public string ThreadId { get; set; }
+		public string CodemarkId { get; set; }
 	}
 
 	public class ShowStreamNotificationType : NotificationType<ShowStreamNotification> {

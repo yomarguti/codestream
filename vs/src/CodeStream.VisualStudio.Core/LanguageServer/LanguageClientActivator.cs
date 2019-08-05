@@ -12,6 +12,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		private static readonly ILogger Log = LogManager.ForContext<LanguageClientActivatorDummy>();
 		public static async Task<bool?> ActivateAsync(DTE dte) {
 			if (dte == null) return false;
+
 			string path = null;
 			try {
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -22,6 +23,10 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 				window.Close(vsSaveChanges.vsSaveChangesNo);
 				Log.Debug($"{nameof(ActivateAsync)} success for {path}");
 				return true;
+			}
+			catch (ArgumentNullException ex) {
+				Log.Warning(ex, $"{nameof(ActivateAsync)} failed for {path}");
+				return false;
 			}
 			catch (Exception ex) {
 				Log.Error(ex, $"{nameof(ActivateAsync)} failed for {path}");

@@ -80,7 +80,7 @@ namespace CodeStream.VisualStudio.Packages {
 				_themeEventsService = _componentModel.GetService<IThemeEventsListener>();
 				_themeEventsService.ThemeChangedEventHandler += Theme_Changed;
 
-				InitializeLogging();
+				AsyncPackageHelper.InitializeLogging(_settingsManager);
 				AsyncPackageHelper.InitializePackage(GetType().Name);
 
 				await base.InitializeAsync(cancellationToken, progress);
@@ -88,32 +88,15 @@ namespace CodeStream.VisualStudio.Packages {
 				var isSolutionLoaded = await IsSolutionLoadedAsync();
 				Log.Debug($"{nameof(isSolutionLoaded)}={isSolutionLoaded}");
 				if (isSolutionLoaded) {
-					await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, TryTriggerLspActivationAsync);
+					await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, () => {
+						return AsyncPackageHelper.TryTriggerLspActivationAsync(Log);
+					});
 				}
 
 				Log.Debug($"{nameof(InitializeAsync)} completed");
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(InitializeAsync));
-			}
-		}
-
-		void InitializeLogging() {
-			if (_settingsManager != null) {
-				var traceLevel = _settingsManager.GetExtensionTraceLevel();
-				if (traceLevel != TraceLevel.Silent) {
-#if DEBUG
-					if (traceLevel == TraceLevel.Errors || traceLevel == TraceLevel.Info) {
-						// make the default a little more informative
-						LogManager.SetTraceLevel(TraceLevel.Debug);
-					}
-					else {
-						LogManager.SetTraceLevel(traceLevel);
-					}
-#else
-					LogManager.SetTraceLevel(traceLevel);
-#endif
-				}
 			}
 		}
 
