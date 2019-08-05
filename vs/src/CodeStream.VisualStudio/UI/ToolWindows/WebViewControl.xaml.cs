@@ -1,15 +1,15 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Events;
-using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.Models;
-using CodeStream.VisualStudio.Services;
+﻿using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Events;
+using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
+using Microsoft;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
-using System.Collections.Generic;
 using System.Windows.Controls;
-using Microsoft;
-using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace CodeStream.VisualStudio.UI.ToolWindows {
 	// ReSharper disable once RedundantExtendsListEntry
@@ -71,7 +71,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 			}
 		}
 
-		private void WebViewControl_IsVisibleChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e) {
+		private void WebViewControl_IsVisibleChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e) {			
 			var newValue = e.NewValue.AsBool();
 			_sessionService.IsWebViewVisible = newValue;
 

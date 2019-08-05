@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.Composition;
 using System.Threading;
-using CodeStream.VisualStudio.Events;
+using CodeStream.VisualStudio.Core.Events;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.LiveShare;
 using Microsoft.VisualStudio.Shell;

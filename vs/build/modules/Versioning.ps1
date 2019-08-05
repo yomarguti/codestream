@@ -45,7 +45,10 @@ New-Module -ScriptBlock {
     function Write-Version([System.Version]$version, [System.String] $environment) {
         Write-VersionVsixManifest $version
         Write-SolutionInfo $version $environment
-        Write-AssemblyInfo $version
+        Write-AssemblyInfo $version "CodeStream.VisualStudio"
+        Write-AssemblyInfo $version "CodeStream.VisualStudio.Core"
+        Write-AssemblyInfo $version "CodeStream.VisualStudio.Shell.2017"
+        Write-AssemblyInfo $version "CodeStream.VisualStudio.Shell.2019"
         #Write-VersionAppVeyor $version
         #Write-DirectoryBuildProps $version
         #Push-Location $rootDirectory

@@ -1,9 +1,11 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Events;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
 using CodeStream.VisualStudio.Services;
 using Moq;
-using CodeStream.VisualStudio.Events;
-using CodeStream.VisualStudio.Models;
 using Newtonsoft.Json.Linq;
 
 namespace CodeStream.VisualStudio.UnitTests {

@@ -1,29 +1,14 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Events;
-using CodeStream.VisualStudio.Models;
 using Serilog;
 using System;
 using System.ComponentModel.Composition;
-using CodeStream.VisualStudio.Extensions;
-using Microsoft.VisualStudio.Shell;
+using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Events;
+using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
 
 namespace CodeStream.VisualStudio.Services {
-	public interface IAuthenticationServiceFactory {
-		IAuthenticationService Create();
-	}
-
-	[Export(typeof(IAuthenticationServiceFactory))]
-	[PartCreationPolicy(CreationPolicy.Shared)]
-	public class AuthenticationServiceFactory : ServiceFactory<IAuthenticationService>, IAuthenticationServiceFactory {
-		[ImportingConstructor]
-		public AuthenticationServiceFactory([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) :
-			base(serviceProvider) {
-		}
-	}
-
-	public interface IAuthenticationService {
-		System.Threading.Tasks.Task LogoutAsync();
-	}
 
 	[Export(typeof(IAuthenticationService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]

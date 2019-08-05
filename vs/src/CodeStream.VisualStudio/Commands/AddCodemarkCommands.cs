@@ -1,11 +1,12 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Models;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
 using System.Threading;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
 
 namespace CodeStream.VisualStudio.Commands {
 	internal class AddCodemarkCommentCommand : AddCodemarkCommandBase {

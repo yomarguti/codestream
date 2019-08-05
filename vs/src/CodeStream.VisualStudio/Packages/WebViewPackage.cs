@@ -1,11 +1,7 @@
 ﻿using CodeStream.VisualStudio.Controllers;
 using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Events;
-using CodeStream.VisualStudio.LSP;
 using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.UI.Settings;
 using CodeStream.VisualStudio.UI.ToolWindows;
-using CodeStream.VisualStudio.Vssdk;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -16,9 +12,15 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Events;
+using CodeStream.VisualStudio.Core.Services;
 using Microsoft.VisualStudio.ComponentModelHost;
 using SolutionEvents = Microsoft.VisualStudio.Shell.Events.SolutionEvents;
 using Task = System.Threading.Tasks.Task;
+using CodeStream.VisualStudio.Core.LanguageServer;
+using CodeStream.VisualStudio.Core.Vssdk;
+using CodeStream.VisualStudio.UI.Settings;
 
 namespace CodeStream.VisualStudio.Packages {
 	[Guid(Guids.CodeStreamWebViewPackageId)]
@@ -283,8 +285,10 @@ namespace CodeStream.VisualStudio.Packages {
 					_vsShellEventManager?.Dispose();
 					_languageServerReadyEvent?.Dispose();
 					_codeStreamEventManager?.Dispose();
-					
-					LanguageClient.Instance?.Dispose();
+
+					//cheese
+					//can't do this anymore... though at this point the process is exiting so why bother?...
+					//Client.Instance?.Dispose();
 				}
 				catch (Exception ex) {
 					Log.Error(ex, nameof(Dispose));

@@ -2,12 +2,15 @@ Set-StrictMode -Version Latest
 
 New-Module -ScriptBlock {
 
-    function Get-AssemblyInfoPath {
-        Join-Path $rootDirectory src\CodeStream.VisualStudio\Properties\AssemblyInfo.cs
+    function Get-AssemblyInfoPath([System.string]$project) {
+        if($project -eq $null){
+            throw "missing project"
+        }
+        Join-Path $rootDirectory src\$project\Properties\AssemblyInfo.cs
     }
 
-    function Read-VersionAssemblyInfo {
-        $file = Get-AssemblyInfoPath
+    function Read-VersionAssemblyInfo([System.string]$project) {
+        $file = Get-AssemblyInfoPath $project
         $currentVersion = Get-Content $file | %{
         $regex = '\[assembly: AssemblyVersion\("(\d+\.\d+\.\d+.\d+)"\)]'
             if ($_ -match $regex) {
@@ -17,8 +20,8 @@ New-Module -ScriptBlock {
         [System.Version] $currentVersion
     }
 
-    function Write-AssemblyInfo([System.Version]$version) {
-        $file = Get-AssemblyInfoPath
+    function Write-AssemblyInfo([System.Version]$version, [System.string]$project) {
+        $file = Get-AssemblyInfoPath $project
         $numberOfReplacements = 0
         $newContent = Get-Content $file | %{
             $newString = $_

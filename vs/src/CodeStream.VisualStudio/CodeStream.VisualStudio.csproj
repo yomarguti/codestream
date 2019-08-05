@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.VSSDK.BuildTools.15.9.3032\build\Microsoft.VSSDK.BuildTools.props" Condition="Exists('..\packages\Microsoft.VSSDK.BuildTools.15.9.3032\build\Microsoft.VSSDK.BuildTools.props')" />
+  <Import Project="..\packages\Microsoft.VSSDK.BuildTools.15.9.3039\build\Microsoft.VSSDK.BuildTools.props" Condition="Exists('..\packages\Microsoft.VSSDK.BuildTools.15.9.3039\build\Microsoft.VSSDK.BuildTools.props')" />
   <PropertyGroup>
     <TargetVsixContainerName>codestream-vs.vsix</TargetVsixContainerName>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
@@ -64,8 +64,6 @@
     <StartArguments>/rootsuffix Exp</StartArguments>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Annotations\Annotations.cs" />
-    <Compile Include="Application.cs" />
     <Compile Include="CodeStreamEventManager.cs" />
     <Compile Include="CodeStreamPackageVSCT.cs">
       <AutoGen>True</AutoGen>
@@ -74,150 +72,60 @@
     </Compile>
     <Compile Include="Commands\AddCodemarkCommandBase.cs" />
     <Compile Include="Commands\AddCodemarkCommands.cs" />
-    <Compile Include="Commands\BookmarkShortcutRegistration.cs" />
-    <Compile Include="Commands\BookmarkShortcutICommands.cs" />
-    <Compile Include="Commands\BookmarkShortcutCommand.cs" />
-    <Compile Include="Commands\UserCommand.cs" />
     <Compile Include="Commands\AuthenticationCommand.cs" />
+    <Compile Include="Commands\BookmarkShortcutCommand.cs" />
+    <Compile Include="Commands\BookmarkShortcutICommands.cs" />
+    <Compile Include="Commands\BookmarkShortcutRegistration.cs" />
+    <Compile Include="Commands\UserCommand.cs" />
     <Compile Include="Commands\WebViewDevToolsCommand.cs" />
     <Compile Include="Commands\WebViewReloadCommand.cs" />
-    <Compile Include="Controllers\AuthenticationController.cs" />
+    <Compile Include="Commands\WebViewToggleCommand.cs" />
     <Compile Include="Controllers\ConfigurationController.cs" />
-    <Compile Include="Controllers\LiveShareController.cs" />
-    <Compile Include="Core\CamelCaseStringEnumConverter.cs" />
-    <Compile Include="Core\Constants.cs" />
-    <Compile Include="Core\ContentTypes.cs" />
-    <Compile Include="Core\Logging\CodeStreamSink.cs" />
-    <Compile Include="Core\Logging\CustomOutputPaneSink.cs" />
-    <Compile Include="Core\Logging\Enrichers\CallerEnricher.cs" />
-    <Compile Include="Core\Logging\Instrumentation\Metrics.cs" />
-    <Compile Include="Core\Logging\LogExtensions.cs" />
-    <Compile Include="Core\Logging\LogManager.cs" />
-    <Compile Include="Core\Logging\EmptyLogger.cs" />
-    <Compile Include="Core\Logging\Instrumentation\MetricsExtensions.cs" />
-    <Compile Include="Core\Logging\Sanitizer\IProcessor.cs" />
-    <Compile Include="Core\Logging\Sanitizer\ISanitizingFormatRule.cs" />
-    <Compile Include="Core\Logging\Sanitizer\LogSanitizingFormatter.cs" />
-    <Compile Include="Core\Logging\Sanitizer\SecretsSanitizingFormatRule.cs" />
-    <Compile Include="Core\Logging\Sanitizer\TextProcessor.cs" />
-    <Compile Include="Core\Logging\TraceLevel.cs" />
-    <Compile Include="Core\RegularExpressions.cs" />
-    <Compile Include="Core\Retry.cs" />
-    <Compile Include="Core\TelemetryEventNames.cs" />
-    <Compile Include="Credentials\Credential.cs" />
-    <Compile Include="Credentials\CredentialSet.cs" />
-    <Compile Include="Credentials\CredentialType.cs" />
-    <Compile Include="Credentials\NativeMethods.cs" />
-    <Compile Include="Credentials\PersistanceType.cs" />
-    <Compile Include="Credentials\SecureStringHelper.cs" />
-    <Compile Include="Events\EventAggregator.cs" />
-    <Compile Include="Events\EventArgs.cs" />
-    <Compile Include="Extensions\CollectionExtensions.cs" />
-    <Compile Include="Extensions\ColorExtensions.cs" />
-    <Compile Include="Extensions\DateTimeExtensions.cs" />
-    <Compile Include="Extensions\DictionaryExtensions.cs" />
-    <Compile Include="Extensions\DynamicExtensions.cs" />
-    <Compile Include="Extensions\ExceptionExtensions.cs" />
-    <Compile Include="Extensions\FileSystemExtensions.cs" />
-    <Compile Include="Extensions\Guard.cs" />
-    <Compile Include="Extensions\ITextSelectionExtensions.cs" />
-    <Compile Include="Extensions\JsonExtensions.cs" />
-    <Compile Include="Extensions\ListExtensions.cs" />
-    <Compile Include="Extensions\ObjectExtensions.cs" />
-    <Compile Include="Extensions\PackageExtensions.cs" />
-    <Compile Include="Core\Process.cs" />
-    <Compile Include="Extensions\RangeExtensions.cs" />
-    <Compile Include="Extensions\ReactiveExtensions.cs" />
-    <Compile Include="Extensions\TextViewExtensions.cs" />
-    <Compile Include="LSP\LanguageClientActivator.cs" />
-    <Compile Include="LSP\Extensions.cs" />
-    <Compile Include="Models\ActiveTextEditor.cs" />
-    <Compile Include="Models\Agent.Protocol.cs" />
-    <Compile Include="Models\Agent.Protocol.DocumentMarkers.cs" />
-    <Compile Include="Models\Agent.Protocol.Notifications.cs" />
-    <Compile Include="Models\Agent.Protocol.Scm.cs" />
-    <Compile Include="Models\Host.Protocol.Editor.cs" />
-    <Compile Include="Models\Host.Protocol.Notifications.cs" />
-    <Compile Include="Models\Host.Protocol.Vsls.cs" />
-    <Compile Include="Models\Webview.Protocol.cs" />
-    <Compile Include="ServiceLocator.cs" />
-    <Compile Include="Extensions\StringExtensions.cs" />
-    <Compile Include="Extensions\EnumExtensions.cs" />
-    <Compile Include="Extensions\UriExtensions.cs" />
     <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="Guids.cs" />
-    <Compile Include="LSP\CustomCamelCasePropertyNamesContractResolver.cs" />
-    <Compile Include="LSP\ContentDefinitions.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ContentDefinitions.tt</DependentUpon>
-    </Compile>
-    <Compile Include="LSP\CustomMessageHandler.cs" />
-    <Compile Include="LSP\LanguageClient.cs" />
-    <Compile Include="LSP\LanguageServerProcess.cs" />
-    <Compile Include="Models\CodeStreamModels.cs" />
-    <Compile Include="Models\MessageTypes.cs" />
-    <Compile Include="Models\Types.cs" />
-    <Compile Include="Models\Webview.Protocol.Common.cs" />
-    <Compile Include="Models\Webview.Protocol.Notifications.cs" />
-    <Compile Include="Models\WebviewIpcMessage.cs" />
     <Compile Include="Packages\AsyncPackageHelper.cs" />
     <Compile Include="Packages\CodeStreamPackage.cs" />
-    <Compile Include="Packages\ExtensionManager.cs" />
     <Compile Include="Packages\ServiceProviderPackage.cs" />
     <Compile Include="Packages\WebViewPackage.cs" />
-    <Compile Include="Process\ProcessFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\SolutionInfo.cs" />
     <Compile Include="Services\AuthenticationService.cs" />
-    <Compile Include="Services\BrowserServiceBase.cs" />
+    <Compile Include="Services\AuthenticationServiceFactory.cs" />
     <Compile Include="Services\CodeStreamAgentService.cs" />
     <Compile Include="Services\CodeStreamService.cs" />
     <Compile Include="Services\CredentialsService.cs" />
     <Compile Include="Services\CredentialsServiceBase.cs" />
     <Compile Include="Services\DiffViewerService.cs" />
-    <Compile Include="Services\EditorService.cs" />
-    <Compile Include="Services\ServiceFactory.cs" />
-    <Compile Include="Services\WpfTextViewCache.cs" />
     <Compile Include="Services\DotNetBrowserService.cs" />
+    <Compile Include="Services\EditorService.cs" />
+    <Compile Include="Services\EventAggregator.cs" />
     <Compile Include="Services\IdeService.cs" />
-    <Compile Include="IpcLogger.cs" />
-    <Compile Include="Services\Providers\ShellSettingsProvider.cs" />
-    <Compile Include="Services\UserSettingsKeys.cs" />
-    <Compile Include="Services\UserSettingsService.cs" />
     <Compile Include="Services\LiveShare\CollaborationHostService.cs" />
     <Compile Include="Services\LiveShare\CollaborationHostServiceFactory.cs" />
+    <Compile Include="Services\Providers\ShellSettingsProvider.cs" />
+    <Compile Include="Services\ServiceFactory.cs" />
     <Compile Include="Services\SessionService.cs" />
     <Compile Include="Services\SettingsService.cs" />
-    <Compile Include="Services\ThemeManager.cs" />
-    <Compile Include="Services\BrowserServiceExtensions.cs" />
-    <Compile Include="Services\IpcScope.cs" />
-    <Compile Include="Services\WebviewUserSettingsService.cs" />
-    <Compile Include="UI\Adornments\ActiveTextEditorExtensions.cs" />
-    <Compile Include="UI\Adornments\HighlightAdornmentManager.cs" />
+    <Compile Include="Services\UserSettingsService.cs" />
+    <Compile Include="Services\WpfTextViewCache.cs" />
     <Compile Include="UI\DiffViewCreationListener.cs" />
     <Compile Include="UI\DocumentMarkerManager.cs" />
-    <Compile Include="UI\Extensions\FrameworkElementExtensions.cs" />
     <Compile Include="UI\Glyphs\DocumentMarkGlyphFactory.cs" />
     <Compile Include="UI\Glyphs\DocumentMarkGlyphFactoryProvider.cs" />
     <Compile Include="UI\Glyphs\DocumentMarkGlyphTag.cs" />
     <Compile Include="UI\InfoBarProvider.cs" />
+    <Compile Include="UI\Margins\CodeStreamMarginExtensions.cs" />
     <Compile Include="UI\Margins\DocumentMark.xaml.cs">
       <DependentUpon>DocumentMark.xaml</DependentUpon>
     </Compile>
     <Compile Include="UI\Margins\DocumentMarkMargin.cs" />
-    <Compile Include="UI\Margins\DocumentMarkViewModel.cs" />
     <Compile Include="UI\Margins\DocumentMarkMarginProvider.cs" />
-    <Compile Include="UI\Margins\CodeStreamMarginExtensions.cs" />
-    <Compile Include="UI\Margins\ICodeStreamMarginProvider.cs" />
-    <Compile Include="UI\Margins\IGlyphMetadata.cs" />
     <Compile Include="UI\Margins\DocumentMarkScrollbar.cs" />
     <Compile Include="UI\Margins\DocumentMarkScrollbarFormat.cs" />
-    <Compile Include="UI\Margins\DocumentMarkScrollbarProvider.cs" />
     <Compile Include="UI\Margins\DocumentMarkScrollbarMarkersEnabledOption.cs" />
-    <Compile Include="UI\Placement.cs" />
+    <Compile Include="UI\Margins\DocumentMarkScrollbarProvider.cs" />
+    <Compile Include="UI\Margins\DocumentMarkViewModel.cs" />
+    <Compile Include="UI\Margins\ICodeStreamMarginProvider.cs" />
+    <Compile Include="UI\Margins\IGlyphMetadata.cs" />
     <Compile Include="UI\PredefinedCodestreamNames.cs" />
-    <Compile Include="UI\PropertyNames.cs" />
     <Compile Include="UI\Settings\OptionsDialogPage.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -225,29 +133,20 @@
     <Compile Include="UI\SuggestedActions\CodemarkSuggestedActionsSourceProvider.cs" />
     <Compile Include="UI\Taggers\DocumentMarkTagger.cs" />
     <Compile Include="UI\Taggers\DocumentMarkTaggerProvider.cs" />
-    <Compile Include="UI\Extensions\TextDocumentExtensions.cs" />
     <Compile Include="UI\TextViewCreationListener.cs" />
-    <Compile Include="UI\Extensions\TextViewExtensions.cs" />
-    <Compile Include="UI\TextViewRoles.cs" />
-    <Compile Include="UI\Wpf\KeyChordGesture.cs" />
-    <Compile Include="Vssdk\Commands\IVsCommand.cs" />
-    <Compile Include="Vssdk\Commands\IVsCommandBase.cs" />
-    <Compile Include="Vssdk\Commands\MenuCommandServiceExtensions.cs" />
-    <Compile Include="Vssdk\Commands\VsCommand.cs" />
-    <Compile Include="Vssdk\Commands\VsCommandBase.cs" />
-    <Compile Include="Vssdk\Events\WindowFocusChangedEventArgs.cs" />
-    <Compile Include="Vssdk\VsShellEventManager.cs" />
-    <Compile Include="WebViewRouter.cs" />
-    <Compile Include="UI\ToolWindows\WebViewToolWindowPane.cs" />
-    <Compile Include="Commands\WebViewToggleCommand.cs" />
     <Compile Include="UI\ToolWindows\WebViewControl.xaml.cs">
       <DependentUpon>WebViewControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UI\ToolWindows\WebViewToolWindowPane.cs" />
+    <Compile Include="UI\Wpf\KeyChordGesture.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="UI\WebViews\index.html" />
+    <Content Include="UI\WebViews\theme.css" />
+    <Content Include="UI\WebViews\waiting.html" />
     <Content Include="Vssdk\Internal\2017\Microsoft.VisualStudio.ExtensionEngine.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Vssdk\Internal\2017\Microsoft.VisualStudio.ExtensionManager.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -264,9 +163,7 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="ClassDiagram1.cd" />
     <None Include="CodeStream.VisualStudio.Settings.json" />
-    <Compile Include="Models\Host.Protocol.cs" />
     <Content Include="CHANGELOG.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -275,19 +172,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="LSP\ContentDefinitions.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ContentDefinitions.cs</LastGenOutput>
-    </Content>
-    <Content Include="LSP\FileExtensionExclusions.txt" />
-    <Content Include="LSP\FileExtensionsGeneric.txt" />
-    <Content Include="LSP\ContentTypesVisualStudio.txt" />
     <Content Include="Resources\codestream.codestream">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Compile Include="Models\Agent.Protocol.Auth.cs" />
     <None Include="packages.config" />
+    <None Include="Post-Build.ps1" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
@@ -387,14 +277,6 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="UI\WebViews\index.html" />
-    <Content Include="UI\WebViews\index.ts" />
-    <Content Include="UI\WebViews\theme.css">
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="UI\WebViews\waiting.html">
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <Content Include="dist\webview\webview.html">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -453,12 +335,6 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.VisualStudio.Language.Intellisense.15.8.525\lib\net46\Microsoft.VisualStudio.Language.Intellisense.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.LanguageServer.Client, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.VisualStudio.LanguageServer.Client.15.9.3032\lib\net46\Microsoft.VisualStudio.LanguageServer.Client.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.VisualStudio.LanguageServer.Protocol.15.9.3032\lib\net46\Microsoft.VisualStudio.LanguageServer.Protocol.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.LiveShare, Version=0.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.VisualStudio.LiveShare.0.3.1074\lib\net461\Microsoft.VisualStudio.LiveShare.dll</HintPath>
@@ -580,19 +456,10 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="UI\Margins\DocumentMark.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="UI\ToolWindows\WebViewControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="VSPackage.resx">
       <MergeWithCTO>true</MergeWithCTO>
       <ManifestResourceName>VSPackage</ManifestResourceName>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -601,6 +468,42 @@
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.VisualStudio.SDK.Analyzers.15.8.36\analyzers\cs\Microsoft.VisualStudio.SDK.Analyzers.dll" />
     <Analyzer Include="..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.168\analyzers\cs\Microsoft.VisualStudio.Threading.Analyzers.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="UI\WebViews\index.ts" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CodeStream.VisualStudio.Core\CodeStream.VisualStudio.Core.csproj">
+      <Project>{1a29b558-c55a-4769-ad37-69f903ed6eb3}</Project>
+      <Name>CodeStream.VisualStudio.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CodeStream.VisualStudio.Shell.2017\CodeStream.VisualStudio.Shell.2017.csproj">
+      <Project>{689F3AA3-DE22-4675-A461-C92F1E1EE2FB}</Project>
+      <Name>CodeStream.VisualStudio.Shell.2017</Name>
+      <VSIXSubPath>Internal\2017</VSIXSubPath>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
+      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
+    </ProjectReference>
+    <ProjectReference Include="..\CodeStream.VisualStudio.Shell.2019\CodeStream.VisualStudio.Shell.2019.csproj">
+      <Project>{E45E73E2-3442-464F-A54F-A5B8A8E48084}</Project>
+      <Name>CodeStream.VisualStudio.Shell.2019</Name>
+      <VSIXSubPath>Internal\2019</VSIXSubPath>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
+      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Internal\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="UI\Margins\DocumentMark.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UI\ToolWindows\WebViewControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
@@ -615,17 +518,17 @@ copy /Y "$(SolutionDir)..\licenses\$(ConfigurationName)\teamdev.licenses" "$(Pro
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Microsoft.VisualStudio.SDK.EmbedInteropTypes.15.0.27\build\Microsoft.VisualStudio.SDK.EmbedInteropTypes.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.VisualStudio.SDK.EmbedInteropTypes.15.0.27\build\Microsoft.VisualStudio.SDK.EmbedInteropTypes.targets'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.VSSDK.BuildTools.15.9.3032\build\Microsoft.VSSDK.BuildTools.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.VSSDK.BuildTools.15.9.3032\build\Microsoft.VSSDK.BuildTools.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.VSSDK.BuildTools.15.9.3032\build\Microsoft.VSSDK.BuildTools.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.VSSDK.BuildTools.15.9.3032\build\Microsoft.VSSDK.BuildTools.targets'))" />
     <Error Condition="!Exists('..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.168\build\Microsoft.VisualStudio.Threading.Analyzers.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.168\build\Microsoft.VisualStudio.Threading.Analyzers.targets'))" />
     <Error Condition="!Exists('..\packages\Microsoft.VisualStudio.SDK.Analyzers.15.8.36\build\Microsoft.VisualStudio.SDK.Analyzers.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.VisualStudio.SDK.Analyzers.15.8.36\build\Microsoft.VisualStudio.SDK.Analyzers.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.VSSDK.BuildTools.15.9.3039\build\Microsoft.VSSDK.BuildTools.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.VSSDK.BuildTools.15.9.3039\build\Microsoft.VSSDK.BuildTools.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.VSSDK.BuildTools.15.9.3039\build\Microsoft.VSSDK.BuildTools.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.VSSDK.BuildTools.15.9.3039\build\Microsoft.VSSDK.BuildTools.targets'))" />
   </Target>
-  <Import Project="..\packages\Microsoft.VSSDK.BuildTools.15.9.3032\build\Microsoft.VSSDK.BuildTools.targets" Condition="Exists('..\packages\Microsoft.VSSDK.BuildTools.15.9.3032\build\Microsoft.VSSDK.BuildTools.targets')" />
   <PropertyGroup>
     <PostBuildEvent>powershell -ExecutionPolicy Unrestricted $(ProjectDir)Post-Build.ps1 -ConfigurationName $(ConfigurationName)</PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.168\build\Microsoft.VisualStudio.Threading.Analyzers.targets" Condition="Exists('..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.168\build\Microsoft.VisualStudio.Threading.Analyzers.targets')" />
   <Import Project="..\packages\Microsoft.VisualStudio.SDK.Analyzers.15.8.36\build\Microsoft.VisualStudio.SDK.Analyzers.targets" Condition="Exists('..\packages\Microsoft.VisualStudio.SDK.Analyzers.15.8.36\build\Microsoft.VisualStudio.SDK.Analyzers.targets')" />
+  <Import Project="..\packages\Microsoft.VSSDK.BuildTools.15.9.3039\build\Microsoft.VSSDK.BuildTools.targets" Condition="Exists('..\packages\Microsoft.VSSDK.BuildTools.15.9.3039\build\Microsoft.VSSDK.BuildTools.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

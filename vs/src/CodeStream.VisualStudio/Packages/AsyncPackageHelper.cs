@@ -1,4 +1,5 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Logging;
 using Serilog;
 
 namespace CodeStream.VisualStudio.Packages

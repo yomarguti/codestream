@@ -1,41 +1,20 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Core.Managers;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
 using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Threading;
-using CodeStream.VisualStudio.UI.Extensions;
+using CodeStream.VisualStudio.Core.UI.Extensions;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Services {
-	public interface ICodeStreamService {
-		Task ResetActiveEditorAsync();
-		Task ChangeActiveEditorAsync(Uri uri);
-		Task ChangeActiveEditorAsync(Uri uri, ActiveTextEditor activeTextEditor = null);
-		Task ChangeCaretAsync(Uri uri, List<Range> visibleRange, int cursorLine, int lineCount);
-		Task NewCodemarkAsync(Uri uri, Range range, CodemarkType codemarkType, string source, CancellationToken? cancellationToken = null);
-		Task ShowCodemarkAsync(string codemarkId, string filePath, CancellationToken? cancellationToken = null);
-		Task EditorSelectionChangedNotificationAsync(Uri uri,
-			EditorState editorState,
-			List<Range> visibleRanges,
-			int? totalLines,
-			CodemarkType codemarkType,
-			CancellationToken? cancellationToken = null);
-		Task OpenCommentByThreadAsync(string streamId, string threadId);
-		/// <summary>
-		/// logs the user out from the CodeStream agent and the session
-		/// </summary>
-		/// <returns></returns>
-		//Task LogoutAsync();
-		IBrowserService BrowserService { get; }
-		bool IsReady { get; }
-	}
 
 	[Export(typeof(ICodeStreamService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
@@ -164,7 +143,7 @@ namespace CodeStream.VisualStudio.Services {
 				_ = BrowserService.NotifyAsync(new ShowCodemarkNotificationType {
 					Params = new ShowCodemarkNotification {
 						CodemarkId = codemarkId,
-						SourceUri = LSP.Extensions.ToLspUriString(filePath),
+						SourceUri = Core.LanguageServer.Extensions.ToLspUriString(filePath),
 					}
 				});
 			}

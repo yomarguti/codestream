@@ -1,7 +1,7 @@
-﻿using CodeStream.VisualStudio.Models;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using CodeStream.VisualStudio.Core.Models;
 
 namespace CodeStream.VisualStudio.UnitTests.Models
 {

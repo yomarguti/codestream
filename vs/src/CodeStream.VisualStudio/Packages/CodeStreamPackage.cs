@@ -1,8 +1,9 @@
-﻿using CodeStream.VisualStudio.Properties;
-using Microsoft.VisualStudio.Shell;
+﻿using Microsoft.VisualStudio.Shell;
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
+using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Properties;
 
 namespace CodeStream.VisualStudio.Packages {
 	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]

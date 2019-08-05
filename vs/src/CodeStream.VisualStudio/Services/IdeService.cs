@@ -1,11 +1,9 @@
 ﻿using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Logging.Instrumentation;
-using CodeStream.VisualStudio.Extensions;
 using EnvDTE;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -23,42 +21,15 @@ using IComponentModel = Microsoft.VisualStudio.ComponentModelHost.IComponentMode
 using ILogger = Serilog.ILogger;
 using System.IO;
 using System.Text;
+using CodeStream.VisualStudio.Core.Extensions;
 using Microsoft;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Text.Differencing;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
 
 namespace CodeStream.VisualStudio.Services {
-	public enum ExtensionKind {
-		LiveShare
-	}
-
-	public class CurrentTextViews {
-		public object DocumentView { get; set; }
-		public IEnumerable<ITextView> TextViews { get; set; }
-	}
-
-	public interface IIdeService {
-		/// <summary>
-		/// Uses built in process handler for navigating to an external url
-		/// </summary>
-		/// <param name="url">an absolute url</param>
-		void Navigate(string url);
-		System.Threading.Tasks.Task SetClipboardAsync(string text);
-		void ScrollEditor(Uri fileUri, int? scrollTo = null, int? deltaPixels = null, bool? atTop = false);
-		System.Threading.Tasks.Task<bool> OpenEditorAndRevealAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false);
-		System.Threading.Tasks.Task<IWpfTextView> OpenEditorAtLineAsync(Uri fileUri, Range range, bool forceOpen = false);
-		//bool QueryExtensions(string author, params string[] names);
-		bool QueryExtension(ExtensionKind extensionKind);
-		bool TryStartLiveShare();
-		bool TryJoinLiveShare(string url);
-		System.Threading.Tasks.Task GetClipboardTextValueAsync(int millisecondsTimeout, Action<string> callback, Regex clipboardMatcher = null);
-
-		void CompareFiles(string filePath1, string filePath2, ITextBuffer file2Replacement, Span location, string content, bool isFile1Temp = false, bool isFile2Temp = false);
-		string CreateTempFile(string originalFilePath, string content);
-		//	string CreateDiffTempFile(string originalFile, string content, Range range);
-		void RemoveTempFileSafe(string fileName);
-		CurrentTextViews GetCurrentTextViews();
-	}
+ 
 
 	[Export(typeof(IIdeService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
@@ -532,7 +503,7 @@ namespace CodeStream.VisualStudio.Services {
 				var tempFile = CreateTempFile(originalFilePath);
 				if (tempFile == null) return null;
 
-				using (var fs = File.OpenRead(originalFilePath))
+				using (var fs = System.IO.File.OpenRead(originalFilePath))
 				using (var reader = new StreamReader(fs, Encoding.UTF8, true)) {
 					reader.Peek();
 					// do some magic to get the encoding from the current file

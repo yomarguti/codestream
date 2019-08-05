@@ -1,37 +1,13 @@
 ﻿using System;
-using CodeStream.VisualStudio.Core.Logging;
 using System.ComponentModel;
 using System.Net;
 using System.Runtime.CompilerServices;
-using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.Models;
+using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Core.Models;
 
 namespace CodeStream.VisualStudio.UI.Settings {
-	public interface IOptions {
-		string Email { get; set; }
-		string Team { get; set; }
-		bool ShowAvatars { get; set; }
-		bool AutoSignIn { get; set; }
-
-		bool AutoHideMarkers { get; set; }
-		//bool ShowMarkerCodeLens { get; set; }
-		bool ShowMarkerGlyphs { get; set; }
-
-		string ServerUrl { get; set; }
-		string ProxyUrl { get; set; }
-		bool ProxyStrictSsl { get; set; }
-		ProxySupport ProxySupport { get; set; }
-	}
-
-	public interface IOptionsDialogPage : IOptions, INotifyPropertyChanged {
-		Proxy Proxy { get; }
-		void SaveSettingsToStorage();
-		void LoadSettingsFromStorage();
-
-		TraceLevel TraceLevel { get; set; }
-	}
-
-	internal class OptionsDialogPage : Microsoft.VisualStudio.Shell.DialogPage, IOptionsDialogPage {	
+	public class OptionsDialogPage : Microsoft.VisualStudio.Shell.DialogPage, IOptionsDialogPage {	
 
 		private string _email;
 		private bool _autoHideMarkers = true;

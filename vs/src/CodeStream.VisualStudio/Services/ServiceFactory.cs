@@ -1,10 +1,10 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Extensions;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
 using System.ComponentModel.Composition;
+using CodeStream.VisualStudio.Core.Extensions;
 
 namespace CodeStream.VisualStudio.Services {
 	public interface IServiceFactory<T> {

@@ -1,10 +1,10 @@
-using CodeStream.VisualStudio.UI.Adornments;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text.Editor;
 using Moq;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.UI.Adornments;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Formatting;
 
@@ -58,7 +58,7 @@ namespace CodeStream.VisualStudio.UnitTests.UI.Adornments {
 		[Ignore("Requires too much VS UI/Process")]
 		public void Highlight_StateUnderTest_ExpectedBehavior() {
 			var unitUnderTest = this.CreateManager();
-			var range = new Microsoft.VisualStudio.LanguageServer.Protocol.Range {
+			var range = new VisualStudio.Core.Models.Range {
 				Start = new Position(1, 1),
 				End = new Position(5, 5)
 			};

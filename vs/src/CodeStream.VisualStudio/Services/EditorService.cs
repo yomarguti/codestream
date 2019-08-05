@@ -1,9 +1,6 @@
-﻿using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.Models;
-using Microsoft;
+﻿using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -11,22 +8,14 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using Serilog;
 using System;
 using System.ComponentModel.Composition;
-using System.Runtime.InteropServices;
+using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.UI.Extensions;
-using System.Text;
+using CodeStream.VisualStudio.Core.Managers;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.Core.UI.Extensions;
 
 namespace CodeStream.VisualStudio.Services {
-	[Guid("278C1E14-E429-4364-8B73-BB643C041274")]
-	public interface IEditorService {
-		EditorState GetActiveEditorState();
-		EditorState GetEditorState(IWpfTextView wpfTextView);
-		EditorContext GetEditorContext();
-		ActiveTextEditorSelection GetActiveTextEditorSelection();
-		ActiveTextEditor GetActiveTextEditor(Uri uri = null);
-		ActiveTextEditor GetActiveTextEditor(ITextDocumentFactoryService textDocumentFactoryService,
-			IWpfTextView wpfTextView);
-	}
 
 	[Export(typeof(IEditorService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]

@@ -1,8 +1,8 @@
-﻿using CodeStream.VisualStudio.Extensions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Drawing;
 using System.Globalization;
 using System.Threading;
+using CodeStream.VisualStudio.Core.Extensions;
 
 namespace CodeStream.VisualStudio.UnitTests.Extensions {
 	[TestClass]

@@ -1,7 +1,7 @@
 ﻿using System.Windows.Input;
 
 namespace CodeStream.VisualStudio.UI.Wpf {
-	internal class KeyChordGesture : KeyGesture {
+	public class KeyChordGesture : KeyGesture {
 		private readonly Key _key;
 		private bool _gotFirstGesture;
 		private readonly InputGesture _firstGesture;

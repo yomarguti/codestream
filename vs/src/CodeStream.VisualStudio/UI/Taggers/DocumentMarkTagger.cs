@@ -1,13 +1,14 @@
-﻿using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.Models;
-using CodeStream.VisualStudio.Services;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.Core.UI;
 using CodeStream.VisualStudio.UI.Glyphs;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace CodeStream.VisualStudio.UI.Taggers {
 	/// <summary>

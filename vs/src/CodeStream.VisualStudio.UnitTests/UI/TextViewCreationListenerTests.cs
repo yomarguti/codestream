@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Reactive.Subjects;
-using CodeStream.VisualStudio.Events;
+﻿using CodeStream.VisualStudio.Core.Events;
+using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.Core.UI;
 using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.UI;
-using CodeStream.VisualStudio.UI.Margins;
 using CodeStream.VisualStudio.UnitTests.Stubs;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -14,6 +10,11 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
 using Moq;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Reactive.Subjects;
+using CodeStream.VisualStudio.UI;
+using CodeStream.VisualStudio.UI.Margins;
 
 namespace CodeStream.VisualStudio.UnitTests.UI {
 	[TestClass]

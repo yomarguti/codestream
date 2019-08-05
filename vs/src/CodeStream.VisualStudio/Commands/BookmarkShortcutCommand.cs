@@ -2,9 +2,10 @@
 using System.ComponentModel.Design;
 using System.Threading;
 using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.Models;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;

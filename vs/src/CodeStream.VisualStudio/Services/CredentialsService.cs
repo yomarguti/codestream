@@ -2,15 +2,9 @@
 using System;
 using System.ComponentModel.Composition;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.Core.Services;
 
-namespace CodeStream.VisualStudio.Services {
-	public interface ICredentialsService {
-		Task<Tuple<string, string>> LoadAsync(Uri uri, string email);
-		Task<bool> SaveAsync(Uri uri, string email, string secret);
-		Task<bool> SaveJsonAsync(Uri uri, string email, JToken secret);
-		Task<bool> DeleteAsync(Uri uri, string email);
-		Task<JToken> LoadJsonAsync(Uri uri, string email);
-	}
+namespace CodeStream.VisualStudio.Services {	 
 
 	[Export(typeof(ICredentialsService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]

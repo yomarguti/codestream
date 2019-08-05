@@ -1,13 +1,15 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Extensions;
 using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.Vssdk.Commands;
 using Microsoft.VisualStudio.Shell;
 using System;
+using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.Core.Vssdk.Commands;
 using Serilog;
 
 namespace CodeStream.VisualStudio.Commands {
-	internal class UserCommand : VsCommandBase {
+	public class UserCommand : VsCommandBase {
 		private static readonly ILogger Log = LogManager.ForContext<UserCommand>();
 
 		private const string DefaultText = "Sign In...";

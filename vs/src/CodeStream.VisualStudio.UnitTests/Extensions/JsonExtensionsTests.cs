@@ -1,6 +1,6 @@
-﻿using CodeStream.VisualStudio.Extensions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
+using JsonExtensions = CodeStream.VisualStudio.Core.Extensions.JsonExtensions;
 
 namespace CodeStream.VisualStudio.UnitTests.Extensions {
 	[TestClass]
@@ -13,7 +13,7 @@ namespace CodeStream.VisualStudio.UnitTests.Extensions {
 			};
 			Assert.AreEqual(
 				@"{""cheese"":""swiss""}",
-				foo.ToJson());
+				JsonExtensions.ToJson(foo));
 		}
 
 		[TestMethod]
@@ -21,7 +21,7 @@ namespace CodeStream.VisualStudio.UnitTests.Extensions {
 			var foo = new Foo {
 				Cheese = "swiss"
 			};
-			var token = foo.ToJToken();
+			var token = JsonExtensions.ToJToken(foo);
 			Assert.AreEqual("swiss", token["cheese"].Value<string>());
 			// the following asserts that the camelCase resolver is working
 			Assert.AreEqual(null, token["Cheese"]);

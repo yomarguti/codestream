@@ -1,9 +1,10 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.Vssdk;
 using Microsoft.VisualStudio.PlatformUI;
 using Serilog;
 using System;
+using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.Core.Vssdk;
 using Microsoft.VisualStudio.Shell;
 
 namespace CodeStream.VisualStudio {

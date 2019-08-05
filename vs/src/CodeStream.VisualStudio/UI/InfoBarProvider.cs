@@ -1,6 +1,6 @@
-﻿using Microsoft.VisualStudio.Shell;
+﻿using System;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using System;
 
 namespace CodeStream.VisualStudio.UI
 {

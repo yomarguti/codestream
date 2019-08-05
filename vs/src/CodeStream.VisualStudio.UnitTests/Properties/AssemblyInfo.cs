@@ -7,9 +7,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("CodeStream.VisualStudio.UnitTests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("HP Inc.")]
+[assembly: AssemblyCompany("CodeStream")]
 [assembly: AssemblyProduct("CodeStream.VisualStudio.UnitTests")]
-[assembly: AssemblyCopyright("Copyright © HP Inc. 2019")]
+[assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

@@ -1,8 +1,4 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Events;
-using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.Models;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
@@ -13,9 +9,14 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Events;
+using CodeStream.VisualStudio.Core.Extensions;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Task = System.Threading.Tasks.Task;
-using TextDocumentIdentifier = CodeStream.VisualStudio.Models.TextDocumentIdentifier;
+using TextDocumentIdentifier = CodeStream.VisualStudio.Core.Models.TextDocumentIdentifier;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
 #if DEBUG
 using TraceLevel = CodeStream.VisualStudio.Core.Logging.TraceLevel;
 #endif
@@ -24,9 +25,7 @@ using TraceLevel = CodeStream.VisualStudio.Core.Logging.TraceLevel;
 
 namespace CodeStream.VisualStudio.Services {
 
-	public interface ICodeStreamAgentServiceFactory {
-		ICodeStreamAgentService Create();
-	}
+	 
 
 	[Export(typeof(ICodeStreamAgentServiceFactory))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
@@ -38,36 +37,7 @@ namespace CodeStream.VisualStudio.Services {
 		}
 	}
 
-	public class OtcLoginRequest {
-		public string Code { get; set; }
-		public string TeamId { get; set; }
-		public string Team { get; set; }
-		public bool? Alias { get; set; }
-	}
-
-	public interface ICodeStreamAgentService {
-		Task SetRpcAsync(JsonRpc rpc);
-		Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null);
-		Task<JToken> ReinitializeAsync();
-		Task<CreateDocumentMarkerPermalinkResponse> CreatePermalinkAsync(Range range, string uri, string privacy);
-		Task<GetDocumentFromKeyBindingResponse> GetDocumentFromKeyBindingAsync(int key);
-		Task<CreatePostResponse> CreatePostAsync(string streamId, string threadId, string text);
-		Task<GetFileStreamResponse> GetFileStreamAsync(Uri uri);
-		Task<GetPostResponse> GetPostAsync(string streamId, string postId);
-		Task<GetUserResponse> GetUserAsync(string userId);
-		Task<GetStreamResponse> GetStreamAsync(string streamId);
-		Task<CsDirectStream> CreateDirectStreamAsync(List<string> memberIds);
-		Task<JToken> LoginViaTokenAsync(JToken token, string team, string teamId = null);
-		Task<JToken> OtcLoginRequestAsync(OtcLoginRequest request);
-		Task<JToken> LoginAsync(string email, string password, string serverUrl, string teamId);
-		Task<JToken> LogoutAsync();
-		Task<JToken> GetBootstrapAsync(Settings settings, JToken state = null, bool isAuthenticated = false);
-		Task<FetchCodemarksResponse> GetMarkersAsync(string streamId);
-		Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request);
-		Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(Uri uri, bool excludeArchived, CancellationToken? cancellationToken = null);
-		Task<FetchStreamsResponse> FetchStreamsAsync(FetchStreamsRequest request);
-		Task TrackAsync(string key, TelemetryProperties properties = null);
-	}
+	 
 
 
 	[Export(typeof(ICodeStreamAgentService))]
@@ -317,7 +287,7 @@ namespace CodeStream.VisualStudio.Services {
 				CodemarkApply = true,
 				CodemarkCompare = true,
 				EditorTrackVisibleRange = true,
-				Services = new Models.Services {
+				Services = new Core.Models.Services {
 					Vsls = vslsEnabled
 				}
 			}.ToJToken(), new JsonMergeSettings {

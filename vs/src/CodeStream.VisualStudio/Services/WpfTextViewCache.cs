@@ -4,15 +4,10 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Runtime.InteropServices;
+using CodeStream.VisualStudio.Core.Services;
 
 namespace CodeStream.VisualStudio.Services {
-	[Guid("56467630-0C95-4CDE-857A-E59AC6FDB852")]
-	public interface IWpfTextViewCache {
-		void Add(string key, IWpfTextView wpfTextView);
-		void Remove(string key, IWpfTextView wpfTextView);
-		bool TryGetValue(string key, out IWpfTextView wpfTextView);
-		int Count();
-	}
+	 
 
 	[Export(typeof(IWpfTextViewCache))]
 	[PartCreationPolicy(CreationPolicy.Shared)]

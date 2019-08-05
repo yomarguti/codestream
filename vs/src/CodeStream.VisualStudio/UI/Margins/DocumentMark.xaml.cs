@@ -1,13 +1,13 @@
-﻿using CodeStream.VisualStudio.Core;
-using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.Packages;
-using CodeStream.VisualStudio.Services;
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using CodeStream.VisualStudio.Models;
+using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Packages;
+using CodeStream.VisualStudio.Core.Services;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Serilog;
 

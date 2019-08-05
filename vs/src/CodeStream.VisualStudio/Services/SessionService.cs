@@ -2,36 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Runtime.Serialization;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
 
 namespace CodeStream.VisualStudio.Services {
-	public interface ISessionService {
-		User User { get; }
-		JToken State { get; }
-		void SetState(AgentState state);
-		void SetState(SessionState state);
-		SessionState SessionState { get; }
-		void SetUser(User user, JToken state);
-		void SetAgentDisconnected();
-		List<string> PanelStack { get; set; }
-		/// <summary>
-		/// Also known as Spatial view
-		/// </summary>
-		bool IsCodemarksForFileVisible { get; set; }
-		bool IsWebViewVisible { get; set; }
-		bool AreMarkerGlyphsVisible { get; set; }
-		string LastActiveFileUrl { get; set; }
-
-		/// <summary>
-		/// Session is ready when the agent has loaded and the user has logged in
-		/// </summary>
-		bool IsReady { get; }
-		bool IsAgentReady { get; }
-		void Logout();
-		string LiveShareUrl { get; set; }
-		string StateString { get; }
-		bool? WebViewDidInitialize { get; set; }
-	}
+ 
 
 	[Export(typeof(ISessionService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
@@ -115,66 +90,5 @@ namespace CodeStream.VisualStudio.Services {
 		}
 	}
 
-	public class User {
-		public User(string id, string userName, string emailAddress, string teamName, int teamCount) {
-			Id = id;
-			UserName = userName;
-			EmailAddress = emailAddress;
-			TeamName = teamName;
-			TeamCount = teamCount;
-		}
-
-		public string Id { get; }
-		public string TeamName { get; }
-		public string UserName { get; }
-		public string EmailAddress { get; }
-		public int TeamCount { get; set; }
-
-		public bool HasSingleTeam() => TeamCount == 1;
-	}
-
-	[Serializable]
-	public class AgentStateException : Exception {
-		public AgentStateException() { }
-
-		public AgentStateException(string message) : base(message) { }
-
-		public AgentStateException(string message, Exception innerException) : base(message, innerException) { }
-
-		protected AgentStateException(SerializationInfo info, StreamingContext context) : base(info, context) { }
-	}
-
-	[Flags]
-	public enum AgentState {
-		Unknown = 0,
-		/// <summary>
-		/// The LanguageServerProcess is ready
-		/// </summary>
-		Ready = 1 << 1
-	}
-
-	[Flags]
-	public enum SessionState {
-		Unknown = 0,
-		/// <summary>
-		/// User is in the process of signing in
-		/// </summary>
-		UserSigningIn = 1 << 1,
-		/// <summary>
-		/// The user has authenticated
-		/// </summary>
-		UserSignedIn = 1 << 2,
-		/// <summary>
-		/// The user is signing out
-		/// </summary>
-		UserSigningOut = 1 << 3,
-		/// <summary>
-		/// The user has signed out
-		/// </summary>
-		UserSignedOut = 1 << 4,
-		/// <summary>
-		/// The user has failed signing in
-		/// </summary>
-		UserSignInFailed = 1 << 5
-	}
+ 
 }

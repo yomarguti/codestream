@@ -1,7 +1,14 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Models;
-using CodeStream.VisualStudio.Packages;
-using CodeStream.VisualStudio.Services;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Packages;
+using CodeStream.VisualStudio.Core.Services;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -9,12 +16,6 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Serilog;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using CodeStream.VisualStudio.Extensions;
 
 namespace CodeStream.VisualStudio.UI.SuggestedActions {
 	internal class CodemarkSuggestedActionsSource : ISuggestedActionsSource {

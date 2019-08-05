@@ -1,5 +1,5 @@
-﻿using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CodeStream.VisualStudio.UnitTests.Models

@@ -1,7 +1,7 @@
-﻿using CodeStream.VisualStudio.Extensions;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
+using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Models;
 
 namespace CodeStream.VisualStudio.UnitTests.UI
 {

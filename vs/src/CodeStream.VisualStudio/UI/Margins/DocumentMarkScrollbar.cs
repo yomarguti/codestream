@@ -1,19 +1,20 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Models;
-using CodeStream.VisualStudio.Services;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
-using Serilog;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Threading;
-using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.UI.Extensions;
+using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Core.Managers;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.Core.UI;
+using CodeStream.VisualStudio.Core.UI.Extensions;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
+using Serilog;
 
 namespace CodeStream.VisualStudio.UI.Margins {
 	internal class DocumentMarkScrollbar : FrameworkElement, ICodeStreamWpfTextViewMargin {

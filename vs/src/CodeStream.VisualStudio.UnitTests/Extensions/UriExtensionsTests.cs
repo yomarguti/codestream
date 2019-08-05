@@ -1,5 +1,5 @@
 ﻿using System;
-using CodeStream.VisualStudio.Extensions;
+using CodeStream.VisualStudio.Core.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CodeStream.VisualStudio.UnitTests.Extensions {

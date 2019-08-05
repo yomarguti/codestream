@@ -3,7 +3,7 @@ Set-StrictMode -Version Latest
 New-Module -ScriptBlock {
 
     function Get-SolutionInfoPath {
-        Join-Path $rootDirectory src\CodeStream.VisualStudio\Properties\SolutionInfo.cs
+        Join-Path $rootDirectory src\CodeStream.VisualStudio.Core\Properties\SolutionInfo.cs
     }
 
     function Read-VersionSolutionInfo {

@@ -1,4 +1,4 @@
-﻿using CodeStream.VisualStudio.Models;
+﻿using CodeStream.VisualStudio.Core.Models;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {

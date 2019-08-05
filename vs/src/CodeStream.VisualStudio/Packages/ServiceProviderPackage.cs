@@ -1,6 +1,5 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.UI.Settings;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -11,37 +10,19 @@ using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
 using CodeStream.VisualStudio.Commands;
-using CodeStream.VisualStudio.Events;
-using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.Vssdk.Commands;
+using CodeStream.VisualStudio.Core.Events;
+using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Packages;
+using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.Core.Vssdk.Commands;
+using CodeStream.VisualStudio.UI.Settings;
 using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Packages {
-	public interface IToolWindowProvider {
-		bool? ToggleToolWindowVisibility(Guid toolWindowId);
-		bool ShowToolWindowSafe(Guid toolWindowId);
-		bool IsVisible(Guid toolWindowId);
-	}
 
-	public interface SToolWindowProvider { }	 
-
-	public interface SOptionsDialogPageAccessor { }
-	public interface IOptionsDialogPageAccessor {
-		IOptionsDialogPage GetOptionsDialogPage();
-
-	}
-
-	public class OptionsDialogPageAccessor : IOptionsDialogPageAccessor, SOptionsDialogPageAccessor {
-		private IOptionsDialogPage _optionsDialogPage;
-		public OptionsDialogPageAccessor(IOptionsDialogPage optionsDialogPage) {
-			_optionsDialogPage = optionsDialogPage;
-		}
-		public IOptionsDialogPage GetOptionsDialogPage() {
-			return _optionsDialogPage;
-		}
-	}
 
 	/// <summary>
 	/// Pseudo-package to allow for a custom service provider
@@ -64,7 +45,7 @@ namespace CodeStream.VisualStudio.Packages {
 		private List<VsCommandBase> _commands;
 
 		protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
-			try {
+			try {				
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
 				AsyncPackageHelper.InitializePackage(GetType().Name);

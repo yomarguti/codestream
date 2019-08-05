@@ -1,13 +1,13 @@
-﻿using CodeStream.VisualStudio.Core;
+﻿using System;
+using System.ComponentModel.Composition;
+using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.UI.Extensions;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
-using System;
-using System.ComponentModel.Composition;
-using CodeStream.VisualStudio.UI.Extensions;
 
 namespace CodeStream.VisualStudio.UI.SuggestedActions {
 	[Export(typeof(ISuggestedActionsSourceProvider))]

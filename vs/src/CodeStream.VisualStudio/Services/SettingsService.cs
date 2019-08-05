@@ -1,18 +1,18 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.Models;
-using CodeStream.VisualStudio.UI.Settings;
 using System;
 using System.ComponentModel.Composition;
 using Serilog;
 using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Packages;
+using CodeStream.VisualStudio.Core.Services;
 using Microsoft.VisualStudio.Shell;
 using CodeStream.VisualStudio.Packages;
+using CodeStream.VisualStudio.UI.Settings;
 
 namespace CodeStream.VisualStudio.Services {
-	public interface ISettingsServiceFactory {
-		ISettingsManager Create();
-	}
+	 
 
 	[Export(typeof(ISettingsServiceFactory))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
@@ -53,30 +53,7 @@ namespace CodeStream.VisualStudio.Services {
 		}
 	}
 
-	public interface ISettingsManager : IOptions {
-		void SaveSettingsToStorage();
-		Settings GetSettings();
-		TraceLevel TraceLevel { get; set; }
-		IOptionsDialogPage DialogPage { get; }
-		string GetEnvironmentName();
-		string GetUsefulEnvironmentName();
-		string GetEnvironmentVersionFormatted();
-		Ide GetIdeInfo();
-		Extension GetExtensionInfo();
-		Proxy Proxy { get; }
-	}
-
-	public class Settings {
-		public IOptions Options { get; set; }
-		/// <summary>
-		/// this is solely the environment name (prod, pd, foo)
-		/// </summary>
-		public string Env { get; set; }
-		/// <summary>
-		/// this is the full formatted version
-		/// </summary>
-		public string Version { get; set; }
-	}
+	 
 
 	public class SettingsManager : ISettingsManager, IOptions {
 		// once we don't support VS 2017, we'll be able to use something like...
@@ -228,34 +205,6 @@ namespace CodeStream.VisualStudio.Services {
 		public string GetEnvironmentVersionFormatted() {
 			var environmentName = GetEnvironmentName();
 			return $"{Application.ExtensionVersionSemVer}{(environmentName != "prod" ? " (" + environmentName + ")" : "")}";
-		}
-	}
-
-	public class SettingsScope : IDisposable {
-		public ISettingsManager SettingsManager { get; private set; }
-
-		private SettingsScope(ISettingsManager settingsManager) {
-			SettingsManager = settingsManager;
-		}
-
-		private bool _disposed;
-
-		public void Dispose() {
-			Dispose(true);
-		}
-
-		protected virtual void Dispose(bool disposing) {
-			if (_disposed) return;
-
-			if (disposing) {
-				SettingsManager?.SaveSettingsToStorage();
-			}
-
-			_disposed = true;
-		}
-
-		public static SettingsScope Create(ISettingsManager settingsManager) {
-			return new SettingsScope(settingsManager);
 		}
 	}
 }

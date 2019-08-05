@@ -1,68 +1,58 @@
-﻿using CodeStream.VisualStudio.Events;
+﻿using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using CodeStream.VisualStudio.Core.Events;
 
-namespace CodeStream.VisualStudio.UnitTests.Events
-{
-    [TestClass]
-    public class EventAggregatorTests
-    {
-        private readonly IEventAggregator _ea;
+namespace CodeStream.VisualStudio.UnitTests.Events {
+	[TestClass]
+	public class EventAggregatorTests {
+		private readonly IEventAggregator _ea;
 
-        public EventAggregatorTests()
-        {
-            _ea = new EventAggregator();
-        }
+		public EventAggregatorTests() {
+			_ea = new EventAggregator();
+		}
 
-        [TestMethod]
-        public void GetEventTest()
-        {
-            IDisposable x = null;
-            IDisposable y = null;
+		[TestMethod]
+		public void GetEventTest() {
+			IDisposable x = null;
+			IDisposable y = null;
 
-            try
-            {
-                x = _ea.GetEvent<Foo>().Subscribe(_ => { });
-                Assert.IsNotNull(x);
+			try {
+				x = _ea.GetEvent<Foo>().Subscribe(_ => { });
+				Assert.IsNotNull(x);
 
-                y = _ea.GetEvent<Foo>().Subscribe(_ => { });
-                Assert.IsNotNull(y);
-                Assert.AreNotSame(x, y);
-            }
-            finally
-            {
-                x?.Dispose();
-                y?.Dispose();
-            }
-        }
+				y = _ea.GetEvent<Foo>().Subscribe(_ => { });
+				Assert.IsNotNull(y);
+				Assert.AreNotSame(x, y);
+			}
+			finally {
+				x?.Dispose();
+				y?.Dispose();
+			}
+		}
 
-        [TestMethod]
-        public void PublishTest()
-        {
-            IDisposable x = null;
-            bool called = false;
+		[TestMethod]
+		public void PublishTest() {
+			IDisposable x = null;
+			bool called = false;
 
-            try
-            {
-                x = _ea.GetEvent<Bar>().Subscribe(_ => { called = true; });
-                _ea.Publish(new Bar());
+			try {
+				x = _ea.GetEvent<Bar>().Subscribe(_ => { called = true; });
+				_ea.Publish(new Bar());
 
-               Assert.IsTrue(called);
-            }
-            finally
-            {
-                x?.Dispose();
-            }
-        }
-    }
+				Assert.IsTrue(called);
+			}
+			finally {
+				x?.Dispose();
+			}
+		}
+	}
 
-    class Foo : EventBase
-    {
+	class Foo : EventBase {
 
-    }
+	}
 
-    class Bar : EventBase
-    {
+	class Bar : EventBase {
 
-    }
+	}
 }

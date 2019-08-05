@@ -1,12 +1,4 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.UI.Glyphs;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Text.Formatting;
-using Microsoft.VisualStudio.Text.Tagging;
-using Serilog;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -14,8 +6,16 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using CodeStream.VisualStudio.UI.Extensions;
+using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.Core.UI.Extensions;
+using CodeStream.VisualStudio.UI.Glyphs;
 using Microsoft;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Text.Formatting;
+using Microsoft.VisualStudio.Text.Tagging;
+using Serilog;
 
 namespace CodeStream.VisualStudio.UI.Margins {
 	internal class DocumentMarkMarginDummy { }

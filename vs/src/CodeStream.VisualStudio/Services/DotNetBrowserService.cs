@@ -12,10 +12,13 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using CodeStream.VisualStudio.Commands;
+using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Events;
+using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Events;
-using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.Models;
+using CodeStream.VisualStudio.Core.Managers;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
 using CodeStream.VisualStudio.UI.Wpf;
 using DotNetBrowser;
 using DotNetBrowser.Events;
@@ -23,7 +26,8 @@ using DotNetBrowser.WPF;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
-using static CodeStream.VisualStudio.Extensions.FileSystemExtensions;
+using static CodeStream.VisualStudio.Core.Extensions.FileSystemExtensions;
+using Application = CodeStream.VisualStudio.Core.Application;
 
 namespace CodeStream.VisualStudio.Services {
 	/// <summary>
@@ -39,9 +43,7 @@ namespace CodeStream.VisualStudio.Services {
 		public static WindowMessageHandler MessageHandler;
 	}
 
-	public interface IBrowserServiceFactory {
-		IBrowserService Create();
-	}
+	 
 
 	[Export(typeof(IBrowserServiceFactory))]
 	[PartCreationPolicy(CreationPolicy.Shared)]

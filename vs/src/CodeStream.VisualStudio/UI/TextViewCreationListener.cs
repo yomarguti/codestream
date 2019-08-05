@@ -1,12 +1,13 @@
 ﻿using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Events;
+using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Events;
-using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.Models;
-using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.UI.Adornments;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.Core.UI;
 using CodeStream.VisualStudio.UI.Margins;
 using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -22,12 +23,12 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using CodeStream.VisualStudio.UI.Extensions;
-using Microsoft.VisualStudio.Shell;
-
-public class TextViewCreationListenerDummy { }
+using CodeStream.VisualStudio.Core.UI.Extensions;
+using CodeStream.VisualStudio.Core.UI.Adornments;
 
 namespace CodeStream.VisualStudio.UI {
+	public class TextViewCreationListenerDummy { }
+
 	[Export(typeof(IVsTextViewCreationListener))]
 	[Export(typeof(IWpfTextViewConnectionListener))]
 	[ContentType(ContentTypes.Text)]
@@ -42,7 +43,7 @@ namespace CodeStream.VisualStudio.UI {
 		private IWpfTextView _focusedWpfTextView;
 		private static readonly object InitializedLock = new object();
 
-		internal const string LayerName = "CodeStreamHighlightColor";
+		internal const string LayerName = CodeStream.VisualStudio.Core.UI.PropertyNames.TextViewCreationListenerLayerName;
 
 		private static readonly object WeakTableLock = new object();
 		private static readonly ConditionalWeakTable<ITextBuffer, HashSet<IWpfTextView>> TextBufferTable =
@@ -100,6 +101,7 @@ namespace CodeStream.VisualStudio.UI {
 
 						textViews.Add(wpfTextView);
 					}
+
 					wpfTextView.Properties.GetOrCreateSingletonProperty(PropertyNames.DocumentMarkerManager,
 						() => new DocumentMarkerManager(CodeStreamAgentServiceFactory.Create(), wpfTextView, textDocument));
 					wpfTextView.Properties.AddProperty(PropertyNames.TextViewFilePath, textDocument.FilePath);
@@ -149,13 +151,13 @@ namespace CodeStream.VisualStudio.UI {
 					//listening on the main thread since we have to change the UI state
 					var disposables = new List<IDisposable>();
 					disposables.Add(EventAggregator.GetEvent<SessionReadyEvent>()
-							.ObserveOnApplicationDispatcher()
-							.Subscribe(_ => {
-								Log.Verbose($"{nameof(VsTextViewCreated)} SessionReadyEvent Session IsReady={SessionService.IsReady}");
-								if (SessionService.IsReady) {
-									OnSessionReady(wpfTextView);
-								}
-							}));
+						.ObserveOnApplicationDispatcher()
+						.Subscribe(_ => {
+							Log.Verbose($"{nameof(VsTextViewCreated)} SessionReadyEvent Session IsReady={SessionService.IsReady}");
+							if (SessionService.IsReady) {
+								OnSessionReady(wpfTextView);
+							}
+						}));
 					disposables.Add(EventAggregator.GetEvent<SessionLogoutEvent>()
 						.ObserveOnApplicationDispatcher()
 						.Subscribe(_ => OnSessionLogout(wpfTextView, textViewMarginProviders)));
@@ -274,7 +276,7 @@ namespace CodeStream.VisualStudio.UI {
 								});
 
 							if (wpfTextView.Properties.TryGetProperty(PropertyNames.DocumentMarkerManager, out DocumentMarkerManager documentMarkerManager)
-								&& documentMarkerManager != null) {
+							    && documentMarkerManager != null) {
 								if (!documentMarkerManager.IsInitialized()) {
 									documentMarkerManager.TrySetMarkers(true);
 								}
@@ -443,9 +445,9 @@ namespace CodeStream.VisualStudio.UI {
 
 				// don't trigger for changes that don't result in lines being added or removed
 				var triggerTextViewLayoutChanged = (e.VerticalTranslation ||
-													 e.NewViewState.ViewportTop != e.OldViewState.ViewportTop ||
-													 e.NewViewState.ViewportBottom != e.OldViewState.ViewportBottom) &&
-													SessionService.IsWebViewVisible && SessionService.IsCodemarksForFileVisible;
+				                                    e.NewViewState.ViewportTop != e.OldViewState.ViewportTop ||
+				                                    e.NewViewState.ViewportBottom != e.OldViewState.ViewportBottom) &&
+				                                   SessionService.IsWebViewVisible && SessionService.IsCodemarksForFileVisible;
 
 				var requiresMarkerCheck = false;
 				if (wpfTextView.Properties.TryGetProperty(PropertyNames.DocumentMarkerManager, out DocumentMarkerManager documentMarkerManager) && documentMarkerManager != null) {

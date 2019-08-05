@@ -1,5 +1,5 @@
 ﻿using System.Linq;
-using CodeStream.VisualStudio.Extensions;
+using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.UnitTests.Stubs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

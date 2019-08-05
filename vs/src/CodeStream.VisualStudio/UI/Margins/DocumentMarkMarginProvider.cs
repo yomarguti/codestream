@@ -1,17 +1,17 @@
-﻿using CodeStream.VisualStudio.Core;
-using CodeStream.VisualStudio.Services;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.Composition;
+using System.Linq;
+using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.Core.UI.Extensions;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Linq;
-using CodeStream.VisualStudio.Extensions;
-using CodeStream.VisualStudio.UI.Extensions;
-using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace CodeStream.VisualStudio.UI.Margins {
 	[Export(typeof(IWpfTextViewMarginProvider))]

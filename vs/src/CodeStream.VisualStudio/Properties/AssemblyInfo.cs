@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("CodeStream.VisualStudio")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("CodeStream")]
 [assembly: AssemblyProduct("CodeStream.VisualStudio")]
 [assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]

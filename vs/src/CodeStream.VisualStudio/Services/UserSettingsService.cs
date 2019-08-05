@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Extensions;
+using CodeStream.VisualStudio.Core.Services;
 using CodeStream.VisualStudio.Services.Providers;
 using EnvDTE;
 using Newtonsoft.Json;
@@ -10,12 +11,7 @@ using Newtonsoft.Json.Linq;
 using Serilog;
 
 namespace CodeStream.VisualStudio.Services {
-	public interface SUserSettingsService { }
-
-	public interface IUserSettingsService {
-		Task<T> TryGetValueAsync<T>(string bucketName, string dataKey);
-		Task<bool> SaveAsync(string bucketName, string dataKey, object obj);
-	}
+	 
 
 	/// <summary>
 	/// Saves settings based on the current solution file name
