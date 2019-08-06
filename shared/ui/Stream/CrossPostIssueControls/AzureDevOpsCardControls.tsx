@@ -114,7 +114,8 @@ export default class AzureDevOpsCardControls extends React.Component<Props, Stat
 						/>
 					)}
 				</span>
-				{` in ${displayName}`}
+				{` on `} 
+				{this.props.children}
 			</div>
 		);
 	}
