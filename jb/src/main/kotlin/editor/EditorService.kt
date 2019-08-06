@@ -89,6 +89,7 @@ class EditorService(val project: Project) {
     private var codeStreamVisible = project.codeStream?.isVisible ?: false
 
     fun add(editor: Editor) {
+        val agentService = project.agentService ?: return
         managedEditors.add(editor)
         rangeHighlighters[editor] = mutableSetOf()
         updateMarkers(editor)
@@ -96,30 +97,35 @@ class EditorService(val project: Project) {
         editor.scrollingModel.addVisibleAreaListener(VisibleAreaListenerImpl(project))
 
         val document = editor.document
-        synchronized(managedDocuments) {
-            if (!managedDocuments.contains(document) && document.uri != null) {
-                managedDocuments[document] = DocumentVersion()
-                project.agentService?.agent?.textDocumentService?.didOpen(
-                    DidOpenTextDocumentParams(document.textDocumentItem)
-                )
-                document.addDocumentListener(DocumentSynchronizer())
-                document.addDocumentListener(DocumentListenerImpl(project))
+        agentService.onDidStart {
+            synchronized(managedDocuments) {
+                if (!managedDocuments.contains(document) && document.uri != null) {
+                    managedDocuments[document] = DocumentVersion()
+                    agentService.agent.textDocumentService.didOpen(
+                        DidOpenTextDocumentParams(document.textDocumentItem)
+                    )
+                    document.addDocumentListener(DocumentSynchronizer())
+                    document.addDocumentListener(DocumentListenerImpl(project))
+                }
             }
         }
     }
 
     fun remove(editor: Editor) {
+        val agentService = project.agentService ?: return
         managedEditors.remove(editor)
         rangeHighlighters.remove(editor)
 
         val document = editor.document
-        synchronized(managedDocuments) {
-            val editors = EditorFactory.getInstance().getEditors(document, project)
-            if (editors.isEmpty()) {
-                managedDocuments.remove(document)
-                project.agentService?.agent?.textDocumentService?.didClose(
-                    DidCloseTextDocumentParams(document.textDocumentIdentifier)
-                )
+        agentService.onDidStart {
+            synchronized(managedDocuments) {
+                val editors = EditorFactory.getInstance().getEditors(document, project)
+                if (editors.isEmpty()) {
+                    managedDocuments.remove(document)
+                    agentService.agent.textDocumentService.didClose(
+                        DidCloseTextDocumentParams(document.textDocumentIdentifier)
+                    )
+                }
             }
         }
     }
