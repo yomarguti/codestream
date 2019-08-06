@@ -135,15 +135,6 @@ export class CodemarkDetails extends React.Component<Props, State> {
 					capabilities={capabilities}
 				/>
 				<div className="replies">
-					{this.state.isLoadingReplies && (
-						<DelayedRender>
-							<div className="progress-container">
-								<div className="progress-bar">
-									<div className="progress-cursor" />
-								</div>
-							</div>
-						</DelayedRender>
-					)}
 					<div className="compose codemark-compose">
 						<div className="related-label">Add Reply</div>
 						<MessageInput
@@ -180,6 +171,15 @@ export class CodemarkDetails extends React.Component<Props, State> {
 							</div>
 						</div>
 					</div>
+					{this.state.isLoadingReplies && (
+						<DelayedRender>
+							<div className="progress-container">
+								<div className="progress-bar">
+									<div className="progress-cursor" />
+								</div>
+							</div>
+						</DelayedRender>
+					)}
 					<div className="postslist threadlist" onClick={this.handleClickPost}>
 						<PostList
 							onDidInitialize={this.onRepliesLoaded}
