@@ -27,6 +27,8 @@ export interface Props {
 	disableEdits: boolean;
 	onCancelEdit?: Function;
 	onDidSaveEdit?: Function;
+	renderHeaderIfPostsExist?: string;
+	reverse?: boolean;
 
 	markRead: any;
 	onDidChangeVisiblePosts: any;
@@ -241,8 +243,13 @@ export default infiniteLoadable(
 				postAction,
 				renderIntro,
 				isFetchingMore,
-				hasMore
+				hasMore,
+				posts,
+				reverse,
+				renderHeaderIfPostsExist
 			} = this.props;
+
+			const postsInOrder = reverse ? [...posts].reverse() : posts;
 
 			return (
 				<div className="postslist" data-scrollable="true" ref={this.list} onScroll={this.onScroll}>
@@ -253,7 +260,10 @@ export default infiniteLoadable(
 					) : (
 						safe(renderIntro)
 					)}
-					{this.props.posts.map((post, index) => {
+					{renderHeaderIfPostsExist && posts && posts.length > 1 && (
+						<div className="posts-header">{renderHeaderIfPostsExist}</div>
+					)}
+					{postsInOrder.map((post, index) => {
 						if (
 							this.props.skipParentPost &&
 							(!post.parentPostId || post.parentPostId === post.id)

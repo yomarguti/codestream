@@ -250,6 +250,22 @@ export class Codemark extends React.Component<Props, State> {
 		return icon;
 	}
 
+	renderTagsAndAssigneesSelected = codemark => {
+		const renderedTagsSelected = this.renderTagsSelected(codemark);
+		const renderedAssigneesSelected = this.renderAssigneesSelected(codemark);
+
+		if (renderedTagsSelected && renderedAssigneesSelected) {
+			return (
+				<div className="related-row" style={{ display: "flex" }}>
+					{renderedTagsSelected}
+					{renderedAssigneesSelected}
+				</div>
+			);
+		} else {
+			return [renderedTagsSelected, renderedAssigneesSelected];
+		}
+	};
+
 	renderTagsSelected = codemark => {
 		const renderedTags = this.renderTags(codemark);
 
@@ -260,8 +276,10 @@ export class Codemark extends React.Component<Props, State> {
 		return (
 			<div className="related">
 				<div className="related-label">Tags</div>
-				{renderedTags}
-				<div style={{ clear: "both" }} />
+				<div style={{ marginBottom: "-5px" }}>
+					{renderedTags}
+					<div style={{ clear: "both" }} />
+				</div>
 			</div>
 		);
 	};
@@ -915,7 +933,7 @@ export class Codemark extends React.Component<Props, State> {
 							postAction={this.props.postAction}
 						>
 							<div className="description">
-								{this.renderAssigneesSelected(codemark)}
+								{this.renderTagsAndAssigneesSelected(codemark)}
 								{description && (
 									<div className="related">
 										<div className="related-label">Description</div>
@@ -928,8 +946,8 @@ export class Codemark extends React.Component<Props, State> {
 									</div>
 								)}
 								{this.renderExternalLink(codemark)}
-								{this.renderTagsSelected(codemark)}
 								{this.renderRelatedCodemarks()}
+								{this.renderPinnedRepliesSelected()}
 							</div>
 						</CodemarkDetails>
 					)}
@@ -947,6 +965,19 @@ export class Codemark extends React.Component<Props, State> {
 				</div>
 			</div>
 		);
+	}
+
+	renderPinnedRepliesSelected() {
+		const renderedPinnedReplies = this.renderPinnedReplies();
+
+		if (renderedPinnedReplies) {
+			return (
+				<div className="related">
+					<div className="related-label">Starred Replies</div>
+					<div style={{ margin: "-5px 0 0 0" }}>{renderedPinnedReplies}</div>
+				</div>
+			);
+		} else return null;
 	}
 
 	renderPinnedReplies() {

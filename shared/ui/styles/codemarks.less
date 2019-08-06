@@ -191,9 +191,9 @@
 
 		&.selected {
 			// transform: scale(1.05);
-			transform: translate(-20px, 0);
+			// transform: translate(-20px, 0);
 			z-index: 2;
-			box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+			// box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
 		}
 		&.cs-hidden {
 			transform: none;
@@ -211,14 +211,11 @@
 			}
 		}
 		.postslist {
-			max-height: 200px;
-			overflow: auto;
+			// max-height: 200px;
+			// overflow: auto;
 		}
 		.date-separator {
 			display: none;
-		}
-		.post {
-			border-top: 1px solid @base-border-color;
 		}
 		.contents > .body {
 			white-space: normal;
@@ -236,9 +233,20 @@
 		.codemark-details {
 			.post {
 				padding: 10px;
+				.body {
+					padding: 0 23px;
+				}
 
 				&.reply .author {
 					cursor: unset;
+				}
+				&:hover {
+					.gear {
+						visibility: visible;
+					}
+				}
+				.gear {
+					visibility: hidden;
 				}
 			}
 
@@ -325,7 +333,7 @@
 		}
 	}
 	.replies {
-		margin-top: 1px;
+		// margin-top: 1px;
 	}
 	.post-details {
 		padding: 5px 10px 10px 10px;
@@ -373,14 +381,14 @@
 		}
 	}
 	.pinned-replies {
-		// margin-bottom: 10px;
+		margin-top: 10px;
 	}
 	.pinned-reply {
 		// padding: 10px 10px 3px 10px;
 		// margin: 10px -10px 0 -10px;
 		// width: calc(100% + 30px);
 		// border-top: 1px solid @base-border-color;
-		padding: 10px 0 5px 0;
+		margin: 0 0 5px 0;
 		.pinned-reply-body {
 			opacity: 0.5;
 			// see COMPUTATION below
@@ -394,7 +402,8 @@
 		}
 	}
 	.post + .post {
-		border-top: 1px solid @base-border-color;
+		// border-top: 1px solid @base-border-color;
+		border: none;
 	}
 	.detail-icons {
 		margin-top: 10px;
@@ -434,15 +443,28 @@
 		}
 	}
 }
-.related {
-	margin: 10px 0;
+.related-row {
+	display: flex;
+	.related {
+		flex-grow: 1;
+		margin-bottom: 0;
+	}
+	// this should match the margin-bottom of .related
+	margin-bottom: 20px;
 }
-.related-label {
+.related {
+	margin: 20px 0;
+}
+.related-label,
+.posts-header {
 	text-transform: uppercase;
-	font-weight: 600;
+	font-weight: 800;
 	opacity: 0.5;
 	font-size: 11px;
 	margin-bottom: 3px;
+}
+.posts-header {
+	margin: 10px 0 -7px 10px;
 }
 .icon.pinned-reply-star {
 	opacity: 0.6;
@@ -552,4 +574,24 @@
 .menu-selected {
 	color: @text-color-info;
 	font-weight: bold;
+}
+.codemark-container .align-right-button {
+	position: fixed !important;
+	z-index: 35;
+	right: 15px;
+	top: 40px;
+}
+.spatial-list .codemark-container .align-right-button {
+	position: absolute !important;
+	right: -35px;
+	top: 10px;
+}
+#codemark-blanket {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	z-index: 30;
+	left: 0;
+	top: 0;
+	background: @app-background-color;
 }

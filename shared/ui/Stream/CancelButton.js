@@ -13,13 +13,19 @@ CancelButton.defaultProps = {
 	)
 };
 
-export default function CancelButton({ placement, onClick, title = "", ...extras }) {
+export default function CancelButton({
+	placement = "bottomRight",
+	onClick,
+	className = "cancel-icon",
+	title = "",
+	...extras
+}) {
 	const { dispatch, ...extraProps } = extras; // remove non-html attributes
 	return (
 		<span className="align-right-button" onClick={onClick}>
 			<Tooltip title={title} placement={placement}>
 				<span>
-					<Icon name="x" className="cancel-icon" />
+					<Icon name="x" className={className} />
 				</span>
 			</Tooltip>
 		</span>

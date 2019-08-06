@@ -367,9 +367,14 @@ export class SimpleStream extends Component {
 			const { name, isEnterprise, host, needsConfigure, forEnterprise } = provider;
 			const display = PROVIDER_MAPPINGS[name];
 			if (display && provider.hasIssues) {
-				const displayHost = host.startsWith('http://') ? host.split('http://')[1] :
-					host.startsWith('https://') ? host.split('https://')[1] : host;
-				const displayName = isEnterprise ? `${display.displayName} - ${displayHost}` : display.displayName;
+				const displayHost = host.startsWith("http://")
+					? host.split("http://")[1]
+					: host.startsWith("https://")
+					? host.split("https://")[1]
+					: host;
+				const displayName = isEnterprise
+					? `${display.displayName} - ${displayHost}`
+					: display.displayName;
 				const isConnected = this.isConnectedToProvider(provider);
 				let label = `Connect to ${displayName}`;
 				let action;
@@ -672,9 +677,11 @@ export class SimpleStream extends Component {
 
 		const onInlineCodemarks = activePanel === WebviewPanels.CodemarksForFile;
 		const contentClass = onInlineCodemarks ? "content inline" : "content vscroll inline";
-		const configureProviderInfo = (activePanel.startsWith("configure-provider-") || activePanel.startsWith("configure-enterprise-")) 
-			? activePanel.split("-")
-			: null;
+		const configureProviderInfo =
+			activePanel.startsWith("configure-provider-") ||
+			activePanel.startsWith("configure-enterprise-")
+				? activePanel.split("-")
+				: null;
 		return (
 			<div id="stream-root" className={streamClass}>
 				<div id="modal-root" />
@@ -2166,6 +2173,7 @@ const mapStateToProps = state => {
 		teamMembersById,
 		teammates: teamMembers,
 		muteAll: context.channelsMuteAll,
+		currentDocumentMarkerId: context.currentDocumentMarkerId,
 		postStream,
 		postStreamId: postStream.id,
 		postStreamName,

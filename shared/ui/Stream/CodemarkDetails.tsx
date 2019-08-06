@@ -1,7 +1,8 @@
 import React from "react";
 import { connect } from "react-redux";
-import ScrollBox from "./ScrollBox";
+import Button from "./Button";
 import PostList from "./PostList";
+import Tooltip from "./Tooltip";
 import { MessageInput } from "./MessageInput";
 import { findMentionedUserIds, getTeamMembers } from "../store/users/reducer";
 import CodemarkActions from "./CodemarkActions";
@@ -50,24 +51,23 @@ export class CodemarkDetails extends React.Component<Props, State> {
 	}
 
 	getCachedText() {
-		const replyCache = localStore.get('replyCache');
+		const replyCache = localStore.get("replyCache");
 		if (!replyCache) return "";
 
 		return replyCache[this.props.codemark.id] || "";
 	}
 
 	cacheText(text: string) {
-		let replyCache = localStore.get('replyCache');
+		let replyCache = localStore.get("replyCache");
 		if (!replyCache) replyCache = {};
 
 		if (text === "") {
 			delete replyCache[this.props.codemark.id];
-		}
-		else {
+		} else {
 			replyCache[this.props.codemark.id] = text;
 		}
 
-		localStore.set('replyCache', replyCache);
+		localStore.set("replyCache", replyCache);
 	}
 
 	componentDidMount() {
@@ -75,7 +75,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		if (input) input.focus();
 	}
 
-	handleClickPost() { }
+	handleClickPost() {}
 
 	submitReply = async () => {
 		const { codemark } = this.props;
@@ -117,6 +117,14 @@ export class CodemarkDetails extends React.Component<Props, State> {
 	render() {
 		const { codemark, capabilities, author, currentUserId } = this.props;
 
+		const modifier = navigator.appVersion.includes("Macintosh") ? "⌘" : "Alt";
+
+		const submitTip = (
+			<span>
+				Submit Comment<span className="keybinding extra-pad">{modifier} ENTER</span>
+			</span>
+		);
+
 		const threadId = codemark.postId || "";
 		return (
 			<div className="codemark-details">
@@ -136,45 +144,65 @@ export class CodemarkDetails extends React.Component<Props, State> {
 							</div>
 						</DelayedRender>
 					)}
-					<div className="shadow-overlay">
-						<div className="postslist threadlist" onClick={this.handleClickPost}>
-							<ScrollBox>
-								<PostList
-									onDidInitialize={this.onRepliesLoaded}
-									ref={this.postList}
-									isActive={true}
-									hasFocus={this.props.hasFocus}
-									teammates={this.props.teammates}
-									currentUserId={this.props.currentUserId}
-									currentUserName={this.props.currentUserName}
-									editingPostId={this.state.editingPostId}
-									postAction={this.postAction}
-									streamId={this.props.codemark.streamId}
-									isThread
-									threadId={threadId}
-									teamId={this.props.teamId}
-									skipParentPost={true}
-									onCancelEdit={this.cancelEdit}
-									onDidSaveEdit={this.cancelEdit}
-									disableEdits
-								/>
-							</ScrollBox>
+					<div className="compose codemark-compose">
+						<div className="related-label">Add Reply</div>
+						<MessageInput
+							teammates={this.props.teammates}
+							currentUserId={this.props.currentUserId}
+							slashCommands={this.props.slashCommands}
+							services={this.props.services}
+							teamProvider={this.props.teamProvider}
+							text={this.state.text}
+							placeholder="Reply..."
+							onChange={this.handleOnChange}
+							onSubmit={this.submitReply}
+							multiCompose={true}
+						/>
+						<div style={{ display: "flex" }}>
+							<div style={{ opacity: 0.4, paddingTop: "3px" }}>Markdown is supported</div>
+							<div style={{ textAlign: "right", flexGrow: 1 }}>
+								<Tooltip title={submitTip} placement="bottom" delay={1}>
+									<Button
+										key="submit"
+										style={{
+											// fixed width to handle the isLoading case
+											width: "80px",
+											margin: "10px 0",
+											float: "right"
+										}}
+										className="control-button"
+										type="submit"
+										onClick={this.submitReply}
+									>
+										Submit
+									</Button>
+								</Tooltip>
+							</div>
 						</div>
 					</div>
-				</div>
-
-				<div className="compose codemark-compose">
-					<MessageInput
-						teammates={this.props.teammates}
-						currentUserId={this.props.currentUserId}
-						slashCommands={this.props.slashCommands}
-						services={this.props.services}
-						teamProvider={this.props.teamProvider}
-						text={this.state.text}
-						placeholder="Reply..."
-						onChange={this.handleOnChange}
-						onSubmit={this.submitReply}
-					/>
+					<div className="postslist threadlist" onClick={this.handleClickPost}>
+						<PostList
+							onDidInitialize={this.onRepliesLoaded}
+							ref={this.postList}
+							reverse={true}
+							isActive={true}
+							hasFocus={this.props.hasFocus}
+							teammates={this.props.teammates}
+							currentUserId={this.props.currentUserId}
+							currentUserName={this.props.currentUserName}
+							editingPostId={this.state.editingPostId}
+							postAction={this.postAction}
+							streamId={this.props.codemark.streamId}
+							isThread
+							threadId={threadId}
+							teamId={this.props.teamId}
+							skipParentPost={true}
+							onCancelEdit={this.cancelEdit}
+							onDidSaveEdit={this.cancelEdit}
+							disableEdits
+							renderHeaderIfPostsExist="Activity"
+						/>
+					</div>
 				</div>
 			</div>
 		);
