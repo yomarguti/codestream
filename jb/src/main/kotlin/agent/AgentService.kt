@@ -94,11 +94,13 @@ class AgentService(private val project: Project) : Disposable {
             remoteEndpoint = launcher.remoteEndpoint
             launcher.startListening()
 
-            this.initializeResult = agent.initialize(getInitializeParams()).await()
-            if (autoSignIn) {
-                project.authenticationService?.let {
-                    val success = it.autoSignIn()
-                    if (!success) restart()
+            if (!project.isDisposed) {
+                this.initializeResult = agent.initialize(getInitializeParams()).await()
+                if (autoSignIn) {
+                    project.authenticationService?.let {
+                        val success = it.autoSignIn()
+                        if (!success) restart()
+                    }
                 }
             }
             initialization.complete(Unit)
