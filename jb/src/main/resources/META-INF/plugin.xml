@@ -64,7 +64,7 @@
 <h5>Fixed</h5>
 <ul>
     <li>Fixes an issue where resizing the CodeStream pane would cause the IDE to freeze</li>
-    <li>Fixes an issue where you could no longer create a codemark after switching projects`</li>
+    <li>Fixes an issue where you could no longer create a codemark after switching projects</li>
     <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/82">#82</a> - IDE crashes on startup</li>
 </ul>
 <h4 id="2_0_0">2.0.0</h4>
