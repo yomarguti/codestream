@@ -110,7 +110,7 @@ class AgentService(private val project: Project) : Disposable {
 
     override fun dispose() {
         logger.info("Shutting down CodeStream LSP agent")
-        agent.exit()
+        onDidStart { agent.exit() }
     }
 
     suspend fun restart() {
