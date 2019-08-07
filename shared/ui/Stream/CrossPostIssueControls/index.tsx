@@ -340,7 +340,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 
 	async onChangeProvider(providerInfo: ProviderInfo) {
 		this.setState({ isLoading: true, loadingProvider: providerInfo });
-		if (providerInfo.provider.needsConfigure) {
+		if (providerInfo.provider.needsConfigure && !this.providerIsConnected(providerInfo.provider.id)) {
 			const { name, id } = providerInfo.provider;
 			this.props.openPanel(`configure-provider-${name}-${id}`);
 		} else if (providerInfo.provider.forEnterprise) {
@@ -370,6 +370,17 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		}
 		if (!providerInfo || !providerInfo.accessToken) return undefined;
 		return { provider, display };
+	}
+
+	providerIsConnected(providerId: string): boolean {
+		const provider = this.props.providers ? this.props.providers[providerId] : undefined;
+		if (!provider) return false;
+		let providerInfo = this.props.currentUser.providerInfo![this.props.currentTeamId][provider.name];
+		if (provider.isEnterprise) {
+			if (!providerInfo!.hosts) return false;
+			providerInfo = providerInfo!.hosts![provider.id];
+		}
+		return providerInfo && !!providerInfo.accessToken ? true : false;
 	}
 }
 
