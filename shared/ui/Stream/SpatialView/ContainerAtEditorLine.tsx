@@ -12,6 +12,7 @@ export default function ContainerAtEditorLine(props: {
 	lineNumber: number;
 	children: ReactNode | ReactNode[];
 	className?: string;
+	repositionToFit?: boolean;
 }) {
 	const { visibleLineCount, line0 } = useSelector((state: CodeStreamState) => {
 		const visibleRanges = getVisibleRanges(state.editorContext);
@@ -46,33 +47,39 @@ export default function ContainerAtEditorLine(props: {
 
 	// reposition after mounted in DOM
 	React.useLayoutEffect(() => {
-		let rootDimensions = rootRef.current!.getBoundingClientRect();
+		if (props.repositionToFit) {
+			let rootDimensions = rootRef.current!.getBoundingClientRect();
 
-		const domBodyDimensions = document.body.getBoundingClientRect();
-		if (rootDimensions.bottom >= domBodyDimensions.bottom) {
-			const nextPosition = getAdjustedPosition(position, rootDimensions.bottom);
-			if (nextPosition !== position) return setAdjustedPosition(nextPosition);
+			const domBodyDimensions = document.body.getBoundingClientRect();
+			if (rootDimensions.bottom >= domBodyDimensions.bottom) {
+				const nextPosition = getAdjustedPosition(position, rootDimensions.bottom);
+				if (nextPosition !== position) return setAdjustedPosition(nextPosition);
+			}
 		}
 	}, []);
 
 	// check whether adjustment is necessary after updates
 	useUpdates(() => {
-		if (adjustedPosition) {
-			// if logicalPosition is higher than the adjustedPosition then adjustment isn't necessary anymore
-			if (logicalPosition <= adjustedPosition) {
-				setAdjustedPosition(undefined);
-				setPosition(logicalPosition);
-				return;
+		if (props.repositionToFit) {
+			if (adjustedPosition) {
+				// if logicalPosition is higher than the adjustedPosition then adjustment isn't necessary anymore
+				if (logicalPosition <= adjustedPosition) {
+					setAdjustedPosition(undefined);
+					setPosition(logicalPosition);
+					return;
+				}
 			}
-		}
-		// if still adjusted and logicalPosition has changed, update position and potentially adjustment
-		if (position !== logicalPosition) {
+			// if still adjusted and logicalPosition has changed, update position and potentially adjustment
+			if (position !== logicalPosition) {
+				setPosition(logicalPosition);
+				const nextPosition = getAdjustedPosition(
+					logicalPosition,
+					logicalPosition + rootDimensions.height
+				);
+				if (nextPosition !== logicalPosition) setAdjustedPosition(nextPosition);
+			}
+		} else {
 			setPosition(logicalPosition);
-			const nextPosition = getAdjustedPosition(
-				logicalPosition,
-				logicalPosition + rootDimensions.height
-			);
-			if (nextPosition !== logicalPosition) setAdjustedPosition(nextPosition);
 		}
 	}, [rootDimensions.height, rootDimensions.bottom, position, adjustedPosition, logicalPosition]);
 
