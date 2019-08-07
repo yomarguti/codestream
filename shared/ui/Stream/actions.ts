@@ -847,6 +847,11 @@ export const updateTeamTag = (
 ) => async dispatch => {
 	try {
 		const tag = { ...attributes };
+
+		if (team.tags == null) {
+			team.tags = Object.create(null);
+		}
+
 		let response;
 		if (!tag.id) {
 			// create a random ID for the new tag

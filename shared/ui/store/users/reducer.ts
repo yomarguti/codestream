@@ -56,6 +56,10 @@ export const getTeamMembers = createSelector(
 export const getTeamTagsArray = createSelector(
 	getTeam,
 	team => {
+		if (team.tags == null) {
+			team.tags = Object.create(null);
+		}
+
 		return mapFilter(
 			Object.keys(team.tags)
 				.map(id => {
@@ -71,6 +75,10 @@ export const getTeamTagsArray = createSelector(
 export const getTeamTagsHash = createSelector(
 	getTeam,
 	team => {
+		if (team.tags == null) {
+			team.tags = Object.create(null);
+		}
+
 		const keys = Object.keys(team.tags);
 		const tags = {};
 		keys.forEach(id => {
