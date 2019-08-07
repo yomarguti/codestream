@@ -665,6 +665,9 @@ class CodemarkForm extends React.Component<Props, State> {
 					return (
 						<div key={key} className="related-codemark">
 							{icon}&nbsp;{title}&nbsp;&nbsp;<span className="codemark-file">{file}</span>
+							<span style={{ marginLeft: 5 }}>
+								<Icon name="x" onClick={() => this.handleToggleCodemark(codemark)} />
+							</span>
 						</div>
 					);
 				})}
