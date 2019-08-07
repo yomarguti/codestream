@@ -36,6 +36,7 @@ import { getCurrentTeamProvider } from "../store/teams/actions";
 import { isNil } from "lodash-es";
 import { CodeStreamState } from "../store";
 import { getCodemark } from "../store/codemarks/reducer";
+import { setCurrentDocumentMarker } from "../store/context/actions";
 
 interface State {
 	hover: boolean;
@@ -52,6 +53,7 @@ interface DispatchProps {
 	setCodemarkStatus: typeof setCodemarkStatus;
 	setUserPreference: typeof setUserPreference;
 	getPosts: typeof getPosts;
+	setCurrentDocumentMarker: typeof setCurrentDocumentMarker;
 }
 
 interface ConnectedProps {
@@ -172,7 +174,7 @@ export class Codemark extends React.Component<Props, State> {
 						editingCodemark={this.props.codemark}
 						commentType={this.props.codemark.type}
 						onSubmit={this.editCodemark}
-						onClickClose={() => this.setState({ isEditing: false })}
+						onClickClose={this.cancelEditing}
 						streamId={this.props.codemark.streamId}
 						collapsed={false}
 					/>
@@ -187,6 +189,11 @@ export class Codemark extends React.Component<Props, State> {
 				return this.renderInlineCodemark();
 		}
 	}
+
+	cancelEditing = () => {
+		this.props.setCurrentDocumentMarker();
+		this.setState({ isEditing: false });
+	};
 
 	editCodemark = async ({ text, assignees, title, relatedCodemarkIds, tags }) => {
 		await this.props.editCodemark(this.props.codemark.id, {
@@ -502,6 +509,7 @@ export class Codemark extends React.Component<Props, State> {
 				break;
 			}
 			case "edit-post": {
+				if (!this.props.selected) this.props.setCurrentDocumentMarker(this.props.marker.id);
 				this.setState({ isEditing: true });
 				break;
 			}
@@ -1135,7 +1143,8 @@ export default connect(
 		deleteCodemark,
 		editCodemark,
 		fetchThread,
-		getPosts
+		getPosts,
+		setCurrentDocumentMarker
 	}
 	// @ts-ignore
 )(Codemark);
