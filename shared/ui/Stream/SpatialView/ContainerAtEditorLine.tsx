@@ -23,7 +23,8 @@ export default function ContainerAtEditorLine(props: {
 	});
 
 	const logicalPosition = React.useMemo(
-		() => (props.lineNumber > 0 ? (window.innerHeight * line0) / visibleLineCount : -1000),
+		() =>
+			props.lineNumber > 0 && line0 >= 0 ? (window.innerHeight * line0) / visibleLineCount : -1000,
 		[props.lineNumber, line0, visibleLineCount]
 	);
 
