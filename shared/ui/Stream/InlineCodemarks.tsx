@@ -40,7 +40,7 @@ import {
 	GetRangeScmInfoResponse
 } from "@codestream/protocols/agent";
 import { Range, Position } from "vscode-languageserver-types";
-import { fetchDocumentMarkers, saveDocumentMarkers } from "../store/documentMarkers/actions";
+import { fetchDocumentMarkers, addDocumentMarker } from "../store/documentMarkers/actions";
 import {
 	getCurrentSelection,
 	getVisibleLineCount,
@@ -123,7 +123,7 @@ interface Props {
 	) => ReturnType<typeof setCurrentDocumentMarker>;
 
 	createPostAndCodemark: (...args: Parameters<typeof createPostAndCodemark>) => any;
-	saveDocumentMarkers: Function;
+	addDocumentMarker: Function;
 }
 
 interface State {
@@ -1042,8 +1042,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				this.updateEmitter.enqueue(() => {
 					this.setState({ newCodemarkAttributes: undefined });
 				});
-				this.props.saveDocumentMarkers(this.props.textEditorUri!, [docMarker]);
-				this.props.setCurrentDocumentMarker(docMarker.id);
+				this.props.addDocumentMarker(this.props.textEditorUri!, docMarker);
 			});
 		} else {
 			this.setState({ newCodemarkAttributes: undefined });
@@ -1578,6 +1577,6 @@ export default connect(
 		setCurrentDocumentMarker,
 		setEditorContext,
 		createPostAndCodemark,
-		saveDocumentMarkers
+		addDocumentMarker
 	}
 )(SimpleInlineCodemarks);

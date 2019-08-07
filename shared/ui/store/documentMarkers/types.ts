@@ -4,5 +4,6 @@ import { Index } from "../common";
 export interface DocumentMarkersState extends Index<DocumentMarker[]> {}
 
 export enum DocumentMarkersActionsType {
-	SaveForFile = "@documentMarkers/save"
+	SaveForFile = "@documentMarkers/SaveForFile",
+	SaveOneForFile = "@documentMarkers/SaveOne"
 }
