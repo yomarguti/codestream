@@ -7,6 +7,7 @@ import CancelButton from "./CancelButton";
 import ScrollBox from "./ScrollBox";
 import Tooltip from "./Tooltip"; // careful with tooltips on codemarks; they are not performant
 import Feedback from "./Feedback";
+import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import cx from "classnames";
 import {
 	range,
@@ -281,6 +282,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					e.type,
 					getLine0ForEditorLine(this.props.textEditorVisibleRanges, e.range.start.line)
 				);
+			}),
+			VsCodeKeystrokeDispatcher.on("keydown", event => {
+				if (event.key === "Escape" && this.props.currentDocumentMarkerId) {
+					event.stopPropagation();
+					this.props.setCurrentDocumentMarker();
+				}
 			})
 		);
 
@@ -291,7 +298,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	componentDidUpdate(prevProps: Props) {
 		this.updateEmitter.emit();
-		const { textEditorUri, currentDocumentMarkerId, viewInline } = this.props;
+		const { textEditorUri } = this.props;
 		if (String(textEditorUri).length > 0 && prevProps.textEditorUri !== textEditorUri) {
 			this.onFileChanged();
 		}
