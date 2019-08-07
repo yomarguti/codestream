@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import Headshot from "./Headshot";
+import Icon from "./Icon";
 
 // AtMentionsPopup expects an on/off switch determined by the on property
 // on = show the popup, off = hide the popup
@@ -8,15 +9,29 @@ import Headshot from "./Headshot";
 // [id, nickname, full name, email, headshot, presence]
 // and a prefix, which is used to filter/match against the list
 export default class AtMentionsPopup extends Component {
+	componentDidUpdate(prevProps, prevState) {
+		if (!this._div) return;
+		const rect = this._div.parentNode.getBoundingClientRect();
+		const height = window.innerHeight;
+		if (rect.top < height / 2) {
+			this._div.style.top = "90%";
+			this._div.style.bottom = "auto";
+		} else {
+			this._div.style.top = "auto";
+			this._div.style.bottom = "110%";
+		}
+	}
+
 	render() {
 		if (!this.props.on) return null;
 
 		const { items, prefix } = this.props;
 
 		return (
-			<div className="mentions-popup">
+			<div className="mentions-popup" ref={ref => (this._div = ref)}>
 				<div className="body">
-					<div className="instructions" onClick={this.handleClickInstructions}>
+					<div className="instructions">
+						<Icon onClick={this.close} name="x" className="close" />
 						{this.props.on === "slash-commands" ? (
 							<span>
 								Commands matching{" "}
@@ -95,9 +110,9 @@ export default class AtMentionsPopup extends Component {
 		return this.props.handleSelectAtMention(id);
 	}
 
-	handleClickInstructions() {
-		return this.props.handleSelectAtMention();
-	}
+	close = () => {
+		return this.props.handleSelectAtMention("__close");
+	};
 
 	handleClick = async event => {
 		console.log("CLICK ON MENTION: " + event.target.innerHTML);

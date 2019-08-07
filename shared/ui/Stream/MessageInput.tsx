@@ -382,6 +382,10 @@ export class MessageInput extends React.Component<Props, State> {
 		let toInsert;
 		const toInsertPostfix = "";
 
+		this.hidePopup();
+
+		if (id === "__close") return;
+
 		if (this.state.currentPopup === "slash-commands") {
 			toInsert = id + "\u00A0";
 		} else if (this.state.currentPopup === "channels") {
@@ -393,7 +397,6 @@ export class MessageInput extends React.Component<Props, State> {
 			if (!user) return;
 			toInsert = user.username + "\u00A0";
 		}
-		this.hidePopup();
 		// setTimeout(() => {
 		this.focus();
 		// }, 20);
@@ -999,16 +1002,14 @@ export class MessageInput extends React.Component<Props, State> {
 				onKeyDown={this.handleKeyDown}
 				style={{ position: "relative" }}
 			>
-				<div className="mentions-popup-container">
-					<AtMentionsPopup
-						on={Boolean(this.state.currentPopup)}
-						items={this.state.popupItems}
-						prefix={this.state.popupPrefix}
-						selected={this.state.selectedPopupItem}
-						handleHoverAtMention={this.handleHoverAtMention}
-						handleSelectAtMention={this.handleSelectAtMention}
-					/>
-				</div>
+				<AtMentionsPopup
+					on={this.state.currentPopup}
+					items={this.state.popupItems}
+					prefix={this.state.popupPrefix}
+					selected={this.state.selectedPopupItem}
+					handleHoverAtMention={this.handleHoverAtMention}
+					handleSelectAtMention={this.handleSelectAtMention}
+				/>
 				<div key="message-attach-icons" className="message-attach-icons">
 					<Icon
 						key="code-box"

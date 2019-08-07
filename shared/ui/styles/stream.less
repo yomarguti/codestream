@@ -886,7 +886,6 @@
 			width: 100%;
 			// height: 500px;
 			position: absolute;
-			bottom: 5px;
 			right: 0px;
 			z-index: 50;
 			padding: 0;
@@ -894,6 +893,21 @@
 			user-select: none;
 			cursor: pointer;
 			border-radius: 5px;
+			top: 80%;
+			// max-height: 50vh;
+
+			.icon.close {
+				position: absolute;
+				right: 5px;
+				top: 8px;
+				padding: 3px 6px 0px 6px;
+				display: block;
+				border-radius: 3px;
+				font-size: 15px;
+				&:hover {
+					background: rgba(127, 127, 127, 0.4);
+				}
+			}
 
 			.body {
 				width: 100%;
@@ -930,15 +944,13 @@
 				}
 			}
 			ul {
-				max-height: 80vh;
-				overflow-y: auto;
 				// border-bottom: 1px solid @base-border-color;
 				border-top: 1px solid @base-border-color;
 				// background: #fff;
 				background: @base-background-color;
 				padding: 5px 0;
 				border-radius: 0 0 5px 5px;
-				max-height: 60vh;
+				max-height: 40vh;
 				overflow-y: auto;
 			}
 			li {

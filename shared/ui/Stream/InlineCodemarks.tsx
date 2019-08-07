@@ -1060,6 +1060,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (target.classList.contains("message-input") || target.closest(".compose") != null) {
 			return;
 		}
+		if (target.closest(".mentions-popup") != null) {
+			return;
+		}
 
 		if (this._clearWheelingStateTimeout !== undefined) {
 			clearTimeout(this._clearWheelingStateTimeout);
