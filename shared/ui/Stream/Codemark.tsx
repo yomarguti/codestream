@@ -447,12 +447,9 @@ export class Codemark extends React.Component<Props, State> {
 
 	handleClickRelatedCodemark = async (event, codemark, marker) => {
 		this.props.onClick && this.props.onClick(event, codemark, marker);
-		// HostApi.instance.send(TelemetryRequestType, {
-		// 	eventName: "Codemark Clicked",
-		// 	properties: {
-		// 		"Codemark Location": "Codemarks Tab"
-		// 	}
-		// });
+		HostApi.instance.track("Codemark Clicked", {
+			"Codemark Location": "Related List"
+		});
 
 		// if (codemark.markers) {
 		// 	try {
