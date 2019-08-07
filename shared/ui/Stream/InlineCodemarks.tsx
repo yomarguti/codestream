@@ -1193,9 +1193,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const { viewInline, currentDocumentMarkerId } = this.props;
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
-				{false && viewInline && currentDocumentMarkerId && <div id="codemark-blanket"></div>}
 				{this.state.isLoading ? null : this.renderCodemarks()}
-				{this.printViewSelectors()}
+				{currentDocumentMarkerId && viewInline ? null : this.printViewSelectors()}
 			</div>
 		);
 	}
