@@ -1034,7 +1034,7 @@ export class MessageInput extends React.Component<Props, State> {
 					<Icon
 						key="smiley"
 						name="smiley"
-						title="Add a smiley"
+						title="Add an emoji"
 						placement="top"
 						align={{ offset: [5, 0] }}
 						delay={1}
