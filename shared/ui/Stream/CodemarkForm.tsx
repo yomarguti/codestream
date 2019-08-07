@@ -97,6 +97,7 @@ interface DispatchProps {
 
 interface State {
 	text: string;
+	formatCode: boolean;
 	type: string;
 	codeBlock?: GetRangeScmInfoResponse;
 	assignees: { value: any; label: string }[] | { value: any; label: string };
@@ -152,6 +153,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		const defaultState: Partial<State> = {
 			title: "",
 			text: "",
+			formatCode: false,
 			type: defaultType,
 			codeBlock: props.codeBlock,
 			assignees: [],
@@ -805,11 +807,9 @@ class CodemarkForm extends React.Component<Props, State> {
 		// }
 	};
 
-	handleChange = text => {
+	handleChange = (text, formatCode) => {
 		// track newPostText as the user types
-		this.setState({
-			text
-		});
+		this.setState({ text, formatCode });
 	};
 
 	handleChangeTag = newTag => {

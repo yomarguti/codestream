@@ -17,6 +17,7 @@ import { localStore } from "../utilities/storage";
 interface State {
 	editingPostId?: string;
 	text: string;
+	formatCode: boolean;
 	isLoadingReplies: boolean;
 }
 
@@ -46,6 +47,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		super(props);
 		this.state = {
 			text: this.getCachedText(),
+			formatCode: false,
 			isLoadingReplies: true
 		};
 	}
@@ -79,21 +81,22 @@ export class CodemarkDetails extends React.Component<Props, State> {
 
 	submitReply = async () => {
 		const { codemark } = this.props;
-		const { text } = this.state;
+		const { text, formatCode } = this.state;
 		const mentionedUserIds = findMentionedUserIds(this.props.teammates, text);
 		const threadId = codemark ? codemark.postId : "";
 		const { createPost } = this.props;
 		this.setState({ text: "" });
 		this.cacheText("");
 
-		await createPost(codemark.streamId, threadId, replaceHtml(text)!, null, mentionedUserIds, {
+		let replyText = formatCode ? "```" + text + "```" : text;
+		await createPost(codemark.streamId, threadId, replaceHtml(replyText)!, null, mentionedUserIds, {
 			entryPoint: "Codemark"
 		});
 	};
 
-	handleOnChange = (text: string) => {
+	handleOnChange = (text: string, formatCode: boolean) => {
 		this.cacheText(text);
-		this.setState({ text: text });
+		this.setState({ text, formatCode });
 	};
 
 	postAction = (name: string, post: CSPost) => {

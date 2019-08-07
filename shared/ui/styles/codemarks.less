@@ -222,6 +222,9 @@
 			text-overflow: initial;
 			overflow-x: auto;
 			padding: 10px 10px 10px 10px !important;
+			.code.prettyprint {
+				margin: 0;
+			}
 		}
 		.contents > .body > .title > p {
 			margin: 0;
@@ -234,7 +237,7 @@
 			.post {
 				padding: 10px;
 				.body {
-					padding: 0 23px;
+					padding: 0 0 0 23px;
 				}
 
 				&.reply .author {
@@ -339,7 +342,7 @@
 		padding: 5px 10px 10px 10px;
 	}
 	.code {
-		margin: 0 10px !important;
+		margin: 5px 0 !important;
 	}
 	a {
 		text-decoration: none;
@@ -356,7 +359,11 @@
 		cursor: pointer;
 		&:hover {
 			color: @text-color-highlight;
-			background: @base-background-color;
+			// background: @base-background-color;
+
+			color: var(--button-text-color);
+			background: var(--button-background-color);
+			border: 1px solid var(--button-background-color);
 		}
 	}
 	.codemark-actions-button {
@@ -394,6 +401,9 @@
 			// see COMPUTATION below
 			padding-left: 49px;
 			margin-top: -18px;
+		}
+		.title p {
+			margin: 0;
 		}
 	}
 	&.type-bookmark:not(.selected) {
@@ -594,4 +604,5 @@
 	left: 0;
 	top: 0;
 	background: @app-background-color;
+	// background: rgba(0, 0, 0, 0.4);
 }

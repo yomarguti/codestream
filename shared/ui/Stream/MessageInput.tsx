@@ -45,6 +45,7 @@ interface State {
 	customColor?: string;
 	q?: string;
 	codemarkMenuStart?: number;
+	formatCode: boolean;
 }
 
 interface Props {
@@ -60,7 +61,7 @@ interface Props {
 	submitOnEnter?: boolean;
 	placeholder?: string;
 	quotePost?: QuotePost;
-	onChange?(text: string): any;
+	onChange?(text: string, formatCode: boolean): any;
 	updateTeamTag?(team: any, tag: any): any;
 	onChangeSelectedTags?(tag: any): any;
 	onEmptyUpArrow?(event: React.KeyboardEvent): any;
@@ -88,7 +89,8 @@ export class MessageInput extends React.Component<Props, State> {
 			codemarkOpen: false,
 			tagsOpen: false,
 			customColor: "",
-			codemarkMenuStart: 0
+			codemarkMenuStart: 0,
+			formatCode: false
 		};
 	}
 
@@ -140,7 +142,7 @@ export class MessageInput extends React.Component<Props, State> {
 	quotePost() {
 		if (this._contentEditable) {
 			this._contentEditable.htmlEl.innerHTML = "";
-			this.props.onChange && this.props.onChange("");
+			this.props.onChange && this.props.onChange("", false);
 		}
 		this.focus(() => {
 			const post = this.props.quotePost!;
@@ -364,7 +366,8 @@ export class MessageInput extends React.Component<Props, State> {
 		}
 
 		// track newPostText as the user types
-		this.props.onChange && this.props.onChange(this._contentEditable!.htmlEl.innerHTML);
+		this.props.onChange &&
+			this.props.onChange(this._contentEditable!.htmlEl.innerHTML, this.state.formatCode);
 		this.setState({
 			// autoMentions: this.state.autoMentions.filter(mention => newPostText.includes(mention)), // TODO
 			cursorPosition: getCurrentCursorPosition("input-div")
@@ -432,7 +435,8 @@ export class MessageInput extends React.Component<Props, State> {
 			// window.getSelection().empty();
 			// this.focus();
 
-			this.props.onChange && this.props.onChange(this._contentEditable!.htmlEl.innerHTML);
+			this.props.onChange &&
+				this.props.onChange(this._contentEditable!.htmlEl.innerHTML, this.state.formatCode);
 			this.setState({
 				cursorPosition: getCurrentCursorPosition("input-div")
 			});
@@ -470,7 +474,8 @@ export class MessageInput extends React.Component<Props, State> {
 			// window.getSelection().empty();
 			// this.focus();
 
-			this.props.onChange && this.props.onChange(this._contentEditable.htmlEl.innerHTML);
+			this.props.onChange &&
+				this.props.onChange(this._contentEditable.htmlEl.innerHTML, this.state.formatCode);
 			this.setState({
 				cursorPosition: getCurrentCursorPosition("input-div")
 			});
@@ -957,16 +962,28 @@ export class MessageInput extends React.Component<Props, State> {
 	handleClickAtMentions = () => {
 		if (this.state.currentPopup) {
 			this.focus(() => {
+				this.setCurrentCursorPosition(this.state.cursorPosition);
 				// this.insertTextAtCursor("", "@");
 				this.hidePopup();
 			});
 		} else
 			this.focus(() => {
+				this.setCurrentCursorPosition(this.state.cursorPosition);
 				// this.insertTextAtCursor("@");
 				this.showPopupSelectors("", "at-mentions");
 			});
 
 		// this.insertTextAtCursor("@");
+	};
+
+	handleClickFormatCode = () => {
+		const formatCode = !this.state.formatCode;
+		this.focus(() => {
+			this.setCurrentCursorPosition(this.state.cursorPosition);
+			this.setState({ formatCode });
+			this.props.onChange &&
+				this.props.onChange(this._contentEditable!.htmlEl.innerHTML, formatCode);
+		});
 	};
 
 	render() {
@@ -993,6 +1010,16 @@ export class MessageInput extends React.Component<Props, State> {
 					/>
 				</div>
 				<div key="message-attach-icons" className="message-attach-icons">
+					<Icon
+						key="code-box"
+						name="code-box"
+						title="Format as code"
+						placement="top"
+						align={{ offset: [5, 0] }}
+						delay={1}
+						className={cx("code-box", { selected: this.state.formatCode })}
+						onClick={this.handleClickFormatCode}
+					/>
 					<Icon
 						key="mention"
 						name="mention"
@@ -1051,7 +1078,7 @@ export class MessageInput extends React.Component<Props, State> {
 				</div>
 				<ContentEditable
 					className={cx("message-input", btoa(unescape(encodeURIComponent(placeholder || ""))), {
-						// "has-plus": !this.props.multiCompose
+						"format-code": this.state.formatCode
 					})}
 					id="input-div"
 					tabIndex={this.props.tabIndex}
