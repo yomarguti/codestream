@@ -101,11 +101,10 @@ export default function ContainerAtEditorLine(props: {
 			ref={rootRef}
 			className={`plane-container ${props.className || ""}`}
 			style={{
-				transform: `${
+				transform:
 					props.className && props.className.includes("cs-hidden")
-						? "translateX(100vw) translateX(-55px) "
-						: ""
-				}translateY(${adjustedPosition || position}px)`
+						? `translate(calc(100% - 55px), ${adjustedPosition || position}px)`
+						: `translateY(${adjustedPosition || position}px)`
 			}}
 			data-top={adjustedPosition || position}
 		>

@@ -1007,18 +1007,10 @@ class CodemarkForm extends React.Component<Props, State> {
 			>
 				<fieldset className="form-body">
 					<div id="controls" className="control-group" key="controls1">
-						<div
-							key="headshot"
-							style={{
-								paddingLeft: "25px",
-								height: "20px",
-								marginTop: "10px",
-								display: "inline-flex"
-							}}
-						>
+						<div key="headshot" className="headline">
 							<Headshot person={currentUser} />
 							<b>{currentUser.username}</b>
-							<span style={{ opacity: 0.75, paddingLeft: "5px" }}>{this.getCodeBlockHint()}</span>
+							<span className="subhead">{this.getCodeBlockHint()}</span>
 						</div>
 						{/* false && commentType === "bookmark" && (
 							<div className="hint frame control-group" style={{ marginBottom: "10px" }}>

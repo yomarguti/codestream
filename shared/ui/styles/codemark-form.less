@@ -9,6 +9,10 @@
 	padding: 0 10px 10px 10px;
 	position: relative;
 
+	.form-body {
+		min-width: 180px;
+	}
+
 	.message-input {
 		min-height: 50px;
 		max-width: calc(~"100vw - 62px") !important;
@@ -25,7 +29,9 @@
 	.connect-issue {
 		display: flex;
 		margin-bottom: 10px;
+		flex-wrap: wrap;
 	}
+
 	.connect-issue-label {
 		white-space: nowrap;
 		padding-right: 5px;
@@ -36,10 +42,29 @@
 		color: @text-color-highlight;
 		white-space: nowrap;
 		cursor: pointer;
+		text-overflow: ellipsis;
+		overflow: hidden;
+
 		.icon {
 			display: inline-block;
 			transform: scale(0.7);
 			margin-left: 2px;
+		}
+	}
+
+	.headline {
+		padding-left: 25px;
+		height: 20px;
+		margin-top: 10px;
+		display: inline-flex;
+		width: 100%;
+
+		.subhead {
+			opacity: 0.75;
+			padding-left: 5px;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+			overflow: hidden;
 		}
 	}
 
@@ -55,6 +80,7 @@
 		z-index: 2;
 		left: 10px;
 	}
+
 	.headshot-initials {
 		display: block;
 		position: absolute;
@@ -70,9 +96,11 @@
 		z-index: 1;
 		left: 10px;
 	}
+
 	.tab-group {
 		margin-bottom: 10px;
 	}
+
 	fieldset {
 		padding: 0 !important;
 		// padding: 0 0 40px 0 !important;

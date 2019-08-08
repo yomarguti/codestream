@@ -26,7 +26,7 @@
 	}
 
 	&.cs-selected {
-		padding-left: 20px;
+		padding: 0 58px 0 20px;
 		margin-top: 30px !important;
 		z-index: 35;
 		max-height: 100vh;
@@ -38,6 +38,12 @@
 
 .codemark-container {
 	position: relative;
+	display: flex;
+	min-width: 200px;
+
+	.spatial-list & {
+		min-width: 290px;
+	}
 
 	.animate & {
 		transition: transform 0.2s;
@@ -46,6 +52,7 @@
 	.cs-hidden & {
 		background-color: var(--base-background-color);
 		position: absolute;
+		z-index: 0;
 
 		&,
 		* {
@@ -58,6 +65,8 @@
 	.card;
 	margin: 0 40px 0 45px;
 	padding-bottom: 10px;
+	min-width: 200px;
+	z-index: 35;
 }
 
 .inline-panel {
