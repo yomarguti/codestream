@@ -14,13 +14,25 @@ export default function ContainerAtEditorLine(props: {
 	className?: string;
 	repositionToFit?: boolean;
 }) {
-	const { visibleLineCount, line0 } = useSelector((state: CodeStreamState) => {
+	const { logicalVisibleLineCount, line0 } = useSelector((state: CodeStreamState) => {
 		const visibleRanges = getVisibleRanges(state.editorContext);
 		return {
-			visibleLineCount: getVisibleLineCount(visibleRanges),
+			logicalVisibleLineCount: getVisibleLineCount(visibleRanges),
 			line0: getLine0ForEditorLine(visibleRanges, props.lineNumber)
 		};
 	});
+
+	const [visibleLineCount, setVisibleLineCount] = React.useState(logicalVisibleLineCount);
+
+	React.useEffect(() => {
+		// Also done in InlineCodemarks::getDerivedStateFromProps
+		// only set this if it changes by more than 1. we expect it to vary by 1 as
+		// the topmost and bottommost line are revealed and the window is not an integer
+		// number of lines high.
+		if (Math.abs(logicalVisibleLineCount - visibleLineCount) > 1) {
+			setVisibleLineCount(logicalVisibleLineCount);
+		}
+	}, [logicalVisibleLineCount]);
 
 	const logicalPosition = React.useMemo(
 		() =>
