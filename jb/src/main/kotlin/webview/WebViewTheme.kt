@@ -67,6 +67,8 @@ class WebViewTheme(val name: String, val stylesheet: String) {
 
                 textColorInfoMuted = link.darken(10)
 
+                textFocusBorderColor = textColorInfoMuted.opacity(60)
+
                 buttonBgColorHover = buttonBg.lighten(10)
             } else {
                 appBgColorDarker = bg.lighten(4)
@@ -80,6 +82,8 @@ class WebViewTheme(val name: String, val stylesheet: String) {
                 textColorSubtleExtra = fg.opacity(60).darken(50)
 
                 textColorInfoMuted = link
+
+                textFocusBorderColor = textColorInfoMuted.opacity(60)
 
                 buttonBgColorHover = buttonBg.darken(10)
             }
@@ -101,6 +105,8 @@ body {
 
     --text-color-info: ${textColorInfo.rgba};
     --text-color-info-muted: ${textColorInfoMuted.rgba};
+
+    --text-focus-border-color: ${textFocusBorderColor.rgba};
 
     --app-background-color: ${appBgColor.rgba};
     --app-background-color-darker: ${appBgColorDarker.rgba};
