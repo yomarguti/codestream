@@ -135,7 +135,11 @@
 		position: relative;
 		padding: 0 !important;
 		z-index: 1;
-		background: @app-background-color;
+		border: 1px solid @base-border-color;
+		background: @base-background-color;
+		height: auto;
+		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+
 		.assignees {
 			// float: right;
 		}
@@ -180,14 +184,6 @@
 			background: rgba(127, 127, 127, 0.05);
 		}
 
-		width: calc(~"100vw - 85px");
-		border: 1px solid @base-border-color;
-		background: @base-background-color;
-		height: auto;
-		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-		// max-height: 90%;
-		// overflow-y: auto;
-
 		&:not(.selected) {
 			cursor: pointer;
 		}
@@ -199,7 +195,8 @@
 			// box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
 		}
 		&.cs-hidden {
-			transform: none;
+			// transform: none;
+
 			.contents {
 				visibility: hidden;
 			}
@@ -596,12 +593,12 @@
 .codemark-container .align-right-button {
 	position: fixed !important;
 	z-index: 35;
-	right: 15px;
-	top: 40px;
+	right: 20px;
+	top: 10px;
 }
 .spatial-list .codemark-container .align-right-button {
 	position: absolute !important;
-	right: -35px;
+	right: 20px;
 	top: 10px;
 }
 #codemark-blanket {

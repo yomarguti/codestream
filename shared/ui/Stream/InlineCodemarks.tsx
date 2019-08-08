@@ -286,7 +286,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			VsCodeKeystrokeDispatcher.on("keydown", event => {
 				if (event.key === "Escape" && this.props.currentDocumentMarkerId) {
 					event.stopPropagation();
-					this.props.setCurrentDocumentMarker();
+					this.setSelectedDocumentMarker();
 				}
 			})
 		);
@@ -382,7 +382,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			document.querySelectorAll(".plane-container.cs-hidden")
 		);
 		if ($hiddenDivs.length > 0) this.repositionElements($hiddenDivs);
-		this.repositionElements($hiddenDivs);
 	});
 
 	repositionElements = ($elements: HTMLElement[]) => {
@@ -1245,7 +1244,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	deselectCodemarks = () => {
-		this.props.setCurrentDocumentMarker(undefined);
+		this.setSelectedDocumentMarker();
 		this.clearSelection();
 	};
 
@@ -1378,7 +1377,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			newCodemarkAttributes: { type, codeBlock: scmInfo }
 		});
 
-		this.props.setCurrentDocumentMarker();
+		this.setSelectedDocumentMarker();
 
 		// setup git context for codemark form
 		// setTimeout(() => this.props.focusInput(), 500);
@@ -1442,9 +1441,19 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			}
 		}
 
-		this.props.setCurrentDocumentMarker(docMarker.id);
+		this.setSelectedDocumentMarker(docMarker);
 		this.clearSelection();
 	};
+
+	setSelectedDocumentMarker(docMarker?: DocumentMarker) {
+		// Turn on the CSS animations (there is probably a more react way to do this)
+		this._scrollDiv && this._scrollDiv.classList.add("animate");
+
+		this.props.setCurrentDocumentMarker(docMarker && docMarker.id);
+
+		// Turn on the CSS animations (there is probably a more react way to do this)
+		setTimeout(() => this._scrollDiv && this._scrollDiv.classList.remove("animate"), 500);
+	}
 
 	async highlightCode(marker, highlight) {
 		let range = marker.range;
