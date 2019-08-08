@@ -1248,16 +1248,26 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		this.clearSelection();
 	};
 
+	enableAnimations(fn: Function) {
+		// Turn on the CSS animations (there is probably a more react way to do this)
+		this._scrollDiv && this._scrollDiv.classList.add("animate");
+
+		fn();
+
+		// Turn on the CSS animations (there is probably a more react way to do this)
+		setTimeout(() => this._scrollDiv && this._scrollDiv.classList.remove("animate"), 500);
+	}
+
 	toggleViewCodemarksInline = () => {
 		this.props.setCodemarksFileViewStyle(this.props.viewInline ? "list" : "inline");
 	};
 
 	toggleShowUnpinned = () => {
-		this.props.setCodemarksShowArchived(!this.props.showUnpinned);
+		this.enableAnimations(() => this.props.setCodemarksShowArchived(!this.props.showUnpinned));
 	};
 
 	toggleShowClosed = () => {
-		this.props.setCodemarksShowResolved(!this.props.showClosed);
+		this.enableAnimations(() => this.props.setCodemarksShowResolved(!this.props.showClosed));
 	};
 
 	showAbove = () => {
@@ -1446,13 +1456,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	setSelectedDocumentMarker(docMarker?: DocumentMarker) {
-		// Turn on the CSS animations (there is probably a more react way to do this)
-		this._scrollDiv && this._scrollDiv.classList.add("animate");
-
-		this.props.setCurrentDocumentMarker(docMarker && docMarker.id);
-
-		// Turn on the CSS animations (there is probably a more react way to do this)
-		setTimeout(() => this._scrollDiv && this._scrollDiv.classList.remove("animate"), 500);
+		this.enableAnimations(() => this.props.setCurrentDocumentMarker(docMarker && docMarker.id));
 	}
 
 	async highlightCode(marker, highlight) {
