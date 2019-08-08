@@ -348,11 +348,12 @@ export class Codemark extends React.Component<Props, State> {
 					);
 					const marker = codemark.markers && codemark.markers[0];
 					const file = marker && marker.file;
+					const resolved = codemark.status === "closed";
 
 					return (
 						<div
 							key={codemark.id}
-							className="related-codemark"
+							className={cx("related-codemark", { resolved })}
 							onClick={e => {
 								this.handleClickRelatedCodemark(e, codemark, marker);
 							}}
