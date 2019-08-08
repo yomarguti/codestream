@@ -26,6 +26,7 @@ export interface CreateCodemarkRequest {
 	status?: string;
 	title?: string;
 	assignees?: string[];
+	tags?: string[];
 	markers?: CreateCodemarkRequestMarker[];
 	remotes?: string[];
 	externalProvider?: string;
