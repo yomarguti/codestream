@@ -863,7 +863,7 @@ export const updateTeamTag = (
 			response = HostApi.instance.send(CreateTeamTagRequestType, { team, tag });
 			HostApi.instance.track("New Tag", {
 				Label: tag.label,
-				color: tag.color
+				Color: tag.color
 			});
 		} else if (tag.deactivated) {
 			response = HostApi.instance.send(DeleteTeamTagRequestType, { team, tag });
