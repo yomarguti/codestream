@@ -853,6 +853,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		let numAbove = 0,
 			numBelow = 0;
 		// create a map from start-lines to the codemarks that start on that line
+		// and while we're at it, count the number of non-filtered-out codemarks
+		// that are above the current viewport, and below the current viewport
 		this.docMarkersByStartLine = {};
 		this.hiddenCodemarks = {};
 		documentMarkers.forEach(docMarker => {
@@ -876,6 +878,26 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (numAbove != this.state.numAbove) this.setState({ numAbove });
 		if (numBelow != this.state.numBelow) this.setState({ numBelow });
 
+		// HOW THIS WORKS
+		// we want to render only the codemarks in the selected viewport, with one
+		// exception -- when you have selected one and it is "full-screen".
+		// in order to preserve the ability to animate from one version of the
+		// collapsed codemark to the full-screen version, we need React to see
+		// the same number of nodes
+		// so the strategy is to iterate through all the visible lines, and if
+		// there isn't a selected codemark (currentDocumentMarkerId), then
+		// render all codemarks as per normal.
+		// but once there is a selected codemark, do the exact same thing only
+		// return NULL for each codemark that isn't the selected one AND THEN
+		// also double-check to make sure we have rendered the selected
+		// codemark, because if the user selects a codemark, then scrolls, it
+		// might transition to out of the viewport, and we want to keep it in
+		// view.
+		let haveWeRenderedSelectedDocMarker = false;
+		const selectedDocMarker = currentDocumentMarkerId
+			? documentMarkers.find(marker => marker.id === currentDocumentMarkerId)
+			: null;
+
 		let rangeStartOffset = 0;
 		return (
 			<div
@@ -886,7 +908,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				onClick={this.handleClickField}
 				data-scrollable="true"
 			>
-				{currentDocumentMarkerId && <div id="codemark-blanket"></div>}
+				{selectedDocMarker && <div id="codemark-blanket"></div>}
 
 				<div
 					style={{
@@ -896,7 +918,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				>
 					<div
 						style={{
-							top: currentDocumentMarkerId ? 0 : paddingTop,
+							top: selectedDocMarker ? 0 : paddingTop,
 							// purple background for debugging purposes
 							// background: "#333366",
 							position: "relative",
@@ -912,48 +934,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 								const realLastLine = lineRange.end.line;
 								const linesInRange = realLastLine - realFirstLine + 1;
 								const marksInRange = range(realFirstLine, realLastLine + 1).map(lineNum => {
-									if (this.docMarkersByStartLine[lineNum]) {
-										//} && lineNum !== this.state.openIconsOnLine) {
-										const docMarker = this.docMarkersByStartLine[lineNum];
-										const codemark = docMarker.codemark;
-										const hidden = this.hiddenCodemarks[docMarker.id] ? true : false;
-										const selected = currentDocumentMarkerId === docMarker.id;
-										return (
-											<ContainerAtEditorLine
-												key={docMarker.id}
-												lineNumber={lineNum}
-												className={cx({
-													"cs-hidden": hidden && !selected,
-													"cs-off-plane": hidden || selected,
-													"cs-selected": selected
-												})}
-											>
-												<div className="codemark-container">
-													<Codemark
-														codemark={codemark}
-														marker={docMarker}
-														deselectCodemarks={this.deselectCodemarks}
-														hidden={hidden}
-														selected={selected}
-														onClick={this.handleClickCodemark}
-														onMouseEnter={this.handleHighlightCodemark}
-														onMouseLeave={this.handleUnhighlightCodemark}
-														action={this.props.postAction}
-														query={this.state.query}
-														postAction={this.props.postAction}
-													/>
-													{selected && (
-														<CancelButton
-															className="cancel-icon clickable"
-															onClick={this.deselectCodemarks}
-														/>
-													)}
-												</div>
-											</ContainerAtEditorLine>
-										);
-									} else {
-										return null;
-									}
+									const docMarker = this.docMarkersByStartLine[lineNum];
+									if (!docMarker) return null;
+									//} && lineNum !== this.state.openIconsOnLine) {
+									const selected = currentDocumentMarkerId === docMarker.id;
+									if (selected) haveWeRenderedSelectedDocMarker = true;
+									if (selectedDocMarker && !selected) return null;
+									return this.renderInlineCodemark(docMarker, lineNum, selected);
 								});
 								rangeStartOffset += linesInRange;
 								if (rangeIndex + 1 < numVisibleRanges) {
@@ -962,6 +949,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 								}
 								return marksInRange;
 							})}
+							{selectedDocMarker &&
+								!haveWeRenderedSelectedDocMarker &&
+								this.renderSelectedDocMarker(selectedDocMarker)}
 						</div>
 						{this.renderHoverIcons(numLinesVisible)}
 					</div>
@@ -970,6 +960,45 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		);
 	}
 
+	renderSelectedDocMarker(selectedDocMarker) {
+		const lineNum = Number(this.getMarkerStartLine(selectedDocMarker));
+		return this.renderInlineCodemark(selectedDocMarker, lineNum, true);
+	}
+
+	renderInlineCodemark(docMarker, lineNum, selected) {
+		const codemark = docMarker.codemark;
+		const hidden = this.hiddenCodemarks[docMarker.id] ? true : false;
+		return (
+			<ContainerAtEditorLine
+				key={docMarker.id}
+				lineNumber={lineNum}
+				className={cx({
+					"cs-hidden": hidden && !selected,
+					"cs-off-plane": hidden || selected,
+					"cs-selected": selected
+				})}
+			>
+				<div className="codemark-container">
+					<Codemark
+						codemark={codemark}
+						marker={docMarker}
+						deselectCodemarks={this.deselectCodemarks}
+						hidden={hidden}
+						selected={selected}
+						onClick={this.handleClickCodemark}
+						onMouseEnter={this.handleHighlightCodemark}
+						onMouseLeave={this.handleUnhighlightCodemark}
+						action={this.props.postAction}
+						query={this.state.query}
+						postAction={this.props.postAction}
+					/>
+					{selected && (
+						<CancelButton className="cancel-icon clickable" onClick={this.deselectCodemarks} />
+					)}
+				</div>
+			</ContainerAtEditorLine>
+		);
+	}
 	renderBlanket() {
 		const { currentDocumentMarkerId } = this.props;
 

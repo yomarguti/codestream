@@ -1011,9 +1011,8 @@ class CodemarkForm extends React.Component<Props, State> {
 							key="headshot"
 							style={{
 								paddingLeft: "25px",
-								height: "25px",
+								height: "20px",
 								marginTop: "10px",
-								marginBottom: "2px",
 								display: "inline-flex"
 							}}
 						>
