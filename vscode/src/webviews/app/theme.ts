@@ -140,9 +140,11 @@ export function initializeColorPalette() {
 		switch (theme) {
 			case "dark":
 				bodyStyle.setProperty("--text-color-info-muted", darken(color, 10));
+				bodyStyle.setProperty("--text-focus-border-color", opacity(darken(color, 10), 60));
 				break;
 			case "light":
 				bodyStyle.setProperty("--text-color-info-muted", color);
+				bodyStyle.setProperty("--text-focus-border-color", opacity(color, 60));
 				break;
 		}
 
