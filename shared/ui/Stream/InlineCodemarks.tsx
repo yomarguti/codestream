@@ -339,7 +339,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			// if this has been shifted down, account for that shift when calculating intersection?
 			const overlap = topOfLastDiv - (domRect.bottom - marginTop);
 			const minimumDistance = 20;
-			const yDiff = overlap - minimumDistance;
+			const yDiff = Math.round(overlap - minimumDistance);
 
 			if (yDiff < 0) {
 				$element.style.marginTop = `${yDiff}px`;
