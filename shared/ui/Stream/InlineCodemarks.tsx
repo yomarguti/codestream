@@ -346,7 +346,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				// if this has been shifted down, account for that shift
 				topOfLastDiv = domRect.top - marginTop + yDiff;
 			} else {
-				$element.style.marginTop = `${marginTop}px`;
+				$element.style.marginTop = marginTop === 0 ? null : `${marginTop}px`;
 				topOfLastDiv = domRect.top;
 			}
 		}
