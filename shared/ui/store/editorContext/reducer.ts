@@ -70,11 +70,19 @@ export const getLine0ForEditorLine = createSelector(
 	(visibleRanges?: Range[]) => visibleRanges || emptyArray,
 	(_: any, editorLine: number) => editorLine,
 	(textEditorVisibleRanges: Range[], editorLine: number) => {
-		let lineCounter = 0;
+		// start at 20 lines above the first visible range
+		const linesAboveViewport = 20;
+
+		// since we're starting at minus-20 lines, our line counter should start at -20
+		let lineCounter = -linesAboveViewport;
+
 		let toLineNum0 = -1; // -1 indicates we didn't find it
 		if (textEditorVisibleRanges != null) {
-			textEditorVisibleRanges.forEach(lineRange => {
-				range(lineRange.start.line, lineRange.end.line + 1).forEach(thisLine => {
+			textEditorVisibleRanges.forEach((lineRange, rangeIndex) => {
+				// if this is the first range, start 20 lines above.
+				const startLine =
+					rangeIndex === 0 ? lineRange.start.line - linesAboveViewport : lineRange.start.line;
+				range(startLine, lineRange.end.line + 1).forEach(thisLine => {
 					if (thisLine === editorLine) toLineNum0 = lineCounter;
 					lineCounter++;
 				});

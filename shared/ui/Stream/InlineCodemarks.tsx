@@ -396,7 +396,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			this.shiftUp(composeDimensions.top, $elements.slice(0, composeIndex).reverse());
 			this.shiftDown(composeDimensions.bottom, $elements.slice(composeIndex + 1));
 		} else {
-			this.shiftDown(-30, $elements);
+			// -3000 is just an arbitrary off-screen number that will allow
+			// codemarks that appear above the viewport to render properly,
+			// even if we just get a glimpse of the bottom of them because
+			// they are off-screen. If codemarks are more than 3000px hight
+			// when collapsed this will be a bug, but fine otherwise. -Pez
+			this.shiftDown(-3000, $elements);
 		}
 	};
 
@@ -907,6 +912,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				ref={ref => (this._scrollDiv = ref)}
 				onClick={this.handleClickField}
 				data-scrollable="true"
+				className={cx("scrollbox", { "off-top": firstVisibleLine > 0 })}
 			>
 				{selectedDocMarker && <div id="codemark-blanket"></div>}
 
@@ -929,11 +935,15 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					>
 						<div className="inline-codemarks vscroll-x">
 							{this.renderCodemarkForm()}
-							{(textEditorVisibleRanges || []).map((lineRange, rangeIndex) => {
-								const realFirstLine = lineRange.start.line; // == 0 ? 1 : lineRange[0].line;
+							{textEditorVisibleRanges.map((lineRange, rangeIndex) => {
+								const realFirstLine = lineRange.start.line;
 								const realLastLine = lineRange.end.line;
 								const linesInRange = realLastLine - realFirstLine + 1;
-								const marksInRange = range(realFirstLine, realLastLine + 1).map(lineNum => {
+								// if this is the first range, we start 20 lines above the viewport to
+								// try to capture any codemarks that are out of view, but the bottom
+								// may still be visible
+								const lineToStartOn = rangeIndex == 0 ? realFirstLine - 20 : realFirstLine;
+								const marksInRange = range(lineToStartOn, realLastLine + 1).map(lineNum => {
 									const docMarker = this.docMarkersByStartLine[lineNum];
 									if (!docMarker) return null;
 									//} && lineNum !== this.state.openIconsOnLine) {

@@ -34,11 +34,12 @@ export default function ContainerAtEditorLine(props: {
 		}
 	}, [logicalVisibleLineCount]);
 
-	const logicalPosition = React.useMemo(
-		() =>
-			props.lineNumber > 0 && line0 >= 0 ? (window.innerHeight * line0) / visibleLineCount : -1000,
-		[props.lineNumber, line0, visibleLineCount]
-	);
+	// allow negative line0 values here in case the codemark is above the viewport
+	const logicalPosition = React.useMemo(() => (window.innerHeight * line0) / visibleLineCount, [
+		props.lineNumber,
+		line0,
+		visibleLineCount
+	]);
 
 	const rootRef = React.useRef<HTMLElement>(null);
 	const rootDimensions = useRect(rootRef, [logicalPosition]);
