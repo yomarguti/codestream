@@ -27,13 +27,16 @@
 	}
 
 	&.cs-selected {
+		// these !important declarations are necessary to over-ride
+		// the inline styles of when we position NON-selected codemarks
 		padding-top: 30px !important;
 		padding-bottom: 30px !important;
+		margin-top: 0 !important;
+		transform: translateY(0) !important;
 		z-index: 35;
 		max-height: 100vh;
 		min-height: 100vh;
 		overflow-y: auto;
-		transform: translateY(0) !important;
 	}
 }
 
