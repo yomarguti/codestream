@@ -314,7 +314,7 @@ export class SimpleKnowledgePanel extends Component {
 			})
 		);
 
-		console.log("SELECTED AG FILTER: ", tagFilter);
+		// console.log("SELECTED AG FILTER: ", tagFilter);
 		return (
 			<div className="panel knowledge-panel">
 				<div className="search-bar">
