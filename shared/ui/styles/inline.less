@@ -20,7 +20,7 @@
 	transition: transform 20ms, margin-top 20ms;
 	will-change: transform;
 	padding: 0 45px;
-	z-index: 2; // one above the <nav> element
+	z-index: 2; // one above the <nav> element, one below .hover-plus
 
 	.animate & {
 		transition: transform 200ms, margin-top 200ms;
@@ -149,7 +149,7 @@
 	width: 35px;
 	height: 25px;
 	white-space: nowrap;
-	z-index: 1;
+	z-index: 3; // needs to be above .plane-container
 	overflow: visible;
 	&:hover:not(.disabled),
 	&.open {
