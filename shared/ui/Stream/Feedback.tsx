@@ -78,7 +78,7 @@ export class Feedback extends React.Component<Props, State> {
 				<div className="dialog standard-form" style={{ padding: 0 }}>
 					<div className="form-body">
 						<div id="controls">
-							<CancelButton onClick={this.toggleDialog} placement="left" title="Close" />
+							<CancelButton className="clickable" onClick={this.toggleDialog} title="Close" />
 							<h2>Tweet us your CodeStream feedback.</h2>
 							<div className="contact-us">
 								<h4>Other ways to contact us</h4>

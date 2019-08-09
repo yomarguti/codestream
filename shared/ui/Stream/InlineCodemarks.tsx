@@ -1003,7 +1003,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						postAction={this.props.postAction}
 					/>
 					{selected && (
-						<CancelButton className="cancel-icon clickable" onClick={this.deselectCodemarks} />
+						<CancelButton
+							title="Close"
+							className="cancel-icon clickable"
+							onClick={this.deselectCodemarks}
+						/>
 					)}
 				</div>
 			</ContainerAtEditorLine>

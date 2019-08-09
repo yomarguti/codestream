@@ -5,12 +5,7 @@ import Tooltip from "./Tooltip";
 CancelButton.defaultProps = {
 	className: "",
 	disabled: false,
-	placement: "bottomRight",
-	title: (
-		<span>
-			Cancel <span className="keybinding">ESC</span>
-		</span>
-	)
+	placement: "bottomRight"
 };
 
 export default function CancelButton({
@@ -21,9 +16,14 @@ export default function CancelButton({
 	...extras
 }) {
 	const { dispatch, ...extraProps } = extras; // remove non-html attributes
+	let tip = (
+		<span>
+			{title || "Cancel"} <span className="keybinding">ESC</span>
+		</span>
+	);
 	return (
 		<span className="align-right-button" onClick={onClick}>
-			<Tooltip title={title} placement={placement}>
+			<Tooltip title={tip} placement={placement}>
 				<span>
 					<Icon name="x" className={className} />
 				</span>

@@ -656,11 +656,6 @@ export class SimpleStream extends Component {
 		const lower = threadPost ? threadPost.type || "Comment" : "";
 		const commentTypeLabel = lower.charAt(0).toUpperCase() + lower.substr(1);
 		const postStreamStarred = this.props.starredStreams[this.props.postStreamId];
-		const closeThreadTooltip = (
-			<span>
-				Close thread <span className="keybinding">ESC</span>
-			</span>
-		);
 
 		const textEditorVisibleRanges =
 			this.state.textEditorVisibleRanges || this.props.textEditorVisibleRanges;
@@ -918,7 +913,7 @@ export class SimpleStream extends Component {
 					{threadId && !onInlineCodemarks && (
 						<div className="thread-panel" ref={ref => (this._threadPanel = ref)}>
 							<div className="panel-header inline">
-								<CancelButton title={closeThreadTooltip} onClick={this.handleDismissThread} />
+								<CancelButton title="Close thread" onClick={this.handleDismissThread} />
 								<span>
 									<label>
 										{commentTypeLabel} in{" "}
