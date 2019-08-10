@@ -15,6 +15,8 @@ import KnowledgePanel from "./KnowledgePanel";
 import InlineCodemarks from "./InlineCodemarks";
 import CreateDMPanel from "./CreateDMPanel";
 import ChannelMenu from "./ChannelMenu";
+import Codemark from "./Codemark";
+import ContainerAtEditorLine from "./SpatialView/ContainerAtEditorLine";
 import Icon from "./Icon";
 import Menu from "./Menu";
 import CancelButton from "./CancelButton";
@@ -592,6 +594,11 @@ export class SimpleStream extends Component {
 
 		let threadId = this.props.threadId;
 		let threadPost = this.findPostById(threadId);
+		let selectedCodemark = null;
+		if (threadPost && threadPost.codemarkId) {
+			const { codemarks } = this.context.store.getState();
+			selectedCodemark = getCodemark(codemarks, threadPost.codemarkId);
+		}
 
 		const streamClass = createClassString({
 			stream: true,
@@ -671,7 +678,8 @@ export class SimpleStream extends Component {
 		// if (threadId) renderNav = false;
 
 		const onInlineCodemarks = activePanel === WebviewPanels.CodemarksForFile;
-		const contentClass = onInlineCodemarks ? "content inline" : "content vscroll inline";
+		const contentClass =
+			onInlineCodemarks || selectedCodemark ? "content inline" : "content vscroll inline";
 		const configureProviderInfo =
 			activePanel.startsWith("configure-provider-") ||
 			activePanel.startsWith("configure-enterprise-")
@@ -681,7 +689,7 @@ export class SimpleStream extends Component {
 			<div id="stream-root" className={streamClass}>
 				<div id="modal-root" />
 				<div id="confirm-root" />
-				{threadId && !onInlineCodemarks && <div id="panel-blanket" />}
+				{threadId && !onInlineCodemarks && !selectedCodemark && <div id="panel-blanket" />}
 				{renderNav && this.renderNavIcons()}
 				{this.state.floatCompose &&
 					activePanel !== WebviewPanels.CodemarksForFile &&
@@ -910,7 +918,7 @@ export class SimpleStream extends Component {
 								this.renderComposeBox(placeholderText, channelName)}
 						</div>
 					)}
-					{threadId && !onInlineCodemarks && (
+					{threadId && !selectedCodemark && !onInlineCodemarks && (
 						<div className="thread-panel" ref={ref => (this._threadPanel = ref)}>
 							<div className="panel-header inline">
 								<CancelButton title="Close thread" onClick={this.handleDismissThread} />
@@ -951,10 +959,44 @@ export class SimpleStream extends Component {
 							{!this.state.floatCompose && this.renderComposeBox(placeholderText, channelName)}
 						</div>
 					)}
+					{threadId &&
+						!onInlineCodemarks &&
+						selectedCodemark &&
+						this.renderCodemark(selectedCodemark)}
 				</div>
 			</div>
 		);
 	}
+
+	renderCodemark = codemark => {
+		return (
+			<>
+				<div id="codemark-blanket"></div>
+				<ContainerAtEditorLine lineNumber={0} className="cs-selected">
+					<div className="codemark-container">
+						<Codemark
+							key={codemark.id}
+							// @ts-ignore
+							codemark={codemark}
+							hidden={false}
+							selected={true}
+							onClick={this.handleClickCodemark}
+							onMouseEnter={this.handleHighlightCodemark}
+							onMouseLeave={this.handleUnhighlightCodemark}
+							action={this.props.postAction}
+							query={this.state.query}
+							viewHeadshots={this.props.viewHeadshots}
+							postAction={this.props.postAction}
+						/>
+						<CancelButton
+							className="cancel-icon clickable"
+							onClick={() => this.handleDismissThread()}
+						/>
+					</div>
+				</ContainerAtEditorLine>
+			</>
+		);
+	};
 
 	renderComposeBox = (placeholderText, channelName) => {
 		return (
