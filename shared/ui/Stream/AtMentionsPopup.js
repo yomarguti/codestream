@@ -30,7 +30,7 @@ export default class AtMentionsPopup extends Component {
 		return (
 			<div className="mentions-popup" ref={ref => (this._div = ref)}>
 				<div className="body">
-					<div className="instructions">
+					<div className="matches">
 						<Icon onClick={this.close} name="x" className="close" />
 						{this.props.on === "slash-commands" ? (
 							<span>
@@ -88,15 +88,11 @@ export default class AtMentionsPopup extends Component {
 							);
 						})}
 					</ul>
-					<table>
-						<tbody>
-							<tr>
-								<td>&uarr; or &darr; to navigate</td>
-								<td>&crarr; to select</td>
-								<td>esc to dismiss</td>
-							</tr>
-						</tbody>
-					</table>
+					<div className="instructions">
+						<div>&uarr; or &darr; to navigate</div>
+						<div>&crarr; to select</div>
+						<div>esc to dismiss</div>
+					</div>
 				</div>
 			</div>
 		);

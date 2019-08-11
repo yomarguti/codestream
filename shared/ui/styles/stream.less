@@ -919,32 +919,31 @@
 				// background: #eee;
 				background: @base-background-color;
 			}
-			.instructions {
+			.matches {
 				font-size: 11px;
 				padding: 10px;
 				border-radius: 5px 5px 0 0;
 				opacity: 0.5;
-				background: #eee;
-				background: @base-background-color;
 			}
-			table {
-				// temporarily not displayed for aesthetic reasons
-				display: none;
+			.instructions {
+				display: flex;
+				padding: 10px;
 				font-size: 11px;
-				width: 100%;
-				border-collapse: collapse;
-				border-spacing: 0;
 				opacity: 0.5;
-				td:nth-child(2) {
-					text-align: center;
-				}
-				td:last-child {
-					text-align: right;
+				div {
+					flex-grow: 1;
+					&:nth-of-type(2) {
+						text-align: middle;
+					}
+					&:nth-of-type(3) {
+						text-align: right;
+					}
 				}
 			}
 			ul {
 				// border-bottom: 1px solid @base-border-color;
 				border-top: 1px solid @base-border-color;
+				border-bottom: 1px solid @base-border-color;
 				// background: #fff;
 				background: @base-background-color;
 				padding: 5px 0;

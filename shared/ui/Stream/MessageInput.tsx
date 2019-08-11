@@ -46,6 +46,7 @@ interface State {
 	q?: string;
 	codemarkMenuStart?: number;
 	formatCode: boolean;
+	insertPrefix: string;
 }
 
 interface Props {
@@ -90,7 +91,8 @@ export class MessageInput extends React.Component<Props, State> {
 			tagsOpen: false,
 			customColor: "",
 			codemarkMenuStart: 0,
-			formatCode: false
+			formatCode: false,
+			insertPrefix: ""
 		};
 	}
 
@@ -165,7 +167,7 @@ export class MessageInput extends React.Component<Props, State> {
 	// }
 
 	hidePopup() {
-		this.setState({ currentPopup: undefined });
+		this.setState({ currentPopup: undefined, insertPrefix: "" });
 	}
 
 	hideEmojiPicker = () => {
@@ -404,7 +406,8 @@ export class MessageInput extends React.Component<Props, State> {
 		// not render a space at the end of a contenteditable div
 		// unless it is a &nbsp;, which is difficult to insert
 		// so we insert this unicode character instead
-		this.insertTextAtCursor(toInsert, this.state.popupPrefix);
+		this.insertTextAtCursor(this.state.insertPrefix + toInsert, this.state.popupPrefix);
+		this.setState({ insertPrefix: "" });
 	};
 
 	// insert the given text at the cursor of the input field
@@ -965,12 +968,14 @@ export class MessageInput extends React.Component<Props, State> {
 	handleClickAtMentions = () => {
 		if (this.state.currentPopup) {
 			this.focus(() => {
+				this.setState({ insertPrefix: "" });
 				this.setCurrentCursorPosition(this.state.cursorPosition);
 				// this.insertTextAtCursor("", "@");
 				this.hidePopup();
 			});
 		} else
 			this.focus(() => {
+				this.setState({ insertPrefix: "@" });
 				this.setCurrentCursorPosition(this.state.cursorPosition);
 				// this.insertTextAtCursor("@");
 				this.showPopupSelectors("", "at-mentions");
