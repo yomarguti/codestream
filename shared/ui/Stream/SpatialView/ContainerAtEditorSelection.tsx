@@ -21,7 +21,7 @@ export default function ContainerAtEditorSelection(props: {
 		props.initialLine && initialRenderRef.current ? props.initialLine : selectionStartLine;
 
 	return (
-		<ContainerAtEditorLine lineNumber={lineNumber} repositionToFit>
+		<ContainerAtEditorLine lineNumber={lineNumber} repositionToFit className="cs-at-selection">
 			{props.children}
 		</ContainerAtEditorLine>
 	);
