@@ -4,6 +4,7 @@ import createClassString from "classnames";
 import * as actions from "./actions";
 import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as userSelectors from "../store/users/reducer";
+import Tag from "./Tag";
 import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
@@ -293,7 +294,7 @@ export class SimpleKnowledgePanel extends Component {
 		let tagMenuItems = [{ label: "Any Tag", action: "all" }];
 		tagMenuItems = tagMenuItems.concat(
 			this.props.teamTagsArray.map(tag => {
-				let className = "tag-menu-block";
+				let className = "tag-menu-block wide";
 				if (!tag.color.startsWith("#")) className += " " + tag.color + "-background";
 				return {
 					label: (
@@ -302,8 +303,7 @@ export class SimpleKnowledgePanel extends Component {
 								className={className}
 								style={tag.color.startsWith("#") ? { background: tag.color } : {}}
 							>
-								{tag.label}&nbsp;
-								{this.state.selectedTags[tag.id] && <Icon name="check" className="check" />}
+								{tag.label || <span>&nbsp;</span>}
 							</span>
 						</span>
 					),
@@ -502,7 +502,12 @@ const mapStateToProps = state => {
 	const teamTagsArray = userSelectors.getTeamTagsArray(state);
 	let tagFiltersLabelsLower = { all: "with any tag" };
 	teamTagsArray.map(tag => {
-		tagFiltersLabelsLower[tag.id] = "with tag: " + (tag.label || tag.color);
+		// tagFiltersLabelsLower[tag.id] = "with tag: " + (tag.label || tag.color);
+		tagFiltersLabelsLower[tag.id] = (
+			<span>
+				with tag <Tag tag={tag}></Tag>
+			</span>
+		);
 	});
 
 	return {
