@@ -499,8 +499,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 											hidden={hidden}
 											selected={selected}
 											onClick={this.handleClickCodemark}
-											onMouseEnter={this.handleHighlightCodemark}
-											onMouseLeave={this.handleUnhighlightCodemark}
+											highlightCodeInTextEditor
 											action={this.props.postAction}
 											query={this.state.query}
 											viewHeadshots={this.props.viewHeadshots}
@@ -996,8 +995,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						hidden={hidden}
 						selected={selected}
 						onClick={this.handleClickCodemark}
-						onMouseEnter={this.handleHighlightCodemark}
-						onMouseLeave={this.handleUnhighlightCodemark}
+						highlightCodeInTextEditor
 						action={this.props.postAction}
 						query={this.state.query}
 						postAction={this.props.postAction}
@@ -1503,33 +1501,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	setSelectedDocumentMarker(docMarker?: DocumentMarker) {
 		this.enableAnimations(() => this.props.setCurrentDocumentMarker(docMarker && docMarker.id));
 	}
-
-	async highlightCode(marker, highlight) {
-		let range = marker.range;
-		if (!range) {
-			const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
-				markerId: marker.id
-			});
-			// TODO: What should we do if we don't find the marker?
-			if (response === undefined) return;
-
-			range = response.range;
-		}
-
-		HostApi.instance.send(EditorHighlightRangeRequestType, {
-			uri: this.props.textEditorUri!,
-			range: range,
-			highlight: highlight
-		});
-	}
-
-	handleHighlightCodemark = marker => {
-		this.highlightCode(marker, true);
-	};
-
-	handleUnhighlightCodemark = marker => {
-		this.highlightCode(marker, false);
-	};
 
 	mapLine0ToVisibleRange = fromLineNum0 => {
 		const { textEditorVisibleRanges } = this.props;

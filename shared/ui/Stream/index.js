@@ -978,6 +978,7 @@ export class SimpleStream extends Component {
 							key={codemark.id}
 							codemark={codemark}
 							selected={true}
+							highlightCodeInTextEditor
 							action={this.postAction}
 							postAction={this.postAction}
 						/>

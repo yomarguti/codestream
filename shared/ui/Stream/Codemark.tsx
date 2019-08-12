@@ -13,7 +13,8 @@ import {
 	DocumentMarker,
 	CodemarkPlus,
 	OpenUrlRequestType,
-	Capabilities
+	Capabilities,
+	GetDocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
 import { CodemarkType, CSUser, CSMe, CSPost, CSTag } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
@@ -37,6 +38,7 @@ import { isNil } from "lodash-es";
 import { CodeStreamState } from "../store";
 import { getCodemark } from "../store/codemarks/reducer";
 import { setCurrentDocumentMarker } from "../store/context/actions";
+import { EditorHighlightRangeRequestType } from "@codestream/protocols/webview";
 
 interface State {
 	hover: boolean;
@@ -86,8 +88,7 @@ interface InheritedProps {
 		marker: DocumentMarker,
 		shouldTrack?: boolean
 	): any;
-	onMouseEnter?(marker: DocumentMarker): any;
-	onMouseLeave?(marker: DocumentMarker): any;
+	highlightCodeInTextEditor?: boolean;
 	query?: string;
 	showLabelText?: boolean;
 	hidden?: boolean;
@@ -102,6 +103,8 @@ export class Codemark extends React.Component<Props, State> {
 	};
 
 	private _pollingTimer?: any;
+	private _fileUri?: string;
+	private _isHighlightedInTextEditor = false;
 
 	constructor(props: Props) {
 		super(props);
@@ -121,19 +124,23 @@ export class Codemark extends React.Component<Props, State> {
 
 		if (selected) {
 			this.startPollingReplies(false);
+			this.toggleCodeHighlightInTextEditor(true);
 		}
 	}
 
 	componentDidUpdate(prevProps, prevState) {
 		if (prevProps.selected && !this.props.selected) {
 			this.stopPollingReplies();
+			this.toggleCodeHighlightInTextEditor(false, true);
 		} else if (this.props.selected && this._pollingTimer === undefined) {
 			this.startPollingReplies(true);
+			this.toggleCodeHighlightInTextEditor(true);
 		}
 	}
 
 	componentWillUnmount() {
 		this.stopPollingReplies();
+		if (this._isHighlightedInTextEditor) this.toggleCodeHighlightInTextEditor(false, true);
 	}
 
 	private startPollingReplies(prefetch: boolean) {
@@ -482,14 +489,47 @@ export class Codemark extends React.Component<Props, State> {
 		// // }
 	};
 
+	async toggleCodeHighlightInTextEditor(highlight: boolean, forceRemoval = false) {
+		// don't do anything if trying to highlight already highlighted code
+		if (highlight && this._isHighlightedInTextEditor) return;
+		// require explicitly forcing de-highlighting while selected
+		if (this.props.selected && this._isHighlightedInTextEditor && !forceRemoval) return;
+
+		const marker =
+			this.props.marker || (this.props.codemark.markers && this.props.codemark.markers[0]);
+
+		if (marker == undefined) return;
+
+		let range = marker.range;
+		if (!range || !this._fileUri) {
+			const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
+				markerId: marker.id
+			});
+			// TODO: What should we do if we don't find the marker?
+			if (response === undefined) return;
+
+			this._fileUri = response.textDocument.uri;
+			range = response.range;
+		}
+
+		this._isHighlightedInTextEditor = highlight;
+		HostApi.instance.send(EditorHighlightRangeRequestType, {
+			uri: this._fileUri,
+			range: range,
+			highlight: highlight
+		});
+	}
+
 	handleMouseEnterCodemark = (event: React.MouseEvent): any => {
+		event.preventDefault();
 		this.setState({ hover: true });
-		this.props.onMouseEnter && this.props.onMouseEnter(this.props.marker);
+		this.props.highlightCodeInTextEditor && this.toggleCodeHighlightInTextEditor(true);
 	};
 
 	handleMouseLeaveCodemark = (event: React.MouseEvent): any => {
+		event.preventDefault();
 		this.setState({ hover: false });
-		this.props.onMouseLeave && this.props.onMouseLeave(this.props.marker);
+		this.props.highlightCodeInTextEditor && this.toggleCodeHighlightInTextEditor(false);
 	};
 
 	handleMenuClick = (event: React.MouseEvent) => {
