@@ -714,7 +714,7 @@ export const createProviderCard = async (attributes, codemark) => {
 				description += ` (Lines ${range.start.line + 1}-${range.end.line + 1})`;
 			}
 		}
-		description += `${linefeed}${linefeed}${start}${marker.code}${end}${linefeed}${linefeed}`;
+		description += `${linefeed}${linefeed}${start}${linefeed}${marker.code}${linefeed}${end}${linefeed}${linefeed}`;
 	}
 	description += `Posted via CodeStream${linefeed}`;
 
