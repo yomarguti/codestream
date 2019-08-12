@@ -1439,7 +1439,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	handleClickCodemark = async (
 		event: React.MouseEvent,
 		codemark: CodemarkPlus,
-		docMarker: DocumentMarker
+		docMarker: DocumentMarker,
+		shouldTrack = true
 	) => {
 		const target = event.target as HTMLElement | undefined;
 		if (target && (target.classList.contains("info") || target.closest(".info"))) {
@@ -1456,12 +1457,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			return;
 		}
 
-		HostApi.instance.send(TelemetryRequestType, {
-			eventName: "Codemark Clicked",
-			properties: {
-				"Codemark Location": "Spatial View"
-			}
-		});
+		if (shouldTrack)
+			HostApi.instance.send(TelemetryRequestType, {
+				eventName: "Codemark Clicked",
+				properties: {
+					"Codemark Location": "Spatial View"
+				}
+			});
 
 		let markerId;
 		if (codemark.markers) {

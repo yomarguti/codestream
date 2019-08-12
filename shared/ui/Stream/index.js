@@ -976,17 +976,10 @@ export class SimpleStream extends Component {
 					<div className="codemark-container">
 						<Codemark
 							key={codemark.id}
-							// @ts-ignore
 							codemark={codemark}
-							hidden={false}
 							selected={true}
-							onClick={this.handleClickCodemark}
-							onMouseEnter={this.handleHighlightCodemark}
-							onMouseLeave={this.handleUnhighlightCodemark}
-							action={this.props.postAction}
-							query={this.state.query}
-							viewHeadshots={this.props.viewHeadshots}
-							postAction={this.props.postAction}
+							action={this.postAction}
+							postAction={this.postAction}
 						/>
 						<CancelButton
 							className="cancel-icon clickable"

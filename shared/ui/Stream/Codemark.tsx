@@ -80,7 +80,12 @@ interface InheritedProps {
 	marker: DocumentMarker;
 	postAction?(...args: any[]): any;
 	action(action: string, post: any, args: any): any;
-	onClick?(event: React.SyntheticEvent, codemark: CodemarkPlus, marker: DocumentMarker): any;
+	onClick?(
+		event: React.SyntheticEvent,
+		codemark: CodemarkPlus,
+		marker: DocumentMarker,
+		shouldTrack?: boolean
+	): any;
 	onMouseEnter?(marker: DocumentMarker): any;
 	onMouseLeave?(marker: DocumentMarker): any;
 	query?: string;
@@ -447,7 +452,7 @@ export class Codemark extends React.Component<Props, State> {
 	};
 
 	handleClickRelatedCodemark = async (event, codemark, marker) => {
-		this.props.onClick && this.props.onClick(event, codemark, marker);
+		this.props.onClick && this.props.onClick(event, codemark, marker, false);
 		HostApi.instance.track("Codemark Clicked", {
 			"Codemark Location": "Related List"
 		});

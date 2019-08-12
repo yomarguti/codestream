@@ -421,13 +421,14 @@ export class SimpleKnowledgePanel extends Component {
 		});
 	};
 
-	handleClickCodemark = async (event, codemark) => {
-		HostApi.instance.send(TelemetryRequestType, {
-			eventName: "Codemark Clicked",
-			properties: {
-				"Codemark Location": "Codemarks Tab"
-			}
-		});
+	handleClickCodemark = async (event, codemark, _, shouldTrack = true) => {
+		if (shouldTrack)
+			HostApi.instance.send(TelemetryRequestType, {
+				eventName: "Codemark Clicked",
+				properties: {
+					"Codemark Location": "Codemarks Tab"
+				}
+			});
 
 		if (codemark.markers) {
 			try {
