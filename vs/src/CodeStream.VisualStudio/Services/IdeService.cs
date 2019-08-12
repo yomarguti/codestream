@@ -1,35 +1,34 @@
 ﻿using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Logging.Instrumentation;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
 using EnvDTE;
+using Microsoft;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Differencing;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
-using CodeStream.VisualStudio.Packages;
 using IComponentModel = Microsoft.VisualStudio.ComponentModelHost.IComponentModel;
 using ILogger = Serilog.ILogger;
-using System.IO;
-using System.Text;
-using CodeStream.VisualStudio.Core.Extensions;
-using Microsoft;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Text.Differencing;
-using CodeStream.VisualStudio.Core.Models;
-using CodeStream.VisualStudio.Core.Services;
 
 namespace CodeStream.VisualStudio.Services {
- 
+
 
 	[Export(typeof(IIdeService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]

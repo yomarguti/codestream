@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -66,7 +67,19 @@ namespace CodeStream.VisualStudio.Core.UI.Adornments {
 				for (var i = range.Start.Line; i <= range.End.Line; i++) {
 					var isInnerOrLastLine = i > range.Start.Line && i <= range.End.Line;
 					if (!_lineInfos.TryGetValue(i, out ITextViewLine lineInfo)) {
-						Log.Warning($"Could not find lineInfo for line={i}");
+						if (Log.IsVerboseEnabled()) {
+							try {
+								var visible = _textView.TextViewLines.AsQueryable().Select(_ =>
+									_textView.TextSnapshot.GetLineNumberFromPosition(_.Extent.Start.Position)
+								).ToList();
+								if (visible.Count() >= 1) {
+									Log.Verbose($"Could not find lineInfo for line={i}, only lines {visible.First()}-{visible.Last()} are visible");
+								}
+							}
+							catch (Exception ex) {
+								Log.Verbose(ex, $"Problem with logging message for line={i}");
+							}
+						}
 						continue;
 					}
 
