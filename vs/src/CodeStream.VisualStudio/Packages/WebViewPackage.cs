@@ -1,6 +1,5 @@
 ﻿using CodeStream.VisualStudio.Controllers;
 using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.ToolWindows;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
@@ -27,7 +26,7 @@ namespace CodeStream.VisualStudio.Packages {
 	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 	[ProvideToolWindow(typeof(WebViewToolWindowPane), Orientation = ToolWindowOrientation.Right,
 		Window = EnvDTE.Constants.vsWindowKindSolutionExplorer,
-		Style = VsDockStyle.Tabbed)]	
+		Style = VsDockStyle.Tabbed)]
 	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.NoSolution)]
 	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.EmptySolution)]
 	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.SolutionExists)]
@@ -37,7 +36,7 @@ namespace CodeStream.VisualStudio.Packages {
 	[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
 	public sealed class WebViewPackage : AsyncPackage {
 		private static readonly ILogger Log = LogManager.ForContext<WebViewPackage>();
-		
+
 		private ISettingsManager _settingsManager;
 		private IDisposable _languageServerReadyEvent;
 		private VsShellEventManager _vsShellEventManager;
@@ -45,7 +44,7 @@ namespace CodeStream.VisualStudio.Packages {
 		private IComponentModel _componentModel;
 		private bool _hasOpenedSolutionOnce = false;
 		private readonly object _eventLocker = new object();
-		private bool _initializedEvents;		
+		private bool _initializedEvents;
 
 		//public WebViewPackage() {
 		//	OptionsDialogPage = GetDialogPage(typeof(OptionsDialogPage)) as OptionsDialogPage;
@@ -72,7 +71,7 @@ namespace CodeStream.VisualStudio.Packages {
 			try {
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 				_componentModel = GetGlobalService(typeof(SComponentModel)) as IComponentModel;
-				
+
 				var settingsServiceFactory = _componentModel?.GetService<ISettingsServiceFactory>();
 				_settingsManager = settingsServiceFactory.Create();
 				if (_settingsManager != null) {
@@ -88,7 +87,7 @@ namespace CodeStream.VisualStudio.Packages {
 
 				InitializeLogging();
 				AsyncPackageHelper.InitializePackage(GetType().Name);
-				 
+
 				await base.InitializeAsync(cancellationToken, progress);
 				Log.Debug($"{nameof(InitializeAsync)} completed");
 			}
@@ -96,10 +95,23 @@ namespace CodeStream.VisualStudio.Packages {
 				Log.Fatal(ex, nameof(InitializeAsync));
 			}
 		}
- 
+
 		void InitializeLogging() {
-			if (_settingsManager != null && _settingsManager.TraceLevel != TraceLevel.Silent) {
-				LogManager.SetTraceLevel(_settingsManager.TraceLevel);
+			if (_settingsManager != null) {
+				var traceLevel = _settingsManager.GetExtensionTraceLevel();
+				if (traceLevel != TraceLevel.Silent) {
+#if DEBUG
+					if (traceLevel == TraceLevel.Errors || traceLevel == TraceLevel.Info) {
+						// make the default a little more informative
+						LogManager.SetTraceLevel(TraceLevel.Debug);
+					}
+					else {
+						LogManager.SetTraceLevel(traceLevel);
+					}
+#else
+					LogManager.SetTraceLevel(traceLevel);
+#endif
+				}
 			}
 		}
 
@@ -210,7 +222,7 @@ namespace CodeStream.VisualStudio.Packages {
 			}
 
 			if (args.PropertyName == nameof(_settingsManager.TraceLevel)) {
-				LogManager.SetTraceLevel(_settingsManager.TraceLevel);
+				LogManager.SetTraceLevel(_settingsManager.GetExtensionTraceLevel());
 			}
 			else if (args.PropertyName == nameof(_settingsManager.AutoHideMarkers)) {
 				var odp = sender as OptionsDialogPage;

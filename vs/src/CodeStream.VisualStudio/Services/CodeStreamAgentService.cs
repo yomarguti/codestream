@@ -147,7 +147,7 @@ namespace CodeStream.VisualStudio.Services {
 				TraceLevel = TraceLevel.Verbose.ToJsonValue(),
 				IsDebugging = true
 #else
-                TraceLevel = settingsManager.TraceLevel.ToJsonValue()
+                TraceLevel = settingsManager.GetAgentTraceLevel().ToJsonValue()
 #endif
 			});
 		}
@@ -305,7 +305,7 @@ namespace CodeStream.VisualStudio.Services {
 						Team = _settingsManager.Team,
 						ShowAvatars = _settingsManager.ShowAvatars,
 						ServerUrl = _settingsManager.ServerUrl,
-						TraceLevel = _settingsManager.TraceLevel
+						TraceLevel = _settingsManager.GetAgentTraceLevel()
 					},
 					Env = _settingsManager.GetEnvironmentName(),
 					Version = _settingsManager.GetEnvironmentVersionFormatted(),
@@ -354,7 +354,7 @@ namespace CodeStream.VisualStudio.Services {
 					Team = settings.Options.Team,
 					ShowAvatars = settings.Options.ShowAvatars,
 					ServerUrl = settings.Options.ServerUrl,
-					TraceLevel = _settingsManager.TraceLevel
+					TraceLevel = _settingsManager.GetAgentTraceLevel()
 				},
 				Context = webviewContext,
 				EditorContext = editorContext,

@@ -8,8 +8,6 @@ using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Packages;
 using CodeStream.VisualStudio.Core.Services;
 using Microsoft.VisualStudio.Shell;
-using CodeStream.VisualStudio.Packages;
-using CodeStream.VisualStudio.UI.Settings;
 
 namespace CodeStream.VisualStudio.Services {
 	 
@@ -205,6 +203,17 @@ namespace CodeStream.VisualStudio.Services {
 		public string GetEnvironmentVersionFormatted() {
 			var environmentName = GetEnvironmentName();
 			return $"{Application.ExtensionVersionSemVer}{(environmentName != "prod" ? " (" + environmentName + ")" : "")}";
+		}
+
+		public TraceLevel GetAgentTraceLevel() {
+			if (TraceLevel == TraceLevel.Info)
+				return TraceLevel.Errors;
+
+			return TraceLevel;
+		}
+
+		public TraceLevel GetExtensionTraceLevel() {
+			return TraceLevel;
 		}
 	}
 }

@@ -81,8 +81,11 @@ namespace CodeStream.VisualStudio.Core.Logging {
 			try {
 				var logEventLevel = FromTraceLevel(level);
 				if (_loggingLevelSwitch.MinimumLevel != logEventLevel) {
-					ForContext(typeof(LogManager)).Information("Set Logging Level: {LogEventLevel}", logEventLevel);
+					ForContext(typeof(LogManager)).Information("Set Extension Logging Level: {LogEventLevel}", logEventLevel);
 					_loggingLevelSwitch.MinimumLevel = logEventLevel;
+				}
+				else {
+					ForContext(typeof(LogManager)).Information("Extension Logging Level (already): {LogEventLevel}", logEventLevel);
 				}
 			}
 			catch {

@@ -5,7 +5,7 @@ namespace CodeStream.VisualStudio.Core.Services {
 	public interface ISettingsManager : IOptions {
 		void SaveSettingsToStorage();
 		Settings GetSettings();
-		TraceLevel TraceLevel { get; set; }
+		TraceLevel TraceLevel {  set; }
 		IOptionsDialogPage DialogPage { get; }
 		string GetEnvironmentName();
 		string GetUsefulEnvironmentName();
@@ -13,5 +13,8 @@ namespace CodeStream.VisualStudio.Core.Services {
 		Ide GetIdeInfo();
 		Extension GetExtensionInfo();
 		Proxy Proxy { get; }
+
+		TraceLevel GetAgentTraceLevel();
+		TraceLevel GetExtensionTraceLevel();
 	}
 }

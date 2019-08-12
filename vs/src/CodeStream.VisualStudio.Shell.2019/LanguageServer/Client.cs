@@ -82,7 +82,7 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 
 			try {
 				var settingsManager = SettingsServiceFactory.Create();
-				var process = LanguageServerProcess.Create(settingsManager?.TraceLevel);
+				var process = LanguageServerProcess.Create(settingsManager?.GetAgentTraceLevel());
 
 				using (Log.CriticalOperation($"Starting language server process. FileName={process.StartInfo.FileName} Arguments={process.StartInfo.Arguments}", Serilog.Events.LogEventLevel.Information)) {
 					if (process.Start()) {

@@ -56,13 +56,20 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 						TraceLevel = TraceLevel.Verbose.ToJsonValue(),
 						IsDebugging = true,
 #else
-                        TraceLevel = settingsManager.TraceLevel.ToJsonValue(),
+                        TraceLevel = settingsManager.GetAgentTraceLevel().ToJsonValue(),
 #endif
 						Proxy = settingsManager.Proxy,
 						ProxySupport = settingsManager.ProxySupport.ToJsonValue()
 					};
-
-					Log.Debug(nameof(InitializationOptions) + " {@InitializationOptions}", initializationOptions);
+					if (Log.IsDebugEnabled()) {
+						Log.Debug(nameof(InitializationOptions) + " {@InitializationOptions}", initializationOptions);
+					}
+					else {
+						Log.Information(nameof(InitializationOptions) + " {@InitializationOptions}", new {
+							TraceLevel = initializationOptions.TraceLevel,
+							Proxy = initializationOptions.Proxy != null
+						});
+					}
 					_initializationOptionsBase = initializationOptions;
 				}
 
