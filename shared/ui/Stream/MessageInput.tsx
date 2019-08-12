@@ -1016,16 +1016,18 @@ export class MessageInput extends React.Component<Props, State> {
 					handleSelectAtMention={this.handleSelectAtMention}
 				/>
 				<div key="message-attach-icons" className="message-attach-icons">
-					<Icon
-						key="code-box"
-						name="code-box"
-						title="Format as code"
-						placement="top"
-						align={{ offset: [5, 0] }}
-						delay={1}
-						className={cx("code-box", { selected: this.state.formatCode })}
-						onClick={this.handleClickFormatCode}
-					/>
+					{
+						// <Icon
+						// 	key="code-box"
+						// 	name="code-box"
+						// 	title="Format as code"
+						// 	placement="top"
+						// 	align={{ offset: [5, 0] }}
+						// 	delay={1}
+						// 	className={cx("code-box", { selected: this.state.formatCode })}
+						// 	onClick={this.handleClickFormatCode}
+						// />
+					}
 					<Icon
 						key="mention"
 						name="mention"
