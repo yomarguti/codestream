@@ -44,6 +44,7 @@ namespace CodeStream.VisualStudio.Services {
 		public ISettingsServiceFactory SettingsServiceFactory { get; set; }
 
 		public async System.Threading.Tasks.Task LogoutAsync() {
+			Log.Information($"{nameof(LogoutAsync)} starting");
 			try {
 				try {
 					SessionService.SetState(SessionState.UserSigningOut);
@@ -103,6 +104,7 @@ namespace CodeStream.VisualStudio.Services {
 				catch (Exception ex) {
 					Log.Error(ex, $"{nameof(LogoutAsync)} - {nameof(HostDidLogoutNotificationType)}");
 				}
+				Log.Information($"{nameof(LogoutAsync)} completed");
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(LogoutAsync));
