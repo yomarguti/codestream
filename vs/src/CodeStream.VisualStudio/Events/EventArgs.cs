@@ -52,10 +52,6 @@ namespace CodeStream.VisualStudio.Events {
 		public ConnectionStatus Status { get; set; }
 	}
 
-	public sealed class AuthenticationChangedEvent : EventBase {
-		public LogoutReason Reason { get; set; }
-	}
-
 	public sealed class MarkerGlyphVisibilityEvent : EventBase {
 		public bool IsVisible { get; set; }
 	}

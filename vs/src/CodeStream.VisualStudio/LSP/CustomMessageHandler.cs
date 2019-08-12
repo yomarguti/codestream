@@ -115,7 +115,7 @@ namespace CodeStream.VisualStudio.LSP {
 		[JsonRpcMethod(DidChangeVersionCompatibilityNotificationType.MethodName)]
 		public void OnDidChangeVersionCompatibility(JToken e) {
 			Log.Information($"{nameof(OnDidChangeVersionCompatibility)} {e}");
-			
+
 			ThreadHelper.JoinableTaskFactory.Run(async delegate {
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -139,7 +139,31 @@ namespace CodeStream.VisualStudio.LSP {
 			var @params = e.ToObject<DidLogoutNotification>();
 			Log.Information($"{nameof(OnDidLogout)} {@params.Reason}");
 
-			_eventAggregator.Publish(new AuthenticationChangedEvent { Reason = @params.Reason });
+			if (@params.Reason == LogoutReason.Token) {
+				ThreadHelper.JoinableTaskFactory.Run(async delegate {
+					try {
+						await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+						var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+						Assumes.Present(componentModel);
+
+						var authenticationServiceFactory = componentModel.GetService<IAuthenticationServiceFactory>();
+						if (authenticationServiceFactory != null) {
+							var authService = authenticationServiceFactory.Create();
+							if (authService == null) {
+								Log.Error(nameof(OnDidLogout) + " " + nameof(authService) + " is null");
+								return;
+							}
+							await authService.LogoutAsync();
+						}
+					}
+					catch (Exception ex) {
+						Log.Error(ex, nameof(OnDidLogout));
+					}
+				});
+			}
+			else {
+				// TODO: Handle this
+			}
 		}
 
 		[JsonRpcMethod(DidLoginNotificationType.MethodName)]

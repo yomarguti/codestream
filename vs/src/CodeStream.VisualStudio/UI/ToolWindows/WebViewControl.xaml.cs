@@ -23,8 +23,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 		private readonly ISessionService _sessionService;
 		private readonly IDisposable _languageServerDisconnectedEvent;
 
-		private IDisposable _languageServerReadyEvent;
-		private List<IDisposable> _disposables;
+		private IDisposable _languageServerReadyEvent;		
 		private bool _disposed = false;
 		private bool _isInitialized;
 		private static readonly object InitializeLock = new object();
@@ -145,29 +144,6 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 
 							_browserService.LoadWebView();
 
-							_disposables = new List<IDisposable> {
-								_eventAggregator.GetEvent<AuthenticationChangedEvent>()
-									.Subscribe(_ => {
-										if (_.Reason == LogoutReason.Token) {
-											ThreadHelper.JoinableTaskFactory.Run(async delegate {
-												try {
-													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-													var authenticationServiceFactory = _componentModel.GetService<IAuthenticationServiceFactory>();
-													if (authenticationServiceFactory != null) {
-														await authenticationServiceFactory.Create().LogoutAsync();
-													}	
-												}
-												catch(Exception ex) {
-													Log.Error(ex, nameof(AuthenticationChangedEvent));
-												}
-											});
-										}
-										else {
-											// TODO: Handle this
-										}
-									})
-							};
-
 							_isInitialized = true;
 						}
 						catch (Exception ex) {
@@ -190,8 +166,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 
 			if (disposing) {
 				_languageServerReadyEvent?.Dispose();
-				_languageServerDisconnectedEvent?.Dispose();
-				_disposables.DisposeAll();
+				_languageServerDisconnectedEvent?.Dispose();				
 				IsVisibleChanged -= WebViewControl_IsVisibleChanged;
 			}
 

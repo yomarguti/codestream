@@ -45,14 +45,21 @@ namespace CodeStream.VisualStudio.Services {
 
 		public async System.Threading.Tasks.Task LogoutAsync() {
 			try {
-				if (SessionService.IsReady == false) return;
-
-				SessionService.SetState(SessionState.UserSigningOut);
-
-				EventAggregator.Publish(new SessionDidStartSignOutEvent());
-
-				var settingsService = SettingsServiceFactory.Create();
 				try {
+					SessionService.SetState(SessionState.UserSigningOut);
+				}
+				catch(Exception ex) {
+					Log.Warning(ex, $"{nameof(LogoutAsync)} - SetState");
+				}
+				try {
+					EventAggregator.Publish(new SessionDidStartSignOutEvent());
+				}
+				catch(Exception ex) {
+					Log.Warning(ex, $"{nameof(LogoutAsync)} - {nameof(SessionDidStartSignOutEvent)}");
+				}
+				
+				try {
+					var settingsService = SettingsServiceFactory.Create();
 					await CredentialsService.DeleteAsync(settingsService.ServerUrl.ToUri(), settingsService.Email);
 				}
 				catch (Exception ex) {
@@ -80,17 +87,25 @@ namespace CodeStream.VisualStudio.Services {
 					Log.Error(ex, $"{nameof(LogoutAsync)} - session");
 				}
 
-				EventAggregator.Publish(new SessionLogoutEvent());
+				try {
+					EventAggregator.Publish(new SessionLogoutEvent());
+				}
+				catch(Exception ex) {
+					Log.Error(ex, $"{nameof(LogoutAsync)} - {nameof(SessionLogoutEvent)}");
+				}
 
+				try {
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
-
-				// it's possible that this Logout method is called before the webview is ready -- enqueue it
-				WebviewIpc.EnqueueNotification(new HostDidLogoutNotificationType());
+					// it's possible that this Logout method is called before the webview is ready -- enqueue it
+					WebviewIpc.EnqueueNotification(new HostDidLogoutNotificationType());
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
-
+				}
+				catch (Exception ex) {
+					Log.Error(ex, $"{nameof(LogoutAsync)} - {nameof(HostDidLogoutNotificationType)}");
+				}
 			}
 			catch (Exception ex) {
-				Log.Error(ex, nameof(LogoutAsync));
+				Log.Fatal(ex, nameof(LogoutAsync));
 			}
 		}
 	}
