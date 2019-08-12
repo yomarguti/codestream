@@ -88,6 +88,7 @@ export namespace Editor {
 	}
 
 	export async function highlightRange(uri: Uri, range: Range, clear?: boolean): Promise<boolean> {
+		if (clear) return true;
 		const editor = await findOrOpenEditor(uri, { preserveFocus: true });
 		if (editor === undefined) return false;
 
