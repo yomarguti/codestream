@@ -141,8 +141,8 @@
 		height: auto;
 		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 		flex: auto;
-		overflow-x: hidden;
-		overflow-y: auto;
+		width: 100%;
+		// overflow: hidden;
 
 		.assignees {
 			// float: right;
@@ -164,6 +164,9 @@
 
 		&.type-bookmark:not(.selected) .header {
 			margin-bottom: 0 !important;
+		}
+		.contents {
+			width: 100%;
 		}
 		.contents > .body {
 			display: flex;
