@@ -16,7 +16,7 @@ import {
 } from "@codestream/protocols/agent";
 import { EditorRevealRangeRequestType } from "../ipc/webview.protocol";
 import { includes as _includes, sortBy as _sortBy } from "lodash-es";
-import { setCurrentStream } from "../store/context/actions";
+import { setCurrentStream, setCurrentCodemark } from "../store/context/actions";
 
 export class SimpleKnowledgePanel extends Component {
 	disposables = [];
@@ -447,12 +447,7 @@ export class SimpleKnowledgePanel extends Component {
 				// TODO: likely because the file no longer exists
 			}
 		}
-		this.props.setCurrentStream(codemark.streamId, codemark.parentPostId || codemark.postId);
-		// const isOpen = this.state.openPost === id;
-		// if (isOpen) this.setState({ openPost: null });
-		// else {
-		// this.setState({ openPost: id });
-		// }
+		this.props.setCurrentCodemark(codemark.id);
 	};
 
 	toggleStatus = id => {
@@ -528,5 +523,5 @@ const mapStateToProps = state => {
 
 export default connect(
 	mapStateToProps,
-	{ ...actions, setCurrentStream }
+	{ ...actions, setCurrentStream, setCurrentCodemark }
 )(SimpleKnowledgePanel);

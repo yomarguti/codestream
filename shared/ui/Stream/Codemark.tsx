@@ -16,7 +16,7 @@ import {
 	Capabilities,
 	GetDocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
-import { CodemarkType, CSUser, CSMe, CSPost, CSTag } from "@codestream/protocols/api";
+import { CodemarkType, CSUser, CSMe, CSPost } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
 import { range } from "../utils";
@@ -37,8 +37,8 @@ import { getCurrentTeamProvider } from "../store/teams/actions";
 import { isNil } from "lodash-es";
 import { CodeStreamState } from "../store";
 import { getCodemark } from "../store/codemarks/reducer";
-import { setCurrentDocumentMarker } from "../store/context/actions";
 import { EditorHighlightRangeRequestType } from "@codestream/protocols/webview";
+import { setCurrentCodemark } from "../store/context/actions";
 
 interface State {
 	hover: boolean;
@@ -55,7 +55,7 @@ interface DispatchProps {
 	setCodemarkStatus: typeof setCodemarkStatus;
 	setUserPreference: typeof setUserPreference;
 	getPosts: typeof getPosts;
-	setCurrentDocumentMarker: typeof setCurrentDocumentMarker;
+	setCurrentCodemark: typeof setCurrentCodemark;
 }
 
 interface ConnectedProps {
@@ -203,7 +203,6 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	cancelEditing = () => {
-		this.props.setCurrentDocumentMarker();
 		this.setState({ isEditing: false });
 	};
 
@@ -445,9 +444,24 @@ export class Codemark extends React.Component<Props, State> {
 			)
 				return false;
 		}
-		// if (this.props.selected) return false;
+
+		if (target && (target.classList.contains("info") || target.closest(".info"))) {
+			return false;
+		}
 
 		event.preventDefault();
+
+		// in codemarkview, toggling by the header doesn't seem like a good idea
+		// if (this.props.selected) {
+		// 	if (target && (target.classList.contains("header") || target.closest(".header"))) {
+		// 		this.props.setCurrentCodemark();
+		// 	}
+		// 	if (target && target.closest(".related-codemarks")) {
+		// 		this.props.setCurrentCodemark();
+		// 	}
+		// 	return;
+		// }
+
 		const selection = window.getSelection();
 		if (selection != null && selection.toString().length > 0) {
 			// in this case the user has selected a string
@@ -506,7 +520,7 @@ export class Codemark extends React.Component<Props, State> {
 				markerId: marker.id
 			});
 			// TODO: What should we do if we don't find the marker?
-			if (response === undefined) return;
+			if (response == undefined) return;
 
 			this._fileUri = response.textDocument.uri;
 			range = response.range;
@@ -552,7 +566,8 @@ export class Codemark extends React.Component<Props, State> {
 				break;
 			}
 			case "edit-post": {
-				if (!this.props.selected) this.props.setCurrentDocumentMarker(this.props.marker.id);
+				// TODO: ideally should also open the <CodemarkView/> but that's more complicated
+				// if (!this.props.selected) this.props.setCurrentCodemark(this.props.codemark.id);
 				this.setState({ isEditing: true });
 				break;
 			}
@@ -1191,7 +1206,7 @@ export default connect(
 		editCodemark,
 		fetchThread,
 		getPosts,
-		setCurrentDocumentMarker
+		setCurrentCodemark
 	}
 	// @ts-ignore
 )(Codemark);

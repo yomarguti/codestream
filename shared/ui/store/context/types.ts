@@ -20,7 +20,8 @@ export enum ContextActionsType {
 	SetShowFeedbackSmiley = "@context/SetShowFeedbackSmiley",
 	SetNewPostEntryPoint = "@context/SetNewPostEntryPoint",
 	SetRoute = "@context/SetRoute",
-	SetChatProviderAccess = "@context/SetChatProviderAccess"
+	SetChatProviderAccess = "@context/SetChatProviderAccess",
+	SetCurrentCodemark = "@context/SetCurrentCodemark"
 }
 
 export type PostEntryPoint = "Stream" | "Global Nav" | "Spatial View" | undefined;

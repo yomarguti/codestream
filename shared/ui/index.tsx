@@ -10,8 +10,7 @@ import {
 	HostDidChangeEditorSelectionNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
 	ShowCodemarkNotificationType,
-	ShowStreamNotificationType,
-	WebviewPanels
+	ShowStreamNotificationType
 } from "./ipc/webview.protocol";
 import { createCodeStreamStore } from "./store";
 import { HostApi } from "./webview-api";
@@ -39,7 +38,7 @@ import { updatePreferences } from "./store/preferences/actions";
 import { updateUnreads } from "./store/unreads/actions";
 import { updateConfigs } from "./store/configs/actions";
 import { setEditorContext } from "./store/editorContext/actions";
-import { blur, focus, setCurrentStream, setCurrentDocumentMarker } from "./store/context/actions";
+import { blur, focus, setCurrentStream, setCurrentCodemark } from "./store/context/actions";
 import { isNotOnDisk } from "./utils";
 
 export { HostApi };
@@ -189,16 +188,6 @@ export function listenForEvents(store) {
 		const codemark = getCodemark(codemarks, e.codemarkId);
 		if (codemark == null) return;
 
-		if (
-			context.panelStack[0] === WebviewPanels.CodemarksForFile ||
-			(e.sourceUri != null && editorContext.textEditorUri === e.sourceUri)
-		) {
-			store.dispatch(openPanel(WebviewPanels.CodemarksForFile));
-			store.dispatch(setCurrentDocumentMarker(codemark.markerIds && codemark.markerIds[0]));
-			return;
-		}
-
-		store.dispatch(openPanel(WebviewPanels.Codemarks));
-		store.dispatch(setCurrentStream(codemark.streamId, codemark.postId));
+		store.dispatch(setCurrentCodemark(codemark.id));
 	});
 }

@@ -54,7 +54,7 @@ import {
 	setCodemarksFileViewStyle,
 	setCodemarksShowArchived,
 	setCodemarksShowResolved,
-	setCurrentDocumentMarker
+	setCurrentCodemark
 } from "../store/context/actions";
 import { sortBy as _sortBy } from "lodash-es";
 import { setEditorContext } from "../store/editorContext/actions";
@@ -118,9 +118,9 @@ interface Props {
 	setCodemarksShowResolved: (
 		...args: Parameters<typeof setCodemarksShowResolved>
 	) => ReturnType<typeof setCodemarksShowResolved>;
-	setCurrentDocumentMarker: (
-		...args: Parameters<typeof setCurrentDocumentMarker>
-	) => ReturnType<typeof setCurrentDocumentMarker>;
+	setCurrentCodemark: (
+		...args: Parameters<typeof setCurrentCodemark>
+	) => ReturnType<typeof setCurrentCodemark>;
 
 	createPostAndCodemark: (...args: Parameters<typeof createPostAndCodemark>) => any;
 	addDocumentMarker: Function;
@@ -282,12 +282,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					e.type,
 					getLine0ForEditorLine(this.props.textEditorVisibleRanges, e.range.start.line)
 				);
-			}),
-			VsCodeKeystrokeDispatcher.on("keydown", event => {
-				if (event.key === "Escape" && this.props.currentDocumentMarkerId) {
-					event.stopPropagation();
-					this.setSelectedDocumentMarker();
-				}
 			})
 		);
 
@@ -488,7 +482,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 									this.hiddenCodemarks[docMarker.id] = true;
 									return null;
 								}
-								const selected = currentDocumentMarkerId === docMarker.id;
 								return (
 									<div className="codemark-container">
 										<Codemark
@@ -497,7 +490,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 											codemark={docMarker.codemark}
 											marker={docMarker}
 											hidden={hidden}
-											selected={selected}
 											onClick={this.handleClickCodemark}
 											highlightCodeInTextEditor
 											action={this.props.postAction}
@@ -505,12 +497,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 											viewHeadshots={this.props.viewHeadshots}
 											postAction={this.props.postAction}
 										/>
-										{selected && (
-											<CancelButton
-												className="cancel-icon clickable"
-												onClick={this.deselectCodemarks}
-											/>
-										)}
 									</div>
 								);
 							})}
@@ -882,26 +868,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (numAbove != this.state.numAbove) this.setState({ numAbove });
 		if (numBelow != this.state.numBelow) this.setState({ numBelow });
 
-		// HOW THIS WORKS
-		// we want to render only the codemarks in the selected viewport, with one
-		// exception -- when you have selected one and it is "full-screen".
-		// in order to preserve the ability to animate from one version of the
-		// collapsed codemark to the full-screen version, we need React to see
-		// the same number of nodes
-		// so the strategy is to iterate through all the visible lines, and if
-		// there isn't a selected codemark (currentDocumentMarkerId), then
-		// render all codemarks as per normal.
-		// but once there is a selected codemark, do the exact same thing only
-		// return NULL for each codemark that isn't the selected one AND THEN
-		// also double-check to make sure we have rendered the selected
-		// codemark, because if the user selects a codemark, then scrolls, it
-		// might transition to out of the viewport, and we want to keep it in
-		// view.
-		let haveWeRenderedSelectedDocMarker = false;
-		const selectedDocMarker = currentDocumentMarkerId
-			? documentMarkers.find(marker => marker.id === currentDocumentMarkerId)
-			: null;
-
 		let rangeStartOffset = 0;
 		return (
 			<div
@@ -913,8 +879,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				data-scrollable="true"
 				className={cx("scrollbox", { "off-top": firstVisibleLine > 0 })}
 			>
-				{selectedDocMarker && <div id="codemark-blanket"></div>}
-
 				<div
 					style={{
 						padding: `${this.props.metrics.lineHeight!}px 0`,
@@ -923,7 +887,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				>
 					<div
 						style={{
-							top: selectedDocMarker ? 0 : paddingTop,
+							top: paddingTop,
 							// purple background for debugging purposes
 							// background: "#333366",
 							position: "relative",
@@ -945,11 +909,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 								const marksInRange = range(lineToStartOn, realLastLine + 1).map(lineNum => {
 									const docMarker = this.docMarkersByStartLine[lineNum];
 									if (!docMarker) return null;
-									//} && lineNum !== this.state.openIconsOnLine) {
-									const selected = currentDocumentMarkerId === docMarker.id;
-									if (selected) haveWeRenderedSelectedDocMarker = true;
-									if (selectedDocMarker && !selected) return null;
-									return this.renderInlineCodemark(docMarker, lineNum, selected);
+									return this.renderInlineCodemark(docMarker, lineNum);
 								});
 								rangeStartOffset += linesInRange;
 								if (rangeIndex + 1 < numVisibleRanges) {
@@ -958,9 +918,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 								}
 								return marksInRange;
 							})}
-							{selectedDocMarker &&
-								!haveWeRenderedSelectedDocMarker &&
-								this.renderSelectedDocMarker(selectedDocMarker)}
 						</div>
 						{this.renderHoverIcons(numLinesVisible)}
 					</div>
@@ -969,12 +926,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		);
 	}
 
-	renderSelectedDocMarker(selectedDocMarker) {
-		const lineNum = Number(this.getMarkerStartLine(selectedDocMarker));
-		return this.renderInlineCodemark(selectedDocMarker, lineNum, true);
-	}
-
-	renderInlineCodemark(docMarker, lineNum, selected) {
+	renderInlineCodemark(docMarker, lineNum) {
 		const codemark = docMarker.codemark;
 		const hidden = this.hiddenCodemarks[docMarker.id] ? true : false;
 		return (
@@ -982,9 +934,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				key={docMarker.id}
 				lineNumber={lineNum}
 				className={cx({
-					"cs-hidden": hidden && !selected,
-					"cs-off-plane": hidden || selected,
-					"cs-selected": selected
+					"cs-hidden": hidden,
+					"cs-off-plane": hidden
 				})}
 			>
 				<div className="codemark-container">
@@ -993,29 +944,15 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						marker={docMarker}
 						deselectCodemarks={this.deselectCodemarks}
 						hidden={hidden}
-						selected={selected}
 						onClick={this.handleClickCodemark}
 						highlightCodeInTextEditor
 						action={this.props.postAction}
 						query={this.state.query}
 						postAction={this.props.postAction}
 					/>
-					{selected && (
-						<CancelButton
-							title="Close"
-							className="cancel-icon clickable"
-							onClick={this.deselectCodemarks}
-						/>
-					)}
 				</div>
 			</ContainerAtEditorLine>
 		);
-	}
-	renderBlanket() {
-		const { currentDocumentMarkerId } = this.props;
-
-		if (!currentDocumentMarkerId) return null;
-		return <div className=""></div>;
 	}
 
 	renderCodemarkForm() {
@@ -1285,7 +1222,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	deselectCodemarks = () => {
-		this.setSelectedDocumentMarker();
+		this.props.setCurrentCodemark();
 		this.clearSelection();
 	};
 
@@ -1428,7 +1365,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			newCodemarkAttributes: { type, codeBlock: scmInfo }
 		});
 
-		this.setSelectedDocumentMarker();
+		this.props.setCurrentCodemark();
 
 		// setup git context for codemark form
 		// setTimeout(() => this.props.focusInput(), 500);
@@ -1440,21 +1377,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		docMarker: DocumentMarker,
 		shouldTrack = true
 	) => {
-		const target = event.target as HTMLElement | undefined;
-		if (target && (target.classList.contains("info") || target.closest(".info"))) {
-			return;
-		}
-
-		if (this.props.currentDocumentMarkerId === docMarker.id) {
-			if (target && (target.classList.contains("header") || target.closest(".header"))) {
-				this.deselectCodemarks();
-			}
-			if (target && target.closest(".related-codemarks")) {
-				this.deselectCodemarks();
-			}
-			return;
-		}
-
 		if (shouldTrack)
 			HostApi.instance.send(TelemetryRequestType, {
 				eventName: "Codemark Clicked",
@@ -1463,44 +1385,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				}
 			});
 
-		let markerId;
-		if (codemark.markers) {
-			markerId = codemark.markers[0].id;
-		} else if (codemark.markerIds) {
-			markerId = codemark.markerIds[0];
-		}
-
-		if (markerId) {
-			try {
-				const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
-					markerId: markerId
-				});
-
-				// TODO: What should we do if we don't find the marker? Is that possible?
-				if (response) {
-					// Ensure we put the cursor at the right line (don't actually select the whole range)
-					HostApi.instance.send(EditorSelectRangeRequestType, {
-						uri: response.textDocument.uri,
-						selection: {
-							start: response.range.start,
-							end: response.range.start,
-							cursor: response.range.start
-						},
-						preserveFocus: true
-					});
-				}
-			} catch (error) {
-				// TODO:
-			}
-		}
-
-		this.setSelectedDocumentMarker(docMarker);
-		this.clearSelection();
+		this.props.setCurrentCodemark(codemark.id);
 	};
-
-	setSelectedDocumentMarker(docMarker?: DocumentMarker) {
-		this.enableAnimations(() => this.props.setCurrentDocumentMarker(docMarker && docMarker.id));
-	}
 
 	mapLine0ToVisibleRange = fromLineNum0 => {
 		const { textEditorVisibleRanges } = this.props;
@@ -1603,7 +1489,7 @@ export default connect(
 		setCodemarksFileViewStyle,
 		setCodemarksShowArchived,
 		setCodemarksShowResolved,
-		setCurrentDocumentMarker,
+		setCurrentCodemark,
 		setEditorContext,
 		createPostAndCodemark,
 		addDocumentMarker

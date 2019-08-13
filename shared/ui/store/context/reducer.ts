@@ -17,6 +17,7 @@ const initialState: ContextState = {
 	currentTeamId: "",
 	currentStreamId: "",
 	currentDocumentMarkerId: "",
+	currentCodemarkId: undefined,
 	issueProvider: undefined,
 	threadId: undefined,
 	panelStack: [WebviewPanels.CodemarksForFile], // default view is the "in this file" view
@@ -46,6 +47,8 @@ export function reduceContext(
 		}
 		case ContextActionsType.SetCurrentDocumentMarker:
 			return { ...state, currentDocumentMarkerId: action.payload };
+		case ContextActionsType.SetCurrentCodemark:
+			return { ...state, currentCodemarkId: action.payload };
 
 		case ContextActionsType.OpenPanel:
 			return { ...state, panelStack: [action.payload, ...state.panelStack].slice(0, 10) };
