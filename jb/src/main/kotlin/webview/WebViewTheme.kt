@@ -53,6 +53,7 @@ class WebViewTheme(val name: String, val stylesheet: String) {
             val lineNumbersFgColor = fg.opacity(40)
             val buttonBgColor = buttonBg
             var buttonBgColorHover: Color
+            var textFocusBorderColor: Color
 
             if (ColorUtil.isDark(bg)) {
                 appBgColorDarker = bg.darken(4)
