@@ -60,6 +60,25 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="2_1_0">2.1.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds more robust tagging functionality, allowing you to create tags with any color / text label combination</li>
+    <li>Adds the ability to link parts of your codebase by adding "related" codemarks to a parent codemark, and then using the links to jump around the codebases</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>Improved display of collapsed codemarks to make it easy to see tags, assignees, linked issues (i.e., on an external service like Jira), and the presence of replies or related codemarks</li>
+    <li>All new cleaner display of expanded codemarks, with replies now displayed in descending order (i.e., most recent first)</li>
+    <li>Consistent display of codemarks across all areas of CodeStream</li>
+    <li>Smoother scrolling of codemarks in the CodeStream pane</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with the positioning of the codemark form when creating a codemark at the bottom of the viewport</li>
+    <li>Fixes an issue with not being able to change issue-tracking selection once Azure DevOps has been selected</li>
+    <li>Fixes an issue with password reset in CodeStream on-prem</li>
+</ul>
 <h4 id="2_0_1">2.0.1</h4>
 <h5>Fixed</h5>
 <ul>
