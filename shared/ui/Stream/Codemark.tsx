@@ -736,7 +736,11 @@ export class Codemark extends React.Component<Props, State> {
 			const assigneeHeadshots = [...assignees, ...externalAssignees].map(a => {
 				if (hover && !selected) {
 					return (
-						<Tooltip title={"Assigned to " + (a.fullName || a.email)} placement="bottom">
+						<Tooltip
+							title={"Assigned to " + (a.fullName || a.email)}
+							placement="bottomRight"
+							align={{ offset: [17, 4] }}
+						>
 							<span>
 								<Headshot size={18} person={a} />
 							</span>
