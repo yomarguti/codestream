@@ -113,10 +113,10 @@ export enum ScmError {
 
 export const getFileScmError = (scmInfo: GetFileScmInfoResponse | GetRangeScmInfoResponse) => {
 	if (!scmInfo.scm) {
-		if (!scmInfo.error) {
-			return ScmError.NoRepo;
-		} else {
+		if (!scmInfo.error) {			
 			return ScmError.NoGit;
+		} else {
+			return ScmError.NoRepo;
 		}
 	} else if (scmInfo.scm!.remotes.length === 0) {
 		return ScmError.NoRemotes;
