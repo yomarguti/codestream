@@ -88,7 +88,18 @@ export namespace Editor {
 	}
 
 	export async function highlightRange(uri: Uri, range: Range, clear?: boolean): Promise<boolean> {
-		if (clear) return true;
+		if (clear) {
+			// while removing, only do anything if the uri is already open. otherwise, vscode will clear the highlight
+			const normalizedUri = uri.toString(false);
+			for (const e of window.visibleTextEditors) {
+				if (e.document.uri.toString(false) === normalizedUri) {
+					e.setDecorations(highlightDecorationType, []);
+					return true;
+				}
+			}
+			return true;
+		}
+
 		const editor = await findOrOpenEditor(uri, { preserveFocus: true });
 		if (editor === undefined) return false;
 
