@@ -58,6 +58,8 @@
 
 	.cs-hidden & {
 		background-color: var(--base-background-color);
+		// when a codemark gets marked hidden, we transition it off-screen in 200ms
+		transition: transform 200ms, margin-top 200ms;
 		// position: absolute;
 		// z-index: 0;
 
