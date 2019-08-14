@@ -475,9 +475,13 @@ export class CodeStreamSession {
 
 		return new Promise<WorkspaceFolder[] | null>(resolve => {
 			if (this.agent.rootUri) {
+				const uri =
+					this.agent.rootUri[this.agent.rootUri.length - 1] === "/"
+						? this.agent.rootUri.substring(0, this.agent.rootUri.length - 1)
+						: this.agent.rootUri;
 				resolve([
 					{
-						uri: this.agent.rootUri.substring(0, this.agent.rootUri.length - 1),
+						uri: uri,
 						name: path.basename(this.agent.rootUri)
 					}
 				]);
@@ -801,7 +805,7 @@ export class CodeStreamSession {
 		return new SlackApiProvider(
 			this._api! as CodeStreamApiProvider,
 			user.providerInfo!.slack ||
-			(user.providerInfo![this._teamId!] && user.providerInfo![this._teamId!].slack)!,
+				(user.providerInfo![this._teamId!] && user.providerInfo![this._teamId!].slack)!,
 			user,
 			this._teamId!,
 			this._proxyAgent
@@ -922,7 +926,6 @@ export class CodeStreamSession {
 				type: ChangeDataType.Providers,
 				data: this._providers
 			});
-
 		}
 	}
 }
