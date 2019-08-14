@@ -88,21 +88,11 @@ export function CodemarkView() {
 		);
 
 	return (
-		<span
-			style={{
-				zIndex: 51,
-				paddingLeft: "45px",
-				paddingRight: "45px",
-				paddingTop: 30,
-				paddingBottom: 30,
-				marginTop: 0,
-				height: "100vh"
-			}}
-		>
+		<div className="codemark-view">
+			<CancelButton className="cancel-icon clickable" onClick={handleClickCancel} />
 			<div className="codemark-container">
 				<Codemark codemark={codemark} selected highlightCodeInTextEditor />
-				<CancelButton className="cancel-icon clickable" onClick={handleClickCancel} />
 			</div>
-		</span>
+		</div>
 	);
 }

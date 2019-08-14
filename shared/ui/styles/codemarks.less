@@ -603,18 +603,20 @@
 	font-weight: bold;
 }
 
-.codemark-container {
+.codemark-view {
+	z-index: 51;
+	position: absolute;
+	padding: 30px 45px;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	overflow: auto;
+
+	// this is the X cancel button
 	.align-right-button {
-		position: relative !important;
-		left: 10px;
-		top: 10px;
-
-		.spatial-list & {
-			position: absolute !important;
-			left: unset;
-			right: 20px;
-		}
+		position: absolute !important;
+		right: 20px;
+		top: 40px;
 	}
-
-	left: unset;
 }
