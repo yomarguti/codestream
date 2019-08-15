@@ -322,8 +322,8 @@ export class Codemark extends React.Component<Props, State> {
 		// LEGACY (backward compat) we used to store one "color" property on a codemark
 		// so now we promote it to a tag if it exists. We should remove this code if we
 		// do a data migration that removes ".color" attributes and replaces them with
-		// tags
-		if (codemark.color) {
+		// tags. note that we don't do any backward compat if tags have been set
+		if (tags.length === 0 && codemark.color) {
 			const tag = { id: "_" + codemark.color, label: "", color: codemark.color };
 			return <Tag tag={tag} title={title} placement="bottom" />;
 		}
