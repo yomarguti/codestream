@@ -16,7 +16,7 @@ import {
 	Capabilities,
 	GetDocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
-import { CodemarkType, CSUser, CSMe, CSPost } from "@codestream/protocols/api";
+import { CodemarkType, CSUser, CSMe, CSPost, CSMarker } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
 import { range } from "../utils";
@@ -76,18 +76,14 @@ interface ConnectedProps {
 export type DisplayType = "default" | "collapsed";
 
 interface InheritedProps {
+	contextName?: "Spatial View" | "Codemarks Tab";
 	displayType?: DisplayType;
 	selected?: boolean;
 	codemark: CodemarkPlus;
 	marker: DocumentMarker;
 	postAction?(...args: any[]): any;
 	action(action: string, post: any, args: any): any;
-	onClick?(
-		event: React.SyntheticEvent,
-		codemark: CodemarkPlus,
-		marker: DocumentMarker,
-		shouldTrack?: boolean
-	): any;
+	onClick?(event: React.SyntheticEvent, codemark: CodemarkPlus, marker: DocumentMarker): any;
 	highlightCodeInTextEditor?: boolean;
 	query?: string;
 	showLabelText?: boolean;
@@ -469,38 +465,34 @@ export class Codemark extends React.Component<Props, State> {
 			return;
 		}
 
-		this.props.onClick && this.props.onClick(event, this.props.codemark, this.props.marker);
+		if (!this.props.selected) {
+			HostApi.instance.track(
+				"Codemark Clicked",
+				this.props.contextName && {
+					"Codemark Location": this.props.contextName
+				}
+			);
+		}
+
+		if (this.props.onClick) {
+			this.props.onClick(event, this.props.codemark, this.props.marker);
+		} else {
+			if (!this.props.selected) this.props.setCurrentCodemark(this.props.codemark.id);
+		}
 	};
 
-	handleClickRelatedCodemark = async (event, codemark, marker) => {
-		this.props.onClick && this.props.onClick(event, codemark, marker, false);
+	handleClickRelatedCodemark = (
+		event: React.SyntheticEvent,
+		codemark: CodemarkPlus,
+		_: CSMarker | undefined
+	) => {
+		event.preventDefault();
+		event.stopPropagation();
 		HostApi.instance.track("Codemark Clicked", {
 			"Codemark Location": "Related List"
 		});
 
-		// if (codemark.markers) {
-		// 	try {
-		// 		const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
-		// 			markerId: codemark.markers[0].id
-		// 		});
-		// 		// TODO: What should we do if we don't find the marker?
-		// 		if (response) {
-		// 			HostApi.instance.send(EditorRevealRangeRequestType, {
-		// 				uri: response.textDocument.uri,
-		// 				range: response.range,
-		// 				preserveFocus: true
-		// 			});
-		// 		}
-		// 	} catch (error) {
-		// 		// TODO: likely because the file no longer exists
-		// 	}
-		// }
-		// this.props.setCurrentStream(codemark.streamId, codemark.parentPostId || codemark.postId);
-		// // const isOpen = this.state.openPost === id;
-		// // if (isOpen) this.setState({ openPost: null });
-		// // else {
-		// // this.setState({ openPost: id });
-		// // }
+		this.props.setCurrentCodemark(codemark.id);
 	};
 
 	async toggleCodeHighlightInTextEditor(highlight: boolean, forceRemoval = false) {

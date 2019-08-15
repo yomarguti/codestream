@@ -3,11 +3,9 @@ import PropTypes from "prop-types";
 import { connect, batch } from "react-redux";
 import * as userSelectors from "../store/users/reducer";
 import Icon from "./Icon";
-import CancelButton from "./CancelButton";
 import ScrollBox from "./ScrollBox";
 import Tooltip from "./Tooltip"; // careful with tooltips on codemarks; they are not performant
 import Feedback from "./Feedback";
-import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import cx from "classnames";
 import {
 	range,
@@ -30,12 +28,9 @@ import {
 } from "../ipc/webview.protocol";
 import {
 	DocumentMarker,
-	TelemetryRequestType,
 	DidChangeDocumentMarkersNotificationType,
-	GetDocumentFromMarkerRequestType,
 	GetFileScmInfoResponse,
 	GetFileScmInfoRequestType,
-	CodemarkPlus,
 	GetRangeScmInfoRequestType,
 	GetRangeScmInfoResponse
 } from "@codestream/protocols/agent";
@@ -485,12 +480,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 								return (
 									<div className="codemark-container">
 										<Codemark
+											contextName="Spatial View"
 											key={codemark.id}
 											// @ts-ignore
 											codemark={docMarker.codemark}
 											marker={docMarker}
 											hidden={hidden}
-											onClick={this.handleClickCodemark}
 											highlightCodeInTextEditor
 											action={this.props.postAction}
 											query={this.state.query}
@@ -940,11 +935,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			>
 				<div className="codemark-container">
 					<Codemark
+						contextName="Spatial View"
 						codemark={codemark}
 						marker={docMarker}
 						deselectCodemarks={this.deselectCodemarks}
 						hidden={hidden}
-						onClick={this.handleClickCodemark}
 						highlightCodeInTextEditor
 						action={this.props.postAction}
 						query={this.state.query}
@@ -1369,23 +1364,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		// setup git context for codemark form
 		// setTimeout(() => this.props.focusInput(), 500);
-	};
-
-	handleClickCodemark = async (
-		event: React.MouseEvent,
-		codemark: CodemarkPlus,
-		docMarker: DocumentMarker,
-		shouldTrack = true
-	) => {
-		if (shouldTrack)
-			HostApi.instance.send(TelemetryRequestType, {
-				eventName: "Codemark Clicked",
-				properties: {
-					"Codemark Location": "Spatial View"
-				}
-			});
-
-		this.props.setCurrentCodemark(codemark.id);
 	};
 
 	mapLine0ToVisibleRange = fromLineNum0 => {

@@ -136,11 +136,11 @@ export class SimpleKnowledgePanel extends Component {
 				return (
 					<Codemark
 						key={codemark.id}
+						contextName="Codemarks Tab"
 						codemark={codemark}
 						displayType="collapsed"
 						currentUserName={this.props.currentUserName}
 						usernames={this.props.usernames}
-						onClick={this.handleClickCodemark}
 						action={this.props.postAction}
 						query={this.state.q}
 					/>
@@ -419,35 +419,6 @@ export class SimpleKnowledgePanel extends Component {
 		this.props.setMultiCompose(true, {
 			codemarkType: type
 		});
-	};
-
-	handleClickCodemark = async (event, codemark, _, shouldTrack = true) => {
-		if (shouldTrack)
-			HostApi.instance.send(TelemetryRequestType, {
-				eventName: "Codemark Clicked",
-				properties: {
-					"Codemark Location": "Codemarks Tab"
-				}
-			});
-
-		if (codemark.markers) {
-			try {
-				const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
-					markerId: codemark.markers[0].id
-				});
-				// TODO: What should we do if we don't find the marker?
-				if (response) {
-					HostApi.instance.send(EditorRevealRangeRequestType, {
-						uri: response.textDocument.uri,
-						range: response.range,
-						preserveFocus: true
-					});
-				}
-			} catch (error) {
-				// TODO: likely because the file no longer exists
-			}
-		}
-		this.props.setCurrentCodemark(codemark.id);
 	};
 
 	toggleStatus = id => {
