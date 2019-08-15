@@ -1,33 +1,52 @@
 import React from "react";
 import * as paths from "path-browserify";
-import { escapeHtml } from "../utils";
+import { escapeHtml, safe } from "../utils";
 import { prettyPrintOne } from "code-prettify";
 import { HostApi } from "../webview-api";
 import Tooltip from "./Tooltip";
-import { ApplyMarkerRequestType, CompareMarkerRequestType } from "../ipc/webview.protocol";
+import {
+	ApplyMarkerRequestType,
+	CompareMarkerRequestType,
+	EditorSelectRangeRequestType
+} from "../ipc/webview.protocol";
 import {
 	Capabilities,
 	CodemarkPlus,
 	GetCodemarkSha1RequestType,
-	TelemetryRequestType
+	TelemetryRequestType,
+	GetDocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
+import { injectIntl, InjectedIntl } from "react-intl";
+import { CodeStreamState } from "../store";
+import { connect } from "react-redux";
+import { getById } from "../store/repos/reducer";
+import Icon from "./Icon";
 
 interface State {
 	hasDiff: boolean;
 	codemarkSha1: string | undefined;
+	warning?: string;
 }
 
-interface Props {
+interface ConnectedProps {
+	repoName: string;
+}
+
+interface IntlProps {
+	intl: InjectedIntl;
+}
+
+interface InheritedProps {
 	codemark: CodemarkPlus;
 	capabilities: Capabilities;
 	isAuthor: boolean;
 	alwaysRenderCode?: boolean;
 }
 
-export default class CodemarkActions extends React.Component<Props, State> {
-	private _div: HTMLDivElement | null = null;
+type Props = InheritedProps & ConnectedProps & IntlProps;
 
-	constructor(props) {
+class CodemarkActions extends React.Component<Props, State> {
+	constructor(props: Props) {
 		super(props);
 		this.state = { hasDiff: false, codemarkSha1: "" };
 	}
@@ -40,14 +59,41 @@ export default class CodemarkActions extends React.Component<Props, State> {
 			codemark.markers != null && codemark.markers.length !== 0 ? codemark.markers[0] : undefined;
 		if (marker == null) return;
 
-		const response = await HostApi.instance.send(GetCodemarkSha1RequestType, {
-			codemarkId: codemark.id
-		});
-		this.setState({
-			hasDiff:
-				response.codemarkSha1 === undefined || response.codemarkSha1 !== response.documentSha1,
-			codemarkSha1: response.codemarkSha1
-		});
+		try {
+			const response = await HostApi.instance.send(GetCodemarkSha1RequestType, {
+				codemarkId: codemark.id
+			});
+			this.setState({
+				hasDiff:
+					response.codemarkSha1 === undefined || response.codemarkSha1 !== response.documentSha1,
+				codemarkSha1: response.codemarkSha1
+			});
+		} catch (error) {}
+
+		try {
+			if (marker.repoId) {
+				const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
+					markerId: marker.id
+				});
+
+				if (response) {
+					const { success } = await HostApi.instance.send(EditorSelectRangeRequestType, {
+						uri: response.textDocument.uri,
+						// Ensure we put the cursor at the right line (don't actually select the whole range)
+						selection: {
+							start: response.range.start,
+							end: response.range.start,
+							cursor: response.range.start
+						},
+						preserveFocus: true
+					});
+					this.setState({ warning: success ? undefined : "FILE_NOT_FOUND" });
+				} else {
+					// assumption based on GetDocumentFromMarkerRequestType api requiring the workspace to be available
+					this.setState({ warning: "REPO_NOT_IN_WORKSPACE" });
+				}
+			} else this.setState({ warning: "NO_REMOTE" });
+		} catch (error) {}
 	}
 
 	handleClickApplyPatch = event => {
@@ -73,6 +119,59 @@ export default class CodemarkActions extends React.Component<Props, State> {
 		event.preventDefault();
 		// HostApi.instance.send(OpenRevisionMarkerRequestType, { marker: this.props.codemark.markers![0] });
 	};
+
+	getWarningMessage() {
+		const { intl } = this.props;
+		switch (this.state.warning) {
+			case "NO_REMOTE": {
+				const message = intl.formatMessage({
+					id: "codeBlock.noRemote",
+					defaultMessage: "This code does not have a remote URL associated with it."
+				});
+				const learnMore = intl.formatMessage({ id: "learnMore" });
+				return (
+					<span>
+						{message}{" "}
+						<a href="https://help.codestream.com/hc/en-us/articles/360013410551">{learnMore}</a>
+					</span>
+				);
+			}
+			case "FILE_NOT_FOUND": {
+				return (
+					<span>
+						{intl.formatMessage({
+							id: "codeBlock.fileNotFound",
+							defaultMessage: "You don’t currently have this file in your repo."
+						})}
+					</span>
+				);
+			}
+			case "REPO_NOT_IN_WORKSPACE": {
+				return (
+					<span>
+						{intl.formatMessage(
+							{
+								id: "codeBlock.repoMissing",
+								defaultMessage: "You don’t currently have the {repoName} repo open."
+							},
+							{ repoName: this.props.repoName }
+						)}
+					</span>
+				);
+			}
+			case "UNKNOWN_LOCATION":
+			default: {
+				return (
+					<span>
+						{intl.formatMessage({
+							id: "codeBlock.locationUnknown",
+							defaultMessage: "Unknown code block location."
+						})}
+					</span>
+				);
+			}
+		}
+	}
 
 	render() {
 		const { codemark } = this.props;
@@ -102,7 +201,8 @@ export default class CodemarkActions extends React.Component<Props, State> {
 
 		return (
 			<>
-				{(this.props.alwaysRenderCode || this.state.hasDiff) && this.renderCodeblock()}
+				{(this.props.alwaysRenderCode || this.state.hasDiff || this.state.warning) &&
+					this.renderCodeblock()}
 				{(canCompare || canApply || canOpenRevision) && (
 					<div className="post-details" id={codemark.id}>
 						<div className="a-group" key="a">
@@ -170,6 +270,11 @@ export default class CodemarkActions extends React.Component<Props, State> {
 				<div className="related-label">
 					Original Code <span>(from {marker.commitHashWhenCreated.substring(0, 6)})</span>
 				</div>
+				{this.state.warning && (
+					<div className="repo-warning">
+						<Icon name="alert" /> {this.getWarningMessage()}
+					</div>
+				)}
 				<pre
 					className="code prettyprint"
 					data-scrollable="true"
@@ -179,3 +284,18 @@ export default class CodemarkActions extends React.Component<Props, State> {
 		];
 	}
 }
+
+const mapStateToProps = (state: CodeStreamState, props: InheritedProps) => {
+	const repoName =
+		(props.codemark &&
+			safe(() => {
+				return getById(state.repos, props.codemark.markers![0].repoId).name;
+			})) ||
+		"";
+
+	return {
+		repoName
+	};
+};
+
+export default connect(mapStateToProps)(injectIntl(CodemarkActions));

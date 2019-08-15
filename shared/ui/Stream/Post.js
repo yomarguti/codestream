@@ -33,7 +33,6 @@ import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { HostApi } from "../webview-api";
 import { includes as _includes } from "lodash-es";
 import { prettyPrintOne } from "code-prettify";
-import { getCurrentTeamProvider } from "../store/teams/actions";
 
 class Post extends React.Component {
 	state = {

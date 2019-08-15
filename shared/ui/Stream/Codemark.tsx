@@ -46,7 +46,6 @@ interface State {
 	isEditing: boolean;
 	menuOpen?: boolean;
 	menuTarget?: any;
-	showLabelText: boolean;
 }
 
 interface DispatchProps {
@@ -87,7 +86,6 @@ interface InheritedProps {
 	onClick?(event: React.SyntheticEvent, codemark: CodemarkPlus, marker: DocumentMarker): any;
 	highlightCodeInTextEditor?: boolean;
 	query?: string;
-	showLabelText?: boolean;
 	hidden?: boolean;
 	deselectCodemarks?: Function;
 }
@@ -109,8 +107,7 @@ export class Codemark extends React.Component<Props, State> {
 		this.state = {
 			hover: false,
 			isEditing: false,
-			menuOpen: false,
-			showLabelText: false
+			menuOpen: false
 		};
 	}
 
@@ -1121,7 +1118,7 @@ const unkownAuthor = {
 };
 
 const mapStateToProps = (state: CodeStreamState, props: InheritedProps): ConnectedProps => {
-	const { capabilities, context, preferences, users, session, posts, codemarks } = state;
+	const { capabilities, context, preferences, users, session, posts } = state;
 	const { codemark } = props;
 
 	const teamProvider = getCurrentTeamProvider(state);
