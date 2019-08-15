@@ -29,7 +29,7 @@ export function RelatedCodemark(props: { id: string }) {
 
 			dispatch(setCurrentCodemark(codemark!.id));
 		},
-		[codemark && codemark.id]
+		[props.id]
 	);
 
 	if (!codemark) {
