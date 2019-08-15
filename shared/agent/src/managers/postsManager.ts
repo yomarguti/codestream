@@ -746,7 +746,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				remotes,
 				file: source && source.file,
 				commitHash: commitHashWhenPosted,
-				location: backtrackedLocation && MarkerLocation.toArray(backtrackedLocation)
+				location: backtrackedLocation && MarkerLocation.toArray(backtrackedLocation),
+				branchWhenCreated: (source && source.branch) || undefined
 			};
 
 			codemarkRequest.streamId = streamId;

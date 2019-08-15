@@ -41,6 +41,7 @@ export interface CreateCodemarkRequestMarker {
 	file?: string;
 	commitHash?: string;
 	location?: CSLocationArray;
+	branchWhenCreated?: string;
 }
 export interface CreateCodemarkResponse {
 	codemark: CSCodemark;

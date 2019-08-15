@@ -11,6 +11,7 @@ export interface GetFileScmInfoResponse {
 		repoPath: string;
 		revision: string;
 		remotes: { name: string; url: string }[];
+		branch?: string;
 	};
 	error?: string;
 }
@@ -38,6 +39,7 @@ export interface GetRangeScmInfoResponse {
 		revision: string;
 		authors: { id: string; username: string }[];
 		remotes: { name: string; url: string }[];
+		branch?: string;
 	};
 	error?: string;
 }

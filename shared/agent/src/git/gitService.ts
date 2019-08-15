@@ -357,6 +357,28 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
+	async getCurrentBranch(uri: URI, isDirectory?: boolean): Promise<string | undefined>;
+	async getCurrentBranch(path: string, isDirectory?: boolean): Promise<string | undefined>;
+	async getCurrentBranch(
+		uriOrPath: URI | string,
+		isDirectory: boolean = false
+	): Promise<string | undefined> {
+		const filePath = typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath;
+		let cwd;
+		if (isDirectory) {
+			cwd = filePath;
+		} else {
+			[cwd] = Strings.splitPath(filePath);
+		}
+
+		try {
+			const data = (await git({ cwd: cwd }, "rev-parse", "--abbrev-ref", "HEAD")).trim();
+			return data === "" || data === "HEAD" ? undefined : data;
+		} catch {
+			return undefined;
+		}
+	}
+
 	cygwinRegex = /\/cygdrive\/([a-zA-Z])/;
 
 	sanitizePath(path: string): string {

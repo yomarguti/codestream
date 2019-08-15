@@ -80,6 +80,7 @@ export interface CSMarker extends CSEntity, CSMarkerIdentifier {
 	codemarkId: string;
 	providerType?: ProviderType;
 	commitHashWhenCreated: string;
+	branchWhenCreated?: string;
 	locationWhenCreated: CSLocationArray;
 	code: string;
 	repo: string;

@@ -47,6 +47,7 @@ export interface CodeBlockSource {
 	revision: string;
 	authors: { id: string; username: string }[];
 	remotes: { name: string; url: string }[];
+	branch?: string;
 }
 export interface CreatePostWithMarkerRequest {
 	textDocument: TextDocumentIdentifier;

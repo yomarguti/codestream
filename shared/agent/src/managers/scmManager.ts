@@ -28,6 +28,7 @@ export class ScmManager {
 		let file: string | undefined;
 		let remotes: { name: string; url: string }[] | undefined;
 		let rev: string | undefined;
+		let branch: string | undefined;
 
 		let gitError;
 		let repoPath;
@@ -46,6 +47,7 @@ export class ScmManager {
 					const gitRemotes = await git.getRepoRemotes(repoPath);
 					remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
 				}
+				branch = await git.getCurrentBranch(uri.fsPath);
 			} catch (ex) {
 				gitError = ex.toString();
 				Logger.error(ex, cc);
@@ -61,7 +63,8 @@ export class ScmManager {
 							file: file!,
 							repoPath: repoPath,
 							revision: rev!,
-							remotes: remotes || []
+							remotes: remotes || [],
+							branch
 					  }
 					: undefined,
 			error: gitError
@@ -88,6 +91,7 @@ export class ScmManager {
 		let file: string | undefined;
 		let remotes: { name: string; url: string }[] | undefined;
 		let rev: string | undefined;
+		let branch: string | undefined;
 
 		let document;
 		if (contents == null) {
@@ -145,6 +149,7 @@ export class ScmManager {
 						authors = [...Iterables.map(users, u => ({ id: u.id, username: u.username }))];
 					}
 				}
+				branch = await git.getCurrentBranch(uri.fsPath);
 			} catch (ex) {
 				gitError = ex.toString();
 				Logger.error(ex, cc);
@@ -163,7 +168,8 @@ export class ScmManager {
 							repoPath: repoPath,
 							revision: rev!,
 							authors: authors || [],
-							remotes: remotes || []
+							remotes: remotes || [],
+							branch
 					  }
 					: undefined,
 			error: gitError
