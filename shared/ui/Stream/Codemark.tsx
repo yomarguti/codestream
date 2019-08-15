@@ -17,7 +17,7 @@ import {
 	Capabilities,
 	GetDocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
-import { CodemarkType, CSUser, CSMe, CSPost, CSMarker } from "@codestream/protocols/api";
+import { CodemarkType, CSUser, CSMe, CSPost } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
 import { range } from "../utils";
@@ -37,9 +37,9 @@ import Tooltip from "./Tooltip";
 import { getCurrentTeamProvider } from "../store/teams/actions";
 import { isNil } from "lodash-es";
 import { CodeStreamState } from "../store";
-import { getCodemark } from "../store/codemarks/reducer";
 import { EditorHighlightRangeRequestType } from "@codestream/protocols/webview";
 import { setCurrentCodemark } from "../store/context/actions";
+import { RelatedCodemark } from "./RelatedCodemark";
 
 interface State {
 	hover: boolean;
@@ -69,7 +69,7 @@ interface ConnectedProps {
 	editorHasFocus: boolean;
 	pinnedReplies: CSPost[];
 	pinnedAuthors: CSUser[];
-	relatedCodemarks: (CodemarkPlus | undefined)[];
+	relatedCodemarkIds: string[];
 	isCodeStreamTeam: boolean;
 	teamTagsHash: any;
 }
@@ -346,39 +346,16 @@ export class Codemark extends React.Component<Props, State> {
 	};
 
 	renderRelatedCodemarks = () => {
-		const { relatedCodemarks } = this.props;
+		const { relatedCodemarkIds } = this.props;
 
-		if (relatedCodemarks.length === 0) return null;
+		if (relatedCodemarkIds.length === 0) return null;
 
 		return (
 			<div className="related" key="related-codemarks">
 				<div className="related-label">Related</div>
-				{relatedCodemarks.map(codemark => {
-					if (!codemark) return null;
-					const title = codemark.title || codemark.text;
-					const icon = (
-						<Icon
-							name={codemark.type || "comment"}
-							className={`${codemark.color}-color type-icon`}
-						/>
-					);
-					const marker = codemark.markers && codemark.markers[0];
-					const file = marker && marker.file;
-					const resolved = codemark.status === "closed";
-
-					return (
-						<div
-							key={codemark.id}
-							className={cx("related-codemark", { resolved })}
-							onClick={e => {
-								this.handleClickRelatedCodemark(e, codemark, marker);
-							}}
-						>
-							{icon}&nbsp;{title}
-							<span className="codemark-file">{file}</span>
-						</div>
-					);
-				})}
+				{relatedCodemarkIds.map(id => (
+					<RelatedCodemark id={id} />
+				))}
 				<div style={{ clear: "both" }} />
 			</div>
 		);
@@ -488,20 +465,6 @@ export class Codemark extends React.Component<Props, State> {
 		} else {
 			if (!this.props.selected) this.props.setCurrentCodemark(this.props.codemark.id);
 		}
-	};
-
-	handleClickRelatedCodemark = (
-		event: React.SyntheticEvent,
-		codemark: CodemarkPlus,
-		_: CSMarker | undefined
-	) => {
-		event.preventDefault();
-		event.stopPropagation();
-		HostApi.instance.track("Codemark Clicked", {
-			"Codemark Location": "Related List"
-		});
-
-		this.props.setCurrentCodemark(codemark.id);
 	};
 
 	async toggleCodeHighlightInTextEditor(highlight: boolean, forceRemoval = false) {
@@ -803,7 +766,7 @@ export class Codemark extends React.Component<Props, State> {
 
 	renderDetailIcons = codemark => {
 		const { hover } = this.state;
-		const { selected, relatedCodemarks } = this.props;
+		const { selected, relatedCodemarkIds } = this.props;
 
 		const hasDescription = codemark.title && codemark.text;
 		const hasReplies = codemark.numReplies > 0;
@@ -838,7 +801,7 @@ export class Codemark extends React.Component<Props, State> {
 		const renderedAssignees = this.renderAssignees(codemark);
 
 		if (
-			relatedCodemarks.length ||
+			relatedCodemarkIds.length ||
 			renderedTags ||
 			externalLink ||
 			hasDescription ||
@@ -859,14 +822,14 @@ export class Codemark extends React.Component<Props, State> {
 							/>
 						</span>
 					)}
-					{relatedCodemarks.length > 0 && (
+					{relatedCodemarkIds.length > 0 && (
 						<span className="detail-icon">
 							<Icon
 								title={hover && !selected ? "Show related codemarks" : undefined}
 								placement="bottom"
 								name="codestream"
 							/>{" "}
-							{relatedCodemarks.length}
+							{relatedCodemarkIds.length}
 						</span>
 					)}
 					{hasReplies && (
@@ -1169,13 +1132,7 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 
 	const pinnedAuthors = pinnedReplies.map(post => users[post.creatorId]);
 
-	const relatedCodemarks = (
-		codemark.relatedCodemarkIds ||
-		/* ["5ca4247023873e3eba2596f6"] || */
-		EMPTY_ARRAY
-	)
-		.map(id => getCodemark(codemarks, id))
-		.filter(Boolean);
+	const relatedCodemarkIds = codemark.relatedCodemarkIds || EMPTY_ARRAY;
 
 	const teamTagsHash = getTeamTagsHash(state);
 
@@ -1184,7 +1141,7 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		editorHasFocus: context.hasFocus,
 		pinnedReplies,
 		pinnedAuthors,
-		relatedCodemarks,
+		relatedCodemarkIds,
 		currentUser: users[session.userId!] as CSMe,
 		author: getUserByCsId(users, props.codemark.creatorId) || (unkownAuthor as CSUser),
 		codemarkKeybindings: preferences.codemarkKeybindings || EMPTY_OBJECT,
