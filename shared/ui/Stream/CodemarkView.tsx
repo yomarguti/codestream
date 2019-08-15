@@ -73,7 +73,7 @@ export function CodemarkView() {
 		if (markerId) {
 			moveCursorToLine(markerId);
 		}
-	}, [codemark]);
+	}, [codemark && codemark.id]);
 
 	const handleClickCancel = React.useCallback(event => {
 		event.preventDefault();

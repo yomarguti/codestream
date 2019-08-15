@@ -1,6 +1,7 @@
 import cx from "classnames";
 import React from "react";
 import { connect } from "react-redux";
+import { Range } from "vscode-languageserver-protocol";
 import { fetchThread, setCodemarkStatus, setUserPreference } from "./actions";
 import Headshot from "./Headshot";
 import Tag from "./Tag";
@@ -101,6 +102,7 @@ export class Codemark extends React.Component<Props, State> {
 	private _pollingTimer?: any;
 	private _fileUri?: string;
 	private _isHighlightedInTextEditor = false;
+	private _range?: Range;
 
 	constructor(props: Props) {
 		super(props);
@@ -130,6 +132,13 @@ export class Codemark extends React.Component<Props, State> {
 			this.toggleCodeHighlightInTextEditor(false, true);
 		} else if (this.props.selected && this._pollingTimer === undefined) {
 			this.startPollingReplies(true);
+			this.toggleCodeHighlightInTextEditor(true);
+		}
+
+		// if selected codemark changes, then clean up highlight in file and highlight for new codemark
+		if (prevProps.codemark.id !== this.props.codemark.id && this.props.selected) {
+			this.toggleCodeHighlightInTextEditor(false, true);
+			this._fileUri = this._range = undefined;
 			this.toggleCodeHighlightInTextEditor(true);
 		}
 	}
@@ -501,13 +510,11 @@ export class Codemark extends React.Component<Props, State> {
 		// require explicitly forcing de-highlighting while selected
 		if (this.props.selected && this._isHighlightedInTextEditor && !forceRemoval) return;
 
-		const marker =
-			this.props.marker || (this.props.codemark.markers && this.props.codemark.markers[0]);
+		if (!this._range || !this._fileUri) {
+			const marker =
+				this.props.marker || (this.props.codemark.markers && this.props.codemark.markers[0]);
+			if (marker == undefined) return;
 
-		if (marker == undefined) return;
-
-		let range = marker.range;
-		if (!range || !this._fileUri) {
 			const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
 				markerId: marker.id
 			});
@@ -515,13 +522,13 @@ export class Codemark extends React.Component<Props, State> {
 			if (response == undefined) return;
 
 			this._fileUri = response.textDocument.uri;
-			range = response.range;
+			this._range = response.range;
 		}
 
 		this._isHighlightedInTextEditor = highlight;
 		HostApi.instance.send(EditorHighlightRangeRequestType, {
 			uri: this._fileUri,
-			range: range,
+			range: this._range,
 			highlight: highlight
 		});
 	}
