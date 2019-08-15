@@ -585,6 +585,14 @@
 }
 .external-link {
 	color: @text-color;
+	overflow: hidden;
+	white-space: nowrap;
+	display: block;
+
+	.external-url {
+		text-overflow: ellipsis;
+	}
+
 	&:hover {
 		color: @text-color-info;
 		text-decoration: none !important;
