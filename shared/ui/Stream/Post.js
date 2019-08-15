@@ -17,6 +17,7 @@ import { getById } from "../store/repos/reducer";
 import { getPost } from "../store/posts/reducer";
 import { getUserByCsId } from "../store/users/reducer";
 import { getCodemark } from "../store/codemarks/reducer";
+import { pinReply, unpinReply } from "../store/codemarks/actions";
 import { markdownify, emojify } from "./Markdowner";
 import { reactToPost, setCodemarkStatus } from "./actions";
 import { escapeHtml, safe, replaceHtml } from "../utils";
@@ -850,12 +851,19 @@ class Post extends React.Component {
 	};
 
 	handleSelectMenu = action => {
-		this.props.action(action, {
-			...this.props.post,
-			author: this.props.author,
-			codemark: this.props.codemark,
-			parentPostCodemark: this.props.parentPostCodemark
-		});
+		if (action === "pin-reply") {
+			this.props.pinReply(this.props.parentPostCodemark, this.props.post.id);
+		} else if (action === "unpin-reply") {
+			this.props.unpinReply(this.props.parentPostCodemark, this.props.post.id);
+		} else {
+			this.props.action(action, {
+				...this.props.post,
+				author: this.props.author,
+				codemark: this.props.codemark,
+				parentPostCodemark: this.props.parentPostCodemark
+			});
+		}
+
 		this.setState({ menuOpen: false, authorMenuOpen: false });
 	};
 }
@@ -930,5 +938,5 @@ const mapStateToProps = (state, props) => {
 
 export default connect(
 	mapStateToProps,
-	{ cancelPost, retryPost, editPost, reactToPost, setCodemarkStatus }
+	{ cancelPost, retryPost, editPost, reactToPost, setCodemarkStatus, pinReply, unpinReply }
 )(injectIntl(Post));

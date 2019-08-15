@@ -15,8 +15,6 @@ import KnowledgePanel from "./KnowledgePanel";
 import InlineCodemarks from "./InlineCodemarks";
 import CreateDMPanel from "./CreateDMPanel";
 import ChannelMenu from "./ChannelMenu";
-import Codemark from "./Codemark";
-import ContainerAtEditorLine from "./SpatialView/ContainerAtEditorLine";
 import Icon from "./Icon";
 import Menu from "./Menu";
 import CancelButton from "./CancelButton";
@@ -1229,17 +1227,6 @@ export class SimpleStream extends Component {
 		this.props.markPostUnread(this.props.postStreamId, postId);
 	};
 
-	pinReply = (post, value) => {
-		const { parentPostCodemark } = post;
-		if (parentPostCodemark) {
-			HostApi.instance.send(PinReplyToCodemarkRequestType, {
-				codemarkId: parentPostCodemark.id,
-				postId: post.id,
-				value: value
-			});
-		}
-	};
-
 	togglePinned = post => {
 		if (!post) return;
 		const codemark = post.codemark;
@@ -1306,10 +1293,6 @@ export class SimpleStream extends Component {
 				return this.quotePost(post);
 			case "add-reaction":
 				return this.notImplementedYet();
-			case "pin-reply":
-				return this.pinReply(post, true);
-			case "unpin-reply":
-				return this.pinReply(post, false);
 			case "toggle-pinned":
 				return this.togglePinned(post);
 			case "direct-message":

@@ -2,7 +2,12 @@ import { CSCodemark } from "@codestream/protocols/api";
 import { action } from "../common";
 import { CodemarksActionsTypes } from "./types";
 import { HostApi } from "@codestream/webview/webview-api";
-import { UpdateCodemarkRequestType, DeleteCodemarkRequestType } from "@codestream/protocols/agent";
+import {
+	UpdateCodemarkRequestType,
+	DeleteCodemarkRequestType,
+	PinReplyToCodemarkRequestType,
+	CodemarkPlus
+} from "@codestream/protocols/agent";
 import { logError } from "@codestream/webview/logger";
 
 export const reset = () => action("RESET");
@@ -47,4 +52,24 @@ export const editCodemark = (
 	} catch (error) {
 		logError(`failed to update codemark: ${error}`, { codemarkId });
 	}
+};
+
+export const pinReply = (codemark: CodemarkPlus, postId: string) => () => {
+	if (codemark.pinnedReplies && codemark.pinnedReplies.includes(postId)) return;
+
+	HostApi.instance.send(PinReplyToCodemarkRequestType, {
+		codemarkId: codemark.id,
+		postId,
+		value: true
+	});
+};
+
+export const unpinReply = (codemark: CodemarkPlus, postId: string) => () => {
+	if (!codemark.pinnedReplies || !codemark.pinnedReplies.includes(postId)) return;
+
+	HostApi.instance.send(PinReplyToCodemarkRequestType, {
+		codemarkId: codemark.id,
+		postId,
+		value: false
+	});
 };
