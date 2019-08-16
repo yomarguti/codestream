@@ -10,7 +10,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 	public class LanguageClientActivatorDummy { }
 	public static class LanguageClientActivator {
 		private static readonly ILogger Log = LogManager.ForContext<LanguageClientActivatorDummy>();
-		public static async Task<bool?> InitializeAsync(DTE dte) {
+		public static async Task<bool?> ActivateAsync(DTE dte) {
 			if (dte == null) return false;
 			string path = null;
 			try {
@@ -20,11 +20,11 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 				var window = dte.OpenFile(EnvDTE.Constants.vsViewKindCode, path);
 				window.Visible = true;
 				window.Close(vsSaveChanges.vsSaveChangesNo);
-				Log.Debug($"{nameof(InitializeAsync)} success for {path}");
+				Log.Debug($"{nameof(ActivateAsync)} success for {path}");
 				return true;
 			}
 			catch (Exception ex) {
-				Log.Error(ex, $"{nameof(InitializeAsync)} failed for {path}");
+				Log.Error(ex, $"{nameof(ActivateAsync)} failed for {path}");
 				return false;
 			}
 		}

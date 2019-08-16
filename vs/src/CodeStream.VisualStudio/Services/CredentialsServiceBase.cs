@@ -90,6 +90,22 @@ namespace CodeStream.VisualStudio.Services {
 			return Task.FromResult(false);
 		}
 
+		protected bool Save(string userName, string secret, params string[] keys) {
+			if (keys == null) throw new ArgumentNullException(nameof(keys));
+
+			Log.Verbose(nameof(SaveAsync));
+
+			try {
+				Credential.Save(GetKey(FormatKey(keys)), userName, secret);
+				return true;
+			}
+			catch (Exception ex) {
+				Log.Warning(ex, "Could not save token");
+			}
+
+			return false;
+		}
+
 		protected Task<bool> DeleteAsync(params string[] keys) {
 			if (keys == null) throw new ArgumentNullException(nameof(keys));
 

@@ -1,5 +1,4 @@
-﻿using CodeStream.VisualStudio.Core;
-using CodeStream.VisualStudio.Core.Events;
+﻿using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
@@ -23,7 +22,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 		private readonly ISessionService _sessionService;
 		private readonly IDisposable _languageServerDisconnectedEvent;
 
-		private IDisposable _languageServerReadyEvent;		
+		private IDisposable _languageServerReadyEvent;
 		private bool _disposed = false;
 		private bool _isInitialized;
 		private static readonly object InitializeLock = new object();
@@ -33,45 +32,38 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 		/// </summary>
 		public WebViewControl() {
 			try {
-				this.IsVisibleChanged += WebViewControl_IsVisibleChanged;
+				using (Log.CriticalOperation($"ctor", Serilog.Events.LogEventLevel.Debug)) {
 
-				InitializeComponent();
+					this.IsVisibleChanged += WebViewControl_IsVisibleChanged;
 
-				Log.Verbose($"{nameof(OnInitialized)}...");
-				_componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
-				Assumes.Present(_componentModel);
+					InitializeComponent();
 
-				_eventAggregator = _componentModel.GetService<IEventAggregator>();
-				_sessionService = _componentModel.GetService<ISessionService>();
-				_browserService = _componentModel.GetService<IBrowserService>();
+					Log.Verbose($"{nameof(OnInitialized)}...");
+					_componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
+					Assumes.Present(_componentModel);
 
-				_browserService.Initialize();
-				_browserService.AttachControl(Grid);
-				_browserService.LoadSplashView();
+					_eventAggregator = _componentModel.GetService<IEventAggregator>();
+					_sessionService = _componentModel.GetService<ISessionService>();
+					_browserService = _componentModel.GetService<IBrowserService>();
 
-				if (_sessionService == null) {
-					Log.Error("SessionService is null");
-				}
-				else {
+					_browserService.Initialize();
+					_browserService.AttachControl(Grid);
+					_browserService.LoadSplashView();
+
 					_languageServerDisconnectedEvent = _eventAggregator?.GetEvent<LanguageServerDisconnectedEvent>()
 						.Subscribe(_ => {
-							_isInitialized = false;
-
 							_browserService.LoadSplashView();
-
-							SetupInitialization();
 						});
 
 					SetupInitialization();
 				}
-				Log.Debug($"{nameof(OnInitialized)}");
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex.UnwrapCompositionException(), nameof(WebViewControl));
 			}
 		}
 
-		private void WebViewControl_IsVisibleChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e) {			
+		private void WebViewControl_IsVisibleChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e) {
 			var newValue = e.NewValue.AsBool();
 			_sessionService.IsWebViewVisible = newValue;
 
@@ -117,6 +109,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 					.ObserveOnApplicationDispatcher()
 					.Subscribe(_ => {
 						InitializeCore();
+						_browserService.LoadWebView();
 					});
 			}
 		}
@@ -129,7 +122,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 						try {
 
 							var router = new WebViewRouter(
-								_componentModel.GetService<ICredentialsService>(),
+								_componentModel.GetService<IWebviewUserSettingsService>(),
 								_componentModel.GetService<ISessionService>(),
 								_componentModel.GetService<ICodeStreamAgentService>(),
 								_componentModel.GetService<ISettingsServiceFactory>(),
@@ -141,8 +134,6 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 
 							_browserService.AddWindowMessageEvent(
 								async delegate (object sender, WindowEventArgs ea) { await router.HandleAsync(ea); });
-
-							_browserService.LoadWebView();
 
 							_isInitialized = true;
 						}
@@ -166,7 +157,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 
 			if (disposing) {
 				_languageServerReadyEvent?.Dispose();
-				_languageServerDisconnectedEvent?.Dispose();				
+				_languageServerDisconnectedEvent?.Dispose();
 				IsVisibleChanged -= WebViewControl_IsVisibleChanged;
 			}
 

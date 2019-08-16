@@ -1,6 +1,15 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Services;
+﻿using CodeStream.VisualStudio.Commands;
+using CodeStream.VisualStudio.Core.Events;
+using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Packages;
+using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.Core.Vssdk.Commands;
+using CodeStream.VisualStudio.UI.Settings;
+using Microsoft;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Serilog;
@@ -9,16 +18,6 @@ using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
-using CodeStream.VisualStudio.Commands;
-using CodeStream.VisualStudio.Core.Events;
-using CodeStream.VisualStudio.Core.Extensions;
-using CodeStream.VisualStudio.Core.Models;
-using CodeStream.VisualStudio.Core.Packages;
-using CodeStream.VisualStudio.Core.Services;
-using CodeStream.VisualStudio.Core.Vssdk.Commands;
-using CodeStream.VisualStudio.UI.Settings;
-using Microsoft;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Packages {
@@ -29,7 +28,6 @@ namespace CodeStream.VisualStudio.Packages {
 	/// </summary>
 	[ProvideService(typeof(SOptionsDialogPageAccessor))]
 	[ProvideService(typeof(SToolWindowProvider))]
-	[ProvideService(typeof(SUserSettingsService))]
 	[ProvideMenuResource("Menus.ctmenu", 1)]
 	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 	[Guid(PackageGuids.guidCodeStreamPackageString)]
@@ -45,7 +43,7 @@ namespace CodeStream.VisualStudio.Packages {
 		private List<VsCommandBase> _commands;
 
 		protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
-			try {				
+			try {
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
 				AsyncPackageHelper.InitializePackage(GetType().Name);
@@ -55,7 +53,6 @@ namespace CodeStream.VisualStudio.Packages {
 
 				((IServiceContainer)this).AddService(typeof(SOptionsDialogPageAccessor), CreateService, true);
 				((IServiceContainer)this).AddService(typeof(SToolWindowProvider), CreateService, true);
-				((IServiceContainer)this).AddService(typeof(SUserSettingsService), CreateService, true);
 
 				await base.InitializeAsync(cancellationToken, progress);
 
@@ -111,18 +108,22 @@ namespace CodeStream.VisualStudio.Packages {
 				var eventAggregator = _componentModel.GetService<IEventAggregator>();
 				_disposables = new List<IDisposable> {
 					//when a user has logged in/out we alter the text of some of the commands
-					eventAggregator?.GetEvent<SessionReadyEvent>().Subscribe(_ => {
-						ThreadHelper.JoinableTaskFactory.Run(async delegate {
-							await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+					eventAggregator?.GetEvent<SessionReadyEvent>()
+					.ObserveOnApplicationDispatcher()
+					.Subscribe(_ => {
 							userCommand.Update();
-						});
 					}),
-					eventAggregator?.GetEvent<SessionLogoutEvent>().Subscribe(_ => {
-						ThreadHelper.JoinableTaskFactory.Run(async delegate {
-							await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+					eventAggregator?.GetEvent<SessionLogoutEvent>()
+					.ObserveOnApplicationDispatcher()
+					.Subscribe(_ => {
 							userCommand.Update();
-						});
 					}),
+					eventAggregator?.GetEvent<LanguageServerDisconnectedEvent>()
+					.ObserveOnApplicationDispatcher()
+					.Subscribe(_ => {
+							userCommand.Update();
+					}),
+
 					//eventAggregator?.GetEvent<SessionDidStartSignInEvent>().Subscribe(_ => {
 					//	ThreadHelper.JoinableTaskFactory.Run(async delegate {
 					//		await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
@@ -153,8 +154,6 @@ namespace CodeStream.VisualStudio.Packages {
 				return new OptionsDialogPageAccessor(OptionsDialogPage);
 			if (typeof(SToolWindowProvider) == serviceType)
 				return this;
-			if (typeof(SUserSettingsService) == serviceType)
-				return new UserSettingsService(this);
 
 			return null;
 		}
@@ -239,8 +238,8 @@ namespace CodeStream.VisualStudio.Packages {
 #pragma warning disable VSTHRD108
 					ThreadHelper.ThrowIfNotOnUIThread();
 #pragma warning restore VSTHRD108
-					 
-					_disposables.DisposeAll(); 
+
+					_disposables.DisposeAll();
 				}
 				catch (Exception ex) {
 					Log.Error(ex, nameof(Dispose));

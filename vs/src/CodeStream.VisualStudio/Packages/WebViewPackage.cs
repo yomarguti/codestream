@@ -1,7 +1,14 @@
 ﻿using CodeStream.VisualStudio.Controllers;
+using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Events;
+using CodeStream.VisualStudio.Core.LanguageServer;
 using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.Services;
+using CodeStream.VisualStudio.UI.Settings;
 using CodeStream.VisualStudio.UI.ToolWindows;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Serilog;
@@ -11,15 +18,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using CodeStream.VisualStudio.Core;
-using CodeStream.VisualStudio.Core.Events;
-using CodeStream.VisualStudio.Core.Services;
-using Microsoft.VisualStudio.ComponentModelHost;
-using SolutionEvents = Microsoft.VisualStudio.Shell.Events.SolutionEvents;
 using Task = System.Threading.Tasks.Task;
-using CodeStream.VisualStudio.Core.LanguageServer;
-using CodeStream.VisualStudio.Core.Vssdk;
-using CodeStream.VisualStudio.UI.Settings;
 
 namespace CodeStream.VisualStudio.Packages {
 	[Guid(Guids.CodeStreamWebViewPackageId)]
@@ -38,13 +37,9 @@ namespace CodeStream.VisualStudio.Packages {
 		private static readonly ILogger Log = LogManager.ForContext<WebViewPackage>();
 
 		private ISettingsManager _settingsManager;
-		private IDisposable _languageServerReadyEvent;
-		private VsShellEventManager _vsShellEventManager;
-		private CodeStreamEventManager _codeStreamEventManager;
 		private IComponentModel _componentModel;
-		private bool _hasOpenedSolutionOnce = false;
-		private readonly object _eventLocker = new object();
-		private bool _initializedEvents;
+		private ISolutionEventsListener _solutionEventListener;
+		private IThemeEventsListener _themeEventsService;
 
 		//public WebViewPackage() {
 		//	OptionsDialogPage = GetDialogPage(typeof(OptionsDialogPage)) as OptionsDialogPage;
@@ -78,17 +73,19 @@ namespace CodeStream.VisualStudio.Packages {
 					_settingsManager.DialogPage.PropertyChanged += DialogPage_PropertyChanged;
 				}
 
-				var isSolutionLoaded = await IsSolutionLoadedAsync();
-				if (isSolutionLoaded) {
-					OnAfterBackgroundSolutionLoadComplete();
-				}
+				_solutionEventListener = _componentModel.GetService<ISolutionEventsListener>();
+				_solutionEventListener.Opened += SolutionOrFolder_Opened;
+				_solutionEventListener.Closed += SolutionOrFolder_Closed;
 
-				SolutionEvents.OnAfterBackgroundSolutionLoadComplete += OnAfterBackgroundSolutionLoadComplete;
+				_themeEventsService = _componentModel.GetService<IThemeEventsListener>();
+				_themeEventsService.ThemeChangedEventHandler += Theme_Changed;
 
 				InitializeLogging();
 				AsyncPackageHelper.InitializePackage(GetType().Name);
 
 				await base.InitializeAsync(cancellationToken, progress);
+
+				//await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, TryTriggerLspActivationAsync);
 				Log.Debug($"{nameof(InitializeAsync)} completed");
 			}
 			catch (Exception ex) {
@@ -115,6 +112,60 @@ namespace CodeStream.VisualStudio.Packages {
 			}
 		}
 
+		private void Theme_Changed(object sender, Microsoft.VisualStudio.PlatformUI.ThemeChangedEventArgs e) {
+			try {
+				Log.Information(nameof(Theme_Changed));
+				var browserService = _componentModel?.GetService<IBrowserService>();
+				if (browserService == null) {
+					Log.IsNull(nameof(browserService));
+					return;
+				}
+
+				browserService?.ReloadWebView();
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(Theme_Changed));
+			}
+		}
+
+		private void SolutionOrFolder_Closed(object sender, HostClosedEventArgs e) {
+			Log.Information($"{nameof(SolutionOrFolder_Closed)}");
+
+			var sessionService = _componentModel?.GetService<ISessionService>();
+			if (sessionService == null) {
+				Log.IsNull(nameof(sessionService));
+				return;
+			}
+
+			sessionService.SolutionName = null;
+		}
+
+		private void SolutionOrFolder_Opened(object sender, HostOpenedEventArgs e) {
+			try {
+				if (Log.IsDebugEnabled()) {
+					Log.Debug($"{nameof(SolutionOrFolder_Opened)} ProjectType={e.ProjectType} FileName={e.FileName}");
+				}
+				else {
+					Log.Information($"{nameof(SolutionOrFolder_Opened)}  ProjectType={e.ProjectType}");
+				}
+
+				var sessionService = _componentModel?.GetService<ISessionService>();
+				if (sessionService == null) {
+					Log.IsNull(nameof(sessionService));
+					return;
+				}
+
+				sessionService.SolutionName = e.FileName;
+
+				ThreadHelper.JoinableTaskFactory.Run(async delegate {
+					await TryTriggerLspActivationAsync();
+				});
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(SolutionOrFolder_Opened));
+			}
+		}
+
 		/// <summary>
 		/// Checks if a solution is open
 		/// </summary>
@@ -126,47 +177,6 @@ namespace CodeStream.VisualStudio.Packages {
 			if (solService == null) return false;
 			ErrorHandler.ThrowOnFailure(solService.GetProperty((int)__VSPROPID.VSPROPID_IsSolutionOpen, out object value));
 			return value is bool isSolOpen && isSolOpen;
-		}
-
-		private void OnAfterBackgroundSolutionLoadComplete(object sender = null, EventArgs e = null) {
-			// there is work that needs to be done only after the first time a solution as opened.
-			// if it's opened once before, run OnSolutionLoadedAlwaysAsync
-			if (_hasOpenedSolutionOnce) {
-				ThreadHelper.JoinableTaskFactory.Run(async delegate {
-					await OnSolutionLoadedAlwaysAsync();
-				});
-			}
-			else {
-				ThreadHelper.JoinableTaskFactory.Run(async delegate {
-					try {
-						await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-						await TryTriggerLspActivationAsync();
-						var sessionService = _componentModel.GetService<ISessionService>();
-
-						if (sessionService?.IsAgentReady == true) {
-							InitializeEvents();
-						}
-						else {
-							var eventAggregator = _componentModel.GetService<IEventAggregator>();
-							// ReSharper disable once PossibleNullReferenceException
-							_languageServerReadyEvent = eventAggregator.GetEvent<LanguageServerReadyEvent>().Subscribe(
-								_ => {
-									ThreadHelper.ThrowIfNotOnUIThread();
-									InitializeEvents();
-								});
-						}
-
-						// Avoid delays when there is ongoing UI activity.
-						// See: https://github.com/github/VisualStudio/issues/1537
-						await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, OnSolutionLoadedInitialAsync);
-						_hasOpenedSolutionOnce = true;
-
-					}
-					catch (Exception ex) {
-						Log.Error(ex, nameof(OnAfterBackgroundSolutionLoadComplete));
-					}
-				});
-			}
 		}
 
 		/// <summary>
@@ -186,33 +196,11 @@ namespace CodeStream.VisualStudio.Packages {
 			}
 			bool? languageClientActivatorResult = null;
 			if (!hasActiveEditor) {
-				languageClientActivatorResult = await LanguageClientActivator.InitializeAsync(dte);
+				languageClientActivatorResult = await LanguageClientActivator.ActivateAsync(dte);
 			}
+
 			Log.Debug($"{nameof(TryTriggerLspActivationAsync)} HasActiveEditor={hasActiveEditor} LanguageClientActivatorResult={languageClientActivatorResult}");
-
 			await System.Threading.Tasks.Task.CompletedTask;
-		}
-
-		private void InitializeEvents() {
-			try {
-				ThreadHelper.ThrowIfNotOnUIThread();
-				// don't invert if -- this is the double 'null' locking check pattern
-				// ReSharper disable InvertIf
-				if (!_initializedEvents) {
-					lock (_eventLocker) {
-						if (!_initializedEvents) {
-							_vsShellEventManager = new VsShellEventManager(GetGlobalService(typeof(SVsShellMonitorSelection)) as IVsMonitorSelection);
-							_codeStreamEventManager = new CodeStreamEventManager(_vsShellEventManager, _componentModel.GetService<IBrowserService>());
-							_initializedEvents = true;
-
-						}
-					}
-				}
-				// ReSharper restore InvertIf
-			}
-			catch (Exception ex) {
-				Log.Error(ex, nameof(InitializeEvents));
-			}
 		}
 
 		private void DialogPage_PropertyChanged(object sender, PropertyChangedEventArgs args) {
@@ -272,31 +260,24 @@ namespace CodeStream.VisualStudio.Packages {
 			}
 		}
 
-		private async Task OnSolutionLoadedInitialAsync() {
-			await OnSolutionLoadedAlwaysAsync();
-			await Task.CompletedTask;
-		}
-
-		private async Task OnSolutionLoadedAlwaysAsync() {
-			// no-op
-			await Task.CompletedTask;
-		}
-
 		protected override void Dispose(bool isDisposing) {
 			if (isDisposing) {
 				try {
 #pragma warning disable VSTHRD108
 					ThreadHelper.ThrowIfNotOnUIThread();
 #pragma warning restore VSTHRD108
-					SolutionEvents.OnAfterBackgroundSolutionLoadComplete -= OnAfterBackgroundSolutionLoadComplete;
 
 					if (_settingsManager != null && _settingsManager.DialogPage != null) {
 						_settingsManager.DialogPage.PropertyChanged -= DialogPage_PropertyChanged;
 					}
 
-					_vsShellEventManager?.Dispose();
-					_languageServerReadyEvent?.Dispose();
-					_codeStreamEventManager?.Dispose();
+					if (_solutionEventListener != null) {
+						_solutionEventListener.Opened -= SolutionOrFolder_Opened;
+						_solutionEventListener.Closed -= SolutionOrFolder_Closed;
+					}
+					if (_themeEventsService != null) {
+						_themeEventsService.ThemeChangedEventHandler -= Theme_Changed;
+					}
 
 					//cheese
 					//can't do this anymore... though at this point the process is exiting so why bother?...

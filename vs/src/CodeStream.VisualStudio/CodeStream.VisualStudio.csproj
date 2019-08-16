@@ -64,7 +64,6 @@
     <StartArguments>/rootsuffix Exp</StartArguments>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CodeStreamEventManager.cs" />
     <Compile Include="CodeStreamPackageVSCT.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -102,9 +101,13 @@
     <Compile Include="Services\LiveShare\CollaborationHostServiceFactory.cs" />
     <Compile Include="Services\Providers\ShellSettingsProvider.cs" />
     <Compile Include="Services\ServiceFactory.cs" />
+    <Compile Include="Services\ServiceProviderExtensions.cs" />
     <Compile Include="Services\SessionService.cs" />
     <Compile Include="Services\SettingsService.cs" />
+    <Compile Include="Services\SolutionEventsListener.cs" />
+    <Compile Include="Services\ThemeEventsService.cs" />
     <Compile Include="Services\UserSettingsService.cs" />
+    <Compile Include="Services\WebviewUserSettingsService.cs" />
     <Compile Include="Services\WpfTextViewCache.cs" />
     <Compile Include="UI\DiffViewCreationListener.cs" />
     <Compile Include="UI\DocumentMarkerManager.cs" />
@@ -139,6 +142,7 @@
     </Compile>
     <Compile Include="UI\ToolWindows\WebViewToolWindowPane.cs" />
     <Compile Include="UI\Wpf\KeyChordGesture.cs" />
+    <Compile Include="WebViewRouter.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="UI\WebViews\index.html" />
@@ -365,6 +369,10 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.14.0.DesignTime, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.VisualStudio.Shell.Interop.14.0.DesignTime.14.3.26929\lib\net20\Microsoft.VisualStudio.Shell.Interop.14.0.DesignTime.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.15.0.DesignTime, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.VisualStudio.Shell.Interop.15.0.DesignTime.15.0.26932\lib\net20\Microsoft.VisualStudio.Shell.Interop.15.0.DesignTime.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">

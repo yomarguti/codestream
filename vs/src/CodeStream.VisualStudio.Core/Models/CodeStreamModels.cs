@@ -311,7 +311,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 	}
 
 	public class InitializationOptions {
-		//public string ServerUrl { get; set; }
+		 public string ServerUrl { get; set; }
 		//public string GitPath { get; set; }
 
 		public Ide Ide { get; set; }

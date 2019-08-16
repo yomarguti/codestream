@@ -24,21 +24,14 @@ using TraceLevel = CodeStream.VisualStudio.Core.Logging.TraceLevel;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace CodeStream.VisualStudio.Services {
-
-	 
-
 	[Export(typeof(ICodeStreamAgentServiceFactory))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class CodeStreamAgentServiceFactory : ServiceFactory<ICodeStreamAgentService>, ICodeStreamAgentServiceFactory {
 		[ImportingConstructor]
 		public CodeStreamAgentServiceFactory([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) :
 			base(serviceProvider) {
-
 		}
 	}
-
-	 
-
 
 	[Export(typeof(ICodeStreamAgentService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
@@ -71,8 +64,11 @@ namespace CodeStream.VisualStudio.Services {
 		bool _disposed;
 
 		public async Task SetRpcAsync(JsonRpc rpc) {
+			await System.Threading.Tasks.Task.Yield();
+
 			_rpc = rpc;
 			_rpc.Disconnected += Rpc_Disconnected;
+			Log.Debug(nameof(SetRpcAsync));
 
 			try {
 				var initializationResult = await InitializeAsync();
@@ -85,7 +81,7 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		private void Rpc_Disconnected(object sender, JsonRpcDisconnectedEventArgs e) {
-			Log.Debug(e.Exception, $"RPC Disconnected: {e.LastMessage} {e.Description}");
+			Log.Debug(e.Exception, $"RPC Disconnected: LastMessage={e.LastMessage} Description={e.Description} Reason={e.Reason} Exception={e.Exception}");
 
 			try {
 				_sessionService.SetAgentDisconnected();
@@ -104,8 +100,15 @@ namespace CodeStream.VisualStudio.Services {
 					return _rpc.InvokeWithParameterObjectAsync<T>(name, arguments, cancellationToken.Value);
 				}
 			}
+			catch (ObjectDisposedException ex) {
+				Log.Fatal(ex, "SendName={Name}", name);
+#if DEBUG
+				Log.Verbose($"Arguments={(arguments != null ? arguments.ToJson(true) : null)}");
+#endif
+				throw;
+			}
 			catch (Exception ex) {
-				Log.Error(ex, "SendName={Name}", name);
+				Log.Fatal(ex, "SendName={Name}", name);
 				throw;
 			}
 		}
@@ -274,110 +277,112 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public async Task<JToken> GetBootstrapAsync(Settings settings, JToken state = null, bool isAuthenticated = false) {
-			var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
-			var ideService = componentModel?.GetService<IIdeService>();
-			var _settingsManager = _settingsServiceFactory.Create();
-			var vslsEnabled = ideService?.QueryExtension(ExtensionKind.LiveShare) == true;
+			using (Log.CriticalOperation(nameof(GetBootstrapAsync), Serilog.Events.LogEventLevel.Debug)) {
+				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
+				var ideService = componentModel?.GetService<IIdeService>();
+				var _settingsManager = _settingsServiceFactory.Create();
+				var vslsEnabled = ideService?.QueryExtension(ExtensionKind.LiveShare) == true;
 
-			// NOTE: this camelCaseSerializer is important because FromObject doesn't
-			// serialize using the global camelCase resolver
+				// NOTE: this camelCaseSerializer is important because FromObject doesn't
+				// serialize using the global camelCase resolver
 
-			var capabilities = state?["capabilities"] != null ? state["capabilities"].ToObject<JObject>() : JObject.FromObject(new { });
-			capabilities.Merge(new Capabilities {
-				CodemarkApply = true,
-				CodemarkCompare = true,
-				EditorTrackVisibleRange = true,
-				Services = new Core.Models.Services {
-					Vsls = vslsEnabled
+				var capabilities = state?["capabilities"] != null ? state["capabilities"].ToObject<JObject>() : JObject.FromObject(new { });
+				capabilities.Merge(new Capabilities {
+					CodemarkApply = true,
+					CodemarkCompare = true,
+					EditorTrackVisibleRange = true,
+					Services = new Core.Models.Services {
+						Vsls = vslsEnabled
+					}
+				}.ToJToken(), new JsonMergeSettings {
+					MergeArrayHandling = MergeArrayHandling.Union
+				});
+
+				// TODO: Need to separate the agent caps from the IDE ones, so that we don't need to keep the model up to date (i.e. support agent passthrough)
+				var capabilitiesObject = capabilities.ToObject<Capabilities>();
+
+				if (!isAuthenticated) {
+					var bootstrapAnonymous = new BootstrapPartialResponseAnonymous {
+						Capabilities = capabilitiesObject,
+						Configs = new Configs {
+							Email = _settingsManager.Email,
+							Team = _settingsManager.Team,
+							ShowAvatars = _settingsManager.ShowAvatars,
+							ServerUrl = _settingsManager.ServerUrl,
+							TraceLevel = _settingsManager.GetAgentTraceLevel()
+						},
+						Env = _settingsManager.GetEnvironmentName(),
+						Version = _settingsManager.GetEnvironmentVersionFormatted(),
+						Context = new WebviewContext {
+							HasFocus = true
+						},
+						Session = new UserSession() { },
+						Ide = new Ide() {
+							Name = Application.IdeMoniker
+						}
+					}.ToJToken();
+#if DEBUG
+					Log.Debug(bootstrapAnonymous?.ToString());
+#endif
+					return bootstrapAnonymous;
 				}
-			}.ToJToken(), new JsonMergeSettings {
-				MergeArrayHandling = MergeArrayHandling.Union
-			});
 
-			// TODO: Need to separate the agent caps from the IDE ones, so that we don't need to keep the model up to date (i.e. support agent passthrough)
-			var capabilitiesObject = capabilities.ToObject<Capabilities>();
+				if (state == null) throw new ArgumentNullException(nameof(state));
+				var bootstrapAuthenticated = await _rpc.InvokeWithParameterObjectAsync<JToken>(BootstrapRequestType.MethodName)
+					.ConfigureAwait(false) as JObject;
 
-			if (!isAuthenticated) {
-				var bootstrapAnonymous = new BootstrapPartialResponseAnonymous {
+				var editorService = componentModel?.GetService<IEditorService>();
+				var editorContext = editorService?.GetEditorContext();
+
+				WebviewContext webviewContext;
+				var teamId = state["teamId"].ToString();
+				var webViewUserSettingsService = componentModel.GetService<IWebviewUserSettingsService>();
+				var userSettings = webViewUserSettingsService?.TryGetWebviewContext(_sessionService.SolutionName, teamId);
+				if (userSettings != null) {
+					webviewContext = userSettings;
+				}
+				else {
+					webviewContext = new WebviewContext {
+						HasFocus = true
+					};
+				}
+
+				webviewContext.CurrentTeamId = teamId;
+				if (!webviewContext.PanelStack.AnySafe()) {
+					webviewContext.PanelStack = new List<string> { WebviewPanels.CodemarksForFile };
+				}
+				var bootstrapResponse = new BootstrapAuthenticatedResponse {
 					Capabilities = capabilitiesObject,
 					Configs = new Configs {
-						Email = _settingsManager.Email,
-						Team = _settingsManager.Team,
-						ShowAvatars = _settingsManager.ShowAvatars,
-						ServerUrl = _settingsManager.ServerUrl,
+						Email = (string)state["email"],
+						Team = settings.Options.Team,
+						ShowAvatars = settings.Options.ShowAvatars,
+						ServerUrl = settings.Options.ServerUrl,
 						TraceLevel = _settingsManager.GetAgentTraceLevel()
 					},
-					Env = _settingsManager.GetEnvironmentName(),
-					Version = _settingsManager.GetEnvironmentVersionFormatted(),
-					Context = new WebviewContext {
-						HasFocus = true
+					Context = webviewContext,
+					EditorContext = editorContext,
+					Session = new UserSession {
+						UserId = state["userId"].ToString()
 					},
-					Session = new UserSession() { },
+					Env = settings.Env,
+					Version = settings.Version,
 					Ide = new Ide() {
 						Name = Application.IdeMoniker
 					}
-				}.ToJToken();
-#if DEBUG
-				Log.Debug(bootstrapAnonymous?.ToString());
-#endif
-				return bootstrapAnonymous;
-			}
-
-			if (state == null) throw new ArgumentNullException(nameof(state));
-			var bootstrapAuthenticated = await _rpc.InvokeWithParameterObjectAsync<JToken>(BootstrapRequestType.MethodName)
-				.ConfigureAwait(false) as JObject;
-
-			var editorService = componentModel?.GetService<IEditorService>();
-			var editorContext = editorService?.GetEditorContext();
-
-			WebviewContext webviewContext;
-			var teamId = state["teamId"].ToString();
-			var userSettingsService = ServiceLocator.Get<SUserSettingsService, IUserSettingsService>();
-			var userSettings = await userSettingsService?.TryGetWebviewContextAsync(teamId);
-			if (userSettings != null) {
-				webviewContext = userSettings;
-			}
-			else {
-				webviewContext = new WebviewContext {
-					HasFocus = true
 				};
-			}
 
-			webviewContext.CurrentTeamId = teamId;
-			if (!webviewContext.PanelStack.AnySafe()) {
-				webviewContext.PanelStack = new List<string> { WebviewPanels.CodemarksForFile };
-			}
-			var bootstrapResponse = new BootstrapAuthenticatedResponse {
-				Capabilities = capabilitiesObject,
-				Configs = new Configs {
-					Email = (string)state["email"],
-					Team = settings.Options.Team,
-					ShowAvatars = settings.Options.ShowAvatars,
-					ServerUrl = settings.Options.ServerUrl,
-					TraceLevel = _settingsManager.GetAgentTraceLevel()
-				},
-				Context = webviewContext,
-				EditorContext = editorContext,
-				Session = new UserSession {
-					UserId = state["userId"].ToString()					
-				},
-				Env = settings.Env,
-				Version = settings.Version,
-				Ide = new Ide() {
-					Name = Application.IdeMoniker
-				}
-			};
-
-			var bootstrapResponseJson = bootstrapResponse.ToJToken();
-			bootstrapAuthenticated?.Merge(bootstrapResponseJson);
+				var bootstrapResponseJson = bootstrapResponse.ToJToken();
+				bootstrapAuthenticated?.Merge(bootstrapResponseJson);
 #if DEBUG
-			// only log the non-user bootstrap data -- it's too verbose
-			if (bootstrapAuthenticated == null) {
-				System.Diagnostics.Debugger.Break();
-			}
-			Log.Debug(bootstrapResponseJson?.ToString());
+				// only log the non-user bootstrap data -- it's too verbose
+				if (bootstrapAuthenticated == null) {
+					System.Diagnostics.Debugger.Break();
+				}
+				Log.Debug(bootstrapResponseJson?.ToString());
 #endif
-			return bootstrapAuthenticated;
+				return bootstrapAuthenticated;
+			}
 		}
 
 		public void Dispose() {

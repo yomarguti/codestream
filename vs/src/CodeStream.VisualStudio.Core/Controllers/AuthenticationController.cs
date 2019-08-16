@@ -1,14 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using CodeStream.VisualStudio.Core.Events;
+﻿using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
+using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio.Core.Controllers {
 	public class AuthenticationController {
@@ -19,29 +21,34 @@ namespace CodeStream.VisualStudio.Core.Controllers {
 		private readonly ICodeStreamAgentService _codeStreamAgent;
 		private readonly IEventAggregator _eventAggregator;
 		private readonly ICredentialsService _credentialsService;
+		private readonly IWebviewUserSettingsService _webviewUserSettingsService;
 
 		public AuthenticationController(
 			ISettingsManager settingManager,
 			ISessionService sessionService,
 			ICodeStreamAgentService codeStreamAgent,
 			IEventAggregator eventAggregator,
-			ICredentialsService credentialsService) {
+			ICredentialsService credentialsService,
+			IWebviewUserSettingsService webviewUserSettingsService) {
 			_settingsManager = settingManager;
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
 			_eventAggregator = eventAggregator;
 			_credentialsService = credentialsService;
+			_webviewUserSettingsService = webviewUserSettingsService;
 		}
 
 		public AuthenticationController(
 			ISettingsManager settingManager,
 			ISessionService sessionService,
 			IEventAggregator eventAggregator,
-			ICredentialsService credentialsService) {
+			ICredentialsService credentialsService,
+			IWebviewUserSettingsService IWebviewUserSettingsService) {
 			_settingsManager = settingManager;
 			_sessionService = sessionService;
 			_eventAggregator = eventAggregator;
 			_credentialsService = credentialsService;
+			_webviewUserSettingsService = IWebviewUserSettingsService;
 		}
 
 		public async Task<bool> TryAutoSignInAsync() {
@@ -52,9 +59,9 @@ namespace CodeStream.VisualStudio.Core.Controllers {
 					var token = await _credentialsService.LoadJsonAsync(_settingsManager.ServerUrl.ToUri(), _settingsManager.Email);
 					if (token != null) {
 						try {
-							var teamId = await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TryGetTeamIdAsync();
+							var teamId = _webviewUserSettingsService?.TryGetTeamId(_sessionService.SolutionName);
 							var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(token, _settingsManager.Team, teamId);
-							processResponse = await ProcessLoginAsync(loginResponse);
+							processResponse = ProcessLoginError(loginResponse);
 
 							if (!processResponse.Success) {
 								if (!processResponse.ErrorMessage.IsNullOrWhiteSpace() &&
@@ -63,8 +70,7 @@ namespace CodeStream.VisualStudio.Core.Controllers {
 								}
 								return false;
 							}
-							else {
-								await OnSuccessAsync(loginResponse, processResponse.Email);
+							else {								
 								return true;
 							}
 						}
@@ -81,19 +87,18 @@ namespace CodeStream.VisualStudio.Core.Controllers {
 			return false;
 		}
 
-		public async Task<bool> CompleteSigninAsync(JToken loginResponse) {
+		public bool CompleteSigninAsync(JToken loginResponse) {
 			ProcessLoginResponse processResponse = null;
 			try {
-
 				try {
-					processResponse = await ProcessLoginAsync(loginResponse);
+					processResponse = ProcessLogin(loginResponse);
 				}
 				catch (Exception ex) {
 					Log.Error(ex, $"{nameof(CompleteSigninAsync)}");
 				}
 
 				if (processResponse?.Success == true) {
-					await OnSuccessAsync(loginResponse, processResponse.Email);
+					OnSuccessAsync(loginResponse, processResponse.Email);
 				}
 			}
 			catch (Exception ex) {
@@ -103,27 +108,48 @@ namespace CodeStream.VisualStudio.Core.Controllers {
 			return processResponse?.Success == true;
 		}
 
-		private async Task OnSuccessAsync(JToken loginResponse, string email) {
+		private void OnSuccessAsync(JToken loginResponse, string email) {
 			_sessionService.SetState(SessionState.UserSignedIn);
 			_eventAggregator.Publish(new SessionReadyEvent());
 
 			if (!email.IsNullOrWhiteSpace()) {
-				await Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-				using (var scope = SettingsScope.Create(_settingsManager)) {
-					scope.SettingsManager.Email = email;
-				}
-
 				if (_settingsManager.AutoSignIn) {
-					await _credentialsService.SaveJsonAsync(_settingsManager.ServerUrl.ToUri(), email, GetAccessToken(loginResponse));
+					_credentialsService.SaveJson(_settingsManager.ServerUrl.ToUri(), email, GetAccessToken(loginResponse));
 				}
 
-				await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TrySaveTeamIdAsync(GetTeamId(loginResponse));
+				_webviewUserSettingsService.SaveTeamId(_sessionService.SolutionName, GetTeamId(loginResponse));
+				Log.Debug("OnSuccessAsync ThreadHelper.JoinableTaskFactory.Run...");
+
+				ThreadHelper.JoinableTaskFactory.Run(async delegate {
+					Log.Debug("ThreadHelper.JoinableTaskFactory.Run");
+					Log.Debug("About to SwitchToMainThreadAsync...");
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+					Log.Debug("SwitchedToMainThreadAsync");
+
+					using (var scope = SettingsScope.Create(_settingsManager)) {
+						scope.SettingsManager.Email = email;
+					}
+				});
+			}			
+		}	 
+
+		private ProcessLoginResponse ProcessLoginError(JToken loginResponse) {
+			var response = new ProcessLoginResponse();
+			var error = GetError(loginResponse);
+
+			if (error != null) {
+				 
+				response.ErrorMessage = error?.Value<string>();
+			}
+			else if (loginResponse != null) {
+				 
+				response.Success = true;
 			}
 
-			await Task.CompletedTask;
+			return response;
 		}
 
-		private async Task<ProcessLoginResponse> ProcessLoginAsync(JToken loginResponse) {
+		private ProcessLoginResponse ProcessLogin(JToken loginResponse) {
 			var response = new ProcessLoginResponse();
 			var error = GetError(loginResponse);
 

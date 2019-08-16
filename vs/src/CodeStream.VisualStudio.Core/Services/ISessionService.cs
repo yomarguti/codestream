@@ -29,5 +29,9 @@ namespace CodeStream.VisualStudio.Core.Services {
 		string LiveShareUrl { get; set; }
 		string StateString { get; }
 		bool? WebViewDidInitialize { get; set; }
+		/// <summary>
+		/// Name of the current solution (.sln) file OR open folder
+		/// </summary>
+		string SolutionName { get; set; }
 	}
 }

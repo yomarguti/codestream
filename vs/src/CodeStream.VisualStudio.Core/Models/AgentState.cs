@@ -7,6 +7,10 @@ namespace CodeStream.VisualStudio.Core.Models {
 		/// <summary>
 		/// The LanguageServerProcess is ready
 		/// </summary>
-		Ready = 1 << 1
+		Ready = 1 << 1,
+		/// <summary>
+		/// The LanguageServerProcess is disconnected
+		/// </summary>
+		Disconnected = 1 << 2
 	}
 }

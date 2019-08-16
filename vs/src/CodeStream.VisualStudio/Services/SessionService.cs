@@ -6,7 +6,6 @@ using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
 
 namespace CodeStream.VisualStudio.Services {
- 
 
 	[Export(typeof(ISessionService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
@@ -51,8 +50,14 @@ namespace CodeStream.VisualStudio.Services {
 			}
 		}
 
+		private void SetAgentState(AgentState agentState) {
+			lock (locker) {
+				_agentState = agentState;
+			}
+		}
+
 		public void SetAgentDisconnected() {
-			SetState(SessionState.Unknown);
+			SetAgentState(AgentState.Disconnected);
 		}
 
 		public void SetUser(User user, JToken state) {
@@ -72,6 +77,7 @@ namespace CodeStream.VisualStudio.Services {
 		public bool IsReady => _agentState == AgentState.Ready && SessionState == SessionState.UserSignedIn;
 
 		public string LiveShareUrl { get; set; }
+		public string SolutionName { get; set; }
 
 		public void Dispose() {
 			Dispose(true);

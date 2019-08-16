@@ -72,6 +72,8 @@
     <Compile Include="Process\ProcessExtensions.cs" />
     <Compile Include="RegularExpressions.cs" />
     <Compile Include="Retry.cs" />
+    <Compile Include="Services\ISolutionEventsListener.cs" />
+    <Compile Include="Services\IWebviewUserSettingsService.cs" />
     <Compile Include="TelemetryEventNames.cs" />
     <Compile Include="Credentials\Credential.cs" />
     <Compile Include="Credentials\CredentialSet.cs" />
@@ -158,11 +160,8 @@
     <Compile Include="Services\ISessionService.cs" />
     <Compile Include="Services\ISettingsManager.cs" />
     <Compile Include="Services\ISettingsServiceFactory.cs" />
-    <Compile Include="Services\IUserSettingsService.cs" />
-    <Compile Include="Services\IUserSettingsServiceExtensions.cs" />
     <Compile Include="Services\IWpfTextViewCache.cs" />
     <Compile Include="Services\UserSettingsKeys.cs" />
-    <Compile Include="Services\WebviewUserSettingsService.cs" />
     <Compile Include="Services\WindowMessageHandler.cs" />
     <Compile Include="UI\Adornments\ActiveTextEditorExtensions.cs" />
     <Compile Include="UI\Adornments\HighlightAdornmentManager.cs" />
@@ -176,9 +175,6 @@
     <Compile Include="Vssdk\Commands\MenuCommandServiceExtensions.cs" />
     <Compile Include="Vssdk\Commands\VsCommand.cs" />
     <Compile Include="Vssdk\Commands\VsCommandBase.cs" />
-    <Compile Include="Vssdk\Events\WindowFocusChangedEventArgs.cs" />
-    <Compile Include="Vssdk\VsShellEventManager.cs" />
-    <Compile Include="WebViewRouter.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="LanguageServer\FileExtensionExclusions.txt" />

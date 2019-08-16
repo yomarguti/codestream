@@ -7,7 +7,7 @@ function Get-LogColor {
 
     process {        
 		if ($LogEntry.Contains(" EROR ")) {Return "Red"}
-		elseif ($LogEntry.Contains(" FAIL ")) {Return "Red"}
+		elseif ($LogEntry.Contains(" FATL ")) {Return "Red"}
 		elseif ($LogEntry.Contains(" WARN ")) {Return "Magenta"}
         elseif ($LogEntry.Contains(" INFO ")) {Return "White"}    
 		elseif ($LogEntry.Contains("EventAggregator")) { Return "DarkGreen" }

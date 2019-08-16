@@ -54,5 +54,9 @@ namespace CodeStream.VisualStudio.Core.Logging {
 		public static void Ctor(this ILogger logger, string message = null) {
 			logger.Debug($"ctor {message}");
 		}
+
+		public static void IsNull(this ILogger logger, string message) {
+			logger.Warning($"{message} is null");
+		}
 	}
 }

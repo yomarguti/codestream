@@ -1,5 +1,9 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Core.Controllers;
+using CodeStream.VisualStudio.Core.Events;
+using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Packages;
 using CodeStream.VisualStudio.Core.Services;
 using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -10,10 +14,6 @@ using StreamJsonRpc;
 using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using CodeStream.VisualStudio.Core.Controllers;
-using CodeStream.VisualStudio.Core.Events;
-using CodeStream.VisualStudio.Core.Extensions;
-using CodeStream.VisualStudio.Core.Packages;
 
 // ReSharper disable UnusedMember.Global
 
@@ -29,8 +29,11 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		private readonly Subject<DocumentMarkerChangedSubjectArgs> _documentMarkerChangedSubject;
 		private readonly IDisposable _documentMarkerChangedSubscription;
 
-		public CustomMessageHandler(IServiceProvider serviceProvider, IEventAggregator eventAggregator,
-			IBrowserService browserService, ISettingsServiceFactory settingsServiceFactory) {
+		public CustomMessageHandler(
+			IServiceProvider serviceProvider,
+			IEventAggregator eventAggregator,
+			IBrowserService browserService,
+			ISettingsServiceFactory settingsServiceFactory) {
 			_serviceProvider = serviceProvider;
 			_eventAggregator = eventAggregator;
 			_browserService = browserService;
@@ -114,107 +117,118 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 
 		[JsonRpcMethod(DidChangeVersionCompatibilityNotificationType.MethodName)]
 		public void OnDidChangeVersionCompatibility(JToken e) {
-			Log.Information($"{nameof(OnDidChangeVersionCompatibility)} {e}");
-
-			ThreadHelper.JoinableTaskFactory.Run(async delegate {
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				try {
-					var toolWindowProvider = _serviceProvider.GetService(typeof(SToolWindowProvider)) as IToolWindowProvider;
-					Assumes.Present(toolWindowProvider);
-					if (!toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) {
-						toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
+			using (Log.CriticalOperation($"{nameof(OnDidChangeVersionCompatibility)} Method={DidChangeVersionCompatibilityNotificationType.MethodName}", Serilog.Events.LogEventLevel.Information)) {
+				ThreadHelper.JoinableTaskFactory.Run(async delegate {
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+					try {
+						var toolWindowProvider = _serviceProvider.GetService(typeof(SToolWindowProvider)) as IToolWindowProvider;
+						Assumes.Present(toolWindowProvider);
+						if (!toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) {
+							toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
+						}
 					}
-				}
-				catch (Exception ex) {
-					Log.Error(ex, nameof(OnDidChangeVersionCompatibility));
-				}
-			});
+					catch (Exception ex) {
+						Log.Error(ex, nameof(OnDidChangeVersionCompatibility));
+					}
+				});
 
-			_browserService.EnqueueNotification(new DidChangeVersionCompatibilityNotificationType(e));
+				_browserService.EnqueueNotification(new DidChangeVersionCompatibilityNotificationType(e));
+			}
 		}
 
 		[JsonRpcMethod(DidLogoutNotificationType.MethodName)]
 		public void OnDidLogout(JToken e) {
-			var @params = e.ToObject<DidLogoutNotification>();
-			Log.Information($"{nameof(OnDidLogout)} {@params.Reason}");
+			try {
+				var @params = e.ToObject<DidLogoutNotification>();
+				using (Log.CriticalOperation($"{nameof(OnDidLogin)} Method={DidLogoutNotificationType.MethodName} Reason={@params?.Reason}", Serilog.Events.LogEventLevel.Information)) {
+					if (@params.Reason == LogoutReason.Token) {
+						ThreadHelper.JoinableTaskFactory.Run(async delegate {
+							try {
+								await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+								var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+								Assumes.Present(componentModel);
 
-			if (@params.Reason == LogoutReason.Token) {
-				ThreadHelper.JoinableTaskFactory.Run(async delegate {
-					try {
-						await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-						var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-						Assumes.Present(componentModel);
-
-						var authenticationServiceFactory = componentModel.GetService<IAuthenticationServiceFactory>();
-						if (authenticationServiceFactory != null) {
-							var authService = authenticationServiceFactory.Create();
-							if (authService == null) {
-								Log.Error(nameof(OnDidLogout) + " " + nameof(authService) + " is null");
-								return;
+								var authenticationServiceFactory = componentModel.GetService<IAuthenticationServiceFactory>();
+								if (authenticationServiceFactory != null) {
+									var authService = authenticationServiceFactory.Create();
+									if (authService == null) {
+										Log.Error(nameof(OnDidLogout) + " " + nameof(authService) + " is null");
+										return;
+									}
+									await authService.LogoutAsync();
+								}
 							}
-							await authService.LogoutAsync();
-						}
+							catch (Exception ex) {
+								Log.Error(ex, nameof(OnDidLogout));
+							}
+						});
 					}
-					catch (Exception ex) {
-						Log.Error(ex, nameof(OnDidLogout));
+					else {
+						// TODO: Handle this
 					}
-				});
+				}
 			}
-			else {
-				// TODO: Handle this
+			catch (Exception ex) {
+				Log.Error(ex, nameof(OnDidLogout));
 			}
 		}
 
 		[JsonRpcMethod(DidLoginNotificationType.MethodName)]
 		public void OnDidLogin(JToken e) {
-			Log.Debug($"{nameof(OnDidLogin)}");
-			if (e == null) {
-				Log.Warning($"{nameof(OnDidLogin)} e is null");
-				return;
-			}
-			try {
-				var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-				Assumes.Present(componentModel);
+			using (Log.CriticalOperation($"{nameof(OnDidLogin)} Method={DidLoginNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug)) {
+				try {
+					if (e == null) {
+						Log.IsNull(nameof(OnDidLogin));
+					}
+					else {
+						var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+						Assumes.Present(componentModel);
 
-				_ = new AuthenticationController(
-					_settingsServiceFactory.Create(),
-					componentModel.GetService<ISessionService>(),
-					_eventAggregator,
-					componentModel.GetService<ICredentialsService>()
-					).CompleteSigninAsync(e["data"]);
-			}
-			catch (Exception ex) {
-				Log.Error(ex, nameof(OnDidLogin));
+						var authenticationController = new AuthenticationController(
+							_settingsServiceFactory.Create(),
+							componentModel.GetService<ISessionService>(),
+							_eventAggregator,
+							componentModel.GetService<ICredentialsService>(),
+							componentModel.GetService<IWebviewUserSettingsService>()
+							);
+
+						authenticationController.CompleteSigninAsync(e["data"]);
+					}
+				}
+				catch (Exception ex) {
+					Log.Error(ex, "Problem with AutoSignIn");
+				}
 			}
 		}
 
-		[JsonRpcMethod(DidStartLoginNotificationType.MethodName)]
-		public void OnDidStartLogin() {
-			Log.Debug($"{nameof(OnDidStartLogin)}");
-			try {
-				var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-				Assumes.Present(componentModel);
+		//[JsonRpcMethod(DidStartLoginNotificationType.MethodName)]
+		//public void OnDidStartLogin() {
+		//	using (Log.CriticalOperation($"{nameof(OnDidStartLogin)} Method={DidStartLoginNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug)) {
+		//		try {
+		//			var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+		//			Assumes.Present(componentModel);
 
-				componentModel.GetService<ISessionService>().SetState(SessionState.UserSigningIn);
+		//			componentModel.GetService<ISessionService>().SetState(SessionState.UserSigningIn);
 
-				_eventAggregator.Publish(new SessionDidStartSignInEvent());
-			}
-			catch (Exception ex) {
-				Log.Error(ex, nameof(OnDidStartLogin));
-			}
-		}
+		//			_eventAggregator.Publish(new SessionDidStartSignInEvent());
+		//		}
+		//		catch (Exception ex) {
+		//			Log.Error(ex, nameof(OnDidStartLogin));
+		//		}
+		//	}
+		//}
 
-		[JsonRpcMethod(DidFailLoginNotificationType.MethodName)]
-		public void OnFailLogin() {
-			try {
-				Log.Debug($"{nameof(OnFailLogin)}");
-				_eventAggregator.Publish(new SessionDidFailSignInEvent());
-			}
-			catch (Exception ex) {
-				Log.Error(ex, nameof(OnFailLogin));
-			}
-		}
+		//[JsonRpcMethod(DidFailLoginNotificationType.MethodName)]
+		//public void OnFailLogin() {
+		//	using (Log.CriticalOperation($"{nameof(OnFailLogin)} Method={DidFailLoginNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug)) {
+		//		try {
+		//			_eventAggregator.Publish(new SessionDidFailSignInEvent());
+		//		}
+		//		catch (Exception ex) {
+		//			Log.Error(ex, nameof(OnFailLogin));
+		//		}
+		//	}
+		//}
 
 		private bool _disposed = false;
 

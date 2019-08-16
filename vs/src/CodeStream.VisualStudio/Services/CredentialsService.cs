@@ -25,6 +25,10 @@ namespace CodeStream.VisualStudio.Services {
 			return SaveAsync(email, secret.ToString(Newtonsoft.Json.Formatting.None), uri.ToString(), email);
 		}
 
+		public bool SaveJson(Uri uri, string email, JToken secret) {
+			return Save(email, secret.ToString(Newtonsoft.Json.Formatting.None), uri.ToString(), email);
+		}
+
 		public Task<bool> DeleteAsync(Uri uri, string email) {
 			return DeleteAsync(uri.ToString(), email);
 		}

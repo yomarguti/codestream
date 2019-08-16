@@ -50,6 +50,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 						Log.Fatal($"{nameof(settingsManager)} is null");
 					}
 					var initializationOptions = new InitializationOptions {
+						ServerUrl = settingsManager.ServerUrl,
 						Extension = settingsManager.GetExtensionInfo(),
 						Ide = settingsManager.GetIdeInfo(),
 #if DEBUG
@@ -88,7 +89,8 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 					sessionService,
 					codeStreamAgentService,
 					EventAggregator,
-					componentModel.GetService<ICredentialsService>()
+					componentModel.GetService<ICredentialsService>(),
+					componentModel.GetService<IWebviewUserSettingsService>()
 					).TryAutoSignInAsync();
 
 				Log.Information($"AutoSignIn Result={autoSignInResult}");

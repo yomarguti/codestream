@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Windows.Threading;
+using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Controllers;
 using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Extensions;
@@ -12,11 +13,11 @@ using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
 
-namespace CodeStream.VisualStudio.Core {
+namespace CodeStream.VisualStudio {
 	public class WebViewRouter {
 		private static readonly ILogger Log = LogManager.ForContext<WebViewRouter>();
 
-		private readonly ICredentialsService _credentialsService;
+		private readonly IWebviewUserSettingsService _webviewUserSettingsService;
 		private readonly ISessionService _sessionService;
 		private readonly ICodeStreamAgentService _codeStreamAgent;
 		private readonly ISettingsManager _settingsManager;
@@ -27,7 +28,7 @@ namespace CodeStream.VisualStudio.Core {
 		private readonly IAuthenticationServiceFactory _authenticationServiceFactory;
 
 		public WebViewRouter(
-			ICredentialsService credentialsService,
+			IWebviewUserSettingsService webviewUserSettingsService,
 			ISessionService sessionService,
 			ICodeStreamAgentService codeStreamAgent,
 			ISettingsServiceFactory settingsServiceFactory,
@@ -36,7 +37,7 @@ namespace CodeStream.VisualStudio.Core {
 			IIdeService ideService,
 			IEditorService editorService,
 			IAuthenticationServiceFactory authenticationServiceFactory) {
-			_credentialsService = credentialsService;
+			_webviewUserSettingsService = webviewUserSettingsService;
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
 			_settingsManager = settingsServiceFactory.Create();
@@ -91,7 +92,7 @@ namespace CodeStream.VisualStudio.Core {
 											_sessionService.WebViewDidInitialize = true;
 											_eventAggregator.Publish(new WebviewDidInitializeEvent());
 
-											Log.Debug(nameof(_sessionService.WebViewDidInitialize));											
+											Log.Debug(nameof(_sessionService.WebViewDidInitialize));
 											break;
 										}
 									case WebviewDidChangeContextNotificationType.MethodName: {
@@ -106,8 +107,7 @@ namespace CodeStream.VisualStudio.Core {
 
 													_eventAggregator.Publish(new MarkerGlyphVisibilityEvent { IsVisible = !visible });
 												}
-												
-												await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.SaveContextAsync(@params.Context);
+												_webviewUserSettingsService.SaveContext(_sessionService.SolutionName, @params.Context);												
 											}
 											break;
 										}
@@ -174,8 +174,7 @@ namespace CodeStream.VisualStudio.Core {
 											}
 											break;
 										}
-									case BootstrapInHostRequestType.MethodName: {
-											await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+									case BootstrapInHostRequestType.MethodName: {											
 											try {
 												string errorResponse = null;
 												JToken @params = null;
@@ -195,7 +194,7 @@ namespace CodeStream.VisualStudio.Core {
 											}
 											catch (Exception ex) {
 												Log.Error(ex, nameof(BootstrapInHostRequestType));
-											}
+											}											
 											break;
 										}
 									case LogoutRequestType.MethodName: {
@@ -221,7 +220,7 @@ namespace CodeStream.VisualStudio.Core {
 												bool result = false;
 												try {
 													var @params = message.Params.ToObject<EditorSelectRangeRequest>();
-													if (@params != null) {														
+													if (@params != null) {
 														var uri = @params.Uri.ToUri();
 														await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 														var editorResponse = await _ideService.OpenEditorAtLineAsync(uri, @params.Selection.ToRange(), true);
@@ -235,7 +234,7 @@ namespace CodeStream.VisualStudio.Core {
 														}
 													}
 												}
-												catch(Exception ex) {
+												catch (Exception ex) {
 													Log.Warning(ex, nameof(EditorSelectRangeRequestType.MethodName));
 												}
 												scope.FulfillRequest(new EditorSelectRangeResponse { Success = result }.ToJToken());

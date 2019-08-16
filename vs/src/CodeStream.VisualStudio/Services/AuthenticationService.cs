@@ -1,4 +1,8 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Core.Events;
+using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
 using Serilog;
 using System;
 using System.ComponentModel.Composition;
@@ -27,6 +31,8 @@ namespace CodeStream.VisualStudio.Services {
 		public IBrowserService WebviewIpc { get; set; }
 		[Import]
 		public ISettingsServiceFactory SettingsServiceFactory { get; set; }
+		[Import]
+		public IWebviewUserSettingsService WebviewUserSettingsService { get; set; }
 
 		public async System.Threading.Tasks.Task LogoutAsync() {
 			Log.Information($"{nameof(LogoutAsync)} starting");
@@ -60,7 +66,7 @@ namespace CodeStream.VisualStudio.Services {
 				}
 
 				try {
-					await ServiceLocator.Get<SUserSettingsService, IUserSettingsService>()?.TryDeleteTeamIdAsync();
+					WebviewUserSettingsService.DeleteTeamId(SessionService.SolutionName);					
 				}
 				catch(Exception ex) {
 					Log.Error(ex, "could not delete teamId");

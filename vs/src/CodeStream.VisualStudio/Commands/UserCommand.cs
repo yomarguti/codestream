@@ -1,5 +1,4 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.Shell;
 using System;
 using CodeStream.VisualStudio.Core.Extensions;
@@ -33,8 +32,19 @@ namespace CodeStream.VisualStudio.Commands {
 
 		public void Update() {
 			ThreadHelper.ThrowIfNotOnUIThread();
+			var state = _sessionService.SessionState;
+			var agentReady = _sessionService.IsAgentReady;
+			Log.Debug($"Updating {nameof(UserCommand)} SessionState={_sessionService.SessionState} AgentReady={agentReady}...");
+
+			if (!agentReady) {
+				Visible = false;
+				Enabled = false;
+				Text = DefaultText;
+				return;
+			}
+			
 			try {
-				switch (_sessionService.SessionState) {
+				switch (state) {
 					case SessionState.UserSignInFailed: {
 							// the caching on this sucks and it doesn't always update...
 							//Visible = false;
