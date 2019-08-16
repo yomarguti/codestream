@@ -1077,6 +1077,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		let deltaY = event.deltaY * metrics.scrollRatio!;
 
+		console.log("EVENT IS: ", event);
+		console.log("DY: ", deltaY);
 		let deltaPixels;
 		let lines = 0;
 		switch (event.deltaMode) {
