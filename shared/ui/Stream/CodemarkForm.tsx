@@ -57,8 +57,9 @@ import { getSlashCommands } from "./SlashCommands";
 import { getCurrentTeamProvider } from "../store/teams/actions";
 import { getCodemark } from "../store/codemarks/reducer";
 import { CodemarksState } from "../store/codemarks/types";
+import { setCurrentStream } from "../store/context/actions";
 
-interface Props extends DispatchProps {
+interface Props extends ConnectedProps {
 	streamId: string;
 	collapseForm?: Function;
 	onSubmit: Function;
@@ -74,7 +75,7 @@ interface Props extends DispatchProps {
 	onDidChangeSelection?(location: EditorSelection): void;
 }
 
-interface DispatchProps {
+interface ConnectedProps {
 	teammates: CSUser[];
 	channelStreams: CSChannelStream[];
 	directMessageStreams: CSDirectStream[];
@@ -519,6 +520,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				},
 				event
 			);
+			(this.props as any).dispatch(setCurrentStream(selectedChannelId));
 		} catch (error) {
 		} finally {
 			this.setState({ isLoading: false });
@@ -1210,7 +1212,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 const EMPTY_OBJECT = {};
 
-const mapStateToProps = (state): DispatchProps => {
+const mapStateToProps = (state): ConnectedProps => {
 	const { context, editorContext, users, session, preferences, providers, codemarks } = state;
 	const user = users[session.userId];
 	const channel = context.currentStreamId
