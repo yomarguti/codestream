@@ -251,25 +251,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	componentDidMount() {
-		const mutationObserver = new MutationObserver(() => this.repositionCodemarks());
-		mutationObserver.observe(document.getElementById("stream-root")!, {
-			childList: true,
-			subtree: true,
-			attributes: true,
-			attributeFilter: ["data-top"]
-		});
-
 		this.disposables.push(
 			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
 				if (this.props.textEditorUri === textDocument.uri) {
 					this.props.fetchDocumentMarkers(textDocument.uri);
 				}
 			}),
-			{
-				dispose() {
-					mutationObserver.disconnect();
-				}
-			},
 			HostApi.instance.on(NewCodemarkNotificationType, e => {
 				this.currentPostEntryPoint = e.source as PostEntryPoint;
 				this.handleClickPlus(
