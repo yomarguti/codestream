@@ -28,8 +28,8 @@ export function reduceEditorContext(state = initialState, action: EditorContextA
 		case EditorContextActionsType.SetEditorContext: {
 			const { metrics }: { metrics?: EditorMetrics } = action.payload;
 			if (metrics != null) {
-				if (metrics.lineHeight === undefined) {
-					if (metrics.fontSize === undefined) {
+				if (metrics.lineHeight == undefined) {
+					if (metrics.fontSize == undefined) {
 						metrics.fontSize = 12;
 						metrics.lineHeight = 18;
 					} else {
@@ -113,7 +113,7 @@ export enum ScmError {
 
 export const getFileScmError = (scmInfo: GetFileScmInfoResponse | GetRangeScmInfoResponse) => {
 	if (!scmInfo.scm) {
-		if (!scmInfo.error) {			
+		if (!scmInfo.error) {
 			return ScmError.NoGit;
 		} else {
 			return ScmError.NoRepo;
