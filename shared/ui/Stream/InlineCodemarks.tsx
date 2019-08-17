@@ -153,6 +153,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	hiddenCodemarks = {};
 	currentPostEntryPoint?: PostEntryPoint;
 	_updateEmitter = new ComponentUpdateEmitter();
+	minimumDistance = 20;
 
 	constructor(props: Props) {
 		super(props);
@@ -327,8 +328,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			const marginTop = parseInt($element.style.marginTop || "0", 10);
 			// if this has been shifted down, account for that shift when calculating intersection?
 			const overlap = topOfLastDiv - (domRect.bottom - marginTop);
-			const minimumDistance = 20;
-			const yDiff = Math.round(overlap - minimumDistance);
+			const yDiff = Math.round(overlap - this.minimumDistance);
 
 			if (yDiff < 0) {
 				$element.style.marginTop = `${yDiff}px`;
@@ -346,9 +346,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		for (let $element of $elements) {
 			const domRect = $element.getBoundingClientRect();
 			const origTop = parseInt($element.dataset.top || "", 10);
-			const minimumDistance = 20;
 			const overlap = bottomOfLastDiv - origTop;
-			const yDiff = overlap + minimumDistance;
+			const yDiff = overlap + this.minimumDistance;
 			const height = domRect.bottom - domRect.top;
 
 			if (yDiff > 0) {
@@ -383,7 +382,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (composeIndex > -1) {
 			const composeDimensions = $elements[composeIndex].getBoundingClientRect();
 			this.shiftUp(composeDimensions.top, $elements.slice(0, composeIndex).reverse());
-			this.shiftDown(composeDimensions.bottom, $elements.slice(composeIndex + 1));
+			this.shiftDown(
+				// we subtract minimumDistance (20px) here because
+				// otherwise there is 40px margin below the compose
+				// box, since it adds 20 more before it shifts down
+				composeDimensions.bottom - this.minimumDistance,
+				$elements.slice(composeIndex + 1)
+			);
 		} else {
 			// -3000 is just an arbitrary off-screen number that will allow
 			// codemarks that appear above the viewport to render properly,
