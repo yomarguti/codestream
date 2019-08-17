@@ -15,6 +15,28 @@
 .emoji-mart {
 	max-width: 95%;
 	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+	input[type="search"] {
+		font-family: var(--font-family);
+		font-size: 15px;
+		padding: 4px 8px;
+		opacity: 0.6;
+		background-color: @app-background-color;
+		color: @text-color;
+		border-radius: 0;
+		border: 1px solid @base-border-color;
+		margin: 5px 0 10px 0;
+
+		:focus {
+			opacity: 1;
+			color: @text-color-highlight;
+		}
+	}
+	.emoji-mart-search-icon {
+		display: none;
+	}
+	.emoji-mart-anchor-bar {
+		background-color: @text-color-info !important;
+	}
 }
 .emoji-mart-category .emoji-mart-emoji:hover:before {
 	background-color: @background-color-highlight;
