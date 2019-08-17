@@ -4,21 +4,10 @@ import { getCurrentSelection } from "@codestream/webview/store/editorContext/red
 import { CodeStreamState } from "@codestream/webview/store";
 import ContainerAtEditorLine from "./ContainerAtEditorLine";
 
-export default function ContainerAtEditorSelection(props: {
-	initialLine?: number;
-	children: ReactNode | ReactNode[];
-}) {
-	const initialRenderRef = React.useRef(true);
-	React.useEffect(() => {
-		initialRenderRef.current = false;
-	}, []);
-
-	const selectionStartLine = useSelector(
+export default function ContainerAtEditorSelection(props: { children: ReactNode | ReactNode[] }) {
+	const lineNumber = useSelector(
 		(state: CodeStreamState) => getCurrentSelection(state.editorContext).start.line
 	);
-
-	const lineNumber =
-		props.initialLine && initialRenderRef.current ? props.initialLine : selectionStartLine;
 
 	return (
 		<ContainerAtEditorLine lineNumber={lineNumber} repositionToFit className="cs-at-selection">

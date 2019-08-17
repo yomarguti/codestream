@@ -152,7 +152,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	private root = React.createRef<HTMLDivElement>();
 	hiddenCodemarks = {};
 	currentPostEntryPoint?: PostEntryPoint;
-	updateEmitter = new ComponentUpdateEmitter();
+	_updateEmitter = new ComponentUpdateEmitter();
 
 	constructor(props: Props) {
 		super(props);
@@ -286,7 +286,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	componentDidUpdate(prevProps: Props) {
-		this.updateEmitter.emit();
+		this._updateEmitter.emit();
 		const { textEditorUri } = this.props;
 		if (String(textEditorUri).length > 0 && prevProps.textEditorUri !== textEditorUri) {
 			this.onFileChanged();
@@ -956,7 +956,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const { type, codeBlock } = this.state.newCodemarkAttributes;
 
 		return (
-			<ContainerAtEditorSelection initialLine={codeBlock.range.start.line}>
+			<ContainerAtEditorSelection>
 				<div className="codemark-form-container">
 					<CodemarkForm
 						commentType={type}
@@ -1011,7 +1011,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		if (docMarker) {
 			batch(() => {
-				this.updateEmitter.enqueue(() => {
+				this._updateEmitter.enqueue(() => {
 					this.setState({ newCodemarkAttributes: undefined });
 				});
 				this.props.addDocumentMarker(this.props.textEditorUri!, docMarker);
@@ -1304,7 +1304,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			this.props.setCodemarksFileViewStyle("inline");
 			try {
 				await new Promise((resolve, reject) => {
-					this.updateEmitter.enqueue(() => {
+					this._updateEmitter.enqueue(() => {
 						if (this.props.viewInline) resolve();
 						else reject();
 					});
@@ -1338,11 +1338,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		this.handleUnhighlightLine(lineNum0);
 
 		if (setSelection) {
-			HostApi.instance.send(EditorSelectRangeRequestType, {
+			await HostApi.instance.send(EditorSelectRangeRequestType, {
 				uri: this.props.textEditorUri!,
 				selection: { ...range, cursor: range.end },
 				preserveFocus: true
 			});
+			await new Promise(resolve => this._updateEmitter.enqueue(resolve));
 		}
 		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
 			uri: this.props.textEditorUri!,
