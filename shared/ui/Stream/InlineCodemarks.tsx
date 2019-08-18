@@ -321,8 +321,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	shiftUp(previousTop: number, $elements: HTMLElement[]) {
-		console.log("SHIFTING UP: ", $elements);
-		let topOfLastDiv = previousTop;
 		for (let $element of $elements) {
 			const domRect = $element.getBoundingClientRect();
 
