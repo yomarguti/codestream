@@ -321,21 +321,30 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	shiftUp(previousTop: number, $elements: HTMLElement[]) {
+		console.log("SHIFTING UP: ", $elements);
 		let topOfLastDiv = previousTop;
 		for (let $element of $elements) {
 			const domRect = $element.getBoundingClientRect();
 
-			const marginTop = parseInt($element.style.marginTop || "0", 10);
-			// if this has been shifted down, account for that shift when calculating intersection?
-			const overlap = topOfLastDiv - (domRect.bottom - marginTop);
-			const yDiff = Math.round(overlap - this.minimumDistance);
+			// determine the difference between the top of the last div, and
+			// this one, to see if there is an overlap
+			const overlap = domRect.bottom - topOfLastDiv;
+			// even if there is zero overlap, we want at least a minimum
+			// distance, so we add this.minimumDistance to compare
+			const yDiff = Math.round(overlap + this.minimumDistance);
 
-			if (yDiff < 0) {
-				$element.style.marginTop = `${yDiff}px`;
-				// if this has been shifted down, account for that shift
-				topOfLastDiv = domRect.top - marginTop + yDiff;
+			// if there is greater than zero overlap (when taking into
+			// account the minimum distance between boxes), we need to
+			// shift this box up
+			if (yDiff > 0) {
+				// the new marginTop for this box is equal to the old
+				// one, minus the overlap yDiff
+				const marginTop = parseInt($element.style.marginTop || "0", 10);
+				$element.style.marginTop = `${marginTop - yDiff}px`;
+				// now that we shifted this box up, the top of it's
+				// domRect will be yDiff less
+				topOfLastDiv = domRect.top - yDiff;
 			} else {
-				$element.style.marginTop = marginTop === 0 ? null : `${marginTop}px`;
 				topOfLastDiv = domRect.top;
 			}
 		}
@@ -343,11 +352,18 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	shiftDown(previousBottom: number, $elements: HTMLElement[]) {
 		let bottomOfLastDiv = previousBottom;
+		// loop through all of the elements and use dataset.top
+		// as the "originally desired" position which represents
+		// where the inline view would put the box ideally to the
+		// right of the code. we use that as a starting point to
+		// know where the box wants to be ideally. as we shift
+		// boxes down, we keep track of the bottom of the last box
+		// as a minimum starting point for the top of the next one
 		for (let $element of $elements) {
 			const domRect = $element.getBoundingClientRect();
 			const origTop = parseInt($element.dataset.top || "", 10);
 			const overlap = bottomOfLastDiv - origTop;
-			const yDiff = overlap + this.minimumDistance;
+			const yDiff = Math.round(overlap + this.minimumDistance);
 			const height = domRect.bottom - domRect.top;
 
 			if (yDiff > 0) {
