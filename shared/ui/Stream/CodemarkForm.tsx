@@ -1061,7 +1061,7 @@ class CodemarkForm extends React.Component<Props, State> {
 										value={this.state.assignees}
 										options={this.state.assignableUsers}
 										closeMenuOnSelect={true}
-										isClearable={false}
+										isClearable={this.state.singleAssignee}
 										placeholder={assigneesPlaceholder}
 										onChange={value => this.setState({ assignees: value! })}
 										tabIndex={this.tabIndex().toString()}
