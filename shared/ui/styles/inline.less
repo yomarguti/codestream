@@ -22,6 +22,20 @@
 	padding: 0 45px;
 	z-index: 2; // one above the <nav> element, one below .hover-plus
 
+	// since we use padding to place the codemark inside this div,
+	// when you click to the left or right of the codemark, we want
+	// those clicks to go through to the element below -- on the left
+	// that means the hover-plus icons, and on the right that might
+	// mean an archived codemark or the ... of the global nav
+	// by setting pointer-events to none, these clicks fall through
+	// the plane-container div to the one below... but...
+	pointer-events: none;
+	// ... we want clicks to divs inside this div to still work, so
+	// we reset pointer-events to initial for any direct descendent
+	> * {
+		pointer-events: initial;
+	}
+
 	.animate & {
 		transition: transform 200ms, margin-top 200ms;
 	}
