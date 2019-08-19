@@ -321,6 +321,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		}
 	}
 
+	// shiftUp and shiftDown use different frames of reference to
+	// determine height -- one takes into account the container's
+	// padding (due to breadcrumbs or other UI elements in the editor)
+	// and the other does not. this should be simplified so that there
+	// aren't subtle bugs introduced
 	shiftUp(previousTop: number, $elements: HTMLElement[]) {
 		let topOfLastDiv = previousTop;
 		for (let $element of $elements) {
@@ -396,13 +401,17 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		});
 
 		if (composeIndex > -1) {
-			const composeDimensions = $elements[composeIndex].getBoundingClientRect();
-			this.shiftUp(composeDimensions.top, $elements.slice(0, composeIndex).reverse());
+			const $element = $elements[composeIndex];
+			const domRect = $element.getBoundingClientRect();
+			const top = parseInt($element.dataset.top || "", 10);
+			const height = domRect.bottom - domRect.top;
+			this.shiftUp(domRect.top, $elements.slice(0, composeIndex).reverse());
 			this.shiftDown(
 				// we subtract minimumDistance (20px) here because
 				// otherwise there is 40px margin below the compose
 				// box, since it adds 20 more before it shifts down
-				composeDimensions.bottom - this.minimumDistance,
+				// composeDimensions.bottom - this.minimumDistance,
+				top + height,
 				$elements.slice(composeIndex + 1)
 			);
 		} else {
