@@ -13,6 +13,7 @@ import {
 	EditorScrollToNotificationType,
 	EditorSelectRangeRequest,
 	EditorSelectRangeRequestType,
+	EditorSelectRangeResponse,
 	GetActiveEditorContextRequestType,
 	GetActiveEditorContextResponse,
 	HostDidChangeActiveEditorNotification,
@@ -417,13 +418,19 @@ export class CodestreamView {
 			case EditorSelectRangeRequestType.method: {
 				const { selection, uri, preserveFocus }: EditorSelectRangeRequest = message.params;
 
-				await Container.editorManipulator.select(
-					Convert.uriToPath(uri),
-					Convert.lsRangeToAtomRange(selection)
-				);
+				try {
+					await Container.editorManipulator.select(
+						Convert.uriToPath(uri),
+						Convert.lsRangeToAtomRange(selection)
+					);
 
-				if (preserveFocus) {
-					atom.views.getView(this).focus();
+					if (preserveFocus) {
+						atom.views.getView(this).focus();
+					}
+
+					this.respond<EditorSelectRangeResponse>({ id: message.id, params: { success: true } });
+				} catch (error) {
+					this.respond<EditorSelectRangeResponse>({ id: message.id, params: { success: false } });
 				}
 				break;
 			}
@@ -547,7 +554,7 @@ export class CodestreamView {
 			visibleRanges: Editor.getVisibleRanges(event.editor),
 			lineCount: event.editor.getLineCount(),
 		});
-	};
+	}
 
 	private onEditorActiveEditorChanged = (editor?: TextEditor) => {
 		const notification: HostDidChangeActiveEditorNotification = {};
@@ -566,5 +573,5 @@ export class CodestreamView {
 			};
 		}
 		this.sendEvent(HostDidChangeActiveEditorNotificationType, notification);
-	};
+	}
 }
