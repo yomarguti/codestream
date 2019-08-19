@@ -6,11 +6,6 @@ using CodeStream.VisualStudio.Core.Services;
 using Serilog;
 using System;
 using System.ComponentModel.Composition;
-using CodeStream.VisualStudio.Core;
-using CodeStream.VisualStudio.Core.Events;
-using CodeStream.VisualStudio.Core.Extensions;
-using CodeStream.VisualStudio.Core.Models;
-using CodeStream.VisualStudio.Core.Services;
 
 namespace CodeStream.VisualStudio.Services {
 
@@ -43,6 +38,7 @@ namespace CodeStream.VisualStudio.Services {
 				catch(Exception ex) {
 					Log.Warning(ex, $"{nameof(LogoutAsync)} - SetState");
 				}
+
 				try {
 					EventAggregator.Publish(new SessionDidStartSignOutEvent());
 				}
@@ -73,6 +69,16 @@ namespace CodeStream.VisualStudio.Services {
 				}
 
 				try {
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
+					// it's possible that this Logout method is called before the webview is ready -- enqueue it
+					WebviewIpc.EnqueueNotification(new HostDidLogoutNotificationType());
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
+				}
+				catch (Exception ex) {
+					Log.Error(ex, $"{nameof(LogoutAsync)} - {nameof(HostDidLogoutNotificationType)}");
+				}
+
+				try {
 					SessionService.Logout();
 				}
 				catch (Exception ex) {
@@ -82,19 +88,10 @@ namespace CodeStream.VisualStudio.Services {
 				try {
 					EventAggregator.Publish(new SessionLogoutEvent());
 				}
-				catch(Exception ex) {
+				catch (Exception ex) {
 					Log.Error(ex, $"{nameof(LogoutAsync)} - {nameof(SessionLogoutEvent)}");
 				}
 
-				try {
-#pragma warning disable VSTHRD103 // Call async methods when in an async method
-					// it's possible that this Logout method is called before the webview is ready -- enqueue it
-					WebviewIpc.EnqueueNotification(new HostDidLogoutNotificationType());
-#pragma warning restore VSTHRD103 // Call async methods when in an async method
-				}
-				catch (Exception ex) {
-					Log.Error(ex, $"{nameof(LogoutAsync)} - {nameof(HostDidLogoutNotificationType)}");
-				}
 				Log.Information($"{nameof(LogoutAsync)} completed");
 			}
 			catch (Exception ex) {
