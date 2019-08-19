@@ -533,9 +533,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	renderIconRow(lineNum0, top, hover, open) {
-		// if the compose box is open, don't show hover icons
-		if (this.props.children) return null;
-
 		// we only add the title properties (which add tooltips)
 		// when you mouse over them for performance reasons. adding
 		// tool tips on each one slowed things down a lot. -Pez
@@ -628,7 +625,16 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			this.state.openIconsOnLine
 		);
 		// console.log("IOL IS: ", iconsOnLine0, " FROM: ", this.state.openIconsOnLine);
-		const { highlightedLine, rippledLine } = this.state;
+		const { highlightedLine, rippledLine, newCodemarkAttributes } = this.state;
+
+		// if the compose box is active, don't render the
+		// hover icons. even though you could technically
+		// argue that this is a loss of fucntionality
+		// (one extra click to reposition the compose box)
+		// the UX is just too weird/messy keeping those
+		// buttons active. see google docs for comparison,
+		// who hide the (+) when you have a compose box
+		if (newCodemarkAttributes != undefined) return null;
 
 		const codeHeight = this.codeHeight();
 		if (iconsOnLine0 >= 0) {
