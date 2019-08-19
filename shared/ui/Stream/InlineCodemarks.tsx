@@ -1364,12 +1364,14 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		this.handleUnhighlightLine(lineNum0);
 
 		if (setSelection) {
-			await HostApi.instance.send(EditorSelectRangeRequestType, {
-				uri: this.props.textEditorUri!,
-				selection: { ...range, cursor: range.end },
-				preserveFocus: true
+			await new Promise(async resolve => {
+				this._updateEmitter.enqueue(resolve);
+				await HostApi.instance.send(EditorSelectRangeRequestType, {
+					uri: this.props.textEditorUri!,
+					selection: { ...range!, cursor: range!.end },
+					preserveFocus: true
+				});
 			});
-			await new Promise(resolve => this._updateEmitter.enqueue(resolve));
 		}
 		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
 			uri: this.props.textEditorUri!,
