@@ -304,8 +304,7 @@ export class CodeStreamSession {
 	private async onRTMessageReceived(e: RTMessage) {
 		switch (e.type) {
 			case MessageType.Codemarks:
-				let codemarks = await SessionContainer.instance().codemarks.resolve(e);
-				codemarks = await SessionContainer.instance().codemarks.enrichCodemarks(codemarks);
+				const codemarks = await SessionContainer.instance().codemarks.enrichCodemarks(e.data);
 				this._onDidChangeCodemarks.fire(codemarks);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.Codemarks,
@@ -320,29 +319,25 @@ export class CodeStreamSession {
 				this.agent.sendNotification(DidChangeConnectionStatusNotificationType, e.data);
 				break;
 			case MessageType.MarkerLocations:
-				const markerLocations = await SessionContainer.instance().markerLocations.resolve(e);
-				this._onDidChangeMarkerLocations.fire(markerLocations);
+				this._onDidChangeMarkerLocations.fire(e.data);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.MarkerLocations,
-					data: markerLocations
+					data: e.data
 				});
 				break;
 			case MessageType.Markers:
-				const markers = await SessionContainer.instance().markers.resolve(e);
-				this._onDidChangeMarkers.fire(markers);
+				this._onDidChangeMarkers.fire(e.data);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.Markers,
-					data: markers
+					data: e.data
 				});
 				break;
 			case MessageType.Posts:
-				const postManager = SessionContainer.instance().posts;
-				const posts = await postManager.resolve(e);
+				const posts = await SessionContainer.instance().posts.enrichPosts(e.data);
 				this._onDidChangePosts.fire(posts);
-				const fullPosts = await postManager.enrichPosts(posts);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.Posts,
-					data: fullPosts
+					data: posts
 				});
 				break;
 			case MessageType.Preferences:

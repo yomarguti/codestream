@@ -13,7 +13,7 @@ export function isCompleteObject(obj: object): boolean {
 	return true;
 }
 
-export function resolve(
+export function resolve<T>(
 	{ id, ...object }: { id: string; object: any[] },
 	changes: { [key: string]: any }
 ) {
@@ -33,7 +33,7 @@ export function resolve(
 			}
 		}
 	});
-	return result;
+	return result as T;
 }
 
 export function handle(property: any, object: any, data: any, recurse: any, apply: any) {

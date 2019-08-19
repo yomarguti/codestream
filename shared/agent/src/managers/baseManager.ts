@@ -6,21 +6,44 @@ import { IndexParams } from "./cache";
 import { BaseCache, KeyValue } from "./cache/baseCache";
 import { isDirective, resolve } from "./operations";
 
-function isCompatibleVersion(cachedEntity: any, newEntityOrDirective: any): boolean {
-	if (isDirective(newEntityOrDirective)) {
-		const directiveVersion = newEntityOrDirective.$version;
-		if (!directiveVersion) {
+function getCacheUpdateAction(
+	newOrDirective: any,
+	existing: any | undefined
+): "query" | "skip" | "update" {
+	if (isDirective(newOrDirective)) {
+		if (existing == null) return "query";
+
+		const directiveVersion = newOrDirective.$version;
+		if (directiveVersion == null) {
 			throw new Error(
-				`Received directive without version attribute for object Id=${newEntityOrDirective.id}`
+				`Received directive without version attribute for object Id=${newOrDirective.id}`
 			);
 		}
-		return directiveVersion.before === cachedEntity.version || directiveVersion.before === "*";
-	} else {
-		if (cachedEntity.version == null && newEntityOrDirective.version == null) {
-			return true;
+
+		if (directiveVersion.before === "*" || directiveVersion.before === existing.version) {
+			return "update";
 		}
-		return cachedEntity.version < newEntityOrDirective.version;
+
+		if (directiveVersion.after <= existing.version) {
+			return "skip";
+		}
+
+		return "query";
 	}
+
+	if (
+		existing == null ||
+		(existing.version == null && newOrDirective.version == null) ||
+		newOrDirective.version > existing.version
+	) {
+		return "update";
+	}
+
+	if (newOrDirective.version <= existing.version) {
+		return "skip";
+	}
+
+	return "query";
 }
 
 export abstract class ManagerBase<T> {
@@ -57,31 +80,44 @@ export abstract class ManagerBase<T> {
 	}
 
 	@debug()
-	async resolve(message: RawRTMessage): Promise<T[]> {
+	async resolve(
+		message: RawRTMessage,
+		{ onlyIfNeeded }: { onlyIfNeeded?: boolean } = {}
+	): Promise<T[]> {
+		if (message.data == null || !Array.isArray(message.data)) {
+			throw new Error("Message was either missing data or it wasn't an array");
+		}
+
 		const resolved = await Promise.all(
 			message.data.map(async (data: any) => {
 				const criteria = this.fetchCriteria(data as T);
 				const cached = await this.cacheGet(criteria);
 
-				if (cached && isCompatibleVersion(cached, data)) {
-					const updatedEntity = resolve(cached as any, data);
-					return await this.cacheSet(updatedEntity as T, cached);
+				const action = getCacheUpdateAction(data, cached);
+				// We need to return the cached item still until the UI handles updates via api calls the same as notifications
+				if (action === "skip") return onlyIfNeeded ? undefined : cached;
+				if (action === "update") {
+					// TODO: Should we fall-through to query if we don't have the cached data, but we do have a full object?
+					const updatedEntity: T = cached == null ? data : resolve<T>(cached as any, data);
+					return this.cacheSet(updatedEntity, cached);
 				}
 
-				let entity;
+				// Fall-through to query for the data
+				let entity: T;
 				if (this.forceFetchToResolveOnCacheMiss || isDirective(data)) {
 					entity = await this.fetch(criteria);
 				} else {
-					entity = data as T;
+					entity = data;
 				}
 
-				if (entity) {
-					return await this.cacheSet(entity);
+				if (entity != null) {
+					return this.cacheSet(entity);
 				}
 
 				return undefined;
 			})
 		);
+
 		return resolved.filter(Boolean) as T[];
 	}
 

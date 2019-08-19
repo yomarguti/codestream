@@ -1,6 +1,6 @@
 "use strict";
 import HttpsProxyAgent from "https-proxy-agent";
-import { cloneDeep, isEqual } from "lodash-es";
+import { isEqual } from "lodash-es";
 import fetch, { Headers, RequestInit, Response } from "node-fetch";
 import { URLSearchParams } from "url";
 import { Emitter, Event } from "vscode-languageserver";
@@ -152,6 +152,7 @@ import {
 	CSUpdatePresenceResponse,
 	CSUpdateStreamRequest,
 	CSUpdateStreamResponse,
+	CSUser,
 	LoginResult,
 	StreamType
 } from "../../protocol/api.protocol";
@@ -460,26 +461,38 @@ export class CodeStreamApiProvider implements ApiProvider {
 		// Resolve any directives in the message data
 		switch (e.type) {
 			case MessageType.Codemarks:
-				e.data = await SessionContainer.instance().codemarks.resolve(e);
+				e.data = await SessionContainer.instance().codemarks.resolve(e, { onlyIfNeeded: false });
+				if (e.data == null || e.data.length === 0) return;
+
 				break;
 			case MessageType.MarkerLocations:
-				e.data = await SessionContainer.instance().markerLocations.resolve(e);
+				e.data = await SessionContainer.instance().markerLocations.resolve(e, {
+					onlyIfNeeded: false
+				});
+				if (e.data == null || e.data.length === 0) return;
+
 				break;
 			case MessageType.Markers:
-				e.data = await SessionContainer.instance().markers.resolve(e);
+				e.data = await SessionContainer.instance().markers.resolve(e, { onlyIfNeeded: false });
+				if (e.data == null || e.data.length === 0) return;
+
 				break;
 			case MessageType.Posts:
-				e.data = await SessionContainer.instance().posts.resolve(e);
+				e.data = await SessionContainer.instance().posts.resolve(e, { onlyIfNeeded: false });
+				if (e.data == null || e.data.length === 0) return;
 
 				if (this._unreads !== undefined) {
 					this._unreads.update(e.data as CSPost[]);
 				}
 				break;
 			case MessageType.Repositories:
-				e.data = await SessionContainer.instance().repos.resolve(e);
+				e.data = await SessionContainer.instance().repos.resolve(e, { onlyIfNeeded: false });
+				if (e.data == null || e.data.length === 0) return;
+
 				break;
 			case MessageType.Streams:
-				e.data = await SessionContainer.instance().streams.resolve(e);
+				e.data = await SessionContainer.instance().streams.resolve(e, { onlyIfNeeded: false });
+				if (e.data == null || e.data.length === 0) return;
 
 				if (this._events !== undefined) {
 					for (const stream of e.data as (CSChannelStream | CSDirectStream)[]) {
@@ -493,40 +506,79 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 				break;
 			case MessageType.Teams:
-				const currentTeam = await SessionContainer.instance().teams.getByIdFromCache(this.teamId);
-				const providerHostsBefore = cloneDeep(
-					(currentTeam ? currentTeam.providerHosts : undefined) || {}
-				);
-				e.data = await SessionContainer.instance().teams.resolve(e);
-				const providerHostsAfter = (currentTeam ? currentTeam.providerHosts : undefined) || {};
-				if (!isEqual(providerHostsBefore, providerHostsAfter)) {
-					SessionContainer.instance().session.updateProviders();
+				const { session, teams } = SessionContainer.instance();
+
+				let currentTeam = await teams.getByIdFromCache(this.teamId);
+
+				let providerHostsBefore;
+				if (currentTeam && currentTeam.providerHosts) {
+					providerHostsBefore = JSON.parse(JSON.stringify(currentTeam.providerHosts));
+				}
+
+				e.data = await teams.resolve(e, { onlyIfNeeded: false });
+				if (e.data == null || e.data.length === 0) return;
+
+				// Ensure we get the updated copy
+				currentTeam = await teams.getByIdFromCache(this.teamId);
+
+				if (currentTeam && currentTeam.providerHosts) {
+					if (!isEqual(providerHostsBefore, currentTeam.providerHosts)) {
+						session.updateProviders();
+					}
+				} else if (providerHostsBefore) {
+					void session.updateProviders();
 				}
 				break;
 			case MessageType.Users:
+				const users: CSUser[] = e.data;
+				const meIndex = users.findIndex(u => u.id === this.userId);
+
+				// If we aren't updating the current user, just continue
+				if (meIndex === -1) {
+					e.data = await SessionContainer.instance().repos.resolve(e, { onlyIfNeeded: false });
+					if (e.data == null || e.data.length === 0) return;
+
+					break;
+				}
+
+				const me = users[meIndex] as CSMe;
+				if (users.length > 1) {
+					// Remove the current user, as we will handle that seperately
+					users.splice(meIndex, 1);
+
+					e.data = await SessionContainer.instance().repos.resolve(e, { onlyIfNeeded: false });
+					if (e.data != null && e.data.length !== 0) {
+						this._onDidReceiveMessage.fire(e as RTMessage);
+					}
+
+					e.data = [me];
+				}
+
 				const lastReads = {
 					...(this._unreads ? (await this._unreads.get()).lastReads : this._user!.lastReads)
 				};
-				e.data = await SessionContainer.instance().users.resolve(e);
 
-				const me = (e.data as CSMe[]).find(u => u.id === this.userId);
-				if (me != null) {
-					this._user = (await SessionContainer.instance().users.getMe()).user;
+				e.data = await SessionContainer.instance().users.resolve(e, {
+					onlyIfNeeded: true
+				});
+				if (e.data == null || e.data.length === 0) return;
 
-					try {
-						if (
-							this._unreads !== undefined &&
-							(Objects.isEmpty(me.lastReads) ||
-								!Objects.shallowEquals(lastReads, this._user.lastReads))
-						) {
-							this._unreads.compute(me.lastReads);
-						}
-						if (this._preferences && me.preferences && this._user.preferences) {
-							this._preferences.update(this._user.preferences);
-						}
-					} catch {
-						debugger;
+				this._user = (await SessionContainer.instance().users.getMe()).user;
+				e.data = [this._user];
+
+				try {
+					if (
+						this._unreads !== undefined &&
+						(Objects.isEmpty(me.lastReads) ||
+							!Objects.shallowEquals(lastReads, this._user.lastReads))
+					) {
+						this._unreads.compute(me.lastReads);
 					}
+					if (this._preferences && me.preferences && this._user.preferences) {
+						this._preferences.update(this._user.preferences);
+					}
+				} catch {
+					debugger;
 				}
 
 				break;

@@ -335,7 +335,9 @@ export interface ApiProvider {
 		data: { [key: string]: any };
 	}): Promise<void>;
 	disconnectThirdPartyProvider(request: { providerId: string }): Promise<void>;
-	addEnterpriseProviderHost(request: AddEnterpriseProviderHostRequest): Promise<AddEnterpriseProviderHostResponse>;
+	addEnterpriseProviderHost(
+		request: AddEnterpriseProviderHostRequest
+	): Promise<AddEnterpriseProviderHostResponse>;
 	refreshThirdPartyProvider(request: { providerId: string; refreshToken: string }): Promise<CSMe>;
 }
 
