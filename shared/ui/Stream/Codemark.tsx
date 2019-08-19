@@ -139,7 +139,13 @@ export class Codemark extends React.Component<Props, State> {
 			this.toggleCodeHighlightInTextEditor(true);
 		}
 
-		if (!areRangesEqual(prevProps.marker.range, this.props.marker.range)) {
+		if (
+			prevProps.marker &&
+			this.props.marker &&
+			prevProps.marker.range &&
+			this.props.marker.range &&
+			!areRangesEqual(prevProps.marker.range, this.props.marker.range)
+		) {
 			this._range = this.props.marker.range;
 		}
 	}
