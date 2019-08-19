@@ -20,7 +20,7 @@ import {
 import { CodemarkType, CSUser, CSMe, CSPost } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
-import { range } from "../utils";
+import { range, areRangesEqual } from "../utils";
 import {
 	getUserByCsId,
 	getTeamMembers,
@@ -123,7 +123,7 @@ export class Codemark extends React.Component<Props, State> {
 		}
 	}
 
-	componentDidUpdate(prevProps, prevState) {
+	componentDidUpdate(prevProps: Props, _prevState: State) {
 		if (prevProps.selected && !this.props.selected) {
 			this.stopPollingReplies();
 			this.toggleCodeHighlightInTextEditor(false, true);
@@ -137,6 +137,10 @@ export class Codemark extends React.Component<Props, State> {
 			this.toggleCodeHighlightInTextEditor(false, true);
 			this._fileUri = this._range = undefined;
 			this.toggleCodeHighlightInTextEditor(true);
+		}
+
+		if (!areRangesEqual(prevProps.marker.range, this.props.marker.range)) {
+			this._range = this.props.marker.range;
 		}
 	}
 
