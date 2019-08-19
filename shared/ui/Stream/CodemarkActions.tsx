@@ -132,7 +132,7 @@ class CodemarkActions extends React.Component<Props, State> {
 				return (
 					<span>
 						{message}{" "}
-						<a href="https://help.codestream.com/hc/en-us/articles/360013410551">{learnMore}</a>
+						<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Git-Issues">{learnMore}</a>
 					</span>
 				);
 			}
