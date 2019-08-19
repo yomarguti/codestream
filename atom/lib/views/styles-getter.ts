@@ -106,7 +106,15 @@ export class StylesProvider implements Disposable {
 	}
 
 	buildCSStyles() {
-		this._csStyles = atom.themes.loadLessStylesheet(this.webviewStylesPath);
+		try {
+			this._csStyles = atom.themes.loadLessStylesheet(this.webviewStylesPath, true);
+		} catch (error) {
+			if (Debug.isDebugging) {
+				console.error(error);
+				atom.notifications.addError("There was an error compiling stylesheets");
+				debugger;
+			}
+		}
 	}
 
 	buildAtomStyles() {
