@@ -80,6 +80,17 @@ export function CodemarkView() {
 		dispatch(setCurrentCodemark());
 	}, []);
 
+	// this click handler is on the root element of this
+	// component, and is meant to dismiss it whenever you
+	// click outside the codemark. so if the target doesn't
+	// have the same class as the root element, then do not
+	// perform the cancel operation
+	const handleClickField = React.useCallback(event => {
+		if (!event.target.classList.contains("codemark-view")) return;
+		event.preventDefault();
+		dispatch(setCurrentCodemark());
+	}, []);
+
 	if (codemark == undefined)
 		return (
 			<DelayedRender>
@@ -88,7 +99,7 @@ export function CodemarkView() {
 		);
 
 	return (
-		<div className="codemark-view">
+		<div className="codemark-view" onClick={handleClickField}>
 			<CancelButton className="cancel-icon clickable" onClick={handleClickCancel} />
 			<div className="codemark-container">
 				<Codemark codemark={codemark} selected highlightCodeInTextEditor />
