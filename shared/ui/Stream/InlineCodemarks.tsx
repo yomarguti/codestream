@@ -52,7 +52,7 @@ import {
 	setCurrentCodemark
 } from "../store/context/actions";
 import { sortBy as _sortBy } from "lodash-es";
-import { setEditorContext } from "../store/editorContext/actions";
+import { setEditorContext, changeSelection } from "../store/editorContext/actions";
 import { CodeStreamState } from "../store";
 import ContainerAtEditorLine from "./SpatialView/ContainerAtEditorLine";
 import ContainerAtEditorSelection from "./SpatialView/ContainerAtEditorSelection";
@@ -119,6 +119,7 @@ interface Props {
 
 	createPostAndCodemark: (...args: Parameters<typeof createPostAndCodemark>) => any;
 	addDocumentMarker: Function;
+	changeSelection: Function;
 }
 
 interface State {
@@ -1364,14 +1365,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		this.handleUnhighlightLine(lineNum0);
 
 		if (setSelection) {
-			await new Promise(async resolve => {
-				this._updateEmitter.enqueue(resolve);
-				await HostApi.instance.send(EditorSelectRangeRequestType, {
-					uri: this.props.textEditorUri!,
-					selection: { ...range!, cursor: range!.end },
-					preserveFocus: true
-				});
-			});
+			await this.props.changeSelection(this.props.textEditorUri!, { ...range, cursor: range.end });
 		}
 		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
 			uri: this.props.textEditorUri!,
@@ -1499,6 +1493,7 @@ export default connect(
 		setCurrentCodemark,
 		setEditorContext,
 		createPostAndCodemark,
-		addDocumentMarker
+		addDocumentMarker,
+		changeSelection
 	}
 )(SimpleInlineCodemarks);
