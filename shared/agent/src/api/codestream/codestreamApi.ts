@@ -494,7 +494,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 				break;
 			case MessageType.Teams:
 				const currentTeam = await SessionContainer.instance().teams.getByIdFromCache(this.teamId);
-				const providerHostsBefore = cloneDeep((currentTeam ? currentTeam.providerHosts : undefined) || {});
+				const providerHostsBefore = cloneDeep(
+					(currentTeam ? currentTeam.providerHosts : undefined) || {}
+				);
 				e.data = await SessionContainer.instance().teams.resolve(e);
 				const providerHostsAfter = (currentTeam ? currentTeam.providerHosts : undefined) || {};
 				if (!isEqual(providerHostsBefore, providerHostsAfter)) {
@@ -816,9 +818,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	getPosts(request: GetPostsRequest) {
 		return this.get<CSGetPostsResponse>(
-			`/posts?teamId=${this.teamId}&streamId=${request.streamId}&postIds=${request.postIds.join(
-				","
-			)}`,
+			`/posts?teamId=${this.teamId}&streamId=${request.streamId}&ids=${request.postIds.join(",")}`,
 			this._token
 		);
 	}
@@ -1100,7 +1100,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@lspHandler(UpdateTeamTagRequestType)
 	async updateTeamTag(request: CSTeamTagRequest) {
-		await this.put(`/team-tags/${request.team.id}/${request.tag.id}`, { ...request.tag }, this._token);
+		await this.put(
+			`/team-tags/${request.team.id}/${request.tag.id}`,
+			{ ...request.tag },
+			this._token
+		);
 	}
 
 	convertUserIdToCodeStreamUserId(id: string): string {
@@ -1346,7 +1350,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async addEnterpriseProviderHost(request: AddEnterpriseProviderHostRequest): Promise<AddEnterpriseProviderHostResponse> {
+	async addEnterpriseProviderHost(
+		request: AddEnterpriseProviderHostRequest
+	): Promise<AddEnterpriseProviderHostResponse> {
 		const cc = Logger.getCorrelationContext();
 		try {
 			const response = await this.put<CSAddProviderHostRequest, CSAddProviderHostResponse>(
