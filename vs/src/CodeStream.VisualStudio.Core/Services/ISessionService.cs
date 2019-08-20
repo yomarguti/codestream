@@ -5,11 +5,11 @@ using Newtonsoft.Json.Linq;
 namespace CodeStream.VisualStudio.Core.Services {
 	public interface ISessionService {
 		User User { get; }
-		JToken State { get; }
-		void SetState(AgentState state);
+		JToken State { get; }		
 		void SetState(SessionState state);
 		SessionState SessionState { get; }
 		void SetUser(User user, JToken state);
+		void SetAgentConnected();
 		void SetAgentDisconnected();
 		List<string> PanelStack { get; set; }
 		/// <summary>

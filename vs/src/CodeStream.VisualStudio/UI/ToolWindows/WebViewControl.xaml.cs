@@ -38,7 +38,6 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 
 					InitializeComponent();
 
-					Log.Verbose($"{nameof(OnInitialized)}...");
 					_componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
 					Assumes.Present(_componentModel);
 
@@ -96,10 +95,15 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 		}
 
 		private void SetupInitialization() {
+			Log.Debug($"{nameof(SetupInitialization)} IsAgentReady={_sessionService.IsAgentReady}");
 			if (_sessionService.IsAgentReady) {
+				Log.Debug($"Calling {nameof(InitializeCore)}");
 				InitializeCore();
+				_browserService.LoadWebView();
 			}
 			else {
+				Log.Debug($"{nameof(SetupInitialization)} Setting up event");
+
 				if (_languageServerReadyEvent != null) {
 					// if we're re-using this... dispose it first.
 					_languageServerReadyEvent.Dispose();
@@ -108,6 +112,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 				_languageServerReadyEvent = _eventAggregator.GetEvent<LanguageServerReadyEvent>()
 					.ObserveOnApplicationDispatcher()
 					.Subscribe(_ => {
+						Log.Debug($"{nameof(LanguageServerReadyEvent)} Received, calling {nameof(InitializeCore)}");
 						InitializeCore();
 						_browserService.LoadWebView();
 					});
@@ -120,22 +125,23 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 				lock (InitializeLock) {
 					if (!_isInitialized) {
 						try {
+							using (Log.CriticalOperation(nameof(InitializeCore), Serilog.Events.LogEventLevel.Debug)) {
+								var router = new WebViewRouter(
+									_componentModel.GetService<IWebviewUserSettingsService>(),
+									_componentModel.GetService<ISessionService>(),
+									_componentModel.GetService<ICodeStreamAgentService>(),
+									_componentModel.GetService<ISettingsServiceFactory>(),
+									_eventAggregator,
+									_browserService,
+									_componentModel.GetService<IIdeService>(),
+									_componentModel.GetService<IEditorService>(),
+									_componentModel.GetService<IAuthenticationServiceFactory>());
 
-							var router = new WebViewRouter(
-								_componentModel.GetService<IWebviewUserSettingsService>(),
-								_componentModel.GetService<ISessionService>(),
-								_componentModel.GetService<ICodeStreamAgentService>(),
-								_componentModel.GetService<ISettingsServiceFactory>(),
-								_eventAggregator,
-								_browserService,
-								_componentModel.GetService<IIdeService>(),
-								_componentModel.GetService<IEditorService>(),
-								_componentModel.GetService<IAuthenticationServiceFactory>());
+								_browserService.AddWindowMessageEvent(
+									async delegate (object sender, WindowEventArgs ea) { await router.HandleAsync(ea); });
 
-							_browserService.AddWindowMessageEvent(
-								async delegate (object sender, WindowEventArgs ea) { await router.HandleAsync(ea); });
-
-							_isInitialized = true;
+								_isInitialized = true;
+							}
 						}
 						catch (Exception ex) {
 							Log.Fatal(ex, nameof(InitializeCore));

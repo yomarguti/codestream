@@ -405,6 +405,7 @@ namespace CodeStream.VisualStudio.Services {
 			ThreadHelper.JoinableTaskFactory.Run(async delegate {
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 				LoadHtml(CreateWebViewHarness(Assembly.GetAssembly(typeof(IBrowserService)), "webview"));
+				Log.Debug(nameof(LoadWebView));
 			});
 		}
 
@@ -415,6 +416,7 @@ namespace CodeStream.VisualStudio.Services {
 			ThreadHelper.JoinableTaskFactory.Run(async delegate {
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 				LoadHtml(CreateWebViewHarness(Assembly.GetAssembly(typeof(IBrowserService)), "waiting"));
+				Log.Debug(nameof(LoadSplashView));
 			});
 		}
 
@@ -422,7 +424,7 @@ namespace CodeStream.VisualStudio.Services {
 
 		public void Dispose() {
 			if (!_isDisposed) {
-				Log.Verbose("Browser Dispose...");
+				Log.Debug(nameof(Dispose));
 
 				Dispose(true);
 				_isDisposed = true;

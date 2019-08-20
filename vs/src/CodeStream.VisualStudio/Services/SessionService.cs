@@ -4,18 +4,21 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.Core.Logging;
+using Serilog;
 
 namespace CodeStream.VisualStudio.Services {
 
 	[Export(typeof(ISessionService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class SessionService : ISessionService, IDisposable {
+		private static readonly ILogger Log = LogManager.ForContext<SessionService>();
 		private AgentState _agentState;
 
 		public User User { get; private set; }
 		public JToken State { get; private set; }
-        public SessionState SessionState { get; private set; }
-        public List<string> PanelStack { get; set; }
+		public SessionState SessionState { get; private set; }
+		public List<string> PanelStack { get; set; }
 		public bool IsWebViewVisible { get; set; }
 		public bool AreMarkerGlyphsVisible { get; set; } = true;
 		/// <summary>
@@ -33,14 +36,17 @@ namespace CodeStream.VisualStudio.Services {
 		public string StateString => SessionState.ToString();
 		private static readonly object locker = new object();
 
-		public void SetState(AgentState state) {
+		public void SetAgentConnected() {
+			Log.Debug($"{nameof(SetState)}");
 			lock (locker) {
-				switch (state) {
-					case AgentState.Ready: {
-							_agentState = AgentState.Ready;
-							break;
-						}
-				}
+				_agentState = AgentState.Ready;
+			}
+		}
+
+		public void SetAgentDisconnected() {
+			Log.Debug($"{nameof(SetAgentDisconnected)}");
+			lock (locker) {
+				_agentState = AgentState.Disconnected;
 			}
 		}
 
@@ -48,16 +54,6 @@ namespace CodeStream.VisualStudio.Services {
 			lock (locker) {
 				SessionState = sessionState;
 			}
-		}
-
-		private void SetAgentState(AgentState agentState) {
-			lock (locker) {
-				_agentState = agentState;
-			}
-		}
-
-		public void SetAgentDisconnected() {
-			SetAgentState(AgentState.Disconnected);
 		}
 
 		public void SetUser(User user, JToken state) {
@@ -72,7 +68,11 @@ namespace CodeStream.VisualStudio.Services {
 			SetState(SessionState.UserSignedOut);
 		}
 
-		public bool IsAgentReady => _agentState == AgentState.Ready;
+		public bool IsAgentReady {
+			get {
+				return _agentState == AgentState.Ready;
+			}
+		}
 
 		public bool IsReady => _agentState == AgentState.Ready && SessionState == SessionState.UserSignedIn;
 
@@ -96,5 +96,5 @@ namespace CodeStream.VisualStudio.Services {
 		}
 	}
 
- 
+
 }
