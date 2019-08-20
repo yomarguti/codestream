@@ -68,9 +68,8 @@ export class EditorManipulator implements Disposable {
 		if (editor) {
 			if (range.isEmpty()) {
 				this.scrollIntoView(editor, range.start.row);
-			} else {
-				editor.setSelectedBufferRange(range);
 			}
+			editor.setSelectedBufferRange(range);
 		}
 	}
 }
