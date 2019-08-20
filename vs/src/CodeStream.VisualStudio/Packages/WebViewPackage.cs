@@ -87,7 +87,9 @@ namespace CodeStream.VisualStudio.Packages {
 
 				var isSolutionLoaded = await IsSolutionLoadedAsync();
 				Log.Debug($"{nameof(isSolutionLoaded)}={isSolutionLoaded}");
-				await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, TryTriggerLspActivationAsync);
+				if (isSolutionLoaded) {
+					await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, TryTriggerLspActivationAsync);
+				}
 
 				Log.Debug($"{nameof(InitializeAsync)} completed");
 			}
@@ -192,6 +194,7 @@ namespace CodeStream.VisualStudio.Packages {
 		/// </summary>
 		/// <returns></returns>
 		private async Task TryTriggerLspActivationAsync() {
+			Log.Debug($"{nameof(TryTriggerLspActivationAsync)} starting...");
 			var hasActiveEditor = false;
 			EnvDTE.DTE dte = null;
 			try {
