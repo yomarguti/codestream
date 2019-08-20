@@ -493,16 +493,19 @@
 	opacity: 0.6;
 	margin: 0 6px 0 2px;
 }
-.no-codemarks {
-	width: 100%;
+.no-codemarks-container {
 	position: fixed;
-	padding: 0 40px 0 40px;
+	width: 100%;
+	top: 50%;
+	transform: translateY(-50%);
+	z-index: 0;
+}
+.no-codemarks {
+	width: 20em;
+	margin: 0 auto;
 	color: @text-color-subtle;
 	text-align: center;
 	font-size: 13px;
-	z-index: 0;
-	top: 50%;
-	transform: translateY(-50%);
 	.keybindings {
 		background-color: @base-background-color;
 		padding: 10px;
@@ -518,6 +521,9 @@
 			.keybinding {
 			}
 		}
+	}
+	a {
+		white-space: nowrap;
 	}
 }
 

@@ -744,33 +744,31 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				</div>
 			);
 			return (
-				<div key="no-codemarks" className="no-codemarks">
-					There are no codemarks
-					<Icon title={title} placement="top" className="superscript" name="info" /> in{" "}
-					<b>{this.props.fileNameToFilterFor}</b>
-					<br />
-					<br />
-					Discuss code with your team by selecting a range and clicking an icon (
-					<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
-						show me how
-					</a>
-					).
-					<br />
-					<br />
-					<div className="keybindings">
-						<div className="function-row">{this.titles.comment}</div>
-						<div className="function-row">{this.titles.issue}</div>
-						<div className="function-row">{this.titles.bookmark}</div>
-						<div className="function-row">{this.titles.link}</div>
-						<div className="function-row">
-							<span className="function">Copy Private Permalink</span>
-							<span className="keybinding extra-pad">{modifier}</span>
-							<span className="keybinding extra-pad">⇧ p</span>
-						</div>
-						<div className="function-row">
-							<span className="function">Toggle CodeStream Panel</span>
-							<span className="keybinding extra-pad">{modifier}</span>
-							<span className="keybinding extra-pad">{modifier}</span>
+				<div key="no-codemarks" className="no-codemarks-container">
+					<div className="no-codemarks">
+						Discuss code with your team by selecting a range and clicking an icon, or by using a
+						shortcut below (
+						<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
+							show me how
+						</a>
+						).
+						<br />
+						<br />
+						<div className="keybindings">
+							<div className="function-row">{this.titles.comment}</div>
+							<div className="function-row">{this.titles.issue}</div>
+							<div className="function-row">{this.titles.bookmark}</div>
+							<div className="function-row">{this.titles.link}</div>
+							<div className="function-row">
+								<span className="function">Copy Private Permalink</span>
+								<span className="keybinding extra-pad">{modifier}</span>
+								<span className="keybinding extra-pad">⇧ p</span>
+							</div>
+							<div className="function-row">
+								<span className="function">Toggle CodeStream Panel</span>
+								<span className="keybinding extra-pad">{modifier}</span>
+								<span className="keybinding extra-pad">{modifier}</span>
+							</div>
 						</div>
 					</div>
 				</div>
