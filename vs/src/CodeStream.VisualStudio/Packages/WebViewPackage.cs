@@ -85,7 +85,10 @@ namespace CodeStream.VisualStudio.Packages {
 
 				await base.InitializeAsync(cancellationToken, progress);
 
-				//await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, TryTriggerLspActivationAsync);
+				var isSolutionLoaded = await IsSolutionLoadedAsync();
+				Log.Debug($"{nameof(isSolutionLoaded)}={isSolutionLoaded}");
+				await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, TryTriggerLspActivationAsync);
+
 				Log.Debug($"{nameof(InitializeAsync)} completed");
 			}
 			catch (Exception ex) {
@@ -156,10 +159,15 @@ namespace CodeStream.VisualStudio.Packages {
 				}
 
 				sessionService.SolutionName = e.FileName;
-
-				ThreadHelper.JoinableTaskFactory.Run(async delegate {
-					await TryTriggerLspActivationAsync();
-				});
+				if (e.ProjectType == ProjectType.Solution) {
+					Log.Debug($"About to {nameof(TryTriggerLspActivationAsync)} for {e.ProjectType}...");
+					ThreadHelper.JoinableTaskFactory.Run(async delegate {
+						await TryTriggerLspActivationAsync();
+					});
+				}
+				else {
+					Log.Debug($"Skipped {nameof(TryTriggerLspActivationAsync)} for {e.ProjectType}");
+				}
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(SolutionOrFolder_Opened));

@@ -64,8 +64,6 @@ namespace CodeStream.VisualStudio.Services {
 		bool _disposed;
 
 		public async Task SetRpcAsync(JsonRpc rpc) {
-			await System.Threading.Tasks.Task.Yield();
-
 			_rpc = rpc;
 			_rpc.Disconnected += Rpc_Disconnected;
 			Log.Debug(nameof(SetRpcAsync));
@@ -78,6 +76,8 @@ namespace CodeStream.VisualStudio.Services {
 				Log.Fatal(ex, nameof(SetRpcAsync));
 				throw;
 			}
+
+			await System.Threading.Tasks.Task.CompletedTask;
 		}
 
 		private void Rpc_Disconnected(object sender, JsonRpcDisconnectedEventArgs e) {

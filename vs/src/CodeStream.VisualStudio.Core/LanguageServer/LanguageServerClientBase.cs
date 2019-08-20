@@ -81,18 +81,20 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		protected async System.Threading.Tasks.Task OnServerInitializedBaseAsync(
 			ICodeStreamAgentService codeStreamAgentService, IComponentModel componentModel) {
 			try {
+				Log.Debug($"{nameof(OnServerInitializedBaseAsync)} starting...");
 				var sessionService = componentModel.GetService<ISessionService>();
 				sessionService.SetState(AgentState.Ready);
 
-				var autoSignInResult = await new AuthenticationController(
+				Log.Debug($"TryAutoSignInAsync starting...");
+				var authenticationController = new AuthenticationController(
 					SettingsServiceFactory.Create(),
 					sessionService,
 					codeStreamAgentService,
 					EventAggregator,
 					componentModel.GetService<ICredentialsService>(),
 					componentModel.GetService<IWebviewUserSettingsService>()
-					).TryAutoSignInAsync();
-
+					);
+				var autoSignInResult = await authenticationController.TryAutoSignInAsync();
 				Log.Information($"AutoSignIn Result={autoSignInResult}");
 				EventAggregator.Publish(new LanguageServerReadyEvent { IsReady = true });
 			}
@@ -100,7 +102,6 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 				Log.Fatal(ex, nameof(OnServerInitializedBaseAsync));
 				throw;
 			}
-			await System.Threading.Tasks.Task.CompletedTask;
 		}
 	}
 }

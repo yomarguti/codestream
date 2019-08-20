@@ -28,7 +28,7 @@ namespace CodeStream.VisualStudio.Services {
 		protected Task<Tuple<string, string>> LoadAsync(params string[] keys) {
 			if (keys == null) throw new ArgumentNullException(nameof(keys));
 
-			Log.Verbose(nameof(LoadAsync));
+			Log.Debug(nameof(LoadAsync));
 			Tuple<string, string> result = null;
 
 			try {
@@ -49,7 +49,7 @@ namespace CodeStream.VisualStudio.Services {
 		protected Task<JToken> LoadJsonAsync(params string[] keys) {
 			if (keys == null) throw new ArgumentNullException(nameof(keys));
 
-			Log.Verbose(nameof(LoadAsync));
+			Log.Debug(nameof(LoadAsync));
 			JToken result = null;
 
 			try {
@@ -77,7 +77,7 @@ namespace CodeStream.VisualStudio.Services {
 		protected Task<bool> SaveAsync(string userName, string secret, params string[] keys) {
 			if (keys == null) throw new ArgumentNullException(nameof(keys));
 
-			Log.Verbose(nameof(SaveAsync));
+			Log.Debug(nameof(SaveAsync));
 
 			try {
 				Credential.Save(GetKey(FormatKey(keys)), userName, secret);
@@ -93,7 +93,7 @@ namespace CodeStream.VisualStudio.Services {
 		protected bool Save(string userName, string secret, params string[] keys) {
 			if (keys == null) throw new ArgumentNullException(nameof(keys));
 
-			Log.Verbose(nameof(SaveAsync));
+			Log.Debug(nameof(SaveAsync));
 
 			try {
 				Credential.Save(GetKey(FormatKey(keys)), userName, secret);
@@ -109,7 +109,7 @@ namespace CodeStream.VisualStudio.Services {
 		protected Task<bool> DeleteAsync(params string[] keys) {
 			if (keys == null) throw new ArgumentNullException(nameof(keys));
 
-			Log.Verbose(nameof(DeleteAsync));
+			Log.Debug(nameof(DeleteAsync));
 
 			try {
 				Credential.Delete(GetKey(FormatKey(keys)));

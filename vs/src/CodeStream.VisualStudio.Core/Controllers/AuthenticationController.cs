@@ -55,30 +55,39 @@ namespace CodeStream.VisualStudio.Core.Controllers {
 			try {
 				ProcessLoginResponse processResponse = null;
 
-				if (_settingsManager.AutoSignIn && !_settingsManager.Email.IsNullOrWhiteSpace()) {
-					var token = await _credentialsService.LoadJsonAsync(_settingsManager.ServerUrl.ToUri(), _settingsManager.Email);
-					if (token != null) {
-						try {
-							var teamId = _webviewUserSettingsService?.TryGetTeamId(_sessionService.SolutionName);
-							var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(token, _settingsManager.Team, teamId);
-							processResponse = ProcessLoginError(loginResponse);
+				if (!_settingsManager.AutoSignIn || _settingsManager.Email.IsNullOrWhiteSpace()) {
+					Log.Debug("no AutoSignIn or Email is missing");
+					return false;
+				}
 
-							if (!processResponse.Success) {
-								if (!processResponse.ErrorMessage.IsNullOrWhiteSpace() &&
-									Enum.TryParse(processResponse.ErrorMessage, out LoginResult loginResult) && loginResult != LoginResult.VERSION_UNSUPPORTED) {
-									await _credentialsService.DeleteAsync(_settingsManager.ServerUrl.ToUri(), _settingsManager.Email);
-								}
-								return false;
+				var token = await _credentialsService.LoadJsonAsync(_settingsManager.ServerUrl.ToUri(), _settingsManager.Email);
+				if (token != null) {
+					Log.Debug("Attempting to AutoSignIn");
+					try {
+						var teamId = _webviewUserSettingsService?.TryGetTeamId(_sessionService.SolutionName);
+						var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(token, _settingsManager.Team, teamId);
+						processResponse = ProcessLoginError(loginResponse);
+						Log.Debug($"{nameof(processResponse)} Success={processResponse?.Success}");
+						if (!processResponse.Success) {
+							if (!processResponse.ErrorMessage.IsNullOrWhiteSpace() &&
+								Enum.TryParse(processResponse.ErrorMessage, out LoginResult loginResult) && loginResult != LoginResult.VERSION_UNSUPPORTED) {
+								await _credentialsService.DeleteAsync(_settingsManager.ServerUrl.ToUri(), _settingsManager.Email);
 							}
-							else {								
-								return true;
-							}
+							return false;
 						}
-						catch (Exception ex) {
-							Log.Warning(ex, $"{nameof(TryAutoSignInAsync)}");
+						else {
+							return true;
 						}
 					}
+					catch (Exception ex) {
+						Log.Warning(ex, $"{nameof(TryAutoSignInAsync)}");
+					}
 				}
+				else {
+					Log.Debug("Missing token");
+				}
+
+				return false;
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(TryAutoSignInAsync));

@@ -70,7 +70,8 @@ namespace CodeStream.VisualStudio.UI {
 					}
 					_wpfTextView.Properties.RemovePropertySafe(PropertyNames.DocumentMarkers);
 					_wpfTextView.Properties.AddProperty(PropertyNames.DocumentMarkers, _markers?.Markers);
-					Log.Debug("Setting Markers({Count})", _markers?.Markers.Count);
+					Log.Debug($"Setting Markers({_markers?.Markers.Count}) for {fileUri}");
+
 					var current = _markers?.Markers.Any() == true;
 					if (previousResult == true && current == false) {
 						result = true;
