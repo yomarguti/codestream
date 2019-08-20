@@ -12,7 +12,8 @@ import {
 	debounceToAnimationFrame,
 	isNotOnDisk,
 	areRangesEqual,
-	ComponentUpdateEmitter
+	ComponentUpdateEmitter,
+	isRangeEmpty
 } from "../utils";
 import { HostApi } from "../webview-api";
 import {
@@ -997,15 +998,18 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						codeBlock={codeBlock}
 						streamId={this.props.currentStreamId!}
 						onSubmit={this.submitCodemark}
-						onClickClose={() => {
-							this.setState({ newCodemarkAttributes: undefined });
-						}}
+						onClickClose={this.closeCodemarkForm}
 						collapsed={false}
 					/>
 				</div>
 			</ContainerAtEditorSelection>
 		);
 	}
+
+	closeCodemarkForm = () => {
+		this.setState({ newCodemarkAttributes: undefined });
+		this.clearSelection();
+	};
 
 	static contextTypes = {
 		store: PropTypes.object
@@ -1216,21 +1220,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	clearSelection = () => {
 		const { textEditorSelection } = this.props;
-		if (
-			textEditorSelection &&
-			(textEditorSelection.start.line !== textEditorSelection.end.line ||
-				textEditorSelection.start.character !== textEditorSelection.end.character)
-		) {
+		if (textEditorSelection && !isRangeEmpty(textEditorSelection)) {
 			const position = Position.create(
 				textEditorSelection.cursor.line,
 				textEditorSelection.cursor.character
 			);
 			const range = Range.create(position, position);
-			HostApi.instance.send(EditorSelectRangeRequestType, {
-				uri: this.props.textEditorUri!,
-				selection: { ...range, cursor: range.end },
-				preserveFocus: true
-			});
+			this.props.changeSelection(this.props.textEditorUri!, { ...range, cursor: range.end });
 			// just short-circuits the round-trip to the editor
 			this.setState({ openIconsOnLine: -1 });
 		}
@@ -1354,7 +1350,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const mappedLineNum = this.mapLine0ToVisibleRange(lineNum0);
 
 		let range: Range | undefined;
-		let setSelection = false;
 		if (
 			mappedLineNum === openIconsOnLine &&
 			textEditorSelection &&
@@ -1365,15 +1360,17 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			range = Range.create(textEditorSelection.start, textEditorSelection.end);
 		} else {
 			range = Range.create(mappedLineNum, 0, mappedLineNum, MaxRangeValue);
-			setSelection = true;
+			const newSelection: EditorSelection = { ...range, cursor: range.end };
+			// HACK: although the changeSelection action creator will update the redux store,
+			// this component needs to update the store pre-emptively to avoid flashing the hover button
+			// before the form appears. the flash is because as the selection changes, we try to show the hover button to initiate opening the form
+			this.props.setEditorContext({ textEditorSelections: [newSelection] });
+			this.props.changeSelection(this.props.textEditorUri!, newSelection);
 		}
 
 		// Clear the previous highlight
 		this.handleUnhighlightLine(lineNum0);
 
-		if (setSelection) {
-			await this.props.changeSelection(this.props.textEditorUri!, { ...range, cursor: range.end });
-		}
 		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
 			uri: this.props.textEditorUri!,
 			range: range,
