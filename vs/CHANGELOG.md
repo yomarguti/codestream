@@ -4,6 +4,7 @@
 
 ### Added
 
+- Adds Open Folder functionality
 - Adds more robust tagging functionality, allowing you to create tags with any color / text label combination
 - Adds the ability to link parts of your codebase by adding "related" codemarks to a parent codemark, and then using the links to jump around the codebases
 
@@ -16,6 +17,7 @@
 
 ### Fixed
 
+- Fixes [#74](https://github.com/TeamCodeStream/CodeStream/issues/74) &mdash; Extension messes with default settings / LSP is changing the theme
 - Fixes an issue with the positioning of the codemark form when creating a codemark at the bottom of the viewport
 - Fixes an issue with not being able to change issue-tracking selection once Azure DevOps has been selected
 - Fixes an issue with password reset in CodeStream on-prem
