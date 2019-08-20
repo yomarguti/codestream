@@ -207,7 +207,9 @@ namespace CodeStream.VisualStudio.Services {
 
 		public TraceLevel GetAgentTraceLevel() {
 			if (TraceLevel == TraceLevel.Info)
-				return TraceLevel.Errors;
+				return TraceLevel.Verbose;
+			if (TraceLevel == TraceLevel.Debug || TraceLevel == TraceLevel.Verbose)
+				return TraceLevel.Debug;
 
 			return TraceLevel;
 		}
