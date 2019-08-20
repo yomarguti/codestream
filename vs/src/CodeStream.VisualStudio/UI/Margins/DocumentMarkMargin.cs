@@ -150,7 +150,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		}
 
 		public void RefreshMargin() {
-			if (_lineInfos == null) return;
+			if (_lineInfos == null || _isDisposed) return;
 
 			_lineInfos.Clear();
 			foreach (var c in _childCanvases) {
@@ -312,7 +312,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 				}
 			}
 			catch (ObjectDisposedException ex) {
-				Log.Error(ex, nameof(CreateIconInfos) + " " + nameof(ObjectDisposedException));
+				Log.Error(ex, nameof(CreateIconInfos) + " " + nameof(ObjectDisposedException) + $" AgentReady={ _sessionService?.IsAgentReady} IsReady={_sessionService?.IsReady} _isDisposed={_isDisposed}");
 			}
 
 			catch (Exception ex) {
