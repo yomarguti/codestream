@@ -3,6 +3,7 @@ import { action } from "../common";
 import { PendingPost, Post, PostsActionsType } from "./types";
 import { HostApi } from "@codestream/webview/webview-api";
 import { GetPostsRequestType } from "@codestream/protocols/agent";
+import { logError } from "@codestream/webview/logger";
 
 export const reset = () => action("RESET");
 
@@ -33,10 +34,18 @@ export const getPosts = (
 	postIds: string[],
 	parentPostId?: string
 ) => async dispatch => {
-	const { posts } = await HostApi.instance.send(GetPostsRequestType, {
-		streamId,
-		postIds,
-		parentPostId
-	});
-	dispatch(addPosts(posts));
+	try {
+		const { posts } = await HostApi.instance.send(GetPostsRequestType, {
+			streamId,
+			postIds,
+			parentPostId
+		});
+		dispatch(addPosts(posts));
+	} catch (error) {
+		logError(error, {
+			streamId,
+			postIds,
+			parentPostId
+		});
+	}
 };
