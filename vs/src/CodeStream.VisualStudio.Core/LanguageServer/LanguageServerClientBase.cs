@@ -7,6 +7,8 @@ using System;
 using CodeStream.VisualStudio.Core.Controllers;
 using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Extensions;
+using Microsoft.VisualStudio.Shell;
+using System.Threading;
 
 namespace CodeStream.VisualStudio.Core.LanguageServer {
 	public abstract class LanguageServerClientBase {
@@ -86,17 +88,28 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 				var sessionService = componentModel.GetService<ISessionService>();
 				sessionService.SetAgentConnected();
 
-				Log.Debug($"TryAutoSignInAsync starting...");
-				var authenticationController = new AuthenticationController(
-					SettingsServiceFactory.Create(),
-					sessionService,
-					codeStreamAgentService,
-					EventAggregator,
-					componentModel.GetService<ICredentialsService>(),
-					componentModel.GetService<IWebviewUserSettingsService>()
-					);
-				var autoSignInResult = await authenticationController.TryAutoSignInAsync();
+				bool autoSignInResult = false;
+				try {
+					Log.Debug($"TryAutoSignInAsync starting...");
+					var authenticationController = new AuthenticationController(
+						SettingsServiceFactory.Create(),
+						sessionService,
+						codeStreamAgentService,
+						EventAggregator,
+						componentModel.GetService<ICredentialsService>(),
+						componentModel.GetService<IWebviewUserSettingsService>()
+						);
+					autoSignInResult = await authenticationController.TryAutoSignInAsync();
+				}
+				catch (Exception ex) {
+					Log.Error(ex, nameof(OnServerInitializedBaseAsync));
+				}
+
 				Log.Information($"AutoSignIn Result={autoSignInResult}");
+				Log.Debug($"Switching to UI thread");
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+				Log.Debug("Switched to UI thread");
+
 				Log.Debug($"Publishing {nameof(LanguageServerReadyEvent)}...");
 				EventAggregator.Publish(new LanguageServerReadyEvent { IsReady = true });
 				Log.Debug($"Published {nameof(LanguageServerReadyEvent)}");

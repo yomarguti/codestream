@@ -25,7 +25,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 		private IDisposable _languageServerReadyEvent;
 		private bool _disposed = false;
 		private bool _isInitialized;
-		private static readonly object InitializeLock = new object();
+		private static readonly object InitializeLock = new object();		
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="WebViewControl"/> class.
@@ -94,20 +94,10 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 			}
 		}
 
-		private void SetupInitialization() {
+		private void SetupInitialization() {			
 			Log.Debug($"{nameof(SetupInitialization)} IsAgentReady={_sessionService.IsAgentReady}");
-			if (_sessionService.IsAgentReady) {
-				Log.Debug($"Calling {nameof(InitializeCore)}");
-				InitializeCore();
-				_browserService.LoadWebView();
-			}
-			else {
-				Log.Debug($"{nameof(SetupInitialization)} Setting up event");
-
-				if (_languageServerReadyEvent != null) {
-					// if we're re-using this... dispose it first.
-					_languageServerReadyEvent.Dispose();
-				}
+			if (_languageServerReadyEvent == null) {
+				Log.Debug($"{nameof(SetupInitialization)} Setting up {nameof(LanguageServerReadyEvent)} event");
 				// ReSharper disable once PossibleNullReferenceException
 				_languageServerReadyEvent = _eventAggregator.GetEvent<LanguageServerReadyEvent>()
 					.ObserveOnApplicationDispatcher()
@@ -116,6 +106,12 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 						InitializeCore();
 						_browserService.LoadWebView();
 					});
+			}
+
+			if (_sessionService.IsAgentReady) {
+				Log.Debug($"Calling {nameof(InitializeCore)}");
+				InitializeCore();
+				_browserService.LoadWebView();
 			}
 		}
 
