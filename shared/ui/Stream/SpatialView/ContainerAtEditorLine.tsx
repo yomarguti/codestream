@@ -8,6 +8,7 @@ import {
 import { CodeStreamState } from "@codestream/webview/store";
 import { useRect, useUpdates } from "@codestream/webview/utilities/hooks";
 
+// TODO: figure out how to handle if there is no editor context
 export default function ContainerAtEditorLine(props: {
 	lineNumber: number;
 	children: ReactNode | ReactNode[];

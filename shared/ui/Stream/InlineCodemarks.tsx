@@ -428,6 +428,10 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	async onFileChanged(isInitialRender = false) {
 		const { textEditorUri, setEditorContext } = this.props;
 
+		if (textEditorUri === undefined && this.state.newCodemarkAttributes) {
+			this.setState({ newCodemarkAttributes: undefined });
+		}
+
 		if (textEditorUri === undefined || isNotOnDisk(textEditorUri)) {
 			if (isInitialRender) {
 				this.setState({ isLoading: false });
