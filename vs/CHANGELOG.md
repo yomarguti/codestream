@@ -1,5 +1,11 @@
 # Change Log
 
+## [2.1.1] - 2019-8-21
+
+### Fixed
+
+Activation issue on subsequent folder/solution opens
+
 ## [2.1.0] - 2019-8-20
 
 ### Added
