@@ -1,4 +1,5 @@
 "use strict";
+import { ProtocolHandler } from "protocolHandler";
 import {
 	env,
 	ExtensionContext,
@@ -79,6 +80,7 @@ export async function activate(context: ExtensionContext) {
 	});
 
 	context.subscriptions.push(Container.session.onDidChangeSessionStatus(onSessionStatusChanged));
+	context.subscriptions.push(new ProtocolHandler());
 
 	showStartupMessage(context, extensionVersion);
 

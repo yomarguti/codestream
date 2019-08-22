@@ -29,6 +29,7 @@ import {
 	HostDidChangeEditorSelectionNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
 	HostDidLogoutNotificationType,
+	HostDidReceiveRequestNotificationType,
 	InsertTextRequestType,
 	IpcRoutes,
 	isIpcRequestMessage,
@@ -39,6 +40,7 @@ import {
 	LogoutRequestType,
 	NewCodemarkNotificationType,
 	ReloadWebviewRequestType,
+	ShellPromptFolderRequestType,
 	ShowCodemarkNotificationType,
 	UpdateConfigurationRequestType,
 	WebviewContext,
@@ -55,6 +57,7 @@ import {
 	ConfigurationChangeEvent,
 	ConfigurationTarget,
 	Disposable,
+	OpenDialogOptions,
 	TextEditor,
 	TextEditorSelectionChangeEvent,
 	TextEditorVisibleRangesChangeEvent,
@@ -327,6 +330,16 @@ export class WebviewController implements Disposable {
 		}
 
 		this._webview!.notify(DidChangeVersionCompatibilityNotificationType, e);
+	}
+
+	@log({
+		args: false
+	})
+	async handleProtocol(uri: Uri) {
+		await this.ensureWebView();
+		this._webview!.notify(HostDidReceiveRequestNotificationType, {
+			url: uri.toString()
+		});
 	}
 
 	@log()
@@ -604,6 +617,25 @@ export class WebviewController implements Disposable {
 			}
 			case ReloadWebviewRequestType.method: {
 				webview.onIpcRequest(ReloadWebviewRequestType, e, async (type, params) => this.reload());
+
+				break;
+			}
+			case ShellPromptFolderRequestType.method: {
+				webview.onIpcRequest(ShellPromptFolderRequestType, e, async (type, params) => {
+					const fileUri = await window.showOpenDialog({
+						canSelectMany: false,
+						canSelectFiles: false,
+						canSelectFolders: true
+					});
+
+					let path: string | undefined = undefined;
+					if (fileUri && fileUri[0]) {
+						path = fileUri[0].fsPath;
+					}
+					return {
+						path: path
+					};
+				});
 
 				break;
 			}
