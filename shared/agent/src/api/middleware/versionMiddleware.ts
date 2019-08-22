@@ -1,17 +1,23 @@
 "use strict";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
-import { VersionCompatibility } from "../../protocol/agent.protocol";
+import { ApiVersionCompatibility, VersionCompatibility } from "../../protocol/agent.protocol";
 import { log } from "../../system";
 import {
 	ApiProvider,
 	CodeStreamApiMiddleware,
 	CodeStreamApiMiddlewareContext
 } from "../apiProvider";
+import { APIServerVersionInfo } from "../codestream/apiServerVersionInfo";
 
 export interface VersionCompatibilityChangedEvent {
 	compatibility: VersionCompatibility;
 	downloadUrl: string;
 	version: string | undefined;
+}
+
+export interface ApiVersionCompatibilityChangedEvent {
+	compatibility: ApiVersionCompatibility;
+	version: string;
 }
 
 export class VersionMiddlewareManager implements Disposable {
@@ -20,8 +26,14 @@ export class VersionMiddlewareManager implements Disposable {
 		return this._onDidChangeCompatibility.event;
 	}
 
+	private _onDidChangeApiCompatibility = new Emitter<ApiVersionCompatibilityChangedEvent>();
+	get onDidChangeApiCompatibility(): Event<ApiVersionCompatibilityChangedEvent> {
+		return this._onDidChangeApiCompatibility.event;
+	}
+
 	private readonly _disposable: Disposable;
 	private _compatibility: VersionCompatibility | undefined;
+	private _apiVersion: string = "";
 
 	constructor(private readonly _api: ApiProvider) {
 		this._disposable = this._api.useMiddleware(new VersionMiddleware(this));
@@ -42,6 +54,48 @@ export class VersionMiddlewareManager implements Disposable {
 			version: version
 		});
 	}
+
+	@log()
+	async apiVersionNotify(compatibility: ApiVersionCompatibility, version: string) {
+		this._onDidChangeApiCompatibility.fire({
+			compatibility: compatibility,
+			version: version
+		});
+	}
+
+	@log()
+	async setApiVersion(version: string) {
+		const prevApiVersion = this._apiVersion;
+		let compatibility = ApiVersionCompatibility.ApiCompatible;
+		if (version !== prevApiVersion) {
+			if (this.compareVersions(version, APIServerVersionInfo.minimumRequired) === -1) {
+				compatibility = ApiVersionCompatibility.ApiUpgradeRequired;
+			}
+			else if (this.compareVersions(version, APIServerVersionInfo.minimumPreferred) === -1) {
+				compatibility = ApiVersionCompatibility.ApiUpgradeRecommended;
+			}
+			this.apiVersionNotify(compatibility, version);
+		}
+		if (compatibility !== ApiVersionCompatibility.ApiUpgradeRequired) {
+			this._apiVersion = version;
+		}
+	}
+
+	get apiVersion() {
+		return this._apiVersion;
+	}
+
+	compareVersions(version1: string, version2: string) {
+		const [ major1, minor1, patch1 ] = version1.split(".").map(str => parseInt(str, 10));
+		const [ major2, minor2, patch2 ] = version2.split(".").map(str => parseInt(str, 10));
+		if (major1 > major2) return 1;
+		else if (major1 < major2) return -1;
+		else if (minor1 > minor2) return 1;
+		else if (minor1 < minor2) return -1;
+		else if (patch1 > patch2) return 1;
+		else if (patch1 < patch2) return -1;
+		else return 0;
+	}
 }
 
 export class VersionMiddleware implements CodeStreamApiMiddleware {
@@ -53,6 +107,9 @@ export class VersionMiddleware implements CodeStreamApiMiddleware {
 
 	async onResponse<R>(context: Readonly<CodeStreamApiMiddlewareContext>, responseJson: Promise<R>) {
 		if (context.response === undefined) return;
+
+		const apiVersion = context.response.headers.get("X-CS-API-Version") || "";
+		this._manager.setApiVersion(apiVersion);
 
 		const compatibility = context.response.headers.get(
 			"X-CS-Version-Disposition"

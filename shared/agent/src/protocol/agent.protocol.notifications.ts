@@ -154,6 +154,22 @@ export const DidChangeVersionCompatibilityNotificationType = new NotificationTyp
 	void
 >("codestream/didChangeVersionCompatibility");
 
+export enum ApiVersionCompatibility {
+	ApiCompatible = "ApiOk",
+	ApiUpgradeRecommended = "apiUpgradeRecommended",
+	ApiUpgradeRequired = "apiUpgradeRequired"
+}
+
+export interface DidChangeApiVersionCompatibilityNotification {
+	compatibility: ApiVersionCompatibility;
+	version: string;
+}
+
+export const DidChangeApiVersionCompatibilityNotificationType = new NotificationType<
+	DidChangeApiVersionCompatibilityNotification,
+	void
+>("codestream/didChangeApiVersionCompatibility");
+
 export enum LogoutReason {
 	Token = "token",
 	Unknown = "unknown",

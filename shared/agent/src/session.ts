@@ -22,6 +22,7 @@ import {
 import { CodeStreamApiProvider } from "./api/codestream/codestreamApi";
 import { Team, User } from "./api/extensions";
 import {
+	ApiVersionCompatibilityChangedEvent,
 	VersionCompatibilityChangedEvent,
 	VersionMiddlewareManager
 } from "./api/middleware/versionMiddleware";
@@ -33,6 +34,7 @@ import { Logger } from "./logger";
 import {
 	AccessToken,
 	ApiRequestType,
+	ApiVersionCompatibility,
 	BaseAgentOptions,
 	BootstrapRequestType,
 	ChangeDataType,
@@ -40,6 +42,7 @@ import {
 	ConfirmRegistrationRequest,
 	ConfirmRegistrationRequestType,
 	ConnectionStatus,
+	DidChangeApiVersionCompatibilityNotificationType,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
@@ -248,6 +251,7 @@ export class CodeStreamSession {
 
 		const versionManager = new VersionMiddlewareManager(this._api);
 		versionManager.onDidChangeCompatibility(this.onVersionCompatibilityChanged, this);
+		versionManager.onDidChangeApiCompatibility(this.onApiVersionCompatibilityChanged, this);
 
 		// this.connection.onHover(e => MarkerHandler.onHover(e));
 
@@ -389,6 +393,15 @@ export class CodeStreamSession {
 
 		if (e.compatibility === VersionCompatibility.UnsupportedUpgradeRequired) {
 			this.logout(LogoutReason.UnsupportedVersion);
+		}
+	}
+
+	@log()
+	private onApiVersionCompatibilityChanged(e: ApiVersionCompatibilityChangedEvent) {
+		this.agent.sendNotification(DidChangeApiVersionCompatibilityNotificationType, e);
+
+		if (e.compatibility === ApiVersionCompatibility.ApiUpgradeRequired) {
+			// this.logout(LogoutReason.UnsupportedVersion);
 		}
 	}
 
