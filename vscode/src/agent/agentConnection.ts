@@ -15,6 +15,8 @@ import {
 	CreatePostWithMarkerRequestType,
 	CreateRepoRequestType,
 	DeletePostRequestType,
+	DidChangeApiVersionCompatibilityNotification,
+	DidChangeApiVersionCompatibilityNotificationType,
 	DidChangeConnectionStatusNotification,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotification,
@@ -856,6 +858,11 @@ export class CodeStreamAgentConnection implements Disposable {
 		await Container.webview.onVersionChanged(e);
 	}
 
+	@log()
+	private async onApiVersionCompatibilityChanged(e: DidChangeApiVersionCompatibilityNotification) {
+		await Container.webview.onApiVersionChanged(e);
+	}
+
 	@started
 	async sendNotification<NT extends NotificationType<any, any>>(
 		type: NT,
@@ -960,6 +967,10 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._client.onNotification(
 			DidChangeVersionCompatibilityNotificationType,
 			this.onVersionCompatibilityChanged.bind(this)
+		);
+		this._client.onNotification(
+			DidChangeApiVersionCompatibilityNotificationType,
+			this.onApiVersionCompatibilityChanged.bind(this)
 		);
 		this._client.onNotification(DidLoginNotificationType, e => this._onDidLogin.fire(e));
 		this._client.onNotification(DidStartLoginNotificationType, () => this._onDidStartLogin.fire());

@@ -1,6 +1,9 @@
 "use strict";
 import {
+	ApiVersionCompatibility,
 	ConnectionStatus,
+	DidChangeApiVersionCompatibilityNotification,
+	DidChangeApiVersionCompatibilityNotificationType,
 	DidChangeConnectionStatusNotification,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotification,
@@ -100,6 +103,7 @@ export class WebviewController implements Disposable {
 	private _disposableWebview: Disposable | undefined;
 	private _webview: CodeStreamWebviewPanel | undefined;
 	private _versionCompatibility: VersionCompatibility | undefined;
+	private _apiVersionCompatibility: ApiVersionCompatibility | undefined;
 
 	private readonly _notifyActiveEditorChangedDebounced: (e: TextEditor | undefined) => void;
 
@@ -340,6 +344,18 @@ export class WebviewController implements Disposable {
 		this._webview!.notify(HostDidReceiveRequestNotificationType, {
 			url: uri.toString()
 		});
+	}
+	
+	@log()
+	async onApiVersionChanged(e: DidChangeApiVersionCompatibilityNotification) {
+		if (e.compatibility === ApiVersionCompatibility.ApiUpgradeRequired) {
+			this._apiVersionCompatibility = e.compatibility;
+		}
+		if (!this.visible) {
+			await this.show();
+		}
+
+		this._webview!.notify(DidChangeApiVersionCompatibilityNotificationType, e);
 	}
 
 	@log()
@@ -734,7 +750,8 @@ export class WebviewController implements Disposable {
 						currentTeamId: currentTeamId
 				  },
 			version: Container.versionFormatted,
-			versionCompatibility: this._versionCompatibility
+			versionCompatibility: this._versionCompatibility,
+			apiVersionCompatibility: this._apiVersionCompatibility
 		};
 	}
 
