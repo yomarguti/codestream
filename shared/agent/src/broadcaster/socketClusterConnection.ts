@@ -43,19 +43,28 @@ export class SocketClusterConnection implements BroadcasterConnection {
 	private _debug: (msg: string, info?: any) => void = () => {};
 	private _messageCallback: MessageCallback | undefined;
 	private _statusCallback: StatusCallback | undefined;
+	private _connectionTimer: NodeJS.Timer | undefined;
+	private _connectionPending: boolean = false;
 
 	// initialize SocketCluster connection
 	initialize(options: SocketClusterInitializer): Promise<Disposable> {
 		if (options.debug) {
 			this._debug = options.debug;
 		}
-		this._debug(`SocketCluster Connection initializing...`);
+		this._debug("SocketCluster Connection initializing...");
 
 		this._messageCallback = options.onMessage;
 		this._statusCallback = options.onStatus;
 
+		this._connectionPending = true;
 		return new Promise((resolve, reject) => {
+			this._connectionTimer = setTimeout(() => {
+				this._debug("SocketCluster connection timed out");
+				this._connectionPending = false;
+				reject("timed out");
+			}, 10000);
 			try {
+				this._debug("Creating SocketCluster connection...");
 				this._scClient = create({
 					hostname: options.host,
 					port: parseInt(options.port, 10),
@@ -63,17 +72,27 @@ export class SocketClusterConnection implements BroadcasterConnection {
 					rejectUnauthorized: false
 				});
 			} catch (ex) {
+				this._connectionPending = false;
 				reject(ex);
 			}
 			this._scClient!.on("connect", () => {
-				this._onConnected(options);
+				this._debug("SocketCluster connected");
+				if (this._connectionPending) {
+					this._onConnected(options);
+				}
 			});
 
 			this._scClient!.on("disconnect", () => {
+				this._debug("SocketCluster disconnected");
 				this._onDisconnect(options);
 			});
 
 			this._scClient!.on("authed", () => {
+				this._debug("SocketCluster authorized the connection");
+				if (this._connectionTimer) {
+					clearTimeout(this._connectionTimer);
+				}
+				this._connectionPending = false;
 				resolve({
 					dispose: () => {
 						this.unsubscribeAll();
@@ -83,6 +102,7 @@ export class SocketClusterConnection implements BroadcasterConnection {
 			});
 			this._scClient!.on("error", error => {
 				if (!this._connected) {
+					this._connectionPending = false;
 					reject(error);
 				}
 				const message = error instanceof Error ? error.message : JSON.stringify(error);
@@ -93,6 +113,7 @@ export class SocketClusterConnection implements BroadcasterConnection {
 
 	_onConnected(options: SocketClusterInitializer): void {
 		this._connected = true;
+		this._debug("Emitting authorization request to SocketCluster...");
 		this._scClient!.emit("auth", {
 			token: options.authKey,
 			uid: options.userId
