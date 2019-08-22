@@ -324,8 +324,6 @@
     </change-notes>
 
     <extensions defaultExtensionNs="com.intellij">
-        <applicationService serviceImplementation="com.codestream.webview.BrowserEngineService"/>
-
         <projectService serviceImplementation="com.codestream.agent.AgentService"/>
         <projectService serviceImplementation="com.codestream.authentication.AuthenticationService"/>
         <projectService serviceImplementation="com.codestream.settings.SettingsService"/>
@@ -335,6 +333,8 @@
 
         <projectConfigurable groupId="tools" displayName="CodeStream" id="preferences.CodeStreamConfigurable"
                              instance="com.codestream.settings.CodeStreamConfigurable"/>
+
+        <errorHandler implementation="com.codestream.error.ErrorHandler"/>
 
         <intentionAction>
             <className>com.codestream.actions.AddComment</className>

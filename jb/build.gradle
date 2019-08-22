@@ -34,6 +34,10 @@ dependencies {
 
     implementation group: "org.eclipse.lsp4j", name: "org.eclipse.lsp4j", version: "0.6.0"
     implementation "com.github.salomonbrys.kotson:kotson:2.5.0"
+    implementation("io.sentry:sentry:1.7.27") {
+        exclude group: 'org.slf4j', module: 'slf4j-simple'
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+    }
 
     implementation group: 'commons-io', name: 'commons-io', version: '2.6'
 }

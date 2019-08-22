@@ -1,6 +1,7 @@
 package com.codestream.settings
 
 import com.codestream.DEBUG
+import com.codestream.error.ErrorHandler
 import com.codestream.gson
 import com.codestream.sessionService
 import com.github.salomonbrys.kotson.fromJson
@@ -20,7 +21,6 @@ import protocols.agent.Extension
 import protocols.agent.Ide
 import protocols.agent.ProxySettings
 import protocols.agent.TraceLevel
-import protocols.webview.CodeStreamEnvironment
 import protocols.webview.Configs
 import protocols.webview.WebViewContext
 import kotlin.properties.Delegates
@@ -61,10 +61,10 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
     override fun loadState(state: SettingsServiceState) {
         state.serverUrl = if (state.serverUrl.isNullOrEmpty()) state.serverUrl else state.serverUrl.trimEnd('/')
         _state = state
+        ErrorHandler.environment = environmentName
     }
 
     private val viewCodemarksInline get() = state.webViewConfig[INLINE_CODEMARKS]?.toBoolean() ?: true
-    val environment get() = CodeStreamEnvironment.PROD
     val environmentVersion: String
         get() = PluginManager.getPlugin(
             PluginId.findId("com.codestream.jetbrains-codestream")
@@ -109,6 +109,17 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
                 "Local:"
             } else {
                 "CodeStream:"
+            }
+        }
+
+    val environmentName
+        get() = when (state.serverUrl) {
+            API_PD -> "pd"
+            API_QA -> "qa"
+            else -> if (state.serverUrl.contains("localhost")) {
+                "local"
+            } else {
+                "prod"
             }
         }
 

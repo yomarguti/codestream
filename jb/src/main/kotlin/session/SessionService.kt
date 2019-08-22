@@ -2,6 +2,7 @@ package com.codestream.session
 
 import com.codestream.agent.DidChangeUnreadsNotification
 import com.codestream.agentService
+import com.codestream.error.ErrorHandler
 import com.intellij.openapi.project.Project
 import protocols.agent.CSUser
 import protocols.agent.Post
@@ -65,6 +66,7 @@ class SessionService(val project: Project) {
 
     fun login(userLoggedIn: UserLoggedIn) {
         _userLoggedIn = userLoggedIn
+        ErrorHandler.userLoggedIn = userLoggedIn
     }
 
     fun logout() {

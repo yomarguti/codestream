@@ -5,13 +5,14 @@ import com.codestream.authenticationService
 import com.codestream.extensions.baseUri
 import com.codestream.gson
 import com.codestream.settingsService
+import com.codestream.system.Platform
+import com.codestream.system.platform
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.JsonObject
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.SystemInfo
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
@@ -277,21 +278,4 @@ class AgentService(private val project: Project) : Disposable {
     fun onRestart(observer: () -> Unit) {
         _restartObservers += observer
     }
-}
-
-val platform: Platform by lazy {
-    when {
-        SystemInfo.isLinux -> Platform.LINUX
-        SystemInfo.isMac -> Platform.MAC
-        SystemInfo.isWindows && SystemInfo.is32Bit -> Platform.WIN32
-        SystemInfo.isWindows && SystemInfo.is64Bit -> Platform.WIN64
-        else -> throw IllegalStateException("Unable to detect system platform")
-    }
-}
-
-enum class Platform {
-    LINUX,
-    MAC,
-    WIN32,
-    WIN64
 }
